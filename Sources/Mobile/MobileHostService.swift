@@ -433,7 +433,7 @@ final class MobileHostService {
     private let callbackQueue = DispatchQueue(label: "dev.cmux.mobile.host-listener")
     /// TCP compatibility listener for legacy Tailscale clients. Iroh owns its
     /// own UDP endpoint and never shares this socket or its lifecycle.
-    private var tailscaleListener: NWListener?
+    private var tailscaleListener: MobileHostPOSIXListener?
     private var tailscaleIsRunning = false
     private var tailscalePort: Int?
     private var tailscaleFailureDescription: String?
@@ -986,7 +986,7 @@ final class MobileHostService {
     private func startTailscaleListenerIfNeeded() {
         guard Self.isListeningEnabled(defaults: defaults), tailscaleListener == nil else { return }
         let configuredPort = Self.configuredPort(defaults: defaults)
-        guard let port = NWEndpoint.Port(rawValue: UInt16(configuredPort)) else {
+        guard let port = UInt16(exactly: configuredPort), port > 0 else {
             tailscaleFailureDescription = listenerFailureDescription(
                 port: configuredPort,
                 error: "The configured port is outside 1–65535."
@@ -997,67 +997,49 @@ final class MobileHostService {
         let generation = UUID()
         tailscaleListenerGeneration = generation
         do {
-            let listener = try NWListener(using: .tcp, on: port)
-            listener.stateUpdateHandler = { [weak self] state in
-                Task { @MainActor in
-                    self?.handleTailscaleListenerState(state, generation: generation)
+            // A BSD socket, not NWListener: with the Tailscale system
+            // extension on macOS 26+, NECP drops connections that arrive over
+            // the tailnet for NWListener sockets before accept runs.
+            let listener = try MobileHostPOSIXListener(preferredPort: port, queue: callbackQueue)
+            listener.start(
+                onAccepted: { [weak self] accepted in
+                    Task { @MainActor in
+                        self?.acceptTailscaleConnection(accepted, generation: generation)
+                    }
+                },
+                onCancelled: { [weak self] in
+                    Task { @MainActor in
+                        self?.handleTailscaleListenerCancelled(generation: generation)
+                    }
                 }
-            }
-            listener.newConnectionHandler = { [weak self] connection in
-                Task { @MainActor in
-                    self?.acceptTailscaleConnection(connection, generation: generation)
-                }
-            }
+            )
             tailscaleListener = listener
+            tailscaleIsRunning = true
+            tailscalePort = Int(listener.boundPort)
             tailscaleFailureDescription = nil
-            listener.start(queue: callbackQueue)
+            let routes = tailscaleRouteResolver.routes(port: Int(listener.boundPort)).routes
+            tailscaleRoutes = routes
+            MobileHostPublicStatusCache.update(routes: routes)
         } catch {
             tailscaleListenerGeneration = UUID()
             tailscaleFailureDescription = listenerFailureDescription(
                 port: configuredPort,
                 error: String(describing: error)
             )
-            NotificationCenter.default.post(name: .mobileHostStatusDidChange, object: nil)
         }
+        NotificationCenter.default.post(name: .mobileHostStatusDidChange, object: nil)
     }
 
-    private func handleTailscaleListenerState(
-        _ state: NWListener.State,
-        generation: UUID
-    ) {
+    /// Spontaneous listener loss. Intentional stops disarm first, so this
+    /// only fires when the socket went away underneath the service.
+    private func handleTailscaleListenerCancelled(generation: UUID) {
         guard generation == tailscaleListenerGeneration else { return }
-        switch state {
-        case .ready:
-            guard Self.isListeningEnabled(defaults: defaults) else {
-                stopTailscaleListener()
-                return
-            }
-            tailscaleIsRunning = true
-            tailscalePort = tailscaleListener?.port.map { Int($0.rawValue) }
-            tailscaleFailureDescription = nil
-            let routes = tailscalePort.map { tailscaleRouteResolver.routes(port: $0).routes } ?? []
-            tailscaleRoutes = routes
-            MobileHostPublicStatusCache.update(routes: routes)
-        case .failed(let error):
-            tailscaleListenerGeneration = UUID()
-            tailscaleListener?.cancel()
-            tailscaleListener = nil
-            tailscaleIsRunning = false
-            tailscalePort = nil
-            tailscaleFailureDescription = listenerFailureDescription(
-                port: Self.configuredPort(defaults: defaults),
-                error: String(describing: error)
-            )
-            MobileHostPublicStatusCache.update(routes: [])
-            tailscaleRoutes = []
-        case .cancelled:
-            tailscaleIsRunning = false
-            tailscalePort = nil
-            tailscaleRoutes = []
-            MobileHostPublicStatusCache.update(routes: [])
-        default:
-            tailscaleIsRunning = false
-        }
+        tailscaleListenerGeneration = UUID()
+        tailscaleListener = nil
+        tailscaleIsRunning = false
+        tailscalePort = nil
+        tailscaleRoutes = []
+        MobileHostPublicStatusCache.update(routes: [])
         NotificationCenter.default.post(name: .mobileHostStatusDidChange, object: nil)
     }
 
@@ -1072,6 +1054,7 @@ final class MobileHostService {
 
     private func stopTailscaleListener() {
         tailscaleListenerGeneration = UUID()
+        tailscaleListener?.disarm()
         tailscaleListener?.cancel()
         tailscaleListener = nil
         tailscaleIsRunning = false
@@ -1082,14 +1065,28 @@ final class MobileHostService {
         NotificationCenter.default.post(name: .mobileHostStatusDidChange, object: nil)
     }
 
-    private func acceptTailscaleConnection(_ connection: NWConnection, generation: UUID) {
+    /// A real phone always arrives over a network interface; loopback peers
+    /// are only legitimate for the DEBUG mock host used by UI tests.
+    nonisolated static func allowsTailscalePeer(isLoopback: Bool) -> Bool {
+        #if DEBUG
+        true
+        #else
+        !isLoopback
+        #endif
+    }
+
+    private func acceptTailscaleConnection(
+        _ accepted: MobileHostPOSIXAcceptedConnection,
+        generation: UUID
+    ) {
         guard generation == tailscaleListenerGeneration,
               tailscaleIsRunning,
-              Self.isListeningEnabled(defaults: defaults) else {
-            connection.cancel()
+              Self.isListeningEnabled(defaults: defaults),
+              Self.allowsTailscalePeer(isLoopback: accepted.peerIsLoopback) else {
+            close(accepted.fileDescriptor)
             return
         }
-        let transport = CmxNetworkByteTransport(acceptedConnection: connection)
+        let transport = CmxPOSIXByteTransport(acceptedFileDescriptor: accepted.fileDescriptor)
         Task {
             _ = await Self.acceptTransport(
                 transport,
