@@ -10,6 +10,9 @@ import Foundation
 struct MobileHostPOSIXAcceptedConnection: Sendable {
     let fileDescriptor: Int32
     let peerIsLoopback: Bool
+    /// Whether the peer address is in Tailscale's ranges (`100.64.0.0/10`,
+    /// `fd7a:115c:a1e0::/48`, or the IPv4-mapped form of the former).
+    var peerIsTailscale: Bool = false
 }
 
 /// BSD-socket TCP listener for the legacy mobile pairing host.
@@ -208,6 +211,36 @@ final class MobileHostPOSIXListener: @unchecked Sendable {
         }
     }
 
+    /// Whether `address` belongs to a Tailscale peer: IPv4 `100.64.0.0/10`
+    /// (CGNAT space Tailscale assigns), its IPv4-mapped IPv6 form, or the
+    /// Tailscale IPv6 ULA prefix `fd7a:115c:a1e0::/48`.
+    static func isTailscalePeer(_ address: sockaddr_storage) -> Bool {
+        func isTailscaleIPv4(_ first: UInt8, _ second: UInt8) -> Bool {
+            first == 100 && (second & 0xC0) == 0x40
+        }
+        switch Int32(address.ss_family) {
+        case AF_INET:
+            return withUnsafeBytes(of: address) { raw in
+                guard raw.count >= MemoryLayout<sockaddr_in>.size else { return false }
+                let sin = raw.loadUnaligned(as: sockaddr_in.self)
+                let bytes = withUnsafeBytes(of: sin.sin_addr) { Array($0) }
+                return isTailscaleIPv4(bytes[0], bytes[1])
+            }
+        case AF_INET6:
+            return withUnsafeBytes(of: address) { raw in
+                guard raw.count >= MemoryLayout<sockaddr_in6>.size else { return false }
+                let sin6 = raw.loadUnaligned(as: sockaddr_in6.self)
+                let bytes = withUnsafeBytes(of: sin6.sin6_addr) { Array($0) }
+                if bytes[0..<10].allSatisfy({ $0 == 0 }), bytes[10] == 0xFF, bytes[11] == 0xFF {
+                    return isTailscaleIPv4(bytes[12], bytes[13])
+                }
+                return bytes[0..<6] == [0xFD, 0x7A, 0x11, 0x5C, 0xA1, 0xE0]
+            }
+        default:
+            return false
+        }
+    }
+
     // MARK: - Private
 
     /// Runs on `queue`: drains every pending connection, then returns; the
@@ -230,7 +263,8 @@ final class MobileHostPOSIXListener: @unchecked Sendable {
             onAccepted(
                 MobileHostPOSIXAcceptedConnection(
                     fileDescriptor: client,
-                    peerIsLoopback: Self.isLoopbackPeer(peer)
+                    peerIsLoopback: Self.isLoopbackPeer(peer),
+                    peerIsTailscale: Self.isTailscalePeer(peer)
                 )
             )
         }

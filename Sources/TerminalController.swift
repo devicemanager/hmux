@@ -2034,6 +2034,12 @@ class TerminalController {
             return v2Result(id: request.id, v2MobileCompatibleTagsGet())
         case "mobile.compatible_tags.set":
             return v2Result(id: request.id, v2MobileCompatibleTagsSet(params: request.params))
+        case "mobile.local_pairing.create":
+            return v2Result(id: request.id, v2MobileLocalPairingCreate())
+        case "mobile.local_devices.list":
+            return v2Result(id: request.id, v2MobileLocalDevicesList())
+        case "mobile.local_devices.revoke":
+            return v2Result(id: request.id, v2MobileLocalDevicesRevoke(params: request.params))
         case "system.ping":
             return v2Ok(id: request.id, result: ["pong": true])
         case "system.capabilities":

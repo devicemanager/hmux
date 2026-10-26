@@ -163,6 +163,11 @@ public enum ControlCommandExecutionPolicy: Sendable, Equatable {
         // event through thread-safe MobileHostService statics.
         "mobile.compatible_tags.get",
         "mobile.compatible_tags.set",
+        // Local pairing: a lock-guarded store plus one main-actor hop to read
+        // the listener's bound port when minting a code.
+        "mobile.local_pairing.create",
+        "mobile.local_devices.list",
+        "mobile.local_devices.revoke",
         // Panel artifact reads are mobile data-plane file IO for non-terminal
         // surfaces. Keep them on the worker lane so markdown/file-preview panes
         // reach TerminalController's mobile.panel.artifact.* dispatcher instead

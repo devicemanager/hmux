@@ -2738,6 +2738,8 @@
 		BC6C909156BA44C7923C2218 /* MobileHostIrxSettingsMappingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B1810000000000000015 /* MobileHostIrxSettingsMappingTests.swift */; };
 		C1B1810000000000000002 /* MobileHostIrxTerminalLaneServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B1810000000000000012 /* MobileHostIrxTerminalLaneServer.swift */; };
 		C1B181000000000000000A /* MobileHostListenerState.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B181000000000000001A /* MobileHostListenerState.swift */; };
+		265AD48644283B2A10F62CDB /* MobileHostLocalPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 63DE5A5ED7BDC704AA7D9C4E /* MobileHostLocalPairing.swift */; };
+		350D98CDF1C166CF312B60D1 /* MobileHostLocalPairingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD19986FDCCB3A7F4EEF72E2 /* MobileHostLocalPairingTests.swift */; };
 		DE71CE000000000000000006 /* MobileHostNetworkPathRefreshTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE71CE000000000000000005 /* MobileHostNetworkPathRefreshTests.swift */; };
 		A1B2C3D4E5F60718293A4C03 /* MobileHostOrderedInputTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4C04 /* MobileHostOrderedInputTests.swift */; };
 		A1B2C3D4E5F60718293A4C01 /* MobileHostOrderedRequestQueue.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4C02 /* MobileHostOrderedRequestQueue.swift */; };
@@ -4014,6 +4016,7 @@
 		D1A700000000000000000002 /* TerminalController+MobileDirectorySearch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1A700000000000000000005 /* TerminalController+MobileDirectorySearch.swift */; };
 		D7AB00000000000000C101 /* TerminalController+MobileFeed.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB00000000000000C100 /* TerminalController+MobileFeed.swift */; };
 		4688B527FE390A0BC3B772E8 /* TerminalController+MobileInputDelivery.swift in Sources */ = {isa = PBXBuildFile; fileRef = 67FB0CE02C2AC02973B75A89 /* TerminalController+MobileInputDelivery.swift */; };
+		28F7B07E0EBF7CDCD650F341 /* TerminalController+MobileLocalPairing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 027D23A197AA3D23F5882865 /* TerminalController+MobileLocalPairing.swift */; };
 		D7AB00000000000000B001 /* TerminalController+MobileNotificationSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB00000000000000B000 /* TerminalController+MobileNotificationSync.swift */; };
 		D1F0A0040000000000000001 /* TerminalController+MobilePhonePushSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1F0A0040000000000000002 /* TerminalController+MobilePhonePushSettings.swift */; };
 		D7AB00000000000000B011 /* TerminalController+MobileScrollPrefetch.swift in Sources */ = {isa = PBXBuildFile; fileRef = D7AB00000000000000B010 /* TerminalController+MobileScrollPrefetch.swift */; };
@@ -7409,6 +7412,8 @@
 		C1B1810000000000000015 /* MobileHostIrxSettingsMappingTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileHostIrxSettingsMappingTests.swift; sourceTree = "<group>"; };
 		C1B1810000000000000012 /* MobileHostIrxTerminalLaneServer.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileHostIrxTerminalLaneServer.swift; sourceTree = "<group>"; };
 		C1B181000000000000001A /* MobileHostListenerState.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileHostListenerState.swift; sourceTree = "<group>"; };
+		63DE5A5ED7BDC704AA7D9C4E /* MobileHostLocalPairing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "MobileHostLocalPairing.swift"; sourceTree = "<group>"; };
+		FD19986FDCCB3A7F4EEF72E2 /* MobileHostLocalPairingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "MobileHostLocalPairingTests.swift"; sourceTree = "<group>"; };
 		DE71CE000000000000000005 /* MobileHostNetworkPathRefreshTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHostNetworkPathRefreshTests.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4C04 /* MobileHostOrderedInputTests.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileHostOrderedInputTests.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F60718293A4C02 /* MobileHostOrderedRequestQueue.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileHostOrderedRequestQueue.swift; sourceTree = "<group>"; };
@@ -8668,6 +8673,7 @@
 		D1A700000000000000000005 /* TerminalController+MobileDirectorySearch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+MobileDirectorySearch.swift"; sourceTree = "<group>"; };
 		D7AB00000000000000C100 /* TerminalController+MobileFeed.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+MobileFeed.swift"; sourceTree = "<group>"; };
 		67FB0CE02C2AC02973B75A89 /* TerminalController+MobileInputDelivery.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+MobileInputDelivery.swift"; sourceTree = "<group>"; };
+		027D23A197AA3D23F5882865 /* TerminalController+MobileLocalPairing.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "TerminalController+MobileLocalPairing.swift"; sourceTree = "<group>"; };
 		D7AB00000000000000B000 /* TerminalController+MobileNotificationSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+MobileNotificationSync.swift"; sourceTree = "<group>"; };
 		D1F0A0040000000000000002 /* TerminalController+MobilePhonePushSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+MobilePhonePushSettings.swift"; sourceTree = "<group>"; };
 		D7AB00000000000000B010 /* TerminalController+MobileScrollPrefetch.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "TerminalController+MobileScrollPrefetch.swift"; sourceTree = "<group>"; };
@@ -9913,6 +9919,7 @@
 				C1B1810000000000000011 /* MobileHostIrxRuntime.swift */,
 				C1A070000000000000000014 /* MobileHostIrohServerEventWriter.swift */,
 				C1B1810000000000000013 /* MobileHostIrxLegacyDialectServer.swift */,
+				63DE5A5ED7BDC704AA7D9C4E /* MobileHostLocalPairing.swift */,
 				A5516FEB938854A487B9BBF1 /* MobileHostPOSIXListener.swift */,
 				C1B1810000000000000018 /* MobileHostV2Installation.swift */,
 				C1B1810000000000000019 /* MobileHostDiagnostics.swift */,
@@ -11031,6 +11038,7 @@
 				A1329C080000000000000001 /* TerminalSizeParticipantRow.swift */,
 				A1329C090000000000000001 /* TerminalSizePanelPresenter.swift */,
 				A13056000000000000000001 /* TerminalController+Capabilities.swift */,
+				027D23A197AA3D23F5882865 /* TerminalController+MobileLocalPairing.swift */,
 				AE55B7F6000000000000A003 /* TerminalController+SurfaceInputState.swift */,
 				AE55B7F6000000000000A005 /* TerminalController+SurfaceWaitTextChange.swift */,
 				EE30D5000000000000000003 /* WorkspaceRemoteRelayCommandRewriter.swift */,
@@ -14281,6 +14289,7 @@
 				FBFA082D961AFAB3FFBFF6CC /* RawOSCMachinePayloadTests.swift */,
 				E5E915CF2237052FDE02EE05 /* WorkspaceTitleRecoveryTests.swift */,
 				479DF9891F051FB943D54483 /* MobileHostPOSIXListenerTests.swift */,
+				FD19986FDCCB3A7F4EEF72E2 /* MobileHostLocalPairingTests.swift */,
 			);
 			path = cmuxTests;
 			sourceTree = "<group>";
@@ -16522,6 +16531,7 @@
 				C1B1810000000000000001 /* MobileHostIrxRuntime.swift in Sources */,
 				C1B1810000000000000002 /* MobileHostIrxTerminalLaneServer.swift in Sources */,
 				C1B181000000000000000A /* MobileHostListenerState.swift in Sources */,
+				265AD48644283B2A10F62CDB /* MobileHostLocalPairing.swift in Sources */,
 				A1B2C3D4E5F60718293A4C01 /* MobileHostOrderedRequestQueue.swift in Sources */,
 				DD6FA290AA945703B703DAEE /* MobileHostPOSIXListener.swift in Sources */,
 				4E673EDE464BF3AB80E94C1D /* MobileHostRPC.swift in Sources */,
@@ -17361,6 +17371,7 @@
 				D1A700000000000000000002 /* TerminalController+MobileDirectorySearch.swift in Sources */,
 				D7AB00000000000000C101 /* TerminalController+MobileFeed.swift in Sources */,
 				4688B527FE390A0BC3B772E8 /* TerminalController+MobileInputDelivery.swift in Sources */,
+				28F7B07E0EBF7CDCD650F341 /* TerminalController+MobileLocalPairing.swift in Sources */,
 				D7AB00000000000000B001 /* TerminalController+MobileNotificationSync.swift in Sources */,
 				D1F0A0040000000000000001 /* TerminalController+MobilePhonePushSettings.swift in Sources */,
 				D7AB00000000000000B011 /* TerminalController+MobileScrollPrefetch.swift in Sources */,
@@ -19103,6 +19114,7 @@
 				B8B056D80000000000000001 /* MobileHostIdentityTests.swift in Sources */,
 				C1A071000000000000000001 /* MobileHostIrohAdmissionTests.swift in Sources */,
 				BC6C909156BA44C7923C2218 /* MobileHostIrxSettingsMappingTests.swift in Sources */,
+				350D98CDF1C166CF312B60D1 /* MobileHostLocalPairingTests.swift in Sources */,
 				DE71CE000000000000000006 /* MobileHostNetworkPathRefreshTests.swift in Sources */,
 				A1B2C3D4E5F60718293A4C03 /* MobileHostOrderedInputTests.swift in Sources */,
 				3A830FCBE1DD414C7427955E /* MobileHostPOSIXListenerTests.swift in Sources */,

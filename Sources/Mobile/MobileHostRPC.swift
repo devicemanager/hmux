@@ -1,3 +1,4 @@
+import CMUXMobileCore
 import Foundation
 
 // JSONSerialization payloads are Foundation value containers. Requests are
@@ -13,6 +14,14 @@ struct MobileHostRPCRequest: @unchecked Sendable {
 struct MobileHostRPCAuth: @unchecked Sendable {
     let attachToken: String?
     let stackAccessToken: String?
+    /// Per-phone key issued by account-free local pairing.
+    let deviceKey: String?
+
+    init(attachToken: String?, stackAccessToken: String?, deviceKey: String? = nil) {
+        self.attachToken = attachToken
+        self.stackAccessToken = stackAccessToken
+        self.deviceKey = deviceKey
+    }
 }
 
 // Error data is normalized through MobileHostRPCEnvelope.jsonValue before it is
@@ -143,12 +152,14 @@ enum MobileHostRPCEnvelope {
         }
         let attachToken = nonEmptyString(auth["attach_token"])
         let accessToken = nonEmptyString(auth["stack_access_token"])
-        guard attachToken != nil || accessToken != nil else {
+        let deviceKey = nonEmptyString(auth[CmxLocalPairing.deviceKeyAuthField])
+        guard attachToken != nil || accessToken != nil || deviceKey != nil else {
             return nil
         }
         return MobileHostRPCAuth(
             attachToken: attachToken,
-            stackAccessToken: accessToken
+            stackAccessToken: accessToken,
+            deviceKey: deviceKey
         )
     }
 

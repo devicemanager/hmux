@@ -230,8 +230,7 @@ public final class MobileRouteResolver: @unchecked Sendable {
         return callbacks
     }
 
-    @usableFromInline
-    static func tailscaleRouteHosts(resolveDNS: Bool) -> [String] {
+    public static func tailscaleRouteHosts(resolveDNS: Bool) -> [String] {
         let candidates = tailscaleAddressCandidates(resolveDNS: resolveDNS)
         guard let candidate = preferredTailscaleAddressCandidate(in: candidates) else {
             return []

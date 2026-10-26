@@ -857,6 +857,33 @@ final class MobileHostService {
         TerminalController.shared.clearAllMobileViewportReports(reason: "mobile.host.stopped")
     }
 
+    enum LocalPairingIssueError: Error, Equatable {
+        case listenerNotRunning
+        case noTailscaleAddress
+    }
+
+    /// Issues a single-use local pairing code for the running Tailscale TCP
+    /// listener. Only reachable from the Mac's own automation socket and UI;
+    /// the network RPC surface can redeem codes but never mint them.
+    func issueLocalPairingPayload(
+        pairing: MobileHostLocalPairing = .shared
+    ) -> Result<CmxLocalPairingPayload, LocalPairingIssueError> {
+        guard tailscaleIsRunning, let port = tailscalePort else {
+            return .failure(.listenerNotRunning)
+        }
+        let hosts = MobileRouteResolver.tailscaleRouteHosts(resolveDNS: false)
+        guard !hosts.isEmpty else { return .failure(.noTailscaleAddress) }
+        let issued = pairing.issueCode()
+        return .success(CmxLocalPairingPayload(
+            hosts: hosts,
+            port: port,
+            pairingCode: issued.code,
+            macDeviceID: MobileHostIdentity.deviceID(),
+            macDisplayName: MobileHostIdentity.baseDisplayName(),
+            expiresAt: issued.expiresAt
+        ))
+    }
+
     func statusSnapshot() -> MobileHostServiceStatus {
         makeStatus(routes: MobileHostPublicStatusCache.snapshot())
     }
@@ -1065,13 +1092,15 @@ final class MobileHostService {
         NotificationCenter.default.post(name: .mobileHostStatusDidChange, object: nil)
     }
 
-    /// A real phone always arrives over a network interface; loopback peers
-    /// are only legitimate for the DEBUG mock host used by UI tests.
-    nonisolated static func allowsTailscalePeer(isLoopback: Bool) -> Bool {
+    /// The listener binds every interface, so admission is limited to
+    /// Tailscale peers: a device on the same LAN or Wi-Fi cannot reach the
+    /// pairing or RPC surface. Loopback is allowed only in DEBUG builds for
+    /// the UI-test mock host and local protocol checks.
+    nonisolated static func allowsTailscalePeer(isLoopback: Bool, isTailscale: Bool) -> Bool {
         #if DEBUG
-        true
+        isTailscale || isLoopback
         #else
-        !isLoopback
+        isTailscale
         #endif
     }
 
@@ -1082,7 +1111,10 @@ final class MobileHostService {
         guard generation == tailscaleListenerGeneration,
               tailscaleIsRunning,
               Self.isListeningEnabled(defaults: defaults),
-              Self.allowsTailscalePeer(isLoopback: accepted.peerIsLoopback) else {
+              Self.allowsTailscalePeer(
+                  isLoopback: accepted.peerIsLoopback,
+                  isTailscale: accepted.peerIsTailscale
+              ) else {
             close(accepted.fileDescriptor)
             return
         }
@@ -1090,7 +1122,7 @@ final class MobileHostService {
         Task {
             _ = await Self.acceptTransport(
                 transport,
-                authorization: .stackBearer,
+                authorization: .localDevice,
                 hostDeviceID: MobileHostIdentity.deviceID(),
                 isCurrent: { [weak self] in
                     await MainActor.run { [weak self] in
@@ -1147,7 +1179,7 @@ final class MobileHostService {
             // first control frame is valid while the admitted session is
             // settling, so an application timer must not retire it.
             0
-        case .stackBearer:
+        case .stackBearer, .localDevice:
             MobileHostConnection.defaultFirstFrameTimeoutNanoseconds
         }
         let session = MobileHostConnection(
@@ -1199,6 +1231,15 @@ final class MobileHostService {
                 }
                 if request.method == "phone_push.keys.exchange" {
                     return await MobileHostService.shared.handlePhonePushKeyExchange(request)
+                }
+                if request.method == CmxLocalPairing.pairMethod {
+                    guard authorization == .localDevice else {
+                        return .failure(MobileHostRPCError(
+                            code: "method_not_found",
+                            message: "Local pairing is only served on the private-network route."
+                        ))
+                    }
+                    return Self.localPairResult(for: request, hostDeviceID: hostDeviceID)
                 }
                 let result = await TerminalController.shared.mobileHostHandleRPC(
                     request,
@@ -1259,7 +1300,58 @@ final class MobileHostService {
             return await stackAuthorization(request)
         case .irohAdmission:
             return nil
+        case .localDevice:
+            return localDeviceAuthorizationError(for: request)
         }
+    }
+
+    /// Local routes serve only the host probe and code redemption without a
+    /// key; everything else needs a key issued by ``MobileHostLocalPairing``.
+    nonisolated static func localDeviceAuthorizationError(
+        for request: MobileHostRPCRequest,
+        pairing: MobileHostLocalPairing = .shared
+    ) -> MobileHostRPCResult? {
+        switch request.method {
+        case "mobile.host.status", CmxLocalPairing.pairMethod:
+            return nil
+        default:
+            guard pairing.device(forKey: request.auth?.deviceKey) != nil else {
+                return .failure(MobileHostRPCError(
+                    code: "unauthorized",
+                    message: "Pair this phone with the Mac's local pairing code first."
+                ))
+            }
+            return nil
+        }
+    }
+
+    nonisolated static func localPairResult(
+        for request: MobileHostRPCRequest,
+        hostDeviceID: String?,
+        pairing: MobileHostLocalPairing = .shared
+    ) -> MobileHostRPCResult {
+        guard let code = (request.params["pairing_code"] as? String)?
+            .trimmingCharacters(in: .whitespacesAndNewlines), !code.isEmpty else {
+            return .failure(MobileHostRPCError(code: "invalid_params", message: "pairing_code is required"))
+        }
+        guard let redemption = pairing.redeem(
+            code: code,
+            deviceName: request.params["device_name"] as? String
+        ) else {
+            mobileHostLog.info("mobile host rejected a local pairing code")
+            return .failure(MobileHostRPCError(
+                code: "invalid_pairing_code",
+                message: "This pairing code is wrong, used, or expired. Show a new code on the Mac."
+            ))
+        }
+        mobileHostLog.info("mobile host paired a local device")
+        let payload: [String: Any] = [
+            "device_id": redemption.deviceID,
+            "device_key": redemption.deviceKey,
+            "mac_device_id": hostDeviceID ?? NSNull(),
+            "mac_display_name": MobileHostIdentity.baseDisplayName() ?? NSNull(),
+        ]
+        return .ok(payload)
     }
 
     nonisolated static func connectionStatusResult(
@@ -1272,6 +1364,13 @@ final class MobileHostService {
         switch authorization {
         case .stackBearer:
             return await stackStatus(request)
+        case .localDevice:
+            // Identity is disclosed only to an already-paired phone.
+            let paired = MobileHostLocalPairing.shared.device(forKey: request.auth?.deviceKey) != nil
+            return MobileHostPublicStatusCache.result(
+                includeIdentity: paired,
+                deviceID: paired ? hostDeviceID : nil
+            )
         case .irohAdmission:
             let phonePushStatus = await MainActor.run {
                 (

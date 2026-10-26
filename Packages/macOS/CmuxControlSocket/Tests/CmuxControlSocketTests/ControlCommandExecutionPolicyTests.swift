@@ -66,6 +66,8 @@ struct ControlCommandExecutionPolicyTests {
             "vault.sessions", "vault.search", "vault.checkpoints",
             "vault.checkpoint", "vault.fork",
             "mobile.compatible_tags.get", "mobile.compatible_tags.set",
+            "mobile.local_pairing.create", "mobile.local_devices.list",
+            "mobile.local_devices.revoke",
             "mobile.panel.artifact.stat", "mobile.panel.artifact.thumbnail",
             // JavaScript-evaluating browser methods block on page JS and must
             // not hold the main actor (see socketWorkerMethods rationale).

@@ -15,6 +15,9 @@ import os
 enum MobileHostConnectionAuthorizationContext: Equatable, Sendable {
     case stackBearer
     case irohAdmission(CmxIrohAdmittedPeer)
+    /// Private-network TCP route authorized per request by a device key from
+    /// account-free local pairing (``MobileHostLocalPairing``).
+    case localDevice
 }
 
 /// Immutable trust context carried from transport admission into RPC dispatch.

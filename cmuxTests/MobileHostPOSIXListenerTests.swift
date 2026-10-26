@@ -70,7 +70,7 @@ struct MobileHostPOSIXListenerTests {
     /// connected descriptor.
     private func dialLoopback(port: UInt16) throws -> Int32 {
         let fd = socket(AF_INET, SOCK_STREAM, 0)
-        #require(fd >= 0)
+        try #require(fd >= 0)
         var address = sockaddr_in()
         address.sin_family = sa_family_t(AF_INET)
         address.sin_port = port.bigEndian
@@ -122,7 +122,15 @@ struct MobileHostPOSIXListenerTests {
         var buffer = [UInt8](repeating: 0, count: message.count)
         var filled = 0
         while filled < message.count {
-            let n = read(accepted.fileDescriptor, &buffer, message.count - filled)
+            // The accepted socket is nonblocking by contract; wait until the
+            // client's bytes arrive instead of racing them.
+            var readable = pollfd(fd: accepted.fileDescriptor, events: Int16(POLLIN), revents: 0)
+            guard poll(&readable, 1, 2_000) == 1 else {
+                throw NSError(domain: "poll", code: Int(errno))
+            }
+            let n = buffer.withUnsafeMutableBytes { raw in
+                read(accepted.fileDescriptor, raw.baseAddress! + filled, message.count - filled)
+            }
             if n <= 0 { throw NSError(domain: "read", code: Int(errno)) }
             filled += n
         }
@@ -203,8 +211,9 @@ struct MobileHostPOSIXListenerTests {
             withUnsafeMutableBytes(of: &storage) { raw in
                 let sin = raw.bindMemory(to: sockaddr_in.self).baseAddress!
                 sin.pointee.sin_family = sa_family_t(AF_INET)
+                // s_addr holds the address in network byte order.
                 sin.pointee.sin_addr = in_addr(
-                    s_addr: UInt32(a) << 24 | UInt32(b) << 16 | UInt32(c) << 8 | UInt32(d)
+                    s_addr: (UInt32(a) << 24 | UInt32(b) << 16 | UInt32(c) << 8 | UInt32(d)).bigEndian
                 )
             }
             return storage
@@ -235,5 +244,20 @@ struct MobileHostPOSIXListenerTests {
         #expect(!MobileHostPOSIXListener.isLoopbackPeer(ipv4(100, 88, 118, 71)))
         #expect(!MobileHostPOSIXListener.isLoopbackPeer(ipv4(192, 168, 0, 3)))
         #expect(!MobileHostPOSIXListener.isLoopbackPeer(ipv4(8, 8, 8, 8)))
+
+        // Admission is limited to Tailscale peers: 100.64.0.0/10, its
+        // IPv4-mapped form, and fd7a:115c:a1e0::/48. LAN and public peers fail.
+        let tailnetV6: [UInt8] = [0xFD, 0x7A, 0x11, 0x5C, 0xA1, 0xE0, 0, 0, 0, 0, 0, 0, 0xCF, 0x34, 0x6B, 0x70]
+        let otherULA: [UInt8] = [0xFD, 0x00, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 5]
+        let mappedTailnet: [UInt8] = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0xFF, 0xFF, 100, 87, 89, 87]
+        #expect(MobileHostPOSIXListener.isTailscalePeer(ipv4(100, 64, 0, 1)))
+        #expect(MobileHostPOSIXListener.isTailscalePeer(ipv4(100, 127, 255, 254)))
+        #expect(MobileHostPOSIXListener.isTailscalePeer(ipv6(tailnetV6)))
+        #expect(MobileHostPOSIXListener.isTailscalePeer(ipv6(mappedTailnet)))
+        #expect(!MobileHostPOSIXListener.isTailscalePeer(ipv4(100, 63, 255, 255)))
+        #expect(!MobileHostPOSIXListener.isTailscalePeer(ipv4(100, 128, 0, 0)))
+        #expect(!MobileHostPOSIXListener.isTailscalePeer(ipv4(192, 168, 0, 3)))
+        #expect(!MobileHostPOSIXListener.isTailscalePeer(ipv4(127, 0, 0, 1)))
+        #expect(!MobileHostPOSIXListener.isTailscalePeer(ipv6(otherULA)))
     }
 }
