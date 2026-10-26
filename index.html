@@ -1,0 +1,511 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Setup guide for private cmux Mac and iPhone builds that pair directly over Tailscale, with no cmux account or cloud.">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>cmux local</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
+<style>
+/* Layout: one reading column with a terminal-styled hero; setup is a numbered rail because it is a real sequence. */
+:root {
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --fg: #16191e;
+  --muted: #5b6270;
+  --line: #d9dce2;
+  --accent: #a8650a;
+  --accent-soft: #f6e8d2;
+  --tailnet: #345f9c;
+  --code-bg: #1b1e24;
+  --code-fg: #e8e3d8;
+  --code-dim: #8f97a6;
+  --phosphor: #f0b35a;
+  --ok: #2f7a4f;
+  --off: #a33d3d;
+  --font-display: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+  --font-body: "Source Sans 3", -apple-system, "Segoe UI", Helvetica, Arial, sans-serif;
+  --font-code: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #121418; --surface: #1a1d23; --fg: #e9eaee; --muted: #9aa1ad; --line: #2c3039;
+    --accent: #f0b35a; --accent-soft: #3a2c17; --tailnet: #7fa6de;
+    --code-bg: #0c0e11; --code-fg: #e8e3d8; --code-dim: #7d8594; --phosphor: #f0b35a;
+    --ok: #6cc08f; --off: #e08585; color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #121418; --surface: #1a1d23; --fg: #e9eaee; --muted: #9aa1ad; --line: #2c3039;
+  --accent: #f0b35a; --accent-soft: #3a2c17; --tailnet: #7fa6de;
+  --code-bg: #0c0e11; --code-fg: #e8e3d8; --code-dim: #7d8594; --phosphor: #f0b35a;
+  --ok: #6cc08f; --off: #e08585; color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--fg);
+  font-family: var(--font-body); font-size: 17px; line-height: 1.6;
+}
+.wrap {
+  max-width: 940px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: var(--tailnet); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; line-height: 1.2; margin: 0; }
+h2 { font-size: 1.6rem; font-weight: 600; letter-spacing: -0.01em; }
+h3 { font-size: 1.05rem; font-weight: 600; }
+p { margin: 0; }
+.prose { max-width: 65ch; display: grid; gap: 0.9rem; }
+.lead { color: var(--muted); font-size: 1.1rem; }
+.eyebrow {
+  font-family: var(--font-code); font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.12em; color: var(--accent);
+}
+code, kbd { font-family: var(--font-code); font-size: 0.88em; }
+:not(pre) > code { background: var(--accent-soft); padding: 0.05em 0.35em; border-radius: 4px; }
+
+/* Header */
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+header.site {
+  position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5;
+  background: color-mix(in srgb, var(--bg) 92%, transparent);
+  backdrop-filter: blur(8px); border-bottom: 1px solid var(--line);
+}
+header.site .wrap { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding-block: 0.7rem; flex-wrap: wrap; }
+.brand { font-family: var(--font-display); font-weight: 600; text-decoration: none; color: var(--fg); display: flex; align-items: center; gap: 0.5rem; }
+.brand .cursor { width: 0.6em; height: 1.05em; background: var(--accent); display: inline-block; }
+nav.links { display: flex; gap: 1.1rem; flex-wrap: wrap; font-size: 0.95rem; }
+nav.links a { color: var(--muted); text-decoration: none; }
+nav.links a:hover { color: var(--fg); }
+
+/* Hero */
+.hero { padding-block: 3.5rem 2.5rem; display: grid; gap: 2.2rem; }
+.hero h1 { font-size: clamp(2rem, 5vw, 3.1rem); font-weight: 600; letter-spacing: -0.02em; max-width: 18ch; }
+.hero h1 em { font-style: normal; color: var(--accent); }
+.cta { display: flex; gap: 0.8rem; flex-wrap: wrap; }
+.btn {
+  display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1.1rem;
+  border-radius: 8px; font-weight: 600; text-decoration: none; font-size: 1rem;
+  border: 1px solid var(--line); color: var(--fg); background: var(--surface);
+}
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+.reqs { font-size: 0.9rem; color: var(--muted); }
+
+.term {
+  background: var(--code-bg); color: var(--code-fg); border-radius: 10px;
+  font-family: var(--font-code); font-size: 0.85rem; line-height: 1.7;
+  overflow: hidden; border: 1px solid var(--line);
+}
+.term .bar { display: flex; gap: 6px; padding: 0.6rem 0.8rem; border-bottom: 1px solid #ffffff14; }
+.term .bar span { width: 10px; height: 10px; border-radius: 50%; background: #ffffff24; }
+.term pre { margin: 0; padding: 1rem 1.1rem; overflow-x: auto; }
+.term .p { color: var(--phosphor); }
+.term .d { color: var(--code-dim); }
+
+.status {
+  display: flex; gap: 0.6rem 1.2rem; flex-wrap: wrap; font-size: 0.9rem;
+  padding: 0.8rem 1rem; background: var(--surface); border: 1px solid var(--line); border-radius: 8px;
+}
+.status b { font-weight: 600; }
+.pill { display: inline-flex; align-items: center; gap: 0.35rem; }
+.pill::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.pill.pending::before { background: var(--accent); }
+
+section { padding-block: 2.8rem; border-top: 1px solid var(--line); display: grid; gap: 1.4rem; }
+
+/* What's different */
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1rem; }
+.compare > div { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1.1rem 1.2rem; min-width: 0; }
+.compare h3 { margin-bottom: 0.6rem; }
+.compare ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.4rem; }
+.compare li { padding-left: 1.4rem; position: relative; }
+.compare li::before { position: absolute; left: 0; font-family: var(--font-code); font-weight: 600; }
+.keeps li::before { content: "+"; color: var(--ok); }
+.drops li::before { content: "\2212"; color: var(--off); }
+.compare small { color: var(--muted); display: block; font-size: 0.85rem; }
+
+/* Diagram */
+.diagram { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 1rem; overflow-x: auto; }
+.diagram svg { display: block; width: 100%; min-width: 560px; height: auto; }
+.diagram text { font-family: var(--font-code); }
+
+.flow { margin: 0; padding: 0; list-style: none; display: grid; gap: 0.9rem; counter-reset: flow; }
+.flow li { display: grid; grid-template-columns: 2rem 1fr; gap: 0.8rem; counter-increment: flow; }
+.flow li::before {
+  content: counter(flow); font-family: var(--font-code); font-weight: 600; color: var(--accent);
+  border: 1px solid var(--accent); border-radius: 50%; width: 1.8rem; height: 1.8rem;
+  display: grid; place-items: center; font-size: 0.85rem;
+}
+.flow li > div { min-width: 0; }
+
+/* Setup */
+.steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 0; counter-reset: step; }
+.steps > li { counter-increment: step; display: grid; grid-template-columns: 2.6rem 1fr; gap: 1rem; position: relative; padding-bottom: 2rem; }
+.steps > li::before {
+  content: counter(step); font-family: var(--font-display); font-weight: 600; font-size: 1rem;
+  width: 2.4rem; height: 2.4rem; display: grid; place-items: center; border-radius: 8px;
+  background: var(--accent); color: var(--bg); position: relative; z-index: 1;
+}
+.steps > li:not(:last-child)::after {
+  content: ""; position: absolute; left: 1.2rem; top: 2.6rem; bottom: 0.3rem; width: 1px; background: var(--line);
+}
+.steps > li > div { min-width: 0; display: grid; gap: 0.7rem; }
+.steps ul { margin: 0; padding-left: 1.2rem; display: grid; gap: 0.3rem; }
+
+.code { position: relative; background: var(--code-bg); border-radius: 8px; border: 1px solid var(--line); min-width: 0; }
+.code pre { margin: 0; padding: 0.85rem 1rem; padding-right: 4.8rem; overflow-x: auto; color: var(--code-fg); font-family: var(--font-code); font-size: 0.84rem; line-height: 1.65; }
+.code .c { color: var(--code-dim); }
+.copy {
+  position: absolute; top: 0.5rem; right: 0.5rem; font: 500 0.75rem var(--font-code);
+  background: #ffffff14; color: var(--code-fg); border: 1px solid #ffffff26; border-radius: 6px;
+  padding: 0.25rem 0.55rem; cursor: pointer;
+}
+.copy:hover { background: #ffffff24; }
+.note {
+  font-size: 0.93rem; color: var(--muted); border-left: 3px solid var(--accent);
+  padding: 0.2rem 0 0.2rem 0.8rem;
+}
+
+/* Tables */
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 0.93rem; }
+th, td { text-align: left; padding: 0.6rem 0.9rem; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-family: var(--font-code); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 500; }
+tr:last-child td { border-bottom: 0; }
+td code { white-space: nowrap; }
+
+/* Troubleshooting */
+details { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 0.8rem 1.1rem; }
+details + details { margin-top: 0.6rem; }
+summary { cursor: pointer; font-weight: 600; }
+details > div { padding-top: 0.6rem; display: grid; gap: 0.6rem; color: var(--fg); }
+
+footer { border-top: 1px solid var(--line); padding-block: 2rem 3rem; color: var(--muted); font-size: 0.9rem; }
+footer .wrap { display: grid; gap: 0.6rem; }
+footer nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+@media (prefers-reduced-motion: no-preference) {
+  .brand .cursor { animation: blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity: 0; } }
+}
+@media (max-width: 520px) {
+  body { font-size: 16px; }
+  .steps > li { grid-template-columns: 2.2rem 1fr; gap: 0.7rem; }
+  .steps > li::before { width: 2rem; height: 2rem; }
+  .steps > li:not(:last-child)::after { left: 1rem; top: 2.2rem; }
+}
+</style>
+</head>
+<body>
+<header class="site">
+  <div class="wrap">
+    <a class="brand" href="#top"><span class="cursor" aria-hidden="true"></span>cmux local</a>
+    <nav class="links" aria-label="Sections">
+      <a href="#different">What's different</a>
+      <a href="#how">How it works</a>
+      <a href="#setup">Setup</a>
+      <a href="#settings">Settings</a>
+      <a href="#trouble">Troubleshooting</a>
+      <a href="https://github.com/devicemanager/cmux/tree/feat/tailscale-tcp-listener">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <div class="wrap">
+    <div class="hero">
+      <div class="prose">
+        <p class="eyebrow">Private build of cmux · macOS + iPhone</p>
+        <h1>Your terminal on your iPhone, over <em>your own</em> tailnet.</h1>
+        <p class="lead">cmux local is cmux with the cloud taken out. The Mac app and the iPhone app talk to each other directly over Tailscale, paired with a one-time code. No cmux account, no relays, no telemetry.</p>
+      </div>
+      <div class="cta">
+        <a class="btn primary" href="#setup">Set it up</a>
+        <a class="btn" href="https://github.com/devicemanager/cmux/tree/feat/tailscale-tcp-listener">View the fork on GitHub</a>
+      </div>
+      <p class="reqs">Requires macOS 14 or later, iOS 17 or later, Tailscale on both devices, and an Apple Developer account to sign your own builds.</p>
+
+      <div class="term" role="img" aria-label="Terminal showing a local pairing code and the iPhone connected over Tailscale on port 4399">
+        <div class="bar" aria-hidden="true"><span></span><span></span><span></span></div>
+<pre><span class="p">$</span> cmux rpc mobile.local_pairing.create
+<span class="d">{</span>
+<span class="d">  "url": </span>"cmux-local://pair?v=1&amp;host=100.101.102.103&amp;port=4399&amp;code=…"<span class="d">,</span>
+<span class="d">  "expires_at": </span>"2026-10-26T20:04:27Z"
+<span class="d">}</span>
+<span class="p">$</span> lsof -nP -iTCP:4399
+cmux  TCP *:4399 (LISTEN)
+cmux  TCP 100.101.102.103:4399-&gt;100.88.12.34:49315 (ESTABLISHED)</pre>
+      </div>
+
+      <div class="status" aria-label="Build status">
+        <span><b>Last checked</b> 26 Oct 2026</span>
+        <span class="pill">Installed Mac app paired with the iPhone app over Tailscale</span>
+        <span class="pill">No outbound connections from the Mac in a 90-second launch sample</span>
+        <span class="pill">Notarized Mac build installs in /Applications</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap">
+    <section aria-labelledby="why">
+      <div class="prose">
+        <h2 id="why">Why this exists</h2>
+        <p>The official cmux connects the iPhone app to the Mac through a cmux account and Iroh relays run by the cmux service. That is convenient, but it puts a third-party service between your phone and a terminal on your own infrastructure.</p>
+        <p>cmux local keeps the connection between your devices. The Mac listens on one TCP port that only Tailscale addresses can reach, and the iPhone proves itself with a key the Mac issued to it. Everything that would talk to cmux.com is switched off at build time.</p>
+      </div>
+    </section>
+
+    <section id="different" aria-labelledby="different-h">
+      <h2 id="different-h">What's different from cmux</h2>
+      <div class="compare">
+        <div class="keeps">
+          <h3>Kept</h3>
+          <ul>
+            <li>The full cmux terminal, built on Ghostty</li>
+            <li>Workspaces, splits, the sidebar and agent integrations</li>
+            <li>The embedded browser and Markdown viewer</li>
+            <li>iPhone remote view and control of your Mac's terminals</li>
+            <li>The automation socket and <code>cmux</code> CLI</li>
+          </ul>
+        </div>
+        <div class="drops">
+          <h3>Removed or switched off</h3>
+          <ul>
+            <li>cmux account sign-in <small>Stack Auth, on both apps</small></li>
+            <li>Iroh relays and control servers</li>
+            <li>cmux Cloud machines and the VPN tunnel extension</li>
+            <li>Device discovery, presence and push notifications</li>
+            <li>Auto-update <small>Sparkle never starts</small></li>
+            <li>Analytics, crash reports and remote feature flags <small>PostHog, Sentry</small></li>
+            <li>Billing and the feedback uploader</li>
+          </ul>
+        </div>
+      </div>
+      <p class="note">On the Mac these are cmux's own administrator policies, which a local-only build forces on. They show as locked in Settings. On the iPhone the account is replaced by a fixed on-device identity, and every cloud address points at a closed port on the phone itself.</p>
+    </section>
+
+    <section id="how" aria-labelledby="how-h">
+      <h2 id="how-h">How it works</h2>
+      <div class="diagram">
+        <svg viewBox="0 0 720 200" role="img" aria-labelledby="dg-title">
+          <title id="dg-title">The iPhone connects to the Mac's TCP port 4399 across the Tailscale network; the cmux cloud is not involved.</title>
+          <rect x="20" y="40" width="210" height="110" rx="10" fill="var(--bg)" stroke="var(--line)"/>
+          <text x="40" y="72" font-size="15" font-weight="600" fill="var(--fg)">Mac</text>
+          <text x="40" y="96" font-size="12" fill="var(--muted)">cmux local</text>
+          <text x="40" y="118" font-size="12" fill="var(--muted)">listens on TCP 4399</text>
+          <text x="40" y="138" font-size="12" fill="var(--muted)">Tailscale peers only</text>
+
+          <rect x="490" y="40" width="210" height="110" rx="10" fill="var(--bg)" stroke="var(--line)"/>
+          <text x="510" y="72" font-size="15" font-weight="600" fill="var(--fg)">iPhone</text>
+          <text x="510" y="96" font-size="12" fill="var(--muted)">cmux local app</text>
+          <text x="510" y="118" font-size="12" fill="var(--muted)">device key in Keychain</text>
+          <text x="510" y="138" font-size="12" fill="var(--muted)">sent with every request</text>
+
+          <line x1="230" y1="95" x2="490" y2="95" stroke="var(--tailnet)" stroke-width="2.5"/>
+          <polygon points="490,95 480,90 480,100" fill="var(--tailnet)"/>
+          <polygon points="230,95 240,90 240,100" fill="var(--tailnet)"/>
+          <text x="360" y="84" font-size="12" text-anchor="middle" fill="var(--tailnet)">Tailscale (WireGuard)</text>
+          <text x="360" y="114" font-size="11" text-anchor="middle" fill="var(--muted)">100.64.0.0/10 · fd7a:115c:a1e0::/48</text>
+
+          <rect x="290" y="150" width="140" height="36" rx="18" fill="var(--surface)" stroke="var(--off)" stroke-dasharray="4 4"/>
+          <text x="360" y="173" font-size="12" text-anchor="middle" fill="var(--off)">cmux cloud: unused</text>
+        </svg>
+      </div>
+      <ol class="flow">
+        <li><div><b>The Mac shows a one-time code.</b> It is a QR code with the Mac's Tailscale addresses, the port and a secret. It works once, expires after five minutes, and burns after five wrong guesses.</div></li>
+        <li><div><b>The iPhone redeems it.</b> The phone connects to the Mac's Tailscale address and trades the code for its own random device key, which it stores in the Keychain for that exact address and port.</div></li>
+        <li><div><b>Every request carries the key.</b> The Mac keeps only a SHA-256 hash of each phone's key in a file only your user can read, and refuses requests without a valid key. Revoking a phone takes effect on its next request.</div></li>
+      </ol>
+      <p class="note">Traffic between the devices is end-to-end encrypted WireGuard. When Tailscale can't connect the devices directly, it routes them through its relay servers. Those servers see only encrypted packets. To avoid them, allow direct connections on your router or run your own relay.</p>
+    </section>
+
+    <section id="setup" aria-labelledby="setup-h">
+      <div class="prose">
+        <h2 id="setup-h">Setup</h2>
+        <p>You build and sign both apps yourself. Plan for about an hour the first time, and at least 30 GB of free disk space: a full cmux build leaves large temporary folders behind.</p>
+      </div>
+      <ol class="steps">
+        <li><div>
+          <h3>Install the tools</h3>
+          <ul>
+            <li>Xcode 27.1 or later, opened once to finish its setup, plus the Metal toolchain</li>
+            <li>zig 0.16.0, Go and Rust</li>
+            <li>Tailscale on the Mac and the iPhone, signed in to the same tailnet</li>
+            <li>An Apple Developer account with a <b>Developer ID Application</b> certificate (Mac) and a <b>development profile</b> that lists your iPhone</li>
+            <li>An App Store Connect API key, so the Mac build can create its own Developer ID provisioning profile</li>
+          </ul>
+          <div class="code"><button class="copy" type="button">Copy</button><pre>xcodebuild -downloadComponent MetalToolchain
+brew install go rust
+<span class="c"># zig 0.16.0 from https://ziglang.org/download/ (Homebrew may ship another version)</span></pre></div>
+        </div></li>
+
+        <li><div>
+          <h3>Get the source</h3>
+          <div class="code"><button class="copy" type="button">Copy</button><pre>git clone https://github.com/devicemanager/cmux.git
+cd cmux
+git checkout feat/tailscale-tcp-listener
+git submodule update --init --recursive</pre></div>
+        </div></li>
+
+        <li><div>
+          <h3>Write your local settings</h3>
+          <p>Your team ID, bundle IDs, signing identity and server details live in <code>.env-local</code>, which git ignores. The template explains every setting.</p>
+          <div class="code"><button class="copy" type="button">Copy</button><pre>cp .env-local.template .env-local
+open -e .env-local</pre></div>
+          <p>To notarize the Mac app, store notarytool credentials once and put the profile name in <code>CMUX_LOCAL_NOTARY_PROFILE</code>:</p>
+          <div class="code"><button class="copy" type="button">Copy</button><pre>xcrun notarytool store-credentials my-notary-profile \
+  --apple-id you@example.com --team-id TEAMID --password app-specific-password</pre></div>
+        </div></li>
+
+        <li><div>
+          <h3>Build the Mac app</h3>
+          <p>This builds a Release copy and registers your Mac bundle ID with Apple if needed. It creates a Developer ID provisioning profile, signs and notarizes the app, then installs <b>cmux local</b> in /Applications. It installs under your own bundle ID and never replaces the official cmux.</p>
+          <p class="note">Without the profile the app can't keep secrets in its own Keychain group, and macOS refuses to launch a Developer ID app that claims one. Run <code>scripts/build-local-only-mac.sh --skip-build</code> to re-sign the last build without compiling again.</p>
+          <div class="code"><button class="copy" type="button">Copy</button><pre>scripts/build-local-only-mac.sh</pre></div>
+          <p>Open cmux local, then turn on iOS pairing in <b>Settings › Mobile</b>. The pairing listener uses TCP port 4399.</p>
+        </div></li>
+
+        <li><div>
+          <h3>Build the iPhone app</h3>
+          <p>Over the air: set <code>CMUX_LOCAL_IOS_OTA_DIR</code> to a folder your HTTPS web server publishes and <code>CMUX_LOCAL_IOS_OTA_URL</code> to its public address. Then open <code>&lt;url&gt;/install.html</code> on the iPhone in Safari.</p>
+          <div class="code"><button class="copy" type="button">Copy</button><pre>ios/scripts/build-local-only.sh</pre></div>
+          <p>By cable instead: connect and unlock the iPhone, then pass its identifier.</p>
+          <div class="code"><button class="copy" type="button">Copy</button><pre>xcrun devicectl list devices
+ios/scripts/build-local-only.sh --device-id &lt;identifier&gt;</pre></div>
+          <p class="note">The iPhone must have Developer Mode on (Settings › Privacy &amp; Security) and be listed in the signing profile.</p>
+        </div></li>
+
+        <li><div>
+          <h3>Pair</h3>
+          <ul>
+            <li>On the Mac: open <b>Pair your iPhone</b> and click <b>Show Pairing Code</b>.</li>
+            <li>On the iPhone: open cmux local, go to <b>Add Computer</b> and scan the code within five minutes.</li>
+          </ul>
+        </div></li>
+
+        <li><div>
+          <h3>Check what leaves your Mac</h3>
+          <p>With the phone connected, the only sockets should be the listener and your phone's Tailscale address:</p>
+          <div class="code"><button class="copy" type="button">Copy</button><pre>lsof -nP -a -p "$(pgrep -f 'cmux local.app/Contents/MacOS' | head -1)" -i</pre></div>
+          <p>On the iPhone, turn on <b>Settings › Privacy &amp; Security › App Privacy Report</b>. After a day of use it lists every domain and address cmux local contacted. It should show only your Mac. For proof over longer periods, run a per-app firewall such as LuLu or Little Snitch on the Mac.</p>
+        </div></li>
+      </ol>
+    </section>
+
+    <section id="settings" aria-labelledby="settings-h">
+      <h2 id="settings-h">Settings in .env-local</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Setting</th><th>Used for</th></tr></thead>
+          <tbody>
+            <tr><td><code>CMUX_LOCAL_TEAM_ID</code></td><td>Your 10-character Apple Developer team ID.</td></tr>
+            <tr><td><code>CMUX_LOCAL_BUNDLE_PREFIX</code></td><td>A reverse-DNS prefix you own. Gives <code>&lt;prefix&gt;.cmux</code> for the iPhone and <code>&lt;prefix&gt;.cmux.mac</code> for the Mac.</td></tr>
+            <tr><td><code>CMUX_LOCAL_IOS_BUNDLE_ID</code><br><code>CMUX_LOCAL_MAC_BUNDLE_ID</code></td><td>Optional overrides for the derived bundle IDs. Official cmux IDs are refused.</td></tr>
+            <tr><td><code>CMUX_LOCAL_MAC_APP_NAME</code></td><td>The Mac app's name. Default <code>cmux local</code>.</td></tr>
+            <tr><td><code>CMUX_LOCAL_MAC_SIGNING_IDENTITY</code></td><td>Your Developer ID Application identity. Empty picks the first one for your team.</td></tr>
+            <tr><td><code>CMUX_LOCAL_NOTARY_PROFILE</code></td><td>notarytool keychain profile. Empty skips notarization.</td></tr>
+            <tr><td><code>CMUX_LOCAL_ASC_KEY_ID</code><br><code>CMUX_LOCAL_ASC_ISSUER_ID</code><br><code>CMUX_LOCAL_ASC_KEY_PATH</code></td><td>App Store Connect API key for the Mac app's Developer ID profile.</td></tr>
+            <tr><td><code>CMUX_LOCAL_MAC_INSTALL_DIR</code></td><td>Install folder for the Mac app. Default <code>/Applications</code>.</td></tr>
+            <tr><td><code>CMUX_ZIG</code></td><td>Path to zig 0.16.0, for the Ghostty command-line helper.</td></tr>
+            <tr><td><code>CMUX_LOCAL_IOS_PROFILE</code></td><td>Development profile UUID for the iPhone app. Empty picks a matching one.</td></tr>
+            <tr><td><code>CMUX_LOCAL_IOS_OTA_DIR</code><br><code>CMUX_LOCAL_IOS_OTA_URL</code></td><td>Folder and HTTPS address for over-the-air installs.</td></tr>
+            <tr><td><code>CMUX_IPHONE_DEVICE_ID</code></td><td>iPhone identifier for cable installs.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section aria-labelledby="phones-h">
+      <div class="prose">
+        <h2 id="phones-h">Managing paired iPhones</h2>
+        <p>Run these in a terminal inside cmux local. Each pairing creates one entry, so pairing again after reinstalling the app leaves the old entry behind.</p>
+      </div>
+      <div class="code"><button class="copy" type="button">Copy</button><pre>cmux rpc mobile.local_devices.list
+cmux rpc mobile.local_devices.revoke '{"id":"&lt;device id&gt;"}'</pre></div>
+    </section>
+
+    <section id="trouble" aria-labelledby="trouble-h">
+      <h2 id="trouble-h">Troubleshooting</h2>
+      <div>
+        <details>
+          <summary>The iPhone says the Mac runs an incompatible version of cmux</summary>
+          <div><p>The phone has an older build that only accepts official Mac releases. Install the current iPhone build; local-only builds accept any cmux build on your Mac.</p></div>
+        </details>
+        <details>
+          <summary>The pairing code is rejected</summary>
+          <div><p>Each code works once and expires after five minutes. Click <b>New Code</b> on the Mac and scan again.</p></div>
+        </details>
+        <details>
+          <summary>The iPhone can't reach the Mac</summary>
+          <div>
+            <p>Check that Tailscale is connected on both devices and that the Mac is listening:</p>
+            <div class="code"><button class="copy" type="button">Copy</button><pre>tailscale status
+lsof -nP -iTCP:4399 -sTCP:LISTEN</pre></div>
+            <p>If nothing listens, turn on iOS pairing in Settings › Mobile.</p>
+          </div>
+        </details>
+        <details>
+          <summary>"Provisioning profile is Xcode managed, but signing settings require a manually managed profile"</summary>
+          <div><p>The iPhone script avoids this by building unsigned and signing with <code>codesign</code>. If you see it, you are building through Xcode directly; use <code>ios/scripts/build-local-only.sh</code>.</p></div>
+        </details>
+        <details>
+          <summary>The Mac app won't open ("Launch failed", error 163)</summary>
+          <div><p>The app claims an entitlement its provisioning profile doesn't grant. Set the App Store Connect key in <code>.env-local</code> and run <code>scripts/build-local-only-mac.sh --skip-build</code>.</p></div>
+        </details>
+        <details>
+          <summary>The build stops with "No space left on device"</summary>
+          <div><p>Delete old build folders in <code>~/Library/Developer/Xcode/DerivedData</code> and the <code>.build</code> folders under <code>Packages/</code>, then rerun. Free space can take a while to show up when Time Machine keeps local snapshots.</p></div>
+        </details>
+        <details>
+          <summary>The phone doesn't use my Pi-hole or other DNS server</summary>
+          <div><p>With Tailscale on, the phone sends DNS to Tailscale. Make the DNS server reachable from the tailnet and set it under DNS in the Tailscale admin console. cmux local itself makes no DNS lookups: it connects to your Mac by numeric address.</p></div>
+        </details>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap">
+    <nav aria-label="Links">
+      <a href="https://github.com/devicemanager/cmux/tree/feat/tailscale-tcp-listener">Fork on GitHub</a>
+      <a href="https://github.com/manaflow-ai/cmux">Upstream cmux</a>
+      <a href="https://tailscale.com/kb">Tailscale docs</a>
+    </nav>
+    <p>Based on cmux by Manaflow, Inc., licensed GPL-3.0-or-later. This private build isn't affiliated with or supported by Manaflow.</p>
+  </div>
+</footer>
+
+<script>
+document.querySelectorAll(".copy").forEach(function (button) {
+  button.addEventListener("click", function () {
+    var pre = button.parentElement.querySelector("pre");
+    var text = pre.innerText.trim();
+    function done(label) {
+      button.textContent = label;
+      setTimeout(function () { button.textContent = "Copy"; }, 1500);
+    }
+    function selectFallback() {
+      var range = document.createRange();
+      range.selectNodeContents(pre);
+      var sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
+      done("Selected");
+    }
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () { done("Copied"); }, selectFallback);
+    } else {
+      selectFallback();
+    }
+  });
+});
+</script>
+</body>
+</html>
