@@ -31,4 +31,24 @@ import Testing
             try await LocalOnlyAuthClient().signInWithCredential(email: "a@b.c", password: "x")
         }
     }
+
+    @Test(.timeLimit(.minutes(1)))
+    func signOutKeepsTheLocalIdentity() async {
+        let store = FakeKeyValueStore()
+        let coordinator = AuthCoordinator(
+            client: LocalOnlyAuthClient(),
+            sessionCache: CMUXAuthSessionCache(keyValueStore: store, key: "has_tokens"),
+            userCache: CMUXAuthIdentityStore(keyValueStore: store, key: "cached_user"),
+            teamSelection: CMUXAuthTeamSelectionStore(keyValueStore: store, key: "selected_team"),
+            anchor: FakeAnchor(),
+            config: .test,
+            launch: .plain()
+        )
+        coordinator.start()
+        await coordinator.awaitBootstrapped()
+        await coordinator.signOut()
+
+        #expect(coordinator.isAuthenticated)
+        #expect(coordinator.isLocalOnlySession)
+    }
 }

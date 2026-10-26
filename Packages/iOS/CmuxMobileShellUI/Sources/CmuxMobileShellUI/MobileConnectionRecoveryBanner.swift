@@ -1,3 +1,4 @@
+import CMUXMobileCore
 import CmuxMobileShell
 import CmuxMobileSupport
 import SwiftUI
@@ -16,19 +17,30 @@ struct MobileConnectionRecoveryBanner: View {
     /// the Mac.
     var signOut: (() -> Void)?
     var rendersInline = false
+    /// A local-only build has no account to switch: a rejection means the Mac
+    /// does not hold this iPhone's device key, and pairing again is the fix.
+    private let isLocalOnly = CmxLocalOnlyMode.isEnabled()
 
     var body: some View {
         Group {
             if connectionRequiresReauth {
-                authBanner(
-                    text: connectionError ?? L10n.string(
-                        "mobile.recovery.accountMismatch",
-                        defaultValue: "This computer is signed in to a different cmux account. Sign out and sign back in with that account."
-                    )
-                )
+                authBanner(text: bannerText)
             }
         }
         .animation(.default, value: connectionRequiresReauth)
+    }
+
+    private var bannerText: String {
+        if isLocalOnly {
+            return L10n.string(
+                "mobile.recovery.localPairingRejected",
+                defaultValue: "This computer doesn't recognize this iPhone. On the computer, open Pair your iPhone and show a pairing code, then scan it under Add Computer."
+            )
+        }
+        return connectionError ?? L10n.string(
+            "mobile.recovery.accountMismatch",
+            defaultValue: "This computer is signed in to a different cmux account. Sign out and sign back in with that account."
+        )
     }
 
     /// An authorization failure (wrong account / unverifiable token). Retrying
@@ -47,7 +59,7 @@ struct MobileConnectionRecoveryBanner: View {
                         .foregroundStyle(.primary)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                if let signOut {
+                if let signOut, !isLocalOnly {
                     Button {
                         signOut()
                     } label: {
@@ -71,7 +83,7 @@ struct MobileConnectionRecoveryBanner: View {
                         .multilineTextAlignment(.leading)
                         .fixedSize(horizontal: false, vertical: true)
                 }
-                if let signOut {
+                if let signOut, !isLocalOnly {
                     Button {
                         signOut()
                     } label: {

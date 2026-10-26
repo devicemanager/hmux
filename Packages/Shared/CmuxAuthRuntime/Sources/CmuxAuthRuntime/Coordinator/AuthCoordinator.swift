@@ -541,10 +541,17 @@ public final class AuthCoordinator {
     ///   (hook + revocation) may run before it is cancelled so a hanging call
     ///   can't hold `signOut()` open. Sleeps on the injected clock so tests
     ///   drive the deadline with virtual time. Defaults to 5 seconds.
+    /// Whether this coordinator runs the fixed on-device identity of a
+    /// local-only build, which has no account to leave.
+    public var isLocalOnlySession: Bool { client is LocalOnlyAuthClient }
+
     public func signOut(
         onSignedOut: @escaping @Sendable (_ accessToken: String?, _ refreshToken: String?) async -> Void = { _, _ in },
         teardownTimeout: Duration = .seconds(5)
     ) async {
+        // Signing out of the local-only identity would leave only a sign-in
+        // screen whose every option is unsupported.
+        guard !isLocalOnlySession else { return }
         isCapturingSignOutCredentials = true
         defer { finishSignOutCredentialCapture() }
         // Cancel in-flight sign-in exchanges FIRST: the SDK's token-write

@@ -91,7 +91,10 @@ struct MobileSettingsView: View {
         #endif
         return NavigationStack {
             Form {
-                MobileSettingsAccountSection(signOut: signOut)
+                // A local-only build has no account to show or sign out of.
+                if !CmxLocalOnlyMode.isEnabled() {
+                    MobileSettingsAccountSection(signOut: signOut)
+                }
 
                 // Plan and App Store subscription, for a signed-in account.
                 // Renders nothing when the host injected no billing model.

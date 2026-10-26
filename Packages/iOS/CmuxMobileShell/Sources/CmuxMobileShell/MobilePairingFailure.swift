@@ -302,6 +302,12 @@ extension MobilePairingFailureCategory {
                 return String(format: format, expected, actual)
             }
             return String(format: format, expected)
+        case .authFailed where CmxLocalOnlyMode.isEnabled():
+            // A local-only Mac rejects only an unknown device key.
+            return L10n.string(
+                "mobile.pairing.localDeviceKeyRejected",
+                defaultValue: "This Mac doesn't recognize this iPhone. On the Mac, open Pair your iPhone and show a pairing code, then scan it under Add Computer."
+            )
         case .authFailed:
             return L10n.string(
                 "mobile.pairing.authorizationFailed",
@@ -478,6 +484,8 @@ extension MobilePairingFailureCategory {
                 "mobile.pairing.guidance.localNetwork",
                 defaultValue: "Settings > cmux > Local Network, then try again."
             )
+        case .authFailed where CmxLocalOnlyMode.isEnabled():
+            return nil
         case .accountMismatch, .emailMismatch, .authFailed:
             return L10n.string(
                 "mobile.pairing.guidance.sameAccount",

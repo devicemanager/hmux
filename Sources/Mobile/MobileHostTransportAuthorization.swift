@@ -166,9 +166,11 @@ final class MobileHostConnectionRegistry: @unchecked Sendable {
         return values
     }
 
+    /// Removes the Tailscale TCP route's connections: account-bearer and
+    /// locally paired phones alike, so turning iOS pairing off ends both.
     func removeStackBearerConnections() -> [MobileHostConnection] {
         removeConnections { authorization in
-            authorization == .stackBearer
+            authorization == .stackBearer || authorization == .localDevice
         }
     }
 

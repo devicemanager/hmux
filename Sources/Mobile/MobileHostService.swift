@@ -833,7 +833,7 @@ final class MobileHostService {
         guard (1...65535).contains(port) else { return .invalid }
         defaults.set(port, forKey: Self.portDefaultsKey)
         NotificationCenter.default.post(name: .mobileHostStatusDidChange, object: nil)
-        if pairingRuntime.isNetworkingAllowed, tailscaleIsRunning, tailscalePort == port {
+        if allowsTailscaleListener, tailscaleIsRunning, tailscalePort == port {
             return .applied(port)
         }
         return .savedForLater
@@ -933,7 +933,7 @@ final class MobileHostService {
         let runtime = pairingRuntime
         if !runtime.isNetworkingAllowed { runtime.prepareForStop() }
         await runtime.applyManagedNetworkingPolicy()
-        if runtime.isNetworkingAllowed, Self.isListeningEnabled(defaults: defaults) {
+        if allowsTailscaleListener, Self.isListeningEnabled(defaults: defaults) {
             // A Tailscale bind failure is independent of Iroh readiness. An
             // explicit pairing refresh is the user's retry action, so retry
             // the TCP listener even when the Iroh endpoint is already settled.
@@ -981,13 +981,21 @@ final class MobileHostService {
         )
     }
 
+    /// Whether managed policy permits the Tailscale TCP listener. It follows
+    /// `DisableRemoteControl`, not `DisableIrohNetworking`: the listener is
+    /// not Iroh traffic, and a local-only build forbids Iroh while pairing
+    /// iPhones over exactly this route.
+    private var allowsTailscaleListener: Bool {
+        !ManagedDevicePolicy(defaults: defaults).isEnforced(.disableRemoteControl)
+    }
+
     /// The runtime alone reconciles pairing policy. Ordinary settings writes
     /// leave its endpoint and established sessions running.
     func syncToSettings() {
         let runtime = pairingRuntime
         if !runtime.isNetworkingAllowed { runtime.prepareForStop() }
         Task { @MainActor in await runtime.applyManagedNetworkingPolicy() }
-        if runtime.isNetworkingAllowed {
+        if allowsTailscaleListener {
             if Self.isListeningEnabled(defaults: defaults) {
                 startTailscaleListenerIfNeeded()
                 startNetworkPathMonitorIfNeeded()
