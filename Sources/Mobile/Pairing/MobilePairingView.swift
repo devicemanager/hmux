@@ -42,8 +42,11 @@ struct MobilePairingView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 18) {
                 header
-                content
-                Divider()
+                // A local-only build has no account pairing at all.
+                if !CmuxLocalOnlyBuild.isEnabled {
+                    content
+                    Divider()
+                }
                 MobileLocalPairingSection()
             }
             .padding(24)

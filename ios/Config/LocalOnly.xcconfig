@@ -6,9 +6,8 @@
 
 #include "Release.xcconfig"
 
-// Identity: the owner's App ID and team, never a cmux bundle.
-CMUX_LOCAL_ONLY_BUNDLE_IDENTIFIER = com.example.cmux
-CMUX_LOCAL_ONLY_TEAM = ABCDE12345
+// Identity: the owner's App ID and team, never a cmux bundle. Both come
+// from .env-local through the generated LocalOnly.signing.xcconfig below.
 CMUX_APP_BUNDLE_IDENTIFIER = $(CMUX_LOCAL_ONLY_BUNDLE_IDENTIFIER)
 PRODUCT_BUNDLE_IDENTIFIER = $(CMUX_APP_BUNDLE_IDENTIFIER)
 CMUX_HOST_BUNDLE_IDENTIFIER = $(CMUX_APP_BUNDLE_IDENTIFIER)

@@ -243,4 +243,21 @@ struct ManagedDevicePolicyTests {
         appDefaults.set("off", forKey: Self.forcedMirrorPrefix + key)
         #expect(policy.forcedValueSource(forUserDefaultsKey: key) == .appDomain)
     }
+
+    @Test func localOnlyBuildEnforcesCloudPoliciesButKeepsIncomingAccess() throws {
+        let (defaults, cleanup) = try makeSuite("localOnly")
+        defer { cleanup() }
+        let policy = ManagedDevicePolicy(
+            defaults: defaults,
+            releaseDomainDefaults: nil,
+            forcedObject: Self.probe,
+            buildEnforcedKeys: ManagedDevicePolicy.defaultBuildEnforcedKeys(isLocalOnlyBuild: true)
+        )
+        for key in ManagedDevicePolicy.localOnlyEnforcedKeys {
+            #expect(policy.isEnforced(key))
+        }
+        #expect(!policy.isEnforced(.disableRemoteControl))
+        #expect(!policy.isIncomingDeviceAccessDisabled)
+        #expect(ManagedDevicePolicy.defaultBuildEnforcedKeys(isLocalOnlyBuild: false).isEmpty)
+    }
 }

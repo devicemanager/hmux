@@ -446,8 +446,12 @@ final class CmuxFeatureFlags {
     /// swaps the surface under a test that deliberately selected the other one.
     private let pinsFlagsToLocalValues: Bool
 
+    /// A forced `DisableTelemetry` (an MDM profile, or a local-only build)
+    /// also pins flags: the remote fetch to cmux.com runs even without an
+    /// install id, and that policy promises no fetch at all.
     nonisolated static var pinsFlagsToLocalValuesForCurrentLaunch: Bool {
         ProcessInfo.processInfo.environment["CMUX_UI_TEST_MODE"] == "1"
+            || ManagedDevicePolicy().isEnforced(.disableTelemetry)
     }
     private var resolutionsByKey: [String: CmuxFeatureFlagResolution] = [:]
 

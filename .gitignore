@@ -11,6 +11,7 @@ xcuserdata/
 
 # Local env
 .env
+.env-local
 .envrc
 !web/.envrc
 ios/Config/AppStoreConnect.local.plist

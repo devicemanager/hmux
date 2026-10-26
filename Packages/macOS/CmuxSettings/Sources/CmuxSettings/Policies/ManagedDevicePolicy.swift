@@ -1,3 +1,4 @@
+import CmuxFoundation
 import Foundation
 
 /// Resolves MDM-managed ("forced") preference values for cmux's enterprise
@@ -45,6 +46,28 @@ public struct ManagedDevicePolicy: Sendable {
     nonisolated(unsafe) private let defaults: UserDefaults
     nonisolated(unsafe) private let releaseDomainDefaults: UserDefaults?
     private let forcedObject: ForcedObjectProbe
+    private let buildEnforcedKeys: Set<String>
+
+    /// Policies a local-only build (``CmuxLocalOnlyBuild``) enforces as if an
+    /// administrator had forced them: everything that reaches cmux's cloud.
+    /// Incoming device access stays allowed, because iPhones pair with a
+    /// local-only Mac over the Tailscale TCP route.
+    public static let localOnlyEnforcedKeys: Set<ManagedDevicePolicyKey> = [
+        .disableCloud,
+        .disableIrohNetworking,
+        .disableDeviceDiscovery,
+        .disableTelemetry,
+        .disableAutoUpdate,
+        .disableAICredentialUpload,
+    ]
+
+    /// The keys the running build enforces on its own: the local-only set in
+    /// a local-only build, otherwise none.
+    public static func defaultBuildEnforcedKeys(
+        isLocalOnlyBuild: Bool = CmuxLocalOnlyBuild.isEnabled
+    ) -> Set<String> {
+        isLocalOnlyBuild ? Set(localOnlyEnforcedKeys.map(\.rawValue)) : []
+    }
 
     /// Creates a resolver.
     ///
@@ -58,16 +81,20 @@ public struct ManagedDevicePolicy: Sendable {
     ///     the fallback.
     ///   - forcedObject: Probe answering whether a profile forces a key in a
     ///     given domain. Tests inject a deterministic probe.
+    ///   - buildEnforcedKeys: Keys the build itself forces to `true`, ahead
+    ///     of any profile. Defaults to ``defaultBuildEnforcedKeys(isLocalOnlyBuild:)``.
     public init(
         defaults: UserDefaults = .standard,
         releaseDomainDefaults: UserDefaults? = ManagedDevicePolicy.defaultReleaseDomainDefaults(),
         forcedObject: @escaping ForcedObjectProbe = { defaults, key in
             defaults.objectIsForced(forKey: key) ? defaults.object(forKey: key) : nil
-        }
+        },
+        buildEnforcedKeys: Set<String> = ManagedDevicePolicy.defaultBuildEnforcedKeys()
     ) {
         self.defaults = defaults
         self.releaseDomainDefaults = releaseDomainDefaults
         self.forcedObject = forcedObject
+        self.buildEnforcedKeys = buildEnforcedKeys
     }
 
     /// The release-domain fallback suite for the running process, or `nil`
@@ -132,6 +159,9 @@ public struct ManagedDevicePolicy: Sendable {
     public func forcedValue(
         forUserDefaultsKey userDefaultsKey: String
     ) -> (object: Any, source: ManagedDevicePolicyValueSource)? {
+        if buildEnforcedKeys.contains(userDefaultsKey) {
+            return (true, .appDomain)
+        }
         if let value = forcedObject(defaults, userDefaultsKey) {
             return (value, .appDomain)
         }

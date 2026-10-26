@@ -1,4 +1,5 @@
 import CmuxCloud
+import CmuxFoundation
 import CmuxProductAnalytics
 import AppKit
 import CMUXAuthCore
@@ -168,11 +169,14 @@ final class HostAccountFlow: AccountFlow, AccountSignInFlow {
     }
 
     func startSignIn() {
+        // A local-only build has no cmux account; never open cmux.com.
+        guard !CmuxLocalOnlyBuild.isEnabled else { return }
         noteSignInStarted()
         browserSignIn.beginSignIn()
     }
 
     func startSignInForPane() -> URL? {
+        guard !CmuxLocalOnlyBuild.isEnabled else { return nil }
         noteSignInStarted()
         browserSignIn.beginSignIn()
         return browserSignIn.activeAttemptSignInURL
@@ -185,6 +189,7 @@ final class HostAccountFlow: AccountFlow, AccountSignInFlow {
     /// Runs the same hosted Stack sign-in used by every UI entrypoint, while
     /// allowing socket callers to await a bounded result.
     func signIn(timeout: TimeInterval) async -> Bool {
+        guard !CmuxLocalOnlyBuild.isEnabled else { return false }
         noteSignInStarted()
         return await browserSignIn.signIn(timeout: timeout)
     }

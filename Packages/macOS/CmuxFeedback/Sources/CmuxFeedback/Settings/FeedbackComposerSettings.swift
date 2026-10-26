@@ -1,3 +1,4 @@
+internal import CmuxFoundation
 public import Foundation
 
 /// Configuration value for the feedback composer: the persisted-email defaults
@@ -50,6 +51,9 @@ public struct FeedbackComposerSettings: Sendable, Equatable {
     public func endpointURL(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> URL? {
+        // A local-only build sends nothing to cmux.com; submission fails as
+        // an invalid endpoint instead.
+        guard !CmuxLocalOnlyBuild.isEnabled else { return nil }
         if let override = environment[endpointEnvironmentKey]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !override.isEmpty {
             return URL(string: override)

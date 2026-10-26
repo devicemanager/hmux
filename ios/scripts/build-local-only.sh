@@ -20,20 +20,25 @@
 # --ota-dir/--ota-url publish an over-the-air install instead of a cable
 # install: the signed .ipa, an itms-services manifest and an install page are
 # written to <dir>, which a web server must serve at <https-url> (iOS requires
-# HTTPS). Open <https-url>/install.html on the iPhone to install. The server
-# location stays out of this repo on purpose; set CMUX_LOCAL_ONLY_OTA_DIR and
-# CMUX_LOCAL_ONLY_OTA_URL to avoid repeating the options.
+# HTTPS). Open <https-url>/install.html on the iPhone to install.
+#
+# Team, bundle ID, profile, OTA folder and URL come from .env-local in the
+# repository root (see .env-local.template), so none of them live in the
+# repo. The options above override the file for one run.
 set -euo pipefail
 
 IOS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 REPO_DIR="$(cd "$IOS_DIR/.." && pwd)"
-TEAM_ID="${CMUX_LOCAL_ONLY_TEAM:-ABCDE12345}"
-BUNDLE_ID="${CMUX_LOCAL_ONLY_BUNDLE_ID:-com.example.cmux}"
-PROFILE_UUID="${CMUX_LOCAL_ONLY_PROFILE:-}"
+# shellcheck source=../../scripts/lib/local-only-env.sh
+source "$REPO_DIR/scripts/lib/local-only-env.sh"
+cmux_local_only_load_env "$REPO_DIR"
+TEAM_ID="$CMUX_LOCAL_TEAM_ID"
+BUNDLE_ID="$CMUX_LOCAL_IOS_BUNDLE_ID"
+PROFILE_UUID="${CMUX_LOCAL_IOS_PROFILE:-}"
 DEVICE_ID="${CMUX_IPHONE_DEVICE_ID:-}"
 INSTALL=1
-OTA_DIR="${CMUX_LOCAL_ONLY_OTA_DIR:-}"
-OTA_URL="${CMUX_LOCAL_ONLY_OTA_URL:-}"
+OTA_DIR="${CMUX_LOCAL_IOS_OTA_DIR:-}"
+OTA_URL="${CMUX_LOCAL_IOS_OTA_URL:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
