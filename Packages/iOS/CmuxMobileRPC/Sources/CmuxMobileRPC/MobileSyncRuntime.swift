@@ -94,6 +94,12 @@ public protocol MobileSyncRuntime: Sendable {
     /// throwing if cancelled first. Same clock contract as
     /// ``sleepUntilReconnectAttemptDeadline(nanoseconds:)``.
     func sleepUntilMacDialDeadline(nanoseconds: UInt64) async throws
+
+    /// Device keys Macs issued to this phone through `CmxLocalPairing`, by
+    /// exact numeric Tailscale endpoint. When it holds a key for a route, the
+    /// client authorizes requests there with it instead of a Stack bearer.
+    /// Nil (the default) keeps account authorization.
+    var localDeviceKeys: (any CmxLocalDeviceKeyStoring)? { get }
 }
 
 public extension MobileSyncRuntime {
@@ -105,6 +111,7 @@ public extension MobileSyncRuntime {
     var simulatorStreamLaneProvider: MobileSimulatorStreamLaneProvider? { nil }
     var tunnelConnectProvider: MobileTunnelConnectProvider? { nil }
     var tunnelListeningPortsProvider: MobileTunnelListeningPortsProvider? { nil }
+    var localDeviceKeys: (any CmxLocalDeviceKeyStoring)? { nil }
 
     /// Returns a cached Stack access token for best-effort status probes.
     var stackAccessTokenForStatusProvider: @Sendable () async -> String? {

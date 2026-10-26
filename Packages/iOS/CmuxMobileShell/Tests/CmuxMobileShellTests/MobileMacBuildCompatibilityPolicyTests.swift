@@ -478,4 +478,18 @@ import Testing
         #expect(isolated.devices[0].instances.map(\.tag) == ["tsmig"])
         #expect(store.compatiblePresenceUpdate(.online(icap)) == nil)
     }
+
+    @Test func localOnlyBuildAcceptsAnyTaggedMacBuild() {
+        let policy = MobileMacBuildCompatibilityPolicy.current(buildScope: nil, isLocalOnly: true)
+        #expect(policy == .localOnly)
+        #expect(policy.allows(instanceTag: "tailnet", clientNamespace: "mac:com.cmuxterm.app.debug.tailnet"))
+        #expect(policy.allows(instanceTag: "default", clientNamespace: "mac:com.cmuxterm.app"))
+        #expect(policy.allowsAuthenticatedHost(
+            instanceTag: "tailnet",
+            clientNamespace: nil,
+            macAppVersion: "0.65.2",
+            usesLocallyAuthorizedTailscaleRoute: true
+        ))
+        #expect(!policy.allows(instanceTag: nil))
+    }
 }

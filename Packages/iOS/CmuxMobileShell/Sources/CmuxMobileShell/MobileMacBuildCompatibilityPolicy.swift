@@ -27,6 +27,11 @@ public enum MobileMacBuildCompatibilityPolicy: Equatable, Sendable {
     )
     /// A distributed iOS build may use Stable, Nightly, and RC Mac releases.
     case official
+    /// A local-only build (`CmxLocalOnlyMode`) may use any cmux build on the
+    /// owner's Macs. Each Mac authorizes the phone with the device key it
+    /// issued during local pairing, so the release-channel boundary that
+    /// separates account-bound builds does not apply.
+    case localOnly
 
     public static func development(
         expectedInstanceTag: String
@@ -47,8 +52,10 @@ public enum MobileMacBuildCompatibilityPolicy: Equatable, Sendable {
     ///   compatibility for distributed builds.
     public static func current(
         buildScope: MobileIOSBuildScope?,
-        additionalInstanceTags: MobileMacTagAllowlist = MobileMacTagAllowlist()
+        additionalInstanceTags: MobileMacTagAllowlist = MobileMacTagAllowlist(),
+        isLocalOnly: Bool = false
     ) -> MobileMacBuildCompatibilityPolicy {
+        if isLocalOnly { return .localOnly }
         #if DEBUG
         return .development(
             expectedInstanceTag: buildScope?.value ?? "dev",
@@ -116,6 +123,8 @@ public enum MobileMacBuildCompatibilityPolicy: Equatable, Sendable {
                 return false
             }
             return normalizedTag == "default" || normalizedTag == "nightly" || normalizedTag == "rc"
+        case .localOnly:
+            return true
         }
     }
 
@@ -191,7 +200,7 @@ public enum MobileMacBuildCompatibilityPolicy: Equatable, Sendable {
         ):
             return normalized(lhsTag) == normalized(rhsTag)
                 && lhsAllowlist === rhsAllowlist
-        case (.official, .official):
+        case (.official, .official), (.localOnly, .localOnly):
             return true
         default:
             return false

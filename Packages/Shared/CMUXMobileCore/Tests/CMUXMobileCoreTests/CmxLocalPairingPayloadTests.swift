@@ -51,4 +51,20 @@ import Testing
             try CmxLocalPairingPayload(url: url, now: now)
         }
     }
+
+    @Test func dropsHostsOutsideTheTailnet() throws {
+        let mixed = try #require(URL(string: "cmux-local://pair?v=1&host=192.168.1.20&host=100.64.0.1&host=example.com&port=4399&code=x&mac=m&exp=1900000000"))
+        #expect(try CmxLocalPairingPayload(url: mixed, now: now).hosts == ["100.64.0.1"])
+
+        let lanOnly = try #require(URL(string: "cmux-local://pair?v=1&host=192.168.1.20&port=4399&code=x&mac=m&exp=1900000000"))
+        #expect(throws: CmxLocalPairingPayloadError.missingField("host")) {
+            try CmxLocalPairingPayload(url: lanOnly, now: now)
+        }
+    }
+
+    @Test func deviceKeysAreAddressedOnlyByTailnetEndpoints() {
+        #expect(CmxLocalDeviceKeyStore.account(host: "100.64.0.1", port: 4399) == "100.64.0.1|4399")
+        #expect(CmxLocalDeviceKeyStore.account(host: "192.168.1.20", port: 4399) == nil)
+        #expect(CmxLocalDeviceKeyStore.account(host: "100.64.0.1", port: 0) == nil)
+    }
 }

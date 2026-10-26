@@ -1,0 +1,38 @@
+// LocalOnly.xcconfig
+// A private build of the iPhone app that talks only to the owner's Macs over
+// Tailscale, paired with `cmux-local://` codes. No cmux account, Iroh relays,
+// presence, push, billing or telemetry. Built by ios/scripts/build-local-only.sh,
+// which swaps this file in for Release.xcconfig on the app target.
+
+#include "Release.xcconfig"
+
+// Identity: the owner's App ID and team, never a cmux bundle.
+CMUX_LOCAL_ONLY_BUNDLE_IDENTIFIER = com.example.cmux
+CMUX_LOCAL_ONLY_TEAM = ABCDE12345
+CMUX_APP_BUNDLE_IDENTIFIER = $(CMUX_LOCAL_ONLY_BUNDLE_IDENTIFIER)
+PRODUCT_BUNDLE_IDENTIFIER = $(CMUX_APP_BUNDLE_IDENTIFIER)
+CMUX_HOST_BUNDLE_IDENTIFIER = $(CMUX_APP_BUNDLE_IDENTIFIER)
+DEVELOPMENT_TEAM = $(CMUX_LOCAL_ONLY_TEAM)
+PRODUCT_DISPLAY_NAME = cmux local
+
+// Read at runtime through CmxLocalOnlyMode.
+CMUX_LOCAL_ONLY = YES
+CMUX_LOCAL_PAIRING_URL_SCHEME = cmux-local
+
+// Only the bundle's own Keychain group: no Sign in with Apple, push, app
+// group or Network Extension.
+CMUX_APP_CODE_SIGN_ENTITLEMENTS = Config/cmux-local-only.entitlements
+CODE_SIGN_ENTITLEMENTS = $(CMUX_APP_CODE_SIGN_ENTITLEMENTS)
+
+// No cloud origins are baked in. The app also forces its API origin to a
+// closed loopback port at runtime.
+CMUX_API_BASE_URL =
+CMUX_IROH_BROKER_BASE_URL =
+CMUX_IROH_V2_ENVIRONMENT =
+CMUX_IROH_V2_BASE_URL =
+CMUX_PRESENCE_BASE_URL =
+CMUX_CRASH_REPORTING_ENABLED = NO
+
+// Bundle id and team overrides from ios/scripts/build-local-only.sh
+// (git-ignored). The script signs the built app itself.
+#include? "LocalOnly.signing.xcconfig"

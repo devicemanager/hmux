@@ -43,6 +43,8 @@ struct MobilePairingView: View {
             VStack(alignment: .leading, spacing: 18) {
                 header
                 content
+                Divider()
+                MobileLocalPairingSection()
             }
             .padding(24)
             .frame(maxWidth: .infinity, alignment: .leading)

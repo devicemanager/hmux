@@ -18,6 +18,15 @@ public enum CmxLocalPairing {
     public static let pairMethod = "mobile.local.pair"
     /// `auth` object field carrying the device key on every other request.
     public static let deviceKeyAuthField = "device_key"
+
+    /// Whether `string` is a local pairing link, for code-entry surfaces that
+    /// otherwise accept only account-bound pairing schemes.
+    public static func isPairingURL(_ string: String) -> Bool {
+        let trimmed = string.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let components = URLComponents(string: trimmed) else { return false }
+        return components.scheme?.lowercased() == urlScheme
+            && components.host?.lowercased() == urlHost
+    }
 }
 
 public enum CmxLocalPairingPayloadError: Error, Equatable, Sendable {
@@ -88,9 +97,11 @@ public struct CmxLocalPairingPayload: Equatable, Sendable {
         guard version == Self.currentVersion else {
             throw CmxLocalPairingPayloadError.unsupportedVersion(version)
         }
+        // Only numeric Tailscale addresses survive: a code must never steer
+        // the phone to a LAN or public host.
         let hosts = items
             .filter { $0.name == "host" }
-            .compactMap { $0.value?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty }
+            .compactMap { $0.value.flatMap(CmxTailscalePeerAddress.init)?.value }
         guard !hosts.isEmpty else {
             throw CmxLocalPairingPayloadError.missingField("host")
         }

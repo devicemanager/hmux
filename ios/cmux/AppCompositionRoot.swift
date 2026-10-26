@@ -121,9 +121,11 @@ final class AppCompositionRoot {
         self.buildCompatibilityPolicy = buildCompatibilityPolicy
         self.reachability = reachability
         self.diagnosticLog = diagnosticLog
-        let telemetryConsent = UserDefaultsAnalyticsConsentProvider(defaults: .standard)
+        let telemetryConsent: any AnalyticsConsentProviding = auth.isLocalOnly
+            ? LocalOnlyTelemetryConsent()
+            : UserDefaultsAnalyticsConsentProvider(defaults: .standard)
         let crashReportingEvent: DiagnosticAppEventKind
-        if Self.crashReportingEnabled {
+        if Self.crashReportingEnabled && !auth.isLocalOnly {
             MobileCrashReporter().startIfEnabled(
                 consent: telemetryConsent,
                 revocationWatcher: crashRevocationWatcher,
@@ -165,7 +167,8 @@ final class AppCompositionRoot {
             onFeedScrollAnomaly: { feedScrollSentryReporter.report($0) }
         )
         self.analytics = analytics
-        let billing = MobileBillingComposition(
+        // A local-only build sells nothing and has no account to bill.
+        let billing = auth.isLocalOnly ? nil : MobileBillingComposition(
             auth: auth,
             bundleIdentifier: Bundle.main.bundleIdentifier
         ).makeModel(analytics: analytics.emitter)
@@ -338,6 +341,10 @@ final class AppCompositionRoot {
             defaults: connectionPreferenceDefaults,
             diagnosticLog: diagnosticLog
         )
+        if auth.isLocalOnly {
+            // Tailscale is the only route a local-only build registers.
+            connectionMethodStore.method = .tailscale
+        }
         // Skip first-run onboarding when a UI-test mock harness
         // (`CMUX_UITEST_MOCK_DATA`/XCUITest) or a dogfood auto-pair attach URL is
         // active: those launches expect to land on sign-in / add-device / a live
@@ -349,7 +356,10 @@ final class AppCompositionRoot {
         #else
         let onboardingPreviewEnabled = false
         #endif
-        let bypassOnboarding = (UITestConfig.mockDataEnabled && !onboardingPreviewEnabled)
+        // The tour introduces account sign-in and relay setup, neither of
+        // which exists in a local-only build.
+        let bypassOnboarding = auth.isLocalOnly
+            || (UITestConfig.mockDataEnabled && !onboardingPreviewEnabled)
             || UITestConfig.dogfoodAttachURL != nil
             || UITestConfig.attachURL != nil
         self.onboardingStore = MobileOnboardingStore(
@@ -500,4 +510,10 @@ final class AppCompositionRoot {
             break
         }
     }
+}
+
+/// Telemetry consent for a local-only build: permanently off, whatever the
+/// Settings toggle says, so analytics and crash reports never leave the phone.
+private struct LocalOnlyTelemetryConsent: AnalyticsConsentProviding {
+    var isTelemetryEnabled: Bool { false }
 }

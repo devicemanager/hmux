@@ -90,6 +90,9 @@ extension MobileShellComposite {
         switch buildCompatibilityPolicy {
         case .official?:
             return MobileMacCompatPolicy.Channel(instanceTag: instanceTag)
+        case .localOnly?:
+            // The owner builds both apps; no release-lane version gate.
+            return nil
         case .development?:
             #if DEBUG
             guard MobileMacBuildCompatibilityPolicy.forcesDebugEvaluation() else { return nil }

@@ -439,6 +439,7 @@ public final class MobileCoreRPCClient: MobileSyncing, Sendable {
             // help and would only weaken the same-account gate; it surfaces as
             // `.rpcError("account_mismatch", _)`, not `.authorizationFailed`.
             guard transportUsesStackBearer,
+                  localDeviceKey == nil,
                   case .authorizationFailed = error else { throw error }
             try await forceRefreshStackTokenForRetry(deadline: deadline)
             // Re-run with retry disabled so a fresh token that is still rejected
@@ -588,6 +589,19 @@ public final class MobileCoreRPCClient: MobileSyncing, Sendable {
             )
         }
         let requestNeedsAuth = Self.requestRequiresAuth(request)
+        if let deviceKey = localDeviceKey {
+            // A locally paired Mac authorizes with the key it issued for this
+            // exact endpoint; no account token is minted or sent.
+            if requestNeedsAuth || isHostStatusRequest(request) {
+                request["auth"] = [CmxLocalPairing.deviceKeyAuthField: deviceKey]
+            } else {
+                request.removeValue(forKey: "auth")
+            }
+            return AuthenticatedRequestPayload(
+                data: try JSONSerialization.data(withJSONObject: request),
+                stackAccessToken: nil
+            )
+        }
         let requestIsCoveredByAttachTicket = !Self.requestNeedsStackAuthFallback(request, ticket: ticket)
         var auth: [String: Any] = [:]
         var requestStackAccessToken: String?
@@ -686,6 +700,25 @@ public final class MobileCoreRPCClient: MobileSyncing, Sendable {
         try await stackTokenGate.token(timeoutNanoseconds: try deadline.remainingNanoseconds()) { [runtime] in
             try await runtime.stackAccessTokenProvider()
         }
+    }
+
+    /// The local device key for this exact Tailscale endpoint, when the
+    /// runtime holds one. Only the user-authorized Tailscale modes qualify, so
+    /// a key never rides a discovered or relayed route.
+    private var localDeviceKey: String? {
+        guard route.kind == .tailscale,
+              case let .hostPort(host, port) = route.endpoint,
+              let store = runtime.localDeviceKeys else {
+            return nil
+        }
+        switch transportRequest.authorizationMode {
+        case .legacyTailscaleBearer, .userAuthorizedTailscalePairing:
+            break
+        case .stackBearer, .transportAdmission:
+            return nil
+        }
+        guard canSendStackBearer else { return nil }
+        return store.credential(host: host, port: port)?.deviceKey
     }
 
     private var transportUsesStackBearer: Bool {
@@ -818,7 +851,9 @@ public final class MobileCoreRPCClient: MobileSyncing, Sendable {
         // Only the unauthenticated host probe is exempt. attach_ticket.create has no
         // attach token yet (it mints the ticket), so requiring auth routes it through
         // the Stack Auth account token: a ticket can only be created by a signed-in user.
-        return method != "mobile.host.status"
+        // A local pairing redemption carries its one-time code in params;
+        // it runs before the phone holds any credential for the Mac.
+        return method != "mobile.host.status" && method != CmxLocalPairing.pairMethod
     }
 
     private static func stringParamSelection(

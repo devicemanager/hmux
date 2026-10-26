@@ -42,6 +42,8 @@ public struct CMUXMobileRuntime: Sendable, MobileSyncRuntime {
     public var artifactLaneProvider: MobileArtifactLaneProvider?
     public var tunnelConnectProvider: MobileTunnelConnectProvider?
     public var tunnelListeningPortsProvider: MobileTunnelListeningPortsProvider?
+    /// Device keys from local (account-free) pairing; nil in account builds.
+    public var localDeviceKeys: (any CmxLocalDeviceKeyStoring)?
 
     /// Builds the production access-token provider over an injected
     /// ``TokenProviding`` (the app-root ``AuthCoordinator``), honoring the DEBUG
@@ -156,8 +158,10 @@ public struct CMUXMobileRuntime: Sendable, MobileSyncRuntime {
         simulatorStreamLaneProvider: MobileSimulatorStreamLaneProvider? = nil,
         independentEventsMergeSurfaceLanes: Bool = false,
         tunnelConnectProvider: MobileTunnelConnectProvider? = nil,
-        tunnelListeningPortsProvider: MobileTunnelListeningPortsProvider? = nil
+        tunnelListeningPortsProvider: MobileTunnelListeningPortsProvider? = nil,
+        localDeviceKeys: (any CmxLocalDeviceKeyStoring)? = nil
     ) {
+        self.localDeviceKeys = localDeviceKeys
         self.supportedRouteKinds = supportedRouteKinds
         self.transportFactory = transportFactory
         self.stackAccessTokenProvider = stackAccessTokenProvider ?? { throw AuthError.unauthorized }
@@ -195,8 +199,10 @@ public struct CMUXMobileRuntime: Sendable, MobileSyncRuntime {
         simulatorStreamLaneProvider: MobileSimulatorStreamLaneProvider? = nil,
         independentEventsMergeSurfaceLanes: Bool = false,
         tunnelConnectProvider: MobileTunnelConnectProvider? = nil,
-        tunnelListeningPortsProvider: MobileTunnelListeningPortsProvider? = nil
+        tunnelListeningPortsProvider: MobileTunnelListeningPortsProvider? = nil,
+        localDeviceKeys: (any CmxLocalDeviceKeyStoring)? = nil
     ) {
+        self.localDeviceKeys = localDeviceKeys
         self.supportedRouteKinds = transportFactory.supportedKinds
         self.transportFactory = transportFactory
         self.stackAccessTokenProvider = stackAccessTokenProvider ?? { throw AuthError.unauthorized }

@@ -2928,7 +2928,8 @@ public final class MobileShellComposite: MobileTerminalOutputSinking {
         guard !trimmedCode.isEmpty else {
             return false
         }
-        if CmxPairingURLScheme(urlString: trimmedCode) != nil {
+        if CmxPairingURLScheme(urlString: trimmedCode) != nil
+            || CmxLocalPairing.isPairingURL(trimmedCode) {
             return false
         }
         let attemptID = beginPairingAttempt()
@@ -2958,7 +2959,8 @@ public final class MobileShellComposite: MobileTerminalOutputSinking {
         guard !trimmedCode.isEmpty else {
             return .failed
         }
-        if CmxPairingURLScheme(urlString: trimmedCode) != nil {
+        if CmxPairingURLScheme(urlString: trimmedCode) != nil
+            || CmxLocalPairing.isPairingURL(trimmedCode) {
             // The pairing input field is an explicit in-app code entry (scan
             // or paste), the act that authorizes a compatibility Tailscale dial.
             return await connectPairingURLResult(
@@ -5633,6 +5635,9 @@ public final class MobileShellComposite: MobileTerminalOutputSinking {
             "pairing.qr_connect.begin user_entered=\(userEnteredPairingCode) accepted_version_warning=\(acceptedVersionWarning)"
         )
         let rawURL = Self.normalizedPairingURL(rawValue ?? pairingCode)
+        if URLComponents(string: rawURL)?.scheme?.lowercased() == CmxLocalPairing.urlScheme {
+            return await connectLocalPairingURL(rawURL)
+        }
         _ = beginPairingValidationAttempt()
         connectionAttemptGeneration = UUID()
         if connectionState != .connected {
@@ -12396,6 +12401,15 @@ public final class MobileShellComposite: MobileTerminalOutputSinking {
         connectionState = .disconnected
         macConnectionStatus = .unavailable
         clearRemoteConnectionContext()
+    }
+
+    /// Surfaces a local pairing failure the same way a manual pairing does.
+    func failLocalPairing(_ message: String) {
+        recordAppEvent(.pairingStarted)
+        recordAppEvent(.pairingFailed, failure: .protocolViolation)
+        connectionError = message
+        connectionErrorGuidance = nil
+        releaseForegroundAfterPairingFailure()
     }
 
     /// Releases connection ownership when `attemptID` returns, whatever the

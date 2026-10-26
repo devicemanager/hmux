@@ -112,3 +112,10 @@ CODE_SIGN_ENTITLEMENTS = $(CMUX_APP_CODE_SIGN_ENTITLEMENTS)
 // ==========================================
 // Every bundle registers only its full-bundle-derived scheme.
 CMUX_IOS_URL_SCHEME = cmux-ios-$(PRODUCT_BUNDLE_IDENTIFIER)
+
+// ==========================================
+// Local-only builds (Config/LocalOnly.xcconfig)
+// ==========================================
+// Normal builds keep accounts and register no extra scheme.
+CMUX_LOCAL_ONLY = NO
+CMUX_LOCAL_PAIRING_URL_SCHEME = $(CMUX_IOS_URL_SCHEME)

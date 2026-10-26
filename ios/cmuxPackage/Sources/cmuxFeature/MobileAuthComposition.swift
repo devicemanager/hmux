@@ -38,6 +38,9 @@ public struct MobileAuthComposition {
     public let appNamespace: MobileIOSAppNamespace?
     /// Exact Keychain group claimed by this signed bundle.
     public let keychainAccessGroup: String?
+    /// Whether this build talks only to locally paired Macs, with no account
+    /// (see ``CmxLocalOnlyMode``).
+    public let isLocalOnly: Bool
 
     /// iOS OAuth must not inherit Safari cookies from another cmux build.
     nonisolated static let oauthBrowserSessionPrivacy: OAuthBrowserSessionPrivacy = .ephemeral
@@ -91,10 +94,19 @@ public struct MobileAuthComposition {
             isDevelopmentBuild: Self.isDevelopmentBuild,
             overrides: sourcedOverrides
         )
-        let overrides = Self.productionSafeOverrides(
+        let isLocalOnly = CmxLocalOnlyMode.isEnabled(in: bundle)
+        self.isLocalOnly = isLocalOnly
+        var overrides = Self.productionSafeOverrides(
             sourcedOverrides,
             authEnvironment: resolvedEnvironment
         )
+        if isLocalOnly {
+            // Every account, billing, analytics and config request derives
+            // from this origin. A closed loopback port makes any call that
+            // slips past the local-only switches fail on the device instead
+            // of reaching cmux.com.
+            overrides["ApiBaseURL"] = Self.localOnlyDeadAPIBaseURL
+        }
         self.authEnvironment = resolvedEnvironment
         let resolvedConfig = AuthConfig(
             environment: resolvedEnvironment,
@@ -102,7 +114,9 @@ public struct MobileAuthComposition {
         )
         self.config = resolvedConfig
 
-        let client = StackAuthClient(
+        // A local-only build has no account: a fixed on-device identity keeps
+        // the shell signed in, and nothing below contacts Stack.
+        let client: any AuthClient = isLocalOnly ? LocalOnlyAuthClient() : StackAuthClient(
             config: resolvedConfig,
             tokenStore: Self.tokenStore(
                 appNamespace: appNamespace,
@@ -199,8 +213,10 @@ public struct MobileAuthComposition {
             },
             session: .shared
         )
-        deferredSignIn.set {
-            await push.syncTokenIfPossible()
+        if !isLocalOnly {
+            deferredSignIn.set {
+                await push.syncTokenIfPossible()
+            }
         }
         self.coordinator = coordinator
         self.pushRegistration = push
@@ -217,6 +233,10 @@ public struct MobileAuthComposition {
     /// Begin asynchronous session restore (call once after construction).
     public func start() {
         taskOwner.recordRestoreStarted()
+        guard !isLocalOnly else {
+            coordinator.start()
+            return
+        }
         let pushRegistration = self.pushRegistration
         protectedDataAvailability.startObserving { [coordinator, taskOwner, pushRegistration] in
             taskOwner.revalidateSession(using: coordinator) {
@@ -256,6 +276,10 @@ public struct MobileAuthComposition {
     /// tag so auth, trust-broker, and device routes cannot drift to another
     /// agent's localhost server.
     nonisolated static let apiBaseURLInfoPlistKey = "CMUXApiBaseURL"
+
+    /// The API origin of a local-only build: the discard port on loopback,
+    /// where nothing listens.
+    nonisolated static let localOnlyDeadAPIBaseURL = "http://127.0.0.1:9"
 
     /// Cloud machines live independently of the paired Mac. A development
     /// build may still use a loopback API origin for Mac pairing, but Cloud

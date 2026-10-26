@@ -40,6 +40,8 @@
 	<string>$(CMUX_CRASH_REPORTING_ENABLED)</string>
 	<key>CMUXPresenceBaseURL</key>
 	<string>$(CMUX_PRESENCE_BASE_URL)</string>
+	<key>CMUXLocalOnly</key>
+	<string>$(CMUX_LOCAL_ONLY)</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
@@ -58,6 +60,9 @@
 				<!-- Exact-bundle pairing scheme. No two installed cmux apps
 				     register the same route with iOS. -->
 				<string>$(CMUX_IOS_URL_SCHEME)</string>
+				<!-- cmux-local in a local-only build; repeats the bundle
+				     scheme otherwise. -->
+				<string>$(CMUX_LOCAL_PAIRING_URL_SCHEME)</string>
 			</array>
 		</dict>
 	</array>

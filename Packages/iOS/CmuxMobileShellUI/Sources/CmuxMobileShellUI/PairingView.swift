@@ -421,6 +421,7 @@ struct PairingView: View {
         let trimmedHost = host.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmedHost.isEmpty,
               CmxPairingURLScheme(urlString: trimmedHost) == nil,
+              !CmxLocalPairing.isPairingURL(trimmedHost),
               MobileShellRouteAuthPolicy.manualHostNeedsTrustWarning(trimmedHost) else {
             return nil
         }
@@ -458,7 +459,8 @@ struct PairingView: View {
             validationError = L10n.string("mobile.addDevice.invalidHost", defaultValue: "Enter a host or IP address, without spaces or URL paths.")
             return
         }
-        if CmxPairingURLScheme(urlString: trimmedHost) != nil {
+        if CmxPairingURLScheme(urlString: trimmedHost) != nil
+            || CmxLocalPairing.isPairingURL(trimmedHost) {
             pairingCode = trimmedHost
             startPairingTask {
                 let result = await connectPairingCode()

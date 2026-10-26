@@ -49,21 +49,28 @@ struct cmuxApp: App {
         // (`cmux mobile compatible-tags`), persisted across launches.
         let buildCompatibilityPolicy = MobileMacBuildCompatibilityPolicy.current(
             buildScope: MobileIOSBuildScope.current(),
-            additionalInstanceTags: MobileMacTagAllowlist.persisted()
+            additionalInstanceTags: MobileMacTagAllowlist.persisted(),
+            isLocalOnly: auth.isLocalOnly
         )
         let v2Configuration = MobileIrohV2Configuration.current(projectID: auth.config.stack.projectId)
         let irx = MobileIrxRuntimeComposition(configuration: v2Configuration,
             macListAuthState: MobileMacListAuthState(),
             keychainAccessGroup: auth.keychainAccessGroup,
             diagnosticLog: diagnosticLog)
-        Task { await irx.configure(auth: auth.coordinator) }
-        // iroh cannot observe every iOS network change on its own; forward
-        // each one so the transport drops dead paths now instead of after
-        // its heartbeat and path-idle timeouts (multi-second terminal stalls
-        // measured on Wi-Fi to cellular handoffs).
-        Task {
-            for await _ in reachability.allPathUpdates() {
-                await irx.notifyNetworkChange()
+        // A local-only build never registers with the Iroh broker or relays:
+        // left unconfigured, the runtime stays inert and its route is not
+        // registered below.
+        let isLocalOnly = auth.isLocalOnly
+        if !isLocalOnly {
+            Task { await irx.configure(auth: auth.coordinator) }
+            // iroh cannot observe every iOS network change on its own; forward
+            // each one so the transport drops dead paths now instead of after
+            // its heartbeat and path-idle timeouts (multi-second terminal stalls
+            // measured on Wi-Fi to cellular handoffs).
+            Task {
+                for await _ in reachability.allPathUpdates() {
+                    await irx.notifyNetworkChange()
+                }
             }
         }
 
@@ -83,12 +90,13 @@ struct cmuxApp: App {
         let fallbackRegistrations = supportedKinds.map { kind in
             CmxRouteTransportFactoryRegistration(kind: kind, factory: networkFactory)
         }
-        let registrations = [
+        let irohRegistrations = isLocalOnly ? [] : [
             CmxRouteTransportFactoryRegistration(
                 kind: .iroh,
                 factory: irx.transportFactory
             ),
-        ] + fallbackRegistrations
+        ]
+        let registrations = irohRegistrations + fallbackRegistrations
         let transportFactory: CmxRouteTransportFactory
         do {
             transportFactory = try CmxRouteTransportFactory(registrations)
@@ -126,7 +134,10 @@ struct cmuxApp: App {
             },
             tunnelListeningPortsProvider: { request in
                 try await irx.tunnelListeningPorts(for: request)
-            }
+            },
+            localDeviceKeys: isLocalOnly
+                ? CmxLocalDeviceKeyStore.current(accessGroup: auth.keychainAccessGroup)
+                : nil
         )
 
         return AppCompositionRoot(

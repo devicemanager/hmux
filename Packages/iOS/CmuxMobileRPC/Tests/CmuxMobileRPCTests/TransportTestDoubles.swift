@@ -17,6 +17,7 @@ struct TestMobileSyncRuntime: MobileSyncRuntime {
     var supportsServerPushEvents: Bool
     var independentEventByteStreamProvider: CmxIndependentEventByteStreamProvider?
     var independentEventsMergeSurfaceLanes: Bool
+    var localDeviceKeys: (any CmxLocalDeviceKeyStoring)?
 
     init(
         transportFactory: any CmxByteTransportFactory,
@@ -30,8 +31,10 @@ struct TestMobileSyncRuntime: MobileSyncRuntime {
         now: @escaping @Sendable () -> Date = Date.init,
         supportsServerPushEvents: Bool = true,
         independentEventByteStreamProvider: CmxIndependentEventByteStreamProvider? = nil,
-        independentEventsMergeSurfaceLanes: Bool = false
+        independentEventsMergeSurfaceLanes: Bool = false,
+        localDeviceKeys: (any CmxLocalDeviceKeyStoring)? = nil
     ) {
+        self.localDeviceKeys = localDeviceKeys
         self.independentEventsMergeSurfaceLanes = independentEventsMergeSurfaceLanes
         self.supportedRouteKinds = supportedRouteKinds
         self.transportFactory = transportFactory
@@ -79,6 +82,7 @@ struct RecordedRPCRequest: Sendable {
     var hasAuth: Bool
     var attachToken: String?
     var stackAccessToken: String?
+    var deviceKey: String? = nil
 }
 
 func recordedRPCRequest(from payload: Data) throws -> RecordedRPCRequest {
@@ -93,7 +97,8 @@ func recordedRPCRequest(from payload: Data) throws -> RecordedRPCRequest {
         text: params["text"] as? String,
         hasAuth: auth != nil,
         attachToken: auth?["attach_token"] as? String,
-        stackAccessToken: auth?["stack_access_token"] as? String
+        stackAccessToken: auth?["stack_access_token"] as? String,
+        deviceKey: auth?["device_key"] as? String
     )
 }
 

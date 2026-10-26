@@ -2761,6 +2761,7 @@
 		C1B1810000000000000008 /* MobileHostV2Installation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C1B1810000000000000018 /* MobileHostV2Installation.swift */; };
 		C0DE73840000000000000001 /* MobileHostWorkspaceTicketAuthorizationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DE73840000000000000002 /* MobileHostWorkspaceTicketAuthorizationTests.swift */; };
 		86BEAF78BDAB4871996E9EF2 /* MobileIOSPairingTargetStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1148AEDC5E59435E879326ED /* MobileIOSPairingTargetStore.swift */; };
+		3C83CD3B75352E6470472C87 /* MobileLocalPairingSection.swift in Sources */ = {isa = PBXBuildFile; fileRef = 214DD43D298A6E15B3921187 /* MobileLocalPairingSection.swift */; };
 		C0DEFEF90000000000000001 /* MobileNotificationFeedWireItem.swift in Sources */ = {isa = PBXBuildFile; fileRef = C0DEFEF90000000000000002 /* MobileNotificationFeedWireItem.swift */; };
 		9B08F916D7FF7626C6820727 /* MobilePairingConnectionTransitionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A4880BD05924400E5279D632 /* MobilePairingConnectionTransitionTests.swift */; };
 		0099C2865D9D468747D14593 /* MobilePairingModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 04CE82AE8B39EA0C1395F696 /* MobilePairingModel.swift */; };
@@ -7435,6 +7436,7 @@
 		C1B1810000000000000018 /* MobileHostV2Installation.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileHostV2Installation.swift; sourceTree = "<group>"; };
 		C0DE73840000000000000002 /* MobileHostWorkspaceTicketAuthorizationTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileHostWorkspaceTicketAuthorizationTests.swift; sourceTree = "<group>"; };
 		1148AEDC5E59435E879326ED /* MobileIOSPairingTargetStore.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MobileIOSPairingTargetStore.swift; sourceTree = "<group>"; };
+		214DD43D298A6E15B3921187 /* MobileLocalPairingSection.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Pairing/MobileLocalPairingSection.swift"; sourceTree = "<group>"; };
 		C0DEFEF90000000000000002 /* MobileNotificationFeedWireItem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobileNotificationFeedWireItem.swift; sourceTree = "<group>"; };
 		A4880BD05924400E5279D632 /* MobilePairingConnectionTransitionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MobilePairingConnectionTransitionTests.swift; sourceTree = "<group>"; };
 		04CE82AE8B39EA0C1395F696 /* MobilePairingModel.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = "Pairing/MobilePairingModel.swift"; sourceTree = "<group>"; };
@@ -9936,6 +9938,7 @@
 				C7A50B000000000000000013 /* MobileHostService+Capabilities.swift */,
 				04CE82AE8B39EA0C1395F696 /* MobilePairingModel.swift */,
 				F9BC53FA4991A6EBFB930EDF /* MobilePairingView.swift */,
+				214DD43D298A6E15B3921187 /* MobileLocalPairingSection.swift */,
 				C1A070000000000000000016 /* MobilePairingView+Connected.swift */,
 				5AE701F43A0B49F08835191C /* MobilePairingWindowController.swift */,
 				C9F14137954A34DFFA05C88C /* MobileWorkspaceListObserver.swift */,
@@ -16545,6 +16548,7 @@
 				C1A070000000000000000005 /* MobileHostTransportAuthorization.swift in Sources */,
 				C1B1810000000000000008 /* MobileHostV2Installation.swift in Sources */,
 				86BEAF78BDAB4871996E9EF2 /* MobileIOSPairingTargetStore.swift in Sources */,
+				3C83CD3B75352E6470472C87 /* MobileLocalPairingSection.swift in Sources */,
 				C0DEFEF90000000000000001 /* MobileNotificationFeedWireItem.swift in Sources */,
 				0099C2865D9D468747D14593 /* MobilePairingModel.swift in Sources */,
 				C1A070000000000000000006 /* MobilePairingView+Connected.swift in Sources */,
