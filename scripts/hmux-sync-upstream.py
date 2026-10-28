@@ -11,6 +11,7 @@ changed the same lines itself.
 Usage:
   scripts/hmux-sync-upstream.py                  sync to the upstream main and merge it
   scripts/hmux-sync-upstream.py --ref <commit>   sync to a specific upstream commit
+  scripts/hmux-sync-upstream.py --build          also build the Mac app after the merge
   scripts/hmux-sync-upstream.py --no-merge       update upstream-hmux only
   scripts/hmux-sync-upstream.py --init <commit>  first run: record the renamed fork
                                                  point as merged, without changing files
@@ -309,6 +310,7 @@ def main():
     parser.add_argument("--ref", help="upstream commit to sync to (default: <upstream>/main)")
     parser.add_argument("--no-merge", action="store_true", help=f"update {BRANCH} only")
     parser.add_argument("--init", metavar="COMMIT", help="record the renamed fork point as merged")
+    parser.add_argument("--build", action="store_true", help="build the Mac app after a clean merge (not installed)")
     parser.add_argument("--compare", metavar="REV", help="rename REV and diff it against HEAD")
     args = parser.parse_args()
     os.chdir(git_text("rev-parse", "--show-toplevel"))
@@ -374,7 +376,15 @@ def main():
         print("\n==> The merge stopped on conflicts: these are lines both cmux and hmux changed.")
         print("    Resolve them, `git add` the files and run `git commit`; or `git merge --abort`.")
         sys.exit(1)
-    print(f"==> Merged cmux {target[:12]}. Next: git submodule update --init, build, then push.")
+    git("submodule", "update", "--init")
+    print(f"==> Merged cmux {target[:12]}")
+    if args.build:
+        # --no-install: the running app is never replaced from here.
+        if subprocess.run(["scripts/build-local-only-mac.sh", "--no-install", "--no-notarize"]).returncode != 0:
+            sys.exit("error: the Mac build failed; fix it on this branch before pushing")
+        print("==> Mac build OK. Install it with scripts/build-local-only-mac.sh --skip-build once hmux is closed.")
+    else:
+        print("    Next: scripts/build-local-only-mac.sh, then push.")
 
 
 if __name__ == "__main__":
