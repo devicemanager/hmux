@@ -6,7 +6,7 @@ import SwiftUI
 
 /// Account-free pairing for a local-only iPhone app.
 ///
-/// Shows a single-use `cmux-local://` QR code that names this Mac's Tailscale
+/// Shows a single-use `hmux://` QR code that names this Mac's Tailscale
 /// addresses. The phone redeems it once for its own device key, so neither
 /// side needs a cmux account, relay, or cloud service.
 struct MobileLocalPairingSection: View {

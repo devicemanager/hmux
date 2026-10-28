@@ -10,7 +10,7 @@ import Foundation
 public enum CmxLocalPairing {
     /// URL scheme for local pairing codes. Separate from the account-bound
     /// bundle schemes so a local-only build can register it on its own.
-    public static let urlScheme = "cmux-local"
+    public static let urlScheme = "hmux"
     /// URL host for the pairing action.
     public static let urlHost = "pair"
     /// RPC method that trades a pairing code for a device key. It is the only
@@ -73,7 +73,7 @@ public struct CmxLocalPairingPayload: Equatable, Sendable {
         self.expiresAt = expiresAt
     }
 
-    /// Parses a scanned `cmux-local://pair?...` URL and rejects expired codes.
+    /// Parses a scanned `hmux://pair?...` URL and rejects expired codes.
     public init(url: URL, now: Date = Date()) throws {
         guard url.scheme?.lowercased() == CmxLocalPairing.urlScheme,
               url.host?.lowercased() == CmxLocalPairing.urlHost,

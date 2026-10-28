@@ -10,7 +10,7 @@ import UIKit
 
 /// Account-free pairing with a Mac on the owner's tailnet.
 ///
-/// A `cmux-local://pair` code carries the Mac's Tailscale addresses and a
+/// A `hmux://pair` code carries the Mac's Tailscale addresses and a
 /// one-time pairing code. The phone redeems the code for a per-phone device
 /// key, stores it for those exact endpoints, then pairs through the manual
 /// Tailscale route, whose requests carry the key instead of an account token.

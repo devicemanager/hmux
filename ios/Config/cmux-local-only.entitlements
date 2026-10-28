@@ -2,7 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Local-only build: the device keys from cmux-local pairing live in the
+	<!-- Local-only build: the device keys from hmux pairing live in the
 	     bundle's own Keychain group. Nothing else is claimed. -->
 	<key>keychain-access-groups</key>
 	<array>

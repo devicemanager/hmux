@@ -42,7 +42,7 @@ done
 
 TEAM_ID="$CMUX_LOCAL_TEAM_ID"
 BUNDLE_ID="$CMUX_LOCAL_MAC_BUNDLE_ID"
-APP_NAME="${CMUX_LOCAL_MAC_APP_NAME:-cmux local}"
+APP_NAME="${CMUX_LOCAL_MAC_APP_NAME:-hmux}"
 INSTALL_DIR="${CMUX_LOCAL_MAC_INSTALL_DIR:-}"
 NOTARY_PROFILE="${CMUX_LOCAL_NOTARY_PROFILE:-}"
 [[ -n "$INSTALL_DIR" ]] || INSTALL=0
@@ -183,6 +183,19 @@ if [[ "$INSTALL" -eq 0 ]]; then
   exit 0
 fi
 DEST="$INSTALL_DIR/$APP_NAME.app"
+# A rename leaves the previous copy under its old name; remove it so only one
+# app carries this bundle ID.
+for old in "$INSTALL_DIR"/*.app; do
+  [[ -d "$old" && "$old" != "$DEST" ]] || continue
+  old_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$old/Contents/Info.plist" 2>/dev/null || true)"
+  [[ "$old_id" == "$BUNDLE_ID" ]] || continue
+  if pgrep -f "^$old/Contents/MacOS/" >/dev/null; then
+    echo "error: $(basename "$old" .app) is running. Quit it, then rerun to install." >&2
+    exit 1
+  fi
+  echo "==> Removing $old (renamed to $APP_NAME)"
+  rm -rf "$old"
+done
 if [[ -d "$DEST" ]]; then
   existing_id="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$DEST/Contents/Info.plist" 2>/dev/null || true)"
   if [[ "$existing_id" != "$BUNDLE_ID" ]]; then

@@ -39,24 +39,24 @@ import Testing
     }
 
     @Test func rejectsMissingCode() throws {
-        let url = try #require(URL(string: "cmux-local://pair?v=1&host=100.64.0.1&port=4399&mac=m&exp=1900000000"))
+        let url = try #require(URL(string: "hmux://pair?v=1&host=100.64.0.1&port=4399&mac=m&exp=1900000000"))
         #expect(throws: CmxLocalPairingPayloadError.missingField("code")) {
             try CmxLocalPairingPayload(url: url, now: now)
         }
     }
 
     @Test func rejectsOutOfRangePorts() throws {
-        let url = try #require(URL(string: "cmux-local://pair?v=1&host=100.64.0.1&port=70000&code=x&mac=m&exp=1900000000"))
+        let url = try #require(URL(string: "hmux://pair?v=1&host=100.64.0.1&port=70000&code=x&mac=m&exp=1900000000"))
         #expect(throws: CmxLocalPairingPayloadError.invalidPort(70000)) {
             try CmxLocalPairingPayload(url: url, now: now)
         }
     }
 
     @Test func dropsHostsOutsideTheTailnet() throws {
-        let mixed = try #require(URL(string: "cmux-local://pair?v=1&host=192.168.1.20&host=100.64.0.1&host=example.com&port=4399&code=x&mac=m&exp=1900000000"))
+        let mixed = try #require(URL(string: "hmux://pair?v=1&host=192.168.1.20&host=100.64.0.1&host=example.com&port=4399&code=x&mac=m&exp=1900000000"))
         #expect(try CmxLocalPairingPayload(url: mixed, now: now).hosts == ["100.64.0.1"])
 
-        let lanOnly = try #require(URL(string: "cmux-local://pair?v=1&host=192.168.1.20&port=4399&code=x&mac=m&exp=1900000000"))
+        let lanOnly = try #require(URL(string: "hmux://pair?v=1&host=192.168.1.20&port=4399&code=x&mac=m&exp=1900000000"))
         #expect(throws: CmxLocalPairingPayloadError.missingField("host")) {
             try CmxLocalPairingPayload(url: lanOnly, now: now)
         }
