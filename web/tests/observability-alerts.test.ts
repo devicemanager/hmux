@@ -71,7 +71,7 @@ describe("observability alerts", () => {
       body: "Alert body",
       severity: "critical",
     }, {
-      env: { CMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/services/test" },
+      env: { HMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/services/test" },
       fetch: fetchMock,
     });
 
@@ -93,7 +93,7 @@ describe("observability alerts", () => {
     );
 
     expect(seen.body?.event).toBe("cloud_vm_alert_dropped");
-    expect(seen.body?.distinct_id).toBe("cmux-vm-alerts");
+    expect(seen.body?.distinct_id).toBe("hmux-vm-alerts");
     const properties = seen.body?.properties as Record<string, unknown>;
     expect(properties.operator_fault).toBe(true);
     expect(properties.alert_keys).toEqual(["vm-create-failure-spike"]);
@@ -139,7 +139,7 @@ describe("observability alerts", () => {
       now: new Date("2026-08-31T12:00:00.000Z"),
       env: {
         VERCEL_ENV: "production",
-        CMUX_VM_ALERT_CREATE_FAILURES_15M: "1",
+        HMUX_VM_ALERT_CREATE_FAILURES_15M: "1",
       },
       fetch: fetchMock,
       sendAlert: async (): Promise<AlertResult> => ({
@@ -175,7 +175,7 @@ describe("observability alerts", () => {
     const run = () => runVmAlertChecks({
       db: fakeAlertDb(),
       now: new Date("2026-10-09T16:00:00.000Z"),
-      env: { CMUX_VM_ALERT_CREATE_FAILURES_15M: "5" },
+      env: { HMUX_VM_ALERT_CREATE_FAILURES_15M: "5" },
       alertStateStore,
       readTlsRuleUsage: async () => usage,
       sendAlert: async (input): Promise<AlertResult> => {
@@ -262,18 +262,18 @@ describe("observability alerts", () => {
     try {
       delete process.env.CRON_SECRET;
       const notConfigured = await vmAlertsCronGET(
-        new Request("https://cmux.test/api/cron/vm-alerts"),
+        new Request("https://hmux.test/api/cron/vm-alerts"),
       );
       expect(notConfigured.status).toBe(503);
 
       process.env.CRON_SECRET = "cron-secret";
       const missingBearer = await vmAlertsCronGET(
-        new Request("https://cmux.test/api/cron/vm-alerts"),
+        new Request("https://hmux.test/api/cron/vm-alerts"),
       );
       expect(missingBearer.status).toBe(401);
 
       const unauthorized = await vmAlertsCronGET(
-        new Request("https://cmux.test/api/cron/vm-alerts", {
+        new Request("https://hmux.test/api/cron/vm-alerts", {
           headers: { authorization: "Bearer wrong-secret" },
         }),
       );

@@ -11,7 +11,7 @@ import threading
 from pathlib import Path
 from typing import Any
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 from fake_socket_env import cli_environment, unwrap_capability
 
 
@@ -33,7 +33,7 @@ class RecordingState:
             return list(self._requests[index:])
 
 
-class FakeCmuxHandler(socketserver.StreamRequestHandler):
+class FakeHmuxHandler(socketserver.StreamRequestHandler):
     def handle(self) -> None:
         while line := self.rfile.readline():
             request = json.loads(unwrap_capability(line.decode("utf-8")))
@@ -76,13 +76,13 @@ class FakeCmuxHandler(socketserver.StreamRequestHandler):
             self.wfile.flush()
 
 
-class FakeCmuxUnixServer(socketserver.ThreadingUnixStreamServer):
+class FakeHmuxUnixServer(socketserver.ThreadingUnixStreamServer):
     allow_reuse_address = True
     daemon_threads = True
 
     def __init__(self, socket_path: str, state: RecordingState) -> None:
         self.state = state
-        super().__init__(socket_path, FakeCmuxHandler)
+        super().__init__(socket_path, FakeHmuxHandler)
 
 
 def run_cli(
@@ -92,8 +92,8 @@ def run_cli(
     arguments: list[str],
 ) -> subprocess.CompletedProcess[str]:
     env = cli_environment(socket_path, home=fake_home)
-    env["CMUX_CLI_SENTRY_DISABLED"] = "1"
-    env["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
+    env["HMUX_CLI_SENTRY_DISABLED"] = "1"
+    env["HMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
     return subprocess.run(
         [cli_path, "--socket", str(socket_path), "simulator", *arguments],
         capture_output=True,
@@ -111,8 +111,8 @@ def run_ios_cli(
     arguments: list[str],
 ) -> subprocess.CompletedProcess[str]:
     env = cli_environment(socket_path, home=fake_home)
-    env["CMUX_CLI_SENTRY_DISABLED"] = "1"
-    env["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
+    env["HMUX_CLI_SENTRY_DISABLED"] = "1"
+    env["HMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
     return subprocess.run(
         [cli_path, "--socket", str(socket_path), "ios", *arguments],
         capture_output=True,
@@ -365,14 +365,14 @@ def check_ios_error_identity(
 
 def main() -> int:
     try:
-        cli_path = resolve_cmux_cli()
-        with tempfile.TemporaryDirectory(prefix="cmux-sim-cli-", dir="/tmp") as root:
+        cli_path = resolve_hmux_cli()
+        with tempfile.TemporaryDirectory(prefix="hmux-sim-cli-", dir="/tmp") as root:
             root_path = Path(root)
-            socket_path = root_path / "cmux.sock"
+            socket_path = root_path / "hmux.sock"
             fake_home = root_path / "home"
             fake_home.mkdir()
             state = RecordingState()
-            server = FakeCmuxUnixServer(str(socket_path), state)
+            server = FakeHmuxUnixServer(str(socket_path), state)
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
             try:

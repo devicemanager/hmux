@@ -34,8 +34,8 @@ export async function POST(request: Request) {
     request,
     "/api/support/contact",
     {
-      "cmux.subsystem": "support",
-      "cmux.support.operation": "contact",
+      "hmux.subsystem": "support",
+      "hmux.support.operation": "contact",
     },
     async (span): Promise<Response> => {
       const config = resolveSupportConfig();
@@ -60,7 +60,7 @@ export async function POST(request: Request) {
         }
         const { error, rateLimited } = result;
         setSpanAttributes(span, {
-          "cmux.rate_limited": rateLimited || error === "blocked",
+          "hmux.rate_limited": rateLimited || error === "blocked",
         });
         if (rateLimited || error === "blocked") {
           return jsonError("Rate limit exceeded", 429);
@@ -89,13 +89,13 @@ export async function POST(request: Request) {
 
       const ticket = parsed.data;
       setSpanAttributes(span, {
-        "cmux.support.topic": ticket.topic,
-        "cmux.support.email_domain": emailDomain(ticket.email),
+        "hmux.support.topic": ticket.topic,
+        "hmux.support.email_domain": emailDomain(ticket.email),
       });
 
       const deliverable = await checkEmailDeliverable(ticket.email);
       setSpanAttributes(span, {
-        "cmux.support.email_check": deliverable,
+        "hmux.support.email_check": deliverable,
       });
       if (deliverable === "invalid") {
         return jsonError("Email address cannot receive mail", 400);
@@ -152,9 +152,9 @@ export async function POST(request: Request) {
 
 function resolveSupportConfig() {
   const resendApiKey = env.RESEND_API_KEY;
-  const fromEmail = env.CMUX_FEEDBACK_FROM_EMAIL;
+  const fromEmail = env.HMUX_FEEDBACK_FROM_EMAIL;
   // rateLimitId is optional: unset means the route runs without rate limiting.
-  const rateLimitId = env.CMUX_FEEDBACK_RATE_LIMIT_ID;
+  const rateLimitId = env.HMUX_FEEDBACK_RATE_LIMIT_ID;
   if (!resendApiKey || !fromEmail) return null;
   return {
     resendApiKey,
@@ -208,7 +208,7 @@ async function capturePostHog(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_key: POSTHOG_PROJECT_KEY,
-        event: "cmux_support_request_submitted",
+        event: "hmux_support_request_submitted",
         distinct_id: ticket.email,
         properties: {
           ...ticket,
@@ -267,7 +267,7 @@ function supportRequestEntries(ticket: SupportRequest): [string, string][] {
 
 function slackText(ticket: SupportRequest): string {
   const lines = [
-    ":sos: New cmux support request",
+    ":sos: New hmux support request",
     `*Email:* ${escapeSlack(ticket.email)}`,
   ];
   if (ticket.name) {

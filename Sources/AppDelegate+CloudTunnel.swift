@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSettings
+import HmuxCloud
+import HmuxSettings
 import AppKit
 
 /// Composition of the app-managed Cloud tunnel: built once at startup next to

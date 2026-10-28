@@ -24,8 +24,8 @@ ROUTES = GUARD_ROUTES + ("ghosttykit_release",)
 INDIRECT_ROUTE_INPUTS = {
     # The two CLI contracts each exercise the script they are named after.
     "linux_guard_cli": frozenset({
-        "Resources/bin/start-cmux-profiling",
-        "scripts/ci/resolve-cmux-tui-client-commit.sh",
+        "Resources/bin/start-hmux-profiling",
+        "scripts/ci/resolve-hmux-tui-client-commit.sh",
     }),
     # workflow-guard-tests reads these through an import, a working directory,
     # or yaml.safe_load; PATH_OWNERS is the one place they are declared.
@@ -58,7 +58,7 @@ def route_inputs() -> dict[str, frozenset[str]] | None:
 
 
 def plain_documentation(path: str) -> bool:
-    if path.startswith("skills/cmux-cua/") or path == "docs/cli-contract.md":
+    if path.startswith("skills/hmux-cua/") or path == "docs/cli-contract.md":
         return False
     name = path.rsplit("/", 1)[-1]
     if name in {"AGENTS.md", "CLAUDE.md"}:
@@ -95,11 +95,11 @@ def classify(paths: list[str], *, event: str, macos: str) -> dict[str, bool]:
             routes["linux_guard_history"] = True
             routes["linux_guard_source"] = True
         elif path.startswith(("Sources/", "CLI/", "Resources/", "Packages/",
-                              "cmuxTests/", "cmuxCLITests/", "cmuxCLITestSupport/",
-                              "cmuxUITests/", "cmux.xcodeproj/",
-                              "cmux.xcworkspace/", "vendor/bonsplit/", "ios/")):
+                              "hmuxTests/", "hmuxCLITests/", "hmuxCLITestSupport/",
+                              "hmuxUITests/", "hmux.xcodeproj/",
+                              "hmux.xcworkspace/", "vendor/bonsplit/", "ios/")):
             routes["linux_guard_source"] = True
-        elif path.startswith(("web/", "webviews/", "cmux-tui/")):
+        elif path.startswith(("web/", "webviews/", "hmux-tui/")):
             pass
         else:
             # Workflows, scripts, tests, new top-level areas, and the router

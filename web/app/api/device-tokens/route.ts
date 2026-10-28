@@ -40,7 +40,7 @@ export async function GET(request: Request): Promise<Response> {
   catch (error) { return authProviderErrorResponse(error, "device-tokens.get.auth"); }
   if (!user) return unauthorized();
   const url = new URL(request.url);
-  const requestedNamespace = request.headers.get("x-cmux-app-namespace")?.trim()
+  const requestedNamespace = request.headers.get("x-hmux-app-namespace")?.trim()
     || url.searchParams.get("bundleId")?.trim() || "";
   const accountWide = url.searchParams.get("all") === "true";
   if (accountWide && requestedNamespace) {
@@ -67,7 +67,7 @@ export async function POST(request: Request): Promise<Response> {
   const rateLimitResponse = await enforceNativeIngressRateLimit({
     request,
     route: "device-tokens.post",
-    ruleId: env.CMUX_PUSH_RATE_LIMIT_ID,
+    ruleId: env.HMUX_PUSH_RATE_LIMIT_ID,
   });
   if (rateLimitResponse) return rateLimitResponse;
   return withApnsApiRoute(request, "/api/device-tokens", "register", async () => registerDeviceToken(request));
@@ -317,7 +317,7 @@ function parseRegistrationInput(
 ): { ok: true; value: RegistrationInput } | { ok: false; response: Response } {
   const deviceToken = typeof body.deviceToken === "string" ? body.deviceToken.trim().toLowerCase() : "";
   const bundleId = typeof body.bundleId === "string" ? body.bundleId.trim() : "";
-  const clientNamespace = request.headers.get("x-cmux-app-namespace") ?? "legacy";
+  const clientNamespace = request.headers.get("x-hmux-app-namespace") ?? "legacy";
   const platform = typeof body.platform === "string" ? body.platform.trim() || "ios" : "ios";
   const installationId = typeof body.installationId === "string" ? body.installationId.trim() : "";
   const pushKeyId = typeof body.pushKeyId === "string" ? body.pushKeyId.trim() : "";
@@ -394,9 +394,9 @@ function registrationResponse(registration: {
   return jsonResponse({
     ok: true,
     pushServiceConfigured: resolveApnsProviderConfiguration(
-      env.CMUX_APNS_KEY_P8,
-      env.CMUX_APNS_KEY_ID,
-      env.CMUX_APNS_TEAM_ID,
+      env.HMUX_APNS_KEY_P8,
+      env.HMUX_APNS_KEY_ID,
+      env.HMUX_APNS_TEAM_ID,
     ) !== null,
   });
 }
@@ -405,7 +405,7 @@ export async function DELETE(request: Request): Promise<Response> {
   const rateLimitResponse = await enforceNativeIngressRateLimit({
     request,
     route: "device-tokens.delete",
-    ruleId: env.CMUX_PUSH_RATE_LIMIT_ID,
+    ruleId: env.HMUX_PUSH_RATE_LIMIT_ID,
   });
   if (rateLimitResponse) return rateLimitResponse;
   return withApnsApiRoute(request, "/api/device-tokens", "delete", async () => deleteDeviceToken(request));
@@ -530,7 +530,7 @@ function parseDeviceTokenDeletionRequest(
     ? body.installationId.trim()
     : "";
   const bodyBundleId = typeof body.bundleId === "string" ? body.bundleId.trim() : "";
-  const headerNamespace = request.headers.get("x-cmux-app-namespace");
+  const headerNamespace = request.headers.get("x-hmux-app-namespace");
   const clientNamespace = headerNamespace ?? bodyBundleId;
   if (!deviceToken) return jsonResponse({ error: "missing_device_token" }, 400);
   if (!HEX_TOKEN.test(deviceToken)) return jsonResponse({ error: "invalid_device_token" }, 400);
@@ -673,7 +673,7 @@ function requestAuthSessionFingerprint(request: Request): string | null {
   if (typeof sessionID !== "string" || sessionID.length === 0) return null;
   return crypto
     .createHash("sha256")
-    .update("cmux-stack-session-v1\n" + sessionID)
+    .update("hmux-stack-session-v1\n" + sessionID)
     .digest("hex");
 }
 

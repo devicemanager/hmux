@@ -12,7 +12,7 @@ struct SurfaceTaskLocalProbe {
         try await failureRestoresParentScope()
         try await cancellationRestoresParentScope()
         try await displayReservationCrossesActorHops()
-        if ProcessInfo.processInfo.environment["CMUX_TEST_LEGACY_TASK_LOCAL"] != nil {
+        if ProcessInfo.processInfo.environment["HMUX_TEST_LEGACY_TASK_LOCAL"] != nil {
             precondition(legacyCheckCount() > 0, "The regression must execute the legacy branch")
         }
         print("PASS: 4 surface task-local reservation scenarios")

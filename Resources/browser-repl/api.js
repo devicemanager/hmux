@@ -1,9 +1,9 @@
-// cmux browser REPL globals (docs/browser-repl/README.md, Globals): page,
+// hmux browser REPL globals (docs/browser-repl/README.md, Globals): page,
 // tabs, snapshot, screenshot, fetch, fs/path/os/Buffer, sleep, display,
 // session, console. Built on runtime-core (Playwright model) and snapshot.js.
 (function (root) {
   "use strict";
-  const ns = (root.CmuxBrowserRepl = root.CmuxBrowserRepl || {});
+  const ns = (root.HmuxBrowserRepl = root.HmuxBrowserRepl || {});
   const core = ns.core;
   const { Buffer } = core;
 
@@ -434,7 +434,7 @@
   // session cut at the URL's share, and no DOM-wide string is made first.
   const CONTENT_READ_SIZE = 2000000;
   function readContent(opts) {
-    const B = globalThis[Symbol.for("cmux.browserRepl.agent")].budget({ maxSize: opts.maxSize });
+    const B = globalThis[Symbol.for("hmux.browserRepl.agent")].budget({ maxSize: opts.maxSize });
     let content;
     if (opts.html) {
       const doctype = document.doctype ? B.fit(new XMLSerializer().serializeToString(document.doctype)) : "";
@@ -443,7 +443,7 @@
     return { content, truncated: B.truncated || null, report: B.report() };
   }
   function readTitle(opts) {
-    return globalThis[Symbol.for("cmux.browserRepl.agent")].budget({ maxSize: opts.maxSize }).fit(document.title);
+    return globalThis[Symbol.for("hmux.browserRepl.agent")].budget({ maxSize: opts.maxSize }).fit(document.title);
   }
 
   function createGlobals(session, host) {
@@ -470,7 +470,7 @@
     function importModule(specifier) {
       const name = String(specifier).replace(/^node:/, "");
       const mod = modules[name];
-      if (!mod) throw new Error(`Cannot import ${specifier}: the cmux browser REPL provides node:fs, node:fs/promises, node:path, node:os and node:buffer`);
+      if (!mod) throw new Error(`Cannot import ${specifier}: the hmux browser REPL provides node:fs, node:fs/promises, node:path, node:os and node:buffer`);
       return Object.assign({ default: mod }, mod);
     }
 
@@ -614,7 +614,7 @@
       // A tab tabs.list({ all: true }) lists can be attached, except one
       // another running session opened; the driver refuses those. A user's
       // tab of another workspace is not listed (a person must grant one,
-      // and cmux has no such grant yet).
+      // and hmux has no such grant yet).
       const list = await session.call("tabs.list", { all: true });
       const row = list.find((t) => t.targetId === String(id));
       if (!row) throw new Error(`No open tab with id ${JSON.stringify(String(id))}; see tabs.list()`);
@@ -635,7 +635,7 @@
         const list = await session.call("tabs.list", options && options.all ? { all: true } : {});
         const current = state.current && state.current._targetId;
         return list.map((t) => {
-          // state: "live", "hibernated" (cmux unloaded the hidden page to
+          // state: "live", "hibernated" (hmux unloaded the hidden page to
           // save memory; the next call on it loads it again), "waking" or
           // "crashed" (page.reload() loads it again).
           const row = { id: t.targetId, title: t.title, url: t.url, active: !!t.active, current: t.targetId === current, state: t.state || "live" };
@@ -703,7 +703,7 @@
         }
         return out;
       },
-      // cmux's browser history, most recent first: [{ url, title, dateVisited }].
+      // hmux's browser history, most recent first: [{ url, title, dateVisited }].
       async history(options = {}) {
         if (options === null || typeof options !== "object") throw new Error(`tabs.history: options: expected an object, got ${JSON.stringify(options)}`);
         const limit = options.limit === undefined ? 100 : options.limit;

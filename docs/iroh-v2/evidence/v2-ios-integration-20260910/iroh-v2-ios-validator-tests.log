@@ -1,57 +1,57 @@
 Command line invocation:
-    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -workspace ios/cmux.xcworkspace -scheme cmux-ios -testPlan cmux -destination "platform=iOS Simulator,id=9331CE0B-B058-4320-AB0F-C5853BB4E723" -derivedDataPath /tmp/cmux-iv2a-20260910211351 -parallel-testing-enabled NO "-only-testing:CmuxMobileShellUITests/privatePathMacLabelsExposeSiblingBuilds()" "-only-testing:CmuxMobileShellUITests/customPrivatePathEditorValidationUsesSharedAddressLimit()" "-only-testing:CmuxMobileShellUITests/confinedRelayPreservesSurfaceRetargetPolicy()" "-only-testing:CmuxMobileShellUITests/replyRelayDoesNotRepeatRequestInsideServerCooldown()" CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=dev.cmux.ios.iv2a CMUX_DEV_TAG=iv2a ARCHS=arm64 ONLY_ACTIVE_ARCH=YES test-without-building
+    /Applications/Xcode.app/Contents/Developer/usr/bin/xcodebuild -workspace ios/hmux.xcworkspace -scheme hmux-ios -testPlan hmux -destination "platform=iOS Simulator,id=9331CE0B-B058-4320-AB0F-C5853BB4E723" -derivedDataPath /tmp/hmux-iv2a-20260910211351 -parallel-testing-enabled NO "-only-testing:HmuxMobileShellUITests/privatePathMacLabelsExposeSiblingBuilds()" "-only-testing:HmuxMobileShellUITests/customPrivatePathEditorValidationUsesSharedAddressLimit()" "-only-testing:HmuxMobileShellUITests/confinedRelayPreservesSurfaceRetargetPolicy()" "-only-testing:HmuxMobileShellUITests/replyRelayDoesNotRepeatRequestInsideServerCooldown()" CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=dev.hmux.ios.iv2a HMUX_DEV_TAG=iv2a ARCHS=arm64 ONLY_ACTIVE_ARCH=YES test-without-building
 
 Build settings from command line:
     ARCHS = arm64
-    CMUX_DEV_TAG = iv2a
+    HMUX_DEV_TAG = iv2a
     CODE_SIGNING_ALLOWED = NO
     ONLY_ACTIVE_ARCH = YES
-    PRODUCT_BUNDLE_IDENTIFIER = dev.cmux.ios.iv2a
+    PRODUCT_BUNDLE_IDENTIFIER = dev.hmux.ios.iv2a
 
 Resolve Package Graph
 
 
 Resolved source packages:
-  CmuxMobileTerminal: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileTerminal
-  CmuxAgentChatUI: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxAgentChatUI @ local
-  CmuxMobileAnalytics: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileAnalytics @ local
+  HmuxMobileTerminal: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileTerminal
+  HmuxAgentChatUI: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxAgentChatUI @ local
+  HmuxMobileAnalytics: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileAnalytics @ local
   Sentry: https://github.com/getsentry/sentry-cocoa.git @ 9.26.0
-  StackAuth: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/vendor/stack-auth-swift-sdk-prerelease @ local
-  CmuxMobileSimulatorStream: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileSimulatorStream @ local
-  CmuxMobileShellModel: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileShellModel @ local
-  CmuxMobileCrashReporting: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileCrashReporting @ local
+  StackAuth: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/vendor/stack-auth-swift-sdk-prerelease @ local
+  HmuxMobileSimulatorStream: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileSimulatorStream @ local
+  HmuxMobileShellModel: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileShellModel @ local
+  HmuxMobileCrashReporting: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileCrashReporting @ local
   Highlightr: https://github.com/raspu/Highlightr.git @ 2.3.0
   swift-crypto: https://github.com/apple/swift-crypto.git @ 3.15.1
-  CmuxSentryTelemetry: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxSentryTelemetry @ local
-  CmuxIrxTransport: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport @ local
-  CmuxMobileCamera: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileCamera @ local
-  CmuxMobileBrowserStream: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileBrowserStream @ local
-  CmuxMobileTransport: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileTransport @ local
-  CmuxAgentChat: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxAgentChat @ local
-  CmuxIrohTransport: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrohTransport @ local
-  CmuxMobileToast: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileToast @ local
-  CmuxMobileTerminalKit: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileTerminalKit @ local
-  cmuxFeature: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/ios/cmuxPackage
-  CmuxClientConfig: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxClientConfig @ local
-  CMUXMobileCore: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CMUXMobileCore @ local
-  CmuxMobileWorkspace: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileWorkspace @ local
-  CMUXAuthCore: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CMUXAuthCore @ local
-  CmuxMobilePairedMac: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobilePairedMac @ local
+  HmuxSentryTelemetry: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxSentryTelemetry @ local
+  HmuxIrxTransport: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport @ local
+  HmuxMobileCamera: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileCamera @ local
+  HmuxMobileBrowserStream: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileBrowserStream @ local
+  HmuxMobileTransport: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileTransport @ local
+  HmuxAgentChat: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxAgentChat @ local
+  HmuxIrohTransport: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrohTransport @ local
+  HmuxMobileToast: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileToast @ local
+  HmuxMobileTerminalKit: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileTerminalKit @ local
+  hmuxFeature: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/ios/hmuxPackage
+  HmuxClientConfig: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxClientConfig @ local
+  HMUXMobileCore: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HMUXMobileCore @ local
+  HmuxMobileWorkspace: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileWorkspace @ local
+  HMUXAuthCore: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HMUXAuthCore @ local
+  HmuxMobilePairedMac: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobilePairedMac @ local
   swift-asn1: https://github.com/apple/swift-asn1.git @ 1.7.1
-  IrohLib: https://github.com/manaflow-ai/iroh-ffi.git @ 1.0.2-cmux.7
-  CmuxMobileShellUI: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileShellUI
-  CmuxSimulatorStreamKit: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxSimulatorStreamKit @ local
-  CmuxMobileShell: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileShell @ local
-  CmuxMobileSupport: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileSupport @ local
-  CmuxMobileDiagnostics: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileDiagnostics @ local
-  CmuxMobileChanges: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileChanges @ local
-  CmuxAuthRuntime: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxAuthRuntime @ local
-  CmuxMobileRPC: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileRPC @ local
-  CmuxMobileBrowser: /Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/CmuxMobileBrowser @ local
+  IrohLib: https://github.com/manaflow-ai/iroh-ffi.git @ 1.0.2-hmux.7
+  HmuxMobileShellUI: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileShellUI
+  HmuxSimulatorStreamKit: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxSimulatorStreamKit @ local
+  HmuxMobileShell: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileShell @ local
+  HmuxMobileSupport: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileSupport @ local
+  HmuxMobileDiagnostics: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileDiagnostics @ local
+  HmuxMobileChanges: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileChanges @ local
+  HmuxAuthRuntime: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxAuthRuntime @ local
+  HmuxMobileRPC: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileRPC @ local
+  HmuxMobileBrowser: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileBrowser @ local
 
 Test Suite 'Selected tests' started at 2026-09-10 22:03:28.784.
-Test Suite 'CmuxMobileShellUITests.xctest' started at 2026-09-10 22:03:28.784.
-Test Suite 'CmuxMobileShellUITests.xctest' passed at 2026-09-10 22:03:28.784.
+Test Suite 'HmuxMobileShellUITests.xctest' started at 2026-09-10 22:03:28.784.
+Test Suite 'HmuxMobileShellUITests.xctest' passed at 2026-09-10 22:03:28.784.
 	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
 Test Suite 'Selected tests' passed at 2026-09-10 22:03:28.784.
 	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds
@@ -73,7 +73,7 @@ Test Suite 'Selected tests' passed at 2026-09-10 22:03:28.784.
 2026-09-10 22:03:29.092 xcodebuild[64543:4218599] [MT] IDETestOperationsObserverDebug: 4.158 sec, +4.158 sec -- end
 
 Test session results, code coverage, and logs:
-	/tmp/cmux-iv2a-20260910211351/Logs/Test/Test-cmux-ios-2026.09.10_22-03-24--0700.xcresult
+	/tmp/hmux-iv2a-20260910211351/Logs/Test/Test-hmux-ios-2026.09.10_22-03-24--0700.xcresult
 
 ** TEST EXECUTE SUCCEEDED **
 

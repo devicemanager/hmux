@@ -162,7 +162,7 @@ export async function openCodeClientConfig(
   }
   // The proxy origin comes from the serving request, not a hardcoded host,
   // so the config works on every deployment of this app (coderouter.dev,
-  // the cmux origin Cloud VMs are minted against, previews, self-hosted).
+  // the hmux origin Cloud VMs are minted against, previews, self-hosted).
   //
   // A VM-bound token never leaves the edge: the guest's config carries the
   // public placeholder key, and the edge injects the real token per request.

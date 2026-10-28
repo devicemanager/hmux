@@ -19,7 +19,7 @@ export function PricingAudienceSelector({ individualLabel, teamLabel, ariaLabel,
   const buttons = useRef<Array<HTMLButtonElement | null>>([]);
   function select(next: PricingAudience) {
     setAudience(next);
-    if (next !== audience) posthog.capture("cmux_pricing_audience_selected", { audience: next, surface });
+    if (next !== audience) posthog.capture("hmux_pricing_audience_selected", { audience: next, surface });
   }
   return (
     <>

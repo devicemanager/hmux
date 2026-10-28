@@ -1,10 +1,10 @@
 # Review
 
-Run an adversarial review of the current change using the repository's cmux review skill.
+Run an adversarial review of the current change using the repository's hmux review skill.
 
 Read and follow:
 
-`skills/cmux-review/SKILL.md`
+`skills/hmux-review/SKILL.md`
 
 Use the current task/conversation as the change intent when available. Default to reviewing the current working tree against `origin/main` (or the repository default branch when origin/main is unavailable).
 

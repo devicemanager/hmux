@@ -1,6 +1,6 @@
 import AppKit
-import CmuxCommandPalette
-import CmuxWorkspaces
+import HmuxCommandPalette
+import HmuxWorkspaces
 import SwiftUI
 
 // MARK: - Context menu section
@@ -239,7 +239,7 @@ enum WorkspaceTodoPaletteCommands {
             }
         )
         // Same shared path as the cycleWorkspaceStatus shortcut, the
-        // workspace.status.cycle socket verb, and `cmux workspace status cycle`.
+        // workspace.status.cycle socket verb, and `hmux workspace status cycle`.
         registry.register(
             commandId: cycleWorkspaceStatusCommandId,
             handler: withSelectedWorkspace { workspace in

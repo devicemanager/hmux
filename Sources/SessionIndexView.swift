@@ -1,8 +1,8 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
 import Bonsplit
-import CmuxAppKitSupportUI
-import CMUXAgentLaunch
+import HmuxAppKitSupportUI
+import HMUXAgentLaunch
 import SQLite3
 import SwiftUI
 import UniformTypeIdentifiers
@@ -423,7 +423,7 @@ struct SessionIndexView: View {
         VStack(spacing: 6) {
             ProgressView().controlSize(.small)
             Text(String(localized: "sessionIndex.loading", defaultValue: "Loading Vault…"))
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -432,11 +432,11 @@ struct SessionIndexView: View {
     private var emptyView: some View {
         VStack(spacing: 4) {
             Text(String(localized: "sessionIndex.empty.title", defaultValue: "Vault is empty"))
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
                 .foregroundColor(.secondary)
             Text(String(localized: "sessionIndex.empty.subtitle",
                                    defaultValue: "Claude Code, Codex, OpenCode, and Rovo Dev history will appear here."))
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundColor(.secondary.opacity(0.7))
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 16)
@@ -590,7 +590,7 @@ struct SessionIndexView: View {
 
     private var searchStatusView: some View {
         Text(String(localized: "sessionIndex.search.searching", defaultValue: "Searching…"))
-            .cmuxFont(size: 11, weight: .medium)
+            .hmuxFont(size: 11, weight: .medium)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
@@ -599,7 +599,7 @@ struct SessionIndexView: View {
 
     private var searchEmptyView: some View {
         Text(String(localized: "sessionIndex.search.noResults", defaultValue: "No matching sessions"))
-            .cmuxFont(size: 11)
+            .hmuxFont(size: 11)
             .foregroundStyle(.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
@@ -644,10 +644,10 @@ struct SessionIndexView: View {
             ForEach(searchErrors, id: \.self) { msg in
                 HStack(alignment: .top, spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .cmuxFont(size: 10)
+                        .hmuxFont(size: 10)
                         .foregroundColor(.orange)
                     Text(msg)
-                        .cmuxFont(size: 11)
+                        .hmuxFont(size: 11)
                         .foregroundColor(.primary.opacity(0.85))
                 }
             }
@@ -692,7 +692,7 @@ private struct GroupingButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: RightSidebarChromeMetrics.contentIconTextSpacing) {
-                CmuxSystemSymbolImage(
+                HmuxSystemSymbolImage(
                     magnified: mode.symbolName,
                     pointSize: RightSidebarChromeControlStyle.secondaryIconSize,
                     weight: RightSidebarChromeControlStyle.iconWeight,
@@ -700,7 +700,7 @@ private struct GroupingButton: View {
                 )
                 .frame(width: RightSidebarChromeMetrics.contentIconFrameSize)
                 Text(mode.label)
-                    .cmuxFont(
+                    .hmuxFont(
                         size: RightSidebarChromeControlStyle.labelSize,
                         weight: RightSidebarChromeControlStyle.labelWeight
                     )
@@ -871,7 +871,7 @@ struct IndexSectionView: View, Equatable {
             onShowMore()
         } label: {
             Text(String(localized: "sessionIndex.section.showMore", defaultValue: "Show more"))
-                .cmuxFont(size: 12, weight: .medium)
+                .hmuxFont(size: 12, weight: .medium)
                 .foregroundColor(.secondary.opacity(0.7))
                 .padding(.leading, 32)
                 .padding(.trailing, 12)
@@ -907,7 +907,7 @@ struct IndexSectionView: View, Equatable {
                     HStack(spacing: RightSidebarChromeMetrics.contentIconTextSpacing) {
                         sectionIconView
                         Text(section.title)
-                            .cmuxFont(size: 12, weight: .semibold)
+                            .hmuxFont(size: 12, weight: .semibold)
                     }
                     .padding(.horizontal, 10)
                     .padding(.vertical, 5)
@@ -923,15 +923,15 @@ struct IndexSectionView: View, Equatable {
             HStack(spacing: RightSidebarChromeMetrics.contentIconTextSpacing) {
                 sectionIconView
                 Text(section.title)
-                    .cmuxFont(size: 12, weight: .semibold)
+                    .hmuxFont(size: 12, weight: .semibold)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 Text(section.entries.count.description)
-                    .cmuxFont(size: 11, weight: .medium, monospacedDigit: true)
+                    .hmuxFont(size: 11, weight: .medium, monospacedDigit: true)
                     .foregroundStyle(.tertiary)
                     .fixedSize()
-                CmuxSystemSymbolImage(magnified: "chevron.down", pointSize: 9, weight: .semibold, tint: .secondary.opacity(0.6))
+                HmuxSystemSymbolImage(magnified: "chevron.down", pointSize: 9, weight: .semibold, tint: .secondary.opacity(0.6))
                     .rotationEffect(.degrees(isCollapsed ? -90 : 0))
                 Spacer(minLength: 0)
             }
@@ -950,7 +950,7 @@ struct IndexSectionView: View, Equatable {
 }
 
 struct SectionReorderGap: View, Equatable {
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     /// Section the dragged item should land BEFORE if dropped here. `nil` for
     /// the trailing gap (drop appends to the end of persisted order).
     let beforeKey: SectionKey?
@@ -973,7 +973,7 @@ struct SectionReorderGap: View, Equatable {
             .overlay(alignment: .center) {
                 if isDropTarget && isValidDrop {
                     Capsule()
-                        .fill(cmuxAccent.color)
+                        .fill(hmuxAccent.color)
                         .frame(height: 3)
                         .padding(.horizontal, 10)
                 }
@@ -1080,7 +1080,7 @@ private struct SessionRow: View, Equatable {
             HStack(spacing: SessionIndexRowMetrics.primaryLineSpacing) {
                 SessionIndexAgentIconImage(agent: entry.agent, size: SessionIndexRowMetrics.agentIconSize)
                 Text(entry.displayTitle)
-                    .cmuxFont(size: 13)
+                    .hmuxFont(size: 13)
                     .foregroundColor(.primary.opacity(0.92))
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -1090,13 +1090,13 @@ private struct SessionRow: View, Equatable {
                     liveStatus: accessory?.liveStatus
                 )
                 Text(relativeTime(entry.modified))
-                    .cmuxFont(size: 12, monospacedDigit: true)
+                    .hmuxFont(size: 12, monospacedDigit: true)
                     .foregroundColor(.secondary.opacity(0.65))
                     .fixedSize()
             }
             if let accessory, let detail = accessory.detail {
                 Text(detail)
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundColor(.secondary.opacity(0.75))
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -1319,20 +1319,20 @@ struct SessionTranscriptPreviewView: View {
             SessionIndexSectionIconImage(icon: .agent(entry.agent), size: SessionIndexRowMetrics.sectionIconSize)
             VStack(alignment: .leading, spacing: 1) {
                 Text(entry.displayTitle)
-                    .cmuxFont(size: 13, weight: .semibold)
+                    .hmuxFont(size: 13, weight: .semibold)
                     .foregroundColor(.primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
                 if let cwd = entry.cwdLabel {
                     Text(cwd)
-                        .cmuxFont(size: 11)
+                        .hmuxFont(size: 11)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                         .truncationMode(.middle)
                 }
             }
             Spacer(minLength: 8)
-            CmuxSystemSymbolImage(magnified: "xmark", pointSize: 11, weight: .semibold, tint: closeIsHovered ? .primary : .secondary)
+            HmuxSystemSymbolImage(magnified: "xmark", pointSize: 11, weight: .semibold, tint: closeIsHovered ? .primary : .secondary)
                 .frame(width: 20, height: 20)
                 .background(
                     RoundedRectangle(cornerRadius: RightSidebarChromeMetrics.buttonCornerRadius, style: .continuous)
@@ -1398,7 +1398,7 @@ struct SessionTranscriptPreviewView: View {
             ProgressView()
                 .controlSize(.small)
             Text(String(localized: "sessionIndex.popover.loading", defaultValue: "Loading…"))
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
                 .foregroundColor(.secondary)
             Spacer(minLength: 0)
         }
@@ -1408,9 +1408,9 @@ struct SessionTranscriptPreviewView: View {
 
     private func statusRow(systemImage: String, text: String) -> some View {
         HStack(spacing: 8) {
-            CmuxSystemSymbolImage(magnified: systemImage, pointSize: 12, weight: .medium, tint: .secondary)
+            HmuxSystemSymbolImage(magnified: systemImage, pointSize: 12, weight: .medium, tint: .secondary)
             Text(text)
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
                 .foregroundColor(.secondary)
             Spacer(minLength: 0)
         }
@@ -1497,7 +1497,7 @@ private struct SessionTranscriptTurnView: View, Equatable {
         HStack(alignment: .top, spacing: 10) {
             VStack(spacing: 3) {
                 Text(row.isContinuation ? "" : row.role.label)
-                    .cmuxFont(size: 10, weight: .semibold)
+                    .hmuxFont(size: 10, weight: .semibold)
                     .foregroundColor(row.role.foregroundColor)
                     .lineLimit(1)
                     .frame(width: 58, alignment: .trailing)
@@ -1508,7 +1508,7 @@ private struct SessionTranscriptTurnView: View, Equatable {
                 }
             }
             Text(row.text)
-                .cmuxFont(size: row.role.bodyFontSize, design: row.role.bodyFontDesign)
+                .hmuxFont(size: row.role.bodyFontSize, design: row.role.bodyFontDesign)
                 .foregroundColor(.primary.opacity(0.92))
                 .copyOnlyTextSelection(for: row.text)
                 .fixedSize(horizontal: false, vertical: true)
@@ -1904,7 +1904,7 @@ enum SessionTranscriptLoader {
     private static func loadOpenCodeSynchronously(sessionId: String) throws -> [SessionTranscriptTurn] {
         let snapshot: OpenCodeDatabaseSnapshot.Snapshot
         do {
-            guard let madeSnapshot = try OpenCodeDatabaseSnapshot.make(prefix: "cmux-opencode-preview") else {
+            guard let madeSnapshot = try OpenCodeDatabaseSnapshot.make(prefix: "hmux-opencode-preview") else {
                 throw SessionTranscriptLoadError.missingFile
             }
             snapshot = madeSnapshot
@@ -2569,7 +2569,7 @@ struct SectionPopoverView: View {
             HStack(spacing: 8) {
                 sectionIconView
                 Text(section.title)
-                    .cmuxFont(size: 13, weight: .semibold)
+                    .hmuxFont(size: 13, weight: .semibold)
                     .foregroundColor(.primary)
                     .lineLimit(1)
                     .truncationMode(.middle)
@@ -2580,20 +2580,20 @@ struct SectionPopoverView: View {
             .padding(.bottom, 6)
 
             HStack(spacing: 6) {
-                CmuxSystemSymbolImage(magnified: "magnifyingglass", pointSize: 11, weight: .medium, tint: .secondary)
+                HmuxSystemSymbolImage(magnified: "magnifyingglass", pointSize: 11, weight: .medium, tint: .secondary)
                 TextField(
                     String(localized: "sessionIndex.popover.searchPlaceholder",
                            defaultValue: "Search Vault"),
                     text: $query
                 )
                 .textFieldStyle(.plain)
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
                 .focused($searchFieldFocused)
                 if !query.isEmpty {
                     Button {
                         query = ""
                     } label: {
-                        CmuxSystemSymbolImage(magnified: "xmark.circle.fill", pointSize: 11, tint: .secondary)
+                        HmuxSystemSymbolImage(magnified: "xmark.circle.fill", pointSize: 11, tint: .secondary)
                     }
                     .buttonStyle(.plain)
                     .accessibilityLabel(String(localized: "historyPane.search.clear", defaultValue: "Clear search"))
@@ -2614,9 +2614,9 @@ struct SectionPopoverView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     ForEach(errorMessages, id: \.self) { msg in
                         HStack(alignment: .top, spacing: 6) {
-                            CmuxSystemSymbolImage(magnified: "exclamationmark.triangle.fill", pointSize: 10, tint: .orange)
+                            HmuxSystemSymbolImage(magnified: "exclamationmark.triangle.fill", pointSize: 10, tint: .orange)
                             Text(msg)
-                                .cmuxFont(size: 11)
+                                .hmuxFont(size: 11)
                                 .foregroundColor(.primary.opacity(0.85))
                         }
                     }
@@ -2633,7 +2633,7 @@ struct SectionPopoverView: View {
                     } else if loadedRows.isEmpty {
                         Text(String(localized: "sessionIndex.popover.noMatches",
                                     defaultValue: "No matches"))
-                            .cmuxFont(size: 12)
+                            .hmuxFont(size: 12)
                             .foregroundColor(.secondary)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 10)
@@ -2669,7 +2669,7 @@ struct SectionPopoverView: View {
                         } else {
                             Text(String(localized: "sessionIndex.popover.endOfList",
                                         defaultValue: "You've reached the end"))
-                                .cmuxFont(size: 11)
+                                .hmuxFont(size: 11)
                                 .foregroundColor(.secondary.opacity(0.5))
                                 .frame(maxWidth: .infinity, alignment: .center)
                                 .padding(.vertical, 8)
@@ -2785,7 +2785,7 @@ struct SectionPopoverView: View {
         HStack(spacing: 6) {
             ProgressView().controlSize(.small)
             Text(String(localized: "sessionIndex.popover.loading", defaultValue: "Loading…"))
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundColor(.secondary)
             Spacer(minLength: 0)
         }
@@ -2908,7 +2908,7 @@ private struct PopoverRow: View, Equatable {
         TimelineView(RelativeTimestampSchedule(modified: entry.modified)) { context in
             Text(SessionIndexView.relativeFormatter.localizedString(for: entry.modified, relativeTo: context.date))
         }
-        .cmuxFont(size: 11, monospacedDigit: true)
+        .hmuxFont(size: 11, monospacedDigit: true)
         .foregroundColor(.secondary.opacity(0.7))
         .fixedSize()
     }
@@ -2922,7 +2922,7 @@ private struct PopoverRow: View, Equatable {
                 // always constrain a Text that has hard line breaks in the
                 // source string.
                 Text(Self.flatten(entry.displayTitle))
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .foregroundColor(.primary.opacity(0.92))
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -2935,7 +2935,7 @@ private struct PopoverRow: View, Equatable {
             }
             if let detail = accessory?.detail {
                 Text(Self.flatten(detail))
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundColor(.secondary.opacity(0.75))
                     .lineLimit(1)
                     .truncationMode(.middle)

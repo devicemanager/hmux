@@ -5,7 +5,7 @@ const digest = "sha256:" + "a".repeat(64);
 
 function spec(overrides: Record<string, unknown> = {}) {
   return {
-    schema: "cmux.run/v1",
+    schema: "hmux.run/v1",
     operationId: "dogfood-run",
     source: { repository: "manaflow-ai/cmux", commit: "0123456789abcdef0123456789abcdef01234567", setupManifestDigest: digest },
     intent: { digest },
@@ -24,7 +24,7 @@ function spec(overrides: Record<string, unknown> = {}) {
 describe("RunSpec", () => {
   test("normalizes the public secret-free contract and produces a stable digest", () => {
     const normalized = normalizeRunSpec(spec());
-    expect(normalized.schema).toBe("cmux.run/v1");
+    expect(normalized.schema).toBe("hmux.run/v1");
     expect(runSpecDigest(normalized)).toMatch(/^sha256:[0-9a-f]{64}$/);
     expect(runSpecDigest(normalized)).toBe(runSpecDigest(normalizeRunSpec(spec())));
   });

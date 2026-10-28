@@ -69,8 +69,8 @@ test("signed out: LinkedIn and X login redirects are reported", async () => {
   try {
     const o = out.session("x");
     assert.match(await o.error("sites.linkedin.me()"), /not signed in to LinkedIn/);
-    assert.match(await o.error("sites.linkedin.feed()"), /linkedin: the cmux browser is not signed in/);
-    assert.match(await o.error('sites.x.user("grace")'), /x\.user: the cmux browser is not signed in \(landed on https:\/\/x\.com\/i\/flow\/login\)/);
+    assert.match(await o.error("sites.linkedin.feed()"), /linkedin: the hmux browser is not signed in/);
+    assert.match(await o.error('sites.x.user("grace")'), /x\.user: the hmux browser is not signed in \(landed on https:\/\/x\.com\/i\/flow\/login\)/);
   } finally {
     await out.close();
   }

@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""The cmux NEXT nightly release train: cars, candidates and verdicts.
+"""The hmux NEXT nightly release train: cars, candidates and verdicts.
 
-Design: leo-workspace workstreams/cmux-next-nightly-train.md (sections 1.1 to
+Design: leo-workspace workstreams/hmux-next-nightly-train.md (sections 1.1 to
 1.5); the operator notes are in docs/ci/nightly-next-train.md.
 
   verdict --build B --verdict pass|fail|skipped --commit SHA --run-url URL --out FILE
       Write the durable canary verdict of one feed build (verdicts/<build>.json
-      next to the cmux NEXT appcast in R2; nightly-next-verdict.yml uploads it).
+      next to the hmux NEXT appcast in R2; nightly-next-verdict.yml uploads it).
 
   verdict-check --repo R --build B --verdict V --canary-run ID --out FILE
       The same document, for nightly-next-verdict.yml: the commit is read from
@@ -54,7 +54,7 @@ import urllib.request
 from dataclasses import asdict, dataclass, field
 from typing import Callable, Iterable
 
-SOURCE = "feat-cmux-next"
+SOURCE = "feat-hmux-next"
 TARGET = "nightly-next"
 FEED = "https://files-next.cmux.com/nightly-next/next/appcast-arm64.xml"
 VERDICTS = "https://files-next.cmux.com/nightly-next/next/verdicts"
@@ -100,7 +100,7 @@ def gh_api(path: str, paginate: bool = False) -> object:
 
 def http_get(url: str) -> bytes | None:
     """The body, or None on a 404 (a build with no verdict yet)."""
-    request = urllib.request.Request(url, headers={"User-Agent": "cmux-nightly-next-train/1", "Cache-Control": "no-cache"})
+    request = urllib.request.Request(url, headers={"User-Agent": "hmux-nightly-next-train/1", "Cache-Control": "no-cache"})
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             return response.read()
@@ -243,8 +243,8 @@ def revert_onto(tree_commit: str, revert: str) -> tuple[str | None, list[str]]:
 
 
 _SCRATCH_ENV = {
-    "GIT_AUTHOR_NAME": "cmux nightly train", "GIT_AUTHOR_EMAIL": "nightly-train@cmux.invalid",
-    "GIT_COMMITTER_NAME": "cmux nightly train", "GIT_COMMITTER_EMAIL": "nightly-train@cmux.invalid",
+    "GIT_AUTHOR_NAME": "hmux nightly train", "GIT_AUTHOR_EMAIL": "nightly-train@hmux.invalid",
+    "GIT_COMMITTER_NAME": "hmux nightly train", "GIT_COMMITTER_EMAIL": "nightly-train@hmux.invalid",
     "GIT_AUTHOR_DATE": "1700000000 +0000", "GIT_COMMITTER_DATE": "1700000000 +0000",
 }
 
@@ -331,7 +331,7 @@ def changed_files(sha: str) -> list[str]:
 
 def push_groups(api: Callable[..., object], repo: str, commits: list[str], boundary: str) -> dict[str, tuple[str, str]]:
     """commit -> (push id, push actor) from the repository activity of
-    feat-cmux-next, for the commits of the range a push brought."""
+    feat-hmux-next, for the commits of the range a push brought."""
     wanted = set(commits)
     position = {sha: index for index, sha in enumerate(commits)}
     found: dict[str, tuple[str, str]] = {}
@@ -369,7 +369,7 @@ MAX_PULL_LOOKUPS = 40
 
 
 def merged_pulls(api: Callable[..., object], repo: str, numbers: set[int]) -> dict[int, dict]:
-    """The closed PRs into feat-cmux-next, newest updated first, 100 a page,
+    """The closed PRs into feat-hmux-next, newest updated first, 100 a page,
     until every wanted number is seen: a day of cars costs a few calls, not
     one per PR (the plan runs on every tick, on the repository's token)."""
     found: dict[int, dict] = {}
@@ -512,7 +512,7 @@ def carried_cars(train: TrainCommit) -> list[Car]:
 
 
 def source_base(base_commit: str) -> tuple[str, list[Car]]:
-    """(feat-cmux-next commit the base was built from, cars it quarantined)."""
+    """(feat-hmux-next commit the base was built from, cars it quarantined)."""
     train = read_train_commit(base_commit)
     if train is None:
         return base_commit, []
@@ -527,7 +527,7 @@ def require_on_tip(source: str, cars: list[Car], tip: str) -> None:
     The base comes from a build or a dispatch input, and its trailers name the
     carried cars, so a crafted base could name commits that never landed. The
     car guards check out every car, and the drive job holds the release App
-    token while they run, so only feat-cmux-next history may get that far."""
+    token while they run, so only feat-hmux-next history may get that far."""
     def on_tip(sha: str) -> bool:
         return bool(SHA_RE.match(sha)) and subprocess.run(
             ["git", "merge-base", "--is-ancestor", sha, tip], capture_output=True,
@@ -608,8 +608,8 @@ def make_train_commit(parent: str, tip: str, cars: list[Car], quarantine: Iterab
     candidate = build_candidate(tip, cars, quarantine)
     message = train_message(tip, cars, candidate, title)
     commit = git("commit-tree", candidate["tree"], "-p", parent, "-p", tip, "-F", "-", input=message, env={
-        "GIT_AUTHOR_NAME": "cmux nightly train", "GIT_AUTHOR_EMAIL": "41898282+github-actions[bot]@users.noreply.github.com",
-        "GIT_COMMITTER_NAME": "cmux nightly train", "GIT_COMMITTER_EMAIL": "41898282+github-actions[bot]@users.noreply.github.com",
+        "GIT_AUTHOR_NAME": "hmux nightly train", "GIT_AUTHOR_EMAIL": "41898282+github-actions[bot]@users.noreply.github.com",
+        "GIT_COMMITTER_NAME": "hmux nightly train", "GIT_COMMITTER_EMAIL": "41898282+github-actions[bot]@users.noreply.github.com",
     }).strip()
     return {**candidate, "commit": commit, "parent": parent, "tip": tip}
 
@@ -635,7 +635,7 @@ def narrow(lo: int, hi: int, results: dict[int, bool]) -> tuple[int, int]:
 
 def prefix_candidate(cars: list[Car], length: int, quarantine: Iterable[str], source_base_commit: str) -> tuple[str, list[str]]:
     """(head commit, cars to revert) for the candidate holding the first
-    `length` cars. A non-carried prefix is a real feat-cmux-next commit; the
+    `length` cars. A non-carried prefix is a real feat-hmux-next commit; the
     carried cars past the prefix and the quarantined cars in it are reverted."""
     quarantine = set(quarantine)
     included = cars[:length]

@@ -11,13 +11,13 @@ describe("billing purchase recovery", () => {
       id: "cus_fixture",
       deleted: false,
       email: "billingfixture@gmail.com",
-      metadata: { app: "cmux" },
+      metadata: { app: "hmux" },
     };
     const subscription = {
       id: "sub_fixture",
       customer: customer.id,
       status: "active",
-      metadata: { app: "cmux", plan: "pro", stackUserId: "anonymous" },
+      metadata: { app: "hmux", plan: "pro", stackUserId: "anonymous" },
       cancel_at_period_end: false,
       items: { data: [] },
     };
@@ -54,13 +54,13 @@ describe("billing purchase recovery", () => {
       id: "cus_googlemail_fixture",
       deleted: false,
       email: "billingfixture@googlemail.com",
-      metadata: { app: "cmux" },
+      metadata: { app: "hmux" },
     };
     const subscription = {
       id: "sub_googlemail_fixture",
       customer: customer.id,
       status: "active",
-      metadata: { app: "cmux", plan: "pro" },
+      metadata: { app: "hmux", plan: "pro" },
       cancel_at_period_end: false,
       items: { data: [] },
     };
@@ -183,7 +183,7 @@ describe("billing purchase recovery", () => {
       id: "sub_canceled_fixture",
       customer: customer.id,
       status: "canceled",
-      metadata: { app: "cmux", plan: "pro" },
+      metadata: { app: "hmux", plan: "pro" },
       cancel_at_period_end: false,
       items: { data: [] },
     };
@@ -211,7 +211,7 @@ describe("billing purchase recovery", () => {
                     customer: customer.id,
                     customer_details: { email: customer.email },
                     payment_status: "paid",
-                    metadata: { app: "cmux", plan: "pro" },
+                    metadata: { app: "hmux", plan: "pro" },
                     subscription: canceledSubscription,
                   },
                 ],
@@ -400,7 +400,7 @@ describe("billing purchase recovery", () => {
       customer: customer.id,
       status: "active",
       metadata: {
-        app: "cmux",
+        app: "hmux",
         plan: "pro",
         founders_edition: "true",
       },
@@ -413,7 +413,7 @@ describe("billing purchase recovery", () => {
       customer_details: { email: customer.email },
       payment_status: "paid",
       metadata: {
-        app: "cmux",
+        app: "hmux",
         plan: "pro",
         founders_edition: "true",
       },

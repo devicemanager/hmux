@@ -63,7 +63,7 @@ final class MobileHostPOSIXListener: @unchecked Sendable {
     ///     ``ListenerError/bindFailed`` with `EADDRINUSE`.
     ///   - queue: The dispatch queue that receives accepted connections and
     ///     the cancellation callback. The service passes the shared
-    ///     `dev.cmux.mobile.host-listener` queue.
+    ///     `dev.hmux.mobile.host-listener` queue.
     /// - Throws: ``ListenerError`` when the socket cannot be created, bound,
     ///   or switched to listening.
     init(preferredPort: UInt16?, queue: DispatchQueue) throws {

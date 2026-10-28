@@ -4,7 +4,7 @@ import os
 
 enum StartupBreadcrumbLog {
     private static let maxFieldLength = 240
-    private nonisolated static let logger = Logger(subsystem: "com.cmuxterm.app", category: "StartupBreadcrumbLog")
+    private nonisolated static let logger = Logger(subsystem: "com.hmuxterm.app", category: "StartupBreadcrumbLog")
     private static let reservedFieldKeys: Set<String> = [
         "timestamp",
         "timestampMs",
@@ -64,7 +64,7 @@ enum StartupBreadcrumbLog {
             try handle.write(contentsOf: line)
             try handle.write(contentsOf: Data([0x0A]))
         } catch {
-            logger.fault("cmux startup breadcrumb failed: \(String(describing: error), privacy: .public)")
+            logger.fault("hmux startup breadcrumb failed: \(String(describing: error), privacy: .public)")
         }
     }
 
@@ -94,27 +94,27 @@ enum StartupBreadcrumbLog {
 
     private static var isEnabled: Bool {
         let environment = ProcessInfo.processInfo.environment
-        if environment["CMUX_DISABLE_STARTUP_BREADCRUMBS"] == "1" {
+        if environment["HMUX_DISABLE_STARTUP_BREADCRUMBS"] == "1" {
             return false
         }
-        if environment["CMUX_STARTUP_BREADCRUMBS"] == "1" {
+        if environment["HMUX_STARTUP_BREADCRUMBS"] == "1" {
             return true
         }
         let bundleIdentifier = Bundle.main.bundleIdentifier ?? ""
-        return bundleIdentifier == "com.cmuxterm.app.nightly"
-            || bundleIdentifier.hasPrefix("com.cmuxterm.app.nightly.")
-            || bundleIdentifier == "com.cmuxterm.app.rc"
-            || bundleIdentifier.hasPrefix("com.cmuxterm.app.rc.")
-            || bundleIdentifier == "com.cmuxterm.app.debug"
-            || bundleIdentifier.hasPrefix("com.cmuxterm.app.debug.")
+        return bundleIdentifier == "com.hmuxterm.app.nightly"
+            || bundleIdentifier.hasPrefix("com.hmuxterm.app.nightly.")
+            || bundleIdentifier == "com.hmuxterm.app.rc"
+            || bundleIdentifier.hasPrefix("com.hmuxterm.app.rc.")
+            || bundleIdentifier == "com.hmuxterm.app.debug"
+            || bundleIdentifier.hasPrefix("com.hmuxterm.app.debug.")
     }
 
     private static var logURL: URL {
         let logsDirectory = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)
             .first?
-            .appendingPathComponent("Logs/cmux", isDirectory: true)
+            .appendingPathComponent("Logs/hmux", isDirectory: true)
             ?? URL(fileURLWithPath: NSTemporaryDirectory(), isDirectory: true)
-                .appendingPathComponent("cmux-logs", isDirectory: true)
+                .appendingPathComponent("hmux-logs", isDirectory: true)
         let sanitizedBundleIdentifier = logFileComponent(Bundle.main.bundleIdentifier ?? "unknown")
         return logsDirectory.appendingPathComponent("startup-\(sanitizedBundleIdentifier).log")
     }

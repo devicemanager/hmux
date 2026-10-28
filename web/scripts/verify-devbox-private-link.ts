@@ -4,7 +4,7 @@
  * Verify an image through the same private carrier as the Mac app. Local daemon
  * readiness alone misses a stale client, VPC routing, or enrollment failure.
  *
- * bun scripts/verify-devbox-private-link.ts <snapshot-id> <cmux-tui-client>
+ * bun scripts/verify-devbox-private-link.ts <snapshot-id> <hmux-tui-client>
  *
  * Requires FREESTYLE_API_KEY. Creates an isolated VM, VPC, and temporary tunnel;
  * deletes all three, including on failure. Never modifies existing machines.
@@ -55,17 +55,17 @@ function verify(image: string, client: string) {
   return Effect.gen(function* () {
     const rawProbe = yield* command(client, ["remote-probe", "--json"], "Client probe failed");
     const probe = yield* Effect.try(() => JSON.parse(rawProbe));
-    if (probe.app !== "cmux-tui" || !Array.isArray(probe.capabilities) || !probe.capabilities.includes("wireguard-hub")) {
-      return yield* Effect.fail(new Error("This client lacks wireguard-hub. Update cmux NIGHTLY before diagnosing or replacing the Freestyle image."));
+    if (probe.app !== "hmux-tui" || !Array.isArray(probe.capabilities) || !probe.capabilities.includes("wireguard-hub")) {
+      return yield* Effect.fail(new Error("This client lacks wireguard-hub. Update hmux NIGHTLY before diagnosing or replacing the Freestyle image."));
     }
     if (!process.env.FREESTYLE_API_KEY) return yield* Effect.fail(new Error("Set FREESTYLE_API_KEY"));
     const provider = new FreestyleProvider();
     const networking = provider.privateNetworking;
     const root = yield* Effect.acquireRelease(
-      Effect.sync(() => mkdtempSync(path.join(tmpdir(), "cmux-image-link-"))),
+      Effect.sync(() => mkdtempSync(path.join(tmpdir(), "hmux-image-link-"))),
       (directory) => Effect.sync(() => rmSync(directory, { recursive: true, force: true })),
     );
-    const slug = `cmux-image-check-${randomUUID().slice(0, 12)}`;
+    const slug = `hmux-image-check-${randomUUID().slice(0, 12)}`;
     const network = yield* Effect.acquireRelease(
       attempt("Create diagnostic VPC failed", () => networking.ensureNetwork({ slug })),
       (value) => cleanup(`VPC ${value.id}`, () => networking.deleteNetwork(value.id)),
@@ -89,7 +89,7 @@ function verify(image: string, client: string) {
     yield* Effect.try(() => writeFileSync(configPath, config, { mode: 0o600 }));
     const hub = yield* startPrivateLinkClient(client, ["wg", "hub", "--config", configPath, "--socket", hubSocket], { event: "hub-ready", socket: hubSocket });
     yield* hub.ready;
-    const endpoint = yield* attempt("Read image attach bundle failed", () => provider.openCmuxRemote(vm.providerVmId, { clientCapabilities: probe.capabilities }));
+    const endpoint = yield* attempt("Read image attach bundle failed", () => provider.openHmuxRemote(vm.providerVmId, { clientCapabilities: probe.capabilities }));
     if (!endpoint.trustedCarrier) return yield* Effect.fail(new Error("Fresh VM does not serve the trusted-carrier listener"));
     const args = ["remote", "connect", endpoint.route, "--carrier", "--state-dir", path.join(root, "identity"),
       "--device-name", slug, "--headless", "--json", "--wireguard-hub", hubSocket,
@@ -113,7 +113,7 @@ function verify(image: string, client: string) {
 
 const [image, client] = process.argv.slice(2);
 if (!image || !client || !/^sh-[a-zA-Z0-9]+$/.test(image)) {
-  console.error("Usage: bun scripts/verify-devbox-private-link.ts <snapshot-id> <cmux-tui-client>");
+  console.error("Usage: bun scripts/verify-devbox-private-link.ts <snapshot-id> <hmux-tui-client>");
   process.exit(1);
 }
 const controller = new AbortController();

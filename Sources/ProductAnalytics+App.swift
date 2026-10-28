@@ -1,13 +1,13 @@
-import CmuxCloud
-import CmuxProductAnalytics
-import CmuxSettings
+import HmuxCloud
+import HmuxProductAnalytics
+import HmuxSettings
 import Foundation
 
 extension ProductAnalytics {
     /// The app's product analytics, sending through ``PostHogAnalytics``.
     /// Disabled whenever PostHog capture is (telemetry opt-out in Settings,
     /// managed `DisableTelemetry`, XCTest, debug builds without
-    /// `CMUX_POSTHOG_ENABLE=1`), so it enqueues nothing in those launches.
+    /// `HMUX_POSTHOG_ENABLE=1`), so it enqueues nothing in those launches.
     static let app: ProductAnalytics = {
         let posthog = PostHogAnalytics.shared
         let defaults = UserDefaults.standard

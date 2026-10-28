@@ -6,8 +6,8 @@ import { desktopUpstreamUrl } from "../../../../services/vms/desktopWrapper";
 import { preferredLocaleFromAcceptLanguage } from "../../../../i18n/accept-language";
 import { loadMessages } from "../../../../i18n/messages";
 
-// The cmux-owned face of a machine's screen. `openUrl` (what the pane is
-// handed, what a person keeps) is this route with `cmux_token` on our origin.
+// The hmux-owned face of a machine's screen. `openUrl` (what the pane is
+// handed, what a person keeps) is this route with `hmux_token` on our origin.
 // It validates the upstream host and token, refuses lapsed tokens with an
 // honest screen, and otherwise sends the pane top-level to the noVNC page.
 // Top-level, not an iframe: the gateway sets its `bl_preview_token` cookie on
@@ -29,7 +29,7 @@ export default async function VmDesktopPage({
   await connection();
   const { id } = await params;
   const query = await searchParams;
-  const token = typeof query.cmux_token === "string" ? query.cmux_token : "";
+  const token = typeof query.hmux_token === "string" ? query.hmux_token : "";
   const host = typeof query.host === "string" ? query.host : "";
   const expiresAtMs = typeof query.exp === "string" ? Number.parseInt(query.exp, 10) : NaN;
   const upstream = desktopUpstreamUrl({ host, token, params: query });

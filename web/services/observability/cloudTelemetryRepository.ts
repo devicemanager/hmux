@@ -44,9 +44,9 @@ export async function acceptCloudTelemetry(
     // The event is the contract-normalized span; see parseCloudTelemetryUpload for the catalog-change window.
     // Store origin metadata separately so a later drain cannot relabel old errors.
     const backend = {
-      tag: process.env.CMUX_DEV_BUILD_TAG ?? "unknown",
-      revision: process.env.CMUX_DEV_BUILD_COMMIT ?? process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown",
-      sourceSha256: process.env.CMUX_DEV_BUILD_SOURCE_SHA256 ?? "unknown",
+      tag: process.env.HMUX_DEV_BUILD_TAG ?? "unknown",
+      revision: process.env.HMUX_DEV_BUILD_COMMIT ?? process.env.VERCEL_GIT_COMMIT_SHA ?? "unknown",
+      sourceSha256: process.env.HMUX_DEV_BUILD_SOURCE_SHA256 ?? "unknown",
     };
     // The sample weight is ingest policy, not submitted evidence, so it stays outside the hash.
     const sampleWeight = sampleWeights?.get(span.eventId);

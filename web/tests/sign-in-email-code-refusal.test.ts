@@ -35,10 +35,10 @@ describe("email code refusal", () => {
     const catalogs = (await readdir(dir)).filter((name) => name.endsWith(".json"));
     expect(catalogs.length).toBeGreaterThan(1);
     for (const name of catalogs) {
-      const catalog = JSON.parse(await readFile(new URL(name, dir), "utf8")) as { cmuxSignIn: Record<string, unknown> };
-      expect({ name, unverified: typeof catalog.cmuxSignIn.errorEmailUnverified, button: typeof catalog.cmuxSignIn.useEmailPasswordInstead })
+      const catalog = JSON.parse(await readFile(new URL(name, dir), "utf8")) as { hmuxSignIn: Record<string, unknown> };
+      expect({ name, unverified: typeof catalog.hmuxSignIn.errorEmailUnverified, button: typeof catalog.hmuxSignIn.useEmailPasswordInstead })
         .toEqual({ name, unverified: "string", button: "string" });
     }
-    expect(en.cmuxSignIn.errorEmailUnverified).not.toBe(en.cmuxSignIn.errorGeneric);
+    expect(en.hmuxSignIn.errorEmailUnverified).not.toBe(en.hmuxSignIn.errorGeneric);
   });
 });

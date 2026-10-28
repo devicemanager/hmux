@@ -2,7 +2,7 @@ import AppKit
 
 /// The quiet line above the compose field while Chief runs a turn:
 /// "Working · 12s" (T3 Code's "Working for 12s" beside Stop,
-/// cmux-design-references `apps/t3-code/live/task-running-thinking.png`,
+/// hmux-design-references `apps/t3-code/live/task-running-thinking.png`,
 /// `topics/status-and-progress.md`). While an approval waits the owner hides
 /// it: the transcript's last row says "Waiting for you" in the attention color
 /// (MessagesLabHome `HomeStatusLine`).

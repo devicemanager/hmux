@@ -58,13 +58,13 @@ def api_request(method: str, path: str, *, payload: dict | None = None) -> dict:
         headers={
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
-            "User-Agent": "cmux-nightly-tag-finalizer",
+            "User-Agent": "hmux-nightly-tag-finalizer",
             "X-GitHub-Api-Version": "2022-11-28",
             "Content-Type": "application/json",
         },
     )
-    attempts = max(int(_setting("CMUX_NIGHTLY_TAG_API_MAX_ATTEMPTS", 4, integer=True)), 1)
-    delay = _setting("CMUX_NIGHTLY_TAG_API_RETRY_DELAY_SECONDS", 2.0)
+    attempts = max(int(_setting("HMUX_NIGHTLY_TAG_API_MAX_ATTEMPTS", 4, integer=True)), 1)
+    delay = _setting("HMUX_NIGHTLY_TAG_API_RETRY_DELAY_SECONDS", 2.0)
     for attempt in range(attempts):
         try:
             # Without a timeout a stalled connection blocks until the job

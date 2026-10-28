@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxCloudMachines
-import CmuxFoundation
+import HmuxCloud
+import HmuxCloudMachines
+import HmuxFoundation
 import SwiftUI
 
 /// Compact rows keep identity, resources and usage on one baseline; cards stack details.
@@ -10,7 +10,7 @@ struct CloudTreeMachineRowContent: View {
     var style: CloudTreeStyle = CloudTreeStyleStore.current
     var now: Date = .now
     var resources: CloudTreeMachineResourceSection? = nil
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var fontMagnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var fontMagnification
 
     /// Generated names use adjective-colour-noun, so the tail is the word that
     /// distinguishes machines. Keep both ends when space is tight.
@@ -24,7 +24,7 @@ struct CloudTreeMachineRowContent: View {
                 nameRow
                 if style.machineRowLayout == .twoLine {
                     Text(subtitle)
-                        .cmuxFont(size: style.detailSize, design: style.fontDesign)
+                        .hmuxFont(size: style.detailSize, design: style.fontDesign)
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -42,13 +42,13 @@ struct CloudTreeMachineRowContent: View {
         HStack(alignment: .firstTextBaseline, spacing: style.rowGrid.dotGap) {
             HStack(alignment: .firstTextBaseline, spacing: style.rowGrid.dotGap) {
                 Text(machine.displayName)
-                    .cmuxFont(size: style.machineNameSize, weight: .medium, design: style.fontDesign)
+                    .hmuxFont(size: style.machineNameSize, weight: .medium, design: style.fontDesign)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .truncationMode(Self.nameTruncationMode)
                     .layoutPriority(1)
                 if let statusSymbol {
-                    CmuxSystemSymbolImage(
+                    HmuxSystemSymbolImage(
                         magnified: statusSymbol,
                         pointSize: style.detailSize,
                         weight: .medium,

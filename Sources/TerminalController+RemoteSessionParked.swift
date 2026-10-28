@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CmuxRemoteSession
+import HmuxFoundation
+import HmuxRemoteSession
 import Foundation
 
 /// `workspace.remote.pty_bridge` answers for a remote session that gave up

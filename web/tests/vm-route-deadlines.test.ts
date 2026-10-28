@@ -138,7 +138,7 @@ describe("client-stated budgets", () => {
   });
 
   test("the stated budget is read from the client timeout header", () => {
-    const stated = (value?: string) => vmClientTimeoutMsFromRequest(new Request("https://cmux.test/api/vm/x/pause", value === undefined ? {} : { headers: { "x-cmux-client-timeout-ms": value } }));
+    const stated = (value?: string) => vmClientTimeoutMsFromRequest(new Request("https://hmux.test/api/vm/x/pause", value === undefined ? {} : { headers: { "x-hmux-client-timeout-ms": value } }));
     expect(stated("20000")).toBe(20_000);
     expect(stated()).toBeUndefined();
     expect(stated("abc")).toBeUndefined();
@@ -204,7 +204,7 @@ describe("VM route deadline answers", () => {
     expect(response?.status).toBe(503);
     const payload = await response!.json() as Record<string, unknown>;
     expect(payload).toMatchObject({ error: "vm_operation_in_progress", retryable: true });
-    expect(String(payload.action)).toContain("cmux vm ls");
+    expect(String(payload.action)).toContain("hmux vm ls");
     expect(JSON.stringify(payload)).not.toMatch(/temporarily unavailable/i);
   });
 

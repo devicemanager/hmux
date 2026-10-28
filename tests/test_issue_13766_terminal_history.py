@@ -16,14 +16,14 @@ class TerminalHistoryTests(unittest.TestCase):
     def run_shell(self, shell, directory, surface, commands, exit_cleanly=False):
         pid, descriptor = pty.fork()
         if pid == 0:
-            # Do not let the harness publish activity to a running cmux app.
+            # Do not let the harness publish activity to a running hmux app.
             for key in list(os.environ):
-                if key.startswith(('CMUX_', '_CMUX_')):
+                if key.startswith(('HMUX_', '_HMUX_')):
                     del os.environ[key]
             os.environ.update(
                 ZDOTDIR=str(directory),
-                CMUX_HISTORY_FILE=str(directory / surface),
-                CMUX_SHELL_INTEGRATION='1',
+                HMUX_HISTORY_FILE=str(directory / surface),
+                HMUX_SHELL_INTEGRATION='1',
             )
             argv = [shell, '-i'] if shell.endswith('zsh') else [
                 shell, '--noprofile', '--rcfile', str(directory / 'bashrc'), '-i'
@@ -58,7 +58,7 @@ class TerminalHistoryTests(unittest.TestCase):
             return results
         finally:
             if pid is not None:
-                # Closing a cmux terminal hangs up its shell (Ghostty sends
+                # Closing a hmux terminal hangs up its shell (Ghostty sends
                 # SIGHUP), so persistence must not need `exit`. SIGHUP also
                 # runs bash's own exit-time history save, which is what
                 # double-wrote entries; SIGKILL skipped that path.
@@ -84,7 +84,7 @@ class TerminalHistoryTests(unittest.TestCase):
     def write_startup(self, shell, directory, lines, integration_enabled=True):
         name = Path(shell).name
         integration = ROOT / 'Resources/shell-integration' / (
-            'cmux-zsh-integration.zsh' if name == 'zsh' else 'cmux-bash-integration.bash'
+            'hmux-zsh-integration.zsh' if name == 'zsh' else 'hmux-bash-integration.bash'
         )
         startup = directory / ('.zshrc' if name == 'zsh' else 'bashrc')
         startup.write_text(
@@ -106,7 +106,7 @@ class TerminalHistoryTests(unittest.TestCase):
         # terminal: Up reads the shell's global history. Starting every new
         # terminal empty would take that away from every existing user.
         for shell in ('/bin/zsh', '/bin/bash'):
-            with self.subTest(shell=shell), tempfile.TemporaryDirectory(prefix='cmux13766-new-') as temp:
+            with self.subTest(shell=shell), tempfile.TemporaryDirectory(prefix='hmux13766-new-') as temp:
                 directory = Path(temp)
                 self.global_startup(shell, directory)
                 output = self.run_shell(shell, directory, 'fresh', [b'\x1b[A\n'])[0]
@@ -114,7 +114,7 @@ class TerminalHistoryTests(unittest.TestCase):
 
     def test_restored_terminal_recalls_its_own_command_first(self):
         for shell in ('/bin/zsh', '/bin/bash'):
-            with self.subTest(shell=shell), tempfile.TemporaryDirectory(prefix='cmux13766-') as temp:
+            with self.subTest(shell=shell), tempfile.TemporaryDirectory(prefix='hmux13766-') as temp:
                 directory = Path(temp)
                 global_history = self.global_startup(shell, directory)
                 self.run_shell(shell, directory, 'a', [b'echo ALPHA_13766\n'])
@@ -137,11 +137,11 @@ class TerminalHistoryTests(unittest.TestCase):
     def test_explicit_history_opt_out(self):
         for shell in ('/bin/zsh', '/bin/bash'):
             for opt_out in ('unset HISTFILE', 'HISTFILE=', 'HISTFILE=/dev/null'):
-                with self.subTest(shell=shell, opt_out=opt_out), tempfile.TemporaryDirectory(prefix='cmux13766-private-') as temp:
+                with self.subTest(shell=shell, opt_out=opt_out), tempfile.TemporaryDirectory(prefix='hmux13766-private-') as temp:
                     directory = Path(temp)
                     name = Path(shell).name
                     integration = ROOT / 'Resources/shell-integration' / (
-                        'cmux-zsh-integration.zsh' if name == 'zsh' else 'cmux-bash-integration.bash'
+                        'hmux-zsh-integration.zsh' if name == 'zsh' else 'hmux-bash-integration.bash'
                     )
                     startup = directory / ('.zshrc' if name == 'zsh' else 'bashrc')
                     startup.write_text(
@@ -156,7 +156,7 @@ class TerminalHistoryTests(unittest.TestCase):
         # full-list `history -w` plus the exit append stored every command
         # twice, and the file doubled on every restart.
         for shell in ('/bin/zsh', '/bin/bash'):
-            with self.subTest(shell=shell), tempfile.TemporaryDirectory(prefix='cmux13766-exit-') as temp:
+            with self.subTest(shell=shell), tempfile.TemporaryDirectory(prefix='hmux13766-exit-') as temp:
                 directory = Path(temp)
                 global_history = self.global_startup(shell, directory)
                 for exit_cleanly in (True, False, True):
@@ -173,8 +173,8 @@ class TerminalHistoryTests(unittest.TestCase):
 
     def test_zsh_unset_savehist_is_not_persisted(self):
         # macOS's native session hooks can save global history even with
-        # SAVEHIST unset. Match that baseline; cmux must add no persistence.
-        with tempfile.TemporaryDirectory(prefix='cmux13766-savehist-') as temp:
+        # SAVEHIST unset. Match that baseline; hmux must add no persistence.
+        with tempfile.TemporaryDirectory(prefix='hmux13766-savehist-') as temp:
             directory = Path(temp)
             global_history = directory / 'global'
             lines = [

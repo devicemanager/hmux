@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxFoundation
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxFoundation
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// An immutable claim on one creating pane, retained only by its attachment task.

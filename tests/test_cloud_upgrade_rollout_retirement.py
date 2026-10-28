@@ -36,7 +36,7 @@ class RolloutRetirementTests(unittest.TestCase):
         self.assertIn("if !ProBadgeStyleStore.shared.isDismissed", badge)
         self.assertIn("ProBadgeStyleStore.shared.isDismissed = true", badge)
         self.assertIn("actions.upgrade()", badge)
-        self.assertNotIn("CmuxFeatureFlags", badge)
+        self.assertNotIn("HmuxFeatureFlags", badge)
         actions = (ROOT / "Sources/ProBadgeActions.swift").read_text()
         self.assertIn("static let source = ProUpgradeSource.sidebarBadge", actions)
         self.assertIn("ProUpgradePresenter.present(source: Self.source", actions)
@@ -45,8 +45,8 @@ class RolloutRetirementTests(unittest.TestCase):
         for relative in (
             "Sources/Cloud/CloudMachinesFeature+FeatureFlags.swift",
             "Sources/AppDelegate+CloudTunnel.swift",
-            "Sources/Surfaces/CmuxTuiSurfaceProviderRegistry+Production.swift",
-            "Packages/macOS/CmuxCloud/Sources/CmuxCloud/Environment/CloudActivationPolicy.swift",
+            "Sources/Surfaces/HmuxTuiSurfaceProviderRegistry+Production.swift",
+            "Packages/macOS/HmuxCloud/Sources/HmuxCloud/Environment/CloudActivationPolicy.swift",
         ):
             with self.subTest(path=relative):
                 source = (ROOT / relative).read_text()

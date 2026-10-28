@@ -1,12 +1,12 @@
 #include "TerminationWatchdogAtomic.h"
 
-CMUXTerminationWatchdogLatch CMUXTerminationWatchdogLatchMake(void) {
-    CMUXTerminationWatchdogLatch latch;
+HMUXTerminationWatchdogLatch HMUXTerminationWatchdogLatchMake(void) {
+    HMUXTerminationWatchdogLatch latch;
     atomic_init(&latch.isArmed, false);
     return latch;
 }
 
-bool CMUXTerminationWatchdogLatchClaim(CMUXTerminationWatchdogLatch *latch) {
+bool HMUXTerminationWatchdogLatchClaim(HMUXTerminationWatchdogLatch *latch) {
     bool expected = false;
     return atomic_compare_exchange_strong_explicit(
         &latch->isArmed,

@@ -176,7 +176,7 @@ class NeverQueueBehindBlacksmithTests(unittest.TestCase):
         self.assertTrue(picker.wait_on_owned({}, head=repo, repository=repo))
         self.assertTrue(picker.wait_on_owned({"GITHUB_RUN_ATTEMPT": "2", "GITHUB_TRIGGERING_ACTOR": "lawrencecchen"},
                                              head=repo, repository=repo))
-        self.assertFalse(picker.wait_on_owned({}, head="teamleaderleo/cmux", repository=repo))
+        self.assertFalse(picker.wait_on_owned({}, head="teamleaderleo/hmux", repository=repo))
         self.assertFalse(picker.wait_on_owned({"GITHUB_RUN_ATTEMPT": "2", "GITHUB_TRIGGERING_ACTOR": "github-actions[bot]"},
                                               head=repo, repository=repo))
         self.assertFalse(picker.wait_on_owned({}, head="", repository=""))
@@ -186,7 +186,7 @@ class NeverQueueBehindBlacksmithTests(unittest.TestCase):
         original = picker.observe
         picker.observe = lambda **kwargs: seen.update(kwargs) or picker.State(jobs=0)
         try:
-            picker.main([], {"GITHUB_REPOSITORY": "manaflow-ai/cmux", "HEAD_REPO": "teamleaderleo/cmux",
+            picker.main([], {"GITHUB_REPOSITORY": "manaflow-ai/cmux", "HEAD_REPO": "teamleaderleo/hmux",
                              "CI_PR_POOL_FORK_ALLOWED": "1", "RUN_JOBS": "2"})
         finally:
             picker.observe = original
@@ -224,7 +224,7 @@ OWNED_ENV = {
     "GITHUB_REPOSITORY": "manaflow-ai/cmux",
     "CI_PR_POOL_OWNED": "1",
     "CI_OWNED_POOL_SLOTS": json.dumps({STD: 42, LIGHT: 4, "glaeda-root-light-xcode-26.6": 2}),
-    "CMUX_CI_XCODE_APP_PR": "/Applications/Xcode_26.6.app",
+    "HMUX_CI_XCODE_APP_PR": "/Applications/Xcode_26.6.app",
     "RUN_MACOS": "true",
 }
 
@@ -276,7 +276,7 @@ class ConfiguredPoolTests(unittest.TestCase):
     def test_an_unlisted_owned_looking_label_is_never_picked(self):
         # Ten idle aws runners carry glaeda-std-xcode-26.3, which sorts before
         # the minis' 26.6; picking it sent compile admission to five runners
-        # per EC2 Mac while the minis sat idle (cmux#17207).
+        # per EC2 Mac while the minis sat idle (hmux#17207).
         aws = [runner(f"aws-{index}", ["glaeda-std-xcode-26.3", "glaeda-root-std-xcode-26.3"], busy=False)
                for index in range(10)]
         minis = [std_runner(index, busy=False) for index in range(8)]
@@ -317,7 +317,7 @@ class LiveRunnerReadTests(unittest.TestCase):
 
     def test_configured_aws_family_can_be_selected(self):
         aws_label = "glaeda-aws-std-xcode-26.3"
-        env = {**OWNED_ENV, "CMUX_CI_XCODE_APP_PR": "/Applications/Xcode_26.3.app",
+        env = {**OWNED_ENV, "HMUX_CI_XCODE_APP_PR": "/Applications/Xcode_26.3.app",
                "CI_OWNED_POOL_SLOTS": json.dumps({aws_label: 10})}
         aws = [runner(f"aws-{index}", [aws_label], busy=False) for index in range(10)]
         choice = picker.pick(observed(aws, {}, env=env))

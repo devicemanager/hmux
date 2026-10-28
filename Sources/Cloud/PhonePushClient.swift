@@ -1,12 +1,12 @@
-import CmuxCloud
-import CmuxAuthRuntime
-import CmuxPhonePush
+import HmuxCloud
+import HmuxAuthRuntime
+import HmuxPhonePush
 import Foundation
 import Observation
 import OSLog
 
 nonisolated private let phonePushLog = Logger(
-    subsystem: "ai.manaflow.cmux",
+    subsystem: "ai.manaflow.hmux",
     category: "phone-push"
 )
 
@@ -293,12 +293,12 @@ final class PhonePushClient {
             kind: .notify,
             title: String(
                 localized: "push.test.title",
-                defaultValue: "cmux Notification Test"
+                defaultValue: "hmux Notification Test"
             ),
             subtitle: "",
             body: String(
                 localized: "push.test.body",
-                defaultValue: "Your Mac sent a test alert to cmux."
+                defaultValue: "Your Mac sent a test alert to hmux."
             ),
             replyShape: "",
             workspaceId: nil,
@@ -607,7 +607,7 @@ final class PhonePushClient {
               let macDeviceID = payload.macDeviceId,
               let macBuildID = Bundle.main.bundleIdentifier,
               let macKey = try? PhonePushKeyMaterial.current(
-                  bundleID: Bundle.main.bundleIdentifier ?? "cmux"
+                  bundleID: Bundle.main.bundleIdentifier ?? "hmux"
               ) else { return nil }
         let recipients = trustedRecipients(
             identity: identity,
@@ -1026,12 +1026,12 @@ final class PhonePushClient {
            !targetBundleIdentifier.isEmpty {
             request.setValue(
                 targetBundleIdentifier,
-                forHTTPHeaderField: "X-Cmux-IOS-Target-Namespace"
+                forHTTPHeaderField: "X-Hmux-IOS-Target-Namespace"
             )
         }
         // An omitted target requests account-wide fanout. The server still
         // selects each device's APNs topic and matching encrypted payload.
-        // Intentionally omit X-Cmux-Team-Id because push ownership is scoped
+        // Intentionally omit X-Hmux-Team-Id because push ownership is scoped
         // to the authenticated Stack user id.
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 

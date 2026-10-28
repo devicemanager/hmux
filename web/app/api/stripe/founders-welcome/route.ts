@@ -42,7 +42,7 @@ type FoundersWelcomeDependencies = {
 const defaultDependencies: FoundersWelcomeDependencies = {
   personalProWelcomeEnabled: () =>
     personalProWelcomeOwnsDelivery({
-      enabled: env.CMUX_PERSONAL_PRO_WELCOME_ENABLED,
+      enabled: env.HMUX_PERSONAL_PRO_WELCOME_ENABLED,
       resendApiKey: env.RESEND_API_KEY,
       webhookSecret: env.STRIPE_FOUNDERS_WEBHOOK_SECRET,
       stripeSecretKey: env.STRIPE_SECRET_KEY,
@@ -60,7 +60,7 @@ function resolveConfig(): FoundersConfig | null {
   return {
     resendApiKey,
     webhookSecret,
-    fromEmail: env.CMUX_FOUNDERS_FROM_EMAIL ?? DEFAULT_FROM_EMAIL,
+    fromEmail: env.HMUX_FOUNDERS_FROM_EMAIL ?? DEFAULT_FROM_EMAIL,
   };
 }
 
@@ -122,7 +122,7 @@ export function makeFoundersWelcomeHandler(
     return withApiRouteSpan(
       request,
       "/api/stripe/founders-welcome",
-      { "cmux.subsystem": "stripe", "cmux.stripe.operation": "founders_welcome" },
+      { "hmux.subsystem": "stripe", "hmux.stripe.operation": "founders_welcome" },
       async (span): Promise<Response> => {
       const config = resolveConfig();
       if (!config) {
@@ -137,7 +137,7 @@ export function makeFoundersWelcomeHandler(
         config.webhookSecret,
         nowSeconds,
       );
-      setSpanAttributes(span, { "cmux.stripe.signature_valid": valid });
+      setSpanAttributes(span, { "hmux.stripe.signature_valid": valid });
       if (!valid) {
         return jsonError("Invalid Stripe signature", 400);
       }
@@ -149,7 +149,7 @@ export function makeFoundersWelcomeHandler(
         return jsonError("Invalid JSON payload", 400);
       }
 
-      setSpanAttributes(span, { "cmux.stripe.event_type": event.type ?? "" });
+      setSpanAttributes(span, { "hmux.stripe.event_type": event.type ?? "" });
 
       // This endpoint owns the personal welcome for Founder's Edition and Pro.
       // Team and unrecognized checkouts are acknowledged without mail. Explicit
@@ -188,9 +188,9 @@ export function makeFoundersWelcomeHandler(
       );
       const customerEmail = session?.customer_details?.email ?? null;
       setSpanAttributes(span, {
-        "cmux.stripe.is_founders": trigger === "founders_edition",
-        "cmux.stripe.welcome_trigger": trigger,
-        "cmux.stripe.has_customer_email": Boolean(customerEmail),
+        "hmux.stripe.is_founders": trigger === "founders_edition",
+        "hmux.stripe.welcome_trigger": trigger,
+        "hmux.stripe.has_customer_email": Boolean(customerEmail),
       });
       if (trigger !== "founders_edition" && trigger !== "pro_plan") {
         return NextResponse.json({ ok: true, skipped: "not_welcome_eligible" });

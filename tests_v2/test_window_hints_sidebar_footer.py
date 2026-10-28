@@ -8,11 +8,11 @@ window's close, minimize and zoom buttons got unnamed labels, so a typo could
 close the window. Hint mode is off
 by default (feature flag `window-hints-release`), so this test needs the local
 override written before launch:
-  defaults write <debug bundle id> cmux.flags.override.window-hints-release -bool true
+  defaults write <debug bundle id> hmux.flags.override.window-hints-release -bool true
 
 Needs a key window, so run it where the app can be frontmost (a whole capture
 mini or a local tagged build), never against the user's default socket:
-  CMUX_SOCKET_PATH=/tmp/cmux-debug-<tag>.sock python3 tests_v2/test_window_hints_sidebar_footer.py
+  HMUX_SOCKET_PATH=/tmp/hmux-debug-<tag>.sock python3 tests_v2/test_window_hints_sidebar_footer.py
 """
 
 import sys
@@ -20,7 +20,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
 def _call(fn, *args):
@@ -28,25 +28,25 @@ def _call(fn, *args):
     for _ in range(20):
         try:
             return fn(*args)
-        except cmuxError as error:
+        except hmuxError as error:
             if "rate_limited" not in str(error):
                 raise
             time.sleep(0.3)
     return fn(*args)
 
 
-def _hints(c: cmux) -> dict:
+def _hints(c: hmux) -> dict:
     try:
         return _call(c._call, "debug.window_hints", {}) or {}
-    except cmuxError as error:
+    except hmuxError as error:
         return {"error": str(error)}
 
 
 def main() -> int:
-    c = cmux()
+    c = hmux()
     c.connect()
     if not c.ping():
-        raise cmuxError("socket ping failed")
+        raise hmuxError("socket ping failed")
     c.activate_app()
     c.focus_window(c.current_window())
     time.sleep(1.0)

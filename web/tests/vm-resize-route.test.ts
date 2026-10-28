@@ -53,7 +53,7 @@ const user: AuthedUser = {
   billingCustomerType: "team",
   billingTeamId: "team-resize-route",
   selectedTeamId: "team-resize-route",
-  teams: [{ id: "team-resize-route", displayName: "cmux", billingPlanId: "pro", billingSeats: 3 }],
+  teams: [{ id: "team-resize-route", displayName: "hmux", billingPlanId: "pro", billingSeats: 3 }],
   teamIds: ["team-resize-route"],
   userBillingPlanId: null,
   billingPlanId: "pro",
@@ -61,7 +61,7 @@ const user: AuthedUser = {
 };
 
 function post(body: unknown): Request {
-  return new Request("https://cmux.test/api/vm/fs-route/resize", {
+  return new Request("https://hmux.test/api/vm/fs-route/resize", {
     method: "POST",
     headers: {
       authorization: "Bearer access-token",

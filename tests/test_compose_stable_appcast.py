@@ -30,7 +30,7 @@ def appcast(dmg: str, version: str = "109", signature: str = "c2ln") -> str:
     return f"""<?xml version="1.0" standalone="yes"?>
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
-        <title>cmux</title>
+        <title>hmux</title>
         <item>
             <title>0.66.0</title>
             <sparkle:version>{version}</sparkle:version>
@@ -67,34 +67,34 @@ def sparkle_pick(feed_xml: str, *, sparkle_29: bool, native_intel: bool, host_ve
 class ComposeStableAppcastTest(unittest.TestCase):
     def compose(self):
         return compose_module.compose(
-            appcast("cmux-macos.dmg"), appcast("cmux-macos-arm64.dmg"), appcast("cmux-macos-x86_64.dmg")
+            appcast("hmux-macos.dmg"), appcast("hmux-macos-arm64.dmg"), appcast("hmux-macos-x86_64.dmg")
         )
 
     def test_existing_installs_land_on_their_architecture_in_one_update(self):
         legacy, _ = self.compose()
         # v0.64.2x and v0.65.x bundle Sparkle 2.9.3/2.9.5.
-        self.assertEqual(sparkle_pick(legacy, sparkle_29=True, native_intel=False), "cmux-macos-arm64.dmg")
-        self.assertEqual(sparkle_pick(legacy, sparkle_29=True, native_intel=True), "cmux-macos-x86_64.dmg")
+        self.assertEqual(sparkle_pick(legacy, sparkle_29=True, native_intel=False), "hmux-macos-arm64.dmg")
+        self.assertEqual(sparkle_pick(legacy, sparkle_29=True, native_intel=True), "hmux-macos-x86_64.dmg")
 
     def test_sparkle_281_installs_stay_universal(self):
         legacy, _ = self.compose()
         # 2.8.1 cannot tell the architecture, so it must never be handed a thin build.
-        self.assertEqual(sparkle_pick(legacy, sparkle_29=False, native_intel=True), "cmux-macos.dmg")
-        self.assertEqual(sparkle_pick(legacy, sparkle_29=False, native_intel=False), "cmux-macos.dmg")
+        self.assertEqual(sparkle_pick(legacy, sparkle_29=False, native_intel=True), "hmux-macos.dmg")
+        self.assertEqual(sparkle_pick(legacy, sparkle_29=False, native_intel=False), "hmux-macos.dmg")
 
     def test_thin_installs_never_switch_architecture_on_their_own_feeds(self):
         _, arm64_feed = self.compose()
-        self.assertEqual(sparkle_pick(arm64_feed, sparkle_29=True, native_intel=False), "cmux-macos-arm64.dmg")
+        self.assertEqual(sparkle_pick(arm64_feed, sparkle_29=True, native_intel=False), "hmux-macos-arm64.dmg")
         self.assertEqual(sparkle_pick(arm64_feed, sparkle_29=True, native_intel=True), "")
-        x86_64_feed = appcast("cmux-macos-x86_64.dmg")
-        self.assertEqual(sparkle_pick(x86_64_feed, sparkle_29=True, native_intel=True), "cmux-macos-x86_64.dmg")
+        x86_64_feed = appcast("hmux-macos-x86_64.dmg")
+        self.assertEqual(sparkle_pick(x86_64_feed, sparkle_29=True, native_intel=True), "hmux-macos-x86_64.dmg")
 
     def test_legacy_feed_keeps_every_signature_and_item_order(self):
         legacy, _ = self.compose()
         items = list(ET.fromstring(legacy).iter("item"))
         self.assertEqual(
             [item.find("enclosure").get("url").rsplit("/", 1)[1] for item in items],
-            ["cmux-macos.dmg", "cmux-macos-arm64.dmg", "cmux-macos-x86_64.dmg"],
+            ["hmux-macos.dmg", "hmux-macos-arm64.dmg", "hmux-macos-x86_64.dmg"],
         )
         for item in items:
             self.assertTrue(item.find("enclosure").get(f"{SPARKLE}edSignature"))
@@ -102,18 +102,18 @@ class ComposeStableAppcastTest(unittest.TestCase):
     def test_rejects_mismatched_versions_and_missing_signatures(self):
         with self.assertRaisesRegex(compose_module.AppcastError, "one sparkle:version"):
             compose_module.compose(
-                appcast("cmux-macos.dmg"), appcast("cmux-macos-arm64.dmg", version="110"), appcast("cmux-macos-x86_64.dmg")
+                appcast("hmux-macos.dmg"), appcast("hmux-macos-arm64.dmg", version="110"), appcast("hmux-macos-x86_64.dmg")
             )
-        unsigned = appcast("cmux-macos-arm64.dmg").replace(' sparkle:edSignature="c2ln"', "")
+        unsigned = appcast("hmux-macos-arm64.dmg").replace(' sparkle:edSignature="c2ln"', "")
         with self.assertRaisesRegex(compose_module.AppcastError, "edSignature"):
-            compose_module.compose(appcast("cmux-macos.dmg"), unsigned, appcast("cmux-macos-x86_64.dmg"))
-        with self.assertRaisesRegex(compose_module.AppcastError, "must enclose cmux-macos-x86_64.dmg"):
-            compose_module.compose(appcast("cmux-macos.dmg"), appcast("cmux-macos-arm64.dmg"), appcast("cmux-macos.dmg"))
+            compose_module.compose(appcast("hmux-macos.dmg"), unsigned, appcast("hmux-macos-x86_64.dmg"))
+        with self.assertRaisesRegex(compose_module.AppcastError, "must enclose hmux-macos-x86_64.dmg"):
+            compose_module.compose(appcast("hmux-macos.dmg"), appcast("hmux-macos-arm64.dmg"), appcast("hmux-macos.dmg"))
 
     def test_cli_writes_legacy_and_arm64_feeds(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory)
-            for name, dmg in (("u.xml", "cmux-macos.dmg"), ("a.xml", "cmux-macos-arm64.dmg"), ("x.xml", "cmux-macos-x86_64.dmg")):
+            for name, dmg in (("u.xml", "hmux-macos.dmg"), ("a.xml", "hmux-macos-arm64.dmg"), ("x.xml", "hmux-macos-x86_64.dmg")):
                 (path / name).write_text(appcast(dmg), encoding="utf-8")
             subprocess.run(
                 [sys.executable, str(SCRIPT), "--universal", str(path / "u.xml"), "--arm64", str(path / "a.xml"),

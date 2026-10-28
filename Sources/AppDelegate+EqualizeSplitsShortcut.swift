@@ -1,17 +1,17 @@
 import AppKit
-import CmuxPanes
-import CmuxSettings
+import HmuxPanes
+import HmuxSettings
 
 extension AppDelegate {
     func performEqualizeSplitsShortcut() {
         guard let tabManager, let workspace = tabManager.selectedWorkspace else {
 #if DEBUG
-            cmuxDebugLog("shortcut.action name=equalizeSplits result=noWorkspace")
+            hmuxDebugLog("shortcut.action name=equalizeSplits result=noWorkspace")
 #endif
             return
         }
 #if DEBUG
-        cmuxDebugLog("shortcut.action name=equalizeSplits workspaceId=\(workspace.id)")
+        hmuxDebugLog("shortcut.action name=equalizeSplits workspaceId=\(workspace.id)")
 #endif
         if workspace.layoutMode == .canvas {
             let executor = CanvasActionExecutor(workspace: workspace)
@@ -19,7 +19,7 @@ extension AppDelegate {
             let didEqualizeHeights = executor.perform(.alignment(.equalizeHeights))
 #if DEBUG
             if !didEqualizeWidths && !didEqualizeHeights {
-                cmuxDebugLog("shortcut.action name=equalizeSplits result=noCanvasChange workspaceId=\(workspace.id)")
+                hmuxDebugLog("shortcut.action name=equalizeSplits result=noCanvasChange workspaceId=\(workspace.id)")
             }
 #endif
             return
@@ -30,12 +30,12 @@ extension AppDelegate {
         let didEqualize = tabManager.equalizeSplits(tabId: workspace.id)
 #if DEBUG
         if !didEqualize {
-            cmuxDebugLog("shortcut.action name=equalizeSplits result=noSplitOrFailed workspaceId=\(workspace.id)")
+            hmuxDebugLog("shortcut.action name=equalizeSplits result=noSplitOrFailed workspaceId=\(workspace.id)")
         }
 #endif
     }
 
-    /// New Pane (Auto Layout), cmux-tui's Alt-n: adds a terminal pane and
+    /// New Pane (Auto Layout), hmux-tui's Alt-n: adds a terminal pane and
     /// retiles the workspace in Zellij's default layout. Canvas workspaces
     /// have no tiling, so they open the pane to the right. Shortcut and
     /// command palette both call this method.
@@ -63,7 +63,7 @@ extension AppDelegate {
             didCreate = routedManager?.createAutoLayoutPaneOutcome().isAccepted ?? false
         }
 #if DEBUG
-        cmuxDebugLog("shortcut.action name=newPaneAutoLayout result=\(didCreate ? 1 : 0)")
+        hmuxDebugLog("shortcut.action name=newPaneAutoLayout result=\(didCreate ? 1 : 0)")
 #endif
         return didCreate
     }
@@ -94,7 +94,7 @@ extension AppDelegate {
             let didResize = dock.performShortcutCommand(.resizePane(direction))
             if !didResize { NSSound.beep() }
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "shortcut.action name=resizePane direction=\(direction) amount=\(PaneResizeStepSettings(defaults: .standard).currentPixels()) "
                     + "result=\(didResize ? 1 : 0) scope=dock"
             )
@@ -108,7 +108,7 @@ extension AppDelegate {
             amount: PaneResizeStepSettings(defaults: .standard).currentPixels()
         ) ?? false
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "shortcut.action name=resizePane direction=\(direction) amount=\(PaneResizeStepSettings(defaults: .standard).currentPixels()) "
                 + "result=\(didResize ? 1 : 0) scope=workspace"
         )

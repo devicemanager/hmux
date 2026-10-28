@@ -1,6 +1,6 @@
 # Remote agent status in `ssh-tmux` mirrors
 
-`ssh-tmux` mirrors have no local PTY for the remote agent and no remote cmux
+`ssh-tmux` mirrors have no local PTY for the remote agent and no remote hmux
 socket. The status path therefore uses the tmux control stream that the mirror
 already owns.
 
@@ -10,7 +10,7 @@ On attach, the existing tmux control connection installs a versioned helper in
 the remote user's data directory and makes it the default command for newly
 created panes. The helper adds a launch wrapper for Claude and Codex. Each
 wrapper captures the exact tmux socket, pane id, and a launch owner token in
-every hook command, then writes a JSON value to the pane-scoped `@cmux_agent`
+every hook command, then writes a JSON value to the pane-scoped `@hmux_agent`
 user option:
 
 ```text
@@ -24,7 +24,7 @@ SessionEnd         clear
 `RemoteTmuxControlConnection` subscribes each pane with:
 
 ```text
-refresh-client -B "cmux_agent_<pane>:%<pane>:#{@cmux_agent}"
+refresh-client -B "hmux_agent_<pane>:%<pane>:#{@hmux_agent}"
 ```
 
 The `%subscription-changed` value is parsed locally and forwarded through
@@ -32,7 +32,7 @@ The `%subscription-changed` value is parsed locally and forwarded through
 so a shared/multiplexed host cannot publish one session's status into another
 workspace.
 
-The sidebar uses the existing `cmux.remote.agent:<agent>` status namespace and
+The sidebar uses the existing `hmux.remote.agent:<agent>` status namespace and
 per-panel lifecycle ownership already used by the SSH TUI projector. Statuses
 are aggregated by mirrored tmux window and provider, so multiple panes do not
 overwrite each other. Idle clears the lifecycle; working and blocked retain the
@@ -62,7 +62,7 @@ directory. The owner token ignores late events from a previous invocation.
 - An agent already running when the mirror attaches does not emit SessionStart
   through the newly installed hook. Restarting it enables lifecycle status.
 - This change covers both dedicated and multiplexed `ssh-tmux` control streams.
-  The separate `cmux ssh` path is covered by the Codex launch-wrapper fix in
+  The separate `hmux ssh` path is covered by the Codex launch-wrapper fix in
   PR #18792; this patch does not change that transport.
 
 ## Regression coverage

@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSettings
+import HmuxCloud
+import HmuxSettings
 import Foundation
 
 /// Shared policy for discovering the account's other Macs. Incoming discovery

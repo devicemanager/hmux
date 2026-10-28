@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if [ "$(basename "$0")" = "fake-lsof" ]; then
-  if [ "${CMUX_FAKE_LSOF_WARNING:-0}" = "1" ]; then
+  if [ "${HMUX_FAKE_LSOF_WARNING:-0}" = "1" ]; then
     printf 'lsof: simulated advisory diagnostic\n' >&2
   fi
   pid_filter=""
@@ -27,19 +27,19 @@ if [ "$(basename "$0")" = "fake-lsof" ]; then
     esac
   done
 
-  if [ -n "$path_filter" ] && [ -n "${CMUX_FAKE_LSOF_RECEIPT_EXIT:-}" ]; then
-    exit "$CMUX_FAKE_LSOF_RECEIPT_EXIT"
+  if [ -n "$path_filter" ] && [ -n "${HMUX_FAKE_LSOF_RECEIPT_EXIT:-}" ]; then
+    exit "$HMUX_FAKE_LSOF_RECEIPT_EXIT"
   fi
-  if [ -z "$path_filter" ] && [ -z "$fd_filter" ] && [ -n "${CMUX_FAKE_LSOF_LIST_EXIT:-}" ]; then
-    if [ -n "${CMUX_FAKE_LSOF_LIST_KILLS_PID:-}" ]; then
+  if [ -z "$path_filter" ] && [ -z "$fd_filter" ] && [ -n "${HMUX_FAKE_LSOF_LIST_EXIT:-}" ]; then
+    if [ -n "${HMUX_FAKE_LSOF_LIST_KILLS_PID:-}" ]; then
       # The PID exits between the receipt query and this listing.
-      /bin/kill -KILL "$CMUX_FAKE_LSOF_LIST_KILLS_PID" 2>/dev/null || true
+      /bin/kill -KILL "$HMUX_FAKE_LSOF_LIST_KILLS_PID" 2>/dev/null || true
       for _ in $(seq 1 100); do
-        /bin/kill -0 "$CMUX_FAKE_LSOF_LIST_KILLS_PID" 2>/dev/null || break
+        /bin/kill -0 "$HMUX_FAKE_LSOF_LIST_KILLS_PID" 2>/dev/null || break
         /bin/sleep 0.05
       done
     fi
-    exit "$CMUX_FAKE_LSOF_LIST_EXIT"
+    exit "$HMUX_FAKE_LSOF_LIST_EXIT"
   fi
   found=0
   while IFS='|' read -r state_pid state_executable; do
@@ -51,30 +51,30 @@ if [ "$(basename "$0")" = "fake-lsof" ]; then
       continue
     fi
     if [ -n "$path_filter" ]; then
-      if [ "${CMUX_FAKE_LSOF_MISSING_RECEIPT_PID:-}" = "$state_pid" ] \
+      if [ "${HMUX_FAKE_LSOF_MISSING_RECEIPT_PID:-}" = "$state_pid" ] \
         || [ "$fd_filter" != "9" ]; then
         continue
       fi
       printf 'p%s\n%s\n%s\nn%s\n' \
         "$state_pid" \
-        "${CMUX_FAKE_LSOF_RECEIPT_FD_FIELD:-f9}" \
-        "${CMUX_FAKE_LSOF_RECEIPT_ACCESS_FIELD:-aw}" \
+        "${HMUX_FAKE_LSOF_RECEIPT_FD_FIELD:-f9}" \
+        "${HMUX_FAKE_LSOF_RECEIPT_ACCESS_FIELD:-aw}" \
         "$path_filter"
-    elif [ -z "$fd_filter" ] && [ "${CMUX_FAKE_LSOF_LIST_NO_FILES:-0}" = "1" ]; then
+    elif [ -z "$fd_filter" ] && [ "${HMUX_FAKE_LSOF_LIST_NO_FILES:-0}" = "1" ]; then
       printf 'p%s\n' "$state_pid"
     else
       printf 'p%s\nftxt\nn%s\nftxt\nn/usr/lib/dyld\n' \
         "$state_pid" "$state_executable"
-      if [ -z "$fd_filter" ] && [ -n "${CMUX_FAKE_LSOF_LIST_RECEIPT_ON_FD10:-}" ]; then
-        printf 'f10\nn%s\n' "$CMUX_FAKE_LSOF_LIST_RECEIPT_ON_FD10"
+      if [ -z "$fd_filter" ] && [ -n "${HMUX_FAKE_LSOF_LIST_RECEIPT_ON_FD10:-}" ]; then
+        printf 'f10\nn%s\n' "$HMUX_FAKE_LSOF_LIST_RECEIPT_ON_FD10"
       fi
     fi
     found=1
-  done < "$CMUX_FAKE_LSOF_STATE"
+  done < "$HMUX_FAKE_LSOF_STATE"
   if [ "$found" -eq 1 ] || [ -z "$pid_filter" ]; then
     exit 0
   fi
-  if [ "${CMUX_FAKE_LSOF_DEAD_PID_DIAGNOSTIC:-0}" = "1" ]; then
+  if [ "${HMUX_FAKE_LSOF_DEAD_PID_DIAGNOSTIC:-0}" = "1" ]; then
     printf 'lsof: status error on %s: No such process\n' "$pid_filter" >&2
   fi
   exit 1
@@ -109,11 +109,11 @@ trap cleanup EXIT
 
 FAKE_LSOF="$TMP_DIR/fake-lsof"
 ln -s "$ROOT_DIR/tests/test_ci_app_host_processes.sh" "$FAKE_LSOF"
-export CMUX_CI_APP_HOST_CLEANUP_TEST_HELPER=1
-export CMUX_APP_HOST_LSOF="$FAKE_LSOF"
-export CMUX_FAKE_LSOF_STATE="$TMP_DIR/lsof-state"
+export HMUX_CI_APP_HOST_CLEANUP_TEST_HELPER=1
+export HMUX_APP_HOST_LSOF="$FAKE_LSOF"
+export HMUX_FAKE_LSOF_STATE="$TMP_DIR/lsof-state"
 export GITHUB_REPOSITORY_ID=1234567
-: > "$CMUX_FAKE_LSOF_STATE"
+: > "$HMUX_FAKE_LSOF_STATE"
 
 # shellcheck source=scripts/ci/app-host-processes.sh
 PROCESS_HELPER="$ROOT_DIR/scripts/ci/app-host-processes.sh"
@@ -133,13 +133,13 @@ fail() {
 
 # Recovery is inclusive at the grace boundary and excludes current, newest,
 # future-dated, young, and pre-v3 scopes.
-cmux_classify_app_host_scope_recovery_eligibility \
+hmux_classify_app_host_scope_recovery_eligibility \
   111111111111 222222222222 3 100 300 200 100
-[ "$CMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -eq 1 ] \
+[ "$HMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -eq 1 ] \
   || fail "exact app-host recovery grace boundary was not eligible"
-cmux_classify_app_host_scope_recovery_eligibility \
+hmux_classify_app_host_scope_recovery_eligibility \
   111111111111 222222222222 3 199 300 200 0
-[ "$CMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -eq 1 ] \
+[ "$HMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -eq 1 ] \
   || fail "authenticated prior owner was not immediately eligible"
 for eligibility_case in \
   "222222222222 222222222222 3 100 300 200 100" \
@@ -150,56 +150,56 @@ for eligibility_case in \
   "111111111111 222222222222 1 100 300 200 100"
 do
   # shellcheck disable=SC2086
-  cmux_classify_app_host_scope_recovery_eligibility $eligibility_case
-  [ "$CMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -eq 0 ] \
+  hmux_classify_app_host_scope_recovery_eligibility $eligibility_case
+  [ "$HMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -eq 0 ] \
     || fail "ineligible app-host recovery scope was admitted"
 done
 
 # Shared /tmp debris cannot make a genuine old scope lose newest protection.
 newest_scope_root="$TMP_DIR/newest-scope-root"
 mkdir -p "$newest_scope_root"
-cmux_compute_app_host_key 940001 1 1 "$GITHUB_REPOSITORY_ID"
-trusted_newest_key="$CMUX_COMPUTED_APP_HOST_KEY"
-trusted_newest_home="$newest_scope_root/cmux-ah-$trusted_newest_key"
-trusted_newest_receipts="$newest_scope_root/cmux-ah-$trusted_newest_key-receipts"
-cmux_compute_app_host_cleanup_confirmation \
+hmux_compute_app_host_key 940001 1 1 "$GITHUB_REPOSITORY_ID"
+trusted_newest_key="$HMUX_COMPUTED_APP_HOST_KEY"
+trusted_newest_home="$newest_scope_root/hmux-ah-$trusted_newest_key"
+trusted_newest_receipts="$newest_scope_root/hmux-ah-$trusted_newest_key-receipts"
+hmux_compute_app_host_cleanup_confirmation \
   940001 1 1 "$trusted_newest_home" "$trusted_newest_receipts" \
   "$GITHUB_REPOSITORY_ID"
-trusted_newest_confirmation="$newest_scope_root/cmux-ah-$trusted_newest_key.confirm"
+trusted_newest_confirmation="$newest_scope_root/hmux-ah-$trusted_newest_key.confirm"
 printf 'version=3\nrepository_id=%s\nrun_id=940001\nrun_attempt=1\nshard=1\nkey=%s\nhome=%s\nreceipt_dir=%s\nconfirmation=%s\n' \
   "$GITHUB_REPOSITORY_ID" "$trusted_newest_key" \
   "$trusted_newest_home" "$trusted_newest_receipts" \
-  "$CMUX_COMPUTED_APP_HOST_CLEANUP_CONFIRMATION" \
+  "$HMUX_COMPUTED_APP_HOST_CLEANUP_CONFIRMATION" \
   > "$trusted_newest_confirmation"
 chmod 600 "$trusted_newest_confirmation"
 touch -t 202001010000 "$trusted_newest_confirmation"
-cmux_app_host_scope_mtime "$trusted_newest_confirmation"
-trusted_newest_mtime="$CMUX_APP_HOST_SCOPE_MTIME"
+hmux_app_host_scope_mtime "$trusted_newest_confirmation"
+trusted_newest_mtime="$HMUX_APP_HOST_SCOPE_MTIME"
 
-cmux_compute_app_host_key 940002 1 1 "$GITHUB_REPOSITORY_ID"
-malformed_newest_confirmation="$newest_scope_root/cmux-ah-$CMUX_COMPUTED_APP_HOST_KEY.confirm"
+hmux_compute_app_host_key 940002 1 1 "$GITHUB_REPOSITORY_ID"
+malformed_newest_confirmation="$newest_scope_root/hmux-ah-$HMUX_COMPUTED_APP_HOST_KEY.confirm"
 printf 'version=3\nmalformed\n' > "$malformed_newest_confirmation"
 chmod 600 "$malformed_newest_confirmation"
 touch -t 203001010000 "$malformed_newest_confirmation"
 
-cmux_compute_app_host_key 940003 1 1 "$GITHUB_REPOSITORY_ID"
-nonprivate_newest_key="$CMUX_COMPUTED_APP_HOST_KEY"
-nonprivate_newest_home="$newest_scope_root/cmux-ah-$nonprivate_newest_key"
-nonprivate_newest_receipts="$newest_scope_root/cmux-ah-$nonprivate_newest_key-receipts"
-cmux_compute_app_host_cleanup_confirmation \
+hmux_compute_app_host_key 940003 1 1 "$GITHUB_REPOSITORY_ID"
+nonprivate_newest_key="$HMUX_COMPUTED_APP_HOST_KEY"
+nonprivate_newest_home="$newest_scope_root/hmux-ah-$nonprivate_newest_key"
+nonprivate_newest_receipts="$newest_scope_root/hmux-ah-$nonprivate_newest_key-receipts"
+hmux_compute_app_host_cleanup_confirmation \
   940003 1 1 "$nonprivate_newest_home" "$nonprivate_newest_receipts" \
   "$GITHUB_REPOSITORY_ID"
-nonprivate_newest_confirmation="$newest_scope_root/cmux-ah-$nonprivate_newest_key.confirm"
+nonprivate_newest_confirmation="$newest_scope_root/hmux-ah-$nonprivate_newest_key.confirm"
 printf 'version=3\nrepository_id=%s\nrun_id=940003\nrun_attempt=1\nshard=1\nkey=%s\nhome=%s\nreceipt_dir=%s\nconfirmation=%s\n' \
   "$GITHUB_REPOSITORY_ID" "$nonprivate_newest_key" \
   "$nonprivate_newest_home" \
-  "$nonprivate_newest_receipts" "$CMUX_COMPUTED_APP_HOST_CLEANUP_CONFIRMATION" \
+  "$nonprivate_newest_receipts" "$HMUX_COMPUTED_APP_HOST_CLEANUP_CONFIRMATION" \
   > "$nonprivate_newest_confirmation"
 chmod 644 "$nonprivate_newest_confirmation"
 touch -t 204001010000 "$nonprivate_newest_confirmation"
 
-cmux_newest_app_host_confirmation_mtime "$newest_scope_root"
-[ "$CMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME" = "$trusted_newest_mtime" ] \
+hmux_newest_app_host_confirmation_mtime "$newest_scope_root"
+[ "$HMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME" = "$trusted_newest_mtime" ] \
   || fail "untrusted confirmation changed newest-scope protection"
 
 untrack_pid() {
@@ -222,15 +222,15 @@ PIDS=""
 
 spawn_process() {
   /bin/bash -c 'trap "exit 0" TERM; while :; do /bin/sleep 0.1; done' &
-  CMUX_TEST_SPAWNED_PID=$!
-  PIDS="${PIDS:+$PIDS }$CMUX_TEST_SPAWNED_PID"
+  HMUX_TEST_SPAWNED_PID=$!
+  PIDS="${PIDS:+$PIDS }$HMUX_TEST_SPAWNED_PID"
 }
 
 spawn_forged_argv_process() {
   /bin/bash -c 'exec -a "$1" /bin/bash -c "$2" "$1"' \
     bash "$1" 'trap "exit 0" TERM; while :; do /bin/sleep 0.1; done' &
-  CMUX_TEST_SPAWNED_PID=$!
-  PIDS="${PIDS:+$PIDS }$CMUX_TEST_SPAWNED_PID"
+  HMUX_TEST_SPAWNED_PID=$!
+  PIDS="${PIDS:+$PIDS }$HMUX_TEST_SPAWNED_PID"
 }
 
 write_receipt() {
@@ -260,7 +260,7 @@ make_scope() {
   local name="$1"
   TEST_DERIVED_DATA="$TMP_DIR/$name/Derived Data"
   TEST_RECEIPT_DIR="$TMP_DIR/$name/receipts"
-  TEST_EXECUTABLE="$TEST_DERIVED_DATA/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+  TEST_EXECUTABLE="$TEST_DERIVED_DATA/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
   mkdir -p "$(dirname "$TEST_EXECUTABLE")" "$TEST_RECEIPT_DIR"
   : > "$TEST_EXECUTABLE"
 }
@@ -268,84 +268,84 @@ make_scope() {
 KEY=0123456789ab
 
 make_scope empty-current-scope
-: > "$CMUX_FAKE_LSOF_STATE"
-empty_verified="$(cmux_app_host_verified_pids \
+: > "$HMUX_FAKE_LSOF_STATE"
+empty_verified="$(hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA")" \
   || fail "an empty current scope was treated as malformed"
 [ -z "$empty_verified" ] || fail "an empty current scope returned a process"
 
 make_scope dead-pid-diagnostic
 spawn_process
-dead_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$dead_pid" "$TEST_EXECUTABLE" > "$CMUX_FAKE_LSOF_STATE"
+dead_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$dead_pid" "$TEST_EXECUTABLE" > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$dead_pid" "$TEST_EXECUTABLE"
 /bin/kill -TERM "$dead_pid"
 wait "$dead_pid" 2>/dev/null || true
 untrack_pid "$dead_pid"
-export CMUX_FAKE_LSOF_DEAD_PID_DIAGNOSTIC=1
-dead_verified="$(cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_DEAD_PID_DIAGNOSTIC=1
+dead_verified="$(hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA")" \
   || fail "a dead-PID lsof diagnostic was treated as an inspection failure"
-unset CMUX_FAKE_LSOF_DEAD_PID_DIAGNOSTIC
+unset HMUX_FAKE_LSOF_DEAD_PID_DIAGNOSTIC
 [ -z "$dead_verified" ] || fail "a dead PID was returned as a live process"
 
 make_scope matching
 spawn_process
-matching_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$matching_pid" "$TEST_EXECUTABLE" > "$CMUX_FAKE_LSOF_STATE"
+matching_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$matching_pid" "$TEST_EXECUTABLE" > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$matching_pid" "$TEST_EXECUTABLE"
-export CMUX_FAKE_LSOF_WARNING=1
-verified="$(cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_WARNING=1
+verified="$(hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   2> "$TMP_DIR/matching-lsof-warning.err")" || fail "matching receipt was rejected"
 [ "$verified" = "$matching_pid" ] || fail "matching receipt did not return its PID"
-export CMUX_FAKE_LSOF_RECEIPT_FD_FIELD=f9w
-if cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_RECEIPT_FD_FIELD=f9w
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/human-fd-suffix.out" 2> "$TMP_DIR/human-fd-suffix.err"; then
   fail "human-readable lsof descriptor suffix was accepted as machine output"
 fi
-unset CMUX_FAKE_LSOF_RECEIPT_FD_FIELD
+unset HMUX_FAKE_LSOF_RECEIPT_FD_FIELD
 /bin/kill -0 "$matching_pid" 2>/dev/null \
   || fail "malformed lsof descriptor verification signaled the live PID"
-cmux_terminate_verified_app_hosts \
+hmux_terminate_verified_app_hosts \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   2>> "$TMP_DIR/matching-lsof-warning.err" || fail "matching receipt did not terminate"
 grep -Fq "lsof: simulated advisory diagnostic" \
   "$TMP_DIR/matching-lsof-warning.err" \
   || fail "lsof advisory diagnostics did not remain on stderr"
-unset CMUX_FAKE_LSOF_WARNING
+unset HMUX_FAKE_LSOF_WARNING
 wait "$matching_pid" 2>/dev/null || true
 untrack_pid "$matching_pid"
 
 make_scope unbound-receipt
 spawn_process
-unbound_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$unbound_pid" "$TEST_EXECUTABLE" > "$CMUX_FAKE_LSOF_STATE"
+unbound_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$unbound_pid" "$TEST_EXECUTABLE" > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$unbound_pid" "$TEST_EXECUTABLE"
-export CMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$unbound_pid"
-if cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$unbound_pid"
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/unbound.out" 2> "$TMP_DIR/unbound.err"; then
   fail "a live PID without the receipt file open was authenticated"
 fi
-unset CMUX_FAKE_LSOF_MISSING_RECEIPT_PID
+unset HMUX_FAKE_LSOF_MISSING_RECEIPT_PID
 /bin/kill -0 "$unbound_pid" 2>/dev/null \
   || fail "unbound receipt verification signaled the live PID"
 
 make_scope deleted-vnode
 spawn_process
-deleted_vnode_pid="$CMUX_TEST_SPAWNED_PID"
+deleted_vnode_pid="$HMUX_TEST_SPAWNED_PID"
 printf '%s|%s (deleted)\n' \
-  "$deleted_vnode_pid" "$TEST_EXECUTABLE" > "$CMUX_FAKE_LSOF_STATE"
+  "$deleted_vnode_pid" "$TEST_EXECUTABLE" > "$HMUX_FAKE_LSOF_STATE"
 write_receipt \
   "$TEST_RECEIPT_DIR" "$KEY" "$deleted_vnode_pid" "$TEST_EXECUTABLE"
-deleted_verified="$(cmux_app_host_verified_pids \
+deleted_verified="$(hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA")" \
   || fail "lsof's deleted-vnode suffix broke receipt verification"
 [ "$deleted_verified" = "$deleted_vnode_pid" ] \
   || fail "deleted-vnode verification did not return its PID"
-cmux_terminate_verified_app_hosts \
+hmux_terminate_verified_app_hosts \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   || fail "deleted-vnode receipt did not terminate"
 wait "$deleted_vnode_pid" 2>/dev/null || true
@@ -353,10 +353,10 @@ untrack_pid "$deleted_vnode_pid"
 
 make_scope forged-argv
 spawn_forged_argv_process "$TEST_EXECUTABLE"
-forged_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$forged_pid" /bin/sleep > "$CMUX_FAKE_LSOF_STATE"
+forged_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$forged_pid" /bin/sleep > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$forged_pid" "$TEST_EXECUTABLE"
-if cmux_app_host_verified_pids \
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/forged.out" 2> "$TMP_DIR/forged.err"; then
   fail "a forged process title authorized an app-host PID"
@@ -365,10 +365,10 @@ fi
 
 make_scope wrong-key
 spawn_process
-wrong_key_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$wrong_key_pid" "$TEST_EXECUTABLE" > "$CMUX_FAKE_LSOF_STATE"
+wrong_key_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$wrong_key_pid" "$TEST_EXECUTABLE" > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" fedcba987654 "$wrong_key_pid" "$TEST_EXECUTABLE"
-if cmux_app_host_verified_pids \
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/wrong-key.out" 2> "$TMP_DIR/wrong-key.err"; then
   fail "a receipt from another run key was accepted"
@@ -376,13 +376,13 @@ fi
 
 make_scope wrong-path
 spawn_process
-wrong_path_pid="$CMUX_TEST_SPAWNED_PID"
-outside_executable="$TMP_DIR/outside/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+wrong_path_pid="$HMUX_TEST_SPAWNED_PID"
+outside_executable="$TMP_DIR/outside/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
 mkdir -p "$(dirname "$outside_executable")"
 : > "$outside_executable"
-printf '%s|%s\n' "$wrong_path_pid" "$outside_executable" > "$CMUX_FAKE_LSOF_STATE"
+printf '%s|%s\n' "$wrong_path_pid" "$outside_executable" > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$wrong_path_pid" "$outside_executable"
-if cmux_app_host_verified_pids \
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/wrong-path.out" 2> "$TMP_DIR/wrong-path.err"; then
   fail "an executable outside the supplied DerivedData path was accepted"
@@ -390,10 +390,10 @@ fi
 
 make_scope wrong-lsof
 spawn_process
-wrong_lsof_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$wrong_lsof_pid" /bin/sleep > "$CMUX_FAKE_LSOF_STATE"
+wrong_lsof_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$wrong_lsof_pid" /bin/sleep > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$wrong_lsof_pid" "$TEST_EXECUTABLE"
-if cmux_app_host_verified_pids \
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/wrong-lsof.out" 2> "$TMP_DIR/wrong-lsof.err"; then
   fail "a receipt whose PID had another executable vnode was accepted"
@@ -403,20 +403,20 @@ fi
 # stale: cleanup succeeds, authorizes nothing, and signals nothing.
 make_scope reused-pid
 spawn_process
-reused_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$reused_pid" /bin/sleep > "$CMUX_FAKE_LSOF_STATE"
+reused_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$reused_pid" /bin/sleep > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$reused_pid" "$TEST_EXECUTABLE"
-export CMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$reused_pid"
-cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$reused_pid"
+hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/reused-pid.out" 2> "$TMP_DIR/reused-pid.err" \
   || fail "a receipt whose PID was reused by another executable failed cleanup: $(cat "$TMP_DIR/reused-pid.err")"
 [ ! -s "$TMP_DIR/reused-pid.out" ] \
   || fail "a reused PID was authorized by a stale receipt"
-cmux_terminate_verified_app_hosts \
+hmux_terminate_verified_app_hosts \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   || fail "a stale receipt for a reused PID failed termination"
-unset CMUX_FAKE_LSOF_MISSING_RECEIPT_PID
+unset HMUX_FAKE_LSOF_MISSING_RECEIPT_PID
 /bin/kill -0 "$reused_pid" 2>/dev/null \
   || fail "stale receipt verification signaled the reused PID"
 
@@ -424,18 +424,18 @@ unset CMUX_FAKE_LSOF_MISSING_RECEIPT_PID
 # the mismatched executable still fails cleanup instead of reading as stale.
 make_scope uninspectable-pid
 spawn_process
-uninspectable_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$uninspectable_pid" /bin/sleep > "$CMUX_FAKE_LSOF_STATE"
+uninspectable_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$uninspectable_pid" /bin/sleep > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$uninspectable_pid" "$TEST_EXECUTABLE"
-export CMUX_FAKE_LSOF_RECEIPT_EXIT=2
-if cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_RECEIPT_EXIT=2
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/uninspectable-pid.out" 2> "$TMP_DIR/uninspectable-pid.err"; then
   fail "a receipt whose descriptor lsof could not inspect was treated as stale"
 fi
 grep -q "does not match the PID executable vnode" "$TMP_DIR/uninspectable-pid.err" \
   || fail "an uninspectable receipt failed for the wrong reason: $(cat "$TMP_DIR/uninspectable-pid.err")"
-unset CMUX_FAKE_LSOF_RECEIPT_EXIT
+unset HMUX_FAKE_LSOF_RECEIPT_EXIT
 /bin/kill -0 "$uninspectable_pid" 2>/dev/null \
   || fail "uninspectable receipt verification signaled its PID"
 
@@ -443,34 +443,34 @@ unset CMUX_FAKE_LSOF_RECEIPT_EXIT
 # nothing shows the receipt is gone, so cleanup still fails.
 make_scope unlisted-pid
 spawn_process
-unlisted_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$unlisted_pid" /bin/sleep > "$CMUX_FAKE_LSOF_STATE"
+unlisted_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$unlisted_pid" /bin/sleep > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$unlisted_pid" "$TEST_EXECUTABLE"
-export CMUX_FAKE_LSOF_RECEIPT_EXIT=1 CMUX_FAKE_LSOF_LIST_EXIT=1
-if cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_RECEIPT_EXIT=1 HMUX_FAKE_LSOF_LIST_EXIT=1
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/unlisted-pid.out" 2> "$TMP_DIR/unlisted-pid.err"; then
   fail "an lsof exit 1 without a listing of the PID was treated as a stale receipt"
 fi
-unset CMUX_FAKE_LSOF_RECEIPT_EXIT CMUX_FAKE_LSOF_LIST_EXIT
+unset HMUX_FAKE_LSOF_RECEIPT_EXIT HMUX_FAKE_LSOF_LIST_EXIT
 /bin/kill -0 "$unlisted_pid" 2>/dev/null \
   || fail "unlisted receipt verification signaled its PID"
 
 # A listing that names the PID but no open file shows nothing either.
 make_scope fileless-pid
 spawn_process
-fileless_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$fileless_pid" /bin/sleep > "$CMUX_FAKE_LSOF_STATE"
+fileless_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$fileless_pid" /bin/sleep > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$fileless_pid" "$TEST_EXECUTABLE"
-export CMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$fileless_pid" CMUX_FAKE_LSOF_LIST_NO_FILES=1
-if cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$fileless_pid" HMUX_FAKE_LSOF_LIST_NO_FILES=1
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/fileless-pid.out" 2> "$TMP_DIR/fileless-pid.err"; then
   fail "a listing without open files was treated as a stale receipt"
 fi
 grep -q "could not inspect the process receipt of app-host PID $fileless_pid" "$TMP_DIR/fileless-pid.err" \
   || fail "a listing without open files failed for the wrong reason: $(cat "$TMP_DIR/fileless-pid.err")"
-unset CMUX_FAKE_LSOF_MISSING_RECEIPT_PID CMUX_FAKE_LSOF_LIST_NO_FILES
+unset HMUX_FAKE_LSOF_MISSING_RECEIPT_PID HMUX_FAKE_LSOF_LIST_NO_FILES
 /bin/kill -0 "$fileless_pid" 2>/dev/null \
   || fail "fileless receipt verification signaled its PID"
 
@@ -478,12 +478,12 @@ unset CMUX_FAKE_LSOF_MISSING_RECEIPT_PID CMUX_FAKE_LSOF_LIST_NO_FILES
 # it, which no PID reuse explains.
 make_scope moved-receipt-fd
 spawn_process
-moved_fd_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$moved_fd_pid" /bin/sleep > "$CMUX_FAKE_LSOF_STATE"
+moved_fd_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$moved_fd_pid" /bin/sleep > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$moved_fd_pid" "$TEST_EXECUTABLE"
-export CMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$moved_fd_pid"
-export CMUX_FAKE_LSOF_LIST_RECEIPT_ON_FD10="$TEST_RECEIPT_DIR/app-host-$moved_fd_pid.receipt"
-if cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$moved_fd_pid"
+export HMUX_FAKE_LSOF_LIST_RECEIPT_ON_FD10="$TEST_RECEIPT_DIR/app-host-$moved_fd_pid.receipt"
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/moved-fd.out" 2> "$TMP_DIR/moved-fd.err"; then
   fail "a receipt held on another descriptor was treated as stale"
@@ -491,7 +491,7 @@ fi
 grep -q "could not inspect the process receipt of app-host PID $moved_fd_pid" "$TMP_DIR/moved-fd.err" \
   && grep -q "does not match the PID executable vnode" "$TMP_DIR/moved-fd.err" \
   || fail "a receipt held on another descriptor failed for the wrong reason: $(cat "$TMP_DIR/moved-fd.err")"
-unset CMUX_FAKE_LSOF_MISSING_RECEIPT_PID CMUX_FAKE_LSOF_LIST_RECEIPT_ON_FD10
+unset HMUX_FAKE_LSOF_MISSING_RECEIPT_PID HMUX_FAKE_LSOF_LIST_RECEIPT_ON_FD10
 /bin/kill -0 "$moved_fd_pid" 2>/dev/null \
   || fail "moved-descriptor receipt verification signaled its PID"
 
@@ -499,12 +499,12 @@ unset CMUX_FAKE_LSOF_MISSING_RECEIPT_PID CMUX_FAKE_LSOF_LIST_RECEIPT_ON_FD10
 # exited, which is a stale receipt, not an inspection failure.
 make_scope exiting-reused-pid
 spawn_process
-exiting_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$exiting_pid" /bin/sleep > "$CMUX_FAKE_LSOF_STATE"
+exiting_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$exiting_pid" /bin/sleep > "$HMUX_FAKE_LSOF_STATE"
 write_receipt "$TEST_RECEIPT_DIR" "$KEY" "$exiting_pid" "$TEST_EXECUTABLE"
-export CMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$exiting_pid"
-export CMUX_FAKE_LSOF_LIST_EXIT=1 CMUX_FAKE_LSOF_LIST_KILLS_PID="$exiting_pid"
-cmux_app_host_verified_pids \
+export HMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$exiting_pid"
+export HMUX_FAKE_LSOF_LIST_EXIT=1 HMUX_FAKE_LSOF_LIST_KILLS_PID="$exiting_pid"
+hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/exiting-pid.out" 2> "$TMP_DIR/exiting-pid.err" \
   || fail "a reused PID that exited during verification failed cleanup: $(cat "$TMP_DIR/exiting-pid.err")"
@@ -512,15 +512,15 @@ cmux_app_host_verified_pids \
   || fail "a PID that exited during verification was authorized"
 grep -q "exited during verification" "$TMP_DIR/exiting-pid.err" \
   || fail "an exited reused PID was not reported: $(cat "$TMP_DIR/exiting-pid.err")"
-unset CMUX_FAKE_LSOF_MISSING_RECEIPT_PID CMUX_FAKE_LSOF_LIST_EXIT CMUX_FAKE_LSOF_LIST_KILLS_PID
+unset HMUX_FAKE_LSOF_MISSING_RECEIPT_PID HMUX_FAKE_LSOF_LIST_EXIT HMUX_FAKE_LSOF_LIST_KILLS_PID
 wait "$exiting_pid" 2>/dev/null || true
 untrack_pid "$exiting_pid"
 
 make_scope missing-receipt
 spawn_process
-unreceipted_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$unreceipted_pid" "$TEST_EXECUTABLE" > "$CMUX_FAKE_LSOF_STATE"
-if cmux_app_host_verified_pids \
+unreceipted_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$unreceipted_pid" "$TEST_EXECUTABLE" > "$HMUX_FAKE_LSOF_STATE"
+if hmux_app_host_verified_pids \
   "$TEST_RECEIPT_DIR" "$KEY" "$TEST_DERIVED_DATA" \
   > "$TMP_DIR/unreceipted.out" 2> "$TMP_DIR/unreceipted.err"; then
   fail "a live target without a receipt was accepted"
@@ -531,9 +531,9 @@ grep -Fq "has no verified receipt" "$TMP_DIR/unreceipted.err" \
 empty_runner_root="$TMP_DIR/empty-runner-work"
 empty_receipt_root="$TMP_DIR/empty-receipts"
 mkdir -p "$empty_runner_root" "$empty_receipt_root"
-: > "$CMUX_FAKE_LSOF_STATE"
-export CMUX_FAKE_LSOF_WARNING=1
-cmux_reclaim_abandoned_app_host_scopes \
+: > "$HMUX_FAKE_LSOF_STATE"
+export HMUX_FAKE_LSOF_WARNING=1
+hmux_reclaim_abandoned_app_host_scopes \
   "$empty_runner_root" "$empty_receipt_root" fedcba987654 \
   2000000000 86400 fedcba987654 \
   2> "$TMP_DIR/empty-runner-lsof-warning.err" \
@@ -541,14 +541,14 @@ cmux_reclaim_abandoned_app_host_scopes \
 grep -Fq "lsof: simulated advisory diagnostic" \
   "$TMP_DIR/empty-runner-lsof-warning.err" \
   || fail "runner lsof diagnostics did not remain on stderr"
-unset CMUX_FAKE_LSOF_WARNING
+unset HMUX_FAKE_LSOF_WARNING
 
 preflight_runner_root="$TMP_DIR/preflight-runner-work"
 preflight_receipt_root="$TMP_DIR/preflight-receipts"
 preflight_key=13579bdf0246
-preflight_receipt_dir="$preflight_receipt_root/cmux-ah-$preflight_key-receipts"
-preflight_receipted_executable="$preflight_runner_root/old-job/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
-preflight_unreceipted_executable="$preflight_runner_root/current-job/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+preflight_receipt_dir="$preflight_receipt_root/hmux-ah-$preflight_key-receipts"
+preflight_receipted_executable="$preflight_runner_root/old-job/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
+preflight_unreceipted_executable="$preflight_runner_root/current-job/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
 mkdir -p \
   "$preflight_runner_root" \
   "$preflight_receipt_dir" \
@@ -557,17 +557,17 @@ mkdir -p \
 : > "$preflight_receipted_executable"
 : > "$preflight_unreceipted_executable"
 spawn_process
-preflight_receipted_pid="$CMUX_TEST_SPAWNED_PID"
+preflight_receipted_pid="$HMUX_TEST_SPAWNED_PID"
 spawn_process
-preflight_unreceipted_pid="$CMUX_TEST_SPAWNED_PID"
+preflight_unreceipted_pid="$HMUX_TEST_SPAWNED_PID"
 printf '%s|%s\n%s|%s\n' \
   "$preflight_receipted_pid" "$preflight_receipted_executable" \
   "$preflight_unreceipted_pid" "$preflight_unreceipted_executable" \
-  > "$CMUX_FAKE_LSOF_STATE"
+  > "$HMUX_FAKE_LSOF_STATE"
 write_receipt \
   "$preflight_receipt_dir" "$preflight_key" \
   "$preflight_receipted_pid" "$preflight_receipted_executable"
-if cmux_recover_owned_app_host_attempt \
+if hmux_recover_owned_app_host_attempt \
   "$preflight_receipt_dir" "$preflight_key" \
   "${preflight_receipted_executable%%/Build/Products/*}" \
   "$preflight_runner_root" "$preflight_receipt_root" \
@@ -586,18 +586,18 @@ grep -Fq "foreign app-host" "$TMP_DIR/stale-unreceipted.err" || {
 deleted_runner_root="$TMP_DIR/deleted-runner-work"
 deleted_receipt_root="$TMP_DIR/deleted-receipts"
 deleted_key=2468ace01357
-deleted_receipt_dir="$deleted_receipt_root/cmux-ah-$deleted_key-receipts"
+deleted_receipt_dir="$deleted_receipt_root/hmux-ah-$deleted_key-receipts"
 deleted_derived_data="$deleted_runner_root/old-job/deleted-derived-data"
-deleted_executable="$deleted_derived_data/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+deleted_executable="$deleted_derived_data/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
 mkdir -p "$deleted_runner_root" "$deleted_receipt_dir"
 spawn_process
-deleted_stale_pid="$CMUX_TEST_SPAWNED_PID"
+deleted_stale_pid="$HMUX_TEST_SPAWNED_PID"
 printf '%s|%s (deleted)\n' \
-  "$deleted_stale_pid" "$deleted_executable" > "$CMUX_FAKE_LSOF_STATE"
+  "$deleted_stale_pid" "$deleted_executable" > "$HMUX_FAKE_LSOF_STATE"
 write_receipt \
   "$deleted_receipt_dir" "$deleted_key" \
   "$deleted_stale_pid" "$deleted_executable"
-cmux_terminate_one_verified_app_host \
+hmux_terminate_one_verified_app_host \
   "$deleted_receipt_dir/app-host-$deleted_stale_pid.receipt" \
   "$deleted_key" "$deleted_derived_data" "$deleted_runner_root" \
   || fail "deleted stale product was not verified and terminated"
@@ -609,25 +609,25 @@ untrack_pid "$deleted_stale_pid"
 # Recovery verifies receipts an earlier job left, where PID reuse is likeliest:
 # a reused PID reads as a stale receipt there too, and is not signaled.
 reused_runner_root="$TMP_DIR/reused-runner-work"
-reused_receipt_dir="$TMP_DIR/reused-receipts/cmux-ah-$deleted_key-receipts"
+reused_receipt_dir="$TMP_DIR/reused-receipts/hmux-ah-$deleted_key-receipts"
 reused_derived_data="$reused_runner_root/old-job/derived-data"
-reused_executable="$reused_derived_data/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+reused_executable="$reused_derived_data/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
 mkdir -p "$reused_runner_root" "$reused_receipt_dir"
 spawn_process
-recovery_reused_pid="$CMUX_TEST_SPAWNED_PID"
-printf '%s|%s\n' "$recovery_reused_pid" /bin/sleep > "$CMUX_FAKE_LSOF_STATE"
+recovery_reused_pid="$HMUX_TEST_SPAWNED_PID"
+printf '%s|%s\n' "$recovery_reused_pid" /bin/sleep > "$HMUX_FAKE_LSOF_STATE"
 write_receipt \
   "$reused_receipt_dir" "$deleted_key" \
   "$recovery_reused_pid" "$reused_executable"
-export CMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$recovery_reused_pid"
-cmux_terminate_one_verified_app_host \
+export HMUX_FAKE_LSOF_MISSING_RECEIPT_PID="$recovery_reused_pid"
+hmux_terminate_one_verified_app_host \
   "$reused_receipt_dir/app-host-$recovery_reused_pid.receipt" \
   "$deleted_key" "$reused_derived_data" "$reused_runner_root" \
   2> "$TMP_DIR/recovery-reused.err" \
   || fail "recovery failed on an earlier job's receipt whose PID was reused: $(cat "$TMP_DIR/recovery-reused.err")"
 grep -q "skipping the stale receipt" "$TMP_DIR/recovery-reused.err" \
   || fail "recovery did not report the reused receipt PID: $(cat "$TMP_DIR/recovery-reused.err")"
-unset CMUX_FAKE_LSOF_MISSING_RECEIPT_PID
+unset HMUX_FAKE_LSOF_MISSING_RECEIPT_PID
 /bin/kill -0 "$recovery_reused_pid" 2>/dev/null \
   || fail "recovery signaled a reused receipt PID"
 
@@ -639,16 +639,16 @@ make_durable_scope() {
   local derived_data_path="$5"
   export GITHUB_RUN_ID="$run_id"
   export GITHUB_RUN_ATTEMPT="$run_attempt"
-  export CMUX_APP_HOST_SHARD="$shard"
+  export HMUX_APP_HOST_SHARD="$shard"
   export RUNNER_TEMP="$stale_runner_root/$scope_name-runner-temp"
   mkdir -p "$RUNNER_TEMP"
-  cmux_resolve_app_host_identity
-  DURABLE_SCOPE_KEY="$CMUX_RESOLVED_APP_HOST_KEY"
-  DURABLE_SCOPE_HOME="$CMUX_RESOLVED_APP_HOST_HOME"
-  DURABLE_SCOPE_RECEIPT_DIR="$CMUX_RESOLVED_APP_HOST_RECEIPT_DIR"
-  DURABLE_SCOPE_CONFIRMATION_FILE="$CMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE"
-  DURABLE_SCOPE_CONFIRMATION="$CMUX_RESOLVED_APP_HOST_CLEANUP_CONFIRMATION"
-  DURABLE_SCOPE_EXECUTABLE="$derived_data_path/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+  hmux_resolve_app_host_identity
+  DURABLE_SCOPE_KEY="$HMUX_RESOLVED_APP_HOST_KEY"
+  DURABLE_SCOPE_HOME="$HMUX_RESOLVED_APP_HOST_HOME"
+  DURABLE_SCOPE_RECEIPT_DIR="$HMUX_RESOLVED_APP_HOST_RECEIPT_DIR"
+  DURABLE_SCOPE_CONFIRMATION_FILE="$HMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE"
+  DURABLE_SCOPE_CONFIRMATION="$HMUX_RESOLVED_APP_HOST_CLEANUP_CONFIRMATION"
+  DURABLE_SCOPE_EXECUTABLE="$derived_data_path/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
   mkdir -p \
     "$DURABLE_SCOPE_HOME" \
     "$DURABLE_SCOPE_RECEIPT_DIR" \
@@ -681,9 +681,9 @@ old_executable="$DURABLE_SCOPE_EXECUTABLE"
 GITHUB_REPOSITORY_ID="$current_repository_id"
 export GITHUB_REPOSITORY_ID
 spawn_process
-old_pid_one="$CMUX_TEST_SPAWNED_PID"
+old_pid_one="$HMUX_TEST_SPAWNED_PID"
 spawn_process
-old_pid_two="$CMUX_TEST_SPAWNED_PID"
+old_pid_two="$HMUX_TEST_SPAWNED_PID"
 write_receipt "$old_receipt_dir" "$old_key" "$old_pid_one" "$old_executable"
 write_receipt "$old_receipt_dir" "$old_key" "$old_pid_two" "$old_executable"
 
@@ -695,9 +695,9 @@ current_receipt_dir="$DURABLE_SCOPE_RECEIPT_DIR"
 current_confirmation_file="$DURABLE_SCOPE_CONFIRMATION_FILE"
 current_executable="$DURABLE_SCOPE_EXECUTABLE"
 spawn_process
-current_pid="$CMUX_TEST_SPAWNED_PID"
+current_pid="$HMUX_TEST_SPAWNED_PID"
 spawn_process
-current_pid_two="$CMUX_TEST_SPAWNED_PID"
+current_pid_two="$HMUX_TEST_SPAWNED_PID"
 write_receipt \
   "$current_receipt_dir" "$current_key" "$current_pid" "$current_executable"
 write_receipt \
@@ -714,9 +714,9 @@ printf '%s|%s\n%s|%s\n%s|%s\n%s|%s\n' \
   "$old_pid_two" "$old_executable" \
   "$current_pid" "$current_executable" \
   "$current_pid_two" "$current_executable" \
-  > "$CMUX_FAKE_LSOF_STATE"
+  > "$HMUX_FAKE_LSOF_STATE"
 touch -t 204001010000 "$old_confirmation_file"
-if cmux_recover_owned_app_host_attempt \
+if hmux_recover_owned_app_host_attempt \
   "$current_receipt_dir" "$current_key" \
   "${current_executable%%/Build/Products/*}" \
   "$stale_runner_root" "$system_temp_root" \
@@ -739,7 +739,7 @@ for foreign_pid in "$old_pid_one" "$old_pid_two"; do
   wait "$foreign_pid" 2>/dev/null || true
   untrack_pid "$foreign_pid"
 done
-cmux_recover_owned_app_host_attempt \
+hmux_recover_owned_app_host_attempt \
   "$current_receipt_dir" "$current_key" \
   "${current_executable%%/Build/Products/*}" \
   "$stale_runner_root" "$system_temp_root" \
@@ -760,16 +760,16 @@ done
 # The canonical machine-lock holder must immediately recover an authenticated
 # prior owner. The process-free scope still observes the deletion grace period.
 spawn_process
-old_orphan_pid_one="$CMUX_TEST_SPAWNED_PID"
+old_orphan_pid_one="$HMUX_TEST_SPAWNED_PID"
 spawn_process
-old_orphan_pid_two="$CMUX_TEST_SPAWNED_PID"
+old_orphan_pid_two="$HMUX_TEST_SPAWNED_PID"
 write_receipt \
   "$old_receipt_dir" "$old_key" "$old_orphan_pid_one" "$old_executable"
 write_receipt \
   "$old_receipt_dir" "$old_key" "$old_orphan_pid_two" "$old_executable"
 touch "$old_confirmation_file"
-cmux_app_host_scope_mtime "$old_confirmation_file"
-old_orphan_confirmation_mtime="$CMUX_APP_HOST_SCOPE_MTIME"
+hmux_app_host_scope_mtime "$old_confirmation_file"
+old_orphan_confirmation_mtime="$HMUX_APP_HOST_SCOPE_MTIME"
 old_orphan_recovery_now=$((old_orphan_confirmation_mtime + 1))
 touch -t 204001010000 \
   "$current_confirmation_file" "$waiting_confirmation_file"
@@ -778,8 +778,8 @@ rm -rf -- "$old_derived_data"
 printf '%s|%s (deleted)\n%s|%s (deleted)\n' \
   "$old_orphan_pid_one" "$old_executable" \
   "$old_orphan_pid_two" "$old_executable" \
-  > "$CMUX_FAKE_LSOF_STATE"
-cmux_recover_owned_app_host_attempt \
+  > "$HMUX_FAKE_LSOF_STATE"
+hmux_recover_owned_app_host_attempt \
   "$current_receipt_dir" "$current_key" \
   "${current_executable%%/Build/Products/*}" \
   "$stale_runner_root" "$system_temp_root" \
@@ -805,7 +805,7 @@ do
 done
 
 old_scope_reclaim_now=$((old_orphan_confirmation_mtime + 86400))
-cmux_recover_owned_app_host_attempt \
+hmux_recover_owned_app_host_attempt \
   "$current_receipt_dir" "$current_key" \
   "${current_executable%%/Build/Products/*}" \
   "$stale_runner_root" "$system_temp_root" \
@@ -825,8 +825,8 @@ abandoned_home="$DURABLE_SCOPE_HOME"
 abandoned_receipt_dir="$DURABLE_SCOPE_RECEIPT_DIR"
 abandoned_confirmation_file="$DURABLE_SCOPE_CONFIRMATION_FILE"
 touch -t 200001010000 "$abandoned_confirmation_file"
-: > "$CMUX_FAKE_LSOF_STATE"
-cmux_recover_owned_app_host_attempt \
+: > "$HMUX_FAKE_LSOF_STATE"
+hmux_recover_owned_app_host_attempt \
   "$current_receipt_dir" "$current_key" \
   "${current_executable%%/Build/Products/*}" \
   "$stale_runner_root" "$system_temp_root" 2000000000 86400 \
@@ -854,7 +854,7 @@ abandoned_partial_receipt_dir="$DURABLE_SCOPE_RECEIPT_DIR"
 abandoned_partial_confirmation_file="$DURABLE_SCOPE_CONFIRMATION_FILE"
 rm -rf -- "$abandoned_partial_home" "$abandoned_partial_receipt_dir"
 touch -t 200001010000 "$abandoned_partial_confirmation_file"
-cmux_recover_owned_app_host_attempt \
+hmux_recover_owned_app_host_attempt \
   "$current_receipt_dir" "$current_key" \
   "${current_executable%%/Build/Products/*}" \
   "$stale_runner_root" "$system_temp_root" 2000000000 86400 \
@@ -881,7 +881,7 @@ touch -t 200001010000 \
   "$candidate_one_confirmation_file" "$candidate_two_confirmation_file"
 write_changed_confirmation_record "$candidate_two_confirmation_file"
 touch -t 200001010000 "$candidate_two_confirmation_file"
-if cmux_reclaim_abandoned_app_host_scopes \
+if hmux_reclaim_abandoned_app_host_scopes \
   "$stale_runner_root" "$system_temp_root" "$current_key" \
   2000000000 86400 \
   "$current_key" "$candidate_one_key" "$candidate_two_key" \
@@ -897,7 +897,7 @@ do
   [ -e "$preserved_path" ] \
     || fail "candidate validation partially deleted a stale scope"
 done
-if ! cmux_recover_owned_app_host_attempt \
+if ! hmux_recover_owned_app_host_attempt \
   "$current_receipt_dir" "$current_key" \
   "${current_executable%%/Build/Products/*}" \
   "$stale_runner_root" "$system_temp_root" 2000000000 86400 \
@@ -920,7 +920,7 @@ done
 printf '%s\n' "$candidate_two_record" > "$candidate_two_confirmation_file"
 chmod 600 "$candidate_two_confirmation_file"
 touch -t 200001010000 "$candidate_two_confirmation_file"
-cmux_reclaim_abandoned_app_host_scopes \
+hmux_reclaim_abandoned_app_host_scopes \
   "$stale_runner_root" "$system_temp_root" "$current_key" \
   2000000000 86400 \
   "$current_key" "$candidate_one_key" "$candidate_two_key" \
@@ -937,7 +937,7 @@ legacy_record="$(cat "$legacy_confirmation_file")"
 printf 'version=2\nrun_id=%s\nrun_attempt=2\nshard=1\nkey=%s\nhome=%s\nreceipt_dir=%s\nconfirmation=%s\n' \
   "930005$$" "$legacy_key" "$legacy_home" "$legacy_receipt_dir" \
   "$DURABLE_SCOPE_CONFIRMATION" > "$legacy_confirmation_file"
-cmux_reclaim_abandoned_app_host_scopes \
+hmux_reclaim_abandoned_app_host_scopes \
   "$stale_runner_root" "$system_temp_root" "$current_key" \
   2000000000 86400 "$current_key" "$legacy_key" \
   > "$TMP_DIR/v2-candidate.out" 2> "$TMP_DIR/v2-candidate.err" \
@@ -947,7 +947,7 @@ cmux_reclaim_abandoned_app_host_scopes \
 printf 'version=1\nkey=%s\nhome=%s\nreceipt_dir=%s\nconfirmation=%s\n' \
   "$legacy_key" "$legacy_home" "$legacy_receipt_dir" \
   "$DURABLE_SCOPE_CONFIRMATION" > "$legacy_confirmation_file"
-cmux_reclaim_abandoned_app_host_scopes \
+hmux_reclaim_abandoned_app_host_scopes \
   "$stale_runner_root" "$system_temp_root" "$current_key" \
   2000000000 86400 "$current_key" "$legacy_key" \
   > "$TMP_DIR/legacy-candidate.out" 2> "$TMP_DIR/legacy-candidate.err" \
@@ -965,7 +965,7 @@ printf 'preserve\n' > "$outside_scope/sentinel"
 legacy_home_backup="$TMP_DIR/legacy-home-backup"
 mv "$legacy_home" "$legacy_home_backup"
 ln -s "$outside_scope" "$legacy_home"
-if cmux_reclaim_abandoned_app_host_scopes \
+if hmux_reclaim_abandoned_app_host_scopes \
   "$stale_runner_root" "$system_temp_root" "$current_key" \
   2000000000 86400 "$current_key" "$legacy_key" \
   > "$TMP_DIR/symlink-candidate.out" 2> "$TMP_DIR/symlink-candidate.err"; then
@@ -976,7 +976,7 @@ grep -Fxq preserve "$outside_scope/sentinel" \
 unlink "$legacy_home"
 mv "$legacy_home_backup" "$legacy_home"
 wrong_uid=$(( $(/usr/bin/id -u) + 1 ))
-if cmux_validate_abandoned_app_host_scope \
+if hmux_validate_abandoned_app_host_scope \
   "$system_temp_root" "$legacy_key" "$wrong_uid" \
   > "$TMP_DIR/wrong-owner.out" 2> "$TMP_DIR/wrong-owner.err"; then
   fail "stale recovery accepted a scope owned by another UID"
@@ -984,7 +984,7 @@ fi
 
 # Internal symlinks are unlinked with the authenticated root, not traversed.
 ln -s "$outside_scope" "$legacy_home/internal-link"
-cmux_reclaim_abandoned_app_host_scopes \
+hmux_reclaim_abandoned_app_host_scopes \
   "$stale_runner_root" "$system_temp_root" "$current_key" \
   2000000000 86400 "$current_key" "$legacy_key" \
   || fail "valid stale scope with an internal symlink was not removed"

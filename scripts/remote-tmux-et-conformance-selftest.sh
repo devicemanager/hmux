@@ -28,7 +28,7 @@ cd "$(dirname "$0")/.." || exit 1
 HARNESS=scripts/remote-tmux-et-conformance.sh
 [ -x "$HARNESS" ] || [ -f "$HARNESS" ] || { echo "cannot find $HARNESS" >&2; exit 2; }
 
-WORK="$(mktemp -d /tmp/cmux-etconf-selftest.XXXXXX)" || exit 1
+WORK="$(mktemp -d /tmp/hmux-etconf-selftest.XXXXXX)" || exit 1
 # /tmp deliberately, and short: a unix socket path is capped near 104 bytes and macOS sets TMPDIR
 # to a long /var/folders/... path. Putting a tmux socket under it fails to bind with "File name
 # too long", which the harness then reports as three unrelated transport failures.
@@ -171,7 +171,7 @@ run_against() {
   TRANSPORT_HOST="selftest" \
   NO_LINE_LIMIT="$no_limit" \
   HUMAN_GRACE=2 \
-  CMUX_ET_PORT=0 \
+  HMUX_ET_PORT=0 \
   BISECT_SAMPLES=fine \
   RESULTS="$WORK/results-$(basename "$fake").txt" \
     timeout 300 bash "$HARNESS" > "$log" 2>&1
@@ -250,7 +250,7 @@ record_verdict login-shell nologin "$LOG" '(a login shell resolves tmux|tmux did
 head2 limit "commands over 600 bytes are truncated; the harness must find that number"
 LOG=$(run_against "$FAKE_LIMIT")
 expect limit length-bound   present 'the length bound is real' "$LOG"
-# The bracket must contain 600, and cmux's 1024 budget must be reported as not fitting.
+# The bracket must contain 600, and hmux's 1024 budget must be reported as not fitting.
 if grep -aq 'delivery stops between' "$LOG"; then
   LO=$(sed -n 's/.*delivery stops between \([0-9]*\) and \([0-9]*\).*/\1/p' "$LOG" | head -1)
   HI=$(sed -n 's/.*delivery stops between \([0-9]*\) and \([0-9]*\).*/\2/p' "$LOG" | head -1)
@@ -326,7 +326,7 @@ if [ "$MISMATCHES" -eq 0 ]; then
   echo "      login-shell, control-mode, stream-answers — 3 of the harness's checks."
   echo "    Driven in one direction only, so their other branch is unproven:"
   echo "      the precondition gate (fail only), short-command delivery (pass only),"
-  echo "      length-bound-real and cmux-budget-fits (the budget check's PASS branch fires in"
+  echo "      length-bound-real and hmux-budget-fits (the budget check's PASS branch fires in"
   echo "      no scenario: limit exercises only its failure, and good short-circuits earlier),"
   echo "      the DCS position, which is reported rather than asserted, and survival, which the"
   echo "      harness skips in brokered mode and only the loopback path can observe."

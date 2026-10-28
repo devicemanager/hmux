@@ -4,7 +4,7 @@ import distribution from "./guestCliDistribution.json";
 
 export const defaultGuestCliDistribution: GuestCliDistribution = distribution;
 
-export const GUEST_CMUX_ADAPTER_PATH = "/usr/local/libexec/cmux-cloud-adapter";
+export const GUEST_HMUX_ADAPTER_PATH = "/usr/local/libexec/hmux-cloud-adapter";
 const LIBEXEC = "/usr/local/libexec";
 const BIN = "/usr/local/bin";
 
@@ -20,12 +20,12 @@ export function guestCliDistributionInstallPaths(
   libexec = LIBEXEC,
   bin = BIN,
 ): string[] {
-  const release = `${libexec}/cmux-cloud-${manifest.archiveSha256}`;
+  const release = `${libexec}/hmux-cloud-${manifest.archiveSha256}`;
   return [
-    `${release}/cmux-cloud-cli`,
+    `${release}/hmux-cloud-cli`,
     `${release}/coderouter`,
-    `${libexec}/cmux-coderouter`,
-    `${bin}/cmux`,
+    `${libexec}/hmux-coderouter`,
+    `${bin}/hmux`,
     `${bin}/coderouter`,
     `${bin}/cr`,
   ];
@@ -41,11 +41,11 @@ export function guestCliDistributionPruneCommand(
   const script = `import base64, json, pathlib, shutil, sys
 config = json.loads(base64.b64decode('${settings}'))
 root = pathlib.Path(sys.argv[1])
-release = root / ('cmux-cloud-' + config['manifest']['archiveSha256'])
+release = root / ('hmux-cloud-' + config['manifest']['archiveSha256'])
 if not root.is_dir():
     raise SystemExit(0)
 active = set()
-for path in (root / 'cmux-coderouter', pathlib.Path(sys.argv[2]) / 'cmux', pathlib.Path(sys.argv[2]) / 'coderouter', pathlib.Path(sys.argv[2]) / 'cr'):
+for path in (root / 'hmux-coderouter', pathlib.Path(sys.argv[2]) / 'hmux', pathlib.Path(sys.argv[2]) / 'coderouter', pathlib.Path(sys.argv[2]) / 'cr'):
     try:
         if path.is_symlink():
             active.add(path.resolve().parent)
@@ -53,7 +53,7 @@ for path in (root / 'cmux-coderouter', pathlib.Path(sys.argv[2]) / 'cmux', pathl
         pass
 releases = []
 for candidate in root.iterdir():
-    suffix = candidate.name.removeprefix('cmux-cloud-')
+    suffix = candidate.name.removeprefix('hmux-cloud-')
     if candidate == release or candidate.is_symlink() or not candidate.is_dir() or len(suffix) != 64 or any(char not in '0123456789abcdef' for char in suffix):
         continue
     releases.append(candidate)
@@ -79,16 +79,16 @@ export function guestCliDistributionCommand(
 config = json.loads(base64.b64decode('${settings}'))
 manifest = config['manifest']
 libexec, bindir = pathlib.Path(sys.argv[1]), pathlib.Path(sys.argv[2])
-release = libexec / ('cmux-cloud-' + manifest['archiveSha256'])
-names = {'cmux-cloud-cli', 'coderouter'}
+release = libexec / ('hmux-cloud-' + manifest['archiveSha256'])
+names = {'hmux-cloud-cli', 'coderouter'}
 if set(manifest['binaries']) != names:
     raise SystemExit('invalid Cloud CLI manifest')
 def valid(path, digest):
     return path.is_file() and not path.is_symlink() and os.access(path, os.X_OK) and hashlib.sha256(path.read_bytes()).hexdigest() == digest
 def ready():
     return all(valid(release / name, digest) for name, digest in manifest['binaries'].items())
-links = {libexec / 'cmux-coderouter': release / 'coderouter'}
-links.update({bindir / name: release / 'cmux-cloud-cli' for name in ['cmux', 'coderouter', 'cr']})
+links = {libexec / 'hmux-coderouter': release / 'coderouter'}
+links.update({bindir / name: release / 'hmux-cloud-cli' for name in ['hmux', 'coderouter', 'cr']})
 if config['verify']:
     raise SystemExit(0 if ready() and all(path.is_symlink() and path.resolve() == target.resolve() for path, target in links.items()) else 1)
 libexec.mkdir(parents=True, exist_ok=True)
@@ -98,7 +98,7 @@ if not ready():
         archive = response.read(64 * 1024 * 1024 + 1)
     if len(archive) > 64 * 1024 * 1024 or hashlib.sha256(archive).hexdigest() != manifest['archiveSha256']:
         raise SystemExit('Cloud CLI download checksum mismatch')
-    staging = pathlib.Path(tempfile.mkdtemp(prefix='.cmux-cli-', dir=libexec))
+    staging = pathlib.Path(tempfile.mkdtemp(prefix='.hmux-cli-', dir=libexec))
     try:
         with tarfile.open(fileobj=io.BytesIO(archive), mode='r:gz') as files:
             members = files.getmembers()
@@ -121,7 +121,7 @@ if not ready():
 if not ready():
     raise SystemExit('Cloud CLI installation did not verify')
 for path, target in links.items():
-    handle, temporary = tempfile.mkstemp(prefix='.cmux-link-', dir=path.parent)
+    handle, temporary = tempfile.mkstemp(prefix='.hmux-link-', dir=path.parent)
     os.close(handle)
     os.unlink(temporary)
     try:
@@ -132,7 +132,7 @@ for path, target in links.items():
 if config['prune']:
     release_dirs = []
     for candidate in libexec.iterdir():
-        suffix = candidate.name.removeprefix('cmux-cloud-')
+        suffix = candidate.name.removeprefix('hmux-cloud-')
         if candidate == release or candidate.is_symlink() or not candidate.is_dir() or len(suffix) != 64 or any(char not in '0123456789abcdef' for char in suffix):
             continue
         release_dirs.append(candidate)

@@ -1,8 +1,8 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import Bonsplit
-import CmuxSurfaceCatalogModel
-import CmuxTerminal
+import HmuxSurfaceCatalogModel
+import HmuxTerminal
 import Foundation
 
 /// Captures the initiating window before creation suspends; completion never reselects it.

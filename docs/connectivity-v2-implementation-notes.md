@@ -88,7 +88,7 @@
     Decision: Give active-route publication its own runtime callback. Fresh policy publishes broker-validated hints, while cached policy publishes the attested endpoint identity without stale hints; persistence remains exclusive to fresh broker responses.
 
 20. Expected: Validating Bonjour aliases after resolving them was sufficient because unknown records could not authorize a path.
-    Found: The synchronous DNS callback entered a bounded queue before validation. Hundreds of unrelated cmux development builds could fill that queue and drop the exact authenticated Mac alias without ever bypassing cryptographic authorization.
+    Found: The synchronous DNS callback entered a bounded queue before validation. Hundreds of unrelated hmux development builds could fill that queue and drop the exact authenticated Mac alias without ever bypassing cryptographic authorization.
     Decision: Derive the three accepted rotating aliases from the broker-authenticated binding before browsing, filter every DNS callback against that allowlist before it enters the bounded queue, restart browsing when the allowlist changes, and fence browser startup to the current network lifecycle revision.
 
 21. Expected: Refreshing the signed relay policy before endpoint startup was cheap enough to remain a readiness barrier.

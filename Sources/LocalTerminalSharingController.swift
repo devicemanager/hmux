@@ -1,6 +1,6 @@
-import CmuxTerminal
-import CmuxTerminalSharing
-import CmuxTerminalSizing
+import HmuxTerminal
+import HmuxTerminalSharing
+import HmuxTerminalSizing
 import Foundation
 
 /// Executes store actions for one local terminal against its Mac host.

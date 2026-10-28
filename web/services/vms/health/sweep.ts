@@ -65,8 +65,8 @@ export function sweepVmHealth(
     const previous = yield* step("previous_snapshot", repo.latestVmHealthSnapshot);
     const inventory = yield* bounded("inventory", providers.listAccountVms && (() => providers.listAccountVms!(VM_HEALTH_PROVIDER, { deadlineAtMs })));
     const tlsRules = yield* bounded("tls_rules", providers.listAccountTlsRules && (() => providers.listAccountTlsRules!(VM_HEALTH_PROVIDER, { deadlineAtMs })));
-    const cmuxIds = (inventory?.vms ?? []).filter((vm) => vmWorkload(vm.metadata) === "cmux_cloud").map((vm) => vm.id);
-    const dbRows = yield* step("db_rows", repo.vmHealthDbRows && (() => repo.vmHealthDbRows!({ provider: VM_HEALTH_PROVIDER, providerVmIds: cmuxIds })));
+    const hmuxIds = (inventory?.vms ?? []).filter((vm) => vmWorkload(vm.metadata) === "hmux_cloud").map((vm) => vm.id);
+    const dbRows = yield* step("db_rows", repo.vmHealthDbRows && (() => repo.vmHealthDbRows!({ provider: VM_HEALTH_PROVIDER, providerVmIds: hmuxIds })));
 
     const probes = yield* probeRunningVms(inventory?.vms ?? [], {
       deadlineAtMs,

@@ -1,13 +1,13 @@
 # Upgrading running Cloud machines
 
-A cmux Cloud machine keeps the software its image baked for its whole life.
+A hmux Cloud machine keeps the software its image baked for its whole life.
 Nothing on the guest updates itself, so every change to guest software, the
 daemon's command line, or the attach contract reaches only machines created
 after the next bake unless it is shipped to running machines on purpose. This
 doc is the contract that makes that shipping possible, the runbook for doing
 it, and the plan for machines it cannot reach.
 
-Read it before changing any of: `cmux-tui` (daemon, terminal host, remote
+Read it before changing any of: `hmux-tui` (daemon, terminal host, remote
 protocol, journal), `web/services/vms/images/devbox/` (the boot supervisor and
 baked files), `web/scripts/build-devbox-freestyle.ts`, or any attach, open or
 route code in `web/services/vms/` that reads `providerMetadata`.
@@ -15,7 +15,7 @@ route code in `web/services/vms/` that reads `providerMetadata`.
 ## Why this exists
 
 On 2026-09-24, [#14125](https://github.com/manaflow-ai/cmux/pull/14125) made attach refuse any machine whose row lacked
-`cmuxTuiContract: "snapshot-v2"`, on the premise that no older machine
+`hmuxTuiContract: "snapshot-v2"`, on the premise that no older machine
 existed. 16 running machines of 10 users did. Their terminals stopped
 connecting, and every team Mac retried each refused machine every 45 s: about
 26,000 `502`s a day, each tagged `operator_fault`. Most of those machines
@@ -27,30 +27,30 @@ missing, and an in-place upgrade plus a one-row backfill restored them
 
 | Change | Reaches running machines? | How |
 | --- | --- | --- |
-| `cmux-tui` binary, `cmux-tui-hook`, and the state-mount helper | Yes | `web/scripts/upgrade-fleet-cmux-tui.ts` (below) |
-| Coding-agent hook entries | Yes | Same run: the pinned install command re-runs `cmux-tui agent hook install` |
-| `cmux-devbox-boot`, systemd units, the daemon's argv and environment | No | Bake only. The supervisor that is running keeps its own copy |
-| Baked packages, agent pins, desktop, `/etc/cmux/*` | No (agent pins: only on machines opted into `agentUpdates: "latest"`) | Bake only; opted-in machines update their coding agents on attach (`web/services/vms/guestAgentUpdates.ts`) |
+| `hmux-tui` binary, `hmux-tui-hook`, and the state-mount helper | Yes | `web/scripts/upgrade-fleet-hmux-tui.ts` (below) |
+| Coding-agent hook entries | Yes | Same run: the pinned install command re-runs `hmux-tui agent hook install` |
+| `hmux-devbox-boot`, systemd units, the daemon's argv and environment | No | Bake only. The supervisor that is running keeps its own copy |
+| Baked packages, agent pins, desktop, `/etc/hmux/*` | No (agent pins: only on machines opted into `agentUpdates: "latest"`) | Bake only; opted-in machines update their coding agents on attach (`web/services/vms/guestAgentUpdates.ts`) |
 | Create-time provider config: inline TLS rules (coderouter), VPC, firewall | No | Fixed at `vms.create`; the platform ignores later rules |
 | `cloud_vms.provider_metadata` written at create | Only by a backfill | A reviewed SQL update, per machine, after verifying the guest |
 
-So a change is updatable when it lives in the cmux-tui binary and stays
+So a change is updatable when it lives in the hmux-tui binary and stays
 compatible with every supervisor, host and client still running. Anything
 else is image-only: design it so old machines keep working without it.
 
 ## Rules for changes
 
-### cmux-tui
+### hmux-tui
 
 - **The daemon's command line is owned by old supervisors.** Existing machines
-  start `cmux-tui server start --session cloud --remote-ws <bind>
+  start `hmux-tui server start --session cloud --remote-ws <bind>
   --remote-ws-insecure-bind --remote-ws-trusted-carrier` from their baked
-  `cmux-devbox-boot`, with the environment it exports. A new daemon must run
+  `hmux-devbox-boot`, with the environment it exports. A new daemon must run
   correctly with exactly that argv and environment. Add flags only as optional
   with defaults that preserve today's behavior; never make a new flag or
   environment variable required, and never remove or rename one.
 - **A new daemon adopts every live terminal host.** Each terminal runs in its
-  own `__terminal-host` process (`cmux-tui-core/src/terminal_host_runtime.rs`),
+  own `__terminal-host` process (`hmux-tui-core/src/terminal_host_runtime.rs`),
   and a replacement daemon adopts them. The hosts keep running the build that
   spawned them, possibly for weeks, so the daemon must speak the terminal-host
   protocol (`spec/terminal-host.md`, `PROTOCOL_VERSION` 4) to every host
@@ -59,7 +59,7 @@ else is image-only: design it so old machines keep working without it.
 - **SIGTERM hands off.** The supervisor and the upgrade both stop the daemon
   with SIGTERM and start the new binary. SIGTERM must leave hosts alive and
   adoptable. Never kill hosts on shutdown, and never move them into a path
-  where `systemctl restart cmux-tui-daemon` is the only restart (the unit's
+  where `systemctl restart hmux-tui-daemon` is the only restart (the unit's
   `KillMode=control-group` kills every host).
 - **Journal and registry migrations are forward-only and one-way.** The new
   daemon must open every older on-disk schema. After it migrates, the old
@@ -77,7 +77,7 @@ else is image-only: design it so old machines keep working without it.
   or contract needs, in the same PR, either a backfill that sets it on every
   running machine that already qualifies, or a check against what the running
   daemon reports. Query the running fleet first:
-  `select provider_metadata->>'cmuxTuiContract', count(*) from cloud_vms where destroyed_at is null and status = 'running' group by 1`.
+  `select provider_metadata->>'hmuxTuiContract', count(*) from cloud_vms where destroyed_at is null and status = 'running' group by 1`.
 - **A permanent refusal is not a `502`.** When a machine cannot be served and
   retrying cannot help, return a non-retryable status with a stable code and
   a user action (recreate), so clients stop polling and the UI can say what
@@ -89,46 +89,46 @@ else is image-only: design it so old machines keep working without it.
 - Anything the daemon needs at start must work when absent: an old machine
   upgraded to the new binary will not have the new file, package or setting.
 
-## Runbook: upgrade cmux-tui on running machines
+## Runbook: upgrade hmux-tui on running machines
 
-The target is the cmux-tui build the default image bakes (the manifest's
-`cmuxTuiCommit`), so an upgraded machine runs what a new machine runs.
+The target is the hmux-tui build the default image bakes (the manifest's
+`hmuxTuiCommit`), so an upgraded machine runs what a new machine runs.
 Machines created by fork, restore or a template boot the source's snapshot,
-not the default image, so they keep its older cmux-tui and belong in the
+not the default image, so they keep its older hmux-tui and belong in the
 inventory like any other running machine.
 
 1. **Inventory.** List running machines and their owners (read-only):
-   `select provider_vm_id, provider_metadata->>'cmuxTuiContract', image_version from cloud_vms where destroyed_at is null and provider = 'freestyle' and status = 'running'`.
+   `select provider_vm_id, provider_metadata->>'hmuxTuiContract', image_version from cloud_vms where destroyed_at is null and provider = 'freestyle' and status = 'running'`.
 2. **Canary.** Run one machine you own, then attach to it from the Mac:
 
    ```bash
    cd web
-   FREESTYLE_API_KEY=... bun scripts/upgrade-fleet-cmux-tui.ts --vm <vm-id>
+   FREESTYLE_API_KEY=... bun scripts/upgrade-fleet-hmux-tui.ts --vm <vm-id>
    ```
 
 3. **Fleet.** Internal machines, then external:
-   `bun scripts/upgrade-fleet-cmux-tui.ts --vms-file <file>` (one id per line).
+   `bun scripts/upgrade-fleet-hmux-tui.ts --vms-file <file>` (one id per line).
 4. **Backfill** machines that were created before snapshot-v2 and now report
    `OK`, one reviewed statement, guarded so it cannot touch anything else:
 
    ```sql
    update cloud_vms
-      set provider_metadata = provider_metadata || '{"cmuxTuiContract":"snapshot-v2"}'::jsonb,
+      set provider_metadata = provider_metadata || '{"hmuxTuiContract":"snapshot-v2"}'::jsonb,
           updated_at = now()
     where provider_vm_id = any($1)
       and destroyed_at is null
-      and coalesce(provider_metadata->>'cmuxTuiContract', '') = ''
+      and coalesce(provider_metadata->>'hmuxTuiContract', '') = ''
       and (provider_metadata ? 'networkIpv4' or provider_metadata ? 'networkIpv6')
    returning provider_vm_id;
    ```
 
    Save the rows first (`select row_to_json(v) ...`). Confirm the next attach
-   for each machine returns 200 (Axiom `cmux-prod-otel-traces`, span
+   for each machine returns 200 (Axiom `hmux-prod-otel-traces`, span
    `POST /api/vm/[id]/attach-endpoint`).
 
-What the guest script (`web/scripts/cloud-vm/cmux-tui-upgrade.sh`) does per
+What the guest script (`web/scripts/cloud-vm/hmux-tui-upgrade.sh`) does per
 machine: it runs detached as root from its own run directory
-(`/var/lib/cmux-tui-upgrade/run-<time>-<commit>/`, with `result` and `log`),
+(`/var/lib/hmux-tui-upgrade/run-<time>-<commit>/`, with `result` and `log`),
 and holds a per-machine lock, so a second run reports `SKIP busy`. Before it
 touches the daemon it atomically installs the current state-mount helper and
 runs its `ensure` path, so a running machine receives the bounded state-image
@@ -167,7 +167,7 @@ guest too broken to exec into. Plan for this outcome in every contract change:
    these machines; report them with owners before merging the change.
 2. **Refuse clearly.** Attach returns a non-retryable status and code, and the
    client shows "Recreate this machine" instead of retrying.
-3. **Keep the user's data reachable.** `cmux vm push`, `cmux vm pull` and exec
+3. **Keep the user's data reachable.** `hmux vm push`, `hmux vm pull` and exec
    do not use the attach route; do not gate them on the attach contract.
 4. **Offer recreation.** A new machine from the current image; the user
    carries files across. Tell external owners before their machine stops

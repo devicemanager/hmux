@@ -6,7 +6,7 @@ import { vmDbSpanAttributes } from "../services/vms/routeHelpers";
 // Review of #19982: a future stall must show whether a VM request waited for
 // a pooled database connection. Every query's acquire wait (creation until
 // postgres.js assigns it a statement on a connection) and duration reach the
-// route span as cmux.db.* attributes.
+// route span as hmux.db.* attributes.
 
 afterEach(() => setCloudDbQueryObserver(undefined));
 
@@ -60,30 +60,30 @@ describe("postgres.js query timing", () => {
     recordVmRequestDbTiming(context, { acquireWaitMs: 12.4, durationMs: 20, failed: false });
     recordVmRequestDbTiming(context, { acquireWaitMs: 1_800.6, durationMs: 1_900, failed: true });
     expect(vmDbSpanAttributes(context.dbStats)).toEqual({
-      "cmux.db.query_count": 2,
-      "cmux.db.acquire_wait_ms": 1_801,
-      "cmux.db.acquire_wait_ms_total": 1_813,
-      "cmux.db.query_ms_total": 1_920,
-      "cmux.db.query_failed": 1,
+      "hmux.db.query_count": 2,
+      "hmux.db.acquire_wait_ms": 1_801,
+      "hmux.db.acquire_wait_ms_total": 1_813,
+      "hmux.db.query_ms_total": 1_920,
+      "hmux.db.query_failed": 1,
     });
-    expect(vmDbSpanAttributes(undefined)).toEqual({ "cmux.db.query_count": 0, "cmux.db.acquire_wait_ms": 0 });
+    expect(vmDbSpanAttributes(undefined)).toEqual({ "hmux.db.query_count": 0, "hmux.db.acquire_wait_ms": 0 });
   });
 });
 
-// Against a real Postgres (the web-database-tests CI job sets CMUX_DB_TEST=1
+// Against a real Postgres (the web-database-tests CI job sets HMUX_DB_TEST=1
 // and DATABASE_URL; locally, point DATABASE_URL at any scratch database).
 // Through cloudDb(), so the postgres.js wrapper that tags, cancels and times
 // queries (installPostgresJsQueryCancellation) is what is exercised: with a
 // one-connection pool, a query queued behind a 300 ms query reports that wait
 // as its acquire wait, and a query whose signal aborts is still cancelled.
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 (runDbTests ? describe : describe.skip)("postgres.js query timing through cloudDb()", () => {
   // postgres.js pipelines plain queries onto open connections, so a query
   // waits for a connection only while every connection is reserved: by a
   // transaction, as a continuation's would be. That wait is what is measured.
   test("a query waiting behind a transaction that holds the only connection is sent after the transaction ends", async () => {
-    const savedPoolMax = process.env.CMUX_DB_POOL_MAX;
-    process.env.CMUX_DB_POOL_MAX = "1";
+    const savedPoolMax = process.env.HMUX_DB_POOL_MAX;
+    process.env.HMUX_DB_POOL_MAX = "1";
     const { cloudDb, closeCloudDbForTests } = await import("../db/client");
     const { sql } = await import("drizzle-orm");
     type Recorded = { timing?: CloudDbQueryTiming; createdWhileHeld: boolean; settledAfterRelease?: boolean };
@@ -127,8 +127,8 @@ const runDbTests = process.env.CMUX_DB_TEST === "1";
       expect(queuedEntry!.timing!.acquireWaitMs).toBeGreaterThan(0);
     } finally {
       await closeCloudDbForTests();
-      if (savedPoolMax === undefined) delete process.env.CMUX_DB_POOL_MAX;
-      else process.env.CMUX_DB_POOL_MAX = savedPoolMax;
+      if (savedPoolMax === undefined) delete process.env.HMUX_DB_POOL_MAX;
+      else process.env.HMUX_DB_POOL_MAX = savedPoolMax;
     }
   });
 
@@ -138,8 +138,8 @@ const runDbTests = process.env.CMUX_DB_TEST === "1";
     const { sql } = await import("drizzle-orm");
     const timings: CloudDbQueryTiming[] = [];
     setCloudDbQueryObserver(() => (timing) => timings.push(timing));
-    const savedPoolMax = process.env.CMUX_DB_POOL_MAX;
-    process.env.CMUX_DB_POOL_MAX = "1";
+    const savedPoolMax = process.env.HMUX_DB_POOL_MAX;
+    process.env.HMUX_DB_POOL_MAX = "1";
     try {
       await cloudDb().execute(sql`select 1 as warm`);
       // Aborted before postgres.js sends it: the query is cancelled, and the
@@ -153,8 +153,8 @@ const runDbTests = process.env.CMUX_DB_TEST === "1";
       expect(timings.some((timing) => timing.failed)).toBe(true);
     } finally {
       await closeCloudDbForTests();
-      if (savedPoolMax === undefined) delete process.env.CMUX_DB_POOL_MAX;
-      else process.env.CMUX_DB_POOL_MAX = savedPoolMax;
+      if (savedPoolMax === undefined) delete process.env.HMUX_DB_POOL_MAX;
+      else process.env.HMUX_DB_POOL_MAX = savedPoolMax;
     }
   }, 15_000);
 });

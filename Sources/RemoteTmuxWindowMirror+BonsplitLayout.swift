@@ -1,4 +1,4 @@
-import CmuxRemoteSession
+import HmuxRemoteSession
 import Bonsplit
 import Foundation
 

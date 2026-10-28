@@ -9,7 +9,7 @@ from pathlib import Path
 
 SOURCE = (
     Path(__file__).resolve().parents[2]
-    / "Packages/iOS/CmuxMobileCloudUI/Sources/CmuxMobileCloudUI/CloudOnboardingView.swift"
+    / "Packages/iOS/HmuxMobileCloudUI/Sources/HmuxMobileCloudUI/CloudOnboardingView.swift"
 ).read_text()
 
 

@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Alarm when feat-cmux-next work waits too long to reach the nightly-next feed.
+"""Alarm when feat-hmux-next work waits too long to reach the nightly-next feed.
 
-nightly-next ships feat-cmux-next: a green push is promoted to the
+nightly-next ships feat-hmux-next: a green push is promoted to the
 `nightly-next` branch, whose nightly.yml run publishes appcast-arm64.xml. Any
-stage can stall: a red Release compile or an unpublished cmux-tui tree stops
+stage can stall: a red Release compile or an unpublished hmux-tui tree stops
 promotion, a red nightly stops publication. Lawrence and Leo daily-drive the
 feed, so this checks it every 30 minutes from main (schedule runs only there).
 
-Waiting is measured from the oldest feat-cmux-next push after the published
-commit's own push (cmux-next guards runs on every such push), so a quiet spell
+Waiting is measured from the oldest feat-hmux-next push after the published
+commit's own push (hmux-next guards runs on every such push), so a quiet spell
 never alarms however old the feed is, and a push that landed while the
 published build ran still counts. Past --max-lag-hours it keeps ONE open
 `nightly-next-feed-stale` issue, updated in place, naming the last published
@@ -34,14 +34,14 @@ import sys
 import urllib.parse
 import urllib.request
 
-FEED_URL = "https://files-next.cmux.com/nightly-next/next/appcast-arm64.xml"  # cmux NEXT (cx-x7hwx)
+FEED_URL = "https://files-next.cmux.com/nightly-next/next/appcast-arm64.xml"  # hmux NEXT (cx-x7hwx)
 CLASSIC_FEED_URL = "https://files.cmux.com/nightly/appcast-arm64.xml"
 LABEL = "nightly-next-feed-stale"
-PUSH_WORKFLOW = "cmux-next-guards.yml"  # every feat-cmux-next push, no path filter
-RELEASE_COMPILE_JOB = "cmux-next Release compile (Xcode 26)"
+PUSH_WORKFLOW = "hmux-next-guards.yml"  # every feat-hmux-next push, no path filter
+RELEASE_COMPILE_JOB = "hmux-next Release compile (Xcode 26)"
 TICK_WORKFLOW = "nightly-next-tick.yml"
 TICK_ANNOTATION = "nightly-next tick"  # the tick's refusal tally
-PUBLISHED_MARKER = re.compile(r"<!--\s*cmux-published-sha:\s*([0-9a-f]{40})\s*-->", re.IGNORECASE)
+PUBLISHED_MARKER = re.compile(r"<!--\s*hmux-published-sha:\s*([0-9a-f]{40})\s*-->", re.IGNORECASE)
 
 
 @dataclass(frozen=True)
@@ -76,12 +76,12 @@ def failed_steps(jobs: list[dict]) -> str:
 
 def assess(now: dt.datetime, newest: dt.datetime, pushes: list[dict], nightly: list[dict],
            jobs_of, artifacts: list[dict], compiles: list[dict], max_lag_hours: float, tick_refusal=lambda: "") -> Stage:
-    """pushes: the waiting feat-cmux-next push runs (only the oldest matters); nightly: nightly-next push runs since
-    `newest` (newest first); artifacts / compiles: the latest feat-cmux-next cmux-tui artifacts
-    and cmux-next push runs (newest first); jobs_of(run) lists a run's jobs; tick_refusal() is the
+    """pushes: the waiting feat-hmux-next push runs (only the oldest matters); nightly: nightly-next push runs since
+    `newest` (newest first); artifacts / compiles: the latest feat-hmux-next hmux-tui artifacts
+    and hmux-next push runs (newest first); jobs_of(run) lists a run's jobs; tick_refusal() is the
     latest nightly-next tick's refusal tally, read only for a promotion stall."""
     if not pushes:
-        return Stage(False, 0.0, None, "No feat-cmux-next push since the feed's newest item.")
+        return Stage(False, 0.0, None, "No feat-hmux-next push since the feed's newest item.")
     since = min(parse_time(run["created_at"]) for run in pushes)
     waited = (now - since).total_seconds() / 3600
     detail = ""
@@ -100,13 +100,13 @@ def assess(now: dt.datetime, newest: dt.datetime, pushes: list[dict], nightly: l
             detail = f"The latest nightly-next tick refused every newer commit: {refusal}"
         artifact = artifacts[0] if artifacts else None
         if artifact and artifact.get("conclusion") == "failure":
-            reason += f" The latest feat-cmux-next cmux-tui artifacts run {artifact['html_url']} failed, so its tree is unpublished: {failed_steps(jobs_of(artifact))}."
+            reason += f" The latest feat-hmux-next hmux-tui artifacts run {artifact['html_url']} failed, so its tree is unpublished: {failed_steps(jobs_of(artifact))}."
         # Superseded pushes cancel or skip their compile; read the newest one that finished.
         for compile_run in (run for run in compiles if run.get("status") == "completed"):
             compile_job = next((job for job in jobs_of(compile_run) if job["name"] == RELEASE_COMPILE_JOB), None)
             conclusion = compile_job.get("conclusion") if compile_job else None
             if conclusion in ("failure", "timed_out"):
-                reason += f" The latest feat-cmux-next {RELEASE_COMPILE_JOB} is {conclusion}: {compile_run['html_url']}."
+                reason += f" The latest feat-hmux-next {RELEASE_COMPILE_JOB} is {conclusion}: {compile_run['html_url']}."
             if conclusion in ("success", "failure", "timed_out"):
                 break
     return Stage(waited > max_lag_hours, waited, since, reason, detail)
@@ -115,7 +115,7 @@ def assess(now: dt.datetime, newest: dt.datetime, pushes: list[dict], nightly: l
 def issue_body(stage: Stage, newest: dt.datetime, now: dt.datetime, published_sha: str, max_lag_hours: float, run_url: str) -> str:
     feed_hours = (now - newest).total_seconds() / 3600
     return "\n\n".join([
-        f"feat-cmux-next pushes have waited {stage.waited_hours:.1f} hours (limit {max_lag_hours:g}h) for the nightly-next feed, "
+        f"feat-hmux-next pushes have waited {stage.waited_hours:.1f} hours (limit {max_lag_hours:g}h) for the nightly-next feed, "
         f"since {stage.since.isoformat(timespec='minutes') if stage.since else '?'}. The feed's newest item is {feed_hours:.1f} hours old "
         f"({newest.isoformat(timespec='minutes')}). Installed nightly-next apps report \"Up to Date\".",
         f"Last published commit: {published_sha or '(unknown)'}.",
@@ -242,24 +242,24 @@ def published_commit(gh: GitHub) -> str:
 
 
 def oldest_waiting_push(gh: GitHub, published_sha: str, newest: dt.datetime) -> dict | None:
-    """The oldest feat-cmux-next push after the published commit's push (else since the
+    """The oldest feat-hmux-next push after the published commit's push (else since the
     feed's newest item). Runs list newest first and a busy day has hundreds, so read
     the count and then the last page; a filtered listing stops at 1000 results, which
     is still far past the limit."""
     created = ">=" + stamp(newest)
     if published_sha:
-        own = gh.runs_page(PUSH_WORKFLOW, "feat-cmux-next", per_page=1, head_sha=published_sha)["workflow_runs"]
+        own = gh.runs_page(PUSH_WORKFLOW, "feat-hmux-next", per_page=1, head_sha=published_sha)["workflow_runs"]
         if own:
             created = ">" + stamp(parse_time(own[0]["created_at"]))
-    total = gh.runs_page(PUSH_WORKFLOW, "feat-cmux-next", created, per_page=1)["total_count"]
+    total = gh.runs_page(PUSH_WORKFLOW, "feat-hmux-next", created, per_page=1)["total_count"]
     if not total:
         return None
-    return gh.runs_page(PUSH_WORKFLOW, "feat-cmux-next", created, per_page=1, page=min(total, 1000))["workflow_runs"][0]
+    return gh.runs_page(PUSH_WORKFLOW, "feat-hmux-next", created, per_page=1, page=min(total, 1000))["workflow_runs"][0]
 
 
 def read_feed(url: str) -> dt.datetime | None:
     # The CDN answers Python's default user agent with 403.
-    request = urllib.request.Request(url, headers={"Cache-Control": "no-cache", "User-Agent": "cmux-nightly-next-feed-watch"})
+    request = urllib.request.Request(url, headers={"Cache-Control": "no-cache", "User-Agent": "hmux-nightly-next-feed-watch"})
     with urllib.request.urlopen(request, timeout=30) as response:
         return newest_item(response.read().decode("utf-8", "replace"))
 
@@ -272,7 +272,7 @@ def sync_issue(gh: GitHub, stage: Stage, body: str, max_lag_hours: float, run_ur
             gh.call("POST", f"/issues/{issue['number']}/comments", {"body": f"The nightly-next feed caught up: {run_url}"})
             gh.call("PATCH", f"/issues/{issue['number']}", {"state": "closed"})
         return f"current ({stage.waited_hours:.1f}h waited); closed {len(open_issues)} issue(s)"
-    title = f"nightly-next feed: feat-cmux-next pushes waiting more than {max_lag_hours:g}h"
+    title = f"nightly-next feed: feat-hmux-next pushes waiting more than {max_lag_hours:g}h"
     if not open_issues:
         gh.call("POST", "/issues", {"title": title, "body": body, "labels": [LABEL]})
         return "stale; opened an issue"
@@ -322,8 +322,8 @@ def main(argv: list[str]) -> int:
             pushes=[oldest] if oldest else [],
             nightly=gh.runs("nightly.yml", "nightly-next", newest),
             jobs_of=gh.jobs,
-            artifacts=gh.runs("cmux-tui-artifacts.yml", "feat-cmux-next", per_page=1),
-            compiles=gh.runs("cmux-next.yml", "feat-cmux-next", per_page=5),
+            artifacts=gh.runs("hmux-tui-artifacts.yml", "feat-hmux-next", per_page=1),
+            compiles=gh.runs("hmux-next.yml", "feat-hmux-next", per_page=5),
             max_lag_hours=args.max_lag_hours,
             tick_refusal=gh.tick_refusal,
         )
@@ -332,9 +332,9 @@ def main(argv: list[str]) -> int:
         try:
             print("next starvation: " + starvation_dispatch(
                 gh, now, feed=newest, published_sha=published_sha,
-                branch="feat-cmux-next", workflow="nightly-next-tick.yml", ref="main",
-                inputs={"sha": gh.ref_sha("feat-cmux-next")},
-                active_workflows=[("nightly-next-tick.yml", "main"), ("nightly-next-train.yml", "feat-cmux-next"),
+                branch="feat-hmux-next", workflow="nightly-next-tick.yml", ref="main",
+                inputs={"sha": gh.ref_sha("feat-hmux-next")},
+                active_workflows=[("nightly-next-tick.yml", "main"), ("nightly-next-train.yml", "feat-hmux-next"),
                                   ("nightly.yml", "nightly-next"), ("nightly.yml", "main")]))
             print("classic starvation: " + starvation_dispatch(
                 gh, now, feed=classic_newest, published_sha=published_commit_for_release(gh, "nightly"),
@@ -345,7 +345,7 @@ def main(argv: list[str]) -> int:
         print(f"::warning::GitHub API error, skipped this check: {error}")
         return 0
     if stage.stale:
-        print(f"::error title=nightly-next feed stale::feat-cmux-next pushes have waited {stage.waited_hours:.1f}h "
+        print(f"::error title=nightly-next feed stale::feat-hmux-next pushes have waited {stage.waited_hours:.1f}h "
               f"(limit {args.max_lag_hours:g}h). {' '.join(filter(None, [stage.reason, stage.detail]))}")
         return 1
     return 0

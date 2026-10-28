@@ -23,7 +23,7 @@ have() {
 }
 
 fail() {
-  echo "::error::[cmux-ci machine: brew-provision] $command_name is missing on ${RUNNER_NAME:-this runner}: $1"
+  echo "::error::[hmux-ci machine: brew-provision] $command_name is missing on ${RUNNER_NAME:-this runner}: $1"
   exit 1
 }
 

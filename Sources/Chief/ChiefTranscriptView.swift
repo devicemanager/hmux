@@ -1,13 +1,13 @@
 import AppKit
-import CmuxChief
-import CmuxHomeCore
-import CmuxHomeRender
-import CmuxSettings
+import HmuxChief
+import HmuxHomeCore
+import HmuxHomeRender
+import HmuxSettings
 import MessagesLabHome
 import Observation
 import UniformTypeIdentifiers
 
-/// One Chief conversation (cmux-next `HomeHostView` over
+/// One Chief conversation (hmux-next `HomeHostView` over
 /// `HomeNativeTranscriptView`): MessagesLab's native transcript and compose
 /// field over ``ChiefService``'s store, themed from the terminal, with the
 /// first-run panel while the Chief conversation is empty, the notice above
@@ -635,7 +635,7 @@ final class ChiefTranscriptView: NSView {
     }
 
     /// Shows (or with nil clears) the notice above the field; VoiceOver hears it.
-    /// A Cloud result card's Open Workspace: the `cmux vm workspace open` path, focused
+    /// A Cloud result card's Open Workspace: the `hmux vm workspace open` path, focused
     /// (the user asked to see it).
     private func openCloudWorkspace(_ machine: String, _ workspace: String) {
         // task-owner: one open; ends when the workspace is projected or fails
@@ -649,7 +649,7 @@ final class ChiefTranscriptView: NSView {
     }
 
     /// A Cloud result card's Open Desktop: use the same bundled CLI path as the Cloud menu,
-    /// leaving the display in cmux for the user to inspect or operate.
+    /// leaving the display in hmux for the user to inspect or operate.
     private func openCloudDesktop(_ machine: String) {
         let socketPath = TerminalController.shared.activeSocketPath(
             preferredPath: SocketControlSettings.socketPath()

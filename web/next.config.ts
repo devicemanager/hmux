@@ -14,7 +14,7 @@ import {
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 const webRoot = path.dirname(fileURLToPath(import.meta.url));
-const docsChannel = process.env.CMUX_DOCS_CHANNEL;
+const docsChannel = process.env.HMUX_DOCS_CHANNEL;
 const isDocsZone = isDocsZoneDeployment();
 const releaseDocsOrigin = configuredReleaseDocsOrigin();
 const nightlyDocsOrigin = configuredNightlyDocsOrigin();
@@ -93,7 +93,7 @@ const nextConfig: NextConfig = {
     },
   },
   env: {
-    CMUX_DOCS_CHANNEL: docsChannel ?? "",
+    HMUX_DOCS_CHANNEL: docsChannel ?? "",
   },
   assetPrefix: isDocsZone ? `/_docs-assets/${docsChannel}` : undefined,
   async rewrites() {
@@ -210,8 +210,8 @@ const nextConfig: NextConfig = {
     // function; static analysis cannot follow the URL-relative fs reads after
     // Turbopack bundles the module.
     "/*": [
-      "./services/vms/images/devbox/cmux-bashrc",
-      "./services/vms/images/devbox/cmux-prompt.bash",
+      "./services/vms/images/devbox/hmux-bashrc",
+      "./services/vms/images/devbox/hmux-prompt.bash",
     ],
     "**/opengraph-image": [
       "./app/lib/open-graph-fonts/**/*",

@@ -20,7 +20,7 @@ class R2PresignTests(unittest.TestCase):
                 "AWS_SECRET_ACCESS_KEY": "example-secret",
                 "AWS_SESSION_TOKEN": "example-session",
                 "AWS_DEFAULT_REGION": "auto",
-                "CMUX_R2_PRESIGN_AMZ_DATE": "20260102T030405Z",
+                "HMUX_R2_PRESIGN_AMZ_DATE": "20260102T030405Z",
             }
         )
 
@@ -32,7 +32,7 @@ class R2PresignTests(unittest.TestCase):
                 "--endpoint-url",
                 "https://account.r2.cloudflarestorage.com",
                 "--bucket",
-                "cmux-fleet-artifacts",
+                "hmux-fleet-artifacts",
                 "--key",
                 "artifacts/" + "a" * 64,
                 *extra,
@@ -49,7 +49,7 @@ class R2PresignTests(unittest.TestCase):
         url = urlsplit(result.stdout.strip())
         self.assertEqual(url.scheme, "https")
         self.assertEqual(url.netloc, "account.r2.cloudflarestorage.com")
-        self.assertEqual(url.path, "/cmux-fleet-artifacts/artifacts/" + "a" * 64)
+        self.assertEqual(url.path, "/hmux-fleet-artifacts/artifacts/" + "a" * 64)
         query = parse_qs(url.query)
         self.assertEqual(query["X-Amz-Algorithm"], ["AWS4-HMAC-SHA256"])
         self.assertEqual(query["X-Amz-Date"], ["20260102T030405Z"])

@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// A hit-testable create row whose action remains visible without hover.
@@ -21,7 +21,7 @@ struct CloudTreeCreateActionView: View {
     /// False when a reload puts the pointer back on this row, so the fill
     /// appears without fading in again.
     var animatesHover = true
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {

@@ -41,7 +41,7 @@ final class CanvasHostedPanelPresentation {
               let window = owner.window,
               event.window === window,
               let contentView = window.contentView else { return false }
-        guard let hitView = contentView.cmuxHitTest(windowPoint: event.locationInWindow) else { return false }
+        guard let hitView = contentView.hmuxHitTest(windowPoint: event.locationInWindow) else { return false }
         return hitView === owner || hitView.isDescendant(of: owner)
     }
 }

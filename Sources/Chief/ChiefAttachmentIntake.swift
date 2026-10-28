@@ -1,5 +1,5 @@
 import AppKit
-import CmuxHomeCore
+import HmuxHomeCore
 import UniformTypeIdentifiers
 
 /// One thing the user gave the composer: a file (drop, picker, a copied
@@ -10,7 +10,7 @@ enum ChiefDraftInput: Hashable {
 }
 
 /// What a pasteboard (drop or paste) offers as attachments, and the check
-/// before preparing (cmux-next `HomeAttachmentIntake` and
+/// before preparing (hmux-next `HomeAttachmentIntake` and
 /// `HomeComposerCheck`): file URLs first; else picture bytes, but only when
 /// there is no text (rich text often carries a picture of itself). Types
 /// follow `HomeAttachmentPolicy`, the data side's own rule, so paste, drop,

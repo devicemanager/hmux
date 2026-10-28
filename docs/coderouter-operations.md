@@ -18,13 +18,13 @@ The native cross-process handoff contract, including the method-specific
 authorization assumptions and atomic one-time exchange, is documented in
 [`docs/coderouter-handoff-protocol.md`](coderouter-handoff-protocol.md).
 Production handoff rollout also requires the durable Firewall rule and the
-trusted `CMUX_CODEROUTER_PUBLIC_ORIGIN` setting; the exchange route fails closed
+trusted `HMUX_CODEROUTER_PUBLIC_ORIGIN` setting; the exchange route fails closed
 when either required deployment control is unavailable.
 
 ## Stripe webhook replay
 
 1. Identify the failed Stripe event and the production `cmux.com` webhook
-   endpoint in Stripe Workbench. Verify the event belongs to `app=cmux`.
+   endpoint in Stripe Workbench. Verify the event belongs to `app=hmux`.
 2. Inspect without printing the complete payload:
 
    ```sh
@@ -38,7 +38,7 @@ when either required deployment control is unavailable.
 
    ```sh
    stripe events resend "$EVENT_ID" \
-     --webhook-endpoint "$CMUX_WEBHOOK_ENDPOINT_ID" \
+     --webhook-endpoint "$HMUX_WEBHOOK_ENDPOINT_ID" \
      --live --confirm
    ```
 
@@ -86,7 +86,7 @@ the authenticated output if it contains a principal identifier.
 
 - Sentry project: `coderouter-web`; alert on new coderouter errors,
   reconciliation failure, refresh failure, and sustained provider failure.
-- PostHog project: the main cmux project (`244066`) for account/session
+- PostHog project: the main hmux project (`244066`) for account/session
   lifecycle and operational exceptions. It is not a CodeRouter usage ledger.
 - CodeRouter model usage uses the ClickHouse `usage_events` ledger. It contains
   token counts, model/provider categories, and the API-equivalent estimate.
@@ -95,7 +95,7 @@ the authenticated output if it contains a principal identifier.
   tokens, emails, payment-method details, or provider-account labels. The
   canonical trace may carry a bounded opaque account ID for routing diagnostics;
   it is not a credential or an account label.
-- Person-level product analytics live in the main cmux PostHog project through
+- Person-level product analytics live in the main hmux PostHog project through
   `web/services/coderouter/analytics.ts`: closed account/session/upstream
   lifecycle events and operational exceptions. Route outcomes and token usage
   stay in ClickHouse. See
@@ -115,7 +115,7 @@ raw team and Stack user IDs, the optional `vm_id`, provider, agent, model,
 status, and a per-request `request_id` shared by the usage and route rows.
 No prompt, output, header, or credential is ever written.
 
-- Runtime env (Vercel production and preview, `~/.secrets/cmuxterm-dev.env`
+- Runtime env (Vercel production and preview, `~/.secrets/hmuxterm-dev.env`
   for local dev): `CLICKHOUSE_URL` (HTTPS interface, for example
   `https://<host>.clickhouse.cloud:8443`), `CLICKHOUSE_USER`,
   `CLICKHOUSE_PASSWORD`, `CLICKHOUSE_DATABASE` (`coderouter` in production,
@@ -174,7 +174,7 @@ No prompt, output, header, or credential is ever written.
 - `web/services/coderouter/vmMetrics.ts` runs the same 30-day query filtered
   by `vm_id`, and a per-machine query (`GROUP BY vm_id` where `vm_id IS NOT
   NULL`, at most 200 machines) for a team.
-- `vm_id` is the cmux `cloud_vms.id` UUID written on every ledger row when the
+- `vm_id` is the hmux `cloud_vms.id` UUID written on every ledger row when the
   route token was bound to a Cloud VM. It is an opaque server-minted
   identifier, not personal data, and is only ever queried after the server
   confirms the machine belongs to the requesting billing team.
@@ -218,17 +218,17 @@ storm shows up as latency instead of failures. `usage_events.upstream_account_id
 and `route_events.upstream_account_id` (ClickHouse migration `002`) name the account that served a
 request. PostHog does not receive request-level LLM or token events.
 
-The cmux CLI manages the list through the app's session, so no credential is typed into a browser
+The hmux CLI manages the list through the app's session, so no credential is typed into a browser
 or argv:
 
 ```bash
 claude setup-token                                    # mints a long-lived sk-ant-oat01-... token
-cmux coderouter claude add oauth-token --label work   # runs claude setup-token; or CLAUDE_CODE_OAUTH_TOKEN / --stdin
-cmux coderouter claude add oauth-token --label personal
-cmux coderouter claude list                           # id, kind, masked identifier, label, health
-cmux coderouter claude disable work                   # out of routing, keeps the credential
-cmux coderouter claude remove personal                # by id, label, or identifier
-cmux coderouter machines                              # 30-day spend per Cloud machine
+hmux coderouter claude add oauth-token --label work   # runs claude setup-token; or CLAUDE_CODE_OAUTH_TOKEN / --stdin
+hmux coderouter claude add oauth-token --label personal
+hmux coderouter claude list                           # id, kind, masked identifier, label, health
+hmux coderouter claude disable work                   # out of routing, keeps the credential
+hmux coderouter claude remove personal                # by id, label, or identifier
+hmux coderouter machines                              # 30-day spend per Cloud machine
 ```
 
 `add api-key` takes `ANTHROPIC_API_KEY`; `add bedrock` takes `AWS_ACCESS_KEY_ID`,
@@ -252,15 +252,15 @@ agent CLIs then run with placeholder keys exactly as a Cloud machine does, again
 node scripts/coderouter/local-edge.mjs --origin http://127.0.0.1:<port> \
   --route-token <crt_ bound to a cloud_vms.id> --vm-id <cloud_vms.id>
 eval "$(...)"                                   # the exports it prints: CA bundle + base URLs
-curl -sS "$CMUX_CODEROUTER_URL/api/coderouter/vm-usage/self" -H "authorization: Bearer $OPENAI_API_KEY"
+curl -sS "$HMUX_CODEROUTER_URL/api/coderouter/vm-usage/self" -H "authorization: Bearer $OPENAI_API_KEY"
 codex exec 'Reply with exactly pong.'           # rustls trusts SSL_CERT_FILE
 claude -p 'Reply with exactly pong.'            # Node trusts NODE_EXTRA_CA_CERTS
 ```
 
 What to check: `--no-inject` (or a raw request with the placeholder) returns 401, a token
-bound to another `cloud_vms.id` returns 403 `vm_mismatch`, a forged `x-cmux-vm-id` from the
+bound to another `cloud_vms.id` returns 403 `vm_mismatch`, a forged `x-hmux-vm-id` from the
 client is overwritten and logged by the edge, `usage_events` rows in ClickHouse carry the
 `vm_id`, `agent`, `upstream_kind`, and cost, and `vm-usage/self` reflects them. For the real
 edge against local code, expose the dev server through a quick tunnel, set
-`CMUX_CODEROUTER_EDGE_ORIGIN` to it, and run `scripts/cloud-vm/smoke-vm-api.mjs --create
+`HMUX_CODEROUTER_EDGE_ORIGIN` to it, and run `scripts/cloud-vm/smoke-vm-api.mjs --create
 --paid --edge-check`, which creates a Freestyle VM whose inline rule points at the tunnel.

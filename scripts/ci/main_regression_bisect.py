@@ -57,7 +57,7 @@ STATE_PREFIX = "<!-- main-regression-bisect-state "
 VERDICT_MARKER_RE = re.compile(r"<!-- main-regression-bisect pr=(\d+) test=(\w+) -->")
 BOT_LOGINS = frozenset({"github-actions", "github-actions[bot]"})
 SHA_RE = re.compile(r"^[0-9a-f]{40}$")
-# What dispatch-focused-test.py accepts after cmuxTests/.
+# What dispatch-focused-test.py accepts after hmuxTests/.
 TEST_RE = re.compile(r"^[A-Za-z_]\w*/[A-Za-z_]\w*(?:\((?:[A-Za-z_]\w*:)*\))?$")
 RUN_URL_RE = re.compile(r"^Run: (https://github\.com/[^\s]+/actions/runs/(\d+))\s*$", re.M)
 
@@ -685,7 +685,7 @@ def dispatch_run(test: str, sha: str) -> tuple[int, str] | None:
     # --force: the dispatcher refuses a selector that already failed at a
     # commit, which is the question asked here; the state already keeps one
     # run per item in flight.
-    command = [sys.executable, str(DISPATCH_SCRIPT), f"cmuxTests/{test}", "--ref", sha, "--force"]
+    command = [sys.executable, str(DISPATCH_SCRIPT), f"hmuxTests/{test}", "--ref", sha, "--force"]
     print(f"Dispatching {test} at {sha}", flush=True)
     try:
         result = subprocess.run(command, capture_output=True, text=True, timeout=DISPATCH_TIMEOUT_SECONDS)

@@ -1,12 +1,12 @@
-import CmuxCloud
-import CmuxProductAnalytics
+import HmuxCloud
+import HmuxProductAnalytics
 import AppKit
-import CMUXMobileCore
+import HMUXMobileCore
 import Bonsplit
 import Foundation
 import SwiftUI
 
-/// Shared entrypoint for every "Upgrade to cmux Pro" surface (sidebar badge,
+/// Shared entrypoint for every "Upgrade to hmux Pro" surface (sidebar badge,
 /// titlebar badge, Settings Account card, command palette, Help menu). Opens
 /// the app-specific pricing page in a dedicated browser workspace in the
 /// current window, falling back through the older in-window browser paths if
@@ -17,39 +17,39 @@ enum ProUpgradePresenter {
     private static var workspaceReuseState = ProUpgradeWorkspaceReuseState()
 
     /// Menu title for an upgrade entrypoint that offers `tier`, the next
-    /// tier above the account's plan (``CmuxPlanTier/upgradeOffer(isSignedIn:knownTier:)``).
-    nonisolated static func upgradeMenuTitle(for tier: CmuxPlanTier) -> String {
+    /// tier above the account's plan (``HmuxPlanTier/upgradeOffer(isSignedIn:knownTier:)``).
+    nonisolated static func upgradeMenuTitle(for tier: HmuxPlanTier) -> String {
         switch tier {
         case .max:
-            String(localized: "menu.help.upgradeToMax", defaultValue: "Upgrade to cmux Max…")
+            String(localized: "menu.help.upgradeToMax", defaultValue: "Upgrade to hmux Max…")
         case .free, .go, .pro:
-            String(localized: "menu.help.upgradeToPro", defaultValue: "Upgrade to cmux Pro…")
+            String(localized: "menu.help.upgradeToPro", defaultValue: "Upgrade to hmux Pro…")
         }
     }
 
     /// Command palette title for the same offer, without the ellipsis.
-    nonisolated static func upgradeCommandTitle(for tier: CmuxPlanTier) -> String {
+    nonisolated static func upgradeCommandTitle(for tier: HmuxPlanTier) -> String {
         switch tier {
         case .max:
-            String(localized: "command.pro.upgradeToMax.title", defaultValue: "Upgrade to cmux Max")
+            String(localized: "command.pro.upgradeToMax.title", defaultValue: "Upgrade to hmux Max")
         case .free, .go, .pro:
-            String(localized: "command.pro.upgrade.title", defaultValue: "Upgrade to cmux Pro")
+            String(localized: "command.pro.upgrade.title", defaultValue: "Upgrade to hmux Pro")
         }
     }
 
     /// The offer every upgrade entrypoint shows, or nil when the account is
     /// already on the top tier or its plan is not yet known.
     @MainActor
-    static var currentUpgradeOffer: CmuxPlanTier? {
+    static var currentUpgradeOffer: HmuxPlanTier? {
         guard let flow = AppDelegate.shared?.auth?.accountFlow else { return .pro }
         return flow.upgradeOffer
     }
 
-    /// Records the click as `cmux_upgrade_entrypoint_opened` (the funnel's
+    /// Records the click as `hmux_upgrade_entrypoint_opened` (the funnel's
     /// first client step) and opens pricing.
     ///
     /// - Parameters:
-    ///   - source: The surface; it also travels to checkout as `cmux_source`.
+    ///   - source: The surface; it also travels to checkout as `hmux_source`.
     ///   - analytics: The emitter. Tests pass their own.
     ///   - open: Opens pricing. Tests pass a no-op.
     @MainActor
@@ -141,7 +141,7 @@ enum ProUpgradePresenter {
             workspaceReuseState.clear()
         }
 
-        let title = String(localized: "pricing.pro.workspace.title", defaultValue: "cmux Pro")
+        let title = String(localized: "pricing.pro.workspace.title", defaultValue: "hmux Pro")
         guard let workspace = appDelegate.performProUpgradeWorkspaceAction(
             title: title,
             url: url,
@@ -216,7 +216,7 @@ private final class NativePricingWindowController: NSWindowController {
             backing: .buffered,
             defer: false
         )
-        window.title = String(localized: "pricing.native.window.title", defaultValue: "cmux Upgrade")
+        window.title = String(localized: "pricing.native.window.title", defaultValue: "hmux Upgrade")
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
         window.minSize = NSSize(width: 760, height: 520)
@@ -512,7 +512,7 @@ private struct NativePricingPlansView: View {
                     String(localized: "pricing.native.free.feature.community", defaultValue: "Community support on Discord and GitHub"),
                 ]
             )
-            if snapshot.isGo || (CmuxFeatureFlags.shared.isGoPlanEnabled && !snapshot.isPro) {
+            if snapshot.isGo || (HmuxFeatureFlags.shared.isGoPlanEnabled && !snapshot.isPro) {
                 NativePricingPlanCard(
                     name: String(localized: "pricing.native.plan.go", defaultValue: "Go"),
                     price: String(localized: "pricing.native.go.price", defaultValue: "$10"),
@@ -540,7 +540,7 @@ private struct NativePricingPlansView: View {
                     String(localized: "pricing.native.pro.feature.vms", defaultValue: "Cloud agents on isolated Cloud VMs"),
                     String(localized: "pricing.native.pro.feature.hours", defaultValue: "Up to 5 Cloud VMs sharing 20 vCPUs and 40 GB RAM; one VM can use up to 16 GB RAM / 8 vCPU. The 24 GB / 12 vCPU and 32 GB / 16 vCPU sizes require Max."),
                     String(localized: "pricing.native.pro.feature.gateway", defaultValue: "Unlimited workspaces"),
-                    String(localized: "pricing.native.pro.feature.ios", defaultValue: "cmux iOS app and email support"),
+                    String(localized: "pricing.native.pro.feature.ios", defaultValue: "hmux iOS app and email support"),
                 ]
             )
             NativePricingPlanCard(

@@ -181,7 +181,7 @@ def main():
     if 'requires user authentication' in run(['automationmodetool'])[1]:
         # XCTest enables Automation Mode before the first test and, when it
         # needs authentication, waits a minute for a prompt nobody answers
-        # ("Timed out while enabling automation mode"; cmux7s, 2026-09-27).
+        # ("Timed out while enabling automation mode"; hmux7s, 2026-09-27).
         # The job's runner user cannot lift the requirement.
         annotate('error', 'Automation Mode requires authentication on this runner, so XCTest times out '
                  'enabling it; no UI tests ran. An admin on the Mac runs '

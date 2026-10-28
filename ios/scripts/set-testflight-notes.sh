@@ -17,7 +17,7 @@ set -euo pipefail
 #
 # Usage:
 #   ios/scripts/set-testflight-notes.sh --build-number 20260613120501 \
-#       [--audience internal|external] [--bundle-id dev.cmux.app.beta] \
+#       [--audience internal|external] [--bundle-id dev.hmux.app.beta] \
 #       [--changelog <path>] [--locale en-US] \
 #       [--expect-marketing-version X.Y.Z] \
 #       [--notes "literal override text"] [--timeout-seconds 1800]
@@ -41,11 +41,11 @@ usage() { sed -n '3,35p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 BUILD_NUMBER=""
 AUDIENCE="internal"
-BUNDLE_ID="${IOS_BETA_BUNDLE_ID:-dev.cmux.app.beta}"
+BUNDLE_ID="${IOS_BETA_BUNDLE_ID:-dev.hmux.app.beta}"
 CHANGELOG="$IOS_DIR/CHANGELOG.md"
 LOCALE="en-US"
 NOTES_OVERRIDE=""
-TIMEOUT_SECONDS="${CMUX_TESTFLIGHT_PROCESSING_TIMEOUT_SECONDS:-1800}"
+TIMEOUT_SECONDS="${HMUX_TESTFLIGHT_PROCESSING_TIMEOUT_SECONDS:-1800}"
 # When set, the TOP changelog version MUST equal this (the MARKETING_VERSION of
 # the build being annotated). Guards against attaching e.g. 1.0.3 notes to a build
 # archived as 1.0.0 when a cut forgets to bump the version. upload-testflight.sh
@@ -98,7 +98,7 @@ if [[ "$VALIDATE_ONLY" -ne 1 ]]; then
   fi
 fi
 
-NOTES_FILE="$(mktemp "${TMPDIR:-/tmp}/cmux-testflight-notes.XXXXXX")"
+NOTES_FILE="$(mktemp "${TMPDIR:-/tmp}/hmux-testflight-notes.XXXXXX")"
 trap 'rm -f "$NOTES_FILE"' EXIT
 
 if [[ -n "$NOTES_OVERRIDE" ]]; then

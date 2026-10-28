@@ -349,7 +349,7 @@ async function startServer(): Promise<AppServer> {
   }, 30_000);
   try {
     await request("initialize", {
-      clientInfo: { name: "cmux", title: "cmux", version: "0.1" },
+      clientInfo: { name: "hmux", title: "hmux", version: "0.1" },
       capabilities: { experimentalApi: true, requestAttestation: false },
     });
   } catch (err) {
@@ -383,7 +383,7 @@ function approvalResponse(method: string, approve: boolean): { result: unknown }
     case "item/fileChange/requestApproval":
       return { result: { decision: approve ? "accept" : "decline" } };
     default:
-      return { error: { code: -32601, message: `${method} is not supported by cmux-agent-ui` } };
+      return { error: { code: -32601, message: `${method} is not supported by hmux-agent-ui` } };
   }
 }
 

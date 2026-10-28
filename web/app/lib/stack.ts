@@ -31,15 +31,15 @@ export function getRequestScopedStackUser(flow: string): Promise<RequestStackUse
   const key = "current-user";
   const existing = cache.get(key);
   if (existing) {
-    trace.getActiveSpan()?.setAttribute("cmux.auth.request_cache", "hit");
+    trace.getActiveSpan()?.setAttribute("hmux.auth.request_cache", "hit");
     return existing;
   }
 
-  trace.getActiveSpan()?.setAttribute("cmux.auth.request_cache", "miss");
+  trace.getActiveSpan()?.setAttribute("hmux.auth.request_cache", "miss");
   const pending = withStackAuthSpan(
     "get_user",
     () => getStackServerApp().getUser({ or: "return-null" }),
-    { "cmux.auth.flow": flow },
+    { "hmux.auth.flow": flow },
   );
   cache.set(key, pending);
   void pending.catch(() => {
@@ -241,10 +241,10 @@ async function updateStackUserViaApi(
         },
       );
       span.setAttribute("http.response.status_code", stackActualStatus(response));
-      span.setAttribute("cmux.external.success", stackActualStatus(response) < 400);
+      span.setAttribute("hmux.external.success", stackActualStatus(response) < 400);
       return response;
     },
-    { "cmux.auth.flow": "server_user_update" },
+    { "hmux.auth.flow": "server_user_update" },
   );
   const status = stackActualStatus(response);
   if (status >= 400) {

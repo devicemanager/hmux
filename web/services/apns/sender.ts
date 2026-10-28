@@ -349,7 +349,7 @@ export async function sendApnsNotification(
   const bodies = new Map<string, Buffer>();
   // The collapse-id coalesces repeated updates for one exact Mac app instance
   // and notification into one delivered banner. The dismiss lever itself is
-  // the `cmux.notificationId` payload key, which iOS maps to delivered banners;
+  // the `hmux.notificationId` payload key, which iOS maps to delivered banners;
   // the request identifier equaling the collapse-id is observed OS behavior,
   // not a contract. APNs caps it at 64 bytes.
   // Never set on a dismiss push: a collapse would try to REPLACE the delivered
@@ -670,7 +670,7 @@ function collapseIdFor(
   const device = macDeviceId?.trim();
   const tag = macInstanceTag?.trim();
   if (device && tag) {
-    return `cmux-${crypto
+    return `hmux-${crypto
       .createHash("sha256")
       .update(`v1\0${device.toLowerCase()}\0${tag}\0${id}`)
       .digest("base64url")}`;

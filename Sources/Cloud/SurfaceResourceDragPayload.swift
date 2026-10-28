@@ -1,5 +1,5 @@
 import Bonsplit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Registers a Cloud tree row as the same live capability Bonsplit tab drags
@@ -59,7 +59,7 @@ struct SurfaceResourceDragPasteboardRecord: Codable, Equatable {
     let resources: [String]
     let title: String
     /// Placement-aware records preserve the exact daemon tab for each member.
-    /// It is optional so pasteboards written by older cmux builds still decode.
+    /// It is optional so pasteboards written by older hmux builds still decode.
     let placements: [SurfaceResourcePlacement]?
 
     init(

@@ -1,10 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 
 const languages = {
-  en: { title: "cmux - The terminal built for multitasking", heading: "Features" },
-  ko: { title: "cmux — 멀티태스킹을 위해 만든 터미널", heading: "기능" },
-  ja: { title: "cmux - マルチタスクのために作られたターミナル", heading: "機能" },
-  ar: { title: "cmux — المحطة الطرفية المصممة لتعدد المهام", heading: "الميزات" },
+  en: { title: "hmux - The terminal built for multitasking", heading: "Features" },
+  ko: { title: "hmux — 멀티태스킹을 위해 만든 터미널", heading: "기능" },
+  ja: { title: "hmux - マルチタスクのために作られたターミナル", heading: "機能" },
+  ar: { title: "hmux — المحطة الطرفية المصممة لتعدد المهام", heading: "الميزات" },
 } as const;
 
 type TestLocale = keyof typeof languages;

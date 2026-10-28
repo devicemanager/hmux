@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-TAG="${CMUX_TAG:-swmob}"
+TAG="${HMUX_TAG:-swmob}"
 TTL_SECONDS="3600"
 ROUTE_ID=""
 ROUTE_KIND="iroh"
 OUT_DIR=""
 OPEN_HTML="0"
-MAX_ATTEMPTS="${CMUX_ATTACH_QR_MAX_ATTEMPTS:-20}"
-POLL_INTERVAL_SECONDS="${CMUX_ATTACH_QR_POLL_INTERVAL_SECONDS:-0.5}"
+MAX_ATTEMPTS="${HMUX_ATTACH_QR_MAX_ATTEMPTS:-20}"
+POLL_INTERVAL_SECONDS="${HMUX_ATTACH_QR_POLL_INTERVAL_SECONDS:-0.5}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -48,7 +48,7 @@ done
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 TMP_ROOT="${TMPDIR:-/tmp}"
-OUT_DIR="${OUT_DIR:-${TMP_ROOT%/}/cmux-mobile-attach-qr-$TAG}"
+OUT_DIR="${OUT_DIR:-${TMP_ROOT%/}/hmux-mobile-attach-qr-$TAG}"
 umask 077
 mkdir -p "$OUT_DIR"
 chmod 700 "$OUT_DIR"
@@ -82,7 +82,7 @@ RAW_JSON_TMP="$(mktemp "$OUT_DIR/attach-ticket.raw.json.XXXXXX")"
 trap 'rm -f "$RAW_JSON_TMP"' EXIT
 READY="0"
 for _attempt in $(seq 1 "$MAX_ATTEMPTS"); do
-  if CMUX_TAG="$TAG" "$REPO_ROOT/scripts/cmux-debug-cli.sh" \
+  if HMUX_TAG="$TAG" "$REPO_ROOT/scripts/hmux-debug-cli.sh" \
     rpc mobile.attach_ticket.create "$PARAMS" > "$RAW_JSON_TMP" 2>/dev/null && \
     RAW_JSON_TMP="$RAW_JSON_TMP" python3 - <<'PY'
 import json
@@ -175,7 +175,7 @@ const html = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>cmux mobile pairing</title>
+<title>hmux mobile pairing</title>
 <style>
   :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; }
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #101111; color: #f5f5f5; }
@@ -195,8 +195,8 @@ const html = `<!doctype html>
 <main>
   <div class="qr">${qrSVG}</div>
   <section>
-    <h1>Scan to pair cmux</h1>
-    <p>Open cmux on iPhone, tap <strong>Scan QR Code</strong>, and scan this code. This ticket is route-filtered for the address below.</p>
+    <h1>Scan to pair hmux</h1>
+    <p>Open hmux on iPhone, tap <strong>Scan QR Code</strong>, and scan this code. This ticket is route-filtered for the address below.</p>
     <table>
       <thead><tr><th>Route</th><th>Kind</th><th>Address</th></tr></thead>
       <tbody>${routeRows}</tbody>

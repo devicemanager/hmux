@@ -1,5 +1,5 @@
 import Bonsplit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import Foundation
 
 /// Workspace surface creation for the CodeRouter guide opened from the Cloud sidebar.
@@ -37,7 +37,7 @@ extension Workspace {
         if let targetIndex {
             _ = bonsplitController.reorderTab(newTabId, toIndex: targetIndex)
         }
-        publishCmuxSurfaceCreated(
+        publishHmuxSurfaceCreated(
             guidePanel.id,
             paneId: paneId,
             kind: SurfaceKind.coderouterGuide.rawValue,

@@ -6,15 +6,15 @@ struct Completion: ParsableCommand {
         commandName: "completion",
         abstract: String(
             localized: "cli.command.completion.abstract",
-            defaultValue: "Print a shell completion script for cmux."
+            defaultValue: "Print a shell completion script for hmux."
         ),
         discussion: String(
             localized: "cli.command.completion.discussion",
             defaultValue: """
             Add the matching line to your shell startup file:
-              zsh:  eval "$(cmux completion zsh)"
-              bash: eval "$(cmux completion bash)"
-              fish: cmux completion fish | source
+              zsh:  eval "$(hmux completion zsh)"
+              bash: eval "$(hmux completion bash)"
+              fish: hmux completion fish | source
             """
         )
     )
@@ -43,6 +43,6 @@ struct Completion: ParsableCommand {
                 exitCode: 2
             )
         }
-        print(CmuxCommand.completionScript(for: kind))
+        print(HmuxCommand.completionScript(for: kind))
     }
 }

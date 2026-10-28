@@ -59,15 +59,15 @@ def test_consumers_prefer_warm_aggregate_then_selective_layers_before_remote_agg
         assert local < peer < layers < r2 < parallel < github
 
         layer_step = step_by_id(job, "restore-layers")
-        assert layer_step["env"]["CMUX_APP_HOST_LAYER_PROFILE"] == "app-host-tests"
+        assert layer_step["env"]["HMUX_APP_HOST_LAYER_PROFILE"] == "app-host-tests"
         assert "steps.node-products.outputs.hit != 'true'" in layer_step["if"]
         assert "steps.peer-products.outputs.hit != 'true'" in layer_step["if"]
 
         restore = step_by_name(job, "Restore compiled app-host test product")
-        assert restore["env"]["CMUX_LAYER_RESTORED"] == "${{ steps.restore-layers.outputs.hit }}"
+        assert restore["env"]["HMUX_LAYER_RESTORED"] == "${{ steps.restore-layers.outputs.hit }}"
 
         finalize = step_by_name(job, "Finalize node-local compiled product cache")
-        assert "steps.restore-layers.outputs.hit != 'true'" in finalize["env"]["CMUX_PRODUCT_RESTORE_SUCCEEDED"]
+        assert "steps.restore-layers.outputs.hit != 'true'" in finalize["env"]["HMUX_PRODUCT_RESTORE_SUCCEEDED"]
 
 
 if __name__ == "__main__":

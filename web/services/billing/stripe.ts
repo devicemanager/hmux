@@ -25,7 +25,7 @@ const resolvedGoPriceIds = new Map<BillingInterval, string>();
  * so plan switches use this dedicated configuration by id.
  */
 export const PERSONAL_PLAN_SWITCH_PORTAL_METADATA = {
-  app: "cmux",
+  app: "hmux",
   purpose: "personal_plan_switch",
 } as const;
 let resolvedPersonalPlanSwitchConfigurationId: string | null = null;

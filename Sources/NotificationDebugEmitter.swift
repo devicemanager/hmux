@@ -1,7 +1,7 @@
 import AppKit
-import CMUXAgentLaunch
-import CmuxNotifications
-import CmuxSettings
+import HMUXAgentLaunch
+import HmuxNotifications
+import HmuxSettings
 import Foundation
 
 #if DEBUG

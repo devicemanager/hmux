@@ -36,7 +36,7 @@ export default function ClaudeCodeTeamsPage() {
       <p>{t("intro")}</p>
 
       <video
-        src="/blog/cmux-claude-teams-demo.mp4"
+        src="/blog/hmux-claude-teams-demo.mp4"
         width={1824}
         height={1080}
         autoPlay
@@ -47,9 +47,9 @@ export default function ClaudeCodeTeamsPage() {
       />
 
       <DocsHeading level={2} id="usage">{t("usage")}</DocsHeading>
-      <CodeBlock lang="bash">{`cmux claude-teams
-cmux claude-teams --continue
-cmux claude-teams --model sonnet`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux claude-teams
+hmux claude-teams --continue
+hmux claude-teams --model sonnet`}</CodeBlock>
       <p>{t("usageDesc")}</p>
 
       <DocsHeading level={2} id="how-it-works">{t("howItWorks")}</DocsHeading>
@@ -78,9 +78,9 @@ cmux claude-teams --model sonnet`}</CodeBlock>
         <tbody>
           <tr><td><code>TMUX</code></td><td>{t("envTmux")}</td></tr>
           <tr><td><code>TMUX_PANE</code></td><td>{t("envTmuxPane")}</td></tr>
-          <tr><td><code>CMUX_SURFACE_ID</code></td><td>{t("envSurface")}</td></tr>
+          <tr><td><code>HMUX_SURFACE_ID</code></td><td>{t("envSurface")}</td></tr>
           <tr><td><code>CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS</code></td><td>{t("envTeams")}</td></tr>
-          <tr><td><code>CMUX_SOCKET_PATH</code></td><td>{t("envSocket")}</td></tr>
+          <tr><td><code>HMUX_SOCKET_PATH</code></td><td>{t("envSocket")}</td></tr>
         </tbody>
       </table>
       <p>
@@ -104,7 +104,7 @@ cmux claude-teams --model sonnet`}</CodeBlock>
         </thead>
         <tbody>
           <tr><td>{t("dirShimPath")}</td><td>{t("dirShim")}</td></tr>
-          <tr><td><code>~/.cmuxterm/tmux-compat-store.json</code></td><td>{t("dirStore")}</td></tr>
+          <tr><td><code>~/.hmuxterm/tmux-compat-store.json</code></td><td>{t("dirStore")}</td></tr>
         </tbody>
       </table>
       <p>{t("storeDetails")}</p>

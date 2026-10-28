@@ -3,22 +3,22 @@
 
     actions_artifact_prune.py --repo OWNER/NAME [--delete] [--max-deletes N]
 
-Until cmux#19180 (feat-cmux-next, 2026-10-11), cmux-tui-build-package.yml set no retention-days, so
+Until hmux#19180 (feat-hmux-next, 2026-10-11), hmux-tui-build-package.yml set no retention-days, so
 every push's binaries, relay binaries, npm-packages and pypi-wheels kept the repository's 90-day
-default, and gallery evidence stages kept 14 days. feat-cmux-next uploads now expire on their own (3
+default, and gallery evidence stages kept 14 days. feat-hmux-next uploads now expire on their own (3
 days, 1 for gallery stages); this deletes the backlog, main's copies, and anything a later caller
 forgets to cap.
 
 Rules, by exact artifact name (the repository-wide artifact list returns HTTP 500 at this size, so
 each name is listed on its own):
 
-  cmux-tui-<target>, cmux-relay-<target>, chatmux-relay-<target>,
-  cmux-agent-screen-detection-<target>, npm-packages, pypi-wheels      older than 3 days
+  hmux-tui-<target>, hmux-relay-<target>, chatmux-relay-<target>,
+  hmux-agent-screen-detection-<target>, npm-packages, pypi-wheels      older than 3 days
   gallery-stage-<stage>-<shard>                                         older than 1 day
 
-An artifact from a run of cmux-tui-release.yml, cmux-tui-nightly.yml or relay-publish-npm.yml is kept
+An artifact from a run of hmux-tui-release.yml, hmux-tui-nightly.yml or relay-publish-npm.yml is kept
 for 30 days, because tui-publish-npm.yml and tui-publish-pypi.yml download those by run id. If
-cmux-tui-release.yml cannot be found the run stops: a rename must not quietly drop that protection.
+hmux-tui-release.yml cannot be found the run stops: a rename must not quietly drop that protection.
 
 Without --delete this is a dry run: it lists and reports, and sends no DELETE. One run sends at most
 --max-deletes deletes, paced under GitHub's secondary limit (a DELETE costs 5 of 900 points a minute),
@@ -45,8 +45,8 @@ BUILD_DAYS = 3
 STAGE_DAYS = 1
 RELEASE_DAYS = 30
 QUOTA_FLOOR = 50  # API calls left in the hour when a run stops deleting
-RELEASE_WORKFLOWS = ("cmux-tui-release.yml", "cmux-tui-nightly.yml", "relay-publish-npm.yml")
-REQUIRED_WORKFLOW = "cmux-tui-release.yml"  # the publish workflows accept only its runs
+RELEASE_WORKFLOWS = ("hmux-tui-release.yml", "hmux-tui-nightly.yml", "relay-publish-npm.yml")
+REQUIRED_WORKFLOW = "hmux-tui-release.yml"  # the publish workflows accept only its runs
 DELETE_INTERVAL = 0.4  # seconds between deletes: at most 150 a minute, 750 of the 900 points
 
 
@@ -56,8 +56,8 @@ class SlowDown(Exception):
 
 def rules() -> dict[str, int]:
     """Artifact name -> days it may live."""
-    names = {f"cmux-tui-{t}": BUILD_DAYS for t in TARGETS + ("x86_64-pc-windows-gnu",)}
-    for family in ("cmux-relay", "chatmux-relay", "cmux-agent-screen-detection"):
+    names = {f"hmux-tui-{t}": BUILD_DAYS for t in TARGETS + ("x86_64-pc-windows-gnu",)}
+    for family in ("hmux-relay", "chatmux-relay", "hmux-agent-screen-detection"):
         names.update({f"{family}-{t}": BUILD_DAYS for t in TARGETS})
     names.update({"npm-packages": BUILD_DAYS, "pypi-wheels": BUILD_DAYS})
     names.update({f"gallery-stage-{s}-{n}": STAGE_DAYS for s in ("base", "head", "repeat") for n in range(4)})

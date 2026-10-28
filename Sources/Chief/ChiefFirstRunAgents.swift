@@ -6,7 +6,7 @@ import Combine
 /// one word for what its agents are doing. Mapped from the same per-panel
 /// agent lifecycle the sidebar draws (``Workspace/agentLifecycleStatesByPanelId``)
 /// and the workspace's unread notifications, so Home never says something
-/// the sidebar does not. (cmux-next `HomeAgentGlance`, per workspace here.)
+/// the sidebar does not. (hmux-next `HomeAgentGlance`, per workspace here.)
 struct ChiefAgentGlance: Equatable {
     /// Most urgent first: the list's order.
     enum Status: Int, Comparable {
@@ -37,7 +37,7 @@ struct ChiefAgentGlance: Equatable {
     }
 
     /// Workspaces without agents as idle rows, in sidebar order, at most
-    /// `limit`. cmux-next's glance lists agents only (`HomeAgentGlances`);
+    /// `limit`. hmux-next's glance lists agents only (`HomeAgentGlances`);
     /// classic Home also lists plain workspaces when there are no agents,
     /// because the sidebar's workspace rows are hidden while Home is selected.
     static func plainWorkspaces(_ workspaces: [(id: UUID, title: String)], limit: Int = 5) -> [ChiefAgentGlance] {

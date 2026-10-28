@@ -48,7 +48,7 @@ function rowsFor(table: unknown): Array<Record<string, unknown>> {
 function appleMaxRow() {
   return {
     originalTransactionId: "otx-apple", planId: "max", status: "active", environment: "Production",
-    bundleId: "com.cmux.app", expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), gracePeriodExpiresAt: null,
+    bundleId: "com.hmux.app", expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), gracePeriodExpiresAt: null,
     autoRenewEnabled: true,
   };
 }
@@ -57,7 +57,7 @@ const proUser = {
   id: "user-pro",
   isAnonymous: false,
   primaryEmail: "pro@example.com",
-  clientReadOnlyMetadata: { cmuxPlan: "pro" },
+  clientReadOnlyMetadata: { hmuxPlan: "pro" },
   update: mock(async () => undefined),
 };
 
@@ -88,7 +88,7 @@ const { default: AppPricingPage } = await import("../app/app-pricing/page");
 describe("app pricing page", () => {
   beforeEach(() => {
     redirect.mockClear();
-    process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES = "cmux-dev-test";
+    process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES = "hmux-dev-test";
     stackConfigured = false;
     currentUser = null;
     stripeSubscriptionRows = [];
@@ -96,7 +96,7 @@ describe("app pricing page", () => {
     proUser.update.mockClear();
   });
 
-  test("redirects to public pricing outside the cmux app", async () => {
+  test("redirects to public pricing outside the hmux app", async () => {
     await expect(
       renderSettled(AppPricingPage({ searchParams: Promise.resolve({}) })),
     ).rejects.toMatchObject({ href: "/pricing" });
@@ -105,8 +105,8 @@ describe("app pricing page", () => {
   test("renders embedded pricing with checkout links carrying the validated scheme", async () => {
     const element = await AppPricingPage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
-        cmux_scheme: "cmux-dev-test",
+        hmux_app: "1",
+        hmux_scheme: "hmux-dev-test",
       }),
     });
     const html = (await renderSettled(element));
@@ -152,7 +152,7 @@ describe("app pricing page", () => {
     const pending = new Promise<unknown>((resolve) => { release = () => resolve(null); });
     getUser.mockImplementation(() => pending);
     const stream = await renderToReadableStream(AppPricingPage({
-      searchParams: Promise.resolve({ cmux_app: "1", cmux_distribution: "appstore" }),
+      searchParams: Promise.resolve({ hmux_app: "1", hmux_distribution: "appstore" }),
     }));
     const reader = stream.getReader();
     try {
@@ -171,28 +171,28 @@ describe("app pricing page", () => {
   test("forwards the Mac app's checkout attribution to every checkout link", async () => {
     const element = await AppPricingPage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
-        cmux_scheme: "cmux-dev-test",
-        cmux_source: "mac_help_menu",
-        cmux_client: "mac",
-        cmux_channel: "nightly",
-        cmux_app_version: "0.65.1",
-        cmux_app_build: "2026090101",
+        hmux_app: "1",
+        hmux_scheme: "hmux-dev-test",
+        hmux_source: "mac_help_menu",
+        hmux_client: "mac",
+        hmux_channel: "nightly",
+        hmux_app_version: "0.65.1",
+        hmux_app_build: "2026090101",
       }),
     });
     const html = (await renderSettled(element));
 
     expect(html).toContain("plan%253Dpro");
     expect(html).toContain("plan%253Dteam");
-    expect(html).toContain("cmux_source%253Dmac_help_menu");
-    expect(html).toContain("cmux_app_build%253D2026090101");
+    expect(html).toContain("hmux_source%253Dmac_help_menu");
+    expect(html).toContain("hmux_app_build%253D2026090101");
   });
 
   test("renders signed-out recovery without claiming Free is the current plan", async () => {
     const element = await AppPricingPage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
-        cmux_scheme: "cmux-dev-test",
+        hmux_app: "1",
+        hmux_scheme: "hmux-dev-test",
         appearance: "dark",
         background: "#112233",
         interval: "year",
@@ -206,24 +206,24 @@ describe("app pricing page", () => {
       /href="(\/handler\/native-sign-in\?after_auth_return_to=[^"]+)"/,
     )?.[1];
     expect(signInHref).toBeTruthy();
-    const nativeSignIn = new URL(signInHref!, "https://cmux.test");
+    const nativeSignIn = new URL(signInHref!, "https://hmux.test");
     const afterSignIn = new URL(
       nativeSignIn.searchParams.get("after_auth_return_to")!,
-      "https://cmux.test",
+      "https://hmux.test",
     );
     expect(afterSignIn.searchParams.get("native_app_return_to")).toBe(
-      "cmux-dev-test://auth-callback",
+      "hmux-dev-test://auth-callback",
     );
     expect(afterSignIn.searchParams.get("web_return_to")).toBe(
-      "/app-pricing?cmux_app=1&cmux_scheme=cmux-dev-test&appearance=dark&background=%23112233&interval=year",
+      "/app-pricing?hmux_app=1&hmux_scheme=hmux-dev-test&appearance=dark&background=%23112233&interval=year",
     );
   });
 
   test("renders monthly pricing and preserves native checkout context", async () => {
     const element = await AppPricingPage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
-        cmux_scheme: "cmux-dev-test",
+        hmux_app: "1",
+        hmux_scheme: "hmux-dev-test",
         appearance: "dark",
         background: "#112233",
         foreground: "#ddeeff",
@@ -252,21 +252,21 @@ describe("app pricing page", () => {
     expect(html).toContain("plan%253Dpro");
     expect(html).toContain("plan%253Dteam");
     expect(html).not.toContain("appearance=dark&amp;interval=month");
-    expect(html).toContain('data-cmux-app-theme="true"');
+    expect(html).toContain('data-hmux-app-theme="true"');
     expect(html).toContain("--ghostty-background:#112233");
     expect(html).toContain("--ghostty-foreground:#ddeeff");
-    expect(html).toContain("--cmux-product-blue:#0091ff");
-    expect(html).toContain("--cmux-product-blue-on-background:#0091ff");
-    expect(html).toContain("--cmux-product-blue-on-foreground:#006CBF");
+    expect(html).toContain("--hmux-product-blue:#0091ff");
+    expect(html).toContain("--hmux-product-blue-on-background:#0091ff");
+    expect(html).toContain("--hmux-product-blue-on-foreground:#006CBF");
     expect(html).toContain('data-testid="pricing-controls"');
-    expect(html).toContain('href="/enterprise?cmux_external_browser=1"');
+    expect(html).toContain('href="/enterprise?hmux_external_browser=1"');
   });
 
   test("defaults the Pro card to yearly billing", async () => {
     const element = await AppPricingPage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
-        cmux_scheme: "cmux-dev-test",
+        hmux_app: "1",
+        hmux_scheme: "hmux-dev-test",
       }),
     });
     const html = (await renderSettled(element));
@@ -280,9 +280,9 @@ describe("app pricing page", () => {
   test("removes external purchase links in App Store distribution mode", async () => {
     const element = await AppPricingPage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
-        cmux_distribution: "appstore",
-        cmux_scheme: "cmux-dev-test",
+        hmux_app: "1",
+        hmux_distribution: "appstore",
+        hmux_scheme: "hmux-dev-test",
       }),
     });
     const html = (await renderSettled(element));
@@ -299,15 +299,15 @@ describe("app pricing page", () => {
 
     const element = await AppPricingPage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
-        cmux_scheme: "cmux-dev-test",
+        hmux_app: "1",
+        hmux_scheme: "hmux-dev-test",
       }),
     });
     const html = (await renderSettled(element));
 
     expect(html).not.toContain('href="/api/billing/portal"');
     expect(html).toContain(
-      "http://localhost:9210/api/billing/checkout?plan=pro&amp;cmux_external_browser=1&amp;cmux_scheme=cmux-dev-test",
+      "http://localhost:9210/api/billing/checkout?plan=pro&amp;hmux_external_browser=1&amp;hmux_scheme=hmux-dev-test",
     );
     expect(html).toContain("Current plan");
     expect(html).not.toContain("not signed in.");
@@ -320,9 +320,9 @@ describe("app pricing page", () => {
 
     const element = await AppPricingPage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
-        cmux_distribution: "appstore",
-        cmux_scheme: "cmux-dev-test",
+        hmux_app: "1",
+        hmux_distribution: "appstore",
+        hmux_scheme: "hmux-dev-test",
       }),
     });
     const html = (await renderSettled(element));
@@ -338,7 +338,7 @@ describe("app pricing page", () => {
     appleRows = [{ ...appleMaxRow(), planId: "pro" }];
 
     const element = await AppPricingPage({
-      searchParams: Promise.resolve({ cmux_app: "1", cmux_scheme: "cmux-dev-test" }),
+      searchParams: Promise.resolve({ hmux_app: "1", hmux_scheme: "hmux-dev-test" }),
     });
     const html = (await renderSettled(element));
 
@@ -359,8 +359,8 @@ describe("app pricing page", () => {
 
     const element = await AppPricingPage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
-        cmux_scheme: "cmux-dev-test",
+        hmux_app: "1",
+        hmux_scheme: "hmux-dev-test",
       }),
     });
     const html = (await renderSettled(element));
@@ -380,11 +380,11 @@ describe("app pricing page", () => {
 
   test("routes a granted Pro user's Max CTA through checkout", async () => {
     stackConfigured = true;
-    currentUser = { ...proUser, clientReadOnlyMetadata: { cmuxVmPlan: "pro" } };
+    currentUser = { ...proUser, clientReadOnlyMetadata: { hmuxVmPlan: "pro" } };
 
     const html = await renderSettled(
       await AppPricingPage({
-        searchParams: Promise.resolve({ cmux_app: "1", cmux_scheme: "cmux-dev-test" }),
+        searchParams: Promise.resolve({ hmux_app: "1", hmux_scheme: "hmux-dev-test" }),
       }),
     );
     const card = Array.from(
@@ -403,7 +403,7 @@ describe("app pricing page", () => {
 
     const html = await renderSettled(
       await AppPricingPage({
-        searchParams: Promise.resolve({ cmux_app: "1", cmux_scheme: "cmux-dev-test" }),
+        searchParams: Promise.resolve({ hmux_app: "1", hmux_scheme: "hmux-dev-test" }),
       }),
     );
 
@@ -419,15 +419,15 @@ describe("app pricing page", () => {
   });
 
   for (const [name, params, message] of [
-    ["welcomeTeam", { welcome: "team" }, "Your cmux Team purchase is complete."],
+    ["welcomeTeam", { welcome: "team" }, "Your hmux Team purchase is complete."],
     ["billingCancelled", { billing: "cancelled" }, "Checkout cancelled. You have not been charged."],
     ["billingInvalidPlan", { billing: "invalid_plan" }, "That plan is not available. Pick a plan below."],
-    ["billingInvalidRelay", { billing: "invalid_relay" }, "The app checkout link expired or could not be verified. Return to cmux and try again."],
+    ["billingInvalidRelay", { billing: "invalid_relay" }, "The app checkout link expired or could not be verified. Return to hmux and try again."],
   ] as const) {
     test(`renders ${name} banner state`, async () => {
       const element = await AppPricingPage({
         searchParams: Promise.resolve({
-          cmux_app: "1",
+          hmux_app: "1",
           ...params,
         }),
       });

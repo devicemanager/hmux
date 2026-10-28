@@ -66,7 +66,7 @@ export async function runVmAlertChecks(options: {
   const now = options.now ?? new Date();
   const rawSend = options.sendAlert ?? ((input) => sendAlert(input, { fetch: options.fetch, env }));
   const alertStateStore = options.alertStateStore ?? durableVmAlertStateStore(db);
-  const alertsConfigured = Boolean(env.CMUX_ALERTS_SLACK_WEBHOOK_URL?.trim());
+  const alertsConfigured = Boolean(env.HMUX_ALERTS_SLACK_WEBHOOK_URL?.trim());
   const droppedAlerts: AlertInput[] = [];
   const send: SendAlert = async (input) => {
     const result = await rawSend(input);
@@ -77,9 +77,9 @@ export async function runVmAlertChecks(options: {
     return result;
   };
 
-  const createFailureThreshold = positiveIntegerEnv(env.CMUX_VM_ALERT_CREATE_FAILURES_15M, 3);
-  const expiredLeaseThreshold = positiveIntegerEnv(env.CMUX_VM_ALERT_EXPIRED_LEASES, 50);
-  const healthStaleMs = positiveIntegerEnv(env.CMUX_VM_ALERT_HEALTH_STALE_MS, VM_HEALTH_STALE_MS);
+  const createFailureThreshold = positiveIntegerEnv(env.HMUX_VM_ALERT_CREATE_FAILURES_15M, 3);
+  const expiredLeaseThreshold = positiveIntegerEnv(env.HMUX_VM_ALERT_EXPIRED_LEASES, 50);
+  const healthStaleMs = positiveIntegerEnv(env.HMUX_VM_ALERT_HEALTH_STALE_MS, VM_HEALTH_STALE_MS);
   const createFailureSince = new Date(now.getTime() - 15 * 60 * 1000);
   const stuckProvisioningBefore = new Date(now.getTime() - 20 * 60 * 1000);
 
@@ -203,7 +203,7 @@ async function checkTlsRuleCapacity(
     reportError(
       error,
       { subsystem: "cloud_vm_alerts", code: "tls_rule_usage_unreadable" },
-      { fingerprint: ["cmux-vm-alerts", "tls_rule_usage_unreadable"] },
+      { fingerprint: ["hmux-vm-alerts", "tls_rule_usage_unreadable"] },
     );
     usage = null;
   }
@@ -230,7 +230,7 @@ export async function reportDroppedVmAlerts(
   } = {},
 ): Promise<void> {
   const env = options.env ?? process.env;
-  if (env.VERCEL_ENV !== "production" && env.CMUX_ALERTS_REPORT_FORCE !== "1") return;
+  if (env.VERCEL_ENV !== "production" && env.HMUX_ALERTS_REPORT_FORCE !== "1") return;
   const keys = [...new Set(alerts.map((alert) => alert.key))];
   if (keys.length === 0) return;
   const now = options.now ?? new Date();
@@ -242,14 +242,14 @@ export async function reportDroppedVmAlerts(
       code: "alerts_unconfigured",
       droppedAlerts: keys,
     },
-    { fingerprint: ["cmux-vm-alerts", "alerts_unconfigured"] },
+    { fingerprint: ["hmux-vm-alerts", "alerts_unconfigured"] },
   );
   const fetchImpl = options.fetch ?? fetch;
   const captureTask = Promise.all(keys.map((key) => {
     const body = JSON.stringify({
       api_key: POSTHOG_PROJECT_KEY,
       event: "cloud_vm_alert_dropped",
-      distinct_id: "cmux-vm-alerts",
+      distinct_id: "hmux-vm-alerts",
       properties: {
         alert_key: key,
         alert_keys: [key],
@@ -420,9 +420,9 @@ async function listUnhealthyVms(
     // Only classify rows that have reported at least once. A legacy image
     // without the reporter is unknown rather than silently treated as dead;
     // new images and the stats route establish this heartbeat on first use.
-    sql`(${cloudVms.providerMetadata}->'cmuxResourceUsage'->>'providerVmId') = ${cloudVms.providerVmId}`,
-    sql`CASE WHEN ((${cloudVms.providerMetadata}->'cmuxResourceUsage'->>'receivedAt') ~ '^[0-9]+$')
-      THEN ((${cloudVms.providerMetadata}->'cmuxResourceUsage'->>'receivedAt')::double precision)
+    sql`(${cloudVms.providerMetadata}->'hmuxResourceUsage'->>'providerVmId') = ${cloudVms.providerVmId}`,
+    sql`CASE WHEN ((${cloudVms.providerMetadata}->'hmuxResourceUsage'->>'receivedAt') ~ '^[0-9]+$')
+      THEN ((${cloudVms.providerMetadata}->'hmuxResourceUsage'->>'receivedAt')::double precision)
       ELSE NULL END < ${before.getTime()}`,
   );
   // Count and sample in one statement so an alert never reports a count from

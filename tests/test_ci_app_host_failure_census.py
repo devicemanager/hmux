@@ -9,19 +9,19 @@ spec.loader.exec_module(census)
 
 
 def test_parses_xctest_swift_and_restart():
-    text = """Test Case '-[cmuxTests.Foo testBad]' started.\nfile.swift:12: error: -[cmuxTests.Foo testBad] : XCTAssertEqual failed\nTest Case '-[cmuxTests.Foo testBad]' failed (0.1 seconds).\n◇ Test \"swift bad\" started.\n✘ Test \"swift bad\" recorded an issue at Foo.swift:4: Expectation failed: false\n✘ Test \"swift bad\" failed after 1 seconds with 1 issue.\nRestarting after unexpected exit, crash, or test timeout; summary\n"""
+    text = """Test Case '-[hmuxTests.Foo testBad]' started.\nfile.swift:12: error: -[hmuxTests.Foo testBad] : XCTAssertEqual failed\nTest Case '-[hmuxTests.Foo testBad]' failed (0.1 seconds).\n◇ Test \"swift bad\" started.\n✘ Test \"swift bad\" recorded an issue at Foo.swift:4: Expectation failed: false\n✘ Test \"swift bad\" failed after 1 seconds with 1 issue.\nRestarting after unexpected exit, crash, or test timeout; summary\n"""
     record = census.parse_log(text, "1", "job")
-    assert record["tests_failed"] == {"cmuxTests.Foo/testBad", "swift bad"}
-    assert record["assertions"]["cmuxTests.Foo/testBad"] == "-[cmuxTests.Foo testBad] : XCTAssertEqual failed"
+    assert record["tests_failed"] == {"hmuxTests.Foo/testBad", "swift bad"}
+    assert record["assertions"]["hmuxTests.Foo/testBad"] == "-[hmuxTests.Foo testBad] : XCTAssertEqual failed"
     assert record["restarts"][0]["test"] == "swift bad"
 
 
 def test_known_issue_is_excluded_and_runs_are_deduplicated():
     a = census.parse_log('◇ Test "known" started.\n✘ Test "known" recorded an issue (known issue).\n', "r")
-    b = census.parse_log("Test Case '-[cmuxTests.Foo testBad]' started.\nTest Case '-[cmuxTests.Foo testBad]' failed\n", "r")
+    b = census.parse_log("Test Case '-[hmuxTests.Foo testBad]' started.\nTest Case '-[hmuxTests.Foo testBad]' failed\n", "r")
     report = census.summarize([a, b])
     assert [row for row in report["tests"] if row["test"] == "known"] == []
-    row = next(row for row in report["tests"] if row["test"] == "cmuxTests.Foo/testBad")
+    row = next(row for row in report["tests"] if row["test"] == "hmuxTests.Foo/testBad")
     assert row["runs_seen"] == 1 and row["runs_failed"] == 1
 
 

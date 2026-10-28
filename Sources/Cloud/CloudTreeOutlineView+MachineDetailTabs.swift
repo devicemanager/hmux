@@ -1,6 +1,6 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 
 extension CloudTreeOutlineView.Coordinator {
     /// Opens `tab` on a machine's tab row, or closes it, then re-presents the

@@ -3,7 +3,7 @@
 // the editors' own export endpoints in the signed-in session; xlsx and pptx
 // exports are unzipped in a docs.google.com page with the browser's
 // DecompressionStream. Writes drive the editor in a background tab with real
-// input: the Sheets name box and a paste from cmux's per-tab clipboard, the
+// input: the Sheets name box and a paste from hmux's per-tab clipboard, the
 // Docs and Slides Find and replace dialog, typing at the end of a document.
 //
 // Rule for writes: every edit is a draft first (reference B's confirmation
@@ -12,9 +12,9 @@
 // draft; the draft shows it, and the confirmation requires it again.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URL } = root.CmuxBrowserRepl.core;
+  const { URL } = root.HmuxBrowserRepl.core;
 
   // Runs in a blank page (for DecompressionStream): unzips base64 bytes and
   // returns the text of entries whose names match arg.want. A shared file's

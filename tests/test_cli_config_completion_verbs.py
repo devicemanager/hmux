@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Asserts `cmux config <TAB>` offers every subcommand `cmux config --help` documents.
+"""Asserts `hmux config <TAB>` offers every subcommand `hmux config --help` documents.
 
 A verb the runner handles but completion omits is invisible to anyone who
 discovers commands by tabbing. The documented verbs come from the usage line in
-CLI/CMUXCLI+Config.swift; aliases (the extra labels on a runner `case`, such as
+CLI/HMUXCLI+Config.swift; aliases (the extra labels on a runner `case`, such as
 `paths` for `path`) are left out of completion on purpose. The offered verbs come
 from docs/cli-command-tree.txt, which test_cli_command_tree_snapshot.py ties to
 the built binary.
@@ -15,14 +15,14 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CONFIG_SOURCE = ROOT / "CLI" / "CMUXCLI+Config.swift"
+CONFIG_SOURCE = ROOT / "CLI" / "HMUXCLI+Config.swift"
 COMMAND_TREE = ROOT / "docs" / "cli-command-tree.txt"
 
 
 def documented_verbs(source: str) -> set[str]:
-    match = re.search(r"Usage: cmux config <([^>]+)>", source)
+    match = re.search(r"Usage: hmux config <([^>]+)>", source)
     if not match:
-        raise AssertionError("usage line `Usage: cmux config <...>` not found")
+        raise AssertionError("usage line `Usage: hmux config <...>` not found")
     return set(match.group(1).split("|"))
 
 
@@ -60,9 +60,9 @@ def main() -> int:
         failures.append(f"aliases offered by completion: {', '.join(offered_aliases)}")
     if failures:
         for failure in failures:
-            print(f"FAIL: cmux config completion: {failure}")
+            print(f"FAIL: hmux config completion: {failure}")
         return 1
-    print("PASS: cmux config completion offers every documented subcommand")
+    print("PASS: hmux config completion offers every documented subcommand")
     return 0
 
 

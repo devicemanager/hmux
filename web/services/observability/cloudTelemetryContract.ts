@@ -27,7 +27,7 @@ export const stackAuthPhases = ["sign_in_completion", "token_refresh", "session_
 export const stackAuthBodyKinds = ["json", "html", "other"] as const;
 
 /**
- * A sign-in service rate-limit record. Exported as the span `cmux.auth.<event>`.
+ * A sign-in service rate-limit record. Exported as the span `hmux.auth.<event>`.
  * The endpoint is a path with ids replaced by `ID`: no query, token or address.
  */
 export type CloudTelemetryAuth = {

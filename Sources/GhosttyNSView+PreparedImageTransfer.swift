@@ -136,8 +136,8 @@ extension GhosttyNSView {
             mode: .drop
         )
 #if DEBUG
-        cmuxDebugLog("terminal.imageDrop.prepared surface=\(terminalSurface?.id.uuidString.prefix(5) ?? "nil") " +
-            "types=\((pasteboard.types ?? []).map(\.rawValue).joined(separator: ",")) prepared=\(prepared.cmuxDebugDescription)")
+        hmuxDebugLog("terminal.imageDrop.prepared surface=\(terminalSurface?.id.uuidString.prefix(5) ?? "nil") " +
+            "types=\((pasteboard.types ?? []).map(\.rawValue).joined(separator: ",")) prepared=\(prepared.hmuxDebugDescription)")
 #endif
         return executePreparedImageTransfer(prepared, onCancel: {})
     }

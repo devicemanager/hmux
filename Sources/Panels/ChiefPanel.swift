@@ -1,5 +1,5 @@
 import AppKit
-import CmuxHomeCore
+import HmuxHomeCore
 import Combine
 
 /// A workspace pane that shows one Chief conversation beside the user's work.

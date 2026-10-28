@@ -9,8 +9,8 @@ import { parseNativeStackTokens } from "../../../../services/vms/auth";
 export const CODEROUTER_HANDOFF_MAX_BODY_BYTES = 2 * 1_024;
 export const CODEROUTER_HANDOFF_MAX_AUTH_HEADER_BYTES = 16 * 1_024;
 export const CODEROUTER_HANDOFF_TEAM_HEADER_NAMES = [
-  "x-cmux-team-id",
-  "x-cmux-billing-team-id",
+  "x-hmux-team-id",
+  "x-hmux-billing-team-id",
 ] as const;
 export const CODEROUTER_HANDOFF_TEAM_QUERY_NAMES = [
   "teamId",
@@ -339,9 +339,9 @@ function byteLength(value: string): number {
 }
 
 function configuredHandoffRateLimitId(): string | undefined {
-  const dedicated = env.CMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID;
+  const dedicated = env.HMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID;
   if (dedicated) return dedicated;
-  const fallback = env.CMUX_FEEDBACK_RATE_LIMIT_ID;
+  const fallback = env.HMUX_FEEDBACK_RATE_LIMIT_ID;
   return fallback || undefined;
 }
 

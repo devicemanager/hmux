@@ -5,11 +5,11 @@ Hint mode (cx-zjtn.5) skipped web views: a page's accessibility tree lives in
 its web content process, so a browser panel's links and buttons got no label.
 Hint mode is off by default (feature flag `window-hints-release`), so this test
 needs the local override written before launch:
-  defaults write <debug bundle id> cmux.flags.override.window-hints-release -bool true
+  defaults write <debug bundle id> hmux.flags.override.window-hints-release -bool true
 
 Needs a key window, so run it where the app can be frontmost (a whole capture
 mini or a local tagged build), never against the user's default socket:
-  CMUX_SOCKET_PATH=/tmp/cmux-debug-<tag>.sock python3 tests_v2/test_window_hints_web_page.py
+  HMUX_SOCKET_PATH=/tmp/hmux-debug-<tag>.sock python3 tests_v2/test_window_hints_web_page.py
 """
 
 import sys
@@ -18,7 +18,7 @@ import urllib.parse
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 PAGE = (
     "<!doctype html><html><body style='margin:40px'>"
@@ -32,29 +32,29 @@ def _call(fn, *args):
     for _ in range(20):
         try:
             return fn(*args)
-        except cmuxError as error:
+        except hmuxError as error:
             if "rate_limited" not in str(error):
                 raise
             time.sleep(0.3)
     return fn(*args)
 
 
-def _hints(c: cmux) -> dict:
+def _hints(c: hmux) -> dict:
     try:
         return _call(c._call, "debug.window_hints", {}) or {}
-    except cmuxError as error:
+    except hmuxError as error:
         return {"error": str(error)}
 
 
-def _eval(c: cmux, surface: str, script: str):
+def _eval(c: hmux, surface: str, script: str):
     return (_call(c._call, "browser.eval", {"surface_id": surface, "script": script}) or {}).get("value")
 
 
 def main() -> int:
-    c = cmux()
+    c = hmux()
     c.connect()
     if not c.ping():
-        raise cmuxError("socket ping failed")
+        raise hmuxError("socket ping failed")
     c.activate_app()
     c.focus_window(c.current_window())
     time.sleep(0.5)
@@ -74,7 +74,7 @@ def main() -> int:
         try:
             if _eval(c, surface, "document.readyState === 'complete' && !!document.getElementById('zebra')"):
                 break
-        except cmuxError:
+        except hmuxError:
             pass
         time.sleep(0.2)
     c.focus_window(c.current_window())
@@ -110,7 +110,7 @@ def main() -> int:
     if surface:
         try:
             _call(c._call, "surface.close", {"surface_id": surface})
-        except cmuxError:
+        except hmuxError:
             pass
     passed = sum(results)
     print(f"RESULT {passed}/{len(results)}")

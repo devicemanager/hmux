@@ -6,7 +6,7 @@
 // cells (and closures from earlier cells) see the same bindings.
 (function (root) {
   "use strict";
-  const ns = (root.CmuxBrowserRepl = root.CmuxBrowserRepl || {});
+  const ns = (root.HmuxBrowserRepl = root.HmuxBrowserRepl || {});
   // Taken before any cell runs, so a cell that replaces the global Error
   // does not change how the runtime reads a stack.
   const StackError = Error;
@@ -73,7 +73,7 @@
     if (imports.length) {
       // Replace the `import` keyword (6 chars) from the end so offsets stay valid.
       for (const node of imports.sort((a, b) => b.start - a.start)) {
-        code = code.slice(0, node.start) + "__cmuxImport" + code.slice(node.start + 6);
+        code = code.slice(0, node.start) + "__hmuxImport" + code.slice(node.start + 6);
       }
       return rewriteTopLevel(code);
     }
@@ -104,7 +104,7 @@
         out += `;${stmt.id.name} = ${text};`;
       } else if (index === body.length - 1 && stmt.type === "ExpressionStatement") {
         const expr = code.slice(stmt.expression.start, stmt.expression.end);
-        out += `;__cmuxLast = (${expr});`;
+        out += `;__hmuxLast = (${expr});`;
       } else {
         out += text;
       }
@@ -158,7 +158,7 @@
       }
     }
     // Which cell's code runs now. Each cell body runs as a function named
-    // __cmuxCell<seq>, which the stack names in every engine, also after an
+    // __hmuxCell<seq>, which the stack names in every engine, also after an
     // await resumes it, and the engines' async stacks name it under an
     // async function the cell awaits. The cell's sequence number is the
     // token its leftover work carries: once the app cancelled the cell
@@ -169,7 +169,7 @@
     // fetches and driver calls itself).
     let cellSeq = 0;
     const cancelledSeqs = new Set();
-    const CELL_FRAME = /__cmuxCell(\d+)\b/g;
+    const CELL_FRAME = /__hmuxCell(\d+)\b/g;
     // The cells whose bodies are on the stack now, innermost first.
     function cellsOnStack() {
       const limit = StackError.stackTraceLimit;
@@ -267,8 +267,8 @@
         const owner = cell || {};
         owner.seq = ++cellSeq;
         ownCells.add(owner);
-        const body = instrumented ? `const __cmuxK=__cmuxT.begin(__cmuxOwner);try{\n${rewritten.source}\n}finally{__cmuxT.leave(__cmuxK)}` : `\n${rewritten.source}\n`;
-        fn = new Function("__cmuxScope", "__cmuxConsole", "__cmuxT", "__cmuxOwner", `return async function () { let __cmuxLast; with (__cmuxScope) { await (async function __cmuxCell${owner.seq}(console) {${body}})(__cmuxConsole); } return __cmuxLast; };`)(scope, cellConsole(owner), asyncOwner && asyncOwner.tracker, owner);
+        const body = instrumented ? `const __hmuxK=__hmuxT.begin(__hmuxOwner);try{\n${rewritten.source}\n}finally{__hmuxT.leave(__hmuxK)}` : `\n${rewritten.source}\n`;
+        fn = new Function("__hmuxScope", "__hmuxConsole", "__hmuxT", "__hmuxOwner", `return async function () { let __hmuxLast; with (__hmuxScope) { await (async function __hmuxCell${owner.seq}(console) {${body}})(__hmuxConsole); } return __hmuxLast; };`)(scope, cellConsole(owner), asyncOwner && asyncOwner.tracker, owner);
       } catch (e) {
         return { ok: false, error: `SyntaxError: ${e.message}`, ms: 0 };
       }
@@ -364,7 +364,7 @@
       },
       queueMicrotask: (fn) => Promise.resolve().then(fn),
       // import("node:fs") and friends return the same modules as the globals.
-      __cmuxImport: (specifier) => Promise.resolve().then(() => importModule(specifier)),
+      __hmuxImport: (specifier) => Promise.resolve().then(() => importModule(specifier)),
     };
   }
 
@@ -398,7 +398,7 @@
       try {
         host.fsOp("writeFile", { path: file, base64: ns.core.Buffer.from(text, "utf8").toString("base64"), append });
       } catch (e) {
-        if (host.console) host.console.error(`cmux browser repl: could not write ${file}: ${e.message}`);
+        if (host.console) host.console.error(`hmux browser repl: could not write ${file}: ${e.message}`);
       }
     };
     const spill = () => {
@@ -571,16 +571,16 @@
     return n >= MAX_TIMER_DELAY ? MAX_TIMER_DELAY : Math.floor(n);
   }
 
-  // Adapts the app's `__cmuxNative` object (driver-protocol.md, "Native host
+  // Adapts the app's `__hmuxNative` object (driver-protocol.md, "Native host
   // contract") to the `host` and `driver` objects the runtime uses, and
   // defines the entry points the app calls.
   function installNativeHost() {
-    const native = root.__cmuxNative;
-    if (!native || root.__cmuxReplEval) return;
+    const native = root.__hmuxNative;
+    if (!native || root.__hmuxReplEval) return;
     // Agent code runs in this context. The native host stays in these
     // closures only: the global goes before any agent code runs, so a cell
     // cannot call it directly (the guards behind it are native anyway).
-    delete root.__cmuxNative;
+    delete root.__hmuxNative;
     const hostCall = (fn, op, args) => {
       const r = JSON.parse(fn(op, JSON.stringify(args || {})));
       if (r.error) {
@@ -599,7 +599,7 @@
     const fromApp = () => {
       if (asyncOwner) asyncOwner.tracker.reset();
     };
-    root.__cmuxHostOnResult = (id, errorJSON, resultJSON) => {
+    root.__hmuxHostOnResult = (id, errorJSON, resultJSON) => {
       fromApp();
       const p = pending.get(id);
       if (!p) return;
@@ -611,14 +611,14 @@
         p.reject(e);
       } else p.resolve(resultJSON === null || resultJSON === undefined ? undefined : JSON.parse(resultJSON));
     };
-    root.__cmuxHostOnTimer = (id) => {
+    root.__hmuxHostOnTimer = (id) => {
       fromApp();
       const t = timers.get(id);
       if (!t) return;
       timers.delete(id);
       t();
     };
-    root.__cmuxHostOnEvent = (name, payloadJSON) => {
+    root.__hmuxHostOnEvent = (name, payloadJSON) => {
       fromApp();
       const payload = payloadJSON ? JSON.parse(payloadJSON) : {};
       for (const h of listeners.get(name) || []) h(payload);
@@ -700,23 +700,23 @@
       if (!r.ok) throw r.exception || new Error(r.error);
       return undefined;
     };
-    root.__cmuxReplEval = (code, optionsJSON) => {
+    root.__hmuxReplEval = (code, optionsJSON) => {
       fromApp();
       return evaluateCell(code, optionsJSON);
     };
     // `timerIds`: the timers the app cancelled with the cell; their
     // callbacks go, so a fire already queued for one runs nothing.
-    root.__cmuxReplCancel = (message, evalId, timerIds) => {
+    root.__hmuxReplCancel = (message, evalId, timerIds) => {
       fromApp();
       for (const id of Array.isArray(timerIds) ? timerIds : []) timers.delete(id);
       return repl ? repl.cancel(message, evalId === null ? undefined : evalId) : false;
     };
-    root.__cmuxFormatError = (e) => formatError(e);
+    root.__hmuxFormatError = (e) => formatError(e);
     // The app takes these entry points and deletes the globals before any
     // cell runs, so a cell cannot call them (work they start would belong
     // to no cell). The runtime's namespace goes too: a cell must not build
     // a second REPL over this host and driver.
-    delete root.CmuxBrowserRepl;
+    delete root.HmuxBrowserRepl;
   }
 
   ns.replHost = { timerDelay, printable, rewriteTopLevel, createReplSession, createBrowserRepl, createOutputGate, DEFAULT_MAX_OUTPUT, HARD_MAX_OUTPUT, formatError, installNativeHost };

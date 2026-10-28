@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxProductAnalytics
-import CmuxSettings
+import HmuxCloud
+import HmuxProductAnalytics
+import HmuxSettings
 import Foundation
 import Observation
 
@@ -73,7 +73,7 @@ final class CloudActivationCoordinator {
             : .unavailable
         if observeChanges {
             observations = [
-                .cmuxFeatureFlagsDidChange,
+                .hmuxFeatureFlagsDidChange,
                 RightSidebarBetaFeatureSettings.didChangeNotification,
                 ManagedDevicePolicy.didChangeNotification,
                 UserDefaults.didChangeNotification,
@@ -88,7 +88,7 @@ final class CloudActivationCoordinator {
     /// Creates a safe placeholder for views mounted before app composition.
     static func unconfigured() -> CloudActivationCoordinator {
         CloudActivationCoordinator(
-            defaults: UserDefaults(suiteName: "cmux.cloud.unconfigured.\(UUID().uuidString)") ?? .standard,
+            defaults: UserDefaults(suiteName: "hmux.cloud.unconfigured.\(UUID().uuidString)") ?? .standard,
             isAvailable: { false },
             prepare: {},
             observeChanges: false

@@ -49,7 +49,7 @@ rerouted.
 Owned Macs (glaeda-<class>-xcode-<version>, pr_runner_pool.persistent) join
 the choice exactly as they do for pull requests: only when
 `vars.CI_PR_POOL_OWNED == '1'`, only the labels for the lane's Xcode pin
-(vars.CMUX_CI_XCODE_APP_PR), ahead of Blacksmith, on a snapshot younger than
+(vars.HMUX_CI_XCODE_APP_PR), ahead of Blacksmith, on a snapshot younger than
 pr_runner_pool.MAX_SNAPSHOT_MINUTES, and by pull request CI's queue rule
 (vars.CI_PR_POOL_QUEUE_ROUNDS, `--queue-rounds`): an owned pool takes the run
 while its job starts there within that many job lengths, whatever
@@ -93,7 +93,7 @@ An `auto` run started from the Actions UI is titled with the 6vcpu default,
 so the replay counts it there even when it took an owned Mac; run-e2e.sh
 names the pool it chose, so its runs are counted where they are.
 
-Only cmuxTests runs go to an owned Mac on `auto` for now: UI tests need
+Only hmuxTests runs go to an owned Mac on `auto` for now: UI tests need
 Automation Mode enabled without authentication, which takes an admin on
 each Mac (`sudo automationmodetool enable-automationmode-without-authentication`)
 and the job's runner user cannot do it. Once the fleet has it,
@@ -213,20 +213,20 @@ def e2e_pool(label: str) -> bool:
 def owned_target(test_filter: str | None, owned_ui: str | None) -> bool:
     """Whether a run of this filter may take an owned Mac (see the module docstring).
 
-    A filter is a UI run unless every entry names cmuxTests/, as test-e2e.yml's
+    A filter is a UI run unless every entry names hmuxTests/, as test-e2e.yml's
     filter job reads it. No filter (an older caller) is allowed.
     """
     if test_filter is None or (owned_ui or "").strip() == "1":
         return True
     entries = [entry.strip() for entry in test_filter.split(",")]
-    return bool(entries) and all(entry.startswith("cmuxTests/") for entry in entries)
+    return bool(entries) and all(entry.startswith("hmuxTests/") for entry in entries)
 
 
 def ui_run(test_filter: str | None) -> bool:
-    """Whether a filter names any UI test: anything but cmuxTests/ entries."""
+    """Whether a filter names any UI test: anything but hmuxTests/ entries."""
     if not test_filter:
         return False
-    return not all(entry.strip().startswith("cmuxTests/") for entry in test_filter.split(","))
+    return not all(entry.strip().startswith("hmuxTests/") for entry in test_filter.split(","))
 
 
 def retry_runner(label: str, *, ui: bool = False) -> str:
@@ -491,7 +491,7 @@ def resolve(
             # An owned pool asked for by name still takes its root runners, as auto_runner() does: glaeda gives
             # the build a canonical root, and only the root runners' gate keeps a root free for what they take.
             # On the pool label a non-root runner took the build, and E2E builds on two of them held both of a
-            # mini's roots while its root runner's compile admission waited (2026-09-28, cmux10s).
+            # mini's roots while its root runner's compile admission waited (2026-09-28, hmux10s).
             root = pr_runner_pool.root_label(requested)
             if root and pr_runner_pool.slots(owned_slots, pr_xcode_app).get(root, 0) > 0:
                 log(f"{requested} -> {root} (an E2E build takes a canonical root)")
@@ -577,7 +577,7 @@ def main(argv: Sequence[str] | None = None, env: Mapping[str, str] | None = None
         values = dict(env)
         values.update({"CI_PR_POOL_OWNED": args.owned, "CI_OWNED_POOL_SLOTS": args.owned_slots,
                        "CI_PR_POOL_OVERFLOW": args.overflow, "MACOS_RUNNER_PR": args.variable,
-                       "CMUX_CI_XCODE_APP_PR": args.pr_xcode_app})
+                       "HMUX_CI_XCODE_APP_PR": args.pr_xcode_app})
         choice = simple_pool_picker.pick(simple_pool_picker.observe(
             token=values.get("ROUTE_TOKEN") or values.get("GH_TOKEN") or "",
             repository=values.get("GH_REPO") or values.get("GITHUB_REPOSITORY") or "",

@@ -1,11 +1,11 @@
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 import Foundation
 
 extension TerminalController {
     /// Reconciles and inserts one authoritative batch, then publishes it off the main-actor hop.
     nonisolated func v2IngestAcknowledgedFeedEvents(
         _ events: [WorkstreamEvent],
-        automationOrigin: CmuxAutomationEventOrigin? = nil
+        automationOrigin: HmuxAutomationEventOrigin? = nil
     ) -> V2CallResult {
         guard !events.isEmpty else {
             return .err(
@@ -59,10 +59,10 @@ extension TerminalController {
             if let ingestion,
                case .accepted(let authoritativeEvents, let authoritativeItemIds) = ingestion {
                 for (event, itemId) in zip(authoritativeEvents, authoritativeItemIds) {
-                    CmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
-                        CmuxEventBus.shared.publishWorkstreamEvent(event, phase: "received")
+                    HmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
+                        HmuxEventBus.shared.publishWorkstreamEvent(event, phase: "received")
                         let result = FeedCoordinator.IngestBlockingResult.acknowledged(itemId: itemId)
-                        CmuxEventBus.shared.publishWorkstreamEvent(
+                        HmuxEventBus.shared.publishWorkstreamEvent(
                             event,
                             phase: "completed",
                             result: FeedSocketEncoding.payload(for: result)
@@ -138,7 +138,7 @@ extension TerminalController {
     nonisolated func v2IngestFeedEvent(
         _ event: WorkstreamEvent,
         waitTimeout: TimeInterval,
-        automationOrigin: CmuxAutomationEventOrigin? = nil
+        automationOrigin: HmuxAutomationEventOrigin? = nil
     ) -> V2CallResult {
         let waitsForDecision = waitTimeout > 0 && event.requestId != nil
         let outcome = FeedCoordinator.shared.ingestBlockingWithOutcome(
@@ -149,11 +149,11 @@ extension TerminalController {
                 self.v2NoteAcceptedFeedEvents([authoritativeEvent])
             },
             onAccepted: { authoritativeEvent in
-                CmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
-                    CmuxEventBus.shared.publishWorkstreamEvent(authoritativeEvent, phase: "received")
+                HmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
+                    HmuxEventBus.shared.publishWorkstreamEvent(authoritativeEvent, phase: "received")
                     if !waitsForDecision {
                         let acknowledgment = FeedCoordinator.IngestBlockingResult.acknowledged(itemId: nil)
-                        CmuxEventBus.shared.publishWorkstreamEvent(
+                        HmuxEventBus.shared.publishWorkstreamEvent(
                             authoritativeEvent,
                             phase: "completed",
                             result: FeedSocketEncoding.payload(for: acknowledgment)
@@ -177,8 +177,8 @@ extension TerminalController {
         guard let acceptedEvent = outcome.authoritativeEvent else {
             return v2FeedTargetUnavailable()
         }
-        CmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
-            CmuxEventBus.shared.publishWorkstreamEvent(
+        HmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
+            HmuxEventBus.shared.publishWorkstreamEvent(
                 acceptedEvent,
                 phase: "completed",
                 result: FeedSocketEncoding.payload(for: result)
@@ -205,7 +205,7 @@ extension TerminalController {
             code: "unavailable",
             message: String(
                 localized: "agent.deliveryTarget.error.unavailable",
-                defaultValue: "Delivery target resolution is unavailable; retry after cmux finishes starting."
+                defaultValue: "Delivery target resolution is unavailable; retry after hmux finishes starting."
             ),
             data: nil
         )

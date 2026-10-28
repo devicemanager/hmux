@@ -1,10 +1,10 @@
 # iOS network reliability workload
 
-Run this on the tagged iOS build and export cmux-network.log after each
+Run this on the tagged iOS build and export hmux-network.log after each
 scenario. The export contains peer aliases and session IDs, never Mac IDs or
 addresses.
 
-1. Cold launch: terminate cmux, launch it, attach one Mac, and wait until the
+1. Cold launch: terminate hmux, launch it, attach one Mac, and wait until the
    terminal is usable. Record the time from launch to the first usable terminal.
 2. Background resume: leave the connected app in the background for eight
    minutes, return to it, and wait for a usable terminal. This exercises the
@@ -19,7 +19,7 @@ addresses.
 Check an export with:
 
 ~~~sh
-./scripts/analyze-ios-network-log.py /path/to/cmux-network.log \
+./scripts/analyze-ios-network-log.py /path/to/hmux-network.log \
   --expect-background-seconds 480
 ~~~
 

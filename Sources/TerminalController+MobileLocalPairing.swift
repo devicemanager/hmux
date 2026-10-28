@@ -1,9 +1,9 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 
 /// Local automation socket commands for account-free phone pairing.
 ///
-/// These run only on the Mac's own socket (`cmux rpc ...`). The phone-facing
+/// These run only on the Mac's own socket (`hmux rpc ...`). The phone-facing
 /// RPC surface can redeem a code but never mint one or manage paired devices.
 extension TerminalController {
     /// Issues a single-use pairing code and returns the QR URL plus its parts.

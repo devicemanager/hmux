@@ -155,7 +155,7 @@ final class SessionAutosaveCoordinator {
         guard activeAttempt == nil else { return }
         if let remainingQuietPeriod = remainingTypingQuietPeriod() {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "session.save.skipped reason=typing_recent includeScrollback=0 source=\(source) " +
                     "retryMs=\(Int((remainingQuietPeriod * 1000).rounded()))"
             )
@@ -215,7 +215,7 @@ final class SessionAutosaveCoordinator {
 
     private func finish(source: String, generation: UInt64) async {
 #if DEBUG
-        let timingStart = CmuxTypingTiming.start()
+        let timingStart = HmuxTypingTiming.start()
         let phaseStart = ProcessInfo.processInfo.systemUptime
         var loadMs: Double = 0
         var fingerprintMs: Double = 0
@@ -225,7 +225,7 @@ final class SessionAutosaveCoordinator {
                 activeAttempt = nil
             }
             let totalMs = (ProcessInfo.processInfo.systemUptime - phaseStart) * 1000.0
-            CmuxTypingTiming.logBreakdown(
+            HmuxTypingTiming.logBreakdown(
                 path: "session.autosaveTick.phase",
                 totalMs: totalMs,
                 thresholdMs: 2.0,
@@ -236,7 +236,7 @@ final class SessionAutosaveCoordinator {
                 ],
                 extra: "source=\(source)"
             )
-            CmuxTypingTiming.logDuration(
+            HmuxTypingTiming.logDuration(
                 path: "session.autosaveTick",
                 startedAt: timingStart,
                 extra: "source=\(source)"
@@ -267,7 +267,7 @@ final class SessionAutosaveCoordinator {
               activeAttempt?.generation == generation,
               isCurrentProcessDetectedSaveGeneration(generation) else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "session.save.skipped reason=stale_process_detected_scan includeScrollback=0 source=\(source)"
             )
 #endif
@@ -289,7 +289,7 @@ final class SessionAutosaveCoordinator {
             now: now
         ) {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "session.save.skipped reason=unchanged_autosave_fingerprint includeScrollback=0 source=\(source)"
             )
 #endif

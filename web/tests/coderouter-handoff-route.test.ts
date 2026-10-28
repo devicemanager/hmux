@@ -43,7 +43,7 @@ function nativeHeaders(extra: Record<string, string> = {}): Record<string, strin
   return {
     authorization: "Bearer stack-access",
     "x-stack-refresh-token": "stack-refresh",
-    "x-cmux-team-id": "team_1",
+    "x-hmux-team-id": "team_1",
     ...extra,
   };
 }
@@ -57,7 +57,7 @@ function mintRequest(
   new Headers(init.headers).forEach((value, name) => {
     headers.set(name, value);
   });
-  return new Request("https://cmux.test/api/coderouter/handoff", {
+  return new Request("https://hmux.test/api/coderouter/handoff", {
     ...init,
     method: init.method ?? "POST",
     headers,
@@ -68,7 +68,7 @@ function exchangeRequest(
   lease = LEASE,
   headers: Record<string, string> = {},
 ): Request {
-  return new Request("https://cmux.test/api/coderouter/handoff/exchange", {
+  return new Request("https://hmux.test/api/coderouter/handoff/exchange", {
     method: "POST",
     headers: {
       "content-type": "application/json",
@@ -94,7 +94,7 @@ describe("CodeRouter native handoff mint", () => {
     });
 
     const response = await POST(new Request(
-      "https://cmux.test/api/coderouter/handoff",
+      "https://hmux.test/api/coderouter/handoff",
       {
         method: "POST",
         headers: { cookie: "hexclave-access=browser-session" },
@@ -451,7 +451,7 @@ describe("CodeRouter native handoff exchange", () => {
 
     const malformed = await POST(exchangeRequest("crh_bad"));
     const wrongContentType = await POST(new Request(
-      "https://cmux.test/api/coderouter/handoff/exchange",
+      "https://hmux.test/api/coderouter/handoff/exchange",
       {
         method: "POST",
         headers: { "content-type": "application/jsonp" },
@@ -459,7 +459,7 @@ describe("CodeRouter native handoff exchange", () => {
       },
     ));
     const oversized = await POST(new Request(
-      "https://cmux.test/api/coderouter/handoff/exchange",
+      "https://hmux.test/api/coderouter/handoff/exchange",
       {
         method: "POST",
         headers: {
@@ -510,37 +510,37 @@ describe("CodeRouter handoff secret representation", () => {
 
   test("rejects ambiguous team selectors before Stack resolves a team", () => {
     expect(validTeamSelectorHeaders(new Request(
-      "https://cmux.test/api/coderouter/handoff?teamId=team_1&team_id=team_2",
+      "https://hmux.test/api/coderouter/handoff?teamId=team_1&team_id=team_2",
     ))).toBe(false);
     expect(validTeamSelectorHeaders(new Request(
-      "https://cmux.test/api/coderouter/handoff?teamId=team_1&teamId=team_1",
+      "https://hmux.test/api/coderouter/handoff?teamId=team_1&teamId=team_1",
     ))).toBe(true);
     expect(validTeamSelectorHeaders(new Request(
-      "https://cmux.test/api/coderouter/handoff?teamId=team_1&teamId=team_2",
+      "https://hmux.test/api/coderouter/handoff?teamId=team_1&teamId=team_2",
     ))).toBe(false);
     expect(validTeamSelectorHeaders(new Request(
-      "https://cmux.test/api/coderouter/handoff?teamId=team_1",
-      { headers: { "x-cmux-team-id": "team_2" } },
+      "https://hmux.test/api/coderouter/handoff?teamId=team_1",
+      { headers: { "x-hmux-team-id": "team_2" } },
     ))).toBe(false);
     expect(validTeamSelectorHeaders(new Request(
-      "https://cmux.test/api/coderouter/handoff?teamId=team_1",
-      { headers: { "x-cmux-team-id": "team_1" } },
+      "https://hmux.test/api/coderouter/handoff?teamId=team_1",
+      { headers: { "x-hmux-team-id": "team_1" } },
     ))).toBe(true);
     expect(validTeamSelectorHeaders(new Request(
-      "https://cmux.test/api/coderouter/handoff",
+      "https://hmux.test/api/coderouter/handoff",
       {
         headers: [
-          ["x-cmux-team-id", "team_1"],
-          ["x-cmux-team-id", "team_1"],
+          ["x-hmux-team-id", "team_1"],
+          ["x-hmux-team-id", "team_1"],
         ],
       },
     ))).toBe(true);
     expect(validTeamSelectorHeaders(new Request(
-      "https://cmux.test/api/coderouter/handoff",
+      "https://hmux.test/api/coderouter/handoff",
       {
         headers: [
-          ["x-cmux-team-id", "team_1"],
-          ["x-cmux-team-id", "team_2"],
+          ["x-hmux-team-id", "team_1"],
+          ["x-hmux-team-id", "team_2"],
         ],
       },
     ))).toBe(false);

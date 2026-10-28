@@ -37,9 +37,9 @@ async function RequestPricing({
   searchParams: Promise<PricingQuery>;
 }) {
   const params = await searchParams;
-  const app = Array.isArray(params.cmux_app)
-    ? params.cmux_app[0]
-    : params.cmux_app;
+  const app = Array.isArray(params.hmux_app)
+    ? params.hmux_app[0]
+    : params.hmux_app;
   if (app !== "1") redirect("/pricing");
   const headersList = await headers();
   const fallback = {

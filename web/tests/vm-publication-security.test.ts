@@ -58,9 +58,9 @@ describe("Cloud VM publication security primitives", () => {
   });
 
   test("extracts exact cookies and emits a host-only secure contract", () => {
-    expect(publicationCookie("other=1; __Host-cmux-preview=opaque; next=2", PUBLICATION_SESSION_COOKIE))
+    expect(publicationCookie("other=1; __Host-hmux-preview=opaque; next=2", PUBLICATION_SESSION_COOKIE))
       .toBe("opaque");
-    expect(publicationCookie("cmux-preview=wrong", PUBLICATION_SESSION_COOKIE)).toBeNull();
+    expect(publicationCookie("hmux-preview=wrong", PUBLICATION_SESSION_COOKIE)).toBeNull();
     const serialized = publicationCookieHeader(PUBLICATION_SESSION_COOKIE, "opaque", 60);
     expect(serialized).toContain("Path=/");
     expect(serialized).toContain("Secure");

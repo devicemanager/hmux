@@ -6,7 +6,7 @@ extension AppDelegate {
     func renderNewWorkspaceContextMenu(
         model: NewWorkspaceMenuModel,
         context: MainWindowContext,
-        cmuxConfigStore: CmuxConfigStore
+        hmuxConfigStore: HmuxConfigStore
     ) -> NSMenu? {
         let menu = NSMenu()
         var renderedSectionCount = 0
@@ -19,7 +19,7 @@ extension AppDelegate {
         }
 
         func actionItem(
-            menuAction: CmuxResolvedConfigMenuAction,
+            menuAction: HmuxResolvedConfigMenuAction,
             isDefault: Bool
         ) -> NSMenuItem {
             let item = NSMenuItem(
@@ -36,7 +36,7 @@ extension AppDelegate {
             applyNewWorkspaceMenuShortcutHint(to: item, action: menuAction.action)
             item.image = menuAction.icon?.contextMenuImage(
                 configSourcePath: menuAction.iconSourcePath,
-                globalConfigPath: cmuxConfigStore.globalConfigPath
+                globalConfigPath: hmuxConfigStore.globalConfigPath
             )
             if isDefault {
                 item.badge = defaultBadge()
@@ -44,7 +44,7 @@ extension AppDelegate {
             return item
         }
 
-        func alternateDeleteItem(action: CmuxResolvedConfigAction) -> NSMenuItem {
+        func alternateDeleteItem(action: HmuxResolvedConfigAction) -> NSMenuItem {
             let deleteFormat = String(
                 localized: "menu.newWorkspace.deleteLayoutAlternate",
                 defaultValue: "Delete “%@”"
@@ -180,10 +180,10 @@ extension AppDelegate {
                         if entry.isCurrent {
                             item.badge = defaultBadge()
                         }
-                        if let action = cmuxConfigStore.actionLookup[entry.id] {
+                        if let action = hmuxConfigStore.actionLookup[entry.id] {
                             item.image = action.icon?.contextMenuImage(
                                 configSourcePath: action.iconSourcePath,
-                                globalConfigPath: cmuxConfigStore.globalConfigPath
+                                globalConfigPath: hmuxConfigStore.globalConfigPath
                             )
                         }
                         submenu.addItem(item)
@@ -208,7 +208,7 @@ extension AppDelegate {
                             )
                             item.image = action.icon?.contextMenuImage(
                                 configSourcePath: action.iconSourcePath,
-                                globalConfigPath: cmuxConfigStore.globalConfigPath
+                                globalConfigPath: hmuxConfigStore.globalConfigPath
                             )
                             submenu.addItem(item)
                         }
@@ -244,7 +244,7 @@ extension AppDelegate {
     /// `shortcut` declared on a config action. Nil when unbound or when the
     /// binding is a chord, which an `NSMenuItem` key equivalent cannot show.
     nonisolated static func newWorkspaceMenuShortcutHint(
-        for action: CmuxResolvedConfigAction
+        for action: HmuxResolvedConfigAction
     ) -> StoredShortcut? {
         let shortcut: StoredShortcut
         if case .builtIn(let builtIn) = action.action, let shortcutAction = builtIn.shortcutAction {
@@ -261,7 +261,7 @@ extension AppDelegate {
     /// AppKit draws a key equivalent as the grey shortcut column of the menu
     /// row. The menu is rebuilt on every open, so this always reflects the
     /// current binding.
-    func applyNewWorkspaceMenuShortcutHint(to item: NSMenuItem, action: CmuxResolvedConfigAction) {
+    func applyNewWorkspaceMenuShortcutHint(to item: NSMenuItem, action: HmuxResolvedConfigAction) {
         guard let shortcut = Self.newWorkspaceMenuShortcutHint(for: action),
               let keyEquivalent = shortcut.menuItemKeyEquivalent else {
             item.keyEquivalent = ""

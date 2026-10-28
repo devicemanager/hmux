@@ -18,13 +18,13 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/restart",
-    { "cmux.vm.operation": "restart" },
+    { "hmux.vm.operation": "restart" },
     "/api/vm/[id]/restart POST failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "hmux.vm.id": id });
       const run = await runVmRoute(restartVm({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

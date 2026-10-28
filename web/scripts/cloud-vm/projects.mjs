@@ -7,7 +7,7 @@ export const projects = {
   staging: {
     projectId: "prj_804LTAUdOwulMvEfcmfnU8bvGo3T",
     orgId: "team_KndpHsJ15gO2OoAP2SO0thYn",
-    projectName: "cmux-staging",
+    projectName: "hmux-staging",
     label: "staging",
     url: "https://cmux-staging.vercel.app",
     stackLabel: "staging",
@@ -15,7 +15,7 @@ export const projects = {
   production: {
     projectId: "prj_kH8qcuoliyJ2TLI4vMM03rnNVzr4",
     orgId: "team_KndpHsJ15gO2OoAP2SO0thYn",
-    projectName: "cmux",
+    projectName: "hmux",
     label: "production",
     url: "https://cmux.com",
     stackLabel: "prod",
@@ -29,18 +29,18 @@ export const requiredRuntimeEnvKeys = [
   // alert cron keeps returning 200, so an unset webhook is an observability
   // outage, not a tuning choice. The only waiver is a recorded operator
   // decision in the env itself (alertSinkAudit.mjs).
-  "CMUX_ALERTS_SLACK_WEBHOOK_URL",
+  "HMUX_ALERTS_SLACK_WEBHOOK_URL",
   // The application can build without APNs credentials, but a promoted
   // runtime cannot deliver the Push Alerts feature without the complete set.
-  "CMUX_APNS_KEY_ID",
-  "CMUX_APNS_KEY_P8",
-  "CMUX_APNS_TEAM_ID",
-  "CMUX_DB_DRIVER",
-  "CMUX_VM_CREATE_ENABLED",
-  "CMUX_VM_DEFAULT_PROVIDER",
-  // Freestyle is the production default provider (CMUX_VM_DEFAULT_PROVIDER):
+  "HMUX_APNS_KEY_ID",
+  "HMUX_APNS_KEY_P8",
+  "HMUX_APNS_TEAM_ID",
+  "HMUX_DB_DRIVER",
+  "HMUX_VM_CREATE_ENABLED",
+  "HMUX_VM_DEFAULT_PROVIDER",
+  // Freestyle is the production default provider (HMUX_VM_DEFAULT_PROVIDER):
   // without credentials and a snapshot selector every create 503s.
-  "CMUX_VM_FREESTYLE_ENABLED",
+  "HMUX_VM_FREESTYLE_ENABLED",
   // Every Vercel cron (VM alerts included) refuses to run without it.
   "CRON_SECRET",
   // Coderouter: the usage ledger (customer-facing usage, alert source) and
@@ -94,15 +94,15 @@ export function requiredRuntimeEnvKeySatisfied(key, presentKeys) {
 }
 
 export const recommendedRuntimeEnvKeys = [
-  "CMUX_DB_POOL_MAX",
+  "HMUX_DB_POOL_MAX",
   // Kill switches are off-only: unset means enabled, so requiring presence
   // would fail a healthy deployment. Freestyle's own flag is required rather
   // than recommended because it is the only provider, so a missing value there
   // is a real outage risk.
-  // CMUX_VM_ALLOW_FREE_PROVISIONING / CMUX_VM_REQUIRE_PRO are deliberately
+  // HMUX_VM_ALLOW_FREE_PROVISIONING / HMUX_VM_REQUIRE_PRO are deliberately
   // absent from every presence list: unset is the safe value, and their
   // VALUES are audited by freeProvisioningAudit.mjs (a permissive value fails).
-  // CMUX_ALERTS_SINK_UNCONFIGURED_ACK is absent for the same reason; its VALUE
+  // HMUX_ALERTS_SINK_UNCONFIGURED_ACK is absent for the same reason; its VALUE
   // is audited by alertSinkAudit.mjs.
   "OTEL_EXPORTER_OTLP_ENDPOINT",
   "OTEL_EXPORTER_OTLP_HEADERS",
@@ -110,33 +110,33 @@ export const recommendedRuntimeEnvKeys = [
 ];
 
 export const forbiddenRuntimeEnvKeys = [
-  "CMUX_DB_SSL_CA_PEM",
-  "CMUX_DB_SSL_CA_PEM_BASE64",
+  "HMUX_DB_SSL_CA_PEM",
+  "HMUX_DB_SSL_CA_PEM_BASE64",
 ];
 
 export const legacyCloudVmEnvKeys = [
   // Paid count policy is code-owned; aggregate resource pools were removed.
-  "CMUX_VM_PAID_MAX_ACTIVE_VMS",
-  "CMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS",
-  "CMUX_VM_PLAN_TEAM_MAX_ACTIVE_VMS",
-  "CMUX_VM_PLAN_FOUNDERS_MAX_ACTIVE_VMS",
-  "CMUX_VM_SHARED_CPU_LIMIT_ENABLED",
+  "HMUX_VM_PAID_MAX_ACTIVE_VMS",
+  "HMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS",
+  "HMUX_VM_PLAN_TEAM_MAX_ACTIVE_VMS",
+  "HMUX_VM_PLAN_FOUNDERS_MAX_ACTIVE_VMS",
+  "HMUX_VM_SHARED_CPU_LIMIT_ENABLED",
   // Blaxel, E2B, and Daytona were removed by the provider migrations. Keep
   // their keys visible to the audit until operators remove them from Vercel.
   "BL_API_KEY",
   "BL_WORKSPACE",
   "BLAXEL_SANDBOX_IMAGE",
   "BLAXEL_SANDBOX_DESKTOP_IMAGE",
-  "CMUX_VM_BLAXEL_ENABLED",
+  "HMUX_VM_BLAXEL_ENABLED",
   "E2B_API_KEY",
-  "E2B_CMUXD_WS_TEMPLATE",
+  "E2B_HMUXD_WS_TEMPLATE",
   "E2B_SANDBOX_TEMPLATE",
-  "CMUX_VM_E2B_ENABLED",
+  "HMUX_VM_E2B_ENABLED",
   "DAYTONA_API_KEY",
   "DAYTONA_API_URL",
   "DAYTONA_SANDBOX_SNAPSHOT",
-  "CMUX_VM_DAYTONA_ENABLED",
-  "CMUX_RIVET_INTERNAL_SECRET",
+  "HMUX_VM_DAYTONA_ENABLED",
+  "HMUX_RIVET_INTERNAL_SECRET",
   "RIVET_ENDPOINT",
   "RIVET_NAMESPACE",
   "RIVET_PUBLIC_ENDPOINT",
@@ -149,7 +149,7 @@ export const legacyCloudVmEnvKeys = [
   "CODEROUTER_HOSTED_PRO_REQUIRED",
   // The isolated coderouter PostHog project (HMAC pseudonyms, PostHog
   // Endpoints) was retired on 2026-09-03: coderouter events now go to the main
-  // cmux project keyed by Stack user id. The runtime ignores these keys.
+  // hmux project keyed by Stack user id. The runtime ignores these keys.
   "CODEROUTER_ANALYTICS_SCOPE_SECRET",
   "POSTHOG_CODEROUTER_API_HOST",
   "POSTHOG_CODEROUTER_ENDPOINT_NAME",
@@ -201,7 +201,7 @@ export function resolveWebDir(input) {
 }
 
 export function withLinkedVercelProject(project, fn) {
-  const scratch = mkdtempSync(path.join(tmpdir(), `cmux-${project.label}-vercel-`));
+  const scratch = mkdtempSync(path.join(tmpdir(), `hmux-${project.label}-vercel-`));
   try {
     const vercelDir = path.join(scratch, ".vercel");
     mkdirSync(vercelDir, { recursive: true });
@@ -248,10 +248,10 @@ export function loadTargetEnv(project) {
 }
 
 export function loadTargetEnvWithMetadata(project) {
-  const source = process.env.CMUX_CLOUD_VM_ENV_SOURCE ?? "vercel";
+  const source = process.env.HMUX_CLOUD_VM_ENV_SOURCE ?? "vercel";
   if (source === "vercel") return pullProductionEnvWithMetadata(project);
   if (source === "process") return { env: processEnvObject(), metadata: [] };
-  throw new Error(`Unknown CMUX_CLOUD_VM_ENV_SOURCE ${source}`);
+  throw new Error(`Unknown HMUX_CLOUD_VM_ENV_SOURCE ${source}`);
 }
 
 export function requireEnvKeys(env, keys, label) {

@@ -76,7 +76,7 @@ fi
 for consumer in \
   "$ROOT_DIR/scripts/install-zig-ci.sh" \
   "$ROOT_DIR/scripts/build-ghostty-cli-helper.sh" \
-  "$ROOT_DIR/cmux-tui/apps/macos/TerminalBytesDemo/run-demo.sh"; do
+  "$ROOT_DIR/hmux-tui/apps/macos/TerminalBytesDemo/run-demo.sh"; do
   if ! grep -Eq 'ghostty_minimum_zig_version[[:space:]]+' "$consumer"; then
     echo "$(basename "$consumer") does not use the shared Ghostty Zig version" >&2
     exit 1
@@ -113,4 +113,4 @@ if ! awk '
   exit 1
 fi
 
-echo "PASS: cmux build scripts use Ghostty's declared Zig version ($actual)"
+echo "PASS: hmux build scripts use Ghostty's declared Zig version ($actual)"

@@ -35,7 +35,7 @@ test("forged private headers and cookies cannot become trusted DO authority", as
   const result = await routeControl(new Request("https://api.example/v2/control/session", {
     method: "POST", headers: {
       "content-type": "application/json", authorization: "Bearer stack-token", cookie: "private=value",
-      "x-cmux-v2-verified-authority": JSON.stringify({ authority: { userId: "victim", teamId: "victim-team" } }),
+      "x-hmux-v2-verified-authority": JSON.stringify({ authority: { userId: "victim", teamId: "victim-team" } }),
     }, body: JSON.stringify(setup),
   }), dependencies);
   expect(result.status).toBe(200);
@@ -78,7 +78,7 @@ test("the health route answers without Stack or a team object and rejects other 
   const ok = await routeControl(new Request("https://api.example/v2/health"), { ...dependencies, sourceRevision: revision });
   expect(ok.status).toBe(200);
   expect(ok.headers.get("cache-control")).toBe("no-store");
-  expect(await ok.json() as Record<string, unknown>).toEqual({ schemaId: "health.v1", environment: device.identity.environment, sourceRevision: revision, rules: ["cmux.mac-peer-inbound.v1"], storage: { maxSchemaVersion: 7, writeSchemaVersion: 6 } });
+  expect(await ok.json() as Record<string, unknown>).toEqual({ schemaId: "health.v1", environment: device.identity.environment, sourceRevision: revision, rules: ["hmux.mac-peer-inbound.v1"], storage: { maxSchemaVersion: 7, writeSchemaVersion: 6 } });
   const unpublished = await routeControl(new Request("https://api.example/v2/health"), { ...dependencies, sourceRevision: "not a sha" });
   expect((await unpublished.json() as { sourceRevision: string }).sourceRevision).toBe("unknown");
   expect((await routeControl(new Request("https://api.example/v2/health", { method: "POST" }), dependencies)).status).toBe(405);

@@ -10,10 +10,10 @@ TAG=""
 
 usage() {
   cat >&2 <<'EOF'
-Usage: web/scripts/stripe/dev-stack.sh --port <CMUX_PORT> [--db-port <n>] [--tag <tag>]
+Usage: web/scripts/stripe/dev-stack.sh --port <HMUX_PORT> [--db-port <n>] [--tag <tag>]
 
 Starts bun dev plus Stripe webhook forwarding for local Pro checkout testing.
-Use the CMUX_PORT printed by the tagged app reload; that port is baked into Info.plist.
+Use the HMUX_PORT printed by the tagged app reload; that port is baked into Info.plist.
 EOF
 }
 
@@ -80,9 +80,9 @@ if [[ -z "$STRIPE_SECRET_KEY" || "$STRIPE_SECRET_KEY" != sk_test_* ]]; then
   exit 1
 fi
 
-web_log="$(mktemp "${TMPDIR:-/tmp}/cmux-stripe-web.XXXXXX")"
-stripe_log="$(mktemp "${TMPDIR:-/tmp}/cmux-stripe-listen.XXXXXX")"
-secret_log="$(mktemp "${TMPDIR:-/tmp}/cmux-stripe-secret.XXXXXX")"
+web_log="$(mktemp "${TMPDIR:-/tmp}/hmux-stripe-web.XXXXXX")"
+stripe_log="$(mktemp "${TMPDIR:-/tmp}/hmux-stripe-listen.XXXXXX")"
+secret_log="$(mktemp "${TMPDIR:-/tmp}/hmux-stripe-secret.XXXXXX")"
 web_pid=""
 stripe_pid=""
 secret_pid=""
@@ -130,12 +130,12 @@ if [[ -z "$STRIPE_WEBHOOK_SECRET" ]]; then
   exit 1
 fi
 
-CMUX_PORT_END="$((PORT + 9))"
-SCHEME="cmux"
+HMUX_PORT_END="$((PORT + 9))"
+SCHEME="hmux"
 auth_scheme_env=()
 if [[ -n "$TAG" ]]; then
-  SCHEME="cmux-dev-$TAG"
-  auth_scheme_env=(CMUX_AUTH_CALLBACK_SCHEME="$SCHEME")
+  SCHEME="hmux-dev-$TAG"
+  auth_scheme_env=(HMUX_AUTH_CALLBACK_SCHEME="$SCHEME")
 fi
 
 branch="$(git -C "$REPO_DIR" branch --show-current 2>/dev/null || true)"
@@ -151,26 +151,26 @@ slug="$(
 if [[ -z "$slug" ]]; then
   slug="worktree"
 fi
-db_container="${CMUX_DB_CONTAINER_NAME:-cmux-postgres-${slug}-dev-${PORT}}"
+db_container="${HMUX_DB_CONTAINER_NAME:-hmux-postgres-${slug}-dev-${PORT}}"
 
 events="checkout.session.completed,checkout.session.async_payment_succeeded,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.paid,invoice.payment_failed,charge.refunded"
 
-echo "cmux Stripe dev stack"
+echo "hmux Stripe dev stack"
 echo "  Web log: $web_log"
 echo "  Stripe listen log: $stripe_log"
-echo "  CMUX_PORT=$PORT"
-echo "  CMUX_DB_PORT=$DB_PORT"
-echo "  CMUX_DB_CONTAINER_NAME=$db_container"
+echo "  HMUX_PORT=$PORT"
+echo "  HMUX_DB_PORT=$DB_PORT"
+echo "  HMUX_DB_CONTAINER_NAME=$db_container"
 echo "  Callback scheme: $SCHEME"
 
 (
   cd "$WEB_DIR"
   env \
-    CMUX_PORT="$PORT" \
-    CMUX_PORT_RANGE=10 \
-    CMUX_PORT_END="$CMUX_PORT_END" \
-    CMUX_DB_KIND=dev \
-    CMUX_DB_PORT="$DB_PORT" \
+    HMUX_PORT="$PORT" \
+    HMUX_PORT_RANGE=10 \
+    HMUX_PORT_END="$HMUX_PORT_END" \
+    HMUX_DB_KIND=dev \
+    HMUX_DB_PORT="$DB_PORT" \
     STRIPE_SECRET_KEY="$STRIPE_SECRET_KEY" \
     STRIPE_WEBHOOK_SECRET="$STRIPE_WEBHOOK_SECRET" \
     ${auth_scheme_env[@]+"${auth_scheme_env[@]}"} \
@@ -183,7 +183,7 @@ stripe listen \
   --events "$events" >"$stripe_log" 2>&1 &
 stripe_pid=$!
 
-pricing_url="http://localhost:${PORT}/app-pricing?cmux_app=1"
+pricing_url="http://localhost:${PORT}/app-pricing?hmux_app=1"
 for _ in $(seq 1 90); do
   if ! kill -0 "$web_pid" >/dev/null 2>&1; then
     echo "bun dev exited before the pricing page became ready. See $web_log" >&2
@@ -200,7 +200,7 @@ if ! curl -fsS -o /dev/null "$pricing_url"; then
   exit 1
 fi
 
-checkout_url="http://localhost:${PORT}/api/billing/checkout?plan=pro&cmux_scheme=${SCHEME}"
+checkout_url="http://localhost:${PORT}/api/billing/checkout?plan=pro&hmux_scheme=${SCHEME}"
 plan_url="http://localhost:${PORT}/api/billing/plan"
 
 cat <<EOF
@@ -214,7 +214,7 @@ Verification
     4242 4242 4242 4242
 
   DB inspection:
-    docker exec $db_container psql -U cmux -d cmux -c 'select id, status, plan from stripe_subscriptions;'
+    docker exec $db_container psql -U hmux -d hmux -c 'select id, status, plan from stripe_subscriptions;'
 
   Plan probe:
     curl -sS '$plan_url'

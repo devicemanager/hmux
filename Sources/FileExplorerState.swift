@@ -1,5 +1,5 @@
 import AppKit
-import CmuxProductAnalytics
+import HmuxProductAnalytics
 import SwiftUI
 
 // MARK: - State (visibility toggle)

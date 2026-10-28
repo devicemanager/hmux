@@ -1,5 +1,5 @@
-import CmuxAppKitSupportUI
-import CmuxCloud
+import HmuxAppKitSupportUI
+import HmuxCloud
 import AppKit
 import SwiftUI
 
@@ -24,12 +24,12 @@ struct MachinesFreeAccessBanner: View {
                     Image(systemName: isExpired ? "lock.fill" : "clock")
                         .font(.system(size: 10, weight: .semibold))
                     Text(text)
-                        .cmuxFont(size: 11, monospacedDigit: true)
+                        .hmuxFont(size: 11, monospacedDigit: true)
                         .lineLimit(1)
                         .truncationMode(.tail)
                     Spacer(minLength: 0)
                     Text(String(localized: "machines.freeAccess.upgrade", defaultValue: "Upgrade"))
-                        .cmuxFont(size: 11)
+                        .hmuxFont(size: 11)
                         .underline(isHovered)
                 }
             }
@@ -79,7 +79,7 @@ struct MachinesChromeIconButton: View {
                     // The glyph draws into the whole button canvas, centered
                     // by its visible pixels. Centering its layout box instead
                     // leaves glyphs like `trash` a point low.
-                    CmuxResolvedIconImage(request: CmuxResolvedIconRequest(
+                    HmuxResolvedIconImage(request: HmuxResolvedIconRequest(
                         source: symbolSource,
                         size: NSSize(width: 22, height: 20),
                         tintColor: isHovered ? .labelColor : .secondaryLabelColor,
@@ -105,7 +105,7 @@ struct MachinesChromeIconButton: View {
         .accessibilityLabel(accessibilityLabel)
     }
 
-    private var symbolSource: CmuxResolvedIconSource {
+    private var symbolSource: HmuxResolvedIconSource {
         .systemSymbol(name: symbolName, accessibilityDescription: nil)
     }
 }
@@ -125,7 +125,7 @@ struct MachinesChromeLabelButton: View {
                 Image(systemName: symbolName)
                     .font(.system(size: 10, weight: .semibold))
                 Text(title)
-                    .cmuxFont(size: 11, weight: .medium)
+                    .hmuxFont(size: 11, weight: .medium)
             }
             // Same grey and hover rule as the tab bar's mode labels above.
             .foregroundColor(RightSidebarChromeControlStyle.pillForegroundColor(isSelected: false, isHovered: isHovered))

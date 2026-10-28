@@ -10,7 +10,7 @@ type GrantTeamAdminApp = Pick<TeamStackApp, "getUser" | "getTeam">;
 /**
  * Grant Stack `team_admin` to a user on a team. Every path that creates a
  * team must call this: Stack's creator default does not make the creator a
- * cmux admin, and a team without an admin cannot be managed.
+ * hmux admin, and a team without an admin cannot be managed.
  */
 export async function grantTeamAdmin(
   stackApp: GrantTeamAdminApp,

@@ -8,7 +8,7 @@ import {
 
 
 export async function POST(request: Request): Promise<Response> {
-  const ruleId = process.env.CMUX_ANALYTICS_RATE_LIMIT_ID?.trim();
+  const ruleId = process.env.HMUX_ANALYTICS_RATE_LIMIT_ID?.trim();
   if (process.env.VERCEL === "1" && ruleId) {
     try {
       const { error, rateLimited } = await checkRateLimit(ruleId, { request });

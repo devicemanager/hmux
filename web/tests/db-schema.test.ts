@@ -8,7 +8,7 @@ import {
   OBSERVED_DESTROY_OUTBOX_CANDIDATE_PREDICATE,
 } from "../services/vms/repository";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 
 let sql: Sql | null = null;
@@ -17,7 +17,7 @@ beforeAll(() => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!databaseURL) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   }
   sql = postgres(databaseURL, { max: 1 });
 });
@@ -39,13 +39,13 @@ describe("Cloud VM database schema", () => {
       import.meta.url,
     ), "utf8").replace(/\s+/g, " ");
     expect(migration).toContain(
-      'ON "cloud_vms" ("updated_at", "id") WHERE "status" = \'destroyed\' AND "provider_metadata" ? \'cmuxObservedDestroyCleanup\'',
+      'ON "cloud_vms" ("updated_at", "id") WHERE "status" = \'destroyed\' AND "provider_metadata" ? \'hmuxObservedDestroyCleanup\'',
     );
     expect(migration).toContain(
-      'jsonb_typeof("provider_metadata"->\'cmuxObservedDestroyCleanup\') = \'object\'',
+      'jsonb_typeof("provider_metadata"->\'hmuxObservedDestroyCleanup\') = \'object\'',
     );
     expect(migration).toContain(
-      '"provider_metadata"->\'cmuxObservedDestroyCleanup\' @> \'{"modelPlane":true}\'::jsonb',
+      '"provider_metadata"->\'hmuxObservedDestroyCleanup\' @> \'{"modelPlane":true}\'::jsonb',
     );
   });
 
@@ -56,7 +56,7 @@ describe("Cloud VM database schema", () => {
     expect(compiled.params).toEqual([]);
     expect(normalized).toContain(`"cloud_vms"."status" = 'destroyed'`);
     expect(normalized).toContain(
-      `"cloud_vms"."provider_metadata" ? 'cmuxObservedDestroyCleanup'`,
+      `"cloud_vms"."provider_metadata" ? 'hmuxObservedDestroyCleanup'`,
     );
   });
 
@@ -171,7 +171,7 @@ describe("Cloud VM database schema", () => {
         'team-1',
         'freestyle',
         'provider-vm-1',
-        'cmuxd-ws:test',
+        'hmuxd-ws:test',
         '2026-04-24.1',
         'running',
         'idem-1'
@@ -183,7 +183,7 @@ describe("Cloud VM database schema", () => {
     try {
       await sql`
         insert into cloud_vms (user_id, billing_team_id, provider, image_id, status, idempotency_key)
-        values ('user-2', 'team-1', 'freestyle', 'cmuxd-ws:test', 'provisioning', 'idem-1')
+        values ('user-2', 'team-1', 'freestyle', 'hmuxd-ws:test', 'provisioning', 'idem-1')
       `;
     } catch (err) {
       duplicateError = err;
@@ -192,7 +192,7 @@ describe("Cloud VM database schema", () => {
 
     await sql`
       insert into cloud_vms (user_id, billing_team_id, provider, image_id, status, idempotency_key)
-      values ('user-1', 'team-2', 'freestyle', 'cmuxd-ws:test', 'provisioning', 'idem-1')
+      values ('user-1', 'team-2', 'freestyle', 'hmuxd-ws:test', 'provisioning', 'idem-1')
     `;
 
     await sql`
@@ -208,7 +208,7 @@ describe("Cloud VM database schema", () => {
     `;
     await sql`
       insert into cloud_vm_usage_events (user_id, vm_id, event_type, provider, image_id, metadata)
-      values ('user-1', ${vm.id}, 'vm.created', 'freestyle', 'cmuxd-ws:test', '{"source":"test"}'::jsonb)
+      values ('user-1', ${vm.id}, 'vm.created', 'freestyle', 'hmuxd-ws:test', '{"source":"test"}'::jsonb)
     `;
 
     await sql`delete from cloud_vms where id = ${vm.id}`;

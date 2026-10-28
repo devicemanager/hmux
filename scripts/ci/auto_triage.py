@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Put severity and area labels on cmux issues, and say why.
+"""Put severity and area labels on hmux issues, and say why.
 
 Two modes:
 

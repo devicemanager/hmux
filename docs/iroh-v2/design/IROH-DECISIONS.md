@@ -1,6 +1,6 @@
 # IROH v2 decisions
 
-> Provider update (2026-09-16): cmux Cloud now uses PlanetScale Postgres. Aurora references below describe the historical design and do not authorize AWS database operations. Use `skills/cmux-backend/references/cloud-vm-control-plane.md` for the current database workflow.
+> Provider update (2026-09-16): hmux Cloud now uses PlanetScale Postgres. Aurora references below describe the historical design and do not authorize AWS database operations. Use `skills/hmux-backend/references/cloud-vm-control-plane.md` for the current database workflow.
 
 Updated 15 September 2026, revision 23. Accepted directions are recorded here; unresolved implementation details are listed at the end. Revision 23 clarifies that new Macs must support older iOS apps; new iOS apps only need to support new Macs.
 
@@ -31,7 +31,7 @@ and the additional v2 key with the same signature, expiry, audience and endpoint
 checks. Apply and verify relay changes in every region used by the apps.
 
 PlanetScale is supported by the local tooling through
-`CMUX_DB_PROVIDER=planetscale` and `PLANETSCALE_DATABASE_URL`. The Worker uses
+`HMUX_DB_PROVIDER=planetscale` and `PLANETSCALE_DATABASE_URL`. The Worker uses
 PostgreSQL semantics, so the target must be PlanetScale PostgreSQL. A
 PlanetScale MySQL database would require a separate Drizzle schema and driver
 and is not interchangeable with the current adapter.
@@ -144,13 +144,13 @@ One client owner coordinates each peer’s connection and retries. Direct/relay 
 - **No scheduled application presence heartbeat to the DO**, presence-only timeout alarm, or presence checkpoint. A usable authorized IROH session establishes the client’s connection status. Saved untested Macs have unknown reachability; backend online status must never hide them or block a cached attempt. Do not connect to every saved Mac solely to label it online.
 - Retain IROH transport keepalives/failure detection and application request deadlines. A keepalive probe and acknowledgment use both directions; two custom application timers are unnecessary. Exact intervals remain open.
 - Native WebSocket protocol ping gets Cloudflare runtime pong without waking the DO. Preserve hibernation; no custom JSON ping loop. Keep control sockets for credentials, directory updates and permission removals.
-- **Each Mac must explicitly enable Enable iOS pairing in cmux Settings.** Before opt-in, do not initialize IROH, bind its listener/port, contact a relay, or start IROH backend/control, enrollment, discovery or renewal work. Sign-in alone does not opt in.
-- Disabling pairing stops IROH sessions/listeners and cancels setup, refresh and retries. Invalidate the local run before cancellation so delayed callbacks cannot restart networking. Re-enable an intact identity without new registration. Other cmux features retain their own network behavior.
+- **Each Mac must explicitly enable Enable iOS pairing in hmux Settings.** Before opt-in, do not initialize IROH, bind its listener/port, contact a relay, or start IROH backend/control, enrollment, discovery or renewal work. Sign-in alone does not opt in.
+- Disabling pairing stops IROH sessions/listeners and cancels setup, refresh and retries. Invalidate the local run before cancellation so delayed callbacks cannot restart networking. Re-enable an intact identity without new registration. Other hmux features retain their own network behavior.
 - iOS onboarding and the empty computer list explain the Mac setting and selecting the appropriate team. A phone cannot prove a remote setting without communication; the Mac gate enforces opt-in. Exact copy and migration from existing settings belong to the independent implementation.
 
-Proposed v2 onboarding: “On your Mac, open cmux Settings and turn on Enable iOS pairing. Select the same team on both devices using accounts allowed to connect.”
+Proposed v2 onboarding: “On your Mac, open hmux Settings and turn on Enable iOS pairing. Select the same team on both devices using accounts allowed to connect.”
 
-Proposed empty list: “No Macs found. Open cmux Settings on your Mac, enable iOS pairing, and select the same team on both devices.”
+Proposed empty list: “No Macs found. Open hmux Settings on your Mac, enable iOS pairing, and select the same team on both devices.”
 
 [Pairing agent task](PAIRING-AGENT-TASK.md). The independent feature works with current main; team backend migration is outside its scope.
 

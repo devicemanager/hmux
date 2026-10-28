@@ -7,10 +7,10 @@ ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 if [[ "$(uname -s)" == Darwin ]]; then
   backend_helper="$ROOT_DIR/../scripts/dev-backend.sh"
   [[ -x "$backend_helper" ]] || { echo 'Shared GCP backend helper is missing; update the HQ worktree tooling.' >&2; exit 1; }
-  tag="${CMUX_TAG:-}"
+  tag="${HMUX_TAG:-}"
   if [[ -z "$tag" ]]; then
     branch="$(git -C "$ROOT_DIR/.." branch --show-current)"
-    [[ -n "$branch" ]] || { echo 'Set CMUX_TAG for a detached checkout.' >&2; exit 1; }
+    [[ -n "$branch" ]] || { echo 'Set HMUX_TAG for a detached checkout.' >&2; exit 1; }
     slug="$(printf '%s' "$branch" | tr -cs 'A-Za-z0-9._-' '-' | cut -c1-45)"
     digest="$(printf '%s' "$branch" | shasum -a 256 | cut -c1-8)"
     tag="web-${slug}-${digest}"
@@ -44,12 +44,12 @@ dev_lock_key() {
   if [[ -z "$slug" ]]; then
     slug="worktree"
   fi
-  printf '%s-dev-%s' "$slug" "$CMUX_PORT"
+  printf '%s-dev-%s' "$slug" "$HMUX_PORT"
 }
 
 claim_dev_lock() {
   local lock_dir
-  lock_dir="${TMPDIR:-/tmp}/cmux-web-dev"
+  lock_dir="${TMPDIR:-/tmp}/hmux-web-dev"
   mkdir -p "$lock_dir"
   dev_lock_file="$lock_dir/$(dev_lock_key).pid"
   printf '%s\n' "$$" > "$dev_lock_file"
@@ -61,15 +61,15 @@ owns_dev_lock() {
 
 stop_local_services() {
   if ! owns_dev_lock; then
-    echo "cmux web dev: skipped local service stop because another dev process owns CMUX_PORT=$CMUX_PORT"
+    echo "hmux web dev: skipped local service stop because another dev process owns HMUX_PORT=$HMUX_PORT"
     return
   fi
   bash "$ROOT_DIR/scripts/db-local.sh" down >/dev/null 2>&1 || true
-  echo "cmux web dev: stopped local Postgres for CMUX_PORT=$CMUX_PORT"
+  echo "hmux web dev: stopped local Postgres for HMUX_PORT=$HMUX_PORT"
 }
 
 start_cleanup_watcher() {
-  if [[ "${CMUX_DEV_STOP_DB_ON_EXIT:-1}" == "0" ]]; then
+  if [[ "${HMUX_DEV_STOP_DB_ON_EXIT:-1}" == "0" ]]; then
     return
   fi
 
@@ -87,7 +87,7 @@ start_cleanup_watcher() {
 }
 
 start_db_watchdog() {
-  if [[ "${CMUX_DEV_WATCH_DB:-1}" == "0" ]]; then
+  if [[ "${HMUX_DEV_WATCH_DB:-1}" == "0" ]]; then
     return
   fi
 
@@ -96,7 +96,7 @@ start_db_watchdog() {
     trap '' INT HUP
     while kill -0 "$parent_pid" >/dev/null 2>&1; do
       if owns_dev_lock && ! bash "$ROOT_DIR/scripts/db-local.sh" ready >/dev/null 2>&1; then
-        echo "cmux web dev: local Postgres unavailable; restarting for CMUX_PORT=$CMUX_PORT"
+        echo "hmux web dev: local Postgres unavailable; restarting for HMUX_PORT=$HMUX_PORT"
         if bash "$ROOT_DIR/scripts/db-local.sh" up >/dev/null 2>&1; then
           bash "$ROOT_DIR/scripts/db-local.sh" migrate >/dev/null
         fi
@@ -117,7 +117,7 @@ cleanup() {
     wait "$next_pid" >/dev/null 2>&1 || true
   fi
 
-  if [[ "$started_db" == "1" && "${CMUX_DEV_STOP_DB_ON_EXIT:-1}" != "0" ]]; then
+  if [[ "$started_db" == "1" && "${HMUX_DEV_STOP_DB_ON_EXIT:-1}" != "0" ]]; then
     if [[ -n "$db_watchdog_pid" ]] && kill -0 "$db_watchdog_pid" >/dev/null 2>&1; then
       kill "$db_watchdog_pid" >/dev/null 2>&1 || true
       wait "$db_watchdog_pid" >/dev/null 2>&1 || true
@@ -140,7 +140,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-if [[ "${CMUX_DEV_START_DB:-1}" != "0" ]]; then
+if [[ "${HMUX_DEV_START_DB:-1}" != "0" ]]; then
   started_db=1
   claim_dev_lock
   start_cleanup_watcher
@@ -149,20 +149,20 @@ if [[ "${CMUX_DEV_START_DB:-1}" != "0" ]]; then
   start_db_watchdog
 fi
 
-redacted_database_url="postgres://${CMUX_DB_USER}:<redacted>@localhost:${CMUX_DB_PORT}/${CMUX_DB_NAME}"
+redacted_database_url="postgres://${HMUX_DB_USER}:<redacted>@localhost:${HMUX_DB_PORT}/${HMUX_DB_NAME}"
 cat <<EOF
-cmux web dev
-  CMUX_PORT=$CMUX_PORT
-  CMUX_VM_API_BASE_URL=$CMUX_VM_API_BASE_URL
+hmux web dev
+  HMUX_PORT=$HMUX_PORT
+  HMUX_VM_API_BASE_URL=$HMUX_VM_API_BASE_URL
   DATABASE_URL=$redacted_database_url
-  CMUX_WEB_SECRET_ENV_FILE=$CMUX_WEB_SECRET_ENV_FILE
-  CMUX_WEB_EXTRA_SECRET_ENV_FILE=${CMUX_WEB_EXTRA_SECRET_ENV_FILE:-}
+  HMUX_WEB_SECRET_ENV_FILE=$HMUX_WEB_SECRET_ENV_FILE
+  HMUX_WEB_EXTRA_SECRET_ENV_FILE=${HMUX_WEB_EXTRA_SECRET_ENV_FILE:-}
 EOF
 
 # This explicit opt-in is consumed by the billing guard. It is set only by
 # this local development launcher, never by preview or production config.
-export CMUX_LOCAL_DEV_PRO=1
-next dev --port "$CMUX_PORT" &
+export HMUX_LOCAL_DEV_PRO=1
+next dev --port "$HMUX_PORT" &
 next_pid=$!
 
 set +e

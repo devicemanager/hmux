@@ -27,12 +27,12 @@ struct CloudVPNSetupView: View {
         VStack(alignment: .leading, spacing: 5) {
             Label {
                 Text(String(localized: "cloud.vpn.setup.heading", defaultValue: "Use Cloud machines from any app"))
-                    .cmuxFont(.title2, weight: .semibold)
+                    .hmuxFont(.title2, weight: .semibold)
             } icon: {
                 Image(systemName: "network").foregroundStyle(.blue)
             }
             Text(String(localized: "cloud.vpn.setup.subtitle", defaultValue: "Optional access to each VM's private address and original ports, such as 10.40.0.10:3000."))
-                .cmuxFont(size: 13)
+                .hmuxFont(size: 13)
                 .foregroundStyle(.secondary)
         }
     }
@@ -40,12 +40,12 @@ struct CloudVPNSetupView: View {
     private var explanation: some View {
         VStack(alignment: .leading, spacing: 9) {
             Text(String(localized: "cloud.vpn.setup.howItWorks.title", defaultValue: "How it works"))
-                .cmuxFont(size: 14, weight: .semibold)
-            Text(String(localized: "cloud.vpn.setup.howItWorks.body", defaultValue: "Connect Safari, Chrome, and other apps to your Cloud machines. Each machine keeps its private IP address and original ports. Only traffic to your Cloud network uses this encrypted connection. cmux terminals, Ports, and Desktop work without it."))
-                .cmuxFont(size: 13).foregroundStyle(.secondary)
+                .hmuxFont(size: 14, weight: .semibold)
+            Text(String(localized: "cloud.vpn.setup.howItWorks.body", defaultValue: "Connect Safari, Chrome, and other apps to your Cloud machines. Each machine keeps its private IP address and original ports. Only traffic to your Cloud network uses this encrypted connection. hmux terminals, Ports, and Desktop work without it."))
+                .hmuxFont(size: 13).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
-            Text(String(localized: "cloud.vpn.setup.permission.body", defaultValue: "The VPN software is included in cmux. You do not need another app. macOS may require your password or Touch ID during approval."))
-                .cmuxFont(size: 13).foregroundStyle(.secondary)
+            Text(String(localized: "cloud.vpn.setup.permission.body", defaultValue: "The VPN software is included in hmux. You do not need another app. macOS may require your password or Touch ID during approval."))
+                .hmuxFont(size: 13).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -54,20 +54,20 @@ struct CloudVPNSetupView: View {
         VStack(alignment: .leading, spacing: 7) {
             HStack {
                 Text(String(localized: "cloud.vpn.setup.status.title", defaultValue: "Private network status"))
-                    .cmuxFont(size: 14, weight: .semibold)
+                    .hmuxFont(size: 14, weight: .semibold)
                 Spacer()
                 statusLabel
             }
             if let message = model.errorMessage ?? model.unavailableMessage {
-                Text(message).cmuxFont(size: 12).foregroundStyle(.orange)
+                Text(message).hmuxFont(size: 12).foregroundStyle(.orange)
                     .fixedSize(horizontal: false, vertical: true)
                     .accessibilityIdentifier("CloudVPNSetupError")
             } else if let message = model.tunnelBanner?.text {
-                Text(message).cmuxFont(size: 12).foregroundStyle(.secondary)
+                Text(message).hmuxFont(size: 12).foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             } else {
-                Text(String(localized: "cloud.vpn.setup.status.off", defaultValue: "Off. Your Cloud panes continue to work through cmux's built-in route."))
-                    .cmuxFont(size: 12).foregroundStyle(.secondary)
+                Text(String(localized: "cloud.vpn.setup.status.off", defaultValue: "Off. Your Cloud panes continue to work through hmux's built-in route."))
+                    .hmuxFont(size: 12).foregroundStyle(.secondary)
             }
         }
         .padding(14)
@@ -119,24 +119,24 @@ struct CloudVPNSetupView: View {
     private var approvalSteps: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(String(localized: "cloud.vpn.setup.steps.title", defaultValue: "First-time setup"))
-                .cmuxFont(size: 14, weight: .semibold)
-            Text(String(localized: "cloud.vpn.setup.steps.extension", defaultValue: "1. Click Connect Cloud VPN. When macOS asks, allow the cmux network extension in System Settings."))
+                .hmuxFont(size: 14, weight: .semibold)
+            Text(String(localized: "cloud.vpn.setup.steps.extension", defaultValue: "1. Click Connect Cloud VPN. When macOS asks, allow the hmux network extension in System Settings."))
             Text(ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 15
-                ? String(localized: "cloud.vpn.setup.steps.settings", defaultValue: "Open General > Login Items & Extensions > Network Extensions, then enable cmux.")
-                : String(localized: "cloud.vpn.setup.steps.settingsLegacy", defaultValue: "Open Privacy & Security and allow the cmux extension."))
+                ? String(localized: "cloud.vpn.setup.steps.settings", defaultValue: "Open General > Login Items & Extensions > Network Extensions, then enable hmux.")
+                : String(localized: "cloud.vpn.setup.steps.settingsLegacy", defaultValue: "Open Privacy & Security and allow the hmux extension."))
                 .foregroundStyle(.secondary)
-            Text(String(localized: "cloud.vpn.setup.steps.configuration", defaultValue: "2. Allow cmux to add a VPN configuration named cmux Cloud. This is a separate macOS permission."))
-            Text(String(localized: "cloud.vpn.setup.steps.return", defaultValue: "3. Return to this pane. The connection continues automatically after approval. Disconnect here when finished. Quitting cmux or signing out also disconnects it."))
+            Text(String(localized: "cloud.vpn.setup.steps.configuration", defaultValue: "2. Allow hmux to add a VPN configuration named hmux Cloud. This is a separate macOS permission."))
+            Text(String(localized: "cloud.vpn.setup.steps.return", defaultValue: "3. Return to this pane. The connection continues automatically after approval. Disconnect here when finished. Quitting hmux or signing out also disconnects it."))
         }
-        .cmuxFont(size: 13).fixedSize(horizontal: false, vertical: true)
+        .hmuxFont(size: 13).fixedSize(horizontal: false, vertical: true)
     }
 
     private var addressHelp: some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(String(localized: "cloud.vpn.setup.address.title", defaultValue: "Private addresses"))
-                .cmuxFont(size: 14, weight: .semibold)
+                .hmuxFont(size: 14, weight: .semibold)
             Text(String(localized: "cloud.vpn.setup.address.body", defaultValue: "Each machine has its own private IP. Two machines may both expose port 3000, for example 10.40.0.10:3000 and 10.40.0.11:3000. Right-click a Cloud port and choose Copy Private Address URL after connecting. These addresses are private, not public share links."))
-                .cmuxFont(size: 13).foregroundStyle(.secondary)
+                .hmuxFont(size: 13).foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }

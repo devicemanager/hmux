@@ -1,8 +1,8 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
 /// Identifies one agent process generation whose SessionEnd belongs to a
-/// cmux initiated hibernation.
+/// hmux initiated hibernation.
 struct AgentHibernationSessionEndIntent: Sendable, Equatable {
     let sessionID: String
     let processIdentities: Set<AgentPIDProcessIdentity>
@@ -39,7 +39,7 @@ extension AgentHibernationController {
     }
 
     /// Returns whether a hook's exact session/process generation belongs to a
-    /// pending cmux hibernation.
+    /// pending hmux hibernation.
     func shouldPreserveSessionEnd(
         workspaceID: UUID,
         panelID: UUID,

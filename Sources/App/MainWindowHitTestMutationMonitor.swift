@@ -6,7 +6,7 @@ import AppKit
 /// `-[NSView hitTest:]` reads its subview count once and then walks the array
 /// by index from the top. A removal made while that walk is in flight shifts
 /// the array under it, and AppKit throws `NSRangeException` once the walk
-/// reaches an index past the new end (CMUXTERM-MACOS-41RH: index 141 against
+/// reaches an index past the new end (HMUXTERM-MACOS-41RH: index 141 against
 /// 133 subviews, during cursor-update routing). The walk calls each child's
 /// `hitTest(_:)`, so the code that removes subviews is still on the stack
 /// when `willRemoveSubview(_:)` runs. The first such removal per process is
@@ -60,7 +60,7 @@ final class MainWindowHitTestMutationMonitor {
             "eventType": mutation.eventType.map { Int($0) } ?? -1,
         ]
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "mainWindow.hitTestMutation removed=\(mutation.removedSubviewType) " +
             "count=\(mutation.subviewCountBeforeRemoval) event=\(mutation.eventType.map(String.init) ?? "nil")"
         )

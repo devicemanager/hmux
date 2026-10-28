@@ -91,7 +91,7 @@ extension BrowserLegacyAliasName {
     static func legacyAbstract(for browserCommand: String) -> String {
         let format = String(
             localized: "cli.browser.legacyAlias.abstract",
-            defaultValue: "Legacy alias for 'cmux browser %@'. Run 'cmux browser --help' for details."
+            defaultValue: "Legacy alias for 'hmux browser %@'. Run 'hmux browser --help' for details."
         )
         return String(format: format, locale: .current, browserCommand)
     }

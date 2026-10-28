@@ -1,6 +1,6 @@
 import Foundation
 
-/// Binds cmux registry records to one session in one tmux server incarnation.
+/// Binds hmux registry records to one session in one tmux server incarnation.
 struct LocalTmuxSessionIdentityResolver {
     struct ObservedSession: Sendable {
         let name: String

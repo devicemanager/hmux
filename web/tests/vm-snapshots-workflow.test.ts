@@ -8,7 +8,7 @@ import { VmProviderGateway, type VmProviderGatewayShape } from "../services/vms/
 import { VmRepository, type CloudVmRow, type VmRepositoryShape } from "../services/vms/repository";
 import { deleteVmSnapshot, listVmSnapshots } from "../services/vms/workflows";
 
-// `cmux vm snapshot ls <m>` / `cmux vm snapshot rm <m> <snapshot>`: the
+// `hmux vm snapshot ls <m>` / `hmux vm snapshot rm <m> <snapshot>`: the
 // inventory and deletion of a machine's snapshots, scoped to a machine the
 // caller owns. Fake repository and gateway layers pin the contract without a
 // database or a provider (the pattern of vm-pause-resume-workflow.test.ts).

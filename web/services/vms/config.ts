@@ -22,7 +22,7 @@ export function vmCreateDisabledReason(
   provider: ProviderId,
   env: VmRuntimeEnv = process.env,
 ): string | null {
-  if (isFalseFlag(env.CMUX_VM_CREATE_ENABLED)) {
+  if (isFalseFlag(env.HMUX_VM_CREATE_ENABLED)) {
     return "Cloud VM creation is disabled";
   }
   if (isFalseFlag(env[providerEnabledEnvKey(provider)])) {
@@ -37,7 +37,7 @@ export function vmCreateDisabledReason(
 export function providerEnabledEnvKey(provider: ProviderId): string {
   switch (provider) {
     case "freestyle":
-      return "CMUX_VM_FREESTYLE_ENABLED";
+      return "HMUX_VM_FREESTYLE_ENABLED";
     default:
       return assertNever(provider);
   }
@@ -51,7 +51,7 @@ export function providerEnabledEnvKey(provider: ProviderId): string {
  * and it never selects a public route for an existing machine.
  */
 export function vmPrivateNetworkEnabled(env: VmRuntimeEnv = process.env): boolean {
-  return !isFalseFlag(env.CMUX_VM_PRIVATE_NETWORK_ENABLED);
+  return !isFalseFlag(env.HMUX_VM_PRIVATE_NETWORK_ENABLED);
 }
 
 /**
@@ -69,11 +69,11 @@ export function vmPrivateNetworkEnabled(env: VmRuntimeEnv = process.env): boolea
  * which keeps the longest derived slug inside the provider's 63.
  */
 export function vmNetworkNamespace(env: VmRuntimeEnv = process.env): string | null {
-  const value = env.CMUX_VM_NETWORK_NAMESPACE?.trim() ?? "";
+  const value = env.HMUX_VM_NETWORK_NAMESPACE?.trim() ?? "";
   if (!value) return null;
   if (value.length > 16 || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(value)) {
     throw new Error(
-      `CMUX_VM_NETWORK_NAMESPACE must be 1-16 lowercase letters, digits, and single hyphens; got ${JSON.stringify(value)}`,
+      `HMUX_VM_NETWORK_NAMESPACE must be 1-16 lowercase letters, digits, and single hyphens; got ${JSON.stringify(value)}`,
     );
   }
   return value;
@@ -81,10 +81,10 @@ export function vmNetworkNamespace(env: VmRuntimeEnv = process.env): string | nu
 
 /**
  * The slug prefix for one kind of provider resource (`net`, `team-net`, `wg`)
- * in a namespace; `cmux-<kind>` for production.
+ * in a namespace; `hmux-<kind>` for production.
  */
 export function vmNetworkSlugPrefix(kind: "net" | "team-net" | "wg", namespace: string | null): string {
-  return namespace ? `cmux-${namespace}-${kind}` : `cmux-${kind}`;
+  return namespace ? `hmux-${namespace}-${kind}` : `hmux-${kind}`;
 }
 
 export function isDeployedRuntime(env: VmRuntimeEnv = process.env): boolean {
@@ -95,7 +95,7 @@ export function isDeployedRuntime(env: VmRuntimeEnv = process.env): boolean {
 }
 
 export function allowUnmanifestedImages(env: VmRuntimeEnv = process.env): boolean {
-  return isTrueFlag(env.CMUX_VM_ALLOW_UNMANIFESTED_IMAGES) || !isDeployedRuntime(env);
+  return isTrueFlag(env.HMUX_VM_ALLOW_UNMANIFESTED_IMAGES) || !isDeployedRuntime(env);
 }
 
 

@@ -21,7 +21,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/resize",
-    { "cmux.vm.operation": "resize" },
+    { "hmux.vm.operation": "resize" },
     "/api/vm/[id]/resize POST failed",
     async ({ user, span }) => {
       const { id } = await params;
@@ -47,7 +47,7 @@ export async function POST(
           message: "Provide cpu (1–32), memoryMb (4–64 GiB, whole GiB), or storageMb (4 GiB steps, up to 256 GiB).",
         }, 400);
       }
-      span.setAttribute("cmux.vm.id", id);
+      span.setAttribute("hmux.vm.id", id);
       const run = await runVmRoute(resizeVm({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

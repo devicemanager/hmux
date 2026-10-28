@@ -1,9 +1,9 @@
-// sites.googleAccounts: the Google accounts signed in to the cmux browser,
+// sites.googleAccounts: the Google accounts signed in to the hmux browser,
 // with their /u/{uid}/ index (S.shared.google.listAccounts, Google's
 // ListAccounts endpoint). Cookie-only, no tab.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
   S.register(
     "googleAccounts",

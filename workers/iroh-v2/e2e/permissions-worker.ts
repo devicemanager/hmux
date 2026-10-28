@@ -25,7 +25,7 @@ export class PermissionTestDO {
       ] as const;
       for (const [index, [name, userId, platform]] of seeds.entries()) {
         const descriptor = {
-          identity: { ...scope, userId, deviceId: name, appNamespace: "cmux", buildTag: "test" },
+          identity: { ...scope, userId, deviceId: name, appNamespace: "hmux", buildTag: "test" },
           endpointId: (index + 1).toString(16).padStart(64, "0"), identityGeneration: 0,
           metadata: { platform, displayName: name, appVersion: "2", pairingEnabled: true, capabilities: [], relayURLs: [] },
         };
@@ -70,7 +70,7 @@ export class PermissionTestDO {
       }
       if (path === "/mac-devices") {
         this.store.updateMetadata(device.descriptor.identity, { ...device.descriptor.metadata,
-          capabilities: ["cmux.mac-devices.v1", "cmux.mac-host.v1"] }, this.now);
+          capabilities: ["hmux.mac-devices.v1", "hmux.mac-host.v1"] }, this.now);
         const descriptor = {
           ...device.descriptor,
           identity: { ...device.descriptor.identity, deviceId: "mac-alice-peer",
@@ -78,7 +78,7 @@ export class PermissionTestDO {
             buildTag: input.tag ?? device.descriptor.identity.buildTag,
             appNamespace: input.namespace ?? device.descriptor.identity.appNamespace },
           endpointId: "f".repeat(64),
-          metadata: { ...device.descriptor.metadata, pairingEnabled: false, capabilities: ["cmux.mac-devices.v1"] },
+          metadata: { ...device.descriptor.metadata, pairingEnabled: false, capabilities: ["hmux.mac-devices.v1"] },
         };
         const challenge = { challengeId: "peer", nonceHash: "peer", payloadHash: "peer", issuedAt: 1000, expiresAt: 2800 };
         this.store.issueChallenge(descriptor.identity, challenge);
@@ -89,15 +89,15 @@ export class PermissionTestDO {
       if (path === "/nightly-pair") {
         // The pair from https://github.com/manaflow-ai/cmux/issues/13458: two
         // nightly Macs on one account. The host opted into incoming access
-        // (cmux.mac-host.v1); the dialer only discovers (cmux.mac-devices.v1).
+        // (hmux.mac-host.v1); the dialer only discovers (hmux.mac-devices.v1).
         // The host keeps iOS pairing off, while the dialer still hosts phones.
         const pair = [
-          ["nightly-host", "e", ["irx-v2", "cmux.mac-devices.v1", "cmux.mac-host.v1"]],
-          ["nightly-dialer", "d", ["irx-v2", "cmux.mac-devices.v1"]],
+          ["nightly-host", "e", ["irx-v2", "hmux.mac-devices.v1", "hmux.mac-host.v1"]],
+          ["nightly-dialer", "d", ["irx-v2", "hmux.mac-devices.v1"]],
         ] as const;
         for (const [name, key, capabilities] of pair) {
           const descriptor = {
-            identity: { ...scope, userId: "alice", deviceId: name, appNamespace: "com.cmuxterm.app.nightly", buildTag: "nightly" },
+            identity: { ...scope, userId: "alice", deviceId: name, appNamespace: "com.hmuxterm.app.nightly", buildTag: "nightly" },
             endpointId: key.repeat(64), identityGeneration: 0,
             metadata: { platform: "mac" as const, displayName: name, appVersion: "0.64.25-nightly.1", pairingEnabled: name !== "nightly-host",
               capabilities: [...capabilities], relayURLs: ["https://relay.test"] },

@@ -7,12 +7,12 @@ import {
 } from "./discoveryScope";
 export { MANAGED_RELAY_URLS } from "./publicationPolicy";
 
-export const IROH_ALPN = "cmux/mobile/1";
-export const IROH_PAIR_SCOPE = "cmux.mobile.attach";
-export const IROH_PAIR_GRANT_TYP = "cmux-pair-grant+jwt";
+export const IROH_ALPN = "hmux/mobile/1";
+export const IROH_PAIR_SCOPE = "hmux.mobile.attach";
+export const IROH_PAIR_GRANT_TYP = "hmux-pair-grant+jwt";
 export const IROH_ENDPOINT_ATTESTATION_VERSION = 1;
-export const IROH_ENDPOINT_ATTESTATION_TYP = "cmux-endpoint-attestation-v1+jwt";
-export const IROH_ENDPOINT_ATTESTATION_SCOPE = "cmux.offline-pair.same-account";
+export const IROH_ENDPOINT_ATTESTATION_TYP = "hmux-endpoint-attestation-v1+jwt";
+export const IROH_ENDPOINT_ATTESTATION_SCOPE = "hmux.offline-pair.same-account";
 export const IROH_CHALLENGE_LIFETIME_MS = 5 * 60 * 1_000;
 /**
  * The floor between two accepted registrations of the same slot. A client
@@ -31,7 +31,7 @@ export const IROH_MIN_REGISTRATION_SPACING_MS = 60 * 1_000;
  * not on the client namespace, because current stable builds also register
  * under a bundle namespace. Remove this exemption once irx honors the header.
  */
-export const IROH_IRX_CAPABILITY = "cmux.irx.v1";
+export const IROH_IRX_CAPABILITY = "hmux.irx.v1";
 export const IROH_PAIR_GRANT_LIFETIME_SECONDS = 7 * 24 * 60 * 60;
 export const IROH_ENDPOINT_ATTESTATION_LIFETIME_SECONDS = 24 * 60 * 60;
 export const IROH_OFFLINE_PAIR_SESSION_LIFETIME_SECONDS = 5 * 60;

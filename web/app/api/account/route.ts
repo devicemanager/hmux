@@ -191,7 +191,7 @@ type AccountDeletionStage =
   | "identity_publications_vms"
   | "networking_vault"
   | "hosted_subrouter"
-  | "cmux_rows"
+  | "hmux_rows"
   | "stack_delete"
   | "post_stack_cleanup";
 
@@ -199,7 +199,7 @@ type AccountDeletionProgress = {
   stage: AccountDeletionStage;
   stackMetadataMarked: boolean;
   accountDeletionTombstoneStarted: boolean;
-  cmuxOwnedRowsDeleted: boolean;
+  hmuxOwnedRowsDeleted: boolean;
   analyticsCleanupStarted: boolean;
   destructiveCleanupStarted: boolean;
   resumeCheckpoint: AccountDeletionResumeCheckpoint;
@@ -435,7 +435,7 @@ function isRestingResumeFailureStatus(status: string): boolean {
  * Stack-delete phase. PostHog, billing, TestFlight, identity, VM, networking,
  * and vault cleanup already ran in both cases.
  *
- * Only the Stack-delete phase also ran deleteCmuxOwnedAccountRows with the
+ * Only the Stack-delete phase also ran deleteHmuxOwnedAccountRows with the
  * full personal-team scope, so only it can complete here. For a hosted
  * checkpoint the personal teams can no longer be listed: the user-keyed rows
  * are still removed, then the tombstone is failed (keeping user_id) and
@@ -492,7 +492,7 @@ function initialAccountDeletionProgress(): AccountDeletionProgress {
     stage: "tombstone",
     stackMetadataMarked: false,
     accountDeletionTombstoneStarted: false,
-    cmuxOwnedRowsDeleted: false,
+    hmuxOwnedRowsDeleted: false,
     analyticsCleanupStarted: false,
     destructiveCleanupStarted: false,
     resumeCheckpoint: null,
@@ -614,7 +614,7 @@ async function accountDeletionResponseForSettledTombstone(
   if (tombstoneStart.kind === "cleanupIncomplete") {
     const accountScope = await accountDeletionScopeForUser(context.stackUser);
     // PostHog deletion completed before the Stack user was removed. A
-    // cleanup-incomplete tombstone represents only the idempotent cmux-owned
+    // cleanup-incomplete tombstone represents only the idempotent hmux-owned
     // cleanup that follows Stack deletion, so retrying PostHog here can block
     // tombstone completion after the account itself is already gone.
     await finishPostStackAccountCleanup(context.userId, accountScope.teamIds, {
@@ -709,13 +709,13 @@ async function deleteStackUserAndFinishAccountCleanup(
   progress: AccountDeletionProgress,
 ): Promise<Response> {
   const { stackUser, userId } = context;
-  // Delete cmux-owned data before the Stack user so a Stack-side failure does
+  // Delete hmux-owned data before the Stack user so a Stack-side failure does
   // not strand retained app data behind an account the user can no longer use.
   // These deletes are idempotent, so the same signed-in user can retry the
   // final Stack deletion when the distinct response below is returned.
-  progress.stage = "cmux_rows";
-  await deleteCmuxOwnedAccountRows(userId, teamIds);
-  progress.cmuxOwnedRowsDeleted = true;
+  progress.stage = "hmux_rows";
+  await deleteHmuxOwnedAccountRows(userId, teamIds);
+  progress.hmuxOwnedRowsDeleted = true;
   progress.stage = "stack_delete";
   try {
     await markAccountDeletionTombstoneStackDeletePending(userId);
@@ -776,13 +776,13 @@ async function accountDeletionFailureResponse(
   }
   const retryable =
     progress.destructiveCleanupStarted ||
-    progress.cmuxOwnedRowsDeleted ||
+    progress.hmuxOwnedRowsDeleted ||
     progress.analyticsCleanupStarted ||
     error instanceof AccountDeletionAnalyticsForwardInProgressError ||
     error instanceof AccountDeletionUserMutationInProgressError;
   // Report before the tombstone and Stack writes below, which can fail too.
   reportAccountDeletionFailure(context, progress, error, { retryable });
-  if (progress.destructiveCleanupStarted || progress.cmuxOwnedRowsDeleted) {
+  if (progress.destructiveCleanupStarted || progress.hmuxOwnedRowsDeleted) {
     if (progress.accountDeletionTombstoneStarted) {
       await markAccountDeletionFailureCheckpoint(
         userId,
@@ -1417,7 +1417,7 @@ async function finishPostStackAccountCleanup(
     await deletePostHogPersonForAccountDeletion(userId);
   }
   await deleteVmPublicationsForAccountDeletion({ ownerUserId: userId });
-  await deleteCmuxOwnedAccountRows(userId, accountTeamIds);
+  await deleteHmuxOwnedAccountRows(userId, accountTeamIds);
 }
 
 async function deletePostHogPersonForAccountDeletion(
@@ -1523,7 +1523,7 @@ function postHogPersonDeletionConfig(): PostHogPersonDeletionConfig | null {
   if (!personalApiKey) {
     if (
       process.env.VERCEL_ENV === "production" ||
-      process.env.CMUX_REQUIRE_POSTHOG_PERSON_DELETE === "1"
+      process.env.HMUX_REQUIRE_POSTHOG_PERSON_DELETE === "1"
     ) {
       throw new Error("POSTHOG_PERSONAL_API_KEY is required for account deletion");
     }
@@ -1729,8 +1729,8 @@ async function removeTestFlightAccessForAccountDeletion(
 
 async function markAccountDeletingAndClearBillingEntitlements(user: DeletableStackUser): Promise<void> {
   const metadata = stackMetadataRecord(user.clientReadOnlyMetadata);
-  delete metadata.cmuxPlan;
-  metadata.cmuxAccountDeleting = true;
+  delete metadata.hmuxPlan;
+  metadata.hmuxAccountDeleting = true;
   await user.update({ clientReadOnlyMetadata: metadata as ProMetadataJson });
 }
 
@@ -1742,7 +1742,7 @@ async function restoreStackMetadataAfterAccountDeletionFailure(
   try {
     const restored = stackMetadataRecord(metadata);
     if (options.restoreBillingEntitlements === false) {
-      delete restored.cmuxPlan;
+      delete restored.hmuxPlan;
     }
     await user.update({ clientReadOnlyMetadata: restored as ProMetadataJson });
   } catch (error) {
@@ -1795,7 +1795,7 @@ function isStripeAlreadyInDeletionTargetState(error: unknown, messagePatterns: r
   return messagePatterns.some((pattern) => pattern.test(message));
 }
 
-async function deleteCmuxOwnedAccountRows(userId: string, accountTeamIds: readonly string[]): Promise<void> {
+async function deleteHmuxOwnedAccountRows(userId: string, accountTeamIds: readonly string[]): Promise<void> {
   const db = cloudDb();
   const vmSync = await db.transaction(async (tx) => {
     const now = new Date();

@@ -1,13 +1,13 @@
 import AppKit
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxTerminal
+import HmuxTerminalCore
 import Foundation
 import os
 
 /// Answers Ghostty's link filter for one surface (cx-do47.1). A regex match
 /// under the pointer is a link only when it names a file or folder that exists
 /// (against the terminal's directory, then the git root above it) or a web
-/// address cmux would open, so `missing/nowhere.md` gets no underline, no
+/// address hmux would open, so `missing/nowhere.md` gets no underline, no
 /// pointing hand and no click. Remote terminals keep Ghostty's answer: their
 /// paths name files on another machine.
 ///
@@ -98,7 +98,7 @@ final class TerminalLinkHoverFilter: @unchecked Sendable {
 
 /// Ghostty's link filter callback; `userdata` is the surface's retained
 /// ``TerminalLinkHoverFilter``.
-let cmuxTerminalLinkFilterCallback: @convention(c) (
+let hmuxTerminalLinkFilterCallback: @convention(c) (
     UnsafeMutableRawPointer?, UnsafePointer<CChar>?, UInt
 ) -> Bool = { userdata, text, length in
     guard let userdata, let text else { return true }

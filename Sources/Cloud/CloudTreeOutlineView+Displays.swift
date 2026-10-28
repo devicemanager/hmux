@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 
 extension CloudTreeOutlineView.Coordinator {
     func displayMenuItems(machine: SurfaceMachineID, canCreate: Bool) -> [NSMenuItem] {

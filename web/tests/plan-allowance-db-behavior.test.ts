@@ -12,7 +12,7 @@ import { closeCloudDbForTests } from "../db/client";
 import { getGoVmUsage, GO_INCLUDED_VM_SECONDS } from "../services/vms/goUsage";
 import { getPlanBudgetUsage, PLAN_BUDGETS } from "../services/vms/planUsage";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const HOUR = 60 * 60 * 1000;
 const DAY = 24 * HOUR;
@@ -23,7 +23,7 @@ const users: string[] = [];
 beforeAll(() => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!databaseURL) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!databaseURL) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   sql = postgres(databaseURL, { max: 2 });
 });
 
@@ -53,7 +53,7 @@ async function appleSubscription(userId: string, planId: string, purchaseDate: D
     original_transaction_id, user_id, bundle_id, environment, product_id, plan_id, status,
     purchase_date, original_purchase_date, expires_at, state_signed_at
   ) values (
-    ${`otx-${userId}`}, ${userId}, 'com.cmux.app', 'Production', ${`com.cmux.app.${planId}.${period}`}, ${planId}, 'active',
+    ${`otx-${userId}`}, ${userId}, 'com.hmux.app', 'Production', ${`com.hmux.app.${planId}.${period}`}, ${planId}, 'active',
     ${purchaseDate}, ${purchaseDate}, ${expiresAt}, ${purchaseDate}
   )`;
 }
@@ -73,7 +73,7 @@ async function machine(input: {
   readonly startedAt: Date;
   readonly endedAt: Date;
 }) {
-  const metadata = input.reservation ? { cmuxResourceReservation: input.reservation } : {};
+  const metadata = input.reservation ? { hmuxResourceReservation: input.reservation } : {};
   const [row] = await db()<{ id: string }[]>`insert into cloud_vms (user_id, billing_team_id, billing_plan_id, provider, image_id, status, provider_metadata)
     values (${input.userId}, ${input.userId}, ${input.planId}, 'freestyle', 'test', 'running', ${db().json(metadata)})
     returning id`;
@@ -108,10 +108,10 @@ describe("Go hours for App Store subscribers", () => {
 });
 
 describe("Pro and Max allowances", () => {
-  const budgetSwitch = process.env.CMUX_VM_PLAN_BUDGETS;
+  const budgetSwitch = process.env.HMUX_VM_PLAN_BUDGETS;
   afterEach(() => {
-    if (budgetSwitch === undefined) delete process.env.CMUX_VM_PLAN_BUDGETS;
-    else process.env.CMUX_VM_PLAN_BUDGETS = budgetSwitch;
+    if (budgetSwitch === undefined) delete process.env.HMUX_VM_PLAN_BUDGETS;
+    else process.env.HMUX_VM_PLAN_BUDGETS = budgetSwitch;
   });
 
   dbTest("Pro meters compute units and saved disk on the web subscription's period", async () => {
@@ -121,9 +121,9 @@ describe("Pro and Max allowances", () => {
     const periodEnd = new Date(now.getTime() + 28 * DAY);
     await stripeSubscription(userId, "pro", periodStart, periodEnd);
     // Off by default: the pricing page promises no hour limits.
-    delete process.env.CMUX_VM_PLAN_BUDGETS;
+    delete process.env.HMUX_VM_PLAN_BUDGETS;
     expect(await getPlanBudgetUsage(userId, now)).toBeNull();
-    process.env.CMUX_VM_PLAN_BUDGETS = "on";
+    process.env.HMUX_VM_PLAN_BUDGETS = "on";
     // 10 hours of an 8 vCPU / 16 GB machine is 80 compute-hours; 4 hours of a
     // legacy machine without a recorded shape counts as the default 4 units.
     await machine({
@@ -151,7 +151,7 @@ describe("Pro and Max allowances", () => {
 
   dbTest("an App Store Max subscription outranks a web Pro one; Founder's Edition has no allowance", async () => {
     const now = new Date();
-    process.env.CMUX_VM_PLAN_BUDGETS = "on";
+    process.env.HMUX_VM_PLAN_BUDGETS = "on";
     const maxUser = newUser("apple-max");
     await stripeSubscription(maxUser, "pro", new Date(now.getTime() - DAY), new Date(now.getTime() + 29 * DAY));
     const purchased = new Date(now.getTime() - 5 * DAY);

@@ -54,12 +54,12 @@ class ComparisonBaseTests(unittest.TestCase):
         self.assertEqual(self.git(self.clone, "rev-list", "--count", self.head, self.base), "2")
 
     def test_available_commit_needs_no_network(self):
-        self.git(self.clone, "remote", "set-url", "origin", "/nonexistent/cmux-comparison-test")
+        self.git(self.clone, "remote", "set-url", "origin", "/nonexistent/hmux-comparison-test")
         result = self.fetch(self.head)
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_initial_push_without_a_base_needs_no_network(self):
-        self.git(self.clone, "remote", "set-url", "origin", "/nonexistent/cmux-comparison-test")
+        self.git(self.clone, "remote", "set-url", "origin", "/nonexistent/hmux-comparison-test")
         for revision in ("", "0" * 40):
             result = self.fetch(revision)
             self.assertEqual(result.returncode, 0, result.stderr)

@@ -20,7 +20,7 @@ export type SavedSession = {
   savedAt: number;
 };
 
-export const ACCOUNT_SESSIONS_COOKIE = "cmux-account-sessions";
+export const ACCOUNT_SESSIONS_COOKIE = "hmux-account-sessions";
 export const ACCOUNT_SESSIONS_PATH = "/handler/accounts";
 const ACCOUNT_SESSIONS_MAX_AGE_SECONDS = 365 * 24 * 60 * 60;
 const VAULT_VERSION = "v1";
@@ -47,7 +47,7 @@ export function findSession(sessions: SavedSession[], id: string): SavedSession 
 // MARK: Sealing
 
 function vaultKey(secret: string): Buffer {
-  return Buffer.from(hkdfSync("sha256", secret, "cmux-account-sessions", VAULT_VERSION, 32));
+  return Buffer.from(hkdfSync("sha256", secret, "hmux-account-sessions", VAULT_VERSION, 32));
 }
 
 export function sealSessions(sessions: SavedSession[], secret: string): string {

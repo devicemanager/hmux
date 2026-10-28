@@ -38,7 +38,7 @@ const REQUEST_TIMEOUT_MS = 10_000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 // Only the three managed Workers may receive browser Stack tokens. A generic
 // workers.dev suffix would also trust another account's Worker.
-const ORIGIN_ALLOWED = /^https:\/\/cmux-v2(?:-development|-staging)?\.debussy\.workers\.dev$/u;
+const ORIGIN_ALLOWED = /^https:\/\/hmux-v2(?:-development|-staging)?\.debussy\.workers\.dev$/u;
 
 export class V2DashboardController {
   private readonly options: DashboardOptions;
@@ -58,7 +58,7 @@ export class V2DashboardController {
   constructor(options: DashboardOptions) {
     if (!ORIGIN_ALLOWED.test(options.origin)) throw new Error("Dashboard origin is not an approved device service");
     this.options = options;
-    const storageKey = "cmux-iroh-v2.dashboard.client-instance";
+    const storageKey = "hmux-iroh-v2.dashboard.client-instance";
     const storage = typeof sessionStorage === "undefined" ? null : sessionStorage;
     const existing = storage?.getItem(storageKey) ?? null;
     this.clientInstanceId = existing ?? crypto.randomUUID();
@@ -132,7 +132,7 @@ export class V2DashboardController {
     const previous = this.socket;
     const url = new URL("/v2/dashboard/socket", this.options.origin);
     url.protocol = "wss:";
-    const socket = new WebSocket(url.href, ["cmux-v2-dashboard", `ticket.${ticket.token}`]);
+    const socket = new WebSocket(url.href, ["hmux-v2-dashboard", `ticket.${ticket.token}`]);
     this.socket = socket;
     try {
       await new Promise<void>((resolve, reject) => {

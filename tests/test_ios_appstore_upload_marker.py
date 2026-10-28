@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""The cmux.app upload marker must follow Apple's receipt, not the step's exit.
+"""The hmux.app upload marker must follow Apple's receipt, not the step's exit.
 
 ios-appstore-upload.yml skips a scheduled poll when a completed run for the
-same main SHA left a `cmux-app-testflight-upload` artifact: the marker says
+same main SHA left a `hmux-app-testflight-upload` artifact: the marker says
 "Apple already has this revision", and the next poll only retries group
 assignment. The two steps that write and retain that marker ran only on
 success, so a failure after App Store Connect had accepted the IPA (issue
@@ -28,7 +28,7 @@ WORKFLOW = ROOT / ".github/workflows/ios-appstore-upload.yml"
 RECORD = "Record completed upload before group assignment"
 RETAIN = "Retain completed upload for assignment retries"
 APP_ID = "6783338052"
-RECEIPT = {"uploadId": "41b619d5", "fileName": "cmux-resigned.ipa", "uploaded": True}
+RECEIPT = {"uploadId": "41b619d5", "fileName": "hmux-resigned.ipa", "uploaded": True}
 
 
 def upload_steps():
@@ -55,12 +55,12 @@ class UploadMarkerTests(unittest.TestCase):
         record = step(RECORD)
         with tempfile.TemporaryDirectory() as directory:
             temp = Path(directory)
-            upload_dir = temp / "cmux-ios-upload"
+            upload_dir = temp / "hmux-ios-upload"
             upload_dir.mkdir()
             if receipt is not None:
                 (upload_dir / "upload.log").write_text(receipt, encoding="utf-8")
             if build_number_file is not None:
-                (temp / "cmux-final-build-number.txt").write_text(
+                (temp / "hmux-final-build-number.txt").write_text(
                     build_number_file + "\n", encoding="utf-8"
                 )
             output = temp / "github_output"
@@ -84,7 +84,7 @@ class UploadMarkerTests(unittest.TestCase):
             outputs = dict(
                 line.split("=", 1) for line in output.read_text().splitlines() if "=" in line
             )
-            marker_path = temp / "cmux-app-upload-marker" / "upload.json"
+            marker_path = temp / "hmux-app-upload-marker" / "upload.json"
             marker = json.loads(marker_path.read_text()) if marker_path.exists() else None
             return outputs, marker
 
@@ -105,7 +105,7 @@ class UploadMarkerTests(unittest.TestCase):
         )
 
     def test_receipt_among_other_log_lines_is_found(self):
-        log = "Uploading cmux-resigned.ipa (53037920 bytes)\n" + json.dumps(RECEIPT, indent=2) + "\n"
+        log = "Uploading hmux-resigned.ipa (53037920 bytes)\n" + json.dumps(RECEIPT, indent=2) + "\n"
         outputs, marker = self.record("failure", receipt=log)
         self.assertEqual(outputs.get("recorded"), "true")
         self.assertEqual(marker["build_number"], "20260922133206")

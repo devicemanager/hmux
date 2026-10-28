@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Observation
 import SwiftUI
 
@@ -45,7 +45,7 @@ enum CommandPaletteRowHighlight: Equatable {
         }
     }
 
-    func backgroundColor(accent: CmuxAccentColor) -> Color {
+    func backgroundColor(accent: HmuxAccentColor) -> Color {
         switch self {
         case .selected: return accent.color.opacity(backgroundOpacity)
         case .hovered: return Color.primary.opacity(backgroundOpacity)
@@ -110,7 +110,7 @@ struct CommandPaletteCommandListRenderView: View {
 }
 
 struct CommandPaletteCommandListRowsView: View {
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     let state: CommandPaletteCommandListRenderState
     let onRunResult: (String) -> Void
     @State private var hoveredIndex: Int?
@@ -130,7 +130,7 @@ struct CommandPaletteCommandListRowsView: View {
                 if state.rows.isEmpty {
                     if state.shouldShowEmptyState {
                         Text(state.emptyStateText)
-                            .cmuxFont(size: 13, weight: .regular)
+                            .hmuxFont(size: 13, weight: .regular)
                             .foregroundStyle(.secondary)
                             .frame(maxWidth: .infinity, alignment: .leading)
                             .padding(.horizontal, 12)
@@ -145,7 +145,7 @@ struct CommandPaletteCommandListRowsView: View {
                         let rowBackground = CommandPaletteRowHighlight(
                             isSelected: index == state.selectedIndex,
                             isHovered: hoveredIndex == index
-                        ).backgroundColor(accent: cmuxAccent)
+                        ).backgroundColor(accent: hmuxAccent)
 
                         Button {
                             onRunResult(row.id)

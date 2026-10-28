@@ -1,7 +1,7 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxSettings
-import CmuxTerminalCore
+import HmuxSettings
+import HmuxTerminalCore
 import Foundation
 
 /// Owns remote click downloads and discards completions whose source terminal has changed.
@@ -61,7 +61,7 @@ final class RemoteTerminalFilePreviewCoordinator {
         let timeout = self.timeout
         let requestID = UUID()
         #if DEBUG
-        cmuxDebugLog("remotePreview.start request=\(requestID.uuidString) surface=\(sourcePanelID.uuidString)")
+        hmuxDebugLog("remotePreview.start request=\(requestID.uuidString) surface=\(sourcePanelID.uuidString)")
         #endif
         let sourceSurface = panel.surface
         let lifecycleID = sourceSurface.terminalLifecycleId
@@ -101,23 +101,23 @@ final class RemoteTerminalFilePreviewCoordinator {
                       workspace.focusedPanelId == sourcePanelID,
                       panel.hostedView.window?.isKeyWindow == true else {
                     #if DEBUG
-                    cmuxDebugLog("remotePreview.discarded request=\(requestID.uuidString)")
+                    hmuxDebugLog("remotePreview.discarded request=\(requestID.uuidString)")
                     #endif
                     return
                 }
-                let opened = CommandClickFileOpenRouter.openInCmux(
+                let opened = CommandClickFileOpenRouter.openInHmux(
                     workspace: workspace,
                     sourcePanelId: sourcePanelID,
                     filePath: localURL.path,
                     defaults: self.defaults
                 )
                 #if DEBUG
-                cmuxDebugLog("remotePreview.complete request=\(requestID.uuidString) opened=\(opened)")
+                hmuxDebugLog("remotePreview.complete request=\(requestID.uuidString) opened=\(opened)")
                 #endif
             } catch {
                 guard !Task.isCancelled else { return }
                 #if DEBUG
-                cmuxDebugLog("remotePreview.failed request=\(requestID.uuidString)")
+                hmuxDebugLog("remotePreview.failed request=\(requestID.uuidString)")
                 #endif
                 guard let workspace, let panel,
                       workspace.remoteTerminalFilePreviewConfiguration(for: sourcePanelID) == configuration,

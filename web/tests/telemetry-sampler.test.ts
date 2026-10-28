@@ -8,11 +8,11 @@ import {
   SimpleSpanProcessor,
 } from "@opentelemetry/sdk-trace-base";
 
-import { buildCmuxTraceSampler, isPriorityPath, isPrioritySpan, isVmPrioritySpan } from "../services/observability/sampler";
+import { buildHmuxTraceSampler, isPriorityPath, isPrioritySpan, isVmPrioritySpan } from "../services/observability/sampler";
 import { recordSpanError, withApiRouteSpan, withPrioritySpan } from "../services/telemetry";
 
-describe("buildCmuxTraceSampler", () => {
-  const neverSample = buildCmuxTraceSampler({ CMUX_OTEL_BASE_SAMPLE_RATIO: "0" });
+describe("buildHmuxTraceSampler", () => {
+  const neverSample = buildHmuxTraceSampler({ HMUX_OTEL_BASE_SAMPLE_RATIO: "0" });
   const root = otelContext.active();
 
   function decideRoot(name: string, attributes: Record<string, string>): SamplingDecision {
@@ -27,10 +27,10 @@ describe("buildCmuxTraceSampler", () => {
     expect(decideRoot("POST", { "http.target": "/api/vm/abc/attach-endpoint" })).toBe(
       SamplingDecision.RECORD_AND_SAMPLED,
     );
-    expect(decideRoot("cmux.api.POST /api/vm/base/open", {})).toBe(
+    expect(decideRoot("hmux.api.POST /api/vm/base/open", {})).toBe(
       SamplingDecision.RECORD_AND_SAMPLED,
     );
-    expect(decideRoot("anything", { "cmux.subsystem": "vm-cloud" })).toBe(
+    expect(decideRoot("anything", { "hmux.subsystem": "vm-cloud" })).toBe(
       SamplingDecision.RECORD_AND_SAMPLED,
     );
   });
@@ -39,11 +39,11 @@ describe("buildCmuxTraceSampler", () => {
     expect(decideRoot("POST /v1/responses", { "http.route": "/v1/responses" })).toBe(
       SamplingDecision.RECORD_AND_SAMPLED,
     );
-    expect(decideRoot("cmux.api.POST /v1/messages", {})).toBe(SamplingDecision.RECORD_AND_SAMPLED);
+    expect(decideRoot("hmux.api.POST /v1/messages", {})).toBe(SamplingDecision.RECORD_AND_SAMPLED);
     expect(decideRoot("GET", { "url.path": "/api/coderouter/opencode/config" })).toBe(
       SamplingDecision.RECORD_AND_SAMPLED,
     );
-    expect(decideRoot("anything", { "cmux.subsystem": "coderouter" })).toBe(
+    expect(decideRoot("anything", { "hmux.subsystem": "coderouter" })).toBe(
       SamplingDecision.RECORD_AND_SAMPLED,
     );
     expect(decideRoot("GET /v1beta/other", { "http.route": "/v1beta/other" })).toBe(
@@ -52,7 +52,7 @@ describe("buildCmuxTraceSampler", () => {
     expect(isPriorityPath("/v1/models?x=1")).toBe(true);
     expect(isPriorityPath("/v10/models")).toBe(false);
     expect(isPriorityPath("/api/coderouterx")).toBe(false);
-    expect(isPrioritySpan("GET /api/coderouter/health", { "cmux.priority": false })).toBe(false);
+    expect(isPrioritySpan("GET /api/coderouter/health", { "hmux.priority": false })).toBe(false);
     expect(decideRoot("GET /api/admin/pro-users", { "http.route": "/api/admin/pro-users" })).toBe(
       SamplingDecision.RECORD_AND_SAMPLED,
     );
@@ -92,7 +92,7 @@ describe("buildCmuxTraceSampler", () => {
     expect(decideRoot("GET /api/devices", { "http.route": "/api/devices" })).toBe(
       SamplingDecision.NOT_RECORD,
     );
-    const alwaysSample = buildCmuxTraceSampler({ CMUX_OTEL_BASE_SAMPLE_RATIO: "1" });
+    const alwaysSample = buildHmuxTraceSampler({ HMUX_OTEL_BASE_SAMPLE_RATIO: "1" });
     expect(
       alwaysSample.shouldSample(root, "0af7651916cd43dd8448eb211c80319c", "GET /", 1, {}, [])
         .decision,
@@ -101,7 +101,7 @@ describe("buildCmuxTraceSampler", () => {
 
   test("invalid or missing ratios fall back to the default without throwing", () => {
     for (const raw of [undefined, "", "nan", "-1", "7"]) {
-      expect(() => buildCmuxTraceSampler({ CMUX_OTEL_BASE_SAMPLE_RATIO: raw })).not.toThrow();
+      expect(() => buildHmuxTraceSampler({ HMUX_OTEL_BASE_SAMPLE_RATIO: raw })).not.toThrow();
     }
   });
 
@@ -109,7 +109,7 @@ describe("buildCmuxTraceSampler", () => {
     expect(isVmPrioritySpan("GET /api/vmstats-lookalike", {})).toBe(false);
     expect(isVmPrioritySpan("GET", { "url.path": "/api/devices" })).toBe(false);
     expect(isVmPrioritySpan("POST /v1/responses", { "http.route": "/v1/responses" })).toBe(false);
-    expect(isVmPrioritySpan("anything", { "cmux.subsystem": "coderouter" })).toBe(false);
+    expect(isVmPrioritySpan("anything", { "hmux.subsystem": "coderouter" })).toBe(false);
     // Prefix semantics are intentional: /api/vm/... and /api/vm itself.
     expect(isVmPrioritySpan("GET", { "url.path": "/api/vm" })).toBe(true);
   });
@@ -119,7 +119,7 @@ describe("buildCmuxTraceSampler", () => {
 describe("withApiRouteSpan re-rooting under head sampling", () => {
   const exporter = new InMemorySpanExporter();
   const provider = new BasicTracerProvider({
-    sampler: buildCmuxTraceSampler({ CMUX_OTEL_BASE_SAMPLE_RATIO: "0" }),
+    sampler: buildHmuxTraceSampler({ HMUX_OTEL_BASE_SAMPLE_RATIO: "0" }),
     spanProcessors: [new SimpleSpanProcessor(exporter)],
   });
   trace.setGlobalTracerProvider(provider);
@@ -148,13 +148,13 @@ describe("withApiRouteSpan re-rooting under head sampling", () => {
       withApiRouteSpan(
         new Request("https://cmux.com/api/vm", { method: "POST" }),
         "/api/vm",
-        { "cmux.subsystem": "vm-cloud" },
+        { "hmux.subsystem": "vm-cloud" },
         async () => new Response("{}", { status: 200 }),
       ));
     const spans = exporter.getFinishedSpans();
     expect(spans.length).toBe(1);
     const span = spans[0]!;
-    expect(span.name).toBe("cmux.api.POST /api/vm");
+    expect(span.name).toBe("hmux.api.POST /api/vm");
     // New trace, not the dropped parent's.
     expect(span.spanContext().traceId).not.toBe("1af7651916cd43dd8448eb211c80319c");
     expect(span.parentSpanContext).toBeUndefined();
@@ -178,14 +178,14 @@ describe("withApiRouteSpan re-rooting under head sampling", () => {
     exporter.reset();
     await otelContext.with(unsampledParentContext(), () =>
       withPrioritySpan(
-        "cmux-dashboard",
-        "cmux.dashboard.auth",
+        "hmux-dashboard",
+        "hmux.dashboard.auth",
         { "http.route": "/dashboard" },
         async () => undefined,
       ));
     const spans = exporter.getFinishedSpans();
     expect(spans.length).toBe(1);
-    expect(spans[0]?.name).toBe("cmux.dashboard.auth");
+    expect(spans[0]?.name).toBe("hmux.dashboard.auth");
     expect(spans[0]?.parentSpanContext).toBeUndefined();
     expect(spans[0]?.links[0]?.context.traceId).toBe("1af7651916cd43dd8448eb211c80319c");
   });
@@ -193,12 +193,12 @@ describe("withApiRouteSpan re-rooting under head sampling", () => {
   test("priority marker cannot be disabled by caller attributes", async () => {
     exporter.reset();
     await withPrioritySpan(
-      "cmux-dashboard",
-      "cmux.dashboard.auth",
-      { "cmux.priority": false },
+      "hmux-dashboard",
+      "hmux.dashboard.auth",
+      { "hmux.priority": false },
       async () => undefined,
     );
-    expect(exporter.getFinishedSpans()[0]?.attributes["cmux.priority"]).toBe(true);
+    expect(exporter.getFinishedSpans()[0]?.attributes["hmux.priority"]).toBe(true);
   });
 
   test("every span error sink redacts sensitive Error metadata", () => {
@@ -230,10 +230,10 @@ describe("withApiRouteSpan re-rooting under head sampling", () => {
     });
     expect(status).toEqual({ code: 2, message: "request failed [redacted]" });
     expect(attributes).toMatchObject({
-      "cmux.error_name": "Top [redacted]",
-      "cmux.error_message": "request failed [redacted]",
-      "cmux.error_cause_chain": "Cause [redacted]: cause [redacted]",
-      "cmux.error_cause_code": "[redacted]",
+      "hmux.error_name": "Top [redacted]",
+      "hmux.error_message": "request failed [redacted]",
+      "hmux.error_cause_chain": "Cause [redacted]: cause [redacted]",
+      "hmux.error_cause_code": "[redacted]",
     });
     expect(JSON.stringify({ recorded, status, attributes })).not.toContain("secret");
   });
@@ -257,8 +257,8 @@ describe("withApiRouteSpan re-rooting under head sampling", () => {
     expect(recorded).toBe("request failed [redacted]");
     expect(status).toEqual({ code: 2, message: "request failed [redacted]" });
     expect(attributes).toEqual({
-      "cmux.error_name": "NonError",
-      "cmux.error_message": "request failed [redacted]",
+      "hmux.error_name": "NonError",
+      "hmux.error_message": "request failed [redacted]",
     });
   });
 
@@ -269,14 +269,14 @@ describe("withApiRouteSpan re-rooting under head sampling", () => {
       await withApiRouteSpan(
         new Request("https://cmux.com/api/vm", { method: "POST" }),
         "/api/vm",
-        { "cmux.subsystem": "vm-cloud" },
+        { "hmux.subsystem": "vm-cloud" },
         async () => new Response("{}", { status: 200 }),
       );
       parent.end();
     });
     const spans = exporter.getFinishedSpans();
     expect(spans.length).toBe(2);
-    const child = spans.find((s) => s.name === "cmux.api.POST /api/vm");
+    const child = spans.find((s) => s.name === "hmux.api.POST /api/vm");
     const parent = spans.find((s) => s.name === "POST /api/vm");
     expect(child?.parentSpanContext?.spanId).toBe(parent?.spanContext().spanId);
     expect(child?.links.length ?? 0).toBe(0);
@@ -294,7 +294,7 @@ describe("always-kept operational routes", () => {
   });
 
   test("account deletion and its resume cron are always kept", () => {
-    const neverSample = buildCmuxTraceSampler({ CMUX_OTEL_BASE_SAMPLE_RATIO: "0" });
+    const neverSample = buildHmuxTraceSampler({ HMUX_OTEL_BASE_SAMPLE_RATIO: "0" });
     const decide = (name: string, attributes: Record<string, string>) =>
       neverSample.shouldSample(otelContext.active(), "0af7651916cd43dd8448eb211c80319c", name, 1, attributes, [])
         .decision;

@@ -28,8 +28,8 @@ describe("Go runtime accounting", () => {
     expect(subscriptionPeriodStart({})).toBeNull();
   });
   test("turns nested PostgreSQL quota failures into the specific upgrade guidance", () => {
-    expect(goCapacityConstraint({ cause: { constraint_name: "cmux_go_saved_limit" } })).toBe("saved");
-    expect(goCapacityConstraint({ cause: { constraint: "cmux_go_hours_limit" } })).toBe("hours");
+    expect(goCapacityConstraint({ cause: { constraint_name: "hmux_go_saved_limit" } })).toBe("saved");
+    expect(goCapacityConstraint({ cause: { constraint: "hmux_go_hours_limit" } })).toBe("hours");
     expect(goCapacityConstraint({ constraint: "unrelated_check" })).toBeNull();
   });
 });

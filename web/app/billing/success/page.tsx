@@ -14,7 +14,7 @@ import {
 import { appPricingNativeReturnURL } from "../../lib/billing";
 import { requestOrigin } from "../../lib/request-origin";
 import {
-  isCmuxCheckoutSession,
+  isHmuxCheckoutSession,
   isActiveStripeSubscriptionStatus,
   latestStripeSubscriptionForSession,
 } from "../../../services/billing/purchase";
@@ -33,7 +33,7 @@ type BillingSuccessMessages = {
   dashboardLink: string;
   emailLabel: string;
   whatUnlockedTitle: string;
-  openCmux: string;
+  openHmux: string;
   manageBilling: string;
   manageSignInMethods: string;
   features: Record<BillingSuccessFeatureKey, BillingSuccessFeatureMessage>;
@@ -67,7 +67,7 @@ export default async function BillingSuccessPage({
 
   const request = requestFromHeaders(requestHeaders, "/billing/success");
   const requestedScheme = validatedNativeCallbackScheme(
-    firstParam(params.cmux_scheme),
+    firstParam(params.hmux_scheme),
     request,
   );
   let session: Stripe.Checkout.Session;
@@ -82,7 +82,7 @@ export default async function BillingSuccessPage({
     });
     redirect("/pricing?billing=error");
   }
-  if (!isCmuxCheckoutSession(session, expandedSubscription(session))) {
+  if (!isHmuxCheckoutSession(session, expandedSubscription(session))) {
     redirect("/pricing?billing=error");
   }
   const scheme =
@@ -109,7 +109,7 @@ export default async function BillingSuccessPage({
 
   const email = purchaseEmail(session) ?? "";
   const { locale, messages } = await billingSuccessMessages(requestHeaders);
-  const openCmuxHref = appPricingNativeReturnURL(
+  const openHmuxHref = appPricingNativeReturnURL(
     new URL("/handler/after-sign-in", requestOrigin(request)),
     nativeCallbackHrefForScheme(scheme),
     sessionId,
@@ -120,7 +120,7 @@ export default async function BillingSuccessPage({
     key: BillingSuccessFeatureKey;
     href: string;
   }[] = [
-    { key: "cloudAgents", href: openCmuxHref.toString() },
+    { key: "cloudAgents", href: openHmuxHref.toString() },
     { key: "modelGateway", href: localizedDashboardPath(locale, "/dashboard/coderouter") },
     { key: "aiAccounts", href: localizedDashboardPath(locale, "/dashboard/ai-accounts") },
     { key: "iosApp", href: localizedDashboardPath(locale, "/dashboard/testflight") },
@@ -148,11 +148,11 @@ export default async function BillingSuccessPage({
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <a
               className="inline-flex min-h-10 items-center border border-foreground bg-foreground px-4 py-2 text-sm font-medium text-background transition-colors hover:bg-background hover:text-foreground focus-visible:outline focus-visible:outline-1 focus-visible:outline-foreground"
-              href={openCmuxHref.toString()}
+              href={openHmuxHref.toString()}
               target="_blank"
               rel="noreferrer"
             >
-              {messages.openCmux}
+              {messages.openHmux}
               <span aria-hidden="true" className="ml-3">→</span>
             </a>
             <a

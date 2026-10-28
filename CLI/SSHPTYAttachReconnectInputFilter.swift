@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Darwin
 import Foundation
 

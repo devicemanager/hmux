@@ -9,7 +9,7 @@ import {
 type FakeRow = {
   id: string;
   deviceCodeHash: string;
-  client: "cmux-vault" | "subrouter";
+  client: "hmux-vault" | "subrouter";
   status: string;
   userId: string | null;
   expiresAt: Date;
@@ -51,11 +51,11 @@ function countingMinter(
   tokens: CliAuthTokens | null,
 ): {
   minter: CliAuthTokenMinter;
-  calls: Array<{ userId: string; client: "cmux-vault" | "subrouter" }>;
+  calls: Array<{ userId: string; client: "hmux-vault" | "subrouter" }>;
 } {
   const calls: Array<{
     userId: string;
-    client: "cmux-vault" | "subrouter";
+    client: "hmux-vault" | "subrouter";
   }> = [];
   return {
     minter: async (userId, client) => {

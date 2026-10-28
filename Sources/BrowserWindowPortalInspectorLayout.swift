@@ -1,11 +1,11 @@
 import AppKit
-import CmuxAppKitSupportUI
+import HmuxAppKitSupportUI
 
 extension WindowBrowserPortal {
     static func hasVisibleInspectorView(in root: NSView) -> Bool {
         var stack: [NSView] = [root]
         while let current = stack.popLast() {
-            if cmuxIsWebInspectorObject(current),
+            if hmuxIsWebInspectorObject(current),
                !current.isHidden,
                current.alphaValue > 0,
                current.frame.width > 1,

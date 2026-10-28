@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxCloudResizeCore
-import CmuxCloudMachines
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCloudResizeCore
+import HmuxCloudMachines
+import HmuxSurfaceCatalogModel
 import AppKit
 import Foundation
 import SwiftUI
@@ -102,7 +102,7 @@ final class MachinesPanelViewModel: ObservableObject {
     /// remains the sole network-state owner.
     private func applyNetworkChange(_ online: Bool) {
         #if DEBUG
-        cmuxDebugLog("cloud.machines.list network online=\(online) wantsPolling=\(wantsPolling)")
+        hmuxDebugLog("cloud.machines.list network online=\(online) wantsPolling=\(wantsPolling)")
         #endif
         isNetworkOffline = !online
         if online {
@@ -118,7 +118,7 @@ final class MachinesPanelViewModel: ObservableObject {
     func recoverList() {
         refresh()
         #if DEBUG
-        cmuxDebugLog("cloud.machines.list recover started=\(isRecoveringList) problem=\(String(describing: listProblem))")
+        hmuxDebugLog("cloud.machines.list recover started=\(isRecoveringList) problem=\(String(describing: listProblem))")
         #endif
     }
 
@@ -222,7 +222,7 @@ final class MachinesPanelViewModel: ObservableObject {
         catalogProvider: @escaping @MainActor () -> SurfaceCatalogSnapshot = {
             MachinesPanelViewModel.catalog(
                 SurfaceCatalog.shared.snapshot,
-                hiding: CmuxTuiSurfaceProviderRegistry.shared.foreignTeamMachineIDs
+                hiding: HmuxTuiSurfaceProviderRegistry.shared.foreignTeamMachineIDs
             )
         },
         localWorkspacesProvider: (@MainActor () -> [CloudTreeLocalWorkspace])? = nil
@@ -251,15 +251,15 @@ final class MachinesPanelViewModel: ObservableObject {
             MainActor.assumeIsolated { self?.createsDidChange(finished: finished) }
         }
         authScopeObservers = [
-            Notification.Name.cmuxCloudVMAccessDidEnd,
-            .cmuxCloudTeamScopeDidChange,
-            .cmuxCloudTeamScopeReady,
+            Notification.Name.hmuxCloudVMAccessDidEnd,
+            .hmuxCloudTeamScopeDidChange,
+            .hmuxCloudTeamScopeReady,
         ].map { name in
             NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated {
                     guard let self else { return }
-                    if name == .cmuxCloudVMAccessDidEnd { self.resetForAuthTransition() }
-                    else if name == .cmuxCloudTeamScopeDidChange { self.beginTeamScopeTransition() }
+                    if name == .hmuxCloudVMAccessDidEnd { self.resetForAuthTransition() }
+                    else if name == .hmuxCloudTeamScopeDidChange { self.beginTeamScopeTransition() }
                     else { self.finishTeamScopeTransition() }
                 }
             }
@@ -290,7 +290,7 @@ final class MachinesPanelViewModel: ObservableObject {
         }
         if let unreadObserver { NotificationCenter.default.removeObserver(unreadObserver) }
         unreadObserver = NotificationCenter.default.addObserver(
-            forName: .cmuxCloudNotificationUnreadDidChange,
+            forName: .hmuxCloudNotificationUnreadDidChange,
             object: nil,
             queue: .main
         ) { [weak self] _ in
@@ -426,7 +426,7 @@ final class MachinesPanelViewModel: ObservableObject {
         let unread = CloudNotificationSyncHub.shared.unreadTerminalIDs
         guard unread != unreadTerminalIDs else { return }
         #if DEBUG
-        cmuxDebugLog("cloud.notifications.panelUnread machines=\(unread.count) terminals=\(unread.values.reduce(0) { $0 + $1.count })")
+        hmuxDebugLog("cloud.notifications.panelUnread machines=\(unread.count) terminals=\(unread.values.reduce(0) { $0 + $1.count })")
         #endif
         unreadTerminalIDs = unread
     }
@@ -584,7 +584,7 @@ final class MachinesPanelViewModel: ObservableObject {
     /// admitted again only after the shared registry refreshes the new account.
     @discardableResult
     func refreshAccountScope(
-        refreshCatalog: @escaping @MainActor () async -> Bool = { await CmuxTuiSurfaceProviderRegistry.shared.refresh(force: true) }
+        refreshCatalog: @escaping @MainActor () async -> Bool = { await HmuxTuiSurfaceProviderRegistry.shared.refresh(force: true) }
     ) -> Task<Void, Never> {
         resetForAuthTransition()
         machinePinStore?.refreshScope()
@@ -743,7 +743,7 @@ final class MachinesPanelViewModel: ObservableObject {
         }
         hasLoadedOnce = hasLoadedOnce || listProblem != .unreachable
         #if DEBUG
-        cmuxDebugLog("cloud.machines.list settled count=\(machines.count) problem=\(String(describing: listProblem))")
+        hmuxDebugLog("cloud.machines.list settled count=\(machines.count) problem=\(String(describing: listProblem))")
         #endif
     }
 
@@ -900,7 +900,7 @@ final class MachinesPanelViewModel: ObservableObject {
         readCatalog()
         plan = MachineSnapshotBuilder.planSnapshot(activeCount: rows.count, limits: lastLimits, machines: rows)
         #if DEBUG
-        cmuxDebugLog("cloud.machines.list stream upserts=\(upserts.count) deletions=\(deletions.count) authoritative=\(authoritative) count=\(rows.count)")
+        hmuxDebugLog("cloud.machines.list stream upserts=\(upserts.count) deletions=\(deletions.count) authoritative=\(authoritative) count=\(rows.count)")
         #endif
     }
 }

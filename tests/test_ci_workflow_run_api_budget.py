@@ -182,17 +182,17 @@ class FailureAttributionCalls(unittest.TestCase):
 
 
     NEXT_RUN = {**RUN, "id": 42, "conclusion": "success", "pull_requests": [
-        {"number": 7, "base": {"ref": "feat-cmux-next", "repo": {"url": f"https://api.github.com/repos/{REPO}"}}}]}
+        {"number": 7, "base": {"ref": "feat-hmux-next", "repo": {"url": f"https://api.github.com/repos/{REPO}"}}}]}
 
-    def test_a_green_run_into_feat_cmux_next_reads_only_the_comments(self) -> None:
-        # feat-cmux-next's ci.yml skips `Fast static checks` and so `macos` by design: routing,
+    def test_a_green_run_into_feat_hmux_next_reads_only_the_comments(self) -> None:
+        # feat-hmux-next's ci.yml skips `Fast static checks` and so `macos` by design: routing,
         # not "macOS never ran". Before, that skip read the pull request, its comments and its files.
         jobs = [{"name": "changes", "conclusion": "success"}, {"name": "Fast static checks", "conclusion": "skipped"}]
-        self.assertEqual(cf.macos_blocked(jobs, "feat-cmux-next"), "")
+        self.assertEqual(cf.macos_blocked(jobs, "feat-hmux-next"), "")
         self.assertEqual(cf.macos_blocked(jobs, "main"), "`Fast static checks` skipped")
         rep = cf.green_next_report(CountingGitHub(), self.NEXT_RUN)  # type: ignore[arg-type]
         self.assertIsNotNone(rep)
-        gh = CountingGitHub(files=["Packages/macOS/CmuxNext/Sources/A.swift"])
+        gh = CountingGitHub(files=["Packages/macOS/HmuxNext/Sources/A.swift"])
         result = cf.act(gh, cf.Writer(gh, dry_run=False), self.NEXT_RUN, rep)  # type: ignore[arg-type]
         self.assertEqual(gh.reads, ["comments 7"])  # no jobs, pull or files read
         self.assertEqual(gh.writes, [])
@@ -202,42 +202,42 @@ class FailureAttributionCalls(unittest.TestCase):
         cf.act(gh, cf.Writer(gh, dry_run=False), self.NEXT_RUN, cf.green_next_report(gh, self.NEXT_RUN))  # type: ignore[arg-type]
         self.assertEqual(gh.writes, [("PATCH", f"repos/{REPO}/issues/comments/99")])
 
-    def test_only_a_green_run_into_feat_cmux_next_skips_the_jobs(self) -> None:
+    def test_only_a_green_run_into_feat_hmux_next_skips_the_jobs(self) -> None:
         gh = CountingGitHub()
         self.assertIsNone(cf.green_next_report(gh, {**self.NEXT_RUN, "conclusion": "failure"}))  # type: ignore[arg-type]
         main_run = {**self.NEXT_RUN, "pull_requests": [
             {"number": 7, "base": {"ref": "main", "repo": {"url": f"https://api.github.com/repos/{REPO}"}}}]}
         self.assertIsNone(cf.green_next_report(gh, main_run))  # type: ignore[arg-type]
         fork_pr = {**self.NEXT_RUN, "pull_requests": [
-            {"number": 7, "base": {"ref": "feat-cmux-next", "repo": {"url": "https://api.github.com/repos/someone/cmux"}}}]}
+            {"number": 7, "base": {"ref": "feat-hmux-next", "repo": {"url": "https://api.github.com/repos/someone/hmux"}}}]}
         self.assertIsNone(cf.green_next_report(gh, fork_pr))  # type: ignore[arg-type]
 
-    def test_feat_cmux_next_ci_skips_the_static_checks_and_gates_macos_on_them(self) -> None:
-        shown = subprocess.run(["git", "-C", str(ROOT), "show", "origin/feat-cmux-next:.github/workflows/ci.yml"],
+    def test_feat_hmux_next_ci_skips_the_static_checks_and_gates_macos_on_them(self) -> None:
+        shown = subprocess.run(["git", "-C", str(ROOT), "show", "origin/feat-hmux-next:.github/workflows/ci.yml"],
                                capture_output=True, text=True, check=False)
         if shown.returncode:
-            self.skipTest("origin/feat-cmux-next is not fetched")
+            self.skipTest("origin/feat-hmux-next is not fetched")
         jobs = yaml.safe_load(shown.stdout)["jobs"]
         static = next(name for name, job in jobs.items() if job.get("name") == cf.STATIC_CHECKS_JOB)
-        self.assertIn("github.event.pull_request.base.ref != 'feat-cmux-next'", jobs[static]["if"])
+        self.assertIn("github.event.pull_request.base.ref != 'feat-hmux-next'", jobs[static]["if"])
         self.assertIn(f"needs.{static}.result == 'success'", jobs["macos"]["if"])
 
 
-class FeatCmuxNextSkips(unittest.TestCase):
-    """CI runs of pull requests into feat-cmux-next start no guard analysis: that branch's ci.yml
+class FeatHmuxNextSkips(unittest.TestCase):
+    """CI runs of pull requests into feat-hmux-next start no guard analysis: that branch's ci.yml
     skips `fast-guards` for them, so the analysis read the run's jobs to find no verdict."""
 
-    def test_guard_attribution_skips_feat_cmux_next_ci_runs(self) -> None:
+    def test_guard_attribution_skips_feat_hmux_next_ci_runs(self) -> None:
         job, _ = workflow_step("ci-guard-attribution.yml", "analyze", "Analyze")
         self.assertIn("!(github.event.workflow_run.event == 'pull_request' && "
                       "github.event.workflow_run.path == '.github/workflows/ci.yml' && "
-                      "github.event.workflow_run.pull_requests[0].base.ref == 'feat-cmux-next')", job["if"])
-        shown = subprocess.run(["git", "-C", str(ROOT), "show", "origin/feat-cmux-next:.github/workflows/ci.yml"],
+                      "github.event.workflow_run.pull_requests[0].base.ref == 'feat-hmux-next')", job["if"])
+        shown = subprocess.run(["git", "-C", str(ROOT), "show", "origin/feat-hmux-next:.github/workflows/ci.yml"],
                                capture_output=True, text=True, check=False)
         if shown.returncode:
-            self.skipTest("origin/feat-cmux-next is not fetched")
+            self.skipTest("origin/feat-hmux-next is not fetched")
         guards = yaml.safe_load(shown.stdout)["jobs"]["fast-guards"]
-        self.assertIn("github.event.pull_request.base.ref != 'feat-cmux-next'", guards["if"])
+        self.assertIn("github.event.pull_request.base.ref != 'feat-hmux-next'", guards["if"])
 
 
 class ReadTokenRouting(unittest.TestCase):
@@ -455,8 +455,8 @@ class DogfoodPublishCalls(StepHarness):
     def test_every_trust_condition_still_holds(self) -> None:
         for change in ({"state": "closed"}, {"author_association": "CONTRIBUTOR"},
                        {"head": {"sha": "b" * 40, "repo": {"full_name": REPO}}},
-                       {"head": {"sha": HEAD, "repo": {"full_name": "someone/cmux"}}},
-                       {"base": {"ref": "feat-cmux-next"}}):
+                       {"head": {"sha": HEAD, "repo": {"full_name": "someone/hmux"}}},
+                       {"base": {"ref": "feat-hmux-next"}}):
             calls, output, _ = self.run_step(self.STEP["run"], self.ENV, self.responses({**self.pull(), **change}))
             self.assertEqual(output, "publish=false\n", change)
         responses = self.responses(self.pull())
@@ -502,7 +502,7 @@ class HostedQueueRescueCalls(StepHarness):
 
     def test_reads_use_the_read_token_and_the_rerun_the_workflow_token(self) -> None:
         self.assertEqual(self.STEP["env"]["READ_TOKEN"],
-                         "${{ steps.cmux-bot-token.outputs.token || steps.glaeda-token.outputs.token }}")
+                         "${{ steps.hmux-bot-token.outputs.token || steps.glaeda-token.outputs.token }}")
         with tempfile.TemporaryDirectory() as tmp:
             tokens = Path(tmp) / "tokens"
             self.run_step(self.STEP["run"], {**self.ENV, "READ_TOKEN": "app", "FAKE_GH_TOKEN_LOG": str(tokens)},
@@ -516,7 +516,7 @@ class HostedQueueRescueCalls(StepHarness):
         self.assertIn("another rescue owns it", out)
 
 
-class CmuxBotTokenWorkflowShape(unittest.TestCase):
+class HmuxBotTokenWorkflowShape(unittest.TestCase):
     """High-volume bot jobs use the dedicated installation budget when configured."""
 
     JOBS = {
@@ -529,7 +529,7 @@ class CmuxBotTokenWorkflowShape(unittest.TestCase):
         # The publish job runs in the artifacts environment, which is limited
         # to R2 credentials by the production-secret guard. Its explicitly
         # scoped GITHUB_TOKEN preserves that trust boundary; capture has no
-        # artifact secrets and can use cmux-bot's separate budget.
+        # artifact secrets and can use hmux-bot's separate budget.
         "dogfood-artifact-publish.yml": ("capture",),
     }
     PERMISSIONS = {
@@ -547,13 +547,13 @@ class CmuxBotTokenWorkflowShape(unittest.TestCase):
                 with self.subTest(workflow=filename, job=job_name):
                     job = document["jobs"][job_name]
                     steps = job["steps"]
-                    mint = next(step for step in steps if step.get("id") == "cmux-bot-token")
+                    mint = next(step for step in steps if step.get("id") == "hmux-bot-token")
                     self.assertEqual(mint["uses"],
                                      "actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1")
-                    self.assertIn("vars.CMUX_BOT_APP_ID != ''", mint["if"])
+                    self.assertIn("vars.HMUX_BOT_APP_ID != ''", mint["if"])
                     self.assertTrue(mint["continue-on-error"])
-                    self.assertEqual(mint["with"]["app-id"], "${{ vars.CMUX_BOT_APP_ID }}")
-                    self.assertEqual(mint["with"]["private-key"], "${{ secrets.CMUX_BOT_APP_KEY }}")
+                    self.assertEqual(mint["with"]["app-id"], "${{ vars.HMUX_BOT_APP_ID }}")
+                    self.assertEqual(mint["with"]["private-key"], "${{ secrets.HMUX_BOT_APP_KEY }}")
                     self.assertEqual({key: mint["with"][key] for key in self.PERMISSIONS}, self.PERMISSIONS)
 
                     # Every shell step that can call gh receives the App token,
@@ -563,16 +563,16 @@ class CmuxBotTokenWorkflowShape(unittest.TestCase):
                     self.assertTrue(token_envs)
                     for step_id, value in token_envs:
                         if filename == "ci-queue-janitor.yml" and step_id == "fresh":
-                            # Ahead of the cmux-bot mint, so only the glaeda-route App's token.
+                            # Ahead of the hmux-bot mint, so only the glaeda-route App's token.
                             self.assertEqual(value, "${{ steps.glaeda-token.outputs.token || github.token }}")
                         else:
-                            self.assertIn("steps.cmux-bot-token.outputs.token", value)
+                            self.assertIn("steps.hmux-bot-token.outputs.token", value)
 
     def test_artifact_publisher_keeps_the_r2_environment_secret_boundary(self) -> None:
         document = yaml.safe_load((ROOT / ".github/workflows/dogfood-artifact-publish.yml").read_text())
         publish = document["jobs"]["publish"]
         self.assertEqual(publish["environment"], "artifacts")
-        self.assertFalse(any(step.get("id") == "cmux-bot-token" for step in publish["steps"]))
+        self.assertFalse(any(step.get("id") == "hmux-bot-token" for step in publish["steps"]))
         for step in publish["steps"]:
             token = step.get("env", {}).get("GH_TOKEN")
             if token is not None:

@@ -45,9 +45,9 @@ test("the agent's reply is the last agent message in codex's JSONL stream", () =
     JSON.stringify({ type: "thread.started" }),
     JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "first" } }),
     "not json",
-    JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "# cmux" } }),
+    JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "# hmux" } }),
   ].join("\n");
-  expect(lastAgentMessage(stream)).toBe("# cmux");
+  expect(lastAgentMessage(stream)).toBe("# hmux");
   expect(lastAgentMessage("")).toBeNull();
 });
 
@@ -87,7 +87,7 @@ test("fan-out submits every lane at once and reports each outcome, including adm
       };
     }
     if (method === "POST" && route.endsWith("/exec")) {
-      return { status: 200, text: "", json: { stdout: JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "# cmux" } }) } };
+      return { status: 200, text: "", json: { stdout: JSON.stringify({ type: "item.completed", item: { type: "agent_message", text: "# hmux" } }) } };
     }
     throw new Error(`unexpected ${method} ${route}`);
   };

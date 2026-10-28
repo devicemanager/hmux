@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import SwiftUI
 
 /// The noninteractive label shared by a create row and its SwiftUI button.

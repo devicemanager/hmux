@@ -1,5 +1,5 @@
 import AppKit
-import CmuxTerminalCore
+import HmuxTerminalCore
 
 struct KeyboardCopyModeResolvedCell {
     let cursor: TerminalKeyboardCopyModeCursor

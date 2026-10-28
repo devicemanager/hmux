@@ -5,7 +5,7 @@
         --host <capture-mac> [--allow-1x] [--keep-app] [--dry-run]
 
 Reads a scene file, runs host_agent.py on the capture host over SSH (it
-installs the latest nightly there, sets up the scene with the cmux CLI and
+installs the latest nightly there, sets up the scene with the hmux CLI and
 captures the window), copies the raw capture back, encodes it to the
 changelog media convention, writes it under web/public/changelog/<version>/,
 and points the feature's entry in changelog-media.ts at it.
@@ -106,11 +106,11 @@ def validate_scene(scene):
 
 
 def validate_step(step):
-    kinds = [k for k in ("cmux", "sleep", "settings") if k in step]
+    kinds = [k for k in ("hmux", "sleep", "settings") if k in step]
     if len(kinds) != 1:
-        raise SceneError("each step has exactly one of cmux, sleep, settings: {!r}".format(step))
-    if "cmux" in step and not (isinstance(step["cmux"], list) and step["cmux"]):
-        raise SceneError("cmux steps are argument lists: {!r}".format(step))
+        raise SceneError("each step has exactly one of hmux, sleep, settings: {!r}".format(step))
+    if "hmux" in step and not (isinstance(step["hmux"], list) and step["hmux"]):
+        raise SceneError("hmux steps are argument lists: {!r}".format(step))
 
 
 # Host agent -----------------------------------------------------------------

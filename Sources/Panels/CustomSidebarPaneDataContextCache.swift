@@ -1,6 +1,6 @@
-import CmuxSidebar
-import CmuxNotifications
-import CmuxSwiftRender
+import HmuxSidebar
+import HmuxNotifications
+import HmuxSwiftRender
 import Foundation
 
 @MainActor

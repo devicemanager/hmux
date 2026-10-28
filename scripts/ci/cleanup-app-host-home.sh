@@ -7,33 +7,33 @@ source "$ci_script_dir/app-host-isolation.sh"
 # shellcheck source=scripts/ci/app-host-processes.sh
 source "$ci_script_dir/app-host-processes.sh"
 
-if [ "${CMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" != "1" ]; then
+if [ "${HMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" != "1" ]; then
   echo "FAIL: refusing app-host cleanup without the mandatory CI isolation marker" >&2
   exit 1
 fi
 
 published_identity_count=0
 for published_name in \
-  CMUX_APP_HOST_KEY \
-  CMUX_APP_HOST_HOME \
-  CMUX_APP_HOST_XDG_CONFIG_HOME \
-  CMUX_APP_HOST_RECEIPT_DIR \
-  CMUX_APP_HOST_CLEANUP_CONFIRMATION \
-  CMUX_APP_HOST_CONFIRMATION_FILE
+  HMUX_APP_HOST_KEY \
+  HMUX_APP_HOST_HOME \
+  HMUX_APP_HOST_XDG_CONFIG_HOME \
+  HMUX_APP_HOST_RECEIPT_DIR \
+  HMUX_APP_HOST_CLEANUP_CONFIRMATION \
+  HMUX_APP_HOST_CONFIRMATION_FILE
 do
   if [ -n "${!published_name:-}" ]; then
     published_identity_count=$((published_identity_count + 1))
   fi
 done
 
-cmux_resolve_app_host_identity
+hmux_resolve_app_host_identity
 if [ "$published_identity_count" -eq 0 ]; then
-  if [ ! -e "$CMUX_RESOLVED_APP_HOST_HOME" ] \
-    && [ ! -L "$CMUX_RESOLVED_APP_HOST_HOME" ] \
-    && [ ! -e "$CMUX_RESOLVED_APP_HOST_RECEIPT_DIR" ] \
-    && [ ! -L "$CMUX_RESOLVED_APP_HOST_RECEIPT_DIR" ] \
-    && [ ! -e "$CMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE" ] \
-    && [ ! -L "$CMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE" ]; then
+  if [ ! -e "$HMUX_RESOLVED_APP_HOST_HOME" ] \
+    && [ ! -L "$HMUX_RESOLVED_APP_HOST_HOME" ] \
+    && [ ! -e "$HMUX_RESOLVED_APP_HOST_RECEIPT_DIR" ] \
+    && [ ! -L "$HMUX_RESOLVED_APP_HOST_RECEIPT_DIR" ] \
+    && [ ! -e "$HMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE" ] \
+    && [ ! -L "$HMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE" ]; then
     echo "App-host isolation identity was not published and no derived target exists; cleanup skipped"
     exit 0
   fi
@@ -45,12 +45,12 @@ if [ "$published_identity_count" -ne 6 ]; then
   exit 1
 fi
 
-cmux_validate_published_app_host_identity_values
-app_host_home="$CMUX_RESOLVED_APP_HOST_HOME"
-app_host_xdg_config_home="$CMUX_RESOLVED_APP_HOST_XDG_CONFIG_HOME"
-app_host_receipt_dir="$CMUX_RESOLVED_APP_HOST_RECEIPT_DIR"
-app_host_confirmation_file="$CMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE"
-app_host_key="$CMUX_RESOLVED_APP_HOST_KEY"
+hmux_validate_published_app_host_identity_values
+app_host_home="$HMUX_RESOLVED_APP_HOST_HOME"
+app_host_xdg_config_home="$HMUX_RESOLVED_APP_HOST_XDG_CONFIG_HOME"
+app_host_receipt_dir="$HMUX_RESOLVED_APP_HOST_RECEIPT_DIR"
+app_host_confirmation_file="$HMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE"
+app_host_key="$HMUX_RESOLVED_APP_HOST_KEY"
 
 if [ ! -e "$app_host_home" ] \
   && [ ! -L "$app_host_home" ] \
@@ -70,7 +70,7 @@ if [ -L "$app_host_receipt_dir" ]; then
   echo "FAIL: refusing app-host cleanup through a receipt symlink" >&2
   exit 1
 fi
-cmux_validate_app_host_cleanup_confirmation
+hmux_validate_app_host_cleanup_confirmation
 
 # Preparation publishes the external confirmation before either mutable root.
 # If interruption happens in that narrow window, the authenticated claim is the
@@ -136,22 +136,22 @@ if [ -d "$app_host_home" ] \
   && [ -d "$app_host_xdg_config_home" ] \
   && [ ! -L "$app_host_xdg_config_home" ] \
   && [ -d "$app_host_receipt_dir" ]; then
-  cmux_validate_published_app_host_identity
+  hmux_validate_published_app_host_identity
 fi
 
-if [ -z "${CMUX_DERIVED_DATA_PATH:-}" ]; then
+if [ -z "${HMUX_DERIVED_DATA_PATH:-}" ]; then
   echo "FAIL: app-host cleanup requires the shard DerivedData path" >&2
   exit 1
 fi
-cmux_validate_app_host_derived_data "$CMUX_DERIVED_DATA_PATH"
-derived_data_path="$CMUX_VALIDATED_APP_HOST_DERIVED_DATA"
+hmux_validate_app_host_derived_data "$HMUX_DERIVED_DATA_PATH"
+derived_data_path="$HMUX_VALIDATED_APP_HOST_DERIVED_DATA"
 
 # E2E products live in the workspace, while shards use runner temp. Neither
 # location grants process ownership. The helper cross-checks the current run's
 # receipts against lsof's executable vnode and open receipt descriptor, and
 # fails if a live target in this exact DerivedData tree lacks a matching receipt.
 # Only the confirmed home and receipt paths below are deleted, never the product.
-cmux_terminate_verified_app_hosts \
+hmux_terminate_verified_app_hosts \
   "$app_host_receipt_dir" "$app_host_key" "$derived_data_path"
 
 rm -rf -- "$app_host_home"

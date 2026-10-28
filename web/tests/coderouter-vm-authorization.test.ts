@@ -9,14 +9,14 @@ import { scrubSentryEvent } from "../services/sentry";
 
 const identity = { teamId: "team-1", stackUserId: "user-1", vmId: "vm-1" };
 const request = (token: string) => new Request("https://coderouter.test/v1/models", {
-  headers: { "x-cmux-authorization": `Bearer ${token}` },
+  headers: { "x-hmux-authorization": `Bearer ${token}` },
 });
 const now = Math.floor(Date.now() / 1000);
 async function arbitraryToken(claims: Record<string, unknown> = {}, header: Record<string, unknown> = {}) {
   return await new SignJWT({ vm_id: "vm-1", team_id: "team-1", owner_id: "user-1", jti: "id-1",
-    iss: "cmux", aud: "cmux-vm-model-plane", iat: now, exp: now + 60, ...claims })
-    .setProtectedHeader({ alg: "HS256", typ: "cmux-vm+jwt", kid: "test-v1", ...header })
-    .sign(Buffer.from(process.env.CMUX_VM_AUTH_SIGNING_KEY!, "base64url"));
+    iss: "hmux", aud: "hmux-vm-model-plane", iat: now, exp: now + 60, ...claims })
+    .setProtectedHeader({ alg: "HS256", typ: "hmux-vm+jwt", kid: "test-v1", ...header })
+    .sign(Buffer.from(process.env.HMUX_VM_AUTH_SIGNING_KEY!, "base64url"));
 }
 
 describe("signed VM authorization", () => {
@@ -25,7 +25,7 @@ describe("signed VM authorization", () => {
     const req = request(token);
     req.headers.set("authorization", "Bearer crt_forged");
     req.headers.set("x-coderouter-route-token", "crt_forged");
-    req.headers.set("x-cmux-vm-id", "vm-b");
+    req.headers.set("x-hmux-vm-id", "vm-b");
     const result = await authenticateRequestRouteToken(req, async t => t === token ? identity : null);
     expect(result.ok).toBe(true);
     if (result.ok) expect(result.identity.vmId).toBe("vm-1");
@@ -61,7 +61,7 @@ describe("signed VM authorization", () => {
   test("malformed/unsigned headers fail closed without fallback or database access", async () => {
     for (const header of ["", "Basic abc", "Bearer", "Bearer crt_unsigned", "Bearer a.b.", "Bearer a.b.c, a.b.c", "a.b.c", `Bearer ${"x".repeat(4097)}`]) {
       const req = request("unused");
-      req.headers.set("x-cmux-authorization", header);
+      req.headers.set("x-hmux-authorization", header);
       req.headers.set("authorization", "Bearer crt_valid_cli");
       let lookups = 0;
       const result = await authenticateRequestRouteToken(req, async () => { lookups++; return identity; });
@@ -113,27 +113,27 @@ describe("signed VM authorization", () => {
   });
 
   test("retiring a key rejects its tokens immediately, overlap permits only listed keys", async () => {
-    const oldKey = process.env.CMUX_VM_AUTH_SIGNING_KEY!;
+    const oldKey = process.env.HMUX_VM_AUTH_SIGNING_KEY!;
     const token = await vmToken();
     try {
-      process.env.CMUX_VM_AUTH_SIGNING_KEY = randomBytes(32).toString("base64url");
-      process.env.CMUX_VM_AUTH_SIGNING_KEY_ID = "test-v2";
+      process.env.HMUX_VM_AUTH_SIGNING_KEY = randomBytes(32).toString("base64url");
+      process.env.HMUX_VM_AUTH_SIGNING_KEY_ID = "test-v2";
       expect(await verifyVmAuthorization(token)).toBeNull();
-      process.env.CMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS = JSON.stringify({ "test-v1": oldKey });
+      process.env.HMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS = JSON.stringify({ "test-v1": oldKey });
       expect((await verifyVmAuthorization(token))?.vm_id).toBe("vm-1");
-      delete process.env.CMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS;
+      delete process.env.HMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS;
       expect(await verifyVmAuthorization(token)).toBeNull();
     } finally {
-      process.env.CMUX_VM_AUTH_SIGNING_KEY = oldKey;
-      process.env.CMUX_VM_AUTH_SIGNING_KEY_ID = "test-v1";
-      delete process.env.CMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS;
+      process.env.HMUX_VM_AUTH_SIGNING_KEY = oldKey;
+      process.env.HMUX_VM_AUTH_SIGNING_KEY_ID = "test-v1";
+      delete process.env.HMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS;
     }
   });
 
   test("secrets cannot enter guest environment files or telemetry", async () => {
     const token = await vmToken();
     expect(() => renderVmGuestModelPlaneEnvFile({ OPENAI_API_KEY: token })).toThrow();
-    const event = scrubSentryEvent({ extra: { "x-cmux-authorization": `Bearer ${token}`, detail: token } });
+    const event = scrubSentryEvent({ extra: { "x-hmux-authorization": `Bearer ${token}`, detail: token } });
     expect(JSON.stringify(event).includes(token)).toBe(false);
   });
 });

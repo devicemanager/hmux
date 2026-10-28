@@ -24,7 +24,7 @@ function span(overrides: Record<string, unknown> = {}) {
 }
 function batch(spans = [span()], channel = "nightly") { return { version: 1, client: { channel, version: "0.1.0", build: "123", revision: "abcdef1234567", osVersion: "26.0", architecture: "arm64" }, spans }; }
 function request(body: unknown = batch(), headers: Record<string, string> = {}) {
-  return new Request("https://cmux.test/api/observability/cloud", {
+  return new Request("https://hmux.test/api/observability/cloud", {
     method: "POST", headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
   });
@@ -121,7 +121,7 @@ describe("Cloud diagnostic boundary", () => {
     expect(errorChannels).toEqual(["production", "rc"]);
     const traceChannels = sent.filter((item) => item.url.endsWith("/v1/traces"))
       .map((item) => item.body.resourceSpans[0].resource.attributes
-        .find((attribute: any) => attribute.key === "cmux.client.channel").value.stringValue).sort();
+        .find((attribute: any) => attribute.key === "hmux.client.channel").value.stringValue).sort();
     expect(traceChannels).toEqual(["production", "rc"]);
   });
 
@@ -261,7 +261,7 @@ describe("one span outside the contract never costs the rest of the upload", () 
     expect(response.status).toBe(202);
     expect(await response.json()).toEqual({ accepted: 3, rejected: 0, eventIds: ids.slice(0, 3), rejectedEventIds: [] });
     expect(stored).toEqual(ids.slice(0, 3));
-    expect(exportedNames()).toEqual(["cmux.cloud.network.request", "cmux.cloud.agent_updates.operation", "cmux.auth.stack_rate_limited"]);
+    expect(exportedNames()).toEqual(["hmux.cloud.network.request", "hmux.cloud.agent_updates.operation", "hmux.auth.stack_rate_limited"]);
   });
 
   test("stores an unknown future operation as unknown and drops only the span that breaks the contract", async () => {
@@ -280,7 +280,7 @@ describe("one span outside the contract never costs the rest of the upload", () 
     const submittedIds = payload.spans.map((item) => item.eventId);
     expect(await response.json()).toEqual({ accepted: 3, rejected: 3, eventIds: submittedIds, rejectedEventIds: [ids[1], ids[2], ids[4]] });
     expect(stored).toEqual([ids[0], ids[3], submittedIds[5]]);
-    expect(exportedNames()).toEqual(["cmux.cloud.unknown.request", "cmux.cloud.create.provider", "cmux.cloud.unknown.route"]);
+    expect(exportedNames()).toEqual(["hmux.cloud.unknown.request", "hmux.cloud.create.provider", "hmux.cloud.unknown.route"]);
     const errors = sent.find((item) => item.url.endsWith("/v1/ingest/test-errors"))!.body;
     expect(errors.map((item: any) => [item.operation, item.failure])).toEqual([["unknown", "unknown"], ["create", "placement"], ["unknown", "network"]]);
     expect(JSON.stringify(sent)).not.toContain("teleport");
@@ -305,14 +305,14 @@ describe("shared development error destination", () => {
   test("routes client and server errors to the dev dataset with backend identity", async () => {
     const { cloudAxiomConfiguration, exportCloudDiagnostics } = await import("../services/observability/cloudTelemetryExport");
     const configuration = cloudAxiomConfiguration({
-      CMUX_CLOUD_AXIOM_TOKEN: "test-token",
-      CMUX_CLOUD_TELEMETRY_ID_KEY: "k".repeat(32),
-      CMUX_DEV_BUILD_TAG: "errhub",
-      CMUX_DEV_BUILD_COMMIT: "a".repeat(40),
-      CMUX_DEV_BUILD_SOURCE_SHA256: "b".repeat(64),
+      HMUX_CLOUD_AXIOM_TOKEN: "test-token",
+      HMUX_CLOUD_TELEMETRY_ID_KEY: "k".repeat(32),
+      HMUX_DEV_BUILD_TAG: "errhub",
+      HMUX_DEV_BUILD_COMMIT: "a".repeat(40),
+      HMUX_DEV_BUILD_SOURCE_SHA256: "b".repeat(64),
     } as unknown as NodeJS.ProcessEnv)!;
-    expect(configuration.tracesDataset).toBe("cmux-dev-otel-traces");
-    expect(configuration.errorsDataset).toBe("cmux-dev-otel-traces");
+    expect(configuration.tracesDataset).toBe("hmux-dev-otel-traces");
+    expect(configuration.errorsDataset).toBe("hmux-dev-otel-traces");
     const parsed = parseCloudTelemetryBatch(batch(), now)!;
     const sent: { url: string; body: any }[] = [];
     await exportCloudDiagnostics(["client", "server"].map((source) => ({
@@ -334,10 +334,10 @@ describe("shared development error destination", () => {
   test("hosted production never follows a dev tag into a dev dataset", async () => {
     const { cloudAxiomConfiguration } = await import("../services/observability/cloudTelemetryExport");
     const config = cloudAxiomConfiguration({
-      VERCEL_ENV: "production", CMUX_DEV_BUILD_TAG: "errhub",
-      CMUX_CLOUD_AXIOM_TOKEN: "test", CMUX_CLOUD_TELEMETRY_ID_KEY: "k".repeat(32),
+      VERCEL_ENV: "production", HMUX_DEV_BUILD_TAG: "errhub",
+      HMUX_CLOUD_AXIOM_TOKEN: "test", HMUX_CLOUD_TELEMETRY_ID_KEY: "k".repeat(32),
     } as unknown as NodeJS.ProcessEnv)!;
-    expect(config.errorsDataset).toBe("cmux-cloud-errors-prod");
+    expect(config.errorsDataset).toBe("hmux-cloud-errors-prod");
   });
 
   test("client tags survive the strict diagnostics boundary", () => {
@@ -432,7 +432,7 @@ describe("ingest sampling of routine Cloud polls", () => {
   test("exports the sample weight so Axiom counts can be scaled", () => {
     const parsed = parseCloudTelemetryBatch(batch([poll({ traceId: sampledTrace })]), now)!;
     const attribute = (exported: ReturnType<typeof cloudSpanToOtlp>) => exported.attributes
-      .find((item) => item.key === "cmux.telemetry.sample_weight")?.value;
+      .find((item) => item.key === "hmux.telemetry.sample_weight")?.value;
     expect(attribute(cloudSpanToOtlp(parsed.spans[0]!, 50))).toEqual({ intValue: "50" });
     expect(attribute(cloudSpanToOtlp(parsed.spans[0]!))).toEqual({ intValue: "1" });
   });
@@ -479,19 +479,19 @@ describe("ingest sampling of routine Cloud polls", () => {
       return { resource: attributes(resourceSpan.resource.attributes), name: otlp.name, status: otlp.status.code, attributes: attributes(otlp.attributes) };
     });
     expect(exported[0]).toMatchObject({
-      resource: { "service.instance.id": instanceId, "cmux.client.channel": "production", "cmux.observation.source": "client" },
-      name: "cmux.auth.stack_rate_limited", status: 2,
+      resource: { "service.instance.id": instanceId, "hmux.client.channel": "production", "hmux.observation.source": "client" },
+      name: "hmux.auth.stack_rate_limited", status: 2,
       attributes: {
-        "cmux.observation.source": "client", "cmux.auth.phase": "token_refresh", "cmux.auth.retry_after_s": 60,
-        "cmux.auth.backoff_s": 60, "cmux.auth.attempt": 2, "cmux.auth.body_kind": "html",
-        "http.status_code": 429, "cmux.auth.endpoint": "/api/v1/auth/oauth/token",
+        "hmux.observation.source": "client", "hmux.auth.phase": "token_refresh", "hmux.auth.retry_after_s": 60,
+        "hmux.auth.backoff_s": 60, "hmux.auth.attempt": 2, "hmux.auth.body_kind": "html",
+        "http.status_code": 429, "hmux.auth.endpoint": "/api/v1/auth/oauth/token",
       },
     });
     expect(exported[1]).toMatchObject({
-      name: "cmux.auth.stack_rate_limit_recovered", status: 1,
-      attributes: { "cmux.auth.phase": "token_refresh", "cmux.auth.limited_for_s": 75 },
+      name: "hmux.auth.stack_rate_limit_recovered", status: 1,
+      attributes: { "hmux.auth.phase": "token_refresh", "hmux.auth.limited_for_s": 75 },
     });
-    expect(Object.keys(exported[0].attributes).filter((key) => key.startsWith("cmux.cloud."))).toEqual([]);
+    expect(Object.keys(exported[0].attributes).filter((key) => key.startsWith("hmux.cloud."))).toEqual([]);
   });
 
   test("rejects a sign-in rate-limit record that carries a query, an address or no 429", async () => {

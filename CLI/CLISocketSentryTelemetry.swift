@@ -1,6 +1,6 @@
-import CmuxFoundation
-import CmuxSentryReporting
-import CmuxSettings
+import HmuxFoundation
+import HmuxSentryReporting
+import HmuxSettings
 import Darwin
 import Foundation
 
@@ -13,19 +13,19 @@ import Foundation
 
 enum CLISocketEnvironment {
     static func socketPath(in environment: [String: String]) throws -> String? {
-        let socketPath = normalized(environment["CMUX_SOCKET_PATH"])
-        let legacySocketPath = normalized(environment["CMUX_SOCKET"])
+        let socketPath = normalized(environment["HMUX_SOCKET_PATH"])
+        let legacySocketPath = normalized(environment["HMUX_SOCKET"])
         if let socketPath, let legacySocketPath, socketPath != legacySocketPath {
             throw CLIError(message: String(
                 localized: "cli.socket.error.conflictingEnvironment",
-                defaultValue: "Refusing to choose socket: CMUX_SOCKET_PATH and CMUX_SOCKET differ. Use CMUX_SOCKET_PATH or unset CMUX_SOCKET."
+                defaultValue: "Refusing to choose socket: HMUX_SOCKET_PATH and HMUX_SOCKET differ. Use HMUX_SOCKET_PATH or unset HMUX_SOCKET."
             ))
         }
         return socketPath ?? legacySocketPath
     }
 
     static func socketPathForTelemetry(in environment: [String: String]) -> String? {
-        normalized(environment["CMUX_SOCKET_PATH"]) ?? normalized(environment["CMUX_SOCKET"])
+        normalized(environment["HMUX_SOCKET_PATH"]) ?? normalized(environment["HMUX_SOCKET"])
     }
 
     private static func normalized(_ raw: String?) -> String? {
@@ -85,7 +85,7 @@ final class CLISocketSentryTelemetry {
     private static func currentSentryBundleIdentifier(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> String? {
-        if let bundleIdentifier = environment["CMUX_BUNDLE_ID"]?
+        if let bundleIdentifier = environment["HMUX_BUNDLE_ID"]?
             .trimmingCharacters(in: .whitespacesAndNewlines),
            !bundleIdentifier.isEmpty {
             return bundleIdentifier
@@ -130,27 +130,27 @@ final class CLISocketSentryTelemetry {
         self.socketPath = socketPath
         self.envSocketPath = CLISocketEnvironment.socketPathForTelemetry(in: processEnv)
         self.processEnv = processEnv
-        self.workspaceId = processEnv["CMUX_WORKSPACE_ID"]
-        self.surfaceId = processEnv["CMUX_SURFACE_ID"]
+        self.workspaceId = processEnv["HMUX_WORKSPACE_ID"]
+        self.surfaceId = processEnv["HMUX_SURFACE_ID"]
         self.disabledByEnv =
-            processEnv["CMUX_CLI_SENTRY_DISABLED"] == "1" ||
-            processEnv["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] == "1" ||
+            processEnv["HMUX_CLI_SENTRY_DISABLED"] == "1" ||
+            processEnv["HMUX_CLAUDE_HOOK_SENTRY_DISABLED"] == "1" ||
             Self.isFailOpenAgentHookAdmission(
                 command: command.lowercased(),
                 subcommand: commandArgs.first?.lowercased() ?? "help"
             )
         self.noiseFilter = SentryNoiseFilter()
         self.sentryPolicy = CLISocketSentryPolicy(environment: processEnv)
-        // The cmux repo is public; rebranded forks have shipped with this
-        // CLI's hardcoded DSN intact. Only a build that identifies as cmux
-        // may report to it (Sentry issue CMUXTERM-MACOS-1RZF).
+        // The hmux repo is public; rebranded forks have shipped with this
+        // CLI's hardcoded DSN intact. Only a build that identifies as hmux
+        // may report to it (Sentry issue HMUXTERM-MACOS-1RZF).
         self.buildIdentityPolicy = SentryBuildIdentityPolicy(
             bundleIdentifier: Self.currentSentryBundleIdentifier(environment: processEnv),
             trustedBaseBundleIdentifier: SocketPathMarkerFiles.stableBundleIdentifier
         )
     }
 
-    /// `cmux hooks enqueue` fails open by design: every failure becomes the
+    /// `hmux hooks enqueue` fails open by design: every failure becomes the
     /// agent's neutral response, and failures are expected while the app is
     /// busy or quitting. Starting Sentry there is unbounded work inside the
     /// agent's hook budget.
@@ -226,7 +226,7 @@ final class CLISocketSentryTelemetry {
             context: context,
             command: command,
             subcommand: subcommand,
-            fingerprint: ["cmux-cli", stage, fingerprintKind ?? "{{ default }}"],
+            fingerprint: ["hmux-cli", stage, fingerprintKind ?? "{{ default }}"],
             breadcrumbs: pendingBreadcrumbs.map { pending in
                 makeBreadcrumb(message: pending.message, data: pending.data)
             }
@@ -414,7 +414,7 @@ final class CLISocketSentryTelemetry {
 
 #if DEBUG
     private func recordCaptureProbe(stage: String, error: Error) {
-        guard let path = processEnv["CMUX_CLI_SENTRY_CAPTURE_PROBE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        guard let path = processEnv["HMUX_CLI_SENTRY_CAPTURE_PROBE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
               !path.isEmpty else {
             return
         }
@@ -424,7 +424,7 @@ final class CLISocketSentryTelemetry {
 
 #if canImport(Sentry)
     private func recordStoreProbe(eventId: String, fingerprint: [String]) {
-        guard let path = processEnv["CMUX_CLI_SENTRY_STORE_PROBE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        guard let path = processEnv["HMUX_CLI_SENTRY_STORE_PROBE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
               !path.isEmpty else {
             return
         }
@@ -460,7 +460,7 @@ final class CLISocketSentryTelemetry {
         event.environment = "production-cli"
 #endif
         event.tags = [
-            "component": "cmux-cli",
+            "component": "hmux-cli",
             "cli_command": command,
             "cli_subcommand": subcommand
         ]
@@ -565,7 +565,7 @@ final class CLISocketSentryTelemetry {
         for (key, value) in data {
             payload[key] = value
         }
-        let crumb = Breadcrumb(level: .info, category: "cmux.cli")
+        let crumb = Breadcrumb(level: .info, category: "hmux.cli")
         crumb.message = message
         crumb.data = payload
         return crumb
@@ -611,7 +611,7 @@ final class CLISocketSentryTelemetry {
 
         let tmpSockets = Self.discoverSockets(in: "/tmp", limit: 10)
         if !tmpSockets.isEmpty {
-            context["tmp_cmux_sockets"] = tmpSockets
+            context["tmp_hmux_sockets"] = tmpSockets
         }
         let taggedSockets = tmpSockets.filter { $0 != CLISocketPathResolver.legacyDefaultSocketPath }
         if CLISocketPathResolver.isImplicitDefaultPath(
@@ -621,7 +621,7 @@ final class CLISocketSentryTelemetry {
         ),
            (envSocketPath?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true),
            !taggedSockets.isEmpty {
-            context["possible_root_cause"] = "CMUX_SOCKET_PATH missing while tagged sockets exist"
+            context["possible_root_cause"] = "HMUX_SOCKET_PATH missing while tagged sockets exist"
         }
 
         return context
@@ -648,7 +648,7 @@ final class CLISocketSentryTelemetry {
         }
         var sockets: [String] = []
         for name in entries.sorted() {
-            guard name.hasPrefix("cmux"), name.hasSuffix(".sock") else { continue }
+            guard name.hasPrefix("hmux"), name.hasSuffix(".sock") else { continue }
             let fullPath = URL(fileURLWithPath: directory)
                 .appendingPathComponent(name, isDirectory: false)
                 .path

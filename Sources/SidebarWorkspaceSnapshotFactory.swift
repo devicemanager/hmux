@@ -1,5 +1,5 @@
-import CmuxSidebar
-import CmuxWorkspaces
+import HmuxSidebar
+import HmuxWorkspaces
 import Foundation
 
 /// Builds the immutable value passed across the workspace sidebar's
@@ -64,7 +64,7 @@ struct SidebarWorkspaceSnapshotFactory {
     /// Creates the current immutable presentation snapshot for the workspace row.
     func makeSnapshot() -> SidebarWorkspaceSnapshotBuilder.Snapshot {
         let detailVisibility = settings.visibleAuxiliaryDetails
-        // Compact status folds the lines cmux generates for you into the
+        // Compact status folds the lines hmux generates for you into the
         // glyph's tooltip: the branch/directory line and the pull request
         // rows. The visibility itself stays, since it also drives git and PR
         // polling, which the glyph reads.

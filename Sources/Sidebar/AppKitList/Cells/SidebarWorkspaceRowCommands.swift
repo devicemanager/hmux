@@ -1,6 +1,6 @@
 import AppKit
-import CmuxFoundation
-import CmuxWorkspaces
+import HmuxFoundation
+import HmuxWorkspaces
 import Foundation
 import SwiftUI
 
@@ -23,7 +23,7 @@ struct SidebarWorkspaceRowCommands {
     let allRemoteContextMenuTargetsDisconnected: Bool
     let contextMenuPinState: WorkspaceActionDispatcher.PinState?
     let workspaceGroupMenuSnapshot: WorkspaceGroupMenuSnapshot
-    /// Resolved cmux scheme used for menu swatches.
+    /// Resolved hmux scheme used for menu swatches.
     let colorScheme: ColorScheme
     /// `workspaceColors.brightenInDarkMode`, so swatches match the rows.
     var brightenInDarkMode = true
@@ -43,14 +43,14 @@ struct SidebarWorkspaceRowCommands {
 
     func updateSelection(modifiers: NSEvent.ModifierFlags = NSEvent.modifierFlags) {
 #if DEBUG
-        cmuxDebugLog("sidebar.select.enter workspace=\(tab.id.uuidString.prefix(5)) hasTabManager=\(tabManager != nil)")
+        hmuxDebugLog("sidebar.select.enter workspace=\(tab.id.uuidString.prefix(5)) hasTabManager=\(tabManager != nil)")
 #endif
         guard let tabManager else { return }
         let isCommand = modifiers.contains(.command)
         let isShift = modifiers.contains(.shift)
         let wasSelected = tabManager.selectedTabId == tab.id
 #if DEBUG
-        cmuxDebugLog("sidebar.select workspace=\(tab.id.uuidString.prefix(5)) source=appKitRow")
+        hmuxDebugLog("sidebar.select workspace=\(tab.id.uuidString.prefix(5)) source=appKitRow")
 #endif
         var selectedTabIds = readSelectedTabIds()
         let workspaceIds = tabManager.tabs.map(\.id)

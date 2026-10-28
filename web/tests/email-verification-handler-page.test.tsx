@@ -2,14 +2,14 @@ import { beforeEach, describe, expect, mock, test } from "bun:test";
 import React from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { CliAuthIdentityMessages } from "../app/handler/cli-auth-confirmation";
-import type { CmuxSignInMessages } from "../app/handler/cmux-sign-in";
+import type { HmuxSignInMessages } from "../app/handler/hmux-sign-in";
 import de from "../messages/de.json";
 import ja from "../messages/ja.json";
 
 const pendingStackRender = new Promise<never>(() => {});
 let requestHeaders = new Headers();
 let receivedIdentityMessages: CliAuthIdentityMessages | undefined;
-let receivedSignIn: { mode: string; messages: CmuxSignInMessages } | undefined;
+let receivedSignIn: { mode: string; messages: HmuxSignInMessages } | undefined;
 
 mock.module("../app/handler/cli-auth-confirmation", () => ({
   CliAuthConfirmation: ({ identityMessages }: { identityMessages: CliAuthIdentityMessages }) => {
@@ -18,12 +18,12 @@ mock.module("../app/handler/cli-auth-confirmation", () => ({
   },
 }));
 
-mock.module("../app/handler/cmux-sign-in", () => ({
-  CmuxSignIn: (props: { mode: string; messages: CmuxSignInMessages }) => {
+mock.module("../app/handler/hmux-sign-in", () => ({
+  HmuxSignIn: (props: { mode: string; messages: HmuxSignInMessages }) => {
     receivedSignIn = props;
-    return React.createElement("div", { "data-cmux-sign-in": props.mode });
+    return React.createElement("div", { "data-hmux-sign-in": props.mode });
   },
-  CmuxOAuthCallback: () => React.createElement("div", { "data-cmux-oauth-callback": "" }),
+  HmuxOAuthCallback: () => React.createElement("div", { "data-hmux-oauth-callback": "" }),
 }));
 
 mock.module("@hexclave/next", () => ({
@@ -113,20 +113,20 @@ describe("Stack handler page", () => {
     expect(renderToStaticMarkup(page)).toContain('aria-busy="true"');
   });
 
-  test("sign-in and sign-up render cmux's own screen in the browser's language", async () => {
+  test("sign-in and sign-up render hmux's own screen in the browser's language", async () => {
     requestHeaders.set("accept-language", "de,en;q=0.8");
     for (const mode of ["sign-in", "sign-up"]) {
       const page = await StackHandlerPage({ params: Promise.resolve({ stack: [mode] }) });
-      expect(renderToStaticMarkup(page)).toContain(`data-cmux-sign-in="${mode}"`);
+      expect(renderToStaticMarkup(page)).toContain(`data-hmux-sign-in="${mode}"`);
       expect(receivedSignIn?.mode).toBe(mode);
-      expect(receivedSignIn?.messages).toEqual(de.cmuxSignIn);
+      expect(receivedSignIn?.messages).toEqual(de.hmuxSignIn);
     }
   });
 
   test("the coderouter host keeps its email-only sign-in", async () => {
     requestHeaders.set("host", "coderouter.dev");
     const page = await StackHandlerPage({ params: Promise.resolve({ stack: ["sign-in"] }) });
-    expect(renderToStaticMarkup(page)).not.toContain("data-cmux-sign-in");
+    expect(renderToStaticMarkup(page)).not.toContain("data-hmux-sign-in");
     expect(receivedSignIn).toBeUndefined();
   });
 
@@ -138,12 +138,12 @@ describe("Stack handler page", () => {
     expect(receivedSignIn).toBeUndefined();
   });
 
-  test("the OAuth return is cmux's own page", async () => {
+  test("the OAuth return is hmux's own page", async () => {
     const page = await StackHandlerPage({ params: Promise.resolve({ stack: ["oauth-callback"] }) });
-    expect(renderToStaticMarkup(page)).toContain("data-cmux-oauth-callback");
+    expect(renderToStaticMarkup(page)).toContain("data-hmux-oauth-callback");
   });
 
-  test("a refused OAuth return goes to cmux's recovery page, without the provider's text", async () => {
+  test("a refused OAuth return goes to hmux's recovery page, without the provider's text", async () => {
     const searchParams = Promise.resolve({
       error: "server_error",
       error_description: 'This email "(a@b.com)" is already used for authentication by another account',

@@ -1,4 +1,4 @@
-# cmux Cloud devbox codex managed defaults (source:
+# hmux Cloud devbox codex managed defaults (source:
 # web/services/vms/images/devbox/codex-managed.toml; baked to
 # /etc/codex/managed_config.toml, codex's unix managed-config layer, the
 # same idiom as /etc/claude-code/managed-settings.json).
@@ -6,7 +6,7 @@
 # Folder trust only. codex matches these keys EXACTLY against the cwd or its
 # git root (no ancestor walk, no env short-circuit) and blocks the TUI on a
 # trust screen when neither matches. These entries cover the two HOMEs a
-# session can start in: the work user's, where the cmux-tui daemon opens every
+# session can start in: the work user's, where the hmux-tui daemon opens every
 # pane and where SSH and the desktop land, and root's, for a machine from an
 # image that predates the non-root work user. Any other directory, such as a cloned repo, is trusted per
 # launch by the codex() wrapper in agent-config.sh. Approval and sandbox
@@ -21,5 +21,5 @@ check_for_update_on_startup = false
 [projects."/root"]
 trust_level = "trusted"
 
-[projects."/home/cmux"]
+[projects."/home/hmux"]
 trust_level = "trusted"

@@ -31,8 +31,8 @@ done
 [[ -n "$device_id" ]] || { echo "error: --device-id is required" >&2; exit 2; }
 [[ -n "$bundle_id" ]] || { echo "error: --bundle-id is required" >&2; exit 2; }
 
-apps_json="$(mktemp "${TMPDIR:-/tmp}/cmux-ios-apps.XXXXXX")"
-processes_json="$(mktemp "${TMPDIR:-/tmp}/cmux-ios-processes.XXXXXX")"
+apps_json="$(mktemp "${TMPDIR:-/tmp}/hmux-ios-apps.XXXXXX")"
+processes_json="$(mktemp "${TMPDIR:-/tmp}/hmux-ios-processes.XXXXXX")"
 cleanup() {
   rm -f "$apps_json" "$processes_json"
 }

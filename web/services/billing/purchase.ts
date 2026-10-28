@@ -396,7 +396,7 @@ export async function recordCheckoutCompletion(
         ...subscription,
         metadata: {
           ...subscription.metadata,
-          app: "cmux",
+          app: "hmux",
           plan: PRO_PLAN_ID,
           stackUserId,
         },
@@ -546,8 +546,8 @@ export async function recordFoundersCheckoutCompletion(
   dependencies: BillingPurchaseDependencies = {},
 ): Promise<FoundersCheckoutCompletionResult> {
   const providerSubscription = input.subscription ?? expandedSubscription(input.session);
-  if (!isCmuxCheckoutSession(input.session, providerSubscription)) {
-    throw new Error("Stripe Founder's Edition checkout is not a cmux purchase");
+  if (!isHmuxCheckoutSession(input.session, providerSubscription)) {
+    throw new Error("Stripe Founder's Edition checkout is not a hmux purchase");
   }
   if (hasConflictingFounderMetadata(input.session, providerSubscription)) {
     throw new Error("Stripe Founder's Edition checkout has conflicting product metadata");
@@ -855,8 +855,8 @@ export async function recordProCheckoutCompletionByEmail(
 > {
   const session = input.session;
   const subscription = input.subscription ?? expandedSubscription(session);
-  if (!isCmuxCheckoutSession(session, subscription)) {
-    throw new Error("Stripe Pro checkout is not a cmux purchase");
+  if (!isHmuxCheckoutSession(session, subscription)) {
+    throw new Error("Stripe Pro checkout is not a hmux purchase");
   }
   if (isFounderCheckoutMetadata(session.metadata, subscription)) {
     return recordFoundersCheckoutCompletion(input, dependencies);
@@ -917,7 +917,7 @@ export async function recordProCheckoutCompletionByEmail(
         client_reference_id: source.id,
         metadata: {
           ...(session.metadata ?? {}),
-          app: "cmux",
+          app: "hmux",
           plan: PRO_PLAN_ID,
           stackUserId: source.id,
         },
@@ -926,7 +926,7 @@ export async function recordProCheckoutCompletionByEmail(
         ...subscription,
         metadata: {
           ...subscription.metadata,
-          app: "cmux",
+          app: "hmux",
           plan: PRO_PLAN_ID,
           stackUserId: source.id,
         },
@@ -960,7 +960,7 @@ export async function recordProCheckoutCompletionByEmail(
     client_reference_id: existingUser.id,
     metadata: {
       ...(session.metadata ?? {}),
-      app: "cmux",
+      app: "hmux",
       plan: personalPlan,
       stackUserId: existingUser.id,
     },
@@ -974,7 +974,7 @@ export async function recordProCheckoutCompletionByEmail(
         ...subscription,
         metadata: {
           ...subscription.metadata,
-          app: "cmux",
+          app: "hmux",
           plan: personalPlan,
           stackUserId: existingUser.id,
         },
@@ -1625,7 +1625,7 @@ async function syncTransferredStripeOwnership(
     await client.customers.update(transfer.customerId, {
       metadata: {
         ...customer.metadata,
-        app: "cmux",
+        app: "hmux",
         plan: PRO_PLAN_ID,
         stackUserId: transfer.targetStackUserId,
       },
@@ -1636,7 +1636,7 @@ async function syncTransferredStripeOwnership(
       await client.subscriptions.update(subscriptionId, {
         metadata: {
           ...subscription.metadata,
-          app: "cmux",
+          app: "hmux",
           plan: PRO_PLAN_ID,
           stackUserId: transfer.targetStackUserId,
         },
@@ -1664,7 +1664,7 @@ async function syncResolvedStripeOwnership(
       await client.customers.update(customerId, {
         metadata: {
           ...customer.metadata,
-          app: "cmux",
+          app: "hmux",
           plan: PRO_PLAN_ID,
           stackUserId,
         },
@@ -1675,7 +1675,7 @@ async function syncResolvedStripeOwnership(
     await client.subscriptions.update(subscriptionId, {
       metadata: {
         ...subscription.metadata,
-        app: "cmux",
+        app: "hmux",
         plan: PRO_PLAN_ID,
         stackUserId,
       },
@@ -1869,7 +1869,7 @@ export async function applySubscriptionUpdate(
   // have produced a provider subscription that was later cancelled; never let
   // that provider lifecycle revoke the durable paid Founder entitlement.
   if (subscription.metadata?.founders_edition === "true") return { skipped: true };
-  if (subscription.metadata?.app !== "cmux") return { skipped: true };
+  if (subscription.metadata?.app !== "hmux") return { skipped: true };
 
   const db = dependencies.db ?? cloudDb();
   const customerId = customerIdFromSubscription(subscription);
@@ -2021,7 +2021,7 @@ export async function applySubscriptionUpdate(
     stackApp: dependencies.stackApp ?? getStackServerApp(),
     sync: async (freshUser, mutationLease) => {
       // Label the mirror with the plan this subscription's Price sells, so a
-      // Billing Portal switch between Pro and Max lands as `cmuxPlan` change.
+      // Billing Portal switch between Pro and Max lands as `hmuxPlan` change.
       const currentMetadata = await syncProPlanMetadata(
         freshUser,
         isActive,
@@ -2048,7 +2048,7 @@ function isAccountDeletionInProgress(user: StackBillingUser): boolean {
     metadata &&
       typeof metadata === "object" &&
       !Array.isArray(metadata) &&
-      (metadata as Record<string, unknown>).cmuxAccountDeleting === true
+      (metadata as Record<string, unknown>).hmuxAccountDeleting === true
   );
 }
 
@@ -2222,17 +2222,17 @@ function isStripeCustomerAlreadyDeletedError(error: unknown): boolean {
   return /no such customer|already deleted/i.test(message);
 }
 
-export function isCmuxCheckoutSession(
+export function isHmuxCheckoutSession(
   session: Pick<Stripe.Checkout.Session, "client_reference_id" | "metadata">,
   subscription?: Pick<Stripe.Subscription, "metadata"> | null,
 ): boolean {
   const sessionMetadata = session.metadata;
   const subscriptionMetadata = subscription?.metadata;
   // An explicit app marker on the checkout is the trust boundary. A nested
-  // subscription cannot turn a foreign session into a cmux purchase.
-  if (sessionMetadata?.app) return sessionMetadata.app === "cmux";
+  // subscription cannot turn a foreign session into a hmux purchase.
+  if (sessionMetadata?.app) return sessionMetadata.app === "hmux";
   if (subscriptionMetadata?.app) {
-    if (subscriptionMetadata.app !== "cmux") return false;
+    if (subscriptionMetadata.app !== "hmux") return false;
     return true;
   }
   if (

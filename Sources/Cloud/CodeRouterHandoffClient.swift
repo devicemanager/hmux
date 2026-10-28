@@ -1,13 +1,13 @@
-import CmuxAuthRuntime
-import CmuxCloud
-import CmuxFoundation
+import HmuxAuthRuntime
+import HmuxCloud
+import HmuxFoundation
 import Foundation
 
-/// The short-lived, one-use authority that cmux passes to CodeRouter.
+/// The short-lived, one-use authority that hmux passes to CodeRouter.
 ///
 /// The value is intentionally kept in a small Sendable DTO. Callers must not
 /// log or persist it. The control-socket response is the only supported
-/// transport out of cmux.
+/// transport out of hmux.
 struct CodeRouterHandoffLease: Sendable, Equatable {
     let teamID: String
     let lease: String
@@ -69,19 +69,19 @@ enum CodeRouterHandoffClientError: Error, Equatable, Sendable, CustomStringConve
     var description: String {
         switch self {
         case .notSignedIn:
-            return "CodeRouter handoff requires a signed-in cmux account."
+            return "CodeRouter handoff requires a signed-in hmux account."
         case .sessionUnavailable, .backendUnreachable:
-            return "The cmux service is not available. Check your connection and try again."
+            return "The hmux service is not available. Check your connection and try again."
         case .sessionChanged:
-            return "The cmux account or team changed during the handoff. Try again."
+            return "The hmux account or team changed during the handoff. Try again."
         case .invalidTeam:
-            return "The selected cmux team is invalid."
+            return "The selected hmux team is invalid."
         case .invalidResponse, .redirectedResponse:
-            return "The cmux service returned an invalid handoff response."
+            return "The hmux service returned an invalid handoff response."
         case .expiredLease:
-            return "The cmux handoff lease is expired. Try again."
+            return "The hmux handoff lease is expired. Try again."
         case .httpStatus:
-            return "The cmux service rejected the CodeRouter handoff."
+            return "The hmux service rejected the CodeRouter handoff."
         }
     }
 }
@@ -89,7 +89,7 @@ enum CodeRouterHandoffClientError: Error, Equatable, Sendable, CustomStringConve
 /// Mints a hosted CodeRouter handoff lease with the native Stack session.
 ///
 /// This actor owns an ephemeral, cookie-free URLSession. It sends the
-/// coherent Stack access/refresh pair only to the configured cmux VM API
+/// coherent Stack access/refresh pair only to the configured hmux VM API
 /// origin, and it refuses to return a lease if the account or selected team
 /// changes while the request is in flight.
 actor CodeRouterHandoffClient {
@@ -309,7 +309,7 @@ actor CodeRouterHandoffClient {
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue(refreshToken, forHTTPHeaderField: "X-Stack-Refresh-Token")
         if let teamID {
-            request.setValue(teamID, forHTTPHeaderField: "X-Cmux-Team-Id")
+            request.setValue(teamID, forHTTPHeaderField: "X-Hmux-Team-Id")
         }
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("application/json", forHTTPHeaderField: "Accept")
@@ -357,7 +357,7 @@ actor CodeRouterHandoffClient {
             throw CodeRouterHandoffClientError.invalidResponse
         }
 
-        guard let expiry = CmuxRFC3339DateParser().date(from: expiresAt), expiry > now else {
+        guard let expiry = HmuxRFC3339DateParser().date(from: expiresAt), expiry > now else {
             throw CodeRouterHandoffClientError.expiredLease
         }
         return CodeRouterHandoffLease(teamID: teamID, lease: lease, expiresAt: expiresAt)

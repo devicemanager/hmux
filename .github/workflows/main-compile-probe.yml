@@ -1,7 +1,7 @@
 name: Main compile probe
 run-name: Main compile probe ${{ inputs.sha }}
 
-# Compiles one main commit's app-host test product (the app and cmuxTests,
+# Compiles one main commit's app-host test product (the app and hmuxTests,
 # build-for-testing, no test run) and nothing else: no seed, product or cache
 # is saved. ci-compile-attribution.yml dispatches it only for a commit the
 # seeds skipped inside a compile break's range of several merges, so the break
@@ -45,9 +45,9 @@ jobs:
       group: main-compile-probe-${{ inputs.sha }}
       cancel-in-progress: false
     env:
-      CMUX_CI_XCODE_APP: ${{ endsWith(inputs.runner, 'vcpu-macos-15') && vars.CMUX_CI_XCODE_APP_MACOS_15 || vars.CMUX_CI_XCODE_APP_PR || vars.CMUX_CI_XCODE_APP_MACOS_15 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
-      CMUX_SKIP_ZIG_BUILD: "1"
+      HMUX_CI_XCODE_APP: ${{ endsWith(inputs.runner, 'vcpu-macos-15') && vars.HMUX_CI_XCODE_APP_MACOS_15 || vars.HMUX_CI_XCODE_APP_PR || vars.HMUX_CI_XCODE_APP_MACOS_15 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_SKIP_ZIG_BUILD: "1"
       PROBE_SHA: ${{ inputs.sha }}
     steps:
       - name: Clear stale git locks (self-hosted reused workspace)
@@ -84,9 +84,9 @@ jobs:
           # seed key. On an owned Mac hold the root the hook exported (or root
           # 1) for the job, as the seed job does.
           root="$(scripts/ci/canonical-build-root.sh --print-root)"
-          export CMUX_CI_CANONICAL_ROOT="$root"
-          echo "CMUX_CI_CANONICAL_ROOT=$root" >> "$GITHUB_ENV"
-          helper=/Users/Shared/cmux-build-fleet/bin/glaeda-canonical-root
+          export HMUX_CI_CANONICAL_ROOT="$root"
+          echo "HMUX_CI_CANONICAL_ROOT=$root" >> "$GITHUB_ENV"
+          helper=/Users/Shared/hmux-build-fleet/bin/glaeda-canonical-root
           if [ -x "$helper" ]; then
             status=0
             "$helper" take "$root" --wait 900 >/dev/null || status=$?
@@ -103,8 +103,8 @@ jobs:
             esac
           fi
           scripts/ci/clear-dirs.sh "$root/derived-data-compile-admission" "$root/compile-admission-cas"
-          echo "CMUX_COMPILE_ADMISSION_DERIVED_DATA=$root/derived-data-compile-admission" >> "$GITHUB_ENV"
-          echo "CMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas" >> "$GITHUB_ENV"
+          echo "HMUX_COMPILE_ADMISSION_DERIVED_DATA=$root/derived-data-compile-admission" >> "$GITHUB_ENV"
+          echo "HMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas" >> "$GITHUB_ENV"
 
       - name: Select Xcode
         run: ./scripts/select-ci-xcode.sh
@@ -113,7 +113,7 @@ jobs:
         id: key
         run: |
           set -euo pipefail
-          fingerprint="$(scripts/ci/compile-app-host-test-product.sh canonical-fingerprint "$CMUX_COMPILE_ADMISSION_DERIVED_DATA")"
+          fingerprint="$(scripts/ci/compile-app-host-test-product.sh canonical-fingerprint "$HMUX_COMPILE_ADMISSION_DERIVED_DATA")"
           echo "prefix=admission-derived-data-v1-${RUNNER_OS}-${RUNNER_ARCH}-${fingerprint}-" >> "$GITHUB_OUTPUT"
 
       - name: Install compilation dependencies
@@ -126,7 +126,7 @@ jobs:
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
           path: .ci-source-packages
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -151,11 +151,11 @@ jobs:
 
       - name: Resolve Swift packages
         env:
-          CMUX_CI_MOVE_SOURCE_PACKAGES: "1"
+          HMUX_CI_MOVE_SOURCE_PACKAGES: "1"
         run: |
           set -euo pipefail
           scripts/ci/compile-app-host-test-product.sh canonical-resolve \
-            "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" "$PWD/.ci-source-packages"
+            "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" "$PWD/.ci-source-packages"
 
       # The nearest earlier main seed for this pool and width, so the compile
       # is one merge's diff. Read without credentials, as compile admission does.
@@ -169,10 +169,10 @@ jobs:
           # A probe runs on a specific mini shape. Never make a 14-core root
           # runner replay a seed emitted with another Swift-driver width;
           # without its own-width chain it safely compiles cold.
-          CMUX_SEED_REQUIRE_OWN_WIDTH: "1"
+          HMUX_SEED_REQUIRE_OWN_WIDTH: "1"
         run: |
           python3 scripts/ci/seed_derived_data.py adopt \
-            "$CMUX_CI_CANONICAL_SRC" "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" \
+            "$HMUX_CI_CANONICAL_SRC" "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" \
             "$PREFIX" "$PROBE_SHA"
 
       # The verdict main_compile_attribution.py reads (COMPILE_STEPS).
@@ -182,9 +182,9 @@ jobs:
         run: |
           set -euo pipefail
           scripts/ci/compile-app-host-test-product.sh canonical-build \
-            "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" \
+            "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" \
             "$PWD/.ci-source-packages" \
-            "$CMUX_COMPILE_ADMISSION_CAS"
+            "$HMUX_COMPILE_ADMISSION_CAS"
 
       - name: Forget the adopted-build inode override
         if: always() && steps.adopt.outputs.hit == 'true'

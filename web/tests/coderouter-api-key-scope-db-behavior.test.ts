@@ -23,7 +23,7 @@ import { RESPONSES_PROVIDERS } from "../services/coderouter/types";
 // must not route through its creator's private accounts in an organization.
 // Personal scopes (team id = user id) keep their owner's private imports.
 
-const enabled = process.env.CMUX_DB_TEST === "1";
+const enabled = process.env.HMUX_DB_TEST === "1";
 const dbTest = enabled ? test : test.skip;
 const ADMIN = "api-key-scope-admin";
 const MEMBER = "api-key-scope-member";

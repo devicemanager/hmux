@@ -1,6 +1,6 @@
 // Coherence check between the deployed Cloud VM env and the image manifest.
 //
-// The 2026-08-26 outage: code shipped assuming one CMUX_VM_DEFAULT_PROVIDER
+// The 2026-08-26 outage: code shipped assuming one HMUX_VM_DEFAULT_PROVIDER
 // while production still said another, and no image selector was set for it.
 // Key-presence auditing could not catch that; provider VALUES have to agree
 // with the manifest. Image env vars derive from manifest.json (each entry
@@ -24,11 +24,11 @@ const PROVIDER_CREDENTIAL_ALTERNATIVES = {
 // disables the provider. Keep this mapping beside the credential mapping so a
 // new default provider cannot pass the audit while its create path is off.
 const PROVIDER_ENABLED_KEYS = {
-  freestyle: "CMUX_VM_FREESTYLE_ENABLED",
+  freestyle: "HMUX_VM_FREESTYLE_ENABLED",
 };
 
 // Mirrors defaultProviderId() in services/vms/drivers/index.ts. Freestyle is
-// the only provider, and shipped CLIs hardcode its image ids (cmux.swift
+// the only provider, and shipped CLIs hardcode its image ids (hmux.swift
 // cloudVMDesktopImage / cloudVMBaseImage), so it must stay provisionable in
 // production.
 export const CODE_DEFAULT_PROVIDER = "freestyle";
@@ -148,13 +148,13 @@ function isFalseFlag(value) {
  * @returns {{ selected: object | null, codeDefault: object | null, problems: string[] }}
  */
 export function auditCloudVmProviderCoherence(env, manifest) {
-  const rawProvider = (env.CMUX_VM_DEFAULT_PROVIDER ?? CODE_DEFAULT_PROVIDER).trim();
+  const rawProvider = (env.HMUX_VM_DEFAULT_PROVIDER ?? CODE_DEFAULT_PROVIDER).trim();
   if (rawProvider === SENSITIVE_PLACEHOLDER) {
     return {
       selected: null,
       codeDefault: null,
       problems: [
-        "CMUX_VM_DEFAULT_PROVIDER is stored as a Sensitive env var, so its value " +
+        "HMUX_VM_DEFAULT_PROVIDER is stored as a Sensitive env var, so its value " +
         "cannot be audited; store it as a plain env var (it is configuration, not a secret)",
       ],
     };

@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxCloudTui
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCloudTui
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Creates one terminal beside an exact daemon tab from a fresh operation snapshot.
@@ -26,7 +26,7 @@ struct CloudTerminalLayoutCreation: Sendable {
     nonisolated func run(
         nearTabID: String,
         splitDirection: SurfaceSplitDirection?,
-        idempotencyKey: String = "cmux-cloud-create-\(UUID().uuidString.lowercased())",
+        idempotencyKey: String = "hmux-cloud-create-\(UUID().uuidString.lowercased())",
         correlationKey: String? = nil,
         expectedWorkspaceID: String? = nil
     ) async throws -> CloudTerminalLayoutCreationResult {
@@ -42,17 +42,17 @@ struct CloudTerminalLayoutCreation: Sendable {
                initialState.lookupIndex.tab(id: nearTabID) != nil { state = initialState }
             else {
                 #if DEBUG
-                cmuxDebugLog("cloud.split.create.snapshot attempt=\(attempt) cursor=\(initialState?.cursor != nil ? 1 : 0)")
+                hmuxDebugLog("cloud.split.create.snapshot attempt=\(attempt) cursor=\(initialState?.cursor != nil ? 1 : 0)")
                 #endif
                 state = try await snapshot(deadline: snapshotBudget)
             }
             guard let tab = state.lookupIndex.tab(id: nearTabID),
                   tab.contentKind == "terminal" else {
-                throw CmuxTuiSurfaceProvider.ProviderError.remoteTabNotFound(nearTabID)
+                throw HmuxTuiSurfaceProvider.ProviderError.remoteTabNotFound(nearTabID)
             }
             guard let pane = state.lookupIndex.pane(id: tab.paneID),
                   let screen = state.lookupIndex.screen(id: pane.screenID) else {
-                throw CmuxTuiSurfaceProvider.ProviderError.remotePlacementUnavailable(nearTabID)
+                throw HmuxTuiSurfaceProvider.ProviderError.remotePlacementUnavailable(nearTabID)
             }
             // The revision fence protects this comparison through the mutation.
             // A conflict retry must recheck placement, never follow a moved tab.
@@ -69,19 +69,19 @@ struct CloudTerminalLayoutCreation: Sendable {
                 let mutationBudget = clock.now.duration(to: deadline)
                 guard mutationBudget > .zero else { throw CloudDiagnosticFailure.timeout }
                 #if DEBUG
-                cmuxDebugLog("cloud.split.create.paneCreate attempt=\(attempt)")
+                hmuxDebugLog("cloud.split.create.paneCreate attempt=\(attempt)")
                 #endif
                 let data = try await commandRunner.runTuiCommand(arguments: arguments, deadline: mutationBudget)
                 #if DEBUG
-                cmuxDebugLog("cloud.split.create.paneCreated attempt=\(attempt)")
+                hmuxDebugLog("cloud.split.create.paneCreated attempt=\(attempt)")
                 #endif
                 guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                      let created = CmuxTuiSnapshotParser.createdTerminal(fromRunResult: object) else {
-                    throw CmuxTuiSurfaceProvider.ProviderError.terminalNotCreated(nearTabID)
+                      let created = HmuxTuiSnapshotParser.createdTerminal(fromRunResult: object) else {
+                    throw HmuxTuiSurfaceProvider.ProviderError.terminalNotCreated(nearTabID)
                 }
                 return CloudTerminalLayoutCreationResult(created: created, workspaceID: screen.workspaceID)
             } catch {
-                guard CmuxTuiSurfaceProvider.isRevisionConflict(error),
+                guard HmuxTuiSurfaceProvider.isRevisionConflict(error),
                       attempt == 0 || Self.isConfirmedRevisionConflict(error) else { throw error }
                 attempt += 1
             }
@@ -96,8 +96,8 @@ struct CloudTerminalLayoutCreation: Sendable {
                 deadline: deadline
             )
             guard let object = try JSONSerialization.jsonObject(with: data) as? [String: Any],
-                  let state = CmuxTuiSnapshotParser.state(fromSnapshot: object, machine: machine) else {
-                throw CmuxTuiSurfaceProvider.ProviderError.invalidSnapshot(machine.rawValue)
+                  let state = HmuxTuiSnapshotParser.state(fromSnapshot: object, machine: machine) else {
+                throw HmuxTuiSurfaceProvider.ProviderError.invalidSnapshot(machine.rawValue)
             }
             return state
         }

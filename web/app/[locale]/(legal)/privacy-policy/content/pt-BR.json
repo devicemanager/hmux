@@ -1,13 +1,13 @@
 {
-  "metadataTitle": "Política de Privacidade — cmux",
-  "metadataDescription": "Política de privacidade para cmux",
+  "metadataTitle": "Política de Privacidade — hmux",
+  "metadataDescription": "Política de privacidade para hmux",
   "title": "Política de Privacidade",
   "lastUpdated": "Última atualização: 1º de setembro de 2026",
   "sections": [
     {
       "paragraphs": [
         "Manaflow (a \"Empresa\") está comprometida em manter proteções robustas de privacidade para seus usuários. Esta Política de Privacidade explica como coletamos, usamos e protegemos as informações que você nos fornece.",
-        "Nesta política, \"Site\" significa o site da Empresa em [cmux.com](https://cmux.com). \"Aplicativo\" significa o aplicativo de desktop cmux para macOS e o aplicativo móvel cmux para iPhone e iPad. \"Serviço\" significa o Site e o Aplicativo juntos. \"Nós\", \"nos\" e \"nosso\" significam a Empresa. \"Você\" significa um usuário do nosso Serviço.",
+        "Nesta política, \"Site\" significa o site da Empresa em [cmux.com](https://cmux.com). \"Aplicativo\" significa o aplicativo de desktop hmux para macOS e o aplicativo móvel hmux para iPhone e iPad. \"Serviço\" significa o Site e o Aplicativo juntos. \"Nós\", \"nos\" e \"nosso\" significam a Empresa. \"Você\" significa um usuário do nosso Serviço.",
         "Ao utilizar nosso Serviço, você aceita esta Política de Privacidade e nossos [Termos de Serviço](https://cmux.com/terms-of-service) e concorda com a coleta, armazenamento, uso e divulgação descritos aqui."
       ]
     },
@@ -42,7 +42,7 @@
           "paragraphs": [
             "Se você entrar em contato conosco por e-mail, pela nossa página de contato ou pelo formulário de contato empresarial, coletaremos as informações que você fornecer, incluindo nome, e-mail, empresa, função, número de telefone, país, necessidades de implantação e comentários. Se você ingressar em uma lista de espera de plataforma, coletaremos o e-mail enviado para notificá-lo quando a plataforma for lançada e enviaremos o e-mail de inscrição e as plataformas selecionadas para nosso espaço de trabalho privado Slack.",
             "Quando você faz login, recebemos informações de autenticação, como seu endereço de e-mail e identificador de provedor de Apple, Google, GitHub ou login com código de e-mail. Quando você emparelha o aplicativo móvel com um Mac, processamos as informações de emparelhamento necessárias para conectar os dispositivos. Quando você visualiza um espaço de trabalho, envia entradas de terminal, anexa fotos selecionadas, usa transcrição de fala ou recebe notificações de terminal, o conteúdo ou transcrição relacionado pode passar entre seus dispositivos e nosso serviço conforme necessário para fornecer esse recurso.",
-            "O acesso à câmera é usado apenas para digitalizar códigos cmux de emparelhamento QR. O acesso ao microfone e ao reconhecimento de fala são usados ​​somente quando você escolhe a transcrição de voz na caixa de mensagem. O acesso à biblioteca de fotos é usado somente quando você escolhe fotos para anexar."
+            "O acesso à câmera é usado apenas para digitalizar códigos hmux de emparelhamento QR. O acesso ao microfone e ao reconhecimento de fala são usados ​​somente quando você escolhe a transcrição de voz na caixa de mensagem. O acesso à biblioteca de fotos é usado somente quando você escolhe fotos para anexar."
           ]
         },
         {
@@ -71,7 +71,7 @@
         "Slack: notificações internas privadas. Se você ingressar em uma lista de espera de plataforma, o e-mail e as plataformas enviadas serão enviados para nosso espaço de trabalho privado Slack."
       ],
       "afterBullets": [
-        "Cada serviço tem sua própria política de privacidade. Quando um terceiro processa Informações Pessoais para cmux, exigimos salvaguardas pelo menos tão protetoras quanto esta política e limitamos o uso ao fornecimento de serviços para cmux."
+        "Cada serviço tem sua própria política de privacidade. Quando um terceiro processa Informações Pessoais para hmux, exigimos salvaguardas pelo menos tão protetoras quanto esta política e limitamos o uso ao fornecimento de serviços para hmux."
       ]
     },
     {
@@ -123,7 +123,7 @@
     {
       "heading": "IX. Retenção de dados",
       "paragraphs": [
-        "Relatórios de falhas e diagnósticos são mantidos apenas pelo tempo necessário. Reproduções de sessão mascaradas são excluídas do Sentry 90 dias após a captura. Identificadores de conta e registros de autenticação são mantidos enquanto a conta está ativa e depois excluídos ou anonimizados, salvo obrigações de segurança, legais, fiscais, de cobrança ou antifraude. Metadados do dispositivo e emparelhamento são mantidos até a desvinculação ou exclusão. Tokens Apple são mantidos apenas com notificações ativadas. Análises web e móveis, análises vinculadas à conta, eventos do ciclo de cobrança e identificadores Stripe no PostHog são mantidos por até 24 meses, salvo solicitação de exclusão antecipada. As configurações da conta móvel excluem ou anonimizam dados do cmux, excluem a pessoa do PostHog vinculada à conta e solicitam a exclusão de eventos e gravações de análise web e móvel. Alguns registros de cobrança e identificadores Stripe podem ser mantidos por obrigações de segurança, legais, fiscais, de cobrança ou antifraude. Exclusões de provedores podem ocorrer de forma assíncrona. Solicite a exclusão nas configurações da conta móvel ou em [founders@cmux.com](mailto:founders@cmux.com)."
+        "Relatórios de falhas e diagnósticos são mantidos apenas pelo tempo necessário. Reproduções de sessão mascaradas são excluídas do Sentry 90 dias após a captura. Identificadores de conta e registros de autenticação são mantidos enquanto a conta está ativa e depois excluídos ou anonimizados, salvo obrigações de segurança, legais, fiscais, de cobrança ou antifraude. Metadados do dispositivo e emparelhamento são mantidos até a desvinculação ou exclusão. Tokens Apple são mantidos apenas com notificações ativadas. Análises web e móveis, análises vinculadas à conta, eventos do ciclo de cobrança e identificadores Stripe no PostHog são mantidos por até 24 meses, salvo solicitação de exclusão antecipada. As configurações da conta móvel excluem ou anonimizam dados do hmux, excluem a pessoa do PostHog vinculada à conta e solicitam a exclusão de eventos e gravações de análise web e móvel. Alguns registros de cobrança e identificadores Stripe podem ser mantidos por obrigações de segurança, legais, fiscais, de cobrança ou antifraude. Exclusões de provedores podem ocorrer de forma assíncrona. Solicite a exclusão nas configurações da conta móvel ou em [founders@cmux.com](mailto:founders@cmux.com)."
       ]
     }
   ]

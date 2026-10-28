@@ -1,7 +1,7 @@
 import AppKit
-import CMUXMobileCore
-import CmuxAppKitSupportUI
-import CmuxSettingsUI
+import HMUXMobileCore
+import HmuxAppKitSupportUI
+import HmuxSettingsUI
 import SwiftUI
 
 /// The compact sidebar account button for account-level actions.
@@ -12,7 +12,7 @@ struct SidebarAccountMenuButton: View {
     private let signInTitle = String(localized: "settings.account.signIn", defaultValue: "Sign In…")
     private let buttonSize = SidebarFooterButtonMetrics.buttonSize
     @State private var isPopoverPresented = false
-    @State private var popoverGroup = CmuxPopoverGroup()
+    @State private var popoverGroup = HmuxPopoverGroup()
 #if DEBUG
     @AppStorage(SidebarFooterProfileIconDebugSettings.sizeKey)
     private var debugIconSize = SidebarFooterProfileIconDebugSettings.defaultSize
@@ -127,11 +127,11 @@ private struct SidebarAccountPopover: View {
                     )
                     VStack(alignment: .leading, spacing: 2) {
                         Text(identity.displayName.isEmpty ? identity.email : identity.displayName)
-                            .cmuxFont(size: 13, weight: .semibold)
+                            .hmuxFont(size: 13, weight: .semibold)
                             .lineLimit(1)
                         if !identity.email.isEmpty && identity.email != identity.displayName {
                             Text(identity.email)
-                                .cmuxFont(size: 11)
+                                .hmuxFont(size: 11)
                                 .foregroundStyle(.secondary)
                                 .lineLimit(1)
                         }
@@ -140,7 +140,7 @@ private struct SidebarAccountPopover: View {
                 settingsRow
             } else {
                 Text(String(localized: "settings.account.signedOut.title", defaultValue: "Not signed in"))
-                    .cmuxFont(size: 13, weight: .semibold)
+                    .hmuxFont(size: 13, weight: .semibold)
                 Button {
                     dismiss()
                     accountFlow?.startSignIn()
@@ -212,7 +212,7 @@ private struct SidebarAccountPopover: View {
                     )
                     Spacer(minLength: 8)
                     Text(settingsShortcutHint)
-                        .cmuxFont(size: 11)
+                        .hmuxFont(size: 11)
                         .foregroundStyle(.secondary)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

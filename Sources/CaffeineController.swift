@@ -1,10 +1,10 @@
 import Foundation
 import Observation
 
-/// Owns cmux's process-scoped idle-sleep activity.
+/// Owns hmux's process-scoped idle-sleep activity.
 ///
 /// The assertion keeps the Mac reachable while its display remains free to
-/// sleep. It is intentionally not persisted: quitting cmux always releases it.
+/// sleep. It is intentionally not persisted: quitting hmux always releases it.
 @MainActor
 @Observable
 final class CaffeineController {
@@ -22,7 +22,7 @@ final class CaffeineController {
         beginActivity: @escaping BeginActivity = {
             ProcessInfo.processInfo.beginActivity(
                 options: [.idleSystemSleepDisabled],
-                reason: "cmux Keep Mac Awake"
+                reason: "hmux Keep Mac Awake"
             )
         },
         endActivity: @escaping EndActivity = { activity in

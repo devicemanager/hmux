@@ -1,6 +1,6 @@
 # Cloud VMs service
 
-Backend for `cmux vm new/ls/rm/exec/attach` and the sidebar Cloud VM surface. Stack Auth gates every public route. Provider API keys stay server-side. Every managed machine session uses the cmux-tui remote daemon (transport `cmux-remote`). The legacy `cmuxd-remote` WebSocket PTY is gone. Freestyle still exposes a scoped SSH proxy for provider-level diagnostics, but that unmanaged path does not carry cmux workspace, tab, or revision state.
+Backend for `hmux vm new/ls/rm/exec/attach` and the sidebar Cloud VM surface. Stack Auth gates every public route. Provider API keys stay server-side. Every managed machine session uses the hmux-tui remote daemon (transport `hmux-remote`). The legacy `hmuxd-remote` WebSocket PTY is gone. Freestyle still exposes a scoped SSH proxy for provider-level diagnostics, but that unmanaged path does not carry hmux workspace, tab, or revision state.
 
 ## Layout
 
@@ -51,7 +51,7 @@ For cookie calls, `POST`/`DELETE` routes reject cross-site `Origin` or `Sec-Fetc
 before any VM workflow runs.
 
 Cloud VM billing is team-scoped. The native client sends the selected Stack team in
-`X-Cmux-Team-Id`; browser callers may send that header or `teamId`/`billingTeamId` in the request.
+`X-Hmux-Team-Id`; browser callers may send that header or `teamId`/`billingTeamId` in the request.
 The backend validates membership before create or team-filtered list. If Stack returns one team,
 the backend treats it as the personal team created on sign-up. If Stack returns no team, or multiple
 teams without a selected/requested team, create fails before providers or billing are called.
@@ -61,7 +61,7 @@ The auth regression tests live in `web/tests/vm-route-auth.test.ts`. They verify
 ## State model
 
 - `cloud_vms` owns VM lifecycle state, provider ids, image ids, billing team/plan ids, and per-user idempotency keys.
-- The Freestyle cmux-tui daemon owns the complete remote graph. The macOS
+- The Freestyle hmux-tui daemon owns the complete remote graph. The macOS
   catalog stores one lossless canonical fragment document plus typed projections
   and materialized ID / relationship indexes, never a second provider-specific
   graph. The document owns every known and unknown field. Typed and raw-row
@@ -88,7 +88,7 @@ The auth regression tests live in `web/tests/vm-route-auth.test.ts`. They verify
   gets one snapshot-recovery restart without erasing the spent budget. Later
   snapshot refreshes do not restart an exhausted feed.
 - `cloud_vm_leases` stores hashed PTY/RPC/SSH lease tokens, provider identity handles, session ids, expiry, and revocation timestamps.
-- `cmux-remote` lease rows are account-scoped and are marked revoked on sign-out.
+- `hmux-remote` lease rows are account-scoped and are marked revoked on sign-out.
   Freestyle daemon enrollment records are device-scoped and are not revoked yet,
   because the lease row does not store the claimed device id. The follow-up must
   persist that id and issue one exact `remote enroll revoke` command per device;
@@ -124,7 +124,7 @@ Active VM limits are enforced inside the same Postgres transaction that inserts 
 ## Image manifest and rollback
 
 Known-good images are recorded in `services/vms/images/manifest.json`. Each entry records the
-provider, image id, cmux image version, build metadata (`repoCommit`, agent pins), and
+provider, image id, hmux image version, build metadata (`repoCommit`, agent pins), and
 validation status. **The manifest is the only source of truth for the image users get; no env
 var selects or overrides it.**
 
@@ -140,7 +140,7 @@ Image policy:
   `services/vms/images/sizes.ts`): one snapshot per size, and the smallest whose memory covers
   the plan's `defaultMemoryMbForPlan` is served, so machines boot at their shape and the driver
   never resizes. Create responses and `limits.imageKinds` carry the `size`. `image` still wins when present, but a client-requested `image` must be
-  in the manifest (or `CMUX_VM_ALLOW_UNMANIFESTED_IMAGES=1`, which local dev implies). Responses
+  in the manifest (or `HMUX_VM_ALLOW_UNMANIFESTED_IMAGES=1`, which local dev implies). Responses
   and `GET /api/vm` entries echo `kind`; `GET /api/vm` `limits.imageKinds` lists the kinds the
   default provider can serve and the image each resolves to.
 - `vm_image_config_error` responses carry client-safe `details.imageRequested`, `details.kind`,
@@ -155,7 +155,7 @@ Image policy:
   manifest for auditability; this README intentionally does not duplicate time-sensitive snapshot
   ids.
 - Snapshots are account-scoped: a manifest id is only bootable by the Freestyle account whose
-  `FREESTYLE_API_KEY` the deployment uses; promote under cmux's key.
+  `FREESTYLE_API_KEY` the deployment uses; promote under hmux's key.
 - Promotion is `bun run devbox:promote -- freestyle` (bake → verify → manifest write), then a PR
   with the manifest diff; merging promotes. See
   `services/vms/images/devbox/README.md`. `tests/vm-image-manifest.test.ts` holds the invariants:
@@ -166,24 +166,24 @@ Image policy:
   `-base` rows point at the same ids), so `kind` never changes what a machine is. Every machine has
   the shell tooling, the coding agents, TigerVNC on `:1` with an openbox session, the tint2 dock
   (Chrome, Files, Ghostty), the CC0 wallpaper, the accessibility bus for computer-use, and noVNC on
-  6901, run by the `cmux-desktop` unit; the contract lives in `services/vms/images/desktop.ts`. The
-  app's New Machine sheet asks only for a size, `cmux vm new` accepts `--desktop` / `--base` for
+  6901, run by the `hmux-desktop` unit; the contract lives in `services/vms/images/desktop.ts`. The
+  app's New Machine sheet asks only for a size, `hmux vm new` accepts `--desktop` / `--base` for
   older scripts without changing anything, and the Mac app lists a Displays row for every
   newly created default machine. Historical shell-only machines keep their existing capabilities. A shell-only base ladder can still be baked (`--no-desktop`) but is not promoted.
-  `POST /api/vm/[id]/open-port` (the app's Displays row, `cmux
+  `POST /api/vm/[id]/open-port` (the app's Displays row, `hmux
   vm open <m>:desktop`, port rows) returns the machine's **private VPC address**
   (`http://10.x.x.x:6901/vnc.html?…`), reachable only over the owner's WireGuard tunnel, the same
-  path the daemon route takes; the driver (re)starts the `cmux-desktop` unit first when noVNC is
+  path the daemon route takes; the driver (re)starts the `hmux-desktop` unit first when noVNC is
   not listening. noVNC has no auth of its own, so a machine outside a private network (created
   before private networking) gets an error rather than a public URL.
 - Baked agent tools are installed at image-build time. They are not auto-updated on VM startup, so
   startup latency stays bounded and the manifest remains the source of truth.
 - To update tool versions, run `bun run devbox:pins:check --write` (web/; it rewrites the Dockerfile
   ARG pins to the npm registry's current releases and refuses ranges and tags), bump
-  `CMUX_IMAGE_EPOCH`, then promote both ladders. `tests/vm-image-manifest.test.ts` and
+  `HMUX_IMAGE_EPOCH`, then promote both ladders. `tests/vm-image-manifest.test.ts` and
   `devbox:manifest:check` fail while a default is baked at another epoch or from other devbox
   sources than the checkout (`devboxSourceDriftProblems`), so a pin bump and its promotion land
-  in one PR and never drift apart. `CMUX_CLOUD_IMAGE_<TOOL>_NPM_SPEC` overrides must be exact npm
+  in one PR and never drift apart. `HMUX_CLOUD_IMAGE_<TOOL>_NPM_SPEC` overrides must be exact npm
   package version pins, for example `@openai/codex@0.130.0`, or `none` to disable a tool. The
   image builder rejects ranges and tags such as `latest`.
 
@@ -199,47 +199,47 @@ Rollback is a manifest change:
 2. Deploy staging, smoke test, then production.
 3. Keep old snapshots until all VMs using them are gone.
 
-## Baked tools and VM-local cmux CLI
+## Baked tools and VM-local hmux CLI
 
 The Freestyle devbox image is defined in
 `web/services/vms/images/devbox/` and baked with `web/scripts/build-devbox-freestyle.ts`
 (chatmux devbox
 parity: devtools, mise node/python/bun, uv, gh, Chrome + cua-driver, pinned coding
-agents, ble.sh devshell, agent-config generator). The session daemon is cmux-tui,
-baked at `/home/cmux/.cmux/bin/cmux-tui` from the files.cmux.com artifacts manifest pin
-current at bake time (recorded as `cmuxTuiCommit` in the manifest entry). Its identity
-is bound to the machine's instance id by `cmux-devbox-boot`, so create runs no guest
-bootstrap. See the devbox README for the bake + verify + manifest flow. The legacy cmuxd-remote image builder
+agents, ble.sh devshell, agent-config generator). The session daemon is hmux-tui,
+baked at `/home/hmux/.hmux/bin/hmux-tui` from the files.cmux.com artifacts manifest pin
+current at bake time (recorded as `hmuxTuiCommit` in the manifest entry). Its identity
+is bound to the machine's instance id by `hmux-devbox-boot`, so create runs no guest
+bootstrap. See the devbox README for the bake + verify + manifest flow. The legacy hmuxd-remote image builder
 (`build-cloud-vm-images.ts`) has been deleted; images it produced remain in the
-manifest for reference but cannot serve the cmux-remote transport.
+manifest for reference but cannot serve the hmux-remote transport.
 
 ## Browser automation from a Cloud VM remote session
 
-`cmux browser ...` inside a `cmux ssh` or `cmux vm ssh` session controls the local cmux browser
+`hmux browser ...` inside a `hmux ssh` or `hmux vm ssh` session controls the local hmux browser
 through the authenticated relay. It does not start Chrome inside the VM. This keeps browser UI,
 cookies, profiles, and screenshots on the local Mac while agent computation runs remotely.
 
 The Linux relay CLI supports the common browser automation subcommands: `open`, `navigate`, `back`,
 `forward`, `reload`, `get-url`, `snapshot`, `eval`, `wait`, `click`, `dblclick`, `hover`, `focus`,
 `check`, `uncheck`, `fill`, `type`, `press`, `select`, and `screenshot`. Existing-browser commands
-default to `CMUX_SURFACE_ID`; `open` defaults to `CMUX_WORKSPACE_ID`.
+default to `HMUX_SURFACE_ID`; `open` defaults to `HMUX_WORKSPACE_ID`.
 
 ## Cloud VM session lifecycle
 
-`cmux vm ssh <id>` and `cmux vm attach <id>` open a cmux-managed remote workspace. On Freestyle,
-`vm ssh` is a compatibility alias for the `cmux-remote` daemon path. Freestyle's scoped SSH proxy
+`hmux vm ssh <id>` and `hmux vm attach <id>` open a hmux-managed remote workspace. On Freestyle,
+`vm ssh` is a compatibility alias for the `hmux-remote` daemon path. Freestyle's scoped SSH proxy
 (`beta-ssh.freestyle.sh`) is intentionally not used for managed sessions, because raw SSH cannot
-carry the daemon graph or revision fence. `cmux vm ssh-info <id>` remains a legacy print-only
+carry the daemon graph or revision fence. `hmux vm ssh-info <id>` remains a legacy print-only
 command and is unsupported by the managed API.
 
-Plain `cmux ssh` uses OpenSSH control sockets and `ControlPersist` by default. Cloud VM Freestyle
-sessions use the cmux-tui daemon and its reconnecting Noise link, not OpenSSH. If a legacy provider
+Plain `hmux ssh` uses OpenSSH control sockets and `ControlPersist` by default. Cloud VM Freestyle
+sessions use the hmux-tui daemon and its reconnecting Noise link, not OpenSSH. If a legacy provider
 returns SSH attach info, the shared wrapper still retries after sleep or a network transition;
 Freestyle never enters that branch and never falls back silently to a local shell.
 
 Manual sleep/network smoke:
 
-1. Start a Cloud VM, then attach with `cmux vm ssh <id>`.
+1. Start a Cloud VM, then attach with `hmux vm ssh <id>`.
 2. Confirm the terminal reaches a remote prompt and the sidebar shows the workspace as connected.
 3. Disable Wi-Fi or sleep the Mac long enough for OpenSSH to exit.
 4. Restore the network and confirm the terminal prints a reconnect attempt and either lands back in
@@ -265,57 +265,57 @@ Production and staging use PlanetScale PostgreSQL. The Vercel runtime and explic
 
 Set these Vercel environment variables per production/staging environment:
 
-- `CMUX_DB_DRIVER=url`.
+- `HMUX_DB_DRIVER=url`.
 - `DATABASE_URL`, a PlanetScale PostgreSQL connection URL. Keep it in the Vercel project secret store.
-- `CMUX_DB_POOL_MAX`, small pool size for Vercel Functions. Start with `5`.
+- `HMUX_DB_POOL_MAX`, small pool size for Vercel Functions. Start with `5`.
 - Preserve `sslmode=verify-full` on the PlanetScale URL.
-- `CMUX_VM_CREATE_ENABLED`, global create kill switch. Set `0` to block new paid creates while
+- `HMUX_VM_CREATE_ENABLED`, global create kill switch. Set `0` to block new paid creates while
   keeping list, attach, and delete available.
-- `CMUX_VM_RESTRICTED_IMAGE_USER_IDS`, comma- or space-separated Stack user ids that may create a
+- `HMUX_VM_RESTRICTED_IMAGE_USER_IDS`, comma- or space-separated Stack user ids that may create a
   machine on a manifest entry marked `restricted: true` by naming its image id or version. Such an
   entry is never a default; everyone else, and everyone while this is empty, gets the unknown-image
   refusal. A restricted image is not confidential (a teammate can fork a machine built on it), only
   not selectable.
-- `CMUX_VM_ALLOW_FREE_PROVISIONING`, explicit opt-out of the paid-plan Cloud VM gate. Leave unset
+- `HMUX_VM_ALLOW_FREE_PROVISIONING`, explicit opt-out of the paid-plan Cloud VM gate. Leave unset
   (or set to `0`) in every shared environment; set to `1` only for a deliberate demo/rollback. When
-  enabled, `CMUX_VM_FREE_MAX_ACTIVE_VMS` and the plan-specific free limit are honored again.
-- `CMUX_VM_REQUIRE_PRO`, legacy compatibility spelling for the paid-plan gate. Unset now means the
+  enabled, `HMUX_VM_FREE_MAX_ACTIVE_VMS` and the plan-specific free limit are honored again.
+- `HMUX_VM_REQUIRE_PRO`, legacy compatibility spelling for the paid-plan gate. Unset now means the
   gate is **on**. `0`/`false`/`off` is treated as the old permissive escape hatch only when
-  `CMUX_VM_ALLOW_FREE_PROVISIONING` is absent; prefer the clearly named allow switch for new
+  `HMUX_VM_ALLOW_FREE_PROVISIONING` is absent; prefer the clearly named allow switch for new
   deployments.
-- `CMUX_VM_FREESTYLE_ENABLED`, per-provider Freestyle create kill switch.
-- `CMUX_CODEROUTER_EDGE_ORIGIN`, optional bare https origin guests dial for coderouter
+- `HMUX_VM_FREESTYLE_ENABLED`, per-provider Freestyle create kill switch.
+- `HMUX_CODEROUTER_EDGE_ORIGIN`, optional bare https origin guests dial for coderouter
   (`https://coderouter.dev` in production, the branch URL on a Vercel preview). Any other
   deployment without it (a dev backend, a local checkout) creates machines with no edge rule:
   production can verify neither its signing key nor its database. See "Model plane".
-- `CMUX_VM_CODEROUTER_ENV_ENABLED`, local-dev only. `0` creates unwired machines with no
+- `HMUX_VM_CODEROUTER_ENV_ENABLED`, local-dev only. `0` creates unwired machines with no
   coderouter env or edge rule. Never set it in production or staging.
-- `CMUX_VM_PRIVATE_NETWORK_ENABLED`, fail-closed private networking switch. Unset/`1`:
+- `HMUX_VM_PRIVATE_NETWORK_ENABLED`, fail-closed private networking switch. Unset/`1`:
   Freestyle machines join their owner's VPC and open no public inbound port. `0`: new
   machine creation and tunnel enrollment stop. The switch never selects public ingress.
-- `CMUX_VM_ALLOWED_ORIGINS`, optional comma-separated extra origins allowed for cookie mutations.
+- `HMUX_VM_ALLOWED_ORIGINS`, optional comma-separated extra origins allowed for cookie mutations.
 - `FREESTYLE_API_KEY`, the normal Freestyle provider credential. A complete
   `FREESTYLE_STACK_ACCESS_TOKEN` plus `FREESTYLE_TEAM_ID` pair is the supported
   short-lived alternative.
-- `CMUX_VM_DEFAULT_PROVIDER`, only `freestyle` (and its default).
-- `CMUX_VM_DEFAULT_PLAN`, optional fallback for accounts without plan metadata. It defaults to `free`;
-  paid values are ignored unless `CMUX_VM_ALLOW_FREE_PROVISIONING=1`, so deployment configuration
+- `HMUX_VM_DEFAULT_PROVIDER`, only `freestyle` (and its default).
+- `HMUX_VM_DEFAULT_PLAN`, optional fallback for accounts without plan metadata. It defaults to `free`;
+  paid values are ignored unless `HMUX_VM_ALLOW_FREE_PROVISIONING=1`, so deployment configuration
   cannot silently grant every unclassified account a paid entitlement.
-- `CMUX_VM_PLAN_FREE_CREATE_CREDIT_ITEM_ID`, optional Stack Auth team item used as the free-plan create-credit bucket. Leave unset to skip free-plan create-credit accounting; set to `none`, `disabled`, `off`, or `false` to explicitly opt out.
-- `CMUX_VM_PLAN_FREE_CREATE_CREDIT_COST`, optional free-plan per-create cost. Defaults to `1`.
-- `CMUX_VM_PLAN_FREE_INITIAL_CREATE_CREDITS`, optional first-use seed for the free-plan Stack Auth create-credit item. Defaults to `20`.
-- `CMUX_VM_CREATE_CREDIT_ITEM_ID`, optional global Stack Auth item used as a prepaid create-credit bucket for every plan without a plan-specific item. Set to `none`, `disabled`, `off`, or `false` to opt out of create credits for plans without a plan-specific value.
-- `CMUX_VM_CREATE_CREDIT_COST`, default `1`.
-- `CMUX_VM_CREATE_CREDIT_COST_FREESTYLE`, optional provider-specific override.
-- `CMUX_VM_FREE_MAX_ACTIVE_VMS`, default `0` and ignored while the paid-plan gate is enforced.
-- `CMUX_VM_PLAN_<PLAN>_MAX_ACTIVE_VMS`, optional incident-only cap for one paid plan. Unset means
+- `HMUX_VM_PLAN_FREE_CREATE_CREDIT_ITEM_ID`, optional Stack Auth team item used as the free-plan create-credit bucket. Leave unset to skip free-plan create-credit accounting; set to `none`, `disabled`, `off`, or `false` to explicitly opt out.
+- `HMUX_VM_PLAN_FREE_CREATE_CREDIT_COST`, optional free-plan per-create cost. Defaults to `1`.
+- `HMUX_VM_PLAN_FREE_INITIAL_CREATE_CREDITS`, optional first-use seed for the free-plan Stack Auth create-credit item. Defaults to `20`.
+- `HMUX_VM_CREATE_CREDIT_ITEM_ID`, optional global Stack Auth item used as a prepaid create-credit bucket for every plan without a plan-specific item. Set to `none`, `disabled`, `off`, or `false` to opt out of create credits for plans without a plan-specific value.
+- `HMUX_VM_CREATE_CREDIT_COST`, default `1`.
+- `HMUX_VM_CREATE_CREDIT_COST_FREESTYLE`, optional provider-specific override.
+- `HMUX_VM_FREE_MAX_ACTIVE_VMS`, default `0` and ignored while the paid-plan gate is enforced.
+- `HMUX_VM_PLAN_<PLAN>_MAX_ACTIVE_VMS`, optional incident-only cap for one paid plan. Unset means
   paid plans have no active-machine limit.
 - Stack Auth environment variables.
 - Axiom/OpenTelemetry exporter variables.
 
-Local development keeps using Docker Postgres through `DATABASE_URL`, derived from `CMUX_PORT`.
+Local development keeps using Docker Postgres through `DATABASE_URL`, derived from `HMUX_PORT`.
 
-Use `bun run cloud-vm:migrate -- staging --check` to verify access without changing schema. Operator jobs use the branch's direct port (5432) and verify its TLS certificate. `DIRECT_DATABASE_URL` takes precedence when set. With process-provided credentials, set `CMUX_CLOUD_VM_ENV_SOURCE=process`; otherwise the command pulls the selected Vercel project.
+Use `bun run cloud-vm:migrate -- staging --check` to verify access without changing schema. Operator jobs use the branch's direct port (5432) and verify its TLS certificate. `DIRECT_DATABASE_URL` takes precedence when set. With process-provided credentials, set `HMUX_CLOUD_VM_ENV_SOURCE=process`; otherwise the command pulls the selected Vercel project.
 
 Run production/staging migrations explicitly, never during Vercel build or route startup. The local operator path pulls the selected Vercel project `DATABASE_URL`. The GitHub Actions path reads the protected `DATABASE_URL` secret and applies Drizzle migrations:
 
@@ -381,7 +381,7 @@ bun scripts/cloud-vm/bench-private-link.ts --trials 3               # the app's 
 
 The two SDK benchmarks read the provider credential the way the runtime does
 (`FREESTYLE_API_KEY`, or `FREESTYLE_STACK_ACCESS_TOKEN` with `FREESTYLE_TEAM_ID`,
-from `~/.secrets/cmux.env`). The API benchmark pulls the target's Vercel env, fills
+from `~/.secrets/hmux.env`). The API benchmark pulls the target's Vercel env, fills
 a sensitive (empty) value from the process environment, and sends its throwaway
 session only to the project's own https origin; a deployment that Vercel's API
 attributes to the project also needs `--allow-preview`, and any other https host
@@ -389,33 +389,33 @@ attributes to the project also needs `--allow-preview`, and any other https host
 
 ## Telemetry
 
-Every `/api/vm*` request runs inside `withAuthedVmApiRoute` (`routeHelpers.ts`), which owns one request context (`requestContext.ts`) and one route span. The client mints a W3C `traceparent` and an `X-Cmux-Client-Request-Id` per call and sends `X-Cmux-Client`, `X-Cmux-App-Version`, `X-Cmux-App-Build`, `X-Cmux-Channel`. The server answers every response with `x-cmux-trace-id` and `x-cmux-span-id`, and every error body carries `traceId` (also `ui.traceId`). The Mac app prints it as `Reference: <trace id>` on every Cloud VM error, and the socket `vm_error` payload carries it as `data.trace_id`. That id is the join key across the three sinks:
+Every `/api/vm*` request runs inside `withAuthedVmApiRoute` (`routeHelpers.ts`), which owns one request context (`requestContext.ts`) and one route span. The client mints a W3C `traceparent` and an `X-Hmux-Client-Request-Id` per call and sends `X-Hmux-Client`, `X-Hmux-App-Version`, `X-Hmux-App-Build`, `X-Hmux-Channel`. The server answers every response with `x-hmux-trace-id` and `x-hmux-span-id`, and every error body carries `traceId` (also `ui.traceId`). The Mac app prints it as `Reference: <trace id>` on every Cloud VM error, and the socket `vm_error` payload carries it as `data.trace_id`. That id is the join key across the three sinks:
 
-- Axiom (`cmux-prod-otel-traces`, 100% of VM traces): route span with `cmux.vm.timing.<stage>_ms`, `cmux.vm.request_duration_ms`, `cmux.vm.request_success`, `cmux.vm.error_*` (code, phase, provider, image, env var, reason), `cmux.client.*`, `cmux.user_id`, `cmux.vercel.request_id`; provider spans under it record the wrapped cause chain (`cmux.error_cause_chain`, `cmux.error_cause_http_status`, `cmux.error_cause_code`). Error and non-polled responses force a bounded span flush in `after()` so an error-heavy instance cannot drop the trace.
-- PostHog (production, or `CMUX_VM_ANALYTICS_FORCE=1`): `cloud_vm_request` (schema 2) for every failure and for the successes a user waits on (create, attach, base open, restore, fork, ...) with `duration_ms`, `status`, `error_code`, `error_phase`, `operator_fault`, `trace_id`, `client_*`, plus the provider `vm_id` from the URL, `plan_id`, `billing_customer_type`, `billing_team_id` and the `stack_team` group; polled reads (`list`, `status`, `stats`, `list_sessions`, `get_tunnel`, `approve_cmux_remote_enrollment`) succeed silently. Every operator-fault failure also emits a `$exception` (Error Tracking) fingerprinted by error code, with `$exception_list` sent as a JSON array. A user or tenant fault (`vm_not_found`, `vm_requires_pro`, `vm_access_grant_busy`, `vm_command_too_large`, an unauthenticated 401, ...) is an expected answer and stays in `cloud_vm_request` only. `cloud_vm_provision` (schema 3, failures of create-like operations, feeds the alert) carries the same scope plus `trace_id`, `duration_ms`, `error_phase` and client fields.
-- PostHog product events (production, or `CMUX_SERVER_ANALYTICS_FORCE=1`): every allowlisted `cloud_vm_usage_events` ledger row is mirrored after a successful Postgres insert by `productAnalytics.ts` as `cloud_vm_created`, `cloud_vm_destroyed`, `cloud_vm_attached`, `cloud_vm_exec`, `cloud_vm_forked`, `cloud_vm_resumed`, `cloud_vm_snapshot_created`, `cloud_vm_port_opened`, `cloud_vm_base_opened`, `cloud_vm_base_reset`, keyed by the Stack user id with the billing team as the `stack_team` group and `billing_plan` on the person. Their `vm_id` is the internal `cloud_vms.id` UUID, not the provider id in request telemetry. Catalog, identity model and query shapes: `docs/posthog/cloud-product-analytics.md`.
-- Sentry (shared project, `subsystem: cloud_vm_api`): operator-fault VM errors only, at `error` level, fingerprint `["cmux-vm-error", code, provider]`, tags `vm.error_code`, `vm.phase`, `vm.operation`, `vm.provider`, `vm_id`, `client.*` (including `client.request_id`), `trace_id`, and a trace context holding the same ids.
+- Axiom (`hmux-prod-otel-traces`, 100% of VM traces): route span with `hmux.vm.timing.<stage>_ms`, `hmux.vm.request_duration_ms`, `hmux.vm.request_success`, `hmux.vm.error_*` (code, phase, provider, image, env var, reason), `hmux.client.*`, `hmux.user_id`, `hmux.vercel.request_id`; provider spans under it record the wrapped cause chain (`hmux.error_cause_chain`, `hmux.error_cause_http_status`, `hmux.error_cause_code`). Error and non-polled responses force a bounded span flush in `after()` so an error-heavy instance cannot drop the trace.
+- PostHog (production, or `HMUX_VM_ANALYTICS_FORCE=1`): `cloud_vm_request` (schema 2) for every failure and for the successes a user waits on (create, attach, base open, restore, fork, ...) with `duration_ms`, `status`, `error_code`, `error_phase`, `operator_fault`, `trace_id`, `client_*`, plus the provider `vm_id` from the URL, `plan_id`, `billing_customer_type`, `billing_team_id` and the `stack_team` group; polled reads (`list`, `status`, `stats`, `list_sessions`, `get_tunnel`, `approve_hmux_remote_enrollment`) succeed silently. Every operator-fault failure also emits a `$exception` (Error Tracking) fingerprinted by error code, with `$exception_list` sent as a JSON array. A user or tenant fault (`vm_not_found`, `vm_requires_pro`, `vm_access_grant_busy`, `vm_command_too_large`, an unauthenticated 401, ...) is an expected answer and stays in `cloud_vm_request` only. `cloud_vm_provision` (schema 3, failures of create-like operations, feeds the alert) carries the same scope plus `trace_id`, `duration_ms`, `error_phase` and client fields.
+- PostHog product events (production, or `HMUX_SERVER_ANALYTICS_FORCE=1`): every allowlisted `cloud_vm_usage_events` ledger row is mirrored after a successful Postgres insert by `productAnalytics.ts` as `cloud_vm_created`, `cloud_vm_destroyed`, `cloud_vm_attached`, `cloud_vm_exec`, `cloud_vm_forked`, `cloud_vm_resumed`, `cloud_vm_snapshot_created`, `cloud_vm_port_opened`, `cloud_vm_base_opened`, `cloud_vm_base_reset`, keyed by the Stack user id with the billing team as the `stack_team` group and `billing_plan` on the person. Their `vm_id` is the internal `cloud_vms.id` UUID, not the provider id in request telemetry. Catalog, identity model and query shapes: `docs/posthog/cloud-product-analytics.md`.
+- Sentry (shared project, `subsystem: cloud_vm_api`): operator-fault VM errors only, at `error` level, fingerprint `["hmux-vm-error", code, provider]`, tags `vm.error_code`, `vm.phase`, `vm.operation`, `vm.provider`, `vm_id`, `client.*` (including `client.request_id`), `trace_id`, and a trace context holding the same ids.
 
-`operator_fault` is true for a 5xx or a deployment-configuration code, and never for a permanent client-state code (`vm_not_found`, `vm_snapshot_not_found`, `vm_tunnel_not_found`, `vm_access_revoked`, `vm_access_grant_not_found`, `vm_attach_transport_unsupported`, `vm_memory_size_unknown`) or the expected `vm_operation_unsupported` 501, whatever status a route answers with (`isOperatorFaultVmError`). Every `cmux-vm-error:<code>` exception and `cloud_vm_request` failure on a per-machine route carries the path `vm_id`; every one carries `client_request_id` and the client name and version, and Sentry gets `vm_id` and `client.request_id` as tags. To tell one looping client from a broad outage, split the fingerprint by machine and person: `SELECT properties.error_code, count(), uniq(distinct_id), uniq(properties.vm_id), uniq(properties.client_request_id), uniq(properties.client_version) FROM events WHERE event = 'cloud_vm_request' AND properties.error_code = '<code>' AND timestamp > now() - INTERVAL 1 DAY GROUP BY properties.error_code`. A high count with one `vm_id` and one distinct id is a client retrying a permanent error; many machines and people is an incident.
+`operator_fault` is true for a 5xx or a deployment-configuration code, and never for a permanent client-state code (`vm_not_found`, `vm_snapshot_not_found`, `vm_tunnel_not_found`, `vm_access_revoked`, `vm_access_grant_not_found`, `vm_attach_transport_unsupported`, `vm_memory_size_unknown`) or the expected `vm_operation_unsupported` 501, whatever status a route answers with (`isOperatorFaultVmError`). Every `hmux-vm-error:<code>` exception and `cloud_vm_request` failure on a per-machine route carries the path `vm_id`; every one carries `client_request_id` and the client name and version, and Sentry gets `vm_id` and `client.request_id` as tags. To tell one looping client from a broad outage, split the fingerprint by machine and person: `SELECT properties.error_code, count(), uniq(distinct_id), uniq(properties.vm_id), uniq(properties.client_request_id), uniq(properties.client_version) FROM events WHERE event = 'cloud_vm_request' AND properties.error_code = '<code>' AND timestamp > now() - INTERVAL 1 DAY GROUP BY properties.error_code`. A high count with one `vm_id` and one distinct id is a client retrying a permanent error; many machines and people is an incident.
 
-Client side, `VMClientTelemetry` (`Sources/Cloud/VMClientTelemetry.swift`) measures every request: `os.log` category `CloudVM` for all of them, a Sentry breadcrumb for all, PostHog `cmux_cloud_vm_request` for failures plus non-polled successes, and a Sentry event for failures (5xx and transport failures `error`, 4xx `warning`). Client failures are throttled per operation and code (60 s PostHog, 300 s Sentry) so a polling loop during an outage produces one event per window.
+Client side, `VMClientTelemetry` (`Sources/Cloud/VMClientTelemetry.swift`) measures every request: `os.log` category `CloudVM` for all of them, a Sentry breadcrumb for all, PostHog `hmux_cloud_vm_request` for failures plus non-polled successes, and a Sentry event for failures (5xx and transport failures `error`, 4xx `warning`). Client failures are throttled per operation and code (60 s PostHog, 300 s Sentry) so a polling loop during an outage produces one event per window.
 
-Every outbound call (Freestyle, Stack Auth, Stripe, PostHog, Slack, Postgres, ...) is a client span inside the request trace, so the Axiom trace view shows the waterfall of third-party calls under each route span. `DependencySpanProcessor` (`services/observability/dependencies.ts`) stamps `cmux.dep.name` (third party) and `cmux.dep.route` (method plus id-templated path, `POST /v5/vms/{id}/exec-await`) on each of them at start. Failure rate and latency per dependency and endpoint, VM traces at 100%, everything else sampled at the base ratio:
+Every outbound call (Freestyle, Stack Auth, Stripe, PostHog, Slack, Postgres, ...) is a client span inside the request trace, so the Axiom trace view shows the waterfall of third-party calls under each route span. `DependencySpanProcessor` (`services/observability/dependencies.ts`) stamps `hmux.dep.name` (third party) and `hmux.dep.route` (method plus id-templated path, `POST /v5/vms/{id}/exec-await`) on each of them at start. Failure rate and latency per dependency and endpoint, VM traces at 100%, everything else sampled at the base ratio:
 
 ```
-['cmux-prod-otel-traces']
-| where _time > ago(1h) and isnotempty(['attributes.custom']['cmux.dep.name'])
+['hmux-prod-otel-traces']
+| where _time > ago(1h) and isnotempty(['attributes.custom']['hmux.dep.name'])
 | extend status = toint(coalesce(['attributes.custom']['http.status_code'], ['attributes.custom']['http.response.status_code']))
 | summarize calls = count(), failures = countif(status >= 400 or isnotempty(error)),
             p50_ms = round(percentile(duration, 50) / 1000000, 0), p95_ms = round(percentile(duration, 95) / 1000000, 0)
-  by dep = tostring(['attributes.custom']['cmux.dep.name']), route = tostring(['attributes.custom']['cmux.dep.route'])
+  by dep = tostring(['attributes.custom']['hmux.dep.name']), route = tostring(['attributes.custom']['hmux.dep.route'])
 | extend failure_rate = round(100.0 * failures / calls, 2)
 | order by failures desc, calls desc
 ```
 
 Freestyle only, per endpoint over time: add `| where dep == 'freestyle'` and `bin(_time, 5m)` to the `by` clause. Sentry's NodeFetch integration is disabled in `instrumentation.ts` because it duplicated every fetch span as a bare `GET`/`POST` client span without a URL.
 
-To investigate one failure: take the reference id, query Axiom `['cmux-prod-otel-traces'] | where trace_id == '<id>'`, open the PostHog `$exception` or `cloud_vm_request` row with `trace_id = <id>`, and search Sentry for `trace_id:<id>`.
+To investigate one failure: take the reference id, query Axiom `['hmux-prod-otel-traces'] | where trace_id == '<id>'`, open the PostHog `$exception` or `cloud_vm_request` row with `trace_id = <id>`, and search Sentry for `trace_id:<id>`.
 
 ## GitHub operations
 
@@ -439,39 +439,39 @@ Production migration runs staging migration first on the same commit, then waits
 
 ## Local database development
 
-Use `CMUX_PORT` to run multiple isolated web and database environments on one machine:
+Use `HMUX_PORT` to run multiple isolated web and database environments on one machine:
 
 ```bash
-CMUX_PORT=10180 bun dev
+HMUX_PORT=10180 bun dev
 ```
 
-`bun dev` sources provider values from `~/.secrets/cmux.env`, then sources
-`~/.secrets/cmuxterm-dev.env` (falling back to the legacy secret files). It derives the local
-database URL from `CMUX_PORT`, starts this worktree's Docker Postgres, applies Drizzle migrations,
+`bun dev` sources provider values from `~/.secrets/hmux.env`, then sources
+`~/.secrets/hmuxterm-dev.env` (falling back to the legacy secret files). It derives the local
+database URL from `HMUX_PORT`, starts this worktree's Docker Postgres, applies Drizzle migrations,
 then starts Next.js. When it exits or is interrupted, it stops the matching Docker container and
 network while preserving the Postgres volume.
 
-The dev Postgres port is `CMUX_PORT + 10000`, so `CMUX_PORT=10180` maps to `localhost:20180`. `bun db:test` starts a separate test DB on `CMUX_PORT + 30000`, applies migrations twice, and runs behavior tests against a real Postgres container.
+The dev Postgres port is `HMUX_PORT + 10000`, so `HMUX_PORT=10180` maps to `localhost:20180`. `bun db:test` starts a separate test DB on `HMUX_PORT + 30000`, applies migrations twice, and runs behavior tests against a real Postgres container.
 
 ## Provider matrix
 
 | Verb | Freestyle |
 | --- | --- |
-| `cmux vm new` | yes |
-| `cmux vm new --workspace` | yes |
-| `cmux vm new --detach` | yes |
-| `cmux vm attach <id>` | yes |
-| `cmux vm ssh <id>` | yes (cmux-remote alias) |
-| `cmux vm ssh-info <id>` | no (managed API has no SSH credential endpoint) |
-| `cmux vm exec <id> -- ...` | yes |
-| `cmux vm ls / rm` | yes |
+| `hmux vm new` | yes |
+| `hmux vm new --workspace` | yes |
+| `hmux vm new --detach` | yes |
+| `hmux vm attach <id>` | yes |
+| `hmux vm ssh <id>` | yes (hmux-remote alias) |
+| `hmux vm ssh-info <id>` | no (managed API has no SSH credential endpoint) |
+| `hmux vm exec <id> -- ...` | yes |
+| `hmux vm ls / rm` | yes |
 | snapshot / restore | yes |
 
-`cmux vm ssh <id>` is the user-facing interactive alias and opens the same managed workspace path
-as `cmux vm attach <id>`. Freestyle's provider SSH proxy is available outside cmux's managed
+`hmux vm ssh <id>` is the user-facing interactive alias and opens the same managed workspace path
+as `hmux vm attach <id>`. Freestyle's provider SSH proxy is available outside hmux's managed
 session protocol, but the managed API does not mint or expose its scoped identities. This keeps
-workspace, tab, terminal, and revision state on one authoritative cmux-tui path. Therefore
-`cmux vm ssh-info <id>` and `POST /api/vm/:id/ssh-endpoint` stay unsupported.
+workspace, tab, terminal, and revision state on one authoritative hmux-tui path. Therefore
+`hmux vm ssh-info <id>` and `POST /api/vm/:id/ssh-endpoint` stay unsupported.
 
 ## Capabilities: the client-visible provider contract
 
@@ -502,25 +502,25 @@ The current port-preview and model-plane paths have different trust boundaries:
   Revoking network access is not a promise to erase content already cached by a browser.
 - **Model-plane edge injection** — an egress rule `{ vmId } → { public }` on the
   CodeRouter origin with a headers transform. The edge overwrites the guest's
-  placeholder `authorization` and injects one signed `x-cmux-authorization`
+  placeholder `authorization` and injects one signed `x-hmux-authorization`
   header in flight. The persisted env file carries only
   placeholder keys, and a compromised guest has no credential to exfiltrate. Header
   values are write-only at the provider (read back as `***`); provisioning fails
   closed if the rule cannot be installed.
 
-## In-VM cmux CLI and machine-to-machine links
+## In-VM hmux CLI and machine-to-machine links
 
-The driver installs `/usr/local/bin/cmux`, `coderouter`, and `cr` as aliases of
-one Rust facade (`cmux-tui/crates/cmux-cloud-cli`). The facade forwards the complete
+The driver installs `/usr/local/bin/hmux`, `coderouter`, and `cr` as aliases of
+one Rust facade (`hmux-tui/crates/hmux-cloud-cli`). The facade forwards the complete
 CodeRouter argument list to the official Rust core and local/peer commands to the
-guest adapter, which uses the machine's cmux-tui daemon. `cmux coderouter` and
-`cmux cr` use the same CodeRouter implementation as the top-level aliases.
+guest adapter, which uses the machine's hmux-tui daemon. `hmux coderouter` and
+`hmux cr` use the same CodeRouter implementation as the top-level aliases.
 
 The facade and CodeRouter core are one checksum-pinned archive described by
 `guestCliDistribution.json`. Create and attach heal this distribution separately
 from the persistent terminal daemon, so a CLI upgrade does not restart terminals.
 Downloads must match the archive and executable checksums before aliases change.
-The adapter at `/usr/local/libexec/cmux-cloud-adapter` retains the existing cmux
+The adapter at `/usr/local/libexec/hmux-cloud-adapter` retains the existing hmux
 session grammar and Cloud extensions (`status`, `machines`, `models`, and `agent`).
 `usage` uses the official CodeRouter account/quota view; `machines` retains the
 VM spend view.
@@ -542,27 +542,27 @@ Freestyle machines boot the shared devbox snapshot (definition in
 `services/vms/images/devbox/`, baked with `web/scripts/build-devbox-freestyle.ts` against
 the public platform `api.freestyle.sh`): chatmux-devbox tool parity (mise node/python/bun,
 uv, gh, devtools, pinned coding agents, ble.sh, half-life prompt, seeded history). Machines
-run no cmuxd-remote: the **cmux-tui remote daemon is the machine's only session daemon**,
-and the bake installs the pinned static-musl build at `/home/cmux/.cmux/bin/cmux-tui` with
+run no hmuxd-remote: the **hmux-tui remote daemon is the machine's only session daemon**,
+and the bake installs the pinned static-musl build at `/home/hmux/.hmux/bin/hmux-tui` with
 `sha256sum -c` verification. A create is one `vms.create` (firewall, VPC, and the coderouter
 TLS rule inline); a size-less image also gets the grow-only resize. Nothing is written into
 the guest: the model-plane env is baked (see "Model plane"). The baked supervisor starts the
 daemon with a fresh identity
-keyed on the platform instance id. Neither create nor attach installs, heals or upgrades cmux-tui:
-a new machine runs the build its image baked (the manifest entry's `cmuxTuiCommit`), and a
-running machine changes build only through `web/scripts/upgrade-fleet-cmux-tui.ts`
+keyed on the platform instance id. Neither create nor attach installs, heals or upgrades hmux-tui:
+a new machine runs the build its image baked (the manifest entry's `hmuxTuiCommit`), and a
+running machine changes build only through `web/scripts/upgrade-fleet-hmux-tui.ts`
 (docs/cloud-guest-upgrades.md). The build and its digest come from the artifacts manifest
-published by `.github/workflows/cmux-tui-artifacts.yml`, nothing is pinned by hand, and a new
+published by `.github/workflows/hmux-tui-artifacts.yml`, nothing is pinned by hand, and a new
 build reaches new machines through a rebake and promotion. Public `vm exec` commands leave
-the provider account unset, so Freestyle selects its uid-1000 work account (usually `cmux`,
+the provider account unset, so Freestyle selects its uid-1000 work account (usually `hmux`,
 with a legacy root fallback when that account is absent) and resolves its passwd home before
 running. That often matches the terminal work user, but the daemon can fall back to root when
 the work user's home is unusable; exec still uses the provider-selected account. Commands that
 need root should use `sudo`, and snapshots with the former `/home/ubuntu` uid-1000 home do not
 leak a stale `HOME`. Config: `FREESTYLE_API_KEY` (or `FREESTYLE_STACK_ACCESS_TOKEN` + `FREESTYLE_TEAM_ID`);
-optionally `FREESTYLE_API_URL` to point at a non-default edge. `CMUX_VM_CMUX_TUI_MANIFEST_URL`
+optionally `FREESTYLE_API_URL` to point at a non-default edge. `HMUX_VM_HMUX_TUI_MANIFEST_URL`
 is read only by the bake, verify, reachability-check and BusyBox-probe scripts, to pin one
-commit's `https://files.cmux.com/cmux-tui/<commit>/manifest.json` instead of the rolling
+commit's `https://files.cmux.com/hmux-tui/<commit>/manifest.json` instead of the rolling
 `latest`; a deployment ignores it.
 
 Cloud-created Freestyle machines explicitly set `idleTimeoutSeconds: -1`, making them
@@ -575,14 +575,14 @@ There is no HTTP ingress proxy to arbitrary VM ports on the public platform (a T
 needs a customer-verified domain), so the daemon is reached directly at a VM address.
 
 **Private networking is the default.** Every Freestyle machine joins the one VPC that
-belongs to its owner (provisioned on first create, slug `cmux-net-<hash>`); the owner's
+belongs to its owner (provisioned on first create, slug `hmux-net-<hash>`); the owner's
 computers join the same VPC over WireGuard tunnels (`/api/vm/tunnel`). Every machine and
 every tunnel holds one address in it. Freestyle derives a /24 (254 members) when a VPC is
 created without a CIDR, and the range is fixed for the VPC's life, so production creates each
 owner network with a /20 (4,094 members) from 10.192.0.0/10 (`userNetworkCidr`), inside the tunnels' default
 10.0.0.0/8 route and above the band the platform derives team /24s from. Networks created
-before this keep their /24. `CMUX_VM_NETWORK_NAMESPACE` prefixes every derived network and
-tunnel slug (`cmux-<ns>-net-…`, `cmux-<ns>-wg-…`); unset keeps the production slugs.
+before this keep their /24. `HMUX_VM_NETWORK_NAMESPACE` prefixes every derived network and
+tunnel slug (`hmux-<ns>-net-…`, `hmux-<ns>-wg-…`); unset keeps the production slugs.
 `web/scripts/load-dev-env.sh` sets `dev-<hash of the dev database>`, so a dev stack, which
 shares the production Freestyle account, never enrolls tunnels into a production network.
 Namespaced networks keep the platform's account-unique /24, and a namespaced deployment
@@ -598,12 +598,12 @@ address reachable.
 The Noise handshake encrypts and authenticates the session end to end, so carrier TLS is not
 required; the route token exists only for the lease ledger. Creates take no ports field and
 no create-time env; the guest's model-plane env is the same for every machine and baked at
-`/etc/cmux/model-plane.env`, which `/etc/cmux/agent-config.sh` sources when no boot env and no
+`/etc/hmux/model-plane.env`, which `/etc/hmux/agent-config.sh` sources when no boot env and no
 per-home file exist. It carries alias base URLs and a placeholder key only; the credential is
 edge-injected (see "Model plane" below).
 
 Driver maintenance commands run with `linuxUser: "root"`. Public `vm exec` leaves the
-provider account unset so Freestyle selects uid 1000 (the `cmux` work user on current
+provider account unset so Freestyle selects uid 1000 (the `hmux` work user on current
 images, with a legacy root fallback when that account is absent), then derives `HOME` from
 that account's passwd entry. This often aligns exec credentials and paths with Cloud
 terminals, but the daemon can fall back to root when its work-user layout is unavailable;
@@ -611,27 +611,27 @@ exec still uses the provider-selected account. Explicit root remains a separate 
 for maintenance.
 
 `POST /api/vm/[id]/attach-endpoint` with
-`{"transport":"cmux-remote","clientCapabilities":[...]}` returns
+`{"transport":"hmux-remote","clientCapabilities":[...]}` returns
 `{route, token, session, trustedCarrier, daemonBuild?}`. The machine's daemon serves a
 trusted-carrier listener: the route is reachable only inside the owner's private network,
 whose members are all the owner's, so the daemon grants every link carrier
-authentication and the client connects with `cmux-tui remote connect <route> --carrier`
+authentication and the client connects with `hmux-tui remote connect <route> --carrier`
 through the user-space WireGuard hub — no device enrollment, no invitation, no approval.
 The endpoint brings a daemon from an older bake to the pinned build and restarts it with
 the trusted drop-in, except under a device that is already enrolled there (its sessions
 would end); that device keeps dialing with its stored key. `POST
-/api/vm/[id]/cmux-remote/approve` remains as a no-op that answers `approved` for older
+/api/vm/[id]/hmux-remote/approve` remains as a no-op that answers `approved` for older
 Mac builds. The legacy websocket/SSH attach (`attach-endpoint` without a
 transport, `POST /api/vm/[id]/sessions`) answers `409 vm_attach_transport_unsupported` with
-`details.supportedTransports: ["cmux-remote"]`. `cmux vm shell`, `cmux vm new`,
-`cmux vm base open` and the Machines panel all drive this from the Mac.
-See docs/cloud-cmux-tui-daemon.md for the design.
+`details.supportedTransports: ["hmux-remote"]`. `hmux vm shell`, `hmux vm new`,
+`hmux vm base open` and the Machines panel all drive this from the Mac.
+See docs/cloud-hmux-tui-daemon.md for the design.
 
-Freestyle machines run the cmux-tui daemon and only the `cmux-remote`
+Freestyle machines run the hmux-tui daemon and only the `hmux-remote`
 transport. The route is the VM's private VPC address. The app carries it through
 user-space WireGuard. The daemon's Noise enrollment gates sessions. The backend writes
 only a hash of attach tokens to Postgres; raw tokens are returned once to the Mac client.
-Machines created by the old cmuxd-remote drivers need recreation on the private network.
+Machines created by the old hmuxd-remote drivers need recreation on the private network.
 
 Operational note: before rollout, verify the deployed provider, create switch,
 image manifest, and credential presence with
@@ -646,9 +646,9 @@ No coderouter secret ever lands in a guest. `createVm`/`restoreVm` take a `model
 provisioner (`services/vms/modelPlaneGateway.ts` adapting
 `services/coderouter/vmModelPlane.ts`). After the `cloud_vms` row exists and before the
 provider call, it mints one signed authorization token bound to the row id (`coderouter_route_tokens.vm_id`)
-and returns one edge rule: domain `coderouter.cmux.internal` (the alias every guest dials;
-`CMUX_VM_EDGE_ALIAS_DOMAIN` overrides it per deployment, never per machine), destination host
-this deployment's API host, and header `x-cmux-authorization`. The
+and returns one edge rule: domain `coderouter.hmux.internal` (the alias every guest dials;
+`HMUX_VM_EDGE_ALIAS_DOMAIN` overrides it per deployment, never per machine), destination host
+this deployment's API host, and header `x-hmux-authorization`. The
 Freestyle driver passes the rule inline as `tls.rules` on the create; the platform resolves the
 alias to its edge, installs its CA in the guest at boot, terminates TLS for the alias, forwards
 to the destination host, and injects (and overwrites) those headers on every request.
@@ -656,9 +656,9 @@ coderouter rejects a bound token whose request carries a different VM id. Rules 
 boot never reach a running guest, so the rule is never added later.
 
 Because the guest always dials the alias, its env is identical everywhere and is baked
-(`services/coderouter/vmGuestEnv.ts`, written by the bake to `/etc/cmux/model-plane.env`):
-`OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `CMUX_CODEROUTER_URL` on the alias origin and the
-placeholder `OPENAI_API_KEY`/`ANTHROPIC_API_KEY`. `CMUX_CODEROUTER_EDGE_ORIGIN` (a bare https
+(`services/coderouter/vmGuestEnv.ts`, written by the bake to `/etc/hmux/model-plane.env`):
+`OPENAI_BASE_URL`, `ANTHROPIC_BASE_URL`, `HMUX_CODEROUTER_URL` on the alias origin and the
+placeholder `OPENAI_API_KEY`/`ANTHROPIC_API_KEY`. `HMUX_CODEROUTER_EDGE_ORIGIN` (a bare https
 origin) moves the rule's destination; outside production and previews it is the only way a
 machine gets a rule at all, and it must name a public origin sharing the deployment's signing key
 and database. Injection activates a few
@@ -673,33 +673,33 @@ coderouter and Subrouter is team membership only, so every member of the billing
 token. Rows written by the retired gate still carry `model_plane_entitlement` and stay
 retryable. Tokens never rotate; `destroyVm`, account deletion,
 the status reconcile cron, and every create rollback revoke them best-effort.
-`CMUX_VM_CODEROUTER_ENV_ENABLED=0` is a local-dev escape hatch only: it creates an unwired
+`HMUX_VM_CODEROUTER_ENV_ENABLED=0` is a local-dev escape hatch only: it creates an unwired
 machine (no env, no rule, still no secret) and must never be set in production.
 
 ## Usage, limits, and pricing
 
-The usage ledger is in Postgres. VM create pricing gates can use Stack Auth payment items, but free-plan create credits are opt-in. Configure `CMUX_VM_PLAN_FREE_CREATE_CREDIT_ITEM_ID` only when the free plan should consume a prepaid create-credit bucket. When enabled, the create workflow records a one-time local grant row, seeds the configured Stack Auth item credits once per billing team, reserves one create credit only for a newly inserted row, calls the provider, and refunds the credit if provisioning fails before a usable VM exists.
+The usage ledger is in Postgres. VM create pricing gates can use Stack Auth payment items, but free-plan create credits are opt-in. Configure `HMUX_VM_PLAN_FREE_CREATE_CREDIT_ITEM_ID` only when the free plan should consume a prepaid create-credit bucket. When enabled, the create workflow records a one-time local grant row, seeds the configured Stack Auth item credits once per billing team, reserves one create credit only for a newly inserted row, calls the provider, and refunds the credit if provisioning fails before a usable VM exists.
 
-Plan limits are team-based. Stack Auth personal teams should stay enabled for both dev/staging and production projects (`createTeamOnSignUp` / `teams.createPersonalTeamOnSignUp`). New VM rows store `billing_team_id` and `billing_plan_id`; the free plan allows zero active VMs by default and remains at zero regardless of stale free-limit env values while the paid-plan gate is on. A deliberate `CMUX_VM_ALLOW_FREE_PROVISIONING=1` escape hatch re-enables the configured free allowance for local demos and dev-backend stacks; it is ignored when `VERCEL_ENV=production`, so production never gives a free account a machine; Go is a $10/month personal starter plan with one active 2 vCPU / 4 GiB / 16 GB VM and two saved VM records. It includes 40 VM-hours per Stripe billing period. PostgreSQL runtime records commit with VM state changes, and an account-level lock limits Go to two retained VMs in total, with one active. Freestyle lifetime runtime caps enforce the remaining allowance and block restarts until cmux grants a new allowance. A minute job reconciles exhausted machines. Go disk growth beyond 16 GiB is refused; Pro and Max get the allowance sold on /pricing, 5 active machines per billing team, multiplied by the Team subscription's paid seats (`cmuxSeats` in the team's Stack metadata, written from the Stripe quantity) so "5 per paid seat" holds for the whole team (`PAID_MAX_ACTIVE_VMS_DEFAULT`; `maxActiveVms` in entitlements and the list response). New machines use validated Freestyle base snapshots from 4 GiB RAM / 16 GB disk through 64 GiB RAM / 128 GB disk, including the 24 GiB / 96 GB intermediate size. The default is 8 GiB RAM and 32 GB disk. Pro, Team, and Founder's plans may start machines up to the 8 vCPU / 16 GiB `lg` row; the 24 GiB, 32 GiB, and 64 GiB rows require the Max plan (`maxMemoryMbForPlan`, `lockedMemoryOptionsMbForPlan`). Free machines, which exist only behind the free-provisioning escape hatch, stop at 8 GiB. vCPUs follow the image ladder, one per 2 GiB (`vcpusForMemoryMb`). Existing machines remain usable during the entitlement migration even when their recorded CPU or memory exceeds the caller's current plan; new machines, forks, restores, Base generations, and future CPU/RAM growth enforce current limits. List, status, rename, and delete continue to work. The list response names the locked sizes and the upgrade plan, and gives each offered size's vCPUs in `vcpusByMemoryMb` so clients label sizes without their own table. A create with a locked size returns `402 vm_memory_requires_plan` rather than coercing to a smaller machine. Active machines share one vCPU and memory pool per billing scope: 20 vCPUs and 40 GiB for Pro and Founder's Edition, the same per paid seat on Team (multiplied by `cmuxSeats` exactly like the machine count), and 80 vCPUs and 160 GiB for Max (`resourcePoolForPlan`; a Max caller on a large team keeps the larger pool per dimension). Go and Free have no pool. Only `provisioning` and `running` rows draw from the pool; paused and stopped machines do not. Each row's share is its `cmuxResourceReservation` marker; a live row without a valid marker reserves the provider maximum (64 GiB / 32 vCPU) until reconciliation measures it, so a larger legacy machine cannot undercount the pool. The repository sums the scope's active shares and adds the new, resumed, resized, or forked machine inside the same transaction and billing-team advisory lock as the count check: `beginCreate` (create, restore, fork), `beginBaseOpen`, `beginBaseReset`, `reservePausedResume`, and `reserveVmComputeResize` (CPU/memory growth, which writes the larger marker before provider I/O and gives it back only when a fresh provider read proves the resize did not apply). A request that does not fit fails with `VmResourcePoolExceededError` and answers `402 vm_resource_pool_exceeded` with the pool, the amount in use, the request, and `upgradePlanId: "max"` below Max. `GET /api/vm` returns `poolVcpus`, `poolMemoryMb`, `usedVcpus`, and `usedMemoryMb` in `limits` and each machine's `resources`. Disk is not pooled. Disk growth is independent and grow-only: Go reaches 16 GiB, Pro/Team/Founder's 128 GiB, and Max 256 GiB in 4 GiB steps. The Freestyle driver applies the default at create (`CMUX_VM_DISK_MB` overrides it), and the resize API reads provider stats before and after the provider confirms the change. Destroyed VMs do not count against a limit; pausing frees the active slot, while Go still counts the retained VM toward its saved limit. Paid plan activation should write a readable plan id such as `pro` into Stack Auth team read-only metadata (`cmuxVmPlan`) or equivalent billing sync metadata. Paid-plan `CMUX_VM_PLAN_<PLAN>_MAX_ACTIVE_VMS`, `CMUX_VM_PAID_MAX_ACTIVE_VMS`, and `CMUX_VM_SHARED_CPU_LIMIT_ENABLED` are retired and ignored. The paid allowance lives in code; `CMUX_VM_CREATE_ENABLED=0` remains the provisioning incident control. Paid plans only consume Stack Auth create credits when `CMUX_VM_PLAN_<PLAN>_CREATE_CREDIT_ITEM_ID` or the global `CMUX_VM_CREATE_CREDIT_ITEM_ID` is configured.
+Plan limits are team-based. Stack Auth personal teams should stay enabled for both dev/staging and production projects (`createTeamOnSignUp` / `teams.createPersonalTeamOnSignUp`). New VM rows store `billing_team_id` and `billing_plan_id`; the free plan allows zero active VMs by default and remains at zero regardless of stale free-limit env values while the paid-plan gate is on. A deliberate `HMUX_VM_ALLOW_FREE_PROVISIONING=1` escape hatch re-enables the configured free allowance for local demos and dev-backend stacks; it is ignored when `VERCEL_ENV=production`, so production never gives a free account a machine; Go is a $10/month personal starter plan with one active 2 vCPU / 4 GiB / 16 GB VM and two saved VM records. It includes 40 VM-hours per Stripe billing period. PostgreSQL runtime records commit with VM state changes, and an account-level lock limits Go to two retained VMs in total, with one active. Freestyle lifetime runtime caps enforce the remaining allowance and block restarts until hmux grants a new allowance. A minute job reconciles exhausted machines. Go disk growth beyond 16 GiB is refused; Pro and Max get the allowance sold on /pricing, 5 active machines per billing team, multiplied by the Team subscription's paid seats (`hmuxSeats` in the team's Stack metadata, written from the Stripe quantity) so "5 per paid seat" holds for the whole team (`PAID_MAX_ACTIVE_VMS_DEFAULT`; `maxActiveVms` in entitlements and the list response). New machines use validated Freestyle base snapshots from 4 GiB RAM / 16 GB disk through 64 GiB RAM / 128 GB disk, including the 24 GiB / 96 GB intermediate size. The default is 8 GiB RAM and 32 GB disk. Pro, Team, and Founder's plans may start machines up to the 8 vCPU / 16 GiB `lg` row; the 24 GiB, 32 GiB, and 64 GiB rows require the Max plan (`maxMemoryMbForPlan`, `lockedMemoryOptionsMbForPlan`). Free machines, which exist only behind the free-provisioning escape hatch, stop at 8 GiB. vCPUs follow the image ladder, one per 2 GiB (`vcpusForMemoryMb`). Existing machines remain usable during the entitlement migration even when their recorded CPU or memory exceeds the caller's current plan; new machines, forks, restores, Base generations, and future CPU/RAM growth enforce current limits. List, status, rename, and delete continue to work. The list response names the locked sizes and the upgrade plan, and gives each offered size's vCPUs in `vcpusByMemoryMb` so clients label sizes without their own table. A create with a locked size returns `402 vm_memory_requires_plan` rather than coercing to a smaller machine. Active machines share one vCPU and memory pool per billing scope: 20 vCPUs and 40 GiB for Pro and Founder's Edition, the same per paid seat on Team (multiplied by `hmuxSeats` exactly like the machine count), and 80 vCPUs and 160 GiB for Max (`resourcePoolForPlan`; a Max caller on a large team keeps the larger pool per dimension). Go and Free have no pool. Only `provisioning` and `running` rows draw from the pool; paused and stopped machines do not. Each row's share is its `hmuxResourceReservation` marker; a live row without a valid marker reserves the provider maximum (64 GiB / 32 vCPU) until reconciliation measures it, so a larger legacy machine cannot undercount the pool. The repository sums the scope's active shares and adds the new, resumed, resized, or forked machine inside the same transaction and billing-team advisory lock as the count check: `beginCreate` (create, restore, fork), `beginBaseOpen`, `beginBaseReset`, `reservePausedResume`, and `reserveVmComputeResize` (CPU/memory growth, which writes the larger marker before provider I/O and gives it back only when a fresh provider read proves the resize did not apply). A request that does not fit fails with `VmResourcePoolExceededError` and answers `402 vm_resource_pool_exceeded` with the pool, the amount in use, the request, and `upgradePlanId: "max"` below Max. `GET /api/vm` returns `poolVcpus`, `poolMemoryMb`, `usedVcpus`, and `usedMemoryMb` in `limits` and each machine's `resources`. Disk is not pooled. Disk growth is independent and grow-only: Go reaches 16 GiB, Pro/Team/Founder's 128 GiB, and Max 256 GiB in 4 GiB steps. The Freestyle driver applies the default at create (`HMUX_VM_DISK_MB` overrides it), and the resize API reads provider stats before and after the provider confirms the change. Destroyed VMs do not count against a limit; pausing frees the active slot, while Go still counts the retained VM toward its saved limit. Paid plan activation should write a readable plan id such as `pro` into Stack Auth team read-only metadata (`hmuxVmPlan`) or equivalent billing sync metadata. Paid-plan `HMUX_VM_PLAN_<PLAN>_MAX_ACTIVE_VMS`, `HMUX_VM_PAID_MAX_ACTIVE_VMS`, and `HMUX_VM_SHARED_CPU_LIMIT_ENABLED` are retired and ignored. The paid allowance lives in code; `HMUX_VM_CREATE_ENABLED=0` remains the provisioning incident control. Paid plans only consume Stack Auth create credits when `HMUX_VM_PLAN_<PLAN>_CREATE_CREDIT_ITEM_ID` or the global `HMUX_VM_CREATE_CREDIT_ITEM_ID` is configured.
 
 ### The free limit is the paywall moment
 
-`vmActiveLimitExceededResponse` (routeHelpers) renders every provisioning verb's over-limit error. On unpaid plans the message sells the upgrade — with the default zero allowance it is the subscribe gate ("Cloud VMs require a cmux Pro subscription") with `upgradeRequired: true` and `upgradeUrl` pointing at `/pricing` — so clients can show a real upgrade prompt (checkout flow per `skills/cmux-billing`) instead of a dead error. Paid plans see it at the plan allowance (5 active machines, times paid seats on Team) or at an operator incident brake; then the message is operational "delete one" guidance, not a paywall.
+`vmActiveLimitExceededResponse` (routeHelpers) renders every provisioning verb's over-limit error. On unpaid plans the message sells the upgrade — with the default zero allowance it is the subscribe gate ("Cloud VMs require a hmux Pro subscription") with `upgradeRequired: true` and `upgradeUrl` pointing at `/pricing` — so clients can show a real upgrade prompt (checkout flow per `skills/hmux-billing`) instead of a dead error. Paid plans see it at the plan allowance (5 active machines, times paid seats on Team) or at an operator incident brake; then the message is operational "delete one" guidance, not a paywall.
 
 ### Pricing is flat
 
 Go includes one active VM with the starter resource shape. Pro and Max include up to 5 active VMs (per paid seat on Team) for a flat subscription price; those VMs share the plan's vCPU and memory pool, and each VM has its own disk. Go is capped by active VM count until usage metering is added. There is no overage billing; an earlier GB-RAM-awake-seconds metering design was considered and dropped to keep pricing simple. Legacy VM resource claims are repaired by the status-reconcile cron in batches of 50, so create and resize requests do not fan out provider stats reads. A legacy row without resource metadata reserves the provider maximum until the cron records its measured shape, so an oversized row cannot undercount the shared pool.
 # Signed VM model-plane authorization
 
-VM model traffic uses one `x-cmux-authorization: Bearer <JWT>` header. The
+VM model traffic uses one `x-hmux-authorization: Bearer <JWT>` header. The
 token is signed with HMAC-SHA-256 and contains `vm_id`, `team_id`, `owner_id`,
 `aud`, `iat`, `exp`, `jti`, and a `kid` key-version claim. The signing key is
-provided to the web deployment as the base64url value `CMUX_VM_AUTH_SIGNING_KEY`
-and its active version as `CMUX_VM_AUTH_SIGNING_KEY_ID`. During rotation, keep
-old verification keys in the JSON map `CMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS`,
+provided to the web deployment as the base64url value `HMUX_VM_AUTH_SIGNING_KEY`
+and its active version as `HMUX_VM_AUTH_SIGNING_KEY_ID`. During rotation, keep
+old verification keys in the JSON map `HMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS`,
 then remove them after the longest token lifetime (30 days).
 
-The verifier requires the `cmux` issuer and `cmux-vm-model-plane` audience,
+The verifier requires the `hmux` issuer and `hmux-vm-model-plane` audience,
 rejects malformed, expired, wrong-owner, and wrong-VM claims, and checks the
 hashed token row for revocation and live VM ownership. Destroying a VM or
 revoking its tokens therefore takes effect immediately even before a signing

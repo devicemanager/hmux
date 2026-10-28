@@ -1,11 +1,11 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// The resolved color shared by pane flashes and unread notification rings.
 ///
 /// A configured color paints both. Without one, both signals use the existing
-/// cmux accent, preserving the established blue default.
+/// hmux accent, preserving the established blue default.
 ///
 /// The setting store remains the only owner of the configured string. This
 /// value validates one immutable snapshot before it reaches a renderer, so
@@ -13,13 +13,13 @@ import SwiftUI
 /// setting in their drawing loops.
 struct WorkspaceAttentionColor: Hashable, Sendable {
     private let rgb: UInt32?
-    /// The resolved cmux accent used when no valid color is configured.
-    private let accent: CmuxAccentColor
+    /// The resolved hmux accent used when no valid color is configured.
+    private let accent: HmuxAccentColor
     private let themeForegroundHex: String?
     private let useThemeForeground: Bool
     init(
         configuredHex: String?,
-        accent: CmuxAccentColor = CmuxAccentColor(),
+        accent: HmuxAccentColor = HmuxAccentColor(),
         themeForeground: NSColor? = nil,
         useThemeForeground: Bool = false
     ) {
@@ -36,7 +36,7 @@ struct WorkspaceAttentionColor: Hashable, Sendable {
         return Self.color(rgb: rgb, alpha: 1)
     }
 
-    /// The pane flash keeps the configured color or the existing cmux accent.
+    /// The pane flash keeps the configured color or the existing hmux accent.
     var flashNSColor: NSColor {
         guard rgb == nil, useThemeForeground,
               let themeForegroundHex,

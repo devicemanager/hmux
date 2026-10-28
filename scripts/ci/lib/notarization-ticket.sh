@@ -2,8 +2,8 @@
 # Architecture-aware checks supplement stapler's ticket validation. A ticket
 # found by the host's CDHash can belong to a thin copy of a universal helper.
 
-CODESIGN_TOOL="${CMUX_CODESIGN_TOOL:-/usr/bin/codesign}"
-LIPO_TOOL="${CMUX_LIPO_TOOL:-lipo}"
+CODESIGN_TOOL="${HMUX_CODESIGN_TOOL:-/usr/bin/codesign}"
+LIPO_TOOL="${HMUX_LIPO_TOOL:-lipo}"
 
 # Prints arch=CDHash for every slice. Capture command results explicitly: a
 # failing process substitution would otherwise let an empty slice set pass.
@@ -52,7 +52,7 @@ import pathlib, plistlib, sys, uuid
 path = pathlib.Path(sys.argv[1])
 data = path.read_bytes()
 info = plistlib.loads(data)
-info['CMUXNotarizationSubmission'] = str(uuid.uuid4())
+info['HMUXNotarizationSubmission'] = str(uuid.uuid4())
 fmt = plistlib.FMT_BINARY if data.startswith(b'bplist00') else plistlib.FMT_XML
 path.write_bytes(plistlib.dumps(info, fmt=fmt))
 PY

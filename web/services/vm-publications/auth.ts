@@ -46,7 +46,7 @@ export type PublicationViewerResolverShape = {
 };
 
 export class PublicationViewerResolver extends Context.Tag(
-  "cmux/PublicationViewerResolver",
+  "hmux/PublicationViewerResolver",
 )<PublicationViewerResolver, PublicationViewerResolverShape>() {}
 
 export const PublicationViewerResolverLive = Layer.succeed(
@@ -144,7 +144,7 @@ export type PublicationRequestEvaluation =
 /**
  * Evaluate an edge-authenticated request against the current publication and
  * current Stack team membership without writing anything. The untrusted VM
- * never receives either cmux cookie; Freestyle keeps both in protectedCookies.
+ * never receives either hmux cookie; Freestyle keeps both in protectedCookies.
  * Minting the sign-in transaction is a separate step so the route can rate
  * limit it: every unauthenticated navigation would otherwise cost a write.
  */
@@ -273,7 +273,7 @@ export function completePublicationAuthorization(input: {
   });
 }
 
-/** Resolve CMUX's browser page, issuing a one-time callback code when authorized. */
+/** Resolve HMUX's browser page, issuing a one-time callback code when authorized. */
 export function resolvePublicationAccess(input: {
   readonly transaction: string;
   readonly state: string;
@@ -339,7 +339,7 @@ function currentPublicationViewer(
       return user;
     }
     // Team access is dynamic. Never trust the membership snapshot carried by
-    // the CMUX page request: a removed member must lose access immediately,
+    // the HMUX page request: a removed member must lose access immediately,
     // just as a newly-added member must gain it without another sign-in.
     const resolver = yield* PublicationViewerResolver;
     const fresh = yield* resolver.resolve(user.userId);

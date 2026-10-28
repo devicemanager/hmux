@@ -1,5 +1,5 @@
-import CmuxCloudBannerCore
-import CmuxCloud
+import HmuxCloudBannerCore
+import HmuxCloud
 import AppKit
 import SwiftUI
 

@@ -30,7 +30,7 @@ import {
   themeVarMap,
   turnBaselineCountForTest,
   turnBaselineKeysForTest,
-  validateCmuxThemePayload,
+  validateHmuxThemePayload,
   writeStateFileForTest,
 } from "../server";
 import { applyManagedThemeOverrideForTest, pickAccentColor, resolveThemeNameForTest, type GhosttyTheme } from "../theme";
@@ -42,9 +42,9 @@ function assert(cond: unknown, msg: string): asserts cond {
   if (!cond) throw new Error(msg);
 }
 
-const priorDev = process.env.CMUX_AGENT_UI_DEV;
+const priorDev = process.env.HMUX_AGENT_UI_DEV;
 try {
-  delete process.env.CMUX_AGENT_UI_DEV;
+  delete process.env.HMUX_AGENT_UI_DEV;
   resetAssetCachesForTest();
   const [firstBundles, secondBundles] = await Promise.all([buildBundles(), buildBundles()]);
   assert(firstBundles === secondBundles, "buildBundles should return the cached bundle map by default");
@@ -55,8 +55,8 @@ try {
   assert(firstCss === secondCss, "cssAsset should return the cached stylesheet by default");
   assert(assetCacheStatsForTest().cssReadCount === 1, "cssAsset should read once by default");
 } finally {
-  if (priorDev === undefined) delete process.env.CMUX_AGENT_UI_DEV;
-  else process.env.CMUX_AGENT_UI_DEV = priorDev;
+  if (priorDev === undefined) delete process.env.HMUX_AGENT_UI_DEV;
+  else process.env.HMUX_AGENT_UI_DEV = priorDev;
 }
 
 const listedSession = stripQueuedMessages({ id: "s1", status: "running", queuedMessages: [{ id: "m1", body: "private" }] });
@@ -134,33 +134,33 @@ assert(pickAccentColor(monokaiTheme) === "#66d9ef", `Monokai should pick the fir
 assert(pickAccentColor(fakeTheme) === "#000011", "normal blue slot should remain the accent");
 assert(pickAccentColor({ ...fakeTheme, accent: "#123456" }) === "#123456", "explicit accent override should win");
 const { sources: _sources, ...postTheme } = fakeTheme;
-const cmuxTheme = validateCmuxThemePayload({ ...postTheme, source: "cmux", accent: "#123456" });
-assert(cmuxTheme.source === "cmux" && cmuxTheme.palette.length === 16, "valid cmux theme POST payload should normalize");
-assert(themeVarMap(cmuxTheme)["--accent"] === "#123456", "cmux POST accent override should drive --accent");
-// A cmux push without an accent must inherit the file-configured agent-chat-accent
+const hmuxTheme = validateHmuxThemePayload({ ...postTheme, source: "hmux", accent: "#123456" });
+assert(hmuxTheme.source === "hmux" && hmuxTheme.palette.length === 16, "valid hmux theme POST payload should normalize");
+assert(themeVarMap(hmuxTheme)["--accent"] === "#123456", "hmux POST accent override should drive --accent");
+// A hmux push without an accent must inherit the file-configured agent-chat-accent
 // (the Swift payload has no accent field; clobbering would break the documented override).
-const inheritTheme = validateCmuxThemePayload({ ...postTheme, source: "cmux" });
-assert(inheritTheme.accent == null, "cmux payload without accent should validate with null accent");
+const inheritTheme = validateHmuxThemePayload({ ...postTheme, source: "hmux" });
+assert(inheritTheme.accent == null, "hmux payload without accent should validate with null accent");
 // background-opacity = 0 is legal ghostty config; Swift encoders may omit nil optionals entirely.
 const { selectionBackground: _sb, cursorColor: _cc, fontFamily: _ff, fontSize: _fs, ...sparseTheme } = postTheme;
-const sparse = validateCmuxThemePayload({ ...sparseTheme, source: "cmux", opacity: 0 });
+const sparse = validateHmuxThemePayload({ ...sparseTheme, source: "hmux", opacity: 0 });
 assert(sparse.opacity === 0 && sparse.fontFamily === null && sparse.selectionBackground === null, "omitted nullable keys default to null and opacity 0 validates");
-assert(themeOverrideStateForTest("cmux", cmuxTheme).hasOverride, "cmux theme push should become the authoritative override");
+assert(themeOverrideStateForTest("hmux", hmuxTheme).hasOverride, "hmux theme push should become the authoritative override");
 const ghosttyWins = themeOverrideStateForTest("ghostty", { ...fakeTheme, background: "#010203", source: "show-config:test" });
-assert(!ghosttyWins.hasOverride && ghosttyWins.current.background === "#010203", "later ghostty refresh should supersede a stale cmux override");
-assert(themeOverrideStateForTest("cmux", cmuxTheme).current.source === "cmux", "newer cmux push should win again");
+assert(!ghosttyWins.hasOverride && ghosttyWins.current.background === "#010203", "later ghostty refresh should supersede a stale hmux override");
+assert(themeOverrideStateForTest("hmux", hmuxTheme).current.source === "hmux", "newer hmux push should win again");
 for (const bad of [
   { ...postTheme, source: "ghostty" },
-  { ...postTheme, source: "cmux", palette: fakeTheme.palette.slice(0, 15) },
-  { ...postTheme, source: "cmux", extra: true },
+  { ...postTheme, source: "hmux", palette: fakeTheme.palette.slice(0, 15) },
+  { ...postTheme, source: "hmux", extra: true },
 ]) {
   let rejected = false;
   try {
-    validateCmuxThemePayload(bad);
+    validateHmuxThemePayload(bad);
   } catch {
     rejected = true;
   }
-  assert(rejected, `invalid cmux theme payload should be rejected: ${JSON.stringify(bad)}`);
+  assert(rejected, `invalid hmux theme payload should be rejected: ${JSON.stringify(bad)}`);
 }
 assert(resolveThemeNameForTest("theme = light:Paper,dark:Ink\n", "light") === "Paper", "managed light theme pair should resolve by light appearance");
 assert(resolveThemeNameForTest("theme = light:Paper,dark:Ink\n", "dark") === "Ink", "managed dark theme pair should resolve by dark appearance");
@@ -242,7 +242,7 @@ assert(attributed.map((f) => f.path).join("|") === "changed.txt|new.txt", `basel
 const noFilesRoot = join(import.meta.dir, "..", "scratch", "no-files-baseline-test");
 await rm(noFilesRoot, { recursive: true, force: true });
 await mkdir(noFilesRoot, { recursive: true });
-// Its own repository: inside the cmux checkout, git status on the whole
+// Its own repository: inside the hmux checkout, git status on the whole
 // checkout can outlast the 500 ms budget below.
 await run(["git", "init"], noFilesRoot);
 const noFilesSession = {

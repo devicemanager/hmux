@@ -1,6 +1,6 @@
-import CmuxFoundation
-import CmuxSettings
-import CmuxSidebar
+import HmuxFoundation
+import HmuxSettings
+import HmuxSidebar
 import CoreGraphics
 import Foundation
 
@@ -24,8 +24,8 @@ struct SidebarTabItemSettingsSnapshot: Equatable {
     let showsGitBranchIcon: Bool
     let showsCloudDeviceIcons: Bool
     let makesPullRequestsClickable: Bool
-    let openPullRequestLinksInCmuxBrowser: Bool
-    let openPortLinksInCmuxBrowser: Bool
+    let openPullRequestLinksInHmuxBrowser: Bool
+    let openPortLinksInHmuxBrowser: Bool
     let showsNotificationMessage: Bool
     let notificationMessageLineLimit: Int
     let activeTabIndicatorStyle: WorkspaceIndicatorStyle
@@ -39,9 +39,9 @@ struct SidebarTabItemSettingsSnapshot: Equatable {
     let visibleAuxiliaryDetails: SidebarWorkspaceAuxiliaryDetailVisibility
     let iMessageModeEnabled: Bool
     let workspaceTodoChecklistStyle: WorkspaceTodoChecklistStyle
-    /// The resolved cmux accent. Rows draw selection, progress, drop
+    /// The resolved hmux accent. Rows draw selection, progress, drop
     /// indicators and agent status with it, and reconfigure when it changes.
-    let accentColor: CmuxAccentColor
+    let accentColor: HmuxAccentColor
 
     var usesLastSegmentPath: Bool { branchDirectory.usesLastSegmentPath }
     var showsSSH: Bool { details.showSSH }
@@ -49,7 +49,7 @@ struct SidebarTabItemSettingsSnapshot: Equatable {
     init(
         defaults: UserDefaults = .standard,
         sidebarFontSize: CGFloat = GhosttyConfig.defaultSidebarFontSize,
-        accentColor: CmuxAccentColor = CmuxAccentColor()
+        accentColor: HmuxAccentColor = HmuxAccentColor()
     ) {
         let settings = UserDefaultsSettingsClient(defaults: defaults)
         let sidebar = SidebarCatalogSection()
@@ -66,10 +66,10 @@ struct SidebarTabItemSettingsSnapshot: Equatable {
         showsGitBranchIcon = Self.bool(defaults: defaults, key: "sidebarShowGitBranchIcon", defaultValue: false)
         showsCloudDeviceIcons = settings.value(for: sidebar.showCloudDeviceIcons)
         makesPullRequestsClickable = settings.value(for: sidebar.makePullRequestsClickable)
-        openPullRequestLinksInCmuxBrowser = BrowserLinkOpenSettings.openSidebarPullRequestLinksInCmuxBrowser(
+        openPullRequestLinksInHmuxBrowser = BrowserLinkOpenSettings.openSidebarPullRequestLinksInHmuxBrowser(
             defaults: defaults
         )
-        openPortLinksInCmuxBrowser = BrowserLinkOpenSettings.openSidebarPortLinksInCmuxBrowser(
+        openPortLinksInHmuxBrowser = BrowserLinkOpenSettings.openSidebarPortLinksInHmuxBrowser(
             defaults: defaults
         )
         hidesAllDetails = settings.value(for: sidebar.hideAllDetails)

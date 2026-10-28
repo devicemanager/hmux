@@ -5,7 +5,7 @@ ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 WORKFLOW="$ROOT_DIR/.github/workflows/repair-v0-64-25-helper-rpaths.yml"
 RELEASE_WORKFLOW="$ROOT_DIR/.github/workflows/release.yml"
 
-grep -Fq 'name: Repair v0.64.25 cmux-cua rpaths' "$WORKFLOW"
+grep -Fq 'name: Repair v0.64.25 hmux-cua rpaths' "$WORKFLOW"
 grep -Fq 'default: ""' "$WORKFLOW"
 grep -Fq 'group: stable-appcast-publication' "$WORKFLOW"
 grep -Fq 'group: stable-appcast-publication' "$RELEASE_WORKFLOW"
@@ -18,7 +18,7 @@ if [ "$(grep -Fc "if: inputs.confirmation == 'v0.64.25'" "$WORKFLOW")" -lt 2 ]; 
 fi
 
 for required in \
-  './scripts/strip-cmux-cua-rpaths.sh' \
+  './scripts/strip-hmux-cua-rpaths.sh' \
   './scripts/verify-bundle-load-commands.sh' \
   'syspolicy_check distribution "$APP_PATH"' \
   './scripts/sparkle_generate_appcast.sh "$DMG_PATH" "$TARGET_TAG" "$APPCAST_PATH"' \

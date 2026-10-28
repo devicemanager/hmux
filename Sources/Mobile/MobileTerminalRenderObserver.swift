@@ -1,6 +1,6 @@
-import CMUXMobileCore
-import CmuxMobileHost
-import CmuxTerminal
+import HMUXMobileCore
+import HmuxMobileHost
+import HmuxTerminal
 import Foundation
 import GhosttyKit
 import os
@@ -509,7 +509,7 @@ final class MobileTerminalRenderObserver {
         )
         #if DEBUG
         for (anchor, frame) in emittedByAnchor {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "mobile.render_grid surface=\(surfaceID.uuidString.prefix(8)) anchor=\(anchor.rawValue) " +
                     "full=\(frame.full) cleared=\(frame.clearedRows.count) spans=\(frame.rowSpans.count) " +
                     "scrolled=\(frame.scrolledRows) sbRows=\(frame.scrollbackRows) " +

@@ -8,10 +8,10 @@ import { tmpdir } from "node:os";
 import { createServer } from "node:net";
 import { join } from "node:path";
 
-import { GUEST_CMUX_SHIM, GUEST_CMUX_SHIM_PATH, guestCliInstallCommand } from "../services/vms/guestCli";
+import { GUEST_HMUX_SHIM, GUEST_HMUX_SHIM_PATH, guestCliInstallCommand } from "../services/vms/guestCli";
 
 /**
- * Runs the shim against a fake cmux-tui binary that prints its argv one word
+ * Runs the shim against a fake hmux-tui binary that prints its argv one word
  * per line, so a test can assert exactly what would reach the daemon.
  */
 async function runShim(
@@ -19,10 +19,10 @@ async function runShim(
   env: Record<string, string | undefined> = {},
   setup?: (directory: string) => void,
 ): Promise<{ argv: string[]; status: number | null; signal: NodeJS.Signals | null; stdout: string; stderr: string }> {
-  const dir = mkdtempSync(join(tmpdir(), "cmux-guest-cli-"));
-  const shim = join(dir, "cmux");
-  const fakeTui = join(dir, "cmux-tui");
-  writeFileSync(shim, GUEST_CMUX_SHIM);
+  const dir = mkdtempSync(join(tmpdir(), "hmux-guest-cli-"));
+  const shim = join(dir, "hmux");
+  const fakeTui = join(dir, "hmux-tui");
+  writeFileSync(shim, GUEST_HMUX_SHIM);
   chmodSync(shim, 0o755);
   writeFileSync(fakeTui, '#!/bin/sh\nprintf \'%s\\n\' "$@"\n');
   chmodSync(fakeTui, 0o755);
@@ -30,7 +30,7 @@ async function runShim(
   const inheritedPath = env.PATH ?? process.env.PATH ?? "/usr/bin:/bin";
   const result = await runChild("sh", [shim, ...args], {
     timeout: 12_000,
-    env: { NODE_ENV: "test", HOME: dir, CMUX_TUI_BIN: fakeTui, ...env, PATH: `${dir}:${inheritedPath}` },
+    env: { NODE_ENV: "test", HOME: dir, HMUX_TUI_BIN: fakeTui, ...env, PATH: `${dir}:${inheritedPath}` },
   });
   const argv = result.stdout.length === 0 ? [] : result.stdout.replace(/\n$/, "").split("\n");
   return { argv, status: result.status, signal: result.signal, stdout: result.stdout, stderr: result.stderr };
@@ -38,11 +38,11 @@ async function runShim(
 
 const TERMINAL_ID = "term_0123456789abcdef0123456789abcdef";
 
-// The in-VM `cmux` shim is shipped as driver-written bytes; a syntax error
+// The in-VM `hmux` shim is shipped as driver-written bytes; a syntax error
 // would surface only inside a live machine, so validate it here.
-describe("in-VM cmux shim", () => {
+describe("in-VM hmux shim", () => {
   test.each(["existing", "create", "create-failed", "missing-id"])("peer exec selects a supported workspace and fails closed (%s)", async (mode) => {
-    const directory = mkdtempSync(join(tmpdir(), "cmux-peer-exec-"));
+    const directory = mkdtempSync(join(tmpdir(), "hmux-peer-exec-"));
     const socket = join(directory, "peer.sock");
     const server = createServer();
     try {
@@ -50,16 +50,16 @@ describe("in-VM cmux shim", () => {
         server.once("error", reject);
         server.listen(socket, resolve);
       });
-      const peers = join(directory, ".cmux", "peers");
-      const links = join(directory, ".cmux", "peer-links");
+      const peers = join(directory, ".hmux", "peers");
+      const links = join(directory, ".hmux", "peer-links");
       mkdirSync(peers, { recursive: true });
       mkdirSync(links, { recursive: true });
       writeFileSync(join(peers, "peer.json"), "{}");
       writeFileSync(join(links, "peer.sock-path"), socket);
       writeFileSync(join(links, "peer.pid"), String(process.pid));
-      const shim = join(directory, "cmux");
-      const daemon = join(directory, "cmux-tui");
-      writeFileSync(shim, GUEST_CMUX_SHIM);
+      const shim = join(directory, "hmux");
+      const daemon = join(directory, "hmux-tui");
+      writeFileSync(shim, GUEST_HMUX_SHIM);
       writeFileSync(daemon, `#!/bin/sh
 printf '%s\\n' "$*" >> "$HOME/calls"
 case "$*" in
@@ -74,7 +74,7 @@ esac
       chmodSync(daemon, 0o755);
       const result = await runChild("sh", [shim, "vm", "exec", "peer", "--", "printf", "hello"], {
         timeout: 10_000,
-        env: { NODE_ENV: "test", PATH: process.env.PATH, HOME: directory, CMUX_TUI_BIN: daemon, MODE: mode },
+        env: { NODE_ENV: "test", PATH: process.env.PATH, HOME: directory, HMUX_TUI_BIN: daemon, MODE: mode },
       });
       const calls = readFileSync(join(directory, "calls"), "utf8");
       expect(calls).toContain("workspace current show");
@@ -118,7 +118,7 @@ esac
     try {
       const result = await runShim(["vm", "connect", "peer"], {}, (directory) => {
         fixtureDirectory = directory;
-        const peerDirectory = join(directory, ".cmux", "peers");
+        const peerDirectory = join(directory, ".hmux", "peers");
         mkdirSync(peerDirectory, { recursive: true });
         writeFileSync(join(peerDirectory, "peer.json"), JSON.stringify({ route: "test-route", invite: "one-use-invite" }));
         const client = join(directory, "client.cjs");
@@ -131,12 +131,12 @@ esac
             process.stdout.write(JSON.stringify({ event: "connection-snapshot", local_socket: socket }) + "\\n");
           });
         ` : 'process.stderr.write("connection refused\\n"); process.exit(7);');
-        writeFileSync(join(directory, "cmux-tui"), `#!/bin/sh\nexec '${process.execPath}' '${client}'\n`);
+        writeFileSync(join(directory, "hmux-tui"), `#!/bin/sh\nexec '${process.execPath}' '${client}'\n`);
       });
       expect(result.status).toBe(ready ? 0 : 3);
       if (ready) {
         expect(result.stdout).toContain("OK connected peer socket=");
-        const peer = JSON.parse(readFileSync(join(fixtureDirectory, ".cmux", "peers", "peer.json"), "utf8"));
+        const peer = JSON.parse(readFileSync(join(fixtureDirectory, ".hmux", "peers", "peer.json"), "utf8"));
         expect(peer.invite).toBeUndefined();
       } else {
         expect(result.stderr).toContain("link to 'peer' exited");
@@ -144,7 +144,7 @@ esac
     } finally {
       for (const filename of ["peer.pid", "peer.events.pid"]) {
         try {
-          const processID = Number(readFileSync(join(fixtureDirectory, ".cmux", "peer-links", filename), "utf8"));
+          const processID = Number(readFileSync(join(fixtureDirectory, ".hmux", "peer-links", filename), "utf8"));
           if (Number.isInteger(processID) && processID > 1) process.kill(processID, "SIGTERM");
         } catch {}
       }
@@ -153,39 +153,39 @@ esac
   });
 
   test("is valid POSIX sh", async () => {
-    const result = await runChild("sh", ["-n"], { input: GUEST_CMUX_SHIM });
+    const result = await runChild("sh", ["-n"], { input: GUEST_HMUX_SHIM });
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
   });
 
-  test("fronts the machine's own cmux-tui and the peer-link verbs", () => {
+  test("fronts the machine's own hmux-tui and the peer-link verbs", () => {
     // Local verbs forward to the daemon binary on the daemon's session.
-    expect(GUEST_CMUX_SHIM).toContain("/root/.cmux/bin/cmux-tui");
-    expect(GUEST_CMUX_SHIM).toContain('--session "$LOCAL_SESSION"');
+    expect(GUEST_HMUX_SHIM).toContain("/root/.hmux/bin/hmux-tui");
+    expect(GUEST_HMUX_SHIM).toContain('--session "$LOCAL_SESSION"');
     // Peer links ride the same headless connect contract the Mac app uses:
     // remote connect --headless --json, socket named by the
     // connection-snapshot event's local_socket field.
-    expect(GUEST_CMUX_SHIM).toContain("remote connect");
-    expect(GUEST_CMUX_SHIM).toContain("--headless --json");
-    expect(GUEST_CMUX_SHIM).toContain('select(.event=="connection-snapshot")');
-    expect(GUEST_CMUX_SHIM).toContain(".local_socket");
+    expect(GUEST_HMUX_SHIM).toContain("remote connect");
+    expect(GUEST_HMUX_SHIM).toContain("--headless --json");
+    expect(GUEST_HMUX_SHIM).toContain('select(.event=="connection-snapshot")');
+    expect(GUEST_HMUX_SHIM).toContain(".local_socket");
     // The single-use invitation travels by file, never argv, and is dropped
     // from the peer file once consumed.
-    expect(GUEST_CMUX_SHIM).toContain("--invite-file");
-    expect(GUEST_CMUX_SHIM).toContain("del(.invite)");
+    expect(GUEST_HMUX_SHIM).toContain("--invite-file");
+    expect(GUEST_HMUX_SHIM).toContain("del(.invite)");
     // Peer exec runs through a durable terminal on the peer, creating a
     // workspace when the fresh session has none.
-    expect(GUEST_CMUX_SHIM).toContain('workspace "$target" run --on-exit close');
-    expect(GUEST_CMUX_SHIM).toContain("workspace create --name main");
+    expect(GUEST_HMUX_SHIM).toContain('workspace "$target" run --on-exit close');
+    expect(GUEST_HMUX_SHIM).toContain("workspace create --name main");
   });
 
   test("help exposes the shared auth, CodeRouter, and agent contract", async () => {
     const run = await runShim(["--help"]);
     expect(run.status).toBe(0);
-    expect(run.stdout).toContain("cmux auth status [--json]");
-    expect(run.stdout).toContain("cmux coderouter status|usage [--json]|models");
-    expect(run.stdout).toContain("cmux coderouter agent <claude|codex|opencode|pi>");
-    expect(run.stdout).toContain("cmux agent <claude|codex|opencode|pi>");
+    expect(run.stdout).toContain("hmux auth status [--json]");
+    expect(run.stdout).toContain("hmux coderouter status|usage [--json]|models");
+    expect(run.stdout).toContain("hmux coderouter agent <claude|codex|opencode|pi>");
+    expect(run.stdout).toContain("hmux agent <claude|codex|opencode|pi>");
   });
 
   describe("auth status", () => {
@@ -202,8 +202,8 @@ esac
       const run = await runShim(
         ["auth", "status", "--json"],
         {
-          CMUX_CODEROUTER_URL: "https://coderouter.cmux.internal",
-          OPENAI_API_KEY: "cmux-vm-edge-placeholder",
+          HMUX_CODEROUTER_URL: "https://coderouter.hmux.internal",
+          OPENAI_API_KEY: "hmux-vm-edge-placeholder",
         },
         fakeCurl("200"),
       );
@@ -219,7 +219,7 @@ esac
     test("separates TLS reachability from a rejected route", async () => {
       const run = await runShim(
         ["auth", "status", "--json"],
-        { CMUX_CODEROUTER_URL: "https://coderouter.cmux.internal" },
+        { HMUX_CODEROUTER_URL: "https://coderouter.hmux.internal" },
         fakeCurl("401"),
       );
       expect(run.signal).toBeNull();
@@ -280,7 +280,7 @@ esac
       chmodSync(curl, 0o755);
     };
     // "now" pinned 30 minutes after asOf so the relative age is deterministic.
-    const USAGE_ENV = { CMUX_CODEROUTER_URL: "https://coderouter.cmux.internal", CMUX_NOW_EPOCH: String(Date.parse("2026-09-10T23:54:01Z") / 1000) };
+    const USAGE_ENV = { HMUX_CODEROUTER_URL: "https://coderouter.hmux.internal", HMUX_NOW_EPOCH: String(Date.parse("2026-09-10T23:54:01Z") / 1000) };
 
     test("renders usage for people and agents: labeled lines, trend, one row per day with usage, hints", async () => {
       const run = await runShim(["coderouter", "usage"], USAGE_ENV, usageCurl(USAGE_BODY));
@@ -298,13 +298,13 @@ esac
         "2026-09-10     68,612  <$0.01  █",
         "Days without usage are not listed (27 of 30).",
         "",
-        "Machine-readable JSON: cmux coderouter usage --json",
+        "Machine-readable JSON: hmux coderouter usage --json",
         "Team view: https://cmux.com/dashboard/coderouter",
         "",
       ].join("\n"));
     });
 
-    test("usage breaks spend down per workspace (named through cmux-tui), agent, and model", async () => {
+    test("usage breaks spend down per workspace (named through hmux-tui), agent, and model", async () => {
       const totals = (totalTokens: number) => ({ inputTokens: totalTokens, cachedInputTokens: 0, outputTokens: 0, totalTokens, apiEquivalentUsd: totalTokens / 100_000 });
       const body = {
         ...USAGE,
@@ -323,7 +323,7 @@ esac
       };
       const run = await runShim(["coderouter", "usage"], USAGE_ENV, (directory) => {
         usageCurl(JSON.stringify(body))(directory);
-        writeFileSync(join(directory, "cmux-tui"), "#!/bin/sh\nprintf '%s' '{\"workspaces\":[{\"id\":\"ws_a\",\"name\":\"chatmux\"},{\"id\":\"ws_zzz\",\"name\":\"idle\"}]}'\n");
+        writeFileSync(join(directory, "hmux-tui"), "#!/bin/sh\nprintf '%s' '{\"workspaces\":[{\"id\":\"ws_a\",\"name\":\"chatmux\"},{\"id\":\"ws_zzz\",\"name\":\"idle\"}]}'\n");
       });
       expect(run.status).toBe(0);
       expect(run.stdout).toContain([
@@ -336,7 +336,7 @@ esac
       expect(run.stdout).not.toContain("sf_1");
       expect(run.stdout).not.toContain("ws_");
 
-      // No usable name lookup (the default fake cmux-tui echoes its arguments): ids are
+      // No usable name lookup (the default fake hmux-tui echoes its arguments): ids are
       // never printed, so the workspace line is dropped and the other lines stay.
       const noNames = await runShim(["coderouter", "usage"], USAGE_ENV, usageCurl(JSON.stringify(body)));
       expect(noNames.stdout).not.toContain("workspace");
@@ -375,11 +375,11 @@ esac
       }
     });
 
-    test("usage --json and CMUX_OUTPUT=json return the vm-usage contract unchanged, for agents and scripts", async () => {
+    test("usage --json and HMUX_OUTPUT=json return the vm-usage contract unchanged, for agents and scripts", async () => {
       const run = await runShim(["coderouter", "usage", "--json"], USAGE_ENV, usageCurl(USAGE_BODY));
       expect(run.status).toBe(0);
       expect(JSON.parse(run.stdout)).toEqual(USAGE);
-      const env = await runShim(["coderouter", "machines"], { ...USAGE_ENV, CMUX_OUTPUT: "json" }, usageCurl(USAGE_BODY));
+      const env = await runShim(["coderouter", "machines"], { ...USAGE_ENV, HMUX_OUTPUT: "json" }, usageCurl(USAGE_BODY));
       expect(JSON.parse(env.stdout)).toEqual(USAGE);
     });
 
@@ -438,7 +438,7 @@ esac
     test("usage --help documents the modes, the stable lines, and the exit codes", async () => {
       const help = await runShim(["coderouter", "usage", "--help"]);
       expect(help.status).toBe(0);
-      expect(help.stdout).toContain("cmux coderouter usage [--json|--tsv] [--days <n>]");
+      expect(help.stdout).toContain("hmux coderouter usage [--json|--tsv] [--days <n>]");
       expect(help.stdout).toContain("Exit codes: 0 usage shown, 1 the edge did not answer, 2 bad option, 3 usage ledger unavailable.");
       const ja = await runShim(["coderouter", "usage", "-h"], { LANG: "ja_JP.UTF-8" });
       expect(ja.stdout).toContain("終了コード");
@@ -478,7 +478,7 @@ esac
       expect(run.stdout.trim().split("\n")).toEqual(["exec", "reply exactly pong"]);
     });
 
-    test("keeps cmux-tui's local agent scope available", async () => {
+    test("keeps hmux-tui's local agent scope available", async () => {
       const run = await runShim(["agent", "list"]);
       expect(run.status).toBe(0);
       expect(run.argv).toEqual(["--session", "cloud", "agent", "list"]);
@@ -497,7 +497,7 @@ esac
 `);
         chmodSync(curl, 0o755);
       };
-      const env = { CMUX_CODEROUTER_URL: "https://coderouter.cmux.internal" };
+      const env = { HMUX_CODEROUTER_URL: "https://coderouter.hmux.internal" };
       const listed = await runShim(["coderouter", "accounts", "--json"], env, setup);
       expect(listed.status).toBe(0);
       expect(JSON.parse(listed.stdout)).toMatchObject({ teamId: "team-a", accounts: [{ id: "native-a" }, { id: "claude-a" }] });
@@ -509,7 +509,7 @@ esac
     });
 
     test("does not merge account lists from different teams", async () => {
-      const result = await runShim(["coderouter", "accounts", "--json"], { CMUX_CODEROUTER_URL: "https://coderouter.cmux.internal" }, directory => {
+      const result = await runShim(["coderouter", "accounts", "--json"], { HMUX_CODEROUTER_URL: "https://coderouter.hmux.internal" }, directory => {
         const curl = join(directory, "curl");
         writeFileSync(curl, `#!/bin/sh
 case "$*" in *claude-upstream*) printf '%s' '{"teamId":"team-b","accounts":[]}' ;; *) printf '%s' '{"teamId":"team-a","accounts":[]}' ;; esac
@@ -538,7 +538,7 @@ case "$*" in *claude-upstream*) printf '%s' '{"teamId":"team-b","accounts":[]}' 
     });
   });
 
-  // `cmux notify` is what agent hooks run inside a machine. cmux-tui's own
+  // `hmux notify` is what agent hooks run inside a machine. hmux-tui's own
   // `notify` verb carries the macOS signature (subtitle field, scoped --clear,
   // --reply refused, selectors validated), so the shim forwards the arguments
   // untouched on the machine's session. A translation here would fork the
@@ -548,7 +548,7 @@ case "$*" in *claude-upstream*) printf '%s' '{"teamId":"team-b","accounts":[]}' 
     test("forwards every argument verbatim to the daemon's notify verb on the local session", async () => {
       const run = await runShim(
         ["notify", "--title", "Build done", "--subtitle", "api", "--body", "3 tests passed", "--surface", "current"],
-        { CMUX_TUI_TERMINAL_ID: TERMINAL_ID },
+        { HMUX_TUI_TERMINAL_ID: TERMINAL_ID },
       );
       expect(run.stderr).toBe("");
       expect(run.status).toBe(0);
@@ -569,15 +569,15 @@ case "$*" in *claude-upstream*) printf '%s' '{"teamId":"team-b","accounts":[]}' 
     });
 
     test("does not fold, drop, or rewrite flags: --clear and --reply reach the daemon for it to decide", async () => {
-      const clear = await runShim(["notify", "--clear", "--workspace", "current"], { CMUX_TUI_TERMINAL_ID: TERMINAL_ID });
+      const clear = await runShim(["notify", "--clear", "--workspace", "current"], { HMUX_TUI_TERMINAL_ID: TERMINAL_ID });
       expect(clear.status).toBe(0);
       expect(clear.argv).toEqual(["--session", "cloud", "--quiet", "notify", "--clear", "--workspace", "current"]);
-      const reply = await runShim(["notify", "--title=T", "--reply"], { CMUX_TUI_TERMINAL_ID: undefined });
+      const reply = await runShim(["notify", "--title=T", "--reply"], { HMUX_TUI_TERMINAL_ID: undefined });
       expect(reply.argv).toEqual(["--session", "cloud", "--quiet", "notify", "--title=T", "--reply"]);
     });
 
     test("drops --quiet when the caller wants the JSON result, since the two output modes exclude each other", async () => {
-      const json = await runShim(["notify", "--title", "T", "--json"], { CMUX_TUI_TERMINAL_ID: TERMINAL_ID });
+      const json = await runShim(["notify", "--title", "T", "--json"], { HMUX_TUI_TERMINAL_ID: TERMINAL_ID });
       expect(json.argv).toEqual(["--session", "cloud", "notify", "--title", "T", "--json"]);
       const jsonl = await runShim(["notify", "--jsonl", "--title=T"], {});
       expect(jsonl.argv).toEqual(["--session", "cloud", "notify", "--jsonl", "--title=T"]);
@@ -590,34 +590,34 @@ case "$*" in *claude-upstream*) printf '%s' '{"teamId":"team-b","accounts":[]}' 
 
     test("never adds Mac socket identity from the environment", async () => {
       const run = await runShim(["notify", "--title", "T"], {
-        CMUX_TUI_TERMINAL_ID: TERMINAL_ID,
-        CMUX_SOCKET_PATH: "/tmp/should-not-leak.sock",
-        CMUX_WORKSPACE_ID: "11111111-1111-1111-1111-111111111111",
-        CMUX_SURFACE_ID: "22222222-2222-2222-2222-222222222222",
+        HMUX_TUI_TERMINAL_ID: TERMINAL_ID,
+        HMUX_SOCKET_PATH: "/tmp/should-not-leak.sock",
+        HMUX_WORKSPACE_ID: "11111111-1111-1111-1111-111111111111",
+        HMUX_SURFACE_ID: "22222222-2222-2222-2222-222222222222",
       });
       expect(run.status).toBe(0);
       expect(run.argv).toEqual(["--session", "cloud", "--quiet", "notify", "--title", "T"]);
     });
   });
 
-  test("finds the daemon binary under the daemon's home when CMUX_TUI_BIN is unset", async () => {
-    // The root layout keeps the binary at /root/.cmux/bin; layout-aware bakes
-    // symlink /usr/local/bin/cmux-tui. A dev Mac with either would shadow the
+  test("finds the daemon binary under the daemon's home when HMUX_TUI_BIN is unset", async () => {
+    // The root layout keeps the binary at /root/.hmux/bin; layout-aware bakes
+    // symlink /usr/local/bin/hmux-tui. A dev Mac with either would shadow the
     // per-test fake, so only assert when neither exists on this host.
-    const probes = await Promise.all(["/usr/local/bin/cmux-tui", "/root/.cmux/bin/cmux-tui"].map((path) => runChild("test", ["-x", path])));
+    const probes = await Promise.all(["/usr/local/bin/hmux-tui", "/root/.hmux/bin/hmux-tui"].map((path) => runChild("test", ["-x", path])));
     const shadowed = probes.some((probe) => probe.status === 0);
     if (shadowed) return;
-    const dir = mkdtempSync(join(tmpdir(), "cmux-guest-cli-home-"));
-    const shim = join(dir, "cmux");
-    writeFileSync(shim, GUEST_CMUX_SHIM);
+    const dir = mkdtempSync(join(tmpdir(), "hmux-guest-cli-home-"));
+    const shim = join(dir, "hmux");
+    writeFileSync(shim, GUEST_HMUX_SHIM);
     chmodSync(shim, 0o755);
-    const binDir = join(dir, ".cmux", "bin");
+    const binDir = join(dir, ".hmux", "bin");
     await runChild("mkdir", ["-p", binDir]);
-    const fakeTui = join(binDir, "cmux-tui");
+    const fakeTui = join(binDir, "hmux-tui");
     writeFileSync(fakeTui, '#!/bin/sh\nprintf \'home-fake\'; printf \' %s\' "$@"; echo\n');
     chmodSync(fakeTui, 0o755);
     const result = await runChild("sh", [shim, "notify", "--title", "T"], {
-      env: { NODE_ENV: "test", PATH: process.env.PATH ?? "/usr/bin:/bin", HOME: dir, CMUX_TUI_TERMINAL_ID: TERMINAL_ID },
+      env: { NODE_ENV: "test", PATH: process.env.PATH ?? "/usr/bin:/bin", HOME: dir, HMUX_TUI_TERMINAL_ID: TERMINAL_ID },
     });
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
@@ -626,21 +626,21 @@ case "$*" in *claude-upstream*) printf '%s' '{"teamId":"team-b","accounts":[]}' 
 
   test("install command is a safe atomic base64 write", () => {
     const command = guestCliInstallCommand();
-    expect(command).toContain(`${GUEST_CMUX_SHIM_PATH}.tmp`);
-    expect(command).toContain(`mv ${GUEST_CMUX_SHIM_PATH}.tmp ${GUEST_CMUX_SHIM_PATH}`);
+    expect(command).toContain(`${GUEST_HMUX_SHIM_PATH}.tmp`);
+    expect(command).toContain(`mv ${GUEST_HMUX_SHIM_PATH}.tmp ${GUEST_HMUX_SHIM_PATH}`);
     expect(command).toContain("chmod 0755");
     // The payload is base64: no shell metacharacters from the script body leak
     // into the exec command line.
     const encoded = command.match(/printf '%s' '([A-Za-z0-9+/=]+)'/);
     expect(encoded).not.toBeNull();
-    expect(Buffer.from(encoded![1], "base64").toString("utf8")).toBe(GUEST_CMUX_SHIM);
+    expect(Buffer.from(encoded![1], "base64").toString("utf8")).toBe(GUEST_HMUX_SHIM);
   });
 });
 
 // ---------------------------------------------------------------------------
 // Agent primitives shared with the Mac CLI: layout export/apply, env, the
 // Mac-flavoured terminal verbs, and their peer forms. A stateful fake
-// cmux-tui logs every argv (one call per `--END--`-terminated block) and
+// hmux-tui logs every argv (one call per `--END--`-terminated block) and
 // answers creation verbs with CreatedTerminalPath / CreatedBrowserPath results
 // whose ids embed the call number, so the exact op sequence is assertable.
 // ---------------------------------------------------------------------------
@@ -656,7 +656,7 @@ while [ $# -gt 0 ]; do
   esac
 done
 a="\${1:-}"; b="\${2:-}"; c="\${3:-}"; d="\${4:-}"
-# cmux-tui exits 1 when a screen wait ends unmatched.
+# hmux-tui exits 1 when a screen wait ends unmatched.
 fake_wait_exit() { [ "\${FAKE_MATCHED:-true}" = true ] && exit 0; exit 1; }
 if [ "$a" = session ] && [ "$c" = snapshot ]; then cat "$FAKE_SNAPSHOT"; exit 0; fi
 if [ "$a" = workspace ] && [ "$b" = create ]; then
@@ -678,12 +678,12 @@ if [ "$a" = pane ] && [ "$c" = tab ] && [ "$d" = create ]; then
 fi
 if [ "$a" = terminal ] && [ "$c" = screen ] && [ "$d" = wait ]; then
   case "$*" in
-    *CMUX-FILE-\\(OK*) printf '{"matched":true,"text":"CMUX-FILE-READY\\\\nCMUX-FILE-OK bytes=%s path=%s mode=%s\\\\n"}\\n' "\${FAKE_FILE_BYTES:-11}" "\${FAKE_FILE_PATH:-/root/app/.env}" "\${FAKE_FILE_MODE:-640}"; exit 0 ;;
-    *CMUX-FILE-READY*)
-      if [ "\${FAKE_FILE_REFUSE:-0}" = 1 ]; then printf '{"matched":false,"text":"CMUX-FILE-ERR is-directory /root/app\\\\n"}\\n'; exit 1; fi
-      printf '{"matched":%s,"text":"CMUX-FILE-READY\\\\n"}\\n' "\${FAKE_MATCHED:-true}"; fake_wait_exit ;;
-    *CMUX-ENV-\\(OK*) printf '{"matched":true,"text":"CMUX-ENV-READY\\\\nCMUX-ENV-OK keys=2 path=/root/.config/cmux/env\\\\n"}\\n'; exit 0 ;;
-    *CMUX-ENV-READY*) printf '{"matched":%s,"text":"CMUX-ENV-READY\\\\n"}\\n' "\${FAKE_MATCHED:-true}"; fake_wait_exit ;;
+    *HMUX-FILE-\\(OK*) printf '{"matched":true,"text":"HMUX-FILE-READY\\\\nHMUX-FILE-OK bytes=%s path=%s mode=%s\\\\n"}\\n' "\${FAKE_FILE_BYTES:-11}" "\${FAKE_FILE_PATH:-/root/app/.env}" "\${FAKE_FILE_MODE:-640}"; exit 0 ;;
+    *HMUX-FILE-READY*)
+      if [ "\${FAKE_FILE_REFUSE:-0}" = 1 ]; then printf '{"matched":false,"text":"HMUX-FILE-ERR is-directory /root/app\\\\n"}\\n'; exit 1; fi
+      printf '{"matched":%s,"text":"HMUX-FILE-READY\\\\n"}\\n' "\${FAKE_MATCHED:-true}"; fake_wait_exit ;;
+    *HMUX-ENV-\\(OK*) printf '{"matched":true,"text":"HMUX-ENV-READY\\\\nHMUX-ENV-OK keys=2 path=/root/.config/hmux/env\\\\n"}\\n'; exit 0 ;;
+    *HMUX-ENV-READY*) printf '{"matched":%s,"text":"HMUX-ENV-READY\\\\n"}\\n' "\${FAKE_MATCHED:-true}"; fake_wait_exit ;;
   esac
   printf '{"matched":%s,"text":"λ "}\\n' "\${FAKE_MATCHED:-true}"; fake_wait_exit
 fi
@@ -808,11 +808,11 @@ const PROMPT_WAIT = ["screen", "wait", "--pattern", "λ|\\$ $|# $", "--timeout-m
 type StatefulRun = { calls: string[][]; status: number | null; stdout: string; stderr: string; home: string };
 
 function makeStatefulDir(): string {
-  const dir = mkdtempSync(join(tmpdir(), "cmux-guest-prims-"));
-  writeFileSync(join(dir, "cmux"), GUEST_CMUX_SHIM);
-  chmodSync(join(dir, "cmux"), 0o755);
-  writeFileSync(join(dir, "cmux-tui"), STATEFUL_FAKE_TUI);
-  chmodSync(join(dir, "cmux-tui"), 0o755);
+  const dir = mkdtempSync(join(tmpdir(), "hmux-guest-prims-"));
+  writeFileSync(join(dir, "hmux"), GUEST_HMUX_SHIM);
+  chmodSync(join(dir, "hmux"), 0o755);
+  writeFileSync(join(dir, "hmux-tui"), STATEFUL_FAKE_TUI);
+  chmodSync(join(dir, "hmux-tui"), 0o755);
   writeFileSync(join(dir, "snapshot.json"), JSON.stringify(SNAPSHOT_FIXTURE));
   return dir;
 }
@@ -822,13 +822,13 @@ async function runStateful(dir: string, args: string[], env: Record<string, stri
   const log = join(dir, "calls.log");
   writeFileSync(log, "");
   writeFileSync(join(dir, "state"), "");
-  const result = await runChild(shell, [join(dir, "cmux"), ...args], {
+  const result = await runChild(shell, [join(dir, "hmux"), ...args], {
     timeout: 20_000,
     input,
     env: {
       NODE_ENV: "test",
       HOME: dir,
-      CMUX_TUI_BIN: join(dir, "cmux-tui"),
+      HMUX_TUI_BIN: join(dir, "hmux-tui"),
       FAKE_LOG: log,
       FAKE_STATE: join(dir, "state"),
       FAKE_SNAPSHOT: join(dir, "snapshot.json"),
@@ -852,10 +852,10 @@ async function runStateful(dir: string, args: string[], env: Record<string, stri
 /** Argv with the routing prefix (`--session cloud` / `--socket …`) removed. */
 const stripRoute = (call: string[]) => call.slice(2);
 
-describe("in-VM cmux shim: agent primitives", () => {
+describe("in-VM hmux shim: agent primitives", () => {
   test("is valid for dash too when it is installed (the image's /bin/sh is dash)", async () => {
     if (!existsSync("/bin/dash")) return;
-    const result = await runChild("/bin/dash", ["-n"], { input: GUEST_CMUX_SHIM });
+    const result = await runChild("/bin/dash", ["-n"], { input: GUEST_HMUX_SHIM });
     expect(result.stderr).toBe("");
     expect(result.status).toBe(0);
   });
@@ -864,60 +864,60 @@ describe("in-VM cmux shim: agent primitives", () => {
     const run = await runShim(["--help"]);
     expect(run.status).toBe(0);
     for (const line of [
-      "cmux layout export [--workspace <ws>] [--raw]",
-      "cmux layout apply [--workspace <ws>|--name <n>] [--cwd <dir>] [<file>|-]",
-      "cmux env set|ls|rm|path",
-      "cmux send [--terminal <id>] <text>",
-      "cmux send-key [--terminal <id>] <key> [key...]",
-      "cmux read-screen [--terminal <id>] [--json]",
-      "cmux terminal send|read|wait|wait-exit|output|close <id>",
-      "cmux vm terminal send|read|wait|wait-exit|output|close <machine> <term>",
-      "cmux vm workspace new|rename|close|rm <machine>",
-      "cmux vm agent <machine> --agent <claude|codex|opencode|pi>",
-      "cmux vm layout export|apply <machine>",
-      "cmux vm env set|ls|rm|path <machine>",
-      "cmux self [--json]",
-      "cmux vm ls [--json]",
-      "cmux file receive <path> [--mode <octal>]",
-      "cmux vm push <machine> <local-file> <remote-path> [--mode <octal>]",
-      "cmux vm agent <machine> --agent <claude|codex|opencode|pi> [--wait [--output] [--timeout <s>]] -- <prompt>",
-      "cmux agent <claude|codex|opencode|pi> [--timeout <s>] [args...]",
+      "hmux layout export [--workspace <ws>] [--raw]",
+      "hmux layout apply [--workspace <ws>|--name <n>] [--cwd <dir>] [<file>|-]",
+      "hmux env set|ls|rm|path",
+      "hmux send [--terminal <id>] <text>",
+      "hmux send-key [--terminal <id>] <key> [key...]",
+      "hmux read-screen [--terminal <id>] [--json]",
+      "hmux terminal send|read|wait|wait-exit|output|close <id>",
+      "hmux vm terminal send|read|wait|wait-exit|output|close <machine> <term>",
+      "hmux vm workspace new|rename|close|rm <machine>",
+      "hmux vm agent <machine> --agent <claude|codex|opencode|pi>",
+      "hmux vm layout export|apply <machine>",
+      "hmux vm env set|ls|rm|path <machine>",
+      "hmux self [--json]",
+      "hmux vm ls [--json]",
+      "hmux file receive <path> [--mode <octal>]",
+      "hmux vm push <machine> <local-file> <remote-path> [--mode <octal>]",
+      "hmux vm agent <machine> --agent <claude|codex|opencode|pi> [--wait [--output] [--timeout <s>]] -- <prompt>",
+      "hmux agent <claude|codex|opencode|pi> [--timeout <s>] [args...]",
     ]) {
       expect(run.stdout).toContain(line);
     }
     const fileHelp = await runShim(["file", "help"]);
     expect(fileHelp.status).toBe(0);
-    for (const line of ["cmux file receive <path> [--mode <octal>]", "CMUX-FILE-READY", "CMUX-FILE-OK bytes=<n> path=<p> mode=<m>", "CMUX-FILE-ERR <reason>", "cmux vm push <machine> <local-file> <remote-path>"]) {
+    for (const line of ["hmux file receive <path> [--mode <octal>]", "HMUX-FILE-READY", "HMUX-FILE-OK bytes=<n> path=<p> mode=<m>", "HMUX-FILE-ERR <reason>", "hmux vm push <machine> <local-file> <remote-path>"]) {
       expect(fileHelp.stdout).toContain(line);
     }
-    expect((await runShim(["file", "help"], { LANG: "ja_JP.UTF-8" })).stdout).toContain("CMUX-FILE-READY");
+    expect((await runShim(["file", "help"], { LANG: "ja_JP.UTF-8" })).stdout).toContain("HMUX-FILE-READY");
     const envHelp = await runShim(["env", "help"]);
-    for (const line of ["cmux env receive [--stdin]", "CMUX-ENV-READY / CMUX-ENV-OK / CMUX-ENV-ERR", "cmux env set -"]) {
+    for (const line of ["hmux env receive [--stdin]", "HMUX-ENV-READY / HMUX-ENV-OK / HMUX-ENV-ERR", "hmux env set -"]) {
       expect(envHelp.stdout).toContain(line);
     }
     for (const line of [
-      "cmux env set|ls|rm|path",
+      "hmux env set|ls|rm|path",
     ]) {
       expect(run.stdout).toContain(line);
     }
     const vmHelp = await runShim(["vm", "help"]);
-    expect(vmHelp.stdout).toContain("cmux vm agent <machine> --agent");
+    expect(vmHelp.stdout).toContain("hmux vm agent <machine> --agent");
     expect(vmHelp.stdout).toContain("[--wait [--output] [--timeout <s>]]");
-    expect(vmHelp.stdout).toContain("cmux vm env set|ls|rm|path <machine>");
-    expect(vmHelp.stdout).toContain("cmux vm push <machine> <local-file> <remote-path> [--mode <octal>]");
+    expect(vmHelp.stdout).toContain("hmux vm env set|ls|rm|path <machine>");
+    expect(vmHelp.stdout).toContain("hmux vm push <machine> <local-file> <remote-path> [--mode <octal>]");
   });
 
   describe("local Mac-flavoured verbs", () => {
     test("send defaults to the caller's terminal, --terminal overrides, nothing else is an error", async () => {
       const dir = makeStatefulDir();
-      const mine = await runStateful(dir, ["send", "hi", "there"], { CMUX_TUI_TERMINAL_ID: TERMINAL_ID });
+      const mine = await runStateful(dir, ["send", "hi", "there"], { HMUX_TUI_TERMINAL_ID: TERMINAL_ID });
       expect(mine.status).toBe(0);
       expect(mine.calls).toEqual([["--session", "cloud", "terminal", TERMINAL_ID, "write", "--text", "hi there"]]);
 
-      const other = await runStateful(dir, ["send", "--terminal", "term_other", "ls -la"], { CMUX_TUI_TERMINAL_ID: TERMINAL_ID });
+      const other = await runStateful(dir, ["send", "--terminal", "term_other", "ls -la"], { HMUX_TUI_TERMINAL_ID: TERMINAL_ID });
       expect(other.calls).toEqual([["--session", "cloud", "terminal", "term_other", "write", "--text", "ls -la"]]);
 
-      const none = await runStateful(dir, ["send", "hi"], { CMUX_TUI_TERMINAL_ID: undefined });
+      const none = await runStateful(dir, ["send", "hi"], { HMUX_TUI_TERMINAL_ID: undefined });
       expect(none.status).toBe(2);
       expect(none.stderr).toContain("--terminal <term_id>");
       expect(none.calls).toEqual([]);
@@ -925,7 +925,7 @@ describe("in-VM cmux shim: agent primitives", () => {
 
     test("send-key and read-screen map to keys and screen read", async () => {
       const dir = makeStatefulDir();
-      const keys = await runStateful(dir, ["send-key", "ctrl+c", "enter"], { CMUX_TUI_TERMINAL_ID: TERMINAL_ID });
+      const keys = await runStateful(dir, ["send-key", "ctrl+c", "enter"], { HMUX_TUI_TERMINAL_ID: TERMINAL_ID });
       expect(keys.calls).toEqual([["--session", "cloud", "terminal", TERMINAL_ID, "keys", "ctrl+c", "enter"]]);
       const screen = await runStateful(dir, ["read-screen", "--terminal", "term_2", "--json"]);
       expect(screen.status).toBe(0);
@@ -966,7 +966,7 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(close.calls.map(stripRoute)).toEqual([["terminal", "term_1", "close"]]);
     });
 
-    test("cmux-tui's own id-first terminal grammar still passes through untouched", async () => {
+    test("hmux-tui's own id-first terminal grammar still passes through untouched", async () => {
       const dir = makeStatefulDir();
       expect((await runStateful(dir, ["terminal", "term_x", "keys", "enter"])).calls).toEqual([["--session", "cloud", "terminal", "term_x", "keys", "enter"]]);
       expect((await runStateful(dir, ["terminal", "list"])).calls).toEqual([["--session", "cloud", "terminal", "list"]]);
@@ -980,10 +980,10 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(tree.calls).toEqual([["--session", "cloud", "--json", "session", "current", "snapshot"]]);
       expect(JSON.parse(tree.stdout).workspaces[0].id).toBe("ws_main");
 
-      const fromCaller = await runStateful(dir, ["new-split", "down"], { CMUX_TUI_TERMINAL_ID: "term_logs" });
+      const fromCaller = await runStateful(dir, ["new-split", "down"], { HMUX_TUI_TERMINAL_ID: "term_logs" });
       expect(fromCaller.status).toBe(0);
       expect(fromCaller.calls.map(stripRoute)).toEqual([["--json", "session", "current", "snapshot"], ["pane", "pane_3", "split", "--down"]]);
-      const focused = await runStateful(dir, ["new-split", "right"], { CMUX_TUI_TERMINAL_ID: undefined });
+      const focused = await runStateful(dir, ["new-split", "right"], { HMUX_TUI_TERMINAL_ID: undefined });
       expect(focused.status).toBe(0);
       expect(focused.calls.at(-1)).toEqual(["--session", "cloud", "pane", "pane_1", "split", "--right"]);
       const explicit = await runStateful(dir, ["new-split", "right", "--pane", "pane_9"]);
@@ -1200,12 +1200,12 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(run.stderr).toBe("");
       expect(run.status).toBe(0);
       expect(run.stdout).toContain("OK set 3 variables");
-      const file = join(dir, ".config", "cmux", "env");
+      const file = join(dir, ".config", "hmux", "env");
       expect(readFileSync(file, "utf8")).toBe(
-        "# managed by cmux env; KEY='value' lines; edit with cmux env set/rm\nexport BAZ='it'\\''s here'\nexport FOO='bar'\nexport ZED='1'\n",
+        "# managed by hmux env; KEY='value' lines; edit with hmux env set/rm\nexport BAZ='it'\\''s here'\nexport FOO='bar'\nexport ZED='1'\n",
       );
       expect(statSync(file).mode & 0o777).toBe(0o600);
-      const hook = '[ -f "$HOME/.config/cmux/env" ] && . "$HOME/.config/cmux/env" # cmux-env-hook';
+      const hook = '[ -f "$HOME/.config/hmux/env" ] && . "$HOME/.config/hmux/env" # hmux-env-hook';
       await runStateful(dir, ["env", "set", "FOO=again"]);
       for (const rc of [".profile", ".bashrc"]) {
         const text = readFileSync(join(dir, rc), "utf8");
@@ -1230,11 +1230,11 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(names.stdout).toBe("API_KEY\nDB_URL\nPLAIN\nX\nY\n");
       const json = await runStateful(dir, ["env", "ls", "--json", "--show"]);
       expect(JSON.parse(json.stdout)).toEqual({
-        path: join(dir, ".config", "cmux", "env"),
+        path: join(dir, ".config", "hmux", "env"),
         keys: ["API_KEY", "DB_URL", "PLAIN", "X", "Y"],
         values: { API_KEY: "abc def", DB_URL: "postgres://x", PLAIN: "2", X: "1", Y: "spaced" },
       });
-      expect(JSON.parse((await runStateful(dir, ["env", "ls", "--json"])).stdout)).toEqual({ path: join(dir, ".config", "cmux", "env"), keys: ["API_KEY", "DB_URL", "PLAIN", "X", "Y"] });
+      expect(JSON.parse((await runStateful(dir, ["env", "ls", "--json"])).stdout)).toEqual({ path: join(dir, ".config", "hmux", "env"), keys: ["API_KEY", "DB_URL", "PLAIN", "X", "Y"] });
     });
 
     test("dotenv quote handling preserves literal hashes and backslashes", async () => {
@@ -1274,52 +1274,52 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect((await runStateful(dir, ["env", "set", "novalue"])).status).toBe(2);
       expect((await runStateful(dir, ["env", "set"])).status).toBe(2);
       expect((await runStateful(dir, ["env", "rm"])).status).toBe(2);
-      expect((await runStateful(dir, ["env", "path"])).stdout.trim()).toBe(join(dir, ".config", "cmux", "env"));
+      expect((await runStateful(dir, ["env", "path"])).stdout.trim()).toBe(join(dir, ".config", "hmux", "env"));
       const fresh = makeStatefulDir();
       expect((await runStateful(fresh, ["env", "ls"])).stdout).toContain("no machine env yet");
-      expect(JSON.parse((await runStateful(fresh, ["env", "ls", "--json"])).stdout)).toEqual({ path: join(fresh, ".config", "cmux", "env"), keys: [] });
+      expect(JSON.parse((await runStateful(fresh, ["env", "ls", "--json"])).stdout)).toEqual({ path: join(fresh, ".config", "hmux", "env"), keys: [] });
     });
 
     test("env receive --stdin: READY first, then OK with the key count; values are byte-literal", async () => {
       const dir = makeStatefulDir();
       const payload = "FOO=bar\nBAZ=it's  here \nURL=postgres://u:p%40ss@h/db?x=1\n";
       const b64 = Buffer.from(payload, "utf8").toString("base64").replace(/(.{20})/g, "$1\n");
-      const run = await runStateful(dir, ["env", "receive", "--stdin"], {}, `${b64}\n\nCMUX-ENV-END\n`);
+      const run = await runStateful(dir, ["env", "receive", "--stdin"], {}, `${b64}\n\nHMUX-ENV-END\n`);
       expect(run.stderr).toBe("");
       expect(run.status).toBe(0);
-      const file = join(dir, ".config", "cmux", "env");
-      expect(run.stdout).toBe(`CMUX-ENV-READY\nCMUX-ENV-OK keys=3 path=${file}\n`);
+      const file = join(dir, ".config", "hmux", "env");
+      expect(run.stdout).toBe(`HMUX-ENV-READY\nHMUX-ENV-OK keys=3 path=${file}\n`);
       expect(readFileSync(file, "utf8")).toBe(
-        "# managed by cmux env; KEY='value' lines; edit with cmux env set/rm\nexport BAZ='it'\\''s  here '\nexport FOO='bar'\nexport URL='postgres://u:p%40ss@h/db?x=1'\n",
+        "# managed by hmux env; KEY='value' lines; edit with hmux env set/rm\nexport BAZ='it'\\''s  here '\nexport FOO='bar'\nexport URL='postgres://u:p%40ss@h/db?x=1'\n",
       );
       expect(statSync(file).mode & 0o777).toBe(0o600);
-      expect(readFileSync(join(dir, ".profile"), "utf8")).toContain("cmux-env-hook");
+      expect(readFileSync(join(dir, ".profile"), "utf8")).toContain("hmux-env-hook");
       expect(run.calls).toEqual([]);
     });
 
     test("env receive refuses bad keys, truncated streams, and garbage without writing anything", async () => {
       const dir = makeStatefulDir();
-      const badKey = await runStateful(dir, ["env", "receive", "--stdin"], {}, `${Buffer.from("OK=1\n1BAD=x\n").toString("base64")}\nCMUX-ENV-END\n`);
+      const badKey = await runStateful(dir, ["env", "receive", "--stdin"], {}, `${Buffer.from("OK=1\n1BAD=x\n").toString("base64")}\nHMUX-ENV-END\n`);
       expect(badKey.status).toBe(1);
-      expect(badKey.stdout).toBe("CMUX-ENV-READY\nCMUX-ENV-ERR invalid-key 1BAD\n");
-      expect(existsSync(join(dir, ".config", "cmux", "env"))).toBe(false);
+      expect(badKey.stdout).toBe("HMUX-ENV-READY\nHMUX-ENV-ERR invalid-key 1BAD\n");
+      expect(existsSync(join(dir, ".config", "hmux", "env"))).toBe(false);
       const noEnd = await runStateful(dir, ["env", "receive", "--stdin"], {}, `${Buffer.from("A=1\n").toString("base64")}\n`);
       expect(noEnd.status).toBe(1);
-      expect(noEnd.stdout).toBe("CMUX-ENV-READY\nCMUX-ENV-ERR eof\n");
-      const garbage = await runStateful(dir, ["env", "receive", "--stdin"], {}, "!!!not base64!!!\nCMUX-ENV-END\n");
+      expect(noEnd.stdout).toBe("HMUX-ENV-READY\nHMUX-ENV-ERR eof\n");
+      const garbage = await runStateful(dir, ["env", "receive", "--stdin"], {}, "!!!not base64!!!\nHMUX-ENV-END\n");
       expect(garbage.status).toBe(1);
-      expect(garbage.stdout).toContain("CMUX-ENV-ERR bad-base64");
-      const empty = await runStateful(dir, ["env", "receive", "--stdin"], {}, "CMUX-ENV-END\n");
+      expect(garbage.stdout).toContain("HMUX-ENV-ERR bad-base64");
+      const empty = await runStateful(dir, ["env", "receive", "--stdin"], {}, "HMUX-ENV-END\n");
       expect(empty.status).toBe(1);
-      expect(empty.stdout).toContain("CMUX-ENV-ERR empty");
-      expect(existsSync(join(dir, ".config", "cmux", "env"))).toBe(false);
+      expect(empty.stdout).toContain("HMUX-ENV-ERR empty");
+      expect(existsSync(join(dir, ".config", "hmux", "env"))).toBe(false);
     });
 
     test("agents started through the shim see the machine env", async () => {
       const dir = makeStatefulDir();
-      await runStateful(dir, ["env", "set", "CMUX_TEST_TOKEN=from-env"]);
+      await runStateful(dir, ["env", "set", "HMUX_TEST_TOKEN=from-env"]);
       const claude = join(dir, "claude");
-      writeFileSync(claude, "#!/bin/sh\nprintf '%s\\n' \"$CMUX_TEST_TOKEN\"\n");
+      writeFileSync(claude, "#!/bin/sh\nprintf '%s\\n' \"$HMUX_TEST_TOKEN\"\n");
       chmodSync(claude, 0o755);
       const run = await runStateful(dir, ["agent", "claude", "say hi"]);
       expect(run.status).toBe(0);
@@ -1353,25 +1353,25 @@ describe("in-VM cmux shim: agent primitives", () => {
   });
 
   describe("peer forms", () => {
-    // A live link: the shim reuses ~/.cmux/peer-links/<peer>.{pid,sock-path}
+    // A live link: the shim reuses ~/.hmux/peer-links/<peer>.{pid,sock-path}
     // when the pid is alive and the socket exists, so the peer verbs can be
-    // exercised without a cmux-remote daemon.
+    // exercised without a hmux-remote daemon.
     let server: ReturnType<typeof createServer> | undefined;
     let sockPath = "";
     const peer = "brave-otter";
 
     function peerDir(): string {
       const dir = makeStatefulDir();
-      mkdirSync(join(dir, ".cmux", "peers"), { recursive: true });
-      mkdirSync(join(dir, ".cmux", "peer-links"), { recursive: true });
-      writeFileSync(join(dir, ".cmux", "peers", `${peer}.json`), JSON.stringify({ route: "cmux-remote://example" }));
-      writeFileSync(join(dir, ".cmux", "peer-links", `${peer}.pid`), String(process.pid));
-      writeFileSync(join(dir, ".cmux", "peer-links", `${peer}.sock-path`), sockPath);
+      mkdirSync(join(dir, ".hmux", "peers"), { recursive: true });
+      mkdirSync(join(dir, ".hmux", "peer-links"), { recursive: true });
+      writeFileSync(join(dir, ".hmux", "peers", `${peer}.json`), JSON.stringify({ route: "hmux-remote://example" }));
+      writeFileSync(join(dir, ".hmux", "peer-links", `${peer}.pid`), String(process.pid));
+      writeFileSync(join(dir, ".hmux", "peer-links", `${peer}.sock-path`), sockPath);
       return dir;
     }
 
     beforeAll(async () => {
-      sockPath = `/tmp/cmux-gs-${process.pid}-${Math.random().toString(36).slice(2, 8)}.sock`;
+      sockPath = `/tmp/hmux-gs-${process.pid}-${Math.random().toString(36).slice(2, 8)}.sock`;
       server = createServer();
       await new Promise<void>((resolve, reject) => {
         server!.once("error", reject);
@@ -1404,7 +1404,7 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect((await runStateful(dir, ["vm", "send", peer, "term_x", "hello", "world"])).calls).toEqual([["--socket", sockPath, "terminal", "term_x", "write", "--text", "hello world"]]);
       expect((await runStateful(dir, ["vm", "send-key", peer, "term_x", "ctrl+c"])).calls).toEqual([["--socket", sockPath, "terminal", "term_x", "keys", "ctrl+c"]]);
       expect((await runStateful(dir, ["vm", "read-screen", peer, "term_x", "--json"])).calls).toEqual([["--socket", sockPath, "--json", "terminal", "term_x", "screen", "read"]]);
-      // cmux-tui's own grammar on the peer is untouched.
+      // hmux-tui's own grammar on the peer is untouched.
       expect((await runStateful(dir, ["vm", "terminal", peer, "list"])).calls).toEqual([["--socket", sockPath, "terminal", "list"]]);
     });
 
@@ -1424,18 +1424,18 @@ describe("in-VM cmux shim: agent primitives", () => {
         ["--socket", sockPath, "workspace", "ws_main", "close"],
       ]);
       expect(rm.stdout).toContain("4 terminals closed");
-      // Passthrough for cmux-tui's own workspace grammar.
+      // Passthrough for hmux-tui's own workspace grammar.
       expect((await runStateful(dir, ["vm", "workspace", peer, "list"])).calls).toEqual([["--socket", sockPath, "workspace", "list"]]);
     });
 
-    test("agent starts a durable terminal on the peer running the peer's own `cmux agent`", async () => {
+    test("agent starts a durable terminal on the peer running the peer's own `hmux agent`", async () => {
       const dir = peerDir();
       const run = await runStateful(dir, ["vm", "agent", peer, "--agent", "claude", "--cwd", "/root/work/app", "--", "fix", "the tests"]);
       expect(run.stderr).toBe("");
       expect(run.status).toBe(0);
       expect(run.calls).toEqual([
         ["--socket", sockPath, "workspace", "current", "show"],
-        ["--socket", sockPath, "--json", "workspace", "current", "run", "--on-exit", "keep", "--name", "claude", "--cwd", "/root/work/app", "--", "cmux", "agent", "claude", "fix", "the tests"],
+        ["--socket", sockPath, "--json", "workspace", "current", "run", "--on-exit", "keep", "--name", "claude", "--cwd", "/root/work/app", "--", "hmux", "agent", "claude", "fix", "the tests"],
       ]);
       expect(run.stdout).toContain(`OK terminal=term_2 workspace=current machine=${peer} agent=claude`);
       // No current workspace on the peer yet → `main` is created and used.
@@ -1444,10 +1444,10 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(fresh.calls.map((call) => call.slice(2))).toEqual([
         ["workspace", "current", "show"],
         ["--json", "workspace", "create", "--name", "main"],
-        ["--json", "workspace", "ws_new2", "run", "--on-exit", "keep", "--name", "docs", "--", "cmux", "agent", "codex", "write docs"],
+        ["--json", "workspace", "ws_new2", "run", "--on-exit", "keep", "--name", "docs", "--", "hmux", "agent", "codex", "write docs"],
       ]);
       expect((await runStateful(dir, ["vm", "agent", peer, "--agent", "emacs", "--", "x"])).status).toBe(2);
-      // `vm agent <peer> list` is still cmux-tui's agent scope on the peer.
+      // `vm agent <peer> list` is still hmux-tui's agent scope on the peer.
       expect((await runStateful(dir, ["vm", "agent", peer, "list"])).calls).toEqual([["--socket", sockPath, "agent", "list"]]);
     });
 
@@ -1459,18 +1459,18 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(run.status).toBe(0);
       const ops = run.calls.map((call) => call.slice(2));
       expect(ops[0]).toEqual(["workspace", "current", "show"]);
-      expect(ops[1]).toEqual(["--json", "workspace", "current", "run", "--on-exit", "keep", "--name", "cmux env", "--", "cmux", "env", "receive"]);
-      expect(ops[2]).toEqual(["--json", "terminal", "term_2", "screen", "wait", "--pattern", "CMUX-ENV-READY", "--timeout-ms", "15000"]);
+      expect(ops[1]).toEqual(["--json", "workspace", "current", "run", "--on-exit", "keep", "--name", "hmux env", "--", "hmux", "env", "receive"]);
+      expect(ops[2]).toEqual(["--json", "terminal", "term_2", "screen", "wait", "--pattern", "HMUX-ENV-READY", "--timeout-ms", "15000"]);
       const writes = ops.filter((call) => call[1] === "terminal" && call[3] === "write");
       expect(writes.length).toBeGreaterThan(0);
       for (const write of writes) expect(write.slice(0, 5)).toEqual(["--json", "terminal", "term_2", "write", "--bytes-base64"]);
       const stream = Buffer.concat(writes.map((write) => Buffer.from(write[5], "base64"))).toString("utf8");
       const lines = stream.split("\n");
       expect(lines.at(-1)).toBe("");
-      expect(lines.at(-2)).toBe("CMUX-ENV-END");
+      expect(lines.at(-2)).toBe("HMUX-ENV-END");
       const inner = lines.slice(0, -2).join("");
       expect(Buffer.from(inner, "base64").toString("utf8")).toBe(`TOKEN=${secret}\nOTHER=two\n`);
-      expect(ops.at(-2)).toEqual(["--json", "terminal", "term_2", "screen", "wait", "--pattern", "CMUX-ENV-(OK|ERR)", "--timeout-ms", "30000"]);
+      expect(ops.at(-2)).toEqual(["--json", "terminal", "term_2", "screen", "wait", "--pattern", "HMUX-ENV-(OK|ERR)", "--timeout-ms", "30000"]);
       expect(ops.at(-1)).toEqual(["--json", "terminal", "term_2", "close"]);
       // The secret is nowhere in argv except inside the base64 payload.
       for (const call of run.calls) {
@@ -1487,7 +1487,7 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(notReady.calls.at(-1)?.slice(2)).toEqual(["--json", "terminal", "term_2", "close"]);
     });
 
-    test("vm push types one file into the peer's cmux file receive over the link; only the payload carries the bytes", async () => {
+    test("vm push types one file into the peer's hmux file receive over the link; only the payload carries the bytes", async () => {
       const dir = peerDir();
       const secret = Buffer.concat([Buffer.from("API_KEY=s3cr3t-value\n", "utf8"), Buffer.from([0, 1, 2, 255, 10])]);
       writeFileSync(join(dir, "local.env"), secret);
@@ -1496,18 +1496,18 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(run.status).toBe(0);
       const ops = run.calls.map(stripRoute);
       expect(ops[0]).toEqual(["workspace", "current", "show"]);
-      expect(ops[1]).toEqual(["--json", "workspace", "current", "run", "--on-exit", "keep", "--name", "cmux file", "--", "cmux", "file", "receive", "/root/app/.env", "--mode", "640"]);
-      expect(ops[2]).toEqual(["--json", "terminal", "term_2", "screen", "wait", "--pattern", "CMUX-FILE-READY", "--timeout-ms", "15000"]);
+      expect(ops[1]).toEqual(["--json", "workspace", "current", "run", "--on-exit", "keep", "--name", "hmux file", "--", "hmux", "file", "receive", "/root/app/.env", "--mode", "640"]);
+      expect(ops[2]).toEqual(["--json", "terminal", "term_2", "screen", "wait", "--pattern", "HMUX-FILE-READY", "--timeout-ms", "15000"]);
       const writes = ops.filter((call) => call[1] === "terminal" && call[3] === "write");
       expect(writes.length).toBeGreaterThan(0);
       for (const write of writes) expect(write.slice(0, 5)).toEqual(["--json", "terminal", "term_2", "write", "--bytes-base64"]);
       const stream = Buffer.concat(writes.map((write) => Buffer.from(write[5], "base64"))).toString("utf8");
       const lines = stream.split("\n");
       expect(lines.at(-1)).toBe("");
-      expect(lines.at(-2)).toBe("CMUX-FILE-END");
+      expect(lines.at(-2)).toBe("HMUX-FILE-END");
       expect(lines.slice(0, -2).every((line) => line.length <= 76)).toBe(true);
       expect(Buffer.from(lines.slice(0, -2).join(""), "base64").equals(secret)).toBe(true);
-      expect(ops.at(-2)).toEqual(["--json", "terminal", "term_2", "screen", "wait", "--pattern", "CMUX-FILE-(OK|ERR)", "--timeout-ms", "30000"]);
+      expect(ops.at(-2)).toEqual(["--json", "terminal", "term_2", "screen", "wait", "--pattern", "HMUX-FILE-(OK|ERR)", "--timeout-ms", "30000"]);
       expect(ops.at(-1)).toEqual(["--json", "terminal", "term_2", "close"]);
       for (const call of run.calls) {
         if (call[3] === "write") continue;
@@ -1553,7 +1553,7 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(waited.stderr).toBe(`started terminal=term_2 workspace=current machine=${peer} agent=claude; waiting\n`);
       expect(waited.calls.map(stripRoute)).toEqual([
         ["workspace", "current", "show"],
-        ["--json", "workspace", "current", "run", "--on-exit", "keep", "--name", "claude", "--", "cmux", "agent", "claude", "fix", "the tests"],
+        ["--json", "workspace", "current", "run", "--on-exit", "keep", "--name", "claude", "--", "hmux", "agent", "claude", "fix", "the tests"],
         ["--json", "terminal", "term_2", "process", "wait", "--timeout-ms", "30000"],
       ]);
       // --output implies --wait and pages the stream by next_offset until complete.
@@ -1579,7 +1579,7 @@ describe("in-VM cmux shim: agent primitives", () => {
         ["--json", "terminal", "term_2", "process", "wait", "--timeout-ms", "15000"],
       ]);
       expect(slow.stderr).toContain(`agent codex on ${peer} is still running after 45s (terminal term_2`);
-      expect(slow.stderr).toContain(`cmux vm terminal wait-exit ${peer} term_2`);
+      expect(slow.stderr).toContain(`hmux vm terminal wait-exit ${peer} term_2`);
       // With --output the partial stream is still printed before the timeout verdict.
       const slowOutput = await runStateful(dir, ["vm", "agent", peer, "claude", "--output", "--timeout", "0.5", "--", "x"], { FAKE_EXIT_PENDING: "1" });
       expect(slowOutput.status).toBe(1);
@@ -1618,9 +1618,9 @@ describe("in-VM cmux shim: agent primitives", () => {
       expect(applied.calls[0]).toEqual(["--socket", sockPath, "--json", "workspace", "create", "--empty", "--name", "remote"]);
       expect((await runStateful(dir, ["vm", "env", "ls", peer, "--json"])).calls).toEqual([
         ["--socket", sockPath, "workspace", "current", "show"],
-        ["--socket", sockPath, "workspace", "current", "run", "--on-exit", "close", "--", "cmux", "env", "ls", "--json"],
+        ["--socket", sockPath, "workspace", "current", "run", "--on-exit", "close", "--", "hmux", "env", "ls", "--json"],
       ]);
-      expect((await runStateful(dir, ["vm", "env", "rm", peer, "K"])).calls.at(-1)).toEqual(["--socket", sockPath, "workspace", "current", "run", "--on-exit", "close", "--", "cmux", "env", "rm", "K"]);
+      expect((await runStateful(dir, ["vm", "env", "rm", peer, "K"])).calls.at(-1)).toEqual(["--socket", sockPath, "workspace", "current", "run", "--on-exit", "close", "--", "hmux", "env", "rm", "K"]);
       expect((await runStateful(dir, ["vm", "exec", peer, "--", "echo", "hi there"])).calls.at(-1)).toEqual(["--socket", sockPath, "workspace", "current", "run", "--on-exit", "close", "--", "echo", "hi there"]);
       expect((await runStateful(dir, ["vm", "tree", peer])).calls).toEqual([["--socket", sockPath, "--json", "session", "current", "snapshot"]]);
       const unlinked = await runStateful(dir, ["vm", "terminal", "read", "unknown-peer", "term_x"]);
@@ -1668,7 +1668,7 @@ const REFLECTION_INDEX_PLAIN = {
   owner: { user_id: "user_1", email: "owner@example.com", display_name: "Owner" },
   team_id: "team_1",
   plan_id: "pro",
-  urls: { reflection: ["https://coderouter.cmux.internal/api/vm/reflection", "https://reflection.cmux.internal/"] },
+  urls: { reflection: ["https://coderouter.hmux.internal/api/vm/reflection", "https://reflection.hmux.internal/"] },
   paths: [{ path: "/owner", description: "owner of this machine" }, { path: "/peers", description: "other machines" }],
 };
 const REFLECTION_INDEX = { schema: 1, ...REFLECTION_INDEX_PLAIN, machine: REFLECTION_MACHINES[0], team: { id: "team_1" }, machines: REFLECTION_MACHINES };
@@ -1677,18 +1677,18 @@ const withoutRoute = ({ id, vmId, name, displayName, slug, status, createdAt, se
 const SELF_LEGACY = { schema: 1, machine: withoutRoute(REFLECTION_MACHINES[0]), team: { id: "team_1" }, machines: REFLECTION_MACHINES.map(withoutRoute) };
 const REFLECTION_PEERS = {
   peers: [
-    { name: "brave-otter", display_name: "Reviewer", vm_id: "aaaa", provider_vm_id: "fs-a", status: "running", network: { ipv4: "10.0.0.4", ipv6: "fd00::4" }, route: "ws://[fd00::4]:1337/v1/link", reachable: true, help: "cmux vm exec brave-otter -- <command>" },
-    { name: "sleepy-otter", display_name: "Sleepy", vm_id: "bbbb", provider_vm_id: "fs-b", status: "running", network: { ipv4: "10.0.0.5", ipv6: "fd00::5" }, route: "ws://[fd00::5]:1337/v1/link", reachable: true, help: "cmux vm exec sleepy-otter -- <command>" },
-    { name: "asleep-mole", display_name: null, vm_id: "cccc", provider_vm_id: "fs-c", status: "paused", network: { ipv4: null, ipv6: null }, route: null, reachable: false, help: "cmux vm exec asleep-mole -- <command>" },
+    { name: "brave-otter", display_name: "Reviewer", vm_id: "aaaa", provider_vm_id: "fs-a", status: "running", network: { ipv4: "10.0.0.4", ipv6: "fd00::4" }, route: "ws://[fd00::4]:1337/v1/link", reachable: true, help: "hmux vm exec brave-otter -- <command>" },
+    { name: "sleepy-otter", display_name: "Sleepy", vm_id: "bbbb", provider_vm_id: "fs-b", status: "running", network: { ipv4: "10.0.0.5", ipv6: "fd00::5" }, route: "ws://[fd00::5]:1337/v1/link", reachable: true, help: "hmux vm exec sleepy-otter -- <command>" },
+    { name: "asleep-mole", display_name: null, vm_id: "cccc", provider_vm_id: "fs-c", status: "paused", network: { ipv4: null, ipv6: null }, route: null, reachable: false, help: "hmux vm exec asleep-mole -- <command>" },
   ],
 };
-const REFLECTION_INTEGRATIONS = { integrations: [{ type: "llm", name: "coderouter", help: "cmux coderouter models" }] };
+const REFLECTION_INTEGRATIONS = { integrations: [{ type: "llm", name: "coderouter", help: "hmux coderouter models" }] };
 
 /**
  * A curl that answers the reflection paths, /api/vm/self, and the CodeRouter usage probe by URL
  * suffix. It speaks both capture styles: `-o <file>` + `-w '%{http_code}'` (the auth probes) and
  * the bootstrap shim's body-then-status on stdout (`--write-out '\n%{http_code}'`).
- * CMUX_TEST_REFLECTION=deny|down simulates no identity / no edge; plain = a reflection server
+ * HMUX_TEST_REFLECTION=deny|down simulates no identity / no edge; plain = a reflection server
  * before the superset; legacy = no reflection at all (index 404), only /api/vm/self.
  */
 function fakeReflectionCurl(directory: string): void {
@@ -1709,10 +1709,10 @@ printf '%s\\n' "$url" >> "$HOME/curl.log"
 answer() {
   if [ -n "$out" ]; then printf '%s' "$2" > "$out"; printf '%s' "$1"; else printf '%s\\n%s' "$2" "$1"; fi
 }
-mode="\${CMUX_TEST_REFLECTION:-ok}"
+mode="\${HMUX_TEST_REFLECTION:-ok}"
 case "$mode" in
   down) exit 7 ;;
-  deny) answer 401 '{"error":"vm_principal_required","message":"only a cmux Cloud machine can call reflection"}'; exit 0 ;;
+  deny) answer 401 '{"error":"vm_principal_required","message":"only a hmux Cloud machine can call reflection"}'; exit 0 ;;
 esac
 case "$url" in
   */api/vm/reflection)
@@ -1732,20 +1732,20 @@ esac
   chmodSync(join(directory, "curl"), 0o755);
 }
 
-const REFLECTION_ENV = { CMUX_CODEROUTER_URL: "https://coderouter.cmux.internal", OPENAI_API_KEY: "cmux-vm-edge-placeholder" };
+const REFLECTION_ENV = { HMUX_CODEROUTER_URL: "https://coderouter.hmux.internal", OPENAI_API_KEY: "hmux-vm-edge-placeholder" };
 const SELF_HUMAN = "Build box\tfs-build\trunning\t(this machine)\nteam\tteam_1\t4 machines\nowner\towner@example.com\nplan\tpro\n";
 const VM_LS_HUMAN = "* Build box\tfs-build\trunning\t(this machine)\n  Reviewer\tfs-a\trunning\treachable\tlinked\n  Sleepy\tfs-b\trunning\treachable\tconnected\n  asleep-mole\tfs-c\tpaused\tunreachable\n";
 
-/** Peer files as the Mac or a first `cmux vm exec` leaves them: brave-otter linked, Sleepy linked with a live link process. */
+/** Peer files as the Mac or a first `hmux vm exec` leaves them: brave-otter linked, Sleepy linked with a live link process. */
 function linkTwoPeers(directory: string): void {
-  mkdirSync(join(directory, ".cmux", "peers"), { recursive: true });
-  mkdirSync(join(directory, ".cmux", "peer-links"), { recursive: true });
-  writeFileSync(join(directory, ".cmux", "peers", "brave-otter.json"), JSON.stringify({ route: "ws://[fd00::4]:1337/v1/link" }));
-  writeFileSync(join(directory, ".cmux", "peers", "Sleepy.json"), JSON.stringify({ route: "ws://[fd00::5]:1337/v1/link" }));
-  writeFileSync(join(directory, ".cmux", "peer-links", "Sleepy.pid"), String(process.pid));
+  mkdirSync(join(directory, ".hmux", "peers"), { recursive: true });
+  mkdirSync(join(directory, ".hmux", "peer-links"), { recursive: true });
+  writeFileSync(join(directory, ".hmux", "peers", "brave-otter.json"), JSON.stringify({ route: "ws://[fd00::4]:1337/v1/link" }));
+  writeFileSync(join(directory, ".hmux", "peers", "Sleepy.json"), JSON.stringify({ route: "ws://[fd00::5]:1337/v1/link" }));
+  writeFileSync(join(directory, ".hmux", "peer-links", "Sleepy.pid"), String(process.pid));
 }
 
-describe("in-VM cmux shim: reflection", () => {
+describe("in-VM hmux shim: reflection", () => {
   test("self prints who this machine is, human and JSON; whoami and reflect are aliases", async () => {
     const run = await runShim(["self"], REFLECTION_ENV, fakeReflectionCurl);
     expect(run.stderr).toBe("");
@@ -1761,29 +1761,29 @@ describe("in-VM cmux shim: reflection", () => {
     expect(JSON.parse((await runShim(["whoami", "--json"], REFLECTION_ENV, fakeReflectionCurl)).stdout)).toEqual(REFLECTION_INDEX);
   });
 
-  test("self answers without the daemon binary: identity precedes cmux-tui on a fresh machine", async () => {
-    const run = await runShim(["self"], { ...REFLECTION_ENV, CMUX_TUI_BIN: "/nonexistent/cmux-tui" }, fakeReflectionCurl);
+  test("self answers without the daemon binary: identity precedes hmux-tui on a fresh machine", async () => {
+    const run = await runShim(["self"], { ...REFLECTION_ENV, HMUX_TUI_BIN: "/nonexistent/hmux-tui" }, fakeReflectionCurl);
     expect(run.stderr).toBe("");
     expect(run.status).toBe(0);
     expect(run.stdout).toBe(SELF_HUMAN);
-    expect((await runShim(["vm", "ls", "--json"], { ...REFLECTION_ENV, CMUX_TUI_BIN: "/nonexistent/cmux-tui" }, fakeReflectionCurl)).status).toBe(0);
+    expect((await runShim(["vm", "ls", "--json"], { ...REFLECTION_ENV, HMUX_TUI_BIN: "/nonexistent/hmux-tui" }, fakeReflectionCurl)).status).toBe(0);
     // Everything else still needs the daemon.
-    const tree = await runShim(["tree"], { ...REFLECTION_ENV, CMUX_TUI_BIN: "/nonexistent/cmux-tui" }, fakeReflectionCurl);
+    const tree = await runShim(["tree"], { ...REFLECTION_ENV, HMUX_TUI_BIN: "/nonexistent/hmux-tui" }, fakeReflectionCurl);
     expect(tree.status).toBe(1);
-    expect(tree.stderr).toContain("/nonexistent/cmux-tui");
+    expect(tree.stderr).toContain("/nonexistent/hmux-tui");
   });
 
   test("self explains a missing alias, a machine without identity, and an unreachable edge", async () => {
     const unconfigured = await runShim(["self"]);
     expect(unconfigured.status).toBe(2);
     expect(unconfigured.stdout).toBe("");
-    const denied = await runShim(["self"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "deny" }, fakeReflectionCurl);
+    const denied = await runShim(["self"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "deny" }, fakeReflectionCurl);
     expect(denied.status).toBe(1);
     expect(denied.stderr).toContain("this machine has no VM identity");
     expect(denied.stderr).toContain("HTTP 401");
-    const down = await runShim(["self"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "down" }, fakeReflectionCurl);
+    const down = await runShim(["self"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "down" }, fakeReflectionCurl);
     expect(down.status).toBe(1);
-    expect(down.stderr).toContain("reflection unreachable at https://coderouter.cmux.internal/api/vm/reflection");
+    expect(down.stderr).toContain("reflection unreachable at https://coderouter.hmux.internal/api/vm/reflection");
   });
 
   test("self <path> passes any reflection path through and surfaces server errors", async () => {
@@ -1802,22 +1802,22 @@ describe("in-VM cmux shim: reflection", () => {
   });
 
   test("self falls back to GET /api/vm/self when the control plane has no reflection index", async () => {
-    const dir = mkdtempSync(join(tmpdir(), "cmux-guest-legacy-"));
-    const run = await runShim(["self"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "legacy", HOME: dir }, (directory) => {
+    const dir = mkdtempSync(join(tmpdir(), "hmux-guest-legacy-"));
+    const run = await runShim(["self"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "legacy", HOME: dir }, (directory) => {
       fakeReflectionCurl(directory);
       fakeReflectionCurl(dir);
     });
     expect(run.stderr).toBe("");
     expect(run.status).toBe(0);
-    // No owner or plan there; the same first lines as main's bootstrap `cmux self`.
+    // No owner or plan there; the same first lines as main's bootstrap `hmux self`.
     expect(run.stdout).toBe("Build box\tfs-build\trunning\t(this machine)\nteam\tteam_1\t4 machines\n");
     expect(readFileSync(join(dir, "curl.log"), "utf8").trim().split("\n")).toEqual([
-      "https://coderouter.cmux.internal/api/vm/reflection",
-      "https://coderouter.cmux.internal/api/vm/self",
+      "https://coderouter.hmux.internal/api/vm/reflection",
+      "https://coderouter.hmux.internal/api/vm/self",
     ]);
-    expect(JSON.parse((await runShim(["self", "--json"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "legacy" }, fakeReflectionCurl)).stdout)).toEqual(SELF_LEGACY);
+    expect(JSON.parse((await runShim(["self", "--json"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "legacy" }, fakeReflectionCurl)).stdout)).toEqual(SELF_LEGACY);
     // A pre-superset reflection index still identifies the machine; it just cannot count the fleet.
-    const plain = await runShim(["self"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "plain" }, fakeReflectionCurl);
+    const plain = await runShim(["self"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "plain" }, fakeReflectionCurl);
     expect(plain.status).toBe(0);
     expect(plain.stdout).toBe("Build box\tfs-build\trunning\t(this machine)\nteam\tteam_1\nowner\towner@example.com\nplan\tpro\n");
   });
@@ -1830,9 +1830,9 @@ describe("in-VM cmux shim: reflection", () => {
     expect(payload.identity).toEqual({ vm_id: "11111111-2222-4333-8444-555555555555", name: "build-box" });
     const human = await runShim(["auth", "status"], REFLECTION_ENV, fakeReflectionCurl);
     expect(human.stdout).toContain("Identity: build-box (11111111-2222-4333-8444-555555555555)");
-    const denied = await runShim(["auth", "status", "--json"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "deny" }, fakeReflectionCurl);
+    const denied = await runShim(["auth", "status", "--json"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "deny" }, fakeReflectionCurl);
     expect((JSON.parse(denied.stdout) as Record<string, any>).identity).toBeNull();
-    expect((await runShim(["auth", "status"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "deny" }, fakeReflectionCurl)).stdout).toContain("Identity: unavailable (reflection: this machine has no VM identity");
+    expect((await runShim(["auth", "status"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "deny" }, fakeReflectionCurl)).stdout).toContain("Identity: unavailable (reflection: this machine has no VM identity");
     // Without an alias the field is still present, so JSON readers never see a missing key.
     expect((JSON.parse((await runShim(["auth", "status", "--json"])).stdout) as Record<string, any>).identity).toBeNull();
   });
@@ -1861,10 +1861,10 @@ describe("in-VM cmux shim: reflection", () => {
     fakeReflectionCurl(dir);
     linkTwoPeers(dir);
     // A reflection server before the superset: the index plus /peers give the same lines.
-    const plain = await runStateful(dir, ["vm", "ls"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "plain" });
+    const plain = await runStateful(dir, ["vm", "ls"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "plain" });
     expect(plain.stderr).toBe("");
     expect(plain.stdout).toBe(VM_LS_HUMAN);
-    const plainJson = JSON.parse((await runStateful(dir, ["vm", "ls", "--json"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "plain" })).stdout) as { machines: Array<Record<string, unknown>> };
+    const plainJson = JSON.parse((await runStateful(dir, ["vm", "ls", "--json"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "plain" })).stdout) as { machines: Array<Record<string, unknown>> };
     expect(plainJson.machines.map((machine) => [machine.name, machine.id, machine.self, machine.reachable, machine.route])).toEqual([
       ["Build box", "fs-build", true, false, null],
       ["Reviewer", "fs-a", false, true, "ws://[fd00::4]:1337/v1/link"],
@@ -1872,12 +1872,12 @@ describe("in-VM cmux shim: reflection", () => {
       ["asleep-mole", "fs-c", false, false, null],
     ]);
     // No reflection at all: /api/vm/self knows the machines but not their routes.
-    const legacy = await runStateful(dir, ["vm", "ls"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "legacy" });
+    const legacy = await runStateful(dir, ["vm", "ls"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "legacy" });
     expect(legacy.stderr).toBe("");
     expect(legacy.stdout).toBe("* Build box\tfs-build\trunning\t(this machine)\n  Reviewer\tfs-a\trunning\tlinked\n  Sleepy\tfs-b\trunning\tconnected\n  asleep-mole\tfs-c\tpaused\n");
-    expect(JSON.parse((await runStateful(dir, ["vm", "ls", "--json"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "legacy" })).stdout)).toEqual({ machines: SELF_LEGACY.machines });
+    expect(JSON.parse((await runStateful(dir, ["vm", "ls", "--json"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "legacy" })).stdout)).toEqual({ machines: SELF_LEGACY.machines });
     // Nothing is invented when the control plane cannot answer.
-    const down = await runStateful(dir, ["vm", "ls"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "down" });
+    const down = await runStateful(dir, ["vm", "ls"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "down" });
     expect(down.status).toBe(1);
     expect(down.stdout).toBe("");
     expect(down.stderr).toContain("reflection unreachable");
@@ -1888,7 +1888,7 @@ describe("in-VM cmux shim: reflection", () => {
     let server: ReturnType<typeof createServer> | undefined;
     let sockPath = "";
     beforeAll(async () => {
-      sockPath = `/tmp/cmux-gr-${process.pid}-${Math.random().toString(36).slice(2, 8)}.sock`;
+      sockPath = `/tmp/hmux-gr-${process.pid}-${Math.random().toString(36).slice(2, 8)}.sock`;
       server = createServer();
       await new Promise<void>((resolve, reject) => {
         server!.once("error", reject);
@@ -1910,9 +1910,9 @@ describe("in-VM cmux shim: reflection", () => {
       const run = await runStateful(dir, ["vm", "terminal", "read", "sleepy-otter", "term_x"], { ...REFLECTION_ENV, FAKE_LINK_SOCKET: sockPath });
       expect(run.stderr).toBe("");
       expect(run.status).toBe(0);
-      const peerFile = JSON.parse(readFileSync(join(dir, ".cmux", "peers", "sleepy-otter.json"), "utf8"));
+      const peerFile = JSON.parse(readFileSync(join(dir, ".hmux", "peers", "sleepy-otter.json"), "utf8"));
       expect(peerFile).toEqual({ route: "ws://[fd00::5]:1337/v1/link", name: "sleepy-otter", vm_id: "bbbb", provider_vm_id: "fs-b", source: "reflection" });
-      expect(statSync(join(dir, ".cmux", "peers", "sleepy-otter.json")).mode & 0o777).toBe(0o600);
+      expect(statSync(join(dir, ".hmux", "peers", "sleepy-otter.json")).mode & 0o777).toBe(0o600);
       const connect = run.calls.find((call) => call[0] === "remote" && call[1] === "connect");
       expect(connect?.slice(0, 5)).toEqual(["remote", "connect", "ws://[fd00::5]:1337/v1/link", "--headless", "--json"]);
       expect(connect).not.toContain("--invite-file");
@@ -1920,7 +1920,7 @@ describe("in-VM cmux shim: reflection", () => {
       // Display name and ids resolve to the same machine; the file is reused on the next call.
       const byDisplay = await runStateful(dir, ["vm", "terminal", "read", "Sleepy", "term_y"], { ...REFLECTION_ENV, FAKE_LINK_SOCKET: sockPath });
       expect(byDisplay.status).toBe(0);
-      expect(JSON.parse(readFileSync(join(dir, ".cmux", "peers", "Sleepy.json"), "utf8")).route).toBe("ws://[fd00::5]:1337/v1/link");
+      expect(JSON.parse(readFileSync(join(dir, ".hmux", "peers", "Sleepy.json"), "utf8")).route).toBe("ws://[fd00::5]:1337/v1/link");
     });
 
     test("wait-exit and output take the same road to a peer terminal", async () => {
@@ -1948,8 +1948,8 @@ describe("in-VM cmux shim: reflection", () => {
       const routeless = await runStateful(dir, ["vm", "terminal", "read", "asleep-mole", "term_x"], REFLECTION_ENV);
       expect(routeless.status).toBe(2);
       expect(routeless.stderr).toContain("no private-network route");
-      expect(existsSync(join(dir, ".cmux", "peers", "asleep-mole.json"))).toBe(false);
-      const down = await runStateful(dir, ["vm", "terminal", "read", "sleepy-otter", "term_x"], { ...REFLECTION_ENV, CMUX_TEST_REFLECTION: "down" });
+      expect(existsSync(join(dir, ".hmux", "peers", "asleep-mole.json"))).toBe(false);
+      const down = await runStateful(dir, ["vm", "terminal", "read", "sleepy-otter", "term_x"], { ...REFLECTION_ENV, HMUX_TEST_REFLECTION: "down" });
       expect(down.status).toBe(2);
       expect(down.stderr).toContain("no link for machine 'sleepy-otter': reflection unreachable");
       const unconfigured = await runStateful(dir, ["vm", "terminal", "read", "sleepy-otter", "term_x"]);
@@ -1965,28 +1965,28 @@ describe("in-VM cmux shim: reflection", () => {
     const positions = sections.map((section) => run.stdout.indexOf(section));
     expect(positions.every((position) => position >= 0)).toBe(true);
     expect([...positions].sort((a, b) => a - b)).toEqual(positions);
-    expect(run.stdout).toContain("cmux self [--json]");
-    expect(run.stdout).toContain("cmux vm ls [--json]");
-    expect(run.stdout).toContain("cmux vm exec <machine> -- <cmd...>");
-    expect(run.stdout).toContain("cmux notify --title <text>");
+    expect(run.stdout).toContain("hmux self [--json]");
+    expect(run.stdout).toContain("hmux vm ls [--json]");
+    expect(run.stdout).toContain("hmux vm exec <machine> -- <cmd...>");
+    expect(run.stdout).toContain("hmux notify --title <text>");
     // One spelling per concept: whoami/reflect appear only as aliases, and no verb is listed twice.
-    expect(run.stdout).not.toContain("cmux whoami [--json]");
-    expect(run.stdout).not.toContain("cmux vm peers");
-    expect((await runShim(["vm", "help"])).stdout).toContain("cmux vm ls [--json]");
+    expect(run.stdout).not.toContain("hmux whoami [--json]");
+    expect(run.stdout).not.toContain("hmux vm peers");
+    expect((await runShim(["vm", "help"])).stdout).toContain("hmux vm ls [--json]");
     for (const alias of [["self", "--help"], ["whoami", "--help"], ["reflect", "-h"]]) {
       const help = await runShim(alias);
       expect(help.status).toBe(0);
-      expect(help.stdout).toContain("cmux self peers [--json]");
-      expect(help.stdout).toContain("cmux whoami = cmux self");
+      expect(help.stdout).toContain("hmux self peers [--json]");
+      expect(help.stdout).toContain("hmux whoami = hmux self");
     }
     const terminalHelp = await runShim(["terminal", "help"]);
-    expect(terminalHelp.stdout).toContain("cmux terminal wait-exit <id> [--timeout <seconds>] [--json]");
-    expect(terminalHelp.stdout).toContain("cmux terminal output <id> [--after <offset>] [--max-bytes <n>] [--json]");
+    expect(terminalHelp.stdout).toContain("hmux terminal wait-exit <id> [--timeout <seconds>] [--json]");
+    expect(terminalHelp.stdout).toContain("hmux terminal output <id> [--after <offset>] [--max-bytes <n>] [--json]");
   });
 });
 
-describe("in-VM cmux shim: file drop", () => {
-  const stream = (bytes: Buffer) => `${bytes.toString("base64").replace(/(.{76})/g, "$1\n")}\nCMUX-FILE-END\n`;
+describe("in-VM hmux shim: file drop", () => {
+  const stream = (bytes: Buffer) => `${bytes.toString("base64").replace(/(.{76})/g, "$1\n")}\nHMUX-FILE-END\n`;
 
   test("file receive: READY, base64 lines, END; the bytes land by rename with the mode and parents asked for", async () => {
     const dir = makeStatefulDir();
@@ -1995,7 +1995,7 @@ describe("in-VM cmux shim: file drop", () => {
     expect(run.stderr).toBe("");
     expect(run.status).toBe(0);
     const file = join(dir, "secrets", "deep", "key.bin");
-    expect(run.stdout).toBe(`CMUX-FILE-READY\nCMUX-FILE-OK bytes=${payload.length} path=${file} mode=640\n`);
+    expect(run.stdout).toBe(`HMUX-FILE-READY\nHMUX-FILE-OK bytes=${payload.length} path=${file} mode=640\n`);
     expect(readFileSync(file).equals(payload)).toBe(true);
     expect(statSync(file).mode & 0o777).toBe(0o640);
     expect(statSync(join(dir, "secrets")).mode & 0o777).toBe(0o700);
@@ -2007,10 +2007,10 @@ describe("in-VM cmux shim: file drop", () => {
     writeFileSync(target, "old\n");
     const replaced = await runStateful(dir, ["file", "receive", target, "--stdin"], {}, stream(Buffer.from("NEW=1\n")));
     expect(replaced.status).toBe(0);
-    expect(replaced.stdout).toBe(`CMUX-FILE-READY\nCMUX-FILE-OK bytes=6 path=${target} mode=600\n`);
+    expect(replaced.stdout).toBe(`HMUX-FILE-READY\nHMUX-FILE-OK bytes=6 path=${target} mode=600\n`);
     expect(readFileSync(target, "utf8")).toBe("NEW=1\n");
     expect(statSync(target).mode & 0o777).toBe(0o600);
-    expect(readdirSync(dir).filter((name) => name.startsWith(".cmux-file."))).toEqual([]);
+    expect(readdirSync(dir).filter((name) => name.startsWith(".hmux-file."))).toEqual([]);
     // CRLF line ends and blank lines from a PTY are tolerated; --mode=0755 is the four-digit form.
     const crlf = await runStateful(dir, ["file", "receive", "bin/run.sh", "--mode=0755", "--stdin"], {}, stream(Buffer.from("#!/bin/sh\necho hi\n")).replace(/\n/g, "\r\n\r\n"));
     expect(crlf.status).toBe(0);
@@ -2021,32 +2021,32 @@ describe("in-VM cmux shim: file drop", () => {
   test("file receive refuses garbage, truncation, empty and oversize payloads, directories and bad modes without leaving anything behind", async () => {
     const dir = makeStatefulDir();
     mkdirSync(join(dir, "dest"));
-    const garbage = await runStateful(dir, ["file", "receive", "dest/x", "--stdin"], {}, "!!!not base64!!!\nCMUX-FILE-END\n");
+    const garbage = await runStateful(dir, ["file", "receive", "dest/x", "--stdin"], {}, "!!!not base64!!!\nHMUX-FILE-END\n");
     expect(garbage.status).toBe(1);
-    expect(garbage.stdout).toBe("CMUX-FILE-READY\nCMUX-FILE-ERR bad-base64\n");
+    expect(garbage.stdout).toBe("HMUX-FILE-READY\nHMUX-FILE-ERR bad-base64\n");
     const truncated = await runStateful(dir, ["file", "receive", "dest/x", "--stdin"], {}, `${Buffer.from("abc").toString("base64")}\n`);
     expect(truncated.status).toBe(1);
-    expect(truncated.stdout).toBe("CMUX-FILE-READY\nCMUX-FILE-ERR eof\n");
-    const empty = await runStateful(dir, ["file", "receive", "dest/x", "--stdin"], {}, "CMUX-FILE-END\n");
+    expect(truncated.stdout).toBe("HMUX-FILE-READY\nHMUX-FILE-ERR eof\n");
+    const empty = await runStateful(dir, ["file", "receive", "dest/x", "--stdin"], {}, "HMUX-FILE-END\n");
     expect(empty.status).toBe(1);
-    expect(empty.stdout).toBe("CMUX-FILE-READY\nCMUX-FILE-ERR empty\n");
+    expect(empty.stdout).toBe("HMUX-FILE-READY\nHMUX-FILE-ERR empty\n");
     const big = await runStateful(dir, ["file", "receive", "dest/x", "--stdin"], {}, stream(Buffer.alloc(262145, 1)));
     expect(big.status).toBe(1);
-    expect(big.stdout).toBe("CMUX-FILE-READY\nCMUX-FILE-ERR too-large\n");
+    expect(big.stdout).toBe("HMUX-FILE-READY\nHMUX-FILE-ERR too-large\n");
     const exact = await runStateful(dir, ["file", "receive", "dest/max", "--stdin"], {}, stream(Buffer.alloc(262144, 1)));
     expect(exact.status).toBe(0);
     expect(statSync(join(dir, "dest", "max")).size).toBe(262144);
     expect(readdirSync(join(dir, "dest"))).toEqual(["max"]);
     const directory = await runStateful(dir, ["file", "receive", "dest", "--stdin"], {}, stream(Buffer.from("x")));
     expect(directory.status).toBe(1);
-    expect(directory.stdout).toBe(`CMUX-FILE-ERR is-directory ${join(dir, "dest")}\n`);
+    expect(directory.stdout).toBe(`HMUX-FILE-ERR is-directory ${join(dir, "dest")}\n`);
     // Usage errors answer before READY, so a sender sees the reason on the screen instead of a silent timeout.
     const badMode = await runStateful(dir, ["file", "receive", "dest/x", "--mode", "9", "--stdin"], {}, stream(Buffer.from("x")));
     expect(badMode.status).toBe(2);
-    expect(badMode.stdout).toBe("CMUX-FILE-ERR bad-mode 9\n");
+    expect(badMode.stdout).toBe("HMUX-FILE-ERR bad-mode 9\n");
     const noPath = await runStateful(dir, ["file", "receive", "--stdin"], {}, stream(Buffer.from("x")));
     expect(noPath.status).toBe(2);
-    expect(noPath.stdout).toBe("CMUX-FILE-ERR usage cmux file receive <path> [--mode <octal>]\n");
+    expect(noPath.stdout).toBe("HMUX-FILE-ERR usage hmux file receive <path> [--mode <octal>]\n");
     expect((await runStateful(dir, ["file", "bogus"])).status).toBe(2);
     expect((await runStateful(dir, ["file", "bogus"])).stderr).toContain("unknown file command");
   });
@@ -2062,7 +2062,7 @@ describe("in-VM cmux shim: file drop", () => {
   });
 });
 
-describe("in-VM cmux shim: terminal exit and output", () => {
+describe("in-VM hmux shim: terminal exit and output", () => {
   test("wait-exit blocks on process wait and reports the exit the way the Mac CLI does", async () => {
     const dir = makeStatefulDir();
     const run = await runStateful(dir, ["terminal", "wait-exit", "term_x", "--timeout", "5"]);

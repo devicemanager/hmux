@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
-# Guided end-to-end tour of the cmux-tui Blacksmith Testbox lane.
+# Guided end-to-end tour of the hmux-tui Blacksmith Testbox lane.
 #
-# Warms a box from main, pins it to your pushed HEAD, builds cmux-tui twice to
+# Warms a box from main, pins it to your pushed HEAD, builds hmux-tui twice to
 # show what the persistent disk buys, and always stops the box it created.
 # Every remote command is printed before it runs, so the tour doubles as the
 # documentation.
 set -euo pipefail
 
-WORKFLOW=.github/workflows/cmux-tui-testbox-warmup.yml
-JOB=cmux-tui-rust
+WORKFLOW=.github/workflows/hmux-tui-testbox-warmup.yml
+JOB=hmux-tui-rust
 IDLE_TIMEOUT=15
 STAGES=0
 # The wrapper warms the box (the old direct warmup had 300 s) and then polls
 # for its run (up to 300 s), so its bound covers both.
-WARMUP_TIMEOUT="${CMUX_TESTBOX_DEMO_WARMUP_TIMEOUT:-900}"
-TITLE_PREFIX="cmux-tui Rust Testbox setup"
+WARMUP_TIMEOUT="${HMUX_TESTBOX_DEMO_WARMUP_TIMEOUT:-900}"
+TITLE_PREFIX="hmux-tui Rust Testbox setup"
 
 usage() {
   cat <<'USAGE'
@@ -47,7 +47,7 @@ say "Preflight"
 for tool in blacksmith gh git; do
   command -v "$tool" >/dev/null || { echo "missing required tool: $tool" >&2; exit 65; }
 done
-test -x "$BOUNDED" || { echo "missing $BOUNDED; run from a cmux worktree" >&2; exit 65; }
+test -x "$BOUNDED" || { echo "missing $BOUNDED; run from a hmux worktree" >&2; exit 65; }
 # GNU timeout moves its child into a new process group, so a terminal Ctrl-C
 # never reaches it, and bash runs an INT trap only after a foreground command
 # ends. Every bounded step therefore runs in the background and is waited for:
@@ -62,23 +62,23 @@ bounded() {
   return "$rc"
 }
 test -f "$WORKFLOW" || { echo "missing $WORKFLOW; rebase onto a main that has the lane" >&2; exit 65; }
-[[ "$WARMUP_TIMEOUT" =~ ^[0-9]+$ ]] || { echo "CMUX_TESTBOX_DEMO_WARMUP_TIMEOUT must be seconds" >&2; exit 64; }
+[[ "$WARMUP_TIMEOUT" =~ ^[0-9]+$ ]] || { echo "HMUX_TESTBOX_DEMO_WARMUP_TIMEOUT must be seconds" >&2; exit 64; }
 
-# Every Testbox starts through the cmuxterm-hq wrapper: it warms the box,
-# registers it with the fleet controller (the cmux-ci-testbox-approver App
+# Every Testbox starts through the hmuxterm-hq wrapper: it warms the box,
+# registers it with the fleet controller (the hmux-ci-testbox-approver App
 # passes the run of a registered box only) and waits for that run. Human
 # approval of Testbox runs was removed on purpose on 2026-10-05, so a missing
 # reviewer is expected. HQ_TOOLS is an hq checkout on main; the script pulls it.
 no_hq() {
   cat >&2 <<MSG
 $*
-This demo starts the box through the cmuxterm-hq wrapper
+This demo starts the box through the hmuxterm-hq wrapper
 (scripts/testbox-warmup.sh), which registers the box so its warmup run is
-approved. cmuxterm-hq is private to the Manaflow team.
+approved. hmuxterm-hq is private to the Manaflow team.
   Team members: set HQ_TOOLS to an hq checkout on main, for example
-    HQ_TOOLS=~/cmuxterm-hq ./scripts/blacksmith-testbox-demo.sh
-  Everyone else: run focused cargo test inside cmux-tui/ locally (see
-    cmux-tui/README.md) and say so in the PR; a maintainer runs the hosted
+    HQ_TOOLS=~/hmuxterm-hq ./scripts/blacksmith-testbox-demo.sh
+  Everyone else: run focused cargo test inside hmux-tui/ locally (see
+    hmux-tui/README.md) and say so in the PR; a maintainer runs the hosted
     verification.
 Nothing was started.
 MSG
@@ -161,7 +161,7 @@ cleanup() {
   if [[ -n "$TBX" && -z "$RUN_ID" ]]; then
     RUN_ID="$("$BOUNDED" 60 gh api "repos/manaflow-ai/cmux/actions/workflows/cmux-tui-testbox-warmup.yml/runs?event=workflow_dispatch&branch=main&per_page=50" \
       --jq ".workflow_runs[] | select(.display_title == \"$TITLE_PREFIX $TBX\") | .id" 2>/dev/null | head -1 || true)"
-    [[ -n "$RUN_ID" ]] || echo "no warmup run names $TBX yet; check: gh run list --repo manaflow-ai/cmux --workflow cmux-tui-testbox-warmup.yml" >&2
+    [[ -n "$RUN_ID" ]] || echo "no warmup run names $TBX yet; check: gh run list --repo manaflow-ai/cmux --workflow hmux-tui-testbox-warmup.yml" >&2
   fi
   if [[ -n "$TBX" ]]; then
     say "Stopping the box this script created ($TBX)"
@@ -187,12 +187,12 @@ say "Warming a box from main"
 echo "The workflow refuses any ref but main: it is the trust boundary, because"
 echo "the CLI resolves the workflow definition from the same ref it hydrates."
 printf '\033[2m$ %s --lane %s -- %s --ref main --job %s --idle-timeout %s\033[0m\n' \
-  "$WARMUP" "${CMUX_TESTBOX_LANE:-testbox-demo}" "$WORKFLOW" "$JOB" "$IDLE_TIMEOUT"
+  "$WARMUP" "${HMUX_TESTBOX_LANE:-testbox-demo}" "$WORKFLOW" "$JOB" "$IDLE_TIMEOUT"
 # stdout (TBX=, RUN=) goes straight to the file, never through a pipe a
 # Ctrl-C could break; the wrapper's progress log is on stderr.
 warmup_rc=0
 warmup_started=1
-bounded "$WARMUP_TIMEOUT" "$WARMUP" --lane "${CMUX_TESTBOX_LANE:-testbox-demo}" -- "$WORKFLOW" \
+bounded "$WARMUP_TIMEOUT" "$WARMUP" --lane "${HMUX_TESTBOX_LANE:-testbox-demo}" -- "$WORKFLOW" \
   --ref main --job "$JOB" --idle-timeout "$IDLE_TIMEOUT" >"$warmup_out" || warmup_rc=$?
 cat "$warmup_out"
 TBX="$(sed -n 's/^TBX=//p' "$warmup_out" | head -1)"
@@ -219,11 +219,11 @@ bounded 300 blacksmith testbox run --id "$TBX" "$pin_command"
 # -------------------------------------------------------------------- build --
 if (( STAGES )); then
   say "Running the three measured stages"
-  out=".cmux-scratch/testbox-demo-$(git rev-parse --short HEAD)"
+  out=".hmux-scratch/testbox-demo-$(git rev-parse --short HEAD)"
   mkdir -p "$out/raw"
   for stage in first-clean incremental-noop changed-file; do
     say "Stage: $stage"
-    stage_command="CMUX_TESTBOX_REMOTE=1 CMUX_TESTBOX_ID=$TBX ./scripts/blacksmith-cmux-tui-testbox-stage.sh $stage $SOURCE_SHA $GHOSTTY_SHA"
+    stage_command="HMUX_TESTBOX_REMOTE=1 HMUX_TESTBOX_ID=$TBX ./scripts/blacksmith-hmux-tui-testbox-stage.sh $stage $SOURCE_SHA $GHOSTTY_SHA"
     printf '\033[2m$ blacksmith testbox run --id %s "%s"\033[0m\n' "$TBX" "$stage_command"
     bounded 1500 blacksmith testbox run --id "$TBX" "$stage_command"
     for suffix in json time log; do
@@ -248,7 +248,7 @@ PY
   echo "raw records: $out/raw"
 else
   say "Build 1 of 2: cold target directory, warm dependency caches"
-  build_command="cd cmux-tui && cargo build -p cmux-tui --locked"
+  build_command="cd hmux-tui && cargo build -p hmux-tui --locked"
   printf '\033[2m$ blacksmith testbox run --id %s "%s"\033[0m\n' "$TBX" "$build_command"
   bounded 1500 blacksmith testbox run --id "$TBX" "$build_command"
 

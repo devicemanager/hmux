@@ -56,7 +56,7 @@ export function DocsPageActions() {
     try {
       await navigator.clipboard.writeText(pageMarkdown());
       setCopied(true);
-      posthog.capture("cmuxterm_docs_copy_page", { path: window.location.pathname });
+      posthog.capture("hmuxterm_docs_copy_page", { path: window.location.pathname });
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
       setCopied(false);
@@ -69,7 +69,7 @@ export function DocsPageActions() {
   }
 
   function openAssistant(base: string, name: string) {
-    posthog.capture("cmuxterm_docs_open_in_assistant", {
+    posthog.capture("hmuxterm_docs_open_in_assistant", {
       assistant: name,
       path: window.location.pathname,
     });

@@ -1,9 +1,9 @@
-import CmuxIrohTransport
+import HmuxIrohTransport
 import Foundation
 import OSLog
 
 private let simStreamV2CoordinatorLog = Logger(
-    subsystem: "dev.cmux", category: "mobile-simstream-v2")
+    subsystem: "dev.hmux", category: "mobile-simstream-v2")
 
 /// Router registration glue: forwards admitted simulator-stream lanes to the
 /// process-wide v2 coordinator.

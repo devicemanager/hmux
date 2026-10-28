@@ -260,7 +260,7 @@ function cleanPlainTextBlock(text: string): string {
 
 function cleanDocumentTitle(text: string): string {
   return cleanPlainText(text)
-    .replace(/\s+(?:\||-|\u2013|\u2014)\s+cmux$/i, "")
+    .replace(/\s+(?:\||-|\u2013|\u2014)\s+hmux$/i, "")
     .trim();
 }
 
@@ -342,7 +342,7 @@ function rewriteOutsideInlineCode(
 function markdownInlineToText(markdown: string): string {
   const codeSpans: string[] = [];
   const withoutCode = markdown.replace(/`([^`]+)`/g, (_match, code: string) => {
-    const token = `CMUXCODESPAN${codeSpans.length}TOKEN`;
+    const token = `HMUXCODESPAN${codeSpans.length}TOKEN`;
     codeSpans.push(code);
     return token;
   });
@@ -361,7 +361,7 @@ function markdownInlineToText(markdown: string): string {
 
   return codeSpans.reduce(
     (current, code, index) =>
-      current.replace(`CMUXCODESPAN${index}TOKEN`, code),
+      current.replace(`HMUXCODESPAN${index}TOKEN`, code),
     text,
   );
 }

@@ -2,19 +2,19 @@
 # gh-merge-green REPO#PR [--full] [--wait SECONDS] [--dry-run] [--sha SHA] [--main-fix] [--override "reason"] [--trust-fork-head SHA] [gh pr merge flags...]
 # gh-merge-green --revert REPO#PR: open a revert PR for a merged PR and land it (scripts/ci/revert_pr.py).
 # Optional helper: merges only when the PR head's checks are green.
-# Into feat-cmux-next it applies a FAST gate by default (scripts/ci/merge_fast_gate.py):
+# Into feat-hmux-next it applies a FAST gate by default (scripts/ci/merge_fast_gate.py):
 # it waits up to --wait seconds (default 2400) for path routing, the fast tier and the touched
 # compiles on the exact head, waits for lint and risk evidence (a red risk evidence is never waived),
 # and refuses a completed red in those, in the web, app size or crash families, or in a
 # full-gate lane (ci-status, Release compile, swift test). It also checks conflict markers and freezes. The full suites run after
 # the merge; the culprit bot and the base sheriff revert or fix forward.
 # --full keeps the wait for every check (main, classic), as does every base other than
-# feat-cmux-next. Every feat-cmux-next merge, on either gate, also needs an independent review's SHIP
+# feat-hmux-next. Every feat-hmux-next merge, on either gate, also needs an independent review's SHIP
 # receipt for the exact head (scripts/ci/review_receipt.py), which nothing waives.
 # One `gh-merge-green:` line at exit says what was checked and how long it waited.
 set -Eeuo pipefail
 
-repair_note='see cmuxterm-hq REPAIR.md#merging'
+repair_note='see hmuxterm-hq REPAIR.md#merging'
 refusal_reported=0
 
 print_repair() {
@@ -79,7 +79,7 @@ case "${1:-}" in
       'usage: gh-merge-green OWNER/REPO#PR [--full] [--wait SECONDS] [--dry-run] [--sha SHA] [--main-fix] [--override "reason"] [--trust-fork-head SHA] [gh pr merge flags...]' \
       '       gh-merge-green --revert OWNER/REPO#PR' \
       'Merges only when the PR head'"'"'s required-in-practice checks are green.' \
-      'Into feat-cmux-next it waits only for the fast gate (scripts/ci/merge_fast_gate.py); --full waits for every check.' \
+      'Into feat-hmux-next it waits only for the fast gate (scripts/ci/merge_fast_gate.py); --full waits for every check.' \
       '--dry-run runs every gate, then posts and merges nothing.' \
       '--sha SHA (or --match-head-commit SHA) refuses unless SHA is the current head.' \
       'gh pr merge flags passed on: --squash --merge --rebase --delete-branch --subject --body --body-file --author-email --auto --disable-auto --admin' \
@@ -240,7 +240,7 @@ while [ "$#" -gt 0 ]; do
       ;;
     --sha|--match-head-commit|--sha=*|--match-head-commit=*)
       # The helper always pins gh pr merge to the head it checked; a caller's
-      # SHA is an assertion about that head (cmuxterm-hq#2554 passed --sha, which
+      # SHA is an assertion about that head (hmuxterm-hq#2554 passed --sha, which
       # reached gh pr merge after every gate and died in its usage text).
       case "$1" in
         *=*) value="${1#*=}" ;;
@@ -279,7 +279,7 @@ while [ "$#" -gt 0 ]; do
       shift
       ;;
     --freeze-token|--window-token)
-      # Retired with the WINDOW file on cmux-lawrence: freezes are merge-freeze
+      # Retired with the WINDOW file on hmux-lawrence: freezes are merge-freeze
       # issues now (docs/ci/merge-freeze.md). Old callers still parse.
       [ "$#" -ge 2 ] || refuse \
         "not green: $1 requires a value" \
@@ -393,11 +393,11 @@ if ! fields=$(jq -r '[.headRefOid // "", .baseRefName // ""] | @tsv' <<<"$pr_jso
 fi
 IFS=$'\t' read -r sha base <<<"$fields"
 
-# Owner-controlled cmux forks are trusted for the local merged-head checks.
+# Owner-controlled hmux forks are trusted for the local merged-head checks.
 # Keep this allowlist narrow and repository-specific: arbitrary forks remain
 # fail-closed unless an operator supplies --trust-fork-head for the exact SHA.
 trusted_fork_owner='teamleaderleo'
-trusted_fork_repo='teamleaderleo/cmux'
+trusted_fork_repo='teamleaderleo/hmux'
 fork_trusted=0
 if jq -e --arg owner "$trusted_fork_owner" --arg repo "$trusted_fork_repo" \
     '.isCrossRepository == true and
@@ -435,7 +435,7 @@ if [ -f "$script_dir/ci/pr_proof_section.py" ]; then
 fi
 [ $# -gt 0 ] || set -- --squash
 fast=0
-[ "$base" = feat-cmux-next ] && [ "$full" -eq 0 ] && [ "$fix" -eq 0 ] && fast=1
+[ "$base" = feat-hmux-next ] && [ "$full" -eq 0 ] && [ "$fix" -eq 0 ] && fast=1
 gate_mode=full
 [ "$fast" -eq 1 ] && gate_mode=fast
 [ "$fix" -eq 1 ] && gate_mode=main-fix
@@ -446,7 +446,7 @@ if [ "$fast" -eq 1 ] && jq -e '.isCrossRepository == true' <<<"$pr_json" >/dev/n
    [ "$fork_trusted" -ne 1 ] && [ -z "$trust_fork_head" ]; then
   refuse \
     "not merged: $ref is from an untrusted fork; the fast gate does not merge unreviewed fork code" \
-    "review that code, then rerun with --trust-fork-head $sha; only teamleaderleo/cmux is owner-trusted"
+    "review that code, then rerun with --trust-fork-head $sha; only teamleaderleo/hmux is owner-trusted"
 fi
 # Before any gate reads or waits: a spent REST pool fails every check-run, file and log read
 # below, and the fast gate polls GraphQL. Refuse now with the reset time rather than after a
@@ -457,9 +457,9 @@ fi
 if [ "$fast" -eq 1 ] && [ "$(python3 "$script_dir/ci/gh_rate_limit.py" --exhausted graphql 2>/dev/null || true)" = spent ]; then
   refuse_rate_limited "GitHub's GraphQL quota is spent, and the fast gate polls the pull request through it"
 fi
-# Into feat-cmux-next a head merges only with an independent review's SHIP receipt for that
-# exact commit (scripts/ci/review_receipt.py), the rule next-autoland applies: cmux#22899 merged
-# before its re-review, which then found cmux#22988 (2026-10-21). Like a red risk evidence,
+# Into feat-hmux-next a head merges only with an independent review's SHIP receipt for that
+# exact commit (scripts/ci/review_receipt.py), the rule next-autoland applies: hmux#22899 merged
+# before its re-review, which then found hmux#22988 (2026-10-21). Like a red risk evidence,
 # nothing waives a missing receipt, --override included. It is read before the gate waits and
 # again before the merge, ahead of any merge-override comment, so a BLOCK posted during the
 # wait stops it. Pass `final` for that second read.
@@ -491,13 +491,13 @@ review_receipt_gate() {
   fi
   printf 'note: review receipt on %s: %s\n' "$sha" "${receipt_out#receipt=}" >&2
 }
-if [ "$base" = feat-cmux-next ]; then
+if [ "$base" = feat-hmux-next ]; then
   review_receipt_gate
 fi
 if [ "$fix" -eq 1 ]; then
   validator="$script_dir/ci/main_fix_evidence.py"
   if [ ! -f "$validator" ]; then
-    repo_root="${CMUX_REPO_ROOT:-}"
+    repo_root="${HMUX_REPO_ROOT:-}"
     if [ -z "$repo_root" ]; then
       repo_root=$(git rev-parse --show-toplevel 2>/dev/null || true)
     fi
@@ -512,7 +512,7 @@ if [ "$fix" -eq 1 ]; then
   if [ -z "$validator" ] || [ ! -f "$validator" ]; then
     refuse \
       'not green: --main-fix validator is unavailable' \
-      'set CMUX_REPO_ROOT to a cmux checkout containing scripts/ci/main_fix_evidence.py'
+      'set HMUX_REPO_ROOT to a hmux checkout containing scripts/ci/main_fix_evidence.py'
   fi
   gate_checked='main-fix compile and test evidence'
   check_only=()
@@ -530,7 +530,7 @@ if [ "$fix" -eq 1 ]; then
 fi
 
 # The files of $2 (one per line) inside the on.pull_request.paths filter of the
-# cmux-next.yml text $1. Exit 2 when the filter cannot be read.
+# hmux-next.yml text $1. Exit 2 when the filter cannot be read.
 next_paths_covered() {
   python3 -c '
 import re, sys
@@ -628,7 +628,7 @@ git_patches() {
   local repo_dir="${GH_MERGE_GREEN_REPO_DIR:-$(git -C "$script_dir" rev-parse --show-toplevel 2>/dev/null || true)}" remote
   [ -n "$repo_dir" ] || return 1
   if ! git -C "$repo_dir" cat-file -e "$sha^{commit}" 2>/dev/null; then
-    remote=$(git -C "$repo_dir" remote -v | awk '$2 ~ /github.com[/:]manaflow-ai\/cmux([.]git)?/ {print $1; exit}')
+    remote=$(git -C "$repo_dir" remote -v | awk '$2 ~ /github.com[/:]manaflow-ai\/hmux([.]git)?/ {print $1; exit}')
     [ -n "$remote" ] || return 1
     timeout "${GH_MERGE_GREEN_GIT_TIMEOUT:-20}" git -C "$repo_dir" fetch -q "$remote" "refs/pull/$num/head" || return 1
     git -C "$repo_dir" cat-file -e "$sha^{commit}" 2>/dev/null || return 1
@@ -687,7 +687,7 @@ sys.exit(0 if re.search(r"(?m)^\s+[\x22\x27]?ci-status[\x22\x27]?\s*:", text) el
 ' <<<"$workflow_response"
 }
 
-# The full gate: every check (--full, and every base but feat-cmux-next). Its body
+# The full gate: every check (--full, and every base but feat-hmux-next). Its body
 # keeps the indentation it had before the fast gate split it out.
 full_gate() {
 # Require aggregate checks only when their workflow exists on the base. Otherwise
@@ -715,7 +715,7 @@ if [ "$base" = main ] && [ "$has_app_compile" -eq 1 ]; then
     echo "note: used GraphQL fallback to inspect changed files for $ref" >&2
     fallback_answered
   fi
-  if grep -qE '\.(swift|m|mm|h|c|cpp|xcconfig|plist|entitlements|xcstrings)$|\.xcodeproj/|^(Sources|Packages|cmuxTests|cmuxUITests|ghostty|vendor)/|^Package\.(swift|resolved)$' <<<"$files"; then
+  if grep -qE '\.(swift|m|mm|h|c|cpp|xcconfig|plist|entitlements|xcstrings)$|\.xcodeproj/|^(Sources|Packages|hmuxTests|hmuxUITests|ghostty|vendor)/|^Package\.(swift|resolved)$' <<<"$files"; then
     needs_app_compile=1
   fi
 fi
@@ -760,12 +760,12 @@ fi
 
 # God-file, localization and concurrency lint reported on the exact head must
 # complete. A red one merges when the base fails it with every finding the head
-# printed (base_red_excuse.py compares them line by line), since the cmux-next
+# printed (base_red_excuse.py compares them line by line), since the hmux-next
 # checks job bundles many lints and the base can be red in one, or when a human
 # waives it with --override, whose reason is posted on the PR before the merge.
-# `risk evidence` (risk-tier.yml on feat-cmux-next) must be green: it reads only
+# `risk evidence` (risk-tier.yml on feat-hmux-next) must be green: it reads only
 # the description, so it is never base-red, and a maintainer waives it with the
-# risk:waived label instead (docs/ci/risk-tiers.md on feat-cmux-next).
+# risk:waived label instead (docs/ci/risk-tiers.md on feat-hmux-next).
 lint_reds=()
 while IFS=$'\t' read -r name st co; do
   [ -n "$name" ] || continue
@@ -798,17 +798,17 @@ while IFS=$'\t' read -r name st co; do
   esac
 done <<<"$runs"
 
-# Pull requests into feat-cmux-next also run the branch's dedicated cmux-next
+# Pull requests into feat-hmux-next also run the branch's dedicated hmux-next
 # workflow. Its Release and native app checks are separate check runs, so the
 # legacy ci-status job on that branch cannot stand in for them. Require each
 # one that reported on this exact head; a skipped lane remains a passing
 # conclusion, while a pending or red lane blocks the merge.
-if [ "$base" = feat-cmux-next ]; then
+if [ "$base" = feat-hmux-next ]; then
   # A check run that has not been created yet (native jobs still queued behind
   # the Linux lanes) or a rerun after a runner loss leaves the old verdict in
-  # place, so also wait for every cmux-next.yml run on this exact head to finish.
+  # place, so also wait for every hmux-next.yml run on this exact head to finish.
   # --override cannot bypass this: a pending run has no verdict to waive.
-  if ! next_runs_json=$(gh api "repos/$repo/actions/workflows/cmux-next.yml/runs?head_sha=$sha&per_page=20" 2>/dev/null) \
+  if ! next_runs_json=$(gh api "repos/$repo/actions/workflows/hmux-next.yml/runs?head_sha=$sha&per_page=20" 2>/dev/null) \
     || ! next_pending=$(jq -r '
       (if type == "object" then (.workflow_runs // []) else [] end)[]
       | select(.head_sha == null or .head_sha == $sha)
@@ -816,13 +816,13 @@ if [ "$base" = feat-cmux-next ]; then
       | "\(.id) attempt \(.run_attempt // 1) is \(.status)"
       ' --arg sha "$sha" <<<"$next_runs_json" 2>/dev/null); then
     refuse \
-      "not green: cannot read cmux-next workflow runs for $sha" \
+      "not green: cannot read hmux-next workflow runs for $sha" \
       'restore GitHub API access, then retry the exact-head check'
   fi
   if [ -n "$next_pending" ]; then
     refuse \
-      "not green: cmux-next run still pending on $sha ($(tr '\n' ';' <<<"$next_pending" | sed 's/;$//')); --override cannot bypass a run that has not finished" \
-      "wait for the cmux-next workflow run to complete on the exact head, then retry"
+      "not green: hmux-next run still pending on $sha ($(tr '\n' ';' <<<"$next_pending" | sed 's/;$//')); --override cannot bypass a run that has not finished" \
+      "wait for the hmux-next workflow run to complete on the exact head, then retry"
   fi
   # A cancelled run is completed too: heads merged between cancelling stale runs
   # and rerunning them (#17653, #18079, #18080, #18083) with no native job run.
@@ -837,7 +837,7 @@ if [ "$base" = feat-cmux-next ]; then
       | "\(.id) attempt \(.run_attempt // 1) (\(.event // "unknown")) is \(.conclusion // "unknown")"
       ' --arg sha "$sha" <<<"$next_runs_json" 2>/dev/null); then
     refuse \
-      "not green: cannot parse cmux-next workflow runs for $sha" \
+      "not green: cannot parse hmux-next workflow runs for $sha" \
       'retry after GitHub returns valid workflow run metadata'
   fi
   # No run is fine only for a pull request outside the workflow's pull_request
@@ -845,22 +845,22 @@ if [ "$base" = feat-cmux-next ]; then
   # covers gets a run, so none yet means GitHub has not created it (#18100 merged
   # seconds after a push). Read the filter from this head and fail closed.
   if [ -z "$next_verdicts" ]; then
-    if ! next_workflow=$(gh api "repos/$repo/contents/.github/workflows/cmux-next.yml?ref=$sha" \
+    if ! next_workflow=$(gh api "repos/$repo/contents/.github/workflows/hmux-next.yml?ref=$sha" \
         -H 'Accept: application/vnd.github.raw' 2>/dev/null) || [ -z "$next_workflow" ] \
       || ! next_files=$(gh api --paginate "repos/$repo/pulls/$num/files?per_page=100" -q '.[].filename' 2>/dev/null); then
       refuse \
-        "not green: no cmux-next run on $sha, and its paths filter or changed files cannot be read" \
+        "not green: no hmux-next run on $sha, and its paths filter or changed files cannot be read" \
         'restore GitHub API access, then retry the exact-head check'
     fi
     if ! next_covered=$(next_paths_covered "$next_workflow" "$next_files" 2>/dev/null); then
       refuse \
-        "not green: no cmux-next run on $sha, and its pull_request paths filter cannot be parsed" \
-        'check .github/workflows/cmux-next.yml on the exact head, then retry'
+        "not green: no hmux-next run on $sha, and its pull_request paths filter cannot be parsed" \
+        'check .github/workflows/hmux-next.yml on the exact head, then retry'
     fi
     if [ -n "$next_covered" ]; then
       refuse \
-        "not green: no cmux-next run on $sha yet, but it changes paths the workflow covers ($(head -n 3 <<<"$next_covered" | tr '\n' ' ' | sed 's/ $//')); --override cannot bypass a run that does not exist" \
-        "wait for GitHub to create and finish the cmux-next run on the exact head, then retry"
+        "not green: no hmux-next run on $sha yet, but it changes paths the workflow covers ($(head -n 3 <<<"$next_covered" | tr '\n' ' ' | sed 's/ $//')); --override cannot bypass a run that does not exist" \
+        "wait for GitHub to create and finish the hmux-next run on the exact head, then retry"
     fi
   fi
   while IFS= read -r verdict; do
@@ -871,20 +871,20 @@ if [ "$base" = feat-cmux-next ]; then
         # Judged below: a failure the base branch also has is excused.
         if [ -z "$override_reason" ]; then
           excuse_runs+=(--run "${verdict%% *}")
-          red_lanes+=("cmux-next run $verdict")
+          red_lanes+=("hmux-next run $verdict")
         fi
         ;;
       *)
         refuse \
-          "not green: cmux-next run $verdict on $sha; its native jobs did not all run, and --override cannot bypass that" \
-          "rerun the cmux-next workflow on the exact head and wait for it to succeed, then retry"
+          "not green: hmux-next run $verdict on $sha; its native jobs did not all run, and --override cannot bypass that" \
+          "rerun the hmux-next workflow on the exact head and wait for it to succeed, then retry"
         ;;
     esac
   done <<<"$next_verdicts"
   for next_check in \
-    "cmux-next Release compile (Xcode 26)" \
-    "cmux app scheme compile (Debug)" \
-    "cmux-next swift test"; do
+    "hmux-next Release compile (Xcode 26)" \
+    "hmux app scheme compile (Debug)" \
+    "hmux-next swift test"; do
     if awk -F '\t' -v expected="$next_check" '$1 == expected { found = 1 } END { exit !found }' <<<"$runs"; then
       must+=("$next_check")
     fi
@@ -1074,7 +1074,7 @@ fast_gate() {
   local workflow_dir workflow_file
   workflow_dir=$(mktemp -d)
   tmp_files+=("$workflow_dir")
-  for workflow_file in cmux-next.yml ci.yml ci-web.yml; do
+  for workflow_file in hmux-next.yml ci.yml ci-web.yml; do
     if ! workflow=$(gh api "repos/$repo/contents/.github/workflows/$workflow_file?ref=$sha" \
         -H 'Accept: application/vnd.github.raw' 2>/dev/null) || [ -z "$workflow" ]; then
       rm -rf "$workflow_dir"
@@ -1088,11 +1088,11 @@ fast_gate() {
   # its own files from the head's filter still waits for routing. An unreadable or
   # unparsable filter counts as covered, so the gate waits for routing.
   local base_next_workflow
-  if base_next_workflow=$(gh api "repos/$repo/contents/.github/workflows/cmux-next.yml?ref=$base" \
+  if base_next_workflow=$(gh api "repos/$repo/contents/.github/workflows/hmux-next.yml?ref=$base" \
       -H 'Accept: application/vnd.github.raw' 2>/dev/null) && [ -n "$base_next_workflow" ]; then
     covered=$(next_paths_covered "$base_next_workflow" "$files" 2>/dev/null) || covered=x
   else
-    echo "note: cannot read the $base paths filter of cmux-next.yml; waiting for path routing" >&2
+    echo "note: cannot read the $base paths filter of hmux-next.yml; waiting for path routing" >&2
     covered=x
   fi
   [ -n "$covered" ] && covered_flag=(--next-covered)
@@ -1110,7 +1110,7 @@ fast_gate() {
   gate_waiting_since=$(date +%s)
   local gate_status=0 still_waiting
   gate_out=$(python3 "$script_dir/ci/merge_fast_gate.py" "$repo" "$num" "$sha" --base "$base" \
-      --next-workflow "$workflow_dir/cmux-next.yml" --ci-workflow "$workflow_dir/ci.yml" \
+      --next-workflow "$workflow_dir/hmux-next.yml" --ci-workflow "$workflow_dir/ci.yml" \
       --web-workflow "$workflow_dir/ci-web.yml" --files-from "$files_list" \
       "${covered_flag[@]+"${covered_flag[@]}"}" --timeout "$wait_seconds" 2>"$gate_err") || gate_status=$?
   if [ "$gate_status" -ne 0 ]; then
@@ -1165,9 +1165,9 @@ fast_gate() {
   printf '%s\n' "$excused" | sed 's/^/note: /' >&2
 }
 
-# The check-path gate (scripts/ci/merge_check_paths.py), into feat-cmux-next: when a
+# The check-path gate (scripts/ci/merge_check_paths.py), into feat-hmux-next: when a
 # check path (the base's scripts/ci/check-paths.txt) changed after the PR's
-# cmux-next/fast-gates base, it dispatches the fast gates against the current tip and
+# hmux-next/fast-gates base, it dispatches the fast gates against the current tip and
 # waits for a fresh success. 2026-10-21: #22967, #22975 and #23094 merged after a
 # new check landed, never ran it, and turned it red on the base.
 check_paths_gate() {
@@ -1204,12 +1204,12 @@ else
   full_gate
 fi
 # gate_mode, not $fix: full_gate reuses `fix` for a refusal's advice.
-if [ "$base" = feat-cmux-next ] && [ "$gate_mode" != main-fix ]; then
+if [ "$base" = feat-hmux-next ] && [ "$gate_mode" != main-fix ]; then
   check_paths_gate
 fi
 if ! patches=$(gh api --paginate "repos/$repo/pulls/$num/files?per_page=100" -q '.[].patch // empty' 2>/dev/null); then
   if ! patches=$(git_patches); then
-    refuse "not green: cannot read the diff for $ref" 'restore GitHub API access or provide a verified cmux checkout for Git fallback'
+    refuse "not green: cannot read the diff for $ref" 'restore GitHub API access or provide a verified hmux checkout for Git fallback'
   fi
   echo "note: used verified Git fallback to inspect the diff for $ref" >&2
   fallback_answered
@@ -1255,7 +1255,7 @@ elif [ "$freeze_status" -ne 0 ]; then
 fi
 # The merged head passes the checks a red lint job can hide (#18326 grew a god
 # type while an unrelated lint red masked the god-file step): the Swift god-file
-# check when CmuxNext changes, vp check when webviews changes. They run here on
+# check when HmuxNext changes, vp check when webviews changes. They run here on
 # base + head merged locally, with the base branch's copy of the god-file script
 # and baseline, so a pull request cannot loosen its own check.
 # The files a vp check report names, sorted (ANSI colors stripped).
@@ -1276,7 +1276,7 @@ web_shared_paths() {
 }
 merged_head_checks() {
   # $1=force: run the merged-tree checks (merge cleanliness, fork trust) even when
-  # no CmuxNext Swift or webviews file changed; the fast gate passes it for a PR
+  # no HmuxNext Swift or webviews file changed; the fast gate passes it for a PR
   # touching a protected gate path.
   local force="${1:-0}"
   local repo_dir tmp merged base_sha head_sha merged_tree status=0 output bun changed_path
@@ -1287,7 +1287,7 @@ merged_head_checks() {
   # entire module inside check-no-godfiles.sh, preserving extension/type
   # accounting without rescanning unrelated modules for every small PR.
   while IFS= read -r changed_path; do
-    [[ "$changed_path" =~ ^Packages/macOS/CmuxNext/(Sources|Tests)/.+\.swift$ ]] || continue
+    [[ "$changed_path" =~ ^Packages/macOS/HmuxNext/(Sources|Tests)/.+\.swift$ ]] || continue
     swift_changed=1
     swift_file_args+=(--file "$changed_path")
   done <<<"$changed"
@@ -1299,14 +1299,14 @@ merged_head_checks() {
      [ "$fork_trusted" -ne 1 ] && [ -z "$trust_fork_head" ]; then
     refuse \
       "not merged: $ref is from an untrusted fork, and its merged-head checks would run its code here" \
-      "review that code, then rerun with --trust-fork-head $sha; only teamleaderleo/cmux is owner-trusted"
+      "review that code, then rerun with --trust-fork-head $sha; only teamleaderleo/hmux is owner-trusted"
   fi
   repo_dir="${GH_MERGE_GREEN_REPO_DIR:-$(git -C "$script_dir" rev-parse --show-toplevel 2>/dev/null || true)}"
   if [ -z "$repo_dir" ] || ! git -C "$repo_dir" fetch --quiet origin \
       "+refs/heads/$base:refs/gh-merge-green/base" "+refs/pull/$num/head:refs/gh-merge-green/head" 2>/dev/null; then
     refuse \
       "not merged: cannot fetch $base and $ref to check the merged head" \
-      'run gh-merge-green from its cmux checkout with network access, or set GH_MERGE_GREEN_REPO_DIR to a cmux clone'
+      'run gh-merge-green from its hmux checkout with network access, or set GH_MERGE_GREEN_REPO_DIR to a hmux clone'
   fi
   base_sha=$(git -C "$repo_dir" rev-parse refs/gh-merge-green/base)
   head_sha=$(git -C "$repo_dir" rev-parse refs/gh-merge-green/head)
@@ -1328,8 +1328,8 @@ merged_head_checks() {
       'merge the base into the PR (scripts/merge-main.sh), push, and retry'
   fi
   if ! git -C "$repo_dir" archive "$merged_tree" -- \
-      Packages/macOS/CmuxNext webviews scripts/cmux-next/check-no-godfiles.sh \
-      scripts/cmux-next/godfile-baseline.tsv $(web_shared_paths "$merged_tree") | tar -x -C "$merged"; then
+      Packages/macOS/HmuxNext webviews scripts/hmux-next/check-no-godfiles.sh \
+      scripts/hmux-next/godfile-baseline.tsv $(web_shared_paths "$merged_tree") | tar -x -C "$merged"; then
     rm -rf "$tmp"
     refuse \
       "not merged: cannot materialize the checked merged tree for $ref" \
@@ -1348,10 +1348,10 @@ merged_head_checks() {
           'repair the rename or deletion metadata, then retry the exact head'
       fi
     done
-    git -C "$repo_dir" show "$base_sha:scripts/cmux-next/check-no-godfiles.sh" > "$merged/scripts/cmux-next/check-no-godfiles.sh"
-    git -C "$repo_dir" show "$base_sha:scripts/cmux-next/godfile-baseline.tsv" > "$merged/scripts/cmux-next/godfile-baseline.tsv"
-    if ! output=$(bash "$merged/scripts/cmux-next/check-no-godfiles.sh" --only swift --base "$base_sha" \
-        "${swift_file_args[@]}" "$merged/Packages/macOS/CmuxNext" 2>&1); then
+    git -C "$repo_dir" show "$base_sha:scripts/hmux-next/check-no-godfiles.sh" > "$merged/scripts/hmux-next/check-no-godfiles.sh"
+    git -C "$repo_dir" show "$base_sha:scripts/hmux-next/godfile-baseline.tsv" > "$merged/scripts/hmux-next/godfile-baseline.tsv"
+    if ! output=$(bash "$merged/scripts/hmux-next/check-no-godfiles.sh" --only swift --base "$base_sha" \
+        "${swift_file_args[@]}" "$merged/Packages/macOS/HmuxNext" 2>&1); then
       status=1
       printf '%s\n' "$output" | grep -E 'FAIL|god|split' | sed 's/^/  /' >&2 || true
       printf 'not merged: the merged head of %s fails the Swift god-file check\n' "$ref" >&2
@@ -1421,11 +1421,11 @@ for name in open(sys.argv[2]).read().split():
         print(name)
 ' <(printf '%s\n' "$list") <(printf '%s\n' "$changed")
 }
-# The full gate runs the merged-tree checks on every feat-cmux-next PR. The fast gate
+# The full gate runs the merged-tree checks on every feat-hmux-next PR. The fast gate
 # leaves vp check and the god-file check to the post-merge suites (they take minutes
 # on a cold install), except for a PR touching a protected gate path (leoli-f6,
 # 2026-10-19): that one gets every merged-tree check back.
-if [ "$base" = feat-cmux-next ] && [ "$fast" -eq 0 ]; then
+if [ "$base" = feat-hmux-next ] && [ "$fast" -eq 0 ]; then
   merged_head_checks
 elif [ "$fast" -eq 1 ]; then
   if ! protected=$(protected_gate_paths); then
@@ -1438,7 +1438,7 @@ elif [ "$fast" -eq 1 ]; then
     merged_head_checks 1
   fi
 fi
-[ "$base" != feat-cmux-next ] || review_receipt_gate final
+[ "$base" != feat-hmux-next ] || review_receipt_gate final
 if [ "$dry_run" -eq 1 ]; then
   printf 'dry-run: every gate passes for %s at %s; would run: gh pr merge %s --repo %s --match-head-commit %s%s\n' \
     "$ref" "$sha" "$num" "$repo" "$sha" "$(printf ' %q' "$@")"
@@ -1467,7 +1467,7 @@ fi
 # Re-read the pull request right before merging, on both gates. --match-head-commit
 # pins the head but not the base, and the gate, the merged-head checks and the
 # freeze check were all chosen for $base: a PR retargeted since then (for example
-# from feat-cmux-next to main during the fast gate's wait) must not merge on them.
+# from feat-hmux-next to main during the fast gate's wait) must not merge on them.
 graphql_error_file=$(mktemp "${TMPDIR:-/tmp}/gh-merge-green-graphql.XXXXXX")
 if ! current=$(gh pr view "$num" --repo "$repo" --json headRefOid,baseRefName,state 2>"$graphql_error_file"); then
   if graphql_quota_error "$graphql_error_file"; then

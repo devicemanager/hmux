@@ -60,7 +60,7 @@ final class GlobalSearchPanelCaptureManager {
                     try await index.upsert(document)
                 } catch {
 #if DEBUG
-                    cmuxDebugLog("globalSearch.markdown.upsert failed panel=\(context.panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
+                    hmuxDebugLog("globalSearch.markdown.upsert failed panel=\(context.panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
                 }
             }
@@ -222,7 +222,7 @@ final class GlobalSearchPanelCaptureManager {
                     } catch {
                         guard !Task.isCancelled else { return }
 #if DEBUG
-                        cmuxDebugLog("globalSearch.markdown.capture failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
+                        hmuxDebugLog("globalSearch.markdown.capture failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
                     }
                 }
@@ -311,7 +311,7 @@ final class GlobalSearchPanelCaptureManager {
             terminalCaptureFingerprints[panelID] = prepared.fingerprint
         } catch {
 #if DEBUG
-            cmuxDebugLog("globalSearch.terminal.upsert failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
+            hmuxDebugLog("globalSearch.terminal.upsert failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
         }
     }
@@ -380,7 +380,7 @@ final class GlobalSearchPanelCaptureManager {
             agentSessionIndexStates[panelID] = next
         } catch {
 #if DEBUG
-            cmuxDebugLog("globalSearch.agentSession.upsert failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
+            hmuxDebugLog("globalSearch.agentSession.upsert failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
             return false
         }
@@ -403,7 +403,7 @@ final class GlobalSearchPanelCaptureManager {
             }
         } catch {
 #if DEBUG
-            cmuxDebugLog("globalSearch.agentSession.purge failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
+            hmuxDebugLog("globalSearch.agentSession.purge failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
         }
     }
@@ -414,7 +414,7 @@ final class GlobalSearchPanelCaptureManager {
             try await index.deleteDocument(id: documentID)
         } catch {
 #if DEBUG
-            cmuxDebugLog("globalSearch.terminal.purge failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
+            hmuxDebugLog("globalSearch.terminal.purge failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
         }
     }
@@ -425,7 +425,7 @@ final class GlobalSearchPanelCaptureManager {
             try await index.deleteDocument(id: documentID)
         } catch {
 #if DEBUG
-            cmuxDebugLog("globalSearch.markdown.purge failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
+            hmuxDebugLog("globalSearch.markdown.purge failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
         }
     }
@@ -469,7 +469,7 @@ final class GlobalSearchPanelCaptureManager {
         } catch {
             guard !Task.isCancelled else { return }
 #if DEBUG
-            cmuxDebugLog("globalSearch.browser.upsert failed panel=\(panel.id.uuidString.prefix(5)) error=\(error.localizedDescription)")
+            hmuxDebugLog("globalSearch.browser.upsert failed panel=\(panel.id.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
         }
     }

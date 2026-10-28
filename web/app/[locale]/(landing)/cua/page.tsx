@@ -56,7 +56,7 @@ export default function ComputerUsePage() {
         <JsonLd data={breadcrumbList(locale, [{ name: links("home"), path: "/" }, { name: t("title"), path: "/cua" }])} />
         <div className="flex items-center gap-4 mb-10" data-dev="cua-header">
           <BrandLogoLink className="shrink-0">
-            <Image src="/logo.png" alt="cmux" width={48} height={48} className="rounded-xl" />
+            <Image src="/logo.png" alt="hmux" width={48} height={48} className="rounded-xl" />
           </BrandLogoLink>
           <h1 className="text-2xl font-semibold tracking-tight">{t("title")}</h1>
         </div>

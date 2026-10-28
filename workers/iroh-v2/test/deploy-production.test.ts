@@ -57,8 +57,8 @@ elif args[:2] == ['versions', 'view']:
     bindings = [{'name':'TEAM_CONTROL','type':'durable_object_namespace','class_name':'TeamControl','namespace_id':'team-ns'},
                 {'name':'USER_USAGE','type':'durable_object_namespace','class_name':'UserUsage','namespace_id':'user-ns'},
                 {'name':'ACCOUNT_CONTROL','type':'durable_object_namespace','class_name':'AccountControl','namespace_id':'account-ns'},
-                {'name':'CMUX_SOURCE_REVISION','type':'plain_text','text':'${MOCK_HEAD}'}]
-    staging_view = 'cmux-v2-staging' in args and os.environ['PROBE_ENVIRONMENT'] == 'production'
+                {'name':'HMUX_SOURCE_REVISION','type':'plain_text','text':'${MOCK_HEAD}'}]
+    staging_view = 'hmux-v2-staging' in args and os.environ['PROBE_ENVIRONMENT'] == 'production'
     if os.environ.get('PROBE_PRE_ACCOUNT') == '1' and args[2] == 'old-version' and not (staging_view and os.environ.get('PROBE_STAGING_MIGRATED') == '1'):
         migration_tag = 'iroh-v2-fresh-storage-1'
         bindings = [binding for binding in bindings if binding['name'] != 'ACCOUNT_CONTROL']
@@ -85,17 +85,17 @@ for flag, expected in [('--connect-timeout', '10'), ('--max-time', '30'), ('--ma
     except (ValueError, IndexError):
         sys.exit(28)
 url = next(value for value in args if value.startswith('https://'))
-if os.environ['PROBE_SCENARIO'] == 'canonical-target' and not any(url.startswith(origin) for origin in ('https://cmux-v2.debussy.workers.dev/v2/', 'https://cmux-v2-staging.debussy.workers.dev/v2/')): sys.exit(97)
+if os.environ['PROBE_SCENARIO'] == 'canonical-target' and not any(url.startswith(origin) for origin in ('https://hmux-v2.debussy.workers.dev/v2/', 'https://hmux-v2-staging.debussy.workers.dev/v2/')): sys.exit(97)
 if args[-1].endswith('/v2/health'):
     deployment=json.loads(pathlib.Path(os.environ['MOCK_STATE']).read_text())
     deployed=deployment.get('annotations',{}).get('workers/message','') != 'old'
-    health={'schemaId':'health.v1','environment':('staging' if 'cmux-v2-staging' in url else 'production'),'sourceRevision':'${MOCK_HEAD}','rules':['cmux.mac-peer-inbound.v1'],'storage':{'maxSchemaVersion':7,'writeSchemaVersion':6}}
+    health={'schemaId':'health.v1','environment':('staging' if 'hmux-v2-staging' in url else 'production'),'sourceRevision':'${MOCK_HEAD}','rules':['hmux.mac-peer-inbound.v1'],'storage':{'maxSchemaVersion':7,'writeSchemaVersion':6}}
     scenario=os.environ['PROBE_SCENARIO']
     status='200'
     if scenario=='unknown-storage' and not deployed: health.pop('storage')
-    if scenario=='staging-mismatch' and 'cmux-v2-staging' in url: health['sourceRevision']='f'*40
+    if scenario=='staging-mismatch' and 'hmux-v2-staging' in url: health['sourceRevision']='f'*40
     if scenario=='post-health-failure' and deployed: health['rules']=[]
-    if scenario in ('late-pre-change','late-post-change') and 'cmux-v2-staging' not in url and deployed == (scenario=='late-post-change'):
+    if scenario in ('late-pre-change','late-post-change') and 'hmux-v2-staging' not in url and deployed == (scenario=='late-post-change'):
         deployment['created_on']='2026-09-15T04:00:00.000Z'
         deployment['annotations']={'workers/message':'someone-else'}
         pathlib.Path(os.environ['MOCK_STATE']).write_text(json.dumps(deployment))
@@ -162,16 +162,16 @@ print(status, end='')
 test("expected scope failures pass the production configuration check", async () => {
   const result = await probe("valid");
   expect(result.exit).toBe(0);
-  expect(result.calls).toMatch(/--message cmux-prod-guard-[0-9a-f-]{36}/);
+  expect(result.calls).toMatch(/--message hmux-prod-guard-[0-9a-f-]{36}/);
   // The health route reports this value; the drift check compares it with main.
-  expect(result.calls).toContain(`--var CMUX_SOURCE_REVISION:${MOCK_HEAD}`);
+  expect(result.calls).toContain(`--var HMUX_SOURCE_REVISION:${MOCK_HEAD}`);
 });
 
 test("a dirty tree is refused before any upload", async () => {
   const result = await probe("valid", { dirtyTree: true });
   expect(result.exit).not.toBe(0);
   expect(result.calls).not.toContain("wrangler deploy ");
-  expect(result.output).toContain("publishing CMUX_SOURCE_REVISION=unknown");
+  expect(result.output).toContain("publishing HMUX_SOURCE_REVISION=unknown");
 });
 
 test("matching HTTP status with the wrong error code fails without disclosing the response", async () => {
@@ -223,7 +223,7 @@ test("pending Durable Object migrations are refused before deployment", async ()
 test("reads the migration tag from the Worker script resource shape", async () => {
   const result = await probe("script-migration-resource");
   expect(result.exit).toBe(0);
-  expect(result.calls).toMatch(/--message cmux-prod-guard-[0-9a-f-]{36}/);
+  expect(result.calls).toMatch(/--message hmux-prod-guard-[0-9a-f-]{36}/);
 });
 
 test("missing curl is rejected before running checks or deployment", async () => {
@@ -237,15 +237,15 @@ test("missing curl is rejected before running checks or deployment", async () =>
 test("deployment scope checks reach the canonical Worker, never its forwarding alias", async () => {
   const result = await probe("canonical-target");
   expect(result.exit).toBe(0);
-  expect(result.calls).toContain("--name cmux-v2");
-  expect(result.calls).not.toContain("--name cmux-iroh-v2");
+  expect(result.calls).toContain("--name hmux-v2");
+  expect(result.calls).not.toContain("--name hmux-iroh-v2");
 });
 
 
 test("staging uses the same guards with its own environment and project", async () => {
   const result = await probe("valid", {environment: "staging"});
   expect(result.exit).toBe(0);
-  expect(result.calls).toContain("--name cmux-v2-staging");
+  expect(result.calls).toContain("--name hmux-v2-staging");
   expect(result.calls).toContain("wrangler deploy --env staging --keep-vars --strict");
 });
 

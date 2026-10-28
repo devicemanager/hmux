@@ -8,32 +8,32 @@ type AgentSessionNativeReply =
 
 declare global {
   /// Opaque sanitizer policy built by `Resources/markdown-viewer/markdown-sanitizer.js`.
-  type CmuxMarkdownSanitizerProfile = { readonly __cmuxMarkdownSanitizerProfile?: never };
+  type HmuxMarkdownSanitizerProfile = { readonly __hmuxMarkdownSanitizerProfile?: never };
 
-  type CmuxMarkdownSanitizerURLContext = {
+  type HmuxMarkdownSanitizerURLContext = {
     namespace: string;
     tag: string;
     name: string;
     value: string;
   };
 
-  var CmuxMarkdownSanitizer: {
+  var HmuxMarkdownSanitizer: {
     markdownProfile(options?: {
       removeElements?: string[];
       extraAttributes?: Record<string, string[]>;
-      url?: (context: CmuxMarkdownSanitizerURLContext) => string | null;
+      url?: (context: HmuxMarkdownSanitizerURLContext) => string | null;
       element?: (source: Element, clean: Element) => boolean;
-    }): CmuxMarkdownSanitizerProfile;
-    diagramProfile(): CmuxMarkdownSanitizerProfile;
+    }): HmuxMarkdownSanitizerProfile;
+    diagramProfile(): HmuxMarkdownSanitizerProfile;
     sanitizeToFragment(
       html: string,
-      options: { document: Document; profile: CmuxMarkdownSanitizerProfile },
+      options: { document: Document; profile: HmuxMarkdownSanitizerProfile },
     ): DocumentFragment;
     serializeFragment(fragment: DocumentFragment, targetDocument: Document): string;
     sanitizeCSS(text: string): string | null;
   };
 
-  var CmuxViewerNavigation: {
+  var HmuxViewerNavigation: {
     install(options: {
       target: Document | HTMLElement;
       getScroller: () => HTMLElement;
@@ -48,8 +48,8 @@ declare global {
   };
 
   interface Window {
-    __cmuxPerformDiffViewerNavigationAction?: (action: string) => boolean;
-    __cmuxDiffViewer?: {
+    __hmuxPerformDiffViewerNavigationAction?: (action: string) => boolean;
+    __hmuxDiffViewer?: {
       codeView?: unknown;
       codeViewItems?: unknown[];
       items?: unknown[];
@@ -62,7 +62,7 @@ declare global {
         agentSession?: {
           postMessage(message: unknown): Promise<AgentSessionNativeReply>;
         };
-        cmuxDiff?: {
+        hmuxDiff?: {
           postMessage(message: unknown): Promise<DiffResponse>;
         };
       };

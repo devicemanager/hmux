@@ -269,8 +269,8 @@ describe("Cloud VM publication workflows", () => {
     expect(providerCalled).toBeFalse();
   });
 
-  test("never publishes the cmux-tui daemon port", async () => {
-    // Port 1337 is the VM's cmux-tui daemon, which trusts every carrier link
+  test("never publishes the hmux-tui daemon port", async () => {
+    // Port 1337 is the VM's hmux-tui daemon, which trusts every carrier link
     // (it is reached only over the private VPC). Publishing it would hand
     // terminal control of the VM to anyone who can reach the publication.
     let repositoryCalled = false;
@@ -407,7 +407,7 @@ describe("Cloud VM publication workflows", () => {
       verificationState: "pending",
       certificateState: "missing",
       verificationRecords: [
-        { purpose: "verification", recordTypes: ["TXT"], name: "_cmux.example.com", value: "token" },
+        { purpose: "verification", recordTypes: ["TXT"], name: "_hmux.example.com", value: "token" },
         { purpose: "routing", recordTypes: ["CNAME"], name: "example.com", value: "edge" },
         { purpose: "certificate", recordTypes: ["NS"], name: "_acme-challenge.example.com", value: "dns" },
       ],
@@ -1947,7 +1947,7 @@ describe("Cloud VM publication workflows", () => {
     expect(response.status).toBe(409);
     const body = await response.json() as Record<string, unknown>;
     expect(body).toMatchObject({ error: "vm_publication_conflict", reason: "publication_failed" });
-    expect(String(body.action)).toContain("cmux cloud domains rm");
+    expect(String(body.action)).toContain("hmux cloud domains rm");
   });
 
   test("deleting a failed publication with no provider rule deletes no stored rule id", async () => {
@@ -2108,8 +2108,8 @@ describe("Cloud VM publication REST adapters", () => {
     const secret = "a-secret-long-enough-for-the-provider";
     expect(publicationForwardAuthConfig({})).toBeUndefined();
     expect(publicationForwardAuthConfig({
-      CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: secret,
-      CMUX_VM_PUBLICATION_AUTH_ORIGIN: " https://cmux.com/ ",
+      HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: secret,
+      HMUX_VM_PUBLICATION_AUTH_ORIGIN: " https://cmux.com/ ",
     })).toEqual({ url: "https://cmux.com/api/freestyle/forward-auth", serviceToken: secret });
     for (const origin of [
       undefined,
@@ -2121,8 +2121,8 @@ describe("Cloud VM publication REST adapters", () => {
       "not a url",
     ]) {
       expect(publicationForwardAuthConfig({
-        CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: secret,
-        CMUX_VM_PUBLICATION_AUTH_ORIGIN: origin,
+        HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: secret,
+        HMUX_VM_PUBLICATION_AUTH_ORIGIN: origin,
       })).toEqual({ url: "", serviceToken: secret });
     }
   });
@@ -2130,14 +2130,14 @@ describe("Cloud VM publication REST adapters", () => {
   test("an edge-only forward-auth origin overrides the target and fails closed when malformed", () => {
     const secret = "a-secret-long-enough-for-the-provider";
     expect(publicationForwardAuthConfig({
-      CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: secret,
-      CMUX_VM_PUBLICATION_AUTH_ORIGIN: "https://cmux-dev.example.ts.net:4252",
-      CMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN: "https://edge-tunnel.example.com",
+      HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: secret,
+      HMUX_VM_PUBLICATION_AUTH_ORIGIN: "https://hmux-dev.example.ts.net:4252",
+      HMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN: "https://edge-tunnel.example.com",
     })).toEqual({ url: "https://edge-tunnel.example.com/api/freestyle/forward-auth", serviceToken: secret });
     expect(publicationForwardAuthConfig({
-      CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: secret,
-      CMUX_VM_PUBLICATION_AUTH_ORIGIN: "https://cmux.com",
-      CMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN: "http://edge-tunnel.example.com",
+      HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: secret,
+      HMUX_VM_PUBLICATION_AUTH_ORIGIN: "https://cmux.com",
+      HMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN: "http://edge-tunnel.example.com",
     })).toEqual({ url: "", serviceToken: secret });
   });
 
@@ -2190,7 +2190,7 @@ describe("Cloud VM publication REST adapters", () => {
         readonly reason: string;
       };
       expect(body.reason).toBe(reason);
-      expect(`${body.message} ${body.action}`).not.toMatch(/CMUX_VM_PUBLICATION/u);
+      expect(`${body.message} ${body.action}`).not.toMatch(/HMUX_VM_PUBLICATION/u);
     }
   });
 
@@ -2236,7 +2236,7 @@ describe("Cloud VM publication REST adapters", () => {
     expect(publicationReference(" app.example.com ", {})).toBe("app.example.com");
     expect(publicationReference("00000000-0000-4000-8000-000000000001", {}))
       .toBe("00000000-0000-4000-8000-000000000001");
-    expect(publicationReference("otter", { CMUX_VM_PUBLICATION_GENERATED_DOMAIN: "preview.cmux.dev" }))
+    expect(publicationReference("otter", { HMUX_VM_PUBLICATION_GENERATED_DOMAIN: "preview.cmux.dev" }))
       .toBe("otter.preview.cmux.dev");
     expect(publicationReference("  ", {})).toBe("");
   });
@@ -2282,10 +2282,10 @@ describe("Cloud VM publication REST adapters", () => {
 
   test("mints generated names under cmux.sh unless the deployment overrides the zone", () => {
     expect(publicationGeneratedDomain({})).toBe("cmux.sh");
-    expect(publicationGeneratedDomain({ CMUX_VM_PUBLICATION_GENERATED_DOMAIN: "   " }))
+    expect(publicationGeneratedDomain({ HMUX_VM_PUBLICATION_GENERATED_DOMAIN: "   " }))
       .toBe("cmux.sh");
     expect(publicationGeneratedDomain({
-      CMUX_VM_PUBLICATION_GENERATED_DOMAIN: " preview.cmux.dev ",
+      HMUX_VM_PUBLICATION_GENERATED_DOMAIN: " preview.cmux.dev ",
     })).toBe("preview.cmux.dev");
   });
 

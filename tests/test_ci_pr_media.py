@@ -361,14 +361,14 @@ class PlanTests(StubbedTest):
     def test_app_changes_follow_cis_build_inputs(self) -> None:
         self.assertTrue(media.reaches_app("config/IrohRelayPolicyProduction.xcconfig"))
         self.assertTrue(media.reaches_app("Sources/ContentView.swift"))
-        self.assertTrue(media.reaches_app("Packages/Shared/CmuxAuthRuntime/Sources/A.swift"))
-        for path in ("CLI/cmux.swift", "cmuxTests/AppTests.swift", "docs/a.md", "web/app/page.tsx", "tests/test_x.py", "scripts/ci/pr_media.py"):
+        self.assertTrue(media.reaches_app("Packages/Shared/HmuxAuthRuntime/Sources/A.swift"))
+        for path in ("CLI/hmux.swift", "hmuxTests/AppTests.swift", "docs/a.md", "web/app/page.tsx", "tests/test_x.py", "scripts/ci/pr_media.py"):
             with self.subTest(path=path):
                 self.assertFalse(media.reaches_app(path))
 
     def test_a_pull_request_no_tour_shows_gets_no_media(self) -> None:
         outputs = self.plan({"repos/o/r/actions/workflows/ci.yml/runs": {"workflow_runs": []},
-                             "repos/o/r/pulls/42/files": [[{"filename": "CLI/cmux.swift"}]]}, {})
+                             "repos/o/r/pulls/42/files": [[{"filename": "CLI/hmux.swift"}]]}, {})
         self.assertEqual(outputs["run"], "[]")
 
     def test_an_automatic_run_without_a_build_tours_nothing(self) -> None:

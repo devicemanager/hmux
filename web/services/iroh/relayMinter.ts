@@ -34,7 +34,7 @@ export type IrohRelayMinterShape = {
   >;
 };
 
-export class IrohRelayMinter extends Context.Tag("cmux/IrohRelayMinter")<
+export class IrohRelayMinter extends Context.Tag("hmux/IrohRelayMinter")<
   IrohRelayMinter,
   IrohRelayMinterShape
 >() {}
@@ -80,8 +80,8 @@ function mintWithIsolatedService(
         signal: AbortSignal.timeout(10_000),
         headers: {
           "content-type": "application/json",
-          "x-cmux-iroh-timestamp": timestamp,
-          "x-cmux-iroh-signature": signature,
+          "x-hmux-iroh-timestamp": timestamp,
+          "x-hmux-iroh-signature": signature,
         },
         body,
       });

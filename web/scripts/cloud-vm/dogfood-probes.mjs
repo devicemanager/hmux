@@ -65,7 +65,7 @@ async function hookStatus(runtime) {
   const doneHead = marker;
   const doneTail = "-done";
   const statusCommand = [
-    "status=$(cmux --json agent hook status claude codex);",
+    "status=$(hmux --json agent hook status claude codex);",
     `printf '%s\\n' \"$status\" | jq -r '.. | objects | select(has(\"provider\") and has(\"state\")) | \"${marker}-\\(.provider):\\(.state)\"'`,
     `; printf '\\n%s%s\\n' '${doneHead}' '${doneTail}'`,
   ].join(" ");
@@ -119,7 +119,7 @@ async function agentStatus(runtime, name, event, expectedState) {
     const payload = JSON.stringify({ session_id: runtime.marker });
     await runtime.typeLine(
       runtime.terminal,
-      `printf '%s' '${payload}' | cmux agent hook emit --source claude --event ${event}`,
+      `printf '%s' '${payload}' | hmux agent hook emit --source claude --event ${event}`,
       remainingMs(deadline, runtime.now),
     );
     await pollHost(runtime, deadline, observation,
@@ -135,7 +135,7 @@ async function notification(runtime) {
   const title = runtime.marker;
   return probe(runtime, "notifyReachesHost", { title, emitToHostMs: null }, async (deadline, observation) => {
     const startedAt = runtime.now();
-    await runtime.typeLine(runtime.terminal, `cmux notify --title ${title} --body probe`, remainingMs(deadline, runtime.now));
+    await runtime.typeLine(runtime.terminal, `hmux notify --title ${title} --body probe`, remainingMs(deadline, runtime.now));
     await pollHost(runtime, deadline, observation,
       () => readHost(runtime, ["notification", "list"], deadline),
       (records) => records.some((record) => record.title === title),

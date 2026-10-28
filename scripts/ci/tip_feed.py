@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The cmux NEXT DEV tip feed (cmux-next-dev-daily.yml, job tip).
+"""The hmux NEXT DEV tip feed (hmux-next-dev-daily.yml, job tip).
 
     tip_feed.py previous FEED --build N --keep K
         Reads the live feed. Prints "fresh" and then the DMG URLs of the newest

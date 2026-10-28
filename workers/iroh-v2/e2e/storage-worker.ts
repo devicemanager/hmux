@@ -34,7 +34,7 @@ export class StorageTestDO {
             ...scope,
             userId: `fill-user-${index}`,
             deviceId: `fill-device-${index}`,
-            appNamespace: "cmux",
+            appNamespace: "hmux",
             buildTag: "fill",
           };
           this.team.issueChallenge(fillIdentity, {

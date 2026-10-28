@@ -292,7 +292,7 @@ jobs:
             --force \
             --options runtime \
             --timestamp \
-            --identifier com.cmuxterm.coderouter \
+            --identifier com.hmuxterm.coderouter \
             --keychain "$CODEROUTER_SIGNING_KEYCHAIN" \
             --sign "$CODEROUTER_SIGNING_IDENTITY" \
             "$binary"
@@ -348,7 +348,7 @@ jobs:
               --force \
               --options runtime \
               --timestamp \
-              --identifier com.cmuxterm.coderouter \
+              --identifier com.hmuxterm.coderouter \
               --keychain "$CODEROUTER_SIGNING_KEYCHAIN" \
               --sign "$CODEROUTER_SIGNING_IDENTITY" \
               "$binary"

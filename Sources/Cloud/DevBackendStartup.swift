@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 import Observation
 
@@ -32,12 +32,12 @@ final class DevBackendStartup {
 
     static var endpoint: URL? {
         #if DEBUG
-        guard CmuxFeatureFlagOverrideCapability().enablesCloudDogfood else { return nil }
+        guard HmuxFeatureFlagOverrideCapability().enablesCloudDogfood else { return nil }
         let base = AuthEnvironment.vmAPIBaseURL
         guard base.scheme == "https",
-              base.host == "cmux-dev-backend-1.tail137216.ts.net",
+              base.host == "hmux-dev-backend-1.tail137216.ts.net",
               let port = base.port, (3800...4799).contains(port) else { return nil }
-        return base.appendingPathComponent("__cmux_backend/events")
+        return base.appendingPathComponent("__hmux_backend/events")
         #else
         return nil
         #endif

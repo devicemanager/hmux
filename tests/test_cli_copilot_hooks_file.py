@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""`cmux hooks setup copilot` writes a hooks file Copilot CLI actually loads.
+"""`hmux hooks setup copilot` writes a hooks file Copilot CLI actually loads.
 
 Copilot CLI reads hooks from `~/.copilot/hooks/*.json` (or `$COPILOT_HOME/hooks/`)
 as a `version: 1` file with camelCase events and `bash`/`timeoutSec` entries. It
-no longer reads `~/.copilot/config.json`, which is where cmux used to write
+no longer reads `~/.copilot/config.json`, which is where hmux used to write
 Claude-style nested groups under PascalCase keys, so a clean install never fired.
 
 Each case runs the real CLI against a temporary home with a fake `copilot`
@@ -17,7 +17,7 @@ import subprocess
 import tempfile
 import unittest
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 
 EXPECTED_EVENTS = {"sessionStart", "agentStop", "notification", "sessionEnd", "preToolUse"}
 LIFECYCLE_SUBCOMMANDS = {
@@ -29,24 +29,24 @@ LIFECYCLE_SUBCOMMANDS = {
 
 
 def legacy_config(user_command="echo user-hook"):
-    """The shape cmux used to write into ~/.copilot/config.json, plus one user hook."""
-    def cmux_group(subcommand):
+    """The shape hmux used to write into ~/.copilot/config.json, plus one user hook."""
+    def hmux_group(subcommand):
         return {"hooks": [{"type": "command", "timeout": 5000,
-                           "command": f"cmux hooks copilot {subcommand}"}]}
+                           "command": f"hmux hooks copilot {subcommand}"}]}
     return {
         "theme": "dark",
         "hooks": {
-            "SessionStart": [cmux_group("session-start")],
-            "Stop": [cmux_group("stop"),
+            "SessionStart": [hmux_group("session-start")],
+            "Stop": [hmux_group("stop"),
                      {"hooks": [{"type": "command", "command": user_command, "timeout": 1000}]}],
-            "SessionEnd": [cmux_group("session-end")],
+            "SessionEnd": [hmux_group("session-end")],
         },
     }
 
 
 class CopilotHooksFileTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix='cmux-copilot-hooks-')
+        self.temp = tempfile.TemporaryDirectory(prefix='hmux-copilot-hooks-')
         self.addCleanup(self.temp.cleanup)
         root = Path(self.temp.name)
         self.home = root / 'home'
@@ -59,7 +59,7 @@ class CopilotHooksFileTests(unittest.TestCase):
         fake.write_text('#!/bin/sh\nexit 0\n')
         fake.chmod(fake.stat().st_mode | stat.S_IXUSR)
         self.bin_dir = bin_dir
-        self.cli = str(resolve_cmux_cli())
+        self.cli = str(resolve_hmux_cli())
 
     def run_cli(self, *args, extra_env=None):
         env = {
@@ -67,8 +67,8 @@ class CopilotHooksFileTests(unittest.TestCase):
             'CFFIXED_USER_HOME': str(self.home),
             'PATH': f'{self.bin_dir}:/usr/bin:/bin:/usr/sbin:/sbin',
             'TMPDIR': os.environ.get('TMPDIR', '/tmp'),
-            'CMUX_CLI_SENTRY_DISABLED': '1',
-            'CMUX_SOCKET_PATH': str(Path(self.temp.name) / 'no-socket.sock'),
+            'HMUX_CLI_SENTRY_DISABLED': '1',
+            'HMUX_SOCKET_PATH': str(Path(self.temp.name) / 'no-socket.sock'),
         }
         env.update(extra_env or {})
         return subprocess.run([self.cli, *args], env=env, stdin=subprocess.DEVNULL,
@@ -85,7 +85,7 @@ class CopilotHooksFileTests(unittest.TestCase):
         return result
 
     def hooks_file(self, copilot_dir=None):
-        return (copilot_dir or self.copilot_dir) / 'hooks' / 'cmux.json'
+        return (copilot_dir or self.copilot_dir) / 'hooks' / 'hmux.json'
 
     def assert_native_hooks_file(self, path):
         self.assertTrue(path.is_file(), f'{path} was not written')
@@ -144,7 +144,7 @@ class CopilotHooksFileTests(unittest.TestCase):
                          [{"hooks": [{"type": "command", "command": "echo user-hook", "timeout": 1000}]}],
                          migrated)
 
-    def test_setup_prunes_the_commands_an_older_cmux_really_wrote(self):
+    def test_setup_prunes_the_commands_an_older_hmux_really_wrote(self):
         # The old installer put the same shell dispatch strings this version
         # generates into config.json, as nested groups under PascalCase keys.
         # Harvest them from a fresh install so the fixture is the real thing.
@@ -163,7 +163,7 @@ class CopilotHooksFileTests(unittest.TestCase):
             },
         }))
         result = self.setup()
-        self.assertIn('Removed 2 cmux hook(s)', result.stdout + result.stderr)
+        self.assertIn('Removed 2 hmux hook(s)', result.stdout + result.stderr)
         migrated = json.loads(config.read_text())
         self.assertEqual(migrated, {"hooks": {"PreToolUse": [
             {"hooks": [{"type": "command", "command": "echo mine", "timeout": 1000}]}]}}, migrated)
@@ -176,18 +176,18 @@ class CopilotHooksFileTests(unittest.TestCase):
         theirs = self.copilot_dir / 'hooks' / 'theirs.json'
         theirs.write_text('{"version": 1, "hooks": {}}')
         self.uninstall()
-        self.assertFalse(self.hooks_file().exists(), 'uninstall must remove hooks/cmux.json')
+        self.assertFalse(self.hooks_file().exists(), 'uninstall must remove hooks/hmux.json')
         self.assertTrue(theirs.is_file(), 'uninstall must not touch other hook files')
         migrated = json.loads(config.read_text())
         self.assertEqual(set(migrated.get('hooks', {})), {'Stop'}, migrated)
         self.assertEqual(migrated['hooks']['Stop'][0]['hooks'][0]['command'], 'echo user-hook', migrated)
 
-    def test_uninstall_leaves_a_cmux_json_it_did_not_write(self):
+    def test_uninstall_leaves_a_hmux_json_it_did_not_write(self):
         foreign = self.hooks_file()
         foreign.parent.mkdir()
         foreign.write_text('{"version": 1, "hooks": {"agentStop": [{"bash": "say done"}]}}')
         self.uninstall()
-        self.assertTrue(foreign.is_file(), 'a hooks/cmux.json without cmux commands is not ours to delete')
+        self.assertTrue(foreign.is_file(), 'a hooks/hmux.json without hmux commands is not ours to delete')
 
     def test_uninstall_without_anything_installed_succeeds(self):
         result = self.uninstall()

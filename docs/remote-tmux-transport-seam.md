@@ -44,7 +44,7 @@ protocol RemoteTmuxTransport: Sendable {
     func controlStreamArgv(host: RemoteTmuxHost, sessionName: String, createIfMissing: Bool) -> [String]
     /// argv for a one-shot remote command (discovery, mutations).
     func oneShotArgv(host: RemoteTmuxHost, remoteCommand: String) -> [String]
-    /// Whether the transport recovers from network loss on its own, or whether cmux
+    /// Whether the transport recovers from network loss on its own, or whether hmux
     /// must respawn it.
     var reconnectsInternally: Bool { get }
 }
@@ -57,7 +57,7 @@ implementation wraps a persistent-session transport. For ET that is:
 et --command 'exec tmux -CC attach-session -t <session>' [--port N] <user>@<host>
 ```
 
-Four details are load-bearing for any such transport. Each one is a claim about a program cmux
+Four details are load-bearing for any such transport. Each one is a claim about a program hmux
 does not control, so each one is a check in `scripts/remote-tmux-et-conformance.sh` rather than
 only a paragraph here — every defect this transport shipped with was a claim in this list that
 nothing executed. Run that script against every ET version you intend to support: 7.x rewrote the
@@ -77,7 +77,7 @@ pty input path that 6.x deadlocks on, so "et behaves like this" is version-scope
   ssh's 22.
 - **Never pass a flag that kills other sessions.** ET's `-x` / `--kill-other-sessions`
   terminates every one of that user's sessions on the host, not just stale ones. Some
-  wrappers pass it by default, so an unrelated reconnect elsewhere can kill cmux's
+  wrappers pass it by default, so an unrelated reconnect elsewhere can kill hmux's
   session; recover by recreating on unexpected exit rather than trying to hold a claim.
 
 One-shot commands can keep using ssh over the existing ControlMaster even when the control
@@ -93,12 +93,12 @@ rather than just swapping argv.
 Today `handleStreamEnd` treats stdout EOF as the signal to reconnect and
 `beginReconnecting()` respawns with backoff. A transport that reconnects internally
 produces no EOF for a network drop: the stream pauses and resumes. Reacting only to EOF is
-therefore correct and cmux notices nothing, which is the goal. What it must not do is
+therefore correct and hmux notices nothing, which is the goal. What it must not do is
 treat a *stall* as death and respawn on a timer, because that discards a session the
 transport was about to recover.
 
 So the tempting next step is a liveness check: probe the stream on a timer and respawn it
-when a probe goes unanswered. cmux shipped that and then removed it, because the cure was
+when a probe goes unanswered. hmux shipped that and then removed it, because the cure was
 worse than the disease.
 
 An unanswered probe cannot be the verdict. A real network interruption looks identical from
@@ -133,7 +133,7 @@ transport, so end-of-stream reconnects and the reattach reports which it was —
 There is a bug here worth fixing independently of any new transport.
 `handleStreamEnd`'s classifier only distinguishes "session gone" (end) from everything else
 (retry with backoff, forever). A reconnect that fails because the host wants interactive
-authentication lands in the second bucket, so it retries silently and forever. cmux already
+authentication lands in the second bucket, so it retries silently and forever. hmux already
 detects that case (`RemoteTmuxSSHTransport.indicatesAuthRequired`) and already has a path
 for handing the user an interactive ssh on initial attach
 (`RemoteTmuxAttachOutcome.authRequired(sshArgv:)`, built by
@@ -142,16 +142,16 @@ instead of looping.
 
 ## Seam 3: a pre-connect hook
 
-Some hosts need a step before the connection that cmux has no business knowing about:
+Some hosts need a step before the connection that hmux has no business knowing about:
 minting a short-lived credential, unlocking an agent, refreshing a token. Rather than
-teaching cmux any of them, give a host an optional command, in the same spirit as the
+teaching hmux any of them, give a host an optional command, in the same spirit as the
 existing per-host upload command:
 
 ```
 preseedCommand: <command>   # run as `<command> <host>` before opening a connection
 ```
 
-cmux runs it before opening or reopening a connection, treats a non-zero exit as non-fatal
+hmux runs it before opening or reopening a connection, treats a non-zero exit as non-fatal
 (proceed and let the connection fail normally, so a broken hook cannot make a host
 unreachable), and ignores its output. Unset means today's behavior.
 
@@ -178,7 +178,7 @@ rapid re-attach and reconnect, and `remote-tmux-shape-zoo.sh` plus
 green unchanged; if a transport swap breaks them, that is the answer, and re-testing
 rendering under a second transport adds cost without signal.
 
-What is genuinely uncovered is the **connection state machine**: what cmux does when a
+What is genuinely uncovered is the **connection state machine**: what hmux does when a
 stream stalls, resumes, dies, or fails to authenticate, and who resolves the commands that
 were in flight when it happened. Every layer below targets that.
 
@@ -190,7 +190,7 @@ mock honest, and the fuzz is what finds the state-machine bugs.
 `scripts/remote-tmux-e2e-ssh-shim.sh` already does this for ssh: it strips the option
 framing, runs the "remote" command locally, and allocates a pty with `script(1)` only when
 `-t`/`-tt` asked for one. `RemoteTmuxHost.defaultSSHExecutablePath()` honors
-`CMUX_REMOTE_TMUX_SSH_FOR_TESTING` in DEBUG so the real app process can be pointed at it.
+`HMUX_REMOTE_TMUX_SSH_FOR_TESTING` in DEBUG so the real app process can be pointed at it.
 
 Add the same seam for the transport binary (an ET shim honoring `--command` instead of
 ssh's framing) so `ETTransport` gets identical treatment. The shim must reproduce the two
@@ -212,9 +212,9 @@ alias whose forced command pins an isolated `TMUX_TMPDIR`**, so a harness drives
 against the machine's own sshd and can never touch the developer's real tmux:
 
 ```
-Host cmux-srvA
+Host hmux-srvA
     HostName 127.0.0.1
-    RemoteCommand TMUX_TMPDIR=/tmp/cmux-srvA $SHELL -l
+    RemoteCommand TMUX_TMPDIR=/tmp/hmux-srvA $SHELL -l
     RequestTTY yes
 ```
 
@@ -229,7 +229,7 @@ the host and then speaks to an `etserver` there. Pointed at loopback, the whole 
 local and real:
 
 ```
-cmux → et client (upstream) → ssh 127.0.0.1 (real sshd) → etserver/etterminal → tmux -CC
+hmux → et client (upstream) → ssh 127.0.0.1 (real sshd) → etserver/etterminal → tmux -CC
 ```
 
 Requirements for it to be trustworthy:
@@ -244,7 +244,7 @@ Requirements for it to be trustworthy:
   and resume (a packet-filter rule works too, but a relay needs no privileges and is
   deterministic). Killing the `et` process tests the wrong thing: that is the session-gone
   path, not a recoverable outage.
-- **Assert on cmux's observable state, not log text**: the mirror stays populated across the
+- **Assert on hmux's observable state, not log text**: the mirror stays populated across the
   outage, the spawn counter does not increment, and a command issued after the resume
   completes.
 
@@ -270,7 +270,7 @@ Step actions to draw from:
 |---|---|
 | Transport | stall the stream; resume after a stall; drop mid-frame then resume; exit cleanly; exit with an auth failure; exit with a transient failure; refuse to launch (binary missing) |
 | Session | kill the session remotely during an outage; create a session; rename; churn windows |
-| cmux | issue a one-shot; issue a command batch; resize; stop the connection; close the window; quit |
+| hmux | issue a one-shot; issue a command batch; resize; stop the connection; close the window; quit |
 | Hook | hook succeeds; hook exits non-zero; hook hangs past its timeout; two opens race the hook |
 
 Invariants to assert after every step:
@@ -300,7 +300,7 @@ stays at its original eight seeds after finding bugs is not ratcheting, it is de
 ## Notes on carrying a control protocol over a PTY transport
 
 `tmux -CC` is line-oriented, and any transport that allocates a remote PTY translates `\n`
-to `\r\n` on the way back. cmux already runs `ssh -tt` (also a remote PTY) so
+to `\r\n` on the way back. hmux already runs `ssh -tt` (also a remote PTY) so
 `RemoteTmuxControlStreamParser` tolerates `\r` today. Keep an explicit test for it rather
 than rediscovering it after a transport swap.
 

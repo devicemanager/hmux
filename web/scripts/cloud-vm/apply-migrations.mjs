@@ -63,7 +63,7 @@ export async function applyPendingMigrations(pool, webDir) {
   const client = await pool.connect();
   let locked = false;
   try {
-    await client.query("select pg_advisory_lock(hashtextextended($1, 0))", ["cmux:migrations"]);
+    await client.query("select pg_advisory_lock(hashtextextended($1, 0))", ["hmux:migrations"]);
     locked = true;
     await client.query("CREATE SCHEMA IF NOT EXISTS drizzle");
     await client.query(`
@@ -88,7 +88,7 @@ export async function applyPendingMigrations(pool, webDir) {
     return pending.length;
   } finally {
     try {
-      if (locked) await client.query("select pg_advisory_unlock(hashtextextended($1, 0))", ["cmux:migrations"]);
+      if (locked) await client.query("select pg_advisory_unlock(hashtextextended($1, 0))", ["hmux:migrations"]);
     } finally {
       client.release();
     }

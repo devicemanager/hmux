@@ -11,7 +11,7 @@ const DEPENDENCY_NAMES: ReadonlyArray<readonly [RegExp, string]> = [
   [/(^|\.)stack-auth\.com$/, "stack-auth"],
   [/(^|\.)stripe\.com$/, "stripe"],
   [/(^|\.)posthog\.com$/, "posthog"],
-  [/^r\.cmux\.com$/, "posthog"],
+  [/^r\.hmux\.com$/, "posthog"],
   [/(^|\.)sentry\.io$/, "sentry"],
   [/(^|\.)slack\.com$/, "slack"],
   [/(^|\.)github\.com$/, "github"],
@@ -25,8 +25,8 @@ const DEPENDENCY_NAMES: ReadonlyArray<readonly [RegExp, string]> = [
   [/(^|\.)anthropic\.com$/, "anthropic"],
   [/(^|\.)amazonaws\.com$/, "aws"],
   [/(^|\.)cloudflare\.com$/, "cloudflare"],
-  [/(^|\.)cmux\.com$/, "cmux"],
-  [/(^|\.)cmux\.sh$/, "cmux-vm"],
+  [/(^|\.)hmux\.com$/, "hmux"],
+  [/(^|\.)hmux\.sh$/, "hmux-vm"],
 ];
 
 export function dependencyNameForHost(host: string): string {
@@ -64,12 +64,12 @@ export function templateDependencyPath(path: string): string {
 }
 
 export type DependencyAttributes = {
-  readonly "cmux.dep.name": string;
-  readonly "cmux.dep.host"?: string;
-  readonly "cmux.dep.method"?: string;
-  readonly "cmux.dep.path"?: string;
+  readonly "hmux.dep.name": string;
+  readonly "hmux.dep.host"?: string;
+  readonly "hmux.dep.method"?: string;
+  readonly "hmux.dep.path"?: string;
   /** `POST /v5/vms/{id}/exec-await`: the grouping key for failure rate and latency. */
-  readonly "cmux.dep.route": string;
+  readonly "hmux.dep.route": string;
 };
 
 function firstString(attributes: Attributes, keys: readonly string[]): string | undefined {
@@ -103,11 +103,11 @@ export function dependencyAttributes(
     const method = (firstString(attributes, ["http.request.method", "http.method"]) ?? "GET").toUpperCase();
     const path = templateDependencyPath(parsed.pathname);
     return {
-      "cmux.dep.name": dependencyNameForHost(parsed.host),
-      "cmux.dep.host": parsed.host.toLowerCase(),
-      "cmux.dep.method": method,
-      "cmux.dep.path": path,
-      "cmux.dep.route": `${method} ${path}`,
+      "hmux.dep.name": dependencyNameForHost(parsed.host),
+      "hmux.dep.host": parsed.host.toLowerCase(),
+      "hmux.dep.method": method,
+      "hmux.dep.path": path,
+      "hmux.dep.route": `${method} ${path}`,
     };
   }
   const dbSystem = firstString(attributes, ["db.system", "db.system.name"]);
@@ -115,17 +115,17 @@ export function dependencyAttributes(
     const operation = firstString(attributes, ["db.operation.name", "db.operation"]) ?? "query";
     const target = firstString(attributes, ["db.collection.name", "db.sql.table", "db.name"]);
     return {
-      "cmux.dep.name": dbSystem.toLowerCase(),
-      "cmux.dep.route": target ? `${operation} ${target}` : operation,
+      "hmux.dep.name": dbSystem.toLowerCase(),
+      "hmux.dep.route": target ? `${operation} ${target}` : operation,
     };
   }
   return undefined;
 }
 
 /**
- * Stamps `cmux.dep.*` on every outbound span as it starts, so Axiom can
+ * Stamps `hmux.dep.*` on every outbound span as it starts, so Axiom can
  * report failure rate and latency per third party and per endpoint
- * (`summarize ... by ['cmux.dep.name'], ['cmux.dep.route']`) without regex
+ * (`summarize ... by ['hmux.dep.name'], ['hmux.dep.route']`) without regex
  * over raw URLs full of machine and user ids. Read-only after start: the
  * response status stays where the instrumentation puts it
  * (`http.status_code` / `http.response.status_code`).

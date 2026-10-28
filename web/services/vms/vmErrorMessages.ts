@@ -54,7 +54,7 @@ export function vmUnsupportedOperationKey(operation: string): VmUnsupportedOpera
   if (normalized.includes("restore")) return "restore";
   if (normalized.includes("fork")) return "fork";
   if (normalized.includes("snapshot")) return "snapshot";
-  // `cmux vm pause` / `cmux vm resume`: a provider without the verb answers a
+  // `hmux vm pause` / `hmux vm resume`: a provider without the verb answers a
   // pause-specific 501, so the CLI can say "this provider cannot pause machines".
   if (normalized.includes("pause")) return "pause";
   if (normalized.includes("resume")) return "resume";

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import QuartzCore
 import WebKit
 
@@ -43,7 +43,7 @@ final class BrowserScreenshotDOMProbeCollector {
             throw CancellationError()
         } catch {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.screenshot.synchronize.unconfirmed error=\(error.localizedDescription)"
             )
 #endif
@@ -69,7 +69,7 @@ final class BrowserScreenshotDOMProbeCollector {
             return probeSet(from: value)
         } catch {
 #if DEBUG
-            cmuxDebugLog("browser.screenshot.probes.failed error=\(error.localizedDescription)")
+            hmuxDebugLog("browser.screenshot.probes.failed error=\(error.localizedDescription)")
 #endif
             return nil
         }
@@ -166,11 +166,11 @@ final class BrowserScreenshotDOMProbeCollector {
     }
 
     private func forceAppKitLayout(for webView: WKWebView) {
-        let presentationView = webView.cmuxBrowserViewportPresentationView
+        let presentationView = webView.hmuxBrowserViewportPresentationView
         webView.needsLayout = true
         presentationView.needsLayout = true
-        webView.cmuxBrowserViewportAttachmentSuperview?.needsLayout = true
-        webView.cmuxBrowserViewportAttachmentSuperview?.layoutSubtreeIfNeeded()
+        webView.hmuxBrowserViewportAttachmentSuperview?.needsLayout = true
+        webView.hmuxBrowserViewportAttachmentSuperview?.layoutSubtreeIfNeeded()
         presentationView.layoutSubtreeIfNeeded()
         webView.layoutSubtreeIfNeeded()
         presentationView.displayIfNeeded()

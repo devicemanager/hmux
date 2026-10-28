@@ -1,5 +1,5 @@
 import Foundation
-import CmuxCore
+import HmuxCore
 
 enum RemoteLoopbackRuntimeBridge {
     static let runtimeBridgeScriptSource = scriptSource(aliasHost: RemoteLoopbackProxyAlias.aliasHost)
@@ -48,8 +48,8 @@ enum RemoteLoopbackRuntimeBridge {
             }
             return pageHost === normalizedAliasHost || pageHost.endsWith(`.${normalizedAliasHost}`);
           };
-          if (window.__cmuxRemoteLoopbackRuntimeBridgeInstalled) return true;
-          window.__cmuxRemoteLoopbackRuntimeBridgeInstalled = true;
+          if (window.__hmuxRemoteLoopbackRuntimeBridgeInstalled) return true;
+          window.__hmuxRemoteLoopbackRuntimeBridgeInstalled = true;
 
           const loopbackAliasHost = (host) => {
             const normalizedHost = normalizeHost(host);
@@ -89,7 +89,7 @@ enum RemoteLoopbackRuntimeBridge {
             return parsed.href;
           };
 
-          Object.defineProperty(window, '__cmuxRewriteRemoteLoopbackURL', {
+          Object.defineProperty(window, '__hmuxRewriteRemoteLoopbackURL', {
             value: rewriteLoopbackURL,
             configurable: true,
           });
@@ -117,30 +117,30 @@ enum RemoteLoopbackRuntimeBridge {
 
           const NativeWebSocket = window.WebSocket;
           if (typeof NativeWebSocket === 'function') {
-            const CmuxWebSocket = function(url, protocols) {
+            const HmuxWebSocket = function(url, protocols) {
               const rewrittenURL = rewriteLoopbackURL(url);
               if (protocols === undefined) {
                 return new NativeWebSocket(rewrittenURL);
               }
               return new NativeWebSocket(rewrittenURL, protocols);
             };
-            CmuxWebSocket.prototype = NativeWebSocket.prototype;
-            Object.setPrototypeOf(CmuxWebSocket, NativeWebSocket);
-            window.WebSocket = CmuxWebSocket;
+            HmuxWebSocket.prototype = NativeWebSocket.prototype;
+            Object.setPrototypeOf(HmuxWebSocket, NativeWebSocket);
+            window.WebSocket = HmuxWebSocket;
           }
 
           const NativeEventSource = window.EventSource;
           if (typeof NativeEventSource === 'function') {
-            const CmuxEventSource = function(url, eventSourceInitDict) {
+            const HmuxEventSource = function(url, eventSourceInitDict) {
               const rewrittenURL = rewriteLoopbackURL(url);
               if (eventSourceInitDict === undefined) {
                 return new NativeEventSource(rewrittenURL);
               }
               return new NativeEventSource(rewrittenURL, eventSourceInitDict);
             };
-            CmuxEventSource.prototype = NativeEventSource.prototype;
-            Object.setPrototypeOf(CmuxEventSource, NativeEventSource);
-            window.EventSource = CmuxEventSource;
+            HmuxEventSource.prototype = NativeEventSource.prototype;
+            Object.setPrototypeOf(HmuxEventSource, NativeEventSource);
+            window.EventSource = HmuxEventSource;
           }
 
           return true;

@@ -1,17 +1,17 @@
 #!/usr/bin/env bash
 # Warn when a git remote fetches from one place and pushes to another.
 #
-# On 2026-10-19 ~/Projects/cmux's origin fetched from a local mirror
-# (~/Projects/cmux-merge-remote-nightly.git) while pushing to GitHub. Fetches
+# On 2026-10-19 ~/Projects/hmux's origin fetched from a local mirror
+# (~/Projects/hmux-merge-remote-nightly.git) while pushing to GitHub. Fetches
 # silently returned a stale main, and every agent based work on it.
 #
 # For each remote this compares the effective fetch URL (after url.*.insteadOf)
 # with every effective push URL (after pushurl and url.*.pushInsteadOf). It warns
 # when the fetch URL is a local path and a push URL is not, or when they name
 # different repositories. Silence a deliberate split with:
-#   git config remote.<name>.cmuxSplitOk true
+#   git config remote.<name>.hmuxSplitOk true
 #
-# The cmux pre-commit and post-merge hooks run this as a warning only (installed
+# The hmux pre-commit and post-merge hooks run this as a warning only (installed
 # by scripts/install-git-hooks.sh). Run it by hand as a doctor check:
 #   scripts/git-hooks/check-git-remotes.sh [--strict]   (--strict exits 1 on a warning)
 set -uo pipefail
@@ -79,7 +79,7 @@ rewrites_of() {
 warned=0
 while IFS= read -r remote; do
   [ -n "$remote" ] || continue
-  [ "$(git config --bool --get "remote.$remote.cmuxSplitOk" 2>/dev/null)" = true ] && continue
+  [ "$(git config --bool --get "remote.$remote.hmuxSplitOk" 2>/dev/null)" = true ] && continue
   fetch_url="$(git remote get-url "$remote" 2>/dev/null)" || continue
   fetch_id="$(identity "$fetch_url")"
   while IFS= read -r push_url; do
@@ -109,7 +109,7 @@ while IFS= read -r remote; do
       else
         printf '  Fix: point both at one repository (git remote set-url %q URL; git config --unset-all %q)\n' "$remote" "remote.$remote.pushurl"
       fi
-      printf '  If the split is deliberate: git config %q true\n\n' "remote.$remote.cmuxSplitOk"
+      printf '  If the split is deliberate: git config %q true\n\n' "remote.$remote.hmuxSplitOk"
     } >&2
     warned=1
   done < <(git remote get-url --push --all "$remote" 2>/dev/null)

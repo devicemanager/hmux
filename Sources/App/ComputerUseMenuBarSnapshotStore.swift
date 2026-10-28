@@ -1,9 +1,9 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import AppKit
 import Combine
 import Darwin
 import Foundation
-import CmuxSettings
+import HmuxSettings
 
 /// Builds the value-only snapshot consumed by the computer-use menu-bar controller.
 @MainActor
@@ -33,7 +33,7 @@ final class ComputerUseMenuBarSnapshotStore: ObservableObject {
     private var cancellables: Set<AnyCancellable> = []
     private var directoryWatchSource: DispatchSourceFileSystemObject?
     // DispatchSource requires a delivery queue; every mutation hops back to MainActor.
-    private let directoryWatchQueue = DispatchQueue(label: "com.cmuxterm.app.computerUseStateWatch")
+    private let directoryWatchQueue = DispatchQueue(label: "com.hmuxterm.app.computerUseStateWatch")
     private var refreshGeneration = 0
     private var liveRows: [ComputerUseMenuBarRow] = []
     private var liveRowsNeedRebuild = true
@@ -80,7 +80,7 @@ final class ComputerUseMenuBarSnapshotStore: ObservableObject {
                 }
             }
             .store(in: &cancellables)
-        NotificationCenter.default.publisher(for: .cmuxFeatureFlagsDidChange)
+        NotificationCenter.default.publisher(for: .hmuxFeatureFlagsDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 Task { @MainActor in self?.refresh() }
@@ -126,7 +126,7 @@ final class ComputerUseMenuBarSnapshotStore: ObservableObject {
             showInMenuBar: currentShowInMenuBar
         ) else {
             #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "computerUse.menuBar.hidden gates featureEnabled=\(currentFeatureEnabled) showInMenuBar=\(currentShowInMenuBar)"
             )
             #endif
@@ -142,7 +142,7 @@ final class ComputerUseMenuBarSnapshotStore: ObservableObject {
         }
         guard !liveRows.isEmpty else {
             #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "computerUse.menuBar.hidden noLiveAgentRows"
             )
             #endif
@@ -217,7 +217,7 @@ final class ComputerUseMenuBarSnapshotStore: ObservableObject {
                         )
                         #if DEBUG
                         if !belongs {
-                            cmuxDebugLog(
+                            hmuxDebugLog(
                                 "computerUse.menuBar.stateRejected writer=\(state.writerPID) session=\(state.session ?? "-") roots=\(roots.map(\.pid))"
                             )
                         }
@@ -258,7 +258,7 @@ final class ComputerUseMenuBarSnapshotStore: ObservableObject {
                 )
             }
             #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "computerUse.menuBar.scan liveRows=\(pending.count) recentStateFiles=\(result.hasRecentStateFiles) activeRow=\(result.activeRow != nil) activeState=\(result.activeState != nil) rows=\(rows.count)"
             )
             #endif

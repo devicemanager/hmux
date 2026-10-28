@@ -1,28 +1,28 @@
-name: cmux-relay release
+name: hmux-relay release
 
 # npm publisher for the chatmux machine relay (crate chatmux-relay, npm name
-# cmux-relay). This tag family is the ONLY cmux-side publisher for cmux-relay:
+# hmux-relay). This tag family is the ONLY hmux-side publisher for hmux-relay:
 # the coordinated TUI publish (tui-publish-npm.yml) and the nightly lane
-# deliberately do not touch the cmux-relay dist-tags, so a routine TUI release
-# can never move cmux-relay@latest away from the shipping relay.
+# deliberately do not touch the hmux-relay dist-tags, so a routine TUI release
+# can never move hmux-relay@latest away from the shipping relay.
 #
 # Dist-tag policy (chatmux relay Rust cutover, chatmux docs/RELAY-RUST.md):
-# - cmux-relay-vX.Y.Z-rc.N publishes under `next` — Sprites and the sandbox
-#   images install cmux-relay@latest at provision, so release candidates must
+# - hmux-relay-vX.Y.Z-rc.N publishes under `next` — Sprites and the sandbox
+#   images install hmux-relay@latest at provision, so release candidates must
 #   never take `latest`.
-# - cmux-relay-vX.Y.Z (stable) publishes under `latest`. Cutting the first
+# - hmux-relay-vX.Y.Z (stable) publishes under `latest`. Cutting the first
 #   stable tag IS the production cutover flip; coordinate with the chatmux
 #   repo variable CHATMUX_RELAY_PUBLISH_MODE=external-rust so the old Node
 #   publisher stands down first.
 on:
   push:
     tags:
-      - "cmux-relay-v*"
+      - "hmux-relay-v*"
 
 permissions: {}
 
 concurrency:
-  group: cmux-relay-release-${{ github.ref }}
+  group: hmux-relay-release-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -46,14 +46,14 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${GITHUB_REF_TYPE:-}" != "tag" ]]; then
-            echo "cmux-relay publishes require a cmux-relay-v* tag ref." >&2
+            echo "hmux-relay publishes require a hmux-relay-v* tag ref." >&2
             exit 1
           fi
-          [[ "$GITHUB_REF_NAME" =~ ^cmux-relay-v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || {
-            echo "tag must match cmux-relay-vX.Y.Z or cmux-relay-vX.Y.Z-rc.N" >&2
+          [[ "$GITHUB_REF_NAME" =~ ^hmux-relay-v[0-9]+\.[0-9]+\.[0-9]+(-rc\.[0-9]+)?$ ]] || {
+            echo "tag must match hmux-relay-vX.Y.Z or hmux-relay-vX.Y.Z-rc.N" >&2
             exit 1
           }
-          version="${GITHUB_REF_NAME#cmux-relay-v}"
+          version="${GITHUB_REF_NAME#hmux-relay-v}"
           git fetch --force origin main
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
             echo "release tag $GITHUB_REF_NAME is not an ancestor of protected main" >&2
@@ -69,11 +69,11 @@ jobs:
             echo "dist_tag=$dist_tag"
           } >> "$GITHUB_OUTPUT"
           {
-            echo "## cmux-relay release"
+            echo "## hmux-relay release"
             echo "Version: \`$version\`"
             echo "npm dist-tag: \`$dist_tag\`"
             if [[ "$dist_tag" == "latest" ]]; then
-              echo "This publish takes over \`cmux-relay@latest\`. The chatmux Node publisher must already be in external-rust mode (CHATMUX_RELAY_PUBLISH_MODE)."
+              echo "This publish takes over \`hmux-relay@latest\`. The chatmux Node publisher must already be in external-rust mode (CHATMUX_RELAY_PUBLISH_MODE)."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -83,7 +83,7 @@ jobs:
       contents: read
       id-token: write
       attestations: write
-    uses: ./.github/workflows/cmux-tui-build-package.yml
+    uses: ./.github/workflows/hmux-tui-build-package.yml
     with:
       version: ${{ needs.version.outputs.version }}
       package_npm: true
@@ -106,7 +106,7 @@ jobs:
       attestations: read
     environment:
       name: npm-tui
-      url: https://www.npmjs.com/package/cmux-relay
+      url: https://www.npmjs.com/package/hmux-relay
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -120,7 +120,7 @@ jobs:
 
       - name: Restore npm package executable modes
         run: |
-          python3 cmux-tui/dist/scripts/package_npm_artifact.py extract \
+          python3 hmux-tui/dist/scripts/package_npm_artifact.py extract \
             --archive dist/npm-packages.tar.gz \
             --out dist
 
@@ -135,11 +135,11 @@ jobs:
 
       - name: Revalidate packed npm contract
         run: |
-          python3 cmux-tui/dist/scripts/validate_package_contract.py \
+          python3 hmux-tui/dist/scripts/validate_package_contract.py \
             --npm-packages dist/npm-packages \
             --version "${{ needs.version.outputs.version }}" \
-            --install-npm-package cmux-tui-linux-x64 \
-            --install-npm-relay-package cmux-relay-linux-x64
+            --install-npm-package hmux-tui-linux-x64 \
+            --install-npm-relay-package hmux-relay-linux-x64
 
       - name: Preflight trusted publishing contract
         env:
@@ -161,11 +161,11 @@ jobs:
           NODE
 
           packages=(
-            cmux-relay
-            cmux-relay-darwin-arm64
-            cmux-relay-darwin-x64
-            cmux-relay-linux-x64
-            cmux-relay-linux-arm64
+            hmux-relay
+            hmux-relay-darwin-arm64
+            hmux-relay-darwin-x64
+            hmux-relay-linux-x64
+            hmux-relay-linux-arm64
           )
           for package in "${packages[@]}"; do
             package_json="dist/npm-packages/$package/package.json"
@@ -201,15 +201,15 @@ jobs:
           set -euo pipefail
           mapfile -d '' binaries < <(
             find dist/npm-packages -type f \
-              \( -path '*/cmux-relay-*/bin/chatmux-relay*' -o \
-                 -path '*/cmux-relay-*/bin/cmux-tui*' \) \
+              \( -path '*/hmux-relay-*/bin/chatmux-relay*' -o \
+                 -path '*/hmux-relay-*/bin/hmux-tui*' \) \
               -print0 | sort -z
           )
           ((${#binaries[@]} > 0))
           for binary in "${binaries[@]}"; do
             gh attestation verify "$binary" \
               --repo "$GITHUB_REPOSITORY" \
-              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/cmux-tui-build-package.yml" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/hmux-tui-build-package.yml" \
               --deny-self-hosted-runners \
               --source-digest "$GITHUB_SHA" \
               --source-ref "$GITHUB_REF"
@@ -222,11 +222,11 @@ jobs:
         run: |
           set -euo pipefail
           packages=(
-            cmux-relay-darwin-arm64
-            cmux-relay-darwin-x64
-            cmux-relay-linux-x64
-            cmux-relay-linux-arm64
-            cmux-relay
+            hmux-relay-darwin-arm64
+            hmux-relay-darwin-x64
+            hmux-relay-linux-x64
+            hmux-relay-linux-arm64
+            hmux-relay
           )
 
           local_integrity() {
@@ -328,11 +328,11 @@ jobs:
         run: |
           set -euo pipefail
           packages=(
-            cmux-relay
-            cmux-relay-darwin-arm64
-            cmux-relay-darwin-x64
-            cmux-relay-linux-x64
-            cmux-relay-linux-arm64
+            hmux-relay
+            hmux-relay-darwin-arm64
+            hmux-relay-darwin-x64
+            hmux-relay-linux-x64
+            hmux-relay-linux-arm64
           )
           audit_root="$(mktemp -d)"
           trap 'rm -rf "$audit_root"' EXIT
@@ -383,9 +383,9 @@ jobs:
       matrix:
         include:
           - os: blacksmith-4vcpu-ubuntu-2404
-            package: cmux-relay-linux-x64
+            package: hmux-relay-linux-x64
           - os: blacksmith-6vcpu-macos-15
-            package: cmux-relay-darwin-arm64
+            package: hmux-relay-darwin-arm64
     runs-on: ${{ matrix.os }}
     timeout-minutes: 15
     permissions:
@@ -409,9 +409,9 @@ jobs:
           set -euo pipefail
           # Install the exact platform package as a direct dependency so this
           # smoke proves the launcher resolves the package for each OS family.
-          npm install --global --ignore-scripts --force "cmux-relay@$VERSION" "$PLATFORM_PACKAGE@$VERSION"
+          npm install --global --ignore-scripts --force "hmux-relay@$VERSION" "$PLATFORM_PACKAGE@$VERSION"
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            cmux-relay.cmd --version
+            hmux-relay.cmd --version
           else
-            cmux-relay --version
+            hmux-relay --version
           fi

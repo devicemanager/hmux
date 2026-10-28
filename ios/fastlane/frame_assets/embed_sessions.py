@@ -12,7 +12,7 @@ import sys
 HERE = os.path.dirname(os.path.abspath(__file__))
 SWIFT = os.path.normpath(os.path.join(
     HERE, "..", "..", "..",
-    "Packages/iOS/CmuxMobileShellUI/Sources/CmuxMobileShellUI/TerminalPreviewTranscripts.swift"))
+    "Packages/iOS/HmuxMobileShellUI/Sources/HmuxMobileShellUI/TerminalPreviewTranscripts.swift"))
 
 AGENTS = ["claude", "codex", "opencode", "pi"]
 NOISE = re.compile(
@@ -53,7 +53,7 @@ def main():
            '/// terminal grid width, then base64-embedded so the App Store terminal',
            '/// screenshots show genuine TUIs (no hand-authored transcripts). Re-record with',
            '/// ios/fastlane/frame_assets/record_sessions.sh. Selected via',
-           '/// `CMUX_UITEST_TERMINAL_TRANSCRIPT` (claude | codex | opencode | pi).',
+           '/// `HMUX_UITEST_TERMINAL_TRANSCRIPT` (claude | codex | opencode | pi).',
            'enum TerminalPreviewTranscripts {',
            '    static func transcript(named name: String) -> Data {',
            '        let b64: String',

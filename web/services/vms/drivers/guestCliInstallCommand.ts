@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import { GUEST_CMUX_SHIM, GUEST_CMUX_SHIM_PATH } from "../guestCli";
+import { GUEST_HMUX_SHIM, GUEST_HMUX_SHIM_PATH } from "../guestCli";
 import { GUEST_BROWSER_FILES, guestBrowserInstallCommand } from "../guestBrowser";
 import { GUEST_CLIPBOARD_FILES } from "../guestClipboard";
 import {
@@ -10,22 +10,22 @@ import {
   type GuestCliDistribution,
 } from "../guestCliDistribution";
 import { guestPromptInstallFiles, type GuestPromptIdentity } from "../guestPrompt";
-import { shellQuote } from "./cmuxTuiDaemon";
+import { shellQuote } from "./hmuxTuiDaemon";
 
-const digest = createHash("sha256").update(GUEST_CMUX_SHIM).digest("hex");
+const digest = createHash("sha256").update(GUEST_HMUX_SHIM).digest("hex");
 function distributionPaths(manifest: GuestCliDistribution = defaultGuestCliDistribution): string[] {
   return guestCliDistributionInstallPaths(manifest);
 }
 
 const installPaths = [
-  GUEST_CMUX_SHIM_PATH,
+  GUEST_HMUX_SHIM_PATH,
   ...GUEST_BROWSER_FILES.map(({ path }) => path),
   ...GUEST_CLIPBOARD_FILES.map(({ path }) => path),
-  "/etc/cmux/browser-opener-version",
-  "/etc/cmux/prompt.bash",
-  "/etc/cmux/bashrc",
-  "/etc/cmux/.prompt-identity",
-  "/etc/cmux/vm-name",
+  "/etc/hmux/browser-opener-version",
+  "/etc/hmux/prompt.bash",
+  "/etc/hmux/bashrc",
+  "/etc/hmux/.prompt-identity",
+  "/etc/hmux/vm-name",
   "/etc/bash.bashrc",
   "/etc/zsh/zshenv",
   ...distributionPaths(),
@@ -43,11 +43,11 @@ lock = None
 backup_root = None
 backups = {}
 paths = list(dict.fromkeys(json.loads(paths_json)))
-lock_path = "/etc/cmux/.prompt-lock"
+lock_path = "/etc/hmux/.prompt-lock"
 
 def mime_paths():
     result = []
-    for username in ("root", "cmux", "ubuntu"):
+    for username in ("root", "hmux", "ubuntu"):
         try:
             lookup = subprocess.run(["getent", "passwd", username], check=False,
                                     stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True)
@@ -148,7 +148,7 @@ def restore_paths():
 
 def cleanup_generated():
     failures = []
-    prefixes = [".prompt-" + transaction_token + "-", ".cmux-cli-", ".cmux-link-"]
+    prefixes = [".prompt-" + transaction_token + "-", ".hmux-cli-", ".hmux-link-"]
     prefixes.extend(os.path.basename(path) + "." + transaction_token + "." for path in paths)
     for directory in directory_paths:
         if not os.path.isdir(directory) or os.path.islink(directory):
@@ -195,7 +195,7 @@ def replace_file(directory, name, content):
 def install_prompt(payload):
     if not payload:
         return
-    directory = "/etc/cmux"
+    directory = "/etc/hmux"
     os.makedirs(directory, exist_ok=True)
     incoming = payload["identity"]
     try:
@@ -227,7 +227,7 @@ try:
         if hashlib.sha256(stream.read()).hexdigest() != digest:
             raise ValueError("upload checksum mismatch")
         os.fchmod(stream.fileno(), 0o755)
-    backup_root = tempfile.mkdtemp(prefix=".cmux-install-", dir=os.path.dirname(lock_path))
+    backup_root = tempfile.mkdtemp(prefix=".hmux-install-", dir=os.path.dirname(lock_path))
     for path in paths:
         snapshot_path(path)
     stage = "verify"
@@ -278,7 +278,7 @@ except Exception as error:
     # into a non-empty directory or touch an alias target.
     try:
         for directory in sorted(directory_paths, key=len, reverse=True):
-            if not os.path.basename(directory).startswith("cmux-cloud-"):
+            if not os.path.basename(directory).startswith("hmux-cloud-"):
                 continue
             if before_directories.get(directory, False) or not os.path.isdir(directory) or os.path.islink(directory):
                 continue
@@ -292,7 +292,7 @@ except Exception as error:
         "errno": getattr(error, "errno", None),
         "exitCode": getattr(error, "returncode", None),
     }
-    print("CMUX_GUEST_INSTALL_FAILURE=" + json.dumps(detail), file=sys.stderr)
+    print("HMUX_GUEST_INSTALL_FAILURE=" + json.dumps(detail), file=sys.stderr)
     sys.exit(1)
 finally:
     if lock is not None:
@@ -319,8 +319,8 @@ export function guestCliInstallCommand(
   const paths = manifest === defaultGuestCliDistribution
     ? installPaths
     : [
-        ...installPaths.filter((path) => !path.startsWith("/usr/local/libexec/cmux-cloud-")),
+        ...installPaths.filter((path) => !path.startsWith("/usr/local/libexec/hmux-cloud-")),
         ...distributionPaths(manifest),
       ];
-  return `python3 -c ${shellQuote(install)} ${shellQuote(temporaryPath)} ${shellQuote(GUEST_CMUX_SHIM_PATH)} ${shellQuote(digest)} ${shellQuote(browser)} ${shellQuote(distribution)} ${shellQuote(prompt)} ${shellQuote(JSON.stringify(paths))} ${shellQuote(transactionToken)} ${shellQuote(cleanup)}`;
+  return `python3 -c ${shellQuote(install)} ${shellQuote(temporaryPath)} ${shellQuote(GUEST_HMUX_SHIM_PATH)} ${shellQuote(digest)} ${shellQuote(browser)} ${shellQuote(distribution)} ${shellQuote(prompt)} ${shellQuote(JSON.stringify(paths))} ${shellQuote(transactionToken)} ${shellQuote(cleanup)}`;
 }

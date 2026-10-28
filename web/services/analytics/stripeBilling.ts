@@ -70,7 +70,7 @@ export async function captureBillingPlanSwitchStarted(input: {
   livemode?: boolean;
 }, postHogFetch?: typeof fetch): Promise<void> {
   await captureBillingPayload({
-    name: "cmux_billing_plan_switch_started",
+    name: "hmux_billing_plan_switch_started",
     insertId: input.sessionId,
     subject: { scope: "user", stackUserId: input.userId },
     livemode: input.livemode,
@@ -96,7 +96,7 @@ export async function captureBillingCheckoutStarted(
   postHogFetch?: typeof fetch,
 ): Promise<void> {
   await captureBillingPayload({
-    name: "cmux_billing_checkout_started",
+    name: "hmux_billing_checkout_started",
     insertId: `checkout-started:${input.sessionId}`,
     subject: input.subject,
     livemode: input.livemode,
@@ -183,7 +183,7 @@ function checkoutCompletedEvent(
   const plan = metadataString(session.metadata, "plan");
   const amountDiscount = session.total_details?.amount_discount ?? null;
   return {
-    name: "cmux_billing_checkout_completed",
+    name: "hmux_billing_checkout_completed",
     properties: {
       ...common,
       plan,
@@ -216,7 +216,7 @@ function checkoutExpiredEvent(
 ): MappedBillingEvent {
   const attribution = checkoutAttributionFromMetadata(session.metadata);
   return {
-    name: "cmux_billing_checkout_expired",
+    name: "hmux_billing_checkout_expired",
     properties: {
       ...common,
       plan: metadataString(session.metadata, "plan"),
@@ -237,7 +237,7 @@ function subscriptionEvent(
 ): MappedBillingEvent {
   const attribution = checkoutAttributionFromMetadata(subscription.metadata);
   return {
-    name: `cmux_billing_subscription_${action}`,
+    name: `hmux_billing_subscription_${action}`,
     properties: {
       ...common,
       plan: subscription.metadata?.plan === "team" ? "team" : personalPlanIdForSubscription(subscription),
@@ -261,8 +261,8 @@ function invoiceEvent(
 ): MappedBillingEvent {
   return {
     name: type === "invoice.paid"
-      ? "cmux_billing_invoice_paid"
-      : "cmux_billing_invoice_payment_failed",
+      ? "hmux_billing_invoice_paid"
+      : "hmux_billing_invoice_payment_failed",
     properties: {
       ...common,
       amount_due: invoice.amount_due,
@@ -280,7 +280,7 @@ function refundEvent(
   common: Record<string, unknown>,
 ): MappedBillingEvent {
   return {
-    name: "cmux_billing_charge_refunded",
+    name: "hmux_billing_charge_refunded",
     properties: {
       ...common,
       amount: charge.amount,

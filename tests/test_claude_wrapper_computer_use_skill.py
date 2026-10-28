@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Regression tests for cmux-claude-wrapper's explicit-install policy,
+Regression tests for hmux-claude-wrapper's explicit-install policy,
 ownership-safe migration, and collision handling. Ordinary Claude launches do
 not add a skill directory or plugin; legacy aliases are migrated only when
-their targets prove cmux ownership.
+their targets prove hmux ownership.
 """
 
 from __future__ import annotations
@@ -17,14 +17,14 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-WRAPPER = ROOT / "Resources" / "bin" / "cmux-claude-wrapper"
-LINK_POLICY = ROOT / "skills" / "cmux-cua" / "link-policy.sh"
-CLIENT_POLICY = ROOT / "skills" / "cmux-cua" / "client-policy.sh"
+WRAPPER = ROOT / "Resources" / "bin" / "hmux-claude-wrapper"
+LINK_POLICY = ROOT / "skills" / "hmux-cua" / "link-policy.sh"
+CLIENT_POLICY = ROOT / "skills" / "hmux-cua" / "client-policy.sh"
 
 SKILL_MD = (
     "---\n"
-    "name: cmux-cua\n"
-    "description: Test bundled cmux Computer Use skill.\n"
+    "name: hmux-cua\n"
+    "description: Test bundled hmux Computer Use skill.\n"
     "---\n"
     "\n"
     "Use the bundled Computer Use tools.\n"
@@ -46,7 +46,7 @@ def run_wrapper(
     *,
     disabled: bool = False,
     preexisting_link_target: Path | None = None,
-    preexisting_valid_cmux_link: bool = False,
+    preexisting_valid_hmux_link: bool = False,
     preexisting_directory: bool = False,
     preexisting_legacy_link_target: Path | None = None,
     project_skill_collision: bool = False,
@@ -59,28 +59,28 @@ def run_wrapper(
 
     Returns (result, skill_link_path, bundled_skill_dir, claude_args).
     """
-    td = tempfile.mkdtemp(prefix="cmux-claude-wrapper-skill-")
+    td = tempfile.mkdtemp(prefix="hmux-claude-wrapper-skill-")
     root = Path(td)
     home = root / "home"
-    bundle_bin = root / "cmux.app" / "Contents" / "Resources" / "bin"
+    bundle_bin = root / "hmux.app" / "Contents" / "Resources" / "bin"
     real_bin = root / "real-bin"
     for directory in (home, bundle_bin, real_bin):
         directory.mkdir(parents=True, exist_ok=True)
 
-    wrapper = bundle_bin / "cmux-claude-wrapper"
+    wrapper = bundle_bin / "hmux-claude-wrapper"
     wrapper.write_bytes(WRAPPER.read_bytes())
     wrapper.chmod(0o755)
 
-    bundled_skill = bundle_bin.parent / "cmux-cua"
+    bundled_skill = bundle_bin.parent / "hmux-cua"
     bundled_skill.mkdir()
     (bundled_skill / "SKILL.md").write_text(SKILL_MD, encoding="utf-8")
     (bundled_skill / "link-policy.sh").write_bytes(LINK_POLICY.read_bytes())
     (bundled_skill / "client-policy.sh").write_bytes(CLIENT_POLICY.read_bytes())
-    project_skill = root / ".claude" / "skills" / "cmux-cua"
+    project_skill = root / ".claude" / "skills" / "hmux-cua"
     if project_skill_collision:
         project_skill.mkdir(parents=True)
         (project_skill / "SKILL.md").write_text(
-            "---\nname: cmux-cua\ndescription: Project-owned build skill.\n---\n\nProject instructions.\n",
+            "---\nname: hmux-cua\ndescription: Project-owned build skill.\n---\n\nProject instructions.\n",
             encoding="utf-8",
         )
 
@@ -131,13 +131,13 @@ done
     )
 
     # The wrapper only reaches computer-use setup with authoritative evidence
-    # of a live cmux: a surface id plus a socket its bundled CLI can ping.
-    socket_path = root / "cmux.sock"
+    # of a live hmux: a surface id plus a socket its bundled CLI can ping.
+    socket_path = root / "hmux.sock"
     listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     listener.bind(str(socket_path))
     listener.listen(1)
     write_executable(
-        bundle_bin / "cmux",
+        bundle_bin / "hmux",
         """#!/bin/sh
 if [ "$1" = "--socket" ]; then
   shift 2
@@ -149,26 +149,26 @@ exit 1
 """,
     )
 
-    destination = home / ".claude" / "skills" / "cmux-cua"
+    destination = home / ".claude" / "skills" / "hmux-cua"
     if preexisting_link_target is not None:
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.symlink_to(preexisting_link_target)
-    if preexisting_valid_cmux_link:
+    if preexisting_valid_hmux_link:
         destination.parent.mkdir(parents=True, exist_ok=True)
-        old_skill = home / "Library" / "Developer" / "Xcode" / "DerivedData" / "cmux-fixture" / "Build" / "Products" / "Debug" / "cmux DEV old.app" / "Contents" / "Resources" / "cmux-cua"
+        old_skill = home / "Library" / "Developer" / "Xcode" / "DerivedData" / "hmux-fixture" / "Build" / "Products" / "Debug" / "hmux DEV old.app" / "Contents" / "Resources" / "hmux-cua"
         old_skill.mkdir(parents=True)
         (old_skill / "SKILL.md").write_text(
-            "---\nname: cmux-cua\ndescription: Old cmux skill.\n---\n\nOld bundle.\n",
+            "---\nname: hmux-cua\ndescription: Old hmux skill.\n---\n\nOld bundle.\n",
             encoding="utf-8",
         )
         with (old_skill.parents[1] / "Info.plist").open("wb") as stream:
-            plistlib.dump({"CFBundleIdentifier": "com.cmuxterm.app.debug.fixture"}, stream)
+            plistlib.dump({"CFBundleIdentifier": "com.hmuxterm.app.debug.fixture"}, stream)
         destination.symlink_to(old_skill)
     if preexisting_directory:
         destination.mkdir(parents=True, exist_ok=True)
         (destination / "SKILL.md").write_text("user-owned\n", encoding="utf-8")
     if preexisting_legacy_link_target is not None:
-        legacy = home / ".agents" / "skills" / "cmux-computer-use"
+        legacy = home / ".agents" / "skills" / "hmux-computer-use"
         legacy.parent.mkdir(parents=True, exist_ok=True)
         legacy.symlink_to(preexisting_legacy_link_target)
 
@@ -176,22 +176,22 @@ exit 1
         "HOME": str(home),
         "PATH": f"{real_bin}:/usr/bin:/bin",
         "TMPDIR": str(root),
-        "CMUX_SURFACE_ID": "surface:test",
-        "CMUX_SOCKET_PATH": str(socket_path),
-        "CMUX_CLAUDE_SKIP_DEFAULTS": "1",
-        "CMUX_CLAUDE_MANAGED_SETTINGS_FILE": str(root / "no-managed-settings.json"),
-        "CMUX_CLAUDE_MANAGED_SETTINGS_DIR": str(root / "no-managed-settings.d"),
-        "CMUX_CLAUDE_REMOTE_SETTINGS_FILE": str(root / "no-remote-settings.json"),
+        "HMUX_SURFACE_ID": "surface:test",
+        "HMUX_SOCKET_PATH": str(socket_path),
+        "HMUX_CLAUDE_SKIP_DEFAULTS": "1",
+        "HMUX_CLAUDE_MANAGED_SETTINGS_FILE": str(root / "no-managed-settings.json"),
+        "HMUX_CLAUDE_MANAGED_SETTINGS_DIR": str(root / "no-managed-settings.d"),
+        "HMUX_CLAUDE_REMOTE_SETTINGS_FILE": str(root / "no-remote-settings.json"),
         "FAKE_CLAUDE_ARGS_LOG": str(args_log),
     }
     if disabled:
-        env["CMUX_COMPUTER_USE_MCP_DISABLED"] = "1"
+        env["HMUX_COMPUTER_USE_MCP_DISABLED"] = "1"
     if diagnostics:
-        env["CMUX_CUA_DIAGNOSTICS"] = "1"
+        env["HMUX_CUA_DIAGNOSTICS"] = "1"
     if install_global_skill:
-        env["CMUX_COMPUTER_USE_INSTALL_GLOBAL_SKILL"] = "1"
+        env["HMUX_COMPUTER_USE_INSTALL_GLOBAL_SKILL"] = "1"
     elif global_skill_opt_out:
-        env["CMUX_COMPUTER_USE_INSTALL_GLOBAL_SKILL"] = "0"
+        env["HMUX_COMPUTER_USE_INSTALL_GLOBAL_SKILL"] = "0"
 
     try:
         launch_cwd = home / "projects" / "plain" if cwd_under_home_no_git else root
@@ -231,7 +231,7 @@ def test_claude_preserves_unverified_dangling_link_by_default(
     failures: list[str],
 ) -> None:
     dangling = Path(
-        "/Applications/cmux DEV old.app/Contents/Resources/cmux-cua"
+        "/Applications/hmux DEV old.app/Contents/Resources/hmux-cua"
     )
     result, link, bundled_skill, args = run_wrapper(
         ["hello"],
@@ -282,7 +282,7 @@ def test_claude_default_is_session_scoped_without_global_mutation(
 def test_claude_preserves_unverified_dangling_link_without_global_install(
     failures: list[str],
 ) -> None:
-    dangling = Path("/Applications/cmux NIGHTLY old.app/Contents/Resources/cmux-cua")
+    dangling = Path("/Applications/hmux NIGHTLY old.app/Contents/Resources/hmux-cua")
     result, link, bundled_skill, args = run_wrapper(
         ["hello"],
         preexisting_link_target=dangling,
@@ -307,7 +307,7 @@ def test_claude_preserves_unverified_dangling_link_without_global_install(
 def test_claude_explicit_opt_in_preserves_unverified_dangling_link(
     failures: list[str],
 ) -> None:
-    dangling = Path("/Applications/cmux NIGHTLY old.app/Contents/Resources/cmux-cua")
+    dangling = Path("/Applications/hmux NIGHTLY old.app/Contents/Resources/hmux-cua")
     result, link, bundled_skill, args = run_wrapper(
         ["hello"],
         preexisting_link_target=dangling,
@@ -324,7 +324,7 @@ def test_claude_explicit_opt_in_preserves_unverified_dangling_link(
         f"explicit opt-in must preserve an unverified dangling link, got {link}",
         failures,
     )
-    expect("cmux-cua: skill-install=blocked-user-path" in result.stderr and str(link) in result.stderr,
+    expect("hmux-cua: skill-install=blocked-user-path" in result.stderr and str(link) in result.stderr,
            f"explicit blocked install must identify the preserved path, got {result.stderr!r}", failures)
     expect(
         add_dir_arg(args) is None,
@@ -356,7 +356,7 @@ def test_claude_home_ancestor_is_not_project_collision(
 ) -> None:
     for opt_in in (False, True):
         result, link, bundled_skill, args = run_wrapper(
-            ["hello"], preexisting_valid_cmux_link=True,
+            ["hello"], preexisting_valid_hmux_link=True,
             cwd_under_home_no_git=True, install_global_skill=opt_in,
             diagnostics=not opt_in,
         )
@@ -426,7 +426,7 @@ def test_claude_explicit_global_opt_in_remains_available(failures: list[str]) ->
 
 def test_claude_preserves_unverified_legacy_computer_use_link(failures: list[str]) -> None:
     legacy_target = Path(
-        "/Applications/cmux DEV old.app/Contents/Resources/cmux-computer-use"
+        "/Applications/hmux DEV old.app/Contents/Resources/hmux-computer-use"
     )
     result, link, bundled_skill, args = run_wrapper(
         ["hello"],
@@ -437,7 +437,7 @@ def test_claude_preserves_unverified_legacy_computer_use_link(failures: list[str
         f"wrapper exited {result.returncode}: {result.stdout} {result.stderr}",
         failures,
     )
-    legacy = link.parents[2] / ".agents" / "skills" / "cmux-computer-use"
+    legacy = link.parents[2] / ".agents" / "skills" / "hmux-computer-use"
     expect(
         legacy.is_symlink() and os.readlink(legacy) == str(legacy_target),
         f"unverified legacy link must be preserved, found {legacy}",
@@ -471,10 +471,10 @@ def test_claude_leaves_user_owned_legacy_links_alone(failures: list[str]) -> Non
         f"wrapper exited {result.returncode}: {result.stdout} {result.stderr}",
         failures,
     )
-    legacy = link.parents[2] / ".agents" / "skills" / "cmux-computer-use"
+    legacy = link.parents[2] / ".agents" / "skills" / "hmux-computer-use"
     expect(
         legacy.is_symlink() and os.readlink(legacy) == str(foreign),
-        "expected a user-owned cmux-computer-use link untouched by migration",
+        "expected a user-owned hmux-computer-use link untouched by migration",
         failures,
     )
 
@@ -509,9 +509,9 @@ def test_claude_global_skill_can_be_disabled_explicitly(failures: list[str]) -> 
 
 def test_claude_leaves_user_owned_skill_links_alone(failures: list[str]) -> None:
     # A user-owned link can use the same resource suffix and a misleading app
-    # name; an untrusted root must not be treated as cmux ownership proof.
+    # name; an untrusted root must not be treated as hmux ownership proof.
     foreign = Path(
-        "/nonexistent/cmux NIGHTLY user-owned.app/Contents/Resources/cmux-cua"
+        "/nonexistent/hmux NIGHTLY user-owned.app/Contents/Resources/hmux-cua"
     )
     result, link, bundled_skill, args = run_wrapper(
         ["hello"],
@@ -598,7 +598,7 @@ def test_strict_mcp_config_skips_all_computer_use_sideloading(failures: list[str
         f"strict wrapper exited {result.returncode}: {result.stdout} {result.stderr}",
         failures,
     )
-    expect(plugin_dir_arg(args) is None, f"strict mode loaded cmux plugin: {args}", failures)
+    expect(plugin_dir_arg(args) is None, f"strict mode loaded hmux plugin: {args}", failures)
     expect(
         not link.exists() and not link.is_symlink(),
         f"strict mode wrote global skill state at {link}",

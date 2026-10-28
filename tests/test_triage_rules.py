@@ -31,7 +31,7 @@ SYNC = load("sync_labels", "scripts/ci/sync_labels.py")
 
 class SeverityTests(unittest.TestCase):
     def test_data_loss_is_critical(self):
-        result = RULES.classify("Quitting cmux causes data loss in the active workspace", "")
+        result = RULES.classify("Quitting hmux causes data loss in the active workspace", "")
         self.assertEqual(result.severity, "S1: critical")
 
     def test_app_that_will_not_launch_is_critical(self):
@@ -124,7 +124,7 @@ def form_body(answer: str, *, before: str = "Something is wrong.") -> str:
     """An issue body the way GitHub renders the bug form."""
     return (
         f"### What happened?\n\n{before}\n\n"
-        f"### Which part of cmux is this about?\n\n{answer}\n\n"
+        f"### Which part of hmux is this about?\n\n{answer}\n\n"
         "### Additional context\n\n_No response_"
     )
 
@@ -147,9 +147,9 @@ class FormAreaTests(unittest.TestCase):
         self.assertEqual(result.areas, ["area: workspaces"])
 
     def test_option_parentheses_do_not_leak_into_the_area(self):
-        # `remote (cmux ssh, tunnels, relays)` also matches the cli and cloud
+        # `remote (hmux ssh, tunnels, relays)` also matches the cli and cloud
         # patterns. The reporter picked remote, so remote is what it gets.
-        result = RULES.classify("Nothing works", form_body("remote (cmux ssh, tunnels, relays)"))
+        result = RULES.classify("Nothing works", form_body("remote (hmux ssh, tunnels, relays)"))
         self.assertEqual(result.areas, ["area: remote"])
 
     def test_the_answer_is_explained_in_the_notes(self):
@@ -230,7 +230,7 @@ class DeclaredAreaTests(unittest.TestCase):
     def test_a_channel_name_is_not_an_area(self):
         # "NIGHTLY" and "Install" name where a bug happens or what it is called,
         # not `area: updates`, so they stay out of the declaration vocabulary.
-        self.assertIsNone(RULES.declared_area("NIGHTLY hangs: CmuxEventBus.publish blocks"))
+        self.assertIsNone(RULES.declared_area("NIGHTLY hangs: HmuxEventBus.publish blocks"))
         self.assertIsNone(
             RULES.declared_area("Regression: Install and Relaunch no longer relaunches")
         )
@@ -358,7 +358,7 @@ class DocumentedExampleTests(unittest.TestCase):
         examples = {
             "Reopening a session destroys the current windows": "S1: critical",
             "Crash when closing the last split": "S2: major",
-            "cmux ssh cannot connect to the host": "S2: major",
+            "hmux ssh cannot connect to the host": "S2: major",
             "Tab title shows the old directory until you switch tabs": "S3: minor",
             "A typo in Settings": "S4: cosmetic",
             "A misaligned tab indicator": "S4: cosmetic",
@@ -425,9 +425,9 @@ class ReceiptTests(unittest.TestCase):
             self.assertEqual(len(self.rows()), 2)
 
     def test_rows_carry_the_repo(self):
-        with AUTO.Receipt(self.path, "teamleaderleo/cmux", dry_run=False) as receipt:
+        with AUTO.Receipt(self.path, "teamleaderleo/hmux", dry_run=False) as receipt:
             receipt.add(7, ["needs-triage"])
-        self.assertEqual(self.rows()[0]["repo"], "teamleaderleo/cmux")
+        self.assertEqual(self.rows()[0]["repo"], "teamleaderleo/hmux")
 
     def test_a_dry_run_receipt_is_marked_and_refused_by_revert(self):
         with AUTO.Receipt(self.path, "manaflow-ai/cmux", dry_run=True) as receipt:
@@ -438,11 +438,11 @@ class ReceiptTests(unittest.TestCase):
         self.assertIn("dry run", str(caught.exception))
 
     def test_revert_refuses_a_receipt_from_another_repo(self):
-        with AUTO.Receipt(self.path, "teamleaderleo/cmux", dry_run=False) as receipt:
+        with AUTO.Receipt(self.path, "teamleaderleo/hmux", dry_run=False) as receipt:
             receipt.add(9, ["S3: minor"])
         with self.assertRaises(SystemExit) as caught:
             AUTO.load_receipt(self.path, "manaflow-ai/cmux")
-        self.assertIn("teamleaderleo/cmux", str(caught.exception))
+        self.assertIn("teamleaderleo/hmux", str(caught.exception))
 
     def test_revert_accepts_its_own_real_receipt(self):
         with AUTO.Receipt(self.path, "manaflow-ai/cmux", dry_run=False) as receipt:

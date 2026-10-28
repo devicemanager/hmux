@@ -68,7 +68,7 @@
   },
   {
    "role": "link",
-   "name": "cmux",
+   "name": "hmux",
    "path": "1.0.4.0.0.0.0.0.0.3.0"
   },
   {
@@ -203,7 +203,7 @@
   },
   {
    "role": "link",
-   "name": "[codex] Add more cmux agent skills (",
+   "name": "[codex] Add more hmux agent skills (",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.0.2.0.0.0"
   },
   {
@@ -433,7 +433,7 @@
   },
   {
    "role": "link",
-   "name": "cmux-browser, (Directory)",
+   "name": "hmux-browser, (Directory)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.17.1.0.1.0.0.0"
   },
   {
@@ -448,7 +448,7 @@
   },
   {
    "role": "link",
-   "name": "cmux-tui, (Directory)",
+   "name": "hmux-tui, (Directory)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.18.1.0.1.0.0.0"
   },
   {
@@ -458,12 +458,12 @@
   },
   {
    "role": "link",
-   "name": "cmux.xcodeproj, (Directory)",
+   "name": "hmux.xcodeproj, (Directory)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.19.1.0.1.0.0.0"
   },
   {
    "role": "link",
-   "name": "cmux.xcworkspace, (Directory)",
+   "name": "hmux.xcworkspace, (Directory)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.20.1.0.1.0.0.0"
   },
   {
@@ -478,7 +478,7 @@
   },
   {
    "role": "link",
-   "name": "cmuxCLITestSupport, (Directory)",
+   "name": "hmuxCLITestSupport, (Directory)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.21.1.0.1.0.0.0"
   },
   {
@@ -488,7 +488,7 @@
   },
   {
    "role": "link",
-   "name": "cmuxCLITests, (Directory)",
+   "name": "hmuxCLITests, (Directory)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.22.1.0.1.0.0.0"
   },
   {
@@ -498,12 +498,12 @@
   },
   {
    "role": "link",
-   "name": "cmuxTests, (Directory)",
+   "name": "hmuxTests, (Directory)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.23.1.0.1.0.0.0"
   },
   {
    "role": "link",
-   "name": "cmuxUITests, (Directory)",
+   "name": "hmuxUITests, (Directory)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.24.1.0.1.0.0.0"
   },
   {
@@ -588,7 +588,7 @@
   },
   {
    "role": "link",
-   "name": "examples/cmux-pack-template, (Directory)",
+   "name": "examples/hmux-pack-template, (Directory)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.30.1.0.1.0.0.0"
   },
   {
@@ -633,7 +633,7 @@
   },
   {
    "role": "link",
-   "name": "homebrew-cmux, (Submodule)",
+   "name": "homebrew-hmux, (Submodule)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.33.1.0.1.0.0.0"
   },
   {
@@ -1503,7 +1503,7 @@
   },
   {
    "role": "link",
-   "name": "cmux-Bridging-Header.h, (File)",
+   "name": "hmux-Bridging-Header.h, (File)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.90.1.0.1.0.0.0"
   },
   {
@@ -1533,7 +1533,7 @@
   },
   {
    "role": "link",
-   "name": "cmux-helper.entitlements, (File)",
+   "name": "hmux-helper.entitlements, (File)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.91.1.0.1.0.0.0"
   },
   {
@@ -1548,7 +1548,7 @@
   },
   {
    "role": "link",
-   "name": "cmux.entitlements, (File)",
+   "name": "hmux.entitlements, (File)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.92.1.0.1.0.0.0"
   },
   {
@@ -1558,17 +1558,17 @@
   },
   {
    "role": "link",
-   "name": "cmux.nightly.entitlements, (File)",
+   "name": "hmux.nightly.entitlements, (File)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.93.1.0.1.0.0.0"
   },
   {
    "role": "link",
-   "name": "cmux.rc.entitlements, (File)",
+   "name": "hmux.rc.entitlements, (File)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.94.1.0.1.0.0.0"
   },
   {
    "role": "link",
-   "name": "Add the cmux RC release channel (com.cmuxterm.app.rc) (",
+   "name": "Add the hmux RC release channel (com.hmuxterm.app.rc) (",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.94.2.0.0.0"
   },
   {
@@ -1583,7 +1583,7 @@
   },
   {
    "role": "link",
-   "name": "cmux.release.entitlements, (File)",
+   "name": "hmux.release.entitlements, (File)",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.0.3.1.95.1.0.1.0.0.0"
   },
   {
@@ -1708,7 +1708,7 @@
   },
   {
    "role": "link",
-   "name": "Download cmux for macOS",
+   "name": "Download hmux for macOS",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.2.0"
   },
   {
@@ -1828,7 +1828,7 @@
   },
   {
    "role": "link",
-   "name": "cmux screenshot",
+   "name": "hmux screenshot",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.5.0"
   },
   {
@@ -1838,7 +1838,7 @@
   },
   {
    "role": "link",
-   "name": "The Zen of cmux",
+   "name": "The Zen of hmux",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.6.1"
   },
   {
@@ -1888,7 +1888,7 @@
   },
   {
    "role": "link",
-   "name": "cmux SSH",
+   "name": "hmux SSH",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.9.0.0.4.1.0"
   },
   {
@@ -1898,7 +1898,7 @@
   },
   {
    "role": "link",
-   "name": "cmux.json",
+   "name": "hmux.json",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.10.1.1"
   },
   {
@@ -1908,7 +1908,7 @@
   },
   {
    "role": "link",
-   "name": "Download cmux for macOS",
+   "name": "Download hmux for macOS",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.13"
   },
   {
@@ -1933,17 +1933,17 @@
   },
   {
    "role": "link",
-   "name": "Customizing cmux's look",
+   "name": "Customizing hmux's look",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.33.0"
   },
   {
    "role": "link",
-   "name": "CMUX_NO_GIT_WATCH=1 mitigation",
+   "name": "HMUX_NO_GIT_WATCH=1 mitigation",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.34.0"
   },
   {
    "role": "link",
-   "name": "Download cmux NIGHTLY",
+   "name": "Download hmux NIGHTLY",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.54.0"
   },
   {
@@ -1993,7 +1993,7 @@
   },
   {
    "role": "link",
-   "name": "cmux Founders Edition",
+   "name": "hmux Founders Edition",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.84.0"
   },
   {
@@ -2018,7 +2018,7 @@
   },
   {
    "role": "link",
-   "name": "cmux CLI",
+   "name": "hmux CLI",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.92.0"
   },
   {
@@ -2043,7 +2043,7 @@
   },
   {
    "role": "link",
-   "name": "cmux-skills",
+   "name": "hmux-skills",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.98.0"
   },
   {
@@ -2093,7 +2093,7 @@
   },
   {
    "role": "link",
-   "name": "cmux Founders Edition",
+   "name": "hmux Founders Edition",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.110.0"
   },
   {
@@ -2198,7 +2198,7 @@
   },
   {
    "role": "link",
-   "name": "WeChat QR code to join the cmux community",
+   "name": "WeChat QR code to join the hmux community",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.121.2"
   },
   {
@@ -2208,7 +2208,7 @@
   },
   {
    "role": "link",
-   "name": "Download cmux for macOS",
+   "name": "Download hmux for macOS",
    "path": "1.0.4.0.0.1.0.0.0.2.0.0.0.0.0.0.0.0.1.0.0.0.2.1.0.1.0.128"
   },
   {

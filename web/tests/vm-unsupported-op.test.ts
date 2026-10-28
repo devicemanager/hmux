@@ -6,7 +6,7 @@ import { isOperatorFaultVmError } from "../services/vms/observability";
 import { vmWorkflowErrorResponse } from "../services/vms/routeHelpers";
 import { vmRequestLocale, vmUnsupportedCopy } from "../services/vms/vmErrorMessages";
 import { locales } from "../i18n/routing";
-import { parseCmuxTuiManifest } from "../services/vms/drivers/cmuxTuiDaemon";
+import { parseHmuxTuiManifest } from "../services/vms/drivers/hmuxTuiDaemon";
 
 // A driver that cannot perform an operation raises VmOperationUnsupportedError.
 // Before this mapping it surfaced as 502 vm_cloud_service_unavailable
@@ -17,9 +17,9 @@ describe("unsupported provider operations", () => {
   test("missing hook artifacts return localized setup guidance without manifest diagnostics", async () => {
     let cause: unknown;
     try {
-      parseCmuxTuiManifest("https://private.example/artifacts/manifest.json", {
+      parseHmuxTuiManifest("https://private.example/artifacts/manifest.json", {
         commit: "a".repeat(40),
-        binaries: { "cmux-tui-x86_64-unknown-linux-musl": "b".repeat(64) },
+        binaries: { "hmux-tui-x86_64-unknown-linux-musl": "b".repeat(64) },
       });
     } catch (error) {
       cause = error;
@@ -34,7 +34,7 @@ describe("unsupported provider operations", () => {
     expect(response!.status).toBe(503);
     expect(payload.error).toBe("vm_artifact_unavailable");
     expect(payload.message).toBe("Cloud VM のセットアップを一時的に利用できません。");
-    expect(JSON.stringify(payload)).not.toMatch(/private\.example|cmux-tui|freestyle|manifest/);
+    expect(JSON.stringify(payload)).not.toMatch(/private\.example|hmux-tui|freestyle|manifest/);
   });
 
   test("the structured driver error maps to an honest non-retryable 501", async () => {
@@ -98,11 +98,11 @@ describe("unsupported provider operations", () => {
       ui: { retryable: false, severity: "error" },
     });
     expect(String(payload.message)).toContain("preview URLs");
-    expect(String(payload.action)).toContain("cmux vm exec");
+    expect(String(payload.action)).toContain("hmux vm exec");
   });
 
   test("pause and resume on a provider without the verb answer verb-specific 501 copy", async () => {
-    // `cmux vm pause` / `cmux vm resume` (POST /api/vm/[id]/pause|resume) raise
+    // `hmux vm pause` / `hmux vm resume` (POST /api/vm/[id]/pause|resume) raise
     // the unsupported error directly from the workflow; the CLI keys off 501.
     const pause = await vmWorkflowErrorResponse(new VmOperationUnsupportedError({ provider: "freestyle", operation: "pause" }));
     expect(pause!.status).toBe(501);
@@ -113,7 +113,7 @@ describe("unsupported provider operations", () => {
       details: { operation: "pause", retryable: false },
     });
     expect(String(pausePayload.message)).toContain("cannot be paused");
-    expect(String(pausePayload.action)).toContain("cmux vm rm");
+    expect(String(pausePayload.action)).toContain("hmux vm rm");
 
     const resume = await vmWorkflowErrorResponse(new VmOperationUnsupportedError({ provider: "freestyle", operation: "resume" }));
     expect(resume!.status).toBe(501);

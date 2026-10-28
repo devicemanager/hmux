@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:hmuxPackage">
+   </FileRef>
+   <FileRef
+      location = "group:../Packages/iOS/HmuxMobileShellUI">
+   </FileRef>
+   <FileRef
+      location = "group:../Packages/iOS/HmuxMobileTerminal">
+   </FileRef>
+   <FileRef
+      location = "group:hmux-ios.xcodeproj">
+   </FileRef>
+</Workspace>

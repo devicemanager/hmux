@@ -1,12 +1,12 @@
-// cmux-opencode-tui-plugin-marker v2
+// hmux-opencode-tui-plugin-marker v2
 // OpenCode V2 bridge loaded inside each TUI process.
-// The server entry is inert; this module owns the TUI's cmux identity.
+// The server entry is inert; this module owns the TUI's hmux identity.
 
 import fs from "node:fs";
 import path from "node:path";
 import { spawn } from "node:child_process";
 import { createEffect, createRoot } from "solid-js";
-import { CMUXFeed } from "./index.js";
+import { HMUXFeed } from "./index.js";
 
 const firstString = (...values) => values.find((value) => typeof value === "string" && value.trim())?.trim() || null;
 const properties = (event) => event?.data || event?.properties || {};
@@ -172,34 +172,34 @@ function launchArgv() {
 }
 
 function launchEnvironment(cwdValue, baseEnvironment = process.env) {
-  const env = { ...baseEnvironment, CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC: "1" };
+  const env = { ...baseEnvironment, HMUXTERM_CLI_RESPONSE_TIMEOUT_SEC: "1" };
   delete env.AMP_API_KEY;
   // Any inherited capture describes a parent process: another agent, or an
   // OpenCode that started this one. Always describe this process's launch.
-  delete env.CMUX_AGENT_LAUNCH_SUBROUTER_CLAUDE_RESUME_COMMAND;
-  delete env.CMUX_AGENT_LAUNCH_SUBROUTER_CODEX_RESUME_COMMAND;
-  delete env.CMUX_AGENT_LAUNCH_ROUTED_CLAUDE_ACCOUNT;
+  delete env.HMUX_AGENT_LAUNCH_SUBROUTER_CLAUDE_RESUME_COMMAND;
+  delete env.HMUX_AGENT_LAUNCH_SUBROUTER_CODEX_RESUME_COMMAND;
+  delete env.HMUX_AGENT_LAUNCH_ROUTED_CLAUDE_ACCOUNT;
   const argv = launchArgv();
-  env.CMUX_AGENT_LAUNCH_KIND = "opencode";
-  env.CMUX_AGENT_LAUNCH_EXECUTABLE = argv[0] || resolveExecutable("opencode");
-  env.CMUX_AGENT_LAUNCH_ARGV_B64 = Buffer.from(`${argv.join("\0")}\0`, "utf8").toString("base64");
-  env.CMUX_AGENT_LAUNCH_CWD = cwdValue || process.cwd();
+  env.HMUX_AGENT_LAUNCH_KIND = "opencode";
+  env.HMUX_AGENT_LAUNCH_EXECUTABLE = argv[0] || resolveExecutable("opencode");
+  env.HMUX_AGENT_LAUNCH_ARGV_B64 = Buffer.from(`${argv.join("\0")}\0`, "utf8").toString("base64");
+  env.HMUX_AGENT_LAUNCH_CWD = cwdValue || process.cwd();
   return env;
 }
 
 /** Admit session restore without blocking the shared OpenCode service. */
 export function dispatchSessionHook(eventName, payload, spawnImpl = spawn, baseEnvironment = process.env) {
-  if (baseEnvironment.CMUX_OPENCODE_HOOKS_DISABLED === "1" || !baseEnvironment.CMUX_SURFACE_ID) return false;
-  const cmux = baseEnvironment.CMUX_OPENCODE_CMUX_BIN || "cmux";
+  if (baseEnvironment.HMUX_OPENCODE_HOOKS_DISABLED === "1" || !baseEnvironment.HMUX_SURFACE_ID) return false;
+  const hmux = baseEnvironment.HMUX_OPENCODE_HMUX_BIN || "hmux";
   const environment = launchEnvironment(payload.cwd, baseEnvironment);
   // A child (sub-agent) session runs in the same OpenCode process as its parent
-  // and shares the parent's surface, so cmux's process-ancestry check cannot
-  // detect it. Tag it explicitly so cmux treats the event as a nested subagent:
+  // and shares the parent's surface, so hmux's process-ancestry check cannot
+  // detect it. Tag it explicitly so hmux treats the event as a nested subagent:
   // with `automation.suppressSubagentNotifications` on, the child's completion
   // is dropped instead of alerting as a top-level finish.
-  if (payload.subagent === true) environment.CMUX_AGENT_MANAGED_SUBAGENT = "1";
+  if (payload.subagent === true) environment.HMUX_AGENT_MANAGED_SUBAGENT = "1";
   try {
-    const child = spawnImpl(cmux, ["hooks", "enqueue", "opencode", eventName], {
+    const child = spawnImpl(hmux, ["hooks", "enqueue", "opencode", eventName], {
       env: environment,
       stdio: ["pipe", "ignore", "ignore"],
       detached: true,
@@ -264,7 +264,7 @@ function reportError(ctx, _error) {
     const toast = ctx?.ui?.toast?.show;
     if (typeof toast === "function") {
       toast.call(ctx.ui.toast, {
-        message: "cmux could not process the OpenCode event. Try again.",
+        message: "hmux could not process the OpenCode event. Try again.",
         variant: "error",
       });
     }
@@ -318,7 +318,7 @@ async function handleEvent(ctx, ownership, feed, details, environment, retrySess
 // removes stale queue entries; route readiness is observed by Solid below.
 const SESSION_START_QUEUE_TTL_MS = 30_000;
 
-export async function createCMUXTUIBridge(ctx, options = {}) {
+export async function createHMUXTUIBridge(ctx, options = {}) {
   const environment = { ...process.env, ...options.environment };
   let disposed = false;
   const turns = createTurnLedger();
@@ -348,7 +348,7 @@ export async function createCMUXTUIBridge(ctx, options = {}) {
     }
   };
   ownership = createOwnership(ctx, flushPending);
-  feed = await CMUXFeed(ctx, {
+  feed = await HMUXFeed(ctx, {
     tui: true,
     ownsSession: ownership.belongs,
     locationForSession: () => ctx?.location,
@@ -403,8 +403,8 @@ export async function createCMUXTUIBridge(ctx, options = {}) {
 }
 
 export default {
-  id: "cmux.tui",
-  async tui(ctx) { return createCMUXTUIBridge(ctx); },
+  id: "hmux.tui",
+  async tui(ctx) { return createHMUXTUIBridge(ctx); },
   // Compatibility alias for older V2 snapshots that called setup().
-  async setup(ctx) { return createCMUXTUIBridge(ctx); },
+  async setup(ctx) { return createHMUXTUIBridge(ctx); },
 };

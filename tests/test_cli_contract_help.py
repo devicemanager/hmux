@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Executable contract check for no-socket cmux CLI help behavior.
+Executable contract check for no-socket hmux CLI help behavior.
 
 The command list lives in docs/cli-contract.md so the human migration spec and
 CI check stay tied together. This test invokes the built CLI binary; it does not
@@ -27,8 +27,8 @@ START_MARKER = "<!-- cli-contract-help-probes:start -->"
 END_MARKER = "<!-- cli-contract-help-probes:end -->"
 NEGATIVE_START_MARKER = "<!-- cli-contract-negative-help-probes:start -->"
 NEGATIVE_END_MARKER = "<!-- cli-contract-negative-help-probes:end -->"
-PROBE_RE = re.compile(r"^- `(?P<command>cmux(?: [^`]+)?)` -> `(?P<needle>[^`]+)`$")
-NEGATIVE_PROBE_RE = re.compile(r"^- `(?P<command>cmux(?: [^`]+)?)` !> `(?P<needle>[^`]+)`$")
+PROBE_RE = re.compile(r"^- `(?P<command>hmux(?: [^`]+)?)` -> `(?P<needle>[^`]+)`$")
+NEGATIVE_PROBE_RE = re.compile(r"^- `(?P<command>hmux(?: [^`]+)?)` !> `(?P<needle>[^`]+)`$")
 
 
 @dataclass(frozen=True)
@@ -49,19 +49,19 @@ def repo_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
-def resolve_cmux_cli() -> str:
-    explicit = os.environ.get("CMUX_CLI_BIN") or os.environ.get("CMUX_CLI")
+def resolve_hmux_cli() -> str:
+    explicit = os.environ.get("HMUX_CLI_BIN") or os.environ.get("HMUX_CLI")
     if explicit and os.path.exists(explicit) and os.access(explicit, os.X_OK):
         return explicit
 
     candidates: list[str] = []
-    candidates.extend(glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/cmux")))
+    candidates.extend(glob.glob(os.path.expanduser("~/Library/Developer/Xcode/DerivedData/*/Build/Products/Debug/hmux")))
     candidates = [path for path in candidates if os.path.exists(path) and os.access(path, os.X_OK)]
     if candidates:
         candidates.sort(key=os.path.getmtime, reverse=True)
         return candidates[0]
 
-    raise RuntimeError("Unable to find cmux CLI binary. Set CMUX_CLI_BIN.")
+    raise RuntimeError("Unable to find hmux CLI binary. Set HMUX_CLI_BIN.")
 
 
 def load_help_probes() -> list[HelpProbe]:
@@ -109,8 +109,8 @@ def load_probes(start_marker: str, end_marker: str, pattern: re.Pattern[str]) ->
 
 def run_probe(cli_path: str, probe: HelpProbe) -> ProbeResult:
     tokens = shlex.split(probe.command)
-    if not tokens or tokens[0] != "cmux":
-        raise RuntimeError(f"Probe must start with cmux: {probe.command}")
+    if not tokens or tokens[0] != "hmux":
+        raise RuntimeError(f"Probe must start with hmux: {probe.command}")
 
     return run_cli_args(cli_path, tokens[1:])
 
@@ -153,21 +153,21 @@ def run_cli_args(
 ) -> ProbeResult:
     env = clean_git_env()
     for key in [
-        "CMUX_SOCKET_PASSWORD",
-        "CMUX_SOCKET",
-        "CMUX_WORKSPACE_ID",
-        "CMUX_SURFACE_ID",
-        "CMUX_TAB_ID",
+        "HMUX_SOCKET_PASSWORD",
+        "HMUX_SOCKET",
+        "HMUX_WORKSPACE_ID",
+        "HMUX_SURFACE_ID",
+        "HMUX_TAB_ID",
     ]:
         env.pop(key, None)
-    env["CMUX_CLI_SENTRY_DISABLED"] = "1"
-    env["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
+    env["HMUX_CLI_SENTRY_DISABLED"] = "1"
+    env["HMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
     if extra_env:
         env.update(extra_env)
 
-    with tempfile.TemporaryDirectory(prefix="cmux-no-socket-") as tmpdir:
+    with tempfile.TemporaryDirectory(prefix="hmux-no-socket-") as tmpdir:
         no_socket = os.path.join(tmpdir, f"socket-{uuid.uuid4().hex}.sock")
-        env["CMUX_SOCKET_PATH"] = no_socket
+        env["HMUX_SOCKET_PATH"] = no_socket
 
         proc = subprocess.run(  # noqa: S603
             [cli_path, *args],
@@ -189,7 +189,7 @@ def run_cli_args(
 
 def main() -> int:
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
         probes = load_help_probes()
         negative_probes = load_negative_help_probes()
     except (RuntimeError, OSError, ValueError) as exc:
@@ -260,48 +260,48 @@ def main() -> int:
     try:
         result = run_cli_args(cli_path, [])
     except subprocess.TimeoutExpired:
-        failures.append("cmux: timed out")
+        failures.append("hmux: timed out")
     except (RuntimeError, OSError, ValueError) as exc:
-        failures.append(f"cmux: {exc}")
+        failures.append(f"hmux: {exc}")
     else:
         if result.returncode != 2:
             failures.append(
-                f"cmux: expected missing-command exit 2, got {result.returncode}\n"
+                f"hmux: expected missing-command exit 2, got {result.returncode}\n"
                 f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
             )
         if result.stdout:
             failures.append(
-                f"cmux: missing-command usage should not write stdout\n"
+                f"hmux: missing-command usage should not write stdout\n"
                 f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
             )
-        if "Missing command" not in result.stderr or "cmux --help" not in result.stderr:
+        if "Missing command" not in result.stderr or "hmux --help" not in result.stderr:
             failures.append(
-                f"cmux: missing-command error should point to cmux --help\n"
+                f"hmux: missing-command error should point to hmux --help\n"
                 f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
             )
-        if "browser find" in result.stderr or "cmux - control cmux via Unix socket" in result.stderr:
+        if "browser find" in result.stderr or "hmux - control hmux via Unix socket" in result.stderr:
             failures.append(
-                f"cmux: missing-command error should not dump full help\n"
+                f"hmux: missing-command error should not dump full help\n"
                 f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
             )
 
     try:
         result = run_cli_args(cli_path, ["settings", "--help"])
     except subprocess.TimeoutExpired:
-        failures.append("cmux settings --help stale-target check: timed out")
+        failures.append("hmux settings --help stale-target check: timed out")
     except (RuntimeError, OSError, ValueError) as exc:
-        failures.append(f"cmux settings --help stale-target check: {exc}")
+        failures.append(f"hmux settings --help stale-target check: {exc}")
     else:
-        stale_usage = "Usage: cmux settings [open|path|docs|target]"
-        target_usage = "Usage: cmux settings [open [target]|path|docs|<target>]"
+        stale_usage = "Usage: hmux settings [open|path|docs|target]"
+        target_usage = "Usage: hmux settings [open [target]|path|docs|<target>]"
         if stale_usage in result.stdout:
             failures.append(
-                f"cmux settings --help: stale literal target usage still present\n"
+                f"hmux settings --help: stale literal target usage still present\n"
                 f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
             )
         if target_usage not in result.stdout:
             failures.append(
-                f"cmux settings --help: expected target-placeholder usage {target_usage!r}\n"
+                f"hmux settings --help: expected target-placeholder usage {target_usage!r}\n"
                 f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
             )
 
@@ -319,7 +319,7 @@ def main() -> int:
 
 def check_review_ledger_contract(cli_path: str) -> list[str]:
     failures: list[str] = []
-    with tempfile.TemporaryDirectory(prefix="cmux-review-ledger-") as tmpdir:
+    with tempfile.TemporaryDirectory(prefix="hmux-review-ledger-") as tmpdir:
         repository = Path(tmpdir) / "repo"
         init = subprocess.run(
             ["git", "init", "-q", str(repository)],
@@ -330,15 +330,15 @@ def check_review_ledger_contract(cli_path: str) -> list[str]:
             env=clean_git_env(),
         )
         if init.returncode != 0:
-            return [f"cmux review fixture: git init failed: {init.stderr!r}"]
+            return [f"hmux review fixture: git init failed: {init.stderr!r}"]
         canonical_repository = str(repository.resolve())
 
         review_id = "aaaaaaaa-bbbbbbbb-" + ("c" * 64)
-        receipt_dir = repository / ".git" / "cmux" / "reviews"
+        receipt_dir = repository / ".git" / "hmux" / "reviews"
         receipt_dir.mkdir(parents=True)
         receipt = {
             "schema_version": 1,
-            "policy_version": "cmux-review/v1",
+            "policy_version": "hmux-review/v1",
             "repository_root": str(repository),
             "ruleset_sha256": None,
             "source": {
@@ -355,7 +355,7 @@ def check_review_ledger_contract(cli_path: str) -> list[str]:
                     {
                         "requirement": "Read receipts without a running app",
                         "status": "satisfied",
-                        "evidence": ["cmux review is routed before socket connection"],
+                        "evidence": ["hmux review is routed before socket connection"],
                     }
                 ],
                 "out_of_scope_changes": [],
@@ -480,7 +480,7 @@ def check_review_ledger_contract(cli_path: str) -> list[str]:
                 "show",
                 ["review", "show", "latest", "--json"],
                 lambda payload: (
-                    payload["policy_version"] == "cmux-review/v1"
+                    payload["policy_version"] == "hmux-review/v1"
                     and payload["brief"]["requirements"][0]["status"] == "satisfied"
                 ),
             ),
@@ -505,34 +505,34 @@ def check_review_ledger_contract(cli_path: str) -> list[str]:
             try:
                 result = run_cli_args(cli_path, args, cwd=str(repository))
             except (subprocess.TimeoutExpired, OSError, ValueError) as exc:
-                failures.append(f"cmux review {label}: {exc}")
+                failures.append(f"hmux review {label}: {exc}")
                 continue
             if result.returncode != 0 or result.stderr:
                 failures.append(
-                    f"cmux review {label}: expected clean exit\n"
+                    f"hmux review {label}: expected clean exit\n"
                     f"stdout={result.stdout!r}\nstderr={result.stderr!r}"
                 )
                 continue
             if result.socket_path in result.stdout:
                 failures.append(
-                    f"cmux review {label}: unexpectedly attempted socket access "
+                    f"hmux review {label}: unexpectedly attempted socket access "
                     f"{result.socket_path!r}"
                 )
                 continue
             try:
                 payload = json.loads(result.stdout)
             except json.JSONDecodeError as exc:
-                failures.append(f"cmux review {label}: invalid JSON: {exc}")
+                failures.append(f"hmux review {label}: invalid JSON: {exc}")
                 continue
             if not validate(payload):
                 failures.append(
-                    f"cmux review {label}: unexpected payload {payload!r}"
+                    f"hmux review {label}: unexpected payload {payload!r}"
                 )
 
         try:
             text_result = run_cli_args(cli_path, ["review", "show"], cwd=str(repository))
         except (subprocess.TimeoutExpired, OSError, ValueError) as exc:
-            failures.append(f"cmux review show: {exc}")
+            failures.append(f"hmux review show: {exc}")
         else:
             if (
                 text_result.returncode != 0
@@ -540,7 +540,7 @@ def check_review_ledger_contract(cli_path: str) -> list[str]:
                 or "Findings: 1 verified · 0 human · 0 refuted · 1 suppressed" not in text_result.stdout
             ):
                 failures.append(
-                    "cmux review show: human output lost review summary\n"
+                    "hmux review show: human output lost review summary\n"
                     f"stdout={text_result.stdout!r}\nstderr={text_result.stderr!r}"
                 )
 
@@ -557,14 +557,14 @@ def check_review_ledger_contract(cli_path: str) -> list[str]:
                 cwd=str(repository),
             )
         except (subprocess.TimeoutExpired, OSError, ValueError) as exc:
-            failures.append(f"cmux review list future receipt: {exc}")
+            failures.append(f"hmux review list future receipt: {exc}")
         else:
             if (
                 future_result.returncode == 0
                 or "schema_version must be 1" not in future_result.stderr
             ):
                 failures.append(
-                    "cmux review list: future receipt schema should fail closed\n"
+                    "hmux review list: future receipt schema should fail closed\n"
                     f"stdout={future_result.stdout!r}\nstderr={future_result.stderr!r}"
                 )
 
@@ -586,7 +586,7 @@ def check_task_help_contract(cli_path: str) -> list[str]:
     headings = {heading for heading, _ in topics.values()}
 
     for topic, (heading, needle) in topics.items():
-        label = f"cmux help {topic}"
+        label = f"hmux help {topic}"
         try:
             result = run_cli_args(cli_path, ["help", topic])
         except subprocess.TimeoutExpired:
@@ -628,18 +628,18 @@ def check_task_help_contract(cli_path: str) -> list[str]:
     try:
         fallback = run_cli_args(cli_path, ["help", "unknown-task-topic"])
     except subprocess.TimeoutExpired:
-        failures.append("cmux help unknown-task-topic: timed out")
+        failures.append("hmux help unknown-task-topic: timed out")
     except (RuntimeError, OSError, ValueError) as exc:
-        failures.append(f"cmux help unknown-task-topic: {exc}")
+        failures.append(f"hmux help unknown-task-topic: {exc}")
     else:
         if (
             fallback.returncode != 0
             or fallback.stderr
-            or "cmux - control cmux via Unix socket" not in fallback.stdout
+            or "hmux - control hmux via Unix socket" not in fallback.stdout
             or "Start & Resume:" not in fallback.stdout
         ):
             failures.append(
-                "cmux help unknown-task-topic: expected legacy top-level help fallback\n"
+                "hmux help unknown-task-topic: expected legacy top-level help fallback\n"
                 f"stdout={fallback.stdout!r}\nstderr={fallback.stderr!r}"
             )
 
@@ -649,19 +649,19 @@ def check_task_help_contract(cli_path: str) -> list[str]:
 def check_guide_contract(cli_path: str) -> list[str]:
     failures: list[str] = []
     # An explicit missing socket and invalid window prove that guides do not
-    # connect, authenticate, or focus a window, even with ambient cmux context.
-    prefix = ["--socket", f"/tmp/cmux-guide-{uuid.uuid4().hex}.sock", "--window", "window:999999"]
+    # connect, authenticate, or focus a window, even with ambient hmux context.
+    prefix = ["--socket", f"/tmp/hmux-guide-{uuid.uuid4().hex}.sock", "--window", "window:999999"]
     topics = {
-        "cmux": [["guide"], ["--skill"]],
+        "hmux": [["guide"], ["--skill"]],
         "cloud": [["cloud", "guide"], ["cloud", "--skill"], ["vm", "guide"], ["vm", "--skill"]],
     }
     for topic, aliases in topics.items():
         expected_content = None
         for invocation in aliases:
-            label = "cmux " + " ".join(invocation)
+            label = "hmux " + " ".join(invocation)
             try:
                 plain = run_cli_args(cli_path, prefix + invocation)
-                if plain.returncode != 0 or plain.stderr or not plain.stdout.startswith("# cmux"):
+                if plain.returncode != 0 or plain.stderr or not plain.stdout.startswith("# hmux"):
                     raise ValueError(f"guide failed: {plain}")
                 if expected_content is None:
                     expected_content = plain.stdout
@@ -674,15 +674,15 @@ def check_guide_contract(cli_path: str) -> list[str]:
                         "topic": topic, "format": "markdown", "content": expected_content,
                     }:
                         raise ValueError(f"JSON guide differs from plain output: {result}")
-                if topic == "cmux":
-                    for needle in ("cmux cloud", "Chrome", "cua-driver"):
+                if topic == "hmux":
+                    for needle in ("hmux cloud", "Chrome", "cua-driver"):
                         if needle not in plain.stdout:
                             raise ValueError(f"local guide must include the Cloud detail: {needle}")
                 expected = ["agent-browser.dev", "agent-browser --auto-connect", "agent-browser --cdp"]
-                if topic == "cmux":
+                if topic == "hmux":
                     expected.append("agent-browser --headed")
                 if topic == "cloud":
-                    expected += ["cua-driver --version", "cua-driver doctor", "cua-driver mcp", "DISPLAY=:1", "cmux cloud route --json", "would_provision", "route --provision", "terminal wait", "terminal read", "google-chrome-stable", "--remote-debugging-port=9222", "cmux cloud dev <machine> --no-open"]
+                    expected += ["cua-driver --version", "cua-driver doctor", "cua-driver mcp", "DISPLAY=:1", "hmux cloud route --json", "would_provision", "route --provision", "terminal wait", "terminal read", "google-chrome-stable", "--remote-debugging-port=9222", "hmux cloud dev <machine> --no-open"]
                 missing = [needle for needle in expected if needle not in plain.stdout]
                 if missing:
                     raise ValueError(f"guide is missing method details: {missing}")
@@ -725,17 +725,17 @@ def welcome_rows(stdout: str) -> list[tuple[str, str]]:
 
 
 def check_welcome_contract(cli_path: str) -> list[str]:
-    """`cmux welcome` restores the v0.64.25 shortcut list, whatever the user rebound.
+    """`hmux welcome` restores the v0.64.25 shortcut list, whatever the user rebound.
 
-    The second run points HOME at a cmux.json that rebinds and unbinds rows
-    from the list. The output must stay the restored list, and `cmux shortcuts`
+    The second run points HOME at a hmux.json that rebinds and unbinds rows
+    from the list. The output must stay the restored list, and `hmux shortcuts`
     is where current bindings live.
     """
     failures: list[str] = []
-    with tempfile.TemporaryDirectory(prefix="cmux-welcome-") as home:
-        config_dir = Path(home) / ".config" / "cmux"
+    with tempfile.TemporaryDirectory(prefix="hmux-welcome-") as home:
+        config_dir = Path(home) / ".config" / "hmux"
         config_dir.mkdir(parents=True)
-        (config_dir / "cmux.json").write_text(
+        (config_dir / "hmux.json").write_text(
             json.dumps({
                 "shortcuts": {
                     "bindings": {"newTab": "cmd+shift+k", "splitRight": None},
@@ -746,33 +746,33 @@ def check_welcome_contract(cli_path: str) -> list[str]:
         )
         runs = {
             "defaults": None,
-            "rebound cmux.json": {"HOME": home, "CFFIXED_USER_HOME": home},
+            "rebound hmux.json": {"HOME": home, "CFFIXED_USER_HOME": home},
         }
         for label, extra_env in runs.items():
             try:
                 result = run_cli_args(cli_path, ["welcome"], extra_env=extra_env)
             except (subprocess.TimeoutExpired, OSError, ValueError) as exc:
-                failures.append(f"cmux welcome ({label}): {exc}")
+                failures.append(f"hmux welcome ({label}): {exc}")
                 continue
             if result.returncode != 0:
-                failures.append(f"cmux welcome ({label}): exit {result.returncode}: {result.stderr!r}")
+                failures.append(f"hmux welcome ({label}): exit {result.returncode}: {result.stderr!r}")
                 continue
             rows = welcome_rows(result.stdout)
             if rows != WELCOME_DEFAULT_ROWS:
                 failures.append(
-                    f"cmux welcome ({label}): expected default shortcut rows {WELCOME_DEFAULT_ROWS!r}, "
+                    f"hmux welcome ({label}): expected default shortcut rows {WELCOME_DEFAULT_ROWS!r}, "
                     f"got {rows!r}\nstdout={result.stdout!r}"
                 )
             plain = ANSI_ESCAPE_RE.sub("", result.stdout)
-            for needle in ("Run cmux shortcuts to edit shortcuts.", "Command Palette…"):
+            for needle in ("Run hmux shortcuts to edit shortcuts.", "Command Palette…"):
                 if needle not in plain:
-                    failures.append(f"cmux welcome ({label}): missing {needle!r}\nstdout={result.stdout!r}")
+                    failures.append(f"hmux welcome ({label}): missing {needle!r}\nstdout={result.stdout!r}")
             for stale in ("Default shortcuts", "Settings > Keyboard Shortcuts"):
                 if stale in plain:
-                    failures.append(f"cmux welcome ({label}): shows stale text {stale!r}\nstdout={result.stdout!r}")
+                    failures.append(f"hmux welcome ({label}): shows stale text {stale!r}\nstdout={result.stdout!r}")
             for rebound in ("⇧⌘K", "⌃⌥P"):
                 if rebound in plain:
-                    failures.append(f"cmux welcome ({label}): shows the user's binding {rebound!r}")
+                    failures.append(f"hmux welcome ({label}): shows the user's binding {rebound!r}")
     return failures
 
 

@@ -229,7 +229,7 @@ describe("Connectivity authority", () => {
       discoverScoped: () => Effect.succeed(snapshot),
     });
     const malformed = await handleConnectivitySync(new Request(
-      "https://cmux.test/api/connectivity/v2/sync",
+      "https://hmux.test/api/connectivity/v2/sync",
       {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -242,7 +242,7 @@ describe("Connectivity authority", () => {
     expect(malformed.status).toBe(400);
 
     const oversized = await handleConnectivitySync(new Request(
-      "https://cmux.test/api/connectivity/v2/sync",
+      "https://hmux.test/api/connectivity/v2/sync",
       {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -316,7 +316,7 @@ describe("Connectivity authority", () => {
 });
 
 function syncRequest(knownRevision: number | null): Request {
-  return new Request("https://cmux.test/api/connectivity/v2/sync", {
+  return new Request("https://hmux.test/api/connectivity/v2/sync", {
     method: "POST",
     headers: {
       authorization: "Bearer test-access",
@@ -331,7 +331,7 @@ function syncRequest(knownRevision: number | null): Request {
 }
 
 function scopedSyncRequest(discoveryScope: unknown): Request {
-  return new Request("https://cmux.test/api/connectivity/v3/sync", {
+  return new Request("https://hmux.test/api/connectivity/v3/sync", {
     method: "POST",
     headers: {
       authorization: "Bearer test-access",

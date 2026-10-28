@@ -1,12 +1,12 @@
-import CmuxChief
+import HmuxChief
 import Foundation
 
 /// The Chief Settings panel's strings beyond ``ChiefStrings``' original set
 /// (`Resources/Localizable.xcstrings`): the Name field, section titles, the
 /// "Default (Opus 5.5)" items, effort descriptions, the last turn's stats,
 /// where the brain runs, and the header's brain hint. Wording follows
-/// cmux-next `HomeEngineStrings` (feat-cmux-next
-/// `Packages/macOS/CmuxNext/Sources/CmuxNextHomeEngine/HomeEngineStrings.swift`).
+/// hmux-next `HomeEngineStrings` (feat-hmux-next
+/// `Packages/macOS/HmuxNext/Sources/HmuxNextHomeEngine/HomeEngineStrings.swift`).
 enum ChiefSettingsStrings {
     // MARK: Sections
 
@@ -88,7 +88,7 @@ enum ChiefSettingsStrings {
 
     /// A harness id as the pickers name it ("claude" is "Claude Code"); an unknown id as written.
     static func harnessName(_ id: String) -> String {
-        CmuxChief.ChiefHarness(rawValue: id)?.displayName ?? id
+        HmuxChief.ChiefHarness(rawValue: id)?.displayName ?? id
     }
 
     // MARK: Where it runs
@@ -113,7 +113,7 @@ enum ChiefSettingsStrings {
     /// The button's tooltip, with the CLI line that reports the same state.
     static var showTranscriptLogHelp: String {
         String(localized: "chief.settings.showTranscriptLog.help",
-               defaultValue: "Reveals this conversation’s log (JSON Lines) in Finder. From a terminal: cmux chief status")
+               defaultValue: "Reveals this conversation’s log (JSON Lines) in Finder. From a terminal: hmux chief status")
     }
 
     // MARK: Brain hint
@@ -135,7 +135,7 @@ enum ChiefSettingsStrings {
     /// A model's short name: the catalog's display name without the vendor
     /// prefix ("Opus 5.5", "GPT-6.1 Sol"); an unlisted id as is.
     static func modelName(_ id: String, harness: String) -> String {
-        let resolved = CmuxChief.ChiefHarness(rawValue: harness) ?? .claude
+        let resolved = HmuxChief.ChiefHarness(rawValue: harness) ?? .claude
         guard let option = resolved.model(id) else { return id }
         let prefix = "Claude "
         return option.displayName.hasPrefix(prefix) ? String(option.displayName.dropFirst(prefix.count)) : option.displayName

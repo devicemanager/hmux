@@ -47,7 +47,7 @@ final class ComputerUseOnboardingHostingView: NSHostingView<AnyView> {
 ///
 /// An NSPanel subclass so the borderless permission companion can carry
 /// `.nonactivatingPanel`: clicking or dragging the helper tile beside System
-/// Settings must never activate cmux, which would raise the main terminal
+/// Settings must never activate hmux, which would raise the main terminal
 /// window over the permission pane the user is dragging into.
 @MainActor
 final class ComputerUseOnboardingWindow: NSPanel {

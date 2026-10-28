@@ -1,4 +1,4 @@
-const testflightEligibilityKey = Symbol.for("cmux.tests.testflightEligibility");
+const testflightEligibilityKey = Symbol.for("hmux.tests.testflightEligibility");
 
 export function createTestflightUser({
   eligible = true,

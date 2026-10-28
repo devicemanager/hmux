@@ -181,7 +181,7 @@ describe("createVm critical path", () => {
     for (const work of deferred) await Effect.runPromise(work);
     expect(execs).toHaveLength(1);
     expect(execs[0]).toContain("vm-name");
-    // /etc/cmux is root-owned; the push ran as root until public exec moved
+    // /etc/hmux is root-owned; the push ran as root until public exec moved
     // to the work user (#16769), and must keep doing so.
     expect(execOptions[0]?.asRoot).toBe(true);
   });

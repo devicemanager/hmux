@@ -1,11 +1,11 @@
-import CmuxCloud
-import CmuxCore
-import CmuxFoundation
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCore
+import HmuxFoundation
+import HmuxSurfaceCatalogModel
 import Foundation
 /// One row of the Cloud outline, built from the surface catalog: this Mac or a
 /// cloud machine, a pool ("Terminals", "Displays"), a group header, a workspace
-/// (cmux-tui on a machine, or the local workspace that projects a terminal), a
+/// (hmux-tui on a machine, or the local workspace that projects a terminal), a
 /// terminal, a VNC display, a browser, a forwarded port, or a placeholder line.
 ///
 /// Reference type so `NSOutlineView` can use the node as its item; identity is
@@ -51,7 +51,7 @@ final class CloudTreeNode: NSObject {
         case displaysPool(machine: SurfaceMachineID, count: Int, canCreate: Bool = false)
         /// "Workspaces" group under a machine.
         case workspacesGroup(machine: SurfaceMachineID)
-        /// A cmux-tui workspace on a cloud machine; its children are flat pointer rows
+        /// A hmux-tui workspace on a cloud machine; its children are flat pointer rows
         /// into the machine's pools, one row per terminal, browser, or display placement.
         /// `terminalCount` counts every terminal placement in the workspace.
         /// `openIn`: the local workspace already showing this remote one (its open mark;
@@ -842,7 +842,7 @@ enum CloudTreeNodeBuilder {
         // Cloud machines only: the local Mac has no private-network address to
         // begin with, so it never reaches here with one.
         guard machine.isLocal == false else { return nil }
-        return CmuxInternalHostnames().directPortURL(privateAddress: address, port: port)
+        return HmuxInternalHostnames().directPortURL(privateAddress: address, port: port)
     }
 
     static func cloudChildren(
@@ -900,7 +900,7 @@ enum CloudTreeNodeBuilder {
             // paste (`http://<private-ip>:<port>`) when the machine has a private
             // address; the bare `:<port>` otherwise. Click opens it as a browser
             // pane; the row's menu copies the link. Another Mac exposes no
-            // cmux-managed ports or desktop, so device rows skip both groups.
+            // hmux-managed ports or desktop, so device rows skip both groups.
             if !machine.isDevice {
                 let portBrowsers = resources
                     .filter { $0.id.isForwardedPort }

@@ -26,7 +26,7 @@ test.each(locales)("cleanup-pending response is localized and never suggests ret
 
 test.each(locales)("confirmed guest install failures use localized safe guidance for %s", async (locale) => {
   const install = new GuestCliInstallError({ stage: "install", outcome: "guest_exit", exitCode: 7 });
-  for (const operation of ["create", "openCmuxRemote"]) {
+  for (const operation of ["create", "openHmuxRemote"]) {
     const provider = new VmProviderOperationError({
       provider: "freestyle", operation,
       cause: new ProviderError("freestyle", `${operation}(private-machine) failed`, install),
@@ -38,7 +38,7 @@ test.each(locales)("confirmed guest install failures use localized safe guidance
     expect(body.retryable).toBe(true);
     expect(body.phase).toBe(operation === "create" ? "create" : "attach");
     expect(JSON.stringify(body)).not.toContain("private-machine");
-    expect(JSON.stringify(body)).not.toContain("guest cmux shim");
+    expect(JSON.stringify(body)).not.toContain("guest hmux shim");
     expect(JSON.stringify(body)).not.toContain("guest_exit");
   }
 });

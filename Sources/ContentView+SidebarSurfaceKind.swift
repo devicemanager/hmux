@@ -1,7 +1,7 @@
-import CmuxExtensionKit
+import HmuxExtensionKit
 
 extension VerticalTabsSidebar {
-    func cmuxSidebarSurfaceKind(for panelType: PanelType) -> CmuxSidebarSurfaceKind {
+    func hmuxSidebarSurfaceKind(for panelType: PanelType) -> HmuxSidebarSurfaceKind {
         switch panelType {
         case .terminal:
             return .terminal

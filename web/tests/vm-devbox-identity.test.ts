@@ -17,8 +17,8 @@ import {
 import { DEVBOX_HOSTNAME, DEVBOX_HOSTNAME_LOOPBACK, DEVBOX_PROVIDER_HOSTNAME } from "../services/vms/images/identity";
 import { devboxNetworkAnnounceCommand } from "../services/vms/images/network";
 
-// The devbox identity contract (services/vms/images/identity.ts): a cmux Cloud
-// machine is `cmux`, never the Freestyle base's `freestyle-vm`. The shell that
+// The devbox identity contract (services/vms/images/identity.ts): a hmux Cloud
+// machine is `hmux`, never the Freestyle base's `freestyle-vm`. The shell that
 // renames it and the audit that hunts the old name run here against real
 // files; the bake, verify, derive and boot-supervisor wiring is pinned so the
 // contract cannot silently drop out of any of them. The live proof is
@@ -27,9 +27,9 @@ import { devboxNetworkAnnounceCommand } from "../services/vms/images/network";
 const templateDir = path.join(import.meta.dirname, "../services/vms/images/devbox");
 const scriptsDir = path.join(import.meta.dirname, "../scripts");
 const readScript = (name: string) => readFileSync(path.join(scriptsDir, name), "utf8");
-const devboxBoot = readFileSync(path.join(templateDir, "cmux-devbox-boot"), "utf8");
+const devboxBoot = readFileSync(path.join(templateDir, "hmux-devbox-boot"), "utf8");
 describe("devbox identity contract (services/vms/images/identity.ts)", () => {
-  // /etc/hosts as a cmux Cloud machine on the pre-contract image carried it:
+  // /etc/hosts as a hmux Cloud machine on the pre-contract image carried it:
   // the base's alias line plus the block the Freestyle agent keeps for its
   // TLS edge. The rewrite may touch nothing but the alias.
   const providerHosts = [
@@ -40,46 +40,46 @@ describe("devbox identity contract (services/vms/images/identity.ts)", () => {
     "ff02::2\tip6-allrouters",
     "",
     "# BEGIN freestyle-tls-egress",
-    "10.32.0.28 coderouter.cmux.internal",
-    "2602:f470:1::28 coderouter.cmux.internal",
+    "10.32.0.28 coderouter.hmux.internal",
+    "2602:f470:1::28 coderouter.hmux.internal",
     "# END freestyle-tls-egress",
     "",
   ].join("\n");
   /** Applies the hosts alias rewrite to a scratch hosts file and returns the result. */
   const rewrite = async (contents: string): Promise<string> => {
-    const dir = mkdtempSync(path.join(tmpdir(), "cmux-identity-"));
+    const dir = mkdtempSync(path.join(tmpdir(), "hmux-identity-"));
     try {
       const hosts = path.join(dir, "hosts");
       writeFileSync(hosts, contents);
       const run = await runChild("bash", ["-c", devboxHostsAliasRewriteCommand(DEVBOX_HOSTNAME, hosts)]);
       expect({ status: run.status, stderr: run.stderr }).toEqual({ status: 0, stderr: "" });
-      expect(existsSync(`${hosts}.cmux-identity`)).toBe(false);
+      expect(existsSync(`${hosts}.hmux-identity`)).toBe(false);
       return readFileSync(hosts, "utf8");
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
   };
 
-  test("the machine is cmux; the provider's name is what the audit hunts", () => {
-    expect(DEVBOX_HOSTNAME).toBe("cmux");
+  test("the machine is hmux; the provider's name is what the audit hunts", () => {
+    expect(DEVBOX_HOSTNAME).toBe("hmux");
     expect(DEVBOX_PROVIDER_HOSTNAME).toBe("freestyle-vm");
     expect(DEVBOX_HOSTNAME_LOOPBACK).toBe("127.0.1.1");
     expect(DEVBOX_IDENTITY_RESIDUE_ROOTS).toEqual(["/etc", "/home", "/root", "/usr/local", "/opt"]);
   });
 
   test("the hosts rewrite renames only the loopback alias line", async () => {
-    expect(await rewrite(providerHosts)).toBe(providerHosts.replace("127.0.1.1\tfreestyle-vm", "127.0.1.1\tcmux"));
+    expect(await rewrite(providerHosts)).toBe(providerHosts.replace("127.0.1.1\tfreestyle-vm", "127.0.1.1\thmux"));
   });
 
   test("the hosts rewrite is idempotent, keeps one alias, and adds a missing one", async () => {
     const once = await rewrite(providerHosts);
     expect(await rewrite(once)).toBe(once);
-    expect(await rewrite("127.0.1.1 a\n127.0.0.1\tlocalhost\n127.0.1.1 b\n")).toBe("127.0.1.1\tcmux\n127.0.0.1\tlocalhost\n");
-    expect(await rewrite("127.0.0.1\tlocalhost\n")).toBe("127.0.0.1\tlocalhost\n127.0.1.1\tcmux\n");
+    expect(await rewrite("127.0.1.1 a\n127.0.0.1\tlocalhost\n127.0.1.1 b\n")).toBe("127.0.1.1\thmux\n127.0.0.1\tlocalhost\n");
+    expect(await rewrite("127.0.0.1\tlocalhost\n")).toBe("127.0.0.1\tlocalhost\n127.0.1.1\thmux\n");
   });
 
   test("the residue audit matches the base's name as a whole word, never the provider's platform naming", async () => {
-    const dir = mkdtempSync(path.join(tmpdir(), "cmux-residue-"));
+    const dir = mkdtempSync(path.join(tmpdir(), "hmux-residue-"));
     try {
       // The provider's own naming and a package tree mentioning the name: allowed.
       writeFileSync(path.join(dir, "60-freestyle-vms.conf"), "# Written by freestyle-vms when this rootfs was built.\n");
@@ -102,24 +102,24 @@ describe("devbox identity contract (services/vms/images/identity.ts)", () => {
 
   test("the bake renames the machine first and re-checks last; verify and derive prove it on booted machines", () => {
     const install = devboxIdentityInstallCommand();
-    expect(install).toContain("hostnamectl set-hostname cmux");
+    expect(install).toContain("hostnamectl set-hostname hmux");
     expect(install).toContain("> /etc/hostname");
     expect(install).toContain(devboxHostsAliasRewriteCommand());
     expect(install).toContain(devboxSshHostKeyRegenerateCommand());
     expect(install).toContain(devboxIdentityCheckCommand());
     const check = devboxIdentityCheckCommand();
-    expect(check).toContain('[ "$(hostname)" = cmux ]');
-    expect(check).toContain('[ "$(cat /etc/hostname)" = cmux ]');
-    expect(check).toContain("getent hosts cmux");
+    expect(check).toContain('[ "$(hostname)" = hmux ]');
+    expect(check).toContain('[ "$(cat /etc/hostname)" = hmux ]');
+    expect(check).toContain("getent hosts hmux");
     expect(check).toContain("unable to resolve host");
-    expect(check).toContain("= root@cmux ]");
+    expect(check).toContain("= root@hmux ]");
     expect(check).toContain(devboxProviderResidueCommand());
     // Order in the bake: inventory, identity, every layer (the daemon included),
     // the re-check, the stamp; the cleanup starts the journal over.
     const bake = readScript("build-devbox-freestyle.ts");
     const inventory = bake.indexOf('"base-inventory"');
     const identity = bake.indexOf('await step("identity", devboxIdentityInstallCommand());');
-    const daemon = bake.indexOf('await step("cmux-tui-install"');
+    const daemon = bake.indexOf('await step("hmux-tui-install"');
     const final = bake.indexOf('await step("identity-final", devboxIdentityCheckCommand());');
     const stamp = bake.indexOf('"image-stamp"');
     expect(inventory).toBeGreaterThan(-1);
@@ -174,7 +174,7 @@ describe("devbox identity contract (services/vms/images/identity.ts)", () => {
   });
 
   test("a reboot clears stale daemon markers but preserves failed finalization", async () => {
-    const root = mkdtempSync(path.join(tmpdir(), "cmux-reboot-recovery-"));
+    const root = mkdtempSync(path.join(tmpdir(), "hmux-reboot-recovery-"));
     try {
       const state = path.join(root, "remote");
       const session = path.join(state, "sessions", "Y2xvdWQ");
@@ -269,7 +269,7 @@ describe("devbox identity contract (services/vms/images/identity.ts)", () => {
 describe("devbox private-network announce (services/vms/images/network.ts)", () => {
   /** Runs body with fake ip and arping binaries first on PATH, logging arping calls. */
   const withFakeNet = async (addrs: string, run: (env: NodeJS.ProcessEnv, log: string) => Promise<void>) => {
-    const dir = mkdtempSync(path.join(tmpdir(), "cmux-announce-"));
+    const dir = mkdtempSync(path.join(tmpdir(), "hmux-announce-"));
     try {
       const log = path.join(dir, "arping.log");
       writeFileSync(path.join(dir, "ip"), `#!/bin/sh\n[ "$*" = "-o -4 addr show scope global" ] || { echo "unexpected ip $*" >&2; exit 2; }\ncat <<'EOF'\n${addrs}EOF\n`, { mode: 0o755 });
@@ -304,7 +304,7 @@ describe("devbox private-network announce (services/vms/images/network.ts)", () 
       expect(result.status).toBe(0);
       expect(existsSync(log)).toBe(false);
     });
-    const empty = mkdtempSync(path.join(tmpdir(), "cmux-noarping-"));
+    const empty = mkdtempSync(path.join(tmpdir(), "hmux-noarping-"));
     try {
       // PATH holds only the empty dir, so `command -v arping` cannot find a host
       // binary; /bin/sh is invoked by absolute path and needs no PATH.
@@ -354,7 +354,7 @@ describe("devbox private-network announce (services/vms/images/network.ts)", () 
     for (const timer of ["logrotate.timer", "man-db.timer", "fstrim.timer", "dpkg-db-backup.timer", "systemd-tmpfiles-clean.timer", "apt-daily.timer"]) {
       expect(devboxBoot).toContain(timer);
     }
-    expect(devboxBoot).toContain("systemctl stop cmux-housekeeping-rearm.timer cmux-housekeeping-rearm.service $HOUSEKEEPING_TIMERS");
+    expect(devboxBoot).toContain("systemctl stop hmux-housekeeping-rearm.timer hmux-housekeeping-rearm.service $HOUSEKEEPING_TIMERS");
     // Service watchdogs are runtime state: off while parked (so the clock jump
     // kills nothing on resume), back on with the delayed re-arm.
     expect(devboxBoot).toContain("  systemd-analyze service-watchdogs no >/dev/null 2>&1 || true\n");
@@ -367,7 +367,7 @@ describe("devbox private-network announce (services/vms/images/network.ts)", () 
   test("the image installs arping and verify proves the announce loop on a booted machine", () => {
     expect(readFileSync(path.join(templateDir, "Dockerfile"), "utf8")).toContain("    iputils-arping \\\n");
     const verify = readScript("verify-devbox-image.ts");
-    expect(verify).toContain("command -v arping && pgrep -f 'cmux-devbox-[b]oot' >/dev/null && grep -q 'announce_loop &' /usr/local/bin/cmux-devbox-boot && echo network-announce-ok");
+    expect(verify).toContain("command -v arping && pgrep -f 'hmux-devbox-[b]oot' >/dev/null && grep -q 'announce_loop &' /usr/local/bin/hmux-devbox-boot && echo network-announce-ok");
   });
 });
 
@@ -378,16 +378,16 @@ describe("devbox private-network announce (services/vms/images/network.ts)", () 
 describe("devbox warm template terminal", () => {
   /** Runs the park wipe against stateRoot from a scratch working directory. */
   function wipe(root: string, stateRoot: string) {
-    return runChild("sh", ["-c", `${devboxWipeDaemonStateKeepingTemplateCommand(stateRoot)} && echo "$cmux_keep"`], {
+    return runChild("sh", ["-c", `${devboxWipeDaemonStateKeepingTemplateCommand(stateRoot)} && echo "$hmux_keep"`], {
       cwd: root,
       timeout: 5_000,
     });
   }
 
   test("the park wipe keeps only the terminal host records and removes every identity file", async () => {
-    const root = mkdtempSync(path.join(tmpdir(), "cmux-template-wipe-"));
+    const root = mkdtempSync(path.join(tmpdir(), "hmux-template-wipe-"));
     try {
-      const state = path.join(root, "cmux-tui");
+      const state = path.join(root, "hmux-tui");
       const sessions = path.join(state, "sessions");
       const hosts = path.join(sessions, "terminal-hosts-abc");
       const session = path.join(sessions, "cloud");
@@ -416,7 +416,7 @@ describe("devbox warm template terminal", () => {
   });
 
   test("the park wipe fails without deleting anything when there is no template host", async () => {
-    const root = mkdtempSync(path.join(tmpdir(), "cmux-template-wipe-"));
+    const root = mkdtempSync(path.join(tmpdir(), "hmux-template-wipe-"));
     try {
       const state = path.join(root, "state");
       mkdirSync(path.join(state, "sessions"), { recursive: true });
@@ -435,9 +435,9 @@ describe("devbox warm template terminal", () => {
   });
 
   test("a clone reseeds the kernel RNG and starts the shell's bounded wait before its daemon starts", () => {
-    expect(devboxBoot).toContain("export CMUX_TUI_ADOPT_TEMPLATE_TERMINAL=1");
-    expect(devboxBoot).toContain('export CMUX_TUI_TEMPLATE_BOUND_FILE="$TEMPLATE_RUN_DIR/bound"');
-    expect(devboxBoot).toContain("export CMUX_TUI_TEMPLATE_WORKSPACE_NAME=workspace-1");
+    expect(devboxBoot).toContain("export HMUX_TUI_ADOPT_TEMPLATE_TERMINAL=1");
+    expect(devboxBoot).toContain('export HMUX_TUI_TEMPLATE_BOUND_FILE="$TEMPLATE_RUN_DIR/bound"');
+    expect(devboxBoot).toContain("export HMUX_TUI_TEMPLATE_WORKSPACE_NAME=workspace-1");
     const cloneBranch = devboxBoot.indexOf('if [ -n "$id" ] && [ "$id" != "$(cat "$BOUND_INSTANCE_FILE" 2>/dev/null)" ]; then');
     const announce = devboxBoot.indexOf("( announce_network & )", cloneBranch);
     const cloneStarted = devboxBoot.indexOf('"$TEMPLATE_RUN_DIR/clone-started"', cloneBranch);
@@ -469,11 +469,11 @@ describe("devbox warm template terminal", () => {
     }
     const prepare = devboxPrepareTemplateTerminalCommand();
     expect(prepare.indexOf("template-arm")).toBeLessThan(prepare.indexOf("workspace create --name workspace-1"));
-    expect(prepare).toContain("test -e /run/cmux/template-shell-ready");
-    expect(prepare).toContain("test ! -e /run/cmux/template-arm");
+    expect(prepare).toContain("test -e /run/hmux/template-shell-ready");
+    expect(prepare).toContain("test ! -e /run/hmux/template-arm");
     const park = devboxParkDaemonCommand();
     expect(park).toContain("pgrep -f '[_]_terminal-host'");
-    expect(park).toContain("/etc/cmux/daemon-boot-id");
-    expect(park).toContain("rm -f /run/cmux/bound /run/cmux/clone-started /run/cmux/first-prompt-named");
+    expect(park).toContain("/etc/hmux/daemon-boot-id");
+    expect(park).toContain("rm -f /run/hmux/bound /run/hmux/clone-started /run/hmux/first-prompt-named");
   });
 });

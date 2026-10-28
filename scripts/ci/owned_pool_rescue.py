@@ -79,7 +79,7 @@ failure) goes back to the minis on any attempt. Neither has a marker of its
 own; the sweeper finds them among the unfinished CI runs (owned_reruns()) and
 watches them like attempt 1, and a job stuck or refused there gets the bot's
 next re-run, which every runs-on sends to retry_runner (Blacksmith) from
-attempt 3 on, so a refusal costs two re-runs at most. cmux-next's bot attempt
+attempt 3 on, so a refusal costs two re-runs at most. hmux-next's bot attempt
 3 is the exception: it keeps macos-placement's mini label, so it is watched
 for refusals only and a refused one goes to Blacksmith as attempt 4
 (REFUSAL_RESCUE_ATTEMPT), three re-runs at most.
@@ -142,7 +142,7 @@ workflow_dispatch, whose code is this repository's own branch; see
 TRUSTED_SIDE_EVENTS), their small macOS jobs take vars.CI_LIGHT_LANE_RUNNER
 (the light minis' side label) or vars.CI_SIDE_LANE_RUNNER (the std minis'),
 both glaeda-side-* labels that only the minis' non-root runners carry. Most
-side lanes take the job's Blacksmith default on attempt 2 and later. cmux-next
+side lanes take the job's Blacksmith default on attempt 2 and later. hmux-next
 keeps trusted attempts 1 and 2 on the owned side label and only overflows a
 later bot attempt after its ten-minute queue budget. So the first job on an owned label marks the run as on a persistent
 pool (a job behind a Linux gate appears once the gate ends), and the watch
@@ -151,18 +151,18 @@ jobs reach in minutes. A refused side-lane job gets the run's failed jobs
 re-run; a stuck one gets the run cancelled and its failed and cancelled jobs
 re-run, keeping the jobs that had already finished. That re-run takes the
 lane's configured retry route, so the watch ends there or continues on
-cmux-next's owned label. A
+hmux-next's owned label. A
 stuck run that finished some other way (a newer push cancelled it) is not
 re-run. Its watch lasts SIDE_WATCH_LIMIT_SECONDS. A nightly-next watch does
 not end when its accepted jobs are all that exist: prepare-nightly-variant takes
 the side label only after build-nightly-app finishes, so it lasts until the
 run finishes, within NIGHTLY_WATCH_LIMIT_SECONDS. Side lanes upload no marker
-(cmux-next.yml aside), so the sweeper finds one's run by path once it has
+(hmux-next.yml aside), so the sweeper finds one's run by path once it has
 failed (GitHub.failed_runs()), which a refused job makes it: its failed jobs
 are re-run then. A failed job of such a run that is not a refusal keeps it
 red (a re-run of failed jobs would repeat it), except one that needs a refused
 job, directly or through others, with no other failure or cancel upstream of it:
-an `if: always()` aggregator such as cmux-tui.yml's hosted-verification fails
+an `if: always()` aggregator such as hmux-tui.yml's hosted-verification fails
 whenever a leg it requires was refused, so it fails only because of the refusal
 (downstream_of_refusals(), which reads the `needs` graph from the workflow file
 at the run's head). GitHub's re-run of failed jobs re-runs it too. A
@@ -172,11 +172,11 @@ inventory its sweep already lists: an owned leg no runner claimed for
 max(45 minutes, the pool's p90 wait), at the head of an open pull request or a
 live branch, gets its run cancelled and its failed jobs re-run once, where that
 re-run leaves the owned label (bot_rerun_leaves_owned()). A side-lane run that is not
-a pull request has no head to move, like a dispatch. cmux-next.yml exists only
-on the feat-cmux-next branch; its pull request and dispatch runs upload the
+a pull request has no head to move, like a dispatch. hmux-next.yml exists only
+on the feat-hmux-next branch; its pull request and dispatch runs upload the
 owned-pool-watch marker themselves, so the sweeper adopts them like a picker's
 run. Its push runs upload none (they queue each Mac job in a group per branch),
-and a cmux-next push run this rescue watches anyway (a dispatch with its run
+and a hmux-next push run this rescue watches anyway (a dispatch with its run
 id) is never cancelled because a newer push run exists; a refused job's failed
 jobs are still re-run when no newer push run covers the branch.
 
@@ -321,51 +321,51 @@ NIGHTLY_EVENTS = frozenset({"push", "schedule"})
 # job-started hook admits only main's push and schedule jobs. Only nightly.yml's
 # app build asks for one through this watch.
 TRUSTED_LABEL = re.compile(r"glaeda-(?:root-)?trusted-(?:xl|std|light)-xcode-[0-9]+(?:\.[0-9]+)*")
-# feat-cmux-next's session and fast roles (glaeda#1530, pr_runner_pool.OWNED_LABEL there), which main's
-# picker never hands out: cmux-next-base-autofix.yml's Mac exports take glaeda-session-std-xcode-26.6.
+# feat-hmux-next's session and fast roles (glaeda#1530, pr_runner_pool.OWNED_LABEL there), which main's
+# picker never hands out: hmux-next-base-autofix.yml's Mac exports take glaeda-session-std-xcode-26.6.
 LANE_LABEL = re.compile(r"glaeda-(?:aws-)?(?:session-|fast-)(?:xl|std|light)-xcode-[0-9]+(?:\.[0-9]+)*")
 # Every other workflow that can put a job on an owned pool, on main or on
-# feat-cmux-next (whose files are not in main's tree): owned_pool_sources.py
+# feat-hmux-next (whose files are not in main's tree): owned_pool_sources.py
 # finds them from their jobs' runs-on, and tests/test_ci_owned_pool_sources.py
 # fails when a workflow it finds is missing here, or one here is found in
 # neither branch. Most take a glaeda-side-* label on attempt 1 of a trusted
 # run and Blacksmith later; some (the base and PR autofix's Mac exports) take
 # a session or gui label on every attempt. None uploads a marker, so the
-# sweeper finds their failed runs by path (GitHub.failed_runs()); cmux-next.yml
+# sweeper finds their failed runs by path (GitHub.failed_runs()); hmux-next.yml
 # is marked as well.
 SIDE_WORKFLOW_PATHS = frozenset({
-    ".github/workflows/agent-brands.yml",  # feat-cmux-next only
+    ".github/workflows/agent-brands.yml",  # feat-hmux-next only
     ".github/workflows/app-host-test-rerun.yml",
     ".github/workflows/auth-refresh-tests.yml",
     ".github/workflows/cloud-command-deadlines.yml",
     ".github/workflows/cloud-machine-tests.yml",
     ".github/workflows/cloud-task-local-tests.yml",
-    ".github/workflows/cmux-next-base-autofix.yml",  # feat-cmux-next only
-    ".github/workflows/cmux-next-batch.yml",  # feat-cmux-next only
-    ".github/workflows/cmux-next-frame-pacing.yml",  # feat-cmux-next only
-    ".github/workflows/cmux-next-media.yml",  # feat-cmux-next only
-    ".github/workflows/cmux-next-pr-autofix.yml",  # feat-cmux-next only
-    ".github/workflows/cmux-next-terminal.yml",  # feat-cmux-next only
-    # feat-cmux-next only; uploads the owned-pool-watch marker on attempt 1.
-    ".github/workflows/cmux-next.yml",
-    ".github/workflows/cmux-tui-artifacts.yml",
-    ".github/workflows/cmux-tui.yml",
+    ".github/workflows/hmux-next-base-autofix.yml",  # feat-hmux-next only
+    ".github/workflows/hmux-next-batch.yml",  # feat-hmux-next only
+    ".github/workflows/hmux-next-frame-pacing.yml",  # feat-hmux-next only
+    ".github/workflows/hmux-next-media.yml",  # feat-hmux-next only
+    ".github/workflows/hmux-next-pr-autofix.yml",  # feat-hmux-next only
+    ".github/workflows/hmux-next-terminal.yml",  # feat-hmux-next only
+    # feat-hmux-next only; uploads the owned-pool-watch marker on attempt 1.
+    ".github/workflows/hmux-next.yml",
+    ".github/workflows/hmux-tui-artifacts.yml",
+    ".github/workflows/hmux-tui.yml",
     ".github/workflows/iroh-v2.yml",
     ".github/workflows/relay-tls.yml",
     ".github/workflows/reload-build.yml",
     ".github/workflows/remote-daemon.yml",
     ".github/workflows/terminal-hang-diagnostics.yml",
-    ".github/workflows/test-feed-reply-providers.yml",  # feat-cmux-next only
+    ".github/workflows/test-feed-reply-providers.yml",  # feat-hmux-next only
 })
-# Side workflows whose Mac jobs take a session or gui label on every attempt (feat-cmux-next only), so no
+# Side workflows whose Mac jobs take a session or gui label on every attempt (feat-hmux-next only), so no
 # re-run moves them off the minis (bot_rerun_leaves_owned()).
 OWNED_EVERY_ATTEMPT_PATHS = frozenset({
-    ".github/workflows/cmux-next-base-autofix.yml",
-    ".github/workflows/cmux-next-pr-autofix.yml",
+    ".github/workflows/hmux-next-base-autofix.yml",
+    ".github/workflows/hmux-next-pr-autofix.yml",
 })
-# cmux-next is the side lane whose placement and retry route are minis-first;
+# hmux-next is the side lane whose placement and retry route are minis-first;
 # other side workflows keep their existing fallback policy.
-CMUX_NEXT_WORKFLOW_PATH = ".github/workflows/cmux-next.yml"
+HMUX_NEXT_WORKFLOW_PATH = ".github/workflows/hmux-next.yml"
 # Events whose code is this repository's own: a push or schedule runs a branch
 # of it, and a workflow_dispatch needs write access. A side-lane run of one of
 # these is owned-eligible like a same-repository pull request. merge_group,
@@ -376,13 +376,13 @@ TRUSTED_SIDE_EVENTS = frozenset({"push", "schedule", "workflow_dispatch"})
 # WATCHED_WORKFLOW_PATHS (tests/test_ci_owned_pool_sources.py).
 UNRESCUED_WORKFLOW_PATHS = {
     ".github/workflows/app-ffi-release.yml":
-        "feat-cmux-next only; builds and publishes the FFI xcframework every app build links on the trusted "
+        "feat-hmux-next only; builds and publishes the FFI xcframework every app build links on the trusted "
         "promote mini: a release step, so a person re-runs it",
-    ".github/workflows/cmux-tui-nightly.yml":
-        "feat-cmux-next only; builds (on a side label it passes cmux-tui-build-package.yml) and publishes the "
-        "cmux-tui nightly packages: a release step, so a person re-runs it",
+    ".github/workflows/hmux-tui-nightly.yml":
+        "feat-hmux-next only; builds (on a side label it passes hmux-tui-build-package.yml) and publishes the "
+        "hmux-tui nightly packages: a release step, so a person re-runs it",
     ".github/workflows/ios-internal-nightly.yml":
-        "feat-cmux-next only; signs and uploads the internal iOS build: a release step, so a person re-runs it",
+        "feat-hmux-next only; signs and uploads the internal iOS build: a release step, so a person re-runs it",
     ".github/workflows/main-compile-probe.yml":
         "one optional compile data point for main's compile attribution; its dispatcher already sends a probe "
         "that has not started to Blacksmith, and nothing waits on it",
@@ -465,11 +465,11 @@ REFUSAL_SECONDS = 360
 # is watched whatever its attempt (owned_rerun()); the rescue's re-run of it is
 # the bot's, on Blacksmith.
 LAST_OWNED_ATTEMPT = 2
-# cmux-next's bot attempt 3 keeps macos-placement's mini label (a re-run reuses
+# hmux-next's bot attempt 3 keeps macos-placement's mini label (a re-run reuses
 # attempt 1's outputs), so a lend drain can refuse it too, and before 2026-10-07
 # nothing re-ran it (#18147's scheme compile, 02:23Z). It is watched for
 # refusals only: when every failed job of it was refused, its failed jobs are
-# re-run as attempt 4, which cmux-next.yml sends to Blacksmith. Minis-first
+# re-run as attempt 4, which hmux-next.yml sends to Blacksmith. Minis-first
 # still holds for attempts 1 to 3, and no attempt past 3 is watched.
 REFUSAL_RESCUE_ATTEMPT = LAST_OWNED_ATTEMPT + 1
 RESCUE_ACTOR = "github-actions[bot]"
@@ -482,7 +482,7 @@ def owned_rerun(run: Mapping[str, Any]) -> bool:
     if attempt <= 1:
         return False
     actor = str((run.get("triggering_actor") or {}).get("login") or "")
-    if run.get("path") == CMUX_NEXT_WORKFLOW_PATH:
+    if run.get("path") == HMUX_NEXT_WORKFLOW_PATH:
         # Manual side-lane reruns stay minis-first at any attempt. The bot's
         # second attempt is still watched so a second long queue can overflow
         # on attempt three; bot attempt three is watched for refusals only.
@@ -747,7 +747,7 @@ def downstream_of_refusals(workflow_text: str, jobs: Sequence[Mapping[str, Any]]
     A job counts when the workflow file's `needs` graph puts a refused job (refused(), or one no runner
     acquired, unacquired()) upstream of it, directly or through other jobs, and every job upstream of it
     that failed, timed out or was cancelled is a refusal or counts itself. That is an `if: always()`
-    aggregator failing on a refused leg, such as cmux-tui.yml's hosted-verification (`require_success
+    aggregator failing on a refused leg, such as hmux-tui.yml's hosted-verification (`require_success
     "Rust tests"` after the macOS test leg was refused). A job's own failure cannot be told apart from
     its refused upstream's, so such a job is re-run with it: GitHub's re-run of failed jobs re-runs
     every failed job and everything that needs one. Names map to workflow jobs by their rendered
@@ -836,14 +836,14 @@ def assess(jobs: Sequence[Mapping[str, Any]], *, now: dt.datetime, budget_second
     names = ", ".join(sorted(str(job.get("name") or job.get("id")) for job in stuck))
     # Rescuing normally cancels the whole run, so a job already running on a
     # persistent runner would die with the stuck one and move to Blacksmith
-    # too (#16463). cmux-next's explicit rescue window is the overflow
+    # too (#16463). hmux-next's explicit rescue window is the overflow
     # boundary: move the run as the bot once a side job waits past budget even
     # when another side job is still running. Manual reruns stay minis-first
     # through attempt 2; the bot's next rerun is the overflow.
     on_mini = [job for job in jobs if job_pool(job) and job.get("status") == "in_progress" and not in_setup(job)]
     # A job that failed on its own (not refused by the fleet) has already made the run red. Cancelling
     # and re-running it repeats that failure and puts the stuck job at the back of the same queue
-    # (feat-cmux-next, 2026-10-20: 33 of 44 cmux-next pull request runs reached attempt 2 or 3, each
+    # (feat-hmux-next, 2026-10-20: 33 of 44 hmux-next pull request runs reached attempt 2 or 3, each
     # failing `checks` again), so the stuck job stays queued for the minis instead.
     decided = decided_failures(jobs, attempt_started_at) if leave_decided else []
     if stuck and not decided and (allow_running_rescue or not on_mini):
@@ -897,7 +897,7 @@ def _headers(token: str) -> dict[str, str]:
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {token}",
         "X-GitHub-Api-Version": "2022-11-28",
-        "User-Agent": "cmux-ci-owned-pool-rescue",
+        "User-Agent": "hmux-ci-owned-pool-rescue",
     }
 
 
@@ -977,11 +977,11 @@ class GitHub:
         return self.request("GET", f"/actions/runs/{run_id}")
 
     def owned_reruns(self, count: int) -> list[tuple[int, int]]:
-        """(run id, attempt) of unfinished CI and cmux-next re-runs whose owned jobs go back to the minis
+        """(run id, attempt) of unfinished CI and hmux-next re-runs whose owned jobs go back to the minis
         (owned_rerun()): a re-run of failed jobs uploads no marker. GitHub lists a run as `queued` while a job of it waits for a
         runner, so both statuses are read."""
         found: list[tuple[int, int]] = []
-        for workflow in (CI_WORKFLOW_PATH, CMUX_NEXT_WORKFLOW_PATH):
+        for workflow in (CI_WORKFLOW_PATH, HMUX_NEXT_WORKFLOW_PATH):
             name = workflow.rsplit("/", 1)[-1]
             for status in ("queued", "in_progress"):
                 data = self.request("GET", f"/actions/workflows/{name}/runs?status={status}&per_page={count}")
@@ -1132,7 +1132,7 @@ class Target:
     # A side lane's push run: its branch. Push runs of a side lane may each hold
     # their own concurrency group, so a newer push does not cancel this one.
     push_branch: str = ""
-    # cmux-next's bot attempt 3 (REFUSAL_RESCUE_ATTEMPT): still on the minis, so a
+    # hmux-next's bot attempt 3 (REFUSAL_RESCUE_ATTEMPT): still on the minis, so a
     # refusal there goes to Blacksmith as attempt 4; a long queue is not moved.
     refusals_only: bool = False
 
@@ -1330,7 +1330,7 @@ def watch(api: GitHub, target: Target, *, budget_seconds: int,
                     first_seen.setdefault(job.get("id"), seen_at)
             look = assess(jobs, now=seen_at, budget_seconds=budget_seconds, first_seen=first_seen,
                           deadline=deadline, floor_seconds=floor_seconds,
-                          allow_running_rescue=target.path == CMUX_NEXT_WORKFLOW_PATH,
+                          allow_running_rescue=target.path == HMUX_NEXT_WORKFLOW_PATH,
                           # Main, nightly and push runs keep the rescue: a stuck one holds its
                           # concurrency group, and rescue() cancels it once its head has moved.
                           leave_decided=bool(target.pr_number) and not (
@@ -1390,9 +1390,9 @@ def bot_rerun_leaves_owned(path: str, attempt: int) -> bool:
     queue_janitor.py's unclaimed-leg rule cancels a run whose owned leg no runner claimed within its bound
     and later re-runs its failed jobs (rerun-failed-jobs), so it acts only where that re-run is a rescue,
     as next_attempt() describes the routes:
-    - a side lane other than cmux-next takes its Blacksmith default from attempt 2 on (cmux-tui.yml's
+    - a side lane other than hmux-next takes its Blacksmith default from attempt 2 on (hmux-tui.yml's
       macOS legs read `github.run_attempt == 1 && vars.CI_SIDE_LANE_RUNNER || 'blacksmith-...-macos-...'`);
-    - cmux-next keeps the minis through REFUSAL_RESCUE_ATTEMPT and takes Blacksmith after it;
+    - hmux-next keeps the minis through REFUSAL_RESCUE_ATTEMPT and takes Blacksmith after it;
     - ci.yml's re-run of failed jobs reuses attempt 1's placement through LAST_OWNED_ATTEMPT;
     - test-ios.yml, ios-screenshots.yml and iroh-release-gate.yml take their retry route from attempt 2;
       test-e2e.yml does not count, since a UI run's retry_label stays on its owned pool and the path alone
@@ -1404,7 +1404,7 @@ def bot_rerun_leaves_owned(path: str, attempt: int) -> bool:
     following = attempt + 1
     if path in OWNED_EVERY_ATTEMPT_PATHS:
         return False
-    if path == CMUX_NEXT_WORKFLOW_PATH:
+    if path == HMUX_NEXT_WORKFLOW_PATH:
         return following > REFUSAL_RESCUE_ATTEMPT
     if path == CI_WORKFLOW_PATH:
         return following > LAST_OWNED_ATTEMPT
@@ -1416,7 +1416,7 @@ def bot_rerun_leaves_owned(path: str, attempt: int) -> bool:
 def next_attempt(target: Target) -> str:
     """Where a re-run of failed jobs goes next."""
     following = target.attempt + 1
-    if target.path == CMUX_NEXT_WORKFLOW_PATH:
+    if target.path == HMUX_NEXT_WORKFLOW_PATH:
         if following <= LAST_OWNED_ATTEMPT:
             return f"attempt {following} stays on the side lane's owned label"
         if following > REFUSAL_RESCUE_ATTEMPT:
@@ -1510,14 +1510,14 @@ def rescue(api: GitHub, target: Target, *, now: Callable[[], dt.datetime], sleep
     # A stuck later attempt re-runs its failed jobs too, but is no refusal.
     keep_main = target.main and refusal
     moved = "" if keep_main else pull_moved(api, target, sleep, log)
-    if moved and target.push_branch and target.path == CMUX_NEXT_WORKFLOW_PATH:
-        # cmux-next.yml queues each push Mac job in a group per branch (one
+    if moved and target.push_branch and target.path == HMUX_NEXT_WORKFLOW_PATH:
+        # hmux-next.yml queues each push Mac job in a group per branch (one
         # runs, one waits, a newer push replaces only the waiting one), so a
         # newer push never makes this run cancel. Cancelling here killed every
         # tip run's running jobs at one push a minute (2026-10-07: no tip swift
         # test completed from 00:20Z to 01:05Z). Not re-run either: a re-run
         # would join the branch group and replace the newer run's waiting job.
-        return f"not rescued: {moved}; a cmux-next push run is never cancelled for a newer push"
+        return f"not rescued: {moved}; a hmux-next push run is never cancelled for a newer push"
     if moved and (target.main or target.nightly or target.push_branch):
         # Main's stuck run holds its concurrency group, so nothing newer can
         # start until it finishes: cancel it, and its completion dispatches
@@ -1672,7 +1672,7 @@ def follow(client: GitHub, target: Target, *, seconds: int, queue_rounds: str | 
     """
     rescue_sleep = rescue_sleep or sleep
     clock = now
-    effective_seconds = side_seconds if target.path == CMUX_NEXT_WORKFLOW_PATH and side_seconds is not None else seconds
+    effective_seconds = side_seconds if target.path == HMUX_NEXT_WORKFLOW_PATH and side_seconds is not None else seconds
 
     def capped(deadline: dt.datetime) -> dt.datetime:
         return min(deadline, latest) if latest is not None else deadline
@@ -1770,7 +1770,7 @@ def follow(client: GitHub, target: Target, *, seconds: int, queue_rounds: str | 
 # (GitHub.failed_runs()).
 WATCH_MARKER = "owned-pool-watch"
 LATE_WATCH_MARKER = "owned-pool-watch-late"
-# cmux-next.yml's placement uploads this instead of WATCH_MARKER when it found
+# hmux-next.yml's placement uploads this instead of WATCH_MARKER when it found
 # no free Blacksmith slot: a re-run would only rejoin the same owned queue, so
 # the run (and every re-run of it) is watched for refusals only (run
 # 39615562861 was cancelled and re-run twice while it waited, 2026-10-21).
@@ -1836,7 +1836,7 @@ def sweep_target(run: Mapping[str, Any], repository: str, *, late: bool, full_re
         actor = str((run.get("triggering_actor") or {}).get("login") or "")
         return dataclasses.replace(target, attempt=attempt, full_rerun=full_rerun,
                                    late=full_rerun and not (target.e2e or target.main or target.side),
-                                   refusals_only=(run.get("path") == CMUX_NEXT_WORKFLOW_PATH and actor == RESCUE_ACTOR
+                                   refusals_only=(run.get("path") == HMUX_NEXT_WORKFLOW_PATH and actor == RESCUE_ACTOR
                                                   and attempt == REFUSAL_RESCUE_ATTEMPT))
     if late and not (target.e2e or target.main or target.side):
         return dataclasses.replace(target, late=True)
@@ -1897,8 +1897,8 @@ def sweep(client: GitHub, repository: str, *, seconds: int, queue_rounds: str | 
             seen.discard(run_id)  # the next tick tries again
             log(f"[run {run_id}] could not read the run ({error})")
             return False
-        if not refusals_known and run.get("path") == CMUX_NEXT_WORKFLOW_PATH:
-            # Without this tick's refusals listing a cmux-next re-run could lose its mark.
+        if not refusals_known and run.get("path") == HMUX_NEXT_WORKFLOW_PATH:
+            # Without this tick's refusals listing a hmux-next re-run could lose its mark.
             if not was_seen:
                 seen.discard(run_id)
             log(f"[run {run_id}] not adopted yet: the refusals markers were not listed; next tick")

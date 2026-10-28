@@ -1,9 +1,9 @@
-import CmuxAgentJournal
-import CmuxSettings
+import HmuxAgentJournal
+import HmuxSettings
 import Foundation
 
 /// Owns the app's agent message store and publishes its receipts on the
-/// event bus (`cmux events --category agent`).
+/// event bus (`hmux events --category agent`).
 ///
 /// It is also the one place the off switches are applied: the app-wide
 /// `agentMessages.enabled` setting (read by the store on every send and
@@ -17,7 +17,7 @@ enum AgentMessageCenter {
             isEnabled: { AgentMessageCenter.isEnabled() },
             onChange: { change in
                 let message = change.message
-                CmuxEventBus.shared.publish(
+                HmuxEventBus.shared.publish(
                     name: "agent.message.\(change.state.rawValue)",
                     category: "agent",
                     source: "agent.message",
@@ -55,7 +55,7 @@ enum AgentMessageCenter {
         }
     }
 
-    /// The app-wide switch, `agentMessages.enabled` in cmux.json and
+    /// The app-wide switch, `agentMessages.enabled` in hmux.json and
     /// Settings > Automation > Agent Messages.
     static func isEnabled(defaults: UserDefaults = .standard) -> Bool {
         AgentMessagesCatalogSection().enabled.value(in: defaults)
@@ -95,13 +95,13 @@ enum AgentMessageCenter {
         store.isReceivingDisabled(scope: scope, id: id.uuidString)
     }
 
-    /// `CMUX_AGENT_MESSAGES_PATH`, else a per-install file next to the agent
+    /// `HMUX_AGENT_MESSAGES_PATH`, else a per-install file next to the agent
     /// journal. In-memory under automated tests.
     static func defaultFileURL(
         bundleIdentifier: String? = Bundle.main.bundleIdentifier,
         isRunningUnderAutomatedTests: Bool = SessionRestorePolicy.isRunningUnderAutomatedTests()
     ) -> URL? {
-        if let override = ProcessInfo.processInfo.environment["CMUX_AGENT_MESSAGES_PATH"],
+        if let override = ProcessInfo.processInfo.environment["HMUX_AGENT_MESSAGES_PATH"],
            !override.isEmpty {
             return URL(fileURLWithPath: override)
         }
@@ -115,14 +115,14 @@ enum AgentMessageCenter {
             return nil
         }
         let bundleID = bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines)
-        let resolvedBundleID = bundleID?.isEmpty == false ? bundleID! : "com.cmuxterm.app"
+        let resolvedBundleID = bundleID?.isEmpty == false ? bundleID! : "com.hmuxterm.app"
         let safeBundleID = resolvedBundleID.replacingOccurrences(
             of: "[^A-Za-z0-9._-]",
             with: "_",
             options: .regularExpression
         )
         return appSupport
-            .appendingPathComponent("cmux", isDirectory: true)
+            .appendingPathComponent("hmux", isDirectory: true)
             .appendingPathComponent("agent-messages-\(safeBundleID).jsonl", isDirectory: false)
     }
 
@@ -148,7 +148,7 @@ enum AgentMessageCenter {
 }
 
 /// Fails every queued message when `agentMessages.enabled` turns off, from
-/// Settings or a cmux.json reload. Defaults change notifications are frequent,
+/// Settings or a hmux.json reload. Defaults change notifications are frequent,
 /// so the sweep runs only on the on-to-off transition.
 private final class AgentMessageEnabledObserver: @unchecked Sendable {
     // Lock justification: the notification arrives on whichever thread

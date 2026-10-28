@@ -1,13 +1,13 @@
-import CmuxIrohTransport
-import CmuxMobileHost
-import CmuxSimulator
-import CmuxSimulatorStreamKit
-import CmuxSimulatorUI
+import HmuxIrohTransport
+import HmuxMobileHost
+import HmuxSimulator
+import HmuxSimulatorStreamKit
+import HmuxSimulatorUI
 import Foundation
 import OSLog
 import Observation
 
-private let simStreamV2Log = Logger(subsystem: "dev.cmux", category: "mobile-simstream-v2")
+private let simStreamV2Log = Logger(subsystem: "dev.hmux", category: "mobile-simstream-v2")
 
 /// Bridges the worker's shared-memory frame reader to the pump's capture seam.
 private struct SimStreamReaderSource: SimStreamFrameSource {
@@ -184,7 +184,7 @@ final class MobileSimulatorStreamV2Session {
     // MARK: - Start
 
     private func handleStart(_ request: SimStreamStartRequest) async {
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else {
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else {
             await pump.sendState(
                 SimStreamStateUpdate(status: .failed, detail: "simulator_disabled"))
             end(reason: .featureDisabled)

@@ -63,7 +63,7 @@ export async function handlePublicationCreate(
     return jsonResponse({
       error: "vm_publication_invalid_request",
       message: "vmId is required.",
-      action: "Run `cmux cloud list` and pass a running machine id.",
+      action: "Run `hmux cloud list` and pass a running machine id.",
       details: { field: "vmId" },
     }, 400);
   }

@@ -10,7 +10,7 @@ import {
   FREESTYLE_PERSISTENT_IDLE_TIMEOUT_SECONDS,
   FreestyleProvider,
   PORT_OPEN_LEASE_TTL_SECONDS,
-  freestyleCmuxRemoteRoute,
+  freestyleHmuxRemoteRoute,
   freestyleNetworkAddressMetadata,
   freestyleRouteAddressesFromMetadata,
   freestyleDesktopHealCommand,
@@ -31,7 +31,7 @@ const CLOUD_VM_ID = "11111111-2222-4333-8444-555555555555";
 const TUNNEL_CLIENT_KEY = Buffer.alloc(32, 1).toString("base64");
 const EDGE_RULE: VmEdgeRule = {
   domain: "coderouter.dev",
-  headers: { "x-cmux-authorization": "Bearer eyJ.signed.token" },
+  headers: { "x-hmux-authorization": "Bearer eyJ.signed.token" },
 };
 
 // A fake Freestyle SDK client: records every create, exec, file write, and
@@ -88,16 +88,16 @@ function providerWith(fake: { readonly client: Freestyle }): FreestyleProvider {
 }
 
 describe("FreestyleProvider transport contract", () => {
-  test("cmux-remote is the only session transport", () => {
+  test("hmux-remote is the only session transport", () => {
     const provider = new FreestyleProvider();
-    expect(provider.attachTransports).toEqual(["cmux-remote"]);
-    expect(typeof provider.openCmuxRemote).toBe("function");
-    expect(typeof provider.approveCmuxRemoteEnrollment).toBe("function");
+    expect(provider.attachTransports).toEqual(["hmux-remote"]);
+    expect(typeof provider.openHmuxRemote).toBe("function");
+    expect(typeof provider.approveHmuxRemoteEnrollment).toBe("function");
   });
 
   test("legacy attach and public SSH remain unavailable", () => {
     // SSH is an explicit legacy attach verb. It must not become the default
-    // transport advertised for cmux-tui machines.
+    // transport advertised for hmux-tui machines.
     const provider: VMProvider = new FreestyleProvider();
     expect(provider.openAttach).toBeUndefined();
     expect(provider.openSSH).toBeUndefined();
@@ -137,7 +137,7 @@ describe("Freestyle fork readiness", () => {
   };
 
   test("names the stalled stage without guest log text", async () => {
-    const fake = forkClient("cmux fork daemon did not become ready: stage=unbound supervisor=active\ncmux-tui: /home/cmux/private-path refused\n");
+    const fake = forkClient("hmux fork daemon did not become ready: stage=unbound supervisor=active\nhmux-tui: /home/hmux/private-path refused\n");
     const error = await providerWith(fake).create({ image: "sh-fork", forked: true }).catch((err: unknown) => err);
     expect(error).toBeInstanceOf(ProviderError);
     expect((error as Error).message).toContain("forked machine daemon did not become ready (stage=unbound supervisor=active)");
@@ -146,7 +146,7 @@ describe("Freestyle fork readiness", () => {
   });
 
   test("a stage outside the fixed set reads as unknown", async () => {
-    const fake = forkClient("cmux fork daemon did not become ready: stage=leaked-token supervisor=active\n");
+    const fake = forkClient("hmux fork daemon did not become ready: stage=leaked-token supervisor=active\n");
     const error = await providerWith(fake).create({ image: "sh-fork", forked: true }).catch((err: unknown) => err);
     expect((error as Error).message).toContain("forked machine daemon did not become ready (stage=unknown)");
     expect((error as Error).message).not.toContain("leaked-token");
@@ -285,8 +285,8 @@ describe("Freestyle platform contract", () => {
       vpc: {
         get: async (idOrSlug: string) => {
           gets.push(idOrSlug);
-          if (idOrSlug === "cmux-team-net-missing") throw new FreestyleApiError(404, { code: "NOT_FOUND", message: "missing" });
-          return { id: "vpc-team", slug: "cmux-team-net-1", cidr: "10.3.0.0/24", cidrV6: "fd03::/64" };
+          if (idOrSlug === "hmux-team-net-missing") throw new FreestyleApiError(404, { code: "NOT_FOUND", message: "missing" });
+          return { id: "vpc-team", slug: "hmux-team-net-1", cidr: "10.3.0.0/24", cidrV6: "fd03::/64" };
         },
         ref: (networkId: string) => {
           refs.push(networkId);
@@ -295,10 +295,10 @@ describe("Freestyle platform contract", () => {
       },
     } as unknown as Freestyle;
     const provider = new FreestyleProvider({ client: () => client });
-    await expect(provider.privateNetworking!.getNetwork("cmux-team-net-1")).resolves.toEqual({ id: "vpc-team", slug: "cmux-team-net-1", cidr: "10.3.0.0/24", cidrV6: "fd03::/64" });
-    await expect(provider.privateNetworking!.getNetwork("cmux-team-net-missing")).resolves.toBeNull();
+    await expect(provider.privateNetworking!.getNetwork("hmux-team-net-1")).resolves.toEqual({ id: "vpc-team", slug: "hmux-team-net-1", cidr: "10.3.0.0/24", cidrV6: "fd03::/64" });
+    await expect(provider.privateNetworking!.getNetwork("hmux-team-net-missing")).resolves.toBeNull();
     await expect(provider.privateNetworking!.listNetworkTunnelIds!("vpc-team")).resolves.toEqual(["tun-1", "tun-2"]);
-    expect(gets).toEqual(["cmux-team-net-1", "cmux-team-net-missing"]);
+    expect(gets).toEqual(["hmux-team-net-1", "hmux-team-net-missing"]);
     expect(refs).toEqual(["vpc-team"]);
     const failing = new FreestyleProvider({ client: () => ({
       vpc: {
@@ -306,7 +306,7 @@ describe("Freestyle platform contract", () => {
         ref: () => ({ tunnels: { list: async () => { throw new Error("list failed"); } } }),
       },
     } as unknown as Freestyle) });
-    await expect(failing.privateNetworking!.getNetwork("cmux-team-net-1")).rejects.toBeInstanceOf(ProviderError);
+    await expect(failing.privateNetworking!.getNetwork("hmux-team-net-1")).rejects.toBeInstanceOf(ProviderError);
     await expect(failing.privateNetworking!.listNetworkTunnelIds!("vpc-team")).rejects.toBeInstanceOf(ProviderError);
   });
 
@@ -390,7 +390,7 @@ describe("Freestyle platform contract", () => {
     ).toEqual({});
   });
 
-  test("cmux-remote route prefers the private VPC address and never falls back from it", () => {
+  test("hmux-remote route prefers the private VPC address and never falls back from it", () => {
     // On a VPC: the private address wins even when a public address exists,
     // because a VPC machine has no public inbound rule. v4 is preferred within
     // the network — the tunnel routes the VPC's v4 prefix as a subnet and so
@@ -398,7 +398,7 @@ describe("Freestyle platform contract", () => {
     // created after the tunnel came up, stalling their connect for the full
     // timeout.
     expect(
-      freestyleCmuxRemoteRoute(
+      freestyleHmuxRemoteRoute(
         {
           publicIpv6: "2602:f75c:0:1::2a",
           vpcs: [{ ipv4: "10.40.0.10", ipv6: "fd7a:115c:a1e0::a" }],
@@ -408,7 +408,7 @@ describe("Freestyle platform contract", () => {
     ).toBe("ws://10.40.0.10:1337/v1/link");
     // v6-only membership is the honest second choice, not a public fallback.
     expect(
-      freestyleCmuxRemoteRoute(
+      freestyleHmuxRemoteRoute(
         { publicIpv6: "2602:f75c:0:1::2a", vpcs: [{ ipv4: null, ipv6: "fd7a:115c:a1e0::a" }] },
         VM_ID,
       ),
@@ -416,26 +416,26 @@ describe("Freestyle platform contract", () => {
     // A membership with no address is unreachable and must say so, not
     // silently dial a public address the firewall will drop.
     expect(() =>
-      freestyleCmuxRemoteRoute(
+      freestyleHmuxRemoteRoute(
         { publicIpv6: "2602:f75c:0:1::2a", vpcs: [{ ipv4: null, ipv6: null }] },
         VM_ID,
       ),
     ).toThrow("no address");
   });
 
-  test("cmux-remote route without a network is the public IPv6, as before", () => {
-    expect(freestyleCmuxRemoteRoute({ publicIpv6: "2602:f75c:0:1::2a" }, VM_ID)).toBe(
+  test("hmux-remote route without a network is the public IPv6, as before", () => {
+    expect(freestyleHmuxRemoteRoute({ publicIpv6: "2602:f75c:0:1::2a" }, VM_ID)).toBe(
       "ws://[2602:f75c:0:1::2a]:1337/v1/link",
     );
     // The deprecated `networks` alias still resolves for older responses.
     expect(
-      freestyleCmuxRemoteRoute(
+      freestyleHmuxRemoteRoute(
         { networks: [{ ipv6: "fd7a:115c:a1e0::b" }] },
         VM_ID,
       ),
     ).toBe("ws://[fd7a:115c:a1e0::b]:1337/v1/link");
-    expect(() => freestyleCmuxRemoteRoute({ publicIpv6: null }, VM_ID)).toThrow("public IPv6");
-    expect(() => freestyleCmuxRemoteRoute({ publicIpv6: "  " }, VM_ID)).toThrow("public IPv6");
+    expect(() => freestyleHmuxRemoteRoute({ publicIpv6: null }, VM_ID)).toThrow("public IPv6");
+    expect(() => freestyleHmuxRemoteRoute({ publicIpv6: "  " }, VM_ID)).toThrow("public IPv6");
   });
 
   test("edge rules map to inline egress tls rules with header transforms", () => {
@@ -448,7 +448,7 @@ describe("Freestyle platform contract", () => {
         transform: [
           {
             headers: {
-              "x-cmux-authorization": "Bearer eyJ.signed.token",
+              "x-hmux-authorization": "Bearer eyJ.signed.token",
             },
           },
         ],
@@ -470,7 +470,7 @@ describe("Freestyle platform contract", () => {
     expect(fake.writes).toHaveLength(0);
   });
 
-  test("cmux's own guest maintenance through exec can still ask for root", async () => {
+  test("hmux's own guest maintenance through exec can still ask for root", async () => {
     const fake = fakeFreestyle({ probeExit: 0 });
     const result = await providerWith(fake).exec(VM_ID, "true", { timeoutMs: 5_000, asRoot: true });
     expect(result.exitCode).toBe(0);
@@ -479,7 +479,7 @@ describe("Freestyle platform contract", () => {
 
   test("exec does not repair an absent guest CLI during a command", async () => {
     const fake = fakeFreestyle({ probeExit: 0, guestCliExit: 1 });
-    const result = await providerWith(fake).exec(VM_ID, "cmux self --json");
+    const result = await providerWith(fake).exec(VM_ID, "hmux self --json");
     expect(result.exitCode).toBe(0);
     expect(fake.writes).toHaveLength(0);
     expect(fake.execs[0]).toContain("getent passwd");
@@ -539,8 +539,8 @@ describe("Freestyle platform contract", () => {
     const existing = {
       id: "tun-existing",
       tunnelId: "tun-existing",
-      slug: "cmux-wg-recover",
-      displayName: "cmux computer",
+      slug: "hmux-wg-recover",
+      displayName: "hmux computer",
       clientConfig: "[Interface]\nPrivateKey =\n[Peer]\n",
       endpointHost: "tun-existing.beta-vpn.freestyle.sh",
       endpointPort: 51820,
@@ -582,8 +582,8 @@ describe("Freestyle platform contract", () => {
     });
 
     const recovered = await provider.privateNetworking!.createTunnel({
-      slug: "cmux-wg-recover",
-      displayName: "cmux computer",
+      slug: "hmux-wg-recover",
+      displayName: "hmux computer",
       clientPublicKey: TUNNEL_CLIENT_KEY,
       networkId: "vpc-1",
     });
@@ -622,8 +622,8 @@ describe("Freestyle platform contract", () => {
     const provider = new FreestyleProvider({ client: (timeoutMs) => { timeouts.push(timeoutMs); return client; } });
 
     const result = await provider.privateNetworking!.createTunnel({
-      slug: "cmux-wg-recover",
-      displayName: "cmux computer",
+      slug: "hmux-wg-recover",
+      displayName: "hmux computer",
       clientPublicKey: TUNNEL_CLIENT_KEY,
       networkId: "vpc-1",
     });
@@ -645,11 +645,11 @@ describe("Freestyle platform contract", () => {
     const provider = new FreestyleProvider({ client: () => client });
 
     await expect(provider.privateNetworking!.createTunnel({
-      slug: "cmux-wg-recover",
-      displayName: "cmux computer",
+      slug: "hmux-wg-recover",
+      displayName: "hmux computer",
       clientPublicKey: TUNNEL_CLIENT_KEY,
       networkId: "vpc-1",
-    })).rejects.toThrow("createTunnel(cmux-wg-recover)");
+    })).rejects.toThrow("createTunnel(hmux-wg-recover)");
   });
 
   test("a definite 4xx refusal does not spend a recovery read", async () => {
@@ -663,11 +663,11 @@ describe("Freestyle platform contract", () => {
     const provider = new FreestyleProvider({ client: () => client });
 
     await expect(provider.privateNetworking!.createTunnel({
-      slug: "cmux-wg-recover",
-      displayName: "cmux computer",
+      slug: "hmux-wg-recover",
+      displayName: "hmux computer",
       clientPublicKey: TUNNEL_CLIENT_KEY,
       networkId: "vpc-1",
-    })).rejects.toThrow("createTunnel(cmux-wg-recover)");
+    })).rejects.toThrow("createTunnel(hmux-wg-recover)");
     expect(lists).toBe(0);
   });
 });
@@ -676,8 +676,8 @@ function recoverableTunnel(clientPublicKey: string) {
   return {
     id: "tun-existing",
     tunnelId: "tun-existing",
-    slug: "cmux-wg-recover",
-    displayName: "cmux computer",
+    slug: "hmux-wg-recover",
+    displayName: "hmux computer",
     clientConfig: "[Interface]\nPrivateKey =\n[Peer]\n",
     endpointHost: "tun-existing.beta-vpn.freestyle.sh",
     endpointPort: 51820,
@@ -845,7 +845,7 @@ describe("FreestyleProvider resume network readiness", () => {
     // `start()` has already returned, so the machine is running and a resume
     // has no fresh allocation to undo. A start payload can also name the
     // network before the platform fills in the address assigned on it, so a
-    // missing address here is not a verdict on the machine. openCmuxRemote
+    // missing address here is not a verdict on the machine. openHmuxRemote
     // reads the authoritative addresses and is the boundary that fails closed.
     const fake = resumeFake(vpcs);
 
@@ -895,8 +895,8 @@ const driverSource = readFileSync(
 
 describe("Freestyle edge rule destination", () => {
   test("an alias rule connects the edge to the deployment's API host; a bare rule stays public", () => {
-    const [alias] = freestyleEdgeRules([{ domain: "coderouter.cmux.internal", destinationHost: "cmux.com", headers: { a: "b" } }])!;
-    expect(alias).toMatchObject({ domain: "coderouter.cmux.internal", destination: { host: "cmux.com", port: 443 }, transform: [{ headers: { a: "b" } }] });
+    const [alias] = freestyleEdgeRules([{ domain: "coderouter.hmux.internal", destinationHost: "cmux.com", headers: { a: "b" } }])!;
+    expect(alias).toMatchObject({ domain: "coderouter.hmux.internal", destination: { host: "cmux.com", port: 443 }, transform: [{ headers: { a: "b" } }] });
     const [plain] = freestyleEdgeRules([EDGE_RULE])!;
     expect(plain.destination).toEqual({ public: true });
     expect(() => freestyleEdgeRules([{ domain: "x.dev", destinationHost: "bad host", headers: {} }])).toThrow(ProviderError);
@@ -906,7 +906,7 @@ describe("Freestyle edge rule destination", () => {
 describe("Freestyle attach route source", () => {
   test("attach builds the route from the persisted row addresses, falling back to the provider only without them", () => {
     expect(freestyleRouteAddressesFromMetadata({ networkIpv4: "10.0.0.5", networkIpv6: "fd00::5" })).toEqual({ vpcs: [{ ipv4: "10.0.0.5", ipv6: "fd00::5" }] });
-    expect(freestyleCmuxRemoteRoute(freestyleRouteAddressesFromMetadata({ networkIpv4: " 10.0.0.5 " })!, VM_ID)).toBe("ws://10.0.0.5:1337/v1/link");
+    expect(freestyleHmuxRemoteRoute(freestyleRouteAddressesFromMetadata({ networkIpv4: " 10.0.0.5 " })!, VM_ID)).toBe("ws://10.0.0.5:1337/v1/link");
     expect(freestyleRouteAddressesFromMetadata({ networkId: "vpc-1" })).toBeNull();
     expect(freestyleRouteAddressesFromMetadata(undefined)).toBeNull();
   });
@@ -932,10 +932,10 @@ describe("Freestyle client configuration", () => {
   });
 
   test("public vm exec derives HOME from the guest passwd entry", async () => {
-    const root = await mkdtemp(path.join(tmpdir(), "cmux-exec-home-"));
+    const root = await mkdtemp(path.join(tmpdir(), "hmux-exec-home-"));
     const bin = path.join(root, "bin");
     await mkdir(bin, { recursive: true });
-    await writeFile(path.join(bin, "getent"), "#!/bin/sh\nprintf '%s\n' 'cmux:x:1000:1000::/home/cmux:/bin/bash'\n", { mode: 0o755 });
+    await writeFile(path.join(bin, "getent"), "#!/bin/sh\nprintf '%s\n' 'hmux:x:1000:1000::/home/hmux:/bin/bash'\n", { mode: 0o755 });
     try {
       const fake = fakeFreestyle({ probeExit: 0 });
       await providerWith(fake).exec(VM_ID, 'printf "%s" "$HOME"');
@@ -949,7 +949,7 @@ describe("Freestyle client configuration", () => {
         child.on("close", (status: number | null) => resolve({ status, stdout }));
       });
       expect(result.status).toBe(0);
-      expect(result.stdout).toBe("/home/cmux");
+      expect(result.stdout).toBe("/home/hmux");
     } finally {
       await rm(root, { recursive: true, force: true });
     }
@@ -974,7 +974,7 @@ describe("Freestyle client configuration", () => {
 // is the machine's VPC address over the owner's tunnel, nothing is minted at
 // the platform and nothing public is opened. noVNC on 6901 has no auth of
 // its own, so a machine outside a private network gets no URL at all.
-describe("Freestyle openCmuxRemote: snapshot-v2 fast path", () => {
+describe("Freestyle openHmuxRemote: snapshot-v2 fast path", () => {
   test("uses persisted network metadata without a guest probe or healing", async () => {
     const commands: string[] = [];
     const vm = {
@@ -982,8 +982,8 @@ describe("Freestyle openCmuxRemote: snapshot-v2 fast path", () => {
     };
     const client = { vms: { ref: () => vm } } as unknown as Freestyle;
     const provider = new FreestyleProvider({ client: () => client });
-    const endpoint = await provider.openCmuxRemote(VM_ID, {
-      providerMetadata: { cmuxTuiContract: "snapshot-v2", networkIpv4: "10.4.0.7", networkIpv6: "fd00:4::7" },
+    const endpoint = await provider.openHmuxRemote(VM_ID, {
+      providerMetadata: { hmuxTuiContract: "snapshot-v2", networkIpv4: "10.4.0.7", networkIpv6: "fd00:4::7" },
     });
     expect(endpoint).toMatchObject({ route: "ws://10.4.0.7:1337/v1/link", trustedCarrier: true });
     expect(commands).toEqual([]);
@@ -994,7 +994,7 @@ describe("Freestyle openCmuxRemote: snapshot-v2 fast path", () => {
   // addresses is refused with a clear error, never healed or looked up.
   for (const [name, providerMetadata] of [
     ["without the snapshot-v2 contract", { networkIpv4: "10.4.0.8" }],
-    ["without recorded addresses", { cmuxTuiContract: "snapshot-v2" }],
+    ["without recorded addresses", { hmuxTuiContract: "snapshot-v2" }],
     ["with no metadata", {}],
   ] as const) {
     test(`a row ${name} is refused without provider reads or guest work`, async () => {
@@ -1006,7 +1006,7 @@ describe("Freestyle openCmuxRemote: snapshot-v2 fast path", () => {
       };
       const client = { vms: { ref: () => vm } } as unknown as Freestyle;
       const provider = new FreestyleProvider({ client: () => client });
-      await expect(provider.openCmuxRemote(VM_ID, { providerMetadata })).rejects.toThrow(/recreate/);
+      await expect(provider.openHmuxRemote(VM_ID, { providerMetadata })).rejects.toThrow(/recreate/);
       expect(reads).toBe(0);
       expect(commands).toEqual([]);
     });
@@ -1053,7 +1053,7 @@ describe("Freestyle port open: the private address, the desktop healed", () => {
   test("the desktop heal blocks on the unit's readiness signal, never a sleep loop, and tells a base image apart", () => {
     const command = freestyleDesktopHealCommand();
     expect(command).toBe(
-      "[ -x /usr/local/bin/start-vnc.sh ] || exit 3; if [ -d /run/systemd/system ]; then systemctl start cmux-desktop || exit 1; fi; ss -tln 2>/dev/null | grep -q ':6901 '",
+      "[ -x /usr/local/bin/start-vnc.sh ] || exit 3; if [ -d /run/systemd/system ]; then systemctl start hmux-desktop || exit 1; fi; ss -tln 2>/dev/null | grep -q ':6901 '",
     );
     expect(command).not.toContain("sleep");
     expect(command).not.toContain("seq ");
@@ -1067,7 +1067,7 @@ describe("Freestyle port open: the private address, the desktop healed", () => {
       const endpoint = await fake.provider.openPort(VM_ID, DEVBOX_DESKTOP_NOVNC_PORT);
       expect(endpoint.url).toBe("http://10.4.0.7:6901/");
       expect(endpoint.openUrl).toBe("http://10.4.0.7:6901/vnc.html?path=websockify");
-      expect(endpoint.token).toMatch(/^cmux-freestyle-port-[0-9a-f]{64}$/);
+      expect(endpoint.token).toMatch(/^hmux-freestyle-port-[0-9a-f]{64}$/);
       expect(endpoint.expiresAtMs).toBe(now.getTime() + PORT_OPEN_LEASE_TTL_SECONDS * 1000);
       expect(fake.execs).toEqual([freestyleDesktopHealCommand()]);
     } finally {

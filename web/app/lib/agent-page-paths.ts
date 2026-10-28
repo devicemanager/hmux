@@ -40,38 +40,38 @@ type AgentReadablePage = {
 
 const llmsCompareDescriptions = {
   "best-terminal-for-ai-coding-agents":
-    "compares cmux, Conductor, Superset, Cursor, Devin, VS Code, Zed, Warp, Ghostty, iTerm2, tmux, Kitty, Alacritty, WezTerm, OpenCode, Herdr, and other tools for agent-heavy workflows.",
-  "cmux-vs-alacritty":
+    "compares hmux, Conductor, Superset, Cursor, Devin, VS Code, Zed, Warp, Ghostty, iTerm2, tmux, Kitty, Alacritty, WezTerm, OpenCode, Herdr, and other tools for agent-heavy workflows.",
+  "hmux-vs-alacritty":
     "native macOS agent supervision versus a fast cross-platform OpenGL terminal emulator.",
-  "cmux-vs-conductor":
+  "hmux-vs-conductor":
     "native terminal/browser supervision versus a Mac app for running Claude Code, Codex, Cursor, and OpenCode in isolated workspaces.",
-  "cmux-vs-cursor":
+  "hmux-vs-cursor":
     "terminal agent supervision beside any editor versus an AI editor and hosted agent platform.",
-  "cmux-vs-devin":
+  "hmux-vs-devin":
     "local terminal supervision for your CLI agents versus a cloud AI software engineer and team agent platform.",
-  "cmux-vs-ghostty":
-    "cmux as a libghostty-based agent workflow app versus Ghostty as a general-purpose terminal.",
-  "cmux-vs-herdr":
+  "hmux-vs-ghostty":
+    "hmux as a libghostty-based agent workflow app versus Ghostty as a general-purpose terminal.",
+  "hmux-vs-herdr":
     "native Mac agent workspace with browser panes versus a terminal-native agent multiplexer with SSH attach.",
-  "cmux-vs-iterm2":
+  "hmux-vs-iterm2":
     "agent-aware native terminal workspace versus a mature general-purpose macOS terminal.",
-  "cmux-vs-kitty":
+  "hmux-vs-kitty":
     "agent-aware macOS workspace versus a fast, feature-rich, GPU-based terminal emulator.",
-  "cmux-vs-opencode":
+  "hmux-vs-opencode":
     "terminal workspace and supervision layer versus an open source coding agent that can run in terminal, desktop, or IDE surfaces.",
-  "cmux-vs-superset":
+  "hmux-vs-superset":
     "native terminal/browser supervision versus an Electron agent orchestration workspace.",
-  "cmux-vs-tmux":
+  "hmux-vs-tmux":
     "native macOS agent supervision versus a portable terminal multiplexer.",
-  "cmux-vs-vscode":
+  "hmux-vs-vscode":
     "terminal agent supervision beside a general-purpose editor and extension platform.",
-  "cmux-vs-warp":
+  "hmux-vs-warp":
     "agent supervision terminal versus an AI-enhanced terminal product.",
-  "cmux-vs-wezterm":
+  "hmux-vs-wezterm":
     "agent notification workspace versus a cross-platform terminal emulator and multiplexer.",
-  "cmux-vs-windsurf":
+  "hmux-vs-windsurf":
     "terminal agent supervision beside any editor versus the Devin Desktop IDE lineage.",
-  "cmux-vs-zed":
+  "hmux-vs-zed":
     "terminal agent supervision beside a fast collaborative code editor.",
   "multiple-claude-code-agents-parallel":
     "explains parallel Claude Code, Codex, OpenCode, and other CLI agents with visible workspaces, notification rings, and jump-to-latest-unread review flow.",
@@ -94,22 +94,22 @@ const englishOnlyPages = [
 
 const comparePageTitles = {
   bestTerminalForAgents: "Best terminals and agent workspaces for AI coding agents",
-  cmuxVsAlacritty: "cmux vs Alacritty",
-  cmuxVsConductor: "cmux vs Conductor",
-  cmuxVsCursor: "cmux vs Cursor",
-  cmuxVsDevin: "cmux vs Devin",
-  cmuxVsGhostty: "cmux vs Ghostty",
-  cmuxVsHerdr: "cmux vs Herdr",
-  cmuxVsIterm2: "cmux vs iTerm2",
-  cmuxVsKitty: "cmux vs Kitty",
-  cmuxVsOpencode: "cmux vs OpenCode",
-  cmuxVsSuperset: "cmux vs Superset",
-  cmuxVsTmux: "cmux vs tmux",
-  cmuxVsVscode: "cmux vs VS Code",
-  cmuxVsWarp: "cmux vs Warp",
-  cmuxVsWezterm: "cmux vs WezTerm",
-  cmuxVsWindsurf: "cmux vs Windsurf",
-  cmuxVsZed: "cmux vs Zed",
+  hmuxVsAlacritty: "hmux vs Alacritty",
+  hmuxVsConductor: "hmux vs Conductor",
+  hmuxVsCursor: "hmux vs Cursor",
+  hmuxVsDevin: "hmux vs Devin",
+  hmuxVsGhostty: "hmux vs Ghostty",
+  hmuxVsHerdr: "hmux vs Herdr",
+  hmuxVsIterm2: "hmux vs iTerm2",
+  hmuxVsKitty: "hmux vs Kitty",
+  hmuxVsOpencode: "hmux vs OpenCode",
+  hmuxVsSuperset: "hmux vs Superset",
+  hmuxVsTmux: "hmux vs tmux",
+  hmuxVsVscode: "hmux vs VS Code",
+  hmuxVsWarp: "hmux vs Warp",
+  hmuxVsWezterm: "hmux vs WezTerm",
+  hmuxVsWindsurf: "hmux vs Windsurf",
+  hmuxVsZed: "hmux vs Zed",
   multipleClaudeAgents: "How to run multiple Claude Code agents in parallel",
 } satisfies Record<ComparePageKey, string>;
 
@@ -119,8 +119,8 @@ const agentReadableComparePages = comparePages.map((page) => ({
 }));
 
 const agentReadableDownloadTitles = {
-  windows: "cmux for Windows",
-  linux: "cmux for Linux",
+  windows: "hmux for Windows",
+  linux: "hmux for Linux",
 } satisfies Record<DownloadPlatform, string>;
 
 const agentReadableDownloadPages = DOWNLOAD_PLATFORMS.map((platform) => ({
@@ -130,23 +130,23 @@ const agentReadableDownloadPages = DOWNLOAD_PLATFORMS.map((platform) => ({
 
 export const agentReadablePages = [
   { path: "/", title: "Home" },
-  { path: "/ios", title: "cmux iOS" },
-  { path: "/browser", title: "cmux Browser" },
-  { path: "/cua", title: "cmux Computer Use" },
+  { path: "/ios", title: "hmux iOS" },
+  { path: "/browser", title: "hmux Browser" },
+  { path: "/cua", title: "hmux Computer Use" },
   ...agentReadableDownloadPages,
   {
     path: "/jobs",
-    title: "Founding Engineer jobs at cmux",
+    title: "Founding Engineer jobs at hmux",
     locales: jobsContentLocales,
   },
   {
     path: "/jobs/founding-designer",
-    title: "Founding Designer jobs at cmux",
+    title: "Founding Designer jobs at hmux",
     locales: jobsContentLocales,
   },
   {
     path: "/jobs/founding-chromium-engineer",
-    title: "Founding Chromium Engineer jobs at cmux",
+    title: "Founding Chromium Engineer jobs at hmux",
     locales: jobsContentLocales,
   },
   { path: "/pricing", title: "Pricing", locales: fallbackContentLocales },
@@ -164,40 +164,40 @@ export const agentReadablePages = [
     title: "Superrepos and Why Claude Code Is the Best Worktree Manager",
     locales: fallbackContentLocales,
   },
-  { path: "/blog/cmux-fork", title: "Introducing cmux Fork" },
-  { path: "/blog/cmux-home", title: "cmux home" },
-  { path: "/blog/cmux-history", title: "cmux history" },
-  { path: "/blog/cmux-finder", title: "Introducing cmux Finder" },
-  { path: "/blog/cmux-vault", title: "cmux Vault" },
-  { path: "/blog/passkey-auth", title: "Passkey auth in the cmux browser" },
-  { path: "/blog/task-manager", title: "Task Manager in cmux" },
-  { path: "/blog/markdown-viewer", title: "A better markdown viewer in cmux" },
-  { path: "/blog/unread-shortcuts", title: "Unread workspace shortcuts in cmux" },
-  { path: "/blog/session-restore", title: "Session restore in cmux" },
+  { path: "/blog/hmux-fork", title: "Introducing hmux Fork" },
+  { path: "/blog/hmux-home", title: "hmux home" },
+  { path: "/blog/hmux-history", title: "hmux history" },
+  { path: "/blog/hmux-finder", title: "Introducing hmux Finder" },
+  { path: "/blog/hmux-vault", title: "hmux Vault" },
+  { path: "/blog/passkey-auth", title: "Passkey auth in the hmux browser" },
+  { path: "/blog/task-manager", title: "Task Manager in hmux" },
+  { path: "/blog/markdown-viewer", title: "A better markdown viewer in hmux" },
+  { path: "/blog/unread-shortcuts", title: "Unread workspace shortcuts in hmux" },
+  { path: "/blog/session-restore", title: "Session restore in hmux" },
   {
-    path: "/blog/cmux-ssh",
-    title: "cmux SSH",
+    path: "/blog/hmux-ssh",
+    title: "hmux SSH",
     locales: fallbackContentLocales,
   },
   {
-    path: "/blog/cmux-claude-teams",
-    title: "Claude Code teammate agents as native cmux panes",
+    path: "/blog/hmux-claude-teams",
+    title: "Claude Code teammate agents as native hmux panes",
     locales: englishFallbackContentLocales,
   },
   {
-    path: "/blog/cmux-omo",
-    title: "oh-my-openagent subagents as native cmux panes",
+    path: "/blog/hmux-omo",
+    title: "oh-my-openagent subagents as native hmux panes",
     locales: englishFallbackContentLocales,
   },
   {
     path: "/blog/gpl",
-    title: "cmux is now GPL",
+    title: "hmux is now GPL",
     locales: englishFallbackContentLocales,
   },
   { path: "/blog/cmd-shift-u", title: "Cmd+Shift+U" },
-  { path: "/blog/zen-of-cmux", title: "The Zen of cmux" },
-  { path: "/blog/show-hn-launch", title: "Launching cmux on Show HN" },
-  { path: "/blog/introducing-cmux", title: "Introducing cmux" },
+  { path: "/blog/zen-of-hmux", title: "The Zen of hmux" },
+  { path: "/blog/show-hn-launch", title: "Launching hmux on Show HN" },
+  { path: "/blog/introducing-hmux", title: "Introducing hmux" },
   { path: "/docs", title: "Docs" },
   { path: "/docs/getting-started", title: "Getting Started" },
   { path: "/docs/concepts", title: "Concepts" },
@@ -215,7 +215,7 @@ export const agentReadablePages = [
   { path: "/docs/computer-use", title: "Computer Use" },
   { path: "/docs/skills", title: "Skills" },
   { path: "/docs/notifications", title: "Notifications" },
-  { path: "/docs/cloud", title: "cmux Cloud" },
+  { path: "/docs/cloud", title: "hmux Cloud" },
   { path: "/docs/cloud/machines", title: "Cloud Machines" },
   { path: "/docs/cloud/workspaces", title: "Cloud Workspaces and Agents" },
   { path: "/docs/cloud/networking", title: "Cloud Files and Networking" },
@@ -265,7 +265,7 @@ export const agentReadablePages = [
   { path: "/assets", title: "Brand Assets" },
   { path: "/art", title: "Art" },
   { path: "/guides", title: "Guides" },
-  { path: "/compare", title: "Compare cmux" },
+  { path: "/compare", title: "Compare hmux" },
   ...agentReadableComparePages,
   { path: "/best-terminal-for-mac", title: "Best terminal for Mac" },
   { path: "/built-on-ghostty", title: "Built on Ghostty" },
@@ -348,11 +348,11 @@ export function variantPathForPage(
 
 export function buildLlmsText(origin: string): string {
   const lines = [
-    "# cmux",
+    "# hmux",
     "",
-    "> cmux is a free and open source (GPL), fully scriptable native macOS terminal built on libghostty, purpose-built for running AI coding agents. Every action is available through a CLI and a Unix socket API, so agents can drive the terminal itself. It works with the CLI agents you already use (Claude Code, Codex, OpenCode, Gemini CLI, Aider, and any CLI tool) and adds workspace organization, agent notification rings, and vertical tabs on top of a GPU-accelerated terminal.",
+    "> hmux is a free and open source (GPL), fully scriptable native macOS terminal built on libghostty, purpose-built for running AI coding agents. Every action is available through a CLI and a Unix socket API, so agents can drive the terminal itself. It works with the CLI agents you already use (Claude Code, Codex, OpenCode, Gemini CLI, Aider, and any CLI tool) and adds workspace organization, agent notification rings, and vertical tabs on top of a GPU-accelerated terminal.",
     "",
-    "## What cmux is",
+    "## What hmux is",
     "",
     "- Native macOS app: written in Swift and AppKit with no Electron, built on libghostty (the Ghostty engine) for GPU-accelerated rendering.",
     "- Agent-first: run many AI coding agents in parallel, each in its own workspace, instead of juggling one terminal.",
@@ -365,11 +365,11 @@ export function buildLlmsText(origin: string): string {
     "",
     "## Programmable",
     "",
-    "cmux is designed to be driven by scripts and agents, not just used by hand. Every command is available through both a `cmux` CLI and a Unix socket, so anything an agent has in its PATH can control the running app:",
+    "hmux is designed to be driven by scripts and agents, not just used by hand. Every command is available through both a `hmux` CLI and a Unix socket, so anything an agent has in its PATH can control the running app:",
     "",
     "- Control the app: create and switch workspaces, open split panes and surfaces, send input to a terminal, read screen contents, and capture screenshots over the socket API.",
     "- Browser automation: open an in-app browser surface and drive it programmatically (navigate, snapshot the DOM, click, type, fill, wait, evaluate JavaScript, inspect console and network, manage cookies and storage), so agents can verify web changes in the same terminal.",
-    "- Hooks: run your own commands on cmux events to wire it into other tools and notification pipelines.",
+    "- Hooks: run your own commands on hmux events to wire it into other tools and notification pipelines.",
     "- Skills and custom commands: package reusable agent workflows and bind them to commands.",
     "- Sidebar metadata and notifications are scriptable, so external processes can update workspace status and ring panes.",
     "",
@@ -379,8 +379,8 @@ export function buildLlmsText(origin: string): string {
     "- License: GPL, free to download",
     "- Built on: libghostty (the Ghostty terminal engine)",
     "- Works with: Claude Code, Codex, OpenCode, Gemini CLI, Aider, and any CLI tool",
-    "- Automation: `cmux` CLI and Unix socket API, browser automation, hooks, skills, and custom commands",
-    "- Remote tmux: attach to existing tmux sessions over SSH while preserving cmux workspaces and notifications.",
+    "- Automation: `hmux` CLI and Unix socket API, browser automation, hooks, skills, and custom commands",
+    "- Remote tmux: attach to existing tmux sessions over SSH while preserving hmux workspaces and notifications.",
     "- Agent pages: every public page has Markdown and plain-text variants for AI crawlers and answer engines.",
     `- Download: ${origin}/docs/getting-started`,
     `- Updates: ${origin}/feed.xml`,

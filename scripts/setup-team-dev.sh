@@ -30,9 +30,9 @@ Complete profiles are kept unless their refresh option is selected:
   --refresh-agent       Replace the development simulator/test account.
   --refresh-production  Configure or replace the optional production account.
 
-Development: ~/.secrets/cmuxterm-dev.env (CMUX_DOGFOOD_STACK_* / CMUX_UITEST_STACK_*)
-Production:  ~/.secrets/cmuxterm-prod.env (CMUX_DOGFOOD_STACK_*)
-An existing complete cmux-beta-production.env is copied to the production path
+Development: ~/.secrets/hmuxterm-dev.env (HMUX_DOGFOOD_STACK_* / HMUX_UITEST_STACK_*)
+Production:  ~/.secrets/hmuxterm-prod.env (HMUX_DOGFOOD_STACK_*)
+An existing complete hmux-beta-production.env is copied to the production path
 only if that path is absent; the legacy file stays available to explicit callers.
 Production requires an explicit --credentials-file selection on a launcher
 configured for production; normal development launches never select this file.
@@ -45,32 +45,32 @@ HELP
 done
 
 SECRETS_DIR="${HOME:?HOME must be set}/.secrets"
-DEV_ENV_FILE="$SECRETS_DIR/cmuxterm-dev.env"
-PRODUCTION_ENV_FILE="$SECRETS_DIR/cmuxterm-prod.env"
+DEV_ENV_FILE="$SECRETS_DIR/hmuxterm-dev.env"
+PRODUCTION_ENV_FILE="$SECRETS_DIR/hmuxterm-prod.env"
 
 validate_existing_file() {
   local file="$1"
   if [[ -e "$file" || -L "$file" ]]; then
-    cmux_dev_secrets_validate_file "$file"
+    hmux_dev_secrets_validate_file "$file"
   fi
 }
 
 profile_configured() {
   # A subshell keeps the loader's exported variables out of subsequent profiles.
-  (cmux_dev_secrets_load --profile "$2" --credentials-file "$1" >/dev/null 2>&1)
+  (hmux_dev_secrets_load --profile "$2" --credentials-file "$1" >/dev/null 2>&1)
 }
 
 adopt_legacy_production() (
-  local legacy_file="$SECRETS_DIR/cmux-beta-production.env" temporary_file=""
+  local legacy_file="$SECRETS_DIR/hmux-beta-production.env" temporary_file=""
   # Never replace even an incomplete canonical profile or combine its values
   # with legacy credentials. Existing explicit callers retain their old file.
   [[ ! -e "$PRODUCTION_ENV_FILE" && ! -L "$PRODUCTION_ENV_FILE" ]] || return 0
   [[ -e "$legacy_file" || -L "$legacy_file" ]] || return 0
-  cmux_dev_secrets_validate_file "$legacy_file"
+  hmux_dev_secrets_validate_file "$legacy_file"
   profile_configured "$legacy_file" personal || return 0
 
   umask 077
-  temporary_file="$(mktemp "$SECRETS_DIR/.cmux-credentials.XXXXXX")"
+  temporary_file="$(mktemp "$SECRETS_DIR/.hmux-credentials.XXXXXX")"
   trap 'rm -f "$temporary_file"' EXIT
   cat "$legacy_file" > "$temporary_file"
   chmod 600 "$temporary_file"
@@ -182,7 +182,7 @@ try:
             try:
                 descriptor = os.open(file, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
             except FileNotFoundError:
-                previous = b"# Local cmux sign-in credentials. Never commit or source this file.\n"
+                previous = b"# Local hmux sign-in credentials. Never commit or source this file.\n"
             else:
                 with os.fdopen(descriptor, "rb") as source:
                     validate(source.fileno())
@@ -195,7 +195,7 @@ try:
             # Match the shared parser: strip one outer quote layer only, and
             # preserve literal quotes, CRs, and other password bytes inside.
             retained.extend((prefix + b"_EMAIL=\"" + values[0] + b"\"", prefix + b"_PASSWORD=\"" + values[1] + b"\""))
-            descriptor, temporary = tempfile.mkstemp(prefix=".cmux-credentials.", dir=os.path.dirname(file))
+            descriptor, temporary = tempfile.mkstemp(prefix=".hmux-credentials.", dir=os.path.dirname(file))
             try:
                 with os.fdopen(descriptor, "wb") as output:
                     output.write(b"\n".join(retained) + b"\n")
@@ -247,7 +247,7 @@ configure_production() {
   echo "==> Optional production verification"
   echo "    Add this only if you may want to verify against the production environment."
   echo "    This requires your production account password, even if you normally use email codes."
-  echo "    First set your own password in the Hexclave account portal for cmux production."
+  echo "    First set your own password in the Hexclave account portal for hmux production."
   echo "    These credentials are separate from development and require explicit selection."
   adopt_legacy_production
   validate_existing_file "$PRODUCTION_ENV_FILE"
@@ -268,19 +268,19 @@ configure_production() {
     done
   fi
   echo "    Leave the email empty to skip."
-  configure_profile "Production verification" production personal CMUX_DOGFOOD_STACK \
+  configure_profile "Production verification" production personal HMUX_DOGFOOD_STACK \
     "$PRODUCTION_ENV_FILE" "$REFRESH_PRODUCTION" 1
 }
 
-echo "==> cmux developer account setup"
+echo "==> hmux developer account setup"
 echo "    Use development accounts for both dogfood and simulator/test profiles."
 echo "    Both accounts may belong to you; existing complete profiles are preserved."
 echo "    Each account needs a password; an email code cannot be used here."
-echo "    First set your own password in the Hexclave account portal for cmux development."
+echo "    First set your own password in the Hexclave account portal for hmux development."
 echo
-configure_profile "Development personal dogfood" development personal CMUX_DOGFOOD_STACK \
+configure_profile "Development personal dogfood" development personal HMUX_DOGFOOD_STACK \
   "$DEV_ENV_FILE" "$REFRESH_PERSONAL" 0
-configure_profile "Development simulator/test" development agent CMUX_UITEST_STACK \
+configure_profile "Development simulator/test" development agent HMUX_UITEST_STACK \
   "$DEV_ENV_FILE" "$REFRESH_AGENT" 0
 configure_production
 

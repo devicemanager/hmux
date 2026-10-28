@@ -54,7 +54,7 @@ class R2UploadRequestsTests(unittest.TestCase):
             AWS_ACCESS_KEY_ID="AKIDEXAMPLE",
             AWS_SECRET_ACCESS_KEY="wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY",
             AWS_DEFAULT_REGION="auto",
-            CMUX_R2_UPLOAD_AMZ_DATE="20260102T030405Z",
+            HMUX_R2_UPLOAD_AMZ_DATE="20260102T030405Z",
             NO_PROXY="127.0.0.1",
             no_proxy="127.0.0.1",
             SSL_CERT_FILE=str(self.cert),
@@ -65,7 +65,7 @@ class R2UploadRequestsTests(unittest.TestCase):
         path.write_bytes(body)
         return subprocess.run(
             [sys.executable, str(UPLOADER), "--file", str(path),
-             "--endpoint-url", endpoint, "--bucket", "cmux-binaries",
+             "--endpoint-url", endpoint, "--bucket", "hmux-binaries",
              "--key", f"nightly/{name}", "--cache-control", CACHE_CONTROL, *flags],
             env=self.env, capture_output=True, text=True, timeout=10,
         )
@@ -176,7 +176,7 @@ class R2UploadRequestsTests(unittest.TestCase):
             with self.subTest(name=name):
                 request, headers = self.dry_run(name, "--content-type", "application/xml")
                 self.assert_upload_headers(headers, "application/xml")
-                self.assertEqual(request["url"], f"https://example.invalid/cmux-binaries/nightly/{name}")
+                self.assertEqual(request["url"], f"https://example.invalid/hmux-binaries/nightly/{name}")
                 self.assertEqual(request["body_sha256"], hashlib.sha256(BODY).hexdigest())
                 self.assertEqual(headers["x-amz-content-sha256"], request["body_sha256"])
 
@@ -186,7 +186,7 @@ class R2UploadRequestsTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(len(requests), 1)
         method, path, headers, body = requests[0]
-        self.assertEqual((method, path, body), ("PUT", "/cmux-binaries/nightly/appcast.xml", BODY))
+        self.assertEqual((method, path, body), ("PUT", "/hmux-binaries/nightly/appcast.xml", BODY))
         headers = {k.lower(): v for k, v in headers.items()}
         self.assertIn(headers.get("content-type"), {"application/xml", "text/xml"})
         self.assert_upload_headers(headers, headers["content-type"])
@@ -201,7 +201,7 @@ class R2UploadRequestsTests(unittest.TestCase):
 
     def test_non_xml_defaults(self):
         for name, expected in (("manifest.json", "application/json"),
-                               ("cmux-tui-darwin-arm64", "application/octet-stream"),
+                               ("hmux-tui-darwin-arm64", "application/octet-stream"),
                                ("appcast.xml.gz", "application/octet-stream")):
             with self.subTest(name=name):
                 _, headers = self.dry_run(name)

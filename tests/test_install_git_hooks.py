@@ -25,7 +25,7 @@ git lfs pre-push "$@"
 
 class InstallGitHooksTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="cmux-install-hooks-")
+        self.temporary = tempfile.TemporaryDirectory(prefix="hmux-install-hooks-")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.repo = self.root / "repository"
@@ -74,7 +74,7 @@ class InstallGitHooksTests(unittest.TestCase):
         return common if common.is_absolute() else self.repo / common
 
     def assert_trusted_hooks_installed(self):
-        installed = self.common_dir() / "cmux-git-hooks"
+        installed = self.common_dir() / "hmux-git-hooks"
         self.assertEqual(Path(self.local_hooks_path()).resolve(), installed.resolve())
         self.assertNotEqual(installed.resolve(), (self.repo / "scripts/git-hooks").resolve())
         for name in ("pre-commit", "post-merge", "prepare-commit-msg", "check-git-remotes.sh"):
@@ -101,7 +101,7 @@ class InstallGitHooksTests(unittest.TestCase):
         self.assertEqual(helper.returncode, 0, helper.stderr)
 
     def assert_merge_driver_installed(self):
-        installed = self.common_dir() / "cmux-merge-drivers"
+        installed = self.common_dir() / "hmux-merge-drivers"
         for name in ("merge-xcstrings.py", "merge-pbxproj.py", "normalize-pbxproj.py"):
             self.assertTrue((installed / name).is_file(), name)
         self.assertTrue((installed / "ci" / "merge_main_resolver.py").is_file())
@@ -179,7 +179,7 @@ class InstallGitHooksTests(unittest.TestCase):
         workflow = self.repo / ".github/workflows/probe.yml"
         workflow.parent.mkdir(parents=True)
         workflow.write_text("name: probe\n", encoding="utf-8")
-        pbxproj = self.repo / "cmux.xcodeproj/project.pbxproj"
+        pbxproj = self.repo / "hmux.xcodeproj/project.pbxproj"
         pbxproj.parent.mkdir(parents=True)
         pbxproj.write_text("not a project\n", encoding="utf-8")
         self.git("add", str(workflow.relative_to(self.repo)), str(pbxproj.relative_to(self.repo)))
@@ -376,8 +376,8 @@ class InstallGitHooksTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.local_hooks_path(), "", "must not override the contributor's hooks")
         self.assertIn(str(global_hooks), result.stderr)
-        self.assertIn("cmux-git-hooks/pre-commit", result.stderr, "must say how to wire the hook")
-        self.assertIn("cmux-git-hooks/post-merge", result.stderr, "must say how to refresh merge drivers")
+        self.assertIn("hmux-git-hooks/pre-commit", result.stderr, "must say how to wire the hook")
+        self.assertIn("hmux-git-hooks/post-merge", result.stderr, "must say how to refresh merge drivers")
         self.assertNotIn("core.hooksPath scripts/git-hooks", result.stderr)
         self.assert_merge_driver_installed()
 
@@ -401,7 +401,7 @@ class InstallGitHooksTests(unittest.TestCase):
     def test_trusted_hooks_run_the_global_prepare_commit_msg(self):
         message = self.commit_message_with_global_hook(
             '#!/bin/sh\necho "Agent-Session: test" >> "$1"\n')
-        self.assertEqual(Path(self.local_hooks_path()).resolve(), (self.common_dir() / "cmux-git-hooks").resolve())
+        self.assertEqual(Path(self.local_hooks_path()).resolve(), (self.common_dir() / "hmux-git-hooks").resolve())
         self.assertIn("Agent-Session: test", message)
 
     def test_a_failing_global_prepare_commit_msg_never_blocks_a_commit(self):
@@ -411,7 +411,7 @@ class InstallGitHooksTests(unittest.TestCase):
     def test_a_global_hook_that_runs_the_clones_hooks_does_not_loop(self):
         message = self.commit_message_with_global_hook(
             '#!/bin/sh\necho "Global: once" >> "$1"\n'
-            'h="$(git rev-parse --git-common-dir)/cmux-git-hooks/prepare-commit-msg"\n'
+            'h="$(git rev-parse --git-common-dir)/hmux-git-hooks/prepare-commit-msg"\n'
             '"$h" "$@"\n')
         self.assertEqual(message.count("Global: once"), 1)
 
@@ -440,8 +440,8 @@ class InstallGitHooksTests(unittest.TestCase):
         self.assertEqual(self.local_hooks_path(), "", "must not hide the existing hook")
         self.assertEqual(hook.read_text(), LFS_PRE_PUSH)
         self.assertIn("pre-push", result.stderr)
-        self.assertIn("cmux-git-hooks/pre-commit", result.stderr, "must say how to chain the hook")
-        self.assertIn("cmux-git-hooks/post-merge", result.stderr, "must say how to refresh merge drivers")
+        self.assertIn("hmux-git-hooks/pre-commit", result.stderr, "must say how to chain the hook")
+        self.assertIn("hmux-git-hooks/post-merge", result.stderr, "must say how to refresh merge drivers")
         self.assert_merge_driver_installed()
 
     def check_remotes(self, *args):
@@ -450,7 +450,7 @@ class InstallGitHooksTests(unittest.TestCase):
 
     def test_remote_fetching_a_local_mirror_but_pushing_to_github_warns(self):
         # 2026-10-19: origin fetched a stale local mirror and pushed to GitHub.
-        mirror = self.root / "cmux-merge-remote-nightly.git"
+        mirror = self.root / "hmux-merge-remote-nightly.git"
         self.git("remote", "add", "origin", str(mirror))
         self.git("remote", "set-url", "--push", "origin", "https://github.com/manaflow-ai/cmux.git")
 
@@ -465,12 +465,12 @@ class InstallGitHooksTests(unittest.TestCase):
         self.assertEqual(install.returncode, 0, install.stderr)
         self.assertIn("warning: git remote origin", install.stderr, "setup must say it too")
 
-        self.git("config", "remote.origin.cmuxSplitOk", "true")
+        self.git("config", "remote.origin.hmuxSplitOk", "true")
         silenced = self.check_remotes("--strict")
         self.assertEqual((silenced.returncode, silenced.stderr), (0, ""))
 
     def test_remotes_naming_different_repositories_warn(self):
-        self.git("remote", "add", "fork", "git@github.com:someone/cmux.git")
+        self.git("remote", "add", "fork", "git@github.com:someone/hmux.git")
         self.git("remote", "set-url", "--push", "fork", "https://github.com/manaflow-ai/cmux.git")
         result = self.check_remotes("--strict")
         self.assertEqual(result.returncode, 1)
@@ -478,7 +478,7 @@ class InstallGitHooksTests(unittest.TestCase):
 
     def test_one_repository_in_different_spellings_is_quiet(self):
         self.git("remote", "add", "origin", "https://github.com/manaflow-ai/cmux.git")
-        self.git("remote", "set-url", "--push", "origin", "git@github.com:Manaflow-AI/cmux")
+        self.git("remote", "set-url", "--push", "origin", "git@github.com:Manaflow-AI/hmux")
         self.git("remote", "add", "mf", "ssh://git@github.com/manaflow-ai/cmux.git/")
         self.git("remote", "add", "local", str(self.root / "mirror.git"))
         self.git("config", "url.https://github.com/.insteadOf", "gh:")
@@ -532,7 +532,7 @@ class InstallGitHooksTests(unittest.TestCase):
         self.git("remote", "set-url", "--push", "dev&ops", "https://github.com/manaflow-ai/cmux.git")
         result = self.check_remotes()
         self.assertIn("git remote set-url dev\\&ops https://github.com/manaflow-ai/cmux.git", result.stderr)
-        self.assertIn("git config remote.dev\\&ops.cmuxSplitOk true", result.stderr)
+        self.assertIn("git config remote.dev\\&ops.hmuxSplitOk true", result.stderr)
 
     def test_pre_commit_hook_warns_but_commits(self):
         install = self.install()

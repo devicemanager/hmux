@@ -12,15 +12,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 from test_codex_feed_hooks import FAKE_SURFACE_ID, FAKE_WORKSPACE_ID, run_feed_hook_optional_frame
 
 
 class CopilotFeedPayloadTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix='cmux-copilot-feed-')
+        self.temp = tempfile.TemporaryDirectory(prefix='hmux-copilot-feed-')
         self.addCleanup(self.temp.cleanup)
-        self.cli = str(resolve_cmux_cli())
+        self.cli = str(resolve_hmux_cli())
 
     def test_pre_tool_use_forwards_tool_name_and_tool_args(self):
         payload = {
@@ -32,7 +32,7 @@ class CopilotFeedPayloadTests(unittest.TestCase):
             "toolArgs": {"command": "git status --short", "description": "Check the tree"},
         }
         stdout, frame = run_feed_hook_optional_frame(
-            self.cli, Path(self.temp.name) / 'cmux.sock', payload, None, source="copilot")
+            self.cli, Path(self.temp.name) / 'hmux.sock', payload, None, source="copilot")
         self.assertEqual(stdout, {}, 'a telemetry-only event never blocks the tool')
         self.assertIsNotNone(frame, 'the preToolUse event must reach the Feed')
         event = frame["params"]["event"]
@@ -57,7 +57,7 @@ class CopilotFeedPayloadTests(unittest.TestCase):
             "toolArgs": tool_args,
         }
         stdout, frame = run_feed_hook_optional_frame(
-            self.cli, Path(self.temp.name) / 'cmux.sock', payload, None, source="copilot")
+            self.cli, Path(self.temp.name) / 'hmux.sock', payload, None, source="copilot")
         self.assertEqual(stdout, {}, 'a telemetry-only event never blocks the tool')
         self.assertIsNotNone(frame, 'the preToolUse event must reach the Feed')
         return frame["params"]["event"]

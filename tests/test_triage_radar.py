@@ -62,9 +62,9 @@ class RegressionTests(unittest.TestCase):
     def test_crash_and_confirmed_nightly_repro_surface(self):
         report = issue(
             7,
-            "cmux crashes when restoring a session",
+            "hmux crashes when restoring a session",
             body=(
-                "### Can you reproduce this on cmux NIGHTLY?\n\n"
+                "### Can you reproduce this on hmux NIGHTLY?\n\n"
                 "Yes, it still reproduces on NIGHTLY\n\nPreviously worked."
             ),
         )
@@ -89,7 +89,7 @@ class RegressionTests(unittest.TestCase):
             8,
             "Connection fails after sleep",
             body=(
-                "### Can you reproduce this on cmux NIGHTLY?\n\n"
+                "### Can you reproduce this on hmux NIGHTLY?\n\n"
                 "No, it does not reproduce on NIGHTLY"
             ),
         )

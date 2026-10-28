@@ -35,7 +35,7 @@ export default function TextBoxPage() {
 
       <h2>{t("configTitle")}</h2>
       <p>{t("configDesc")}</p>
-      <CodeBlock title="~/.config/cmux/cmux.json" lang="json">{`{
+      <CodeBlock title="~/.config/hmux/hmux.json" lang="json">{`{
   "terminal": {
     "showTextBoxOnNewTerminals": true,
     "focusTextBoxOnNewTerminals": false,

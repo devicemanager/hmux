@@ -11,14 +11,14 @@ import tempfile
 import threading
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli, socket_request_method
+from claude_teams_test_utils import resolve_hmux_cli, socket_request_method
 from fake_socket_env import cli_environment, unwrap_capability
 
 CALLER_WORKSPACE_ID = "11111111-1111-4111-8111-111111111111"
 CREATED_WORKSPACE_ID = "99999999-9999-4999-8999-999999999999"
 
 
-class FakeCmuxState:
+class FakeHmuxState:
     def __init__(self, *, list_error: bool, titles: list[str]) -> None:
         self.methods: list[str] = []
         self.list_error = list_error
@@ -47,7 +47,7 @@ class FakeCmuxState:
         raise RuntimeError(f"unexpected method {method}")
 
 
-class FakeCmuxHandler(socketserver.StreamRequestHandler):
+class FakeHmuxHandler(socketserver.StreamRequestHandler):
     def handle(self) -> None:
         while True:
             line = self.rfile.readline()
@@ -72,28 +72,28 @@ class FakeCmuxHandler(socketserver.StreamRequestHandler):
             self.wfile.flush()
 
 
-class FakeCmuxUnixServer(socketserver.ThreadingUnixStreamServer):
+class FakeHmuxUnixServer(socketserver.ThreadingUnixStreamServer):
     allow_reuse_address = True
     daemon_threads = True
 
-    def __init__(self, socket_path: str, state: FakeCmuxState) -> None:
+    def __init__(self, socket_path: str, state: FakeHmuxState) -> None:
         self.state = state
-        super().__init__(socket_path, FakeCmuxHandler)
+        super().__init__(socket_path, FakeHmuxHandler)
 
 
-def run_compat(cli_path: str, args: list[str], state: FakeCmuxState) -> subprocess.CompletedProcess[str]:
-    with tempfile.TemporaryDirectory(prefix="cmux-tmux-session-") as td:
+def run_compat(cli_path: str, args: list[str], state: FakeHmuxState) -> subprocess.CompletedProcess[str]:
+    with tempfile.TemporaryDirectory(prefix="hmux-tmux-session-") as td:
         tmp = Path(td)
         home = tmp / "home"
         home.mkdir()
         socket_path = tmp / "fake.sock"
-        server = FakeCmuxUnixServer(str(socket_path), state)
+        server = FakeHmuxUnixServer(str(socket_path), state)
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
         env = cli_environment(
             socket_path,
             home=home,
-            CMUX_WORKSPACE_ID=CALLER_WORKSPACE_ID,
+            HMUX_WORKSPACE_ID=CALLER_WORKSPACE_ID,
         )
         try:
             return subprocess.run(
@@ -110,7 +110,7 @@ def run_compat(cli_path: str, args: list[str], state: FakeCmuxState) -> subproce
             thread.join(timeout=2)
 
 
-def fail(message: str, proc: subprocess.CompletedProcess[str], state: FakeCmuxState) -> int:
+def fail(message: str, proc: subprocess.CompletedProcess[str], state: FakeHmuxState) -> int:
     print(f"FAIL: {message}")
     print(f"exit={proc.returncode}")
     print(f"stdout={proc.stdout.strip()}")
@@ -121,12 +121,12 @@ def fail(message: str, proc: subprocess.CompletedProcess[str], state: FakeCmuxSt
 
 def main() -> int:
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
-    lookup_failure = FakeCmuxState(list_error=True, titles=[])
+    lookup_failure = FakeHmuxState(list_error=True, titles=[])
     failed_lookup = run_compat(
         cli_path,
         ["new-session", "-A", "-d", "-s", "demo-team"],
@@ -141,7 +141,7 @@ def main() -> int:
     if "lookup failed" not in failed_lookup.stderr:
         return fail("new-session -A did not report the lookup error", failed_lookup, lookup_failure)
 
-    missing = FakeCmuxState(list_error=False, titles=["other-team"])
+    missing = FakeHmuxState(list_error=False, titles=["other-team"])
     created = run_compat(
         cli_path,
         ["new-session", "-A", "-d", "-s", "demo-team"],
@@ -150,7 +150,7 @@ def main() -> int:
     if created.returncode != 0 or "workspace.create" not in missing.methods:
         return fail("new-session -A did not create a missing session", created, missing)
 
-    kill_all_others = FakeCmuxState(list_error=False, titles=["demo-team"])
+    kill_all_others = FakeHmuxState(list_error=False, titles=["demo-team"])
     rejected = run_compat(cli_path, ["kill-session", "-a"], kill_all_others)
     if rejected.returncode == 0 or "workspace.close" in kill_all_others.methods:
         return fail("kill-session -a closed the caller", rejected, kill_all_others)

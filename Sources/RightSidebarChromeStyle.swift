@@ -1,7 +1,7 @@
 import AppKit
-import CmuxFoundation
-import CmuxAppKitSupportUI
-import CmuxSettings
+import HmuxFoundation
+import HmuxAppKitSupportUI
+import HmuxSettings
 import SwiftUI
 
 func titlebarShortcutHintShouldShow(
@@ -26,7 +26,7 @@ enum HeaderChromeIconStyle {
     }
 
     static func symbol(_ systemName: String) -> some View {
-        CmuxSystemSymbolImage(
+        HmuxSystemSymbolImage(
             systemName: systemName,
             pointSize: RightSidebarChromeMetrics.headerIconSize,
             weight: weight,
@@ -114,7 +114,7 @@ struct RightSidebarChromeBarModifier: ViewModifier {
     var leadingPadding: CGFloat
     var trailingPadding: CGFloat
     var height: CGFloat
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var globalFontPercent
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var globalFontPercent
 
     func body(content: Content) -> some View {
         content
@@ -138,7 +138,7 @@ struct RightSidebarChromePillModifier: ViewModifier {
     /// False when one shared selection pill is drawn behind the controls
     /// instead (the mode bar's sliding pill).
     var drawsSelectionFill = true
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var globalFontPercent
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var globalFontPercent
 
     func body(content: Content) -> some View {
         content
@@ -412,7 +412,7 @@ struct ModeBarButton: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: Self.contentSpacing) {
-                CmuxSystemSymbolImage(
+                HmuxSystemSymbolImage(
                     systemName: item.symbolName,
                     pointSize: RightSidebarChromeControlStyle.modeIconSize,
                     weight: RightSidebarChromeControlStyle.iconWeight,
@@ -429,7 +429,7 @@ struct ModeBarButton: View {
                 // re-truncating ("Files", "Fil…", "F…") on every frame of a
                 // width change.
                 Text(item.label)
-                    .cmuxFont(
+                    .hmuxFont(
                         size: RightSidebarChromeControlStyle.labelSize,
                         weight: RightSidebarChromeControlStyle.labelWeight
                     )
@@ -512,7 +512,7 @@ struct ModeBarButton: View {
     private var pendingChip: some View {
         let countText = badgeCount > 9 ? "9+" : String(badgeCount)
         return Text(countText)
-            .cmuxFont(size: 10, weight: .bold, monospacedDigit: true)
+            .hmuxFont(size: 10, weight: .bold, monospacedDigit: true)
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: true)
             .foregroundColor(.orange)

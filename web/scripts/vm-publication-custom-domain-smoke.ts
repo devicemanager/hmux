@@ -3,9 +3,9 @@
 // exactly as the CLI's socket calls reach it. Run one step at a time from
 // web/, adding the printed DNS records between `verify` runs:
 //
-//   SMOKE_ZONE=cmux.example.com bun --env-file=/dev/null run scripts/vm-publication-custom-domain-smoke.ts verify
+//   SMOKE_ZONE=hmux.example.com bun --env-file=/dev/null run scripts/vm-publication-custom-domain-smoke.ts verify
 //   ... add the records, then run `verify` again until the zone is verified ...
-//   SMOKE_ZONE=... SMOKE_HOSTNAME=cmux.example.com bun ... publish     # throwaway VM + listener, public
+//   SMOKE_ZONE=... SMOKE_HOSTNAME=hmux.example.com bun ... publish     # throwaway VM + listener, public
 //   SMOKE_ZONE=... SMOKE_HOSTNAME=... bun ... protect                  # personal -> fetch -> public
 //   SMOKE_ZONE=... SMOKE_HOSTNAME=... SMOKE_FORWARD_AUTH_URL=https://... bun ... lock   # personal, stay locked
 //   SMOKE_ZONE=... SMOKE_HOSTNAME=... bun ... unlock                   # back to public
@@ -38,9 +38,9 @@ const hostname = process.env.SMOKE_HOSTNAME?.trim() || zone;
 const principal: PublicationPrincipal = { userId: process.env.SMOKE_OWNER?.trim() || "smoke-owner", teamIds: [] };
 const forwardAuth = {
   url: process.env.SMOKE_FORWARD_AUTH_URL?.trim() || "https://cmux.com/api/freestyle/forward-auth",
-  serviceToken: process.env.CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET?.trim() || `smoke-forward-auth-${"x".repeat(40)}`,
+  serviceToken: process.env.HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET?.trim() || `smoke-forward-auth-${"x".repeat(40)}`,
 };
-const stateFile = process.env.SMOKE_STATE?.trim() || `/tmp/cmux-custom-domain-smoke-${zone}.json`;
+const stateFile = process.env.SMOKE_STATE?.trim() || `/tmp/hmux-custom-domain-smoke-${zone}.json`;
 const databaseUrl = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
 if (!databaseUrl) throw new Error("DATABASE_URL is required");
 if (!process.env.FREESTYLE_API_KEY?.trim()) throw new Error("FREESTYLE_API_KEY is required");
@@ -83,7 +83,7 @@ async function ensureVm(): Promise<string> {
   const state = readState();
   if (state.vmId) return state.vmId;
   const created = await client.vms.create({
-    displayName: `cmux-custom-domain-smoke-${zone}`,
+    displayName: `hmux-custom-domain-smoke-${zone}`,
     firewall: { rules: [] },
     idleTimeoutSeconds: 1_800,
   });

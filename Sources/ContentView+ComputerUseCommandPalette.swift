@@ -1,5 +1,5 @@
 import AppKit
-import CmuxCommandPalette
+import HmuxCommandPalette
 
 extension ContentView {
     static let commandPaletteComputerUseOpenSetupCommandId = "palette.computerUse.openSetup"
@@ -25,7 +25,7 @@ extension ContentView {
             CommandPaletteCommandContribution(
                 commandId: commandPaletteComputerUseOpenSetupCommandId,
                 title: constant(
-                    String(localized: "computerUse.onboarding.windowTitle", defaultValue: "cmux Computer Use Setup")
+                    String(localized: "computerUse.onboarding.windowTitle", defaultValue: "hmux Computer Use Setup")
                 ),
                 subtitle: subtitle,
                 keywords: [

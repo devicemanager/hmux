@@ -1,4 +1,4 @@
-import CmuxSidebar
+import HmuxSidebar
 import Foundation
 
 extension Workspace {
@@ -167,7 +167,7 @@ extension Workspace {
         return visibleStatusKeys
     }
 
-    /// Relay-host agents report state only through relayed hooks. cmux-tui SSH
+    /// Relay-host agents report state only through relayed hooks. hmux-tui SSH
     /// workspaces publish their own remote status keys instead.
     var showsRelayHostAgentStatus: Bool {
         (remoteConfiguration?.relayPort ?? 0) > 0 && !usesSSHTui

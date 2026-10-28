@@ -311,25 +311,25 @@ class LocalizeChangesTests(unittest.TestCase):
         text = (
             '    static var help: String {\n'
             '        String(localized: "cli.help.demo", defaultValue: """\n'
-            '        Usage: cmux demo [flags]\n'
+            '        Usage: hmux demo [flags]\n'
             '\n'
             '        Flags:\n'
             '          --loud   Be loud (default: no)\n'
             '\n'
             '        Example:\n'
-            '          cmux demo --loud\n'
+            '          hmux demo --loud\n'
             '        """)\n'
             '    }\n'
             'String(localized: "after", defaultValue: "After")\n'
         )
         expected = (
-            "Usage: cmux demo [flags]\n"
+            "Usage: hmux demo [flags]\n"
             "\n"
             "Flags:\n"
             "  --loud   Be loud (default: no)\n"
             "\n"
             "Example:\n"
-            "  cmux demo --loud"
+            "  hmux demo --loud"
         )
 
         messages, attention = MODULE.parse_swift_messages("CLI/Demo.swift", text)
@@ -352,7 +352,7 @@ class LocalizeChangesTests(unittest.TestCase):
     def test_multiline_default_with_a_quoted_example_keeps_its_quotes(self):
         text = (
             'String(localized: "cli.help.quote", defaultValue: """\n'
-            '    cmux record note "dragging the workspace"\n'
+            '    hmux record note "dragging the workspace"\n'
             '    """)\n'
         )
 
@@ -361,7 +361,7 @@ class LocalizeChangesTests(unittest.TestCase):
         self.assertEqual(attention, [])
         self.assertEqual(
             messages["cli.help.quote"].source,
-            'cmux record note "dragging the workspace"',
+            'hmux record note "dragging the workspace"',
         )
 
     def test_multiline_default_wrapped_with_a_line_continuation_reaches_the_catalog(self):

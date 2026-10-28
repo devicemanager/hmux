@@ -30,7 +30,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-/** CMUX-hosted half of the cross-domain authorization-code handoff. */
+/** HMUX-hosted half of the cross-domain authorization-code handoff. */
 export default async function CloudPublicationAccessPage({
   searchParams,
 }: CloudPublicationAccessPageProps) {

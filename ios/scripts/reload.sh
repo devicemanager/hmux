@@ -8,16 +8,16 @@ Usage: ios/scripts/reload.sh --tag <tag> [--simulator <name>] [--simulator-id <i
        ios/scripts/reload.sh --tag <tag> --device-only [--device-id <id>] [--device-name <name>] [--team <team-id>] [--no-launch]
        ios/scripts/reload.sh --tag <tag> --simulator-only
 
-Build, install, and launch the cmux iOS app with an isolated tag.
+Build, install, and launch the hmux iOS app with an isolated tag.
 
 Verification default is simulator + iPhone: when a default iPhone is configured
-(CMUX_IPHONE_DEVICE_ID or ~/.config/cmux/iphone-device-id), the device leg is
+(HMUX_IPHONE_DEVICE_ID or ~/.config/hmux/iphone-device-id), the device leg is
 enabled automatically; --simulator-only opts out explicitly. Without a
 configured default, this reloads only the simulator unless --device is given.
 If the iPhone is unreachable, the signed build is parked in the offline install
 queue (scripts/iphone-install-queue.sh) and auto-installs when the phone
 reconnects. Unless a simulator is named explicitly, the simulator leg uses the
-tag's own isolated device ("cmux-dev-<slug>"), created on demand.
+tag's own isolated device ("hmux-dev-<slug>"), created on demand.
 
 When a trusted phone leg is enabled, the simulator app is installed but not
 launched. The simulator's agent auto-pair would replace the phone's personal
@@ -34,7 +34,7 @@ the tagged Mac app. Opt out granularly:
   --no-setup     plain install + launch (today's behavior)
 
   --prod-auth    sign this DEV build in against PRODUCTION auth (bakes
-                 CMUXAuthEnvironment=production into Info.plist; the presence
+                 HMUXAuthEnvironment=production into Info.plist; the presence
                  worker and API base follow the channel in-app). Implies
                  --no-sign-in (dogfood auto-login creds are dev-channel);
                  sign in in-app with your real account and use the IN-APP
@@ -51,7 +51,7 @@ EOF
 # sourced below) so the bundle id this builds/installs always matches the one
 # scripts/mobile-dev-launch.sh later signs in / pairs against, including for edge
 # tags that sanitize to empty. Do not reintroduce a local sanitizer here.
-sanitize_tag() { cmux_attach__slug "$1"; }
+sanitize_tag() { hmux_attach__slug "$1"; }
 
 require_option_value() {
   local option="$1"
@@ -65,11 +65,11 @@ require_option_value() {
 
 # Fresh tagged bundle IDs signed with an App Store Connect API key can be
 # provisioned automatically, but ASC API-key auth cannot associate the concrete
-# group.dev.cmux.ios App Group with a newly-created App ID. Always try the full
+# group.dev.hmux.ios App Group with a newly-created App ID. Always try the full
 # Debug entitlements first so existing/pre-associated tags keep shared-container
 # push behavior. A retry without the App Group is allowed only for this exact
 # Debug + ASC API-key + provisioning-updates path.
-cmux_ios_tagged_device_app_group_fallback_allowed() {
+hmux_ios_tagged_device_app_group_fallback_allowed() {
   local configuration="$1"
   local signing_backend="$2"
   local allow_provisioning_updates="$3"
@@ -79,7 +79,7 @@ cmux_ios_tagged_device_app_group_fallback_allowed() {
     && "$allow_provisioning_updates" == "1" ]]
 }
 
-cmux_ios_device_signing_backend() {
+hmux_ios_device_signing_backend() {
   local key_id="$1"
   local issuer_id="$2"
   local key_path="$3"
@@ -97,7 +97,7 @@ cmux_ios_device_signing_backend() {
   return 2
 }
 
-cmux_ios_device_build_failed_for_app_group_entitlement() {
+hmux_ios_device_build_failed_for_app_group_entitlement() {
   local log_path="$1"
 
   # Require the App Group key and the profile-mismatch wording in the same
@@ -109,18 +109,18 @@ cmux_ios_device_build_failed_for_app_group_entitlement() {
 # Derive fallback entitlements from the checked-in Debug entitlement files at
 # build time so every other capability stays in lockstep automatically. Refuse
 # to remove anything except the one known App Group value.
-cmux_ios_render_tagged_device_no_app_group_entitlements() {
+hmux_ios_render_tagged_device_no_app_group_entitlements() {
   local output_dir="$1"
   mkdir -p "$output_dir"
 
   /usr/bin/python3 - \
-    "$IOS_DIR/Config/cmux.entitlements" "$output_dir/cmux.entitlements" \
+    "$IOS_DIR/Config/hmux.entitlements" "$output_dir/hmux.entitlements" \
     "$IOS_DIR/Config/NotificationService.entitlements" "$output_dir/NotificationService.entitlements" <<'PY'
 import plistlib
 import sys
 from pathlib import Path
 
-expected_group = ["group.dev.cmux.ios"]
+expected_group = ["group.dev.hmux.ios"]
 for source_raw, destination_raw in zip(sys.argv[1::2], sys.argv[2::2]):
     source = Path(source_raw)
     destination = Path(destination_raw)
@@ -167,9 +167,9 @@ SIMULATOR_LAUNCH=1
 # Disable AArch64 GlobalISel codegen for this build. Xcode 26's Swift frontend
 # can miscompile under -O/wholemodule on the GlobalISel path, surfacing as bogus
 # "undefined symbol: _abort/_free/..." link failures. Mirrors scripts/reload.sh.
-# Also honored via CMUX_SWIFT_FRONTEND_WORKAROUND=1.
-SWIFT_FRONTEND_WORKAROUND="${CMUX_SWIFT_FRONTEND_WORKAROUND:-0}"
-# --prod-auth: bake CMUXAuthEnvironment=production so the dev build signs in
+# Also honored via HMUX_SWIFT_FRONTEND_WORKAROUND=1.
+SWIFT_FRONTEND_WORKAROUND="${HMUX_SWIFT_FRONTEND_WORKAROUND:-0}"
+# --prod-auth: bake HMUXAuthEnvironment=production so the dev build signs in
 # against the production Stack project.
 PROD_AUTH=0
 
@@ -309,24 +309,24 @@ if [[ "$SWIFT_FRONTEND_WORKAROUND" == "1" ]]; then
 fi
 
 XCODEBUILD_PARALLEL_ARGS=()
-if [[ -n "${CMUX_XCODEBUILD_JOBS:-}" ]]; then
-  if [[ ! "$CMUX_XCODEBUILD_JOBS" =~ ^[1-9][0-9]*$ ]]; then
-    echo "error: CMUX_XCODEBUILD_JOBS must be a positive integer" >&2
+if [[ -n "${HMUX_XCODEBUILD_JOBS:-}" ]]; then
+  if [[ ! "$HMUX_XCODEBUILD_JOBS" =~ ^[1-9][0-9]*$ ]]; then
+    echo "error: HMUX_XCODEBUILD_JOBS must be a positive integer" >&2
     exit 1
   fi
-  XCODEBUILD_PARALLEL_ARGS=(-jobs "$CMUX_XCODEBUILD_JOBS")
+  XCODEBUILD_PARALLEL_ARGS=(-jobs "$HMUX_XCODEBUILD_JOBS")
 fi
 
 # --prod-auth: point the build at the production auth channel for production
 # account, registry, and API testing (https://github.com/manaflow-ai/cmux/issues/7145).
-# The value lands in the CMUXAuthEnvironment Info.plist key (a tapped device
+# The value lands in the HMUXAuthEnvironment Info.plist key (a tapped device
 # build sees no shell env), read by MobileAuthComposition. Presence needs no
 # URL here: PresenceClient.resolvedServiceBaseURL follows the resolved auth
 # channel, so the worker URLs live only in Swift and cannot drift; an explicit
-# CMUX_PRESENCE_BASE_URL still wins as before.
-CMUX_IOS_AUTH_ENV_VALUE=""
+# HMUX_PRESENCE_BASE_URL still wins as before.
+HMUX_IOS_AUTH_ENV_VALUE=""
 if [[ "$PROD_AUTH" -eq 1 ]]; then
-  CMUX_IOS_AUTH_ENV_VALUE="production"
+  HMUX_IOS_AUTH_ENV_VALUE="production"
   # The dogfood auto-login creds are dev-Stack-project accounts; against
   # production auth they cannot sign in. Launch plain and sign in in-app with
   # the same account as the Mac you want to pair with.
@@ -341,10 +341,10 @@ fi
 # server. A physical device cannot: localhost is the phone itself, so Debug
 # device builds use staging unless the caller supplies a reachable override.
 # Production-auth builds retain production origins. Explicit overrides always
-# win for Debug builds, including the shared CMUX_DEV_API_BASE_URL used by
+# win for Debug builds, including the shared HMUX_DEV_API_BASE_URL used by
 # tagged Mac builds. --prod-auth is fail-closed: it cannot be combined with a
 # staging/loopback origin.
-cmux_ios_require_production_origin() {
+hmux_ios_require_production_origin() {
   local label="$1"
   local value="$2"
   if [[ -n "$value" && "$value" != "https://cmux.com" ]]; then
@@ -353,25 +353,25 @@ cmux_ios_require_production_origin() {
   fi
 }
 
-cmux_ios_resolve_api_base_url() {
+hmux_ios_resolve_api_base_url() {
   local target="$1"
-  local explicit_base_url="${CMUX_IOS_API_BASE_URL:-${CMUX_DEV_API_BASE_URL:-}}"
+  local explicit_base_url="${HMUX_IOS_API_BASE_URL:-${HMUX_DEV_API_BASE_URL:-}}"
 
   if [[ "$PROD_AUTH" -eq 1 ]]; then
-    cmux_ios_require_production_origin "the API origin" "$explicit_base_url" || return 1
+    hmux_ios_require_production_origin "the API origin" "$explicit_base_url" || return 1
     printf '%s' "https://cmux.com"
     return 0
   fi
 
   if [[ -n "$explicit_base_url" ]]; then
     printf '%s' "$explicit_base_url"
-  elif [[ -n "${CMUX_VM_API_BASE_URL:-}" ]]; then
-    printf '%s' "$CMUX_VM_API_BASE_URL"
+  elif [[ -n "${HMUX_VM_API_BASE_URL:-}" ]]; then
+    printf '%s' "$HMUX_VM_API_BASE_URL"
   elif [[ "$target" == "physical_device" ]]; then
     printf '%s' "https://cmux-staging.vercel.app"
-  elif [[ "${CMUX_PORT:-}" =~ ^[0-9]+$ ]] \
-      && (( 10#$CMUX_PORT >= 1 && 10#$CMUX_PORT <= 65535 )); then
-    printf 'http://localhost:%d' "$((10#$CMUX_PORT))"
+  elif [[ "${HMUX_PORT:-}" =~ ^[0-9]+$ ]] \
+      && (( 10#$HMUX_PORT >= 1 && 10#$HMUX_PORT <= 65535 )); then
+    printf 'http://localhost:%d' "$((10#$HMUX_PORT))"
   else
     printf '%s' "http://localhost:3000"
   fi
@@ -379,11 +379,11 @@ cmux_ios_resolve_api_base_url() {
 
 # Iroh discovery and grants always use one shared broker. This is staging for
 # Debug builds on both targets and production for --prod-auth builds.
-cmux_ios_resolve_iroh_broker_base_url() {
-  local explicit_base_url="${CMUX_IOS_IROH_BROKER_BASE_URL:-${CMUX_IROH_BROKER_BASE_URL:-}}"
+hmux_ios_resolve_iroh_broker_base_url() {
+  local explicit_base_url="${HMUX_IOS_IROH_BROKER_BASE_URL:-${HMUX_IROH_BROKER_BASE_URL:-}}"
 
   if [[ "$PROD_AUTH" -eq 1 ]]; then
-    cmux_ios_require_production_origin "the Iroh broker origin" "$explicit_base_url" || return 1
+    hmux_ios_require_production_origin "the Iroh broker origin" "$explicit_base_url" || return 1
     printf '%s' "https://cmux.com"
     return 0
   fi
@@ -396,16 +396,16 @@ cmux_ios_resolve_iroh_broker_base_url() {
 }
 
 if [[ "$PROD_AUTH" -eq 1 ]]; then
-  cmux_ios_require_production_origin "the presence origin" "${CMUX_PRESENCE_BASE_URL:-}" || exit 1
-  CMUX_PRESENCE_BASE_URL="https://presence.cmux.dev"
-  export CMUX_PRESENCE_BASE_URL
+  hmux_ios_require_production_origin "the presence origin" "${HMUX_PRESENCE_BASE_URL:-}" || exit 1
+  HMUX_PRESENCE_BASE_URL="https://presence.cmux.dev"
+  export HMUX_PRESENCE_BASE_URL
 fi
 
-CMUX_IOS_SIMULATOR_API_BASE_URL_VALUE="$(cmux_ios_resolve_api_base_url simulator)"
-CMUX_IOS_DEVICE_API_BASE_URL_VALUE="$(cmux_ios_resolve_api_base_url physical_device)"
-CMUX_IOS_IROH_BROKER_BASE_URL_VALUE="$(cmux_ios_resolve_iroh_broker_base_url)"
-CMUX_IROH_V2_ENVIRONMENT_VALUE="${CMUX_IROH_V2_ENVIRONMENT:-development}"
-CMUX_IROH_V2_BASE_URL_VALUE="${CMUX_IROH_V2_BASE_URL:-}"
+HMUX_IOS_SIMULATOR_API_BASE_URL_VALUE="$(hmux_ios_resolve_api_base_url simulator)"
+HMUX_IOS_DEVICE_API_BASE_URL_VALUE="$(hmux_ios_resolve_api_base_url physical_device)"
+HMUX_IOS_IROH_BROKER_BASE_URL_VALUE="$(hmux_ios_resolve_iroh_broker_base_url)"
+HMUX_IROH_V2_ENVIRONMENT_VALUE="${HMUX_IROH_V2_ENVIRONMENT:-development}"
+HMUX_IROH_V2_BASE_URL_VALUE="${HMUX_IROH_V2_BASE_URL:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IOS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -422,19 +422,19 @@ fi
 source "$IOS_DIR/../scripts/lib/mobile-attach.sh"
 # Fail before building if the tag would collide with a fallback/reserved identity
 # or exceed the cloud presence limit.
-if ! cmux_attach_validate_dev_tag "$TAG"; then
+if ! hmux_attach_validate_dev_tag "$TAG"; then
   exit 1
 fi
-WORKSPACE="$IOS_DIR/cmux.xcworkspace"
-SCHEME="cmux-ios"
+WORKSPACE="$IOS_DIR/hmux.xcworkspace"
+SCHEME="hmux-ios"
 TAG_SLUG="$(sanitize_tag "$TAG")"
-DISPLAY_NAME="cmux DEV $TAG"
-BUNDLE_ID="dev.cmux.ios.$TAG_SLUG"
-DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/cmux-ios-$TAG_SLUG"
+DISPLAY_NAME="hmux DEV $TAG"
+BUNDLE_ID="dev.hmux.ios.$TAG_SLUG"
+DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/hmux-ios-$TAG_SLUG"
 QUEUE_SCRIPT="$IOS_DIR/../scripts/iphone-install-queue.sh"
 
 # Enforced verification default: simulator + iPhone. When a default device id
-# is configured (CMUX_IPHONE_DEVICE_ID or ~/.config/cmux/iphone-device-id) and
+# is configured (HMUX_IPHONE_DEVICE_ID or ~/.config/hmux/iphone-device-id) and
 # the caller made no explicit device/simulator-only choice, enable the device
 # leg automatically so agent verification never silently stops at sim-only.
 DEFAULT_DEVICE_ID=""
@@ -454,26 +454,26 @@ fi
 # mobile-dev-launch performs the signed launch immediately afterward, or the
 # offline queue performs it when the phone reconnects. Only flags that actually
 # skip that launcher (--no-sign-in, --no-setup, --no-attach) require a HUMAN
-# setting CMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 (agents never set it; same
-# convention as CMUX_ALLOW_LOCAL_XCODEBUILD). --prod-auth is exempt: its
+# setting HMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 (agents never set it; same
+# convention as HMUX_ALLOW_LOCAL_XCODEBUILD). --prod-auth is exempt: its
 # sign-in is inherently manual and announced above.
 if [[ "$RELOAD_DEVICE" -eq 1 && "$PROD_AUTH" -eq 0 ]] \
     && [[ "$NO_SIGN_IN" -eq 1 || "$NO_SETUP" -eq 1 || "$NO_ATTACH" -eq 1 ]] \
-    && [[ "${CMUX_ALLOW_UNAUTHENTICATED_INSTALL:-0}" != "1" ]]; then
+    && [[ "${HMUX_ALLOW_UNAUTHENTICATED_INSTALL:-0}" != "1" ]]; then
   echo "error: refusing an unauthenticated iPhone install: --no-sign-in/--no-setup/--no-attach skip the signed-in+paired auth gate" >&2
-  echo "error: retry without the opt-out flag(s): ios/scripts/reload.sh --tag $TAG --device${DEVICE_ID:+ --device-id $DEVICE_ID}  (humans only: CMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 to skip)" >&2
+  echo "error: retry without the opt-out flag(s): ios/scripts/reload.sh --tag $TAG --device${DEVICE_ID:+ --device-id $DEVICE_ID}  (humans only: HMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 to skip)" >&2
   exit 2
 fi
 
 # Isolated per-tag simulator by default: unless the caller explicitly picked a
 # simulator (flag or IOS_SIMULATOR_NAME/IOS_SIMULATOR_ID), resolve or create
-# "cmux-dev-<slug>" so concurrent agent sessions never share a simulator.
+# "hmux-dev-<slug>" so concurrent agent sessions never share a simulator.
 if [[ "$RELOAD_SIMULATOR" -eq 1 && "$SIMULATOR_EXPLICIT" -eq 0 ]]; then
   # shellcheck source=../../scripts/lib/ios-sim-isolate.sh
   source "$IOS_DIR/../scripts/lib/ios-sim-isolate.sh"
-  SIMULATOR_ID="$(cmux_ios_isolated_sim_udid "$TAG_SLUG")"
+  SIMULATOR_ID="$(hmux_ios_isolated_sim_udid "$TAG_SLUG")"
   [[ -n "$SIMULATOR_ID" ]] || { echo "error: could not resolve the isolated simulator for tag $TAG" >&2; exit 1; }
-  SIMULATOR_NAME="$(cmux_ios_isolated_sim_name "$TAG_SLUG")"
+  SIMULATOR_NAME="$(hmux_ios_isolated_sim_name "$TAG_SLUG")"
 fi
 
 DESTINATION="platform=iOS Simulator,name=$SIMULATOR_NAME"
@@ -484,7 +484,7 @@ MOBILE_DEV_LAUNCH="$IOS_DIR/../scripts/mobile-dev-launch.sh"
 DEVICE_PROCESS_HELPER="$IOS_DIR/../scripts/ios-device-process.sh"
 GHOSTTYKIT_ENSURE="$IOS_DIR/../scripts/ensure-ghosttykit.sh"
 DEVICE_AUTH_PROFILE="personal"
-DEVICE_AUTH_CREDENTIALS_FILE="${CMUX_IOS_DOGFOOD_CREDENTIALS_FILE:-$HOME/.secrets/cmuxterm-dev.env}"
+DEVICE_AUTH_CREDENTIALS_FILE="${HMUX_IOS_DOGFOOD_CREDENTIALS_FILE:-$HOME/.secrets/hmuxterm-dev.env}"
 DEVICE_AUTH_ACCOUNT=""
 DEVICE_AUTH_REQUIRED=0
 if [[ "$RELOAD_DEVICE" -eq 1 && "$PROD_AUTH" -eq 0 \
@@ -499,7 +499,7 @@ if [[ "$RELOAD_DEVICE" -eq 1 && "$PROD_AUTH" -eq 0 \
       --credentials-file "$DEVICE_AUTH_CREDENTIALS_FILE"
   )" || exit $?
   DEVICE_AUTH_ACCOUNT="$(printf '%s\n' "$auth_contract_output" \
-    | awk -F= '$1 == "CMUX_DEV_AUTH_ACCOUNT" { print substr($0, index($0, "=") + 1); exit }')"
+    | awk -F= '$1 == "HMUX_DEV_AUTH_ACCOUNT" { print substr($0, index($0, "=") + 1); exit }')"
   [[ -n "$DEVICE_AUTH_ACCOUNT" ]] \
     || { echo "error: iPhone auth preflight returned no selected account" >&2; exit 2; }
   echo "==> iPhone auth contract: $DEVICE_AUTH_PROFILE ($DEVICE_AUTH_ACCOUNT)"
@@ -517,11 +517,11 @@ fi
 
 # Best-effort user notification (mirrors the queue script's notify).
 reload_device_notify() {
-  local title="$1" body="$2" cmux_bin
-  cmux_bin="$(command -v cmux 2>/dev/null || true)"
-  [[ -z "$cmux_bin" && -x "$HOME/.local/bin/cmux" ]] && cmux_bin="$HOME/.local/bin/cmux"
-  [[ -n "$cmux_bin" ]] || return 0
-  "$cmux_bin" notify --title "$title" --body "$body" >/dev/null 2>&1 || true
+  local title="$1" body="$2" hmux_bin
+  hmux_bin="$(command -v hmux 2>/dev/null || true)"
+  [[ -z "$hmux_bin" && -x "$HOME/.local/bin/hmux" ]] && hmux_bin="$HOME/.local/bin/hmux"
+  [[ -n "$hmux_bin" ]] || return 0
+  "$hmux_bin" notify --title "$title" --body "$body" >/dev/null 2>&1 || true
 }
 
 # Auto-setup launch: relaunch the just-installed app signed in (dogfood creds
@@ -565,11 +565,11 @@ auto_setup_launch() {
     return 1
   fi
   local installed_app_path="${APP_PATH:-${device_app_path:-}}"
-  CMUX_INSTALLED_APP_PATH="$installed_app_path" \
+  HMUX_INSTALLED_APP_PATH="$installed_app_path" \
     "$MOBILE_DEV_LAUNCH" "${args[@]}"
 }
 
-# Dev-build identity baked into the app's Info.plist (CMUXGitSHA / CMUXDevTag),
+# Dev-build identity baked into the app's Info.plist (HMUXGitSHA / HMUXDevTag),
 # surfaced in-app under Settings > About so a dogfood build is tellable. The
 # short SHA marks "+" when the working tree is dirty. Use `git status --porcelain`
 # (not `git diff HEAD`) so an UNTRACKED new source file also flips the marker:
@@ -592,7 +592,7 @@ fi
 XCODE_AUTH_ARGS=()
 DEVICE_SIGNING_BACKEND="xcode-account"
 if [[ "$RELOAD_DEVICE" -eq 1 ]]; then
-  if ! DEVICE_SIGNING_BACKEND="$(cmux_ios_device_signing_backend \
+  if ! DEVICE_SIGNING_BACKEND="$(hmux_ios_device_signing_backend \
       "${ASC_API_KEY_ID:-}" "${ASC_API_ISSUER_ID:-}" "${ASC_API_KEY_PATH:-}")"; then
     exit 2
   fi
@@ -620,7 +620,7 @@ fi
 update_qr_tag_marker() {
   # FIXED /tmp path (not TMPDIR): the QR server runs in a different shell whose
   # per-session TMPDIR differs, so the rendezvous file must be machine-shared.
-  local marker="/tmp/cmux-mobile-attach-qr-tags.json"
+  local marker="/tmp/hmux-mobile-attach-qr-tags.json"
   command -v python3 >/dev/null 2>&1 || return 0
   IOS_TAG="$TAG" MARKER="$marker" python3 - <<'PY' 2>/dev/null || true
 import json, os
@@ -849,17 +849,17 @@ reload_simulator() {
     -destination "$DESTINATION" \
     -derivedDataPath "$DERIVED_DATA" \
     ${IROH_RELAY_POLICY_BUILD_ARGS[@]+"${IROH_RELAY_POLICY_BUILD_ARGS[@]}"} \
-    CMUX_APP_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
-    CMUX_HOST_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+    HMUX_APP_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
+    HMUX_HOST_BUNDLE_IDENTIFIER="$BUNDLE_ID" \
     PRODUCT_DISPLAY_NAME="$DISPLAY_NAME" \
-    CMUX_GIT_SHA="$GIT_SHA" \
-    CMUX_DEV_TAG="$TAG" \
-    CMUX_PRESENCE_BASE_URL="${CMUX_PRESENCE_BASE_URL:-}" \
-    CMUX_IOS_AUTH_ENV="$CMUX_IOS_AUTH_ENV_VALUE" \
-    CMUX_API_BASE_URL="$CMUX_IOS_SIMULATOR_API_BASE_URL_VALUE" \
-    CMUX_IROH_BROKER_BASE_URL="$CMUX_IOS_IROH_BROKER_BASE_URL_VALUE" \
-    CMUX_IROH_V2_ENVIRONMENT="$CMUX_IROH_V2_ENVIRONMENT_VALUE" \
-    CMUX_IROH_V2_BASE_URL="$CMUX_IROH_V2_BASE_URL_VALUE" \
+    HMUX_GIT_SHA="$GIT_SHA" \
+    HMUX_DEV_TAG="$TAG" \
+    HMUX_PRESENCE_BASE_URL="${HMUX_PRESENCE_BASE_URL:-}" \
+    HMUX_IOS_AUTH_ENV="$HMUX_IOS_AUTH_ENV_VALUE" \
+    HMUX_API_BASE_URL="$HMUX_IOS_SIMULATOR_API_BASE_URL_VALUE" \
+    HMUX_IROH_BROKER_BASE_URL="$HMUX_IOS_IROH_BROKER_BASE_URL_VALUE" \
+    HMUX_IROH_V2_ENVIRONMENT="$HMUX_IROH_V2_ENVIRONMENT_VALUE" \
+    HMUX_IROH_V2_BASE_URL="$HMUX_IROH_V2_BASE_URL_VALUE" \
     EXCLUDED_SOURCE_FILE_NAMES=Info.plist \
     CODE_SIGNING_ALLOWED=NO \
     SWIFT_OPTIMIZATION_LEVEL=-O \
@@ -868,7 +868,7 @@ reload_simulator() {
     ${SWIFT_WORKAROUND_ARGS[@]+"${SWIFT_WORKAROUND_ARGS[@]}"} \
     build
 
-  APP_PATH="$DERIVED_DATA/Build/Products/Debug-iphonesimulator/cmux.app"
+  APP_PATH="$DERIVED_DATA/Build/Products/Debug-iphonesimulator/hmux.app"
   if [[ ! -d "$APP_PATH" ]]; then
     echo "error: built app not found at $APP_PATH" >&2
     exit 1
@@ -934,14 +934,14 @@ EOF
 # unusable without its Mac). Build the Mac tag first when missing; refuse to
 # ship a phone-only build when that fails.
 mac_app_present() {
-  [[ -d "$(cmux_attach_mac_app_path "$TAG")" ]] && return 0
-  compgen -G "$HOME/Library/Developer/Xcode/DerivedData/cmux-$TAG/Build/Products/Debug/cmux DEV*.app" >/dev/null 2>&1
+  [[ -d "$(hmux_attach_mac_app_path "$TAG")" ]] && return 0
+  compgen -G "$HOME/Library/Developer/Xcode/DerivedData/hmux-$TAG/Build/Products/Debug/hmux DEV*.app" >/dev/null 2>&1
 }
 
 ensure_mac_build() {
   mac_app_present && return 0
-  if [[ "${CMUX_IOS_SKIP_MAC_BUILD_CHECK:-0}" == "1" ]]; then
-    echo "warning: same-tag Mac dev build missing (CMUX_IOS_SKIP_MAC_BUILD_CHECK=1; shipping phone-only at your own risk)" >&2
+  if [[ "${HMUX_IOS_SKIP_MAC_BUILD_CHECK:-0}" == "1" ]]; then
+    echo "warning: same-tag Mac dev build missing (HMUX_IOS_SKIP_MAC_BUILD_CHECK=1; shipping phone-only at your own risk)" >&2
     return 0
   fi
   local repo_root mac_reload
@@ -984,7 +984,7 @@ reload_device() {
 
   # Reachability uses ONE probe implementation (the queue script's), so the
   # local and cloud reload paths agree on what "unreachable" means, including
-  # the CMUX_IPHONE_QUEUE_FORCE_UNREACHABLE test hook. select_device still owns
+  # the HMUX_IPHONE_QUEUE_FORCE_UNREACHABLE test hook. select_device still owns
   # name/ambiguity resolution for reachable devices, and its failure is treated
   # as unreachable too (the phone can drop between probe and selection).
   # A --device-name target never falls back to the DEFAULT device id: queueing
@@ -1015,7 +1015,7 @@ reload_device() {
       if [[ -n "$DEVICE_NAME" ]]; then
         echo "error: device '$DEVICE_NAME' is unreachable and name targets cannot be queued (the queue needs a stable id); pass --device-id instead" >&2
       else
-        echo "error: iPhone unreachable and no device id to queue for (pass --device-id, set CMUX_IPHONE_DEVICE_ID, or write ~/.config/cmux/iphone-device-id)" >&2
+        echo "error: iPhone unreachable and no device id to queue for (pass --device-id, set HMUX_IPHONE_DEVICE_ID, or write ~/.config/hmux/iphone-device-id)" >&2
       fi
       exit 1
     fi
@@ -1037,8 +1037,8 @@ reload_device() {
   if [[ "$queue_mode" -eq 0 && "$ALLOW_DEVICE_REGISTRATION" -eq 1 ]]; then
     device_destination="platform=iOS,id=$selected_device_id"
   fi
-  device_app_path="$DERIVED_DATA/Build/Products/Debug-iphoneos/cmux.app"
-  build_log="${TMPDIR:-/tmp}/cmux-ios-device-build-$TAG_SLUG.log"
+  device_app_path="$DERIVED_DATA/Build/Products/Debug-iphoneos/hmux.app"
+  build_log="${TMPDIR:-/tmp}/hmux-ios-device-build-$TAG_SLUG.log"
 
   echo "==> Building physical device app (tag: $TAG, device: $selected_device_name)"
 
@@ -1065,17 +1065,17 @@ reload_device() {
   build_args+=(${XCODE_AUTH_ARGS[@]+"${XCODE_AUTH_ARGS[@]}"})
 
   build_args+=(
-    CMUX_APP_BUNDLE_IDENTIFIER="$BUNDLE_ID"
-    CMUX_HOST_BUNDLE_IDENTIFIER="$BUNDLE_ID"
+    HMUX_APP_BUNDLE_IDENTIFIER="$BUNDLE_ID"
+    HMUX_HOST_BUNDLE_IDENTIFIER="$BUNDLE_ID"
     PRODUCT_DISPLAY_NAME="$DISPLAY_NAME"
-    CMUX_GIT_SHA="$GIT_SHA"
-    CMUX_DEV_TAG="$TAG"
-    CMUX_PRESENCE_BASE_URL="${CMUX_PRESENCE_BASE_URL:-}"
-    CMUX_IOS_AUTH_ENV="$CMUX_IOS_AUTH_ENV_VALUE"
-    CMUX_API_BASE_URL="$CMUX_IOS_DEVICE_API_BASE_URL_VALUE"
-    CMUX_IROH_BROKER_BASE_URL="$CMUX_IOS_IROH_BROKER_BASE_URL_VALUE"
-    CMUX_IROH_V2_ENVIRONMENT="$CMUX_IROH_V2_ENVIRONMENT_VALUE"
-    CMUX_IROH_V2_BASE_URL="$CMUX_IROH_V2_BASE_URL_VALUE"
+    HMUX_GIT_SHA="$GIT_SHA"
+    HMUX_DEV_TAG="$TAG"
+    HMUX_PRESENCE_BASE_URL="${HMUX_PRESENCE_BASE_URL:-}"
+    HMUX_IOS_AUTH_ENV="$HMUX_IOS_AUTH_ENV_VALUE"
+    HMUX_API_BASE_URL="$HMUX_IOS_DEVICE_API_BASE_URL_VALUE"
+    HMUX_IROH_BROKER_BASE_URL="$HMUX_IOS_IROH_BROKER_BASE_URL_VALUE"
+    HMUX_IROH_V2_ENVIRONMENT="$HMUX_IROH_V2_ENVIRONMENT_VALUE"
+    HMUX_IROH_V2_BASE_URL="$HMUX_IROH_V2_BASE_URL_VALUE"
     EXCLUDED_SOURCE_FILE_NAMES=Info.plist
     CODE_SIGNING_ALLOWED=YES
     CODE_SIGN_STYLE=Automatic
@@ -1095,19 +1095,19 @@ reload_device() {
   fi
 
   # First attempt always uses the configured full entitlements. Existing tagged
-  # App IDs whose provisioning profiles already grant group.dev.cmux.ios keep
+  # App IDs whose provisioning profiles already grant group.dev.hmux.ios keep
   # shared-container push behavior with no special case.
   if ! run_and_capture "$build_log" "${build_args[@]}" build; then
-    if cmux_ios_tagged_device_app_group_fallback_allowed \
+    if hmux_ios_tagged_device_app_group_fallback_allowed \
         "$configuration" "$DEVICE_SIGNING_BACKEND" "$ALLOW_PROVISIONING_UPDATES" \
-        && cmux_ios_device_build_failed_for_app_group_entitlement "$build_log"; then
+        && hmux_ios_device_build_failed_for_app_group_entitlement "$build_log"; then
       fallback_entitlements_dir="$DERIVED_DATA/TaggedDeviceEntitlements/no-app-group"
-      fallback_build_log="${TMPDIR:-/tmp}/cmux-ios-device-build-$TAG_SLUG-no-app-group.log"
-      cmux_ios_render_tagged_device_no_app_group_entitlements "$fallback_entitlements_dir"
-      echo "==> ASC API-key profile cannot grant group.dev.cmux.ios; retrying tagged Debug device signing without the App Group"
+      fallback_build_log="${TMPDIR:-/tmp}/hmux-ios-device-build-$TAG_SLUG-no-app-group.log"
+      hmux_ios_render_tagged_device_no_app_group_entitlements "$fallback_entitlements_dir"
+      echo "==> ASC API-key profile cannot grant group.dev.hmux.ios; retrying tagged Debug device signing without the App Group"
       if ! run_and_capture "$fallback_build_log" "${build_args[@]}" \
-          "CMUX_APP_CODE_SIGN_ENTITLEMENTS=$fallback_entitlements_dir/cmux.entitlements" \
-          "CMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=$fallback_entitlements_dir/NotificationService.entitlements" \
+          "HMUX_APP_CODE_SIGN_ENTITLEMENTS=$fallback_entitlements_dir/hmux.entitlements" \
+          "HMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=$fallback_entitlements_dir/NotificationService.entitlements" \
           build; then
         print_device_build_failure "$fallback_build_log"
         exit 1
@@ -1165,11 +1165,11 @@ reload_device() {
   "$DEVICE_PROCESS_HELPER" terminate-installed \
     --device-id "$selected_device_install_id" \
     --bundle-id "$BUNDLE_ID"
-  # CMUX_SANCTIONED_IPHONE_INSTALL marks this install as coming from the
-  # sanctioned wrapper flow, so the cmuxterm-hq local-build-guards devicectl
+  # HMUX_SANCTIONED_IPHONE_INSTALL marks this install as coming from the
+  # sanctioned wrapper flow, so the hmuxterm-hq local-build-guards devicectl
   # interceptor lets it through while refusing raw agent installs (which skip
   # sign-in). Inert on machines without the guards.
-  CMUX_SANCTIONED_IPHONE_INSTALL=1 \
+  HMUX_SANCTIONED_IPHONE_INSTALL=1 \
     xcrun devicectl device install app --device "$selected_device_install_id" "$device_app_path"
 
   local device_auth_status
@@ -1181,7 +1181,7 @@ reload_device() {
   if [[ "$LAUNCH" -eq 1 ]]; then
     if [[ "$NO_SETUP" -eq 1 || "$NO_SIGN_IN" -eq 1 ]]; then
       # Plain launch (no sign-in / no pair); reachable only via --prod-auth or
-      # the human-only CMUX_ALLOW_UNAUTHENTICATED_INSTALL=1. A launch failure
+      # the human-only HMUX_ALLOW_UNAUTHENTICATED_INSTALL=1. A launch failure
       # (most commonly a LOCKED device) must not fail the whole reload here.
       if ! xcrun devicectl device process launch --terminate-existing --device "$selected_device_install_id" "$BUNDLE_ID" >/dev/null 2>&1; then
         echo "warning: installed but could not launch $BUNDLE_ID (device locked? unlock the iPhone and tap the app)" >&2

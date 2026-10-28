@@ -1,0 +1,19 @@
+{
+  "jobs": [
+    {
+      "name": "setup",
+      "argv": ["/usr/bin/env", "python3", "-c", "print('HMUX_SETUP_READY')"],
+      "ready_pattern": "HMUX_SETUP_READY"
+    },
+    {
+      "name": "build",
+      "argv": ["/usr/bin/env", "python3", "-c", "print('HMUX_BUILD_OK')"],
+      "ready_pattern": "HMUX_BUILD_OK"
+    },
+    {
+      "name": "tests",
+      "argv": ["/usr/bin/env", "python3", "-c", "print('HMUX_TESTS_OK')"],
+      "ready_pattern": "HMUX_TESTS_OK"
+    }
+  ]
+}

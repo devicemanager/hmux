@@ -74,45 +74,45 @@ require_value() {
 
 require_value \
   "Mac app API configuration" \
-  "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:CMUX_API_BASE_URL")" \
+  "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:HMUX_API_BASE_URL")" \
   "$BACKEND_BASE_URL"
 require_value \
   "Mac app Iroh broker configuration" \
-  "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:CMUX_IROH_BROKER_BASE_URL")" \
+  "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:HMUX_IROH_BROKER_BASE_URL")" \
   "$BACKEND_BASE_URL"
 require_value \
   "iOS app API configuration" \
-  "$(read_plist "$IOS_INFO_PLIST" "CMUXApiBaseURL")" \
+  "$(read_plist "$IOS_INFO_PLIST" "HMUXApiBaseURL")" \
   "$BACKEND_BASE_URL"
 require_value \
   "iOS app Iroh broker configuration" \
-  "$(read_plist "$IOS_INFO_PLIST" "CMUXIrohBrokerBaseURL")" \
+  "$(read_plist "$IOS_INFO_PLIST" "HMUXIrohBrokerBaseURL")" \
   "$BACKEND_BASE_URL"
 require_value \
   "Mac app v2 Worker configuration" \
-  "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:CMUX_IROH_V2_BASE_URL")" \
+  "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:HMUX_IROH_V2_BASE_URL")" \
   "$V2_BASE_URL"
 require_value \
   "iOS app v2 Worker configuration" \
-  "$(read_plist "$IOS_INFO_PLIST" "CMUX_IROH_V2_BASE_URL")" \
+  "$(read_plist "$IOS_INFO_PLIST" "HMUX_IROH_V2_BASE_URL")" \
   "$V2_BASE_URL"
 require_value \
   "Mac app v2 environment" \
-  "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:CMUX_IROH_V2_ENVIRONMENT")" \
+  "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:HMUX_IROH_V2_ENVIRONMENT")" \
   "$V2_ENVIRONMENT"
 require_value \
   "iOS app v2 environment" \
-  "$(read_plist "$IOS_INFO_PLIST" "CMUX_IROH_V2_ENVIRONMENT")" \
+  "$(read_plist "$IOS_INFO_PLIST" "HMUX_IROH_V2_ENVIRONMENT")" \
   "$V2_ENVIRONMENT"
 
 if [[ -n "$PRESENCE_BASE_URL" ]]; then
   require_value \
     "Mac app presence configuration" \
-    "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:CMUX_PRESENCE_BASE_URL")" \
+    "$(read_plist "$MAC_INFO_PLIST" "LSEnvironment:HMUX_PRESENCE_BASE_URL")" \
     "$PRESENCE_BASE_URL"
   require_value \
     "iOS app presence configuration" \
-    "$(read_plist "$IOS_INFO_PLIST" "CMUXPresenceBaseURL")" \
+    "$(read_plist "$IOS_INFO_PLIST" "HMUXPresenceBaseURL")" \
     "$PRESENCE_BASE_URL"
 fi
 

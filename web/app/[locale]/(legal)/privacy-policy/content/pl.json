@@ -1,13 +1,13 @@
 {
-  "metadataTitle": "Polityka prywatności — cmux",
-  "metadataDescription": "Polityka prywatności dla cmux",
+  "metadataTitle": "Polityka prywatności — hmux",
+  "metadataDescription": "Polityka prywatności dla hmux",
   "title": "Polityka prywatności",
   "lastUpdated": "Ostatnia aktualizacja: 1 września 2026 r",
   "sections": [
     {
       "paragraphs": [
         "Manaflow („Firma”) zobowiązuje się do utrzymywania solidnej ochrony prywatności swoich użytkowników. Niniejsza Polityka prywatności wyjaśnia, w jaki sposób gromadzimy, wykorzystujemy i zabezpieczamy informacje, które nam przekazujesz.",
-        "W tej polityce „Witryna” oznacza witrynę internetową Spółki pod adresem [cmux.com](https://cmux.com). „Aplikacja” oznacza aplikację komputerową cmux dla macOS oraz aplikację mobilną cmux dla iPhone i iPad. „Usługa” oznacza łącznie Witrynę i Aplikację. „My”, „nas” i „nasz” oznaczają Firmę. „Ty” oznacza użytkownika naszej Usługi.",
+        "W tej polityce „Witryna” oznacza witrynę internetową Spółki pod adresem [cmux.com](https://cmux.com). „Aplikacja” oznacza aplikację komputerową hmux dla macOS oraz aplikację mobilną hmux dla iPhone i iPad. „Usługa” oznacza łącznie Witrynę i Aplikację. „My”, „nas” i „nasz” oznaczają Firmę. „Ty” oznacza użytkownika naszej Usługi.",
         "Korzystając z naszej Usługi, akceptujesz niniejszą Politykę prywatności i nasze [Warunki korzystania z usługi](https://cmux.com/terms-of-service) oraz wyrażasz zgodę na gromadzenie, przechowywanie, wykorzystywanie i ujawnianie opisane tutaj."
       ]
     },
@@ -42,7 +42,7 @@
           "paragraphs": [
             "Jeśli skontaktujesz się z nami za pośrednictwem poczty elektronicznej, naszej strony kontaktowej lub formularza kontaktowego Enterprise, zbieramy podane przez Ciebie informacje, w tym imię i nazwisko, adres e-mail, firma, rola, numer telefonu, kraj, potrzeby wdrożeniowe i komentarze. Jeśli dołączysz do listy oczekujących platformy, zbierzemy przesłaną przez Ciebie wiadomość e-mail, aby powiadomić Cię o uruchomieniu platformy i wysłać wiadomość e-mail rejestracyjną oraz wybrane platformy do naszego prywatnego obszaru roboczego Slack.",
             "Kiedy się logujesz, otrzymujemy informacje uwierzytelniające, takie jak adres e-mail i identyfikator dostawcy, od Apple, Google, GitHub lub kod e-mail do logowania. Kiedy łączysz aplikację mobilną z komputerem Mac, przetwarzamy informacje dotyczące parowania potrzebne do połączenia urządzeń. Gdy przeglądasz obszar roboczy, wysyłasz dane wejściowe z terminala, dołączasz wybrane zdjęcia, korzystasz z transkrypcji mowy lub odbierasz powiadomienia z terminala, powiązana treść lub transkrypcja może być przekazywana między Twoimi urządzeniami a naszą usługą, jeśli jest to konieczne do zapewnienia tej funkcji.",
-            "Dostęp do kamery służy wyłącznie do skanowania kodów parowania cmux QR. Dostęp do mikrofonu i rozpoznawania mowy jest używany tylko wtedy, gdy w oknie wiadomości wybierzesz transkrypcję głosu. Dostęp do biblioteki zdjęć jest używany tylko wtedy, gdy wybierzesz zdjęcia do załączenia."
+            "Dostęp do kamery służy wyłącznie do skanowania kodów parowania hmux QR. Dostęp do mikrofonu i rozpoznawania mowy jest używany tylko wtedy, gdy w oknie wiadomości wybierzesz transkrypcję głosu. Dostęp do biblioteki zdjęć jest używany tylko wtedy, gdy wybierzesz zdjęcia do załączenia."
           ]
         },
         {
@@ -71,7 +71,7 @@
         "Slack: prywatne powiadomienia wewnętrzne. Jeśli dołączysz do listy oczekujących platformy, przesłane wiadomości e-mail i platformy zostaną przesłane do naszego prywatnego obszaru roboczego Slack."
       ],
       "afterBullets": [
-        "Każdy serwis posiada własną politykę prywatności. Kiedy strona trzecia przetwarza dane osobowe na rzecz cmux, wymagamy zabezpieczeń co najmniej tak samo ochronnych jak niniejsza polityka i ograniczamy ich wykorzystanie do świadczenia usług na rzecz cmux."
+        "Każdy serwis posiada własną politykę prywatności. Kiedy strona trzecia przetwarza dane osobowe na rzecz hmux, wymagamy zabezpieczeń co najmniej tak samo ochronnych jak niniejsza polityka i ograniczamy ich wykorzystanie do świadczenia usług na rzecz hmux."
       ]
     },
     {
@@ -123,7 +123,7 @@
     {
       "heading": "IX. Przechowywanie danych",
       "paragraphs": [
-        "Raporty o awariach i diagnostyka są przechowywane tylko tak długo, jak to konieczne. Zamaskowane powtórki sesji są usuwane z Sentry po 90 dniach od zarejestrowania. Identyfikatory konta i dane uwierzytelniania są przechowywane, gdy konto jest aktywne, a następnie usuwane lub anonimizowane, chyba że obowiązki bezpieczeństwa, prawne, podatkowe, rozliczeniowe lub zapobiegania oszustwom wymagają zachowania. Metadane urządzenia i parowania są przechowywane do odłączenia lub usunięcia, a tokeny Apple tylko przy włączonych powiadomieniach. Analityka internetowa i mobilna, analityka powiązana z kontem, zdarzenia cyklu rozliczeniowego i identyfikatory Stripe w PostHog są przechowywane do 24 miesięcy, chyba że poprosisz o wcześniejsze usunięcie. Ustawienia konta usuwają lub anonimizują dane cmux, usuwają powiązaną osobę PostHog i żądają usunięcia zdarzeń i nagrań analityki internetowej i mobilnej. Niektóre dane rozliczeniowe i identyfikatory Stripe mogą być przechowywane ze względu na obowiązki bezpieczeństwa, prawne, podatkowe, rozliczeniowe lub zapobiegania oszustwom. Usuwanie przez dostawców może być asynchroniczne. Poproś o usunięcie w ustawieniach lub przez [founders@cmux.com](mailto:founders@cmux.com)."
+        "Raporty o awariach i diagnostyka są przechowywane tylko tak długo, jak to konieczne. Zamaskowane powtórki sesji są usuwane z Sentry po 90 dniach od zarejestrowania. Identyfikatory konta i dane uwierzytelniania są przechowywane, gdy konto jest aktywne, a następnie usuwane lub anonimizowane, chyba że obowiązki bezpieczeństwa, prawne, podatkowe, rozliczeniowe lub zapobiegania oszustwom wymagają zachowania. Metadane urządzenia i parowania są przechowywane do odłączenia lub usunięcia, a tokeny Apple tylko przy włączonych powiadomieniach. Analityka internetowa i mobilna, analityka powiązana z kontem, zdarzenia cyklu rozliczeniowego i identyfikatory Stripe w PostHog są przechowywane do 24 miesięcy, chyba że poprosisz o wcześniejsze usunięcie. Ustawienia konta usuwają lub anonimizują dane hmux, usuwają powiązaną osobę PostHog i żądają usunięcia zdarzeń i nagrań analityki internetowej i mobilnej. Niektóre dane rozliczeniowe i identyfikatory Stripe mogą być przechowywane ze względu na obowiązki bezpieczeństwa, prawne, podatkowe, rozliczeniowe lub zapobiegania oszustwom. Usuwanie przez dostawców może być asynchroniczne. Poproś o usunięcie w ustawieniach lub przez [founders@cmux.com](mailto:founders@cmux.com)."
       ]
     }
   ]

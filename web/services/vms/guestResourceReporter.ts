@@ -1,4 +1,4 @@
-import { shellQuote } from "./drivers/cmuxTuiDaemon";
+import { shellQuote } from "./drivers/hmuxTuiDaemon";
 import { vmEdgeAliasDomain, VM_PLACEHOLDER_API_KEY } from "../coderouter/vmGuestEnv";
 
 /** CPU uses a 250 ms counter delta; memory excludes reclaimable cache. Units are MiB. */
@@ -69,12 +69,12 @@ while True:
 export function guestResourceReporterInstallCommand(): string {
   const script = guestResourceReporterScript();
   const unit = `[Unit]
-Description=cmux resource statistics
+Description=hmux resource statistics
 After=network-online.target
 [Service]
 Type=simple
 User=nobody
-ExecStart=/usr/bin/python3 /usr/local/lib/cmux/resource-stats.py
+ExecStart=/usr/bin/python3 /usr/local/lib/hmux/resource-stats.py
 Restart=always
 RestartSec=30
 NoNewPrivileges=true
@@ -85,18 +85,18 @@ PrivateTmp=true
 WantedBy=multi-user.target
 `;
   return `set -eu
-install -d -m 0755 /usr/local/lib/cmux
-cmux_stats_tmp=$(mktemp -d)
-trap 'rm -rf "$cmux_stats_tmp"' EXIT
-printf %s ${shellQuote(script)} > "$cmux_stats_tmp/script"
-printf %s ${shellQuote(unit)} > "$cmux_stats_tmp/unit"
-if ! cmp -s "$cmux_stats_tmp/script" /usr/local/lib/cmux/resource-stats.py || ! cmp -s "$cmux_stats_tmp/unit" /etc/systemd/system/cmux-resource-stats.service; then
-    install -m 0644 "$cmux_stats_tmp/script" /usr/local/lib/cmux/resource-stats.py
-    install -m 0644 "$cmux_stats_tmp/unit" /etc/systemd/system/cmux-resource-stats.service
+install -d -m 0755 /usr/local/lib/hmux
+hmux_stats_tmp=$(mktemp -d)
+trap 'rm -rf "$hmux_stats_tmp"' EXIT
+printf %s ${shellQuote(script)} > "$hmux_stats_tmp/script"
+printf %s ${shellQuote(unit)} > "$hmux_stats_tmp/unit"
+if ! cmp -s "$hmux_stats_tmp/script" /usr/local/lib/hmux/resource-stats.py || ! cmp -s "$hmux_stats_tmp/unit" /etc/systemd/system/hmux-resource-stats.service; then
+    install -m 0644 "$hmux_stats_tmp/script" /usr/local/lib/hmux/resource-stats.py
+    install -m 0644 "$hmux_stats_tmp/unit" /etc/systemd/system/hmux-resource-stats.service
     systemctl daemon-reload
-    systemctl restart cmux-resource-stats.service
+    systemctl restart hmux-resource-stats.service
 fi
-if ! systemctl is-enabled --quiet cmux-resource-stats.service || ! systemctl is-active --quiet cmux-resource-stats.service; then
-    systemctl enable --now cmux-resource-stats.service >/dev/null 2>&1
+if ! systemctl is-enabled --quiet hmux-resource-stats.service || ! systemctl is-active --quiet hmux-resource-stats.service; then
+    systemctl enable --now hmux-resource-stats.service >/dev/null 2>&1
 fi`;
 }

@@ -5,7 +5,7 @@
 #
 # ET is not ssh: it terminates the connection on the server side and reconnects
 # internally after a network change, which is the whole reason the seam exists.
-# The only way to know cmux's argv and its reconnect ownership are right is to
+# The only way to know hmux's argv and its reconnect ownership are right is to
 # carry a real `tmux -CC` control stream over a real et.
 #
 # Usage: scripts/remote-tmux-et-host.sh [name] [port]
@@ -13,13 +13,13 @@
 # ============================================================================
 set -uo pipefail
 
-NAME="${1:-cmux-ethost}"
+NAME="${1:-hmux-ethost}"
 PORT="${2:-2039}"
 
 command -v et >/dev/null 2>&1 || { echo "et not installed" >&2; exit 2; }
 command -v etserver >/dev/null 2>&1 || { echo "etserver not installed" >&2; exit 2; }
 
-STATE_ROOT="$HOME/Library/Caches/cmux/remote-tmux-et"
+STATE_ROOT="$HOME/Library/Caches/hmux/remote-tmux-et"
 DIR="$STATE_ROOT/$NAME"
 if [ -L "$STATE_ROOT" ] || [ -L "$DIR" ]; then
   echo "refusing symlinked et state path" >&2; exit 1
@@ -59,19 +59,19 @@ fi
 
 # A session for the mirror to attach to, on the server both transports reach.
 #
-# It has to be the server a plain login shell resolves to, because cmux splits the work:
+# It has to be the server a plain login shell resolves to, because hmux splits the work:
 # one-shot commands like the `has-session` check before an attach ride ssh, while the
 # control stream rides et. Putting the session on a private TMUX_TMPDIR isolates it from
 # the ssh side, so the attach fails with "can't find session" even though the session
 # exists. A real et host has both transports landing on the same default server, so the
 # harness matches that.
-SESSION="${CMUX_ET_SESSION:-etmirror}"
+SESSION="${HMUX_ET_SESSION:-etmirror}"
 OWNED="$DIR/owned-sessions"
 if tmux has-session -t "$SESSION" 2>/dev/null; then
   # Never adopt a session this harness did not create: teardown kills what it owns, and a
   # developer's own session of the same name must survive.
   grep -qxF "$SESSION" "$OWNED" 2>/dev/null \
-    || { echo "tmux session '$SESSION' already exists and is not ours; set CMUX_ET_SESSION" >&2; exit 1; }
+    || { echo "tmux session '$SESSION' already exists and is not ours; set HMUX_ET_SESSION" >&2; exit 1; }
 else
   tmux new-session -d -s "$SESSION" -c "$HOME" 2>>"$DIR/logs/start.out" \
     || { echo "could not create tmux session $SESSION" >&2; exit 1; }

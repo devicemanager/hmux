@@ -47,9 +47,9 @@ class FindingsTests(unittest.TestCase):
             "- сmux7's Maс mini",
             "• сmux7's Mас mini",
             "стиx7's Mac mini",
-            "cmux@cmux7s-Mac-mini cmux %",
-            "сmux@cmuxs-Maс-mini-4 cmux %",
-            "• /Users/cmux",
+            "hmux@hmux7s-Mac-mini hmux %",
+            "сmux@hmuxs-Maс-mini-4 hmux %",
+            "• /Users/hmux",
             "ssh leo@manaflow.ai",
         ):
             with self.subTest(text=text):
@@ -57,20 +57,20 @@ class FindingsTests(unittest.TestCase):
 
     def test_ordinary_text_is_not_flagged(self) -> None:
         for text in (
-            "cmux-next",
+            "hmux-next",
             "manaflow-ai/cmux#22345",
-            "cmux ~/code",
+            "hmux ~/code",
             "user@example.com",
             "Add retries with backoff",
-            "cmux NEXT",
-            "/Users/cmuxbot",
+            "hmux NEXT",
+            "/Users/hmuxbot",
             "notify@docs.example.org",
         ):
             with self.subTest(text=text):
                 self.assertEqual(kinds(text), [])
 
     def test_each_hit_names_its_kind_and_line(self) -> None:
-        hits = privacy.findings(["clean", "• /Users/cmux"], list(privacy.GENERIC_PATTERNS))
+        hits = privacy.findings(["clean", "• /Users/hmux"], list(privacy.GENERIC_PATTERNS))
         self.assertEqual([(hit["kind"], hit["line"]) for hit in hits], [("capture-account", 2)])
 
     def test_private_terms_match_whole_words_through_look_alikes(self) -> None:
@@ -100,10 +100,10 @@ class LookAlikeTests(unittest.TestCase):
                 self.assertEqual(kinds(text, patterns), [])
 
     def test_digits_are_never_folded_into_each_other(self) -> None:
-        self.assertEqual(kinds("ssh cmux7", privacy.private_patterns(json.dumps(["cmux1"]))), [])
-        self.assertEqual(privacy.fold("cmux1 cmux7"), "cmux1 cmux7")
-        self.assertEqual([hit["text"] for hit in privacy.findings(["cmux7"], list(privacy.GENERIC_PATTERNS))],
-                         ["cmux7"])
+        self.assertEqual(kinds("ssh hmux7", privacy.private_patterns(json.dumps(["hmux1"]))), [])
+        self.assertEqual(privacy.fold("hmux1 hmux7"), "hmux1 hmux7")
+        self.assertEqual([hit["text"] for hit in privacy.findings(["hmux7"], list(privacy.GENERIC_PATTERNS))],
+                         ["hmux7"])
 
     def test_an_address_with_look_alike_letters_is_still_an_address(self) -> None:
         self.assertEqual(kinds("mail lео@glow-box.dev"), ["email"])  # Cyrillic е, о
@@ -120,7 +120,7 @@ class LookAlikeTests(unittest.TestCase):
 
 class TermSourceTests(unittest.TestCase):
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="cmux-pr-media-terms-test-")
+        temporary = tempfile.TemporaryDirectory(prefix="hmux-pr-media-terms-test-")
         self.addCleanup(temporary.cleanup)
         self.home = Path(temporary.name)
 
@@ -134,10 +134,10 @@ class TermSourceTests(unittest.TestCase):
         ci = {"HOME": str(self.home), "GITHUB_ACTIONS": "true"}
         self.assertEqual(privacy.load_private_terms(ci)[0], [])
         self.assertIn("no private terms", privacy.load_private_terms(ci)[1])
-        self.write("Projects/cmuxterm-hq/build-fleet/pr_capture/private-terms.json", {"terms": ["home-box"]})
+        self.write("Projects/hmuxterm-hq/build-fleet/pr_capture/private-terms.json", {"terms": ["home-box"]})
         self.assertEqual(privacy.load_private_terms(ci)[0], ["home-box"])
         hq = self.write("hq/build-fleet/pr_capture/private-terms.json", {"terms": ["hq-box"]})
-        with_hq = {**ci, "CMUX_HQ": str(hq.parents[2])}
+        with_hq = {**ci, "HMUX_HQ": str(hq.parents[2])}
         self.assertEqual(privacy.load_private_terms(with_hq)[0], ["hq-box"])
         named = self.write("terms.json", ["file-box"])
         with_file = {**with_hq, "PR_MEDIA_PRIVATE_TERMS_FILE": str(named)}
@@ -154,7 +154,7 @@ class TermSourceTests(unittest.TestCase):
             self.assertEqual(privacy.load_private_terms({**local, "GITHUB_ACTIONS": "true"})[0], ["glow-box"])
 
     def test_local_names_drop_short_and_shared_names(self) -> None:
-        with mock.patch.object(privacy.getpass, "getuser", return_value="cmux"), \
+        with mock.patch.object(privacy.getpass, "getuser", return_value="hmux"), \
                 mock.patch.object(privacy.socket, "gethostname", return_value="glow-box.local"), \
                 mock.patch.object(privacy.sys, "platform", "linux"):
             self.assertEqual(privacy.local_names(Path("/h")), ["glow-box", "glow-box.local"])
@@ -188,12 +188,12 @@ def fake_ocr(local: Path) -> list[str]:
     """Reads a "leak" file as a fleet prompt and a "broken" one as an OCR failure."""
     if "broken" in local.name:
         raise RuntimeError("OCR exited 4")
-    return ["cmux@cmux7s-Mac-mini ~ %"] if "leak" in local.name else ["ok"]
+    return ["hmux@hmux7s-Mac-mini ~ %"] if "leak" in local.name else ["ok"]
 
 
 class CheckFilesTests(unittest.TestCase):
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="cmux-pr-media-check-test-")
+        temporary = tempfile.TemporaryDirectory(prefix="hmux-pr-media-check-test-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         self.patterns = [*privacy.GENERIC_PATTERNS, *privacy.private_patterns('["glow-box"]')]
@@ -217,7 +217,7 @@ class CheckFilesTests(unittest.TestCase):
         self.assertEqual(actions, dict.fromkeys(["10/leak.png", "11/leak.png", "12/notes.md", "ui-lab/leak.png",
                                                  "nightly-next/r/leak.png", "fuzz/d/1/leak.png"], "refuse"))
         self.assertTrue(report["refused"])
-        self.assertNotIn("cmux7s", json.dumps(report))
+        self.assertNotIn("hmux7s", json.dumps(report))
         self.assertNotIn("g1ow", json.dumps(report))
 
     def test_a_refusal_names_the_category_and_the_fix_never_the_term(self) -> None:
@@ -225,14 +225,14 @@ class CheckFilesTests(unittest.TestCase):
         lookup = mock.Mock(return_value={10: "teammate"})
         with contextlib.redirect_stderr(io.StringIO()) as err, self.assertRaises(privacy.Refused) as raised:
             privacy.check_upload([("10/notes.html", self.file("notes.html", "ssh glow-box")),
-                                  ("10/prompt.md", self.file("prompt.md", "cmux@cmux7s-Mac-mini %"))],
+                                  ("10/prompt.md", self.file("prompt.md", "hmux@hmux7s-Mac-mini %"))],
                                  env=env, ocr=None, lookup=lookup)
         said = err.getvalue() + str(raised.exception)
         self.assertIn("10/notes.html shows a personal machine or account name; refused", said)
         self.assertIn("10/prompt.md (fleet Mac mini name, fleet shell prompt)", said)
         self.assertIn("Nothing was uploaded. Show fixture names in the scene instead", said)
         self.assertNotIn("glow", said.replace(str(self.root), ""))
-        self.assertNotIn("cmux7s", said)
+        self.assertNotIn("hmux7s", said)
         lookup.assert_not_called()  # no PR author decides any more
 
     def test_every_kind_has_a_category(self) -> None:
@@ -245,7 +245,7 @@ class CheckFilesTests(unittest.TestCase):
         self.assertEqual(report["files"][0]["kinds"], ["unreadable"])
 
     def test_without_ocr_media_are_skipped_and_text_is_still_read(self) -> None:
-        notes = self.file("notes.html", "<p>cmux@cmux3s-mac-mini %</p>")
+        notes = self.file("notes.html", "<p>hmux@hmux3s-mac-mini %</p>")
         actions, report = self.check([("fuzz/d/leak.png", self.file("leak.png")), ("fuzz/d/notes.html", notes)],
                                      ocr=None)
         self.assertEqual(actions, {"fuzz/d/notes.html": "refuse"})
@@ -261,7 +261,7 @@ class CheckFilesTests(unittest.TestCase):
 
 class CheckCommandTests(unittest.TestCase):
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="cmux-pr-media-check-cli-test-")
+        temporary = tempfile.TemporaryDirectory(prefix="hmux-pr-media-check-cli-test-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         tool = self.root / "ocr.sh"
@@ -269,7 +269,7 @@ class CheckCommandTests(unittest.TestCase):
         tool.chmod(0o755)
         self.env = {"HOME": str(self.root), "GITHUB_ACTIONS": "true", "PR_MEDIA_PRIVACY_OCR": str(tool),
                     "PR_MEDIA_PRIVATE_TERMS": '{"terms": ["glow-box"]}', "PR_MEDIA_AGENT_AUTHORS": "bot-a",
-                    "PR_MEDIA_PRIVATE_TERMS_FILE": "", "CMUX_HQ": ""}
+                    "PR_MEDIA_PRIVATE_TERMS_FILE": "", "HMUX_HQ": ""}
 
     def run_check(self, prefix: str, *names: str):
         paths = []
@@ -307,17 +307,17 @@ class FuzzUploadTests(unittest.TestCase):
     def test_a_refused_frame_stops_every_put(self) -> None:
         sys.path.insert(0, str(ROOT / "dogfood" / "fuzz"))
         self.addCleanup(sys.path.remove, str(ROOT / "dogfood" / "fuzz"))
-        from cmuxfuzz import triage
-        with tempfile.TemporaryDirectory(prefix="cmux-pr-media-fuzz-test-") as directory:
+        from hmuxfuzz import triage
+        with tempfile.TemporaryDirectory(prefix="hmux-pr-media-fuzz-test-") as directory:
             frames = []
             for name in ("step-00000.png", "step-00001.png"):
                 frames.append(Path(directory) / name)
                 frames[-1].write_bytes(b"x")
             tool = Path(directory) / "ocr.sh"
-            tool.write_text('#!/bin/sh\ncase "$1" in *00001*) echo "cmux@cmux7s-Mac-mini" ;; *) echo ok ;; esac\n')
+            tool.write_text('#!/bin/sh\ncase "$1" in *00001*) echo "hmux@hmux7s-Mac-mini" ;; *) echo ok ;; esac\n')
             tool.chmod(0o755)
             env = {"HOME": directory, "GITHUB_ACTIONS": "true", "PR_MEDIA_PRIVACY_OCR": str(tool),
-                   "PR_MEDIA_PRIVATE_TERMS": "", "PR_MEDIA_PRIVATE_TERMS_FILE": "", "CMUX_HQ": "",
+                   "PR_MEDIA_PRIVATE_TERMS": "", "PR_MEDIA_PRIVATE_TERMS_FILE": "", "HMUX_HQ": "",
                    "PR_MEDIA_AGENT_AUTHORS": ""}
             with mock.patch.dict(os.environ, env), mock.patch.object(triage, "_gh") as gh, \
                     contextlib.redirect_stderr(io.StringIO()) as err:
@@ -325,7 +325,7 @@ class FuzzUploadTests(unittest.TestCase):
                     triage.upload(frames, "digest/7")
                 gh.assert_not_called()
                 self.assertIn("fuzz/digest/7/step-00001.png", str(raised.exception))
-                self.assertNotIn("cmux7s", str(raised.exception) + err.getvalue())
+                self.assertNotIn("hmux7s", str(raised.exception) + err.getvalue())
                 gh.return_value = ""
                 urls = triage.upload(frames[:1], "digest/7")
                 self.assertEqual(gh.call_count, 1)
@@ -336,7 +336,7 @@ class RepoCase(unittest.TestCase):
     """A bare remote with a pr-media branch and a blob:none-style checkout of it."""
 
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="cmux-pr-media-privacy-test-")
+        temporary = tempfile.TemporaryDirectory(prefix="hmux-pr-media-privacy-test-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         self.remote = self.root / "remote.git"
@@ -345,7 +345,7 @@ class RepoCase(unittest.TestCase):
         git("init", "-q", "-b", privacy.BRANCH, str(self.work), cwd=self.root)
         git("remote", "add", "origin", str(self.remote), cwd=self.work)
         self.ocr = self.root / "ocr.sh"
-        self.ocr.write_text('#!/bin/sh\ncase "$1" in *leak*) echo "cmux@cmux7s-Mac-mini ~ %" ;; *) echo ok ;; esac\n')
+        self.ocr.write_text('#!/bin/sh\ncase "$1" in *leak*) echo "hmux@hmux7s-Mac-mini ~ %" ;; *) echo ok ;; esac\n')
         self.ocr.chmod(0o755)
 
     def commit(self, files: dict[str, str]) -> str:
@@ -383,10 +383,10 @@ class ScanTests(RepoCase):
 
     def test_text_files_are_read_without_ocr(self) -> None:
         start = self.commit({"README.md": "hi"})
-        end = self.commit({"7/index.html": "<p>cmux@cmux3s-mac-mini %</p>"})
+        end = self.commit({"7/index.html": "<p>hmux@hmux3s-mac-mini %</p>"})
         report, out = self.scan(start, end, apply=False)
         self.assertEqual([item["path"] for item in report["files"]], ["7/index.html"])
-        self.assertNotIn("cmux3s", out)  # matched text is never printed
+        self.assertNotIn("hmux3s", out)  # matched text is never printed
 
     def test_no_marker_scans_nothing(self) -> None:
         end = self.commit({"5/leak.png": "x"})
@@ -418,7 +418,7 @@ class ApplyTests(RepoCase):
         self.assertEqual(git("rev-parse", f"{privacy.BRANCH}^", cwd=self.remote).strip(), end)
         message = git("log", "-1", "--format=%B", privacy.BRANCH, cwd=self.remote)
         self.assertIn("10/aaaaaaaa/tour/leak.png (mini-name, shell-prompt)", message)
-        self.assertNotIn("cmux7s", message)
+        self.assertNotIn("hmux7s", message)
         actions = {item["path"]: item["action"] for item in report["files"]}
         self.assertEqual(actions["10/aaaaaaaa/tour/leak.png"], "removed")
         self.assertEqual(actions["nightly-next/reel/leak.mp4"], "removed")
@@ -519,7 +519,7 @@ class WriterInventoryTests(unittest.TestCase):
     DIRECT = re.compile(r"""\bPUT\b|(?i:-xput\b|\.put\(|--method[\s"',=]+put\b)|\bgit\b(?:[^\n]|\\\n){0,120}?\bpush\b|"push",|git/refs|createCommitOnBranch""")
     VIA_TOOL = re.compile(r"put_file\(|pr-media\.py")
     # Writes with its own PUT or push, after check_privacy()/check_upload().
-    CHECKS_ITSELF = {"scripts/pr-media.py", "dogfood/fuzz/cmuxfuzz/triage.py"}
+    CHECKS_ITSELF = {"scripts/pr-media.py", "dogfood/fuzz/hmuxfuzz/triage.py"}
     # Writes only through scripts/pr-media.py, which checks.
     THROUGH_PR_MEDIA_PY = {"scripts/ci/pr_media.py", "scripts/showcase-publish.py",
                            ".github/workflows/pr-media.yml", ".github/actions/pr-media-publish/action.yml"}
@@ -587,7 +587,7 @@ def load_script(name: str, path: Path):
 
 PNG = b"\x89PNG\r\n\x1a\n" + b"0" * 32
 # A local file holding LEAK reads as a fleet prompt to the fake OCR below.
-FAKE_OCR = '#!/bin/sh\nif grep -q LEAK "$1"; then echo "cmux@cmux7s-Mac-mini ~ %"; else echo ok; fi\n'
+FAKE_OCR = '#!/bin/sh\nif grep -q LEAK "$1"; then echo "hmux@hmux7s-Mac-mini ~ %"; else echo ok; fi\n'
 
 
 class GatedWriterCase(unittest.TestCase):
@@ -598,7 +598,7 @@ class GatedWriterCase(unittest.TestCase):
     """
 
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="cmux-pr-media-gated-writer-test-")
+        temporary = tempfile.TemporaryDirectory(prefix="hmux-pr-media-gated-writer-test-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         ocr = self.root / "ocr.sh"
@@ -606,7 +606,7 @@ class GatedWriterCase(unittest.TestCase):
         ocr.chmod(0o755)
         environment = mock.patch.dict(os.environ, {
             "HOME": str(self.root), "GITHUB_ACTIONS": "true", "PR_MEDIA_PRIVACY_OCR": str(ocr),
-            "PR_MEDIA_PRIVATE_TERMS": '["glow-box"]', "PR_MEDIA_PRIVATE_TERMS_FILE": "", "CMUX_HQ": "",
+            "PR_MEDIA_PRIVATE_TERMS": '["glow-box"]', "PR_MEDIA_PRIVATE_TERMS_FILE": "", "HMUX_HQ": "",
             "PR_MEDIA_AGENT_AUTHORS": "", "PR_MEDIA_PUBLISH_GATE": "1"})
         environment.start()
         self.addCleanup(environment.stop)
@@ -693,7 +693,7 @@ class GatePreflightTests(unittest.TestCase):
     """scripts/ci/pr_media_gate.py: terms present and the OCR catches the canary, or no publish."""
 
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="cmux-pr-media-gate-test-")
+        temporary = tempfile.TemporaryDirectory(prefix="hmux-pr-media-gate-test-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         self.gate = load_script("pr_media_gate_test", GATE)
@@ -710,7 +710,7 @@ class GatePreflightTests(unittest.TestCase):
             return self.gate.preflight(CANARY, env=environment, privacy=privacy)
 
     def test_an_ocr_that_reads_the_canary_passes(self) -> None:
-        tool = self.ocr("cmux@cmux-mac-mini-7 ~ %")
+        tool = self.ocr("hmux@hmux-mac-mini-7 ~ %")
         self.assertEqual(self.preflight(PR_MEDIA_PRIVATE_TERMS='["glow-box"]', PR_MEDIA_PRIVACY_OCR=tool), tool)
 
     def test_a_blind_ocr_stops_the_publish(self) -> None:
@@ -730,7 +730,7 @@ class GatePreflightTests(unittest.TestCase):
     def test_no_terms_list_stops_the_publish(self) -> None:
         for terms in ("", "   ", "[]", '["io"]'):
             with self.subTest(terms=terms), self.assertRaises(SystemExit):
-                self.preflight(PR_MEDIA_PRIVATE_TERMS=terms, PR_MEDIA_PRIVACY_OCR=self.ocr("cmux@cmux-mac-mini"))
+                self.preflight(PR_MEDIA_PRIVATE_TERMS=terms, PR_MEDIA_PRIVACY_OCR=self.ocr("hmux@hmux-mac-mini"))
 
     def test_no_ocr_tool_stops_the_publish(self) -> None:
         with self.assertRaises(SystemExit) as raised:
@@ -738,7 +738,7 @@ class GatePreflightTests(unittest.TestCase):
         self.assertIn("no OCR tool", str(raised.exception))
 
     def test_the_terms_are_never_printed(self) -> None:
-        tool = self.ocr("cmux@cmux-mac-mini-7 ~ %")
+        tool = self.ocr("hmux@hmux-mac-mini-7 ~ %")
         out = io.StringIO()
         with contextlib.redirect_stderr(io.StringIO()):
             self.gate.preflight(CANARY, env={"HOME": str(self.root), "GITHUB_ACTIONS": "true",
@@ -771,7 +771,7 @@ class TesseractToolTests(unittest.TestCase):
     """scripts/ci/pr_media_ocr_tesseract.py keeps pr_media_ocr.swift's output contract."""
 
     def setUp(self) -> None:
-        temporary = tempfile.TemporaryDirectory(prefix="cmux-pr-media-tesseract-test-")
+        temporary = tempfile.TemporaryDirectory(prefix="hmux-pr-media-tesseract-test-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         bin_dir = self.root / "bin"

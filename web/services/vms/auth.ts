@@ -140,7 +140,7 @@ type AuthCacheEntry = {
 
 const nativeAuthCache = new Map<string, AuthCacheEntry>();
 
-function authCacheTtlMs(raw = process.env.CMUX_VM_AUTH_CACHE_TTL_MS): number {
+function authCacheTtlMs(raw = process.env.HMUX_VM_AUTH_CACHE_TTL_MS): number {
   const trimmed = raw?.trim();
   if (trimmed === undefined || trimmed === "") return DEFAULT_AUTH_CACHE_TTL_MS;
   const parsed = Number(trimmed);
@@ -298,7 +298,7 @@ export async function withSubrouterAuthorizationDeadline<T>(
 
 /**
  * Run a Stack call under a caller's authorization deadline. The call shares
- * the deadline-gated concurrency slots and `cmux.stack_auth.*` span with
+ * the deadline-gated concurrency slots and `hmux.stack_auth.*` span with
  * verification, and rejects with `SubrouterAuthorizationTimeoutError` once the
  * signal aborts. A call that has not started when the signal aborts never
  * starts.
@@ -397,7 +397,7 @@ async function stackAuthorizationCall<T>(
   operationName = "request",
 ): Promise<T> {
   const timedOperation = () => withStackAuthSpan(operationName, operation, {
-    "cmux.auth.deadline_gated": signal !== undefined,
+    "hmux.auth.deadline_gated": signal !== undefined,
   });
   if (!signal) return timedOperation();
   const release = await acquireStackAuthorizationSlot(signal);
@@ -1049,7 +1049,7 @@ function hasAccountDeletionMetadataFlag(metadata: unknown): boolean {
   return !!metadata &&
     typeof metadata === "object" &&
     !Array.isArray(metadata) &&
-    (metadata as { cmuxAccountDeleting?: unknown }).cmuxAccountDeleting === true;
+    (metadata as { hmuxAccountDeleting?: unknown }).hmuxAccountDeleting === true;
 }
 
 type StackUserLike = {

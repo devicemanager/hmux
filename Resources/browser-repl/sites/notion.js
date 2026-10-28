@@ -4,7 +4,7 @@
 // session cookie authenticates and never reaches the REPL.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
   const ORIGIN = "https://www.notion.so";
 
@@ -163,7 +163,7 @@
         }
         for (let i = 0; i < rs.length; i++) {
           const r = rs[i];
-          if (r.status === 401 || (r.json && /unauthorized|not logged in/i.test(r.json.name || r.json.message || ""))) throw new S.SiteError("not_signed_in", "notion: the cmux browser is not signed in to Notion; open https://www.notion.so with tabs.open() and ask the user to sign in");
+          if (r.status === 401 || (r.json && /unauthorized|not logged in/i.test(r.json.name || r.json.message || ""))) throw new S.SiteError("not_signed_in", "notion: the hmux browser is not signed in to Notion; open https://www.notion.so with tabs.open() and ask the user to sign in");
           if (r.status < 200 || r.status >= 300) throw new S.SiteError("http", `notion ${list[i].endpoint}: HTTP ${r.status}${r.json && r.json.message ? `: ${r.json.message}` : ""}`);
         }
         return rs.map((r) => r.json);
@@ -237,7 +237,7 @@
             const users = await spaces({ ...input, userId: undefined });
             const user = input.userId ? users.find((u) => u.userId === input.userId) : users.length === 1 ? users[0] : null;
             if (!user) {
-              if (!users.length || input.userId) throw new S.SiteError("not_signed_in", `notion.append: ${input.userId ? `the Notion user ${input.userId} is not` : "no Notion user is"} signed in to the cmux browser; open https://www.notion.so with tabs.open() and ask the user to sign in`);
+              if (!users.length || input.userId) throw new S.SiteError("not_signed_in", `notion.append: ${input.userId ? `the Notion user ${input.userId} is not` : "no Notion user is"} signed in to the hmux browser; open https://www.notion.so with tabs.open() and ask the user to sign in`);
               throw new S.SiteError("invalid", `notion.append: several Notion users are signed in (${users.map((u) => `${u.email || u.name} = ${u.userId}`).join(", ")}); pass { userId } to choose the one that writes`);
             }
             const account = { userId: user.userId, email: user.email };
@@ -293,7 +293,7 @@
                       ops.push({ pointer: { table: "block", id, spaceId }, path: ["content"], command: "listAfter", args: after ? { after, id: bid } : { id: bid } });
                       after = bid;
                     }
-                    await calls([{ endpoint: "saveTransactions", body: { requestId: uuid(), transactions: [{ id: uuid(), spaceId, debug: { userAction: "cmux.sites.notion.append" }, operations: ops }] } }], { ...as, world: "agent" });
+                    await calls([{ endpoint: "saveTransactions", body: { requestId: uuid(), transactions: [{ id: uuid(), spaceId, debug: { userAction: "hmux.sites.notion.append" }, operations: ops }] } }], { ...as, world: "agent" });
                     return { status: "appended", page: id, blockIds: ids };
                   }),
                   { account: holderNow },

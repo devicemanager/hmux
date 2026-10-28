@@ -1,10 +1,10 @@
 import AppKit
-import CmuxCloud
+import HmuxCloud
 import SwiftUI
 
 /// Shows one Network sheet at a time on the main window, like
 /// ``NewMachineSheetPresenter``. The sheet reads and writes through
-/// ``VMClient``, the same calls `cmux vm network` reaches through the socket.
+/// ``VMClient``, the same calls `hmux vm network` reaches through the socket.
 @MainActor
 final class CloudNetworkPolicySheetPresenter {
     static let shared = CloudNetworkPolicySheetPresenter()
@@ -45,7 +45,7 @@ final class CloudNetworkPolicySheetPresenter {
         sheetWindow = window
         loadTask = Task { [weak model] in await model?.load() }
 
-        let host = NSApp.cmuxMainWindowForModalPresentation(preferring: preferredWindow)
+        let host = NSApp.hmuxMainWindowForModalPresentation(preferring: preferredWindow)
         if let host, host.attachedSheet == nil {
             hostWindow = host
             sheet.beginSheet(on: host)

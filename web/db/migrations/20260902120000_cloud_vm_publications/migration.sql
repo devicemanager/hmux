@@ -1,4 +1,4 @@
--- CMUX-owned DNS zones, persistent exact-host VM publications, and the browser
+-- HMUX-owned DNS zones, persistent exact-host VM publications, and the browser
 -- authorization state used by Freestyle TLS forwardAuth.
 --
 -- Freestyle owns certificate termination and the public TLS rule. Postgres is

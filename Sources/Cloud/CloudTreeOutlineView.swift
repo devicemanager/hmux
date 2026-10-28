@@ -1,9 +1,9 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import Bonsplit
-import CmuxAppKitSupportUI
-import CmuxFoundation
-import CmuxSurfaceCatalogModel
+import HmuxAppKitSupportUI
+import HmuxFoundation
+import HmuxSurfaceCatalogModel
 import SwiftUI
 /// The Cloud catalog outline: local workspaces, then machine workspaces and resources. Rows are pure
 /// display (`CloudTreeRowContentView`); the coordinator owns selection,
@@ -318,7 +318,7 @@ struct CloudTreeOutlineView: NSViewRepresentable {
                 if case .terminal(let row) = $0.kind { return row.hasUnreadNotification }
                 return false
             }.count
-            cmuxDebugLog("cloudTree.apply structureChanged=\(!structureUnchanged) contentChanged=\(!contentUnchanged) unreadRows=\(unreadRows) rows=\(outlineView?.numberOfRows ?? -1)")
+            hmuxDebugLog("cloudTree.apply structureChanged=\(!structureUnchanged) contentChanged=\(!contentUnchanged) unreadRows=\(unreadRows) rows=\(outlineView?.numberOfRows ?? -1)")
             #endif
             // Detail pools live outside the visible row/content signatures, so
             // a closed tab can change without changing the outline. Adopt an
@@ -491,7 +491,7 @@ struct CloudTreeOutlineView: NSViewRepresentable {
             let clickCount = NSApp.currentEvent?.clickCount ?? 1
             guard clickCount <= 1 || node.kind.togglesOnActivation else { return }
 #if DEBUG
-            cmuxDebugLog("cloudTree.click row=\(row) kind=\(node.structureTag) clicks=\(clickCount)")
+            hmuxDebugLog("cloudTree.click row=\(row) kind=\(node.structureTag) clicks=\(clickCount)")
 #endif
             if case .display(let resource, _, _) = node.kind,
                nodeActions.showDisplayOpenHint(resource.id) {
@@ -509,7 +509,7 @@ struct CloudTreeOutlineView: NSViewRepresentable {
             let row = outlineView.clickedRow >= 0 ? outlineView.clickedRow : outlineView.selectedRow
             guard row >= 0, let node = outlineView.item(atRow: row) as? CloudTreeNode else { return }
 #if DEBUG
-            cmuxDebugLog("cloudTree.doubleClick row=\(row) kind=\(node.structureTag)")
+            hmuxDebugLog("cloudTree.doubleClick row=\(row) kind=\(node.structureTag)")
 #endif
             if node.kind.togglesOnActivation {
                 open(node)
@@ -634,7 +634,7 @@ struct CloudTreeOutlineView: NSViewRepresentable {
         private func toggle(_ node: CloudTreeNode) {
             guard let outlineView else { return }
 #if DEBUG
-            cmuxDebugLog("cloudTree.toggle kind=\(node.structureTag) expanded=\(outlineView.isItemExpanded(node))")
+            hmuxDebugLog("cloudTree.toggle kind=\(node.structureTag) expanded=\(outlineView.isItemExpanded(node))")
 #endif
             if outlineView.isItemExpanded(node) {
                 outlineView.collapseItem(node)
@@ -712,7 +712,7 @@ struct CloudTreeOutlineView: NSViewRepresentable {
                 menu.addItem(item(CloudErrorCopy.title) { CloudErrorCopy.copy(error) })
             }
             #if DEBUG
-            cmuxDebugLog("cloudTree.menu.build row=\(resolvedRow) items=\(menu.items.count)")
+            hmuxDebugLog("cloudTree.menu.build row=\(resolvedRow) items=\(menu.items.count)")
             #endif
             return menu.items.isEmpty ? nil : menu
         }
@@ -897,7 +897,7 @@ struct CloudTreeOutlineView: NSViewRepresentable {
 
         /// The verbs every surface row shares: open (reusing an open pane), open as a
         /// tab, a second pane (cloud resources only — a local terminal has one pane),
-        /// and copying the resource id agents use with `cmux vm open`.
+        /// and copying the resource id agents use with `hmux vm open`.
         private func resourceMenuItems(
             _ resource: SurfaceResource,
             isLocal: Bool,
@@ -992,7 +992,7 @@ struct CloudTreeOutlineView: NSViewRepresentable {
             )
             latestPendingDragWriter = writer
 #if DEBUG
-            cmuxDebugLog("surfaces.drag.begin drag=\(registration.id.uuidString.prefix(5)) node=\(node.id)")
+            hmuxDebugLog("surfaces.drag.begin drag=\(registration.id.uuidString.prefix(5)) node=\(node.id)")
 #endif
             return writer
         }
@@ -1119,7 +1119,7 @@ struct CloudTreeOutlineView: NSViewRepresentable {
                 return
             }
 #if DEBUG
-            cmuxDebugLog("surfaces.drag.end drag=\(activeDrag.id.uuidString.prefix(5)) operation=\(operation.rawValue)")
+            hmuxDebugLog("surfaces.drag.end drag=\(activeDrag.id.uuidString.prefix(5)) operation=\(operation.rawValue)")
 #endif
             // The registration is paired with the exact source that promoted
             // this session; do not consult a potentially rebuilt environment.

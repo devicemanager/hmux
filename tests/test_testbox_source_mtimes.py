@@ -25,11 +25,11 @@ class SourceMtimesTests(unittest.TestCase):
         self.box2 = tempfile.TemporaryDirectory()
         self.manifest = os.path.join(self.box1.name, "manifest.tsv")
         for box in (self.box1.name, self.box2.name):
-            os.makedirs(os.path.join(box, "cmux-tui", "src"))
+            os.makedirs(os.path.join(box, "hmux-tui", "src"))
             os.makedirs(os.path.join(box, "ghostty", "src"))
             os.makedirs(os.path.join(box, "web"))
-        self.write(self.box1.name, "cmux-tui/src/same.rs", "fn same() {}\n")
-        self.write(self.box1.name, "cmux-tui/src/changed.rs", "fn old() {}\n")
+        self.write(self.box1.name, "hmux-tui/src/same.rs", "fn same() {}\n")
+        self.write(self.box1.name, "hmux-tui/src/changed.rs", "fn old() {}\n")
         self.write(self.box1.name, "ghostty/src/vt.zig", "const a = 1;\n")
         self.write(self.box1.name, "web/page.ts", "x\n")
         os.makedirs(os.path.join(self.box1.name, "web", "node_modules"))
@@ -41,13 +41,13 @@ class SourceMtimesTests(unittest.TestCase):
         self.write(self.box2.name, "ghostty/include/b.h", "b\n")
         for path in pathlib.Path(self.box1.name).rglob("*"):
             os.utime(path, ns=(OLD, OLD))
-        for top in ("cmux-tui", "ghostty"):
+        for top in ("hmux-tui", "ghostty"):
             os.utime(os.path.join(self.box1.name, top), ns=(OLD, OLD))
         run("record", self.box1.name, self.manifest)
 
-        self.write(self.box2.name, "cmux-tui/src/same.rs", "fn same() {}\n")
-        self.write(self.box2.name, "cmux-tui/src/changed.rs", "fn new() {}\n")
-        self.write(self.box2.name, "cmux-tui/src/added.rs", "fn added() {}\n")
+        self.write(self.box2.name, "hmux-tui/src/same.rs", "fn same() {}\n")
+        self.write(self.box2.name, "hmux-tui/src/changed.rs", "fn new() {}\n")
+        self.write(self.box2.name, "hmux-tui/src/added.rs", "fn added() {}\n")
         self.write(self.box2.name, "ghostty/src/vt.zig", "const a = 1;\n")
         self.write(self.box2.name, "web/page.ts", "x\n")
         os.makedirs(os.path.join(self.box2.name, "web", "node_modules"))
@@ -66,11 +66,11 @@ class SourceMtimesTests(unittest.TestCase):
 
     def test_only_identical_sources_get_their_recorded_mtime(self) -> None:
         run("restore", self.box2.name, self.manifest)
-        self.assertEqual(self.mtime("cmux-tui/src/same.rs"), OLD)
+        self.assertEqual(self.mtime("hmux-tui/src/same.rs"), OLD)
         self.assertEqual(self.mtime("ghostty/src/vt.zig"), OLD)
-        self.assertGreater(self.mtime("cmux-tui/src/changed.rs"), OLD)
-        self.assertGreater(self.mtime("cmux-tui/src/added.rs"), OLD)
-        # Files outside cmux-tui/ are Cargo inputs too (include_str! of
+        self.assertGreater(self.mtime("hmux-tui/src/changed.rs"), OLD)
+        self.assertGreater(self.mtime("hmux-tui/src/added.rs"), OLD)
+        # Files outside hmux-tui/ are Cargo inputs too (include_str! of
         # schemas/); dependency stores are never recorded.
         self.assertEqual(self.mtime("web/page.ts"), OLD)
         self.assertGreater(self.mtime("web/node_modules/dep.js"), OLD)
@@ -80,32 +80,32 @@ class SourceMtimesTests(unittest.TestCase):
         self.assertEqual(self.mtime("ghostty/src"), OLD)
         self.assertEqual(self.mtime("ghostty"), OLD)
         self.assertGreater(self.mtime("ghostty/include"), OLD)
-        self.assertGreater(self.mtime("cmux-tui/src"), OLD)
+        self.assertGreater(self.mtime("hmux-tui/src"), OLD)
 
     def test_restore_never_dates_a_file_into_the_future(self) -> None:
-        path = os.path.join(self.box2.name, "cmux-tui", "src", "same.rs")
+        path = os.path.join(self.box2.name, "hmux-tui", "src", "same.rs")
         os.utime(path, ns=(OLD - 10**9, OLD - 10**9))
         run("restore", self.box2.name, self.manifest)
-        self.assertEqual(self.mtime("cmux-tui/src/same.rs"), OLD - 10**9)
+        self.assertEqual(self.mtime("hmux-tui/src/same.rs"), OLD - 10**9)
 
     def test_a_hostile_manifest_cannot_leave_the_repository_or_follow_links(self) -> None:
         outside = os.path.join(self.box1.name, "outside.txt")
         pathlib.Path(outside).write_text("fn same() {}\n", encoding="utf-8")
-        os.symlink(outside, os.path.join(self.box2.name, "cmux-tui", "src", "link.rs"))
+        os.symlink(outside, os.path.join(self.box2.name, "hmux-tui", "src", "link.rs"))
         before = os.lstat(outside).st_mtime_ns
         with open(self.manifest, "a", encoding="utf-8") as handle:
             data = b"fn same() {}\n"
             blob = hashlib.sha1(b"blob %d\0" % len(data) + data).hexdigest()
             handle.write(f"F\t{blob}\t1\t../outside.txt\n")
-            handle.write(f"F\t{blob}\t1\tcmux-tui/../../outside.txt\n")
-            handle.write(f"F\t{blob}\t1\tcmux-tui/src/link.rs\n")
+            handle.write(f"F\t{blob}\t1\thmux-tui/../../outside.txt\n")
+            handle.write(f"F\t{blob}\t1\thmux-tui/src/link.rs\n")
             handle.write("garbage line\n")
         run("restore", self.box2.name, self.manifest)
         self.assertEqual(os.lstat(outside).st_mtime_ns, before)
 
     def test_a_missing_manifest_is_a_cold_build(self) -> None:
         run("restore", self.box2.name, os.path.join(self.box2.name, "absent.tsv"))
-        self.assertGreater(self.mtime("cmux-tui/src/same.rs"), OLD)
+        self.assertGreater(self.mtime("hmux-tui/src/same.rs"), OLD)
 
 
 class NativeCpuOutputTests(unittest.TestCase):
@@ -117,9 +117,9 @@ class NativeCpuOutputTests(unittest.TestCase):
     def setUp(self) -> None:
         self.tmp = tempfile.TemporaryDirectory()
         self.repo = os.path.join(self.tmp.name, "repo")
-        self.target = os.path.join(self.repo, "cmux-tui", "target")
-        os.makedirs(os.path.join(self.repo, "cmux-tui", "src"))
-        self.manifest = os.path.join(self.target, ".cmux-testbox-source-mtimes.tsv")
+        self.target = os.path.join(self.repo, "hmux-tui", "target")
+        os.makedirs(os.path.join(self.repo, "hmux-tui", "src"))
+        self.manifest = os.path.join(self.target, ".hmux-testbox-source-mtimes.tsv")
         self.native = [
             os.path.join(self.target, "debug", "build", "ghostty-vt-sys-1a2b"),
             os.path.join(self.target, "debug", ".fingerprint", "ghostty-vt-sys-1a2b"),
@@ -145,7 +145,7 @@ class NativeCpuOutputTests(unittest.TestCase):
             [sys.executable, "-I", str(SCRIPT), command, self.repo, self.manifest],
             check=True,
             capture_output=True,
-            env={**os.environ, "CMUX_TESTBOX_CPUINFO": self.cpuinfo(flags)},
+            env={**os.environ, "HMUX_TESTBOX_CPUINFO": self.cpuinfo(flags)},
         )
 
     def test_same_cpu_keeps_native_outputs(self) -> None:
@@ -172,8 +172,8 @@ class NativeCpuOutputTests(unittest.TestCase):
 
     def write_run(self, fingerprint_dir: str, cpu) -> None:
         os.makedirs(fingerprint_dir, exist_ok=True)
-        local = [{"RerunIfEnvChanged": {"var": "CMUX_GHOSTTY_SRC", "val": None}},
-                 {"RerunIfEnvChanged": {"var": "CMUX_GHOSTTY_VT_ZIG_CPU", "val": cpu}}]
+        local = [{"RerunIfEnvChanged": {"var": "HMUX_GHOSTTY_SRC", "val": None}},
+                 {"RerunIfEnvChanged": {"var": "HMUX_GHOSTTY_VT_ZIG_CPU", "val": cpu}}]
         pathlib.Path(fingerprint_dir, "run-build-script-build-script-build.json").write_text(
             json.dumps({"rustc": 1, "local": local}), encoding="utf-8")
 
@@ -183,8 +183,8 @@ class NativeCpuOutputTests(unittest.TestCase):
         os.makedirs(fingerprint)
         os.makedirs(build)
         if kind == "run":
-            local = [{"RerunIfEnvChanged": {"var": "CMUX_GHOSTTY_SRC", "val": None}},
-                     {"RerunIfEnvChanged": {"var": "CMUX_GHOSTTY_VT_ZIG_CPU", "val": cpu}}]
+            local = [{"RerunIfEnvChanged": {"var": "HMUX_GHOSTTY_SRC", "val": None}},
+                     {"RerunIfEnvChanged": {"var": "HMUX_GHOSTTY_VT_ZIG_CPU", "val": cpu}}]
             name = "run-build-script-build-script-build.json"
         else:
             local, name = [], "build-script-build-script-build.json"

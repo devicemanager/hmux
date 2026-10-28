@@ -148,7 +148,7 @@ function buildNativeHref(
 
 function hasAuthState(href: string): boolean {
   try {
-    return new URL(href).searchParams.has("cmux_auth_state");
+    return new URL(href).searchParams.has("hmux_auth_state");
   } catch {
     return false;
   }

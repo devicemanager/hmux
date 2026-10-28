@@ -1,4 +1,4 @@
-# cmux-devbox wallpaper (copied from the chatmux desktop image)
+# hmux-devbox wallpaper (copied from the chatmux desktop image)
 
 `wallpaper.jpg` — mountain lake landscape.
 

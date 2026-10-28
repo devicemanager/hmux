@@ -13,7 +13,7 @@ enum TextViewUndoRegistrationLifetime {
     private static let didInstall: Void = {
         let targetClass: AnyClass = NSTextView.self
         let originalSelector = #selector(NSView.viewWillMove(toWindow:))
-        let swizzledSelector = #selector(NSTextView.cmux_undoLifetimeViewWillMove(toWindow:))
+        let swizzledSelector = #selector(NSTextView.hmux_undoLifetimeViewWillMove(toWindow:))
         guard let originalMethod = class_getInstanceMethod(targetClass, originalSelector),
               let swizzledMethod = class_getInstanceMethod(targetClass, swizzledSelector) else {
             return
@@ -129,17 +129,17 @@ private final class TextViewUndoPendingCleanup {
 
 @MainActor
 extension NSTextView {
-    @objc func cmux_undoLifetimeViewWillMove(toWindow newWindow: NSWindow?) {
+    @objc func hmux_undoLifetimeViewWillMove(toWindow newWindow: NSWindow?) {
         if let currentWindow = window, newWindow !== currentWindow {
-            cmuxRemoveUndoRegistrationsBeforeLeaving(currentWindow)
+            hmuxRemoveUndoRegistrationsBeforeLeaving(currentWindow)
         }
         // Calls the original implementation after the exchange.
-        cmux_undoLifetimeViewWillMove(toWindow: newWindow)
+        hmux_undoLifetimeViewWillMove(toWindow: newWindow)
     }
 
     /// Removes registrations for this view and its storage while membership
     /// in ``currentWindow`` still resolves the correct undo manager.
-    private func cmuxRemoveUndoRegistrationsBeforeLeaving(_ currentWindow: NSWindow) {
+    private func hmuxRemoveUndoRegistrationsBeforeLeaving(_ currentWindow: NSWindow) {
         guard allowsUndo,
               let undoManager,
               undoManager.canUndo || undoManager.canRedo else {
@@ -147,7 +147,7 @@ extension NSTextView {
         }
 
         var targets: [AnyObject] = [self]
-        if let textStorage, !cmuxTextStorageIsShared(textStorage, inside: currentWindow) {
+        if let textStorage, !hmuxTextStorageIsShared(textStorage, inside: currentWindow) {
             targets.append(textStorage)
         }
 
@@ -165,7 +165,7 @@ extension NSTextView {
     }
 
     /// Reports whether another text view in `window` still uses this storage.
-    private func cmuxTextStorageIsShared(_ textStorage: NSTextStorage, inside window: NSWindow) -> Bool {
+    private func hmuxTextStorageIsShared(_ textStorage: NSTextStorage, inside window: NSWindow) -> Bool {
         textStorage.layoutManagers.contains { layoutManager in
             layoutManager.textContainers.contains { container in
                 guard let otherTextView = container.textView else { return false }

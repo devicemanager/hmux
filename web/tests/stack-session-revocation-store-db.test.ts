@@ -13,7 +13,7 @@ import {
   STACK_SESSION_REVOCATION_POLICY,
 } from "../services/vms/stackSessionRevocations";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const sql = runDbTests ? postgres((process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL)!, { max: 1 }) : null;
 

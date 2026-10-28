@@ -1,10 +1,10 @@
 #!/bin/bash
 # ============================================================================
-# Checks the things cmux believes about `et`, against `et`.
+# Checks the things hmux believes about `et`, against `et`.
 #
 # The ET transport shipped with six defects that shared one cause: its load-bearing claims about
 # EternalTerminal lived in a design doc and in comments, and nothing executed them. Unit tests
-# could not catch any of them — they assert what cmux builds, which is the model, not what the
+# could not catch any of them — they assert what hmux builds, which is the model, not what the
 # other program does. 77 of them passed while the transport could not carry a stream at all.
 #
 # So each claim gets one check here. A claim that cannot be written as a check is an assumption,
@@ -52,7 +52,7 @@
 #
 # Two further corrections, both real. The DCS position is not fixed: it lands at the start of its
 # line on a host whose shell emits a newline before tmux's output, and mid-line on one that does
-# not, so it is reported rather than asserted — which is the actual reason cmux's parser must scan
+# not, so it is reported rather than asserted — which is the actual reason hmux's parser must scan
 # anywhere. And this script used to create its tmux session on the user's DEFAULT tmux server,
 # which it must never touch.
 #
@@ -67,10 +67,10 @@
 #   TRANSPORT_BROKER=/path/to/broker TRANSPORT_BROKER_ARGS="-et -fallback" \
 #     TRANSPORT_HOST=somehost scripts/remote-tmux-et-conformance.sh
 #
-# The client connects to CMUX_ET_HOST (default `127.0.0.1`), which must be an ssh
+# The client connects to HMUX_ET_HOST (default `127.0.0.1`), which must be an ssh
 # destination this machine can log into, because et bootstraps over ssh before its own
 # protocol takes over. The loopback default works wherever this machine runs sshd and
-# accepts key auth for the current user; point CMUX_ET_HOST at a different destination
+# accepts key auth for the current user; point HMUX_ET_HOST at a different destination
 # (an ssh_config alias, another host) when that is not the case.
 #
 # Exit code is the number of failed checks (0 = every belief holds).
@@ -80,19 +80,19 @@ cd "$(dirname "$0")/.." || exit 1
 
 ET_CLIENT="${ET_CLIENT:-$(command -v et || true)}"
 ET_SERVER="${ET_SERVER:-$(command -v etserver || true)}"
-# Resolved, not assumed. A literal path is a claim about someone else's machine, and cmux
+# Resolved, not assumed. A literal path is a claim about someone else's machine, and hmux
 # hardcoding one of these is itself one of the defects this file exists to prevent.
 ET_TERMINAL="${ET_TERMINAL:-$(command -v etterminal || true)}"
-PORT="${CMUX_ET_PORT:-2041}"
-HOST="${CMUX_ET_HOST:-127.0.0.1}"
-SESSION="cmux-conformance-$$"
+PORT="${HMUX_ET_PORT:-2041}"
+HOST="${HMUX_ET_HOST:-127.0.0.1}"
+SESSION="hmux-conformance-$$"
 
 # Optional brokered mode. Empty means talk to a loopback etserver directly.
 TRANSPORT_BROKER="${TRANSPORT_BROKER:-}"
 TRANSPORT_BROKER_ARGS="${TRANSPORT_BROKER_ARGS:-}"
 TRANSPORT_HOST="${TRANSPORT_HOST:-}"
 
-# What cmux actually puts on the line, which is NOT the same as the MAX_CANON constant it
+# What hmux actually puts on the line, which is NOT the same as the MAX_CANON constant it
 # compares against internally. RemoteTmuxETTransportProfile keeps maxCanonicalLineBytes = 1024
 # (the kernel limit) and spends only deliverableCommandBytes = 1024 - 96, reserving the rest for
 # et's appended "; exit" and the shell's line editing.
@@ -100,7 +100,7 @@ TRANSPORT_HOST="${TRANSPORT_HOST:-}"
 # Comparing the kernel constant against a measured delivery bound is a units error: it failed by
 # 8 bytes while the code was in fact safe by 88. The number checked here has to be the budget the
 # code spends, because that is the thing that either fits or gets truncated.
-CMUX_ASSUMED_BOUND="${CMUX_ASSUMED_BOUND:-928}"
+HMUX_ASSUMED_BOUND="${HMUX_ASSUMED_BOUND:-928}"
 
 # Where to mirror transport output so a human can see an auth prompt. /dev/tty when there is one,
 # otherwise nowhere — which keeps the loopback (unauthenticated, headless, CI) path unchanged.
@@ -114,14 +114,14 @@ if { : > /dev/tty; } 2>/dev/null; then TTY_SINK=/dev/tty; else TTY_SINK=/dev/nul
 # stdin so a 2FA passcode never reached the client, and script(1) aborts when stdin is a socket. A
 # pane is a real tty in both cases, so there is nothing to choose and nothing to get wrong — and the
 # headless path then exercises exactly the code the interactive path uses.
-if [ -z "${CMUX_CONF_IN_PANE:-}" ] && [ ! -t 0 ]; then
-  pane_dir="$(mktemp -d /tmp/cmux-conf-pane.XXXXXX)"   # short path: a socket is capped near 104 bytes
+if [ -z "${HMUX_CONF_IN_PANE:-}" ] && [ ! -t 0 ]; then
+  pane_dir="$(mktemp -d /tmp/hmux-conf-pane.XXXXXX)"   # short path: a socket is capped near 104 bytes
   export TMUX_TMPDIR="$pane_dir"
   unset TMUX
   done_file="$pane_dir/done"
   # `remain-on-exit` is not used: the pane must close so the wait below has a real edge.
   tmux new-session -d -s conf -x 200 -y 50 \
-    "CMUX_CONF_IN_PANE=1 $(printf '%q ' "$0" "$@") > $pane_dir/out 2>&1; echo \$? > $done_file"
+    "HMUX_CONF_IN_PANE=1 $(printf '%q ' "$0" "$@") > $pane_dir/out 2>&1; echo \$? > $done_file"
   for _ in $(seq 1 3600); do
     [ -s "$done_file" ] && break
     tmux has-session -t conf 2>/dev/null || break
@@ -144,9 +144,9 @@ skip() { printf '  ⏭  %s\n' "$*"; }
 # Resolve the deadline command before anything uses it. Stock macOS has no `timeout`, and a
 # missing one makes every bounded client run below exit 127 - which a check expecting the client
 # to fail reads as the claim holding. Fail loudly instead of passing for the wrong reason.
-TIMEOUT_BIN="${CMUX_TIMEOUT_BIN:-$(command -v timeout || command -v gtimeout || true)}"
+TIMEOUT_BIN="${HMUX_TIMEOUT_BIN:-$(command -v timeout || command -v gtimeout || true)}"
 if [ -z "$TIMEOUT_BIN" ] || [ ! -x "$TIMEOUT_BIN" ]; then
-  echo "no usable timeout(1)/gtimeout(1) at '${TIMEOUT_BIN:-<none>}'; brew install coreutils, or point CMUX_TIMEOUT_BIN at one" >&2
+  echo "no usable timeout(1)/gtimeout(1) at '${TIMEOUT_BIN:-<none>}'; brew install coreutils, or point HMUX_TIMEOUT_BIN at one" >&2
   exit 2
 fi
 
@@ -157,7 +157,7 @@ fi
 # sets TMPDIR to a long /var/folders/... path; putting the tmux socket dir under it produced
 # "error connecting to .../tmux-501/default (File name too long)", which then looked like three
 # separate transport failures — no control mode, no data, no surviving session.
-STATE="$(mktemp -d "/tmp/cmux-etconf.XXXXXX")" || exit 1
+STATE="$(mktemp -d "/tmp/hmux-etconf.XXXXXX")" || exit 1
 export TMUX_TMPDIR="$STATE/tmux"
 mkdir -p "$TMUX_TMPDIR" "$STATE/logs"
 unset TMUX
@@ -204,9 +204,9 @@ if [ -z "$TRANSPORT_BROKER" ]; then
   nc -z 127.0.0.1 "$PORT" 2>/dev/null || { echo "etserver did not start on $PORT" >&2; exit 1; }
 fi
 
-# Every check runs the command the way cmux does: through the pty allocator, with the terminal
+# Every check runs the command the way hmux does: through the pty allocator, with the terminal
 # path named rather than assumed. In brokered mode the endpoint flags are omitted, because the
-# broker resolved the endpoint and cmux's guesses would override it — and because a client flag
+# broker resolved the endpoint and hmux's guesses would override it — and because a client flag
 # placed before the destination is rejected outright by the wrapper.
 # Extra patience for every brokered connection, because a human has to notice a prompt and touch
 # a security key before anything can happen. The per-check timeouts below are sized for a loopback
@@ -269,7 +269,7 @@ et_run() {
       /usr/bin/script -q "$T_SCRIPT" \
       "$TRANSPORT_BROKER" $TRANSPORT_BROKER_ARGS "$TRANSPORT_HOST" -c "$command"
   else
-    # `--` before the destination, as cmux's own et argv does: a destination beginning with `-`
+    # `--` before the destination, as hmux's own et argv does: a destination beginning with `-`
     # has to be a host, never an option.
     python3 scripts/pty-run.py --timeout "$timeout_s" -- \
       "$ET_CLIENT" -p "$PORT" --terminal-path "$ET_TERMINAL" -c "$command" -- "$HOST" 2>&1 \
@@ -381,10 +381,10 @@ if [ -n "$TRANSPORT_BROKER" ]; then
   skip "not checked in brokered mode: a failed connection also produces nothing"
 else
   # The old version of this check asserted that et is silent on a pipe. It is not, so the check
-  # could only fail against a healthy et. What is true, and what cmux actually depends on:
+  # could only fail against a healthy et. What is true, and what hmux actually depends on:
   #   - control mode IS reached over pipes, so the pty is not what makes the transport work;
   #   - without usable termios the client cannot go raw, so the same stream arrives far larger,
-  #     padded with redraws, and cmux parses and budgets against that stream;
+  #     padded with redraws, and hmux parses and budgets against that stream;
   #   - `-N` suppresses the console, and et writes the remote output only when a console exists,
   #     so it receives the stream and discards it.
   # The last one is the sharp, cheap assertion, so that is what is checked here.
@@ -402,7 +402,7 @@ else
     fail "no control mode even under a pty — something more basic is wrong"
   fi
   if printf '%s' "$withN" | grep -q '%begin'; then
-    fail "-N still delivered the stream; cmux could drop the pty wrapper and pass -N instead"
+    fail "-N still delivered the stream; hmux could drop the pty wrapper and pass -N instead"
   elif printf '%s' "$withN" | grep -qE "Could not reach|onnection refused|uthentication|rror"; then
     # Absence of %begin only means something if the run actually connected. Without this, an
     # unreachable port scored as "-N discards the stream" — measured.
@@ -421,7 +421,7 @@ else
 fi
 
 echo "--- claim: the remote command runs in a LOGIN shell, so it inherits the user's PATH"
-# cmux dropped ssh's PATH resolver from the ET argv on the strength of this. If it is false, the
+# hmux dropped ssh's PATH resolver from the ET argv on the strength of this. If it is false, the
 # transport cannot find tmux on a host where tmux is outside the default PATH.
 # Upper-cased by the remote, so the reply cannot be satisfied by the request: this harness prepends
 # `TMUX_TMPDIR=<dir>/tmux` to any command mentioning tmux, and the old `grep -q '/tmux'` matched
@@ -449,7 +449,7 @@ fi
 # 5000-byte write. So the reported number is not enforced there, and treating agreement between it
 # and the measurement as corroboration is backwards — on any Linux host they will disagree by
 # design. It cost real time: the reported 255 was briefly believed over a 4001-byte delivery this
-# same harness had already observed, and produced a false alarm that cmux's budget was 4x too big.
+# same harness had already observed, and produced a false alarm that hmux's budget was 4x too big.
 #
 # It is still worth printing, because a disagreement is informative about the platform. It is
 # printed as advisory, and nothing is derived from it. The measured bound below is authoritative.
@@ -466,7 +466,7 @@ fi
 # because the loopback server needs no authentication.
 lo=64; hi=8192
 # A brokered connection costs one human key press each, so a nine-sample bisection costs nine.
-# BISECT_SAMPLES=coarse brackets the bound with two, which is enough to confirm cmux's budget
+# BISECT_SAMPLES=coarse brackets the bound with two, which is enough to confirm hmux's budget
 # fits inside it — the exact threshold is only interesting on the free loopback path.
 if [ -n "$TRANSPORT_BROKER" ] && [ "${BISECT_SAMPLES:-coarse}" = coarse ]; then
   COARSE=1
@@ -481,11 +481,11 @@ elif [ -n "${NO_LINE_LIMIT:-}" ]; then
   # harness invent a finding against a healthy transport.
   skip "this transport does not type its command into a terminal, so no line bound applies"
 elif delivered "$hi"; then
-  fail "an ${hi}-byte command was delivered, so this host has no bound in range; cmux's budget rests on a limit it does not have"
+  fail "an ${hi}-byte command was delivered, so this host has no bound in range; hmux's budget rests on a limit it does not have"
 else
   if [ "$COARSE" = 1 ]; then
-    # Just enough to answer the question that matters: does cmux's budget fit?
-    if delivered "$CMUX_ASSUMED_BOUND"; then lo=$CMUX_ASSUMED_BOUND; else hi=$CMUX_ASSUMED_BOUND; fi
+    # Just enough to answer the question that matters: does hmux's budget fit?
+    if delivered "$HMUX_ASSUMED_BOUND"; then lo=$HMUX_ASSUMED_BOUND; else hi=$HMUX_ASSUMED_BOUND; fi
     note "coarse mode: bracketed with 2 samples to save key presses (set BISECT_SAMPLES=fine for the exact threshold)"
   else
     while [ $((hi - lo)) -gt 64 ]; do
@@ -498,11 +498,11 @@ else
   else
     pass "the length bound is real: delivery stops between $lo and $hi bytes of total command line"
   fi
-  # The only thing that actually matters is that what cmux compiles in stays under it.
-  if [ "$CMUX_ASSUMED_BOUND" -le "$lo" ]; then
-    pass "cmux's assumed bound ($CMUX_ASSUMED_BOUND) is within the measured limit"
+  # The only thing that actually matters is that what hmux compiles in stays under it.
+  if [ "$HMUX_ASSUMED_BOUND" -le "$lo" ]; then
+    pass "hmux's assumed bound ($HMUX_ASSUMED_BOUND) is within the measured limit"
   else
-    fail "cmux assumes $CMUX_ASSUMED_BOUND bytes but only ~$lo are delivered — commands will be truncated"
+    fail "hmux assumes $HMUX_ASSUMED_BOUND bytes but only ~$lo are delivered — commands will be truncated"
   fi
   if [ -n "$reported" ] && [ "$reported" -gt 0 ] && [ "$lo" -gt "$reported" ]; then
     # Expected on Linux, and stated so it is not mistaken for a problem: the advertised value is
@@ -511,7 +511,7 @@ else
   fi
 fi
 
-echo "--- claim: control mode is reached, and cmux must not require the DCS at a line start"
+echo "--- claim: control mode is reached, and hmux must not require the DCS at a line start"
 tmux -f /dev/null new-session -d -s "$SESSION" 2>/dev/null
 cc_raw="$STATE/cc.bin"
 et_run 20 "exec tmux -CC attach-session -t $SESSION"
@@ -542,7 +542,7 @@ else
 fi
 
 echo "--- claim: the stream answers commands, not just the handshake"
-# A handshake followed by a deaf stream is indistinguishable from a working one until cmux tries to
+# A handshake followed by a deaf stream is indistinguishable from a working one until hmux tries to
 # drive it. The session's own command reports through the stream, so no client input is needed and
 # the client exits by itself when that command finishes.
 ans_raw="$STATE/answer.bin"
@@ -554,8 +554,8 @@ else
   fail "nothing but the handshake crossed the stream"
 fi
 
-echo "--- claim: an argv the transport rejects fails in wording cmux classifies as unrecoverable"
-# cmux must fail fast on a bad argv rather than retry it forever. The wordings here are the ones
+echo "--- claim: an argv the transport rejects fails in wording hmux classifies as unrecoverable"
+# hmux must fail fast on a bad argv rather than retry it forever. The wordings here are the ones
 # RemoteTmuxSSHTransport.indicatesUnrecoverableTransportFailure knows; a wrapper written in Go
 # answers "flag provided but not defined", which is why that string is in the classifier.
 if [ -n "$TRANSPORT_BROKER" ]; then
@@ -568,20 +568,20 @@ else
   rej="$("$TIMEOUT_BIN" 15 "$ET_CLIENT" -p "$PORT" --definitely-not-a-flag "$HOST" 2>&1; true)"
 fi
 if printf '%s' "$rej" | grep -qiE "unrecognized option|unknown option|flag provided but not defined|invalid option"; then
-  pass "a rejected argv says so in wording cmux classifies as unrecoverable"
+  pass "a rejected argv says so in wording hmux classifies as unrecoverable"
   note "$(printf '%s' "$rej" | head -1)"
 elif printf '%s' "$rej" | grep -qiE "could not reach|connection refused|timed out"; then
   fail "the probe never got as far as argv parsing, so this check measured nothing"
   note "$(printf '%s' "$rej" | head -1)"
 else
-  # Not a failure of cmux: a client that ignores unknown flags simply cannot be classified this
+  # Not a failure of hmux: a client that ignores unknown flags simply cannot be classified this
   # way, and the classifier's real target is a wrapper that does reject them.
   skip "this client ignores an unknown flag rather than rejecting it — nothing to classify"
   note "$(printf '%s' "$rej" | head -1)"
 fi
 
 echo "--- claim: end-of-stream does NOT mean the remote session is gone"
-# cmux used to treat an ET exit as the session ending, and removed the mirror. Restarting only
+# hmux used to treat an ET exit as the session ending, and removed the mirror. Restarting only
 # etserver falsifies that: the stream ends, the session lives.
 if [ -n "$TRANSPORT_BROKER" ]; then
   # Skipped, because the check as written proved nothing here. It asked whether `$SESSION` still

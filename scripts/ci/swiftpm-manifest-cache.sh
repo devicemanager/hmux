@@ -16,7 +16,7 @@
 # environment minus a short denylist of terminal variables. On Actions every
 # step has a different environment (GITHUB_RUN_ID, GITHUB_ACTION, the
 # GITHUB_OUTPUT file path), so a restored cache never hits unless the resolve
-# runs under a fixed one. `run` supplies that. No cmux Package.swift reads the
+# runs under a fixed one. `run` supplies that. No hmux Package.swift reads the
 # environment, so fixing it cannot change what a manifest declares.
 #
 # The absolute path stays in the key, so an entry serves only the path it was
@@ -28,9 +28,9 @@ set -euo pipefail
 SCRIPT_PATH="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/$(basename "${BASH_SOURCE[0]}")"
 # The account's home from the user database, not $HOME: `run` drops HOME, so
 # that is where SwiftPM looks, even on a runner that points HOME elsewhere.
-# CMUX_CI_SWIFTPM_MANIFEST_CACHE_DIR overrides it for tests.
+# HMUX_CI_SWIFTPM_MANIFEST_CACHE_DIR overrides it for tests.
 USER_HOME="$(eval echo "~$(id -un)")"
-MANIFEST_CACHE_DIR="${CMUX_CI_SWIFTPM_MANIFEST_CACHE_DIR:-$USER_HOME/Library/Caches/org.swift.swiftpm/manifests}"
+MANIFEST_CACHE_DIR="${HMUX_CI_SWIFTPM_MANIFEST_CACHE_DIR:-$USER_HOME/Library/Caches/org.swift.swiftpm/manifests}"
 
 usage() {
   echo "usage: $0 key | run <command> [args...] | stage <dir> | install <dir> | clear" >&2
@@ -47,7 +47,7 @@ key() {
   toolchain="$(xcodebuild -version | shasum -a 256 | cut -c1-16)"
   inputs="$(
     {
-      git ls-files -s -- '*Package.swift' 'cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'
+      git ls-files -s -- '*Package.swift' 'hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved'
       # Submodule pointers, since the vendor/bonsplit manifest lives past one.
       git ls-files -s | awk '$1 == "160000"'
       shasum -a 256 "$SCRIPT_PATH" | cut -d' ' -f1
@@ -62,12 +62,12 @@ key() {
 # runner image and Xcode. PATH is fixed because steps before a resolve append
 # to it differently per workflow (Rust, Bun, Zig); the command itself is still
 # found on the caller's PATH. HOME, USER and LOGNAME are dropped too: they
-# name the runner account (runner on Blacksmith, cmux on the glaeda minis), so
+# name the runner account (runner on Blacksmith, hmux on the glaeda minis), so
 # keeping them split one seed into one per account, and SwiftPM finds the same
 # ~/Library/Caches through the user database without them. TMPDIR is dropped
 # so Foundation picks the per-user default. FileSystemMode is kept because
 # compile-app-host-test-product.sh sets it on the resolve and on every build,
-# and they must share one environment. CMUX_CI_SWIFTPM_KEEP_ENV names
+# and they must share one environment. HMUX_CI_SWIFTPM_KEEP_ENV names
 # extra variables to keep, for tests whose xcodebuild stub is configured
 # through the environment.
 run() {
@@ -80,7 +80,7 @@ run() {
   )
   local name
   # shellcheck disable=SC2086 # a space-separated list of names
-  for name in DEVELOPER_DIR FileSystemMode http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY ${CMUX_CI_SWIFTPM_KEEP_ENV:-}; do
+  for name in DEVELOPER_DIR FileSystemMode http_proxy https_proxy no_proxy HTTP_PROXY HTTPS_PROXY NO_PROXY ${HMUX_CI_SWIFTPM_KEEP_ENV:-}; do
     [[ "$name" =~ ^[A-Za-z_][A-Za-z0-9_]*$ ]] || continue
     if [ -n "${!name:-}" ]; then
       vars+=("$name=${!name}")
@@ -108,7 +108,7 @@ stage() {
 }
 
 # Past this size a kept cache is replaced instead of merged into.
-MANIFEST_CACHE_MERGE_MAX_BYTES="${CMUX_CI_SWIFTPM_MANIFEST_MERGE_MAX_BYTES:-268435456}"
+MANIFEST_CACHE_MERGE_MAX_BYTES="${HMUX_CI_SWIFTPM_MANIFEST_MERGE_MAX_BYTES:-268435456}"
 
 # Installs a restored manifest.db as SwiftPM's cache. A missing or unreadable
 # restore leaves the runner's own cache alone: the resolve then evaluates
@@ -117,7 +117,7 @@ MANIFEST_CACHE_MERGE_MAX_BYTES="${CMUX_CI_SWIFTPM_MANIFEST_MERGE_MAX_BYTES:-2684
 # An owned Mac keeps its cache between jobs, so the restored entries are merged
 # into it rather than replacing it. The seed holds entries for one canonical
 # root (the key names each manifest's absolute path), and a second compile slot
-# resolves at /private/tmp/cmux-ci-2. Replaced every job, that slot evaluated
+# resolves at /private/tmp/hmux-ci-2. Replaced every job, that slot evaluated
 # all 91 manifests every time: 53 to 64 s of the resolve against 15 to 22 s in
 # root 1 (hq#661). Merged, it evaluates only what changed since its last job on
 # that Mac. Entries are keyed on contents, so an old one is never wrong, only

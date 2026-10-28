@@ -1,8 +1,8 @@
 # Remote Relay Authorization
 
-Apply this rule to any PR that adds or changes v2 socket methods, touches `RemoteRelayCommandPolicy.swift` or its tests, edits the remote CLI command table (`daemon/remote/cmd/cmuxd-remote/commands.go`) or relay dispatch (`cli.go`, `cli_overrides.go`), or changes app-side handling of `initial_command` / `command` / `tmux_start_command` / `pane_start_command` params.
+Apply this rule to any PR that adds or changes v2 socket methods, touches `RemoteRelayCommandPolicy.swift` or its tests, edits the remote CLI command table (`daemon/remote/cmd/hmuxd-remote/commands.go`) or relay dispatch (`cli.go`, `cli_overrides.go`), or changes app-side handling of `initial_command` / `command` / `tmux_start_command` / `pane_start_command` params.
 
-Background: GHSA-9vmv-3hjw-j28c. The `cmux ssh` reverse relay stores its credential on the remote host, so the remote host must be treated as a compromised client. `RemoteRelayCommandPolicy` is the only authorization boundary between an authenticated relay client and arbitrary command execution on the developer's Mac. It denies by default; the allowlist, the owned-target scoping, and the command-parameter denial are the whole defense.
+Background: GHSA-9vmv-3hjw-j28c. The `hmux ssh` reverse relay stores its credential on the remote host, so the remote host must be treated as a compromised client. `RemoteRelayCommandPolicy` is the only authorization boundary between an authenticated relay client and arbitrary command execution on the developer's Mac. It denies by default; the allowlist, the owned-target scoping, and the command-parameter denial are the whole defense.
 
 ## Fail
 
@@ -22,4 +22,4 @@ Background: GHSA-9vmv-3hjw-j28c. The `cmux ssh` reverse relay stores its credent
 
 ## Report
 
-Name the exact method, param, and file. State which failure case applies (unanalyzed allowlist addition, local-execution risk, unscoped ID param, command-param acceptance, weakened default-deny). Propose the minimal change that restores the boundary, and name the test file where the allow/deny coverage belongs (`Packages/macOS/CmuxRemoteWorkspace/Tests/CmuxRemoteWorkspaceTests/RemoteCLIRelayPolicyTests.swift`).
+Name the exact method, param, and file. State which failure case applies (unanalyzed allowlist addition, local-execution risk, unscoped ID param, command-param acceptance, weakened default-deny). Propose the minimal change that restores the boundary, and name the test file where the allow/deny coverage belongs (`Packages/macOS/HmuxRemoteWorkspace/Tests/HmuxRemoteWorkspaceTests/RemoteCLIRelayPolicyTests.swift`).

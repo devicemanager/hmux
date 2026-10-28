@@ -86,8 +86,8 @@ export function AppPricingContent({
   const showGo = isGo || (goPlanEnabled && !snapshot.isPro);
   const isProCurrent = snapshot.isPro && !isMax && !isGo;
   const requestOrigin = appPricingRequestOrigin(headersList);
-  const cmuxScheme = validatedNativeCallbackScheme(
-    firstParam(params.cmux_scheme),
+  const hmuxScheme = validatedNativeCallbackScheme(
+    firstParam(params.hmux_scheme),
     appPricingRequest(headersList),
   );
   const appStorePaymentGated = isAppStoreDistributionMode(params);
@@ -124,8 +124,8 @@ export function AppPricingContent({
     ...checkoutAttributionParamsFrom(params),
   };
   const proCheckoutHrefs = {
-    month: appPricingCheckoutURL("pro", requestOrigin, cmuxScheme, "month", attribution),
-    year: appPricingCheckoutURL("pro", requestOrigin, cmuxScheme, "year", attribution),
+    month: appPricingCheckoutURL("pro", requestOrigin, hmuxScheme, "month", attribution),
+    year: appPricingCheckoutURL("pro", requestOrigin, hmuxScheme, "year", attribution),
   };
   const proAnnualLabelSet = {
     billingPeriod: pricing.billingPeriod,
@@ -136,7 +136,7 @@ export function AppPricingContent({
   const teamCheckoutHref = appPricingCheckoutURL(
     "team",
     requestOrigin,
-    cmuxScheme,
+    hmuxScheme,
     "month",
     attribution,
   );
@@ -144,11 +144,11 @@ export function AppPricingContent({
   // of an existing subscription. Pro access alone does not mean a Stripe
   // customer exists (an operator grant has none).
   const maxCheckoutHrefs = {
-    month: appPricingCheckoutURL("max", requestOrigin, cmuxScheme, "month", attribution),
-    year: appPricingCheckoutURL("max", requestOrigin, cmuxScheme, "year", attribution),
+    month: appPricingCheckoutURL("max", requestOrigin, hmuxScheme, "month", attribution),
+    year: appPricingCheckoutURL("max", requestOrigin, hmuxScheme, "year", attribution),
   };
   const maxComparePrice = `$${MAX_PRICING_USD.month.billedAmount} ${pricing.perMonth}`;
-  const signInHref = appPricingSignInHref(cmuxScheme, params);
+  const signInHref = appPricingSignInHref(hmuxScheme, params);
   const banner = pending
     ? null
     : appPricingBanner(params, snapshot, signInHref);
@@ -241,7 +241,7 @@ export function AppPricingContent({
               href={appPricingCheckoutURL(
                 "go",
                 requestOrigin,
-                cmuxScheme,
+                hmuxScheme,
                 "month",
                 attribution,
               )}
@@ -402,8 +402,8 @@ export function AppPricingContent({
       `}</style>
       <main
         className="min-h-screen w-full px-6 py-10 text-foreground sm:py-12"
-        data-cmux-app-theme="true"
-        data-cmux-app-theme-appearance={theme.appearance}
+        data-hmux-app-theme="true"
+        data-hmux-app-theme-appearance={theme.appearance}
         data-app-pricing-appearance={theme.appearance}
         style={appPricingStyle(theme)}
       >
@@ -562,7 +562,7 @@ type BillingBannerModel = {
 /// web_return_to lets the embedded browser navigate back to this pricing page
 /// (with its appearance params intact) once the app has consumed the callback.
 function appPricingSignInHref(
-  cmuxScheme: string,
+  hmuxScheme: string,
   params: Record<string, string | string[] | undefined>,
 ): string {
   const search = new URLSearchParams();
@@ -573,7 +573,7 @@ function appPricingSignInHref(
   const query = search.toString();
   const webReturnTo = query ? `/app-pricing?${query}` : "/app-pricing";
   const afterSignIn = `/handler/after-sign-in?native_app_return_to=${encodeURIComponent(
-    `${cmuxScheme}://auth-callback`,
+    `${hmuxScheme}://auth-callback`,
   )}&web_return_to=${encodeURIComponent(webReturnTo)}`;
   return `/handler/native-sign-in?after_auth_return_to=${encodeURIComponent(afterSignIn)}`;
 }

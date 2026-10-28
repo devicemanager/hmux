@@ -1,4 +1,4 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import Foundation
 
 /// Reads and validates the computer-use driver's untrusted per-process state files.
@@ -141,8 +141,8 @@ struct ComputerUseStateRepository: Sendable {
         homeDirectory
             .appendingPathComponent("Library", isDirectory: true)
             .appendingPathComponent("Application Support", isDirectory: true)
-            .appendingPathComponent("cmux", isDirectory: true)
-            .appendingPathComponent("cmux-cua", isDirectory: true)
+            .appendingPathComponent("hmux", isDirectory: true)
+            .appendingPathComponent("hmux-cua", isDirectory: true)
             .appendingPathComponent("state", isDirectory: true)
     }
 

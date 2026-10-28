@@ -1,11 +1,11 @@
-> **Provider update (2026-09-16):** This rollout checklist is historical. cmux Cloud now uses PlanetScale PostgreSQL (`cmux` / `cmux-prod`, `main` production, `staging` staging, `development` development). Do not execute the old AWS Aurora/RDS steps below. Use `skills/cmux-backend/references/cloud-vm-control-plane.md` and the current `cloud-vm-migrate.yml` workflow.
+> **Provider update (2026-09-16):** This rollout checklist is historical. hmux Cloud now uses PlanetScale PostgreSQL (`hmux` / `hmux-prod`, `main` production, `staging` staging, `development` development). Do not execute the old AWS Aurora/RDS steps below. Use `skills/hmux-backend/references/cloud-vm-control-plane.md` and the current `cloud-vm-migrate.yml` workflow.
 
 # Cloud VM Backend Rollout Todo
 
-This is the scoped todo list for making the Cloud VM backend production-ready with application logic running in the existing Vercel `manaflow/cmux` project.
+This is the scoped todo list for making the Cloud VM backend production-ready with application logic running in the existing Vercel `manaflow/hmux` project.
 
 > **2026-09-02:** Freestyle on the public platform (`api.freestyle.sh`) is the
-> only active Cloud VM provider. E2B, Blaxel, Daytona, the old `cmuxd-remote`
+> only active Cloud VM provider. E2B, Blaxel, Daytona, the old `hmuxd-remote`
 > gateway, and Rivet actors are historical migration records. They are not
 > valid values for current deployment or dogfood commands.
 
@@ -20,10 +20,10 @@ This is the scoped todo list for making the Cloud VM backend production-ready wi
 
 ## Current State
 
-- Vercel project exists: `manaflow/cmux`.
+- Vercel project exists: `manaflow/hmux`.
 - Vercel root directory is `web`.
 - Production URL is `https://cmux.com`.
-- Vercel custom `staging` environment exists for the `manaflow/cmux` project and tracks the
+- Vercel custom `staging` environment exists for the `manaflow/hmux` project and tracks the
   `staging` git branch.
 - VM application logic already runs in the Vercel Next app:
   - `web/app/api/vm/**`
@@ -33,14 +33,14 @@ This is the scoped todo list for making the Cloud VM backend production-ready wi
   - `cloud_vm_leases`
   - `cloud_vm_tunnel_enrollment_locks`
   - `cloud_vm_usage_events`
-- WebSocket PTY and browser proxy data paths use the authenticated `cmux-remote`
+- WebSocket PTY and browser proxy data paths use the authenticated `hmux-remote`
   link after the REST handshake.
 - No separate AWS app server is required for the current version.
-- A separate `manaflow/cmux-staging` Vercel project exists for staging.
+- A separate `manaflow/hmux-staging` Vercel project exists for staging.
 
 The checked-in image manifest is the source of truth for active and rollback
 images. Its active validated Freestyle ladder is
-`freestyle-cmux-devbox-20260903b-{sm,md,lg,xl,2xl}` for both desktop and base
+`freestyle-hmux-devbox-20260903b-{sm,md,lg,xl,2xl}` for both desktop and base
 kinds. The resolver selects the smallest entry that meets the requested memory.
 Older validated entries are rollback images, and the retired beta snapshot
 remains only for provenance. `FREESTYLE_SANDBOX_SNAPSHOT` is a legacy name
@@ -49,7 +49,7 @@ read it.
 
 ## State and rename synchronization contract
 
-The cmux-tui daemon owns the canonical remote graph: machines contain
+The hmux-tui daemon owns the canonical remote graph: machines contain
 workspaces, workspaces contain tab views, and tab views point to terminals,
 browsers, and agents. The macOS app must not create a second remote graph.
 
@@ -152,7 +152,7 @@ browsers, and agents. The macOS app must not create a second remote graph.
   field is present, uses the deprecated `networks` alias only when `vpcs` is
   absent, prefers private IPv4, then private IPv6, and uses public IPv6 only for
   a machine with no private address list. Private machines require the owner's
-  WireGuard tunnel. `cmux-remote` Noise enrollment remains the only managed
+  WireGuard tunnel. `hmux-remote` Noise enrollment remains the only managed
   session transport. Freestyle's scoped SSH proxy is provider-level access and
   is not a managed fallback.
 - Freestyle model-plane readiness is checked with the VM-bound
@@ -160,7 +160,7 @@ browsers, and agents. The macOS app must not create a second remote graph.
   token injection without selecting a model or spending upstream credits; a
   failed probe rolls the provider machine back.
 
-Agent-facing controls are JSON-first and composable: `cmux vm tree --json`,
+Agent-facing controls are JSON-first and composable: `hmux vm tree --json`,
 `surface.catalog`, `surface.project`, `vm tab rename`, and the explicit
 `vm terminal rename` compatibility command. The full graph costs more parsing at
 snapshot boundaries than a row-only cache, but the canonical fragment document
@@ -178,7 +178,7 @@ remains incompatible.
   - `PGPORT`
   - `PGUSER`
   - `PGDATABASE`
-  - `CMUX_DB_SSL_REJECT_UNAUTHORIZED`
+  - `HMUX_DB_SSL_REJECT_UNAUTHORIZED`
 - [x] Copy Stack smoke variables from Vercel into both GitHub Cloud VM environments:
   - `NEXT_PUBLIC_STACK_PROJECT_ID`
   - `NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY`
@@ -187,10 +187,10 @@ remains incompatible.
   - `OTEL_SERVICE_NAME`
   - `OTEL_EXPORTER_OTLP_ENDPOINT`
   - `OTEL_EXPORTER_OTLP_HEADERS`
-- [x] Publish and validate the current Freestyle snapshot with the cmux-tui daemon.
+- [x] Publish and validate the current Freestyle snapshot with the hmux-tui daemon.
 - [x] Promote the validated public snapshot configuration to the active provider
   manifest and local dogfood environment.
-- [x] Verify Freestyle create/attach, `cmux-remote` transport, and provider tunnel
+- [x] Verify Freestyle create/attach, `hmux-remote` transport, and provider tunnel
   recovery against a live sandbox.
 - [ ] Verify the tagged macOS client can reach a private Freestyle VM and observe
   daemon state plus tab/workspace rename persistence end to end. The API and
@@ -210,7 +210,7 @@ remains incompatible.
   owner-token lease, renewal, expiry recovery, and fail-closed migration guard.
 - [ ] Apply `cloud_vm_tunnel_enrollment_locks` in staging and production before
   deploying the route, then rehearse an expired lease and a concurrent request.
-- [ ] Persist the claimed cmux-tui device fingerprint/device id in each lease and
+- [ ] Persist the claimed hmux-tui device fingerprint/device id in each lease and
   revoke only those device records on sign-out. Freestyle currently revokes the
   control-plane lease rows, but not daemon enrollment records.
 - [x] Make missing Freestyle VPC member-rule repair fail closed. A rejected
@@ -238,15 +238,15 @@ remains incompatible.
 - [x] Both Vercel projects contain the Freestyle API key as a Sensitive
   variable. The env audit verifies key presence through Vercel metadata because
   the pinned CLI redacts the value.
-- [x] Freestyle create, `cmux-remote` attach, and provider tunnel state-recovery
+- [x] Freestyle create, `hmux-remote` attach, and provider tunnel state-recovery
   smoke passed without creating a production VM during the audit.
 - [ ] Tagged macOS end-to-end rename smoke is pending a working private-network
   route; focused client and backend behavior tests pass.
 - [x] Production auth/list smoke passed without creating a production VM.
 - [x] Axiom/OpenTelemetry env is set and redeployed in staging and production.
 - [x] GitHub Cloud VM smoke workflows no longer require `VERCEL_TOKEN`.
-- [ ] Configure `CMUX_ALERTS_SLACK_WEBHOOK_URL` in staging, or record the named
-  operator decision in `CMUX_ALERTS_SINK_UNCONFIGURED_ACK`. Production has the
+- [ ] Configure `HMUX_ALERTS_SLACK_WEBHOOK_URL` in staging, or record the named
+  operator decision in `HMUX_ALERTS_SINK_UNCONFIGURED_ACK`. Production has the
   acknowledgement and passes the audit; staging has neither and remains red.
 - [ ] Remove retired subrouter and coderouter access-gate variables from the
   staging Vercel project. Runtime code ignores them, but the env audit reports
@@ -257,8 +257,8 @@ remains incompatible.
 These are already configured in Vercel for development, preview, and production:
 
 - `RESEND_API_KEY`
-- `CMUX_FEEDBACK_FROM_EMAIL`
-- `CMUX_FEEDBACK_RATE_LIMIT_ID`
+- `HMUX_FEEDBACK_FROM_EMAIL`
+- `HMUX_FEEDBACK_RATE_LIMIT_ID`
 - `NEXT_PUBLIC_STACK_PROJECT_ID`
 - `NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY`
 - `STACK_SECRET_SERVER_KEY`
@@ -266,14 +266,14 @@ These are already configured in Vercel for development, preview, and production:
 ## Phase 1: Finish Current Vercel Backend Setup
 
 - [x] Use a dedicated Vercel staging project instead of sharing preview secrets.
-- [x] Add a global VM create kill switch, `CMUX_VM_CREATE_ENABLED`.
-- [x] Add the Freestyle provider kill switch, `CMUX_VM_FREESTYLE_ENABLED`.
+- [x] Add a global VM create kill switch, `HMUX_VM_CREATE_ENABLED`.
+- [x] Add the Freestyle provider kill switch, `HMUX_VM_FREESTYLE_ENABLED`.
 - [x] Set the global and Freestyle create switches to enabled values in the
   verified deployment configuration.
 - [ ] Add a preview allowlist before paid provider calls if preview uses real provider keys:
   - Stack user ids
   - Stack org ids later, if org billing exists
-- [x] Set `CMUX_VM_DEFAULT_PROVIDER=freestyle` in the verified local and deployed
+- [x] Set `HMUX_VM_DEFAULT_PROVIDER=freestyle` in the verified local and deployed
   environments.
 - [x] Set the Freestyle credential in the verified provider environments.
   `FREESTYLE_API_KEY` is normal; a complete `FREESTYLE_STACK_ACCESS_TOKEN` plus
@@ -292,34 +292,34 @@ These are already configured in Vercel for development, preview, and production:
 - [ ] Confirm Stack Auth callback and trusted domains include:
   - `https://cmux.com`
   - the Vercel preview domain pattern used by this project
-  - local `CMUX_PORT` development callback URLs
+  - local `HMUX_PORT` development callback URLs
 - [ ] Redeploy Vercel preview after the rename branch merges.
 - [ ] Smoke test the deployed preview:
-  - `cmux auth login`
-  - `cmux vm new --provider freestyle`
-  - `cmux vm attach <id>`
+  - `hmux auth login`
+  - `hmux vm new --provider freestyle`
+  - `hmux vm attach <id>`
   - browser proxy against a simple HTTP server inside the VM
 - [ ] Redeploy production only after preview and staging smoke tests pass.
 
 ## Phase 2: Local Secret Parity
 
-- [ ] Keep local Stack/web runtime secrets in `~/.secrets/cmuxterm-dev.env`.
-- [ ] Keep production Stack/web runtime secrets in `~/.secrets/cmuxterm.env`.
-- [ ] Keep provider image-build secrets in `~/.secrets/cmux.env`.
-- [ ] Add runtime VM vars to the relevant `~/.secrets/cmuxterm*.env` file:
-  - `CMUX_VM_DEFAULT_PROVIDER`
-  - `CMUX_VM_CREATE_ENABLED`
-  - `CMUX_VM_ALLOW_FREE_PROVISIONING` (leave unset; the paid-plan gate is the safe default and
+- [ ] Keep local Stack/web runtime secrets in `~/.secrets/hmuxterm-dev.env`.
+- [ ] Keep production Stack/web runtime secrets in `~/.secrets/hmuxterm.env`.
+- [ ] Keep provider image-build secrets in `~/.secrets/hmux.env`.
+- [ ] Add runtime VM vars to the relevant `~/.secrets/hmuxterm*.env` file:
+  - `HMUX_VM_DEFAULT_PROVIDER`
+  - `HMUX_VM_CREATE_ENABLED`
+  - `HMUX_VM_ALLOW_FREE_PROVISIONING` (leave unset; the paid-plan gate is the safe default and
     `audit-vercel-env.mjs` fails when a shared environment sets it to `1`/`true`/`yes`/`on`/`enabled`)
-  - `CMUX_VM_REQUIRE_PRO` (legacy compatibility alias only: `0`/`false`/`no`/`off`/`disabled`
-    enables free provisioning **only while** `CMUX_VM_ALLOW_FREE_PROVISIONING` is unset; any set
+  - `HMUX_VM_REQUIRE_PRO` (legacy compatibility alias only: `0`/`false`/`no`/`off`/`disabled`
+    enables free provisioning **only while** `HMUX_VM_ALLOW_FREE_PROVISIONING` is unset; any set
     value of the new switch wins, and every other legacy value or unset keeps the gate on)
-  - `CMUX_VM_FREESTYLE_ENABLED`
+  - `HMUX_VM_FREESTYLE_ENABLED`
   - `FREESTYLE_SANDBOX_SNAPSHOT` only when running an image-build or legacy
     audit command; it is ignored by VM runtime resolution
   - Axiom/OpenTelemetry vars
-- [x] Document the split between `~/.secrets/cmuxterm-dev.env`, `~/.secrets/cmuxterm.env`, and
-  `~/.secrets/cmux.env` in `AGENTS.md`.
+- [x] Document the split between `~/.secrets/hmuxterm-dev.env`, `~/.secrets/hmuxterm.env`, and
+  `~/.secrets/hmux.env` in `AGENTS.md`.
 - [x] Replace `web/.env.local` local development with the committed `web/.envrc` and `bun dev`
   loader.
 - [ ] Make the script print missing keys by name only, never values.
@@ -339,7 +339,7 @@ the reviewed image.
 - [x] Record every known-good Freestyle snapshot with:
   - image version
   - Freestyle snapshot id
-  - cmux-tui daemon artifact provenance
+  - hmux-tui daemon artifact provenance
   - build timestamp
   - builder script version
   - validation status
@@ -366,15 +366,15 @@ the reviewed image.
 ## Phase 4: Image Build and Promotion Workflow
 
 - [x] Make image build script output a manifest entry instead of relying on chat notes.
-- [x] Build the Freestyle snapshot from the pinned cmux-tui daemon artifact.
+- [x] Build the Freestyle snapshot from the pinned hmux-tui daemon artifact.
 - [x] Record artifact provenance:
-  - cmux-tui release/artifact manifest entry
-  - cmux-tui install and bootstrap command
+  - hmux-tui release/artifact manifest entry
+  - hmux-tui install and bootstrap command
   - binary SHA256
   - artifact URL used by Freestyle snapshot creation
 - [ ] Run Freestyle smoke tests after image build:
   - shell starts
-  - `cmux-remote` Noise session authenticates over `/v1/link`
+  - `hmux-remote` Noise session authenticates over `/v1/link`
   - terminal RPC and command execution work
   - browser proxy can reach an HTTP server inside the VM
   - locale/sudo/python sanity checks pass
@@ -463,19 +463,19 @@ This should be a follow-up after the current VM PR unless billing becomes a laun
 ## Phase 7: Database Control Plane and Legacy Removal
 
 Postgres is the durable control plane for Cloud VMs. The current VM API has no
-Rivet dependency. PTY and browser traffic uses the authenticated `cmux-remote`
+Rivet dependency. PTY and browser traffic uses the authenticated `hmux-remote`
 link after the Vercel REST handshake. The remaining work is cleanup and
 operational proof, not a provider migration.
 
 - [x] Add Postgres as the durable control plane foundation for Cloud VMs.
 - [x] Use Drizzle for TypeScript schema and migrations.
-- [x] Add CMUX_PORT-derived local Postgres so parallel worktrees do not collide.
+- [x] Add HMUX_PORT-derived local Postgres so parallel worktrees do not collide.
 - [x] Add CI migration verification against a real Postgres service.
 - [x] Add the first internal DB-backed VM read model and real Postgres test.
 - [x] Add a Vercel Marketplace Aurora OIDC/RDS IAM runtime DB adapter.
 - [x] Add a dedicated `bun db:migrate:aws-rds-iam` migration command for production/staging.
 - [x] Seed Vercel staging and production with app/provider DB driver env names.
-- [ ] Connect the Vercel Marketplace Aurora resource to `manaflow/cmux` for both `staging` and production so these env names are present:
+- [ ] Connect the Vercel Marketplace Aurora resource to `manaflow/hmux` for both `staging` and production so these env names are present:
   - `AWS_ROLE_ARN`
   - `AWS_REGION`
   - `PGHOST`
@@ -526,7 +526,7 @@ operational proof, not a provider migration.
   - `RIVET_RUNNER_VERSION`
   - `RIVET_TOKEN`
   - `RIVET_NAMESPACE`
-  - `CMUX_RIVET_INTERNAL_SECRET`
+  - `HMUX_RIVET_INTERNAL_SECRET`
 - [x] Remove `/api/rivet/**` routes after no VM code path depends on Rivet.
 - [x] Remove `rivetkit` dependency after the route migration and state migration are complete.
 
@@ -578,14 +578,14 @@ operational proof, not a provider migration.
 - [ ] Add local env setup instructions.
 - [ ] Add production promotion instructions.
 - [ ] Add Vercel environment variable audit instructions.
-- [ ] Add `CMUX_VM_CREATE_ENABLED` and provider kill-switch docs.
+- [ ] Add `HMUX_VM_CREATE_ENABLED` and provider kill-switch docs.
 - [x] Add security notes for Stack Auth bearer plus refresh tokens, provider
-  attach leases, and `cmux-remote` invitation/device-key handling.
+  attach leases, and `hmux-remote` invitation/device-key handling.
 - [ ] Document secret redaction for provider keys, attach tokens, and daemon
   startup commands.
 - [ ] Add a license/package-boundary note if future backend-only code is intended to use a different
   license from the rest of the repo.
-- [ ] Add a future `cmux-infra` or `backend-rollout` skill so agents follow this
+- [ ] Add a future `hmux-infra` or `backend-rollout` skill so agents follow this
   workflow consistently, including the state/rename contract above.
 
 ## Historical migration record
@@ -593,8 +593,8 @@ operational proof, not a provider migration.
 The following systems are retained only for auditability and rollback history:
 
 - E2B, Blaxel, and Daytona provider adapters and image selectors were removed.
-- The old `cmuxd-remote` WebSocket gateway and its lease-file protocol were
-  replaced by the cmux-tui daemon and `cmux-remote` transport.
+- The old `hmuxd-remote` WebSocket gateway and its lease-file protocol were
+  replaced by the hmux-tui daemon and `hmux-remote` transport.
 - Rivet actor routes and state were replaced by Postgres route handlers.
 
 Do not restore these names to deployment env, provider selection, or new image

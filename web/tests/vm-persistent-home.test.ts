@@ -10,7 +10,7 @@ describe("persistent home volume naming", () => {
     const a = homeVolumeNameForUser("user-1");
     const b = homeVolumeNameForUser("user-2");
     expect(a).not.toBe(b);
-    expect(a).toMatch(/^cmux-home-[0-9a-f]{12}$/);
+    expect(a).toMatch(/^hmux-home-[0-9a-f]{12}$/);
     expect(a).not.toContain("user-1");
   });
 });

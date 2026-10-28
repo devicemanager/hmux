@@ -66,9 +66,9 @@ describe("agent deeplink page", () => {
       message: "5cf944c9-b816-486a-a3aa-c89b3faea35f",
     });
 
-    expect(rendered).toContain("Open in cmux");
+    expect(rendered).toContain("Open in hmux");
     expect(rendered).toContain(
-      "cmux://agent/claude/e8f63fd9-94e8-4878-bcd4-704659aba1f2?host=cosmic-gray&message=5cf944c9-b816-486a-a3aa-c89b3faea35f",
+      "hmux://agent/claude/e8f63fd9-94e8-4878-bcd4-704659aba1f2?host=cosmic-gray&message=5cf944c9-b816-486a-a3aa-c89b3faea35f",
     );
     expect(rendered.join("\n")).not.toContain("unsupported parameters");
   });
@@ -81,19 +81,19 @@ describe("agent deeplink page", () => {
       cwd: "/home/leo",
     });
 
-    expect(rendered).toContain("Open in cmux");
+    expect(rendered).toContain("Open in hmux");
     expect(rendered).toContain(
-      "cmux ignores parameters it does not use: cwd. The session still opens.",
+      "hmux ignores parameters it does not use: cwd. The session still opens.",
     );
-    expect(rendered).toContain("cmux://agent/claude/s1?host=cosmic-gray");
+    expect(rendered).toContain("hmux://agent/claude/s1?host=cosmic-gray");
     expect(rendered.join("\n")).not.toContain("/home/leo");
   });
 
   test("a session named twice is called a repeat, not a bad value", async () => {
     const rendered = await render({ harness: "claude", session: ["s1", "s2"] });
 
-    expect(rendered).not.toContain("Open in cmux");
-    expect(rendered).toContain("This link repeats parameters cmux will reject: session");
+    expect(rendered).not.toContain("Open in hmux");
+    expect(rendered).toContain("This link repeats parameters hmux will reject: session");
     expect(rendered.join("\n")).not.toContain("invalid parameter values");
     expect(rendered.join("\n")).not.toContain("missing required parameters: ");
   });
@@ -102,18 +102,18 @@ describe("agent deeplink page", () => {
     const machine = "machine_0123456789abcdef0123456789abcdef";
     const rendered = await render({ harness: "claude", session: "s1", machine });
 
-    expect(rendered).toContain("Open in cmux");
-    expect(rendered).toContain(`cmux://agent/claude/s1?machine=${machine}`);
+    expect(rendered).toContain("Open in hmux");
+    expect(rendered).toContain(`hmux://agent/claude/s1?machine=${machine}`);
     expect(rendered.join("\n")).not.toContain("does not use");
   });
 
   test("a link with no session says so and offers no Open", async () => {
     const rendered = await render({ harness: "claude" });
 
-    expect(rendered).not.toContain("Open in cmux");
+    expect(rendered).not.toContain("Open in hmux");
     expect(rendered).toContain(
       "This link is missing required parameters: session",
     );
-    expect(rendered).toContain("cmux://agent");
+    expect(rendered).toContain("hmux://agent");
   });
 });

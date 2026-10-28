@@ -2,8 +2,8 @@ import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import { vmPromptIdentity } from "../services/vms/guestPrompt";
 import type { VmPrincipalRow } from "../services/vms/vmPrincipalContract";
 
-// GET /api/vm/reflection/name: the guest's cmux-prompt-sync fetches this every
-// 30 s and writes the answer to /etc/cmux/vm-name. Create and rename write the
+// GET /api/vm/reflection/name: the guest's hmux-prompt-sync fetches this every
+// 30 s and writes the answer to /etc/hmux/vm-name. Create and rename write the
 // same file through vmPromptIdentity, so the two must agree, or a named
 // machine's prompt flips back to its generated slug within 30 s.
 // bun's mock.module is process-global; the override delegates unless active.
@@ -47,7 +47,7 @@ function row(overrides: Partial<VmPrincipalRow>): VmPrincipalRow {
 
 async function nameFor(vm: VmPrincipalRow): Promise<string> {
   principal = vm;
-  const response = await GET(new Request("https://reflection.cmux.internal/name"));
+  const response = await GET(new Request("https://reflection.hmux.internal/name"));
   expect(response.status).toBe(200);
   return ((await response.json()) as { name: string }).name;
 }

@@ -1,11 +1,11 @@
-import CmuxCore
-import CmuxFoundation
+import HmuxCore
+import HmuxFoundation
 import Foundation
 
 extension SessionRemoteWorkspaceSnapshot {
-    /// Restore the carrier descriptor without reviving a cmuxd-remote launch script.
+    /// Restore the carrier descriptor without reviving a hmuxd-remote launch script.
     func tuiSSHConfiguration(agentSocketPath: String?) -> WorkspaceRemoteConfiguration? {
-        guard sshSessionOwner == "cmux-tui", isPersistentSSHCarrierShape else { return nil }
+        guard sshSessionOwner == "hmux-tui", isPersistentSSHCarrierShape else { return nil }
         var configuration = carrierConfiguration(agentSocketPath: agentSocketPath)
         configuration.restoredSSHSession = self
         return configuration
@@ -37,7 +37,7 @@ extension SessionRemoteWorkspaceSnapshot {
             terminalProfile: terminalProfile ?? .shell, destination: destination.trimmingCharacters(in: .whitespacesAndNewlines),
             port: port.flatMap { (1...65535).contains($0) ? $0 : nil },
             identityFile: WorkspaceRemoteConfiguration.normalizedIdentityPath(identityFile),
-            sshOptions: sshSessionOwner == "cmux-tui"
+            sshOptions: sshSessionOwner == "hmux-tui"
                 ? WorkspaceRemoteConfiguration.restorableCarrierSSHOptions(sshOptions)
                 : WorkspaceRemoteConfiguration.durableSSHOptions(sshOptions),
             localProxyPort: nil, relayPort: nil, relayID: nil, relayToken: nil, localSocketPath: nil,

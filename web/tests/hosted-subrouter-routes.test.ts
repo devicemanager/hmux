@@ -365,7 +365,7 @@ describe("hosted Subrouter account routes", () => {
       request("/api/subrouter/accounts", {
         auth: "cookie",
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({
           provider: "openai-apikey",
           label: "work",
@@ -438,7 +438,7 @@ describe("hosted Subrouter account routes", () => {
       nested: { accessToken: "must-not-leak" },
     }];
 
-    const response = await accountsRoute.GET(request("/api/subrouter/accounts", { headers: { "x-cmux-view-open": "1" } }));
+    const response = await accountsRoute.GET(request("/api/subrouter/accounts", { headers: { "x-hmux-view-open": "1" } }));
     const text = await response.text();
 
     expect(response.status).toBe(200);
@@ -698,7 +698,7 @@ describe("hosted Subrouter account routes", () => {
       request("/api/coderouter/organizations", {
         headers: {
           cookie:
-            "cmux_coderouter_organization=%5B%22user-1%22%2C%22team-b%22%5D",
+            "hmux_coderouter_organization=%5B%22user-1%22%2C%22team-b%22%5D",
         },
       }),
     );
@@ -731,7 +731,7 @@ describe("hosted Subrouter account routes", () => {
       request("/api/coderouter/organizations", {
         headers: {
           cookie:
-            "cmux_coderouter_organization=%5B%22user-1%22%2C%22team-not-authorized%22%5D",
+            "hmux_coderouter_organization=%5B%22user-1%22%2C%22team-not-authorized%22%5D",
         },
       }),
     );
@@ -816,7 +816,7 @@ function request(path: string, init: TestRequestInit = {}): Request {
     headers.set("authorization", "Bearer access-token");
     headers.set("x-stack-refresh-token", "refresh-token");
   }
-  return new Request(`https://cmux.test${path}`, {
+  return new Request(`https://hmux.test${path}`, {
     method: init.method ?? "GET",
     headers,
     body: init.body,

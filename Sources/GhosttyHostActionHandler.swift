@@ -1,9 +1,9 @@
 import AppKit
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxTerminal
+import HmuxTerminalCore
 import GhosttyKit
 
-/// Adapts Ghostty intents to the existing cmux owners; it owns no workspace state.
+/// Adapts Ghostty intents to the existing hmux owners; it owns no workspace state.
 @MainActor
 struct GhosttyHostActionHandler {
     let app: AppDelegate

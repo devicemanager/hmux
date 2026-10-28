@@ -77,16 +77,16 @@ require_empty() {
 
 bundle_id="$(read_plist CFBundleIdentifier)"
 case "$bundle_id" in
-  com.cmux.app|com.cmuxterm.app.nightly|dev.cmux.app.beta|dev.cmux.app.internal|dev.cmux.app.demo) ;;
+  com.hmux.app|com.hmuxterm.app.nightly|dev.hmux.app.beta|dev.hmux.app.internal|dev.hmux.app.demo) ;;
   *)
     echo "error: production iOS artifact has unexpected release bundle identifier '${bundle_id:-<absent>}'" >&2
     exit 1
     ;;
 esac
-require_exact "CMUXAuthEnvironment" "$(read_plist CMUXAuthEnvironment)" "production"
-require_exact "CMUXApiBaseURL" "$(read_plist CMUXApiBaseURL)" "https://cmux.com"
-require_exact "CMUXIrohBrokerBaseURL" "$(read_plist CMUXIrohBrokerBaseURL)" "https://cmux.com"
-require_exact "CMUXPresenceBaseURL" "$(read_plist CMUXPresenceBaseURL)" "https://presence.cmux.dev"
-require_empty "CMUXDevTag" "$(read_plist CMUXDevTag)"
+require_exact "HMUXAuthEnvironment" "$(read_plist HMUXAuthEnvironment)" "production"
+require_exact "HMUXApiBaseURL" "$(read_plist HMUXApiBaseURL)" "https://cmux.com"
+require_exact "HMUXIrohBrokerBaseURL" "$(read_plist HMUXIrohBrokerBaseURL)" "https://cmux.com"
+require_exact "HMUXPresenceBaseURL" "$(read_plist HMUXPresenceBaseURL)" "https://presence.cmux.dev"
+require_empty "HMUXDevTag" "$(read_plist HMUXDevTag)"
 
 echo "==> production iOS runtime origins verified for ${bundle_id:-unknown bundle}"

@@ -1,5 +1,5 @@
-import CmuxIrxTransport
-import CmuxSurfaceCatalogModel
+import HmuxIrxTransport
+import HmuxSurfaceCatalogModel
 import Foundation
 import Observation
 

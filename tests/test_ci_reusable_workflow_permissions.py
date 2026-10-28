@@ -39,7 +39,7 @@ _keepalive: list[tempfile.TemporaryDirectory[str]] = []
 
 
 def workflows_tree(files: dict[str, str]) -> Path:
-    tmp = tempfile.TemporaryDirectory(prefix="cmux-reusable-perms-")
+    tmp = tempfile.TemporaryDirectory(prefix="hmux-reusable-perms-")
     _keepalive.append(tmp)
     workflows = Path(tmp.name) / ".github" / "workflows"
     workflows.mkdir(parents=True)
@@ -156,7 +156,7 @@ def test_callee_that_keeps_or_reduces_the_grant_passes() -> None:
 
 
 def test_callee_job_level_permissions_count_even_when_the_job_is_gated() -> None:
-    # Mirrors cmux-tui-build-package.yml: its attest job is optional at runtime, but GitHub still
+    # Mirrors hmux-tui-build-package.yml: its attest job is optional at runtime, but GitHub still
     # validates the declared job-level ceiling against the caller (see 4b9720dc750).
     callee = """\
         on:
@@ -557,7 +557,7 @@ def test_ci_runs_this_guard_in_workflow_guard_tests() -> None:
     match = re.search(r"(?ms)^  workflow-guard-tests:\n(.*?)(?=^  [A-Za-z0-9_-]+:\n|\Z)", text)
     assert match is not None, "workflow-guard-tests job missing from ci-guards.yml"
 
-    # The ci leg runs it through the cmux.ci.guard workload profile.
+    # The ci leg runs it through the hmux.ci.guard workload profile.
     sys.path.insert(0, str(ROOT / "scripts" / "ci"))
     import workload_entrypoints
 

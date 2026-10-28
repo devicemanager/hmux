@@ -12,7 +12,7 @@ afterEach(() => {
 });
 
 function fixture() {
-  const directory = mkdtempSync(path.join(tmpdir(), "cmux-prompt-"));
+  const directory = mkdtempSync(path.join(tmpdir(), "hmux-prompt-"));
   directories.push(directory);
   return directory;
 }
@@ -59,7 +59,7 @@ describe("Cloud Bash prompt", () => {
     const directory = fixture();
     await install(directory, "brave-blue-otter", 100);
     const digest = (name: string) => createHash("sha256")
-      .update(readFileSync(path.join(directory, name), "utf8").replaceAll(directory, "/etc/cmux"))
+      .update(readFileSync(path.join(directory, name), "utf8").replaceAll(directory, "/etc/hmux"))
       .digest("hex");
     expect({ bashrc: digest("bashrc"), prompt: digest("prompt.bash") }).toEqual({
       bashrc: "b5229855c3edd1961e8bd695ea1254b410ca2146a8f37903d7c2b9db588692c8",
@@ -89,7 +89,7 @@ describe("Cloud Bash prompt", () => {
       PS1='custom> '
       for command in "\${PROMPT_COMMAND[@]}"; do eval "$command"; done
     `], {
-      env: { NODE_ENV: "test", PATH: process.env.PATH!, HOME: directory, USER: "cmux", TERM: "dumb" },
+      env: { NODE_ENV: "test", PATH: process.env.PATH!, HOME: directory, USER: "hmux", TERM: "dumb" },
     });
     expect(result.status).toBe(0);
     expect(readFileSync(path.join(directory, "captured-prompt"), "utf8")).toBe("custom> ");
@@ -112,16 +112,16 @@ describe("Cloud Bash prompt", () => {
     const output = await bash(directory, `
       . '${directory}/prompt.bash'
       PATH=/does-not-exist
-      __cmux_prompt_name
+      __hmux_prompt_name
       eval 'printf "%s\\n" "'"$PS1"'"'
       printf '%s\\n' renamed-box > '${directory}/vm-name'
-      __cmux_prompt_name
+      __hmux_prompt_name
       eval 'printf "%s\\n" "'"$PS1"'"'
       printf 'hook=%s\\n' "\${PROMPT_COMMAND-}"
     `);
     expect(output).toContain("@brave-blue-otter");
     expect(output).toContain("@renamed-box");
-    expect(output).toContain("hook=__cmux_prompt_name\n");
+    expect(output).toContain("hook=__hmux_prompt_name\n");
   });
 
   test("preserves existing prompt commands, exit status, and repeated sourcing", async () => {
@@ -132,10 +132,10 @@ describe("Cloud Bash prompt", () => {
       . '${directory}/prompt.bash'
       . '${directory}/prompt.bash'
       false
-      __cmux_prompt_name
+      __hmux_prompt_name
       printf '%s|' "$?"
       printf '%s|' "\${PROMPT_COMMAND[@]}"
-    `))).toBe("1|__cmux_prompt_name|:|printf user-hook|");
+    `))).toBe("1|__hmux_prompt_name|:|printf user-hook|");
   });
 
   test("reports the working directory to the daemon with OSC 7 using only builtins", async () => {
@@ -143,7 +143,7 @@ describe("Cloud Bash prompt", () => {
     await install(directory, "brave-blue-otter", 100);
     // A space and a multi-byte character: the daemon parses the report as a
     // file URL, so every byte outside the unreserved set is percent-encoded.
-    const cwd = path.join(directory, "cmux tést dir");
+    const cwd = path.join(directory, "hmux tést dir");
     mkdirSync(cwd);
     const encoded = Array.from(Buffer.from(cwd, "utf8"), (byte) => {
       const char = String.fromCharCode(byte);
@@ -155,7 +155,7 @@ describe("Cloud Bash prompt", () => {
       HOSTNAME=test-host
       cd '${cwd}'
       false
-      __cmux_prompt_name
+      __hmux_prompt_name
       printf '|status=%s' "$?"
     `);
     expect(output).toBe(`\u001b]7;file://test-host${encoded}\u0007|status=1`);
@@ -164,7 +164,7 @@ describe("Cloud Bash prompt", () => {
   test("renders successive prompts in a real interactive Bash terminal", async () => {
     const directory = fixture();
     await install(directory, "brave-blue-otter", 100);
-    // System rc, Ubuntu user defaults, then the user's cmux source line.
+    // System rc, Ubuntu user defaults, then the user's hmux source line.
     writeFileSync(path.join(directory, "startup.bash"), `. '${directory}/bashrc'\nPS1='ubuntu> '\n. '${directory}/bashrc'\n`);
     const result = await runChild("python3", ["-c", String.raw`
 import fcntl, os, pathlib, pty, re, select, signal, struct, subprocess, sys, termios, time
@@ -231,8 +231,8 @@ finally:
 
   test("prompt sync treats a name written into vm-name as published, and ignores the baked default", async () => {
     const directory = fixture();
-    writeFileSync(path.join(directory, "vm-name"), "cmux\n");
-    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/cmux-prompt-sync");
+    writeFileSync(path.join(directory, "vm-name"), "hmux\n");
+    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/hmux-prompt-sync");
     const result = await runChild("python3", ["-c", String.raw`
 import importlib.util, importlib.machinery, pathlib, sys, threading, time
 sys.dont_write_bytecode = True
@@ -256,7 +256,7 @@ print("named", ready.wait(2.0))
     // Every success waits 30 s. A refused credential used to retry every 8 s
     // forever, so a machine whose credential stopped working polled almost
     // four times as often as a healthy one.
-    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/cmux-prompt-sync");
+    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/hmux-prompt-sync");
     const result = await runChild("python3", ["-c", String.raw`
 import importlib.util, importlib.machinery, io, sys, urllib.error
 sys.dont_write_bytecode = True
@@ -269,7 +269,7 @@ def run(error, count):
         delay = module.retry_delay(delay, error)
         delays.append(delay)
     return delays
-refused = urllib.error.HTTPError("https://reflection.cmux.internal/name", 401, "Unauthorized", {}, io.BytesIO())
+refused = urllib.error.HTTPError("https://reflection.hmux.internal/name", 401, "Unauthorized", {}, io.BytesIO())
 print("refused", run(refused, 11))
 print("transport", run(urllib.error.URLError("timed out"), 8))
 `, script]);
@@ -286,7 +286,7 @@ print("transport", run(urllib.error.URLError("timed out"), 8))
     // A warm clone's daemon is still adopting the template terminal when the
     // prompt sync starts. An unanswered list must not fall through to a
     // create: the CLI then waits for the daemon and adds a second workspace.
-    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/cmux-prompt-sync");
+    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/hmux-prompt-sync");
     const run = (listings: string, runDir = path.join(fixture(), "run")) => runChild("python3", ["-c", String.raw`
 import importlib.util, importlib.machinery, json, pathlib, sys, threading, types
 sys.dont_write_bytecode = True
@@ -308,7 +308,7 @@ module.tui = tui
 ready = threading.Event(); ready.set()
 module.seed_terminal(ready, pathlib.Path(sys.argv[2]))
 print(json.dumps([c for c in calls if c.startswith(("terminal list", "workspace create"))]))
-`, script, fixture(), listings], { env: { ...process.env, CMUX_PROMPT_RUN_DIR: runDir } });
+`, script, fixture(), listings], { env: { ...process.env, HMUX_PROMPT_RUN_DIR: runDir } });
     const adopted = await run(JSON.stringify([[1, ""], [1, ""], [0, '{"terminals":[{"terminal_id":"term_adopted"}]}']]));
     expect(adopted.stderr).toBe("");
     expect(JSON.parse(adopted.stdout)).toEqual(["terminal list --json", "terminal list --json", "terminal list --json"]);
@@ -318,10 +318,10 @@ print(json.dumps([c for c in calls if c.startswith(("terminal list", "workspace 
   });
 
   test("prompt sync seeds the terminal a warm clone's daemon bound, even before the list shows it", async () => {
-    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/cmux-prompt-sync");
+    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/hmux-prompt-sync");
     const run = path.join(fixture(), "run");
     mkdirSync(run);
-    writeFileSync(path.join(run, "bound"), "CMUX_TUI_SESSION_ID=session_clone\nCMUX_TUI_TERMINAL_ID=term_adopted\n");
+    writeFileSync(path.join(run, "bound"), "HMUX_TUI_SESSION_ID=session_clone\nHMUX_TUI_TERMINAL_ID=term_adopted\n");
     const result = await runChild("python3", ["-c", String.raw`
 import importlib.util, importlib.machinery, json, pathlib, sys, threading, types
 sys.dont_write_bytecode = True
@@ -339,16 +339,16 @@ module.tui = tui
 ready = threading.Event(); ready.set()
 module.seed_terminal(ready, pathlib.Path(sys.argv[2]))
 print(json.dumps(calls))
-`, script, fixture()], { env: { ...process.env, CMUX_PROMPT_RUN_DIR: run } });
+`, script, fixture()], { env: { ...process.env, HMUX_PROMPT_RUN_DIR: run } });
     expect(result.stderr).toBe("");
     expect(JSON.parse(result.stdout)).toEqual(["terminal term_adopted history clear --quiet", "terminal term_adopted keys ctrl+l --quiet"]);
   });
 
   test("prompt sync clears the baked prompt even after the clone prompt is named", async () => {
-    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/cmux-prompt-sync");
+    const script = path.join(import.meta.dirname, "../services/vms/images/devbox/hmux-prompt-sync");
     const run = path.join(fixture(), "run");
     mkdirSync(run);
-    writeFileSync(path.join(run, "bound"), "CMUX_TUI_SESSION_ID=session_clone\nCMUX_TUI_TERMINAL_ID=term_adopted\n");
+    writeFileSync(path.join(run, "bound"), "HMUX_TUI_SESSION_ID=session_clone\nHMUX_TUI_TERMINAL_ID=term_adopted\n");
     writeFileSync(path.join(run, "first-prompt-named"), "");
     const result = await runChild("python3", ["-c", String.raw`
 import importlib.util, importlib.machinery, json, pathlib, sys, threading, types
@@ -365,7 +365,7 @@ module.tui = tui
 ready = threading.Event(); ready.set()
 module.seed_terminal(ready, pathlib.Path(sys.argv[2]))
 print(json.dumps(calls))
-`, script, run], { env: { ...process.env, CMUX_PROMPT_RUN_DIR: run } });
+`, script, run], { env: { ...process.env, HMUX_PROMPT_RUN_DIR: run } });
     expect(result.stderr).toBe("");
     expect(JSON.parse(result.stdout)).toEqual([
       "terminal term_adopted history clear --quiet",
@@ -375,20 +375,20 @@ print(json.dumps(calls))
 
   test("the armed template shell waits for its clone binding and replaces the builder's ids", async () => {
     const directory = fixture();
-    await install(directory, "cmux", 100);
+    await install(directory, "hmux", 100);
     const run = path.join(directory, "run");
     mkdirSync(run);
     writeFileSync(path.join(run, "template-arm"), "");
     // A clone binds 0.3 s after the shell reached its first prompt; the name
     // arrives right after. The builder's ids must be gone, the clone's set.
     const output = await bash(directory, `
-      export CMUX_PROMPT_RUN_DIR='${run}' CMUX_TUI_SESSION_ID=sess_builder CMUX_TUI_TERMINAL_ID=term_builder
+      export HMUX_PROMPT_RUN_DIR='${run}' HMUX_TUI_SESSION_ID=sess_builder HMUX_TUI_TERMINAL_ID=term_builder
       . '${directory}/prompt.bash'
       ( sleep 0.3; : > '${run}/clone-started'
-        printf 'CMUX_TUI_SESSION_ID=sess_clone\\nCMUX_TUI_TERMINAL_ID=term_clone\\n' > '${run}/bound'
+        printf 'HMUX_TUI_SESSION_ID=sess_clone\\nHMUX_TUI_TERMINAL_ID=term_clone\\n' > '${run}/bound'
         printf 'shiny-cobalt-lizard\\n' > '${directory}/vm-name' ) &
-      __cmux_prompt_name >/dev/null
-      printf '%s %s %s ' "$CMUX_TUI_SESSION_ID" "$CMUX_TUI_TERMINAL_ID" "$__cmux_vm_name"
+      __hmux_prompt_name >/dev/null
+      printf '%s %s %s ' "$HMUX_TUI_SESSION_ID" "$HMUX_TUI_TERMINAL_ID" "$__hmux_vm_name"
       [ -e '${run}/template-arm' ] && printf armed || printf consumed
       [ -e '${run}/first-prompt-named' ] && printf ' named'
       wait
@@ -406,13 +406,13 @@ print(json.dumps(calls))
     // A zero clone deadline gives up at once. The binding then arrives after
     // the first prompt; the next prompt must pick it up.
     const output = await bash(directory, `
-      export CMUX_PROMPT_RUN_DIR='${run}' CMUX_PROMPT_TEMPLATE_WAIT_US=0 CMUX_TUI_SESSION_ID=sess_builder CMUX_TUI_TERMINAL_ID=term_builder
+      export HMUX_PROMPT_RUN_DIR='${run}' HMUX_PROMPT_TEMPLATE_WAIT_US=0 HMUX_TUI_SESSION_ID=sess_builder HMUX_TUI_TERMINAL_ID=term_builder
       . '${directory}/prompt.bash'
-      __cmux_prompt_name >/dev/null
-      printf '[%s][%s]' "\${CMUX_TUI_SESSION_ID-unset}" "\${CMUX_TUI_TERMINAL_ID-unset}"
-      printf 'CMUX_TUI_SESSION_ID=sess_late\\nCMUX_TUI_TERMINAL_ID=term_late\\n' > '${run}/bound'
-      __cmux_prompt_name >/dev/null
-      printf '[%s][%s]' "\${CMUX_TUI_SESSION_ID-unset}" "\${CMUX_TUI_TERMINAL_ID-unset}"
+      __hmux_prompt_name >/dev/null
+      printf '[%s][%s]' "\${HMUX_TUI_SESSION_ID-unset}" "\${HMUX_TUI_TERMINAL_ID-unset}"
+      printf 'HMUX_TUI_SESSION_ID=sess_late\\nHMUX_TUI_TERMINAL_ID=term_late\\n' > '${run}/bound'
+      __hmux_prompt_name >/dev/null
+      printf '[%s][%s]' "\${HMUX_TUI_SESSION_ID-unset}" "\${HMUX_TUI_TERMINAL_ID-unset}"
     `);
     expect(output).toBe("[unset][unset][sess_late][term_late]");
   });
@@ -423,10 +423,10 @@ print(json.dumps(calls))
     const run = path.join(directory, "run");
     mkdirSync(run);
     const output = await bash(directory, `
-      export CMUX_PROMPT_RUN_DIR='${run}' CMUX_TUI_SESSION_ID=sess_live
+      export HMUX_PROMPT_RUN_DIR='${run}' HMUX_TUI_SESSION_ID=sess_live
       . '${directory}/prompt.bash'
-      __cmux_prompt_name >/dev/null
-      printf '%s' "$CMUX_TUI_SESSION_ID"
+      __hmux_prompt_name >/dev/null
+      printf '%s' "$HMUX_TUI_SESSION_ID"
     `);
     expect(output).toBe("sess_live");
     // The gate writes template-shell-ready as its first step, so its absence

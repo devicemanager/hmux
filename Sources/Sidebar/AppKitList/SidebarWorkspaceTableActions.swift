@@ -1,7 +1,7 @@
 import Bonsplit
 import AppKit
-import CmuxFoundation
-import CmuxSidebar
+import HmuxFoundation
+import HmuxSidebar
 import Foundation
 
 /// Native source identity and completion callbacks carried as one capability.

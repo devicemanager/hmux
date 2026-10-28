@@ -17,13 +17,13 @@ import { relayPem, sign, deviceKey, type DeviceKey } from "../test/support/team-
 const FIXED_NOW = 1_900_000_000; // e2e/account-worker.ts freezes Date.now() here.
 const environment = "test";
 const projectId = "iroh-v2-account-test";
-const HOST = ["cmux.mac-host.v1", "cmux.mac-devices.v1"];
+const HOST = ["hmux.mac-host.v1", "hmux.mac-devices.v1"];
 const ticketKey = encodeBase64URL(new Uint8Array(32).fill(5));
 let workerRoot = "";
 
 type Device = { key: DeviceKey; descriptor: DeviceDescriptor; ticket: string };
 
-async function device(seed: number, teamId: string, userId: string, deviceId: string, platform: "mac" | "ios", capabilities: string[], appNamespace = "com.cmux.app"): Promise<Device> {
+async function device(seed: number, teamId: string, userId: string, deviceId: string, platform: "mac" | "ios", capabilities: string[], appNamespace = "com.hmux.app"): Promise<Device> {
   const key = await deviceKey(seed);
   const descriptor: DeviceDescriptor = {
     identity: { environment, projectId, teamId, userId, deviceId, appNamespace, buildTag: "release" },
@@ -94,7 +94,7 @@ async function openSocket(mf: Miniflare, path: string, owner: Device, purpose: "
   const url = new URL(path, await mf.ready);
   url.protocol = "ws:";
   const setup = await signedSetup(owner, `${purpose}-open-${as.identity.deviceId}`, plain => plain, purpose, as);
-  const socket = new NodeWebSocket(url.href, { headers: { authorization: `IrohTicket ${owner.ticket}`, "x-cmux-v2-setup": setupHeader(setup) } });
+  const socket = new NodeWebSocket(url.href, { headers: { authorization: `IrohTicket ${owner.ticket}`, "x-hmux-v2-setup": setupHeader(setup) } });
   const stream = frames(socket);
   await new Promise<void>((resolve, reject) => {
     socket.once("open", () => resolve());
@@ -107,7 +107,7 @@ async function openSocket(mf: Miniflare, path: string, owner: Device, purpose: "
 async function post(mf: Miniflare, path: string, owner: Device, input: { schemaId: string; requestId: string; [key: string]: unknown }, purpose: "team" | "account", as = owner.descriptor) {
   const setup = await signedSetup(owner, input.requestId, plain => ({ setup: plain, request: input }), purpose, as);
   const response = await mf.dispatchFetch(`https://iroh.test${path}`, {
-    method: "POST", headers: { "content-type": "application/json", authorization: `IrohTicket ${owner.ticket}`, "x-cmux-v2-setup": setupHeader(setup) },
+    method: "POST", headers: { "content-type": "application/json", authorization: `IrohTicket ${owner.ticket}`, "x-hmux-v2-setup": setupHeader(setup) },
     body: JSON.stringify(input),
   });
   return { status: response.status, text: await response.text() };
@@ -169,7 +169,7 @@ async function scenario(withAccount: boolean) {
       const fromA = await directory(a, "directory-a-1");
       expect(fromA.userId).toBe("user-u");
       expect(fromA.macs.map((mac: any) => [mac.descriptor.identity.teamId, mac.descriptor.endpointId])).toEqual([["team-y", b.descriptor.endpointId]]);
-      expect(fromA.rules).toEqual(["cmux.mac-account-peer.v1"]);
+      expect(fromA.rules).toEqual(["hmux.mac-account-peer.v1"]);
       const fromB = await directory(b, "directory-b-1");
       expect(fromB.macs.map((mac: any) => mac.descriptor.endpointId)).toEqual([a.descriptor.endpointId]);
       expect(fromB.inboundMacs.map((peer: any) => [peer.device.descriptor.endpointId, peer.device.descriptor.identity.teamId])).toEqual([[a.descriptor.endpointId, "team-x"]]);
@@ -186,7 +186,7 @@ async function scenario(withAccount: boolean) {
       // A Stack bearer token never opens an account route.
       const bearer = await mf.dispatchFetch("https://iroh.test/v2/account/requests", {
         method: "POST", headers: { "content-type": "application/json", authorization: "Bearer stack-token",
-          "x-cmux-v2-setup": setupHeader(await signedSetup(a, "bearer", plain => ({ setup: plain, request: { schemaId: "account.directory.v1", requestId: "bearer" } }), "account")) },
+          "x-hmux-v2-setup": setupHeader(await signedSetup(a, "bearer", plain => ({ setup: plain, request: { schemaId: "account.directory.v1", requestId: "bearer" } }), "account")) },
         body: JSON.stringify({ schemaId: "account.directory.v1", requestId: "bearer" }),
       });
       expect(bearer.status).toBe(401);
@@ -234,7 +234,7 @@ test("one user's Macs on teams X, Y and Z find each other; teammates and the iPh
   expect(exercised.phoneFrames.length).toBeGreaterThan(2);
   const final = JSON.parse(exercised.phoneFrames.find(text => text.includes('"phone-final"'))!);
   expect(final.schemaId).toBe("directory.result.v1");
-  expect(final.directory.rules).toEqual(["cmux.mac-peer-inbound.v1"]);
+  expect(final.directory.rules).toEqual(["hmux.mac-peer-inbound.v1"]);
   expect(final.directory.devices.map((record: any) => record.descriptor.identity.deviceId).sort()).toEqual(["iphone", "mac-a"]);
   // Byte-for-byte: every frame the iPhone's team socket received, including its directory.
   expect(exercised.phoneFrames).toEqual(untouched.phoneFrames);

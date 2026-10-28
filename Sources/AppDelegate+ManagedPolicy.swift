@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// Runtime enforcement for MDM managed policies (`DisableEmbeddedBrowser`,
@@ -13,7 +13,7 @@ extension AppDelegate {
         guard managedPolicyEnforcementObserver == nil else { return }
         managedPolicyEnforcementObserver = ManagedPolicyEnforcementObserver(
             socketControlPolicy: {
-                CmuxSettingsFileStore.socketControlPolicyResolution()
+                HmuxSettingsFileStore.socketControlPolicyResolution()
             },
             enforceBrowserPolicy: { [weak self] in
                 self?.closeBrowserPanelsForManagedPolicy()
@@ -79,7 +79,7 @@ extension AppDelegate {
                 }
             }
         }
-        CmuxTuiSurfaceProviderRegistry.shared.syncPollingToActivationPolicy()
+        HmuxTuiSurfaceProviderRegistry.shared.syncPollingToActivationPolicy()
     }
 
     /// `DisableComputerUse` transitions, both directions: activation stops the
@@ -89,7 +89,7 @@ extension AppDelegate {
         guard let service = computerUseRuntimeService else { return }
         let catalog = settingsRuntime?.catalog ?? SettingCatalog()
         let store = settingsRuntime?.jsonStore
-            ?? JSONConfigStore(fileURL: CmuxConfigLocation().userConfigFile)
+            ?? JSONConfigStore(fileURL: HmuxConfigLocation().userConfigFile)
         let userEnabled = store.snapshotValue(for: catalog.computerUse.enabled)
         Task { @MainActor in
             // `setEnabled` applies the policy itself; passing the user's value
@@ -110,19 +110,19 @@ extension AppDelegate {
         )
         alert.informativeText = String(
             localized: "managedPolicy.autoUpdate.disabledDetail",
-            defaultValue: "cmux does not check for or install updates on this Mac. Your organization deploys new versions."
+            defaultValue: "hmux does not check for or install updates on this Mac. Your organization deploys new versions."
         )
         alert.alertStyle = .informational
         alert.runModal()
         return false
     }
 
-    /// `DisableRemoteConnections` activation. Every live cmux-created remote
+    /// `DisableRemoteConnections` activation. Every live hmux-created remote
     /// connection ends: remote workspaces (SSH, Mosh, and Cloud attachments)
     /// disconnect and drop their configuration so no reconnect path can
     /// redial, remote tmux mirrors detach and close, and their SSH control
     /// masters exit. Remote tmux sessions stay alive on their hosts; only
-    /// cmux's connections to them end. The per-call gates
+    /// hmux's connections to them end. The per-call gates
     /// (`Workspace.configureRemoteConnection`, `reconnectRemoteConnection`,
     /// the remote-tmux socket verbs) refuse anything new while the policy is
     /// forced, and read the resolver live once it lifts.
@@ -155,14 +155,14 @@ extension AppDelegate {
             _ = await previous?.value
             guard let self else { return }
             guard ManagedDevicePolicy().isEnforced(.disableCloud) else {
-                CmuxTuiSurfaceProviderRegistry.shared.start(catalog: .shared)
+                HmuxTuiSurfaceProviderRegistry.shared.start(catalog: .shared)
                 return
             }
-            await CmuxTuiSurfaceProviderRegistry.shared.accessDidEnd()
+            await HmuxTuiSurfaceProviderRegistry.shared.accessDidEnd()
             guard ManagedDevicePolicy().isEnforced(.disableCloud) else {
                 // The profile was removed mid-teardown: Cloud is allowed again,
                 // so restart discovery instead of ending live access.
-                CmuxTuiSurfaceProviderRegistry.shared.start(catalog: .shared)
+                HmuxTuiSurfaceProviderRegistry.shared.start(catalog: .shared)
                 return
             }
             self.endCloudVMAccess(reason: .managedPolicy)
@@ -173,7 +173,7 @@ extension AppDelegate {
     }
 
     /// Closes every live browser pane — main area and Docks, across all
-    /// windows — when `DisableEmbeddedBrowser` activates while cmux runs.
+    /// windows — when `DisableEmbeddedBrowser` activates while hmux runs.
     func closeBrowserPanelsForManagedPolicy() {
         for manager in allTabManagersForManagedPolicyEnforcement() {
             for workspace in manager.tabs {

@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// Applies the authoritative workspace receipt to an optional workspace group.

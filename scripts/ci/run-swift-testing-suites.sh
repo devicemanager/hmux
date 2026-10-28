@@ -8,16 +8,16 @@ if [ "$#" -ne 1 ]; then
 fi
 
 package_path="$1"
-suite_timeout_seconds="${CMUX_SWIFT_TEST_SUITE_TIMEOUT_SECONDS:-300}"
+suite_timeout_seconds="${HMUX_SWIFT_TEST_SUITE_TIMEOUT_SECONDS:-300}"
 if ! [[ "$suite_timeout_seconds" =~ ^[1-9][0-9]*$ ]]; then
-  echo "CMUX_SWIFT_TEST_SUITE_TIMEOUT_SECONDS must be a positive integer" >&2
+  echo "HMUX_SWIFT_TEST_SUITE_TIMEOUT_SECONDS must be a positive integer" >&2
   exit 2
 fi
 # Same stall rule as the package loop in ci-macos.yml: after the build, no test
 # starting or finishing for this long is a hang.
-stall_seconds="${CMUX_SWIFT_TEST_STALL_SECONDS:-180}"
+stall_seconds="${HMUX_SWIFT_TEST_STALL_SECONDS:-180}"
 if ! [[ "$stall_seconds" =~ ^[1-9][0-9]*$ ]]; then
-  echo "CMUX_SWIFT_TEST_STALL_SECONDS must be a positive integer" >&2
+  echo "HMUX_SWIFT_TEST_STALL_SECONDS must be a positive integer" >&2
   exit 2
 fi
 script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

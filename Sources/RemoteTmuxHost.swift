@@ -1,28 +1,28 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
-/// Identifies a remote host whose tmux server cmux mirrors over SSH.
+/// Identifies a remote host whose tmux server hmux mirrors over SSH.
 ///
 /// A host is addressed by its SSH `destination` — either a `~/.ssh/config`
-/// alias (e.g. `claude-box`) or an explicit `user@host`. cmux multiplexes
+/// alias (e.g. `claude-box`) or an explicit `user@host`. hmux multiplexes
 /// every operation against the host (discovery commands, the `tmux -CC`
 /// control client, and one-shot mutations) over a single SSH ControlMaster
 /// socket derived from the destination, so authentication happens once.
 /// The ssh binary every remote-tmux spawn uses. DEBUG builds honor
-/// `CMUX_REMOTE_TMUX_SSH_FOR_TESTING` so end-to-end tests can substitute a
+/// `HMUX_REMOTE_TMUX_SSH_FOR_TESTING` so end-to-end tests can substitute a
 /// shim that strips the ssh framing and execs the remote command locally —
 /// the full mirror stack then runs hermetically (no sshd, no network).
 struct RemoteTmuxHost: Sendable, Equatable, Identifiable {
     /// The ssh executable used when the caller doesn't inject one (the
     /// connection and transport inits both take `sshExecutablePath`).
     ///
-    /// DEBUG builds honor `CMUX_REMOTE_TMUX_SSH_FOR_TESTING` because the
+    /// DEBUG builds honor `HMUX_REMOTE_TMUX_SSH_FOR_TESTING` because the
     /// sizing UI tests exercise the REAL app process, and a launch
     /// environment variable is the only injection channel that crosses the
-    /// XCUITest process boundary — the same seam `CMUX_SOCKET_PATH` uses.
+    /// XCUITest process boundary — the same seam `HMUX_SOCKET_PATH` uses.
     static func defaultSSHExecutablePath() -> String {
         #if DEBUG
-        if let override = ProcessInfo.processInfo.environment["CMUX_REMOTE_TMUX_SSH_FOR_TESTING"],
+        if let override = ProcessInfo.processInfo.environment["HMUX_REMOTE_TMUX_SSH_FOR_TESTING"],
            !override.isEmpty {
             return override
         }
@@ -172,7 +172,7 @@ struct RemoteTmuxHost: Sendable, Equatable, Identifiable {
 
     /// The SSH ControlMaster socket path shared by every operation against this host.
     ///
-    /// Namespaced under `~/.cmux/ssh/`. The filename combines the lossy
+    /// Namespaced under `~/.hmux/ssh/`. The filename combines the lossy
     /// human-readable ``slug`` with the collision-resistant ``connectionHash`` of
     /// the exact endpoint identity (destination + port + identity file + transport), so two
     /// distinct endpoints never collide on one socket (which would otherwise route
@@ -192,7 +192,7 @@ struct RemoteTmuxHost: Sendable, Equatable, Identifiable {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
         // Fixed parts that can never be trimmed: directory, the `tmux-` prefix,
         // the `-<hash>.sock` tail, and the transient suffix OpenSSH binds first.
-        let prefix = "\(home)/.cmux/ssh/tmux-"
+        let prefix = "\(home)/.hmux/ssh/tmux-"
         let suffix = "-\(connectionHash).sock"
         let fixedBytes = prefix.utf8.count + suffix.utf8.count + Self.opensshTransientSuffixLength
         let slugBudget = max(0, Self.maxUnixSocketPathLength - fixedBytes)
@@ -316,7 +316,7 @@ struct RemoteTmuxHost: Sendable, Equatable, Identifiable {
     /// ``controlPersistSeconds`` so the subsequent pipe-based discovery and
     /// `tmux -CC` control client multiplex over it with no further prompt.
     ///
-    /// Intended to be run by the `cmux ssh-tmux` CLI **inside the user's terminal**
+    /// Intended to be run by the `hmux ssh-tmux` CLI **inside the user's terminal**
     /// (which supplies the tty); the local control client itself uses plain pipes
     /// and cannot prompt. It forces `BatchMode=no` so the interactive prompt always
     /// works even when the user's ssh_config sets `BatchMode yes`, but it does NOT

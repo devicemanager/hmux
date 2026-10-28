@@ -180,7 +180,7 @@ function normalizedBindingText(value: string | null | undefined): string | null 
 /**
  * Lists Codex root/child identity bindings for an account-visible runtime.
  * These are identity links only; Codex remains authoritative for transcripts
- * and resume references, while cmux owns the runtime journal and resources.
+ * and resume references, while hmux owns the runtime journal and resources.
  */
 export function listHiveRuntimeAgentBindings(ownerTeamId: string, runtimeId: string, limit = 100) {
   return Effect.tryPromise({

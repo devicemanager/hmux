@@ -89,10 +89,10 @@ export default async function BasePage({
         <li>{t("forkMeaning")}</li>
       </ul>
       <CodeBlock lang="bash">{`# Current preview CLI
-cmux vm base open
-cmux vm base reset
-cmux vm ls
-cmux vm status <id>`}</CodeBlock>
+hmux vm base open
+hmux vm base reset
+hmux vm ls
+hmux vm status <id>`}</CodeBlock>
       <p>{t("cliNamingDesc")}</p>
 
       <DocsHeading level={2} id="sessions">{t("sessionsTitle")}</DocsHeading>

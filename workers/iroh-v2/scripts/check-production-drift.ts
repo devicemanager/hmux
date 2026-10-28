@@ -14,13 +14,13 @@
  * Being behind the base ref on other commits is reported, not failed.
  *
  * Usage: bun scripts/check-production-drift.ts [--url URL] [--base REF] [--environment NAME]
- * Environment: CMUX_IROH_V2_HEALTH_URL, CMUX_IROH_V2_DRIFT_BASE (default origin/main),
- * CMUX_IROH_V2_DRIFT_ENVIRONMENT (default production).
+ * Environment: HMUX_IROH_V2_HEALTH_URL, HMUX_IROH_V2_DRIFT_BASE (default origin/main),
+ * HMUX_IROH_V2_DRIFT_ENVIRONMENT (default production).
  */
 import { HealthSchema } from "../src/health";
 import { CONTROL_PLANE_RULES } from "../src/rules";
 
-const PRODUCTION_HEALTH_URL = "https://cmux-v2.debussy.workers.dev/v2/health";
+const PRODUCTION_HEALTH_URL = "https://hmux-v2.debussy.workers.dev/v2/health";
 const DEPLOY_COMMAND = "cd workers/iroh-v2 && bun install --frozen-lockfile && CLOUDFLARE_ACCOUNT_ID=<account> bun run deploy:production";
 
 function argument(flag: string): string | undefined {
@@ -37,10 +37,10 @@ function git(...args: string[]): { ok: boolean; output: string } {
   return { ok: result.exitCode === 0, output: new TextDecoder().decode(result.stdout).trim() };
 }
 
-const url = argument("--url") ?? process.env.CMUX_IROH_V2_HEALTH_URL ?? PRODUCTION_HEALTH_URL;
-const base = argument("--base") ?? process.env.CMUX_IROH_V2_DRIFT_BASE ?? "origin/main";
+const url = argument("--url") ?? process.env.HMUX_IROH_V2_HEALTH_URL ?? PRODUCTION_HEALTH_URL;
+const base = argument("--base") ?? process.env.HMUX_IROH_V2_DRIFT_BASE ?? "origin/main";
 // A health response from another environment (a mis-pointed URL, a staging Worker) must not pass as production.
-const expectedEnvironment = argument("--environment") ?? process.env.CMUX_IROH_V2_DRIFT_ENVIRONMENT ?? "production";
+const expectedEnvironment = argument("--environment") ?? process.env.HMUX_IROH_V2_DRIFT_ENVIRONMENT ?? "production";
 const failures: string[] = [];
 const notes: string[] = [];
 

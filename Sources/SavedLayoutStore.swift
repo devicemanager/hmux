@@ -1,10 +1,10 @@
 import Foundation
-import CmuxSettings
+import HmuxSettings
 
-struct CmuxSavedLayout: Codable, Sendable {
+struct HmuxSavedLayout: Codable, Sendable {
     var name: String
     var description: String?
-    var workspace: CmuxWorkspaceDefinition
+    var workspace: HmuxWorkspaceDefinition
 }
 
 enum SavedLayoutStoreError: Error, Equatable {
@@ -17,7 +17,7 @@ enum SavedLayoutStoreError: Error, Equatable {
 @MainActor
 final class SavedLayoutStore {
     struct LayoutsFile: Codable, Sendable {
-        var layouts: [CmuxSavedLayout]
+        var layouts: [HmuxSavedLayout]
     }
 
     private struct CachedLayoutsFile: Sendable {
@@ -32,7 +32,7 @@ final class SavedLayoutStore {
     private static var sharedCacheByPath: [String: CachedLayoutsFile] = [:]
 
     init(
-        fileURL: URL = CmuxConfigLocation().userConfigFile
+        fileURL: URL = HmuxConfigLocation().userConfigFile
             .deletingLastPathComponent()
             .appendingPathComponent("layouts.json", isDirectory: false),
         fileManager: FileManager = .default
@@ -41,24 +41,24 @@ final class SavedLayoutStore {
         self.fileManager = fileManager
     }
 
-    func list() throws -> [CmuxSavedLayout] {
+    func list() throws -> [HmuxSavedLayout] {
         try load().layouts
     }
 
-    func layout(named name: String) throws -> CmuxSavedLayout? {
+    func layout(named name: String) throws -> HmuxSavedLayout? {
         let normalizedName = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedName.isEmpty else { return nil }
         return try load().layouts.first { $0.name.caseInsensitiveCompare(normalizedName) == .orderedSame }
     }
 
-    func save(_ layout: CmuxSavedLayout, overwrite: Bool) throws {
+    func save(_ layout: HmuxSavedLayout, overwrite: Bool) throws {
         let normalizedName = layout.name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !normalizedName.isEmpty else {
             throw SavedLayoutStoreError.blankName
         }
 
         var file = try load()
-        let replacement = CmuxSavedLayout(
+        let replacement = HmuxSavedLayout(
             name: normalizedName,
             description: layout.description,
             workspace: layout.workspace

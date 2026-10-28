@@ -142,10 +142,10 @@ function messagesRequest(
     headers: {
       "anthropic-version": "2023-06-01",
       "content-type": "application/json",
-      "x-api-key": "cmux-vm-edge-placeholder",
-      authorization: "Bearer cmux-vm-edge-placeholder",
+      "x-api-key": "hmux-vm-edge-placeholder",
+      authorization: "Bearer hmux-vm-edge-placeholder",
       "x-coderouter-route-token": "crt_" + "a".repeat(43),
-      "x-cmux-vm-id": "vm-1",
+      "x-hmux-vm-id": "vm-1",
       "user-agent": "claude-cli/2.0.0 (external, cli)",
       ...headers,
     },
@@ -254,7 +254,7 @@ describe("claude proxy auth", () => {
       type: "error",
       error: {
         type: "permission_error",
-        message: "No Claude upstream account is configured for this team or shared with this caller. Add one with `cmux coderouter claude add` or at coderouter.dev.",
+        message: "No Claude upstream account is configured for this team or shared with this caller. Add one with `hmux coderouter claude add` or at coderouter.dev.",
       },
     });
     expect(outcome).toMatchObject({
@@ -285,7 +285,7 @@ describe("claude proxy direct Anthropic upstreams", () => {
     expect(headers.get("x-api-key")).toBe(apiKeyUpstream.secret.kind === "anthropic_api_key" ? apiKeyUpstream.secret.apiKey : "");
     expect(headers.get("authorization")).toBeNull();
     expect(headers.get("x-coderouter-route-token")).toBeNull();
-    expect(headers.get("x-cmux-vm-id")).toBeNull();
+    expect(headers.get("x-hmux-vm-id")).toBeNull();
     expect(headers.get("x-app")).toBeNull();
     expect(headers.get("anthropic-version")).toBe("2023-06-01");
     expect(headers.get("anthropic-beta")).toBe("interleaved-thinking-2025-05-14");
@@ -323,7 +323,7 @@ describe("claude proxy direct Anthropic upstreams", () => {
     expect(headers.get("authorization")).toBe("Bearer sk-ant-oat01-long-lived-oauth-token-value");
     expect(headers.get("x-api-key")).toBeNull();
     expect(headers.get("x-coderouter-route-token")).toBeNull();
-    expect(headers.get("x-cmux-vm-id")).toBeNull();
+    expect(headers.get("x-hmux-vm-id")).toBeNull();
     expect(headers.get("anthropic-beta")).toBe("interleaved-thinking-2025-05-14,oauth-2025-04-20");
     expect(headers.get("x-app")).toBe("cli");
     expect(headers.get("host")).toBeNull();

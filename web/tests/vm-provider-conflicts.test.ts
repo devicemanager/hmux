@@ -68,7 +68,7 @@ describe("a machine-state conflict", () => {
     const { response, payload } = await answer("exec", cause);
     expect(response.status).toBe(409);
     expect(payload).toMatchObject({ error: "vm_state_conflict", retryable: true });
-    expect(String(payload.action)).toContain("cmux vm ls");
+    expect(String(payload.action)).toContain("hmux vm ls");
     expect(isOperatorFaultVmError({ error: String(payload.error), status: response.status })).toBe(false);
   });
 
@@ -88,7 +88,7 @@ describe("a machine-state conflict", () => {
     expect(payload).toMatchObject({ error: "vm_guest_unresponsive", retryable: false });
     expect(String(payload.action)).toMatch(/contact support/i);
     expect(String(payload.action)).toMatch(/trace ID/i);
-    expect(String(payload.action)).not.toMatch(/cmux vm (?:pause|resume|restart|rm)/);
+    expect(String(payload.action)).not.toMatch(/hmux vm (?:pause|resume|restart|rm)/);
   });
 });
 

@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Immutable surface rows available even before the terminal link supplies a graph.
@@ -11,9 +11,9 @@ struct CloudMachineSurfacePresentation {
         // screen discovered by the daemon during reconnect.
         guard displays.isEmpty else { return displays }
         guard info.hasDesktop else { return [] }
-        return [CmuxTuiSnapshotParser.display(
+        return [HmuxTuiSnapshotParser.display(
             machine: info.id,
-            directURL: info.privateAddress.map { CmuxTuiSurfaceProvider.privateDesktopURL(privateAddress: $0) }
+            directURL: info.privateAddress.map { HmuxTuiSurfaceProvider.privateDesktopURL(privateAddress: $0) }
         )]
     }
 

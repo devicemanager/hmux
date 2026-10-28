@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CmuxWorkspaces
+import HmuxFoundation
+import HmuxWorkspaces
 
 extension RestorableAgentSessionIndex.Entry {
     /// Resolves a matched hook session's snapshot state. Execution admission

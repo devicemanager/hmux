@@ -17,8 +17,8 @@ let exporter: InMemorySpanExporter;
 let provider: BasicTracerProvider;
 
 const ORIGINAL_ENV = {
-  CMUX_VAULT_ENABLED: process.env.CMUX_VAULT_ENABLED,
-  CMUX_VAULT_S3_BUCKET: process.env.CMUX_VAULT_S3_BUCKET,
+  HMUX_VAULT_ENABLED: process.env.HMUX_VAULT_ENABLED,
+  HMUX_VAULT_S3_BUCKET: process.env.HMUX_VAULT_S3_BUCKET,
 };
 
 beforeAll(() => {
@@ -30,8 +30,8 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
-  process.env.CMUX_VAULT_ENABLED = "1";
-  process.env.CMUX_VAULT_S3_BUCKET = "test-bucket";
+  process.env.HMUX_VAULT_ENABLED = "1";
+  process.env.HMUX_VAULT_S3_BUCKET = "test-bucket";
   exporter.reset();
 });
 
@@ -44,9 +44,9 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test"),
+      new Request("https://hmux.test/api/vault/test"),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "hmux.vault.operation": "test" },
       "/api/vault/test failed",
       {},
       handler,
@@ -69,9 +69,9 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test"),
+      new Request("https://hmux.test/api/vault/test"),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "hmux.vault.operation": "test" },
       "/api/vault/test failed",
       {},
       handler,
@@ -93,9 +93,9 @@ describe("Vault route helper", () => {
     console.error = consoleError as unknown as typeof console.error;
     try {
       const response = await withVaultApiRoute(
-        new Request("https://cmux.test/api/vault/test"),
+        new Request("https://hmux.test/api/vault/test"),
         "/api/vault/test",
-        { "cmux.vault.operation": "test" },
+        { "hmux.vault.operation": "test" },
         "/api/vault/test failed",
         async () => {
           throw new Error("provider exploded");
@@ -115,24 +115,24 @@ describe("Vault route helper", () => {
   });
 
   test("keeps CLI auth available without transcript object storage", async () => {
-    delete process.env.CMUX_VAULT_ENABLED;
-    delete process.env.CMUX_VAULT_S3_BUCKET;
+    delete process.env.HMUX_VAULT_ENABLED;
+    delete process.env.HMUX_VAULT_S3_BUCKET;
     const handler = mock(async () => Response.json({ ok: true }));
 
     const publicResponse = await withCliAuthApiRoute(
-      new Request("https://cmux.test/api/vault/cli/auth/start", { method: "POST" }),
+      new Request("https://hmux.test/api/vault/cli/auth/start", { method: "POST" }),
       "/api/vault/cli/auth/start",
-      { "cmux.vault.operation": "cli_auth.start" },
+      { "hmux.vault.operation": "cli_auth.start" },
       "/api/vault/cli/auth/start failed",
       handler,
     );
     const authedResponse = await withAuthedCliAuthApiRoute(
-      new Request("https://cmux.test/api/vault/cli/auth/approve", {
+      new Request("https://hmux.test/api/vault/cli/auth/approve", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
       }),
       "/api/vault/cli/auth/approve",
-      { "cmux.vault.operation": "cli_auth.approve" },
+      { "hmux.vault.operation": "cli_auth.approve" },
       "/api/vault/cli/auth/approve failed",
       {},
       handler,
@@ -145,14 +145,14 @@ describe("Vault route helper", () => {
   });
 
   test("hides transcript Vault routes when the release flag is off", async () => {
-    delete process.env.CMUX_VAULT_ENABLED;
-    process.env.CMUX_VAULT_S3_BUCKET = "configured-without-release-flag";
+    delete process.env.HMUX_VAULT_ENABLED;
+    process.env.HMUX_VAULT_S3_BUCKET = "configured-without-release-flag";
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test"),
+      new Request("https://hmux.test/api/vault/test"),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "hmux.vault.operation": "test" },
       "/api/vault/test failed",
       handler,
     );
@@ -163,14 +163,14 @@ describe("Vault route helper", () => {
   });
 
   test("gates enabled transcript Vault routes on object storage", async () => {
-    process.env.CMUX_VAULT_ENABLED = "1";
-    delete process.env.CMUX_VAULT_S3_BUCKET;
+    process.env.HMUX_VAULT_ENABLED = "1";
+    delete process.env.HMUX_VAULT_S3_BUCKET;
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test"),
+      new Request("https://hmux.test/api/vault/test"),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "hmux.vault.operation": "test" },
       "/api/vault/test failed",
       handler,
     );
@@ -184,7 +184,7 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test", {
+      new Request("https://hmux.test/api/vault/test", {
         method: "POST",
         headers: {
           origin: "https://evil.test",
@@ -192,7 +192,7 @@ describe("Vault route helper", () => {
         },
       }),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "hmux.vault.operation": "test" },
       "/api/vault/test failed",
       {},
       handler,
@@ -208,9 +208,9 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test", { method: "POST" }),
+      new Request("https://hmux.test/api/vault/test", { method: "POST" }),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "hmux.vault.operation": "test" },
       "/api/vault/test failed",
       {},
       handler,
@@ -226,12 +226,12 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test", {
+      new Request("https://hmux.test/api/vault/test", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
       }),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "hmux.vault.operation": "test" },
       "/api/vault/test failed",
       {},
       handler,
@@ -247,7 +247,7 @@ describe("Vault route helper", () => {
     const handler = mock(async () => Response.json({ ok: true }));
 
     const response = await withAuthedVaultApiRoute(
-      new Request("https://cmux.test/api/vault/test", {
+      new Request("https://hmux.test/api/vault/test", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
@@ -255,7 +255,7 @@ describe("Vault route helper", () => {
         },
       }),
       "/api/vault/test",
-      { "cmux.vault.operation": "test" },
+      { "hmux.vault.operation": "test" },
       "/api/vault/test failed",
       { allowCookie: false },
       handler,
@@ -285,13 +285,13 @@ const testUser: AuthedUser = {
 function latestVaultTestSpan() {
   return exporter
     .getFinishedSpans()
-    .filter((span) => span.name === "cmux.api.GET /api/vault/test")
+    .filter((span) => span.name === "hmux.api.GET /api/vault/test")
     .at(-1);
 }
 
 function restoreEnv(): void {
-  restoreEnvValue("CMUX_VAULT_ENABLED", ORIGINAL_ENV.CMUX_VAULT_ENABLED);
-  restoreEnvValue("CMUX_VAULT_S3_BUCKET", ORIGINAL_ENV.CMUX_VAULT_S3_BUCKET);
+  restoreEnvValue("HMUX_VAULT_ENABLED", ORIGINAL_ENV.HMUX_VAULT_ENABLED);
+  restoreEnvValue("HMUX_VAULT_S3_BUCKET", ORIGINAL_ENV.HMUX_VAULT_S3_BUCKET);
 }
 
 function restoreEnvValue(key: string, value: string | undefined): void {

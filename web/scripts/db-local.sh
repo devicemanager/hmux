@@ -9,29 +9,29 @@ else
 fi
 
 command="${1:-status}"
-db_provider="${CMUX_DB_PROVIDER:-docker}"
+db_provider="${HMUX_DB_PROVIDER:-docker}"
 if [[ "$db_provider" != "docker" && "$db_provider" != "planetscale" ]]; then
-  echo "CMUX_DB_PROVIDER must be docker or planetscale" >&2
+  echo "HMUX_DB_PROVIDER must be docker or planetscale" >&2
   exit 2
 fi
 
-cmux_port="${CMUX_PORT:-${PORT:-3777}}"
-if [[ ! "$cmux_port" =~ ^[0-9]+$ ]]; then
-  echo "CMUX_PORT must be numeric, got: $cmux_port" >&2
+hmux_port="${HMUX_PORT:-${PORT:-3777}}"
+if [[ ! "$hmux_port" =~ ^[0-9]+$ ]]; then
+  echo "HMUX_PORT must be numeric, got: $hmux_port" >&2
   exit 2
 fi
 
-db_kind="${CMUX_DB_KIND:-dev}"
-db_offset="${CMUX_DB_PORT_OFFSET:-10000}"
+db_kind="${HMUX_DB_KIND:-dev}"
+db_offset="${HMUX_DB_PORT_OFFSET:-10000}"
 if [[ ! "$db_offset" =~ ^[0-9]+$ ]]; then
-  echo "CMUX_DB_PORT_OFFSET must be numeric, got: $db_offset" >&2
+  echo "HMUX_DB_PORT_OFFSET must be numeric, got: $db_offset" >&2
   exit 2
 fi
 
-db_port="${CMUX_DB_PORT:-$((cmux_port + db_offset))}"
-db_user="${CMUX_DB_USER:-cmux}"
-db_password="${CMUX_DB_PASSWORD:-cmux}"
-db_name="${CMUX_DB_NAME:-cmux}"
+db_port="${HMUX_DB_PORT:-$((hmux_port + db_offset))}"
+db_user="${HMUX_DB_USER:-hmux}"
+db_password="${HMUX_DB_PASSWORD:-hmux}"
+db_name="${HMUX_DB_NAME:-hmux}"
 
 branch="$(git -C "$REPO_DIR" branch --show-current 2>/dev/null || true)"
 if [[ -z "$branch" ]]; then
@@ -47,23 +47,23 @@ if [[ -z "$slug" ]]; then
   slug="worktree"
 fi
 
-export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-cmux-db-${slug}-${db_kind}-${cmux_port}}"
-export CMUX_DB_CONTAINER_NAME="${CMUX_DB_CONTAINER_NAME:-cmux-postgres-${slug}-${db_kind}-${cmux_port}}"
-export CMUX_DB_VOLUME_NAME="${CMUX_DB_VOLUME_NAME:-cmux-postgres-${slug}-${db_kind}-${cmux_port}}"
-export CMUX_DB_PORT="$db_port"
-export CMUX_DB_USER="$db_user"
-export CMUX_DB_PASSWORD="$db_password"
-export CMUX_DB_NAME="$db_name"
+export COMPOSE_PROJECT_NAME="${COMPOSE_PROJECT_NAME:-hmux-db-${slug}-${db_kind}-${hmux_port}}"
+export HMUX_DB_CONTAINER_NAME="${HMUX_DB_CONTAINER_NAME:-hmux-postgres-${slug}-${db_kind}-${hmux_port}}"
+export HMUX_DB_VOLUME_NAME="${HMUX_DB_VOLUME_NAME:-hmux-postgres-${slug}-${db_kind}-${hmux_port}}"
+export HMUX_DB_PORT="$db_port"
+export HMUX_DB_USER="$db_user"
+export HMUX_DB_PASSWORD="$db_password"
+export HMUX_DB_NAME="$db_name"
 if [[ "$db_provider" == "planetscale" ]]; then
   export DATABASE_URL="${PLANETSCALE_DATABASE_URL:-${DATABASE_URL:-}}"
-  [[ -n "$DATABASE_URL" ]] || { echo "CMUX_DB_PROVIDER=planetscale requires PLANETSCALE_DATABASE_URL or DATABASE_URL" >&2; exit 2; }
+  [[ -n "$DATABASE_URL" ]] || { echo "HMUX_DB_PROVIDER=planetscale requires PLANETSCALE_DATABASE_URL or DATABASE_URL" >&2; exit 2; }
 else
   export DATABASE_URL="${DATABASE_URL:-postgres://${db_user}:${db_password}@localhost:${db_port}/${db_name}}"
 fi
 export DIRECT_DATABASE_URL="${DIRECT_DATABASE_URL:-$DATABASE_URL}"
 
 compose() {
-  [[ "$db_provider" == "docker" ]] || { echo "Docker database is disabled when CMUX_DB_PROVIDER=planetscale" >&2; return 2; }
+  [[ "$db_provider" == "docker" ]] || { echo "Docker database is disabled when HMUX_DB_PROVIDER=planetscale" >&2; return 2; }
   if [[ "$(uname -s)" == Darwin ]]; then
     echo 'Local Docker databases are disabled on developer Macs. Use the shared GCP backend.' >&2
     return 2
@@ -91,14 +91,14 @@ print_status() {
   local redacted_url
   redacted_url="$(printf '%s' "$DATABASE_URL" | sed -E 's#(://[^:/@]+:)[^@]+@#\1<redacted>@#')"
   cat <<EOF
-CMUX_PORT=$cmux_port
-CMUX_DB_KIND=$db_kind
-CMUX_DB_PORT=$db_port
+HMUX_PORT=$hmux_port
+HMUX_DB_KIND=$db_kind
+HMUX_DB_PORT=$db_port
 COMPOSE_PROJECT_NAME=$COMPOSE_PROJECT_NAME
-CMUX_DB_CONTAINER_NAME=$CMUX_DB_CONTAINER_NAME
-CMUX_DB_VOLUME_NAME=$CMUX_DB_VOLUME_NAME
+HMUX_DB_CONTAINER_NAME=$HMUX_DB_CONTAINER_NAME
+HMUX_DB_VOLUME_NAME=$HMUX_DB_VOLUME_NAME
 DATABASE_URL=$redacted_url
-CMUX_DB_PROVIDER=$db_provider
+HMUX_DB_PROVIDER=$db_provider
 EOF
 }
 
@@ -133,21 +133,21 @@ case "$command" in
     [[ "$db_provider" == "docker" ]] || { echo "Database behavior tests require an isolated Docker database; refusing to run against PlanetScale" >&2; exit 2; }
     env \
       -u COMPOSE_PROJECT_NAME \
-      -u CMUX_DB_CONTAINER_NAME \
-      -u CMUX_DB_VOLUME_NAME \
-      -u CMUX_DB_PORT \
+      -u HMUX_DB_CONTAINER_NAME \
+      -u HMUX_DB_VOLUME_NAME \
+      -u HMUX_DB_PORT \
       -u DATABASE_URL \
       -u DIRECT_DATABASE_URL \
-      CMUX_DB_KIND=test \
-      CMUX_DB_PORT_OFFSET="${CMUX_TEST_DB_PORT_OFFSET:-30000}" \
-      CMUX_DB_NAME="${CMUX_TEST_DB_NAME:-cmux_test}" \
+      HMUX_DB_KIND=test \
+      HMUX_DB_PORT_OFFSET="${HMUX_TEST_DB_PORT_OFFSET:-30000}" \
+      HMUX_DB_NAME="${HMUX_TEST_DB_NAME:-hmux_test}" \
       "$0" up >/dev/null
-    export CMUX_DB_TEST=1
-    export CMUX_DB_KIND=test
-    export CMUX_DB_PORT_OFFSET="${CMUX_TEST_DB_PORT_OFFSET:-30000}"
-    export CMUX_DB_NAME="${CMUX_TEST_DB_NAME:-cmux_test}"
-    export CMUX_DB_PORT="$((cmux_port + ${CMUX_TEST_DB_PORT_OFFSET:-30000}))"
-    export DATABASE_URL="postgres://${db_user}:${db_password}@localhost:${CMUX_DB_PORT}/${CMUX_DB_NAME}"
+    export HMUX_DB_TEST=1
+    export HMUX_DB_KIND=test
+    export HMUX_DB_PORT_OFFSET="${HMUX_TEST_DB_PORT_OFFSET:-30000}"
+    export HMUX_DB_NAME="${HMUX_TEST_DB_NAME:-hmux_test}"
+    export HMUX_DB_PORT="$((hmux_port + ${HMUX_TEST_DB_PORT_OFFSET:-30000}))"
+    export DATABASE_URL="postgres://${db_user}:${db_password}@localhost:${HMUX_DB_PORT}/${HMUX_DB_NAME}"
     export DIRECT_DATABASE_URL="$DATABASE_URL"
     bun "$ROOT_DIR/scripts/db-migrate.mjs"
     bun "$ROOT_DIR/scripts/db-migrate.mjs"

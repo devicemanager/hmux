@@ -1,12 +1,12 @@
 import crypto from "node:crypto";
 import { EventEmitter } from "node:events";
 import { describe, expect, test } from "bun:test";
-import { buildApnsPayload, CMUX_APNS_CATEGORY } from "../services/apns/payload";
+import { buildApnsPayload, HMUX_APNS_CATEGORY } from "../services/apns/payload";
 import { parsePushPayload } from "../services/apns/routePolicy";
 import { APNS_MAX_PAYLOAD_BYTES, sendApnsNotification } from "../services/apns/sender";
 
 const correlationId = "62dbd6e3-f8ef-4d40-bafc-88b2ecc3dbe7";
-const bundleID = "dev.cmux.ios.e2en12";
+const bundleID = "dev.hmux.ios.e2en12";
 function envelope(installationID = "installation-one", keyID = "key-one", bytes = 1800) {
   return {
     version: 2,
@@ -21,7 +21,7 @@ function envelope(installationID = "installation-one", keyID = "key-one", bytes 
       iosInstallationID: installationID,
       macDeviceID: "mac-one",
       macInstanceTag: "e2en12",
-      macBuildID: "com.cmuxterm.app.debug.e2en12",
+      macBuildID: "com.hmuxterm.app.debug.e2en12",
     },
   };
 }
@@ -48,28 +48,28 @@ describe("encrypted production APNs boundary", () => {
     const body = buildApnsPayload({
       ...parsedWire(),
       macPushPublicKey: "untrusted-server-key",
-    }) as { aps: Record<string, unknown>; cmux: Record<string, unknown> };
+    }) as { aps: Record<string, unknown>; hmux: Record<string, unknown> };
     expect(body.aps["mutable-content"]).toBe(1);
-    expect(body.aps.category).toBe(CMUX_APNS_CATEGORY);
-    expect(body.cmux).toEqual({
+    expect(body.aps.category).toBe(HMUX_APNS_CATEGORY);
+    expect(body.hmux).toEqual({
       encryptedPayloads: [envelope()], macDeviceId: "mac-one", macInstanceTag: "e2en12", correlationId,
     });
-    expect(body.cmux.macPushPublicKey).toBeUndefined();
-    expect(body.cmux.workspaceId).toBeUndefined();
-    expect(body.cmux.surfaceId).toBeUndefined();
+    expect(body.hmux.macPushPublicKey).toBeUndefined();
+    expect(body.hmux.workspaceId).toBeUndefined();
+    expect(body.hmux.surfaceId).toBeUndefined();
   });
 
   test("encrypted dismiss uses ciphertext without requiring or publishing plaintext notification IDs", () => {
     const parsed = parsedWire({ kind: "dismiss", badgeCount: 0 });
-    const body = buildApnsPayload(parsed) as { aps: Record<string, unknown>; cmux: Record<string, unknown> };
+    const body = buildApnsPayload(parsed) as { aps: Record<string, unknown>; hmux: Record<string, unknown> };
     expect(body.aps).toEqual({
       "content-available": 1,
       "mutable-content": 1,
       alert: { title: "", body: "" },
       badge: 0,
     });
-    expect(body.cmux.encryptedPayloads).toEqual([envelope()]);
-    expect(body.cmux.dismissedIds).toBeUndefined();
+    expect(body.hmux.encryptedPayloads).toEqual([envelope()]);
+    expect(body.hmux.dismissedIds).toBeUndefined();
     expect(body.aps.alert).toEqual({ title: "", body: "" });
   });
 
@@ -126,14 +126,14 @@ describe("encrypted production APNs boundary", () => {
       expect(request.body.byteLength).toBeLessThanOrEqual(APNS_MAX_PAYLOAD_BYTES);
       expect(request.topic).toBe(bundleID);
       const payload = JSON.parse(request.body.toString());
-      expect(payload.cmux.encryptedPayloads).toHaveLength(1);
-      expect(payload.cmux.encryptedPayloads[0].installationID).toBe(targets[index]!.installationId);
+      expect(payload.hmux.encryptedPayloads).toHaveLength(1);
+      expect(payload.hmux.encryptedPayloads[0].installationID).toBe(targets[index]!.installationId);
     }
     requests.length = 0;
     const stale = await sendApnsNotification(config, [{ ...targets[0]!, pushKeyId: "rotated" }], input, 1000, transport);
     expect(stale[0]?.reason).toBe("push_recipient_key_changed");
     expect(requests).toHaveLength(0);
-    const wrongBuild = await sendApnsNotification(config, [{ ...targets[0]!, bundleId: "dev.cmux.ios.other" }], input, 1000, transport);
+    const wrongBuild = await sendApnsNotification(config, [{ ...targets[0]!, bundleId: "dev.hmux.ios.other" }], input, 1000, transport);
     expect(wrongBuild[0]?.reason).toBe("push_recipient_key_changed");
     expect(requests).toHaveLength(0);
   });

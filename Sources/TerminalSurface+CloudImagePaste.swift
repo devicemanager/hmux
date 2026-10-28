@@ -1,7 +1,7 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxCloudImagePaste
-import CmuxTerminal
+import HmuxCloudImagePaste
+import HmuxTerminal
 
 extension TerminalSurface {
     /// Runs only for a managed Cloud paste plan; there is deliberately no text fallback.

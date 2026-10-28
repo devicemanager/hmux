@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks generated shell-completion scripts without a running cmux socket."""
+"""Checks generated shell-completion scripts without a running hmux socket."""
 
 from __future__ import annotations
 
@@ -61,10 +61,10 @@ def has_structural_browser_command(shell: str, script: str) -> bool:
     raise ValueError(f"unhandled shell: {shell}")
 
 
-def resolve_cmux_cli() -> str:
-    cli = os.environ.get("CMUX_CLI_BIN")
+def resolve_hmux_cli() -> str:
+    cli = os.environ.get("HMUX_CLI_BIN")
     if not cli or not os.access(cli, os.X_OK):
-        raise RuntimeError("set CMUX_CLI_BIN to the built cmux binary")
+        raise RuntimeError("set HMUX_CLI_BIN to the built hmux binary")
     return cli
 
 
@@ -111,26 +111,26 @@ class SocketConnectionRecorder:
 def run_completion(cli: str, shell: str) -> tuple[subprocess.CompletedProcess[str], str, int]:
     env = dict(os.environ)
     for key in [
-        "CMUX_SOCKET_PASSWORD",
-        "CMUX_SOCKET",
-        "CMUX_WORKSPACE_ID",
-        "CMUX_SURFACE_ID",
-        "CMUX_TAB_ID",
+        "HMUX_SOCKET_PASSWORD",
+        "HMUX_SOCKET",
+        "HMUX_WORKSPACE_ID",
+        "HMUX_SURFACE_ID",
+        "HMUX_TAB_ID",
         # Completion generation is a facade-only path. A legacy-parser override
         # inherited from CI or a developer shell would test the wrong parser.
-        "CMUX_CLI_LEGACY_PARSER",
+        "HMUX_CLI_LEGACY_PARSER",
     ]:
         env.pop(key, None)
-    env["CMUX_CLI_SENTRY_DISABLED"] = "1"
-    env["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
+    env["HMUX_CLI_SENTRY_DISABLED"] = "1"
+    env["HMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
 
     # A Unix socket path is capped near 104 bytes, so bind under a short
     # directory instead of the much longer platform temp directory.
-    with tempfile.TemporaryDirectory(prefix="cmux-comp-", dir="/tmp") as tmpdir:
+    with tempfile.TemporaryDirectory(prefix="hmux-comp-", dir="/tmp") as tmpdir:
         socket_path = os.path.join(tmpdir, f"{uuid.uuid4().hex[:8]}.sock")
-        env["CMUX_SOCKET_PATH"] = socket_path
+        env["HMUX_SOCKET_PATH"] = socket_path
         # A per-run home, removed with the temp directory: this spawns the real
-        # cmux binary, and a facade regression that reads or writes user config
+        # hmux binary, and a facade regression that reads or writes user config
         # or state must not reach the developer's actual home.
         home = os.path.join(tmpdir, "home")
         os.mkdir(home)
@@ -145,7 +145,7 @@ def run_completion(cli: str, shell: str) -> tuple[subprocess.CompletedProcess[st
 
 def main() -> int:
     try:
-        cli = resolve_cmux_cli()
+        cli = resolve_hmux_cli()
     except RuntimeError as exc:
         print(f"FAIL: {exc}")
         return 1
@@ -160,32 +160,32 @@ def main() -> int:
         try:
             completion, socket_path, socket_connections = run_completion(cli, shell)
         except subprocess.TimeoutExpired:
-            failures.append(f"cmux completion {shell}: timed out")
+            failures.append(f"hmux completion {shell}: timed out")
             continue
 
         if socket_connections:
             failures.append(
-                f"cmux completion {shell}: connected to the forced socket "
+                f"hmux completion {shell}: connected to the forced socket "
                 f"{socket_path!r} {socket_connections} time(s); completion "
-                f"generation must not consult a running cmux instance"
+                f"generation must not consult a running hmux instance"
             )
 
         if completion.returncode != 0:
             failures.append(
-                f"cmux completion {shell}: expected exit 0, got {completion.returncode}\n"
+                f"hmux completion {shell}: expected exit 0, got {completion.returncode}\n"
                 f"stdout={completion.stdout!r}\nstderr={completion.stderr!r}"
             )
         if not completion.stdout:
-            failures.append(f"cmux completion {shell}: expected non-empty stdout")
+            failures.append(f"hmux completion {shell}: expected non-empty stdout")
         if completion.stderr:
             failures.append(
-                f"cmux completion {shell}: expected empty stderr, got {completion.stderr!r}"
+                f"hmux completion {shell}: expected empty stderr, got {completion.stderr!r}"
             )
 
         output = f"{completion.stdout}{completion.stderr}"
         if socket_path in output:
             failures.append(
-                f"cmux completion {shell}: consulted forced socket {socket_path!r}\n"
+                f"hmux completion {shell}: consulted forced socket {socket_path!r}\n"
                 f"stdout={completion.stdout!r}\nstderr={completion.stderr!r}"
             )
 
@@ -197,11 +197,11 @@ def main() -> int:
         try:
             parser = run_bounded(parse_command, timeout=30.0, input_text=completion.stdout)
         except subprocess.TimeoutExpired:
-            failures.append(f"cmux completion {shell}: {' '.join(parse_command)} timed out")
+            failures.append(f"hmux completion {shell}: {' '.join(parse_command)} timed out")
             continue
         if parser.returncode != 0:
             failures.append(
-                f"cmux completion {shell}: generated script did not parse\n"
+                f"hmux completion {shell}: generated script did not parse\n"
                 f"stdout={parser.stdout!r}\nstderr={parser.stderr!r}"
             )
             continue
@@ -209,19 +209,19 @@ def main() -> int:
         missing_tokens = [token for token in REQUIRED_TOKENS if token not in completion.stdout]
         if missing_tokens:
             failures.append(
-                f"cmux completion {shell}: generated script is missing expected tokens {missing_tokens}"
+                f"hmux completion {shell}: generated script is missing expected tokens {missing_tokens}"
             )
             continue
 
         if not has_shared_json_option(shell, completion.stdout):
             failures.append(
-                f"cmux completion {shell}: generated script is missing the shared --json option"
+                f"hmux completion {shell}: generated script is missing the shared --json option"
             )
             continue
 
         if not has_structural_browser_command(shell, completion.stdout):
             failures.append(
-                f"cmux completion {shell}: generated script is missing the 'browser' command candidate"
+                f"hmux completion {shell}: generated script is missing the 'browser' command candidate"
             )
             continue
 

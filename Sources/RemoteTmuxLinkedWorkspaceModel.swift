@@ -1,19 +1,19 @@
 import Foundation
 
-/// Pure mapping from the multiplexer view's flat window set back to cmux workspaces.
+/// Pure mapping from the multiplexer view's flat window set back to hmux workspaces.
 ///
 /// With the multiplexer on, a single `tmux -CC` client is attached to the hidden view
 /// session, which contains windows linked in from many real sessions. The control
 /// stream therefore delivers `%output`/`%window-add` for windows belonging to
-/// different home sessions. cmux must regroup them: each real (home) session is a
+/// different home sessions. hmux must regroup them: each real (home) session is a
 /// workspace; that session's windows are its tabs, in tmux index order.
 ///
 /// This type turns `list-windows -a` rows into that grouping. It is pure (no tmux)
 /// so the regrouping policy is unit-testable and deterministic.
 ///
 /// Two correctness properties enforced here (hardened after adversarial review):
-/// - **All view sessions are excluded**, not just our own — a *foreign* cmux
-///   install's `cmux-view-*` session must never be surfaced as a workspace nor
+/// - **All view sessions are excluded**, not just our own — a *foreign* hmux
+///   install's `hmux-view-*` session must never be surfaced as a workspace nor
 ///   have its windows treated as desired. Callers pass the full set of view
 ///   session names (from `RemoteTmuxViewSession.isAnyView`).
 /// - **Each window has exactly one deterministic home.** A window linked into

@@ -1,23 +1,23 @@
-# `cmux browser repl`
+# `hmux browser repl`
 
 Run JavaScript in a persistent JavaScriptCore session that drives the browser
-panes of your cmux workspace. The API is Playwright: `page`, locators,
+panes of your hmux workspace. The API is Playwright: `page`, locators,
 `keyboard`, `mouse`, events and waits behave as in Playwright. Input is native:
 pages see trusted events.
 
 ## Usage
 
-    cmux browser repl 'await page.goto("https://example.com"); snapshot()'
-    cmux browser repl --eval - < script.js
-    cmux browser repl --session work 'const s1 = await snapshot()'
-    cmux browser repl list | reset <session> [--all-workspaces] | guide
+    hmux browser repl 'await page.goto("https://example.com"); snapshot()'
+    hmux browser repl --eval - < script.js
+    hmux browser repl --session work 'const s1 = await snapshot()'
+    hmux browser repl list | reset <session> [--all-workspaces] | guide
 
 Without `--session` each call is one-shot: its tabs close at the end unless
 `page.keep()` was called. With `--session NAME`, top-level `const`/`let`
 bindings and tabs persist until `reset NAME` or 30 minutes idle. A session
-binds to your cmux workspace; the same name in another workspace is another
-session. Outside cmux, one session per name is shared by every caller
-outside cmux, whatever workspace is focused (its tabs open in the one
+binds to your hmux workspace; the same name in another workspace is another
+session. Outside hmux, one session per name is shared by every caller
+outside hmux, whatever workspace is focused (its tabs open in the one
 focused when it was made). `list` and `reset` act on your sessions
 (`--all-workspaces` for every one). A name
 is up to 64 letters, digits, `.`, `_` and `-`; at most 32 sessions are open
@@ -47,7 +47,7 @@ at once.
   `content({ urls, format })` loads URLs in background tabs and returns
   `[{ url, title, status, content }]` (`format`: `text`, `markdown`,
   `html`, `snapshot`) without changing the current tab.
-  `history({ query, from, to, limit })` returns cmux browser history,
+  `history({ query, from, to, limit })` returns hmux browser history,
   newest first, as `{ url, title, dateVisited }`.
 - `snapshot(target?, options?)`: accessibility snapshot of `page`, a locator or
   a ref. Options: `interactive` (controls plus headings and landmarks),
@@ -182,7 +182,7 @@ snapshot prints `dialog dismissed: ...` once.
 
 ## Hibernated and crashed tabs
 
-`state` in `tabs.list()` is `live`, `hibernated` (cmux unloaded the hidden
+`state` in `tabs.list()` is `live`, `hibernated` (hmux unloaded the hidden
 page to save memory), `waking` (it is loading again) or `crashed`. Any call
 on a hibernated tab loads it again first, in the background, and waits up to
 30 s; it fails with `hibernated` when the user stopped that load or it ended

@@ -1,17 +1,17 @@
 name: risk tier
 
-# Labels each feat-cmux-next pull request risk:low, risk:normal or risk:high from what it changes
-# (docs/ci/risk-tiers.md on feat-cmux-next). Low and normal never wait for a person: the check passes
+# Labels each feat-hmux-next pull request risk:low, risk:normal or risk:high from what it changes
+# (docs/ci/risk-tiers.md on feat-hmux-next). Low and normal never wait for a person: the check passes
 # as soon as it has graded them. High stays red until a person has looked: an approving review on the
 # head commit, or risk:human-ok from a maintainer. Any tier is held while it takes back another pull
 # request's change from the last week, until a `Takes back #N: <why>` line owns it. gh-merge-green
 # and next-autoland refuse a red `risk evidence` check.
 #
 # This copy is the one that runs. GitHub runs pull_request_target workflows from the default branch
-# (main) whatever the pull request's base, so the copy on feat-cmux-next never ran: no feat pull
+# (main) whatever the pull request's base, so the copy on feat-hmux-next never ran: no feat pull
 # request got a risk label or a `risk evidence` check, and risk:high pull requests (the updater,
 # nightly.yml, signing) merged with no person looking (#22781, 2026-10-21). It grades with the
-# classifier at the pull request's base commit (scripts/ci/risk_tier.py lives on feat-cmux-next),
+# classifier at the pull request's base commit (scripts/ci/risk_tier.py lives on feat-hmux-next),
 # so the classifier's rules stay on the branch they describe.
 #
 # pull_request_target so fork pull requests can be labeled. It never checks out or runs the
@@ -20,7 +20,7 @@ name: risk tier
 
 on:
   pull_request_target:
-    branches: [feat-cmux-next]
+    branches: [feat-hmux-next]
     types: [opened, synchronize, reopened, edited, ready_for_review, labeled, unlabeled]
 
 permissions:
@@ -43,7 +43,7 @@ jobs:
       pull-requests: write
       issues: write
     steps:
-      # The tip of feat-cmux-next (the branch filter makes base.ref that branch), not base.sha: base.sha
+      # The tip of feat-hmux-next (the branch filter makes base.ref that branch), not base.sha: base.sha
       # is the base as of the pull request's last push, so a label or description event on an older pull
       # request would grade it with an older classifier, or find none from before #21718.
       - name: Checkout the classifier at the tip of the pull request's base branch
@@ -102,7 +102,7 @@ jobs:
             [ "$old" = "$LABEL" ] || gh pr edit "$NUMBER" --repo "$REPO" --remove-label "$old"
           done
           grep -qx "$LABEL" <<<"$current" || gh pr edit "$NUMBER" --repo "$REPO" --add-label "$LABEL"
-      # Enforced from ENFORCE_FROM: the feat-cmux-next copy's advisory window (to 2026-10-24) let high
+      # Enforced from ENFORCE_FROM: the feat-hmux-next copy's advisory window (to 2026-10-24) let high
       # pull requests merge unchecked, so this one holds from the start. gh-merge-green reads the value
       # from the base's copy.
       - name: Hold high until a person looked

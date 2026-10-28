@@ -1,3 +1,3 @@
-import CmuxCloud
+import HmuxCloud
 
 extension CloudWorkspaceOperationController: CloudTerminalNavigationScheduling {}

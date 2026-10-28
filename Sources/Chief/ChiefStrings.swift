@@ -1,4 +1,4 @@
-import CmuxHomeCore
+import HmuxHomeCore
 import Foundation
 
 /// Every user-facing string of the classic Chief UI (`Resources/Localizable.xcstrings`).
@@ -6,13 +6,13 @@ import Foundation
 enum ChiefStrings {
     // MARK: Names
 
-    /// The persistent Home destination in cmux's left sidebar.
+    /// The persistent Home destination in hmux's left sidebar.
     static var home: String {
         String(localized: "sidebar.home.title", defaultValue: "Home")
     }
 
     /// The Chief's name: a new conversation's Chief and an untitled row's title.
-    /// A proper name, never translated (cmux-next keeps "Chief" in every locale).
+    /// A proper name, never translated (hmux-next keeps "Chief" in every locale).
     static let chiefName = "Chief"
     static var unavailable: String {
         String(localized: "chief.unavailable", defaultValue: "Chief couldn’t start. Its conversations folder can’t be opened.")

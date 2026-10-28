@@ -14,7 +14,7 @@ There are two independent changes in the history, and three costs in this run:
   (`f7f61ef720`), introduced the Cloud surface/remote-daemon path and both
   device-name helpers that call `ProcessInfo.processInfo.hostName`. Previously
   the CLI used the Go daemon's WebSocket/SSH attach path. Both paths needed
-  connection setup; `cmux_remote_info` alone is not evidence of a new handshake.
+  connection setup; `hmux_remote_info` alone is not evidence of a new handshake.
 - [#11602](https://github.com/manaflow-ai/cmux/pull/11602) and
   [#11789](https://github.com/manaflow-ai/cmux/pull/11789), merged September 2
   and 5, added per-account private networks and the shared userspace WireGuard
@@ -61,7 +61,7 @@ not 58.948 s. This measures CLI completion, not the exact first painted prompt.
 
 These are nested/overlapping observations, not rows to sum. A background link
 also called attach-endpoint (1.721 s client / 1.666 s server), overlapping the
-shared tunnel enrollment. `cmux_remote_info`'s 49.540 s aggregates status,
+shared tunnel enrollment. `hmux_remote_info`'s 49.540 s aggregates status,
 attach-endpoint, enrollment and route readiness. `surface_new_terminal`'s
 9.327 s includes waiting for the link/catalog and projecting an existing terminal;
 it does not prove that terminal allocation itself took nine seconds.
@@ -75,7 +75,7 @@ changing retry intervals or exposing a public fallback would not repair it.
 
 - `mDNSResponder` records the 56 PTR requests under app PID 96305. They begin
   immediately after `CloudMachineLink.connect` reaches the call to
-  `CloudTuiClientPaths.deviceName()`. The `cmux-tui wg hub` child (PID 44605)
+  `CloudTuiClientPaths.deviceName()`. The `hmux-tui wg hub` child (PID 44605)
   had just resolved its provider endpoint with A/AAAA queries and become ready.
 - A process-local Objective-C probe replaces `NSHost.name` with a sentinel.
   Calling `NSProcessInfo.hostName` returns that sentinel. The probe runs with
@@ -89,7 +89,7 @@ changing retry intervals or exposing a public fallback would not repair it.
   prompt. This evidence implicates Foundation's hostname resolution, not
   Bonjour service discovery, the WireGuard child, or private backend routing.
 - macOS may attribute a helper's network request to its parent app; the wording
-  “A program running within cmux” is static metadata, not proof of child
+  “A program running within hmux” is static metadata, not proof of child
   attribution. Here the DNS requests identify the app PID directly.
 
 Apple documents that local DNS resolution can require Local Network permission,
@@ -103,7 +103,7 @@ state and needs neither DNS nor LAN access.
 ## Fix and proof
 
 `RemoteClientDeviceName` owns the app/CLI derivation and uses `gethostname` with
-a bounded buffer. Missing hostnames retain `cmux-mac`. Existing sanitization,
+a bounded buffer. Missing hostnames retain `hmux-mac`. Existing sanitization,
 prefix and 40-character limit are preserved. The label may now reflect the
 configured local hostname rather than a DNS canonical name; it is not an
 authentication key, grant, machine ID or persistent connection identity.
@@ -124,18 +124,18 @@ enrollment name) does not call that resolver; the problematic API is
 Commands:
 
 ```sh
-CMUX_CLI_BIN=<built-cli> python3 tests/test_cli_cloud_hostname.py
+HMUX_CLI_BIN=<built-cli> python3 tests/test_cli_cloud_hostname.py
 python3 scripts/swift_file_length_budget.py
 ```
 
 The regression-only commit `b0b56530a4` fails against the reported main CLI:
-`cmux-resolver-must-not-run` instead of the kernel hostname. Hosted baseline CI:
+`hmux-resolver-must-not-run` instead of the kernel hostname. Hosted baseline CI:
 https://github.com/manaflow-ai/cmux/actions/runs/35475513195.
 
 ## Independent live transport baseline
 
 `web/scripts/cloud-vm/bench-private-link.ts --trials 2` used the reported app's
-bundled cmux-tui client (`cbe279df124f8ba930b0252364dcf293a409d794`) and the current
+bundled hmux-tui client (`cbe279df124f8ba930b0252364dcf293a409d794`) and the current
 md image `sh-0b6a5ee6edfd490795e0e5d556f5adf5`, daemon `f3b652d8dcfb`.
 It created its own network, tunnel and machines and cleaned them up. The
 hostname is supplied explicitly, so there is no Foundation hostname lookup.
@@ -162,7 +162,7 @@ creation still felt slow. The new trace separates the remaining cost:
 | Phase | Time |
 | --- | ---: |
 | Create | 2.901 s |
-| `cmux_remote_info` | 49.770 s |
+| `hmux_remote_info` | 49.770 s |
 | `surface_new_terminal` | 0.824 s |
 | Post-create completion | 50.730 s |
 | Create plus completion | 53.631 s |

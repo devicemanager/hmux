@@ -69,7 +69,7 @@ def test_stays_in_sync_with_the_checker() -> None:
 
 def test_skips_when_nothing_relevant_changed() -> None:
     check("swift-only change skips", run([mod("apps/mac/Sources/App.swift")]) is False)
-    check("ios-only change skips", run([mod("ios/cmux/ContentView.swift"), mod("Package.resolved")]) is False)
+    check("ios-only change skips", run([mod("ios/hmux/ContentView.swift"), mod("Package.resolved")]) is False)
     check(
         "web locales and docs skip",
         run([mod("web/messages/en.json"), mod("web/README.md"), mod("web/public/logo.svg")]) is False,

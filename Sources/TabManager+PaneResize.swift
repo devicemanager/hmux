@@ -1,5 +1,5 @@
 import Foundation
-import CmuxPanes
+import HmuxPanes
 
 extension TabManager {
     /// Resize split - not directly supported by bonsplit, but we can adjust divider positions

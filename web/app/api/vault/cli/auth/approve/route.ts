@@ -12,7 +12,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedCliAuthApiRoute(
     request,
     "/api/vault/cli/auth/approve",
-    { "cmux.vault.operation": "cli_auth.approve" },
+    { "hmux.vault.operation": "cli_auth.approve" },
     "/api/vault/cli/auth/approve POST failed",
     {},
     async ({ user, span }) => {
@@ -22,7 +22,7 @@ export async function POST(request: Request): Promise<Response> {
       }
       const userCode = typeof body.value.userCode === "string" ? body.value.userCode.trim().toUpperCase() : "";
       if (!/^[A-Z2-9]{8}$/.test(userCode)) {
-        setSpanAttributes(span, { "cmux.vault.cli_auth.approved": false });
+        setSpanAttributes(span, { "hmux.vault.cli_auth.approved": false });
         return jsonResponse({ error: "invalid_user_code" }, 400);
       }
 
@@ -43,7 +43,7 @@ export async function POST(request: Request): Promise<Response> {
         .orderBy(vaultCliAuthRequests.createdAt)
         .limit(1);
       if (!pending) {
-        setSpanAttributes(span, { "cmux.vault.cli_auth.approved": false });
+        setSpanAttributes(span, { "hmux.vault.cli_auth.approved": false });
         return jsonResponse({ error: "auth_request_not_pending" }, 409);
       }
 
@@ -60,10 +60,10 @@ export async function POST(request: Request): Promise<Response> {
         .returning({ id: vaultCliAuthRequests.id });
 
       if (!updated) {
-        setSpanAttributes(span, { "cmux.vault.cli_auth.approved": false });
+        setSpanAttributes(span, { "hmux.vault.cli_auth.approved": false });
         return jsonResponse({ error: "auth_request_not_pending" }, 409);
       }
-      setSpanAttributes(span, { "cmux.vault.cli_auth.approved": true });
+      setSpanAttributes(span, { "hmux.vault.cli_auth.approved": true });
       return jsonResponse({ ok: true });
     },
   );

@@ -21,7 +21,7 @@ import { reportError } from "./report";
 import { durableVmAlertStateStore, type VmAlertStateStore } from "./vmAlerts";
 
 export const CODEROUTER_ALERT_WINDOW_MINUTES = 5;
-export const CODEROUTER_ALERT_SINK_ACK_ENV = "CMUX_ALERTS_SINK_UNCONFIGURED_ACK";
+export const CODEROUTER_ALERT_SINK_ACK_ENV = "HMUX_ALERTS_SINK_UNCONFIGURED_ACK";
 export const CODEROUTER_SCHEMA_DRIFT_ALERT_KEY = "coderouter-clickhouse-schema-drift";
 
 /**
@@ -33,7 +33,7 @@ export const CODEROUTER_SCHEMA_DRIFT_ALERT_KEY = "coderouter-clickhouse-schema-d
 export function coderouterAlertSinkReady(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
-  if (env.CMUX_ALERTS_SLACK_WEBHOOK_URL?.trim()) return true;
+  if (env.HMUX_ALERTS_SLACK_WEBHOOK_URL?.trim()) return true;
   const acknowledgement = env[CODEROUTER_ALERT_SINK_ACK_ENV]?.trim();
   return Boolean(acknowledgement && acknowledgement !== "[SENSITIVE]");
 }
@@ -141,7 +141,7 @@ export async function runCoderouterAlertChecks(
 ): Promise<CoderouterAlertSummary> {
   const env = dependencies.env ?? process.env;
   const rawSend = dependencies.sendAlert ?? ((input: AlertInput) => sendAlert(input, { fetch: dependencies.fetch, env }));
-  const configured = Boolean(env.CMUX_ALERTS_SLACK_WEBHOOK_URL?.trim());
+  const configured = Boolean(env.HMUX_ALERTS_SLACK_WEBHOOK_URL?.trim());
   const dropped: AlertInput[] = [];
   let sent = 0;
   let deliveryFailures = 0;
@@ -161,11 +161,11 @@ export async function runCoderouterAlertChecks(
   };
 
   const thresholds = {
-    routeCrashes: positiveIntegerEnv(env.CMUX_CODEROUTER_ALERT_ROUTE_CRASHES_5M, 3),
-    operatorFailures: positiveIntegerEnv(env.CMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M, 1),
-    upstreamFailures: positiveIntegerEnv(env.CMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M, 5),
-    noUsableAccount: positiveIntegerEnv(env.CMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M, 10),
-    authRejected: positiveIntegerEnv(env.CMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M, 25),
+    routeCrashes: positiveIntegerEnv(env.HMUX_CODEROUTER_ALERT_ROUTE_CRASHES_5M, 3),
+    operatorFailures: positiveIntegerEnv(env.HMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M, 1),
+    upstreamFailures: positiveIntegerEnv(env.HMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M, 5),
+    noUsableAccount: positiveIntegerEnv(env.HMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M, 10),
+    authRejected: positiveIntegerEnv(env.HMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M, 25),
   };
 
   const health = await (dependencies.health ?? coderouterHealth)().catch((error: unknown): CoderouterHealth => {
@@ -463,7 +463,7 @@ function reportDroppedCoderouterAlerts(
   env: Record<string, string | undefined>,
   dependencies: Pick<CoderouterAlertDependencies, "captureRawBatch" | "reportFailure"> = {},
 ): void {
-  if (env.VERCEL_ENV !== "production" && env.CMUX_ALERTS_REPORT_FORCE !== "1") return;
+  if (env.VERCEL_ENV !== "production" && env.HMUX_ALERTS_REPORT_FORCE !== "1") return;
   const keys = [...new Set(alerts.map((alert) => alert.key))];
   (dependencies.reportFailure ?? reportCoderouterFailure)(
     "alerts",

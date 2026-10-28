@@ -1,4 +1,4 @@
-import CmuxIrxTransport
+import HmuxIrxTransport
 import Foundation
 
 /// Borrowed connectivity resources for one authenticated Mac runtime generation.

@@ -1,5 +1,5 @@
-import CmuxSettings
-import CmuxSettingsUI
+import HmuxSettings
+import HmuxSettingsUI
 import Foundation
 
 extension KeyboardShortcutSettings {
@@ -32,29 +32,29 @@ extension KeyboardShortcutSettings {
         for action: Action,
         explicitlyConfiguredShortcut: (Action) -> StoredShortcut?
     ) -> StoredShortcut? {
-        guard let settingsAction = CmuxSettings.ShortcutAction(rawValue: action.rawValue) else {
+        guard let settingsAction = HmuxSettings.ShortcutAction(rawValue: action.rawValue) else {
             return action.defaultShortcut.isUnbound ? nil : action.defaultShortcut
         }
         return settingsAction.effectivePersistedShortcutResolvingLegacyConflicts(
             nil,
-            defaultShortcut: action.defaultShortcut.cmuxSettingsStoredShortcut,
+            defaultShortcut: action.defaultShortcut.hmuxSettingsStoredShortcut,
             explicitlyConfiguredShortcut: { settingsConfiguredAction in
                 guard let configuredAction = Action(rawValue: settingsConfiguredAction.rawValue) else {
                     return nil
                 }
-                return explicitlyConfiguredShortcut(configuredAction)?.cmuxSettingsStoredShortcut
+                return explicitlyConfiguredShortcut(configuredAction)?.hmuxSettingsStoredShortcut
             },
             bindingsConflict: { proposed, settingsConfiguredAction, configured in
                 guard let configuredAction = Action(rawValue: settingsConfiguredAction.rawValue) else {
                     return false
                 }
                 return configuredAction.conflicts(
-                    with: StoredShortcut(cmuxSettingsStoredShortcut: proposed),
+                    with: StoredShortcut(hmuxSettingsStoredShortcut: proposed),
                     proposedAction: action,
-                    configuredShortcut: StoredShortcut(cmuxSettingsStoredShortcut: configured)
+                    configuredShortcut: StoredShortcut(hmuxSettingsStoredShortcut: configured)
                 )
             }
-        ).map(StoredShortcut.init(cmuxSettingsStoredShortcut:))
+        ).map(StoredShortcut.init(hmuxSettingsStoredShortcut:))
     }
 
     static func shortcut(for action: Action) -> StoredShortcut {
@@ -104,7 +104,7 @@ extension KeyboardShortcutSettings {
         settingsFileStore.isManagedByFile(action)
     }
 
-    /// Whether the user persisted a binding for `action`, either in cmux.json
+    /// Whether the user persisted a binding for `action`, either in hmux.json
     /// or the legacy UserDefaults store. Used to preserve the precedence of an
     /// existing binding when a newly introduced default reuses its keystroke.
     static func hasExplicitShortcutOverride(for action: Action) -> Bool {
@@ -113,7 +113,7 @@ extension KeyboardShortcutSettings {
     }
 
     /// The effective focus predicate gating `action`: the `shortcuts.when`
-    /// override from cmux.json if present, otherwise the action's built-in
+    /// override from hmux.json if present, otherwise the action's built-in
     /// ``KeyboardShortcutSettings/Action/shortcutContext`` expressed as a
     /// ``ShortcutWhenClause``. Drives both runtime availability and conflict
     /// detection so the same keystroke can be context-routed.
@@ -135,7 +135,7 @@ extension KeyboardShortcutSettings {
 
     static func settingsFileManagedSubtitle(for action: Action) -> String? {
         guard isManagedBySettingsFile(action) else { return nil }
-        return String(localized: "settings.shortcuts.managedByFile", defaultValue: "Managed in cmux.json")
+        return String(localized: "settings.shortcuts.managedByFile", defaultValue: "Managed in hmux.json")
     }
 }
 

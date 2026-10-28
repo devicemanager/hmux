@@ -4,7 +4,7 @@
 #
 #   scripts/ci/finalize-sparkle-deltas.sh <appcast.xml> <archives-dir> <out-dir> <name-prefix>
 #
-# generate_appcast writes "<app name><new>-<old>.delta" (e.g. "cmux NIGHTLY123-100.delta")
+# generate_appcast writes "<app name><new>-<old>.delta" (e.g. "hmux NIGHTLY123-100.delta")
 # into <archives-dir>. The name carries a space, which GitHub rewrites on
 # upload, and it is identical for every per-architecture track. Each delta is
 # moved to <out-dir>/<name-prefix><new>-<old>.delta and the appcast's URL for

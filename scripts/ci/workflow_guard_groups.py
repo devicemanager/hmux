@@ -73,7 +73,7 @@ PATH_OWNERS = {
     ".github/workflows/ci-web.yml": frozenset(GROUPS),
     ".github/workflows/web-complexity.yml": frozenset(("ci",)),
     ".github/workflows/web-complexity-trusted.yml": frozenset(("ci",)),
-    ".github/workflows/cmux-next-pr-merge-tree.yml": frozenset(("ci",)),
+    ".github/workflows/hmux-next-pr-merge-tree.yml": frozenset(("ci",)),
     "scripts/ci/publish_pr_merge_tree.py": frozenset(("ci",)),
     ".github/workflows/iroh-v2-production-drift.yml": frozenset(("ci",)),
     "tests/test_iroh_drift_issue.py": frozenset(("ci",)),
@@ -119,7 +119,7 @@ PATH_OWNERS = {
     "scripts/ci/merge_main_resolver.py": frozenset(("preflight", "ci")),
     "scripts/merge-xcstrings.py": frozenset(("ci",)),
     "scripts/normalize-pbxproj.py": frozenset(("ci",)),
-    "scripts/generate-cmux-config-schema.py": frozenset(("ci",)),
+    "scripts/generate-hmux-config-schema.py": frozenset(("ci",)),
     # test_merge_pbxproj.py runs the merge driver, which runs the normalizer
     # above and borrows union_pbxproj from the local resolver.
     "scripts/merge-pbxproj.py": frozenset(("preflight",)),
@@ -160,7 +160,7 @@ PATH_OWNERS = {
     # runs the namespace linter, which imports the source mask.
     "scripts/lint_swift_namespaces.py": frozenset(("release-ios",)),
     "scripts/swift_source_mask.py": frozenset(("release-ios",)),
-    # test_ci_reusable_workflow_permissions.py loads it; cmux.ci.guard runs that.
+    # test_ci_reusable_workflow_permissions.py loads it; hmux.ci.guard runs that.
     "scripts/ci/check_reusable_workflow_permissions.py": frozenset(("ci",)),
     "scripts/ci/require_swift_test_execution.py": frozenset(("app-host-execution",)),
     "scripts/ci/run-swift-testing-suites.sh": frozenset(("app-host-execution",)),
@@ -195,7 +195,7 @@ PATH_OWNERS = {
     "tests/fixtures/pr_media_gate/clean.png": frozenset(("ci",)),
     "tests/fixtures/pr_media_gate/seeded-private-term.png": frozenset(("ci",)),
     # tests/test_ci_pr_media_privacy.py runs its upload() through the gate.
-    "dogfood/fuzz/cmuxfuzz/triage.py": frozenset(("ci",)),
+    "dogfood/fuzz/hmuxfuzz/triage.py": frozenset(("ci",)),
     ".github/workflows/pr-media-privacy.yml": frozenset(("ci",)),
     # detect_ci_change_areas.py imports this to decide the swift-package-tests
     # route, so the ci group's router tests observe an edit to it even though
@@ -207,10 +207,10 @@ PATH_OWNERS = {
     "scripts/ci/package_interface_fingerprint.py": frozenset(("ci",)),
     "scripts/ci/swift_incremental_diagnostics.py": frozenset(("preflight",)),
     "scripts/ci/test_execution_registry.py": frozenset(("preflight",)),
-    "skills/cmux-cloud-vm/SKILL.md": frozenset(("preflight",)),
-    "skills/cmux-cloud-vm/references/agent-workflows.md": frozenset(("preflight",)),
-    "skills/cmux-cloud-vm/references/commands.md": frozenset(("preflight",)),
-    "skills/cmux-cloud-vm/references/guest.md": frozenset(("preflight",)),
+    "skills/hmux-cloud-vm/SKILL.md": frozenset(("preflight",)),
+    "skills/hmux-cloud-vm/references/agent-workflows.md": frozenset(("preflight",)),
+    "skills/hmux-cloud-vm/references/commands.md": frozenset(("preflight",)),
+    "skills/hmux-cloud-vm/references/guest.md": frozenset(("preflight",)),
     "tests/test-execution.toml": frozenset(("preflight",)),
 }
 
@@ -223,7 +223,7 @@ ROUTING_POLICY_PATHS = frozenset({
     "scripts/ci/detect_linux_guard_changes.py",
     "scripts/ci/workflow_guard_groups.py",
     "scripts/ci/workload_entrypoints.py",
-    "scripts/ci/cmux-workload-profiles.json",
+    "scripts/ci/hmux-workload-profiles.json",
     "tests/test_ci_change_areas.py",
     "tests/test_ci_fork_runner_routing.py",
     "tests/test_ci_linux_guard_routing.py",
@@ -240,8 +240,8 @@ def _python_syntax_scan(path: str) -> bool:
 def _determinism_scan(path: str) -> bool:
     if not path.endswith(DETERMINISM_SUFFIXES):
         return False
-    if path.startswith(("cmuxTests/", "cmuxCLITests/", "cmuxCLITestSupport/",
-                        "cmuxUITests/", "ios/cmuxUITests/",
+    if path.startswith(("hmuxTests/", "hmuxCLITests/", "hmuxCLITestSupport/",
+                        "hmuxUITests/", "ios/hmuxUITests/",
                         "tests/", "tests_v2/", "web/tests/", "webviews/test/")):
         return True
     return path.startswith("Packages/") and "/Tests/" in path

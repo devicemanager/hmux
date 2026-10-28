@@ -1,7 +1,7 @@
 import AppKit
-import CmuxSettings
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxSettings
+import HmuxTerminal
+import HmuxTerminalCore
 import GhosttyKit
 
 final class GhosttyPassthroughVisualEffectView: NSVisualEffectView {
@@ -16,7 +16,7 @@ final class GhosttyPassthroughVisualEffectView: NSVisualEffectView {
 /// foreground program has echo off for a password prompt, optionally with one
 /// dot per typed character.
 ///
-/// Drawn in cmux chrome only; nothing is written to the terminal. The view
+/// Drawn in hmux chrome only; nothing is written to the terminal. The view
 /// holds a keystroke count through ``TerminalPasswordInputIndicatorState`` and
 /// never sees, stores, or logs the typed characters.
 final class TerminalPasswordInputIndicatorView: NSView {
@@ -234,7 +234,7 @@ extension GhosttyNSView {
     /// the view's full bounds would hide AppKit's edge and corner resize cursors.
     func terminalCursorRect() -> NSRect {
         guard let window,
-              window is CmuxMainWindow,
+              window is HmuxMainWindow,
               window.styleMask.contains(.resizable),
               window.styleMask.contains(.fullSizeContentView),
               !window.styleMask.contains(.fullScreen)

@@ -138,7 +138,7 @@ export type PaidBillingProvisionResult =
   | Awaited<ReturnType<typeof recordProCheckoutCompletionByEmail>>;
 
 /**
- * Locate a paid cmux checkout by canonical email.
+ * Locate a paid hmux checkout by canonical email.
  *
  * Local ownership rows are checked first because they are the durable record
  * written by the webhook. A bounded Stripe read repairs the case where the
@@ -331,7 +331,7 @@ async function findLocalPurchase(
       const metadata = isRecord(raw.metadata) ? raw.metadata : {};
       const isFounder = metadata.founders_edition === "true";
       const app = metadata.app;
-      if (app && app !== "cmux" && !isFounder) continue;
+      if (app && app !== "hmux" && !isFounder) continue;
       if (
         !isFounder &&
         !["active", "trialing", "past_due"].includes(row.subscriptionStatus)
@@ -483,10 +483,10 @@ async function purchaseFromStripeCustomer(
       // as an ordinary Pro subscription after the Founder branch rejects it.
       continue;
     }
-    const isCmuxPro = metadata.app === "cmux" && metadata.plan === "pro";
+    const isHmuxPro = metadata.app === "hmux" && metadata.plan === "pro";
     const isFounder = isFounderRecoveryPurchase(undefined, subscription);
     if (metadata.stackTeamId) continue;
-    if (!isCmuxPro && !isFounder) continue;
+    if (!isHmuxPro && !isFounder) continue;
     if (isFounder) {
       // A subscription record alone is not payment proof. Stripe can create
       // an incomplete subscription before the first invoice is paid. Require
@@ -563,7 +563,7 @@ function isSettledFounderCheckoutSession(
   }
   if (stringID(session.subscription) !== subscriptionId) return false;
   if (session.metadata?.stackTeamId) return false;
-  if (session.metadata?.app && session.metadata.app !== "cmux") {
+  if (session.metadata?.app && session.metadata.app !== "hmux") {
     return false;
   }
   return true;
@@ -648,11 +648,11 @@ function isFounderRecoveryPurchase(
   if (hasConflictingFounderMetadata({ metadata: sessionMetadata ?? null }, subscription)) {
     return false;
   }
-  if (sessionMetadata?.app && sessionMetadata.app !== "cmux") return false;
+  if (sessionMetadata?.app && sessionMetadata.app !== "hmux") return false;
   if (
     !sessionMetadata?.app &&
     subscription?.metadata?.app &&
-    subscription.metadata.app !== "cmux"
+    subscription.metadata.app !== "hmux"
   ) {
     return false;
   }
@@ -671,14 +671,14 @@ function isRecognizedRecoveryMetadata(
   }
   if (sessionMetadata?.app) {
     return (
-      sessionMetadata.app === "cmux" &&
+      sessionMetadata.app === "hmux" &&
       (sessionMetadata.plan === "pro" ||
         sessionMetadata.founders_edition === "true")
     );
   }
   if (subscription?.metadata?.app) {
     return (
-      subscription.metadata.app === "cmux" &&
+      subscription.metadata.app === "hmux" &&
       (subscription.metadata.plan === "pro" ||
         subscription.metadata.founders_edition === "true")
     );

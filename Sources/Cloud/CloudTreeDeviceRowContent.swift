@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// Another Mac's header row, on the same grid as the cloud machine rows: the
@@ -13,7 +13,7 @@ struct CloudTreeDeviceRowContent: View {
     var style: CloudTreeStyle = CloudTreeStyleStore.current
     /// Injected so rows never read the wall clock in `body` on their own.
     var now: Date = Date()
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var fontMagnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var fontMagnification
 
     var body: some View {
         CloudTreeMachineBand(style: style) {
@@ -31,7 +31,7 @@ struct CloudTreeDeviceRowContent: View {
                 .frame(height: scaled(style.machineNameLineHeight))
                 if style.machineRowLayout == .twoLine {
                     Text(Self.subtitle(row, now: now))
-                        .cmuxFont(size: style.detailSize, design: style.fontDesign)
+                        .hmuxFont(size: style.detailSize, design: style.fontDesign)
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -50,7 +50,7 @@ struct CloudTreeDeviceRowContent: View {
 
     private func name(weight: Font.Weight) -> some View {
         Text(row.name)
-            .cmuxFont(size: style.machineNameSize, weight: weight, design: style.fontDesign)
+            .hmuxFont(size: style.machineNameSize, weight: weight, design: style.fontDesign)
             .foregroundStyle(row.isOnline ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
             .lineLimit(1)
             .truncationMode(.tail)
@@ -61,7 +61,7 @@ struct CloudTreeDeviceRowContent: View {
     private var tag: some View {
         if let tagLabel = row.tagLabel {
             Text(tagLabel)
-                .cmuxFont(size: style.detailSize, design: style.fontDesign)
+                .hmuxFont(size: style.detailSize, design: style.fontDesign)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .truncationMode(.tail)
@@ -71,7 +71,7 @@ struct CloudTreeDeviceRowContent: View {
     /// The failure color a failed create uses; every other status stays tertiary.
     private func statusText(_ status: String) -> some View {
         Text(status)
-            .cmuxFont(size: style.detailSize, design: style.fontDesign)
+            .hmuxFont(size: style.detailSize, design: style.fontDesign)
             .foregroundStyle(row.indicator == .attention ? AnyShapeStyle(Color.orange.opacity(0.9)) : AnyShapeStyle(.tertiary))
             .lineLimit(1)
             .truncationMode(.tail)

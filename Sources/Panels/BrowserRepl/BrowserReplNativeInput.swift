@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import WebKit
 
 /// Builds the AppKit events the REPL driver sends to WebKit.
@@ -299,7 +299,7 @@ enum BrowserReplNativeInput {
 
     /// Stops `webView`'s web content process (WebKit's
     /// `_killWebContentProcess`), so nothing it was still doing reaches the
-    /// app; the tab then shows WebKit's crash and cmux reloads it as after
+    /// app; the tab then shows WebKit's crash and hmux reloads it as after
     /// any crash. Returns `false` when this WebKit has no way to stop it.
     static func stopWebContentProcess(_ webView: WKWebView) -> Bool {
         let selector = NSSelectorFromString("_killWebContentProcess")

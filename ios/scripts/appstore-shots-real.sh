@@ -5,7 +5,7 @@
 # genuine agent output rather than recorded fixtures.
 #
 # Prerequisites:
-#   - a tagged Mac cmux running with real agent sessions in named workspaces
+#   - a tagged Mac hmux running with real agent sessions in named workspaces
 #   - the same-tag iOS app installed, SIGNED IN, and PAIRED on the target sim
 #     (scripts/mobile-dev-launch.sh --tag <tag> --simulator-id <udid>); this
 #     driver never relaunches the signed-in app: a bare `simctl launch` wipes
@@ -13,7 +13,7 @@
 #   - axe + idb installed; the sim booted with a 9:41 status-bar override
 #
 # Usage: appstore-shots-real.sh --udid <sim-udid> [--class iphone|ipad]
-#        [--bundle-id dev.cmux.ios.shots] [--out <dir>] [--prompt <text>]
+#        [--bundle-id dev.hmux.ios.shots] [--out <dir>] [--prompt <text>]
 #        [--reply-text <text>] [--skip-lockshot]
 #
 # Writes fastlane-style names (<Device Name>-<Shot>.png) into
@@ -24,7 +24,7 @@ set -euo pipefail
 
 HERE="$(cd "$(dirname "$0")" && pwd)"
 WORK="$(dirname "$HERE")/fastlane/appstore-shots-work"
-UDID="" CLASS="iphone" BUNDLE_ID="dev.cmux.ios.shots" OUT="" SKIP_LOCK=0
+UDID="" CLASS="iphone" BUNDLE_ID="dev.hmux.ios.shots" OUT="" SKIP_LOCK=0
 PROMPT_TEXT="Add Apple Pay to the checkout flow and cover it with tests"
 REPLY_TEXT="Looks great, merge it and start the deploy"
 while [ $# -gt 0 ]; do
@@ -356,9 +356,9 @@ sleep 1
 # replaces the live paired foreground session, just like the lock-shot leg.
 if [ "$CLASS" = ipad ]; then
   xcrun simctl terminate "$UDID" "$BUNDLE_ID" 2>/dev/null || true
-  SIMCTL_CHILD_CMUX_UITEST_MOCK_DATA=1 \
-  SIMCTL_CHILD_CMUX_UITEST_WORKSPACE_LIST_PREVIEW=1 \
-  SIMCTL_CHILD_CMUX_UITEST_NOTIFICATION_BANNER=1 \
+  SIMCTL_CHILD_HMUX_UITEST_MOCK_DATA=1 \
+  SIMCTL_CHILD_HMUX_UITEST_WORKSPACE_LIST_PREVIEW=1 \
+  SIMCTL_CHILD_HMUX_UITEST_NOTIFICATION_BANNER=1 \
     xcrun simctl launch "$UDID" "$BUNDLE_ID" >/dev/null
   sleep 2
   axe tap --label "Allow" --udid "$UDID" >/dev/null 2>&1 || true
@@ -376,15 +376,15 @@ if [ "$CLASS" = "iphone" ] && [ "$SKIP_LOCK" = "0" ]; then
   xcrun simctl status_bar "$UDID" override --time "9:41" --dataNetwork wifi \
     --wifiMode active --wifiBars 3 --cellularMode active --cellularBars 4 \
     --batteryState charging --batteryLevel 100
-  SIMCTL_CHILD_CMUX_UITEST_MOCK_DATA=1 \
-  SIMCTL_CHILD_CMUX_UITEST_WORKSPACE_LIST_PREVIEW=1 \
-  SIMCTL_CHILD_CMUX_UITEST_NOTIFICATION_BANNER=reply \
+  SIMCTL_CHILD_HMUX_UITEST_MOCK_DATA=1 \
+  SIMCTL_CHILD_HMUX_UITEST_WORKSPACE_LIST_PREVIEW=1 \
+  SIMCTL_CHILD_HMUX_UITEST_NOTIFICATION_BANNER=reply \
     xcrun simctl launch "$UDID" "$BUNDLE_ID" >/dev/null
   sleep 2.5
   idb ui button --udid "$UDID" LOCK
   sleep 6
   wait_label "Claude finished" 15 contains || true
-  XY="$(ax_find "Claude finished" contains || ax_find "cmux agent" contains || echo "220 680")"
+  XY="$(ax_find "Claude finished" contains || ax_find "hmux agent" contains || echo "220 680")"
   cx="${XY%% *}"; cy="${XY##* }"
   # Try a real HID long press first. Some simulator runtimes expose the
   # notification's View action only after the notification is swiped left, so

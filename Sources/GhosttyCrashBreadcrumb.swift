@@ -12,14 +12,14 @@ enum GhosttyCrashBreadcrumb {
 
     private static let sessionLifecycleDirectoryName = "lifecycle"
     private static let sessionLaunchSentinelFileName = "running.sentinel"
-    private static let fallbackBundleIdentifier = "com.cmuxterm.app"
+    private static let fallbackBundleIdentifier = "com.hmuxterm.app"
 
     nonisolated static var defaultCrashDirectoryURL: URL {
-        SessionPersistencePolicy.defaultCmuxCrashDirectoryURL()
+        SessionPersistencePolicy.defaultHmuxCrashDirectoryURL()
     }
 
     nonisolated static var defaultCrashDirectoryURLs: [URL] {
-        SessionPersistencePolicy.cmuxCrashDirectoryURLs()
+        SessionPersistencePolicy.hmuxCrashDirectoryURLs()
     }
 
     #if compiler(>=6.2)
@@ -219,12 +219,12 @@ enum GhosttyCrashBreadcrumb {
                 fileURLWithPath: (xdgStateHome as NSString).expandingTildeInPath,
                 isDirectory: true
             )
-            .appendingPathComponent("cmux", isDirectory: true)
+            .appendingPathComponent("hmux", isDirectory: true)
         } else {
             stateRoot = homeDirectory
                 .appendingPathComponent(".local", isDirectory: true)
                 .appendingPathComponent("state", isDirectory: true)
-                .appendingPathComponent("cmux", isDirectory: true)
+                .appendingPathComponent("hmux", isDirectory: true)
         }
 
         return stateRoot
@@ -234,7 +234,7 @@ enum GhosttyCrashBreadcrumb {
     }
 
     private static func sessionLifecycleScope(environment: [String: String]) -> String {
-        let rawBundleIdentifier = environment["CMUX_BUNDLE_ID"]
+        let rawBundleIdentifier = environment["HMUX_BUNDLE_ID"]
             ?? Bundle.main.bundleIdentifier
             ?? fallbackBundleIdentifier
         let trimmedBundleIdentifier = rawBundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)

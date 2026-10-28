@@ -11,8 +11,8 @@ type Env = Record<string, string | undefined>;
 export const APPLE_MANAGE_SUBSCRIPTIONS_URL = "https://apps.apple.com/account/subscriptions";
 
 /** The App Store app; App Review purchases arrive from it in the Sandbox. */
-export const APP_STORE_BUNDLE_ID = "com.cmux.app";
-const DEFAULT_BUNDLE_IDS = [APP_STORE_BUNDLE_ID, "dev.cmux.app.beta"] as const;
+export const APP_STORE_BUNDLE_ID = "com.hmux.app";
+const DEFAULT_BUNDLE_IDS = [APP_STORE_BUNDLE_ID, "dev.hmux.app.beta"] as const;
 const DEFAULT_APP_APPLE_ID = 6783338052;
 
 /** Environments whose payloads carry an App Store signature. */
@@ -117,7 +117,7 @@ export function appleServerApiCredentials(env: Env = process.env): AppleServerAp
 }
 
 /**
- * Lowercased cmux account emails whose Sandbox purchases of the App Store
+ * Lowercased hmux account emails whose Sandbox purchases of the App Store
  * bundle grant a plan in production (`APPLE_IAP_SANDBOX_ACCOUNT_EMAILS`,
  * comma-separated). App Review's demo account must be listed, or App Review
  * sees no products.
@@ -127,7 +127,7 @@ export function appleSandboxAccountEmails(env: Env = process.env): readonly stri
 }
 
 /**
- * Whether the Sandbox decision depends on the cmux account's email. True only
+ * Whether the Sandbox decision depends on the hmux account's email. True only
  * in a production deployment without an `APPLE_IAP_SANDBOX_ENTITLEMENTS`
  * override, so other callers never need to read the email.
  */
@@ -138,7 +138,7 @@ export function appleSandboxGrantNeedsAccountEmail(env: Env = process.env): bool
 /**
  * Whether a Sandbox subscription may grant a real plan here. Sandbox
  * purchases are free, so production grants them only for the App Store
- * bundle and only to cmux accounts in `APPLE_IAP_SANDBOX_ACCOUNT_EMAILS`
+ * bundle and only to hmux accounts in `APPLE_IAP_SANDBOX_ACCOUNT_EMAILS`
  * (App Review's demo account and the team's own testers). Any other TestFlight
  * tester stays unentitled. Other deployments grant every Sandbox purchase.
  * `APPLE_IAP_SANDBOX_ENTITLEMENTS` overrides both with `all`, `none`, or a

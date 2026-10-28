@@ -132,7 +132,7 @@ test("another session's code in the agent world cannot redirect a session's refs
   const { primary } = servers.origins;
   try {
     const tamper = `() => {
-      const K = Symbol.for("cmux.browserRepl.agent");
+      const K = Symbol.for("hmux.browserRepl.agent");
       const a = globalThis[K];
       const decoy = document.getElementById("decoy");
       const forged = { ...a, snapshot: () => ({ nodes: ["forged"], max: 0 }), queryAll: () => [a.handleFor(decoy)], refState: () => ({ live: true, max: 0 }) };
@@ -141,7 +141,7 @@ test("another session's code in the agent world cannot redirect a session's refs
         redefine: () => Object.defineProperty(globalThis, K, { value: forged }),
         replace: () => { delete globalThis[K]; globalThis[K] = forged; if (globalThis[K] !== forged) throw 0; },
         engine: () => a.injected._engines.set("aria-ref", { queryAll: () => [decoy] }),
-        resolver: () => Object.defineProperty(globalThis, "__cmuxPageAgent", { value: { resolveHandle: () => decoy } }),
+        resolver: () => Object.defineProperty(globalThis, "__hmuxPageAgent", { value: { resolveHandle: () => decoy } }),
         deref: () => { WeakRef.prototype.deref = function () { return decoy; }; },
         mapGet: () => { const get = Map.prototype.get; Map.prototype.get = function (k) { const v = get.call(this, k); return v && typeof v.deref === "function" ? new WeakRef(decoy) : v; }; },
       };

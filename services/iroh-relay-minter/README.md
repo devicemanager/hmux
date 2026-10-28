@@ -1,12 +1,12 @@
 # Iroh relay-token minter
 
-This Vercel Rust project is the only cmux service allowed to hold the Iroh
+This Vercel Rust project is the only hmux service allowed to hold the Iroh
 Services project credential. It converts a short-lived request authenticated by
-the cmux web trust broker into a 24-hour, endpoint-scoped RCAN containing only
+the hmux web trust broker into a 24-hour, endpoint-scoped RCAN containing only
 `relay:use`.
 
 Deploy this directory as a separate Vercel project. Set its Root Directory to
-`services/iroh-relay-minter`. Do not add `IROH_SERVICES_API_SECRET` to the cmux
+`services/iroh-relay-minter`. Do not add `IROH_SERVICES_API_SECRET` to the hmux
 web project because Vercel environment variables are project-wide.
 
 ## Environment
@@ -15,27 +15,27 @@ The minter project requires:
 
 - `IROH_SERVICES_API_SECRET`: the rotated Iroh Services project secret. It is
   parsed by `iroh-services` 1.0.0 and is never returned or logged.
-- `CMUX_IROH_MINT_HMAC_SECRET_B64`: 32 to 256 random bytes encoded as canonical
+- `HMUX_IROH_MINT_HMAC_SECRET_B64`: 32 to 256 random bytes encoded as canonical
   standard base64. Generate a new 32-byte value with `openssl rand -base64 32`.
-- `CMUX_IROH_MINT_HMAC_PREVIOUS_SECRET_B64`: optional minter-only previous key
+- `HMUX_IROH_MINT_HMAC_PREVIOUS_SECRET_B64`: optional minter-only previous key
   accepted during a bounded rotation overlap. It must differ from the current
   key. The web project never receives this value.
 
-The web project requires the same `CMUX_IROH_MINT_HMAC_SECRET_B64` value and:
+The web project requires the same `HMUX_IROH_MINT_HMAC_SECRET_B64` value and:
 
-- `CMUX_IROH_MINT_URL=https://<minter-domain>/api/relay-token`
+- `HMUX_IROH_MINT_URL=https://<minter-domain>/api/relay-token`
 
 Rotate any Iroh Services credential previously pasted into chat or logs before
 putting it in Vercel. A Services credential rotation affects only the minter.
 
 Rotate the HMAC without an outage in this order:
 
-1. Deploy the minter with the new key in `CMUX_IROH_MINT_HMAC_SECRET_B64` and
-   the old key in `CMUX_IROH_MINT_HMAC_PREVIOUS_SECRET_B64`.
-2. Change the web project's `CMUX_IROH_MINT_HMAC_SECRET_B64` to the new key.
+1. Deploy the minter with the new key in `HMUX_IROH_MINT_HMAC_SECRET_B64` and
+   the old key in `HMUX_IROH_MINT_HMAC_PREVIOUS_SECRET_B64`.
+2. Change the web project's `HMUX_IROH_MINT_HMAC_SECRET_B64` to the new key.
 3. Keep the previous key for at least five minutes, which covers the 30-second
    request timestamp window and deployment propagation.
-4. Remove `CMUX_IROH_MINT_HMAC_PREVIOUS_SECRET_B64` from the minter.
+4. Remove `HMUX_IROH_MINT_HMAC_PREVIOUS_SECRET_B64` from the minter.
 
 The overlap changes only which HMAC key authenticates the existing fixed
 method, path, timestamp, and body-hash transcript. It does not expand the
@@ -53,9 +53,9 @@ such as `charset=utf-8`, no query string, and this body:
 
 The web service sends:
 
-- `x-cmux-iroh-timestamp`: canonical Unix seconds, within 30 seconds of the
+- `x-hmux-iroh-timestamp`: canonical Unix seconds, within 30 seconds of the
   minter clock.
-- `x-cmux-iroh-signature`: unpadded base64url HMAC-SHA256 over the transcript
+- `x-hmux-iroh-signature`: unpadded base64url HMAC-SHA256 over the transcript
   below.
 
 ```text
@@ -90,9 +90,9 @@ For authenticated local dogfood, the example server binds only to loopback and
 uses the same request handler as the Vercel function:
 
 ```sh
-CMUX_IROH_MINT_DEV_PORT=9460 cargo run --locked --example loopback
+HMUX_IROH_MINT_DEV_PORT=9460 cargo run --locked --example loopback
 ```
 
 It still requires `IROH_SERVICES_API_SECRET` and
-`CMUX_IROH_MINT_HMAC_SECRET_B64` in the process environment. Do not use a
+`HMUX_IROH_MINT_HMAC_SECRET_B64` in the process environment. Do not use a
 credential copied through chat for a deployed environment; rotate it first.

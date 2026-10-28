@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
-# Build, sign, notarize and install a local-only cmux for macOS.
+# Build, sign, notarize and install a local-only hmux for macOS.
 #
-# A local-only build keeps to your own machines: it has no cmux account,
+# A local-only build keeps to your own machines: it has no hmux account,
 # Cloud, Iroh relays, device discovery, auto-update or telemetry, and iPhones
 # pair with it over Tailscale using one-time local pairing codes (see
 # ios/scripts/build-local-only.sh for the matching iPhone app). The app reads
-# `CMUXLocalOnly = YES` from its Info.plist and enforces those managed-device
+# `HMUXLocalOnly = YES` from its Info.plist and enforces those managed-device
 # policies itself (ManagedDevicePolicy.localOnlyEnforcedKeys).
 #
 # It installs under its own name and bundle ID, never over the official
-# com.cmuxterm.app.
+# com.hmuxterm.app.
 #
 # Settings come from .env-local in the repository root (copy
 # .env-local.template): team, bundle prefix, app name, Developer ID identity,
@@ -25,7 +25,7 @@ REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$REPO_DIR"
 # shellcheck source=lib/local-only-env.sh
 source "$REPO_DIR/scripts/lib/local-only-env.sh"
-cmux_local_only_load_env "$REPO_DIR"
+hmux_local_only_load_env "$REPO_DIR"
 
 INSTALL=1
 NOTARIZE=1
@@ -40,15 +40,15 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-TEAM_ID="$CMUX_LOCAL_TEAM_ID"
-BUNDLE_ID="$CMUX_LOCAL_MAC_BUNDLE_ID"
-APP_NAME="${CMUX_LOCAL_MAC_APP_NAME:-hmux}"
-INSTALL_DIR="${CMUX_LOCAL_MAC_INSTALL_DIR:-}"
-NOTARY_PROFILE="${CMUX_LOCAL_NOTARY_PROFILE:-}"
+TEAM_ID="$HMUX_LOCAL_TEAM_ID"
+BUNDLE_ID="$HMUX_LOCAL_MAC_BUNDLE_ID"
+APP_NAME="${HMUX_LOCAL_MAC_APP_NAME:-hmux}"
+INSTALL_DIR="${HMUX_LOCAL_MAC_INSTALL_DIR:-}"
+NOTARY_PROFILE="${HMUX_LOCAL_NOTARY_PROFILE:-}"
 [[ -n "$INSTALL_DIR" ]] || INSTALL=0
 [[ -n "$NOTARY_PROFILE" ]] || NOTARIZE=0
 
-IDENTITY="${CMUX_LOCAL_MAC_SIGNING_IDENTITY:-}"
+IDENTITY="${HMUX_LOCAL_MAC_SIGNING_IDENTITY:-}"
 if [[ -z "$IDENTITY" ]]; then
   IDENTITY="$(security find-identity -v -p codesigning \
     | sed -n "s/.*\"\(Developer ID Application: .*($TEAM_ID)\)\"/\1/p" | head -1)"
@@ -59,8 +59,8 @@ security find-identity -v -p codesigning | grep -qF "$IDENTITY" \
 
 echo "==> $APP_NAME ($BUNDLE_ID), signed by $IDENTITY"
 
-DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/cmux-local-only-mac"
-BUILT_APP="$DERIVED_DATA/Build/Products/Release/cmux.app"
+DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/hmux-local-only-mac"
+BUILT_APP="$DERIVED_DATA/Build/Products/Release/hmux.app"
 OUT_DIR="$DERIVED_DATA/LocalOnly"
 APP="$OUT_DIR/$APP_NAME.app"
 WORK_DIR="$(mktemp -d)"
@@ -69,8 +69,8 @@ trap 'rm -rf "$WORK_DIR"' EXIT
 # --- Build ---------------------------------------------------------------
 if [[ "$BUILD" -eq 1 ]]; then
 ./scripts/ensure-ghosttykit.sh
-CMUX_SKIP_ZIG_BUILD=1 xcodebuild \
-  -scheme cmux \
+HMUX_SKIP_ZIG_BUILD=1 xcodebuild \
+  -scheme hmux \
   -configuration Release \
   -derivedDataPath "$DERIVED_DATA" \
   -destination 'generic/platform=macOS' \
@@ -114,13 +114,13 @@ for index in 0 1 2; do
       ;;
   esac
 done
-for key in SUFeedURL SUPublicEDKey CMUXLocalOnly CMUXCommit; do
+for key in SUFeedURL SUPublicEDKey HMUXLocalOnly HMUXCommit; do
   pb "Delete :$key" 2>/dev/null || true
 done
 pb "Set :SUEnableAutomaticChecks false" 2>/dev/null || pb "Add :SUEnableAutomaticChecks bool false"
 pb "Set :SUAutomaticallyUpdate false" 2>/dev/null || pb "Add :SUAutomaticallyUpdate bool false"
-pb "Add :CMUXLocalOnly string YES"
-pb "Add :CMUXCommit string $(git rev-parse --short HEAD)"
+pb "Add :HMUXLocalOnly string YES"
+pb "Add :HMUXCommit string $(git rev-parse --short HEAD)"
 
 # --- Sign ----------------------------------------------------------------
 # The app keeps secrets (session encryption key, CLI socket credential) in its
@@ -131,18 +131,18 @@ pb "Add :CMUXCommit string $(git rev-parse --short HEAD)"
 # cannot be stored. The official app's group and the browser passkey
 # entitlement are never claimed. The signer also removes the Cloud tunnel
 # system extension.
-ENTITLEMENTS="$WORK_DIR/cmux-local-only.entitlements"
-cp cmux.entitlements "$ENTITLEMENTS"
+ENTITLEMENTS="$WORK_DIR/hmux-local-only.entitlements"
+cp hmux.entitlements "$ENTITLEMENTS"
 ent() { /usr/libexec/PlistBuddy -c "$1" "$ENTITLEMENTS"; }
 for key in keychain-access-groups com.apple.developer.web-browser.public-key-credential; do
   ent "Delete :$key" 2>/dev/null || true
 done
-if [[ -n "${CMUX_LOCAL_ASC_KEY_ID:-}" && -n "${CMUX_LOCAL_ASC_ISSUER_ID:-}" && -n "${CMUX_LOCAL_ASC_KEY_PATH:-}" ]]; then
+if [[ -n "${HMUX_LOCAL_ASC_KEY_ID:-}" && -n "${HMUX_LOCAL_ASC_ISSUER_ID:-}" && -n "${HMUX_LOCAL_ASC_KEY_PATH:-}" ]]; then
   identity_sha1="$(security find-identity -v -p codesigning | grep -F "$IDENTITY" | awk '{print $2}' | head -1)"
   [[ -n "$identity_sha1" ]] || { echo "error: cannot resolve the certificate hash of $IDENTITY" >&2; exit 1; }
-  ASC_API_KEY_ID="$CMUX_LOCAL_ASC_KEY_ID" \
-  ASC_API_ISSUER_ID="$CMUX_LOCAL_ASC_ISSUER_ID" \
-  ASC_API_KEY_PATH="${CMUX_LOCAL_ASC_KEY_PATH/#\~/$HOME}" \
+  ASC_API_KEY_ID="$HMUX_LOCAL_ASC_KEY_ID" \
+  ASC_API_ISSUER_ID="$HMUX_LOCAL_ASC_ISSUER_ID" \
+  ASC_API_KEY_PATH="${HMUX_LOCAL_ASC_KEY_PATH/#\~/$HOME}" \
     python3 scripts/local-only-mac-profile.py \
       --bundle-id "$BUNDLE_ID" \
       --app-name "$APP_NAME" \
@@ -159,7 +159,7 @@ else
     exit 1
   fi
 fi
-CMUX_SIGN_MODE=all ./scripts/sign-cmux-bundle.sh "$APP" "$ENTITLEMENTS" "$IDENTITY"
+HMUX_SIGN_MODE=all ./scripts/sign-hmux-bundle.sh "$APP" "$ENTITLEMENTS" "$IDENTITY"
 if [[ -d "$APP/Contents/Library/SystemExtensions" ]]; then
   echo "error: the local-only app must not carry the Cloud tunnel extension" >&2
   exit 1

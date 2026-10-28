@@ -1,5 +1,5 @@
 /**
- * Top hang signatures from opt-in cmux NEXT hang reports. Read only.
+ * Top hang signatures from opt-in hmux NEXT hang reports. Read only.
  *
  *   DATABASE_URL=... bun scripts/hang-reports-top-frames.ts [--days 7] [--channel nightly]
  *     [--min-version 0.70.0] [--limit 20] [--json] [--symbolicate DSYM_DIR]

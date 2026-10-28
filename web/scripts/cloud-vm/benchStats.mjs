@@ -79,13 +79,13 @@ export function summarizeFields(records, fields) {
 }
 
 /**
- * The provider slug of a user's owner network, `cmux-net-<sha256 prefix>`.
+ * The provider slug of a user's owner network, `hmux-net-<sha256 prefix>`.
  * Mirrors `networkSlugForUser` in services/vms/privateNetwork.ts (no secret
  * enters the hash); tests/cloud-vm-bench-stats.test.ts pins the equality so
  * the benchmark's cleanup cannot drift from the application's derivation.
  */
 export function ownerNetworkSlug(userId) {
-  return `cmux-net-${createHash("sha256").update("cmux:network:").update(userId).digest("hex").slice(0, 32)}`;
+  return `hmux-net-${createHash("sha256").update("hmux:network:").update(userId).digest("hex").slice(0, 32)}`;
 }
 
 /** Milliseconds since a `performance.now()` mark, rounded to 0.1. */

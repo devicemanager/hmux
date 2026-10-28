@@ -9,28 +9,28 @@ describe("VM create kill switch", () => {
   });
 
   test("the global flag disables creation", () => {
-    expect(vmCreateDisabledReason("freestyle", { CMUX_VM_CREATE_ENABLED: "0" })).toContain("disabled");
-    expect(vmCreateDisabledReason("freestyle", { CMUX_VM_CREATE_ENABLED: "off" })).toContain("disabled");
+    expect(vmCreateDisabledReason("freestyle", { HMUX_VM_CREATE_ENABLED: "0" })).toContain("disabled");
+    expect(vmCreateDisabledReason("freestyle", { HMUX_VM_CREATE_ENABLED: "off" })).toContain("disabled");
   });
 
   test("the provider flag names the provider it disabled", () => {
-    const env = { CMUX_VM_FREESTYLE_ENABLED: "false" };
+    const env = { HMUX_VM_FREESTYLE_ENABLED: "false" };
     expect(vmCreateDisabledReason("freestyle", env)).toContain("freestyle");
   });
 
   test("the private-network kill switch disables creation instead of selecting public ingress", () => {
-    expect(vmCreateDisabledReason("freestyle", { CMUX_VM_PRIVATE_NETWORK_ENABLED: "0" })).toBe(
+    expect(vmCreateDisabledReason("freestyle", { HMUX_VM_PRIVATE_NETWORK_ENABLED: "0" })).toBe(
       "Cloud VM creation requires private networking",
     );
   });
 
   test("an unrelated env flag does not disable creation", () => {
-    expect(vmCreateDisabledReason("freestyle", { CMUX_VM_SOME_OTHER_FLAG: "0" })).toBeNull();
+    expect(vmCreateDisabledReason("freestyle", { HMUX_VM_SOME_OTHER_FLAG: "0" })).toBeNull();
   });
 
   test("assertVmCreateEnabled throws the typed error", () => {
     try {
-      assertVmCreateEnabled("freestyle", { CMUX_VM_FREESTYLE_ENABLED: "0" });
+      assertVmCreateEnabled("freestyle", { HMUX_VM_FREESTYLE_ENABLED: "0" });
       throw new Error("expected VmCreateDisabledError");
     } catch (err) {
       expect(isVmCreateDisabledError(err)).toBe(true);

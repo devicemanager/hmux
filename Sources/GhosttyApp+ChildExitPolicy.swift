@@ -1,6 +1,6 @@
-import CMUXDebugLog
-import CmuxTerminal
-import CmuxTerminalCore
+import HMUXDebugLog
+import HmuxTerminal
+import HmuxTerminalCore
 import Foundation
 import GhosttyKit
 
@@ -16,7 +16,7 @@ extension GhosttyApp {
         ).shouldKeepSurfaceVisible(runtimeMilliseconds: message.timetime_ms)
 
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "surface.action.showChildExited tab=\(tabId?.uuidString.prefix(5) ?? "nil") " +
             "surface=\(surfaceId?.uuidString.prefix(5) ?? "nil") " +
             "runtimeMs=\(message.timetime_ms) keepVisible=\(keepSurfaceVisible ? 1 : 0)"

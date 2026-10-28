@@ -22,14 +22,14 @@ export const PRO_PRICING_USD = {
     billedAmount: 50,
     monthlyEquivalent: 50,
     discountPercent: 0,
-    lookupKey: "cmux-pro-monthly-50",
+    lookupKey: "hmux-pro-monthly-50",
   },
   // Pro is sold yearly at 20% off: 12 months for the price of 9.6.
   year: {
     billedAmount: 480,
     monthlyEquivalent: 40,
     discountPercent: 20,
-    lookupKey: "cmux-pro-yearly-480",
+    lookupKey: "hmux-pro-yearly-480",
   },
 } as const satisfies MonthlyOrYearlyPlanPricing;
 
@@ -39,7 +39,7 @@ export const GO_PRICING_USD = {
     billedAmount: 10,
     monthlyEquivalent: 10,
     discountPercent: 0,
-    lookupKey: "cmux-go-monthly-10",
+    lookupKey: "hmux-go-monthly-10",
   },
 } as const satisfies MonthlyOnlyPlanPricing;
 
@@ -48,7 +48,7 @@ export const TEAM_PRICING_USD = {
     billedAmount: 60,
     monthlyEquivalent: 60,
     discountPercent: 0,
-    lookupKey: "cmux-team-monthly-60",
+    lookupKey: "hmux-team-monthly-60",
   },
 } as const satisfies MonthlyOnlyPlanPricing;
 
@@ -62,13 +62,13 @@ export const MAX_PRICING_USD = {
     billedAmount: 200,
     monthlyEquivalent: 200,
     discountPercent: 0,
-    lookupKey: "cmux-max-monthly-200",
+    lookupKey: "hmux-max-monthly-200",
   },
   year: {
     billedAmount: 1_920,
     monthlyEquivalent: 160,
     discountPercent: 20,
-    lookupKey: "cmux-max-yearly-1920",
+    lookupKey: "hmux-max-yearly-1920",
   },
 } as const satisfies MonthlyOrYearlyPlanPricing;
 
@@ -108,12 +108,12 @@ export function isPortalSwitchableLookupKey(lookupKey: string | null | undefined
  * the subscription's own Stripe amount, never from these keys.
  */
 export const LEGACY_PRICE_LOOKUP_KEYS = [
-  "cmux-pro-monthly", // $30/mo
-  "cmux-pro-yearly", // $240/yr
-  "cmux-pro-yearly-288", // $288/yr
-  "cmux-team-monthly", // $35/user/mo
-  "cmux-team-yearly-336", // $336/user/yr
-  "cmux-team-yearly-576", // $576/user/yr; existing subscriptions only
+  "hmux-pro-monthly", // $30/mo
+  "hmux-pro-yearly", // $240/yr
+  "hmux-pro-yearly-288", // $288/yr
+  "hmux-team-monthly", // $35/user/mo
+  "hmux-team-yearly-336", // $336/user/yr
+  "hmux-team-yearly-576", // $576/user/yr; existing subscriptions only
 ] as const;
 
 export function billingInterval(value: string | null | undefined): BillingInterval {

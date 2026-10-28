@@ -1,4 +1,4 @@
-export const STACK_IDENTITY_STORAGE_KEY = "cmux.posthog.stack-user-id";
+export const STACK_IDENTITY_STORAGE_KEY = "hmux.posthog.stack-user-id";
 
 export type StackAnalyticsIdentity = {
   readonly id: string;
@@ -68,4 +68,4 @@ export function syncStackAnalyticsIdentity(
 }
 
 /** Dispatched on `window` when the Hexclave session changes without a navigation. */
-export const STACK_AUTH_CHANGED_EVENT = "cmux:stack-auth-changed";
+export const STACK_AUTH_CHANGED_EVENT = "hmux:stack-auth-changed";

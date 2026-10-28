@@ -1,11 +1,11 @@
 import AppKit
-import CmuxChief
-import CmuxControlSocket
-import CmuxHomeCore
+import HmuxChief
+import HmuxControlSocket
+import HmuxHomeCore
 import Foundation
 import MessagesLabHome
 
-/// `chief.*`: the local Chief from the socket and `cmux chief`.
+/// `chief.*`: the local Chief from the socket and `hmux chief`.
 ///
 /// Every method runs on the socket worker (`ControlCommandExecutionPolicy`):
 /// parameters are validated there, owner reads and writes await the
@@ -93,11 +93,11 @@ extension TerminalController {
                 message: timeout.retryable
                     ? String(
                         localized: "socket.mainActorHop.timeout.notRun",
-                        defaultValue: "cmux did not respond within 10 seconds, so the command was not run. Retry in a moment."
+                        defaultValue: "hmux did not respond within 10 seconds, so the command was not run. Retry in a moment."
                     )
                     : String(
                         localized: "socket.mainActorHop.timeout.mayHaveRun",
-                        defaultValue: "cmux did not respond within 10 seconds after the command started, so its result is unknown. Check the effect before retrying."
+                        defaultValue: "hmux did not respond within 10 seconds after the command started, so its result is unknown. Check the effect before retrying."
                     ),
                 data: [
                     "retryable": timeout.retryable,
@@ -328,7 +328,7 @@ extension TerminalController {
                         data: ["window_id": target.windowID ?? ""])
         case .some(.none):
             return .err(code: "not_found",
-                        message: String(localized: "socket.chief.error.noWindow", defaultValue: "No cmux window is open."),
+                        message: String(localized: "socket.chief.error.noWindow", defaultValue: "No hmux window is open."),
                         data: nil)
         case .some(.some(let id)):
             return .ok(["window_id": id.uuidString, "opened": true] as [String: Any])

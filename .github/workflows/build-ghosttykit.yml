@@ -21,8 +21,8 @@ jobs:
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'macos-26' || vars.MACOS_RUNNER_BACKGROUND || 'blacksmith-6vcpu-macos-15' }}
     timeout-minutes: 60
     env:
-      GHOSTTYKIT_CRASH_REPORT_SUBDIR: cmux/crash
-      GHOSTTYKIT_BUILD_FLAVOR: crashsubdir-cmux-crash-sentry-off-noi18n-v2
+      GHOSTTYKIT_CRASH_REPORT_SUBDIR: hmux/crash
+      GHOSTTYKIT_BUILD_FLAVOR: crashsubdir-hmux-crash-sentry-off-noi18n-v2
     steps:
       - name: Clear stale git locks (self-hosted reused workspace)
         shell: bash
@@ -224,7 +224,7 @@ jobs:
           set -euo pipefail
           # -Di18n=false matches scripts/ensure-ghosttykit.sh: compiling the
           # .po catalogs needs gettext's msgfmt (absent on some builders) and
-          # cmux never bundles the .mo output.
+          # hmux never bundles the .mo output.
           cd ghostty && zig build -Dcrash-report-subdir="$GHOSTTYKIT_CRASH_REPORT_SUBDIR" -Dsentry=false -Di18n=false -Demit-xcframework=true -Demit-macos-app=false -Dxcframework-target=universal -Doptimize=ReleaseFast
 
       - name: Package xcframework

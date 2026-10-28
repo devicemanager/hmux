@@ -1,5 +1,5 @@
 // sites.browserAuth: a secure sign-in handoff (reference B's
-// browserAuth). The agent names the visible credential fields; cmux shows
+// browserAuth). The agent names the visible credential fields; hmux shows
 // its own sheet on the browser window, naming the origin of the frame that
 // holds them and labeling each field by its kind, the user types there, and
 // the app fills the fields in the page (sites/auth-fill.js). Only password,
@@ -12,9 +12,9 @@
 // filled field like any other.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URL, functionSource } = root.CmuxBrowserRepl.core;
+  const { URL, functionSource } = root.HmuxBrowserRepl.core;
   const TYPES = ["text", "email", "password", "tel", "number", "url"];
   // The credential kind of a field, or null. The app runs the same rule
   // (sites/auth-fill.js) before it fills anything.
@@ -42,14 +42,14 @@
     const form = el && el.form;
     if (!form) return false;
     if (a.markers) {
-      const fields = a.markers.map((m) => document.querySelector('[data-cmux-auth="' + String(m).replace(/["\\]/g, "") + '"]'));
+      const fields = a.markers.map((m) => document.querySelector('[data-hmux-auth="' + String(m).replace(/["\\]/g, "") + '"]'));
       if (!fields.every((f) => f && f.form === form)) return false;
       if (a.action === "press_enter" ? !fields.includes(el) : !isSubmit(el)) return false;
-      if (form.hasAttribute("data-cmux-auth-form")) return false;
-      form.setAttribute("data-cmux-auth-form", a.formMarker);
+      if (form.hasAttribute("data-hmux-auth-form")) return false;
+      form.setAttribute("data-hmux-auth-form", a.formMarker);
       return true;
     }
-    if (form.getAttribute("data-cmux-auth-form") !== a.formMarker) return false;
+    if (form.getAttribute("data-hmux-auth-form") !== a.formMarker) return false;
     return a.action === "press_enter" ? el instanceof HTMLInputElement : isSubmit(el);
   };
 
@@ -64,7 +64,7 @@
       el.isConnected,
       el.localName,
       attrs(el, ["type", "form", "formaction", "formmethod", "formenctype", "formtarget", "formnovalidate", "name", "value", "disabled"]),
-      form ? [form.isConnected, attrs(form, ["action", "method", "enctype", "target", "novalidate", "data-cmux-auth-form"])] : null,
+      form ? [form.isConnected, attrs(form, ["action", "method", "enctype", "target", "novalidate", "data-hmux-auth-form"])] : null,
     ]);
   };
 
@@ -174,7 +174,7 @@
             if (marked.length && fid !== frameId) return { status: "locator_invalid", locator_error: { field_id: f.id, reason: "fields_in_different_frames" } };
             frameId = fid;
             const marker = `${f.id}-${Math.floor(Math.random() * 1e12).toString(36)}`;
-            await loc.evaluate((el, m) => el.setAttribute("data-cmux-auth", m), marker);
+            await loc.evaluate((el, m) => el.setAttribute("data-hmux-auth", m), marker);
             marked.push({ loc, field: f, marker });
           }
           // The control that submits, checked before the sheet opens: only
@@ -234,11 +234,11 @@
           }
           return { status: "submitted" };
         } finally {
-          for (const { loc } of marked) await loc.evaluate((el) => el.removeAttribute("data-cmux-auth")).catch(() => {});
-          if (marked.length) await marked[0].loc.evaluate((el, m) => { for (const f of document.querySelectorAll("[data-cmux-auth-form]")) if (f.getAttribute("data-cmux-auth-form") === m) f.removeAttribute("data-cmux-auth-form"); }, formMarker).catch(() => {});
+          for (const { loc } of marked) await loc.evaluate((el) => el.removeAttribute("data-hmux-auth")).catch(() => {});
+          if (marked.length) await marked[0].loc.evaluate((el, m) => { for (const f of document.querySelectorAll("[data-hmux-auth-form]")) if (f.getAttribute("data-hmux-auth-form") === m) f.removeAttribute("data-hmux-auth-form"); }, formMarker).catch(() => {});
         }
       },
     }),
-    { summary: "Secure sign-in: a cmux sheet collects credentials and fills the page; values reach the agent only masked" },
+    { summary: "Secure sign-in: a hmux sheet collects credentials and fills the page; values reach the agent only masked" },
   );
 })(typeof globalThis !== "undefined" ? globalThis : this);

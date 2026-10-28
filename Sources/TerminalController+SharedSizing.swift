@@ -1,9 +1,9 @@
 import AppKit
 import Bonsplit
-import CmuxCloud
-import CmuxTerminal
-import CmuxTerminalSharing
-import CmuxTerminalSizing
+import HmuxCloud
+import HmuxTerminal
+import HmuxTerminalSharing
+import HmuxTerminalSizing
 import Foundation
 import SwiftUI
 import SystemConfiguration
@@ -50,7 +50,7 @@ extension TerminalController {
         reason: String
     ) -> (columns: Int, rows: Int)? {
         if let relay = cloudSizingRelaysBySurfaceID[surfaceID]?.value, relay.relaysPhones {
-            // The cmux-tui daemon decides a Cloud terminal's grid; the local
+            // The hmux-tui daemon decides a Cloud terminal's grid; the local
             // mirror follows the remote grid it reports back.
             relay.relayPhones(phoneParticipants(reports: reports, surfaceID: surfaceID))
             if let countsOverride {

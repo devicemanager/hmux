@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://contracts.cmux.invalid/iroh-v2/V2Ticket.json",
+  "$id": "https://contracts.hmux.invalid/iroh-v2/V2Ticket.json",
   "type": "object",
   "properties": {
     "token": {

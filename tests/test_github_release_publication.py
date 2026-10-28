@@ -174,7 +174,7 @@ class PublicationTests(unittest.TestCase):
         with self.assertRaises(publisher.RequestError):
             self.publish([asset])
         self.assertEqual(self.client.stored[asset.path.name], old)
-        self.assertNotIn("cmux-backup-latest.dmg", self.client.stored)
+        self.assertNotIn("hmux-backup-latest.dmg", self.client.stored)
 
     def test_null_digest_replacement_resolves_the_old_asset_before_rename(self):
         asset = self.asset("latest.dmg", True)
@@ -187,12 +187,12 @@ class PublicationTests(unittest.TestCase):
         asset = self.asset("latest.dmg", True)
         old = {**remote(asset), "digest": "sha256:old"}
         self.client.stored[asset.path.name] = old
-        self.client.failures["cmux-upload-latest.dmg-" + asset.digest[7:19]] = ["timeout"] * 3
+        self.client.failures["hmux-upload-latest.dmg-" + asset.digest[7:19]] = ["timeout"] * 3
         with self.assertRaises(publisher.RequestError):
             self.publish([asset])
         self.assertEqual(self.client.stored[asset.path.name], old)
         self.assertEqual([event[0] for event in self.client.events], ["upload", "upload", "upload"])
-        self.assertEqual(list(self.root.glob("cmux-upload-*")), [])
+        self.assertEqual(list(self.root.glob("hmux-upload-*")), [])
 
     def test_immutable_digest_collision_is_fatal_without_deletion(self):
         asset = self.asset("build.dmg")
@@ -282,8 +282,8 @@ class PublicationTests(unittest.TestCase):
         # GitHub normalizes leading-dot release asset names, so replacement
         # staging and backup names must remain ordinary filenames.
         text = (ROOT / "scripts/ci/publish-release-assets.py").read_text()
-        self.assertIn('f"cmux-upload-', text)
-        self.assertIn('f"cmux-backup-', text)
+        self.assertIn('f"hmux-upload-', text)
+        self.assertIn('f"hmux-backup-', text)
 
     def test_nightly_finalization_targets_the_channel_release(self):
         text = (ROOT / ".github/workflows/nightly.yml").read_text()

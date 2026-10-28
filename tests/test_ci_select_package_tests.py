@@ -32,8 +32,8 @@ def fixture(root: Path) -> None:
         "Packages/macOS/Middle": manifest("../Base"),
         "Packages/Shared/Top": manifest("../../macOS/Middle"),
         "Packages/macOS/Loner": manifest(),
-        "Packages/macOS/CmuxCommandPalette": manifest(),
-        "Packages/macOS/Palette": manifest("../CmuxCommandPalette"),
+        "Packages/macOS/HmuxCommandPalette": manifest(),
+        "Packages/macOS/Palette": manifest("../HmuxCommandPalette"),
         "Packages/macOS/Splitter": manifest("../../../vendor/bonsplit"),
     }
     for directory, text in layout.items():
@@ -106,7 +106,7 @@ def check_package_output_behavior() -> None:
     padding = "build progress line without diagnostics\n" * 12000
     passed = "✔ Test run with 4 tests in 1 suites passed after 0.001 seconds.\n"
     cosmetic = "error: unexpected binary name GhosttyKit\n"
-    for package in ("CmuxTerminal", "CmuxTerminalCore"):
+    for package in ("HmuxTerminal", "HmuxTerminalCore"):
         result, count = run_package_step(package, [(cosmetic + "error: real compiler failure\n" + padding + passed, 1)])
         assert result.returncode == 1 and count == 1, f"{package}: real error incorrectly tolerated: {result.returncode}"
         result, count = run_package_step(package, [(cosmetic + padding + passed, 1)])
@@ -116,13 +116,13 @@ def check_package_output_behavior() -> None:
     for bonsplit in (False, True):
         for signal in (5, 6):
             startup = f"Build complete!\nerror: Exited with unexpected signal code {signal}\n" + padding
-            result, count = run_package_step("CmuxSettings", [(startup, 1), (passed, 0)], bonsplit)
+            result, count = run_package_step("HmuxSettings", [(startup, 1), (passed, 0)], bonsplit)
             assert result.returncode == 0 and count == 2, f"startup signal {signal} must retry once (bonsplit={bonsplit})"
-            result, count = run_package_step("CmuxSettings", [(startup, 1)], bonsplit)
+            result, count = run_package_step("HmuxSettings", [(startup, 1)], bonsplit)
             assert result.returncode == 1 and count == 2, "repeated startup crashes must fail after one retry"
         for output in ("Build complete!\nerror: Exited with unexpected signal code 10\n" + padding,
                        "Build complete!\nerror: Exited with unexpected signal code 5\nTest Suite started\n" + padding):
-            result, count = run_package_step("CmuxSettings", [(output, 1)], bonsplit)
+            result, count = run_package_step("HmuxSettings", [(output, 1)], bonsplit)
             assert result.returncode == 1 and count == 1, "non-startup failures must not retry"
     print("PASS: real package CI steps reject true errors and preserve bounded startup retries")
 
@@ -134,7 +134,7 @@ def main() -> int:
         fixture(root)
         check(root, None, PACKAGES, "an unknown diff runs everything")
         check(root, [], [], "an empty diff runs nothing")
-        check(root, ["Sources/App.swift", "cmuxTests/AppTests.swift", "web/app/page.tsx", "README.md"], [],
+        check(root, ["Sources/App.swift", "hmuxTests/AppTests.swift", "web/app/page.tsx", "README.md"], [],
               "app, web and docs changes reach no package")
         check(root, ["Packages/macOS/Loner/Sources/Loner/A.swift"], ["Loner"], "a leaf change runs that package")
         check(root, ["Packages/macOS/Base/Sources/Base/A.swift"], ["Base", "Middle", "Top"],

@@ -1,4 +1,4 @@
-import CmuxTerminalCore
+import HmuxTerminalCore
 import Foundation
 
 struct RemoteTerminalWorkingDirectoryResolution {

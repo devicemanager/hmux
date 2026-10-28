@@ -1,4 +1,4 @@
-import CmuxMobileHost
+import HmuxMobileHost
 import Foundation
 
 /// Coalesces explicit transcript fallback lookups and cancels them with the

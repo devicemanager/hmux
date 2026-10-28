@@ -9,7 +9,7 @@ import type {
 
 export const CLIENT_CONFIG_CACHE_TTL_SECONDS = 5 * 60;
 
-const CACHE_NAMESPACE = "cmux-client-config";
+const CACHE_NAMESPACE = "hmux-client-config";
 // The SDK otherwise re-hashes our SHA-256 key into only 32 bits.
 const CACHE_OPTIONS = { namespace: CACHE_NAMESPACE, keyHashFunction: (key: string) => key };
 const CACHE_VERSION = "v1";

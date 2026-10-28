@@ -134,7 +134,7 @@ function stubStack(): void {
 }
 
 function revokeRequest(): Request {
-  return new Request(`https://cmux.test/api/vm/access-grants/${GRANT_ID}`, {
+  return new Request(`https://hmux.test/api/vm/access-grants/${GRANT_ID}`, {
     method: "DELETE",
     headers: { authorization: "Bearer access-1", "x-stack-refresh-token": "refresh-1" },
   });
@@ -241,7 +241,7 @@ describe("vm-reconcile cron", () => {
       gaveUpAt: null,
     });
     const { GET } = await import("../app/api/cron/vm-reconcile/route");
-    const response = await GET(new Request("https://cmux.test/api/cron/vm-reconcile", {
+    const response = await GET(new Request("https://hmux.test/api/cron/vm-reconcile", {
       headers: { authorization: "Bearer cron-secret" },
     }));
     const body = await response.json() as { stackSessionRevocations?: unknown };

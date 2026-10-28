@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Darwin
 
 /// Decides whether persisted Codex turn state can still belong to a live process.

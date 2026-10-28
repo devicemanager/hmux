@@ -16,7 +16,7 @@ IOS_PATHS = (
     "ios/**",
     "Packages/iOS/**",
     "Packages/Shared/**",
-    "Packages/macOS/CmuxPhonePush/**",
+    "Packages/macOS/HmuxPhonePush/**",
     "Sources/Mobile/**",
     "vendor/stack-auth-swift-sdk-prerelease/**",
     "ghostty",
@@ -332,7 +332,7 @@ const setTimeout = (resolve, milliseconds) => {{
   resolve();
 }};
 const context = {{
-  repo: {{ owner: 'manaflow-ai', repo: 'cmux' }},
+  repo: {{ owner: 'manaflow-ai', repo: 'hmux' }},
   eventName: scenario.eventName,
   payload: {{
     schedule: scenario.schedule,
@@ -616,7 +616,7 @@ def test_schedule_decision_executes_ios_path_filter() -> None:
     expected_compare = [
         {
             "owner": "manaflow-ai",
-            "repo": "cmux",
+            "repo": "hmux",
             "base": "base-sha",
             "head": "head-sha",
         }
@@ -629,13 +629,13 @@ def test_schedule_decision_executes_ios_path_filter() -> None:
 
 
 def test_phone_push_dependency_change_schedules_ios_upload() -> None:
-    # Despite its macOS directory, ios/cmuxPackage directly imports this package.
+    # Despite its macOS directory, ios/hmuxPackage directly imports this package.
     result = run_decision_scenario(
         event_name="schedule",
         schedule=IOS_SCHEDULES[0],
         prior_sha="base-sha",
         head_sha="head-sha",
-        changed_files=("Packages/macOS/CmuxPhonePush/Sources/CmuxPhonePush/PhonePush.swift",),
+        changed_files=("Packages/macOS/HmuxPhonePush/Sources/HmuxPhonePush/PhonePush.swift",),
     )
     assert result["outputs"]["should_build"] == "true", result
 
@@ -790,7 +790,7 @@ def test_demo_history_skips_newer_internal_artifact() -> None:
     assert result["compareCalls"] == [
         {
             "owner": "manaflow-ai",
-            "repo": "cmux",
+            "repo": "hmux",
             "base": "demo-base-sha",
             "head": "head-sha",
         }
@@ -817,7 +817,7 @@ def test_history_lookup_ignores_long_idle_workflow_run_history() -> None:
     assert result["artifactRequests"] == [
         {
             "owner": "manaflow-ai",
-            "repo": "cmux",
+            "repo": "hmux",
             "name": "ios-testflight-build-metadata",
             "per_page": 100,
             "page": 1,
@@ -850,7 +850,7 @@ def test_history_lookup_paginates_artifacts_and_selects_newest() -> None:
     assert result["compareCalls"] == [
         {
             "owner": "manaflow-ai",
-            "repo": "cmux",
+            "repo": "hmux",
             "base": "newest-sha",
             "head": "head-sha",
         }
@@ -934,7 +934,7 @@ def test_manual_run_waits_for_an_earlier_upload() -> None:
         event_name="workflow_dispatch",
         prior_sha="base-sha",
         head_sha="head-sha",
-        changed_files=("ios/cmux/App.swift",),
+        changed_files=("ios/hmux/App.swift",),
         blocking_prior_run=True,
     )
 
@@ -943,14 +943,14 @@ def test_manual_run_waits_for_an_earlier_upload() -> None:
     assert result["workflowRunRequests"] == [
         {
             "owner": "manaflow-ai",
-            "repo": "cmux",
+            "repo": "hmux",
             "workflow_id": "ios-testflight.yml",
             "branch": "main",
             "per_page": 100,
         },
         {
             "owner": "manaflow-ai",
-            "repo": "cmux",
+            "repo": "hmux",
             "workflow_id": "ios-testflight.yml",
             "branch": "main",
             "per_page": 100,
@@ -976,7 +976,7 @@ def test_manual_run_waits_before_upload_job_exists() -> None:
         event_name="workflow_dispatch",
         prior_sha="base-sha",
         head_sha="head-sha",
-        changed_files=("ios/cmux/App.swift",),
+        changed_files=("ios/hmux/App.swift",),
         blocking_prior_run=True,
         upload_job_starts_late=True,
     )
@@ -1000,7 +1000,7 @@ def test_ordering_retries_transient_api_failures() -> None:
             event_name="workflow_dispatch",
             prior_sha="base-sha",
             head_sha="head-sha",
-            changed_files=("ios/cmux/App.swift",),
+            changed_files=("ios/hmux/App.swift",),
             blocking_prior_run=True,
             upload_job_starts_late=True,
             ordering_api_failure=failed_api,
@@ -1056,7 +1056,7 @@ def test_ordering_skips_defunct_queued_prior_run() -> None:
         event_name="schedule",
         schedule=IOS_SCHEDULES[0],
         prior_sha="base-sha",
-        changed_files=("ios/cmux/App.swift",),
+        changed_files=("ios/hmux/App.swift",),
         zombie_prior_run=True,
     )
 
@@ -1075,7 +1075,7 @@ def test_manual_run_waits_behind_a_scheduled_upload() -> None:
         prior_sha="base-sha",
         prior_event="schedule",
         head_sha="head-sha",
-        changed_files=("ios/cmux/App.swift",),
+        changed_files=("ios/hmux/App.swift",),
         blocking_prior_run=True,
     )
 
@@ -1101,7 +1101,7 @@ def test_internal_poll_skips_instead_of_queueing_behind_an_upload() -> None:
             prior_sha="base-sha",
             prior_event=prior_event,
             head_sha="head-sha",
-            changed_files=("ios/cmux/App.swift",),
+            changed_files=("ios/hmux/App.swift",),
             blocking_prior_run=True,
         )
 
@@ -1126,7 +1126,7 @@ def test_internal_poll_skips_when_ordering_cannot_be_checked() -> None:
             schedule=IOS_SCHEDULES[0],
             prior_sha="base-sha",
             head_sha="head-sha",
-            changed_files=("ios/cmux/App.swift",),
+            changed_files=("ios/hmux/App.swift",),
             blocking_prior_run=True,
             ordering_api_failure=failed_api,
         )
@@ -1151,7 +1151,7 @@ def test_demo_schedule_still_waits_for_an_earlier_upload() -> None:
         prior_sha="base-sha",
         prior_artifact="ios-testflight-build-metadata-demo",
         head_sha="head-sha",
-        changed_files=("ios/cmux/App.swift",),
+        changed_files=("ios/hmux/App.swift",),
         blocking_prior_run=True,
     )
 
@@ -1172,7 +1172,7 @@ def test_demo_schedule_retries_ordering_api_errors() -> None:
             prior_sha="base-sha",
             prior_artifact="ios-testflight-build-metadata-demo",
             head_sha="head-sha",
-            changed_files=("ios/cmux/App.swift",),
+            changed_files=("ios/hmux/App.swift",),
             blocking_prior_run=True,
             ordering_api_failure=failed_api,
         )
@@ -1198,7 +1198,7 @@ def test_internal_poll_skips_inputs_that_already_failed_to_upload() -> None:
             prior_sha="base-sha",
             prior_run_ids=(40,),
             head_sha=head_sha,
-            changed_files=("ios/cmux/App.swift",),
+            changed_files=("ios/hmux/App.swift",),
             failed_prior_run={
                 "id": 60,
                 "sha": "failed-sha",
@@ -1223,7 +1223,7 @@ def test_internal_poll_retries_failed_inputs_after_an_ios_change() -> None:
         prior_sha="base-sha",
         prior_run_ids=(40,),
         head_sha="head-sha",
-        changed_files=("ios/cmux/App.swift",),
+        changed_files=("ios/hmux/App.swift",),
         failed_prior_run={
             "id": 60,
             "sha": "failed-sha",
@@ -1256,7 +1256,7 @@ def test_failed_upload_skip_ignores_other_failures() -> None:
             prior_artifact=prior_artifact,
             prior_run_ids=(40,),
             head_sha="failed-sha",
-            changed_files=("ios/cmux/App.swift",),
+            changed_files=("ios/hmux/App.swift",),
             failed_prior_run={
                 "id": case["failed_id"],
                 "sha": "failed-sha",
@@ -1327,7 +1327,7 @@ def test_scheduled_and_manual_runs_use_independent_concurrency_groups() -> None:
     assert scheduled_group != manual_group
 
 
-def test_automatic_lane_stays_on_cmux_internal_identity() -> None:
+def test_automatic_lane_stays_on_hmux_internal_identity() -> None:
     text = workflow_text()
     upload = mapping_block(text, "upload", indent=2)
     assignment = mapping_block(text, "assign-internal-group", indent=2)
@@ -1407,5 +1407,5 @@ if __name__ == "__main__":
     test_mapping_keys_normalizes_quoted_yaml_keys()
     test_testflight_notes_use_the_same_ios_path_contract()
     test_scheduled_and_manual_runs_use_independent_concurrency_groups()
-    test_automatic_lane_stays_on_cmux_internal_identity()
+    test_automatic_lane_stays_on_hmux_internal_identity()
     print("all iOS TestFlight scheduling tests passed")

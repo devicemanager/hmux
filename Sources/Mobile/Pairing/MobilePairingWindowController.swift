@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import SwiftUI
 
 /// Owns the single iOS pairing window and presents it on demand.
@@ -15,10 +15,10 @@ final class MobilePairingWindowController: ReleasingWindowController {
     static let shared = MobilePairingWindowController()
 
     /// The pairing window's identifier. Listed in
-    /// `cmuxAuxiliaryWindowIdentifiers` (cmuxApp.swift) so the standard close
+    /// `hmuxAuxiliaryWindowIdentifiers` (hmuxApp.swift) so the standard close
     /// shortcut closes this window instead of a terminal tab in the main
     /// window behind it; referenced from the Cmd+W regression test.
-    static let windowIdentifier = "cmux.mobilePairingWindow"
+    static let windowIdentifier = "hmux.mobilePairingWindow"
 
     private static let screenMargin: CGFloat = 40
     private var idealContentHeight: CGFloat?
@@ -54,7 +54,7 @@ final class MobilePairingWindowController: ReleasingWindowController {
         let root = MobilePairingView { [weak self] height in
             self?.pairingContentHeightDidChange(height)
         }
-            .cmuxAppearanceColorScheme(appearanceMode)
+            .hmuxAppearanceColorScheme(appearanceMode)
         let hostingController = NSHostingController(rootView: root)
 
         let window = NSWindow(contentViewController: hostingController)
@@ -185,7 +185,7 @@ extension Workspace {
         }
 
         bindSurface(tabId, toPanelId: panel.id)
-        publishCmuxSurfaceCreated(
+        publishHmuxSurfaceCreated(
             panel.id,
             paneId: paneId,
             kind: SurfaceKind.mobilePairing.rawValue,

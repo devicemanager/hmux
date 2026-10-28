@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Exercise native pane moves/closes against a real cloud daemon.
 
-Run on the leased verification Mac with CMUX_SOCKET_PATH pointing at the tagged
-app, CMUX_TEST_VM_ID identifying a disposable test machine, and CMUX_TUI_CLIENT
-pointing at that app's bundled cmux-tui client. The app must already be signed in.
+Run on the leased verification Mac with HMUX_SOCKET_PATH pointing at the tagged
+app, HMUX_TEST_VM_ID identifying a disposable test machine, and HMUX_TUI_CLIENT
+pointing at that app's bundled hmux-tui client. The app must already be signed in.
 The harness owns and removes only the workspaces and terminals it creates.
 """
 
@@ -15,7 +15,7 @@ import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
 class CloudLayoutHarness:
@@ -76,7 +76,7 @@ class CloudLayoutHarness:
         return fixture
 
     def checkpoint(self, label, workspace):
-        if os.environ.get("CMUX_LAYOUT_EVIDENCE_PAUSE") == "1":
+        if os.environ.get("HMUX_LAYOUT_EVIDENCE_PAUSE") == "1":
             self.client._call("workspace.select", {"workspace_id": workspace})
             input("CHECKPOINT " + label + " — capture the tagged window, then continue: ")
 
@@ -107,7 +107,7 @@ class CloudLayoutHarness:
         self.client._call("vm.tree", {"id": self.machine, "refresh": True}, timeout_s=120)
 
         def project(workspace):
-            with cmux(os.environ["CMUX_SOCKET_PATH"]) as other_client:
+            with hmux(os.environ["HMUX_SOCKET_PATH"]) as other_client:
                 return other_client._call("surface.project", {
                     "resource": self.machine + "/terminal/" + terminal,
                     "workspace_id": workspace, "reuse": False, "focus": False,
@@ -136,7 +136,7 @@ class CloudLayoutHarness:
         except Exception as error:
             # A last-pane transfer or the teardown assertion may already have
             # removed this workspace. Transport and other server errors matter.
-            if not (isinstance(error, cmuxError) and str(error) == "not_found: Workspace not found"):
+            if not (isinstance(error, hmuxError) and str(error) == "not_found: Workspace not found"):
                 errors.append(f"local workspace {workspace}: {error}")
 
     def close(self):
@@ -156,10 +156,10 @@ class CloudLayoutHarness:
 
 
 def main():
-    socket_path = os.environ["CMUX_SOCKET_PATH"]
-    machine = os.environ["CMUX_TEST_VM_ID"]
-    tui = os.environ["CMUX_TUI_CLIENT"]
-    with cmux(socket_path) as client:
+    socket_path = os.environ["HMUX_SOCKET_PATH"]
+    machine = os.environ["HMUX_TEST_VM_ID"]
+    tui = os.environ["HMUX_TUI_CLIENT"]
+    with hmux(socket_path) as client:
         harness = CloudLayoutHarness(client, machine, tui)
         try:
             harness.run()

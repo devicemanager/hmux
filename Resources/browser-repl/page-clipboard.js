@@ -26,7 +26,7 @@
 //   scripts run, and only that string reaches WebKit: a page that replaces
 //   `String`, `String.prototype.toLowerCase` or array methods cannot make a
 //   name this script does not see as "copy" reach WebKit's Copy.
-(function cmuxPageClipboard(post) {
+(function hmuxPageClipboard(post) {
   "use strict";
   const define = Object.defineProperty;
   const apply = Reflect.apply;
@@ -95,7 +95,7 @@
     }
   }
 
-  const constructing = Symbol("cmux clipboard");
+  const constructing = Symbol("hmux clipboard");
   let clipboardInstance = null;
 
   class Clipboard extends NativeEventTarget {

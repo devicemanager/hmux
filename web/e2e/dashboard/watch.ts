@@ -4,7 +4,7 @@ import { expect, type Page } from "@playwright/test";
 // instant validation, blocked analytics beacons, and Stripe's iframe logs.
 const IGNORED_CONSOLE = [
   /Next\.js encountered URL data/,
-  /r\.hexclave\.com|r\.cmux\.com/,
+  /r\.hexclave\.com|r\.hmux\.com/,
   /Failed to load resource: net::ERR_BLOCKED_BY_CLIENT/,
   /stripe/i,
 ];

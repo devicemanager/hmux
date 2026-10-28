@@ -55,7 +55,7 @@ function outputLedger(options: { refuseFirstCharge?: boolean } = {}) {
 function connection(options: { refuseFirstCharge?: boolean } = {}) {
   const now = Math.floor(Date.now() / 1000);
   const claims: DashboardClaims = {
-    version: 2, audience: "cmux-iroh-dashboard-v2", authority, origin: "https://cmux.com",
+    version: 2, audience: "hmux-iroh-dashboard-v2", authority, origin: "https://cmux.com",
     clientInstanceId: "tab", canManageTeam: false, expiresAt: now + 3600, keyId: "key-1",
   };
   // A writer that lands while this reply is being prepared moves the team

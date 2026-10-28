@@ -1,4 +1,4 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import AppKit
 import Observation
 import SwiftUI
@@ -106,13 +106,13 @@ final class ComputerUseOnboardingWindowController: NSObject, NSWindowDelegate {
     }
 
     enum ActivationPlan: Sendable, Equatable {
-        /// Activate cmux and make the window key.
+        /// Activate hmux and make the window key.
         case activateAndFocus
-        /// cmux is already active: show the window without taking key focus
+        /// hmux is already active: show the window without taking key focus
         /// from the terminal the user is typing in.
         case orderFrontWithoutFocus
         /// Another app is active: keep the window behind it, bounce the Dock
-        /// icon, and bring the window forward once the user switches to cmux.
+        /// icon, and bring the window forward once the user switches to hmux.
         case waitForAppActivation
     }
 
@@ -128,7 +128,7 @@ final class ComputerUseOnboardingWindowController: NSObject, NSWindowDelegate {
         }
     }
 
-    static let seenDefaultsKey = "cmux.computerUse.onboarding.seen"
+    static let seenDefaultsKey = "hmux.computerUse.onboarding.seen"
     static let directCaptureReadyDefaultsKey = ComputerUseOnboardingStore.legacyCompletionKey
     nonisolated static let completionDismissDelay: Duration = .seconds(2.4)
     nonisolated static let permissionCompanionGlideDuration: TimeInterval = 0.48
@@ -260,13 +260,13 @@ final class ComputerUseOnboardingWindowController: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.computerUse.onboarding")
-        window.title = String(localized: "computerUse.onboarding.windowTitle", defaultValue: "cmux Computer Use Setup")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.computerUse.onboarding")
+        window.title = String(localized: "computerUse.onboarding.windowTitle", defaultValue: "hmux Computer Use Setup")
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isReleasedWhenClosed = false
         // NSPanel hides on app deactivation by default; onboarding must stay
-        // visible beside System Settings while cmux is inactive.
+        // visible beside System Settings while hmux is inactive.
         window.hidesOnDeactivate = false
         window.isMovableByWindowBackground = false
         window.contentView = ComputerUseOnboardingHostingView(rootView: rootView)
@@ -357,7 +357,7 @@ final class ComputerUseOnboardingWindowController: NSObject, NSWindowDelegate {
             else {
                 return
             }
-            // Window disappearance is not a request to activate cmux. The
+            // Window disappearance is not a request to activate hmux. The
             // overview is already visible at its original position.
             stopSystemSettingsObservation()
             dismissPermissionCompanion()
@@ -583,7 +583,7 @@ final class ComputerUseOnboardingWindowController: NSObject, NSWindowDelegate {
             }
         )
         // Nonactivating: interacting with the companion (dragging the helper
-        // tile, pressing Back) must not activate cmux, or the main terminal
+        // tile, pressing Back) must not activate hmux, or the main terminal
         // window raises over the System Settings pane the user is working in.
         let companionWindow = ComputerUseOnboardingWindow(
             contentRect: NSRect(origin: .zero, size: Self.permissionCompanionWindowSize),
@@ -592,7 +592,7 @@ final class ComputerUseOnboardingWindowController: NSObject, NSWindowDelegate {
             defer: false
         )
         companionWindow.identifier = NSUserInterfaceItemIdentifier(
-            "cmux.computerUse.onboarding.permissionCompanion"
+            "hmux.computerUse.onboarding.permissionCompanion"
         )
         companionWindow.isReleasedWhenClosed = false
         companionWindow.becomesKeyOnlyIfNeeded = true

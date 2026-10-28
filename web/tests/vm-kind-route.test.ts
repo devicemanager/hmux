@@ -2,9 +2,9 @@ import { afterAll, beforeAll, describe, expect, mock, test } from "bun:test";
 import type { VmPrincipalRow } from "../services/vms/vmPrincipalContract";
 import type { VmTeamMemberLookup } from "../services/vms/teamDirectory";
 
-// Move to Cloud on a production personal machine (cx-rppd.14). cmux-tui on a
+// Move to Cloud on a production personal machine (cx-rppd.14). hmux-tui on a
 // Cloud VM refuses to start or receive a chat unless the root-owned
-// /etc/cmux/vm-kind reads `owner` (cmux-tui agent_start_host.rs). The guest
+// /etc/hmux/vm-kind reads `owner` (hmux-tui agent_start_host.rs). The guest
 // asks GET /api/vm/reflection/kind which kind it is; the answer comes from
 // the machine's own row and its owner team's members, never from the guest.
 
@@ -100,7 +100,7 @@ describe("GET /api/vm/reflection/kind", () => {
 
   async function kindFor(vm: VmPrincipalRow): Promise<{ status: number; body: Record<string, unknown> }> {
     principal = vm;
-    const response = await GET(new Request("https://reflection.cmux.internal/kind"));
+    const response = await GET(new Request("https://reflection.hmux.internal/kind"));
     return { status: response.status, body: (await response.json()) as Record<string, unknown> };
   }
 

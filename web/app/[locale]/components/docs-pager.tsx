@@ -44,7 +44,7 @@ function DocsFeedback({ pathname }: { pathname: string }) {
   const done = answered === pathname;
 
   function answer(helpful: boolean) {
-    posthog.capture("cmuxterm_docs_feedback", { helpful, path: pathname });
+    posthog.capture("hmuxterm_docs_feedback", { helpful, path: pathname });
     setAnswered(pathname);
   }
 

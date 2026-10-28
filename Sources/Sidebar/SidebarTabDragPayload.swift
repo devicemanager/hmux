@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSidebar
+import HmuxSidebar
 import Foundation
 import UniformTypeIdentifiers
 

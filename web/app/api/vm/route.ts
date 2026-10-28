@@ -129,7 +129,7 @@ export async function GET(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm",
-    { "cmux.vm.operation": "list" },
+    { "hmux.vm.operation": "list" },
     "/api/vm GET failed",
     async ({ user, span }) => {
       // List traffic is the natural idle-path signal from the Cloud sidebar.
@@ -149,9 +149,9 @@ export async function GET(request: Request): Promise<Response> {
           billingTeamId = entitlements.billingTeamId;
           annotateVmRequestBilling(entitlements);
           setSpanAttributes(span, {
-            "cmux.billing.team_id_set": !!billingTeamId,
-            "cmux.billing.customer_type": entitlements.billingCustomerType,
-            "cmux.billing.plan_id": entitlements.planId,
+            "hmux.billing.team_id_set": !!billingTeamId,
+            "hmux.billing.customer_type": entitlements.billingCustomerType,
+            "hmux.billing.plan_id": entitlements.planId,
           });
         }
       } catch (err) {
@@ -171,7 +171,7 @@ export async function GET(request: Request): Promise<Response> {
       // Converge the realtime `vms` collection on exactly what this list shows;
       // best-effort after the response, never on the request path.
       void publishVmOps(billingTeamId || user.id, [vmSyncReplaceOp(entries, listObservedAtMs)]);
-      setSpanAttributes(span, { "cmux.vm.count": entries.length });
+      setSpanAttributes(span, { "hmux.vm.count": entries.length });
       // REST adapter: expose `id` at the top level so existing CLI + curl users don't need to
       // learn the new `providerVmId` field name. Swift CLI reads `vm["id"]`.
       // Plan context for machine-fleet UIs: how many active VMs this caller may
@@ -197,13 +197,13 @@ export async function GET(request: Request): Promise<Response> {
         teamId: billingTeamId,
         caller: user,
         onFailure: (error) => setSpanAttributes(span, {
-          "cmux.vm.creator_lookup_error": error instanceof Error ? error.name : "unknown",
+          "hmux.vm.creator_lookup_error": error instanceof Error ? error.name : "unknown",
         }),
       });
       // A migration lagging in one environment turns every row into "Unknown"
       // with nothing else to show for it. This, with the lookup error above,
       // separates that from nobody having set a name.
-      setSpanAttributes(span, { "cmux.vm.creator_names": creatorNames.size });
+      setSpanAttributes(span, { "hmux.vm.creator_names": creatorNames.size });
       // A legacy row without a reservation marker reserves the provider
       // maximum until reconciliation measures it, exactly as the repository
       // counts it.
@@ -236,9 +236,9 @@ export async function GET(request: Request): Promise<Response> {
         freeAccessExpiresAt: freeAccessExpiresAtMs(entry.createdAt, freeAccessWindowDays),
         // "image" keeps the baked coding-agent pins; "latest" updates them on attach.
         agentUpdates: entry.agentUpdates,
-        // Contract recorded when the provider attached cmux-tui. This is
+        // Contract recorded when the provider attached hmux-tui. This is
         // rollout metadata, not a live daemon probe.
-        cmuxTuiContract: entry.cmuxTuiContract,
+        hmuxTuiContract: entry.hmuxTuiContract,
         // `resources` remains the server-authoritative pool claim used by
         // limits.used*. Legacy rows conservatively claim the provider
         // maximum until reconciliation. The explicit marker is separate so
@@ -320,7 +320,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm",
-    { "cmux.vm.operation": "create" },
+    { "hmux.vm.operation": "create" },
     "/api/vm POST failed",
     async ({ user: initialUser, span, authDurationMs, routeStartedAtMs, setResponseFinalizer }) => {
       const timing = new VmTimingRecorder(span, "create", { startedAt: routeStartedAtMs });
@@ -339,9 +339,9 @@ export async function POST(request: Request): Promise<Response> {
         const durationMs = performance.now() - admissionStartedAt;
         timing.record("admission", durationMs);
         setSpanAttributes(span, {
-          "cmux.vm.admission_ms": Math.round(durationMs * 100) / 100,
-          "cmux.vm.admission_budget_ms": VM_CREATE_ADMISSION_BUDGET_MS,
-          "cmux.vm.admission_within_budget": durationMs <= VM_CREATE_ADMISSION_BUDGET_MS,
+          "hmux.vm.admission_ms": Math.round(durationMs * 100) / 100,
+          "hmux.vm.admission_budget_ms": VM_CREATE_ADMISSION_BUDGET_MS,
+          "hmux.vm.admission_within_budget": durationMs <= VM_CREATE_ADMISSION_BUDGET_MS,
         });
       };
       setResponseFinalizer((response) => {
@@ -390,13 +390,13 @@ export async function POST(request: Request): Promise<Response> {
       const optionPolicy = createOptionPolicy(vmCapabilitiesFor(provider), candidate);
       const homeVolumeRequested = optionPolicy.kind === "accept" && optionPolicy.ignoredFields.length === 0;
       setSpanAttributes(span, {
-        "cmux.vm.provider": provider,
-        "cmux.vm.ignored_create_fields": optionPolicy.kind === "accept" ? optionPolicy.ignoredFields.join(",") : "",
-        "cmux.vm.image_set": image.length > 0,
-        "cmux.vm.image_version": imageSelection.imageVersion,
-        "cmux.vm.image_manifest": !!imageSelection.manifestEntry,
-        "cmux.vm.image_size": imageSelection.size?.name ?? "size-less",
-        "cmux.idempotency_key_set": !!idempotencyKey,
+        "hmux.vm.provider": provider,
+        "hmux.vm.ignored_create_fields": optionPolicy.kind === "accept" ? optionPolicy.ignoredFields.join(",") : "",
+        "hmux.vm.image_set": image.length > 0,
+        "hmux.vm.image_version": imageSelection.imageVersion,
+        "hmux.vm.image_manifest": !!imageSelection.manifestEntry,
+        "hmux.vm.image_size": imageSelection.size?.name ?? "size-less",
+        "hmux.idempotency_key_set": !!idempotencyKey,
       });
 
       // Admission starts after request validation. Its budget describes only
@@ -412,7 +412,7 @@ export async function POST(request: Request): Promise<Response> {
         teamId: entitlements.billingTeamId,
         stackUserId: user.id,
       });
-      setSpanAttributes(span, { "cmux.vm.model_plane": !!modelPlane });
+      setSpanAttributes(span, { "hmux.vm.model_plane": !!modelPlane });
 
       const run = await runVmRoute(createVm({
         userId: user.id,
@@ -443,7 +443,7 @@ export async function POST(request: Request): Promise<Response> {
       });
       if (!run.ok) return run.response;
       const created = run.value;
-      setSpanAttributes(span, { "cmux.vm.id": created.providerVmId });
+      setSpanAttributes(span, { "hmux.vm.id": created.providerVmId });
       const attach = createAttachBlock({
         entry: created,
         manifestEntry: findVmImageManifestEntry(created.provider, created.image, imageSelection.kind),
@@ -468,7 +468,7 @@ export async function POST(request: Request): Promise<Response> {
         // fleet list re-read plus a whole POST /attach-endpoint round trip
         // (~2 s measured) for data this response already had.
         address: { ipv4: created.addressIpv4, ipv6: created.addressIpv6 },
-        cmuxTuiContract: created.cmuxTuiContract,
+        hmuxTuiContract: created.hmuxTuiContract,
         agentUpdates: created.agentUpdates,
         // Keep the create response self-contained for clients that append it
         // directly to their fleet model. Pool accounting and the per-machine
@@ -496,7 +496,7 @@ function parseCreateMachineOptions(candidate: Record<string, unknown>) {
  * would not get. `persistentHome`/`perMachineHome` on a provider without home volumes
  * are ignored, not rejected: every shipped CLI sends them on the default create (the
  * "each machine is its own persistent computer" contract, PR 10478), a Freestyle
- * machine already is durable without a volume, and rejecting them took `cmux vm new`
+ * machine already is durable without a volume, and rejecting them took `hmux vm new`
  * down for every installed client on 2026-09-10 (8 of 9 creates 400 after PR 11609).
  * The ignored fields are reported so the span and the response can say so.
  */
@@ -613,12 +613,12 @@ async function parseCreateRequest(
     provider: candidate.provider as ProviderId | undefined,
     billingTeamId: typeof bodyBillingTeamId === "string" ? bodyBillingTeamId.trim() : undefined,
   };
-  // Idempotency-Key is standard HTTP; we also accept x-cmux-idempotency-key for CLI
+  // Idempotency-Key is standard HTTP; we also accept x-hmux-idempotency-key for CLI
   // callers that don't know about RFC-style keys. Trim + clamp to a reasonable length
   // so we don't store unbounded idempotency metadata.
   const rawKey = (
     request.headers.get("idempotency-key") ||
-    request.headers.get("x-cmux-idempotency-key") ||
+    request.headers.get("x-hmux-idempotency-key") ||
     ""
   ).trim();
   const idempotencyKey = rawKey ? rawKey.slice(0, 128) : undefined;
@@ -781,18 +781,18 @@ async function resolveCreateAccount(input: {
       console.error("[VM] Pro plan reconcile failed", err);
     }
   }
-  setSpanAttributes(span, { "cmux.billing.reconcile_mode": reconcileMode });
+  setSpanAttributes(span, { "hmux.billing.reconcile_mode": reconcileMode });
   if (!account.ok) return { ok: false, response: account.response };
   if (reconcileMode === "deferred") {
     runAfterResponse(() => reconcileProPlan(false).then(() => undefined));
   }
   const entitlements = account.entitlements;
   setSpanAttributes(span, {
-    "cmux.billing.team_id_set": !!entitlements.billingTeamId,
-    "cmux.billing.customer_type": entitlements.billingCustomerType,
-    "cmux.billing.plan_id": entitlements.planId,
-    "cmux.billing.requested_team_id_set": !!requestedBillingTeamId,
-    "cmux.vm.max_active": entitlements.maxActiveVms,
+    "hmux.billing.team_id_set": !!entitlements.billingTeamId,
+    "hmux.billing.customer_type": entitlements.billingCustomerType,
+    "hmux.billing.plan_id": entitlements.planId,
+    "hmux.billing.requested_team_id_set": !!requestedBillingTeamId,
+    "hmux.vm.max_active": entitlements.maxActiveVms,
   });
   return { ok: true, user, entitlements };
 }
@@ -831,10 +831,10 @@ async function resolveCreateMemory(
     const upgradePlanId = upgradePlanForMemory(requestedMemoryMb, planId);
     if (!upgradePlanId) return { ok: false, response: await vmMemoryUnavailableResponse(maxMemoryMb, vmRequestLocale(request)) };
     setSpanAttributes(span, {
-      "cmux.vm.memory_mb": requestedMemoryMb,
-      "cmux.vm.max_memory_mb": maxMemoryMb,
-      "cmux.vm.memory_requested_mb": requestedMemoryMb,
-      "cmux.vm.memory_requires_plan": upgradePlanId,
+      "hmux.vm.memory_mb": requestedMemoryMb,
+      "hmux.vm.max_memory_mb": maxMemoryMb,
+      "hmux.vm.memory_requested_mb": requestedMemoryMb,
+      "hmux.vm.memory_requires_plan": upgradePlanId,
     });
     return {
       ok: false,
@@ -851,10 +851,10 @@ async function resolveCreateMemory(
       ? requestedMemoryMb ?? planMemoryMb
       : planMemoryMb;
   setSpanAttributes(span, {
-    "cmux.vm.memory_mb": memoryMb,
-    "cmux.vm.max_memory_mb": maxMemoryMb,
-    "cmux.vm.memory_requested_mb": requestedMemoryMb,
-    "cmux.vm.memory_coerced": requestedMemoryMb !== undefined && requestedMemoryMb !== memoryMb,
+    "hmux.vm.memory_mb": memoryMb,
+    "hmux.vm.max_memory_mb": maxMemoryMb,
+    "hmux.vm.memory_requested_mb": requestedMemoryMb,
+    "hmux.vm.memory_coerced": requestedMemoryMb !== undefined && requestedMemoryMb !== memoryMb,
   });
   return { ok: true, memoryMb };
 }
@@ -946,7 +946,7 @@ function createErrorResponders(entitlements: {
         error: "vm_create_in_progress",
         status: 409,
         message: "A Cloud VM create is already running for this request.",
-        action: "Wait for the first `cmux vm new` to finish. If your terminal was interrupted, retry the same command and cmux will reuse the in-flight request.",
+        action: "Wait for the first `hmux vm new` to finish. If your terminal was interrupted, retry the same command and hmux will reuse the in-flight request.",
         details: { idempotencyKeySet: !!error.idempotencyKey },
       }),
     VmCreateFailedError: (error) =>
@@ -954,7 +954,7 @@ function createErrorResponders(entitlements: {
         error: "vm_create_failed",
         status: 500,
         message: "The previous Cloud VM create attempt failed.",
-        action: "Retry with a fresh `cmux vm new`. If it fails again, copy the details and contact support.",
+        action: "Retry with a fresh `hmux vm new`. If it fails again, copy the details and contact support.",
         details: {
           idempotencyKeySet: !!error.idempotencyKey,
           failureCode: error.code,
@@ -967,7 +967,7 @@ function createErrorResponders(entitlements: {
         limit: error.limit,
         activeMachines: error.activeMachines,
         planId: entitlements.planId,
-        retryAction: "Run `cmux vm ls`, then delete an active VM with `cmux vm rm <id>` before creating another, or upgrade your plan.",
+        retryAction: "Run `hmux vm ls`, then delete an active VM with `hmux vm rm <id>` before creating another, or upgrade your plan.",
       }),
     VmCreateCreditsInsufficientError: (error) => {
       const billsUser = entitlements.billingCustomerType === "user";
@@ -992,13 +992,13 @@ function invalidTeamIdResponse(): Response {
     error: "vm_invalid_request",
     status: 400,
     message: "`teamId` must be a non-empty string when provided.",
-    action: "Use a team id from `cmux auth status`, or omit `teamId` when the signed-in account has one team.",
+    action: "Use a team id from `hmux auth status`, or omit `teamId` when the signed-in account has one team.",
     details: { field: "teamId" },
   });
 }
 
 function requestHasBlankVmTeamId(request: Request): boolean {
-  for (const header of ["x-cmux-team-id", "x-cmux-billing-team-id"]) {
+  for (const header of ["x-hmux-team-id", "x-hmux-billing-team-id"]) {
     const value = request.headers.get(header);
     if (value !== null && value.trim().length === 0) return true;
   }
@@ -1028,7 +1028,7 @@ function billingTeamErrorResponse(err: {
       error: err.code,
       status: err.status,
       message: "That team is not available for this account.",
-      action: "Switch to a team you belong to, or run `cmux auth login` again and retry with the correct team id.",
+      action: "Switch to a team you belong to, or run `hmux auth login` again and retry with the correct team id.",
       reason: "The selected team is not available for this account.",
     });
   }
@@ -1036,8 +1036,8 @@ function billingTeamErrorResponse(err: {
   return vmErrorResponse({
     error: err.code,
     status: err.status,
-    message: "cmux needs to know which team should own this Cloud VM.",
-    action: "Select a team in cmux, or pass the team id with `X-Cmux-Team-Id`. If you do not see a team, run `cmux auth login` again.",
+    message: "hmux needs to know which team should own this Cloud VM.",
+    action: "Select a team in hmux, or pass the team id with `X-Hmux-Team-Id`. If you do not see a team, run `hmux auth login` again.",
     reason: "No eligible team was selected for this Cloud VM.",
   });
 }

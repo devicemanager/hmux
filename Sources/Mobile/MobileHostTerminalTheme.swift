@@ -1,14 +1,14 @@
-import CMUXMobileCore
-import CmuxFoundation
-import CmuxTerminalCore
+import HMUXMobileCore
+import HmuxFoundation
+import HmuxTerminalCore
 import Foundation
 
 extension TerminalTheme {
     /// Builds the wire ``TerminalTheme`` from the Mac's resolved terminal config.
     ///
-    /// `GhosttyConfig.loadForCmux()` already folds a named `theme = <name>`
+    /// `GhosttyConfig.loadForHmux()` already folds a named `theme = <name>`
     /// directive (any of Ghostty's bundled themes, e.g. `catppuccin-mocha`),
-    /// Ghostty's built-in defaults or cmux's managed fresh-config appearance,
+    /// Ghostty's built-in defaults or hmux's managed fresh-config appearance,
     /// and the user's explicit `background=`/`palette=` settings into concrete
     /// `NSColor`s, so reading those resolved colors here
     /// captures the *effective* palette for both custom configs and named ghostty
@@ -99,7 +99,7 @@ extension TerminalTheme {
     @MainActor
     static func currentMacTerminalThemeSnapshot() -> TerminalTheme {
         let app = GhosttyApp.shared
-        let config = GhosttyConfig.loadForCmux(
+        let config = GhosttyConfig.loadForHmux(
             preferredColorScheme: app.effectiveTerminalColorSchemePreference,
             useCache: false,
             globalFontMagnificationPercent: GlobalFontMagnification.storedPercent

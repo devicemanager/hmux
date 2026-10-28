@@ -1,9 +1,9 @@
-import CmuxSettings
+import HmuxSettings
 import Darwin
 import Foundation
 
 /// The user-configured custom upload rules (`terminal.uploadCommands` in
-/// `cmux.json`, see ``TerminalUploadCommandRule``), resolved against an ssh
+/// `hmux.json`, see ``TerminalUploadCommandRule``), resolved against an ssh
 /// destination. Constructed at the call site (see ``TerminalCustomUploadRunner``)
 /// from the rules read out of the settings catalog, so the rule set can be
 /// supplied directly in tests.
@@ -105,18 +105,18 @@ struct TerminalUploadCommand: Sendable, Equatable {
         sshOptions: [String]
     ) -> [String: String] {
         var env: [String: String] = [
-            "CMUX_UPLOAD_LOCAL_PATH": localPath,
-            "CMUX_UPLOAD_REMOTE_PATH": remotePath,
-            "CMUX_UPLOAD_DESTINATION": destination,
+            "HMUX_UPLOAD_LOCAL_PATH": localPath,
+            "HMUX_UPLOAD_REMOTE_PATH": remotePath,
+            "HMUX_UPLOAD_DESTINATION": destination,
         ]
         if let port {
-            env["CMUX_UPLOAD_PORT"] = String(port)
+            env["HMUX_UPLOAD_PORT"] = String(port)
         }
         if let identityFile, !identityFile.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            env["CMUX_UPLOAD_IDENTITY_FILE"] = identityFile
+            env["HMUX_UPLOAD_IDENTITY_FILE"] = identityFile
         }
         if !sshOptions.isEmpty {
-            env["CMUX_UPLOAD_SSH_OPTIONS"] = sshOptions.joined(separator: "\n")
+            env["HMUX_UPLOAD_SSH_OPTIONS"] = sshOptions.joined(separator: "\n")
         }
         return env
     }
@@ -124,7 +124,7 @@ struct TerminalUploadCommand: Sendable, Equatable {
     /// The path handed to a custom upload command. It is intentionally independent
     /// of the built-in SSH transport's private session directory: custom commands
     /// may use an interactive SSH wrapper, an artifact service, or another
-    /// transport that cannot run cmux's directory-maintenance SSH command.
+    /// transport that cannot run hmux's directory-maintenance SSH command.
     static func customRemotePath(for fileURL: URL, uuid: UUID = UUID()) -> String {
         // Preserve the path shape used by custom commands before the private
         // session directory was introduced in #16523.
@@ -141,16 +141,16 @@ struct TerminalUploadCommand: Sendable, Equatable {
             boundedExtension.unicodeScalars.append(scalar)
         }
         let suffix = boundedExtension.isEmpty ? "" : "." + boundedExtension
-        return "/tmp/cmux-drop-\(uuid.uuidString.lowercased())\(suffix)"
+        return "/tmp/hmux-drop-\(uuid.uuidString.lowercased())\(suffix)"
     }
 
-    /// The ready-to-type string cmux inserts for one file after the command runs.
+    /// The ready-to-type string hmux inserts for one file after the command runs.
     ///
     /// Non-empty command output is typed verbatim — a path, URL, or any reference
     /// the command chose — with C0 control characters and DEL stripped so output
     /// (which is often server-influenced, e.g. a URL an upload service returns)
     /// can't inject escape sequences or newlines into the terminal. When the
-    /// command prints nothing, cmux falls back to the shell-escaped remote path it
+    /// command prints nothing, hmux falls back to the shell-escaped remote path it
     /// delivered to, matching the built-in `scp` transport.
     ///
     /// Trust model: the output is *inserted, not executed*. Verbatim insertion is

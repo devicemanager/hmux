@@ -1,5 +1,5 @@
 {
-  "name": "cmux-presence-worker",
+  "name": "hmux-presence-worker",
   "license": "BUSL-1.1",
   "private": true,
   "type": "module",

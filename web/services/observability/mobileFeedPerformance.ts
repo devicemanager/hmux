@@ -81,17 +81,17 @@ export function parseMobileFeedPerformanceEvent(candidate: unknown): MobileFeedP
 /** Numeric distributions are span attributes; ingestion span duration is not scroll latency. */
 export function mobileFeedPerformanceAttributes(userId: string, observation: MobileFeedPerformanceEvent) {
   const attributes: Record<string, string | number | boolean> = {
-    "cmux.subsystem": "mobile-feed",
-    "cmux.runtime": "ios",
-    "cmux.user_id": userId,
-    "cmux.observation.source": "client",
-    "cmux.mobile.event": observation.event,
-    "cmux.mobile.occurred_at": observation.timestamp,
-    "cmux.mobile.feed.measurement": "display_link_callback_gap",
+    "hmux.subsystem": "mobile-feed",
+    "hmux.runtime": "ios",
+    "hmux.user_id": userId,
+    "hmux.observation.source": "client",
+    "hmux.mobile.event": observation.event,
+    "hmux.mobile.occurred_at": observation.timestamp,
+    "hmux.mobile.feed.measurement": "display_link_callback_gap",
   };
   for (const [key, value] of Object.entries(observation.properties)) {
     if (value !== undefined) {
-      attributes[`cmux.mobile.feed.${key}`] = Array.isArray(value) ? JSON.stringify(value) : value;
+      attributes[`hmux.mobile.feed.${key}`] = Array.isArray(value) ? JSON.stringify(value) : value;
     }
   }
   return attributes;
@@ -100,6 +100,6 @@ export function mobileFeedPerformanceAttributes(userId: string, observation: Mob
 /** Uses the existing server-owned Axiom credentials and authenticated user attribution. */
 export function emitMobileFeedPerformance(userId: string, observation: MobileFeedPerformanceEvent): Promise<void> {
   const name = observation.event === "ios_feed_performance_window"
-    ? "cmux.mobile.feed.performance" : "cmux.mobile.feed.scroll_anomaly";
-  return withSpan("cmux-mobile-feed", name, mobileFeedPerformanceAttributes(userId, observation), async () => {});
+    ? "hmux.mobile.feed.performance" : "hmux.mobile.feed.scroll_anomaly";
+  return withSpan("hmux-mobile-feed", name, mobileFeedPerformanceAttributes(userId, observation), async () => {});
 }

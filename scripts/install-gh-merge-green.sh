@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Pin the gh-merge-green that every session runs to a tested origin/main commit.
 #
-# ~/.local/bin/gh-merge-green used to be a symlink into a live cmux working
+# ~/.local/bin/gh-merge-green used to be a symlink into a live hmux working
 # checkout. On 2026-10-19 an agent switched that checkout's branch and edited
 # the script in place; the half-edited file broke every session's merges.
 #
@@ -24,7 +24,7 @@
 #   install-gh-merge-green.sh repair SNAPSHOT
 #   install-gh-merge-green.sh status
 #
-# --repo is any cmux clone whose origin is GitHub (first install only; it is
+# --repo is any hmux clone whose origin is GitHub (first install only; it is
 # remembered). REF must be origin/main or one of its ancestors.
 set -euo pipefail
 
@@ -142,7 +142,7 @@ run_tests() { # SNAPSHOT
 
 tests_where() { # local, or ci on a Mac that runs no test suites
   case "${GH_MERGE_GREEN_TESTS:-}" in local|ci) echo "$GH_MERGE_GREEN_TESTS"; return 0 ;; esac
-  local role="${CMUX_LOCAL_BUILD_GUARDS_DIR:-$HOME/.local/lib/cmux-local-build-guards}/build-role"
+  local role="${HMUX_LOCAL_BUILD_GUARDS_DIR:-$HOME/.local/lib/hmux-local-build-guards}/build-role"
   if [ -f "$role" ] && [ "$(cat "$role")" = submitter-only ]; then echo ci; else echo local; fi
 }
 
@@ -203,7 +203,7 @@ cmd_install() {
   repo="${repo:-$(saved repo)}"
   bin="${bin:-$(saved bin)}"
   bin="${bin:-$HOME/.local/bin}"
-  [ -n "$repo" ] || die "pass --repo DIR (a cmux clone whose origin is GitHub) on the first install"
+  [ -n "$repo" ] || die "pass --repo DIR (a hmux clone whose origin is GitHub) on the first install"
   repo="$(git -C "$repo" rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" ||
     die "--repo is not a git checkout"
   # Worktrees are added from the main checkout of that repository.

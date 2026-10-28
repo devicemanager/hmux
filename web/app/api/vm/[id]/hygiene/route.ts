@@ -8,7 +8,7 @@ import { setSpanAttributes } from "../../../../../services/telemetry";
 import { runVmRoute } from "../../../../../services/vms/routeWorkflow";
 import { parseMachineHygieneRequest, runMachineHygiene } from "../../../../../services/vms/hygiene/workflow";
 
-// Disk hygiene for one of the caller's own machines (cmux-machine-hygiene).
+// Disk hygiene for one of the caller's own machines (hmux-machine-hygiene).
 // The body is optional: `{}` or no body is a dry-run that only reports what
 // could be reclaimed; `{ "apply": true }` reclaims it. Clients show the
 // dry-run first and offer apply as its own, separately confirmed action.
@@ -24,7 +24,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/hygiene",
-    { "cmux.vm.operation": "hygiene" },
+    { "hmux.vm.operation": "hygiene" },
     "/api/vm/[id]/hygiene POST failed",
     async ({ user, span }) => {
       const text = await request.text();
@@ -52,7 +52,7 @@ export async function POST(
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id, "cmux.vm.hygiene.apply": parsed.apply });
+      setSpanAttributes(span, { "hmux.vm.id": id, "hmux.vm.hygiene.apply": parsed.apply });
       const run = await runVmRoute(runMachineHygiene({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,
@@ -92,8 +92,8 @@ export async function POST(
         });
       }
       setSpanAttributes(span, {
-        "cmux.vm.hygiene.reclaimable_kb": outcome.report.reclaimableKb,
-        "cmux.vm.hygiene.items": outcome.report.items.length,
+        "hmux.vm.hygiene.reclaimable_kb": outcome.report.reclaimableKb,
+        "hmux.vm.hygiene.items": outcome.report.items.length,
       });
       return jsonResponse({ id, ...outcome.report });
     },

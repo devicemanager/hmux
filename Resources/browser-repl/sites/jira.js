@@ -3,9 +3,9 @@
 // session cookie authenticates.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URL } = root.CmuxBrowserRepl.core;
+  const { URL } = root.HmuxBrowserRepl.core;
 
   async function rest(arg) {
     const out = [];
@@ -92,7 +92,7 @@
           } catch (e) {}
           return { status: res.status, json };
         });
-        if (r.status === 401 || r.status === 403) throw new S.SiteError("not_signed_in", `${name}: the cmux browser is not signed in to Atlassian; open https://home.atlassian.com with tabs.open() and ask the user to sign in`);
+        if (r.status === 401 || r.status === 403) throw new S.SiteError("not_signed_in", `${name}: the hmux browser is not signed in to Atlassian; open https://home.atlassian.com with tabs.open() and ask the user to sign in`);
         if (r.status !== 200 || !r.json) throw new S.SiteError("http", `${name}: HTTP ${r.status}`);
         return (r.json.sites || [])
           .map((x) => ({ url: x.url, name: x.displayName || x.name || null, products: x.products || x.availableProducts || [] }))
@@ -116,7 +116,7 @@
       async function get(origin, paths, name) {
         const rs = await t.inOrigin(origin, rest, { paths });
         for (const r of rs) {
-          if (r.status === 401) throw new S.SiteError("not_signed_in", `${name}: the cmux browser is not signed in to ${origin}; open it with tabs.open() and ask the user to sign in`);
+          if (r.status === 401) throw new S.SiteError("not_signed_in", `${name}: the hmux browser is not signed in to ${origin}; open it with tabs.open() and ask the user to sign in`);
           if (r.status === 404) throw new S.SiteError("not_found", `${name}: not found, or this account cannot see it`);
           if (r.status < 200 || r.status >= 300) throw new S.SiteError("http", `${name}: HTTP ${r.status}${r.json && r.json.errorMessages ? ": " + r.json.errorMessages.join("; ") : ""}`);
         }

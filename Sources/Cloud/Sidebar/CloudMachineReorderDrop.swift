@@ -1,5 +1,5 @@
 import AppKit
-import CmuxCloudMachines
+import HmuxCloudMachines
 
 /// Resolves a machine drag against the frozen, displayed machine rows (the
 /// roots, or the Cloud Machines section's children). Descendants are hover

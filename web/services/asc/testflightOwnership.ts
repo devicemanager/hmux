@@ -5,12 +5,12 @@ export const FOUNDER_TESTFLIGHT_GROUP_ID =
   "3ee84bfa-10ad-4f23-a45c-f9a3b037373e";
 
 const PRO_OWNED_LEGACY_TESTFLIGHT_GROUP_IDS_METADATA_KEY =
-  "cmuxProTestflightOwnedLegacyGroupIDs";
+  "hmuxProTestflightOwnedLegacyGroupIDs";
 const PRO_OWNED_LEGACY_TESTFLIGHT_EMAILS_METADATA_KEY =
-  "cmuxProTestflightOwnedLegacyEmails";
+  "hmuxProTestflightOwnedLegacyEmails";
 const PRO_TESTFLIGHT_ENROLLMENT_EMAILS_METADATA_KEY =
-  "cmuxProTestflightEnrollmentEmails";
-const PRO_TESTFLIGHT_GRANTS_METADATA_KEY = "cmuxProTestflightGrants";
+  "hmuxProTestflightEnrollmentEmails";
+const PRO_TESTFLIGHT_GRANTS_METADATA_KEY = "hmuxProTestflightGrants";
 
 type TestflightOwnershipMetadata =
   | null

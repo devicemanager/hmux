@@ -147,7 +147,7 @@ const productionDeps: RelayTokenDeps = {
     ),
   ),
   checkRateLimit,
-  rateLimitRuleId: () => process.env.CMUX_RELAY_TOKEN_RATE_LIMIT_ID,
+  rateLimitRuleId: () => process.env.HMUX_RELAY_TOKEN_RATE_LIMIT_ID,
   isVercel: () => process.env.VERCEL === "1",
   credentialSigningRequired: () =>
     process.env.VERCEL === "1" && process.env.VERCEL_ENV !== "preview",
@@ -371,7 +371,7 @@ type RelayTokenRequest = {
 async function parseRelayTokenRequest(
   request: Request,
 ): Promise<RelayTokenRequest | Response> {
-  const clientNamespace = request.headers.get("x-cmux-app-namespace") ?? "legacy";
+  const clientNamespace = request.headers.get("x-hmux-app-namespace") ?? "legacy";
   if (!/^[A-Za-z0-9._:-]{1,255}$/.test(clientNamespace)) {
     return jsonResponse({ error: "invalid_client_namespace" }, 400);
   }

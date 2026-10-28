@@ -1,5 +1,5 @@
-import CmuxBrowser
-import CmuxControlSocket
+import HmuxBrowser
+import HmuxControlSocket
 import Foundation
 
 extension TerminalController {
@@ -28,7 +28,7 @@ extension TerminalController {
             isV2: true,
             params: params
         )
-        let result = await CmuxAutomationInvocationContext.$focusAllowed.withValue(allowsFocusMutation) {
+        let result = await HmuxAutomationInvocationContext.$focusAllowed.withValue(allowsFocusMutation) {
             await Task { @MainActor [weak self] in
                 guard let self else {
                     return ControlCallResult.err(
@@ -104,7 +104,7 @@ extension TerminalController {
             isV2: true,
             params: params
         )
-        let encodedResponse = CmuxAutomationInvocationContext.$focusAllowed.withValue(allowsFocusMutation) {
+        let encodedResponse = HmuxAutomationInvocationContext.$focusAllowed.withValue(allowsFocusMutation) {
             v2AsyncResultCall(id: request.id?.foundationObject, timeoutSeconds: 15) {
                 let result = await self.v2BrowserKeyboardNativeResult(
                     request: request,

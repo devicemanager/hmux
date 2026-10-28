@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSimulatorUI
+import HmuxSimulatorUI
 import SwiftUI
 
 struct SimulatorPanelView: View {
@@ -25,7 +25,7 @@ struct SimulatorPanelView: View {
             }
             .environment(
                 \.colorScheme,
-                cmuxReadableColorScheme(for: appearance.backgroundColor)
+                hmuxReadableColorScheme(for: appearance.backgroundColor)
             )
             .onAppear {
                 panel.coordinator.setActive(isFocused)

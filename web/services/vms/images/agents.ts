@@ -1,5 +1,5 @@
 /**
- * The coding agents a cmux Cloud machine carries, and the one channel each is
+ * The coding agents a hmux Cloud machine carries, and the one channel each is
  * installed and updated from: the tool's own GitHub release asset for Linux
  * x86_64. The devbox bake installs the Dockerfile's pins from these assets
  * (sha256-verified), and the opt-in updater (services/vms/guestAgentUpdates.ts)
@@ -32,9 +32,9 @@ export type GuestAgent = {
   readonly binary: string;
   /** The npm package older images installed; the updater migrates it. Also the pin's stable key. */
   readonly npm: string;
-  /** The Dockerfile ARG carrying the exact version (CMUX_IMAGE_<TOOL>_VERSION). */
+  /** The Dockerfile ARG carrying the exact version (HMUX_IMAGE_<TOOL>_VERSION). */
   readonly versionArg: string;
-  /** The Dockerfile ARG carrying the asset's sha256 (CMUX_IMAGE_<TOOL>_SHA256). */
+  /** The Dockerfile ARG carrying the asset's sha256 (HMUX_IMAGE_<TOOL>_SHA256). */
   readonly sha256Arg: string;
   /** owner/name on GitHub. */
   readonly repo: string;
@@ -52,8 +52,8 @@ export const GUEST_AGENTS: readonly GuestAgent[] = [
   {
     binary: "claude",
     npm: "@anthropic-ai/claude-code",
-    versionArg: "CMUX_IMAGE_CLAUDE_CODE_VERSION",
-    sha256Arg: "CMUX_IMAGE_CLAUDE_CODE_SHA256",
+    versionArg: "HMUX_IMAGE_CLAUDE_CODE_VERSION",
+    sha256Arg: "HMUX_IMAGE_CLAUDE_CODE_SHA256",
     repo: "anthropics/claude-code",
     tagPrefix: "v",
     asset: "claude-linux-x64.tar.gz",
@@ -63,8 +63,8 @@ export const GUEST_AGENTS: readonly GuestAgent[] = [
   {
     binary: "codex",
     npm: "@openai/codex",
-    versionArg: "CMUX_IMAGE_CODEX_VERSION",
-    sha256Arg: "CMUX_IMAGE_CODEX_SHA256",
+    versionArg: "HMUX_IMAGE_CODEX_VERSION",
+    sha256Arg: "HMUX_IMAGE_CODEX_SHA256",
     repo: "openai/codex",
     tagPrefix: "rust-v",
     asset: "codex-package-x86_64-unknown-linux-musl.tar.gz",
@@ -74,8 +74,8 @@ export const GUEST_AGENTS: readonly GuestAgent[] = [
   {
     binary: "opencode",
     npm: "opencode-ai",
-    versionArg: "CMUX_IMAGE_OPENCODE_VERSION",
-    sha256Arg: "CMUX_IMAGE_OPENCODE_SHA256",
+    versionArg: "HMUX_IMAGE_OPENCODE_VERSION",
+    sha256Arg: "HMUX_IMAGE_OPENCODE_SHA256",
     repo: "anomalyco/opencode",
     tagPrefix: "v",
     asset: "opencode-linux-x64.tar.gz",
@@ -85,8 +85,8 @@ export const GUEST_AGENTS: readonly GuestAgent[] = [
   {
     binary: "pi",
     npm: "@earendil-works/pi-coding-agent",
-    versionArg: "CMUX_IMAGE_PI_VERSION",
-    sha256Arg: "CMUX_IMAGE_PI_SHA256",
+    versionArg: "HMUX_IMAGE_PI_VERSION",
+    sha256Arg: "HMUX_IMAGE_PI_SHA256",
     repo: "earendil-works/pi",
     tagPrefix: "v",
     asset: "pi-linux-x64.tar.gz",
@@ -96,8 +96,8 @@ export const GUEST_AGENTS: readonly GuestAgent[] = [
   {
     binary: "agent-browser",
     npm: "agent-browser",
-    versionArg: "CMUX_IMAGE_AGENT_BROWSER_VERSION",
-    sha256Arg: "CMUX_IMAGE_AGENT_BROWSER_SHA256",
+    versionArg: "HMUX_IMAGE_AGENT_BROWSER_VERSION",
+    sha256Arg: "HMUX_IMAGE_AGENT_BROWSER_SHA256",
     repo: "vercel-labs/agent-browser",
     tagPrefix: "v",
     asset: "agent-browser-linux-x64",
@@ -107,9 +107,9 @@ export const GUEST_AGENTS: readonly GuestAgent[] = [
 ];
 
 /** Each version unpacks to <root>/<binary>/<version>/; /usr/local/bin/<binary> links into the current one. */
-export const GUEST_AGENTS_ROOT = "/opt/cmux-agents";
+export const GUEST_AGENTS_ROOT = "/opt/hmux-agents";
 /** Written last into a version directory: its presence says the unpack finished and was verified. */
-export const GUEST_AGENT_MARKER = ".cmux-agent.json";
+export const GUEST_AGENT_MARKER = ".hmux-agent.json";
 
 export const GITHUB_API_BASE = "https://api.github.com";
 export const GITHUB_DOWNLOAD_BASE = "https://github.com";
@@ -117,7 +117,7 @@ export const GITHUB_DOWNLOAD_BASE = "https://github.com";
 /**
  * The hosts agent installs and updates reach: release metadata from the API,
  * then the asset from github.com, which redirects to GitHub's release-asset
- * storage. All are in CMUX_REQUIRED_DOMAINS, so updates work in every network
+ * storage. All are in HMUX_REQUIRED_DOMAINS, so updates work in every network
  * mode (a test keeps the two lists together).
  */
 export const GUEST_AGENT_UPDATE_DOMAINS: readonly string[] = [

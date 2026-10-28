@@ -11,7 +11,7 @@ describe("locale preference during prefetch", () => {
   ];
   for (const headers of prefetchHeaders) {
     test(`does not replace an explicit locale preference for ${JSON.stringify(headers)}`, () => {
-      const response = middleware(new NextRequest("https://cmux.com/ko/blog/cmux-vault", {
+      const response = middleware(new NextRequest("https://cmux.com/ko/blog/hmux-vault", {
         headers: { host: "cmux.com", cookie: "NEXT_LOCALE=en", ...headers },
       }));
 
@@ -28,7 +28,7 @@ describe("locale preference during prefetch", () => {
   }
 
   test("still persists the destination locale for a real navigation", () => {
-    const response = middleware(new NextRequest("https://cmux.com/ko/blog/cmux-vault", {
+    const response = middleware(new NextRequest("https://cmux.com/ko/blog/hmux-vault", {
       headers: { host: "cmux.com", cookie: "NEXT_LOCALE=en", "sec-fetch-dest": "document" },
     }));
 

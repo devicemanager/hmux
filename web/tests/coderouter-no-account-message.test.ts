@@ -30,7 +30,7 @@ describe("coderouter no-account message", () => {
       }
     }
     // A personal machine is told the command that exists inside it, not the host-only one.
-    expect(noAccountConfiguredMessage("claude", personal)).not.toContain("cmux coderouter claude add");
+    expect(noAccountConfiguredMessage("claude", personal)).not.toContain("hmux coderouter claude add");
   });
 
   test("chatmux machines, API keys and people keep the host text", () => {
@@ -44,7 +44,7 @@ describe("coderouter no-account message", () => {
       for (const family of FAMILIES) expect(noAccountConfiguredMessage(family, caller)).not.toContain("cr use own");
     }
     expect(noAccountConfiguredMessage("claude", callers[2]!)).toBe(
-      "No Claude upstream account is configured for this team or shared with this caller. Add one with `cmux coderouter claude add` or at coderouter.dev.",
+      "No Claude upstream account is configured for this team or shared with this caller. Add one with `hmux coderouter claude add` or at coderouter.dev.",
     );
   });
 });

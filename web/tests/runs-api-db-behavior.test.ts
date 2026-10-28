@@ -16,7 +16,7 @@ import {
 import { runAttachTicket } from "../services/runs/attach";
 import { normalizeRunSpec, runSpecDigest, type RunSpec } from "../services/runs/spec";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const COMMIT = "a".repeat(40);
 const DIGEST = "sha256:" + "b".repeat(64);
@@ -34,7 +34,7 @@ function scope(suffix: string, team = `team-${suffix}`): RunScope {
 
 function spec(operationId: string): RunSpec {
   return normalizeRunSpec({
-    schema: "cmux.run/v1",
+    schema: "hmux.run/v1",
     operationId,
     source: { repository: "manaflow-ai/cmux", ref: "main", commit: COMMIT, setupManifestDigest: DIGEST },
     intent: { digest: DIGEST },
@@ -68,7 +68,7 @@ async function expectRunHttpError(action: Promise<unknown>, status: number): Pro
 beforeAll(async () => {
   if (!runDbTests) return;
   const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!url) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   sqlClient = postgres(url, { max: 4 });
 });
 

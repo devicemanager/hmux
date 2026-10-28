@@ -24,13 +24,13 @@ SAMPLE = """SwiftDriver Bonsplit normal arm64 com.apple.xcode.tools.swift.compil
 Cache hit
 
 Cache miss
-SwiftCompile normal arm64 Compiling\\ Foo.swift /repo/Sources/Foo.swift (in target 'cmux' from project 'cmux')
+SwiftCompile normal arm64 Compiling\\ Foo.swift /repo/Sources/Foo.swift (in target 'hmux' from project 'hmux')
 Cache miss
 
-SwiftCompile normal arm64 Compiling\\ Bar.swift /repo/Sources/Bar.swift (in target 'cmux' from project 'cmux')
-SwiftEmitModule normal arm64 Emitting\\ module\\ for\\ cmux (in target 'cmux' from project 'cmux')
+SwiftCompile normal arm64 Compiling\\ Bar.swift /repo/Sources/Bar.swift (in target 'hmux' from project 'hmux')
+SwiftEmitModule normal arm64 Emitting\\ module\\ for\\ hmux (in target 'hmux' from project 'hmux')
 
-CodeSign /tmp/cmux.app (in target 'cmux' from project 'cmux')
+CodeSign /tmp/hmux.app (in target 'hmux' from project 'hmux')
 
 Build Timing Summary
 CompileSwiftSources (8 tasks) | 12.500 seconds
@@ -60,7 +60,7 @@ SwiftCompile (1 task) | 1.000 seconds
 """
 
 FLEET_CACHE_LOG = """COMPILATION_CACHE_ENABLE_PLUGIN = YES
-COMPILATION_CACHE_REMOTE_SERVICE_PATH = /Users/Shared/cmux-build-fleet/xcode/fleet-cas.sock
+COMPILATION_CACHE_REMOTE_SERVICE_PATH = /Users/Shared/hmux-build-fleet/xcode/fleet-cas.sock
 Build Timing Summary
 CompileSwiftSources (2 tasks) | 3.000 seconds
 Ld (1 task) | 0.500 seconds
@@ -71,7 +71,7 @@ Ld (1 task) | 0.500 seconds
 class BuildMetricsTests(unittest.TestCase):
     def test_parse_log_attributes_cache_and_swift_work(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "cmux-build.log"
+            path = Path(directory) / "hmux-build.log"
             path.write_text(SAMPLE)
             parsed = build_metrics.parse_log(path)
 
@@ -81,8 +81,8 @@ class BuildMetricsTests(unittest.TestCase):
         self.assertEqual(parsed["swift_compile_events"], 2)
         self.assertEqual(parsed["swift_emit_module_events"], 1)
         self.assertEqual(parsed["targets"]["Bonsplit"]["cache_hits"], 1)
-        self.assertEqual(parsed["targets"]["cmux"]["cache_misses"], 2)
-        self.assertEqual(parsed["targets"]["cmux"]["swift_compile_events"], 2)
+        self.assertEqual(parsed["targets"]["hmux"]["cache_misses"], 2)
+        self.assertEqual(parsed["targets"]["hmux"]["swift_compile_events"], 2)
         self.assertEqual(
             parsed["timing_summary_seconds"],
             {"CompileSwiftSources": 12.5, "Ld": 2.25},
@@ -90,21 +90,21 @@ class BuildMetricsTests(unittest.TestCase):
 
     def test_xcode_26_6_summary_sets_cacheable_tasks(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "cmux-build.log"
+            path = Path(directory) / "hmux-build.log"
             path.write_text(XCODE_26_6)
             parsed = build_metrics.parse_log(path)
         self.assertEqual((parsed["cache_hits"], parsed["cache_misses"], parsed["cacheable_tasks"]), (7, 3, 10))
 
     def test_xcode_26_6_remarks_count_hits_and_misses(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "cmux-build.log"
+            path = Path(directory) / "hmux-build.log"
             path.write_text(XCODE_26_6_REMARKS)
             parsed = build_metrics.parse_log(path)
         self.assertEqual((parsed["cache_hits"], parsed["cache_misses"], parsed["cacheable_tasks"]), (4, 1, 5))
 
     def test_xcode_26_6_compact_summary_sets_all_tasks_as_misses(self):
         with tempfile.TemporaryDirectory() as directory:
-            path = Path(directory) / "cmux-build.log"
+            path = Path(directory) / "hmux-build.log"
             path.write_text(XCODE_26_6_COMPACT)
             parsed = build_metrics.parse_log(path)
         self.assertEqual((parsed["cache_hits"], parsed["cache_misses"], parsed["cacheable_tasks"]), (0, 316, 316))
@@ -125,7 +125,7 @@ class BuildMetricsTests(unittest.TestCase):
                         "swift_compile_events": 1,
                         "swift_emit_module_events": 0,
                     },
-                    "cmux": {
+                    "hmux": {
                         "cache_hits": 0,
                         "cache_misses": 3,
                         "swift_compile_events": 3,
@@ -141,7 +141,7 @@ class BuildMetricsTests(unittest.TestCase):
                 "swift_emit_module_events": 0,
                 "timing_summary_seconds": {"CompileSwiftSources": 2.0},
                 "targets": {
-                    "cmux": {
+                    "hmux": {
                         "cache_hits": 1,
                         "cache_misses": 1,
                         "swift_compile_events": 2,
@@ -155,8 +155,8 @@ class BuildMetricsTests(unittest.TestCase):
         self.assertEqual(aggregate["cache_misses"], 4)
         self.assertEqual(aggregate["cacheable_tasks"], 7)
         self.assertEqual(aggregate["timing_summary_seconds"]["CompileSwiftSources"], 7.0)
-        self.assertEqual(next(iter(aggregate["targets"])), "cmux")
-        self.assertEqual(aggregate["targets"]["cmux"]["swift_compile_events"], 5)
+        self.assertEqual(next(iter(aggregate["targets"])), "hmux")
+        self.assertEqual(aggregate["targets"]["hmux"]["swift_compile_events"], 5)
 
     def test_ci_wires_advisory_receipt_and_timing_summary(self):
         compile_script = (ROOT / "scripts/ci/compile-app-host-test-product.sh").read_text()
@@ -178,7 +178,7 @@ class BuildMetricsTests(unittest.TestCase):
     def test_receipt_discovers_logs_and_activity_metadata(self):
         with tempfile.TemporaryDirectory() as directory:
             derived = Path(directory)
-            (derived / "cmux-build.log").write_text(SAMPLE)
+            (derived / "hmux-build.log").write_text(SAMPLE)
             activity = derived / "Logs" / "Build"
             activity.mkdir(parents=True)
             (activity / "one.xcactivitylog").write_bytes(b"abc")
@@ -204,7 +204,7 @@ class BuildMetricsTests(unittest.TestCase):
     def test_receipt_identifies_fleet_cache_backend_without_emitting_paths(self):
         with tempfile.TemporaryDirectory() as directory:
             derived = Path(directory)
-            (derived / "cmux-build.log").write_text(FLEET_CACHE_LOG)
+            (derived / "hmux-build.log").write_text(FLEET_CACHE_LOG)
 
             receipt = build_metrics.build_receipt(derived, 9.25, compile_outcome="success")
 
@@ -217,7 +217,7 @@ class BuildMetricsTests(unittest.TestCase):
             root = Path(directory)
             derived = root / "derived"
             derived.mkdir()
-            (derived / "cmux-build.log").write_text(FLEET_CACHE_LOG)
+            (derived / "hmux-build.log").write_text(FLEET_CACHE_LOG)
             output = root / "receipt.json"
             host = root / "host.json"
             env = {**os.environ, "GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "2"}

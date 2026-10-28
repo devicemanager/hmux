@@ -1,6 +1,6 @@
-import CMUXMobileCore
-import CmuxMobileRPC
-import CmuxSurfaceCatalogModel
+import HMUXMobileCore
+import HmuxMobileRPC
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// A Mac the person paired in Settings › Devices, as the directory lists it:

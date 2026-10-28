@@ -32,7 +32,7 @@ def job(name, created, started, completed, runner="blacksmith-4vcpu-ubuntu-2404-
 JOBS = [
     job("changes", 0, 2, 30),
     job("guards / workflow-guard-tests / ci", 31, 33, 120),
-    job("macos / macOS compile admission", 31, 40, 340, runner="cmux14-glaeda", labels=("glaeda-root-std",),
+    job("macos / macOS compile admission", 31, 40, 340, runner="hmux14-glaeda", labels=("glaeda-root-std",),
         steps=[("Compile app-host test product", 60, 280), ("Checkout", 40, 45)]),
     job("macos / app-host unit tests (1/3)", 341, 350, 700, labels=("blacksmith-12vcpu-macos-26",)),
     job("macos / app-host unit tests (2/3)", 341, 581, 1100, labels=("blacksmith-12vcpu-macos-26",),
@@ -123,8 +123,8 @@ class ReadoutTests(unittest.TestCase):
         self.assertIn("app-host unit tests (2/3) queued 4m00s (above p90) + 8m39s", headline)
         self.assertNotIn("tests 3s", headline)  # roll-ups stay in the table only
         self.assertIn("| critical path | where | queue | run | runner setup | runner cleanup |", text)
-        self.assertIn("| macos / macOS compile admission | mini cmux14 | 9s |", text)
-        self.assertIn("| macos / macOS compile admission | mini cmux14 | 9s | 5m00s | 0s | 1m00s |", text)
+        self.assertIn("| macos / macOS compile admission | mini hmux14 | 9s |", text)
+        self.assertIn("| macos / macOS compile admission | mini hmux14 | 9s | 5m00s | 0s | 1m00s |", text)
         self.assertIn("| p92 (p50 4m00s, p90 4m40s) | 5m00s vs 4m00s ↑ |", text)
         self.assertIn("| macOS compile admission | Compile app-host test product | 3m40s | p92 (p50 2m30s, p90 3m20s) |", text)
         self.assertIn("**4m00s (>p99), above p90**", text)
@@ -153,7 +153,7 @@ class ReadoutTests(unittest.TestCase):
             if j["name"] == "macos / macOS compile admission":
                 j["conclusion"] = "cancelled"
         text = readout.build_readout(jobs, STATS, "pr")
-        self.assertIn("| macos / macOS compile admission | mini cmux14 | 9s | 5m00s | 0s | 1m00s | - |", text)
+        self.assertIn("| macos / macOS compile admission | mini hmux14 | 9s | 5m00s | 0s | 1m00s | - |", text)
         self.assertNotIn("Compile app-host test product | 3m40s | p", text)
 
     def test_nothing_ran(self):
@@ -178,7 +178,7 @@ class HelperTests(unittest.TestCase):
         self.assertEqual(readout.fmt_duration(3725), "1h02m")
 
     def test_where(self):
-        self.assertEqual(readout.where({"runner_name": "cmuxs-mac-mini-5-glaeda-3", "labels": ["glaeda-side-std"]}), "mini cmuxs-mac-mini-5")
+        self.assertEqual(readout.where({"runner_name": "hmuxs-mac-mini-5-glaeda-3", "labels": ["glaeda-side-std"]}), "mini hmuxs-mac-mini-5")
         self.assertEqual(readout.where({"runner_name": "b-1", "labels": ["blacksmith-12vcpu-macos-26"]}), "Blacksmith 12vcpu-macos-26")
         self.assertEqual(readout.where({"runner_name": "GitHub Actions 3", "labels": ["ubuntu-latest"]}), "GitHub-hosted")
 

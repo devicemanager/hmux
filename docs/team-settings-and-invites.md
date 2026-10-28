@@ -1,6 +1,6 @@
 # Team settings, invites, and per-team billing
 
-Replaces Hexclave `<AccountSettings />` with cmux-owned settings, adds team
+Replaces Hexclave `<AccountSettings />` with hmux-owned settings, adds team
 invites (per-email and reusable links), and makes every team upgradable on
 its own.
 

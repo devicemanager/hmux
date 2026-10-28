@@ -1,20 +1,20 @@
 import Darwin
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
-/// Terminates the agent processes cmux spawned and waits for their exact
+/// Terminates the agent processes hmux spawned and waits for their exact
 /// process generations to exit before the app replies to a quit request.
 ///
-/// cmux owns the agents it launched. Until this coordinator existed, quit left
+/// hmux owns the agents it launched. Until this coordinator existed, quit left
 /// them to the SIGHUP that the closing pty delivers as the process dies, and
 /// never waited. Codex treats that SIGHUP as a graceful-only shutdown and keeps
 /// its thread writer lock (`$CODEX_HOME/thread-writer-locks/<thread>.lock`)
-/// until it finishes, so a relaunched cmux could run `codex resume` against a
+/// until it finishes, so a relaunched hmux could run `codex resume` against a
 /// lock that the previous agent still held and open the thread read-only
 /// (https://github.com/manaflow-ai/cmux/issues/12805).
 ///
 /// The signal path is the hibernation teardown's: exact PID-generation, process
-/// group, controlling-TTY, and cmux-scope validation before SIGTERM, then a
+/// group, controlling-TTY, and hmux-scope validation before SIGTERM, then a
 /// bounded wait, validated SIGKILL escalation for survivors, and a bounded
 /// post-kill wait. If the refresh cannot prove the target group, the process is
 /// left alone rather than signaling stale process-group data.

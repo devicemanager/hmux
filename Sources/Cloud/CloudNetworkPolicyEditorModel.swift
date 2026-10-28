@@ -1,11 +1,11 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 import Observation
 
 /// Editable state behind ``CloudNetworkPolicyEditor``, shared by the New
 /// Machine sheet and the Network sheet. Every change goes through
 /// ``CloudNetworkPolicy/apply(_:knownPresetIDs:)``, the same rules
-/// `cmux vm network` uses, and a refused change becomes ``inputError``.
+/// `hmux vm network` uses, and a refused change becomes ``inputError``.
 @MainActor
 @Observable
 final class CloudNetworkPolicyEditorModel {
@@ -40,11 +40,11 @@ final class CloudNetworkPolicyEditorModel {
     var presets: [CloudNetworkPreset] { catalog?.presets ?? [] }
     var requiredDomains: [String] { catalog?.requiredDomains ?? [] }
 
-    /// "Includes files.cmux.com, github.com, … which cmux needs." for the
+    /// "Includes files.cmux.com, github.com, … which hmux needs." for the
     /// restrictive modes; nil in Full mode or before the catalog loads.
     var requiredDomainsNote: String? {
         guard policy.mode != .full, !requiredDomains.isEmpty else { return nil }
-        let format = String(localized: "cloud.network.required.note", defaultValue: "Always allowed so cmux keeps working: %@.")
+        let format = String(localized: "cloud.network.required.note", defaultValue: "Always allowed so hmux keeps working: %@.")
         return String(format: format, ListFormatter.localizedString(byJoining: requiredDomains))
     }
 

@@ -72,16 +72,16 @@ const reachable = (el) => {
   if (right - left < 1 || bottom - top < 1) return false;
   return root.elementFromPoint((left + right) / 2, (top + bottom) / 2) === el;
 };
-const markedWith = (marker) => document.querySelectorAll('[data-cmux-auth="' + String(marker).replace(/["\\]/g, "") + '"]');
+const markedWith = (marker) => document.querySelectorAll('[data-hmux-auth="' + String(marker).replace(/["\\]/g, "") + '"]');
 const usable = (f, el) => {
   if (!(el instanceof HTMLInputElement) || el.disabled || el.readOnly || !shown(el)) return false;
   const kind = kindOf(el);
   return !!kind && (f.type === "password") === (kind === "password");
 };
 if (typeof __binding !== "string" || !__binding) return { status: "page_changed" };
-const bindings = Object.prototype.hasOwnProperty.call(globalThis, "__cmuxAuthBindings")
-  ? globalThis.__cmuxAuthBindings
-  : Object.defineProperty(globalThis, "__cmuxAuthBindings", { value: new Map() }).__cmuxAuthBindings;
+const bindings = Object.prototype.hasOwnProperty.call(globalThis, "__hmuxAuthBindings")
+  ? globalThis.__hmuxAuthBindings
+  : Object.defineProperty(globalThis, "__hmuxAuthBindings", { value: new Map() }).__hmuxAuthBindings;
 if (__phase === "bind") {
   const elements = [];
   for (const f of __fields) {
@@ -116,6 +116,6 @@ for (const [f, el] of found) {
   setter.call(el, value);
   el.dispatchEvent(new InputEvent("input", { bubbles: true, composed: true, inputType: "insertReplacementText" }));
   el.dispatchEvent(new Event("change", { bubbles: true }));
-  el.removeAttribute("data-cmux-auth");
+  el.removeAttribute("data-hmux-auth");
 }
 return { status: "filled" };

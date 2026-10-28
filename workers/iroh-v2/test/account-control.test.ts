@@ -11,7 +11,7 @@ import { ACCOUNT_RECORD_BYTES } from "../src/contracts/account";
 import { RELAY_URL, deterministicRandom, descriptor, deviceKey, identity, sign, teamHarness, type DeviceKey } from "./support/team-fixture";
 
 const NOW = 1_800_000_000;
-const HOST = ["cmux.mac-host.v1", "cmux.mac-devices.v1"];
+const HOST = ["hmux.mac-host.v1", "hmux.mac-devices.v1"];
 let restore: () => void;
 beforeAll(() => { restore = deterministicRandom(); });
 afterAll(() => restore());
@@ -90,7 +90,7 @@ test("a Mac that switches team X to Y replaces its row; its other Mac sees the Y
   await call(broker, aKey!, aInY, "account.publish.v1");
   seen = directoryOf((await call(broker, bKey!, bInY, "account.directory.v1")).response);
   expect(seen.userId).toBe("user-u");
-  expect(seen.rules).toEqual(["cmux.mac-account-peer.v1"]);
+  expect(seen.rules).toEqual(["hmux.mac-account-peer.v1"]);
   expect(seen.macs.map(mac => [mac.descriptor.identity.teamId, mac.descriptor.endpointId])).toEqual([["team-y", aKey!.endpointId]]);
   expect(seen.inboundMacs.map(peer => [peer.device.descriptor.identity.deviceId, peer.permissionExpiresAt])).toEqual([["mac-a", NOW + 300]]);
   expect(seen.permissionExpiresAt).toBe(NOW + 3590);
@@ -196,9 +196,9 @@ test("namespace, build tag and lease gate inbound admission", async () => {
   const w = await world();
   const [hostKey, sameKey, otherBuildKey, otherNamespaceKey] = await Promise.all([61, 62, 63, 64].map(deviceKey));
   const host = descriptor(hostKey!, identity("team-x", "user-u", "host"), "mac", HOST);
-  const same = descriptor(sameKey!, identity("team-y", "user-u", "same"), "mac", ["cmux.mac-devices.v1"]);
+  const same = descriptor(sameKey!, identity("team-y", "user-u", "same"), "mac", ["hmux.mac-devices.v1"]);
   const otherBuild = descriptor(otherBuildKey!, identity("team-y", "user-u", "build", { buildTag: "dev" }), "mac", HOST);
-  const otherNamespace = descriptor(otherNamespaceKey!, identity("team-y", "user-u", "ns", { appNamespace: "dev.cmux.app.beta" }), "mac", HOST);
+  const otherNamespace = descriptor(otherNamespaceKey!, identity("team-y", "user-u", "ns", { appNamespace: "dev.hmux.app.beta" }), "mac", HOST);
   for (const device of [host]) w.x.enroll(device, NOW - 100);
   for (const device of [same, otherBuild, otherNamespace]) w.y.enroll(device, NOW - 100);
   w.x.store.observeAuthority("user-u", NOW - 50, NOW + 3550, NOW);

@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// A machine that does not exist yet (or failed to): the row the Machines
@@ -10,7 +10,7 @@ import SwiftUI
 struct CloudTreePendingMachineRowContent: View {
     let operation: MachineCreateOperation
     var style: CloudTreeStyle = CloudTreeStyleStore.current
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
 
     var body: some View {
         if operation.failureOutput != nil {
@@ -83,7 +83,7 @@ struct CloudTreePendingMachineRowContent: View {
             ProgressView()
                 .controlSize(.mini)
         } else {
-            CmuxSystemSymbolImage(
+            HmuxSystemSymbolImage(
                 magnified: "exclamationmark.triangle.fill",
                 pointSize: style.iconSize,
                 weight: .medium,
@@ -98,7 +98,7 @@ struct CloudTreePendingMachineRowContent: View {
 
     private var name: some View {
         Text(operation.request.displayName)
-            .cmuxFont(size: style.machineNameSize, weight: style.machineBand ? .semibold : .medium, design: style.fontDesign)
+            .hmuxFont(size: style.machineNameSize, weight: style.machineBand ? .semibold : .medium, design: style.fontDesign)
             .foregroundStyle(operation.isRunning || operation.isReconciling ? AnyShapeStyle(.secondary) : AnyShapeStyle(.primary))
             .lineLimit(1)
             .truncationMode(.tail)
@@ -106,7 +106,7 @@ struct CloudTreePendingMachineRowContent: View {
 
     private var status: some View {
         Text(operation.statusLabel)
-            .cmuxFont(size: style.detailSize, design: style.fontDesign)
+            .hmuxFont(size: style.detailSize, design: style.fontDesign)
             .foregroundStyle(operation.isRunning || operation.isReconciling ? AnyShapeStyle(.tertiary) : AnyShapeStyle(Color.orange.opacity(0.9)))
             .lineLimit(1)
             .truncationMode(.tail)

@@ -28,7 +28,7 @@ struct LocalTmuxInvocation {
     let all: Bool
     let prune: Bool
 
-    var canRunWithoutCmux: Bool {
+    var canRunWithoutHmux: Bool {
         switch action {
         case .list, .status, .detach, .close, .cleanup:
             return true
@@ -233,10 +233,10 @@ struct LocalTmuxInvocation {
 
     static var usage: String {
         String(localized: "cli.localTmux.usage", defaultValue: """
-    Usage: cmux local-tmux <start|attach|list|status|detach|close|cleanup> [session] [options]
+    Usage: hmux local-tmux <start|attach|list|status|detach|close|cleanup> [session] [options]
 
-    Opt-in local tmux sessions survive cmux quit, crash, and app updates.
-    Ordinary cmux terminals are unchanged.
+    Opt-in local tmux sessions survive hmux quit, crash, and app updates.
+    Ordinary hmux terminals are unchanged.
 
     start <name> [--cwd <path>] [--command <shell>] [--detached]
     attach <name|--id <uuid>> [--workspace <id|ref|index>] [--focus <true|false>] [--headless] [--new-client]
@@ -246,9 +246,9 @@ struct LocalTmuxInvocation {
     close <name|--id <uuid>>
     cleanup [--prune]
 
-    The registry and tmux server socket live under ~/.cmux/local-tmux with
+    The registry and tmux server socket live under ~/.hmux/local-tmux with
     user-only permissions. `attach --headless` hands the terminal directly to
-    tmux for a client outside the cmux GUI.
+    tmux for a client outside the hmux GUI.
     """)
     }
 

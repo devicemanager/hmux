@@ -1,5 +1,5 @@
 import AppKit
-import CmuxCloud
+import HmuxCloud
 
 extension CloudTreeOutlineView.Coordinator {
     /// Shows a row's context menu under its trailing "⋯" button, the same

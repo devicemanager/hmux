@@ -42,8 +42,8 @@ type GetStackServerApp = typeof StackLib.getStackServerApp;
 export async function GET(request: NextRequest) {
   if (
     isAppStoreDistributionMode({
-      cmux_distribution: request.nextUrl.searchParams.get("cmux_distribution"),
-      cmux_ios_app_store: request.nextUrl.searchParams.get("cmux_ios_app_store"),
+      hmux_distribution: request.nextUrl.searchParams.get("hmux_distribution"),
+      hmux_ios_app_store: request.nextUrl.searchParams.get("hmux_ios_app_store"),
     })
   ) {
     return NextResponse.redirect(

@@ -1,7 +1,7 @@
 import { coderouterControlRoute } from "@/services/coderouter/requestTelemetry";
-// Usage for the machine a VM-bound route token belongs to. cmux-tui inside
+// Usage for the machine a VM-bound route token belongs to. hmux-tui inside
 // the VM calls this through the Freestyle edge, which injects the real
-// `x-cmux-authorization` header; the guest itself
+// `x-hmux-authorization` header; the guest itself
 // only sends the public placeholder bearer.
 import {
   authenticateRequestRouteToken,
@@ -56,7 +56,7 @@ async function handleGet(request: Request): Promise<Response> {
     return Response.json(
       {
         error: "vm_bound_token_required",
-        message: "Per-machine usage is only available from inside a cmux Cloud VM.",
+        message: "Per-machine usage is only available from inside a hmux Cloud VM.",
         retryable: false,
       },
       { status: 403, headers: JSON_HEADERS },

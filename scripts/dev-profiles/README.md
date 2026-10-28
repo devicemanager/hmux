@@ -1,13 +1,13 @@
 # dev-profiles
 
 Data-driven environment presets for the turnkey dev-build flow (P3). A profile
-provisions a realistic test environment in a **tagged** dev cmux instance so a
+provisions a realistic test environment in a **tagged** dev hmux instance so a
 given feature has live state to test against, picked by what you're testing.
 
 Profiles are replayed by `scripts/dev-setup.sh --profile <name>` after the app
 is built, launched, and paired. Every step runs through
-`scripts/cmux-debug-cli.sh`, which refuses without `CMUX_TAG` and targets
-`/tmp/cmux-debug-<slug>.sock` only, never the user's stable app. Profiles are
+`scripts/hmux-debug-cli.sh`, which refuses without `HMUX_TAG` and targets
+`/tmp/hmux-debug-<slug>.sock` only, never the user's stable app. Profiles are
 dev-only tooling and must contain no secrets.
 
 ## Usage
@@ -22,7 +22,7 @@ scripts/dev-setup.sh --tag grid --profile composer,browser
 # List the available profiles:
 scripts/dev-profiles/replay-cli.mjs --list
 
-# Dry-run: print the resolved `cmux` arg vectors without touching a socket:
+# Dry-run: print the resolved `hmux` arg vectors without touching a socket:
 scripts/dev-profiles/replay-cli.mjs --dry-run --cwd "$PWD" --profile groups
 
 # Apply directly to an already-running tagged build (no rebuild):
@@ -53,24 +53,24 @@ becomes available automatically. Format:
 }
 ```
 
-- **`steps`** (required): an ordered list. Each step is one `cmux` invocation.
-- **`args`** (required): the exact `cmux` argument vector for the step, with the
-  leading `cmux` omitted. These are passed verbatim to `cmux-debug-cli.sh`.
+- **`steps`** (required): an ordered list. Each step is one `hmux` invocation.
+- **`args`** (required): the exact `hmux` argument vector for the step, with the
+  leading `hmux` omitted. These are passed verbatim to `hmux-debug-cli.sh`.
 - **`${name}`** placeholders are substituted from earlier `capture`s plus the
   built-in `${cwd}` (the directory dev-setup ran in, i.e. the repo worktree).
 - **`capture`** (optional): maps a local variable name to a dotted JSON path
   read out of that step's stdout. The step must pass `--json`. Later steps
   reference the value as `${name}`. Use this to chain "create a thing, then act
   on the thing" (e.g. capture `workspace_id`, then `send` to it). Captured
-  values are cmux refs/ids, never secrets.
+  values are hmux refs/ids, never secrets.
 
-Only use `cmux` verbs that actually exist (see
-`skills/cmux-workspace/references/commands.md` and the `cmux-groups` skill).
-Prefer the canonical noun forms (`cmux workspace create`,
-`cmux workspace group create`) which honor `--json`. Use `--focus false` on
+Only use `hmux` verbs that actually exist (see
+`skills/hmux-workspace/references/commands.md` and the `hmux-groups` skill).
+Prefer the canonical noun forms (`hmux workspace create`,
+`hmux workspace group create`) which honor `--json`. Use `--focus false` on
 creation steps so replay does not yank the dev window around.
 
-The capture key name depends on the id format, because cmux renames id fields
+The capture key name depends on the id format, because hmux renames id fields
 in `--json` output: with the default `refs` format a created workspace prints
 `workspace_ref` (a positional `workspace:N`), but with `--id-format uuids` it
 prints `workspace_id` (a stable UUID). The shipped profiles prepend
@@ -102,7 +102,7 @@ to both.
 - `replay.mjs` — the engine. `resolveSteps(profile, context)` is a pure,
   I/O-free function (parse + substitute + JSON-path capture) that the unit test
   and `--dry-run` both use. `ProfileReplayer` wraps it with execution: it shells
-  out to `cmux-debug-cli.sh` with `CMUX_TAG` set, so the tagged-socket safety
+  out to `hmux-debug-cli.sh` with `HMUX_TAG` set, so the tagged-socket safety
   contract is enforced by the helper, not re-implemented.
 - `replay-cli.mjs` — the thin CLI `dev-setup.sh` calls (`--list`, `--dry-run`,
   `--tag`, comma-list `--profile`).

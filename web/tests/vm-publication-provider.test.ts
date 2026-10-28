@@ -11,9 +11,9 @@ import {
   type TlsRuleData,
 } from "freestyle";
 import {
-  CMUX_FORWARD_AUTH_TIMEOUT_MS,
-  CMUX_PREVIEW_SESSION_COOKIE,
-  CMUX_PREVIEW_TRANSACTION_COOKIE,
+  HMUX_FORWARD_AUTH_TIMEOUT_MS,
+  HMUX_PREVIEW_SESSION_COOKIE,
+  HMUX_PREVIEW_TRANSACTION_COOKIE,
   FREESTYLE_CERTIFICATE_NAMESERVER,
   FREESTYLE_WEB_EDGE_HOST,
   VmPublicationProviderError,
@@ -36,11 +36,11 @@ function forwardAuthData(
 ): TlsForwardAuthData {
   return {
     id,
-    accountId: "acct-cmux",
+    accountId: "acct-hmux",
     url: "https://cmux.com/api/freestyle/forward-auth",
     headers: { authorization: "***" },
-    timeoutMs: CMUX_FORWARD_AUTH_TIMEOUT_MS,
-    protectedCookies: [CMUX_PREVIEW_SESSION_COOKIE, CMUX_PREVIEW_TRANSACTION_COOKIE],
+    timeoutMs: HMUX_FORWARD_AUTH_TIMEOUT_MS,
+    protectedCookies: [HMUX_PREVIEW_SESSION_COOKIE, HMUX_PREVIEW_TRANSACTION_COOKIE],
     redacted: true,
     createdAt: CREATED_AT,
     updatedAt: UPDATED_AT,
@@ -55,7 +55,7 @@ function tlsRuleData(
 ): TlsRuleData {
   return {
     id,
-    accountId: "acct-cmux",
+    accountId: "acct-hmux",
     action: options.action,
     domain: options.domain,
     protocol: options.protocol ?? "http",
@@ -179,8 +179,8 @@ describe("VM publication Freestyle provider", () => {
         options: {
           url: "https://cmux.com/api/freestyle/forward-auth",
           headers: { authorization: "Bearer new-secret" },
-          timeoutMs: CMUX_FORWARD_AUTH_TIMEOUT_MS,
-          protectedCookies: [CMUX_PREVIEW_SESSION_COOKIE, CMUX_PREVIEW_TRANSACTION_COOKIE],
+          timeoutMs: HMUX_FORWARD_AUTH_TIMEOUT_MS,
+          protectedCookies: [HMUX_PREVIEW_SESSION_COOKIE, HMUX_PREVIEW_TRANSACTION_COOKIE],
         },
       },
     ]);
@@ -809,7 +809,7 @@ describe("VM publication Freestyle provider", () => {
       Effect.runPromise(provider.getCertificateStatus("pending.example.com")),
     ).resolves.toMatchObject({ state: "pending", ready: false });
 
-    // The CMUX generated zone is ordinary account inventory: its wildcard
+    // The HMUX generated zone is ordinary account inventory: its wildcard
     // certificate must be live before a generated name is ready.
     certificates = [
       {

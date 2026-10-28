@@ -9,14 +9,14 @@ import {
   CLOUD_MCP_TOOLS,
   callCloudMcpTool,
   CloudMcpToolError,
-  cmuxTuiArgs,
+  hmuxTuiArgs,
   handleCloudMcpBody,
   handleCloudMcpMessage,
   type CloudMcpExecResult,
   type CloudMcpGateway,
 } from "../services/mcp/cloudMcp";
 import { cloudMcpGatewayFor, type CloudMcpCaller } from "../services/mcp/cloudMcpGateway";
-import { cmuxTuiRunCommand } from "../services/vms/drivers/cmuxTuiDaemon";
+import { hmuxTuiRunCommand } from "../services/vms/drivers/hmuxTuiDaemon";
 import { noOpVmBillingGateway, VmBillingGateway } from "../services/vms/billingGateway";
 import { isVmWorkflowError } from "../services/vms/errors";
 import { VmProviderGateway, type VmProviderGatewayShape } from "../services/vms/providerGateway";
@@ -34,7 +34,7 @@ function fakeGateway(replies: Array<CloudMcpExecResult | ((call: RecordedCall) =
   const calls: RecordedCall[] = [];
   const gateway: CloudMcpGateway = {
     listMachines: async () => [{ id: "vm-a", name: "alpha", status: "running" }],
-    runCmuxTui: async (machineId, args) => {
+    runHmuxTui: async (machineId, args) => {
       const call = { machineId, args };
       calls.push(call);
       const reply = replies.shift();
@@ -81,7 +81,7 @@ describe("cloud MCP protocol", () => {
       listMachines: async () => {
         throw new Error("database down");
       },
-      runCmuxTui: async () => ok([]),
+      runHmuxTui: async () => ok([]),
     };
     const defects: unknown[] = [];
     const reply = await handleCloudMcpBody(gateway, [
@@ -182,7 +182,7 @@ describe("cloud MCP tool arguments", () => {
     const accepted = fakeGateway([ok({ value: {} })]);
     await callCloudMcpTool(accepted.gateway, "send_input", { machine_id: "vm-a", terminal_id: TERMINAL, text: "x".repeat(16 * 1024) });
     expect(accepted.calls).toHaveLength(1);
-    expect(Buffer.byteLength(cmuxTuiRunCommand(accepted.calls[0].args))).toBeLessThanOrEqual(64 * 1024);
+    expect(Buffer.byteLength(hmuxTuiRunCommand(accepted.calls[0].args))).toBeLessThanOrEqual(64 * 1024);
   });
 
   test("send_input is one write, with Enter as a carriage return only when asked", async () => {
@@ -210,8 +210,8 @@ describe("cloud MCP tool arguments", () => {
     expect(result.content[0].text).toContain("selector.not_found");
   });
 
-  test("cmuxTuiArgs targets the machine's cloud session", async () => {
-    expect(await shellWords(cmuxTuiArgs(["terminal", "list"]))).toEqual(["--session", "cloud", "--json", "terminal", "list"]);
+  test("hmuxTuiArgs targets the machine's cloud session", async () => {
+    expect(await shellWords(hmuxTuiArgs(["terminal", "list"]))).toEqual(["--session", "cloud", "--json", "terminal", "list"]);
   });
 });
 
@@ -271,14 +271,14 @@ describe("cloud MCP scoping", () => {
     return { execs, listed, gatewayFor };
   }
 
-  test("the owner reaches their machine, and the command is the cmux-tui call", async () => {
+  test("the owner reaches their machine, and the command is the hmux-tui call", async () => {
     const { execs, gatewayFor } = harness();
     const result = await callCloudMcpTool(gatewayFor({ userId: OWNER }), "list_terminals", { machine_id: "vm-personal" });
     expect(result.isError).toBeUndefined();
     expect(result.structuredContent).toMatchObject({ terminals: [{ id: TERMINAL }] });
     expect(execs).toHaveLength(1);
     expect(execs[0].providerVmId).toBe("vm-personal");
-    expect(execs[0].command).toContain(`"$CMUX_TUI_BIN" ${cmuxTuiArgs(["terminal", "list"])}`);
+    expect(execs[0].command).toContain(`"$HMUX_TUI_BIN" ${hmuxTuiArgs(["terminal", "list"])}`);
   });
 
   test("another user gets vm_not_found and nothing runs on the machine", async () => {

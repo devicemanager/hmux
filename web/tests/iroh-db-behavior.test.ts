@@ -23,7 +23,7 @@ import {
   type RelayRepositoryShape,
 } from "../services/relay/repository";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const NOW = new Date("2026-07-09T20:00:00.000Z");
 
@@ -34,7 +34,7 @@ let relayRepository: RelayRepositoryShape | null = null;
 beforeAll(async () => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!databaseURL) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!databaseURL) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   sql = postgres(databaseURL, { max: 8 });
   repository = await Effect.runPromise(
     Effect.gen(function* () { return yield* IrohRepository; }).pipe(
@@ -87,7 +87,7 @@ describe("Iroh trust broker database behavior", () => {
       sequence: 20,
       relays: [{
         id: "relay-a",
-        provider: "cmux",
+        provider: "hmux",
         region: "A",
         url: "https://relay-a.cmux.dev/",
       }],
@@ -99,7 +99,7 @@ describe("Iroh trust broker database behavior", () => {
         ...current.relays,
         {
           id: "relay-b",
-          provider: "cmux",
+          provider: "hmux",
           region: "B",
           url: "https://relay-b.cmux.dev/",
         },
@@ -141,7 +141,7 @@ describe("Iroh trust broker database behavior", () => {
       sequence: 30,
       relays: [{
         id: "relay-a",
-        provider: "cmux",
+        provider: "hmux",
         region: "A",
         url: "https://relay-a.cmux.dev/",
       }],
@@ -153,7 +153,7 @@ describe("Iroh trust broker database behavior", () => {
         ...current.relays,
         {
           id: "relay-b",
-          provider: "cmux",
+          provider: "hmux",
           region: "B",
           url: "https://relay-b.cmux.dev/",
         },
@@ -317,8 +317,8 @@ describe("Iroh trust broker database behavior", () => {
         initiator: ios,
         acceptor: mac,
         signingKeyId: "current",
-        alpn: "cmux/mobile/1",
-        scope: "cmux.mobile.attach",
+        alpn: "hmux/mobile/1",
+        scope: "hmux.mobile.attach",
         issuedAt: NOW,
         notBefore: NOW,
         expiresAt: new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1_000),
@@ -479,7 +479,7 @@ describe("Iroh trust broker database behavior", () => {
     );
     const adopted = await register(
       randomUUID(),
-      "mac:com.cmuxterm.app",
+      "mac:com.hmuxterm.app",
       "39".repeat(32),
     );
 
@@ -496,7 +496,7 @@ describe("Iroh trust broker database behavior", () => {
     `;
     expect(rows).toEqual([{
       id: legacy.binding.id,
-      clientNamespace: "mac:com.cmuxterm.app",
+      clientNamespace: "mac:com.hmuxterm.app",
     }]);
   });
 
@@ -530,7 +530,7 @@ describe("Iroh trust broker database behavior", () => {
     const revoked = await Effect.runPromise(repo.revokeBinding({
       userId,
       bindingId: legacy.id,
-      clientNamespace: "dev.cmux.app.internal",
+      clientNamespace: "dev.hmux.app.internal",
       now: NOW,
     }));
 
@@ -570,7 +570,7 @@ describe("Iroh trust broker database behavior", () => {
           ${userId},
           ${randomUUID()},
           ${randomUUID()},
-          'dev.cmux.app.internal',
+          'dev.hmux.app.internal',
           'stable',
           'ios',
           ${"3a".repeat(32)},
@@ -580,7 +580,7 @@ describe("Iroh trust broker database behavior", () => {
           ${userId},
           ${randomUUID()},
           ${randomUUID()},
-          'dev.cmux.app.demo',
+          'dev.hmux.app.demo',
           'stable',
           'ios',
           ${"3b".repeat(32)},
@@ -604,13 +604,13 @@ describe("Iroh trust broker database behavior", () => {
 
     const demo = await Effect.runPromise(repo.discoverySnapshot({
       userId,
-      clientNamespace: "dev.cmux.app.demo",
-      callerBindingId: idByNamespace.get("dev.cmux.app.demo")!,
+      clientNamespace: "dev.hmux.app.demo",
+      callerBindingId: idByNamespace.get("dev.hmux.app.demo")!,
       callerPlatform: "ios",
       now: NOW,
     }));
     expect(demo.bindings.map((row) => row.id).sort()).toEqual([
-      idByNamespace.get("dev.cmux.app.demo"),
+      idByNamespace.get("dev.hmux.app.demo"),
       idByNamespace.get("mac:stable"),
     ].sort());
 
@@ -647,14 +647,14 @@ describe("Iroh trust broker database behavior", () => {
           user_id, device_uuid, app_instance_id, client_namespace, tag, platform,
           endpoint_id, identity_generation, pairing_enabled
         ) values (
-          ${fixture.user}, ${fixture.device}, ${randomUUID()}, 'mac:com.cmuxterm.app.debug.feature',
+          ${fixture.user}, ${fixture.device}, ${randomUUID()}, 'mac:com.hmuxterm.app.debug.feature',
           ${fixture.tag}, 'mac', ${randomBytes(32).toString("hex")}, 1, ${fixture.enabled}
         ) returning id
       `;
       ids.push(row!.id);
     }
     const input = {
-      userId, clientNamespace: "mac:com.cmuxterm.app.debug.feature",
+      userId, clientNamespace: "mac:com.hmuxterm.app.debug.feature",
       callerBindingId: ids[0]!, callerPlatform: "mac" as const, now: NOW,
     };
     const expected = ids.filter((_, index) => fixtures[index]!.visible).sort();
@@ -1451,7 +1451,7 @@ describe("Iroh trust broker database behavior", () => {
     });
 
     const legacy = await Effect.runPromise(issue("legacy", "a"));
-    const namespaced = await Effect.runPromise(issue("dev.cmux.app.internal", "b"));
+    const namespaced = await Effect.runPromise(issue("dev.hmux.app.internal", "b"));
     expect(namespaced.id).not.toBe(legacy.id);
 
     const [{ challenges }] = await requiredSql()<Array<{ challenges: string }>>`
@@ -1527,7 +1527,7 @@ describe("Iroh trust broker database behavior", () => {
           alpn, scope, issued_at, not_before, expires_at, revoked_at
         ) values (
           ${initiatorUser}, ${randomUUID()}, ${initiator.binding.id}, ${acceptorId}, 'current',
-          'cmux/mobile/1', 'cmux.mobile.attach',
+          'hmux/mobile/1', 'hmux.mobile.attach',
           ${NOW}, ${NOW}, ${new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1_000)}, ${revokedAt}
         ) returning id::text
       `;
@@ -1947,8 +1947,8 @@ describe("Iroh trust broker database behavior", () => {
       initiator,
       acceptor,
       signingKeyId: "current",
-      alpn: "cmux/mobile/1",
-      scope: "cmux.mobile.attach",
+      alpn: "hmux/mobile/1",
+      scope: "hmux.mobile.attach",
       issuedAt: NOW,
       notBefore: NOW,
       expiresAt: new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1_000),
@@ -1989,8 +1989,8 @@ describe("Iroh trust broker database behavior", () => {
       initiator: await pairPeer(initiatorId),
       acceptor: await pairPeer(acceptorId),
       signingKeyId: "current",
-      alpn: "cmux/mobile/1",
-      scope: "cmux.mobile.attach",
+      alpn: "hmux/mobile/1",
+      scope: "hmux.mobile.attach",
       issuedAt: NOW,
       notBefore: NOW,
       expiresAt: new Date(NOW.getTime() + 7 * 24 * 60 * 60 * 1_000),
@@ -2284,7 +2284,7 @@ describe("Iroh trust broker database behavior", () => {
     const deviceId = randomUUID();
     const appInstanceId = randomUUID();
     const endpointId = "16".repeat(32);
-    const namespace = "mac:com.cmuxterm.app.debug.irohhb";
+    const namespace = "mac:com.hmuxterm.app.debug.irohhb";
     const mint = (nonceHash: string, at: Date) => Effect.runPromise(repo.issueChallenge({
       userId,
       deviceUuid: deviceId,
@@ -2313,7 +2313,7 @@ describe("Iroh trust broker database behavior", () => {
         endpointId,
         identityGeneration: 1,
         pairingEnabled: true,
-        capabilities: ["cmux.irx.v1", "iroh.private_paths.v1"],
+        capabilities: ["hmux.irx.v1", "iroh.private_paths.v1"],
         pathHints: [],
       },
       now: NOW,
@@ -2335,7 +2335,7 @@ describe("Iroh trust broker database behavior", () => {
       userId,
       deviceUuid: deviceId,
       appInstanceId,
-      clientNamespace: "mac:com.cmuxterm.app",
+      clientNamespace: "mac:com.hmuxterm.app",
       tag: "stable",
       endpointId,
       identityGeneration: 1,
@@ -2355,7 +2355,7 @@ describe("Iroh trust broker database behavior", () => {
         route_contract_version: 1,
         deviceId,
         appInstanceId,
-        clientNamespace: "mac:com.cmuxterm.app",
+        clientNamespace: "mac:com.hmuxterm.app",
         tag: "stable",
         platform: "mac",
         endpointId,
@@ -2537,7 +2537,7 @@ describe("Iroh trust broker database behavior", () => {
         alpn, scope, issued_at, not_before, expires_at
       ) values (
         'user-retention', ${randomUUID()}, ${activeId}, ${revokedId}, 'current',
-        'cmux/mobile/1', 'cmux.mobile.attach', ${NOW}, ${NOW}, ${new Date(NOW.getTime() + 1_000)}
+        'hmux/mobile/1', 'hmux.mobile.attach', ${NOW}, ${NOW}, ${new Date(NOW.getTime() + 1_000)}
       )
     `;
     await Effect.runPromise(repo.revokeBinding({ userId: "user-retention", bindingId: revokedId, now: NOW }));
@@ -2724,7 +2724,7 @@ describe("Iroh trust broker database behavior", () => {
         alpn, scope, issued_at, not_before, expires_at
       ) values (
         ${userId}, ${randomUUID()}, ${initiatorId}, ${acceptorId}, 'current',
-        'cmux/mobile/1', 'cmux.mobile.attach', ${NOW}, ${NOW}, ${new Date(NOW.getTime() + 1_000)}
+        'hmux/mobile/1', 'hmux.mobile.attach', ${NOW}, ${NOW}, ${new Date(NOW.getTime() + 1_000)}
       )
     `;
     await requiredSql()`
@@ -2771,7 +2771,7 @@ describe("Iroh trust broker database behavior", () => {
         alpn, scope, issued_at, not_before, expires_at
       ) values (
         'user-delete', ${randomUUID()}, ${bindingId}, ${peerId}, 'current',
-        'cmux/mobile/1', 'cmux.mobile.attach', ${NOW}, ${NOW}, ${new Date(NOW.getTime() + 1_000)}
+        'hmux/mobile/1', 'hmux.mobile.attach', ${NOW}, ${NOW}, ${new Date(NOW.getTime() + 1_000)}
       )
     `;
     await requiredSql()`

@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 
 PRODUCER_PACKAGE_FRAMEWORKS = re.compile(
-    r"^(?:/private)?/tmp/cmux-ci(?:-[0-9]{1,2})?/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks/?$"
+    r"^(?:/private)?/tmp/hmux-ci(?:-[0-9]{1,2})?/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks/?$"
 )
 
 MH_MAGIC_64 = 0xFEEDFACF

@@ -14,11 +14,11 @@ export default [
     // A browser tab the user has open in another workspace. A session acts
     // in its own workspace: tabs.list({ all: true }) does not list a user's
     // tab of another workspace, and tabs.use(id) refuses it (a person must
-    // grant such a tab, and cmux has no such grant yet). The user's tab of
+    // grant such a tab, and hmux has no such grant yet). The user's tab of
     // the session's own workspace is claimed by tabs.attach. `known` proves
     // the id names the tab, so the refusal is not a wrong id.
     custom: {
-      async cmux(ctx) {
+      async hmux(ctx) {
         const url = `${ctx.origins.primary}/diff/lab.html?claim=${Date.now()}`;
         const ws = await ctx.cli(["new-workspace", "--name", "parity-claim", "--focus", "false"]);
         const wsRef = (ws.out.match(/workspace:\d+|[0-9A-F]{8}-[0-9A-F-]{27}/i) || [])[0];
@@ -62,22 +62,22 @@ return { listedAll, inOwnList, useRefused: !!used.error && /No open tab|in anoth
     id: "tabs.legacy-socket-refused",
     edge: "legacy-socket-refused",
     appOnly: true,
-    // The older browser.* socket methods (`cmux browser <surface> eval`,
+    // The older browser.* socket methods (`hmux browser <surface> eval`,
     // `click` and the rest) carry no session, so no ownership check or
     // secret masking: they are refused every tab a session drives (one it
     // opened, a user's tab it drives with tabs.use()), with an error that
-    // names `cmux browser repl`. A user's tab no session drives stays
+    // names `hmux browser repl`. A user's tab no session drives stays
     // theirs, also once the session that drove it ends, and the tab list
     // still shows a session's tab. The user's tab opens in the caller's
     // workspace, the one the session binds to.
     custom: {
-      async cmux(ctx) {
+      async hmux(ctx) {
         const url = `${ctx.origins.primary}/diff/lab.html?legacy=${Date.now()}`;
         const legacy = async (surface, ...argv) => {
           const r = await ctx.cli(["browser", surface, ...argv]);
           const text = `${r.out}\n${r.err}`;
           if (r.code === 0) return "ok";
-          return /browser REPL session/.test(text) && /cmux browser repl/.test(text) ? "refused" : `failed: ${text.trim().slice(0, 200)}`;
+          return /browser REPL session/.test(text) && /hmux browser repl/.test(text) ? "refused" : `failed: ${text.trim().slice(0, 200)}`;
         };
         const S = ctx.session("legacy");
         let user = null;
@@ -115,7 +115,7 @@ return { own: own.id, user: row ? row.id : null, workspace: row ? row.workspace 
     id: "edge.sessions-two-tabs",
     edge: "sessions-two-tabs",
     custom: {
-      async cmux(ctx) {
+      async hmux(ctx) {
         const [a, b] = await Promise.all([
           ctx.repl(ctx.wrap({ path: null, code: MY("session A") }), { session: ctx.session("two-a") }),
           ctx.repl(ctx.wrap({ path: null, code: MY("session B") }), { session: ctx.session("two-b") }),
@@ -136,7 +136,7 @@ return { own: own.id, user: row ? row.id : null, workspace: row ? row.workspace 
     id: "edge.sessions-same-tab",
     edge: "sessions-same-tab",
     custom: {
-      async cmux(ctx) {
+      async hmux(ctx) {
         const A = ctx.session("same-a");
         const B = ctx.session("same-b");
         const opened = await ctx.repl(ctx.wrap({ path: null, code: `const p = await tabs.open(U("/diff/lab.html")); return p.id;` }), { session: A });
@@ -158,7 +158,7 @@ return { own: own.id, user: row ? row.id : null, workspace: row ? row.workspace 
     edge: "web-process-crash",
     appOnly: true,
     custom: {
-      async cmux(ctx) {
+      async hmux(ctx) {
         const S = ctx.session("crash");
         const first = await ctx.repl(ctx.wrap({ path: null, code: `const p = await tabs.open(U("/diff/lab.html")); await p.locator("#counter").click(); return await p._webProcessId();` }), { session: S });
         const pid = first.value;
@@ -184,7 +184,7 @@ return { own: own.id, user: row ? row.id : null, workspace: row ? row.workspace 
     // tagged app) while this session types into the name field; the session
     // sees the trusted user click and its own typing is intact.
     custom: {
-      async cmux(ctx) {
+      async hmux(ctx) {
         const S = ctx.session("user");
         const setup = await ctx.repl(ctx.wrap({ path: null, code: `const p = await tabs.open(U("/diff/lab.html")); await p.bringToFront(); return p.id;` }), { session: S });
         const marker = process.env.PARITY_USER_CLICK_MARKER;
@@ -211,7 +211,7 @@ return { userClick, status: await page.locator("#status").innerText(), typedInta
     // permissions, and a proxy for tabs opened afterwards (a CONNECT proxy in
     // this process that counts the tunnels it opened).
     custom: {
-      async cmux(ctx) {
+      async hmux(ctx) {
         const net = await import("node:net");
         const tunnels = [];
         const proxy = net.createServer((client) => {
@@ -233,7 +233,7 @@ return { userClick, status: await page.locator("#status").innerText(), typedInta
         const S = ctx.session("context");
         try {
           const r = await ctx.repl(ctx.wrap({ path: null, code: `const until = async (f) => { for (let i = 0; i < 60; i++) { const v = await f(); if (v) return v; await sleep(50); } return null; };
-const configured = await session.configure({ userAgent: "cmux-parity-agent/1.0", extraHTTPHeaders: { "X-Parity": "on" }, permissions: ["notifications"] });
+const configured = await session.configure({ userAgent: "hmux-parity-agent/1.0", extraHTTPHeaders: { "X-Parity": "on" }, permissions: ["notifications"] });
 await page.goto(U("/headers"));
 const nav = JSON.parse(await page.locator("#headers").innerText());
 const asset = await until(() => page.evaluate(() => window.__assetHeaders));
@@ -248,7 +248,7 @@ const proxied = await tabs.open(U("/diff/next.html", "sub"));
 const proxiedTitle = await proxied.title();
 await proxied.close();
 await session.configure({ proxy: null });
-return { configured, nav, asset, ua, notify, camera, after: { userAgent: after.userAgent === "cmux-parity-agent/1.0" ? "still set" : "restored", parity: after.parity }, proxiedTitle };` }), { session: S });
+return { configured, nav, asset, ua, notify, camera, after: { userAgent: after.userAgent === "hmux-parity-agent/1.0" ? "still set" : "restored", parity: after.parity }, proxiedTitle };` }), { session: S });
           const v = r.value ?? r;
           if (v && typeof v === "object" && "proxiedTitle" in v) v.proxied = tunnels.some((t) => t.startsWith("a.lvh.me:")) ? "through the proxy" : `direct (${tunnels.join(", ") || "no tunnels"})`;
           return v;
@@ -259,10 +259,10 @@ return { configured, nav, asset, ua, notify, camera, after: { userAgent: after.u
     },
     scope: { "reference-a": "browser-context options of a running reference A session are fixed at launch", "reference-b": "Reference B drives the user's Chrome profile and exposes no context options" },
     expect: {
-      configured: { userAgent: "cmux-parity-agent/1.0", extraHTTPHeaders: { "X-Parity": "on" }, permissions: ["notifications"] },
-      nav: { userAgent: "cmux-parity-agent/1.0", parity: "on" },
-      asset: { userAgent: "cmux-parity-agent/1.0", parity: null },
-      ua: "cmux-parity-agent/1.0",
+      configured: { userAgent: "hmux-parity-agent/1.0", extraHTTPHeaders: { "X-Parity": "on" }, permissions: ["notifications"] },
+      nav: { userAgent: "hmux-parity-agent/1.0", parity: "on" },
+      asset: { userAgent: "hmux-parity-agent/1.0", parity: null },
+      ua: "hmux-parity-agent/1.0",
       notify: "granted",
       camera: "NotAllowedError",
       after: { userAgent: "restored", parity: null },

@@ -5,7 +5,7 @@ import WebKit
 /// accessibility tree lives in its web content process, so each shown page
 /// is asked instead. A script in an isolated world (never the page's own
 /// scripts) lists the page's clickable elements in the viewport. Ported from
-/// cmux-next's link hints.
+/// hmux-next's link hints.
 @MainActor
 enum WindowHintPages {
     /// How long the pages may take to list their targets; a busy page is left out.

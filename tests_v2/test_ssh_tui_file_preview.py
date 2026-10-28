@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Click a file printed by an actual managed, cmux-tui-owned SSH workload.
+"""Click a file printed by an actual managed, hmux-tui-owned SSH workload.
 
-Requires a disposable Linux CMUX_SSH_TEST_HOST and a launched tagged app with
+Requires a disposable Linux HMUX_SSH_TEST_HOST and a launched tagged app with
 the existing terminal Cmd-click harness enabled for `preview file.txt` in grid
-mode. CMUX_PREVIEW_HARNESS_STATE and CMUX_PREVIEW_HARNESS_COMMAND identify its
-state/command files. CMUXTERM_CLI must be the tagged app's bundled CLI.
+mode. HMUX_PREVIEW_HARNESS_STATE and HMUX_PREVIEW_HARNESS_COMMAND identify its
+state/command files. HMUXTERM_CLI must be the tagged app's bundled CLI.
 No raw-SSH or manually configured remote-workspace substitute is accepted.
 """
 
@@ -20,13 +20,13 @@ import subprocess
 import tempfile
 import time
 
-from cmux import cmux
+from hmux import hmux
 
 
 WORKLOAD = r'''
 import os, pathlib, shutil, socket, sys, tempfile
 token = sys.argv[1]
-directory = tempfile.mkdtemp(prefix='cmux-preview-' + token + '-')
+directory = tempfile.mkdtemp(prefix='hmux-preview-' + token + '-')
 owners = []
 pid = os.getpid()
 while pid > 1:
@@ -41,8 +41,8 @@ try:
     for _ in range(48):
         print('preview file.txt    OtherFile')
     print('@' + token + ':cwd=' + directory)
-    print('@' + token + ':tui=' + str(int('cmux-tui' in owners)))
-    print('@' + token + ':legacy=' + str(int('cmuxd-remote' in owners)), flush=True)
+    print('@' + token + ':tui=' + str(int('hmux-tui' in owners)))
+    print('@' + token + ':legacy=' + str(int('hmuxd-remote' in owners)), flush=True)
     for line in sys.stdin:
         if line.strip() == token + ':quit':
             break
@@ -56,22 +56,22 @@ finally:
 
 
 def main():
-    tag = os.environ['CMUX_TAG']
+    tag = os.environ['HMUX_TAG']
     assert re.fullmatch(r'[a-z0-9]+(?:-[a-z0-9]+)+', tag)
-    socket_path = os.environ['CMUX_SOCKET_PATH']
-    assert socket_path == f'/tmp/cmux-debug-{tag}.sock'
-    cli = Path(os.environ['CMUXTERM_CLI']).resolve(strict=True)
+    socket_path = os.environ['HMUX_SOCKET_PATH']
+    assert socket_path == f'/tmp/hmux-debug-{tag}.sock'
+    cli = Path(os.environ['HMUXTERM_CLI']).resolve(strict=True)
     bundle = cli.parents[3]
-    assert bundle.name == f'cmux DEV {tag}.app'
+    assert bundle.name == f'hmux DEV {tag}.app'
     info = plistlib.loads((bundle / 'Contents/Info.plist').read_bytes())
-    state_path = Path(os.environ['CMUX_PREVIEW_HARNESS_STATE'])
-    command_path = Path(os.environ['CMUX_PREVIEW_HARNESS_COMMAND'])
+    state_path = Path(os.environ['HMUX_PREVIEW_HARNESS_STATE'])
+    command_path = Path(os.environ['HMUX_PREVIEW_HARNESS_COMMAND'])
     token = secrets.token_hex(8)
     evidence = {'tag': tag, 'socket': socket_path, 'identity_checks': []}
-    lock_path = Path('/tmp/cmux-issue-wave/gui-proof.lock')
+    lock_path = Path('/tmp/hmux-issue-wave/gui-proof.lock')
     lock_path.parent.mkdir(parents=True, exist_ok=True)
-    environment = {k: v for k, v in os.environ.items() if not k.startswith('CMUX_')}
-    environment['CMUX_SOCKET_PATH'] = socket_path
+    environment = {k: v for k, v in os.environ.items() if not k.startswith('HMUX_')}
+    environment['HMUX_SOCKET_PATH'] = socket_path
 
     with lock_path.open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
@@ -79,7 +79,7 @@ def main():
         def call(method, params=None):
             # Bootstrap can outlast the server's idle-connection deadline.
             # Never retry an ambiguous mutation; use a fresh connection per request.
-            with cmux(socket_path) as request:
+            with hmux(socket_path) as request:
                 return request._call(method, params)
 
         def identify():
@@ -104,7 +104,7 @@ def main():
             raise AssertionError('Timed out waiting for managed SSH preview assertion')
 
         def line(pattern):
-            with cmux(socket_path) as request:
+            with hmux(socket_path) as request:
                 text = request.read_terminal_text(surface)
             return next((match for value in text.splitlines()
                          if (match := re.fullmatch(pattern, value.strip()))), None)
@@ -112,21 +112,21 @@ def main():
         window = mutate('window.create', {})['window_id']
         workspace = surface = None
         try:
-            args = ['ssh', os.environ['CMUX_SSH_TEST_HOST'], '--window', window,
+            args = ['ssh', os.environ['HMUX_SSH_TEST_HOST'], '--window', window,
                     '--name', f'ssh-preview-{token}', '--command',
                     shlex.join(['python3', '-u', '-c', WORKLOAD, token])]
-            for variable, option in [('CMUX_SSH_TEST_PORT', '--port'),
-                                     ('CMUX_SSH_TEST_IDENTITY', '--identity')]:
+            for variable, option in [('HMUX_SSH_TEST_PORT', '--port'),
+                                     ('HMUX_SSH_TEST_IDENTITY', '--identity')]:
                 if os.environ.get(variable):
                     args += [option, os.environ[variable]]
-            ssh_options = json.loads(os.environ.get('CMUX_SSH_TEST_OPTIONS_JSON', '[]'))
+            ssh_options = json.loads(os.environ.get('HMUX_SSH_TEST_OPTIONS_JSON', '[]'))
             assert isinstance(ssh_options, list) and all(isinstance(value, str) for value in ssh_options)
             for value in ssh_options:
                 args += ['--ssh-option', value]
             identify()
             launched = subprocess.run([str(cli), '--socket', socket_path, '--id-format', 'uuids', '--json', *args],
                                       env=environment, capture_output=True, text=True, timeout=120)
-            assert launched.returncode == 0, f'cmux ssh exited {launched.returncode}'
+            assert launched.returncode == 0, f'hmux ssh exited {launched.returncode}'
             workspace = json.loads(launched.stdout)['workspace_id']
             rows = call('surface.list', {'workspace_id': workspace})['surfaces']
             assert len(rows) == 1
@@ -134,7 +134,7 @@ def main():
             cwd = wait_for(lambda: line('@' + token + r':cwd=(/.*)')).group(1)
             tui = wait_for(lambda: line('@' + token + r':tui=([01])')).group(1)
             legacy = wait_for(lambda: line('@' + token + r':legacy=([01])')).group(1)
-            evidence['ownership'] = {'cmux_tui': tui, 'cmuxd_remote': legacy}
+            evidence['ownership'] = {'hmux_tui': tui, 'hmuxd_remote': legacy}
             assert (tui, legacy) == ('1', '0'), evidence['ownership']
             evidence['catalog_before_click'] = call('surface.catalog', {})
             mutate('window.focus', {'window_id': window})
@@ -158,7 +158,7 @@ def main():
                 return next((row for row in rows if row['type'] == 'filepreview'), None)
 
             evidence['preview'] = wait_for(preview, timeout=30)
-            cache = Path(tempfile.gettempdir()) / 'cmux-remote-terminal-previews'
+            cache = Path(tempfile.gettempdir()) / 'hmux-remote-terminal-previews'
             expected = 'REMOTE_PREVIEW_' + token + '\n'
             assert any(path.read_text() == expected for path in cache.rglob('preview file.txt'))
             evidence['remote_bytes_verified'] = True
@@ -180,7 +180,7 @@ def main():
             assert replacement_cwd != cwd
             assert (replacement_tui, replacement_legacy) == ('1', '0')
             evidence['respawn'] = {'surface_id': surface, 'identity_preserved': True,
-                                   'cmux_tui': replacement_tui, 'cmuxd_remote': replacement_legacy}
+                                   'hmux_tui': replacement_tui, 'hmuxd_remote': replacement_legacy}
         finally:
             try:
                 if surface:

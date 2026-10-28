@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 /// Runs one authenticated command on a Cloud VM.

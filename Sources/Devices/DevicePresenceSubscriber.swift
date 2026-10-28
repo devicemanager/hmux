@@ -98,7 +98,7 @@ actor DevicePresenceSubscriber {
         var request = URLRequest(url: url)
         request.setValue("Bearer \(credentials.accessToken)", forHTTPHeaderField: "Authorization")
         if let teamID = credentials.teamID, !teamID.isEmpty {
-            request.setValue(teamID, forHTTPHeaderField: "X-Cmux-Team-Id")
+            request.setValue(teamID, forHTTPHeaderField: "X-Hmux-Team-Id")
         }
         let task = session.webSocketTask(with: request)
         task.resume()

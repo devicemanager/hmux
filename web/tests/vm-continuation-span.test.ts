@@ -37,11 +37,11 @@ describe("continuation result spans", () => {
       yield* Effect.promise(() => Promise.all(background));
     }).pipe(Effect.provide(TestContext.TestContext)));
     await provider.forceFlush();
-    const span = exporter.getFinishedSpans().find((finished) => finished.name === "cmux.vm.continuation");
+    const span = exporter.getFinishedSpans().find((finished) => finished.name === "hmux.vm.continuation");
     expect(span?.attributes).toMatchObject({
-      "cmux.vm.continuation.route": "/api/vm/[id]/pause",
-      "cmux.vm.continuation.outcome": outcome,
-      "cmux.vm.continuation.key": "pause:vm-7",
+      "hmux.vm.continuation.route": "/api/vm/[id]/pause",
+      "hmux.vm.continuation.outcome": outcome,
+      "hmux.vm.continuation.key": "pause:vm-7",
     });
   });
 });

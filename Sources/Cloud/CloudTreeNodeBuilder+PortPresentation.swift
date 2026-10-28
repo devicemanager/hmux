@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxFoundation
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxFoundation
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension CloudTreeNodeBuilder {
@@ -34,7 +34,7 @@ extension CloudTreeNodeBuilder {
             children.append(CloudMachineSurfacePresentation.emptyPorts(info: info))
         }
         // Setup is optional for ports that other apps can reach through a private address.
-        // Loopback-only ports already open in cmux and gain nothing from VPN setup.
+        // Loopback-only ports already open in hmux and gain nothing from VPN setup.
         // SSH ports ride the SSH link's loopback forward; the Cloud VPN never reaches them.
         let hasPortRows = children.contains { if case .port = $0.kind { true } else { false } }
         if showsCloudVPNWarning, hasPortRows, info.portDiscoveryState == .available, !machine.isSSH,

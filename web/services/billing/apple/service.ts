@@ -40,7 +40,7 @@ export type AppleIapDependencies = {
   readonly store: AppleIapStore;
   readonly verifier: AppleSignedDataVerifier;
   readonly serverApi: AppleServerApi | null;
-  /** Re-derives the user's `cmuxPlan` mirror from Stripe and Apple. */
+  /** Re-derives the user's `hmuxPlan` mirror from Stripe and Apple. */
   readonly applyEntitlement: (userId: string) => Promise<void>;
   readonly captureEvent: (input: ServerEventInput) => Promise<void>;
   /**
@@ -146,7 +146,7 @@ async function freshAppleState(
 }
 
 /**
- * Replay guard: a token cmux minted must map to the caller, so one account
+ * Replay guard: a token hmux minted must map to the caller, so one account
  * cannot post another account's transaction. A transaction without a token
  * (an offer code redeemed outside the app) may be claimed only while no other
  * account owns it, which the subscription write enforces.

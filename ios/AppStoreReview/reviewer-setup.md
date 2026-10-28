@@ -1,18 +1,18 @@
-# cmux iOS App Review Access Setup
+# hmux iOS App Review Access Setup
 
 Use this source to prepare the App Store Connect Review Information for the
-official cmux iOS app, Apple ID `6783338052`. Do not commit passwords, one-time
+official hmux iOS app, Apple ID `6783338052`. Do not commit passwords, one-time
 codes, or live pairing secrets.
 
 ## Required Review Environment
 
-The reviewer must be able to test cmux for iOS without owning a Mac. Before
+The reviewer must be able to test hmux for iOS without owning a Mac. Before
 submission, keep a prepared review Mac online and signed in to the same demo
 account entered in App Store Connect.
 
 The prepared Mac must:
 
-- Run the production cmux macOS app that matches the submitted iOS backend.
+- Run the production hmux macOS app that matches the submitted iOS backend.
 - Stay awake, unlocked after reboot, and reachable from Apple review networks.
 - Use fictional account, workspace, terminal, file, and device names.
 - Use a dedicated review-only macOS user account on a dedicated review Mac or
@@ -43,7 +43,7 @@ iOS Add Computer form:
 - Host: the prepared Mac's concrete Tailscale MagicDNS `*.ts.net` hostname or
   concrete `100.64.x.x` Tailscale address after the reviewer signs in to the
   supplied tailnet
-- Port: the prepared Mac's cmux mobile host port
+- Port: the prepared Mac's hmux mobile host port
 
 Before submission, verify either the automatic route or the fallback values from
 a clean network outside Manaflow's office and outside the prepared Mac's LAN,
@@ -70,8 +70,8 @@ Fill the App Store Connect fields for Apple ID `6783338052`:
 Pasteable notes block:
 
 ```text
-cmux for iOS is a companion app for the cmux macOS terminal. The reviewer does
-not need to own or install cmux on a Mac. We have prepared a review Mac that is
+hmux for iOS is a companion app for the hmux macOS terminal. The reviewer does
+not need to own or install hmux on a Mac. We have prepared a review Mac that is
 already online and signed in to this demo account.
 
 Prior review resolutions:
@@ -93,7 +93,7 @@ Demo account:
   in the app.
 
 Connect to the review Mac:
-1. Launch cmux.
+1. Launch hmux.
 2. Sign in with the demo account.
 3. The prepared review Mac appears automatically within about one minute. It is
    the only computer on this demo account. Tap it to connect.
@@ -106,7 +106,7 @@ Manual fallback:
 - In the Add Computer form, enter:
    - Name: App Review Mac
    - Host: <TAILSCALE_MAGICDNS_OR_100_X_ADDRESS>
-   - Port: <CMUX_MOBILE_HOST_PORT>
+   - Port: <HMUX_MOBILE_HOST_PORT>
 - Tap Pair.
 
 QR alternative:
@@ -130,14 +130,14 @@ Optional permissions:
 - Notifications are optional and can be enabled or disabled from the app.
 
 Payments:
-- cmux Go, Pro, and Max are monthly auto-renewable subscriptions in the
-  subscription group "cmux Plans", sold only through In-App Purchase.
+- hmux Go, Pro, and Max are monthly auto-renewable subscriptions in the
+  subscription group "hmux Plans", sold only through In-App Purchase.
 - To review them, open Settings > Account > Plan (or Cloud > Upgrade). The plans
   screen shows each plan with its App Store price, Restore Purchases, Manage
   Subscription, the auto-renewal terms, and links to the Terms of Use and
   Privacy Policy.
 - Purchases use the Sandbox Apple Account on the review device. The server
-  verifies the signed transaction and grants the plan to the signed-in cmux
+  verifies the signed transaction and grants the plan to the signed-in hmux
   account. The demo account has no web subscription, so the purchase buttons
   are enabled.
 - The app has no Stripe, external checkout, or external billing links.
@@ -152,7 +152,7 @@ Support during review:
 Apple's Guideline 2.1(a) rejections invited "a demonstration mode that
 exhibits the app's full features and functionality." The app ships one:
 when the signed-in account's Stack `clientReadOnlyMetadata` carries
-`cmuxReviewDemoContent: true`, a local "Demo Mac" appears in Computers with
+`hmuxReviewDemoContent: true`, a local "Demo Mac" appears in Computers with
 sample developer workspaces (agent task rows with statuses), sample
 notifications, and interactive canned terminals that echo typed input and
 answer common commands. It renders through exactly the same views and stores

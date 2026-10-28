@@ -96,7 +96,7 @@ class PlanFollowsTheWorkflow(unittest.TestCase):
         registry = next(
             s for s in preflight.steps if s.name == "Validate Python test execution registry"
         )
-        self.assertEqual(registry.env["CMUX_TEST_REGISTRY_BASE_REF"], "base")
+        self.assertEqual(registry.env["HMUX_TEST_REGISTRY_BASE_REF"], "base")
 
     def test_registry_comparison_is_empty_without_a_local_base(self) -> None:
         units = run_ci_guards.plan(self.workflow, "", "head")
@@ -104,7 +104,7 @@ class PlanFollowsTheWorkflow(unittest.TestCase):
         registry = next(
             s for s in preflight.steps if s.name == "Validate Python test execution registry"
         )
-        self.assertEqual(registry.env["CMUX_TEST_REGISTRY_BASE_REF"], "")
+        self.assertEqual(registry.env["HMUX_TEST_REGISTRY_BASE_REF"], "")
 
     def test_groups_that_pass_state_between_steps_run_in_order(self) -> None:
         by_group = {unit.group or unit.job: unit for unit in self.units}
@@ -182,7 +182,7 @@ class PortableSubstitutes(unittest.TestCase):
 
     def test_the_substitute_runs_the_real_payload(self) -> None:
         self.assertEqual(
-            run_ci_guards.PORTABLE_SUBSTITUTES["Run canonical CMUX CI guard profile"],
+            run_ci_guards.PORTABLE_SUBSTITUTES["Run canonical HMUX CI guard profile"],
             "scripts/ci/run_ci_guard_payload.sh",
         )
         # Every line of the real ci-guard.sh is one the substitute recognizes.

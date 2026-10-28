@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 
 /// Caps synchronous `reload_config` waiters until their async callbacks retire.
 ///

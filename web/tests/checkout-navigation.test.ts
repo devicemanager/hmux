@@ -30,7 +30,7 @@ describe("checkout navigation", () => {
     try {
       renderToStaticMarkup(createElement(Harness));
       start?.(
-        "http://localhost:9210/api/billing/checkout?plan=pro&cmux_external_browser=1",
+        "http://localhost:9210/api/billing/checkout?plan=pro&hmux_external_browser=1",
         {
           button: 0,
           defaultPrevented: false,
@@ -44,7 +44,7 @@ describe("checkout navigation", () => {
 
       expect(preventDefault).toHaveBeenCalledTimes(1);
       expect(fetchMock).toHaveBeenCalledWith(
-        "http://localhost:9210/api/billing/checkout?plan=pro&cmux_external_browser=1&format=json",
+        "http://localhost:9210/api/billing/checkout?plan=pro&hmux_external_browser=1&format=json",
         { headers: { accept: "application/json" } },
       );
     } finally {

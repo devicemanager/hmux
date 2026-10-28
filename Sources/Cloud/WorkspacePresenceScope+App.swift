@@ -1,6 +1,6 @@
 import Foundation
-import CMUXMobileCore
-import CmuxCloud
+import HMUXMobileCore
+import HmuxCloud
 
 extension WorkspacePresenceScope {
     /// Resolves the host-owned scope used by Mac clients and Cloud projections.

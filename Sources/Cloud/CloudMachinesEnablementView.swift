@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// The Cloud tab's first-use outcome. Mirrors
@@ -129,16 +129,16 @@ struct CloudMachinesEnablementView: View {
                 .padding(.bottom, 16)
             // A known Free plan is told what it needs; Pro and an unknown plan are invited.
             Text(isProGated
-                ? String(localized: "cloud.enable.intro.requiresPro", defaultValue: "Upgrade to use cmux cloud")
-                : String(localized: "cloud.enable.intro.title", defaultValue: "Use cmux cloud"))
-                .cmuxFont(size: 20, weight: .bold)
+                ? String(localized: "cloud.enable.intro.requiresPro", defaultValue: "Upgrade to use hmux cloud")
+                : String(localized: "cloud.enable.intro.title", defaultValue: "Use hmux cloud"))
+                .hmuxFont(size: 20, weight: .bold)
                 .multilineTextAlignment(.center)
                 .accessibilityAddTraits(.isHeader)
             Text(String(
                 localized: "cloud.enable.subtitle",
-                defaultValue: "Persistent cloud computers that open as regular cmux workspaces."
+                defaultValue: "Persistent cloud computers that open as regular hmux workspaces."
             ))
-            .cmuxFont(size: 12)
+            .hmuxFont(size: 12)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
             .fixedSize(horizontal: false, vertical: true)
@@ -148,7 +148,7 @@ struct CloudMachinesEnablementView: View {
             VStack(spacing: 8) {
                 introductionAction
                 Text(planNote)
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -166,7 +166,7 @@ struct CloudMachinesEnablementView: View {
                 .resizable()
                 .frame(width: 60, height: 60)
             Image(systemName: isProGated ? "lock.fill" : "cloud.fill")
-                .cmuxFont(size: isProGated ? 11 : 12, weight: .semibold)
+                .hmuxFont(size: isProGated ? 11 : 12, weight: .semibold)
                 .foregroundStyle(.white)
                 .frame(width: 24, height: 24)
                 .background(Circle().fill(Color.accentColor))
@@ -215,7 +215,7 @@ struct CloudMachinesEnablementView: View {
                 defaultValue: "Cloud can be enabled through your team; machine access follows the team’s plan."
             )
         }
-        return String(localized: "cloud.welcome.note.available", defaultValue: "Cloud is available on cmux Pro and Max.")
+        return String(localized: "cloud.welcome.note.available", defaultValue: "Cloud is available on hmux Pro and Max.")
     }
 
     // MARK: Status (every other outcome)
@@ -225,8 +225,8 @@ struct CloudMachinesEnablementView: View {
         VStack(spacing: 10) {
             ProgressView()
                 .controlSize(.small)
-            Text(String(localized: "cloud.enable.planChecking", defaultValue: "Checking your cmux plan…"))
-                .cmuxFont(size: 13)
+            Text(String(localized: "cloud.enable.planChecking", defaultValue: "Checking your hmux plan…"))
+                .hmuxFont(size: 13)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
         }
@@ -237,13 +237,13 @@ struct CloudMachinesEnablementView: View {
             statusSymbol
                 .frame(height: 36)
             Text(title)
-                .cmuxFont(size: 17, weight: .bold)
+                .hmuxFont(size: 17, weight: .bold)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityAddTraits(.isHeader)
                 .padding(.top, 14)
             Text(subtitle)
-                .cmuxFont(size: 13)
+                .hmuxFont(size: 13)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -338,7 +338,7 @@ struct CloudMachinesEnablementView: View {
 
     private var title: String {
         if isProGated {
-            return String(localized: "cloud.enable.requiresPro.title", defaultValue: "Cloud Machines require cmux Pro")
+            return String(localized: "cloud.enable.requiresPro.title", defaultValue: "Cloud Machines require hmux Pro")
         }
         switch phase {
         case .disabled, .cancelled, .enabled:
@@ -346,7 +346,7 @@ struct CloudMachinesEnablementView: View {
         case .enabling:
             return String(localized: "cloud.enable.loading.title", defaultValue: "Setting up Cloud Machines…")
         case .failed(.requiresPro):
-            return String(localized: "cloud.enable.requiresPro.title", defaultValue: "Cloud Machines require cmux Pro")
+            return String(localized: "cloud.enable.requiresPro.title", defaultValue: "Cloud Machines require hmux Pro")
         case .failed(.signInRequired):
             return String(localized: "cloud.enable.signIn.title", defaultValue: "Sign in to use Cloud Machines")
         case .failed(.serviceUnavailable):
@@ -365,7 +365,7 @@ struct CloudMachinesEnablementView: View {
         case .disabled, .enabled:
             return String(
                 localized: "cloud.enable.subtitle",
-                defaultValue: "Persistent cloud computers that open as regular cmux workspaces."
+                defaultValue: "Persistent cloud computers that open as regular hmux workspaces."
             )
         case .cancelled:
             return String(
@@ -375,7 +375,7 @@ struct CloudMachinesEnablementView: View {
         case .enabling:
             return String(
                 localized: "cloud.enable.loading.subtitle",
-                defaultValue: "cmux is preparing the shared Cloud connection. This can take a moment."
+                defaultValue: "hmux is preparing the shared Cloud connection. This can take a moment."
             )
         case .failed(.requiresPro):
             return String(
@@ -385,7 +385,7 @@ struct CloudMachinesEnablementView: View {
         case .failed(.signInRequired):
             return String(
                 localized: "cloud.enable.signIn.subtitle",
-                defaultValue: "Sign in to your cmux account, then retry Cloud setup."
+                defaultValue: "Sign in to your hmux account, then retry Cloud setup."
             )
         case .failed(.serviceUnavailable):
             return String(
@@ -503,16 +503,16 @@ private struct CloudMachinesEnablementReasons: View {
     private func row(symbol: String, title: String, detail: String) -> some View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: symbol)
-                .cmuxFont(size: 16)
+                .hmuxFont(size: 16)
                 .foregroundStyle(Color.accentColor)
                 .frame(width: 24)
                 .padding(.top, 1)
                 .accessibilityHidden(true)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .cmuxFont(size: 13, weight: .semibold)
+                    .hmuxFont(size: 13, weight: .semibold)
                 Text(detail)
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }

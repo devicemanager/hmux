@@ -1,6 +1,6 @@
 // Dev server board: every workspace with listening ports, port pills, jump on
 // tap. Shows reactive filtering and per-row context menus in the JS lane.
-//   cp Examples/CustomSidebars/ports.js ~/.config/cmux/sidebars/ && cmux sidebar open ports
+//   cp Examples/CustomSidebars/ports.js ~/.config/hmux/sidebars/ && hmux sidebar open ports
 
 const serving = () => (data.workspaces() ?? []).filter((w) => (w.ports ?? []).length > 0);
 
@@ -37,7 +37,7 @@ sidebar(() =>
           .background(() => (w().selected ? "#7f7f7f3d" : null))
           .hoverBackground(() => (w().selected ? "#7f7f7f3d" : "#7f7f7f24"))
           .frame({ maxWidth: "infinity" })
-          .onTap(() => cmux("workspace.select", { workspace_id: w().id }))
+          .onTap(() => hmux("workspace.select", { workspace_id: w().id }))
     ),
     Text(() => (serving().length === 0 ? "No listening ports" : ""))
       .font("caption").color("tertiary").paddingHorizontal(10),

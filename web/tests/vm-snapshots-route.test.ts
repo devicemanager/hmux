@@ -61,7 +61,7 @@ const user: AuthedUser = {
   billingCustomerType: "team",
   billingTeamId: "team-1",
   selectedTeamId: "team-1",
-  teams: [{ id: "team-1", displayName: "cmux", billingPlanId: "pro", billingSeats: 3 }],
+  teams: [{ id: "team-1", displayName: "hmux", billingPlanId: "pro", billingSeats: 3 }],
   teamIds: ["team-1"],
   userBillingPlanId: null,
   billingPlanId: "pro",
@@ -69,7 +69,7 @@ const user: AuthedUser = {
 };
 
 function request(path: string, method: "GET" | "DELETE"): Request {
-  return new Request(`https://cmux.test${path}`, {
+  return new Request(`https://hmux.test${path}`, {
     method,
     headers: { authorization: "Bearer access-token", "x-stack-refresh-token": "refresh-token" },
   });

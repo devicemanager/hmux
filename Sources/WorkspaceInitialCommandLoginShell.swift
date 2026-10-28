@@ -26,8 +26,8 @@ enum WorkspaceInitialCommandLoginShell {
     /// Wraps a command in a supported login shell while preserving the command verbatim.
     ///
     /// Login profiles can prepend other tool directories (Homebrew's `shellenv` puts
-    /// `/opt/homebrew/bin` first) ahead of the per-surface shim directory that cmux
-    /// seeds into the spawned PATH, which would route `claude`/`codex` around cmux's
+    /// `/opt/homebrew/bin` first) ahead of the per-surface shim directory that hmux
+    /// seeds into the spawned PATH, which would route `claude`/`codex` around hmux's
     /// wrapper hooks. The payload therefore re-prepends the shim directory after
     /// profiles run; a duplicate PATH entry is harmless and matches what interactive
     /// shell integration already produces. The directory can sit in a shared
@@ -46,14 +46,14 @@ enum WorkspaceInitialCommandLoginShell {
         switch (shellPath as NSString).lastPathComponent {
         case "fish":
             payload = """
-            set -l _cmux_previous_shim ""
-            for _cmux_candidate_shim in "$CMUX_CLAUDE_WRAPPER_SHIM_ROOT" "$CMUX_AGENT_COMMAND_SHIM_ROOT"
-                if test -n "$_cmux_candidate_shim"; and test "$_cmux_candidate_shim" != "$_cmux_previous_shim"; and /bin/sh -c \(check) cmux "$_cmux_candidate_shim"
-                    set -gx PATH "$_cmux_candidate_shim" $PATH
-                    set _cmux_previous_shim "$_cmux_candidate_shim"
+            set -l _hmux_previous_shim ""
+            for _hmux_candidate_shim in "$HMUX_CLAUDE_WRAPPER_SHIM_ROOT" "$HMUX_AGENT_COMMAND_SHIM_ROOT"
+                if test -n "$_hmux_candidate_shim"; and test "$_hmux_candidate_shim" != "$_hmux_previous_shim"; and /bin/sh -c \(check) hmux "$_hmux_candidate_shim"
+                    set -gx PATH "$_hmux_candidate_shim" $PATH
+                    set _hmux_previous_shim "$_hmux_candidate_shim"
                 end
             end
-            set -e _cmux_previous_shim _cmux_candidate_shim
+            set -e _hmux_previous_shim _hmux_candidate_shim
             \(command)
             """
         case "zsh", "bash", "sh", "ksh", "dash":
@@ -74,54 +74,54 @@ enum WorkspaceInitialCommandLoginShell {
 
     private static var posixShimRootPrepend: String {
         """
-        _cmux_previous_shim=''
-        for _cmux_candidate_shim in "${CMUX_CLAUDE_WRAPPER_SHIM_ROOT:-}" "${CMUX_AGENT_COMMAND_SHIM_ROOT:-}"; do
-            if [ -n "$_cmux_candidate_shim" ] && [ "$_cmux_candidate_shim" != "$_cmux_previous_shim" ] && /bin/sh -c \(shellSingleQuoted(shimRootCheck)) cmux "$_cmux_candidate_shim"; then
-                PATH="$_cmux_candidate_shim${PATH:+:$PATH}"; export PATH
-                _cmux_previous_shim=$_cmux_candidate_shim
+        _hmux_previous_shim=''
+        for _hmux_candidate_shim in "${HMUX_CLAUDE_WRAPPER_SHIM_ROOT:-}" "${HMUX_AGENT_COMMAND_SHIM_ROOT:-}"; do
+            if [ -n "$_hmux_candidate_shim" ] && [ "$_hmux_candidate_shim" != "$_hmux_previous_shim" ] && /bin/sh -c \(shellSingleQuoted(shimRootCheck)) hmux "$_hmux_candidate_shim"; then
+                PATH="$_hmux_candidate_shim${PATH:+:$PATH}"; export PATH
+                _hmux_previous_shim=$_hmux_candidate_shim
             fi
         done
-        unset _cmux_previous_shim _cmux_candidate_shim
+        unset _hmux_previous_shim _hmux_candidate_shim
         """
     }
 
     /// The same fixed POSIX predicate runs from every supported login shell;
     /// the candidate is argv data and never interpolated into executable code.
     private static let shimRootCheck = #"""
-    _cmux_root=$1
-    case "$_cmux_root" in /*) ;; *) exit 1 ;; esac
-    while [ "$_cmux_root" != / ] && [ "${_cmux_root%/}" != "$_cmux_root" ]; do _cmux_root=${_cmux_root%/}; done
-    [ -d "$_cmux_root" ] && [ ! -L "$_cmux_root" ] || exit 1
-    _cmux_uid=$(/usr/bin/id -u) || exit 1
-    _cmux_meta() {
-        _cmux_info=$(/usr/bin/stat -f '%HT:%u:%Mp%Lp' -- "$1" 2>/dev/null) || _cmux_info=$(/usr/bin/stat -c '%F:%u:%a' -- "$1" 2>/dev/null) || return 1
-        _cmux_kind=${_cmux_info%%:*}
-        _cmux_info=${_cmux_info#*:}
-        _cmux_owner=${_cmux_info%%:*}
-        _cmux_mode=${_cmux_info#*:}
-        case "$_cmux_mode" in ''|*[!0-7]*) return 1 ;; esac
-        _cmux_mode=$((0$_cmux_mode))
+    _hmux_root=$1
+    case "$_hmux_root" in /*) ;; *) exit 1 ;; esac
+    while [ "$_hmux_root" != / ] && [ "${_hmux_root%/}" != "$_hmux_root" ]; do _hmux_root=${_hmux_root%/}; done
+    [ -d "$_hmux_root" ] && [ ! -L "$_hmux_root" ] || exit 1
+    _hmux_uid=$(/usr/bin/id -u) || exit 1
+    _hmux_meta() {
+        _hmux_info=$(/usr/bin/stat -f '%HT:%u:%Mp%Lp' -- "$1" 2>/dev/null) || _hmux_info=$(/usr/bin/stat -c '%F:%u:%a' -- "$1" 2>/dev/null) || return 1
+        _hmux_kind=${_hmux_info%%:*}
+        _hmux_info=${_hmux_info#*:}
+        _hmux_owner=${_hmux_info%%:*}
+        _hmux_mode=${_hmux_info#*:}
+        case "$_hmux_mode" in ''|*[!0-7]*) return 1 ;; esac
+        _hmux_mode=$((0$_hmux_mode))
     }
-    _cmux_chain_safe() {
-        _cmux_current=$1
+    _hmux_chain_safe() {
+        _hmux_current=$1
         while :; do
-            _cmux_meta "$_cmux_current" || return 1
-            [ "$_cmux_owner" = "$_cmux_uid" ] || [ "$_cmux_owner" = 0 ] || return 1
-            case "$_cmux_kind" in
-                Directory|directory) [ $((_cmux_mode & 0022)) -eq 0 ] || [ $((_cmux_mode & 01000)) -ne 0 ] || return 1 ;;
+            _hmux_meta "$_hmux_current" || return 1
+            [ "$_hmux_owner" = "$_hmux_uid" ] || [ "$_hmux_owner" = 0 ] || return 1
+            case "$_hmux_kind" in
+                Directory|directory) [ $((_hmux_mode & 0022)) -eq 0 ] || [ $((_hmux_mode & 01000)) -ne 0 ] || return 1 ;;
                 'Symbolic Link'|'symbolic link') ;;
                 *) return 1 ;;
             esac
-            [ "$_cmux_current" = / ] && return 0
-            _cmux_current=${_cmux_current%/*}
-            [ -n "$_cmux_current" ] || _cmux_current=/
+            [ "$_hmux_current" = / ] && return 0
+            _hmux_current=${_hmux_current%/*}
+            [ -n "$_hmux_current" ] || _hmux_current=/
         done
     }
-    _cmux_meta "$_cmux_root" || exit 1
-    [ "$_cmux_owner" = "$_cmux_uid" ] && [ $((_cmux_mode & 0022)) -eq 0 ] || exit 1
-    _cmux_chain_safe "$_cmux_root" || exit 1
-    _cmux_resolved=$(CDPATH='' command cd -P "$_cmux_root" >/dev/null && /bin/pwd -P) || exit 1
-    _cmux_chain_safe "$_cmux_resolved"
+    _hmux_meta "$_hmux_root" || exit 1
+    [ "$_hmux_owner" = "$_hmux_uid" ] && [ $((_hmux_mode & 0022)) -eq 0 ] || exit 1
+    _hmux_chain_safe "$_hmux_root" || exit 1
+    _hmux_resolved=$(CDPATH='' command cd -P "$_hmux_root" >/dev/null && /bin/pwd -P) || exit 1
+    _hmux_chain_safe "$_hmux_resolved"
     """#
 
     private static func shellSingleQuoted(_ value: String) -> String {

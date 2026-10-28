@@ -1,6 +1,6 @@
 import AppKit
-import CMUXMobileCore
-import CmuxTerminal
+import HMUXMobileCore
+import HmuxTerminal
 
 /// App boundary for privacy-safe snapshots; it never reads terminal contents.
 @MainActor

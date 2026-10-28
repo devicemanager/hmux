@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """nightly-next feed watch (scripts/ci/nightly_next_feed_watch.py, cx-npz7g).
 
-feat-cmux-next work must reach the nightly-next feed. The nightly.yml alarm
+feat-hmux-next work must reach the nightly-next feed. The nightly.yml alarm
 runs only inside nightly-next push runs, so a promotion stall (red Release
-compile, unpublished cmux-tui tree) never raised it. The watch runs from main
-every 30 minutes and measures how long feat-cmux-next pushes have waited.
+compile, unpublished hmux-tui tree) never raised it. The watch runs from main
+every 30 minutes and measures how long feat-hmux-next pushes have waited.
 """
 from __future__ import annotations
 
@@ -42,9 +42,9 @@ JOBS = {
          "steps": [{"name": "libghostty-vt Zig packages are covered by the notices", "conclusion": "failure"}]}],
     8: [{"name": "build / build x86_64-apple-darwin", "conclusion": "failure",
          "steps": [{"name": "Build the macOS binaries on Linux (no Apple SDK)", "conclusion": "failure"}]}],
-    9: [{"name": "cmux-next Release compile (Xcode 26)", "conclusion": "failure", "steps": []}],
-    10: [{"name": "cmux-next Release compile (Xcode 26)", "conclusion": "cancelled", "steps": []}],
-    11: [{"name": "cmux-next Release compile (Xcode 26)", "conclusion": "success", "steps": []}],
+    9: [{"name": "hmux-next Release compile (Xcode 26)", "conclusion": "failure", "steps": []}],
+    10: [{"name": "hmux-next Release compile (Xcode 26)", "conclusion": "cancelled", "steps": []}],
+    11: [{"name": "hmux-next Release compile (Xcode 26)", "conclusion": "success", "steps": []}],
 }
 
 
@@ -64,7 +64,7 @@ class AssessTests(unittest.TestCase):
         self.assertAlmostEqual(stage.waited_hours, 5.0)
         self.assertIn("Nothing was promoted", stage.reason)
         self.assertIn("build / build x86_64-apple-darwin (step: Build the macOS binaries on Linux (no Apple SDK))", stage.reason)
-        self.assertIn("cmux-next Release compile (Xcode 26) is failure", stage.reason)
+        self.assertIn("hmux-next Release compile (Xcode 26) is failure", stage.reason)
 
     def test_failed_nightly_names_its_job_and_step(self):
         stage = assess([run(1, 6)], nightly=[run(7, 2, conclusion="failure")])
@@ -206,9 +206,9 @@ class StaleExitTests(unittest.TestCase):
 
 
 class FeedTests(unittest.TestCase):
-    def test_watches_the_cmux_next_feed(self):
-        # nightly-next ships as cmux NEXT with its own feed (cx-x7hwx); the old
-        # cmux NIGHTLY-identity feed is no longer written.
+    def test_watches_the_hmux_next_feed(self):
+        # nightly-next ships as hmux NEXT with its own feed (cx-x7hwx); the old
+        # hmux NIGHTLY-identity feed is no longer written.
         self.assertEqual(watch.FEED_URL, "https://files-next.cmux.com/nightly-next/next/appcast-arm64.xml")
 
 
@@ -253,27 +253,27 @@ class IssueTests(unittest.TestCase):
         self.assertIn("a" * 40, body)
         self.assertIn(stage.reason, body)
         self.assertIn("30.0 hours old", body)
-        self.assertEqual(watch.PUBLISHED_MARKER.search("<!-- cmux-published-sha: " + "b" * 40 + " -->").group(1), "b" * 40)
+        self.assertEqual(watch.PUBLISHED_MARKER.search("<!-- hmux-published-sha: " + "b" * 40 + " -->").group(1), "b" * 40)
 
 
 class ContinuationTests(unittest.TestCase):
     """The schedule also publishes a build Apple accepted after its run stopped
     waiting. Without it, an accepted build waited for the next green
-    feat-cmux-next compile, so a quiet branch held the feed."""
+    feat-hmux-next compile, so a quiet branch held the feed."""
 
     ROOT = Path(__file__).resolve().parents[1]
 
     def test_the_schedule_requests_a_continuation(self):
         workflow = (self.ROOT / ".github/workflows/nightly-next-feed-watch.yml").read_text()
         self.assertIn("actions: write", workflow)
-        call = 'run: scripts/cmux-next/continue-nightly-next.sh --repo "$REPOSITORY"'
+        call = 'run: scripts/hmux-next/continue-nightly-next.sh --repo "$REPOSITORY"'
         self.assertIn(call, workflow)
         step = workflow[:workflow.index(call)].rsplit("- name:", 1)[1]
         self.assertIn("continue-on-error: true", step)
 
     def test_the_continuation_script_passes_its_own_test(self):
         import subprocess
-        test = self.ROOT / "scripts/cmux-next/tests/continue-nightly-next.test.sh"
+        test = self.ROOT / "scripts/hmux-next/tests/continue-nightly-next.test.sh"
         self.assertTrue(test.is_file(), test)
         result = subprocess.run(["bash", str(test)], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)

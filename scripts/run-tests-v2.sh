@@ -1,22 +1,22 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# This runner is intended for the UTM macOS VM (ssh cmux-vm).
-# It is intentionally guarded so we don't accidentally kill the host user's cmux instances.
-if [ "$(id -un)" != "cmux" ]; then
-  echo "ERROR: This script is intended to be run on the cmux-vm (user: cmux)." >&2
-  echo "Run via: ssh cmux-vm 'cd /Users/cmux/cmux && ./scripts/run-tests-v2.sh'" >&2
+# This runner is intended for the UTM macOS VM (ssh hmux-vm).
+# It is intentionally guarded so we don't accidentally kill the host user's hmux instances.
+if [ "$(id -un)" != "hmux" ]; then
+  echo "ERROR: This script is intended to be run on the hmux-vm (user: hmux)." >&2
+  echo "Run via: ssh hmux-vm 'cd /Users/hmux/hmux && ./scripts/run-tests-v2.sh'" >&2
   exit 2
 fi
 
 cd "$(dirname "$0")/.."
 
-DERIVED_DATA_PATH="$HOME/Library/Developer/Xcode/DerivedData/cmux-tests-v2"
-APP="$DERIVED_DATA_PATH/Build/Products/Debug/cmux DEV.app"
+DERIVED_DATA_PATH="$HOME/Library/Developer/Xcode/DerivedData/hmux-tests-v2"
+APP="$DERIVED_DATA_PATH/Build/Products/Debug/hmux DEV.app"
 RUN_TAG="tests-v2"
-# CMUX_TAG gives the test app its own socket. Only ever touch that one so a
+# HMUX_TAG gives the test app its own socket. Only ever touch that one so a
 # run cannot remove or drive another tagged app's socket.
-TEST_SOCK="/tmp/cmux-debug-${RUN_TAG}.sock"
+TEST_SOCK="/tmp/hmux-debug-${RUN_TAG}.sock"
 
 echo "== build =="
 # Work around stale explicit-module cache artifacts (notably Sentry headers) that can
@@ -24,22 +24,22 @@ echo "== build =="
 # module file ... was built".
 rm -rf "$DERIVED_DATA_PATH/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules" || true
 xcodebuild \
-  -project cmux.xcodeproj \
-  -scheme cmux \
+  -project hmux.xcodeproj \
+  -scheme hmux \
   -configuration Debug \
   -destination "platform=macOS" \
   -derivedDataPath "$DERIVED_DATA_PATH" \
   build >/dev/null
 
 if [ ! -d "$APP" ]; then
-  echo "ERROR: cmux DEV.app not found at expected path: $APP" >&2
+  echo "ERROR: hmux DEV.app not found at expected path: $APP" >&2
   exit 1
 fi
 
 cleanup() {
-  # Never touch the user's running stable app ("cmux", com.cmuxterm.app):
+  # Never touch the user's running stable app ("hmux", com.hmuxterm.app):
   # killing it drops their live agent sessions.
-  pkill -x "cmux DEV" || true
+  pkill -x "hmux DEV" || true
   rm -f "$TEST_SOCK" || true
 }
 
@@ -48,15 +48,15 @@ launch_and_wait() {
   # Wait briefly for the previous instance to fully terminate; LaunchServices can flake if we
   # relaunch too quickly.
   for _ in {1..50}; do
-    pgrep -x "cmux DEV" >/dev/null 2>&1 || break
+    pgrep -x "hmux DEV" >/dev/null 2>&1 || break
     sleep 0.1
   done
 
   # Force socket mode for deterministic automation runs, independent of prior user settings.
-  defaults write com.cmuxterm.app.debug socketControlMode -string full >/dev/null 2>&1 || true
+  defaults write com.hmuxterm.app.debug socketControlMode -string full >/dev/null 2>&1 || true
 
   # Launch directly with UI test mode enabled so startup follows deterministic test codepaths.
-  CMUX_TAG="$RUN_TAG" CMUX_UI_TEST_MODE=1 "$APP/Contents/MacOS/cmux DEV" >/dev/null 2>&1 &
+  HMUX_TAG="$RUN_TAG" HMUX_UI_TEST_MODE=1 "$APP/Contents/MacOS/hmux DEV" >/dev/null 2>&1 &
 
   SOCK=""
   for _ in {1..120}; do
@@ -71,10 +71,10 @@ launch_and_wait() {
     echo "ERROR: Socket not ready (looked for $TEST_SOCK)" >&2
     exit 1
   fi
-  export CMUX_SOCKET_PATH="$SOCK"
+  export HMUX_SOCKET_PATH="$SOCK"
 
   # Ensure LaunchServices has a visible/main window attached for rendering checks.
-  CMUX_TAG="$RUN_TAG" open "$APP" >/dev/null 2>&1 || true
+  HMUX_TAG="$RUN_TAG" open "$APP" >/dev/null 2>&1 || true
   sleep 0.5
 
   echo "== wait ready =="
@@ -84,14 +84,14 @@ import os
 import sys
 
 sys.path.insert(0, os.path.join(os.getcwd(), "tests_v2"))
-from cmux import cmux  # type: ignore
+from hmux import hmux  # type: ignore
 
 deadline = time.time() + 30.0
 last = None
 client = None
 while time.time() < deadline:
     try:
-        client = cmux()
+        client = hmux()
         client.connect()
         break
     except Exception as e:
@@ -125,7 +125,7 @@ probe_deadline = time.time() + 10.0
 while time.time() < probe_deadline:
     probe = None
     try:
-        probe = cmux()
+        probe = hmux()
         probe.connect()
         if not probe.ping():
             raise RuntimeError("ping returned false")

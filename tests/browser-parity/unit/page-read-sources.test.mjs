@@ -22,7 +22,7 @@ const READ_SIZE = 2000000;
 
 async function withRepl(fn) {
   const servers = await startFixtureServers();
-  const dir = makeTestDir("cmux-repl-read-sources-");
+  const dir = makeTestDir("hmux-repl-read-sources-");
   const browser = await createDevBrowser();
   const lines = [];
   const host = createNodeHost({ workDir: dir, sessionId: `read-sources-${process.pid}`, print: (level, text) => lines.push(text) });

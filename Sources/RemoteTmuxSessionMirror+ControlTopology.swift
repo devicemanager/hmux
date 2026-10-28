@@ -1,5 +1,5 @@
 import Bonsplit
-import CmuxRemoteSession
+import HmuxRemoteSession
 import Foundation
 
 @MainActor

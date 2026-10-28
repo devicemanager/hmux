@@ -1,19 +1,19 @@
 name: Namespace autofix
 
 # Lives on main: GitHub takes a pull_request_target workflow from the default
-# branch whatever the pull request's base, so the feat-cmux-next copy never ran.
-# The lint, its helpers and its baselines are still the feat-cmux-next base's:
+# branch whatever the pull request's base, so the feat-hmux-next copy never ran.
+# The lint, its helpers and its baselines are still the feat-hmux-next base's:
 # the job checks out the pull request's base commit and restores every helper
-# from it, never from main. Only feat-cmux-next pull requests run it, as before
+# from it, never from main. Only feat-hmux-next pull requests run it, as before
 # (main never had this workflow). This copy is the one that runs, so change it
 # here.
 on:
   pull_request_target:
-    branches: [feat-cmux-next]
+    branches: [feat-hmux-next]
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
       - "Packages/**/*.swift"
-      - "ios/cmux/**/*.swift"
+      - "ios/hmux/**/*.swift"
       - "scripts/lint-ios-package-conventions.sh"
       - "scripts/lint_swift_namespaces.py"
       - "scripts/swift_source_mask.py"
@@ -53,7 +53,7 @@ jobs:
       # The App's installation may not grant contents: write (it refused with
       # a 422 on #23518). Without a token the job warns and skips; the
       # conventions lint still reports violations, as warnings only while
-      # CMUX_NEXT_STYLE_GUARDS is warn.
+      # HMUX_NEXT_STYLE_GUARDS is warn.
       - name: Mint scoped write token
         id: app-token
         if: vars.GLAEDA_ROUTE_APP_ID != ''
@@ -126,7 +126,7 @@ jobs:
           done
 
           git diff --name-only --diff-filter=ACMR "$BASE_SHA" "$HEAD_SHA" \
-            | awk '/^(Packages|ios\/cmux)\/.*\.swift$/ { print }' \
+            | awk '/^(Packages|ios\/hmux)\/.*\.swift$/ { print }' \
             | sort -u > "$RUNNER_TEMP/namespace-files.txt"
           if [ ! -s "$RUNNER_TEMP/namespace-files.txt" ]; then
             echo "No changed package Swift files; namespace autofix is clean."
@@ -156,7 +156,7 @@ jobs:
             exit 0
           fi
 
-          git config user.name "cmux namespace autofix"
+          git config user.name "hmux namespace autofix"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git -c core.hooksPath=/dev/null commit -m "lint: apply namespace autofix"
           auth="$(printf 'x-access-token:%s' "$APP_TOKEN" | base64 -w0)"

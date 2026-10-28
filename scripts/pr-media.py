@@ -12,7 +12,7 @@ of only printing it.
 An mp4 is also converted to a gif, because GitHub renders a gif inline from a
 raw URL and will not render an mp4 from one: a reviewer scrolling a PR sees the
 gif move without clicking, and the mp4 stays linked next to it at full quality.
-`cmux record --gif` output needs no conversion and is uploaded as it is.
+`hmux record --gif` output needs no conversion and is uploaded as it is.
 
 A gif or screenshot has to stay under 5 MiB, the limit of the proxy GitHub
 renders an inline image through; past it a reader sees a broken image, so the
@@ -110,7 +110,7 @@ def privacy_module():
     to upload rather than skipping the check."""
     global _privacy
     if _privacy is None:
-        spec = importlib.util.spec_from_file_location("cmux_pr_media_privacy", PRIVACY_MODULE)
+        spec = importlib.util.spec_from_file_location("hmux_pr_media_privacy", PRIVACY_MODULE)
         if not PRIVACY_MODULE.is_file() or spec is None or spec.loader is None:
             raise PrivacyError(f"the privacy check {PRIVACY_MODULE} is missing; nothing is uploaded without it. "
                              "Add scripts/ci/pr_media_privacy.py (and pr_media_ocr.swift) to a sparse checkout.")

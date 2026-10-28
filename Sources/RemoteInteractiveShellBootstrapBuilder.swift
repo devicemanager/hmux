@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
 enum RemoteInteractiveShellBootstrapBuilder {
@@ -19,7 +19,7 @@ enum RemoteInteractiveShellBootstrapBuilder {
             command: initialCommand,
             protectsFromHangup: protectsFromHangup
         )
-        let shellExec = shellExecCommand(shell: #""$CMUX_LOGIN_SHELL""#, protectsFromHangup: protectsFromHangup)
+        let shellExec = shellExecCommand(shell: #""$HMUX_LOGIN_SHELL""#, protectsFromHangup: protectsFromHangup)
         let zshExec = shellExecCommand(shell: #""${SHELL:-/bin/zsh}""#, protectsFromHangup: protectsFromHangup)
         let bashExec = shellExecCommand(shell: #""${SHELL:-/bin/bash}""#, protectsFromHangup: protectsFromHangup)
         let fishExec = shellExecCommand(shell: #""${SHELL:-/bin/fish}""#, protectsFromHangup: protectsFromHangup)
@@ -32,11 +32,11 @@ enum RemoteInteractiveShellBootstrapBuilder {
         )
         var zshShellLines = commonShellExportLines
         zshShellLines.append(
-            #"if [ "${CMUX_SHELL_INTEGRATION:-1}" != "0" ] && [ -r "${CMUX_SHELL_INTEGRATION_DIR}/cmux-zsh-integration.zsh" ]; then . "${CMUX_SHELL_INTEGRATION_DIR}/cmux-zsh-integration.zsh"; fi"#
+            #"if [ "${HMUX_SHELL_INTEGRATION:-1}" != "0" ] && [ -r "${HMUX_SHELL_INTEGRATION_DIR}/hmux-zsh-integration.zsh" ]; then . "${HMUX_SHELL_INTEGRATION_DIR}/hmux-zsh-integration.zsh"; fi"#
         )
         var bashShellLines = commonShellExportLines
         bashShellLines.append(
-            #"if [ "${CMUX_SHELL_INTEGRATION:-1}" != "0" ] && [ -r "${CMUX_SHELL_INTEGRATION_DIR}/cmux-bash-integration.bash" ]; then . "${CMUX_SHELL_INTEGRATION_DIR}/cmux-bash-integration.bash"; fi"#
+            #"if [ "${HMUX_SHELL_INTEGRATION:-1}" != "0" ] && [ -r "${HMUX_SHELL_INTEGRATION_DIR}/hmux-bash-integration.bash" ]; then . "${HMUX_SHELL_INTEGRATION_DIR}/hmux-bash-integration.bash"; fi"#
         )
         bashShellLines.append(contentsOf: initialCommandBootstrap.posixInteractiveShellLines)
         let zshBootstrap = RemoteRelayZshBootstrap(shellStateDir: shellStateDir)
@@ -55,78 +55,78 @@ enum RemoteInteractiveShellBootstrapBuilder {
         }
 
         var outerLines: [String] = [
-            "mkdir -p \"$HOME/.cmux/relay\"",
-            "cmux_shell_dir=\"\(shellStateDir)\"",
-            "mkdir -p \"$cmux_shell_dir\"",
+            "mkdir -p \"$HOME/.hmux/relay\"",
+            "hmux_shell_dir=\"\(shellStateDir)\"",
+            "mkdir -p \"$hmux_shell_dir\"",
         ]
         outerLines.append(contentsOf: claudeWrapperInstallLines)
         outerLines.append(contentsOf: initialCommandBootstrap.preparationLines)
         if let bundledZshIntegration {
             outerLines += [
-                "cat > \"$cmux_shell_dir/cmux-zsh-integration.zsh\" <<'CMUXCMUXZSH'",
+                "cat > \"$hmux_shell_dir/hmux-zsh-integration.zsh\" <<'HMUXHMUXZSH'",
                 bundledZshIntegration,
-                "CMUXCMUXZSH",
+                "HMUXHMUXZSH",
             ]
         }
         if let bundledBashIntegration {
             outerLines += [
-                "cat > \"$cmux_shell_dir/cmux-bash-integration.bash\" <<'CMUXCMUXBASH'",
+                "cat > \"$hmux_shell_dir/hmux-bash-integration.bash\" <<'HMUXHMUXBASH'",
                 bundledBashIntegration,
-                "CMUXCMUXBASH",
+                "HMUXHMUXBASH",
             ]
         }
         if let bundledFishIntegration {
             outerLines += [
-                "mkdir -p \"$cmux_shell_dir/fish\"",
-                "cat > \"$cmux_shell_dir/fish/config.fish\" <<'CMUXCMUXFISH'",
+                "mkdir -p \"$hmux_shell_dir/fish\"",
+                "cat > \"$hmux_shell_dir/fish/config.fish\" <<'HMUXHMUXFISH'",
                 bundledFishIntegration,
-                "CMUXCMUXFISH",
+                "HMUXHMUXFISH",
             ]
         }
         outerLines.append(contentsOf: commonShellExportLines + Self.remoteInitialWorkingDirectoryLines())
         outerLines += [
-            "CMUX_LOGIN_SHELL=\"${SHELL:-/bin/zsh}\"",
+            "HMUX_LOGIN_SHELL=\"${SHELL:-/bin/zsh}\"",
             protectsFromHangup
-                ? "if [ -z \"${CMUX_PERSISTENT_PTY_EXEC_HELPER:-}\" ] || [ ! -x \"$CMUX_PERSISTENT_PTY_EXEC_HELPER\" ]; then exit 126; fi"
+                ? "if [ -z \"${HMUX_PERSISTENT_PTY_EXEC_HELPER:-}\" ] || [ ! -x \"$HMUX_PERSISTENT_PTY_EXEC_HELPER\" ]; then exit 126; fi"
                 : ":",
-            "case \"${CMUX_LOGIN_SHELL##*/}\" in",
+            "case \"${HMUX_LOGIN_SHELL##*/}\" in",
             "  zsh)",
-            "    cat > \"$cmux_shell_dir/.zshenv\" <<'CMUXZSHENV'",
+            "    cat > \"$hmux_shell_dir/.zshenv\" <<'HMUXZSHENV'",
         ]
         outerLines.append(contentsOf: zshBootstrap.zshEnvLines)
         outerLines += [
-            "CMUXZSHENV",
-            "    cat > \"$cmux_shell_dir/.zprofile\" <<'CMUXZSHPROFILE'",
+            "HMUXZSHENV",
+            "    cat > \"$hmux_shell_dir/.zprofile\" <<'HMUXZSHPROFILE'",
         ]
         outerLines.append(contentsOf: zshBootstrap.zshProfileLines)
         outerLines += [
-            "CMUXZSHPROFILE",
-            "    cat > \"$cmux_shell_dir/.zshrc\" <<'CMUXZSHRC'",
+            "HMUXZSHPROFILE",
+            "    cat > \"$hmux_shell_dir/.zshrc\" <<'HMUXZSHRC'",
         ]
         outerLines.append(contentsOf: zshBootstrap.zshRCLines(commonShellLines: zshShellLines))
         outerLines += [
-            "CMUXZSHRC",
-            "    cat > \"$cmux_shell_dir/.zlogin\" <<'CMUXZSHLOGIN'",
+            "HMUXZSHRC",
+            "    cat > \"$hmux_shell_dir/.zlogin\" <<'HMUXZSHLOGIN'",
         ]
         outerLines.append(contentsOf: zshBootstrap.zshLoginLines + initialCommandBootstrap.posixInteractiveShellLines)
         outerLines += [
-            "CMUXZSHLOGIN",
-            "    chmod 600 \"$cmux_shell_dir/.zshenv\" \"$cmux_shell_dir/.zprofile\" \"$cmux_shell_dir/.zshrc\" \"$cmux_shell_dir/.zlogin\" >/dev/null 2>&1 || true",
+            "HMUXZSHLOGIN",
+            "    chmod 600 \"$hmux_shell_dir/.zshenv\" \"$hmux_shell_dir/.zprofile\" \"$hmux_shell_dir/.zshrc\" \"$hmux_shell_dir/.zlogin\" >/dev/null 2>&1 || true",
         ]
         outerLines.append(contentsOf: relayWarmupLines.map { "    " + $0 })
         outerLines += [
-            "    export CMUX_REAL_ZDOTDIR=\"${ZDOTDIR:-$HOME}\"",
-            "    export ZDOTDIR=\"$cmux_shell_dir\"",
+            "    export HMUX_REAL_ZDOTDIR=\"${ZDOTDIR:-$HOME}\"",
+            "    export ZDOTDIR=\"$hmux_shell_dir\"",
             terminalLaunchLine(
                 profile: terminalProfile,
                 indentation: "    ",
                 directShellCommand: chainedRemoteCommandLaunch
                     ?? "\(shellExec) -il",
-                tmuxShellCommand: "export CMUX_REAL_ZDOTDIR=\"${CMUX_REAL_ZDOTDIR:-${ZDOTDIR:-$HOME}}\"; export ZDOTDIR=\"\(shellStateDir)\"; \(zshExec) -il"
+                tmuxShellCommand: "export HMUX_REAL_ZDOTDIR=\"${HMUX_REAL_ZDOTDIR:-${ZDOTDIR:-$HOME}}\"; export ZDOTDIR=\"\(shellStateDir)\"; \(zshExec) -il"
             ),
             "    ;;",
             "  bash)",
-            "    cat > \"$cmux_shell_dir/.bashrc\" <<'CMUXBASHRC'",
+            "    cat > \"$hmux_shell_dir/.bashrc\" <<'HMUXBASHRC'",
         ]
         outerLines.append(contentsOf: [
             "if [ -f \"$HOME/.bash_profile\" ]; then",
@@ -139,8 +139,8 @@ enum RemoteInteractiveShellBootstrapBuilder {
             "[ -f \"$HOME/.bashrc\" ] && . \"$HOME/.bashrc\"",
         ] + bashShellLines)
         outerLines += [
-            "CMUXBASHRC",
-            "    chmod 600 \"$cmux_shell_dir/.bashrc\" >/dev/null 2>&1 || true",
+            "HMUXBASHRC",
+            "    chmod 600 \"$hmux_shell_dir/.bashrc\" >/dev/null 2>&1 || true",
         ]
         outerLines.append(contentsOf: relayWarmupLines.map { "    " + $0 })
         outerLines += [
@@ -148,31 +148,31 @@ enum RemoteInteractiveShellBootstrapBuilder {
                 profile: terminalProfile,
                 indentation: "    ",
                 directShellCommand: chainedRemoteCommandLaunch
-                    ?? "\(shellExec) --rcfile \"$cmux_shell_dir/.bashrc\" -i",
+                    ?? "\(shellExec) --rcfile \"$hmux_shell_dir/.bashrc\" -i",
                 // tmux stores `default-command` at the session level. Resolve
                 // the relay directory from the session environment each time
                 // a pane is created so reconnects cannot leave new panes
                 // pointing at a deleted relay rcfile.
-                tmuxShellCommand: "\(bashExec) --rcfile \"${CMUX_SHELL_INTEGRATION_DIR:-\(shellStateDir)}/.bashrc\" -i"
+                tmuxShellCommand: "\(bashExec) --rcfile \"${HMUX_SHELL_INTEGRATION_DIR:-\(shellStateDir)}/.bashrc\" -i"
             ),
             "    ;;",
             "  fish)",
         ]
         outerLines.append(contentsOf: relayWarmupLines.map { "    " + $0 })
-        var fishInitCommands = ["source \"$CMUX_FISH_INTEGRATION_FILE\""]
+        var fishInitCommands = ["source \"$HMUX_FISH_INTEGRATION_FILE\""]
         if let initialCommand = initialCommandBootstrap.fishInteractiveShellCommand {
             fishInitCommands.append(initialCommand)
         }
         let fishInitCommand = shellQuote(fishInitCommands.joined(separator: "; "))
         outerLines += [
-            "    export CMUX_FISH_INTEGRATION_FILE=\"$cmux_shell_dir/fish/config.fish\"",
-            "    export CMUX_FISH_USER_CONFIG_ALREADY_LOADED=1",
+            "    export HMUX_FISH_INTEGRATION_FILE=\"$hmux_shell_dir/fish/config.fish\"",
+            "    export HMUX_FISH_USER_CONFIG_ALREADY_LOADED=1",
             terminalLaunchLine(
                 profile: terminalProfile,
                 indentation: "    ",
                 directShellCommand: chainedRemoteCommandLaunch
                     ?? "\(shellExec) -il --init-command \(fishInitCommand)",
-                tmuxShellCommand: "export CMUX_FISH_INTEGRATION_FILE=\"\(shellStateDir)/fish/config.fish\"; export CMUX_FISH_USER_CONFIG_ALREADY_LOADED=1; \(fishExec) -il --init-command \(fishInitCommand)"
+                tmuxShellCommand: "export HMUX_FISH_INTEGRATION_FILE=\"\(shellStateDir)/fish/config.fish\"; export HMUX_FISH_USER_CONFIG_ALREADY_LOADED=1; \(fishExec) -il --init-command \(fishInitCommand)"
             ),
             "    ;;",
             "  *)",
@@ -198,7 +198,7 @@ enum RemoteInteractiveShellBootstrapBuilder {
     /// shells retain normal hangup handling when their transport goes away.
     static func shellExecCommand(shell: String, protectsFromHangup: Bool) -> String {
         if protectsFromHangup {
-            return "exec \"$CMUX_PERSISTENT_PTY_EXEC_HELPER\" --internal-persistent-pty-exec \(shell) \(shell)"
+            return "exec \"$HMUX_PERSISTENT_PTY_EXEC_HELPER\" --internal-persistent-pty-exec \(shell) \(shell)"
         }
         return "exec \(shell)"
     }
@@ -270,29 +270,29 @@ enum RemoteInteractiveShellBootstrapBuilder {
         var lines = terminalSetupLines(terminfoSource: terminfoSource)
         lines.append(contentsOf: RemoteShellEnvironment.utf8LocaleSetupLines())
         lines.append(contentsOf: shellExportLines(shellFeatures: shellFeatures))
-        lines.append("export PATH=\"$HOME/.cmux/bin:$PATH\"")
-        lines.append("export CMUX_BUNDLED_CLI_PATH=\"$HOME/.cmux/bin/cmux\"")
-        lines.append("unset CMUX_CODEX_WRAPPER_SHIM; if [ -x \"$HOME/.cmux/bin/cmux-codex-wrapper\" ] && command -v bash >/dev/null 2>&1; then export CMUX_CODEX_WRAPPER_SHIM=\"$HOME/.cmux/bin/cmux-codex-wrapper\"; fi")
+        lines.append("export PATH=\"$HOME/.hmux/bin:$PATH\"")
+        lines.append("export HMUX_BUNDLED_CLI_PATH=\"$HOME/.hmux/bin/hmux\"")
+        lines.append("unset HMUX_CODEX_WRAPPER_SHIM; if [ -x \"$HOME/.hmux/bin/hmux-codex-wrapper\" ] && command -v bash >/dev/null 2>&1; then export HMUX_CODEX_WRAPPER_SHIM=\"$HOME/.hmux/bin/hmux-codex-wrapper\"; fi")
         lines.append(
-            "export CMUX_PERSISTENT_PTY_EXEC_HELPER=\"${CMUX_PERSISTENT_PTY_EXEC_HELPER:-$CMUX_BUNDLED_CLI_PATH}\""
+            "export HMUX_PERSISTENT_PTY_EXEC_HELPER=\"${HMUX_PERSISTENT_PTY_EXEC_HELPER:-$HMUX_BUNDLED_CLI_PATH}\""
         )
-        lines.append("export CMUX_SHELL_INTEGRATION_DIR=\"\(shellStateDir)\"")
+        lines.append("export HMUX_SHELL_INTEGRATION_DIR=\"\(shellStateDir)\"")
         if let relaySocket {
-            lines.append("export CMUX_SOCKET_PATH=\(relaySocket)")
+            lines.append("export HMUX_SOCKET_PATH=\(relaySocket)")
         }
         // The assignment placeholders are replaced by `ssh-pty-attach` before
         // this script runs. Split the sentinel patterns so a missed replacement
         // does not export literal placeholder IDs into the remote shell.
         lines.append(contentsOf: [
-            "cmux_workspace_id='__CMUX_WORKSPACE_ID__'",
-            "case \"$cmux_workspace_id\" in \"\"|'__CMUX_''WORKSPACE_ID__') ;; *) export CMUX_WORKSPACE_ID=\"$cmux_workspace_id\"; export CMUX_TAB_ID=\"$cmux_workspace_id\" ;; esac",
-            "cmux_surface_id='__CMUX_SURFACE_ID__'",
-            "case \"$cmux_surface_id\" in \"\"|'__CMUX_''SURFACE_ID__') ;; *) export CMUX_SURFACE_ID=\"$cmux_surface_id\"; export CMUX_PANEL_ID=\"$cmux_surface_id\" ;; esac",
-            "cmux_terminal_lifecycle_id='__CMUX_TERMINAL_LIFECYCLE_ID__'",
-            "case \"$cmux_terminal_lifecycle_id\" in \"\"|'__CMUX_''TERMINAL_LIFECYCLE_ID__') ;; *) export CMUX_TERMINAL_LIFECYCLE_ID=\"$cmux_terminal_lifecycle_id\" ;; esac",
-            "cmux_ssh_attempt_id='__CMUX_SSH_ATTEMPT_ID__'",
-            "case \"$cmux_ssh_attempt_id\" in \"\"|'__CMUX_''SSH_ATTEMPT_ID__') ;; *) export CMUX_SSH_ATTEMPT_ID=\"$cmux_ssh_attempt_id\" ;; esac",
-            "unset cmux_workspace_id cmux_surface_id cmux_terminal_lifecycle_id cmux_ssh_attempt_id",
+            "hmux_workspace_id='__HMUX_WORKSPACE_ID__'",
+            "case \"$hmux_workspace_id\" in \"\"|'__HMUX_''WORKSPACE_ID__') ;; *) export HMUX_WORKSPACE_ID=\"$hmux_workspace_id\"; export HMUX_TAB_ID=\"$hmux_workspace_id\" ;; esac",
+            "hmux_surface_id='__HMUX_SURFACE_ID__'",
+            "case \"$hmux_surface_id\" in \"\"|'__HMUX_''SURFACE_ID__') ;; *) export HMUX_SURFACE_ID=\"$hmux_surface_id\"; export HMUX_PANEL_ID=\"$hmux_surface_id\" ;; esac",
+            "hmux_terminal_lifecycle_id='__HMUX_TERMINAL_LIFECYCLE_ID__'",
+            "case \"$hmux_terminal_lifecycle_id\" in \"\"|'__HMUX_''TERMINAL_LIFECYCLE_ID__') ;; *) export HMUX_TERMINAL_LIFECYCLE_ID=\"$hmux_terminal_lifecycle_id\" ;; esac",
+            "hmux_ssh_attempt_id='__HMUX_SSH_ATTEMPT_ID__'",
+            "case \"$hmux_ssh_attempt_id\" in \"\"|'__HMUX_''SSH_ATTEMPT_ID__') ;; *) export HMUX_SSH_ATTEMPT_ID=\"$hmux_ssh_attempt_id\" ;; esac",
+            "unset hmux_workspace_id hmux_surface_id hmux_terminal_lifecycle_id hmux_ssh_attempt_id",
             "hash -r >/dev/null 2>&1 || true",
             "rehash >/dev/null 2>&1 || true",
         ])
@@ -306,11 +306,11 @@ enum RemoteInteractiveShellBootstrapBuilder {
             // Without a bundled terminfo to install we can only probe what the
             // remote already has and fall back to a universally-present entry.
             return [
-                "cmux_term='xterm-256color'",
+                "hmux_term='xterm-256color'",
                 "if command -v infocmp >/dev/null 2>&1 && infocmp xterm-ghostty >/dev/null 2>&1; then",
-                "  cmux_term='xterm-ghostty'",
+                "  hmux_term='xterm-ghostty'",
                 "fi",
-                "export TERM=\"$cmux_term\"",
+                "export TERM=\"$hmux_term\"",
             ]
         }
         // Install the bundled xterm-ghostty terminfo *synchronously*, before
@@ -323,44 +323,44 @@ enum RemoteInteractiveShellBootstrapBuilder {
         // and garble output (#6352). Here we compile into a private temp
         // directory on the same filesystem as ~/.terminfo, then move each
         // compiled entry into place with an atomic rename, so a concurrent reader
-        // in another cmux ssh session sharing $HOME never observes a partially
+        // in another hmux ssh session sharing $HOME never observes a partially
         // written database. The temp directory comes from `mktemp` when present,
         // otherwise a per-process `$$` directory (unique among live processes) so
         // the atomic-rename path applies even without `mktemp` — no branch ever
         // compiles terminfo directly into ~/.terminfo.
         return [
-            "cmux_term='xterm-256color'",
+            "hmux_term='xterm-256color'",
             "if command -v infocmp >/dev/null 2>&1 && infocmp xterm-ghostty >/dev/null 2>&1; then",
-            "  cmux_term='xterm-ghostty'",
+            "  hmux_term='xterm-ghostty'",
             "elif command -v tic >/dev/null 2>&1; then",
             "  mkdir -p \"$HOME/.terminfo\" 2>/dev/null",
-            "  cmux_ti_tmp=$(mktemp -d \"$HOME/.terminfo.cmux.XXXXXX\" 2>/dev/null) || cmux_ti_tmp=''",
-            "  if [ -z \"$cmux_ti_tmp\" ]; then",
-            "    cmux_ti_tmp=\"$HOME/.terminfo.cmux.$$\"",
-            "    rm -rf \"$cmux_ti_tmp\" 2>/dev/null",
-            "    mkdir \"$cmux_ti_tmp\" 2>/dev/null || cmux_ti_tmp=''",
+            "  hmux_ti_tmp=$(mktemp -d \"$HOME/.terminfo.hmux.XXXXXX\" 2>/dev/null) || hmux_ti_tmp=''",
+            "  if [ -z \"$hmux_ti_tmp\" ]; then",
+            "    hmux_ti_tmp=\"$HOME/.terminfo.hmux.$$\"",
+            "    rm -rf \"$hmux_ti_tmp\" 2>/dev/null",
+            "    mkdir \"$hmux_ti_tmp\" 2>/dev/null || hmux_ti_tmp=''",
             "  fi",
             "  {",
-            "    cat <<'CMUXTERMINFO'",
+            "    cat <<'HMUXTERMINFO'",
             trimmedTerminfoSource,
-            "CMUXTERMINFO",
+            "HMUXTERMINFO",
             "  } | {",
-            "    if [ -n \"$cmux_ti_tmp\" ] && tic -x -o \"$cmux_ti_tmp\" - >/dev/null 2>&1; then",
-            "      find \"$cmux_ti_tmp\" -type f 2>/dev/null | while IFS= read -r cmux_ti_file; do",
-            "        cmux_ti_rel=${cmux_ti_file#\"$cmux_ti_tmp\"/}",
-            "        cmux_ti_dest=\"$HOME/.terminfo/$cmux_ti_rel\"",
-            "        mkdir -p \"$(dirname \"$cmux_ti_dest\")\" 2>/dev/null",
-            "        mv -f \"$cmux_ti_file\" \"$cmux_ti_dest\" 2>/dev/null || cp -f \"$cmux_ti_file\" \"$cmux_ti_dest\" 2>/dev/null",
+            "    if [ -n \"$hmux_ti_tmp\" ] && tic -x -o \"$hmux_ti_tmp\" - >/dev/null 2>&1; then",
+            "      find \"$hmux_ti_tmp\" -type f 2>/dev/null | while IFS= read -r hmux_ti_file; do",
+            "        hmux_ti_rel=${hmux_ti_file#\"$hmux_ti_tmp\"/}",
+            "        hmux_ti_dest=\"$HOME/.terminfo/$hmux_ti_rel\"",
+            "        mkdir -p \"$(dirname \"$hmux_ti_dest\")\" 2>/dev/null",
+            "        mv -f \"$hmux_ti_file\" \"$hmux_ti_dest\" 2>/dev/null || cp -f \"$hmux_ti_file\" \"$hmux_ti_dest\" 2>/dev/null",
             "      done",
             "    fi",
             "  }",
-            "  [ -n \"$cmux_ti_tmp\" ] && rm -rf \"$cmux_ti_tmp\" 2>/dev/null",
+            "  [ -n \"$hmux_ti_tmp\" ] && rm -rf \"$hmux_ti_tmp\" 2>/dev/null",
             "  if infocmp xterm-ghostty >/dev/null 2>&1; then",
-            "    cmux_term='xterm-ghostty'",
+            "    hmux_term='xterm-ghostty'",
             "  fi",
-            "  unset cmux_ti_tmp cmux_ti_file cmux_ti_rel cmux_ti_dest 2>/dev/null || true",
+            "  unset hmux_ti_tmp hmux_ti_file hmux_ti_rel hmux_ti_dest 2>/dev/null || true",
             "fi",
-            "export TERM=\"$cmux_term\"",
+            "export TERM=\"$hmux_term\"",
         ]
     }
 
@@ -391,53 +391,53 @@ enum RemoteInteractiveShellBootstrapBuilder {
             return []
         }
         return [
-            "cmux_relay_cli=\"${CMUX_BUNDLED_CLI_PATH:-$HOME/.cmux/bin/cmux}\"",
-            "if [ ! -x \"$cmux_relay_cli\" ]; then cmux_relay_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi",
-            "cmux_relay_tty=\"${CMUX_BOOTSTRAP_TTY:-}\"",
-            "if [ -z \"$cmux_relay_tty\" ]; then cmux_relay_tty=\"$(tty 2>/dev/null || true)\"; fi",
-            "cmux_relay_tty=\"${cmux_relay_tty##*/}\"",
-            "if [ -n \"$cmux_relay_tty\" ] && [ \"$cmux_relay_tty\" != \"not a tty\" ]; then",
-            "  mkdir -p \"$HOME/.cmux/relay\" >/dev/null 2>&1 || true",
-            "  printf '%s' \"$cmux_relay_tty\" > \"$HOME/.cmux/relay/\(remoteRelayPort).tty\" 2>/dev/null || true",
+            "hmux_relay_cli=\"${HMUX_BUNDLED_CLI_PATH:-$HOME/.hmux/bin/hmux}\"",
+            "if [ ! -x \"$hmux_relay_cli\" ]; then hmux_relay_cli=\"$(command -v hmux 2>/dev/null || true)\"; fi",
+            "hmux_relay_tty=\"${HMUX_BOOTSTRAP_TTY:-}\"",
+            "if [ -z \"$hmux_relay_tty\" ]; then hmux_relay_tty=\"$(tty 2>/dev/null || true)\"; fi",
+            "hmux_relay_tty=\"${hmux_relay_tty##*/}\"",
+            "if [ -n \"$hmux_relay_tty\" ] && [ \"$hmux_relay_tty\" != \"not a tty\" ]; then",
+            "  mkdir -p \"$HOME/.hmux/relay\" >/dev/null 2>&1 || true",
+            "  printf '%s' \"$hmux_relay_tty\" > \"$HOME/.hmux/relay/\(remoteRelayPort).tty\" 2>/dev/null || true",
             "fi",
-            "if [ -n \"$cmux_relay_cli\" ] && [ -n \"$CMUX_WORKSPACE_ID\" ] && [ -n \"$CMUX_TERMINAL_LIFECYCLE_ID\" ] && [ -n \"$CMUX_SSH_ATTEMPT_ID\" ] && [ -n \"$cmux_relay_tty\" ] && [ \"$cmux_relay_tty\" != \"not a tty\" ]; then",
-            "  cmux_relay_report_tty=\"{\\\"workspace_id\\\":\\\"$CMUX_WORKSPACE_ID\\\",\\\"tty_name\\\":\\\"$cmux_relay_tty\\\",\\\"terminal_lifecycle_id\\\":\\\"$CMUX_TERMINAL_LIFECYCLE_ID\\\",\\\"attempt_id\\\":\\\"$CMUX_SSH_ATTEMPT_ID\\\"}\"",
-            "  cmux_relay_ports_kick=\"{\\\"workspace_id\\\":\\\"$CMUX_WORKSPACE_ID\\\",\\\"reason\\\":\\\"command\\\"}\"",
-            "  if [ -n \"$CMUX_SURFACE_ID\" ]; then",
-            "    cmux_relay_report_tty=\"{\\\"workspace_id\\\":\\\"$CMUX_WORKSPACE_ID\\\",\\\"surface_id\\\":\\\"$CMUX_SURFACE_ID\\\",\\\"tty_name\\\":\\\"$cmux_relay_tty\\\",\\\"terminal_lifecycle_id\\\":\\\"$CMUX_TERMINAL_LIFECYCLE_ID\\\",\\\"attempt_id\\\":\\\"$CMUX_SSH_ATTEMPT_ID\\\"}\"",
-            "    cmux_relay_ports_kick=\"{\\\"workspace_id\\\":\\\"$CMUX_WORKSPACE_ID\\\",\\\"surface_id\\\":\\\"$CMUX_SURFACE_ID\\\",\\\"reason\\\":\\\"command\\\"}\"",
+            "if [ -n \"$hmux_relay_cli\" ] && [ -n \"$HMUX_WORKSPACE_ID\" ] && [ -n \"$HMUX_TERMINAL_LIFECYCLE_ID\" ] && [ -n \"$HMUX_SSH_ATTEMPT_ID\" ] && [ -n \"$hmux_relay_tty\" ] && [ \"$hmux_relay_tty\" != \"not a tty\" ]; then",
+            "  hmux_relay_report_tty=\"{\\\"workspace_id\\\":\\\"$HMUX_WORKSPACE_ID\\\",\\\"tty_name\\\":\\\"$hmux_relay_tty\\\",\\\"terminal_lifecycle_id\\\":\\\"$HMUX_TERMINAL_LIFECYCLE_ID\\\",\\\"attempt_id\\\":\\\"$HMUX_SSH_ATTEMPT_ID\\\"}\"",
+            "  hmux_relay_ports_kick=\"{\\\"workspace_id\\\":\\\"$HMUX_WORKSPACE_ID\\\",\\\"reason\\\":\\\"command\\\"}\"",
+            "  if [ -n \"$HMUX_SURFACE_ID\" ]; then",
+            "    hmux_relay_report_tty=\"{\\\"workspace_id\\\":\\\"$HMUX_WORKSPACE_ID\\\",\\\"surface_id\\\":\\\"$HMUX_SURFACE_ID\\\",\\\"tty_name\\\":\\\"$hmux_relay_tty\\\",\\\"terminal_lifecycle_id\\\":\\\"$HMUX_TERMINAL_LIFECYCLE_ID\\\",\\\"attempt_id\\\":\\\"$HMUX_SSH_ATTEMPT_ID\\\"}\"",
+            "    hmux_relay_ports_kick=\"{\\\"workspace_id\\\":\\\"$HMUX_WORKSPACE_ID\\\",\\\"surface_id\\\":\\\"$HMUX_SURFACE_ID\\\",\\\"reason\\\":\\\"command\\\"}\"",
             "  fi",
-            "  \"$cmux_relay_cli\" rpc surface.report_tty \"$cmux_relay_report_tty\" >/dev/null 2>&1 || true",
-            "  ( \"$cmux_relay_cli\" rpc surface.ports_kick \"$cmux_relay_ports_kick\" >/dev/null 2>&1 || true ) </dev/null >/dev/null 2>&1 &",
+            "  \"$hmux_relay_cli\" rpc surface.report_tty \"$hmux_relay_report_tty\" >/dev/null 2>&1 || true",
+            "  ( \"$hmux_relay_cli\" rpc surface.ports_kick \"$hmux_relay_ports_kick\" >/dev/null 2>&1 || true ) </dev/null >/dev/null 2>&1 &",
             "fi",
-            "unset CMUX_BOOTSTRAP_TTY cmux_relay_cli cmux_relay_tty cmux_relay_report_tty cmux_relay_ports_kick",
+            "unset HMUX_BOOTSTRAP_TTY hmux_relay_cli hmux_relay_tty hmux_relay_report_tty hmux_relay_ports_kick",
         ]
     }
 
     /// The shell integration's `claude` shim execs
-    /// `$CMUX_SHELL_INTEGRATION_DIR/bin/cmux-claude-wrapper` when present. On a
+    /// `$HMUX_SHELL_INTEGRATION_DIR/bin/hmux-claude-wrapper` when present. On a
     /// relay host that wrapper hands off to the remote CLI, which injects the
     /// relay hooks through `--settings`, so launchers that resolve `claude`
     /// from PATH (and set their own CLAUDE_CONFIG_DIR) still report status.
-    /// An older remote CLI without the verb fails the local `--cmux-probe`
+    /// An older remote CLI without the verb fails the local `--hmux-probe`
     /// (no relay round trip), so the wrapper falls back to plain `claude`.
     static let claudeWrapperInstallLines: [String] = [
-        "mkdir -p \"$cmux_shell_dir/bin\"",
-        "cat > \"$cmux_shell_dir/bin/cmux-claude-wrapper\" <<'CMUXCLAUDEWRAPPER'",
+        "mkdir -p \"$hmux_shell_dir/bin\"",
+        "cat > \"$hmux_shell_dir/bin/hmux-claude-wrapper\" <<'HMUXCLAUDEWRAPPER'",
         "#!/bin/sh",
-        "cmux_cli=\"$HOME/.cmux/bin/cmux\"",
-        "if [ -x \"$cmux_cli\" ] && \"$cmux_cli\" claude-wrapper --cmux-probe >/dev/null 2>&1; then exec \"$cmux_cli\" claude-wrapper \"$@\"; fi",
-        "cmux_path=",
-        "cmux_ifs=$IFS; IFS=:",
-        "for cmux_entry in $PATH; do case \"$cmux_entry\" in *cmux-cli-shims*) ;; *) cmux_path=\"${cmux_path:+$cmux_path:}$cmux_entry\" ;; esac; done",
-        "IFS=$cmux_ifs; PATH=$cmux_path; export PATH",
+        "hmux_cli=\"$HOME/.hmux/bin/hmux\"",
+        "if [ -x \"$hmux_cli\" ] && \"$hmux_cli\" claude-wrapper --hmux-probe >/dev/null 2>&1; then exec \"$hmux_cli\" claude-wrapper \"$@\"; fi",
+        "hmux_path=",
+        "hmux_ifs=$IFS; IFS=:",
+        "for hmux_entry in $PATH; do case \"$hmux_entry\" in *hmux-cli-shims*) ;; *) hmux_path=\"${hmux_path:+$hmux_path:}$hmux_entry\" ;; esac; done",
+        "IFS=$hmux_ifs; PATH=$hmux_path; export PATH",
         "exec claude \"$@\"",
-        "CMUXCLAUDEWRAPPER",
-        "chmod 700 \"$cmux_shell_dir/bin/cmux-claude-wrapper\"",
+        "HMUXCLAUDEWRAPPER",
+        "chmod 700 \"$hmux_shell_dir/bin/hmux-claude-wrapper\"",
     ]
 
     private static func shellStateDirForRemoteRelayPort(_ remoteRelayPort: Int) -> String {
-        "$HOME/.cmux/relay/\(max(remoteRelayPort, 0)).shell"
+        "$HOME/.hmux/relay/\(max(remoteRelayPort, 0)).shell"
     }
 
     private static func normalizedEnvValue(_ value: String?) -> String? {

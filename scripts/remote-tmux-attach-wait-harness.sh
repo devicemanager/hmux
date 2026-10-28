@@ -2,7 +2,7 @@
 # ============================================================================
 # Remote-tmux ATTACH-WAIT harness.
 #
-# Checks, through the real `cmux ssh-tmux` and a running app, that an attach over the
+# Checks, through the real `hmux ssh-tmux` and a running app, that an attach over the
 # shared connection waits for a transport that is still working and reports what
 # happened when it stops:
 #
@@ -21,20 +21,20 @@
 # PREREQUISITES
 #   - A tagged Debug app built and running WITH the stand-in ssh in its environment:
 #       scripts/remote-tmux-attach-wait-harness.sh --print-ssh    # prints the path
-#       open -g --env CMUX_REMOTE_TMUX_SSH_FOR_TESTING=<path> "<tagged app>"
+#       open -g --env HMUX_REMOTE_TMUX_SSH_FOR_TESTING=<path> "<tagged app>"
 #   - Both remote tmux betas on for that bundle id:
-#       defaults write com.cmuxterm.app.debug.<tag> remoteTmux.beta.enabled -bool true
-#       defaults write com.cmuxterm.app.debug.<tag> remoteTmux.multiplexer.beta.enabled -bool true
+#       defaults write com.hmuxterm.app.debug.<tag> remoteTmux.beta.enabled -bool true
+#       defaults write com.hmuxterm.app.debug.<tag> remoteTmux.multiplexer.beta.enabled -bool true
 #   - A loopback ssh alias from `scripts/remote-tmux-fuzz-host.sh <name>`. Defaults to
-#     `cmux-fuzzhost`; override with CMUX_WAIT_HOST.
+#     `hmux-fuzzhost`; override with HMUX_WAIT_HOST.
 #
-# Usage: CMUX_TAG=<tag> scripts/remote-tmux-attach-wait-harness.sh [refuse|hang|slow ...]
+# Usage: HMUX_TAG=<tag> scripts/remote-tmux-attach-wait-harness.sh [refuse|hang|slow ...]
 # With no scenario named it runs all three. `hang` takes the full login quiet limit
 # (300 s). Exit code is the number of failed scenarios (0 = all green).
 # ============================================================================
 set -uo pipefail
 
-STATE="${CMUX_WAIT_STATE_DIR:-$HOME/Library/Caches/cmux/remote-tmux-attach-wait}"
+STATE="${HMUX_WAIT_STATE_DIR:-$HOME/Library/Caches/hmux/remote-tmux-attach-wait}"
 FAKE_SSH="$STATE/ssh"
 MODE_FILE="$STATE/mode"
 CALLS="$STATE/calls"
@@ -80,10 +80,10 @@ if [ "${1:-}" = "--print-ssh" ]; then
   exit 0
 fi
 
-TAG="${CMUX_TAG:?set CMUX_TAG=<tag> of a running tagged Debug app}"
-HOST="${CMUX_WAIT_HOST:-cmux-fuzzhost}"
-BUNDLE="com.cmuxterm.app.debug.$TAG"
-CLI=(scripts/cmux-debug-cli.sh)
+TAG="${HMUX_TAG:?set HMUX_TAG=<tag> of a running tagged Debug app}"
+HOST="${HMUX_WAIT_HOST:-hmux-fuzzhost}"
+BUNDLE="com.hmuxterm.app.debug.$TAG"
+CLI=(scripts/hmux-debug-cli.sh)
 FAILURES=0
 
 log()  { printf '%s %s\n' "$(date '+%H:%M:%S')" "$*"; }
@@ -115,14 +115,14 @@ attach() {
   printf '%s' "$mode" > "$MODE_FILE"
   before="$(wc -l < "$CALLS" 2>/dev/null || echo 0)"
   start="$(date +%s)"
-  OUT="$(CMUX_QUIET=1 CMUX_TAG="$TAG" "${CLI[@]}" ssh-tmux "$HOST" 2>&1)"
+  OUT="$(HMUX_QUIET=1 HMUX_TAG="$TAG" "${CLI[@]}" ssh-tmux "$HOST" 2>&1)"
   STATUS=$?
   ELAPSED=$(( $(date +%s) - start ))
   : > "$MODE_FILE"
   printf '%s\n' "$OUT" | sed 's/^/    | /'
   log "exit=$STATUS after ${ELAPSED}s"
   if [ "$(wc -l < "$CALLS" 2>/dev/null || echo 0)" -le "$before" ]; then
-    fail "the app did not run the stand-in ssh; launch it with CMUX_REMOTE_TMUX_SSH_FOR_TESTING=$FAKE_SSH"
+    fail "the app did not run the stand-in ssh; launch it with HMUX_REMOTE_TMUX_SSH_FOR_TESTING=$FAKE_SSH"
     return 1
   fi
 }

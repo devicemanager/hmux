@@ -46,12 +46,12 @@ def render(value, context):
 
 class ReleaseHelperArchitectures(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix='cmux-release-arch-')
+        self.temp = tempfile.TemporaryDirectory(prefix='hmux-release-arch-')
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.bin = self.root / 'bin'
         self.bin.mkdir()
-        self.app = self.root / 'build-universal/Build/Products/Release/cmux.app'
+        self.app = self.root / 'build-universal/Build/Products/Release/hmux.app'
         for name in ['scripts/ci/release-build-archs.sh', 'scripts/ci/verify-binary-archs.sh',
                      'scripts/install-prebuilt-ghostty-cli-helper.sh']:
             dest = self.root / name
@@ -99,17 +99,17 @@ if [[ "$1" == -version ]]; then printf 'Xcode 26.3\\nBuild version fixture\\n'; 
 archs=""
 for arg in "$@"; do case "$arg" in ARCHS=*) archs="${arg#ARCHS=}" ;; esac; done
 [[ -n "$archs" ]] || exit 1
-app=build-universal/Build/Products/Release/cmux.app
-mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/bin" "$app/Contents/Library/cmux Computer Use.app/Contents/MacOS"
-for file in Contents/MacOS/cmux Contents/Resources/bin/cmux "Contents/Library/cmux Computer Use.app/Contents/MacOS/cmux-cua" Contents/Resources/bin/cmux-diff-sidecar; do
+app=build-universal/Build/Products/Release/hmux.app
+mkdir -p "$app/Contents/MacOS" "$app/Contents/Resources/bin" "$app/Contents/Library/hmux Computer Use.app/Contents/MacOS"
+for file in Contents/MacOS/hmux Contents/Resources/bin/hmux "Contents/Library/hmux Computer Use.app/Contents/MacOS/hmux-cua" Contents/Resources/bin/hmux-diff-sidecar; do
   printf '%s\\n' "$archs" > "$app/$file"; chmod +x "$app/$file"
 done
 ''')
         self.tool('bin/xcrun', '#!/bin/bash\nprintf "26C123\\n"\n')
         self.tool('bin/codesign', '#!/bin/bash\nexit 0\n')
         self.tool('scripts/verify-diff-sidecar-artifact.sh', '#!/bin/bash\nexit 0\n')
-        self.tool('tests/test_install_cmux_tui_client.sh', '#!/bin/bash\nexit 0\n')
-        self.tool('scripts/install-cmux-tui-client.sh', '''#!/bin/bash
+        self.tool('tests/test_install_hmux_tui_client.sh', '#!/bin/bash\nexit 0\n')
+        self.tool('scripts/install-hmux-tui-client.sh', '''#!/bin/bash
 set -eu
 app="$1"; shift
 [[ $# == 6 && "$1" == --manifest-url ]] || exit 2
@@ -119,8 +119,8 @@ shift 2
 shift 2
 [[ "$1" == --arch ]] || exit 2
 case "$2" in arm64) archs=arm64 ;; universal) archs="arm64 x86_64" ;; *) exit 2 ;; esac
-printf '%s\\n' "$archs" > "$app/Contents/Resources/bin/cmux-tui"
-chmod +x "$app/Contents/Resources/bin/cmux-tui"
+printf '%s\\n' "$archs" > "$app/Contents/Resources/bin/hmux-tui"
+chmod +x "$app/Contents/Resources/bin/hmux-tui"
 ''')
         self.env = dict(os.environ, PATH=str(self.bin) + ':' + os.environ['PATH'])
         self.context = {'inputs': {'release_archs': 'default'}, 'vars': {'CI_RELEASE_BUILD_ARCHS': ''},
@@ -177,7 +177,7 @@ chmod +x "$app/Contents/Resources/bin/cmux-tui"
             with self.subTest(setting=setting, dispatch=dispatch):
                 self.produce(setting, dispatch)
                 self.consume()
-                for file in ['Contents/MacOS/cmux', 'Contents/Resources/bin/ghostty', 'Contents/Resources/bin/cmux-tui']:
+                for file in ['Contents/MacOS/hmux', 'Contents/Resources/bin/ghostty', 'Contents/Resources/bin/hmux-tui']:
                     self.assertEqual((self.app / file).read_text().strip(), expected)
 
     def test_wrong_architecture_helper_is_rejected(self):

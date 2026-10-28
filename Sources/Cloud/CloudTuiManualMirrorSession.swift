@@ -1,20 +1,20 @@
-import CmuxCloud
-import CmuxCloudTui
-import CmuxSurfaceCatalogModel
-import CmuxTerminal
-import CmuxTerminalSharing
-import CmuxTerminalSizing
-import CmuxCore
-import CmuxCloudImagePaste
+import HmuxCloud
+import HmuxCloudTui
+import HmuxSurfaceCatalogModel
+import HmuxTerminal
+import HmuxTerminalSharing
+import HmuxTerminalSizing
+import HmuxCore
+import HmuxCloudImagePaste
 import Foundation
 import os
-private let manualMirrorLogger = Logger(subsystem: "com.cmuxterm.app", category: "CloudManualMirror")
+private let manualMirrorLogger = Logger(subsystem: "com.hmuxterm.app", category: "CloudManualMirror")
 /// Owns one native cloud-terminal attachment.
 ///
-/// The session is the only bridge between a remote cmux-tui PTY and a local
+/// The session is the only bridge between a remote hmux-tui PTY and a local
 /// ``TerminalSurface``. Remote VT bytes are injected into Ghostty, manual input
 /// is sent to the PTY, and the applied local grid is reported back through the
-/// cmux-tui control protocol. cmux-tui remains the PTY/session owner; it never
+/// hmux-tui control protocol. hmux-tui remains the PTY/session owner; it never
 /// renders a foreign viewport inside this pane.
 @MainActor
 final class CloudTuiManualMirrorSession {
@@ -111,7 +111,7 @@ final class CloudTuiManualMirrorSession {
     var allowsAutomaticReconnect: Bool { !automaticReconnectSuppressed }
 
     /// SSH hosts can continue over the byte-oriented attach protocol when the
-    /// remote cmux-tui predates replay framing. Cloud machines remain strict,
+    /// remote hmux-tui predates replay framing. Cloud machines remain strict,
     /// because their managed transport cannot safely recover incomplete VT
     /// sequences without the modern capability.
     nonisolated static func shouldRejectStaleReplay(machineID: String, capabilities: [String]) -> Bool {
@@ -416,7 +416,7 @@ final class CloudTuiManualMirrorSession {
             }
         }
         #if DEBUG
-        cmuxDebugLog("cloud.split.attach.start terminal=\(terminalID) creationAttachment=\(creationAttachment != nil ? 1 : 0)")
+        hmuxDebugLog("cloud.split.attach.start terminal=\(terminalID) creationAttachment=\(creationAttachment != nil ? 1 : 0)")
         #endif
         self.socketPath = socketPath
         tearDownConnection()
@@ -464,7 +464,7 @@ final class CloudTuiManualMirrorSession {
                 return
             }
             #if DEBUG
-            cmuxDebugLog("cloud.split.attach.connected terminal=\(self.terminalID)")
+            hmuxDebugLog("cloud.split.attach.connected terminal=\(self.terminalID)")
             #endif
             self.connection = connection
             self.startEventTask(connection)
@@ -479,7 +479,7 @@ final class CloudTuiManualMirrorSession {
     /// attach, exactly as after ``handleResponse`` acknowledges the registration.
     private func adoptRegisteredConnection(_ ready: CloudTuiManualMirrorHandshake.Ready) {
         #if DEBUG
-        cmuxDebugLog("cloud.split.attach.adopted terminal=\(terminalID) identified=\(ready.identified ? 1 : 0)")
+        hmuxDebugLog("cloud.split.attach.adopted terminal=\(terminalID) identified=\(ready.identified ? 1 : 0)")
         #endif
         connection = ready.connection
         nextRequestID = max(nextRequestID, ready.nextRequestID)
@@ -685,7 +685,7 @@ final class CloudTuiManualMirrorSession {
             switch frame {
             case .snapshot, .output:
                 debugFirstFrameLogged = true
-                cmuxDebugLog("cloud.split.attach.firstFrame terminal=\(terminalID)")
+                hmuxDebugLog("cloud.split.attach.firstFrame terminal=\(terminalID)")
             default: break
             }
         }
@@ -895,7 +895,7 @@ final class CloudTuiManualMirrorSession {
         #if DEBUG
         switch kind {
         case .identify, .clientInfo, .attach:
-            cmuxDebugLog("cloud.split.attach.answer terminal=\(terminalID) kind=\(String(describing: kind)) ok=\(ok)")
+            hmuxDebugLog("cloud.split.attach.answer terminal=\(terminalID) kind=\(String(describing: kind)) ok=\(ok)")
         default:
             break
         }
@@ -1106,7 +1106,7 @@ final class CloudTuiManualMirrorSession {
         pendingRequests[requestID] = .clientInfo
         connection.send(
             commandBuilder.setClientInfo(
-                name: "cmux cloud terminal",
+                name: "hmux cloud terminal",
                 kind: "native-mirror",
                 identity: sizingRelay.isSupported ? sharingSelfIdentity() : nil,
                 requestID: requestID

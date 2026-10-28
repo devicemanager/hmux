@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-test_root="$(mktemp -d "${TMPDIR:-/tmp}/cmux-theme-cycle-test.XXXXXX")"
+test_root="$(mktemp -d "${TMPDIR:-/tmp}/hmux-theme-cycle-test.XXXXXX")"
 trap 'rm -rf "$test_root"' EXIT
 
 mkdir -p "$test_root/config/ghostty" "$test_root/dotfiles"
@@ -34,7 +34,7 @@ fi
 
 mkdir -p "$test_root/failing-bin" "$test_root/failure-config/ghostty/themes"
 printf 'theme = "Original"\n' > "$test_root/failure-config/ghostty/config"
-printf 'background = #123456\n' > "$test_root/failure-config/ghostty/themes/cmux iOS Theme Cycle"
+printf 'background = #123456\n' > "$test_root/failure-config/ghostty/themes/hmux iOS Theme Cycle"
 cat > "$test_root/failing-bin/cat" <<'EOF'
 #!/usr/bin/env bash
 IFS= read -r first_line || true
@@ -62,7 +62,7 @@ if [[ "$(/bin/cat "$test_root/failure-config/ghostty/config")" != 'theme = "Orig
   echo "setup failure changed the Ghostty config" >&2
   exit 1
 fi
-if [[ "$(/bin/cat "$test_root/failure-config/ghostty/themes/cmux iOS Theme Cycle")" != 'background = #123456' ]]; then
+if [[ "$(/bin/cat "$test_root/failure-config/ghostty/themes/hmux iOS Theme Cycle")" != 'background = #123456' ]]; then
   echo "setup failure did not restore the existing custom theme" >&2
   exit 1
 fi

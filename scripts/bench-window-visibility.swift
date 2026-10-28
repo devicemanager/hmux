@@ -205,25 +205,25 @@ private func resolvedBundleIdentifier(appURL: URL, requestedBundleIdentifier: St
 }
 
 private let directLaunchEnvironmentKeysToRemove = [
-    "CMUX_SOCKET",
-    "CMUX_SOCKET_PATH",
-    "CMUX_SOCKET_MODE",
-    "CMUX_TAB_ID",
-    "CMUX_PANEL_ID",
-    "CMUX_SURFACE_ID",
-    "CMUX_WORKSPACE_ID",
-    "CMUXD_UNIX_PATH",
-    "CMUX_TAG",
-    "CMUX_PORT",
-    "CMUX_PORT_END",
-    "CMUX_PORT_RANGE",
-    "CMUX_DEBUG_LOG",
-    "CMUX_BUNDLE_ID",
-    "CMUX_BUNDLED_CLI_PATH",
-    "CMUX_DISABLE_SESSION_RESTORE",
-    "CMUX_SHELL_INTEGRATION",
-    "CMUX_SHELL_INTEGRATION_DIR",
-    "CMUX_LOAD_GHOSTTY_ZSH_INTEGRATION",
+    "HMUX_SOCKET",
+    "HMUX_SOCKET_PATH",
+    "HMUX_SOCKET_MODE",
+    "HMUX_TAB_ID",
+    "HMUX_PANEL_ID",
+    "HMUX_SURFACE_ID",
+    "HMUX_WORKSPACE_ID",
+    "HMUXD_UNIX_PATH",
+    "HMUX_TAG",
+    "HMUX_PORT",
+    "HMUX_PORT_END",
+    "HMUX_PORT_RANGE",
+    "HMUX_DEBUG_LOG",
+    "HMUX_BUNDLE_ID",
+    "HMUX_BUNDLED_CLI_PATH",
+    "HMUX_DISABLE_SESSION_RESTORE",
+    "HMUX_SHELL_INTEGRATION",
+    "HMUX_SHELL_INTEGRATION_DIR",
+    "HMUX_LOAD_GHOSTTY_ZSH_INTEGRATION",
     "GHOSTTY_BIN_DIR",
     "GHOSTTY_RESOURCES_DIR",
     "GHOSTTY_SHELL_FEATURES",
@@ -243,7 +243,7 @@ private func directLaunchEnvironment(appURL: URL, bundleIdentifier: String) -> [
        let launchEnvironment = bundle.infoDictionary?["LSEnvironment"] as? [String: String] {
         environment.merge(launchEnvironment) { _, newValue in newValue }
     }
-    environment["CMUX_BUNDLE_ID"] = environment["CMUX_BUNDLE_ID"] ?? bundleIdentifier
+    environment["HMUX_BUNDLE_ID"] = environment["HMUX_BUNDLE_ID"] ?? bundleIdentifier
     return environment
 }
 
@@ -263,7 +263,7 @@ private func directLaunchLogURL(bundleIdentifier: String) -> URL {
         .map { character in character.isLetter || character.isNumber ? character : "-" }
         .reduce(into: "") { $0.append($1) }
     return URL(fileURLWithPath: NSTemporaryDirectory())
-        .appendingPathComponent("cmux-window-visibility-\(safeIdentifier).log")
+        .appendingPathComponent("hmux-window-visibility-\(safeIdentifier).log")
 }
 
 private func launchApplicationProcess(appURL: URL, bundleIdentifier: String) -> NSRunningApplication? {

@@ -74,7 +74,7 @@ class LayerTransportTests(unittest.TestCase):
         self.identity = {"source_sha": "a" * 40, "workflow_run_id": "123", "workflow_run_attempt": "2",
                          "toolchain": {"xcode": "26.3", "architecture": "arm64", "developer": "/Xcode"}}
         self.expected = t.producer("org/repo", self.identity, "a" * 40)
-        self.manifest = {"schema": "cmux.app-host-layers", "version": 1, "profile": "app-host-full",
+        self.manifest = {"schema": "hmux.app-host-layers", "version": 1, "profile": "app-host-full",
                          "identity": self.identity, "required_layers": list(t.NAMES), "directories": [], "layers": []}
         receipts = []
         for ident, name in enumerate(t.NAMES, 10):
@@ -177,7 +177,7 @@ class LayerTransportTests(unittest.TestCase):
                 output = self.root / (mutation + ".output")
                 envfile = self.root / (mutation + ".env")
                 with mock.patch.object(t, "current_identity", return_value=self.identity), mock.patch.object(t, "GitHub", return_value=self.api), \
-                        mock.patch.dict(t.os.environ, {"GITHUB_REPOSITORY": "org/repo", "CMUX_RUN_HEAD_SHA": "a" * 40,
+                        mock.patch.dict(t.os.environ, {"GITHUB_REPOSITORY": "org/repo", "HMUX_RUN_HEAD_SHA": "a" * 40,
                                                      "GITHUB_OUTPUT": str(output), "GITHUB_ENV": str(envfile)}), \
                         mock.patch.object(sys, "argv", [str(SCRIPT), "restore", str(self.destination), "--index-id", "50", "--index-digest", self.reference["artifact_digest"]]):
                     t.main()
@@ -203,7 +203,7 @@ class LayerTransportTests(unittest.TestCase):
                 t.os.environ,
                 {
                     "GITHUB_REPOSITORY": "org/repo",
-                    "CMUX_RUN_HEAD_SHA": "a" * 40,
+                    "HMUX_RUN_HEAD_SHA": "a" * 40,
                     "GITHUB_OUTPUT": str(output),
                     "GITHUB_ENV": str(envfile),
                 },
@@ -234,7 +234,7 @@ class LayerTransportTests(unittest.TestCase):
         self.assertEqual(self.api.downloaded, [50, 10, 11, 12, 13])
         self.assertEqual((self.destination / "Build/Products/complete").read_text(), "all four verified")
         transfers = [json.loads(line.split(" ", 1)[1]) for line in self.output.getvalue().splitlines()
-                     if line.startswith("CMUX_APP_HOST_LAYER_TRANSFER ")]
+                     if line.startswith("HMUX_APP_HOST_LAYER_TRANSFER ")]
         self.assertEqual([row["layer"] for row in transfers], ["index", *t.NAMES])
         self.assertTrue(all(row["result"] == "success" and row["expected_zip_bytes"] > 0 for row in transfers))
 
@@ -341,16 +341,16 @@ class LayerTransportTests(unittest.TestCase):
         import app_host_layered_products as local
         derived = self.root / "real-producer"
         products = derived / "Build/Products"
-        files = {"Debug/cmux DEV.app/Contents/MacOS/cmux": b"app",
-                 "Debug/cmux DEV.app/Contents/_CodeSignature/CodeResources": b"sealed entries",
-                 "Debug/cmux DEV.app/Contents/PlugIns/cmuxTests.xctest/test": b"tests",
+        files = {"Debug/hmux DEV.app/Contents/MacOS/hmux": b"app",
+                 "Debug/hmux DEV.app/Contents/_CodeSignature/CodeResources": b"sealed entries",
+                 "Debug/hmux DEV.app/Contents/PlugIns/hmuxTests.xctest/test": b"tests",
                  "Debug/F.framework/Versions/A/F": b"runtime",
-                 "Debug/helper.o": b"diagnostics", "Debug/cmux": b"cli", "cmux-unit.xctestrun": b"manifest"}
+                 "Debug/helper.o": b"diagnostics", "Debug/hmux": b"cli", "hmux-unit.xctestrun": b"manifest"}
         for name, value in files.items():
             path = products / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(value)
-        (products / "Debug/cmux").chmod(0o755)
+        (products / "Debug/hmux").chmod(0o755)
         (products / "Debug/F.framework/Versions/Current").symlink_to("A")
         output = self.root / "real-layers"
         local.pack(derived, output, self.identity)

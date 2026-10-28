@@ -6,8 +6,8 @@
 # Playwright is pinned to 1.62.1 (README.md): set PARITY_PLAYWRIGHT_DIR to
 # the node_modules of a 1.62.1 install.
 #
-#   tests/browser-parity/gate.sh                 # unit, sites, cmux-dev, oracle
-#   PARITY_CMUX_CLI=<tagged cli> CMUX_SOCKET_PATH=/tmp/cmux-debug-<tag>.sock \
+#   tests/browser-parity/gate.sh                 # unit, sites, hmux-dev, oracle
+#   PARITY_HMUX_CLI=<tagged cli> HMUX_SOCKET_PATH=/tmp/hmux-debug-<tag>.sock \
 #     tests/browser-parity/gate.sh --app [--app-runs N]   # plus the real app
 set -uo pipefail
 cd "$(dirname "$0")/../.."
@@ -32,12 +32,12 @@ step() {
 
 step unit node --test tests/browser-parity/unit/*.test.mjs
 step sites node --test tests/browser-parity/sites/*.test.mjs
-step cmux-dev node tests/browser-parity/run.mjs check --backend cmux-dev
+step hmux-dev node tests/browser-parity/run.mjs check --backend hmux-dev
 step oracle node tests/browser-parity/run.mjs check --backend oracle
 if [ "$app" = 1 ]; then
-  : "${PARITY_CMUX_CLI:?set PARITY_CMUX_CLI to the tagged app cmux CLI}"
+  : "${PARITY_HMUX_CLI:?set PARITY_HMUX_CLI to the tagged app hmux CLI}"
   for i in $(seq 1 "$app_runs"); do
-    step "app run $i/$app_runs" node tests/browser-parity/run.mjs check --backend cmux
+    step "app run $i/$app_runs" node tests/browser-parity/run.mjs check --backend hmux
   done
 fi
 

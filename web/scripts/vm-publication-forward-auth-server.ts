@@ -1,10 +1,10 @@
 // Serve the real Freestyle forward-auth route standalone, so the Freestyle edge
 // can be pointed at a development machine through any HTTPS tunnel and the
-// edge <-> cmux contract can be exercised without deploying the web app.
+// edge <-> hmux contract can be exercised without deploying the web app.
 //
 //   SKIP_ENV_VALIDATION=1 DATABASE_URL=... \
-//   CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET=... \
-//   CMUX_VM_PUBLICATION_AUTH_ORIGIN=https://<tunnel> \
+//   HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET=... \
+//   HMUX_VM_PUBLICATION_AUTH_ORIGIN=https://<tunnel> \
 //   bun --env-file=/dev/null run scripts/vm-publication-forward-auth-server.ts
 //
 // `/cloud/access` answers with a placeholder page (the Next.js page needs Stack
@@ -42,7 +42,7 @@ Bun.serve({
     if (url.pathname === "/cloud/access") {
       log(`access page transaction=${url.searchParams.get("transaction")?.slice(0, 8) ?? "-"}…`);
       return new Response(
-        `<!doctype html><title>cmux sign-in (stand-in)</title><body style="font-family:system-ui;padding:2rem"><h1>cmux sign-in would render here</h1><p>The Freestyle edge redirected this browser to the cmux access page with transaction <code>${url.searchParams.get("transaction") ?? ""}</code>. In the deployed app this page signs you in with Stack Auth and sends you back to the site.</p></body>`,
+        `<!doctype html><title>hmux sign-in (stand-in)</title><body style="font-family:system-ui;padding:2rem"><h1>hmux sign-in would render here</h1><p>The Freestyle edge redirected this browser to the hmux access page with transaction <code>${url.searchParams.get("transaction") ?? ""}</code>. In the deployed app this page signs you in with Stack Auth and sends you back to the site.</p></body>`,
         { status: 200, headers: { "content-type": "text/html; charset=utf-8", "cache-control": "no-store" } },
       );
     }
@@ -50,4 +50,4 @@ Bun.serve({
     return new Response("not found", { status: 404 });
   },
 });
-log(`listening on :${port}; auth origin ${process.env.CMUX_VM_PUBLICATION_AUTH_ORIGIN ?? "(unset)"}`);
+log(`listening on :${port}; auth origin ${process.env.HMUX_VM_PUBLICATION_AUTH_ORIGIN ?? "(unset)"}`);

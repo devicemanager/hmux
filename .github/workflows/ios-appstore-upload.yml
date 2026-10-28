@@ -1,4 +1,4 @@
-name: iOS TestFlight (cmux.app)
+name: iOS TestFlight (hmux.app)
 
 on:
   # Upload the official bundle for internal testing. App Review remains manual.
@@ -54,7 +54,7 @@ jobs:
           # Durable upload evidence is both the scheduled skip baseline and the
           # "What to Test" notes range base (every event, like the INTERNAL
           # lane): never advance it merely because a poll succeeded.
-          LAST_UPLOAD_SHA="$(gh api "repos/$REPOSITORY/actions/artifacts?name=cmux-app-testflight-upload&per_page=100" --jq '[.artifacts[] | select(.expired == false and .workflow_run.head_branch == "main")] | max_by(.created_at) | .workflow_run.head_sha // ""' 2>/dev/null || true)"
+          LAST_UPLOAD_SHA="$(gh api "repos/$REPOSITORY/actions/artifacts?name=hmux-app-testflight-upload&per_page=100" --jq '[.artifacts[] | select(.expired == false and .workflow_run.head_branch == "main")] | max_by(.created_at) | .workflow_run.head_sha // ""' 2>/dev/null || true)"
           echo "last_upload_sha=$LAST_UPLOAD_SHA" >> "$GITHUB_OUTPUT"
           if [ "$EVENT_NAME" = schedule ]; then
             LAST_SHA="$(gh api "repos/$REPOSITORY/actions/workflows/ios-appstore-upload.yml/runs?branch=main&status=success&per_page=1" --jq '.workflow_runs[0].head_sha // ""')"
@@ -67,10 +67,10 @@ jobs:
           if [ "$EVENT_NAME" = schedule ]; then
             RUN_IDS="$(gh api "repos/$REPOSITORY/actions/workflows/ios-appstore-upload.yml/runs?branch=main&status=completed&head_sha=$HEAD_SHA&per_page=20" --jq '.workflow_runs[].id')"
             for RUN_ID in $RUN_IDS; do
-              MARKER_ID="$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/artifacts" --jq '.artifacts[] | select(.name == "cmux-app-testflight-upload" and .expired == false) | .id')"
+              MARKER_ID="$(gh api "repos/$REPOSITORY/actions/runs/$RUN_ID/artifacts" --jq '.artifacts[] | select(.name == "hmux-app-testflight-upload" and .expired == false) | .id')"
               [ -n "$MARKER_ID" ] || continue
               MARKER_DIR="$(mktemp -d)"
-              gh run download "$RUN_ID" --repo "$REPOSITORY" --name cmux-app-testflight-upload --dir "$MARKER_DIR"
+              gh run download "$RUN_ID" --repo "$REPOSITORY" --name hmux-app-testflight-upload --dir "$MARKER_DIR"
               BUILD_NUMBER="$(python3 - "$MARKER_DIR/upload.json" "$HEAD_SHA" <<'PYCODE'
           import json, re, sys
           with open(sys.argv[1]) as f:
@@ -96,12 +96,12 @@ jobs:
           import json, sys
 
           # All unrecognized paths remain build inputs. In particular iOS uses
-          # Packages/macOS/CmuxPhonePush, shared protocols and scripts outside
+          # Packages/macOS/HmuxPhonePush, shared protocols and scripts outside
           # ios/, so copying the INTERNAL lane's allowlist would miss inputs.
           def unrelated(path):
               if not isinstance(path, str) or not path:
                   return False
-              if path.startswith(("web/", "docs/", "tests/", "cmuxTests/")):
+              if path.startswith(("web/", "docs/", "tests/", "hmuxTests/")):
                   return True
               if path.startswith(".github/workflows/"):
                   return path not in {
@@ -196,7 +196,7 @@ jobs:
             --summary "$GITHUB_STEP_SUMMARY"
 
   upload:
-    name: Upload to App Store Connect (com.cmux.app)
+    name: Upload to App Store Connect (com.hmux.app)
     # Only ever publish from main: the ASC secrets ship reviewed main, and a
     # dispatch against a feature branch must not upload arbitrary code.
     needs: decide
@@ -246,7 +246,7 @@ jobs:
 
       - name: Select Xcode
         env:
-          CMUX_CI_MAX_MACOS_SDK_MAJOR: "26"
+          HMUX_CI_MAX_MACOS_SDK_MAJOR: "26"
         run: ./scripts/select-ci-xcode.sh
 
       - name: Set up Go for the Cloud tunnel extension
@@ -298,7 +298,7 @@ jobs:
         if: ${{ steps.ghosttykit_prebuilt.outputs.available != 'true' }}
         env:
           # The download step already proved the prebuilt path failed.
-          CMUX_GHOSTTYKIT_NO_PREBUILT: "1"
+          HMUX_GHOSTTYKIT_NO_PREBUILT: "1"
         run: ./scripts/ensure-ghosttykit.sh
 
       - name: Verify provisioned GhosttyKit
@@ -389,7 +389,7 @@ jobs:
         uses: ./.github/actions/cache-restore
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ runner.temp }}/cmux-ios-upload/DerivedData/CompilationCache.noindex
+          path: ${{ runner.temp }}/hmux-ios-upload/DerivedData/CompilationCache.noindex
           key: xcode-compilation-ios-appstore-${{ runner.os }}-${{ runner.arch }}-${{ steps.ios-compilation-cache-key.outputs.toolchain }}-${{ github.sha }}
           restore-keys: |
             xcode-compilation-ios-appstore-${{ runner.os }}-${{ runner.arch }}-${{ steps.ios-compilation-cache-key.outputs.toolchain }}-
@@ -400,33 +400,33 @@ jobs:
         uses: ./.github/actions/cache-restore
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ runner.temp }}/cmux-ios-spm
-          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          path: ${{ runner.temp }}/hmux-ios-spm
+          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
             ios-spm-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Sanitize iOS SwiftPM cache
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/cmux-ios-spm"
-          python3 scripts/ci/sanitize-xcode-source-packages-cache.py "$RUNNER_TEMP/cmux-ios-spm"
+          mkdir -p "$RUNNER_TEMP/hmux-ios-spm"
+          python3 scripts/ci/sanitize-xcode-source-packages-cache.py "$RUNNER_TEMP/hmux-ios-spm"
 
       - name: Archive, export, and upload to App Store Connect
         id: upload
         env:
           INPUT_BUILD_NUMBER: ${{ github.event.inputs.build_number }}
-          CMUX_IOS_UPLOAD_DIR: ${{ runner.temp }}/cmux-ios-upload
-          CMUX_IOS_SPM_CACHE_DIR: ${{ runner.temp }}/cmux-ios-spm
-          CMUX_IOS_COMPILATION_CACHE: ${{ (vars.IOS_UPLOAD_COMPILATION_CACHE || '1') != '0' && '1' || '0' }}
-          CMUX_BUILD_NUMBER_OUT_FILE: ${{ runner.temp }}/cmux-final-build-number.txt
-          CMUX_TESTFLIGHT_NOTES_REQUEST_FILE: ${{ runner.temp }}/testflight-notes.json
+          HMUX_IOS_UPLOAD_DIR: ${{ runner.temp }}/hmux-ios-upload
+          HMUX_IOS_SPM_CACHE_DIR: ${{ runner.temp }}/hmux-ios-spm
+          HMUX_IOS_COMPILATION_CACHE: ${{ (vars.IOS_UPLOAD_COMPILATION_CACHE || '1') != '0' && '1' || '0' }}
+          HMUX_BUILD_NUMBER_OUT_FILE: ${{ runner.temp }}/hmux-final-build-number.txt
+          HMUX_TESTFLIGHT_NOTES_REQUEST_FILE: ${{ runner.temp }}/testflight-notes.json
           LAST_UPLOAD_SHA: ${{ needs.decide.outputs.last_upload_sha }}
         run: |
           set -euo pipefail
-          # Version comes from CMUX_IOS_APPSTORE_MARKETING_VERSION in main.
+          # Version comes from HMUX_IOS_APPSTORE_MARKETING_VERSION in main.
           ARGS=(--lane appstore --signing manual)
           # --notes-from-range: auto-generate the internal "What to Test" notes
-          # from the commits since the previous cmux.app upload, exactly like
+          # from the commits since the previous hmux.app upload, exactly like
           # the INTERNAL lane, so every build's notes reflect what changed
           # instead of repeating the static ios/CHANGELOG.md top entry. A first
           # upload has no base and keeps the changelog notes path.
@@ -436,9 +436,9 @@ jobs:
           if [ -n "${INPUT_BUILD_NUMBER:-}" ]; then
             ARGS+=(--build-number "$INPUT_BUILD_NUMBER")
           fi
-          ./ios/scripts/upload-testflight.sh "${ARGS[@]}" 2>&1 | tee "$RUNNER_TEMP/cmux-app-upload.log"
-          if [ -f "$CMUX_BUILD_NUMBER_OUT_FILE" ]; then
-            FINAL_BN="$(cat "$CMUX_BUILD_NUMBER_OUT_FILE")"
+          ./ios/scripts/upload-testflight.sh "${ARGS[@]}" 2>&1 | tee "$RUNNER_TEMP/hmux-app-upload.log"
+          if [ -f "$HMUX_BUILD_NUMBER_OUT_FILE" ]; then
+            FINAL_BN="$(cat "$HMUX_BUILD_NUMBER_OUT_FILE")"
           else
             FINAL_BN="${INPUT_BUILD_NUMBER:-unknown}"
           fi
@@ -458,7 +458,7 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          cache_path="$RUNNER_TEMP/cmux-ios-upload/DerivedData/CompilationCache.noindex"
+          cache_path="$RUNNER_TEMP/hmux-ios-upload/DerivedData/CompilationCache.noindex"
           max_cache_kib=$((5 * 1024 * 1024))
           save=false
           if [ -d "$cache_path" ]; then
@@ -487,7 +487,7 @@ jobs:
           CI_CACHE_R2_BUCKET: ${{ vars.CI_CACHE_R2_BUCKET }}
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ runner.temp }}/cmux-ios-upload/DerivedData/CompilationCache.noindex
+          path: ${{ runner.temp }}/hmux-ios-upload/DerivedData/CompilationCache.noindex
           key: xcode-compilation-ios-appstore-${{ runner.os }}-${{ runner.arch }}-${{ steps.ios-compilation-cache-key.outputs.toolchain }}-${{ github.sha }}
 
       # test-ios.yml saves this key only on a seed_cache dispatch, so nothing
@@ -504,8 +504,8 @@ jobs:
           CI_CACHE_R2_BUCKET: ${{ vars.CI_CACHE_R2_BUCKET }}
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ runner.temp }}/cmux-ios-spm
-          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          path: ${{ runner.temp }}/hmux-ios-spm
+          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
       - name: Save deferred TestFlight notes request
         id: notes_request
         if: ${{ !cancelled() && steps.upload.outcome == 'success' }}
@@ -529,10 +529,10 @@ jobs:
         env:
           UPLOAD_OUTCOME: ${{ steps.upload.outcome }}
           BUILD_NUMBER: ${{ steps.upload.outputs.final_build_number }}
-          BUILD_NUMBER_FILE: ${{ runner.temp }}/cmux-final-build-number.txt
-          UPLOAD_RECEIPT: ${{ runner.temp }}/cmux-ios-upload/upload.log
+          BUILD_NUMBER_FILE: ${{ runner.temp }}/hmux-final-build-number.txt
+          UPLOAD_RECEIPT: ${{ runner.temp }}/hmux-ios-upload/upload.log
         run: |
-          mkdir -p "$RUNNER_TEMP/cmux-app-upload-marker"
+          mkdir -p "$RUNNER_TEMP/hmux-app-upload-marker"
           python3 - <<'PY'
           import json, os, re
           from pathlib import Path
@@ -567,7 +567,7 @@ jobs:
               print(f'No numeric build number ({build_number!r}); not recording an upload.')
               raise SystemExit(0)
           marker = {'sha': os.environ['GITHUB_SHA'], 'app_id': '6783338052', 'build_number': build_number}
-          Path(os.environ['RUNNER_TEMP'], 'cmux-app-upload-marker', 'upload.json').write_text(json.dumps(marker))
+          Path(os.environ['RUNNER_TEMP'], 'hmux-app-upload-marker', 'upload.json').write_text(json.dumps(marker))
           with open(os.environ['GITHUB_OUTPUT'], 'a', encoding='utf-8') as output:
               output.write('recorded=true\n')
           print(f'Recorded upload of build {build_number} for {os.environ["GITHUB_SHA"]}.')
@@ -577,25 +577,25 @@ jobs:
         if: ${{ always() && steps.record_upload.outputs.recorded == 'true' }}
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: cmux-app-testflight-upload
+          name: hmux-app-testflight-upload
           retention-days: 90
           if-no-files-found: error
-          path: ${{ runner.temp }}/cmux-app-upload-marker/upload.json
+          path: ${{ runner.temp }}/hmux-app-upload-marker/upload.json
 
       - name: Save upload evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: cmux-app-testflight-${{ github.sha }}
+          name: hmux-app-testflight-${{ github.sha }}
           retention-days: 14
           if-no-files-found: ignore
           path: |
-            ${{ runner.temp }}/cmux-final-build-number.txt
-            ${{ runner.temp }}/cmux-app-upload.log
-            ${{ runner.temp }}/cmux-ios-upload/*.log
-            ${{ runner.temp }}/cmux-ios-upload/export/*.ipa
-            ${{ runner.temp }}/cmux-ios-upload/export/*.xcarchive/dSYMs
-            ${{ runner.temp }}/cmux-ios-upload/*.xcarchive/dSYMs
+            ${{ runner.temp }}/hmux-final-build-number.txt
+            ${{ runner.temp }}/hmux-app-upload.log
+            ${{ runner.temp }}/hmux-ios-upload/*.log
+            ${{ runner.temp }}/hmux-ios-upload/export/*.ipa
+            ${{ runner.temp }}/hmux-ios-upload/export/*.xcarchive/dSYMs
+            ${{ runner.temp }}/hmux-ios-upload/*.xcarchive/dSYMs
 
       - name: Summary
         if: always()
@@ -603,11 +603,11 @@ jobs:
           BUILD_NUMBER: ${{ steps.upload.outputs.final_build_number || 'unknown' }}
         run: |
           {
-            echo '### cmux.app internal TestFlight'
-            echo '- App: 6783338052 (com.cmux.app)'
+            echo '### hmux.app internal TestFlight'
+            echo '- App: 6783338052 (com.hmux.app)'
             echo "- Revision: $GITHUB_SHA"
             echo "- Build: $BUILD_NUMBER"
-            echo '- Group: cmux release internal'
+            echo '- Group: hmux release internal'
             echo '- App Review submission is a separate verified release action.'
           } >> "$GITHUB_STEP_SUMMARY"
 
@@ -677,6 +677,6 @@ jobs:
       - name: Wait for processing and assign the official internal group
         run: |
           python3 ios/scripts/asc_assign_internal_testflight_group.py \
-            --bundle-id com.cmux.app \
+            --bundle-id com.hmux.app \
             --build-number "$BUILD_NUMBER" \
             --group-id ac3d6e62-36ce-4669-88e1-7ee489aac612

@@ -64,12 +64,12 @@ def git(repo: Path, *args: str) -> str:
 
 
 def make_repo(root: Path) -> Path:
-    repo = root / "work" / "cmux" / "cmux"
+    repo = root / "work" / "hmux" / "hmux"
     repo.mkdir(parents=True)
     git(repo, "init", "-q", "-b", "reload-blacksmith/12624-cloud-auth-latency-1789854264")
     git(repo, "config", "user.email", "guard@example.invalid")
     git(repo, "config", "user.name", "guard")
-    resolved = repo / "cmux.xcodeproj" / "project.xcworkspace" / "xcshareddata" / "swiftpm"
+    resolved = repo / "hmux.xcodeproj" / "project.xcworkspace" / "xcshareddata" / "swiftpm"
     resolved.mkdir(parents=True)
     (resolved / "Package.resolved").write_text('{"pins": [], "version": 3}\n')
     git(repo, "add", "-A")
@@ -81,7 +81,7 @@ def commit_change(repo: Path, text: str) -> None:
     (repo / "Sources.swift").write_text(text)
     # A package bump changes Package.resolved; the SourcePackages checkouts of
     # every unchanged package are still worth restoring.
-    resolved = repo / "cmux.xcodeproj" / "project.xcworkspace" / "xcshareddata" / "swiftpm"
+    resolved = repo / "hmux.xcodeproj" / "project.xcworkspace" / "xcshareddata" / "swiftpm"
     (resolved / "Package.resolved").write_text(f'{{"pins": ["{text.strip()}"], "version": 3}}\n')
     git(repo, "add", "-A")
     git(repo, "commit", "-q", "-m", text)
@@ -135,7 +135,7 @@ def cache_metadata(
         **step_env(source_ref, dispatch_ref),
         "PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}",
         "GITHUB_OUTPUT": str(output),
-        "GITHUB_WORKSPACE": "/Users/runner/_work/cmux/cmux",
+        "GITHUB_WORKSPACE": "/Users/runner/_work/hmux/hmux",
         "GITHUB_RUN_ID": run_id,
         "GITHUB_RUN_ATTEMPT": "1",
         "GIT_CONFIG_GLOBAL": os.devnull,

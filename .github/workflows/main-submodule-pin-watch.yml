@@ -2,7 +2,7 @@ name: Main submodule pin watch
 
 # Runs the PR submodule forward-only guard against each push to main. The PR
 # guard is not a required check, so a squash merge can still land a stale
-# gitlink (cmux#16319 moved vendor/bonsplit back from f33c31c to 351bfa7 a
+# gitlink (hmux#16319 moved vendor/bonsplit back from f33c31c to 351bfa7 a
 # minute after its branch merged main, before the guard reported). This never
 # gates anything: on a backward or diverged pin it comments on the merged pull
 # request with the pin to restore, and fails so the run shows red on main.

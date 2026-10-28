@@ -1,12 +1,12 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxTerminal
+import HmuxTerminalCore
 import GhosttyKit
 import os
 
 nonisolated private let runtimeClipboardLogger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "com.cmuxterm.app",
+    subsystem: Bundle.main.bundleIdentifier ?? "com.hmuxterm.app",
     category: "RuntimeClipboard"
 )
 
@@ -196,7 +196,7 @@ extension GhosttyApp {
                 let preparationMilliseconds = Int(
                     ((now - preparationStartedAt) * 1_000).rounded()
                 )
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "terminal.clipboard.prepare.failure " +
                     "surface=\(callbackContext.surfaceId.uuidString.prefix(5)) " +
                     "mode=\(String(describing: readContent)) " +
@@ -206,10 +206,10 @@ extension GhosttyApp {
                     "prepare_ms=\(preparationMilliseconds)"
                 )
             }
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "terminal.clipboard.read surface=\(callbackContext.surfaceId.uuidString.prefix(5)) " +
                 "types=\(pasteboardTypeDescription) " +
-                "prepared=\(preparedContent.cmuxDebugDescription)"
+                "prepared=\(preparedContent.hmuxDebugDescription)"
             )
 #endif
 
@@ -304,7 +304,7 @@ extension GhosttyApp {
                                 return requestTerminalSurface.owningWorkspace()
                             }
                             guard let workspace else {
-                                finish(.failure(NSError(domain: "cmux.remote.paste", code: 3)))
+                                finish(.failure(NSError(domain: "hmux.remote.paste", code: 3)))
                                 preparationService.cleanupTransferredTemporaryFiles(
                                     .fileURLs(fileURLs)
                                 )
@@ -325,7 +325,7 @@ extension GhosttyApp {
                             guard MainActor.assumeIsolated({
                                 requestSurfaceIdentity.matches(requestTerminalSurface)
                             }) else {
-                                finish(.failure(NSError(domain: "cmux.remote.paste", code: 4)))
+                                finish(.failure(NSError(domain: "hmux.remote.paste", code: 4)))
                                 preparationService.cleanupTransferredTemporaryFiles(
                                     .fileURLs(fileURLs)
                                 )
@@ -378,7 +378,7 @@ extension GhosttyApp {
                             }
                             if shouldPresentFailure {
 #if DEBUG
-                                cmuxDebugLog(
+                                hmuxDebugLog(
                                     "terminal.remotePasteUpload.failed " +
                                     "surface=\(callbackContext.surfaceId.uuidString.prefix(5))"
                                 )

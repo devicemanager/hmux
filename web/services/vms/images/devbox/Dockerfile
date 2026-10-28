@@ -1,25 +1,25 @@
-# cmux Cloud devbox image (web/scripts/build-devbox-freestyle.ts replays
+# hmux Cloud devbox image (web/scripts/build-devbox-freestyle.ts replays
 # these steps over Freestyle exec on the freestyle/ubuntu base; its build API
-# has no COPY). Ubuntu 24.04, the distro every cmux Cloud machine runs, so
+# has no COPY). Ubuntu 24.04, the distro every hmux Cloud machine runs, so
 # package names, the Ghostty .deb and the desktop stack below are exactly what
 # the Freestyle bake installs.
 # Parity target for the shell layer is the chatmux devbox (chatmux repo,
 # infra/sandbox-images/Dockerfile): same devtools, mise toolchains, pinned
 # coding agents, ble.sh ghost text, half-life prompt, seeded history, and the
 # coderouter agent-config generator. The desktop layer is the retired Blaxel
-# cmux-devbox desktop (openbox/TigerVNC, tint2 dock, Ghostty, Chrome, Thunar,
+# hmux-devbox desktop (openbox/TigerVNC, tint2 dock, Ghostty, Chrome, Thunar,
 # noVNC on 6901), the same stack on every provider.
 #
-# Session daemon: cmux-tui, the machine's only session daemon
-# (docs/cloud-cmux-tui-daemon.md). This container image bakes NO binary: the
+# Session daemon: hmux-tui, the machine's only session daemon
+# (docs/cloud-hmux-tui-daemon.md). This container image bakes NO binary: the
 # Freestyle bake installs the pinned files.cmux.com build (sha256-verified,
-# web/services/vms/drivers/cmuxTuiDaemon.ts), and the driver installs nothing
-# at create or attach. The image ships only /usr/local/bin/cmux-devbox-boot, the supervisor that waits
+# web/services/vms/drivers/hmuxTuiDaemon.ts), and the driver installs nothing
+# at create or attach. The image ships only /usr/local/bin/hmux-devbox-boot, the supervisor that waits
 # for the binary and restarts the daemon, and (without systemd) runs the
 # desktop supervisor as the work user. The Freestyle public-platform bake
 # (build-devbox-freestyle.ts) runs the same supervisor from a systemd unit but
 # bakes the binary, binds the daemon identity to the instance id, and runs the
-# desktop from its own cmux-desktop unit.
+# desktop from its own hmux-desktop unit.
 #
 # Portability rules the Freestyle replay depends on (originally imposed by a
 # remote builder's restricted Dockerfile parser): no backslash escape
@@ -31,8 +31,8 @@ FROM ubuntu:24.04
 
 # Cache-buster: bump the date to force remote builders past stale layer
 # caches (a remote builder served stale layers for chatmux on 2026-08-21 and
-# 2026-08-25). Also the image version /etc/cmux/image-stamp carries.
-ENV CMUX_IMAGE_EPOCH=2026-10-14-r1
+# 2026-08-25). Also the image version /etc/hmux/image-stamp carries.
+ENV HMUX_IMAGE_EPOCH=2026-10-14-r1
 
 ENV LANG=C.UTF-8 \
     DEBIAN_FRONTEND=noninteractive
@@ -79,31 +79,31 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   && echo 'LANG=C.UTF-8' > /etc/default/locale \
   && fd --version && jq --version && fzf --version && sqlite3 --version && tmux -V && ss -V && bwrap --version
 
-# The work user: the base's uid-1000 account renamed to `cmux`
+# The work user: the base's uid-1000 account renamed to `hmux`
 # (web/services/vms/images/workUser.ts). ONE account owns the desktop session,
-# the terminals the cmux-tui daemon opens, the provider's default exec user
+# the terminals the hmux-tui daemon opens, the provider's default exec user
 # and anything an agent writes; it is not root, because coding agents refuse
 # root (`claude --dangerously-skip-permissions` exits before it starts), and
 # it holds passwordless sudo so root stays one word away. Renamed rather than
 # added: a provider whose exec default is "the account holding uid 1000" then
-# lands in the same home as cmux's terminals.
+# lands in the same home as hmux's terminals.
 # Ubuntu's user-private-group rule would give the account a 002 umask, so
-# every directory it creates is group-writable and cmux-tui refuses to store
+# every directory it creates is group-writable and hmux-tui refuses to store
 # its Noise identity under one. Kept byte-for-byte in step with
 # devboxWorkUserSetupCommand, which does the same on the VM bake.
-# (A container's hostname belongs to whoever runs it; the VM bake sets `cmux`.)
-RUN if ! id -u cmux >/dev/null 2>&1; then \
+# (A container's hostname belongs to whoever runs it; the VM bake sets `hmux`.)
+RUN if ! id -u hmux >/dev/null 2>&1; then \
       old="$(getent passwd 1000 | cut -d: -f1)" && test -n "$old" \
-      && usermod -l cmux -d /home/cmux -m "$old" && groupmod -n cmux "$old"; \
+      && usermod -l hmux -d /home/hmux -m "$old" && groupmod -n hmux "$old"; \
     fi \
-  && for f in /etc/sudoers.d/*; do [ -f "$f" ] || continue; grep -q '^cmux[[:space:]]' "$f" || rm -f "$f"; done \
-  && echo "cmux ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/91-cmux-work-user && chmod 0440 /etc/sudoers.d/91-cmux-work-user \
+  && for f in /etc/sudoers.d/*; do [ -f "$f" ] || continue; grep -q '^hmux[[:space:]]' "$f" || rm -f "$f"; done \
+  && echo "hmux ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/91-hmux-work-user && chmod 0440 /etc/sudoers.d/91-hmux-work-user \
   && sed -i 's/^USERGROUPS_ENAB.*/USERGROUPS_ENAB no/' /etc/login.defs \
-  && find /home/cmux -type d -exec chmod g-w,o-w {} + \
-  && [ "$(id -u cmux)" = 1000 ] && [ "$(getent passwd cmux | cut -d: -f6)" = /home/cmux ] \
-  && [ "$(find /home/cmux -type d \( -perm -g+w -o -perm -o+w \) | wc -l)" = 0 ] \
-  && [ "$(sudo -n -u cmux sh -c umask)" = 0022 ] \
-  && sudo -n -u cmux sudo -n true
+  && find /home/hmux -type d -exec chmod g-w,o-w {} + \
+  && [ "$(id -u hmux)" = 1000 ] && [ "$(getent passwd hmux | cut -d: -f6)" = /home/hmux ] \
+  && [ "$(find /home/hmux -type d \( -perm -g+w -o -perm -o+w \) | wc -l)" = 0 ] \
+  && [ "$(sudo -n -u hmux sh -c umask)" = 0022 ] \
+  && sudo -n -u hmux sudo -n true
 
 # GitHub CLI from the official apt repo (not in the Ubuntu archive).
 RUN curl -fsSL https://cli.github.com/packages/githubcli-archive-keyring.gpg -o /usr/share/keyrings/githubcli-archive-keyring.gpg \
@@ -159,13 +159,13 @@ RUN curl -fsSL -o /tmp/chrome.deb https://dl.google.com/linux/direct/google-chro
   && apt-get update && apt-get install -y --no-install-recommends /tmp/chrome.deb \
   && rm -rf /var/lib/apt/lists/* /tmp/chrome.deb \
   && google-chrome-stable --version
-COPY chrome-managed-policy.json /etc/opt/chrome/policies/managed/cmux.json
+COPY chrome-managed-policy.json /etc/opt/chrome/policies/managed/hmux.json
 ENV AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable
-RUN jq -e '.DefaultSearchProviderSearchURL | test("duckduckgo")' /etc/opt/chrome/policies/managed/cmux.json \
-  && echo 'export AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable' > /etc/profile.d/cmux-media.sh
+RUN jq -e '.DefaultSearchProviderSearchURL | test("duckduckgo")' /etc/opt/chrome/policies/managed/hmux.json \
+  && echo 'export AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable' > /etc/profile.d/hmux-media.sh
 
 # cua computer-use driver, pinned. It acts on whatever X display a shell
-# points it at: the VNC desktop below, once /etc/cmux/desktop-env.sh has
+# points it at: the VNC desktop below, once /etc/hmux/desktop-env.sh has
 # exported DISPLAY and the accessibility bus (`cua-driver doctor` proves it).
 ENV CUA_DRIVER_RS_HOME=/opt/cua-driver
 RUN curl -fsSL https://cua.ai/driver/install.sh -o /tmp/cua-install.sh \
@@ -185,62 +185,62 @@ RUN curl -fsSL https://cua.ai/driver/install.sh -o /tmp/cua-install.sh \
 # never a second copy. GL/Vulkan/xkb libraries are what Ghostty and Chrome
 # render with under Xvnc. Ghostty ships no upstream .deb; the community build
 # for Ubuntu 24.04 is pinned by release tag and by the SHA-256 of its bytes.
-ARG CMUX_IMAGE_DESKTOP_PACKAGES="tigervnc-standalone-server tigervnc-tools openbox tint2 thunar feh novnc websockify at-spi2-core dbus-x11 libglib2.0-bin x11-xserver-utils xdg-utils adwaita-icon-theme libgl1-mesa-dri mesa-vulkan-drivers libvulkan1 libxkbcommon0 libxkbcommon-x11-0 netcat-openbsd"
-ARG CMUX_IMAGE_GHOSTTY_DEB_URL=https://github.com/mkasberg/ghostty-ubuntu/releases/download/1.3.1-0-ppa2/ghostty_1.3.1-0.ppa2_amd64_24.04.deb
-ARG CMUX_IMAGE_GHOSTTY_DEB_SHA256=478d440153ef544426418efc7d6d8901715359f452c46be29071901a94b8cd47
-RUN apt-get update && apt-get install -y --no-install-recommends $CMUX_IMAGE_DESKTOP_PACKAGES \
+ARG HMUX_IMAGE_DESKTOP_PACKAGES="tigervnc-standalone-server tigervnc-tools openbox tint2 thunar feh novnc websockify at-spi2-core dbus-x11 libglib2.0-bin x11-xserver-utils xdg-utils adwaita-icon-theme libgl1-mesa-dri mesa-vulkan-drivers libvulkan1 libxkbcommon0 libxkbcommon-x11-0 netcat-openbsd"
+ARG HMUX_IMAGE_GHOSTTY_DEB_URL=https://github.com/mkasberg/ghostty-ubuntu/releases/download/1.3.1-0-ppa2/ghostty_1.3.1-0.ppa2_amd64_24.04.deb
+ARG HMUX_IMAGE_GHOSTTY_DEB_SHA256=478d440153ef544426418efc7d6d8901715359f452c46be29071901a94b8cd47
+RUN apt-get update && apt-get install -y --no-install-recommends $HMUX_IMAGE_DESKTOP_PACKAGES \
   && rm -rf /var/lib/apt/lists/* \
   && { [ -e /usr/share/novnc/index.html ] || ln -s vnc.html /usr/share/novnc/index.html; } \
   && command -v Xtigervnc && command -v vncconfig && command -v websockify && command -v openbox && command -v tint2 \
   && command -v dbus-launch && command -v dbus-send && command -v gdbus && command -v feh && command -v thunar \
   && { test -x /usr/libexec/at-spi-bus-launcher || test -x /usr/lib/at-spi2-core/at-spi-bus-launcher; }
-RUN curl -fsSL -o /tmp/ghostty.deb "$CMUX_IMAGE_GHOSTTY_DEB_URL" \
-  && echo "$CMUX_IMAGE_GHOSTTY_DEB_SHA256  /tmp/ghostty.deb" | sha256sum -c - \
+RUN curl -fsSL -o /tmp/ghostty.deb "$HMUX_IMAGE_GHOSTTY_DEB_URL" \
+  && echo "$HMUX_IMAGE_GHOSTTY_DEB_SHA256  /tmp/ghostty.deb" | sha256sum -c - \
   && apt-get update && apt-get install -y --no-install-recommends /tmp/ghostty.deb \
   && rm -rf /var/lib/apt/lists/* /tmp/ghostty.deb \
   && ghostty +version | head -1
 
-# Dock launchers, icons and the dock config live under /etc/cmux so the dock
+# Dock launchers, icons and the dock config live under /etc/hmux so the dock
 # never depends on a distro's /usr/share/applications or icon-theme layout.
 # The systemd unit is shipped for VM images; a container runs the desktop
-# supervisor from cmux-devbox-boot instead.
-COPY desktop/google-chrome-cmux.desktop /etc/cmux/apps/google-chrome-cmux.desktop
-COPY desktop/thunar-cmux.desktop /etc/cmux/apps/thunar-cmux.desktop
-COPY desktop/ghostty-cmux.desktop /etc/cmux/apps/ghostty-cmux.desktop
-COPY desktop/tint2rc /etc/cmux/tint2rc
-COPY desktop/wallpaper.jpg /usr/share/backgrounds/cmux/wallpaper.jpg
+# supervisor from hmux-devbox-boot instead.
+COPY desktop/google-chrome-hmux.desktop /etc/hmux/apps/google-chrome-hmux.desktop
+COPY desktop/thunar-hmux.desktop /etc/hmux/apps/thunar-hmux.desktop
+COPY desktop/ghostty-hmux.desktop /etc/hmux/apps/ghostty-hmux.desktop
+COPY desktop/tint2rc /etc/hmux/tint2rc
+COPY desktop/wallpaper.jpg /usr/share/backgrounds/hmux/wallpaper.jpg
 COPY desktop/start-vnc.sh /usr/local/bin/start-vnc.sh
-COPY desktop/cmux-desktop-boot /usr/local/bin/cmux-desktop-boot
-COPY desktop/cmux-desktop.service /etc/systemd/system/cmux-desktop.service
-COPY desktop/desktop-env.sh /etc/cmux/desktop-env.sh
-RUN chmod 0755 /usr/local/bin/start-vnc.sh /usr/local/bin/cmux-desktop-boot \
-  && bash -n /usr/local/bin/start-vnc.sh && sh -n /usr/local/bin/cmux-desktop-boot && sh -n /etc/cmux/desktop-env.sh \
-  && mkdir -p /etc/cmux/icons \
-  && cp /opt/google/chrome/product_logo_128.png /etc/cmux/icons/google-chrome.png \
-  && cp "$(find /usr/share/icons -name 'org.xfce.thunar.png' -path '*128*' | head -1)" /etc/cmux/icons/thunar.png \
-  && cp "$(find /usr/share/icons -name 'com.mitchellh.ghostty.png' -path '*128*' | head -1)" /etc/cmux/icons/ghostty.png \
-  && test -s /etc/cmux/icons/thunar.png && test -s /etc/cmux/icons/ghostty.png && test -s /etc/cmux/icons/google-chrome.png \
-  && echo '[ -f /etc/cmux/desktop-env.sh ] && . /etc/cmux/desktop-env.sh' > /etc/profile.d/cmux-desktop.sh \
-  && echo '[ -f /etc/cmux/desktop-env.sh ] && . /etc/cmux/desktop-env.sh' >> /etc/bash.bashrc \
-  && echo '[ -f /etc/cmux/desktop-env.sh ] && . /etc/cmux/desktop-env.sh' >> /etc/skel/.bashrc \
-  && echo '[ -f /etc/cmux/desktop-env.sh ] && . /etc/cmux/desktop-env.sh' >> /root/.bashrc
+COPY desktop/hmux-desktop-boot /usr/local/bin/hmux-desktop-boot
+COPY desktop/hmux-desktop.service /etc/systemd/system/hmux-desktop.service
+COPY desktop/desktop-env.sh /etc/hmux/desktop-env.sh
+RUN chmod 0755 /usr/local/bin/start-vnc.sh /usr/local/bin/hmux-desktop-boot \
+  && bash -n /usr/local/bin/start-vnc.sh && sh -n /usr/local/bin/hmux-desktop-boot && sh -n /etc/hmux/desktop-env.sh \
+  && mkdir -p /etc/hmux/icons \
+  && cp /opt/google/chrome/product_logo_128.png /etc/hmux/icons/google-chrome.png \
+  && cp "$(find /usr/share/icons -name 'org.xfce.thunar.png' -path '*128*' | head -1)" /etc/hmux/icons/thunar.png \
+  && cp "$(find /usr/share/icons -name 'com.mitchellh.ghostty.png' -path '*128*' | head -1)" /etc/hmux/icons/ghostty.png \
+  && test -s /etc/hmux/icons/thunar.png && test -s /etc/hmux/icons/ghostty.png && test -s /etc/hmux/icons/google-chrome.png \
+  && echo '[ -f /etc/hmux/desktop-env.sh ] && . /etc/hmux/desktop-env.sh' > /etc/profile.d/hmux-desktop.sh \
+  && echo '[ -f /etc/hmux/desktop-env.sh ] && . /etc/hmux/desktop-env.sh' >> /etc/bash.bashrc \
+  && echo '[ -f /etc/hmux/desktop-env.sh ] && . /etc/hmux/desktop-env.sh' >> /etc/skel/.bashrc \
+  && echo '[ -f /etc/hmux/desktop-env.sh ] && . /etc/hmux/desktop-env.sh' >> /root/.bashrc
 
 # Coding agents, pinned at bake time (bump with the image epoch; keep in
 # lockstep with the chatmux devbox). Installed on the mise node so they
 # ride the same toolchain users get. `bun run devbox:pins:check` (web/)
 # compares these with the npm registry and `--write` rewrites them; a pin is
 # always an exact release, never a range or a tag.
-ARG CMUX_IMAGE_CLAUDE_CODE_VERSION=2.1.299
-ARG CMUX_IMAGE_CODEX_VERSION=0.162.1
-ARG CMUX_IMAGE_OPENCODE_VERSION=1.19.0
-ARG CMUX_IMAGE_PI_VERSION=1.2.0
-ARG CMUX_IMAGE_AGENT_BROWSER_VERSION=0.39.1
+ARG HMUX_IMAGE_CLAUDE_CODE_VERSION=2.1.299
+ARG HMUX_IMAGE_CODEX_VERSION=0.162.1
+ARG HMUX_IMAGE_OPENCODE_VERSION=1.19.0
+ARG HMUX_IMAGE_PI_VERSION=1.2.0
+ARG HMUX_IMAGE_AGENT_BROWSER_VERSION=0.39.1
 RUN npm install -g --foreground-scripts \
-    "@anthropic-ai/claude-code@${CMUX_IMAGE_CLAUDE_CODE_VERSION}" \
-    "@openai/codex@${CMUX_IMAGE_CODEX_VERSION}" \
-    "opencode-ai@${CMUX_IMAGE_OPENCODE_VERSION}" \
-    "@earendil-works/pi-coding-agent@${CMUX_IMAGE_PI_VERSION}" \
-    "agent-browser@${CMUX_IMAGE_AGENT_BROWSER_VERSION}" \
+    "@anthropic-ai/claude-code@${HMUX_IMAGE_CLAUDE_CODE_VERSION}" \
+    "@openai/codex@${HMUX_IMAGE_CODEX_VERSION}" \
+    "opencode-ai@${HMUX_IMAGE_OPENCODE_VERSION}" \
+    "@earendil-works/pi-coding-agent@${HMUX_IMAGE_PI_VERSION}" \
+    "agent-browser@${HMUX_IMAGE_AGENT_BROWSER_VERSION}" \
   && mise reshim \
   && claude --version && codex --version && opencode --version && pi --version && agent-browser --version
 
@@ -256,12 +256,12 @@ COPY codex-managed.toml /etc/codex/managed_config.toml
 RUN python3 -c 'import tomllib; d = tomllib.load(open("/etc/codex/managed_config.toml", "rb")); assert d["projects"]["/root"]["trust_level"] == "trusted"' \
   && chmod 0644 /etc/codex/managed_config.toml
 
-# Identity (web/services/vms/images/identity.ts): a cmux Cloud machine is
-# `cmux`, never the provider's base name. The Freestyle bake owns that step
+# Identity (web/services/vms/images/identity.ts): a hmux Cloud machine is
+# `hmux`, never the provider's base name. The Freestyle bake owns that step
 # (hostname, the 127.0.1.1 alias, fresh SSH host keys, a reset journal) because
 # a container has no identity of its own to bake: `docker build` mounts
 # /etc/hostname and /etc/hosts from the daemon and discards writes to them, and
-# the runtime names every container it starts. cmux-devbox-boot regenerates the
+# the runtime names every container it starts. hmux-devbox-boot regenerates the
 # host keys on a clone for both recipes.
 
 # Interactive shell polish: bash IS the shell (chatmux parity); it
@@ -275,63 +275,63 @@ RUN curl -fsSL https://github.com/akinomyoga/ble.sh/releases/download/nightly/bl
   && mv /tmp/ble-nightly /usr/local/share/blesh \
   && rm -f /tmp/ble.tar.xz \
   && test -f /usr/local/share/blesh/ble.sh
-COPY cmux-bashrc /etc/cmux/bashrc
-COPY cmux-prompt.bash /etc/cmux/prompt.bash
+COPY hmux-bashrc /etc/hmux/bashrc
+COPY hmux-prompt.bash /etc/hmux/prompt.bash
 # Shadows Ubuntu's python completion (bash-completion searches /usr/local/share
 # first) so ble.sh ghost text on `python -m pkg.` lists one package's
 # submodules instead of importing every installed package per keystroke.
-COPY cmux-python-completion.bash /usr/local/share/bash-completion/completions/python
+COPY hmux-python-completion.bash /usr/local/share/bash-completion/completions/python
 RUN for f in /usr/share/bash-completion/completions/python?* /usr/share/bash-completion/completions/pypy* /usr/share/bash-completion/completions/micropython; do \
        if [ -e "$f" ]; then ln -sf python "/usr/local/share/bash-completion/completions/${f##*/}"; fi; \
      done \
   && bash -n /usr/local/share/bash-completion/completions/python
-RUN echo cmux > /etc/cmux/vm-name
-COPY seed-history /etc/cmux/seed-history
-COPY cmux-terminfo.sh /etc/profile.d/cmux-terminfo.sh
-# The cmux app's terminfo overlay (Resources/terminfo-overlay as infocmp
+RUN echo hmux > /etc/hmux/vm-name
+COPY seed-history /etc/hmux/seed-history
+COPY hmux-terminfo.sh /etc/profile.d/hmux-terminfo.sh
+# The hmux app's terminfo overlay (Resources/terminfo-overlay as infocmp
 # source): Ghostty's entry under xterm-ghostty and under xterm-256color, the
-# TERM cmux exports, with bright colors 8-15 as indexed 38;5;n. Guest
+# TERM hmux exports, with bright colors 8-15 as indexed 38;5;n. Guest
 # programs resolve TERM here, and stock ncurses xterm-256color lacks Tc/Su
 # and turns `setaf 8` into SGR 90. /etc/terminfo outranks /lib and /usr/share
 # in ncurses' search path. Must precede the ble.sh cache seed below, which
 # caches per-TERM tput output.
-COPY cmux-terminfo.src /etc/cmux/terminfo.src
-RUN tic -x -o /etc/terminfo /etc/cmux/terminfo.src \
+COPY hmux-terminfo.src /etc/hmux/terminfo.src
+RUN tic -x -o /etc/terminfo /etc/hmux/terminfo.src \
   && chmod -R a+rX /etc/terminfo \
   && for t in xterm-ghostty xterm-256color; do \
        [ "$(tput -T$t colors)" = 256 ] && infocmp -x $t | grep -qw Tc \
        && [ "$(tput -T$t setaf 8 | od -An -tx1 | tr -d ' \n')" = 1b5b33383b353b386d ] || exit 1; \
      done
-RUN bash -n /etc/cmux/bashrc \
-  && echo '[ -f /etc/cmux/bashrc ] && . /etc/cmux/bashrc' >> /etc/bash.bashrc \
-  && echo '[ -f /etc/cmux/bashrc ] && . /etc/cmux/bashrc' >> /etc/skel/.bashrc \
-  && echo '[ -f /etc/cmux/bashrc ] && . /etc/cmux/bashrc' >> /root/.bashrc \
+RUN bash -n /etc/hmux/bashrc \
+  && echo '[ -f /etc/hmux/bashrc ] && . /etc/hmux/bashrc' >> /etc/bash.bashrc \
+  && echo '[ -f /etc/hmux/bashrc ] && . /etc/hmux/bashrc' >> /etc/skel/.bashrc \
+  && echo '[ -f /etc/hmux/bashrc ] && . /etc/hmux/bashrc' >> /root/.bashrc \
   && echo 'set -g default-shell /bin/bash' >> /etc/tmux.conf \
   && bash -ic 'head -2 /root/.bash_history'
 
-# Seed ble.sh tput caches for the TERMs cmux uses, exactly as the chatmux
+# Seed ble.sh tput caches for the TERMs hmux uses, exactly as the chatmux
 # template does (its Dockerfile carries the full rationale): without them the
 # FIRST shell on a machine prints "ble/term.sh: updating tput cache ... done"
 # into the pane before its first prompt. Both cache homes are seeded: the
-# XDG seed copied by cmux-bashrc from /etc/cmux/blesh-cache-seed, and
+# XDG seed copied by hmux-bashrc from /etc/hmux/blesh-cache-seed, and
 # <blesh>/cache.d for uid 0 plus the uid-1000 work user (numeric chown: the
 # provider's name for that user is not guaranteed).
-RUN mkdir -p /etc/cmux/blesh-cache-seed \
+RUN mkdir -p /etc/hmux/blesh-cache-seed \
   && for term in xterm-256color screen-256color tmux-256color linux xterm-ghostty; do \
-       echo exit | TERM="$term" HOME=/tmp/blesh-seed-home XDG_CACHE_HOME=/etc/cmux/blesh-cache-seed \
+       echo exit | TERM="$term" HOME=/tmp/blesh-seed-home XDG_CACHE_HOME=/etc/hmux/blesh-cache-seed \
          script -qec 'bash -i' /dev/null >/dev/null 2>&1 || true; \
      done \
   && rm -rf /tmp/blesh-seed-home \
-  && chmod -R a+rX /etc/cmux/blesh-cache-seed \
-  && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.xterm-256color \
-  && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.screen-256color \
-  && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.tmux-256color \
-  && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.linux \
-  && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.xterm-ghostty \
+  && chmod -R a+rX /etc/hmux/blesh-cache-seed \
+  && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.xterm-256color \
+  && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.screen-256color \
+  && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.tmux-256color \
+  && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.linux \
+  && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.xterm-ghostty \
   && mkdir -p /usr/local/share/blesh/cache.d/0 /usr/local/share/blesh/cache.d/1000 \
   && chmod a+rwxt /usr/local/share/blesh/cache.d \
-  && cp /etc/cmux/blesh-cache-seed/blesh/*/term.* /usr/local/share/blesh/cache.d/0/ \
-  && cp /etc/cmux/blesh-cache-seed/blesh/*/term.* /usr/local/share/blesh/cache.d/1000/ \
+  && cp /etc/hmux/blesh-cache-seed/blesh/*/term.* /usr/local/share/blesh/cache.d/0/ \
+  && cp /etc/hmux/blesh-cache-seed/blesh/*/term.* /usr/local/share/blesh/cache.d/1000/ \
   && chmod 700 /usr/local/share/blesh/cache.d/0 /usr/local/share/blesh/cache.d/1000 \
   && chown -R 1000:1000 /usr/local/share/blesh/cache.d/1000
 
@@ -343,43 +343,43 @@ RUN mkdir -p /etc/cmux/blesh-cache-seed \
 # The build check generates configs under a throwaway HOME with fake env,
 # proves the persisted-env re-source path, then proves the image itself
 # ships no generated config.
-COPY agent-config.sh /etc/cmux/agent-config.sh
+COPY agent-config.sh /etc/hmux/agent-config.sh
 # Agent sign-in launchers: /usr/local/bin/<agent> resolves the team or
 # own-login mode per launch (agent-auth.sh) and execs
-# /usr/local/libexec/cmux-<agent>-real. mise's shims come first on PATH, so
+# /usr/local/libexec/hmux-<agent>-real. mise's shims come first on PATH, so
 # they point at the launchers too.
-COPY agent-auth.sh /etc/cmux/agent-auth.sh
-COPY cmux-claude /etc/cmux/claude
-COPY cmux-codex /etc/cmux/codex
-COPY cmux-opencode /etc/cmux/opencode
-RUN sh -n /etc/cmux/agent-auth.sh && mkdir -p /usr/local/libexec \
+COPY agent-auth.sh /etc/hmux/agent-auth.sh
+COPY hmux-claude /etc/hmux/claude
+COPY hmux-codex /etc/hmux/codex
+COPY hmux-opencode /etc/hmux/opencode
+RUN sh -n /etc/hmux/agent-auth.sh && mkdir -p /usr/local/libexec \
   && for a in claude codex opencode; do \
-       bash -n /etc/cmux/$a \
-       && ln -s "$(readlink -f "$(mise which $a)")" /usr/local/libexec/cmux-$a-real \
-       && test -f /usr/local/libexec/cmux-$a-real \
+       bash -n /etc/hmux/$a \
+       && ln -s "$(readlink -f "$(mise which $a)")" /usr/local/libexec/hmux-$a-real \
+       && test -f /usr/local/libexec/hmux-$a-real \
        && rm -f /usr/local/bin/$a \
-       && chmod 755 /etc/cmux/$a && ln -s /etc/cmux/$a /usr/local/bin/$a \
-       && ln -sfn /etc/cmux/$a /opt/mise/shims/$a \
+       && chmod 755 /etc/hmux/$a && ln -s /etc/hmux/$a /usr/local/bin/$a \
+       && ln -sfn /etc/hmux/$a /opt/mise/shims/$a \
        && /usr/local/bin/$a --version >/dev/null || exit 1; \
      done \
-  && for a in claude codex opencode; do test "$(readlink -f "$(command -v $a)")" = /etc/cmux/$a || exit 1; done
-RUN bash -n /etc/cmux/agent-config.sh \
-  && echo '[ -f /etc/cmux/agent-config.sh ] && . /etc/cmux/agent-config.sh' > /etc/profile.d/cmux-agents.sh \
-  && echo '[ -f /etc/cmux/agent-config.sh ] && . /etc/cmux/agent-config.sh' >> /etc/bash.bashrc \
-  && echo '[ -f /etc/cmux/agent-config.sh ] && . /etc/cmux/agent-config.sh' >> /etc/skel/.bashrc \
-  && echo '[ -f /etc/cmux/agent-config.sh ] && . /etc/cmux/agent-config.sh' >> /root/.bashrc \
+  && for a in claude codex opencode; do test "$(readlink -f "$(command -v $a)")" = /etc/hmux/$a || exit 1; done
+RUN bash -n /etc/hmux/agent-config.sh \
+  && echo '[ -f /etc/hmux/agent-config.sh ] && . /etc/hmux/agent-config.sh' > /etc/profile.d/hmux-agents.sh \
+  && echo '[ -f /etc/hmux/agent-config.sh ] && . /etc/hmux/agent-config.sh' >> /etc/bash.bashrc \
+  && echo '[ -f /etc/hmux/agent-config.sh ] && . /etc/hmux/agent-config.sh' >> /etc/skel/.bashrc \
+  && echo '[ -f /etc/hmux/agent-config.sh ] && . /etc/hmux/agent-config.sh' >> /root/.bashrc \
   && rm -rf /tmp/agent-config-check && mkdir -p /tmp/agent-config-check \
-  && env HOME=/tmp/agent-config-check OPENAI_BASE_URL=https://example.invalid/v1 OPENAI_API_KEY=cmux-vm-edge-placeholder CMUX_CODEROUTER_URL=https://example.invalid ANTHROPIC_BASE_URL=https://example.invalid ANTHROPIC_API_KEY=cmux-vm-edge-placeholder CMUX_VM_ID=vm-check bash -lc 'true' \
-  && grep -q 'model_provider = "cmux"' /tmp/agent-config-check/.codex/config.toml \
+  && env HOME=/tmp/agent-config-check OPENAI_BASE_URL=https://example.invalid/v1 OPENAI_API_KEY=hmux-vm-edge-placeholder HMUX_CODEROUTER_URL=https://example.invalid ANTHROPIC_BASE_URL=https://example.invalid ANTHROPIC_API_KEY=hmux-vm-edge-placeholder HMUX_VM_ID=vm-check bash -lc 'true' \
+  && grep -q 'model_provider = "hmux"' /tmp/agent-config-check/.codex/config.toml \
   && grep -q 'base_url = "https://example.invalid/v1"' /tmp/agent-config-check/.codex/config.toml \
   && grep -q 'wire_api = "responses"' /tmp/agent-config-check/.codex/config.toml \
   && grep -q 'supports_websockets = false' /tmp/agent-config-check/.codex/config.toml \
   && grep -q 'persistence = "save-all"' /tmp/agent-config-check/.codex/config.toml \
-  && grep -q "export OPENAI_API_KEY='cmux-vm-edge-placeholder'" /tmp/agent-config-check/.config/cmux/model-plane.env \
-  && grep -q "export ANTHROPIC_BASE_URL='https://example.invalid'" /tmp/agent-config-check/.config/cmux/model-plane.env \
-  && grep -q "export ANTHROPIC_API_KEY='cmux-vm-edge-placeholder'" /tmp/agent-config-check/.config/cmux/model-plane.env \
-  && grep -q "export CMUX_VM_ID='vm-check'" /tmp/agent-config-check/.config/cmux/model-plane.env \
-  && [ "$(stat -c %a /tmp/agent-config-check/.config/cmux/model-plane.env)" = "600" ] \
+  && grep -q "export OPENAI_API_KEY='hmux-vm-edge-placeholder'" /tmp/agent-config-check/.config/hmux/model-plane.env \
+  && grep -q "export ANTHROPIC_BASE_URL='https://example.invalid'" /tmp/agent-config-check/.config/hmux/model-plane.env \
+  && grep -q "export ANTHROPIC_API_KEY='hmux-vm-edge-placeholder'" /tmp/agent-config-check/.config/hmux/model-plane.env \
+  && grep -q "export HMUX_VM_ID='vm-check'" /tmp/agent-config-check/.config/hmux/model-plane.env \
+  && [ "$(stat -c %a /tmp/agent-config-check/.config/hmux/model-plane.env)" = "600" ] \
   && grep -q '"baseUrl": "https://example.invalid/v1"' /tmp/agent-config-check/.pi/agent/models.json \
   && grep -qF '"apiKey": "e30.' /tmp/agent-config-check/.pi/agent/models.json \
   && ! grep -q 'x-coderouter-route-token' /tmp/agent-config-check/.pi/agent/models.json \
@@ -389,9 +389,9 @@ RUN bash -n /etc/cmux/agent-config.sh \
   && [ "$(stat -c %a /tmp/agent-config-check/.claude.json)" = "600" ] \
   && [ "$(bash -lc 'echo $CLAUDE_CODE_SANDBOXED:$IS_SANDBOX:$DISABLE_AUTOUPDATER')" = "1:1:1" ] \
   && rm -rf /tmp/agent-config-check \
-  && mkdir -p /tmp/agent-config-resurrect/.config/cmux \
-  && echo "export OPENAI_BASE_URL='https://resurrect.invalid/v1'" > /tmp/agent-config-resurrect/.config/cmux/model-plane.env \
-  && echo "export OPENAI_API_KEY='cmux-vm-edge-placeholder'" >> /tmp/agent-config-resurrect/.config/cmux/model-plane.env \
+  && mkdir -p /tmp/agent-config-resurrect/.config/hmux \
+  && echo "export OPENAI_BASE_URL='https://resurrect.invalid/v1'" > /tmp/agent-config-resurrect/.config/hmux/model-plane.env \
+  && echo "export OPENAI_API_KEY='hmux-vm-edge-placeholder'" >> /tmp/agent-config-resurrect/.config/hmux/model-plane.env \
   && env HOME=/tmp/agent-config-resurrect bash -lc 'grep -q "https://resurrect.invalid/v1" "$HOME/.codex/config.toml"' \
   && rm -rf /tmp/agent-config-resurrect \
   && bash -lc 'true' \
@@ -400,71 +400,71 @@ RUN bash -n /etc/cmux/agent-config.sh \
   && test ! -e /root/.codex/config.toml \
   && test ! -e /root/.pi/agent/models.json \
   && test ! -e /root/.config/opencode/opencode.json \
-  && test ! -e /root/.config/cmux/model-plane.env
+  && test ! -e /root/.config/hmux/model-plane.env
 
 # The boot supervisor (see the header; the daemon binary itself is installed
 # by the driver at create time, never baked). Without systemd it also runs the
 # desktop supervisor as the work user.
-COPY cmux-devbox-boot /usr/local/bin/cmux-devbox-boot
-COPY cmux-tui-state-mount /usr/local/bin/cmux-tui-state-mount
+COPY hmux-devbox-boot /usr/local/bin/hmux-devbox-boot
+COPY hmux-tui-state-mount /usr/local/bin/hmux-tui-state-mount
 # The Ghostty generation panes announce as TERM_PROGRAM_VERSION next to
 # TERM_PROGRAM=ghostty (the supervisor reads it; base images without the .deb
 # still record the pin). The Freestyle bake writes the same file.
-RUN chmod 0755 /usr/local/bin/cmux-devbox-boot \
-  && chmod 0755 /usr/local/bin/cmux-tui-state-mount \
-  && sh -n /usr/local/bin/cmux-devbox-boot \
-  && sh -n /usr/local/bin/cmux-tui-state-mount \
-  && mkdir -p /etc/cmux \
-  && echo "$CMUX_IMAGE_GHOSTTY_DEB_URL" | sed -n 's|.*/ghostty_\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)[-_].*|\1|p' > /etc/cmux/ghostty-version \
-  && grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' /etc/cmux/ghostty-version
+RUN chmod 0755 /usr/local/bin/hmux-devbox-boot \
+  && chmod 0755 /usr/local/bin/hmux-tui-state-mount \
+  && sh -n /usr/local/bin/hmux-devbox-boot \
+  && sh -n /usr/local/bin/hmux-tui-state-mount \
+  && mkdir -p /etc/hmux \
+  && echo "$HMUX_IMAGE_GHOSTTY_DEB_URL" | sed -n 's|.*/ghostty_\([0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\)[-_].*|\1|p' > /etc/hmux/ghostty-version \
+  && grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' /etc/hmux/ghostty-version
 
 # Desktop self-check, the way a container boots it: the supervisor starts the
 # session as the work user, both contract ports answer, noVNC serves its
 # client, the window manager, dock, clipboard helper and accessibility bus are
 # up, the wallpaper is on the root window, root can reach the display too
-# (cmux sessions run as root), a login shell inherits DISPLAY from the
+# (hmux sessions run as root), a login shell inherits DISPLAY from the
 # published env, then everything is stopped and the session's state removed
 # so the image ships no live desktop.
 RUN work_user="$(getent passwd 1000 | cut -d: -f1)" && work_home="$(getent passwd 1000 | cut -d: -f6)" \
   && mkdir -p "$work_home/.config/google-chrome" && touch "$work_home/.config/google-chrome/First Run" && chown -R 1000:1000 "$work_home" \
-  && { cmux-devbox-boot >/tmp/cmux-devbox-boot.log 2>&1 & } && boot_pid=$! \
-  && for i in $(seq 1 90); do ss -tln | grep -q ':6901 ' && ss -tln | grep -q ':5901 ' && test -s /run/cmux-desktop/env && break; sleep 1; done \
+  && { hmux-devbox-boot >/tmp/hmux-devbox-boot.log 2>&1 & } && boot_pid=$! \
+  && for i in $(seq 1 90); do ss -tln | grep -q ':6901 ' && ss -tln | grep -q ':5901 ' && test -s /run/hmux-desktop/env && break; sleep 1; done \
   && ss -tln | grep -q ':5901 ' && ss -tln | grep -q ':6901 ' \
   && ss -tln | grep ':5901 ' | grep -q '127.0.0.1:5901' \
   && curl -fsS http://127.0.0.1:6901/ | grep -qi novnc \
   && pgrep -u "$work_user" -x 'Xvnc|Xtigervnc' && pgrep -u "$work_user" -x openbox && pgrep -u "$work_user" -x tint2 \
   && pgrep -u "$work_user" -x vncconfig && pgrep -u "$work_user" -f at-spi-bus-launcher \
-  && pgrep -u "$work_user" -f cmux-desktop-boot \
+  && pgrep -u "$work_user" -f hmux-desktop-boot \
   && runuser -u "$work_user" -- env DISPLAY=:1 xdpyinfo | grep dimensions \
   && env DISPLAY=:1 xdpyinfo >/dev/null \
   && env DISPLAY=:1 xprop -root _XROOTPMAP_ID | grep -q 0x \
-  && grep -q "^export DISPLAY=':1'$" /run/cmux-desktop/env \
-  && grep -q '^export AT_SPI_BUS_ADDRESS=' /run/cmux-desktop/env && grep -q '^export AT_SPI_BUS=' /run/cmux-desktop/env \
+  && grep -q "^export DISPLAY=':1'$" /run/hmux-desktop/env \
+  && grep -q '^export AT_SPI_BUS_ADDRESS=' /run/hmux-desktop/env && grep -q '^export AT_SPI_BUS=' /run/hmux-desktop/env \
   && [ "$(env -i HOME=/root PATH="$PATH" bash -lc 'echo "$DISPLAY"')" = ":1" ] \
   && [ "$(runuser -u "$work_user" -- env -i HOME="$work_home" PATH="$PATH" bash -lc 'echo "$DISPLAY"')" = ":1" ] \
   && runuser -u "$work_user" -- env -i HOME="$work_home" PATH="$PATH" bash -lc 'test -n "$DBUS_SESSION_BUS_ADDRESS" && test -n "$AT_SPI_BUS_ADDRESS"' \
   && [ -z "$(env -i HOME=/root PATH="$PATH" bash -lc 'echo "$DBUS_SESSION_BUS_ADDRESS"')" ] \
   && echo desktop-self-check-ok; rc=$?; \
-  cat /tmp/cmux-devbox-boot.log /var/log/cmux-desktop.log 2>/dev/null | tail -20; \
+  cat /tmp/hmux-devbox-boot.log /var/log/hmux-desktop.log 2>/dev/null | tail -20; \
   kill "$boot_pid" 2>/dev/null; pkill -u "$work_user"; sleep 2; pkill -9 -u "$work_user"; \
-  rm -rf /run/cmux-desktop /tmp/.X1-lock /tmp/.X11-unix/X1 /var/log/cmux-desktop.log /tmp/cmux-devbox-boot.log "$work_home/.cmux"; \
+  rm -rf /run/hmux-desktop /tmp/.X1-lock /tmp/.X11-unix/X1 /var/log/hmux-desktop.log /tmp/hmux-devbox-boot.log "$work_home/.hmux"; \
   test ! -e /tmp/.X11-unix/X1 && test $rc -eq 0
 
 # Login banner (pam_motd on providers that run sshd; inert elsewhere). It
-# reads the versions the bake pinned from /etc/cmux/tool-versions so login
+# reads the versions the bake pinned from /etc/hmux/tool-versions so login
 # never runs a tool to ask.
-COPY cmux-motd /etc/update-motd.d/00-cmux
-RUN chmod 0755 /etc/update-motd.d/00-cmux \
-  && sh -n /etc/update-motd.d/00-cmux \
-  && mkdir -p /etc/cmux \
-  && echo "claude ${CMUX_IMAGE_CLAUDE_CODE_VERSION} · codex ${CMUX_IMAGE_CODEX_VERSION} · opencode ${CMUX_IMAGE_OPENCODE_VERSION} · pi ${CMUX_IMAGE_PI_VERSION}" > /etc/cmux/tool-versions \
-  && echo "node $(node --version) · python $(python3 --version | awk '{print $2}') · bun $(bun --version) · uv $(uv --version | awk '{print $2}') · gh $(gh --version | head -1 | awk '{print $3}')" >> /etc/cmux/tool-versions \
-  && cat /etc/cmux/tool-versions
+COPY hmux-motd /etc/update-motd.d/00-hmux
+RUN chmod 0755 /etc/update-motd.d/00-hmux \
+  && sh -n /etc/update-motd.d/00-hmux \
+  && mkdir -p /etc/hmux \
+  && echo "claude ${HMUX_IMAGE_CLAUDE_CODE_VERSION} · codex ${HMUX_IMAGE_CODEX_VERSION} · opencode ${HMUX_IMAGE_OPENCODE_VERSION} · pi ${HMUX_IMAGE_PI_VERSION}" > /etc/hmux/tool-versions \
+  && echo "node $(node --version) · python $(python3 --version | awk '{print $2}') · bun $(bun --version) · uv $(uv --version | awk '{print $2}') · gh $(gh --version | head -1 | awk '{print $3}')" >> /etc/hmux/tool-versions \
+  && cat /etc/hmux/tool-versions
 
 # Image stamp, last: its presence says every layer above baked, and which
 # layers the image carries (verify-devbox-image.ts keys the desktop checks on
 # the word "desktop").
-RUN echo "cmux-devbox ${CMUX_IMAGE_EPOCH} desktop" > /etc/cmux/image-stamp && cat /etc/cmux/image-stamp
+RUN echo "hmux-devbox ${HMUX_IMAGE_EPOCH} desktop" > /etc/hmux/image-stamp && cat /etc/hmux/image-stamp
 
 # The login-shell probes above seeded ~/.claude.json before any model-plane
 # env existed. Ship no seed: each machine's first shell writes its own, with

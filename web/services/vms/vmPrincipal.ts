@@ -1,9 +1,9 @@
-// The machine principal: a cmux Cloud VM calling the control plane as itself.
+// The machine principal: a hmux Cloud VM calling the control plane as itself.
 //
 // Nothing new is minted for this. Every request a guest makes to its alias host
-// (`https://coderouter.cmux.internal`, or the reflection alias) is terminated by the
+// (`https://coderouter.hmux.internal`, or the reflection alias) is terminated by the
 // provider's TLS edge and re-originated to this deployment with the machine's
-// VM-bound coderouter route token and `x-cmux-vm-id` (services/coderouter/
+// VM-bound coderouter route token and `x-hmux-vm-id` (services/coderouter/
 // vmModelPlane.ts). `authenticateRequestRouteToken` already turns those headers into
 // `{teamId, stackUserId, vmId}` and rejects a forged or mismatched VM id. This module
 // adds the second half of "who is calling": the token's VM must be a live `cloud_vms`

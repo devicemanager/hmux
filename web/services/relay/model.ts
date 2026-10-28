@@ -3,9 +3,9 @@ import { z } from "zod";
 import { RelayConfigurationError, RelayPreferenceValidationError } from "./errors";
 
 export const RELAY_POLICY_VERSION = 1 as const;
-export const RELAY_POLICY_AUDIENCE = "cmux-iroh-relay-policy" as const;
+export const RELAY_POLICY_AUDIENCE = "hmux-iroh-relay-policy" as const;
 export const RELAY_POLICY_PROTOCOL = "iroh-relay-v1" as const;
-export const RELAY_POLICY_TYP = "cmux-relay-policy-v1+jwt" as const;
+export const RELAY_POLICY_TYP = "hmux-relay-policy-v1+jwt" as const;
 // Matches `CmxIrohRelayPolicyVerifier.maximumRelayCount`. Keep the signed
 // server catalog within the client's bounded decode and endpoint limits.
 export const MAX_MANAGED_RELAYS = 16;

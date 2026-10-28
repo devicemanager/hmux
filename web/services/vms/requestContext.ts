@@ -5,7 +5,7 @@ import { setCloudDbQueryObserver, type CloudDbQueryTiming } from "../../db/query
 import type { VmErrorResponseInput } from "./routeHelpers";
 
 /**
- * Client identity a cmux app or CLI attaches to every Cloud VM request. All
+ * Client identity a hmux app or CLI attaches to every Cloud VM request. All
  * headers are optional; older nightlies send none of them and still work.
  */
 export type VmClientIdentity = {
@@ -162,7 +162,7 @@ setCloudDbQueryObserver(() => {
 
 const CLIENT_HEADER_MAX = 120;
 
-export const VM_CLIENT_REQUEST_ID_HEADER = "x-cmux-client-request-id";
+export const VM_CLIENT_REQUEST_ID_HEADER = "x-hmux-client-request-id";
 
 /** Read the client identity headers into a bounded, printable shape. */
 export function vmClientIdentityFromRequest(request: Request): VmClientIdentity {
@@ -177,11 +177,11 @@ export function vmClientIdentityFromRequest(request: Request): VmClientIdentity 
   };
   const requestIdRaw = header(VM_CLIENT_REQUEST_ID_HEADER);
   return {
-    name: header("x-cmux-client"),
-    version: header("x-cmux-app-version"),
-    build: header("x-cmux-app-build"),
-    channel: header("x-cmux-channel"),
-    ...(header("x-cmux-app-revision")?.match(/^[0-9a-f]{7,64}$/) ? { revision: header("x-cmux-app-revision") } : {}),
+    name: header("x-hmux-client"),
+    version: header("x-hmux-app-version"),
+    build: header("x-hmux-app-build"),
+    channel: header("x-hmux-channel"),
+    ...(header("x-hmux-app-revision")?.match(/^[0-9a-f]{7,64}$/) ? { revision: header("x-hmux-app-revision") } : {}),
     userAgent: header("user-agent"),
     requestId: requestIdRaw && /^[A-Za-z0-9._:-]{1,80}$/.test(requestIdRaw) ? requestIdRaw : undefined,
     traceId: traceIdFromTraceparent(request.headers.get("traceparent")),

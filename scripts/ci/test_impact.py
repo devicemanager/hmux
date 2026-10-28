@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Which cmuxTests/ suites a diff can change the behavior of.
+"""Which hmuxTests/ suites a diff can change the behavior of.
 
 A pull request that edits a few tests needs those tests run, not every suite.
 Suites run when a changed line sits inside them. A changed declaration another
@@ -8,7 +8,7 @@ declaration around that place is changed in turn. A test method ends the
 trail at its suite; a helper method continues it.
 
 The answer is None, meaning "run every suite", whenever it could be
-incomplete: a changed file under cmuxTests/ that is not Swift, or a changed
+incomplete: a changed file under hmuxTests/ that is not Swift, or a changed
 declaration nothing can search for by name (a conformance, an operator).
 """
 
@@ -180,14 +180,14 @@ def enclosing(outline_: Outline, line: int) -> tuple[Declaration | None, Declara
 def affected_suites(
     root: Path, paths: list[str], diff: str | None
 ) -> list[str] | None:
-    """cmuxTests/ suite selectors a diff affects; None to run every suite.
+    """hmuxTests/ suite selectors a diff affects; None to run every suite.
 
     `diff` is `git diff -U0` output for the same change. Without it, every
     line of each changed file counts as changed.
     """
     files: dict[str, list[str]] = {}
     mentions: dict[str, set[str]] = {}
-    for source in sorted((root / "cmuxTests").glob("**/*.swift")):
+    for source in sorted((root / "hmuxTests").glob("**/*.swift")):
         relative = source.relative_to(root).as_posix()
         try:
             text = source.read_text(encoding="utf-8")
@@ -243,7 +243,7 @@ def affected_suites(
         return True
 
     for path in (path.strip() for path in paths):
-        if not path.startswith("cmuxTests/"):
+        if not path.startswith("hmuxTests/"):
             continue
         if not (root / path).exists():
             # Deleted: whatever used it changed in this diff too, or no
@@ -293,4 +293,4 @@ def affected_suites(
             for number, text in enumerate(files[path], start=1):
                 if pattern.search(text) and not touch(path, number):
                     return None
-    return sorted(f"cmuxTests/{suite}" for suite in suites)
+    return sorted(f"hmuxTests/{suite}" for suite in suites)

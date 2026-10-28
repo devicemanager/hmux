@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import SwiftUI
 
 private extension SessionContentWidthPresentation {

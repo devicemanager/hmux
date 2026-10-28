@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// How the New Machine sheet arranges its three settings. Release builds
@@ -133,11 +133,11 @@ struct NewMachineSheet: View {
             Text(model.isBaseSetup
                 ? String(localized: "machines.new.title.base", defaultValue: "Set Up Base")
                 : String(localized: "machines.new.title", defaultValue: "New Machine"))
-                .cmuxFont(size: 15, weight: .semibold)
+                .hmuxFont(size: 15, weight: .semibold)
                 .help(subtitle)
             if model.isBaseSetup {
                 Text(subtitle)
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -218,7 +218,7 @@ struct NewMachineSheet: View {
 
     private func gridLabel(_ title: String) -> some View {
         Text(title)
-            .cmuxFont(size: 13)
+            .hmuxFont(size: 13)
             .foregroundStyle(.secondary)
             .fixedSize()
             .gridColumnAlignment(.trailing)
@@ -254,7 +254,7 @@ struct NewMachineSheet: View {
     private func stackedRow<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(title)
-                .cmuxFont(size: 10, weight: .semibold)
+                .hmuxFont(size: 10, weight: .semibold)
                 .foregroundStyle(.secondary)
                 .textCase(.uppercase)
                 .accessibilityHidden(true)
@@ -392,7 +392,7 @@ struct NewMachineSheet: View {
     private func groupedRow<Content: View>(_ title: String, @ViewBuilder content: () -> Content) -> some View {
         HStack(alignment: .center, spacing: 8) {
             Text(title)
-                .cmuxFont(size: 13)
+                .hmuxFont(size: 13)
                 .lineLimit(1)
                 .layoutPriority(1)
                 .accessibilityHidden(true)
@@ -462,7 +462,7 @@ struct NewMachineSheet: View {
                 String(localized: "machines.new.size.noneAllowed.short", defaultValue: "No size available"),
                 systemImage: "exclamationmark.triangle.fill"
             )
-            .cmuxFont(size: 12)
+            .hmuxFont(size: 12)
             .foregroundStyle(.orange)
             .lineLimit(1)
             .help(String(localized: "machines.new.size.noneAllowed", defaultValue: "No machine size is available for this plan. Close this dialog and reopen it to refresh your plan."))
@@ -557,7 +557,7 @@ struct NewMachineSheet: View {
                 CloudNetworkPolicyMode.full.title,
                 systemImage: "exclamationmark.triangle.fill"
             )
-            .cmuxFont(size: 12)
+            .hmuxFont(size: 12)
             .foregroundStyle(.secondary)
             .lineLimit(1)
             .help(String(
@@ -666,7 +666,7 @@ struct NewMachineSheet: View {
         if let shortfall = model.selectedSizePoolShortfallText {
             Label {
                 Text(shortfall)
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .fixedSize(horizontal: false, vertical: true)
             } icon: {
                 Image(systemName: "exclamationmark.triangle.fill")
@@ -676,7 +676,7 @@ struct NewMachineSheet: View {
             .accessibilityIdentifier("NewMachineSheet.pool.shortfall")
         } else if let usage = model.poolUsageText {
             Text(usage)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundStyle(.secondary)
                 .accessibilityIdentifier("NewMachineSheet.pool.usage")
         }
@@ -711,7 +711,7 @@ struct NewMachineSheet: View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             if let meter = model.planMeterText {
                 Text(meterText(meter))
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
                     .help(model.freeAccessNoteText ?? meter)
@@ -724,7 +724,7 @@ struct NewMachineSheet: View {
                     model.showsMaxUpgrade = true
                 }
                 .buttonStyle(.link)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .lineLimit(1)
                 .help(note)
                 .accessibilityHint(note)

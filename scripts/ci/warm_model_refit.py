@@ -26,7 +26,7 @@ branch, so a person merges every change; the next run replaces an unmerged
 branch. Without the token, OUT is the result (the patch and summary to
 apply by hand).
 
-Where it runs: cmuxs-mac-mini-6, beside ci-dash (cmuxterm-hq
+Where it runs: hmuxs-mac-mini-6, beside ci-dash (hmuxterm-hq
 build-fleet/ci-dash), as `_cidash`. That host already collects every mini's
 admission lines and runs no GitHub runners, so no pull request's code can
 read the token (hq#595). A GitHub-hosted runner cannot reach the minis, and
@@ -101,7 +101,7 @@ def call(token: str, method: str, path: str, body: Mapping[str, Any] | None = No
     request = urllib.request.Request(f"{API}{path}", method=method,
                                      data=json.dumps(body).encode() if body is not None else None,
                                      headers={"Authorization": f"Bearer {token}", "Accept": "application/vnd.github+json",
-                                              "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "cmux-warm-model-refit"})
+                                              "X-GitHub-Api-Version": "2022-11-28", "User-Agent": "hmux-warm-model-refit"})
     try:
         with urllib.request.urlopen(request, timeout=30) as response:
             text = response.read()

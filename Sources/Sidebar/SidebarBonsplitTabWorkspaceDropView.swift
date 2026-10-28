@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxFoundation
+import HmuxFoundation
 
 @MainActor
 final class SidebarBonsplitTabWorkspaceDropView: NSView {

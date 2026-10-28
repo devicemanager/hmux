@@ -21,7 +21,7 @@ sys.path.insert(0, str(ROOT / "scripts/ci"))
 import owned_build_state as state  # noqa: E402
 import git_fixture_env  # noqa: F401  (disables git auto maintenance)
 
-OWNED = "startsWith(env.CMUX_PRODUCT_RUNNER, 'glaeda-')"
+OWNED = "startsWith(env.HMUX_PRODUCT_RUNNER, 'glaeda-')"
 
 
 def run(function, *args):
@@ -171,7 +171,7 @@ class AdoptAndSave(Fixture):
 
     def test_every_slot_shares_the_macs_packages(self):
         self.keep()
-        shared, slot = self.store, self.store / "cmux-ci-2"
+        shared, slot = self.store, self.store / "hmux-ci-2"
         state.remove(self.packages)
         result = run(state.check, slot, "fp", self.workspace, shared)
         self.assertEqual((result["warm"], result["packages"]), ("false", "true"))
@@ -184,7 +184,7 @@ class AdoptAndSave(Fixture):
     def test_a_save_that_loses_a_race_leaves_nothing_behind(self):
         self.keep()
         (self.store / ".source-packages.incoming-999999").mkdir()  # a cancelled save
-        (self.store / "cmux-ci-2" / "source-packages").mkdir(parents=True)  # pre-shared slot copy
+        (self.store / "hmux-ci-2" / "source-packages").mkdir(parents=True)  # pre-shared slot copy
         self.packages.mkdir(parents=True)
         real = Path.rename
         def racing(path, target):
@@ -192,10 +192,10 @@ class AdoptAndSave(Fixture):
                 raise OSError(66, "Directory not empty")
             return real(path, target)
         with unittest.mock.patch.object(Path, "rename", racing):
-            result = run(state.save, self.store / "cmux-ci-2", self.packages, self.workspace, self.store)
+            result = run(state.save, self.store / "hmux-ci-2", self.packages, self.workspace, self.store)
         self.assertEqual(result["packages"], "false")
         self.assertEqual([path.name for path in self.store.iterdir() if path.name.startswith(".")], [".keep.lock"])
-        self.assertFalse((self.store / "cmux-ci-2" / "source-packages").exists())
+        self.assertFalse((self.store / "hmux-ci-2" / "source-packages").exists())
 
     def test_a_save_leaves_another_slots_save_in_flight(self):
         self.keep()
@@ -203,7 +203,7 @@ class AdoptAndSave(Fixture):
         live.mkdir()
         dead = self.store / ".source-packages.discard-999999"
         dead.mkdir()
-        run(state.save, self.store / "cmux-ci-2", self.packages, self.workspace, self.store)
+        run(state.save, self.store / "hmux-ci-2", self.packages, self.workspace, self.store)
         self.assertTrue(live.is_dir())
         self.assertFalse(dead.exists())
 
@@ -270,9 +270,9 @@ class WarmKeys(Fixture):
         return path
 
     def keys(self, fingerprint="fp", cache=True):
-        env = {"CMUX_SEED_LOCAL_CACHE": str(self.seeds) if cache else ""}
+        env = {"HMUX_SEED_LOCAL_CACHE": str(self.seeds) if cache else ""}
         with unittest.mock.patch.dict(os.environ, env):
-            return state.warm_keys(self.store, "cmux11s-glaeda-1", "glaeda-root-std-xcode-26.6", fingerprint)
+            return state.warm_keys(self.store, "hmux11s-glaeda-1", "glaeda-root-std-xcode-26.6", fingerprint)
 
     def test_keep_stamps_the_merge_base_and_replaces_it(self):
         self.kept(merged_onto=A.upper())
@@ -289,7 +289,7 @@ class WarmKeys(Fixture):
         self.seed(D, when=20)
         self.seed(E, fingerprint="other", when=40)  # another Xcode: never adopted here
         self.seed("f" * 40, when=50, manifest=False)  # incomplete
-        self.assertEqual(self.keys(), {"runner": "cmux11s-glaeda-1", "pool": "glaeda-root-std-xcode-26.6",
+        self.assertEqual(self.keys(), {"runner": "hmux11s-glaeda-1", "pool": "glaeda-root-std-xcode-26.6",
                                        "keys": ["a" * 12, "c" * 12, "d" * 12, "b" * 12],
                                        "roots": [{"root": 1, "merged_onto": A}]})
 
@@ -298,11 +298,11 @@ class WarmKeys(Fixture):
         stamp = json.loads((self.store / "stamp.json").read_text())
         stamp.update(pr_app_swift_files=["Sources/A.swift"], pr_app_swift_total=1, pr_package_interface=False)
         (self.store / "stamp.json").write_text(json.dumps(stamp))
-        other = self.store / "cmux-ci-2"
+        other = self.store / "hmux-ci-2"
         (other / "derived-data").mkdir(parents=True)
         (other / "stamp.json").write_text(json.dumps({"fingerprint": f"x-{state.STATE_VERSION}", "merged_onto": B,
                                                       "pr": 9}))
-        empty = self.store / "cmux-ci-3"
+        empty = self.store / "hmux-ci-3"
         empty.mkdir()
         roots = self.keys(cache=False)["roots"]
         self.assertEqual(roots, [{"root": 1, "merged_onto": A, "pr": 7, "pr_app_swift_files": ["Sources/A.swift"],
@@ -359,8 +359,8 @@ class WarmKeys(Fixture):
         self.assertNotIn("adopt_from", run(state.check, self.store, "other", self.workspace, None, "7"))
 
     def second_root(self, pr=""):
-        """Root 2 of this mini (STORE/cmux-ci-2), keeping a build of PR (main when "")."""
-        other = self.store / "cmux-ci-2"
+        """Root 2 of this mini (STORE/hmux-ci-2), keeping a build of PR (main when "")."""
+        other = self.store / "hmux-ci-2"
         (other / "derived-data").mkdir(parents=True, exist_ok=True)
         stamp = {"fingerprint": f"x-{state.STATE_VERSION}", "merged_onto": B, **({"pr": int(pr)} if pr else {})}
         (other / "stamp.json").write_text(json.dumps(stamp))
@@ -434,11 +434,11 @@ class WarmKeys(Fixture):
         os.utime(slot, (1, 1))
         log = Path(self.tmp.name) / "jobs.jsonl"
         log.write_text("".join(json.dumps({"event": "started", "at": 2}) + "\n" for _ in range(80)))
-        with unittest.mock.patch.dict(os.environ, {"CMUX_JOB_LOG": str(log)}):
+        with unittest.mock.patch.dict(os.environ, {"HMUX_JOB_LOG": str(log)}):
             run(state.check, self.store, "fp", self.workspace, None, "7")
         self.assertEqual(self.kept_marker(), "nine")
         os.utime(slot)
-        with unittest.mock.patch.dict(os.environ, {"CMUX_JOB_LOG": str(log)}):
+        with unittest.mock.patch.dict(os.environ, {"HMUX_JOB_LOG": str(log)}):
             result = run(state.check, self.store, "fp", self.workspace, None, "7")
         self.assertEqual((result["reason"], self.kept_marker()), ("this pull request's parked build", "seven"))
 
@@ -475,7 +475,7 @@ class WarmKeys(Fixture):
         for number in ("7", "8", "9"):
             self.build(number)
             self.kept(pr=number)
-        second = self.store / "cmux-ci-2" / "pr-builds" / "pr-5"
+        second = self.store / "hmux-ci-2" / "pr-builds" / "pr-5"
         (second / "derived-data").mkdir(parents=True)
         os.utime(second, (1, 1))
         self.assertEqual([path.name for path in state.parked_slots(self.store)], ["pr-5", "pr-7", "pr-8"])
@@ -502,7 +502,7 @@ class WarmKeys(Fixture):
         # A root-2 store's keep frees the mini's SwiftPM scratch beside root 1's store.
         scratch = self.store / "spm-scratch" / "old-xcode"
         (scratch / "pkg").mkdir(parents=True)
-        second = self.store / "cmux-ci-2"
+        second = self.store / "hmux-ci-2"
         real, calls = state.clone, []
 
         def full_once(source, destination):
@@ -560,7 +560,7 @@ class WarmKeys(Fixture):
         log = Path(self.tmp.name) / "jobs.jsonl"
         log.write_text("".join(json.dumps({"event": "started", "at": 2}) + "\n" for _ in range(80)))
         (self.store / "pr-builds" / ".pr-5.incoming-999999999").mkdir()
-        with unittest.mock.patch.dict(os.environ, {"CMUX_JOB_LOG": str(log)}):
+        with unittest.mock.patch.dict(os.environ, {"HMUX_JOB_LOG": str(log)}):
             state.prune_pr_slots(self.store)
         self.assertEqual(sorted(path.name for path in (self.store / "pr-builds").iterdir()), ["pr-3"])
 
@@ -589,11 +589,11 @@ class WarmKeys(Fixture):
     def test_the_other_roots_keys_follow_this_roots(self):
         # A job's root follows glaeda's free token, so a runner lists its whole mini.
         # Each root has its own fingerprint (compile-app-host-test-product.sh adds root=).
-        second = self.store / "cmux-ci-2"
+        second = self.store / "hmux-ci-2"
         self.kept(pr="7")
         self.kept(fingerprint="fp2", merged_onto=B, pr="8", store=second)
         self.assertEqual(self.keys()["keys"], ["a" * 12, "pr-7", "b" * 12, "pr-8"])
-        with unittest.mock.patch.dict(os.environ, {"CMUX_SEED_LOCAL_CACHE": ""}):
+        with unittest.mock.patch.dict(os.environ, {"HMUX_SEED_LOCAL_CACHE": ""}):
             from_second = state.warm_keys(second, "r", "p", "fp2")["keys"]
         self.assertEqual(from_second, ["b" * 12, "pr-8", "a" * 12, "pr-7"])
         # Another root counts only with a kept DerivedData of this STATE_VERSION.
@@ -604,7 +604,7 @@ class WarmKeys(Fixture):
         state.clear(second / "derived-data")
         self.assertEqual(self.keys()["keys"], ["a" * 12, "pr-7"])
         # Not a root store: never read.
-        (self.store / "cmux-ci-x").mkdir()
+        (self.store / "hmux-ci-x").mkdir()
         self.assertEqual(state.other_root_stores(self.store), [second])
 
     def test_a_mini_with_a_second_root_lists_no_seeds(self):
@@ -614,7 +614,7 @@ class WarmKeys(Fixture):
         self.kept(pr="7")
         self.seed(B)
         self.assertEqual(self.keys()["keys"], ["a" * 12, "pr-7", "b" * 12])
-        second = self.store / "cmux-ci-2"
+        second = self.store / "hmux-ci-2"
         second.mkdir()
         self.assertEqual(self.keys()["keys"], ["a" * 12, "pr-7"])
         # From the second root, its own seeds are left out too.
@@ -622,7 +622,7 @@ class WarmKeys(Fixture):
         name = self.seed(C, fingerprint="fp2").name
         second_seeds.mkdir()
         (self.seeds / name).rename(second_seeds / name)
-        with unittest.mock.patch.dict(os.environ, {"CMUX_SEED_LOCAL_CACHE": str(second_seeds)}):
+        with unittest.mock.patch.dict(os.environ, {"HMUX_SEED_LOCAL_CACHE": str(second_seeds)}):
             self.assertEqual(state.warm_keys(second, "r", "p", "fp2")["keys"], ["a" * 12, "pr-7"])
 
     def test_seeds_count_only_when_prefer_may_clone_them(self):
@@ -648,16 +648,16 @@ class WarmKeys(Fixture):
         self.seed(B)
         output = io.StringIO()
         with unittest.mock.patch("sys.stdout", output), \
-             unittest.mock.patch.dict(os.environ, {"CMUX_SEED_LOCAL_CACHE": str(self.seeds),
+             unittest.mock.patch.dict(os.environ, {"HMUX_SEED_LOCAL_CACHE": str(self.seeds),
                                                    "GITHUB_OUTPUT": str(self.store / "out")}):
-            self.assertEqual(state.main(["x", "warm-keys", str(self.store), "cmux11s-glaeda-1",
+            self.assertEqual(state.main(["x", "warm-keys", str(self.store), "hmux11s-glaeda-1",
                                          "glaeda-root-std-xcode-26.6", "fp"]), 0)
         document = json.loads(output.getvalue())
         self.assertFalse((self.store / "out").exists())
-        jobs = [{"name": "CI / " + owned_warm_state.ADMISSION_JOB, "runner_name": "cmux11s-glaeda-1",
+        jobs = [{"name": "CI / " + owned_warm_state.ADMISSION_JOB, "runner_name": "hmux11s-glaeda-1",
                  "workflow_name": owned_warm_state.CI_WORKFLOW}]
         self.assertEqual(owned_warm_state.record(document, jobs),
-                         ("cmux11s-glaeda-1", ["a" * 12, "b" * 12], [{"root": 1, "merged_onto": A}]))
+                         ("hmux11s-glaeda-1", ["a" * 12, "b" * 12], [{"root": 1, "merged_onto": A}]))
 
     def test_main_never_fails(self):
         output = io.StringIO()
@@ -764,8 +764,8 @@ class Prefer(Fixture):
     def setUp(self):
         super().setUp()
         self.cache = Path(self.tmp.name) / "seeds"
-        self.env = unittest.mock.patch.dict(os.environ, {"CMUX_SEED_LOCAL_CACHE": str(self.cache),
-                                                          "CMUX_SEED_SWIFT_JOBS": "14"})
+        self.env = unittest.mock.patch.dict(os.environ, {"HMUX_SEED_LOCAL_CACHE": str(self.cache),
+                                                          "HMUX_SEED_SWIFT_JOBS": "14"})
         self.env.start()
         self.addCleanup(self.env.stop)
         (self.workspace / "Sources").mkdir()
@@ -842,22 +842,22 @@ class Prefer(Fixture):
         self.assertEqual((result["prefer"], result["seed_key"], result["seed_distance"], result["local"]),
                          ("true", "p-j12-older", "1", "true"))
         # The adopt that follows clones exactly that seed, never a newer one.
-        with unittest.mock.patch.dict(os.environ, {"CMUX_SEED_EXACT": result["seed_key"],
-                                                   "CMUX_SEED_DISTANCE": result["seed_distance"]}):
+        with unittest.mock.patch.dict(os.environ, {"HMUX_SEED_EXACT": result["seed_key"],
+                                                   "HMUX_SEED_DISTANCE": result["seed_distance"]}):
             self.assertEqual(state.seed.chosen(), ("p-j12-older", 1))
-        with unittest.mock.patch.dict(os.environ, {"CMUX_SEED_EXACT": "p-j14-gone"}):
+        with unittest.mock.patch.dict(os.environ, {"HMUX_SEED_EXACT": "p-j14-gone"}):
             self.assertIsNone(state.seed.chosen())
 
     def recorded_with_package_change(self, changed):
         record = self.recorded(changed)
-        record["Packages/macOS/CmuxFoundation/Sources/CmuxFoundation/F.swift"] = ["stale", 1]
+        record["Packages/macOS/HmuxFoundation/Sources/HmuxFoundation/F.swift"] = ["stale", 1]
         return record
 
     def test_rebuilds_app_only_for_a_package_swift_source(self):
-        self.assertTrue(state.rebuilds_app({"Packages/macOS/CmuxCloud/Sources/CmuxCloud/A.swift"}))
+        self.assertTrue(state.rebuilds_app({"Packages/macOS/HmuxCloud/Sources/HmuxCloud/A.swift"}))
         self.assertTrue(state.rebuilds_app({"vendor/bonsplit/Package.swift"}))
-        self.assertFalse(state.rebuilds_app({"Sources/AppDelegate.swift", "cmuxTests/ATests.swift",
-                                             "Packages/macOS/CmuxCloud/README.md"}))
+        self.assertFalse(state.rebuilds_app({"Sources/AppDelegate.swift", "hmuxTests/ATests.swift",
+                                             "Packages/macOS/HmuxCloud/README.md"}))
 
     def test_a_seed_without_a_package_change_beats_more_changed_inputs_with_one(self):
         """115 changed inputs across a package change cost 958 s (job 108004619872)."""
@@ -1007,7 +1007,7 @@ class Prefer(Fixture):
         compare.assert_not_called()
 
     def test_package_tests_do_not_rebuild_the_app(self):
-        self.assertFalse(state.rebuilds_app({"Packages/macOS/CmuxSettingsUI/Tests/CmuxSettingsUITests/ATests.swift"}))
+        self.assertFalse(state.rebuilds_app({"Packages/macOS/HmuxSettingsUI/Tests/HmuxSettingsUITests/ATests.swift"}))
 
     def test_a_far_bucket_seed_never_replaces_a_kept_build_without_a_package_change(self):
         self.kept(changed=3)
@@ -1081,11 +1081,11 @@ class WorkflowCommandLines(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             base = Path(tmp)
             (base / "derived").mkdir()
-            env = {"PATH": "/usr/bin:/bin", "CMUX_OWNED_STATE_ROOT": str(base / "store"),
-                   "CMUX_COMPILE_ADMISSION_DERIVED_DATA": str(base / "derived"),
-                   "CMUX_CI_CANONICAL_SRC": str(base / "src"), "FINGERPRINT": "fp",
+            env = {"PATH": "/usr/bin:/bin", "HMUX_OWNED_STATE_ROOT": str(base / "store"),
+                   "HMUX_COMPILE_ADMISSION_DERIVED_DATA": str(base / "derived"),
+                   "HMUX_CI_CANONICAL_SRC": str(base / "src"), "FINGERPRINT": "fp",
                    "MERGED_ONTO": "a" * 40, "RUNNER_NAME": "runner", "RUNNER_TEMP": str(base),
-                   "CMUX_PRODUCT_RUNNER": "glaeda-root-std-xcode-26.6", "HOME": str(base)}
+                   "HMUX_PRODUCT_RUNNER": "glaeda-root-std-xcode-26.6", "HOME": str(base)}
             for step in calls:
                 script = step["run"]
                 # The fingerprint comes from Xcode; stand in for it.
@@ -1130,7 +1130,7 @@ class Wiring(unittest.TestCase):
                      self.step("Keep this owned Mac's DerivedData"), self.step("Keep this owned Mac's build state")):
             self.assertIs(step.get("continue-on-error"), True, step["name"])
             self.assertNotIn("uses", step, step["name"])
-        self.assertEqual(self.job["env"]["CMUX_OWNED_STATE_ROOT"], "/Users/Shared/cmux-build-fleet/ci")
+        self.assertEqual(self.job["env"]["HMUX_OWNED_STATE_ROOT"], "/Users/Shared/hmux-build-fleet/ci")
 
     def test_a_warm_mac_skips_the_seed_and_the_package_cache(self):
         self.assertIn("steps.owned-state.outputs.warm != 'true'", self.by_id["seed-derived-data"]["if"])
@@ -1144,8 +1144,8 @@ class Wiring(unittest.TestCase):
         self.assertIs(prefer.get("continue-on-error"), True)
         for step in (self.by_id["seed-derived-data"], self.step("Start the DerivedData seed download")):
             self.assertIn("steps.prefer-seed.outputs.prefer == 'true'", step["if"])
-            self.assertIn("CMUX_SEED_LOCAL_CACHE", step["env"])
-            self.assertIn("steps.prefer-seed.outputs.seed_key", step["env"]["CMUX_SEED_EXACT"])
+            self.assertIn("HMUX_SEED_LOCAL_CACHE", step["env"])
+            self.assertIn("steps.prefer-seed.outputs.seed_key", step["env"]["HMUX_SEED_EXACT"])
         # A preferred seed that misses still leaves the Mac warm.
         self.assertIn("steps.seed-derived-data.outputs.hit != 'true'", self.by_id["owned-adopt"]["if"])
         index = self.names.index
@@ -1171,7 +1171,7 @@ class Wiring(unittest.TestCase):
             if name == "Compile app-host test product":
                 continue
             self.assertNotIn("owned", block.lower(), name)
-        self.assertNotIn("CMUX_OWNED_STATE_ROOT", identity.recipe_projection(text)["job_controls"]["env"])
+        self.assertNotIn("HMUX_OWNED_STATE_ROOT", identity.recipe_projection(text)["job_controls"]["env"])
 
     def test_order(self):
         index = self.names.index
@@ -1182,7 +1182,7 @@ class Wiring(unittest.TestCase):
         self.assertLess(index("Adopt this owned Mac's DerivedData"), index("Record this owned Mac's build inputs"))
         self.assertLess(index("Record this owned Mac's build inputs"), index("Compile app-host test product"))
         # adopt replays onto the canonical tree the compile builds.
-        self.assertIn('"$CMUX_CI_CANONICAL_SRC"', self.by_id["owned-adopt"]["run"])
+        self.assertIn('"$HMUX_CI_CANONICAL_SRC"', self.by_id["owned-adopt"]["run"])
         self.assertLess(index("Forget the adopted-build inode override"), index("Keep this owned Mac's DerivedData"))
         self.assertLess(index("Seed node-local compiled product cache"), index("Keep this owned Mac's build state"))
         self.assertLess(index("Keep this owned Mac's build state"), index("Prepare isolated DerivedData"))
@@ -1198,10 +1198,10 @@ class Wiring(unittest.TestCase):
             helper.write_text("#!/bin/sh\nexit 0\n")
             helper.chmod(0o755)
             env = {"PATH": os.environ["PATH"], "GITHUB_ENV": str(env_file), "GITHUB_OUTPUT": str(out_file),
-                   "RUNNER_TEMP": tmp, "CMUX_CI_CANONICAL_ROOT_HELPER": str(helper),
-                   "CMUX_PRODUCT_RUNNER": runner, "CMUX_OWNED_STATE_ROOT": "/Users/Shared/cmux-build-fleet/ci"}
+                   "RUNNER_TEMP": tmp, "HMUX_CI_CANONICAL_ROOT_HELPER": str(helper),
+                   "HMUX_PRODUCT_RUNNER": runner, "HMUX_OWNED_STATE_ROOT": "/Users/Shared/hmux-build-fleet/ci"}
             if root is not None:
-                env["CMUX_CI_CANONICAL_ROOT"] = root
+                env["HMUX_CI_CANONICAL_ROOT"] = root
             result = subprocess.run(["bash", "-c", self.by_id["build-slot"]["run"]], env=env,
                                     capture_output=True, text=True)
             read = lambda path: path.read_text() if path.exists() else ""
@@ -1210,18 +1210,18 @@ class Wiring(unittest.TestCase):
     def test_a_second_compile_slot_keeps_its_own_root_and_state(self):
         # The first slot, and every Blacksmith job, keeps the default root and store.
         for runner in ("glaeda-std-xcode-26.6", "blacksmith-6vcpu-macos-26"):
-            self.assertEqual(self.slot(None, runner), (0, "", "root=/private/tmp/cmux-ci\n"))
-        code, env, out = self.slot("/private/tmp/cmux-ci-2")
+            self.assertEqual(self.slot(None, runner), (0, "", "root=/private/tmp/hmux-ci\n"))
+        code, env, out = self.slot("/private/tmp/hmux-ci-2")
         self.assertEqual(code, 0)
         self.assertEqual(
             env,
-            "CMUX_OWNED_PACKAGE_STORE=/Users/Shared/cmux-build-fleet/ci\n"
-            "CMUX_OWNED_STATE_ROOT=/Users/Shared/cmux-build-fleet/ci/cmux-ci-2\n",
+            "HMUX_OWNED_PACKAGE_STORE=/Users/Shared/hmux-build-fleet/ci\n"
+            "HMUX_OWNED_STATE_ROOT=/Users/Shared/hmux-build-fleet/ci/hmux-ci-2\n",
         )
-        self.assertEqual(out, "root=/private/tmp/cmux-ci-2\n")
+        self.assertEqual(out, "root=/private/tmp/hmux-ci-2\n")
         # Only an owned Mac may move the root, and only to a slot root.
-        self.assertNotEqual(self.slot("/private/tmp/cmux-ci-2", "blacksmith-6vcpu-macos-26")[0], 0)
-        for bad in ("/tmp/elsewhere", "/private/tmp/cmux-ci-x", "/private/tmp/cmux-ci/../x"):
+        self.assertNotEqual(self.slot("/private/tmp/hmux-ci-2", "blacksmith-6vcpu-macos-26")[0], 0)
+        for bad in ("/tmp/elsewhere", "/private/tmp/hmux-ci-x", "/private/tmp/hmux-ci/../x"):
             self.assertNotEqual(self.slot(bad)[0], 0, bad)
         # It runs before anything reads the root, and is not part of the product key.
         index = self.names.index
@@ -1233,7 +1233,7 @@ class Wiring(unittest.TestCase):
         # The compiled product maps #filePath to a stable runtime location, so
         # restore does not inspect or lock the producer's canonical root.
         script = (ROOT / "scripts/ci/restore-app-host-test-product.sh").read_text()
-        self.assertIn("CMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/cmux-test-source", script)
+        self.assertIn("HMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/hmux-test-source", script)
         self.assertNotIn("producer_derived", script)
         self.assertNotIn("glaeda-canonical-root", script)
 
@@ -1283,7 +1283,7 @@ class E2EWiring(unittest.TestCase):
         # the step continues on error, so the compile would trust it.
         discard = self.steps[self.names.index("Discard a partly adopted DerivedData")]
         self.assertEqual(discard["if"], "${{ steps.owned-adopt.outcome == 'failure' }}")
-        self.assertIn('rm -rf -- "$CMUX_DERIVED_DATA_PATH"', discard["run"])
+        self.assertIn('rm -rf -- "$HMUX_DERIVED_DATA_PATH"', discard["run"])
         self.assertIn("refusing to clear an unowned DerivedData path", discard["run"])
         index = self.names.index
         self.assertEqual(index("Adopt this owned Mac's DerivedData") + 1, index(discard["name"]))
@@ -1309,9 +1309,9 @@ class E2EWiring(unittest.TestCase):
             self.assertIn("steps.owned-state.outputs.warm != 'true' || steps.prefer-seed.outputs.prefer == 'true'",
                           step["if"])
             # Empty off an owned Mac, so Blacksmith's seed steps see no local cache.
-            self.assertEqual(step["env"]["CMUX_SEED_LOCAL_CACHE"],
+            self.assertEqual(step["env"]["HMUX_SEED_LOCAL_CACHE"],
                              "${{ vars.CI_OWNED_PREFER_SEED != '' && steps.owned-state.outputs.seeds || '' }}")
-            self.assertIn("steps.prefer-seed.outputs.seed_key", step["env"]["CMUX_SEED_EXACT"])
+            self.assertIn("steps.prefer-seed.outputs.seed_key", step["env"]["HMUX_SEED_EXACT"])
         self.assertIn("steps.seed.outputs.hit != 'true'", self.by_id["owned-adopt"]["if"])
         self.assertIn("steps.owned-adopt.outcome != 'skipped'",
                       self.step("Forget the adopted-build inode override")["if"])
@@ -1328,7 +1328,7 @@ class E2EWiring(unittest.TestCase):
         self.assertLess(index("Resolve Swift packages"), index("Adopt this owned Mac's DerivedData"))
         self.assertLess(index("Adopt the DerivedData seed"), index("Adopt this owned Mac's DerivedData"))
         self.assertLess(index("Adopt this owned Mac's DerivedData"), index("Build the app-host and UI test product"))
-        self.assertIn('"$CMUX_CI_CANONICAL_SRC"', self.by_id["owned-adopt"]["run"])
+        self.assertIn('"$HMUX_CI_CANONICAL_SRC"', self.by_id["owned-adopt"]["run"])
 
     def owned_state(self, root, kept_packages=True):
         """Run the owned-state step against a temporary store; (code, outputs, store base)."""
@@ -1359,19 +1359,19 @@ cp "{ROOT}/scripts/ci/${{1##*/}}" "$out"
         curl.chmod(0o755)
         output = base / "output"
         output.write_text("")
-        run = self.by_id["owned-state"]["run"].replace("/Users/Shared/cmux-build-fleet/ci", str(fleet))
+        run = self.by_id["owned-state"]["run"].replace("/Users/Shared/hmux-build-fleet/ci", str(fleet))
         env = {"PATH": f"{base / 'bin'}:{os.environ['PATH']}", "GITHUB_OUTPUT": str(output),
                "RUNNER_TEMP": str(temp), "GITHUB_REPOSITORY": "manaflow-ai/cmux", "WORKFLOW_SHA": "w" * 40,
-               "CMUX_DERIVED_DATA_PATH": "/private/tmp/cmux-ci/derived-data-compile-admission", "CMUX_CI_CANONICAL_ROOT": root or "/private/tmp/cmux-ci", "HOME": str(base)}
+               "HMUX_DERIVED_DATA_PATH": "/private/tmp/hmux-ci/derived-data-compile-admission", "HMUX_CI_CANONICAL_ROOT": root or "/private/tmp/hmux-ci", "HOME": str(base)}
         if root is not None:
-            env["CMUX_CI_CANONICAL_ROOT"] = root
+            env["HMUX_CI_CANONICAL_ROOT"] = root
         result = subprocess.run(["bash", "-e", "-c", run], cwd=workspace, env=env, capture_output=True, text=True)
         outputs = dict(line.split("=", 1) for line in output.read_text().splitlines())
         urls = (base / "urls").read_text().split() if (base / "urls").exists() else []
         return result, outputs, fleet, workspace, urls
 
     def test_each_root_reads_its_own_state_and_the_macs_packages(self):
-        for root, suffix in ((None, ""), ("/private/tmp/cmux-ci", ""), ("/private/tmp/cmux-ci-2", "/cmux-ci-2")):
+        for root, suffix in ((None, ""), ("/private/tmp/hmux-ci", ""), ("/private/tmp/hmux-ci-2", "/hmux-ci-2")):
             with self.subTest(root=root):
                 result, outputs, fleet, workspace, urls = self.owned_state(root)
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -1394,9 +1394,9 @@ cp "{ROOT}/scripts/ci/${{1##*/}}" "$out"
             base = Path(tmp)
             (base / "derived").mkdir()
             env = {"PATH": "/usr/bin:/bin", "HOME": str(base), "OWNED_TOOLS": str(ROOT / "scripts/ci"),
-                   "OWNED_STORE": str(base / "store"), "CMUX_DERIVED_DATA_PATH": str(base / "derived"),
-                   "CMUX_CI_CANONICAL_SRC": str(base / "src"), "SEED_PREFIX": "p-", "TEST_REF": "base",
-                   "MAX_DISTANCE": "", "CMUX_SEED_LOCAL_CACHE": str(base / "store/seeds")}
+                   "OWNED_STORE": str(base / "store"), "HMUX_DERIVED_DATA_PATH": str(base / "derived"),
+                   "HMUX_CI_CANONICAL_SRC": str(base / "src"), "SEED_PREFIX": "p-", "TEST_REF": "base",
+                   "MAX_DISTANCE": "", "HMUX_SEED_LOCAL_CACHE": str(base / "store/seeds")}
             for step_id in ("owned-adopt", "prefer-seed"):
                 script = self.by_id[step_id]["run"].replace("python3 ", f"{sys.executable} ")
                 result = subprocess.run(["bash", "-c", script], cwd=base, env=dict(env, GITHUB_OUTPUT=os.devnull),

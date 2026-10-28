@@ -1,9 +1,9 @@
-import CmuxBrowser
-import CmuxFoundation
-import CmuxSettings
+import HmuxBrowser
+import HmuxFoundation
+import HmuxSettings
 import Foundation
 
-extension CmuxSettingsFileStore {
+extension HmuxSettingsFileStore {
     static func defaultTemplate() -> String {
         var lines: [String] = [
             "{",
@@ -13,7 +13,7 @@ extension CmuxSettingsFileStore {
             "  // This file uses JSON with comments (JSONC).",
             "  // Uncomment and edit any setting to make it file-managed.",
             "  // Remove a setting to fall back to the value saved in Settings.",
-            "  // cmux creates this template on launch when ~/.config/cmux/cmux.json is missing.",
+            "  // hmux creates this template on launch when ~/.config/hmux/hmux.json is missing.",
             "  // Legacy settings.json files are read only as fallback for keys not present here.",
             "",
         ]
@@ -79,8 +79,8 @@ extension CmuxSettingsFileStore {
                     "equalizeSplitsOnDividerDoubleClick": SettingCatalog().app.equalizeSplitsOnDividerDoubleClick.defaultValue,
                     "preferredEditor": "",
                     "defaultWorkspacePath": AppCatalogSection().defaultWorkspacePath.defaultValue,
-                    "openSupportedFilesInCmux": AppCatalogSection().openSupportedFilesInCmux.defaultValue,
-                    "openMarkdownInCmuxViewer": AppCatalogSection().openMarkdownInCmuxViewer.defaultValue,
+                    "openSupportedFilesInHmux": AppCatalogSection().openSupportedFilesInHmux.defaultValue,
+                    "openMarkdownInHmuxViewer": AppCatalogSection().openMarkdownInHmuxViewer.defaultValue,
                     "reorderOnNotification": SettingCatalog().app.reorderOnNotification.defaultValue.encodeForJSON(),
                     "iMessageMode": IMessageModeSettings.defaultValue,
                     "sendAnonymousTelemetry": AppCatalogSection().sendAnonymousTelemetry.defaultValue,
@@ -174,8 +174,8 @@ extension CmuxSettingsFileStore {
                     "showPullRequests": SidebarWorkspaceDetailDefaults.showPullRequests,
                     "watchGitStatus": SidebarWorkspaceDetailDefaults.watchGitStatus,
                     "makePullRequestsClickable": SettingCatalog().sidebar.makePullRequestsClickable.defaultValue,
-                    "openPullRequestLinksInCmuxBrowser": BrowserLinkOpenSettings.defaultOpenSidebarPullRequestLinksInCmuxBrowser,
-                    "openPortLinksInCmuxBrowser": BrowserLinkOpenSettings.defaultOpenSidebarPortLinksInCmuxBrowser,
+                    "openPullRequestLinksInHmuxBrowser": BrowserLinkOpenSettings.defaultOpenSidebarPullRequestLinksInHmuxBrowser,
+                    "openPortLinksInHmuxBrowser": BrowserLinkOpenSettings.defaultOpenSidebarPortLinksInHmuxBrowser,
                     "showSSH": SidebarWorkspaceDetailDefaults.showSSH,
                     "showPorts": SidebarWorkspaceDetailDefaults.showPorts,
                     "showLog": SidebarWorkspaceDetailDefaults.showLog,
@@ -252,8 +252,8 @@ extension CmuxSettingsFileStore {
                     "autoRestoreUnloadedPages": BrowserHiddenWebViewDiscardPolicy.defaultAutoRestore,
                     "askWhereToSaveDownloads": SettingCatalog().browser.askWhereToSaveDownloads.defaultValue,
                     "showLinkHoverURL": SettingCatalog().browser.showLinkHoverURL.defaultValue,
-                    "openTerminalLinksInCmuxBrowser": BrowserLinkOpenSettings.defaultOpenTerminalLinksInCmuxBrowser,
-                    "interceptTerminalOpenCommandInCmuxBrowser": BrowserLinkOpenSettings.defaultInterceptTerminalOpenCommandInCmuxBrowser,
+                    "openTerminalLinksInHmuxBrowser": BrowserLinkOpenSettings.defaultOpenTerminalLinksInHmuxBrowser,
+                    "interceptTerminalOpenCommandInHmuxBrowser": BrowserLinkOpenSettings.defaultInterceptTerminalOpenCommandInHmuxBrowser,
                     "hostsToOpenInEmbeddedBrowser": [String](),
                     "urlsToAlwaysOpenExternally": [String](),
                     "insecureHttpHostsAllowedInEmbeddedBrowser": BrowserInsecureHTTPSettings.defaultAllowlistPatterns,

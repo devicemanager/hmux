@@ -1,9 +1,9 @@
 #if DEBUG
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFoundation
-import CmuxSurfaceCatalogModel
+import HmuxAppKitSupportUI
+import HmuxFoundation
+import HmuxSurfaceCatalogModel
 import SwiftUI
 
 // MARK: - Cloud sidebar spacing lab
@@ -32,7 +32,7 @@ final class CloudSidebarDebugLabWindowController: ReleasingWindowController {
             defer: false
         )
         window.title = String(localized: "debug.cloudSidebarSpacing.title", defaultValue: "Cloud Sidebar Spacing Lab")
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.cloudSidebarDebugLab")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.cloudSidebarDebugLab")
         window.minSize = NSSize(width: 860, height: 560)
         window.isMovableByWindowBackground = true
         window.level = .floating
@@ -104,9 +104,9 @@ private struct CloudSidebarDebugControls: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text(String(localized: "debug.cloudSidebarSpacing.title", defaultValue: "Cloud Sidebar Spacing Lab"))
-                    .cmuxFont(.headline)
+                    .hmuxFont(.headline)
                 Text(String(localized: "debug.cloudSidebarSpacing.instructions", defaultValue: "Tune the production outline with long machine, workspace, terminal, browser, and port names. Values apply live to the Cloud sidebar."))
-                    .cmuxFont(.caption)
+                    .hmuxFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
 
@@ -133,7 +133,7 @@ private struct CloudSidebarDebugControls: View {
                             )
                         }
                         Text(String(format: String(localized: "debug.cloudSidebarSpacing.previewing", defaultValue: "Previewing %@, with spacing overrides below."), localizedStyleName(selectedStyle)))
-                            .cmuxFont(.caption)
+                            .hmuxFont(.caption)
                             .foregroundStyle(.secondary)
                     }
                     .padding(.top, 2)
@@ -178,7 +178,7 @@ private struct CloudSidebarDebugControls: View {
                 .controlSize(.small)
 
                 Text(String(localized: "debug.cloudSidebarSpacing.fixtureNotes", defaultValue: "The fixture keeps every section expanded and uses names long enough to exercise truncation, nested rows, and the trailing edge."))
-                    .cmuxFont(.caption)
+                    .hmuxFont(.caption)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -199,7 +199,7 @@ private struct CloudSidebarDebugSliderRow: View {
                 .frame(width: 126, alignment: .leading)
             Slider(value: $value, in: range, step: 1)
             Text(String(format: "%.0f", value))
-                .cmuxFont(.caption)
+                .hmuxFont(.caption)
                 .monospacedDigit()
                 .frame(width: 28, alignment: .trailing)
             CloudSidebarDebugResetButton(
@@ -267,7 +267,7 @@ private struct CloudSidebarDebugPreviewNotes: View {
             Label(String(localized: "debug.cloudSidebarSpacing.browserPorts", defaultValue: "Browser URL and forwarded port rows"), systemImage: "globe")
             Label(String(localized: "debug.cloudSidebarSpacing.displaysResources", defaultValue: "Displays and resource metrics"), systemImage: "rectangle.on.rectangle")
             Text(String(localized: "debug.cloudSidebarSpacing.resizeNotes", defaultValue: "Resize the preview width to find the first awkward breakpoint. Keep the row readable before making the sidebar wider."))
-                .cmuxFont(.caption)
+                .hmuxFont(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -303,7 +303,7 @@ private enum CloudSidebarDebugFixture {
             MachineSnapshot(
                 id: machineID,
                 provider: "freestyle",
-                image: "cmux-debug-stress-image",
+                image: "hmux-debug-stress-image",
                 isDesktop: true,
                 activity: .ready,
                 createdAt: Date(timeIntervalSinceNow: -86_400 * 12),
@@ -333,7 +333,7 @@ private enum CloudSidebarDebugFixture {
             MachineSnapshot(
                 id: "vm-4f2a",
                 provider: "freestyle",
-                image: "cmux-debug-base-image",
+                image: "hmux-debug-base-image",
                 isDesktop: false,
                 activity: .ready,
                 createdAt: Date(timeIntervalSinceNow: -7_200),
@@ -348,17 +348,17 @@ private enum CloudSidebarDebugFixture {
         let terminalA = terminal(
             key: "debug-terminal-build",
             title: "codex / build-and-test / release-candidate-validation-terminal",
-            detail: "/home/cmux/projects/cmux/very/long/path/to/release-candidate"
+            detail: "/home/hmux/projects/hmux/very/long/path/to/release-candidate"
         )
         let terminalB = terminal(
             key: "debug-terminal-server",
             title: "zsh / web-server / local-development-and-preview-process",
-            detail: "/home/cmux/projects/cmux/web/apps/cloud-dashboard"
+            detail: "/home/hmux/projects/hmux/web/apps/cloud-dashboard"
         )
         let terminalDetached = SurfaceResource(
             id: SurfaceResourceID(machine: machine, kind: .terminal, key: "debug-terminal-detached"),
             title: "detached-background-terminal-with-a-long-process-title",
-            detail: "/home/cmux/projects/cmux/scripts/fixtures",
+            detail: "/home/hmux/projects/hmux/scripts/fixtures",
             lifecycle: .running,
             agent: nil,
             remoteWorkspace: nil,
@@ -397,7 +397,7 @@ private enum CloudSidebarDebugFixture {
                     id: machine,
                     name: "production-hotfix-review-machine-with-a-deliberately-very-long-name",
                     status: "running",
-                    image: "cmux-debug-stress-image",
+                    image: "hmux-debug-stress-image",
                     hasDesktop: true,
                     memoryMb: 16_384,
                     diskMb: 102_400,
@@ -457,8 +457,8 @@ private enum CloudSidebarDebugFixture {
 
     @MainActor
     static func makeExpansionStore() -> CloudTreeExpansionStore {
-        let defaults = UserDefaults(suiteName: "cmux.cloudSidebarDebugLab") ?? .standard
-        defaults.removePersistentDomain(forName: "cmux.cloudSidebarDebugLab")
+        let defaults = UserDefaults(suiteName: "hmux.cloudSidebarDebugLab") ?? .standard
+        defaults.removePersistentDomain(forName: "hmux.cloudSidebarDebugLab")
         let store = CloudTreeExpansionStore(defaults: defaults)
         let nodes = CloudTreeNodeBuilder.nodes(machines: machines, snapshot: snapshot, localWorkspaces: [])
         for node in CloudTreeNodeBuilder.flattened(nodes) where node.isExpandable {

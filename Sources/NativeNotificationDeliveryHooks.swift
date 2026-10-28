@@ -1,5 +1,5 @@
-import CmuxNotifications
-import CmuxSettings
+import HmuxNotifications
+import HmuxSettings
 import Foundation
 import UserNotifications
 

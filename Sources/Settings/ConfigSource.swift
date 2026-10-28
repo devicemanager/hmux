@@ -1,5 +1,5 @@
 import Foundation
-import CmuxFoundation
+import HmuxFoundation
 
 struct ConfigSourceEnvironment {
     let homeDirectoryURL: URL
@@ -9,7 +9,7 @@ struct ConfigSourceEnvironment {
 
     init(
         homeDirectoryURL: URL,
-        currentBundleIdentifier: String? = CmuxGhosttyConfigPathResolver.releaseBundleIdentifier,
+        currentBundleIdentifier: String? = HmuxGhosttyConfigPathResolver.releaseBundleIdentifier,
         previewDirectoryURL: URL? = nil,
         fileManager: FileManager = .default
     ) {
@@ -18,7 +18,7 @@ struct ConfigSourceEnvironment {
         self.fileManager = fileManager
         self.currentBundleIdentifier = currentBundleIdentifier
         self.previewDirectoryURL = previewDirectoryURL?.standardizedFileURL
-            ?? CmuxGhosttyConfigPathResolver().configDirectoryURL(
+            ?? HmuxGhosttyConfigPathResolver().configDirectoryURL(
                 currentBundleIdentifier: currentBundleIdentifier,
                 appSupportDirectory: standardizedHome
                     .appendingPathComponent("Library", isDirectory: true)
@@ -34,8 +34,8 @@ struct ConfigSourceEnvironment {
         )
     }
 
-    var cmuxConfigURL: URL {
-        CmuxGhosttyConfigPathResolver().activeOrEditableConfigURL(
+    var hmuxConfigURL: URL {
+        HmuxGhosttyConfigPathResolver().activeOrEditableConfigURL(
             currentBundleIdentifier: currentBundleIdentifier,
             appSupportDirectory: appSupportDirectoryURL,
             fileManager: fileManager
@@ -67,27 +67,27 @@ struct ConfigSourceEnvironment {
         previewDirectoryURL.appendingPathComponent("config.synced-preview", isDirectory: false)
     }
 
-    func materializeCmuxConfigFileIfNeeded() throws -> URL {
-        let url = cmuxConfigURL
+    func materializeHmuxConfigFileIfNeeded() throws -> URL {
+        let url = hmuxConfigURL
         guard !fileManager.fileExists(atPath: url.path) else { return url }
-        try writeCmuxConfigContents("", to: url)
+        try writeHmuxConfigContents("", to: url)
         return url
     }
 
     func materializedGhosttySettingsEditorURLs() throws -> [URL] {
-        let cmuxURL = try materializeCmuxConfigFileIfNeeded()
+        let hmuxURL = try materializeHmuxConfigFileIfNeeded()
 
         var collector = GhosttySettingsConfigFileCollector(
             fileManager: fileManager,
             homeDirectoryURL: homeDirectoryURL
         )
-        collector.append(cmuxURL)
+        collector.append(hmuxURL)
 
         for url in standaloneGhosttyDisplayCandidates where isRegularFile(at: url) {
             collector.append(url)
         }
 
-        for url in CmuxGhosttyConfigPathResolver().loadConfigURLs(
+        for url in HmuxGhosttyConfigPathResolver().loadConfigURLs(
             currentBundleIdentifier: currentBundleIdentifier,
             appSupportDirectory: appSupportDirectoryURL,
             fileManager: fileManager
@@ -99,14 +99,14 @@ struct ConfigSourceEnvironment {
         return collector.urls
     }
 
-    func writeCmuxConfigContents(_ contents: String) throws {
-        let url = cmuxConfigURL
-        try writeCmuxConfigContents(contents, to: url)
+    func writeHmuxConfigContents(_ contents: String) throws {
+        let url = hmuxConfigURL
+        try writeHmuxConfigContents(contents, to: url)
     }
 
-    func writeCmuxConfigSetting(key: String, value: String) throws {
-        let url = try materializeCmuxConfigFileIfNeeded()
-        try CmuxGhosttyConfigSettingEditor().writeSetting(
+    func writeHmuxConfigSetting(key: String, value: String) throws {
+        let url = try materializeHmuxConfigFileIfNeeded()
+        try HmuxGhosttyConfigSettingEditor().writeSetting(
             key: key,
             value: value,
             to: url,
@@ -115,10 +115,10 @@ struct ConfigSourceEnvironment {
     }
 
     /// Writes one `key = value` line per value, replacing every existing
-    /// assignment to `key`. See `CmuxGhosttyConfigSettingEditor.updatedContents(_:setting:values:)`.
-    func writeCmuxConfigSetting(key: String, values: [String]) throws {
-        let url = try materializeCmuxConfigFileIfNeeded()
-        try CmuxGhosttyConfigSettingEditor().writeSetting(
+    /// assignment to `key`. See `HmuxGhosttyConfigSettingEditor.updatedContents(_:setting:values:)`.
+    func writeHmuxConfigSetting(key: String, values: [String]) throws {
+        let url = try materializeHmuxConfigFileIfNeeded()
+        try HmuxGhosttyConfigSettingEditor().writeSetting(
             key: key,
             values: values,
             to: url,
@@ -126,7 +126,7 @@ struct ConfigSourceEnvironment {
         )
     }
 
-    private func writeCmuxConfigContents(_ contents: String, to url: URL) throws {
+    private func writeHmuxConfigContents(_ contents: String, to url: URL) throws {
         let writeURL = configWriteURL(for: url)
         try fileManager.createDirectory(
             at: writeURL.deletingLastPathComponent(),
@@ -211,19 +211,19 @@ struct ConfigSourceSnapshot {
 }
 
 enum ConfigSource: String, CaseIterable, Identifiable {
-    case cmux
+    case hmux
     case synced
 
     var id: Self { self }
 
     var isEditable: Bool {
-        self == .cmux
+        self == .hmux
     }
 
     func snapshot(environment: ConfigSourceEnvironment = .live()) -> ConfigSourceSnapshot {
         switch self {
-        case .cmux:
-            let url = environment.cmuxConfigURL
+        case .hmux:
+            let url = environment.hmuxConfigURL
             return ConfigSourceSnapshot(
                 source: self,
                 primaryURL: url,
@@ -238,7 +238,7 @@ enum ConfigSource: String, CaseIterable, Identifiable {
             let hasStandaloneGhosttyConfig = environment.isRegularFile(at: ghosttyURL)
             let renderedContents = Self.renderSyncedPreview(
                 ghosttyURL: hasStandaloneGhosttyConfig ? ghosttyURL : nil,
-                cmuxURLs: CmuxGhosttyConfigPathResolver().loadConfigURLs(
+                hmuxURLs: HmuxGhosttyConfigPathResolver().loadConfigURLs(
                     currentBundleIdentifier: environment.currentBundleIdentifier,
                     appSupportDirectory: environment.appSupportDirectoryURL,
                     fileManager: environment.fileManager
@@ -288,14 +288,14 @@ enum ConfigSource: String, CaseIterable, Identifiable {
 
     private static func renderSyncedPreview(
         ghosttyURL: URL?,
-        cmuxURLs: [URL],
+        hmuxURLs: [URL],
         environment: ConfigSourceEnvironment
     ) -> String {
-        // Preserve Ghostty key order, then overlay cmux entries using last-wins precedence.
+        // Preserve Ghostty key order, then overlay hmux entries using last-wins precedence.
         var effectiveEntriesByKey: [String: ParsedConfigEntry] = [:]
         var orderedKeys: [String] = []
 
-        for sourceURL in ([ghosttyURL].compactMap { $0 } + cmuxURLs) {
+        for sourceURL in ([ghosttyURL].compactMap { $0 } + hmuxURLs) {
             for entry in parsedEntries(from: sourceURL) {
                 if effectiveEntriesByKey[entry.key] == nil {
                     orderedKeys.append(entry.key)

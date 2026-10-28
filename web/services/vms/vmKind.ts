@@ -1,9 +1,9 @@
-// The machine kind a cmux Cloud guest records in /etc/cmux/vm-kind.
+// The machine kind a hmux Cloud guest records in /etc/hmux/vm-kind.
 //
-// cmux-tui on the machine refuses to start or receive a chat on a Cloud VM
-// unless that root-owned record reads `owner` (cmux-tui agent_start_host.rs,
+// hmux-tui on the machine refuses to start or receive a chat on a Cloud VM
+// unless that root-owned record reads `owner` (hmux-tui agent_start_host.rs,
 // "a remote start is refused on a team VM, and on a Cloud VM whose kind the
-// daemon cannot tell"). The guest's root-run cmux-vm-kind-sync asks
+// daemon cannot tell"). The guest's root-run hmux-vm-kind-sync asks
 // GET /api/vm/reflection/kind and writes the answer; nothing the guest claims
 // is an input here. The answer comes from the machine's own row, identified by
 // the platform edge (services/vms/vmPrincipal.ts).

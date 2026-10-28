@@ -19,7 +19,7 @@ github-actions[bot]'s rescue attempt 3 moves its jobs to (ci-macos.yml).
 
 CI is minis first; Blacksmith is overflow only, and only while a label has a
 free slot for the run (in flight + queued + reserved below its capacity) and
-its queue is moving (stalled(), the cmux-next cascade's rule). With no owned
+its queue is moving (stalled(), the hmux-next cascade's rule). With no owned
 pool free and no free, moving Blacksmith slot, a same-repository run (not the
 bot's re-run; State.wait_on_owned) waits on the online owned pool with the
 shortest queue for its size instead of a Blacksmith queue (2026-10-20:
@@ -309,7 +309,7 @@ class LiveState:
         self.token = token
         self.repository = repository
         self.headers = {"Accept": "application/vnd.github+json", "Authorization": f"Bearer {token}",
-                        "User-Agent": "cmux-simple-pool-picker"}
+                        "User-Agent": "hmux-simple-pool-picker"}
 
     def _get(self, path: str) -> Any:
         request = urllib.request.Request(f"https://api.github.com{path}", headers=self.headers)
@@ -406,7 +406,7 @@ def state_from(*, jobs: int, env: Mapping[str, str], fork: bool, runners: Sequen
 
     owned: list[Pool] = []
     if runners is not None:
-        xcode_app = env.get("CMUX_CI_XCODE_APP_PR", "")
+        xcode_app = env.get("HMUX_CI_XCODE_APP_PR", "")
         labels = {label for label in _slots(env.get("CI_OWNED_POOL_SLOTS"))
                   if owned_matches_xcode(label, xcode_app)}
         # Only the configured class pools: a runner can carry an owned-looking
@@ -423,14 +423,14 @@ def state_from(*, jobs: int, env: Mapping[str, str], fork: bool, runners: Sequen
             queued = sum(count(name, "queued") for name in pools if owned_family(str(name)) == family)
             free = max(0, idle - queued)
             owned.append(Pool(label, len(online), len(online) - idle, queued, free=free,
-                               xcode_app=owned_xcode_app(label, env.get("CMUX_CI_XCODE_APP_PR", ""))))
+                               xcode_app=owned_xcode_app(label, env.get("HMUX_CI_XCODE_APP_PR", ""))))
     counts = {label: {"running": count(label, "running"), "queued": count(label, "queued"),
                       "reserved": count(label, "reserved_queued"),
                       "stalled": stalled(count(label, "queued"), count(label, "running"),
                                          count(label, "oldest_queued_minutes"), snapshot_age(snapshot))}
               for label in BLACKSMITH}
     blacksmith = tuple(Pool(label, CAPACITY[label], **counts[label],
-                            xcode_app=env.get("CMUX_CI_XCODE_APP_MACOS_15", "") if label == BLACKSMITH[2] else "")
+                            xcode_app=env.get("HMUX_CI_XCODE_APP_MACOS_15", "") if label == BLACKSMITH[2] else "")
                        for label in BLACKSMITH)
     return State(jobs, tuple(owned), blacksmith, fork, owned_enabled,
                  (env.get("CI_PR_POOL_OVERFLOW") or "1") != "0", fallback,

@@ -105,7 +105,7 @@ export function GitHubStarsBadge({
       target="_blank"
       rel="noopener noreferrer"
       onClick={() =>
-        posthog.capture("cmuxterm_github_clicked", { location })
+        posthog.capture("hmuxterm_github_clicked", { location })
       }
       className={classes}
     >

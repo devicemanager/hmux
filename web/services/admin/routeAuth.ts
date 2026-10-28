@@ -53,7 +53,7 @@ export async function requireAdmin(request: NextRequest): Promise<AdminGate> {
   let user: Awaited<ReturnType<typeof loadUser>>;
   try {
     user = await withStackAuthSpan("get_user", loadUser, {
-      "cmux.auth.flow": "admin_route",
+      "hmux.auth.flow": "admin_route",
     });
   } catch (error) {
     return { ok: false, response: authProviderErrorResponse(error, "admin.auth") };

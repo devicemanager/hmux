@@ -1,4 +1,4 @@
-// Stripe and Apple grant through one `cmuxPlan` mirror. The higher plan
+// Stripe and Apple grant through one `hmuxPlan` mirror. The higher plan
 // wins, and neither source's lapse may erase the other's grant.
 
 import { describe, expect, test } from "bun:test";
@@ -59,14 +59,14 @@ describe("Stripe and Apple entitlement precedence", () => {
       billingManagement: "external",
       manageUrl: "https://apps.apple.com/account/subscriptions",
     });
-    expect(user.clientReadOnlyMetadata).toEqual({ cmuxPlan: "pro" });
+    expect(user.clientReadOnlyMetadata).toEqual({ hmuxPlan: "pro" });
   });
 
   test("the higher plan wins in either direction", async () => {
     const appleHigher = metadataUser({});
     expect(await resolveProPlanStatus(appleHigher, sources("go", "max", appleHigher)))
       .toMatchObject({ planId: "max", billingSource: "apple", billingManagement: "stripe" });
-    expect(appleHigher.clientReadOnlyMetadata).toEqual({ cmuxPlan: "max" });
+    expect(appleHigher.clientReadOnlyMetadata).toEqual({ hmuxPlan: "max" });
 
     const stripeHigher = metadataUser({});
     expect(await resolveProPlanStatus(stripeHigher, sources("max", "pro", stripeHigher)))
@@ -77,27 +77,27 @@ describe("Stripe and Apple entitlement precedence", () => {
   });
 
   test("a Stripe lapse keeps an Apple grant", async () => {
-    const user = metadataUser({ cmuxPlan: "pro" });
+    const user = metadataUser({ hmuxPlan: "pro" });
     await syncProPlanMetadata(user, false, lease, "pro", "pro");
     expect(user.updates).toEqual([]);
-    expect(user.clientReadOnlyMetadata).toEqual({ cmuxPlan: "pro" });
+    expect(user.clientReadOnlyMetadata).toEqual({ hmuxPlan: "pro" });
   });
 
   test("a Stripe Go purchase never downgrades an Apple Max mirror", async () => {
-    const user = metadataUser({ cmuxPlan: "max" });
+    const user = metadataUser({ hmuxPlan: "max" });
     await syncProPlanMetadata(user, true, lease, "go", "max");
-    expect(user.clientReadOnlyMetadata).toEqual({ cmuxPlan: "max" });
+    expect(user.clientReadOnlyMetadata).toEqual({ hmuxPlan: "max" });
   });
 
   test("an Apple lapse falls back to the Stripe plan instead of clearing it", async () => {
-    const user = metadataUser({ cmuxPlan: "max" });
+    const user = metadataUser({ hmuxPlan: "max" });
     const changed = await reconcileProPlanMetadata(user, sources("pro", null, user));
     expect(changed).toBe(true);
-    expect(user.clientReadOnlyMetadata).toEqual({ cmuxPlan: "pro" });
+    expect(user.clientReadOnlyMetadata).toEqual({ hmuxPlan: "pro" });
   });
 
   test("Apple expiry, refund or revoke with no Stripe plan removes the grant", async () => {
-    const user = metadataUser({ cmuxPlan: "pro", theme: "dark" });
+    const user = metadataUser({ hmuxPlan: "pro", theme: "dark" });
     await reconcileProPlanMetadata(user, sources(null, null, user));
     expect(user.clientReadOnlyMetadata).toEqual({ theme: "dark" });
     const status = await resolveProPlanStatus(user, sources(null, null, user));
@@ -105,7 +105,7 @@ describe("Stripe and Apple entitlement precedence", () => {
   });
 
   test("an operator override is left alone, as for Stripe", async () => {
-    const user = metadataUser({ cmuxVmPlan: "pro" });
+    const user = metadataUser({ hmuxVmPlan: "pro" });
     expect(await reconcileProPlanMetadata(user, sources(null, "max", user))).toBe(false);
     expect(user.updates).toEqual([]);
   });

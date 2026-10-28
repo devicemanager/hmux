@@ -15,9 +15,9 @@ import uuid
 
 
 def run_case(executable: str, mode: str) -> dict:
-    with tempfile.TemporaryDirectory(prefix="cmux-identity-cold-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="hmux-identity-cold-") as temporary:
         home = str(Path(temporary).resolve())
-        bundle_id = "com.cmuxterm.fixture.identity." + uuid.uuid4().hex
+        bundle_id = "com.hmuxterm.fixture.identity." + uuid.uuid4().hex
         contents = Path(home) / "IdentityColdStartFixture.app" / "Contents"
         binary = contents / "MacOS" / "IdentityColdStartFixture"
         binary.parent.mkdir(parents=True)
@@ -33,8 +33,8 @@ def run_case(executable: str, mode: str) -> dict:
             "HOME": home,
             "CFFIXED_USER_HOME": home,
             "XDG_CONFIG_HOME": home + "/.config",
-            "CMUX_IDENTITY_FIXTURE_HOME": home,
-            "CMUX_IDENTITY_FIXTURE_BUNDLE_ID": bundle_id,
+            "HMUX_IDENTITY_FIXTURE_HOME": home,
+            "HMUX_IDENTITY_FIXTURE_BUNDLE_ID": bundle_id,
         }
         started = time.monotonic()
         process = subprocess.Popen(

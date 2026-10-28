@@ -1,9 +1,9 @@
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxIrohTransport
-import CmuxMobileRPC
-import CmuxMobileTransport
-import CmuxSurfaceCatalogModel
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxIrohTransport
+import HmuxMobileRPC
+import HmuxMobileTransport
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// The Mac's `MobileSyncRuntime`: what the shared RPC client needs from the

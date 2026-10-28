@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Checks how skills/cmux-release/references/changelog-lines.jq reads a PR's Changelog section.
+"""Checks how skills/hmux-release/references/changelog-lines.jq reads a PR's Changelog section.
 
     python3 tests/test_release_changelog_lines.py
 
@@ -17,7 +17,7 @@ import subprocess
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-JQ = ROOT / "skills/cmux-release/references/changelog-lines.jq"
+JQ = ROOT / "skills/hmux-release/references/changelog-lines.jq"
 FOOTER = ('---\n<a href="https://app.blacksmith.sh/x"><picture><source media="(prefers-color-scheme: dark)">'
           '</picture></a>\n<sup>Need help on this PR?</sup>\n')
 GENERATED = "🤖 Generated with [Claude Code](https://claude.com/claude-code)\n"

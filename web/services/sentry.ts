@@ -1,7 +1,7 @@
 import type { Event } from "@sentry/nextjs";
 
 const SECRET_KEY =
-  /^(authorization|body|completion|content|cookie|email|handoff_?lease|output|prompt|provider_?account_?id|response|set-cookie|x-cmux-authorization|x-coderouter-(route|handoff)-token|x-coderouter-handoff-lease|x-stack-access-token|x-stack-refresh-token|access_token|refresh_token|id_token|credential|ciphertext|encryptedDataKey)$/i;
+  /^(authorization|body|completion|content|cookie|email|handoff_?lease|output|prompt|provider_?account_?id|response|set-cookie|x-hmux-authorization|x-coderouter-(route|handoff)-token|x-coderouter-handoff-lease|x-stack-access-token|x-stack-refresh-token|access_token|refresh_token|id_token|credential|ciphertext|encryptedDataKey)$/i;
 const ROUTE_TOKEN = /\b(?:crt|crk)_[A-Za-z0-9_-]{32,}\b/g;
 const HANDOFF_LEASE = /\bcrh_[A-Za-z0-9_-]{32,}\b/g;
 const BEARER_TOKEN = /\bBearer\s+[A-Za-z0-9._~+/=-]{16,}\b/gi;
@@ -25,12 +25,12 @@ export function scrubSentryEvent<T extends Event>(event: T): T {
 }
 
 /**
- * beforeSend gate for the shared cmux Sentry project. The Next.js app serves
+ * beforeSend gate for the shared hmux Sentry project. The Next.js app serves
  * far more than coderouter, and Sentry bills per event, so raw unhandled
  * request errors (`onRequestError`) stay out unless they are coderouter's.
- * Every error a cmux helper reports on purpose (`reportError`, the
+ * Every error a hmux helper reports on purpose (`reportError`, the
  * `capture*Error` helpers in services/errors.ts) carries an explicit
- * `subsystem` tag or the `cmux` context, and passes. Until 2026-10-07 this
+ * `subsystem` tag or the `hmux` context, and passes. Until 2026-10-07 this
  * gate allowlisted a few subsystems and silently dropped the rest, including
  * App Store Connect, cron, teams and auth reports.
  */
@@ -55,8 +55,8 @@ function isDeliberateReport(event: Event): boolean {
   if (typeof subsystem === "string" && subsystem.trim() !== "") return true;
   // reportError (services/observability/report.ts) always sets this context
   // inside its own scope; nothing else in the app writes it.
-  const cmux = event.contexts?.cmux;
-  return typeof cmux === "object" && cmux !== null;
+  const hmux = event.contexts?.hmux;
+  return typeof hmux === "object" && hmux !== null;
 }
 
 function scrubValue(value: unknown): void {

@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import SwiftUI
 
 /// Symbol, copy and action for one ``MachineListStatus``. The compact notice,
@@ -79,7 +79,7 @@ struct MachineListStatusPresentation {
             title = String(localized: "machines.listUnavailable.title", defaultValue: "Can’t load the machine list")
             subtitle = String(
                 localized: "machines.listUnavailable.subtitle",
-                defaultValue: "Your machines are unchanged. cmux couldn’t load the list from the Cloud service and retries on its own."
+                defaultValue: "Your machines are unchanged. hmux couldn’t load the list from the Cloud service and retries on its own."
             )
             action = .retry
             isFailure = true
@@ -98,14 +98,14 @@ struct MachineListStatusPresentation {
         case .failed(.requiresPro):
             // HTTP 402: the fix is an upgrade, not a retry and not a sign-in.
             symbolName = "sparkles"
-            title = String(localized: "machines.requiresPro.title", defaultValue: "Cloud machines need cmux Pro")
+            title = String(localized: "machines.requiresPro.title", defaultValue: "Cloud machines need hmux Pro")
             subtitle = String(
                 localized: "machines.requiresPro.subtitle",
                 defaultValue: "This account’s plan doesn’t include Cloud machine access. Upgrade to create and reconnect machines."
             )
             action = .upgrade
             isFailure = true
-            staleTitle = String(localized: "machines.requiresPro.stale", defaultValue: "Cloud machines need cmux Pro — showing last known")
+            staleTitle = String(localized: "machines.requiresPro.stale", defaultValue: "Cloud machines need hmux Pro — showing last known")
         }
     }
 }
@@ -125,13 +125,13 @@ struct MachinesListStatusNotice: View {
                 ProgressView().controlSize(.mini)
             }
             Text(presentation.title)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .lineLimit(1)
             Spacer(minLength: 4)
             if let action = presentation.action {
                 Button(action.title) { perform(action) }
                     .buttonStyle(.link)
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .accessibilityIdentifier(action.accessibilityIdentifier)
             }
         }
@@ -159,11 +159,11 @@ struct MachinesListStatusEmptyState: View {
                 ProgressView().controlSize(.small)
             }
             Text(presentation.title)
-                .cmuxFont(size: 13, weight: .semibold)
+                .hmuxFont(size: 13, weight: .semibold)
                 .foregroundColor(.primary.opacity(0.85))
             if let subtitle = presentation.subtitle {
                 Text(subtitle)
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 24)
@@ -182,7 +182,7 @@ struct MachinesListStatusEmptyState: View {
             perform(action)
         } label: {
             Text(action.title)
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
         }
         if action == .retry {
             button
@@ -224,7 +224,7 @@ struct MachinesListStatusToolbarRow: View {
             if let action = presentation.action {
                 Button(action.shortTitle) { perform(action) }
                     .buttonStyle(.link)
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     // The sidebar gets narrow. Truncating the status line is
                     // survivable, losing the only affordance that fixes the
                     // failure is not, so the verb keeps its width.
@@ -249,7 +249,7 @@ struct MachinesListStatusToolbarRow: View {
 
     private func label(_ text: String) -> some View {
         Text(text)
-            .cmuxFont(size: 11)
+            .hmuxFont(size: 11)
             .lineLimit(1)
             .truncationMode(.tail)
     }

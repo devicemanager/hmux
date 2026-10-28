@@ -13,7 +13,7 @@ const ROUTE = "/api/billing/apple/account-token";
 /**
  * The caller's `appAccountToken` (minted once), whether the App Store may
  * sell them a personal plan, their current plan, and the products to show
- * for the app named by `x-cmux-bundle-id`. `x-cmux-storekit-environment`
+ * for the app named by `x-hmux-bundle-id`. `x-hmux-storekit-environment`
  * (`Sandbox` or `Production`) lets a build whose purchases would grant
  * nothing get `purchases_unavailable` instead of products.
  */
@@ -22,9 +22,9 @@ export async function POST(request: Request): Promise<Response> {
   if (!auth.ok) return auth.response;
   try {
     const body = await appleAccountTokenResponse(auth.user, {
-      bundleId: requestedAppleBundleId(request.headers.get("x-cmux-bundle-id")),
-      storeKitEnvironment: requestedStoreKitEnvironment(request.headers.get("x-cmux-storekit-environment")),
-      billingPeriods: requestedBillingPeriods(request.headers.get("x-cmux-billing-periods")),
+      bundleId: requestedAppleBundleId(request.headers.get("x-hmux-bundle-id")),
+      storeKitEnvironment: requestedStoreKitEnvironment(request.headers.get("x-hmux-storekit-environment")),
+      billingPeriods: requestedBillingPeriods(request.headers.get("x-hmux-billing-periods")),
     });
     return jsonResponse(body, 200, { "cache-control": "no-store" });
   } catch (error) {

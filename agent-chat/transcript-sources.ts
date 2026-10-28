@@ -1,5 +1,5 @@
-// Resolves which transcript a cmux terminal is running, using the hook session
-// stores cmux's agent hooks maintain (`~/.cmuxterm/<agent>-hook-sessions.json`).
+// Resolves which transcript a hmux terminal is running, using the hook session
+// stores hmux's agent hooks maintain (`~/.hmuxterm/<agent>-hook-sessions.json`).
 // Paths only ever come from those stores or the agents' own default layouts, so
 // the transcript view cannot be pointed at an arbitrary file.
 import { readFileSync, readdirSync, statSync } from "node:fs";
@@ -34,9 +34,9 @@ const SESSION_ID = /^[\w-]{8,128}$/;
 
 export interface TranscriptSourceEnv {
   home?: string;
-  /** Directory holding `<agent>-hook-sessions.json` (cmux's CMUX_AGENT_HOOK_STATE_DIR). */
+  /** Directory holding `<agent>-hook-sessions.json` (hmux's HMUX_AGENT_HOOK_STATE_DIR). */
   hookStateDir?: string;
-  /** Claude store override (cmux's CMUX_CLAUDE_HOOK_STATE_PATH). */
+  /** Claude store override (hmux's HMUX_CLAUDE_HOOK_STATE_PATH). */
   claudeHookStatePath?: string;
   claudeConfigDir?: string;
   codexHome?: string;
@@ -144,8 +144,8 @@ function resolvedEnv(env: TranscriptSourceEnv): Required<TranscriptSourceEnv> {
   const nonEmpty = (v: string | undefined) => (v?.trim() ? expandHome(v.trim(), home) : undefined);
   return {
     home,
-    hookStateDir: env.hookStateDir ?? nonEmpty(process.env.CMUX_AGENT_HOOK_STATE_DIR) ?? join(home, ".cmuxterm"),
-    claudeHookStatePath: env.claudeHookStatePath ?? nonEmpty(process.env.CMUX_CLAUDE_HOOK_STATE_PATH) ?? "",
+    hookStateDir: env.hookStateDir ?? nonEmpty(process.env.HMUX_AGENT_HOOK_STATE_DIR) ?? join(home, ".hmuxterm"),
+    claudeHookStatePath: env.claudeHookStatePath ?? nonEmpty(process.env.HMUX_CLAUDE_HOOK_STATE_PATH) ?? "",
     claudeConfigDir: env.claudeConfigDir ?? process.env.CLAUDE_CONFIG_DIR ?? join(home, ".claude"),
     codexHome: env.codexHome ?? process.env.CODEX_HOME ?? join(home, ".codex"),
   };

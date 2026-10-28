@@ -13,9 +13,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-RECEIPT = "cmux-ios-test-product.json"
+RECEIPT = "hmux-ios-test-product.json"
 PLATFORM_XCTEST_HOST = "__PLATFORMS__/iPhoneSimulator.platform/Developer/Library/Xcode/Agents/xctest"
-PACKAGE_RESOLVED = Path("ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved")
+PACKAGE_RESOLVED = Path("ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved")
 GHOSTTY_CHECKSUMS = Path("scripts/ghosttykit-checksums.txt")
 IDENTITY_KEYS = (
     "source_revision",
@@ -60,12 +60,12 @@ def identity() -> dict[str, str]:
         "package_resolved_sha256": sha256_file(PACKAGE_RESOLVED),
         "ghostty_revision": read("git", "rev-parse", "HEAD:ghostty"),
         "ghosttykit_checksums_sha256": sha256_file(GHOSTTY_CHECKSUMS),
-        "scheme": "cmux-ios",
+        "scheme": "hmux-ios",
         "configuration": "Debug",
         "build_action": "build-for-testing",
-        "test_plan": os.environ.get("CMUX_IOS_TEST_PLAN", ""),
-        "test_filter": os.environ.get("CMUX_IOS_TEST_FILTER", ""),
-        "ios_version": os.environ.get("CMUX_IOS_VERSION", ""),
+        "test_plan": os.environ.get("HMUX_IOS_TEST_PLAN", ""),
+        "test_filter": os.environ.get("HMUX_IOS_TEST_FILTER", ""),
+        "ios_version": os.environ.get("HMUX_IOS_VERSION", ""),
         "checkout": str(Path.cwd().resolve()),
         "developer": str(Path(developer).resolve()),
     }
@@ -228,8 +228,8 @@ def restore(derived: Path) -> None:
     github_env = os.environ.get("GITHUB_ENV")
     if github_env:
         with Path(github_env).open("a") as output:
-            output.write(f"CMUX_IOS_XCTESTRUN={manifest.resolve()}\n")
-            output.write(f"CMUX_IOS_PRODUCT_DIGEST={actual_digest}\n")
+            output.write(f"HMUX_IOS_XCTESTRUN={manifest.resolve()}\n")
+            output.write(f"HMUX_IOS_PRODUCT_DIGEST={actual_digest}\n")
     print(f"Verified iOS simulator product {actual_digest}")
 
 

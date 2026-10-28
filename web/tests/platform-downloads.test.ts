@@ -64,9 +64,9 @@ describe("Windows and Linux downloads", () => {
     expect(BROWSER_NIGHTLY_RELEASE_URL).toBe(
       "https://github.com/manaflow-ai/cmux-v2/releases/tag/nightly",
     );
-    expect(JSON.stringify(PLATFORM_DOWNLOADS)).not.toContain("cmux-browser");
+    expect(JSON.stringify(PLATFORM_DOWNLOADS)).not.toContain("hmux-browser");
     expect(JSON.stringify(BROWSER_MACOS_NIGHTLY_DOWNLOAD)).not.toContain(
-      "cmux-browser",
+      "hmux-browser",
     );
   });
 
@@ -171,7 +171,7 @@ describe("Windows and Linux downloads", () => {
     expect(browserPage).toContain('getTranslations("waitlist")');
     expect(browserPage).not.toContain('getTranslations("vault.detail")');
     expect(downloadButton).toContain("BROWSER_NIGHTLY_PAGE");
-    expect(downloadButton).toContain("cmux_browser_nightly_page_clicked");
+    expect(downloadButton).toContain("hmux_browser_nightly_page_clicked");
   });
 
   test("wraps long localized installer labels on narrow screens", async () => {
@@ -185,8 +185,8 @@ describe("Windows and Linux downloads", () => {
 
   test("makes the auto-updating Linux installer the first-install path", async () => {
     const source = await readFile(PLATFORM_PAGE_SOURCE, "utf8");
-    expect(source).toContain("cmux-linux-x64-installer.run");
-    expect(source).not.toContain("sudo apt install ./cmux-linux-x64.deb");
+    expect(source).toContain("hmux-linux-x64-installer.run");
+    expect(source).not.toContain("sudo apt install ./hmux-linux-x64.deb");
   });
 });
 

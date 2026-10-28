@@ -1,13 +1,13 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxIrohTransport
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxIrohTransport
+import HmuxSurfaceCatalogModel
 import Foundation
 import Observation
 import OSLog
 
-nonisolated private let deviceDirectoryLog = Logger(subsystem: "dev.cmux", category: "device-directory")
+nonisolated private let deviceDirectoryLog = Logger(subsystem: "dev.hmux", category: "device-directory")
 
 /// The account's discoverable Macs, authorized by the Mac directory and enriched
 /// with saved pairings, registry metadata, and live presence. An unavailable
@@ -34,7 +34,7 @@ final class DeviceDirectory {
         case retrying(attempt: Int, error: String)
     }
 
-    static let didChangeNotification = Notification.Name("cmux.devices.directoryDidChange")
+    static let didChangeNotification = Notification.Name("hmux.devices.directoryDidChange")
 
     private(set) var records: [DeviceDirectoryRecord] = []
     private(set) var presenceState: PresenceState = .stopped

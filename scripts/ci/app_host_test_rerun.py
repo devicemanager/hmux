@@ -3,8 +3,8 @@
 
 A test-only change does not need a new app. `plan` finds an upstream CI run
 whose `app-host-products-v1-*` artifact was built from a revision that differs
-from the requested one only under `cmuxTests/`. `detach` then rewrites the
-checked-out project so `cmuxTests` builds by itself against those products: it
+from the requested one only under `hmuxTests/`. `detach` then rewrites the
+checked-out project so `hmuxTests` builds by itself against those products: it
 drops the target's dependency on the app and on its Swift package products,
 and links the prebuilt package frameworks and objects instead. Xcode still
 derives every compiler flag from the real target, so the bundle is compiled
@@ -25,14 +25,14 @@ import sys
 from pathlib import Path
 from typing import Callable, Iterable
 
-TEST_ROOT = "cmuxTests/"
+TEST_ROOT = "hmuxTests/"
 PRODUCTS_PREFIX = "app-host-products-v1-"
-TEST_TARGET = "cmuxTests"
-# Paths no target of the app host reads: cmux.xcodeproj references none of
+TEST_TARGET = "hmuxTests"
+# Paths no target of the app host reads: hmux.xcodeproj references none of
 # them. Narrower than e2e_warm_derived_data.py's list, which may skip bundled
-# resources (skills/cmux-cua, Resources/*.md) because it rebuilds the app;
+# resources (skills/hmux-cua, Resources/*.md) because it rebuilds the app;
 # a rerun keeps CI's app as it is.
-OUTSIDE_THE_APP = (TEST_ROOT, "cmuxUITests/", ".github/", "docs/", "scripts/ci/", "tests/", "web/")
+OUTSIDE_THE_APP = (TEST_ROOT, "hmuxUITests/", ".github/", "docs/", "scripts/ci/", "tests/", "web/")
 SELECTOR = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*(/[A-Za-z_][A-Za-z0-9_]*(/[A-Za-z_][A-Za-z0-9_]*(\(\))?)?)?$")
 
 
@@ -183,7 +183,7 @@ OWNED_POOL = re.compile(
 def product_runner(repository: str, run_id: str, api: Callable[[str], dict], pages: int = 5) -> str:
     """The Blacksmith pool with the macOS, and so the Xcode, that built a run's products.
 
-    The rerun rebuilds cmuxTests with the products' own Xcode, and each macOS
+    The rerun rebuilds hmuxTests with the products' own Xcode, and each macOS
     image carries one pinned Xcode (26.3 on 15, 26.6 on 26). Compile admission
     follows MACOS_RUNNER_PR, so read the pool it actually ran on; a test-e2e.yml
     run compiles in its `build` job. A run without either keeps the macOS 15
@@ -216,7 +216,7 @@ def product_runner(repository: str, run_id: str, api: Callable[[str], dict], pag
 
 
 def parse_selectors(text: str) -> list[str]:
-    """Normalize newline, comma, or space separated selectors to cmuxTests/... form."""
+    """Normalize newline, comma, or space separated selectors to hmuxTests/... form."""
     selectors = []
     for raw in re.split(r"[\s,]+", text.strip()):
         if not raw:
@@ -554,7 +554,7 @@ def detach(args: argparse.Namespace, dump: Callable[[Path], dict] = dump_package
 
 # --- source pruning -----------------------------------------------------------------
 #
-# cmuxTests is one bundle of about 1,100 files, and a rerun of one suite used to
+# hmuxTests is one bundle of about 1,100 files, and a rerun of one suite used to
 # compile all of them. `prune` keeps the files the selected suites can reach:
 # the files that declare or extend a selected suite, then every file declaring
 # a non-private top-level name those files mention, or an extension member
@@ -583,7 +583,7 @@ def source_closure(sources: dict[str, str], suites: set[str]) -> set[str] | None
 
     Inherited tests are never referenced by name: an extension of a base test
     class in a third file would be dropped without a compile error. No
-    cmuxTests class inherits from another today.
+    hmuxTests class inherits from another today.
     """
     top = {name: set(TOP_DECLARATION.findall(text)) for name, text in sources.items()}
     extensions: dict[str, list[tuple[str, set[str]]]] = {}

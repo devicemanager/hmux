@@ -17,7 +17,7 @@ window, plus a partial window when Feed becomes hidden or the app goes
 inactive. Empty windows produce no event. No per-frame network requests,
 logging, row identifiers, Feed text, prompts, search terms, or URLs are sent.
 The server attributes accepted batches to the authenticated account, validates
-a strict schema, and emits `cmux.mobile.feed.performance` spans through the
+a strict schema, and emits `hmux.mobile.feed.performance` spans through the
 existing Axiom exporter. These spans carry measurements in attributes; their
 server-side span duration is ingestion work, **not scroll latency**.
 
@@ -56,7 +56,7 @@ are bounded at 10000. Window IDs are random and contain no row/session IDs.
 ## Axiom comparisons
 
 Use [the comparison query](ios-feed-comparison.apl) with the configured traces
-dataset. The checked-in default is `cmux-prod-otel-traces`; substitute the dev
+dataset. The checked-in default is `hmux-prod-otel-traces`; substitute the dev
 dataset for simulator experiments. Filter to the exact bundle, build, time
 range, and workload before drawing conclusions. Signed bundle SHA is included
 when present, alongside app version/build, OS, device category, simulator flag,
@@ -91,7 +91,7 @@ window ID, worst gap, callback count, and item count. Axiom's
 event ID. Both the Axiom anomaly record and Sentry bridge share the one-per-
 minute limit and are suppressed when the app becomes inactive. Count stalls
 from performance windows, which retain the gap counts and maxima even when
-no anomaly record is emitted. Search the `cmux-ios` project for `feature:feed` and
+no anomaly record is emitted. Search the `hmux-ios` project for `feature:feed` and
 `measurement:display_link_callback_gap`, or paste that event ID into Sentry.
 An SDK event ID is a lookup key, not an upload receipt.
 

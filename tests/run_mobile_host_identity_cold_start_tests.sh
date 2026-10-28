@@ -4,9 +4,9 @@
 set -euo pipefail
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 DEST=${1:?pass an isolated scratch directory}
-mkdir -p "$DEST/Sources/IdentityColdStartFixture" "$DEST/Sources/CMUXMobileCore" \
-  "$DEST/Sources/CmuxSettings" "$DEST/Sources/CmuxFoundation" \
-  "$DEST/Sources/CmuxFoundationAtomicsC/include"
+mkdir -p "$DEST/Sources/IdentityColdStartFixture" "$DEST/Sources/HMUXMobileCore" \
+  "$DEST/Sources/HmuxSettings" "$DEST/Sources/HmuxFoundation" \
+  "$DEST/Sources/HmuxFoundationAtomicsC/include"
 cat > "$DEST/Package.swift" <<'SWIFT'
 // swift-tools-version: 6.0
 import PackageDescription
@@ -14,32 +14,32 @@ let package = Package(
     name: "IdentityColdStartFixture",
     platforms: [.macOS(.v14)],
     targets: [
-        .target(name: "CMUXMobileCore"),
-        .target(name: "CmuxSettings"),
-        .target(name: "CmuxFoundationAtomicsC", publicHeadersPath: "include"),
-        .target(name: "CmuxFoundation", dependencies: ["CmuxFoundationAtomicsC"]),
+        .target(name: "HMUXMobileCore"),
+        .target(name: "HmuxSettings"),
+        .target(name: "HmuxFoundationAtomicsC", publicHeadersPath: "include"),
+        .target(name: "HmuxFoundation", dependencies: ["HmuxFoundationAtomicsC"]),
         .executableTarget(
             name: "IdentityColdStartFixture",
-            dependencies: ["CMUXMobileCore", "CmuxSettings", "CmuxFoundation"]
+            dependencies: ["HMUXMobileCore", "HmuxSettings", "HmuxFoundation"]
         )
     ],
     swiftLanguageModes: [.v5]
 )
 SWIFT
-cp "$ROOT/Packages/macOS/CmuxCloud/Sources/CmuxCloud/Environment/MobileHostIdentity.swift" "$DEST/Sources/IdentityColdStartFixture/"
+cp "$ROOT/Packages/macOS/HmuxCloud/Sources/HmuxCloud/Environment/MobileHostIdentity.swift" "$DEST/Sources/IdentityColdStartFixture/"
 cp "$ROOT/tests/fixtures/mobile-host-identity-cold-start/IdentityColdStartFixture.swift" \
   "$ROOT/tests/fixtures/mobile-host-identity-cold-start/IdentityNotificationProbe.swift" \
   "$DEST/Sources/IdentityColdStartFixture/"
-cp "$ROOT/Packages/Shared/CMUXMobileCore/Sources/CMUXMobileCore/CmxDeviceIDCanonicalization.swift" \
-  "$DEST/Sources/CMUXMobileCore/"
+cp "$ROOT/Packages/Shared/HMUXMobileCore/Sources/HMUXMobileCore/CmxDeviceIDCanonicalization.swift" \
+  "$DEST/Sources/HMUXMobileCore/"
 cp "$ROOT/tests/fixtures/mobile-host-identity-cold-start/DisplayMetadataDependencies.swift" \
-  "$DEST/Sources/CmuxSettings/"
-cp "$ROOT/Packages/macOS/CmuxFoundation/Sources/CmuxFoundation/Concurrency/AtomicBooleanGate.swift" \
-  "$DEST/Sources/CmuxFoundation/"
-cp "$ROOT/Packages/macOS/CmuxFoundation/Sources/CmuxFoundationAtomicsC/CmuxFoundationAtomicsC.c" \
-  "$DEST/Sources/CmuxFoundationAtomicsC/"
-cp "$ROOT/Packages/macOS/CmuxFoundation/Sources/CmuxFoundationAtomicsC/include/CmuxFoundationAtomicsC.h" \
-  "$DEST/Sources/CmuxFoundationAtomicsC/include/"
+  "$DEST/Sources/HmuxSettings/"
+cp "$ROOT/Packages/macOS/HmuxFoundation/Sources/HmuxFoundation/Concurrency/AtomicBooleanGate.swift" \
+  "$DEST/Sources/HmuxFoundation/"
+cp "$ROOT/Packages/macOS/HmuxFoundation/Sources/HmuxFoundationAtomicsC/HmuxFoundationAtomicsC.c" \
+  "$DEST/Sources/HmuxFoundationAtomicsC/"
+cp "$ROOT/Packages/macOS/HmuxFoundation/Sources/HmuxFoundationAtomicsC/include/HmuxFoundationAtomicsC.h" \
+  "$DEST/Sources/HmuxFoundationAtomicsC/include/"
 swift build --package-path "$DEST" -Xswiftc -warnings-as-errors
 BIN_DIR=$(swift build --package-path "$DEST" --show-bin-path)
 python3 "$ROOT/tests/test_mobile_host_identity_cold_start.py" \

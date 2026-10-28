@@ -131,7 +131,7 @@ describe("vm sync request", () => {
     });
     expect(request?.url).toBe("https://presence.example.test/v1/sync/vms");
     expect(request?.method).toBe("POST");
-    expect(request?.headers.get("x-cmux-vms-publisher-secret")).toBe("v".repeat(64));
+    expect(request?.headers.get("x-hmux-vms-publisher-secret")).toBe("v".repeat(64));
     expect(request?.headers.get("authorization")).toBeNull();
     expect(await request?.json()).toEqual({ teamId: "team-1", ops });
   });

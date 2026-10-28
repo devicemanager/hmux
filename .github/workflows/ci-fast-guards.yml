@@ -14,7 +14,7 @@ name: CI fast guards
 # to select a known-green base commit.
 #
 # scripts/ci/guards-local.sh is the same command a dev machine runs; a clean
-# local pass stamps the head for the agent merge guard in cmuxterm-hq.
+# local pass stamps the head for the agent merge guard in hmuxterm-hq.
 
 on:
   push:
@@ -48,5 +48,5 @@ jobs:
 
       - name: Run the fast guard tests
         env:
-          CMUX_GUARDS_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before || '' }}
+          HMUX_GUARDS_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.merge_group.base_sha || github.event.before || '' }}
         run: scripts/ci/guards-local.sh --no-stamp --jobs 8

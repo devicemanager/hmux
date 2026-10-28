@@ -46,7 +46,7 @@ const OTHER_KEY = Buffer.alloc(32, 2).toString("base64");
 
 const NETWORK: ProviderNetwork = {
   id: "vpc-test-1",
-  slug: "cmux-net-abc",
+  slug: "hmux-net-abc",
   cidr: "10.40.0.0/24",
   cidrV6: "fd00:40::/64",
 };
@@ -120,9 +120,9 @@ function accessGrantRow(overrides: Partial<CloudVmAccessGrantRow> = {}): CloudVm
     modelIdentifier: "Mac15,6",
     osVersion: "26.0",
     architecture: "arm64",
-    cmuxVersion: "0.65.0",
-    cmuxBuild: "103",
-    cmuxChannel: "nightly",
+    hmuxVersion: "0.65.0",
+    hmuxBuild: "103",
+    hmuxChannel: "nightly",
     createdAt: new Date(),
     updatedAt: new Date(),
     lastControlPlaneAt: new Date(),
@@ -345,15 +345,15 @@ describe("account slugs", () => {
   test("are stable, hashed, and do not embed the raw user id", () => {
     const slug = networkSlugForUser("user-abcdef");
     expect(slug).toBe(networkSlugForUser("user-abcdef"));
-    expect(slug.startsWith("cmux-net-")).toBe(true);
+    expect(slug.startsWith("hmux-net-")).toBe(true);
     expect(slug).not.toContain("user-abcdef");
     const device = tunnelSlugForDevice("user-abcdef", "device-1");
     expect(device).toBe(tunnelSlugForDevice("user-abcdef", "device-1"));
     expect(device).not.toBe(tunnelSlugForDevice("user-abcdef", "device-2"));
     expect(device).not.toContain("user-abcdef");
     expect(networkSlugForTeam("same-id")).not.toBe(networkSlugForUser("same-id"));
-    expect(vmClientRoutesTeamNetworks(new Request("https://cmux.test", {
-      headers: { "x-cmux-private-network-routing": "other, team-networks" },
+    expect(vmClientRoutesTeamNetworks(new Request("https://hmux.test", {
+      headers: { "x-hmux-private-network-routing": "other, team-networks" },
     }))).toBe(true);
   });
 });
@@ -622,8 +622,8 @@ describe("resolveOwnerNetwork", () => {
   });
 
   test("fails closed when the private-network kill switch is off", async () => {
-    const prior = process.env.CMUX_VM_PRIVATE_NETWORK_ENABLED;
-    process.env.CMUX_VM_PRIVATE_NETWORK_ENABLED = "0";
+    const prior = process.env.HMUX_VM_PRIVATE_NETWORK_ENABLED;
+    process.env.HMUX_VM_PRIVATE_NETWORK_ENABLED = "0";
     try {
       const error = await Effect.runPromise(
         resolveOwnerNetwork({ userId: "user-1", provider: "freestyle" }).pipe(
@@ -633,8 +633,8 @@ describe("resolveOwnerNetwork", () => {
       );
       expect(error).toBeInstanceOf(VmPrivateNetworkUnavailableError);
     } finally {
-      if (prior === undefined) delete process.env.CMUX_VM_PRIVATE_NETWORK_ENABLED;
-      else process.env.CMUX_VM_PRIVATE_NETWORK_ENABLED = prior;
+      if (prior === undefined) delete process.env.HMUX_VM_PRIVATE_NETWORK_ENABLED;
+      else process.env.HMUX_VM_PRIVATE_NETWORK_ENABLED = prior;
     }
   });
 });
@@ -1092,8 +1092,8 @@ describe("team tunnel reconciliation", () => {
 
 describe("readVmTunnel / revokeVmTunnel", () => {
   test("fails closed when rollback leaves only a stale network row", async () => {
-    const prior = process.env.CMUX_VM_PRIVATE_NETWORK_ENABLED;
-    process.env.CMUX_VM_PRIVATE_NETWORK_ENABLED = "0";
+    const prior = process.env.HMUX_VM_PRIVATE_NETWORK_ENABLED;
+    process.env.HMUX_VM_PRIVATE_NETWORK_ENABLED = "0";
     try {
       const error = await Effect.runPromise(
         readVmTunnel({
@@ -1111,8 +1111,8 @@ describe("readVmTunnel / revokeVmTunnel", () => {
       );
       expect(error).toBeInstanceOf(VmPrivateNetworkUnavailableError);
     } finally {
-      if (prior === undefined) delete process.env.CMUX_VM_PRIVATE_NETWORK_ENABLED;
-      else process.env.CMUX_VM_PRIVATE_NETWORK_ENABLED = prior;
+      if (prior === undefined) delete process.env.HMUX_VM_PRIVATE_NETWORK_ENABLED;
+      else process.env.HMUX_VM_PRIVATE_NETWORK_ENABLED = prior;
     }
   });
 
@@ -1281,9 +1281,9 @@ describe("Cloud VM access grant revocation", () => {
         modelIdentifier: "Mac15,6",
         osVersion: "26.0",
         architecture: "arm64",
-        cmuxVersion: "0.65.0",
-        cmuxBuild: "103",
-        cmuxChannel: "nightly",
+        hmuxVersion: "0.65.0",
+        hmuxBuild: "103",
+        hmuxChannel: "nightly",
         createdAt: new Date(),
         updatedAt: new Date(),
         lastControlPlaneAt: new Date(),
@@ -1408,7 +1408,7 @@ describe("firewall VM endpoints on team-owned VMs", () => {
 describe("firewall rule ownership on the shared provider account", () => {
   // Staging rehearsal 2026-10-04: a rule from the caller's VM to a CIDR was created (201) but get and
   // delete answered 404, because they searched only the network listing, so the rule was orphaned.
-  // The provider account is shared by every cmux user: a rule is the caller's only when its
+  // The provider account is shared by every hmux user: a rule is the caller's only when its
   // destination names a caller resource and every resource it names is the caller's.
   const mine = { id: "fw-mine", action: "allow", source: { vmId: "fs-1" }, destination: { cidr: "10.250.0.0/24", port: 8080, protocol: "tcp" } };
   const intoMine = { id: "fw-into-mine", action: "allow", source: { public: true }, destination: { vmId: "fs-1", port: 443, protocol: "tcp" } };

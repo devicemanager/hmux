@@ -11,8 +11,8 @@ import { API_TICKET_SECONDS, canonicalJSON, decodeBase64URL, encodeBase64URL, ve
 import { failureDiagnostics, OperationError } from "./errors";
 import { deviceObservability } from "./observability";
 
-export const SETUP_HEADER = "x-cmux-v2-setup";
-const INTERNAL_HEADER = "x-cmux-v2-verified-authority";
+export const SETUP_HEADER = "x-hmux-v2-setup";
+const INTERNAL_HEADER = "x-hmux-v2-verified-authority";
 export const AuthoritySchema = z.strictObject({
   environment: identifier, projectId: identifier, teamId: identifier, userId: identifier, verifiedAt: timestamp,
 });
@@ -31,7 +31,7 @@ export interface RoutingDependencies {
   /** The caller's AccountControl. `userId` is always the verified ticket's user, never a request field. */
   dispatchAccount: (userId: string, request: Request) => Promise<Response>;
   observe?: (event: { event: string; [key: string]: unknown }) => void;
-  /** Git revision the deploy script published as `CMUX_SOURCE_REVISION`; reported by the health route. */
+  /** Git revision the deploy script published as `HMUX_SOURCE_REVISION`; reported by the health route. */
   sourceRevision?: string | undefined;
 }
 

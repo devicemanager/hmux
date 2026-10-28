@@ -22,7 +22,7 @@ describe("private SCP authentication", () => {
 
   test("keys expire in UTC and cannot open PTYs or forward connections", () => {
     const line = scpAuthorizedKeyLine(key, new Date("2026-09-14T00:15:00Z"));
-    expect(line).toBe(`restrict,expiry-time="20260914001500Z" ${key} cmux-scp:1789344900`);
+    expect(line).toBe(`restrict,expiry-time="20260914001500Z" ${key} hmux-scp:1789344900`);
   });
 
   test("private endpoint uses the guest key from the authenticated provider call", async () => {
@@ -37,7 +37,7 @@ describe("private SCP authentication", () => {
     const provider = new FreestyleProvider({ client: () => client });
     const endpoint = await provider.prepareSCP(vmId, key);
     expect(endpoint.host).toBe("10.4.0.7");
-    expect(endpoint.username).toBe("cmux");
+    expect(endpoint.username).toBe("hmux");
     expect(endpoint.port).toBe(22);
     expect(endpoint.hostPublicKey).toBe(key);
     expect(endpoint.expiresAtUnix).toBeGreaterThan(Date.now() / 1000 + 800);
@@ -95,7 +95,7 @@ describe("SCP setup on a machine that does not answer", () => {
     expect(payload).toMatchObject({ error: "vm_guest_unresponsive", retryable: false });
     expect(String(payload.action)).toMatch(/contact support/i);
     expect(String(payload.action)).toMatch(/trace ID/i);
-    expect(String(payload.action)).not.toMatch(/cmux vm (?:pause|resume|restart|rm)/);
+    expect(String(payload.action)).not.toMatch(/hmux vm (?:pause|resume|restart|rm)/);
     expect(JSON.stringify(payload)).not.toMatch(/temporarily unavailable/i);
   });
 

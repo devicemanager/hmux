@@ -59,8 +59,8 @@ XCODEBUILD_VERDICT_RE = re.compile(rb"\*\* TEST (?:EXECUTE )?(?:SUCCEEDED|FAILED
 # 700s. The startup deadline bounds that silent gap instead.
 TESTING_STARTED_MARKER = b"Testing started"
 FIRST_TEST_RE = re.compile(rb"Test Suite '|Test Case '|Test run started\.")
-# The app host (cmux DEV) logs to the same PTY as xcodebuild. Its lines carry
-# an NSLog-style prefix: "2026-09-08 14:03:49.521479+0000 cmux DEV[13904:67193] ".
+# The app host (hmux DEV) logs to the same PTY as xcodebuild. Its lines carry
+# an NSLog-style prefix: "2026-09-08 14:03:49.521479+0000 hmux DEV[13904:67193] ".
 # Background work (fleet polling, renderer wakeups) keeps emitting them while
 # no test makes progress, so they must not count as activity for the idle
 # timeout; otherwise a stalled test host looks alive until the job-level cap.
@@ -110,14 +110,14 @@ def count_restart_markers(chunk: bytes, carry: bytearray) -> int:
 
 
 def restart_budget() -> int | None:
-    raw = os.environ.get("CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET")
+    raw = os.environ.get("HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET")
     if not raw:
         return None
     try:
         budget = int(raw)
     except ValueError:
         print(
-            "CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET must be an integer",
+            "HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET must be an integer",
             file=sys.stderr,
         )
         raise SystemExit(2)
@@ -129,12 +129,12 @@ def restart_budget() -> int | None:
 def app_host_pids(derived_data_path: str) -> list[int]:
     """PIDs of the XCTest app host xcodebuild launched from this run's DerivedData.
 
-    Scoped to the DerivedData path so a developer's other cmux instances are
-    never inspected; CI exports `CMUX_DERIVED_DATA_PATH` per job.
+    Scoped to the DerivedData path so a developer's other hmux instances are
+    never inspected; CI exports `HMUX_DERIVED_DATA_PATH` per job.
     """
     if shutil.which("pgrep") is None:
         return []
-    pattern = re.escape(derived_data_path.rstrip("/")) + r"/Build/Products/[^/]+/cmux[^/]*\.app/Contents/MacOS/"
+    pattern = re.escape(derived_data_path.rstrip("/")) + r"/Build/Products/[^/]+/hmux[^/]*\.app/Contents/MacOS/"
     try:
         result = subprocess.run(
             ["pgrep", "-f", pattern],
@@ -160,7 +160,7 @@ def sample_app_host(log_file: BinaryIO | None, stdout_fd: int) -> None:
     Best effort: `sample` may be missing or refuse, and diagnostics must never
     change the timeout outcome.
     """
-    derived_data_path = os.environ.get("CMUX_DERIVED_DATA_PATH", "")
+    derived_data_path = os.environ.get("HMUX_DERIVED_DATA_PATH", "")
     sampler = shutil.which("sample")
     if sampler is None or not derived_data_path:
         return
@@ -266,16 +266,16 @@ def child_exit_code(status: int) -> int:
 
 
 def idle_timeout_seconds() -> float | None:
-    raw = os.environ.get("CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS")
+    raw = os.environ.get("HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS")
     if raw is None:
-        raw = os.environ.get("CMUX_XCODEBUILD_NONINTERACTIVE_TIMEOUT_SECONDS")
+        raw = os.environ.get("HMUX_XCODEBUILD_NONINTERACTIVE_TIMEOUT_SECONDS")
     if not raw:
         return None
     try:
         seconds = float(raw)
     except ValueError:
         print(
-            "CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS must be numeric",
+            "HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS must be numeric",
             file=sys.stderr,
         )
         raise SystemExit(2)
@@ -285,14 +285,14 @@ def idle_timeout_seconds() -> float | None:
 
 
 def post_test_timeout_seconds() -> float | None:
-    raw = os.environ.get("CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS")
+    raw = os.environ.get("HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS")
     if not raw:
         return None
     try:
         seconds = float(raw)
     except ValueError:
         print(
-            "CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS must be numeric",
+            "HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS must be numeric",
             file=sys.stderr,
         )
         raise SystemExit(2)
@@ -302,14 +302,14 @@ def post_test_timeout_seconds() -> float | None:
 
 
 def startup_timeout_seconds() -> float | None:
-    raw = os.environ.get("CMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS")
+    raw = os.environ.get("HMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS")
     if not raw:
         return None
     try:
         seconds = float(raw)
     except ValueError:
         print(
-            "CMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS must be numeric",
+            "HMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS must be numeric",
             file=sys.stderr,
         )
         raise SystemExit(2)
@@ -319,14 +319,14 @@ def startup_timeout_seconds() -> float | None:
 
 
 def heartbeat_seconds() -> float | None:
-    raw = os.environ.get("CMUX_XCODEBUILD_NONINTERACTIVE_HEARTBEAT_SECONDS")
+    raw = os.environ.get("HMUX_XCODEBUILD_NONINTERACTIVE_HEARTBEAT_SECONDS")
     if not raw:
         return None
     try:
         seconds = float(raw)
     except ValueError:
         print(
-            "CMUX_XCODEBUILD_NONINTERACTIVE_HEARTBEAT_SECONDS must be numeric",
+            "HMUX_XCODEBUILD_NONINTERACTIVE_HEARTBEAT_SECONDS must be numeric",
             file=sys.stderr,
         )
         raise SystemExit(2)
@@ -390,7 +390,7 @@ def main() -> int:
     swift_testing_run_started = False
     swift_testing_run_finished = False
     xcodebuild_verdict_seen = False
-    log_path = os.environ.get("CMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH")
+    log_path = os.environ.get("HMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH")
     log_file: BinaryIO | None = None
     if log_path:
         log_file = open(log_path, "ab", buffering=0)
@@ -402,7 +402,7 @@ def main() -> int:
             pass
 
     # Forward a fast, non-interactive Swift crash backtrace into the XCTest
-    # host process (cmux DEV.app). The crash that matters happens in the app
+    # host process (hmux DEV.app). The crash that matters happens in the app
     # host, not in xcodebuild, and the job-level SWIFT_BACKTRACE only reaches
     # xcodebuild itself. xcodebuild copies TEST_RUNNER_-prefixed env vars (with
     # the prefix stripped) into the test host's environment, so this is what

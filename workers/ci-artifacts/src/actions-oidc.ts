@@ -1,5 +1,5 @@
 const ISSUER = "https://token.actions.githubusercontent.com";
-export const ACTIONS_OIDC_AUDIENCE = "cmux-ci-artifacts";
+export const ACTIONS_OIDC_AUDIENCE = "hmux-ci-artifacts";
 const JWKS_URL = `${ISSUER}/.well-known/jwks`;
 const REPOSITORY = "manaflow-ai/cmux";
 const REPOSITORY_ID = "1144115288";
@@ -31,7 +31,7 @@ function decode(segment: string): JsonObject {
 
 async function loadKeys(fetcher: typeof fetch, signal?: AbortSignal): Promise<KeyCache> {
   const response = await fetcher(JWKS_URL, {
-    headers: { Accept: "application/json", "User-Agent": "cmux-ci-artifacts" },
+    headers: { Accept: "application/json", "User-Agent": "hmux-ci-artifacts" },
     redirect: "error",
     signal,
   });

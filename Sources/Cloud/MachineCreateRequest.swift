@@ -1,10 +1,10 @@
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
-import CmuxCloudMachines
+import HmuxCloudMachines
 
 /// What the New Machine / Set Up Base sheet asked for, in the form the
 /// background create needs: which flow, the kind and label the person chose,
-/// and the exact `cmux vm …` invocation. The sheet builds one of these and
+/// and the exact `hmux vm …` invocation. The sheet builds one of these and
 /// hands it to ``MachineCreateCoordinator``; from then on the sheet is gone
 /// and the request is what the Machines panel row and notifications describe.
 struct MachineCreateRequest: Equatable {
@@ -13,7 +13,7 @@ struct MachineCreateRequest: Equatable {
     /// The display label the person typed (`--name`); nil when blank or when
     /// the flow has no name (Base is always "Base").
     let name: String?
-    /// The CLI arguments after `cmux`, e.g. `vm new --desktop --size 24576`.
+    /// The CLI arguments after `hmux`, e.g. `vm new --desktop --size 24576`.
     let arguments: [String]
     /// Stable identity of the initiating window. Completion selects only in
     /// this window and never activates a different one.

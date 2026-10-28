@@ -1,13 +1,13 @@
-import CmuxIrxTransport
+import HmuxIrxTransport
 import Foundation
 import os
 
 /// Synchronous inbound authority for same-user Macs from other teams.
 ///
 /// It admits only `platform == .mac` rows from the account directory's
-/// `inboundMacs` that opted into `cmux.mac-devices.v1` and share this host's
+/// `inboundMacs` that opted into `hmux.mac-devices.v1` and share this host's
 /// user, environment, project, app namespace and build tag, and only while this
-/// host's own team record advertises `cmux.mac-host.v1`. iOS rows are never
+/// host's own team record advertises `hmux.mac-host.v1`. iOS rows are never
 /// admitted here: phone pairing stays on the team authority alone.
 final class V2AccountMacAdmissionAuthority: Sendable {
     private struct Entry: Sendable {
@@ -58,7 +58,7 @@ final class V2AccountMacAdmissionAuthority: Sendable {
                   hostRecord.descriptor.endpointID == host.endpointID,
                   hostRecord.descriptor.identityGeneration == host.identityGeneration,
                   hostRecord.descriptor.metadata.platform == .mac,
-                  hostRecord.descriptor.metadata.capabilities.contains("cmux.mac-host.v1"),
+                  hostRecord.descriptor.metadata.capabilities.contains("hmux.mac-host.v1"),
                   let account, account.belongs(to: host),
                   account.directory.userID == host.identity.userID,
                   account.directory.supportsAccountPeers,
@@ -82,7 +82,7 @@ final class V2AccountMacAdmissionAuthority: Sendable {
                 let device = record.descriptor
                 let identity = device.identity
                 guard device.metadata.platform == .mac,
-                      device.metadata.capabilities.contains("cmux.mac-devices.v1"),
+                      device.metadata.capabilities.contains("hmux.mac-devices.v1"),
                       !record.revoked, !record.deviceRecordID.isEmpty,
                       identity.userID == host.identity.userID,
                       // Same-team Macs are admitted by the team authority only.

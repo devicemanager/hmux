@@ -14,7 +14,7 @@ class AuthorizationUnavailable extends Error {}
 
 let stackConfigured = true;
 let outcome: SessionUser | null | Error = null;
-const previousVault = process.env.CMUX_VAULT_ENABLED;
+const previousVault = process.env.HMUX_VAULT_ENABLED;
 
 mock.module("@/app/lib/stack", () => ({
   isStackConfigured: () => stackConfigured,
@@ -37,14 +37,14 @@ const { accountRouter } = await import("../orpc/server/dashboard/account");
 const GET = (request: Request) => procedureResponse(accountRouter.session, undefined, request);
 
 function request() {
-  return new Request("https://cmux.test/api/dashboard/session");
+  return new Request("https://hmux.test/api/dashboard/session");
 }
 
 afterEach(() => {
   stackConfigured = true;
   outcome = null;
-  if (previousVault === undefined) delete process.env.CMUX_VAULT_ENABLED;
-  else process.env.CMUX_VAULT_ENABLED = previousVault;
+  if (previousVault === undefined) delete process.env.HMUX_VAULT_ENABLED;
+  else process.env.HMUX_VAULT_ENABLED = previousVault;
 });
 
 describe("dashboard.account.session", () => {
@@ -74,7 +74,7 @@ describe("dashboard.account.session", () => {
   });
 
   test("200 returns only the wire fields and the Vault flag, never cached", async () => {
-    process.env.CMUX_VAULT_ENABLED = "true";
+    process.env.HMUX_VAULT_ENABLED = "true";
     outcome = {
       id: "user-1",
       displayName: "User One",
@@ -99,7 +99,7 @@ describe("dashboard.account.session", () => {
   });
 
   test("200 normalizes missing optional fields to null and false", async () => {
-    process.env.CMUX_VAULT_ENABLED = "false";
+    process.env.HMUX_VAULT_ENABLED = "false";
     outcome = { id: "user-2" };
     const response = await GET(request());
     expect(await response.json()).toEqual({

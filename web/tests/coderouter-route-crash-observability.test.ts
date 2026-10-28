@@ -181,7 +181,7 @@ describe("route_crash ledger row", () => {
     );
     const response = await route(new Request("https://coderouter.test/v1/messages", {
       method: "POST",
-      headers: { "x-cmux-authorization": `Bearer ${token}` },
+      headers: { "x-hmux-authorization": `Bearer ${token}` },
     }), undefined);
     expect(response.status).toBe(503);
     expect(rows).toHaveLength(1);

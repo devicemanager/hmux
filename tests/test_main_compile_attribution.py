@@ -29,20 +29,20 @@ SEED = ROOT / ".github/workflows/seed-derived-data.yml"
 
 # Trimmed from job 109345503595 (seed, glaeda-trusted-std-xcode-26.6).
 SEED_LOG = textwrap.dedent("""\
-    2026-09-29T09:34:07.9935360Z /tmp/cmux-ci/src/cmuxTests/PaneDropTargetIdentityTests.swift:61:27: error: contextual type for closure argument list expects 1 argument, which cannot be implicitly ignored
+    2026-09-29T09:34:07.9935360Z /tmp/hmux-ci/src/hmuxTests/PaneDropTargetIdentityTests.swift:61:27: error: contextual type for closure argument list expects 1 argument, which cannot be implicitly ignored
     2026-09-29T09:34:07.9935710Z     |                           `- error: contextual type for closure argument list expects 1 argument, which cannot be implicitly ignored
-    2026-09-29T09:34:07.9960960Z /tmp/cmux-ci/src/cmuxTests/PaneDropTargetIdentityTests.swift:61:27: error: contextual type for closure argument list expects 1 argument, which cannot be implicitly ignored
-    2026-09-29T09:44:01.0000000Z /private/tmp/cmux-ci-2/src/cmuxTests/RemoteTmuxMirrorCLIObservabilityTests.swift:399:34: error: immutable value 'self.nonMirrorPanelID' may only be initialized once
+    2026-09-29T09:34:07.9960960Z /tmp/hmux-ci/src/hmuxTests/PaneDropTargetIdentityTests.swift:61:27: error: contextual type for closure argument list expects 1 argument, which cannot be implicitly ignored
+    2026-09-29T09:44:01.0000000Z /private/tmp/hmux-ci-2/src/hmuxTests/RemoteTmuxMirrorCLIObservabilityTests.swift:399:34: error: immutable value 'self.nonMirrorPanelID' may only be initialized once
     2026-09-29T09:44:02.0000000Z error: No space left on device
     2026-09-29T09:44:03.0000000Z ** TEST BUILD FAILED **
 """)
 
 ED, FF, AD, TWO = "ed49329987" + "0" * 30, "ff12362be9" + "0" * 30, "ad7906a261" + "0" * 30, "217ef1338a" + "0" * 30
-PANE = mca.CompileError("cmuxTests/PaneDropTargetIdentityTests.swift", 61, "closure expects 1 argument")
-MIRROR = mca.CompileError("cmuxTests/RemoteTmuxMirrorCLIObservabilityTests.swift", 399, "immutable value 'self.mirror' may only be initialized once")
+PANE = mca.CompileError("hmuxTests/PaneDropTargetIdentityTests.swift", 61, "closure expects 1 argument")
+MIRROR = mca.CompileError("hmuxTests/RemoteTmuxMirrorCLIObservabilityTests.swift", 399, "immutable value 'self.mirror' may only be initialized once")
 FILES = {
-    FF: ["Sources/PaneDropRoutingSupport.swift", "cmuxTests/PaneDropTargetIdentityTests.swift"],
-    AD: ["cmuxTests/RemoteTmuxMirrorCLIObservabilityTests.swift", "Sources/Workspace.swift"],
+    FF: ["Sources/PaneDropRoutingSupport.swift", "hmuxTests/PaneDropTargetIdentityTests.swift"],
+    AD: ["hmuxTests/RemoteTmuxMirrorCLIObservabilityTests.swift", "Sources/Workspace.swift"],
     TWO: ["scripts/ci/package_interface.py"],
 }
 
@@ -68,8 +68,8 @@ class ParseErrors(unittest.TestCase):
         self.assertEqual(
             [e.render() for e in errors.values()],
             [
-                "cmuxTests/PaneDropTargetIdentityTests.swift:61: error: contextual type for closure argument list expects 1 argument, which cannot be implicitly ignored",
-                "cmuxTests/RemoteTmuxMirrorCLIObservabilityTests.swift:399: error: immutable value 'self.nonMirrorPanelID' may only be initialized once",
+                "hmuxTests/PaneDropTargetIdentityTests.swift:61: error: contextual type for closure argument list expects 1 argument, which cannot be implicitly ignored",
+                "hmuxTests/RemoteTmuxMirrorCLIObservabilityTests.swift:399: error: immutable value 'self.nonMirrorPanelID' may only be initialized once",
             ],
         )
 
@@ -104,7 +104,7 @@ class Attribute(unittest.TestCase):
 
     def test_a_one_merge_range_after_a_red_commit_is_only_suspected(self):
         # Errors a first break hid surface at the commit that fixes it; that commit is not confirmed.
-        hidden = mca.CompileError("cmuxTests/Later.swift", 3, "cannot find 'x' in scope")
+        hidden = mca.CompileError("hmuxTests/Later.swift", 3, "cannot find 'x' in scope")
         known = {TWO: mca.State(TWO, "red", {hidden.key: hidden}), AD: mca.State(AD, "red", {PANE.key: PANE}),
                  FF: mca.State(FF, "green")}
         _, _, breaks = attribute([TWO, AD, FF], known)
@@ -133,7 +133,7 @@ class Attribute(unittest.TestCase):
         self.assertEqual(breaks[0].culprits, [])
 
     def test_a_quoted_symbol_in_the_diff_scores_below_the_file(self):
-        err = mca.CompileError("cmuxTests/A.swift", 1, "cannot find 'frameForZone' in scope")
+        err = mca.CompileError("hmuxTests/A.swift", 1, "cannot find 'frameForZone' in scope")
         top, scores = mca.suspects([AD, TWO], [err], files_of=lambda sha: [],
                                    text_of=lambda sha: "-    let frameForZone: (Zone) -> CGRect" if sha == AD else "")
         self.assertEqual((top, scores[AD]), ([AD], 1))
@@ -183,12 +183,12 @@ class FollowThrough(unittest.TestCase):
         return {"head": FF, "state": "red", "newest_known": FF, "breaks": [brk]}
 
     def test_a_person_already_fixing_it_stops_the_fixer(self):
-        prs = [{"number": 15561, "title": "fix(tests): compile cmuxTests again after #15116 and #15550",
+        prs = [{"number": 15561, "title": "fix(tests): compile hmuxTests again after #15116 and #15550",
                 "body": "", "created_at": "2026-09-29T10:00:00Z", "head": {"ref": "fix/compile"}}]
         self.assertEqual(mca.already_fixing(prs, 15550, "2026-09-29T09:26:21Z")["number"], 15561)
         self.assertIsNone(mca.already_fixing(prs, 15551, "2026-09-29T09:26:21Z"))
         # Naming the culprit is not enough when its files are known: it must edit an erroring file.
-        files = {15561: ["cmuxTests/PaneDropTargetIdentityTests.swift"], 15577: ["scripts/ci/x.py"]}
+        files = {15561: ["hmuxTests/PaneDropTargetIdentityTests.swift"], 15577: ["scripts/ci/x.py"]}
         canary = {**prs[0], "number": 15577, "title": "ci: compile canary (replays #15550)"}
         self.assertIsNone(mca.already_fixing([canary], 15550, None, [PANE.path], files.get))
         self.assertEqual(mca.already_fixing([canary, prs[0]], 15550, None, [PANE.path], files.get)["number"], 15561)

@@ -1,13 +1,13 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxGit
-import CmuxIrohTransport
-import CmuxIrxTransport
-import CmuxMobileHost
-import CmuxMobileTransport
-import CmuxSettings
-import CmuxTerminalCore
+import HmuxCloud
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxGit
+import HmuxIrohTransport
+import HmuxIrxTransport
+import HmuxMobileHost
+import HmuxMobileTransport
+import HmuxSettings
+import HmuxTerminalCore
 import CryptoKit
 import Foundation
 @preconcurrency import Network
@@ -15,11 +15,11 @@ import OSLog
 import StackAuth
 import os
 
-private let mobileHostLog = Logger(subsystem: "dev.cmux", category: "mobile-host")
+private let mobileHostLog = Logger(subsystem: "dev.hmux", category: "mobile-host")
 
 extension Notification.Name {
     static let mobileHostEventSubscriptionsDidChange = Notification.Name(
-        "cmux.mobileHostEventSubscriptionsDidChange"
+        "hmux.mobileHostEventSubscriptionsDidChange"
     )
 
     /// Posted whenever the mobile pairing host's observable status changes:
@@ -28,7 +28,7 @@ extension Notification.Name {
     /// `AsyncStream` so the Mobile settings section can show the live bound
     /// port and connection count without polling.
     static let mobileHostStatusDidChange = Notification.Name(
-        "cmux.mobileHostStatusDidChange"
+        "hmux.mobileHostStatusDidChange"
     )
 }
 
@@ -103,13 +103,13 @@ private enum MobileHostEventSubscriptionTracker {
 /// The sibling Mac dev tags this Mac grants to its paired development phones.
 ///
 /// A DEV iPhone build pairs only with its exact-tag Mac by default. This grant
-/// set — edited with `cmux mobile compatible-tags` against this Mac's debug
+/// set — edited with `hmux mobile compatible-tags` against this Mac's debug
 /// socket — is advertised in authenticated host status and pushed live over
 /// `mobile.compatible_tags.changed`, so the phone can also discover the listed
 /// sibling Mac tags without a rebuild or re-pair. The tagged debug bundle id
 /// isolates `UserDefaults` per Mac tag, so one fixed key is per-tag already.
 enum MobileCompatibleMacTags {
-    static let defaultsKey = "CMUXMobileCompatibleMacTags"
+    static let defaultsKey = "HMUXMobileCompatibleMacTags"
     /// Mirrors the phone-side allowlist bound (`MobileMacTagAllowlist`).
     static let maximumTagCount = 32
     /// Release lanes are never grantable to a development phone.
@@ -288,12 +288,12 @@ final class MobileHostService {
     /// are never on this unauthenticated surface.
     nonisolated static func publicStatusPayload(routes: [CmxAttachRoute], now: Date = Date()) -> [String: Any] {
         // The Mac's resolved terminal theme is caller-independent, so it rides
-        // the public payload (identity merges on top). `GhosttyConfig.loadForCmux()`
-        // resolves named Ghostty themes, Ghostty's built-in defaults or cmux's
+        // the public payload (identity merges on top). `GhosttyConfig.loadForHmux()`
+        // resolves named Ghostty themes, Ghostty's built-in defaults or hmux's
         // managed fresh-config defaults, and explicit color settings into a complete
         // effective palette; the phone applies it so its embedded terminal
         // renders with the Mac's colors instead of the built-in Monokai default.
-        let theme = TerminalTheme(ghosttyConfig: GhosttyConfig.loadForCmux())
+        let theme = TerminalTheme(ghosttyConfig: GhosttyConfig.loadForHmux())
         return [
             "routes": routes.mobileHostJSONObjects(for: .publicStatus, at: now),
             "terminal_fidelity": "render_grid",
@@ -430,7 +430,7 @@ final class MobileHostService {
         )
     }
 
-    private let callbackQueue = DispatchQueue(label: "dev.cmux.mobile.host-listener")
+    private let callbackQueue = DispatchQueue(label: "dev.hmux.mobile.host-listener")
     /// TCP compatibility listener for legacy Tailscale clients. Iroh owns its
     /// own UDP endpoint and never shares this socket or its lifecycle.
     private var tailscaleListener: MobileHostPOSIXListener?
@@ -741,7 +741,7 @@ final class MobileHostService {
         let connections = MobileHostConnectionRegistry.shared.snapshot()
         guard !connections.isEmpty else { return }
         #if DEBUG
-        cmuxDebugLog("mobile.emit topic=\(topic) connections=\(connections.count)")
+        hmuxDebugLog("mobile.emit topic=\(topic) connections=\(connections.count)")
         #endif
         var resyncSurfaceIDs = Set<String>()
         for connection in connections {
@@ -810,7 +810,7 @@ final class MobileHostService {
         // The current iOS choice takes precedence over the historical key;
         // incoming Mac access remains an independent opt-in.
         let iOSPairingEnabled = defaults.object(forKey: listeningEnabledDefaultsKey) as? Bool
-            ?? defaults.object(forKey: "cmuxMobilePairingHostEnabled") as? Bool
+            ?? defaults.object(forKey: "hmuxMobilePairingHostEnabled") as? Bool
             ?? false
         return iOSPairingEnabled
     }
@@ -2412,7 +2412,7 @@ actor MobileHostConnection {
                 MobileTerminalRenderGridAnchorRegistry.shared.set(anchor, connectionID: id)
             }
             #if DEBUG
-            cmuxDebugLog("mobile.subscribe streamID=\(streamID) topics=\(topics.sorted()) existing=\(alreadySubscribed) connID=\(self.id.uuidString)")
+            hmuxDebugLog("mobile.subscribe streamID=\(streamID) topics=\(topics.sorted()) existing=\(alreadySubscribed) connID=\(self.id.uuidString)")
             #endif
             var acknowledgement: [String: Any] = [
                 "stream_id": streamID,
@@ -2506,7 +2506,7 @@ actor MobileHostConnection {
         }
         guard await onUsableSession(), !isClosed else { return }
         didPublishUsableSession = true
-        CmuxEventBus.shared.publish(
+        HmuxEventBus.shared.publish(
             name: "mobile.rpc.ready",
             category: "mobile",
             source: "mobile.host",
@@ -2614,7 +2614,7 @@ actor MobileHostConnection {
     func sendEvent(topic: String, payload: [String: Any]) async -> Bool {
         guard !isClosed else {
             #if DEBUG
-            cmuxDebugLog("mobile.send skip: closed topic=\(topic) connID=\(self.id.uuidString)")
+            hmuxDebugLog("mobile.send skip: closed topic=\(topic) connID=\(self.id.uuidString)")
             #endif
             return false
         }

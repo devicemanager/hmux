@@ -1,4 +1,4 @@
-name: cmux-tui publish npm
+name: hmux-tui publish npm
 
 on:
   workflow_dispatch:
@@ -8,11 +8,11 @@ on:
         required: true
         type: string
       artifact_run_id:
-        description: "Successful cmux-tui release run containing verified packages"
+        description: "Successful hmux-tui release run containing verified packages"
         required: true
         type: string
-      confirm_tui_cmux:
-        description: "Set true only for the coordinated npm cmux TUI publish"
+      confirm_tui_hmux:
+        description: "Set true only for the coordinated npm hmux TUI publish"
         required: true
         default: false
         type: boolean
@@ -28,7 +28,7 @@ jobs:
     # This workflow's launcher publish deliberately omits --tag so the version
     # becomes npm `latest`. Only strict stable X.Y.Z may go through here; a
     # prerelease versions on latest would put a prerelease in front of every
-    # `npx cmux` user.
+    # `npx hmux` user.
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
     timeout-minutes: 5
     permissions:
@@ -55,7 +55,7 @@ jobs:
             exit 1
           }
           git fetch --force origin main --tags
-          tag="cmux-tui-v$DISPATCH_VERSION"
+          tag="hmux-tui-v$DISPATCH_VERSION"
           expected_ref="refs/tags/$tag"
           if [[ "$GITHUB_REF" != "$expected_ref" ]]; then
             echo "Refusing to publish npm from $GITHUB_REF; dispatch this workflow on $expected_ref." >&2
@@ -92,7 +92,7 @@ jobs:
             exit 1
           }
 
-          artifact_path=".github/workflows/cmux-tui-release.yml"
+          artifact_path=".github/workflows/hmux-tui-release.yml"
           artifact_status=""
           artifact_conclusion=""
           release_sha="$RELEASE_SHA"
@@ -145,12 +145,12 @@ jobs:
       attestations: read
     environment:
       name: npm-tui
-      url: https://www.npmjs.com/package/cmux
+      url: https://www.npmjs.com/package/hmux
     steps:
-      - name: Require npm cmux confirmation
-        if: inputs.confirm_tui_cmux != true
+      - name: Require npm hmux confirmation
+        if: inputs.confirm_tui_hmux != true
         run: |
-          echo "Refusing to publish npm package cmux for the TUI without confirm_tui_cmux=true." >&2
+          echo "Refusing to publish npm package hmux for the TUI without confirm_tui_hmux=true." >&2
           exit 1
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -168,7 +168,7 @@ jobs:
 
       - name: Restore npm package executable modes
         run: |
-          python3 cmux-tui/dist/scripts/package_npm_artifact.py extract \
+          python3 hmux-tui/dist/scripts/package_npm_artifact.py extract \
             --archive dist/npm-packages.tar.gz \
             --out dist
 
@@ -184,15 +184,15 @@ jobs:
       - name: Revalidate packed npm contract
         run: |
           contract_args=()
-          if [[ -d dist/npm-packages/cmux-tui-win32-x64 ]]; then
+          if [[ -d dist/npm-packages/hmux-tui-win32-x64 ]]; then
             contract_args+=(--include-windows)
           fi
-          python3 cmux-tui/dist/scripts/validate_package_contract.py \
+          python3 hmux-tui/dist/scripts/validate_package_contract.py \
             --npm-packages dist/npm-packages \
             --version "${{ inputs.version }}" \
             "${contract_args[@]}" \
-            --install-npm-package cmux-tui-linux-x64 \
-            --install-npm-relay-package cmux-relay-linux-x64
+            --install-npm-package hmux-tui-linux-x64 \
+            --install-npm-relay-package hmux-relay-linux-x64
 
       - name: Verify native npm package attestations
         env:
@@ -203,38 +203,38 @@ jobs:
           set -euo pipefail
           mapfile -d '' binaries < <(
             find dist/npm-packages -type f \
-              \( -path '*/cmux-tui-*/bin/cmux-tui*' -o \
-                 -path '*/cmux-relay-*/bin/chatmux-relay*' \) \
+              \( -path '*/hmux-tui-*/bin/hmux-tui*' -o \
+                 -path '*/hmux-relay-*/bin/chatmux-relay*' \) \
               -print0 | sort -z
           )
           ((${#binaries[@]} > 0))
           for binary in "${binaries[@]}"; do
             gh attestation verify "$binary" \
               --repo "$GITHUB_REPOSITORY" \
-              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/cmux-tui-build-package.yml" \
+              --signer-workflow "$GITHUB_REPOSITORY/.github/workflows/hmux-tui-build-package.yml" \
               --deny-self-hosted-runners \
               --source-digest "$RELEASE_SHA" \
               --source-ref "refs/tags/$RELEASE_TAG"
           done
 
-      # cmux-relay and its platform packages are validated and attested above
+      # hmux-relay and its platform packages are validated and attested above
       # as part of the artifact contract, but they are NOT published here: the
-      # relay's npm dist-tags move only through the cmux-relay-v* tag family
+      # relay's npm dist-tags move only through the hmux-relay-v* tag family
       # (relay-publish-npm.yml), so a routine TUI release can never take over
-      # cmux-relay@latest from the shipping relay.
+      # hmux-relay@latest from the shipping relay.
       - name: Publish platform packages
         env:
           PUBLISH_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
           packages=(
-            cmux-tui-darwin-arm64
-            cmux-tui-darwin-x64
-            cmux-tui-linux-x64
-            cmux-tui-linux-arm64
+            hmux-tui-darwin-arm64
+            hmux-tui-darwin-x64
+            hmux-tui-linux-x64
+            hmux-tui-linux-arm64
           )
-          if [[ -d dist/npm-packages/cmux-tui-win32-x64 ]]; then
-            packages+=(cmux-tui-win32-x64)
+          if [[ -d dist/npm-packages/hmux-tui-win32-x64 ]]; then
+            packages+=(hmux-tui-win32-x64)
           fi
           for package in "${packages[@]}"; do
             # A retried run must not fail on the packages an earlier attempt
@@ -251,11 +251,11 @@ jobs:
           npm publish failed.
 
           For the first publish of the new TUI platform package names, add npm Trusted Publishers for:
-          - cmux-tui-darwin-arm64
-          - cmux-tui-darwin-x64
-          - cmux-tui-linux-x64
-          - cmux-tui-linux-arm64
-          - cmux-tui-win32-x64
+          - hmux-tui-darwin-arm64
+          - hmux-tui-darwin-x64
+          - hmux-tui-linux-x64
+          - hmux-tui-linux-arm64
+          - hmux-tui-win32-x64
 
           Trusted publisher settings for each package:
           - Repository: manaflow-ai/cmux
@@ -271,10 +271,10 @@ jobs:
           PUBLISH_VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          if [[ "$(npm view "cmux@$PUBLISH_VERSION" version 2>/dev/null || true)" == "$PUBLISH_VERSION" ]]; then
-            echo "Skipping cmux@$PUBLISH_VERSION: already published"
+          if [[ "$(npm view "hmux@$PUBLISH_VERSION" version 2>/dev/null || true)" == "$PUBLISH_VERSION" ]]; then
+            echo "Skipping hmux@$PUBLISH_VERSION: already published"
             exit 0
           fi
           # Deliberately do not pass --tag: this coordinated TUI publish takes
-          # over the cmux latest dist-tag from the old 0.8.3 CLI when version > 0.8.3.
-          npm publish --provenance --access public dist/npm-packages/cmux
+          # over the hmux latest dist-tag from the old 0.8.3 CLI when version > 0.8.3.
+          npm publish --provenance --access public dist/npm-packages/hmux

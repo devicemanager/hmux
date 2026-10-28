@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxFoundation
-import CmuxCloudMachines
-import CmuxSettings
+import HmuxCloud
+import HmuxFoundation
+import HmuxCloudMachines
+import HmuxSettings
 import AppKit
 import Foundation
 
@@ -68,12 +68,12 @@ final class CloudVMActionLauncher {
                 title: String(localized: "command.cloudVM.failed.title", defaultValue: "Couldn't Start Cloud VM"),
                 action: String(
                     localized: "command.cloudVM.failed.action.exit",
-                    defaultValue: "Open a terminal and run `cmux auth status`, `cmux vm ls`, then `cmux vm base open`. If you hit the active VM limit, delete one with `cmux vm rm <id>` and retry."
+                    defaultValue: "Open a terminal and run `hmux auth status`, `hmux vm ls`, then `hmux vm base open`. If you hit the active VM limit, delete one with `hmux vm rm <id>` and retry."
                 )
             )
         }
 
-        /// The presentation for one `cmux …` invocation, keyed on its verb, so
+        /// The presentation for one `hmux …` invocation, keyed on its verb, so
         /// every entrypoint (row menu, palette, ＋ menu) names what failed: a
         /// delete or a rename is never reported as "Couldn't Start Cloud VM".
         static func forCommand(_ arguments: [String]) -> FailurePresentation {
@@ -91,7 +91,7 @@ final class CloudVMActionLauncher {
                     title: String(localized: "command.cloudVM.failed.title.delete", defaultValue: "Couldn't Delete Machine"),
                     action: String(
                         localized: "command.cloudVM.failed.action.delete",
-                        defaultValue: "Refresh the Machines list and retry. A machine that no longer exists is removed from the list automatically. To see the full output, run `cmux vm rm <id>` in a terminal."
+                        defaultValue: "Refresh the Machines list and retry. A machine that no longer exists is removed from the list automatically. To see the full output, run `hmux vm rm <id>` in a terminal."
                     ),
                     isSilent: { $0.indicatesCloudVMNotFound }
                 )
@@ -100,7 +100,7 @@ final class CloudVMActionLauncher {
                     title: String(localized: "command.cloudVM.failed.title.rename", defaultValue: "Couldn't Rename Machine"),
                     action: String(
                         localized: "command.cloudVM.failed.action.rename",
-                        defaultValue: "A label is printable text of at most 64 characters. Retry, or run `cmux vm rename <id> <label>` in a terminal to see the full output."
+                        defaultValue: "A label is printable text of at most 64 characters. Retry, or run `hmux vm rename <id> <label>` in a terminal to see the full output."
                     )
                 )
             case "snapshot":
@@ -290,7 +290,7 @@ final class CloudVMActionLauncher {
             return false
         }
         let failure = failurePresentation ?? FailurePresentation.forCommand(arguments)
-        let cliURL = Bundle.main.resourceURL?.appendingPathComponent("bin/cmux")
+        let cliURL = Bundle.main.resourceURL?.appendingPathComponent("bin/hmux")
         guard let cliURL,
               FileManager.default.isExecutableFile(atPath: cliURL.path) else {
             if presentsFailureAlert {
@@ -298,7 +298,7 @@ final class CloudVMActionLauncher {
                     title: failure.title,
                     summary: String(
                         localized: "command.cloudVM.failed.missingCLI",
-                        defaultValue: "The bundled cmux CLI is missing from this app build."
+                        defaultValue: "The bundled hmux CLI is missing from this app build."
                     ),
                     output: "",
                     action: failure.action,
@@ -313,17 +313,17 @@ final class CloudVMActionLauncher {
         process.executableURL = cliURL
         process.arguments = ["--socket", socketPath, "--id-format", "uuids"] + arguments
         var environment = ProcessInfo.processInfo.environment
-        environment["CMUX_SOCKET_PATH"] = socketPath
-        environment["CMUX_BUNDLED_CLI_PATH"] = cliURL.path
+        environment["HMUX_SOCKET_PATH"] = socketPath
+        environment["HMUX_BUNDLED_CLI_PATH"] = cliURL.path
         // The app launches these for a person's click, so the CLI's opens take focus the
         // way an interactive run does (its piped stdio would otherwise read as a
         // script). A background launch passes `--focus false`, which still wins.
-        environment["CMUX_FOCUS_NEW"] = "1"
+        environment["HMUX_FOCUS_NEW"] = "1"
         for (key, value) in environmentOverrides {
             environment[key] = value
         }
         if let operationContext { environment.merge(operationContext.environment) { _, new in new } }
-        environment.removeValue(forKey: "CMUX_SOCKET")
+        environment.removeValue(forKey: "HMUX_SOCKET")
         process.environment = environment
 
         let outputPipe = Pipe()
@@ -399,7 +399,7 @@ final class CloudVMActionLauncher {
                 self?.cancel(processID: processID, launchID: launchID)
             })
 #if DEBUG
-            cmuxDebugLog("cloudVM.launch pid=\(processID) socket=\(socketPath)")
+            hmuxDebugLog("cloudVM.launch pid=\(processID) socket=\(socketPath)")
 #endif
             return true
         } catch {
@@ -429,7 +429,7 @@ final class CloudVMActionLauncher {
         alert.addButton(withTitle: String(localized: "common.ok", defaultValue: "OK"))
         // House alert style: command output lives in the scrollable details
         // region so long results never balloon the sheet.
-        let content = CmuxAlertContent.scrollingAll(trimmedOutput)
+        let content = HmuxAlertContent.scrollingAll(trimmedOutput)
         let window = Self.presentationWindow(preferred: preferredWindow, key: NSApp.keyWindow, main: NSApp.mainWindow)
         content.apply(to: alert, presentingWindow: window)
         if let window {
@@ -439,7 +439,7 @@ final class CloudVMActionLauncher {
         }
     }
 
-    /// `cmux vm new` prints `OK machine=<id>` the moment the machine exists,
+    /// `hmux vm new` prints `OK machine=<id>` the moment the machine exists,
     /// before it tries to open it, so a failed open still reports the machine.
     private static func createdMachineId(from output: String) -> String? {
         CloudMachineCreateOutput(legacyCreatedFormat: "").machineID(in: output)
@@ -506,8 +506,8 @@ final class CloudVMActionLauncher {
         // House alert style: summary and next steps stay fixed, raw output
         // scrolls, and the sheet is attached to the window so it moves with it.
         let content = safeOutput.isEmpty
-            ? CmuxAlertContent(informativeText: informativeText)
-            : CmuxAlertContent(flattenedText: informativeText, separatingScrollableDetails: safeOutput)
+            ? HmuxAlertContent(informativeText: informativeText)
+            : HmuxAlertContent(flattenedText: informativeText, separatingScrollableDetails: safeOutput)
         let window = Self.presentationWindow(preferred: preferredWindow, key: NSApp.keyWindow, main: NSApp.mainWindow)
         content.apply(to: alert, presentingWindow: window)
         CloudErrorCopy.install(in: alert, text: "\(title)\n\(content.flattenedText)")
@@ -566,7 +566,7 @@ final class CloudVMActionLauncher {
             "bearer",
             "billingcustomer",
             "billingteam",
-            "cmux_vm_",
+            "hmux_vm_",
             "cookie",
             "credential",
             "database",
@@ -597,7 +597,7 @@ final class CloudVMActionLauncher {
             "bearer",
             "billingcustomer",
             "billingteam",
-            "cmuxvmapi",
+            "hmuxvmapi",
             "cookie",
             "credential",
             "database",

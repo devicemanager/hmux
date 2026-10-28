@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxCloudResizeCore
-import CmuxProductAnalytics
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCloudResizeCore
+import HmuxProductAnalytics
+import HmuxSurfaceCatalogModel
 import Foundation
 import Observation
 
@@ -111,9 +111,9 @@ final class NewMachineModel {
     }
     /// Which create flow the sheet fronts.
     enum Mode: Equatable {
-        /// `cmux vm new`: a fresh Freestyle machine with an ephemeral home.
+        /// `hmux vm new`: a fresh Freestyle machine with an ephemeral home.
         case newMachine
-        /// `cmux vm base open --workspace <id>`: the persistent Base slot's
+        /// `hmux vm base open --workspace <id>`: the persistent Base slot's
         /// first provisioning. Base has no size choice (the backend sizes it)
         /// and no name (it is always "Base").
         case base(workspaceID: UUID)
@@ -302,7 +302,7 @@ final class NewMachineModel {
             guard let target = upgradePlan(for: memoryMb) else { return }
             selectedUpgradePlanId = target
             showsMaxUpgrade = true
-            PostHogAnalytics.shared.capture("cmux_vm_size_upgrade_prompted", properties: [
+            PostHogAnalytics.shared.capture("hmux_vm_size_upgrade_prompted", properties: [
                 "requested_memory_mb": memoryMb,
                 "plan": plan?.planId ?? "unknown",
                 "target_plan": target,
@@ -434,7 +434,7 @@ final class NewMachineModel {
         return allowed.first ?? requested
     }
 
-    /// The one machine cmux Cloud provisions: the devbox with the shell
+    /// The one machine hmux Cloud provisions: the devbox with the shell
     /// tooling, the coding agents and a VNC screen. One snapshot ladder serves
     /// every kind the backend knows, so the kind is not something the sheet
     /// asks about; the request carries it so the machine is recorded (and its
@@ -529,13 +529,13 @@ final class NewMachineModel {
         return String(format: format, size.menuTitle, memoryUpgradePlanName)
     }
 
-    /// "24 GB, 32 GB, and 64 GB machines need cmux Max."; nil when nothing is locked
+    /// "24 GB, 32 GB, and 64 GB machines need hmux Max."; nil when nothing is locked
     /// or no plan sells the locked sizes.
     var lockedSizesNoteText: String? {
         guard supportsSize, !lockedMemoryOptions.isEmpty, let memoryUpgradePlanNames = lockedMemoryUpgradePlanNames else { return nil }
         let sizes = lockedMemoryOptions.compactMap { upgradePlan(for: $0) == nil ? nil : Self.memoryLabel(mb: $0) }
         let joined = ListFormatter.localizedString(byJoining: sizes)
-        let format = String(localized: "machines.new.size.locked.note", defaultValue: "%1$@ machines need cmux %2$@.")
+        let format = String(localized: "machines.new.size.locked.note", defaultValue: "%1$@ machines need hmux %2$@.")
         return String(format: format, joined, memoryUpgradePlanNames)
     }
 
@@ -669,7 +669,7 @@ final class NewMachineModel {
         guard submit(createRequest) else {
             errorText = String(
                 localized: "machines.new.error.launch",
-                defaultValue: "cmux could not start the create command. Sign in and try again."
+                defaultValue: "hmux could not start the create command. Sign in and try again."
             )
             return
         }

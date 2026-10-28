@@ -1,9 +1,9 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 import OSLog
 
 private let mobileSimulatorHostDiagnosticsLog = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "dev.cmux",
+    subsystem: Bundle.main.bundleIdentifier ?? "dev.hmux",
     category: "mobile-simulator"
 )
 

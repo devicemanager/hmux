@@ -1,7 +1,7 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
 import SwiftUI
-import CmuxTerminalCore
+import HmuxTerminalCore
 
 enum AppearanceMode: String, CaseIterable, Identifiable {
     case system
@@ -76,7 +76,7 @@ enum AppearanceSettings {
     }
 
     /// The system interface-style snapshot used by terminal color-scheme
-    /// resolution. Lifted to ``TerminalSystemAppearance`` in CmuxTerminalCore so
+    /// resolution. Lifted to ``TerminalSystemAppearance`` in HmuxTerminalCore so
     /// the terminal config type no longer reaches up into the app's appearance
     /// settings; this alias keeps the `AppearanceSettings.SystemAppearance`
     /// call-site name byte-identical.
@@ -113,9 +113,9 @@ enum AppearanceSettings {
         terminalColorSchemePreference(defaults: defaults, systemAppearance: systemAppearance)
     }
 
-    // Ghostty split-theme resolution follows cmux's persisted appearance mode.
+    // Ghostty split-theme resolution follows hmux's persisted appearance mode.
     // AppKit view/window appearances can lag during live mode changes.
-    // The resolution itself now lives in CmuxTerminalCore
+    // The resolution itself now lives in HmuxTerminalCore
     // (TerminalColorSchemePreference.resolve); this forwards the app's
     // normalized appearance mode into it so both surfaces share one source of
     // truth.
@@ -173,7 +173,7 @@ enum AppearanceSettings {
         isApplicationFinishedLaunching: @MainActor () -> Bool = AppIconLaunchState.isApplicationFinishedLaunching,
         effectivePrefersDark: @MainActor () -> Bool? = {
             guard let app = NSApp else { return nil }
-            return app.effectiveAppearance.cmuxPrefersDark
+            return app.effectiveAppearance.hmuxPrefersDark
         }
     ) -> ColorScheme {
         if let override = colorSchemeOverride(for: rawValue) { return override }
@@ -314,7 +314,7 @@ final class AppearanceSettingsUserDefaultsObserver {
 
     init(
         environment: Environment = .live(),
-        source: String = "cmuxApp.appearanceDefaultsChanged"
+        source: String = "hmuxApp.appearanceDefaultsChanged"
     ) {
         self.environment = environment
         self.source = source
@@ -374,26 +374,26 @@ private struct AppearanceColorSchemeModifier: ViewModifier {
         content
             .environment(\.colorScheme, effective)
             .preferredColorScheme(override)
-            .cmuxAccentColorEnvironment()
+            .hmuxAccentColorEnvironment()
             .onReceive(NotificationCenter.default.publisher(for: .systemAppearanceDidChange)) { _ in
                 systemAppearanceGeneration &+= 1
             }
     }
 }
 
-/// Injects the resolved cmux accent (``EnvironmentValues/cmuxAccentColor``)
+/// Injects the resolved hmux accent (``EnvironmentValues/hmuxAccentColor``)
 /// for a SwiftUI root and keeps it current from the app delegate's
-/// ``CmuxAccentColorObserver``. Window roots get it through
-/// `cmuxAppearanceColorScheme`; hosting views mounted outside a window root
+/// ``HmuxAccentColorObserver``. Window roots get it through
+/// `hmuxAppearanceColorScheme`; hosting views mounted outside a window root
 /// (search overlays, titlebar accessories, popovers) apply it directly.
-struct CmuxAccentColorEnvironmentModifier: ViewModifier {
-    @State private var accentColor = AppDelegate.shared?.accentColor ?? CmuxAccentColor()
+struct HmuxAccentColorEnvironmentModifier: ViewModifier {
+    @State private var accentColor = AppDelegate.shared?.accentColor ?? HmuxAccentColor()
 
     func body(content: Content) -> some View {
         content
-            .environment(\.cmuxAccentColor, accentColor)
-            .onReceive(NotificationCenter.default.publisher(for: CmuxAccentColor.didChangeNotification)) { notification in
-                if let observer = notification.object as? CmuxAccentColorObserver {
+            .environment(\.hmuxAccentColor, accentColor)
+            .onReceive(NotificationCenter.default.publisher(for: HmuxAccentColor.didChangeNotification)) { notification in
+                if let observer = notification.object as? HmuxAccentColorObserver {
                     accentColor = observer.current
                 }
             }
@@ -401,11 +401,11 @@ struct CmuxAccentColorEnvironmentModifier: ViewModifier {
 }
 
 extension View {
-    func cmuxAccentColorEnvironment() -> ModifiedContent<Self, CmuxAccentColorEnvironmentModifier> {
-        modifier(CmuxAccentColorEnvironmentModifier())
+    func hmuxAccentColorEnvironment() -> ModifiedContent<Self, HmuxAccentColorEnvironmentModifier> {
+        modifier(HmuxAccentColorEnvironmentModifier())
     }
 
-    func cmuxAppearanceColorScheme(_ rawValue: String?) -> some View {
+    func hmuxAppearanceColorScheme(_ rawValue: String?) -> some View {
         modifier(AppearanceColorSchemeModifier(rawValue: rawValue))
     }
 }

@@ -34,7 +34,7 @@ on:
         required: false
         default: ""
       test_filter:
-        description: "UI test target/class or target/class/method, for example cmuxUITests/cmuxUITests/testSignInPairingAndWorkspaceShell"
+        description: "UI test target/class or target/class/method, for example hmuxUITests/hmuxUITests/testSignInPairingAndWorkspaceShell"
         required: false
         default: ""
       swift_package:
@@ -44,13 +44,13 @@ on:
         type: choice
         options:
           - ""
-          - CMUXMobileCore
-          - CmuxSyncStore
-          - CmuxMobilePairedMac
-          - CmuxMobileChanges
-          - CmuxMobileBilling
-          - CmuxMobileShell
-          - CmuxMobileShellModel
+          - HMUXMobileCore
+          - HmuxSyncStore
+          - HmuxMobilePairedMac
+          - HmuxMobileChanges
+          - HmuxMobileBilling
+          - HmuxMobileShell
+          - HmuxMobileShellModel
       ios_version:
         description: "Optional simulator OS version, for example 17.5, 18.5, or 26.3; empty keeps the default"
         required: false
@@ -204,7 +204,7 @@ jobs:
           IOS_OWNED: ${{ vars.CI_IOS_OWNED }}
           POOL_OWNED: ${{ vars.CI_PR_POOL_OWNED }}
           OWNED_SLOTS: ${{ vars.CI_OWNED_POOL_SLOTS }}
-          PR_XCODE_APP: ${{ (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CMUX_CI_XCODE_APP_PR || '' }}
+          PR_XCODE_APP: ${{ (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) && vars.HMUX_CI_XCODE_APP_PR || '' }}
           POOL_ORDER: ${{ vars.CI_PR_POOL_ORDER }}
           POOL_MAX_QUEUED: ${{ vars.CI_PR_POOL_MAX_QUEUED }}
           POOL_QUEUE_ROUNDS: ${{ vars.CI_PR_POOL_QUEUE_ROUNDS }}
@@ -431,7 +431,7 @@ jobs:
       # test-e2e.yml does; a re-run on Blacksmith keeps it, so a product built
       # on the mini still matches its consumer. Elsewhere select-ci-xcode.sh
       # keeps its pool default.
-      CMUX_CI_XCODE_APP: ${{ startsWith(needs.runner.outputs.label, 'glaeda-') && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CMUX_CI_XCODE_APP_PR || '' }}
+      HMUX_CI_XCODE_APP: ${{ startsWith(needs.runner.outputs.label, 'glaeda-') && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) && vars.HMUX_CI_XCODE_APP_PR || '' }}
       SWIFT_TEST_FILTER: ${{ inputs.test_filter }}
       FOCUSED_SWIFT_PACKAGE: ${{ inputs.swift_package }}
       # A hung test otherwise runs to the job ceiling, which GitHub reports as
@@ -462,7 +462,7 @@ jobs:
           SELECTED_PACKAGE: ${{ inputs.swift_package }}
         run: |
           case "$SELECTED_PACKAGE" in
-            ""|CMUXMobileCore|CmuxSyncStore|CmuxMobilePairedMac|CmuxMobileChanges|CmuxMobileBilling|CmuxMobileShell|CmuxMobileShellModel) ;;
+            ""|HMUXMobileCore|HmuxSyncStore|HmuxMobilePairedMac|HmuxMobileChanges|HmuxMobileBilling|HmuxMobileShell|HmuxMobileShellModel) ;;
             *) echo "::error::Unsupported Swift package: $SELECTED_PACKAGE"; exit 1 ;;
           esac
 
@@ -518,90 +518,90 @@ jobs:
       - name: Select Xcode
         run: ./scripts/select-ci-xcode.sh
 
-      - name: Run CMUXMobileCore package tests
-        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'CMUXMobileCore' }}
+      - name: Run HMUXMobileCore package tests
+        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'HMUXMobileCore' }}
         run: |
           set -euo pipefail
-          args=(--package-path Packages/Shared/CMUXMobileCore)
+          args=(--package-path Packages/Shared/HMUXMobileCore)
           if [ -n "${FOCUSED_SWIFT_PACKAGE:-}" ]; then
             args+=(--no-parallel)
           fi
           if [ -n "${SWIFT_TEST_FILTER:-}" ]; then
             args+=(--filter "$SWIFT_TEST_FILTER")
           fi
-          log_path="$RUNNER_TEMP/CMUXMobileCore-tests.log"
+          log_path="$RUNNER_TEMP/HMUXMobileCore-tests.log"
           python3 scripts/ci/hung_test_watchdog.py --silence-seconds "$TEST_SILENCE_SECONDS" \
-            --label CMUXMobileCore --log "$log_path" -- swift test "${args[@]}"
-          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-CMUXMobileCore}"
+            --label HMUXMobileCore --log "$log_path" -- swift test "${args[@]}"
+          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-HMUXMobileCore}"
 
-      - name: Run CmuxSyncStore package tests
-        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'CmuxSyncStore' }}
+      - name: Run HmuxSyncStore package tests
+        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'HmuxSyncStore' }}
         run: |
           set -euo pipefail
           # Local-first sync store (raw SQLite3). Headless SwiftPM, no GhosttyKit
           # or app-target dependency, so it runs as a real CI gate here.
-          args=(--package-path Packages/Shared/CmuxSyncStore)
+          args=(--package-path Packages/Shared/HmuxSyncStore)
           if [ -n "${FOCUSED_SWIFT_PACKAGE:-}" ]; then
             args+=(--no-parallel)
           fi
           if [ -n "${SWIFT_TEST_FILTER:-}" ]; then
             args+=(--filter "$SWIFT_TEST_FILTER")
           fi
-          log_path="$RUNNER_TEMP/CmuxSyncStore-tests.log"
+          log_path="$RUNNER_TEMP/HmuxSyncStore-tests.log"
           python3 scripts/ci/hung_test_watchdog.py --silence-seconds "$TEST_SILENCE_SECONDS" \
-            --label CmuxSyncStore --log "$log_path" -- swift test "${args[@]}"
-          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-CmuxSyncStore}"
+            --label HmuxSyncStore --log "$log_path" -- swift test "${args[@]}"
+          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-HmuxSyncStore}"
 
-      - name: Run CmuxMobilePairedMac package tests
-        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'CmuxMobilePairedMac' }}
+      - name: Run HmuxMobilePairedMac package tests
+        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'HmuxMobilePairedMac' }}
         run: |
           set -euo pipefail
-          args=(--package-path Packages/iOS/CmuxMobilePairedMac)
+          args=(--package-path Packages/iOS/HmuxMobilePairedMac)
           if [ -n "${FOCUSED_SWIFT_PACKAGE:-}" ]; then
             args+=(--no-parallel)
           fi
           if [ -n "${SWIFT_TEST_FILTER:-}" ]; then
             args+=(--filter "$SWIFT_TEST_FILTER")
           fi
-          log_path="$RUNNER_TEMP/CmuxMobilePairedMac-tests.log"
+          log_path="$RUNNER_TEMP/HmuxMobilePairedMac-tests.log"
           python3 scripts/ci/hung_test_watchdog.py --silence-seconds "$TEST_SILENCE_SECONDS" \
-            --label CmuxMobilePairedMac --log "$log_path" -- swift test "${args[@]}"
-          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-CmuxMobilePairedMac}"
+            --label HmuxMobilePairedMac --log "$log_path" -- swift test "${args[@]}"
+          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-HmuxMobilePairedMac}"
 
-      - name: Run CmuxMobileChanges package tests
-        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'CmuxMobileChanges' }}
+      - name: Run HmuxMobileChanges package tests
+        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'HmuxMobileChanges' }}
         run: |
           set -euo pipefail
-          args=(--package-path Packages/iOS/CmuxMobileChanges)
+          args=(--package-path Packages/iOS/HmuxMobileChanges)
           if [ -n "${FOCUSED_SWIFT_PACKAGE:-}" ]; then
             args+=(--no-parallel)
           fi
           if [ -n "${SWIFT_TEST_FILTER:-}" ]; then
             args+=(--filter "$SWIFT_TEST_FILTER")
           fi
-          log_path="$RUNNER_TEMP/CmuxMobileChanges-tests.log"
+          log_path="$RUNNER_TEMP/HmuxMobileChanges-tests.log"
           python3 scripts/ci/hung_test_watchdog.py --silence-seconds "$TEST_SILENCE_SECONDS" \
-            --label CmuxMobileChanges --log "$log_path" -- swift test "${args[@]}"
-          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-CmuxMobileChanges}"
+            --label HmuxMobileChanges --log "$log_path" -- swift test "${args[@]}"
+          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-HmuxMobileChanges}"
 
-      - name: Run CmuxMobileBilling package tests
-        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'CmuxMobileBilling' }}
+      - name: Run HmuxMobileBilling package tests
+        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'HmuxMobileBilling' }}
         run: |
           set -euo pipefail
-          args=(--package-path Packages/iOS/CmuxMobileBilling)
+          args=(--package-path Packages/iOS/HmuxMobileBilling)
           if [ -n "${FOCUSED_SWIFT_PACKAGE:-}" ]; then
             args+=(--no-parallel)
           fi
           if [ -n "${SWIFT_TEST_FILTER:-}" ]; then
             args+=(--filter "$SWIFT_TEST_FILTER")
           fi
-          log_path="$RUNNER_TEMP/CmuxMobileBilling-tests.log"
+          log_path="$RUNNER_TEMP/HmuxMobileBilling-tests.log"
           python3 scripts/ci/hung_test_watchdog.py --silence-seconds "$TEST_SILENCE_SECONDS" \
-            --label CmuxMobileBilling --log "$log_path" -- swift test "${args[@]}"
-          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-CmuxMobileBilling}"
+            --label HmuxMobileBilling --log "$log_path" -- swift test "${args[@]}"
+          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-HmuxMobileBilling}"
 
-      - name: Run CmuxMobileShell package tests
-        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'CmuxMobileShell' }}
+      - name: Run HmuxMobileShell package tests
+        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'HmuxMobileShell' }}
         run: |
           set -euo pipefail
           # iOS shell replay/liveness regressions live in this package target.
@@ -614,32 +614,32 @@ jobs:
           # then kills the step, which reports as `cancelled` rather than a
           # failure, so none of it surfaced. Run it serially until the waits
           # themselves are fixed.
-          args=(--package-path Packages/iOS/CmuxMobileShell --no-parallel)
+          args=(--package-path Packages/iOS/HmuxMobileShell --no-parallel)
           if [ -n "${SWIFT_TEST_FILTER:-}" ]; then
             args+=(--filter "$SWIFT_TEST_FILTER")
           fi
-          log_path="$RUNNER_TEMP/CmuxMobileShell-tests.log"
+          log_path="$RUNNER_TEMP/HmuxMobileShell-tests.log"
           python3 scripts/ci/hung_test_watchdog.py --silence-seconds "$TEST_SILENCE_SECONDS" \
-            --label CmuxMobileShell --log "$log_path" -- swift test "${args[@]}"
-          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-CmuxMobileShell}"
+            --label HmuxMobileShell --log "$log_path" -- swift test "${args[@]}"
+          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-HmuxMobileShell}"
 
-      - name: Run CmuxMobileShellModel package tests
-        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'CmuxMobileShellModel' }}
+      - name: Run HmuxMobileShellModel package tests
+        if: ${{ inputs.swift_package == '' || inputs.swift_package == 'HmuxMobileShellModel' }}
         run: |
           set -euo pipefail
           # Pure shell-model queue and ordering regressions live in this package.
           # Keep them beside the shell package gate so input framing stays covered.
-          args=(--package-path Packages/iOS/CmuxMobileShellModel)
+          args=(--package-path Packages/iOS/HmuxMobileShellModel)
           if [ -n "${FOCUSED_SWIFT_PACKAGE:-}" ]; then
             args+=(--no-parallel)
           fi
           if [ -n "${SWIFT_TEST_FILTER:-}" ]; then
             args+=(--filter "$SWIFT_TEST_FILTER")
           fi
-          log_path="$RUNNER_TEMP/CmuxMobileShellModel-tests.log"
+          log_path="$RUNNER_TEMP/HmuxMobileShellModel-tests.log"
           python3 scripts/ci/hung_test_watchdog.py --silence-seconds "$TEST_SILENCE_SECONDS" \
-            --label CmuxMobileShellModel --log "$log_path" -- swift test "${args[@]}"
-          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-CmuxMobileShellModel}"
+            --label HmuxMobileShellModel --log "$log_path" -- swift test "${args[@]}"
+          ./scripts/ci/require_selected_test_execution.sh "$log_path" "${SWIFT_TEST_FILTER:-HmuxMobileShellModel}"
 
   ios-simulator-build:
     needs: [runner, detect-ios-changes, package-conventions-lint]
@@ -661,7 +661,7 @@ jobs:
       # test-e2e.yml does; a re-run on Blacksmith keeps it, so a product built
       # on the mini still matches its consumer. Elsewhere select-ci-xcode.sh
       # keeps its pool default.
-      CMUX_CI_XCODE_APP: ${{ startsWith(needs.runner.outputs.label, 'glaeda-') && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CMUX_CI_XCODE_APP_PR || '' }}
+      HMUX_CI_XCODE_APP: ${{ startsWith(needs.runner.outputs.label, 'glaeda-') && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) && vars.HMUX_CI_XCODE_APP_PR || '' }}
     outputs:
       artifact_id: ${{ steps.upload-product.outputs.artifact-id }}
       artifact_digest: ${{ steps.upload-product.outputs.artifact-digest }}
@@ -751,12 +751,12 @@ jobs:
           echo "IOS_SPM_CACHE=$PWD/.ci-ios-source-packages" >> "$GITHUB_ENV"
           # Not restored or saved: ensure-ghosttykit.sh unpacks and locks
           # here, so a reused runner keeps nothing in ~/.cache.
-          echo "CMUX_GHOSTTYKIT_CACHE_DIR=$RUNNER_TEMP/cmux-ghosttykit-cache" >> "$GITHUB_ENV"
+          echo "HMUX_GHOSTTYKIT_CACHE_DIR=$RUNNER_TEMP/hmux-ghosttykit-cache" >> "$GITHUB_ENV"
 
       - name: Reuse this owned Mac's iOS build state
         # An owned Mac outlives the job, so it keeps this job's DerivedData and
         # resolved packages instead of downloading the packages from R2 and
-        # compiling cold every time: on cmux7s the R2 restore took 273 s and
+        # compiling cold every time: on hmux7s the R2 restore took 273 s and
         # the resolve 282 s (run 36108107919). DerivedData is per runner
         # instance (one job at a time, and it carries this instance's paths);
         # the packages are per Mac, so every instance on it starts with them
@@ -771,8 +771,8 @@ jobs:
             *-glaeda|*-glaeda-[0-9]*) ;;
             *) echo "Not an owned Mac: $RUNNER_NAME"; exit 0 ;;
           esac
-          store="/Users/Shared/cmux-build-fleet/ci-ios/$RUNNER_NAME"
-          packages="/Users/Shared/cmux-build-fleet/ci-ios-packages"
+          store="/Users/Shared/hmux-build-fleet/ci-ios/$RUNNER_NAME"
+          packages="/Users/Shared/hmux-build-fleet/ci-ios-packages"
           fingerprint="$( { echo ios-owned-v1; xcodebuild -version; echo "$PWD"; echo "$RUNNER_TEMP"; } | shasum -a 256 | cut -d' ' -f1)"
           echo "IOS_OWNED_STORE=$store" >> "$GITHUB_ENV"
           echo "IOS_OWNED_PACKAGES=$packages" >> "$GITHUB_ENV"
@@ -790,7 +790,7 @@ jobs:
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
           path: .ci-ios-source-packages
-          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
             ios-spm-${{ runner.os }}-${{ runner.arch }}-
 
@@ -852,7 +852,7 @@ jobs:
       - name: Prepare iOS build paths
         run: |
           set -euo pipefail
-          IOS_DERIVED_DATA="${RUNNER_TEMP:-$PWD/.tmp}/cmux-ios-build"
+          IOS_DERIVED_DATA="${RUNNER_TEMP:-$PWD/.tmp}/hmux-ios-build"
           rm -rf "$IOS_DERIVED_DATA"
           mkdir -p "$IOS_DERIVED_DATA/logs"
           echo "IOS_DERIVED_DATA=$IOS_DERIVED_DATA" >> "$GITHUB_ENV"
@@ -864,15 +864,15 @@ jobs:
           set -euo pipefail
           # Kept packages resolved from this same Package.resolved and Xcode
           # need no remote fetches (another 4-5 min over a mini's uplink).
-          stamp="$IOS_SPM_CACHE/.cmux-resolved-sha256"
-          resolved_sha="$( { xcodebuild -version; cat ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved; } | shasum -a 256 | cut -d' ' -f1)"
+          stamp="$IOS_SPM_CACHE/.hmux-resolved-sha256"
+          resolved_sha="$( { xcodebuild -version; cat ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved; } | shasum -a 256 | cut -d' ' -f1)"
           offline=()
           if [ "${KEPT_PACKAGES:-}" = true ] && [ "$(cat "$stamp" 2>/dev/null)" = "$resolved_sha" ]; then
             offline=(-skipPackageUpdates)
           fi
           rm -f "$stamp"
-          xcodebuild -workspace ios/cmux.xcworkspace \
-            -scheme cmux-ios \
+          xcodebuild -workspace ios/hmux.xcworkspace \
+            -scheme hmux-ios \
             -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
             -derivedDataPath "$IOS_DERIVED_DATA" \
             -clonedSourcePackagesDirPath "$IOS_SPM_CACHE" \
@@ -910,8 +910,8 @@ jobs:
           set -euo pipefail
           started_ns="$(python3 -c 'import time; print(time.monotonic_ns())')"
           XCODEBUILD_ARGS=(
-            -workspace ios/cmux.xcworkspace
-            -scheme cmux-ios
+            -workspace ios/hmux.xcworkspace
+            -scheme hmux-ios
             -configuration Debug
             -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
             -derivedDataPath "$IOS_DERIVED_DATA"
@@ -923,16 +923,16 @@ jobs:
           fi
           # The build action emits every scheme plan unless one is named.
           # Match ordinary test's default plan and keep the product unambiguous.
-          if [[ "${TEST_FILTER:-}" == cmuxUITests/* ]]; then
-            XCODEBUILD_ARGS+=(-testPlan cmux-ui)
+          if [[ "${TEST_FILTER:-}" == hmuxUITests/* ]]; then
+            XCODEBUILD_ARGS+=(-testPlan hmux-ui)
           else
-            XCODEBUILD_ARGS+=(-testPlan cmux)
+            XCODEBUILD_ARGS+=(-testPlan hmux)
           fi
           # The focused App Store UI proof must exercise the same compile-time
           # feature gate as the public binary. Keep ordinary Debug and beta /
           # internal simulator builds on their normal System VPN behavior.
-          if [[ "${TEST_FILTER:-}" == "cmuxUITests/cmuxUITests/testAppStoreCloudUIHasNoSystemVPN" ]]; then
-            XCODEBUILD_ARGS+=(SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) DEBUG CMUX_DEV_AUTH CMUX_APPSTORE')
+          if [[ "${TEST_FILTER:-}" == "hmuxUITests/hmuxUITests/testAppStoreCloudUIHasNoSystemVPN" ]]; then
+            XCODEBUILD_ARGS+=(SWIFT_ACTIVE_COMPILATION_CONDITIONS='$(inherited) DEBUG HMUX_DEV_AUTH HMUX_APPSTORE')
           fi
           set +e
           xcodebuild "${XCODEBUILD_ARGS[@]}" -showBuildTimingSummary build-for-testing \
@@ -964,12 +964,12 @@ jobs:
 
       - name: Stage and stamp iOS test product
         env:
-          CMUX_IOS_TEST_PLAN: ${{ startsWith(inputs.test_filter, 'cmuxUITests/') && 'cmux-ui' || 'cmux-ios-default' }}
-          CMUX_IOS_TEST_FILTER: ${{ inputs.test_filter }}
-          CMUX_IOS_VERSION: ${{ inputs.ios_version }}
+          HMUX_IOS_TEST_PLAN: ${{ startsWith(inputs.test_filter, 'hmuxUITests/') && 'hmux-ui' || 'hmux-ios-default' }}
+          HMUX_IOS_TEST_FILTER: ${{ inputs.test_filter }}
+          HMUX_IOS_VERSION: ${{ inputs.ios_version }}
         run: |
           set -euo pipefail
-          IOS_PRODUCT_STAGE="$RUNNER_TEMP/cmux-ios-test-product"
+          IOS_PRODUCT_STAGE="$RUNNER_TEMP/hmux-ios-test-product"
           rm -rf "$IOS_PRODUCT_STAGE"
           mkdir -p "$IOS_PRODUCT_STAGE/Build/Products"
           rsync -aL "$IOS_DERIVED_DATA/Build/Products/" "$IOS_PRODUCT_STAGE/Build/Products/"
@@ -1049,7 +1049,7 @@ jobs:
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
           path: .ci-ios-source-packages
-          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
 
       - name: Save this owned Mac's iOS packages
         if: ${{ always() && steps.owned-state.outputs.fingerprint != '' }}
@@ -1067,7 +1067,7 @@ jobs:
       - name: Remove compatibility simulator
         # Also a simulator select_ios_simulator.py created for this run, which
         # an owned Mac would otherwise keep.
-        if: ${{ always() && env.SIMULATOR_ID != '' && (inputs.ios_version != '' || startsWith(env.SIMULATOR_NAME, 'cmux CI ')) }}
+        if: ${{ always() && env.SIMULATOR_ID != '' && (inputs.ios_version != '' || startsWith(env.SIMULATOR_NAME, 'hmux CI ')) }}
         run: |
           xcrun simctl shutdown "$SIMULATOR_ID" >/dev/null 2>&1 || true
           xcrun simctl delete "$SIMULATOR_ID"
@@ -1097,7 +1097,7 @@ jobs:
       # test-e2e.yml does; a re-run on Blacksmith keeps it, so a product built
       # on the mini still matches its consumer. Elsewhere select-ci-xcode.sh
       # keeps its pool default.
-      CMUX_CI_XCODE_APP: ${{ startsWith(needs.runner.outputs.label, 'glaeda-') && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) && vars.CMUX_CI_XCODE_APP_PR || '' }}
+      HMUX_CI_XCODE_APP: ${{ startsWith(needs.runner.outputs.label, 'glaeda-') && (github.event_name == 'workflow_dispatch' || github.event.pull_request.head.repo.full_name == github.repository) && vars.HMUX_CI_XCODE_APP_PR || '' }}
     strategy:
       fail-fast: false
       matrix:
@@ -1175,7 +1175,7 @@ jobs:
           DEVICE_FAMILY: ${{ matrix.family }}
         run: |
           set -euo pipefail
-          IOS_DERIVED_DATA="${RUNNER_TEMP:-$PWD/.tmp}/cmux-ios-${DEVICE_FAMILY}"
+          IOS_DERIVED_DATA="${RUNNER_TEMP:-$PWD/.tmp}/hmux-ios-${DEVICE_FAMILY}"
           rm -rf "$IOS_DERIVED_DATA"
           mkdir -p "$IOS_DERIVED_DATA/logs" "$IOS_DERIVED_DATA/Logs/Test"
           echo "IOS_DERIVED_DATA=$IOS_DERIVED_DATA" >> "$GITHUB_ENV"
@@ -1219,9 +1219,9 @@ jobs:
         env:
           EXPECTED_SHA256: ${{ needs.ios-simulator-build.outputs.archive_sha256 }}
           EXPECTED_BYTES: ${{ needs.ios-simulator-build.outputs.archive_bytes }}
-          CMUX_IOS_TEST_PLAN: ${{ startsWith(inputs.test_filter, 'cmuxUITests/') && 'cmux-ui' || 'cmux-ios-default' }}
-          CMUX_IOS_TEST_FILTER: ${{ inputs.test_filter }}
-          CMUX_IOS_VERSION: ${{ inputs.ios_version }}
+          HMUX_IOS_TEST_PLAN: ${{ startsWith(inputs.test_filter, 'hmuxUITests/') && 'hmux-ui' || 'hmux-ios-default' }}
+          HMUX_IOS_TEST_FILTER: ${{ inputs.test_filter }}
+          HMUX_IOS_VERSION: ${{ inputs.ios_version }}
         run: |
           set -euo pipefail
           started_ns="$(python3 -c 'import time; print(time.monotonic_ns())')"
@@ -1286,11 +1286,11 @@ jobs:
           }
           trap record_test_seconds EXIT
           XCODEBUILD_ARGS=(
-            -xctestrun "$CMUX_IOS_XCTESTRUN"
+            -xctestrun "$HMUX_IOS_XCTESTRUN"
             -destination "platform=iOS Simulator,id=$SIMULATOR_ID"
           )
           if [ -n "${TEST_FILTER:-}" ]; then
-            if [[ "$TEST_FILTER" != cmuxUITests/* ]]; then
+            if [[ "$TEST_FILTER" != hmuxUITests/* ]]; then
               # Keep focused package assertions bounded on virtualized iOS
               # runners; failed sysdiagnose collection can otherwise take 10m.
               XCODEBUILD_ARGS+=(
@@ -1304,7 +1304,7 @@ jobs:
           else
             # The producer compiled the same default plan with UI tests skipped;
             # retain the runtime selector so the default lane stays non-UI.
-            XCODEBUILD_ARGS+=(-skip-testing:cmuxUITests)
+            XCODEBUILD_ARGS+=(-skip-testing:hmuxUITests)
           fi
           XCODEBUILD_ARGS+=(test-without-building)
           selected_tests_passed_despite_xcodebuild_status() {
@@ -1393,7 +1393,7 @@ jobs:
       - name: Remove compatibility simulator
         # Also a simulator select_ios_simulator.py created for this run, which
         # an owned Mac would otherwise keep.
-        if: ${{ always() && env.SIMULATOR_ID != '' && (inputs.ios_version != '' || startsWith(env.SIMULATOR_NAME, 'cmux CI ')) }}
+        if: ${{ always() && env.SIMULATOR_ID != '' && (inputs.ios_version != '' || startsWith(env.SIMULATOR_NAME, 'hmux CI ')) }}
         run: |
           xcrun simctl shutdown "$SIMULATOR_ID" >/dev/null 2>&1 || true
           xcrun simctl delete "$SIMULATOR_ID"

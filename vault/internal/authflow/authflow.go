@@ -21,7 +21,7 @@ func Login(ctx context.Context, client *api.Client, out Printer) (authstore.Toke
 		return authstore.Tokens{}, err
 	}
 
-	out.Printf("Open this URL to approve cmux-vault:\n  %s\n\n", start.VerificationURL)
+	out.Printf("Open this URL to approve hmux-vault:\n  %s\n\n", start.VerificationURL)
 	out.Printf("Code: %s\n", start.UserCode)
 	if runtime.GOOS == "darwin" {
 		_ = exec.Command("open", start.VerificationURL).Start()

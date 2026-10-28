@@ -1,4 +1,4 @@
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 
 /// The tab row under a Cloud machine: which detail groups the machine has,
 /// their counts, and which one is open. A nil count means the tab shows no

@@ -7,8 +7,8 @@ import { accountDeletionUserHash } from "../services/account/deletionLock";
 
 const deletedUserID = "3241a285-8329-4d69-8f3d-316e08cf140c";
 const originalVercel = process.env.VERCEL;
-const originalRateLimitId = process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
-const originalAnalyticsRateLimitId = process.env.CMUX_ANALYTICS_RATE_LIMIT_ID;
+const originalRateLimitId = process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
+const originalAnalyticsRateLimitId = process.env.HMUX_ANALYTICS_RATE_LIMIT_ID;
 let tombstoneRows: Array<{
   readonly userIdHash: string;
   readonly status: string;
@@ -59,8 +59,8 @@ const POST = makeAnalyticsEventsHandler({
 
 beforeEach(() => {
   delete process.env.VERCEL;
-  process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cmux-client-config-test";
-  process.env.CMUX_ANALYTICS_RATE_LIMIT_ID = "cmux-analytics-test";
+  process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "hmux-client-config-test";
+  process.env.HMUX_ANALYTICS_RATE_LIMIT_ID = "hmux-analytics-test";
   tombstoneRows = [];
   activeLeaseRows = 0;
   leaseInsertCalls = 0;
@@ -81,8 +81,8 @@ beforeEach(() => {
 
 afterAll(() => {
   restoreEnv("VERCEL", originalVercel);
-  restoreEnv("CMUX_CLIENT_CONFIG_RATE_LIMIT_ID", originalRateLimitId);
-  restoreEnv("CMUX_ANALYTICS_RATE_LIMIT_ID", originalAnalyticsRateLimitId);
+  restoreEnv("HMUX_CLIENT_CONFIG_RATE_LIMIT_ID", originalRateLimitId);
+  restoreEnv("HMUX_ANALYTICS_RATE_LIMIT_ID", originalAnalyticsRateLimitId);
 });
 
 describe("iOS analytics events route", () => {
@@ -138,7 +138,7 @@ describe("iOS analytics events route", () => {
     process.env.VERCEL = "1";
     rateLimitResult = { rateLimited: true };
 
-    const response = await POST(new Request("https://cmux.test/api/analytics/events", {
+    const response = await POST(new Request("https://hmux.test/api/analytics/events", {
       method: "POST",
       body: "{not-json",
     }));
@@ -156,7 +156,7 @@ describe("iOS analytics events route", () => {
     const response = await POST(analyticsRequest("new-install-id"));
 
     expect(response.status).toBe(200);
-    expect(rateLimitIDs).toEqual(["cmux-analytics-test"]);
+    expect(rateLimitIDs).toEqual(["hmux-analytics-test"]);
   });
 
   test("forwards a legitimate anonymous install identity", async () => {
@@ -324,7 +324,7 @@ function analyticsRequest(
   distinctID: string,
   properties: Record<string, unknown> = {},
 ): Request {
-  return new Request("https://cmux.test/api/analytics/events", {
+  return new Request("https://hmux.test/api/analytics/events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -340,7 +340,7 @@ function analyticsRequest(
 }
 
 function identifyRequest(distinctID: string, anonymousID: string): Request {
-  return new Request("https://cmux.test/api/analytics/events", {
+  return new Request("https://hmux.test/api/analytics/events", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({

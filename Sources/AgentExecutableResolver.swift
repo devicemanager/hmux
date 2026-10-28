@@ -1,5 +1,5 @@
-import CMUXAgentLaunch
-import CmuxSettings
+import HMUXAgentLaunch
+import HmuxSettings
 import Foundation
 
 struct AgentExecutableResolver {
@@ -47,8 +47,8 @@ struct AgentExecutableResolver {
                   !isDirectory.boolValue,
                   fileManager.isExecutableFile(atPath: candidatePath) else { continue }
             guard !isBundledProviderExecutable(candidateURL) else { continue }
-            guard !isKnownCmuxAgentCommandShim(candidateURL) else { continue }
-            guard !isKnownCmuxAgentWrapper(candidateURL, provider: provider) else { continue }
+            guard !isKnownHmuxAgentCommandShim(candidateURL) else { continue }
+            guard !isKnownHmuxAgentWrapper(candidateURL, provider: provider) else { continue }
 
             return launchPlan(provider: provider, executableURL: candidateURL, searchDirectories: searchDirectories)
         }
@@ -60,7 +60,7 @@ struct AgentExecutableResolver {
         )
     }
 
-    static func cmuxConfiguredExecutablePaths(defaults: UserDefaults = .standard) -> [AgentSessionProviderID: String] {
+    static func hmuxConfiguredExecutablePaths(defaults: UserDefaults = .standard) -> [AgentSessionProviderID: String] {
         guard let claudePath = AgentIntegrationSettingsStore(defaults: defaults).customClaudePath else {
             return [:]
         }
@@ -181,8 +181,8 @@ struct AgentExecutableResolver {
               !isDirectory.boolValue,
               fileManager.isExecutableFile(atPath: candidateURL.path),
               !isBundledProviderExecutable(candidateURL),
-              !isKnownCmuxAgentCommandShim(candidateURL),
-              !isKnownCmuxAgentWrapper(candidateURL, provider: provider) else {
+              !isKnownHmuxAgentCommandShim(candidateURL),
+              !isKnownHmuxAgentWrapper(candidateURL, provider: provider) else {
             return nil
         }
         return candidateURL
@@ -197,16 +197,16 @@ struct AgentExecutableResolver {
            standardized == bundleBin {
             return true
         }
-        if Self.isCmuxAppBundleResourceBinDirectory(standardized) {
+        if Self.isHmuxAppBundleResourceBinDirectory(standardized) {
             return true
         }
         return false
     }
 
-    private func isKnownCmuxAgentCommandShim(_ url: URL) -> Bool {
+    private func isKnownHmuxAgentCommandShim(_ url: URL) -> Bool {
         let candidatePath = url.standardizedFileURL.path
         for (key, rawPath) in environment
-        where key.hasPrefix("CMUX_") && key.hasSuffix("_WRAPPER_SHIM") {
+        where key.hasPrefix("HMUX_") && key.hasSuffix("_WRAPPER_SHIM") {
             let shimPath = rawPath.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !shimPath.isEmpty else { continue }
             if candidatePath == URL(fileURLWithPath: shimPath, isDirectory: false).standardizedFileURL.path {
@@ -215,8 +215,8 @@ struct AgentExecutableResolver {
         }
 
         var shimRoots = environment.compactMap { key, rawPath -> String? in
-            guard key == "CMUX_AGENT_COMMAND_SHIM_ROOT"
-                || (key.hasPrefix("CMUX_") && key.hasSuffix("_WRAPPER_SHIM_ROOT")) else {
+            guard key == "HMUX_AGENT_COMMAND_SHIM_ROOT"
+                || (key.hasPrefix("HMUX_") && key.hasSuffix("_WRAPPER_SHIM_ROOT")) else {
                 return nil
             }
             return rawPath
@@ -224,16 +224,16 @@ struct AgentExecutableResolver {
         if let home = environment["HOME"], home.hasPrefix("/") {
             shimRoots.append(
                 URL(fileURLWithPath: home, isDirectory: true)
-                    .appendingPathComponent(".cmuxterm/cmux-cli-shims", isDirectory: true)
+                    .appendingPathComponent(".hmuxterm/hmux-cli-shims", isDirectory: true)
                     .standardizedFileURL.path
             )
         }
         shimRoots.append(contentsOf: [
             URL(fileURLWithPath: environment["TMPDIR"] ?? NSTemporaryDirectory(), isDirectory: true)
-                .appendingPathComponent("cmux-cli-shims", isDirectory: true)
+                .appendingPathComponent("hmux-cli-shims", isDirectory: true)
                 .standardizedFileURL
                 .path,
-            "/tmp/cmux-cli-shims",
+            "/tmp/hmux-cli-shims",
         ])
         for shimRoot in shimRoots {
             let shimRoot = shimRoot.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -250,20 +250,20 @@ struct AgentExecutableResolver {
 
     private func isBundledProviderExecutable(_ url: URL) -> Bool {
         let path = url.standardizedFileURL.path
-        if Self.isCmuxAppBundleResourceBinChild(path) {
+        if Self.isHmuxAppBundleResourceBinChild(path) {
             return true
         }
         guard let resourcePath = bundleResourceURL?.standardizedFileURL.path else { return false }
         return path.hasPrefix(resourcePath + "/")
     }
 
-    private func isKnownCmuxAgentWrapper(_ url: URL, provider: AgentSessionProviderID) -> Bool {
+    private func isKnownHmuxAgentWrapper(_ url: URL, provider: AgentSessionProviderID) -> Bool {
         let marker: String
         switch provider {
         case .claude:
-            marker = "cmux claude wrapper - injects hooks and session tracking"
+            marker = "hmux claude wrapper - injects hooks and session tracking"
         case .codex:
-            marker = "cmux codex wrapper - per-invocation Codex hook injection"
+            marker = "hmux codex wrapper - per-invocation Codex hook injection"
         case .opencode:
             return false
         }
@@ -280,24 +280,24 @@ struct AgentExecutableResolver {
         return prefix.contains(marker)
     }
 
-    private static func isCmuxAppBundleResourceBinDirectory(_ path: String) -> Bool {
-        cmuxAppBundleResourceBinComponentIndex(path).map { index in
+    private static func isHmuxAppBundleResourceBinDirectory(_ path: String) -> Bool {
+        hmuxAppBundleResourceBinComponentIndex(path).map { index in
             URL(fileURLWithPath: path, isDirectory: true).standardizedFileURL.pathComponents.count == index + 4
         } ?? false
     }
 
-    private static func isCmuxAppBundleResourceBinChild(_ path: String) -> Bool {
-        cmuxAppBundleResourceBinComponentIndex(path).map { index in
+    private static func isHmuxAppBundleResourceBinChild(_ path: String) -> Bool {
+        hmuxAppBundleResourceBinComponentIndex(path).map { index in
             URL(fileURLWithPath: path, isDirectory: false).standardizedFileURL.pathComponents.count > index + 4
         } ?? false
     }
 
-    private static func cmuxAppBundleResourceBinComponentIndex(_ path: String) -> Int? {
+    private static func hmuxAppBundleResourceBinComponentIndex(_ path: String) -> Int? {
         let components = URL(fileURLWithPath: path).standardizedFileURL.pathComponents
         guard components.count >= 4 else { return nil }
         for index in components.indices {
             guard components[index].hasSuffix(".app"),
-                  components[index].lowercased().contains("cmux"),
+                  components[index].lowercased().contains("hmux"),
                   components.indices.contains(index + 3),
                   components[index + 1] == "Contents",
                   components[index + 2] == "Resources",

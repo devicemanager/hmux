@@ -33,7 +33,7 @@ const fakeStackUser = {
 };
 
 function nativeRequest(access: string, refresh = "refresh-1"): Request {
-  return new Request("https://cmux.test/api/vm", {
+  return new Request("https://hmux.test/api/vm", {
     headers: {
       authorization: `Bearer ${access}`,
       "x-stack-refresh-token": refresh,
@@ -41,20 +41,20 @@ function nativeRequest(access: string, refresh = "refresh-1"): Request {
   });
 }
 
-const originalTtl = process.env.CMUX_VM_AUTH_CACHE_TTL_MS;
+const originalTtl = process.env.HMUX_VM_AUTH_CACHE_TTL_MS;
 
 beforeEach(() => {
   clearNativeAuthCacheForTests();
   clearStackThrottleCircuitForTests();
   getUser.mockClear();
   getUser.mockResolvedValue(fakeStackUser);
-  delete process.env.CMUX_VM_AUTH_CACHE_TTL_MS;
+  delete process.env.HMUX_VM_AUTH_CACHE_TTL_MS;
 });
 
 afterEach(() => {
   setSystemTime();
-  if (originalTtl === undefined) delete process.env.CMUX_VM_AUTH_CACHE_TTL_MS;
-  else process.env.CMUX_VM_AUTH_CACHE_TTL_MS = originalTtl;
+  if (originalTtl === undefined) delete process.env.HMUX_VM_AUTH_CACHE_TTL_MS;
+  else process.env.HMUX_VM_AUTH_CACHE_TTL_MS = originalTtl;
 });
 
 describe("native auth verification cache", () => {
@@ -96,8 +96,8 @@ describe("native auth verification cache", () => {
     expect(authed?.id).toBe("user-1");
   });
 
-  test("CMUX_VM_AUTH_CACHE_TTL_MS=0 disables caching", async () => {
-    process.env.CMUX_VM_AUTH_CACHE_TTL_MS = "0";
+  test("HMUX_VM_AUTH_CACHE_TTL_MS=0 disables caching", async () => {
+    process.env.HMUX_VM_AUTH_CACHE_TTL_MS = "0";
 
     await verifyRequest(nativeRequest("access-1"));
     await verifyRequest(nativeRequest("access-1"));
@@ -106,7 +106,7 @@ describe("native auth verification cache", () => {
   });
 
   test("entries expire after the TTL", async () => {
-    process.env.CMUX_VM_AUTH_CACHE_TTL_MS = "20";
+    process.env.HMUX_VM_AUTH_CACHE_TTL_MS = "20";
     setSystemTime(0);
     await verifyRequest(nativeRequest("access-1"));
     setSystemTime(21);
@@ -124,7 +124,7 @@ describe("native auth verification cache", () => {
   });
 
   test("cookie-only requests bypass the cache entirely", async () => {
-    const cookieRequest = new Request("https://cmux.test/api/vm", {
+    const cookieRequest = new Request("https://hmux.test/api/vm", {
       headers: { cookie: "stack-session=abc" },
     });
     await verifyRequest(cookieRequest);
@@ -211,7 +211,7 @@ describe("Stack Auth throttle circuit", () => {
       ]));
     await expect(verifyRequest(nativeRequest("throttled-3"))).rejects.toThrow(/rate limited/i);
 
-    const cookieRequest = new Request("https://cmux.test/api/vm", {
+    const cookieRequest = new Request("https://hmux.test/api/vm", {
       headers: { cookie: "stack-session=abc" },
     });
     const user = await verifyRequest(cookieRequest);

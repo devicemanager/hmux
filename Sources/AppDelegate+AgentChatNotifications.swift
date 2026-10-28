@@ -6,19 +6,19 @@ import Foundation
 extension AppDelegate {
     func postAgentChatServerUnavailableNotification(
         workspace: Workspace?,
-        agentChat: CmuxAgentChatConfiguration
+        agentChat: HmuxAgentChatConfiguration
     ) {
         let body: String
         if let startCommand = agentChat.startCommand {
             let format = String(
                 localized: "notification.agentChat.serverUnavailable.bodyWithCommand",
-                defaultValue: "cmux couldn't reach %@. Start it with: %@"
+                defaultValue: "hmux couldn't reach %@. Start it with: %@"
             )
             body = String(format: format, agentChat.url.absoluteString, startCommand)
         } else {
             let format = String(
                 localized: "notification.agentChat.serverUnavailable.bodyDefault",
-                defaultValue: "cmux couldn't reach %@. Start the server with cmux-chat or configure agentChat.startCommand in cmux.json."
+                defaultValue: "hmux couldn't reach %@. Start the server with hmux-chat or configure agentChat.startCommand in hmux.json."
             )
             body = String(format: format, agentChat.url.absoluteString)
         }

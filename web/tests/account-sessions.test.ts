@@ -18,7 +18,7 @@ const { makeAccountsHandler } = await import("../app/handler/accounts/[action]/h
 const { tokenSignIn } = await import("../app/handler/account-sessions-client");
 
 const SECRET = "test-secret-key";
-const ORIGIN = "https://cmux.test";
+const ORIGIN = "https://hmux.test";
 const COOKIE = `__Secure-${ACCOUNT_SESSIONS_COOKIE}`;
 
 const a = { id: "user-a", refreshToken: "refresh-a", savedAt: 1 };

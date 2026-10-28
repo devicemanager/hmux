@@ -1,6 +1,6 @@
 import Foundation
 import CoreFoundation
-import CmuxControlSocket
+import HmuxControlSocket
 import Darwin
 
 extension SocketClient {
@@ -130,9 +130,9 @@ extension SocketClient {
         }
         var tracedParams = params
         if method.hasPrefix("vm.") {
-            for (key, env) in [("cloud_operation_id", "CMUX_CLOUD_OPERATION_ID"),
-                               ("cloud_trace_id", "CMUX_CLOUD_TRACE_ID"),
-                               ("cloud_parent_span_id", "CMUX_CLOUD_PARENT_SPAN_ID")] {
+            for (key, env) in [("cloud_operation_id", "HMUX_CLOUD_OPERATION_ID"),
+                               ("cloud_trace_id", "HMUX_CLOUD_TRACE_ID"),
+                               ("cloud_parent_span_id", "HMUX_CLOUD_PARENT_SPAN_ID")] {
                 if let value = ProcessInfo.processInfo.environment[env] { tracedParams[key] = value }
             }
             // Keep the cloud control-plane request inside the CLI's remaining
@@ -152,7 +152,7 @@ extension SocketClient {
             "params": tracedParams
         ]
         if includeCapability,
-           let ruleID = ProcessInfo.processInfo.environment["CMUX_AUTOMATION_RULE_ID"],
+           let ruleID = ProcessInfo.processInfo.environment["HMUX_AUTOMATION_RULE_ID"],
            !ruleID.isEmpty {
             request["automation_origin"] = Self.automationOriginPayload(ruleID: ruleID)
         }

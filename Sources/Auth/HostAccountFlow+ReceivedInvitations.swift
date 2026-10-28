@@ -1,6 +1,6 @@
 import AppKit
-import CmuxCloud
-import CmuxSettingsUI
+import HmuxCloud
+import HmuxSettingsUI
 import Foundation
 
 /// Invitations addressed to the signed-in user: the Settings card, the Cloud
@@ -10,7 +10,7 @@ extension HostAccountFlow {
     /// Between polls while signed in. A new invitation also arrives by email,
     /// so the poll only needs to notice it within a few minutes.
     static let receivedInvitationsPollInterval: Duration = .seconds(300)
-    private static let notifiedInvitationIDsKey = "cmux.team.invitations.notified"
+    private static let notifiedInvitationIDsKey = "hmux.team.invitations.notified"
 
     /// Starts the poll on sign-in and stops it on sign-out. Called from the
     /// coordinator observation, so it runs whenever auth state changes.
@@ -103,7 +103,7 @@ extension HostAccountFlow {
                     inviter,
                     invitation.teamName
                 ),
-                subtitle: String(localized: "notification.teamInvite.subtitle", defaultValue: "cmux Cloud team"),
+                subtitle: String(localized: "notification.teamInvite.subtitle", defaultValue: "hmux Cloud team"),
                 body: String(
                     localized: "notification.teamInvite.body",
                     defaultValue: "Join from the team menu in the Cloud panel or Settings › Account."

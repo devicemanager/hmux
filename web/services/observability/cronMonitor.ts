@@ -113,14 +113,14 @@ export function reportCronFailure(
   const last = lastFailureReport.get(key);
   if (last !== undefined && now - last < FAILURE_REPORT_INTERVAL_MS) {
     const log = level === "error" ? console.error : console.warn;
-    log("cmux.cron.failure", { cron, stage, sentry: "throttled" }, scrubErrorForLog(error));
+    log("hmux.cron.failure", { cron, stage, sentry: "throttled" }, scrubErrorForLog(error));
     return;
   }
   lastFailureReport.set(key, now);
   reportError(
     error,
     { subsystem: "cron", cron, stage, ...context },
-    { level, fingerprint: ["cmux-cron", cron, stage], tags: { cron, "cron.stage": stage } },
+    { level, fingerprint: ["hmux-cron", cron, stage], tags: { cron, "cron.stage": stage } },
   );
 }
 

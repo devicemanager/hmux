@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import type { Freestyle } from "freestyle";
 
 import {
-  CMUX_REQUIRED_DOMAINS,
+  HMUX_REQUIRED_DOMAINS,
   NetworkPolicyValidationError,
   canonicalCidr,
   compileNetworkPolicy,
@@ -66,9 +66,9 @@ describe("network policy compilation", () => {
     expect(compileNetworkPolicy(parseNetworkPolicy({ mode: "allowlist", ranges: ["0.0.0.0/0"] })).publicEgress).toBe(true);
   });
 
-  test("none keeps only cmux hosts; allowlist adds presets, domains, ranges, DNS", () => {
+  test("none keeps only hmux hosts; allowlist adds presets, domains, ranges, DNS", () => {
     const none = compileNetworkPolicy(parseNetworkPolicy({ mode: "none", domains: ["ignored.com"], ranges: ["1.1.1.1"] }));
-    expect(none).toEqual({ publicEgress: false, ranges: [], domains: [...CMUX_REQUIRED_DOMAINS], dns: false });
+    expect(none).toEqual({ publicEgress: false, ranges: [], domains: [...HMUX_REQUIRED_DOMAINS], dns: false });
 
     const allow = compileNetworkPolicy(parseNetworkPolicy({
       mode: "allowlist",
@@ -142,7 +142,7 @@ describe("Freestyle egress reconcile", () => {
   const ingress: FakeFirewallRule = { id: "fw-ingress", action: "allow", source: { public: true }, destination: { vmId, port: 1337, protocol: "tcp" } };
   const legacyPublic: FakeFirewallRule = { id: "fw-legacy", action: "allow", source: { vmId }, destination: { public: true } };
   const coderouter: FakeTlsRule = {
-    id: "tls-cr", domain: "coderouter.cmux.internal", protocol: "http", source: { vmId },
+    id: "tls-cr", domain: "coderouter.hmux.internal", protocol: "http", source: { vmId },
     destination: { host: "cmux.com", port: 443 }, transform: [{ headers: { authorization: "***" } }],
   };
 

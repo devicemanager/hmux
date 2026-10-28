@@ -4,7 +4,7 @@
  * preserve the page (and its query string) without trusting a user-supplied
  * redirect target.
  */
-export const DASHBOARD_RETURN_PATH_HEADER = "x-cmux-dashboard-return-path";
+export const DASHBOARD_RETURN_PATH_HEADER = "x-hmux-dashboard-return-path";
 
 const DASHBOARD_PREFIX = "/dashboard";
 const MAX_RETURN_PATH_LENGTH = 2_048;
@@ -41,8 +41,8 @@ export function normalizeDashboardReturnPath(
   try {
     // Parsing against an inert origin gives us normalized pathname and query
     // components while the checks above keep the value relative.
-    const parsed = new URL(value, "https://cmux.invalid");
-    if (parsed.origin !== "https://cmux.invalid") return fallback;
+    const parsed = new URL(value, "https://hmux.invalid");
+    if (parsed.origin !== "https://hmux.invalid") return fallback;
     const path = `${parsed.pathname}${parsed.search}`;
     return isDashboardReturnPath(path) ? path : fallback;
   } catch {

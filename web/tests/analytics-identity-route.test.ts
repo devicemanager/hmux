@@ -7,14 +7,14 @@ describe("analytics identity route", () => {
     const getUser = mock(async () => ({
       id: "stack-user-1",
       isAnonymous: false,
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     }));
     const GET = makeAnalyticsIdentityHandler({
       isConfigured: () => true,
       getUser,
     });
 
-    const response = await GET(new Request("https://cmux.test/api/analytics/identity"));
+    const response = await GET(new Request("https://hmux.test/api/analytics/identity"));
 
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     await expect(response.json()).resolves.toEqual({
@@ -32,7 +32,7 @@ describe("analytics identity route", () => {
       }),
     });
 
-    const response = await GET(new Request("https://cmux.test/api/analytics/identity"));
+    const response = await GET(new Request("https://hmux.test/api/analytics/identity"));
 
     await expect(response.json()).resolves.toEqual({ user: null });
   });
@@ -44,7 +44,7 @@ describe("analytics identity route", () => {
       getUser,
     });
 
-    const response = await GET(new Request("https://cmux.test/api/analytics/identity"));
+    const response = await GET(new Request("https://hmux.test/api/analytics/identity"));
 
     await expect(response.json()).resolves.toEqual({ user: null });
     expect(getUser).not.toHaveBeenCalled();
@@ -59,7 +59,7 @@ describe("analytics identity route", () => {
     });
 
     const response = await GET(
-      new Request("https://cmux.test/api/analytics/identity"),
+      new Request("https://hmux.test/api/analytics/identity"),
     );
 
     expect(response.status).toBe(503);

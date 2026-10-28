@@ -11,7 +11,7 @@ import {
 const CACHE_CONTROL = "public, s-maxage=300, stale-while-revalidate=86400";
 const ALLOW_METHODS = "GET, OPTIONS";
 const ALLOW_HEADERS = "If-None-Match, Content-Type";
-/** In-app What's New webpages may load cmux-owned hosts only. */
+/** In-app What's New webpages may load hmux-owned hosts only. */
 const ALLOWED_WEB_URL_HOSTS = new Set(["cmux.com", "www.cmux.com"]);
 const VERSION_PATTERN = /^\d+(\.\d+)*$/;
 /**
@@ -33,7 +33,7 @@ const ETAG = `"${createHash("sha256").update(PAYLOAD).digest("base64url")}"`;
 /**
  * Validates the reviewed list before it can be served: version bounds are
  * required and well-formed, ids are unique, every announcement resolves to
- * at least one content source, web URLs stay on cmux-owned https hosts, and
+ * at least one content source, web URLs stay on hmux-owned https hosts, and
  * channel lists (announcement `channels`, per-entry `entryChannels`) are
  * nonempty, deduplicated, drawn from the known channel tokens, and keyed to
  * visible entries.
@@ -224,7 +224,7 @@ function webURL(input: string | undefined, path: string): void {
     throw new Error(`${path} must use https`);
   }
   if (!ALLOWED_WEB_URL_HOSTS.has(url.hostname.toLowerCase())) {
-    throw new Error(`${path} must be on a cmux-owned host, got ${url.hostname}`);
+    throw new Error(`${path} must be on a hmux-owned host, got ${url.hostname}`);
   }
 }
 

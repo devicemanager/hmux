@@ -1,30 +1,30 @@
 #!/usr/bin/env python3
-"""The owned-pool rescue watches every workflow that can take an owned pool, on main and on feat-cmux-next.
+"""The owned-pool rescue watches every workflow that can take an owned pool, on main and on feat-hmux-next.
 
 ci-owned-pool-rescue.yml and scripts/ci/owned_pool_rescue.py run from main for
 both branches, and the rescue acts only on the workflow files it lists
 (owned_pool_rescue.WATCHED_WORKFLOW_PATHS). Run 39638669325
-(cmux-next-base-autofix.yml, a feat-cmux-next push, 2026-10-21) had its Mac job
+(hmux-next-base-autofix.yml, a feat-hmux-next push, 2026-10-21) had its Mac job
 refused by a mini at job start, and nothing re-ran it: the workflow exists only
-on feat-cmux-next and main's list did not name it.
+on feat-hmux-next and main's list did not name it.
 
 scripts/ci/owned_pool_sources.py finds the owned workflows from their jobs'
 runs-on. This test reads them from the working tree and from the other branch
-(origin/feat-cmux-next on main, origin/main on feat-cmux-next), and the list
+(origin/feat-hmux-next on main, origin/main on feat-hmux-next), and the list
 from main's copy of the rescue (the working tree on main, origin/main on
-feat-cmux-next, since that is the copy that runs). It fails when an owned
+feat-hmux-next, since that is the copy that runs). It fails when an owned
 workflow of either branch is not listed, and when a listed one is owned in
 neither (only a warning for a workflow main does not have: main's list cannot
-change in the commit that moves a feat-cmux-next-only workflow off the minis,
+change in the commit that moves a feat-hmux-next-only workflow off the minis,
 and a stale entry is harmless). The other branch is read with `git show`; under GitHub Actions the
 test fetches it (one shallow, blob-less fetch, then the files it reads) and
 fails if it still cannot read it. Off CI a missing ref only skips that branch.
 
-Which branch the tree is: CMUX_OWNED_POOL_BRANCH when set; under Actions the
+Which branch the tree is: HMUX_OWNED_POOL_BRANCH when set; under Actions the
 branch the event targets (GITHUB_BASE_REF for a pull request, else
 GITHUB_REF_NAME, a merge queue's gh-readonly-queue/<branch>/... included, and
 main for any other branch); off CI the branch with fewer commits between it and
-HEAD, skipped when either ref is missing. (Both branches carry a cmux-next.yml,
+HEAD, skipped when either ref is missing. (Both branches carry a hmux-next.yml,
 so no file tells them apart.)
 """
 
@@ -44,8 +44,8 @@ sys.path.insert(0, str(ROOT / "scripts" / "ci"))
 
 import owned_pool_sources as sources  # noqa: E402
 
-FEAT = "feat-cmux-next"
-BRANCHES = {"main": "origin/main", FEAT: "origin/feat-cmux-next"}
+FEAT = "feat-hmux-next"
+BRANCHES = {"main": "origin/main", FEAT: "origin/feat-hmux-next"}
 ON_CI = os.environ.get("GITHUB_ACTIONS") == "true"
 
 
@@ -54,8 +54,8 @@ def git(*args: str, stdin: str | None = None) -> subprocess.CompletedProcess:
 
 
 def branch() -> str | None:
-    """main or feat-cmux-next: the branch this tree is (or is going into), or None when it cannot be told."""
-    named = os.environ.get("CMUX_OWNED_POOL_BRANCH")
+    """main or feat-hmux-next: the branch this tree is (or is going into), or None when it cannot be told."""
+    named = os.environ.get("HMUX_OWNED_POOL_BRANCH")
     if named:
         return named
     if ON_CI:
@@ -107,8 +107,8 @@ class OwnedPoolSources(unittest.TestCase):
     def setUpClass(cls) -> None:
         cls.branch = branch()
         if cls.branch is None:
-            raise unittest.SkipTest("cannot tell whether this tree is main or feat-cmux-next (a ref is missing); "
-                                    "set CMUX_OWNED_POOL_BRANCH")
+            raise unittest.SkipTest("cannot tell whether this tree is main or feat-hmux-next (a ref is missing); "
+                                    "set HMUX_OWNED_POOL_BRANCH")
         cls.ref = other_ref()
         if not has_ref(cls.ref) and ON_CI:
             fetch(cls.ref)
@@ -138,7 +138,7 @@ class OwnedPoolSources(unittest.TestCase):
                 self.assertFalse(missing, "\n".join(
                     [f"{tree}: these workflows can take an owned pool but main's {sources.RESCUE_SCRIPT} does not "
                      "watch them, so a refused or stuck job of theirs is never moved; add each to "
-                     "SIDE_WORKFLOW_PATHS on main (a feat-cmux-next-only one too), or to UNRESCUED_WORKFLOW_PATHS "
+                     "SIDE_WORKFLOW_PATHS on main (a feat-hmux-next-only one too), or to UNRESCUED_WORKFLOW_PATHS "
                      "with why a person re-runs it:"]
                     + [f"  {path}: {why}" for path, why in sorted(missing.items())]))
 
@@ -147,17 +147,17 @@ class OwnedPoolSources(unittest.TestCase):
             self.skipTest("both branches are needed to call an entry stale")
         found = set().union(*(set(owned) for owned in self.owned.values()))
         stale = (self.watched | self.unrescued) - found
-        # A feat-cmux-next-only workflow moved off the minis leaves its entry in main's list, which no
+        # A feat-hmux-next-only workflow moved off the minis leaves its entry in main's list, which no
         # commit can change together with it (the entry cannot go first either: main's own run would
         # find the workflow owned and unwatched). A stale entry only watches a run with no owned job.
         on_main = set(self.rescue_tree.workflows())
         feat_only = sorted(stale - on_main)
         if feat_only:
             print(f"::warning title=owned pool sources::{sources.RESCUE_SCRIPT} on main lists "
-                  f"feat-cmux-next-only workflows that take no owned pool any more; remove them in a pull "
+                  f"feat-hmux-next-only workflows that take no owned pool any more; remove them in a pull "
                   f"request to main: {feat_only}", file=sys.stderr)
         self.assertFalse(sorted(stale & on_main), f"{sources.RESCUE_SCRIPT} lists workflows that take no owned "
-                                                  f"pool on main or feat-cmux-next any more; remove them")
+                                                  f"pool on main or feat-hmux-next any more; remove them")
         self.assertFalse(self.watched & self.unrescued, "a workflow is both watched and left to a person")
 
     def test_the_markers_come_from_the_pool_code(self) -> None:
@@ -286,14 +286,14 @@ class OwnedPoolSources(unittest.TestCase):
         self.assertIn("reusable.yml", paths["caller.yml"])
 
     def test_run_39638669325s_workflow_is_watched(self) -> None:
-        # The base autofix's Mac exports take glaeda-session-std-xcode-26.6 on feat-cmux-next.
+        # The base autofix's Mac exports take glaeda-session-std-xcode-26.6 on feat-hmux-next.
         if self.watched is None:
             self.skipTest("main's rescue is not readable here")
-        self.assertIn(".github/workflows/cmux-next-base-autofix.yml", self.watched)
-        feat = sources.Tree(ROOT) if on_feat() else self.other if self.ref == "origin/feat-cmux-next" else None
+        self.assertIn(".github/workflows/hmux-next-base-autofix.yml", self.watched)
+        feat = sources.Tree(ROOT) if on_feat() else self.other if self.ref == "origin/feat-hmux-next" else None
         if feat is None:
-            self.skipTest("feat-cmux-next's workflows are not readable here")
-        self.assertIn(".github/workflows/cmux-next-base-autofix.yml", self.owned[str(feat)])
+            self.skipTest("feat-hmux-next's workflows are not readable here")
+        self.assertIn(".github/workflows/hmux-next-base-autofix.yml", self.owned[str(feat)])
 
 if __name__ == "__main__":
     unittest.main()

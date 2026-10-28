@@ -1,7 +1,7 @@
 import Bonsplit
 import Foundation
 
-/// A sidebar workspace dropped on a pane brings its tabs in (cmux-next #17542).
+/// A sidebar workspace dropped on a pane brings its tabs in (hmux-next #17542).
 /// The pane's center adds every tab at the drop index; an edge splits the pane
 /// with the first tab and the rest follow into that new pane, in sidebar order.
 /// Each tab moves with the existing cross-workspace move, so the emptied

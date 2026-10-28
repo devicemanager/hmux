@@ -1,5 +1,5 @@
 // Fixed JSON contracts for /api/coderouter/vm-usage*. Other surfaces
-// (cmux-tui inside a VM, the dashboard) build against these shapes.
+// (hmux-tui inside a VM, the dashboard) build against these shapes.
 import type {
   CoderouterTeamMachineMetrics,
   CoderouterVmBreakdownRow,
@@ -16,7 +16,7 @@ export type VmUsageTotals = {
   readonly apiEquivalentUsd: number;
 };
 
-/** Usage of one cmux-tui workspace on the machine; null = outside any workspace. */
+/** Usage of one hmux-tui workspace on the machine; null = outside any workspace. */
 export type VmUsageWorkspace = {
   readonly workspaceId: string | null;
   readonly totals: VmUsageTotals;

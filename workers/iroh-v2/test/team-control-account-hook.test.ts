@@ -63,7 +63,7 @@ async function run(variant: Variant) {
     };
     const store = new TeamStore(storage, { environment: ENVIRONMENT, projectId: PROJECT_ID, teamId: "team-x" }, { initialize: false });
     const [macKey, phoneKey] = await Promise.all([81, 82].map(deviceKey));
-    const mac = descriptor(macKey!, identity("team-x", "user-u", "mac-a"), "mac", ["cmux.mac-host.v1", "cmux.mac-devices.v1"]);
+    const mac = descriptor(macKey!, identity("team-x", "user-u", "mac-a"), "mac", ["hmux.mac-host.v1", "hmux.mac-devices.v1"]);
     const phone = descriptor(phoneKey!, identity("team-x", "user-u", "iphone"), "ios", []);
     const now = Math.floor(Date.now() / 1000);
     const records = [mac, phone].map(device => {
@@ -105,7 +105,7 @@ test("the account notice fires only for Mac rows and never changes a team respon
     JSON.stringify({ schemaId: "operation.completed.v1", requestId: "metadata-iphone", revision: 5 }),
   ]);
   // One notice for the Mac change, none for the iOS change.
-  const macIdentity = { environment: ENVIRONMENT, projectId: PROJECT_ID, teamId: "team-x", userId: "user-u", deviceId: "mac-a", appNamespace: "com.cmux.app", buildTag: "release" };
+  const macIdentity = { environment: ENVIRONMENT, projectId: PROJECT_ID, teamId: "team-x", userId: "user-u", deviceId: "mac-a", appNamespace: "com.hmux.app", buildTag: "release" };
   expect(notified.notices).toEqual([["user-u", "team-x", notified.macRecordId, macIdentity]]);
   expect(notified.noticesAfter).toEqual([1, 1]);
   for (const variant of ["rejects", "throws", "unbound", "flaky"] as const) {

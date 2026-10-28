@@ -13,7 +13,7 @@ name: merge freeze
 
 on:
   pull_request_target:
-    branches: [main, feat-cmux-next]
+    branches: [main, feat-hmux-next]
     types: [opened, synchronize, reopened, labeled, unlabeled, ready_for_review]
   schedule:
     - cron: "17 * * * *"

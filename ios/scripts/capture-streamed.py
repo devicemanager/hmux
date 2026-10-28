@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Capture REAL Mac-streamed agent terminal screenshots for the App Store.
 
-Drives the tagged desktop cmux Mac app + a paired simulator and captures the
+Drives the tagged desktop hmux Mac app + a paired simulator and captures the
 live streamed terminal for each agent (claude/codex/opencode/pi):
 
   Mac app (tag) ── runs each agent in its own workspace ──► paired simulator
   mirrors the live terminal ──► we navigate the device into each workspace,
   set a screenshot-friendly font, and capture.
 
-This is genuine cmux Mac→device streaming (not preview-mode replay). The Workspaces
+This is genuine hmux Mac→device streaming (not preview-mode replay). The Workspaces
 and Notifications shots stay on the preview-mode path; this only produces the 4
 agent terminal shots.
 
@@ -41,7 +41,7 @@ PROMPT = ("Explain what main.swift does, then give 3 concrete improvements with 
           "code blocks (app entry point, readability, and a #Preview). Do not edit any files.")
 # Agent terminals REPLAY real sessions recorded locally (with funded accounts)
 # and seeded into each agent's on-disk session store at the matching project cwd
-# (/private/tmp/cmux-stream-<agent>), then resumed read-only. This gives genuine
+# (/private/tmp/hmux-stream-<agent>), then resumed read-only. This gives genuine
 # agent content through the real Mac->device streaming pipeline with no CI billing
 # or nondeterminism. The launch command resumes the seeded session; auth tokens
 # are still set (the CLIs gate launch on them) but resuming makes no API call.
@@ -63,8 +63,8 @@ def run(cmd, **kw):
 
 def cli(tag, *args):
     """Tagged Mac debug CLI."""
-    env = dict(os.environ, CMUX_TAG=tag, CMUX_QUIET="1")
-    return run([os.path.join(ROOT, "scripts", "cmux-debug-cli.sh"), *args], env=env, cwd=ROOT)
+    env = dict(os.environ, HMUX_TAG=tag, HMUX_QUIET="1")
+    return run([os.path.join(ROOT, "scripts", "hmux-debug-cli.sh"), *args], env=env, cwd=ROOT)
 
 
 def mac_up(tag):
@@ -75,14 +75,14 @@ def ensure_mac(tag):
     if mac_up(tag):
         return
     app = None
-    base = os.path.expanduser(f"~/Library/Developer/Xcode/DerivedData/cmux-{tag}/Build/Products/Debug")
+    base = os.path.expanduser(f"~/Library/Developer/Xcode/DerivedData/hmux-{tag}/Build/Products/Debug")
     if os.path.isdir(base):
         for f in os.listdir(base):
             if f.endswith(".app"):
                 app = os.path.join(base, f)
     if not app:
         raise SystemExit(f"no tagged Mac app for tag {tag}; build with scripts/reload-cloud.sh --tag {tag}")
-    sock = f"/tmp/cmux-debug-{tag}.sock"
+    sock = f"/tmp/hmux-debug-{tag}.sock"
     try:
         os.remove(sock)
     except OSError:
@@ -101,7 +101,7 @@ def read_screen(tag, ws):
 
 
 # Directory for Mac-side diagnostic screenshots (set in main from --out). Lets us
-# see the Mac's cmux window / terminal theme next to the phone's streamed view,
+# see the Mac's hmux window / terminal theme next to the phone's streamed view,
 # to check whether the Mac is streaming a light/default theme (the source of the
 # white bands on the phone).
 MAC_SHOT_DIR = None
@@ -311,7 +311,7 @@ def main():
     print("== set up agent workspaces ==")
     wsmap = {}
     for key in agents:
-        wsmap[key] = setup_agent(args.tag, key, f"/tmp/cmux-stream-{key}")
+        wsmap[key] = setup_agent(args.tag, key, f"/tmp/hmux-stream-{key}")
     print("== prepare device ==")
     run(["xcrun", "simctl", "ui", args.sim_id, "appearance", "dark"])
     status_bar_941(args.sim_id)

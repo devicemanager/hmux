@@ -1,4 +1,4 @@
-import CmuxIrxTransport
+import HmuxIrxTransport
 import Foundation
 
 /// Exact outgoing Mac intent checked against the per-user account directory.
@@ -72,7 +72,7 @@ struct IrxAccountMacPeerAuthorization: Sendable {
               identity.deviceID.lowercased() != localIdentity.deviceID.lowercased() else {
             throw IrxMacPeerAuthorization.Failure.identityMismatch
         }
-        guard device.metadata.capabilities.contains("cmux.mac-host.v1") else {
+        guard device.metadata.capabilities.contains("hmux.mac-host.v1") else {
             throw IrxMacPeerAuthorization.Failure.notDiscoverable
         }
         return peer

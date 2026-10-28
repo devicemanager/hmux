@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Run scripts/ci/workloads/ci-guard.sh's commands without the workload profile
-# runner, all at once. The profile runner (cmux_workload_profile.py) refuses
+# runner, all at once. The profile runner (hmux_workload_profile.py) refuses
 # anything but Linux, while the commands (the self-hosted runner policy, change
 # routing, required checks, test wiring) are portable. run_ci_guards.py uses
 # this on macOS so a local guard run still covers them.
@@ -19,7 +19,7 @@ while IFS= read -r line || [[ -n "$line" ]]; do
   trimmed="${line#"${line%%[![:space:]]*}"}"
   case "$trimmed" in
     ""|"#"*|"set -"*|"root="*|'cd "$root"'|"stage() {"|"}"|"stage "*) continue ;;
-    'python3 "$root/scripts/ci/cmux_workload_profile.py" stage "$1" "$2"') continue ;;
+    'python3 "$root/scripts/ci/hmux_workload_profile.py" stage "$1" "$2"') continue ;;
     "./"*|"python3 "*|"bash "*) commands+=("$trimmed") ;;
     *) echo "run_ci_guard_payload.sh: unrecognized line in $payload: $line" >&2; exit 2 ;;
   esac

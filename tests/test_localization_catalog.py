@@ -93,12 +93,12 @@ class LocalizationCatalogTests(unittest.TestCase):
                 self.assertEqual(MODULE.main(), 0)
 
     def test_todo_commands_and_translated_words_are_not_markers(self):
-        for source in ("Usage: cmux todo list", "Open Todo Pane", "Workspace todo controls"):
+        for source in ("Usage: hmux todo list", "Open Todo Pane", "Workspace todo controls"):
             self.assertEqual(MODULE.validate_localization(source, unit(source), "en"), [])
         self.assertEqual(MODULE.validate_localization("All", unit("Todo"), "es"), [])
 
     def test_unfinished_translation_markers_are_rejected(self):
-        for marker in ("TODO", "TODO: translate this", "TRANSLATE_ME", "machine_translation", "<translated>", "__CMUX_TOKEN_1__"):
+        for marker in ("TODO", "TODO: translate this", "TRANSLATE_ME", "machine_translation", "<translated>", "__HMUX_TOKEN_1__"):
             with self.subTest(marker=marker):
                 self.assertTrue(MODULE.validate_localization("Open", unit(marker), "de"))
 
@@ -174,8 +174,8 @@ class LocalizationCatalogTests(unittest.TestCase):
         self.assertIn("missing locale entry", MODULE.check_entry(entry, "de", metadata, {}))
 
     def test_japanese_invariant_requires_entry_but_allows_literal(self):
-        entry = MODULE.Member("brand", {"localizations": {"en": unit("cmux"), "ja": unit("cmux")}}, 0, 0)
-        omissions = {"brand": {"source": "cmux", "class": "brand"}}
+        entry = MODULE.Member("brand", {"localizations": {"en": unit("hmux"), "ja": unit("hmux")}}, 0, 0)
+        omissions = {"brand": {"source": "hmux", "class": "brand"}}
         self.assertEqual(MODULE.check_entry(entry, "ja", omissions, {}), [])
         del entry.value["localizations"]["ja"]
         self.assertIn("missing locale entry", MODULE.check_entry(entry, "ja", omissions, {}))

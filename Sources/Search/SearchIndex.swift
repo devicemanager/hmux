@@ -6,14 +6,14 @@ actor SearchIndex {
 
     private var database: OpaquePointer?
 
-    nonisolated static func open(databaseURL: URL = .cmuxSearchDatabaseURL) async throws -> SearchIndex {
+    nonisolated static func open(databaseURL: URL = .hmuxSearchDatabaseURL) async throws -> SearchIndex {
         // Actor initializers run on the caller executor, so open SQLite off the MainActor.
         try await Task.detached(priority: .utility) {
             try SearchIndex(databaseURL: databaseURL)
         }.value
     }
 
-    init(databaseURL: URL = .cmuxSearchDatabaseURL) throws {
+    init(databaseURL: URL = .hmuxSearchDatabaseURL) throws {
         try Self.ensureParentDirectoryExists(for: databaseURL)
 
         var openedDatabase: OpaquePointer?
@@ -463,22 +463,22 @@ actor SearchIndex {
 }
 
 extension URL {
-    static var cmuxSearchDatabaseURL: URL {
-        cmuxSearchDatabaseURL(
+    static var hmuxSearchDatabaseURL: URL {
+        hmuxSearchDatabaseURL(
             applicationSupportDirectory: FileManager.default.urls(
                 for: .applicationSupportDirectory,
                 in: .userDomainMask
             )[0],
-            bundleIdentifier: Bundle.main.bundleIdentifier ?? "com.cmuxterm.app"
+            bundleIdentifier: Bundle.main.bundleIdentifier ?? "com.hmuxterm.app"
         )
     }
 
-    static func cmuxSearchDatabaseURL(
+    static func hmuxSearchDatabaseURL(
         applicationSupportDirectory: URL,
         bundleIdentifier: String
     ) -> URL {
         let trimmedBundleIdentifier = bundleIdentifier.trimmingCharacters(in: .whitespacesAndNewlines)
-        let namespace = trimmedBundleIdentifier.isEmpty ? "com.cmuxterm.app" : trimmedBundleIdentifier
+        let namespace = trimmedBundleIdentifier.isEmpty ? "com.hmuxterm.app" : trimmedBundleIdentifier
         let safeNamespace = namespace.replacingOccurrences(
             of: "[^A-Za-z0-9._-]",
             with: "_",

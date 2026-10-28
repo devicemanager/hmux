@@ -17,13 +17,13 @@ export async function GET(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/stats",
-    { "cmux.vm.operation": "stats" },
+    { "hmux.vm.operation": "stats" },
     "/api/vm/[id]/stats GET failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "hmux.vm.id": id });
       const run = await runVmRoute(getVmStats({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

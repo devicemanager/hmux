@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxMobileHost
+import HMUXMobileCore
+import HmuxMobileHost
 import Dispatch
 import Foundation
 
@@ -273,7 +273,7 @@ final class MobileBrowserStreamSession {
             let encodeEnd = DispatchTime.now()
             let captureMs = Double(encodeStart.uptimeNanoseconds &- captureStart.uptimeNanoseconds) / 1_000_000
             let encodeMs = Double(encodeEnd.uptimeNanoseconds &- encodeStart.uptimeNanoseconds) / 1_000_000
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.frame.capture fmt=\(format) wait=\(waitForScreenUpdate) "
                     + "capMs=\(String(format: "%.1f", captureMs)) "
                     + "encMs=\(String(format: "%.1f", encodeMs)) "

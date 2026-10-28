@@ -31,7 +31,7 @@ import {
   type CloudVmPublicationTarget,
 } from "../services/vm-publications/repository";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const NOW = new Date("2026-09-02T19:00:00.000Z");
 
@@ -143,7 +143,7 @@ beforeAll(async () => {
   const databaseURL =
     process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!databaseURL)
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   sql = postgres(databaseURL, { max: 8 });
   repository = await Effect.runPromise(
     Effect.gen(function* () {
@@ -379,7 +379,7 @@ describe("Cloud VM publication persistence", () => {
       let waiting = 0;
       while (waiting < 4 && Date.now() < deadline) {
         const [row] = await sql`select count(*)::integer as waiting from pg_stat_activity
-          where datname=current_database() and application_name='cmux-publication-auth' and wait_event_type='Lock'`;
+          where datname=current_database() and application_name='hmux-publication-auth' and wait_event_type='Lock'`;
         waiting = row.waiting;
         if (waiting < 4) await new Promise(resolve => setTimeout(resolve, 10));
       }
@@ -833,8 +833,8 @@ describe("Cloud VM publication persistence", () => {
           ownerUserId: "generated-owner-a",
           provider: "freestyle",
           providerVmId: "generated-vm-a",
-          domainHostname: "Unique-Preview.CMUX.sh.",
-          hostname: "Unique-Preview.CMUX.sh.",
+          domainHostname: "Unique-Preview.HMUX.sh.",
+          hostname: "Unique-Preview.HMUX.sh.",
           kind: "generated",
           port: 3_000,
           accessMode: "public",

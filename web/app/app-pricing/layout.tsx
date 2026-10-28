@@ -1,8 +1,8 @@
 import type { Metadata, Viewport } from "next";
 
 export const metadata: Metadata = {
-  title: "cmux Upgrade",
-  description: "cmux upgrade pricing inside the cmux app.",
+  title: "hmux Upgrade",
+  description: "hmux upgrade pricing inside the hmux app.",
 };
 
 export const viewport: Viewport = {

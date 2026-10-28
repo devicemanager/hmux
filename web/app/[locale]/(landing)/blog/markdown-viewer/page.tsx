@@ -56,7 +56,7 @@ export default function MarkdownViewerPage() {
       <BlogPostMeta date={t("date")} dateTime="2026-05-22" />
 
       <video
-        src="/blog/cmux-markdown-tobi.mp4"
+        src="/blog/hmux-markdown-tobi.mp4"
         width={1280}
         height={850}
         autoPlay
@@ -68,7 +68,7 @@ export default function MarkdownViewerPage() {
 
       <p>{t("p1")}</p>
       <p>{t("p2")}</p>
-      <CodeBlock lang="bash">{`cmux open README.md`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux open README.md`}</CodeBlock>
       <p>{t("p3")}</p>
       <p>
         {t.rich("p4", {

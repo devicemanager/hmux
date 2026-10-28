@@ -13,7 +13,7 @@
     "goto-title": "ARIA Fixture",
     "missing-status": 404
   },
-  "cmux": {
+  "hmux": {
     "snapshot-url": true
   }
 }

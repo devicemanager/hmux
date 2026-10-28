@@ -14,7 +14,7 @@ url="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[
 digest="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]]["sha256"])' "$manifest" "$target")"
 [[ "$digest" =~ ^[0-9a-f]{64}$ ]]
 [[ "$url" == https://github.com/manaflow-ai/coderouter-releases/releases/download/* ]]
-cache="${CMUX_CODEROUTER_CACHE:-$HOME/Library/Caches/cmux/coderouter}"
+cache="${HMUX_CODEROUTER_CACHE:-$HOME/Library/Caches/hmux/coderouter}"
 mkdir -p "$cache" "$app/Contents/Resources/bin"
 binary="$cache/$digest"
 valid() { [[ -f "$1" && "$(shasum -a 256 "$1" | awk '{print $1}')" == "$digest" ]]; }

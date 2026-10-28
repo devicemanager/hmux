@@ -56,7 +56,7 @@ class ProductPublicationTests(unittest.TestCase):
         cls.workflow = yaml.safe_load((ROOT / ".github/workflows/ci-macos.yml").read_text())
         cls.job = cls.workflow["jobs"]["macos-compile-admission"]
 
-    def publication(self, *, full_suite, cli="false", unit_suite="false", event="pull_request", head="contributor/cmux", repo="manaflow-ai/cmux"):
+    def publication(self, *, full_suite, cli="false", unit_suite="false", event="pull_request", head="contributor/hmux", repo="manaflow-ai/cmux"):
         step = next((s for s in self.job["steps"] if s.get("id") == "publish-products"), None)
         if step is None:
             return "true"  # The previous workflow always packaged and uploaded.
@@ -86,7 +86,7 @@ class ProductPublicationTests(unittest.TestCase):
             ({"full_suite": ""}, "true"),
             ({"full_suite": "unknown"}, "true"),
             ({"full_suite": "false", "head": "manaflow-ai/cmux"}, "true"),
-            ({"full_suite": "false", "head": "Manaflow-AI/CMUX"}, "true"),
+            ({"full_suite": "false", "head": "Manaflow-AI/HMUX"}, "true"),
             ({"full_suite": "false", "head": ""}, "true"),
             ({"full_suite": "false", "repo": ""}, "true"),
             ({"full_suite": "false", "event": "merge_group"}, "true"),
@@ -164,7 +164,7 @@ class ProductPublicationTests(unittest.TestCase):
         self.assertLess(restore_index, min(app_host_indices))
 
         run_text = "\n".join(step.get("run", "") for step in steps)
-        self.assertNotIn("-project cmux.xcodeproj", run_text)
+        self.assertNotIn("-project hmux.xcodeproj", run_text)
         self.assertNotIn("-resolvePackageDependencies", run_text)
         self.assertNotIn(".ci-source-packages", str(job))
         self.assertNotIn("Cache Swift packages", names)

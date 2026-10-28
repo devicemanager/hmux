@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import WebKit
 
 extension BrowserPanel {
@@ -35,25 +35,25 @@ extension BrowserPanel {
         oldWebView.stopLoading()
         oldWebView.navigationDelegate = nil
         oldWebView.uiDelegate = nil
-        oldWebView.cmuxBrowserViewportHostView = nil
+        oldWebView.hmuxBrowserViewportHostView = nil
 
-        if let oldCmuxWebView = oldWebView as? CmuxWebView {
-            oldCmuxWebView.cmuxDownloadDelegate = nil
-            oldCmuxWebView.clearBrowserDownloadCallbacks()
-            oldCmuxWebView.browserViewportModel = nil
-            oldCmuxWebView.onBrowserViewportHierarchyChanged = nil
-            oldCmuxWebView.onKeyboardFocusedLinkChanged = nil
-            oldCmuxWebView.onMouseBackButton = nil
-            oldCmuxWebView.onMouseForwardButton = nil
-            oldCmuxWebView.onPhysicalUserInteraction = nil
-            oldCmuxWebView.onContextMenuDownloadStateChanged = nil
-            oldCmuxWebView.onSessionDownloadEvent = nil
-            oldCmuxWebView.onScreenshotCopied = nil
-            oldCmuxWebView.onContextMenuOpenLinkInNewTab = nil
-            oldCmuxWebView.contextMenuLinkURLProvider = nil
-            oldCmuxWebView.contextMenuCanMoveTabToNewWorkspace = nil
-            oldCmuxWebView.contextMenuMoveTabToNewWorkspace = nil
-            oldCmuxWebView.onSubframeDownloadIntent = nil
+        if let oldHmuxWebView = oldWebView as? HmuxWebView {
+            oldHmuxWebView.hmuxDownloadDelegate = nil
+            oldHmuxWebView.clearBrowserDownloadCallbacks()
+            oldHmuxWebView.browserViewportModel = nil
+            oldHmuxWebView.onBrowserViewportHierarchyChanged = nil
+            oldHmuxWebView.onKeyboardFocusedLinkChanged = nil
+            oldHmuxWebView.onMouseBackButton = nil
+            oldHmuxWebView.onMouseForwardButton = nil
+            oldHmuxWebView.onPhysicalUserInteraction = nil
+            oldHmuxWebView.onContextMenuDownloadStateChanged = nil
+            oldHmuxWebView.onSessionDownloadEvent = nil
+            oldHmuxWebView.onScreenshotCopied = nil
+            oldHmuxWebView.onContextMenuOpenLinkInNewTab = nil
+            oldHmuxWebView.contextMenuLinkURLProvider = nil
+            oldHmuxWebView.contextMenuCanMoveTabToNewWorkspace = nil
+            oldHmuxWebView.contextMenuMoveTabToNewWorkspace = nil
+            oldHmuxWebView.onSubframeDownloadIntent = nil
         }
         oldWebView.removeFromSuperview()
     }

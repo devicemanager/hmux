@@ -1,0 +1,40 @@
+name: Cloud CLI
+on:
+  pull_request:
+    paths:
+      - "hmux-tui/crates/hmux-cloud-cli/**"
+      - "hmux-tui/Cargo.*"
+      - ".github/workflows/hmux-cloud-cli.yml"
+  push:
+    branches: [main]
+    paths:
+      - "hmux-tui/crates/hmux-cloud-cli/**"
+      - "hmux-tui/Cargo.*"
+      - ".github/workflows/hmux-cloud-cli.yml"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: hmux-cloud-cli-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'blacksmith-4vcpu-ubuntu-2404' || vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+      - uses: ./.github/actions/setup-hmux-tui-rust
+      - working-directory: hmux-tui
+        run: |
+          cargo fmt -p hmux-cloud-cli --check
+          cargo clippy -p hmux-cloud-cli --locked --all-targets -- -D warnings
+          cargo test -p hmux-cloud-cli --locked
+          rustup target add x86_64-unknown-linux-musl
+          cargo build -p hmux-cloud-cli --release --locked --target x86_64-unknown-linux-musl
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: hmux-cloud-cli-${{ github.event.pull_request.head.sha || github.sha }}
+          path: hmux-tui/target/x86_64-unknown-linux-musl/release/hmux-cloud-cli
+          if-no-files-found: error

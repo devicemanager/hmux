@@ -1,6 +1,6 @@
 """scripts/ci/merge_check_paths.py against a fake GitHub: no network, no sleeping.
 
-The check-path gate gh-merge-green applies into feat-cmux-next: a pull request whose fast gates ran before a check
+The check-path gate gh-merge-green applies into feat-hmux-next: a pull request whose fast gates ran before a check
 path changed on the base is rerun against the current tip before it merges (2026-10-21: #22967, #22975 and #23094
 merged after #23365 added check:fixed-waits and turned it red on the base).
 """
@@ -21,8 +21,8 @@ CHECK_PATHS = ("# a sample of the base's scripts/ci/check-paths.txt\n\nscripts/c
 FILES_23365 = [".github/workflows/ci-web.yml", "webviews/package.json", "webviews/scripts/check-fixed-waits.ts",
                "webviews/scripts/fixed-waits-baseline.tsv", "webviews/test/check-fixed-waits.test.ts",
                "webviews/test/support/pageSwitch.ts"]
-FILES_22975 = ["Packages/macOS/CmuxNext/Sources/CmuxNextAgentPane/AcpmuxPaneMethods+Params.swift",
-               "cmux-tui/crates/cmux-agent-pane-policy/policy.json", "webviews/src/agent-session/acpmux/App.tsx",
+FILES_22975 = ["Packages/macOS/HmuxNext/Sources/HmuxNextAgentPane/AcpmuxPaneMethods+Params.swift",
+               "hmux-tui/crates/hmux-agent-pane-policy/policy.json", "webviews/src/agent-session/acpmux/App.tsx",
                "webviews/src/agent-session/acpmux/ComposerQueue.tsx", "webviews/src/agent-session/acpmux/QueuedImages.tsx"]
 
 
@@ -81,7 +81,7 @@ class CheckPathGate(unittest.TestCase):
         landed = {(OLD, TIP): {"status": "ahead", "ahead_by": 1, "files": FILES_23365}}
         api = FakeApi([status(OLD), status(OLD), status(TIP, at="2026-10-21T14:12:00Z")], compares=landed)
         (checked, waited), err = run(api)
-        self.assertEqual(api.dispatched, [("42", "feat-cmux-next")])
+        self.assertEqual(api.dispatched, [("42", "feat-hmux-next")])
         self.assertIn("has changed the check path .github/workflows/ci-web.yml since", err)
         self.assertEqual(checked, "check paths (fast gates rerun on the current tip)")
         self.assertEqual(waited, 40)
@@ -90,7 +90,7 @@ class CheckPathGate(unittest.TestCase):
         # On the tip, the webviews checks fail #22975 for its own new fixed wait.
         landed = {(OLD, TIP): {"status": "ahead", "ahead_by": 1, "files": FILES_23365}}
         api = FakeApi([status(OLD), status(TIP, state="failure", at="2026-10-21T14:12:00Z")], compares=landed)
-        with self.assertRaisesRegex(gate.Refused, "cmux-next/fast-gates is failure on the pull request merged with "
+        with self.assertRaisesRegex(gate.Refused, "hmux-next/fast-gates is failure on the pull request merged with "
                                                   "the current tip.*actions/runs/1"):
             run(api)
 
@@ -149,7 +149,7 @@ class CheckPathGate(unittest.TestCase):
     def test_no_list_on_the_base_yet_passes(self):
         api = FakeApi([status(OLD)], check_paths=None)
         (checked, _), err = run(api)
-        self.assertIn("is not on feat-cmux-next", err)
+        self.assertIn("is not on feat-hmux-next", err)
         self.assertEqual(api.dispatched, [])
 
     def test_an_unreadable_list_refuses(self):
@@ -169,7 +169,7 @@ class CheckPathGate(unittest.TestCase):
         out = io.StringIO()
         with contextlib.redirect_stdout(out):
             self.assertEqual(gate.main(["manaflow-ai/cmux", "42", HEAD, "--base", "main"]), 0)
-        self.assertIn("not feat-cmux-next", out.getvalue())
+        self.assertIn("not feat-hmux-next", out.getvalue())
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(gate.main(["manaflow-ai/cmux", "42", "abc"]), 1)
 

@@ -14,8 +14,8 @@ function vm(id: string, overrides: Partial<ProviderInventoryVm> = {}): ProviderI
   return {
     id,
     state: "running",
-    metadata: { cmux: "cloud" },
-    snapshot: "cmux-devbox",
+    metadata: { hmux: "cloud" },
+    snapshot: "hmux-devbox",
     cpu: 2,
     memoryMib: 4096,
     storageMib: 10240,
@@ -240,7 +240,7 @@ describe("GET /api/cron/vm-health", () => {
         alerts.push({ hung: report.hung.length, pageUrl });
         return "sent";
       },
-      env: { CMUX_VM_HEALTH_BUDGET_MS: "500", CMUX_VM_HEALTH_PROBE_TIMEOUT_MS: "150", CMUX_VM_HEALTH_PROBE_CONCURRENCY: "8" },
+      env: { HMUX_VM_HEALTH_BUDGET_MS: "500", HMUX_VM_HEALTH_PROBE_TIMEOUT_MS: "150", HMUX_VM_HEALTH_PROBE_CONCURRENCY: "8" },
     });
     expect(response.status).toBe(200);
     const body = await response.json() as { attentionNeeded: boolean; hung: number; coverage: { skippedBudget: number }; alert: string };
@@ -271,7 +271,7 @@ describe("GET /api/cron/vm-health", () => {
 
   test("operator budget overrides are capped inside the route's maxDuration", async () => {
     const { sweepOptionsFromEnv } = await import("../services/vms/health/cron");
-    expect(sweepOptionsFromEnv({ CMUX_VM_HEALTH_BUDGET_MS: "9999999" }).budgetMs).toBe(240_000);
-    expect(sweepOptionsFromEnv({ CMUX_VM_HEALTH_BUDGET_MS: "2,000" }).budgetMs).toBeUndefined();
+    expect(sweepOptionsFromEnv({ HMUX_VM_HEALTH_BUDGET_MS: "9999999" }).budgetMs).toBe(240_000);
+    expect(sweepOptionsFromEnv({ HMUX_VM_HEALTH_BUDGET_MS: "2,000" }).budgetMs).toBeUndefined();
   });
 });

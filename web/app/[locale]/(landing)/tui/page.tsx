@@ -27,7 +27,7 @@ export async function generateMetadata({
       url: alternates.canonical,
       images: [
         {
-          url: "/tui/cmux-tui-overview.png",
+          url: "/tui/hmux-tui-overview.png",
           width: 5120,
           height: 2820,
           alt: t("screenshotAlt"),
@@ -87,7 +87,7 @@ export default async function TuiPage() {
 
         <figure className="relative left-1/2 mb-12 mt-12 w-[min(90rem,100vw_-_3rem)] -translate-x-1/2">
           <Image
-            src="/tui/cmux-tui-overview.png"
+            src="/tui/hmux-tui-overview.png"
             width={5120}
             height={2820}
             priority

@@ -7,7 +7,7 @@ macos-15 image that default is Xcode 16.4, and a fork run there reported 1,309
 compile errors instead of one line saying the Xcode was wrong. Jobs that each
 chose their own Xcode also stopped sharing compilation caches and products.
 
-select-ci-xcode.sh pins every job: to the job's own CMUX_CI_XCODE_APP, else to
+select-ci-xcode.sh pins every job: to the job's own HMUX_CI_XCODE_APP, else to
 the version scripts/ci/xcode-pins.txt names for the runner's macOS, and it
 refuses anything below the .xcode-version major. This guard keeps jobs on it:
 
@@ -17,7 +17,7 @@ refuses anything below the .xcode-version major. This guard keeps jobs on it:
    Swift out of sight (tests/run_cloud_command_deadline_tests.sh runs
    `swift test`).
 2. No macOS job chooses an Xcode itself (DEVELOPER_DIR into GITHUB_ENV,
-   xcode-select --switch, a literal CMUX_CI_XCODE_APP path) outside EXEMPT.
+   xcode-select --switch, a literal HMUX_CI_XCODE_APP path) outside EXEMPT.
 3. Only the SDK 15 Ghostty CLI helper step lifts the pool pin and the floor.
 4. Every pool pin is at least the .xcode-version floor, and check-pbxproj.sh
    knows the floor.
@@ -32,7 +32,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOWS = ROOT / ".github" / "workflows"
 SELECTOR = "scripts/select-ci-xcode.sh"
-BELOW_FLOOR = "CMUX_CI_XCODE_ALLOW_BELOW_FLOOR"
+BELOW_FLOOR = "HMUX_CI_XCODE_ALLOW_BELOW_FLOOR"
 
 # (workflow, job) -> why the job does not go through select-ci-xcode.sh.
 EXEMPT = {
@@ -53,17 +53,17 @@ EXEMPT = {
         "floor on purpose",
     ("remote-daemon.yml", "remote-daemon-macos-tests"): "Go only; no Xcode",
     ("ci.yml", "claude-wrapper"): "shell wrapper tests only; no Xcode",
-    ("cmux-tui.yml", "lint"): "Rust only; no Xcode",
-    ("cmux-tui.yml", "test"): "Rust only; no Xcode",
-    ("cmux-tui.yml", "cdp-browser-smoke"): "Rust only; no Xcode",
-    ("cmux-tui-build-package.yml", "build"):
+    ("hmux-tui.yml", "lint"): "Rust only; no Xcode",
+    ("hmux-tui.yml", "test"): "Rust only; no Xcode",
+    ("hmux-tui.yml", "cdp-browser-smoke"): "Rust only; no Xcode",
+    ("hmux-tui-build-package.yml", "build"):
         "Rust release binaries linked against the runner's default macOS SDK, "
         "as the nightly and release callers always have; pinning it would "
         "change published artifacts",
     ("relay-publish-npm.yml", "smoke"): "npm package smoke test; no Xcode",
 }
 
-# (workflow, job, step name) allowed to set CMUX_CI_XCODE_ALLOW_BELOW_FLOOR.
+# (workflow, job, step name) allowed to set HMUX_CI_XCODE_ALLOW_BELOW_FLOOR.
 BELOW_FLOOR_STEPS = {("ci-macos.yml", "swift-package-tests", "Select helper Xcode")}
 
 # A step that reaches the Xcode toolchain directly or through a repo script.
@@ -75,7 +75,7 @@ TOOLCHAIN = re.compile(
 SELF_SELECTION = re.compile(
     r"DEVELOPER_DIR=[^\n]*GITHUB_ENV|xcode-select\s+(-s|--switch)\b"
 )
-LITERAL_XCODE_PIN = re.compile(r"^\s*CMUX_CI_(XCODE_APP|DEVELOPER_DIR):\s*['\"]?/", re.M)
+LITERAL_XCODE_PIN = re.compile(r"^\s*HMUX_CI_(XCODE_APP|DEVELOPER_DIR):\s*['\"]?/", re.M)
 
 
 def _block(lines: list[str], start: int, indent: int) -> tuple[list[str], int]:
@@ -264,11 +264,11 @@ def check_detects_regressions() -> list[str]:
             ["chooses an Xcode itself"],
         ),
         "literal pin": (
-            base.replace("    steps:\n", "    env:\n      CMUX_CI_XCODE_APP: /Applications/Xcode_26.3.app\n    steps:\n", 1),
+            base.replace("    steps:\n", "    env:\n      HMUX_CI_XCODE_APP: /Applications/Xcode_26.3.app\n    steps:\n", 1),
             ["literal Xcode path"],
         ),
         "below floor": (
-            base.replace("run: ./scripts/select-ci-xcode.sh", "run: CMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1 ./scripts/select-ci-xcode.sh"),
+            base.replace("run: ./scripts/select-ci-xcode.sh", "run: HMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1 ./scripts/select-ci-xcode.sh"),
             ["never runs", "only the SDK 15 helper may"],
         ),
         "matrix macOS": (

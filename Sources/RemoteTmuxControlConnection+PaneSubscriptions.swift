@@ -1,4 +1,4 @@
-import CmuxRemoteSession
+import HmuxRemoteSession
 import Foundation
 
 extension RemoteTmuxControlConnection {
@@ -41,7 +41,7 @@ extension RemoteTmuxControlConnection {
     /// Host-wide session digest subscription used only by the shared view stream.
     /// The value changes on create/kill/rename even when no window event fires,
     /// giving the multiplexer an event-driven reconcile source instead of polling.
-    static let sessionDigestSubscriptionName = "cmux_sessions"
+    static let sessionDigestSubscriptionName = "hmux_sessions"
 
     ///
     /// The target is empty, which subscribes on the attached session. A pane target only reports
@@ -81,7 +81,7 @@ extension RemoteTmuxControlConnection {
 
     /// The exact `refresh-client -B` line for a pane's hook-published agent status.
     static func paneAgentSubscriptionCommand(paneId: Int) -> String {
-        "refresh-client -B \"\(agentSubscriptionPrefix)\(paneId):%\(paneId):#{@cmux_agent}\""
+        "refresh-client -B \"\(agentSubscriptionPrefix)\(paneId):%\(paneId):#{@hmux_agent}\""
     }
 
     /// Subscribes to the pane user option written by remote Claude/Codex hooks.
@@ -128,7 +128,7 @@ extension RemoteTmuxControlConnection {
     /// Subscribes to live `pane_current_path` changes for `paneId` via tmux
     /// control-mode `refresh-client -B`, so a remote `cd` updates the mirrored
     /// tab's folder without polling. tmux emits the value once on subscribe and
-    /// again on every change as `%subscription-changed cmux_cwd_<paneId> … : <path>`.
+    /// again on every change as `%subscription-changed hmux_cwd_<paneId> … : <path>`.
     /// Best-effort: on tmux builds that don't support subscriptions the command is
     /// a no-op and ``requestPanePath(paneId:)`` still supplies the initial folder.
     func subscribePanePath(paneId: Int) {
@@ -170,7 +170,7 @@ extension RemoteTmuxControlConnection {
         paneForegroundStates[paneId] = state
         let noReflow = state.suppressesReflow
         #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "remote.reflow.classify pane=\(paneId) src=\(source) raw=\"\(rawValue.trimmingCharacters(in: .whitespacesAndNewlines))\" "
                 + "alt=\(state.alternateOn ? 1 : 0) cmd=\"\(state.command)\" noReflow=\(noReflow ? 1 : 0)"
         )
@@ -220,7 +220,7 @@ extension RemoteTmuxControlConnection {
                 + " -B \"\(Self.cwdSubscriptionPrefix)\(paneId):%\(paneId):#{pane_current_path}\""
                 + " -B \"\(Self.headerSubscriptionPrefix)\(paneId):%\(paneId):#{T:pane-border-format}\""
                 + " -B \"\(Self.paneTitleSubscriptionPrefix)\(paneId):%\(paneId):\(Self.paneTitleMetadataFormat)\""
-                + " -B \"\(Self.agentSubscriptionPrefix)\(paneId):%\(paneId):#{@cmux_agent}\""
+                + " -B \"\(Self.agentSubscriptionPrefix)\(paneId):%\(paneId):#{@hmux_agent}\""
         )
     }
 

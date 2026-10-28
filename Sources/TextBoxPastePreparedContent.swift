@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 
 enum TextBoxPastePreparedContent: Codable, Equatable, Sendable {
     case insertText(String)

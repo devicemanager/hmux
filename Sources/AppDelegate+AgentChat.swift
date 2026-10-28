@@ -1,6 +1,6 @@
 import AppKit
-import CMUXAgentLaunch
-import CmuxSettings
+import HMUXAgentLaunch
+import HmuxSettings
 import Foundation
 import os
 import Security
@@ -81,27 +81,27 @@ extension AppDelegate {
         preferredWindow: NSWindow?,
         onExecuted: (() -> Void)?
     ) -> Bool {
-        let cmuxConfigStore = context.cmuxConfigStore
+        let hmuxConfigStore = context.hmuxConfigStore
         return performNewAgentChatAction(
             tabManager: context.tabManager,
-            agentChat: cmuxConfigStore?.agentChat ?? .default,
-            globalConfigPath: cmuxConfigStore?.globalConfigPath,
+            agentChat: hmuxConfigStore?.agentChat ?? .default,
+            globalConfigPath: hmuxConfigStore?.globalConfigPath,
             preferredWindow: resolvedWindow(for: context) ?? preferredWindow,
             onExecuted: onExecuted
         )
     }
 
     @discardableResult
-    func executeConfiguredCmuxAction(
+    func executeConfiguredHmuxAction(
         id actionID: String,
         tabManager: TabManager,
         preferredWindow: NSWindow? = nil
     ) -> Bool {
         guard let context = mainWindowContext(for: tabManager),
-              let action = context.cmuxConfigStore?.resolvedAction(id: actionID) else {
+              let action = context.hmuxConfigStore?.resolvedAction(id: actionID) else {
             return false
         }
-        return executeConfiguredCmuxAction(
+        return executeConfiguredHmuxAction(
             action,
             context: context,
             preferredWindow: preferredWindow
@@ -111,12 +111,12 @@ extension AppDelegate {
     @discardableResult
     func performNewAgentChatAction(
         tabManager: TabManager,
-        agentChat: CmuxAgentChatConfiguration,
+        agentChat: HmuxAgentChatConfiguration,
         globalConfigPath: String?,
         preferredWindow: NSWindow?,
         onExecuted: (() -> Void)? = nil
     ) -> Bool {
-        guard CmuxFeatureFlags.shared.isAgentChatUIEnabled else {
+        guard HmuxFeatureFlags.shared.isAgentChatUIEnabled else {
             NSSound.beep()
             return false
         }
@@ -168,11 +168,11 @@ extension AppDelegate {
     /// Starts or reuses the agent-chat sidecar and returns its page base URL,
     /// or nil when Agent Chat is off or the sidecar is unreachable.
     func agentChatBrowserBaseURL(tabManager: TabManager, preferredWindow: NSWindow?) async -> URL? {
-        guard CmuxFeatureFlags.shared.isAgentChatUIEnabled,
+        guard HmuxFeatureFlags.shared.isAgentChatUIEnabled,
               BrowserAvailabilitySettings.isEnabled(),
               AgentChatActionInFlightGate.begin() else { return nil }
         defer { AgentChatActionInFlightGate.end() }
-        let store = mainWindowContext(for: tabManager)?.cmuxConfigStore
+        let store = mainWindowContext(for: tabManager)?.hmuxConfigStore
         let agentChat = store?.agentChat ?? .default
         AgentChatThemeSync.start()
         let availability = await ensureAgentChatServerAvailable(
@@ -194,10 +194,10 @@ extension AppDelegate {
             localized: "workspace.agentChat.defaultTitle",
             defaultValue: "Agent Chat"
         )
-        let workspaceDefinition = CmuxWorkspaceDefinition(
+        let workspaceDefinition = HmuxWorkspaceDefinition(
             name: workspaceName,
-            layout: .pane(CmuxPaneDefinition(surfaces: [
-                CmuxSurfaceDefinition(
+            layout: .pane(HmuxPaneDefinition(surfaces: [
+                HmuxSurfaceDefinition(
                     type: .browser,
                     name: workspaceName,
                     command: nil,
@@ -208,13 +208,13 @@ extension AppDelegate {
                 ),
             ]))
         )
-        let command = CmuxCommandDefinition(
+        let command = HmuxCommandDefinition(
             name: workspaceName,
             workspace: workspaceDefinition
         )
         let baseCwd = tabManager.selectedWorkspace?.currentDirectory
             ?? FileManager.default.homeDirectoryForCurrentUser.path
-        guard CmuxConfigExecutor.executeWorkspaceCommand(
+        guard HmuxConfigExecutor.executeWorkspaceCommand(
             command: command,
             workspace: workspaceDefinition,
             tabManager: tabManager,
@@ -227,7 +227,7 @@ extension AppDelegate {
 
 
     private func ensureAgentChatServerAvailable(
-        _ agentChat: CmuxAgentChatConfiguration,
+        _ agentChat: HmuxAgentChatConfiguration,
         globalConfigPath: String?,
         preferredWindow: NSWindow?
     ) async -> AgentChatServerAvailability {
@@ -256,7 +256,7 @@ extension AppDelegate {
     }
 
     private func ensureExplicitAgentChatServerAvailable(
-        _ agentChat: CmuxAgentChatConfiguration,
+        _ agentChat: HmuxAgentChatConfiguration,
         startCommand: String?,
         globalConfigPath: String?,
         preferredWindow: NSWindow?
@@ -298,7 +298,7 @@ extension AppDelegate {
     }
 
     private func ensureOwnedAgentChatServerAvailable(
-        _ agentChat: CmuxAgentChatConfiguration,
+        _ agentChat: HmuxAgentChatConfiguration,
         startCommand: String,
         globalConfigPath: String?,
         preferredWindow: NSWindow?
@@ -336,13 +336,13 @@ extension AppDelegate {
             startCommand,
             currentDirectoryURL: Self.agentChatStartCommandDirectoryURL(for: agentChat),
             environmentOverrides: [
-                "CMUX_AGENT_CHAT_TOKEN": token,
-                "CMUX_AGENT_CHAT_PORT": "0",
-                "CMUX_AGENT_CHAT_STATE_FILE": stateFileURL.path,
-                "CMUX_AGENT_CHAT_LAUNCH_ID": launchId,
+                "HMUX_AGENT_CHAT_TOKEN": token,
+                "HMUX_AGENT_CHAT_PORT": "0",
+                "HMUX_AGENT_CHAT_STATE_FILE": stateFileURL.path,
+                "HMUX_AGENT_CHAT_LAUNCH_ID": launchId,
                 // Terminal chat views deliver prompts over this app's socket.
-                "CMUX_SOCKET_PATH": TerminalController.shared.activeSocketPath(preferredPath: SocketControlSettings.socketPath()),
-                "CMUX_BUNDLED_CLI_PATH": CLIForwardingLaunchRouter.bundledCLIURL()?.path ?? "",
+                "HMUX_SOCKET_PATH": TerminalController.shared.activeSocketPath(preferredPath: SocketControlSettings.socketPath()),
+                "HMUX_BUNDLED_CLI_PATH": CLIForwardingLaunchRouter.bundledCLIURL()?.path ?? "",
             ]
         ) else {
             return AgentChatServerAvailability(isReachable: false, browserURL: agentChat.url)
@@ -361,7 +361,7 @@ extension AppDelegate {
     }
 
     private func authorizeAgentChatStartCommandIfNeeded(
-        _ agentChat: CmuxAgentChatConfiguration,
+        _ agentChat: HmuxAgentChatConfiguration,
         command: String,
         globalConfigPath: String?,
         preferredWindow: NSWindow?
@@ -376,7 +376,7 @@ extension AppDelegate {
             sourcePath: sourcePath
         )
         return await withCheckedContinuation { continuation in
-            _ = CmuxConfigExecutor.authorizeProjectAutomationIfNeeded(
+            _ = HmuxConfigExecutor.authorizeProjectAutomationIfNeeded(
                 descriptor: descriptor,
                 confirm: false,
                 configSourcePath: sourcePath,
@@ -397,15 +397,15 @@ extension AppDelegate {
     nonisolated private static func agentChatStartCommandTrustDescriptor(
         command: String,
         sourcePath: String
-    ) -> CmuxActionTrustDescriptor {
-        CmuxActionTrustDescriptor(
-            actionID: "\(CmuxSurfaceTabBarBuiltInAction.newAgentChat.configID).startCommand",
+    ) -> HmuxActionTrustDescriptor {
+        HmuxActionTrustDescriptor(
+            actionID: "\(HmuxSurfaceTabBarBuiltInAction.newAgentChat.configID).startCommand",
             kind: "agentChatStartCommand",
             command: command,
             target: "agentChatServer",
             workspaceCommand: nil,
             configPath: canonicalAgentChatPath(sourcePath),
-            projectRoot: canonicalAgentChatPath(CmuxButtonIcon.projectRoot(forConfigPath: sourcePath)),
+            projectRoot: canonicalAgentChatPath(HmuxButtonIcon.projectRoot(forConfigPath: sourcePath)),
             iconFingerprint: nil
         )
     }
@@ -430,11 +430,11 @@ extension AppDelegate {
     }
 
     nonisolated private static func agentChatStartCommandDirectoryURL(
-        for agentChat: CmuxAgentChatConfiguration
+        for agentChat: HmuxAgentChatConfiguration
     ) -> URL {
         if case .local(let sourcePath) = agentChat.source {
             return URL(
-                fileURLWithPath: canonicalAgentChatPath(CmuxButtonIcon.projectRoot(forConfigPath: sourcePath)),
+                fileURLWithPath: canonicalAgentChatPath(HmuxButtonIcon.projectRoot(forConfigPath: sourcePath)),
                 isDirectory: true
             )
         }

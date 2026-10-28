@@ -29,7 +29,7 @@ class VercelMergeGateTests(unittest.TestCase):
         self.assertTrue(requires_vercel("manaflow-ai/cmuxterm-hq", []))
 
     def test_vercel_status_variants_are_recognized(self):
-        for name in ("Vercel", "Vercel Preview", "vercel-preview", "Vercel/Preview", "Vercel – cmux"):
+        for name in ("Vercel", "Vercel Preview", "vercel-preview", "Vercel/Preview", "Vercel – hmux"):
             with self.subTest(name=name):
                 self.assertTrue(is_vercel_status(name))
         for name in ("Vercelish", "Vercel Agent Review", "Vercel Code Review"):

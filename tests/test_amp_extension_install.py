@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Regression test: the generated Amp plugin is importable and emits cmux hook calls.
+Regression test: the generated Amp plugin is importable and emits hmux hook calls.
 """
 
 from __future__ import annotations
@@ -14,7 +14,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 
 
 def make_executable(path: Path, content: str) -> None:
@@ -59,13 +59,13 @@ def main() -> int:
         return 0
 
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
     with tempfile.TemporaryDirectory(
-        prefix="cmux-amp-extension-",
+        prefix="hmux-amp-extension-",
         ignore_cleanup_errors=True,
     ) as td:
         root = Path(td)
@@ -90,13 +90,13 @@ def main() -> int:
             print(f"stderr={install.stderr.strip()}")
             return 1
 
-        extension_path = root / ".config" / "amp" / "plugins" / "cmux-session.ts"
+        extension_path = root / ".config" / "amp" / "plugins" / "hmux-session.ts"
         if not extension_path.exists():
             print(f"FAIL: expected plugin at {extension_path}")
             return 1
         extension_text = extension_path.read_text(encoding="utf-8")
-        if "cmux-amp-session-extension-marker" not in extension_text:
-            print(f"FAIL: expected cmux marker in {extension_path}")
+        if "hmux-amp-session-extension-marker" not in extension_text:
+            print(f"FAIL: expected hmux marker in {extension_path}")
             return 1
         installed_stat = extension_path.stat()
         refresh = subprocess.run(
@@ -122,16 +122,16 @@ def main() -> int:
             print("FAIL: idempotent Amp plugin refresh rewrote the managed extension")
             return 1
 
-        fake_cmux = root / "fake-cmux"
-        fake_args_log = root / "fake-cmux-args.log"
-        fake_stdin_log = root / "fake-cmux-stdin.log"
-        fake_env_log = root / "fake-cmux-env.log"
+        fake_hmux = root / "fake-hmux"
+        fake_args_log = root / "fake-hmux-args.log"
+        fake_stdin_log = root / "fake-hmux-stdin.log"
+        fake_env_log = root / "fake-hmux-env.log"
         fake_bin = root / "bin"
         fake_bin.mkdir()
         fake_amp = fake_bin / "amp"
         make_executable(fake_amp, "#!/usr/bin/env bash\nexit 0\n")
         make_executable(
-            fake_cmux,
+            fake_hmux,
             """#!/usr/bin/perl
 use Fcntl qw(:flock);
 
@@ -144,53 +144,53 @@ sub append {
 }
 
 my $stdin = do { local $/; <STDIN> // "" };
-append($ENV{"FAKE_CMUX_ARGS_LOG"}, join(" ", @ARGV) . "\\n");
-append($ENV{"FAKE_CMUX_STDIN_LOG"}, $stdin . "\\n---\\n");
-append($ENV{"FAKE_CMUX_ENV_LOG"}, sprintf(
+append($ENV{"FAKE_HMUX_ARGS_LOG"}, join(" ", @ARGV) . "\\n");
+append($ENV{"FAKE_HMUX_STDIN_LOG"}, $stdin . "\\n---\\n");
+append($ENV{"FAKE_HMUX_ENV_LOG"}, sprintf(
     "kind=%s\\ncwd=%s\\nargv=%s\\namp_api_key=%s\\n",
-    $ENV{"CMUX_AGENT_LAUNCH_KIND"} // "",
-    $ENV{"CMUX_AGENT_LAUNCH_CWD"} // "",
-    $ENV{"CMUX_AGENT_LAUNCH_ARGV_B64"} // "",
+    $ENV{"HMUX_AGENT_LAUNCH_KIND"} // "",
+    $ENV{"HMUX_AGENT_LAUNCH_CWD"} // "",
+    $ENV{"HMUX_AGENT_LAUNCH_ARGV_B64"} // "",
     $ENV{"AMP_API_KEY"} // "",
 ));
 """,
         )
 
         check_env = env.copy()
-        check_env["CMUX_TEST_AMP_EXTENSION_PATH"] = str(extension_path)
-        check_env["CMUX_SURFACE_ID"] = "surface-amp-test"
-        check_env["CMUX_WORKSPACE_ID"] = "workspace-amp-test"
-        invalid_cmux_override = root / "cmux-directory"
-        invalid_cmux_override.mkdir()
-        check_env["CMUX_AMP_CMUX_BIN"] = str(invalid_cmux_override)
-        check_env["CMUX_BUNDLED_CLI_PATH"] = str(fake_cmux)
+        check_env["HMUX_TEST_AMP_EXTENSION_PATH"] = str(extension_path)
+        check_env["HMUX_SURFACE_ID"] = "surface-amp-test"
+        check_env["HMUX_WORKSPACE_ID"] = "workspace-amp-test"
+        invalid_hmux_override = root / "hmux-directory"
+        invalid_hmux_override.mkdir()
+        check_env["HMUX_AMP_HMUX_BIN"] = str(invalid_hmux_override)
+        check_env["HMUX_BUNDLED_CLI_PATH"] = str(fake_hmux)
         check_env["AMP_API_KEY"] = "secret-should-not-propagate"
-        check_env["FAKE_CMUX_ARGS_LOG"] = str(fake_args_log)
-        check_env["FAKE_CMUX_STDIN_LOG"] = str(fake_stdin_log)
-        check_env["FAKE_CMUX_ENV_LOG"] = str(fake_env_log)
+        check_env["FAKE_HMUX_ARGS_LOG"] = str(fake_args_log)
+        check_env["FAKE_HMUX_STDIN_LOG"] = str(fake_stdin_log)
+        check_env["FAKE_HMUX_ENV_LOG"] = str(fake_env_log)
         check_env["PWD"] = "/tmp/amp-project"
         check_env["PATH"] = f"{fake_bin}{os.pathsep}{env.get('PATH', '')}"
         for key in (
-            "CMUX_AMP_HOOKS_DISABLED",
-            "CMUX_AGENT_LAUNCH_KIND",
-            "CMUX_AGENT_LAUNCH_EXECUTABLE",
-            "CMUX_AGENT_LAUNCH_ARGV_B64",
-            "CMUX_AGENT_LAUNCH_CWD",
+            "HMUX_AMP_HOOKS_DISABLED",
+            "HMUX_AGENT_LAUNCH_KIND",
+            "HMUX_AGENT_LAUNCH_EXECUTABLE",
+            "HMUX_AGENT_LAUNCH_ARGV_B64",
+            "HMUX_AGENT_LAUNCH_CWD",
         ):
             check_env.pop(key, None)
         # Amp runs plugin callbacks from its system plugin directory rather than
         # the terminal's project directory. The managed wrapper's launch
         # capture is the authoritative cwd that hooks must persist.
-        check_env["CMUX_AGENT_LAUNCH_KIND"] = "amp"
-        check_env["CMUX_AGENT_LAUNCH_EXECUTABLE"] = str(fake_amp)
-        check_env["CMUX_AGENT_LAUNCH_ARGV_B64"] = base64.b64encode(
+        check_env["HMUX_AGENT_LAUNCH_KIND"] = "amp"
+        check_env["HMUX_AGENT_LAUNCH_EXECUTABLE"] = str(fake_amp)
+        check_env["HMUX_AGENT_LAUNCH_ARGV_B64"] = base64.b64encode(
             f"{fake_amp}\0--mode\0geppetto\0".encode("utf-8")
         ).decode("ascii")
         expected_launch_cwd = "/tmp/amp-project"
-        check_env["CMUX_AGENT_LAUNCH_CWD"] = expected_launch_cwd
+        check_env["HMUX_AGENT_LAUNCH_CWD"] = expected_launch_cwd
         check_source = """
 import * as fs from "node:fs";
-const extensionPath = process.env.CMUX_TEST_AMP_EXTENSION_PATH;
+const extensionPath = process.env.HMUX_TEST_AMP_EXTENSION_PATH;
 const mod = await import(extensionPath);
 if (typeof mod.default !== "function") throw new Error("missing default export");
 const handlers = new Map();
@@ -308,8 +308,8 @@ function selectThread(nextThread) {
   activeThreadSubscriber(nextThread);
 }
 function statusCount(fragment) {
-  const text = fs.existsSync(process.env.FAKE_CMUX_ARGS_LOG)
-    ? fs.readFileSync(process.env.FAKE_CMUX_ARGS_LOG, "utf8")
+  const text = fs.existsSync(process.env.FAKE_HMUX_ARGS_LOG)
+    ? fs.readFileSync(process.env.FAKE_HMUX_ARGS_LOG, "utf8")
     : "";
   return text.split("\\n").filter((line) => line.startsWith("set-status amp ") && line.includes(fragment)).length;
 }
@@ -321,8 +321,8 @@ async function waitForProjectedStatus(fragment, minimumCount) {
   throw new Error(`Amp status count did not reach ${minimumCount} for ${fragment}`);
 }
 function commandCount(fragment) {
-  const text = fs.existsSync(process.env.FAKE_CMUX_ARGS_LOG)
-    ? fs.readFileSync(process.env.FAKE_CMUX_ARGS_LOG, "utf8")
+  const text = fs.existsSync(process.env.FAKE_HMUX_ARGS_LOG)
+    ? fs.readFileSync(process.env.FAKE_HMUX_ARGS_LOG, "utf8")
     : "";
   return text.split("\\n").filter((line) => line.includes(fragment)).length;
 }
@@ -331,22 +331,22 @@ async function waitForCommandCount(fragment, minimumCount) {
     if (commandCount(fragment) >= minimumCount) return;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
-  throw new Error(`cmux command count did not reach ${minimumCount} for ${fragment}`);
+  throw new Error(`hmux command count did not reach ${minimumCount} for ${fragment}`);
 }
 async function waitForInputFragment(fragment) {
   for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt += 1) {
-    const text = fs.existsSync(process.env.FAKE_CMUX_STDIN_LOG)
-      ? fs.readFileSync(process.env.FAKE_CMUX_STDIN_LOG, "utf8")
+    const text = fs.existsSync(process.env.FAKE_HMUX_STDIN_LOG)
+      ? fs.readFileSync(process.env.FAKE_HMUX_STDIN_LOG, "utf8")
       : "";
     if (text.includes(fragment)) return;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
-  throw new Error(`cmux hook input did not contain ${fragment}`);
+  throw new Error(`hmux hook input did not contain ${fragment}`);
 }
 async function waitForLifecycle(sessionId) {
   for (let attempt = 0; attempt < POLL_ATTEMPTS; attempt += 1) {
-    const text = fs.existsSync(process.env.FAKE_CMUX_STDIN_LOG)
-      ? fs.readFileSync(process.env.FAKE_CMUX_STDIN_LOG, "utf8")
+    const text = fs.existsSync(process.env.FAKE_HMUX_STDIN_LOG)
+      ? fs.readFileSync(process.env.FAKE_HMUX_STDIN_LOG, "utf8")
       : "";
     const found = text.split("\\n---\\n").some((chunk) => {
       try {
@@ -359,11 +359,11 @@ async function waitForLifecycle(sessionId) {
     if (found) return;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
-  throw new Error(`cmux lifecycle input did not contain ${sessionId}`);
+  throw new Error(`hmux lifecycle input did not contain ${sessionId}`);
 }
 function readJsonRecords() {
-  const text = fs.existsSync(process.env.FAKE_CMUX_STDIN_LOG)
-    ? fs.readFileSync(process.env.FAKE_CMUX_STDIN_LOG, "utf8")
+  const text = fs.existsSync(process.env.FAKE_HMUX_STDIN_LOG)
+    ? fs.readFileSync(process.env.FAKE_HMUX_STDIN_LOG, "utf8")
     : "";
   return text.split("\\n---\\n").flatMap((chunk) => {
     try {
@@ -386,11 +386,11 @@ async function waitForLifecycleState(sessionId, state, minimumCount) {
     if (lifecycleStateCount(sessionId, state) >= minimumCount) return;
     await new Promise((resolve) => setTimeout(resolve, 20));
   }
-  throw new Error(`cmux lifecycle state count did not reach ${minimumCount} for ${sessionId}/${state}`);
+  throw new Error(`hmux lifecycle state count did not reach ${minimumCount} for ${sessionId}/${state}`);
 }
 function projectedStatusCount() {
-  const text = fs.existsSync(process.env.FAKE_CMUX_ARGS_LOG)
-    ? fs.readFileSync(process.env.FAKE_CMUX_ARGS_LOG, "utf8")
+  const text = fs.existsSync(process.env.FAKE_HMUX_ARGS_LOG)
+    ? fs.readFileSync(process.env.FAKE_HMUX_ARGS_LOG, "utf8")
     : "";
   return text.split("\\n").filter((line) => line.startsWith("set-status amp ")).length;
 }
@@ -492,7 +492,7 @@ await waitForProjectedStatus(runningStatusFragment, runningStatusCount + 1);
 selectThread(thread);
 secondState = "awaiting-approval";
 await secondStateSubscriber(secondState);
-const needsInputStatusFragment = "__cmux_amp_status_needs_input --icon bell.fill --color #4C8DFF";
+const needsInputStatusFragment = "__hmux_amp_status_needs_input --icon bell.fill --color #4C8DFF";
 const needsInputStatusCount = statusCount(needsInputStatusFragment);
 selectThread(secondThread);
 await waitForProjectedStatus(needsInputStatusFragment, needsInputStatusCount + 1);
@@ -545,7 +545,7 @@ await handlers.get("agent.end")({
 }, { thread: thirdThread });
 thirdState = "error";
 await thirdStateSubscriber(thirdState);
-const errorStatusFragment = "__cmux_amp_status_error --icon xmark.circle --color #ff5555";
+const errorStatusFragment = "__hmux_amp_status_error --icon xmark.circle --color #ff5555";
 const errorStatusCount = statusCount(errorStatusFragment);
 selectThread(thirdThread);
 await waitForProjectedStatus(errorStatusFragment, errorStatusCount + 1);
@@ -554,7 +554,7 @@ selectThread(null);
 await waitForCommandCount("clear-status amp", clearCountBeforeNoActiveThread + 1);
 secondState = "running";
 await secondStateSubscriber(secondState);
-const activeStatusMarker = "set-status amp __cmux_amp_status_error --icon xmark.circle --color #ff5555";
+const activeStatusMarker = "set-status amp __hmux_amp_status_error --icon xmark.circle --color #ff5555";
 const activeStatusCount = commandCount(activeStatusMarker);
 selectThread(thirdThread);
 await waitForCommandCount(activeStatusMarker, activeStatusCount + 1);
@@ -602,8 +602,8 @@ if (lifecycleStateCount("T-amp-read-only", "idle") !== 0) {
 }
 
 // A long-lived Amp process must not retain every completed thread forever.
-const previousHooksDisabled = process.env.CMUX_AMP_HOOKS_DISABLED;
-process.env.CMUX_AMP_HOOKS_DISABLED = "1";
+const previousHooksDisabled = process.env.HMUX_AMP_HOOKS_DISABLED;
+process.env.HMUX_AMP_HOOKS_DISABLED = "1";
 let resumableStateSubscriber = null;
 let resumableStateUnsubscribed = false;
 const resumableThread = {
@@ -639,8 +639,8 @@ for (let index = 0; index < 132; index += 1) {
   };
   await handlers.get("session.start")({ thread: boundedThread }, { thread: boundedThread });
 }
-if (previousHooksDisabled === undefined) delete process.env.CMUX_AMP_HOOKS_DISABLED;
-else process.env.CMUX_AMP_HOOKS_DISABLED = previousHooksDisabled;
+if (previousHooksDisabled === undefined) delete process.env.HMUX_AMP_HOOKS_DISABLED;
+else process.env.HMUX_AMP_HOOKS_DISABLED = previousHooksDisabled;
 if (unsubscribeCount === 0) throw new Error("Amp thread subscriptions were never evicted");
 if (typeof resumableStateSubscriber !== "function" || resumableStateUnsubscribed) {
   throw new Error("Amp evicted the state observer needed for a follow-up turn");
@@ -650,9 +650,9 @@ await resumableStateSubscriber("running");
 // The managed-launch capture above models a wrapped terminal launch.
 // Clear it before the custom-launcher case so normalizedLaunchArgv()
 // still proves its fallback behavior for an unrecognized argv.
-delete process.env.CMUX_AGENT_LAUNCH_ARGV_B64;
-delete process.env.CMUX_AGENT_LAUNCH_EXECUTABLE;
-delete process.env.CMUX_AGENT_LAUNCH_CWD;
+delete process.env.HMUX_AGENT_LAUNCH_ARGV_B64;
+delete process.env.HMUX_AGENT_LAUNCH_EXECUTABLE;
+delete process.env.HMUX_AGENT_LAUNCH_CWD;
 process.argv.splice(
   0,
   process.argv.length,
@@ -889,7 +889,7 @@ for (const sessionId of [
             )
             return 1
 
-    print("PASS: generated Amp plugin installs and emits cmux hooks")
+    print("PASS: generated Amp plugin installs and emits hmux hooks")
     return 0
 
 

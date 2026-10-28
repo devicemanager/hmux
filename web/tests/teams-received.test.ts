@@ -121,16 +121,16 @@ describe("received invitations", () => {
 
   test("a personal-plan team with no free seat refuses the accept", async () => {
     const { stack, deps, invitation } = await invited();
-    stack.teams.get(TEAM_ID)!.metadata = { cmuxPlan: "pro" };
+    stack.teams.get(TEAM_ID)!.metadata = { hmuxPlan: "pro" };
     stack.addUser({ id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd" }).addMember(TEAM_ID, "dddddddd-dddd-4ddd-8ddd-dddddddddddd", ["team_member"]);
     await expect(acceptReceivedInvitation(OUTSIDER_ID, invitation.id, deps)).rejects.toMatchObject({ code: "seat_limit" });
   });
 });
 
 describe("invite email", () => {
-  test("names the inviter and team, links once, and tells a new user how to install cmux", () => {
+  test("names the inviter and team, links once, and tells a new user how to install hmux", () => {
     const email = buildTeamInviteEmail({
-      from: "cmux <invites@cmux.com>",
+      from: "hmux <invites@cmux.com>",
       to: "new@example.com",
       teamName: "Acme <Labs>",
       inviterName: "Ada",
@@ -138,8 +138,8 @@ describe("invite email", () => {
       acceptUrl: "https://cmux.com/en/join/tok",
       expiresAt: new Date("2026-10-07T00:00:00Z"),
     });
-    expect(email.subject).toBe("Ada invited you to Acme <Labs> on cmux");
-    expect(email.text).toContain("Ada invited you to Acme <Labs> on cmux as an admin.");
+    expect(email.subject).toBe("Ada invited you to Acme <Labs> on hmux");
+    expect(email.text).toContain("Ada invited you to Acme <Labs> on hmux as an admin.");
     expect(email.text).toContain("Accept: https://cmux.com/en/join/tok");
     expect(email.text).toContain("Download it for Mac at https://cmux.com/download");
     expect(email.text).toContain("sign in with this address (new@example.com)");
@@ -151,7 +151,7 @@ describe("invite email", () => {
 
   test("an unknown inviter reads as a teammate", () => {
     const email = buildTeamInviteEmail({
-      from: "cmux <invites@cmux.com>",
+      from: "hmux <invites@cmux.com>",
       to: "new@example.com",
       teamName: "Acme",
       inviterName: null,
@@ -159,13 +159,13 @@ describe("invite email", () => {
       acceptUrl: "https://cmux.com/en/join/tok",
       expiresAt: new Date("2026-10-07T00:00:00Z"),
     });
-    expect(email.subject).toBe("A teammate invited you to Acme on cmux");
+    expect(email.subject).toBe("A teammate invited you to Acme on hmux");
     expect(email.text).not.toContain("as an admin");
   });
 
   test("control characters and oversized names never reach the subject or body", () => {
     const email = buildTeamInviteEmail({
-      from: "cmux <invites@cmux.com>",
+      from: "hmux <invites@cmux.com>",
       to: "new@example.com",
       teamName: "Acme\r\nBcc: victim@example.com",
       inviterName: "A".repeat(200) + "\u202e",
@@ -174,7 +174,7 @@ describe("invite email", () => {
       expiresAt: new Date("2026-10-07T00:00:00Z"),
     });
     expect(email.subject).not.toMatch(/[\r\n]/);
-    expect(email.subject).toContain("Acme Bcc: victim@example.com on cmux");
+    expect(email.subject).toContain("Acme Bcc: victim@example.com on hmux");
     expect(email.subject.length).toBeLessThan(140);
     expect(email.text).not.toContain("\u202e");
     expect(Object.keys(email.headers)).toEqual(["Auto-Submitted"]);

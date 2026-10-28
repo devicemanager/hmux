@@ -1,5 +1,5 @@
-import CmuxBrowser
-import CmuxSettings
+import HmuxBrowser
+import HmuxSettings
 import WebKit
 
 /// The driver's own content world. Agent code can run scripts in the agent
@@ -7,7 +7,7 @@ import WebKit
 /// world; neither can reach this one, so the checks and masks the driver
 /// runs here cannot be patched by them.
 enum BrowserReplDriverWorld {
-    @MainActor static let world = WKContentWorld.world(name: "cmux-driver")
+    @MainActor static let world = WKContentWorld.world(name: "hmux-driver")
 }
 
 extension BrowserReplPolicyBoard {
@@ -51,8 +51,8 @@ final class BrowserReplNavigationGuard {
     /// temporary directories load there, by the rule its own navigations
     /// follow (``BrowserReplFileSandbox/navigationRefusal(_:roots:)``),
     /// whoever started it (a page, a redirect, history). Reported to the
-    /// sessions as `navigation.blocked`. A page cmux serves from local files
-    /// (`cmux-diff-viewer:` when this web view serves it, or the diff
+    /// sessions as `navigation.blocked`. A page hmux serves from local files
+    /// (`hmux-diff-viewer:` when this web view serves it, or the diff
     /// viewer's loopback HTTP server) is such a local file outside them: it
     /// never loads there
     /// (``BrowserReplFileSandbox/navigationRefusal(_:roots:)`` refuses it).
@@ -148,7 +148,7 @@ final class BrowserReplNavigationGuard {
     /// (`_isUserInitiated`, read as false where WebKit cannot say) leaves
     /// it. The navigation delegate and the window delegate ask this one
     /// decision before every external side effect: the configured external
-    /// browser, the system browser rule, cmux app links and other apps'
+    /// browser, the system browser rule, hmux app links and other apps'
     /// URL schemes.
     func externalDecision(panelID: UUID, action: WKNavigationAction, target: BrowserReplExternalTarget) -> BrowserReplExternalDecision {
         guard let attachment = BrowserReplTabAttachments.shared.attachment(for: panelID) else { return .handOff }

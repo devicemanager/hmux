@@ -108,7 +108,7 @@ test("browserAuth.request: the app fills marked fields and submits; no value rea
   assert.equal(sent.origin, "https://login.example");
   assert.ok(!JSON.stringify(sent).includes("correct horse"));
   assert.equal(await s.value('page.locator("#out").textContent()'), "submitted as ada@example.com with a 13-character password");
-  assert.deepEqual(await s.value("page.evaluate(() => [document.querySelectorAll('[data-cmux-auth]').length, [...new Set(window.seen)]])"), [0, ["email", "password"]]);
+  assert.deepEqual(await s.value("page.evaluate(() => [document.querySelectorAll('[data-hmux-auth]').length, [...new Set(window.seen)]])"), [0, ["email", "password"]]);
   const scope = Object.keys(s.repl.scope).map((k) => { try { return JSON.stringify(s.repl.scope[k]); } catch { return ""; } }).join("\n");
   assert.ok(!scope.includes("correct horse"));
 });
@@ -134,7 +134,7 @@ test("browserAuth.request: no hidden field is filled, also when auth.request is 
   for (const [name, hide] of Object.entries(hides)) {
     await s.run('await page.goto("https://login.example/")');
     globalThis.__authAnswer = fillLike({ pw: "correct horse" });
-    await s.value(`page.evaluate(() => { const el = document.querySelector('input[type="password"]'); el.setAttribute("data-cmux-auth", "hidden-${name}"); ${hide}; return true; })`);
+    await s.value(`page.evaluate(() => { const el = document.querySelector('input[type="password"]'); el.setAttribute("data-hmux-auth", "hidden-${name}"); ${hide}; return true; })`);
     const r = await s.value(call(`hidden-${name}`));
     assert.equal(r.status, "locator_invalid", `${name}: ${JSON.stringify(r)}`);
     assert.equal(await s.value(`page.evaluate(() => document.querySelector('input[type="password"]').value)`), "", `${name}: the hidden field was filled`);
@@ -144,14 +144,14 @@ test("browserAuth.request: no hidden field is filled, also when auth.request is 
   globalThis.__authAnswer = fillLike({ pw: "correct horse" }, {
     meanwhile: ({ params, call: driverCall }) => driverCall("frame.evaluate", { targetId: params.targetId, frameId: params.frameId, world: "page", source: `() => { document.querySelector('input[type="password"]').style.opacity = "0"; return true; }`, args: [], awaitPromise: true }),
   });
-  await s.value(`page.evaluate(() => { document.querySelector('input[type="password"]').setAttribute("data-cmux-auth", "later"); return true; })`);
+  await s.value(`page.evaluate(() => { document.querySelector('input[type="password"]').setAttribute("data-hmux-auth", "later"); return true; })`);
   const later = await s.value(call("later"));
   assert.equal(later.status, "locator_invalid", JSON.stringify(later));
   assert.equal(await s.value(`page.evaluate(() => document.querySelector('input[type="password"]').value)`), "");
   // A shown field is filled through the same direct call.
   await s.run('await page.goto("https://login.example/")');
   globalThis.__authAnswer = fillLike({ pw: "correct horse" });
-  await s.value(`page.evaluate(() => { document.querySelector('input[type="password"]').setAttribute("data-cmux-auth", "shown"); return true; })`);
+  await s.value(`page.evaluate(() => { document.querySelector('input[type="password"]').setAttribute("data-hmux-auth", "shown"); return true; })`);
   assert.deepEqual(await s.value(call("shown")), { status: "filled" });
   assert.equal(await s.value(`page.evaluate(() => document.querySelector('input[type="password"]').value)`), "correct horse");
 });
@@ -174,12 +174,12 @@ test("browserAuth.request: the fill goes only to the elements and document marke
   await s.run('await page.goto("https://login.example/")');
   globalThis.__authAnswer = fillLike({ email: "ada@example.com" }, {
     meanwhile: ({ params, call }) => pageEval(call, params, `() => {
-      const original = document.querySelector("[data-cmux-auth]");
+      const original = document.querySelector("[data-hmux-auth]");
       const decoy = document.createElement("input");
       decoy.type = "email";
       decoy.id = "decoy";
-      decoy.setAttribute("data-cmux-auth", original.getAttribute("data-cmux-auth"));
-      original.removeAttribute("data-cmux-auth");
+      decoy.setAttribute("data-hmux-auth", original.getAttribute("data-hmux-auth"));
+      original.removeAttribute("data-hmux-auth");
       document.body.append(decoy);
       return true;
     }`),
@@ -193,7 +193,7 @@ test("browserAuth.request: the fill goes only to the elements and document marke
       const decoy = document.createElement("input");
       decoy.type = "email";
       decoy.id = "decoy";
-      decoy.setAttribute("data-cmux-auth", document.querySelector("[data-cmux-auth]").getAttribute("data-cmux-auth"));
+      decoy.setAttribute("data-hmux-auth", document.querySelector("[data-hmux-auth]").getAttribute("data-hmux-auth"));
       document.body.prepend(decoy);
       return true;
     }`),
@@ -205,9 +205,9 @@ test("browserAuth.request: the fill goes only to the elements and document marke
   await s.run('await page.goto("https://login.example/")');
   globalThis.__authAnswer = fillLike({ email: "ada@example.com" }, {
     meanwhile: async ({ params, call }) => {
-      const marker = await pageEval(call, params, `() => document.querySelector("[data-cmux-auth]").getAttribute("data-cmux-auth")`);
+      const marker = await pageEval(call, params, `() => document.querySelector("[data-hmux-auth]").getAttribute("data-hmux-auth")`);
       await call("tab.navigate", { targetId: params.targetId, url: "https://login.example/?again" });
-      await pageEval(call, params, `() => { document.querySelector('input[name="email"]').setAttribute("data-cmux-auth", ${JSON.stringify(marker)}); return true; }`);
+      await pageEval(call, params, `() => { document.querySelector('input[name="email"]').setAttribute("data-hmux-auth", ${JSON.stringify(marker)}); return true; }`);
     },
   });
   assert.deepEqual(await s.value(`sites.browserAuth.request({ origin: "https://login.example", fields: [${field}] })`), { status: "page_changed" });
@@ -225,10 +225,10 @@ test("browserAuth.request: cancel, wrong origin, bad selectors, and no native sh
   assert.match(await s.error(`sites.browserAuth.request({ origin: "https://login.example", fields: [{ id: "e", label: "Enter your email\\nand password", type: "email", selector: "input" }] })`), /label: expected a short noun phrase/);
   globalThis.__authAnswer = (params, { call }) => call("auth.request", params);
   assert.deepEqual(await s.value(`sites.browserAuth.request({ origin: "https://login.example", fields: [${field}] })`), { status: "unavailable" });
-  assert.equal(await s.value("page.evaluate(() => document.querySelectorAll('[data-cmux-auth]').length)"), 0);
+  assert.equal(await s.value("page.evaluate(() => document.querySelectorAll('[data-hmux-auth]').length)"), 0);
 });
 
-// r15 sites#5: after the user fills the sheet, cmux activates only the
+// r15 sites#5: after the user fills the sheet, hmux activates only the
 // submit control of the form that holds the filled fields (a submit
 // button or input of that form; Enter only in a filled field). Any other
 // control the agent names is refused before the sheet opens, and nothing
@@ -243,7 +243,7 @@ test("browserAuth.request: submit presses only a submit control of the fields' o
     assert.equal(r.status, "locator_invalid", submit);
     assert.equal(r.locator_error.field_id, "submit", submit);
     assert.equal(s.auth.length, count, `the sheet opened for ${submit}`);
-    assert.deepEqual(await s.value(`page.evaluate(() => [document.getElementById("out").textContent, document.querySelector('input[name="email"]').value, document.querySelectorAll("[data-cmux-auth], [data-cmux-auth-form]").length])`), ["", "", 0], submit);
+    assert.deepEqual(await s.value(`page.evaluate(() => [document.getElementById("out").textContent, document.querySelector('input[name="email"]').value, document.querySelectorAll("[data-hmux-auth], [data-hmux-auth-form]").length])`), ["", "", 0], submit);
   }
   assert.deepEqual(await s.value(`sites.browserAuth.request({ origin: "https://login.example", fields: [${field}], submit: { selector: 'input[name="email"]', action: "press_enter" } })`), { status: "submitted" });
   assert.match(await s.value('page.locator("#out").textContent()'), /^submitted as ada@example\.com/);
@@ -317,7 +317,7 @@ test("browserAuth.request: the submit control must submit to the page's own orig
   }
 });
 
-// r15 tabs#2: the sheet shows only what cmux verified. The agent's labels
+// r15 tabs#2: the sheet shows only what hmux verified. The agent's labels
 // (and the page's title) are not shown; each field is labeled by the
 // credential kind the app's bind found on the bound element itself.
 test("browserAuth.request: the app's bind answers each bound element's credential kind for the sheet's labels", async () => {
@@ -350,7 +350,7 @@ test("sites.list names every tool; help lists methods; drafts list", async () =>
 });
 
 test("embeddedJSON reads page data given as an object or as an escaped string (YouTube's mobile pages)", () => {
-  const { embeddedJSON } = globalThis.CmuxBrowserRepl.sites;
+  const { embeddedJSON } = globalThis.HmuxBrowserRepl.sites;
   assert.deepEqual(embeddedJSON('<script>var ytInitialData = {"a":"}{","b":[1]};</script>', "ytInitialData = "), { a: "}{", b: [1] });
   const escaped = String.raw`<script>var ytInitialData = '\x7b\x22a\x22:\x22it\x5c\x22s \u00e9\x22\x7d';</script>`;
   assert.deepEqual(embeddedJSON(escaped, "ytInitialData = "), { a: 'it"s é' });
@@ -364,7 +364,7 @@ test("the tools load and parse without Node's URL (JavaScriptCore has none)", ()
   const ctx = vm.createContext({ console });
   for (const f of manifest.repl) vm.runInContext(fs.readFileSync(path.join(dir, f), "utf8"), ctx, { filename: f });
   const out = vm.runInContext(`
-    const ns = globalThis.CmuxBrowserRepl;
+    const ns = globalThis.HmuxBrowserRepl;
     const sites = ns.sites.createSites({ session: { now: () => 0, sleep: async () => {} }, host: { tmpdir: "/tmp" }, fetch: null, fs: null, path: null, Buffer: ns.core.Buffer, URL: ns.core.URL, currentPage: () => null });
     const g = ns.sites.shared.google;
     [typeof URL, g.exportURL(g.parse("https://docs.google.com/spreadsheets/u/2/d/SHEETID_0123456789abcdef/edit#gid=42", "t"), "csv", "t"),

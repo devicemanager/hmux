@@ -1,11 +1,11 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxCommandPalette
-import CmuxFoundation
-import CmuxNotifications
+import HmuxAppKitSupportUI
+import HmuxCommandPalette
+import HmuxFoundation
+import HmuxNotifications
 import SwiftUI
-import CmuxSettings
-import CmuxWorkspaces
+import HmuxSettings
+import HmuxWorkspaces
 
 extension VerticalTabsSidebar {
     func sidebarWorkspaceGroupTableConfiguration(
@@ -25,7 +25,7 @@ extension VerticalTabsSidebar {
         let isMultiSelected = liveAnchorId.map { selectedTabIds.contains($0) } ?? false
             && selectedTabIds.count > 1
         let anchorCwd = liveAnchorId.flatMap { renderContext.workspaceById[$0]?.currentDirectory }
-        let resolvedConfig = cmuxConfigStore.resolveWorkspaceGroupConfig(forCwd: anchorCwd)
+        let resolvedConfig = hmuxConfigStore.resolveWorkspaceGroupConfig(forCwd: anchorCwd)
         let effectiveColor = group.customColor ?? resolvedConfig?.color
         let effectiveIcon = RenderableSystemSymbol.resolvedWorkspaceGroupIcon(
             explicit: group.iconSymbol,
@@ -212,7 +212,7 @@ extension VerticalTabsSidebar {
         let isMultiSelected = liveAnchorId.map { selectedTabIds.contains($0) } ?? false
             && selectedTabIds.count > 1
         let anchorCwd = liveAnchorId.flatMap { renderContext.workspaceById[$0]?.currentDirectory }
-        let resolvedConfig = cmuxConfigStore.resolveWorkspaceGroupConfig(forCwd: anchorCwd)
+        let resolvedConfig = hmuxConfigStore.resolveWorkspaceGroupConfig(forCwd: anchorCwd)
         let effectiveColor = group.customColor ?? resolvedConfig?.color
         let effectiveIcon = RenderableSystemSymbol.resolvedWorkspaceGroupIcon(
             explicit: group.iconSymbol,
@@ -577,7 +577,7 @@ extension VerticalTabsSidebar {
                 tabManager.deleteWorkspaceGroup(confirmed: confirmation)
             },
             onEditConfig: {
-                SidebarWorkspaceGroupConfigOpener.openCmuxConfigInEditor()
+                SidebarWorkspaceGroupConfigOpener.openHmuxConfigInEditor()
             },
             onOpenDocs: {
                 SidebarWorkspaceGroupConfigOpener.openWorkspaceGroupsDocs()

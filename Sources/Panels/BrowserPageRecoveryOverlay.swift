@@ -1,6 +1,6 @@
 import AppKit
-import CmuxBrowser
-import CmuxFoundation
+import HmuxBrowser
+import HmuxFoundation
 import SwiftUI
 
 /// What a browser pane asks the user to do before its page comes back.
@@ -30,7 +30,7 @@ struct BrowserPageRecoveryOverlay: View {
                         String(localized: "browser.error.reload", defaultValue: "Reload"),
                         systemImage: "arrow.clockwise"
                     )
-                    .cmuxFont(size: 13, weight: .medium)
+                    .hmuxFont(size: 13, weight: .medium)
                     .padding(.horizontal, 6)
                 }
                 .buttonStyle(.borderedProminent)
@@ -55,14 +55,14 @@ struct BrowserPageRecoveryOverlay: View {
                         localized: "browser.discard.unloadedMessage",
                         defaultValue: "This page was unloaded to save memory."
                     ))
-                    .cmuxFont(size: 13)
+                    .hmuxFont(size: 13)
                     .foregroundStyle(.secondary)
                     Button(action: action) {
                         Label(
                             String(localized: "browser.discard.restore", defaultValue: "Restore"),
                             systemImage: "arrow.counterclockwise"
                         )
-                        .cmuxFont(size: 13, weight: .medium)
+                        .hmuxFont(size: 13, weight: .medium)
                         .padding(.horizontal, 6)
                     }
                     .buttonStyle(.borderedProminent)

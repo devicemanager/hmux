@@ -26,7 +26,7 @@ export function assertPriceMatchesPlan(
   const expectedAmount = plan.billedAmount * 100;
   const problems: string[] = [];
   if (!price.active) problems.push("inactive");
-  // The catalog script stamps every cmux product with metadata.app/plan, so
+  // The catalog script stamps every hmux product with metadata.app/plan, so
   // an override must belong to this plan's product, not merely cost the same.
   const product = price.product;
   if (typeof product === "string") {
@@ -35,8 +35,8 @@ export function assertPriceMatchesPlan(
     problems.push(`product ${product.id} deleted`);
   } else {
     const metadata = (product as Pick<Stripe.Product, "metadata">).metadata ?? {};
-    if (metadata.app !== "cmux" || metadata.plan !== planId) {
-      problems.push(`product ${product.id} is not the cmux ${planId} product`);
+    if (metadata.app !== "hmux" || metadata.plan !== planId) {
+      problems.push(`product ${product.id} is not the hmux ${planId} product`);
     }
   }
   if (price.currency !== "usd") problems.push(`currency ${price.currency}`);

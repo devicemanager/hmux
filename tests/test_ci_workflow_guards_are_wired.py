@@ -9,7 +9,7 @@ when the drift breaks a release.
 
 That is not hypothetical here. tests/test_tui_publish_dispatch_budget.py
 arrived with the dispatch-budget fix it was written to hold, was never named by
-any workflow, and cmux-tui v0.13.0 failed to publish on that exact regression
+any workflow, and hmux-tui v0.13.0 failed to publish on that exact regression
 anyway. tests/test_ci_universal_release_settings.sh kept asserting that
 scripts/setup.sh builds GhosttyKit universal for however long it has been since
 that build moved to scripts/ensure-ghosttykit.sh -- an assertion about a file

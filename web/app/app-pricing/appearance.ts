@@ -64,9 +64,9 @@ export function appPricingStyle(theme: AppPricingTheme): CSSProperties {
   return {
     "--ghostty-background": theme.background,
     "--ghostty-foreground": theme.foreground,
-    "--cmux-product-blue": theme.accent,
-    "--cmux-product-blue-on-background": theme.accentOnBackground,
-    "--cmux-product-blue-on-foreground": theme.accentOnForeground,
+    "--hmux-product-blue": theme.accent,
+    "--hmux-product-blue-on-background": theme.accentOnBackground,
+    "--hmux-product-blue-on-foreground": theme.accentOnForeground,
     "--foreground": "var(--ghostty-foreground)",
     "--muted":
       "color-mix(in srgb, var(--ghostty-foreground) 62%, var(--ghostty-background))",

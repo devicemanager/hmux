@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
 
-/// The marker file behind `cmux wait-for`: `-S` creates it and a waiter
+/// The marker file behind `hmux wait-for`: `-S` creates it and a waiter
 /// consumes it, so a signal sent before the wait still wakes the waiter.
 ///
 /// Signals, and the `-L`/`-U` lock beside them, live in a private per-user
@@ -25,7 +25,7 @@ struct TmuxWaitForSignal {
         let baseName = encoded.isEmpty ? "empty" : encoded
         fileName = baseName + ".sig"
         lockFileName = baseName + ".lock"
-        directoryPath = Self.userTemporaryDirectory() + "cmux-wait-for"
+        directoryPath = Self.userTemporaryDirectory() + "hmux-wait-for"
         path = directoryPath + "/" + fileName
         lockPath = directoryPath + "/" + lockFileName
     }

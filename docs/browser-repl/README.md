@@ -1,6 +1,6 @@
-# cmux browser REPL
+# hmux browser REPL
 
-`cmux browser repl` is a persistent JavaScript REPL that drives cmux browser
+`hmux browser repl` is a persistent JavaScript REPL that drives hmux browser
 panes for agents. It has one API. It covers every browser-operation capability
 of two reference browser REPLs (reference A and reference B), and improves
 on both where they differ. It does not copy either
@@ -10,8 +10,8 @@ Parity is enforced by
 [capabilities.json](../../tests/browser-parity/capabilities.json) and the
 differential cases in
 [tests/browser-parity/diff](../../tests/browser-parity/diff): every reference
-member maps to a cmux equivalent and to cases that run the same task in cmux,
-reference A and reference B, and no case may leave cmux worse than a
+member maps to a hmux equivalent and to cases that run the same task in hmux,
+reference A and reference B, and no case may leave hmux worse than a
 reference ([parity-report.md](parity-report.md)).
 
 ## Principles
@@ -40,7 +40,7 @@ reference ([parity-report.md](parity-report.md)).
 | Global | Purpose |
 | --- | --- |
 | `page` | The current tab, a Playwright `Page`. |
-| `tabs` | `list()`, `open(url, { background })`, `current()`, `use(tabOrId)`, `get(id)`. `list()` returns `{ id, title, url, active, current, state }` without attaching or waking a tab (`state`: see [Hibernated and crashed tabs](#hibernated-and-crashed-tabs)); `list({ all: true })` adds the session's own tabs that moved to another workspace (a user's tab of another workspace is not listed, and neither is its profile's data store); `use(id)` attaches a tab of the session's own workspace, except one another running session opened (listed with `ownedBy`; see [Sessions and tabs](#sessions-and-tabs)). A tab of another workspace is refused (`denied`): it needs an attach a person grants, which cmux does not offer yet. `tabs.close`/`page.close()` closes only tabs the session opened and user tabs it attached. `open`, `current`, `use` and `get` return a `Page` with a stable `page.id`. `content({ urls, format })` loads URLs in background tabs and extracts text, Markdown, HTML or a snapshot. `history({ query, from, to, limit })` searches cmux browser history. |
+| `tabs` | `list()`, `open(url, { background })`, `current()`, `use(tabOrId)`, `get(id)`. `list()` returns `{ id, title, url, active, current, state }` without attaching or waking a tab (`state`: see [Hibernated and crashed tabs](#hibernated-and-crashed-tabs)); `list({ all: true })` adds the session's own tabs that moved to another workspace (a user's tab of another workspace is not listed, and neither is its profile's data store); `use(id)` attaches a tab of the session's own workspace, except one another running session opened (listed with `ownedBy`; see [Sessions and tabs](#sessions-and-tabs)). A tab of another workspace is refused (`denied`): it needs an attach a person grants, which hmux does not offer yet. `tabs.close`/`page.close()` closes only tabs the session opened and user tabs it attached. `open`, `current`, `use` and `get` return a `Page` with a stable `page.id`. `content({ urls, format })` loads URLs in background tabs and extracts text, Markdown, HTML or a snapshot. `history({ query, from, to, limit })` searches hmux browser history. |
 | `snapshot(target?, options?)` | Accessibility snapshot of `page`, a locator, or a ref string. See [Snapshot](#snapshot). |
 | `screenshot(target?, options?)` | PNG of the viewport, full page, locator or ref. `{ annotate: true }` draws each ref's box and label; a frame that navigated after its refs were read gets no labels. Returns an `Image` that displays when printed. |
 | `fetch` | Standard `fetch` that sends the current tab's cookies and is bound to that tab's data store (a current page with no tab yet opens its tab first, never using the active tab's store; if the tab cannot open, `fetch` fails) (`credentials`: `"include"` by default, `"same-origin"`, `"omit"`). The domain policy is checked on every redirect hop, and the URL and each hop again against the current policy right before it is sent, so a policy narrowed while the request waits for its cookies blocks it; a request body over 64 MiB fails, a response body over 64 MiB fails (download it in a tab instead), as does one past the 128 MiB a session's fetches may hold at once; a fetch fails after 10 minutes; past 256 queued fetches a new one fails at once. |
@@ -60,7 +60,7 @@ reference ([parity-report.md](parity-report.md)).
 | `page.dialog()` | The open JavaScript dialog or `null`: `{ type, message, defaultValue, accept(text?), dismiss() }`. | Reference B `getJsDialog()` |
 | `page.fileChooser()` | The open file chooser or `null`: `{ multiple, setFiles(files), cancel() }`. | Reference B chooser flow |
 | `page.consoleMessages({ level, filter, limit })`, `page.errors()` | Console history and uncaught errors since the tab opened. | Reference B `dev.logs()` |
-| `page.clipboard` | `readText()`, `writeText(text)`, `read()`, `write(items)` on a per-tab virtual clipboard that never touches a pasteboard. Meta+V fires a `paste` event whose `clipboardData` holds it and inserts its text unless the page cancels the event; Meta+C and Meta+X fill it from a `copy`/`cut` event with whatever the page's handler sets, or the selection. The events are dispatched in the focused frame (`isTrusted` is false, so an editor that accepts only a trusted paste ignores it). A JavaScript dialog the page opens meanwhile is dismissed and reported in the next snapshot. The system clipboard, which other code (the terminal) keeps, is never read or written. The clipboard is the creating session's alone, while it lives: `page.clipboard` and the shortcuts run only in tabs the session opened and throw `unsupported` in a user's tab (also one a finished run kept), so two sessions driving one tab never pass bytes through it; `cmux browser press` Meta+C, Meta+X and Meta+V do nothing in such a tab. A shortcut with the focus in a frame the domain policy blocks throws `blocked`, and a paste reaches only the frame document the policy check approved. In a tab a session created, the page's own scripts write here too, never to the system clipboard, even after an agent's click gave them a user gesture: `navigator.clipboard.write` and `writeText` (a `ClipboardItem` whose data settles later included) and `document.execCommand("copy")` or `"cut"`; their reads reject with `NotAllowedError` and `execCommand("paste")` returns false ([Guards](driver-protocol.md#guards) says how, and names the one case WebKit leaves open: a frame's initial empty document). In a user's tab the page keeps the browser's clipboard, also with the gesture an agent's input gives it. | Reference B `clipboard` |
+| `page.clipboard` | `readText()`, `writeText(text)`, `read()`, `write(items)` on a per-tab virtual clipboard that never touches a pasteboard. Meta+V fires a `paste` event whose `clipboardData` holds it and inserts its text unless the page cancels the event; Meta+C and Meta+X fill it from a `copy`/`cut` event with whatever the page's handler sets, or the selection. The events are dispatched in the focused frame (`isTrusted` is false, so an editor that accepts only a trusted paste ignores it). A JavaScript dialog the page opens meanwhile is dismissed and reported in the next snapshot. The system clipboard, which other code (the terminal) keeps, is never read or written. The clipboard is the creating session's alone, while it lives: `page.clipboard` and the shortcuts run only in tabs the session opened and throw `unsupported` in a user's tab (also one a finished run kept), so two sessions driving one tab never pass bytes through it; `hmux browser press` Meta+C, Meta+X and Meta+V do nothing in such a tab. A shortcut with the focus in a frame the domain policy blocks throws `blocked`, and a paste reaches only the frame document the policy check approved. In a tab a session created, the page's own scripts write here too, never to the system clipboard, even after an agent's click gave them a user gesture: `navigator.clipboard.write` and `writeText` (a `ClipboardItem` whose data settles later included) and `document.execCommand("copy")` or `"cut"`; their reads reject with `NotAllowedError` and `execCommand("paste")` returns false ([Guards](driver-protocol.md#guards) says how, and names the one case WebKit leaves open: a frame's initial empty document). In a user's tab the page keeps the browser's clipboard, also with the gesture an agent's input gives it. | Reference B `clipboard` |
 | `page.elementAt(x, y)` | `{ ref, role, name, box }` for the topmost element at a viewport point. | Reference B `elementInfo()` |
 | `page.keep()` | Keep this tab open after a one-shot run. | Reference B `markDeliverable()` |
 | `page.exportContent(options)` | Write the page as Markdown, a Google Docs/Sheets/Slides tab in an export format (`{ format }`), or a YouTube watch page's captions (`{ transcript: true }`, fetched only from a track URL that is https on `www.youtube.com`, `m.youtube.com` or `youtube.com`) to a file; returns the path. | Reference B `content.export*` |
@@ -240,7 +240,7 @@ Rules, and how they improve on the references:
   agent sees why the page is blocked. A file chooser line carries its input's
   ref. A JavaScript dialog line has none, because no element owns the dialog
   and a ref must work as a selector; it names `page.dialog()` instead, and the
-  tree is replaced by a note while the dialog blocks the page. A dialog cmux
+  tree is replaced by a note while the dialog blocks the page. A dialog hmux
   dismissed during Meta+C, Meta+X or Meta+V prints once, as
   `dialog dismissed: alert "…" (it opened during a copy)`.
 - **Options**: `interactive` (interactive nodes, their named ancestors, and
@@ -269,7 +269,7 @@ Rules, and how they improve on the references:
 - **Diff** lines are `+ ` added, `- ` removed and `~ ` changed, each change
   preceded by its unchanged ancestor lines (two-space prefix) as context so
   it is locatable. A changed line (matched by ref, else role and name)
-  prints once, as its new version. Only the `[ref=…]` cmux puts after an
+  prints once, as its new version. Only the `[ref=…]` hmux puts after an
   element's role and name counts as its ref: page text that reads
   `[ref=e1]` (a text line, a name, a value) never pairs with an element. Reference B omits ancestors; reference A prints
   bare `@@` hunks. The diff anchors on lines that occur once in both trees
@@ -285,7 +285,7 @@ prints: Claude Code keeps about 30,000 characters inline (then a
 2,000-character preview and a file), Codex keeps 10,000 tokens (head and
 tail, the middle dropped), reference B stops its DOM view at 20,000
 characters and a node's children at 500 without saying where. Reference A prints
-everything (a 5,000-item page is a 400 KB answer). cmux decides what is
+everything (a 5,000-item page is a 400 KB answer). hmux decides what is
 kept, keeps what an agent needs to act, and says at each cut how to get the
 rest. Measurements: [performance.md](performance.md).
 
@@ -403,12 +403,12 @@ rest. Measurements: [performance.md](performance.md).
 - **A diff too large for the budget** prints the condensed tree with a note
   that `.diff` has the changes.
 - **Per call**, the REPL prints at most 25,000 characters
-  (`cmux browser repl --max-output <chars>`, `0` for no limit up to
+  (`hmux browser repl --max-output <chars>`, `0` for no limit up to
   4,000,000 characters, past which the call spills as below), under both
   harness limits above so the REPL, not the harness, picks what is cut.
   Past the cap, the call's whole output goes to
   `output-N.txt` in the session's own `os.tmpdir()`
-  (`<tmp>/cmux-browser-repl/<session>-<random>-tmp`, mode 0700, where its
+  (`<tmp>/hmux-browser-repl/<session>-<random>-tmp`, mode 0700, where its
   images, exports and recordings go too; kept after the session ends,
   removed only when empty; the session holds it open from when it made it,
   so a link another process puts at its path redirects nothing, and the
@@ -433,13 +433,13 @@ rest. Measurements: [performance.md](performance.md).
 
 ## Sessions and tabs
 
-- Only a client that runs as the same macOS user as cmux reaches
+- Only a client that runs as the same macOS user as hmux reaches
   `browser.repl.eval`, `browser.repl.reset` and `browser.repl.list`, in every
   socket access mode: `allowAll` admits other local users to the socket, but
   their REPL calls fail with `access_denied`. Workspace scoping and private
   session owner tokens apply in every mode too.
 - Named sessions (`--session NAME`) keep variables and tabs until
-  `cmux browser repl reset NAME` or 30 minutes idle. A run without `--session`
+  `hmux browser repl reset NAME` or 30 minutes idle. A run without `--session`
   is one-shot: its tabs close at the end unless `page.keep()` was called.
   A session's tabs close when it ends wherever they are, also one the user
   moved to another workspace or window; only `page.keep()` keeps one, with
@@ -452,7 +452,7 @@ rest. Measurements: [performance.md](performance.md).
   closes when the session ends, kept or seen, since the domain policy that
   keeps the page from sending the value off its domains ends with the
   session.
-- `cmux browser repl mcp [--session NAME]` serves a session as an MCP
+- `hmux browser repl mcp [--session NAME]` serves a session as an MCP
   server on stdio, with the tools `eval`, `snapshot`, `screenshot`, `tabs`
   and `reset`, for agents that load tools over MCP. Without `--session` each
   server process gets its own session (`mcp-<pid>-<random>`), reset when
@@ -482,7 +482,7 @@ rest. Measurements: [performance.md](performance.md).
 - A session made without `--session` (a one-shot run, the interactive
   REPL's `cli-<pid>-<random>`, `mcp`'s) is its client's alone: the client
   sends a random owner token with every call, and without that token no
-  other client sees it in `cmux browser repl list`, attaches to it or
+  other client sees it in `hmux browser repl list`, attaches to it or
   resets it, also when it knows the name or the client was killed before
   its session ended (it then idles out after 30 minutes). When such a
   session ends by itself (its heap limit), its name stays its client's
@@ -497,48 +497,48 @@ rest. Measurements: [performance.md](performance.md).
   sessions keep the rest. An owner token is at most 128 bytes and a working
   directory at most 1024 bytes (`PATH_MAX`); a longer one is refused
   before a session is made.
-- A session binds to the caller's cmux workspace (from `CMUX_WORKSPACE_ID`).
+- A session binds to the caller's hmux workspace (from `HMUX_WORKSPACE_ID`).
   A named session belongs to that workspace: the same `--session` name in
   another workspace is another session, with its own variables, secrets,
-  directory and tabs. A caller outside cmux (no `CMUX_WORKSPACE_ID`, or
+  directory and tabs. A caller outside hmux (no `HMUX_WORKSPACE_ID`, or
   one this instance does not know) shares one session per `--session` name
-  with every other caller outside cmux, whatever workspace is focused: it
+  with every other caller outside hmux, whatever workspace is focused: it
   is made in the workspace focused at its first call, where its tabs open,
   and it is never the session of that name a workspace's own callers use.
-  `cmux browser repl list` and `reset NAME` act on the caller's sessions (a
-  workspace's, or from outside cmux the ones callers outside cmux share,
-  which `list --json` marks `outside_cmux`); `--all-workspaces` lists or
+  `hmux browser repl list` and `reset NAME` act on the caller's sessions (a
+  workspace's, or from outside hmux the ones callers outside hmux share,
+  which `list --json` marks `outside_hmux`); `--all-workspaces` lists or
   resets every one. A run without `--session`, the interactive REPL and
-  `mcp` from outside cmux bind to the focused workspace; the interactive
+  `mcp` from outside hmux bind to the focused workspace; the interactive
   REPL and `mcp` keep the workspace their first call bound, so a change of
-  focus does not switch sessions; with a `--session` name from outside cmux
-  they keep using the session callers outside cmux share, never the
+  focus does not switch sessions; with a `--session` name from outside hmux
+  they keep using the session callers outside hmux share, never the
   workspace's session of that name. Pass `--workspace` to use a workspace's
-  own session from outside cmux. A `--workspace` that
-  names no workspace of this cmux instance (unknown, blank, or a ref that
+  own session from outside hmux. A `--workspace` that
+  names no workspace of this hmux instance (unknown, blank, or a ref that
   does not resolve) is refused; it never falls back to another workspace.
-- A caller that runs in a cmux terminal reaches only that terminal's
-  workspace. cmux traces the socket peer's process id (from the socket
+- A caller that runs in a hmux terminal reaches only that terminal's
+  workspace. hmux traces the socket peer's process id (from the socket
   transport, not from the request) through its parent processes to the
-  first one whose controlling terminal is a cmux pane's PTY, so a process
+  first one whose controlling terminal is a hmux pane's PTY, so a process
   that left the terminal's session (`setsid`) still counts while its
   parent shell lives. That workspace is the caller's, whatever the call
   sends: `--workspace` (`workspace_id`) naming another workspace and
   `--all-workspaces` are refused with a `denied` error, and a
-  `CMUX_WORKSPACE_ID` (`caller_workspace_id`) of another workspace is
+  `HMUX_WORKSPACE_ID` (`caller_workspace_id`) of another workspace is
   ignored. An interactive REPL or `mcp` whose pane moves to another
   workspace is refused from then on; start it again. Residual: a same-user
-  process outside every cmux terminal (one that detached from the
+  process outside every hmux terminal (one that detached from the
   terminal and outlived its parents, or one of another terminal app) is
   an outside caller: it can still list, reset and use
   every workspace's named sessions. A peer whose parent chain cannot be
   walked to its end (more than 256 processes, or a loop) is neither: its
-  call is refused with a `denied` error, never treated as outside cmux.
+  call is refused with a `denied` error, never treated as outside hmux.
   Named sessions are shared by name and
   are not an isolation boundary; private sessions (owner tokens, the
   interactive REPL's, `mcp`'s and one-shot runs) are.
 - A session name is 1 to 64 characters of letters, digits, `.`, `_` and
-  `-`. One cmux instance keeps at most 32 sessions open (named, one-shot and
+  `-`. One hmux instance keeps at most 32 sessions open (named, one-shot and
   `mcp` ones together; each holds a JavaScript thread, timers and
   directories); one more is refused with an error that says so, and no
   open session is closed to make room. Sessions made without `--session`
@@ -563,7 +563,7 @@ rest. Measurements: [performance.md](performance.md).
   first responder to the next view, which belongs to the user. A key no
   page handles stops at the page: WebKit hands such a key back to the
   app's key window, where it would type into the user's terminal or run a
-  menu shortcut, so cmux drops that resend for automated keys.
+  menu shortcut, so hmux drops that resend for automated keys.
 - A session drives the tabs it created and the user's tabs, never a tab
   another running session created. `tabs.list({ all: true })` lists such a
   tab with `ownedBy` (the other session's name), and `tabs.use()`,
@@ -589,7 +589,7 @@ rest. Measurements: [performance.md](performance.md).
   `tabs.history()` entry (history does not say who visited it), and in
   the `url` of every page event (a cancelled navigation, a popup, a
   download) a session gets for a tab it did not create.
-- The older `browser.*` socket methods (`cmux browser <surface> eval`,
+- The older `browser.*` socket methods (`hmux browser <surface> eval`,
   `click`, `type`, `snapshot`, `screenshot`, `navigate`, `get`, cookies,
   storage, devtools, zoom, React Grab and the rest) carry no session, so no
   ownership check, domain policy or secret masking applies to them. They
@@ -597,9 +597,9 @@ rest. Measurements: [performance.md](performance.md).
   tab it drives with `tabs.use()`. They also refuse a tab a session typed a
   secret into, or the user filled through the sign-in sheet, until the tab
   closes, since the page may still show the value. The error says the tab
-  belongs to a browser REPL session and names `cmux browser repl` as the way
+  belongs to a browser REPL session and names `hmux browser repl` as the way
   to drive it; it never names the session. Listing tabs
-  (`cmux browser <surface> tab list`), switching to one and closing one
+  (`hmux browser <surface> tab list`), switching to one and closing one
   still work, as they do in the window. A user's tab no session drives
   keeps working with them, also once the session that drove it ends.
 - Session behaviors apply only to tabs the session created: tabs from
@@ -612,16 +612,16 @@ rest. Measurements: [performance.md](performance.md).
   origin under a policy, is denied), the user agent and extra headers
   from `session.configure` apply, the page's scripts copy to the tab's
   clipboard instead of the system's (for the tab's whole life, also after
-  the session ends and when cmux replaces the tab's web view to restore an
+  the session ends and when hmux replaces the tab's web view to restore an
   unloaded page or recover from a crash), the domain policy's content rules block
   subresources, pages load local files (frames and subresources) only
   from the session's working and temporary directories (never a file a
   `secrets.load` read, under any name), and plain-http
-  pages load without cmux's prompt. Another
+  pages load without hmux's prompt. Another
   session that drives such a tab does not change these; they follow the
   creating session. Any other tab is the user's, also one a session drives
   with `tabs.use()` or one a finished run kept with `page.keep()`: it keeps
-  its own user agent, headers and content, and cmux's own dialogs, file
+  its own user agent, headers and content, and hmux's own dialogs, file
   panel, download location, permission prompts and insecure-HTTP prompt,
   except while the page handles one of the session's own clicks, keys or
   drags, the first second of one of its page scripts (`page.evaluate`), or
@@ -632,7 +632,7 @@ rest. Measurements: [performance.md](performance.md).
   that stays the user's (never closed with the session, nor for the
   session's domain policy, which only keeps the session's reads and input
   out of it). The agent caused
-  them, so cmux's UI must not come up in front of the user (an Open panel
+  them, so hmux's UI must not come up in front of the user (an Open panel
   or a key popup window over their work from a hidden workspace) or leave
   the agent waiting for an answer only the user could give. Windows the
   user's page opens otherwise stay the user's, with no `popup` event; while
@@ -640,7 +640,7 @@ rest. Measurements: [performance.md](performance.md).
   the key window of the active app), such a window opens as a background
   tab, never as a key window over the user's work (a page that opens one
   after an `await` in the agent's click lands here). A link that matches a
-  configured external-browser rule leaves cmux for the system browser only
+  configured external-browser rule leaves hmux for the system browser only
   when the user activated it in a user's tab they are working in: WebKit
   marks the navigation as a user gesture (`_isUserInitiated`), no
   session's input is in flight, and none ended in the last 11 s (a page can
@@ -649,10 +649,10 @@ rest. Measurements: [performance.md](performance.md).
   after a session's input, in a tab sessions drive (and any link in a tab a
   session created) loads in the tab instead, under its guards. The same
   rule decides every way a link leaves the browser: the system-browser
-  rule, a signed-in cmux app link (which opens a split) and another app's
+  rule, a signed-in hmux app link (which opens a split) and another app's
   URL scheme (`mailto:`, `intent:`), which opens nothing (no prompt) and
   reaches the sessions as `navigation.blocked`.
-  A tab a session opens, and a popup or new tab cmux opens for a session,
+  A tab a session opens, and a popup or new tab hmux opens for a session,
   never falls back to the system browser: when the user has turned the
   embedded browser off while such a tab stays open, the window or tab the
   page asks for is refused (the page gets no window).
@@ -672,7 +672,7 @@ rest. Measurements: [performance.md](performance.md).
   and the session's domain policy allows every address the download came
   through (redirects included, also one after the download started, and
   judged again under the policy then when it finishes; a local file only
-  from the session's own directories; never from a page cmux serves from
+  from the session's own directories; never from a page hmux serves from
   local files, its own schemes or a loopback origin it registered, nor
   written by such a page, with or without a policy). A download that went to a session
   ends with it: when the session leaves the tab (it ends, is reset, or the
@@ -706,7 +706,7 @@ rest. Measurements: [performance.md](performance.md).
 ## Limits
 
 Every limit a session has, in one place. A session's holders reserve from
-one ledger (`BrowserReplResourceLedger` in `Packages/macOS/CmuxBrowser`,
+one ledger (`BrowserReplResourceLedger` in `Packages/macOS/HmuxBrowser`,
 the values in `BrowserReplResourceLimits.standard`) before they hold
 memory, work, a slot or disk, and release when they deliver or drop. A
 reservation past a limit is refused whole with one message form,
@@ -758,7 +758,7 @@ checks nothing stays reserved after the session ends.
 | Handles one `queryAll` makes | 250,000 | without a limit, the call fails with the page-read note |
 | A screenshot / PDF | 16,384 CSS pixels an edge and 33,554,432 pixels / 14,400-point edges | `invalid` |
 | An owner token / a working directory | 128 bytes / 1,024 bytes (`PATH_MAX`) | refused before a session is made |
-| Sessions in one cmux instance | 32 | the next is refused |
+| Sessions in one hmux instance | 32 | the next is refused |
 | Memory all sessions hold together: each one's memory (the rows marked M, its heap included) and its JavaScript thread's 8 MiB stack | 4 GiB at once (eight sessions at their full 512 MiB; all 32 at 128 MiB each) | a reservation is refused; a session whose thread's stack does not fit does not start (each cell fails with the limit, and it takes no slot); a heap measure past it, after a full garbage collection, ends that session. A closed session's stack stays counted until its thread has ended (native work still on it), never only until `close` returns |
 | Sessions driving one tab | 4 at once | the next session's call on the tab fails with `limit` |
 | Secrets per session | 256, each at most 4 KiB with 64 domains | refused, naming the limit |
@@ -793,7 +793,7 @@ blocks were dropped the list starts with `{ blocked: "dropped", count }`.
 
 ## Hibernated and crashed tabs
 
-cmux unloads the pages of hidden browser tabs to save memory (Settings,
+hmux unloads the pages of hidden browser tabs to save memory (Settings,
 Browser, memory saver); the tab keeps its URL, history and title. A tab a
 session drives is never unloaded while the session is attached, but a
 user's tab, or a tab a finished run kept, can be unloaded before a session
@@ -802,7 +802,7 @@ reaches it. `tabs.list()` and `tab.info` report each tab's `state`:
 | `state` | Meaning |
 | --- | --- |
 | `live` | The page is loaded. |
-| `hibernated` | cmux unloaded the hidden page, or a relaunch restored the tab without loading it yet. Listing it does not load it. |
+| `hibernated` | hmux unloaded the hidden page, or a relaunch restored the tab without loading it yet. Listing it does not load it. |
 | `waking` | The page is loading again. |
 | `crashed` | The tab's web content process ended (a WebKit crash, or macOS reclaimed its memory) while the tab was shown; the pane offers Reload. |
 
@@ -831,7 +831,7 @@ navigation, `tab.info`, `page.bringToFront()` and `page.close()` work until
   default too (`browser.capabilities` in the parity cases records that). A
   Chromium engine would add them as `page.cdp`.
 
-Everything else reference B documents has a cmux equivalent, including
+Everything else reference B documents has a hmux equivalent, including
 `browser.history` (`tabs.history`), `user.claimTab` (`tabs.list({ all: true })`
 and `tabs.use`), `tabs.content` and the content exports
 (`page.exportContent`). [parity-report.md](parity-report.md) lists every
@@ -841,7 +841,7 @@ the edge cases.
 ## Architecture
 
 ```
-agent -> cmux browser repl -> control socket -> REPL session (JavaScriptCore)
+agent -> hmux browser repl -> control socket -> REPL session (JavaScriptCore)
                                                   runtime-core.js, api.js
                                                   | driver protocol
                                                   v
@@ -852,18 +852,18 @@ agent -> cmux browser repl -> control socket -> REPL session (JavaScriptCore)
   runtime and can replace any runtime object, so nothing in that context
   is a guard. The domain policy (and its lock), secret values, redaction
   and capture masking live in the native session (`BrowserReplBoundary`
-  in `Packages/macOS/CmuxBrowser`) and the driver, which every driver call,
+  in `Packages/macOS/HmuxBrowser`) and the driver, which every driver call,
   fetch, event, file write and output line passes through. Everything
   native hands the session's JavaScript or output passes one egress gate
   that masks secrets in a single scan of the original data, and page URLs
   travel as one typed value that only the tab's live creator reads with
   its credentials. The runtime
-  deletes the `__cmuxNative` global, and the app the runtime's entry
+  deletes the `__hmuxNative` global, and the app the runtime's entry
   points, before any cell runs. Every script on the session's thread is
   bounded, also a timer or event callback outside a cell (10 s per run,
   and 10% of the thread's time over a stream of them, so they cannot
   starve the next cell, whose output says when they were stopped or
-  waited), and `cmux browser repl reset` always ends a stuck one. This
+  waited), and `hmux browser repl reset` always ends a stuck one. This
   needs JavaScriptCore's execution time limit
   (`JSContextGroupSetExecutionTimeLimit`); where it is missing, a session
   runs no cell and says why.
@@ -884,5 +884,5 @@ agent -> cmux browser repl -> control socket -> REPL session (JavaScriptCore)
 ## Tests
 
 [tests/browser-parity](../../tests/browser-parity/README.md): one scenario set in
-this API, run against the cmux app, a Playwright WebKit development driver, and
+this API, run against the hmux app, a Playwright WebKit development driver, and
 a real-Playwright oracle (headless Chrome) for behavior values.

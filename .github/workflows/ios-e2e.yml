@@ -28,10 +28,10 @@ permissions:
 # Trust boundary. Only workflow_dispatch runs this lane, which needs write
 # access. Every job that joins the tailnet or reads a secret runs in the
 # `ios-e2e` environment, whose deployment branch policy is the allow-list, and
-# joins with GitHub OIDC against the federated Tailscale identity "cmux iOS E2E
+# joins with GitHub OIDC against the federated Tailscale identity "hmux iOS E2E
 # protected manual runs" (this workflow, workflow_dispatch, environment
 # ios-e2e): no stored Tailscale secret is used. That identity holds tag:ci and
-# owns the backend's role tag; the ACL (cmuxterm-hq
+# owns the backend's role tag; the ACL (hmuxterm-hq
 # skills/infra/tsadmin/acl.manaflow.hujson) lets tag:ci reach only the
 # backend's Serve ports and SSH into it as `runner`
 # (docs/ci/ios-e2e.md#secrets-and-tailnet-identity).
@@ -44,14 +44,14 @@ env:
   # Deterministic backend name: the macOS job must address the backend while
   # both run, and job outputs only publish when a job completes. run_attempt
   # keeps a rerun from colliding with a not-yet-expired ephemeral node.
-  CMUX_E2E_BACKEND_TAILNET_HOSTNAME: cmux-e2e-backend-${{ github.run_id }}-${{ github.run_attempt }}
+  HMUX_E2E_BACKEND_TAILNET_HOSTNAME: hmux-e2e-backend-${{ github.run_id }}-${{ github.run_attempt }}
   # Host of every backend origin. Its publicly trusted certificate was issued
-  # once (ios-e2e secrets CMUX_E2E_TLS_CERT/KEY); no node carries the name,
+  # once (ios-e2e secrets HMUX_E2E_TLS_CERT/KEY); no node carries the name,
   # and each runner maps it in /etc/hosts to this run's backend
   # (docs/ci/ios-e2e.md#tls).
-  CMUX_E2E_BACKEND_NAME: cmux-e2e-backend.tail137216.ts.net
+  HMUX_E2E_BACKEND_NAME: hmux-e2e-backend.tail137216.ts.net
   # Released by the macOS job over Tailscale SSH (no GitHub API polling).
-  CMUX_E2E_BACKEND_DONE_FILE: /tmp/e2e-backend-done-${{ github.run_id }}-${{ github.run_attempt }}
+  HMUX_E2E_BACKEND_DONE_FILE: /tmp/e2e-backend-done-${{ github.run_id }}-${{ github.run_attempt }}
   # iroh-relay release the backend serves: the version manaflow-ai/cmux-relay
   # wraps, pinned by digest.
   IROH_RELAY_VERSION: v1.0.2
@@ -242,7 +242,7 @@ jobs:
           oauth-client-id: ${{ vars.TS_E2E_OIDC_CLIENT_ID }}
           audience: ${{ vars.TS_E2E_OIDC_AUDIENCE }}
           tags: tag:e2e-backend
-          hostname: ${{ env.CMUX_E2E_BACKEND_TAILNET_HOSTNAME }}
+          hostname: ${{ env.HMUX_E2E_BACKEND_TAILNET_HOSTNAME }}
           # Tailscale SSH server: the macOS job releases this holder as
           # `runner`, the only SSH the ACL grants into tag:e2e-backend.
           args: --ssh
@@ -256,15 +256,15 @@ jobs:
 
       - name: Start per-run backend
         env:
-          CMUX_E2E_IROH_RELAY_BIN: ${{ runner.temp }}/iroh-relay/iroh-relay
+          HMUX_E2E_IROH_RELAY_BIN: ${{ runner.temp }}/iroh-relay/iroh-relay
           # ios-e2e environment secrets: the dev Stack project of the CI
           # account. Environment-only: backend-up.sh writes them to 0600
           # .dev.vars files, never argv. No relay key: the relay is per run.
-          CMUX_E2E_STACK_PROJECT_ID: ${{ secrets.CMUX_E2E_STACK_PROJECT_ID }}
-          CMUX_E2E_STACK_PUBLISHABLE_KEY: ${{ secrets.CMUX_E2E_STACK_PUBLISHABLE_KEY }}
-          CMUX_E2E_STACK_SERVER_KEY: ${{ secrets.CMUX_E2E_STACK_SERVER_KEY }}
-          CMUX_E2E_TLS_CERT: ${{ secrets.CMUX_E2E_TLS_CERT }}
-          CMUX_E2E_TLS_KEY: ${{ secrets.CMUX_E2E_TLS_KEY }}
+          HMUX_E2E_STACK_PROJECT_ID: ${{ secrets.HMUX_E2E_STACK_PROJECT_ID }}
+          HMUX_E2E_STACK_PUBLISHABLE_KEY: ${{ secrets.HMUX_E2E_STACK_PUBLISHABLE_KEY }}
+          HMUX_E2E_STACK_SERVER_KEY: ${{ secrets.HMUX_E2E_STACK_SERVER_KEY }}
+          HMUX_E2E_TLS_CERT: ${{ secrets.HMUX_E2E_TLS_CERT }}
+          HMUX_E2E_TLS_KEY: ${{ secrets.HMUX_E2E_TLS_KEY }}
         run: ./scripts/e2e/backend-up.sh up
 
       - name: Serve until the macOS job finishes
@@ -273,7 +273,7 @@ jobs:
         # thing to disappear under a live client.
         timeout-minutes: 140
         env:
-          CMUX_E2E_WAIT_TIMEOUT_SECONDS: "8100"
+          HMUX_E2E_WAIT_TIMEOUT_SECONDS: "8100"
         run: ./scripts/e2e/backend-up.sh hold
 
       - name: Upload backend logs
@@ -310,17 +310,17 @@ jobs:
       contents: read
       id-token: write
     env:
-      CMUX_E2E_TAG: ${{ needs.route.outputs.backend_tag }}
-      CMUX_IROH_V2_FORCE_RELAY: "1"
+      HMUX_E2E_TAG: ${{ needs.route.outputs.backend_tag }}
+      HMUX_IROH_V2_FORCE_RELAY: "1"
       # Read by scripts/mobile-dev-launch.sh, which forwards them to the
       # simulator app: a fresh install must not stop on the What's New sheet,
       # and the driver expects the paired terminal already open.
-      CMUX_UITEST_SUPPRESS_WHATS_NEW: "1"
-      CMUX_MOBILE_SOAK_OPEN_SELECTED_WORKSPACE: "1"
-      CMUX_SKIP_ZIG_BUILD: "1"
+      HMUX_UITEST_SUPPRESS_WHATS_NEW: "1"
+      HMUX_MOBILE_SOAK_OPEN_SELECTED_WORKSPACE: "1"
+      HMUX_SKIP_ZIG_BUILD: "1"
       SWIFT_BACKTRACE: interactive=no,timeout=0s,symbolicate=off,color=no
     steps:
-      - name: Checkout cmux
+      - name: Checkout hmux
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           persist-credentials: false
@@ -350,23 +350,23 @@ jobs:
 
       - name: Materialize CI auth profile
         env:
-          CMUX_DOGFOOD_STACK_EMAIL: ${{ secrets.CMUX_DOGFOOD_STACK_EMAIL }}
-          CMUX_DOGFOOD_STACK_PASSWORD: ${{ secrets.CMUX_DOGFOOD_STACK_PASSWORD }}
+          HMUX_DOGFOOD_STACK_EMAIL: ${{ secrets.HMUX_DOGFOOD_STACK_EMAIL }}
+          HMUX_DOGFOOD_STACK_PASSWORD: ${{ secrets.HMUX_DOGFOOD_STACK_PASSWORD }}
         run: |
           set -euo pipefail
-          if [ -z "${CMUX_DOGFOOD_STACK_EMAIL:-}" ] || [ -z "${CMUX_DOGFOOD_STACK_PASSWORD:-}" ]; then
+          if [ -z "${HMUX_DOGFOOD_STACK_EMAIL:-}" ] || [ -z "${HMUX_DOGFOOD_STACK_PASSWORD:-}" ]; then
             echo "::error::[infra-preflight] CI Stack credentials are missing"
             exit 1
           fi
           mkdir -p "$HOME/.secrets"
           (
             umask 077
-            # The agent profile reads CMUX_UITEST_*; the secret names retain
+            # The agent profile reads HMUX_UITEST_*; the secret names retain
             # their existing CI account naming for compatibility.
-            printf 'CMUX_UITEST_STACK_EMAIL=%s\n' "$CMUX_DOGFOOD_STACK_EMAIL"
-            printf 'CMUX_UITEST_STACK_PASSWORD=%s\n' "$CMUX_DOGFOOD_STACK_PASSWORD"
-          ) > "$HOME/.secrets/cmuxterm-dev.env"
-          chmod 600 "$HOME/.secrets/cmuxterm-dev.env"
+            printf 'HMUX_UITEST_STACK_EMAIL=%s\n' "$HMUX_DOGFOOD_STACK_EMAIL"
+            printf 'HMUX_UITEST_STACK_PASSWORD=%s\n' "$HMUX_DOGFOOD_STACK_PASSWORD"
+          ) > "$HOME/.secrets/hmuxterm-dev.env"
+          chmod 600 "$HOME/.secrets/hmuxterm-dev.env"
 
       # A runner that already runs Tailscale (a self-hosted fleet host) would
       # have its own node re-registered and then logged out by the join below.
@@ -391,20 +391,20 @@ jobs:
           # compatibility policy, the legacy broker) use shared staging.
           ./scripts/e2e/backend-env.sh env >> "$GITHUB_ENV"
           {
-            echo "CMUX_DEV_BACKEND_MODE=local"
-            echo "CMUX_DEV_API_BASE_URL=https://cmux-staging.vercel.app"
-            echo "CMUX_IROH_BROKER_BASE_URL=https://cmux-staging.vercel.app"
+            echo "HMUX_DEV_BACKEND_MODE=local"
+            echo "HMUX_DEV_API_BASE_URL=https://cmux-staging.vercel.app"
+            echo "HMUX_IROH_BROKER_BASE_URL=https://cmux-staging.vercel.app"
           } >> "$GITHUB_ENV"
 
       - name: Configure Mac relay-only policy
         run: |
           set -euo pipefail
           source scripts/lib/mobile-attach.sh
-          mac_bundle_id="$(cmux_attach_mac_bundle_id "$CMUX_E2E_TAG")"
-          defaults write "$mac_bundle_id" cmux.iroh.debug.transport-mode -string relayOnly
-          defaults write "$mac_bundle_id" cmux.iroh.v2.force-relay -bool true
+          mac_bundle_id="$(hmux_attach_mac_bundle_id "$HMUX_E2E_TAG")"
+          defaults write "$mac_bundle_id" hmux.iroh.debug.transport-mode -string relayOnly
+          defaults write "$mac_bundle_id" hmux.iroh.v2.force-relay -bool true
           # reload.sh bakes no presence origin; the Mac reads this default.
-          defaults write "$mac_bundle_id" presenceServiceURL -string "$CMUX_PRESENCE_BASE_URL"
+          defaults write "$mac_bundle_id" presenceServiceURL -string "$HMUX_PRESENCE_BASE_URL"
 
       - name: Boot fresh named simulator
         run: |
@@ -427,28 +427,28 @@ jobs:
               digits = "".join(c if c.isdigit() else " " for c in device["name"]).split()
               return (int(digits[0]) if digits else 0, "Pro" in device["name"], "Max" not in device["name"])
           print(runtime["identifier"], max(phones, key=generation)["identifier"])')
-          udid="$(xcrun simctl create "cmux-e2e-${GITHUB_RUN_ID}" "$devtype" "$runtime")"
+          udid="$(xcrun simctl create "hmux-e2e-${GITHUB_RUN_ID}" "$devtype" "$runtime")"
           xcrun simctl boot "$udid"
           xcrun simctl bootstatus "$udid" -b
-          echo "CMUX_E2E_SIM_UDID=$udid" >> "$GITHUB_ENV"
+          echo "HMUX_E2E_SIM_UDID=$udid" >> "$GITHUB_ENV"
           echo "simulator: $udid ($devtype, $runtime)"
 
       - name: Build and launch Mac app
         run: |
           set -euo pipefail
           ./scripts/reload.sh \
-            --tag "$CMUX_E2E_TAG" \
+            --tag "$HMUX_E2E_TAG" \
             --launch \
             --auth-profile agent \
-            --credentials-file "$HOME/.secrets/cmuxterm-dev.env" \
+            --credentials-file "$HOME/.secrets/hmuxterm-dev.env" \
             --swift-frontend-workaround
 
       - name: Build iOS simulator app
         run: |
           set -euo pipefail
           ./ios/scripts/reload.sh \
-            --tag "$CMUX_E2E_TAG" \
-            --simulator-id "$CMUX_E2E_SIM_UDID" \
+            --tag "$HMUX_E2E_TAG" \
+            --simulator-id "$HMUX_E2E_SIM_UDID" \
             --simulator-only \
             --no-launch \
             --swift-frontend-workaround
@@ -457,16 +457,16 @@ jobs:
         run: |
           set -euo pipefail
           source scripts/lib/mobile-attach.sh
-          mac_bundle_id="$(cmux_attach_mac_bundle_id "$CMUX_E2E_TAG")"
-          ios_bundle_id="dev.cmux.ios.$(cmux_attach__slug "$CMUX_E2E_TAG")"
-          xcrun simctl spawn "$CMUX_E2E_SIM_UDID" defaults write \
-            "$ios_bundle_id" cmux.iroh.debug.transport-mode -string relayOnly
-          xcrun simctl spawn "$CMUX_E2E_SIM_UDID" defaults write \
-            "$ios_bundle_id" cmux.iroh.v2.config.CMUX_IROH_V2_FORCE_RELAY -string 1
-          [ "$(defaults read "$mac_bundle_id" cmux.iroh.debug.transport-mode)" = "relayOnly" ]
-          [ "$(defaults read "$mac_bundle_id" cmux.iroh.v2.force-relay)" = "1" ]
-          [ "$(xcrun simctl spawn "$CMUX_E2E_SIM_UDID" defaults read "$ios_bundle_id" cmux.iroh.debug.transport-mode)" = "relayOnly" ]
-          [ "$(xcrun simctl spawn "$CMUX_E2E_SIM_UDID" defaults read "$ios_bundle_id" cmux.iroh.v2.config.CMUX_IROH_V2_FORCE_RELAY)" = "1" ]
+          mac_bundle_id="$(hmux_attach_mac_bundle_id "$HMUX_E2E_TAG")"
+          ios_bundle_id="dev.hmux.ios.$(hmux_attach__slug "$HMUX_E2E_TAG")"
+          xcrun simctl spawn "$HMUX_E2E_SIM_UDID" defaults write \
+            "$ios_bundle_id" hmux.iroh.debug.transport-mode -string relayOnly
+          xcrun simctl spawn "$HMUX_E2E_SIM_UDID" defaults write \
+            "$ios_bundle_id" hmux.iroh.v2.config.HMUX_IROH_V2_FORCE_RELAY -string 1
+          [ "$(defaults read "$mac_bundle_id" hmux.iroh.debug.transport-mode)" = "relayOnly" ]
+          [ "$(defaults read "$mac_bundle_id" hmux.iroh.v2.force-relay)" = "1" ]
+          [ "$(xcrun simctl spawn "$HMUX_E2E_SIM_UDID" defaults read "$ios_bundle_id" hmux.iroh.debug.transport-mode)" = "relayOnly" ]
+          [ "$(xcrun simctl spawn "$HMUX_E2E_SIM_UDID" defaults read "$ios_bundle_id" hmux.iroh.v2.config.HMUX_IROH_V2_FORCE_RELAY)" = "1" ]
           echo "relay policy: Mac and iOS simulator forced to relayOnly" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Wait for the per-run backend
@@ -481,31 +481,31 @@ jobs:
         run: |
           set -euo pipefail
           ./scripts/mobile-dev-launch.sh \
-            --tag "$CMUX_E2E_TAG" \
-            --simulator-id "$CMUX_E2E_SIM_UDID" \
+            --tag "$HMUX_E2E_TAG" \
+            --simulator-id "$HMUX_E2E_SIM_UDID" \
             --ensure-mac \
             --detach \
             --auth-profile agent \
-            --credentials-file "$HOME/.secrets/cmuxterm-dev.env"
+            --credentials-file "$HOME/.secrets/hmuxterm-dev.env"
 
       - name: Verify relay policy after launch
         run: |
           set -euo pipefail
           source scripts/lib/mobile-attach.sh
-          mac_bundle_id="$(cmux_attach_mac_bundle_id "$CMUX_E2E_TAG")"
-          ios_bundle_id="dev.cmux.ios.$(cmux_attach__slug "$CMUX_E2E_TAG")"
-          [ "$(defaults read "$mac_bundle_id" cmux.iroh.v2.force-relay)" = "1" ]
-          [ "$(xcrun simctl spawn "$CMUX_E2E_SIM_UDID" defaults read "$ios_bundle_id" cmux.iroh.v2.config.CMUX_IROH_V2_FORCE_RELAY)" = "1" ]
+          mac_bundle_id="$(hmux_attach_mac_bundle_id "$HMUX_E2E_TAG")"
+          ios_bundle_id="dev.hmux.ios.$(hmux_attach__slug "$HMUX_E2E_TAG")"
+          [ "$(defaults read "$mac_bundle_id" hmux.iroh.v2.force-relay)" = "1" ]
+          [ "$(xcrun simctl spawn "$HMUX_E2E_SIM_UDID" defaults read "$ios_bundle_id" hmux.iroh.v2.config.HMUX_IROH_V2_FORCE_RELAY)" = "1" ]
 
       - name: Run iOS E2E
         env:
-          CMUX_E2E_EVIDENCE_DIR: ${{ runner.temp }}/e2e-evidence
+          HMUX_E2E_EVIDENCE_DIR: ${{ runner.temp }}/e2e-evidence
         run: |
           set -euo pipefail
           ./scripts/e2e/ios-e2e-run.sh \
-            --tag "$CMUX_E2E_TAG" \
-            --sim-udid "$CMUX_E2E_SIM_UDID" \
-            --evidence-dir "$CMUX_E2E_EVIDENCE_DIR"
+            --tag "$HMUX_E2E_TAG" \
+            --sim-udid "$HMUX_E2E_SIM_UDID" \
+            --evidence-dir "$HMUX_E2E_EVIDENCE_DIR"
 
       - name: Upload E2E evidence
         if: always()
@@ -520,15 +520,15 @@ jobs:
         if: always()
         run: |
           set -euo pipefail
-          pkill -f "DerivedData/cmux-${CMUX_E2E_TAG}/.*/cmux DEV" 2>/dev/null || true
+          pkill -f "DerivedData/hmux-${HMUX_E2E_TAG}/.*/hmux DEV" 2>/dev/null || true
 
       - name: Delete simulator
         if: always()
         run: |
           set -euo pipefail
-          [ -n "${CMUX_E2E_SIM_UDID:-}" ] || exit 0
-          xcrun simctl shutdown "$CMUX_E2E_SIM_UDID" 2>/dev/null || true
-          xcrun simctl delete "$CMUX_E2E_SIM_UDID" || true
+          [ -n "${HMUX_E2E_SIM_UDID:-}" ] || exit 0
+          xcrun simctl shutdown "$HMUX_E2E_SIM_UDID" 2>/dev/null || true
+          xcrun simctl delete "$HMUX_E2E_SIM_UDID" || true
 
       - name: Release the backend
         # Always, pass or fail: this touch ends the backend job's hold. It rides
@@ -538,14 +538,14 @@ jobs:
         if: always()
         run: |
           ssh -o BatchMode=yes -o StrictHostKeyChecking=accept-new -o ConnectTimeout=15 \
-            "runner@${CMUX_E2E_BACKEND_TAILNET_HOSTNAME}" "touch '${CMUX_E2E_BACKEND_DONE_FILE}'" \
-            || echo "::warning::[infra-preflight] could not release ${CMUX_E2E_BACKEND_TAILNET_HOSTNAME}; its hold expires at its own bound"
+            "runner@${HMUX_E2E_BACKEND_TAILNET_HOSTNAME}" "touch '${HMUX_E2E_BACKEND_DONE_FILE}'" \
+            || echo "::warning::[infra-preflight] could not release ${HMUX_E2E_BACKEND_TAILNET_HOSTNAME}; its hold expires at its own bound"
           ./scripts/e2e/backend-env.sh unhosts
 
       - name: Remove CI auth profile
         if: always()
         run: |
-          rm -f "$HOME/.secrets/cmuxterm-dev.env"
+          rm -f "$HOME/.secrets/hmuxterm-dev.env"
           rmdir "$HOME/.secrets" 2>/dev/null || true
 
   ios-e2e-status:

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import SwiftUI
 
 /// The checklist add/edit field: `FocusGrabbingTextField` that also clears

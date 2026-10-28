@@ -82,7 +82,7 @@ export async function listTeamMachines(
   options?: { readonly liveOnly?: boolean },
 ): Promise<readonly TeamMachine[]> {
   // liveOnly drops destroyed history so it never eats the cap; failed rows
-  // stay, the same rows the Mac's `cmux vm ls` shows.
+  // stay, the same rows the Mac's `hmux vm ls` shows.
   const scope = options?.liveOnly
     ? and(teamScope(teamId), ne(cloudVms.status, "destroyed"))
     : teamScope(teamId);

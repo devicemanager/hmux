@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 
 enum MobileBrowserPanelNativeSignal {
     case dirty(editableFocused: Bool?)

@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 import Observation
 
@@ -30,7 +30,7 @@ final class PaneMemoryGuardrail {
     @ObservationIgnored
     private var engine = PaneMemoryGuardrailEngine()
     @ObservationIgnored
-    private let timerQueue = DispatchQueue(label: "com.cmux.pane-memory-guardrail", qos: .utility)
+    private let timerQueue = DispatchQueue(label: "com.hmux.pane-memory-guardrail", qos: .utility)
     @ObservationIgnored
     private var timer: DispatchSourceTimer?
     @ObservationIgnored
@@ -83,13 +83,13 @@ final class PaneMemoryGuardrail {
             return
         }
         let thresholdBytes = thresholdBytes()
-        let includeCMUXScope = consumeScopedScanIfDue(now: Date())
+        let includeHMUXScope = consumeScopedScanIfDue(now: Date())
         isScanning = true
         let sampleTask = Task.detached(priority: .utility) {
             await Self.computeCachedSamples(
                 descriptors: descriptors,
                 thresholdBytes: thresholdBytes,
-                includeCMUXScope: includeCMUXScope
+                includeHMUXScope: includeHMUXScope
             )
         }
         scanApplyTask = Task { @MainActor [weak self] in
@@ -110,7 +110,7 @@ final class PaneMemoryGuardrail {
     nonisolated static func computeCachedSamples(
         descriptors: [PaneMemoryDescriptor],
         thresholdBytes: Int64,
-        includeCMUXScope: Bool = false
+        includeHMUXScope: Bool = false
     ) async -> PaneMemoryGuardrailSampleBatch {
         // The unscoped maximumAge must stay below pollInterval (4s): serving the
         // guardrail its own previous tick's snapshot would silently halve its
@@ -118,15 +118,15 @@ final class PaneMemoryGuardrail {
         // subsystem (autosave, task manager) captured moments earlier; when the
         // guardrail is the sole sampler it still captures fresh each tick, which
         // is the cheap no-details tier and the intended freshness floor.
-        let snapshot = includeCMUXScope
-            ? await CmuxTopProcessSnapshot.captureCached(includeCMUXScope: true, maximumAge: 5)
-            : await CmuxTopProcessSnapshot.captureCached(includeCMUXScope: false, maximumAge: 3)
+        let snapshot = includeHMUXScope
+            ? await HmuxTopProcessSnapshot.captureCached(includeHMUXScope: true, maximumAge: 5)
+            : await HmuxTopProcessSnapshot.captureCached(includeHMUXScope: false, maximumAge: 3)
         let samples = computeSamples(
             descriptors: descriptors,
             thresholdBytes: thresholdBytes,
             snapshot: snapshot
         )
-        let scopedOnlySamples = snapshot.hasCMUXScope
+        let scopedOnlySamples = snapshot.hasHMUXScope
             ? computeScopedOnlySamples(
                 descriptors: descriptors,
                 thresholdBytes: thresholdBytes,
@@ -139,18 +139,18 @@ final class PaneMemoryGuardrail {
                 scopedOnlySamples.map { ($0.key, $0) },
                 uniquingKeysWith: { _, last in last }
             ),
-            includesCMUXScope: snapshot.hasCMUXScope
+            includesHMUXScope: snapshot.hasHMUXScope
         )
     }
 
     nonisolated static func computeSamples(
         descriptors: [PaneMemoryDescriptor],
         thresholdBytes: Int64,
-        snapshot: CmuxTopProcessSnapshot
+        snapshot: HmuxTopProcessSnapshot
     ) -> [PaneMemorySample] {
         let clearBytes = Int64(Double(thresholdBytes) * PaneMemoryGuardrailEngine.clearFraction)
         return descriptors.map { descriptor in
-            var rootPIDs = snapshot.pids(forCMUXSurfaceID: descriptor.panelId)
+            var rootPIDs = snapshot.pids(forHMUXSurfaceID: descriptor.panelId)
             if let foregroundPID = descriptor.foregroundPID {
                 rootPIDs.insert(foregroundPID)
             }
@@ -179,12 +179,12 @@ final class PaneMemoryGuardrail {
     nonisolated static func computeScopedOnlySamples(
         descriptors: [PaneMemoryDescriptor],
         thresholdBytes: Int64,
-        snapshot: CmuxTopProcessSnapshot
+        snapshot: HmuxTopProcessSnapshot
     ) -> [PaneMemorySample] {
         let clearBytes = Int64(Double(thresholdBytes) * PaneMemoryGuardrailEngine.clearFraction)
         return descriptors.map { descriptor in
             let cheapPIDs = snapshot.expandedPIDs(rootPIDs: cheapRootPIDs(for: descriptor, in: snapshot))
-            let scopedPIDs = snapshot.expandedPIDs(rootPIDs: snapshot.pids(forCMUXSurfaceID: descriptor.panelId))
+            let scopedPIDs = snapshot.expandedPIDs(rootPIDs: snapshot.pids(forHMUXSurfaceID: descriptor.panelId))
             let scopedOnlyPIDs = scopedPIDs.subtracting(cheapPIDs)
             let summary = snapshot.summary(for: scopedOnlyPIDs)
             let pgids = memoryPressureProcessGroupIDs(
@@ -206,7 +206,7 @@ final class PaneMemoryGuardrail {
 
     nonisolated static func cheapRootPIDs(
         for descriptor: PaneMemoryDescriptor,
-        in snapshot: CmuxTopProcessSnapshot
+        in snapshot: HmuxTopProcessSnapshot
     ) -> Set<Int> {
         var rootPIDs: Set<Int> = []
         if let foregroundPID = descriptor.foregroundPID {
@@ -230,7 +230,7 @@ final class PaneMemoryGuardrail {
         samples: [PaneMemorySample],
         currentScopedOnlySamplesByKey: [PaneMemoryPaneKey: PaneMemorySample],
         previousScopedOnlySamplesByKey: [PaneMemoryPaneKey: PaneMemorySample],
-        includesCMUXScope: Bool,
+        includesHMUXScope: Bool,
         clearBytes: Int64
     ) -> (
         samples: [PaneMemorySample],
@@ -239,7 +239,7 @@ final class PaneMemoryGuardrail {
         let liveKeys = Set(samples.map(\.key))
         let previousScopedOnlySamplesByKey = previousScopedOnlySamplesByKey.filter { liveKeys.contains($0.key) }
 
-        if includesCMUXScope {
+        if includesHMUXScope {
             let scopedOnlySamplesByKey = currentScopedOnlySamplesByKey.filter {
                 liveKeys.contains($0.key) && $0.value.memoryBytes > 0
             }
@@ -279,7 +279,7 @@ final class PaneMemoryGuardrail {
     }
 
     nonisolated static func memoryPressureProcessGroupIDs(
-        in snapshot: CmuxTopProcessSnapshot,
+        in snapshot: HmuxTopProcessSnapshot,
         pids: Set<Int>,
         clearBytes: Int64
     ) -> [Int] {
@@ -323,7 +323,7 @@ final class PaneMemoryGuardrail {
             samples: batch.samples,
             currentScopedOnlySamplesByKey: batch.scopedOnlySamplesByKey,
             previousScopedOnlySamplesByKey: lastScopedOnlySamplesByKey,
-            includesCMUXScope: batch.includesCMUXScope,
+            includesHMUXScope: batch.includesHMUXScope,
             clearBytes: clearBytes
         )
         lastScopedOnlySamplesByKey = reconciled.scopedOnlySamplesByKey
@@ -335,21 +335,21 @@ final class PaneMemoryGuardrail {
         // output no longer drives any UI (the badge + banner were removed in
         // issue #6614); it is retained for the DEBUG scan log below.
         let output = engine.ingest(samples: samples, thresholdBytes: thresholdBytes)
-        emitScanDebugLog(samples: samples, output: output, thresholdBytes: thresholdBytes, includesCMUXScope: batch.includesCMUXScope)
+        emitScanDebugLog(samples: samples, output: output, thresholdBytes: thresholdBytes, includesHMUXScope: batch.includesHMUXScope)
     }
 
     private func emitScanDebugLog(
         samples: [PaneMemorySample],
         output: PaneMemoryGuardrailEngineOutput,
         thresholdBytes: Int64,
-        includesCMUXScope: Bool
+        includesHMUXScope: Bool
     ) {
 #if DEBUG
         let maxBytes = samples.map(\.memoryBytes).max() ?? 0
-        cmuxDebugLog(
+        hmuxDebugLog(
             "paneMemGuard.scan panes=\(samples.count) maxMB=\(maxBytes / 1_048_576) " +
             "thresholdMB=\(thresholdBytes / 1_048_576) warned=\(output.warnedWorkspaceIds.count) " +
-            "scope=\(includesCMUXScope ? 1 : 0)"
+            "scope=\(includesHMUXScope ? 1 : 0)"
         )
 #endif
     }

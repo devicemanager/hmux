@@ -13,7 +13,7 @@ async function preContractAttachRefusal(
   const client = { vms: { ref: () => ({}) } } as unknown as Freestyle;
   const provider = new FreestyleProvider({ client: () => client });
   try {
-    await provider.openCmuxRemote("vm-pre-contract", { providerMetadata });
+    await provider.openHmuxRemote("vm-pre-contract", { providerMetadata });
   } catch (error) {
     return error;
   }
@@ -24,7 +24,7 @@ async function attachResponse(locale?: (typeof locales)[number]): Promise<Respon
   const response = await vmWorkflowErrorResponse(
     new VmProviderOperationError({
       provider: "freestyle",
-      operation: "openCmuxRemote",
+      operation: "openHmuxRemote",
       cause: await preContractAttachRefusal(),
     }),
     locale ? { locale } : {},
@@ -47,7 +47,7 @@ describe("attach to a machine that predates the attach contract", () => {
       error: "vm_recreate_required",
       retryable: false,
       phase: "attach",
-      details: { operation: "openCmuxRemote", retryable: false },
+      details: { operation: "openHmuxRemote", retryable: false },
       ui: { title: "Recreate this machine" },
     });
     expect(JSON.stringify(payload)).not.toMatch(/snapshot-v2|freestyle|10\.4\.0\.8/);
@@ -58,12 +58,12 @@ describe("attach to a machine that predates the attach contract", () => {
     const provider = new FreestyleProvider({ client: () => client });
     let cause: unknown;
     try {
-      await provider.openCmuxRemote("vm-pre-contract", { providerMetadata: { cmuxTuiContract: "snapshot-v2" } });
+      await provider.openHmuxRemote("vm-pre-contract", { providerMetadata: { hmuxTuiContract: "snapshot-v2" } });
     } catch (error) {
       cause = error;
     }
     expect(cause).toBeDefined();
-    const response = await vmWorkflowErrorResponse(new VmProviderOperationError({ provider: "freestyle", operation: "openCmuxRemote", cause }));
+    const response = await vmWorkflowErrorResponse(new VmProviderOperationError({ provider: "freestyle", operation: "openHmuxRemote", cause }));
     expect(response?.status).toBe(409);
     expect((await response?.json()).error).toBe("vm_recreate_required");
   });

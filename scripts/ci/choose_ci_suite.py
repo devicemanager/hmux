@@ -31,7 +31,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from test_impact import affected_suites, changed_lines  # noqa: E402
-from cmux_unit_test_shard import (  # noqa: E402
+from hmux_unit_test_shard import (  # noqa: E402
     DEFAULT_TIMINGS_PATH,
     FOCUSED_GATE_SELECTORS,
     discover_selectors,
@@ -48,14 +48,14 @@ UNIT_SUITE_LABEL = "unit-ci"
 # Editing these runs no code under compile admission, which builds the test
 # bundle and stops. Nothing else in a pull request observes them.
 #
-# They differ in what could observe them. `app-host unit tests` runs cmuxTests/
+# They differ in what could observe them. `app-host unit tests` runs hmuxTests/
 # against the product compile admission already built, so asking for that one
-# job is enough to judge a cmuxTests/ diff. No pull request job runs
-# cmuxUITests/ at all -- only the dispatch-only test-e2e lane does -- so ci.yml's
+# job is enough to judge a hmuxTests/ diff. No pull request job runs
+# hmuxUITests/ at all -- only the dispatch-only test-e2e lane does -- so ci.yml's
 # `ui-tests` job runs that lane (through ci-ui-tests.yml) for the classes a diff changes
 # (changed_ui_selectors()). A change it cannot map to classes stays a gap.
-UNIT_JUDGED_PREFIXES = ("cmuxTests/",)
-UNJUDGED_BY_ANY_PR_JOB_PREFIXES = ("cmuxUITests/",)
+UNIT_JUDGED_PREFIXES = ("hmuxTests/",)
+UNJUDGED_BY_ANY_PR_JOB_PREFIXES = ("hmuxUITests/",)
 UNJUDGED_BY_COMPILE_PREFIXES = UNIT_JUDGED_PREFIXES + UNJUDGED_BY_ANY_PR_JOB_PREFIXES
 # A class declaration and the first type it inherits from, attributes and
 # modifiers allowed on the same line; and an extension of a type.
@@ -99,7 +99,7 @@ APP_HOST_CONSUMER_PATHS = (
     "scripts/ci/app_host_test_products.py",
     "scripts/ci/classify-app-host-test-output.py",
     "scripts/ci/cleanup-app-host-home.sh",
-    "scripts/ci/cmux_unit_test_shard.py",
+    "scripts/ci/hmux_unit_test_shard.py",
     "scripts/ci/collect-app-host-diagnostics.sh",
     "scripts/ci/enable-xctest-automation-mode.sh",
     "scripts/ci/enumerate-app-host-tests.sh",
@@ -117,7 +117,7 @@ APP_HOST_CONSUMER_PATHS = (
 # XCTest suite (57 tests, 62 ms measured) on the changed-suites worker. It
 # proves the product restored, the app host launched, and selected tests
 # executed and were accounted for, which is what a consumer edit can break.
-CONSUMER_CANARY_SELECTOR = "cmuxTests/CmuxSSHURLRequestTests"
+CONSUMER_CANARY_SELECTOR = "hmuxTests/HmuxSSHURLRequestTests"
 
 # What decides which suites share a worker and in what order they run. A new
 # layout can put one suite after another that leaves state behind, and only
@@ -128,8 +128,8 @@ CONSUMER_CANARY_SELECTOR = "cmuxTests/CmuxSSHURLRequestTests"
 # change arrives as the timings file it writes.
 SHARD_LAYOUT_PATHS = (
     MACOS_WORKFLOW_PATH,  # only shard_layout_lines() count
-    "scripts/ci/cmux-unit-test-timings.json",
-    "scripts/ci/cmux_unit_test_shard.py",
+    "scripts/ci/hmux-unit-test-timings.json",
+    "scripts/ci/hmux_unit_test_shard.py",
     "scripts/ci/run-app-host-unit-batches.sh",
 )
 
@@ -168,7 +168,7 @@ def wants_unit_suite(
     """True when this run should execute `app-host unit tests`.
 
     The full suite already includes them, so it implies this. Otherwise the
-    diff decides: a change under cmuxTests/ is judged by exactly this job and
+    diff decides: a change under hmuxTests/ is judged by exactly this job and
     by nothing compile admission does, so it selects the job itself rather
     than failing `suite-coverage` and waiting for someone to add a label that
     this module could already have derived. An unreadable diff (`paths` is
@@ -176,7 +176,7 @@ def wants_unit_suite(
 
     Only this job is selected: the package tests, the lag lane, release
     admission and the Release build the full suite also unlocks cost a paid
-    runner and judge nothing about a change to cmuxTests/.
+    runner and judge nothing about a change to hmuxTests/.
     """
     if wants_full_suite(event_name, pull_request_policy, labels):
         return True
@@ -197,7 +197,7 @@ def strict_steps(workflow: str, suites: Iterable[str]) -> list[str] | None:
     Any other shard step that names a suite with `-only-testing:` runs part of
     it in a way the shared batch cannot, such as the renderer memory
     regression, which skips itself unless its step sets
-    CMUX_RENDERER_MEMORY_REGRESSION=1. The suite stays in the shared batch and
+    HMUX_RENDERER_MEMORY_REGRESSION=1. The suite stays in the shared batch and
     that step runs too: otherwise the edited test reports "skipped" and the
     run passes without executing it.
 
@@ -220,7 +220,7 @@ def strict_steps(workflow: str, suites: Iterable[str]) -> list[str] | None:
         for selector in FOCUSED_GATE_SELECTORS:
             if re.search(rf"\b{selector.split('/', 1)[1]}\b", block):
                 owners.setdefault(selector, set()).add(name)
-        for suite in re.findall(r"-only-testing:[\"']?(cmuxTests/[A-Za-z0-9_]+)", block):
+        for suite in re.findall(r"-only-testing:[\"']?(hmuxTests/[A-Za-z0-9_]+)", block):
             owners.setdefault(suite, set()).add(name)
     names: set[str] = set()
     for suite in suites:
@@ -267,14 +267,14 @@ def reverse_unit_selectors(
     """Suites that could observe an app-source change, within what the budget has left.
 
     A pull request that changes Sources/ or a macOS/Shared package without
-    touching cmuxTests/ otherwise runs no behavior test. reverse_test_impact.py
+    touching hmuxTests/ otherwise runs no behavior test. reverse_test_impact.py
     names the suites whose tests mention what the diff changed; this keeps the
     ones that fit beside `already` in one changed-suites run. It only adds:
     anything it cannot judge (no diff, a selector error) adds nothing, and a
     suite that would push the run past its budget or out of the changed-suites
     lane is left out rather than turning the run into seven shards. Only
     suites the shared batch discovers are added: the selector also names
-    helper types in cmuxTests/, and a selector that matches no test fails the
+    helper types in hmuxTests/, and a selector that matches no test fails the
     run. A suite a strict step owns is left out, since that step runs apart
     from the budget. Suites with entries in app-host-known-failures.json are
     left out too: a known failure that happens to pass fails a changed-suites
@@ -304,7 +304,7 @@ def reverse_unit_selectors(
         data = reverse.report(selection, costs, default_ms, CHANGED_SUITES_BUDGET_MS - spent)
         chosen: list[str] = []
         for suite in data["would_run"]:
-            selector = f"cmuxTests/{suite}"
+            selector = f"hmuxTests/{suite}"
             if suite in known or suite not in batch_suites or selector in already:
                 continue
             steps = strict_steps(workflow, already + chosen)
@@ -338,7 +338,7 @@ def job_lines(workflow: str, job: str) -> range | None:
 def admission_route_lines(workflow: str) -> set[int]:
     """1-based lines of compile admission that route the product's consumers.
 
-    Its `outputs:` block, and the CMUX_PRODUCT_RUNNER and CMUX_CI_XCODE_APP
+    Its `outputs:` block, and the HMUX_PRODUCT_RUNNER and HMUX_CI_XCODE_APP
     env the `runner` and `xcode_app` outputs read: the shards run on that pool
     and pin that Xcode (#14163).
     """
@@ -352,7 +352,7 @@ def admission_route_lines(workflow: str) -> set[int]:
         text = lines[number - 1]
         if re.match(r"^    [A-Za-z_-]+:", text):
             in_outputs = text.startswith("    outputs:")
-        if in_outputs or re.match(r"^      (CMUX_PRODUCT_RUNNER|CMUX_CI_XCODE_APP):", text):
+        if in_outputs or re.match(r"^      (HMUX_PRODUCT_RUNNER|HMUX_CI_XCODE_APP):", text):
             route.add(number)
     return route
 
@@ -390,7 +390,7 @@ def consumer_canary_selectors(
     return []
 
 
-SHARD_LAYOUT_SETTING_RE = re.compile(r"^      CMUX_APP_HOST_[A-Z_]*(SHARD|RESERVED_WALL_SECONDS):")
+SHARD_LAYOUT_SETTING_RE = re.compile(r"^      HMUX_APP_HOST_[A-Z_]*(SHARD|RESERVED_WALL_SECONDS):")
 SHARD_MATRIX_ENTRY_RE = re.compile(r'^\s*\{"shard":')
 
 
@@ -539,9 +539,9 @@ def fuzz_regression_selectors(paths: Iterable[str] | None) -> list[str]:
 
 
 def ui_class_graph(root: Path) -> dict[str, str]:
-    """Every class cmuxUITests/ declares, mapped to the first type it inherits from."""
+    """Every class hmuxUITests/ declares, mapped to the first type it inherits from."""
     parents: dict[str, str] = {}
-    for file in sorted((root / "cmuxUITests").rglob("*.swift")):
+    for file in sorted((root / "hmuxUITests").rglob("*.swift")):
         try:
             parents.update(UI_CLASS.findall(file.read_text(encoding="utf-8")))
         except (OSError, UnicodeError):
@@ -550,7 +550,7 @@ def ui_class_graph(root: Path) -> dict[str, str]:
 
 
 def changed_ui_selectors(root: Path, paths: Iterable[str] | None) -> list[str] | None:
-    """The UI test classes a cmuxUITests/ diff changes, as test-e2e selectors.
+    """The UI test classes a hmuxUITests/ diff changes, as test-e2e selectors.
 
     A test class is one that inherits XCTestCase, directly or through a base
     class the suite declares. A changed file selects the test classes it
@@ -596,8 +596,8 @@ def changed_ui_selectors(root: Path, paths: Iterable[str] | None) -> list[str] |
         if not tests:
             return None
         for name in tests:
-            if f"cmuxUITests/{name}" not in selectors:
-                selectors.append(f"cmuxUITests/{name}")
+            if f"hmuxUITests/{name}" not in selectors:
+                selectors.append(f"hmuxUITests/{name}")
     if not fits_one_ui_run(selectors):
         return None
     return selectors
@@ -621,9 +621,9 @@ def coverage_gap(
     is the point: the skip stops being silent.
 
     `unit_suite` closes the gap only for the paths `app-host unit tests` can
-    actually judge. A cmuxUITests/ diff is closed only by `ui_suite`, ci.yml's
+    actually judge. A hmuxUITests/ diff is closed only by `ui_suite`, ci.yml's
     `ui-tests` job running the classes it changed: the full suite never
-    executes cmuxUITests/, so `full-ci` does not close it.
+    executes hmuxUITests/, so `full-ci` does not close it.
     """
     if event_name != "pull_request":
         return False
@@ -656,7 +656,7 @@ def main(argv: list[str]) -> int:
     )
     parser.add_argument(
         "--diff-from",
-        help="`git diff -U0` of cmuxTests/ and ci-macos.yml; omit to count every line of a changed file",
+        help="`git diff -U0` of hmuxTests/ and ci-macos.yml; omit to count every line of a changed file",
     )
     parser.add_argument(
         "--app-diff-from",
@@ -700,7 +700,7 @@ def main(argv: list[str]) -> int:
     opted_out = SUITE_OPT_OUT_LABEL in {label.strip() for label in labels or ()}
     ui_run = args.event_name == "pull_request" and not opted_out
     class_selectors = changed_ui_selectors(args.root, paths) if ui_run else []
-    # Only the changed classes judge a cmuxUITests/ diff; the replays never do.
+    # Only the changed classes judge a hmuxUITests/ diff; the replays never do.
     gap = coverage_gap(args.event_name, full, paths, labels, unit_suite=unit, ui_suite=bool(class_selectors))
     # A fork's `ui-tests` job refuses to run anything, so a fork gets no replay.
     same_repository = bool(args.event_path) and same_repository_from_event(args.event_path)

@@ -19,7 +19,7 @@ const CHECKOUT_PATH = "/api/billing/checkout";
 /** Whether a link points at the checkout route, including an absolute app URL. */
 export function isCheckoutHref(href: string): boolean {
   try {
-    return new URL(href, "https://cmux.invalid").pathname === CHECKOUT_PATH;
+    return new URL(href, "https://hmux.invalid").pathname === CHECKOUT_PATH;
   } catch {
     return false;
   }

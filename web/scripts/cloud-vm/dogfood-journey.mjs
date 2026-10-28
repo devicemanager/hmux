@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// A timed end-to-end user journey through cmux Cloud, the way the app drives it,
-// but from a plain Linux box with only cmux-tui:
+// A timed end-to-end user journey through hmux Cloud, the way the app drives it,
+// but from a plain Linux box with only hmux-tui:
 //
 //   create -> list -> private tunnel -> WireGuard hub -> attach-endpoint ->
 //   headless `remote connect --carrier` -> first prompt in the VM terminal ->
@@ -28,11 +28,11 @@ import {
   requireEnvKeys,
 } from "./projects.mjs";
 
-const usage = "Usage: dogfood-journey.mjs [web-dir] <staging|production> --cmux-tui <path> [--url https://preview.example] [--provider freestyle|default] [--skip-sleep] [--run-fanout N] [--result-file <path>] [--screens-dir <path>]";
+const usage = "Usage: dogfood-journey.mjs [web-dir] <staging|production> --hmux-tui <path> [--url https://preview.example] [--provider freestyle|default] [--skip-sleep] [--run-fanout N] [--result-file <path>] [--screens-dir <path>]";
 const args = process.argv.slice(2);
 const { webDir, target, project, rest } = parseWebDirAndTarget(args, usage);
-const cmuxTui = optionValue(rest, "--cmux-tui");
-if (!cmuxTui) {
+const hmuxTui = optionValue(rest, "--hmux-tui");
+if (!hmuxTui) {
   console.error(usage);
   process.exit(2);
 }
@@ -49,7 +49,7 @@ const requireFromWeb = createRequire(path.join(webDir, "package.json"));
 const stackModule = await import(pathToFileURL(requireFromWeb.resolve("@hexclave/js")).href);
 const { StackServerApp } = stackModule;
 
-const scratch = mkdtempSync(path.join(tmpdir(), "cmux-dogfood-"));
+const scratch = mkdtempSync(path.join(tmpdir(), "hmux-dogfood-"));
 const runStartedAt = performance.now();
 const timings = {};
 const notes = [];
@@ -154,9 +154,9 @@ async function waitForRun(runId, timeoutMs = 20 * 60_000) {
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-// One long-running cmux-tui process whose stdout is JSON lines.
+// One long-running hmux-tui process whose stdout is JSON lines.
 function startJsonProcess(name, argv) {
-  const child = spawn(cmuxTui, [...argv, "--exit-with-parent"], { stdio: ["pipe", "pipe", "pipe"] });
+  const child = spawn(hmuxTui, [...argv, "--exit-with-parent"], { stdio: ["pipe", "pipe", "pipe"] });
   children.add(child);
   child.on("error", (error) => { stderr += `\nspawn failed: ${error.message}`; });
   const lines = [];
@@ -232,7 +232,7 @@ function startJsonProcess(name, argv) {
 
 function runTui(argv, timeoutMs = 30_000) {
   return new Promise((resolve, reject) => {
-    const child = spawn(cmuxTui, argv, { stdio: ["ignore", "pipe", "pipe"] });
+    const child = spawn(hmuxTui, argv, { stdio: ["ignore", "pipe", "pipe"] });
     let stdout = "";
     let stderr = "";
     child.stdout.on("data", (chunk) => { stdout += chunk; });
@@ -280,7 +280,7 @@ function privateRoute(vm) {
 function connectArgv(route, session, hubSocket) {
   return [
     "remote", "connect", route,
-    "--device-name", "cmux-dogfood",
+    "--device-name", "hmux-dogfood",
     "--state-dir", path.join(scratch, "client-state"),
     "--headless", "--json", "--lanes", "single",
     "--carrier",
@@ -471,7 +471,7 @@ try {
   const version = await runTui(["--version"]);
   result.clientVersion = version.stdout.trim();
 
-  const emailPrefix = `cmux-${project.stackLabel}-smoke+dogfood-`;
+  const emailPrefix = `hmux-${project.stackLabel}-smoke+dogfood-`;
   result.swept = await sweepDogfoodLeftovers(app, emailPrefix);
   const suffix = `${Date.now()}-${randomBytes(3).toString("hex")}`;
   await timed("signIn", async () => {
@@ -481,20 +481,20 @@ try {
       primaryEmailVerified: true,
       primaryEmailAuthEnabled: true,
       password: randomBytes(24).toString("base64url"),
-      displayName: "cmux dogfood",
+      displayName: "hmux dogfood",
     });
-    await user.update({ clientReadOnlyMetadata: { cmuxVmPlan: "pro" } });
+    await user.update({ clientReadOnlyMetadata: { hmuxVmPlan: "pro" } });
     authHeaders = await sessionHeaders(user, 45 * 60 * 1000);
   });
 
   const sourceCommit = process.env.GITHUB_SHA;
   if (!sourceCommit || !/^[0-9a-f]{40}$/i.test(sourceCommit)) throw new Error("GITHUB_SHA is required for Run dogfood");
-  const setupManifestPath = path.join(webDir, "..", ".cmux", "setup.json");
+  const setupManifestPath = path.join(webDir, "..", ".hmux", "setup.json");
   const setupManifestDigest = `sha256:${createHash("sha256").update(readFileSync(setupManifestPath)).digest("hex")}`;
   if (runFanoutCount > 0) {
     result.fanout = await timed("runFanout", () => runFanout({
       api, now: () => performance.now(), sleep, count: runFanoutCount,
-      marker: `cmux-run-fanout-${suffix}`, sourceCommit, setupManifestDigest,
+      marker: `hmux-run-fanout-${suffix}`, sourceCommit, setupManifestDigest,
     }));
     const succeeded = result.fanout.outcomes.succeeded ?? 0;
     const ok = succeeded === runFanoutCount;
@@ -506,9 +506,9 @@ try {
     await cleanup().catch((error) => console.error(`cleanup_failed ${error?.message ?? error}`));
     process.exit(ok ? 0 : 1);
   }
-  const runMarker = `cmux-run-dogfood-${suffix}`;
+  const runMarker = `hmux-run-dogfood-${suffix}`;
   const runSpec = {
-    schema: "cmux.run/v1",
+    schema: "hmux.run/v1",
     operationId: runMarker,
     source: { repository: "manaflow-ai/cmux", commit: sourceCommit, setupManifestDigest },
     intent: { digest: `sha256:${"1".repeat(64)}` },
@@ -544,7 +544,7 @@ try {
   result.vm = {
     provider: created.provider,
     imageVersion: created.imageVersion,
-    cmuxTuiContract: created.cmuxTuiContract ?? null,
+    hmuxTuiContract: created.hmuxTuiContract ?? null,
     displayName: created.displayName ?? null,
     hasAddress: Boolean(privateRoute(created)),
     createdBy: created.createdBy ?? created.creator ?? created.userId ?? null,
@@ -568,14 +568,14 @@ try {
     deviceId,
     deviceFingerprint: deviceId,
     tunnelPurpose: "terminal",
-    deviceName: "cmux dogfood (CI)",
+    deviceName: "hmux dogfood (CI)",
     architecture: process.arch,
-    cmuxChannel: "dogfood",
+    hmuxChannel: "dogfood",
   }), [200], "POST /api/vm/tunnel"));
   const allowed = (tunnel.networks ?? []).flatMap((network) => [network.cidr, network.cidrV6])
     .concat([tunnel.network?.cidr, tunnel.network?.cidrV6])
     .filter((value, index, all) => value && all.indexOf(value) === index);
-  const configPath = path.join(scratch, "wg", "cmux.conf");
+  const configPath = path.join(scratch, "wg", "hmux.conf");
   rmSync(path.dirname(configPath), { recursive: true, force: true });
   mkdirSync(path.dirname(configPath), { recursive: true, mode: 0o700 });
   writeFileSync(configPath, completedConfig(tunnel.clientConfig, keys.privateKey, allowed), { mode: 0o600 });
@@ -612,7 +612,7 @@ try {
     result.attachTicket = { expiredStatus: expiredReplay.status, redeemed: redeemed.redeemed === true, replayStatus: replay.status, expiresAt: redeemed.expiresAt };
     return redeemed;
   });
-  const session = attach.session ?? "cmux";
+  const session = attach.session ?? "hmux";
 
   const startLink = async (name = "remote connect", connectRoute = route) => {
     link = startJsonProcess(name, connectArgv(connectRoute, session, hubSocket));
@@ -640,7 +640,7 @@ try {
 
   result.agents = await timed("agents", async () => {
     const response = await api("POST", `/api/vm/${encodeURIComponent(vmId)}/exec`, {
-      command: "export HOME=/root; for f in /etc/profile.d/*.sh; do [ -r \"$f\" ] && . \"$f\"; done; for c in claude codex cr cmux; do printf '%s ' \"$c\"; ($c --version 2>/dev/null || echo missing) | head -1; done",
+      command: "export HOME=/root; for f in /etc/profile.d/*.sh; do [ -r \"$f\" ] && . \"$f\"; done; for c in claude codex cr hmux; do printf '%s ' \"$c\"; ($c --version 2>/dev/null || echo missing) | head -1; done",
       timeoutMs: 60_000,
     }, 90_000);
     const output = expectStatus(response, [200], "POST exec").stdout ?? "";

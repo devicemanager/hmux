@@ -9,7 +9,7 @@ let migrationNamespace: DurableObjectNamespace;
 let workerRoot = "";
 let persistencePath = "";
 
-const identity = { environment: "test", projectId: "iroh-v2-test", teamId: "team-e2e", userId: "u1", deviceId: "d1", appNamespace: "cmux", buildTag: "test" };
+const identity = { environment: "test", projectId: "iroh-v2-test", teamId: "team-e2e", userId: "u1", deviceId: "d1", appNamespace: "hmux", buildTag: "test" };
 const descriptor = { identity, endpointId: "a".repeat(64), identityGeneration: 0, metadata: { platform: "mac", displayName: "Mac", appVersion: "1", pairingEnabled: true, capabilities: [], relayURLs: [] } };
 const post = async (path: string, body: unknown) => {
   const response = await stub.fetch(`https://storage.test${path}`, { method: "POST", body: JSON.stringify(body) });

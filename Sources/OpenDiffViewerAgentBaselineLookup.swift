@@ -1,6 +1,6 @@
 import Foundation
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 
 extension AppDelegate {
     func startOpenDiffViewerAgentContextTask(
@@ -135,13 +135,13 @@ extension AppDelegate {
 
     nonisolated static func agentTurnDiffBaselineStoreURL() -> URL {
         let environment = ProcessInfo.processInfo.environment
-        if let override = normalizedOpenDiffViewerPath(environment["CMUX_AGENT_HOOK_STATE_DIR"]) {
+        if let override = normalizedOpenDiffViewerPath(environment["HMUX_AGENT_HOOK_STATE_DIR"]) {
             let expandedOverride = (override as NSString).expandingTildeInPath
             return URL(fileURLWithPath: expandedOverride, isDirectory: true)
                 .appendingPathComponent("agent-turn-diff-baselines.json", isDirectory: false)
         }
         return FileManager.default.homeDirectoryForCurrentUser
-            .appendingPathComponent(".cmuxterm", isDirectory: true)
+            .appendingPathComponent(".hmuxterm", isDirectory: true)
             .appendingPathComponent("agent-turn-diff-baselines.json", isDirectory: false)
     }
 

@@ -26,7 +26,7 @@ export const VM_REAPER_MAX_VOLUME_SCAN_PAGES = 20;
 export const VM_REAPER_SCAN_DEADLINE_MS = 120_000;
 export const VM_REAPER_DEFAULT_STUCK_PROVISIONING_MINUTES = 60;
 export const VM_REAPER_DEFAULT_VOLUME_MIN_AGE_MINUTES = 120;
-export const VM_REAPER_SYSTEM_USER_ID = "cmux-vm-reaper";
+export const VM_REAPER_SYSTEM_USER_ID = "hmux-vm-reaper";
 
 const ORPHAN_VOLUME_EVENT = "vm.reaper.orphan_volume";
 const ORPHAN_VOLUME_UNKNOWN_ATTACHMENT_EVENT = "vm.reaper.orphan_volume_unknown_attachment";
@@ -146,15 +146,15 @@ export function reapVmResources(
     const now = input.now ?? new Date();
     const volumeLimit = resolveLimit(
       input.volumeLimit,
-      env.CMUX_VM_REAPER_VOLUME_LIMIT,
+      env.HMUX_VM_REAPER_VOLUME_LIMIT,
       VM_REAPER_DEFAULT_VOLUME_LIMIT,
     );
     const volumeScanLimit = resolveScanLimit(
       input.volumeScanLimit,
-      env.CMUX_VM_REAPER_VOLUME_SCAN_LIMIT ?? env.CMUX_VM_REAPER_SCAN_LIMIT,
+      env.HMUX_VM_REAPER_VOLUME_SCAN_LIMIT ?? env.HMUX_VM_REAPER_SCAN_LIMIT,
       volumeLimit,
     );
-    const volumeMinAgeMs = (parsePositiveInteger(env.CMUX_VM_REAPER_VOLUME_MIN_AGE_MINUTES) ??
+    const volumeMinAgeMs = (parsePositiveInteger(env.HMUX_VM_REAPER_VOLUME_MIN_AGE_MINUTES) ??
       VM_REAPER_DEFAULT_VOLUME_MIN_AGE_MINUTES) * 60 * 1_000;
     const summary: MutableSummary = {
       reportOnly: true,
@@ -185,7 +185,7 @@ export function reapVmResources(
       now,
       limit: resolveLimit(
         input.provisioningLimit,
-        env.CMUX_VM_REAPER_PROVISIONING_LIMIT,
+        env.HMUX_VM_REAPER_PROVISIONING_LIMIT,
         VM_REAPER_DEFAULT_PROVISIONING_LIMIT,
       ),
       ageMs: resolveDurationOption(input.stuckProvisioningAgeMs, resolveStuckAgeMs(env)),
@@ -808,9 +808,9 @@ function resolveScanLimit(value: number | undefined, envValue: string | undefine
 }
 
 function resolveStuckAgeMs(env: Record<string, string | undefined>): number {
-  const raw = env.CMUX_VM_REAPER_STUCK_PROVISIONING_MINUTES ??
-    env.CMUX_VM_REAPER_STUCK_THRESHOLD_MINUTES ??
-    env.CMUX_VM_REAPER_STUCK_AGE_MINUTES;
+  const raw = env.HMUX_VM_REAPER_STUCK_PROVISIONING_MINUTES ??
+    env.HMUX_VM_REAPER_STUCK_THRESHOLD_MINUTES ??
+    env.HMUX_VM_REAPER_STUCK_AGE_MINUTES;
   return (parsePositiveInteger(raw) ?? VM_REAPER_DEFAULT_STUCK_PROVISIONING_MINUTES) * 60 * 1_000;
 }
 

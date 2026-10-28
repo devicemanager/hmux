@@ -1,9 +1,9 @@
-// cmux Pro subscription helpers.
+// hmux Pro subscription helpers.
 //
 // VM entitlements (services/vms/auth.ts) read the plan id from the user's
-// `clientReadOnlyMetadata.cmuxPlan`, so syncing that key after a verified
+// `clientReadOnlyMetadata.hmuxPlan`, so syncing that key after a verified
 // purchase is what upgrades Cloud VM limits — no VM code changes needed.
-// `cmuxVmPlan` takes precedence over `cmuxPlan` there and is left untouched
+// `hmuxVmPlan` takes precedence over `hmuxPlan` there and is left untouched
 // here so manual overrides survive.
 
 import { and, desc, eq, inArray, isNull, sql } from "drizzle-orm";
@@ -36,13 +36,13 @@ export const PRO_PLAN_ID = "pro";
 export const GO_PLAN_ID = "go";
 // Max is Pro plus the 24, 32, and 64 GB machine sizes. It is a personal
 // subscription like Pro: same Stripe customer scope, same metadata mirror
-// (`cmuxPlan: "max"`), and it satisfies every "is Pro" check.
+// (`hmuxPlan: "max"`), and it satisfies every "is Pro" check.
 export const MAX_PLAN_ID = "max";
 export const TEAM_PLAN_ID = "team";
 // Founder's Edition is a one-time purchase. Its completion recorder stores a
 // durable active Pro row with a Founder marker, and subscription reconciliation
 // skips that marker so a cancelled provider duplicate cannot clear access.
-// Existing operator grants may still use `cmuxVmPlan: "founders"`.
+// Existing operator grants may still use `hmuxVmPlan: "founders"`.
 export const FOUNDERS_PLAN_ID = "founders";
 export const FREE_PLAN_ID = "free";
 
@@ -51,7 +51,7 @@ export function isFounderSubscriptionRow(row: { readonly id?: string | null; rea
   const raw = row.raw as { metadata?: { founders_edition?: unknown } } | null | undefined;
   return raw?.metadata?.founders_edition === "true";
 }
-/** Stack project used by the local cmux development server. */
+/** Stack project used by the local hmux development server. */
 export const DEVELOPMENT_STACK_PROJECT_ID = "454ecd03-1db2-4050-845e-4ce5b0cd9895";
 
 /**
@@ -64,12 +64,12 @@ export function isDevelopmentProAccessEnabled(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   return env.NODE_ENV === "development" &&
-    env.CMUX_LOCAL_DEV_PRO === "1" &&
+    env.HMUX_LOCAL_DEV_PRO === "1" &&
     !env.VERCEL_ENV &&
     env.NEXT_PUBLIC_STACK_PROJECT_ID === DEVELOPMENT_STACK_PROJECT_ID;
 }
 /**
- * Plan ids an operator may write to `clientReadOnlyMetadata.cmuxVmPlan` to
+ * Plan ids an operator may write to `clientReadOnlyMetadata.hmuxVmPlan` to
  * grant Pro without a Stripe subscription. Mirrors `isPaidVmPlan` in
  * services/vms/entitlements.ts so the desktop plan and the VM plan agree.
  */
@@ -100,7 +100,7 @@ export function highestPersonalPlanId(
   }
   return best;
 }
-export const PRO_ACCESS_ITEM_ID = "cmux-pro-access";
+export const PRO_ACCESS_ITEM_ID = "hmux-pro-access";
 export const ACTIVE_STRIPE_PRO_STATUSES = ["active", "trialing", "past_due"] as const;
 /** Subscription states that Stripe Billing Portal can manage or recover. */
 export const STRIPE_PORTAL_RECOVERABLE_STATUSES = [
@@ -129,7 +129,7 @@ export type ProMetadataCustomer = {
 };
 
 /**
- * Writes `cmuxPlan: "pro"` (or `"max"`, the plan in force) into the user's
+ * Writes `hmuxPlan: "pro"` (or `"max"`, the plan in force) into the user's
  * clientReadOnlyMetadata when a personal subscription is active, and removes
  * it when it lapsed. Returns the normalized metadata snapshot that was
  * written or observed.
@@ -165,19 +165,19 @@ async function writeProPlanMirror(
     raw && typeof raw === "object" && !Array.isArray(raw)
       ? { ...(raw as Record<string, unknown>) }
       : {};
-  if (metadata.cmuxAccountDeleting === true) {
+  if (metadata.hmuxAccountDeleting === true) {
     return metadata as ProMetadataJson;
   }
-  const current = metadata.cmuxPlan;
+  const current = metadata.hmuxPlan;
 
   if (isPro) {
     if (current === plan) return metadata as ProMetadataJson;
-    metadata.cmuxPlan = plan;
+    metadata.hmuxPlan = plan;
   } else {
     // Any paid mirror value is stale once no Stripe Pro row backs it; VM
-    // entitlements read cmuxPlan whenever no override is set.
+    // entitlements read hmuxPlan whenever no override is set.
     if (!isPaidPlanId(typeof current === "string" ? current : null)) return metadata as ProMetadataJson;
-    delete metadata.cmuxPlan;
+    delete metadata.hmuxPlan;
   }
   // Existing metadata came from Stack as JSON; the only value added is a string.
   await lease.refresh();
@@ -256,7 +256,7 @@ export type ProPlanStatus = {
   readonly isPro: boolean;
   readonly billingManagement: BillingManagementKind;
   readonly billingSource: PersonalBillingSource;
-  /** Where the subscriber manages billing outside cmux (the App Store), or null. */
+  /** Where the subscriber manages billing outside hmux (the App Store), or null. */
   readonly manageUrl: string | null;
   readonly metadataPlanId: string | null;
   readonly hasManualVmPlanOverride: boolean;
@@ -274,9 +274,9 @@ export type ProPlanStatus = {
 };
 
 /**
- * Read-time reconciliation: compares the `cmuxPlan` metadata against the
+ * Read-time reconciliation: compares the `hmuxPlan` metadata against the
  * actual Stripe Pro subscription state and syncs it in either direction.
- * Skipped when a manual `cmuxVmPlan` override is set — that key wins in plan
+ * Skipped when a manual `hmuxVmPlan` override is set — that key wins in plan
  * resolution and is operator-owned. Returns true when metadata was changed.
  */
 export async function reconcileProPlanMetadata(
@@ -293,7 +293,7 @@ export async function reconcileProPlanMetadata(
     raw && typeof raw === "object" && !Array.isArray(raw)
       ? (raw as Record<string, unknown>)
       : {};
-  const override = metadata.cmuxVmPlan;
+  const override = metadata.hmuxVmPlan;
   if (typeof override === "string" && override.trim()) return false;
 
   const activePlan = user.id
@@ -460,7 +460,7 @@ async function stripeStateForStatus(
 
 /**
  * The plan in force for a person: the active Stripe plan when there is one,
- * else an operator grant (`cmuxVmPlan` set to a paid plan by the admin
+ * else an operator grant (`hmuxVmPlan` set to a paid plan by the admin
  * dashboard or dev-grant.sh) which is Pro everywhere, not only for Cloud VM
  * limits, with a `max` grant being Max; else free.
  */
@@ -476,7 +476,7 @@ function personalPlanIdForStatus(
 
 /**
  * The source of the plan in force. Apple wins only with a strictly higher
- * plan, so a tie keeps Stripe (the source cmux can manage).
+ * plan, so a tie keeps Stripe (the source hmux can manage).
  */
 function billingSourceForStatus(
   activeStripePlan: PersonalPlanId | null,
@@ -587,7 +587,7 @@ async function reconcileFreshProMetadata(
 ): Promise<boolean> {
   const metadata = proMetadataRecord(user.clientReadOnlyMetadata);
   if (
-    metadata.cmuxAccountDeleting === true ||
+    metadata.hmuxAccountDeleting === true ||
     hasManualVmOverride(metadata) ||
     !proMirrorNeedsReconcile(activePlan, planIdFromMetadata(metadata))
   ) {
@@ -599,7 +599,7 @@ async function reconcileFreshProMetadata(
 }
 
 /**
- * The `cmuxPlan` mirror needs a write when a personal plan is active but the
+ * The `hmuxPlan` mirror needs a write when a personal plan is active but the
  * mirror does not name that exact plan (a Max upgrade must replace "pro"),
  * or when nothing is active but the mirror still names a paid plan (a stale
  * "pro", "max", "team", or "founders" value would keep VM access alive).
@@ -882,11 +882,11 @@ export function metadataPlanId(raw: unknown): string | null {
 }
 
 /**
- * Writes `cmuxPlan: "team"` and `cmuxSeats` (the subscription quantity) into
+ * Writes `hmuxPlan: "team"` and `hmuxSeats` (the subscription quantity) into
  * a Stack team's clientReadOnlyMetadata while a Stripe Team subscription is
  * active; both are removed when it lapses. Seats size the team's Cloud VM
  * allowance (5 machines per seat), so a quantity change must land here even
- * when the plan id is unchanged. `cmuxVmPlan` is operator-owned and left
+ * when the plan id is unchanged. `hmuxVmPlan` is operator-owned and left
  * untouched.
  */
 export async function syncTeamPlanMetadata(
@@ -899,19 +899,19 @@ export async function syncTeamPlanMetadata(
     raw && typeof raw === "object" && !Array.isArray(raw)
       ? { ...(raw as Record<string, unknown>) }
       : {};
-  const currentPlan = metadata.cmuxPlan;
-  const currentSeats = metadata.cmuxSeats;
+  const currentPlan = metadata.hmuxPlan;
+  const currentSeats = metadata.hmuxSeats;
 
   if (isTeam) {
     const nextSeats = seats !== null && Number.isSafeInteger(seats) && seats > 0 ? seats : null;
     if (currentPlan === TEAM_PLAN_ID && currentSeats === (nextSeats ?? undefined)) return;
-    metadata.cmuxPlan = TEAM_PLAN_ID;
-    if (nextSeats === null) delete metadata.cmuxSeats;
-    else metadata.cmuxSeats = nextSeats;
+    metadata.hmuxPlan = TEAM_PLAN_ID;
+    if (nextSeats === null) delete metadata.hmuxSeats;
+    else metadata.hmuxSeats = nextSeats;
   } else {
     if (currentPlan !== TEAM_PLAN_ID && currentSeats === undefined) return;
-    if (currentPlan === TEAM_PLAN_ID) delete metadata.cmuxPlan;
-    delete metadata.cmuxSeats;
+    if (currentPlan === TEAM_PLAN_ID) delete metadata.hmuxPlan;
+    delete metadata.hmuxSeats;
   }
   await team.update({ clientReadOnlyMetadata: metadata as ProMetadataJson });
 }
@@ -926,9 +926,9 @@ function hasManualVmOverride(metadata: Record<string, unknown>): boolean {
   return manualVmPlanOverride(metadata) !== null;
 }
 
-/** The operator-owned `cmuxVmPlan` override, normalized, or null when unset. */
+/** The operator-owned `hmuxVmPlan` override, normalized, or null when unset. */
 export function manualVmPlanOverride(raw: unknown): string | null {
-  const override = proMetadataRecord(raw).cmuxVmPlan;
+  const override = proMetadataRecord(raw).hmuxVmPlan;
   if (typeof override !== "string") return null;
   const normalized = override.trim().toLowerCase();
   return normalized.length > 0 ? normalized : null;
@@ -941,7 +941,7 @@ export function isPaidPlanId(planId: string | null | undefined): boolean {
 }
 
 function planIdFromMetadata(metadata: Record<string, unknown>): string | null {
-  const value = metadata.cmuxPlan;
+  const value = metadata.hmuxPlan;
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 

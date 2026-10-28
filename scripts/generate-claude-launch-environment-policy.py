@@ -14,9 +14,9 @@ from typing import Dict, List
 SCRIPT_PATH = Path(__file__).resolve()
 REPO_ROOT = SCRIPT_PATH.parent.parent
 MANIFEST_PATH = SCRIPT_PATH.with_name("claude-launch-environment-policy.json")
-SWIFT_PATH = REPO_ROOT / "Packages/macOS/CMUXAgentLaunch/Sources/CMUXAgentLaunch/ClaudeSessionEnvironmentPolicy+Generated.swift"
+SWIFT_PATH = REPO_ROOT / "Packages/macOS/HMUXAgentLaunch/Sources/HMUXAgentLaunch/ClaudeSessionEnvironmentPolicy+Generated.swift"
 TYPESCRIPT_PATH = REPO_ROOT / "agent-chat/adapters/claude-environment-policy.generated.ts"
-WRAPPER_PATH = REPO_ROOT / "Resources/bin/cmux-claude-wrapper"
+WRAPPER_PATH = REPO_ROOT / "Resources/bin/hmux-claude-wrapper"
 WRAPPER_BEGIN = "    # BEGIN GENERATED CLAUDE LAUNCH ENVIRONMENT POLICY"
 WRAPPER_END = "    # END GENERATED CLAUDE LAUNCH ENVIRONMENT POLICY"
 ENVIRONMENT_KEY_PATTERN = re.compile(r"^[A-Z][A-Z0-9_]*$")
@@ -86,7 +86,7 @@ export const inheritedClaudeLaunchStateKeys = [
 
 
 def render_wrapper(wrapper: str, manifest: Dict[str, List[str]]) -> str:
-    # The wrapper continues an authorized cmux launch, so only detach it from
+    # The wrapper continues an authorized hmux launch, so only detach it from
     # the inherited conversation; independent launchers also clear trust state.
     keys = manifest["inheritedSessionIdentityKeys"]
     generated_block = "\n".join(

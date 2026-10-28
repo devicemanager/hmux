@@ -12,29 +12,29 @@ if [ "$#" -eq 0 ]; then
   exit 2
 fi
 log_dir="${RUNNER_TEMP:-/tmp}"
-log_tag="${CMUX_TAG:-untagged}"
+log_tag="${HMUX_TAG:-untagged}"
 # Keep every invocation distinct. Focused suites run sequentially in one job,
 # and a shared "untagged" stem used to overwrite earlier retry evidence.
 # Python observes this shell as its parent and avoids relying on shell PID
 # syntax that can be rewritten while workflow text is generated.
 invocation_id="$(python3 -c 'import os; print(os.getppid())')"
-log_stem="${log_dir%/}/cmux-app-host-xcodebuild-${log_tag}-pid-${invocation_id}"
-max_attempts="${CMUX_APP_HOST_XCODEBUILD_ATTEMPTS:-3}"
-export CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS="${CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS:-${CMUX_XCODEBUILD_NONINTERACTIVE_TIMEOUT_SECONDS:-300}}"
+log_stem="${log_dir%/}/hmux-app-host-xcodebuild-${log_tag}-pid-${invocation_id}"
+max_attempts="${HMUX_APP_HOST_XCODEBUILD_ATTEMPTS:-3}"
+export HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS="${HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS:-${HMUX_XCODEBUILD_NONINTERACTIVE_TIMEOUT_SECONDS:-300}}"
 # A crashed app host is relaunched by xcodebuild, which then resumes the run.
 # Nothing bounds that loop, so cap the restarts one invocation may spend before
 # the wrapper aborts it (https://github.com/manaflow-ai/cmux/issues/13707).
-export CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET="${CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET:-2}"
+export HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET="${HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET:-2}"
 restart_budget_exit_code=123
 # A test runner that never connects used to cost xcodebuild's own ~700s per
 # attempt, three attempts in a row, before the job failed. Normal runs print
 # their first test line seconds after "Testing started", so bound that gap.
-export CMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS="${CMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS:-180}"
+export HMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS="${HMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS:-180}"
 startup_hang_exit_code=122
 startup_hangs=0
 # Reading a finished bundle takes seconds. Bound it so a bundle xcresulttool
 # cannot parse fails this batch with a reason instead of holding the shard.
-xcresulttool_timeout_seconds="${CMUX_APP_HOST_XCRESULTTOOL_TIMEOUT_SECONDS:-120}"
+xcresulttool_timeout_seconds="${HMUX_APP_HOST_XCRESULTTOOL_TIMEOUT_SECONDS:-120}"
 # The last XCTest or Swift Testing suite line in an attempt's log, without the
 # aggregate suites that wrap every run.
 last_suite_line() {
@@ -65,7 +65,7 @@ restart_testmanagerd() {
   launchctl kickstart -k "gui/$(id -u)/com.apple.testmanagerd" >&2 \
     || echo "warning: could not restart testmanagerd before retrying" >&2
 }
-echo "App-host xcodebuild idle timeout: ${CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS}s, startup timeout: ${CMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS}s, attempts: ${max_attempts}, restart budget: ${CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET}"
+echo "App-host xcodebuild idle timeout: ${HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS}s, startup timeout: ${HMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS}s, attempts: ${max_attempts}, restart budget: ${HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET}"
 
 # Principled serialization (the actual fix; the retry below is only a backstop).
 # Invariant: a GUI test host owns the Mac's single login session + testmanagerd
@@ -77,18 +77,18 @@ echo "App-host xcodebuild idle timeout: ${CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TI
 # script as its child and retains the lock for the child's whole lifetime.
 # Different machines use different local lock files, so cross-machine
 # parallelism is preserved.
-if [ -z "${CMUX_APP_HOST_TEST_LOCK_ACTIVE:-}" ]; then
+if [ -z "${HMUX_APP_HOST_TEST_LOCK_ACTIVE:-}" ]; then
   app_host_lock_root="$(cd /tmp 2>/dev/null && pwd -P)" || {
     echo "FAIL: canonical app-host lock root is unavailable" >&2
     exit 1
   }
-  if [ "${CMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" = "1" ]; then
-    lock_file="${CMUX_APP_HOST_TEST_LOCK_FILE:-${RUNNER_TEMP:-$app_host_lock_root}/cmux-app-host-test.lock}"
+  if [ "${HMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" = "1" ]; then
+    lock_file="${HMUX_APP_HOST_TEST_LOCK_FILE:-${RUNNER_TEMP:-$app_host_lock_root}/hmux-app-host-test.lock}"
   else
-    lock_file="${app_host_lock_root%/}/cmux-app-host-test.lock"
+    lock_file="${app_host_lock_root%/}/hmux-app-host-test.lock"
   fi
-  lock_wait_seconds="${CMUX_APP_HOST_TEST_LOCK_WAIT_SECONDS:-3600}"
-  export CMUX_APP_HOST_TEST_LOCK_ACTIVE=1
+  lock_wait_seconds="${HMUX_APP_HOST_TEST_LOCK_WAIT_SECONDS:-3600}"
+  export HMUX_APP_HOST_TEST_LOCK_ACTIVE=1
   exec python3 "$(dirname "$0")/app_host_test_lock.py" \
     "$lock_file" "$lock_wait_seconds" "$0" "$@"
 fi
@@ -98,7 +98,7 @@ fi
 # then pass it through Xcode's TEST_RUNNER_ environment channel. Xcode strips
 # that prefix when it launches the test runner, so the app host receives the
 # redirects without exposing them to the xcodebuild driver.
-app_host_test_runner_environment=("TEST_RUNNER_CMUX_TEST_PROCESS=1")
+app_host_test_runner_environment=("TEST_RUNNER_HMUX_TEST_PROCESS=1")
 # Xcode does not inherit the driver's full environment into the test host.
 # Preserve CI identity so existing CI-specific test deadlines actually apply.
 if [ -n "${CI:-}" ]; then
@@ -111,8 +111,8 @@ fi
 # runtime root. Xcode does not inherit the driver's environment, so forward
 # the path through the TEST_RUNNER_ channel when app-host tests are restored
 # from a canonical build product.
-if [ -n "${CMUX_CI_RUNTIME_SOURCE_ROOT:-}" ]; then
-  app_host_test_runner_environment+=("TEST_RUNNER_CMUX_CI_RUNTIME_SOURCE_ROOT=$CMUX_CI_RUNTIME_SOURCE_ROOT")
+if [ -n "${HMUX_CI_RUNTIME_SOURCE_ROOT:-}" ]; then
+  app_host_test_runner_environment+=("TEST_RUNNER_HMUX_CI_RUNTIME_SOURCE_ROOT=$HMUX_CI_RUNTIME_SOURCE_ROOT")
 fi
 # Focused app-host suites invoke Node/Bun-backed helpers from the test process.
 # Xcode does not inherit these driver variables, so carry them through the
@@ -126,30 +126,30 @@ fi
 # SwiftTestingAssertions.sourceURL() resolves source fixtures through this
 # root; without the prefix the test host never sees it and falls back to the
 # producer's #filePath, which a consumer runner does not have.
-if [ -n "${CMUX_CI_RUNTIME_SOURCE_ROOT:-}" ]; then
-  app_host_test_runner_environment+=("TEST_RUNNER_CMUX_CI_RUNTIME_SOURCE_ROOT=$CMUX_CI_RUNTIME_SOURCE_ROOT")
+if [ -n "${HMUX_CI_RUNTIME_SOURCE_ROOT:-}" ]; then
+  app_host_test_runner_environment+=("TEST_RUNNER_HMUX_CI_RUNTIME_SOURCE_ROOT=$HMUX_CI_RUNTIME_SOURCE_ROOT")
 fi
 # Focused opt-in suites (renderer memory regression, benchmarks) are gated on a
 # plain variable the driver receives. Xcode does not inherit it, so a caller that
 # exports the plain name would silently run nothing. Carry those through.
-for cmux_opt_in_gate in CMUX_RENDERER_MEMORY_REGRESSION; do
-  cmux_opt_in_value="${!cmux_opt_in_gate:-}"
-  if [ -n "$cmux_opt_in_value" ]; then
-    app_host_test_runner_environment+=("TEST_RUNNER_${cmux_opt_in_gate}=$cmux_opt_in_value")
+for hmux_opt_in_gate in HMUX_RENDERER_MEMORY_REGRESSION; do
+  hmux_opt_in_value="${!hmux_opt_in_gate:-}"
+  if [ -n "$hmux_opt_in_value" ]; then
+    app_host_test_runner_environment+=("TEST_RUNNER_${hmux_opt_in_gate}=$hmux_opt_in_value")
   fi
 done
 app_host_home=""
 app_host_key=""
 app_host_receipt_dir=""
-app_host_home_input="${CMUX_APP_HOST_HOME:-}"
-app_host_xdg_config_home_input="${CMUX_APP_HOST_XDG_CONFIG_HOME:-}"
-if [ "${CMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" = "1" ]; then
+app_host_home_input="${HMUX_APP_HOST_HOME:-}"
+app_host_xdg_config_home_input="${HMUX_APP_HOST_XDG_CONFIG_HOME:-}"
+if [ "${HMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" = "1" ]; then
   if [ -z "$app_host_home_input" ] \
     || [ -z "$app_host_xdg_config_home_input" ] \
-    || [ -z "${CMUX_APP_HOST_KEY:-}" ] \
-    || [ -z "${CMUX_APP_HOST_RECEIPT_DIR:-}" ] \
-    || [ -z "${CMUX_APP_HOST_CLEANUP_CONFIRMATION:-}" ] \
-    || [ -z "${CMUX_APP_HOST_CONFIRMATION_FILE:-}" ]; then
+    || [ -z "${HMUX_APP_HOST_KEY:-}" ] \
+    || [ -z "${HMUX_APP_HOST_RECEIPT_DIR:-}" ] \
+    || [ -z "${HMUX_APP_HOST_CLEANUP_CONFIRMATION:-}" ] \
+    || [ -z "${HMUX_APP_HOST_CONFIRMATION_FILE:-}" ]; then
     echo "FAIL: required app-host isolation environment is incomplete" >&2
     exit 1
   fi
@@ -160,21 +160,21 @@ if { [ -n "$app_host_home_input" ] && [ -z "$app_host_xdg_config_home_input" ]; 
   exit 1
 fi
 if [ -n "$app_host_home_input" ]; then
-  cmux_validate_published_app_host_identity || exit 1
-  app_host_home="$CMUX_RESOLVED_APP_HOST_HOME"
-  app_host_xdg_config_home="$CMUX_RESOLVED_APP_HOST_XDG_CONFIG_HOME"
-  app_host_key="$CMUX_RESOLVED_APP_HOST_KEY"
-  app_host_receipt_dir="$CMUX_RESOLVED_APP_HOST_RECEIPT_DIR"
+  hmux_validate_published_app_host_identity || exit 1
+  app_host_home="$HMUX_RESOLVED_APP_HOST_HOME"
+  app_host_xdg_config_home="$HMUX_RESOLVED_APP_HOST_XDG_CONFIG_HOME"
+  app_host_key="$HMUX_RESOLVED_APP_HOST_KEY"
+  app_host_receipt_dir="$HMUX_RESOLVED_APP_HOST_RECEIPT_DIR"
   app_host_test_runner_environment+=(
     "TEST_RUNNER_HOME=$app_host_home"
     "TEST_RUNNER_CFFIXED_USER_HOME=$app_host_home"
     "TEST_RUNNER_XDG_CONFIG_HOME=$app_host_xdg_config_home"
     "TEST_RUNNER_SSH_AUTH_SOCK="
-    "TEST_RUNNER_CMUX_APP_HOST_ISOLATION_REQUIRED=1"
-    "TEST_RUNNER_CMUX_APP_HOST_EXPECTED_HOME=$app_host_home"
-    "TEST_RUNNER_CMUX_APP_HOST_EXPECTED_XDG_CONFIG_HOME=$app_host_xdg_config_home"
-    "TEST_RUNNER_CMUX_APP_HOST_RECEIPT_DIR=$app_host_receipt_dir"
-    "TEST_RUNNER_CMUX_APP_HOST_KEY=$app_host_key"
+    "TEST_RUNNER_HMUX_APP_HOST_ISOLATION_REQUIRED=1"
+    "TEST_RUNNER_HMUX_APP_HOST_EXPECTED_HOME=$app_host_home"
+    "TEST_RUNNER_HMUX_APP_HOST_EXPECTED_XDG_CONFIG_HOME=$app_host_xdg_config_home"
+    "TEST_RUNNER_HMUX_APP_HOST_RECEIPT_DIR=$app_host_receipt_dir"
+    "TEST_RUNNER_HMUX_APP_HOST_KEY=$app_host_key"
   )
 fi
 
@@ -244,12 +244,12 @@ if [ "$caller_has_test_timeouts_enabled" -eq 0 ]; then
 fi
 if [ "$caller_has_default_test_timeout" -eq 0 ]; then
   app_host_xcodebuild_arguments+=(
-    "-default-test-execution-time-allowance" "${CMUX_APP_HOST_TEST_CASE_TIMEOUT_SECONDS:-300}"
+    "-default-test-execution-time-allowance" "${HMUX_APP_HOST_TEST_CASE_TIMEOUT_SECONDS:-300}"
   )
 fi
 if [ "$caller_has_maximum_test_timeout" -eq 0 ]; then
   app_host_xcodebuild_arguments+=(
-    "-maximum-test-execution-time-allowance" "${CMUX_APP_HOST_TEST_CASE_TIMEOUT_SECONDS:-300}"
+    "-maximum-test-execution-time-allowance" "${HMUX_APP_HOST_TEST_CASE_TIMEOUT_SECONDS:-300}"
   )
 fi
 
@@ -258,13 +258,13 @@ fi
 # host's rpath expects package frameworks there, so restage from the canonical
 # test-bundle copy immediately before every invocation. This keeps focused
 # gates and the sharded batches identical after any Xcode package operation.
-if [ -n "${CMUX_DERIVED_DATA_PATH:-}" ]; then
-  package_products_dir="$CMUX_DERIVED_DATA_PATH/Build/Products/Debug"
+if [ -n "${HMUX_DERIVED_DATA_PATH:-}" ]; then
+  package_products_dir="$HMUX_DERIVED_DATA_PATH/Build/Products/Debug"
   package_framework_destination="$package_products_dir/PackageFrameworks"
-  stable_framework_destination="${RUNNER_TEMP:-/tmp}/cmux-app-host-package-frameworks"
-  package_framework_source="$(find "$package_products_dir" -type d -name 'CmuxAgentJournal*_PackageProduct.framework' -print -quit 2>/dev/null || true)"
-  if [ -d "$stable_framework_destination" ] && find "$stable_framework_destination" -name 'CmuxAgentJournal*_PackageProduct.framework' -print -quit | grep -q .; then
-    package_framework_source="$(find "$stable_framework_destination" -type d -name 'CmuxAgentJournal*_PackageProduct.framework' -print -quit)"
+  stable_framework_destination="${RUNNER_TEMP:-/tmp}/hmux-app-host-package-frameworks"
+  package_framework_source="$(find "$package_products_dir" -type d -name 'HmuxAgentJournal*_PackageProduct.framework' -print -quit 2>/dev/null || true)"
+  if [ -d "$stable_framework_destination" ] && find "$stable_framework_destination" -name 'HmuxAgentJournal*_PackageProduct.framework' -print -quit | grep -q .; then
+    package_framework_source="$(find "$stable_framework_destination" -type d -name 'HmuxAgentJournal*_PackageProduct.framework' -print -quit)"
   fi
   if [ -n "$package_framework_source" ]; then
     if [ -L "$package_framework_destination" ]; then
@@ -276,39 +276,39 @@ if [ -n "${CMUX_DERIVED_DATA_PATH:-}" ]; then
     # an earlier account. Package-framework mtimes are not authoritative, so
     # avoid utimensat on those files turning staging into EPERM.
     rsync -aL --no-times "$package_framework_root/" "$package_framework_destination/"
-    test -f "$package_framework_destination/CmuxAgentJournal_27B6EF8727F6C277_PackageProduct.framework/Versions/A/CmuxAgentJournal_27B6EF8727F6C277_PackageProduct"
-    app_framework_destination="$package_products_dir/cmux DEV.app/Contents/Frameworks"
+    test -f "$package_framework_destination/HmuxAgentJournal_27B6EF8727F6C277_PackageProduct.framework/Versions/A/HmuxAgentJournal_27B6EF8727F6C277_PackageProduct"
+    app_framework_destination="$package_products_dir/hmux DEV.app/Contents/Frameworks"
     mkdir -p "$app_framework_destination"
     rsync -aL --no-times "$package_framework_root/" "$app_framework_destination/"
-    test -f "$app_framework_destination/CmuxAgentJournal_27B6EF8727F6C277_PackageProduct.framework/Versions/A/CmuxAgentJournal_27B6EF8727F6C277_PackageProduct"
+    test -f "$app_framework_destination/HmuxAgentJournal_27B6EF8727F6C277_PackageProduct.framework/Versions/A/HmuxAgentJournal_27B6EF8727F6C277_PackageProduct"
     mkdir -p "$stable_framework_destination"
     rsync -aL --no-times "$package_framework_root/" "$stable_framework_destination/"
     export DYLD_LIBRARY_PATH="$stable_framework_destination:$app_framework_destination${DYLD_LIBRARY_PATH:+:$DYLD_LIBRARY_PATH}"
-    test -f "$stable_framework_destination/CmuxAgentJournal_27B6EF8727F6C277_PackageProduct.framework/Versions/A/CmuxAgentJournal_27B6EF8727F6C277_PackageProduct"
+    test -f "$stable_framework_destination/HmuxAgentJournal_27B6EF8727F6C277_PackageProduct.framework/Versions/A/HmuxAgentJournal_27B6EF8727F6C277_PackageProduct"
     app_host_test_runner_environment+=(
       "TEST_RUNNER_DYLD_LIBRARY_PATH=$package_framework_destination:$app_framework_destination"
     )
   fi
 fi
 
-if [ "${CMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" = "1" ]; then
+if [ "${HMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" = "1" ]; then
   # This compiled condition reaches the test bundle through Xcode build
   # settings, independently of the TEST_RUNNER_ runtime environment channel.
   # The test therefore fails closed if Xcode ever drops that runtime handoff.
   app_host_xcodebuild_arguments+=(
-    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=\$(inherited) CMUX_CI_APP_HOST_ISOLATION_REQUIRED"
+    "SWIFT_ACTIVE_COMPILATION_CONDITIONS=\$(inherited) HMUX_CI_APP_HOST_ISOLATION_REQUIRED"
   )
 fi
 
 kill_stale_app_host() {
-  [ "${CMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" = "1" ] || return 0
-  cmux_validate_app_host_derived_data "$CMUX_DERIVED_DATA_PATH" || return 1
-  cmux_recover_owned_app_host_attempt \
+  [ "${HMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" = "1" ] || return 0
+  hmux_validate_app_host_derived_data "$HMUX_DERIVED_DATA_PATH" || return 1
+  hmux_recover_owned_app_host_attempt \
     "$app_host_receipt_dir" \
     "$app_host_key" \
-    "$CMUX_VALIDATED_APP_HOST_DERIVED_DATA" \
-    "$CMUX_RESOLVED_RUNNER_WORK_ROOT" \
-    "$CMUX_RESOLVED_SYSTEM_TEMP_ROOT"
+    "$HMUX_VALIDATED_APP_HOST_DERIVED_DATA" \
+    "$HMUX_RESOLVED_RUNNER_WORK_ROOT" \
+    "$HMUX_RESOLVED_SYSTEM_TEMP_ROOT"
 }
 
 validate_app_host_config_paths() {
@@ -328,7 +328,7 @@ validate_app_host_config_paths() {
   published_expected_config_path="${app_host_home_input%/}/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
   resolved_expected_config_path="${app_host_home%/}/Library/Application Support/com.mitchellh.ghostty/config.ghostty"
   local matches scan_status line reported_path
-  if matches="$(grep -E 'cmux DEV.*\[(config|default)\].*path=.*(Library/Application Support/com\.mitchellh\.ghostty/|/\.config/ghostty/)' "$log_path")"; then
+  if matches="$(grep -E 'hmux DEV.*\[(config|default)\].*path=.*(Library/Application Support/com\.mitchellh\.ghostty/|/\.config/ghostty/)' "$log_path")"; then
     scan_status=0
   else
     scan_status=$?
@@ -383,10 +383,10 @@ while [ "$attempt" -le "$max_attempts" ]; do
   : >"$log_path"
   attempt_xcodebuild_arguments=("${app_host_xcodebuild_arguments[@]}")
   result_bundle_path=""
-  result_bundle_root="${CMUX_APP_HOST_RESULT_BUNDLE_ROOT:-}"
+  result_bundle_root="${HMUX_APP_HOST_RESULT_BUNDLE_ROOT:-}"
   if [ -z "$result_bundle_root" ] \
-    && [ "${CMUX_APP_HOST_CAPTURE_XCRESULTS:-0}" = "1" ]; then
-    result_bundle_root="${RUNNER_TEMP:-/tmp}/cmux-app-host-xcresults"
+    && [ "${HMUX_APP_HOST_CAPTURE_XCRESULTS:-0}" = "1" ]; then
+    result_bundle_root="${RUNNER_TEMP:-/tmp}/hmux-app-host-xcresults"
   fi
   if [ -n "$result_bundle_root" ] \
     && [ "$caller_has_result_bundle" -eq 0 ]; then
@@ -419,7 +419,7 @@ while [ "$attempt" -le "$max_attempts" ]; do
     fi
   fi
   {
-    echo "shard=${CMUX_APP_HOST_SHARD:-unknown}"
+    echo "shard=${HMUX_APP_HOST_SHARD:-unknown}"
     echo "tag=$log_tag"
     echo "attempt=$attempt"
     [ -z "$result_bundle_path" ] || echo "result_bundle=$result_bundle_path"
@@ -432,7 +432,7 @@ while [ "$attempt" -le "$max_attempts" ]; do
   set +e
   env \
     "${app_host_test_runner_environment[@]}" \
-    CMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH="$log_path" \
+    HMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH="$log_path" \
     scripts/ci/xcodebuild_noninteractive.py xcodebuild \
       "${attempt_xcodebuild_arguments[@]}"
   status=$?
@@ -480,12 +480,12 @@ while [ "$attempt" -le "$max_attempts" ]; do
     exit 1
   fi
 
-  if grep -Fq 'path = "/tmp/cmux-debug.sock"' "$log_path"; then
+  if grep -Fq 'path = "/tmp/hmux-debug.sock"' "$log_path"; then
     echo "FAIL: app-host used default debug socket instead of an XCTest-scoped socket" >&2
     exit 1
   fi
 
-  if grep -Fq 'SocketControlServer: Listening on /tmp/cmux-debug.sock' "$log_path"; then
+  if grep -Fq 'SocketControlServer: Listening on /tmp/hmux-debug.sock' "$log_path"; then
     echo "FAIL: app-host listener used default debug socket instead of an XCTest-scoped socket" >&2
     exit 1
   fi
@@ -500,10 +500,10 @@ while [ "$attempt" -le "$max_attempts" ]; do
     retry_reason=""
     startup_hang=0
     if [ "$status" -eq "$startup_hang_exit_code" ]; then
-      retry_reason="XCTest startup hang (no test within ${CMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS}s)"
+      retry_reason="XCTest startup hang (no test within ${HMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS}s)"
       startup_hang=1
     elif [ "$status" -eq 124 ]; then
-      retry_reason="${CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS}s idle timeout"
+      retry_reason="${HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS}s idle timeout"
     elif grep -Fq 'The test runner hung before establishing connection.' "$log_path"; then
       retry_reason="XCTest startup hang"
       startup_hang=1
@@ -561,7 +561,7 @@ while [ "$attempt" -le "$max_attempts" ]; do
         while IFS= read -r -d '' app_stdout; do
           if [ ! -r "$app_stdout" ]; then
             invalid_listener_evidence=1
-          elif grep -Eq 'SocketControlServer: Listening on /tmp/cmux-debug\.sock|path = "/tmp/cmux-debug\.sock"' "$app_stdout"; then
+          elif grep -Eq 'SocketControlServer: Listening on /tmp/hmux-debug\.sock|path = "/tmp/hmux-debug\.sock"' "$app_stdout"; then
             echo "FAIL: xcresult app listener used default debug socket instead of an XCTest-scoped socket" >&2
             invalid_listener_evidence=1
           elif grep -Eq 'SocketControlServer: Listening on |message = "socket.listener.start"' "$app_stdout"; then
@@ -569,8 +569,8 @@ while [ "$attempt" -le "$max_attempts" ]; do
             echo "Socket readiness confirmed in xcresult app stdout: $evidence_result_bundle / ${app_stdout#"$diagnostics_dir"/}"
           fi
         done < <(find "$diagnostics_dir" -type f \( \
-          -name 'StandardOutputAndStandardError-com.cmuxterm.app.debug.txt' -o \
-          -name 'StandardOutputAndStandardError-com.cmuxterm.app.txt' \) -print0)
+          -name 'StandardOutputAndStandardError-com.hmuxterm.app.debug.txt' -o \
+          -name 'StandardOutputAndStandardError-com.hmuxterm.app.txt' \) -print0)
       else
         echo "Could not export xcresult app diagnostics; see $diagnostics_log" >&2
       fi

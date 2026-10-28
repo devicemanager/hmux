@@ -12,7 +12,7 @@ import {
 } from "../services/billing/apple/verifier";
 import { createAppleTestSigner } from "./helpers/apple-signing";
 
-const env = { APPLE_IAP_BUNDLE_IDS: "com.cmux.app,dev.cmux.app.beta", APPLE_IAP_APP_APPLE_ID: "6783338052" };
+const env = { APPLE_IAP_BUNDLE_IDS: "com.hmux.app,dev.hmux.app.beta", APPLE_IAP_APP_APPLE_ID: "6783338052" };
 const signer = createAppleTestSigner();
 const verifier = createAppleSignedDataVerifier({ rootCertificates: [signer.rootCertificate], onlineChecks: false, env });
 
@@ -20,8 +20,8 @@ function transaction(overrides: Record<string, unknown> = {}) {
   return {
     transactionId: "2000000000000001",
     originalTransactionId: "2000000000000001",
-    bundleId: "com.cmux.app",
-    productId: "com.cmux.app.pro.monthly",
+    bundleId: "com.hmux.app",
+    productId: "com.hmux.app.pro.monthly",
     type: "Auto-Renewable Subscription",
     environment: "Sandbox",
     purchaseDate: Date.UTC(2026, 9, 1),
@@ -57,7 +57,7 @@ describe("Apple root certificates", () => {
 describe("Apple signed data verification", () => {
   test("verifies and decodes a transaction signed by the trusted chain", async () => {
     const decoded = await verifier.verifyTransaction(signer.sign(transaction()));
-    expect(decoded.productId).toBe("com.cmux.app.pro.monthly");
+    expect(decoded.productId).toBe("com.hmux.app.pro.monthly");
     expect(decoded.environment).toBe("Sandbox");
   });
 
@@ -73,7 +73,7 @@ describe("Apple signed data verification", () => {
 
   test("rejects a tampered payload", async () => {
     const [header, , signature] = signer.sign(transaction()).split(".");
-    const forgedBody = Buffer.from(JSON.stringify(transaction({ productId: "com.cmux.app.max.monthly" }))).toString("base64url");
+    const forgedBody = Buffer.from(JSON.stringify(transaction({ productId: "com.hmux.app.max.monthly" }))).toString("base64url");
     expect(await rejection(verifier.verifyTransaction(`${header}.${forgedBody}.${signature}`))).toBe("invalid_signature");
   });
 
@@ -98,7 +98,7 @@ describe("Apple signed data verification", () => {
       notificationUUID: "4f6c9f3e-7d43-4b5a-9a0e-2a7e9c1d0001",
       version: "2.0",
       signedDate: Date.UTC(2026, 9, 2),
-      data: { bundleId: "com.cmux.app", environment: "Production", appAppleId: 6783338052, status: 1 },
+      data: { bundleId: "com.hmux.app", environment: "Production", appAppleId: 6783338052, status: 1 },
     };
     const decoded = await verifier.verifyNotification(signer.sign(payload));
     expect(decoded.notificationType).toBe("DID_RENEW");
@@ -108,9 +108,9 @@ describe("Apple signed data verification", () => {
 
   test("verifies renewal info only for the requested scope", async () => {
     const renewal = { originalTransactionId: "1", environment: "Sandbox", autoRenewStatus: 1, signedDate: Date.UTC(2026, 9, 1) };
-    const decoded = await verifier.verifyRenewalInfo(signer.sign(renewal), { environment: "Sandbox", bundleId: "com.cmux.app" });
+    const decoded = await verifier.verifyRenewalInfo(signer.sign(renewal), { environment: "Sandbox", bundleId: "com.hmux.app" });
     expect(decoded.autoRenewStatus).toBe(1);
-    expect(await rejection(verifier.verifyRenewalInfo(signer.sign(renewal), { environment: "Production", bundleId: "com.cmux.app" })))
+    expect(await rejection(verifier.verifyRenewalInfo(signer.sign(renewal), { environment: "Production", bundleId: "com.hmux.app" })))
       .toBe("invalid_signature");
   });
 });

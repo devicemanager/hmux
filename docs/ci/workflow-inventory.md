@@ -32,7 +32,7 @@ The required checks on `main` (ruleset "main: block force-push or delete") are `
 
 **c. Duplicates and overlaps**
 
-- `ios-testflight.yml` (every 20 minutes, CMUX INTERNAL) and `ios-appstore-upload.yml` (hourly, cmux.app) both run scheduled TestFlight uploads. About half of each one's runs fail (251 of 507 and 79 of 161). Together they use about 250 runner-hours a week.
+- `ios-testflight.yml` (every 20 minutes, HMUX INTERNAL) and `ios-appstore-upload.yml` (hourly, hmux.app) both run scheduled TestFlight uploads. About half of each one's runs fail (251 of 507 and 79 of 161). Together they use about 250 runner-hours a week.
 - `testbox-broker-guard.yml` used to run on every PR and every push to main (6,275 runs) because its header said "The main CI suite is dispatch-only right now". Its checks now run in the routed `ci-guards.yml` group; the standalone workflow is dispatch-only for diagnostics.
 - `web-complexity-trusted.yml` and `cla-policy-guard.yml` together ran about 27,000 times. That is roughly 3x the PR events, because `pull_request_target` also fires on `edited`. Do not drop `edited` blindly: it also carries base-branch changes.
 - `web-complexity.yml` and `web-complexity-trusted.yml` are an intentional pair: an untrusted diagnostic plus the trusted required check. Not a duplicate.
@@ -51,9 +51,9 @@ Sorted by estimated runner minutes. Trigger abbreviations: pr = pull_request, pr
 | `nightly.yml` | push schedule dispatch | blacksmith/warp/macos | 489 | 150 / 39 / 0 / 300 | 14,637 | 2026-09-22 | lawrencecchen (direct push)  | Lawrence Chen 2026-09-21 | 7 wf refs; 23 docs/tests |  |
 | `ios-testflight.yml` | schedule dispatch | blacksmith/warp/macos | 507 | 231 / 251 / 0 / 25 | 13,771 | 2026-09-22 | lawrencecchen #5448 | Abdulaziz Albahar 2026-09-21 | 11 docs/tests | **c** overlaps ios-appstore-upload; 50% fail |
 | `cli-pipe-regressions.yml` | call dispatch | warp/macos | 2,432 | 1,500 / 228 / 0 / 588 | 7,710 | 2026-09-22 | austinywang #12503 | Leo 2026-09-22 | REQUIRED: ci-status (reusable); called by ci; 3 docs/tests | removed: its CLI tests run in compile admission's CLI smoke step |
-| `cmux-tui-sdks.yml` | push pr dispatch (paths) | blacksmith | 453 | 235 / 82 / 0 / 132 | 7,271 | 2026-09-22 | lawrencecchen #9215 | Lawrence Chen 2026-09-16 | 1 docs/tests |  |
+| `hmux-tui-sdks.yml` | push pr dispatch (paths) | blacksmith | 453 | 235 / 82 / 0 / 132 | 7,271 | 2026-09-22 | lawrencecchen #9215 | Lawrence Chen 2026-09-16 | 1 docs/tests |  |
 | `test-e2e.yml` | dispatch | blacksmith/warp/macos | 959 | 270 / 531 / 0 / 158 | 6,730 | 2026-09-22 | lawrencecchen #778 | Leo 2026-09-21 | 6 docs/tests | 55% fail |
-| `cmux-tui.yml` | dispatch | blacksmith/macos/gh-ubuntu | 114 | 37 / 47 / 0 / 30 | 5,696 | 2026-09-22 | lawrencecchen #7710 | Austin Wang 2026-09-12 | 1 wf refs; 5 docs/tests |  |
+| `hmux-tui.yml` | dispatch | blacksmith/macos/gh-ubuntu | 114 | 37 / 47 / 0 / 30 | 5,696 | 2026-09-22 | lawrencecchen #7710 | Austin Wang 2026-09-12 | 1 wf refs; 5 docs/tests |  |
 | `test-macos-suite.yml` | call dispatch | blacksmith/warp/macos | 348 | 93 / 213 / 0 / 42 | 5,335 | 2026-09-22 | lawrencecchen #710 | Leo 2026-09-21 | 2 docs/tests | renamed from test-depot.yml; 61% fail, mostly single-test dispatches that belong on run-e2e.sh |
 | `reload-build.yml` | dispatch | blacksmith/macos | 276 | 107 / 71 / 0 / 98 | 4,689 | 2026-09-22 | lawrencecchen #6354 | Leo 2026-09-21 | 1 wf refs; 3 docs/tests |  |
 | `cla-policy-guard.yml` | pr_target | gh-ubuntu | 13,584 | 12,311 / 1,272 / 0 / 1 | 2,445 | 2026-09-22 | lawrence703 #11387 | Lawrence Chen 2026-09-02 | REQUIRED: CLA policy guard; 2 docs/tests |  |
@@ -61,10 +61,10 @@ Sorted by estimated runner minutes. Trigger abbreviations: pr = pull_request, pr
 | `test-ios.yml` | pr merge_group dispatch (paths) | blacksmith/warp/macos | 163 | 14 / 124 / 0 / 25 | 2,086 | 2026-09-22 | lawrencecchen #5079 | Leo 2026-09-21 | 3 docs/tests | 76% fail |
 | `testbox-broker-guard.yml` | dispatch | blacksmith | 6,275 (historical) | 5,549 / 92 / 0 / 430 (historical) | 1,877 (historical) | 2026-09-22 | lawrencecchen #10305 | Leo 2026-09-30 | 1 docs/tests | checks moved into routed `ci-guards.yml`; dispatch-only diagnostics |
 | `web-complexity.yml` | pr push (paths) | blacksmith | 5,889 | 4,753 / 135 / 0 / 798 | 1,578 | 2026-09-22 | lawrencecchen #11944 | Leo 2026-09-22 | 2 wf refs; 4 docs/tests |  |
-| `cmux-tui-artifacts.yml` | push dispatch (paths) | blacksmith/warp/macos | 41 | 30 / 4 / 0 / 7 | 1,555 | 2026-09-22 | lawrencecchen #7710 | Austin Wang 2026-09-19 | 3 wf refs; 7 docs/tests |  |
+| `hmux-tui-artifacts.yml` | push dispatch (paths) | blacksmith/warp/macos | 41 | 30 / 4 / 0 / 7 | 1,555 | 2026-09-22 | lawrencecchen #7710 | Austin Wang 2026-09-19 | 3 wf refs; 7 docs/tests |  |
 | `ios-appstore-upload.yml` | schedule dispatch | blacksmith/warp/macos | 161 | 76 / 79 / 1 / 5 | 1,248 | 2026-09-22 | lawrencecchen #6697 | Abdulaziz Albahar 2026-09-21 | 1 docs/tests | **c** overlaps ios-testflight; 49% fail |
 | `cla.yml` | issue_comment pr_target | blacksmith | 10,784 | 6,109 / 669 / 3,905 / 101 | 1,066 | 2026-09-22 | lawrencecchen #11244 | Lawrence Chen 2026-09-02 | REQUIRED: CLA Assistant; 1 wf refs; 1 docs/tests | b 3,905 skipped (issue_comment); required, keep |
-| `cmux-tui-testbox-warmup.yml` | dispatch | blacksmith | 50 | 7 / 0 / 0 / 42 | 1,057 | 2026-09-21 | lawrencecchen #10303 | Lawrence Chen 2026-08-17 | 1 wf refs; 3 docs/tests |  |
+| `hmux-tui-testbox-warmup.yml` | dispatch | blacksmith | 50 | 7 / 0 / 0 / 42 | 1,057 | 2026-09-21 | lawrencecchen #10303 | Lawrence Chen 2026-08-17 | 1 wf refs; 3 docs/tests |  |
 | `terminal-hang-diagnostics.yml` | pr dispatch (paths) | blacksmith/warp/macos | 291 | 212 / 6 / 0 / 71 | 895 | 2026-09-22 | austinywang #12725 | austinpower1258 2026-09-20 | none |  |
 | `web-validation.yml` | pr merge_group push dispatch | blacksmith | 6,043 | 4,523 / 330 / 0 / 994 | 726 | 2026-09-22 | lawrencecchen #12711 | Leo 2026-09-21 | REQUIRED: web-validation; 3 docs/tests |  |
 | `docs-channels.yml` | push (paths) | blacksmith | 72 | 72 / 0 / 0 / 0 | 716 | 2026-09-22 | lawrencecchen #7871 | Lawrence Chen 2026-07-15 | none |  |
@@ -74,10 +74,10 @@ Sorted by estimated runner minutes. Trigger abbreviations: pr = pull_request, pr
 | `release.yml` | push dispatch | blacksmith/warp/macos | 2 | 0 / 2 / 0 / 0 | 310 | 2026-08-03 | lawrencecchen (direct push)  | Leo 2026-09-20 | 7 wf refs; 19 docs/tests | 2 runs, both failed; last success 08-03 |
 | `auth-refresh-tests.yml` | pr dispatch (paths) | blacksmith/warp/macos | 137 | 95 / 9 / 0 / 33 | 305 | 2026-09-22 | austinywang #12628 | Austin Wang 2026-09-20 | none |  |
 | `ci-artifact-transport.yml` | pr push (paths) | blacksmith | 692 | 470 / 22 / 0 / 200 | 297 | 2026-09-22 | teamleaderleo #13268 | Leo 2026-09-21 | 1 docs/tests |  |
-| `cmux-tui-spec.yml` | push pr dispatch (paths) | blacksmith | 423 | 380 / 28 / 0 / 11 | 252 | 2026-09-22 | lawrencecchen #9215 | Lawrence Chen 2026-09-01 | 1 wf refs; 1 docs/tests |  |
+| `hmux-tui-spec.yml` | push pr dispatch (paths) | blacksmith | 423 | 380 / 28 / 0 / 11 | 252 | 2026-09-22 | lawrencecchen #9215 | Lawrence Chen 2026-09-01 | 1 wf refs; 1 docs/tests |  |
 | `ci-cache-receipts.yml` | pr push (paths) | blacksmith | 718 | 681 / 37 / 0 / 0 | 214 | 2026-09-22 | teamleaderleo #13272 | Leo 2026-09-21 | 1 docs/tests |  |
 | `localization-catalog.yml` | pr push dispatch (paths) | blacksmith | 647 | 589 / 28 / 0 / 0 | 144 | 2026-09-22 | lawrencecchen #12906 | Lawrence Chen 2026-09-17 | none |  |
-| `cmux-tui-release.yml` | dispatch push | blacksmith/warp/macos/gh-ubuntu | 4 | 3 / 0 / 0 / 1 | 128 | 2026-09-17 | lawrencecchen #7710 | Lawrence Chen 2026-09-16 | 4 wf refs; 2 docs/tests |  |
+| `hmux-tui-release.yml` | dispatch push | blacksmith/warp/macos/gh-ubuntu | 4 | 3 / 0 / 0 / 1 | 128 | 2026-09-17 | lawrencecchen #7710 | Lawrence Chen 2026-09-16 | 4 wf refs; 2 docs/tests |  |
 | `indexnow.yml` | deployment_status dispatch | blacksmith | 1,199 | 307 / 88 / 804 / 0 | 97 | 2026-09-22 | lawrencecchen #8339 | Lawrence Chen 2026-09-17 | 1 wf refs; 1 docs/tests | **b** 804/1,199 skipped (every deployment_status) |
 | `cloud-vm-image-contract.yml` | pr push dispatch (paths) | blacksmith | 199 | 137 / 62 / 0 / 0 | 93 | 2026-09-22 | lawrencecchen #11984 | Austin Wang 2026-09-10 | none |  |
 | `cloud-command-deadlines.yml` | pr dispatch (paths) | blacksmith/warp/macos | 64 | 46 / 13 / 0 / 5 | 92 | 2026-09-21 | austinywang #12631 | Austin Wang 2026-09-19 | none |  |
@@ -87,19 +87,19 @@ Sorted by estimated runner minutes. Trigger abbreviations: pr = pull_request, pr
 | `iroh-release-gate.yml` | dispatch | blacksmith/warp/macos | 2 | 0 / 2 / 0 / 0 | 60 | 2026-08-14 | azooz2003-bit #8484 | Leo 2026-09-21 | 1 docs/tests | 2 runs, both failed; last success 08-14 |
 | `r2-upload-tests.yml` | pr dispatch (paths) | blacksmith | 154 | 153 / 1 / 0 / 0 | 42 | 2026-09-22 | austinywang #12281 | Lawrence Chen 2026-09-17 | none |  |
 | `ios-screenshots.yml` | call dispatch | blacksmith/macos | 3 | 1 / 2 / 0 / 0 | 41 | 2026-09-17 | lawrencecchen #6697 | Leo 2026-09-21 | called by release; 4 docs/tests |  |
-| `cmux-skill-contract.yml` | pr push (paths) | blacksmith | 131 | 89 / 9 / 0 / 26 | 28 | 2026-09-22 | austinywang #11088 | Leo 2026-09-20 | none |  |
+| `hmux-skill-contract.yml` | pr push (paths) | blacksmith | 131 | 89 / 9 / 0 / 26 | 28 | 2026-09-22 | austinywang #11088 | Leo 2026-09-20 | none |  |
 | `cloud-task-local-tests.yml` | pr dispatch (paths) | blacksmith/macos | 59 | 49 / 0 / 0 / 10 | 26 | 2026-09-22 | austinywang #13200 | Austin Wang 2026-09-20 | none |  |
 | `cloud-vm-env-audit.yml` | schedule push dispatch (paths) | blacksmith | 31 | 31 / 0 / 0 / 0 | 11 | 2026-09-22 | lawrencecchen #10960 | Benjamin Swerdlow 2026-09-01 | none |  |
 | `perf-activation.yml` | dispatch | blacksmith/macos | 1 | 1 / 0 / 0 / 0 | 10 | 2026-09-17 | lawrencecchen #3207 | Leo 2026-09-21 | 4 docs/tests |  |
 | `tui-publish-npm.yml` | dispatch | blacksmith | 2 | 2 / 0 / 0 / 0 | 8 | 2026-09-17 | lawrencecchen #7651 | Lawrence Chen 2026-09-16 | 3 wf refs; 5 docs/tests |  |
-| `cmux-tui-release-delivery.yml` | dispatch wf_run schedule | blacksmith | 28 | 28 / 0 / 0 / 0 | 7 | 2026-09-22 | lawrencecchen #12763 | Leo 2026-09-19 | 1 wf refs; 1 docs/tests |  |
+| `hmux-tui-release-delivery.yml` | dispatch wf_run schedule | blacksmith | 28 | 28 / 0 / 0 / 0 | 7 | 2026-09-22 | lawrencecchen #12763 | Leo 2026-09-19 | 1 wf refs; 1 docs/tests |  |
 | `plain-paste-worker.yml` | pr dispatch (paths) | warp/macos | 10 | 8 / 2 / 0 / 0 | 6 | 2026-09-20 | austinywang #13110 | Austin Wang 2026-09-19 | none |  |
 | `tui-publish-pypi.yml` | dispatch | blacksmith | 2 | 2 / 0 / 0 / 0 | 6 | 2026-09-17 | lawrencecchen #7651 | Lawrence Chen 2026-09-02 | 2 wf refs; 4 docs/tests |  |
-| `cmux-cloud-cli.yml` | pr push dispatch (paths) | blacksmith | 11 | 11 / 0 / 0 / 0 | 5 | 2026-09-21 | lawrencecchen #13100 | Lawrence Chen 2026-09-20 | none |  |
+| `hmux-cloud-cli.yml` | pr push dispatch (paths) | blacksmith | 11 | 11 / 0 / 0 / 0 | 5 | 2026-09-21 | lawrencecchen #13100 | Lawrence Chen 2026-09-20 | none |  |
 | `cloud-vm-migrate.yml` | dispatch | blacksmith | 6 | 4 / 2 / 0 / 0 | 4 | 2026-09-21 | lawrencecchen #3196 | Lawrence Chen 2026-09-16 | 2 docs/tests |  |
 | `merge-group-policy-checks.yml` | merge_group | gh-ubuntu | 34 | 34 / 0 / 0 / 0 | 3 | 2026-09-20 | teamleaderleo #13113 | Leo 2026-09-19 | REQUIRED: CLA checks in merge queue; 2 docs/tests | dormant, merge queue off since 09-20; keep (required checks) |
 | `ios-app-store.yml` | dispatch | blacksmith/macos | 1 | 0 / 1 / 0 / 0 | 3 | 2026-09-08 | azooz2003-bit #7644 | Abdulaziz Albahar 2026-09-18 | 1 docs/tests |  |
-| `cmux-tui-release-cut.yml` | dispatch | blacksmith | 1 | 0 / 1 / 0 / 0 | 2 | 2026-08-26 | lawrencecchen #7710 | lawrencecchen 2026-08-25 | 1 wf refs; 2 docs/tests |  |
+| `hmux-tui-release-cut.yml` | dispatch | blacksmith | 1 | 0 / 1 / 0 / 0 | 2 | 2026-08-26 | lawrencecchen #7710 | lawrencecchen 2026-08-25 | 1 wf refs; 2 docs/tests |  |
 | `repair-nightly-appcast-content-types.yml` | pr dispatch (paths) | blacksmith | 3 | 3 / 0 / 0 / 0 | 2 | 2026-09-17 | austinywang #12281 | Austin Wang 2026-09-10 | none |  |
 | `vercel-auth-health.yml` | dispatch schedule | blacksmith | 8 | 8 / 0 / 0 / 0 | 1 | 2026-09-22 | lawrencecchen #8347 | Lawrence Chen 2026-07-17 | 1 docs/tests |  |
 | `ci-artifact-canary.yml` | dispatch | blacksmith | 1 | 0 / 1 / 0 / 0 | 1 | never | teamleaderleo #13268 | Leo Li 2026-09-20 | 1 wf refs; 1 docs/tests | **a** canary, 1 run, never succeeded |
@@ -112,15 +112,15 @@ Sorted by estimated runner minutes. Trigger abbreviations: pr = pull_request, pr
 | `presence.yml` | dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-09-10 | lawrencecchen #5792 | Abdulaziz Albahar 2026-07-29 | 3 docs/tests |  |
 | `claude.yml` | issue_comment pr_review_comment issues pr_review | blacksmith | 10,239 | 7 / 40 / 9,780 / 0 | 0 | 2026-09-21 | lawrencecchen #965 | Lawrence Chen 2026-09-02 | none | **b** 9,780/10,239 skipped |
 | `tmux-corpus.yml` | dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-07-14 | lawrencecchen #4323 | Leo 2026-09-20 | 2 docs/tests | **dead**: disabled_manually, manual-only since 07-13 |
-| `cmux-browser.yml` | pr push (paths) | gh-ubuntu | 0 | 0 / 0 / 0 / 0 | 0 | 2026-08-27 | lawrencecchen #8717 | Lawrence Chen 2026-07-23 | none |  |
-| `sdk-publish-go.yml` | call dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-07-08 | lawrencecchen #7601 | Lawrence Chen 2026-08-03 | called by cmux-tui-sdks, sdk-release-cut; 1 docs/tests |  |
+| `hmux-browser.yml` | pr push (paths) | gh-ubuntu | 0 | 0 / 0 / 0 / 0 | 0 | 2026-08-27 | lawrencecchen #8717 | Lawrence Chen 2026-07-23 | none |  |
+| `sdk-publish-go.yml` | call dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-07-08 | lawrencecchen #7601 | Lawrence Chen 2026-08-03 | called by hmux-tui-sdks, sdk-release-cut; 1 docs/tests |  |
 | `cloud-vm-smoke.yml` | dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-07-11 | lawrencecchen #3196 | Benjamin Swerdlow 2026-09-02 | none | stale: last success 07-11 |
 | `relay-publish-npm.yml` | push | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-08-27 | lawrencecchen #10725 | lawrencecchen 2026-08-25 | 3 wf refs; 2 docs/tests |  |
 | `ci-web.yml` | call | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | teamleaderleo #13382 | Leo 2026-09-21 | REQUIRED: ci-status (reusable); called by ci; 5 docs/tests |  |
 | `sdk-bootstrap-npm.yml` | repo_dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | lawrencecchen #9376 | Lawrence Chen 2026-08-06 | 2 wf refs; 5 docs/tests |  |
 | `sdk-bootstrap-crates.yml` | repo_dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-08-17 | lawrencecchen #9376 | Lawrence Chen 2026-08-05 | 1 wf refs; 2 docs/tests |  |
 | `sdk-release-cut.yml` | repo_dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | lawrencecchen #9376 | Lawrence Chen 2026-08-03 | 2 wf refs; 4 docs/tests |  |
-| `sdk-publish-python.yml` | call dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-07-28 | lawrencecchen #7601 | Lawrence Chen 2026-08-03 | called by cmux-tui-sdks, sdk-release-cut; 1 docs/tests |  |
+| `sdk-publish-python.yml` | call dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-07-28 | lawrencecchen #7601 | Lawrence Chen 2026-08-03 | called by hmux-tui-sdks, sdk-release-cut; 1 docs/tests |  |
 | `persistent-macos-compile.yml` | dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | teamleaderleo #13383 | Leo 2026-09-21 | 5 docs/tests | **a** pilot producer, never ran; removed |
 | `ci-macos-compat.yml` | dispatch | dynamic:${{ matrix.o | 0 | 0 / 0 / 0 / 0 | 0 | 2026-08-13 | lawrencecchen #769 | Leo 2026-09-20 | 1 docs/tests | stale: last success 08-13; actionlint label error |
 | `persistent-macos-router.yml` | wf_run | blacksmith | 6,927 | 0 / 0 / 6,887 / 39 | 0 | never | teamleaderleo #13383 | Leo 2026-09-21 | 1 wf refs; 4 docs/tests | **b** 6,887/6,927 skipped, 0 success (pilot var unset); removed |
@@ -128,8 +128,8 @@ Sorted by estimated runner minutes. Trigger abbreviations: pr = pull_request, pr
 | `ci-guards.yml` | call | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | teamleaderleo #13378 | Leo 2026-09-21 | REQUIRED: ci-status (reusable); called by ci; 15 docs/tests |  |
 | `docs-deploy-reusable.yml` | call | dynamic:${{ vars.LIN | 0 | 0 / 0 / 0 / 0 | 0 | never | lawrencecchen #7871 | Lawrence Chen 2026-07-17 | called by docs-channels; 1 docs/tests |  |
 | `iroh-relay-minter.yml` | dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-07-15 | azooz2003-bit #7908 | Lawrence Chen 2026-08-25 | none |  |
-| `sdk-publish-crates.yml` | call dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | lawrencecchen #7601 | Lawrence Chen 2026-08-03 | called by cmux-tui-sdks, sdk-release-cut; 1 docs/tests |  |
+| `sdk-publish-crates.yml` | call dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | lawrencecchen #7601 | Lawrence Chen 2026-08-03 | called by hmux-tui-sdks, sdk-release-cut; 1 docs/tests |  |
 | `merge-group-fail-fast.yml` | wf_run | gh-ubuntu | 11,427 | 23 / 2 / 11,324 / 78 | 0 | 2026-09-20 | teamleaderleo #13117 | Leo 2026-09-21 | 1 docs/tests | b (fixed by #13476); dormant, merge queue off since 09-20 |
-| `cmux-tui-build-package.yml` | call | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | lawrencecchen #7710 | Lawrence Chen 2026-09-16 | called by cmux-tui-artifacts, cmux-tui-release; 7 docs/tests |  |
+| `hmux-tui-build-package.yml` | call | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | lawrencecchen #7710 | Lawrence Chen 2026-09-16 | called by hmux-tui-artifacts, hmux-tui-release; 7 docs/tests |  |
 | `resolve-dispatch-ref.yml` | call | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | never | teamleaderleo #13616 | Leo 2026-09-21 | called by cloud-machine-tests, ios-screenshots, iroh-release-gate; 2 docs/tests |  |
-| `sdk-publish-npm.yml` | call dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-08-27 | lawrencecchen #7601 | Lawrence Chen 2026-08-03 | called by cmux-tui-sdks, sdk-release-cut; 1 docs/tests |  |
+| `sdk-publish-npm.yml` | call dispatch | blacksmith | 0 | 0 / 0 / 0 / 0 | 0 | 2026-08-27 | lawrencecchen #7601 | Lawrence Chen 2026-08-03 | called by hmux-tui-sdks, sdk-release-cut; 1 docs/tests |  |

@@ -1,8 +1,8 @@
-// cmux Cloud remote MCP server (prototype), streamable HTTP transport in its
+// hmux Cloud remote MCP server (prototype), streamable HTTP transport in its
 // stateless JSON form: each POST carries one JSON-RPC message (or a batch) and
 // gets a JSON reply. There is no server-to-client stream, so GET answers 405.
 //
-// Auth is the same as `/api/vm`: the Stack bearer pair the cmux app sends, or a
+// Auth is the same as `/api/vm`: the Stack bearer pair the hmux app sends, or a
 // same-origin session cookie. OAuth for ChatGPT and Claude connectors is not
 // wired yet; see #16567 for the plan.
 
@@ -32,7 +32,7 @@ const MAX_BODY_BYTES = 256 * 1024;
 function withBearerChallenge(response: Response): Response {
   if (response.status !== 401) return response;
   const headers = new Headers(response.headers);
-  headers.set("www-authenticate", 'Bearer realm="cmux"');
+  headers.set("www-authenticate", 'Bearer realm="hmux"');
   return new Response(response.body, { status: 401, headers });
 }
 
@@ -58,7 +58,7 @@ export async function POST(request: Request): Promise<Response> {
   const response = await withAuthedVmApiRoute(
     request,
     MCP_ROUTE,
-    { "cmux.vm.operation": "mcp" },
+    { "hmux.vm.operation": "mcp" },
     `${MCP_ROUTE} POST failed`,
     async ({ user, span }) => {
       const declaredLength = Number(request.headers.get("content-length") ?? 0);
@@ -90,7 +90,7 @@ export async function POST(request: Request): Promise<Response> {
         vmModelPlaneRevoker(),
       );
       const method = body && typeof body === "object" && "method" in body ? String(body.method) : Array.isArray(body) ? "batch" : "";
-      setSpanAttributes(span, { "cmux.mcp.method": method.slice(0, 64) });
+      setSpanAttributes(span, { "hmux.mcp.method": method.slice(0, 64) });
       const reply = await handleCloudMcpBody(gateway, body, (error) => {
         recordSpanError(span, error);
         console.error(`${MCP_ROUTE} tool call failed`, error);

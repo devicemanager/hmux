@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxFoundation
-import CmuxSettingsUI
+import HmuxCloud
+import HmuxFoundation
+import HmuxSettingsUI
 import SwiftUI
 
 /// Persistent device controls receive a snapshot and the same setters as the menu.
@@ -9,7 +9,7 @@ struct CloudTreeDevicesEmptyView: View {
     let actions: CloudTreeNodeActions
     let style: CloudTreeStyle
     var contentInset: CGFloat = 0
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
     @State private var hoveredAction: String?
 
     /// The actual status and action heights, plus the 2 pt inset above and below.
@@ -24,7 +24,7 @@ struct CloudTreeDevicesEmptyView: View {
         VStack(alignment: .leading, spacing: 0) {
             if section.count == 0 {
                 Text(String(localized: "cloudTree.devices.empty", defaultValue: "No devices yet"))
-                    .cmuxFont(size: style.detailSize, design: style.fontDesign)
+                    .hmuxFont(size: style.detailSize, design: style.fontDesign)
                     .foregroundStyle(.secondary)
                     .padding(.leading, scaled(textInset))
                     .padding(.trailing, scaled(style.rowGrid.trailingPadding))
@@ -63,7 +63,7 @@ struct CloudTreeDevicesEmptyView: View {
                 title: control.title, titleDimmed: !hovered
             ) {
                 if control.isOn {
-                    CmuxSystemSymbolImage(
+                    HmuxSystemSymbolImage(
                         magnified: "checkmark",
                         pointSize: style.detailSize,
                         tint: Color(nsColor: .labelColor)

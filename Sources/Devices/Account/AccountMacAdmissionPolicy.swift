@@ -1,4 +1,4 @@
-import CmuxIrxTransport
+import HmuxIrxTransport
 import Foundation
 import os
 
@@ -69,7 +69,7 @@ enum AccountMacAdmissionPolicy {
               record.descriptor.identity == cache.identity,
               record.descriptor.metadata.platform == .mac,
               !Set(record.descriptor.metadata.capabilities)
-                .isDisjoint(with: ["cmux.mac-devices.v1", "cmux.mac-host.v1"]),
+                .isDisjoint(with: ["hmux.mac-devices.v1", "hmux.mac-host.v1"]),
               let ticket = cache.ticket, ticket.expiresAt > Int(now.timeIntervalSince1970) else { return nil }
         return AccountMacDirectoryClient.Credentials(device: record.descriptor, ticket: ticket)
     }

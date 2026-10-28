@@ -24,7 +24,7 @@ mock.module("next-intl/server", () => ({
 const { parseArtManifest } = await import("../app/[locale]/(landing)/art/art-manifest");
 const { ArtGallery } = await import("../app/[locale]/(landing)/art/art-gallery");
 
-const origin = "https://files.cmux.com/cmux-art/";
+const origin = "https://files.cmux.com/hmux-art/";
 function work(id: string, collection: string, overrides: Record<string, unknown> = {}) {
   return {
     id,

@@ -1,6 +1,6 @@
-import CMUXMobileCore
-import CmuxMobileHost
-import CmuxSimulatorUI
+import HMUXMobileCore
+import HmuxMobileHost
+import HmuxSimulatorUI
 import Foundation
 import Observation
 

@@ -3,9 +3,9 @@
 // downloaded through the signed-in session (reference B's pageAssets).
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URL } = root.CmuxBrowserRepl.core;
+  const { URL } = root.HmuxBrowserRepl.core;
   const KINDS = ["image", "font", "stylesheet", "video", "script", "other"];
 
   // Runs in the page world through a handle of the document's root element

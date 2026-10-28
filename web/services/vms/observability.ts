@@ -17,7 +17,7 @@ export { VM_ERROR_CODE_HEADER };
  * misconfigured deployment or an unavailable provider. A user cannot fix
  * these by changing the request. User-fault errors (limits, credits,
  * validation) are product signals, not incidents; alerting should filter
- * on the `cmux.vm.error_operator_fault` span attribute or the PostHog
+ * on the `hmux.vm.error_operator_fault` span attribute or the PostHog
  * `operator_fault` property.
  */
 const OPERATOR_FAULT_VM_ERROR_CODES: ReadonlySet<string> = new Set([
@@ -86,14 +86,14 @@ export function isOperatorFaultVmError(input: {
 export function annotateVmErrorSpan(span: Span, input: VmErrorResponseInput): void {
   const diagnostics = input.diagnostics ?? {};
   setSpanAttributes(span, {
-    "cmux.vm.error_code": input.error,
-    "cmux.vm.error_status": input.status,
-    "cmux.vm.error_phase": input.phase ?? "unknown",
-    "cmux.vm.error_operator_fault": isOperatorFaultVmError(input),
-    "cmux.vm.error_reason": input.reason ?? input.message,
-    "cmux.vm.error_provider": stringOrUndefined(diagnostics.provider),
-    "cmux.vm.error_image": stringOrUndefined(diagnostics.image),
-    "cmux.vm.error_env_var": stringOrUndefined(diagnostics.envVar),
+    "hmux.vm.error_code": input.error,
+    "hmux.vm.error_status": input.status,
+    "hmux.vm.error_phase": input.phase ?? "unknown",
+    "hmux.vm.error_operator_fault": isOperatorFaultVmError(input),
+    "hmux.vm.error_reason": input.reason ?? input.message,
+    "hmux.vm.error_provider": stringOrUndefined(diagnostics.provider),
+    "hmux.vm.error_image": stringOrUndefined(diagnostics.image),
+    "hmux.vm.error_env_var": stringOrUndefined(diagnostics.envVar),
   });
 }
 
@@ -133,7 +133,7 @@ export function reportVmErrorResponse(input: VmErrorResponseInput): void {
       ...diagnostics,
     },
     {
-      fingerprint: ["cmux-vm-error", input.error, provider ?? "unknown"],
+      fingerprint: ["hmux-vm-error", input.error, provider ?? "unknown"],
       level: "error",
       tags: {
         "vm.error_code": input.error,
@@ -179,7 +179,7 @@ function vmErrorRequestTags(context: VmRequestContext | undefined): Record<strin
 /**
  * Operations a client polls on a timer. Their successes stay out of PostHog
  * (Axiom keeps 100% of them); their failures are captured like any other.
- * `approve_cmux_remote_enrollment` answers `pending` until the guest connects
+ * `approve_hmux_remote_enrollment` answers `pending` until the guest connects
  * and clients poll it: it produced 17.8k of 22k `cloud_vm_request` rows in one
  * week and would otherwise dominate every "active user" count.
  */
@@ -189,7 +189,7 @@ export const POLLED_VM_OPERATIONS: ReadonlySet<string> = new Set([
   "stats",
   "list_sessions",
   "get_tunnel",
-  "approve_cmux_remote_enrollment",
+  "approve_hmux_remote_enrollment",
 ]);
 
 export function isPolledVmOperation(operation: string): boolean {
@@ -230,7 +230,7 @@ export const VM_REQUEST_POSTHOG_EVENT = "cloud_vm_request";
 /**
  * Schema 2 (2026-09): adds `vm_id`, `plan_id`, `billing_customer_type`,
  * `billing_team_id` and the `stack_team` group; moves
- * `approve_cmux_remote_enrollment` successes out of the event.
+ * `approve_hmux_remote_enrollment` successes out of the event.
  * Schema 3 (2026-10): `vm_id` falls back to the ledger id on collection
  * routes (create, base open); adds `is_synthetic` for probe accounts.
  */
@@ -244,7 +244,7 @@ type PostHogExceptionEntry = {
 type PostHogProperties = Record<string, string | number | boolean | Record<string, string> | readonly PostHogExceptionEntry[]>;
 
 function vmAnalyticsEnabled(env: Record<string, string | undefined>): boolean {
-  return env.VERCEL_ENV === "production" || env.CMUX_VM_ANALYTICS_FORCE === "1";
+  return env.VERCEL_ENV === "production" || env.HMUX_VM_ANALYTICS_FORCE === "1";
 }
 
 function requestTelemetryProperties(
@@ -287,7 +287,7 @@ function requestTelemetryProperties(
  *
  * Every event carries the server trace id, so a PostHog row, a Sentry issue
  * and an Axiom trace of one failure share one key. Reads only the status
- * and the `x-cmux-vm-error` header, never the body stream.
+ * and the `x-hmux-vm-error` header, never the body stream.
  */
 function addMemoryUpgradeProperties(requestProperties: PostHogProperties, errorCode: string | undefined, lastError: VmErrorResponseInput | undefined) {
   if (errorCode === "vm_memory_requires_plan") {
@@ -302,7 +302,7 @@ function requestAnalyticsBatch(requestProperties: PostHogProperties, errorCode: 
     { event: VM_REQUEST_POSTHOG_EVENT, properties: requestProperties },
   ];
   if (errorCode === "vm_memory_requires_plan") {
-    batch.push({ event: "cmux_vm_size_upgrade_required", properties: { ...requestProperties, $insert_id: randomUUID() } });
+    batch.push({ event: "hmux_vm_size_upgrade_required", properties: { ...requestProperties, $insert_id: randomUUID() } });
   }
   return batch;
 }
@@ -313,20 +313,20 @@ function annotateVmRequestSpan(
   outcome: { readonly success: boolean; readonly durationMs: number; readonly code: string | undefined },
 ): void {
   setSpanAttributes(span, {
-    "cmux.vm.request_success": outcome.success,
-    "cmux.vm.request_duration_ms": outcome.durationMs,
-    "cmux.vm.request_error_code": outcome.code,
-    "cmux.user_id": context.userId,
-    "cmux.vm.id": context.vmId,
-    "cmux.client.name": context.client.name,
-    "cmux.client.version": context.client.version,
-    "cmux.client.build": context.client.build,
-    "cmux.client.channel": normalizedCloudClientChannel(context.client.channel),
-    "cmux.client.revision": context.client.revision,
-    "cmux.operation_id": context.operationId,
-    "cmux.client.request_id": context.client.requestId,
-    "cmux.client.trace_id": context.client.traceId,
-    "cmux.vercel.request_id": context.vercelRequestId,
+    "hmux.vm.request_success": outcome.success,
+    "hmux.vm.request_duration_ms": outcome.durationMs,
+    "hmux.vm.request_error_code": outcome.code,
+    "hmux.user_id": context.userId,
+    "hmux.vm.id": context.vmId,
+    "hmux.client.name": context.client.name,
+    "hmux.client.version": context.client.version,
+    "hmux.client.build": context.client.build,
+    "hmux.client.channel": normalizedCloudClientChannel(context.client.channel),
+    "hmux.client.revision": context.client.revision,
+    "hmux.operation_id": context.operationId,
+    "hmux.client.request_id": context.client.requestId,
+    "hmux.client.trace_id": context.client.traceId,
+    "hmux.vercel.request_id": context.vercelRequestId,
   });
 }
 
@@ -363,12 +363,12 @@ function vmOperatorExceptionEvent(
       error_code: errorCode,
       error_phase: lastError?.phase ?? "unknown",
       $exception_level: "error",
-      $exception_fingerprint: `cmux-vm-error:${errorCode}`,
+      $exception_fingerprint: `hmux-vm-error:${errorCode}`,
       $exception_list: [
         {
           type: errorCode,
           value: scrubForAnalytics(lastError?.reason ?? lastError?.message ?? `HTTP ${status}`),
-          mechanism: { handled: true, type: "cmux_vm_api", synthetic: true },
+          mechanism: { handled: true, type: "hmux_vm_api", synthetic: true },
         },
       ],
       schema_version: 1,
@@ -401,7 +401,7 @@ export function captureVmRequestOutcome(
   if (success && POLLED_VM_OPERATIONS.has(context.operation)) return;
   const env = options.env ?? process.env;
   if (!vmAnalyticsEnabled(env)) return;
-  const distinctId = context.userId ?? "cmux-vm-anonymous";
+  const distinctId = context.userId ?? "hmux-vm-anonymous";
   const lastError = context.lastError;
   const errorCode = code ?? lastError?.error;
   const operatorFault = !success && isOperatorFaultVmError({ error: errorCode ?? "", status });
@@ -456,7 +456,7 @@ export type VmProvisionOperation = "create" | "fork" | "restore" | "base_open" |
 
 /** Stable PostHog event name for one bounded VM reaper invocation. */
 export const VM_REAPER_POSTHOG_EVENT = "cloud_vm_reaper_run";
-export const VM_REAPER_POSTHOG_DISTINCT_ID = "cmux-vm-reaper";
+export const VM_REAPER_POSTHOG_DISTINCT_ID = "hmux-vm-reaper";
 
 export type VmReaperSummaryTelemetry = {
   readonly reportOnly: boolean;
@@ -509,8 +509,8 @@ export async function captureVmReaperSummary(
 ): Promise<void> {
   const env = options.env ?? process.env;
   const enabled = env.VERCEL_ENV === "production" ||
-    env.CMUX_VM_REAPER_ANALYTICS_FORCE === "1" ||
-    env.CMUX_VM_ANALYTICS_FORCE === "1";
+    env.HMUX_VM_REAPER_ANALYTICS_FORCE === "1" ||
+    env.HMUX_VM_ANALYTICS_FORCE === "1";
   if (!enabled) return;
 
   const properties: Record<string, string | number | boolean> = {
@@ -598,7 +598,7 @@ function safeTelemetryError(error: unknown): string {
  *   feeds the provisioning-failures insight and its alert; successes stay
  *   out of PostHog by design (2026-08-27 telemetry split).
  *
- * Reads only the response status and the `x-cmux-vm-error` header, so it
+ * Reads only the response status and the `x-hmux-vm-error` header, so it
  * never touches the body stream.
  */
 export function captureVmProvisionOutcome(
@@ -619,9 +619,9 @@ export function captureVmProvisionOutcome(
   const span = input.span ?? trace.getActiveSpan();
   if (span) {
     setSpanAttributes(span, {
-      "cmux.vm.provision_operation": input.operation,
-      "cmux.vm.provision_success": success,
-      "cmux.vm.provision_error_code": code,
+      "hmux.vm.provision_operation": input.operation,
+      "hmux.vm.provision_success": success,
+      "hmux.vm.provision_error_code": code,
     });
   }
   if (success) return;

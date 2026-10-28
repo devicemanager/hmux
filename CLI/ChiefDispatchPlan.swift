@@ -1,6 +1,6 @@
 import Foundation
 
-/// The socket-free half of `cmux chief dispatch`: argument parsing, the
+/// The socket-free half of `hmux chief dispatch`: argument parsing, the
 /// launcher script that hands the agent its task, the worktree layout, and
 /// reading a terminal for proof that the agent is working.
 ///
@@ -12,8 +12,8 @@ import Foundation
 /// backticks and newlines in the task reach the agent unchanged. Every other
 /// word of the script is single-quoted by ``shellWord(_:)``.
 ///
-/// This file is compiled into the `cmux` CLI and into `cmuxCLITests`; it must
-/// not use `CMUXCLI` or the socket client.
+/// This file is compiled into the `hmux` CLI and into `hmuxCLITests`; it must
+/// not use `HMUXCLI` or the socket client.
 enum ChiefDispatchAgent: String, CaseIterable, Equatable {
     case codex
     case claude
@@ -39,7 +39,7 @@ enum ChiefDispatchPromptSource: Equatable {
     case standardInput
 }
 
-/// Parsed `cmux chief dispatch` arguments.
+/// Parsed `hmux chief dispatch` arguments.
 struct ChiefDispatchOptions: Equatable {
     static let defaultTimeout = 60
     static let maxTimeout = 600
@@ -59,14 +59,14 @@ struct ChiefDispatchOptions: Equatable {
     var timeout = ChiefDispatchOptions.defaultTimeout
     var prompt: ChiefDispatchPromptSource = .words("")
 
-    /// Whether the arguments after `cmux chief dispatch` ask for help: `--help`
+    /// Whether the arguments after `hmux chief dispatch` ask for help: `--help`
     /// or `-h` before `--`, so a task that mentions either still dispatches.
     static func isHelpRequest(_ args: [String]) -> Bool {
         let flags = args.firstIndex(of: "--").map { args[..<$0] } ?? args[...]
         return flags.contains("--help") || flags.contains("-h")
     }
 
-    /// Parses the arguments after `cmux chief dispatch`. Value flags take
+    /// Parses the arguments after `hmux chief dispatch`. Value flags take
     /// `--flag value` or `--flag=value`; everything after `--` is the task.
     static func parse(_ args: [String]) throws -> ChiefDispatchOptions {
         var options = ChiefDispatchOptions()
@@ -229,7 +229,7 @@ struct ChiefDispatchOptions: Equatable {
     }
 }
 
-/// Files and command lines `cmux chief dispatch` builds.
+/// Files and command lines `hmux chief dispatch` builds.
 enum ChiefDispatchPlan {
     /// One POSIX shell word: always single-quoted, each `'` spliced as `'"'"'`.
     static func shellWord(_ value: String) -> String {
@@ -243,7 +243,7 @@ enum ChiefDispatchPlan {
         let command = agentCommand.map(shellWord).joined(separator: " ")
         return """
         #!/bin/sh
-        # Written by cmux chief dispatch. Hands the agent its task, then removes itself.
+        # Written by hmux chief dispatch. Hands the agent its task, then removes itself.
         prompt=$(cat -- \(shellWord(promptPath))) || exit 1
         rm -rf -- \(shellWord(directory))
         exec \(command) "$prompt"

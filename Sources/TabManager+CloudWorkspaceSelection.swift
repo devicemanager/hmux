@@ -1,5 +1,5 @@
-import CmuxCloudMachines
-import CmuxSurfaceCatalogModel
+import HmuxCloudMachines
+import HmuxSurfaceCatalogModel
 
 /// Adapts the authoritative per-window workspace selection to Cloud targeting.
 extension TabManager {

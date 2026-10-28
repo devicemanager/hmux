@@ -1,9 +1,9 @@
 import AppKit
 import Bonsplit
-import CmuxAppKitSupportUI
-import CmuxTerminal
-import CmuxTerminalSharing
-import CmuxTerminalSizing
+import HmuxAppKitSupportUI
+import HmuxTerminal
+import HmuxTerminalSharing
+import HmuxTerminalSizing
 import GhosttyKit
 import QuartzCore
 import SwiftUI

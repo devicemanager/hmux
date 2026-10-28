@@ -17,7 +17,7 @@ function vmScope(user: AuthedUser, request: Request): { ok: true; billingTeamId:
 }
 
 export async function GET(request: Request): Promise<Response> {
-  return withAuthedVmApiRoute(request, "/api/vm/firewall", { "cmux.vm.operation": "firewall_list" }, "/api/vm/firewall GET failed", async ({ user }) => {
+  return withAuthedVmApiRoute(request, "/api/vm/firewall", { "hmux.vm.operation": "firewall_list" }, "/api/vm/firewall GET failed", async ({ user }) => {
     const url = new URL(request.url);
     const ruleId = optionalString(url.searchParams.get("ruleId"));
     const vmId = optionalString(url.searchParams.get("vmId")) ?? undefined;
@@ -32,7 +32,7 @@ export async function GET(request: Request): Promise<Response> {
 }
 
 export async function POST(request: Request): Promise<Response> {
-  return withAuthedVmApiRoute(request, "/api/vm/firewall", { "cmux.vm.operation": "firewall_create" }, "/api/vm/firewall POST failed", async ({ user }) => {
+  return withAuthedVmApiRoute(request, "/api/vm/firewall", { "hmux.vm.operation": "firewall_create" }, "/api/vm/firewall POST failed", async ({ user }) => {
     const limited = await enforceVmFirewallRateLimit({ request, route: "vm.firewall.create", userId: user.id });
     if (limited) return limited;
     const body = await parseLenientObjectBody(request);
@@ -50,7 +50,7 @@ export async function POST(request: Request): Promise<Response> {
 }
 
 export async function DELETE(request: Request): Promise<Response> {
-  return withAuthedVmApiRoute(request, "/api/vm/firewall", { "cmux.vm.operation": "firewall_delete" }, "/api/vm/firewall DELETE failed", async ({ user }) => {
+  return withAuthedVmApiRoute(request, "/api/vm/firewall", { "hmux.vm.operation": "firewall_delete" }, "/api/vm/firewall DELETE failed", async ({ user }) => {
     const limited = await enforceVmFirewallRateLimit({ request, route: "vm.firewall.delete", userId: user.id });
     if (limited) return limited;
     const ruleId = optionalString(new URL(request.url).searchParams.get("ruleId"));

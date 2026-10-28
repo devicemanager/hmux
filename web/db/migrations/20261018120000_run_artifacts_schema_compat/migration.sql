@@ -23,7 +23,7 @@ BEGIN
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'run_artifacts' AND column_name = 'uri'
   ) THEN
-    ALTER TABLE "run_artifacts" ALTER COLUMN "uri" SET DEFAULT 'inline://cmux-run-artifact';
+    ALTER TABLE "run_artifacts" ALTER COLUMN "uri" SET DEFAULT 'inline://hmux-run-artifact';
   END IF;
   IF EXISTS (
     SELECT 1 FROM information_schema.columns

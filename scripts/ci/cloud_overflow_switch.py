@@ -323,7 +323,7 @@ class GitHub:
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "cmux-ci-cloud-overflow-switch",
+            "User-Agent": "hmux-ci-cloud-overflow-switch",
         }
 
     def request(self, method: str, path: str, body: Any | None = None) -> Any:
@@ -468,13 +468,13 @@ def rescue_stuck_runs(api: GitHub, *, own_run_id: int, minutes: int, now: Callab
     return lines
 
 
-RUNNER_VARIABLES_ENV = "CMUX_CI_RUNNER_VARIABLES"
+RUNNER_VARIABLES_ENV = "HMUX_CI_RUNNER_VARIABLES"
 
 
 def current_values(env: Mapping[str, str], names: Iterable[str]) -> dict[str, str | None]:
     """The live values the workflow passed from its expression context; '' is unset.
 
-    The runner variables come as NAME=value lines in CMUX_CI_RUNNER_VARIABLES
+    The runner variables come as NAME=value lines in HMUX_CI_RUNNER_VARIABLES
     (the format ci-repo-variables.yml uses); any other name as `VAR_<name>`.
     """
     block: dict[str, str] = {}

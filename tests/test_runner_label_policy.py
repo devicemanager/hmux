@@ -128,7 +128,7 @@ class ForbiddenLabelsAreCaught(unittest.TestCase):
     def test_fleet_and_self_hosted_labels(self) -> None:
         for label in (
             "tart-macos-15",
-            "cmux-persistent-compile",
+            "hmux-persistent-compile",
             "macfleet",
             "mac-mini-3",
             "self-hosted",
@@ -140,7 +140,7 @@ class ForbiddenLabelsAreCaught(unittest.TestCase):
         # Stripping the allow-list first is what lets blacksmith-6vcpu-macos-26
         # through; it must not also launder a fleet label sitting beside it.
         self.assertIsNotNone(
-            forbidden_reason("blacksmith-6vcpu-macos-26,cmux-persistent-compile")
+            forbidden_reason("blacksmith-6vcpu-macos-26,hmux-persistent-compile")
         )
 
 
@@ -148,7 +148,7 @@ class DriftReportingOverVariables(unittest.TestCase):
     def test_only_runner_variables_are_inspected(self) -> None:
         drifted = drifted_runner_variables(
             {
-                "CI_HEALTH_REPORT_ISSUE": "cmux-persistent-compile",
+                "CI_HEALTH_REPORT_ISSUE": "hmux-persistent-compile",
                 "MACOS_RUNNER_26": "warp-macos-26-arm64-12x",
             }
         )
@@ -217,7 +217,7 @@ class TheReportSeesEveryRunnerVariable(unittest.TestCase):
         self.assertEqual(
             missing,
             set(),
-            f"add to CMUX_CI_RUNNER_VARIABLES in {HEALTH_REPORT_WORKFLOW.name} and ci-repo-variables.yml when it "
+            f"add to HMUX_CI_RUNNER_VARIABLES in {HEALTH_REPORT_WORKFLOW.name} and ci-repo-variables.yml when it "
             "is a runs-on label, or to NON_LABEL_RUNNER_VARIABLES here when it holds runner names",
         )
 
@@ -268,16 +268,16 @@ class TrustedPoolVariable(unittest.TestCase):
 class NightlyRunnerVariable(unittest.TestCase):
     def test_only_a_runner_name_label_is_allowed(self) -> None:
         # nightly.yml asks for ["<CI_SEED_TRUSTED_POOL>", "<CI_NIGHTLY_TRUSTED_RUNNER>"]: one trusted runner.
-        self.assertEqual(drifted_runner_variables({"CI_NIGHTLY_TRUSTED_RUNNER": "glaeda-runner-cmux15-glaeda"}), [])
+        self.assertEqual(drifted_runner_variables({"CI_NIGHTLY_TRUSTED_RUNNER": "glaeda-runner-hmux15-glaeda"}), [])
         self.assertEqual(drifted_runner_variables({"CI_NIGHTLY_TRUSTED_RUNNER": ""}), [])
-        for label in ("glaeda-trusted-std-xcode-26.6", "glaeda-runner-", "glaeda-runner-CMUX15",
-                      'glaeda-runner-x", "self-hosted', "blacksmith-12vcpu-macos-26", "cmux15-glaeda"):
+        for label in ("glaeda-trusted-std-xcode-26.6", "glaeda-runner-", "glaeda-runner-HMUX15",
+                      'glaeda-runner-x", "self-hosted', "blacksmith-12vcpu-macos-26", "hmux15-glaeda"):
             with self.subTest(label=label):
                 self.assertEqual(
                     [name for name, _, _ in drifted_runner_variables({"CI_NIGHTLY_TRUSTED_RUNNER": label})],
                     ["CI_NIGHTLY_TRUSTED_RUNNER"],
                 )
-        self.assertTrue(drifted_runner_variables({"MACOS_RUNNER_26_LARGE": "glaeda-runner-cmux15-glaeda"}))
+        self.assertTrue(drifted_runner_variables({"MACOS_RUNNER_26_LARGE": "glaeda-runner-hmux15-glaeda"}))
 
     def test_nightly_asks_for_the_trusted_pool_and_the_runner_together(self) -> None:
         text = (ROOT / ".github" / "workflows" / "nightly.yml").read_text(encoding="utf-8")
@@ -342,7 +342,7 @@ class OwnedPoolLabels(unittest.TestCase):
         self.assertEqual(drifted_runner_variables({"CI_PR_POOL_ORDER": order}), [])
 
     def test_the_pool_order_cannot_smuggle_in_other_fleet_labels(self) -> None:
-        for bad in ("tart-canary", "warp-macos-26-arm64-12x", "self-hosted", "glaeda-mini-xcode-26.6", "cmux-macos-26"):
+        for bad in ("tart-canary", "warp-macos-26-arm64-12x", "self-hosted", "glaeda-mini-xcode-26.6", "hmux-macos-26"):
             with self.subTest(label=bad):
                 reason = pool_order_reason(f"glaeda-std-xcode-26.6,{bad}")
                 self.assertIsNotNone(reason)

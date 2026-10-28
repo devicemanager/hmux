@@ -18,7 +18,7 @@ struct VMCommand: LegacyVMCommand {
     // an invalid duplicate `_arguments` spec in the generated zsh completion script.
     // `defaultSubcommand` absorbs anything that doesn't name a declared subcommand.
 
-    /// The flag spelling of `cmux vm guide`. The default subcommand's `run()`
+    /// The flag spelling of `hmux vm guide`. The default subcommand's `run()`
     /// hands the raw argv to the legacy runner, which serves the guide.
     @Flag(name: .customLong("skill")) var skill = false
 
@@ -244,7 +244,7 @@ struct VMPromoteTemplateCommand: VMIDCommand {
 /// Retains the undocumented legacy command so VM routing remains transparent.
 /// `runVMSSHAttach` reads the machine from `--id` and rejects every positional,
 /// so this declares the option rather than the positional the other VM leaves
-/// use: the startup command cmux generates for a split attach spells it
+/// use: the startup command hmux generates for a split attach spells it
 /// `vm ssh-attach --id <vm> --default-freestyle-sshd`.
 struct VMSSHAttachCommand: VMIDCommand {
     @Option(name: .customLong("id"), completion: vmID) var id: String?

@@ -64,7 +64,7 @@ export class DashboardControl {
         } catch (error) { this.close(server, "slow_consumer"); throw error; }
         for (const old of this.ctx.getWebSockets("device:" + deviceKey)) if (old !== server) this.close(old, "session_replaced");
         observe(this.ctx, this.env, { event: "iroh.dashboard.opened", environment: this.env.ENVIRONMENT, requestId, status: 101 });
-        return new Response(null, { status: 101, webSocket: client, headers: { "sec-websocket-protocol": "cmux-v2-dashboard" } });
+        return new Response(null, { status: 101, webSocket: client, headers: { "sec-websocket-protocol": "hmux-v2-dashboard" } });
       } finally { this.services.opening.delete(sessionId); }
     } catch (error) {
       const failure = errorResponse(error, requestId).failure;

@@ -1,8 +1,8 @@
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 @MainActor
-extension CmuxTuiSurfaceProvider {
+extension HmuxTuiSurfaceProvider {
     /// A committed terminal retained until the canonical graph reaches its receipt.
     struct PendingRemoteCreation {
         var resource: SurfaceResource

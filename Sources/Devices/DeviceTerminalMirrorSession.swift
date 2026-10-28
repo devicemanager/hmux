@@ -1,12 +1,12 @@
-import CMUXMobileCore
-import CmuxMobileRPC
-import CmuxTerminal
-import CmuxTerminalSharing
-import CmuxTerminalSizing
+import HMUXMobileCore
+import HmuxMobileRPC
+import HmuxTerminal
+import HmuxTerminalSharing
+import HmuxTerminalSizing
 import Foundation
 import OSLog
 
-nonisolated private let deviceMirrorLog = Logger(subsystem: "dev.cmux", category: "device-terminal-mirror")
+nonisolated private let deviceMirrorLog = Logger(subsystem: "dev.hmux", category: "device-terminal-mirror")
 
 /// Owns one local projection of a terminal running on another Mac.
 ///

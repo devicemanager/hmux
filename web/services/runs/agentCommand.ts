@@ -7,7 +7,7 @@ const quote = (text: string) => `'${text.replace(/'/g, `'"'"'`)}'`;
  * stream stays in the guest for the attempt's retention window. */
 export function variantAgentCommand(instruction: string, attemptId: string, outputDir = "/tmp"): string {
   if (!/^[0-9a-f-]{36}$/i.test(attemptId)) throw new Error("Invalid attempt identity");
-  const output = `${outputDir}/cmux-agent-output-${attemptId}.jsonl`;
+  const output = `${outputDir}/hmux-agent-output-${attemptId}.jsonl`;
   return `codex exec --json --dangerously-bypass-approvals-and-sandbox -- ${quote(instruction)} >${quote(output)}\n`;
 }
 
@@ -15,5 +15,5 @@ export function variantAgentCommand(instruction: string, attemptId: string, outp
  * replacer function keeps `$&`, `$'` and friends in instruction text literal. */
 export function withVariantExecution(source: string, instruction: string | undefined, attemptId: string): string {
   const work = instruction ? `\n${variantAgentCommand(instruction, attemptId)}` : "";
-  return source.replace("# CMUX_VARIANT_EXECUTION", () => work);
+  return source.replace("# HMUX_VARIANT_EXECUTION", () => work);
 }

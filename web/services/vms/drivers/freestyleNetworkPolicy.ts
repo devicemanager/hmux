@@ -17,7 +17,7 @@ import { canonicalCidr, type NetworkRulePlan } from "../networkPolicy";
  */
 
 /** Firewall rules this module owns carry this description, so reconcile never touches anyone else's. */
-export const EGRESS_RULE_DESCRIPTION = "cmux:egress";
+export const EGRESS_RULE_DESCRIPTION = "hmux:egress";
 
 /** The guest's resolvers from the base image's resolv.conf; overridable for other regions. */
 const DEFAULT_GUEST_DNS_RESOLVERS = ["8.8.8.8", "8.8.4.4", "2606:4700:4700::1111", "2001:4860:4860::8888"];

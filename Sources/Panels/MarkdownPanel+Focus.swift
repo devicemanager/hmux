@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import Foundation
 
 extension MarkdownPanel {
@@ -28,9 +28,9 @@ extension MarkdownPanel {
     func hideFind() {
         guard let searchState else { return }
         let window = windowOwningPreviewFocus()
-        let findResponder = window?.firstResponder.flatMap { cmuxFindTextFieldOwner(for: $0) }
+        let findResponder = window?.firstResponder.flatMap { hmuxFindTextFieldOwner(for: $0) }
         let shouldRestorePreviewFocus = findResponder?.window === window &&
-            findResponder?.cmuxSelectionOwner === searchState
+            findResponder?.hmuxSelectionOwner === searchState
         if shouldRestorePreviewFocus {
             _ = window?.makeFirstResponder(nil)
         }
@@ -128,9 +128,9 @@ extension MarkdownPanel {
     /// Returns whether a responder belongs to this panel's input surfaces.
     private func ownsKeyboardResponder(_ responder: NSResponder, in window: NSWindow) -> Bool {
         if let searchState,
-           let owner = cmuxFindTextFieldOwner(for: responder),
+           let owner = hmuxFindTextFieldOwner(for: responder),
            owner.window === window,
-           owner.cmuxSelectionOwner === searchState {
+           owner.hmuxSelectionOwner === searchState {
             return true
         }
 

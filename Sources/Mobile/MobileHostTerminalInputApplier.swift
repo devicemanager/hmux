@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxTerminal
+import HMUXMobileCore
+import HmuxTerminal
 import Foundation
 
 /// The one place phone input reaches a terminal.

@@ -44,17 +44,17 @@ const { VmProviderGateway, VmProviderGatewayLive } = await import("../services/v
 test("the live gateway preserves private-network driver method receivers", async () => {
   const attachment = await Effect.runPromise(Effect.gen(function* () {
     const gateway = yield* VmProviderGateway;
-    const network = yield* gateway.getNetwork!("freestyle", "cmux-team-net-test");
+    const network = yield* gateway.getNetwork!("freestyle", "hmux-team-net-test");
     const tunnelIds = yield* gateway.listNetworkTunnelIds!("freestyle", "vpc-team");
     const result = yield* gateway.attachTunnelNetwork!("freestyle", "tun-team", "vpc-team");
     yield* gateway.detachTunnelNetwork!("freestyle", "tun-team", "vpc-team");
     return { network, tunnelIds, result };
   }).pipe(Effect.provide(VmProviderGatewayLive)));
 
-  expect(attachment.network).toEqual({ id: "vpc-team", slug: "cmux-team-net-test", cidr: "10.82.45.0/24", cidrV6: "fd82::/64" });
+  expect(attachment.network).toEqual({ id: "vpc-team", slug: "hmux-team-net-test", cidr: "10.82.45.0/24", cidrV6: "fd82::/64" });
   expect(attachment.tunnelIds).toEqual(["tun-team"]);
   expect(attachment.result).toEqual({ networkId: "vpc-team", addressV4: "10.82.45.2", addressV6: "fd82::2" });
-  expect(calls.get).toEqual(["cmux-team-net-test"]);
+  expect(calls.get).toEqual(["hmux-team-net-test"]);
   expect(calls.listTunnels).toEqual(["vpc-team"]);
   expect(calls.attach).toEqual([{ tunnelId: "tun-team", networkId: "vpc-team" }]);
   expect(calls.detach).toEqual([{ tunnelId: "tun-team", networkId: "vpc-team" }]);

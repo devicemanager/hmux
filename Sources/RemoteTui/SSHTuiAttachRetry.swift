@@ -1,8 +1,8 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 
-/// How a restored or reconnecting `cmux ssh` workspace retries its attach.
+/// How a restored or reconnecting `hmux ssh` workspace retries its attach.
 ///
 /// After a relaunch the first attach often runs before the network is ready
 /// (Tailscale, DNS or Wi-Fi still coming up). One failure there is not a

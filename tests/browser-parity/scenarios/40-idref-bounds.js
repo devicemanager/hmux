@@ -3,7 +3,7 @@
 // a list (an id cut there is dropped, and a name with a longer list is read
 // directly from the element), and never escapes a longer slot name into a
 // selector (each host child is asked which slot took it).
-// oracle: skip (cmux-owned page-read bound)
+// oracle: skip (hmux-owned page-read bound)
 await page.goto(`${PRIMARY}/aria.html`);
 await page.evaluate(() => {
   const pad = " ".repeat(5000);
@@ -20,4 +20,4 @@ await page.evaluate(() => {
   shadow.querySelector("slot").setAttribute("name", long);
 });
 const s = await snapshot({ maxChars: Infinity });
-emitCmux("roles", s.tree.split("\n").map((l) => l.trim()).filter((l) => /^- (listbox|option|button|group)/.test(l)).map((l) => l.replace(/ \[ref=\w+\]/, "").replace(/:$/, "")).join("\n"));
+emitHmux("roles", s.tree.split("\n").map((l) => l.trim()).filter((l) => /^- (listbox|option|button|group)/.test(l)).map((l) => l.replace(/ \[ref=\w+\]/, "").replace(/:$/, "")).join("\n"));

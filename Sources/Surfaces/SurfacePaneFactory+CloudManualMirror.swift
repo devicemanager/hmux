@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
-import CmuxTerminal
+import HmuxCloud
+import HmuxSurfaceCatalogModel
+import HmuxTerminal
 import GhosttyKit
 import Foundation
 

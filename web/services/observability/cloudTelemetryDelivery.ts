@@ -14,7 +14,7 @@ export function drainCloudDiagnostics() {
       Effect.match({ onFailure: () => false, onSuccess: () => true }),
     );
     yield* Effect.tryPromise(() => finishCloudDiagnostics(lease, exported));
-    if (!exported) console.error("cmux.cloud.diagnostics.export_failed", { count: rows.length });
+    if (!exported) console.error("hmux.cloud.diagnostics.export_failed", { count: rows.length });
     return { configured: true, delivered: exported ? rows.length : 0 };
   }));
 }
@@ -22,6 +22,6 @@ export function drainCloudDiagnostics() {
 export async function maintainCloudDiagnostics() {
   const delivery = await drainCloudDiagnostics();
   const retention = await expireCloudDiagnostics();
-  if (retention.expiredUndelivered > 0) console.error("cmux.cloud.diagnostics.expired_undelivered", retention);
+  if (retention.expiredUndelivered > 0) console.error("hmux.cloud.diagnostics.expired_undelivered", retention);
   return { ...delivery, ...retention };
 }

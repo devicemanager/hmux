@@ -12,12 +12,12 @@ const read = (relativePath) => fs.readFileSync(path.join(repoRoot, relativePath)
 const reload = read("ios/scripts/reload.sh");
 const sharedConfig = read("ios/Config/Shared.xcconfig");
 const releaseConfig = read("ios/Config/Release.xcconfig");
-const project = read("ios/cmux-ios.xcodeproj/project.pbxproj");
-const appEntitlements = read("ios/Config/cmux.entitlements");
+const project = read("ios/hmux-ios.xcodeproj/project.pbxproj");
+const appEntitlements = read("ios/Config/hmux.entitlements");
 const extensionEntitlements = read("ios/Config/NotificationService.entitlements");
-const debugAppNoGroup = read("ios/Config/cmux-debug-no-app-group.entitlements");
+const debugAppNoGroup = read("ios/Config/hmux-debug-no-app-group.entitlements");
 const debugExtensionNoGroup = read("ios/Config/NotificationService-debug-no-app-group.entitlements");
-const releaseEntitlements = read("ios/Config/cmux-release.entitlements");
+const releaseEntitlements = read("ios/Config/hmux-release.entitlements");
 const uploadTestFlight = read("ios/scripts/upload-testflight.sh");
 const cloudTestFlight = read("ios/scripts/cloud-testflight.sh");
 
@@ -30,12 +30,12 @@ function extractShellFunction(source, name) {
 }
 
 function taggedDeviceEntitlementMode(configuration, signingBackend, allowProvisioningUpdates) {
-  const resolver = extractShellFunction(reload, "cmux_ios_tagged_device_entitlement_mode");
+  const resolver = extractShellFunction(reload, "hmux_ios_tagged_device_entitlement_mode");
   return spawnSync(
     "bash",
     [
       "-c",
-      `${resolver}; cmux_ios_tagged_device_entitlement_mode "$1" "$2" "$3"`,
+      `${resolver}; hmux_ios_tagged_device_entitlement_mode "$1" "$2" "$3"`,
       "ios-entitlement-test",
       configuration,
       signingBackend,
@@ -67,11 +67,11 @@ test("tagged Debug device API-key signing omits only the unsupported App Group",
 
   assert.match(
     reload,
-    /CMUX_APP_CODE_SIGN_ENTITLEMENTS=Config\/cmux-debug-no-app-group\.entitlements/u,
+    /HMUX_APP_CODE_SIGN_ENTITLEMENTS=Config\/hmux-debug-no-app-group\.entitlements/u,
   );
   assert.match(
     reload,
-    /CMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=Config\/NotificationService-debug-no-app-group\.entitlements/u,
+    /HMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=Config\/NotificationService-debug-no-app-group\.entitlements/u,
   );
 });
 
@@ -86,7 +86,7 @@ test("Debug device signing keeps the App Group when the signing path can grant i
 
   for (const entitlements of [appEntitlements, extensionEntitlements]) {
     assert.match(entitlements, /com\.apple\.security\.application-groups/u);
-    assert.match(entitlements, /group\.dev\.cmux\.ios/u);
+    assert.match(entitlements, /group\.dev\.hmux\.ios/u);
   }
 });
 
@@ -95,14 +95,14 @@ test("tagged Simulator builds keep the existing full entitlement selection", () 
 
   assert.match(
     sharedConfig,
-    /CMUX_APP_CODE_SIGN_ENTITLEMENTS = Config\/cmux\.entitlements/u,
+    /HMUX_APP_CODE_SIGN_ENTITLEMENTS = Config\/hmux\.entitlements/u,
   );
   assert.match(
     sharedConfig,
-    /CMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS = Config\/NotificationService\.entitlements/u,
+    /HMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS = Config\/NotificationService\.entitlements/u,
   );
   assert.match(simulator, /CODE_SIGNING_ALLOWED=NO/u);
-  assert.doesNotMatch(simulator, /no-app-group|CMUX_APP_CODE_SIGN_ENTITLEMENTS/u);
+  assert.doesNotMatch(simulator, /no-app-group|HMUX_APP_CODE_SIGN_ENTITLEMENTS/u);
 });
 
 test("Release and TestFlight paths cannot select the Debug no-App-Group entitlements", () => {
@@ -112,11 +112,11 @@ test("Release and TestFlight paths cannot select the Debug no-App-Group entitlem
 
   assert.match(
     releaseConfig,
-    /CMUX_APP_CODE_SIGN_ENTITLEMENTS = Config\/cmux-release\.entitlements/u,
+    /HMUX_APP_CODE_SIGN_ENTITLEMENTS = Config\/hmux-release\.entitlements/u,
   );
   assert.match(
     releaseConfig,
-    /CODE_SIGN_ENTITLEMENTS = \$\(CMUX_APP_CODE_SIGN_ENTITLEMENTS\)/u,
+    /CODE_SIGN_ENTITLEMENTS = \$\(HMUX_APP_CODE_SIGN_ENTITLEMENTS\)/u,
   );
   assert.match(releaseEntitlements, /<key>aps-environment<\/key>\s*<string>production<\/string>/u);
   assert.doesNotMatch(releaseConfig, /no-app-group/u);
@@ -124,13 +124,13 @@ test("Release and TestFlight paths cannot select the Debug no-App-Group entitlem
   assert.doesNotMatch(cloudTestFlight, /debug-no-app-group/u);
 
   const extensionSelectorMatches = project.match(
-    /CODE_SIGN_ENTITLEMENTS = "\$\(CMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS\)";/gu,
+    /CODE_SIGN_ENTITLEMENTS = "\$\(HMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS\)";/gu,
   ) ?? [];
   assert.equal(extensionSelectorMatches.length, 2);
-  assert.match(extensionEntitlements, /group\.dev\.cmux\.ios/u);
+  assert.match(extensionEntitlements, /group\.dev\.hmux\.ios/u);
 
   // The shipping re-sign path continues to seed entitlements from the selected
-  // distribution provisioning profile before merging cmux-release.entitlements.
+  // distribution provisioning profile before merging hmux-release.entitlements.
   assert.match(uploadTestFlight, /plutil -extract Entitlements xml1 -o "\$PROFILE_ENTITLEMENTS"/u);
   assert.match(uploadTestFlight, /Merge \$PROFILE_ENTITLEMENTS/u);
 });
@@ -145,6 +145,6 @@ test("the tagged-device exception is explicitly fenced to Debug provisioning upd
   assert.match(reload, /local configuration="Debug"/u);
   assert.match(
     reload,
-    /cmux_ios_tagged_device_entitlement_mode \\\n    "\$configuration" "\$DEVICE_SIGNING_BACKEND" "\$ALLOW_PROVISIONING_UPDATES"/u,
+    /hmux_ios_tagged_device_entitlement_mode \\\n    "\$configuration" "\$DEVICE_SIGNING_BACKEND" "\$ALLOW_PROVISIONING_UPDATES"/u,
   );
 });

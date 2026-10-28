@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Post-install auth gate for a tagged cmux iOS DEV build on a physical iPhone.
+# Post-install auth gate for a tagged hmux iOS DEV build on a physical iPhone.
 # Answers programmatically, with no screenshots: "is this tagged build on the
 # phone signed in and paired to its tagged Mac right now?"
 #
@@ -12,12 +12,12 @@
 # a signed-out or unpaired install can never reach from the login screen.
 # Because the relaunch injects nothing, only PERSISTED sign-in/pairing state
 # can pass, so this detects exactly the installed-but-signed-out builds that
-# raw `devicectl device install app` or CMUX_ALLOW_UNAUTHENTICATED_INSTALL
+# raw `devicectl device install app` or HMUX_ALLOW_UNAUTHENTICATED_INSTALL
 # produce.
 #
-# App-receipt mode (apps whose Info.plist declares CMUXDogfoodReadiness =
+# App-receipt mode (apps whose Info.plist declares HMUXDogfoodReadiness =
 # app-receipt-v1): no tagged Mac takes part. The credential-free relaunch
-# injects only the client id and a fresh CMUX_DOGFOOD_READINESS_NONCE; the app
+# injects only the client id and a fresh HMUX_DOGFOOD_READINESS_NONCE; the app
 # must then publish a receipt in its data container with that nonce, the
 # selected account, and session_source "restored". A fresh sign-in cannot
 # pass, so this still proves PERSISTED sign-in.
@@ -27,13 +27,13 @@
 #       [--auth-profile personal] [--expected-account <email>]
 #       [--credentials-file <path>] [--readiness mac-rpc|app-receipt|auto]
 #
-# Device id defaults to CMUX_IPHONE_DEVICE_ID, then the first line of
-# ~/.config/cmux/iphone-device-id. Timeout defaults to
-# CMUX_VERIFY_IPHONE_AUTH_TIMEOUT_SECONDS or 45 (a plain relaunch must rebuild
+# Device id defaults to HMUX_IPHONE_DEVICE_ID, then the first line of
+# ~/.config/hmux/iphone-device-id. Timeout defaults to
+# HMUX_VERIFY_IPHONE_AUTH_TIMEOUT_SECONDS or 45 (a plain relaunch must rebuild
 # its broker discovery + Iroh route before the RPC session is usable); the
-# app-receipt mode defaults to CMUX_APP_RECEIPT_TIMEOUT_SECONDS or 90.
-# --readiness auto (default) reads CMUXDogfoodReadiness from
-# CMUX_INSTALLED_APP_PATH when set, else reuses the mode recorded in this
+# app-receipt mode defaults to HMUX_APP_RECEIPT_TIMEOUT_SECONDS or 90.
+# --readiness auto (default) reads HMUXDogfoodReadiness from
+# HMUX_INSTALLED_APP_PATH when set, else reuses the mode recorded in this
 # tag+device's last launcher readiness receipt, else mac-rpc.
 #
 # Prints exactly one final PASS:/FAIL: line on stdout; FAIL includes the
@@ -42,12 +42,12 @@ set -euo pipefail
 
 TAG=""
 DEVICE_ID=""
-TIMEOUT="${CMUX_VERIFY_IPHONE_AUTH_TIMEOUT_SECONDS:-45}"
+TIMEOUT="${HMUX_VERIFY_IPHONE_AUTH_TIMEOUT_SECONDS:-45}"
 TIMEOUT_EXPLICIT=0
 READINESS_REQUEST="auto"
 AUTH_PROFILE="personal"
 EXPECTED_ACCOUNT=""
-AUTH_CREDENTIALS_FILE="${CMUX_IOS_DOGFOOD_CREDENTIALS_FILE:-$HOME/.secrets/cmuxterm-dev.env}"
+AUTH_CREDENTIALS_FILE="${HMUX_IOS_DOGFOOD_CREDENTIALS_FILE:-$HOME/.secrets/hmuxterm-dev.env}"
 
 usage() { sed -n '2,38p' "$0"; }
 
@@ -88,39 +88,39 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$SCRIPT_DIR/lib/mobile-attach.sh"
 # shellcheck source=scripts/lib/dev-secrets.sh
 source "$SCRIPT_DIR/lib/dev-secrets.sh"
-cmux_attach_validate_dev_tag "$TAG" || exit 2
+hmux_attach_validate_dev_tag "$TAG" || exit 2
 credential_args=(--profile "$AUTH_PROFILE" --credentials-file "$AUTH_CREDENTIALS_FILE")
 [[ -n "$EXPECTED_ACCOUNT" ]] && credential_args+=(--expected-account "$EXPECTED_ACCOUNT")
-cmux_dev_secrets_load "${credential_args[@]}" >/dev/null || exit $?
-EXPECTED_ACCOUNT="$CMUX_DEV_AUTH_ACCOUNT"
-unset CMUX_UITEST_STACK_EMAIL CMUX_UITEST_STACK_PASSWORD
+hmux_dev_secrets_load "${credential_args[@]}" >/dev/null || exit $?
+EXPECTED_ACCOUNT="$HMUX_DEV_AUTH_ACCOUNT"
+unset HMUX_UITEST_STACK_EMAIL HMUX_UITEST_STACK_PASSWORD
 
-SLUG="$(cmux_attach__slug "$TAG")"
-BUNDLE_ID="dev.cmux.ios.$SLUG"
+SLUG="$(hmux_attach__slug "$TAG")"
+BUNDLE_ID="dev.hmux.ios.$SLUG"
 
 if [[ -z "$DEVICE_ID" ]]; then
-  DEVICE_ID="${CMUX_IPHONE_DEVICE_ID:-}"
+  DEVICE_ID="${HMUX_IPHONE_DEVICE_ID:-}"
 fi
 if [[ -z "$DEVICE_ID" ]]; then
-  device_id_file="${CMUX_CONFIG_DIR:-$HOME/.config/cmux}/iphone-device-id"
+  device_id_file="${HMUX_CONFIG_DIR:-$HOME/.config/hmux}/iphone-device-id"
   if [[ -f "$device_id_file" ]]; then
     DEVICE_ID="$(head -n1 "$device_id_file" | tr -d '[:space:]')"
   fi
 fi
 if [[ -z "$DEVICE_ID" ]]; then
-  echo "error: no device id (pass --device-id, set CMUX_IPHONE_DEVICE_ID, or write ~/.config/cmux/iphone-device-id)" >&2
+  echo "error: no device id (pass --device-id, set HMUX_IPHONE_DEVICE_ID, or write ~/.config/hmux/iphone-device-id)" >&2
   exit 2
 fi
 
-RECEIPT_DIR="${CMUX_READINESS_RECEIPT_DIR:-/tmp/cmux-ios-dogfood-readiness}"
-RECEIPT_PATH="$RECEIPT_DIR/${SLUG}-$(cmux_attach__slug "$DEVICE_ID").json"
+RECEIPT_DIR="${HMUX_READINESS_RECEIPT_DIR:-/tmp/hmux-ios-dogfood-readiness}"
+RECEIPT_PATH="$RECEIPT_DIR/${SLUG}-$(hmux_attach__slug "$DEVICE_ID").json"
 
 # --- readiness mode -------------------------------------------------------------
 READINESS_MODE="$READINESS_REQUEST"
 READINESS_HINT=""
 if [[ "$READINESS_MODE" == "auto" ]]; then
-  if [[ -n "${CMUX_INSTALLED_APP_PATH:-}" && -f "${CMUX_INSTALLED_APP_PATH}/Info.plist" ]]; then
-    READINESS_MODE="$(cmux_attach_app_readiness_mode "$CMUX_INSTALLED_APP_PATH")" || exit 2
+  if [[ -n "${HMUX_INSTALLED_APP_PATH:-}" && -f "${HMUX_INSTALLED_APP_PATH}/Info.plist" ]]; then
+    READINESS_MODE="$(hmux_attach_app_readiness_mode "$HMUX_INSTALLED_APP_PATH")" || exit 2
   elif [[ -f "$RECEIPT_PATH" ]] && RECORDED_MODE="$(/usr/bin/python3 - "$RECEIPT_PATH" <<'PY'
 import json
 import sys
@@ -136,13 +136,13 @@ PY
     READINESS_MODE="$RECORDED_MODE"
   else
     READINESS_MODE="mac-rpc"
-    READINESS_HINT="readiness mode guessed as mac-rpc (no installed app path or launcher receipt); for a build that declares CMUXDogfoodReadiness, rerun with --readiness app-receipt"
+    READINESS_HINT="readiness mode guessed as mac-rpc (no installed app path or launcher receipt); for a build that declares HMUXDogfoodReadiness, rerun with --readiness app-receipt"
   fi
 fi
 if [[ "$READINESS_MODE" == "app-receipt" && "$TIMEOUT_EXPLICIT" -eq 0 ]]; then
-  TIMEOUT="${CMUX_APP_RECEIPT_TIMEOUT_SECONDS:-90}"
+  TIMEOUT="${HMUX_APP_RECEIPT_TIMEOUT_SECONDS:-90}"
   if [[ ! "$TIMEOUT" =~ ^[1-9][0-9]*$ ]]; then
-    echo "error: CMUX_APP_RECEIPT_TIMEOUT_SECONDS must be a positive integer" >&2
+    echo "error: HMUX_APP_RECEIPT_TIMEOUT_SECONDS must be a positive integer" >&2
     exit 2
   fi
 fi
@@ -166,7 +166,7 @@ fail() {
 }
 
 # --- device + app preconditions ----------------------------------------------
-APPS_JSON="$(mktemp "${TMPDIR:-/tmp}/cmux-verify-auth-apps.XXXXXX")"
+APPS_JSON="$(mktemp "${TMPDIR:-/tmp}/hmux-verify-auth-apps.XXXXXX")"
 trap 'rm -f "$APPS_JSON"' EXIT
 if ! xcrun devicectl device info apps \
     --device "$DEVICE_ID" --json-output "$APPS_JSON" >/dev/null 2>&1; then
@@ -190,36 +190,36 @@ fi
 
 # --- app-receipt mode: the app proves its persisted sign-in itself --------------
 if [[ "$READINESS_MODE" == "app-receipt" ]]; then
-  EXPECTED_CLIENT_ID="$(cmux_attach_dogfood_client_id "$BUNDLE_ID" "$DEVICE_ID")"
-  READINESS_NONCE="$(cmux_attach_readiness_nonce)"
+  EXPECTED_CLIENT_ID="$(hmux_attach_dogfood_client_id "$BUNDLE_ID" "$DEVICE_ID")"
+  READINESS_NONCE="$(hmux_attach_readiness_nonce)"
   [[ -n "$READINESS_NONCE" ]] || fail "could not create a readiness nonce"
-  STARTED_MS="$(cmux_attach_monotonic_milliseconds)"
+  STARTED_MS="$(hmux_attach_monotonic_milliseconds)"
   # Credential-free relaunch: only the client id and a fresh nonce. A replaced
   # session or injected credentials would turn this probe into a fresh sign-in.
-  if ! env -u DEVICECTL_CHILD_CMUX_UITEST_STACK_EMAIL \
-          -u DEVICECTL_CHILD_CMUX_UITEST_STACK_PASSWORD \
-          -u DEVICECTL_CHILD_CMUX_DOGFOOD_ATTACH_URL \
-          -u DEVICECTL_CHILD_CMUX_DEV_AUTH_REPLACE_SESSION \
-          DEVICECTL_CHILD_CMUX_DOGFOOD_CLIENT_ID="$EXPECTED_CLIENT_ID" \
-          DEVICECTL_CHILD_CMUX_DOGFOOD_READINESS_NONCE="$READINESS_NONCE" \
-          DEVICECTL_CHILD_CMUX_UITEST_MOCK_DATA=0 \
+  if ! env -u DEVICECTL_CHILD_HMUX_UITEST_STACK_EMAIL \
+          -u DEVICECTL_CHILD_HMUX_UITEST_STACK_PASSWORD \
+          -u DEVICECTL_CHILD_HMUX_DOGFOOD_ATTACH_URL \
+          -u DEVICECTL_CHILD_HMUX_DEV_AUTH_REPLACE_SESSION \
+          DEVICECTL_CHILD_HMUX_DOGFOOD_CLIENT_ID="$EXPECTED_CLIENT_ID" \
+          DEVICECTL_CHILD_HMUX_DOGFOOD_READINESS_NONCE="$READINESS_NONCE" \
+          DEVICECTL_CHILD_HMUX_UITEST_MOCK_DATA=0 \
           xcrun devicectl device process launch --terminate-existing \
           --device "$DEVICE_ID" "$BUNDLE_ID" >/dev/null 2>&1; then
     fail "could not relaunch $BUNDLE_ID (device locked? unlock the iPhone and rerun)"
   fi
-  RECEIPT_ERR="$(mktemp "${TMPDIR:-/tmp}/cmux-verify-auth-receipt.XXXXXX")"
+  RECEIPT_ERR="$(mktemp "${TMPDIR:-/tmp}/hmux-verify-auth-receipt.XXXXXX")"
   trap 'rm -f "$APPS_JSON" "$RECEIPT_ERR"' EXIT
-  if ! APP_RECEIPT_JSON="$(cmux_attach_wait_for_app_receipt \
+  if ! APP_RECEIPT_JSON="$(hmux_attach_wait_for_app_receipt \
       physical_device "$DEVICE_ID" "$BUNDLE_ID" "$READINESS_NONCE" \
       "$EXPECTED_CLIENT_ID" "$EXPECTED_ACCOUNT" restored "$TIMEOUT" \
       2>"$RECEIPT_ERR")"; then
     fail "no restored signed-in app receipt within ${TIMEOUT}s of a credential-free relaunch: $(sed 's/^error: //' "$RECEIPT_ERR" | head -n1)"
   fi
-  LATENCY_MS="$(($(cmux_attach_monotonic_milliseconds) - STARTED_MS))"
+  LATENCY_MS="$(($(hmux_attach_monotonic_milliseconds) - STARTED_MS))"
   GIT_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
-  INSTALLED_BUNDLE_METADATA="$(cmux_attach_installed_bundle_metadata \
+  INSTALLED_BUNDLE_METADATA="$(hmux_attach_installed_bundle_metadata \
     physical_device "$DEVICE_ID" "$BUNDLE_ID" 2>/dev/null || true)"
-  if cmux_attach_write_app_readiness_receipt \
+  if hmux_attach_write_app_readiness_receipt \
       "$RECEIPT_PATH" "$GIT_SHA" "$TAG" "$BUNDLE_ID" \
       physical_device "$DEVICE_ID" "$LATENCY_MS" 1 \
       "$APP_RECEIPT_JSON" "$INSTALLED_BUNDLE_METADATA" 2>/dev/null; then
@@ -236,25 +236,25 @@ fi
 # The proof is an event on the tagged Mac's debug socket, so the Mac app must
 # be running. A plain launch is enough (no pairing-host arming or ticket
 # minting: the phone must reconnect from persisted state on its own).
-if ! cmux_attach_mac_socket_ready "$TAG"; then
-  MAC_APP="$(cmux_attach_mac_app_path "$TAG")"
+if ! hmux_attach_mac_socket_ready "$TAG"; then
+  MAC_APP="$(hmux_attach_mac_app_path "$TAG")"
   if [[ ! -d "$MAC_APP" ]]; then
     fail "tagged Mac '$TAG' is not running and no local build exists (build it: ./scripts/reload-cloud.sh --tag $TAG, then rerun)"
   fi
   echo "==> launching tagged Mac app so the readiness event stream is observable ($TAG)" >&2
   open -g "$MAC_APP" >/dev/null 2>&1 || open "$MAC_APP" >/dev/null 2>&1 || true
   for _i in $(seq 1 60); do
-    cmux_attach_mac_socket_ready "$TAG" && break
+    hmux_attach_mac_socket_ready "$TAG" && break
     sleep 0.2
   done
-  cmux_attach_mac_socket_ready "$TAG" \
+  hmux_attach_mac_socket_ready "$TAG" \
     || fail "tagged Mac '$TAG' did not bind its debug socket after launch"
 fi
-if ! cmux_attach_wait_for_mac_auth_account "$TAG" "$REPO_ROOT" "$EXPECTED_ACCOUNT"; then
+if ! hmux_attach_wait_for_mac_auth_account "$TAG" "$REPO_ROOT" "$EXPECTED_ACCOUNT"; then
   fail "tagged Mac '$TAG' is not authenticated as the selected $AUTH_PROFILE account ($EXPECTED_ACCOUNT)"
 fi
 
-if ! READINESS_CURSOR="$(cmux_attach_readiness_cursor "$TAG" "$REPO_ROOT")"; then
+if ! READINESS_CURSOR="$(hmux_attach_readiness_cursor "$TAG" "$REPO_ROOT")"; then
   fail "could not read the tagged Mac's event stream (socket up but not answering)"
 fi
 
@@ -263,31 +263,31 @@ fi
 # event to this exact phone+bundle; it is not a secret and the app persists it
 # anyway). Explicitly drop any ambient credential/ticket injection so a caller
 # that exports DEVICECTL_CHILD_* cannot turn this probe into a fresh sign-in.
-EXPECTED_CLIENT_ID="$(cmux_attach_dogfood_client_id "$BUNDLE_ID" "$DEVICE_ID")"
-STARTED_MS="$(cmux_attach_monotonic_milliseconds)"
-if ! env -u DEVICECTL_CHILD_CMUX_UITEST_STACK_EMAIL \
-        -u DEVICECTL_CHILD_CMUX_UITEST_STACK_PASSWORD \
-        -u DEVICECTL_CHILD_CMUX_DOGFOOD_ATTACH_URL \
-        DEVICECTL_CHILD_CMUX_DOGFOOD_CLIENT_ID="$EXPECTED_CLIENT_ID" \
+EXPECTED_CLIENT_ID="$(hmux_attach_dogfood_client_id "$BUNDLE_ID" "$DEVICE_ID")"
+STARTED_MS="$(hmux_attach_monotonic_milliseconds)"
+if ! env -u DEVICECTL_CHILD_HMUX_UITEST_STACK_EMAIL \
+        -u DEVICECTL_CHILD_HMUX_UITEST_STACK_PASSWORD \
+        -u DEVICECTL_CHILD_HMUX_DOGFOOD_ATTACH_URL \
+        DEVICECTL_CHILD_HMUX_DOGFOOD_CLIENT_ID="$EXPECTED_CLIENT_ID" \
         xcrun devicectl device process launch --terminate-existing \
         --device "$DEVICE_ID" "$BUNDLE_ID" >/dev/null 2>&1; then
   fail "could not relaunch $BUNDLE_ID (device locked? unlock the iPhone and rerun)"
 fi
 
-if ! READY_EVENT="$(cmux_attach_wait_for_usable_session \
+if ! READY_EVENT="$(hmux_attach_wait_for_usable_session \
     "$TAG" "$REPO_ROOT" "$READINESS_CURSOR" "$TIMEOUT" "$EXPECTED_CLIENT_ID" \
     2>/dev/null)"; then
   fail "no usable RPC session within ${TIMEOUT}s of a credential-free relaunch: the app is signed out, unpaired, or its Mac route is down"
 fi
-LATENCY_MS="$(($(cmux_attach_monotonic_milliseconds) - STARTED_MS))"
+LATENCY_MS="$(($(hmux_attach_monotonic_milliseconds) - STARTED_MS))"
 
 # Durable secret-free proof, same schema and path as a mobile-dev-launch gate
 # pass, so downstream automation has ONE receipt location to check.
 GIT_SHA="$(git -C "$REPO_ROOT" rev-parse HEAD 2>/dev/null || echo unknown)"
-if cmux_attach_write_readiness_receipt \
+if hmux_attach_write_readiness_receipt \
     "$RECEIPT_PATH" "$GIT_SHA" "$TAG" "$BUNDLE_ID" \
     "physical_device" "$DEVICE_ID" "$TAG" \
-    "$(cmux_attach_socket_path "$TAG")" \
+    "$(hmux_attach_socket_path "$TAG")" \
     "$LATENCY_MS" 1 "$READY_EVENT" 2>/dev/null; then
   echo "==> readiness receipt: $RECEIPT_PATH" >&2
 else

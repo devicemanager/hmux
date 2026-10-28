@@ -39,7 +39,7 @@ describe("membership facts mark the seat queue", () => {
       },
     };
     const seats = new MemoryTeamSeatSync();
-    const request = new Request("https://cmux.test/api/teams/accept", { method: "POST", headers: { authorization: "Bearer t", "x-stack-refresh-token": "r" } });
+    const request = new Request("https://hmux.test/api/teams/accept", { method: "POST", headers: { authorization: "Bearer t", "x-stack-refresh-token": "r" } });
     await acceptTeamInvitationCode(request, OUTSIDER_ID, "code", { stack: stack.app(), codes, store: new MemoryInviteStore(), seats });
     expect(seats.changed).toEqual([TEAM_ID]);
   });
@@ -51,7 +51,7 @@ describe("membership facts mark the seat queue", () => {
       accept: async () => ({ ok: false, failure: "invalid" }),
     };
     const seats = new MemoryTeamSeatSync();
-    const request = new Request("https://cmux.test/api/teams/accept", { method: "POST", headers: { authorization: "Bearer t", "x-stack-refresh-token": "r" } });
+    const request = new Request("https://hmux.test/api/teams/accept", { method: "POST", headers: { authorization: "Bearer t", "x-stack-refresh-token": "r" } });
     await expect(acceptTeamInvitationCode(request, OUTSIDER_ID, "code", { stack: stack.app(), codes, store: new MemoryInviteStore(), seats })).rejects.toThrow();
     expect(seats.changed).toEqual([]);
   });
@@ -92,7 +92,7 @@ describe("membership facts mark the seat queue", () => {
     const stack = standardTeam();
     const seats = new MemoryTeamSeatSync();
     const access = await accessFor(stack, ADMIN_ID);
-    await inviteTeamMembers(access, { emails: ["new@example.com"], role: "member", acceptUrl: (token) => `https://cmux.test/join/${token}` }, { store: new MemoryInviteStore(), mailer: new MemoryInviteMailer() });
+    await inviteTeamMembers(access, { emails: ["new@example.com"], role: "member", acceptUrl: (token) => `https://hmux.test/join/${token}` }, { store: new MemoryInviteStore(), mailer: new MemoryInviteMailer() });
     await changeMemberRole(access, MEMBER_ID, "admin", { stack: stack.app(), lock: noLock, seats });
     expect(seats.changed).toEqual([]);
   });

@@ -25,7 +25,7 @@ for (const exports of moduleEntries) {
   }
 }
 common.DeviceMetadataSchema.shape.platform.register(registry, { id: "V2Platform" });
-const uri = (id: string) => `https://contracts.cmux.invalid/iroh-v2/${id}.json`;
+const uri = (id: string) => `https://contracts.hmux.invalid/iroh-v2/${id}.json`;
 const exported = z.toJSONSchema(registry, { target: "draft-7", unrepresentable: "throw", uri });
 
 /** Generation can only read schemas exported in this invocation. */
@@ -72,7 +72,7 @@ const swiftText = swift.lines.map(line => line.startsWith("    public init(")
   ? line.replace(/(\b\w+: [\w\[\]: ]+\?)(?=,|\))/g, "$1 = nil")
   : line).join("\n") + "\n";
 if (/(?:class|struct|typealias)\s+JSONAny|:\s*\[?JSONAny/.test(swiftText)) throw new Error("Wire contracts must not generate unrestricted JSONAny");
-await emit("../../Packages/Shared/CmuxIrxTransport/Sources/CmuxIrxTransport/ControlPlane/V2WireModels.swift", swiftText);
+await emit("../../Packages/Shared/HmuxIrxTransport/Sources/HmuxIrxTransport/ControlPlane/V2WireModels.swift", swiftText);
 const requestNames = Object.entries(requests).filter(([k,v]) => k.endsWith("Schema") && k !== "RequestSchema" && k !== "SocketSetupSchema" && v instanceof z.ZodType).map(([k]) => "V2" + k.slice(0,-6));
 const responseNames = Object.entries(responses).filter(([k,v]) => k.endsWith("ResponseSchema") && k !== "ResponseSchema" && v instanceof z.ZodType).map(([k]) => "V2" + k.slice(0,-6));
 await emit("generated/wire.ts", typescript.lines.join("\n") + `\nexport type V2Request = ${requestNames.join(" | ")};\nexport type V2Response = ${responseNames.join(" | ")};\n`);

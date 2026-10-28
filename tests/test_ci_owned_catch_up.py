@@ -18,7 +18,7 @@ SCRIPT = REPO / "scripts/ci/owned_catch_up.sh"
 
 
 def run(*args: str, env: dict[str, str] | None = None, cwd: Path = REPO) -> subprocess.CompletedProcess:
-    base = {key: value for key, value in os.environ.items() if not key.startswith(("CMUX_", "GITHUB_"))}
+    base = {key: value for key, value in os.environ.items() if not key.startswith(("HMUX_", "GITHUB_"))}
     return subprocess.run(["bash", str(SCRIPT), *args], cwd=cwd, env={**base, **(env or {})},
                           capture_output=True, text=True, timeout=120)
 
@@ -27,17 +27,17 @@ class OwnedCatchUpTest(unittest.TestCase):
     def test_rejects_bad_arguments(self) -> None:
         for args in ((), ("1",), ("0", "/state"), ("x", "/state"), ("100", "/state"), ("1", "relative")):
             with self.subTest(args=args):
-                self.assertEqual(run(*args, env={"CMUX_CI_XCODE_APP": "/Applications/Xcode.app"}).returncode, 64)
+                self.assertEqual(run(*args, env={"HMUX_CI_XCODE_APP": "/Applications/Xcode.app"}).returncode, 64)
 
     def test_needs_an_xcode_pin(self) -> None:
         result = run("99", "/nonexistent-state")
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("CMUX_CI_XCODE_APP", result.stderr)
+        self.assertIn("HMUX_CI_XCODE_APP", result.stderr)
 
     def test_runs_only_from_its_own_checkout(self) -> None:
         with tempfile.TemporaryDirectory() as other:
             subprocess.run(["git", "init", "-q", other], check=True)
-            result = run("99", "/nonexistent-state", env={"CMUX_CI_XCODE_APP": "/Applications/Xcode.app"},
+            result = run("99", "/nonexistent-state", env={"HMUX_CI_XCODE_APP": "/Applications/Xcode.app"},
                          cwd=Path(other))
         self.assertEqual(result.returncode, 64)
 
@@ -48,8 +48,8 @@ class OwnedCatchUpTest(unittest.TestCase):
             stub = Path(tools) / "defaults"
             stub.write_text(f'#!/bin/sh\necho "$*" >> "{calls}"\n')
             stub.chmod(0o755)
-            result = run("99", state, env={"CMUX_CI_XCODE_APP": "/nonexistent/Xcode.app",
-                                           "CMUX_CATCH_UP_LOG": os.path.join(state, "log"),
+            result = run("99", state, env={"HMUX_CI_XCODE_APP": "/nonexistent/Xcode.app",
+                                           "HMUX_CATCH_UP_LOG": os.path.join(state, "log"),
                                            "PATH": f"{tools}:{os.environ['PATH']}"})
             self.assertEqual(result.returncode, 1)
             # An override a killed run left behind is cleared before anything else.

@@ -53,7 +53,7 @@ export function fixtureStackUser(input: {
     hasPermission: mock(async (team: { id: string }, permission: string) =>
       permission === "team_admin" && admins.has(team.id)),
     grantPermission: mock(async (_team: unknown, _permission: string) => undefined),
-    createTeam: mock(async (_data: { displayName: string }) => fixtureTeam("created-team", { displayName: "cmux Team" })),
+    createTeam: mock(async (_data: { displayName: string }) => fixtureTeam("created-team", { displayName: "hmux Team" })),
     update: mock(async () => undefined),
   };
 }

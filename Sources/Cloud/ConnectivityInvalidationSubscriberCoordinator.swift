@@ -1,6 +1,6 @@
-import CmuxFoundation
-import CmuxAuthRuntime
-import CmuxIrohTransport
+import HmuxFoundation
+import HmuxAuthRuntime
+import HmuxIrohTransport
 import Foundation
 import Observation
 
@@ -103,7 +103,7 @@ final class ConnectivityInvalidationSubscriberCoordinator {
                     await MainActor.run {
                         guard MobileHostService.isListeningEnabled else { return }
                         #if DEBUG
-                        cmuxDebugLog("connectivity.stream \(event)")
+                        hmuxDebugLog("connectivity.stream \(event)")
                         #endif
                         // Frames sent while a stream was down are never
                         // replayed; each fresh stream re-checks the reply
@@ -119,7 +119,7 @@ final class ConnectivityInvalidationSubscriberCoordinator {
                     await MainActor.run {
                         guard MobileHostService.isListeningEnabled else { return }
                         #if DEBUG
-                        cmuxDebugLog("connectivity.frame revision=\(invalidation.revision)")
+                        hmuxDebugLog("connectivity.frame revision=\(invalidation.revision)")
                         #endif
                         MobileHostDiagnostics.logger.info(
                             "Connectivity revision invalidated; reconciling authoritative routes"

@@ -107,12 +107,12 @@ test("two nightly Macs on one account: the opted-in host admits the discovering 
   expect(names(host.inboundPeers.map((p: any) => p.device))).not.toContain("mac-alice");
   // A Mac client that depends on this rule reads it from the directory instead
   // of assuming the deployed Worker implements it (#13458).
-  expect(host.rules).toContain("cmux.mac-peer-inbound.v1");
+  expect(host.rules).toContain("hmux.mac-peer-inbound.v1");
   const dialer = (await post("/directory", { device: "nightly-dialer" })).body.directory;
   expect(names(dialer.devices)).toContain("nightly-host");
   // Discovery alone grants nothing inbound from another Mac; the account's phones keep entering as before.
   expect(names(dialer.inboundPeers.map((p: any) => p.device))).toEqual(["phone-alice"]);
-  expect(dialer.rules).toContain("cmux.mac-peer-inbound.v1");
+  expect(dialer.rules).toContain("hmux.mac-peer-inbound.v1");
 });
 
 test("the iOS directory path never receives Mac-to-Mac inbound grants", async () => {

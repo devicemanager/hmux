@@ -33,14 +33,14 @@ class PrepareCandidateTests(unittest.TestCase):
                         'args': sys.argv[1:],
                         'version': os.environ.get('BETA_MARKETING_VERSION'),
                     }))
-                    Path(os.environ['CMUX_BUILD_NUMBER_OUT_FILE']).write_text('20260924180000')
+                    Path(os.environ['HMUX_BUILD_NUMBER_OUT_FILE']).write_text('20260924180000')
                     '''))
                 script.chmod(0o755)
             env = dict(os.environ, INPUT_PREPARE_ONLY=prepare,
                 IOS_TESTFLIGHT_UPLOAD_MODE='marketing_version_override' if override else 'canonical',
                 INPUT_MARKETING_VERSION_OVERRIDE='1.0.6' if override else '',
                 INPUT_BUILD_NUMBER='', LAST_UPLOADED_SHA='',
-                CMUX_BUILD_NUMBER_OUT_FILE=str(root / 'build-number'),
+                HMUX_BUILD_NUMBER_OUT_FILE=str(root / 'build-number'),
                 GITHUB_OUTPUT=str(root / 'output'), ARCHIVE_LOG=str(root / 'archive.log'))
             subprocess.run(['bash', '-c', archive_step()], cwd=root, env=env,
                            check=True, capture_output=True, text=True)
@@ -98,8 +98,8 @@ class PrepareCandidateTests(unittest.TestCase):
         config = (ROOT / 'ios/Config/Release.xcconfig').read_text()
         values = dict(line.split(' = ', 1) for line in config.splitlines()
                       if ' = ' in line and not line.startswith('//'))
-        self.assertEqual(values.get('CMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER'),
-                         'dev.cmux.app.beta.NotificationServiceV2')
+        self.assertEqual(values.get('HMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER'),
+                         'dev.hmux.app.beta.NotificationServiceV2')
 
     def test_candidate_cannot_claim_uploaded_metadata(self):
         text = WORKFLOW.read_text()
@@ -108,7 +108,7 @@ class PrepareCandidateTests(unittest.TestCase):
             step = text.split(f'      - name: {name}\n')[1].split('\n      - name:')[0]
             self.assertIn("github.event.inputs.prepare_only != 'true'", step)
         candidate = text.split('      - name: Package prepared candidate\n')[1].split('\n      - name:')[0]
-        self.assertIn('/export/cmux-resigned.ipa', candidate)
+        self.assertIn('/export/hmux-resigned.ipa', candidate)
 
 
 if __name__ == '__main__':

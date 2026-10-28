@@ -12,27 +12,27 @@ const POOL_MAX = 2;
 type Runtime = ReturnType<typeof makeDatabaseRuntime>;
 
 const globals = globalThis as typeof globalThis & {
-  __cmuxHangReportsEffectDatabase?: { key: string; runtime: Runtime };
+  __hmuxHangReportsEffectDatabase?: { key: string; runtime: Runtime };
 };
 
 /**
  * One small Effect-owned pool per server instance for hang report ingest and
- * retention. PlanetScale only: `CMUX_DB_DRIVER=url` with `DATABASE_URL`.
+ * retention. PlanetScale only: `HMUX_DB_DRIVER=url` with `DATABASE_URL`.
  */
 function hangReportsDatabaseRuntime(): Runtime {
   const config = cloudDbConfig();
   if (config.driver !== "url") {
-    throw new Error("hang reports need CMUX_DB_DRIVER=url with a PlanetScale DATABASE_URL");
+    throw new Error("hang reports need HMUX_DB_DRIVER=url with a PlanetScale DATABASE_URL");
   }
   const key = `${cloudDbConfigKey(config)}:hang-reports:${POOL_MAX}`;
-  const current = globals.__cmuxHangReportsEffectDatabase;
+  const current = globals.__hmuxHangReportsEffectDatabase;
   if (current?.key === key) return current.runtime;
   const runtime = makeDatabaseRuntime({
     url: Redacted.make(config.url),
     maxConnections: POOL_MAX,
-    applicationName: "cmux-hang-reports",
+    applicationName: "hmux-hang-reports",
   });
-  globals.__cmuxHangReportsEffectDatabase = { key, runtime };
+  globals.__hmuxHangReportsEffectDatabase = { key, runtime };
   if (current) void current.runtime.dispose();
   return runtime;
 }

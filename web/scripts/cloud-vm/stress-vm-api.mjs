@@ -116,11 +116,11 @@ async function runCase(index) {
   const started = Date.now();
   try {
     user = await stack.createUser({
-      primaryEmail: `cmux-${project.stackLabel}-stress+${suffix}@manaflow.dev`,
+      primaryEmail: `hmux-${project.stackLabel}-stress+${suffix}@manaflow.dev`,
       primaryEmailVerified: true,
       primaryEmailAuthEnabled: true,
       password: randomBytes(24).toString("base64url"),
-      displayName: `cmux ${project.stackLabel} stress ${index}`,
+      displayName: `hmux ${project.stackLabel} stress ${index}`,
     });
     throwIfInterrupted();
     const session = await user.createSession({ expiresInMillis: 20 * 60 * 1000, isImpersonation: true });
@@ -154,13 +154,13 @@ async function runCase(index) {
     vmId = created.id;
     throwIfInterrupted();
 
-    // cmux Cloud machines run only the cmux-tui remote daemon (no cmuxd RPC to probe).
-    const expectedTransport = "cmux-remote";
+    // hmux Cloud machines run only the hmux-tui remote daemon (no hmuxd RPC to probe).
+    const expectedTransport = "hmux-remote";
     const attachStartedAt = performance.now();
     const attach = await fetchWithTimeout(`${targetUrl}/api/vm/${encodeURIComponent(vmId)}/attach-endpoint`, {
       method: "POST",
       headers: { ...authHeaders, "content-type": "application/json" },
-      body: JSON.stringify(expectedTransport === "cmux-remote" ? { transport: "cmux-remote" } : { requireDaemon: true }),
+      body: JSON.stringify(expectedTransport === "hmux-remote" ? { transport: "hmux-remote" } : { requireDaemon: true }),
     }, 45_000);
     attachDurationMs = Math.round(performance.now() - attachStartedAt);
     const attachText = await attach.text();
@@ -172,10 +172,10 @@ async function runCase(index) {
     throwIfInterrupted();
 
     let rpcCapabilities = null;
-    if (expectedTransport === "cmux-remote") {
+    if (expectedTransport === "hmux-remote") {
       // Direct public IPv6 ws to the Freestyle machine.
       if (!/^wss?:\/\/.+\/v1\/link(\?|$)/.test(attached.route ?? "")) {
-        throw new Error("cmux-remote attach response missing the daemon route");
+        throw new Error("hmux-remote attach response missing the daemon route");
       }
     } else {
       if (!attached.daemon?.url || !attached.daemon?.token || !attached.daemon?.sessionId) {

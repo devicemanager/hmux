@@ -36,7 +36,7 @@ if ! [[ "$MAX_DELTAS" =~ ^[0-9]+$ ]] || [[ "$MAX_DELTAS" -eq 0 ]]; then
   exit 0
 fi
 
-work_dir="$(mktemp -d "${TMPDIR:-/tmp}/cmux-prebuild-deltas.XXXXXX")"
+work_dir="$(mktemp -d "${TMPDIR:-/tmp}/hmux-prebuild-deltas.XXXXXX")"
 mounts=()
 cleanup() {
   local mount

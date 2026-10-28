@@ -67,7 +67,7 @@ export type VmHealthClassifierInput = {
 
 /** The workload a provider VM belongs to on the shared account. */
 export function vmWorkload(metadata: Readonly<Record<string, string>>): VmWorkload {
-  if (metadata.cmux === "cloud") return "cmux_cloud";
+  if (metadata.hmux === "cloud") return "hmux_cloud";
   const app = metadata.app?.trim();
   return app ? `app:${app.slice(0, 63)}` : "other";
 }
@@ -216,7 +216,7 @@ function classifyStuck(
       vmId: row.providerVmId,
       source: "db",
       state: row.status,
-      workload: "cmux_cloud",
+      workload: "hmux_cloud",
       owner: ownerFromRow(row),
       since: row.updatedAt.toISOString(),
       minutes: Math.floor(ageMs / MINUTE_MS),
@@ -226,7 +226,7 @@ function classifyStuck(
 }
 
 /**
- * DB and provider disagree. Only cmux Cloud machines are compared: other
+ * DB and provider disagree. Only hmux Cloud machines are compared: other
  * workloads on the account have no DB rows by design. Recent DB changes and
  * new provider VMs are left alone because a lifecycle call may be between its
  * provider call and its row update. The reconcile cron owns repair; this only
@@ -252,7 +252,7 @@ function classifyDrift(
     drift.push(driftEntry(row, vm, kind));
   }
   for (const vm of inventory.vms) {
-    if (vmWorkload(vm.metadata) !== "cmux_cloud" || vm.state === "stopped") continue;
+    if (vmWorkload(vm.metadata) !== "hmux_cloud" || vm.state === "stopped") continue;
     if (isRecent(now, vm.createdAt, thresholds.driftGraceMs)) continue;
     const row = rowByProviderId.get(vm.id);
     if (row && row.status !== "destroyed") continue;
@@ -395,7 +395,7 @@ function attentionReasons(input: {
   const reasons: VmAttentionReason[] = [];
   if (input.hung.length > 0) reasons.push({ code: "hung_vms", count: input.hung.length });
   if (input.stuck.length > 0) reasons.push({ code: "stuck_transitions", count: input.stuck.length });
-  // A cmux-tagged VM with no row here may belong to another environment on
+  // A hmux-tagged VM with no row here may belong to another environment on
   // the shared account; it is listed, but does not by itself page anyone.
   const drift = input.drift.filter((entry) => entry.kind !== "provider_untracked").length;
   if (drift > 0) reasons.push({ code: "drift", count: drift });

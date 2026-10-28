@@ -1,11 +1,11 @@
-import CmuxFoundation
-import CmuxSettings
-import CmuxSettingsUI
+import HmuxFoundation
+import HmuxSettings
+import HmuxSettingsUI
 import SwiftUI
 
 /// The Cloud panel's full-width New Cloud Machine button, between the team
 /// header and the machine list. It runs the same action as Cmd-Shift-Y, so the list
-/// itself carries no create row for machines. Like the rest of cmux's chrome,
+/// itself carries no create row for machines. Like the rest of hmux's chrome,
 /// its shortcut shows only while Command is held.
 struct CloudNewMachineButton: View {
     let action: () -> Void
@@ -38,7 +38,7 @@ struct CloudNewMachineButton: View {
                 Image(systemName: "plus")
                     .font(.system(size: 11, weight: .semibold))
                 Text(title)
-                    .cmuxFont(size: 12, weight: .medium)
+                    .hmuxFont(size: 12, weight: .medium)
                     .lineLimit(1)
             }
             .frame(maxWidth: .infinity, minHeight: 26)

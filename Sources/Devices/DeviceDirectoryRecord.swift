@@ -1,6 +1,6 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HMUXMobileCore
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// What the account's presence service currently says about a device.

@@ -1,11 +1,11 @@
 # Start here
 
-You want to change something in cmux and you have not done it before. This page
+You want to change something in hmux and you have not done it before. This page
 is the shortest path from that to a merged pull request. It assumes nothing
 except that you can use git.
 
-cmux is a macOS terminal that treats agents as first-class panes. The app and
-the `cmux` CLI are Swift. `cmux-tui`, the SDKs and the repository tooling are
+hmux is a macOS terminal that treats agents as first-class panes. The app and
+the `hmux` CLI are Swift. `hmux-tui`, the SDKs and the repository tooling are
 Rust, Python and TypeScript.
 
 ## 1. Pick something small
@@ -31,7 +31,7 @@ one, working out where it belongs and saying so in a comment is useful and needs
 no Xcode.
 
 Skip anything labeled `needs a call`. That work is waiting on a maintainer
-decision about what cmux should do, not on code.
+decision about what hmux should do, not on code.
 
 **Say on the issue that you are picking it up, then start.** One comment is
 enough, and you don't need to wait for a reply. It stops two people writing the
@@ -44,14 +44,14 @@ anything. Plenty of open issues were fixed by other work and nobody noticed.
 
 ## 2. Things you can fix without a Mac build
 
-Most of cmux needs macOS and Xcode. These do not:
+Most of hmux needs macOS and Xcode. These do not:
 
 - Documentation, including this page and the [README](../README.md).
 - Translations and localization catalogs.
 - The Python tooling under `scripts/` and its tests under `tests/`, which run
   on Linux.
 - The triage rules in [`scripts/ci/triage_rules.py`](../scripts/ci/triage_rules.py).
-- The `cmux-tui` Rust crates and the SDKs, which have their own test lanes.
+- The `hmux-tui` Rust crates and the SDKs, which have their own test lanes.
 
 The web surfaces under `web/` also build and test on Linux, but note they are
 licensed differently from the app: [LICENSE](../LICENSE) puts `web/` and the
@@ -61,7 +61,7 @@ GPL part of the tree.
 
 If you do have a Mac: [CONTRIBUTING.md](../CONTRIBUTING.md) has the
 prerequisites and the two commands that get you a running debug build
-(`./scripts/setup.sh`, then `CMUX_DEV_BACKEND_MODE=local ./scripts/reload.sh
+(`./scripts/setup.sh`, then `HMUX_DEV_BACKEND_MODE=local ./scripts/reload.sh
 --tag my-feature`). Clone with `--recursive`; the submodules are not optional.
 
 ## 3. Check your change before you push
@@ -128,8 +128,8 @@ the weakest part of contributing here. If your PR goes quiet and you want eyes
 on it, comment on it and say so. That works better than opening a second one.
 
 To land, a change needs green CI, a review that has been answered, and no
-pending decision about what cmux should do. That last one is the usual reason
-a finished patch waits: if the question is "should cmux behave this way", a
+pending decision about what hmux should do. That last one is the usual reason
+a finished patch waits: if the question is "should hmux behave this way", a
 maintainer answers it before the code goes in, and the pull request gets the
 `needs a call` label until then.
 
@@ -150,7 +150,7 @@ If several people are contributing at once, a few things make it work:
 - Have each person claim a different issue in a comment before starting. Thirty
   patches for one `good first issue` helps nobody.
 - `needs-triage` and localization scale well across many people and need no
-  Mac. A group that clears 200 `needs-triage` issues has done more for cmux
+  Mac. A group that clears 200 `needs-triage` issues has done more for hmux
   than a group that opens 200 small PRs.
 - One PR per person per issue. Do not open a PR per commit.
 - Read [STYLE.md](../STYLE.md) once as a group; it is short, and it is what

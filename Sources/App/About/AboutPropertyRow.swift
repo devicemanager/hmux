@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 struct AboutPropertyRow: View {
@@ -35,7 +35,7 @@ struct AboutPropertyRow: View {
                 textView
             }
         }
-        .cmuxFont(.callout)
+        .hmuxFont(.callout)
         .textSelection(.enabled)
         .frame(maxWidth: .infinity)
     }

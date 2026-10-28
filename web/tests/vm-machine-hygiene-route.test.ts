@@ -18,13 +18,13 @@ import { VmProviderGateway, type VmProviderGatewayShape } from "../services/vms/
 import { VmRepository, type CloudVmRow, type VmRepositoryShape } from "../services/vms/repository";
 import { runChild } from "./helpers/run-child";
 
-// POST /api/vm/[id]/hygiene runs cmux-machine-hygiene on one of the caller's
+// POST /api/vm/[id]/hygiene runs hmux-machine-hygiene on one of the caller's
 // own machines through exec. These tests pin that a call without apply
 // deletes nothing (by running the exact command the route sends against a
 // throwaway machine), that apply must be exactly `true`, that only the
 // owner may run it, and that a paused machine is never woken.
 
-const SCRIPT = path.join(import.meta.dirname, "../services/vms/hygiene/cmux-machine-hygiene");
+const SCRIPT = path.join(import.meta.dirname, "../services/vms/hygiene/hmux-machine-hygiene");
 const DAY_S = 24 * 60 * 60;
 
 setDefaultTimeout(30_000);
@@ -64,7 +64,7 @@ function tree(root: string): string[] {
 
 /** A throwaway machine full of things the script would reclaim. */
 function machine() {
-  const root = mkdtempSync(path.join(tmpdir(), "cmux-hygiene-route-"));
+  const root = mkdtempSync(path.join(tmpdir(), "hmux-hygiene-route-"));
   fixtures.push(root);
   const home = path.join(root, "home");
   const tmp = path.join(root, "tmp");
@@ -94,8 +94,8 @@ async function runCommandLocally(m: ReturnType<typeof machine>, apply: boolean) 
       PATH: `${m.bin}:${process.env.PATH ?? "/usr/bin:/bin"}`,
       HOME: m.home,
       TMPDIR: m.tmp,
-      CMUX_HYGIENE_SANDBOX: m.root,
-      CMUX_HYGIENE_SANDBOX_APPLY: apply ? "1" : undefined,
+      HMUX_HYGIENE_SANDBOX: m.root,
+      HMUX_HYGIENE_SANDBOX_APPLY: apply ? "1" : undefined,
     },
   });
   expect(result.stderr).toBe("");
@@ -117,7 +117,7 @@ describe("machine hygiene command", () => {
   test("passes --apply only when asked", () => {
     const lastLine = (apply: boolean) => machineHygieneCommand({ apply }).split("\n").pop() ?? "";
     expect(lastLine(false)).not.toContain("--apply");
-    expect(lastLine(false)).toContain('--home "$cmux_hygiene_home" --root "$cmux_hygiene_home"');
+    expect(lastLine(false)).toContain('--home "$hmux_hygiene_home" --root "$hmux_hygiene_home"');
     expect(lastLine(true).endsWith(" --apply")).toBe(true);
   });
 
@@ -162,7 +162,7 @@ describe("machine hygiene request and report", () => {
       JSON.stringify({
         version: 1,
         mode,
-        home: "/home/cmux",
+        home: "/home/hmux",
         diskUsedPctBefore: 50,
         diskUsedPctAfter: 50,
         reclaimableKb: 4,
@@ -180,7 +180,7 @@ describe("runMachineHygiene", () => {
   const OWNER = "user-owner";
   const TEAM = "team-shared";
   const dryRunStdout = JSON.stringify({
-    version: 1, mode: "dry-run", home: "/home/cmux", diskUsedPctBefore: 40, diskUsedPctAfter: 40, reclaimableKb: 0, items: [],
+    version: 1, mode: "dry-run", home: "/home/hmux", diskUsedPctBefore: 40, diskUsedPctAfter: 40, reclaimableKb: 0, items: [],
   });
   const applyStdout = dryRunStdout.replace('"dry-run"', '"apply"');
 
@@ -254,7 +254,7 @@ describe("runMachineHygiene", () => {
         getStatus: () => Effect.succeed("running" as const),
         exec: (_p: string, _i: string, command: string) => Effect.sync(() => {
           commands.push(command);
-          return { exitCode: 4, stdout: "", stderr: "another cmux-machine-hygiene --apply is running (pid 7)\n" };
+          return { exitCode: 4, stdout: "", stderr: "another hmux-machine-hygiene --apply is running (pid 7)\n" };
         }),
       } as unknown as VmProviderGatewayShape),
       Layer.succeed(VmBillingGateway, noOpVmBillingGateway()),

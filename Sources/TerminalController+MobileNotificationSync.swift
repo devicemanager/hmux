@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 
 /// Mobile-host notification verbs (cross-device dismiss-sync): the

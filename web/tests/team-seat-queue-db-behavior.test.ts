@@ -8,7 +8,7 @@ import postgres, { type Sql } from "postgres";
 import { closeCloudDbForTests } from "../db/client";
 import { databaseTeamSeatQueue as queue, TEAM_SEATS_BUSY } from "../services/billing/teamSeatQueue";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const TEAM = "11111111-1111-4111-8111-111111111111";
 const OTHER = "22222222-2222-4222-8222-222222222222";
@@ -18,7 +18,7 @@ let sql: Sql | null = null;
 beforeAll(() => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!databaseURL) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!databaseURL) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   sql = postgres(databaseURL, { max: 2 });
 });
 

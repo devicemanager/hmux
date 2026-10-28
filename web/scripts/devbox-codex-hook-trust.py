@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Ask codex whether every hook a cmux-tui pane launch gives it is trusted.
+"""Ask codex whether every hook a hmux-tui pane launch gives it is trusted.
 
-A daemon pane starts codex through `cmux-tui agent codex-wrapper`, which adds
+A daemon pane starts codex through `hmux-tui agent codex-wrapper`, which adds
 per-terminal hooks and their trust as `-c` overrides. Codex draws its composer
 before it shows "Hooks need review", so a screen probe cannot see a wrapper
 whose trust codex ignores. This records the exact argv the wrapper passes,
@@ -25,7 +25,7 @@ import time
 SESSION_FLAGS_KEY = "/<session-flags>/"
 
 FAKE_CODEX = """#!/bin/sh
-for arg in "$@"; do printf '%s\\0' "$arg"; done > "$CMUX_HOOK_TRUST_ARGV"
+for arg in "$@"; do printf '%s\\0' "$arg"; done > "$HMUX_HOOK_TRUST_ARGV"
 """
 
 
@@ -33,7 +33,7 @@ def wrapper_argv(wrapper, socket, terminal):
     """The arguments the wrapper hands the codex it finds first on PATH."""
     # Under HOME, not /tmp: the wrapper skips a codex it cannot execute, and
     # /tmp may be mounted noexec.
-    scratch = tempfile.mkdtemp(prefix=".cmux-hook-trust-", dir=os.environ.get("HOME") or None)
+    scratch = tempfile.mkdtemp(prefix=".hmux-hook-trust-", dir=os.environ.get("HOME") or None)
     try:
         fake = os.path.join(scratch, "codex")
         with open(fake, "w") as handle:
@@ -43,11 +43,11 @@ def wrapper_argv(wrapper, socket, terminal):
         env = dict(os.environ)
         env.update(
             PATH=scratch + os.pathsep + env.get("PATH", ""),
-            CMUX_TUI_SOCKET=socket,
-            CMUX_TUI_TERMINAL_ID=terminal,
-            CMUX_HOOK_TRUST_ARGV=argv_file,
+            HMUX_TUI_SOCKET=socket,
+            HMUX_TUI_TERMINAL_ID=terminal,
+            HMUX_HOOK_TRUST_ARGV=argv_file,
         )
-        for name in ("CMUX_TUI_CODEX_WRAPPER_ACTIVE", "CMUX_TUI_CODEX_HOOKS_DISABLED", "CMUX_CODEX_HOOKS_DISABLED"):
+        for name in ("HMUX_TUI_CODEX_WRAPPER_ACTIVE", "HMUX_TUI_CODEX_HOOKS_DISABLED", "HMUX_CODEX_HOOKS_DISABLED"):
             env.pop(name, None)
         subprocess.run([wrapper, "agent", "codex-wrapper"], env=env, check=True, timeout=60)
         with open(argv_file, "rb") as handle:
@@ -103,7 +103,7 @@ def list_hooks(codex, argv, cwd, timeout):
             return message.get("result")
 
     try:
-        send({"id": 1, "method": "initialize", "params": {"clientInfo": {"name": "cmux-verify", "version": "0"}}})
+        send({"id": 1, "method": "initialize", "params": {"clientInfo": {"name": "hmux-verify", "version": "0"}}})
         reply(1)
         send({"method": "initialized"})
         send({"id": 2, "method": "hooks/list", "params": {"cwds": [cwd]}})
@@ -127,7 +127,7 @@ def hooks_in(value):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--wrapper", required=True, help="the cmux-tui binary a pane's codex shim execs")
+    parser.add_argument("--wrapper", required=True, help="the hmux-tui binary a pane's codex shim execs")
     parser.add_argument("--socket", required=True)
     parser.add_argument("--terminal", default="term_verify")
     parser.add_argument("--codex", default="codex")

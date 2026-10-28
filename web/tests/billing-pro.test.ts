@@ -54,41 +54,41 @@ function withFreshMetadataUser(
 }
 
 describe("syncProPlanMetadata", () => {
-  test("sets cmuxPlan on upgrade and keeps other keys", async () => {
+  test("sets hmuxPlan on upgrade and keeps other keys", async () => {
     const user = metadataUser({ theme: "dark" });
     await syncProPlanMetadata(user, true, mutationLease());
-    expect(user.updates).toEqual([{ theme: "dark", cmuxPlan: PRO_PLAN_ID }]);
+    expect(user.updates).toEqual([{ theme: "dark", hmuxPlan: PRO_PLAN_ID }]);
   });
 
   test("no-op when already pro", async () => {
-    const user = metadataUser({ cmuxPlan: PRO_PLAN_ID });
+    const user = metadataUser({ hmuxPlan: PRO_PLAN_ID });
     await syncProPlanMetadata(user, true, mutationLease());
     expect(user.updates).toEqual([]);
   });
 
-  test("removes cmuxPlan when pro lapsed", async () => {
-    const user = metadataUser({ cmuxPlan: PRO_PLAN_ID, theme: "dark" });
+  test("removes hmuxPlan when pro lapsed", async () => {
+    const user = metadataUser({ hmuxPlan: PRO_PLAN_ID, theme: "dark" });
     await syncProPlanMetadata(user, false, mutationLease());
     expect(user.updates).toEqual([{ theme: "dark" }]);
   });
 
   test("does not write pro metadata while account deletion is in progress", async () => {
-    const user = metadataUser({ cmuxAccountDeleting: true });
+    const user = metadataUser({ hmuxAccountDeleting: true });
     await syncProPlanMetadata(user, true, mutationLease());
     expect(user.updates).toEqual([]);
   });
 
   test("does not clear pro metadata while account deletion is in progress", async () => {
-    const user = metadataUser({ cmuxAccountDeleting: true, cmuxPlan: PRO_PLAN_ID });
+    const user = metadataUser({ hmuxAccountDeleting: true, hmuxPlan: PRO_PLAN_ID });
     await syncProPlanMetadata(user, false, mutationLease());
     expect(user.updates).toEqual([]);
   });
 
-  test("leaves cmuxVmPlan override untouched", async () => {
-    const user = metadataUser({ cmuxVmPlan: "enterprise" });
+  test("leaves hmuxVmPlan override untouched", async () => {
+    const user = metadataUser({ hmuxVmPlan: "enterprise" });
     await syncProPlanMetadata(user, true, mutationLease());
     expect(user.updates).toEqual([
-      { cmuxVmPlan: "enterprise", cmuxPlan: PRO_PLAN_ID },
+      { hmuxVmPlan: "enterprise", hmuxPlan: PRO_PLAN_ID },
     ]);
   });
 
@@ -101,7 +101,7 @@ describe("syncProPlanMetadata", () => {
   test("tolerates non-object metadata", async () => {
     const user = metadataUser("bogus");
     await syncProPlanMetadata(user, true, mutationLease());
-    expect(user.updates).toEqual([{ cmuxPlan: PRO_PLAN_ID }]);
+    expect(user.updates).toEqual([{ hmuxPlan: PRO_PLAN_ID }]);
   });
 });
 
@@ -115,11 +115,11 @@ describe("reconcileProPlanMetadata", () => {
         withFreshMetadataUser: withFreshMetadataUser(user),
       }),
     ).toBe(true);
-    expect(user.updates).toEqual([{ cmuxPlan: PRO_PLAN_ID }]);
+    expect(user.updates).toEqual([{ hmuxPlan: PRO_PLAN_ID }]);
   });
 
   test("clears metadata when no Stripe subscription row is active", async () => {
-    const user = metadataUser({ cmuxPlan: PRO_PLAN_ID }, "user-free");
+    const user = metadataUser({ hmuxPlan: PRO_PLAN_ID }, "user-free");
     expect(
       await reconcileProPlanMetadata(user, {
         hasActiveStripeSubscription: async () => false,
@@ -141,8 +141,8 @@ describe("reconcileProPlanMetadata", () => {
     expect(user.updates).toEqual([]);
   });
 
-  test("skips when manual cmuxVmPlan override is set", async () => {
-    const user = metadataUser({ cmuxVmPlan: "enterprise" }, "user-free");
+  test("skips when manual hmuxVmPlan override is set", async () => {
+    const user = metadataUser({ hmuxVmPlan: "enterprise" }, "user-free");
     expect(
       await reconcileProPlanMetadata(user, {
         hasActiveStripeSubscription: async () => false,
@@ -170,7 +170,7 @@ describe("resolveProPlanStatus", () => {
   test("local development Stack accounts receive Pro without a billing grant", async () => {
     expect(isDevelopmentProAccessEnabled({
       NODE_ENV: "development",
-      CMUX_LOCAL_DEV_PRO: "1",
+      HMUX_LOCAL_DEV_PRO: "1",
       NEXT_PUBLIC_STACK_PROJECT_ID: "454ecd03-1db2-4050-845e-4ce5b0cd9895",
     })).toBe(true);
     expect(isDevelopmentProAccessEnabled({
@@ -190,7 +190,7 @@ describe("resolveProPlanStatus", () => {
     await expect(resolveProPlanStatus(user, {
       environment: {
         NODE_ENV: "development",
-        CMUX_LOCAL_DEV_PRO: "1",
+        HMUX_LOCAL_DEV_PRO: "1",
         NEXT_PUBLIC_STACK_PROJECT_ID: "454ecd03-1db2-4050-845e-4ce5b0cd9895",
       },
     })).resolves.toEqual({
@@ -207,7 +207,7 @@ describe("resolveProPlanStatus", () => {
     await expect(resolveProPlanStatus({ ...user, isAnonymous: true }, {
       environment: {
         NODE_ENV: "development",
-        CMUX_LOCAL_DEV_PRO: "1",
+        HMUX_LOCAL_DEV_PRO: "1",
         NEXT_PUBLIC_STACK_PROJECT_ID: "454ecd03-1db2-4050-845e-4ce5b0cd9895",
       },
       hasActiveStripeSubscription: async () => false,
@@ -220,8 +220,8 @@ describe("resolveProPlanStatus", () => {
   test("reloads metadata inside the account mutation lease before reconciling Pro", async () => {
     const staleUser = metadataUser({}, "user-racing-testflight");
     const freshUser = metadataUser({
-      cmuxProTestflightEnrollmentEmails: ["owner@example.com"],
-      cmuxProTestflightGrants: [
+      hmuxProTestflightEnrollmentEmails: ["owner@example.com"],
+      hmuxProTestflightGrants: [
         { email: "owner@example.com", source: "user" },
       ],
     }, "user-racing-testflight");
@@ -242,11 +242,11 @@ describe("resolveProPlanStatus", () => {
 
     expect(staleUser.updates).toEqual([]);
     expect(freshUser.updates).toEqual([{
-      cmuxProTestflightEnrollmentEmails: ["owner@example.com"],
-      cmuxProTestflightGrants: [
+      hmuxProTestflightEnrollmentEmails: ["owner@example.com"],
+      hmuxProTestflightGrants: [
         { email: "owner@example.com", source: "user" },
       ],
-      cmuxPlan: PRO_PLAN_ID,
+      hmuxPlan: PRO_PLAN_ID,
     }]);
     expect(refreshedLeaseCount).toBeGreaterThan(0);
   });
@@ -269,7 +269,7 @@ describe("resolveProPlanStatus", () => {
       hasManualVmPlanOverride: false,
       metadataChanged: true,
     });
-    expect(user.updates).toEqual([{ cmuxPlan: PRO_PLAN_ID }]);
+    expect(user.updates).toEqual([{ hmuxPlan: PRO_PLAN_ID }]);
   });
 
   test("Stack product subscriptions do not grant Pro", async () => {
@@ -295,7 +295,7 @@ describe("resolveProPlanStatus", () => {
   });
 
   test("returns free and clears stale pro metadata after Stripe lapse", async () => {
-    const user = metadataUser({ cmuxPlan: PRO_PLAN_ID }, "user-lapsed");
+    const user = metadataUser({ hmuxPlan: PRO_PLAN_ID }, "user-lapsed");
     await expect(
       resolveProPlanStatus(user, {
         hasActiveStripeSubscription: async () => false,
@@ -330,7 +330,7 @@ describe("resolveProPlanStatus", () => {
 
   test("clears a stale non-pro paid mirror when no Stripe Pro row backs it", async () => {
     for (const stale of ["founders", "team", "PRO"]) {
-      const user = metadataUser({ cmuxPlan: stale }, "user-stale");
+      const user = metadataUser({ hmuxPlan: stale }, "user-stale");
       const status = await resolveProPlanStatus(user, {
         hasActiveStripeSubscription: async () => false,
         hasStripeCustomer: async () => false,
@@ -344,7 +344,7 @@ describe("resolveProPlanStatus", () => {
 
   test("reports Pro from a paid manual override without a Stripe subscription", async () => {
     for (const override of ["pro", "founders", "Team"]) {
-      const user = metadataUser({ cmuxVmPlan: override }, "user-granted");
+      const user = metadataUser({ hmuxVmPlan: override }, "user-granted");
       await expect(
         resolveProPlanStatus(user, {
           hasActiveStripeSubscription: async () => false,
@@ -366,7 +366,7 @@ describe("resolveProPlanStatus", () => {
 
   test("a free or unknown manual override does not grant Pro", async () => {
     for (const override of ["free", "enterprise"]) {
-      const user = metadataUser({ cmuxVmPlan: override }, "user-not-granted");
+      const user = metadataUser({ hmuxVmPlan: override }, "user-not-granted");
       const status = await resolveProPlanStatus(user, {
         hasActiveStripeSubscription: async () => false,
         hasStripeCustomer: async () => false,
@@ -377,7 +377,7 @@ describe("resolveProPlanStatus", () => {
   });
 
   test("does not mutate metadata when a manual VM plan override exists", async () => {
-    const user = metadataUser({ cmuxVmPlan: "enterprise" }, "user-stripe-pro");
+    const user = metadataUser({ hmuxVmPlan: "enterprise" }, "user-stripe-pro");
     await expect(
       resolveProPlanStatus(user, {
         hasActiveStripeSubscription: async () => true,
@@ -453,12 +453,12 @@ describe("resolveProPlanStatus", () => {
 
 describe("isTestflightEligible", () => {
   test("requires personal Pro without mutating Stack metadata or granting Team access", async () => {
-    const user = metadataUser({ cmuxPlan: PRO_PLAN_ID }, "team-member") as MetadataUser & {
+    const user = metadataUser({ hmuxPlan: PRO_PLAN_ID }, "team-member") as MetadataUser & {
       selectedTeam: { id: string; clientReadOnlyMetadata: unknown };
     };
     user.selectedTeam = {
       id: "team-paid",
-      clientReadOnlyMetadata: { cmuxPlan: "team" },
+      clientReadOnlyMetadata: { hmuxPlan: "team" },
     };
 
     await expect(isTestflightEligible(user, {

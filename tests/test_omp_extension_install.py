@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Regression test: the generated OMP extension is importable and emits cmux hook calls with complete payloads.
+Regression test: the generated OMP extension is importable and emits hmux hook calls with complete payloads.
 """
 
 from __future__ import annotations
@@ -19,7 +19,7 @@ import time
 import threading
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 
 
 def make_executable(path: Path, content: str) -> None:
@@ -60,7 +60,7 @@ def wait_for_stable_text(
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
-class MockCmuxSocket:
+class MockHmuxSocket:
     def __init__(self, path: Path, workspace_id: str, surface_id: str,
                  restore_record: dict[str, object] | None = None) -> None:
         self.path = path
@@ -73,7 +73,7 @@ class MockCmuxSocket:
         self._server: socket.socket | None = None
         self._thread: threading.Thread | None = None
 
-    def __enter__(self) -> "MockCmuxSocket":
+    def __enter__(self) -> "MockHmuxSocket":
         try:
             self.path.unlink()
         except FileNotFoundError:
@@ -194,7 +194,7 @@ def verify_hook_persistence(cli_path: str, root: Path, base_env: dict[str, str])
     workspace_id = "11111111-1111-1111-1111-111111111111"
     surface_id = "22222222-2222-2222-2222-222222222222"
     session_id = "omp-hook-session-123"
-    socket_path = Path("/tmp") / f"cmux-omp-hook-{os.getpid()}-{time.monotonic_ns()}.sock"
+    socket_path = Path("/tmp") / f"hmux-omp-hook-{os.getpid()}-{time.monotonic_ns()}.sock"
     launch_argv = [
         "/Users/example/.bun/bin/omp",
         "--resume",
@@ -205,22 +205,22 @@ def verify_hook_persistence(cli_path: str, root: Path, base_env: dict[str, str])
     ]
     hook_env = base_env.copy()
     hook_env.pop("PI_CODING_AGENT_DIR", None)
-    hook_env.pop("CMUX_SOCKET_CAPABILITY", None)
-    hook_env.pop("CMUX_SOCKET_PASSWORD", None)
+    hook_env.pop("HMUX_SOCKET_CAPABILITY", None)
+    hook_env.pop("HMUX_SOCKET_PASSWORD", None)
     hook_env.update(
         {
             "PWD": str(workspace),
-            "CMUX_SOCKET_PATH": str(socket_path),
-            "CMUX_WORKSPACE_ID": workspace_id,
-            "CMUX_SURFACE_ID": surface_id,
-            "CMUX_AGENT_HOOK_STATE_DIR": str(hook_state_dir),
-            "CMUX_AGENT_LAUNCH_KIND": "omp",
-            "CMUX_AGENT_LAUNCH_EXECUTABLE": launch_argv[0],
-            "CMUX_AGENT_LAUNCH_ARGV_B64": base64.b64encode(
+            "HMUX_SOCKET_PATH": str(socket_path),
+            "HMUX_WORKSPACE_ID": workspace_id,
+            "HMUX_SURFACE_ID": surface_id,
+            "HMUX_AGENT_HOOK_STATE_DIR": str(hook_state_dir),
+            "HMUX_AGENT_LAUNCH_KIND": "omp",
+            "HMUX_AGENT_LAUNCH_EXECUTABLE": launch_argv[0],
+            "HMUX_AGENT_LAUNCH_ARGV_B64": base64.b64encode(
                 b"".join(value.encode("utf-8") + b"\0" for value in launch_argv)
             ).decode("ascii"),
-            "CMUX_AGENT_LAUNCH_CWD": str(workspace),
-            "CMUX_CLI_SENTRY_DISABLED": "1",
+            "HMUX_AGENT_LAUNCH_CWD": str(workspace),
+            "HMUX_CLI_SENTRY_DISABLED": "1",
             "PI_CONFIG_DIR": ".custom-omp",
             "OPENAI_API_KEY": "secret-should-not-persist",
         }
@@ -234,7 +234,7 @@ def verify_hook_persistence(cli_path: str, root: Path, base_env: dict[str, str])
         separators=(",", ":"),
     )
 
-    with MockCmuxSocket(socket_path, workspace_id=workspace_id, surface_id=surface_id) as server:
+    with MockHmuxSocket(socket_path, workspace_id=workspace_id, surface_id=surface_id) as server:
         result = subprocess.run(
             [cli_path, "hooks", "omp", "session-start"],
             input=hook_input,
@@ -350,14 +350,14 @@ def verify_restore_rejects_legacy_downgrade(cli_path: str, root: Path) -> None:
             record["launch_command"] = {"launcher": "omp", "arguments": arguments}
             record["prepared_arguments"] = ["omp", "--session", session_id]
             record["fork_arguments"] = ["omp", "--session", session_id, "--fork"]
-        socket_path = Path("/tmp") / f"cmux-omp-restore-{os.getpid()}-{time.monotonic_ns()}.sock"
+        socket_path = Path("/tmp") / f"hmux-omp-restore-{os.getpid()}-{time.monotonic_ns()}.sock"
         env = os.environ.copy()
-        env.update(CMUX_SOCKET_PATH=str(socket_path), CMUX_CLI_SENTRY_DISABLED="1",
+        env.update(HMUX_SOCKET_PATH=str(socket_path), HMUX_CLI_SENTRY_DISABLED="1",
                    HOME=str(root), CFFIXED_USER_HOME=str(root), SHELL="/bin/sh")
-        for key in ("CMUX_SOCKET_CAPABILITY", "CMUX_SOCKET_PASSWORD", "CMUX_AGENT_HOOK_RELAY_ORIGIN"):
+        for key in ("HMUX_SOCKET_CAPABILITY", "HMUX_SOCKET_PASSWORD", "HMUX_AGENT_HOOK_RELAY_ORIGIN"):
             env.pop(key, None)
         marker.unlink(missing_ok=True)
-        with MockCmuxSocket(socket_path, workspace_id, surface_id, record):
+        with MockHmuxSocket(socket_path, workspace_id, surface_id, record):
             result = subprocess.run([cli_path, verb, "--surface", surface_id, "omp", session_id],
                                     env=env, text=True, capture_output=True, timeout=15)
         if mode == "direct":
@@ -374,7 +374,7 @@ def verify_restore_rejects_legacy_downgrade(cli_path: str, root: Path) -> None:
 
 
 def verify_launch_capture(bun: str, extension_path: Path, root: Path) -> None:
-    """Execute the extension's lifecycle and inspect the environment sent to cmux."""
+    """Execute the extension's lifecycle and inspect the environment sent to hmux."""
     root = root.resolve()
     extension_path = extension_path.resolve()
     shim = root / "original" / "omp"
@@ -384,9 +384,9 @@ def verify_launch_capture(bun: str, extension_path: Path, root: Path) -> None:
         executable.parent.mkdir(parents=True, exist_ok=True)
         make_executable(executable, "#!/usr/bin/env bun\n")
     output = root / "launch-capture.json"
-    fake_cmux = root / "capture-cmux"
-    make_executable(fake_cmux, f"#!{bun}\n" +
-                    'const launch = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.startsWith("CMUX_AGENT_LAUNCH_")));\n'
+    fake_hmux = root / "capture-hmux"
+    make_executable(fake_hmux, f"#!{bun}\n" +
+                    'const launch = Object.fromEntries(Object.entries(process.env).filter(([key]) => key.startsWith("HMUX_AGENT_LAUNCH_")));\n'
                     'require("node:fs").writeFileSync(process.env.CAPTURE_OUTPUT, JSON.stringify(launch));\n')
     options = ["--model", "sonnet"]
     cases = [
@@ -416,22 +416,22 @@ await handlers.get("session_shutdown")({}, ctx);
     failures = []
     for name, argv, path_value, expected in cases:
         env = {key: value for key, value in os.environ.items()
-               if not key.startswith("CMUX_AGENT_LAUNCH_")}
-        env.update(PATH=path_value, CMUX_SURFACE_ID="capture-surface",
-                   CMUX_OMP_CMUX_BIN=str(fake_cmux), CMUX_OMP_HOOKS_DISABLED="0",
+               if not key.startswith("HMUX_AGENT_LAUNCH_")}
+        env.update(PATH=path_value, HMUX_SURFACE_ID="capture-surface",
+                   HMUX_OMP_HMUX_BIN=str(fake_hmux), HMUX_OMP_HOOKS_DISABLED="0",
                    CAPTURE_OUTPUT=str(output), CAPTURE_EXTENSION=str(extension_path),
                    CAPTURE_ARGV=json.dumps(argv))
         output.unlink(missing_ok=True)
         subprocess.run([bun, "--eval", runner], cwd=root, env=env, check=True, timeout=20)
         captured = json.loads(output.read_text())
-        encoded = captured.get("CMUX_AGENT_LAUNCH_ARGV_B64")
+        encoded = captured.get("HMUX_AGENT_LAUNCH_ARGV_B64")
         actual = base64.b64decode(encoded).decode().rstrip("\0").split("\0") if encoded else None
         if actual != expected:
             failures.append(f"{name}: expected {expected!r}, got {actual!r}")
         if expected is not None:
-            if captured.get("CMUX_AGENT_LAUNCH_EXECUTABLE") != expected[0]:
+            if captured.get("HMUX_AGENT_LAUNCH_EXECUTABLE") != expected[0]:
                 failures.append(f"{name}: executable metadata differs from expected argv")
-        elif any(key.startswith("CMUX_AGENT_LAUNCH_") for key in captured):
+        elif any(key.startswith("HMUX_AGENT_LAUNCH_") for key in captured):
             failures.append(f"{name}: unresolved capture published launch metadata")
     assert not failures, "\n".join(failures)
     print(f"PASS: {len(cases)} OMP lifecycle launch capture cases")
@@ -444,40 +444,40 @@ def main() -> int:
         return 0
 
     if "--launch-capture-only" in sys.argv:
-        with tempfile.TemporaryDirectory(prefix="cmux-omp-capture-") as td:
+        with tempfile.TemporaryDirectory(prefix="hmux-omp-capture-") as td:
             root = Path(td).resolve()
             # Execute the embedded artifact, without asserting its source shape.
-            source = (Path(__file__).resolve().parents[1] / "CLI/CMUXCLI+OmpExtension.swift").read_text()
+            source = (Path(__file__).resolve().parents[1] / "CLI/HMUXCLI+OmpExtension.swift").read_text()
             extension = root / "extension.ts"
             extension.write_text(source.split('private static let ompExtensionSource = #"""', 1)[1].split('"""#', 1)[0])
             verify_launch_capture(bun, extension, root)
         return 0
 
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
     if "--restore-only" in sys.argv:
-        with tempfile.TemporaryDirectory(prefix="cmux-omp-restore-") as td:
+        with tempfile.TemporaryDirectory(prefix="hmux-omp-restore-") as td:
             verify_restore_rejects_legacy_downgrade(cli_path, Path(td).resolve())
         return 0
 
-    with tempfile.TemporaryDirectory(prefix="cmux-omp-extension-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-omp-extension-") as td:
         root = Path(td)
         home = root / "home"
         home.mkdir()
         shared_agent_dir = root / "shared-agent-dir"
-        shared_pi_extension = shared_agent_dir / "extensions" / "cmux-session.ts"
+        shared_pi_extension = shared_agent_dir / "extensions" / "hmux-session.ts"
         shared_pi_extension.parent.mkdir(parents=True)
-        shared_pi_extension.write_text("// cmux-pi-session-extension-marker v1\n", encoding="utf-8")
+        shared_pi_extension.write_text("// hmux-pi-session-extension-marker v1\n", encoding="utf-8")
 
         env = os.environ.copy()
         env["HOME"] = str(home)
         # OMP treats PI_CODING_AGENT_DIR as the full agent directory override.
         # Install the OMP extension there while proving it does not collide with
-        # Pi's different cmux-session.ts filename in the same extensions folder.
+        # Pi's different hmux-session.ts filename in the same extensions folder.
         env["PI_CODING_AGENT_DIR"] = str(shared_agent_dir)
 
         install = subprocess.run(
@@ -495,15 +495,15 @@ def main() -> int:
             print(f"stderr={install.stderr.strip()}")
             return 1
 
-        extension_path = shared_agent_dir / "extensions" / "cmux-omp-session.ts"
+        extension_path = shared_agent_dir / "extensions" / "hmux-omp-session.ts"
         if not extension_path.exists():
             print(f"FAIL: expected extension at {extension_path}")
             return 1
         extension_text = extension_path.read_text(encoding="utf-8")
-        if "cmux-omp-session-extension-marker" not in extension_text:
-            print(f"FAIL: expected cmux marker in {extension_path}")
+        if "hmux-omp-session-extension-marker" not in extension_text:
+            print(f"FAIL: expected hmux marker in {extension_path}")
             return 1
-        if shared_pi_extension.read_text(encoding="utf-8") != "// cmux-pi-session-extension-marker v1\n":
+        if shared_pi_extension.read_text(encoding="utf-8") != "// hmux-pi-session-extension-marker v1\n":
             print("FAIL: OMP install modified the Pi extension in PI_CODING_AGENT_DIR")
             return 1
 
@@ -521,53 +521,53 @@ def main() -> int:
             print(f"stdout={reinstall.stdout.strip()}")
             print(f"stderr={reinstall.stderr.strip()}")
             return 1
-        extension_override = os.environ.get("CMUX_TEST_OMP_EXTENSION_OVERRIDE")
+        extension_override = os.environ.get("HMUX_TEST_OMP_EXTENSION_OVERRIDE")
         if extension_override:
             shutil.copyfile(extension_override, extension_path)
 
         verify_launch_capture(bun, extension_path, root)
         verify_restore_rejects_legacy_downgrade(cli_path, root)
 
-        fake_cmux = root / "fake-cmux"
-        fake_args_log = root / "fake-cmux-args.log"
-        fake_stdin_log = root / "fake-cmux-stdin.log"
-        fake_env_log = root / "fake-cmux-env.log"
-        fake_concurrency_log = root / "fake-cmux-concurrency.log"
-        fake_pid_log = root / "fake-cmux-pids.log"
-        fake_started_args_log = root / "fake-cmux-started-args.log"
+        fake_hmux = root / "fake-hmux"
+        fake_args_log = root / "fake-hmux-args.log"
+        fake_stdin_log = root / "fake-hmux-stdin.log"
+        fake_env_log = root / "fake-hmux-env.log"
+        fake_concurrency_log = root / "fake-hmux-concurrency.log"
+        fake_pid_log = root / "fake-hmux-pids.log"
+        fake_started_args_log = root / "fake-hmux-started-args.log"
         fake_args_log.touch()
         fake_pid_log.touch()
         fake_started_args_log.touch()
-        fake_lock_dir = root / "fake-cmux.lock"
+        fake_lock_dir = root / "fake-hmux.lock"
         make_executable(
-            fake_cmux,
+            fake_hmux,
             """#!/usr/bin/env bash
 set -euo pipefail
-if ! mkdir "$FAKE_CMUX_LOCK_DIR" 2>/dev/null; then
-  active_pid="$(cat "$FAKE_CMUX_LOCK_DIR/pid" 2>/dev/null || true)"
+if ! mkdir "$FAKE_HMUX_LOCK_DIR" 2>/dev/null; then
+  active_pid="$(cat "$FAKE_HMUX_LOCK_DIR/pid" 2>/dev/null || true)"
   if [ -n "$active_pid" ] && kill -0 "$active_pid" 2>/dev/null; then
-    printf 'overlap\n' >> "$FAKE_CMUX_CONCURRENCY_LOG"
+    printf 'overlap\n' >> "$FAKE_HMUX_CONCURRENCY_LOG"
   fi
 fi
-printf '%s\n' "$$" > "$FAKE_CMUX_LOCK_DIR/pid"
-printf '%s\n' "$$" >> "$FAKE_CMUX_PID_LOG"
-printf '%s\n' "$*" >> "$FAKE_CMUX_STARTED_ARGS_LOG"
+printf '%s\n' "$$" > "$FAKE_HMUX_LOCK_DIR/pid"
+printf '%s\n' "$$" >> "$FAKE_HMUX_PID_LOG"
+printf '%s\n' "$*" >> "$FAKE_HMUX_STARTED_ARGS_LOG"
 kill -STOP "$$"
-printf '%s\n' "$*" >> "$FAKE_CMUX_ARGS_LOG"
-cat >> "$FAKE_CMUX_STDIN_LOG"
-printf '\n---\n' >> "$FAKE_CMUX_STDIN_LOG"
+printf '%s\n' "$*" >> "$FAKE_HMUX_ARGS_LOG"
+cat >> "$FAKE_HMUX_STDIN_LOG"
+printf '\n---\n' >> "$FAKE_HMUX_STDIN_LOG"
 {
-  printf 'kind=%s\n' "${CMUX_AGENT_LAUNCH_KIND-}"
-  printf 'cwd=%s\n' "${CMUX_AGENT_LAUNCH_CWD-}"
-  printf 'argv=%s\n' "${CMUX_AGENT_LAUNCH_ARGV_B64-}"
+  printf 'kind=%s\n' "${HMUX_AGENT_LAUNCH_KIND-}"
+  printf 'cwd=%s\n' "${HMUX_AGENT_LAUNCH_CWD-}"
+  printf 'argv=%s\n' "${HMUX_AGENT_LAUNCH_ARGV_B64-}"
   if [ "${AMP_API_KEY-}" = "amp-secret" ]; then
     printf 'amp=present\n'
   else
     printf 'amp=missing\n'
   fi
-} >> "$FAKE_CMUX_ENV_LOG"
-rm -f "$FAKE_CMUX_LOCK_DIR/pid"
-rmdir "$FAKE_CMUX_LOCK_DIR" 2>/dev/null || true
+} >> "$FAKE_HMUX_ENV_LOG"
+rm -f "$FAKE_HMUX_LOCK_DIR/pid"
+rmdir "$FAKE_HMUX_LOCK_DIR" 2>/dev/null || true
 """,
         )
 
@@ -582,29 +582,29 @@ rmdir "$FAKE_CMUX_LOCK_DIR" 2>/dev/null || true
 
         check_env = env.copy()
         for key in [
-            "CMUX_AGENT_LAUNCH_KIND",
-            "CMUX_AGENT_LAUNCH_EXECUTABLE",
-            "CMUX_AGENT_LAUNCH_ARGV_B64",
-            "CMUX_AGENT_LAUNCH_CWD",
+            "HMUX_AGENT_LAUNCH_KIND",
+            "HMUX_AGENT_LAUNCH_EXECUTABLE",
+            "HMUX_AGENT_LAUNCH_ARGV_B64",
+            "HMUX_AGENT_LAUNCH_CWD",
         ]:
             check_env.pop(key, None)
-        check_env["CMUX_TEST_OMP_EXTENSION_PATH"] = str(extension_path)
-        check_env["CMUX_TEST_OMP_PARENT_SESSION_FILE"] = str(parent_session_file)
-        check_env["CMUX_TEST_OMP_NESTED_SESSION_FILE"] = str(nested_session_file)
-        check_env["CMUX_SURFACE_ID"] = "surface-omp-test"
-        check_env["CMUX_OMP_CMUX_BIN"] = str(fake_cmux)
-        check_env["FAKE_CMUX_ARGS_LOG"] = str(fake_args_log)
-        check_env["FAKE_CMUX_STDIN_LOG"] = str(fake_stdin_log)
-        check_env["FAKE_CMUX_ENV_LOG"] = str(fake_env_log)
-        check_env["FAKE_CMUX_CONCURRENCY_LOG"] = str(fake_concurrency_log)
-        check_env["FAKE_CMUX_PID_LOG"] = str(fake_pid_log)
-        check_env["FAKE_CMUX_STARTED_ARGS_LOG"] = str(fake_started_args_log)
-        check_env["FAKE_CMUX_LOCK_DIR"] = str(fake_lock_dir)
+        check_env["HMUX_TEST_OMP_EXTENSION_PATH"] = str(extension_path)
+        check_env["HMUX_TEST_OMP_PARENT_SESSION_FILE"] = str(parent_session_file)
+        check_env["HMUX_TEST_OMP_NESTED_SESSION_FILE"] = str(nested_session_file)
+        check_env["HMUX_SURFACE_ID"] = "surface-omp-test"
+        check_env["HMUX_OMP_HMUX_BIN"] = str(fake_hmux)
+        check_env["FAKE_HMUX_ARGS_LOG"] = str(fake_args_log)
+        check_env["FAKE_HMUX_STDIN_LOG"] = str(fake_stdin_log)
+        check_env["FAKE_HMUX_ENV_LOG"] = str(fake_env_log)
+        check_env["FAKE_HMUX_CONCURRENCY_LOG"] = str(fake_concurrency_log)
+        check_env["FAKE_HMUX_PID_LOG"] = str(fake_pid_log)
+        check_env["FAKE_HMUX_STARTED_ARGS_LOG"] = str(fake_started_args_log)
+        check_env["FAKE_HMUX_LOCK_DIR"] = str(fake_lock_dir)
         check_env["AMP_API_KEY"] = "amp-secret"
         check_source = """
 import { spawnSync } from "node:child_process";
 import * as fs from "node:fs";
-const extensionPath = process.env.CMUX_TEST_OMP_EXTENSION_PATH;
+const extensionPath = process.env.HMUX_TEST_OMP_EXTENSION_PATH;
 // OMP loads a fresh copy of the extension module for every session in the
 // process (unique ?mtime= cache-busting import URLs), so module scope is
 // per-session. Give each simulated session its own module instance.
@@ -636,21 +636,21 @@ const parentCtx = {
   cwd: "/tmp/omp-project",
   sessionManager: {
     getSessionId() { return currentSessionId; },
-    getSessionFile() { return process.env.CMUX_TEST_OMP_PARENT_SESSION_FILE; }
+    getSessionFile() { return process.env.HMUX_TEST_OMP_PARENT_SESSION_FILE; }
   }
 };
 const nestedCtx = {
   cwd: "/tmp/omp-project",
   sessionManager: {
     getSessionId() { return "omp-nested-task-session"; },
-    getSessionFile() { return process.env.CMUX_TEST_OMP_NESTED_SESSION_FILE; }
+    getSessionFile() { return process.env.HMUX_TEST_OMP_NESTED_SESSION_FILE; }
   }
 };
 const workerCtx = {
   cwd: "/tmp/omp-project",
   sessionManager: {
     getSessionId() { return "omp-worker-task-session"; },
-    getSessionFile() { return process.env.CMUX_TEST_OMP_PARENT_SESSION_FILE; }
+    getSessionFile() { return process.env.HMUX_TEST_OMP_PARENT_SESSION_FILE; }
   }
 };
 let currentSessionId = "omp-session-test";
@@ -675,8 +675,8 @@ async function waitForLineCount(path, expected) {
   }
 }
 async function stoppedHookPID(expectedStartedCount) {
-  await waitForLineCount(process.env.FAKE_CMUX_PID_LOG, expectedStartedCount);
-  const pid = Number(nonEmptyLines(process.env.FAKE_CMUX_PID_LOG)[expectedStartedCount - 1]);
+  await waitForLineCount(process.env.FAKE_HMUX_PID_LOG, expectedStartedCount);
+  const pid = Number(nonEmptyLines(process.env.FAKE_HMUX_PID_LOG)[expectedStartedCount - 1]);
   if (!Number.isInteger(pid) || pid <= 0) throw new Error(`invalid hook pid: ${pid}`);
   while (true) {
     const state = spawnSync("/bin/ps", ["-o", "state=", "-p", String(pid)], { encoding: "utf8" });
@@ -690,7 +690,7 @@ async function releaseHook(expectedStartedCount) {
   process.kill(pid, "SIGCONT");
 }
 async function waitForCompletedHooks(expected) {
-  await waitForLineCount(process.env.FAKE_CMUX_ARGS_LOG, expected);
+  await waitForLineCount(process.env.FAKE_HMUX_ARGS_LOG, expected);
 }
 const start = Date.now();
 await expectHandlerCompletion(handlers.get("session_start")({}, parentCtx), "session_start");
@@ -722,7 +722,7 @@ await waitForCompletedHooks(2);
 await releaseHook(3);
 await waitForCompletedHooks(3);
 await handlers.get("session_shutdown")({}, parentCtx);
-const firstPhasePids = nonEmptyLines(process.env.FAKE_CMUX_PID_LOG);
+const firstPhasePids = nonEmptyLines(process.env.FAKE_HMUX_PID_LOG);
 if (firstPhasePids.length !== 3) {
   throw new Error(`nested OMP task session spawned a hook child: ${firstPhasePids}`);
 }
@@ -753,8 +753,8 @@ for (let index = 0; index < 40; index += 1) {
 }
 await handlers.get("agent_end")({ messages: [], stopReason: "completed" }, parentCtx);
 await handlers.get("session_shutdown")({}, parentCtx);
-const hungPidLines = nonEmptyLines(process.env.FAKE_CMUX_PID_LOG);
-const startedArgs = nonEmptyLines(process.env.FAKE_CMUX_STARTED_ARGS_LOG);
+const hungPidLines = nonEmptyLines(process.env.FAKE_HMUX_PID_LOG);
+const startedArgs = nonEmptyLines(process.env.FAKE_HMUX_STARTED_ARGS_LOG);
 if (hungPidLines.length !== 22) {
   throw new Error(`shutdown did not start the queued Stop after cancelling the active hook: ${hungPidLines}`);
 }
@@ -853,7 +853,7 @@ for (const rawPid of hungPidLines.slice(-2)) {
             print(f"FAIL: queued stop hook was evicted under session-start/prompt pressure: {stdin_log!r}")
             return 1
         if '"session_id":"omp-worker-task-session"' in stdin_log:
-            print(f"FAIL: a non-owner session id reached cmux hooks: {stdin_log!r}")
+            print(f"FAIL: a non-owner session id reached hmux hooks: {stdin_log!r}")
             return 1
         if '"session_id":"priority-prompt-9","cwd":"/tmp/omp-project","hook_event_name":"SessionStart"' not in stdin_log:
             print(f"FAIL: session_switch did not rebind the switched session: {stdin_log!r}")
@@ -924,13 +924,13 @@ for (const rawPid of hungPidLines.slice(-2)) {
             timeout=20,
         )
         if uninstall_foreign.returncode != 0 or not foreign_path.exists() or "Refusing to remove" not in uninstall_foreign.stdout:
-            print("FAIL: omp extension uninstall did not preserve non-cmux file")
+            print("FAIL: omp extension uninstall did not preserve non-hmux file")
             print(f"exit={uninstall_foreign.returncode}")
             print(f"stdout={uninstall_foreign.stdout.strip()}")
             print(f"stderr={uninstall_foreign.stderr.strip()}")
             return 1
 
-        invalid_extension_bytes = b"\xff\xfe\x00cmux-not-utf8"
+        invalid_extension_bytes = b"\xff\xfe\x00hmux-not-utf8"
         foreign_path.write_bytes(invalid_extension_bytes)
         install_invalid = subprocess.run(
             [cli_path, "hooks", "omp", "install", "--yes"],
@@ -947,7 +947,7 @@ for (const rawPid of hungPidLines.slice(-2)) {
             print(f"stderr={install_invalid.stderr.strip()}")
             return 1
         install_invalid_output = install_invalid.stdout + install_invalid.stderr
-        if "Failed to read" not in install_invalid_output or "not a cmux extension" in install_invalid_output:
+        if "Failed to read" not in install_invalid_output or "not a hmux extension" in install_invalid_output:
             print("FAIL: omp extension install did not report unreadable file distinctly")
             print(f"stdout={install_invalid.stdout.strip()}")
             print(f"stderr={install_invalid.stderr.strip()}")
@@ -967,7 +967,7 @@ for (const rawPid of hungPidLines.slice(-2)) {
             print(f"stderr={uninstall_invalid.stderr.strip()}")
             return 1
         uninstall_invalid_output = uninstall_invalid.stdout + uninstall_invalid.stderr
-        if "Failed to read" not in uninstall_invalid_output or "not a cmux extension" in uninstall_invalid_output:
+        if "Failed to read" not in uninstall_invalid_output or "not a hmux extension" in uninstall_invalid_output:
             print("FAIL: omp extension uninstall did not report unreadable file distinctly")
             print(f"stdout={uninstall_invalid.stdout.strip()}")
             print(f"stderr={uninstall_invalid.stderr.strip()}")
@@ -987,7 +987,7 @@ for (const rawPid of hungPidLines.slice(-2)) {
             env=config_env,
             timeout=20,
         )
-        config_extension_path = config_override / "agent" / "extensions" / "cmux-omp-session.ts"
+        config_extension_path = config_override / "agent" / "extensions" / "hmux-omp-session.ts"
         if config_install.returncode != 0 or not config_extension_path.exists():
             print("FAIL: omp extension install did not respect absolute PI_CONFIG_DIR")
             print(f"exit={config_install.returncode}")
@@ -1008,7 +1008,7 @@ for (const rawPid of hungPidLines.slice(-2)) {
             print(f"stdout={config_uninstall.stdout.strip()}")
             print(f"stderr={config_uninstall.stderr.strip()}")
             return 1
-    with tempfile.TemporaryDirectory(prefix="cmux-omp-agent-dir-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-omp-agent-dir-") as td:
         # Pi and OMP both read PI_CODING_AGENT_DIR, so someone who runs the two
         # side by side and points Pi at a directory sends OMP there too.
         # OMP_AGENT_DIR is OMP's own override and has to win.
@@ -1040,11 +1040,11 @@ for (const rawPid of hungPidLines.slice(-2)) {
             print(f"stderr={install.stderr.strip()}")
             return 1
 
-        omp_extension = omp_agent_dir / "extensions" / "cmux-omp-session.ts"
+        omp_extension = omp_agent_dir / "extensions" / "hmux-omp-session.ts"
         if not omp_extension.exists():
             print(f"FAIL: OMP_AGENT_DIR ignored, expected extension at {omp_extension}")
             return 1
-        if (pi_agent_dir / "extensions" / "cmux-omp-session.ts").exists():
+        if (pi_agent_dir / "extensions" / "hmux-omp-session.ts").exists():
             print("FAIL: OMP install wrote into PI_CODING_AGENT_DIR while OMP_AGENT_DIR was set")
             return 1
 
@@ -1063,7 +1063,7 @@ for (const rawPid of hungPidLines.slice(-2)) {
             print(f"stderr={uninstall.stderr.strip()}")
             return 1
 
-    print("PASS: generated OMP extension installs, emits complete cmux hook payloads, and persists hook sessions")
+    print("PASS: generated OMP extension installs, emits complete hmux hook payloads, and persists hook sessions")
     return 0
 
 

@@ -24,7 +24,7 @@ const fakeStackUser = {
 };
 
 function nativeRequest(access: string, refresh = "refresh-1"): Request {
-  return new Request("https://cmux.test/api/devices/iroh/register", {
+  return new Request("https://hmux.test/api/devices/iroh/register", {
     method: "POST",
     headers: {
       authorization: `Bearer ${access}`,
@@ -123,7 +123,7 @@ describe("verifyRequestIdentity", () => {
 
   test("without native credentials and with cookies disallowed there is no identity", async () => {
     const identity = await verifyRequestIdentity(
-      new Request("https://cmux.test/api/devices/iroh/register", {
+      new Request("https://hmux.test/api/devices/iroh/register", {
         method: "POST",
         headers: { cookie: "stack-session=abc" },
       }),

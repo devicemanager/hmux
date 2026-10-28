@@ -112,7 +112,7 @@ describe("email verification recovery", () => {
       requestEmailVerificationRecovery(
         {
           email: "buyer@example.com",
-          callbackURL: "https://cmux.test/handler/email-verification",
+          callbackURL: "https://hmux.test/handler/email-verification",
         },
         { stackApp: { listUsers } },
       ),
@@ -193,7 +193,7 @@ describe("email verification recovery", () => {
       requestEmailVerificationRecovery(
         {
           email: "johndoe@gmail.com",
-          callbackURL: "https://cmux.test/handler/email-verification",
+          callbackURL: "https://hmux.test/handler/email-verification",
         },
         { stackApp: { listUsers } },
       ),
@@ -201,7 +201,7 @@ describe("email verification recovery", () => {
 
     expect(result).toEqual({ delivery: "sent" });
     expect(sendVerificationEmail).toHaveBeenCalledWith({
-      callbackUrl: "https://cmux.test/handler/email-verification",
+      callbackUrl: "https://hmux.test/handler/email-verification",
     });
     expect(listUsers).toHaveBeenCalledWith({
       limit: 100,

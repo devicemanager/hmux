@@ -25,7 +25,7 @@ class MobileAttachPrefersIrohTests(unittest.TestCase):
                 "bash",
                 "-c",
                 f"source {subprocess.list2cmdline([str(helper)])}; "
-                "cmux_attach_validate_route_kind_for_target simulator debug_loopback",
+                "hmux_attach_validate_route_kind_for_target simulator debug_loopback",
             ],
             capture_output=True,
             text=True,
@@ -35,7 +35,7 @@ class MobileAttachPrefersIrohTests(unittest.TestCase):
                 "bash",
                 "-c",
                 f"source {subprocess.list2cmdline([str(helper)])}; "
-                "cmux_attach_validate_route_kind_for_target device debug_loopback",
+                "hmux_attach_validate_route_kind_for_target device debug_loopback",
             ],
             capture_output=True,
             text=True,
@@ -46,7 +46,7 @@ class MobileAttachPrefersIrohTests(unittest.TestCase):
 
     def test_mint_waits_for_iroh_instead_of_accepting_ready_loopback(self) -> None:
         tag = f"iroh-route-test-{os.getpid()}"
-        socket_path = Path(f"/tmp/cmux-debug-{tag}.sock")
+        socket_path = Path(f"/tmp/hmux-debug-{tag}.sock")
         requests: list[dict[str, object]]
 
         with tempfile.TemporaryDirectory() as temporary_directory:
@@ -59,18 +59,18 @@ class MobileAttachPrefersIrohTests(unittest.TestCase):
             )
             requests_path = fake_root / "requests.jsonl"
             counter_path = fake_root / "call-count"
-            fake_cli = scripts / "cmux-debug-cli.sh"
+            fake_cli = scripts / "hmux-debug-cli.sh"
             fake_cli.write_text(
                 """#!/usr/bin/env bash
 set -euo pipefail
 request="${3:?missing request payload}"
-printf '%s\\n' "$request" >> "$CMUX_TEST_REQUESTS"
+printf '%s\\n' "$request" >> "$HMUX_TEST_REQUESTS"
 count=0
-if [[ -f "$CMUX_TEST_COUNTER" ]]; then
-  read -r count < "$CMUX_TEST_COUNTER"
+if [[ -f "$HMUX_TEST_COUNTER" ]]; then
+  read -r count < "$HMUX_TEST_COUNTER"
 fi
 count=$((count + 1))
-printf '%s\\n' "$count" > "$CMUX_TEST_COUNTER"
+printf '%s\\n' "$count" > "$HMUX_TEST_COUNTER"
 
 if [[ "$request" == *'\"route_kind\":\"iroh\"'* ]]; then
   # Model the real startup race: Iroh is unavailable on the first probe and
@@ -98,7 +98,7 @@ printf '%s\\n' '{"ticket":{"version":1,"workspaceID":"","routes":[{"id":"debug_l
                 script = f"""
 source {subprocess.list2cmdline([str(ROOT / 'scripts' / 'lib' / 'mobile-attach.sh')])}
 sleep() {{ :; }}
-cmux_attach_mint_url {tag} 600 {subprocess.list2cmdline([str(fake_root)])} 3
+hmux_attach_mint_url {tag} 600 {subprocess.list2cmdline([str(fake_root)])} 3
 """
                 result = subprocess.run(
                     ["bash", "-c", script],
@@ -107,8 +107,8 @@ cmux_attach_mint_url {tag} 600 {subprocess.list2cmdline([str(fake_root)])} 3
                     text=True,
                     env={
                         **os.environ,
-                        "CMUX_TEST_REQUESTS": str(requests_path),
-                        "CMUX_TEST_COUNTER": str(counter_path),
+                        "HMUX_TEST_REQUESTS": str(requests_path),
+                        "HMUX_TEST_COUNTER": str(counter_path),
                     },
                 )
             finally:

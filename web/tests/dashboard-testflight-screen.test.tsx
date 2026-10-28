@@ -96,7 +96,7 @@ const { testflightQuery } = await import("../dashboard-app/queries/testflight");
 const { planQuery } = await import("../dashboard-app/queries/billing");
 
 function testflightRequest() {
-  return new NextRequest("https://cmux.test/api/testflight");
+  return new NextRequest("https://hmux.test/api/testflight");
 }
 
 describe("dashboard.account.testflight", () => {
@@ -173,7 +173,7 @@ describe("dashboard TestFlight screen", () => {
     const html = await renderTestflightPage({}, { planId: "free", isPro: false, billingManagement: "none" });
 
     expect(html).toContain('data-testid="requires-pro"');
-    expect(html).toContain("The cmux iOS app is part of Pro.");
+    expect(html).toContain("The hmux iOS app is part of Pro.");
     expect(html).toContain("returnTo=%2Fdashboard%2Ftestflight");
     expect(html).toContain("plan=pro");
     // The panel above already explains it; no second "subscription required" card.
@@ -237,7 +237,7 @@ describe("dashboard TestFlight screen", () => {
 
   test("asks for an email when the account has none", async () => {
     currentUser = { ...createTestflightUser(), primaryEmail: "  " };
-    Object.defineProperty(currentUser, Symbol.for("cmux.tests.testflightEligibility"), { value: true });
+    Object.defineProperty(currentUser, Symbol.for("hmux.tests.testflightEligibility"), { value: true });
 
     const html = await renderTestflightPage();
 

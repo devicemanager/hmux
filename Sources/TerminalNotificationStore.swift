@@ -1,17 +1,17 @@
-import CmuxCloud
-import CmuxFoundation
-import CmuxNotifications
+import HmuxCloud
+import HmuxFoundation
+import HmuxNotifications
 import AppKit
 import Combine
 import Foundation
 import os
 import UserNotifications
 import Bonsplit
-import CmuxSettings
-import CmuxNotifications
+import HmuxSettings
+import HmuxNotifications
 
 nonisolated private let terminalNotificationLogger = Logger(
-    subsystem: "com.cmuxterm.app",
+    subsystem: "com.hmuxterm.app",
     category: "notification"
 )
 
@@ -54,12 +54,12 @@ final class TerminalNotificationStore: ObservableObject {
             center: UNUserNotificationCenter.current()
         )
     )
-    let notificationHookCache = CmuxNotificationHookCache()
+    let notificationHookCache = HmuxNotificationHookCache()
 
-    static let authorizationStatusDidChangeNotification = Notification.Name("cmux.terminalNotificationAuthorizationStatusDidChange")
-    static let categoryIdentifier = "com.cmuxterm.app.userNotification"
-    static let textReplyCategoryIdentifier = "com.cmuxterm.app.userNotification.textReply"
-    static let actionShowIdentifier = "com.cmuxterm.app.userNotification.show"
+    static let authorizationStatusDidChangeNotification = Notification.Name("hmux.terminalNotificationAuthorizationStatusDidChange")
+    static let categoryIdentifier = "com.hmuxterm.app.userNotification"
+    static let textReplyCategoryIdentifier = "com.hmuxterm.app.userNotification.textReply"
+    static let actionShowIdentifier = "com.hmuxterm.app.userNotification.show"
     static let actionReplyIdentifier = "terminal.reply"
     nonisolated static let retargetsToLiveSurfaceOwnerUserInfoKey = "retargetsToLiveSurfaceOwner"
     /// Mobile-host event topic the Mac emits when one or more delivered
@@ -106,7 +106,7 @@ final class TerminalNotificationStore: ObservableObject {
     private var dismissedTombstoneOrder: [UUID] = []
     private var dismissedTombstonesLoaded = false
     private static let dismissedTombstoneCapacity = 512
-    static let dismissedTombstoneDefaultsKey = "cmux.notifications.dismissedTombstoneIds"
+    static let dismissedTombstoneDefaultsKey = "hmux.notifications.dismissedTombstoneIds"
 
     private func loadDismissedTombstonesIfNeeded() {
         guard !dismissedTombstonesLoaded else { return }
@@ -266,7 +266,7 @@ final class TerminalNotificationStore: ObservableObject {
         didSet {
             indexes = Self.buildIndexes(for: notifications)
             refreshUnreadPresentation()
-            if !suppressNotificationDiffPublishing { CmuxEventBus.shared.publishNotificationChanges(oldValue: oldValue, newValue: notifications) }
+            if !suppressNotificationDiffPublishing { HmuxEventBus.shared.publishNotificationChanges(oldValue: oldValue, newValue: notifications) }
         }
     }
     @Published private(set) var notificationMenuSnapshot = NotificationMenuSnapshotBuilder.make(notifications: [])
@@ -669,7 +669,7 @@ final class TerminalNotificationStore: ObservableObject {
 
     private func logAuthorization(_ message: String) {
 #if DEBUG
-        cmuxDebugLog("notification.auth \(message)")
+        hmuxDebugLog("notification.auth \(message)")
 #endif
         terminalNotificationLogger.info("Authorization \(message, privacy: .private)")
     }
@@ -748,7 +748,7 @@ final class TerminalNotificationStore: ObservableObject {
                 let content = UNMutableNotificationContent()
                 content.title = String(
                     localized: "settings.notifications.desktop.test.title",
-                    defaultValue: "cmux test notification"
+                    defaultValue: "hmux test notification"
                 )
                 content.body = String(
                     localized: "settings.notifications.desktop.subtitle.allowed",
@@ -759,7 +759,7 @@ final class TerminalNotificationStore: ObservableObject {
                 )
                 content.categoryIdentifier = Self.categoryIdentifier
                 let request = UNNotificationRequest(
-                    identifier: "cmux.settings.test.\(UUID().uuidString)",
+                    identifier: "hmux.settings.test.\(UUID().uuidString)",
                     content: content,
                     trigger: nil
                 )
@@ -1165,7 +1165,7 @@ final class TerminalNotificationStore: ObservableObject {
         cooldownInterval: TimeInterval? = nil,
         correlationKey: String? = nil,
         clickAction: TerminalNotificationClickAction? = nil, notificationGeneration: UInt64? = nil,
-        resolvedHooks: [CmuxResolvedNotificationHook]? = nil,
+        resolvedHooks: [HmuxResolvedNotificationHook]? = nil,
         preRegisteredPolicyRequestId: UUID? = nil,
         notificationID: UUID? = nil,
         agent: TerminalNotificationPolicyAgentContext? = nil,
@@ -1174,7 +1174,7 @@ final class TerminalNotificationStore: ObservableObject {
         effects: TerminalNotificationPolicyEffectsPatch? = nil
     ) -> UUID? {
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "notification.store.add workspace=\(tabId.uuidString.prefix(8)) surface=\(surfaceId?.uuidString.prefix(8) ?? "nil") titleLen=\(title.count) subtitleLen=\(subtitle.count) bodyLen=\(body.count) cooldown=\(cooldownKey == nil ? 0 : 1) origin=\(origin.kind)"
         )
 #endif
@@ -1214,7 +1214,7 @@ final class TerminalNotificationStore: ObservableObject {
            let lastNotificationDate = lastNotificationDateByCooldownKey[cooldownKey],
            now.timeIntervalSince(lastNotificationDate) < resolvedCooldownInterval {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "notification.store.add.skip workspace=\(tabId.uuidString.prefix(8)) surface=\(surfaceId?.uuidString.prefix(8) ?? "nil") reason=cooldown"
             )
 #endif
@@ -1360,7 +1360,7 @@ final class TerminalNotificationStore: ObservableObject {
     private struct NotificationPolicyContext: Sendable {
         let request: TerminalNotificationPolicyRequest
         let scrollPosition: TerminalNotificationScrollPosition?
-        let hooks: [CmuxResolvedNotificationHook]
+        let hooks: [HmuxResolvedNotificationHook]
         let globalConfigPath: String?
     }
 
@@ -1427,7 +1427,7 @@ final class TerminalNotificationStore: ObservableObject {
         replyShape: TerminalNotificationReplyShape = .none,
         retargetsToLiveSurfaceOwner: Bool,
         correlationKey: String?,
-        resolvedHooks: [CmuxResolvedNotificationHook]?,
+        resolvedHooks: [HmuxResolvedNotificationHook]?,
         agent: TerminalNotificationPolicyAgentContext? = nil,
         soundContext: NotificationSoundOverrideContext? = nil,
         origin: TerminalNotificationOrigin = .local,
@@ -1435,7 +1435,7 @@ final class TerminalNotificationStore: ObservableObject {
     ) -> NotificationPolicyContext {
         let appDelegate = AppDelegate.shared
         let focusState = notificationFocusState(tabId: tabId, surfaceId: surfaceId)
-        let cmuxConfigStore = focusState.cmuxConfigStore
+        let hmuxConfigStore = focusState.hmuxConfigStore
         let workspace = focusState.workspace
         let isFocusedPanel = focusState.isActiveTab && focusState.isFocusedSurface
         let isAppFocused = focusState.isAppFocused
@@ -1482,10 +1482,10 @@ final class TerminalNotificationStore: ObservableObject {
                 effects: effects
             ),
             scrollPosition: scrollPosition,
-            hooks: resolvedHooks ?? (origin.isRemote ? [] : cmuxConfigStore?.notificationHooks(
+            hooks: resolvedHooks ?? (origin.isRemote ? [] : hmuxConfigStore?.notificationHooks(
                 startingFrom: workspace?.isRemoteWorkspace == true ? nil : cwd
             )) ?? [],
-            globalConfigPath: cmuxConfigStore?.globalConfigPath
+            globalConfigPath: hmuxConfigStore?.globalConfigPath
         )
     }
     struct NotificationFocusState {
@@ -1493,7 +1493,7 @@ final class TerminalNotificationStore: ObservableObject {
         let isActiveTab: Bool
         let isFocusedSurface: Bool
         let workspace: Workspace?
-        let cmuxConfigStore: CmuxConfigStore?
+        let hmuxConfigStore: HmuxConfigStore?
     }
 
     /// Resolves focus and ownership once for both policy admission and the
@@ -1614,7 +1614,7 @@ final class TerminalNotificationStore: ObservableObject {
         }
 
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "notification.store.effectsOnly workspace=\(notification.tabId.uuidString.prefix(8)) surface=\(notification.surfaceId?.uuidString.prefix(8) ?? "nil") desktop=\(effects.desktop ? 1 : 0) sound=\(effects.sound ? 1 : 0) command=\(effects.command ? 1 : 0) suppressExternal=\(shouldSuppressExternalDelivery ? 1 : 0)"
         )
 #endif
@@ -1689,7 +1689,7 @@ final class TerminalNotificationStore: ObservableObject {
         )
         commitCooldownReservation(cooldownReservation, at: now)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "notification.store.record workspace=\(notification.tabId.uuidString.prefix(8)) surface=\(notification.surfaceId?.uuidString.prefix(8) ?? "nil") removed=\(idsToClear.count) unread=\(!notification.isRead ? 1 : 0) paneFlash=\(notification.paneFlash ? 1 : 0) suppressExternal=\(shouldSuppressExternalDelivery ? 1 : 0) total=\(notifications.count)"
         )
 #endif
@@ -1737,7 +1737,7 @@ final class TerminalNotificationStore: ObservableObject {
         effects: TerminalNotificationPolicyEffects
     ) {
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "notification.store.sideEffects workspace=\(notification.tabId.uuidString.prefix(8)) surface=\(notification.surfaceId?.uuidString.prefix(8) ?? "nil") desktop=\(effects.desktop ? 1 : 0) sound=\(effects.sound ? 1 : 0) command=\(effects.command ? 1 : 0) suppressExternal=\(shouldSuppressExternalDelivery ? 1 : 0)"
         )
 #endif
@@ -1815,7 +1815,7 @@ final class TerminalNotificationStore: ObservableObject {
             )
             let format = String(
                 localized: "notificationHook.failure.body",
-                defaultValue: "cmux used default notification behavior because '%@' failed."
+                defaultValue: "hmux used default notification behavior because '%@' failed."
             )
             Task { @MainActor [weak self, userNotificationCenter] in
                 let content = UNMutableNotificationContent()
@@ -1826,7 +1826,7 @@ final class TerminalNotificationStore: ObservableObject {
                 )
                 content.categoryIdentifier = Self.categoryIdentifier
                 let request = UNNotificationRequest(
-                    identifier: "cmux.notification-hook.failure.\(UUID().uuidString)",
+                    identifier: "hmux.notification-hook.failure.\(UUID().uuidString)",
                     content: content,
                     trigger: nil
                 )
@@ -2329,7 +2329,7 @@ final class TerminalNotificationStore: ObservableObject {
         clearPanelDerivedWorkspaceUnread()
         clearWorkspaceRestoredUnread()
         focusedReadIndicatorByTabId.removeAll()
-        CmuxEventBus.shared.publishNotificationCleared(ids: ids, workspaceId: nil, surfaceId: nil)
+        HmuxEventBus.shared.publishNotificationCleared(ids: ids, workspaceId: nil, surfaceId: nil)
         removeNotificationRequestsAndReleaseSoundReferences(withIdentifiers: ids)
         emitNotificationsDismissed(ids: ids, drainedSuperseded: supersededPhoneDismissBuffer.flushAll())
     }
@@ -2391,7 +2391,7 @@ final class TerminalNotificationStore: ObservableObject {
         }
         indicatorTabIds.forEach { clearFocusedReadIndicator(forTabId: $0, surfaceId: surfaceId) }
         if !idsToClear.isEmpty {
-            CmuxEventBus.shared.publishNotificationCleared(ids: idsToClear, workspaceId: tabIds.count == 1 ? tabId : nil, surfaceId: surfaceId)
+            HmuxEventBus.shared.publishNotificationCleared(ids: idsToClear, workspaceId: tabIds.count == 1 ? tabId : nil, surfaceId: surfaceId)
             removeNotificationRequestsAndReleaseSoundReferences(withIdentifiers: idsToClear)
             emitNotificationsDismissed(ids: idsToClear, drainedSuperseded: supersededDrained)
         }
@@ -2479,7 +2479,7 @@ final class TerminalNotificationStore: ObservableObject {
         }
         clearFocusedReadIndicator(forTabId: tabId)
         if !idsToClear.isEmpty {
-            CmuxEventBus.shared.publishNotificationCleared(ids: idsToClear, workspaceId: tabId, surfaceId: nil)
+            HmuxEventBus.shared.publishNotificationCleared(ids: idsToClear, workspaceId: tabId, surfaceId: nil)
             removeNotificationRequestsAndReleaseSoundReferences(withIdentifiers: idsToClear)
             emitNotificationsDismissed(
                 ids: idsToClear,
@@ -2491,7 +2491,7 @@ final class TerminalNotificationStore: ObservableObject {
     private func resolvedNotificationTitle(for notification: TerminalNotification) -> String {
         let appName = Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String
             ?? Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String
-            ?? "cmux"
+            ?? "hmux"
         return notification.title.isEmpty ? appName : notification.title
     }
 
@@ -2894,8 +2894,8 @@ final class TerminalNotificationStore: ObservableObject {
         }
 
         let alert = notificationSettingsAlertFactory()
-        alert.messageText = String(localized: "dialog.enableNotifications.title", defaultValue: "Enable Notifications for cmux")
-        alert.informativeText = String(localized: "dialog.enableNotifications.message", defaultValue: "Notifications are disabled for cmux. Enable them in System Settings to see alerts.")
+        alert.messageText = String(localized: "dialog.enableNotifications.title", defaultValue: "Enable Notifications for hmux")
+        alert.informativeText = String(localized: "dialog.enableNotifications.message", defaultValue: "Notifications are disabled for hmux. Enable them in System Settings to see alerts.")
         alert.addButton(withTitle: String(localized: "dialog.enableNotifications.openSettings", defaultValue: "Open Settings"))
         alert.addButton(withTitle: String(localized: "dialog.enableNotifications.notNow", defaultValue: "Not Now"))
         alert.beginSheetModal(for: window) { [weak self] response in

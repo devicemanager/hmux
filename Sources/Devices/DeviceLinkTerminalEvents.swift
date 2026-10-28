@@ -1,6 +1,6 @@
-import CmuxMobileRPC
-import CmuxMobileHost
-import CmuxTerminalSizing
+import HmuxMobileRPC
+import HmuxMobileHost
+import HmuxTerminalSizing
 import CoreFoundation
 import Foundation
 

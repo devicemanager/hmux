@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """Native dialog completion while eval blocks on a hidden CLI-driven surface.
 
-Run only against an isolated tagged app with CMUX_SOCKET_PATH set explicitly.
+Run only against an isolated tagged app with HMUX_SOCKET_PATH set explicitly.
 """
 
 import json
 import os
 
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 from browser_dialog_test_support import run_with_dialogs
 
 
 def main():
-    socket_path = os.environ["CMUX_SOCKET_PATH"]
-    if not socket_path.startswith("/tmp/cmux-debug-"):
+    socket_path = os.environ["HMUX_SOCKET_PATH"]
+    if not socket_path.startswith("/tmp/hmux-debug-"):
         raise RuntimeError("This regression requires an isolated tagged socket")
-    with cmux(socket_path) as client:
+    with hmux(socket_path) as client:
         focused = client.identify().get("focused")
         workspace = client._call("workspace.create", {"focus": False})["workspace_id"]
         results = []
@@ -46,7 +46,7 @@ def main():
                 assert client.identify().get("focused") == focused, "Dialog changed the selected workspace/surface"
                 try:
                     client._call("browser.dialog.dismiss", params)
-                except cmuxError as error:
+                except hmuxError as error:
                     assert "not_found" in str(error), str(error)
                 else:
                     raise AssertionError("A completed dialog remained pending")
@@ -85,7 +85,7 @@ def main():
                 client._call("browser.eval", {
                     **params, "script": "window.timeoutAnswer = confirm('timeout')",
                 })
-            except cmuxError as error:
+            except hmuxError as error:
                 assert "timed out" in str(error).lower(), str(error)
             else:
                 raise AssertionError("Unanswered confirm should keep eval blocked")

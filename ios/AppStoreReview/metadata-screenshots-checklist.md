@@ -1,13 +1,13 @@
-# cmux iOS Metadata and Screenshots Checklist
+# hmux iOS Metadata and Screenshots Checklist
 
 Do not submit a production iOS App Store build until every blocking item is
 complete in App Store Connect or in the submitted binary.
 
 ## App Identity
 
-- [ ] Bundle ID is `com.cmux.app`.
-- [ ] Display name is `cmux`, not `cmux BETA` or any dev tag.
-- [ ] `CMUX_IOS_APPSTORE_MARKETING_VERSION` in `ios/Config/Shared.xcconfig` matches the App Store version.
+- [ ] Bundle ID is `com.hmux.app`.
+- [ ] Display name is `hmux`, not `hmux BETA` or any dev tag.
+- [ ] `HMUX_IOS_APPSTORE_MARKETING_VERSION` in `ios/Config/Shared.xcconfig` matches the App Store version.
 - [ ] `CURRENT_PROJECT_VERSION` is higher than every prior ASC build for the app.
 - [ ] `ITSAppUsesNonExemptEncryption` remains `false` only if the build uses no non-exempt encryption beyond standard TLS.
 
@@ -29,7 +29,7 @@ complete in App Store Connect or in the submitted binary.
 
 - [ ] App name is 30 characters or fewer and does not include pricing text.
 - [ ] Subtitle, description, keywords, support URL, marketing URL, and privacy policy URL are complete for every ASC localization.
-- [ ] Description accurately says cmux is an iOS companion for the cmux macOS terminal.
+- [ ] Description accurately says hmux is an iOS companion for the hmux macOS terminal.
 - [ ] Metadata does not describe TestFlight, beta access, dev builds, unfinished features, or unsupported platforms.
 - [ ] Category and age rating are complete and match the app's terminal, remote-control, notifications, and account features.
 - [ ] Content rights declaration is complete.
@@ -47,10 +47,10 @@ complete in App Store Connect or in the submitted binary.
 ## Payments
 
 - [ ] The iOS App Store build exposes no Stripe, Stack checkout, external purchase, external upgrade, or billing-management link.
-- [ ] `/app-pricing?cmux_app=1&cmux_distribution=appstore` renders without `/api/billing/checkout`, `/api/billing/portal`, or enterprise sales CTAs.
-- [ ] `/api/billing/checkout?cmux_distribution=appstore` redirects before creating Stack or Stripe checkout state.
-- [ ] `/api/billing/portal?cmux_distribution=appstore` redirects before resolving Stack users or creating Stripe portal state.
-- [ ] iOS purchases use StoreKit only (Go, Pro, Max in "cmux Plans") and the plans screen has Restore Purchases, Manage Subscription, auto-renewal terms, and working Terms of Use (`https://cmux.com/terms-of-service`) and Privacy Policy (`https://cmux.com/privacy-policy`) links.
+- [ ] `/app-pricing?hmux_app=1&hmux_distribution=appstore` renders without `/api/billing/checkout`, `/api/billing/portal`, or enterprise sales CTAs.
+- [ ] `/api/billing/checkout?hmux_distribution=appstore` redirects before creating Stack or Stripe checkout state.
+- [ ] `/api/billing/portal?hmux_distribution=appstore` redirects before resolving Stack users or creating Stripe portal state.
+- [ ] iOS purchases use StoreKit only (Go, Pro, Max in "hmux Plans") and the plans screen has Restore Purchases, Manage Subscription, auto-renewal terms, and working Terms of Use (`https://cmux.com/terms-of-service`) and Privacy Policy (`https://cmux.com/privacy-policy`) links.
 - [ ] The App Store description names the subscriptions and links the Terms of Use and Privacy Policy (Guideline 3.1.2).
 - [ ] Each subscription the app offers has an App Review screenshot of the plans screen and is attached to the version submission. Submit Go only while the production Go flag shows it in the app; a product the reviewer cannot find is a rejection.
 - [ ] The demo account has no Stripe or team billing, so the plans screen offers purchases to the reviewer.

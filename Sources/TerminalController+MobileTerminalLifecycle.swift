@@ -1,5 +1,5 @@
 import Foundation
-import CmuxControlSocket
+import HmuxControlSocket
 
 /// The two terminal-lifecycle verbs another Mac's Devices sidebar needs that
 /// the mobile plane did not have: close one terminal surface, and rename (or

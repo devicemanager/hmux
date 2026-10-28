@@ -47,7 +47,7 @@ const transactionsRoute = await import("../app/api/billing/apple/transactions/ro
 const notificationsRoute = await import("../app/api/billing/apple/notifications/route");
 
 function post(path: string, body: unknown, headers: Record<string, string> = {}) {
-  return new Request(`https://cmux.test${path}`, {
+  return new Request(`https://hmux.test${path}`, {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },
     body: typeof body === "string" ? body : JSON.stringify(body),
@@ -76,14 +76,14 @@ describe("Apple billing route auth", () => {
     const response = await accountTokenRoute.POST(post("/api/billing/apple/account-token", {}, {
       authorization: "Bearer access-token",
       "x-stack-refresh-token": "refresh-token",
-      "x-cmux-bundle-id": "dev.cmux.app.beta",
-      "x-cmux-storekit-environment": "Sandbox",
-      "x-cmux-billing-periods": "monthly,yearly",
+      "x-hmux-bundle-id": "dev.hmux.app.beta",
+      "x-hmux-storekit-environment": "Sandbox",
+      "x-hmux-billing-periods": "monthly,yearly",
     }));
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       appAccountToken: "token-user-a",
-      app: { bundleId: "dev.cmux.app.beta", storeKitEnvironment: "Sandbox", billingPeriods: ["monthly", "yearly"] },
+      app: { bundleId: "dev.hmux.app.beta", storeKitEnvironment: "Sandbox", billingPeriods: ["monthly", "yearly"] },
     });
     expect(getUserCalls[0]).toMatchObject({ tokenStore: { accessToken: "access-token" } });
   });

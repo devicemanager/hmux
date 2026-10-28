@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { shortcutComboText } from "../data/cmux-shortcuts";
+import { shortcutComboText } from "../data/hmux-shortcuts";
 
 const webRoot = resolve(fileURLToPath(new URL(".", import.meta.url)), "..");
 const conceptsPage = readFileSync(

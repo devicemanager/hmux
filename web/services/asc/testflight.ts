@@ -27,7 +27,7 @@ export {
 } from "./testflightOwnership";
 
 export const PRO_TESTFLIGHT_GROUP_ID =
-  env.CMUX_PRO_TESTFLIGHT_GROUP_ID ||
+  env.HMUX_PRO_TESTFLIGHT_GROUP_ID ||
   "34fbede5-3880-4560-b1bb-a45787249780";
 
 export type RemoveTesterOptions = {

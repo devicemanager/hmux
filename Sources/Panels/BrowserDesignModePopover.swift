@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import SwiftUI
 
 /// Cursor-style floating composer card for Design Mode.
@@ -118,13 +118,13 @@ struct BrowserDesignModePopover: View {
     private var errorMessage: some View {
         if let message = controller.errorMessage {
             Label(message, systemImage: "exclamationmark.triangle.fill")
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    /// Circular trailing action, mirroring the cmux agent composer's send
+    /// Circular trailing action, mirroring the hmux agent composer's send
     /// button and Cursor's compact pill affordance. Shows a checkmark right
     /// after a successful copy.
     private var copyButton: some View {

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWindowing
+import HmuxWindowing
 
 @MainActor
 final class MainWindowController: ReleasingWindowController {
@@ -9,7 +9,7 @@ final class MainWindowController: ReleasingWindowController {
     /// Reports AppKit geometry callbacks for this window to its lifecycle owner.
     var onGeometryChanged: ((NSWindow) -> Void)?
     /// Lifecycle policy for treating a non-live-resize callback as deliberate placement.
-    var shouldRetireZoomIntentForProgrammaticResize: ((CmuxMainWindow) -> Bool) = { _ in true }
+    var shouldRetireZoomIntentForProgrammaticResize: ((HmuxMainWindow) -> Bool) = { _ in true }
 
     private var isFullScreenTransitionInProgress = false
     private var clearsFullscreenTilingOptOutOnPresentation = false
@@ -18,7 +18,7 @@ final class MainWindowController: ReleasingWindowController {
     private func logWindowEvent(_ event: String, notification: Notification) {
         guard let window = notification.object as? NSWindow else { return }
         let id = window.identifier?.rawValue ?? "<nil>"
-        cmuxDebugLog(
+        hmuxDebugLog(
             "mainWindow.delegate.\(event) window=\(id) visible=\(window.isVisible ? 1 : 0) mini=\(window.isMiniaturized ? 1 : 0) key=\(window.isKeyWindow ? 1 : 0) main=\(window.isMainWindow ? 1 : 0)"
         )
     }
@@ -140,8 +140,8 @@ final class MainWindowController: ReleasingWindowController {
     }
 
     func windowWillUseStandardFrame(_ window: NSWindow, defaultFrame newFrame: NSRect) -> NSRect {
-        guard window is CmuxMainWindow else { return newFrame }
-        return CmuxMainWindow.standardFrame(forDefaultFrame: newFrame)
+        guard window is HmuxMainWindow else { return newFrame }
+        return HmuxMainWindow.standardFrame(forDefaultFrame: newFrame)
     }
 
     private func handleFrameRestorationCheckpoint(
@@ -159,11 +159,11 @@ final class MainWindowController: ReleasingWindowController {
     }
 
     /// Retires stale zoom intent for external/programmatic frame assignment while
-    /// preserving cmux-owned repair and native fullscreen transition frames.
+    /// preserving hmux-owned repair and native fullscreen transition frames.
     private func handleProgrammaticResizePlacement(_ notification: Notification) {
-        guard let placedWindow = notification.object as? CmuxMainWindow,
+        guard let placedWindow = notification.object as? HmuxMainWindow,
               placedWindow === window,
-              placedWindow.cmuxWantsZoomedFrame else {
+              placedWindow.hmuxWantsZoomedFrame else {
             return
         }
         if placedWindow.isApplyingManagedPlacement
@@ -201,7 +201,7 @@ final class MainWindowController: ReleasingWindowController {
 
     /// Applies user placement only to the window owned by this controller.
     private func handleUserPlacement(_ notification: Notification) {
-        guard let placedWindow = notification.object as? CmuxMainWindow,
+        guard let placedWindow = notification.object as? HmuxMainWindow,
               placedWindow === window else {
             return
         }

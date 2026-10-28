@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Mine merged cmux PRs for review comments that led to fix commits.
+"""Mine merged hmux PRs for review comments that led to fix commits.
 
 REVIEW.md is drafted from the output. A review comment "led to a fix" when a
 non-merge commit landed on the PR after the comment, and its thread was then

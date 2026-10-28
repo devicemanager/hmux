@@ -1,0 +1,4 @@
+interface:
+  display_name: "hmux Settings"
+  short_description: "Inspect, edit, validate, and reload viewer-aware hmux settings."
+  default_prompt: "Use this skill to change hmux settings safely: identify the viewer type, map preferences to schema-backed hmux.json paths, edit with the bundled helper, validate recognized keys, and rely on hmux's live config reload."

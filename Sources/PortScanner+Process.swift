@@ -1,5 +1,5 @@
-import CmuxCore
-import CmuxFoundation
+import HmuxCore
+import HmuxFoundation
 import Darwin
 import Foundation
 

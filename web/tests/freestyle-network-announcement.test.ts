@@ -10,7 +10,7 @@ import { announceFreestyleNetwork, freestyleNetworkAnnouncementCommand } from ".
 
 /** Runs the shipped announcement command against a fake socket layer and returns the packets it sent. */
 async function captureAnnouncements(addresses: string[], failingFamily = "") {
-  const directory = mkdtempSync(join(tmpdir(), "cmux-network-test-"));
+  const directory = mkdtempSync(join(tmpdir(), "hmux-network-test-"));
   const capture = join(directory, "packets.json");
   // Execute the shipped guest command with only its OS boundary substituted.
   // No raw socket, subprocess, or host network operation can escape this fixture.

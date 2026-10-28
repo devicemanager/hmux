@@ -12,8 +12,8 @@ test("snapshot-v2 attach does not install browser integration or run guest heali
   };
   const client = { vms: { ref: () => vm } } as unknown as Freestyle;
   const provider = new FreestyleProvider({ client: () => client });
-  const result = await provider.openCmuxRemote("vm-browser-attach", {
-    providerMetadata: { cmuxTuiContract: "snapshot-v2", networkIpv4: "10.4.0.7", networkIpv6: "fd00:4::7" },
+  const result = await provider.openHmuxRemote("vm-browser-attach", {
+    providerMetadata: { hmuxTuiContract: "snapshot-v2", networkIpv4: "10.4.0.7", networkIpv6: "fd00:4::7" },
   });
   expect(result).toMatchObject({ route: "ws://10.4.0.7:1337/v1/link", trustedCarrier: true });
   expect(commands).toEqual([]);

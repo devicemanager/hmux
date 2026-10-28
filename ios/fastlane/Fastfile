@@ -36,12 +36,12 @@ def snapshot_language_code(app_store_locale)
   script ? "#{language}-#{script}" : language
 end
 
-# cmux iOS fastlane lanes. Scope is App Store screenshots for now; build/upload
+# hmux iOS fastlane lanes. Scope is App Store screenshots for now; build/upload
 # of the binary lives in ios/scripts/upload-testflight.sh (--lane appstore).
 
 platform :ios do
   desc "Capture App Store screenshots for all nine app languages (iPhone 6.9\" + iPad 13\")"
-  desc "Uses a DEBUG build with CMUX_UITEST_MOCK_DATA; no Apple signing required."
+  desc "Uses a DEBUG build with HMUX_UITEST_MOCK_DATA; no Apple signing required."
   desc "CI overrides device names per Xcode version via SNAPSHOT_DEVICES (the model"
   desc "names in Snapfile drift between Xcode releases, so CI resolves them at runtime)."
   lane :screenshots do
@@ -65,7 +65,7 @@ platform :ios do
       reset_screenshot_simulators(devices)
       captured_before = Dir.glob(File.join(screenshot_root, "**", "*.png")).length
       capture_screenshots(
-        scheme: "cmux-ios",
+        scheme: "hmux-ios",
         # NOTE: do not pass `testplan:` here. With -testPlan, the UI test runs
         # and passes but fastlane collects zero screenshots (verified on CI runs
         # 33479247651 vs the green 32219546960); the known-good path is the plain
@@ -84,7 +84,7 @@ platform :ios do
       )
       # capture_screenshots does not raise when the scheme's test build fails.
       # It records the failure and returns, so a compile error in any test
-      # target of the cmux-ios scheme -- which the plain invocation above
+      # target of the hmux-ios scheme -- which the plain invocation above
       # requires to build -- silently produces nothing, burns every remaining
       # language, and then surfaces from the frame lane as "no localized raws
       # ... run capture first", which points at the wrong thing. Release run
@@ -94,7 +94,7 @@ platform :ios do
       if Dir.glob(File.join(screenshot_root, "**", "*.png")).length == captured_before
         UI.user_error!(
           "No screenshots were captured for #{language}. This lane passes no " \
-          "testplan:, so every test target in the cmux-ios scheme has to " \
+          "testplan:, so every test target in the hmux-ios scheme has to " \
           "compile before any screenshot is taken. Look for the first " \
           "compiler error in the xcodebuild output above: exit status 65 is a " \
           "build failure, not a flaky simulator."
@@ -124,12 +124,12 @@ platform :ios do
     UI.message("Framed screenshots + gallery written")
   end
 
-  desc "Upload the captured screenshots to the com.cmux.app App Store listing"
+  desc "Upload the captured screenshots to the com.hmux.app App Store listing"
   desc "Screenshots only: does not touch the binary, metadata, or version state."
   lane :upload_screenshots do
     deliver(
       api_key: asc_api_key,
-      app_identifier: "com.cmux.app",
+      app_identifier: "com.hmux.app",
       screenshots_path: "./fastlane/screenshots",
       skip_binary_upload: true,
       skip_metadata: true,
@@ -145,7 +145,7 @@ end
 # plist used by ios/scripts. Mirrors the resolution in upload-testflight.sh.
 def asc_api_key
   # Accept both the fastlane-style names (ASC_API_*) and the names used by the
-  # machine-wide secret store ~/.secrets/cmux-appstoreconnect.env
+  # machine-wide secret store ~/.secrets/hmux-appstoreconnect.env
   # (ASC_KEY_ID / ASC_ISSUER_ID / ASC_PRIVATE_KEY_PATH).
   key_id = ENV["ASC_API_KEY_ID"] || ENV["ASC_KEY_ID"]
   issuer_id = ENV["ASC_API_ISSUER_ID"] || ENV["ASC_ISSUER_ID"]

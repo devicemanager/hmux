@@ -69,7 +69,7 @@ class CLIProductRoutingTests(unittest.TestCase):
                                  macos == "true" and full_suite == "true")
                 # A cli-profile product has no app or app-host bundles, so no
                 # job that consumes them may run beside it.
-                profile = gate(self.workflow["env"]["CMUX_PRODUCT_PROFILE"], **routes)
+                profile = gate(self.workflow["env"]["HMUX_PRODUCT_PROFILE"], **routes)
                 app_host_consumer = any(
                     gate(self.jobs[name]["if"], **routes)
                     for name in ("app-host-unit-tests", "tests-build-and-lag"))
@@ -113,9 +113,9 @@ class CLIProductRoutingTests(unittest.TestCase):
         module = importlib.util.module_from_spec(spec)
         sys.modules[spec.name] = module
         spec.loader.exec_module(module)
-        for path in ("cmuxCLITests/CLISSHPTYResizeInputTests.swift", "cmuxCLITestSupport/AgentHookTestNotificationPipeline.swift"):
+        for path in ("hmuxCLITests/CLISSHPTYResizeInputTests.swift", "hmuxCLITestSupport/AgentHookTestNotificationPipeline.swift"):
             self.assertTrue(module.classify_files([path]).cli, path)
-        self.assertFalse(module.classify_files(["cmuxTests/AgentNotificationGateTests.swift"]).cli)
+        self.assertFalse(module.classify_files(["hmuxTests/AgentNotificationGateTests.swift"]).cli)
 
 
 if __name__ == "__main__":

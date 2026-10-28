@@ -32,7 +32,7 @@ kept the stale product. Canary: manaflow-ai/cmux actions run 36023385114.
 Directories are inputs too. Xcode signs a folder input such as
 `Assets.xcassets` by the times of everything in it, the directories included,
 so a checkout-time directory reruns the asset catalog, regenerates
-`GeneratedAssetSymbols.swift` and recompiles every `cmuxTests` file: 241 s
+`GeneratedAssetSymbols.swift` and recompiles every `hmuxTests` file: 241 s
 against 50 s for an app source edit, measured on #14235. `record` also keeps
 each directory's time under `<path>/`, beside a digest of its entry names, and
 `replay` restores it only where those names are unchanged. Every file in it
@@ -59,7 +59,7 @@ import parallel_artifact_download as transport
 
 WORKFLOW_PATH = ".github/workflows/test-e2e.yml"
 ARCHIVE = "derived-data.tar.gz"
-MANIFEST = "cmux-e2e-input-mtimes.json"
+MANIFEST = "hmux-e2e-input-mtimes.json"
 PREFIX = "e2e-derived-data-v1-"
 # Never walk into build outputs or git metadata: they are not inputs, and
 # DerivedData lives inside the workspace on every runner pool.
@@ -251,7 +251,7 @@ def extract(archive: Path, destination: Path) -> None:
 # adopted DerivedData, so the download only adds its own time (runs
 # 35942257134, 35942449623).
 OUTSIDE_THE_APP_BUILD = (
-    "cmuxTests/", "cmuxUITests/", ".github/", "docs/", "scripts/ci/", "skills/", "tests/", "web/",
+    "hmuxTests/", "hmuxUITests/", ".github/", "docs/", "scripts/ci/", "skills/", "tests/", "web/",
 )
 COMPARE_FILE_LIMIT = 300
 # Each candidate costs three API reads; past a few, the newest seeds are all

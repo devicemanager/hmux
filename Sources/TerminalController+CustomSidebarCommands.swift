@@ -1,7 +1,7 @@
 import AppKit
-import CmuxControlSocket
-import CmuxSettings
-import CmuxSwiftRenderUI
+import HmuxControlSocket
+import HmuxSettings
+import HmuxSwiftRenderUI
 import Foundation
 
 extension TerminalController {
@@ -64,10 +64,10 @@ extension TerminalController {
             return .ok(payload)
         }
 
-        let providerId = CmuxExtensionSidebarSelection.customSidebarProviderPrefix + name
+        let providerId = HmuxExtensionSidebarSelection.customSidebarProviderPrefix + name
         v2MainSync {
             UserDefaults.standard.set(true, forKey: SettingCatalog().betaFeatures.customSidebars.userDefaultsKey)
-            CmuxExtensionSidebarSelection.setProviderId(providerId)
+            HmuxExtensionSidebarSelection.setProviderId(providerId)
             NotificationCenter.default.post(
                 name: .customSidebarReloadRequested,
                 object: nil,
@@ -189,12 +189,12 @@ extension TerminalController {
     }
 
     private nonisolated func v2CustomSidebarValidationReport(name: String?) -> CustomSidebarValidationReport {
-        CustomSidebarValidator().validate(directory: CmuxExtensionSidebarSelection.customSidebarsDirectory, name: name)
+        CustomSidebarValidator().validate(directory: HmuxExtensionSidebarSelection.customSidebarsDirectory, name: name)
     }
 
     private nonisolated func v2CustomSidebarReportPayload(_ report: CustomSidebarValidationReport) -> [String: Any] {
         [
-            "directory": CmuxExtensionSidebarSelection.customSidebarsDirectory.path,
+            "directory": HmuxExtensionSidebarSelection.customSidebarsDirectory.path,
             "valid_count": report.validCount,
             "error_count": report.errorCount,
             "sidebars": report.entries.map { entry in

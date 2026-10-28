@@ -11,7 +11,7 @@ export async function GET(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/access-grants",
-    { "cmux.vm.operation": "list_access_grants" },
+    { "hmux.vm.operation": "list_access_grants" },
     "/api/vm/access-grants failed",
     async ({ user }) => {
       const devices = await runVmRoute(listVmAccessGrants({ userId: user.id }), { request });

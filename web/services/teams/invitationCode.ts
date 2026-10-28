@@ -42,7 +42,7 @@ export function createInvitationCodeClient(
         headers: stackClientHeaders(projectId, publishableKey, accessToken),
         body: JSON.stringify({ code }),
         signal: AbortSignal.timeout(10_000),
-      }), { "cmux.auth.flow": "team_invitation_accept" });
+      }), { "hmux.auth.flow": "team_invitation_accept" });
     } catch {
       return { ok: false, failure: "unavailable" };
     }

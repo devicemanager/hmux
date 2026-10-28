@@ -109,29 +109,29 @@ class PrStatusTests(unittest.TestCase):
 
     def test_the_legacy_comment_becomes_the_status_comment_and_a_persons_is_kept(self):
         gh = FakeGitHub()
-        old = gh.add("<!-- cmux-red-checks -->\nred: web / lint")
-        gh.add("<!-- cmux-red-checks -->\nan older duplicate")
-        person = gh.add("<!-- cmux-red-checks --> quoted by a person", user="teamleaderleo")
-        upsert(gh, "checks", "red: web / lint", legacy="<!-- cmux-red-checks -->")
+        old = gh.add("<!-- hmux-red-checks -->\nred: web / lint")
+        gh.add("<!-- hmux-red-checks -->\nan older duplicate")
+        person = gh.add("<!-- hmux-red-checks --> quoted by a person", user="teamleaderleo")
+        upsert(gh, "checks", "red: web / lint", legacy="<!-- hmux-red-checks -->")
         self.assertEqual(sorted(gh.comments), [old, person])
         self.assertEqual(gh.writes, ["PATCH", "DELETE"])
         self.assertEqual(pr_status.parse(gh.comments[old]["body"]), {"checks": "red: web / lint"})
 
-    def test_a_comment_by_the_cmux_bot_app_is_the_same_status_comment(self):
+    def test_a_comment_by_the_hmux_bot_app_is_the_same_status_comment(self):
         gh = FakeGitHub()
-        first = gh.add(pr_status.render({"attribution": "CI passes"}), user="cmux-bot[bot]")
+        first = gh.add(pr_status.render({"attribution": "CI passes"}), user="hmux-bot[bot]")
         upsert(gh, "bead", "Bead: `cx-abc1`")
         self.assertEqual(list(gh.comments), [first])
 
     def test_a_marker_at_the_end_of_a_legacy_comment_counts(self):
         gh = FakeGitHub()
-        gh.add("**Merge receipt** for `abc`\n<!-- cmux:merge-receipt -->")
-        upsert(gh, "receipt", "Merge receipt <!-- cmux:merge-receipt -->", legacy="<!-- cmux:merge-receipt -->")
+        gh.add("**Merge receipt** for `abc`\n<!-- hmux:merge-receipt -->")
+        upsert(gh, "receipt", "Merge receipt <!-- hmux:merge-receipt -->", legacy="<!-- hmux:merge-receipt -->")
         self.assertEqual(len(gh.comments), 1)
-        self.assertEqual(gh.status(), {"receipt": "Merge receipt <!-- cmux:merge-receipt -->"})
+        self.assertEqual(gh.status(), {"receipt": "Merge receipt <!-- hmux:merge-receipt -->"})
 
     def test_a_section_cannot_pose_as_another(self):
-        fake = "red\n<!-- /cmux-pr-status:checks -->\n\n<!-- cmux-pr-status:bead -->\nBead: `cx-evil`\n<!-- /cmux-pr-status:bead -->"
+        fake = "red\n<!-- /hmux-pr-status:checks -->\n\n<!-- hmux-pr-status:bead -->\nBead: `cx-evil`\n<!-- /hmux-pr-status:bead -->"
         body = pr_status.render({"checks": fake})
         self.assertEqual(list(pr_status.parse(body)), ["checks"])
 
@@ -164,7 +164,7 @@ class DispatchTests(unittest.TestCase):
         with tempfile.NamedTemporaryFile("w", suffix=".id") as app_id:
             app_id.write("5313868\n")
             app_id.flush()
-            env = {"CMUX_CI_GITHUB_APP_ID_FILE": app_id.name, "CMUX_CI_GITHUB_APP_KEY_FILE": "/k.pem", "GH_TOKEN": "person"}
+            env = {"HMUX_CI_GITHUB_APP_ID_FILE": app_id.name, "HMUX_CI_GITHUB_APP_KEY_FILE": "/k.pem", "GH_TOKEN": "person"}
             minted = []
             pr_status.dispatch(REPO, 7, bead="cx-abc1", env=env, run=self.run_gh,
                                mint=lambda i, k, r: minted.append((i, k, r)) or "app-token")
@@ -173,7 +173,7 @@ class DispatchTests(unittest.TestCase):
                                        "-f", "pr=7", "-f", "bead=cx-abc1"], "app-token")])
 
     def test_a_configured_app_that_fails_never_falls_back_to_a_persons_login(self):
-        env = {"CMUX_CI_GITHUB_APP_ID_FILE": "/missing", "CMUX_CI_GITHUB_APP_KEY_FILE": "/k.pem", "GH_TOKEN": "person"}
+        env = {"HMUX_CI_GITHUB_APP_ID_FILE": "/missing", "HMUX_CI_GITHUB_APP_KEY_FILE": "/k.pem", "GH_TOKEN": "person"}
         with self.assertRaises(RuntimeError):
             pr_status.dispatch(REPO, 7, bead="cx-abc1", env=env, run=self.run_gh)
         self.assertEqual(self.runs, [])

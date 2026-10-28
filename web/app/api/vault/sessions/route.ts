@@ -18,7 +18,7 @@ export async function GET(request: Request): Promise<Response> {
   return withAuthedVaultApiRoute(
     request,
     "/api/vault/sessions",
-    { "cmux.vault.operation": "sessions.list" },
+    { "hmux.vault.operation": "sessions.list" },
     "/api/vault/sessions GET failed",
     {},
     async ({ user, span }) => {
@@ -43,11 +43,11 @@ export async function GET(request: Request): Promise<Response> {
 
       const q = url.searchParams.get("q") ?? undefined;
       setSpanAttributes(span, {
-        "cmux.vault.limit": limit,
-        "cmux.vault.agent_filter": agent,
-        "cmux.vault.agent_session_id_filter_set": Boolean(agentSessionIdValue),
-        "cmux.vault.search_set": Boolean(q),
-        "cmux.vault.cursor_set": Boolean(url.searchParams.get("cursor")),
+        "hmux.vault.limit": limit,
+        "hmux.vault.agent_filter": agent,
+        "hmux.vault.agent_session_id_filter_set": Boolean(agentSessionIdValue),
+        "hmux.vault.search_set": Boolean(q),
+        "hmux.vault.cursor_set": Boolean(url.searchParams.get("cursor")),
       });
 
       const page = await queryVaultSessionListPage(cloudDb(), {
@@ -60,8 +60,8 @@ export async function GET(request: Request): Promise<Response> {
       });
       const serialized = serializeVaultSessionListPage(page);
       setSpanAttributes(span, {
-        "cmux.vault.result_count": serialized.sessions.length,
-        "cmux.vault.has_more": Boolean(serialized.nextCursor),
+        "hmux.vault.result_count": serialized.sessions.length,
+        "hmux.vault.has_more": Boolean(serialized.nextCursor),
       });
 
       return jsonResponse(serialized);

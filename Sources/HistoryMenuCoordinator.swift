@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import Observation
 
 /// Owns the immutable projection and action routing for the main History menu.

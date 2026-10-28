@@ -1,8 +1,8 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 import Observation
-import CmuxCloudMachines
-import CmuxProductAnalytics
+import HmuxCloudMachines
+import HmuxProductAnalytics
 
 /// Adapts the shared package lifecycle to CLI processes, notifications, and local workspaces.
 /// Every New Machine entrypoint uses this owner; views consume immutable projections.
@@ -44,7 +44,7 @@ final class MachineCreateCoordinator {
             )
         }
     )
-    static let didChangeNotification = Notification.Name("cmux.machineCreate.didChange")
+    static let didChangeNotification = Notification.Name("hmux.machineCreate.didChange")
     nonisolated static let finishedUserInfoKey = "finished"
 
     private let lifecycle: CloudMachineCreateCoordinator
@@ -83,7 +83,7 @@ final class MachineCreateCoordinator {
         self.cancelOperation = cancelOperation
         self.notificationCenter = notificationCenter
         accessDidEndObserver = notificationCenter.addObserver(
-            forName: .cmuxCloudVMAccessDidEnd, object: nil, queue: .main
+            forName: .hmuxCloudVMAccessDidEnd, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.cancelAllForAuthTransition() }
         }
@@ -122,7 +122,7 @@ final class MachineCreateCoordinator {
         launches[attempt.operationID] = launch
 #if DEBUG
         let presentationWorkspace = request.presentationWorkspaceID?.uuidString ?? "none"
-        cmuxDebugLog(
+        hmuxDebugLog(
             "cloud.create.accepted operation=\(attempt.operationID.uuidString) " +
             "workspace=\(presentationWorkspace) " +
             "time=\(Date().timeIntervalSince1970)"
@@ -231,7 +231,7 @@ final class MachineCreateCoordinator {
             self.apply(self.lifecycle.finish(completion, from: attempt))
         })
         guard let handle else {
-            let failure = isRetry ? String(localized: "machines.new.error.launch", defaultValue: "cmux could not start the create command. Sign in and try again.") : nil
+            let failure = isRetry ? String(localized: "machines.new.error.launch", defaultValue: "hmux could not start the create command. Sign in and try again.") : nil
             apply(lifecycle.refuse(attempt, retryFailure: failure))
             return false
         }
@@ -261,7 +261,7 @@ final class MachineCreateCoordinator {
             reportCreateFinished(finished)
 #if DEBUG
             let presentationWorkspace = finished.operation.request.presentationWorkspaceID?.uuidString ?? "none"
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "cloud.create.completed operation=\(id.uuidString) " +
                 "workspace=\(presentationWorkspace) " +
                 "outcome=\(String(describing: finished.outcome)) " +

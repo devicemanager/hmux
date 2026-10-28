@@ -13,32 +13,32 @@ version = 1
 [[test]]
 path = "tests/test_cli_new_window_name.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_large_request_method_first.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_omp_auto_naming.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_opencode_restore_environment_roots.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_omx_hud_command_match.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_surface_handle_ignores_stale_workspace.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_open_wrapper.py"
@@ -52,22 +52,22 @@ serial = true
 [[test]]
 path = "tests/test_cli_vm_transfer_progress.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_vm_resize.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_vm_open_device_target.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_cloud_hostname.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_tmux_wait_for_private_dir.py"
@@ -76,7 +76,7 @@ lane = "macos-cli-no-socket"
 [[test]]
 path = "tests/test_cli_command_tree_snapshot.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 # Reads docs/cli-command-tree.txt, which the snapshot test above ties to the
 # built CLI, so it shares that lane.
@@ -91,17 +91,17 @@ lane = "macos-cli-no-socket"
 [[test]]
 path = "tests/test_cli_dispatch_parity.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_facade_behavior_parity.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_ssh_pty_attach_retry_suppression.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 # Parses the generated scripts with bash -n, zsh -n and fish --no-execute. The
 # fish requirement also selects the post-fish lane, like the other fish-dependent
@@ -109,79 +109,79 @@ requirements = ["cmux-cli"]
 [[test]]
 path = "tests/test_cli_completion_scripts.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli", "fish"]
+requirements = ["hmux-cli", "fish"]
 
 [[test]]
 path = "tests/test_cli_layout_focus_contract.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_right_sidebar_aliases.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_socket_operation_deadline.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 # Asserts sub-second wall-clock deadlines; runs alone, before the parallel pool.
 serial = true
 
 [[test]]
 path = "tests/test_cli_hook_enqueue_wall_clock.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_simulator_contract.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_canvas_arguments.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_coderouter_setup_token_custom_claude.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_browser_profile_cli.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_window_display_arguments.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_workspace_mutation_arguments.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_workspace_group_arguments.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_browser_input_files_cli.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_todo_status_arguments.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_browser_repl_cli_io.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_stress_cli_socket_api.py"
@@ -190,17 +190,17 @@ lane = "macos-cli-no-socket"
 [[test]]
 path = "tests/test_cli_omo_openagent_plugin_migration.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_omo_shadow_config_mirror.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_socket_autodiscovery.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_codex_wrapper_resume_hooks.py"
@@ -223,34 +223,34 @@ path = "tests/test_codex_wrapper_computer_use_mcp.py"
 lane = "macos-cli-no-socket"
 
 [[test]]
-path = "tests/test_cmux_cua_mcp_smoke.py"
+path = "tests/test_hmux_cua_mcp_smoke.py"
 lane = "macos-cli-no-socket"
 
 [[test]]
-path = "tests/test_cmux_cua_compat_contract.py"
+path = "tests/test_hmux_cua_compat_contract.py"
 lane = "macos-cli-no-socket"
 
 [[test]]
-path = "tests/test_cmux_cua_build_cache_safety.py"
+path = "tests/test_hmux_cua_build_cache_safety.py"
 lane = "macos-cli-no-socket"
 
 [[test]]
-path = "tests/test_cmux_cua_helper_identity.py"
+path = "tests/test_hmux_cua_helper_identity.py"
 lane = "macos-cli-no-socket"
 
 [[test]]
-path = "tests/test_cmux_cua_drag_cursor_harness.py"
+path = "tests/test_hmux_cua_drag_cursor_harness.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_cua_drag_cursor.py"
+path = "tests/test_hmux_cua_drag_cursor.py"
 lane = "manual"
-reason = "Requires an isolated macOS GUI session, a running cmux-cua helper with capture/input permissions, and observed window/divider coordinates."
+reason = "Requires an isolated macOS GUI session, a running hmux-cua helper with capture/input permissions, and observed window/divider coordinates."
 
 [[test]]
-path = "tests/test_cmux_cua_divider_drags.py"
+path = "tests/test_hmux_cua_divider_drags.py"
 lane = "manual"
-reason = "Requires an isolated tagged cmux app and helper, two prepared split workspaces, and a plan with observed divider coordinates for native drags."
+reason = "Requires an isolated tagged hmux app and helper, two prepared split workspaces, and a plan with observed divider coordinates for native drags."
 
 [[test]]
 path = "tests/test_hermes_wrapper_hooks.py"
@@ -290,7 +290,7 @@ lane = "macos-cli-no-socket"
 [[test]]
 path = "tests/test_claude_wrapper_generated_settings_fast_path.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_claude_teams_test_utils.py"
@@ -303,77 +303,77 @@ lane = "linux-guard"
 [[test]]
 path = "tests/test_cli_codex_teams_informational.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_claude_teams_fallback_path.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_claude_teams_env.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_claude_teams_existing_shim.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_claude_teams_integration_disabled.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_claude_teams_main_vertical.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_claude_teams_moved_surface.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_claude_teams_tmux_sequence.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_tmux_compat_session_lookup.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_tmux_compat_targeted_read_budget.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_claude_teams_trust_optin.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_omo_fallback_path.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_omx_fallback_path.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_omc_fallback_path.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_issue_8743_path_directory_shadowing.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_issue_2448_shell_claude_wrapper_dispatch.py"
@@ -470,32 +470,32 @@ lane = "macos-shell"
 [[test]]
 path = "tests/test_claude_hook_stop_last_assistant.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_claude_hook_clear_running_status.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_claude_hook_reports_session_cwd.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_claude_hook_push_notification.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_pi_extension_install.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_pi_extension_dispatch.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_pi_wrapper.py"
@@ -504,7 +504,7 @@ lane = "macos-cli-no-socket"
 [[test]]
 path = "tests/test_pi_compacted_feed.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_pi_extension_wakeup.py"
@@ -513,27 +513,27 @@ lane = "macos-cli-no-socket-post-fish"
 [[test]]
 path = "tests/test_codex_permission_prompt_notification.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_codex_monitor_memory.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_omp_extension_install.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_omp_subagent_lifecycle.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_campfire_extension_install.py"
 lane = "macos-cli-no-socket-post-fish"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_issue_9075_shell_socket_reports.py"
@@ -565,7 +565,7 @@ path = "tests/test_check_package_resolved_policy.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_capture_skill.py"
+path = "tests/test_hmux_capture_skill.py"
 lane = "linux-guard"
 
 [[test]]
@@ -617,7 +617,7 @@ path = "tests/test_strings_output_encoding.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_tui_release_profile.py"
+path = "tests/test_hmux_tui_release_profile.py"
 lane = "linux-guard"
 
 [[test]]
@@ -653,7 +653,7 @@ path = "tests/test_ci_console_session_env_forwarding.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_ci_cmux_unit_test_shard.py"
+path = "tests/test_ci_hmux_unit_test_shard.py"
 lane = "linux-guard"
 
 [[test]]
@@ -881,7 +881,7 @@ path = "tests/test_nightly_next_feed_watch.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_tui_artifacts_retry.py"
+path = "tests/test_hmux_tui_artifacts_retry.py"
 lane = "linux-guard"
 
 [[test]]
@@ -1153,7 +1153,7 @@ path = "tests/test_ci_r2_storage_census.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_binaries_prune.py"
+path = "tests/test_hmux_binaries_prune.py"
 lane = "linux-guard"
 
 [[test]]
@@ -1289,19 +1289,19 @@ path = "tests/test_cloud_vm_attach_retry_script.py"
 lane = "legacy"
 
 [[test]]
-path = "tests/test_cmux_browser_skill.py"
+path = "tests/test_hmux_browser_skill.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_settings_jsonc.py"
+path = "tests/test_hmux_settings_jsonc.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_settings_supported_paths.py"
+path = "tests/test_hmux_settings_supported_paths.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_settings_transactions.py"
+path = "tests/test_hmux_settings_transactions.py"
 lane = "linux-guard"
 
 [[test]]
@@ -1555,7 +1555,7 @@ lane = "linux-guard"
 [[test]]
 path = "tests/test_cli_workflow_catalog.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_workflow_catalog_translation.py"
@@ -1734,7 +1734,7 @@ path = "tests/test_ci_owned_catch_up.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_schema_parity.py"
+path = "tests/test_hmux_schema_parity.py"
 lane = "linux-guard"
 
 [[test]]
@@ -1744,22 +1744,22 @@ lane = "linux-guard"
 [[test]]
 path = "tests/test_claude_hook_spool.py"
 lane = "macos-cli-product"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_hooks_setup_arguments.py"
 lane = "macos-cli-product"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_copilot_hooks_file.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_cli_copilot_feed_payload.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_ci_machine_failure.py"
@@ -1770,7 +1770,7 @@ path = "tests/test_release_media.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_config_schema_embed.py"
+path = "tests/test_hmux_config_schema_embed.py"
 lane = "linux-guard"
 
 [[test]]
@@ -1804,7 +1804,7 @@ lane = "linux-guard"
 [[test]]
 path = "tests/test_cli_vm_mutation_arguments.py"
 lane = "macos-cli-no-socket"
-requirements = ["cmux-cli"]
+requirements = ["hmux-cli"]
 
 [[test]]
 path = "tests/test_submodule_forward_only.py"
@@ -1926,7 +1926,7 @@ path = "tests/test_cli_package_graph.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_next_pr_merge_tree.py"
+path = "tests/test_hmux_next_pr_merge_tree.py"
 lane = "linux-guard"
 
 [[test]]
@@ -1946,15 +1946,15 @@ path = "tests/test_merge_check_paths.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_next_dev_daily_dispatch.py"
+path = "tests/test_hmux_next_dev_daily_dispatch.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_next_dev_tip_feed.py"
+path = "tests/test_hmux_next_dev_tip_feed.py"
 lane = "linux-guard"
 
 [[test]]
-path = "tests/test_cmux_next_tip_swift_suite_dispatch.py"
+path = "tests/test_hmux_next_tip_swift_suite_dispatch.py"
 lane = "linux-guard"
 
 [[test]]

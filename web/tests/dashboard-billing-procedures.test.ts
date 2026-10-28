@@ -53,7 +53,7 @@ mock.module("@/services/billing/stripe", () => ({ ...realStripe, isStripeBilling
 const { billingRouter } = await import("../orpc/server/dashboard/billing");
 const { PlanChangeError } = realPlanChange;
 
-const context = { request: new Request("https://cmux.test/api/dashboard/rpc"), serverPrefetch: true };
+const context = { request: new Request("https://hmux.test/api/dashboard/rpc"), serverPrefetch: true };
 
 async function refusalOf(operation: Promise<unknown>) {
   const error = await operation.catch((caught: unknown) => caught);

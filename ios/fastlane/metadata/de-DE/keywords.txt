@@ -1,1 +1,1 @@
-terminal,coding-agent,KI,claude,codex,ssh,entwickler,devops,ghostty,remote,cli,automation,cmux
+terminal,coding-agent,KI,claude,codex,ssh,entwickler,devops,ghostty,remote,cli,automation,hmux

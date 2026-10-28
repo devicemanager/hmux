@@ -47,20 +47,20 @@ export async function POST(request: Request) {
   return withApiRouteSpan(
     request,
     "/api/waitlist",
-    { "cmux.subsystem": "waitlist", "cmux.waitlist.operation": "notify" },
+    { "hmux.subsystem": "waitlist", "hmux.waitlist.operation": "notify" },
     async (span): Promise<Response> => {
       // Rate-limit the whole public endpoint up front, before the DNS lookups
       // below. The validate phase resolves a user-supplied domain (MX + A/AAAA),
       // and unique domains miss the cache, so an unthrottled path would let a
       // public POST flood the resolver as well as Slack. Reuses the feedback
       // rule. Only active on Vercel.
-      if (process.env.VERCEL === "1" && !env.CMUX_FEEDBACK_RATE_LIMIT_ID) {
+      if (process.env.VERCEL === "1" && !env.HMUX_FEEDBACK_RATE_LIMIT_ID) {
         void reportMissingRateLimitRule({ route: "/api/waitlist", reason: "unset" });
       }
-      if (process.env.VERCEL === "1" && env.CMUX_FEEDBACK_RATE_LIMIT_ID) {
+      if (process.env.VERCEL === "1" && env.HMUX_FEEDBACK_RATE_LIMIT_ID) {
         let result: Awaited<ReturnType<typeof checkRateLimit>>;
         try {
-          result = await checkRateLimit(env.CMUX_FEEDBACK_RATE_LIMIT_ID, {
+          result = await checkRateLimit(env.HMUX_FEEDBACK_RATE_LIMIT_ID, {
             request,
           });
         } catch {
@@ -71,7 +71,7 @@ export async function POST(request: Request) {
         }
         const { error, rateLimited } = result;
         setSpanAttributes(span, {
-          "cmux.rate_limited": rateLimited || error === "blocked",
+          "hmux.rate_limited": rateLimited || error === "blocked",
         });
         if (rateLimited || error === "blocked") {
           return jsonError("Rate limit exceeded", 429);
@@ -99,8 +99,8 @@ export async function POST(request: Request) {
       }
       const { email, platforms, location, notify } = parsed.data;
       setSpanAttributes(span, {
-        "cmux.waitlist.platform_count": platforms.length,
-        "cmux.waitlist.location": location,
+        "hmux.waitlist.platform_count": platforms.length,
+        "hmux.waitlist.location": location,
       });
 
       // Reject addresses whose domain can't receive mail (typos, fake domains,
@@ -108,7 +108,7 @@ export async function POST(request: Request) {
       // failures resolve to "unknown" and fail open so a resolver hiccup never
       // blocks a real signup.
       const deliverable = await checkEmailDeliverable(email);
-      setSpanAttributes(span, { "cmux.waitlist.email_check": deliverable });
+      setSpanAttributes(span, { "hmux.waitlist.email_check": deliverable });
       if (deliverable === "invalid") {
         return ok({ valid: false });
       }

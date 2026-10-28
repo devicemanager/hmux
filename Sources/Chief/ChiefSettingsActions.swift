@@ -1,6 +1,6 @@
 import AppKit
-import CmuxChief
-import CmuxHomeCore
+import HmuxChief
+import HmuxHomeCore
 import Foundation
 
 /// What the Chief Settings panel reads and changes beyond the engine

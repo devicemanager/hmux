@@ -19,14 +19,14 @@ describe("cloud db query tags", () => {
       "abcdef123456",
     );
     expect(comment).toBe(
-      "/*application='cmux-web',release='abcdef123456',route='%2Fapi%2Fdevices%2Firoh%2Fregister',source='app'*/",
+      "/*application='hmux-web',release='abcdef123456',route='%2Fapi%2Fdevices%2Firoh%2Fregister',source='app'*/",
     );
   });
 
   test("escapes quotes and comment terminators so a value cannot end the comment", () => {
     const comment = formatCloudDbQueryComment({ source: "app", job: "x'*/; drop" }, undefined);
     expect(comment).not.toContain("*/;");
-    expect(comment).toBe("/*application='cmux-web',job='x%27*%2F%3B%20drop',source='app'*/");
+    expect(comment).toBe("/*application='hmux-web',job='x%27*%2F%3B%20drop',source='app'*/");
   });
 
   test("appends the comment to a statement once and leaves tagged statements alone", () => {
@@ -34,13 +34,13 @@ describe("cloud db query tags", () => {
     const tagged = runWithCloudDbQueryTags({ source: "app", route: "/api/vm" }, () =>
       tagCloudDbQuery("select 1 \n"),
     );
-    expect(tagged).toBe("select 1 /*application='cmux-web',route='%2Fapi%2Fvm',source='app'*/");
+    expect(tagged).toBe("select 1 /*application='hmux-web',route='%2Fapi%2Fvm',source='app'*/");
     expect(tagCloudDbQuery(tagged)).toBe(tagged);
   });
 
   test("scripts and crons identify themselves through the environment when no context is set", () => {
-    process.env.CMUX_DB_QUERY_SOURCE = "script";
-    process.env.CMUX_DB_QUERY_JOB = "stripe-backfill";
+    process.env.HMUX_DB_QUERY_SOURCE = "script";
+    process.env.HMUX_DB_QUERY_JOB = "stripe-backfill";
     expect(currentCloudDbQueryTags()).toEqual({ source: "script", job: "stripe-backfill" });
     // An explicit context still wins.
     expect(runWithCloudDbQueryTags({ source: "app", route: "/x" }, () => currentCloudDbQueryTags()))
@@ -49,9 +49,9 @@ describe("cloud db query tags", () => {
 
   test("defaults to the application and source when nothing else is known", () => {
     delete process.env.VERCEL_GIT_COMMIT_SHA;
-    delete process.env.CMUX_DB_QUERY_SOURCE;
-    delete process.env.CMUX_DB_QUERY_JOB;
-    expect(formatCloudDbQueryComment(undefined, undefined)).toBe("/*application='cmux-web',source='app'*/");
+    delete process.env.HMUX_DB_QUERY_SOURCE;
+    delete process.env.HMUX_DB_QUERY_JOB;
+    expect(formatCloudDbQueryComment(undefined, undefined)).toBe("/*application='hmux-web',source='app'*/");
   });
 });
 
@@ -71,7 +71,7 @@ describe("iroh route query tags", () => {
     const { handleTaggedIrohRoute } = await import("../services/iroh/routeHandler");
     let seen: ReturnType<typeof currentCloudDbQueryTags>;
     const response = await handleTaggedIrohRoute(
-      new Request("https://cmux.test/api/devices/iroh/register", { method: "POST" }),
+      new Request("https://hmux.test/api/devices/iroh/register", { method: "POST" }),
       "register",
       {
         verify: async () => {

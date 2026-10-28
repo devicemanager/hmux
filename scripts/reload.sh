@@ -8,10 +8,10 @@ source "$SCRIPT_DIR/lib/mobile-attach.sh"
 # shellcheck source=scripts/lib/dev-secrets.sh
 source "$SCRIPT_DIR/lib/dev-secrets.sh"
 
-APP_NAME="cmux DEV"
-BUNDLE_ID="com.cmuxterm.app.debug"
-BASE_APP_NAME="cmux DEV"
-# The configuration xcodebuild builds and the app it produces (Release: cmux.app).
+APP_NAME="hmux DEV"
+BUNDLE_ID="com.hmuxterm.app.debug"
+BASE_APP_NAME="hmux DEV"
+# The configuration xcodebuild builds and the app it produces (Release: hmux.app).
 BUILD_CONFIGURATION="Debug"
 PRODUCT_APP_NAME="$BASE_APP_NAME"
 DERIVED_DATA=""
@@ -21,26 +21,26 @@ DERIVED_SET=0
 TAG=""
 LAUNCH=0
 BUILD_ONLY=0
-CMUX_DEBUG_LOG=""
-CMUX_DEV_PORT=""
-CMUX_DEV_PORT_END=""
-CMUX_DEV_PORT_RANGE=""
-CMUX_DEV_ORIGIN=""
-CMUX_DEV_API_BASE_URL_VALUE=""
-CMUX_IROH_BROKER_BASE_URL_VALUE=""
-CMUX_IROH_V2_ENVIRONMENT_VALUE=""
-CMUX_IROH_V2_BASE_URL_VALUE=""
-CMUX_IROH_V2_FORCE_RELAY_VALUE="0"
-CMUX_AUTH_WWW_ORIGIN_VALUE=""
-CMUX_WWW_ORIGIN_VALUE=""
+HMUX_DEBUG_LOG=""
+HMUX_DEV_PORT=""
+HMUX_DEV_PORT_END=""
+HMUX_DEV_PORT_RANGE=""
+HMUX_DEV_ORIGIN=""
+HMUX_DEV_API_BASE_URL_VALUE=""
+HMUX_IROH_BROKER_BASE_URL_VALUE=""
+HMUX_IROH_V2_ENVIRONMENT_VALUE=""
+HMUX_IROH_V2_BASE_URL_VALUE=""
+HMUX_IROH_V2_FORCE_RELAY_VALUE="0"
+HMUX_AUTH_WWW_ORIGIN_VALUE=""
+HMUX_WWW_ORIGIN_VALUE=""
 PROD_AUTH=0
 AUTH_CREDENTIALS_FILE=""
 AUTH_PROFILE=""
 AUTH_EXPECTED_ACCOUNT=""
-CMUX_TUI_CLIENT_MANIFEST_URL_VALUE=""
+HMUX_TUI_CLIENT_MANIFEST_URL_VALUE=""
 CLI_PATH=""
-NO_GLOBAL_CLI_LINKS="${CMUX_RELOAD_NO_GLOBAL_CLI_LINKS:-0}"
-# Matches CmuxStateDirectory (non-TCC ~/.local/state/cmux) where the app/CLI now
+NO_GLOBAL_CLI_LINKS="${HMUX_RELOAD_NO_GLOBAL_CLI_LINKS:-0}"
+# Matches HmuxStateDirectory (non-TCC ~/.local/state/hmux) where the app/CLI now
 # read the last-socket-path markers (https://github.com/manaflow-ai/cmux/issues/5146).
 # Resolve the real account home via getpwuid (the same syscall
 # homeDirectoryForCurrentUser uses) rather than $HOME, which a shell can override.
@@ -48,9 +48,9 @@ NO_GLOBAL_CLI_LINKS="${CMUX_RELOAD_NO_GLOBAL_CLI_LINKS:-0}"
 # `dscl ... | awk` mis-parses such paths because dscl wraps a value with spaces onto
 # a second line. `|| true` keeps the lookup from aborting the script under
 # `set -euo pipefail`; an empty result falls back to $HOME.
-_cmux_account_home="$(perl -e 'print((getpwuid($<))[7])' 2>/dev/null || true)"
-LAST_SOCKET_PATH_DIR="${_cmux_account_home:-$HOME}/.local/state/cmux"
-LEGACY_SOCKET_PATH_DIR="${_cmux_account_home:-$HOME}/Library/Application Support/cmux"
+_hmux_account_home="$(perl -e 'print((getpwuid($<))[7])' 2>/dev/null || true)"
+LAST_SOCKET_PATH_DIR="${_hmux_account_home:-$HOME}/.local/state/hmux"
+LEGACY_SOCKET_PATH_DIR="${_hmux_account_home:-$HOME}/Library/Application Support/hmux"
 SWIFT_FRONTEND_WORKAROUND=0
 XCODEBUILD_STARTED=0
 XCODEBUILD_OUTPUT_VALID=0
@@ -224,7 +224,7 @@ reload_cleanup_tag_state_with_lock() {
         return 0;
       }
       my ($temporary_fh, $temporary_path) = eval {
-        tempfile(".cmux-discovery.XXXXXX", DIR => $directory, UNLINK => 0)
+        tempfile(".hmux-discovery.XXXXXX", DIR => $directory, UNLINK => 0)
       };
       return 0 unless $temporary_fh && $temporary_path;
       my $ok = print {$temporary_fh} $value, "\n";
@@ -361,7 +361,7 @@ reload_cleanup_tag_state_with_lock() {
       close($fh);
       exit 1;
     }
-    my $cli_suffix = "/cmux DEV ${slug}.app/Contents/Resources/bin/cmux";
+    my $cli_suffix = "/hmux DEV ${slug}.app/Contents/Resources/bin/hmux";
     my $pointer_ok = length($publish_cli_path)
       ? write_discovery_file($pointer_path, $publish_cli_path)
       : clear_matching_discovery_file($pointer_path, $cli_suffix, 1);
@@ -398,73 +398,73 @@ derive_socket_marker_names() {
   local variant_slug=""
 
   # Keep this table in lockstep with SocketPathMarkerFiles.variant. In
-  # particular, an identifier that is not one of the known cmux flavors is
+  # particular, an identifier that is not one of the known hmux flavors is
   # stable (rather than an implicitly-tagged dev build), and an empty suffix
   # uses the unscoped nightly/rc/staging/dev marker name.
   bundle_id="$(printf '%s' "$bundle_id" | sed -E 's/^[[:space:]]+//; s/[[:space:]]+$//')"
-  CMUX_RELOAD_MARKER_NAME="last-socket-path"
-  CMUX_RELOAD_TMP_MARKER="/tmp/cmux-last-socket-path"
+  HMUX_RELOAD_MARKER_NAME="last-socket-path"
+  HMUX_RELOAD_TMP_MARKER="/tmp/hmux-last-socket-path"
   case "$bundle_id" in
-    com.cmuxterm.app.nightly)
-      CMUX_RELOAD_MARKER_NAME="nightly-last-socket-path"
-      CMUX_RELOAD_TMP_MARKER="/tmp/cmux-nightly-last-socket-path"
+    com.hmuxterm.app.nightly)
+      HMUX_RELOAD_MARKER_NAME="nightly-last-socket-path"
+      HMUX_RELOAD_TMP_MARKER="/tmp/hmux-nightly-last-socket-path"
       ;;
-    com.cmuxterm.app.nightly.*)
-      variant_slug="$(sanitize_path "${bundle_id#com.cmuxterm.app.nightly.}")"
+    com.hmuxterm.app.nightly.*)
+      variant_slug="$(sanitize_path "${bundle_id#com.hmuxterm.app.nightly.}")"
       if [[ -n "$variant_slug" ]]; then
-        CMUX_RELOAD_MARKER_NAME="nightly-${variant_slug}-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-nightly-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="nightly-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-nightly-${variant_slug}-last-socket-path"
       else
-        CMUX_RELOAD_MARKER_NAME="nightly-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-nightly-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="nightly-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-nightly-last-socket-path"
       fi
       ;;
-    com.cmuxterm.app.rc)
-      CMUX_RELOAD_MARKER_NAME="rc-last-socket-path"
-      CMUX_RELOAD_TMP_MARKER="/tmp/cmux-rc-last-socket-path"
+    com.hmuxterm.app.rc)
+      HMUX_RELOAD_MARKER_NAME="rc-last-socket-path"
+      HMUX_RELOAD_TMP_MARKER="/tmp/hmux-rc-last-socket-path"
       ;;
-    com.cmuxterm.app.rc.*)
-      variant_slug="$(sanitize_path "${bundle_id#com.cmuxterm.app.rc.}")"
+    com.hmuxterm.app.rc.*)
+      variant_slug="$(sanitize_path "${bundle_id#com.hmuxterm.app.rc.}")"
       if [[ -n "$variant_slug" ]]; then
-        CMUX_RELOAD_MARKER_NAME="rc-${variant_slug}-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-rc-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="rc-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-rc-${variant_slug}-last-socket-path"
       else
-        CMUX_RELOAD_MARKER_NAME="rc-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-rc-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="rc-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-rc-last-socket-path"
       fi
       ;;
-    com.cmuxterm.app.staging)
-      CMUX_RELOAD_MARKER_NAME="staging-last-socket-path"
-      CMUX_RELOAD_TMP_MARKER="/tmp/cmux-staging-last-socket-path"
+    com.hmuxterm.app.staging)
+      HMUX_RELOAD_MARKER_NAME="staging-last-socket-path"
+      HMUX_RELOAD_TMP_MARKER="/tmp/hmux-staging-last-socket-path"
       ;;
-    com.cmuxterm.app.staging.*)
-      variant_slug="$(sanitize_path "${bundle_id#com.cmuxterm.app.staging.}")"
+    com.hmuxterm.app.staging.*)
+      variant_slug="$(sanitize_path "${bundle_id#com.hmuxterm.app.staging.}")"
       if [[ -n "$variant_slug" ]]; then
-        CMUX_RELOAD_MARKER_NAME="staging-${variant_slug}-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-staging-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="staging-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-staging-${variant_slug}-last-socket-path"
       else
-        CMUX_RELOAD_MARKER_NAME="staging-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-staging-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="staging-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-staging-last-socket-path"
       fi
       ;;
-    com.cmuxterm.app.debug)
+    com.hmuxterm.app.debug)
       variant_slug="$(sanitize_path "$tag_slug")"
       if [[ -n "$variant_slug" ]]; then
-        CMUX_RELOAD_MARKER_NAME="dev-${variant_slug}-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-dev-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="dev-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-dev-${variant_slug}-last-socket-path"
       else
-        CMUX_RELOAD_MARKER_NAME="dev-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-dev-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="dev-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-dev-last-socket-path"
       fi
       ;;
-    com.cmuxterm.app.debug.*)
-      variant_slug="$(sanitize_path "${bundle_id#com.cmuxterm.app.debug.}")"
+    com.hmuxterm.app.debug.*)
+      variant_slug="$(sanitize_path "${bundle_id#com.hmuxterm.app.debug.}")"
       if [[ -n "$variant_slug" ]]; then
-        CMUX_RELOAD_MARKER_NAME="dev-${variant_slug}-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-dev-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="dev-${variant_slug}-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-dev-${variant_slug}-last-socket-path"
       else
-        CMUX_RELOAD_MARKER_NAME="dev-last-socket-path"
-        CMUX_RELOAD_TMP_MARKER="/tmp/cmux-dev-last-socket-path"
+        HMUX_RELOAD_MARKER_NAME="dev-last-socket-path"
+        HMUX_RELOAD_TMP_MARKER="/tmp/hmux-dev-last-socket-path"
       fi
       ;;
   esac
@@ -472,18 +472,18 @@ derive_socket_marker_names() {
 
 cleanup_stale_tag_state() {
   local slug="$1"
-  local socket_path="${2:-/tmp/cmux-debug-${slug}.sock}"
+  local socket_path="${2:-/tmp/hmux-debug-${slug}.sock}"
   local publish_socket_path="${3:-}"
   local publish_cli_path="${4:-}"
   derive_socket_marker_names "${BUNDLE_ID:-}" "$slug"
-  local marker_name="$CMUX_RELOAD_MARKER_NAME"
-  local tmp_marker="$CMUX_RELOAD_TMP_MARKER"
+  local marker_name="$HMUX_RELOAD_MARKER_NAME"
+  local tmp_marker="$HMUX_RELOAD_TMP_MARKER"
   local marker_path="${LAST_SOCKET_PATH_DIR}/${marker_name}"
   local legacy_marker_path="${LEGACY_SOCKET_PATH_DIR}/${marker_name}"
 
   # The Perl transaction performs the liveness probe after acquiring the tag
   # lock, so validation, stale-node removal, and publication share one owner.
-  local pointer_path="/tmp/cmux-last-cli-path"
+  local pointer_path="/tmp/hmux-last-cli-path"
   if [[ -n "$publish_socket_path" ]]; then
     mkdir -p "$LAST_SOCKET_PATH_DIR" || return 1
   fi
@@ -499,7 +499,7 @@ cleanup_stale_tag_state() {
 }
 
 cleanup_stale_cli_pointer_target() {
-  local pointer_path="/tmp/cmux-last-cli-path"
+  local pointer_path="/tmp/hmux-last-cli-path"
   [[ -f "$pointer_path" && ! -L "$pointer_path" ]] || return 0
   local cli_path=""
   cli_path="$(LC_ALL=C /usr/bin/head -c 4097 "$pointer_path" 2>/dev/null | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//' || true)"
@@ -507,8 +507,8 @@ cleanup_stale_cli_pointer_target() {
   [[ -n "$cli_path" ]] || return 0
   local bundle_path=""
   case "$cli_path" in
-    */Contents/Resources/bin/cmux)
-      bundle_path="${cli_path%/Contents/Resources/bin/cmux}"
+    */Contents/Resources/bin/hmux)
+      bundle_path="${cli_path%/Contents/Resources/bin/hmux}"
       ;;
     *)
       return 0
@@ -516,15 +516,15 @@ cleanup_stale_cli_pointer_target() {
   esac
   local app_name="${bundle_path##*/}"
   app_name="${app_name%.app}"
-  [[ "$app_name" == "cmux DEV "* ]] || return 0
-  local slug="${app_name#cmux DEV }"
+  [[ "$app_name" == "hmux DEV "* ]] || return 0
+  local slug="${app_name#hmux DEV }"
   [[ "$slug" =~ ^[A-Za-z0-9_-]+$ ]] || return 0
   local socket_path=""
   if [[ -x /usr/libexec/PlistBuddy && -f "$bundle_path/Contents/Info.plist" ]]; then
-    socket_path="$(/usr/libexec/PlistBuddy -c 'Print :LSEnvironment:CMUX_SOCKET_PATH' "$bundle_path/Contents/Info.plist" 2>/dev/null || true)"
+    socket_path="$(/usr/libexec/PlistBuddy -c 'Print :LSEnvironment:HMUX_SOCKET_PATH' "$bundle_path/Contents/Info.plist" 2>/dev/null || true)"
   fi
   socket_path="$(printf '%s' "$socket_path" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-  cleanup_stale_tag_state "$slug" "${socket_path:-/tmp/cmux-debug-${slug}.sock}"
+  cleanup_stale_tag_state "$slug" "${socket_path:-/tmp/hmux-debug-${slug}.sock}"
 }
 
 wait_for_tag_socket_lock_release() {
@@ -570,13 +570,13 @@ wait_for_tag_socket_lock_release() {
 }
 
 should_skip_ghostty_cli_helper_zig_build() {
-  [[ "${CMUX_SKIP_ZIG_BUILD:-}" == "1" ]]
+  [[ "${HMUX_SKIP_ZIG_BUILD:-}" == "1" ]]
 }
 
 write_dev_cli_shim() {
   local target="$1"
   local fallback_bin="$2"
-  local cli_path_file="${3:-/tmp/cmux-last-cli-path}"
+  local cli_path_file="${3:-/tmp/hmux-last-cli-path}"
   local cli_path_file_literal=""
   local fallback_bin_literal=""
   local socket_probe_function=""
@@ -587,7 +587,7 @@ write_dev_cli_shim() {
   mkdir -p "$(dirname "$target")"
   cat > "$target" <<EOF
 #!/usr/bin/env bash
-# cmux dev shim (managed by scripts/reload.sh)
+# hmux dev shim (managed by scripts/reload.sh)
 set -euo pipefail
 
 CLI_PATH_FILE=${cli_path_file_literal}
@@ -627,7 +627,7 @@ bundle_socket_path() {
   local bundle_path="\$1"
   local socket_path=""
   if [[ -x /usr/libexec/PlistBuddy ]]; then
-    socket_path="\$(/usr/libexec/PlistBuddy -c 'Print :LSEnvironment:CMUX_SOCKET_PATH' "\$bundle_path/Contents/Info.plist" 2>/dev/null || true)"
+    socket_path="\$(/usr/libexec/PlistBuddy -c 'Print :LSEnvironment:HMUX_SOCKET_PATH' "\$bundle_path/Contents/Info.plist" 2>/dev/null || true)"
   fi
   if [[ -n "\$socket_path" ]]; then
     printf '%s\\n' "\$socket_path"
@@ -636,10 +636,10 @@ bundle_socket_path() {
 
   local app_name="\${bundle_path##*/}"
   app_name="\${app_name%.app}"
-  if [[ "\$app_name" == "cmux DEV "* ]]; then
-    local tag="\${app_name#cmux DEV }"
+  if [[ "\$app_name" == "hmux DEV "* ]]; then
+    local tag="\${app_name#hmux DEV }"
     [[ "\$tag" =~ ^[A-Za-z0-9_-]+\$ ]] || return 1
-    printf '/tmp/cmux-debug-%s.sock\\n' "\$tag"
+    printf '/tmp/hmux-debug-%s.sock\\n' "\$tag"
     return 0
   fi
   return 1
@@ -656,20 +656,20 @@ live_cli_bundle() {
   printf '%s\\n' "\$bundle_path"
 }
 
-if [[ -n "\${CMUX_SOCKET_PATH:-}" || -n "\${CMUX_SOCKET:-}" ]]; then
+if [[ -n "\${HMUX_SOCKET_PATH:-}" || -n "\${HMUX_SOCKET:-}" ]]; then
   HAS_EXPLICIT_SOCKET=1
 fi
 if [[ -n "\$SOCKET_ARG" ]]; then
   SOCKET_NAME="\$(basename "\$SOCKET_ARG")"
-  if [[ "\$SOCKET_NAME" == cmux-debug-*.sock ]]; then
-    TAG="\${SOCKET_NAME#cmux-debug-}"
+  if [[ "\$SOCKET_NAME" == hmux-debug-*.sock ]]; then
+    TAG="\${SOCKET_NAME#hmux-debug-}"
     TAG="\${TAG%.sock}"
     if [[ "\$TAG" =~ ^[A-Za-z0-9_-]+$ ]]; then
-      # reload.sh links /tmp/cmux-<tag> to the DerivedData it built the tag into,
+      # reload.sh links /tmp/hmux-<tag> to the DerivedData it built the tag into,
       # which is not the per-tag default when tags share one.
-      TAG_CLI_SUFFIX="cmux DEV \$TAG.app/Contents/Resources/bin/cmux"
-      for TAG_CLI in "/tmp/cmux-\$TAG"/Build/Products/{Debug,Release}/"\$TAG_CLI_SUFFIX" \
-        "\$HOME/Library/Developer/Xcode/DerivedData/cmux-\$TAG"/Build/Products/{Debug,Release}/"\$TAG_CLI_SUFFIX"; do
+      TAG_CLI_SUFFIX="hmux DEV \$TAG.app/Contents/Resources/bin/hmux"
+      for TAG_CLI in "/tmp/hmux-\$TAG"/Build/Products/{Debug,Release}/"\$TAG_CLI_SUFFIX" \
+        "\$HOME/Library/Developer/Xcode/DerivedData/hmux-\$TAG"/Build/Products/{Debug,Release}/"\$TAG_CLI_SUFFIX"; do
         # /tmp is shared, so only trust a CLI this user owns.
         [[ -O "\$TAG_CLI" ]] || continue
         if live_cli_bundle "\$TAG_CLI" >/dev/null; then
@@ -681,7 +681,7 @@ if [[ -n "\$SOCKET_ARG" ]]; then
     fi
   fi
 fi
-if [[ -n "\${CMUX_BUNDLED_CLI_PATH:-}" ]] && [[ -f "\$CMUX_BUNDLED_CLI_PATH" ]] && [[ -x "\$CMUX_BUNDLED_CLI_PATH" ]] && [[ "\$CMUX_BUNDLED_CLI_PATH" != "\$0" ]]; then
+if [[ -n "\${HMUX_BUNDLED_CLI_PATH:-}" ]] && [[ -f "\$HMUX_BUNDLED_CLI_PATH" ]] && [[ -x "\$HMUX_BUNDLED_CLI_PATH" ]] && [[ "\$HMUX_BUNDLED_CLI_PATH" != "\$0" ]]; then
   # Inherited terminal identity is authoritative when the caller explicitly
   # supplied a socket. For ambient calls, validate liveness only when the
   # bundle carries reload-managed socket metadata; ordinary installed bundles
@@ -689,16 +689,16 @@ if [[ -n "\${CMUX_BUNDLED_CLI_PATH:-}" ]] && [[ -f "\$CMUX_BUNDLED_CLI_PATH" ]] 
   BUNDLED_APP_PATH=""
   BUNDLED_SOCKET_PATH=""
   if [[ "\$HAS_EXPLICIT_SOCKET" == "1" ]]; then
-    exec "\$CMUX_BUNDLED_CLI_PATH" "\$@"
-  elif BUNDLED_APP_PATH="\$(cli_bundle_for_path "\$CMUX_BUNDLED_CLI_PATH" 2>/dev/null)" &&
+    exec "\$HMUX_BUNDLED_CLI_PATH" "\$@"
+  elif BUNDLED_APP_PATH="\$(cli_bundle_for_path "\$HMUX_BUNDLED_CLI_PATH" 2>/dev/null)" &&
        BUNDLED_SOCKET_PATH="\$(bundle_socket_path "\$BUNDLED_APP_PATH" 2>/dev/null)"; then
     if socket_is_live "\$BUNDLED_SOCKET_PATH"; then
-      exec "\$CMUX_BUNDLED_CLI_PATH" "\$@"
+      exec "\$HMUX_BUNDLED_CLI_PATH" "\$@"
     fi
   else
     # Stable, nightly, staging, and other installed bundles need not carry the
     # reload-managed socket metadata. Preserve their inherited CLI identity.
-    exec "\$CMUX_BUNDLED_CLI_PATH" "\$@"
+    exec "\$HMUX_BUNDLED_CLI_PATH" "\$@"
   fi
 fi
 
@@ -714,15 +714,15 @@ if [[ -x ${fallback_bin_literal} ]]; then
   exec ${fallback_bin_literal} "\$@"
 fi
 
-echo "error: no reload-selected dev cmux CLI found. Run ./scripts/reload.sh --tag <name> first." >&2
+echo "error: no reload-selected dev hmux CLI found. Run ./scripts/reload.sh --tag <name> first." >&2
 exit 1
 EOF
   chmod +x "$target"
 }
 
-select_cmux_shim_target() {
-  local app_cli_dir="/Applications/cmux.app/Contents/Resources/bin"
-  local marker="cmux dev shim (managed by scripts/reload.sh)"
+select_hmux_shim_target() {
+  local app_cli_dir="/Applications/hmux.app/Contents/Resources/bin"
+  local marker="hmux dev shim (managed by scripts/reload.sh)"
   local target=""
   local path_entry=""
   local candidate=""
@@ -739,7 +739,7 @@ select_cmux_shim_target() {
       break
     fi
     [[ -d "$path_entry" && -w "$path_entry" ]] || continue
-    candidate="$path_entry/cmux"
+    candidate="$path_entry/hmux"
     if [[ ! -e "$candidate" ]]; then
       target="$candidate"
       break
@@ -758,7 +758,7 @@ select_cmux_shim_target() {
   # Fallback for PATH layouts where app CLI isn't listed or no earlier entries were writable.
   for path_entry in /opt/homebrew/bin /usr/local/bin "$HOME/.local/bin" "$HOME/bin"; do
     [[ -d "$path_entry" && -w "$path_entry" ]] || continue
-    candidate="$path_entry/cmux"
+    candidate="$path_entry/hmux"
     if [[ ! -e "$candidate" ]]; then
       echo "$candidate"
       return 0
@@ -781,15 +781,15 @@ publish_reload_cli_links() {
     return 0
   fi
 
-  ln -sfn "$cli_path" /tmp/cmux-cli || true
+  ln -sfn "$cli_path" /tmp/hmux-cli || true
 
   # Stable shim that always follows the last reload-selected dev CLI.
-  DEV_CLI_SHIM="$HOME/.local/bin/cmux-dev"
-  write_dev_cli_shim "$DEV_CLI_SHIM" "/Applications/cmux.app/Contents/Resources/bin/cmux"
+  DEV_CLI_SHIM="$HOME/.local/bin/hmux-dev"
+  write_dev_cli_shim "$DEV_CLI_SHIM" "/Applications/hmux.app/Contents/Resources/bin/hmux"
 
-  CMUX_SHIM_TARGET="$(select_cmux_shim_target || true)"
-  if [[ -n "${CMUX_SHIM_TARGET:-}" ]]; then
-    write_dev_cli_shim "$CMUX_SHIM_TARGET" "/Applications/cmux.app/Contents/Resources/bin/cmux"
+  HMUX_SHIM_TARGET="$(select_hmux_shim_target || true)"
+  if [[ -n "${HMUX_SHIM_TARGET:-}" ]]; then
+    write_dev_cli_shim "$HMUX_SHIM_TARGET" "/Applications/hmux.app/Contents/Resources/bin/hmux"
   fi
 }
 
@@ -802,7 +802,7 @@ publish_reload_cli_path() {
     return 0
   fi
 
-  reload_write_cli_pointer "/tmp/cmux-last-cli-path" "$cli_path" || return 1
+  reload_write_cli_pointer "/tmp/hmux-last-cli-path" "$cli_path" || return 1
   publish_reload_cli_links "$cli_path"
 }
 
@@ -851,7 +851,7 @@ reload_write_cli_pointer() {
 
     my $directory = dirname($target);
     my ($temporary_fh, $temporary_path) = tempfile(
-      ".cmux-discovery.XXXXXX",
+      ".hmux-discovery.XXXXXX",
       DIR => $directory,
       UNLINK => 0,
     );
@@ -883,7 +883,7 @@ reload_write_discovery_file() {
     [[ "$owner" == "$(id -u)" ]] || return 1
   fi
   mkdir -p "$directory" || return 1
-  temporary="$(mktemp "$directory/.cmux-discovery.XXXXXX")" || return 1
+  temporary="$(mktemp "$directory/.hmux-discovery.XXXXXX")" || return 1
   if ! (umask 077; printf '%s\n' "$value" > "$temporary"); then
     rm -f -- "$temporary"
     return 1
@@ -909,10 +909,10 @@ Options:
                          stopping the running tagged app, daemon, or tag state.
                          Cannot be combined with --launch.
   --prod-auth            Point this tagged Debug build at production Stack auth,
-                         cmux APIs, and the production Iroh broker.
+                         hmux APIs, and the production Iroh broker.
                          Without it, tagged builds use the shared dev backend, which
-                         needs a cmuxterm-hq checkout. Outside one, set
-                         CMUX_DEV_BACKEND_MODE=local to use http://localhost:<port>.
+                         needs a hmuxterm-hq checkout. Outside one, set
+                         HMUX_DEV_BACKEND_MODE=local to use http://localhost:<port>.
   --release              Build the Release configuration (optimized, no DEBUG) of
                          this tagged app, for dogfooding real performance. The
                          debug.* socket commands are compiled out.
@@ -927,21 +927,21 @@ Options:
   --expected-account <email>
                          Fail before building unless the selected profile/file
                          resolves to this normalized account.
-  --cmux-tui-manifest-url <url>
-                         Install the cmux-tui client from this immutable manifest.
+  --hmux-tui-manifest-url <url>
+                         Install the hmux-tui client from this immutable manifest.
   --name <app name>      Override app display/bundle name.
   --bundle-id <id>       Override bundle identifier.
   --derived-data <path>  Override derived data path.
-                         Defaults to CMUX_DERIVED_DATA when set (an absolute
+                         Defaults to HMUX_DERIVED_DATA when set (an absolute
                          path to a DerivedData kept warm for this checkout and
                          shared by its tags), else one directory per tag.
-  --no-global-cli-links  Do not update /tmp/cmux-cli, /tmp/cmux-last-cli-path,
-                         or PATH cmux-dev shims. Useful for isolated dogfood.
+  --no-global-cli-links  Do not update /tmp/hmux-cli, /tmp/hmux-last-cli-path,
+                         or PATH hmux-dev shims. Useful for isolated dogfood.
   --swift-frontend-workaround
                          Work around Swift arm64 frontend spins for this reload
                          only by disabling batch mode, debug symbol emission,
                          and AArch64 GlobalISel. Also enabled by
-                         CMUX_SWIFT_FRONTEND_WORKAROUND=1.
+                         HMUX_SWIFT_FRONTEND_WORKAROUND=1.
   --swift-disable-global-isel
                          Alias for --swift-frontend-workaround.
   -h, --help             Show this help.
@@ -949,11 +949,11 @@ EOF
 }
 
 sanitize_bundle() {
-  cmux_attach__bundle_seg "$1"
+  hmux_attach__bundle_seg "$1"
 }
 
 sanitize_path() {
-  cmux_attach__slug_raw "$1"
+  hmux_attach__slug_raw "$1"
 }
 
 is_valid_port() {
@@ -970,9 +970,9 @@ is_positive_integer() {
   (( numeric > 0 ))
 }
 
-choose_cmux_dev_port() {
-  if is_valid_port "${CMUX_PORT:-}"; then
-    echo "$CMUX_PORT"
+choose_hmux_dev_port() {
+  if is_valid_port "${HMUX_PORT:-}"; then
+    echo "$HMUX_PORT"
     return 0
   fi
   if is_valid_port "${PORT:-}"; then
@@ -982,19 +982,19 @@ choose_cmux_dev_port() {
   echo "3777"
 }
 
-choose_cmux_dev_port_range() {
-  if is_positive_integer "${CMUX_PORT_RANGE:-}"; then
-    echo "$CMUX_PORT_RANGE"
+choose_hmux_dev_port_range() {
+  if is_positive_integer "${HMUX_PORT_RANGE:-}"; then
+    echo "$HMUX_PORT_RANGE"
     return 0
   fi
   echo "1"
 }
 
-choose_cmux_dev_port_end() {
+choose_hmux_dev_port_end() {
   local start="$1"
   local range="$2"
-  if is_valid_port "${CMUX_PORT_END:-}"; then
-    echo "$CMUX_PORT_END"
+  if is_valid_port "${HMUX_PORT_END:-}"; then
+    echo "$HMUX_PORT_END"
     return 0
   fi
   local start_num=$((10#$start))
@@ -1027,14 +1027,14 @@ selected_xcode_version() {
 }
 
 # Whether this reload skips the app's separate Swift module emission, given the
-# selected Xcode's version. CMUX_RELOAD_APP_EMIT_MODULE decides when it is set: 1
+# selected Xcode's version. HMUX_RELOAD_APP_EMIT_MODULE decides when it is set: 1
 # emits the module, 0 skips it. Unset, the module is skipped except on Xcode 26.2
 # and 26.3, where the build without it stops at the module merge with "type
 # mismatch of function ... but used in a swift module as ..." on SwiftUI views
 # whose body goes through an opaque return type.
 reload_skips_app_module_emission() {
   local xcode_version="${1:-}"
-  case "${CMUX_RELOAD_APP_EMIT_MODULE:-}" in
+  case "${HMUX_RELOAD_APP_EMIT_MODULE:-}" in
     1) return 1 ;;
     0) return 0 ;;
   esac
@@ -1046,27 +1046,27 @@ reload_skips_app_module_emission() {
 
 tagged_derived_data_path() {
   local slug="$1"
-  echo "$HOME/Library/Developer/Xcode/DerivedData/cmux-${slug}"
+  echo "$HOME/Library/Developer/Xcode/DerivedData/hmux-${slug}"
 }
 
-# Print the cmux-tui commit whose published client the bundle will carry. A branch
-# that changes cmux-tui has no published client for its own commits, so explain
+# Print the hmux-tui commit whose published client the bundle will carry. A branch
+# that changes hmux-tui has no published client for its own commits, so explain
 # the existing overrides next to the resolver's error.
-resolve_cmux_tui_client_commit() {
+resolve_hmux_tui_client_commit() {
   local commit
   local -a resolver_args=()
-  if [[ -n "${CMUX_TUI_CLIENT_MAX_FALLBACK:-}" ]]; then
-    resolver_args+=(--max-fallback "$CMUX_TUI_CLIENT_MAX_FALLBACK")
+  if [[ -n "${HMUX_TUI_CLIENT_MAX_FALLBACK:-}" ]]; then
+    resolver_args+=(--max-fallback "$HMUX_TUI_CLIENT_MAX_FALLBACK")
   fi
-  if ! commit="$("$PWD/scripts/ci/resolve-cmux-tui-client-commit.sh" ${resolver_args[@]+"${resolver_args[@]}"})"; then
+  if ! commit="$("$PWD/scripts/ci/resolve-hmux-tui-client-commit.sh" ${resolver_args[@]+"${resolver_args[@]}"})"; then
     cat >&2 <<'EOF'
-error: no published cmux-tui client for this checkout, so the app bundle cannot get one.
-       A branch that changes cmux-tui has no published client for its own commits
-       until they land on main. Point reload at a cmux-tui binary built off this Mac
+error: no published hmux-tui client for this checkout, so the app bundle cannot get one.
+       A branch that changes hmux-tui has no published client for its own commits
+       until they land on main. Point reload at a hmux-tui binary built off this Mac
        (Blacksmith Testbox, or this branch's CI artifact):
-         CMUX_TUI_CLIENT_LOCAL=/path/to/cmux-tui ./scripts/reload.sh --tag <tag>
-       or install a published manifest with --cmux-tui-manifest-url <url>
-       (or CMUX_TUI_CLIENT_MANIFEST_URL=<url>).
+         HMUX_TUI_CLIENT_LOCAL=/path/to/hmux-tui ./scripts/reload.sh --tag <tag>
+       or install a published manifest with --hmux-tui-manifest-url <url>
+       (or HMUX_TUI_CLIENT_MANIFEST_URL=<url>).
 EOF
     return 1
   fi
@@ -1076,23 +1076,23 @@ EOF
 # A tag only changes the bundle id, names, socket and state files. None of those
 # are compiler inputs, so a new tag built into a DerivedData that is already warm
 # for this checkout recompiles nothing, while a fresh per-tag DerivedData is a full
-# cold build. CMUX_DERIVED_DATA lets whatever owns the checkout (a pool of reused
+# cold build. HMUX_DERIVED_DATA lets whatever owns the checkout (a pool of reused
 # worktrees, a fleet lease) name that warm directory once, so callers do not have
 # to pass --derived-data on every reload. It must be absolute, and only one build
 # may use it at a time; that is the owner's lock to hold, not this script's.
 resolve_tagged_derived_data() {
-  # Precedence: --derived-data, then CMUX_DERIVED_DATA, then one directory per tag.
+  # Precedence: --derived-data, then HMUX_DERIVED_DATA, then one directory per tag.
   local slug="$1" explicit_set="${2:-0}" explicit_path="${3:-}"
   if [[ "$explicit_set" -eq 1 ]]; then
     echo "$explicit_path"
     return 0
   fi
-  if [[ -n "${CMUX_DERIVED_DATA:-}" ]]; then
-    if [[ "$CMUX_DERIVED_DATA" != /* ]]; then
-      echo "error: CMUX_DERIVED_DATA must be an absolute path, got '$CMUX_DERIVED_DATA'" >&2
+  if [[ -n "${HMUX_DERIVED_DATA:-}" ]]; then
+    if [[ "$HMUX_DERIVED_DATA" != /* ]]; then
+      echo "error: HMUX_DERIVED_DATA must be an absolute path, got '$HMUX_DERIVED_DATA'" >&2
       return 1
     fi
-    echo "$CMUX_DERIVED_DATA"
+    echo "$HMUX_DERIVED_DATA"
     return 0
   fi
   tagged_derived_data_path "$slug"
@@ -1156,13 +1156,13 @@ validate_app_bundle() {
 # that is not the tag's own may hold other tags, so only the tag's app is removed from it.
 tag_build_cleanup_paths() {
   local tag="$1" derived="${2:-}"
-  local own="" link="/tmp/cmux-${tag}"
+  local own="" link="/tmp/hmux-${tag}"
   own="$(tagged_derived_data_path "$tag")"
   if [[ -z "$derived" && -L "$link" ]]; then
     derived="$(readlink "$link" 2>/dev/null || true)"
   fi
   if [[ -n "$derived" && "$derived" != "$own" && "$derived" != "$link" ]]; then
-    printf '%q ' "${derived%/}/Build/Products/Debug/cmux DEV ${tag}.app" "${derived%/}/Build/Products/Release/cmux DEV ${tag}.app"
+    printf '%q ' "${derived%/}/Build/Products/Debug/hmux DEV ${tag}.app" "${derived%/}/Build/Products/Release/hmux DEV ${tag}.app"
     [[ -d "$own" ]] || return 0
   fi
   printf '%q ' "$own"
@@ -1173,10 +1173,10 @@ tag_build_cleanup_paths() {
 # argument is escaped with %q instead of being wrapped in quotes.
 print_tag_cleanup_commands() {
   local tag="$1" derived="${2:-}"
-  printf '  pkill -f %q\n' "cmux DEV ${tag}.app/Contents/MacOS/cmux DEV"
-  printf '  rm -rf %s%q %q\n' "$(tag_build_cleanup_paths "$tag" "$derived")" "/tmp/cmux-${tag}" "/tmp/cmux-debug-${tag}.sock"
-  printf '  rm -f %q\n' "/tmp/cmux-debug-${tag}.log"
-  printf '  rm -f %q\n' "$HOME/Library/Application Support/cmux/cmuxd-dev-${tag}.sock"
+  printf '  pkill -f %q\n' "hmux DEV ${tag}.app/Contents/MacOS/hmux DEV"
+  printf '  rm -rf %s%q %q\n' "$(tag_build_cleanup_paths "$tag" "$derived")" "/tmp/hmux-${tag}" "/tmp/hmux-debug-${tag}.sock"
+  printf '  rm -f %q\n' "/tmp/hmux-debug-${tag}.log"
+  printf '  rm -f %q\n' "$HOME/Library/Application Support/hmux/hmuxd-dev-${tag}.sock"
 }
 
 print_tag_cleanup_reminder() {
@@ -1188,10 +1188,10 @@ print_tag_cleanup_reminder() {
   local -a stale_tags=()
 
   while IFS= read -r -d '' path; do
-    if [[ "$path" == /tmp/cmux-* ]]; then
-      tag="${path#/tmp/cmux-}"
-    elif [[ "$path" == "$HOME/Library/Developer/Xcode/DerivedData/cmux-"* ]]; then
-      tag="${path#"$HOME"/Library/Developer/Xcode/DerivedData/cmux-}"
+    if [[ "$path" == /tmp/hmux-* ]]; then
+      tag="${path#/tmp/hmux-}"
+    elif [[ "$path" == "$HOME/Library/Developer/Xcode/DerivedData/hmux-"* ]]; then
+      tag="${path#"$HOME"/Library/Developer/Xcode/DerivedData/hmux-}"
     else
       continue
     fi
@@ -1213,8 +1213,8 @@ print_tag_cleanup_reminder() {
     stale_tags+=("$tag")
   done < <(
     # The trailing slash makes find descend when /tmp is itself a symlink.
-    find /tmp/ -maxdepth 1 -name 'cmux-*' -print0 2>/dev/null
-    find "$HOME/Library/Developer/Xcode/DerivedData" -maxdepth 1 -type d -name 'cmux-*' -print0 2>/dev/null
+    find /tmp/ -maxdepth 1 -name 'hmux-*' -print0 2>/dev/null
+    find "$HOME/Library/Developer/Xcode/DerivedData" -maxdepth 1 -type d -name 'hmux-*' -print0 2>/dev/null
   )
 
   echo
@@ -1263,8 +1263,8 @@ while [[ $# -gt 0 ]]; do
         exit 1
       fi
       BUNDLE_ID_LOWER="$(printf '%s' "$BUNDLE_ID" | tr '[:upper:]' '[:lower:]')"
-      if [[ "$BUNDLE_ID_LOWER" == "com.cmuxterm.app" || ( "$BUNDLE_ID_LOWER" == com.cmuxterm.app.* && "$BUNDLE_ID_LOWER" != com.cmuxterm.app.debug.* ) ]]; then
-        echo "error: --bundle-id $BUNDLE_ID is not a com.cmuxterm.app.debug.* id; reload.sh would quit a user's running cmux" >&2
+      if [[ "$BUNDLE_ID_LOWER" == "com.hmuxterm.app" || ( "$BUNDLE_ID_LOWER" == com.hmuxterm.app.* && "$BUNDLE_ID_LOWER" != com.hmuxterm.app.debug.* ) ]]; then
+        echo "error: --bundle-id $BUNDLE_ID is not a com.hmuxterm.app.debug.* id; reload.sh would quit a user's running hmux" >&2
         exit 1
       fi
       BUNDLE_SET=1
@@ -1304,12 +1304,12 @@ while [[ $# -gt 0 ]]; do
       [[ -n "$AUTH_EXPECTED_ACCOUNT" ]] || { echo "error: --expected-account requires an email" >&2; exit 1; }
       shift 2
       ;;
-    --cmux-tui-manifest-url)
-      CMUX_TUI_CLIENT_MANIFEST_URL_VALUE="${2:-}"
-      [[ -n "$CMUX_TUI_CLIENT_MANIFEST_URL_VALUE" ]] \
-        || { echo "error: --cmux-tui-manifest-url requires a URL" >&2; exit 1; }
-      [[ "$CMUX_TUI_CLIENT_MANIFEST_URL_VALUE" == https://* ]] \
-        || { echo "error: --cmux-tui-manifest-url requires HTTPS" >&2; exit 1; }
+    --hmux-tui-manifest-url)
+      HMUX_TUI_CLIENT_MANIFEST_URL_VALUE="${2:-}"
+      [[ -n "$HMUX_TUI_CLIENT_MANIFEST_URL_VALUE" ]] \
+        || { echo "error: --hmux-tui-manifest-url requires a URL" >&2; exit 1; }
+      [[ "$HMUX_TUI_CLIENT_MANIFEST_URL_VALUE" == https://* ]] \
+        || { echo "error: --hmux-tui-manifest-url requires HTTPS" >&2; exit 1; }
       shift 2
       ;;
     --derived-data)
@@ -1360,12 +1360,12 @@ if [[ -z "$TAG" ]]; then
   exit 1
 fi
 
-# Release's product is cmux.app, which the tag step stages as the tagged app. It
-# bundles the pinned cmux-tui by default; dogfood the checkout's own instead. Its
+# Release's product is hmux.app, which the tag step stages as the tagged app. It
+# bundles the pinned hmux-tui by default; dogfood the checkout's own instead. Its
 # entitlements need a signing team, and the tagged app is signed ad hoc.
 if [[ "$BUILD_CONFIGURATION" == Release ]]; then
-  PRODUCT_APP_NAME="cmux"
-  export CMUX_NEXT_TUI_MODE=tree
+  PRODUCT_APP_NAME="hmux"
+  export HMUX_NEXT_TUI_MODE=tree
 fi
 
 # Tagged builds normally compile the base product name and stage a distinct
@@ -1383,7 +1383,7 @@ fi
 if [[ "$LAUNCH" -eq 1 && -n "$TAG" && -z "$AUTH_PROFILE" ]]; then
   AUTH_PROFILE="personal"
   if [[ -z "$AUTH_CREDENTIALS_FILE" ]]; then
-    for candidate in "${HOME:-}/.secrets/cmuxterm-dev.env" "${HOME:-}/.secrets/cmux.env"; do
+    for candidate in "${HOME:-}/.secrets/hmuxterm-dev.env" "${HOME:-}/.secrets/hmux.env"; do
       if [[ -f "$candidate" ]]; then
         AUTH_CREDENTIALS_FILE="$candidate"
         break
@@ -1392,13 +1392,13 @@ if [[ "$LAUNCH" -eq 1 && -n "$TAG" && -z "$AUTH_PROFILE" ]]; then
   fi
   if [[ -z "$AUTH_CREDENTIALS_FILE" || ! -f "$AUTH_CREDENTIALS_FILE" ]]; then
     echo "error: tagged launches require authenticated dev credentials" >&2
-    echo "error: configure ~/.secrets/cmuxterm-dev.env with scripts/setup-team-dev.sh" >&2
+    echo "error: configure ~/.secrets/hmuxterm-dev.env with scripts/setup-team-dev.sh" >&2
     exit 2
   fi
 fi
 
 if [[ -n "$AUTH_CREDENTIALS_FILE" ]]; then
-  cmux_dev_secrets_validate_file "$AUTH_CREDENTIALS_FILE"
+  hmux_dev_secrets_validate_file "$AUTH_CREDENTIALS_FILE"
   AUTH_CREDENTIALS_FILE="$(cd "$(dirname "$AUTH_CREDENTIALS_FILE")" && pwd -P)/$(basename "$AUTH_CREDENTIALS_FILE")"
 fi
 if [[ -n "$AUTH_PROFILE" || -n "$AUTH_EXPECTED_ACCOUNT" ]]; then
@@ -1414,13 +1414,13 @@ if [[ -n "$AUTH_PROFILE" || -n "$AUTH_EXPECTED_ACCOUNT" ]]; then
   # normalized account; build tools and package plugins must never inherit the
   # credential while Xcode is running.
   AUTH_EXPECTED_ACCOUNT="$(
-    cmux_dev_secrets_load "${auth_loader_args[@]}" >/dev/null
-    printf '%s' "$CMUX_DEV_AUTH_ACCOUNT"
+    hmux_dev_secrets_load "${auth_loader_args[@]}" >/dev/null
+    printf '%s' "$HMUX_DEV_AUTH_ACCOUNT"
   )" || exit $?
 fi
 
 if [[ -n "$TAG" ]]; then
-  if ! cmux_attach_validate_dev_tag "$TAG"; then
+  if ! hmux_attach_validate_dev_tag "$TAG"; then
     exit 1
   fi
   TAG_ID="$(sanitize_bundle "$TAG")"
@@ -1428,15 +1428,15 @@ if [[ -n "$TAG" ]]; then
   # Serialize the complete reload, including cleanup and log publication.
   # Xcode's database lock alone is too late: a losing reload's cleanup can
   # delete the active build's generated app before it finishes signing.
-  if [[ "${CMUX_RELOAD_TAG_LOCK_OWNER:-}" != "$PPID" ]]; then
+  if [[ "${HMUX_RELOAD_TAG_LOCK_OWNER:-}" != "$PPID" ]]; then
     exec python3 "$SCRIPT_DIR/lib/tagged-reload-lock.py" \
       "$TAG_SLUG" "$0" "${RELOAD_ORIGINAL_ARGS[@]}"
   fi
   if [[ "$NAME_SET" -eq 0 ]]; then
-    APP_NAME="cmux DEV ${TAG_SLUG}"
+    APP_NAME="hmux DEV ${TAG_SLUG}"
   fi
   if [[ "$BUNDLE_SET" -eq 0 ]]; then
-    BUNDLE_ID="com.cmuxterm.app.debug.${TAG_ID}"
+    BUNDLE_ID="com.hmuxterm.app.debug.${TAG_ID}"
   fi
   DERIVED_DATA="$(resolve_tagged_derived_data "$TAG_SLUG" "$DERIVED_SET" "${DERIVED_DATA:-}")"
   if [[ "$BUILD_ONLY" -ne 1 ]]; then
@@ -1445,69 +1445,69 @@ if [[ -n "$TAG" ]]; then
   fi
 fi
 
-# Resolve the published cmux-tui client before the dev backend, GhosttyKit and
+# Resolve the published hmux-tui client before the dev backend, GhosttyKit and
 # xcodebuild, so a checkout without one fails in seconds rather than after a full
 # build. The install step after the build reuses this commit. The same overrides
-# skip it: --cmux-tui-manifest-url, CMUX_TUI_CLIENT_MANIFEST_URL, and
-# CMUX_TUI_CLIENT_LOCAL. CMUX_SKIP_CMUX_TUI_CLIENT=1 defers to the install step,
+# skip it: --hmux-tui-manifest-url, HMUX_TUI_CLIENT_MANIFEST_URL, and
+# HMUX_TUI_CLIENT_LOCAL. HMUX_SKIP_HMUX_TUI_CLIENT=1 defers to the install step,
 # which keeps an existing bundled copy and resolves only when there is none. The
 # resolver's progress lines go to the reload log; they print here only on failure.
-CMUX_TUI_CLIENT_COMMIT=""
-CMUX_TUI_CLIENT_RESOLVE_LOG=""
-if [[ "${CMUX_SKIP_CMUX_TUI_CLIENT:-}" != "1" \
-      && -z "$CMUX_TUI_CLIENT_MANIFEST_URL_VALUE" \
-      && -z "${CMUX_TUI_CLIENT_MANIFEST_URL:-}" \
-      && -z "${CMUX_TUI_CLIENT_LOCAL:-}" ]]; then
-  cmux_tui_resolve_stderr="$(mktemp "${TMPDIR:-/tmp}/cmux-reload-tui-resolve.XXXXXX")"
-  cmux_tui_resolve_rc=0
-  CMUX_TUI_CLIENT_COMMIT="$(resolve_cmux_tui_client_commit 2>"$cmux_tui_resolve_stderr")" \
-    || cmux_tui_resolve_rc=$?
-  CMUX_TUI_CLIENT_RESOLVE_LOG="$(cat "$cmux_tui_resolve_stderr")"
-  rm -f "$cmux_tui_resolve_stderr"
-  if [[ "$cmux_tui_resolve_rc" -ne 0 ]]; then
-    printf '%s\n' "$CMUX_TUI_CLIENT_RESOLVE_LOG" >&2
+HMUX_TUI_CLIENT_COMMIT=""
+HMUX_TUI_CLIENT_RESOLVE_LOG=""
+if [[ "${HMUX_SKIP_HMUX_TUI_CLIENT:-}" != "1" \
+      && -z "$HMUX_TUI_CLIENT_MANIFEST_URL_VALUE" \
+      && -z "${HMUX_TUI_CLIENT_MANIFEST_URL:-}" \
+      && -z "${HMUX_TUI_CLIENT_LOCAL:-}" ]]; then
+  hmux_tui_resolve_stderr="$(mktemp "${TMPDIR:-/tmp}/hmux-reload-tui-resolve.XXXXXX")"
+  hmux_tui_resolve_rc=0
+  HMUX_TUI_CLIENT_COMMIT="$(resolve_hmux_tui_client_commit 2>"$hmux_tui_resolve_stderr")" \
+    || hmux_tui_resolve_rc=$?
+  HMUX_TUI_CLIENT_RESOLVE_LOG="$(cat "$hmux_tui_resolve_stderr")"
+  rm -f "$hmux_tui_resolve_stderr"
+  if [[ "$hmux_tui_resolve_rc" -ne 0 ]]; then
+    printf '%s\n' "$HMUX_TUI_CLIENT_RESOLVE_LOG" >&2
     exit 1
   fi
 fi
 
-CMUX_DEV_PORT="$(choose_cmux_dev_port)"
-CMUX_DEV_PORT_RANGE="$(choose_cmux_dev_port_range)"
-CMUX_DEV_PORT_END="$(choose_cmux_dev_port_end "$CMUX_DEV_PORT" "$CMUX_DEV_PORT_RANGE")"
-CMUX_DEV_ORIGIN="http://localhost:${CMUX_DEV_PORT}"
+HMUX_DEV_PORT="$(choose_hmux_dev_port)"
+HMUX_DEV_PORT_RANGE="$(choose_hmux_dev_port_range)"
+HMUX_DEV_PORT_END="$(choose_hmux_dev_port_end "$HMUX_DEV_PORT" "$HMUX_DEV_PORT_RANGE")"
+HMUX_DEV_ORIGIN="http://localhost:${HMUX_DEV_PORT}"
 if [[ -n "$TAG" && "$PROD_AUTH" -eq 0 ]]; then
   source "$PWD/scripts/lib/dev-backend-origin.sh"
-  CMUX_DEV_ORIGIN="$(cmux_resolve_tagged_backend "$TAG_SLUG" "$PWD" "$CMUX_DEV_ORIGIN")" || exit 1
+  HMUX_DEV_ORIGIN="$(hmux_resolve_tagged_backend "$TAG_SLUG" "$PWD" "$HMUX_DEV_ORIGIN")" || exit 1
   # Local mode has no shared backend to bake into the app or the Iroh broker default.
-  if [[ "${CMUX_DEV_BACKEND_MODE:-remote}" != "local" ]]; then
-    export CMUX_DEV_BACKEND_URL="$CMUX_DEV_ORIGIN"
+  if [[ "${HMUX_DEV_BACKEND_MODE:-remote}" != "local" ]]; then
+    export HMUX_DEV_BACKEND_URL="$HMUX_DEV_ORIGIN"
   fi
 fi
-CMUX_DEV_API_BASE_URL_VALUE="$(cmux_attach_resolve_dev_api_base_url "$CMUX_DEV_ORIGIN")"
-CMUX_IROH_BROKER_BASE_URL_VALUE="${CMUX_DEV_BACKEND_URL:-${CMUX_IROH_BROKER_BASE_URL:-https://cmux-staging.vercel.app}}"
-CMUX_IROH_V2_ENVIRONMENT_VALUE="${CMUX_IROH_V2_ENVIRONMENT:-development}"
-CMUX_IROH_V2_BASE_URL_VALUE="${CMUX_IROH_V2_BASE_URL:-https://cmux-v2-development.debussy.workers.dev}"
-CMUX_IROH_V2_FORCE_RELAY_VALUE="${CMUX_IROH_V2_FORCE_RELAY:-0}"
-CMUX_AUTH_WWW_ORIGIN_VALUE="$CMUX_DEV_ORIGIN"
-CMUX_WWW_ORIGIN_VALUE="$CMUX_DEV_ORIGIN"
+HMUX_DEV_API_BASE_URL_VALUE="$(hmux_attach_resolve_dev_api_base_url "$HMUX_DEV_ORIGIN")"
+HMUX_IROH_BROKER_BASE_URL_VALUE="${HMUX_DEV_BACKEND_URL:-${HMUX_IROH_BROKER_BASE_URL:-https://cmux-staging.vercel.app}}"
+HMUX_IROH_V2_ENVIRONMENT_VALUE="${HMUX_IROH_V2_ENVIRONMENT:-development}"
+HMUX_IROH_V2_BASE_URL_VALUE="${HMUX_IROH_V2_BASE_URL:-https://hmux-v2-development.debussy.workers.dev}"
+HMUX_IROH_V2_FORCE_RELAY_VALUE="${HMUX_IROH_V2_FORCE_RELAY:-0}"
+HMUX_AUTH_WWW_ORIGIN_VALUE="$HMUX_DEV_ORIGIN"
+HMUX_WWW_ORIGIN_VALUE="$HMUX_DEV_ORIGIN"
 if [[ "$PROD_AUTH" -eq 1 ]]; then
-  if [[ -n "${CMUX_DEV_API_BASE_URL:-}" && "$CMUX_DEV_API_BASE_URL" != "https://cmux.com" ]]; then
-    echo "error: --prod-auth cannot use API origin '$CMUX_DEV_API_BASE_URL'; production builds must use https://cmux.com" >&2
+  if [[ -n "${HMUX_DEV_API_BASE_URL:-}" && "$HMUX_DEV_API_BASE_URL" != "https://cmux.com" ]]; then
+    echo "error: --prod-auth cannot use API origin '$HMUX_DEV_API_BASE_URL'; production builds must use https://cmux.com" >&2
     exit 1
   fi
-  if [[ -n "${CMUX_IROH_BROKER_BASE_URL:-}" && "$CMUX_IROH_BROKER_BASE_URL" != "https://cmux.com" ]]; then
-    echo "error: --prod-auth cannot use Iroh broker origin '$CMUX_IROH_BROKER_BASE_URL'; production builds must use https://cmux.com" >&2
+  if [[ -n "${HMUX_IROH_BROKER_BASE_URL:-}" && "$HMUX_IROH_BROKER_BASE_URL" != "https://cmux.com" ]]; then
+    echo "error: --prod-auth cannot use Iroh broker origin '$HMUX_IROH_BROKER_BASE_URL'; production builds must use https://cmux.com" >&2
     exit 1
   fi
-  CMUX_DEV_API_BASE_URL_VALUE="https://cmux.com"
-  CMUX_IROH_BROKER_BASE_URL_VALUE="https://cmux.com"
-  CMUX_AUTH_WWW_ORIGIN_VALUE="https://cmux.com"
-  CMUX_WWW_ORIGIN_VALUE="https://cmux.com"
+  HMUX_DEV_API_BASE_URL_VALUE="https://cmux.com"
+  HMUX_IROH_BROKER_BASE_URL_VALUE="https://cmux.com"
+  HMUX_AUTH_WWW_ORIGIN_VALUE="https://cmux.com"
+  HMUX_WWW_ORIGIN_VALUE="https://cmux.com"
 fi
 
 # Quiet logging: capture all noisy build output (xcodebuild, zig, codesign,
 # plistbuddy, etc.) to a single log file. On success we print only a one-line
 # summary plus the App/CLI paths. On failure we dump the log.
-RELOAD_LOG="/tmp/cmux-reload-${TAG_SLUG}.log"
+RELOAD_LOG="/tmp/hmux-reload-${TAG_SLUG}.log"
 RELOAD_START_TIME="$(date +%s)"
 : > "$RELOAD_LOG"
 
@@ -1532,8 +1532,8 @@ fi
 # summary after the body redirect, then redirect bulk output into the log.
 exec 3>&1 4>&2
 exec >>"$RELOAD_LOG" 2>&1
-if [[ -n "$CMUX_TUI_CLIENT_RESOLVE_LOG" ]]; then
-  printf '%s\n' "$CMUX_TUI_CLIENT_RESOLVE_LOG"
+if [[ -n "$HMUX_TUI_CLIENT_RESOLVE_LOG" ]]; then
+  printf '%s\n' "$HMUX_TUI_CLIENT_RESOLVE_LOG"
 fi
 
 reload_finalize() {
@@ -1564,17 +1564,17 @@ reload_finalize() {
     echo "App path:"
     echo "  $APP_PATH"
   fi
-  if [[ -n "${CMUX_DEV_ORIGIN:-}" ]]; then
+  if [[ -n "${HMUX_DEV_ORIGIN:-}" ]]; then
     echo
     echo "Dev web origin:"
-    echo "  $CMUX_DEV_ORIGIN"
+    echo "  $HMUX_DEV_ORIGIN"
     echo "Dev API origin:"
-    echo "  $CMUX_DEV_API_BASE_URL_VALUE"
+    echo "  $HMUX_DEV_API_BASE_URL_VALUE"
     echo "Iroh broker origin:"
-    echo "  $CMUX_IROH_BROKER_BASE_URL_VALUE"
+    echo "  $HMUX_IROH_BROKER_BASE_URL_VALUE"
     if [[ -n "${TAG_SLUG:-}" ]]; then
       echo "Dev web command:"
-      echo "  cd web && CMUX_PORT=$CMUX_DEV_PORT CMUX_PORT_RANGE=$CMUX_DEV_PORT_RANGE CMUX_PORT_END=$CMUX_DEV_PORT_END CMUX_AUTH_CALLBACK_SCHEME=cmux-dev-$TAG_SLUG bun dev"
+      echo "  cd web && HMUX_PORT=$HMUX_DEV_PORT HMUX_PORT_RANGE=$HMUX_DEV_PORT_RANGE HMUX_PORT_END=$HMUX_DEV_PORT_END HMUX_AUTH_CALLBACK_SCHEME=hmux-dev-$TAG_SLUG bun dev"
     fi
   fi
   if [[ "$BUILD_ONLY" -ne 1 && -x "${CLI_PATH:-}" ]]; then
@@ -1583,16 +1583,16 @@ reload_finalize() {
     echo "  $CLI_PATH"
     echo "CLI helpers:"
     if [[ "$NO_GLOBAL_CLI_LINKS" == "1" ]]; then
-      echo "  preserved existing global cmux CLI links (--no-global-cli-links)"
+      echo "  preserved existing global hmux CLI links (--no-global-cli-links)"
     elif [[ "${CAN_PUBLISH_RELOAD_STATE:-1}" -ne 1 ]]; then
       echo "  not published: ${RELOAD_PUBLICATION_SKIP_REASON:-tag discovery ownership could not be verified}"
     else
-      echo "  /tmp/cmux-cli ..."
-      echo "  $HOME/.local/bin/cmux-dev ..."
-      if [[ -n "${CMUX_SHIM_TARGET:-}" ]]; then
-        echo "  $CMUX_SHIM_TARGET ..."
+      echo "  /tmp/hmux-cli ..."
+      echo "  $HOME/.local/bin/hmux-dev ..."
+      if [[ -n "${HMUX_SHIM_TARGET:-}" ]]; then
+        echo "  $HMUX_SHIM_TARGET ..."
       fi
-      echo "If your shell still resolves the old cmux, run: rehash"
+      echo "If your shell still resolves the old hmux, run: rehash"
     fi
   fi
   if [[ "${SWIFT_FRONTEND_WORKAROUND_EFFECTIVE:-0}" -eq 1 ]]; then
@@ -1602,7 +1602,7 @@ reload_finalize() {
   fi
   if [[ "$BUILD_ONLY" -eq 1 ]]; then
     echo
-    echo "Build-only validation complete. The running tagged app, cmuxd, and tag state were left unchanged."
+    echo "Build-only validation complete. The running tagged app, hmuxd, and tag state were left unchanged."
     if [[ -n "${TAG_APP_STAGING_PATH:-}" && -e "$TAG_APP_STAGING_PATH" ]]; then
       remove_app_bundle_output "$TAG_APP_STAGING_PATH"
       echo "==> removed temporary build-only artifact"
@@ -1620,10 +1620,10 @@ echo "==> reload starting (tag: ${TAG}, log: ${RELOAD_LOG})" >&3
 # Managed profiles already supply their own SourcePackages path. Warm that
 # exact path from local seeds before resolution; cache warming never downloads
 # on the reload path, and populated native state is never replaced.
-if [[ "${GITHUB_ACTIONS:-false}" != "true" && -n "${CMUX_SOURCE_PACKAGES_DIR:-}" && "${CMUX_LOCAL_CACHE_PREFLIGHT:-1}" == "1" ]]; then
+if [[ "${GITHUB_ACTIONS:-false}" != "true" && -n "${HMUX_SOURCE_PACKAGES_DIR:-}" && "${HMUX_LOCAL_CACHE_PREFLIGHT:-1}" == "1" ]]; then
   CACHE_PREFLIGHT_RECEIPT="${RELOAD_LOG}.cache.json"
   if python3 "$PWD/scripts/local-build-cache-preflight.py" \
-      --local-only --source-packages-dir "$CMUX_SOURCE_PACKAGES_DIR" --receipt "$CACHE_PREFLIGHT_RECEIPT"; then
+      --local-only --source-packages-dir "$HMUX_SOURCE_PACKAGES_DIR" --receipt "$CACHE_PREFLIGHT_RECEIPT"; then
     if python3 - "$CACHE_PREFLIGHT_RECEIPT" <<'PY'
 import json
 import sys
@@ -1632,7 +1632,7 @@ with open(sys.argv[1]) as stream:
 raise SystemExit(0 if verified else 1)
 PY
     then
-      export CMUX_GHOSTTYKIT_PREPROVISIONED=1
+      export HMUX_GHOSTTYKIT_PREPROVISIONED=1
     fi
   else
     echo "==> Build cache preflight unavailable; using normal dependency setup."
@@ -1641,9 +1641,9 @@ fi
 
 # CI can verify/download the xcframework before deciding whether Zig is needed.
 # Fail closed if that caller assertion is inconsistent with the checkout.
-if [[ "${CMUX_GHOSTTYKIT_PREPROVISIONED:-0}" == "1" ]]; then
+if [[ "${HMUX_GHOSTTYKIT_PREPROVISIONED:-0}" == "1" ]]; then
   if [[ ! -d "$PWD/GhosttyKit.xcframework" ]]; then
-    echo "error: CMUX_GHOSTTYKIT_PREPROVISIONED=1 but GhosttyKit.xcframework is missing" >&2
+    echo "error: HMUX_GHOSTTYKIT_PREPROVISIONED=1 but GhosttyKit.xcframework is missing" >&2
     exit 1
   fi
   echo "==> Reusing caller-provisioned GhosttyKit.xcframework"
@@ -1652,23 +1652,23 @@ else
 fi
 
 if should_skip_ghostty_cli_helper_zig_build; then
-  export CMUX_SKIP_ZIG_BUILD=1
+  export HMUX_SKIP_ZIG_BUILD=1
 fi
 
 XCODEBUILD_ARGS=(
-  -project cmux.xcodeproj
-  -scheme cmux
+  -project hmux.xcodeproj
+  -scheme hmux
   -configuration "$BUILD_CONFIGURATION"
   -destination 'platform=macOS'
 )
 if [[ -n "$DERIVED_DATA" ]]; then
   XCODEBUILD_ARGS+=(-derivedDataPath "$DERIVED_DATA")
 fi
-if [[ -n "${CMUX_SOURCE_PACKAGES_DIR:-}" ]]; then
-  mkdir -p "$CMUX_SOURCE_PACKAGES_DIR"
-  XCODEBUILD_ARGS+=(-clonedSourcePackagesDirPath "$CMUX_SOURCE_PACKAGES_DIR")
+if [[ -n "${HMUX_SOURCE_PACKAGES_DIR:-}" ]]; then
+  mkdir -p "$HMUX_SOURCE_PACKAGES_DIR"
+  XCODEBUILD_ARGS+=(-clonedSourcePackagesDirPath "$HMUX_SOURCE_PACKAGES_DIR")
 fi
-if [[ "${CMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION:-}" == "1" ]]; then
+if [[ "${HMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION:-}" == "1" ]]; then
   XCODEBUILD_ARGS+=(-disableAutomaticPackageResolution)
 fi
 if [[ -z "$TAG" ]]; then
@@ -1684,7 +1684,7 @@ fi
 # The helper is assembled before Xcode emits the host's processed Info.plist.
 # Pass the final tagged display name explicitly so its TCC entry matches the
 # app the user is dogfooding instead of falling back to the untagged product.
-XCODEBUILD_ARGS+=(CMUX_CUA_HELPER_DISPLAY_NAME="cmux Computer Use")
+XCODEBUILD_ARGS+=(HMUX_CUA_HELPER_DISPLAY_NAME="hmux Computer Use")
 if [[ "$PROD_AUTH" -eq 1 ]]; then
   XCODEBUILD_ARGS+=(-xcconfig "$SCRIPT_DIR/../config/IrohRelayPolicyProduction.xcconfig")
 fi
@@ -1692,14 +1692,14 @@ fi
 # their tagged sample extensions) don't share one point. The host bundle declares
 # the point under Contents/Extensions, and Info.plist carries the same identifier.
 if [[ -n "$TAG" ]]; then
-  XCODEBUILD_ARGS+=(CMUX_SIDEBAR_EXTENSION_POINT_ID="${BUNDLE_ID}.cmux.sidebar")
+  XCODEBUILD_ARGS+=(HMUX_SIDEBAR_EXTENSION_POINT_ID="${BUNDLE_ID}.hmux.sidebar")
 fi
-# Forward explicit CMUX_SKIP_ZIG_BUILD to xcodebuild run script phases.
-if [[ "${CMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
-  XCODEBUILD_ARGS+=(CMUX_SKIP_ZIG_BUILD=1)
+# Forward explicit HMUX_SKIP_ZIG_BUILD to xcodebuild run script phases.
+if [[ "${HMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
+  XCODEBUILD_ARGS+=(HMUX_SKIP_ZIG_BUILD=1)
 fi
 SWIFT_OTHER_FLAGS='$(inherited)'
-if [[ "$SWIFT_FRONTEND_WORKAROUND" -eq 1 || "${CMUX_SWIFT_FRONTEND_WORKAROUND:-}" == "1" || "${CMUX_SWIFT_DISABLE_GLOBAL_ISEL:-}" == "1" ]]; then
+if [[ "$SWIFT_FRONTEND_WORKAROUND" -eq 1 || "${HMUX_SWIFT_FRONTEND_WORKAROUND:-}" == "1" || "${HMUX_SWIFT_DISABLE_GLOBAL_ISEL:-}" == "1" ]]; then
   SWIFT_FRONTEND_WORKAROUND_EFFECTIVE=1
   echo "==> Swift frontend workaround enabled for this reload"
   XCODEBUILD_ARGS+=(SWIFT_ENABLE_BATCH_MODE=NO)
@@ -1709,7 +1709,7 @@ if [[ "$SWIFT_FRONTEND_WORKAROUND" -eq 1 || "${CMUX_SWIFT_FRONTEND_WORKAROUND:-}
 else
   SWIFT_FRONTEND_WORKAROUND_EFFECTIVE=0
 fi
-if [[ "${CMUX_SWIFT_INCREMENTAL_DIAGNOSTICS:-0}" == "1" ]]; then
+if [[ "${HMUX_SWIFT_INCREMENTAL_DIAGNOSTICS:-0}" == "1" ]]; then
   SWIFT_INCREMENTAL_DIAGNOSTICS_EFFECTIVE=1
   echo "==> Swift incremental diagnostics enabled for this reload"
   # These Swift driver diagnostics report scheduling/rebuild decisions and job
@@ -1720,26 +1720,26 @@ else
   SWIFT_INCREMENTAL_DIAGNOSTICS_EFFECTIVE=0
 fi
 if reload_skips_app_module_emission "$(selected_xcode_version)"; then
-  # A dev build runs the app; nothing imports its Swift module (only cmuxTests,
+  # A dev build runs the app; nothing imports its Swift module (only hmuxTests,
   # which reload never builds) and no Objective-C includes its generated header.
   # Xcode's integrated driver still emits the module in a separate job that
   # type-checks every declaration in the app. The standalone driver with
   # -no-emit-module-separately emits none, the same change #14364 made for
-  # cmuxTests; the app's Debug configuration generates no Objective-C header.
+  # hmuxTests; the app's Debug configuration generates no Objective-C header.
   # Settings are per target, so packages and the CLI are unchanged. App edits
   # rebuild ~13 s faster on a 12-core runner. lldb's po/expr in app frames need
-  # the module: set CMUX_RELOAD_APP_EMIT_MODULE=1 to emit it again. Xcode 26.2
+  # the module: set HMUX_RELOAD_APP_EMIT_MODULE=1 to emit it again. Xcode 26.2
   # and 26.3 emit it without being asked; see reload_skips_app_module_emission.
   # shellcheck disable=SC2016 # Xcode expands $(TARGET_NAME), not the shell
   XCODEBUILD_ARGS+=(
-    'SWIFT_USE_INTEGRATED_DRIVER=$(CMUX_RELOAD_INTEGRATED_DRIVER_$(TARGET_NAME):default=YES)'
-    CMUX_RELOAD_INTEGRATED_DRIVER_cmux=NO
-    'SWIFT_INSTALL_MODULE=$(CMUX_RELOAD_INSTALL_MODULE_$(TARGET_NAME):default=YES)'
-    CMUX_RELOAD_INSTALL_MODULE_cmux=NO
+    'SWIFT_USE_INTEGRATED_DRIVER=$(HMUX_RELOAD_INTEGRATED_DRIVER_$(TARGET_NAME):default=YES)'
+    HMUX_RELOAD_INTEGRATED_DRIVER_hmux=NO
+    'SWIFT_INSTALL_MODULE=$(HMUX_RELOAD_INSTALL_MODULE_$(TARGET_NAME):default=YES)'
+    HMUX_RELOAD_INSTALL_MODULE_hmux=NO
   )
   # shellcheck disable=SC2016
-  SWIFT_OTHER_FLAGS+=' $(CMUX_RELOAD_SWIFT_FLAGS_$(TARGET_NAME))'
-  XCODEBUILD_ARGS+=(CMUX_RELOAD_SWIFT_FLAGS_cmux=-no-emit-module-separately)
+  SWIFT_OTHER_FLAGS+=' $(HMUX_RELOAD_SWIFT_FLAGS_$(TARGET_NAME))'
+  XCODEBUILD_ARGS+=(HMUX_RELOAD_SWIFT_FLAGS_hmux=-no-emit-module-separately)
 fi
 if [[ "$SWIFT_OTHER_FLAGS" != '$(inherited)' ]]; then
   XCODEBUILD_ARGS+=("OTHER_SWIFT_FLAGS=$SWIFT_OTHER_FLAGS")
@@ -1752,13 +1752,13 @@ if [[ -n "$BUILD_PRODUCTS_DEBUG_DIR" ]]; then
   XCODEBUILD_CLEANED_OUTPUTS=0
 fi
 
-XCODEBUILD_LOCK_DIR="${TMPDIR:-/tmp}/cmux-xcodebuild-$(id -u).locks"
-XCODEBUILD_LOCK_CONCURRENCY="${CMUX_XCODEBUILD_LOCK_CONCURRENCY:-5}"
+XCODEBUILD_LOCK_DIR="${TMPDIR:-/tmp}/hmux-xcodebuild-$(id -u).locks"
+XCODEBUILD_LOCK_CONCURRENCY="${HMUX_XCODEBUILD_LOCK_CONCURRENCY:-5}"
 if ! is_positive_integer "$XCODEBUILD_LOCK_CONCURRENCY"; then
   echo "error: xcodebuild lock concurrency must be a positive integer" >&2
   exit 1
 fi
-XCODEBUILD_LOCK_WAIT_SECONDS="${CMUX_XCODEBUILD_LOCK_WAIT_SECONDS:-1800}"
+XCODEBUILD_LOCK_WAIT_SECONDS="${HMUX_XCODEBUILD_LOCK_WAIT_SECONDS:-1800}"
 if ! is_positive_integer "$XCODEBUILD_LOCK_WAIT_SECONDS"; then
   echo "error: xcodebuild lock wait timeout must be a positive integer" >&2
   exit 1
@@ -1968,7 +1968,7 @@ if [[ "${SWIFT_INCREMENTAL_DIAGNOSTICS_EFFECTIVE:-0}" -eq 1 ]]; then
 fi
 
 if [[ "$BUILD_ONLY" -ne 1 && -n "${TAG_SLUG:-}" ]]; then
-  TMP_COMPAT_DERIVED_LINK="/tmp/cmux-${TAG_SLUG}"
+  TMP_COMPAT_DERIVED_LINK="/tmp/hmux-${TAG_SLUG}"
   if [[ "$DERIVED_DATA" != "$TMP_COMPAT_DERIVED_LINK" ]]; then
     ABS_DERIVED_DATA="$(cd "$DERIVED_DATA" && pwd)"
     rm -rf "$TMP_COMPAT_DERIVED_LINK"
@@ -1990,156 +1990,156 @@ if [[ -n "$TAG" && "$APP_NAME" != "$SEARCH_APP_NAME" ]]; then
     /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier $BUNDLE_ID" "$INFO_PLIST" 2>/dev/null \
       || /usr/libexec/PlistBuddy -c "Add :CFBundleIdentifier string $BUNDLE_ID" "$INFO_PLIST"
     if [[ -n "${TAG_SLUG:-}" ]]; then
-      APP_SUPPORT_DIR="$HOME/Library/Application Support/cmux"
-      CMUXD_SOCKET="${APP_SUPPORT_DIR}/cmuxd-dev-${TAG_SLUG}.sock"
-      CMUX_SOCKET_PATH_VALUE="/tmp/cmux-debug-${TAG_SLUG}.sock"
-      CMUX_DEBUG_LOG="/tmp/cmux-debug-${TAG_SLUG}.log"
-      CMUX_AUTH_CALLBACK_SCHEME_VALUE="cmux-dev-${TAG_SLUG}"
+      APP_SUPPORT_DIR="$HOME/Library/Application Support/hmux"
+      HMUXD_SOCKET="${APP_SUPPORT_DIR}/hmuxd-dev-${TAG_SLUG}.sock"
+      HMUX_SOCKET_PATH_VALUE="/tmp/hmux-debug-${TAG_SLUG}.sock"
+      HMUX_DEBUG_LOG="/tmp/hmux-debug-${TAG_SLUG}.log"
+      HMUX_AUTH_CALLBACK_SCHEME_VALUE="hmux-dev-${TAG_SLUG}"
       if [[ "$BUILD_ONLY" -ne 1 ]]; then
-        echo "$CMUX_DEBUG_LOG" > /tmp/cmux-last-debug-log-path || true
+        echo "$HMUX_DEBUG_LOG" > /tmp/hmux-last-debug-log-path || true
       fi
       /usr/libexec/PlistBuddy -c "Add :LSEnvironment dict" "$INFO_PLIST" 2>/dev/null || true
-      set_plist_url_scheme "$INFO_PLIST" "$CMUX_AUTH_CALLBACK_SCHEME_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_BUNDLE_ID "$BUNDLE_ID"
-      set_plist_env "$INFO_PLIST" CMUXD_UNIX_PATH "$CMUXD_SOCKET"
-      set_plist_env "$INFO_PLIST" CMUX_SOCKET_PATH "$CMUX_SOCKET_PATH_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_DEBUG_LOG "$CMUX_DEBUG_LOG"
-      set_plist_env "$INFO_PLIST" CMUX_TAG "$TAG_SLUG"
+      set_plist_url_scheme "$INFO_PLIST" "$HMUX_AUTH_CALLBACK_SCHEME_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_BUNDLE_ID "$BUNDLE_ID"
+      set_plist_env "$INFO_PLIST" HMUXD_UNIX_PATH "$HMUXD_SOCKET"
+      set_plist_env "$INFO_PLIST" HMUX_SOCKET_PATH "$HMUX_SOCKET_PATH_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_DEBUG_LOG "$HMUX_DEBUG_LOG"
+      set_plist_env "$INFO_PLIST" HMUX_TAG "$TAG_SLUG"
       # Keep Cloud dogfood policy in the artifact so Finder and HQ cache
       # restores enable both gates on the Mac that actually launches it.
       # The app additionally requires a compiled Debug identity before using it.
-      case "${CMUX_DEV_CLOUD_ENABLED:-1}" in
+      case "${HMUX_DEV_CLOUD_ENABLED:-1}" in
         0|1) ;;
-        *) echo "error: CMUX_DEV_CLOUD_ENABLED must be 0 or 1" >&2; exit 1 ;;
+        *) echo "error: HMUX_DEV_CLOUD_ENABLED must be 0 or 1" >&2; exit 1 ;;
       esac
-      /usr/libexec/PlistBuddy -c 'Delete :CMUXCloudDogfoodEnabled' "$INFO_PLIST" 2>/dev/null || true
-      /usr/libexec/PlistBuddy -c "Add :CMUXCloudDogfoodEnabled bool ${CMUX_DEV_CLOUD_ENABLED:-1}" "$INFO_PLIST"
-      set_plist_env "$INFO_PLIST" CMUX_AUTH_CALLBACK_SCHEME "$CMUX_AUTH_CALLBACK_SCHEME_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_SOCKET_ENABLE "1"
-      set_plist_env "$INFO_PLIST" CMUX_SOCKET_MODE "allowAll"
-      set_plist_env "$INFO_PLIST" CMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD "1"
-      set_plist_env "$INFO_PLIST" CMUXTERM_REPO_ROOT "$PWD"
+      /usr/libexec/PlistBuddy -c 'Delete :HMUXCloudDogfoodEnabled' "$INFO_PLIST" 2>/dev/null || true
+      /usr/libexec/PlistBuddy -c "Add :HMUXCloudDogfoodEnabled bool ${HMUX_DEV_CLOUD_ENABLED:-1}" "$INFO_PLIST"
+      set_plist_env "$INFO_PLIST" HMUX_AUTH_CALLBACK_SCHEME "$HMUX_AUTH_CALLBACK_SCHEME_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_SOCKET_ENABLE "1"
+      set_plist_env "$INFO_PLIST" HMUX_SOCKET_MODE "allowAll"
+      set_plist_env "$INFO_PLIST" HMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD "1"
+      set_plist_env "$INFO_PLIST" HMUXTERM_REPO_ROOT "$PWD"
       BUNDLED_APP_PATH="$TAG_APP_FINAL_PATH"
       if [[ "$BUILD_ONLY" -eq 1 ]]; then
         BUNDLED_APP_PATH="$TAG_APP_STAGING_PATH"
       fi
-      set_plist_env "$INFO_PLIST" CMUX_BUNDLED_CLI_PATH "$BUNDLED_APP_PATH/Contents/Resources/bin/cmux"
-      set_plist_env "$INFO_PLIST" CMUX_SHELL_INTEGRATION_DIR "$BUNDLED_APP_PATH/Contents/Resources/shell-integration"
-      set_plist_env "$INFO_PLIST" CMUX_PORT "$CMUX_DEV_PORT"
-      set_plist_env "$INFO_PLIST" CMUX_PORT_END "$CMUX_DEV_PORT_END"
-      set_plist_env "$INFO_PLIST" CMUX_PORT_RANGE "$CMUX_DEV_PORT_RANGE"
-      set_plist_env "$INFO_PLIST" PORT "$CMUX_DEV_PORT"
-      set_plist_env "$INFO_PLIST" CMUX_AUTH_WWW_ORIGIN "$CMUX_AUTH_WWW_ORIGIN_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_WWW_ORIGIN "$CMUX_WWW_ORIGIN_VALUE"
-      if [[ -n "${CMUX_DEV_BACKEND_URL:-}" ]]; then
-        set_plist_env "$INFO_PLIST" CMUX_DEV_BACKEND_URL "$CMUX_DEV_BACKEND_URL"
-        set_plist_env "$INFO_PLIST" CMUX_DEV_BACKEND_TRANSPORT direct
-        set_plist_env "$INFO_PLIST" CMUX_DEV_BACKEND_TAILSCALE_HOST cmux-dev-backend-1.tail137216.ts.net
+      set_plist_env "$INFO_PLIST" HMUX_BUNDLED_CLI_PATH "$BUNDLED_APP_PATH/Contents/Resources/bin/hmux"
+      set_plist_env "$INFO_PLIST" HMUX_SHELL_INTEGRATION_DIR "$BUNDLED_APP_PATH/Contents/Resources/shell-integration"
+      set_plist_env "$INFO_PLIST" HMUX_PORT "$HMUX_DEV_PORT"
+      set_plist_env "$INFO_PLIST" HMUX_PORT_END "$HMUX_DEV_PORT_END"
+      set_plist_env "$INFO_PLIST" HMUX_PORT_RANGE "$HMUX_DEV_PORT_RANGE"
+      set_plist_env "$INFO_PLIST" PORT "$HMUX_DEV_PORT"
+      set_plist_env "$INFO_PLIST" HMUX_AUTH_WWW_ORIGIN "$HMUX_AUTH_WWW_ORIGIN_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_WWW_ORIGIN "$HMUX_WWW_ORIGIN_VALUE"
+      if [[ -n "${HMUX_DEV_BACKEND_URL:-}" ]]; then
+        set_plist_env "$INFO_PLIST" HMUX_DEV_BACKEND_URL "$HMUX_DEV_BACKEND_URL"
+        set_plist_env "$INFO_PLIST" HMUX_DEV_BACKEND_TRANSPORT direct
+        set_plist_env "$INFO_PLIST" HMUX_DEV_BACKEND_TAILSCALE_HOST hmux-dev-backend-1.tail137216.ts.net
       fi
-      set_plist_env "$INFO_PLIST" CMUX_API_BASE_URL "$CMUX_DEV_API_BASE_URL_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_VM_API_BASE_URL "$CMUX_DEV_API_BASE_URL_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_IROH_BROKER_BASE_URL "$CMUX_IROH_BROKER_BASE_URL_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_IROH_V2_ENVIRONMENT "$CMUX_IROH_V2_ENVIRONMENT_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_IROH_V2_BASE_URL "$CMUX_IROH_V2_BASE_URL_VALUE"
-      set_plist_env "$INFO_PLIST" CMUX_IROH_V2_FORCE_RELAY "$CMUX_IROH_V2_FORCE_RELAY_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_API_BASE_URL "$HMUX_DEV_API_BASE_URL_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_VM_API_BASE_URL "$HMUX_DEV_API_BASE_URL_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_IROH_BROKER_BASE_URL "$HMUX_IROH_BROKER_BASE_URL_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_IROH_V2_ENVIRONMENT "$HMUX_IROH_V2_ENVIRONMENT_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_IROH_V2_BASE_URL "$HMUX_IROH_V2_BASE_URL_VALUE"
+      set_plist_env "$INFO_PLIST" HMUX_IROH_V2_FORCE_RELAY "$HMUX_IROH_V2_FORCE_RELAY_VALUE"
       if [[ "$PROD_AUTH" -eq 1 ]]; then
-        set_plist_env "$INFO_PLIST" CMUX_AUTH_ENVIRONMENT production
+        set_plist_env "$INFO_PLIST" HMUX_AUTH_ENVIRONMENT production
       fi
       if [[ -n "$AUTH_CREDENTIALS_FILE" ]]; then
-        set_plist_env "$INFO_PLIST" CMUX_AUTH_CREDENTIALS_FILE "$AUTH_CREDENTIALS_FILE"
+        set_plist_env "$INFO_PLIST" HMUX_AUTH_CREDENTIALS_FILE "$AUTH_CREDENTIALS_FILE"
       fi
       if [[ -n "$AUTH_PROFILE" ]]; then
-        set_plist_env "$INFO_PLIST" CMUX_DEV_AUTH_PROFILE "$AUTH_PROFILE"
-        set_plist_env "$INFO_PLIST" CMUX_DEV_AUTH_REPLACE_SESSION "1"
+        set_plist_env "$INFO_PLIST" HMUX_DEV_AUTH_PROFILE "$AUTH_PROFILE"
+        set_plist_env "$INFO_PLIST" HMUX_DEV_AUTH_REPLACE_SESSION "1"
       fi
-      if [[ "$BUILD_ONLY" -ne 1 && -S "$CMUXD_SOCKET" ]]; then
-        for PID in $(lsof -t "$CMUXD_SOCKET" 2>/dev/null); do
+      if [[ "$BUILD_ONLY" -ne 1 && -S "$HMUXD_SOCKET" ]]; then
+        for PID in $(lsof -t "$HMUXD_SOCKET" 2>/dev/null); do
           kill "$PID" 2>/dev/null || true
         done
-        rm -f "$CMUXD_SOCKET"
+        rm -f "$HMUXD_SOCKET"
       fi
     fi
   fi
   APP_PATH="$TAG_APP_STAGING_PATH"
 fi
 
-CLI_PATH="$(dirname "$APP_PATH")/cmux"
+CLI_PATH="$(dirname "$APP_PATH")/hmux"
 
-# Build cmuxd and ensure helper binaries are present (needed for both launch and no-launch).
-CMUXD_SRC="$PWD/cmuxd/zig-out/bin/cmuxd"
-if [[ -d "$PWD/cmuxd" ]]; then
-  (cd "$PWD/cmuxd" && zig build -Doptimize=ReleaseFast)
+# Build hmuxd and ensure helper binaries are present (needed for both launch and no-launch).
+HMUXD_SRC="$PWD/hmuxd/zig-out/bin/hmuxd"
+if [[ -d "$PWD/hmuxd" ]]; then
+  (cd "$PWD/hmuxd" && zig build -Doptimize=ReleaseFast)
 fi
 if [[ -d "$PWD/ghostty" ]]; then
   BIN_DIR="$APP_PATH/Contents/Resources/bin"
   GHOSTTY_HELPER_DEST="$BIN_DIR/ghostty"
   if [[ -x "$GHOSTTY_HELPER_DEST" ]]; then
     echo "Preserving Xcode-built ghostty CLI helper at $GHOSTTY_HELPER_DEST"
-  elif [[ "${CMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
-    echo "Skipping direct ghostty CLI helper zig build (CMUX_SKIP_ZIG_BUILD=1)"
+  elif [[ "${HMUX_SKIP_ZIG_BUILD:-}" == "1" ]]; then
+    echo "Skipping direct ghostty CLI helper zig build (HMUX_SKIP_ZIG_BUILD=1)"
   else
     mkdir -p "$BIN_DIR"
     "$PWD/scripts/build-ghostty-cli-helper.sh" --output "$GHOSTTY_HELPER_DEST"
   fi
 fi
-CMUX_CUA_HELPER_APP="$APP_PATH/Contents/Library/cmux Computer Use.app"
-if [[ -x "$CMUX_CUA_HELPER_APP/Contents/MacOS/cmux-cua" ]]; then
-  echo "Preserving Xcode-built cmux Computer Use helper at $CMUX_CUA_HELPER_APP"
+HMUX_CUA_HELPER_APP="$APP_PATH/Contents/Library/hmux Computer Use.app"
+if [[ -x "$HMUX_CUA_HELPER_APP/Contents/MacOS/hmux-cua" ]]; then
+  echo "Preserving Xcode-built hmux Computer Use helper at $HMUX_CUA_HELPER_APP"
 else
-  "$PWD/scripts/build-cmux-cua.sh" --output "$PWD/build/cmux-cua/cmux-cua" \
-    --helper-app "$CMUX_CUA_HELPER_APP"
+  "$PWD/scripts/build-hmux-cua.sh" --output "$PWD/build/hmux-cua/hmux-cua" \
+    --helper-app "$HMUX_CUA_HELPER_APP"
 fi
-if [[ -x "$CMUXD_SRC" ]]; then
+if [[ -x "$HMUXD_SRC" ]]; then
   BIN_DIR="$APP_PATH/Contents/Resources/bin"
   mkdir -p "$BIN_DIR"
-  cp "$CMUXD_SRC" "$BIN_DIR/cmuxd"
-  chmod +x "$BIN_DIR/cmuxd"
+  cp "$HMUXD_SRC" "$BIN_DIR/hmuxd"
+  chmod +x "$BIN_DIR/hmuxd"
 fi
-# The cmux-tui client the Machines panel uses for cloud sessions ships inside the
+# The hmux-tui client the Machines panel uses for cloud sessions ships inside the
 # bundle like the Ghostty helper. Resolve its published inputs from this source
-# history unless CMUX_TUI_CLIENT_MANIFEST_URL / CMUX_TUI_CLIENT_LOCAL overrides it.
-# CMUX_SKIP_CMUX_TUI_CLIENT=1 preserves an existing copy for offline reloads.
-if [[ "${CMUX_SKIP_CMUX_TUI_CLIENT:-}" == "1" && -x "$APP_PATH/Contents/Resources/bin/cmux-tui" ]]; then
-  echo "Preserving bundled cmux-tui client (CMUX_SKIP_CMUX_TUI_CLIENT=1)"
+# history unless HMUX_TUI_CLIENT_MANIFEST_URL / HMUX_TUI_CLIENT_LOCAL overrides it.
+# HMUX_SKIP_HMUX_TUI_CLIENT=1 preserves an existing copy for offline reloads.
+if [[ "${HMUX_SKIP_HMUX_TUI_CLIENT:-}" == "1" && -x "$APP_PATH/Contents/Resources/bin/hmux-tui" ]]; then
+  echo "Preserving bundled hmux-tui client (HMUX_SKIP_HMUX_TUI_CLIENT=1)"
 else
   # Local Debug builds run on this Mac; fetch only its client slice. The
   # installer's universal default remains available to distribution workflows.
-  cmux_tui_install_args=(
+  hmux_tui_install_args=(
     "$APP_PATH"
     --arch native
     --require-capability wireguard-hub
     --require-capability browser-proxy
   )
-  if [[ -n "$CMUX_TUI_CLIENT_MANIFEST_URL_VALUE" ]]; then
-    cmux_tui_install_args+=(
-      --manifest-url "$CMUX_TUI_CLIENT_MANIFEST_URL_VALUE"
+  if [[ -n "$HMUX_TUI_CLIENT_MANIFEST_URL_VALUE" ]]; then
+    hmux_tui_install_args+=(
+      --manifest-url "$HMUX_TUI_CLIENT_MANIFEST_URL_VALUE"
     )
-  elif [[ -z "${CMUX_TUI_CLIENT_MANIFEST_URL:-}" && -z "${CMUX_TUI_CLIENT_LOCAL:-}" ]]; then
-    # Resolved before the build unless CMUX_SKIP_CMUX_TUI_CLIENT=1 deferred it.
-    if [[ -z "$CMUX_TUI_CLIENT_COMMIT" ]]; then
-      CMUX_TUI_CLIENT_COMMIT="$(resolve_cmux_tui_client_commit)" || exit 1
+  elif [[ -z "${HMUX_TUI_CLIENT_MANIFEST_URL:-}" && -z "${HMUX_TUI_CLIENT_LOCAL:-}" ]]; then
+    # Resolved before the build unless HMUX_SKIP_HMUX_TUI_CLIENT=1 deferred it.
+    if [[ -z "$HMUX_TUI_CLIENT_COMMIT" ]]; then
+      HMUX_TUI_CLIENT_COMMIT="$(resolve_hmux_tui_client_commit)" || exit 1
     fi
-    cmux_tui_manifest_base="${CMUX_TUI_CLIENT_MANIFEST_BASE:-https://files.cmux.com/cmux-tui}"
-    cmux_tui_install_args+=(
-      --manifest-url "${cmux_tui_manifest_base%/}/$CMUX_TUI_CLIENT_COMMIT/manifest.json"
-      --expected-commit "$CMUX_TUI_CLIENT_COMMIT"
+    hmux_tui_manifest_base="${HMUX_TUI_CLIENT_MANIFEST_BASE:-https://files.cmux.com/hmux-tui}"
+    hmux_tui_install_args+=(
+      --manifest-url "${hmux_tui_manifest_base%/}/$HMUX_TUI_CLIENT_COMMIT/manifest.json"
+      --expected-commit "$HMUX_TUI_CLIENT_COMMIT"
     )
   fi
   # The installer verifies the published manifest's build-provenance attestation
   # through gh. A dev Mac without an authenticated gh is the one explicit
   # exception; the installer prints the unattested warning in that case.
   if ! command -v gh >/dev/null 2>&1 || ! gh auth token >/dev/null 2>&1; then
-    cmux_tui_install_args+=(--allow-unattested)
+    hmux_tui_install_args+=(--allow-unattested)
   fi
-  "$PWD/scripts/install-cmux-tui-client.sh" "${cmux_tui_install_args[@]}"
+  "$PWD/scripts/install-hmux-tui-client.sh" "${hmux_tui_install_args[@]}"
 fi
 "$PWD/scripts/install-coderouter-client.sh" "$APP_PATH"
 if command -v xattr >/dev/null 2>&1; then
   xattr -cr "$APP_PATH" || true
 fi
 if ! /usr/bin/codesign --force --sign - --timestamp=none --generate-entitlement-der "$APP_PATH" >/dev/null 2>&1; then
-  if [[ "${CMUX_ALLOW_UNSIGNED_DEV_APP:-}" == "1" ]]; then
-    echo "warning: codesign failed for $APP_PATH; continuing because CMUX_ALLOW_UNSIGNED_DEV_APP=1" >&2
+  if [[ "${HMUX_ALLOW_UNSIGNED_DEV_APP:-}" == "1" ]]; then
+    echo "warning: codesign failed for $APP_PATH; continuing because HMUX_ALLOW_UNSIGNED_DEV_APP=1" >&2
   else
     echo "error: codesign failed for $APP_PATH" >&2
     exit 1
@@ -2188,12 +2188,12 @@ elif [[ -n "${TAG_APP_FINAL_PATH:-}" && -n "${TAG_APP_STAGING_PATH:-}" ]]; then
   mv "$TAG_APP_STAGING_PATH" "$TAG_APP_FINAL_PATH"
   APP_PATH="$TAG_APP_FINAL_PATH"
 fi
-CLI_PATH="$APP_PATH/Contents/Resources/bin/cmux"
+CLI_PATH="$APP_PATH/Contents/Resources/bin/hmux"
 
 if [[ "$BUILD_ONLY" -eq 1 ]]; then
   CAN_PUBLISH_RELOAD_STATE=0
   RELOAD_PUBLICATION_SKIP_REASON="build-only mode left the running tagged app and tag state unchanged"
-elif [[ -n "$TAG" ]] && ! wait_for_tag_socket_lock_release "/tmp/cmux-debug-${TAG_SLUG}.sock"; then
+elif [[ -n "$TAG" ]] && ! wait_for_tag_socket_lock_release "/tmp/hmux-debug-${TAG_SLUG}.sock"; then
   CAN_PUBLISH_RELOAD_STATE=0
 fi
 if [[ "$CAN_PUBLISH_RELOAD_STATE" -eq 1 && -n "${TAG_SLUG:-}" ]]; then
@@ -2208,8 +2208,8 @@ if [[ "$CAN_PUBLISH_RELOAD_STATE" -eq 1 && -n "${TAG_SLUG:-}" ]]; then
   fi
   if ! cleanup_stale_tag_state \
       "$TAG_SLUG" \
-      "/tmp/cmux-debug-${TAG_SLUG}.sock" \
-      "/tmp/cmux-debug-${TAG_SLUG}.sock" \
+      "/tmp/hmux-debug-${TAG_SLUG}.sock" \
+      "/tmp/hmux-debug-${TAG_SLUG}.sock" \
       "$RELOAD_PUBLISH_CLI_PATH"; then
     # A replacement process may have reclaimed this tag while the old app was
     # terminating. Do not overwrite its discovery marker or ambient CLI pointer.
@@ -2236,42 +2236,42 @@ if [[ "$LAUNCH" -eq 1 ]]; then
     sleep 0.3
   fi
 
-  # Avoid inheriting cmux/ghostty environment variables from the terminal that
-  # runs this script (often inside another cmux instance), which can cause
+  # Avoid inheriting hmux/ghostty environment variables from the terminal that
+  # runs this script (often inside another hmux instance), which can cause
   # socket and resource-path conflicts.
   OPEN_CLEAN_ENV=(
     env
-    -u CMUX_SOCKET
-    -u CMUX_SOCKET_PASSWORD
-    -u CMUX_SOCKET_PATH
-    -u CMUX_WORKSPACE_ID
-    -u CMUX_SURFACE_ID
-    -u CMUX_TAB_ID
-    -u CMUX_PANEL_ID
-    -u CMUXD_UNIX_PATH
-    -u CMUX_TAG
-    -u CMUX_DEBUG_LOG
-    -u CMUX_BUNDLE_ID
-    -u CMUX_BUNDLED_CLI_PATH
-    -u CMUX_SHELL_INTEGRATION
-    -u CMUX_SHELL_INTEGRATION_DIR
-    -u CMUX_LOAD_GHOSTTY_ZSH_INTEGRATION
-    -u CMUX_AUTH_ENVIRONMENT
-    -u CMUX_STACK_PROJECT_ID
-    -u CMUX_STACK_PUBLISHABLE_CLIENT_KEY
-    -u CMUX_AUTH_CREDENTIALS_FILE
-    -u CMUX_DEV_AUTH_PROFILE
-    -u CMUX_DEV_AUTH_REPLACE_SESSION
-    -u CMUX_DOGFOOD_STACK_EMAIL
-    -u CMUX_DOGFOOD_STACK_PASSWORD
-    -u CMUX_UITEST_STACK_EMAIL
-    -u CMUX_UITEST_STACK_PASSWORD
+    -u HMUX_SOCKET
+    -u HMUX_SOCKET_PASSWORD
+    -u HMUX_SOCKET_PATH
+    -u HMUX_WORKSPACE_ID
+    -u HMUX_SURFACE_ID
+    -u HMUX_TAB_ID
+    -u HMUX_PANEL_ID
+    -u HMUXD_UNIX_PATH
+    -u HMUX_TAG
+    -u HMUX_DEBUG_LOG
+    -u HMUX_BUNDLE_ID
+    -u HMUX_BUNDLED_CLI_PATH
+    -u HMUX_SHELL_INTEGRATION
+    -u HMUX_SHELL_INTEGRATION_DIR
+    -u HMUX_LOAD_GHOSTTY_ZSH_INTEGRATION
+    -u HMUX_AUTH_ENVIRONMENT
+    -u HMUX_STACK_PROJECT_ID
+    -u HMUX_STACK_PUBLISHABLE_CLIENT_KEY
+    -u HMUX_AUTH_CREDENTIALS_FILE
+    -u HMUX_DEV_AUTH_PROFILE
+    -u HMUX_DEV_AUTH_REPLACE_SESSION
+    -u HMUX_DOGFOOD_STACK_EMAIL
+    -u HMUX_DOGFOOD_STACK_PASSWORD
+    -u HMUX_UITEST_STACK_EMAIL
+    -u HMUX_UITEST_STACK_PASSWORD
     -u GHOSTTY_BIN_DIR
     -u GHOSTTY_RESOURCES_DIR
     -u GHOSTTY_SHELL_FEATURES
     -u GHOSTTY_SURFACE_ID
     # Dev shells (including CI/Codex) often force-disable paging by exporting these.
-    # Don't leak that into cmux, otherwise `git diff` won't page even with PAGER=less.
+    # Don't leak that into hmux, otherwise `git diff` won't page even with PAGER=less.
     -u GIT_PAGER
     -u GH_PAGER
     -u TERMINFO
@@ -2279,50 +2279,50 @@ if [[ "$LAUNCH" -eq 1 ]]; then
   )
 
   # DEBUG dogfood auto-sign-in needs no env injection here: the in-app resolver
-  # reads ~/.secrets/cmuxterm-dev.env (then ~/.secrets/cmux.env) directly on
-  # launch, which fires for every launch method including Finder / the CMUX Tag
+  # reads ~/.secrets/hmuxterm-dev.env (then ~/.secrets/hmux.env) directly on
+  # launch, which fires for every launch method including Finder / the HMUX Tag
   # Opener that this script's TAG_LAUNCH_ENV never reaches. Exporting the Stack
   # password into the long-lived GUI process environment would leak it to every
   # child terminal/CLI it spawns, for zero added coverage, so we deliberately do
-  # not set CMUX_UITEST_STACK_* here.
-  LAUNCH_AUTH_CALLBACK_SCHEME="cmux-dev"
+  # not set HMUX_UITEST_STACK_* here.
+  LAUNCH_AUTH_CALLBACK_SCHEME="hmux-dev"
   if [[ -n "${TAG_SLUG:-}" ]]; then
-    LAUNCH_AUTH_CALLBACK_SCHEME="cmux-dev-${TAG_SLUG}"
+    LAUNCH_AUTH_CALLBACK_SCHEME="hmux-dev-${TAG_SLUG}"
   fi
   TAG_LAUNCH_ENV=(
-    CMUX_TAG="${TAG_SLUG:-}"
-    CMUX_BUNDLE_ID="$BUNDLE_ID"
-    CMUX_AUTH_CALLBACK_SCHEME="$LAUNCH_AUTH_CALLBACK_SCHEME"
-    CMUX_SOCKET_ENABLE=1
-    CMUX_SOCKET_MODE=allowAll
-    CMUX_DEBUG_LOG="$CMUX_DEBUG_LOG"
-    CMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD=1
-    CMUXTERM_REPO_ROOT="$PWD"
-    CMUX_BUNDLED_CLI_PATH="$CLI_PATH"
-    CMUX_SHELL_INTEGRATION_DIR="$APP_PATH/Contents/Resources/shell-integration"
-    CMUX_PORT="$CMUX_DEV_PORT"
-    CMUX_PORT_END="$CMUX_DEV_PORT_END"
-    CMUX_PORT_RANGE="$CMUX_DEV_PORT_RANGE"
-    PORT="$CMUX_DEV_PORT"
-    CMUX_AUTH_WWW_ORIGIN="$CMUX_AUTH_WWW_ORIGIN_VALUE"
-    CMUX_WWW_ORIGIN="$CMUX_WWW_ORIGIN_VALUE"
-    CMUX_API_BASE_URL="$CMUX_DEV_API_BASE_URL_VALUE"
-    CMUX_VM_API_BASE_URL="$CMUX_DEV_API_BASE_URL_VALUE"
-    CMUX_IROH_BROKER_BASE_URL="$CMUX_IROH_BROKER_BASE_URL_VALUE"
-    CMUX_IROH_V2_ENVIRONMENT="$CMUX_IROH_V2_ENVIRONMENT_VALUE"
-    CMUX_IROH_V2_BASE_URL="$CMUX_IROH_V2_BASE_URL_VALUE"
-    CMUX_IROH_V2_FORCE_RELAY="$CMUX_IROH_V2_FORCE_RELAY_VALUE"
+    HMUX_TAG="${TAG_SLUG:-}"
+    HMUX_BUNDLE_ID="$BUNDLE_ID"
+    HMUX_AUTH_CALLBACK_SCHEME="$LAUNCH_AUTH_CALLBACK_SCHEME"
+    HMUX_SOCKET_ENABLE=1
+    HMUX_SOCKET_MODE=allowAll
+    HMUX_DEBUG_LOG="$HMUX_DEBUG_LOG"
+    HMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD=1
+    HMUXTERM_REPO_ROOT="$PWD"
+    HMUX_BUNDLED_CLI_PATH="$CLI_PATH"
+    HMUX_SHELL_INTEGRATION_DIR="$APP_PATH/Contents/Resources/shell-integration"
+    HMUX_PORT="$HMUX_DEV_PORT"
+    HMUX_PORT_END="$HMUX_DEV_PORT_END"
+    HMUX_PORT_RANGE="$HMUX_DEV_PORT_RANGE"
+    PORT="$HMUX_DEV_PORT"
+    HMUX_AUTH_WWW_ORIGIN="$HMUX_AUTH_WWW_ORIGIN_VALUE"
+    HMUX_WWW_ORIGIN="$HMUX_WWW_ORIGIN_VALUE"
+    HMUX_API_BASE_URL="$HMUX_DEV_API_BASE_URL_VALUE"
+    HMUX_VM_API_BASE_URL="$HMUX_DEV_API_BASE_URL_VALUE"
+    HMUX_IROH_BROKER_BASE_URL="$HMUX_IROH_BROKER_BASE_URL_VALUE"
+    HMUX_IROH_V2_ENVIRONMENT="$HMUX_IROH_V2_ENVIRONMENT_VALUE"
+    HMUX_IROH_V2_BASE_URL="$HMUX_IROH_V2_BASE_URL_VALUE"
+    HMUX_IROH_V2_FORCE_RELAY="$HMUX_IROH_V2_FORCE_RELAY_VALUE"
   )
   if [[ "$PROD_AUTH" -eq 1 ]]; then
-    TAG_LAUNCH_ENV+=(CMUX_AUTH_ENVIRONMENT=production)
+    TAG_LAUNCH_ENV+=(HMUX_AUTH_ENVIRONMENT=production)
   fi
   if [[ -n "$AUTH_CREDENTIALS_FILE" ]]; then
-    TAG_LAUNCH_ENV+=(CMUX_AUTH_CREDENTIALS_FILE="$AUTH_CREDENTIALS_FILE")
+    TAG_LAUNCH_ENV+=(HMUX_AUTH_CREDENTIALS_FILE="$AUTH_CREDENTIALS_FILE")
   fi
   if [[ -n "$AUTH_PROFILE" ]]; then
     TAG_LAUNCH_ENV+=(
-      CMUX_DEV_AUTH_PROFILE="$AUTH_PROFILE"
-      CMUX_DEV_AUTH_REPLACE_SESSION=1
+      HMUX_DEV_AUTH_PROFILE="$AUTH_PROFILE"
+      HMUX_DEV_AUTH_REPLACE_SESSION=1
     )
   fi
 
@@ -2339,18 +2339,18 @@ if [[ "$LAUNCH" -eq 1 ]]; then
       echo "error: tagged app executable not found: $APP_EXECUTABLE" >&2
       exit 1
     fi
-    CMUX_TAG_LAUNCH_LOG_DIRECTORY="$(mktemp -d "${TMPDIR:-/tmp}/cmux-launch-${TAG_SLUG}.XXXXXX")"
-    chmod 0700 "$CMUX_TAG_LAUNCH_LOG_DIRECTORY"
-    TAG_LAUNCH_LOG="$CMUX_TAG_LAUNCH_LOG_DIRECTORY/launch.out"
+    HMUX_TAG_LAUNCH_LOG_DIRECTORY="$(mktemp -d "${TMPDIR:-/tmp}/hmux-launch-${TAG_SLUG}.XXXXXX")"
+    chmod 0700 "$HMUX_TAG_LAUNCH_LOG_DIRECTORY"
+    TAG_LAUNCH_LOG="$HMUX_TAG_LAUNCH_LOG_DIRECTORY/launch.out"
     (umask 077 && : > "$TAG_LAUNCH_LOG")
     chmod 0600 "$TAG_LAUNCH_LOG"
-    if [[ -n "${CMUX_SOCKET_PATH_VALUE:-}" ]]; then
+    if [[ -n "${HMUX_SOCKET_PATH_VALUE:-}" ]]; then
       TAG_LAUNCH_ENV+=(
-        CMUX_SOCKET_PATH="$CMUX_SOCKET_PATH_VALUE"
-        CMUXD_UNIX_PATH="$CMUXD_SOCKET"
+        HMUX_SOCKET_PATH="$HMUX_SOCKET_PATH_VALUE"
+        HMUXD_UNIX_PATH="$HMUXD_SOCKET"
       )
     fi
-    TAG_LAUNCH_PLIST="$CMUX_TAG_LAUNCH_LOG_DIRECTORY/$TAG_LAUNCHD_LABEL.plist"
+    TAG_LAUNCH_PLIST="$HMUX_TAG_LAUNCH_LOG_DIRECTORY/$TAG_LAUNCHD_LABEL.plist"
     /usr/bin/plutil -create xml1 "$TAG_LAUNCH_PLIST"
     /usr/bin/plutil -insert Label -string "$TAG_LAUNCHD_LABEL" "$TAG_LAUNCH_PLIST"
     # A launchd job inherits the GUI domain environment even when the plist has
@@ -2389,12 +2389,12 @@ if [[ "$LAUNCH" -eq 1 ]]; then
       exit 1
     fi
   else
-    echo "/tmp/cmux-debug.sock" > /tmp/cmux-last-socket-path || true
-    echo "/tmp/cmux-debug.log" > /tmp/cmux-last-debug-log-path || true
-    if [[ -n "${CMUX_SOCKET_PATH_VALUE:-}" ]]; then
-      # Ensure explicit socket paths win even if the caller has CMUX_* overrides.
-      LAUNCH_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" CMUX_SOCKET_PATH="$CMUX_SOCKET_PATH_VALUE" CMUXD_UNIX_PATH="$CMUXD_SOCKET" open -g "$APP_PATH")
-      LAUNCH_RETRY_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" CMUX_SOCKET_PATH="$CMUX_SOCKET_PATH_VALUE" CMUXD_UNIX_PATH="$CMUXD_SOCKET" open -n -g "$APP_PATH")
+    echo "/tmp/hmux-debug.sock" > /tmp/hmux-last-socket-path || true
+    echo "/tmp/hmux-debug.log" > /tmp/hmux-last-debug-log-path || true
+    if [[ -n "${HMUX_SOCKET_PATH_VALUE:-}" ]]; then
+      # Ensure explicit socket paths win even if the caller has HMUX_* overrides.
+      LAUNCH_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" HMUX_SOCKET_PATH="$HMUX_SOCKET_PATH_VALUE" HMUXD_UNIX_PATH="$HMUXD_SOCKET" open -g "$APP_PATH")
+      LAUNCH_RETRY_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" HMUX_SOCKET_PATH="$HMUX_SOCKET_PATH_VALUE" HMUXD_UNIX_PATH="$HMUXD_SOCKET" open -n -g "$APP_PATH")
     else
       LAUNCH_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" open -g "$APP_PATH")
       LAUNCH_RETRY_CMD=("${OPEN_CLEAN_ENV[@]}" "${TAG_LAUNCH_ENV[@]}" open -n -g "$APP_PATH")
@@ -2435,10 +2435,10 @@ if [[ "$LAUNCH" -eq 1 ]]; then
       fi
     done
   fi
-  if [[ -n "${TAG_SLUG:-}" && -n "${CMUX_SOCKET_PATH_VALUE:-}" ]]; then
+  if [[ -n "${TAG_SLUG:-}" && -n "${HMUX_SOCKET_PATH_VALUE:-}" ]]; then
     SOCKET_READY=0
     for _ in {1..80}; do
-      if [[ -S "$CMUX_SOCKET_PATH_VALUE" ]]; then
+      if [[ -S "$HMUX_SOCKET_PATH_VALUE" ]]; then
         SOCKET_READY=1
         break
       fi
@@ -2448,7 +2448,7 @@ if [[ "$LAUNCH" -eq 1 ]]; then
       sleep 0.1
     done
     if [[ "$SOCKET_READY" -ne 1 ]]; then
-      echo "error: tagged app did not create socket: $CMUX_SOCKET_PATH_VALUE" >&2
+      echo "error: tagged app did not create socket: $HMUX_SOCKET_PATH_VALUE" >&2
       if [[ -n "${TAG_LAUNCH_LOG:-}" && -f "$TAG_LAUNCH_LOG" ]]; then
         echo "Launch log: $TAG_LAUNCH_LOG" >&2
         tail -n 80 "$TAG_LAUNCH_LOG" >&2 || true

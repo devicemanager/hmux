@@ -155,7 +155,7 @@ export type IrohTrustBrokerShape = {
   ) => Effect.Effect<unknown, IrohExpectedError>;
 };
 
-export class IrohTrustBroker extends Context.Tag("cmux/IrohTrustBroker")<
+export class IrohTrustBroker extends Context.Tag("hmux/IrohTrustBroker")<
   IrohTrustBroker,
   IrohTrustBrokerShape
 >() {}

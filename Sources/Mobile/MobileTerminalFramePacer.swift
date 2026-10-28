@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 
 /// Bounds how often one terminal surface's render-grid frames are emitted to

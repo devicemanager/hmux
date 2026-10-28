@@ -1,10 +1,10 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// Click by Hint as a preview: hint mode (``WindowHintController``) stays
 /// off by default, and the Beta Features toggle turns it on for one person
 /// (Settings, the command palette, or `windowHints.beta.enabled` in
-/// cmux.json). The remote rollout flag (`FeatureFlags`) can still turn it on
+/// hmux.json). The remote rollout flag (`FeatureFlags`) can still turn it on
 /// for everyone.
 enum ClickByHintPreview {
     static let commandId = "palette.toggleSetting.windowHints"

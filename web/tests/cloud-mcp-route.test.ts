@@ -18,7 +18,7 @@ describe("/api/mcp route", () => {
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "list_machines", arguments: {} } }),
     }));
     expect(response.status).toBe(401);
-    expect(response.headers.get("www-authenticate")).toBe('Bearer realm="cmux"');
+    expect(response.headers.get("www-authenticate")).toBe('Bearer realm="hmux"');
   });
 
   test("GET has no stream to offer", () => {

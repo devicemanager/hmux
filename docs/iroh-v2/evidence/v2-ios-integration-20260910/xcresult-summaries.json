@@ -1,6 +1,6 @@
 {
   "iosConnectionTests": {
-    "path": "/tmp/cmux-iv2a-20260910211351/Logs/Test/Test-cmux-ios-2026.09.10_22-01-25--0700.xcresult",
+    "path": "/tmp/hmux-iv2a-20260910211351/Logs/Test/Test-hmux-ios-2026.09.10_22-01-25--0700.xcresult",
     "summary": {
       "devicesAndConfigurations": [
         {
@@ -23,7 +23,7 @@
           }
         }
       ],
-      "environmentDescription": "cmux \u00b7 Built with macOS 26.5.1",
+      "environmentDescription": "hmux \u00b7 Built with macOS 26.5.1",
       "expectedFailures": 0,
       "failedTests": 0,
       "finishTime": 1789102904.531,
@@ -33,13 +33,13 @@
       "startTime": 1789102885.278,
       "statistics": [],
       "testFailures": [],
-      "title": "Test - cmux-ios",
+      "title": "Test - hmux-ios",
       "topInsights": [],
       "totalTestCount": 13
     }
   },
   "iosValidatorTests": {
-    "path": "/tmp/cmux-iv2a-20260910211351/Logs/Test/Test-cmux-ios-2026.09.10_22-03-24--0700.xcresult",
+    "path": "/tmp/hmux-iv2a-20260910211351/Logs/Test/Test-hmux-ios-2026.09.10_22-03-24--0700.xcresult",
     "summary": {
       "devicesAndConfigurations": [
         {
@@ -62,7 +62,7 @@
           }
         }
       ],
-      "environmentDescription": "cmux \u00b7 Built with macOS 26.5.1",
+      "environmentDescription": "hmux \u00b7 Built with macOS 26.5.1",
       "expectedFailures": 0,
       "failedTests": 0,
       "finishTime": 1789103009.106,
@@ -72,7 +72,7 @@
       "startTime": 1789103004.739,
       "statistics": [],
       "testFailures": [],
-      "title": "Test - cmux-ios",
+      "title": "Test - hmux-ios",
       "topInsights": [],
       "totalTestCount": 4
     }

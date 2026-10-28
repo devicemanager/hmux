@@ -1,9 +1,9 @@
 import AppKit
-import CmuxAppKitSupportUI
+import HmuxAppKitSupportUI
 import Combine
-import CmuxFoundation
-import CmuxSidebar
-import CmuxWorkspaces
+import HmuxFoundation
+import HmuxSidebar
+import HmuxWorkspaces
 import SwiftUI
 
 /// Pure-AppKit workspace row cell: renders every TabItemView slot without
@@ -614,7 +614,7 @@ final class SidebarWorkspaceRowTableCellView: NSTableCellView {
         )
 #if DEBUG
         if titleView.stringValue != boundedTitle {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "sidebar.row.titlePaint workspace=\(model.workspaceId.uuidString.prefix(8)) " +
                 "title=\"\(boundedTitle.prefix(40))\""
             )
@@ -760,7 +760,7 @@ final class SidebarWorkspaceRowTableCellView: NSTableCellView {
     func paintControllerDropIndicator(top: Bool, bottom: Bool) {
         let colorScheme = model.map { $0.colorSchemeIsDark ? ColorScheme.dark : .light }
             ?? SidebarAppearanceColorResolver().currentColorScheme()
-        let accent = (model?.settings.accentColor ?? CmuxAccentColor()).nsColor(for: colorScheme)
+        let accent = (model?.settings.accentColor ?? HmuxAccentColor()).nsColor(for: colorScheme)
         topDropIndicator.layer?.backgroundColor = accent.cgColor
         bottomDropIndicator.layer?.backgroundColor = accent.cgColor
         topDropIndicator.isHidden = !top
@@ -783,7 +783,7 @@ final class SidebarWorkspaceRowTableCellView: NSTableCellView {
         badgeVisible: Bool,
         spinnerVisible: Bool
     ) {
-        let badgeFill = cmuxNotificationBadgeNSColor(
+        let badgeFill = hmuxNotificationBadgeNSColor(
             hex: model.settings.notificationBadgeColorHex,
             fallback: model.isActive
                 ? palette.primaryText.withAlphaComponent(0.25)
@@ -1201,7 +1201,7 @@ final class SidebarWorkspaceRowTableCellView: NSTableCellView {
         contentContainer.addSubview(session.field)
         SidebarRowChecklistFieldBridge.clearFieldEditorBackground(session.field)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "sidebar.row.beginInlineRename tookFocus=\(session.field.currentEditor() != nil ? 1 : 0) window=\(window == nil ? 0 : 1)"
         )
 #endif

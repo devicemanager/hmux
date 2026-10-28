@@ -1,5 +1,5 @@
 /**
- * Shared plumbing for the cmux Cloud devbox image bake
+ * Shared plumbing for the hmux Cloud devbox image bake
  * (build-devbox-freestyle.ts), the post-bake verifier
  * (verify-devbox-image.ts), and the promote step (promote-devbox-image.ts).
  *
@@ -8,10 +8,10 @@
  * pins the Freestyle replay installs (agent versions, the cua driver, the
  * desktop apt packages, the Ghostty .deb) are read from the Dockerfile's ARG
  * and ENV lines here, never kept as a second copy. No daemon binary is baked
- * into the container image: cmux-tui is installed by the drivers at create
+ * into the container image: hmux-tui is installed by the drivers at create
  * time from the pinned files.cmux.com manifest
- * (web/services/vms/drivers/cmuxTuiDaemon.ts); the image only ships the
- * cmux-devbox-boot supervisor.
+ * (web/services/vms/drivers/hmuxTuiDaemon.ts); the image only ships the
+ * hmux-devbox-boot supervisor.
  */
 import { execFileSync, execSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
@@ -19,7 +19,7 @@ import { Buffer } from "node:buffer";
 import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { CMUX_TUI_SESSION, cmuxTuiAsDaemonUser, cmuxTuiLayoutSelector, cmuxTuiRunCommand, shellQuote } from "../services/vms/drivers/cmuxTuiDaemon";
+import { HMUX_TUI_SESSION, hmuxTuiAsDaemonUser, hmuxTuiLayoutSelector, hmuxTuiRunCommand, shellQuote } from "../services/vms/drivers/hmuxTuiDaemon";
 import { DEVBOX_WORK_HOME, DEVBOX_WORK_USER } from "../services/vms/images/workUser";
 import { VM_IMAGE_SIZES, VM_IMAGE_SIZE_NAMES, vmImageSizeRank, type VmImageSizeName } from "../services/vms/images/sizes";
 import { DEVBOX_HOSTNAME, DEVBOX_HOSTNAME_LOOPBACK, DEVBOX_PROVIDER_HOSTNAME } from "../services/vms/images/identity";
@@ -31,36 +31,36 @@ export const devboxDir = path.join(webRoot, "services/vms/images/devbox");
 export const devboxDockerfilePath = path.join(devboxDir, "Dockerfile");
 
 /** The daemon state reservation is inside the existing guest disk, not a VM resize. */
-export const CMUX_TUI_STATE_IMAGE_PATH = "/var/lib/cmux/cmux-tui-state.ext4";
-export const CMUX_TUI_STATE_MOUNT_HELPER_PATH = "/usr/local/bin/cmux-tui-state-mount";
-export const CMUX_TUI_STATE_RESERVATION_MARKER_PATH = "/etc/cmux/cmux-tui-state-reservation";
-export const CMUX_TUI_STATE_RESERVATION_BYTES = 1024 * 1024 * 1024;
+export const HMUX_TUI_STATE_IMAGE_PATH = "/var/lib/hmux/hmux-tui-state.ext4";
+export const HMUX_TUI_STATE_MOUNT_HELPER_PATH = "/usr/local/bin/hmux-tui-state-mount";
+export const HMUX_TUI_STATE_RESERVATION_MARKER_PATH = "/etc/hmux/hmux-tui-state-reservation";
+export const HMUX_TUI_STATE_RESERVATION_BYTES = 1024 * 1024 * 1024;
 /** The reserved filesystem may grow inside the existing VM disk as journals grow. */
-export const CMUX_TUI_STATE_MAX_BYTES = 8 * 1024 * 1024 * 1024;
+export const HMUX_TUI_STATE_MAX_BYTES = 8 * 1024 * 1024 * 1024;
 
 /** Files the Dockerfile COPYs plus the Dockerfile itself; all must exist. */
 export const DEVBOX_TEMPLATE_FILES = [
   "Dockerfile",
   "agent-config.sh",
   "agent-auth.sh",
-  "cmux-claude",
-  "cmux-codex",
-  "cmux-opencode",
+  "hmux-claude",
+  "hmux-codex",
+  "hmux-opencode",
   "chrome-managed-policy.json",
-  "cmux-bashrc",
-  "cmux-devbox-boot",
-  "cmux-tui-state-mount",
-  "cmux-motd",
-  "cmux-prompt.bash",
-  "cmux-python-completion.bash",
-  "cmux-terminfo.sh",
-  "cmux-terminfo.src",
+  "hmux-bashrc",
+  "hmux-devbox-boot",
+  "hmux-tui-state-mount",
+  "hmux-motd",
+  "hmux-prompt.bash",
+  "hmux-python-completion.bash",
+  "hmux-terminfo.sh",
+  "hmux-terminfo.src",
   "codex-managed.toml",
   "seed-history",
 ] as const;
 
 /**
- * Proves the guest resolves every TERM name cmux may export to the overlay,
+ * Proves the guest resolves every TERM name hmux may export to the overlay,
  * including indexed bright colors instead of SGR 90. The explicit path check
  * ensures a stock entry or a user's home directory cannot shadow it.
  */
@@ -78,7 +78,7 @@ export const devboxTerminfoCheckCommand = [
 
 /** Compile the checked-in overlay before any per-TERM cache is seeded. */
 export const devboxTerminfoInstallCommand =
-  `test -s /etc/cmux/terminfo.src && tic -x -o /etc/terminfo /etc/cmux/terminfo.src && chmod -R a+rX /etc/terminfo && ${devboxTerminfoCheckCommand}`;
+  `test -s /etc/hmux/terminfo.src && tic -x -o /etc/terminfo /etc/hmux/terminfo.src && chmod -R a+rX /etc/terminfo && ${devboxTerminfoCheckCommand}`;
 
 /**
  * Proves the baked daemon's direct-WebSocket path, not only its TCP listener.
@@ -89,7 +89,7 @@ export const devboxTerminfoInstallCommand =
  * temporary device and removes the workspace before a snapshot can capture
  * test state.
  */
-export function cmuxTuiWebsocketSmokeCommand(session = "cloud", binary?: string): string {
+export function hmuxTuiWebsocketSmokeCommand(session = "cloud", binary?: string): string {
   const identity = `${DEVBOX_WORK_USER}@${DEVBOX_HOSTNAME}`;
   // Runs as the daemon's own user with the daemon's HOME: enrollment reads and
   // writes the session state the daemon owns, and as root that state dir is a
@@ -99,12 +99,12 @@ export function cmuxTuiWebsocketSmokeCommand(session = "cloud", binary?: string)
   // the daemon's user, would fail every probe and fall back to root's path.
   const shell = `#!/usr/bin/env bash
 set -euo pipefail
-BIN="\${CMUX_TUI_BIN:?cmux-tui binary not provided}"
+BIN="\${HMUX_TUI_BIN:?hmux-tui binary not provided}"
 : "\${HOME:?home not provided}"
 SESSION=${session}
-ROOT=/tmp/cmux-tui-websocket-smoke
+ROOT=/tmp/hmux-tui-websocket-smoke
 ROUTE='ws://[::1]:1337/v1/link'
-MARKER="CMUX_WS_SMOKE_${session}_$$"
+MARKER="HMUX_WS_SMOKE_${session}_$$"
 CONNECT_PID=""
 INVITATION_ID=""
 DEVICE_FINGERPRINT=""
@@ -139,7 +139,7 @@ cleanup() {
 trap cleanup EXIT
 
 "$BIN" remote enroll create --session "$SESSION" --ttl 300 --advertise "$ROUTE" --json >"$ROOT/create.json"
-jq -r '.. | strings | select(startswith("cmux://enroll/"))' "$ROOT/create.json" | head -1 >"$ROOT/invitation"
+jq -r '.. | strings | select(startswith("hmux://enroll/"))' "$ROOT/create.json" | head -1 >"$ROOT/invitation"
 test -s "$ROOT/invitation"
 chmod 600 "$ROOT/invitation"
 ("$BIN" remote connect --invite-file "$ROOT/invitation" --device-name "snapshot-websocket-smoke" --state-dir "$ROOT/state" --session "$SESSION" --headless --json --lanes single --connect-timeout-seconds 60 --reconnect-attempts 2 >"$ROOT/connect.out" 2>"$ROOT/connect.err") &
@@ -172,7 +172,7 @@ SNAPSHOT_REQUEST="$(jq -nc --arg process "$PROCESS_ID" '{type:"snapshot-process-
 FIRST="$(rpc "$SNAPSHOT_REQUEST")"
 echo "$FIRST" | jq -e --arg marker "$MARKER" 'tostring | contains($marker)' >/dev/null
 # The whole point of the daemon layout: a pane it opens is a shell of the work
-# user on a machine named cmux, which is what the prompt shows a person.
+# user on a machine named hmux, which is what the prompt shows a person.
 echo "$FIRST" | jq -e --arg who "$MARKER:${identity}" 'tostring | contains($who)' >/dev/null
 FIRST_SEQUENCE="$(echo "$FIRST" | jq -r '.snapshot.through_sequence // .result.Ok.snapshot.through_sequence')"
 test "$FIRST_SEQUENCE" -ge 1
@@ -183,37 +183,37 @@ test "$SECOND_SEQUENCE" -ge "$FIRST_SEQUENCE"
 echo "websocket-smoke-ok marker=$MARKER through_sequence=$FIRST_SEQUENCE->$SECOND_SEQUENCE"
 `;
   const encoded = Buffer.from(shell, "utf8").toString("base64");
-  const script = "/tmp/cmux-tui-websocket-smoke.sh";
+  const script = "/tmp/hmux-tui-websocket-smoke.sh";
   return (
     `printf %s ${encoded} | base64 -d >${script} && chmod 755 ${script} && ` +
-    `${cmuxTuiLayoutSelector()} && ` +
+    `${hmuxTuiLayoutSelector()} && ` +
     // `binary` overrides only the client: the reachability check drives a
     // freshly downloaded build against the daemon the image baked. HOME still
     // comes from the layout, because enrollment reads the daemon's own state.
-    `${cmuxTuiAsDaemonUser(`CMUX_TUI_BIN=${binary ? shellQuote(binary) : '"$CMUX_TUI_BIN"'} bash ${script}`)}`
+    `${hmuxTuiAsDaemonUser(`HMUX_TUI_BIN=${binary ? shellQuote(binary) : '"$HMUX_TUI_BIN"'} bash ${script}`)}`
   );
 }
 
 
 
 /**
- * The desktop layer (ported from the retired Blaxel cmux-devbox image): an
+ * The desktop layer (ported from the retired Blaxel hmux-devbox image): an
  * openbox/TigerVNC desktop with a tint2 dock, Ghostty, Chrome, Thunar, the
  * accessibility bus for computer-use, and noVNC on 6901
  * (web/services/vms/images/desktop.ts is the contract). The Dockerfile bakes
- * it and starts it from cmux-devbox-boot; build-devbox-freestyle.ts installs
- * the same files and runs it from the cmux-desktop systemd unit.
+ * it and starts it from hmux-devbox-boot; build-devbox-freestyle.ts installs
+ * the same files and runs it from the hmux-desktop systemd unit.
  */
 export const devboxDesktopDir = path.join(devboxDir, "desktop");
 export const DEVBOX_DESKTOP_FILES = [
   "WALLPAPER.md",
-  "cmux-desktop-boot",
-  "cmux-desktop.service",
+  "hmux-desktop-boot",
+  "hmux-desktop.service",
   "desktop-env.sh",
-  "ghostty-cmux.desktop",
-  "google-chrome-cmux.desktop",
+  "ghostty-hmux.desktop",
+  "google-chrome-hmux.desktop",
   "start-vnc.sh",
-  "thunar-cmux.desktop",
+  "thunar-hmux.desktop",
   "tint2rc",
   "wallpaper.jpg",
 ] as const;
@@ -233,71 +233,71 @@ export type DevboxDesktopInstall = {
  * so a path can only change in one place.
  */
 export const DEVBOX_DESKTOP_INSTALLS: readonly DevboxDesktopInstall[] = [
-  { source: "desktop/google-chrome-cmux.desktop", target: "/etc/cmux/apps/google-chrome-cmux.desktop", mode: 0o644 },
-  { source: "desktop/thunar-cmux.desktop", target: "/etc/cmux/apps/thunar-cmux.desktop", mode: 0o644 },
-  { source: "desktop/ghostty-cmux.desktop", target: "/etc/cmux/apps/ghostty-cmux.desktop", mode: 0o644 },
-  { source: "desktop/tint2rc", target: "/etc/cmux/tint2rc", mode: 0o644 },
-  { source: "desktop/wallpaper.jpg", target: "/usr/share/backgrounds/cmux/wallpaper.jpg", mode: 0o644 },
+  { source: "desktop/google-chrome-hmux.desktop", target: "/etc/hmux/apps/google-chrome-hmux.desktop", mode: 0o644 },
+  { source: "desktop/thunar-hmux.desktop", target: "/etc/hmux/apps/thunar-hmux.desktop", mode: 0o644 },
+  { source: "desktop/ghostty-hmux.desktop", target: "/etc/hmux/apps/ghostty-hmux.desktop", mode: 0o644 },
+  { source: "desktop/tint2rc", target: "/etc/hmux/tint2rc", mode: 0o644 },
+  { source: "desktop/wallpaper.jpg", target: "/usr/share/backgrounds/hmux/wallpaper.jpg", mode: 0o644 },
   { source: "desktop/start-vnc.sh", target: "/usr/local/bin/start-vnc.sh", mode: 0o755 },
-  { source: "desktop/cmux-desktop-boot", target: "/usr/local/bin/cmux-desktop-boot", mode: 0o755 },
-  { source: "desktop/cmux-desktop.service", target: "/etc/systemd/system/cmux-desktop.service", mode: 0o644 },
-  { source: "desktop/desktop-env.sh", target: "/etc/cmux/desktop-env.sh", mode: 0o644 },
+  { source: "desktop/hmux-desktop-boot", target: "/usr/local/bin/hmux-desktop-boot", mode: 0o755 },
+  { source: "desktop/hmux-desktop.service", target: "/etc/systemd/system/hmux-desktop.service", mode: 0o644 },
+  { source: "desktop/desktop-env.sh", target: "/etc/hmux/desktop-env.sh", mode: 0o644 },
 ];
 
 /**
  * The desktop apt packages, from the Dockerfile's
- * `ARG CMUX_IMAGE_DESKTOP_PACKAGES="..."` (a quoted list; Docker joins its
+ * `ARG HMUX_IMAGE_DESKTOP_PACKAGES="..."` (a quoted list; Docker joins its
  * continuation lines). The Freestyle bake installs exactly this list.
  */
 export function devboxDesktopPackages(dockerfile = readDevboxDockerfile()): string[] {
   const joined = dockerfile.replace(/\\\n/g, " ");
-  const match = /^ARG CMUX_IMAGE_DESKTOP_PACKAGES="([^"]+)"/m.exec(joined);
-  if (!match) throw new Error("devbox Dockerfile is missing ARG CMUX_IMAGE_DESKTOP_PACKAGES");
+  const match = /^ARG HMUX_IMAGE_DESKTOP_PACKAGES="([^"]+)"/m.exec(joined);
+  if (!match) throw new Error("devbox Dockerfile is missing ARG HMUX_IMAGE_DESKTOP_PACKAGES");
   const packages = match[1].split(/\s+/).filter(Boolean);
-  if (packages.length === 0) throw new Error("devbox Dockerfile's CMUX_IMAGE_DESKTOP_PACKAGES is empty");
+  if (packages.length === 0) throw new Error("devbox Dockerfile's HMUX_IMAGE_DESKTOP_PACKAGES is empty");
   return packages;
 }
 
 /**
  * Ghostty ships no upstream .deb; the Dockerfile pins a community build for
- * Ubuntu 24.04 by release tag (`ARG CMUX_IMAGE_GHOSTTY_DEB_URL=`), and the
+ * Ubuntu 24.04 by release tag (`ARG HMUX_IMAGE_GHOSTTY_DEB_URL=`), and the
  * Freestyle bake installs that exact file.
  */
 export function devboxGhosttyDebUrl(dockerfile = readDevboxDockerfile()): string {
-  const url = /^ARG CMUX_IMAGE_GHOSTTY_DEB_URL=(\S+)$/m.exec(dockerfile)?.[1];
-  if (!url) throw new Error("devbox Dockerfile is missing ARG CMUX_IMAGE_GHOSTTY_DEB_URL");
+  const url = /^ARG HMUX_IMAGE_GHOSTTY_DEB_URL=(\S+)$/m.exec(dockerfile)?.[1];
+  if (!url) throw new Error("devbox Dockerfile is missing ARG HMUX_IMAGE_GHOSTTY_DEB_URL");
   return url;
 }
 
 /**
- * The SHA-256 of that .deb (`ARG CMUX_IMAGE_GHOSTTY_DEB_SHA256=`): both
+ * The SHA-256 of that .deb (`ARG HMUX_IMAGE_GHOSTTY_DEB_SHA256=`): both
  * recipes verify the downloaded bytes against it before dpkg runs as root, so
  * a moved or tampered release asset fails the bake instead of installing.
  */
 /**
  * The Ghostty release the image is built against, from the .deb pin: the
- * version panes export as TERM_PROGRAM_VERSION (cmux-devbox-boot reads it from
- * /etc/cmux/ghostty-version). Base images ship no Ghostty binary, so the pin,
+ * version panes export as TERM_PROGRAM_VERSION (hmux-devbox-boot reads it from
+ * /etc/hmux/ghostty-version). Base images ship no Ghostty binary, so the pin,
  * not `ghostty +version`, is the source.
  */
 export function devboxGhosttyVersion(dockerfile = readDevboxDockerfile()): string {
   const version = /\/ghostty_(\d+\.\d+\.\d+)[-_]/.exec(devboxGhosttyDebUrl(dockerfile))?.[1];
-  if (!version) throw new Error("devbox Dockerfile's CMUX_IMAGE_GHOSTTY_DEB_URL carries no ghostty_<x.y.z> version");
+  if (!version) throw new Error("devbox Dockerfile's HMUX_IMAGE_GHOSTTY_DEB_URL carries no ghostty_<x.y.z> version");
   return version;
 }
 
 export function devboxGhosttyDebSha256(dockerfile = readDevboxDockerfile()): string {
-  const sha = /^ARG CMUX_IMAGE_GHOSTTY_DEB_SHA256=([0-9a-f]{64})$/m.exec(dockerfile)?.[1];
-  if (!sha) throw new Error("devbox Dockerfile is missing a 64-hex ARG CMUX_IMAGE_GHOSTTY_DEB_SHA256");
+  const sha = /^ARG HMUX_IMAGE_GHOSTTY_DEB_SHA256=([0-9a-f]{64})$/m.exec(dockerfile)?.[1];
+  if (!sha) throw new Error("devbox Dockerfile is missing a 64-hex ARG HMUX_IMAGE_GHOSTTY_DEB_SHA256");
   return sha;
 }
 
 export const AGENT_PIN_ARGS: readonly { arg: string; pkg: string; binary: string }[] = [
-  { arg: "CMUX_IMAGE_CLAUDE_CODE_VERSION", pkg: "@anthropic-ai/claude-code", binary: "claude" },
-  { arg: "CMUX_IMAGE_CODEX_VERSION", pkg: "@openai/codex", binary: "codex" },
-  { arg: "CMUX_IMAGE_OPENCODE_VERSION", pkg: "opencode-ai", binary: "opencode" },
-  { arg: "CMUX_IMAGE_PI_VERSION", pkg: "@earendil-works/pi-coding-agent", binary: "pi" },
-  { arg: "CMUX_IMAGE_AGENT_BROWSER_VERSION", pkg: "agent-browser", binary: "agent-browser" },
+  { arg: "HMUX_IMAGE_CLAUDE_CODE_VERSION", pkg: "@anthropic-ai/claude-code", binary: "claude" },
+  { arg: "HMUX_IMAGE_CODEX_VERSION", pkg: "@openai/codex", binary: "codex" },
+  { arg: "HMUX_IMAGE_OPENCODE_VERSION", pkg: "opencode-ai", binary: "opencode" },
+  { arg: "HMUX_IMAGE_PI_VERSION", pkg: "@earendil-works/pi-coding-agent", binary: "pi" },
+  { arg: "HMUX_IMAGE_AGENT_BROWSER_VERSION", pkg: "agent-browser", binary: "agent-browser" },
 ];
 
 export type AgentPin = { pkg: string; version: string; binary: string; spec: string };
@@ -319,7 +319,7 @@ export function readDevboxDockerfile(): string {
 export const EXACT_AGENT_PIN = /^\d+\.\d+\.\d+$/;
 
 /**
- * Rewrites the Dockerfile's `ARG CMUX_IMAGE_<TOOL>_VERSION=` lines to
+ * Rewrites the Dockerfile's `ARG HMUX_IMAGE_<TOOL>_VERSION=` lines to
  * `versions` (keyed by npm package), leaving every other byte alone. The one
  * sanctioned way to bump a pin (`bun run devbox:pins:check --write`): a pin is
  * an exact release, a package the Dockerfile does not bake is a mistake, and
@@ -364,7 +364,7 @@ export function devboxCuaDriverVersion(dockerfile = readDevboxDockerfile()): str
 }
 
 export function devboxImageEpoch(dockerfile = readDevboxDockerfile()): string {
-  return /CMUX_IMAGE_EPOCH=([^\s"]+)/.exec(dockerfile)?.[1] ?? "none";
+  return /HMUX_IMAGE_EPOCH=([^\s"]+)/.exec(dockerfile)?.[1] ?? "none";
 }
 
 /**
@@ -524,7 +524,7 @@ function git(args: string, cwd: string): string {
  * Stale-checkout guard (chatmux bake-preflight lineage): refuse to bake from
  * a checkout that silently missed a pull. The Dockerfile COPYs plain files,
  * so there are no base64 embeds to drift-check. Branch bakes are deliberate
- * with CMUX_BAKE_ALLOW_BRANCH=1.
+ * with HMUX_BAKE_ALLOW_BRANCH=1.
  */
 export function bakePreflight(options: { desktop?: boolean } = {}): { sha: string; epoch: string } {
   for (const name of DEVBOX_TEMPLATE_FILES) {
@@ -539,7 +539,7 @@ export function bakePreflight(options: { desktop?: boolean } = {}): { sha: strin
       }
     }
   }
-  const allowBranch = process.env.CMUX_BAKE_ALLOW_BRANCH === "1";
+  const allowBranch = process.env.HMUX_BAKE_ALLOW_BRANCH === "1";
   // Two promotions running at once (one ladder each) race on the ref lock, so
   // a lost race is retried rather than fatal. What must NOT happen is blessing
   // a stale ref: the whole point of the check below is to refuse a bake from
@@ -560,7 +560,7 @@ export function bakePreflight(options: { desktop?: boolean } = {}): { sha: strin
   if (!fetched && !allowBranch) {
     throw new Error(
       `bake refused: could not refresh origin/main (${fetchError}), so the staleness check below cannot be trusted. ` +
-        "Retry, or set CMUX_BAKE_ALLOW_BRANCH=1 for a deliberate branch bake.",
+        "Retry, or set HMUX_BAKE_ALLOW_BRANCH=1 for a deliberate branch bake.",
     );
   }
   if (!fetched) console.warn(`bake-preflight: could not refresh origin/main (${fetchError}); branch bake, continuing`);
@@ -569,17 +569,17 @@ export function bakePreflight(options: { desktop?: boolean } = {}): { sha: strin
   if (head !== main && !allowBranch) {
     throw new Error(
       `bake refused: HEAD ${head.slice(0, 10)} != origin/main ${main.slice(0, 10)} ` +
-        "(pull first, or set CMUX_BAKE_ALLOW_BRANCH=1 for a deliberate branch bake)",
+        "(pull first, or set HMUX_BAKE_ALLOW_BRANCH=1 for a deliberate branch bake)",
     );
   }
   const epoch = devboxImageEpoch();
-  const state = head === main ? "== origin/main" : "!= origin/main (CMUX_BAKE_ALLOW_BRANCH=1)";
+  const state = head === main ? "== origin/main" : "!= origin/main (HMUX_BAKE_ALLOW_BRANCH=1)";
   console.log(`bake-preflight: HEAD ${head.slice(0, 10)} ${state}, devbox epoch ${epoch}`);
   return { sha: head, epoch };
 }
 
 // ---------------------------------------------------------------------------
-// Identity: the machine is `cmux` (services/vms/images/identity.ts). The bake
+// Identity: the machine is `hmux` (services/vms/images/identity.ts). The bake
 // runs the install command once, early; the verifier and the size derive run
 // the check on machines booted from the snapshot.
 // ---------------------------------------------------------------------------
@@ -601,7 +601,7 @@ export function devboxHostsAliasRewriteCommand(hostname = DEVBOX_HOSTNAME, hosts
     `$1 == "${DEVBOX_HOSTNAME_LOOPBACK}" { if (!done) { print "${DEVBOX_HOSTNAME_LOOPBACK}\\t" h; done = 1 }; next } ` +
     `{ print } ` +
     `END { if (!done) print "${DEVBOX_HOSTNAME_LOOPBACK}\\t" h }`;
-  return `awk -v h=${hostname} '${program}' ${hostsPath} > ${hostsPath}.cmux-identity && cat ${hostsPath}.cmux-identity > ${hostsPath} && rm -f ${hostsPath}.cmux-identity`;
+  return `awk -v h=${hostname} '${program}' ${hostsPath} > ${hostsPath}.hmux-identity && cat ${hostsPath}.hmux-identity > ${hostsPath} && rm -f ${hostsPath}.hmux-identity`;
 }
 
 /**
@@ -611,11 +611,11 @@ export function devboxHostsAliasRewriteCommand(hostname = DEVBOX_HOSTNAME, hosts
  * filesystem and moved over the old ones only once all of them exist, so a
  * failed generation fails the step with the previous keys still in place;
  * sshd loads keys at start, so it is restarted where systemd runs it and left
- * alone where nothing does. cmux-devbox-boot does the same on every clone.
+ * alone where nothing does. hmux-devbox-boot does the same on every clone.
  */
 export function devboxSshHostKeyRegenerateCommand(): string {
   return [
-    'staging="$(mktemp -d /etc/ssh/.cmux-rekey.XXXXXX)"',
+    'staging="$(mktemp -d /etc/ssh/.hmux-rekey.XXXXXX)"',
     'mkdir -p "$staging/etc/ssh"',
     'ssh-keygen -A -f "$staging" >/dev/null',
     '[ -n "$(ls "$staging"/etc/ssh/ssh_host_*_key 2>/dev/null)" ]',
@@ -691,7 +691,7 @@ export function devboxIdentityInstallCommand(hostname = DEVBOX_HOSTNAME): string
 /**
  * The platform's name for the machine running the command: the Firecracker
  * MMDS instance id (EC2-style token, then GET). Empty output means no metadata
- * service (a container). cmux-devbox-boot keys the daemon identity on it.
+ * service (a container). hmux-devbox-boot keys the daemon identity on it.
  */
 export const DEVBOX_INSTANCE_ID_COMMAND =
   "curl -sf -m 2 -H \"X-aws-ec2-metadata-token: $(curl -sf -m 2 -X PUT http://169.254.169.254/latest/api/token -H 'X-metadata-token-ttl-seconds: 60')\" http://169.254.169.254/latest/meta-data/instance-id";
@@ -709,11 +709,11 @@ export const DEVBOX_INSTANCE_ID_COMMAND =
  */
 export function devboxDaemonReadyCondition(): string {
   return (
-    `${cmuxTuiRunCommand(`server status --session ${CMUX_TUI_SESSION}`)} >/dev/null 2>&1 && ` +
+    `${hmuxTuiRunCommand(`server status --session ${HMUX_TUI_SESSION}`)} >/dev/null 2>&1 && ` +
     `grep -qi ':0539 ' /proc/net/tcp6 && ` +
     // Not just "a marker exists": a machine cloned from a snapshot resumes the
     // SOURCE machine's daemon, which answers and listens with the source's
-    // identity until cmux-devbox-boot notices the instance id changed and
+    // identity until hmux-devbox-boot notices the instance id changed and
     // re-keys it. A ready check that accepted the stale marker would hand the
     // next phase a daemon that is about to be stopped and rebuilt.
     //
@@ -722,8 +722,8 @@ export function devboxDaemonReadyCondition(): string {
     // would call "" = "" a bound identity and report ready immediately. This
     // command only ever runs on a Freestyle VM, which always has MMDS, so
     // failing closed here surfaces a broken machine instead of hiding it.
-    `cmux_instance="$(${DEVBOX_INSTANCE_ID_COMMAND})" && [ -n "$cmux_instance" ] && ` +
-    `[ "$(cat /etc/cmux/daemon-instance-id 2>/dev/null)" = "$cmux_instance" ]`
+    `hmux_instance="$(${DEVBOX_INSTANCE_ID_COMMAND})" && [ -n "$hmux_instance" ] && ` +
+    `[ "$(cat /etc/hmux/daemon-instance-id 2>/dev/null)" = "$hmux_instance" ]`
   );
 }
 
@@ -740,10 +740,10 @@ export const devboxSnapshotClockCommand =
  */
 export function devboxWaitForDaemonCommand(timeoutSeconds = 120): string {
   return (
-    `cmux_ready=0; for i in $(seq 1 ${timeoutSeconds * 2}); do ` +
-    `if ${devboxDaemonReadyCondition()}; then cmux_ready=1; break; fi; sleep 0.5; done; ` +
-    `if [ "$cmux_ready" = 1 ]; then echo daemon-ready; else ` +
-    `echo "cmux-tui daemon not ready after ${timeoutSeconds}s" >&2; exit 1; fi`
+    `hmux_ready=0; for i in $(seq 1 ${timeoutSeconds * 2}); do ` +
+    `if ${devboxDaemonReadyCondition()}; then hmux_ready=1; break; fi; sleep 0.5; done; ` +
+    `if [ "$hmux_ready" = 1 ]; then echo daemon-ready; else ` +
+    `echo "hmux-tui daemon not ready after ${timeoutSeconds}s" >&2; exit 1; fi`
   );
 }
 
@@ -759,8 +759,8 @@ export interface DevboxIdleWakeupCheckOptions {
 }
 
 /**
- * Idle-wakeup smoke check (plans/cmux-next/vm-image.md, "Production promotion").
- * Counts voluntary context switches per thread of every cmux-tui terminal host
+ * Idle-wakeup smoke check (plans/hmux-next/vm-image.md, "Production promotion").
+ * Counts voluntary context switches per thread of every hmux-tui terminal host
  * and of the daemon across an idle window, and fails when a terminal host's
  * main thread woke more than the bound. The old host accept loop polled its
  * listener every 20 ms (about 3,000 switches a minute); an event-driven host
@@ -817,32 +817,32 @@ printf '%s\n--\n%s\n' "$before" "$after" | awk -v max=@MAX@ -v window=@WINDOW@ '
     .replace("@WINDOW@", String(windowSeconds));
 }
 
-const TEMPLATE_RUN_DIR = "/run/cmux";
+const TEMPLATE_RUN_DIR = "/run/hmux";
 const TERMINAL_IDS_JQ = `[.. | objects | (.terminal_id? // .id?) | strings | select(startswith("term_"))] | unique | .[]`;
 
 /**
  * Create the warm template terminal the snapshot will carry: close every
- * terminal the bake left behind, arm exactly one shell (cmux-prompt.bash
- * consumes /run/cmux/template-arm), create the first workspace, and wait
+ * terminal the bake left behind, arm exactly one shell (hmux-prompt.bash
+ * consumes /run/hmux/template-arm), create the first workspace, and wait
  * until that shell has sourced its rc files and is waiting at its first
  * prompt for a clone to bind it. Run as root on a machine whose daemon is
  * up. The derive step runs it again after its resize reboot, so a derived
  * snapshot never carries a shell that an earlier clone already bound.
  */
 export function devboxPrepareTemplateTerminalCommand(timeoutSeconds = 60): string {
-  const run = (args: string) => cmuxTuiRunCommand(`--session ${CMUX_TUI_SESSION} --json ${args}`);
+  const run = (args: string) => hmuxTuiRunCommand(`--session ${HMUX_TUI_SESSION} --json ${args}`);
   return [
     `install -d -o ${DEVBOX_WORK_USER} -g ${DEVBOX_WORK_USER} -m 755 ${TEMPLATE_RUN_DIR}`,
     `rm -f ${TEMPLATE_RUN_DIR}/template-arm ${TEMPLATE_RUN_DIR}/template-shell-ready ${TEMPLATE_RUN_DIR}/bound ${TEMPLATE_RUN_DIR}/clone-started ${TEMPLATE_RUN_DIR}/first-prompt-named`,
-    `(${run("terminal list")} > /tmp/cmux-template-terminals.json || :)`,
-    `for id in $(jq -r '${TERMINAL_IDS_JQ}' /tmp/cmux-template-terminals.json 2>/dev/null); do ${run('terminal "$id" close')} >/dev/null || exit 1; done`,
+    `(${run("terminal list")} > /tmp/hmux-template-terminals.json || :)`,
+    `for id in $(jq -r '${TERMINAL_IDS_JQ}' /tmp/hmux-template-terminals.json 2>/dev/null); do ${run('terminal "$id" close')} >/dev/null || exit 1; done`,
     `install -o ${DEVBOX_WORK_USER} -g ${DEVBOX_WORK_USER} -m 644 /dev/null ${TEMPLATE_RUN_DIR}/template-arm`,
     `${run("workspace create --name workspace-1")} >/dev/null`,
     `for i in $(seq 1 ${timeoutSeconds * 10}); do [ -e ${TEMPLATE_RUN_DIR}/template-shell-ready ] && break; sleep 0.1; done`,
     `test -e ${TEMPLATE_RUN_DIR}/template-shell-ready`,
     `test ! -e ${TEMPLATE_RUN_DIR}/template-arm`,
-    `${run("terminal list")} > /tmp/cmux-template-terminals.json`,
-    `test "$(jq -r '${TERMINAL_IDS_JQ}' /tmp/cmux-template-terminals.json | wc -l)" = 1`,
+    `${run("terminal list")} > /tmp/hmux-template-terminals.json`,
+    `test "$(jq -r '${TERMINAL_IDS_JQ}' /tmp/hmux-template-terminals.json | wc -l)" = 1`,
     "echo template-terminal-ready",
   ].join(" && ");
 }
@@ -851,7 +851,7 @@ export function devboxPrepareTemplateTerminalCommand(timeoutSeconds = 60): strin
  * Remove every per-machine file under the daemon's state root (machine id,
  * receipt pepper, session registry and journal) while keeping the terminal
  * host record directory. `stateRoot` is a shell word naming an absolute path.
- * Sets `$cmux_keep` to the kept directory, and fails when no host directory
+ * Sets `$hmux_keep` to the kept directory, and fails when no host directory
  * exists or any identity file survives.
  *
  * The removal loop runs in its own guarded group: it refuses an empty or
@@ -859,20 +859,20 @@ export function devboxPrepareTemplateTerminalCommand(timeoutSeconds = 60): strin
  */
 export function devboxWipeDaemonStateKeepingTemplateCommand(stateRoot: string): string {
   return [
-    `cmux_state=${stateRoot}`,
-    'case "$cmux_state" in /?*) ;; *) exit 1 ;; esac',
-    `cmux_keep="$(find "$cmux_state" -maxdepth 3 -type d -name 'terminal-hosts-*' | head -1)"`,
-    'case "$cmux_keep" in "$cmux_state"/?*) ;; *) exit 1 ;; esac',
+    `hmux_state=${stateRoot}`,
+    'case "$hmux_state" in /?*) ;; *) exit 1 ;; esac',
+    `hmux_keep="$(find "$hmux_state" -maxdepth 3 -type d -name 'terminal-hosts-*' | head -1)"`,
+    'case "$hmux_keep" in "$hmux_state"/?*) ;; *) exit 1 ;; esac',
     // Remove every sibling on the path from the state root down to the host
     // record directory, so only that directory survives.
-    '{ cmux_dir="$cmux_keep"; while [ "$cmux_dir" != "$cmux_state" ]; do cmux_parent="$(dirname "$cmux_dir")"; case "$cmux_parent" in "$cmux_state" | "$cmux_state"/?*) ;; *) exit 1 ;; esac; find "$cmux_parent" -mindepth 1 -maxdepth 1 ! -path "$cmux_dir" -exec rm -rf {} + || exit 1; cmux_dir="$cmux_parent"; done; }',
-    `test -z "$(find "$cmux_state" -name machine-id -o -name resource-effect-pepper -o -name '*.sqlite3*')"`,
+    '{ hmux_dir="$hmux_keep"; while [ "$hmux_dir" != "$hmux_state" ]; do hmux_parent="$(dirname "$hmux_dir")"; case "$hmux_parent" in "$hmux_state" | "$hmux_state"/?*) ;; *) exit 1 ;; esac; find "$hmux_parent" -mindepth 1 -maxdepth 1 ! -path "$hmux_dir" -exec rm -rf {} + || exit 1; hmux_dir="$hmux_parent"; done; }',
+    `test -z "$(find "$hmux_state" -name machine-id -o -name resource-effect-pepper -o -name '*.sqlite3*')"`,
   ].join(" && ");
 }
 
 /**
- * Park the cmux-tui daemon on a machine about to be snapshotted: record this
- * machine's instance id as the bake id (cmux-devbox-boot keeps the daemon
+ * Park the hmux-tui daemon on a machine about to be snapshotted: record this
+ * machine's instance id as the bake id (hmux-devbox-boot keeps the daemon
  * stopped while the ids match), wait for the supervisor to stop it, and wipe
  * every per-machine file it produced (machine id, receipt pepper, session
  * registry and journal, remote identity) while keeping the warm template
@@ -883,17 +883,17 @@ export function devboxWipeDaemonStateKeepingTemplateCommand(stateRoot: string): 
  */
 export function devboxParkDaemonCommand(): string {
   return [
-    cmuxTuiLayoutSelector(),
+    hmuxTuiLayoutSelector(),
     `test -e ${TEMPLATE_RUN_DIR}/template-shell-ready`,
-    `mkdir -p /etc/cmux && ${DEVBOX_INSTANCE_ID_COMMAND} > /etc/cmux/bake-instance-id && test -s /etc/cmux/bake-instance-id`,
+    `mkdir -p /etc/hmux && ${DEVBOX_INSTANCE_ID_COMMAND} > /etc/hmux/bake-instance-id && test -s /etc/hmux/bake-instance-id`,
     // [s]tart: the pattern must not match the exec shell carrying this command line.
-    "for i in $(seq 1 30); do pgrep -f 'cmux-tui server [s]tart' >/dev/null || break; sleep 1; done",
-    "! pgrep -f 'cmux-tui server [s]tart' >/dev/null",
-    "systemctl is-active cmux-tui-daemon >/dev/null",
-    devboxWipeDaemonStateKeepingTemplateCommand('"$CMUX_TUI_HOME/.local/state/cmux-tui"'),
-    'rm -rf "$CMUX_TUI_HOME/.local/state/cmux/remote" /etc/cmux/daemon-instance-id /etc/cmux/daemon-boot-id /etc/cmux/first-terminal.json',
+    "for i in $(seq 1 30); do pgrep -f 'hmux-tui server [s]tart' >/dev/null || break; sleep 1; done",
+    "! pgrep -f 'hmux-tui server [s]tart' >/dev/null",
+    "systemctl is-active hmux-tui-daemon >/dev/null",
+    devboxWipeDaemonStateKeepingTemplateCommand('"$HMUX_TUI_HOME/.local/state/hmux-tui"'),
+    'rm -rf "$HMUX_TUI_HOME/.local/state/hmux/remote" /etc/hmux/daemon-instance-id /etc/hmux/daemon-boot-id /etc/hmux/first-terminal.json',
     `rm -f ${TEMPLATE_RUN_DIR}/bound ${TEMPLATE_RUN_DIR}/clone-started ${TEMPLATE_RUN_DIR}/first-prompt-named`,
-    `test "$(ls "$cmux_keep" | grep -c '\\.json$')" = 1`,
+    `test "$(ls "$hmux_keep" | grep -c '\\.json$')" = 1`,
     "pgrep -f '[_]_terminal-host' >/dev/null",
     "! grep -qi ':0539 ' /proc/net/tcp6",
     "echo daemon-parked-for-clones",
@@ -965,13 +965,13 @@ export type DevboxManifestEntry = {
   restricted?: boolean;
   /** The shape this snapshot boots at (Freestyle ladder). Size-less entries are pre-ladder bakes. */
   size?: DevboxImageSize;
-  cmuxdRemoteCommit: string;
-  /** The cmux-tui build baked in the daemon user's home (files.cmux.com manifest pin at bake time). Absent on images that installed it at create time. */
-  cmuxTuiCommit?: string;
-  cmuxTuiSha256?: string;
-  /** The cmux commit whose devbox definition produced this image. */
+  hmuxdRemoteCommit: string;
+  /** The hmux-tui build baked in the daemon user's home (files.cmux.com manifest pin at bake time). Absent on images that installed it at create time. */
+  hmuxTuiCommit?: string;
+  hmuxTuiSha256?: string;
+  /** The hmux commit whose devbox definition produced this image. */
   repoCommit?: string;
-  /** The Dockerfile's CMUX_IMAGE_EPOCH at bake time; older entries carry it in `notes` only (see manifestEntryEpoch). */
+  /** The Dockerfile's HMUX_IMAGE_EPOCH at bake time; older entries carry it in `notes` only (see manifestEntryEpoch). */
   epoch?: string;
   /** The layers the image carries and the digest of the sources they were baked from (devboxSourceDigest). Absent on older entries. */
   devboxSource?: DevboxSourceRecord;
@@ -997,9 +997,9 @@ export function manifestEntrySkeleton(
     imageId,
     envVar,
     ...(kind ? { kind } : {}),
-    // The session daemon is cmux-tui, installed at create time from the pinned
-    // artifacts manifest; no cmuxd-remote build is baked.
-    cmuxdRemoteCommit: "none-cmux-tui",
+    // The session daemon is hmux-tui, installed at create time from the pinned
+    // artifacts manifest; no hmuxd-remote build is baked.
+    hmuxdRemoteCommit: "none-hmux-tui",
     repoCommit: metadata.repoCommit,
     epoch: metadata.epoch,
     devboxSource: metadata.devboxSource,
@@ -1009,7 +1009,7 @@ export function manifestEntrySkeleton(
     // The bake alone never marks an image passed; verify-devbox-image.ts does.
     validationStatus: "unknown",
     notes: [
-      `cmux devbox epoch ${metadata.epoch}`,
+      `hmux devbox epoch ${metadata.epoch}`,
       extraNotes,
     ].filter(Boolean).join(" "),
   };
@@ -1500,15 +1500,15 @@ export function upgradeDevboxSourceRecords(
   return { manifest: { schemaVersion: manifest.schemaVersion, images }, upgraded, skipped };
 }
 
-/** The epoch an entry was baked at: the field, or the `cmux devbox epoch <x>` prefix every bake writes into `notes`. */
+/** The epoch an entry was baked at: the field, or the `hmux devbox epoch <x>` prefix every bake writes into `notes`. */
 export function manifestEntryEpoch(entry: Pick<DevboxManifestEntry, "epoch" | "notes">): string | undefined {
-  return entry.epoch ?? /cmux devbox epoch (\S+)/.exec(entry.notes ?? "")?.[1];
+  return entry.epoch ?? /hmux devbox epoch (\S+)/.exec(entry.notes ?? "")?.[1];
 }
 
 /**
  * The invariant that makes the checked-in manifest describe the machine
  * users get: every default of `provider` was baked at the Dockerfile's
- * current CMUX_IMAGE_EPOCH (a bumped epoch without a promotion, or a
+ * current HMUX_IMAGE_EPOCH (a bumped epoch without a promotion, or a
  * rollback to an older ladder without reverting the sources, fails), and an
  * entry that recorded its source digest was baked from exactly the files and
  * pins in this checkout (a template or pin change without a re-promotion

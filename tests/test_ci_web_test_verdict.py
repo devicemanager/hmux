@@ -56,7 +56,7 @@ class Decide(unittest.TestCase):
     def test_coverage_is_refused_for_a_fork(self):
         ours = {"number": 1, "head": {"repo": {"full_name": "manaflow-ai/cmux"}}}
         verdict.refuse_fork_coverage(ours, "manaflow-ai/cmux")
-        for head in ({"repo": {"full_name": "someone/cmux"}}, {"repo": None}):
+        for head in ({"repo": {"full_name": "someone/hmux"}}, {"repo": None}):
             with self.assertRaises(SystemExit) as raised:
                 verdict.refuse_fork_coverage({"number": 2, "head": head}, "manaflow-ai/cmux")
             self.assertIn("--coverage would run its code", str(raised.exception))

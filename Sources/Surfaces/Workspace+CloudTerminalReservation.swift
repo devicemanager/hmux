@@ -1,8 +1,8 @@
-import CmuxCloud
+import HmuxCloud
 import Bonsplit
-import CmuxRemoteSession
-import CmuxSurfaceCatalogModel
-import CmuxTerminal
+import HmuxRemoteSession
+import HmuxSurfaceCatalogModel
+import HmuxTerminal
 import Foundation
 import GhosttyKit
 

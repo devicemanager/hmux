@@ -5,7 +5,7 @@ Nothing here gates a merge. It runs after the fact, reads builds that already
 happen, and makes a red main actionable.
 
 The fast lane is seed-derived-data.yml: every push to main already compiles
-the app-host test product (the app and cmuxTests, build-for-testing, no test
+the app-host test product (the app and hmuxTests, build-for-testing, no test
 run) incrementally on the trusted warm minis first, Blacksmith beside them.
 Its seed job's `Build` step is the compile verdict for that commit, so this
 adds no Mac time per merge. A seed job whose Build fails dispatches the
@@ -95,7 +95,7 @@ REVERT_BRANCH_PREFIX = "compile-revert/"
 
 TIMESTAMP = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z ?")
 ANSI = re.compile(r"\x1b\[[0-9;]*[A-Za-z]")
-# `/private/tmp/cmux-ci/src/cmuxTests/X.swift:61:27: error: message`. Only
+# `/private/tmp/hmux-ci/src/hmuxTests/X.swift:61:27: error: message`. Only
 # errors in a source file count: `error: No space left on device` and the like
 # are the machine, not the commit.
 SOURCE_ERROR = re.compile(
@@ -103,7 +103,7 @@ SOURCE_ERROR = re.compile(
     r"error: (?P<message>.+?)\s*$"
 )
 # The canonical source root (compile-app-host-test-product.sh) or a workspace.
-SOURCE_ROOT = re.compile(r"^.*?/(?:cmux-ci(?:-\d+)?/src|_work/[^/]+/[^/]+)/")
+SOURCE_ROOT = re.compile(r"^.*?/(?:hmux-ci(?:-\d+)?/src|_work/[^/]+/[^/]+)/")
 QUOTED = re.compile(r"'([A-Za-z_][A-Za-z0-9_]{2,})")
 PR_SUBJECT = re.compile(r"\(#(\d+)\)\s*$")
 
@@ -515,7 +515,7 @@ def render_culprit_comment(report: Mapping, brk: Mapping, culprit: Mapping, link
         f"### main no longer compiles after this merge",
         "",
         f"{mentions(culprit)}: after `{short(culprit.get('sha'))}` landed on main, the app-host test product "
-        f"(the app and `cmuxTests`, build-for-testing) stops compiling. {how}",
+        f"(the app and `hmuxTests`, build-for-testing) stops compiling. {how}",
         "",
         f"Evidence: {brk['evidence']}",
         "",
@@ -659,7 +659,7 @@ def prompt(report: Mapping) -> str:
     target = report["fix"]
     brk, culprit = target["break"], target["culprit"]
     return "\n".join([
-        "main of this repository no longer compiles its app-host test product (the cmux app and the cmuxTests",
+        "main of this repository no longer compiles its app-host test product (the hmux app and the hmuxTests",
         f"bundle). The errors appeared with pull request #{culprit['pr']} ({culprit.get('title') or ''}), merge",
         f"commit {culprit.get('sha')}. The checkout is main's head {report['head']}.",
         "",

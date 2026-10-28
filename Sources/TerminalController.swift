@@ -1,45 +1,45 @@
-import CmuxCloud
-import CmuxMobileHost
-import CmuxSettingsUI
+import HmuxCloud
+import HmuxMobileHost
+import HmuxSettingsUI
 import AppKit
-import CmuxRemoteSession
-import CmuxCore
-import CmuxAuthRuntime
-import CmuxFeedback
-import CmuxBrowser
-import CmuxControlSocket
-import CmuxFoundation
-import CmuxPanes
-import CmuxRemoteDaemon
-import CmuxRemoteWorkspace
-import CmuxSurfaceCatalogModel
-import CmuxTerminal
-import CmuxTerminalSharing
-import CmuxTerminalSizing
-import CmuxSettings
-import CmuxSwiftRenderUI
+import HmuxRemoteSession
+import HmuxCore
+import HmuxAuthRuntime
+import HmuxFeedback
+import HmuxBrowser
+import HmuxControlSocket
+import HmuxFoundation
+import HmuxPanes
+import HmuxRemoteDaemon
+import HmuxRemoteWorkspace
+import HmuxSurfaceCatalogModel
+import HmuxTerminal
+import HmuxTerminalSharing
+import HmuxTerminalSizing
+import HmuxSettings
+import HmuxSwiftRenderUI
 import Carbon.HIToolbox
-import CMUXMobileCore
-import CMUXAgentLaunch
-import CmuxAgentChat
+import HMUXMobileCore
+import HMUXAgentLaunch
+import HmuxAgentChat
 import Foundation
 import os
 import Bonsplit
 import WebKit
-import CmuxSidebar
-import CmuxWorkspaces
-import CmuxNotifications
-import CmuxSimulator
-private let mobileReconnectDebugLog = Logger(subsystem: "dev.cmux", category: "mobile-reconnect-debug")
+import HmuxSidebar
+import HmuxWorkspaces
+import HmuxNotifications
+import HmuxSimulator
+private let mobileReconnectDebugLog = Logger(subsystem: "dev.hmux", category: "mobile-reconnect-debug")
 extension Notification.Name {
-    static let socketListenerDidStart = Notification.Name("cmux.socketListenerDidStart")
-    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("cmux.terminalSurfaceHostedViewDidMoveToWindow")
-    static let mainWindowContextsDidChange = Notification.Name("cmux.mainWindowContextsDidChange")
-    static let browserDownloadEventDidArrive = Notification.Name("cmux.browserDownloadEventDidArrive")
+    static let socketListenerDidStart = Notification.Name("hmux.socketListenerDidStart")
+    static let terminalSurfaceHostedViewDidMoveToWindow = Notification.Name("hmux.terminalSurfaceHostedViewDidMoveToWindow")
+    static let mainWindowContextsDidChange = Notification.Name("hmux.mainWindowContextsDidChange")
+    static let browserDownloadEventDidArrive = Notification.Name("hmux.browserDownloadEventDidArrive")
     /// Posted on the main thread by a browser panel when its main frame commits a new document.
-    static let browserMainFrameDidCommit = Notification.Name("cmux.browserMainFrameDidCommit")
-    static let reactGrabDidCopySelection = Notification.Name("cmux.reactGrabDidCopySelection")
-    static let workstreamEventReceived = Notification.Name("cmux.workstreamEventReceived")
+    static let browserMainFrameDidCommit = Notification.Name("hmux.browserMainFrameDidCommit")
+    static let reactGrabDidCopySelection = Notification.Name("hmux.reactGrabDidCopySelection")
+    static let workstreamEventReceived = Notification.Name("hmux.workstreamEventReceived")
 }
 
 struct CodeRouterHandoffSessionBinding: Sendable, Equatable {
@@ -57,7 +57,7 @@ private struct SocketLineProcessingResult: Sendable {
 }
 // Agent notification gating types (AgentTurnCompleteMode / AgentNotificationMeta /
 // agentNotificationShouldDeliver) live in AgentNotificationGate.swift;
-// AgentNotifyCategory lives in the CmuxSettings package.
+// AgentNotifyCategory lives in the HmuxSettings package.
 #if DEBUG
 /// Accumulated worker→main `v2MainSync` hop time for the socket command
 /// currently executing on a worker thread. Confined to one thread: it lives in
@@ -81,7 +81,7 @@ private struct RemotePTYSocketTarget {
 }
 nonisolated func remotePTYSessionListErrorIsUnsupportedDaemon(_ error: Error) -> Bool {
     let nsError = error as NSError
-    guard nsError.domain == "cmux.remote.daemon.rpc", nsError.code == 14 else {
+    guard nsError.domain == "hmux.remote.daemon.rpc", nsError.code == 14 else {
         return false
     }
     return error.localizedDescription
@@ -97,7 +97,7 @@ nonisolated private func v2RemotePTYUserFacingErrorMessage(_ message: String) ->
     if lowered.contains("missing required capability") ||
         lowered.contains("pty.session") ||
         lowered.contains("method_not_found") {
-        return "remote daemon does not support persistent SSH PTY sessions; reconnect the remote workspace to update cmux"
+        return "remote daemon does not support persistent SSH PTY sessions; reconnect the remote workspace to update hmux"
     }
     if lowered.contains("pty_session_not_found") ||
         (lowered.contains("persistent ssh pty session") && lowered.contains("not running")) ||
@@ -203,8 +203,8 @@ class TerminalController {
     private var simulatorMutationRecoveryTask: Task<Void, Never>?
     /// Process-wide native SSH master owner and per-host reconnect coordinator.
     nonisolated let nativeSSHConnectionBroker: NativeSSHConnectionBroker
-    // Stateless Sendable structs from CmuxControlSocket; injected at construction.
-    // `transport` is internal so sibling-file extensions (CmuxEventStream) can write through it.
+    // Stateless Sendable structs from HmuxControlSocket; injected at construction.
+    // `transport` is internal so sibling-file extensions (HmuxEventStream) can write through it.
     nonisolated let transport: SocketTransport
     // The package-owned listener: path/bind/lock lifecycle, accept source,
     // backoff/rearm recovery, and the generation-counted state machine.
@@ -244,13 +244,13 @@ class TerminalController {
     // do not downgrade its locking on the assumption that all callers are
     // main-isolated.
     let socketFastPathState = SocketFastPathState()
-    // Stateless sidebar-metadata/command argument parser (CmuxSidebar).
+    // Stateless sidebar-metadata/command argument parser (HmuxSidebar).
     // Pure transforms over the raw arg string; holds no state and reaches no
     // app singletons, so the `report_*`/sidebar-mutation handlers forward to it.
     private nonisolated let sidebarMetadataArgumentParser = SidebarMetadataArgumentParser()
     private nonisolated let myPid = getpid()
-    private nonisolated static let socketCommandFocusAllowanceStackKey = "cmux.socketCommandFocusAllowanceStack"
-    private nonisolated static let socketCommandKeyStackKey = "cmux.socketCommandKeyStack"
+    private nonisolated static let socketCommandFocusAllowanceStackKey = "hmux.socketCommandFocusAllowanceStack"
+    private nonisolated static let socketCommandKeyStackKey = "hmux.socketCommandKeyStack"
     /// Signposter for the worker→main `v2MainSync` hop. Intervals are named
     /// "main-hop" and carry the active socket command key plus queue-wait and
     /// body durations, so Instruments can attribute main-thread occupancy per
@@ -264,7 +264,7 @@ class TerminalController {
     /// tool such as Instruments records signposts, so
     /// `socketMainHopSignpostingActive` genuinely gates all per-hop work.
     private nonisolated static let socketMainHopSignposter = OSSignposter(
-        subsystem: "com.cmux.socket",
+        subsystem: "com.hmux.socket",
         category: .dynamicTracing
     )
     /// True while a tool (e.g. Instruments' os_signpost instrument) is
@@ -309,7 +309,7 @@ class TerminalController {
     var localSizingControllersBySurfaceID: [UUID: LocalTerminalSharingController] = [:]
     /// Phones someone disconnected from a Cloud terminal, by surface then client id.
     var cloudDetachedPhonesBySurfaceID: [UUID: [String: TerminalSharingDetachment]] = [:]
-    /// Cloud mirrors that relay phones to a cmux-tui host, by surface id.
+    /// Cloud mirrors that relay phones to a hmux-tui host, by surface id.
     var cloudSizingRelaysBySurfaceID: [UUID: CloudSizingRelayReference] = [:]
     /// The single owner of shared-terminal size state and actions.
     let terminalSharing = TerminalSharingStore()
@@ -317,7 +317,7 @@ class TerminalController {
     let terminalSizePanelPresenter = TerminalSizePanelPresenter()
     private var mobileViewportGovernorFlushTasksBySurfaceID: [UUID: Task<Void, Never>] = [:]
 #if DEBUG
-    private nonisolated static let socketCommandDebugLogEnvironmentKey = "CMUX_DEBUG_SOCKET_COMMAND_LOG"
+    private nonisolated static let socketCommandDebugLogEnvironmentKey = "HMUX_DEBUG_SOCKET_COMMAND_LOG"
     private nonisolated static let socketCommandSlowThresholdMs: Double = 500
 #endif
     // The terminal-input message/error statics are nonisolated: pure,
@@ -343,7 +343,7 @@ class TerminalController {
     }
     /// The command that shows, and so wakes, a hibernated terminal.
     nonisolated static func terminalWakeCommand(workspaceID: UUID, surfaceID: UUID) -> String {
-        "cmux focus-panel --workspace \(workspaceID.uuidString) --panel \(surfaceID.uuidString)"
+        "hmux focus-panel --workspace \(workspaceID.uuidString) --panel \(surfaceID.uuidString)"
     }
 
     /// Explains why a terminal has no running runtime and how to get one.
@@ -357,19 +357,19 @@ class TerminalController {
                 return String.localizedStringWithFormat(
                     String(
                         localized: "socket.terminal.notRunning.hibernated",
-                        defaultValue: "The terminal is hibernated: cmux suspended its idle agent to save memory. Wake it by showing it (this brings its window to the front), then retry: %@"
+                        defaultValue: "The terminal is hibernated: hmux suspended its idle agent to save memory. Wake it by showing it (this brings its window to the front), then retry: %@"
                     ),
                     wakeCommand
                 )
             }
             return String(
                 localized: "socket.terminal.notRunning.hibernatedNoCommand",
-                defaultValue: "The terminal is hibernated: cmux suspended its idle agent to save memory. Show the terminal in cmux to wake it, then retry."
+                defaultValue: "The terminal is hibernated: hmux suspended its idle agent to save memory. Show the terminal in hmux to wake it, then retry."
             )
         case .awaitingRestore:
             return String(
                 localized: "socket.terminal.notRunning.awaitingRestore",
-                defaultValue: "cmux is still restoring the terminal after it reopened and is checking which agent session to resume. Retry in a few seconds."
+                defaultValue: "hmux is still restoring the terminal after it reopened and is checking which agent session to resume. Retry in a few seconds."
             )
         case .starting:
             return String(
@@ -450,7 +450,7 @@ class TerminalController {
         id: Any?,
         params: [String: Any]
     ) -> String? {
-        guard CmuxAutomationInvocationContext.focusAllowed == false,
+        guard HmuxAutomationInvocationContext.focusAllowed == false,
               commandHasFocusIntent(commandKey: method, isV2: true, params: params) else {
             return nil
         }
@@ -465,7 +465,7 @@ class TerminalController {
         )
     }
 
-    /// The main-actor RPC dispatch coordinator (CmuxControlSocket). Owns the
+    /// The main-actor RPC dispatch coordinator (HmuxControlSocket). Owns the
     /// `kind:N` handle registry and the moved command domains (window so far,
     /// growing per stage-3c sub-stage); this controller is its interim
     /// composition owner and ``ControlCommandContext`` conformer. Constructed in
@@ -475,8 +475,8 @@ class TerminalController {
 
     private final class V2BrowserUndefinedSentinel: Sendable {}
 
-    private nonisolated static let v2BrowserEvalEnvelopeTypeKey = "__cmux_t"
-    private nonisolated static let v2BrowserEvalEnvelopeValueKey = "__cmux_v"
+    private nonisolated static let v2BrowserEvalEnvelopeTypeKey = "__hmux_t"
+    private nonisolated static let v2BrowserEvalEnvelopeValueKey = "__hmux_v"
     private nonisolated static let v2BrowserEvalEnvelopeTypeUndefined = "undefined"
     private nonisolated static let v2BrowserEvalEnvelopeTypeValue = "value"
 
@@ -486,7 +486,7 @@ class TerminalController {
     private var v2BrowserUnsupportedNetworkRequestsBySurface: [UUID: [[String: Any]]] = [:]
     private nonisolated let v2BrowserUndefinedSentinel = V2BrowserUndefinedSentinel()
     /// Stateless browser-control logic (JS builders, value normalization,
-    /// diagnostics, failure classification) extracted to `CmuxBrowser`.
+    /// diagnostics, failure classification) extracted to `HmuxBrowser`.
     /// The per-surface mutable state and WebKit evaluation seam stay here.
     private nonisolated let v2BrowserControl = BrowserControlService(
         evalEnvelope: BrowserEvalEnvelope(
@@ -532,8 +532,8 @@ class TerminalController {
         weak var controller: TerminalController?
     }
 
-    /// Queues a session hook the app observed for a remote agent (the cmux-tui agent
-    /// roster of a `cmux ssh` machine) through the same relay-backed delivery
+    /// Queues a session hook the app observed for a remote agent (the hmux-tui agent
+    /// roster of a `hmux ssh` machine) through the same relay-backed delivery
     /// lane as `agent.hook.enqueue`, routed to the local pane showing it.
     /// - Returns: `false` when the socket is not listening, the event is
     ///   invalid for queued delivery, or the queue is full.
@@ -603,10 +603,10 @@ class TerminalController {
         let socketPathMarkerStore = SocketPathMarkerStore(
             bundleIdentifier: socketMarkerBundleIdentifier,
             environment: socketMarkerEnvironment,
-            stateDirectory: CmuxStateDirectory.url(
+            stateDirectory: HmuxStateDirectory.url(
                 homeDirectory: socketMarkerFileManager.homeDirectoryForCurrentUser
             ),
-            legacyDirectory: CmuxStateDirectory.legacyApplicationSupportURL(
+            legacyDirectory: HmuxStateDirectory.legacyApplicationSupportURL(
                 fileManager: socketMarkerFileManager
             ),
             tmpMarkerPath: socketMarkerVariant.tmpPath,
@@ -641,12 +641,12 @@ class TerminalController {
         )[0]
         let simulatorDurableRecoveryDirectory = simulatorApplicationSupportDirectory
             .appendingPathComponent(
-                "com.cmux.simulator-ownership",
+                "com.hmux.simulator-ownership",
                 isDirectory: true
             )
         let simulatorOwnershipDirectory = simulatorOwnershipFileManager.temporaryDirectory
             .appendingPathComponent(
-                "com.cmux.simulator-ownership",
+                "com.hmux.simulator-ownership",
                 isDirectory: true
             )
         self.simulatorLocationOwnershipScope = SimulatorLocationOwnershipScope(
@@ -798,7 +798,7 @@ class TerminalController {
         // calls, but their default is deliberately focus-neutral. A task-local
         // override lets an action opt into focus without weakening the normal
         // command policy for user and external CLI traffic.
-        if let automationOverride = CmuxAutomationInvocationContext.focusAllowed {
+        if let automationOverride = HmuxAutomationInvocationContext.focusAllowed {
             return automationOverride
         }
         if isV2 {
@@ -1352,7 +1352,7 @@ class TerminalController {
     /// main thread and keeps the connection thread (not the main queue) as
     /// the place the command waits. The hop keeps each reply synchronous with
     /// its effect — the deliberately-synchronous first relay
-    /// `surface.report_tty` (cmux-zsh-integration.zsh `_cmux_report_tty_once`)
+    /// `surface.report_tty` (hmux-zsh-integration.zsh `_hmux_report_tty_once`)
     /// must see the TTY registration applied before its reply so subsequent
     /// `surface.ports_kick` scans resolve the surface.
     nonisolated static let socketWorkerCoordinatorHopMethods: Set<String> = [
@@ -1753,7 +1753,7 @@ class TerminalController {
                           }),
                           CodeRouterHandoffClient.isValidLeaseSyntax(lease.lease),
                           lease.expiresAt.utf8.count <= 128,
-                          let expiry = CmuxRFC3339DateParser().date(from: lease.expiresAt),
+                          let expiry = HmuxRFC3339DateParser().date(from: lease.expiresAt),
                           expiry > Date() else {
                         return .err(
                             code: "coderouter_handoff_invalid_response",
@@ -1834,7 +1834,7 @@ class TerminalController {
                 v2FeedPush(
                     params: request.params,
                     requiresIngestionAcknowledgment: request.id != nil,
-                    automationOrigin: CmuxAutomationInvocationContext.eventOrigin
+                    automationOrigin: HmuxAutomationInvocationContext.eventOrigin
                 )
             )
         case "feed.permission.reply":
@@ -2188,7 +2188,7 @@ class TerminalController {
                     let candidates = (NSApp.keyWindow?.contentView).map { WindowHintTargets.collect(in: $0).count }
                     return [
                         "active": false,
-                        "enabled": CmuxFeatureFlags.shared.isWindowHintsEnabled,
+                        "enabled": HmuxFeatureFlags.shared.isWindowHintsEnabled,
                         "candidates": candidates ?? -1,
                     ]
                 }
@@ -2559,7 +2559,7 @@ class TerminalController {
             }
             // Recheck after admission so a policy refresh cannot cross into execution.
             guard socketAuthorizationIsCurrent(authorizationGeneration, passwordAuthorization: &passwordAuthorization) else { _ = await writer.writeAll(Data((Self.socketClientAccessDeniedResponse + "\n").utf8)); return }
-            // Only a process in cmux's own descendant tree may attach the
+            // Only a process in hmux's own descendant tree may attach the
             // internal automation envelope. Same-UID clients are authorized
             // for ordinary automation RPCs, but cannot forge a rule chain.
             let parsedCommandEnvelope = Self.automationCommandEnvelope(from: commandAuthorization.command)
@@ -2648,7 +2648,7 @@ class TerminalController {
                 )
                 return
             }
-            let result = await CmuxAutomationInvocationContext.$eventOrigin.withValue(commandOrigin) {
+            let result = await HmuxAutomationInvocationContext.$eventOrigin.withValue(commandOrigin) {
                 await SocketCommandTaskPolicy.$peerProcessID.withValue(pid) {
                     await SocketCommandTaskPolicy.$peerHasSameUID.withValue(peerHasSameUID) {
                         await processSocketLineAsync(
@@ -2662,7 +2662,7 @@ class TerminalController {
             passwordAuthorization = result.passwordAuthorization
             if let response = result.response {
                 guard await writer.writeAll(Data((response + "\n").utf8)) else { return }
-                CmuxAutomationInvocationContext.$eventOrigin.withValue(commandOrigin) {
+                HmuxAutomationInvocationContext.$eventOrigin.withValue(commandOrigin) {
                     publishSocketEvents(command: trimmed, response: response)
                 }
             }
@@ -2961,10 +2961,10 @@ class TerminalController {
     }
 
     private nonisolated static func debugLogSocketCommand(_ message: @autoclosure () -> String) {
-        cmuxDebugLog(message())
+        hmuxDebugLog(message())
     }
 
-    private nonisolated static let socketCommandMainHopAccumulatorKey = "cmux.socketCommandMainHopAccumulator"
+    private nonisolated static let socketCommandMainHopAccumulatorKey = "hmux.socketCommandMainHopAccumulator"
 
     /// Installs a fresh per-command main-hop accumulator on the current
     /// (socket worker) thread. Called once per socket line so the totals in
@@ -3015,7 +3015,7 @@ class TerminalController {
                 return errorResponse
             }
             let request = relayAuthorization.request
-            let automationOrigin = CmuxAutomationInvocationContext.eventOrigin
+            let automationOrigin = HmuxAutomationInvocationContext.eventOrigin
             if let focusError = Self.focusSuppressionResponse(
                 method: request.method,
                 id: request.id.map(\.foundationObject),
@@ -3036,7 +3036,7 @@ class TerminalController {
                         message: "\(request.method) must run off the main thread"
                     )
                 }
-                return CmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
+                return HmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
                     v2BrowserKeyboardNativeResponseSync(
                         request: request,
                         event: event,
@@ -3052,11 +3052,11 @@ class TerminalController {
                 )
             }
             if policy.runsOnSocketWorker {
-                return CmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
+                return HmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
                     socketWorkerV2Response(handling: request, codeRouterTeamID: codeRouterTeamID)
                 }
             }
-            return CmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
+            return HmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
                 processParsedV2Command(request)
             }
         }
@@ -3112,7 +3112,7 @@ class TerminalController {
 
         let policyParams = cmd == "right_sidebar" ? ["args": args] : [:]
         return withSocketCommandPolicy(commandKey: cmd, isV2: false, params: policyParams) {
-            // V1 domains migrated into CmuxControlSocket's ControlCommandCoordinator
+            // V1 domains migrated into HmuxControlSocket's ControlCommandCoordinator
             // (the sidebar metadata/pane/surface commands and the browser panel
             // commands) answer here; everything else falls through to the legacy
             // switch below.
@@ -3326,8 +3326,8 @@ class TerminalController {
         case .failure(let parseError):
             return Self.v2Encoder.response(for: parseError)
         case .success(let request):
-            return CmuxAutomationInvocationContext.$eventOrigin.withValue(
-                CmuxAutomationInvocationContext.eventOrigin
+            return HmuxAutomationInvocationContext.$eventOrigin.withValue(
+                HmuxAutomationInvocationContext.eventOrigin
             ) {
                 processParsedV2Command(request)
             }
@@ -3421,7 +3421,7 @@ class TerminalController {
     ) -> V2MainHopOutcome {
         v2RefreshKnownRefs()
 
-        // Domains migrated into CmuxControlSocket's ControlCommandCoordinator
+        // Domains migrated into HmuxControlSocket's ControlCommandCoordinator
         // answer here, on the main actor, through the same encoder/id as the
         // legacy switch (the worker encodes the typed result after the hop);
         // everything else falls through to the legacy switch below.
@@ -3546,7 +3546,7 @@ class TerminalController {
         case "debug.cloudtree.spacing":
             // Explicit window presentation needs AppKit; the socket awaits the main-actor lane.
             AppDelegate.shared?.debugWindowsCoordinator.cloudSidebarDebugLabController.show()
-            return v2Ok(id: id, result: ["window": "cmux.cloudSidebarDebugLab"])
+            return v2Ok(id: id, result: ["window": "hmux.cloudSidebarDebugLab"])
         case "debug.notification.status":
             return v2Ok(id: id, result: notificationDebugStatus())
         case "debug.notification.mode":
@@ -3693,7 +3693,7 @@ class TerminalController {
         guard let error else {
             return String(
                 localized: "cli.coderouter.handoff.notAuthenticated",
-                defaultValue: "CodeRouter handoff requires a signed-in cmux account. Run `cmux auth login`, then retry.",
+                defaultValue: "CodeRouter handoff requires a signed-in hmux account. Run `hmux auth login`, then retry.",
                 bundle: .main
             )
         }
@@ -3701,31 +3701,31 @@ class TerminalController {
         case .notSignedIn:
             return String(
                 localized: "cli.coderouter.handoff.notAuthenticated",
-                defaultValue: "CodeRouter handoff requires a signed-in cmux account. Run `cmux auth login`, then retry.",
+                defaultValue: "CodeRouter handoff requires a signed-in hmux account. Run `hmux auth login`, then retry.",
                 bundle: .main
             )
         case .sessionChanged:
             return String(
                 localized: "cli.coderouter.handoff.sessionChanged",
-                defaultValue: "The cmux account or team changed during the handoff. Try again.",
+                defaultValue: "The hmux account or team changed during the handoff. Try again.",
                 bundle: .main
             )
         case .expiredLease:
             return String(
                 localized: "cli.coderouter.handoff.expired",
-                defaultValue: "The cmux handoff lease expired. Try again.",
+                defaultValue: "The hmux handoff lease expired. Try again.",
                 bundle: .main
             )
         case .sessionUnavailable, .backendUnreachable:
             return String(
                 localized: "cli.coderouter.handoff.unavailable",
-                defaultValue: "The cmux service is not available. Check your connection and try again.",
+                defaultValue: "The hmux service is not available. Check your connection and try again.",
                 bundle: .main
             )
         case .invalidTeam, .invalidResponse, .redirectedResponse, .httpStatus:
             return String(
                 localized: "cli.coderouter.handoff.failed",
-                defaultValue: "The cmux service rejected the CodeRouter handoff. Try again.",
+                defaultValue: "The hmux service rejected the CodeRouter handoff. Try again.",
                 bundle: .main
             )
         }
@@ -3809,7 +3809,7 @@ class TerminalController {
         result["app_bundle_path"] = Bundle.main.bundleURL.path
         // Lets a CLI from another build explain an unknown method
         // (`CLIVersionSkew`): product, version, and build of this process.
-        result["app"] = "cmux"
+        result["app"] = "hmux"
         if let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
             result["version"] = version
         }
@@ -3821,7 +3821,7 @@ class TerminalController {
         }
         if let cliPath = Bundle.main.resourceURL?
             .appendingPathComponent("bin", isDirectory: true)
-            .appendingPathComponent("cmux", isDirectory: false)
+            .appendingPathComponent("hmux", isDirectory: false)
             .path {
             result["app_cli_path"] = cliPath
         }
@@ -3863,7 +3863,7 @@ class TerminalController {
                 nil,
                 .err(
                     code: "invalid_params",
-                    message: "Invalid window selector. Use --window <id|ref|index> to target one window, or run `cmux list-windows` to see available windows and retry.",
+                    message: "Invalid window selector. Use --window <id|ref|index> to target one window, or run `hmux list-windows` to see available windows and retry.",
                     data: v2WindowSelectorDetails(params: params)
                 )
             )
@@ -3873,7 +3873,7 @@ class TerminalController {
                 nil,
                 .err(
                     code: "invalid_params",
-                    message: "Choose either --window <id|ref|index> or --all-windows, not both. Run `cmux list-windows` to see available windows and retry.",
+                    message: "Choose either --window <id|ref|index> or --all-windows, not both. Run `hmux list-windows` to see available windows and retry.",
                     data: v2WindowSelectorDetails(params: params)
                 )
             )
@@ -3905,7 +3905,7 @@ class TerminalController {
     private func v2WindowNotFoundResult(params: [String: Any], windowId: UUID) -> V2CallResult {
         .err(
             code: "not_found",
-            message: "Window not found. Run `cmux list-windows` to see available windows, then retry with --window <id|ref|index>.",
+            message: "Window not found. Run `hmux list-windows` to see available windows, then retry with --window <id|ref|index>.",
             data: v2WindowSelectorDetails(params: params) ?? ["window_id": windowId.uuidString]
         )
     }
@@ -4103,7 +4103,7 @@ class TerminalController {
             return item
         }
 
-        let webContentPID = CmuxWebContentProcessIdentifier.pid(for: browserPanel.webView)
+        let webContentPID = HmuxWebContentProcessIdentifier.pid(for: browserPanel.webView)
         let url = browserPanel.currentURL?.absoluteString ?? ""
         item["url"] = url
         item["browser_web_content_pid"] = v2OrNull(webContentPID)
@@ -4431,18 +4431,18 @@ class TerminalController {
                 // can then return a stable non-zero auth-required failure
                 // instead of presenting a generic backend error. A server 401
                 // means the app still holds a session the service rejects, so
-                // `cmux auth login` alone would short-circuit on "already
+                // `hmux auth login` alone would short-circuit on "already
                 // signed in" — the fix is sign out, then sign in.
                 let message: String
                 if case .httpStatus = vmError {
                     message = String(
                         localized: "socket.cloudVM.sessionRejected",
-                        defaultValue: "The cmux Cloud service rejected this session. Run `cmux auth logout`, then `cmux auth login`, and retry."
+                        defaultValue: "The hmux Cloud service rejected this session. Run `hmux auth logout`, then `hmux auth login`, and retry."
                     )
                 } else {
                     message = String(
                         localized: "socket.cloudVM.authRequired",
-                        defaultValue: "Cloud VM access requires sign-in. Run `cmux auth login`, then retry."
+                        defaultValue: "Cloud VM access requires sign-in. Run `hmux auth login`, then retry."
                     )
                 }
                 return v2Error(
@@ -4454,14 +4454,14 @@ class TerminalController {
             if let vmError = error as? VMClientError,
                let machineID = transportUnsupportedMachineID,
                Self.isCloudVMTransportUnsupportedError(vmError) {
-                // `vm.cmux_remote_info` is the shared attach path for `vm shell`,
+                // `vm.hmux_remote_info` is the shared attach path for `vm shell`,
                 // `vm open`, `vm tui`, and the sidebar, so the message names the
                 // machine and the missing transport rather than guessing the
                 // caller, and points at commands that do not need that transport.
                 let alternative = String(
                     format: String(
                         localized: "socket.cloudVM.transportUnsupported.useExec",
-                        defaultValue: "Use `cmux vm exec %1$@ -- <command>`; `cmux vm ssh %1$@` works where the provider offers SSH."
+                        defaultValue: "Use `hmux vm exec %1$@ -- <command>`; `hmux vm ssh %1$@` works where the provider offers SSH."
                     ),
                     machineID,
                     machineID
@@ -4469,10 +4469,10 @@ class TerminalController {
                 let message = String(
                     format: String(
                         localized: "socket.cloudVM.transportUnsupported",
-                        defaultValue: "%1$@ offers no `%2$@` transport (its provider has no cmux-tui daemon route), so cmux cannot attach a terminal to it. %3$@"
+                        defaultValue: "%1$@ offers no `%2$@` transport (its provider has no hmux-tui daemon route), so hmux cannot attach a terminal to it. %3$@"
                     ),
                     machineID,
-                    "cmux-remote",
+                    "hmux-remote",
                     alternative
                 )
                 return v2Error(
@@ -4524,7 +4524,7 @@ class TerminalController {
     private nonisolated static func cloudVMSafeErrorMessage(_ error: Error) -> String {
         let fallback = String(
             localized: "socket.cloudVM.requestFailed",
-            defaultValue: "The Cloud VM request failed. Retry, or check the machine's status with `cmux vm ls`."
+            defaultValue: "The Cloud VM request failed. Retry, or check the machine's status with `hmux vm ls`."
         )
         if let catalogError = error as? SurfaceCatalogError {
             switch catalogError {
@@ -5087,7 +5087,7 @@ class TerminalController {
     /// Resolves the workspace by `workspace_id` / surface / pane, falling back to the
     /// selected workspace only when no explicit target is supplied, and returns the
     /// raw configured set. An explicit-but-unresolvable target errors. Secret masking is a
-    /// CLI presentation concern (`cmux workspace env --mask`): the local control
+    /// CLI presentation concern (`hmux workspace env --mask`): the local control
     /// socket already exposes the surrounding workspace state, so values are returned
     /// verbatim and the env set is deliberately kept out of `workspace.list` so a
     /// plain listing never echoes secrets.
@@ -5912,7 +5912,7 @@ class TerminalController {
                     return (match.element.windowId, match.offset)
                 }
                 guard let raw = window.identifier?.rawValue else { return (nil, nil) }
-                let prefix = "cmux.main."
+                let prefix = "hmux.main."
                 guard raw.hasPrefix(prefix),
                       let parsedWindowId = UUID(uuidString: String(raw.dropFirst(prefix.count))) else {
                     return (nil, nil)
@@ -6193,7 +6193,7 @@ class TerminalController {
         guard surface.liveSurfaceForGhosttyAccess(reason: "socket.readTerminalText.start") == nil else {
             return false
         }
-        // A restore awaiting admission starts by itself once cmux knows which
+        // A restore awaiting admission starts by itself once hmux knows which
         // agent session to resume, so wait for it. Hibernated and closing
         // terminals never start without outside action; report them now.
         if surface.runtimeUnavailableReason == .awaitingRestore {
@@ -6519,7 +6519,7 @@ class TerminalController {
                maxBytes: SessionPersistencePolicy.maxScrollbackCharactersPerTerminal * 4
            ) {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "session.scrollbackCapture bounded=1 rows=\(lineLimit)"
             )
 #endif
@@ -6537,7 +6537,7 @@ class TerminalController {
             return ok
         }
         #if DEBUG
-        cmuxDebugLog("mobile.vtExport action=\(bindingAction) succeeded=\(actionSucceeded) hasPath=\(exportedPath != nil)")
+        hmuxDebugLog("mobile.vtExport action=\(bindingAction) succeeded=\(actionSucceeded) hasPath=\(exportedPath != nil)")
         #endif
         guard let exportedPath = Self.normalizedExportedScreenPath(exportedPath) else {
             return nil
@@ -6705,7 +6705,7 @@ class TerminalController {
     private nonisolated func v2FeedPush(
         params: [String: Any],
         requiresIngestionAcknowledgment: Bool,
-        automationOrigin: CmuxAutomationEventOrigin? = nil
+        automationOrigin: HmuxAutomationEventOrigin? = nil
     ) -> V2CallResult {
         let waitTimeout: TimeInterval
         if let rawTimeout = params["wait_timeout_seconds"] {
@@ -6990,12 +6990,12 @@ class TerminalController {
         case .drivenBySession:
             message = String(
                 localized: "cli.browser.error.replSessionTab",
-                defaultValue: "This tab belongs to a browser REPL session, which is driving it, so other clients cannot read or drive it. Use `cmux browser repl` to drive it."
+                defaultValue: "This tab belongs to a browser REPL session, which is driving it, so other clients cannot read or drive it. Use `hmux browser repl` to drive it."
             )
         case .holdsTypedSecrets:
             message = String(
                 localized: "cli.browser.error.replSecretTab",
-                defaultValue: "A browser REPL session typed a secret into this tab, so other clients cannot read or drive it until it closes. Use `cmux browser repl` to drive it."
+                defaultValue: "A browser REPL session typed a secret into this tab, so other clients cannot read or drive it until it closes. Use `hmux browser repl` to drive it."
             )
         }
         return message
@@ -7198,7 +7198,7 @@ class TerminalController {
 
         guard let outcome else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.jsRun.timeout preferAsync=\(preferAsync) " +
                 "world=\(world == .page ? "page" : "isolated") timeout=\(timeoutSeconds)"
             )
@@ -7221,7 +7221,7 @@ class TerminalController {
         let timeout = Double(timeoutMs) / 1000.0
         let waitScript = """
         (() => {
-          const __cmuxEvaluate = () => {
+          const __hmuxEvaluate = () => {
             try {
               return !!(\(conditionScript));
             } catch (_) {
@@ -7229,7 +7229,7 @@ class TerminalController {
             }
           };
 
-          if (__cmuxEvaluate()) {
+          if (__hmuxEvaluate()) {
             return true;
           }
 
@@ -7247,7 +7247,7 @@ class TerminalController {
               resolve(value);
             };
             const recheck = () => {
-              if (__cmuxEvaluate()) {
+              if (__hmuxEvaluate()) {
                 finish(true);
               }
             };
@@ -7376,7 +7376,7 @@ class TerminalController {
             readinessTask?.cancel()
         }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "browser.jsCommit surface=\(surfaceId.uuidString.prefix(5)) " +
             "outcome=\(String(describing: outcome)) url=\(v2MainSync { webView.url?.absoluteString ?? "nil" })"
         )
@@ -7579,7 +7579,7 @@ class TerminalController {
             )
         }
         guard let url else {
-            return .err(code: "browser_disabled", message: "cmux browser is disabled", data: nil)
+            return .err(code: "browser_disabled", message: "hmux browser is disabled", data: nil)
         }
 
         var result: V2CallResult = .err(
@@ -7613,7 +7613,7 @@ class TerminalController {
         let policy = BrowserURLAllowlistPolicy(defaults: .standard)
         // Only local file documents use the trusted seam here. Other
         // user-supplied schemes (including data/blob/javascript) stay on the
-        // ordinary allowlist path; cmux-owned document schemes already pass it.
+        // ordinary allowlist path; hmux-owned document schemes already pass it.
         let allowsURL = url.isFileURL
             ? policy.allowsTrustedInternalURL(url)
             : policy.allows(url)
@@ -7666,7 +7666,7 @@ class TerminalController {
     }
 
     // Internal (not private): `CloudTreeService.openDesktop/openPort` open the same browser
-    // split the socket verb does, so the sidebar, `cmux vm desktop`, and `cmux vm open` share
+    // split the socket verb does, so the sidebar, `hmux vm desktop`, and `hmux vm open` share
     // one path.
     func v2BrowserOpenSplit(
         params: [String: Any],
@@ -7692,7 +7692,7 @@ class TerminalController {
                 url = navigable
             } else if let parsed = URL(string: trimmedURLStr), parsed.scheme != nil {
                 // Preserve any real-scheme URL the navigable resolver rejects: about:blank,
-                // the trusted cmux-diff-viewer:// scheme, and external app/deep-link schemes
+                // the trusted hmux-diff-viewer:// scheme, and external app/deep-link schemes
                 // (mailto:, xcode://, ...). The downstream browser-disabled, external-open, and
                 // diff-viewer-registration paths act on the original URL; only scheme-less,
                 // non-navigable input should fall through to a search query.
@@ -7769,7 +7769,7 @@ class TerminalController {
                 )
             }
             if v2IsDiffViewerURL(url) {
-                return .err(code: "browser_disabled", message: "cmux browser is disabled", data: nil)
+                return .err(code: "browser_disabled", message: "hmux browser is disabled", data: nil)
             }
             return v2BrowserDisabledExternalOpenResult(rawURL: urlStr, url: url, tabManager: tabManager)
         }
@@ -8808,7 +8808,7 @@ class TerminalController {
                 data: [
                     "timeout_ms": timeoutMs,
                     "url": v2MainSync { webView.url?.absoluteString ?? "about:blank" },
-                    "hint": "Verify the page loaded with 'cmux browser <surface> get url' before waiting"
+                    "hint": "Verify the page loaded with 'hmux browser <surface> get url' before waiting"
                 ]
             )
         }
@@ -8823,7 +8823,7 @@ class TerminalController {
               if (!el) return { ok: false, error: 'not_found' };
               if (el.disabled) return { ok: false, error: 'disabled' };
               el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-              __cmuxClick(el);
+              __hmuxClick(el);
               return { ok: true };
             })()
             """
@@ -8839,10 +8839,10 @@ class TerminalController {
               if (!el) return { ok: false, error: 'not_found' };
               if (el.disabled) return { ok: false, error: 'disabled' };
               el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-              __cmuxClick(el);
-              __cmuxClick(el);
-              const c = __cmuxCenter(el);
-              __cmuxMouse(el, 'dblclick', c, 0, 2);
+              __hmuxClick(el);
+              __hmuxClick(el);
+              const c = __hmuxCenter(el);
+              __hmuxMouse(el, 'dblclick', c, 0, 2);
               return { ok: true };
             })()
             """
@@ -8857,7 +8857,7 @@ class TerminalController {
               const el = document.querySelector(\(selectorLiteral));
               if (!el) return { ok: false, error: 'not_found' };
               el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
-              __cmuxHover(el);
+              __hmuxHover(el);
               return { ok: true };
             })()
             """
@@ -8904,26 +8904,26 @@ class TerminalController {
     /// mouse sequence (not just `click`) or need legacy KeyboardEvent fields (keyCode/which/code).
     /// These helpers reproduce a real user gesture so React, Vue, Svelte, Angular, Solid, and
     /// vanilla handlers all fire. Define them once at the top of an injected snippet, then call
-    /// `__cmuxClick(el)`, `__cmuxHover(el)`, or `__cmuxSetChecked(el, desired)`.
+    /// `__hmuxClick(el)`, `__hmuxHover(el)`, or `__hmuxSetChecked(el, desired)`.
     private nonisolated static let browserInputHelpers = """
-    function __cmuxCenter(el){const r=el.getBoundingClientRect();return {x:Math.floor(r.left+Math.min(r.width,r.width/2)),y:Math.floor(r.top+Math.min(r.height,r.height/2))};}
-    function __cmuxPointer(el,type,c,buttons,bubbles){try{el.dispatchEvent(new PointerEvent(type,{bubbles:(bubbles===false?false:true),cancelable:true,composed:true,view:window,pointerId:1,pointerType:'mouse',isPrimary:true,button:0,buttons:buttons,clientX:c.x,clientY:c.y,screenX:c.x,screenY:c.y}));}catch(e){}}
-    function __cmuxMouse(el,type,c,buttons,detail,bubbles){el.dispatchEvent(new MouseEvent(type,{bubbles:(bubbles===false?false:true),cancelable:true,composed:true,view:window,button:0,buttons:buttons,detail:detail||0,clientX:c.x,clientY:c.y,screenX:c.x,screenY:c.y}));}
-    function __cmuxClick(el){const c=__cmuxCenter(el);
-      __cmuxPointer(el,'pointerover',c,0);__cmuxMouse(el,'mouseover',c,0);
-      __cmuxPointer(el,'pointerenter',c,0,false);__cmuxMouse(el,'mouseenter',c,0,0,false);
-      __cmuxPointer(el,'pointermove',c,0);__cmuxMouse(el,'mousemove',c,0);
-      __cmuxPointer(el,'pointerdown',c,1);__cmuxMouse(el,'mousedown',c,1,1);
+    function __hmuxCenter(el){const r=el.getBoundingClientRect();return {x:Math.floor(r.left+Math.min(r.width,r.width/2)),y:Math.floor(r.top+Math.min(r.height,r.height/2))};}
+    function __hmuxPointer(el,type,c,buttons,bubbles){try{el.dispatchEvent(new PointerEvent(type,{bubbles:(bubbles===false?false:true),cancelable:true,composed:true,view:window,pointerId:1,pointerType:'mouse',isPrimary:true,button:0,buttons:buttons,clientX:c.x,clientY:c.y,screenX:c.x,screenY:c.y}));}catch(e){}}
+    function __hmuxMouse(el,type,c,buttons,detail,bubbles){el.dispatchEvent(new MouseEvent(type,{bubbles:(bubbles===false?false:true),cancelable:true,composed:true,view:window,button:0,buttons:buttons,detail:detail||0,clientX:c.x,clientY:c.y,screenX:c.x,screenY:c.y}));}
+    function __hmuxClick(el){const c=__hmuxCenter(el);
+      __hmuxPointer(el,'pointerover',c,0);__hmuxMouse(el,'mouseover',c,0);
+      __hmuxPointer(el,'pointerenter',c,0,false);__hmuxMouse(el,'mouseenter',c,0,0,false);
+      __hmuxPointer(el,'pointermove',c,0);__hmuxMouse(el,'mousemove',c,0);
+      __hmuxPointer(el,'pointerdown',c,1);__hmuxMouse(el,'mousedown',c,1,1);
       if(typeof el.focus==='function'){try{el.focus({preventScroll:true});}catch(e){try{el.focus();}catch(e2){}}}
-      __cmuxPointer(el,'pointerup',c,0);__cmuxMouse(el,'mouseup',c,0,1);
-      if(typeof el.click==='function'){el.click();}else{__cmuxMouse(el,'click',c,0,1);}
+      __hmuxPointer(el,'pointerup',c,0);__hmuxMouse(el,'mouseup',c,0,1);
+      if(typeof el.click==='function'){el.click();}else{__hmuxMouse(el,'click',c,0,1);}
     }
-    function __cmuxHover(el){const c=__cmuxCenter(el);
-      __cmuxPointer(el,'pointerover',c,0);__cmuxMouse(el,'mouseover',c,0);
-      __cmuxPointer(el,'pointerenter',c,0,false);__cmuxMouse(el,'mouseenter',c,0,0,false);
-      __cmuxPointer(el,'pointermove',c,0);__cmuxMouse(el,'mousemove',c,0);
+    function __hmuxHover(el){const c=__hmuxCenter(el);
+      __hmuxPointer(el,'pointerover',c,0);__hmuxMouse(el,'mouseover',c,0);
+      __hmuxPointer(el,'pointerenter',c,0,false);__hmuxMouse(el,'mouseenter',c,0,0,false);
+      __hmuxPointer(el,'pointermove',c,0);__hmuxMouse(el,'mousemove',c,0);
     }
-    function __cmuxSetChecked(el,desired){
+    function __hmuxSetChecked(el,desired){
       // A click event runs the checkbox/radio activation behavior (it TOGGLES a checkbox / SELECTS a
       // radio) even when dispatched, and is also what React maps onChange to. So the correct way to
       // reach a target state is to click only when it differs; that fires input + change + (React)
@@ -8943,7 +8943,7 @@ class TerminalController {
         return;
       }
       if(typeof el.click==='function'){el.click();}
-      else {const c=__cmuxCenter(el); __cmuxMouse(el,'click',c,0,1);}
+      else {const c=__hmuxCenter(el); __hmuxMouse(el,'click',c,0,1);}
     }
     """
 
@@ -9147,7 +9147,7 @@ class TerminalController {
               if (el.disabled) return { ok: false, error: 'disabled' };
               el.scrollIntoView({ block: 'nearest', inline: 'nearest' });
               if (typeof el.focus === 'function') { try { el.focus({ preventScroll: true }); } catch (e) {} }
-              __cmuxSetChecked(el, \(checked ? "true" : "false"));
+              __hmuxSetChecked(el, \(checked ? "true" : "false"));
               if (el.checked !== \(checked ? "true" : "false")) return { ok: false, error: 'not_changed' };
               return { ok: true };
             })()
@@ -9316,7 +9316,7 @@ class TerminalController {
 
         // Best effort: keep screenshot data available even when temp-file writes fail.
         let screenshotsDirectory = FileManager.default.temporaryDirectory
-            .appendingPathComponent("cmux-browser-screenshots", isDirectory: true)
+            .appendingPathComponent("hmux-browser-screenshots", isDirectory: true)
         if (try? FileManager.default.createDirectory(at: screenshotsDirectory, withIntermediateDirectories: true)) != nil {
             bestEffortPruneTemporaryFiles(in: screenshotsDirectory)
             let timestampMs = Int(Date().timeIntervalSince1970 * 1000)
@@ -10847,7 +10847,7 @@ class TerminalController {
             semaphore.signal()
         }
 
-        let watcherQueue = DispatchQueue(label: "com.cmux.browser.download.wait.file")
+        let watcherQueue = DispatchQueue(label: "com.hmux.browser.download.wait.file")
         let source = DispatchSource.makeFileSystemObjectSource(
             fileDescriptor: fd,
             eventMask: [.write, .extend, .attrib, .link, .rename],
@@ -11197,8 +11197,8 @@ class TerminalController {
                 if all { return true }
                 if let name, cookie.name != name { return false }
                 if let value, cookie.value != value { return false }
-                if let url, !CmuxWebView.cookieMatchesURL(cookie, url: url) { return false }
-                if let domain, !CmuxWebView.cookieDomainMatchesFilter(cookie.domain, filter: domain) { return false }
+                if let url, !HmuxWebView.cookieMatchesURL(cookie, url: url) { return false }
+                if let domain, !HmuxWebView.cookieDomainMatchesFilter(cookie.domain, filter: domain) { return false }
                 if let path, cookie.path != path { return false }
                 if let expires,
                    cookie.expiresDate.map({ Int($0.timeIntervalSince1970) }) != expires {
@@ -11662,9 +11662,9 @@ class TerminalController {
             let clearLiteral = clear ? "true" : "false"
             let script = """
             (() => {
-              const items = Array.isArray(window.__cmuxConsoleLog) ? window.__cmuxConsoleLog.slice() : [];
+              const items = Array.isArray(window.__hmuxConsoleLog) ? window.__hmuxConsoleLog.slice() : [];
               if (\(clearLiteral)) {
-                window.__cmuxConsoleLog = [];
+                window.__hmuxConsoleLog = [];
               }
               return { ok: true, items };
             })()
@@ -11704,9 +11704,9 @@ class TerminalController {
             let clearLiteral = clear ? "true" : "false"
             let script = """
             (() => {
-              const items = Array.isArray(window.__cmuxErrorLog) ? window.__cmuxErrorLog.slice() : [];
+              const items = Array.isArray(window.__hmuxErrorLog) ? window.__hmuxErrorLog.slice() : [];
               if (\(clearLiteral)) {
-                window.__cmuxErrorLog = [];
+                window.__hmuxErrorLog = [];
               }
               return { ok: true, items };
             })()
@@ -12515,7 +12515,7 @@ class TerminalController {
           focus_pane <pane-id|index>      - Focus a pane
           focus_surface_by_panel <panel_id> - Focus surface by panel ID
           close_surface [id|idx]          - Close surface (collapse split)
-          reload_config                   - Reload Ghostty config, cmux settings, and refresh terminals
+          reload_config                   - Reload Ghostty config, hmux settings, and refresh terminals
           refresh_surfaces                - Force refresh all terminals
           surface_health [workspace]      - Check view health of all surfaces
 
@@ -13023,7 +13023,7 @@ class TerminalController {
         case "tabtransfer", "tab-transfer", "com.splittabbar.tabtransfer":
             return DragOverlayRoutingPolicy.bonsplitTabTransferType
         case "sidebarreorder", "sidebar-reorder", "sidebar_tab_reorder",
-            "com.cmux.sidebar-tab-reorder":
+            "com.hmux.sidebar-tab-reorder":
             return DragOverlayRoutingPolicy.sidebarTabReorderType
         default:
             // Allow explicit UTI strings for ad-hoc debug probes.
@@ -13050,7 +13050,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "hmux.main" || raw.hasPrefix("hmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }
@@ -13097,7 +13097,7 @@ class TerminalController {
                 ?? NSApp.keyWindow
                 ?? NSApp.windows.first(where: { win in
                     guard let raw = win.identifier?.rawValue else { return false }
-                    return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+                    return raw == "hmux.main" || raw.hasPrefix("hmux.main.")
                 }),
                   let contentView = window.contentView,
                   let themeFrame = contentView.superview else { return }
@@ -13865,7 +13865,7 @@ class TerminalController {
         ) else {
 #if DEBUG
             if let meta {
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "socket.notifyTargetAsync.gated category=\(meta.category.rawValue) pending=\(meta.pending) workspace=\(tabId.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8))"
                 )
             }
@@ -13873,7 +13873,7 @@ class TerminalController {
             return "OK"
         }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "socket.notifyTargetAsync.enqueue workspace=\(tabId.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8)) titleLen=\(title.count) subtitleLen=\(subtitle.count) bodyLen=\(body.count) coalesces=0"
         )
 #endif
@@ -14295,7 +14295,7 @@ class TerminalController {
         let snapshotId = "\(timestamp)_\(shortId)"
 
         let outputDir = FileManager.default.temporaryDirectory
-            .appendingPathComponent("cmux-screenshots")
+            .appendingPathComponent("hmux-screenshots")
         try? FileManager.default.createDirectory(at: outputDir, withIntermediateDirectories: true)
         let filename = label.isEmpty ? "\(snapshotId).png" : "\(label)_\(snapshotId).png"
         let outputPath = outputDir.appendingPathComponent(filename)
@@ -14700,7 +14700,7 @@ class TerminalController {
             // ("|c=turn-complete;p=<0|1>", "|c=needs-permission;p=<0|1>",
             // "|c=idle-reminder;p=<0|1>") in notify payloads; any other "c=..."
             // tail (unknown categories included) stays part of the body. Accepted
-            // because the only meta producers are cmux's own agent hooks (whose
+            // because the only meta producers are hmux's own agent hooks (whose
             // fields are |-sanitized) and a collision requires one of those exact
             // suffixes.
             let candidate = parts[3].trimmingCharacters(in: .whitespacesAndNewlines)
@@ -15185,7 +15185,7 @@ class TerminalController {
         options: [String: String]
     ) -> (target: SidebarMutationTabTarget?, error: String?) {
         // `SidebarMetadataArgumentParser.parseMutationTabTarget` already returns the
-        // `CmuxSidebar.SidebarMutationTabTarget` cases this controller resolves, so
+        // `HmuxSidebar.SidebarMutationTabTarget` cases this controller resolves, so
         // forward the parsed target verbatim instead of re-mapping it case-for-case
         // onto a duplicate local enum.
         let resolution = sidebarMetadataArgumentParser.parseMutationTabTarget(options: options)
@@ -15434,10 +15434,10 @@ class TerminalController {
             return true
         }
         guard !AgentHibernationLifecycleStatusKeys.isManualKey(key), let tab = resolveSidebarMutationTab(target),
-              CmuxVaultAgentRegistration.isValidID(key) else {
+              HmuxVaultAgentRegistration.isValidID(key) else {
             return false
         }
-        let registry = CmuxVaultAgentRegistry.load(
+        let registry = HmuxVaultAgentRegistry.load(
             workingDirectory: agentLifecycleRegistryWorkingDirectory(tab: tab, panelId: panelId)
         )
         return registry.registration(id: key) != nil
@@ -15770,9 +15770,9 @@ class TerminalController {
     ///
     /// Reads `{ text, terminal_text, build_stamp, diagnostic_blob_base64 }` off
     /// the wire and hands them to ``DogfoodFeedbackService`` (in the
-    /// `CmuxFeedback` package), which caps the fields, rejects an oversized
+    /// `HmuxFeedback` package), which caps the fields, rejects an oversized
     /// base64 blob without decoding, and writes a self-contained bundle
-    /// directory under `~/.cache/cmux-dogfood-feedback/<ISO8601>_<shortid>/`
+    /// directory under `~/.cache/hmux-dogfood-feedback/<ISO8601>_<shortid>/`
     /// (a `bundle.json` manifest plus the decoded `diagnostic.log`) off the main
     /// actor. This method owns only the trust-boundary privilege check and the
     /// wire mapping; the validation, allocation caps, and filesystem I/O live in
@@ -15825,7 +15825,7 @@ class TerminalController {
     /// Publish a `terminal.set_font` event to connected iOS device(s) so the
     /// mirrored terminal live-zooms its font (the grid reflows automatically on
     /// the phone). Drives the same iOS apply path as a pinch/zoom step, just
-    /// initiated from the Mac for automation (`cmux mobile set-font <size>`).
+    /// initiated from the Mac for automation (`hmux mobile set-font <size>`).
     ///
     /// Params: `{ "font_size": Number, optional "surface_id": String,
     /// optional "workspace_id": String }`. When `surface_id` is omitted the
@@ -15864,7 +15864,7 @@ class TerminalController {
     }
 
     /// Returns the sibling Mac dev tags this Mac grants to its paired
-    /// development phones (`cmux mobile compatible-tags list`).
+    /// development phones (`hmux mobile compatible-tags list`).
     nonisolated func v2MobileCompatibleTagsGet() -> V2CallResult {
         .ok(["tags": MobileCompatibleMacTags.tags()])
     }
@@ -16193,7 +16193,7 @@ class TerminalController {
         }
         guard let resolved = mobileCanonicalTerminalTarget(params: params) else {
             #if DEBUG
-            cmuxDebugLog("mobile.terminal.replay NOT_FOUND surface=\(v2RawString(params, "surface_id") ?? "nil")")
+            hmuxDebugLog("mobile.terminal.replay NOT_FOUND surface=\(v2RawString(params, "surface_id") ?? "nil")")
             #endif
             return .err(code: "not_found", message: "Terminal surface not found", data: nil)
         }
@@ -16214,7 +16214,7 @@ class TerminalController {
         )
         if hasViewportReportFields, expectedViewport == nil {
             #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "mobile.terminal.replay VIEWPORT_PENDING surface=\(surfaceId.uuidString.prefix(8)) expected=unavailable"
             )
             #endif
@@ -16269,7 +16269,7 @@ class TerminalController {
                expectedRows: expectedViewport.rows
            ) {
             #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "mobile.terminal.replay VIEWPORT_PENDING surface=\(surfaceId.uuidString.prefix(8)) " +
                 "expected=\(expectedViewport.columns)x\(expectedViewport.rows) " +
                 "captured=\(renderGrid.columns)x\(renderGrid.rows)"
@@ -16287,7 +16287,7 @@ class TerminalController {
             )
         }
         #if DEBUG
-        cmuxDebugLog("mobile.terminal.replay surface=\(surfaceId.uuidString.prefix(8)) renderGrid=\(renderGrid != nil) seq=\(seq) hasState=\(state != nil)")
+        hmuxDebugLog("mobile.terminal.replay surface=\(surfaceId.uuidString.prefix(8)) renderGrid=\(renderGrid != nil) seq=\(seq) hasState=\(state != nil)")
         #endif
         var payload: [String: Any] = [
             "workspace_id": resolved.workspace.id.uuidString,
@@ -16320,7 +16320,7 @@ class TerminalController {
                     expectedRows: expectedViewport.rows
                 ) else {
                     #if DEBUG
-                    cmuxDebugLog(
+                    hmuxDebugLog(
                         "mobile.terminal.replay VIEWPORT_PENDING surface=\(surfaceId.uuidString.prefix(8)) " +
                         "expected=\(expectedViewport.columns)x\(expectedViewport.rows) " +
                         "captured=\(capturedColumns)x\(capturedRows) fallback=1"
@@ -16579,7 +16579,7 @@ class TerminalController {
         }
         #if DEBUG
         let sendMs = (ProcessInfo.processInfo.systemUptime - sendStart) * 1000.0
-        cmuxDebugLog(
+        hmuxDebugLog(
             "mobile.terminal.input workspace=\(resolved.workspace.id.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8)) queued=\(sendResult == .queued ? 1 : 0) chars=\(text.count) ms=\(String(format: "%.2f", sendMs))"
         )
         #endif
@@ -16656,7 +16656,7 @@ class TerminalController {
             return mobileInputWriteFailure(code: "process_exited", message: Self.terminalProcessExitedMessage, surfaceID: surfaceId, acknowledgement: acknowledgement)
         }
         #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "mobile.terminal.paste_image workspace=\(resolved.workspace.id.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8)) bytes=\(imageData.count) format=\(format)"
         )
         #endif
@@ -16832,7 +16832,7 @@ class TerminalController {
         }
 
         #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "mobile.terminal.paste workspace=\(resolved.workspace.id.uuidString.prefix(8)) surface=\(surfaceId.uuidString.prefix(8)) chars=\(text.count) submitted=\(submitted ? 1 : 0)"
         )
         #endif
@@ -16958,7 +16958,7 @@ class TerminalController {
             return performMobileViewportTarget(surfaceID: surfaceID, target: target, reason: reason)
         case .stage(let target, let scheduleFlush):
             #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "mobile.viewport.govern stage surface=\(surfaceID.uuidString.prefix(8)) " +
                 "reschedule=\(scheduleFlush ? 1 : 0) reason=\(reason)"
             )
@@ -17024,7 +17024,7 @@ class TerminalController {
             self.mobileViewportApplyGovernorsBySurfaceID[surfaceID] = governor
             guard let target else { return }
             #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "mobile.viewport.govern flush surface=\(surfaceID.uuidString.prefix(8)) reason=\(reason)"
             )
             #endif

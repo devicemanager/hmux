@@ -28,7 +28,7 @@ final class WorkspaceDefaultLayoutBox: NSObject {
     }
 }
 
-/// Read-only projection of the live cmux.json action registry for native
+/// Read-only projection of the live hmux.json action registry for native
 /// discovery UI. It deliberately carries only resolved action metadata and
 /// effective placements; execution stays on the existing action paths.
 struct ActionsAndLaunchersDiscoveryModel: Equatable {
@@ -73,13 +73,13 @@ struct ActionsAndLaunchersDiscoveryModel: Equatable {
     let entries: [Entry]
 
     static func build(
-        actions: [CmuxResolvedConfigAction],
+        actions: [HmuxResolvedConfigAction],
         resolvedNewWorkspaceActionID: String?,
         newWorkspaceMenuActionIDs: Set<String>,
         surfaceTabBarActionIDs: Set<String>
     ) -> ActionsAndLaunchersDiscoveryModel {
         let entries = actions.compactMap { action -> Entry? in
-            // Built-ins that only come from cmux itself add noise here. An
+            // Built-ins that only come from hmux itself add noise here. An
             // overridden built-in has a source path and remains discoverable.
             guard let sourcePath = action.actionSourcePath else { return nil }
             let shortcutDisplay = action.shortcut.flatMap { shortcut in
@@ -122,7 +122,7 @@ struct ActionsAndLaunchersDiscoveryModel: Equatable {
         .joined(separator: "\n\n")
     }
 
-    private static func actionType(_ action: CmuxSurfaceTabBarButtonAction) -> String {
+    private static func actionType(_ action: HmuxSurfaceTabBarButtonAction) -> String {
         switch action {
         case .builtIn:
             return "builtin"
@@ -148,14 +148,14 @@ extension AppDelegate {
     static var actionsAndLaunchersMenuTitle: String {
         String(
             localized: "actions.discovery.menuTitle",
-            defaultValue: "Actions · cmux.json…"
+            defaultValue: "Actions · hmux.json…"
         )
     }
 
     private static var actionsAndLaunchersDialogTitle: String {
         String(
             localized: "actions.discovery.dialogTitle",
-            defaultValue: "Actions · cmux.json"
+            defaultValue: "Actions · hmux.json"
         )
     }
 
@@ -170,31 +170,31 @@ extension AppDelegate {
         .compactMap { contextForMainWindow($0) }
         .first
 
-        let cmuxConfigStore: CmuxConfigStore
-        if let activeStore = context?.cmuxConfigStore {
-            cmuxConfigStore = activeStore
+        let hmuxConfigStore: HmuxConfigStore
+        if let activeStore = context?.hmuxConfigStore {
+            hmuxConfigStore = activeStore
         } else {
-            let globalStore = CmuxConfigStore()
+            let globalStore = HmuxConfigStore()
             globalStore.loadAll()
-            cmuxConfigStore = globalStore
+            hmuxConfigStore = globalStore
         }
 
         let newWorkspaceMenuActionIDs = Set(
-            cmuxConfigStore.newWorkspaceContextMenuItems.compactMap { item -> String? in
+            hmuxConfigStore.newWorkspaceContextMenuItems.compactMap { item -> String? in
                 guard case .action(let menuAction) = item else { return nil }
                 return menuAction.action.id
             }
         )
         let model = ActionsAndLaunchersDiscoveryModel.build(
-            actions: cmuxConfigStore.loadedActions,
-            resolvedNewWorkspaceActionID: cmuxConfigStore.resolvedNewWorkspaceAction()?.id,
+            actions: hmuxConfigStore.loadedActions,
+            resolvedNewWorkspaceActionID: hmuxConfigStore.resolvedNewWorkspaceAction()?.id,
             newWorkspaceMenuActionIDs: newWorkspaceMenuActionIDs,
-            surfaceTabBarActionIDs: Set(cmuxConfigStore.surfaceTabBarActionReferenceIDs.values)
+            surfaceTabBarActionIDs: Set(hmuxConfigStore.surfaceTabBarActionReferenceIDs.values)
         )
 
         let alert = NSAlert()
         alert.messageText = Self.actionsAndLaunchersDialogTitle
-        alert.informativeText = (cmuxConfigStore.globalConfigPath as NSString).abbreviatingWithTildeInPath
+        alert.informativeText = (hmuxConfigStore.globalConfigPath as NSString).abbreviatingWithTildeInPath
         alert.accessoryView = actionsAndLaunchersAccessoryView(
             text: model.summaryText,
             entryCount: model.entries.count
@@ -202,8 +202,8 @@ extension AppDelegate {
         // The path is already shown in informativeText; keep the button label
         // short and fully localized.
         alert.addButton(withTitle: String(
-            localized: "menu.app.openCmuxSettingsFile",
-            defaultValue: "Open cmux.json"
+            localized: "menu.app.openHmuxSettingsFile",
+            defaultValue: "Open hmux.json"
         ))
         alert.addButton(withTitle: String(
             localized: "settings.settingsJSON.docsButton",
@@ -270,7 +270,7 @@ extension AppDelegate {
     private func handleActionsAndLaunchersResponse(_ response: NSApplication.ModalResponse) {
         switch response {
         case .alertFirstButtonReturn:
-            // Reuse the existing in-cmux config editor path used by Settings'
+            // Reuse the existing in-hmux config editor path used by Settings'
             // workspace-layout customization.
             openWorkspaceLayoutsCustomization()
         case .alertSecondButtonReturn:
@@ -285,21 +285,21 @@ extension AppDelegate {
     /// write) are deletable from the UI; project-local and built-in actions
     /// are not.
     func isDeletableGlobalAction(
-        _ action: CmuxResolvedConfigAction,
-        cmuxConfigStore: CmuxConfigStore
+        _ action: HmuxResolvedConfigAction,
+        hmuxConfigStore: HmuxConfigStore
     ) -> Bool {
         guard let sourcePath = action.actionSourcePath else { return false }
         func canonical(_ path: String) -> String {
             URL(fileURLWithPath: path).resolvingSymlinksInPath().standardizedFileURL.path
         }
-        return canonical(sourcePath) == canonical(cmuxConfigStore.globalConfigPath)
+        return canonical(sourcePath) == canonical(hmuxConfigStore.globalConfigPath)
     }
 
     func openWorkspaceLayoutsCustomization() {
-        // Open inside cmux's own file editor rather than an external app — the
+        // Open inside hmux's own file editor rather than an external app — the
         // OS-default handler for .json can be Xcode, which is never what
         // "customize my workspace layouts" means.
-        let configURL = SidebarWorkspaceGroupConfigOpener.materializedCmuxConfigURL()
+        let configURL = SidebarWorkspaceGroupConfigOpener.materializedHmuxConfigURL()
         let targetContext = [
             NSApp.keyWindow,
             NSApp.mainWindow,
@@ -321,7 +321,7 @@ extension AppDelegate {
                   focus: true,
                   reuseExisting: true
               ).isEmpty else {
-            SidebarWorkspaceGroupConfigOpener.openCmuxConfigInEditor()
+            SidebarWorkspaceGroupConfigOpener.openHmuxConfigInEditor()
             return
         }
     }
@@ -329,7 +329,7 @@ extension AppDelegate {
     @objc func deleteWorkspaceConfigActionMenuItem(_ sender: NSMenuItem) {
         guard let box = sender.representedObject as? WorkspaceActionDeleteBox,
               let context = mainWindowContexts.values.first(where: { $0.windowId == box.windowId }),
-              let cmuxConfigStore = context.cmuxConfigStore,
+              let hmuxConfigStore = context.hmuxConfigStore,
               let window = resolvedWindow(for: context) else {
             NSSound.beep()
             return
@@ -347,7 +347,7 @@ extension AppDelegate {
         alert.informativeText = String(
             format: messageFormat,
             box.actionTitle,
-            (cmuxConfigStore.globalConfigPath as NSString).abbreviatingWithTildeInPath
+            (hmuxConfigStore.globalConfigPath as NSString).abbreviatingWithTildeInPath
         )
         let deleteButton = alert.addButton(withTitle: String(
             localized: "dialog.deleteWorkspaceLayout.delete",
@@ -359,16 +359,16 @@ extension AppDelegate {
             defaultValue: "Cancel"
         ))
         let windowIdentifier = ObjectIdentifier(window)
-        alert.beginSheetModal(for: window) { [weak cmuxConfigStore] response in
-            guard response == .alertFirstButtonReturn, let cmuxConfigStore else { return }
+        alert.beginSheetModal(for: window) { [weak hmuxConfigStore] response in
+            guard response == .alertFirstButtonReturn, let hmuxConfigStore else { return }
             do {
-                try CmuxConfigActionSaver.deleteAction(
+                try HmuxConfigActionSaver.deleteAction(
                     id: box.actionID,
-                    globalConfigPath: cmuxConfigStore.globalConfigPath
+                    globalConfigPath: hmuxConfigStore.globalConfigPath
                 )
-                cmuxConfigStore.loadAll()
+                hmuxConfigStore.loadAll()
 #if DEBUG
-                cmuxDebugLog("deleteWorkspaceAction.deleted id=\(box.actionID)")
+                hmuxDebugLog("deleteWorkspaceAction.deleted id=\(box.actionID)")
 #endif
             } catch {
                 guard let window = NSApp.windows.first(where: { ObjectIdentifier($0) == windowIdentifier }) else { return }
@@ -400,19 +400,19 @@ extension AppDelegate {
     @objc func setNewWorkspaceDefaultLayoutMenuItem(_ sender: NSMenuItem) {
         guard let box = sender.representedObject as? WorkspaceDefaultLayoutBox,
               let context = mainWindowContexts.values.first(where: { $0.windowId == box.windowId }),
-              let cmuxConfigStore = context.cmuxConfigStore,
+              let hmuxConfigStore = context.hmuxConfigStore,
               let window = resolvedWindow(for: context) else {
             NSSound.beep()
             return
         }
         do {
-            try CmuxConfigActionSaver.setNewWorkspaceDefaultAction(
+            try HmuxConfigActionSaver.setNewWorkspaceDefaultAction(
                 id: box.actionID,
-                globalConfigPath: cmuxConfigStore.globalConfigPath
+                globalConfigPath: hmuxConfigStore.globalConfigPath
             )
-            cmuxConfigStore.loadAll()
+            hmuxConfigStore.loadAll()
 #if DEBUG
-            cmuxDebugLog("newWorkspaceDefaultLayout.updated id=\(box.actionID ?? "<none>")")
+            hmuxDebugLog("newWorkspaceDefaultLayout.updated id=\(box.actionID ?? "<none>")")
 #endif
         } catch {
             presentNewWorkspaceDefaultLayoutError(error, for: window)
@@ -420,7 +420,7 @@ extension AppDelegate {
     }
 
     private func presentSaveWorkspaceActionDialog(context: MainWindowContext) {
-        guard let cmuxConfigStore = context.cmuxConfigStore,
+        guard let hmuxConfigStore = context.hmuxConfigStore,
               let workspace = context.tabManager.selectedWorkspace,
               let window = resolvedWindow(for: context) else {
             NSSound.beep()
@@ -432,7 +432,7 @@ extension AppDelegate {
             defer { self.saveWorkspaceActionTasks[context.windowId] = nil }
             await self.presentSaveWorkspaceActionDialog(
                 workspace: workspace,
-                cmuxConfigStore: cmuxConfigStore,
+                hmuxConfigStore: hmuxConfigStore,
                 window: window
             )
         }
@@ -441,7 +441,7 @@ extension AppDelegate {
 
     private func presentSaveWorkspaceActionDialog(
         workspace: Workspace,
-        cmuxConfigStore: CmuxConfigStore,
+        hmuxConfigStore: HmuxConfigStore,
         window: NSWindow
     ) async {
         let snapshot: WorkspaceConfigActionSnapshot
@@ -453,7 +453,7 @@ extension AppDelegate {
             return
         }
         guard window.isVisible, !Task.isCancelled else { return }
-        let globalConfigPath = cmuxConfigStore.globalConfigPath
+        let globalConfigPath = hmuxConfigStore.globalConfigPath
         if !snapshot.oversizedCommands.isEmpty {
             presentWorkspaceCommandTooLongAlert(for: window)
             return
@@ -499,7 +499,7 @@ extension AppDelegate {
         ))
 
         let windowIdentifier = ObjectIdentifier(window)
-        alert.beginSheetModal(for: window) { [weak cmuxConfigStore] response in
+        alert.beginSheetModal(for: window) { [weak hmuxConfigStore] response in
             guard response == .alertFirstButtonReturn else { return }
             let typedTitle = accessory.nameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             let title = typedTitle.isEmpty
@@ -511,19 +511,19 @@ extension AppDelegate {
             var definition = snapshot.definition
             definition.name = title
             do {
-                let result = try CmuxConfigActionSaver.saveWorkspaceAction(
+                let result = try HmuxConfigActionSaver.saveWorkspaceAction(
                     title: title,
                     definition: definition,
                     globalConfigPath: globalConfigPath,
                     // Reserve every id the active store resolved (including
                     // project-local actions) so the saved global action can't
                     // be shadowed into a no-op.
-                    reservedActionIDs: cmuxConfigStore.map { Set($0.actionLookup.keys) } ?? []
+                    reservedActionIDs: hmuxConfigStore.map { Set($0.actionLookup.keys) } ?? []
                 )
                 var defaultUpdateError: Error?
                 if accessory.makeDefaultCheckbox.state == .on {
                     do {
-                        try CmuxConfigActionSaver.setNewWorkspaceDefaultAction(
+                        try HmuxConfigActionSaver.setNewWorkspaceDefaultAction(
                             id: result.actionID,
                             globalConfigPath: globalConfigPath
                         )
@@ -533,13 +533,13 @@ extension AppDelegate {
                 }
                 // The app's store runs without file watchers; reload explicitly
                 // so the saved layout shows up in the menus right away.
-                cmuxConfigStore?.loadAll()
+                hmuxConfigStore?.loadAll()
                 if let defaultUpdateError,
                    let window = NSApp.windows.first(where: { ObjectIdentifier($0) == windowIdentifier }) {
                     self.presentNewWorkspaceDefaultLayoutError(defaultUpdateError, for: window)
                 }
 #if DEBUG
-                cmuxDebugLog("saveWorkspaceAction.saved id=\(result.actionID)")
+                hmuxDebugLog("saveWorkspaceAction.saved id=\(result.actionID)")
 #endif
             } catch {
                 guard let window = NSApp.windows.first(where: { ObjectIdentifier($0) == windowIdentifier }) else { return }

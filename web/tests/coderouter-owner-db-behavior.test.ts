@@ -7,7 +7,7 @@ import { bindSessionAccount, findSessionAccount, listAccounts } from "../service
 import { encryptCredential, type CredentialKeyService } from "../services/coderouter/encryption";
 import type { CodexCredential } from "../services/coderouter/types";
 
-const enabled = process.env.CMUX_DB_TEST === "1";
+const enabled = process.env.HMUX_DB_TEST === "1";
 const dbTest = enabled ? test : test.skip;
 const team = "codex-owner-test";
 let sql: Sql;

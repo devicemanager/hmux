@@ -29,7 +29,7 @@ describe("invite email chips", () => {
 
   test("validates addresses loosely", () => {
     expect(isValidEmail("dev@cmux.com")).toBe(true);
-    expect(isValidEmail("dev@cmux")).toBe(false);
+    expect(isValidEmail("dev@hmux")).toBe(false);
     expect(isValidEmail("dev.cmux.com")).toBe(false);
     expect(isValidEmail("a@b@c.com")).toBe(false);
   });

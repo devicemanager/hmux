@@ -4,20 +4,20 @@
 # - Accepted: staple it.
 # - A DMG around the stapled app (state stapled_app=true) that is not Accepted
 #   (still queued, refused, or not answered) at its recorded
-#   stapled_submitted_at + CMUX_STAPLED_APP_FALLBACK_SECONDS (6 h): its
+#   stapled_submitted_at + HMUX_STAPLED_APP_FALLBACK_SECONDS (6 h): its
 #   continuation ships the accepted first DMG
 #   (resume-stapled-app-notarization.sh). Before that it is polled again.
-# - Any other outer DMG still In Progress after CMUX_OUTER_POLL_SECONDS
+# - Any other outer DMG still In Progress after HMUX_OUTER_POLL_SECONDS
 #   (80 min) stalls and waits for a manual resume; a refused one fails.
 # A failed query (poll-notary-submission.py exit 3) is an unknown answer and
 # is polled again. The poll sleeps to the nearest deadline when that comes
 # before the next interval, so a refused stapled-app DMG reaches its fallback.
-# The job limit must cover CMUX_OUTER_POLL_BUDGET_SECONDS (357 min) plus setup.
-# A stapled-app deadline that falls at most CMUX_OUTER_POLL_FALLBACK_SLACK_SECONDS
+# The job limit must cover HMUX_OUTER_POLL_BUDGET_SECONDS (357 min) plus setup.
+# A stapled-app deadline that falls at most HMUX_OUTER_POLL_FALLBACK_SLACK_SECONDS
 # (300 s) after the end of the budget (Apple refused the second DMG within a
 # few minutes of its submission) is decided as due for the fallback: its
 # continuation (resume-stapled-app-notarization.sh,
-# CMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS) waits until the deadline before it
+# HMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS) waits until the deadline before it
 # ships the first DMG. A later deadline is reported for a manual resume.
 # A variant whose submission failed or could not be queried is recorded as
 # failed; the others are still polled, and the script exits 1 at the end.
@@ -33,15 +33,15 @@ ROOT="$1"
 VARIANTS_FILE="$2"
 REPORTS="$3"
 REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
-POLL_TOOL="${CMUX_POLL_NOTARY_SUBMISSION_TOOL:-python3 $REPO_ROOT/scripts/ci/poll-notary-submission.py}"
-FALLBACK_SECONDS="${CMUX_STAPLED_APP_FALLBACK_SECONDS:-21600}"
-OUTER_POLL_SECONDS="${CMUX_OUTER_POLL_SECONDS:-4800}"
+POLL_TOOL="${HMUX_POLL_NOTARY_SUBMISSION_TOOL:-python3 $REPO_ROOT/scripts/ci/poll-notary-submission.py}"
+FALLBACK_SECONDS="${HMUX_STAPLED_APP_FALLBACK_SECONDS:-21600}"
+OUTER_POLL_SECONDS="${HMUX_OUTER_POLL_SECONDS:-4800}"
 # A job may run 360 min; stop polling a little before that.
-BUDGET_SECONDS="${CMUX_OUTER_POLL_BUDGET_SECONDS:-21420}"
-INTERVAL_SECONDS="${CMUX_OUTER_POLL_INTERVAL_SECONDS:-300}"
-SLACK_SECONDS="${CMUX_OUTER_POLL_FALLBACK_SLACK_SECONDS:-300}"
+BUDGET_SECONDS="${HMUX_OUTER_POLL_BUDGET_SECONDS:-21420}"
+INTERVAL_SECONDS="${HMUX_OUTER_POLL_INTERVAL_SECONDS:-300}"
+SLACK_SECONDS="${HMUX_OUTER_POLL_FALLBACK_SLACK_SECONDS:-300}"
 for value in "$FALLBACK_SECONDS" "$OUTER_POLL_SECONDS" "$BUDGET_SECONDS" "$INTERVAL_SECONDS" "$SLACK_SECONDS"; do
-  [[ "$value" =~ ^[0-9]+$ ]] || { echo "poll-outer-notarizations.sh: every CMUX_*_SECONDS value must be a number of seconds" >&2; exit 2; }
+  [[ "$value" =~ ^[0-9]+$ ]] || { echo "poll-outer-notarizations.sh: every HMUX_*_SECONDS value must be a number of seconds" >&2; exit 2; }
 done
 OUT="${GITHUB_OUTPUT:-/dev/stdout}"
 now() { date +%s; }
@@ -56,7 +56,7 @@ declare -A state_of deadline_of result_of
 for variant in "${variants[@]}"; do
   env_file="$REPORTS/$variant.env"
   if ! python3 "$REPO_ROOT/scripts/ci/resolve-notarization-recovery.py" \
-      "$ROOT/$variant/cmux-nightly-notarization-recovery.json" "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$CHANNEL" "$variant" \
+      "$ROOT/$variant/hmux-nightly-notarization-recovery.json" "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$CHANNEL" "$variant" \
       --run-attempt "$SOURCE_RUN_ATTEMPT" --strict --metadata-only > "$env_file"; then
     echo "outer recovery resolver failed for $variant" >&2
     exit 1

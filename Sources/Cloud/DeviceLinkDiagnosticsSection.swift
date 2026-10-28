@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import SwiftUI
 
 /// The My Devices part of the Cloud Diagnostics window: every device link's

@@ -1,5 +1,5 @@
 #!/bin/bash
-# App Store screenshot pipeline for cmux iOS.
+# App Store screenshot pipeline for hmux iOS.
 #
 # The default `capture` command is deterministic and uses the hosted
 # SnapshotUITests fixture lane. `capture-real` drives a signed-in, paired
@@ -8,7 +8,7 @@
 # impossible when producing a real-content listing refresh.
 #
 # Capture runs on hosted CI (ios-screenshots.yml), NEVER as a local
-# `xcodebuild test` (repo policy: the cmux test host must not launch on a dev
+# `xcodebuild test` (repo policy: the hmux test host must not launch on a dev
 # Mac). Everything else (post-processing, framing, verification, upload
 # staging, the lock-screen shot) runs locally with simctl/ImageMagick.
 #
@@ -91,7 +91,7 @@ cmd_capture() {
     echo "--ref must be a branch (run resolution matches by branch name, not SHA)" >&2
     exit 1
   fi
-  local request_id="cmux-shots-$(date -u +%Y%m%dT%H%M%SZ)-$$"
+  local request_id="hmux-shots-$(date -u +%Y%m%dT%H%M%SZ)-$$"
   echo "dispatching $WORKFLOW on $REPO ref=$ref languages=$languages request=$request_id"
   gh workflow run "$WORKFLOW" --repo "$REPO" --ref "$ref" \
     -f languages="$languages" -f request_id="$request_id"
@@ -142,7 +142,7 @@ cmd_capture_real() {
 # "reply" mode of ScreenshotNotificationPresenter.
 cmd_lockshot() {
   need xcrun; need axe; need idb
-  local app="" udid="" bundle_id="dev.cmux.ios" sim_name="cmux-shots-lockreply"
+  local app="" udid="" bundle_id="dev.hmux.ios" sim_name="hmux-shots-lockreply"
   local reply_text="Looks great, merge it and start the deploy"
   while [ $# -gt 0 ]; do
     case "$1" in
@@ -186,9 +186,9 @@ for runtime, devices in data.items():
   xcrun simctl terminate "$udid" "$bundle_id" 2>/dev/null || true
 
   echo "launching $bundle_id with the reply-notification fixture"
-  SIMCTL_CHILD_CMUX_UITEST_MOCK_DATA=1 \
-  SIMCTL_CHILD_CMUX_UITEST_WORKSPACE_LIST_PREVIEW=1 \
-  SIMCTL_CHILD_CMUX_UITEST_NOTIFICATION_BANNER=reply \
+  SIMCTL_CHILD_HMUX_UITEST_MOCK_DATA=1 \
+  SIMCTL_CHILD_HMUX_UITEST_WORKSPACE_LIST_PREVIEW=1 \
+  SIMCTL_CHILD_HMUX_UITEST_NOTIFICATION_BANNER=reply \
     xcrun simctl launch "$udid" "$bundle_id"
   sleep 2
   # Approve the notification-authorization alert if present (fresh installs).
@@ -216,7 +216,7 @@ best = None
 for root in tree:
     for node in walk(root):
         label = (node.get('AXLabel') or '')
-        if 'finished in workspace' in label or 'cmux agent' in label:
+        if 'finished in workspace' in label or 'hmux agent' in label:
             f = node['frame']
             best = (f['x'] + f['width'] / 2, f['y'] + f['height'] / 2)
 if best:

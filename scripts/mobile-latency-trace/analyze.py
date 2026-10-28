@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Analyze cmux iOS↔Mac latency trace stamps."""
+"""Analyze hmux iOS↔Mac latency trace stamps."""
 
 from __future__ import annotations
 

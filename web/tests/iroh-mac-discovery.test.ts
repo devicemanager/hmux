@@ -7,7 +7,7 @@ import {
 } from "../services/iroh/registryDiscovery";
 import { registrationIsUnchanged } from "../services/devices/registrationNoOp";
 
-const caller = { platform: "mac", deviceUuid: "local", tag: "my-feature", clientNamespace: "mac:com.cmuxterm.app.debug.my.feature" };
+const caller = { platform: "mac", deviceUuid: "local", tag: "my-feature", clientNamespace: "mac:com.hmuxterm.app.debug.my.feature" };
 const target = { ...caller, deviceUuid: "remote", pairingEnabled: true };
 
 describe("automatic personal Mac discovery", () => {
@@ -19,7 +19,7 @@ describe("automatic personal Mac discovery", () => {
   test("rejects other dev tags, self, non-Mac namespaces, and disabled hosting", () => {
     for (const peer of [
       { ...target, tag: "another-feature" }, { ...target, tag: "rc" }, { ...target, tag: "staging" },
-      { ...target, deviceUuid: caller.deviceUuid }, { ...target, clientNamespace: "dev.cmux.ios.my-feature" },
+      { ...target, deviceUuid: caller.deviceUuid }, { ...target, clientNamespace: "dev.hmux.ios.my-feature" },
       { ...target, pairingEnabled: false },
     ]) expect(canBindingDiscoverPeer(caller, peer)).toBe(false);
   });

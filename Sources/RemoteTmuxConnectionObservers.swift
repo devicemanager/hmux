@@ -163,7 +163,7 @@ final class RemoteTmuxConnectionObservers {
         for callback in Array(sessionChangedObservers.values) { callback(oldName, newName) }
     }
 
-    /// Fans a pane's raw `@cmux_agent` value out to every agent-status observer.
+    /// Fans a pane's raw `@hmux_agent` value out to every agent-status observer.
     func emitPaneAgent(_ paneId: Int, _ rawValue: String) {
         for callback in Array(paneAgentObservers.values) { callback(paneId, rawValue) }
     }
@@ -202,7 +202,7 @@ final class RemoteTmuxConnectionObservers {
     /// The distinction is the whole point. Reporting "handled" merely because an observer is
     /// *subscribed* means a consumer that declines — because the user already dismissed this
     /// host's login — silently suppresses the caller's fallback, leaving the connection
-    /// parked with no retry and no waiter. That is a host stranded until cmux restarts.
+    /// parked with no retry and no waiter. That is a host stranded until hmux restarts.
     func notifyAuthRequired(sshArgv: [String]) -> Bool {
         var presented = false
         for callback in Array(authRequiredObservers.values) {

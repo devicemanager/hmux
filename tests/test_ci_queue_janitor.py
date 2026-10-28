@@ -48,7 +48,7 @@ def make_run(*, event="pull_request", branch="feature", path=".github/workflows/
         "id": run_id, "event": event, "head_branch": branch, "path": path, "name": name,
         "status": status, "head_sha": sha, "created_at": iso(age), "run_attempt": attempt,
         "html_url": f"https://github.com/manaflow-ai/cmux/actions/runs/{run_id}",
-        "head_repository": {"full_name": f"{owner}/cmux", "owner": {"login": owner}},
+        "head_repository": {"full_name": f"{owner}/hmux", "owner": {"login": owner}},
         "pull_requests": [{"number": n} for n in prs],
     }
 
@@ -115,9 +115,9 @@ class ProtectionTests(unittest.TestCase):
             make_run(event="workflow_dispatch", branch="main"),
             make_run(event="schedule", branch="main", name="Some check"),
             make_run(event="push", branch="v0.64.0", name="Release", path=".github/workflows/release.yml"),
-            make_run(event="push", branch="cmux-tui-v0.13.1", name="cmux-tui publish pypi"),
+            make_run(event="push", branch="hmux-tui-v0.13.1", name="hmux-tui publish pypi"),
             make_run(event="release", branch="v0.64.0"),
-            make_run(event="pull_request", name="iOS TestFlight (cmux.app)", path=".github/workflows/ios-testflight.yml"),
+            make_run(event="pull_request", name="iOS TestFlight (hmux.app)", path=".github/workflows/ios-testflight.yml"),
             make_run(event="pull_request", name="iOS App Store", path=".github/workflows/ios-app-store.yml"),
             make_run(event="push", branch="exp/nightly-probe", name="Nightly macOS build", path=".github/workflows/nightly.yml"),
         ]
@@ -289,9 +289,9 @@ class DoomedCategoryTests(unittest.TestCase):
         was cancelled by hand for exactly this and had to be restarted.
         """
         repairs = {
-            "PR #13643 app-host test sources": "cmuxTests/AgentSessionAutoResumeSettingsTests.swift",
-            "PR #13408 the failing regression itself": "cmuxTests/WorkspaceSSHFishShellTests.swift",
-            "PR #13579 shard splitter": "scripts/ci/cmux_unit_test_shard.py",
+            "PR #13643 app-host test sources": "hmuxTests/AgentSessionAutoResumeSettingsTests.swift",
+            "PR #13408 the failing regression itself": "hmuxTests/WorkspaceSSHFishShellTests.swift",
+            "PR #13579 shard splitter": "scripts/ci/hmux_unit_test_shard.py",
             "PR #13579 shard workload": "scripts/ci/workloads/macos-app-host-test-shard.sh",
             "PR #13427 job definition": ".github/workflows/ci-macos.yml",
             "PR #13414 test product build": "scripts/ci/compile-app-host-test-product.sh",
@@ -605,12 +605,12 @@ class FetchSelectionTests(unittest.TestCase):
 
 class GraphQLTests(unittest.TestCase):
     def test_single_query_for_all_branches(self):
-        query, variables = janitor.graphql_query("manaflow-ai", "cmux", ["a", "exp/b"])
+        query, variables = janitor.graphql_query("manaflow-ai", "hmux", ["a", "exp/b"])
         self.assertIn("b0: pullRequests(headRefName: $b0", query)
         self.assertIn("b1: pullRequests(headRefName: $b1", query)
         self.assertNotIn("isDraft", query)
         self.assertIn("LABELED_EVENT", query)
-        self.assertEqual(variables, {"owner": "manaflow-ai", "name": "cmux", "b0": "a", "b1": "exp/b"})
+        self.assertEqual(variables, {"owner": "manaflow-ai", "name": "hmux", "b0": "a", "b1": "exp/b"})
         response = {"data": {"repository": {"b0": {"nodes": [make_pr(1)]}, "b1": {"nodes": []}}}}
         self.assertEqual(sorted(janitor.parse_graphql_prs(response, ["a", "exp/b"])), ["a", "exp/b"])
 
@@ -692,13 +692,13 @@ class WorkflowShapeTests(unittest.TestCase):
         for step in steps[2:]:
             self.assertIn("steps.fresh.outputs.skip != 'true'", step["if"], step["name"])
 
-    def test_a_feat_cmux_next_ci_run_starts_no_sweep(self):
-        # feat-cmux-next's ci.yml never sends its pull requests to macOS; the cron still sweeps.
+    def test_a_feat_hmux_next_ci_run_starts_no_sweep(self):
+        # feat-hmux-next's ci.yml never sends its pull requests to macOS; the cron still sweeps.
         workflow = yaml.safe_load(self.text)
         self.assertEqual(
             workflow["jobs"]["sweep"]["if"],
             "${{ !(github.event_name == 'workflow_run' && "
-            "github.event.workflow_run.pull_requests[0].base.ref == 'feat-cmux-next') }}")
+            "github.event.workflow_run.pull_requests[0].base.ref == 'feat-hmux-next') }}")
 
     def test_requested_runs_only_stand_in_for_a_late_cron(self):
         # 2026-10-06: CI was requested hundreds of times an hour, a 240 s skip
@@ -958,7 +958,7 @@ class OrphanPlanTests(unittest.TestCase):
 
     def test_main_schedule_nightly_and_testflight_orphans_are_cancelled(self):
         for kwargs in (
-            dict(event="schedule", branch="main", name="iOS TestFlight (cmux.app)",
+            dict(event="schedule", branch="main", name="iOS TestFlight (hmux.app)",
                  path=".github/workflows/ios-appstore-upload.yml"),
             dict(event="push", branch="main", name="Nightly macOS build", path=".github/workflows/nightly.yml"),
             dict(event="issue_comment", branch="main", name="Claude Code", path=".github/workflows/claude.yml"),
@@ -972,8 +972,8 @@ class OrphanPlanTests(unittest.TestCase):
             dict(event="release", branch="v0.64.0"),
             dict(event="push", branch="v0.64.0", name="Release", path=".github/workflows/release.yml"),
             dict(event="merge_group", branch="gh-readonly-queue/main/pr-1-abc"),
-            dict(event="workflow_dispatch", branch="main", name="cmux-tui release cut",
-                 path=".github/workflows/cmux-tui-release-cut.yml"),
+            dict(event="workflow_dispatch", branch="main", name="hmux-tui release cut",
+                 path=".github/workflows/hmux-tui-release-cut.yml"),
         ):
             with self.subTest(**kwargs):
                 decisions = orphan_plan(self.orphans(1, **kwargs))
@@ -1232,7 +1232,7 @@ class StarvedLabelSnapshotTests(unittest.TestCase):
     """The starved-label alert reads jobs main's linux-only filter skips when the run uses another branch's copy."""
 
     FLEET = "glaeda-side-light-xcode-26.6"
-    NEXT = "feat-cmux-" + "next"
+    NEXT = "feat-hmux-" + "next"
 
     def snapshot(self, runs, jobs, *, fail_jobs=(), completed=None):
         fake = FakeGitHub({r["id"]: dict(r) for r in runs}, jobs)
@@ -1258,7 +1258,7 @@ class StarvedLabelSnapshotTests(unittest.TestCase):
             workflows = Path(temp) / "workflows"
             workflows.mkdir()
             # Main's inert registration: no macOS text, so main reads it as linux-only.
-            (workflows / "cmux-next.yml").write_text("name: cmux-next\non:\n  workflow_dispatch:\n")
+            (workflows / "hmux-next.yml").write_text("name: hmux-next\non:\n  workflow_dispatch:\n")
             out = Path(temp) / "pool.json"
             argv = ["--repo", "manaflow-ai/cmux", "--summary", str(Path(temp) / "summary.md"), "--dry-run",
                     "--workflows-dir", str(workflows), "--pool-load", str(out)]
@@ -1271,7 +1271,7 @@ class StarvedLabelSnapshotTests(unittest.TestCase):
             return json.loads(out.read_text()), fake
 
     def compile_job(self):
-        return {"status": "queued", "name": "cmux-next app compile (build fleet)", "labels": [self.FLEET],
+        return {"status": "queued", "name": "hmux-next app compile (build fleet)", "labels": [self.FLEET],
                 "created_at": iso(40), "runner_name": None, "html_url": "https://example.invalid/job"}
 
     @staticmethod
@@ -1279,58 +1279,58 @@ class StarvedLabelSnapshotTests(unittest.TestCase):
         return any(f"/runs/{run['id']}/jobs" in path for _, path in fake.log)
 
     def test_a_branch_run_of_a_main_linux_only_workflow_is_read_for_starved_labels(self):
-        run = make_run(path=".github/workflows/cmux-next.yml", name="cmux-next", branch="lane/x")
+        run = make_run(path=".github/workflows/hmux-next.yml", name="hmux-next", branch="lane/x")
         run["pull_requests"] = [{"number": 7, "base": {"ref": self.NEXT}}]
-        pushed = make_run(event="push", path=".github/workflows/cmux-next.yml", name="cmux-next", branch=self.NEXT)
+        pushed = make_run(event="push", path=".github/workflows/hmux-next.yml", name="hmux-next", branch=self.NEXT)
         snapshot, fake = self.snapshot([run, pushed], {run["id"]: [self.compile_job()], pushed["id"]: []})
         self.assertEqual([entry["label"] for entry in snapshot["starved"]], [self.FLEET])
         self.assertEqual(snapshot["unserved"], [self.FLEET])
         self.assertTrue(self.listed(fake, pushed))
 
     def test_a_dispatch_on_a_branch_follows_that_branch_copy(self):
-        run = make_run(event="workflow_dispatch", path=".github/workflows/cmux-next.yml", name="cmux-next",
+        run = make_run(event="workflow_dispatch", path=".github/workflows/hmux-next.yml", name="hmux-next",
                        branch=self.NEXT)
         snapshot, _ = self.snapshot([run], {run["id"]: [self.compile_job()]})
         self.assertEqual([entry["label"] for entry in snapshot["starved"]], [self.FLEET])
 
     def test_a_failed_listing_marks_the_result_incomplete(self):
-        run = make_run(path=".github/workflows/cmux-next.yml", name="cmux-next", branch="lane/x")
+        run = make_run(path=".github/workflows/hmux-next.yml", name="hmux-next", branch="lane/x")
         run["pull_requests"] = [{"number": 7, "base": {"ref": self.NEXT}}]
         snapshot, _ = self.snapshot([run], {run["id"]: [self.compile_job()]}, fail_jobs={run["id"]})
         self.assertEqual(snapshot["starved"], [])
         self.assertTrue(snapshot["starved_incomplete"])
 
     def test_a_complete_listing_is_not_marked_incomplete(self):
-        run = make_run(path=".github/workflows/cmux-next.yml", name="cmux-next", branch="lane/x")
+        run = make_run(path=".github/workflows/hmux-next.yml", name="hmux-next", branch="lane/x")
         run["pull_requests"] = [{"number": 7, "base": {"ref": self.NEXT}}]
         snapshot, _ = self.snapshot([run], {run["id"]: [self.compile_job()]})
         self.assertNotIn("starved_incomplete", snapshot)
 
     def test_a_recent_start_in_a_completed_run_of_its_workflow_serves_the_label(self):
-        run = make_run(path=".github/workflows/cmux-next.yml", name="cmux-next", branch="lane/x")
+        run = make_run(path=".github/workflows/hmux-next.yml", name="hmux-next", branch="lane/x")
         run["pull_requests"] = [{"number": 7, "base": {"ref": self.NEXT}}]
-        done = make_run(path=".github/workflows/cmux-next.yml", name="cmux-next", branch="lane/y",
+        done = make_run(path=".github/workflows/hmux-next.yml", name="hmux-next", branch="lane/y",
                         status="completed", age=20)
         done.update(conclusion="success", updated_at=iso(1))
-        started = {"status": "completed", "conclusion": "success", "name": "cmux-next app compile (build fleet)",
+        started = {"status": "completed", "conclusion": "success", "name": "hmux-next app compile (build fleet)",
                    "labels": [self.FLEET], "created_at": iso(20), "started_at": iso(5), "completed_at": iso(1),
                    "runner_name": "mini-3"}
         snapshot, fake = self.snapshot([run], {run["id"]: [self.compile_job()], done["id"]: [started]},
-                                       completed={"cmux-next.yml": [done]})
+                                       completed={"hmux-next.yml": [done]})
         self.assertEqual(snapshot["starved"], [])
         self.assertEqual(snapshot["unserved"], [])
 
     def test_an_older_completed_run_that_started_the_label_recently_serves_it(self, conclusion="success"):
-        run = make_run(path=".github/workflows/cmux-next.yml", name="cmux-next", branch="lane/x")
+        run = make_run(path=".github/workflows/hmux-next.yml", name="hmux-next", branch="lane/x")
         run["pull_requests"] = [{"number": 7, "base": {"ref": self.NEXT}}]
-        done = make_run(path=".github/workflows/cmux-next.yml", name="cmux-next", branch="lane/y",
+        done = make_run(path=".github/workflows/hmux-next.yml", name="hmux-next", branch="lane/y",
                         status="completed", age=90)
         done.update(conclusion=conclusion, updated_at=iso(1))
-        started = {"status": "completed", "conclusion": conclusion, "name": "cmux-next app compile (build fleet)",
+        started = {"status": "completed", "conclusion": conclusion, "name": "hmux-next app compile (build fleet)",
                    "labels": [self.FLEET], "created_at": iso(90), "started_at": iso(5), "completed_at": iso(1),
                    "runner_name": "mini-3"}
         snapshot, _ = self.snapshot([run], {run["id"]: [self.compile_job()], done["id"]: [started]},
-                                    completed={"cmux-next.yml": [done]})
+                                    completed={"hmux-next.yml": [done]})
         self.assertEqual(snapshot["starved"], [])
 
     def test_a_cancelled_run_that_started_the_label_recently_serves_it(self):
@@ -1338,10 +1338,10 @@ class StarvedLabelSnapshotTests(unittest.TestCase):
         self.test_an_older_completed_run_that_started_the_label_recently_serves_it(conclusion="cancelled")
 
     def test_a_main_run_of_a_linux_only_workflow_is_still_not_listed(self):
-        into_main = make_run(path=".github/workflows/cmux-next.yml", name="cmux-next", branch="lane/x")
+        into_main = make_run(path=".github/workflows/hmux-next.yml", name="hmux-next", branch="lane/x")
         into_main["pull_requests"] = [{"number": 7, "base": {"ref": "main"}}]
-        on_main = make_run(event="push", path=".github/workflows/cmux-next.yml", name="cmux-next", branch="main")
-        fork = make_run(path=".github/workflows/cmux-next.yml", name="cmux-next", branch="fork-branch")
+        on_main = make_run(event="push", path=".github/workflows/hmux-next.yml", name="hmux-next", branch="main")
+        fork = make_run(path=".github/workflows/hmux-next.yml", name="hmux-next", branch="fork-branch")
         runs = (into_main, on_main, fork)
         snapshot, fake = self.snapshot(runs, {run["id"]: [self.compile_job()] for run in runs})
         self.assertEqual(snapshot["starved"], [])
@@ -1459,7 +1459,7 @@ class RateLimitTests(unittest.TestCase):
 # ---------------------------------------------------------------------------
 
 SIDE = "glaeda-side-std-xcode-26.6"
-PIN_BRANCH = "cmux-tui-pin-c59ca5471ad6"
+PIN_BRANCH = "hmux-tui-pin-c59ca5471ad6"
 
 
 def unassigned_job(*, age=40, label=SIDE, runner_id=None, runner_name=None, name="macos / side lane"):
@@ -1482,10 +1482,10 @@ def lost_world(*, age=40, event="push", branch=PIN_BRANCH, sha="aaa", evidence=T
                evidence_label=SIDE, attempt=1, actor="leo", lost=None, siblings=()):
     """A run with one lost job, and another run whose newer same-label job started."""
     stuck = make_run(event=event, branch=branch, sha=sha, status="queued", age=age + 1, attempt=attempt,
-                     name="cmux-tui", path=".github/workflows/cmux-tui.yml")
+                     name="hmux-tui", path=".github/workflows/hmux-tui.yml")
     stuck["triggering_actor"] = {"login": actor}
-    other = make_run(event="push", branch="other-pin", status="in_progress", age=age, name="cmux-tui",
-                     path=".github/workflows/cmux-tui.yml")
+    other = make_run(event="push", branch="other-pin", status="in_progress", age=age, name="hmux-tui",
+                     path=".github/workflows/hmux-tui.yml")
     jobs = {stuck["id"]: [lost or unassigned_job(age=age), *siblings], other["id"]: []}
     if evidence:
         jobs[other["id"]].append(started_job(age=evidence_age if evidence_age is not None else age - 5,
@@ -1560,7 +1560,7 @@ class LostAssignmentPlanTests(unittest.TestCase):
 
     def test_pr_23694_swift_test_on_the_gui_pool_is_lost_at_the_open_pr_head(self):
         # Run 39667716636 attempt 1 (PR #23694, head f4090b079d), the same pattern as job 119450713364:
-        # job 119458409272 `cmux-next swift test` on exactly glaeda-gui-std-xcode-26.6, created 20:11:17Z,
+        # job 119458409272 `hmux-next swift test` on exactly glaeda-gui-std-xcode-26.6, created 20:11:17Z,
         # never assigned, while newer gui-std jobs started (22:51Z, 23:07Z). Its wait starts when the
         # run's last other job finished (Release compile, 22:33:32Z), so it is lost from 23:03:32Z.
         gui = "glaeda-gui-std-xcode-26.6"
@@ -1576,28 +1576,28 @@ class LostAssignmentPlanTests(unittest.TestCase):
         def world(sibling_conclusion):
             run = {"id": 39667716636, "event": "pull_request", "status": "queued", "run_attempt": 1,
                    "head_branch": "launch-frame/restore-first-frame", "head_sha": sha,
-                   "path": ".github/workflows/cmux-next.yml", "name": "cmux-next",
+                   "path": ".github/workflows/hmux-next.yml", "name": "hmux-next",
                    "created_at": "2026-10-21T20:08:33Z", "triggering_actor": {"login": "teamleaderleo"},
                    "head_repository": {"full_name": "manaflow-ai/cmux", "owner": {"login": "manaflow-ai"}},
                    "pull_requests": [{"number": 23694}]}
             jobs = [
-                job("cmux-next checks (god files, concurrency, crash safety, l10n)", LINUX, "2026-10-21T20:08:34Z",
+                job("hmux-next checks (god files, concurrency, crash safety, l10n)", LINUX, "2026-10-21T20:08:34Z",
                     "2026-10-21T20:08:44Z", "2026-10-21T20:11:58Z", sibling_conclusion, 3258772),
-                job("cmux-next web bundles (source-keyed cache)", LINUX, "2026-10-21T20:09:06Z",
+                job("hmux-next web bundles (source-keyed cache)", LINUX, "2026-10-21T20:09:06Z",
                     "2026-10-21T20:09:10Z", "2026-10-21T20:11:17Z", "success", 3258992),
-                job("cmux-next Release compile (Xcode 26)", SIDE, "2026-10-21T20:09:22Z",
+                job("hmux-next Release compile (Xcode 26)", SIDE, "2026-10-21T20:09:22Z",
                     "2026-10-21T22:23:49Z", "2026-10-21T22:33:32Z", "success", 1249742),
-                job("cmux-next generated files", "glaeda-session-std-xcode-26.6", "2026-10-21T20:11:17Z",
+                job("hmux-next generated files", "glaeda-session-std-xcode-26.6", "2026-10-21T20:11:17Z",
                     "2026-10-21T20:13:06Z", "2026-10-21T20:13:18Z", sibling_conclusion, 2782319),
-                job("cmux-next swift test", gui, "2026-10-21T20:11:17Z"),
+                job("hmux-next swift test", gui, "2026-10-21T20:11:17Z"),
             ]
-            other = make_run(branch="another-pr", sha="ccc", path=".github/workflows/cmux-next.yml",
-                             name="cmux-next")
-            served = [job("cmux-next swift test", gui, "2026-10-21T22:20:00Z", "2026-10-21T22:26:00Z",
+            other = make_run(branch="another-pr", sha="ccc", path=".github/workflows/hmux-next.yml",
+                             name="hmux-next")
+            served = [job("hmux-next swift test", gui, "2026-10-21T22:20:00Z", "2026-10-21T22:26:00Z",
                           "2026-10-21T22:40:00Z", "success", 11),
-                      job("cmux-next swift test", gui, "2026-10-21T22:46:00Z", "2026-10-21T22:51:00Z",
+                      job("hmux-next swift test", gui, "2026-10-21T22:46:00Z", "2026-10-21T22:51:00Z",
                           "2026-10-21T23:05:00Z", "success", 12),
-                      job("cmux-next swift test", gui, "2026-10-21T23:01:00Z", "2026-10-21T23:07:00Z", runner=13)]
+                      job("hmux-next swift test", gui, "2026-10-21T23:01:00Z", "2026-10-21T23:07:00Z", runner=13)]
             return run, other, {run["id"]: jobs, other["id"]: served}
 
         pr = make_pr(23694, head=sha)
@@ -1605,7 +1605,7 @@ class LostAssignmentPlanTests(unittest.TestCase):
             with self.subTest(sibling_conclusion=sibling_conclusion):
                 run, other, jobs = world(sibling_conclusion)
                 lost = janitor.find_lost([run, other], jobs, now=now)
-                self.assertEqual(lost[run["id"]].job_name, "cmux-next swift test")
+                self.assertEqual(lost[run["id"]].job_name, "hmux-next swift test")
                 self.assertEqual(lost[run["id"]].labels, gui)
                 # 22:26Z was created before the wait began; 22:51Z and 23:07Z are the evidence.
                 self.assertEqual(lost[run["id"]].skipped, 2)
@@ -1719,7 +1719,7 @@ class LostAssignmentPlanTests(unittest.TestCase):
         self.assertFalse(decision.candidate.rerun)
 
     def test_a_bot_re_run_at_the_pr_head_is_left_to_the_rescue_and_the_orphan_pass(self):
-        for actor in ("github-actions[bot]", "cmux-bot[bot]"):
+        for actor in ("github-actions[bot]", "hmux-bot[bot]"):
             with self.subTest(actor=actor):
                 stuck, other, jobs = lost_world(age=85, event="pull_request", branch="feature", attempt=2,
                                                 actor=actor)
@@ -1740,10 +1740,10 @@ class LostAssignmentPlanTests(unittest.TestCase):
     def test_a_newer_run_at_the_same_head_takes_over_so_the_cancel_asks_for_no_rerun(self):
         # A `labeled` run queued behind the lost run in ci.yml's concurrency group: re-running the
         # old one would replay `synchronize` with cancel-in-progress and kill the newer one.
-        for newer_path in (".github/workflows/ci.yml", ".github/workflows/cmux-tui.yml"):
+        for newer_path in (".github/workflows/ci.yml", ".github/workflows/hmux-tui.yml"):
             with self.subTest(newer_path=newer_path):
                 stuck, other, jobs = lost_world(age=85, event="pull_request", branch="feature")
-                stuck.update(path=newer_path, name="CI" if newer_path.endswith("ci.yml") else "cmux-tui")
+                stuck.update(path=newer_path, name="CI" if newer_path.endswith("ci.yml") else "hmux-tui")
                 newer = make_run(event="pull_request", branch="feature", sha="aaa", status="pending", age=20,
                                  path=newer_path)
                 decision = decision_for(plan([stuck, other, newer], jobs, {"feature": [make_pr(5)]}), stuck)
@@ -1762,7 +1762,7 @@ class LostAssignmentPlanTests(unittest.TestCase):
     def test_never_candidates_are_never_touched(self):
         for event, branch, name, path in (
                 ("push", "main", "CI", ".github/workflows/ci.yml"),
-                ("push", "feat-cmux-next", "CI", ".github/workflows/ci.yml"),
+                ("push", "feat-hmux-next", "CI", ".github/workflows/ci.yml"),
                 ("merge_group", "gh-readonly-queue/main/pr-1-abc", "CI", ".github/workflows/ci.yml"),
                 ("schedule", "main", "Some check", ".github/workflows/check.yml"),
                 ("workflow_dispatch", "main", "CI", ".github/workflows/ci.yml"),
@@ -1815,7 +1815,7 @@ class LostAssignmentPlanTests(unittest.TestCase):
 class LostEvidenceFetchTests(unittest.TestCase):
     def test_suspects_without_evidence_name_their_workflow_and_wait_start(self):
         stuck, other, jobs = lost_world(age=85, evidence=False)
-        self.assertEqual(janitor.evidence_queries([stuck, other], jobs, now=NOW), [("cmux-tui.yml", iso(85))])
+        self.assertEqual(janitor.evidence_queries([stuck, other], jobs, now=NOW), [("hmux-tui.yml", iso(85))])
         # Evidence already in the inventory needs no extra listing.
         stuck, other, jobs = lost_world(age=85)
         self.assertEqual(janitor.evidence_queries([stuck, other], jobs, now=NOW), [])
@@ -1836,7 +1836,7 @@ class LostEvidenceFetchTests(unittest.TestCase):
         done = [dict(make_run(status="completed", age=60 - index), conclusion="success") for index in range(4)]
         fake = FakeGitHub({stuck["id"]: dict(stuck)}, {stuck["id"]: jobs[stuck["id"]],
                                                       done[0]["id"]: [started_job(age=60, status="completed")]})
-        fake.completed["cmux-tui.yml"] = done
+        fake.completed["hmux-tui.yml"] = done
         fake.prs[PIN_BRANCH] = []
         with tempfile.TemporaryDirectory() as temp:
             argv = ["--repo", "manaflow-ai/cmux", "--summary", str(Path(temp) / "s.md"),
@@ -2114,14 +2114,14 @@ class LostAssignmentSweepTests(unittest.TestCase):
 
 DISPATCH_BRANCH = "acpmux-policy-everywhere"
 DISPATCH_SHA = "d9d0e2ca"
-TUI = ".github/workflows/cmux-tui.yml"
+TUI = ".github/workflows/hmux-tui.yml"
 
 
 def unclaimed_world(*, age=50, event="workflow_dispatch", branch=DISPATCH_BRANCH, sha=DISPATCH_SHA, path=TUI,
                     attempt=1, actor="leo", label=SIDE, siblings=(), name="macOS lint and tests"):
-    """Run 39652497071: a dispatch of cmux-tui.yml whose macOS leg no runner ever claimed, and no other run."""
+    """Run 39652497071: a dispatch of hmux-tui.yml whose macOS leg no runner ever claimed, and no other run."""
     run = make_run(event=event, branch=branch, sha=sha, status="queued", age=age + 2, attempt=attempt,
-                   name="cmux-tui", path=path)
+                   name="hmux-tui", path=path)
     run["triggering_actor"] = {"login": actor}
     return run, {run["id"]: [unassigned_job(age=age, label=label, name=name), *siblings]}
 
@@ -2241,7 +2241,7 @@ class UnclaimedLegPlanTests(unittest.TestCase):
         self.assertEqual(decision.candidate.category, "stale-pr")
 
     def test_a_re_run_that_would_stay_on_the_owned_label_is_left_to_the_rescue(self):
-        run, jobs = unclaimed_world(age=50, path=".github/workflows/cmux-next.yml")
+        run, jobs = unclaimed_world(age=50, path=".github/workflows/hmux-next.yml")
         decision = decision_for(unclaimed_plan([run], jobs, {DISPATCH_BRANCH: []}), run)
         self.assertEqual(decision.action, "skip")
         self.assertIn("owned", decision.note)
@@ -2259,7 +2259,7 @@ class UnclaimedLegPlanTests(unittest.TestCase):
         self.assertIn(str(newer["id"]), decision.note)
 
     def test_two_dispatches_at_the_same_head_do_not_block_the_rescue(self):
-        # cmux-tui.yml runs each dispatch in its own group (cmux-tui-${{ inputs.request_id }}, never cancelled
+        # hmux-tui.yml runs each dispatch in its own group (hmux-tui-${{ inputs.request_id }}, never cancelled
         # in progress): a second dispatch at the head is another request, not a takeover.
         run, jobs = unclaimed_world(age=50)
         second = make_run(event="workflow_dispatch", branch=DISPATCH_BRANCH, sha=DISPATCH_SHA,
@@ -2330,7 +2330,7 @@ class UnclaimedLegRerunTests(unittest.TestCase):
 
     def test_candidates_that_could_not_be_re_run_spend_no_head_read(self):
         runs, jobs = [], {}
-        for index, (path, actor, attempt) in enumerate(((TUI, "leo", 1), (".github/workflows/cmux-next.yml", "leo", 1),
+        for index, (path, actor, attempt) in enumerate(((TUI, "leo", 1), (".github/workflows/hmux-next.yml", "leo", 1),
                                                         (TUI, "github-actions[bot]", 2))):
             run, world = unclaimed_world(age=50, branch=f"b{index}", path=path, actor=actor, attempt=attempt)
             runs.append(run)

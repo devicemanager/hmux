@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxRemoteWorkspace
+import HmuxControlSocket
+import HmuxRemoteWorkspace
 import Foundation
 
 /// Discovery responses for local callers and authenticated remote relays.
@@ -10,7 +10,7 @@ extension TerminalController {
             // A capability name is discovery, never a grant. Do not return the
             // local socket, access mode, or unrelated mobile capabilities.
             return [
-                "protocol": "cmux-socket", "version": 2, "scope": "remote_workspace",
+                "protocol": "hmux-socket", "version": 2, "scope": "remote_workspace",
                 "methods": RemoteRelayCommandPolicy().permittedMethods(
                     from: capabilities["methods"] as? [String] ?? []
                 )
@@ -151,7 +151,7 @@ extension TerminalController {
             "vm.reflection",
             "vm.open_port",
             "vm.attach_info",
-            "vm.cmux_remote_info",
+            "vm.hmux_remote_info",
             "vm.ssh_info",
             "vm.scp_info",
             "vm.sessions",
@@ -489,7 +489,7 @@ extension TerminalController {
         }
         // Discovery runs off-main; read the same flag snapshot as mobile host
         // capabilities rather than crossing to the main-actor flag store.
-        if !CmuxFeatureFlags.offMainEffectiveValue(for: CmuxFeatureFlags.mobileWorkspaceChangesFlag) {
+        if !HmuxFeatureFlags.offMainEffectiveValue(for: HmuxFeatureFlags.mobileWorkspaceChangesFlag) {
             let workspaceChangesMethods: Set<String> = [
                 "mobile.workspace.changes.files",
                 "mobile.workspace.changes.file_diff",
@@ -510,7 +510,7 @@ extension TerminalController {
         }
 
         return [
-            "protocol": "cmux-socket",
+            "protocol": "hmux-socket",
             "version": 2,
             "socket_path": socketServer.currentSocketPath,
             "access_mode": socketServer.accessMode.rawValue,

@@ -52,7 +52,7 @@ const { GET: portalGET } = await import("../app/api/billing/portal/route");
 const { POST: subscriptionPOST } = await import("../app/api/billing/subscription/route");
 const { GET: planGET } = await import("../app/api/billing/plan/route");
 
-const teamA = fixtureTeam("team-a", { displayName: "Team A", metadata: { cmuxPlan: "team", cmuxSeats: 4 } });
+const teamA = fixtureTeam("team-a", { displayName: "Team A", metadata: { hmuxPlan: "team", hmuxSeats: 4 } });
 const teamB = fixtureTeam("team-b", { displayName: "Team B" });
 
 beforeEach(() => {
@@ -68,22 +68,22 @@ describe("team portal", () => {
   test("?scope=team&teamId= opens that team's portal for its admin", async () => {
     dbRows.customers = [{ id: "cus_team_b" }];
 
-    const response = await portalGET(new NextRequest("https://cmux.test/api/billing/portal?scope=team&teamId=team-b"));
+    const response = await portalGET(new NextRequest("https://hmux.test/api/billing/portal?scope=team&teamId=team-b"));
 
     expect(response.headers.get("location")).toBe("https://billing.stripe.com/p/team");
     expect(createPortal).toHaveBeenCalledWith({
       customer: "cus_team_b",
-      return_url: "https://cmux.test/dashboard/billing?team=team-b",
+      return_url: "https://hmux.test/dashboard/billing?team=team-b",
     });
   });
 
   test("returns non-admins to the team billing view with a banner and no session", async () => {
     dbRows.customers = [{ id: "cus_team_a" }];
 
-    const response = await portalGET(new NextRequest("https://cmux.test/api/billing/portal?scope=team&teamId=team-a"));
+    const response = await portalGET(new NextRequest("https://hmux.test/api/billing/portal?scope=team&teamId=team-a"));
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?team=team-a&billing=team_admin_required",
+      "https://hmux.test/dashboard/billing?team=team-a&billing=team_admin_required",
     );
     expect(createPortal).not.toHaveBeenCalled();
   });
@@ -91,29 +91,29 @@ describe("team portal", () => {
   test("refuses teams the user does not belong to", async () => {
     dbRows.customers = [{ id: "cus_other" }];
 
-    const response = await portalGET(new NextRequest("https://cmux.test/api/billing/portal?scope=team&teamId=team-x"));
+    const response = await portalGET(new NextRequest("https://hmux.test/api/billing/portal?scope=team&teamId=team-x"));
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?team=team-x&billing=team_not_found",
+      "https://hmux.test/dashboard/billing?team=team-x&billing=team_not_found",
     );
     expect(createPortal).not.toHaveBeenCalled();
   });
 
   test("reports nosub for an admin whose team never had a Stripe customer", async () => {
-    const response = await portalGET(new NextRequest("https://cmux.test/api/billing/portal?scope=team&teamId=team-b"));
+    const response = await portalGET(new NextRequest("https://hmux.test/api/billing/portal?scope=team&teamId=team-b"));
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?team=team-b&billing=nosub");
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?team=team-b&billing=nosub");
   });
 });
 
 describe("team subscription cancel and resume", () => {
   function post(fields: Record<string, string>) {
-    return subscriptionPOST(new NextRequest("https://cmux.test/api/billing/subscription", {
+    return subscriptionPOST(new NextRequest("https://hmux.test/api/billing/subscription", {
       method: "POST",
       headers: {
         "content-type": "application/x-www-form-urlencoded",
-        origin: "https://cmux.test",
-        referer: "https://cmux.test/dashboard/billing",
+        origin: "https://hmux.test",
+        referer: "https://hmux.test/dashboard/billing",
       },
       body: new URLSearchParams(fields),
     }));
@@ -124,7 +124,7 @@ describe("team subscription cancel and resume", () => {
 
     const response = await post({ action: "cancel", scope: "team", teamId: "team-b" });
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?team=team-b&billing=cancelled");
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?team=team-b&billing=cancelled");
     expect(updateSubscription).toHaveBeenCalledWith("sub_team_b", { cancel_at_period_end: true });
   });
 
@@ -134,7 +134,7 @@ describe("team subscription cancel and resume", () => {
     const response = await post({ action: "cancel", scope: "team", teamId: "team-a" });
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?team=team-a&billing=team_admin_required",
+      "https://hmux.test/dashboard/billing?team=team-a&billing=team_admin_required",
     );
     expect(updateSubscription).not.toHaveBeenCalled();
   });
@@ -145,7 +145,7 @@ describe("team subscription cancel and resume", () => {
     const response = await post({ action: "resume", scope: "team", teamId: USER_ID });
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?billing=personal_team_not_upgradable_to_team",
+      "https://hmux.test/dashboard/billing?billing=personal_team_not_upgradable_to_team",
     );
     expect(updateSubscription).not.toHaveBeenCalled();
   });
@@ -156,12 +156,12 @@ describe("team subscription cancel and resume", () => {
 // selected a paid team could cancel its subscription or open its portal.
 describe("legacy team billing without teamId", () => {
   function post(fields: Record<string, string>) {
-    return subscriptionPOST(new NextRequest("https://cmux.test/api/billing/subscription", {
+    return subscriptionPOST(new NextRequest("https://hmux.test/api/billing/subscription", {
       method: "POST",
       headers: {
         "content-type": "application/x-www-form-urlencoded",
-        origin: "https://cmux.test",
-        referer: "https://cmux.test/dashboard/billing",
+        origin: "https://hmux.test",
+        referer: "https://hmux.test/dashboard/billing",
       },
       body: new URLSearchParams(fields),
     }));
@@ -173,7 +173,7 @@ describe("legacy team billing without teamId", () => {
     const response = await post({ action: "cancel", scope: "team" });
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?team=team-a&billing=team_admin_required",
+      "https://hmux.test/dashboard/billing?team=team-a&billing=team_admin_required",
     );
     expect(updateSubscription).not.toHaveBeenCalled();
   });
@@ -181,10 +181,10 @@ describe("legacy team billing without teamId", () => {
   test("a member of the selected team cannot open its portal", async () => {
     dbRows.customers = [{ id: "cus_team_a" }];
 
-    const response = await portalGET(new NextRequest("https://cmux.test/api/billing/portal?scope=team"));
+    const response = await portalGET(new NextRequest("https://hmux.test/api/billing/portal?scope=team"));
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?team=team-a&billing=team_admin_required",
+      "https://hmux.test/dashboard/billing?team=team-a&billing=team_admin_required",
     );
     expect(createPortal).not.toHaveBeenCalled();
   });
@@ -195,17 +195,17 @@ describe("legacy team billing without teamId", () => {
     dbRows.customers = [{ id: "cus_team_b" }];
 
     const cancel = await post({ action: "cancel", scope: "team" });
-    expect(cancel.headers.get("location")).toBe("https://cmux.test/dashboard/billing?team=team-b&billing=cancelled");
+    expect(cancel.headers.get("location")).toBe("https://hmux.test/dashboard/billing?team=team-b&billing=cancelled");
     expect(updateSubscription).toHaveBeenCalledWith("sub_team_b", { cancel_at_period_end: true });
 
-    const portal = await portalGET(new NextRequest("https://cmux.test/api/billing/portal?scope=team"));
+    const portal = await portalGET(new NextRequest("https://hmux.test/api/billing/portal?scope=team"));
     expect(portal.headers.get("location")).toBe("https://billing.stripe.com/p/team");
   });
 });
 
 describe("plan status for an explicit team", () => {
   async function plan(teamId: string) {
-    return planGET(new NextRequest(`https://cmux.test/api/billing/plan?teamId=${encodeURIComponent(teamId)}`));
+    return planGET(new NextRequest(`https://hmux.test/api/billing/plan?teamId=${encodeURIComponent(teamId)}`));
   }
 
   test("any member reads the team's plan, seats and their billing role", async () => {
@@ -250,7 +250,7 @@ describe("plan status for an explicit team", () => {
   });
 
   test("without teamId keeps the legacy implicit response shape", async () => {
-    const response = await planGET(new NextRequest("https://cmux.test/api/billing/plan"));
+    const response = await planGET(new NextRequest("https://hmux.test/api/billing/plan"));
 
     const body = await response.json();
     expect(body).toHaveProperty("planId");

@@ -1,7 +1,7 @@
 // context.clearCookies() clears the current tab's site, not the user's whole
 // profile: a name or RegExp filter stays on that site, and another site's
 // cookies survive. Playwright clears the whole (throwaway) context instead.
-// oracle: skip (cookie scope is cmux-defined: driven tabs use the user's profile)
+// oracle: skip (cookie scope is hmux-defined: driven tabs use the user's profile)
 // ---- cell session=cookies
 const site = (c) => {
   const host = String(c.domain).replace(/^\./, "");
@@ -16,13 +16,13 @@ await page.context().addCookies([
   { name: "a1", value: "1", url: `${PRIMARY}/` }, { name: "a2", value: "1", url: `${PRIMARY}/` },
   { name: "b1", value: "1", url: `${PEER}/` },
 ]);
-emitCmux("start", await jar());
+emitHmux("start", await jar());
 await page.context().clearCookies({ name: "a1" });
-emitCmux("by-name", await jar());
+emitHmux("by-name", await jar());
 await page.context().clearCookies({ name: /^(parity|b1)$/ });
-emitCmux("by-regexp", await jar());
+emitHmux("by-regexp", await jar());
 await page.context().clearCookies();
-emitCmux("this-site", await jar());
+emitHmux("this-site", await jar());
 await peerTab.context().clearCookies();
-emitCmux("peer-site", await jar());
+emitHmux("peer-site", await jar());
 await peerTab.close();

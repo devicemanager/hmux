@@ -1,4 +1,4 @@
-import CmuxAgentJournal
+import HmuxAgentJournal
 import Foundation
 import os
 
@@ -42,7 +42,7 @@ final class AgentJournalLazyStore: Sendable {
                     return store
                 } catch {
                     current = .unavailable
-                    CmuxEventBus.shared.publish(
+                    HmuxEventBus.shared.publish(
                         name: "agent.journal.open_failed",
                         category: "agent",
                         source: "journal",

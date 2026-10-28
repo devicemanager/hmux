@@ -1,4 +1,4 @@
-import { shellQuote } from "./cmuxTuiDaemon";
+import { shellQuote } from "./hmuxTuiDaemon";
 
 export const SCP_KEY_TTL_SECONDS = 15 * 60;
 
@@ -15,18 +15,18 @@ export function parseSshPublicKey(input: string): string {
 
 export function scpAuthorizedKeyLine(publicKey: string, expires: Date): string {
   const expiry = expires.toISOString().replace(/[-:]/g, "").replace("T", "").replace(/\.\d{3}Z$/, "Z");
-  return `restrict,expiry-time="${expiry}" ${parseSshPublicKey(publicKey)} cmux-scp:${Math.floor(expires.getTime() / 1000)}`;
+  return `restrict,expiry-time="${expiry}" ${parseSshPublicKey(publicKey)} hmux-scp:${Math.floor(expires.getTime() / 1000)}`;
 }
 
-/** Run as cmux. Preserve unrelated keys and concurrent transfers under flock. */
+/** Run as hmux. Preserve unrelated keys and concurrent transfers under flock. */
 export function scpAuthorizeCommand(publicKey: string, expires: Date): string {
   const line = scpAuthorizedKeyLine(publicKey, expires);
   return [
     "set -eu", "umask 077", 'mkdir -p "$HOME/.ssh"', 'cd "$HOME/.ssh"',
-    "exec 9>.cmux-scp.lock", "flock -x 9", 'touch authorized_keys',
-    'tmp=$(mktemp .cmux-scp.XXXXXXXXXX)', `trap 'rm -f -- "$tmp"' EXIT`,
+    "exec 9>.hmux-scp.lock", "flock -x 9", 'touch authorized_keys',
+    'tmp=$(mktemp .hmux-scp.XXXXXXXXXX)', `trap 'rm -f -- "$tmp"' EXIT`,
     // Only our expired markers are removed. User and provider keys are preserved.
-    `awk -v now="$(date +%s)" '{ if ($NF ~ /^cmux-scp:[0-9]+$/) { split($NF,a,":"); if (a[2] <= now) next } print }' authorized_keys > "$tmp"`,
+    `awk -v now="$(date +%s)" '{ if ($NF ~ /^hmux-scp:[0-9]+$/) { split($NF,a,":"); if (a[2] <= now) next } print }' authorized_keys > "$tmp"`,
     `printf '%s\\n' ${shellQuote(line)} >> "$tmp"`,
     'chmod 600 "$tmp"', 'mv -f -- "$tmp" authorized_keys',
   ].join("; ");
@@ -36,7 +36,7 @@ export function scpAuthorizeCommand(publicKey: string, expires: Date): string {
 export function scpPrepareCommand(publicKey: string, expires: Date): string {
   return [
     "set -eu", "test -x /usr/sbin/sshd", "systemctl start ssh",
-    `runuser -u cmux -- sh -c ${shellQuote(scpAuthorizeCommand(publicKey, expires))}`,
+    `runuser -u hmux -- sh -c ${shellQuote(scpAuthorizeCommand(publicKey, expires))}`,
     "cat /etc/ssh/ssh_host_ed25519_key.pub",
   ].join("; ");
 }

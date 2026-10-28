@@ -7,7 +7,7 @@ started (telemetry consent on), error-event captures pass cooldown and hourly
 budgets, and structured logs pass their own budget. Breadcrumbs are the widest
 net (every retained transport event, attached to whatever ships next). The
 pipeline turns the existing `DiagnosticLog` ring
-(`Packages/Shared/CMUXMobileCore`) into three Sentry surfaces without adding
+(`Packages/Shared/HMUXMobileCore`) into three Sentry surfaces without adding
 any new PII egress: the ring's vocabulary is fixed integer codes
 (`DiagnosticEventCode`, `DiagnosticFailureKind`, ...), so the bridge ships
 plain-language titles and decoded values, never error strings, peers,
@@ -20,7 +20,7 @@ issue grouping.
 
 `DiagnosticLog.setEventTap(_:)` delivers each retained event (on the ring's
 drain task) to a `TransportSentryReporter`
-(`Packages/Shared/CmuxSentryTelemetry`, target `CmuxSentryReporting`), which
+(`Packages/Shared/HmuxSentryTelemetry`, target `HmuxSentryReporting`), which
 emits:
 
 1. **Breadcrumbs**: every transport event, category `transport`, decoded via
@@ -30,9 +30,9 @@ emits:
    (`options.enableLogs`), rate-limited by a sliding hourly budget so retry
    storms cannot flood the quota.
 3. **Error events**: failures that cross `TransportIncidentPolicy`
-   (`CMUXMobileCore`, pure and unit-tested) become Sentry events fingerprinted
+   (`HMUXMobileCore`, pure and unit-tested) become Sentry events fingerprinted
    by `code/failureKind/transportKind` signature, with the plain-language
-   diagnostic timeline attached (`cmux-transport-diag.txt`, the same report
+   diagnostic timeline attached (`hmux-transport-diag.txt`, the same report
    the `iroh_diag` socket verb and iOS Settings export produce).
 
 The policy suppresses what an operator can already attribute (cancelled or
@@ -53,24 +53,24 @@ The iOS composition root also sends important fixed-enum events through a
 dedicated `AnalyticsEmitter` to `/api/observability/mobile-network`. This is
 separate from the PostHog product emitter. The authenticated route rejects
 unknown properties, stamps the authoritative Stack user ID, and emits one
-always-sampled `cmux.mobile.connectivity.latency` OpenTelemetry span per accepted
+always-sampled `hmux.mobile.connectivity.latency` OpenTelemetry span per accepted
 event. The existing server exporter writes those spans to Axiom. No Axiom
 credential ships in the app.
 
-Use `cmux.mobile.phase`, `cmux.mobile.outcome`, `cmux.mobile.failure`,
-`cmux.mobile.transport`, `cmux.mobile.user_usable`, and
-`cmux.mobile.duration_ms` for breakdowns. Each outcome also carries the stable
-`cmux.mobile.event_code` plus the bounded `cmux.mobile.event_a`,
-`cmux.mobile.event_b`, `cmux.mobile.event_c`, and `cmux.mobile.event_surface`
+Use `hmux.mobile.phase`, `hmux.mobile.outcome`, `hmux.mobile.failure`,
+`hmux.mobile.transport`, `hmux.mobile.user_usable`, and
+`hmux.mobile.duration_ms` for breakdowns. Each outcome also carries the stable
+`hmux.mobile.event_code` plus the bounded `hmux.mobile.event_a`,
+`hmux.mobile.event_b`, `hmux.mobile.event_c`, and `hmux.mobile.event_surface`
 slots from the originating diagnostic event. `transportDialCancelled` includes
-`cmux.mobile.cancellation_reason`, so a timeout-driven cancellation can be
+`hmux.mobile.cancellation_reason`, so a timeout-driven cancellation can be
 separated from teardown or supersession. These slots contain only fixed enum
 values, counters, durations, and process-local correlation numbers. They never
 contain error text, URLs, addresses, identities, credentials, or terminal
-content. `cmux.user_id` identifies accounts with repeated failure outcomes.
+content. `hmux.user_id` identifies accounts with repeated failure outcomes.
 Latency monitors should group p95 duration by phase, transport, event code, app
 version, and OS version. Sentry remains the immediate client-side outage alert
-when the cmux backend itself is unreachable and therefore cannot accept an
+when the hmux backend itself is unreachable and therefore cannot accept an
 Axiom upload.
 
 ## Wiring
@@ -80,7 +80,7 @@ Axiom upload.
   `AnalyticsConsentProviding` gate crash reporting uses; the SDK's
   `beforeSend`/`beforeSendLog` re-check it per envelope, and every outgoing
   event, breadcrumb, and log is scrubbed by `SentryEventScrubber`
-  (target `CmuxSentryReporting`, pure core in `CmuxSentryScrubbing`).
+  (target `HmuxSentryReporting`, pure core in `HmuxSentryScrubbing`).
 - macOS: `AppDelegate` sets the tap on
   `MobileHostIrohRuntime.hostDiagnosticLog` (role `macHost`) after
   `SentrySDK.start`, gated by `MacSentryStartupPolicy` as before.
@@ -91,7 +91,7 @@ A transport issue's title is a plain-language event summary (for example,
 `Transport dial failed (Transport: Iroh, Failure: Relay policy unavailable,
 Attempt: 7)`). Tags:
 `transport.event`, `transport.failure`, `transport.kind`, `transport.role`,
-`transport.incident` (`failure` | `outage`). The `cmux.transport` context
+`transport.incident` (`failure` | `outage`). The `hmux.transport` context
 holds streak counts and suppression counters. The attachment holds the full
 ring as an oldest-first timeline with labeled values. Events use UTC timestamps
 when a wall date is available and `+<seconds>` relative timestamps otherwise.

@@ -2,7 +2,7 @@
 import { appendFileSync, existsSync } from "node:fs";
 import { createInterface } from "node:readline";
 
-const root = process.env.CMUX_TEST_CODEX_RECOVERY_DIR!;
+const root = process.env.HMUX_TEST_CODEX_RECOVERY_DIR!;
 appendFileSync(`${root}/pids`, `${process.pid}\n`);
 const threads = new Set<string>();
 let nextThread = 0;

@@ -44,9 +44,9 @@ CI_WORKFLOW_PATH = ".github/workflows/ci.yml"
 # ci.yml's dogfood-build job. It runs only for same-repository app pull
 # requests (not docs or web only), so its presence is the media gate.
 DOGFOOD_JOB_PREFIX = "Dogfood build #"
-DOGFOOD_MARKER = "<!-- cmux:dogfood-build -->"
-SECTION_START = "<!-- cmux:pr-media:start -->"
-SECTION_END = "<!-- cmux:pr-media:end -->"
+DOGFOOD_MARKER = "<!-- hmux:dogfood-build -->"
+SECTION_START = "<!-- hmux:pr-media:start -->"
+SECTION_END = "<!-- hmux:pr-media:end -->"
 MEDIA_BRANCH = "pr-media"
 SCENARIOS_DIR = "dogfood/scenarios"
 DEFAULT_TOUR = "sidebar-and-chrome-tour"
@@ -69,7 +69,7 @@ ADOPT_CI, ADOPT_MAIN, COMPILE_NOW = "ci", "main", "now"
 COMPILE_MODES = (ADOPT_CI, ADOPT_MAIN, COMPILE_NOW)
 # Product inputs no tour shows (the CLI lane, the app-host unit tests): a
 # pull request that only changes these never compiles an app for its tours.
-NON_TOUR_PRODUCT_PREFIXES = ("CLI/", "cmuxCLITests/", "cmuxCLITestSupport/", "cmuxTests/")
+NON_TOUR_PRODUCT_PREFIXES = ("CLI/", "hmuxCLITests/", "hmuxCLITestSupport/", "hmuxTests/")
 GATE_WAIT_SECONDS = 25 * 60
 # Reads share the repository's token budget with the dispatcher, so waits poll slowly.
 GATE_POLL_SECONDS = 60

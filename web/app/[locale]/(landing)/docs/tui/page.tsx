@@ -43,7 +43,7 @@ export default async function TuiDocsPage() {
       <p>{t("intro")}</p>
       <figure className="not-prose my-6">
         <Image
-          src="/tui/cmux-tui-overview.png"
+          src="/tui/hmux-tui-overview.png"
           width={5120}
           height={2820}
           sizes={
@@ -70,7 +70,7 @@ export default async function TuiDocsPage() {
         copiedLabel={t("installTabs.copied")}
       />
       <p>{t("installNpx")}</p>
-      <CodeBlock lang="bash">{`npx cmux`}</CodeBlock>
+      <CodeBlock lang="bash">{`npx hmux`}</CodeBlock>
       <Callout>{t("platforms")}</Callout>
 
       <DocsHeading level={2} id="model">
@@ -119,8 +119,8 @@ export default async function TuiDocsPage() {
         {t("sessionsTitle")}
       </DocsHeading>
       <p>{t("sessionsIntro")}</p>
-      <CodeBlock lang="bash">{`cmux --headless --session agents
-cmux attach --session agents`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux --headless --session agents
+hmux attach --session agents`}</CodeBlock>
       <p>{t("sessionsBody")}</p>
 
       <DocsHeading level={2} id="remote">
@@ -151,17 +151,17 @@ cmux attach --session agents`}</CodeBlock>
         {t("automationTitle")}
       </DocsHeading>
       <p>{t("automationIntro")}</p>
-      <CodeBlock lang="bash">{`cmux --session agents workspace list --json
-workspace_id="$(cmux --session agents workspace create --name review --json | jq -r '.value.workspace_id')"
-cmux --session agents workspace "$workspace_id" run -- npm test
-cmux --session agents terminal <terminal-id> screen read`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux --session agents workspace list --json
+workspace_id="$(hmux --session agents workspace create --name review --json | jq -r '.value.workspace_id')"
+hmux --session agents workspace "$workspace_id" run -- npm test
+hmux --session agents terminal <terminal-id> screen read`}</CodeBlock>
       <p>{t("automationBody")}</p>
 
       <DocsHeading level={2} id="configuration">
         {t("configTitle")}
       </DocsHeading>
       <p>{t("configBody")}</p>
-      <CodeBlock lang="text">{`~/.config/cmux/cmux-tui.json`}</CodeBlock>
+      <CodeBlock lang="text">{`~/.config/hmux/hmux-tui.json`}</CodeBlock>
 
       <DocsHeading level={2} id="more">
         {t("moreTitle")}

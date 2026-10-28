@@ -113,7 +113,7 @@ class RevisionPlanTests(unittest.TestCase):
 
     def test_keep_marker_preserves_old_closed_root(self):
         files = ["42/00000001/tour/a.png"]
-        info = self.info(state="MERGED", closedAt=LONG_AGO, body="<!-- cmux:pr-media:keep -->")
+        info = self.info(state="MERGED", closedAt=LONG_AGO, body="<!-- hmux:pr-media:keep -->")
         self.assertEqual(prune.plan_media("o/r", files, {42: info}, NOW, {}), (files, []))
 
     def test_live_pr_reference_preserves_media_of_another_old_closed_pr(self):

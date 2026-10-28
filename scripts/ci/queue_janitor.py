@@ -65,7 +65,7 @@ jobs queued on a pool they hold exceeds a threshold:
      jobs a runner took in this sweep's inventory, from when each could first
      run, pool_wait_p90(), once a pool has UNCLAIMED_MIN_SAMPLES of them,
      published in the snapshot under WAIT_P90_KEY), with no evidence needed.
-     Run 39652497071's cmux-tui macOS leg (a dispatch on a live branch, on
+     Run 39652497071's hmux-tui macOS leg (a dispatch on a live branch, on
      glaeda-side-std-xcode-26.6) sat unclaimed 18:25Z to 00:37Z until
      GitHub's queue timeout. It is acted on only at a live head: the head of
      an open pull request, or a push or dispatch whose branch head, read with
@@ -96,7 +96,7 @@ page left unread) leaves either alone, as it does an orphan. Outside (b), (e)
 and (f), candidates are skipped once every pool's projected queue is back under
 the threshold. Every category shares
 the per-sweep cancel cap, and runs holding a backed-up pool are spent first.
-Main and feat-cmux-next pushes, merge groups, scheduled and dispatched runs on
+Main and feat-hmux-next pushes, merge groups, scheduled and dispatched runs on
 main, release/tag runs, nightly, and TestFlight/App Store workflows are never
 candidates, whatever their state.
 
@@ -296,11 +296,11 @@ DOOMED_GRACE = dt.timedelta(minutes=10)
 # waiting for. Sources/ is deliberately absent: the suite exercises it, but
 # nearly every pull request changes it, and a set matching every pull request
 # is not a rule. JANITOR_OPT_OUT_LABEL covers a fix that lives only there.
-DOOMED_INPUT_PREFIXES = ("cmuxTests/", "scripts/ci/workloads/")
+DOOMED_INPUT_PREFIXES = ("hmuxTests/", "scripts/ci/workloads/")
 DOOMED_INPUT_MARKERS = ("app-host", "app_host")
 DOOMED_INPUT_FILES = (
     ".github/workflows/ci-macos.yml",
-    "scripts/ci/cmux_unit_test_shard.py",
+    "scripts/ci/hmux_unit_test_shard.py",
     "scripts/ci/enable-xctest-automation-mode.sh",
 )
 JANITOR_OPT_OUT_LABEL = "no-janitor"
@@ -309,10 +309,10 @@ PROTECTED_EVENTS = frozenset({"merge_group", "release", "create", "delete", "dep
 # Long-lived branches whose pushes are the base other work merges onto, like
 # main's: no pull request ever has their head, so a push there would otherwise
 # read as stale (lost_pr_state()).
-PROTECTED_PUSH_BRANCHES = frozenset({"main", "feat-cmux-next"})
+PROTECTED_PUSH_BRANCHES = frozenset({"main", "feat-hmux-next"})
 MAIN_ONLY_EVENTS = frozenset({"schedule", "workflow_dispatch", "repository_dispatch"})
 PROTECTED_WORKFLOW = re.compile(r"release|nightly|testflight|app[-_ ]?store|appstore|publish|notar", re.IGNORECASE)
-TAG_LIKE_REF = re.compile(r"^(v\d|cmux-tui-v\d|.*-v\d+\.\d+)")
+TAG_LIKE_REF = re.compile(r"^(v\d|hmux-tui-v\d|.*-v\d+\.\d+)")
 
 UTC = dt.timezone.utc
 
@@ -414,8 +414,8 @@ def starved_scope_runs(runs: Sequence[Mapping[str, Any]], listed: Mapping[int, A
     """Runs whose jobs only the starved-label alert reads: skipped as linux-only, yet on another branch's copy.
 
     linux_only_workflow_paths() reads main's workflow files, but a run into or
-    on another branch follows that branch's copy: main's cmux-next.yml is an
-    inert registration while feat-cmux-next's runs the build-fleet compile on
+    on another branch follows that branch's copy: main's hmux-next.yml is an
+    inert registration while feat-hmux-next's runs the build-fleet compile on
     a glaeda-* label. These runs' jobs feed starved_labels only, never the
     cancel policy, and cost one jobs listing each.
     """
@@ -1005,7 +1005,7 @@ def newer_run_at_head(run: Mapping[str, Any], runs: Iterable[Mapping[str, Any]])
     over the newer run, so category e never re-runs a run that has one.
 
     A workflow_dispatch has none: each dispatch is its own request
-    (cmux-tui.yml runs each in its own `cmux-tui-<request_id>` group, never
+    (hmux-tui.yml runs each in its own `hmux-tui-<request_id>` group, never
     cancelled in progress), so a second dispatch at the same head takes
     nothing over, and counting it would block category f's rescue or drop its
     pending re-run, leaving the run cancelled for good.
@@ -1030,7 +1030,7 @@ def newer_run_at_head(run: Mapping[str, Any], runs: Iterable[Mapping[str, Any]])
 # runner fleet never sees it (run 39631559018, job 119450713364 on
 # glaeda-side-std-xcode-26.6, queued 80+ minutes from 19:55Z on 2026-10-21).
 # The same pattern hit PR #23694 that day: run 39667716636's job
-# 119458409272 (`cmux-next swift test`, glaeda-gui-std-xcode-26.6) queued from
+# 119458409272 (`hmux-next swift test`, glaeda-gui-std-xcode-26.6) queued from
 # 20:11Z past 23:03Z with no runner while newer gui-std jobs started at 22:51Z
 # and 23:07Z. The sweep runs on a hosted runner that cannot reach the fleet
 # dashboard, so "the fleet has no record of it" is read from GitHub alone: no
@@ -1345,7 +1345,7 @@ def classify_lost(
 # Category f: unclaimed legs
 # ---------------------------------------------------------------------------
 #
-# The macOS leg of side-lane cmux-tui run 39652497071 (a workflow_dispatch on
+# The macOS leg of side-lane hmux-tui run 39652497071 (a workflow_dispatch on
 # acpmux-policy-everywhere at d9d0e2ca, job 119404259678 `macOS lint and
 # tests` on glaeda-side-std-xcode-26.6) sat unclaimed from 18:25Z to 00:37Z,
 # until GitHub's queue timeout cancelled it. Category e did not apply (a
@@ -2373,7 +2373,7 @@ class GitHub:
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "cmux-ci-queue-janitor",
+            "User-Agent": "hmux-ci-queue-janitor",
         }
 
     def request(self, method: str, path: str, body: Any | None = None) -> Any:

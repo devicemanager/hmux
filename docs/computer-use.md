@@ -1,75 +1,75 @@
-# cmux Computer Use
+# hmux Computer Use
 
-cmux bundles `cmux-cua` from the `manaflow-ai/cmux-cua` fork of trycua/cua
-and exposes it as an MCP server named `cmux-cua`.
+hmux bundles `hmux-cua` from the `manaflow-ai/cmux-cua` fork of trycua/cua
+and exposes it as an MCP server named `hmux-cua`.
 
-Claude Code and Codex CLI sessions launched by cmux receive the server
+Claude Code and Codex CLI sessions launched by hmux receive the server
 automatically at session start (injection is implemented in
-`cmux-claude-wrapper` and `cmux-codex-wrapper`); no user MCP configuration is
-required for them. The Claude wrapper retains cmux's broad native tool surface.
+`hmux-claude-wrapper` and `hmux-codex-wrapper`); no user MCP configuration is
+required for them. The Claude wrapper retains hmux's broad native tool surface.
 The Codex wrapper launches the tag-installed helper executable as its
 authenticated MCP broker and adds `--codex-computer-use-compat`, which
 presents the exact Codex Computer Use server identity, ten-tool order, schemas,
 annotations, app-oriented arguments, screenshot/tree result shape, and
-approval flow while still running on cmux's own engine. Other agents are not
+approval flow while still running on hmux's own engine. Other agents are not
 currently supported:
-the socket proxy requires the per-launch credential that cmux injects into its
-own terminal process tree. Do not configure the bundled cmux-cua engine with
+the socket proxy requires the per-launch credential that hmux injects into its
+own terminal process tree. Do not configure the bundled hmux-cua engine with
 `--embedded`; that would grant Accessibility and Screen Recording to the main
-terminal host and bypass the separately permissioned **cmux Computer Use**
+terminal host and bypass the separately permissioned **hmux Computer Use**
 helper.
 
-Codex's built-in `@computer` entry is an OpenAI-bundled plugin. cmux does not
+Codex's built-in `@computer` entry is an OpenAI-bundled plugin. hmux does not
 replace that plugin: it supplies its own local MCP server and the
-`$cmux-cua` skill. Neither wrapper installs global skills or adds automatic skill
+`$hmux-cua` skill. Neither wrapper installs global skills or adds automatic skill
 directories by default. Use your agent's normal skill installer for a persistent
 user-owned installation. Codex 0.153 treats `skills.config` paths as enable/disable
-rules, not discovery roots; cmux does not inject an ineffective session fallback.
+rules, not discovery roots; hmux does not inject an ineffective session fallback.
 
-Alternatively, `CMUX_COMPUTER_USE_INSTALL_GLOBAL_SKILL=1` is a per-launch
-preference for an app-managed global link: `~/.agents/skills/cmux-cua` for Codex
-or `~/.claude/skills/cmux-cua` for Claude. Export the flag for future launches
-to retain these links; they are user-global and may also appear outside cmux.
-With the flag unset or `=0`, a cmux agent launch removes only verified
+Alternatively, `HMUX_COMPUTER_USE_INSTALL_GLOBAL_SKILL=1` is a per-launch
+preference for an app-managed global link: `~/.agents/skills/hmux-cua` for Codex
+or `~/.claude/skills/hmux-cua` for Claude. Export the flag for future launches
+to retain these links; they are user-global and may also appear outside hmux.
+With the flag unset or `=0`, a hmux agent launch removes only verified
 app-managed links. A same-name project or user-owned skill takes precedence:
 the wrapper does not create a competing global link or hide the existing skill.
 
-Migration of `cmux-cua`, `cmux-computer-use`, and `codex-cua` links requires an
-existing cmux bundle with a verified bundle ID, known install/build root, and
+Migration of `hmux-cua`, `hmux-computer-use`, and `codex-cua` links requires an
+existing hmux bundle with a verified bundle ID, known install/build root, and
 root/current-user ownership. Real skill directories, unrelated symlinks, and
 project skills remain untouched. Unknown or dangling targets lack that proof
-and require manual review; `CMUX_CUA_DIAGNOSTICS=1` reports preserved paths
+and require manual review; `HMUX_CUA_DIAGNOSTICS=1` reports preserved paths
 blocking explicit install and verified managed links retired by the per-launch
 policy. Historical app-created and manually-created symlinks with identical
 verified targets cannot be distinguished retroactively; recognized app-bundle
-links are treated as cmux-managed, while unknown and dangling links remain
+links are treated as hmux-managed, while unknown and dangling links remain
 preserved. No plugin manifest or temporary projection is shipped. Final picker
 rendering and selection are owned by the agent client.
 
-While Codex runs inside a cmux terminal, its CLI also Apple-Events its own
+While Codex runs inside a hmux terminal, its CLI also Apple-Events its own
 "Codex Computer Use" (`com.openai.sky.CUAService`) helper. macOS attributes
 that request to the enclosing terminal app, so a consent dialog naming the
-cmux build and "Codex Computer Use" can appear. It is not cmux's helper or
-cmux-cua engine sending anything (the same TCC entry appears for Ghostty and every
+hmux build and "Codex Computer Use" can appear. It is not hmux's helper or
+hmux-cua engine sending anything (the same TCC entry appears for Ghostty and every
 terminal Codex has run in); allowing or denying it only affects Codex's own
 computer-use path.
 
 The user grants Accessibility and Screen Recording to the helper once. A
-cmux-launched agent then connects through the authenticated, variant-scoped
+hmux-launched agent then connects through the authenticated, variant-scoped
 socket and can perceive the desktop through screenshots and accessibility
 trees and act with click, type, scroll, hotkey, drag, app, window, cursor, and
 diagnostic tools.
-cmux's injection disables the upstream cmux-cua engine's telemetry and self-update
-checks; cmux manages application updates through Sparkle.
+hmux's injection disables the upstream hmux-cua engine's telemetry and self-update
+checks; hmux manages application updates through Sparkle.
 
-The first functional `$cmux-cua` request from a current cmux agent session opens
+The first functional `$hmux-cua` request from a current hmux agent session opens
 the existing onboarding window when setup is required. This is an explicit
 user opt-in signal, not a permission grant: the user still chooses every
 Accessibility and Screen Recording action in the window. The presentation
 boundary is `ComputerUseOnboardingCoordinator`: deliberate Settings actions
 select a step, and authenticated functional CUA requests from a locally owned
 terminal claim the runtime's first-use gate before presenting. Reading or
-discovering `$cmux-cua` does not claim that gate.
+discovering `$hmux-cua` does not claim that gate.
 
 Launch/resume, enabled-setting reconciliation, helper recovery, permission/TCC
 refresh, feature-flag refresh, passive workstream events, and unrelated tools
@@ -79,17 +79,17 @@ protected requests share the runtime claim and one window controller. Dismissal
 leaves the claim in place, so later requests and refreshes stay quiet; only
 disabling Computer Use, relaunching, or invalidating helper readiness resets it.
 To resume or select another permission step, use **Finish Setup…**,
-**Grant…**, or **Open System Settings** in Settings → cmux Computer Use, or the
+**Grant…**, or **Open System Settings** in Settings → hmux Computer Use, or the
 matching command palette action. Completed setup stays quiet unless fresh
 explicit intent needs setup again after readiness is invalidated.
 
 The Settings action uses the same onboarding flow: its first **Allow** action
 goes directly to the matching permanent System Settings pane instead of
 raising a second native TCC prompt first. If the helper is absent from the
-permission list, the compact companion supplies a draggable **cmux Computer
+permission list, the compact companion supplies a draggable **hmux Computer
 Use** app tile; add it, turn it on, and let onboarding advance after the helper
 reports the grant. The companion is a nonactivating panel: dragging its tile or
-pressing Back never activates cmux, so the main terminal window cannot rise
+pressing Back never activates hmux, so the main terminal window cannot rise
 over the System Settings pane mid-drag. On macOS Tahoe, turning Screen
 Recording on is followed by the system's separate direct-capture consent —
 an alert saying the helper "is attempting to bypass the system private window
@@ -122,7 +122,7 @@ method. `list-tools` and `check_permissions` intentionally work before admission
 
 An already attached but unconfigured proxy can still wait for its external
 readiness milestone and then return the pinned helper's setup-required response,
-**“cmux Computer Use onboarding is still in progress. Finish setup in cmux, then
+**“hmux Computer Use onboarding is still in progress. Finish setup in hmux, then
 retry.”** That response is bounded by the helper's current 55-second poll and
 is intentionally documented here rather than bypassing permission readiness or
 silently granting access. Existing users who completed setup retain their
@@ -130,11 +130,11 @@ helper readiness; revoked permissions invalidate that record and the next
 functional request opens setup again.
 
 Risk gating is handled by the MCP client harness. Claude Code and Codex show
-their normal tool approval UI for actions, and `cmux-cua` advertises the
+their normal tool approval UI for actions, and `hmux-cua` advertises the
 profile-specific annotations. Codex app approval is brokered through its
 negotiated MCP elicitation capability and authenticated to the signed Codex
 parent; a raw socket client cannot reuse that approval session. The retired
-cmux Node MCP elicitation layer is intentionally gone.
+hmux Node MCP elicitation layer is intentionally gone.
 
 ## Agent-specific tool contracts
 
@@ -143,7 +143,7 @@ Codex receives exactly these tools, in this order:
 `list_apps`, `get_app_state`, `click`, `perform_secondary_action`, `set_value`,
 `select_text`, `scroll`, `drag`, `press_key`, and `type_text`.
 
-This profile intentionally has no cmux-only lifecycle, cursor, recording,
+This profile intentionally has no hmux-only lifecycle, cursor, recording,
 diagnostic, browser/CDP, or `perform_actions` tools. `get_app_state` accepts an
 app name, path, or unambiguous bundle identifier and returns the Codex-shaped
 logical-window screenshot plus accessibility tree. Its string
@@ -162,34 +162,34 @@ Background coordinate drags are unavailable on macOS and return
 needed. The separate drag report in issue #18595 has not been independently
 reproduced.
 
-Claude Code continues to receive the broader native cmux contract. It uses
+Claude Code continues to receive the broader native hmux contract. It uses
 pid/window addressing, `get_window_state`, stable snapshot tokens, explicit
 cursor and diagnostic controls, and proxy-only `perform_actions`. Keeping the
-profiles separate prevents a cmux extension from silently changing Codex's
+profiles separate prevents a hmux extension from silently changing Codex's
 built-in Computer Use schema.
 
-`cmux-cua` is the one bundled command-line executable and MCP server. MCP is
+`hmux-cua` is the one bundled command-line executable and MCP server. MCP is
 its machine-readable stdio protocol—not a separate user-installed service—and
 no Node, Sky, or legacy bridge is involved.
 
-Set `CMUX_COMPUTER_USE_MCP_DISABLED=1` before launching an agent to disable
+Set `HMUX_COMPUTER_USE_MCP_DISABLED=1` before launching an agent to disable
 automatic computer-use MCP injection. There is no ambient executable override:
-both wrappers fail closed unless cmux has installed its tag-scoped helper.
-That installed helper's `cmux-cua` executable is the MCP client for both
+both wrappers fail closed unless hmux has installed its tag-scoped helper.
+That installed helper's `hmux-cua` executable is the MCP client for both
 Claude Code and Codex.
 
-## Building the bundled cmux-cua engine
+## Building the bundled hmux-cua engine
 
-Every cmux app build runs `scripts/build-cmux-cua.sh`, which compiles the
+Every hmux app build runs `scripts/build-hmux-cua.sh`, which compiles the
 pinned `manaflow-ai/cmux-cua` commit with Cargo and packages the result as
-the `cmux Computer Use.app` executable (`cmux-cua`), so Activity Monitor and
+the `hmux Computer Use.app` executable (`hmux-cua`), so Activity Monitor and
 permission UI show the product name instead of an implementation name. It is
-the only copy of the engine in the app. cmux installs that helper into its
-tag-scoped directory only when the helper is Developer ID signed (`com.cmuxterm.cua`, team `7WLXT3NR37`). A
+the only copy of the engine in the app. hmux installs that helper into its
+tag-scoped directory only when the helper is Developer ID signed (`com.hmuxterm.cua`, team `7WLXT3NR37`). A
 tagged dev build bundles an ad-hoc helper, which can never satisfy the
 Accessibility and Screen Recording rows, and a grant to it replaces the
 release helper's row. A dev build therefore copies the helper of an installed
-cmux NIGHTLY, RC or release app, or reports Computer Use unavailable and
+hmux NIGHTLY, RC or release app, or reports Computer Use unavailable and
 installs, launches and prompts for nothing. This requires a Rust
 toolchain on the build machine:
 
@@ -198,11 +198,11 @@ toolchain on the build machine:
   `aarch64-apple-darwin`/`x86_64-apple-darwin` targets it needs
 - CI: `scripts/install-rust-ci.sh`
 
-The pinned source is cached under `~/Library/Caches/cmux/cmux-cua`; after
+The pinned source is cached under `~/Library/Caches/hmux/hmux-cua`; after
 the first successful build no network access is needed until the pinned
 commit changes. The build applies the checked-in
-`scripts/cmux-cua-codex-delivery-mode.patch` after the SHA check because the
+`scripts/hmux-cua-codex-delivery-mode.patch` after the SHA check because the
 pinned native engine has the delivery ladder while its Codex adapter does not
-forward that field. Set `CMUX_CUA_SRC=/path/to/cmux-cua` to build from a local
+forward that field. Set `HMUX_CUA_SRC=/path/to/hmux-cua` to build from a local
 checkout (it must still be at the pinned commit); the same patch is applied
 idempotently there.

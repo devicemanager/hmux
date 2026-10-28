@@ -4,7 +4,7 @@
     fetch-previous-nightly-dmgs.py --repo manaflow-ai/cmux --release-tag nightly \
         --variant arm64 --exclude-build 3371353821401 --count 2 --out previous-nightlies
 
-Assets are matched by name (cmux-nightly-macos-<variant>-<build>.dmg), ordered by
+Assets are matched by name (hmux-nightly-macos-<variant>-<build>.dmg), ordered by
 build number, and the newest <count> below --exclude-build are downloaded by the
 asset API URL from that same listing, then checked against the listed digest.
 `gh release download --pattern` is not used: it resolves names against the REST
@@ -32,8 +32,8 @@ def main() -> int:
     parser.add_argument("--variant", required=True)
     parser.add_argument(
         "--name-prefix",
-        default="cmux-nightly-macos-",
-        help="Immutable DMG name prefix before <variant>-<build>.dmg (e.g. cmux-rc-macos-)",
+        default="hmux-nightly-macos-",
+        help="Immutable DMG name prefix before <variant>-<build>.dmg (e.g. hmux-rc-macos-)",
     )
     parser.add_argument("--exclude-build", type=int, default=0)
     parser.add_argument("--count", type=int, default=2)

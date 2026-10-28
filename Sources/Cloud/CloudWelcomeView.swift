@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// What the welcome window's one prominent button does for this account.
@@ -121,7 +121,7 @@ struct CloudWelcomeView: View {
                     onNext(nextStep)
                 } label: {
                     Text(primaryLabel)
-                        .cmuxFont(size: 13, weight: .semibold)
+                        .hmuxFont(size: 13, weight: .semibold)
                         .foregroundStyle(.white)
                         .frame(maxWidth: .infinity)
                         .frame(height: 36)
@@ -144,7 +144,7 @@ struct CloudWelcomeView: View {
                 // Return meant for the terminal must not enable Cloud or open pricing.
                 .accessibilityIdentifier("CloudWelcomePrimaryButton")
                 Text(noteLines.joined(separator: " "))
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundStyle(.primary)
                     .multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
@@ -158,7 +158,7 @@ struct CloudWelcomeView: View {
         .overlay(alignment: .topTrailing) {
             Button(action: onNotNow) {
                 Image(systemName: "xmark")
-                    .cmuxFont(size: 9, weight: .bold)
+                    .hmuxFont(size: 9, weight: .bold)
                     .foregroundStyle(.white.opacity(0.8))
                     .frame(width: 24, height: 24)
                     .background(.ultraThinMaterial, in: Circle())
@@ -188,14 +188,14 @@ struct CloudWelcomeView: View {
             Divider()
             HStack(spacing: 6) {
                 Text(noteLines.joined(separator: " "))
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundStyle(.primary)
                     .lineLimit(1)
                     .minimumScaleFactor(0.8)
                 Spacer(minLength: 6)
                 Button(action: onNotNow) {
                     Text(String(localized: "common.notNow", defaultValue: "Not Now"))
-                        .cmuxFont(size: 13, weight: .medium)
+                        .hmuxFont(size: 13, weight: .medium)
                         .padding(.horizontal, 12)
                         .frame(height: 30)
                         .background(Capsule(style: .continuous).fill(Color.primary.opacity(isHoveringNotNow ? 0.16 : 0.1)))
@@ -210,7 +210,7 @@ struct CloudWelcomeView: View {
                     onNext(nextStep)
                 } label: {
                     Text(primaryLabel)
-                        .cmuxFont(size: 13, weight: .semibold)
+                        .hmuxFont(size: 13, weight: .semibold)
                         .foregroundStyle(.white)
                         .padding(.horizontal, 13)
                         .frame(height: 30)
@@ -305,7 +305,7 @@ struct CloudWelcomeView: View {
                     Text(line)
                 }
             }
-            .cmuxFont(size: 11)
+            .hmuxFont(size: 11)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 12)
@@ -350,7 +350,7 @@ struct CloudWelcomeView: View {
     private var noteLines: [String] {
         let available = String(
             localized: "cloud.welcome.note.available",
-            defaultValue: "Cloud is available on cmux Pro and Max."
+            defaultValue: "Cloud is available on hmux Pro and Max."
         )
         switch nextStep {
         case .enable:
@@ -372,9 +372,9 @@ private struct CloudWelcomeHeader: View {
         VStack(spacing: 8) {
             HStack(spacing: 6) {
                 Image(systemName: "cloud.fill")
-                    .cmuxFont(size: 11, weight: .semibold)
-                Text(String(localized: "cloud.welcome.title.eyebrow", defaultValue: "cmux cloud"))
-                    .cmuxFont(size: 12, weight: .semibold)
+                    .hmuxFont(size: 11, weight: .semibold)
+                Text(String(localized: "cloud.welcome.title.eyebrow", defaultValue: "hmux cloud"))
+                    .hmuxFont(size: 12, weight: .semibold)
             }
             .foregroundStyle(Color.accentColor)
             .padding(.horizontal, 10)
@@ -388,7 +388,7 @@ private struct CloudWelcomeHeader: View {
                     .strokeBorder(Color.accentColor.opacity(0.18), lineWidth: 0.5)
             }
             Text(String(localized: "cloud.welcome.title", defaultValue: "Your work, wherever you go"))
-                .cmuxFont(size: 30, weight: .bold)
+                .hmuxFont(size: 30, weight: .bold)
                 .tracking(-0.35)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -418,12 +418,12 @@ private struct CloudWelcomeReasonRow: View {
     var body: some View {
         HStack(alignment: .firstTextBaseline, spacing: 10) {
             Image(systemName: symbol)
-                .cmuxFont(size: 14)
+                .hmuxFont(size: 14)
                 .foregroundStyle(.secondary)
                 .frame(width: 20)
                 .accessibilityHidden(true)
             Text(text)
-                .cmuxFont(size: 13)
+                .hmuxFont(size: 13)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .accessibilityElement(children: .combine)

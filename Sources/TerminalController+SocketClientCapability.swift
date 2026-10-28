@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxSettings
+import HmuxControlSocket
+import HmuxSettings
 import CryptoKit
 import Darwin
 import Foundation
@@ -59,7 +59,7 @@ extension TerminalController {
         bundleIdentifier: String? = Bundle.main.bundleIdentifier
     ) -> SocketClientCapabilityAuthority {
         let audience = bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines)
-            .nonEmpty ?? "com.cmuxterm.app"
+            .nonEmpty ?? "com.hmuxterm.app"
         let store = SocketClientCapabilitySecretStore(
             service: "\(audience).socket-client-capability"
         )
@@ -81,7 +81,7 @@ extension TerminalController {
     nonisolated func socketClientInitialReadLimits(
         peerProcessID: pid_t?
     ) -> ControlClientLineReadLimits? {
-        guard socketServer.accessMode == .cmuxOnly,
+        guard socketServer.accessMode == .hmuxOnly,
               !(peerProcessID.map(isDescendant) ?? false) else {
             return nil
         }
@@ -192,17 +192,17 @@ extension TerminalController {
         // Arm uses proof of possession of an inherited terminal capability.
         // No password or bearer capability is written to this socket.
         if Self.isCodeRouterHandoffArmCommand(command) {
-            let cmuxRealUserID = getuid()
-            let cmuxEffectiveUserID = geteuid()
-            guard cmuxRealUserID == cmuxEffectiveUserID,
+            let hmuxRealUserID = getuid()
+            let hmuxEffectiveUserID = geteuid()
+            guard hmuxRealUserID == hmuxEffectiveUserID,
                   peerHasSameUID,
                   command.utf8.count <= 4_096,
                   SocketClientCapabilityCommand(command) == nil,
                   let peerProcessID,
                   let peerAuditToken,
                   peerAuditToken.processID == peerProcessID,
-                  peerAuditToken.realUserID == cmuxRealUserID,
-                  peerAuditToken.effectiveUserID == cmuxEffectiveUserID,
+                  peerAuditToken.realUserID == hmuxRealUserID,
+                  peerAuditToken.effectiveUserID == hmuxEffectiveUserID,
                   let peerProcessStartTime,
                   let proofRequest = Self.codeRouterHandoffArmProofRequest(
                       command
@@ -660,7 +660,7 @@ extension TerminalController {
             return codeRouterSignedArmError(
                 requestID: request.id?.foundationObject,
                 code: "not_authenticated",
-                message: "Sign in to cmux before arming a CodeRouter handoff",
+                message: "Sign in to hmux before arming a CodeRouter handoff",
                 proof: verifiedProof
             )
         case .teamRequired:
@@ -768,7 +768,7 @@ extension TerminalController {
               }) else {
             return nil
         }
-        let prefix = Data("cmux-coderouter-team-v1\0".utf8)
+        let prefix = Data("hmux-coderouter-team-v1\0".utf8)
         let digest = SHA256.hash(data: prefix + Data(teamID.utf8))
         return digest.map { String(format: "%02x", $0) }.joined()
     }

@@ -24,7 +24,7 @@ extension SystemAppearanceObserver {
                     UserDefaults.standard.string(forKey: AppearanceSettings.appearanceModeKey)
                 },
                 effectivePrefersDark: {
-                    NSApp?.effectiveAppearance.cmuxPrefersDark == true
+                    NSApp?.effectiveAppearance.hmuxPrefersDark == true
                 },
                 synchronizeTerminalTheme: {
                     GhosttyApp.shared.synchronizeThemeWithAppearance(

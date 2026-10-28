@@ -100,7 +100,7 @@ class GitHub:
         config = (f'header = "Authorization: Bearer {self.token}"\n'
                   'header = "Accept: application/vnd.github+json"\n'
                   'header = "X-GitHub-Api-Version: 2022-11-28"\n')
-        with tempfile.TemporaryDirectory(prefix="cmux-release-upload-") as directory:
+        with tempfile.TemporaryDirectory(prefix="hmux-release-upload-") as directory:
             output = Path(directory) / "response.json"
             body_path = None
             if body is not None:
@@ -306,12 +306,12 @@ def ensure_asset(client: GitHub, release_id: int, asset: Asset, existing: dict |
     # Upload replacements under a unique temporary name first. The temporary
     # name must exist both remotely and locally because curl streams the local
     # path; clean it up even when GitHub or the network fails.
-    temporary_name = f"cmux-upload-{name}-{asset.digest[7:19]}"
+    temporary_name = f"hmux-upload-{name}-{asset.digest[7:19]}"
     temporary_path = asset.path.with_name(temporary_name)
     shutil.copyfile(asset.path, temporary_path)
     try:
         temporary = replace(asset, path=temporary_path, replace=False)
-        backup_name = f"cmux-backup-{name}"
+        backup_name = f"hmux-backup-{name}"
         listing = client.assets(release_id)
         temp_existing = listing.get(temporary_name)
         if temp_existing and not _asset_matches(client, temporary, temp_existing):

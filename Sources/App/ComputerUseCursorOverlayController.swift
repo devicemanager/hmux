@@ -1,4 +1,4 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import AppKit
 import Combine
 import Darwin
@@ -266,9 +266,9 @@ final class ComputerUseCursorOverlayController {
     private var panel: NSPanel?
     private var pointerView: AgentCursorPointerView?
     private var directoryWatchSource: DispatchSourceFileSystemObject?
-    private let directoryWatchQueue = DispatchQueue(label: "com.cmuxterm.app.computerUseCursorWatch")
+    private let directoryWatchQueue = DispatchQueue(label: "com.hmuxterm.app.computerUseCursorWatch")
     /// The untrusted feed directory is scanned here, never on the main thread.
-    private let scanQueue = DispatchQueue(label: "com.cmuxterm.app.computerUseCursorScan", qos: .utility)
+    private let scanQueue = DispatchQueue(label: "com.hmuxterm.app.computerUseCursorScan", qos: .utility)
     /// At most one background scan is outstanding; further ticks are dropped until
     /// it lands, which collapses a burst of watcher/timer events into one scan.
     private var scanInFlight = false
@@ -303,7 +303,7 @@ final class ComputerUseCursorOverlayController {
         started = true
         scanGeneration &+= 1
 
-        NotificationCenter.default.publisher(for: .cmuxFeatureFlagsDidChange)
+        NotificationCenter.default.publisher(for: .hmuxFeatureFlagsDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 Task { @MainActor in self?.refresh() }
@@ -418,7 +418,7 @@ final class ComputerUseCursorOverlayController {
             return
         }
 
-        // Re-assert front on every move: when cmux brings the driven app to the
+        // Re-assert front on every move: when hmux brings the driven app to the
         // foreground (watchable mode) the activation can reshuffle window order,
         // and a one-time orderFront at first appearance would let the cursor get
         // buried behind the app it is supposed to be pointing at.

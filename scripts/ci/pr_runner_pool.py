@@ -14,7 +14,7 @@ The run goes where it expects to wait least (pick()):
     vars.CI_PR_POOL_ORDER, comma-separated; by default
       blacksmith-12vcpu-macos-26   same macOS and Xcode as the lane, faster
       blacksmith-6vcpu-macos-26    vars.MACOS_RUNNER_PR today
-      blacksmith-6vcpu-macos-15    macOS 15 Xcode (vars.CMUX_CI_XCODE_APP_MACOS_15),
+      blacksmith-6vcpu-macos-15    macOS 15 Xcode (vars.HMUX_CI_XCODE_APP_MACOS_15),
                                    the pool and Xcode main's own CI runs on
 
     expected wait = that label's queued jobs over its Blacksmith plan capacity,
@@ -58,11 +58,11 @@ is sponsored, so cost is not a reason to prefer one.
 `vars.CI_PR_POOL_OVERFLOW == '0'` turns this off. Only the labels in POOLS
 are accepted, because each one's Xcode pin is known here.
 
-Owned Macs (fleet RFC, cmuxterm-hq#573) join as class pools keyed by the
+Owned Macs (fleet RFC, hmuxterm-hq#573) join as class pools keyed by the
 label glaeda issues, `glaeda-<class>-xcode-<version>`. glaeda puts that label
 only on a dedicated member whose Xcode at the pinned path reports the pinned
 build, so the one label carries the class, the availability and the Xcode.
-The version follows the pull-request lane's pin (vars.CMUX_CI_XCODE_APP_PR,
+The version follows the pull-request lane's pin (vars.HMUX_CI_XCODE_APP_PR,
 `/Applications/Xcode_26.6.app` -> `glaeda-std-xcode-26.6`), so moving the
 pin moves the pool, and no runner carries the new label until glaeda has
 verified the new Xcode on it. Owned pools are persistent: the machine
@@ -155,7 +155,7 @@ each mini, whenever the pool has a root count and more machines than root
 runners (the `side_runner` output). On the pool label a side lane landed on a
 root runner about half the time (11 of 21 on 2026-09-25, 06:30 to 09:00Z,
 3,300 s of root-runner time) and kept a compile or product consumer off that
-mini's root while it ran; on cmux7s and cmux9s, with one root, it blocked the
+mini's root while it ran; on hmux7s and hmux9s, with one root, it blocked the
 mini's only compile. A pool without a root count keeps the pool label.
 The light pool's side runners come first (light_side_lanes()): on attempt 1
 of a same-repository pull request whose pick is an owned pool, as many side
@@ -176,7 +176,7 @@ When `vars.CI_OWNED_WARM == '1'`, admission is placed on a pool with a root
 count and the runners were read live, the picker routes by cost
 (warm_distance.picker_route()): each online runner of that root label that
 carries its own static label, `glaeda-runner-<runner name>`
-(glaeda-cmux-runner gives every root runner one at install), costs its
+(glaeda-hmux-runner gives every root runner one at install), costs its
 expected wait (0 when idle, else what its current job has left, from the
 snapshot's `running`) plus the compile predicted for its start: a kept build
 of this run's merge base (MERGED_ONTO, the merge commit's first parent), of
@@ -322,7 +322,7 @@ MACOS_15_RUNNER = "blacksmith-6vcpu-macos-15"
 POOLS = {
     LARGE_RUNNER: "",
     DEFAULT_RUNNER: "",
-    MACOS_15_RUNNER: "CMUX_CI_XCODE_APP_MACOS_15",
+    MACOS_15_RUNNER: "HMUX_CI_XCODE_APP_MACOS_15",
 }
 DEFAULT_ORDER = (LARGE_RUNNER, DEFAULT_RUNNER, MACOS_15_RUNNER)
 # Owned classes in preference order, ahead of Blacksmith in the default order
@@ -352,13 +352,13 @@ CAPABILITY_LABELS = ("glaeda-ios-sim",)
 # `pr-<number>` for a kept build of that pull request.
 WARM_KEY = re.compile(r"[0-9a-f]{12}|pr-[1-9][0-9]{0,8}")
 # `glaeda-runner-<runner name>`: the static label naming one root runner
-# (glaeda-cmux-runner runner_label()), which warm affinity puts in runs-on.
+# (glaeda-hmux-runner runner_label()), which warm affinity puts in runs-on.
 RUNNER_LABEL_PREFIX = "glaeda-runner-"
 # A glaeda runner's name: `<member>-glaeda` or `<member>-glaeda-<K>`, where
 # the member is the mini it runs on (runner_member()).
 GLAEDA_RUNNER_NAME = re.compile(r"(?P<member>.+)-glaeda(?:-[0-9]+)?")
 XCODE_APP = re.compile(r"/Xcode_([0-9]+(?:\.[0-9]+)*)\.app/?")
-PR_XCODE_VARIABLE = "CMUX_CI_XCODE_APP_PR"
+PR_XCODE_VARIABLE = "HMUX_CI_XCODE_APP_PR"
 OWNED_VARIABLE = "CI_PR_POOL_OWNED"
 SPLIT_VARIABLE = "CI_PR_POOL_OWNED_SPLIT"
 GUI_VARIABLE = "CI_PR_POOL_OWNED_GUI"
@@ -841,7 +841,7 @@ def gui_token_job(key: str) -> bool:
     session but runs XCTest through the runner user's one testmanagerd, which
     glaeda serializes with the same token (glaeda#1281, class `product`). On
     the root label it met a mini whose gui token a shard held, waited 240 s
-    and was refused (cmux runs 36314100892 and 36316398822, 2026-09-27).
+    and was refused (hmux runs 36314100892 and 36316398822, 2026-09-27).
     """
     return gui_job(key) or key == "cli-product"
 
@@ -1263,7 +1263,7 @@ def pr_warm_key(number: str | None) -> str:
 
 
 def runner_label(name: str) -> str:
-    """The static label only runner `name` carries: glaeda-cmux-runner's runner_label()."""
+    """The static label only runner `name` carries: glaeda-hmux-runner's runner_label()."""
     return RUNNER_LABEL_PREFIX + re.sub(r"[^a-z0-9._-]+", "-", name.lower())
 
 
@@ -2005,7 +2005,7 @@ def choose(
                                               snapshot_age_minutes(snapshot, now))
     # On a pool with gui runners each newer run holds one root runner (its
     # admission), not its whole peak: charging the peak left 0 of 15 root
-    # runners for a run while 3 newer runs held 3 (cmux run 36371179217,
+    # runners for a run while 3 newer runs held 3 (hmux run 36371179217,
     # 2026-09-28). With the runners read live, the runs counted are the live
     # window's; older runs' admissions show busy on the runners, or queued
     # through `older` (live_pools()).
@@ -2152,7 +2152,7 @@ class GitHub:
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "cmux-ci-pr-runner-pool",
+            "User-Agent": "hmux-ci-pr-runner-pool",
         }
 
     def get(self, path: str) -> Any:

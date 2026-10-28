@@ -2,12 +2,12 @@
 """The bundled CLI links no package that pulls in swift-syntax.
 
 swift-syntax is the custom-sidebar interpreter's parser. It belongs to the app
-and the sidebar interpreter service, never to `Contents/Resources/bin/cmux`:
+and the sidebar interpreter service, never to `Contents/Resources/bin/hmux`:
 SwiftPM products link as whole objects, so a product the CLI only lists still
 ships its Swift metadata, and swift-syntax alone was about 60% of the CLI's
 Swift symbols (31,539 of them in the v0.65 arm64 build).
 
-This walks the cmux-cli target's package products, follows every local package
+This walks the hmux-cli target's package products, follows every local package
 they depend on, and fails if any of them depends on swift-syntax.
 """
 
@@ -18,7 +18,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PROJECT = (ROOT / "cmux.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
+PROJECT = (ROOT / "hmux.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
 FORBIDDEN_REMOTE = "swift-syntax"
 
 
@@ -35,10 +35,10 @@ def object_body(object_id: str) -> str:
 
 def cli_target_body() -> str:
     match = re.search(
-        r"^\t\t(\w+) /\* cmux-cli \*/ = \{\n\t\t\tisa = PBXNativeTarget;(.*?)^\t\t\};", PROJECT, re.M | re.S
+        r"^\t\t(\w+) /\* hmux-cli \*/ = \{\n\t\t\tisa = PBXNativeTarget;(.*?)^\t\t\};", PROJECT, re.M | re.S
     )
     if not match:
-        raise AssertionError("project.pbxproj has no cmux-cli native target")
+        raise AssertionError("project.pbxproj has no hmux-cli native target")
     return match.group(2)
 
 
@@ -105,14 +105,14 @@ class CLIPackageGraphTest(unittest.TestCase):
         self.assertEqual(
             sorted(set(offenders)),
             [],
-            "cmux-cli links products whose packages depend on swift-syntax; "
-            "the CLI never imports them, so drop them from the cmux-cli target",
+            "hmux-cli links products whose packages depend on swift-syntax; "
+            "the CLI never imports them, so drop them from the hmux-cli target",
         )
 
     def test_the_walk_sees_the_cli_products(self):
         names = {package_directory(product_id)[0] for product_id in cli_product_dependency_ids()}
-        self.assertIn("CmuxControlSocket", names)
-        self.assertIn("CMUXAgentLaunch", names)
+        self.assertIn("HmuxControlSocket", names)
+        self.assertIn("HMUXAgentLaunch", names)
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@ describe("billing complete route", () => {
       id: "cs_123",
       payment_status: "paid",
       client_reference_id: "user-1",
-      metadata: { app: "cmux", plan: "pro" },
+      metadata: { app: "hmux", plan: "pro" },
       subscription: { id: "sub_1" },
       customer: { id: "cus_1" },
     };
@@ -52,10 +52,10 @@ describe("billing complete route", () => {
   });
 
   test("records paid sessions and redirects to success with the validated scheme", async () => {
-    process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES = "cmux-dev-local";
+    process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES = "hmux-dev-local";
     const response = await GET(
       new NextRequest(
-        "http://localhost:3777/api/billing/complete?session_id=cs_123&cmux_scheme=cmux-dev-local",
+        "http://localhost:3777/api/billing/complete?session_id=cs_123&hmux_scheme=hmux-dev-local",
       ),
     );
 
@@ -69,19 +69,19 @@ describe("billing complete route", () => {
     });
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "http://localhost:3777/billing/success?session_id=cs_123&cmux_scheme=cmux-dev-local",
+      "http://localhost:3777/billing/success?session_id=cs_123&hmux_scheme=hmux-dev-local",
     );
   });
 
   test("a dashboard checkout returns to its page with a welcome for the plan", async () => {
-    retrievedSession = { ...retrievedSession, metadata: { app: "cmux", plan: "max", returnTo: "/ja/dashboard/cloud" } };
+    retrievedSession = { ...retrievedSession, metadata: { app: "hmux", plan: "max", returnTo: "/ja/dashboard/cloud" } };
     const response = await GET(new NextRequest("http://localhost:3777/api/billing/complete?session_id=cs_123"));
     expect(recordCheckoutCompletion).toHaveBeenCalled();
     expect(response.headers.get("location")).toBe("http://localhost:3777/ja/dashboard/cloud?welcome=max");
   });
 
   test("an invalid stored returnTo falls back to the success page", async () => {
-    retrievedSession = { ...retrievedSession, metadata: { app: "cmux", plan: "pro", returnTo: "//evil.example/dashboard" } };
+    retrievedSession = { ...retrievedSession, metadata: { app: "hmux", plan: "pro", returnTo: "//evil.example/dashboard" } };
     const response = await GET(new NextRequest("http://localhost:3777/api/billing/complete?session_id=cs_123"));
     expect(response.headers.get("location")).toStartWith("http://localhost:3777/billing/success?");
   });
@@ -92,21 +92,21 @@ describe("billing complete route", () => {
       payment_status: "paid",
       client_reference_id: "user-1",
       metadata: {
-        app: "cmux",
+        app: "hmux",
         plan: "pro",
-        nativeCallbackScheme: "cmux-dev-local",
+        nativeCallbackScheme: "hmux-dev-local",
       },
       subscription: { id: "sub_1" },
       customer: { id: "cus_1" },
     };
     const response = await GET(
       new NextRequest(
-        "https://cmux.test/api/billing/complete?session_id=cs_123&cmux_scheme=cmux-dev-local",
+        "https://hmux.test/api/billing/complete?session_id=cs_123&hmux_scheme=hmux-dev-local",
       ),
     );
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/billing/success?session_id=cs_123&cmux_scheme=cmux-dev-local",
+      "https://hmux.test/billing/success?session_id=cs_123&hmux_scheme=hmux-dev-local",
     );
   });
 
@@ -115,15 +115,15 @@ describe("billing complete route", () => {
       id: "cs_123",
       payment_status: "unpaid",
       client_reference_id: "user-1",
-      metadata: { app: "cmux", plan: "pro" },
+      metadata: { app: "hmux", plan: "pro" },
     };
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/complete?session_id=cs_123"),
+      new NextRequest("https://hmux.test/api/billing/complete?session_id=cs_123"),
     );
 
     expect(recordCheckoutCompletion).not.toHaveBeenCalled();
-    expect(response.headers.get("location")).toBe("https://cmux.test/pricing?welcome=pending");
+    expect(response.headers.get("location")).toBe("https://hmux.test/pricing?welcome=pending");
   });
 
   test("redirects paid Team sessions to dashboard billing after recording", async () => {
@@ -131,19 +131,19 @@ describe("billing complete route", () => {
       id: "cs_team",
       payment_status: "paid",
       client_reference_id: "team-1",
-      metadata: { app: "cmux", plan: "team", stackTeamId: "team-1" },
+      metadata: { app: "hmux", plan: "team", stackTeamId: "team-1" },
       subscription: { id: "sub_team" },
       customer: { id: "cus_team" },
     };
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/complete?session_id=cs_team"),
+      new NextRequest("https://hmux.test/api/billing/complete?session_id=cs_team"),
     );
 
     expect(recordCheckoutCompletion).toHaveBeenCalled();
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/teams/team-1/billing?welcome=team",
+      "https://hmux.test/dashboard/teams/team-1/billing?welcome=team",
     );
   });
 
@@ -158,7 +158,7 @@ describe("billing complete route", () => {
     };
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/complete?session_id=cs_founder"),
+      new NextRequest("https://hmux.test/api/billing/complete?session_id=cs_founder"),
     );
 
     expect(recordFoundersCheckoutCompletion).toHaveBeenCalledWith({
@@ -168,7 +168,7 @@ describe("billing complete route", () => {
     });
     expect(recordCheckoutCompletion).not.toHaveBeenCalled();
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/billing/success?session_id=cs_founder&cmux_scheme=cmux",
+      "https://hmux.test/billing/success?session_id=cs_founder&hmux_scheme=hmux",
     );
   });
 
@@ -179,7 +179,7 @@ describe("billing complete route", () => {
       client_reference_id: "team-1",
       metadata: {
         founders_edition: "true",
-        app: "cmux",
+        app: "hmux",
         plan: "team",
         stackTeamId: "team-1",
       },
@@ -187,7 +187,7 @@ describe("billing complete route", () => {
         id: "sub_conflicting_scope",
         metadata: {
           founders_edition: "true",
-          app: "cmux",
+          app: "hmux",
           plan: "team",
           stackTeamId: "team-1",
         },
@@ -197,14 +197,14 @@ describe("billing complete route", () => {
 
     const response = await GET(
       new NextRequest(
-        "https://cmux.test/api/billing/complete?session_id=cs_conflicting_scope",
+        "https://hmux.test/api/billing/complete?session_id=cs_conflicting_scope",
       ),
     );
 
     expect(recordFoundersCheckoutCompletion).not.toHaveBeenCalled();
     expect(recordCheckoutCompletion).not.toHaveBeenCalled();
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=error",
+      "https://hmux.test/pricing?billing=error",
     );
   });
 
@@ -216,13 +216,13 @@ describe("billing complete route", () => {
     };
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/complete?session_id=cs_123"),
+      new NextRequest("https://hmux.test/api/billing/complete?session_id=cs_123"),
     );
 
     expect(recordCheckoutCompletion).toHaveBeenCalled();
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=account_deletion",
+      "https://hmux.test/pricing?billing=account_deletion",
     );
   });
 
@@ -235,11 +235,11 @@ describe("billing complete route", () => {
     };
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/complete?session_id=cs_foreign"),
+      new NextRequest("https://hmux.test/api/billing/complete?session_id=cs_foreign"),
     );
 
     expect(recordCheckoutCompletion).not.toHaveBeenCalled();
-    expect(response.headers.get("location")).toBe("https://cmux.test/pricing?billing=error");
+    expect(response.headers.get("location")).toBe("https://hmux.test/pricing?billing=error");
   });
 
   test("rejects a foreign session when its expanded subscription says Founder", async () => {
@@ -250,19 +250,19 @@ describe("billing complete route", () => {
       metadata: { app: "other", plan: "pro" },
       subscription: {
         id: "sub_foreign_founder",
-        metadata: { app: "cmux", founders_edition: "true" },
+        metadata: { app: "hmux", founders_edition: "true" },
       },
       customer: { id: "cus_foreign_founder" },
     };
 
     const response = await GET(
       new NextRequest(
-        "https://cmux.test/api/billing/complete?session_id=cs_foreign_founder",
+        "https://hmux.test/api/billing/complete?session_id=cs_foreign_founder",
       ),
     );
 
     expect(recordFoundersCheckoutCompletion).not.toHaveBeenCalled();
     expect(recordCheckoutCompletion).not.toHaveBeenCalled();
-    expect(response.headers.get("location")).toBe("https://cmux.test/pricing?billing=error");
+    expect(response.headers.get("location")).toBe("https://hmux.test/pricing?billing=error");
   });
 });

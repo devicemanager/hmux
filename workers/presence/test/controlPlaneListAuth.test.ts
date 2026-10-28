@@ -284,7 +284,7 @@ describe("confirm-on-hello", () => {
       platform: "mac",
       appVersion: "1.2.3",
       releaseTrack: "internal",
-      capabilities: ["cmux.irx.v1"],
+      capabilities: ["hmux.irx.v1"],
     });
 
     // Overlay recorded the confirmation.
@@ -293,7 +293,7 @@ describe("confirm-on-hello", () => {
       revoked: false,
       appVersion: "1.2.3",
       releaseTrack: "internal",
-      capabilities: ["cmux.irx.v1"],
+      capabilities: ["hmux.irx.v1"],
       lastConfirmedAt: new Date(T0).toISOString(),
       deviceId: "77116c35-0000-4000-8000-000000000001",
     });
@@ -311,7 +311,7 @@ describe("confirm-on-hello", () => {
       revoked: false,
       appVersion: "1.2.3",
       releaseTrack: "internal",
-      capabilities: ["cmux.irx.v1"],
+      capabilities: ["hmux.irx.v1"],
     });
 
     // …while the confirming socket saw exactly ONE directory (its snapshot,
@@ -355,7 +355,7 @@ describe("confirm-on-hello", () => {
     // registration lag, caller self-exclusion all look like this).
     harness.serveDiscovery(() => discoveryResponse(42));
 
-    const socket = await harness.connect("s1", { namespace: "dev.cmux.ios.lsta" });
+    const socket = await harness.connect("s1", { namespace: "dev.hmux.ios.lsta" });
     await harness.hello(socket, {
       endpointId: ENDPOINT_B,
       haveRev: null,
@@ -373,7 +373,7 @@ describe("confirm-on-hello", () => {
     );
     expect(synthesized).toMatchObject({
       bindingId: `ctl-hello:${ENDPOINT_B}`,
-      clientNamespace: "dev.cmux.ios.lsta",
+      clientNamespace: "dev.hmux.ios.lsta",
       deviceId: "device-b",
       status: "active",
       revoked: false,

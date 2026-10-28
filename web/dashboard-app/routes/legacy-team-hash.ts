@@ -3,7 +3,7 @@ import { redirect } from "@tanstack/react-router";
 /**
  * `/dashboard/team` used to host Hexclave's `<AccountSettings />`, which
  * addressed pages with URL hashes. Stack emails and old bookmarks still link
- * there, so the route maps the hash to the matching cmux route.
+ * there, so the route maps the hash to the matching hmux route.
  */
 const SECTION_REDIRECTS = {
   profile: () => redirect({ to: "/dashboard/settings", replace: true }),

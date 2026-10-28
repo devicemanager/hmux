@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxCloudMachines
+import HmuxCloudMachines
 
 /// Native machine commands apply the persisted result before returning to
 /// AppKit. All input paths share the same scoped store action and presentation.

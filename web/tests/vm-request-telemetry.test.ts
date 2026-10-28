@@ -59,7 +59,7 @@ function context(overrides: Partial<VmRequestContext> = {}): VmRequestContext {
     method: "POST",
     operation: "create",
     startedAtMs: 0,
-    client: { name: "cmux-mac", version: "1.2.3", channel: "nightly", requestId: "req-1" },
+    client: { name: "hmux-mac", version: "1.2.3", channel: "nightly", requestId: "req-1" },
     userId: "user-1",
     traceId: TRACE_ID,
     spanId: SPAN_ID,
@@ -83,7 +83,7 @@ function capture(
   }) as typeof fetch;
   captureVmRequestOutcome(
     { context: ctx, response, span, durationMs: 42.123 },
-    { fetch: fakeFetch, env: { CMUX_VM_ANALYTICS_FORCE: "1" } },
+    { fetch: fakeFetch, env: { HMUX_VM_ANALYTICS_FORCE: "1" } },
   );
   return { body, url };
 }
@@ -117,35 +117,35 @@ describe("trace ids on responses", () => {
 });
 
 describe("client identity and trace context from request headers", () => {
-  test("reads the cmux client headers, a valid traceparent and the client request id", () => {
-    const request = new Request("https://cmux.test/api/vm", {
+  test("reads the hmux client headers, a valid traceparent and the client request id", () => {
+    const request = new Request("https://hmux.test/api/vm", {
       headers: {
-        "x-cmux-client": "cmux-mac",
-        "x-cmux-app-version": "0.65.0",
-        "x-cmux-app-build": "1234",
-        "x-cmux-channel": "nightly",
-        "x-cmux-client-request-id": "8d2a6c1e-7f1b-4a3e-9a2c-0c1d2e3f4a5b",
+        "x-hmux-client": "hmux-mac",
+        "x-hmux-app-version": "0.65.0",
+        "x-hmux-app-build": "1234",
+        "x-hmux-channel": "nightly",
+        "x-hmux-client-request-id": "8d2a6c1e-7f1b-4a3e-9a2c-0c1d2e3f4a5b",
         traceparent: `00-${TRACE_ID}-${SPAN_ID}-01`,
-        "user-agent": "cmux/0.65.0",
+        "user-agent": "hmux/0.65.0",
       },
     });
     expect(vmClientIdentityFromRequest(request)).toEqual({
-      name: "cmux-mac",
+      name: "hmux-mac",
       version: "0.65.0",
       build: "1234",
       channel: "nightly",
-      userAgent: "cmux/0.65.0",
+      userAgent: "hmux/0.65.0",
       requestId: "8d2a6c1e-7f1b-4a3e-9a2c-0c1d2e3f4a5b",
       traceId: TRACE_ID,
     });
   });
 
   test("malformed ids and control characters are dropped, values are bounded", () => {
-    const request = new Request("https://cmux.test/api/vm", {
+    const request = new Request("https://hmux.test/api/vm", {
       headers: {
-        "x-cmux-client-request-id": "not valid because of spaces",
+        "x-hmux-client-request-id": "not valid because of spaces",
         traceparent: "garbage",
-        "x-cmux-app-version": `${"a".repeat(200)}`,
+        "x-hmux-app-version": `${"a".repeat(200)}`,
       },
     });
     const identity = vmClientIdentityFromRequest(request);
@@ -179,7 +179,7 @@ describe("vm error payloads", () => {
         error: "vm_billing_team_required",
         status: 409,
         message: "Select a team.",
-        action: "Select a team in cmux, then retry.",
+        action: "Select a team in hmux, then retry.",
         phase: "billing",
       });
     });
@@ -217,10 +217,10 @@ describe("error cause chains on spans", () => {
 
     const { span, attributes } = fakeSpan();
     recordSpanError(span, wrapped);
-    expect(attributes["cmux.error_name"]).toBe("ProviderError");
-    expect(attributes["cmux.error_cause_http_status"]).toBe(404);
-    expect(attributes["cmux.error_cause_code"]).toBe("SNAPSHOT_NOT_FOUND");
-    expect(attributes["cmux.error_cause_depth"]).toBe(1);
+    expect(attributes["hmux.error_name"]).toBe("ProviderError");
+    expect(attributes["hmux.error_cause_http_status"]).toBe(404);
+    expect(attributes["hmux.error_cause_code"]).toBe("SNAPSHOT_NOT_FOUND");
+    expect(attributes["hmux.error_cause_depth"]).toBe(1);
   });
 
   test("errors without a cause add no cause attributes and cycles terminate", () => {
@@ -269,7 +269,7 @@ describe("cloud_vm_request capture", () => {
       trace_id: TRACE_ID,
       span_id: SPAN_ID,
       client_request_id: "req-1",
-      client_name: "cmux-mac",
+      client_name: "hmux-mac",
       client_version: "1.2.3",
       client_channel: "nightly",
       schema_version: 3,
@@ -278,7 +278,7 @@ describe("cloud_vm_request capture", () => {
       trace_id: TRACE_ID,
       error_code: "vm_cloud_service_unavailable",
       $exception_level: "error",
-      $exception_fingerprint: "cmux-vm-error:vm_cloud_service_unavailable",
+      $exception_fingerprint: "hmux-vm-error:vm_cloud_service_unavailable",
     });
     // PostHog Error Tracking rejects a string here ("expected a sequence") and
     // drops the exception type, so the list must be sent as a JSON array.
@@ -286,11 +286,11 @@ describe("cloud_vm_request capture", () => {
     const list = exception.properties.$exception_list as Array<{ type: string; value: string }>;
     expect(list[0].type).toBe("vm_cloud_service_unavailable");
     expect(list[0].value).toContain("upstream 503");
-    expect(attributes["cmux.vm.request_success"]).toBe(false);
-    expect(attributes["cmux.vm.request_duration_ms"]).toBe(42.12);
-    expect(attributes["cmux.vm.request_error_code"]).toBe("vm_cloud_service_unavailable");
-    expect(attributes["cmux.user_id"]).toBe("user-1");
-    expect(attributes["cmux.client.request_id"]).toBe("req-1");
+    expect(attributes["hmux.vm.request_success"]).toBe(false);
+    expect(attributes["hmux.vm.request_duration_ms"]).toBe(42.12);
+    expect(attributes["hmux.vm.request_error_code"]).toBe("vm_cloud_service_unavailable");
+    expect(attributes["hmux.user_id"]).toBe("user-1");
+    expect(attributes["hmux.client.request_id"]).toBe("req-1");
   });
 
   test("a user-fault failure ships only cloud_vm_request, never an exception", () => {
@@ -345,7 +345,7 @@ describe("cloud_vm_request capture", () => {
       const { span, attributes } = fakeSpan();
       const { body } = capture(ctx, new Response("{}", { status: 200 }), span);
       expect(body).toBeNull();
-      expect(attributes["cmux.vm.request_success"]).toBe(true);
+      expect(attributes["hmux.vm.request_success"]).toBe(true);
     }
   });
 
@@ -359,7 +359,7 @@ describe("cloud_vm_request capture", () => {
     const ctx = context({ userId: undefined });
     const { body } = capture(ctx, new Response('{"error":"unauthorized"}', { status: 401 }));
     expect(body?.batch.map((entry) => entry.event)).toEqual([VM_REQUEST_POSTHOG_EVENT]);
-    expect(body?.batch[0].distinct_id).toBe("cmux-vm-anonymous");
+    expect(body?.batch[0].distinct_id).toBe("hmux-vm-anonymous");
   });
 
   test("nothing is sent outside production without the force flag", () => {
@@ -379,7 +379,7 @@ describe("cloud_vm_request capture", () => {
   });
 });
 
-describe("cmux-vm-error attribution", () => {
+describe("hmux-vm-error attribution", () => {
   test("permanent client-state errors are never operator faults, even when answered with a 5xx", () => {
     for (const error of [
       "vm_not_found",
@@ -405,7 +405,7 @@ describe("cmux-vm-error attribution", () => {
       route: "/api/vm/[id]/attach-endpoint",
       operation: "open_attach",
       vmId: "vm-abc",
-      client: { name: "cmux-mac", version: "1.2.3", channel: "nightly", requestId: "client-req-7" },
+      client: { name: "hmux-mac", version: "1.2.3", channel: "nightly", requestId: "client-req-7" },
     });
     const { span, attributes } = fakeSpan();
     const reported = spyOn(report, "reportError").mockImplementation(() => undefined);
@@ -428,7 +428,7 @@ describe("cmux-vm-error attribution", () => {
     for (const entry of [request, exception]) {
       expect(entry.properties).toMatchObject({ vm_id: "vm-abc", client_request_id: "client-req-7" });
     }
-    expect(exception.properties.$exception_fingerprint).toBe("cmux-vm-error:vm_cloud_state_unavailable");
-    expect(attributes["cmux.vm.id"]).toBe("vm-abc");
+    expect(exception.properties.$exception_fingerprint).toBe("hmux-vm-error:vm_cloud_state_unavailable");
+    expect(attributes["hmux.vm.id"]).toBe("vm-abc");
   });
 });

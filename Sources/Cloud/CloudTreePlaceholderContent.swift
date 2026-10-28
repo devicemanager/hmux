@@ -1,12 +1,12 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 struct CloudTreePlaceholderContent: View {
     let placeholder: CloudTreePlaceholder
     let style: CloudTreeStyle
 
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
 
     var body: some View {
         HStack(alignment: .center, spacing: GlobalFontMagnification.scaledSize(style.iconGap, percent: magnification)) {
@@ -15,14 +15,14 @@ struct CloudTreePlaceholderContent: View {
                 case .connecting:
                     ProgressView().controlSize(.mini)
                 case .error:
-                    CmuxSystemSymbolImage(
+                    HmuxSystemSymbolImage(
                         systemName: "exclamationmark.triangle",
                         pointSize: max(style.iconSize, 9),
                         weight: .regular,
                         tint: Color(nsColor: .secondaryLabelColor)
                     )
                 case .createMachine:
-                    CmuxSystemSymbolImage(
+                    HmuxSystemSymbolImage(
                         systemName: "plus",
                         pointSize: max(style.iconSize, 9),
                         weight: .medium,
@@ -33,7 +33,7 @@ struct CloudTreePlaceholderContent: View {
                     // rows it stands in for, like "No other devices yet".
                     Color.clear
                 case .dimmed:
-                    CmuxSystemSymbolImage(
+                    HmuxSystemSymbolImage(
                         systemName: "moon.zzz",
                         pointSize: max(style.iconSize, 9),
                         weight: .regular,
@@ -43,7 +43,7 @@ struct CloudTreePlaceholderContent: View {
             }
             .frame(width: max(style.iconSlot, 12))
             Text(placeholder.text)
-                .cmuxFont(size: placeholder.style == .empty ? style.detailSize : style.detailSize + 1, design: style.fontDesign)
+                .hmuxFont(size: placeholder.style == .empty ? style.detailSize : style.detailSize + 1, design: style.fontDesign)
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .truncationMode(.tail)

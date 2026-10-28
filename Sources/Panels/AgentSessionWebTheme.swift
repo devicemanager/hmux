@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 
 struct AgentSessionWebTheme: Equatable {
     let isDark: Bool
@@ -36,7 +36,7 @@ struct AgentSessionWebTheme: Equatable {
         ]
     }
 
-    static func resolve(appearance: PanelAppearance, accent accentColor: CmuxAccentColor = CmuxAccentColor()) -> AgentSessionWebTheme {
+    static func resolve(appearance: PanelAppearance, accent accentColor: HmuxAccentColor = HmuxAccentColor()) -> AgentSessionWebTheme {
         let base = appearance.backgroundColor.markdownOpaqueSRGB
         let isDark = !base.isLightColor
         let overlay: NSColor = isDark ? .white : .black

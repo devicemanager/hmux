@@ -25,13 +25,13 @@ export async function GET(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/sessions",
-    { "cmux.vm.operation": "list_sessions" },
+    { "hmux.vm.operation": "list_sessions" },
     "/api/vm/[id]/sessions failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "hmux.vm.id": id });
       const run = await runVmRoute(listVmSessions({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,
@@ -52,7 +52,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/sessions",
-    { "cmux.vm.operation": "open_session" },
+    { "hmux.vm.operation": "open_session" },
     "/api/vm/[id]/sessions failed",
     async ({ user, span }) => {
       const { id } = await params;
@@ -71,8 +71,8 @@ export async function POST(
       const title = optionalString(body.title);
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
-      if (sessionId) setSpanAttributes(span, { "cmux.vm.session.id": sessionId });
+      setSpanAttributes(span, { "hmux.vm.id": id });
+      if (sessionId) setSpanAttributes(span, { "hmux.vm.session.id": sessionId });
       const run = await runVmRoute(openVmSession({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

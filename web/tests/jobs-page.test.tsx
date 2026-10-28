@@ -90,7 +90,7 @@ describe("jobs page", () => {
     expect(html).toContain("Founding Designer");
     expect(html).toContain("Founding Chromium Engineer");
     expect(html).toContain(
-      "Hundreds of thousands of developers use cmux to drive their agentic coding workflows.",
+      "Hundreds of thousands of developers use hmux to drive their agentic coding workflows.",
     );
     expect(html).toContain("Build frontier devtools across the stack");
     expect(html).toContain("Design frontier devtools across the stack");
@@ -125,16 +125,16 @@ describe("jobs page", () => {
       )}"`,
     );
     expect(html).toContain(
-      'href="https://www.ycombinator.com/companies/cmux/jobs/RcX3bDA-founding-engineer"',
+      'href="https://www.ycombinator.com/companies/hmux/jobs/RcX3bDA-founding-engineer"',
     );
     expect(html).toContain(
-      'href="https://www.ycombinator.com/companies/cmux/jobs/p21OZLR-founding-designer"',
+      'href="https://www.ycombinator.com/companies/hmux/jobs/p21OZLR-founding-designer"',
     );
     expect(html).toContain(
-      'href="https://www.ycombinator.com/companies/cmux/jobs/T4rJNKX-founding-chromium-engineer"',
+      'href="https://www.ycombinator.com/companies/hmux/jobs/T4rJNKX-founding-chromium-engineer"',
     );
     expect(html.match(/>YC Work at a Startup</g)).toHaveLength(3);
-    expect(html).not.toContain("About cmux");
+    expect(html).not.toContain("About hmux");
     expect(html).not.toContain("Open roles");
     expect(html).not.toContain("Who we're looking for");
     expect(html).not.toContain("No hard requirements.");
@@ -176,7 +176,7 @@ describe("jobs page", () => {
         jaMessages.jobs.foundingDesigner.applyEmailSubject,
       )}`,
     );
-    expect(html).not.toContain("cmux について");
+    expect(html).not.toContain("hmux について");
     expect(html).not.toContain("募集中のポジション");
     expect(html).not.toContain("興味がありますか？");
     expect(html).not.toContain("求める人物像");
@@ -318,7 +318,7 @@ describe("jobs page", () => {
     expect(html).toContain("Founding Engineer");
     expect(html).toContain("Founding Designer");
     expect(html).toContain(
-      "Design frontier devtools across the stack: cmux macOS, cmux TUI, cmux Windows/Linux, cmux iOS, cmux Cloud, cmux.com, chatmux, and more.",
+      "Design frontier devtools across the stack: hmux macOS, hmux TUI, hmux Windows/Linux, hmux iOS, hmux Cloud, cmux.com, chatmux, and more.",
     );
     expect(html).toContain(
       "You are a walking encyclopedia of design components from all sorts of apps.",
@@ -332,7 +332,7 @@ describe("jobs page", () => {
         enMessages.jobs.foundingDesigner.applyEmailSubject,
       )}`,
     );
-    expect(html).not.toContain("About cmux");
+    expect(html).not.toContain("About hmux");
     expect(html).not.toContain("Interested?");
   });
 
@@ -351,7 +351,7 @@ describe("jobs page", () => {
         jaMessages.jobs.foundingDesigner.applyEmailSubject,
       )}`,
     );
-    expect(html).not.toContain("cmux について");
+    expect(html).not.toContain("hmux について");
     expect(html).not.toContain("興味がありますか？");
     expect(html).not.toContain("What you'll do");
   });
@@ -362,7 +362,7 @@ describe("jobs page", () => {
       params: Promise.resolve({ locale: "en" }),
     });
     expect(english.title).toEqual({
-      absolute: "Founding Designer jobs at cmux",
+      absolute: "Founding Designer jobs at hmux",
     });
     expect(english.alternates).toEqual(
       expectedAlternates("/jobs/founding-designer", "en"),
@@ -376,7 +376,7 @@ describe("jobs page", () => {
       params: Promise.resolve({ locale: "ja" }),
     });
     expect(japanese.title).toEqual({
-      absolute: "Founding Designer の採用情報 — cmux",
+      absolute: "Founding Designer の採用情報 — hmux",
     });
     expect(japanese.alternates).toMatchObject({
       canonical: "https://cmux.com/ja/jobs/founding-designer",

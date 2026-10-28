@@ -384,7 +384,7 @@ describe("CodeRouter usage ledger wiring", () => {
       };
       const proxy = createClaudeMessagesProxy(dependencies);
       const response = await proxy(
-        new Request("https://cmux.test/api/coderouter/claude/v1/messages", {
+        new Request("https://hmux.test/api/coderouter/claude/v1/messages", {
           method: "POST",
           headers: {
             "content-type": "application/json",

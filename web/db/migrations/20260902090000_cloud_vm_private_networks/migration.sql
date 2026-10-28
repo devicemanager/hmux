@@ -1,6 +1,6 @@
 -- Per-user private networks and the WireGuard tunnels that reach into them.
 --
--- A Cloud VM used to be reachable only at its public IPv6 with the cmux-tui
+-- A Cloud VM used to be reachable only at its public IPv6 with the hmux-tui
 -- daemon port open to the Internet. It now joins the one private network that
 -- belongs to its owner, and the owner's Mac joins the same network over a
 -- WireGuard tunnel, so the daemon port needs no public exposure at all.

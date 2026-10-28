@@ -6,7 +6,7 @@ import { VmBillingGateway, noOpVmBillingGateway } from "../services/vms/billingG
 import { guestAgentUpdatesCommand } from "../services/vms/guestAgentUpdates";
 import { VmProviderGateway, type VmProviderGatewayShape } from "../services/vms/providerGateway";
 import { VmRepository, type CloudVmRow, type VmRepositoryShape } from "../services/vms/repository";
-import { createVm, openVmCmuxRemote, setVmAgentUpdates } from "../services/vms/workflows";
+import { createVm, openVmHmuxRemote, setVmAgentUpdates } from "../services/vms/workflows";
 
 const NOW = new Date("2026-01-01T00:00:00.000Z");
 
@@ -63,12 +63,12 @@ function harness(options: { vm?: CloudVmRow; exec?: () => Effect.Effect<{ exitCo
     findNetwork: () => Effect.succeed(null),
     upsertNetwork: () => Effect.succeed({
       id: "network-row", userId: "user-agents", provider: "freestyle" as const, providerNetworkId: "network-1",
-      slug: "cmux-agents", cidr: "10.0.0.0/24", cidrV6: "fd00::/64", createdAt: NOW, updatedAt: NOW,
+      slug: "hmux-agents", cidr: "10.0.0.0/24", cidrV6: "fd00::/64", createdAt: NOW, updatedAt: NOW,
     }),
   } as unknown as VmRepositoryShape;
   const providers = {
-    openCmuxRemote: () => Effect.succeed({
-      transport: "cmux-remote", route: "ws://10.0.0.5:1337/v1/link", token: "test-token",
+    openHmuxRemote: () => Effect.succeed({
+      transport: "hmux-remote", route: "ws://10.0.0.5:1337/v1/link", token: "test-token",
       session: "test-session", expiresAtUnix: 2_000_000_000, trustedCarrier: true,
     }),
     create: () => Effect.succeed({ provider: "freestyle" as const, providerVmId: "vm-agents", status: "running" as const, image: "snapshot-test", createdAt: NOW.getTime() }),
@@ -79,7 +79,7 @@ function harness(options: { vm?: CloudVmRow; exec?: () => Effect.Effect<{ exitCo
     },
     getStats: () => Effect.succeed({ cpus: 4, memoryTotalMb: 8192, diskTotalMb: 32768 }),
     supportsPrivateNetworking: () => true,
-    ensureNetwork: () => Effect.succeed({ id: "network-1", slug: "cmux-agents", cidr: "10.0.0.0/24", cidrV6: "fd00::/64" }),
+    ensureNetwork: () => Effect.succeed({ id: "network-1", slug: "hmux-agents", cidr: "10.0.0.0/24", cidrV6: "fd00::/64" }),
   } as unknown as VmProviderGatewayShape;
   const layer = Layer.mergeAll(
     Layer.succeed(VmRepository, repo),
@@ -98,14 +98,14 @@ const access = { userId: "user-agents", billingTeamId: "team-agents", teamIds: [
 describe("agent updates workflows", () => {
   test("an image-pinned attach runs no guest exec", async () => {
     const h = harness();
-    await Effect.runPromise(openVmCmuxRemote({ ...access, deferAfterResponse: h.deferAfterResponse }).pipe(Effect.provide(h.layer)));
+    await Effect.runPromise(openVmHmuxRemote({ ...access, deferAfterResponse: h.deferAfterResponse }).pipe(Effect.provide(h.layer)));
     expect(h.deferred).toHaveLength(0);
     expect(h.execs).toHaveLength(0);
   });
 
   test("an opted-in attach sends the updater after the response", async () => {
     const h = harness({ vm: row({ agentUpdates: "latest" }) });
-    const endpoint = await Effect.runPromise(openVmCmuxRemote({ ...access, deferAfterResponse: h.deferAfterResponse }).pipe(Effect.provide(h.layer)));
+    const endpoint = await Effect.runPromise(openVmHmuxRemote({ ...access, deferAfterResponse: h.deferAfterResponse }).pipe(Effect.provide(h.layer)));
     expect(endpoint.token).toBe("test-token");
     expect(h.execs).toHaveLength(0);
     expect(h.deferred).toHaveLength(1);
@@ -119,7 +119,7 @@ describe("agent updates workflows", () => {
       () => Effect.succeed({ exitCode: 1, stdout: "", stderr: "sudo: a password is required" }),
     ]) {
       const h = harness({ vm: row({ agentUpdates: "latest" }), exec });
-      const endpoint = await Effect.runPromise(openVmCmuxRemote({ ...access, deferAfterResponse: h.deferAfterResponse }).pipe(Effect.provide(h.layer)));
+      const endpoint = await Effect.runPromise(openVmHmuxRemote({ ...access, deferAfterResponse: h.deferAfterResponse }).pipe(Effect.provide(h.layer)));
       expect(endpoint.token).toBe("test-token");
       await Effect.runPromise(h.deferred[0]!);
       expect(h.execs).toHaveLength(1);

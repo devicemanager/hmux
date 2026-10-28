@@ -3,14 +3,14 @@
 
 `CmxPairingURLSchemeResolver` derives the pairing scheme from
 `Bundle.main.bundleIdentifier`. On iOS that is the only branch it has, and in
-an xctest process the main bundle belongs to the test runner, not to a cmux
+an xctest process the main bundle belongs to the test runner, not to a hmux
 build -- so `resolved` is nil, `CmxPairingQRCode.encode` returns nil, and
 `MobileSyncPairingPayload.encodedURL()` throws `invalidURL`.
 
-On macOS the same resolver has a deterministic fallback (`dev.cmux.ios`), so
+On macOS the same resolver has a deterministic fallback (`dev.hmux.ios`), so
 every test that leans on it passes under `swift test` and fails the moment the
 same target is run in an iOS Simulator. ci-macos-compat.yml is the only
-workflow that does that, and eight tests in CMUXMobileCoreTests were failing
+workflow that does that, and eight tests in HMUXMobileCoreTests were failing
 there on all four runners -- invisibly, because that workflow is
 workflow_dispatch only.
 
@@ -42,7 +42,7 @@ IMPLICIT_ENTRY_POINTS = {
     r"CmxPairingQRCode\(\)\s*\.\s*encode\(": "CmxPairingQRCode",
     r"\.encodedURL\(": "MobileSyncPairingPayload",
 }
-SOURCE_ROOT = "Packages/Shared/CMUXMobileCore/Sources/CMUXMobileCore/"
+SOURCE_ROOT = "Packages/Shared/HMUXMobileCore/Sources/HMUXMobileCore/"
 ENTRY_POINT_DECLARATIONS = {
     "CmxPairingQRCode": (SOURCE_ROOT + "CmxPairingQRCode.swift", "encode"),
     "MobileSyncPairingPayload": (SOURCE_ROOT + "MobileSyncProtocol.swift", "encodedURL"),
@@ -51,7 +51,7 @@ ENTRY_POINT_DECLARATIONS = {
 
 def is_test_file(path: str) -> bool:
     return "/Tests/" in path or path.startswith(
-        ("cmuxTests/", "cmuxUITests/", "ios/cmuxUITests/", "cmuxCLITests/", "cmuxCLITestSupport/")
+        ("hmuxTests/", "hmuxUITests/", "ios/hmuxUITests/", "hmuxCLITests/", "hmuxCLITestSupport/")
     )
 
 

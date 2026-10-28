@@ -1,4 +1,4 @@
-import CmuxAgentSessionStore
+import HmuxAgentSessionStore
 
 /// Explicit executor boundary for the Vault's initial filesystem snapshot.
 struct SessionIndexSnapshotLoader: Sendable {

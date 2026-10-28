@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
-# Build the Rust helpers that the cmux app target's late script phases bundle
+# Build the Rust helpers that the hmux app target's late script phases bundle
 # (diff sidecar and command palette Nucleo FFI) while xcodebuild compiles
 # Swift.
 #
-# Those phases run after the cmux Swift compile although they do not read its
+# Those phases run after the hmux Swift compile although they do not read its
 # output, so on CI their cargo builds (about 100 s) were the serial tail of the
 # nightly build. This script overlaps the two local-source helpers and runs the same build scripts with the same Cargo
 # target directories and the same toolchain-visible environment that Xcode gives
@@ -43,7 +43,7 @@ derived_data="$(mkdir -p "$derived_data" && cd "$derived_data" && pwd)"
 # when SDKROOT changes, so both must match the phase's values or Cargo would
 # rebuild. The project uses one deployment target for every configuration.
 deployment_targets="$(
-  grep -o 'MACOSX_DEPLOYMENT_TARGET = [0-9.]*' "$ROOT/cmux.xcodeproj/project.pbxproj" \
+  grep -o 'MACOSX_DEPLOYMENT_TARGET = [0-9.]*' "$ROOT/hmux.xcodeproj/project.pbxproj" \
     | awk '{print $3}' | sort -u
 )"
 if [[ "$(printf '%s\n' "$deployment_targets" | wc -l | tr -d ' ')" != "1" ]]; then
@@ -56,9 +56,9 @@ export SDKROOT
 
 # The diff sidecar keeps its Cargo target directory under the app target's
 # TARGET_TEMP_DIR: $(PROJECT_TEMP_DIR)/$(CONFIGURATION)/$(TARGET_NAME).build.
-target_temp_dir="$derived_data/Build/Intermediates.noindex/cmux.build/$configuration/cmux.build"
+target_temp_dir="$derived_data/Build/Intermediates.noindex/hmux.build/$configuration/hmux.build"
 mkdir -p "$target_temp_dir"
-scratch="$(mktemp -d "${TMPDIR:-/tmp}/cmux-helper-prebuild.XXXXXX")"
+scratch="$(mktemp -d "${TMPDIR:-/tmp}/hmux-helper-prebuild.XXXXXX")"
 trap 'rm -rf "$scratch"' EXIT
 
 run_helper() {
@@ -78,16 +78,16 @@ run_helper() {
 
 run_helper diff-sidecar env \
   TARGET_TEMP_DIR="$target_temp_dir" \
-  CMUX_DIFF_SIDECAR_ARCHS="$archs" \
-  CMUX_DIFF_SIDECAR_MIN_MACOS="$MACOSX_DEPLOYMENT_TARGET" \
+  HMUX_DIFF_SIDECAR_ARCHS="$archs" \
+  HMUX_DIFF_SIDECAR_MIN_MACOS="$MACOSX_DEPLOYMENT_TARGET" \
   "$ROOT/scripts/build-diff-sidecar.sh" &
 sidecar_pid=$!
 run_helper nucleo-ffi env \
-  CMUX_NUCLEO_FFI_ARCHS="$archs" \
-  CMUX_NUCLEO_FFI_REQUIRE_CARGO=1 \
+  HMUX_NUCLEO_FFI_ARCHS="$archs" \
+  HMUX_NUCLEO_FFI_REQUIRE_CARGO=1 \
   "$ROOT/scripts/build-command-palette-nucleo-ffi.sh" &
 nucleo_pid=$!
-# cmux-cua remains in the authoritative Xcode phase. Its source checkout
+# hmux-cua remains in the authoritative Xcode phase. Its source checkout
 # mutates a shared Git cache; cancelling an optional prebuild during checkout
 # could leave a Git index lock that poisons the subsequent required build.
 

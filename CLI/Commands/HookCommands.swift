@@ -8,13 +8,13 @@ private protocol LegacyHookCommand: SharedLegacyFacadeCommand {}
 private protocol AgentLauncherCommand: LegacyHookCommand {}
 
 struct HooksCommand: LegacyHookCommand {
-    @Option(name: .customLong("agent"), completion: .list(CMUXCLI.hookAgentNames)) var agent: String?
+    @Option(name: .customLong("agent"), completion: .list(HMUXCLI.hookAgentNames)) var agent: String?
     @Flag(name: [.customLong("yes"), .customShort("y")]) var yes = false
     @Flag(name: .customLong("project")) var project = false
-    // See `CMUXCLI.hooksTargetNames` for why this stays a sink instead of a
-    // subcommand tree; the completion kind is what makes `cmux hooks <TAB>`
+    // See `HMUXCLI.hooksTargetNames` for why this stays a sink instead of a
+    // subcommand tree; the completion kind is what makes `hmux hooks <TAB>`
     // offer `setup`, `uninstall`, `feed`, and every agent the catalog knows.
-    @Argument(parsing: .allUnrecognized, completion: .list(CMUXCLI.hooksTargetNames))
+    @Argument(parsing: .allUnrecognized, completion: .list(HMUXCLI.hooksTargetNames))
     var arguments: [String] = []
     static let configuration = CommandConfiguration(commandName: "hooks", helpNames: [])
 }
@@ -80,7 +80,7 @@ struct OMCCommand: AgentLauncherCommand {
     static let configuration = CommandConfiguration(commandName: "omc", helpNames: [])
 }
 
-/// Short form of `cmux vm agent`; not part of the documented usage() surface.
+/// Short form of `hmux vm agent`; not part of the documented usage() surface.
 struct VMAgentShortFormCommand: AgentLauncherCommand {
     @Argument(parsing: .captureForPassthrough) var arguments: [String] = []
     static let configuration = CommandConfiguration(commandName: "agent", shouldDisplay: false, helpNames: [])
@@ -97,14 +97,14 @@ struct AgentHibernationCommand: LegacyHookCommand {
 }
 
 struct CoderouterCommand: AgentLauncherCommand {
-    // Only the verbs cmux handles itself (`CMUXCLI.cmuxOwnedCoderouterVerbs`).
+    // Only the verbs hmux handles itself (`HMUXCLI.hmuxOwnedCoderouterVerbs`).
     // Every other verb, and all of `cr`, passes through to the CodeRouter CLI,
     // so the arguments stay a passthrough rather than a subcommand tree.
     @Argument(parsing: .captureForPassthrough, completion: .list(["status", "machines", "claude", "agent"]))
     var arguments: [String] = []
     static let configuration = CommandConfiguration(
         commandName: "coderouter",
-        abstract: CMUXCLI.localizedCoderouterAliases(),
+        abstract: HMUXCLI.localizedCoderouterAliases(),
         helpNames: [],
         aliases: ["cr"]
     )

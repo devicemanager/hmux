@@ -1,12 +1,12 @@
-import CmuxSSHClipboardTrust
-import CmuxCloud
-import CmuxCloudTui
-import CmuxCore
-import CmuxSurfaceCatalogModel
+import HmuxSSHClipboardTrust
+import HmuxCloud
+import HmuxCloudTui
+import HmuxCore
+import HmuxSurfaceCatalogModel
 import Foundation
 import os
 
-private let sshTuiWorkspaceLogger = Logger(subsystem: "com.cmuxterm.app", category: "SSHTuiWorkspace")
+private let sshTuiWorkspaceLogger = Logger(subsystem: "com.hmuxterm.app", category: "SSHTuiWorkspace")
 
 /// Composes SSH carriers with the same terminal graph and native projections as Cloud.
 @MainActor
@@ -74,7 +74,7 @@ final class SSHTuiWorkspaceCoordinator {
     nonisolated static func configurationForAttach(_ input: WorkspaceRemoteConfiguration) -> WorkspaceRemoteConfiguration {
         var configuration = input
         if let saved = configuration.restoredSSHSession,
-           saved.sshSessionOwner != "cmux-tui",
+           saved.sshSessionOwner != "hmux-tui",
            saved.legacyTmuxSSHConfiguration(agentSocketPath: configuration.agentSocketPath) == nil {
             configuration.restoredSSHSession = nil
         }
@@ -87,7 +87,7 @@ final class SSHTuiWorkspaceCoordinator {
     /// so a relaunch that races network startup does not flash SSH errors.
     func connect(workspace: Workspace, configuration: WorkspaceRemoteConfiguration) {
         for projection in catalog.projections where projection.workspaceID == workspace.id && projection.resource.machine.isSSH {
-            let provider = catalog.provider(for: projection.resource.machine) as? CmuxTuiSurfaceProvider
+            let provider = catalog.provider(for: projection.resource.machine) as? HmuxTuiSurfaceProvider
             _ = provider?.manualMirrorSessions[projection.panelID]?.retryConnection()
         }
         startAttempt(workspace: workspace, configuration: configuration)
@@ -218,14 +218,14 @@ final class SSHTuiWorkspaceCoordinator {
         }
     }
 
-    func provider(connection: SSHTuiConnection) throws -> CmuxTuiSurfaceProvider {
+    func provider(connection: SSHTuiConnection) throws -> HmuxTuiSurfaceProvider {
         let machine = SurfaceMachineID(rawValue: connection.id)
-        if let existing = catalog.provider(for: machine) as? CmuxTuiSurfaceProvider { return existing }
+        if let existing = catalog.provider(for: machine) as? HmuxTuiSurfaceProvider { return existing }
         guard let clientURL = clientURL() else { throw CloudMachineLink.LinkError.clientMissing }
         let links = SSHTuiLinkManager(connection: connection, clientURL: clientURL, paths: paths,
                                      isEnabled: { ManagedRemoteConnectionsPolicy.isEnabled },
                                      agentHookProviders: { SSHTuiConnection.agentHookProviders(defaults: .standard) })
-        let provider = CmuxTuiSurfaceProvider(
+        let provider = HmuxTuiSurfaceProvider(
             summary: .ssh(connection), links: links, catalog: catalog,
             sshClipboardWriteTrustStore: sshClipboardWriteTrustStore
         )
@@ -271,8 +271,8 @@ final class SSHTuiWorkspaceCoordinator {
             && Self.configurationForAttach(configuration).restoredSSHSession == nil
         let preparedConfiguration = Self.configurationForAttach(configuration)
         if preparedConfiguration.restoredSSHSession == nil, configuration.restoredSSHSession != nil {
-            // A workspace saved by the retired cmuxd-remote path can still be
-            // opened as a normal cmux-tui SSH workspace. Do not turn that stale
+            // A workspace saved by the retired hmuxd-remote path can still be
+            // opened as a normal hmux-tui SSH workspace. Do not turn that stale
             // descriptor into an "unsupported" Cloud error; it describes a
             // PTY that no longer has a supported owner, so start a fresh
             // daemon-owned workspace and keep the SSH destination/configuration.
@@ -286,7 +286,7 @@ final class SSHTuiWorkspaceCoordinator {
         let provider = try provider(connection: connection)
         let machine = provider.machine
         held.reservation = reserveInitialTerminal(workspace: workspace, machine: machine, configuration: configuration, focus: focus)
-        if let saved = configuration.restoredSSHSession, saved.sshSessionOwner != "cmux-tui" {
+        if let saved = configuration.restoredSSHSession, saved.sshSessionOwner != "hmux-tui" {
             // Use the same eligibility check as snapshot conversion, including
             // the legacy default when terminalTransport was not persisted.
             guard saved.legacyTmuxSSHConfiguration(agentSocketPath: configuration.agentSocketPath) != nil else {
@@ -347,8 +347,8 @@ final class SSHTuiWorkspaceCoordinator {
             let response = try await link.run(arguments: request)
             try requireCurrent(workspace: workspace, attemptID: attemptID)
             guard let object = try JSONSerialization.jsonObject(with: response) as? [String: Any],
-                  let remoteID = CmuxTuiSnapshotParser.createdWorkspace(fromResult: object) else {
-                throw CmuxTuiSurfaceProvider.ProviderError.invalidSnapshot(connection.id)
+                  let remoteID = HmuxTuiSnapshotParser.createdWorkspace(fromResult: object) else {
+                throw HmuxTuiSurfaceProvider.ProviderError.invalidSnapshot(connection.id)
             }
             let resource = try await provider.createTerminal(
                 command: initialCommand ?? connection.shellCommand, cwd: nil, name: nil, remoteWorkspaceID: remoteID,
@@ -442,7 +442,7 @@ final class SSHTuiWorkspaceCoordinator {
             }
         }
         for projection in catalog.projections where projection.workspaceID == workspace.id && projection.resource.machine.isSSH {
-            let provider = catalog.provider(for: projection.resource.machine) as? CmuxTuiSurfaceProvider
+            let provider = catalog.provider(for: projection.resource.machine) as? HmuxTuiSurfaceProvider
             _ = provider?.manualMirrorSessions[projection.panelID]?.cancelConnectionAttempt()
             if !ManagedRemoteConnectionsPolicy.isEnabled, let manager = provider?.links as? SSHTuiLinkManager {
                 Task { await manager.disconnect() }

@@ -1,10 +1,10 @@
 name: iOS App Store screenshots
 run-name: iOS App Store screenshots (${{ inputs.request_id || github.run_id }})
 
-# Captures fastlane screenshots for the public App Store listing (com.cmux.app)
+# Captures fastlane screenshots for the public App Store listing (com.hmux.app)
 # on the required device classes — 6.9" iPhone + 13" iPad — in every language
 # the app is localized in. The capture runs against a DEBUG build with
-# the CMUX_UITEST_MOCK_DATA hook, so no Apple signing is needed to shoot; only
+# the HMUX_UITEST_MOCK_DATA hook, so no Apple signing is needed to shoot; only
 # the optional upload-to-ASC step needs the App Store Connect API key.
 #
 # Manual dispatch remains available for review runs. Stable releases call this
@@ -30,7 +30,7 @@ on:
         type: string
         default: "en-US,de-DE,fr-FR,ar-SA,es-ES,zh-Hant,zh-Hans,ko,ja"
       upload:
-        description: "Upload captured screenshots to the com.cmux.app App Store listing"
+        description: "Upload captured screenshots to the com.hmux.app App Store listing"
         required: false
         type: boolean
         default: false
@@ -49,7 +49,7 @@ on:
         required: false
         default: "en-US,de-DE,fr-FR,ar-SA,es-ES,zh-Hant,zh-Hans,ko,ja"
       upload:
-        description: "Upload captured screenshots to the com.cmux.app App Store listing"
+        description: "Upload captured screenshots to the com.hmux.app App Store listing"
         required: false
         default: false
         type: boolean
@@ -116,7 +116,7 @@ jobs:
           IOS_OWNED: ${{ vars.CI_IOS_OWNED }}
           POOL_OWNED: ${{ vars.CI_PR_POOL_OWNED }}
           OWNED_SLOTS: ${{ vars.CI_OWNED_POOL_SLOTS }}
-          PR_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_PR }}
+          PR_XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_PR }}
           UPLOAD: ${{ inputs.upload }}
           # A called workflow reports its caller's workflow_ref.
           CALLED: ${{ !contains(github.workflow_ref, '/.github/workflows/ios-screenshots.yml@') }}
@@ -188,7 +188,7 @@ jobs:
       # test-e2e.yml does; a re-run on Blacksmith keeps it, so a product built
       # on the mini still matches its consumer. Elsewhere select-ci-xcode.sh
       # keeps its pool default.
-      CMUX_CI_XCODE_APP: ${{ startsWith(needs.runner.outputs.label, 'glaeda-') && vars.CMUX_CI_XCODE_APP_PR || '' }}
+      HMUX_CI_XCODE_APP: ${{ startsWith(needs.runner.outputs.label, 'glaeda-') && vars.HMUX_CI_XCODE_APP_PR || '' }}
     steps:
       - name: Guard trusted upload ref
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.upload && (inputs.ref != '' || github.ref != 'refs/heads/main') }}
@@ -221,7 +221,7 @@ jobs:
         env:
           # Unpacked in the job's temp directory, so a reused runner keeps
           # nothing in ~/.cache (as test-ios.yml does).
-          CMUX_GHOSTTYKIT_CACHE_DIR: ${{ runner.temp }}/cmux-ghosttykit-cache
+          HMUX_GHOSTTYKIT_CACHE_DIR: ${{ runner.temp }}/hmux-ghosttykit-cache
         run: ./scripts/ensure-ghosttykit.sh
 
       - name: Resolve screenshot devices (6.9" iPhone + 13" iPad)
@@ -301,7 +301,7 @@ jobs:
           FASTLANE_HIDE_CHANGELOG: "1"
           # snapshot's derived_data_path: under the job's temp directory, not
           # the runner user's ~/Library, which a reused runner keeps.
-          SNAPSHOT_DERIVED_DATA_PATH: ${{ runner.temp }}/cmux-ios-snapshot-derived-data
+          SNAPSHOT_DERIVED_DATA_PATH: ${{ runner.temp }}/hmux-ios-snapshot-derived-data
         run: |
           set -euo pipefail
           echo "Devices: $SNAPSHOT_DEVICES"

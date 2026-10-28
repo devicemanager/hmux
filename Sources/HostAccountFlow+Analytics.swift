@@ -1,4 +1,4 @@
-import CmuxProductAnalytics
+import HmuxProductAnalytics
 
 extension HostAccountFlow {
     /// Reports sign-in, identity, team and sign-out changes. Called on every
@@ -23,7 +23,7 @@ extension HostAccountFlow {
         }
     }
 
-    /// `cmux_signed_out` is captured before a sign-out runs so it joins the
+    /// `hmux_signed_out` is captured before a sign-out runs so it joins the
     /// account. If the account is still signed in afterwards (a failed or
     /// no-op sign-out), later events get the signed-in context back.
     func restoreAnalyticsIfStillSignedIn() {

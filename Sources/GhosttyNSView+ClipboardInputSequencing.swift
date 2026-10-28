@@ -1,5 +1,5 @@
 import AppKit
-import CmuxTerminalCore
+import HmuxTerminalCore
 
 extension GhosttyNSView {
     enum ClipboardDeferredInput {
@@ -112,7 +112,7 @@ extension GhosttyNSView {
         terminalClipboardInputSequencer.shouldDefer(
             .appKitEvent(event),
             epoch: terminalSurface?.runtimeSurfaceGeneration ?? .max,
-            discardWhenFull: event.cmuxCanDiscardDuringClipboardRead
+            discardWhenFull: event.hmuxCanDiscardDuringClipboardRead
         )
     }
 
@@ -195,7 +195,7 @@ extension GhosttyNSView {
 }
 
 private extension NSEvent {
-    var cmuxCanDiscardDuringClipboardRead: Bool {
+    var hmuxCanDiscardDuringClipboardRead: Bool {
         switch type {
         case .mouseMoved,
              .mouseEntered,

@@ -4,7 +4,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 THIN="$ROOT_DIR/scripts/thin-app-bundle.sh"
-TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cmux-thin-bundle.XXXXXX")"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/hmux-thin-bundle.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
 fat_source="$TMP_DIR/fat-hello"

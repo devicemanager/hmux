@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 # Gather an app-host test job's captures, result bundles and crash reports into
-# $RUNNER_TEMP/cmux-app-host-diagnostics-shard-<shard>-run-<attempt> for upload.
+# $RUNNER_TEMP/hmux-app-host-diagnostics-shard-<shard>-run-<attempt> for upload.
 # Shared by the app-host unit-test shards and compile admission's changed-suites
 # run. Best effort: the caller marks the step continue-on-error.
 set -eo pipefail
 set -u
-diagnostics="$RUNNER_TEMP/cmux-app-host-diagnostics-shard-${CMUX_APP_HOST_SHARD}-run-${GITHUB_RUN_ATTEMPT}"
+diagnostics="$RUNNER_TEMP/hmux-app-host-diagnostics-shard-${HMUX_APP_HOST_SHARD}-run-${GITHUB_RUN_ATTEMPT}"
 rm -rf -- "$diagnostics"
 mkdir -p "$diagnostics/captures"
 
@@ -13,43 +13,43 @@ mkdir -p "$diagnostics/captures"
   echo "run_id=${GITHUB_RUN_ID}"
   echo "run_attempt=${GITHUB_RUN_ATTEMPT}"
   echo "sha=${GITHUB_SHA}"
-  echo "physical_shard=${CMUX_APP_HOST_SHARD}"
-  echo "derived_data=${CMUX_DERIVED_DATA_PATH:-}"
-  echo "result_bundle_root=${CMUX_APP_HOST_RESULT_BUNDLE_ROOT:-${RUNNER_TEMP:-/tmp}/cmux-app-host-xcresults}"
+  echo "physical_shard=${HMUX_APP_HOST_SHARD}"
+  echo "derived_data=${HMUX_DERIVED_DATA_PATH:-}"
+  echo "result_bundle_root=${HMUX_APP_HOST_RESULT_BUNDLE_ROOT:-${RUNNER_TEMP:-/tmp}/hmux-app-host-xcresults}"
 } >"$diagnostics/manifest.txt"
 
 shopt -s nullglob
 capture_files=(
-  "$RUNNER_TEMP"/cmux-app-host-xcodebuild-*.log
-  "$RUNNER_TEMP"/cmux-app-host-xcodebuild-*.meta
-  "$RUNNER_TEMP"/cmux-unit-output-*.txt
-  "$RUNNER_TEMP"/cmux-unit-unfinished-*.txt
-  "$RUNNER_TEMP"/cmux-unit-shard-*.args
+  "$RUNNER_TEMP"/hmux-app-host-xcodebuild-*.log
+  "$RUNNER_TEMP"/hmux-app-host-xcodebuild-*.meta
+  "$RUNNER_TEMP"/hmux-unit-output-*.txt
+  "$RUNNER_TEMP"/hmux-unit-unfinished-*.txt
+  "$RUNNER_TEMP"/hmux-unit-shard-*.args
   "$RUNNER_TEMP"/app-host-hang-sample-*.txt
-  "$RUNNER_TEMP"/cmux-remote-tmux-mirror-*.txt
-  "$RUNNER_TEMP"/cmux-main-window-zoom-placement.txt
-  "$RUNNER_TEMP"/cmux-global-search-shortcuts.txt
-  "$RUNNER_TEMP"/cmux-cloud-ordering-*.txt
-  "$RUNNER_TEMP"/cmux-notification-*.txt
+  "$RUNNER_TEMP"/hmux-remote-tmux-mirror-*.txt
+  "$RUNNER_TEMP"/hmux-main-window-zoom-placement.txt
+  "$RUNNER_TEMP"/hmux-global-search-shortcuts.txt
+  "$RUNNER_TEMP"/hmux-cloud-ordering-*.txt
+  "$RUNNER_TEMP"/hmux-notification-*.txt
 )
 if [ "${#capture_files[@]}" -gt 0 ]; then
   cp "${capture_files[@]}" "$diagnostics/captures/" || true
 fi
 
-result_bundle_root="${CMUX_APP_HOST_RESULT_BUNDLE_ROOT:-${RUNNER_TEMP:-/tmp}/cmux-app-host-xcresults}"
+result_bundle_root="${HMUX_APP_HOST_RESULT_BUNDLE_ROOT:-${RUNNER_TEMP:-/tmp}/hmux-app-host-xcresults}"
 if [ -d "$result_bundle_root" ]; then
   cp -R "$result_bundle_root" "$diagnostics/xcresults" || true
 fi
 
 # Preserve reports from the isolated XCTest HOME before the always-
 # running cleanup removes that run scope.
-if [ -n "${CMUX_APP_HOST_HOME:-}" ]; then
+if [ -n "${HMUX_APP_HOST_HOME:-}" ]; then
   ci_script_dir="${GITHUB_WORKSPACE:-$PWD}/scripts/ci"
   # shellcheck source=scripts/ci/app-host-isolation.sh
   source "$ci_script_dir/app-host-isolation.sh"
-  if cmux_validate_published_app_host_identity_values; then
-    for crash_relative in ".local/state/cmux/crash" "Library/Logs/DiagnosticReports"; do
-      crash_source="$CMUX_RESOLVED_APP_HOST_HOME/$crash_relative"
+  if hmux_validate_published_app_host_identity_values; then
+    for crash_relative in ".local/state/hmux/crash" "Library/Logs/DiagnosticReports"; do
+      crash_source="$HMUX_RESOLVED_APP_HOST_HOME/$crash_relative"
       case "$crash_relative" in
         .local/*) crash_destination="$diagnostics/ghostty-crash-reports" ;;
         *) crash_destination="$diagnostics/macos-diagnostic-reports" ;;
@@ -79,7 +79,7 @@ account_home="$(dscl . -read "/Users/$(id -un)" NFSHomeDirectory 2>/dev/null \
   | sed -n 's/^NFSHomeDirectory: //p' || true)"
 account_reports="${account_home:-/nonexistent}/Library/Logs/DiagnosticReports"
 job_pids="$(cat "$diagnostics"/captures/* 2>/dev/null \
-  | grep -oE 'cmux DEV\[[0-9]+' | grep -oE '[0-9]+$' | sort -u || true)"
+  | grep -oE 'hmux DEV\[[0-9]+' | grep -oE '[0-9]+$' | sort -u || true)"
 if [ -n "$job_pids" ] && [ -d "$account_reports" ]; then
   while IFS= read -r report; do
     report_pid="$(sed -n 's/.*"pid" *: *\([0-9][0-9]*\).*/\1/p' "$report" | head -n 1 || true)"
@@ -87,7 +87,7 @@ if [ -n "$job_pids" ] && [ -d "$account_reports" ]; then
       mkdir -p "$diagnostics/account-diagnostic-reports"
       cp "$report" "$diagnostics/account-diagnostic-reports/" || true
     fi
-  done < <(find "$account_reports" -maxdepth 1 -type f -name 'cmux DEV*.ips' -mmin -240 2>/dev/null || true)
+  done < <(find "$account_reports" -maxdepth 1 -type f -name 'hmux DEV*.ips' -mmin -240 2>/dev/null || true)
 fi
 
 find "$diagnostics" -type f -print | sort || true

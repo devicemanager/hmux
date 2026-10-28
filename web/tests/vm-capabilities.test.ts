@@ -25,7 +25,7 @@ describe("vm capability derivation", () => {
       // Grow-only live resize honors memoryMb as a floor.
       sizing: true,
       persistentHome: false,
-      attachTransports: ["cmux-remote"],
+      attachTransports: ["hmux-remote"],
     });
   });
 
@@ -37,7 +37,7 @@ describe("vm capability derivation", () => {
   });
 
   test("a minimal provider derives the minimal capability set", () => {
-    const caps = vmCapabilitiesOf(new MockVMProvider({ features: { cmuxRemote: false } }));
+    const caps = vmCapabilitiesOf(new MockVMProvider({ features: { hmuxRemote: false } }));
     expect(caps.fork).toBe(false);
     expect(caps.stats).toBe(false);
     expect(caps.restart).toBe(false);
@@ -57,7 +57,7 @@ describe("vm capability derivation", () => {
     expect(caps.fork).toBe(true);
     expect(caps.stats).toBe(true);
     expect(caps.ports).toBe(true);
-    expect(caps.attachTransports).toEqual(["cmux-remote", "websocket", "ssh"]);
+    expect(caps.attachTransports).toEqual(["hmux-remote", "websocket", "ssh"]);
   });
 
   test("declared capabilities override structural facts", () => {
@@ -79,11 +79,11 @@ describe("vm capability derivation", () => {
     const mock = new MockVMProvider({ features: { fork: true } });
     const vm = await mock.create({ image: "mock-image" });
     expect(vm.status).toBe("running");
-    const endpoint = await mock.openCmuxRemote!(vm.providerVmId);
-    expect(endpoint.transport).toBe("cmux-remote");
+    const endpoint = await mock.openHmuxRemote!(vm.providerVmId);
+    expect(endpoint.transport).toBe("hmux-remote");
     expect(endpoint.route).toContain(vm.providerVmId);
     expect(endpoint.trustedCarrier).toBe(true);
-    await expect(mock.openCmuxRemote!("missing")).rejects.toThrow("mock VM not found");
+    await expect(mock.openHmuxRemote!("missing")).rejects.toThrow("mock VM not found");
     const snap = await mock.snapshot(vm.providerVmId, "before");
     const restored = await mock.restore(snap.id);
     expect(restored.image).toBe("mock-image");

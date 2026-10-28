@@ -1,7 +1,7 @@
 /**
  * The minimum-Mac-version list served by GET /api/mobile-mac-compat.
  *
- * cmux iOS consumes this list to decide whether a connected Mac (stable or
+ * hmux iOS consumes this list to decide whether a connected Mac (stable or
  * nightly channel) is new enough to talk to. `entries` are tiers keyed by an
  * inclusive minimum iOS marketing version: the tier with the greatest
  * `minIOSVersion` <= the app's version wins, and an iOS version below every
@@ -25,7 +25,7 @@
  * Devices cache the last fetched list per origin and fall back to a
  * compiled-in default when they have never fetched. That fallback
  * (`MobileMacCompatPolicy.baked` in
- * Packages/iOS/CmuxMobileShell/Sources/CmuxMobileShell/MobileMacCompatPolicy.swift)
+ * Packages/iOS/HmuxMobileShell/Sources/HmuxMobileShell/MobileMacCompatPolicy.swift)
  * mirrors the initial entries here; keep the two in sync when editing.
  * Edits to this file are code-reviewed; the route validates it at module
  * load so a malformed entry fails the build, never the client.

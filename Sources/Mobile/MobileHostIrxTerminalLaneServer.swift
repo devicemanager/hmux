@@ -1,6 +1,6 @@
-import CMUXMobileCore
-import CmuxIrohTransport
-import CmuxIrxTransport
+import HMUXMobileCore
+import HmuxIrohTransport
+import HmuxIrxTransport
 import Foundation
 
 /// Serves one terminal lane over irx: bounded replay from the byte tee at

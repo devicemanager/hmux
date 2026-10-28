@@ -1,5 +1,5 @@
 name: Bug Report
-description: Report a bug in cmux
+description: Report a bug in hmux
 labels: ["bug"]
 body:
   - type: markdown
@@ -8,10 +8,10 @@ body:
         Thanks for reporting a bug! Please fill out the information below so we can reproduce and fix it.
 
   - type: input
-    id: cmux-version
+    id: hmux-version
     attributes:
-      label: cmux version
-      description: "Run `cmux --version` or check About cmux in the menu bar."
+      label: hmux version
+      description: "Run `hmux --version` or check About hmux in the menu bar."
       placeholder: "e.g. 0.3.2"
     validations:
       required: true
@@ -49,7 +49,7 @@ body:
   - type: dropdown
     id: nightly-repro
     attributes:
-      label: Can you reproduce this on cmux NIGHTLY?
+      label: Can you reproduce this on hmux NIGHTLY?
       description: "Please test with the latest NIGHTLY build first: https://github.com/manaflow-ai/cmux?tab=readme-ov-file#nightly-builds"
       options:
         - Yes, it still reproduces on NIGHTLY
@@ -81,7 +81,7 @@ body:
       label: Steps to reproduce
       description: "Minimal steps to reproduce the bug."
       placeholder: |
-        1. Open cmux
+        1. Open hmux
         2. ...
         3. See error
     validations:
@@ -92,7 +92,7 @@ body:
     attributes:
       label: Shell and environment
       description: "Which shell are you using? Any relevant env config (oh-my-zsh, starship, tmux, etc.)?"
-      placeholder: "e.g. zsh with starship prompt, using tmux inside cmux"
+      placeholder: "e.g. zsh with starship prompt, using tmux inside hmux"
     validations:
       required: false
 
@@ -102,7 +102,7 @@ body:
       label: Relevant logs or crash reports
       description: |
         If applicable, paste logs or crash reports. Crash reports are in `~/Library/Logs/DiagnosticReports/`.
-        You can also check `Console.app` for cmux-related messages.
+        You can also check `Console.app` for hmux-related messages.
       render: text
     validations:
       required: false
@@ -118,7 +118,7 @@ body:
   - type: dropdown
     id: area
     attributes:
-      label: Which part of cmux is this about?
+      label: Which part of hmux is this about?
       description: |
         A guess is fine, and "Not sure" is a normal answer. It only helps triage
         find the right person: https://github.com/manaflow-ai/cmux/blob/main/docs/triage.md
@@ -130,10 +130,10 @@ body:
         - sidebar
         - workspaces (sessions, worktrees, restore)
         - agents (Claude Code, Codex, ACP, agent panes)
-        - cloud (cmux Cloud, VMs, relays, the dashboard)
-        - remote (cmux ssh, tunnels, device pairing)
+        - cloud (hmux Cloud, VMs, relays, the dashboard)
+        - remote (hmux ssh, tunnels, device pairing)
         - ios
-        - cli (the cmux command, cmux-tui, SDKs)
+        - cli (the hmux command, hmux-tui, SDKs)
         - settings
         - browser
         - command-palette

@@ -6,7 +6,7 @@ page assets, WebMCP and a secure sign-in handoff. It covers what reference A's R
 integrations and reference B's site capabilities offer, with three
 rules neither reference enforces together:
 
-1. **The user's cmux browser session is the only credential.** A tool reads
+1. **The user's hmux browser session is the only credential.** A tool reads
    through the cookie-bearing REPL `fetch` (Google's export endpoints,
    YouTube, GitHub `.diff`/`/raw/`) or in a background tab of the same
    profile, where its code runs in the page's own world against the site's
@@ -32,7 +32,7 @@ rules neither reference enforces together:
    Nothing happens until `sites.gmail.send(draft.id, { confirm: true })`.
    Reference A's `slack` client posts, `twitter.tweet()` posts and `gmail` compose
    pages send with no gate; reference B has the rule only as policy
-   text ([confirmations.md](#confirmation-taxonomy)). cmux enforces it in the
+   text ([confirmations.md](#confirmation-taxonomy)). hmux enforces it in the
    API: a write without a draft id is a draft, `{ confirm: true }` without a
    draft id is an error, a draft is single-use, expires after 30 minutes and
    lives only in the REPL session that made it. The tool copies its input
@@ -140,7 +140,7 @@ files are in `manifest.json`'s `repl` list after `api.js`, which builds
 
 ```js
 // In one named session, so the draft survives until the user answers:
-//   cmux browser repl --session mail
+//   hmux browser repl --session mail
 const hits = await sites.gmail.search("from:bob has:attachment newer_than:7d");
 const thread = await sites.gmail.thread(hits[0].threadId);
 const draft = await sites.gmail.send({ to: thread.messages[0].from.email, subject: "Re: " + thread.subject, body: "Thanks, looks good." });
@@ -156,7 +156,7 @@ globals (reference A CLI 1.26.916); reference B is the Chrome plugin's `docs/`,
 name the method; "guide" means the reference only documents URLs and
 shortcuts for the agent to drive by hand.
 
-| Tool | Reference A | Reference B | cmux |
+| Tool | Reference A | Reference B | hmux |
 | --- | --- | --- | --- |
 | Google accounts | `googleAccounts.list/print` (cookie HTTP) | none | `sites.googleAccounts.list()` (ListAccounts, cookie) |
 | Google Docs | `googleDocs.getDocumentHTML/Text` (cookie); edits by clipboard paste and select-by-index in a tab (`applyDiffs`, suggestions, comments) | `content.exportGsuite(pdf/md/docx)` | `sites.googleDocs.read(url, { format: md/txt/html })`, `.export(url, { format: md/pdf/docx/txt/html/odt/rtf/epub })`; also `page.exportContent({ format })`. Edits: not implemented (decision 6) |
@@ -177,9 +177,9 @@ shortcuts for the agent to drive by hand.
 | Other site guides (Airtable, Amazon, Asana, ClickUp, Confluence, Discord, Google Forms, Trello, Notion UI) | guide | none | none: they are hints, not tools; `snapshot()` and Playwright drive these sites |
 | Page assets | none | `pageAssets.list()`, `.bundle({ inventoryId, kinds, assetIds })` | `sites.pageAssets.list(page?)`, `.bundle(inventory, { kinds, assetIds, dir })`; also writes inline SVGs and fetches through the session |
 | WebMCP | none | `webmcp.fetchTools()`, `tools.call()` (Chrome's `document.modelContext`) | `sites.webmcp.tools(page?)`, `.call(name, input, { trustReadOnlyHint })`; WebKit has no WebMCP, so only tools a page registers with its own implementation; every call is a draft (see "WebMCP calls") |
-| Secure sign-in | password managers fill by ref | `browserAuth.request({ origin, fields, options, submit })` | `sites.browserAuth.request(page?, { origin, fields, submit })`: a cmux sheet collects the values and the app fills them; sign-in method choice (`options`) and QR are not implemented |
+| Secure sign-in | password managers fill by ref | `browserAuth.request({ origin, fields, options, submit })` | `sites.browserAuth.request(page?, { origin, fields, submit })`: a hmux sheet collects the values and the app fills them; sign-in method choice (`options`) and QR are not implemented |
 | Background content | none | `tabs.content({ urls })` | `tabs.content({ urls, format })` (not in `sites`) |
-| History | `chrome.history` | `browser.history()` | `tabs.history({ query, from, to, limit })` over cmux history |
+| History | `chrome.history` | `browser.history()` | `tabs.history({ query, from, to, limit })` over hmux history |
 | Claim user tabs | `listBrowserTabs`, `attachBrowserTab` | `user.openTabs()`, `user.claimTab()` | `tabs.list({ all: true })`, `tabs.use(id)` |
 | Bot detection | none | `botDetection.report({ reason })` (cloud telemetry) | CAPTCHA and sign-in blocks are errors with codes; no telemetry |
 | CAPTCHA | `captcha.click/drag/readText` | policy: confirm before solving | not implemented (decision 1) |
@@ -187,7 +187,7 @@ shortcuts for the agent to drive by hand.
 | iMessage, KakaoTalk | `imessage.*` (read, send), `kakaotalk.*` (read) | none | not implemented (decision 3) |
 | Image generation, image search | `imagegen.*`, `imageSearch.search` | none | not implemented (decision 4) |
 | Documents (pdf, docx, pptx, xlsx) | skills for local files | none | not a browser tool; exports above write the files |
-| Chrome APIs (bookmarks, tab groups, downloads, top sites) | `chrome.*` | none | not applicable to cmux's WebKit browser |
+| Chrome APIs (bookmarks, tab groups, downloads, top sites) | `chrome.*` | none | not applicable to hmux's WebKit browser |
 
 ## Methods
 
@@ -246,7 +246,7 @@ Google Sheets actions (`read_sheet_contents`, `read_cell_contents`,
 `update_cell_contents`, `clear_cell_contents`, `select_cell_or_range`,
 `fallback_input_into_single_selected_cell`; commented out in its current
 tree) and more. Reference C reads by copying the selection to the system
-clipboard and writes by dispatching a synthetic paste event; cmux reads
+clipboard and writes by dispatching a synthetic paste event; hmux reads
 through the editors' own exports (no selection, no clipboard, whole files
 and every tab) and writes with real input into a background tab, then reads
 the file back to verify.
@@ -310,10 +310,10 @@ for a file `googleDrive.create` made in the same session.
 
 Reference B's `docs/confirmations.md` sorts browser actions into
 "hand-off required", "always confirm at action time", "pre-approval works"
-and "no confirmation". Every cmux write is in "always confirm": [9]
+and "no confirmation". Every hmux write is in "always confirm": [9]
 representational communication (mail, messages, posts, events, page edits)
 and [14] transmitting data to a third party. Each draft names its category.
-cmux has no delete, share, permission, purchase or account-creation tool;
+hmux has no delete, share, permission, purchase or account-creation tool;
 those stay with the agent driving the page under the policy, and are listed
 as decisions below. `{ confirm: true }` is the agent's statement that the
 user approved this exact preview; the API cannot see the user, so it makes
@@ -338,7 +338,7 @@ the descriptor into the page call, which runs the tool only when the page
 lists it with that same descriptor, else fails with `tool_changed`. Every
 call, a confirmed draft or a `trustReadOnlyHint` one, runs only in the
 document and at the URL its tool was listed in: the listing takes an
-element handle of the document's root (handles live in cmux's agent world
+element handle of the document's root (handles live in hmux's agent world
 and resolve only in the document that issued them, so the page cannot copy
 or forge the binding) and notes the URL before it lists; the page call runs
 through that handle, so a new document fails it before anything runs, and
@@ -402,7 +402,7 @@ only when it is the submit control of the form that holds the fields (a
 submit button or input of that form with `action: "click"`, or one of the
 fields with `action: "press_enter"`), checked before the sheet opens
 (`locator_invalid` with `field_id: "submit"`, no sheet) and again right
-before the press (`submission_failed`); the agent cannot have cmux press
+before the press (`submission_failed`); the agent cannot have hmux press
 another control in the user's name. The form must also submit to the
 page's own origin in the same tab: the effective action (the control's
 `formaction`, else the form's `action`, else the page URL) and target
@@ -423,7 +423,7 @@ tab, the asking one included, gets it masked as
 and capture masks hide it in screenshots and PDFs, until the tab closes.
 The masking matches values, so agent code that transforms a field's value
 in the page before returning it is the remaining limit, as for typed
-secrets. The sheet says what holds: cmux masks what the user types in what
+secrets. The sheet says what holds: hmux masks what the user types in what
 the agent reads back, and the page's scripts can read a filled field. Under a domain policy the driver refuses the request
 (`blocked`) when the tab's page, or the frame that holds the fields (by
 WebKit's record of it and by the document it shows when the request
@@ -445,7 +445,7 @@ so a detach, reset or policy change before that turn fills nothing
 These are not implemented and need a decision:
 
 1. **CAPTCHA solving.** Reference A solves by clicking, dragging and OCR; reference B's
-   policy requires confirmation at action time. cmux reports `captcha` and
+   policy requires confirmation at action time. hmux reports `captcha` and
    stops.
 2. **Third-party password managers.** Reading or autofilling 1Password,
    Bitwarden, Dashlane, LastPass, Proton Pass or Apple Passwords puts vault
@@ -455,22 +455,22 @@ These are not implemented and need a decision:
 4. **Image generation and image search.** Not browser operations; image
    generation needs an API credential.
 5. **Bot-detection evasion.** Not implemented; reference B's `botDetection` is
-   telemetry, and cmux does not disguise automation.
+   telemetry, and hmux does not disguise automation.
 6. **Google Docs and Sheets editing.** Reference A edits by clipboard paste and
-   index-mapped selection. A cmux version would be a draft of the diff,
+   index-mapped selection. A hmux version would be a draft of the diff,
    confirmed, applied with real input in the document tab.
 7. **More social writes.** LinkedIn messages and invitations, X likes,
    follows, reposts and DMs: each is [9] or [14]; the draft mechanism supports
    them, but each adds a way to act as the user in public.
-8. **Native approval for writes.** A cmux sheet showing the draft, with
+8. **Native approval for writes.** A hmux sheet showing the draft, with
    Send and Cancel, would make approval the user's click instead of the
    agent's `{ confirm: true }`.
 9. **Sign-in method choice and QR codes** in `browserAuth` (reference B's
    `options` and `qr_code`).
-10. **Contacts.** Reference A's `googlePeople` reads the user's address book; cmux
+10. **Contacts.** Reference A's `googlePeople` reads the user's address book; hmux
     has no contacts tool.
 11. **Reference A's own platform.** `referenceA.settings`, `projects`, `routines` and
-    `channels` manage reference A, not a browser; the cmux counterparts are app
+    `channels` manage reference A, not a browser; the hmux counterparts are app
     settings and workspaces.
 12. **Gmail replies.** A reply draft shows the To, Cc and Bcc read from
     Gmail's reply composer, and the confirmation reads them back right
@@ -535,14 +535,14 @@ YouTube's player token makes the direct caption URL empty.
 Transcript reliability, 3 public videos (manual English captions
 `dQw4w9WgXcQ`, auto-generated Korean only `9bZkp7q19f0`, Spanish with
 `{ lang: "es" }` `kJQP7kiw5Fk`): reference A `youtube.getTranscript` 15/15 (5 runs
-each, about 200 ms); cmux with the native-client path 30/30 (10 runs each,
+each, about 200 ms); hmux with the native-client path 30/30 (10 runs each,
 about 300 ms), same text lengths as reference A. Reference B's
 `exportYouTubeTranscript` was not measured: its reference client may open
 only the approved loopback origin.
 
 `live-diff.mjs` compares the reads live, on the user's own sign-ins, with
 reference A: `signed-in` reports which sites each side is signed in to (cookie
-names on cmux, account counts on reference A, no content); `run [--ops a,b]
+names on hmux, account counts on reference A, no content); `run [--ops a,b]
 [--runs N] [--write-doc]` runs each read on both sides and keeps only
 summaries (counts, sha256-prefixed ids, key names, lengths, order agreement,
 latency) in the gitignored `sites/live-results/`, with the verdict per read.
@@ -550,39 +550,39 @@ latency) in the gitignored `sites/live-results/`, with the verdict per read.
 <!-- live-diff:begin -->
 Live comparison on the user's own sign-ins, 2026-10-01, tag `brepl-live` with the fixes in this branch loaded (counts and lengths only; ids compared as sha256 prefixes). Reference A's own profile was signed in to Google and Slack only; where it was not, the row says so.
 
-| Operation | Verdict | Evidence | cmux ok, median ms | Reference A ok, median ms |
+| Operation | Verdict | Evidence | hmux ok, median ms | Reference A ok, median ms |
 | --- | --- | --- | --- | --- |
-| googleAccounts.list | cmux-better | count 5 vs 2; ids in common 2; order agreement 100% | 1/1 433 | 1/1 0 |
+| googleAccounts.list | hmux-better | count 5 vs 2; ids in common 2; order agreement 100% | 1/1 433 | 1/1 0 |
 | gmail.inbox | same | count 50 vs 50; ids in common 50; order agreement 100% | 1/1 6021 | 1/1 742 |
 | gmail.search is:unread | same | count 50 vs 50; ids in common 50; order agreement 100% | 1/1 5771 | 1/1 462 |
 | gmail.thread | same | count 1 vs 1; ids in common 1 | 1/1 6402 | 1/1 331 |
 | gmail.attachments (metadata) | same | count 2 vs 2; ids in common 2; order agreement 100% | 1/1 5474 | 1/1 368 |
-| googleCalendar.events (next 10) | cmux-better | Reference A has no tool for this read | 1/1 3038 | n/a |
-| googleDrive.recent | cmux-better | Reference A has no tool for this read | 1/1 3120 | n/a |
+| googleCalendar.events (next 10) | hmux-better | Reference A has no tool for this read | 1/1 3038 | n/a |
+| googleDrive.recent | hmux-better | Reference A has no tool for this read | 1/1 3120 | n/a |
 | google document read | same | text 28500 vs 26894 chars | 1/1 1797 | 1/1 1895 |
-| google spreadsheets read | cmux-better | count 1108 vs 358; ids in common 0 | 1/1 963 | 1/1 556 |
+| google spreadsheets read | hmux-better | count 1108 vs 358; ids in common 0 | 1/1 963 | 1/1 556 |
 | google presentation read | skipped | no Slides file owned by the user was found (Drive Recent and search) |  |  |
-| googleSearch.search | cmux-better | Reference A failed:  Google Search returned bot challenge HTML. Open <url> in the browser, solve it, then retry. | 1/1 1152 | 0/1 595 |
+| googleSearch.search | hmux-better | Reference A failed:  Google Search returned bot challenge HTML. Open <url> in the browser, solve it, then retry. | 1/1 1152 | 0/1 595 |
 | slack.workspaces | same | count 1 vs 1; ids in common 1 | 1/1 835 | 1/1 0 |
 | slack.channels | same | count 55 vs 55; ids in common 55; order agreement 100% | 1/1 1321 | 1/1 209 |
 | slack.history (last 20) | same | count 20 vs 20; ids in common 20; order agreement 100% | 1/1 1103 | 1/1 145 |
 | slack.search | same | count 0 vs 0; ids in common 0 | 1/1 1048 | 1/1 121 |
-| notion.search | reference-a-unavailable | Reference A's profile is not signed in to this site; cmux read it | 1/1 2001 | 0/1 23 |
-| notion.read (first page) | reference-a-unavailable | Reference A's profile is not signed in to this site; cmux read it | 1/1 757 | 0/1 21 |
-| linkedin.me | reference-a-unavailable | Reference A's profile is not signed in to this site; cmux read it | 1/1 880 | 0/1 19 |
-| linkedin.feed (first page) | cmux-better | Reference A has no tool for this read | 1/1 7206 | n/a |
-| linkedin.search people | reference-a-unavailable | Reference A's profile is not signed in to this site; cmux read it | 1/1 2563 | 0/1 22 |
-| x.user | reference-a-unavailable | Reference A's profile is not signed in to this site; cmux read it | 1/1 1796 | 0/1 19 |
-| x.timeline | reference-a-unavailable | Reference A's profile is not signed in to this site; cmux read it | 1/1 6682 | 0/1 21 |
-| x.search | reference-a-unavailable | Reference A's profile is not signed in to this site; cmux read it | 1/1 3141 | 0/1 20 |
-| github.assigned | cmux-better | Reference A has no tool for this read | 1/1 24183 | n/a |
-| linear.assigned | cmux-better | Reference A has no tool for this read | 1/1 801 | n/a |
-| jira.sites | cmux-better | Reference A has no tool for this read | 1/1 998 | n/a |
+| notion.search | reference-a-unavailable | Reference A's profile is not signed in to this site; hmux read it | 1/1 2001 | 0/1 23 |
+| notion.read (first page) | reference-a-unavailable | Reference A's profile is not signed in to this site; hmux read it | 1/1 757 | 0/1 21 |
+| linkedin.me | reference-a-unavailable | Reference A's profile is not signed in to this site; hmux read it | 1/1 880 | 0/1 19 |
+| linkedin.feed (first page) | hmux-better | Reference A has no tool for this read | 1/1 7206 | n/a |
+| linkedin.search people | reference-a-unavailable | Reference A's profile is not signed in to this site; hmux read it | 1/1 2563 | 0/1 22 |
+| x.user | reference-a-unavailable | Reference A's profile is not signed in to this site; hmux read it | 1/1 1796 | 0/1 19 |
+| x.timeline | reference-a-unavailable | Reference A's profile is not signed in to this site; hmux read it | 1/1 6682 | 0/1 21 |
+| x.search | reference-a-unavailable | Reference A's profile is not signed in to this site; hmux read it | 1/1 3141 | 0/1 20 |
+| github.assigned | hmux-better | Reference A has no tool for this read | 1/1 24183 | n/a |
+| linear.assigned | hmux-better | Reference A has no tool for this read | 1/1 801 | n/a |
+| jira.sites | hmux-better | Reference A has no tool for this read | 1/1 998 | n/a |
 | jira.assigned | skipped | the Atlassian account has no Jira Cloud site (jira.sites: 0) |  |  |
-| tabs.content | cmux-better | Reference A has no tool for this read | 1/1 688 | n/a |
-| tabs.history | cmux-better | Reference A has no tool for this read | 1/1 15 | n/a |
-| pageAssets.list | cmux-better | Reference A has no tool for this read | 1/1 652 | n/a |
-| googleDrive.search (own Sheets, Slides) | cmux-better | Reference A has no tool for this read | 1/1 4385 | n/a |
+| tabs.content | hmux-better | Reference A has no tool for this read | 1/1 688 | n/a |
+| tabs.history | hmux-better | Reference A has no tool for this read | 1/1 15 | n/a |
+| pageAssets.list | hmux-better | Reference A has no tool for this read | 1/1 652 | n/a |
+| googleDrive.search (own Sheets, Slides) | hmux-better | Reference A has no tool for this read | 1/1 4385 | n/a |
 <!-- live-diff:end -->
 
 Tools against private accounts (Gmail, Calendar, Slack, Notion, LinkedIn, X

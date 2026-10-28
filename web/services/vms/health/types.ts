@@ -1,6 +1,6 @@
 /**
  * Shapes for the staff-only Cloud VM health sweep. The sweep reads the whole
- * provider account (cmux Cloud machines and every other workload that shares
+ * provider account (hmux Cloud machines and every other workload that shares
  * it), probes running machines, and stores one report per run. The page only
  * ever reads a stored report, so nothing here is computed on a page load.
  */
@@ -63,7 +63,7 @@ export type VmProbeRecord =
   | ({ readonly vmId: string } & VmControlProbe)
   | { readonly vmId: string; readonly outcome: "skipped_budget" | "skipped_idle" };
 
-/** The cmux DB row the sweep joins to a provider VM. */
+/** The hmux DB row the sweep joins to a provider VM. */
 export type VmHealthDbRow = {
   readonly id: string;
   readonly providerVmId: string;
@@ -75,7 +75,7 @@ export type VmHealthDbRow = {
   readonly updatedAt: Date;
 };
 
-/** `cmux_cloud` for metadata `cmux=cloud`, `app:<name>` for metadata `app=<name>`, else `other`. */
+/** `hmux_cloud` for metadata `hmux=cloud`, `app:<name>` for metadata `app=<name>`, else `other`. */
 export type VmWorkload = string;
 
 export type VmHealthOwner = {
@@ -104,7 +104,7 @@ export type HungVm = {
 
 export type StuckVm = {
   readonly vmId: string;
-  /** `provider` for a provider transition, `db` for a cmux row stuck provisioning. */
+  /** `provider` for a provider transition, `db` for a hmux row stuck provisioning. */
   readonly source: "provider" | "db";
   readonly state: string;
   readonly workload: VmWorkload;

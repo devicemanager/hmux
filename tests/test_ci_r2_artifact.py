@@ -103,7 +103,7 @@ class TransportTests(unittest.TestCase):
 
         self.assertEqual(seen["mode"], 0o600)
         self.assertIn("Authorization: Bearer oidc-request-token", seen["config"])
-        self.assertIn("audience=cmux-ci-artifacts", seen["url"])
+        self.assertIn("audience=hmux-ci-artifacts", seen["url"])
         self.assertNotIn("audience=old", seen["url"])
 
         for host in [
@@ -151,7 +151,7 @@ class TransportTests(unittest.TestCase):
             output = Path(args[args.index("--output") + 1])
             seen["mode"] = stat.S_IMODE(config.stat().st_mode)
             seen["config"] = config.read_text()
-            headers.write_text("HTTP/1.1 200 OK\r\nX-Cmux-Artifact-Cache: hit\r\n\r\n")
+            headers.write_text("HTTP/1.1 200 OK\r\nX-Hmux-Artifact-Cache: hit\r\n\r\n")
             output.write_bytes(self.zip)
             return subprocess.CompletedProcess(args, 0,
                                                stdout=f"200 0.125 0.625 {len(self.zip)}", stderr="")
@@ -252,7 +252,7 @@ class TransportTests(unittest.TestCase):
         self.assertFalse(self.restore())
         self.assertEqual(len(self.calls), 1)
         self.calls.clear()
-        self.assertFalse(self.restore(repository="someone/cmux"))
+        self.assertFalse(self.restore(repository="someone/hmux"))
         self.assertEqual(self.calls, [])
 
     def test_no_tokens_or_insecure_origins_in_broker_configuration(self):
@@ -302,10 +302,10 @@ class MeasurementTests(unittest.TestCase):
                 "conclusion": "success",
             })
             records[job_id] = [
-                {"_marker": "CMUX_TEST_PRODUCT_TRANSFER", "transport": "github",
+                {"_marker": "HMUX_TEST_PRODUCT_TRANSFER", "transport": "github",
                  "artifact_id": "123", "archive_bytes": 90},
-                {"_marker": "CMUX_R2_ARTIFACT_ATTEMPT", "fallback_reason": "RuntimeError"},
-                {"_marker": "CMUX_TEST_PRODUCT_RESTORE", "route": "github",
+                {"_marker": "HMUX_R2_ARTIFACT_ATTEMPT", "fallback_reason": "RuntimeError"},
+                {"_marker": "HMUX_TEST_PRODUCT_RESTORE", "route": "github",
                  "elapsed_seconds": 2.5},
             ]
         jobs.append({
@@ -316,9 +316,9 @@ class MeasurementTests(unittest.TestCase):
             "conclusion": "success",
         })
         records[200] = [
-            {"_marker": "CMUX_TEST_PRODUCT_TRANSFER", "transport": "r2", "cache": "hit",
+            {"_marker": "HMUX_TEST_PRODUCT_TRANSFER", "transport": "r2", "cache": "hit",
              "artifact_id": "123", "downloaded_bytes": 100},
-            {"_marker": "CMUX_TEST_PRODUCT_RESTORE", "route": "r2", "r2_result": "hit",
+            {"_marker": "HMUX_TEST_PRODUCT_RESTORE", "route": "r2", "r2_result": "hit",
              "elapsed_seconds": 2.0},
         ]
 
@@ -362,12 +362,12 @@ class MeasurementTests(unittest.TestCase):
 
     def test_marker_parser_ignores_unrelated_and_malformed_lines(self):
         log = (
-            'prefix CMUX_TEST_PRODUCT_TRANSFER {"transport":"r2","cache":"fill"}\n'
-            "CMUX_TEST_PRODUCT_TRANSFER garbage\n"
+            'prefix HMUX_TEST_PRODUCT_TRANSFER {"transport":"r2","cache":"fill"}\n'
+            "HMUX_TEST_PRODUCT_TRANSFER garbage\n"
             "other output\n"
         )
         self.assertEqual(measurement.marker_records(log), [{
-            "transport": "r2", "cache": "fill", "_marker": "CMUX_TEST_PRODUCT_TRANSFER"
+            "transport": "r2", "cache": "fill", "_marker": "HMUX_TEST_PRODUCT_TRANSFER"
         }])
 
 
@@ -380,15 +380,15 @@ class RestoreReceiptTests(unittest.TestCase):
             env = {**os.environ, "RUNNER_TEMP": directory,
                    "GITHUB_REPOSITORY": "manaflow-ai/cmux", "ARTIFACT_ID": "123",
                    "ARTIFACT_PROVIDER_DIGEST": "sha256:outer", "EXPECTED_SHA256": "inner",
-                   "CMUX_PRODUCT_CONTRACT": "contract", "CMUX_PRODUCT_SOURCE_REVISION": "revision",
-                   "CMUX_PRODUCT_PRODUCER_RUN_ID": "456", "CMUX_PRODUCT_PRODUCER_RUN_ATTEMPT": "2",
-                   "CMUX_PEER_PRODUCT_HIT": "true", "CMUX_PEER_PRODUCT_BYTES": "789"}
+                   "HMUX_PRODUCT_CONTRACT": "contract", "HMUX_PRODUCT_SOURCE_REVISION": "revision",
+                   "HMUX_PRODUCT_PRODUCER_RUN_ID": "456", "HMUX_PRODUCT_PRODUCER_RUN_ATTEMPT": "2",
+                   "HMUX_PEER_PRODUCT_HIT": "true", "HMUX_PEER_PRODUCT_BYTES": "789"}
             for status in (0, 23):
                 result = subprocess.run(["bash", "-c", prefix + f"exit {status}\n"],
                                         env=env, capture_output=True, text=True)
                 self.assertEqual(result.returncode, status, result.stderr)
                 records = [json.loads(line.split(" ", 1)[1]) for line in result.stdout.splitlines()
-                           if line.startswith("CMUX_TEST_PRODUCT_RESTORE ")]
+                           if line.startswith("HMUX_TEST_PRODUCT_RESTORE ")]
                 self.assertEqual(len(records), 1, result.stdout)
                 record = records[0]
                 self.assertEqual(record["outcome"], "success" if status == 0 else "failure")

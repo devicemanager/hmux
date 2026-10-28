@@ -111,7 +111,7 @@ export type VmResizeReservation = {
 };
 export type CloudVmStatus = CloudVmRow["status"];
 export type CloudVmSessionStatus = CloudVmSessionRow["status"];
-export const OBSERVED_DESTROY_CLEANUP_METADATA_KEY = "cmuxObservedDestroyCleanup";
+export const OBSERVED_DESTROY_CLEANUP_METADATA_KEY = "hmuxObservedDestroyCleanup";
 /** When a status cron last claimed this paused row to re-pause an unexpected wake (ms). */
 export const UNEXPECTED_WAKE_CLAIM_METADATA_KEY = "unexpectedWakeClaimAtMs";
 /**
@@ -259,9 +259,9 @@ export type VmRepositoryShape = Partial<VmHealthRepositoryMethods> & {
     readonly modelIdentifier?: string | null;
     readonly osVersion?: string | null;
     readonly architecture?: string | null;
-    readonly cmuxVersion?: string | null;
-    readonly cmuxBuild?: string | null;
-    readonly cmuxChannel?: string | null;
+    readonly hmuxVersion?: string | null;
+    readonly hmuxBuild?: string | null;
+    readonly hmuxChannel?: string | null;
   }) => Effect.Effect<CloudVmAccessGrantRow, VmDatabaseError>;
   readonly upsertAccessGrantSession?: (input: {
     readonly accessGrantId: string;
@@ -826,7 +826,7 @@ export type VmUsageEventInput = {
   readonly vmCreatedAt?: Date | null;
 };
 
-export class VmRepository extends Context.Tag("cmux/VmRepository")<
+export class VmRepository extends Context.Tag("hmux/VmRepository")<
   VmRepository,
   VmRepositoryShape
 >() {}
@@ -1649,9 +1649,9 @@ export const vmRepositoryLiveShape: VmRepositoryShape = {
           modelIdentifier: input.modelIdentifier ?? null,
           osVersion: input.osVersion ?? null,
           architecture: input.architecture ?? null,
-          cmuxVersion: input.cmuxVersion ?? null,
-          cmuxBuild: input.cmuxBuild ?? null,
-          cmuxChannel: input.cmuxChannel ?? null,
+          hmuxVersion: input.hmuxVersion ?? null,
+          hmuxBuild: input.hmuxBuild ?? null,
+          hmuxChannel: input.hmuxChannel ?? null,
           lastControlPlaneAt: now,
         })
         .onConflictDoUpdate({
@@ -1662,9 +1662,9 @@ export const vmRepositoryLiveShape: VmRepositoryShape = {
             modelIdentifier: input.modelIdentifier ?? null,
             osVersion: input.osVersion ?? null,
             architecture: input.architecture ?? null,
-            cmuxVersion: input.cmuxVersion ?? null,
-            cmuxBuild: input.cmuxBuild ?? null,
-            cmuxChannel: input.cmuxChannel ?? null,
+            hmuxVersion: input.hmuxVersion ?? null,
+            hmuxBuild: input.hmuxBuild ?? null,
+            hmuxChannel: input.hmuxChannel ?? null,
             lastControlPlaneAt: now,
             updatedAt: now,
           },
@@ -3187,7 +3187,7 @@ export const vmRepositoryLiveShape: VmRepositoryShape = {
             providerMetadata: sql`(
               jsonb_set(
                 coalesce(${cloudVms.providerMetadata}, '{}'::jsonb),
-                '{cmuxResourceReservation,diskMb}',
+                '{hmuxResourceReservation,diskMb}',
                 to_jsonb(${diskMb}::integer),
                 true
               )
@@ -3199,7 +3199,7 @@ export const vmRepositoryLiveShape: VmRepositoryShape = {
           .where(and(
             eq(cloudVms.id, input.id),
             inArray(cloudVms.status, LIVE_VM_RESOURCE_STATUSES),
-            sql`${cloudVms.providerMetadata}->'cmuxResourceReservation'->>'diskMb' = ${String(expectedDiskMb)}`,
+            sql`${cloudVms.providerMetadata}->'hmuxResourceReservation'->>'diskMb' = ${String(expectedDiskMb)}`,
             sql`${cloudVms.providerMetadata}->${sql.raw(`'${VM_RESOURCE_RESIZE_PENDING_METADATA_KEY}'`)}->>'operationId' = ${operationId}`,
           ))
           .returning({ id: cloudVms.id });
@@ -3243,7 +3243,7 @@ export const vmRepositoryLiveShape: VmRepositoryShape = {
             providerMetadata: sql`(
               jsonb_set(
                 coalesce(${cloudVms.providerMetadata}, '{}'::jsonb),
-                '{cmuxResourceReservation,diskMb}',
+                '{hmuxResourceReservation,diskMb}',
                 to_jsonb(${VM_DISK_MB_MAX}::integer),
                 true
             )
@@ -4023,7 +4023,7 @@ export const vmRepositoryLiveShape: VmRepositoryShape = {
             eq(cloudVmUsageEvents.provider, input.provider),
             eq(cloudVmUsageEvents.eventType, "vm.snapshot.created"),
             sql`${cloudVmUsageEvents.metadata}->>'snapshotId' = ${input.snapshotId}`,
-            // A snapshot deleted through cmux (`cmux vm snapshot rm`) is no
+            // A snapshot deleted through hmux (`hmux vm snapshot rm`) is no
             // longer restorable: the ledger keeps its creation row for
             // accounting, so exclude it here rather than at the provider.
             sql`not exists (

@@ -1,8 +1,8 @@
-import CmuxCloud
-import CmuxCloudResizeCore
+import HmuxCloud
+import HmuxCloudResizeCore
 import AppKit
 import Foundation
-import CmuxSettings
+import HmuxSettings
 
 /// Closure bundle handed to rows. Bound above the lazy boundary; rows never
 /// see the store. All verbs go through `CloudVMActionLauncher` so this panel,
@@ -13,7 +13,7 @@ struct MachineRowActions {
     let runCommand: @MainActor (String, [String]) -> Void
     let confirmDelete: @MainActor (MachineSnapshot) -> Void
     let promptRename: @MainActor (MachineSnapshot) -> Void
-    /// Grow the machine through the shared `cmux vm resize` command.
+    /// Grow the machine through the shared `hmux vm resize` command.
     let resizeDisk: @MainActor (String, Int) -> Void
     var resizeCPU: @MainActor (String, Int) -> Void = { _, _ in }
     var resizeMemory: @MainActor (String, Int) -> Void = { _, _ in }
@@ -35,7 +35,7 @@ struct MachineRowActions {
     let promptUpgrade: @MainActor () -> Void
     /// Opens the Network sheet for a machine id and its display label.
     var editNetwork: @MainActor (String, String?) -> Void = { _, _ in }
-    /// Turns "Keep Agents Up to Date" on or off through `cmux vm agent-updates`.
+    /// Turns "Keep Agents Up to Date" on or off through `hmux vm agent-updates`.
     var setAgentUpdates: @MainActor (String, Bool) -> Void = { _, _ in }
     /// Persists a pin and returns the authoritative fleet order/render state.
     /// Nil means the action was not accepted (for example, after sign-out).
@@ -172,7 +172,7 @@ struct MachineRowActions {
 
     @MainActor
     @discardableResult
-    /// `arguments` is the `cmux vm new …` invocation the New Machine sheet
+    /// `arguments` is the `hmux vm new …` invocation the New Machine sheet
     /// built (kind, size, name). Failures come back through `onCompletion`
     /// so the sheet can show them inline instead of a detached alert.
     static func openNewMachine(

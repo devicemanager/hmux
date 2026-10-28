@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxAppKitSupportUI
+import HmuxAppKitSupportUI
 import SwiftUI
 
 struct CloudTreeRowHoverButtons: View {
@@ -235,7 +235,7 @@ private struct CloudTreeDevicesMenuButton: View {
                 setIncomingAccess: { nodeActions.setDeviceIncomingAccess($0) }
             )
         } label: {
-            CmuxResolvedIconImage(request: CmuxResolvedIconRequest(
+            HmuxResolvedIconImage(request: HmuxResolvedIconRequest(
                 source: .systemSymbol(name: "ellipsis", accessibilityDescription: nil),
                 size: NSSize(width: 22, height: 20),
                 tintColor: isHovered ? .labelColor : .secondaryLabelColor,

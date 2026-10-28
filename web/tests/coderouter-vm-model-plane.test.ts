@@ -67,10 +67,10 @@ describe("provisionVmModelPlane", () => {
       [VM_AUTHORIZATION_HEADER]: "Bearer crt_test-token",
     };
     expect(provision.edgeRules).toEqual([
-      { domain: "coderouter.cmux.internal", destinationHost: "coderouter.dev", headers },
+      { domain: "coderouter.hmux.internal", destinationHost: "coderouter.dev", headers },
       // Reflection: the same identity, plus the marker the proxy routes on.
       {
-        domain: "reflection.cmux.internal",
+        domain: "reflection.hmux.internal",
         destinationHost: "coderouter.dev",
         headers: { ...headers, [VM_REFLECTION_ALIAS_HEADER]: VM_REFLECTION_ALIAS_VALUE },
       },
@@ -103,7 +103,7 @@ describe("provisionVmModelPlane", () => {
       INPUT,
       deps({ edgeOriginEnv: () => "https://cmux-git-feat-manaflow.vercel.app/" }),
     );
-    expect(provision.edgeRules.map((rule) => rule.domain)).toEqual(["coderouter.cmux.internal", "reflection.cmux.internal"]);
+    expect(provision.edgeRules.map((rule) => rule.domain)).toEqual(["coderouter.hmux.internal", "reflection.hmux.internal"]);
     expect(provision.edgeRules.every((rule) => rule.destinationHost === "cmux-git-feat-manaflow.vercel.app")).toBe(true);
   });
 

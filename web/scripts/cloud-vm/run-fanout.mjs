@@ -22,10 +22,10 @@ export function parseRunFanout(raw) {
   return count;
 }
 
-/** One single-variant cmux.run/v1 spec per fan-out lane. */
+/** One single-variant hmux.run/v1 spec per fan-out lane. */
 export function fanoutRunSpec({ marker, index, sourceCommit, setupManifestDigest, instruction = FANOUT_INSTRUCTION }) {
   return {
-    schema: "cmux.run/v1",
+    schema: "hmux.run/v1",
     operationId: `${marker}-${index}`,
     source: { repository: "manaflow-ai/cmux", commit: sourceCommit, setupManifestDigest },
     intent: { digest: sha256(`fanout:${marker}`) },
@@ -118,7 +118,7 @@ async function oneLane({ api, now, sleep, spec, index, startedAt, timeoutMs, pol
   if (lane.status !== "succeeded") lane.error = String(attempt?.error ?? snapshot?.run?.error ?? snapshot?.error ?? lane.status).slice(0, 300);
   if (lane.status === "succeeded" && lane.providerVmId && lane.attemptId) {
     const read = await api("POST", `/api/vm/${encodeURIComponent(lane.providerVmId)}/exec`, {
-      command: `tail -c 20000 /tmp/cmux-agent-output-${lane.attemptId}.jsonl`,
+      command: `tail -c 20000 /tmp/hmux-agent-output-${lane.attemptId}.jsonl`,
       timeoutMs: 30_000,
     }, 60_000).catch(() => null);
     lane.agentReply = read?.status === 200 ? lastAgentMessage(read.json?.stdout)?.slice(0, 300) ?? null : null;

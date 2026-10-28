@@ -9,7 +9,7 @@ import {
 describe("billing links", () => {
   test("marks relative checkout URLs for system-browser handoff", () => {
     expect(withCheckoutExternalBrowserIntent("/api/billing/checkout")).toBe(
-      "/api/billing/checkout?cmux_external_browser=1",
+      "/api/billing/checkout?hmux_external_browser=1",
     );
   });
 
@@ -19,22 +19,22 @@ describe("billing links", () => {
         "https://cmux.com/api/billing/checkout?plan=pro#pay",
       ),
     ).toBe(
-      "https://cmux.com/api/billing/checkout?plan=pro&cmux_external_browser=1#pay",
+      "https://cmux.com/api/billing/checkout?plan=pro&hmux_external_browser=1#pay",
     );
   });
 
   test("app pricing checkout uses the request origin", () => {
     expect(appPricingCheckoutURL("pro", "http://localhost:9210")).toBe(
-      "http://localhost:9210/api/billing/checkout?plan=pro&cmux_external_browser=1",
+      "http://localhost:9210/api/billing/checkout?plan=pro&hmux_external_browser=1",
     );
     expect(appPricingCheckoutURL("team", "https://cmux.com")).toBe(
-      "https://cmux.com/api/billing/checkout?plan=team&cmux_external_browser=1",
+      "https://cmux.com/api/billing/checkout?plan=team&hmux_external_browser=1",
     );
   });
 
   test("app pricing checkout can carry the native callback scheme", () => {
-    expect(appPricingCheckoutURL("pro", "http://localhost:9210", "cmux-dev-test")).toBe(
-      "http://localhost:9210/api/billing/checkout?plan=pro&cmux_external_browser=1&cmux_scheme=cmux-dev-test",
+    expect(appPricingCheckoutURL("pro", "http://localhost:9210", "hmux-dev-test")).toBe(
+      "http://localhost:9210/api/billing/checkout?plan=pro&hmux_external_browser=1&hmux_scheme=hmux-dev-test",
     );
   });
 
@@ -46,62 +46,62 @@ describe("billing links", () => {
       appPricingCheckoutURL(
         "pro",
         "http://localhost:9210",
-        "cmux-dev-test",
+        "hmux-dev-test",
         "year",
       ),
     ).toBe(
-      "http://localhost:9210/api/billing/checkout?plan=pro&cmux_external_browser=1&cmux_scheme=cmux-dev-test&interval=year",
+      "http://localhost:9210/api/billing/checkout?plan=pro&hmux_external_browser=1&hmux_scheme=hmux-dev-test&interval=year",
     );
     expect(
       appPricingCheckoutURL(
         "team",
         "http://localhost:9210",
-        "cmux-dev-test",
+        "hmux-dev-test",
         "year",
       ),
     ).toBe(
-      "http://localhost:9210/api/billing/checkout?plan=team&cmux_external_browser=1&cmux_scheme=cmux-dev-test&interval=year",
+      "http://localhost:9210/api/billing/checkout?plan=team&hmux_external_browser=1&hmux_scheme=hmux-dev-test&interval=year",
     );
   });
 
   test("relay forwards attribution unsigned next to the signed plan and scheme", () => {
-    const previous = process.env.CMUX_APP_PRICING_CHECKOUT_URL;
-    process.env.CMUX_APP_PRICING_CHECKOUT_URL = "https://billing.example/checkout";
+    const previous = process.env.HMUX_APP_PRICING_CHECKOUT_URL;
+    process.env.HMUX_APP_PRICING_CHECKOUT_URL = "https://billing.example/checkout";
     try {
       const relay = appPricingCheckoutRelayURL(
         new URL(
-          "http://localhost:9210/api/billing/checkout?plan=pro&interval=year&cmux_app_checkout=1" +
-            "&cmux_source=mac_help_menu&cmux_client=mac&cmux_channel=dev&cmux_app_version=0.65.1",
+          "http://localhost:9210/api/billing/checkout?plan=pro&interval=year&hmux_app_checkout=1" +
+            "&hmux_source=mac_help_menu&hmux_client=mac&hmux_channel=dev&hmux_app_version=0.65.1",
         ),
-        { plan: "pro", interval: "year", cmuxScheme: "cmux" },
+        { plan: "pro", interval: "year", hmuxScheme: "hmux" },
       );
       expect(relay?.origin).toBe("https://billing.example");
-      expect(relay?.searchParams.get("cmux_source")).toBe("mac_help_menu");
-      expect(relay?.searchParams.get("cmux_client")).toBe("mac");
-      expect(relay?.searchParams.get("cmux_channel")).toBe("dev");
-      expect(relay?.searchParams.get("cmux_app_version")).toBe("0.65.1");
+      expect(relay?.searchParams.get("hmux_source")).toBe("mac_help_menu");
+      expect(relay?.searchParams.get("hmux_client")).toBe("mac");
+      expect(relay?.searchParams.get("hmux_channel")).toBe("dev");
+      expect(relay?.searchParams.get("hmux_app_version")).toBe("0.65.1");
       expect(relay?.searchParams.get("plan")).toBe("pro");
     } finally {
       if (previous === undefined) {
-        delete process.env.CMUX_APP_PRICING_CHECKOUT_URL;
+        delete process.env.HMUX_APP_PRICING_CHECKOUT_URL;
       } else {
-        process.env.CMUX_APP_PRICING_CHECKOUT_URL = previous;
+        process.env.HMUX_APP_PRICING_CHECKOUT_URL = previous;
       }
     }
   });
 
   test("app pricing checkout relays an explicit override through its trusted origin", () => {
-    const previous = process.env.CMUX_APP_PRICING_CHECKOUT_URL;
-    process.env.CMUX_APP_PRICING_CHECKOUT_URL = "https://billing.example/checkout";
+    const previous = process.env.HMUX_APP_PRICING_CHECKOUT_URL;
+    process.env.HMUX_APP_PRICING_CHECKOUT_URL = "https://billing.example/checkout";
     try {
       expect(appPricingCheckoutURL("pro", "http://localhost:9210")).toBe(
-        "http://localhost:9210/api/billing/checkout?plan=pro&cmux_external_browser=1&cmux_app_checkout=1",
+        "http://localhost:9210/api/billing/checkout?plan=pro&hmux_external_browser=1&hmux_app_checkout=1",
       );
     } finally {
       if (previous === undefined) {
-        delete process.env.CMUX_APP_PRICING_CHECKOUT_URL;
+        delete process.env.HMUX_APP_PRICING_CHECKOUT_URL;
       } else {
-        process.env.CMUX_APP_PRICING_CHECKOUT_URL = previous;
+        process.env.HMUX_APP_PRICING_CHECKOUT_URL = previous;
       }
     }
   });

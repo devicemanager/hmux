@@ -1,6 +1,6 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxWorkspaces
+import HmuxAppKitSupportUI
+import HmuxWorkspaces
 import SwiftUI
 
 /// Top-level SwiftUI view for a ``WorkspaceTodoPanel``: a header (clickable
@@ -220,7 +220,7 @@ private struct WorkspaceTodoPaneContent: View {
             }
         }
         // The add field is armed whenever the pane holds focus, so typing a
-        // new item needs zero extra clicks after `cmux todo open`.
+        // new item needs zero extra clicks after `hmux todo open`.
         .onAppear { if todoControlsEnabled, isFocused { addFieldFocused = true } }
         .onChange(of: isFocused) { _, focused in
             if todoControlsEnabled, focused, editingItemId == nil { addFieldFocused = true }
@@ -429,7 +429,7 @@ private struct WorkspaceTodoPaneContent: View {
         HStack(alignment: .center, spacing: 7) {
             // A `plus.circle` "add" affordance, not an empty checkbox, so the
             // add row never reads as a real (unchecked) item.
-            CmuxSystemSymbolImage(systemName: "plus.circle", pointSize: Self.checkboxPointSize, tint: .secondary)
+            HmuxSystemSymbolImage(systemName: "plus.circle", pointSize: Self.checkboxPointSize, tint: .secondary)
             TextField(
                 String(localized: "sidebar.checklist.addItemPlaceholder", defaultValue: "New checklist item"),
                 text: $pendingItemText,
@@ -562,7 +562,7 @@ private struct WorkspaceTodoPaneItemRow: View {
             Button {
                 actions.toggleCompletion()
             } label: {
-                CmuxSystemSymbolImage(
+                HmuxSystemSymbolImage(
                     systemName: checkboxSymbolName(for: item.state),
                     pointSize: checkboxPointSize,
                     tint: isCompleted ? .secondary : .primary

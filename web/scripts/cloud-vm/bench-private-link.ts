@@ -4,16 +4,16 @@
  * the Mac app uses, driven headlessly. For each trial it creates a machine
  * through the production driver (`FreestyleProvider.create`, so the guest
  * shim and reporter installs are included), mints the attach bundle
- * (`openCmuxRemote`, the attach-endpoint's provider half), dials the daemon
- * over the WireGuard hub with `cmux-tui remote connect --carrier`, reads the
+ * (`openHmuxRemote`, the attach-endpoint's provider half), dials the daemon
+ * over the WireGuard hub with `hmux-tui remote connect --carrier`, reads the
  * session snapshot, starts `bash -l` in the machine's workspace, waits for the
  * prompt, then reconnects once more and destroys the machine.
  *
- *   FREESTYLE_API_KEY=… bun scripts/cloud-vm/bench-private-link.ts [--trials N] [--size md] [--image sh-…] [--client <cmux-tui>] [--out <file.json>]
+ *   FREESTYLE_API_KEY=… bun scripts/cloud-vm/bench-private-link.ts [--trials N] [--size md] [--image sh-…] [--client <hmux-tui>] [--out <file.json>]
  *
  * The provider credential is read the way the runtime's client reads it:
  * FREESTYLE_API_KEY, or FREESTYLE_STACK_ACCESS_TOKEN with FREESTYLE_TEAM_ID
- * (source ~/.secrets/cmux.env).
+ * (source ~/.secrets/hmux.env).
  *
  * Scope: the transport path without the control plane. Production's create
  * also carries two inline `tls` edge rules (the coderouter alias and the
@@ -54,7 +54,7 @@ const option = (flag: string): string | undefined => {
 };
 const trials = Number(option("--trials") ?? "2");
 const sizeName = option("--size") ?? "md";
-const client = path.resolve(option("--client") ?? "/Applications/cmux Nightly.app/Contents/Resources/bin/cmux-tui");
+const client = path.resolve(option("--client") ?? "/Applications/hmux Nightly.app/Contents/Resources/bin/hmux-tui");
 const outPath = option("--out");
 if (!Number.isInteger(trials) || trials < 1 || !isVmImageSizeName(sizeName)) {
   console.error("bench-private-link: --trials takes a positive integer; --size is sm|md|lg|lgx|xl|2xl");
@@ -67,7 +67,7 @@ const size = vmImageSize(sizeName);
 // at a deadline, so no tracked request can stay in flight forever and the
 // settle waits are bounded by construction.
 function exitWithoutProviderCredentials(): never {
-  console.error("bench-private-link: FREESTYLE_API_KEY, or FREESTYLE_STACK_ACCESS_TOKEN with FREESTYLE_TEAM_ID, is required (source ~/.secrets/cmux.env)");
+  console.error("bench-private-link: FREESTYLE_API_KEY, or FREESTYLE_STACK_ACCESS_TOKEN with FREESTYLE_TEAM_ID, is required (source ~/.secrets/hmux.env)");
   process.exit(2);
 }
 const providerCredentials = providerCredentialsFromEnv() ?? exitWithoutProviderCredentials();
@@ -185,7 +185,7 @@ function terminalId(runOutput: string): string {
   return id;
 }
 
-/** `terminal … screen wait` answers `{matched:false}` when its timeout expires (exit 1 from newer cmux-tui builds, exit 0 from older ones). */
+/** `terminal … screen wait` answers `{matched:false}` when its timeout expires (exit 1 from newer hmux-tui builds, exit 0 from older ones). */
 function requireMatched(waitOutput: string): void {
   const parsed = JSON.parse(waitOutput) as Record<string, unknown>;
   const value = (parsed.value as Record<string, unknown> | undefined) ?? parsed;
@@ -347,9 +347,9 @@ function runTrial(index: number, provider: FreestyleProvider, networkId: string,
     // Bounded and tracked like the create: the attach bundle's provider calls
     // can be backgrounded too, and an abandoned attach must settle before the
     // sweep. The bound is the platform limit the app's attach route runs under.
-    const attached = yield* timed(attempt("openCmuxRemote", () => bounded(provider.openCmuxRemote(vmId, {
+    const attached = yield* timed(attempt("openHmuxRemote", () => bounded(provider.openHmuxRemote(vmId, {
       clientCapabilities: capabilities, promptIdentity, providerMetadata: created.value.providerMetadata,
-    }), 300_000, "openCmuxRemote")));
+    }), 300_000, "openHmuxRemote")));
     trial.attachMs = attached.ms;
     trial.trustedCarrier = attached.value.trustedCarrier;
     trial.daemonCommit = attached.value.daemonBuild?.commit ?? null;
@@ -386,7 +386,7 @@ function runTrial(index: number, provider: FreestyleProvider, networkId: string,
 
 /**
  * Destroys every machine still attached to the benchmark's VPC. The driver
- * names every machine "cmux Cloud VM", so the VPC (created by and only for
+ * names every machine "hmux Cloud VM", so the VPC (created by and only for
  * this run) is the one identity the provider persists for them.
  */
 function reconcileRunMachines(provider: FreestyleProvider, networkId: string) {
@@ -400,7 +400,7 @@ function reconcileRunMachines(provider: FreestyleProvider, networkId: string) {
     let total = Number.POSITIVE_INFINITY;
     while (offset < total && offset < 100_000 && listingError === null) {
       const page = yield* Effect.either(
-        attemptWithin("list machines", () => sdk.vms.list({ metadata: "cmux:cloud", limit: 200, offset }), "60 seconds").pipe(Effect.retry({ times: 2, schedule: Schedule.spaced("1500 millis") })),
+        attemptWithin("list machines", () => sdk.vms.list({ metadata: "hmux:cloud", limit: 200, offset }), "60 seconds").pipe(Effect.retry({ times: 2, schedule: Schedule.spaced("1500 millis") })),
       );
       if (page._tag === "Left") { listingError = page.left.message; break; }
       for (const data of page.right.vms) {
@@ -444,18 +444,18 @@ function bench() {
   return Effect.gen(function* () {
     const rawProbe = yield* command(client, ["remote-probe", "--json"], "client probe");
     const probe = JSON.parse(rawProbe) as { app?: string; capabilities?: string[]; build_identity?: string };
-    if (probe.app !== "cmux-tui" || !probe.capabilities?.includes("wireguard-hub")) {
-      return yield* Effect.fail(new Error("the client lacks wireguard-hub; point --client at a current cmux-tui"));
+    if (probe.app !== "hmux-tui" || !probe.capabilities?.includes("wireguard-hub")) {
+      return yield* Effect.fail(new Error("the client lacks wireguard-hub; point --client at a current hmux-tui"));
     }
     // The production driver on the same bounded client, so its create,
     // attach and destroy requests settle within the polling deadline too.
     const provider = new FreestyleProvider({ client: providerClient });
     const networking = provider.privateNetworking;
     const root = yield* Effect.acquireRelease(
-      Effect.sync(() => mkdtempSync(path.join(tmpdir(), "cmux-bench-link-"))),
+      Effect.sync(() => mkdtempSync(path.join(tmpdir(), "hmux-bench-link-"))),
       (directory) => Effect.sync(() => rmSync(directory, { recursive: true, force: true })),
     );
-    const slug = `cmux-bench-link-${runId}`;
+    const slug = `hmux-bench-link-${runId}`;
     // The run's own key pair doubles as its tunnel's ownership proof.
     const { privateKey, publicKey } = generateKeyPairSync("x25519");
     const clientPublicKey = publicKey.export({ type: "spki", format: "der" }).subarray(-32).toString("base64");

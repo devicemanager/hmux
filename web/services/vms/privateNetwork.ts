@@ -24,7 +24,7 @@ import { isProviderTunnelNetworkOverlap } from "./providerErrors";
 import type { ProviderNetwork, ProviderTunnel } from "./drivers";
 
 /**
- * Private networking: one provider network per cmux account, and one WireGuard
+ * Private networking: one provider network per hmux account, and one WireGuard
  * tunnel per computer the account signs in from.
  *
  * The shape of the feature is "the user's machines and the user's computers are
@@ -83,7 +83,7 @@ export type VmTunnelDescriptor = {
  * A WireGuard public key as the client sends it: 32 bytes, standard base64,
  * so exactly 44 characters ending in `=`.
  *
- * Validated here rather than at the provider so a typo is a 400 from cmux with
+ * Validated here rather than at the provider so a typo is a 400 from hmux with
  * a usable message, not an opaque provider rejection halfway through enrolling.
  */
 export function isWireGuardPublicKey(value: unknown): value is string {
@@ -107,8 +107,8 @@ function namespacedPrefix(kind: "net" | "team-net" | "wg", env: VmRuntimeEnv): s
 /**
  * The provider-side slug for an account's network.
  *
- * Hashed rather than derived from the user id directly: cmux's provider account
- * is shared by every cmux user, so slugs are visible to whoever reads that
+ * Hashed rather than derived from the user id directly: hmux's provider account
+ * is shared by every hmux user, so slugs are visible to whoever reads that
  * account's resource list, and a raw Stack Auth user id there would be an
  * avoidable identifier leak. The hash is stable, so the same account always
  * resolves to the same network without a lookup. See {@link vmNetworkNamespace}
@@ -150,7 +150,7 @@ export function userNetworkCidr(userId: string): string {
  * The provider-side slug for a team's network. Hashed for the same reason as
  * the account slug. Because it is derived from the team id, the provider's
  * network list is the only record of team networks: finding one is a read by
- * this slug, and no cmux table tracks them or their tunnel attachments.
+ * this slug, and no hmux table tracks them or their tunnel attachments.
  */
 export function networkSlugForTeam(teamId: string, env: VmRuntimeEnv = process.env): string {
   return `${namespacedPrefix("team-net", env)}-${accountHash("team-network", teamId)}`;
@@ -167,7 +167,7 @@ export function tunnelSlugForDevice(
 }
 
 function accountHash(domain: string, value: string): string {
-  return createHash("sha256").update(`cmux:${domain}:`).update(value).digest("hex").slice(0, 32);
+  return createHash("sha256").update(`hmux:${domain}:`).update(value).digest("hex").slice(0, 32);
 }
 
 /**
@@ -426,8 +426,8 @@ export function resolveOwnerNetwork(input: {
     );
     const span = trace.getActiveSpan();
     if (span) setSpanAttributes(span, teamResolution.network
-      ? { "cmux.vm.network.scope": "team", "cmux.vm.network.team_fallback": false }
-      : { "cmux.vm.network.scope": "user", "cmux.vm.network.team_fallback": teamResolution.fallbackReason ?? "no_capability" });
+      ? { "hmux.vm.network.scope": "team", "hmux.vm.network.team_fallback": false }
+      : { "hmux.vm.network.scope": "user", "hmux.vm.network.team_fallback": teamResolution.fallbackReason ?? "no_capability" });
     if (teamResolution.network) return { ...teamResolution.network, memberIngress: true, scope: "team" as const };
     const network = yield* resolveUserNetwork(input, providers, repo, userRow);
     return { ...network, memberIngress: false, scope: "user" as const };
@@ -488,7 +488,7 @@ function resolveUserNetwork(
     const cidr = vmNetworkNamespace() === null ? userNetworkCidr(input.userId) : undefined;
     const network = yield* providers.ensureNetwork(input.provider, {
       slug,
-      displayName: "cmux machines",
+      displayName: "hmux machines",
       ...(cidr ? { cidr } : {}),
     });
     // The provider call is idempotent by slug and the upsert is idempotent by
@@ -528,9 +528,9 @@ export function enrollVmTunnel(input: {
   readonly modelIdentifier?: string | null;
   readonly osVersion?: string | null;
   readonly architecture?: string | null;
-  readonly cmuxVersion?: string | null;
-  readonly cmuxBuild?: string | null;
-  readonly cmuxChannel?: string | null;
+  readonly hmuxVersion?: string | null;
+  readonly hmuxBuild?: string | null;
+  readonly hmuxChannel?: string | null;
   readonly stackSessionId?: string | null;
   readonly sessionIssuedAt?: Date | null;
   readonly clientPublicKey: string;
@@ -567,9 +567,9 @@ export function enrollVmTunnel(input: {
       modelIdentifier: input.modelIdentifier,
       osVersion: input.osVersion,
       architecture: input.architecture,
-      cmuxVersion: input.cmuxVersion,
-      cmuxBuild: input.cmuxBuild,
-      cmuxChannel: input.cmuxChannel,
+      hmuxVersion: input.hmuxVersion,
+      hmuxBuild: input.hmuxBuild,
+      hmuxChannel: input.hmuxChannel,
     });
     // The lease covers only this tunnel's peer mutation. Team network
     // reconciliation runs after it is released: it makes several provider
@@ -638,7 +638,7 @@ export function enrollVmTunnel(input: {
 
       const created = yield* providers.createTunnel(input.provider, {
         slug: tunnelSlugForDevice(input.userId, input.deviceFingerprint, input.tunnelPurpose),
-        displayName: input.deviceName?.trim() || "cmux computer",
+        displayName: input.deviceName?.trim() || "hmux computer",
         clientPublicKey,
         networkId: network.providerNetworkId,
       });
@@ -818,9 +818,9 @@ const TUNNEL_REAP_BATCH_LIMIT = 25;
 const TUNNEL_REAP_BUDGET_MS = 20_000;
 const TUNNEL_REAP_DELETE_TIMEOUT_MS = 10_000;
 
-/** The stale window, from `CMUX_VM_TUNNEL_STALE_AFTER_DAYS` when it is a positive number. */
+/** The stale window, from `HMUX_VM_TUNNEL_STALE_AFTER_DAYS` when it is a positive number. */
 export function vmTunnelStaleAfterMs(env: Readonly<Record<string, string | undefined>> = process.env): number {
-  const days = Number(env.CMUX_VM_TUNNEL_STALE_AFTER_DAYS);
+  const days = Number(env.HMUX_VM_TUNNEL_STALE_AFTER_DAYS);
   return (Number.isFinite(days) && days > 0 ? days : DEFAULT_VM_TUNNEL_STALE_AFTER_DAYS) * DAY_MS;
 }
 
@@ -973,9 +973,9 @@ export function listVmAccessGrants(input: { readonly userId: string }) {
       modelIdentifier: grant.modelIdentifier,
       osVersion: grant.osVersion,
       architecture: grant.architecture,
-      cmuxVersion: grant.cmuxVersion,
-      cmuxBuild: grant.cmuxBuild,
-      cmuxChannel: grant.cmuxChannel,
+      hmuxVersion: grant.hmuxVersion,
+      hmuxBuild: grant.hmuxBuild,
+      hmuxChannel: grant.hmuxChannel,
       createdAt: grant.createdAt.getTime(),
       lastControlPlaneAt: grant.lastControlPlaneAt.getTime(),
       tunnelPurposes: tunnels

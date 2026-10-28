@@ -26,7 +26,7 @@ type CloudDbState = {
 };
 
 const globalForDb = globalThis as typeof globalThis & {
-  __cmuxCloudDb?: CloudDbState;
+  __hmuxCloudDb?: CloudDbState;
 };
 
 export function createAwsRdsIamPool(
@@ -265,15 +265,15 @@ export function cloudDb(): CloudDb {
   const config = cloudDbConfig();
   const key = cloudDbConfigKey(config);
 
-  if (globalForDb.__cmuxCloudDb?.key === key) {
-    return globalForDb.__cmuxCloudDb.db;
+  if (globalForDb.__hmuxCloudDb?.key === key) {
+    return globalForDb.__hmuxCloudDb.db;
   }
 
   if (config.driver === "aws-rds-iam") {
     const pool = createAwsRdsIamPool(config);
     attachDatabasePool(pool);
     const db = drizzleNodePg({ client: pool, schema }) as unknown as CloudDb;
-    globalForDb.__cmuxCloudDb = {
+    globalForDb.__hmuxCloudDb = {
       db,
       close: () => pool.end(),
       warm: coalesceWarm(async () => {
@@ -290,7 +290,7 @@ export function cloudDb(): CloudDb {
     prepare: false,
   });
   const db = createPostgresJsDb(sql);
-  globalForDb.__cmuxCloudDb = {
+  globalForDb.__hmuxCloudDb = {
     db,
     close: () => sql.end(),
     warm: coalesceWarm(async () => {
@@ -330,7 +330,7 @@ function coalesceWarm(run: () => Promise<void>): () => Promise<void> {
 export function preconnectCloudDb(): Promise<void> {
   try {
     cloudDb();
-    return globalForDb.__cmuxCloudDb?.warm().catch(() => undefined) ?? Promise.resolve();
+    return globalForDb.__hmuxCloudDb?.warm().catch(() => undefined) ?? Promise.resolve();
   } catch {
     // No database configured (tests, offline builds): the first query reports it.
     return Promise.resolve();
@@ -421,7 +421,7 @@ function abortedDatabaseProbe(): DOMException {
 }
 
 export async function closeCloudDbForTests(): Promise<void> {
-  const state = globalForDb.__cmuxCloudDb;
-  globalForDb.__cmuxCloudDb = undefined;
+  const state = globalForDb.__hmuxCloudDb;
+  globalForDb.__hmuxCloudDb = undefined;
   await state?.close();
 }

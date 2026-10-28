@@ -1,11 +1,11 @@
-// Where inside a machine a request came from: the cmux-tui workspace and
-// terminal (surface) whose environment launched the agent. cmux-tui exports
-// CMUX_WORKSPACE_ID and CMUX_SURFACE_ID into every terminal; agent-config.sh
+// Where inside a machine a request came from: the hmux-tui workspace and
+// terminal (surface) whose environment launched the agent. hmux-tui exports
+// HMUX_WORKSPACE_ID and HMUX_SURFACE_ID into every terminal; agent-config.sh
 // in the guest turns them into these two headers (Claude Code through
 // ANTHROPIC_CUSTOM_HEADERS, Codex through env_http_headers). The ids are
 // opaque attribution keys only; a missing or malformed header is null.
-export const WORKSPACE_ID_HEADER = "x-cmux-workspace-id";
-export const SURFACE_ID_HEADER = "x-cmux-surface-id";
+export const WORKSPACE_ID_HEADER = "x-hmux-workspace-id";
+export const SURFACE_ID_HEADER = "x-hmux-surface-id";
 
 const ORIGIN_ID_PATTERN = /^[A-Za-z0-9_.:-]{1,128}$/;
 

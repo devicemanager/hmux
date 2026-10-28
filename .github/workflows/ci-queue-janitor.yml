@@ -10,7 +10,7 @@ name: CI queue janitor
 # admission` or `app-host unit tests` shard, in that order. Draft pull requests are never cancelled for being
 # drafts, and a run whose diff changes what the failing shard does is never
 # cancelled for being doomed.
-# Main and feat-cmux-next pushes, merge groups, main schedules/dispatches,
+# Main and feat-hmux-next pushes, merge groups, main schedules/dispatches,
 # release/tag, nightly and TestFlight/App Store runs are never candidates.
 # scripts/ci/queue_janitor.py holds the policy; every decision is written to
 # the step summary.
@@ -41,7 +41,7 @@ name: CI queue janitor
 # over 10 minutes and no job on it running or started in that time
 # (scripts/ci/starved_labels.py). Each gets an ::error:: annotation, a summary
 # line and one open issue titled "Runner label starved: <label>", closed when
-# the label is served again. The issues use the cmux-bot token's issues: write;
+# the label is served again. The issues use the hmux-bot token's issues: write;
 # without that token a starved label fails the alert step.
 #
 # GitHub delays scheduled runs (the */10 cron fired 55 minutes apart on
@@ -60,7 +60,7 @@ name: CI queue janitor
 # manaflow-glaeda-route App's token, which has its own budget (minted first, so the
 # freshness probe uses it too; a mint costs the App's budget, not GITHUB_TOKEN's), and
 # falls back to GITHUB_TOKEN when the App's is refused. A CI run of a pull request into
-# feat-cmux-next starts no sweep: that branch's ci.yml never routes its pull requests to
+# feat-hmux-next starts no sweep: that branch's ci.yml never routes its pull requests to
 # macOS (`macos` needs `Fast static checks`, which it skips for them), and the cron still
 # sweeps their stale runs.
 on:
@@ -97,7 +97,7 @@ jobs:
       pull-requests: read
       contents: read
     name: Sweep wasted macOS demand
-    if: ${{ !(github.event_name == 'workflow_run' && github.event.workflow_run.pull_requests[0].base.ref == 'feat-cmux-next') }}
+    if: ${{ !(github.event_name == 'workflow_run' && github.event.workflow_run.pull_requests[0].base.ref == 'feat-hmux-next') }}
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
     timeout-minutes: 10
     steps:
@@ -124,7 +124,7 @@ jobs:
         if: github.event_name != 'workflow_dispatch'
         env:
           # This gate stays ahead of every other API use so requested-run
-          # freshness stays cheap; the cmux-bot token is minted only after a
+          # freshness stays cheap; the hmux-bot token is minted only after a
           # stale snapshot needs the cancellation API.
           GH_TOKEN: ${{ steps.glaeda-token.outputs.token || github.token }}
           FALLBACK_TOKEN: ${{ github.token }}
@@ -146,15 +146,15 @@ jobs:
             echo "skip=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Mint the cmux-bot token
-        id: cmux-bot-token
-        if: vars.CMUX_BOT_APP_ID != '' && steps.fresh.outputs.skip != 'true'
+      - name: Mint the hmux-bot token
+        id: hmux-bot-token
+        if: vars.HMUX_BOT_APP_ID != '' && steps.fresh.outputs.skip != 'true'
         continue-on-error: true
         timeout-minutes: 1
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ vars.CMUX_BOT_APP_ID }}
-          private-key: ${{ secrets.CMUX_BOT_APP_KEY }}
+          app-id: ${{ vars.HMUX_BOT_APP_ID }}
+          private-key: ${{ secrets.HMUX_BOT_APP_KEY }}
           permission-actions: write
           permission-checks: read
           permission-contents: read
@@ -170,7 +170,7 @@ jobs:
       - name: Cancel wasted macOS runs
         if: steps.fresh.outputs.skip != 'true'
         env:
-          GH_TOKEN: ${{ steps.cmux-bot-token.outputs.token || steps.glaeda-token.outputs.token || github.token }}
+          GH_TOKEN: ${{ steps.hmux-bot-token.outputs.token || steps.glaeda-token.outputs.token || github.token }}
           # Takes over when the App's token is refused (queue_janitor.GitHub).
           GH_FALLBACK_TOKEN: ${{ github.token }}
           GH_REPO: ${{ github.repository }}
@@ -198,7 +198,7 @@ jobs:
         if: ${{ !cancelled() && steps.fresh.outputs.skip != 'true' }}
         env:
           # Not github.token: this job's GITHUB_TOKEN has no issues permission.
-          GH_TOKEN: ${{ steps.cmux-bot-token.outputs.token }}
+          GH_TOKEN: ${{ steps.hmux-bot-token.outputs.token }}
           GH_REPO: ${{ github.repository }}
           POOL_LOAD_OUT: ${{ runner.temp }}/macos-pool-load.json
         run: python3 scripts/ci/starved_labels.py

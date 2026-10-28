@@ -121,14 +121,14 @@ jobs:
           artifacts = json.loads(pathlib.Path(sys.argv[1]).read_text(encoding="utf-8")).get("artifacts", [])
           channel, short_sha = sys.argv[2:]
           names = {artifact["name"] for artifact in artifacts if not artifact.get("expired")}
-          expected = [f"cmux-{channel}-notarization-recovery-{variant}-{short_sha}" for variant in ("arm64", "x86_64", "universal")]
+          expected = [f"hmux-{channel}-notarization-recovery-{variant}-{short_sha}" for variant in ("arm64", "x86_64", "universal")]
           missing = [name for name in expected if name not in names]
           if missing:
               print("ready=false")
               print("reason=no-published-recovery-artifacts")
               raise SystemExit(0)
           print("ready=true")
-          metadata = [f"cmux-{channel}-notarization-metadata-{variant}-{short_sha}" for variant in ("arm64", "x86_64", "universal")]
+          metadata = [f"hmux-{channel}-notarization-metadata-{variant}-{short_sha}" for variant in ("arm64", "x86_64", "universal")]
           print(f"metadata_only={'true' if all(name in names for name in metadata) else 'false'}")
           PY
           if grep -Fxq 'ready=true' "$RUNNER_TEMP/artifact-check"; then
@@ -153,7 +153,7 @@ jobs:
             echo "source_run_id=$SOURCE_RUN_ID"
             echo "source_run_attempt=$SOURCE_RUN_ATTEMPT"
             echo "short_sha=$short_sha"
-            echo "dmg_prefix=cmux-${channel}-macos"
+            echo "dmg_prefix=hmux-${channel}-macos"
           } >> "$GITHUB_OUTPUT"
 
   # Query Apple from an Ubuntu worker while the submission is in progress.
@@ -199,12 +199,12 @@ jobs:
           kind=recovery
           [ "$RECOVERY_METADATA_ONLY" != true ] || kind=metadata
           for variant in arm64 x86_64 universal; do
-            artifact="cmux-${CHANNEL}-notarization-${kind}-${variant}-${SHORT_SHA}"
+            artifact="hmux-${CHANNEL}-notarization-${kind}-${variant}-${SHORT_SHA}"
             gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" \
               --name "$artifact" --dir "recovery/$variant"
-            test -f "recovery/$variant/cmux-nightly-notarization-recovery.json"
+            test -f "recovery/$variant/hmux-nightly-notarization-recovery.json"
             if [ "$RECOVERY_METADATA_ONLY" != true ]; then
-              test -f "recovery/$variant/cmux-nightly-notarization-recovery-app.tar.gz"
+              test -f "recovery/$variant/hmux-nightly-notarization-recovery-app.tar.gz"
             fi
           done
 
@@ -222,7 +222,7 @@ jobs:
             resolve_args=(--metadata-only)
           fi
           for variant in arm64 x86_64 universal; do
-            manifest="recovery/$variant/cmux-nightly-notarization-recovery.json"
+            manifest="recovery/$variant/hmux-nightly-notarization-recovery.json"
             if ! python3 scripts/ci/resolve-notarization-recovery.py \
                 "$manifest" "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$CHANNEL" "$variant" \
                 --run-attempt "$SOURCE_RUN_ATTEMPT" --strict "${resolve_args[@]}" \
@@ -281,7 +281,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-notarization-poll-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-notarization-poll-${{ needs.preflight.outputs.short_sha }}
           path: poll-reports/*
           if-no-files-found: ignore
           retention-days: 14
@@ -312,8 +312,8 @@ jobs:
       - name: Set outer notarization receipt paths
         run: |
           printf '%s\n' \
-            "OUTER_STATE=$RUNNER_TEMP/cmux-outer-dmg-notarization.state" \
-            "OUTER_LOG=$RUNNER_TEMP/cmux-outer-dmg-notarization.state.log" >> "$GITHUB_ENV"
+            "OUTER_STATE=$RUNNER_TEMP/hmux-outer-dmg-notarization.state" \
+            "OUTER_LOG=$RUNNER_TEMP/hmux-outer-dmg-notarization.state.log" >> "$GITHUB_ENV"
 
       - name: Checkout trusted continuation tools
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -351,15 +351,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          artifact="cmux-${CHANNEL}-notarization-recovery-${VARIANT}-${SHORT_SHA}"
+          artifact="hmux-${CHANNEL}-notarization-recovery-${VARIANT}-${SHORT_SHA}"
           gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir recovery
-          test -f recovery/cmux-nightly-notarization-recovery-app.tar.gz
+          test -f recovery/hmux-nightly-notarization-recovery-app.tar.gz
 
       - name: Resolve manifest and verify exact DMG
         run: |
           set -euo pipefail
           python3 scripts/ci/resolve-notarization-recovery.py \
-            recovery/cmux-nightly-notarization-recovery.json \
+            recovery/hmux-nightly-notarization-recovery.json \
             "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$CHANNEL" "$VARIANT" \
             --run-attempt "$SOURCE_RUN_ATTEMPT" --strict --extract-app > "$RUNNER_TEMP/recovery.env"
           while IFS='=' read -r key value; do
@@ -386,7 +386,7 @@ jobs:
         env:
           # Launch smokes of the stapled DMG run in verify-stapled, which holds
           # no secrets. No bundle code runs in this job.
-          CMUX_DEFER_LAUNCH_SMOKES: "true"
+          HMUX_DEFER_LAUNCH_SMOKES: "true"
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
@@ -398,32 +398,32 @@ jobs:
           set -euo pipefail
           mkdir -p verified
           if [ "${RECOVERY_KIND:-dmg}" = "computer-use-helper" ]; then
-            outer_state="$RUNNER_TEMP/cmux-outer-dmg-notarization.state"
+            outer_state="$RUNNER_TEMP/hmux-outer-dmg-notarization.state"
             # Two bounded waits (the outer DMG, then the DMG around its
             # stapled app) inside the 150-minute step limit.
-            CMUX_CHANNEL="$CHANNEL" \
+            HMUX_CHANNEL="$CHANNEL" \
             CHANNEL_RELEASE_TAG="$RELEASE_TAG" \
             CHANNEL_DMG_PREFIX="$DMG_PREFIX" \
             NIGHTLY_VARIANT="$VARIANT" \
-            CMUX_OUTER_NOTARY_WAIT_TIMEOUT=25m \
-            CMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT=20m \
+            HMUX_OUTER_NOTARY_WAIT_TIMEOUT=25m \
+            HMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT=20m \
               ./scripts/ci/resume-helper-notarization.sh \
               "$HELPER_STATE_FILE" "$APP_PATH" "$DMG_RELEASE" "verified/$IMMUTABLE_NAME" \
-              "${APP_ENTITLEMENTS:-cmux.$CHANNEL.entitlements}" "$APPLE_SIGNING_IDENTITY" "$outer_state"
+              "${APP_ENTITLEMENTS:-hmux.$CHANNEL.entitlements}" "$APPLE_SIGNING_IDENTITY" "$outer_state"
           else
             # The first DMG is accepted: staple its app, then submit the DMG
             # around the stapled app and wait for it like an outer DMG.
-            outer_state="$RUNNER_TEMP/cmux-outer-dmg-notarization.state"
-            CMUX_CHANNEL="$CHANNEL" \
+            outer_state="$RUNNER_TEMP/hmux-outer-dmg-notarization.state"
+            HMUX_CHANNEL="$CHANNEL" \
             CHANNEL_RELEASE_TAG="$RELEASE_TAG" \
             CHANNEL_DMG_PREFIX="$DMG_PREFIX" \
             NIGHTLY_VARIANT="$VARIANT" \
-            CMUX_NOTARY_WAIT_TIMEOUT=2m \
-            CMUX_NOTARY_EVIDENCE_FILE="$EVIDENCE_FILE" \
-            CMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT=40m \
+            HMUX_NOTARY_WAIT_TIMEOUT=2m \
+            HMUX_NOTARY_EVIDENCE_FILE="$EVIDENCE_FILE" \
+            HMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT=40m \
               ./scripts/ci/resume-stapled-app-notarization.sh \
               "$STATE_FILE" "$APP_PATH" "$DMG_RELEASE" "verified/$IMMUTABLE_NAME" \
-              "${APP_ENTITLEMENTS:-cmux.$CHANNEL.entitlements}" "$outer_state"
+              "${APP_ENTITLEMENTS:-hmux.$CHANNEL.entitlements}" "$outer_state"
           fi
 
       # The DMG around the stapled app (stapled_app=true) is handed off when
@@ -435,7 +435,7 @@ jobs:
         if: always() && steps.wait-staple.outcome == 'failure'
         run: |
           set -euo pipefail
-          outer_state="$RUNNER_TEMP/cmux-outer-dmg-notarization.state"
+          outer_state="$RUNNER_TEMP/hmux-outer-dmg-notarization.state"
           require=(--require-stapled-app)
           if [ ! -s "$outer_state" ] && [ "${RECOVERY_KIND:-dmg}" = computer-use-helper ]; then
             outer_state="$outer_state.first"
@@ -446,7 +446,7 @@ jobs:
             exit 0
           fi
           python3 scripts/ci/stage-outer-notarization-recovery.py \
-            recovery/cmux-nightly-notarization-recovery.json \
+            recovery/hmux-nightly-notarization-recovery.json \
             "$outer_state" "$DMG_RELEASE" "$APP_PATH" outer-recovery-staging \
             --metadata-dir outer-metadata-staging ${require[@]+"${require[@]}"} \
             --source-run-id "$SOURCE_RUN_ID" --head-sha "$SOURCE_HEAD_SHA" \
@@ -458,7 +458,7 @@ jobs:
         if: always() && steps.prepare-outer.outputs.prepared == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-outer-notarization-recovery-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-outer-notarization-recovery-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: outer-recovery-staging/*
           compression-level: 0
           if-no-files-found: error
@@ -468,7 +468,7 @@ jobs:
         if: always() && steps.prepare-outer.outputs.prepared == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-outer-notarization-metadata-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-outer-notarization-metadata-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: outer-metadata-staging/*
           if-no-files-found: error
           retention-days: 14
@@ -491,7 +491,7 @@ jobs:
             exit 1
           fi
           final_sha256="$(shasum -a 256 "verified/$IMMUTABLE_NAME" | awk '{print $1}')"
-          python3 - "recovery/cmux-nightly-notarization-recovery.json" "$final_sha256" <<'PY'
+          python3 - "recovery/hmux-nightly-notarization-recovery.json" "$final_sha256" <<'PY'
           import json
           import pathlib
           import sys
@@ -502,7 +502,7 @@ jobs:
           path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
           PY
           cp "$feed" verified/
-          cp recovery/cmux-nightly-notarization-recovery.json verified/
+          cp recovery/hmux-nightly-notarization-recovery.json verified/
           if [ -e "verified/$ALIAS_NAME" ]; then
             echo "verified recovery artifact must not contain a duplicate DMG alias" >&2
             exit 1
@@ -511,7 +511,7 @@ jobs:
       - name: Upload accepted variant
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: verified/*
           # The accepted DMG is already compressed with LZMA.
           compression-level: 0
@@ -562,7 +562,7 @@ jobs:
           mkdir -p outer
           variants=()
           for variant in arm64 x86_64 universal; do
-            artifact="cmux-${CHANNEL}-outer-notarization-metadata-${variant}-${SHORT_SHA}"
+            artifact="hmux-${CHANNEL}-outer-notarization-metadata-${variant}-${SHORT_SHA}"
             if gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir "outer/$variant"; then
               variants+=("$variant")
             fi
@@ -621,15 +621,15 @@ jobs:
         run: |
           set -euo pipefail
           gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
-            --name "cmux-${CHANNEL}-outer-notarization-recovery-${VARIANT}-${SHORT_SHA}" --dir recovery
-          test -f recovery/cmux-nightly-notarization-recovery.json
-          test -f recovery/cmux-nightly-notarization-recovery-app.tar.gz
+            --name "hmux-${CHANNEL}-outer-notarization-recovery-${VARIANT}-${SHORT_SHA}" --dir recovery
+          test -f recovery/hmux-nightly-notarization-recovery.json
+          test -f recovery/hmux-nightly-notarization-recovery-app.tar.gz
 
       - name: Resolve exact outer DMG
         run: |
           set -euo pipefail
           python3 scripts/ci/resolve-notarization-recovery.py \
-            recovery/cmux-nightly-notarization-recovery.json \
+            recovery/hmux-nightly-notarization-recovery.json \
             "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$CHANNEL" "$VARIANT" \
             --run-attempt "$SOURCE_RUN_ATTEMPT" --strict --extract-app > "$RUNNER_TEMP/recovery.env"
           while IFS='=' read -r key value; do printf '%s=%s\n' "$key" "$value" >> "$GITHUB_ENV"; done < "$RUNNER_TEMP/recovery.env"
@@ -675,7 +675,7 @@ jobs:
         timeout-minutes: 120
         env:
           # Launch smokes run in verify-stapled, which holds no secrets.
-          CMUX_DEFER_LAUNCH_SMOKES: "true"
+          HMUX_DEFER_LAUNCH_SMOKES: "true"
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
@@ -686,17 +686,17 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p verified
-          CMUX_CHANNEL="$CHANNEL" \
+          HMUX_CHANNEL="$CHANNEL" \
           CHANNEL_RELEASE_TAG="$RELEASE_TAG" \
           CHANNEL_DMG_PREFIX="$DMG_PREFIX" \
           NIGHTLY_VARIANT="$VARIANT" \
-          CMUX_NOTARY_WAIT_TIMEOUT=2m \
-          CMUX_NOTARY_EVIDENCE_FILE="$EVIDENCE_FILE" \
-          CMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT=30m \
-          CMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS=600 \
+          HMUX_NOTARY_WAIT_TIMEOUT=2m \
+          HMUX_NOTARY_EVIDENCE_FILE="$EVIDENCE_FILE" \
+          HMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT=30m \
+          HMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS=600 \
             ./scripts/ci/resume-stapled-app-notarization.sh \
             "$STATE_FILE" "$APP_PATH" "$DMG_RELEASE" "verified/$IMMUTABLE_NAME" \
-            "${APP_ENTITLEMENTS:-cmux.$CHANNEL.entitlements}" "$RUNNER_TEMP/cmux-stapled-app-notarization.state" \
+            "${APP_ENTITLEMENTS:-hmux.$CHANNEL.entitlements}" "$RUNNER_TEMP/hmux-stapled-app-notarization.state" \
             || rc=$?
           # 75: the stapled-app DMG is not Accepted yet (the only hand-off case).
           echo "exit_code=${rc:-0}" >> "$GITHUB_OUTPUT"
@@ -709,7 +709,7 @@ jobs:
         if: always() && steps.staple-outer.outcome == 'failure' && steps.staple-outer.outputs.exit_code == '75'
         run: |
           set -euo pipefail
-          state="$RUNNER_TEMP/cmux-stapled-app-notarization.state"
+          state="$RUNNER_TEMP/hmux-stapled-app-notarization.state"
           where=()
           if [ ! -s "$state" ] && [ "$OUTER_STAPLED_APP" = true ]; then
             # A stapled-app DMG whose recheck here was not Accepted (exit 75,
@@ -722,14 +722,14 @@ jobs:
             exit 0
           fi
           python3 scripts/ci/stage-outer-notarization-recovery.py \
-            recovery/cmux-nightly-notarization-recovery.json \
+            recovery/hmux-nightly-notarization-recovery.json \
             "$state" "$DMG_RELEASE" "$APP_PATH" stapled-recovery-staging \
             --metadata-dir stapled-metadata-staging --require-stapled-app ${where[@]+"${where[@]}"} \
             --source-run-id "$SOURCE_RUN_ID" --head-sha "$SOURCE_HEAD_SHA" \
             --run-attempt "$SOURCE_RUN_ATTEMPT" --channel "$CHANNEL" --variant "$VARIANT" \
             --release-tag "$RELEASE_TAG" --dmg-prefix "$DMG_PREFIX" --short-sha "$SHORT_SHA"
           id="$(awk -F= '$1 == "submission_id" { print $2; exit }' "$state")"
-          artifact="cmux-${CHANNEL}-stapled-app-notarization-recovery-${VARIANT}-${SHORT_SHA}"
+          artifact="hmux-${CHANNEL}-stapled-app-notarization-recovery-${VARIANT}-${SHORT_SHA}"
           echo "::warning::The DMG around the stapled app (Apple submission $id) is still pending; poll-stapled polls it until Accepted or its 6 h fallback ($artifact)"
           echo "prepared=true" >> "$GITHUB_OUTPUT"
 
@@ -737,7 +737,7 @@ jobs:
         if: always() && steps.prepare-stapled.outputs.prepared == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-stapled-app-notarization-recovery-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-stapled-app-notarization-recovery-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: stapled-recovery-staging/*
           compression-level: 0
           if-no-files-found: error
@@ -747,7 +747,7 @@ jobs:
         if: always() && steps.prepare-stapled.outputs.prepared == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-stapled-app-notarization-metadata-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-stapled-app-notarization-metadata-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: stapled-metadata-staging/*
           if-no-files-found: error
           retention-days: 14
@@ -767,7 +767,7 @@ jobs:
             ./scripts/sparkle_generate_appcast.sh "verified/$IMMUTABLE_NAME" "$RELEASE_TAG" "$feed"
           grep -q 'sparkle:deltas' "$feed" && { echo "recovery feeds must contain full archives only" >&2; exit 1; } || true
           final_sha256="$(shasum -a 256 "verified/$IMMUTABLE_NAME" | awk '{print $1}')"
-          python3 - "recovery/cmux-nightly-notarization-recovery.json" "$final_sha256" <<'PY'
+          python3 - "recovery/hmux-nightly-notarization-recovery.json" "$final_sha256" <<'PY'
           import json
           from pathlib import Path
           import sys
@@ -777,12 +777,12 @@ jobs:
           path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
           PY
           cp "$feed" verified/
-          cp recovery/cmux-nightly-notarization-recovery.json verified/
+          cp recovery/hmux-nightly-notarization-recovery.json verified/
 
       - name: Upload accepted outer variant
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: verified/*
           compression-level: 0
           if-no-files-found: error
@@ -834,7 +834,7 @@ jobs:
           mkdir -p outer
           variants=()
           for variant in arm64 x86_64 universal; do
-            artifact="cmux-${CHANNEL}-stapled-app-notarization-metadata-${variant}-${SHORT_SHA}"
+            artifact="hmux-${CHANNEL}-stapled-app-notarization-metadata-${variant}-${SHORT_SHA}"
             if gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" --name "$artifact" --dir "outer/$variant"; then
               variants+=("$variant")
             fi
@@ -893,15 +893,15 @@ jobs:
         run: |
           set -euo pipefail
           gh run download "$GITHUB_RUN_ID" --repo "$GITHUB_REPOSITORY" \
-            --name "cmux-${CHANNEL}-stapled-app-notarization-recovery-${VARIANT}-${SHORT_SHA}" --dir recovery
-          test -f recovery/cmux-nightly-notarization-recovery.json
-          test -f recovery/cmux-nightly-notarization-recovery-app.tar.gz
+            --name "hmux-${CHANNEL}-stapled-app-notarization-recovery-${VARIANT}-${SHORT_SHA}" --dir recovery
+          test -f recovery/hmux-nightly-notarization-recovery.json
+          test -f recovery/hmux-nightly-notarization-recovery-app.tar.gz
 
       - name: Resolve exact stapled-app DMG
         run: |
           set -euo pipefail
           python3 scripts/ci/resolve-notarization-recovery.py \
-            recovery/cmux-nightly-notarization-recovery.json \
+            recovery/hmux-nightly-notarization-recovery.json \
             "$SOURCE_RUN_ID" "$SOURCE_HEAD_SHA" "$CHANNEL" "$VARIANT" \
             --run-attempt "$SOURCE_RUN_ATTEMPT" --strict --extract-app > "$RUNNER_TEMP/recovery.env"
           while IFS='=' read -r key value; do printf '%s=%s\n' "$key" "$value" >> "$GITHUB_ENV"; done < "$RUNNER_TEMP/recovery.env"
@@ -912,7 +912,7 @@ jobs:
       - name: Staple and validate accepted stapled-app DMG
         env:
           # Launch smokes run in verify-stapled, which holds no secrets.
-          CMUX_DEFER_LAUNCH_SMOKES: "true"
+          HMUX_DEFER_LAUNCH_SMOKES: "true"
           ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
           ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
           ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
@@ -921,13 +921,13 @@ jobs:
           mkdir -p verified
           # poll-stapled may decide a deadline due up to 300 s early (its slack):
           # wait for it before the date check.
-          CMUX_CHANNEL="$CHANNEL" \
-          CMUX_NOTARY_WAIT_TIMEOUT=2m \
-          CMUX_NOTARY_EVIDENCE_FILE="$EVIDENCE_FILE" \
-          CMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS=600 \
+          HMUX_CHANNEL="$CHANNEL" \
+          HMUX_NOTARY_WAIT_TIMEOUT=2m \
+          HMUX_NOTARY_EVIDENCE_FILE="$EVIDENCE_FILE" \
+          HMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS=600 \
             ./scripts/ci/resume-stapled-app-notarization.sh \
             "$STATE_FILE" "$APP_PATH" "$DMG_RELEASE" "verified/$IMMUTABLE_NAME" \
-            "${APP_ENTITLEMENTS:-cmux.$CHANNEL.entitlements}" "$RUNNER_TEMP/cmux-stapled-app-notarization.state"
+            "${APP_ENTITLEMENTS:-hmux.$CHANNEL.entitlements}" "$RUNNER_TEMP/hmux-stapled-app-notarization.state"
 
       - name: Generate verified Sparkle feed
         env:
@@ -944,7 +944,7 @@ jobs:
             ./scripts/sparkle_generate_appcast.sh "verified/$IMMUTABLE_NAME" "$RELEASE_TAG" "$feed"
           grep -q 'sparkle:deltas' "$feed" && { echo "recovery feeds must contain full archives only" >&2; exit 1; } || true
           final_sha256="$(shasum -a 256 "verified/$IMMUTABLE_NAME" | awk '{print $1}')"
-          python3 - "recovery/cmux-nightly-notarization-recovery.json" "$final_sha256" <<'PY'
+          python3 - "recovery/hmux-nightly-notarization-recovery.json" "$final_sha256" <<'PY'
           import json
           from pathlib import Path
           import sys
@@ -954,12 +954,12 @@ jobs:
           path.write_text(json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
           PY
           cp "$feed" verified/
-          cp recovery/cmux-nightly-notarization-recovery.json verified/
+          cp recovery/hmux-nightly-notarization-recovery.json verified/
 
       - name: Upload accepted stapled-app variant
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: verified/*
           compression-level: 0
           if-no-files-found: error
@@ -1000,13 +1000,13 @@ jobs:
       - name: Download accepted variant
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: verified
 
       - name: Launch the app inside the exact stapled DMG
         run: |
           set -euo pipefail
-          manifest=verified/cmux-nightly-notarization-recovery.json
+          manifest=verified/hmux-nightly-notarization-recovery.json
           immutable="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["immutable_path"].split("/")[-1])' "$manifest")"
           expected="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["final_dmg_sha256"])' "$manifest")"
           mkdir -p tested
@@ -1024,7 +1024,7 @@ jobs:
       - name: Upload tested digest
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-launch-tested-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-launch-tested-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: tested/tested-${{ matrix.variant }}.sha256
           if-no-files-found: error
           retention-days: 14
@@ -1069,23 +1069,23 @@ jobs:
       - name: Download all accepted variants
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
         with:
-          pattern: cmux-${{ needs.preflight.outputs.channel }}-notarization-verified-*-${{ needs.preflight.outputs.short_sha }}
+          pattern: hmux-${{ needs.preflight.outputs.channel }}-notarization-verified-*-${{ needs.preflight.outputs.short_sha }}
           path: verified
           merge-multiple: false
 
       - name: Download tested digests
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          pattern: cmux-${{ needs.preflight.outputs.channel }}-launch-tested-*-${{ needs.preflight.outputs.short_sha }}
+          pattern: hmux-${{ needs.preflight.outputs.channel }}-launch-tested-*-${{ needs.preflight.outputs.short_sha }}
           path: tested
           merge-multiple: true
 
       - name: Download immutable remote daemon assets
         run: |
           set -euo pipefail
-          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name cmux-nightly-remote-daemon --dir remote-daemon
+          gh run download "$SOURCE_RUN_ID" --repo "$GITHUB_REPOSITORY" --name hmux-nightly-remote-daemon --dir remote-daemon
           mkdir -p nightly-out
-          find remote-daemon -type f -name 'cmuxd-remote-*' -exec cp {} nightly-out/ \;
+          find remote-daemon -type f -name 'hmuxd-remote-*' -exec cp {} nightly-out/ \;
 
       - name: Assemble and verify all accepted publication inputs
         run: |
@@ -1093,7 +1093,7 @@ jobs:
           mkdir -p nightly-out
           nightly_build=""
           for variant in arm64 x86_64 universal; do
-            manifest="$(find verified -type f -name cmux-nightly-notarization-recovery.json -path "*-${variant}-${SHORT_SHA}/*" -print -quit)"
+            manifest="$(find verified -type f -name hmux-nightly-notarization-recovery.json -path "*-${variant}-${SHORT_SHA}/*" -print -quit)"
             [ -n "$manifest" ] || { echo "missing accepted $variant artifact" >&2; exit 1; }
             dir="$(dirname "$manifest")"
             manifest_build="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["build"])' "$manifest")"
@@ -1130,7 +1130,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 scripts/verify_remote_daemon_release.py \
-            --manifest "nightly-out/cmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
+            --manifest "nightly-out/hmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
             --assets-dir nightly-out
 
       - name: Reject stale continuation before publication
@@ -1160,8 +1160,8 @@ jobs:
                   raise SystemExit(0)
               raise
           body = release.get("body") or ""
-          sha = re.search(r"<!--\s*cmux-published-sha:\s*([0-9a-f]{40})\s*-->", body, re.I)
-          published_build = re.search(r"<!--\s*cmux-published-build:\s*([0-9]+)\s*-->", body, re.I)
+          sha = re.search(r"<!--\s*hmux-published-sha:\s*([0-9a-f]{40})\s*-->", body, re.I)
+          published_build = re.search(r"<!--\s*hmux-published-build:\s*([0-9]+)\s*-->", body, re.I)
           if sha and sha.group(1).lower() == source_sha.lower():
               print("already_published=true")
               print("published_same_source=true")
@@ -1190,7 +1190,7 @@ jobs:
               if [ "$CHANNEL" = rc ]; then
                 marketing_version() {
                   local project versions
-                  project="$(git show "$1:cmux.xcodeproj/project.pbxproj")"
+                  project="$(git show "$1:hmux.xcodeproj/project.pbxproj")"
                   versions="$(sed -n 's/.*MARKETING_VERSION = \([0-9.]*\);.*/\1/p' <<< "$project")"
                   printf '%s\n' "${versions%%$'\n'*}"
                 }
@@ -1233,12 +1233,12 @@ jobs:
             --immutable nightly-out/${DMG_PREFIX}-arm64-${NIGHTLY_BUILD}.dmg \
             --immutable nightly-out/${DMG_PREFIX}-x86_64-${NIGHTLY_BUILD}.dmg \
             --immutable nightly-out/${DMG_PREFIX}-universal-${NIGHTLY_BUILD}.dmg \
-            --immutable nightly-out/cmuxd-remote-linux-arm64-${NIGHTLY_BUILD} \
-            --immutable nightly-out/cmuxd-remote-linux-amd64-${NIGHTLY_BUILD} \
-            --immutable nightly-out/cmuxd-remote-darwin-arm64-${NIGHTLY_BUILD} \
-            --immutable nightly-out/cmuxd-remote-darwin-amd64-${NIGHTLY_BUILD} \
-            --immutable nightly-out/cmuxd-remote-checksums-${NIGHTLY_BUILD}.txt \
-            --immutable nightly-out/cmuxd-remote-manifest-${NIGHTLY_BUILD}.json \
+            --immutable nightly-out/hmuxd-remote-linux-arm64-${NIGHTLY_BUILD} \
+            --immutable nightly-out/hmuxd-remote-linux-amd64-${NIGHTLY_BUILD} \
+            --immutable nightly-out/hmuxd-remote-darwin-arm64-${NIGHTLY_BUILD} \
+            --immutable nightly-out/hmuxd-remote-darwin-amd64-${NIGHTLY_BUILD} \
+            --immutable nightly-out/hmuxd-remote-checksums-${NIGHTLY_BUILD}.txt \
+            --immutable nightly-out/hmuxd-remote-manifest-${NIGHTLY_BUILD}.json \
             --alias nightly-out/${DMG_PREFIX}-arm64.dmg \
             --alias nightly-out/${DMG_PREFIX}-x86_64.dmg \
             --alias nightly-out/${DMG_PREFIX}-universal.dmg \
@@ -1263,7 +1263,7 @@ jobs:
           import sys
 
           path = Path("nightly-notes.published.md")
-          marker = f"<!-- cmux-published-build: {sys.argv[1]} -->\n"
+          marker = f"<!-- hmux-published-build: {sys.argv[1]} -->\n"
           text = path.read_text(encoding="utf-8")
           if marker not in text:
               path.write_text(marker + text, encoding="utf-8")
@@ -1292,7 +1292,7 @@ jobs:
         run: |
           set -euo pipefail
           for feed in appcast-arm64.xml appcast-x86_64.xml appcast-universal.xml appcast.xml; do
-            python3 scripts/ci/upload-r2-object.py --file "nightly-out/$feed" --endpoint-url "$R2_ENDPOINT" --bucket cmux-binaries --key "${RELEASE_TAG}/$feed" --content-type application/xml --cache-control 'no-cache, no-store, must-revalidate'
+            python3 scripts/ci/upload-r2-object.py --file "nightly-out/$feed" --endpoint-url "$R2_ENDPOINT" --bucket hmux-binaries --key "${RELEASE_TAG}/$feed" --content-type application/xml --cache-control 'no-cache, no-store, must-revalidate'
           done
 
       - name: Mint release tag token
@@ -1300,8 +1300,8 @@ jobs:
         if: env.ALREADY_PUBLISHED != 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ secrets.CMUX_RELEASE_APP_ID }}
-          private-key: ${{ secrets.CMUX_RELEASE_APP_KEY }}
+          app-id: ${{ secrets.HMUX_RELEASE_APP_ID }}
+          private-key: ${{ secrets.HMUX_RELEASE_APP_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
@@ -1323,7 +1323,7 @@ jobs:
         run: |
           set -euo pipefail
           gh release edit "$RELEASE_TAG" \
-            --title "cmux ${CHANNEL} ${NIGHTLY_BUILD}" \
+            --title "hmux ${CHANNEL} ${NIGHTLY_BUILD}" \
             --notes-file nightly-notes.published.md \
             --draft=false \
             --prerelease
@@ -1405,14 +1405,14 @@ jobs:
       - name: Download accepted variant
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
         with:
-          pattern: cmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          pattern: hmux-${{ needs.preflight.outputs.channel }}-notarization-verified-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: nightly-delta/input
           merge-multiple: true
 
       - name: Generate one from-version delta and revised appcast
         run: |
           set -euo pipefail
-          manifest="$(find nightly-delta/input -type f -name cmux-nightly-notarization-recovery.json -print -quit)"
+          manifest="$(find nightly-delta/input -type f -name hmux-nightly-notarization-recovery.json -print -quit)"
           [ -n "$manifest" ] || { echo "missing accepted $VARIANT manifest" >&2; exit 1; }
           build="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["build"])' "$manifest")"
           immutable="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["immutable_path"].split("/")[-1])' "$manifest")"
@@ -1450,7 +1450,7 @@ jobs:
       - name: Upload delta result
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.preflight.outputs.channel }}-notarization-deltas-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
+          name: hmux-${{ needs.preflight.outputs.channel }}-notarization-deltas-${{ matrix.variant }}-${{ needs.preflight.outputs.short_sha }}
           path: nightly-delta/output/*
           if-no-files-found: error
           retention-days: 3
@@ -1485,7 +1485,7 @@ jobs:
       - name: Download delta results
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v6.0.0
         with:
-          pattern: cmux-${{ needs.preflight.outputs.channel }}-notarization-deltas-*-${{ needs.preflight.outputs.short_sha }}
+          pattern: hmux-${{ needs.preflight.outputs.channel }}-notarization-deltas-*-${{ needs.preflight.outputs.short_sha }}
           path: nightly-deltas
           merge-multiple: true
 
@@ -1534,7 +1534,7 @@ jobs:
             python3 scripts/ci/upload-r2-object.py \
               --file "$feed" \
               --endpoint-url "$R2_ENDPOINT" \
-              --bucket cmux-binaries \
+              --bucket hmux-binaries \
               --key "${RELEASE_TAG}/$name" \
               --content-type application/xml \
               --cache-control 'no-cache, no-store, must-revalidate'

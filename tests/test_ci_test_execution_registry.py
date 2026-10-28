@@ -74,7 +74,7 @@ class RegistryBlastRadiusTests(unittest.TestCase):
         self.assertEqual(errors, [])
 
     def make_root(self, *, tests: list[str], registry: str) -> Path:
-        root = Path(tempfile.mkdtemp(prefix="cmux-test-execution-registry-"))
+        root = Path(tempfile.mkdtemp(prefix="hmux-test-execution-registry-"))
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
         (root / "tests").mkdir()
         (root / ".github" / "workflows").mkdir(parents=True)
@@ -289,11 +289,11 @@ class RegistryBlastRadiusTests(unittest.TestCase):
         )
         workflow = root / ".github" / "workflows" / "ci-guards.yml"
         workflow.write_text(
-            GUARD_WORKFLOW + "      - run: python3 scripts/ci/cmux_workload_profile.py run test.guard\n",
+            GUARD_WORKFLOW + "      - run: python3 scripts/ci/hmux_workload_profile.py run test.guard\n",
             encoding="utf-8",
         )
         (root / "scripts" / "ci" / "workloads").mkdir(parents=True)
-        (root / "scripts" / "ci" / "cmux-workload-profiles.json").write_text(
+        (root / "scripts" / "ci" / "hmux-workload-profiles.json").write_text(
             '{"profiles": [{"id": "test.guard", "entrypoint": "scripts/ci/workloads/guard.sh"}]}',
             encoding="utf-8",
         )
@@ -312,7 +312,7 @@ class RegistryBlastRadiusTests(unittest.TestCase):
         self.assertEqual((root / "tests" / "test-execution.toml").read_text(encoding="utf-8"), before)
 
     def test_added_tests_are_measured_from_the_merge_base(self) -> None:
-        root = Path(tempfile.mkdtemp(prefix="cmux-test-execution-registry-git-"))
+        root = Path(tempfile.mkdtemp(prefix="hmux-test-execution-registry-git-"))
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
 
         def git(*args: str) -> None:
@@ -355,7 +355,7 @@ class RegistryBlastRadiusTests(unittest.TestCase):
         )
 
     def test_validator_exit_code_tracks_added_tests_in_a_git_fixture(self) -> None:
-        with tempfile.TemporaryDirectory(prefix="cmux-test-execution-registry-exit-") as temp:
+        with tempfile.TemporaryDirectory(prefix="hmux-test-execution-registry-exit-") as temp:
             root = Path(temp)
             origin = root / "origin.git"
             repo = root / "checkout"
@@ -445,20 +445,20 @@ class RegistryBlastRadiusTests(unittest.TestCase):
         step = block[start:end]
 
         self.assertIn(
-            "CMUX_TEST_REGISTRY_BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || '' }}",
+            "HMUX_TEST_REGISTRY_BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || '' }}",
             step,
         )
         self.assertNotIn("github.event.pull_request.base.sha", step)
         self.assertIn(
-            'git fetch --no-tags --depth=1 origin "$CMUX_TEST_REGISTRY_BASE_REF"',
+            'git fetch --no-tags --depth=1 origin "$HMUX_TEST_REGISTRY_BASE_REF"',
             step,
         )
-        self.assertIn('CMUX_TEST_REGISTRY_BASE_SHA="$(git rev-parse FETCH_HEAD)"', step)
+        self.assertIn('HMUX_TEST_REGISTRY_BASE_SHA="$(git rev-parse FETCH_HEAD)"', step)
         self.assertIn('validate_test_execution_registry.py "${args[@]+"${args[@]}"}"', step)
-        self.assertIn('args=(--base-sha "$CMUX_TEST_REGISTRY_BASE_SHA")', step)
+        self.assertIn('args=(--base-sha "$HMUX_TEST_REGISTRY_BASE_SHA")', step)
 
     def test_newly_added_tests_show_why_the_workflow_needs_the_current_base_tip(self) -> None:
-        root = Path(tempfile.mkdtemp(prefix="cmux-test-execution-registry-git-"))
+        root = Path(tempfile.mkdtemp(prefix="hmux-test-execution-registry-git-"))
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
 
         def git(*args: str) -> None:
@@ -522,7 +522,7 @@ class RegistryBlastRadiusTests(unittest.TestCase):
                 result = subprocess.run(
                     ["bash", "-c", script],
                     cwd=root,
-                    env={**os.environ, "CMUX_TEST_REGISTRY_BASE_REF": base_ref},
+                    env={**os.environ, "HMUX_TEST_REGISTRY_BASE_REF": base_ref},
                     check=True,
                     text=True,
                     capture_output=True,
@@ -567,7 +567,7 @@ class LaneRunnerTests(unittest.TestCase):
                 self.assertEqual(result.stdout, "")
 
     def run_lane(self, registry: str, names: list[str], *args: str, peers: int) -> tuple[int, list[str], str]:
-        root = Path(tempfile.mkdtemp(prefix="cmux-lane-runner-"))
+        root = Path(tempfile.mkdtemp(prefix="hmux-lane-runner-"))
         self.addCleanup(shutil.rmtree, root, ignore_errors=True)
         (root / "tests").mkdir()
         for name in names:

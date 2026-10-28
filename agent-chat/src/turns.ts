@@ -3,7 +3,7 @@ import type { Block } from "./session";
 export interface TurnGroup {
   id: string;
   user?: Extract<Block, { kind: "user" }>;
-  /** cmux agent messages the agent received for this turn. */
+  /** hmux agent messages the agent received for this turn. */
   messages?: Extract<Block, { kind: "message" }>[];
   activity: Block[];
   assistant?: Extract<Block, { kind: "assistant" }>;

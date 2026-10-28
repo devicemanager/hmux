@@ -9,7 +9,7 @@ The test exercises the shipped zsh integration through real shell processes:
   loop must tear down its process group while a zselect wait is active.
 
 The socket, repository, and fake sleep executable are all private fixtures;
-no running cmux instance or network access is involved.
+no running hmux instance or network access is involved.
 """
 
 from __future__ import annotations
@@ -27,7 +27,7 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "Resources" / "shell-integration" / "cmux-zsh-integration.zsh"
+SCRIPT = ROOT / "Resources" / "shell-integration" / "hmux-zsh-integration.zsh"
 
 
 def run_zsh(
@@ -43,7 +43,7 @@ def run_zsh(
     # the fixture PATH before the command runs.
     env = {**env, "FIXTURE_PATH": env["PATH"]}
     command = 'PATH="$FIXTURE_PATH"; unset FIXTURE_PATH; ' + command
-    argv = ["/bin/zsh", "-f", "-c", command, "cmux-test", str(SCRIPT)]
+    argv = ["/bin/zsh", "-f", "-c", command, "hmux-test", str(SCRIPT)]
     if not job_control:
         return subprocess.run(
             argv,
@@ -58,7 +58,7 @@ def run_zsh(
     if pid == 0:
         if cwd is not None:
             os.chdir(cwd)
-        os.execve("/bin/zsh", ["/bin/zsh", "-f", "-i", "-c", command, "cmux-test", str(SCRIPT)], env)
+        os.execve("/bin/zsh", ["/bin/zsh", "-f", "-i", "-c", command, "hmux-test", str(SCRIPT)], env)
         os._exit(127)
 
     os.set_blocking(master_fd, False)
@@ -114,8 +114,8 @@ def make_fake_sleep(directory: Path, log: Path) -> None:
     fake.write_text(
         "#!/bin/sh\n"
         f"printf '%s\\n' \"$*\" >> {log}\n"
-        "if [ -n \"$CMUX_FAKE_SLEEP_READY_DIR\" ]; then\n"
-        ": > \"$CMUX_FAKE_SLEEP_READY_DIR/$PPID\"\n"
+        "if [ -n \"$HMUX_FAKE_SLEEP_READY_DIR\" ]; then\n"
+        ": > \"$HMUX_FAKE_SLEEP_READY_DIR/$PPID\"\n"
         "fi\n"
         "exec /bin/sleep \"$@\"\n",
         encoding="utf-8",
@@ -148,8 +148,8 @@ def test_syntax_and_zselect_sleep(env: dict[str, str], log: Path) -> bool:
     assert_ok(syntax, "zsh syntax")
 
     result = run_zsh(
-        "source \"$1\"; (( _CMUX_HAS_ZSELECT )) || { print -r -- SKIP; exit 0; }; "
-        "setopt ERR_RETURN ERR_EXIT; _cmux_sleep_cs 20; print -r -- ZSELECT_OK",
+        "source \"$1\"; (( _HMUX_HAS_ZSELECT )) || { print -r -- SKIP; exit 0; }; "
+        "setopt ERR_RETURN ERR_EXIT; _hmux_sleep_cs 20; print -r -- ZSELECT_OK",
         env=env,
     )
     assert_ok(result, "zselect sleep")
@@ -168,8 +168,8 @@ def test_fallback_sleep(tmp: Path, fake_bin: Path, log: Path) -> None:
         # the integration is sourced, so the production capability probe takes
         # its documented fallback branch.
         "zmodload() { return 1; }; disable -b sleep 2>/dev/null || true; rehash; "
-        "source \"$1\"; (( !_CMUX_HAS_ZSELECT )) || exit 2; "
-        "_cmux_sleep_cs 20; print -r -- FALLBACK_OK",
+        "source \"$1\"; (( !_HMUX_HAS_ZSELECT )) || exit 2; "
+        "_hmux_sleep_cs 20; print -r -- FALLBACK_OK",
         env=env,
     )
     assert_ok(result, "zselect fallback")
@@ -184,7 +184,7 @@ def test_fallback_sleep(tmp: Path, fake_bin: Path, log: Path) -> None:
 
 
 def watcher_fixture(tmp: Path, fake_bin: Path, log: Path) -> tuple[dict[str, str], socket.socket, Path]:
-    sock_path = tmp / "cmux.sock"
+    sock_path = tmp / "hmux.sock"
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     server.bind(str(sock_path))
     server.listen(1)
@@ -200,14 +200,14 @@ def watcher_fixture(tmp: Path, fake_bin: Path, log: Path) -> tuple[dict[str, str
     env = base_env(fake_bin)
     env.update(
         {
-            "CMUX_SOCKET_PATH": str(sock_path),
-            "CMUX_TAB_ID": "tab-15066",
-            "CMUX_PANEL_ID": f"panel-15066-{os.getpid()}",
-            "CMUX_NO_PR_WATCH": "",
-            "CMUX_NO_GIT_WATCH": "",
-            "_CMUX_WATCHER_IDENTITY_INTERVAL": "1",
-            "CMUX_FAKE_SLEEP_READY_DIR": str(ready_dir),
-            "CMUX_ZSELECT_READY_FILE": str(zselect_ready_file),
+            "HMUX_SOCKET_PATH": str(sock_path),
+            "HMUX_TAB_ID": "tab-15066",
+            "HMUX_PANEL_ID": f"panel-15066-{os.getpid()}",
+            "HMUX_NO_PR_WATCH": "",
+            "HMUX_NO_GIT_WATCH": "",
+            "_HMUX_WATCHER_IDENTITY_INTERVAL": "1",
+            "HMUX_FAKE_SLEEP_READY_DIR": str(ready_dir),
+            "HMUX_ZSELECT_READY_FILE": str(zselect_ready_file),
         }
     )
     # The caller owns the socket and repository for the lifetime of the shell.
@@ -219,42 +219,42 @@ def test_real_watchers_and_teardown(
 ) -> None:
     env, server, repo = watcher_fixture(tmp, fake_bin, log)
     if not has_zselect:
-        env["CMUX_TEST_FORCE_NO_ZSELECT"] = "1"
+        env["HMUX_TEST_FORCE_NO_ZSELECT"] = "1"
     try:
         command = r'''
-if [[ "$CMUX_TEST_FORCE_NO_ZSELECT" == 1 ]]; then
+if [[ "$HMUX_TEST_FORCE_NO_ZSELECT" == 1 ]]; then
     zmodload() { return 1; }
     disable -b sleep 2>/dev/null || true
     rehash
 fi
 source "$1"
-if (( _CMUX_HAS_ZSELECT )); then
-    functions[_cmux_test_sleep_impl]=$functions[_cmux_sleep_cs]
-    _cmux_sleep_cs() {
-        print -r -- ready >> "$CMUX_ZSELECT_READY_FILE"
-        _cmux_test_sleep_impl "$@"
+if (( _HMUX_HAS_ZSELECT )); then
+    functions[_hmux_test_sleep_impl]=$functions[_hmux_sleep_cs]
+    _hmux_sleep_cs() {
+        print -r -- ready >> "$HMUX_ZSELECT_READY_FILE"
+        _hmux_test_sleep_impl "$@"
     }
 fi
-_cmux_run_pr_probe_with_timeout() { return 0; }
-_cmux_report_git_branch_for_path() { return 0; }
-_cmux_clear_pr_for_panel() { return 0; }
-_cmux_pr_cache_clear() { return 0; }
-_cmux_start_pr_poll_loop "$PWD" 1
-_cmux_start_git_head_watch
-[[ "${_CMUX_PR_POLL_PID:-}" == <-> && "${_CMUX_GIT_HEAD_WATCH_PID:-}" == <-> ]] || {
-    print -r -- "WATCHERS_MISSING:${_CMUX_PR_POLL_PID:-}:${_CMUX_GIT_HEAD_WATCH_PID:-}"
+_hmux_run_pr_probe_with_timeout() { return 0; }
+_hmux_report_git_branch_for_path() { return 0; }
+_hmux_clear_pr_for_panel() { return 0; }
+_hmux_pr_cache_clear() { return 0; }
+_hmux_start_pr_poll_loop "$PWD" 1
+_hmux_start_git_head_watch
+[[ "${_HMUX_PR_POLL_PID:-}" == <-> && "${_HMUX_GIT_HEAD_WATCH_PID:-}" == <-> ]] || {
+    print -r -- "WATCHERS_MISSING:${_HMUX_PR_POLL_PID:-}:${_HMUX_GIT_HEAD_WATCH_PID:-}"
     exit 3
 }
-kill -0 "$_CMUX_PR_POLL_PID" || { print -r -- "PR_WATCHER_NOT_ALIVE"; exit 4; }
-kill -0 "$_CMUX_GIT_HEAD_WATCH_PID" || { print -r -- "GIT_WATCHER_NOT_ALIVE"; exit 5; }
-kill -0 -- -"$_CMUX_PR_POLL_PID" 2>/dev/null || { print -r -- "PR_WATCHER_GROUP_MISSING"; exit 8; }
-print -r -- "WATCHERS:${_CMUX_PR_POLL_PID}:${_CMUX_GIT_HEAD_WATCH_PID}"
-pr_pid="$_CMUX_PR_POLL_PID"
-git_pid="$_CMUX_GIT_HEAD_WATCH_PID"
-if (( _CMUX_HAS_ZSELECT )); then
+kill -0 "$_HMUX_PR_POLL_PID" || { print -r -- "PR_WATCHER_NOT_ALIVE"; exit 4; }
+kill -0 "$_HMUX_GIT_HEAD_WATCH_PID" || { print -r -- "GIT_WATCHER_NOT_ALIVE"; exit 5; }
+kill -0 -- -"$_HMUX_PR_POLL_PID" 2>/dev/null || { print -r -- "PR_WATCHER_GROUP_MISSING"; exit 8; }
+print -r -- "WATCHERS:${_HMUX_PR_POLL_PID}:${_HMUX_GIT_HEAD_WATCH_PID}"
+pr_pid="$_HMUX_PR_POLL_PID"
+git_pid="$_HMUX_GIT_HEAD_WATCH_PID"
+if (( _HMUX_HAS_ZSELECT )); then
     ready=0
     for (( attempt = 0; attempt < 80; attempt++ )); do
-        ready_count="$(wc -l < "$CMUX_ZSELECT_READY_FILE" 2>/dev/null)"
+        ready_count="$(wc -l < "$HMUX_ZSELECT_READY_FILE" 2>/dev/null)"
         if (( ready_count >= 2 )); then
             ready=1
             break
@@ -268,36 +268,36 @@ if (( _CMUX_HAS_ZSELECT )); then
 else
     ready=0
     for (( attempt = 0; attempt < 80; attempt++ )); do
-        if [[ -e "$CMUX_FAKE_SLEEP_READY_DIR/$pr_pid" && -e "$CMUX_FAKE_SLEEP_READY_DIR/$git_pid" ]]; then
+        if [[ -e "$HMUX_FAKE_SLEEP_READY_DIR/$pr_pid" && -e "$HMUX_FAKE_SLEEP_READY_DIR/$git_pid" ]]; then
             ready=1
             break
         fi
-        _cmux_sleep_cs 5 || true
+        _hmux_sleep_cs 5 || true
     done
     (( ready )) || {
         print -r -- "FALLBACK_WATCHERS_NOT_READY:$pr_pid:$git_pid"
         exit 7
     }
 fi
-_cmux_stop_git_head_watch
-_cmux_halt_pr_poll_loop
+_hmux_stop_git_head_watch
+_hmux_halt_pr_poll_loop
 pr_alive=1
 git_alive=1
 for (( attempt = 0; attempt < 40; attempt++ )); do
     kill -0 -- -"$pr_pid" 2>/dev/null || pr_alive=0
     kill -0 "$git_pid" 2>/dev/null || git_alive=0
     (( !pr_alive && !git_alive )) && break
-    if (( _CMUX_HAS_ZSELECT )); then
+    if (( _HMUX_HAS_ZSELECT )); then
         zselect -t 5 || true
     else
-        _cmux_sleep_cs 5 || true
+        _hmux_sleep_cs 5 || true
     fi
 done
 (( !pr_alive && !git_alive )) || {
     print -r -- "TEARDOWN_LEAK:"$pr_pid":"$git_pid":"$pr_alive":"$git_alive
     exit 6
 }
-print -r -- "TEARDOWN:${_CMUX_PR_POLL_PID}:${_CMUX_GIT_HEAD_WATCH_PID}"
+print -r -- "TEARDOWN:${_HMUX_PR_POLL_PID}:${_HMUX_GIT_HEAD_WATCH_PID}"
 '''
         result = run_zsh(command, env=env, cwd=repo, timeout=8.0, job_control=True)
         assert_ok(result, "watcher loops")
@@ -328,7 +328,7 @@ def main() -> int:
         print("SKIP: zsh is not installed")
         return 0
 
-    tmp = Path(tempfile.mkdtemp(prefix="cmux_15066_"))
+    tmp = Path(tempfile.mkdtemp(prefix="hmux_15066_"))
     fake_bin = tmp / "bin"
     fake_bin.mkdir()
     log = tmp / "sleep.log"

@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxCore
-import CmuxFoundation
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCore
+import HmuxFoundation
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension TerminalController {
@@ -69,7 +69,7 @@ extension TerminalController {
                 SurfacePaneFactory.focus(panelID: panelID, in: id)
             }
             var result = payload
-            result["transport"] = "cmux-tui"
+            result["transport"] = "hmux-tui"
             result["carrier"] = "ssh"
             result["machine"] = connection.id
             result["remote"] = workspace.remoteStatusPayload()

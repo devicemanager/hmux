@@ -19,7 +19,7 @@ export interface ApnsNotificationInput {
   /**
    * `notify` (default) is the visible terminal-banner mirror; `dismiss` is the
    * banner-less Mac→iOS dismiss-sync push (`content-available` + badge +
-   * `cmux.dismissedIds`) fanned out to every registered device.
+   * `hmux.dismissedIds`) fanned out to every registered device.
    */
   readonly kind?: "notify" | "dismiss";
   readonly title: string;
@@ -32,11 +32,11 @@ export interface ApnsNotificationInput {
   /** Whether a tap may resolve the surface outside `workspaceId`. */
   readonly retargetsToLiveSurfaceOwner?: boolean;
   readonly macDeviceId?: string | null;
-  /** The cmux app-instance tag paired with `macDeviceId`. */
+  /** The hmux app-instance tag paired with `macDeviceId`. */
   readonly macInstanceTag?: string | null;
   /**
    * Stable Mac-side notification id. Surfaced in the payload as
-   * `cmux.notificationId` so an iOS swipe-dismiss can tell the Mac which
+   * `hmux.notificationId` so an iOS swipe-dismiss can tell the Mac which
    * notification was cleared. The sender derives an exact-Mac-instance-scoped
    * `apns-collapse-id` from this id when the owner identity is available.
    */
@@ -61,19 +61,19 @@ export interface ApnsNotificationInput {
 }
 
 /**
- * Base APNs `aps.category` for non-replyable cmux terminal pushes. iOS
+ * Base APNs `aps.category` for non-replyable hmux terminal pushes. iOS
  * registers this and the reply category with `customDismissAction` so a
  * swipe/clear delivers `UNNotificationDismissActionIdentifier` to the app.
  * Keep both identifiers in sync with iOS.
  */
-export const CMUX_APNS_CATEGORY = "cmux.terminal";
+export const HMUX_APNS_CATEGORY = "hmux.terminal";
 
 /** APNs category for terminal pushes that accept an inline text reply. */
-export const CMUX_APNS_REPLY_CATEGORY = "cmux.terminal.reply";
+export const HMUX_APNS_REPLY_CATEGORY = "hmux.terminal.reply";
 
 /**
  * Build the APNs JSON payload. Adds the workspace/surface ids, live-owner
- * retargeting provenance, Mac id, and notification id under `cmux` so a tap
+ * retargeting provenance, Mac id, and notification id under `hmux` so a tap
  * can deep-link without crossing a confined workspace boundary and a swipe can
  * be dismiss-synced. Also selects the plain or inline-reply dismiss-action
  * category and marks the alert time-sensitive (the app holds that entitlement).
@@ -90,15 +90,15 @@ function buildEncryptedNotifyPayload(input: ApnsNotificationInput): Record<strin
     "mutable-content": 1,
     "interruption-level": "time-sensitive",
     sound: "default",
-    category: CMUX_APNS_CATEGORY,
+    category: HMUX_APNS_CATEGORY,
   };
   if (typeof input.badgeCount === "number") aps.badge = input.badgeCount;
-  return { aps, cmux: encryptedRouting(input) };
+  return { aps, hmux: encryptedRouting(input) };
 }
 
 function buildVisibleNotifyPayload(input: ApnsNotificationInput): Record<string, unknown> {
   const hidden = input.hideContent === true;
-  const title = input.title.trim() || "cmux";
+  const title = input.title.trim() || "hmux";
   const body = input.body;
   const subtitle = hidden ? undefined : input.subtitle?.trim() || undefined;
 
@@ -115,22 +115,22 @@ function buildVisibleNotifyPayload(input: ApnsNotificationInput): Record<string,
     alert,
     sound: "default",
     "interruption-level": "time-sensitive",
-    category: input.replyShape === "text" ? CMUX_APNS_REPLY_CATEGORY : CMUX_APNS_CATEGORY,
+    category: input.replyShape === "text" ? HMUX_APNS_REPLY_CATEGORY : HMUX_APNS_CATEGORY,
   };
   if (typeof input.badgeCount === "number") aps.badge = input.badgeCount;
 
-  const cmux: Record<string, string | boolean> = {};
-  if (input.workspaceId) cmux.workspaceId = input.workspaceId;
-  if (input.surfaceId) cmux.surfaceId = input.surfaceId;
+  const hmux: Record<string, string | boolean> = {};
+  if (input.workspaceId) hmux.workspaceId = input.workspaceId;
+  if (input.surfaceId) hmux.surfaceId = input.surfaceId;
   if (typeof input.retargetsToLiveSurfaceOwner === "boolean") {
-    cmux.retargetsToLiveSurfaceOwner = input.retargetsToLiveSurfaceOwner;
+    hmux.retargetsToLiveSurfaceOwner = input.retargetsToLiveSurfaceOwner;
   }
-  if (input.macDeviceId) cmux.macDeviceId = input.macDeviceId;
-  if (input.macInstanceTag) cmux.macInstanceTag = input.macInstanceTag;
-  if (input.notificationId) cmux.notificationId = input.notificationId;
-  if (input.correlationId) cmux.correlationId = input.correlationId;
+  if (input.macDeviceId) hmux.macDeviceId = input.macDeviceId;
+  if (input.macInstanceTag) hmux.macInstanceTag = input.macInstanceTag;
+  if (input.notificationId) hmux.notificationId = input.notificationId;
+  if (input.correlationId) hmux.correlationId = input.correlationId;
 
-  return Object.keys(cmux).length > 0 ? { aps, cmux } : { aps };
+  return Object.keys(hmux).length > 0 ? { aps, hmux } : { aps };
 }
 
 /**
@@ -138,7 +138,7 @@ function buildVisibleNotifyPayload(input: ApnsNotificationInput): Record<string,
  * `aps.badge` set to the authoritative unread total (applied by the system even
  * when iOS declines to wake the app), and `content-available: 1` so iOS wakes
  * the app — within its strictly budgeted background-push allowance — to remove
- * the dismissed delivered banners listed under `cmux.dismissedIds`.
+ * the dismissed delivered banners listed under `hmux.dismissedIds`.
  *
  * Deliberately sent as push-type `alert` with priority 5 (see sender): per
  * Apple's push-type taxonomy a badge update is user-facing, so this is not a
@@ -155,13 +155,13 @@ function buildDismissPayload(input: ApnsNotificationInput): Record<string, unkno
     ...(encrypted ? { alert: { title: "", body: "" } } : {}),
   };
   if (typeof input.badgeCount === "number") aps.badge = input.badgeCount;
-  const cmux: Record<string, unknown> = encrypted
+  const hmux: Record<string, unknown> = encrypted
     ? encryptedRouting(input)
     : { dismissedIds: [...(input.dismissedIds ?? [])] };
-  if (input.macDeviceId) cmux.macDeviceId = input.macDeviceId;
-  if (input.macInstanceTag) cmux.macInstanceTag = input.macInstanceTag;
-  if (input.correlationId) cmux.correlationId = input.correlationId;
-  return { aps, cmux };
+  if (input.macDeviceId) hmux.macDeviceId = input.macDeviceId;
+  if (input.macInstanceTag) hmux.macInstanceTag = input.macInstanceTag;
+  if (input.correlationId) hmux.correlationId = input.correlationId;
+  return { aps, hmux };
 }
 
 function encryptedRouting(input: ApnsNotificationInput): Record<string, unknown> {

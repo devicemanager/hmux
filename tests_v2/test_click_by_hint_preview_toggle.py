@@ -10,7 +10,7 @@ again restores the default.
 Run where the app can be frontmost (a whole capture mini or a local tagged
 build), with no `window-hints-release` override, never against the user's
 default socket:
-  CMUX_SOCKET_PATH=/tmp/cmux-debug-<tag>.sock python3 tests_v2/test_click_by_hint_preview_toggle.py
+  HMUX_SOCKET_PATH=/tmp/hmux-debug-<tag>.sock python3 tests_v2/test_click_by_hint_preview_toggle.py
 """
 
 import sys
@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 COMMAND_ID = "palette.toggleSetting.windowHints"
 
@@ -29,30 +29,30 @@ def _wait_until(predicate, timeout_s=4.0, interval_s=0.05):
         try:
             if predicate():
                 return True
-        except cmuxError:
+        except hmuxError:
             pass
         time.sleep(interval_s)
     return False
 
 
-def _hints(c: cmux) -> dict:
+def _hints(c: hmux) -> dict:
     try:
         return c._call("debug.window_hints", {}) or {}
-    except cmuxError as error:
+    except hmuxError as error:
         return {"error": str(error)}
 
 
-def _palette_visible(c: cmux, window_id: str) -> bool:
+def _palette_visible(c: hmux, window_id: str) -> bool:
     return bool((c._call("debug.command_palette.visible", {"window_id": window_id}) or {}).get("visible"))
 
 
-def _set_palette_visible(c: cmux, window_id: str, visible: bool) -> None:
+def _set_palette_visible(c: hmux, window_id: str, visible: bool) -> None:
     if _palette_visible(c, window_id) != visible:
         c._call("debug.command_palette.toggle", {"window_id": window_id})
         _wait_until(lambda: _palette_visible(c, window_id) == visible)
 
 
-def _run_toggle(c: cmux, window_id: str) -> list:
+def _run_toggle(c: hmux, window_id: str) -> list:
     """Searches the palette for Click by Hint; runs the toggle if it is the top row. Returns the rows."""
     _set_palette_visible(c, window_id, False)
     _set_palette_visible(c, window_id, True)
@@ -70,10 +70,10 @@ def _run_toggle(c: cmux, window_id: str) -> list:
 
 
 def main() -> int:
-    c = cmux()
+    c = hmux()
     c.connect()
     if not c.ping():
-        raise cmuxError("socket ping failed")
+        raise hmuxError("socket ping failed")
     c.activate_app()
     window_id = c.current_window()
     c.focus_window(window_id)

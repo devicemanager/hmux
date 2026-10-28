@@ -2,13 +2,13 @@
 """Chief Home uses an ordinary workspace, preserving the local workspace list.
 
 Run against an explicitly named tagged app socket:
-CMUX_SOCKET_PATH=/tmp/cmux-debug-<tag>.sock python3 tests_v2/test_chief_native_home.py
+HMUX_SOCKET_PATH=/tmp/hmux-debug-<tag>.sock python3 tests_v2/test_chief_native_home.py
 """
 
 import os
 import time
 
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
 def wait_for_surfaces(client, workspace_id, predicate):
@@ -24,15 +24,15 @@ def wait_for_surfaces(client, workspace_id, predicate):
 
 
 def main():
-    path = os.environ.get("CMUX_SOCKET_PATH", "")
-    if not path or "cmux-debug-" not in path:
-        raise RuntimeError("Set CMUX_SOCKET_PATH to an isolated tagged development socket")
-    with cmux(path) as client:
+    path = os.environ.get("HMUX_SOCKET_PATH", "")
+    if not path or "hmux-debug-" not in path:
+        raise RuntimeError("Set HMUX_SOCKET_PATH to an isolated tagged development socket")
+    with hmux(path) as client:
         before = client._call("workspace.list")["workspaces"]
         groups = client._call("workspace.group.list")["groups"]
         chief_members = {
             member
-            for group in groups if group.get("external_id") == "cmux.chief.home"
+            for group in groups if group.get("external_id") == "hmux.chief.home"
             for member in group["member_workspace_ids"]
         }
         local = next((row for row in before if row["id"] not in chief_members and row["title"] != "Home"), None)
@@ -44,7 +44,7 @@ def main():
         assert home is not None, "chief.open must select a native Home workspace, not an overlay"
         assert {row["id"] for row in before} <= {row["id"] for row in after}, "Home removed local workspaces"
         groups = client._call("workspace.group.list")["groups"]
-        group = next((row for row in groups if row.get("external_id") == "cmux.chief.home"), None)
+        group = next((row for row in groups if row.get("external_id") == "hmux.chief.home"), None)
         assert group is not None, "Home must belong to the ordinary sidebar group list"
         assert group["name"] == "Home", "The parent must be named Home, not Chief"
         assert group["is_pinned"], "Home must stay pinned above local workspaces"
@@ -78,7 +78,7 @@ def main():
         ]:
             try:
                 client._call(method, params)
-            except cmuxError:
+            except hmuxError:
                 pass
             remaining = client._call("workspace.list")["workspaces"]
             assert any(row["id"] == home["id"] for row in remaining), "Canonical Home was closed"

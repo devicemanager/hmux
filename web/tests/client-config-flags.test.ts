@@ -19,15 +19,15 @@ describe("client-config typed flags", () => {
   test("reads declared boolean flags with safe fallback on wrong type", () => {
     const config: ClientConfig = {
       featureFlags: {
-        "cmux-for-windows": true,
-        "cmux-for-linux": "beta",
+        "hmux-for-windows": true,
+        "hmux-for-linux": "beta",
       },
       featureFlagPayloads: {},
       errorsWhileComputingFlags: false,
     };
 
-    expect(getClientConfigValue(config, clientConfigFlags.cmuxForWindows)).toBe(true);
-    expect(getClientConfigValue(config, clientConfigFlags.cmuxForLinux)).toBe(false);
+    expect(getClientConfigValue(config, clientConfigFlags.hmuxForWindows)).toBe(true);
+    expect(getClientConfigValue(config, clientConfigFlags.hmuxForLinux)).toBe(false);
     expect(getClientConfigValue(config, booleanClientConfigFlag("missing", true))).toBe(true);
   });
 

@@ -23,7 +23,7 @@ export type AppleNotificationRow = typeof appleNotifications.$inferSelect;
 
 export class AppleOwnershipError extends Error {
   constructor(readonly originalTransactionId: string) {
-    super("Apple subscription belongs to another cmux account");
+    super("Apple subscription belongs to another hmux account");
     this.name = "AppleOwnershipError";
   }
 }
@@ -40,8 +40,8 @@ export type AppleSubscriptionWrite = {
 /** Who may own the subscription a state write describes. */
 export type AppleSubscriptionClaim = {
   /**
-   * The cmux user the state's `appAccountToken` maps to, or null for a
-   * token-less transaction or a token cmux never minted.
+   * The hmux user the state's `appAccountToken` maps to, or null for a
+   * token-less transaction or a token hmux never minted.
    */
   readonly tokenOwner: string | null;
   /**
@@ -86,7 +86,7 @@ export function isOlderAppleTransaction(
  * share it so the in-memory test store keeps the database contract.
  *
  * The `appAccountToken` on the newest transaction is authoritative: when the
- * same Apple ID buys again (upgrade or resubscribe) from another cmux
+ * same Apple ID buys again (upgrade or resubscribe) from another hmux
  * account, the subscription moves to that account. A token-less transaction,
  * an unknown token, or an older transaction never moves it.
  */

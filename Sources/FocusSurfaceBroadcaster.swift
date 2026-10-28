@@ -1,9 +1,9 @@
 import Foundation
 import OSLog
-import CmuxNotifications
+import HmuxNotifications
 
 nonisolated private let focusSurfaceBroadcasterLogger = Logger(
-    subsystem: "com.cmuxterm.app",
+    subsystem: "com.hmuxterm.app",
     category: "FocusSurfaceBroadcaster"
 )
 
@@ -79,7 +79,7 @@ final class FocusSurfaceBroadcaster {
     static let shared = FocusSurfaceBroadcaster(
         onDrainBoundExceeded: { payload in
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "focus.broadcast.drain.exceeded workspace=\(payload.workspaceId.uuidString.prefix(5)) " +
                 "panel=\(payload.panelId.uuidString.prefix(5)) tx=\(payload.transactionId.uuidString.prefix(5)) " +
                 "explicit=\(payload.explicitFocusIntent ? 1 : 0)"
@@ -91,7 +91,7 @@ final class FocusSurfaceBroadcaster {
                 "panel=\(payload.panelId.uuidString.prefix(5)) tx=\(payload.transactionId.uuidString.prefix(5)) " +
                 "explicit=\(payload.explicitFocusIntent ? 1 : 0)"
 #if DEBUG
-            cmuxDebugLog(message)
+            hmuxDebugLog(message)
 #endif
             focusSurfaceBroadcasterLogger.error("\(message, privacy: .public)")
         }

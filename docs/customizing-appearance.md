@@ -1,49 +1,49 @@
-# Customizing cmux's look
+# Customizing hmux's look
 
-cmux's terminals run on libghostty, so most of the terminal's look comes from
+hmux's terminals run on libghostty, so most of the terminal's look comes from
 Ghostty config: theme, fonts, cursor, transparency, background images, padding,
 and shaders. The app chrome around the terminals (sidebar, workspace colors,
-pane borders, notification rings, icon) lives in `~/.config/cmux/cmux.json`.
+pane borders, notification rings, icon) lives in `~/.config/hmux/hmux.json`.
 
 ## Where settings live
 
 | File | What it controls | How changes apply |
 | --- | --- | --- |
-| `~/.config/ghostty/config` or `~/.config/ghostty/config.ghostty` | Terminal rendering, shared with standalone Ghostty | **Reload Configuration** (Cmd+Shift+,) or `cmux reload-config` |
+| `~/.config/ghostty/config` or `~/.config/ghostty/config.ghostty` | Terminal rendering, shared with standalone Ghostty | **Reload Configuration** (Cmd+Shift+,) or `hmux reload-config` |
 | `~/Library/Application Support/com.mitchellh.ghostty/config.ghostty` | Same, Ghostty's macOS location | Same |
-| `~/Library/Application Support/com.cmuxterm.app/config.ghostty` | cmux-only Ghostty overrides. `cmux themes` and the Settings font-size controls write here | Same |
-| `~/.config/cmux/cmux.json` | App chrome and behavior ([schema](https://github.com/manaflow-ai/cmux/blob/main/web/data/cmux.schema.json)) | Reloads automatically when you save |
+| `~/Library/Application Support/com.hmuxterm.app/config.ghostty` | hmux-only Ghostty overrides. `hmux themes` and the Settings font-size controls write here | Same |
+| `~/.config/hmux/hmux.json` | App chrome and behavior ([schema](https://github.com/manaflow-ai/cmux/blob/main/web/data/cmux.schema.json)) | Reloads automatically when you save |
 
-cmux loads its own `config.ghostty` after Ghostty's files, so a key set there
+hmux loads its own `config.ghostty` after Ghostty's files, so a key set there
 wins. Nightly and RC builds use their own folder (for example
-`com.cmuxterm.app.nightly`) and fall back to the release one when theirs is
+`com.hmuxterm.app.nightly`) and fall back to the release one when theirs is
 empty. `config-file = ...` includes work as they do in Ghostty.
-The full `cmux.json` reference is at <https://cmux.com/docs/configuration>.
+The full `hmux.json` reference is at <https://cmux.com/docs/configuration>.
 
-Some keys are read only by cmux: `sidebar-background`, `sidebar-tint-opacity`,
+Some keys are read only by hmux: `sidebar-background`, `sidebar-tint-opacity`,
 `sidebar-font-size`, and `surface-tab-bar-font-size`. Standalone Ghostty
 doesn't recognize them, so if you share `~/.config/ghostty/config` with Ghostty,
-put them in cmux's own `config.ghostty` instead.
+put them in hmux's own `config.ghostty` instead.
 
-### What cmux overrides
+### What hmux overrides
 
-cmux owns the window, the shell bootstrap, and its shortcuts, so a few Ghostty
+hmux owns the window, the shell bootstrap, and its shortcuts, so a few Ghostty
 settings are replaced or don't apply:
 
 - `term` is always `xterm-256color`.
-- `shell-integration` is forced to `none` because cmux's own bootstrap loads
+- `shell-integration` is forced to `none` because hmux's own bootstrap loads
   Ghostty's zsh and bash integration. Set `shell-integration = none` yourself
   to skip that too. Your `shell-integration-features` are kept, except
   `cursor` is always off (see [Cursor](#cursor)).
 - `macos-background-from-layer = true` and `macos-titlebar-proxy-icon = hidden`
   are always set.
-- `terminal.copyOnSelect: true` in `cmux.json` sets
+- `terminal.copyOnSelect: true` in `hmux.json` sets
   `copy-on-select = clipboard`. When it's false, your Ghostty value applies.
 - `font-size` is multiplied by `app.globalFontMagnification` when that isn't 100.
-- These Ghostty keybinds are unbound so cmux's remappable shortcuts can use
+- These Ghostty keybinds are unbound so hmux's remappable shortcuts can use
   them: Cmd+D, Cmd+Shift+D, Cmd+W, Cmd+Option+W, Cmd+Shift+W, Cmd+Ctrl+=, and
   Cmd+1 through Cmd+9. Rebind them in Settings > Keyboard Shortcuts or
-  `shortcuts.bindings` in `cmux.json`.
+  `shortcuts.bindings` in `hmux.json`.
 - Settings implemented by Ghostty.app's own windowing code, rather than
   libghostty, have no effect: for example `macos-titlebar-style`,
   `macos-icon`, `window-decoration`, and `window-width`/`window-height`.
@@ -53,19 +53,19 @@ settings are replaced or don't apply:
 Pick a theme interactively, with a live preview across the running app:
 
 ```bash
-cmux themes
+hmux themes
 ```
 
 Or script it:
 
 ```bash
-cmux themes list
-cmux themes set "Catppuccin Mocha"
-cmux themes set --light "Catppuccin Latte" --dark "Catppuccin Mocha"
-cmux themes clear
+hmux themes list
+hmux themes set "Catppuccin Mocha"
+hmux themes set --light "Catppuccin Latte" --dark "Catppuccin Mocha"
+hmux themes clear
 ```
 
-`set` writes `theme = light:...,dark:...` into cmux's `config.ghostty` and asks
+`set` writes `theme = light:...,dark:...` into hmux's `config.ghostty` and asks
 the app to reload. `clear` removes that line so your Ghostty config's `theme`
 applies again. You can also write the pair yourself in any Ghostty config file:
 
@@ -74,16 +74,16 @@ theme = light:Catppuccin Latte,dark:Catppuccin Mocha
 ```
 
 The light or dark half follows `app.appearance` (`system`, `light`, or `dark`)
-in `cmux.json`.
+in `hmux.json`.
 
 Custom themes are ordinary Ghostty config files. Put one in
-`~/.config/ghostty/themes/<Name>` and it shows up in `cmux themes list`. Colors
+`~/.config/ghostty/themes/<Name>` and it shows up in `hmux themes list`. Colors
 set directly in your config (`background`, `foreground`, `palette`, and so on)
 override the theme's.
 
-With no theme and no terminal colors configured, cmux supplies its own
+With no theme and no terminal colors configured, hmux supplies its own
 light/dark palette. Set `"terminal": { "adaptiveDefaultTheme": false }` in
-`cmux.json` to get Ghostty's fixed built-in palette instead.
+`hmux.json` to get Ghostty's fixed built-in palette instead.
 
 ## Transparency, blur, and background images
 
@@ -92,10 +92,10 @@ background-opacity = 0.85
 background-blur = 20
 ```
 
-- `background-opacity` below 1 makes the whole cmux window translucent.
+- `background-opacity` below 1 makes the whole hmux window translucent.
   `background-opacity-cells = true` also applies it to cells with an explicit
   background color.
-- `background-blur` takes an intensity, `true` (20), or `false`. cmux passes it
+- `background-blur` takes an intensity, `true` (20), or `false`. hmux passes it
   to the same macOS compositor call standalone Ghostty uses. On macOS 26,
   `macos-glass-regular` and `macos-glass-clear` switch the window to native
   glass.
@@ -103,10 +103,10 @@ background-blur = 20
   blur and opacity looking different from standalone Ghostty, and
   [#2581](https://github.com/manaflow-ai/cmux/issues/2581) tracks transparency
   being lost in fullscreen.
-- `sidebarAppearance.tintOpacity` in `cmux.json` only tints the sidebar; it
+- `sidebarAppearance.tintOpacity` in `hmux.json` only tints the sidebar; it
   doesn't make the terminal transparent.
 
-Background images come from libghostty's renderer and work in cmux:
+Background images come from libghostty's renderer and work in hmux:
 
 ```ini
 background-image = ~/Pictures/wallpaper.png
@@ -134,14 +134,14 @@ adjust-cell-height = 10%
 `font-feature = -calt` turns off programming ligatures; `-calt, -liga, -dlig`
 turns off most ligatures.
 
-- `app.globalFontMagnification` in `cmux.json` (50 to 200, in steps of 10)
+- `app.globalFontMagnification` in `hmux.json` (50 to 200, in steps of 10)
   scales terminals, tab titles, sidebars, settings, and other app chrome
   together.
 - Cmd+Ctrl+= and Cmd+Ctrl+- change every terminal in the current workspace by
   one point; Cmd+Ctrl+0 resets them.
 - `sidebar-font-size` (10 to 20, default 12.5) and `surface-tab-bar-font-size`
   (8 to 14, default 11) size the sidebar and pane tab bars. Settings writes both
-  to cmux's `config.ghostty`.
+  to hmux's `config.ghostty`.
 
 ## Cursor
 
@@ -153,13 +153,13 @@ cursor-text = #1e1e2e
 cursor-opacity = 0.9
 ```
 
-cmux turns off Ghostty's shell-integration `cursor` feature, which would switch
+hmux turns off Ghostty's shell-integration `cursor` feature, which would switch
 the cursor to a bar at the prompt. Your `cursor-style` is what you see at the
 prompt; programs can still change it with escape sequences.
 
 ## Custom shaders
 
-cmux's Ghostty fork supports `custom-shader`, including the cursor uniforms
+hmux's Ghostty fork supports `custom-shader`, including the cursor uniforms
 (`iCurrentCursor`, `iPreviousCursor`, `iTimeCursorChange`) that cursor-trail
 shaders use:
 
@@ -175,14 +175,14 @@ skipped, and the error goes to the log rather than showing as a config error.
 
 | Setting | Where | Effect |
 | --- | --- | --- |
-| `unfocused-split-opacity`, `unfocused-split-fill` | Ghostty config | Dim unfocused cmux panes |
+| `unfocused-split-opacity`, `unfocused-split-fill` | Ghostty config | Dim unfocused hmux panes |
 | `split-divider-color` | Ghostty config | Pane divider color when `paneBorderColor` is unset |
-| `paneBorderColor` | `cmux.json` | Divider color between cmux panes |
-| `activePaneBorderColor` | `cmux.json` | Border around the focused pane |
+| `paneBorderColor` | `hmux.json` | Divider color between hmux panes |
+| `activePaneBorderColor` | `hmux.json` | Border around the focused pane |
 
 ## Sidebar
 
-In `cmux.json`:
+In `hmux.json`:
 
 - `sidebarAppearance.tintColor`, `lightModeTintColor`, `darkModeTintColor`, and
   `tintOpacity` (0 to 1, default 0.18) tint the sidebar.
@@ -199,7 +199,7 @@ The Ghostty keys `sidebar-background` (a hex color, or
 place or the other.
 
 To replace the sidebar entirely, write a [custom sidebar](custom-sidebars.md)
-in `~/.config/cmux/sidebars/`. [`Examples/CustomSidebars`](../Examples/CustomSidebars)
+in `~/.config/hmux/sidebars/`. [`Examples/CustomSidebars`](../Examples/CustomSidebars)
 has ready-to-copy ones.
 
 ## Workspace and notification colors
@@ -222,8 +222,8 @@ has ready-to-copy ones.
 - `workspaceColors.colors` is the named palette shown in the workspace color
   picker. It replaces the built-in palette, so copy the default entries from the
   schema that you want to keep.
-- Color a workspace from the CLI: `cmux workspace-action set-color Amber` or
-  `cmux workspace-action --action set-color --color "#C0392B"`.
+- Color a workspace from the CLI: `hmux workspace-action set-color Amber` or
+  `hmux workspace-action --action set-color --color "#C0392B"`.
 - `notifications.paneFlashColor` recolors the unread pane ring and pane flash.
   `notifications.unreadPaneRing` and `notifications.paneFlash` turn them off.
 
@@ -237,7 +237,7 @@ has ready-to-copy ones.
 
 ## Prompts and images
 
-- Prompt themes such as Starship and oh-my-posh work in cmux terminals. Set them
+- Prompt themes such as Starship and oh-my-posh work in hmux terminals. Set them
   up in your shell rc files as usual.
 - With Ghostty's shell integration loaded (zsh and bash, unless you set
   `shell-integration = none`), prompts are marked with OSC 133. Cmd+Shift+Up and
@@ -248,7 +248,7 @@ has ready-to-copy ones.
 
 ## Example configs
 
-`~/Library/Application Support/com.cmuxterm.app/config.ghostty`:
+`~/Library/Application Support/com.hmuxterm.app/config.ghostty`:
 
 ```ini
 theme = light:Catppuccin Latte,dark:Catppuccin Mocha
@@ -272,7 +272,7 @@ sidebar-font-size = 13
 surface-tab-bar-font-size = 12
 ```
 
-`~/.config/cmux/cmux.json`:
+`~/.config/hmux/hmux.json`:
 
 ```json
 {
@@ -301,5 +301,5 @@ surface-tab-bar-font-size = 12
 }
 ```
 
-Save `cmux.json` and it applies. After editing the Ghostty file, press
-Cmd+Shift+, or run `cmux reload-config`.
+Save `hmux.json` and it applies. After editing the Ghostty file, press
+Cmd+Shift+, or run `hmux reload-config`.

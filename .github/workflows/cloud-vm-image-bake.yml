@@ -1,17 +1,17 @@
 name: Cloud VM image bake
 
-# The implementation lives on feat-cmux-next (plans/cmux-next/vm-image.md 4.11).
+# The implementation lives on feat-hmux-next (plans/hmux-next/vm-image.md 4.11).
 # GitHub dispatches only a workflow the default branch registers, so this inert
-# copy lets a maintainer run the bake on the cmux-next dev Freestyle account
-# (environment cmux-next-vm-image-dev, which allows only feat-cmux-next):
+# copy lets a maintainer run the bake on the hmux-next dev Freestyle account
+# (environment hmux-next-vm-image-dev, which allows only feat-hmux-next):
 #
 #   gh workflow run cloud-vm-image-bake.yml -R manaflow-ai/cmux \
-#     --ref feat-cmux-next -f mode=bake
+#     --ref feat-hmux-next -f mode=bake
 #
 # Add -f team_vm=true to bake the team VM image (TEAM_VM_SNAPSHOT) instead of
 # the personal Cloud image (CLOUD_FREESTYLE_SNAPSHOT).
 #
-# A dispatch runs the file at --ref, so feat-cmux-next's inputs and jobs win;
+# A dispatch runs the file at --ref, so feat-hmux-next's inputs and jobs win;
 # these inputs only mirror them for the Actions form.
 on:
   workflow_dispatch:
@@ -56,4 +56,4 @@ jobs:
   registration:
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
     steps:
-      - run: echo "Cloud VM image bake is implemented on feat-cmux-next; dispatch it with --ref feat-cmux-next"
+      - run: echo "Cloud VM image bake is implemented on feat-hmux-next; dispatch it with --ref feat-hmux-next"

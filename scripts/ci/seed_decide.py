@@ -22,12 +22,12 @@ macOS 26 seeds too. Anything unknown (API errors, no seeded ancestor within
 the window, a commit outside the shallow checkout) builds that pool.
 
 A pool may be a lane `LABEL@K`: the same runners, building in the second (or
-Kth) canonical root, /private/tmp/cmux-ci-K. That root is part of the seed
+Kth) canonical root, /private/tmp/hmux-ci-K. That root is part of the seed
 key, so an owned Mac's second compile slot only adopts a seed built there.
 
 Far lanes. A pending seed that a newer push replaces is never built, which is
 fine when the newer push is near it, and costly after a change that recompiles
-the `cmux` module: on 2026-09-25 main took 271 pushes, 62 to 77% of each pool's
+the `hmux` module: on 2026-09-25 main took 271 pushes, 62 to 77% of each pool's
 seed jobs were replaced, and admission started p50 6 to 11 commits (14 to 28
 app Swift files) behind main. warm_distance.py measured what such a start costs:
 within NEAR_APP_SWIFT_FILES app Swift files, with no package interface change

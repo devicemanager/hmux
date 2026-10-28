@@ -2,25 +2,25 @@ name: App-host test rerun
 run-name: >-
   app-host test rerun @ ${{ inputs.ref }} · ${{ inputs.only_testing }}${{ inputs.dispatch_id != '' && format(' [{0}]', inputs.dispatch_id) || '' }}
 
-# Reruns app-host tests for a change that touches only cmuxTests/. Instead of
+# Reruns app-host tests for a change that touches only hmuxTests/. Instead of
 # compiling the app, it adopts the app-host products an upstream CI run already
-# compiled from a revision whose app is identical, recompiles only the cmuxTests
+# compiled from a revision whose app is identical, recompiles only the hmuxTests
 # bundle against them, and runs the selected tests. See
 # scripts/ci/app_host_test_rerun.py for how the products are chosen and how the
 # test target is cut loose from its dependencies. A pull_request run compiled
 # refs/pull/N/merge, not its head_sha, so the plan compares against that merge.
 #
-# A change outside cmuxTests/ fails the plan job and names the files; use
+# A change outside hmuxTests/ fails the plan job and names the files; use
 # test-depot.yml for a full build then.
 
 on:
   workflow_dispatch:
     inputs:
       ref:
-        description: Branch, tag, or full SHA to test. Everything outside cmuxTests/ must match a revision CI built.
+        description: Branch, tag, or full SHA to test. Everything outside hmuxTests/ must match a revision CI built.
         required: true
       only_testing:
-        description: "Selectors, space/comma/newline separated: Suite/testName (XCTest) or Suite/testName() (Swift Testing). The cmuxTests/ prefix is optional."
+        description: "Selectors, space/comma/newline separated: Suite/testName (XCTest) or Suite/testName() (Swift Testing). The hmuxTests/ prefix is optional."
         required: true
       test_iterations:
         description: Run each selected test this many times (xcodebuild -test-iterations).
@@ -39,7 +39,7 @@ on:
         required: false
         default: ""
       all_test_sources:
-        description: Compile every cmuxTests source instead of only those the selected suites reach.
+        description: Compile every hmuxTests source instead of only those the selected suites reach.
         required: false
         type: boolean
         default: false
@@ -132,14 +132,14 @@ jobs:
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'macos-26' || needs.plan.outputs.runner == 'blacksmith-6vcpu-macos-26' && (inputs.source_repository == github.repository && needs.resolve-ref.outputs.trusted_ref == 'true' && vars.CI_PR_POOL_OWNED == '1' && contains(fromJSON('["pull_request","push","schedule","workflow_dispatch"]'), github.event_name) && github.run_attempt == 1 && vars.CI_SIDE_LANE_RUNNER || 'blacksmith-6vcpu-macos-26') || needs.plan.outputs.runner || 'blacksmith-6vcpu-macos-15' }}
     timeout-minutes: 60
     env:
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
-      CMUX_CI_APP_HOST_ISOLATION_REQUIRED: "1"
-      CMUX_APP_HOST_SHARD: "1"
-      CMUX_APP_HOST_CAPTURE_XCRESULTS: "1"
-      CMUX_APP_HOST_XCODEBUILD_ATTEMPTS: "1"
-      CMUX_SKIP_ZIG_BUILD: "1"
-      CMUX_UNIT_TEST_TIMEOUT_SECONDS: "900"
-      CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS: "600"
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_CI_APP_HOST_ISOLATION_REQUIRED: "1"
+      HMUX_APP_HOST_SHARD: "1"
+      HMUX_APP_HOST_CAPTURE_XCRESULTS: "1"
+      HMUX_APP_HOST_XCODEBUILD_ATTEMPTS: "1"
+      HMUX_SKIP_ZIG_BUILD: "1"
+      HMUX_UNIT_TEST_TIMEOUT_SECONDS: "900"
+      HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS: "600"
       CI_CACHE_R2_PUBLIC_URL: ${{ vars.CI_CACHE_R2_PUBLIC_URL || 'https://ci-cache.cmux.com' }}
       SOURCE_SHA: ${{ needs.plan.outputs.source_sha }}
       TEST_SHA: ${{ needs.plan.outputs.sha }}
@@ -189,8 +189,8 @@ jobs:
           ls -la "$RUNNER_TEMP/app-host-products"
 
       # The products were compiled in a canonical build root (see
-      # scripts/ci/canonical-build-root.sh): /private/tmp/cmux-ci, or
-      # /private/tmp/cmux-ci-<n> for an owned Mac's second compile slot.
+      # scripts/ci/canonical-build-root.sh): /private/tmp/hmux-ci, or
+      # /private/tmp/hmux-ci-<n> for an owned Mac's second compile slot.
       # Rebuilding the bundle at the same paths keeps it consistent with the
       # swiftmodules it imports, so this job builds in the producer's root,
       # named by the receipt, and holds it (glaeda-canonical-root take) before
@@ -205,7 +205,7 @@ jobs:
           tar -xzf "$RUNNER_TEMP/app-host-products/app-host-products.tar.gz" -C "$staged"
           rm -f "$RUNNER_TEMP/app-host-products/app-host-products.tar.gz"
           root="$("$GITHUB_WORKSPACE/.rerun-tools/scripts/ci/take-product-canonical-root.sh" \
-            "$staged/Build/Products/cmux-test-products.json")"
+            "$staged/Build/Products/hmux-test-products.json")"
           # The helper printed a root only after validating it and, on an
           # owned Mac, holding it for this job.
           test -n "$root"
@@ -214,7 +214,7 @@ jobs:
           mkdir -p "$root"
           mv "$staged" "$COMPILE_DERIVED_DATA"
           {
-            echo "CMUX_CI_CANONICAL_ROOT=$root"
+            echo "HMUX_CI_CANONICAL_ROOT=$root"
             echo "CANONICAL_ROOT=$root"
             echo "COMPILE_DERIVED_DATA=$COMPILE_DERIVED_DATA"
           } >> "$GITHUB_ENV"
@@ -222,25 +222,25 @@ jobs:
           # Stage the package frameworks the way restore-app-host-test-product.sh
           # does, before the bundle build can rewrite PackageFrameworks. The app
           # host loads them from these stable copies at test time.
-          framework_source="$(find "$COMPILE_DERIVED_DATA/Build/Products/Debug" -type d -name 'CmuxAgentJournal*_PackageProduct.framework' -print -quit)"
+          framework_source="$(find "$COMPILE_DERIVED_DATA/Build/Products/Debug" -type d -name 'HmuxAgentJournal*_PackageProduct.framework' -print -quit)"
           test -n "$framework_source"
-          for dest in "$RUNNER_TEMP/cmux-app-host-package-frameworks" /private/tmp/cmux-app-host-package-frameworks; do
+          for dest in "$RUNNER_TEMP/hmux-app-host-package-frameworks" /private/tmp/hmux-app-host-package-frameworks; do
             mkdir -p "$dest"
             rsync -aL --no-times "$(dirname "$framework_source")/" "$dest/"
           done
           # Source-backed test fixtures resolve #fileID through this stable
           # location, so baseline runs do not need the producer root.
-          CMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/cmux-test-source \
+          HMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/hmux-test-source \
             "$GITHUB_WORKSPACE/.rerun-tools/scripts/ci/canonical-build-root.sh" \
             --runtime-source "$PWD"
-          echo "CMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/cmux-test-source" >> "$GITHUB_ENV"
-          receipt="$COMPILE_DERIVED_DATA/Build/Products/cmux-test-products.json"
+          echo "HMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/hmux-test-source" >> "$GITHUB_ENV"
+          receipt="$COMPILE_DERIVED_DATA/Build/Products/hmux-test-products.json"
           cat "$receipt"
           test "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["revision"])' "$receipt")" = "$SOURCE_SHA"
           # Swift modules only load in the compiler that wrote them, so the
           # bundle must be built with the products' Xcode.
           developer="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["developer"])' "$receipt")"
-          echo "CMUX_CI_XCODE_APP=${developer%/Contents/Developer}" >> "$GITHUB_ENV"
+          echo "HMUX_CI_XCODE_APP=${developer%/Contents/Developer}" >> "$GITHUB_ENV"
           echo "PRODUCT_ARCH=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["architecture"])' "$receipt")" >> "$GITHUB_ENV"
 
       - name: Select the products' Xcode
@@ -255,16 +255,16 @@ jobs:
         with:
           backend: r2
           path: .ci-source-packages
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
           restore-keys: spm-
 
       - name: Resolve Swift packages
         env:
           # With the seed ci-macos.yml restores, an exact hit resolves offline.
-          CMUX_CI_SWIFTPM_CACHE_EXACT_HIT: ${{ steps.swift-package-cache.outputs.cache-hit }}
+          HMUX_CI_SWIFTPM_CACHE_EXACT_HIT: ${{ steps.swift-package-cache.outputs.cache-hit }}
           # Move the restored packages into the canonical root rather than
           # copying them, as ci-macos.yml does; only that copy is read later.
-          CMUX_CI_MOVE_SOURCE_PACKAGES: "1"
+          HMUX_CI_MOVE_SOURCE_PACKAGES: "1"
         run: |
           set -euo pipefail
           python3 scripts/ci/sanitize-xcode-source-packages-cache.py .ci-source-packages
@@ -273,59 +273,59 @@ jobs:
           scripts/ci/compile-app-host-test-product.sh canonical-resolve \
             "$CANONICAL_ROOT/derived-data-rerun-resolve" "$PWD/.ci-source-packages"
 
-      - name: Compile only the cmuxTests bundle
+      - name: Compile only the hmuxTests bundle
         env:
           SELECTORS: ${{ needs.plan.outputs.selectors }}
           ALL_SOURCES: ${{ inputs.all_test_sources }}
         run: |
           set -euo pipefail
-          bundle="$COMPILE_DERIVED_DATA/Build/Products/Debug/cmux DEV.app/Contents/PlugIns/cmuxTests.xctest"
-          ditto "$bundle" "$RUNNER_TEMP/prebuilt-cmuxTests.xctest"
+          bundle="$COMPILE_DERIVED_DATA/Build/Products/Debug/hmux DEV.app/Contents/PlugIns/hmuxTests.xctest"
+          ditto "$bundle" "$RUNNER_TEMP/prebuilt-hmuxTests.xctest"
           cd "$CANONICAL_ROOT/src"
           python3 "$GITHUB_WORKSPACE/.rerun-tools/scripts/ci/app_host_test_rerun.py" detach \
-            --project cmux.xcodeproj/project.pbxproj \
+            --project hmux.xcodeproj/project.pbxproj \
             --derived-data "$COMPILE_DERIVED_DATA" \
-            --xcconfig "$RUNNER_TEMP/cmuxTests-detached.xcconfig" \
+            --xcconfig "$RUNNER_TEMP/hmuxTests-detached.xcconfig" \
             --package-root "$PWD/Packages" \
             --package-root "$PWD/vendor" \
             --package-root "$PWD/Examples" \
             --package-root "$PWD/.ci-source-packages/checkouts" \
             --xcframework-root "$PWD/.ci-source-packages/artifacts" \
             --arch "$PRODUCT_ARCH"
-          rm -f "$bundle/Contents/MacOS/cmuxTests"
+          rm -f "$bundle/Contents/MacOS/hmuxTests"
           compile() {
-            xcodebuild -project cmux.xcodeproj -target cmuxTests -configuration Debug \
+            xcodebuild -project hmux.xcodeproj -target hmuxTests -configuration Debug \
               -clonedSourcePackagesDirPath "$PWD/.ci-source-packages" \
               -disableAutomaticPackageResolution \
-              -xcconfig "$RUNNER_TEMP/cmuxTests-detached.xcconfig" \
+              -xcconfig "$RUNNER_TEMP/hmuxTests-detached.xcconfig" \
               "SYMROOT=$COMPILE_DERIVED_DATA/Build/Products" \
               "OBJROOT=$COMPILE_DERIVED_DATA/Build/Intermediates.noindex" \
               "ARCHS=$PRODUCT_ARCH" \
               COMPILER_INDEX_STORE_ENABLE=NO \
-              'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) CMUX_CI_APP_HOST_ISOLATION_REQUIRED' \
-              'LD_RUNPATH_SEARCH_PATHS=$(inherited) @executable_path/../Frameworks /private/tmp/cmux-app-host-package-frameworks' \
+              'SWIFT_ACTIVE_COMPILATION_CONDITIONS=$(inherited) HMUX_CI_APP_HOST_ISOLATION_REQUIRED' \
+              'LD_RUNPATH_SEARCH_PATHS=$(inherited) @executable_path/../Frameworks /private/tmp/hmux-app-host-package-frameworks' \
               -showBuildTimingSummary \
-              build 2>&1 | tee -a "$RUNNER_TEMP/rerun-out/cmuxTests-build.log"
+              build 2>&1 | tee -a "$RUNNER_TEMP/rerun-out/hmuxTests-build.log"
           }
           # Compile only the test sources the selected suites reach (see
           # source_closure in app_host_test_rerun.py). A source the pruning
           # missed fails this compile, and then every source is compiled.
-          cp cmux.xcodeproj/project.pbxproj "$RUNNER_TEMP/detached.pbxproj"
+          cp hmux.xcodeproj/project.pbxproj "$RUNNER_TEMP/detached.pbxproj"
           sources="every test source"
           if [ "$ALL_SOURCES" != "true" ] \
             && python3 "$GITHUB_WORKSPACE/.rerun-tools/scripts/ci/app_host_test_rerun.py" prune \
-              --project cmux.xcodeproj/project.pbxproj --test-root cmuxTests --only-testing "$SELECTORS" \
+              --project hmux.xcodeproj/project.pbxproj --test-root hmuxTests --only-testing "$SELECTORS" \
             && compile; then
             sources="only the test sources the selected suites reach"
           else
             if [ "$ALL_SOURCES" != "true" ]; then
-              echo "::notice::The pruned cmuxTests compile did not succeed; compiling every test source"
+              echo "::notice::The pruned hmuxTests compile did not succeed; compiling every test source"
             fi
-            cp "$RUNNER_TEMP/detached.pbxproj" cmux.xcodeproj/project.pbxproj
+            cp "$RUNNER_TEMP/detached.pbxproj" hmux.xcodeproj/project.pbxproj
             compile
           fi
           echo "- Compiled $sources" >> "$GITHUB_STEP_SUMMARY"
-          test -f "$bundle/Contents/MacOS/cmuxTests"
+          test -f "$bundle/Contents/MacOS/hmuxTests"
 
       - name: Stage and validate products
         run: |
@@ -333,24 +333,24 @@ jobs:
           # App-host isolation only inspects hosts under RUNNER_TEMP. Clone the
           # products there (APFS clones, so no data is copied) rather than
           # moving them: Xcode's symlinks inside point at the compile location.
-          derived="$RUNNER_TEMP/cmux-derived-data-rerun"
+          derived="$RUNNER_TEMP/hmux-derived-data-rerun"
           rm -rf "$derived"
           mkdir -p "$derived/Build"
           cp -cR "$COMPILE_DERIVED_DATA/Build/Products" "$derived/Build/"
-          echo "CMUX_DERIVED_DATA_PATH=$derived" >> "$GITHUB_ENV"
-          bundle="Debug/cmux DEV.app/Contents/PlugIns/cmuxTests.xctest/Contents/MacOS/cmuxTests"
+          echo "HMUX_DERIVED_DATA_PATH=$derived" >> "$GITHUB_ENV"
+          bundle="Debug/hmux DEV.app/Contents/PlugIns/hmuxTests.xctest/Contents/MacOS/hmuxTests"
           {
             echo "### Test bundle"
             echo
-            echo "- CI-built: \`$(shasum -a 256 "$RUNNER_TEMP/prebuilt-cmuxTests.xctest/Contents/MacOS/cmuxTests" | cut -c1-16)\`"
+            echo "- CI-built: \`$(shasum -a 256 "$RUNNER_TEMP/prebuilt-hmuxTests.xctest/Contents/MacOS/hmuxTests" | cut -c1-16)\`"
             echo "- rebuilt for \`$TEST_SHA\`: \`$(shasum -a 256 "$derived/Build/Products/$bundle" | cut -c1-16)\`"
           } >> "$GITHUB_STEP_SUMMARY"
           products="$derived/Build/Products/Debug"
           find "$products/PackageFrameworks" -maxdepth 1 | head -n 5
           if [ -L "$products/PackageFrameworks" ]; then rm "$products/PackageFrameworks"; fi
           mkdir -p "$products/PackageFrameworks"
-          rsync -aL --no-times "$RUNNER_TEMP/cmux-app-host-package-frameworks/" "$products/PackageFrameworks/"
-          find "$products/PackageFrameworks" -maxdepth 1 -type d -name 'CmuxAgentJournal*_PackageProduct.framework' | grep -q .
+          rsync -aL --no-times "$RUNNER_TEMP/hmux-app-host-package-frameworks/" "$products/PackageFrameworks/"
+          find "$products/PackageFrameworks" -maxdepth 1 -type d -name 'HmuxAgentJournal*_PackageProduct.framework' | grep -q .
           # The receipt binds the products to the revision they were built
           # from, so validate with that revision checked out; the plan job
           # proved it differs from the tested one only in paths no app target reads.
@@ -384,7 +384,7 @@ jobs:
           sw_vers
           scripts/ci/run-in-console-session.sh \
             scripts/ci/run-app-host-xcodebuild.sh \
-            -xctestrun "$CMUX_APP_HOST_XCTESTRUN" \
+            -xctestrun "$HMUX_APP_HOST_XCTESTRUN" \
             -destination "platform=macOS" \
             -parallel-testing-enabled NO \
             "${args[@]}" \
@@ -399,20 +399,20 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/rerun-out/rebuilt"
-          cp "$RUNNER_TEMP"/cmux-app-host-xcodebuild-*.log \
-            "$RUNNER_TEMP"/cmux-app-host-xcodebuild-*.meta \
-            "$RUNNER_TEMP"/cmux-app-host-console-capture-*.log \
+          cp "$RUNNER_TEMP"/hmux-app-host-xcodebuild-*.log \
+            "$RUNNER_TEMP"/hmux-app-host-xcodebuild-*.meta \
+            "$RUNNER_TEMP"/hmux-app-host-console-capture-*.log \
             "$RUNNER_TEMP/rerun-out/rebuilt/" 2>/dev/null || true
-          bundle="$CMUX_DERIVED_DATA_PATH/Build/Products/Debug/cmux DEV.app/Contents/PlugIns/cmuxTests.xctest"
+          bundle="$HMUX_DERIVED_DATA_PATH/Build/Products/Debug/hmux DEV.app/Contents/PlugIns/hmuxTests.xctest"
           rm -rf "$bundle"
-          ditto "$RUNNER_TEMP/prebuilt-cmuxTests.xctest" "$bundle"
+          ditto "$RUNNER_TEMP/prebuilt-hmuxTests.xctest" "$bundle"
           read -r -a selectors <<< "$SELECTORS"
           args=()
           for selector in "${selectors[@]}"; do args+=("-only-testing:$selector"); done
           if [ "$TEST_ITERATIONS" -gt 1 ]; then args+=(-test-iterations "$TEST_ITERATIONS"); fi
-          CMUX_TAG=baseline scripts/ci/run-in-console-session.sh \
+          HMUX_TAG=baseline scripts/ci/run-in-console-session.sh \
             scripts/ci/run-app-host-xcodebuild.sh \
-            -xctestrun "$CMUX_APP_HOST_XCTESTRUN" \
+            -xctestrun "$HMUX_APP_HOST_XCTESTRUN" \
             -destination "platform=macOS" \
             -parallel-testing-enabled NO \
             "${args[@]}" \
@@ -426,12 +426,12 @@ jobs:
           mkdir -p "$out"
           # These captures belong to this job; global debug logs may belong to
           # another runner, and collecting diagnostics must not require sudo.
-          cp "$RUNNER_TEMP"/cmux-app-host-xcodebuild-*.log \
-            "$RUNNER_TEMP"/cmux-app-host-xcodebuild-*.meta \
-            "$RUNNER_TEMP"/cmux-app-host-console-capture-*.log "$out"/ 2>/dev/null || true
-          cp "$RUNNER_TEMP/cmuxTests-detached.xcconfig" "$out"/ 2>/dev/null || true
-          if [ -d "$RUNNER_TEMP/cmux-app-host-xcresults" ]; then
-            cp -R "$RUNNER_TEMP/cmux-app-host-xcresults" "$out"/
+          cp "$RUNNER_TEMP"/hmux-app-host-xcodebuild-*.log \
+            "$RUNNER_TEMP"/hmux-app-host-xcodebuild-*.meta \
+            "$RUNNER_TEMP"/hmux-app-host-console-capture-*.log "$out"/ 2>/dev/null || true
+          cp "$RUNNER_TEMP/hmuxTests-detached.xcconfig" "$out"/ 2>/dev/null || true
+          if [ -d "$RUNNER_TEMP/hmux-app-host-xcresults" ]; then
+            cp -R "$RUNNER_TEMP/hmux-app-host-xcresults" "$out"/
           fi
           ls -la "$out"
 
@@ -447,6 +447,6 @@ jobs:
       - name: Clean up app-host home
         if: always()
         run: |
-          if [ -n "${CMUX_APP_HOST_KEY:-}" ]; then
+          if [ -n "${HMUX_APP_HOST_KEY:-}" ]; then
             scripts/ci/run-in-console-session.sh scripts/ci/cleanup-app-host-home.sh
           fi

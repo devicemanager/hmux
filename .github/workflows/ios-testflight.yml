@@ -1,4 +1,4 @@
-name: iOS TestFlight (CMUX INTERNAL)
+name: iOS TestFlight (HMUX INTERNAL)
 
 on:
   # Poll main every 20 minutes and batch merges into one upload. The decide job
@@ -8,9 +8,9 @@ on:
   # IOS_TESTFLIGHT_INTERNAL_MAX_AGE_MINUTES (default 180) old.
   # Manual dispatch remains available for intentional rebuilds.
   schedule:
-    # Check current main for a cmux INTERNAL upload every 20 minutes.
+    # Check current main for a hmux INTERNAL upload every 20 minutes.
     - cron: "7,27,47 * * * *"
-    # Twice-daily (every 12 hours) cmux DEMO upload of current main.
+    # Twice-daily (every 12 hours) hmux DEMO upload of current main.
     - cron: "37 5,17 * * *"
   workflow_dispatch:
     inputs:
@@ -29,9 +29,9 @@ on:
         type: boolean
       variant:
         description: >-
-          Upload variant. internal (default) ships dev.cmux.app.internal /
-          "cmux INTERNAL"; demo ships dev.cmux.app.demo / "cmux DEMO" with the
-          DEMO-badged app icon and assigns to the cmux DEMO TestFlight group.
+          Upload variant. internal (default) ships dev.hmux.app.internal /
+          "hmux INTERNAL"; demo ships dev.hmux.app.demo / "hmux DEMO" with the
+          DEMO-badged app icon and assigns to the hmux DEMO TestFlight group.
         required: false
         default: internal
         type: choice
@@ -315,7 +315,7 @@ jobs:
               'ios/',
               'Packages/iOS/',
               'Packages/Shared/',
-              'Packages/macOS/CmuxPhonePush/',
+              'Packages/macOS/HmuxPhonePush/',
               'Sources/Mobile/',
               'vendor/stack-auth-swift-sdk-prerelease/',
               'ghostty',
@@ -530,9 +530,9 @@ jobs:
       ASC_API_KEY_ID: ${{ secrets.ASC_API_KEY_ID }}
       ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
       ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
-      CMUX_TESTFLIGHT_EXTERNAL_GROUP_ID: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_ID }}
-      CMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_NAME }}
-      CMUX_TESTFLIGHT_PRO_GROUP_ID: ${{ vars.IOS_TESTFLIGHT_PRO_GROUP_ID }}
+      HMUX_TESTFLIGHT_EXTERNAL_GROUP_ID: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_ID }}
+      HMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME: ${{ vars.IOS_TESTFLIGHT_EXTERNAL_GROUP_NAME }}
+      HMUX_TESTFLIGHT_PRO_GROUP_ID: ${{ vars.IOS_TESTFLIGHT_PRO_GROUP_ID }}
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -619,7 +619,7 @@ jobs:
         if: ${{ steps.ghosttykit_prebuilt.outputs.available != 'true' }}
         env:
           # The download step already proved the prebuilt path failed.
-          CMUX_GHOSTTYKIT_NO_PREBUILT: "1"
+          HMUX_GHOSTTYKIT_NO_PREBUILT: "1"
         run: ./scripts/ensure-ghosttykit.sh
 
       - name: Verify provisioned GhosttyKit
@@ -717,7 +717,7 @@ jobs:
             # The demo profile is fetched from the ASC API by name instead of a
             # repository secret, so regenerating it in the developer portal
             # needs no secret rotation. Same credentials the upload uses.
-            PROFILE_BASE64="$(python3 ./ios/scripts/asc_download_profile.py --name "cmux Demo Distribution Push")"
+            PROFILE_BASE64="$(python3 ./ios/scripts/asc_download_profile.py --name "hmux Demo Distribution Push")"
           elif [ "$IOS_BETA_PROFILE_TYPE" = "internal" ]; then
             PROFILE_BASE64="${IOS_BETA_PROVISIONING_PROFILE_INTERNAL_BASE64}"
           else
@@ -730,8 +730,8 @@ jobs:
             exit 1
           fi
 
-          TMP_PROFILE="$RUNNER_TEMP/cmux-${IOS_BETA_PROFILE_TYPE}.mobileprovision"
-          TMP_PLIST="$RUNNER_TEMP/cmux-${IOS_BETA_PROFILE_TYPE}-profile.plist"
+          TMP_PROFILE="$RUNNER_TEMP/hmux-${IOS_BETA_PROFILE_TYPE}.mobileprovision"
+          TMP_PLIST="$RUNNER_TEMP/hmux-${IOS_BETA_PROFILE_TYPE}-profile.plist"
           printf '%s' "$PROFILE_BASE64" | base64 --decode > "$TMP_PROFILE"
           security cms -D -i "$TMP_PROFILE" > "$TMP_PLIST"
 
@@ -766,7 +766,7 @@ jobs:
           # then falls back to the active profile in ASC.
           EXTENSION_BUNDLE_ID="$(bash ./ios/scripts/notification-service-bundle-id.sh "$IOS_BETA_BUNDLE_ID")"
           if [ "$IOS_BETA_PROFILE_TYPE" = "internal" ] || [ "$IOS_BETA_PROFILE_TYPE" = "beta" ] || [ -n "${IOS_BETA_EXTENSION_PROVISIONING_PROFILE_BASE64:-}" ]; then
-            EXTENSION_ENV="$RUNNER_TEMP/cmux-${IOS_BETA_PROFILE_TYPE}-extension.env"
+            EXTENSION_ENV="$RUNNER_TEMP/hmux-${IOS_BETA_PROFILE_TYPE}-extension.env"
             : > "$EXTENSION_ENV"
             ENABLE_CLOUD_VPN=0
             if [ "$IOS_BETA_PROFILE_TYPE" = "beta" ]; then
@@ -810,8 +810,8 @@ jobs:
           # command-line build settings apply to every target in the workspace,
           # and SwiftPM resource-bundle targets with their own asset catalogs
           # would fail actool with a missing "AppIcon-Demo" icon set.
-          SRC="ios/cmux/Assets.xcassets/AppIcon-Demo.appiconset"
-          DST="ios/cmux/Assets.xcassets/AppIcon.appiconset"
+          SRC="ios/hmux/Assets.xcassets/AppIcon-Demo.appiconset"
+          DST="ios/hmux/Assets.xcassets/AppIcon.appiconset"
           for f in AppIcon.png AppIconDark.png AppIconTinted.png; do
             cp "$SRC/$f" "$DST/$f"
           done
@@ -834,7 +834,7 @@ jobs:
         uses: ./.github/actions/cache-restore
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ runner.temp }}/cmux-ios-upload/DerivedData/CompilationCache.noindex
+          path: ${{ runner.temp }}/hmux-ios-upload/DerivedData/CompilationCache.noindex
           key: xcode-compilation-ios-testflight-${{ steps.distribution.outputs.bundle_id }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.ios-compilation-cache-key.outputs.toolchain }}-${{ github.sha }}
           restore-keys: |
             xcode-compilation-ios-testflight-${{ steps.distribution.outputs.bundle_id }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.ios-compilation-cache-key.outputs.toolchain }}-
@@ -845,16 +845,16 @@ jobs:
         uses: ./.github/actions/cache-restore
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ runner.temp }}/cmux-ios-spm
-          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          path: ${{ runner.temp }}/hmux-ios-spm
+          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: |
             ios-spm-${{ runner.os }}-${{ runner.arch }}-
 
       - name: Sanitize iOS SwiftPM cache
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/cmux-ios-spm"
-          python3 scripts/ci/sanitize-xcode-source-packages-cache.py "$RUNNER_TEMP/cmux-ios-spm"
+          mkdir -p "$RUNNER_TEMP/hmux-ios-spm"
+          python3 scripts/ci/sanitize-xcode-source-packages-cache.py "$RUNNER_TEMP/hmux-ios-spm"
 
       - name: Archive, export, and upload to TestFlight
         id: upload
@@ -870,14 +870,14 @@ jobs:
           INPUT_BUILD_NUMBER: ${{ github.event.inputs.build_number }}
           # The script writes the CFBundleVersion that actually shipped here (the
           # monotonic guard may bump it), so the summary reports the real value.
-          CMUX_BUILD_NUMBER_OUT_FILE: ${{ runner.temp }}/cmux-final-build-number.txt
-          CMUX_TESTFLIGHT_NOTES_REQUEST_FILE: ${{ runner.temp }}/testflight-notes.json
+          HMUX_BUILD_NUMBER_OUT_FILE: ${{ runner.temp }}/hmux-final-build-number.txt
+          HMUX_TESTFLIGHT_NOTES_REQUEST_FILE: ${{ runner.temp }}/testflight-notes.json
           # Pin the archive/export workspace: the default is a /tmp dir keyed by
           # the build number, which this workflow cannot compute, and the
           # post-upload dSYM artifact step must find the archive's dSYM bundle.
-          CMUX_IOS_UPLOAD_DIR: ${{ runner.temp }}/cmux-ios-upload
-          CMUX_IOS_SPM_CACHE_DIR: ${{ runner.temp }}/cmux-ios-spm
-          CMUX_IOS_COMPILATION_CACHE: ${{ (vars.IOS_UPLOAD_COMPILATION_CACHE || '1') != '0' && '1' || '0' }}
+          HMUX_IOS_UPLOAD_DIR: ${{ runner.temp }}/hmux-ios-upload
+          HMUX_IOS_SPM_CACHE_DIR: ${{ runner.temp }}/hmux-ios-spm
+          HMUX_IOS_COMPILATION_CACHE: ${{ (vars.IOS_UPLOAD_COMPILATION_CACHE || '1') != '0' && '1' || '0' }}
           # xcodebuild runs for 15-20 minutes here and GitHub truncates a step
           # log that long from the end, which is exactly where a build error
           # is. Keep a full copy so a failed archive can be explained; run
@@ -910,7 +910,7 @@ jobs:
             # fresh Beta App Review for that version. This path intentionally
             # skips changelog-driven notes because ios/CHANGELOG.md tracks the
             # current release line, not the reused older version.
-            # External overrides use external bundle ID and "cmux BETA" display name.
+            # External overrides use external bundle ID and "hmux BETA" display name.
             if [ -n "${INPUT_BUILD_NUMBER:-}" ]; then
               echo "build_number is not supported together with marketing_version_override in the cloud override path" >&2
               exit 1
@@ -920,10 +920,10 @@ jobs:
               --marketing-version "$INPUT_MARKETING_VERSION_OVERRIDE" \
               --skip-notes 2>&1 | tee -a "$ARCHIVE_LOG"
           else
-            # Reuse the checked-in CMUX_IOS_BETA_MARKETING_VERSION for automatic betas.
+            # Reuse the checked-in HMUX_IOS_BETA_MARKETING_VERSION for automatic betas.
             # Main-push builds use:
-            # - "cmux INTERNAL" display name
-            # - dev.cmux.app.internal bundle ID (separate app, can coexist with external)
+            # - "hmux INTERNAL" display name
+            # - dev.hmux.app.internal bundle ID (separate app, can coexist with external)
             # - assigned to internal TestFlight group for dogfooding within the team
             # --notes-from-range: auto-generate audience-appropriate "What to
             # Test" notes from the commits since the previous beta (skipped if we
@@ -937,8 +937,8 @@ jobs:
             fi
             ./ios/scripts/upload-testflight.sh "${ARGS[@]}" 2>&1 | tee -a "$ARCHIVE_LOG"
           fi
-          if [ -f "$CMUX_BUILD_NUMBER_OUT_FILE" ]; then
-            FINAL_BN="$(cat "$CMUX_BUILD_NUMBER_OUT_FILE")"
+          if [ -f "$HMUX_BUILD_NUMBER_OUT_FILE" ]; then
+            FINAL_BN="$(cat "$HMUX_BUILD_NUMBER_OUT_FILE")"
           else
             FINAL_BN="${INPUT_BUILD_NUMBER:-unknown}"
           fi
@@ -956,8 +956,8 @@ jobs:
         if: ${{ !cancelled() && steps.upload.outcome == 'success' && steps.distribution.outputs.upload_mode == 'marketing_version_override' && github.event.inputs.prepare_only != 'true' }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-beta-testflight-${{ github.sha }}
-          path: ${{ runner.temp }}/cmux-ios-upload/export/cmux-resigned.ipa
+          name: hmux-beta-testflight-${{ github.sha }}
+          path: ${{ runner.temp }}/hmux-ios-upload/export/hmux-resigned.ipa
           if-no-files-found: error
           retention-days: 14
 
@@ -970,8 +970,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/ios-candidate"
-          cp "$RUNNER_TEMP/cmux-ios-upload/export/cmux-resigned.ipa" "$RUNNER_TEMP/ios-candidate/"
-          ditto -c -k --keepParent "$RUNNER_TEMP/cmux-ios-upload/cmux.xcarchive/dSYMs" "$RUNNER_TEMP/ios-candidate/dSYMs.zip"
+          cp "$RUNNER_TEMP/hmux-ios-upload/export/hmux-resigned.ipa" "$RUNNER_TEMP/ios-candidate/"
+          ditto -c -k --keepParent "$RUNNER_TEMP/hmux-ios-upload/hmux.xcarchive/dSYMs" "$RUNNER_TEMP/ios-candidate/dSYMs.zip"
           python3 - <<'PYTHON'
           import hashlib, json, os
           from pathlib import Path
@@ -1003,7 +1003,7 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          cache_path="$RUNNER_TEMP/cmux-ios-upload/DerivedData/CompilationCache.noindex"
+          cache_path="$RUNNER_TEMP/hmux-ios-upload/DerivedData/CompilationCache.noindex"
           max_cache_kib=$((5 * 1024 * 1024))
           save=false
           if [ -d "$cache_path" ]; then
@@ -1032,7 +1032,7 @@ jobs:
           CI_CACHE_R2_BUCKET: ${{ vars.CI_CACHE_R2_BUCKET }}
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ runner.temp }}/cmux-ios-upload/DerivedData/CompilationCache.noindex
+          path: ${{ runner.temp }}/hmux-ios-upload/DerivedData/CompilationCache.noindex
           key: xcode-compilation-ios-testflight-${{ steps.distribution.outputs.bundle_id }}-${{ runner.os }}-${{ runner.arch }}-${{ steps.ios-compilation-cache-key.outputs.toolchain }}-${{ github.sha }}
 
       # test-ios.yml saves this key only on a seed_cache dispatch, so nothing
@@ -1049,8 +1049,8 @@ jobs:
           CI_CACHE_R2_BUCKET: ${{ vars.CI_CACHE_R2_BUCKET }}
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ runner.temp }}/cmux-ios-spm
-          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          path: ${{ runner.temp }}/hmux-ios-spm
+          key: ios-spm-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('.xcode-version') }}-${{ hashFiles('ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
       - name: Save deferred TestFlight notes request
         id: notes_request
         if: ${{ !cancelled() && steps.upload.outcome == 'success' && github.event.inputs.prepare_only != 'true' && steps.distribution.outputs.upload_mode != 'marketing_version_override' }}
@@ -1111,7 +1111,7 @@ jobs:
             echo "- signing: manual (CI-imported iOS distribution cert + beta profile)"
             if [ -n "${INPUT_MARKETING_VERSION_OVERRIDE:-}" ]; then
               echo "- marketing version override: \`${INPUT_MARKETING_VERSION_OVERRIDE}\`"
-              echo "- external groups: Founder's Edition and cmux Pro"
+              echo "- external groups: Founder's Edition and hmux Pro"
             else
               echo "- marketing version: checked-in beta marketing version"
             fi
@@ -1148,7 +1148,7 @@ jobs:
         # 20260730090940). Keyed by variant + CFBundleVersion so a crash
         # report's build number finds the right bundle. The override path is
         # excluded like the canonical metadata artifact: it archives on a fleet
-        # Mac via cloud-testflight.sh, not under CMUX_IOS_UPLOAD_DIR.
+        # Mac via cloud-testflight.sh, not under HMUX_IOS_UPLOAD_DIR.
         # Gated on the UPLOAD step's outcome, not whole-job success(): once the
         # IPA reached TestFlight its symbols must be persisted even if a later
         # step (summary/metadata artifact) failed, or a shipped build becomes
@@ -1157,7 +1157,7 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: ios-dsyms-${{ needs.decide.outputs.variant }}-${{ steps.upload.outputs.final_build_number }}
-          path: ${{ runner.temp }}/cmux-ios-upload/cmux.xcarchive/dSYMs
+          path: ${{ runner.temp }}/hmux-ios-upload/hmux.xcarchive/dSYMs
           if-no-files-found: error
           retention-days: 30
 
@@ -1173,14 +1173,14 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: manaflow
-          SENTRY_PROJECT: cmux-ios
+          SENTRY_PROJECT: hmux-ios
         run: |
           if [ -z "$SENTRY_AUTH_TOKEN" ]; then
             echo "SENTRY_AUTH_TOKEN not set, skipping dSYM upload"
             exit 0
           fi
           SENTRY_CLI="$(./scripts/ensure-sentry-cli.sh)"
-          "$SENTRY_CLI" debug-files upload "$RUNNER_TEMP/cmux-ios-upload/cmux.xcarchive/dSYMs"
+          "$SENTRY_CLI" debug-files upload "$RUNNER_TEMP/hmux-ios-upload/hmux.xcarchive/dSYMs"
 
       - name: Cleanup keychain
         if: always()
@@ -1242,13 +1242,13 @@ jobs:
       ASC_API_ISSUER_ID: ${{ secrets.ASC_API_ISSUER_ID }}
       ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
       # Pass ONLY the group id. asc_assign_internal_testflight_group.py reads
-      # both CMUX_TESTFLIGHT_INTERNAL_GROUP_ID and _NAME env vars as argparse
+      # both HMUX_TESTFLIGHT_INTERNAL_GROUP_ID and _NAME env vars as argparse
       # defaults and hard-errors when both are set ("set only one of --group-id
       # or --group-name"), which failed every internal assignment while both
       # repo variables were wired in.
-      # The demo variant assigns to the "cmux DEMO" internal group on the
-      # dev.cmux.app.demo app record instead.
-      CMUX_TESTFLIGHT_INTERNAL_GROUP_ID: ${{ needs.decide.outputs.variant == 'demo' && 'dd5c5cde-05a6-44e5-bd71-c2ec08a3ebfe' || vars.IOS_TESTFLIGHT_INTERNAL_GROUP_ID }}
+      # The demo variant assigns to the "hmux DEMO" internal group on the
+      # dev.hmux.app.demo app record instead.
+      HMUX_TESTFLIGHT_INTERNAL_GROUP_ID: ${{ needs.decide.outputs.variant == 'demo' && 'dd5c5cde-05a6-44e5-bd71-c2ec08a3ebfe' || vars.IOS_TESTFLIGHT_INTERNAL_GROUP_ID }}
       ASSIGN_BUNDLE_ID: ${{ needs.upload.outputs.bundle_id }}
       BUILD_NUMBER: ${{ needs.upload.outputs.final_build_number }}
     steps:

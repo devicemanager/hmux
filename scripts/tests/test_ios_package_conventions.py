@@ -16,7 +16,7 @@ class NamespaceLintTests(unittest.TestCase):
                 path = root / 'scripts' / name
                 if path.exists():
                     shutil.copy2(path, scripts / name)
-            package = checkout / 'Packages/iOS/CmuxMobileFixture/Sources/Fixture'
+            package = checkout / 'Packages/iOS/HmuxMobileFixture/Sources/Fixture'
             package.mkdir(parents=True)
             (package / 'Fixture.swift').write_text(source)
             return subprocess.run(

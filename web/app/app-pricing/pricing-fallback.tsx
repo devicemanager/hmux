@@ -13,7 +13,7 @@ export const unknownPlan: AppPlanSnapshot = {
 export function AppPricingFallback() {
   return (
     <AppPricingContent
-      params={{ cmux_app: "1", cmux_distribution: "appstore" }}
+      params={{ hmux_app: "1", hmux_distribution: "appstore" }}
       headersList={new Headers()}
       snapshot={unknownPlan}
       goPlanEnabled={false}

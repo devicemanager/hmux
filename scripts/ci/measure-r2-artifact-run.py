@@ -12,7 +12,7 @@ import subprocess
 REPOSITORY = "manaflow-ai/cmux"
 PRODUCER = "macOS compile admission"
 CONSUMERS = {"tests-build-and-lag", *(f"app-host unit tests ({index}/6)" for index in range(1, 7))}
-MARKERS = ("CMUX_TEST_PRODUCT_TRANSFER ", "CMUX_R2_ARTIFACT_ATTEMPT ", "CMUX_TEST_PRODUCT_RESTORE ")
+MARKERS = ("HMUX_TEST_PRODUCT_TRANSFER ", "HMUX_R2_ARTIFACT_ATTEMPT ", "HMUX_TEST_PRODUCT_RESTORE ")
 
 
 def job_name(job: dict) -> str:
@@ -114,9 +114,9 @@ def summarize(run: dict, jobs: list[dict], records_by_job: dict[int, list[dict]]
     for job in consumers:
         job_id = int(job["id"])
         records = records_by_job.get(job_id, [])
-        transfers = [record for record in records if record.get("_marker") == "CMUX_TEST_PRODUCT_TRANSFER"]
-        attempts = [record for record in records if record.get("_marker") == "CMUX_R2_ARTIFACT_ATTEMPT"]
-        restores = [record for record in records if record.get("_marker") == "CMUX_TEST_PRODUCT_RESTORE"]
+        transfers = [record for record in records if record.get("_marker") == "HMUX_TEST_PRODUCT_TRANSFER"]
+        attempts = [record for record in records if record.get("_marker") == "HMUX_R2_ARTIFACT_ATTEMPT"]
+        restores = [record for record in records if record.get("_marker") == "HMUX_TEST_PRODUCT_RESTORE"]
         transfer = transfers[-1] if transfers else None
         attempt = attempts[-1] if attempts else None
         restore = restores[-1] if restores else None

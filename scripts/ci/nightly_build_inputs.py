@@ -3,7 +3,7 @@
 
 `detect_ci_change_areas` already answers "can this path change Release app
 bytes" for pull requests, including the carve-outs that are easy to get wrong:
-the app bundles `skills/cmux-cua` as a folder resource, so skill Markdown
+the app bundles `skills/hmux-cua` as a folder resource, so skill Markdown
 outside that folder is neutral while everything inside it is a build input.
 Reusing that classifier keeps one definition of an app build input.
 
@@ -17,8 +17,8 @@ skippable by being added somewhere this file does not know about.
 
 The Nightly also does work no pull-request lane does. It signs, prebuilds
 Sparkle deltas, generates the appcast, and publishes, so every path its own
-workflow runs is an input. It bundles a cmux-tui client chosen by the commits
-`scripts/ci/resolve-cmux-tui-client-commit.sh` looks at, and publishes remote
+workflow runs is an input. It bundles a hmux-tui client chosen by the commits
+`scripts/ci/resolve-hmux-tui-client-commit.sh` looks at, and publishes remote
 daemon assets built from `daemon/remote`. In the other direction the Nightly
 resolves its own jobs, so pull-request CI configuration it never reads cannot
 change what it ships.
@@ -42,7 +42,7 @@ import detect_ci_change_areas as detect  # noqa: E402
 ROOT = Path(__file__).resolve().parents[2]
 NIGHTLY_WORKFLOW_PATH = ".github/workflows/nightly.yml"
 
-# Repository paths named by the workflow: `scripts/sign-cmux-bundle.sh`,
+# Repository paths named by the workflow: `scripts/sign-hmux-bundle.sh`,
 # `./.github/actions/cache-restore`, `python3 scripts/ci/upload-r2-object.py`.
 _REFERENCED_PATH_RE = re.compile(
     r"(?<![\w.-])\.?/?((?:scripts|\.github/(?:actions|scripts|workflows))"
@@ -55,7 +55,7 @@ _REFERENCED_PATH_RE = re.compile(
 # them, which is why the router calls the sources neutral.
 NIGHTLY_SHIPPED_SOURCES = ("daemon/remote/",)
 
-TUI_CLIENT_RESOLVER = "scripts/ci/resolve-cmux-tui-client-commit.sh"
+TUI_CLIENT_RESOLVER = "scripts/ci/resolve-hmux-tui-client-commit.sh"
 _TUI_CLIENT_PATHS_RE = re.compile(r"^PATHS=\(([^)]*)\)", re.MULTILINE)
 
 
@@ -73,12 +73,12 @@ def nightly_workflow_inputs(root: Path) -> frozenset[str]:
 
 
 def bundled_paths(root: Path) -> frozenset[str]:
-    """Repository paths the cmux target copies into the app bundle.
+    """Repository paths the hmux target copies into the app bundle.
 
     Read from the Xcode project, because the pull-request router excuses some
     of these: it asks whether a Release compile is needed, and a script copied
     into the bundle compiles nothing. Covers the resource and copy-files
-    phases, which is where `skills/cmux-cua`, `Resources/bin/*` and
+    phases, which is where `skills/hmux-cua`, `Resources/bin/*` and
     `scripts/setup-pam-tid.sh` enter the app.
     """
     project = (root / detect.MACOS_XCODE_PROJECT_PATH).read_text(encoding="utf-8")
@@ -111,15 +111,15 @@ def bundled_paths(root: Path) -> frozenset[str]:
                 continue
             paths.add(detect.normalize_path(detect._pbx_field(reference, "path")))
     if not paths:
-        raise ValueError("the cmux target bundles no repository path")
+        raise ValueError("the hmux target bundles no repository path")
     return frozenset(paths)
 
 
 def tui_client_paths(root: Path) -> frozenset[str]:
-    """Paths that select which cmux-tui client the Nightly bundles.
+    """Paths that select which hmux-tui client the Nightly bundles.
 
     The resolver publishes a client per commit touching these, and the Nightly
-    installs the newest one into cmux.app, so a change to any of them changes
+    installs the newest one into hmux.app, so a change to any of them changes
     what ships even when the app itself is untouched.
     """
     text = (root / TUI_CLIENT_RESOLVER).read_text(encoding="utf-8")
@@ -148,7 +148,7 @@ def is_pull_request_ci_config(path: str) -> bool:
     The Nightly resolves its own jobs and reads none of these files. Reached
     only after the workflow, bundled and client-selecting paths above, which is
     where the workflow files the Nightly does depend on are matched -- its own,
-    and the two that decide which cmux-tui client it installs.
+    and the two that decide which hmux-tui client it installs.
     """
     return path == detect.CI_WORKFLOW_PATH or detect.is_other_workflow_config(path)
 
@@ -172,7 +172,7 @@ def build_inputs_changed(paths: list[str], root: Path = ROOT) -> tuple[bool, str
         if runs_in_nightly(path, bundled):
             return True, f"{path} is copied into the app the Nightly publishes"
         if runs_in_nightly(path, tui_client):
-            return True, f"{path} selects the cmux-tui client the Nightly bundles"
+            return True, f"{path} selects the hmux-tui client the Nightly bundles"
         if path.startswith(NIGHTLY_SHIPPED_SOURCES):
             return True, f"{path} is built into what the Nightly publishes"
         if is_pull_request_ci_config(path):
@@ -180,7 +180,7 @@ def build_inputs_changed(paths: list[str], root: Path = ROOT) -> tuple[bool, str
         candidates.append(path)
     if not candidates:
         return False, "only pull-request CI configuration changed"
-    # `cli` covers the cmux-cli target, whose product the cmux target copies
+    # `cli` covers the hmux-cli target, whose product the hmux target copies
     # into the bundle; a CLI-only change ships without needing a Release
     # compile, which is the only thing `release_build` answers.
     if not _reaches_the_app(detect.classify_files(candidates)):

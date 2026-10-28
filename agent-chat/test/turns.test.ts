@@ -235,7 +235,7 @@ if (reopenFromMidClose[0].height !== "110px" || reopenFromMidClose[0].opacity !=
   throw new Error(`interrupted reopen should continue from current height instead of snap to start: ${JSON.stringify(reopenFromMidClose)}`);
 }
 
-// cmux agent messages stay visible at the top of the turn they arrived in; a
+// hmux agent messages stay visible at the top of the turn they arrived in; a
 // message that woke an idle agent, or continued it after its reply, starts a turn.
 const messageBlocks = [
   { kind: "user", text: "cut the release" },

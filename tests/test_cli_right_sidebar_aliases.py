@@ -21,8 +21,8 @@ class SidebarHandler(socketserver.StreamRequestHandler):
 
 class SidebarAliasTests(unittest.TestCase):
     def test_aliases_send_the_canonical_cloud_mode(self):
-        cli = os.environ["CMUX_CLI_BIN"]
-        env = {k: v for k, v in os.environ.items() if not k.startswith("CMUX_")}
+        cli = os.environ["HMUX_CLI_BIN"]
+        env = {k: v for k, v in os.environ.items() if not k.startswith("HMUX_")}
         with tempfile.TemporaryDirectory(prefix="sidebar-alias-", dir="/tmp") as root:
             test_home = str(Path(root) / "home")
             Path(test_home).mkdir()

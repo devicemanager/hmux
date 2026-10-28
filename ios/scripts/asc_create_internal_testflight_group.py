@@ -4,7 +4,7 @@
 Creates a new internal beta group for dogfooding builds and outputs the group ID.
 
 Usage:
-  ./ios/scripts/asc_create_internal_testflight_group.py --bundle-id dev.cmux.app.beta --group-name "cmux internal"
+  ./ios/scripts/asc_create_internal_testflight_group.py --bundle-id dev.hmux.app.beta --group-name "hmux internal"
 
 Auth comes from ASC environment:
   ASC_API_KEY_ID, ASC_API_ISSUER_ID, and either ASC_API_KEY_PATH or ASC_API_KEY_P8_BASE64.
@@ -171,7 +171,7 @@ def main() -> int:
     print(f"Created internal TestFlight group: {group_name}")
     print(f"Group ID: {group_id}")
     print()
-    print("Add these GitHub repository variables to cmux:")
+    print("Add these GitHub repository variables to hmux:")
     print(f'  IOS_TESTFLIGHT_INTERNAL_GROUP_ID = {group_id}')
     print(f'  IOS_TESTFLIGHT_INTERNAL_GROUP_NAME = {group_name}')
     return 0

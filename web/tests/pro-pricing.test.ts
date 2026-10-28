@@ -27,13 +27,13 @@ describe("pricing plans", () => {
         billedAmount: 50,
         monthlyEquivalent: 50,
         discountPercent: 0,
-        lookupKey: "cmux-pro-monthly-50",
+        lookupKey: "hmux-pro-monthly-50",
       },
       year: {
         billedAmount: 480,
         monthlyEquivalent: 40,
         discountPercent: 20,
-        lookupKey: "cmux-pro-yearly-480",
+        lookupKey: "hmux-pro-yearly-480",
       },
     });
   });
@@ -43,7 +43,7 @@ describe("pricing plans", () => {
       billedAmount: 60,
       monthlyEquivalent: 60,
       discountPercent: 0,
-      lookupKey: "cmux-team-monthly-60",
+      lookupKey: "hmux-team-monthly-60",
     });
     expect("year" in TEAM_PRICING_USD).toBe(false);
   });
@@ -54,13 +54,13 @@ describe("pricing plans", () => {
         billedAmount: 200,
         monthlyEquivalent: 200,
         discountPercent: 0,
-        lookupKey: "cmux-max-monthly-200",
+        lookupKey: "hmux-max-monthly-200",
       },
       year: {
         billedAmount: 1920,
         monthlyEquivalent: 160,
         discountPercent: 20,
-        lookupKey: "cmux-max-yearly-1920",
+        lookupKey: "hmux-max-yearly-1920",
       },
     });
     expect(MAX_BILLING_INTERVALS).toEqual(["month", "year"]);
@@ -78,12 +78,12 @@ describe("pricing plans", () => {
       expect(LEGACY_PRICE_LOOKUP_KEYS).not.toContain(price.lookupKey);
     }
     expect(LEGACY_PRICE_LOOKUP_KEYS).toEqual([
-      "cmux-pro-monthly",
-      "cmux-pro-yearly",
-      "cmux-pro-yearly-288",
-      "cmux-team-monthly",
-      "cmux-team-yearly-336",
-      "cmux-team-yearly-576",
+      "hmux-pro-monthly",
+      "hmux-pro-yearly",
+      "hmux-pro-yearly-288",
+      "hmux-team-monthly",
+      "hmux-team-yearly-336",
+      "hmux-team-yearly-576",
     ]);
   });
 
@@ -130,7 +130,7 @@ describe("VM defaults and pricing copy", () => {
   test("an image reservation includes an operator disk override", () => {
     expect(vmResourceReservationForCreate({
       imageSize: { cpu: 1, memoryMb: 4096, storageMb: 16384 },
-      env: { CMUX_VM_DISK_MB: "65536" },
+      env: { HMUX_VM_DISK_MB: "65536" },
     })).toEqual({ vcpus: 1, memoryMb: 4096, diskMb: 65536 });
   });
 

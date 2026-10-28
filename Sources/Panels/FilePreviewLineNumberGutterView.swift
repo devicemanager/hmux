@@ -1,6 +1,6 @@
 import AppKit
-import CmuxFilePreviewCore
-import CmuxSyntaxHighlighting
+import HmuxFilePreviewCore
+import HmuxSyntaxHighlighting
 
 /// TextKit 1 line-number ruler. Draws only fragments that intersect the viewport.
 ///

@@ -20,13 +20,13 @@ export async function GET(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/network",
-    { "cmux.vm.operation": "network_policy_get" },
+    { "hmux.vm.operation": "network_policy_get" },
     "/api/vm/[id]/network GET failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      span.setAttribute("cmux.vm.id", id);
+      span.setAttribute("hmux.vm.id", id);
       const run = await runVmRoute(getVmNetworkPolicy({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,
@@ -52,7 +52,7 @@ export async function PUT(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/network",
-    { "cmux.vm.operation": "network_policy_update" },
+    { "hmux.vm.operation": "network_policy_update" },
     "/api/vm/[id]/network PUT failed",
     async ({ user, span }) => {
       const { id } = await params;
@@ -66,8 +66,8 @@ export async function PUT(
       }
       const parsed = parseNetworkPolicyBody(body);
       if (!parsed.ok) return parsed.response;
-      span.setAttribute("cmux.vm.id", id);
-      span.setAttribute("cmux.vm.network.mode", parsed.policy.mode);
+      span.setAttribute("hmux.vm.id", id);
+      span.setAttribute("hmux.vm.network.mode", parsed.policy.mode);
       const run = await runVmRoute(updateVmNetworkPolicy({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

@@ -108,44 +108,44 @@ FACADE_ONLY_CASES: list[tuple[list[str], int, str]] = [
 
 
 class CliTimeout(Exception):
-    """A spawned cmux outlived its deadline; reported as its own failure so a
+    """A spawned hmux outlived its deadline; reported as its own failure so a
     hang is never compared as if it were an exit code."""
 
 
 def run(
     cli: str, args: list[str], legacy: bool, socket_path: str, home: str
 ) -> subprocess.CompletedProcess:
-    # A per-run home for both parsers: these cases spawn the real cmux binary,
+    # A per-run home for both parsers: these cases spawn the real hmux binary,
     # and a runner that reads or writes user state must not reach the developer's
-    # (or the CI app host's) actual ~/.local/state/cmux or config.
+    # (or the CI app host's) actual ~/.local/state/hmux or config.
     env = {
         **os.environ,
-        "CMUX_SOCKET_PATH": socket_path,
+        "HMUX_SOCKET_PATH": socket_path,
         "HOME": home,
         "CFFIXED_USER_HOME": home,
     }
     if legacy:
-        env["CMUX_CLI_LEGACY_PARSER"] = "1"
+        env["HMUX_CLI_LEGACY_PARSER"] = "1"
     else:
-        env.pop("CMUX_CLI_LEGACY_PARSER", None)
+        env.pop("HMUX_CLI_LEGACY_PARSER", None)
     try:
         return subprocess.run(
             [cli, *args], text=True, capture_output=True, check=False, timeout=30.0, env=env,
         )
     except subprocess.TimeoutExpired as exc:
         parser = "legacy" if legacy else "facade"
-        raise CliTimeout(f"cmux {' '.join(args)} ({parser} parser) timed out after {exc.timeout}s") from exc
+        raise CliTimeout(f"hmux {' '.join(args)} ({parser} parser) timed out after {exc.timeout}s") from exc
 
 
 def main() -> int:
-    cli = os.environ.get("CMUX_CLI_BIN")
+    cli = os.environ.get("HMUX_CLI_BIN")
     if not cli or not os.access(cli, os.X_OK):
-        print("FAIL: set CMUX_CLI_BIN to the built cmux binary")
+        print("FAIL: set HMUX_CLI_BIN to the built hmux binary")
         return 1
 
     failures: list[str] = []
     with tempfile.TemporaryDirectory() as tmpdir:
-        socket_path = os.path.join(tmpdir, "cmux-facade-behavior-parity-absent.sock")
+        socket_path = os.path.join(tmpdir, "hmux-facade-behavior-parity-absent.sock")
         home = os.path.join(tmpdir, "home")
         os.mkdir(home)
         for args, description in CASES:
@@ -157,7 +157,7 @@ def main() -> int:
                 continue
             if facade.returncode != legacy.returncode or facade.stderr != legacy.stderr:
                 failures.append(
-                    f"cmux {' '.join(args)} ({description}): "
+                    f"hmux {' '.join(args)} ({description}): "
                     f"facade exit {facade.returncode} != legacy exit {legacy.returncode}\n"
                     f"  facade stderr: {facade.stderr.strip()!r}\n"
                     f"  legacy stderr: {legacy.stderr.strip()!r}"
@@ -178,7 +178,7 @@ def main() -> int:
                     continue
                 parser = "legacy" if legacy else "facade"
                 failures.append(
-                    f"cmux {option}={value} {' '.join(GLOBAL_OPTION_EQUALS_COMMAND)} ({parser} parser): "
+                    f"hmux {option}={value} {' '.join(GLOBAL_OPTION_EQUALS_COMMAND)} ({parser} parser): "
                     f"exit {equals.returncode} != exit {spaced.returncode} for the spaced spelling\n"
                     f"  equals stderr: {equals.stderr.strip()!r}\n"
                     f"  spaced stderr: {spaced.stderr.strip()!r}"
@@ -192,7 +192,7 @@ def main() -> int:
                 continue
             if facade.returncode != expected_exit_code:
                 failures.append(
-                    f"cmux {' '.join(args)} ({description}): "
+                    f"hmux {' '.join(args)} ({description}): "
                     f"facade exit {facade.returncode} != expected {expected_exit_code}\n"
                     f"  facade stderr: {facade.stderr.strip()!r}"
                 )

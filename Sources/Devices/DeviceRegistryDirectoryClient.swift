@@ -1,7 +1,7 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Reads the team's durable device registry (`GET /api/devices`), the source
@@ -24,7 +24,7 @@ actor DeviceRegistryDirectoryClient {
         let platform: String
         let displayName: String?
         /// `labels.manual == true`: a remote the person added by hand with
-        /// `cmux remotes add`, not a Mac running cmux.
+        /// `hmux remotes add`, not a Mac running hmux.
         let isManual: Bool
         let lastSeenAt: Date?
         let instances: [Instance]
@@ -74,7 +74,7 @@ actor DeviceRegistryDirectoryClient {
         request.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
         request.setValue(tokens.refreshToken, forHTTPHeaderField: "X-Stack-Refresh-Token")
         if let teamID, !teamID.isEmpty {
-            request.setValue(teamID, forHTTPHeaderField: "X-Cmux-Team-Id")
+            request.setValue(teamID, forHTTPHeaderField: "X-Hmux-Team-Id")
         }
         let (data, response) = try await session.data(for: request)
         guard let http = response as? HTTPURLResponse else { throw ListError.malformedResponse }

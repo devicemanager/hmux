@@ -18,7 +18,7 @@ test("the owning Mac can recover a forgotten registration with fresh Stack auth"
   const rawPublic = await crypto.subtle.exportKey("raw", keyPair.publicKey) as ArrayBuffer;
   const endpointID = Array.from(new Uint8Array(rawPublic), byte => byte.toString(16).padStart(2, "0")).join("");
   const descriptor = {
-    identity: { environment: authority.environment, projectId: authority.projectId, teamId: authority.teamId, userId: authority.userId, deviceId: "mac", appNamespace: "cmux", buildTag: "test" },
+    identity: { environment: authority.environment, projectId: authority.projectId, teamId: authority.teamId, userId: authority.userId, deviceId: "mac", appNamespace: "hmux", buildTag: "test" },
     endpointId: endpointID,
     identityGeneration: 1,
     metadata: { platform: "mac" as const, displayName: "Mac", appVersion: "1", pairingEnabled: true, capabilities: [], relayURLs: [] },

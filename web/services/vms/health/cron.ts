@@ -25,7 +25,7 @@ export async function handleVmHealthCron(request: Request, deps: VmHealthCronDep
     });
   }
   const result = await deps.sweep(sweepOptionsFromEnv(deps.env));
-  const origin = deps.env.CMUX_PUBLIC_ORIGIN?.trim() || new URL(request.url).origin;
+  const origin = deps.env.HMUX_PUBLIC_ORIGIN?.trim() || new URL(request.url).origin;
   const alert = await deps.alert(result.report, `${origin}${VM_HEALTH_PAGE_PATH}`);
   const { report } = result;
   // A failed store still alerts on what the sweep found, then answers 500 so
@@ -50,16 +50,16 @@ export async function handleVmHealthCron(request: Request, deps: VmHealthCronDep
 
 /** Operator overrides; anything unparseable keeps the default. */
 export function sweepOptionsFromEnv(env: Record<string, string | undefined>): VmHealthSweepOptions {
-  const budgetMs = positiveInt(env.CMUX_VM_HEALTH_BUDGET_MS);
-  const probeTimeoutMs = positiveInt(env.CMUX_VM_HEALTH_PROBE_TIMEOUT_MS);
-  const probeConcurrency = positiveInt(env.CMUX_VM_HEALTH_PROBE_CONCURRENCY);
+  const budgetMs = positiveInt(env.HMUX_VM_HEALTH_BUDGET_MS);
+  const probeTimeoutMs = positiveInt(env.HMUX_VM_HEALTH_PROBE_TIMEOUT_MS);
+  const probeConcurrency = positiveInt(env.HMUX_VM_HEALTH_PROBE_CONCURRENCY);
   const tlsRuleLimit = positiveInt(env.FREESTYLE_TLS_RULE_LIMIT);
   return {
     // The route's maxDuration is 300s; keep the sweep well inside it.
     ...(budgetMs ? { budgetMs: Math.min(budgetMs, 240_000) } : {}),
     ...(probeTimeoutMs ? { probeTimeoutMs: Math.min(probeTimeoutMs, 30_000) } : {}),
     ...(probeConcurrency ? { probeConcurrency: Math.min(probeConcurrency, 64) } : {}),
-    probeIdleVms: env.CMUX_VM_HEALTH_PROBE_IDLE_VMS === "1",
+    probeIdleVms: env.HMUX_VM_HEALTH_PROBE_IDLE_VMS === "1",
     ...(tlsRuleLimit ? { thresholds: { tlsRuleLimit } } : {}),
   };
 }

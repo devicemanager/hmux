@@ -1,4 +1,4 @@
-# What review keeps catching in cmux
+# What review keeps catching in hmux
 
 > **Draft for Lawrence and Leo to prune.** Mined on 2026-10-18 from 5,618 PRs merged between
 > 2026-09-20 and 2026-10-18 with `scripts/review-history.py`. A rule is here because review
@@ -67,7 +67,7 @@ scripts/review-history.py cluster --cache review-history.jsonl > clusters.md
 - **Every new user-facing string goes through the catalog with every supported locale filled
   in.** "Add translations for every catalog locale" is the single most repeated fix in the
   history (#13302, #15677, #16669, #20066 and dozens more). The
-  [localization skill](skills/cmux-localization/SKILL.md) has the procedure.
+  [localization skill](skills/hmux-localization/SKILL.md) has the procedure.
 - **No English copied into other locales as a placeholder** (#13300), and no hard-coded English in
   CLI usage text, JSX or alerts (#13389, #13319).
 - **Read the translation as a speaker would.** Bots caught ungrammatical Italian, a wrong Arabic
@@ -81,7 +81,7 @@ scripts/review-history.py cluster --cache review-history.jsonl > clusters.md
   waive (#21478, #9193). An error path that turns "can't check" into "allowed" is the bug.
 - **Create private files in private directories** and check ownership before trusting a path
   (CWE-59, #13411). Validate a canonical root before deleting under it (#17207).
-- **Remote relay and socket methods** follow [relay authorization](skills/cmux-socket-policy/references/remote-relay-authorization.md):
+- **Remote relay and socket methods** follow [relay authorization](skills/hmux-socket-policy/references/remote-relay-authorization.md):
   a new method that isn't on the allowlist doesn't work remotely (#18222).
 
 ## 6. Fixed sleeps, timeouts and polling (228)

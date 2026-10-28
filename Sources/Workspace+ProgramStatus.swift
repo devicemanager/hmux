@@ -1,5 +1,5 @@
-import CmuxAgentJournal
-import CmuxSidebar
+import HmuxAgentJournal
+import HmuxSidebar
 import Foundation
 
 extension Workspace {
@@ -16,7 +16,7 @@ extension Workspace {
         let updatedStore = updateProgramStatusStore(panelId: panelId) { $0.apply(report) }
         guard let store = updatedStore else { return }
         scheduleAgentTurnSettlement(panelId: panelId, previous: previousStore, current: store)
-        CmuxEventBus.shared.publishProgramStatusChanged(
+        HmuxEventBus.shared.publishProgramStatusChanged(
             workspaceId: id,
             surfaceId: panelId,
             report: report,
@@ -30,7 +30,7 @@ extension Workspace {
         let updatedStore = updateProgramStatusStore(panelId: panelId, createIfMissing: false) { $0.dropTransient() }
         guard let store = updatedStore else { return }
         scheduleAgentTurnSettlement(panelId: panelId, previous: previousStore, current: store)
-        CmuxEventBus.shared.publishProgramStatusChanged(
+        HmuxEventBus.shared.publishProgramStatusChanged(
             workspaceId: id,
             surfaceId: panelId,
             event: .transientDrop,
@@ -42,7 +42,7 @@ extension Workspace {
     func dismissCompletedProgramStatus(panelId: UUID) {
         let updatedStore = updateProgramStatusStore(panelId: panelId, createIfMissing: false) { $0.dismissCompleted() }
         guard let store = updatedStore else { return }
-        CmuxEventBus.shared.publishProgramStatusChanged(
+        HmuxEventBus.shared.publishProgramStatusChanged(
             workspaceId: id,
             surfaceId: panelId,
             event: .dismissed,
@@ -76,7 +76,7 @@ extension Workspace {
         programStatusStoresByPanelId[panelId] = store
         projectProgramStatus(panelId: panelId)
         guard !store.records.isEmpty else { return }
-        CmuxEventBus.shared.publishProgramStatusChanged(
+        HmuxEventBus.shared.publishProgramStatusChanged(
             workspaceId: id,
             surfaceId: panelId,
             event: .adopted,
@@ -94,7 +94,7 @@ extension Workspace {
         programStatusStoresByPanelId.removeAll()
         programStatusUrgencyByPanelId.removeAll()
         for panelId in clearedPanelIds {
-            CmuxEventBus.shared.publishProgramStatusChanged(
+            HmuxEventBus.shared.publishProgramStatusChanged(
                 workspaceId: id,
                 surfaceId: panelId,
                 event: .clear,
@@ -111,7 +111,7 @@ extension Workspace {
         removePanelStatusEntry(key: Self.programStatusKey, panelId: panelId)
         refreshProgramStatusWorkspaceEntry()
         guard let removedStore, !removedStore.records.isEmpty else { return }
-        CmuxEventBus.shared.publishProgramStatusChanged(
+        HmuxEventBus.shared.publishProgramStatusChanged(
             workspaceId: id,
             surfaceId: panelId,
             event: .removed,
@@ -262,7 +262,7 @@ extension Workspace {
         guard !ProgramStatusAgentSettlement().isActive(statusKey: key, in: store) else { return }
         let source = key == "claude_code" ? "claude" : key
 #if DEBUG
-        cmuxDebugLog("agentTurn.settleFromProgramStatus panel=\(panelId.uuidString.prefix(8)) key=\(key)")
+        hmuxDebugLog("agentTurn.settleFromProgramStatus panel=\(panelId.uuidString.prefix(8)) key=\(key)")
 #endif
         let sessionID = surfaceResumeBindingsByPanelId[panelId].flatMap { binding -> String? in
             guard binding.isAgentHookBinding,

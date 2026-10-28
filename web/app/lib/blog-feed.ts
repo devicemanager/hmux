@@ -39,7 +39,7 @@ export function buildBlogRssFeed(
     `    <language>${escapeXml(metadata.language)}</language>`,
     `    <lastBuildDate>${lastBuildDate}</lastBuildDate>`,
     `    <atom:link href="${metadata.feedUrl}" rel="self" type="application/rss+xml" />`,
-    "    <generator>cmux</generator>",
+    "    <generator>hmux</generator>",
     "    <docs>https://www.rssboard.org/rss-specification</docs>",
     items,
     "  </channel>",

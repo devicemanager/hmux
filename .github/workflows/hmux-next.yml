@@ -1,0 +1,15 @@
+name: hmux-next
+
+# The hmux-next implementation lives on feat-hmux-next. Keep this inert
+# registration on the default branch so workflow_run consumers can subscribe
+# to that workflow name before the branch workflow is merged.
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  registration:
+    runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
+    steps:
+      - run: echo "hmux-next is implemented on feat-hmux-next"

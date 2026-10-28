@@ -1,6 +1,6 @@
-"""scripts/ci/review_receipt.py: gh-merge-green merges into feat-cmux-next only a head with a SHIP review receipt.
+"""scripts/ci/review_receipt.py: gh-merge-green merges into feat-hmux-next only a head with a SHIP review receipt.
 
-Autoland paused 2026-10-21 after it merged cmux#22899 before its re-review (which found cmux#22988); next-autoland
+Autoland paused 2026-10-21 after it merged hmux#22899 before its re-review (which found hmux#22988); next-autoland
 now lands only a head an independent review passed (leo-workspace e2a34f6). gh-merge-green applies the same rule.
 """
 import contextlib
@@ -42,7 +42,7 @@ class ReceiptRules(unittest.TestCase):
         self.assertIn("SHIP", receipt.receipt(pr([comment(SHIP)]), HEAD))
 
     def test_a_ship_must_name_the_full_head(self):
-        # cmux#22762 merged at 3a97b47e on a receipt that named 0b4c5bf3: a prefix is too easy to misread or
+        # hmux#22762 merged at 3a97b47e on a receipt that named 0b4c5bf3: a prefix is too easy to misread or
         # reuse, so a SHIP names all 40 characters of the head (Leo, 2026-10-21).
         for short in (HEAD[:7], HEAD[:12], HEAD[:39]):
             with self.subTest(short=short):
@@ -113,7 +113,7 @@ class ReceiptRules(unittest.TestCase):
 
 class NewestReviewSaysWait(unittest.TestCase):
     """A SHIP receipt on the head does not merge when the newest review-like comment on any head says wait,
-    as next-autoland's review_state() judges it (review of cmux#23067)."""
+    as next-autoland's review_state() judges it (review of hmux#23067)."""
     LATER = "2026-10-21T06:00:00Z"
 
     def refused(self, *later_comments, reviews=()):
@@ -145,7 +145,7 @@ class NewestReviewSaysWait(unittest.TestCase):
 
 
 class BareWaitLine(unittest.TestCase):
-    """Re-review of cmux#23067 at 9d98aee: a first line that is only a verdict ("BLOCK at <sha>", "**BLOCK at
+    """Re-review of hmux#23067 at 9d98aee: a first line that is only a verdict ("BLOCK at <sha>", "**BLOCK at
     <sha>**", "Do not merge") names no review, so review_state() skipped it and the older SHIP merged."""
     LATER = "2026-10-21T06:00:00Z"
 

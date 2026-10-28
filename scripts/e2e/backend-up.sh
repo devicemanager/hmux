@@ -9,7 +9,7 @@
 #                        credentials)                         -> https://$NAME:8443
 #   - workers/presence  (TeamPresence/AccountControlPlane/WorkspacePresence
 #                        Durable Objects)                     -> https://$NAME:8444
-#   - iroh-relay        (upstream n0 relay server, the version cmux-relay
+#   - iroh-relay        (upstream n0 relay server, the version hmux-relay
 #                        wraps)                               -> https://$NAME:10000
 #   - Postgres 16       (iroh-v2's endpoint ownership tables)
 # web/ (Next.js) is deliberately absent: sign-in goes to Stack directly and
@@ -19,7 +19,7 @@
 #
 # The relay is per run, so iroh-v2 signs its relay credentials with a key
 # minted here and no production relay key ever reaches CI. The upstream
-# server does not check cmux's credential JWT (manaflow-ai/cmux-relay tests
+# server does not check hmux's credential JWT (manaflow-ai/cmux-relay tests
 # that); the apps still fetch, validate and install credentials exactly as in
 # production, and the relay-only policy forces the stream through it.
 #
@@ -27,7 +27,7 @@
 # starts empty every run, nothing is built, and nothing is deployed to
 # Cloudflare.
 #
-# TLS: every origin uses one fixed name, $NAME (cmux-e2e-backend on the
+# TLS: every origin uses one fixed name, $NAME (hmux-e2e-backend on the
 # tailnet domain), whose publicly trusted certificate was issued once and is
 # stored in the ios-e2e environment. The apps require https, and the iOS Iroh
 # client checks relay TLS against built-in public roots, so a private CA would
@@ -42,20 +42,20 @@
 # internet or from any other tailnet node.
 #
 # Usage: backend-up.sh up     start and health-check everything, then return
-#        backend-up.sh hold   block until CMUX_E2E_BACKEND_DONE_FILE appears
-#                             or CMUX_E2E_WAIT_TIMEOUT_SECONDS expires
+#        backend-up.sh hold   block until HMUX_E2E_BACKEND_DONE_FILE appears
+#                             or HMUX_E2E_WAIT_TIMEOUT_SECONDS expires
 #        backend-up.sh down   stop and remove everything `up` created; safe to
 #                             run after any partial `up`, and more than once
 #
 # Env contract (docs/ci/ios-e2e.md#per-run-backend):
-#   CMUX_E2E_BACKEND_NAME            fixed certificate name (the origins' host)
-#   CMUX_E2E_TLS_CERT / _KEY         its certificate chain and key (PEM)
-#   CMUX_E2E_BACKEND_STATE_DIR       scratch dir (default $RUNNER_TEMP/e2e-backend)
-#   CMUX_E2E_STACK_PROJECT_ID        dev Stack project (same as the CI account)
-#   CMUX_E2E_STACK_PUBLISHABLE_KEY
-#   CMUX_E2E_STACK_SERVER_KEY
-#   CMUX_E2E_IROH_RELAY_BIN          iroh-relay binary (the workflow caches it)
-#   CMUX_E2E_PRESENCE_WEB_BASE_URL   presence's legacy control-plane upstream
+#   HMUX_E2E_BACKEND_NAME            fixed certificate name (the origins' host)
+#   HMUX_E2E_TLS_CERT / _KEY         its certificate chain and key (PEM)
+#   HMUX_E2E_BACKEND_STATE_DIR       scratch dir (default $RUNNER_TEMP/e2e-backend)
+#   HMUX_E2E_STACK_PROJECT_ID        dev Stack project (same as the CI account)
+#   HMUX_E2E_STACK_PUBLISHABLE_KEY
+#   HMUX_E2E_STACK_SERVER_KEY
+#   HMUX_E2E_IROH_RELAY_BIN          iroh-relay binary (the workflow caches it)
+#   HMUX_E2E_PRESENCE_WEB_BASE_URL   presence's legacy control-plane upstream
 #                                    (default: staging, as its dev config)
 # Failures print [infra-preflight] because nothing here is the product path
 # under test (docs/ci/ios-e2e.md#infra-preflight-failure-labeling). Per-phase
@@ -64,15 +64,15 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-NAME="${CMUX_E2E_BACKEND_NAME:-}"
-STATE="${CMUX_E2E_BACKEND_STATE_DIR:-${RUNNER_TEMP:-/tmp}/e2e-backend}"
+NAME="${HMUX_E2E_BACKEND_NAME:-}"
+STATE="${HMUX_E2E_BACKEND_STATE_DIR:-${RUNNER_TEMP:-/tmp}/e2e-backend}"
 LOGS="$STATE/logs"
 
 IROH_V2_PORT=8787
 PRESENCE_PORT=8788
 RELAY_PORT=3341
-HOSTS_MARKER="# cmux-e2e-backend (scripts/e2e/backend-up.sh)"
-PG_CONTAINER=cmux-e2e-postgres
+HOSTS_MARKER="# hmux-e2e-backend (scripts/e2e/backend-up.sh)"
+PG_CONTAINER=hmux-e2e-postgres
 PG_IMAGE=postgres:16-alpine
 
 STARTED_MS="$(date +%s%3N)"
@@ -109,12 +109,12 @@ wait_http() {
 
 require_secrets() {
   local key missing=()
-  for key in CMUX_E2E_STACK_PROJECT_ID CMUX_E2E_STACK_PUBLISHABLE_KEY \
-      CMUX_E2E_STACK_SERVER_KEY CMUX_E2E_IROH_RELAY_BIN CMUX_E2E_TLS_CERT CMUX_E2E_TLS_KEY; do
+  for key in HMUX_E2E_STACK_PROJECT_ID HMUX_E2E_STACK_PUBLISHABLE_KEY \
+      HMUX_E2E_STACK_SERVER_KEY HMUX_E2E_IROH_RELAY_BIN HMUX_E2E_TLS_CERT HMUX_E2E_TLS_KEY; do
     [[ -n "${!key:-}" ]] || missing+=("$key")
   done
   (( ${#missing[@]} == 0 )) || die config "missing ${missing[*]} (docs/ci/ios-e2e.md#secrets-and-tailnet-identity)"
-  [[ -x "$CMUX_E2E_IROH_RELAY_BIN" ]] || die config "iroh-relay not executable at $CMUX_E2E_IROH_RELAY_BIN"
+  [[ -x "$HMUX_E2E_IROH_RELAY_BIN" ]] || die config "iroh-relay not executable at $HMUX_E2E_IROH_RELAY_BIN"
 }
 
 # Writes the fixed-name certificate to disk and checks it still has time left.
@@ -122,7 +122,7 @@ require_secrets() {
 # the warning gives three weeks' notice, the error stops runs it cannot serve.
 install_certificate() {
   mkdir -p "$STATE/tls"
-  (umask 077; printf '%s\n' "$CMUX_E2E_TLS_CERT" >"$STATE/tls/tls.crt"; printf '%s\n' "$CMUX_E2E_TLS_KEY" >"$STATE/tls/tls.key")
+  (umask 077; printf '%s\n' "$HMUX_E2E_TLS_CERT" >"$STATE/tls/tls.crt"; printf '%s\n' "$HMUX_E2E_TLS_KEY" >"$STATE/tls/tls.key")
   openssl x509 -in "$STATE/tls/tls.crt" -noout -checkhost "$NAME" 2>/dev/null | grep -q 'does match' \
     || die tls "certificate does not cover $NAME"
   openssl x509 -in "$STATE/tls/tls.crt" -noout -checkend $(( 7 * 86400 )) >/dev/null \
@@ -145,7 +145,7 @@ start_postgres() {
   # /etc/hosts maps to 127.0.0.1. fsync off: the database lives for one run.
   docker run -d --name "$PG_CONTAINER" \
     -p "127.0.0.1:5432:5432" \
-    -e POSTGRES_USER=cmux -e POSTGRES_PASSWORD="$pg_password" -e POSTGRES_DB=cmux_v2 \
+    -e POSTGRES_USER=hmux -e POSTGRES_PASSWORD="$pg_password" -e POSTGRES_DB=hmux_v2 \
     -v "$STATE/pg-tls:/tls:ro" \
     "$PG_IMAGE" \
     -c ssl=on -c ssl_cert_file=/tls/tls.crt -c ssl_key_file=/tls/tls.key \
@@ -155,14 +155,14 @@ start_postgres() {
   local deadline=$(( $(date +%s) + 60 ))
   # pg_isready over TCP: the image's init phase answers on the socket first,
   # then restarts, so a socket probe can report ready too early.
-  until docker exec "$PG_CONTAINER" pg_isready -h 127.0.0.1 -U cmux -d cmux_v2 >/dev/null 2>&1; do
+  until docker exec "$PG_CONTAINER" pg_isready -h 127.0.0.1 -U hmux -d hmux_v2 >/dev/null 2>&1; do
     (( $(date +%s) < deadline )) || { docker logs "$PG_CONTAINER" >"$LOGS/postgres.log" 2>&1 || true; die postgres "never became ready"; }
     sleep 0.2
   done
   # iroh-v2 owns no migration runner; these files are its schema.
   local sql
   for sql in "$REPO_ROOT"/workers/iroh-v2/ownership-drizzle/*.sql; do
-    docker exec -i "$PG_CONTAINER" psql -h 127.0.0.1 -v ON_ERROR_STOP=1 -U cmux -d cmux_v2 -q <"$sql" \
+    docker exec -i "$PG_CONTAINER" psql -h 127.0.0.1 -v ON_ERROR_STOP=1 -U hmux -d hmux_v2 -q <"$sql" \
       >>"$LOGS/postgres-run.log" 2>&1 || die postgres "apply $(basename "$sql") failed"
   done
   # Prove what iroh-v2 will require: a verified chain and hostname for the
@@ -204,7 +204,7 @@ http_bind_addr = "127.0.0.1:$RELAY_PORT"
 enable_quic_addr_discovery = false
 enable_metrics = false
 EOF
-  "$CMUX_E2E_IROH_RELAY_BIN" --config-path "$STATE/relay.toml" >"$LOGS/relay.log" 2>&1 &
+  "$HMUX_E2E_IROH_RELAY_BIN" --config-path "$STATE/relay.toml" >"$LOGS/relay.log" 2>&1 &
   echo $! >"$STATE/relay.pid"
 }
 
@@ -217,12 +217,12 @@ start_workers() {
   E2E_VAR_RELAY_SIGNING_KEY="$(openssl genpkey -algorithm ed25519 2>/dev/null || true)"
   E2E_VAR_RELAY_KEY_ID=ci
   E2E_VAR_RELAY_URLS="$(printf '["https://%s:10000/"]' "$NAME")"
-  E2E_VAR_DATABASE_URL="postgres://cmux:${pg_password}@${NAME}:5432/cmux_v2"
+  E2E_VAR_DATABASE_URL="postgres://hmux:${pg_password}@${NAME}:5432/hmux_v2"
   E2E_VAR_STACK_API_URL="https://api.stack-auth.com"
-  E2E_VAR_STACK_PROJECT_ID="$CMUX_E2E_STACK_PROJECT_ID"
-  E2E_VAR_STACK_PUBLISHABLE_KEY="$CMUX_E2E_STACK_PUBLISHABLE_KEY"
-  E2E_VAR_STACK_SERVER_KEY="$CMUX_E2E_STACK_SERVER_KEY"
-  E2E_VAR_STACK_PUBLISHABLE_CLIENT_KEY="$CMUX_E2E_STACK_PUBLISHABLE_KEY"
+  E2E_VAR_STACK_PROJECT_ID="$HMUX_E2E_STACK_PROJECT_ID"
+  E2E_VAR_STACK_PUBLISHABLE_KEY="$HMUX_E2E_STACK_PUBLISHABLE_KEY"
+  E2E_VAR_STACK_SERVER_KEY="$HMUX_E2E_STACK_SERVER_KEY"
+  E2E_VAR_STACK_PUBLISHABLE_CLIENT_KEY="$HMUX_E2E_STACK_PUBLISHABLE_KEY"
   [[ "$E2E_VAR_RELAY_SIGNING_KEY" == "-----BEGIN PRIVATE KEY-----"* ]] || die config "openssl could not mint an Ed25519 key"
   export E2E_VAR_API_TICKET_KEYS E2E_VAR_API_TICKET_CURRENT_KEY_ID E2E_VAR_RELAY_URLS \
     E2E_VAR_DATABASE_URL E2E_VAR_STACK_API_URL E2E_VAR_STACK_PROJECT_ID \
@@ -237,7 +237,7 @@ start_workers() {
     E2E_VAR_STACK_PROJECT_ID E2E_VAR_STACK_PUBLISHABLE_CLIENT_KEY E2E_VAR_STACK_API_URL
 
   # `--env development` gives iroh-v2 ENVIRONMENT=development, which must equal
-  # the apps' CMUX_IROH_V2_ENVIRONMENT. Durable Object state persists only
+  # the apps' HMUX_IROH_V2_ENVIRONMENT. Durable Object state persists only
   # under this run's scratch dir.
   export WRANGLER_SEND_METRICS=false CI=1
   (cd "$REPO_ROOT/workers/iroh-v2" && exec node_modules/.bin/wrangler dev --env development \
@@ -248,7 +248,7 @@ start_workers() {
   (cd "$REPO_ROOT/workers/presence" && exec node_modules/.bin/wrangler dev --config wrangler.toml \
       --ip 127.0.0.1 --port "$PRESENCE_PORT" --persist-to "$STATE/wrangler-presence" \
       --inspector-port 9231 --show-interactive-dev-session=false \
-      --var "CMUX_WEB_BASE_URL:${CMUX_E2E_PRESENCE_WEB_BASE_URL:-https://cmux-staging.vercel.app}" \
+      --var "HMUX_WEB_BASE_URL:${HMUX_E2E_PRESENCE_WEB_BASE_URL:-https://cmux-staging.vercel.app}" \
       >"$LOGS/presence.log" 2>&1) &
   echo $! >"$STATE/presence.pid"
 }
@@ -261,7 +261,7 @@ start_tls_forward() {
 }
 
 up() {
-  : "${CMUX_E2E_BACKEND_NAME:?CMUX_E2E_BACKEND_NAME is required}"
+  : "${HMUX_E2E_BACKEND_NAME:?HMUX_E2E_BACKEND_NAME is required}"
   require_secrets
   mkdir -p "$LOGS"
   [[ -n "${GITHUB_STEP_SUMMARY:-}" ]] && printf '### Backend bring-up\n| phase | since start |\n| --- | --- |\n' >>"$GITHUB_STEP_SUMMARY"
@@ -292,8 +292,8 @@ up() {
 }
 
 hold() {
-  local done_file="${CMUX_E2E_BACKEND_DONE_FILE:?CMUX_E2E_BACKEND_DONE_FILE is required}"
-  local budget="${CMUX_E2E_WAIT_TIMEOUT_SECONDS:-1800}" deadline
+  local done_file="${HMUX_E2E_BACKEND_DONE_FILE:?HMUX_E2E_BACKEND_DONE_FILE is required}"
+  local budget="${HMUX_E2E_WAIT_TIMEOUT_SECONDS:-1800}" deadline
   deadline=$(( $(date +%s) + budget ))
   phase hold "serving until $done_file appears (budget ${budget}s)"
   until [[ -f "$done_file" ]]; do

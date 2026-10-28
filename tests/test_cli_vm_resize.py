@@ -88,15 +88,15 @@ class ResizeSocket:
 class VMResizeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.cli = os.environ.get("CMUX_CLI_BIN", "")
+        cls.cli = os.environ.get("HMUX_CLI_BIN", "")
         if not cls.cli or not os.access(cls.cli, os.X_OK):
-            raise RuntimeError("Set CMUX_CLI_BIN to the built CLI")
+            raise RuntimeError("Set HMUX_CLI_BIN to the built CLI")
 
     def run_cli(self, path: str, args: list[str]) -> subprocess.CompletedProcess[str]:
-        environment = {key: value for key, value in os.environ.items() if not key.startswith("CMUX")}
+        environment = {key: value for key, value in os.environ.items() if not key.startswith("HMUX")}
         environment.update({
-            "CMUX_SOCKET_PATH": path,
-            "CMUX_CLI_SENTRY_DISABLED": "1",
+            "HMUX_SOCKET_PATH": path,
+            "HMUX_CLI_SENTRY_DISABLED": "1",
             "AppleLanguages": "(en)",
             "LANG": "en_US.UTF-8",
             "LC_ALL": "en_US.UTF-8",
@@ -199,7 +199,7 @@ class VMResizeTests(unittest.TestCase):
             with self.subTest(cpu=cpu), ResizeSocket(limits=limits) as server:
                 result = self.run_cli(server.path, ["vm", "resize", "existing-vm", "--cpu", str(cpu)])
                 self.assertNotEqual(result.returncode, 0)
-                self.assertIn("cmux Pro plan", result.stderr)
+                self.assertIn("hmux Pro plan", result.stderr)
                 self.assertEqual([request["method"] for request in server.requests], ["vm.list"])
 
     def test_list_failure_fails_closed_without_resize_mutation(self) -> None:

@@ -5,7 +5,7 @@ set -euo pipefail
 DEST="${TARGET_BUILD_DIR}/${UNLOCALIZED_RESOURCES_FOLDER_PATH}"
 GHOSTTY_DEST="${DEST}/ghostty"
 TERMINFO_DEST="${DEST}/terminfo"
-CMUX_SHELL_DEST="${DEST}/shell-integration"
+HMUX_SHELL_DEST="${DEST}/shell-integration"
 BIN_DEST="${DEST}/bin"
 LIBEXEC_DEST="${DEST}/libexec"
 SRC_SHARE="${SRCROOT}/ghostty/zig-out/share"
@@ -14,21 +14,21 @@ TERMINFO_SRC="${SRC_SHARE}/terminfo"
 FALLBACK_GHOSTTY="${SRCROOT}/Resources/ghostty"
 FALLBACK_TERMINFO="${SRCROOT}/Resources/ghostty/terminfo"
 TERMINFO_OVERLAY="${SRCROOT}/Resources/terminfo-overlay"
-CMUX_SHELL_SRC="${SRCROOT}/Resources/shell-integration"
+HMUX_SHELL_SRC="${SRCROOT}/Resources/shell-integration"
 GHOSTTY_SHELL_SRC="${SRCROOT}/ghostty/src/shell-integration"
-CMUX_GHOSTTY_ZSH_SRC="${SRCROOT}/ghostty/src/shell-integration/zsh/ghostty-integration"
+HMUX_GHOSTTY_ZSH_SRC="${SRCROOT}/ghostty/src/shell-integration/zsh/ghostty-integration"
 BUILD_GHOSTTY_HELPER="${SRCROOT}/scripts/build-ghostty-cli-helper.sh"
 GHOSTTY_HELPER_DEST="${BIN_DEST}/ghostty"
-BUILD_CMUX_CUA="${SRCROOT}/scripts/build-cmux-cua.sh"
-APPLY_CMUX_CUA_PATCH="${SRCROOT}/scripts/apply-cmux-cua-patch.sh"
-CMUX_CUA_PATCH="${SRCROOT}/scripts/cmux-cua-codex-delivery-mode.patch"
-# The cmux-cua engine ships once, as the Computer Use helper's executable.
+BUILD_HMUX_CUA="${SRCROOT}/scripts/build-hmux-cua.sh"
+APPLY_HMUX_CUA_PATCH="${SRCROOT}/scripts/apply-hmux-cua-patch.sh"
+HMUX_CUA_PATCH="${SRCROOT}/scripts/hmux-cua-codex-delivery-mode.patch"
+# The hmux-cua engine ships once, as the Computer Use helper's executable.
 # Builds before that also copied it, with its license, into Resources/bin.
-LEGACY_CMUX_CUA_CLIENT="${BIN_DEST}/cmux-cua"
-LEGACY_CMUX_CUA_LICENSE="${BIN_DEST}/cmux-cua-LICENSE.md"
-CMUX_CUA_HELPER_APP="${DEST}/../Library/cmux Computer Use.app"
-CMUX_CUA_HELPER_OWNER_MARKER="${CMUX_CUA_HELPER_APP}/Contents/Resources/.cmux-cua-managed-helper"
-CMUX_CUA_HELPER_EXEC="${CMUX_CUA_HELPER_APP}/Contents/MacOS/cmux-cua"
+LEGACY_HMUX_CUA_CLIENT="${BIN_DEST}/hmux-cua"
+LEGACY_HMUX_CUA_LICENSE="${BIN_DEST}/hmux-cua-LICENSE.md"
+HMUX_CUA_HELPER_APP="${DEST}/../Library/hmux Computer Use.app"
+HMUX_CUA_HELPER_OWNER_MARKER="${HMUX_CUA_HELPER_APP}/Contents/Resources/.hmux-cua-managed-helper"
+HMUX_CUA_HELPER_EXEC="${HMUX_CUA_HELPER_APP}/Contents/MacOS/hmux-cua"
 INFO_PLIST="${TARGET_BUILD_DIR}/${INFOPLIST_PATH}"
 
 run_git() (
@@ -41,7 +41,7 @@ update_commit() {
   local commit
   commit="$(run_git -C "${SRCROOT}" rev-parse --short=9 HEAD 2>/dev/null || true)"
   if [ -n "$commit" ] && [ -f "$INFO_PLIST" ]; then
-    /usr/libexec/PlistBuddy -c "Set :CMUXCommit $commit" "$INFO_PLIST" >/dev/null 2>&1 || /usr/libexec/PlistBuddy -c "Add :CMUXCommit string $commit" "$INFO_PLIST" >/dev/null 2>&1 || true
+    /usr/libexec/PlistBuddy -c "Set :HMUXCommit $commit" "$INFO_PLIST" >/dev/null 2>&1 || /usr/libexec/PlistBuddy -c "Add :HMUXCommit string $commit" "$INFO_PLIST" >/dev/null 2>&1 || true
   fi
 }
 
@@ -55,8 +55,8 @@ fingerprint_tool() {
 
 fingerprint_toolchain() {
   local zig_path
-  if [ -n "${CMUX_ZIG:-}" ]; then
-    zig_path="$CMUX_ZIG"
+  if [ -n "${HMUX_ZIG:-}" ]; then
+    zig_path="$HMUX_ZIG"
     printf 'zig-path=%s\n' "$zig_path"
     if [ -x "$zig_path" ]; then
       fingerprint_tool zig-version "$zig_path" version
@@ -85,8 +85,8 @@ fingerprint_toolchain() {
   done
 }
 
-STAMP="${DERIVED_FILE_DIR}/cmux-bundled-resources.stamp"
-OUTPUT_MANIFEST="${DERIVED_FILE_DIR}/cmux-bundled-resources.outputs"
+STAMP="${DERIVED_FILE_DIR}/hmux-bundled-resources.stamp"
+OUTPUT_MANIFEST="${DERIVED_FILE_DIR}/hmux-bundled-resources.outputs"
 
 # This phase also runs when Xcode's dependency graph is conservative. Keep the
 # expensive helper builds incremental inside the phase by keying the output to
@@ -135,12 +135,12 @@ output_fingerprint() {
     hash_swiftpm_resource_bundles "$BIN_DEST"
     hash_tree "$GHOSTTY_DEST"
     hash_tree "$TERMINFO_DEST"
-    hash_tree "$CMUX_SHELL_DEST"
+    hash_tree "$HMUX_SHELL_DEST"
     hash_tree "$GHOSTTY_HELPER_DEST"
-    if [ -d "$CMUX_CUA_HELPER_APP" ]; then
-      hash_tree "$CMUX_CUA_HELPER_APP"
+    if [ -d "$HMUX_CUA_HELPER_APP" ]; then
+      hash_tree "$HMUX_CUA_HELPER_APP"
     else
-      printf 'missing:%s\n' "$CMUX_CUA_HELPER_APP"
+      printf 'missing:%s\n' "$HMUX_CUA_HELPER_APP"
     fi
   } | shasum | awk '{print $1}'
 }
@@ -191,32 +191,32 @@ fingerprint="$({
   printf 'configuration=%s\n' "${CONFIGURATION:-}"
   printf 'sdk=%s\n' "${SDKROOT:-}"
   printf 'deployment=%s\n' "${MACOSX_DEPLOYMENT_TARGET:-}"
-  printf 'cmux-cua-src=%s\n' "${CMUX_CUA_SRC:-}"
-  printf 'cmux-cua-repo=%s\n' "${CMUX_CUA_REPO_URL:-}"
-  printf 'skip-zig=%s\n' "${CMUX_SKIP_ZIG_BUILD:-}"
-  printf 'cmux-zig=%s\n' "${CMUX_ZIG:-}"
+  printf 'hmux-cua-src=%s\n' "${HMUX_CUA_SRC:-}"
+  printf 'hmux-cua-repo=%s\n' "${HMUX_CUA_REPO_URL:-}"
+  printf 'skip-zig=%s\n' "${HMUX_SKIP_ZIG_BUILD:-}"
+  printf 'hmux-zig=%s\n' "${HMUX_ZIG:-}"
   printf 'zig-required=%s\n' "${ZIG_REQUIRED:-}"
   fingerprint_toolchain
-  printf 'helper-display=%s\n' "${CMUX_CUA_HELPER_DISPLAY_NAME:-}"
+  printf 'helper-display=%s\n' "${HMUX_CUA_HELPER_DISPLAY_NAME:-}"
   printf 'bundle-id=%s\n' "${PRODUCT_BUNDLE_IDENTIFIER:-}"
   hash_git_worktree "${SRCROOT}/ghostty"
   hash_swiftpm_resource_bundles "$DEST"
-  if [ -n "${CMUX_CUA_SRC:-}" ]; then
-    hash_git_worktree "${CMUX_CUA_SRC}"
+  if [ -n "${HMUX_CUA_SRC:-}" ]; then
+    hash_git_worktree "${HMUX_CUA_SRC}"
   fi
   hash_tree "${SRCROOT}/scripts/build-app-bundled-resources.sh"
   hash_tree "$BUILD_GHOSTTY_HELPER"
-  hash_tree "$BUILD_CMUX_CUA"
-  hash_tree "$APPLY_CMUX_CUA_PATCH"
-  hash_tree "$CMUX_CUA_PATCH"
+  hash_tree "$BUILD_HMUX_CUA"
+  hash_tree "$APPLY_HMUX_CUA_PATCH"
+  hash_tree "$HMUX_CUA_PATCH"
   hash_tree "$GHOSTTY_SRC"
   hash_tree "$FALLBACK_GHOSTTY"
   hash_tree "$TERMINFO_SRC"
   hash_tree "$FALLBACK_TERMINFO"
   hash_tree "$TERMINFO_OVERLAY"
-  hash_tree "$CMUX_SHELL_SRC"
+  hash_tree "$HMUX_SHELL_SRC"
   hash_tree "$GHOSTTY_SHELL_SRC"
-  hash_tree "$CMUX_GHOSTTY_ZSH_SRC"
+  hash_tree "$HMUX_GHOSTTY_ZSH_SRC"
   hash_tree "${SRCROOT}/Resources/ComputerUseHelperIcon.icns"
   hash_tree "${SRCROOT}/Resources/AppIcon.icns"
   hash_tree "${SRCROOT}/Resources/AppIcon-Debug.icns"
@@ -224,17 +224,17 @@ fingerprint="$({
 output_fingerprint_value="$(output_fingerprint)"
 
 helper_output_ok=true
-if [ ! -d "$CMUX_CUA_HELPER_APP" ] ||
-  [ ! -f "$CMUX_CUA_HELPER_APP/Contents/Info.plist" ] ||
-  [ ! -f "$CMUX_CUA_HELPER_OWNER_MARKER" ] ||
-  [ ! -x "$CMUX_CUA_HELPER_EXEC" ] ||
-  [ -e "$LEGACY_CMUX_CUA_CLIENT" ]; then
+if [ ! -d "$HMUX_CUA_HELPER_APP" ] ||
+  [ ! -f "$HMUX_CUA_HELPER_APP/Contents/Info.plist" ] ||
+  [ ! -f "$HMUX_CUA_HELPER_OWNER_MARKER" ] ||
+  [ ! -x "$HMUX_CUA_HELPER_EXEC" ] ||
+  [ -e "$LEGACY_HMUX_CUA_CLIENT" ]; then
   helper_output_ok=false
 fi
 if [ -f "$STAMP" ] && [ -x "$GHOSTTY_HELPER_DEST" ] \
   && [ "$helper_output_ok" = true ] \
   && [ -d "$GHOSTTY_DEST" ] && [ -d "$TERMINFO_DEST" ] \
-  && [ -d "$CMUX_SHELL_DEST" ] && [ -f "$INFO_PLIST" ] \
+  && [ -d "$HMUX_SHELL_DEST" ] && [ -f "$INFO_PLIST" ] \
   && [ -f "$OUTPUT_MANIFEST" ] \
   && [ "$(cat "$STAMP")" = "$fingerprint" ] \
   && [ "$(cat "$OUTPUT_MANIFEST")" = "$output_fingerprint_value" ]; then
@@ -243,7 +243,7 @@ if [ -f "$STAMP" ] && [ -x "$GHOSTTY_HELPER_DEST" ] \
   exit 0
 fi
 mkdir -p "$BIN_DEST" "$LIBEXEC_DEST"
-rm -f "$LEGACY_CMUX_CUA_CLIENT" "$LEGACY_CMUX_CUA_LICENSE"
+rm -f "$LEGACY_HMUX_CUA_CLIENT" "$LEGACY_HMUX_CUA_LICENSE"
 sync_swiftpm_resource_bundles
 if [ -d "$GHOSTTY_SRC" ]; then
   mkdir -p "$GHOSTTY_DEST"
@@ -269,22 +269,22 @@ elif [ -d "$FALLBACK_TERMINFO" ]; then
 else
   rm -rf "$TERMINFO_DEST"
 fi
-# Overlay any cmux-specific terminfo adjustments.
+# Overlay any hmux-specific terminfo adjustments.
 # This intentionally does not use --delete so we only patch specific entries.
 if [ -d "$TERMINFO_OVERLAY" ]; then
   mkdir -p "$TERMINFO_DEST"
   rsync -a "$TERMINFO_OVERLAY/" "$TERMINFO_DEST/"
 fi
-if [ -d "$CMUX_SHELL_SRC" ]; then
-  mkdir -p "$CMUX_SHELL_DEST"
+if [ -d "$HMUX_SHELL_SRC" ]; then
+  mkdir -p "$HMUX_SHELL_DEST"
   # Use '/.' so dotfiles like .zshenv/.zprofile are copied too.
-  rsync -a --delete "$CMUX_SHELL_SRC/." "$CMUX_SHELL_DEST/"
+  rsync -a --delete "$HMUX_SHELL_SRC/." "$HMUX_SHELL_DEST/"
 else
-  rm -rf "$CMUX_SHELL_DEST"
+  rm -rf "$HMUX_SHELL_DEST"
 fi
-if [ -f "$CMUX_GHOSTTY_ZSH_SRC" ]; then
-  mkdir -p "$CMUX_SHELL_DEST"
-  rsync -a "$CMUX_GHOSTTY_ZSH_SRC" "$CMUX_SHELL_DEST/ghostty-integration.zsh"
+if [ -f "$HMUX_GHOSTTY_ZSH_SRC" ]; then
+  mkdir -p "$HMUX_SHELL_DEST"
+  rsync -a "$HMUX_GHOSTTY_ZSH_SRC" "$HMUX_SHELL_DEST/ghostty-integration.zsh"
 fi
 if [ ! -x "$BUILD_GHOSTTY_HELPER" ]; then
   echo "error: missing Ghostty CLI helper build script at $BUILD_GHOSTTY_HELPER" >&2
@@ -316,15 +316,15 @@ if [ ! -x "$GHOSTTY_HELPER_DEST" ]; then
   echo "error: Ghostty CLI helper was not created at $GHOSTTY_HELPER_DEST" >&2
   exit 1
 fi
-if [ ! -x "$BUILD_CMUX_CUA" ]; then
-  echo "error: missing cmux-cua build script at $BUILD_CMUX_CUA" >&2
+if [ ! -x "$BUILD_HMUX_CUA" ]; then
+  echo "error: missing hmux-cua build script at $BUILD_HMUX_CUA" >&2
   exit 1
 fi
 # The standalone build output is scratch; only the helper bundle ships.
-"$BUILD_CMUX_CUA" --output "${DERIVED_FILE_DIR}/cmux-cua/cmux-cua" \
-  --helper-app "$CMUX_CUA_HELPER_APP" --archs "${ARCHS:-}"
-if [ ! -x "$CMUX_CUA_HELPER_EXEC" ]; then
-  echo "error: cmux-cua was not created at $CMUX_CUA_HELPER_EXEC" >&2
+"$BUILD_HMUX_CUA" --output "${DERIVED_FILE_DIR}/hmux-cua/hmux-cua" \
+  --helper-app "$HMUX_CUA_HELPER_APP" --archs "${ARCHS:-}"
+if [ ! -x "$HMUX_CUA_HELPER_EXEC" ]; then
+  echo "error: hmux-cua was not created at $HMUX_CUA_HELPER_EXEC" >&2
   exit 1
 fi
 update_commit

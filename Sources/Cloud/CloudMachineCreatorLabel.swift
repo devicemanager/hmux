@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 /// How a Cloud machine's author reads on its row.

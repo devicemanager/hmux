@@ -65,10 +65,10 @@ def workflow_dispatch_input(text: str, name: str) -> str:
 
 
 def test_sdk_ci_tracks_tui_verification_and_packaging_workflows() -> None:
-    triggers = workflow_triggers(workflow("cmux-tui-sdks.yml"))
+    triggers = workflow_triggers(workflow("hmux-tui-sdks.yml"))
     required_paths = {
-        ".github/workflows/cmux-tui-build-package.yml",
-        ".github/workflows/cmux-tui.yml",
+        ".github/workflows/hmux-tui-build-package.yml",
+        ".github/workflows/hmux-tui.yml",
     }
 
     for event in ("push", "pull_request"):
@@ -80,12 +80,12 @@ def test_sdk_ci_tracks_tui_verification_and_packaging_workflows() -> None:
 
 
 def test_spec_inventory_checks_are_not_duplicated_in_sdk_contract() -> None:
-    spec = workflow("cmux-tui-spec.yml")
-    sdk_contract = workflow_job(workflow("cmux-tui-sdks.yml"), "contract")
+    spec = workflow("hmux-tui-spec.yml")
+    sdk_contract = workflow_job(workflow("hmux-tui-sdks.yml"), "contract")
 
     inventory_checks = (
-        "python3 cmux-tui/scripts/test_check_spec_inventory.py",
-        "python3 cmux-tui/scripts/check-spec-inventory.py",
+        "python3 hmux-tui/scripts/test_check_spec_inventory.py",
+        "python3 hmux-tui/scripts/check-spec-inventory.py",
     )
     for command in inventory_checks:
         assert command in spec
@@ -93,7 +93,7 @@ def test_spec_inventory_checks_are_not_duplicated_in_sdk_contract() -> None:
 
 
 def test_macos_tui_tests_use_a_short_temp_root_for_unix_sockets() -> None:
-    tui = workflow("cmux-tui.yml")
+    tui = workflow("hmux-tui.yml")
     test_job = workflow_job(tui, "test")
 
     assert "name: Use short temporary directory for macOS socket tests" in test_job
@@ -102,7 +102,7 @@ def test_macos_tui_tests_use_a_short_temp_root_for_unix_sockets() -> None:
 
 
 def valgrind_build_step() -> str:
-    job = workflow_job(workflow("cmux-tui.yml"), "valgrind-leak-check-shard")
+    job = workflow_job(workflow("hmux-tui.yml"), "valgrind-leak-check-shard")
     marker = "      - name: Build test binaries\n"
     assert marker in job
     return job.split(marker, 1)[1].split(
@@ -118,11 +118,11 @@ def test_valgrind_build_selects_only_startup_cargo_targets() -> None:
         r"([A-Za-z0-9_-]+) \\\s*$",
         build,
     ) == [
-        ("cmux-tui", "bin", "cmux-tui"),
+        ("hmux-tui", "bin", "hmux-tui"),
         ("ghostty-vt", "test", "terminal"),
     ]
     assert re.search(
-        r"cargo test \\\s+-p cmux-tui --bin cmux-tui \\\s+"
+        r"cargo test \\\s+-p hmux-tui --bin hmux-tui \\\s+"
         r"-p ghostty-vt --test terminal \\\s+"
         r"--locked --no-run --message-format=json",
         build,
@@ -132,7 +132,7 @@ def test_valgrind_build_selects_only_startup_cargo_targets() -> None:
 
 
 def test_valgrind_runner_keeps_binary_and_test_safety_guards() -> None:
-    job = workflow_job(workflow("cmux-tui.yml"), "valgrind-leak-check-shard")
+    job = workflow_job(workflow("hmux-tui.yml"), "valgrind-leak-check-shard")
 
     assert "matrix.shard" not in job
     assert "VALGRIND_SHARD: startup" in job
@@ -144,10 +144,10 @@ def test_valgrind_runner_keeps_binary_and_test_safety_guards() -> None:
     assert "pending_wrap_replay_preserves_cursor_with_origin_mode: test" in job
     assert '"$bin" pending_wrap_replay_preserves_cursor_with_origin_mode \\\n' in job
     assert job.count("pending_wrap_replay_preserves_cursor_with_origin_mode") == 4
-    assert 're.fullmatch(r"(?:cmux_tui|terminal)-[0-9a-f]+", name)' in job
+    assert 're.fullmatch(r"(?:hmux_tui|terminal)-[0-9a-f]+", name)' in job
     assert 'if not seen:\n              raise SystemExit("cargo did not report any test binaries")' in job
     assert 'if not selected:\n              raise SystemExit(f"Valgrind shard {shard} selected no test binaries")' in job
-    assert 'if [[ -z "$cmux_tui_bin" || -z "$terminal_bin" ]]; then' in job
+    assert 'if [[ -z "$hmux_tui_bin" || -z "$terminal_bin" ]]; then' in job
     assert 'require_exact_test()' in job
     assert 'pending_wrap_replay_preserves_cursor_with_origin_mode' in job
     for test_name in (
@@ -159,7 +159,7 @@ def test_valgrind_runner_keeps_binary_and_test_safety_guards() -> None:
 
 
 def test_sdk_registry_names_do_not_overlap_tui_cli_packages() -> None:
-    bindings = ROOT / "cmux-tui" / "bindings"
+    bindings = ROOT / "hmux-tui" / "bindings"
     typescript = json.loads(
         (bindings / "typescript" / "package.json").read_text()
     )
@@ -167,24 +167,24 @@ def test_sdk_registry_names_do_not_overlap_tui_cli_packages() -> None:
         (bindings / "python" / "pyproject.toml").read_text()
     )
     tui_npm = json.loads(
-        (ROOT / "cmux-tui" / "dist" / "npm" / "cmux" / "package.json").read_text()
+        (ROOT / "hmux-tui" / "dist" / "npm" / "hmux" / "package.json").read_text()
     )
     tui_pypi = (
-        ROOT / "cmux-tui" / "dist" / "scripts" / "package_pypi.py"
+        ROOT / "hmux-tui" / "dist" / "scripts" / "package_pypi.py"
     ).read_text()
 
-    assert typescript["name"] == "cmux-sdk"
-    assert python["project"]["name"] == "cmux-sdk"
+    assert typescript["name"] == "hmux-sdk"
+    assert python["project"]["name"] == "hmux-sdk"
     assert python["build-system"]["requires"] == ["setuptools>=77"]
-    assert tui_npm["name"] == "cmux"
-    assert 'DIST_NAME = "cmux"' in tui_pypi
-    assert 'PACKAGE_NAME = "cmux_tui"' in tui_pypi
-    assert "cmux = cmux_tui._main:main" in tui_pypi
+    assert tui_npm["name"] == "hmux"
+    assert 'DIST_NAME = "hmux"' in tui_pypi
+    assert 'PACKAGE_NAME = "hmux_tui"' in tui_pypi
+    assert "hmux = hmux_tui._main:main" in tui_pypi
 
 
 def test_raw_binary_manifests_use_canonical_runtime_schema() -> None:
-    artifacts = workflow("cmux-tui-artifacts.yml")
-    releasing = (ROOT / "cmux-tui" / "bindings" / "RELEASING.md").read_text()
+    artifacts = workflow("hmux-tui-artifacts.yml")
+    releasing = (ROOT / "hmux-tui" / "bindings" / "RELEASING.md").read_text()
     assert artifacts.count('"architecture":') >= 4
     assert artifacts.count('"libc": "none"') >= 4
     assert '"arch":' not in artifacts
@@ -197,24 +197,24 @@ def test_typescript_sdk_publisher_cannot_publish_the_cli_package() -> None:
     release = workflow("sdk-release-cut.yml")
     tui = workflow("tui-publish-npm.yml")
 
-    assert "https://www.npmjs.com/package/cmux-sdk" in release
+    assert "https://www.npmjs.com/package/hmux-sdk" in release
     assert "npm publish --provenance" in release
     assert "--tag latest" in release
     assert "npm publish" not in preflight
     assert "--tag sdk" not in release
-    assert "confirm_npm_cmux" not in release
+    assert "confirm_npm_hmux" not in release
     assert "publish_target" not in tui
     assert "publish-sdk" not in tui
-    assert "confirm_sdk_cmux" not in tui
-    assert "https://www.npmjs.com/package/cmux" in tui
+    assert "confirm_sdk_hmux" not in tui
+    assert "https://www.npmjs.com/package/hmux" in tui
 
 
 def test_npm_bootstrap_preserves_the_first_stable_version() -> None:
     bootstrap = workflow("sdk-bootstrap-npm.yml")
     publish = workflow_job(bootstrap, "publish")
-    sdk_ci = workflow("cmux-tui-sdks.yml")
+    sdk_ci = workflow("hmux-tui-sdks.yml")
     releasing = (
-        ROOT / "cmux-tui" / "bindings" / "RELEASING.md"
+        ROOT / "hmux-tui" / "bindings" / "RELEASING.md"
     ).read_text()
 
     assert workflow_triggers(bootstrap) == {
@@ -235,7 +235,7 @@ def test_npm_bootstrap_preserves_the_first_stable_version() -> None:
     assert 'BOOTSTRAP_VERSION: "0.0.0-bootstrap.0"' in bootstrap
     assert "npm test" in bootstrap
     assert "npm pack --pack-destination" in bootstrap
-    assert "CMUX_NPM_PACKAGE" in bootstrap
+    assert "HMUX_NPM_PACKAGE" in bootstrap
     assert 'npm publish "$(realpath "${packages[0]}")"' in bootstrap
     assert "--tag bootstrap" in bootstrap
     assert "--provenance" in bootstrap
@@ -243,15 +243,15 @@ def test_npm_bootstrap_preserves_the_first_stable_version() -> None:
     assert sdk_ci.count('".github/workflows/sdk-bootstrap-npm.yml"') == 2
     assert "sdk-bootstrap-npm.yml" in releasing
     assert "0.0.0-bootstrap.0" in releasing
-    assert "first `cmux-sdk` release interactively" not in releasing
+    assert "first `hmux-sdk` release interactively" not in releasing
 
 
 def test_pypi_bootstrap_reserves_the_project_before_release_tags() -> None:
     bootstrap = workflow("sdk-bootstrap-pypi.yml")
-    sdk_ci = workflow("cmux-tui-sdks.yml")
+    sdk_ci = workflow("hmux-tui-sdks.yml")
     release = workflow("sdk-release-cut.yml")
     releasing = (
-        ROOT / "cmux-tui" / "bindings" / "RELEASING.md"
+        ROOT / "hmux-tui" / "bindings" / "RELEASING.md"
     ).read_text()
 
     assert workflow_triggers(bootstrap) == {
@@ -266,7 +266,7 @@ def test_pypi_bootstrap_reserves_the_project_before_release_tags() -> None:
     assert "setuptools==80.9.0" in bootstrap
     assert "wheel==0.45.1" in bootstrap
     assert "python3 -m build --no-isolation --sdist --wheel" in bootstrap
-    assert "CMUX_PYTHON_DIST_DIR" in bootstrap
+    assert "HMUX_PYTHON_DIST_DIR" in bootstrap
     assert "gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b" in bootstrap
     assert "skip-existing: true" in bootstrap
     assert "pypi-attestations==0.0.29" in bootstrap
@@ -296,15 +296,15 @@ def test_pypi_bootstrap_reserves_the_project_before_release_tags() -> None:
 
 def test_crates_bootstrap_preserves_the_first_stable_version() -> None:
     bootstrap = workflow("sdk-bootstrap-crates.yml")
-    sdk_ci = workflow("cmux-tui-sdks.yml")
+    sdk_ci = workflow("hmux-tui-sdks.yml")
     releasing = (
-        ROOT / "cmux-tui" / "bindings" / "RELEASING.md"
+        ROOT / "hmux-tui" / "bindings" / "RELEASING.md"
     ).read_text()
     manifests = {
         name: tomllib.loads(
             (
                 ROOT
-                / "cmux-tui"
+                / "hmux-tui"
                 / "bindings"
                 / "bootstrap"
                 / source
@@ -312,8 +312,8 @@ def test_crates_bootstrap_preserves_the_first_stable_version() -> None:
             ).read_text()
         )
         for name, source in (
-            ("cmux-sdk", "rust-sdk"),
-            ("cmux-sidebar", "rust-sidebar"),
+            ("hmux-sdk", "rust-sdk"),
+            ("hmux-sidebar", "rust-sidebar"),
         )
     }
 
@@ -338,14 +338,14 @@ def test_crates_bootstrap_preserves_the_first_stable_version() -> None:
         assert manifest["package"]["version"] == "0.0.0-bootstrap.0"
         assert "dependencies" not in manifest
         assert manifest["workspace"] == {}
-    assert "cmux-sdk-bootstrap-crate" in bootstrap
-    assert "cmux-sidebar-bootstrap-crate" in bootstrap
+    assert "hmux-sdk-bootstrap-crate" in bootstrap
+    assert "hmux-sidebar-bootstrap-crate" in bootstrap
     assert "client_payload.package" not in bootstrap
     assert bootstrap.count("max-parallel: 1") == 2
     assert sdk_ci.count('".github/workflows/sdk-bootstrap-crates.yml"') == 2
     assert "sdk-bootstrap-crates.yml" in releasing
     assert "0.0.0-bootstrap.0" in releasing
-    assert "publish `cmux-sidebar` interactively once" not in releasing
+    assert "publish `hmux-sidebar` interactively once" not in releasing
     bootstrap_probe = bootstrap.split(
         "- name: Inspect the crates.io bootstrap state",
         1,
@@ -359,10 +359,10 @@ def test_crates_bootstrap_preserves_the_first_stable_version() -> None:
 
 def test_registry_setup_disables_long_lived_publish_credentials() -> None:
     releasing = (
-        ROOT / "cmux-tui" / "bindings" / "RELEASING.md"
+        ROOT / "hmux-tui" / "bindings" / "RELEASING.md"
     ).read_text()
     verifier = (
-        ROOT / "cmux-tui" / "bindings" / "verify_crates_ownership.py"
+        ROOT / "hmux-tui" / "bindings" / "verify_crates_ownership.py"
     ).read_text()
     normalized = re.sub(r"\s+", " ", releasing)
 
@@ -454,7 +454,7 @@ def test_all_registry_names_are_owned_before_release_tags() -> None:
     release = workflow("sdk-release-cut.yml")
     registry = workflow_job(release, "registry-preflight")
     releasing = (
-        ROOT / "cmux-tui" / "bindings" / "RELEASING.md"
+        ROOT / "hmux-tui" / "bindings" / "RELEASING.md"
     ).read_text()
 
     cut_tags = release.index("  cut-tags:")
@@ -465,14 +465,14 @@ def test_all_registry_names_are_owned_before_release_tags() -> None:
     assert "verify_npm_provenance.py" in registry
     assert "0.0.0-bootstrap.0" in registry
     assert "git+https://github.com/manaflow-ai/cmux.git" in registry
-    assert "cmux-tui/bindings/typescript" in registry
+    assert "hmux-tui/bindings/typescript" in registry
     assert "npm@11.5.1" in registry
     assert "npm audit signatures" in (
-        ROOT / "cmux-tui" / "bindings" / "verify_npm_provenance.py"
+        ROOT / "hmux-tui" / "bindings" / "verify_npm_provenance.py"
     ).read_text()
     assert "verify_crates_ownership.py" in registry
-    assert "--package cmux-sdk" in registry
-    assert "--package cmux-sidebar" in registry
+    assert "--package hmux-sdk" in registry
+    assert "--package hmux-sidebar" in registry
     assert "--owner-id 431397" in registry
     assert "--owner-login lawrencecchen" in registry
     assert registry.count("sleep 1") >= 2
@@ -496,10 +496,10 @@ def test_npm_bootstrap_recovers_an_accepted_publish() -> None:
 
 
 def test_python_ci_installs_its_build_backend_before_consumer_tests() -> None:
-    packages = workflow_job(workflow("cmux-tui-sdks.yml"), "packages")
+    packages = workflow_job(workflow("hmux-tui-sdks.yml"), "packages")
     install = packages.index('"setuptools==80.9.0"')
     tests = packages.index(
-        "python3 -m unittest discover -s cmux-tui/bindings/python/tests -v"
+        "python3 -m unittest discover -s hmux-tui/bindings/python/tests -v"
     )
     assert install < tests
 
@@ -509,10 +509,10 @@ def test_python_sdk_publisher_cannot_publish_the_cli_package() -> None:
     release = workflow("sdk-release-cut.yml")
     tui = workflow("tui-publish-pypi.yml")
 
-    assert "https://pypi.org/p/cmux-sdk" in release
+    assert "https://pypi.org/p/hmux-sdk" in release
     assert "gh-action-pypi-publish" in release
     assert "gh-action-pypi-publish" not in preflight
-    assert "https://pypi.org/p/cmux" in tui
+    assert "https://pypi.org/p/hmux" in tui
 
 
 def test_sdk_release_cut_preflights_then_owns_the_selected_publishers() -> None:
@@ -522,8 +522,8 @@ def test_sdk_release_cut_preflights_then_owns_the_selected_publishers() -> None:
     assert workflow_triggers(release) == {
         "repository_dispatch": {"types": ["sdk-release-cut"]}
     }
-    assert 'sdk_tag="cmux-sdk-v$VERSION"' in release
-    assert 'go_tag="cmux-tui/bindings/go/v$VERSION"' in release
+    assert 'sdk_tag="hmux-sdk-v$VERSION"' in release
+    assert 'go_tag="hmux-tui/bindings/go/v$VERSION"' in release
     assert 'git push --atomic "$release_repository"' in release
     assert '"refs/tags/$SDK_TAG"' in release
     assert '"refs/tags/$GO_TAG"' in release
@@ -546,7 +546,7 @@ def test_sdk_release_cut_preflights_then_owns_the_selected_publishers() -> None:
     assert "sdk_existing_sha" in validation
     assert "go_existing_sha" in validation
     assert "existing coordinated SDK tags must both name $GITHUB_SHA" in validation
-    assert "git tag --list 'cmux-sdk-v*'" in release
+    assert "git tag --list 'hmux-sdk-v*'" in release
     assert "check-spec-inventory.py" in validation
     assert "codegen/generate.py --check" in validation
     surface_gate = validation.index("check-spec-inventory.py")
@@ -598,7 +598,7 @@ def test_privileged_sdk_workflows_use_external_release_authority() -> None:
     npm_bootstrap = workflow("sdk-bootstrap-npm.yml")
     pypi_bootstrap = workflow("sdk-bootstrap-pypi.yml")
     releasing = (
-        ROOT / "cmux-tui" / "bindings" / "RELEASING.md"
+        ROOT / "hmux-tui" / "bindings" / "RELEASING.md"
     ).read_text()
 
     for text, event_type in (
@@ -640,8 +640,8 @@ def test_privileged_sdk_workflows_use_external_release_authority() -> None:
         "crates-bootstrap",
         "sdk-release-credentials",
         "SDK release GitHub App",
-        "refs/tags/cmux-sdk-v*",
-        "refs/tags/cmux-tui/bindings/go/v*",
+        "refs/tags/hmux-sdk-v*",
+        "refs/tags/hmux-tui/bindings/go/v*",
     ):
         assert phrase in releasing
 
@@ -657,7 +657,7 @@ def test_registry_state_is_validated_before_irreversible_tags() -> None:
         "python-preflight",
     ):
         assert prerequisite in registry
-    for artifact in ("cmux-rust-sdk-crate", "cmux-rust-sidebar-crate"):
+    for artifact in ("hmux-rust-sdk-crate", "hmux-rust-sidebar-crate"):
         assert f"name: {artifact}" in registry
     assert (
         "artifact-ids: ${{ needs.typescript-preflight.outputs.artifact_id }}"
@@ -680,14 +680,14 @@ def test_registry_state_is_revalidated_after_release_approval() -> None:
     cut_tags = workflow_job(release, "cut-tags")
     verifier = (
         ROOT
-        / "cmux-tui"
+        / "hmux-tui"
         / "bindings"
         / "verify_release_registry_state.sh"
     ).read_text()
 
     assert "actions: read" in revalidate_tags
     assert "name: sdk-release" in revalidate_tags
-    for artifact in ("cmux-rust-sdk-crate", "cmux-rust-sidebar-crate"):
+    for artifact in ("hmux-rust-sdk-crate", "hmux-rust-sidebar-crate"):
         assert f"name: {artifact}" in revalidate_tags
     assert (
         "artifact-ids: ${{ needs.typescript-preflight.outputs.artifact_id }}"
@@ -698,7 +698,7 @@ def test_registry_state_is_revalidated_after_release_approval() -> None:
         in revalidate_tags
     )
     assert revalidate_tags.count("verify_release_registry_state.sh") == 1
-    assert 'validated-rust-sdk/cmux-sdk-$version.crate' in verifier
+    assert 'validated-rust-sdk/hmux-sdk-$version.crate' in verifier
     assert "validated-client" not in verifier
     assert "remote_state_sha256" in revalidate_tags
     assert "revalidate-tags" in cut_tags
@@ -792,8 +792,8 @@ def test_stable_registry_provenance_gates_recovery_and_completion() -> None:
     assert "publish-crate-sdk" in stable
     assert "publish-crate-sidebar" in stable
     assert "verify_crates_ownership.py" in stable
-    assert "--package cmux-sdk" in stable
-    assert "--package cmux-sidebar" in stable
+    assert "--package hmux-sdk" in stable
+    assert "--package hmux-sidebar" in stable
     assert "--publisher github-actions" in stable
     assert "--dist-tag latest" in stable
     assert "--workflow .github/workflows/sdk-release-cut.yml" in stable
@@ -811,7 +811,7 @@ def test_tag_cut_revalidates_release_order_after_its_final_fetch() -> None:
     cut_tags = workflow_job(release, "cut-tags")
 
     fetch = revalidate_tags.rindex("git fetch --force origin main --tags")
-    tag_list = revalidate_tags.index("git tag --list 'cmux-sdk-v*'", fetch)
+    tag_list = revalidate_tags.index("git tag --list 'hmux-sdk-v*'", fetch)
     revalidate = revalidate_tags.index("--require-latest-tag", tag_list)
     snapshot = revalidate_tags.index("remote_state_sha256", revalidate)
     compare = cut_tags.index('[[ "$remote_state_sha256" == "$REMOTE_STATE_SHA256" ]]')
@@ -826,7 +826,7 @@ def test_tag_cut_retry_requires_fresh_authority_or_safe_poststate() -> None:
     revalidate_tags = workflow_job(release, "revalidate-tags")
     cut_tags = workflow_job(release, "cut-tags")
     releasing = (
-        ROOT / "cmux-tui" / "bindings" / "RELEASING.md"
+        ROOT / "hmux-tui" / "bindings" / "RELEASING.md"
     ).read_text()
 
     for output in (
@@ -891,13 +891,13 @@ def test_tag_cut_retry_behavior_accepts_tags_after_main_advances() -> None:
             capture_output=True,
         ).stdout.strip()
 
-    with tempfile.TemporaryDirectory(prefix="cmux-sdk-tag-retry-") as raw:
+    with tempfile.TemporaryDirectory(prefix="hmux-sdk-tag-retry-") as raw:
         temporary = Path(raw)
         source = temporary / "source"
         remote = temporary / "remote.git"
         source.mkdir()
         git("init", "-b", "main", cwd=source)
-        git("config", "user.name", "cmux release test", cwd=source)
+        git("config", "user.name", "hmux release test", cwd=source)
         git("config", "user.email", "release-test@cmux.dev", cwd=source)
         git("commit", "--allow-empty", "-m", "release", cwd=source)
         release_sha = git("rev-parse", "HEAD", cwd=source)
@@ -928,11 +928,11 @@ def test_tag_cut_retry_behavior_accepts_tags_after_main_advances() -> None:
                     "GITHUB_RUN_ATTEMPT": "2",
                     "GITHUB_RUN_ID": "123456789",
                     "GITHUB_SHA": release_sha,
-                    "GO_TAG": "cmux-tui/bindings/go/v1.0.1",
+                    "GO_TAG": "hmux-tui/bindings/go/v1.0.1",
                     "REMOTE_STATE_SHA256": prestate_sha256,
                     "REMOTE_TAG_STATE_SHA256": pretag_state_sha256,
                     "RUNNER_TEMP": str(run_root),
-                    "SDK_TAG": "cmux-sdk-v1.0.1",
+                    "SDK_TAG": "hmux-sdk-v1.0.1",
                     "VERSION": "1.0.1",
                     "GIT_CONFIG_COUNT": "1",
                     "GIT_CONFIG_KEY_0": f"url.{remote.as_uri()}.insteadOf",
@@ -955,11 +955,11 @@ def test_tag_cut_retry_behavior_accepts_tags_after_main_advances() -> None:
         assert stale.returncode != 0
         assert "release authorization is stale" in stale.stdout
         assert stale_output == ""
-        assert not (stale_root / "cmux-sdk-release").exists()
+        assert not (stale_root / "hmux-sdk-release").exists()
 
         for tag, message in (
-            ("cmux-sdk-v1.0.1", "cmux SDK 1.0.1"),
-            ("cmux-tui/bindings/go/v1.0.1", "cmux Go SDK 1.0.1"),
+            ("hmux-sdk-v1.0.1", "hmux SDK 1.0.1"),
+            ("hmux-tui/bindings/go/v1.0.1", "hmux Go SDK 1.0.1"),
         ):
             git("tag", "-a", tag, "-m", message, cwd=source)
             git("push", "origin", f"refs/tags/{tag}", cwd=source)
@@ -971,16 +971,16 @@ def test_tag_cut_retry_behavior_accepts_tags_after_main_advances() -> None:
         assert recovered.returncode == 0, recovered.stdout
         assert "both coordinated tags already name the release commit" in recovered.stdout
         assert recovered_output == "tags_exist=true\n"
-        assert not (recovered_root / "cmux-sdk-release").exists()
+        assert not (recovered_root / "hmux-sdk-release").exists()
 
-        git("tag", "-a", "cmux-sdk-v0.9.9", "-m", "unrelated release", cwd=source)
-        git("push", "origin", "refs/tags/cmux-sdk-v0.9.9", cwd=source)
+        git("tag", "-a", "hmux-sdk-v0.9.9", "-m", "unrelated release", cwd=source)
+        git("push", "origin", "refs/tags/hmux-sdk-v0.9.9", cwd=source)
         changed_tags, changed_tags_output, _ = prepare(3)
         assert changed_tags.returncode != 0
         assert "remote release tags changed" in changed_tags.stdout
         assert changed_tags_output == ""
 
-        git("push", "origin", ":refs/tags/cmux-sdk-v0.9.9", cwd=source)
+        git("push", "origin", ":refs/tags/hmux-sdk-v0.9.9", cwd=source)
         git("checkout", "--orphan", "rewritten-main", cwd=source)
         git("commit", "--allow-empty", "-m", "rewrite main", cwd=source)
         git("push", "--force", "origin", "HEAD:main", cwd=source)
@@ -994,11 +994,11 @@ def test_go_publisher_uses_the_nested_module_semver_tag() -> None:
     go = workflow("sdk-publish-go.yml")
     java = workflow("sdk-publish-java.yml")
 
-    assert "cmux-tui/bindings/go/vX.Y.Z" in go
-    assert 'version="${GITHUB_REF_NAME#cmux-tui/bindings/go/v}"' in go
+    assert "hmux-tui/bindings/go/vX.Y.Z" in go
+    assert 'version="${GITHUB_REF_NAME#hmux-tui/bindings/go/v}"' in go
     assert "workflow_call:" in go
-    assert '"cmux-sdk-v*"' not in go
-    assert '"cmux-sdk-v*"' not in java
+    assert '"hmux-sdk-v*"' not in go
+    assert '"hmux-sdk-v*"' not in java
 
 
 def test_sdk_preflight_workflows_cannot_write_to_registries() -> None:
@@ -1070,7 +1070,7 @@ def test_go_public_tag_probe_binds_downloaded_tree_to_release_commit() -> None:
     assert 'module_dir="$(go list -m -f' in public_probe
     assert '--repository "$GITHUB_WORKSPACE"' in public_probe
     assert '--commit "$GITHUB_SHA"' in public_probe
-    assert "--module-subdir cmux-tui/bindings/go" in public_probe
+    assert "--module-subdir hmux-tui/bindings/go" in public_probe
     assert '--downloaded-root "$module_dir"' in public_probe
     assert public_probe.index("go mod download") < verifier
     assert verifier < public_probe.index("go test")
@@ -1090,19 +1090,19 @@ def test_registry_publishers_reuse_preflight_artifacts() -> None:
     python = workflow("sdk-publish-python.yml")
     release = workflow("sdk-release-cut.yml")
 
-    for artifact in ("cmux-rust-sdk-crate", "cmux-rust-sidebar-crate"):
+    for artifact in ("hmux-rust-sdk-crate", "hmux-rust-sidebar-crate"):
         assert rust.count(f"name: {artifact}") == 1
         assert release.count(f"name: {artifact}") >= 1
 
-    assert npm.count("name: cmux-npm-dist") == 1
-    assert release.count("name: cmux-npm-dist") == 0
+    assert npm.count("name: hmux-npm-dist") == 1
+    assert release.count("name: hmux-npm-dist") == 0
     assert "npm pack --pack-destination" in npm
     npm_publish = workflow_job(release, "publish-npm")
     assert "Download the validated npm artifact" in npm_publish
     assert "npm test" not in npm_publish
 
-    assert python.count("name: cmux-python-dist") == 1
-    assert release.count("name: cmux-python-dist") == 0
+    assert python.count("name: hmux-python-dist") == 1
+    assert release.count("name: hmux-python-dist") == 0
     for job in ("publish-python-wheel", "publish-python-sdist"):
         python_publish = workflow_job(release, job)
         assert "Download distributions" in python_publish
@@ -1116,9 +1116,9 @@ def test_credentialed_publishers_bind_immutable_preflight_artifacts() -> None:
     release = workflow("sdk-release-cut.yml")
 
     for preflight, job, artifact in (
-        (npm, "bindings-e2e-typescript", "cmux-npm-dist"),
-        (python, "build", "cmux-python-dist"),
-        (bootstrap_python, "build", "cmux-python-bootstrap-dist"),
+        (npm, "bindings-e2e-typescript", "hmux-npm-dist"),
+        (python, "build", "hmux-python-dist"),
+        (bootstrap_python, "build", "hmux-python-bootstrap-dist"),
     ):
         assert "steps.upload.outputs.artifact-id" in preflight
         assert "artifact_sha256:" in preflight
@@ -1139,15 +1139,15 @@ def test_credentialed_publishers_bind_immutable_preflight_artifacts() -> None:
     assert "artifact-ids: ${{ needs.typescript-preflight.outputs.artifact_id }}" in npm_publish
     assert "EXPECTED_ARTIFACT_SHA256" in npm_publish
     assert 'sha256sum "${packages[0]}"' in npm_publish
-    assert 'package["name"] == "cmux-sdk"' in npm_publish
-    assert 'package["version"] == os.environ["CMUX_SDK_VERSION"]' in npm_publish
+    assert 'package["name"] == "hmux-sdk"' in npm_publish
+    assert 'package["version"] == os.environ["HMUX_SDK_VERSION"]' in npm_publish
 
     for job in ("publish-python-wheel", "publish-python-sdist"):
         block = workflow_job(release, job)
         assert "artifact-ids: ${{ needs.python-preflight.outputs.artifact_id }}" in block
         assert "EXPECTED_ARTIFACT_SHA256" in block
         assert "sha256sum" in block
-        assert "cmux_sdk-${CMUX_SDK_VERSION}" in block
+        assert "hmux_sdk-${HMUX_SDK_VERSION}" in block
 
     bootstrap_publish = workflow_job(bootstrap_python, "publish")
     assert "artifact-ids: ${{ needs.build.outputs.artifact_id }}" in bootstrap_publish
@@ -1159,7 +1159,7 @@ def test_publishers_revalidate_registry_authority_after_environment_approval() -
     release = workflow("sdk-release-cut.yml")
     authority_helper = (
         ROOT
-        / "cmux-tui"
+        / "hmux-tui"
         / "bindings"
         / "verify_release_registry_authority.sh"
     ).read_text()
@@ -1202,8 +1202,8 @@ def test_publishers_revalidate_registry_authority_after_environment_approval() -
         assert "actions/setup-python@" not in block
 
     assert "verify_crates_ownership.py" in authority_helper
-    assert "--package cmux-sdk" in authority_helper
-    assert "--package cmux-sidebar" in authority_helper
+    assert "--package hmux-sdk" in authority_helper
+    assert "--package hmux-sidebar" in authority_helper
     assert "--owner-id 431397" in authority_helper
     assert "--owner-login lawrencecchen" in authority_helper
     assert "verify_npm_provenance.py" in authority_helper
@@ -1222,10 +1222,10 @@ def test_irreversible_registry_writes_are_independently_rerunnable() -> None:
 
     sdk = workflow_job(release, "publish-crate-sdk")
     sidebar = workflow_job(release, "publish-crate-sidebar")
-    assert "Publish cmux-sdk" in sdk
-    assert "Publish cmux-sidebar" not in sdk
+    assert "Publish hmux-sdk" in sdk
+    assert "Publish hmux-sidebar" not in sdk
     assert "publish-crate-sdk" in sidebar
-    assert "Publish cmux-sidebar" in sidebar
+    assert "Publish hmux-sidebar" in sidebar
 
     wheel = workflow_job(release, "publish-python-wheel")
     sdist = workflow_job(release, "publish-python-sdist")
@@ -1280,11 +1280,11 @@ def test_rust_release_uses_pinned_cargo_and_verifies_packaged_sidebar() -> None:
         assert 'rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal' in text
         assert 'rustup default "$RUST_TOOLCHAIN"' in text
 
-    assert "-p cmux-sidebar" in preflight
+    assert "-p hmux-sidebar" in preflight
     assert "--no-verify" in preflight
-    assert "cmux-sidebar-$CMUX_SDK_VERSION.crate" in preflight
-    assert "cmux-sdk-$CMUX_SDK_VERSION.crate" in preflight
-    assert "patch.crates-io.cmux-sdk.path" in preflight
+    assert "hmux-sidebar-$HMUX_SDK_VERSION.crate" in preflight
+    assert "hmux-sdk-$HMUX_SDK_VERSION.crate" in preflight
+    assert "patch.crates-io.hmux-sdk.path" in preflight
     assert "--all-targets" in preflight
 
     for job in ("publish-crate-sdk", "publish-crate-sidebar"):
@@ -1309,19 +1309,19 @@ def test_python_preflight_tests_the_exact_pinned_distributions() -> None:
     ):
         assert requirement in build
     assert "python3 -m build --no-isolation --sdist --wheel" in build
-    assert "CMUX_PYTHON_DIST_DIR" in build
-    assert build.index("python3 -m build") < build.index("CMUX_PYTHON_DIST_DIR")
-    assert build.index("CMUX_PYTHON_DIST_DIR") < build.index("Upload distributions")
+    assert "HMUX_PYTHON_DIST_DIR" in build
+    assert build.index("python3 -m build") < build.index("HMUX_PYTHON_DIST_DIR")
+    assert build.index("HMUX_PYTHON_DIST_DIR") < build.index("Upload distributions")
 
     consumer = (
         ROOT
-        / "cmux-tui"
+        / "hmux-tui"
         / "bindings"
         / "python"
         / "tests"
         / "test_package_consumer.py"
     ).read_text()
-    assert "CMUX_PYTHON_DIST_DIR" in consumer
+    assert "HMUX_PYTHON_DIST_DIR" in consumer
     assert "*.whl" in consumer
     assert "*.tar.gz" in consumer
 
@@ -1366,23 +1366,23 @@ def test_python_preflight_pins_the_interpreter_before_installing_tools() -> None
 
 
 def test_typescript_spec_uses_the_sdk_registry_name() -> None:
-    spec = (ROOT / "cmux-tui" / "spec" / "bindings.md").read_text()
+    spec = (ROOT / "hmux-tui" / "spec" / "bindings.md").read_text()
     typescript = spec.split("### TypeScript", 1)[1].split("### Go", 1)[0]
 
     for entry_point in (
-        "cmux-sdk",
-        "cmux-sdk/browser",
-        "cmux-sdk/node",
-        "cmux-sdk/raw",
+        "hmux-sdk",
+        "hmux-sdk/browser",
+        "hmux-sdk/node",
+        "hmux-sdk/raw",
     ):
         assert f"`{entry_point}`" in typescript
-    assert "`cmux/browser`" not in typescript
-    assert "`cmux/node`" not in typescript
-    assert "`cmux/raw`" not in typescript
+    assert "`hmux/browser`" not in typescript
+    assert "`hmux/node`" not in typescript
+    assert "`hmux/raw`" not in typescript
 
 
 def test_required_sdk_ci_checks_only_the_publish_set_version() -> None:
-    sdk_ci = workflow("cmux-tui-sdks.yml")
+    sdk_ci = workflow("hmux-tui-sdks.yml")
 
     assert "check-versions.py --published-only" in sdk_ci
     assert "python3 tests/test_tui_publish_workflow_security.py -v" in sdk_ci
@@ -1393,11 +1393,11 @@ def test_required_sdk_ci_checks_only_the_publish_set_version() -> None:
 
 
 def test_workflow_guard_runs_for_every_workflow_it_validates() -> None:
-    sdk_ci = workflow("cmux-tui-sdks.yml")
+    sdk_ci = workflow("hmux-tui-sdks.yml")
     guarded = (
-        "cmux-tui-release-cut.yml",
-        "cmux-tui-release.yml",
-        "cmux-tui-sdks.yml",
+        "hmux-tui-release-cut.yml",
+        "hmux-tui-release.yml",
+        "hmux-tui-sdks.yml",
         "relay-publish-npm.yml",
         "sdk-bootstrap-crates.yml",
         "sdk-publish-crates.yml",
@@ -1416,15 +1416,15 @@ def test_workflow_guard_runs_for_every_workflow_it_validates() -> None:
 def test_python_wheel_consumer_derives_the_manifest_version() -> None:
     test = (
         ROOT
-        / "cmux-tui"
+        / "hmux-tui"
         / "bindings"
         / "python"
         / "tests"
         / "test_package_consumer.py"
     ).read_text()
 
-    assert "CMUX_EXPECTED_SDK_VERSION" in test
-    assert "version('cmux-sdk') == '1.0.0'" not in test
+    assert "HMUX_EXPECTED_SDK_VERSION" in test
+    assert "version('hmux-sdk') == '1.0.0'" not in test
     assert "import tomllib" in test
     assert '["project"]["version"]' in test
     assert "VERSION_MATCH" not in test
@@ -1436,7 +1436,7 @@ def test_stable_registry_publishers_are_exact_tag_and_artifact_bound() -> None:
         ("tui-publish-pypi.yml", "pypi-tui"),
     ):
         text = workflow(name)
-        assert 'tag="cmux-tui-v$DISPATCH_VERSION"' in text
+        assert 'tag="hmux-tui-v$DISPATCH_VERSION"' in text
         assert 'expected_ref="refs/tags/$tag"' in text
         assert 'if [[ "$GITHUB_REF" != "$expected_ref" ]]' in text
         assert 'git rev-parse "refs/tags/$tag^{commit}"' in text
@@ -1445,13 +1445,13 @@ def test_stable_registry_publishers_are_exact_tag_and_artifact_bound() -> None:
         artifact_input = workflow_dispatch_input(text, "artifact_run_id")
         assert "required: true" in artifact_input
         assert '[[ "$ARTIFACT_RUN_ID" =~ ^[0-9]+$ ]]' in text
-        assert 'artifact_path=".github/workflows/cmux-tui-release.yml"' in text
+        assert 'artifact_path=".github/workflows/hmux-tui-release.yml"' in text
         assert 'if [[ "$artifact_head_sha" != "$release_sha" ]]' in text
         assert 'if [[ "$artifact_conclusion" != "success" ]]' in text
         assert "actions: read" in text
         assert "run-id: ${{ inputs.artifact_run_id }}" in text
         assert "github-token: ${{ github.token }}" in text
-        assert "uses: ./.github/workflows/cmux-tui-build-package.yml" not in text
+        assert "uses: ./.github/workflows/hmux-tui-build-package.yml" not in text
         assert f"name: {environment}" in text
 
 
@@ -1490,14 +1490,14 @@ def test_tui_pypi_publishers_reconcile_every_wheel_after_upload() -> None:
         assert isinstance(verify_step, dict)
         assert verify_step.get("env", {}).get("VERSION") == version
         run = verify_step.get("run", "")
-        assert "bash cmux-tui/scripts/verify-pypi-tui-upload.sh dist \"$VERSION\"" in run
+        assert "bash hmux-tui/scripts/verify-pypi-tui-upload.sh dist \"$VERSION\"" in run
         assert "secrets." not in run
         assert "gh-action-pypi-publish" not in run
         assert "twine " not in run
 
 
 def test_tui_pypi_reconciliation_behavior_test_is_in_tui_ci() -> None:
-    text = workflow("cmux-tui-sdks.yml")
+    text = workflow("hmux-tui-sdks.yml")
     triggers = workflow_triggers(text)
     for event in ("push", "pull_request"):
         event_config = triggers[event]
@@ -1527,9 +1527,9 @@ def test_sdk_publish_conformance_runs_live_against_exact_built_binary() -> None:
         ("sdk-publish-python.yml", "python"),
     ):
         text = workflow(name)
-        assert "cargo build -p cmux-tui --bin cmux-tui --locked" in text
+        assert "cargo build -p hmux-tui --bin hmux-tui --locked" in text
         assert (
-            '--cmux-tui-bin "$GITHUB_WORKSPACE/cmux-tui/target/debug/cmux-tui"'
+            '--hmux-tui-bin "$GITHUB_WORKSPACE/hmux-tui/target/debug/hmux-tui"'
             in text
         )
         assert (
@@ -1540,7 +1540,7 @@ def test_sdk_publish_conformance_runs_live_against_exact_built_binary() -> None:
     typescript = workflow("sdk-publish-npm.yml")
     assert 'node-version: "22.14.0"' in typescript
     assert (
-        "cache-dependency-path: cmux-tui/bindings/typescript/package-lock.json"
+        "cache-dependency-path: hmux-tui/bindings/typescript/package-lock.json"
         in typescript
     )
     assert "npm ci --no-audit --no-fund" in typescript
@@ -1555,26 +1555,26 @@ def test_sdk_publish_conformance_runs_live_against_exact_built_binary() -> None:
 
 
 def test_stable_release_builds_and_tests_once_before_dispatching_publishers() -> None:
-    release_cut = workflow("cmux-tui-release-cut.yml")
-    release = workflow("cmux-tui-release.yml")
+    release_cut = workflow("hmux-tui-release-cut.yml")
+    release = workflow("hmux-tui-release.yml")
     npm = workflow("tui-publish-npm.yml")
     pypi = workflow("tui-publish-pypi.yml")
 
     assert "ref: ${{ github.sha }}" in release_cut
-    assert release_cut.count("gh workflow run cmux-tui-release.yml") == 1
+    assert release_cut.count("gh workflow run hmux-tui-release.yml") == 1
     assert "gh workflow run tui-publish-npm.yml" not in release_cut
     assert "gh workflow run tui-publish-pypi.yml" not in release_cut
     assert "-f publish_npm=true" in release_cut
     assert "-f publish_pypi=true" in release_cut
-    assert "-f confirm_tui_cmux=true" in release_cut
+    assert "-f confirm_tui_hmux=true" in release_cut
 
     stable_workflows = (release, npm, pypi)
-    reusable_build = "uses: ./.github/workflows/cmux-tui-build-package.yml"
+    reusable_build = "uses: ./.github/workflows/hmux-tui-build-package.yml"
     assert sum(text.count(reusable_build) for text in stable_workflows) == 1
     assert "publish_npm:" in release
     assert "publish_pypi:" in release
     assert 'if [[ "${GITHUB_REF_TYPE:-}" != "tag" ]]' in release
-    assert "Stable artifacts require a cmux-tui-vX.Y.Z tag ref." in release
+    assert "Stable artifacts require a hmux-tui-vX.Y.Z tag ref." in release
     assert "needs: build-package" in release
     assert 'gh workflow run tui-publish-npm.yml --repo "$GITHUB_REPOSITORY" --ref "$TAG"' in release
     assert 'gh workflow run tui-publish-pypi.yml --repo "$GITHUB_REPOSITORY" --ref "$TAG"' in release
@@ -1585,24 +1585,24 @@ def test_stable_release_builds_and_tests_once_before_dispatching_publishers() ->
 
 
 def test_tui_delivery_is_checked_independently_of_artifact_completion() -> None:
-    delivery = workflow("cmux-tui-release-delivery.yml")
+    delivery = workflow("hmux-tui-release-delivery.yml")
     triggers = workflow_triggers(delivery)
-    assert triggers["workflow_run"]["workflows"] == ["cmux-tui release binaries"]
+    assert triggers["workflow_run"]["workflows"] == ["hmux-tui release binaries"]
     assert "schedule" in triggers
     assert "contents: read" in delivery
     assert "contents: write" not in delivery
     assert "check_release_delivery.py" in delivery
     assert "head_sha" not in delivery
     assert "persist-credentials: false" in delivery
-    build = workflow("cmux-tui-build-package.yml")
+    build = workflow("hmux-tui-build-package.yml")
     wheel_smoke = build.split("- name: Smoke verify PyPI wheels", 1)[1].split("- name:", 1)[0]
-    assert "/tmp/cmux-tui-wheel-smoke/bin/cmux remote-probe --json" in wheel_smoke
-    assert '"build_identity": os.environ["CMUX_TUI_EXPECTED_BUILD_IDENTITY"]' in wheel_smoke
+    assert "/tmp/hmux-tui-wheel-smoke/bin/hmux remote-probe --json" in wheel_smoke
+    assert '"build_identity": os.environ["HMUX_TUI_EXPECTED_BUILD_IDENTITY"]' in wheel_smoke
     assert '"distribution_version": os.environ["NPM_VERSION"]' in wheel_smoke
 
 
 def test_installed_pypi_wheel_probe_rejects_stale_executable() -> None:
-    document = yaml.safe_load(workflow("cmux-tui-build-package.yml"))
+    document = yaml.safe_load(workflow("hmux-tui-build-package.yml"))
     smoke = next(
         step["run"]
         for job in document["jobs"].values()
@@ -1611,14 +1611,14 @@ def test_installed_pypi_wheel_probe_rejects_stale_executable() -> None:
     )
     validation = smoke.rsplit("python3 - <<'PY'\n", 1)[1].split("\nPY", 1)[0]
     expected = {"build_identity": "a" * 40, "distribution_version": "0.13.2"}
-    env = dict(os.environ, NPM_VERSION="0.13.2", CMUX_TUI_EXPECTED_BUILD_IDENTITY="a" * 40)
+    env = dict(os.environ, NPM_VERSION="0.13.2", HMUX_TUI_EXPECTED_BUILD_IDENTITY="a" * 40)
     for key in (None, "build_identity", "distribution_version"):
         probe = dict(expected)
         if key:
             probe[key] = "stale"
         result = subprocess.run(
             ["python3", "-c", validation],
-            env=dict(env, CMUX_TUI_WHEEL_PROBE=json.dumps(probe)),
+            env=dict(env, HMUX_TUI_WHEEL_PROBE=json.dumps(probe)),
             capture_output=True,
             text=True,
         )
@@ -1629,18 +1629,18 @@ def test_native_tui_releases_do_not_gate_on_separately_deployed_worker() -> None
     """No shipping lane may be gated on the separately deployed Worker.
 
     This used to be enforced caller by caller: the Worker was a job inside
-    cmux-tui-build-package.yml behind `build_cloudflare_relay`, and each release
+    hmux-tui-build-package.yml behind `build_cloudflare_relay`, and each release
     caller passed false. relay-publish-npm.yml never did, so it inherited the
     default of true and ran the Worker's `cargo clippy -- -D warnings` and
     `npm audit --audit-level=high` inside a publishing run, where `publish`
     needs `build-package`. A third-party advisory or a new lint -- neither of
-    them a change to this repository -- could therefore stop cmux-relay
+    them a change to this repository -- could therefore stop hmux-relay
     shipping.
 
     The Worker now has its own lane, so there is no input left to pass and no
     caller left to get it wrong.
     """
-    shared = workflow("cmux-tui-build-package.yml")
+    shared = workflow("hmux-tui-build-package.yml")
     assert "build_cloudflare_relay" not in shared
     assert "cloudflare-relay:" not in shared
     assert "cloudflare-do" not in shared
@@ -1659,15 +1659,15 @@ def test_cloudflare_worker_is_verified_on_the_pull_request_that_changes_it() -> 
     """The Worker's only lane must be triggered by changes to the Worker.
 
     Before it had its own workflow the verification ran only during a
-    cmux-relay publish, which last succeeded 2026-08-27 -- so edits to
-    cmux-tui/relays/cloudflare-do went unverified between releases, and the
+    hmux-relay publish, which last succeeded 2026-08-27 -- so edits to
+    hmux-tui/relays/cloudflare-do went unverified between releases, and the
     verification was discovered only at the moment it could block one.
     """
     document = yaml.safe_load(workflow("cloudflare-relay.yml"))
     triggers = document.get("on") or document.get(True)
     assert "pull_request" in triggers, "the Worker must be verified on pull requests"
 
-    component = "cmux-tui/relays/cloudflare-do/**"
+    component = "hmux-tui/relays/cloudflare-do/**"
     for event in ("pull_request", "push"):
         paths = triggers[event]["paths"]
         assert component in paths, f"{event} must cover {component}"
@@ -1686,44 +1686,44 @@ def test_cloudflare_worker_is_verified_on_the_pull_request_that_changes_it() -> 
 
 
 def test_experimental_windows_is_opt_in_without_blocking_unix_publication() -> None:
-    document = yaml.load(workflow("cmux-tui-release.yml"), Loader=yaml.BaseLoader)
+    document = yaml.load(workflow("hmux-tui-release.yml"), Loader=yaml.BaseLoader)
     assert document["on"]["workflow_dispatch"]["inputs"]["include_windows"]["default"] == "false"
     assert document["jobs"]["build-package"]["with"]["include_windows"] == "${{ inputs.include_windows == true }}"
     publisher = workflow("tui-publish-npm.yml")
-    assert 'if [[ -d dist/npm-packages/cmux-tui-win32-x64 ]]; then' in publisher
+    assert 'if [[ -d dist/npm-packages/hmux-tui-win32-x64 ]]; then' in publisher
     platform_block = publisher.split("packages=(", 1)[1].split(")", 1)[0]
-    assert "cmux-tui-win32-x64" not in platform_block
-    assert "packages+=(cmux-tui-win32-x64)" in publisher
+    assert "hmux-tui-win32-x64" not in platform_block
+    assert "packages+=(hmux-tui-win32-x64)" in publisher
 
 
-def test_relay_publisher_owns_the_cmux_relay_dist_tags_exclusively() -> None:
-    # The chatmux machine relay publishes ONLY through the cmux-relay-v* tag
-    # family. If the coordinated TUI publish ever grows a cmux-relay npm
+def test_relay_publisher_owns_the_hmux_relay_dist_tags_exclusively() -> None:
+    # The chatmux machine relay publishes ONLY through the hmux-relay-v* tag
+    # family. If the coordinated TUI publish ever grows a hmux-relay npm
     # publish back, a routine TUI release could silently take over
-    # cmux-relay@latest from the shipping relay (chatmux relay Rust cutover,
+    # hmux-relay@latest from the shipping relay (chatmux relay Rust cutover,
     # chatmux docs/RELAY-RUST.md).
     text = workflow("tui-publish-npm.yml")
-    assert "npm publish --provenance dist/npm-packages/cmux-relay" not in text
+    assert "npm publish --provenance dist/npm-packages/hmux-relay" not in text
     assert (
-        "npm publish --provenance --tag nightly dist/npm-packages/cmux-relay"
+        "npm publish --provenance --tag nightly dist/npm-packages/hmux-relay"
         not in text
     )
     publish_lists = re.findall(r"packages=\((.*?)\)", text, flags=re.DOTALL)
     assert publish_lists
     for block in publish_lists:
-        assert "cmux-relay" not in block
+        assert "hmux-relay" not in block
 
 
 def test_relay_publisher_is_tag_bound_rc_aware_and_attested() -> None:
     text = workflow("relay-publish-npm.yml")
 
     # Tag-only trigger: no workflow_dispatch bypass, tags pinned to the
-    # cmux-relay-v family, and the tag must be an ancestor of protected main.
+    # hmux-relay-v family, and the tag must be an ancestor of protected main.
     triggers = workflow_triggers(text)
     assert set(triggers) == {"push"}
-    assert triggers["push"] == {"tags": ["cmux-relay-v*"]}
+    assert triggers["push"] == {"tags": ["hmux-relay-v*"]}
     assert (
-        '[[ "$GITHUB_REF_NAME" =~ ^cmux-relay-v[0-9]+\\.[0-9]+\\.[0-9]+(-rc\\.[0-9]+)?$ ]]'
+        '[[ "$GITHUB_REF_NAME" =~ ^hmux-relay-v[0-9]+\\.[0-9]+\\.[0-9]+(-rc\\.[0-9]+)?$ ]]'
         in text
     )
     assert 'git merge-base --is-ancestor "$GITHUB_SHA" origin/main' in text
@@ -1734,7 +1734,7 @@ def test_relay_publisher_is_tag_bound_rc_aware_and_attested() -> None:
     assert 'dist_tag="latest"' in text
     assert 'if [[ "$version" == *-rc.* ]]' in text
     # --access public is required for the first publish of each new unscoped
-    # cmux-relay package name under --provenance and is a no-op afterwards.
+    # hmux-relay package name under --provenance and is a no-op afterwards.
     assert text.count('npm publish --provenance --access public --tag "$DIST_TAG"') == 1
     assert 'npm publish --provenance --tag "$DIST_TAG"' not in text.replace(
         'npm publish --provenance --access public --tag "$DIST_TAG"', ""
@@ -1748,16 +1748,16 @@ def test_relay_publisher_is_tag_bound_rc_aware_and_attested() -> None:
     assert "name: npm-tui" in text
     assert "npm install -g npm@11.5.1" in text
     assert "runs-on: ubuntu-latest" in text
-    assert "uses: ./.github/workflows/cmux-tui-build-package.yml" in text
+    assert "uses: ./.github/workflows/hmux-tui-build-package.yml" in text
     assert "attest_packages: true" in text
     # The Rust machine relay has no Windows PTY backend yet. Its stable npm
     # publisher must build and publish Unix packages only; Windows stays on
     # the Node rollback lane until a tested backend exists.
     assert "include_windows: false" in text
-    assert "cmux-relay-win32-x64" not in text
+    assert "hmux-relay-win32-x64" not in text
     assert "package_pypi: false" in text
     assert "validate_package_contract.py" in text
-    assert "--install-npm-relay-package cmux-relay-linux-x64" in text
+    assert "--install-npm-relay-package hmux-relay-linux-x64" in text
     assert "gh attestation verify" in text
     assert "--deny-self-hosted-runners" in text
     assert '--source-digest "$GITHUB_SHA"' in text
@@ -1777,30 +1777,30 @@ def test_relay_launcher_rc_fallback_never_relaxes_stable() -> None:
         "- name: Publish five Unix relay packages idempotently", 1
     )[1].split("- name: Audit published npm signatures and provenance", 1)[0]
     package_lines = re.findall(
-        r"^\s+(cmux-relay(?:-(?:darwin-arm64|darwin-x64|linux-x64|linux-arm64))?)\s*$",
+        r"^\s+(hmux-relay(?:-(?:darwin-arm64|darwin-x64|linux-x64|linux-arm64))?)\s*$",
         publish_section,
         re.MULTILINE,
     )
     assert package_lines == [
-        "cmux-relay-darwin-arm64",
-        "cmux-relay-darwin-x64",
-        "cmux-relay-linux-x64",
-        "cmux-relay-linux-arm64",
-        "cmux-relay",
+        "hmux-relay-darwin-arm64",
+        "hmux-relay-darwin-x64",
+        "hmux-relay-linux-x64",
+        "hmux-relay-linux-arm64",
+        "hmux-relay",
     ]
     assert 'elif [[ "$DIST_TAG" == "next" ]]' not in text
     assert "LAUNCHER_PUBLISHED" not in text
-    assert "npm install -g ./dist/npm-packages/cmux-relay" not in text
-    assert "cmux-relay-win32-x64" not in text
+    assert "npm install -g ./dist/npm-packages/hmux-relay" not in text
+    assert "hmux-relay-win32-x64" not in text
     assert 'publish_if_missing "$package"' in publish_section
     assert "version_exists" in publish_section
     assert "registry_integrity" in publish_section
     assert "Audit published npm signatures and provenance" in text
-    assert text.count("cmux-relay --version") == 1
+    assert text.count("hmux-relay --version") == 1
 
 
 def test_relay_attestations_survive_a_skipped_windows_build() -> None:
-    text = workflow("cmux-tui-build-package.yml")
+    text = workflow("hmux-tui-build-package.yml")
 
     # A skipped optional build-windows poisons the implicit success() on
     # transitive dependents. verify-linux-packages and attest-npm-packages
@@ -1829,7 +1829,7 @@ PACKAGE_BUILD_JOBS = (
 
 def _package_workflow_document() -> dict[str, object]:
     document = yaml.load(
-        workflow("cmux-tui-build-package.yml"),
+        workflow("hmux-tui-build-package.yml"),
         Loader=yaml.BaseLoader,  # noqa: S506 - preserve raw workflow expressions
     )
     assert isinstance(document, dict)
@@ -1916,10 +1916,10 @@ def test_package_checkout_ref_preserves_workflow_call_pr_branch_tag_and_sha() ->
     scenarios = (
         (
             "workflow_call input",
-            "refs/tags/cmux-tui-v1.2.3",
+            "refs/tags/hmux-tui-v1.2.3",
             "refs/heads/main",
             source_sha,
-            ("refs/tags/cmux-tui-v1.2.3", ""),
+            ("refs/tags/hmux-tui-v1.2.3", ""),
         ),
         (
             "PR",
@@ -1938,9 +1938,9 @@ def test_package_checkout_ref_preserves_workflow_call_pr_branch_tag_and_sha() ->
         (
             "tag",
             "",
-            "refs/tags/cmux-tui-v1.2.3",
+            "refs/tags/hmux-tui-v1.2.3",
             source_sha,
-            ("refs/tags/cmux-tui-v1.2.3", source_sha),
+            ("refs/tags/hmux-tui-v1.2.3", source_sha),
         ),
         (
             "SHA",
@@ -1957,19 +1957,19 @@ def test_package_checkout_ref_preserves_workflow_call_pr_branch_tag_and_sha() ->
 
 def test_package_attestation_stays_bound_to_caller_digest_and_ref() -> None:
     attest = workflow_job(
-        workflow("cmux-tui-build-package.yml"),
+        workflow("hmux-tui-build-package.yml"),
         "attest-npm-packages",
     )
     assert '--source-digest "$GITHUB_SHA"' in attest
     assert '--source-ref "$GITHUB_REF"' in attest
     assert (
         '--signer-workflow "$GITHUB_REPOSITORY/.github/workflows/'
-        'cmux-tui-build-package.yml"'
+        'hmux-tui-build-package.yml"'
     ) in attest
 
 
 def test_package_attestation_rejects_divergent_checkout_ref() -> None:
-    workflow_text = workflow("cmux-tui-build-package.yml")
+    workflow_text = workflow("hmux-tui-build-package.yml")
     attest_job = workflow_job(workflow_text, "attest-npm-packages")
     document = _package_workflow_document()
     jobs = document["jobs"]
@@ -2005,8 +2005,8 @@ def test_package_attestation_rejects_divergent_checkout_ref() -> None:
 
 
 def test_npm_builder_accepts_relay_release_candidate_versions() -> None:
-    builder = ROOT / "cmux-tui" / "dist" / "scripts" / "package_npm.py"
-    namespace = runpy.run_path(str(builder), run_name="cmux_tui_package_npm_test")
+    builder = ROOT / "hmux-tui" / "dist" / "scripts" / "package_npm.py"
+    namespace = runpy.run_path(str(builder), run_name="hmux_tui_package_npm_test")
     version_re = namespace["VERSION_RE"]
     assert isinstance(version_re, re.Pattern)
 

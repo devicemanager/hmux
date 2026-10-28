@@ -15,13 +15,13 @@ from typing import Iterable, Optional
 
 CI_WORKFLOW = ".github/workflows/ci-macos.yml"
 E2E_WORKFLOW = ".github/workflows/test-e2e.yml"
-IDENTITY_SCHEMA = "cmux-app-host-product-inputs/v2"
+IDENTITY_SCHEMA = "hmux-app-host-product-inputs/v2"
 MACOS_ADMISSION_JOB = "macos-compile-admission"
 E2E_BUILD_JOB = "build"
 
 # A product profile is the set of schemes one producer builds. The app-host
 # profile carries the whole app; the cli profile carries only what the host-free
-# CLI lane consumes -- the cmux-cli product and its test bundle.
+# CLI lane consumes -- the hmux-cli product and its test bundle.
 #
 # This is the single source of truth. compile-app-host-test-product.sh asks for
 # the scheme list rather than repeating it: if the built schemes and the
@@ -30,20 +30,20 @@ E2E_BUILD_JOB = "build"
 PRODUCT_PROFILES = {
     # The app/UI scheme builds first so its warning log keeps the runtime
     # job's warning-budget scope; later schemes reuse the same app objects.
-    # cmux-unit supplies both ordinary app-host tests and the serialized
+    # hmux-unit supplies both ordinary app-host tests and the serialized
     # numeric-locale gate (app_host_test_products.OUTPUT_ALIASES); the two
     # schemes' product contracts are kept equivalent by
-    # tests/test_app_host_test_products.py, so cmux-numeric-locale is not
+    # tests/test_app_host_test_products.py, so hmux-numeric-locale is not
     # built a third time.
-    "app-host": ("cmux", "cmux-unit", "cmux-cli-tests"),
-    "cli": ("cmux-cli-tests",),
+    "app-host": ("hmux", "hmux-unit", "hmux-cli-tests"),
+    "cli": ("hmux-cli-tests",),
 }
 DEFAULT_PRODUCT_PROFILE = "app-host"
 
 
 def resolve_profile(name: str | None = None) -> str:
     """Name the product profile, defaulting to the full app-host product."""
-    resolved = name or os.environ.get("CMUX_PRODUCT_PROFILE") or DEFAULT_PRODUCT_PROFILE
+    resolved = name or os.environ.get("HMUX_PRODUCT_PROFILE") or DEFAULT_PRODUCT_PROFILE
     if resolved not in PRODUCT_PROFILES:
         raise SystemExit(
             f"unknown product profile {resolved!r}; "
@@ -68,16 +68,16 @@ PRODUCT_CI_INPUTS = frozenset({
 })
 
 # workers/ is Cloudflare Worker source and stays out of product identity, with
-# one exception. cmux.xcodeproj's "Build Plain Text Paste Worker" phase declares
-# workers/cmux-paste-text/main.m as an input and compiles it into the app-host
-# bundle as bin/cmux-paste-text-worker, which cmuxTests loads and executes.
+# one exception. hmux.xcodeproj's "Build Plain Text Paste Worker" phase declares
+# workers/hmux-paste-text/main.m as an input and compiles it into the app-host
+# bundle as bin/hmux-paste-text-worker, which hmuxTests loads and executes.
 # Changing it changes product bytes, so it has to invalidate reuse.
-PRODUCT_WORKER_PREFIXES = ("workers/cmux-paste-text/",)
+PRODUCT_WORKER_PREFIXES = ("workers/hmux-paste-text/",)
 
 # Developer and maintenance tooling that neither the Xcode build nor any macOS
 # CI lane reads: no build phase, compile helper, bundled-resource script, or
 # ci-macos.yml / test-e2e.yml step names them, and no native test executes
-# them. agent-chat/ is the standalone chat server a user starts with cmux-chat;
+# them. agent-chat/ is the standalone chat server a user starts with hmux-chat;
 # the app only connects to it. Each keeps its own Linux guard. Keep this exact:
 # scripts/ also holds the build phases' helpers, which must stay product inputs.
 NON_PRODUCT_TOOLING_PREFIXES = (
@@ -99,34 +99,34 @@ NON_PRODUCT_TOOLING = frozenset({
 })
 
 REQUIRED_PRODUCT_JOB_ENV_KEYS = frozenset({
-    "CMUX_CI_XCODE_APP",
-    "CMUX_CI_REQUIRED_MACOS_SDK_MAJOR",
-    "CMUX_SKIP_ZIG_BUILD",
+    "HMUX_CI_XCODE_APP",
+    "HMUX_CI_REQUIRED_MACOS_SDK_MAJOR",
+    "HMUX_SKIP_ZIG_BUILD",
 })
 
 E2E_REQUIRED_PRODUCT_JOB_ENV_KEYS = frozenset({
     "TEST_REF",
-    "CMUX_CI_MAX_MACOS_SDK_MAJOR",
-    "CMUX_SKIP_ZIG_BUILD",
-    "CMUX_PRODUCT_RUNNER",
+    "HMUX_CI_MAX_MACOS_SDK_MAJOR",
+    "HMUX_SKIP_ZIG_BUILD",
+    "HMUX_PRODUCT_RUNNER",
 })
 
 NON_PRODUCT_JOB_ENV_KEYS = frozenset({
     # Where an owned Mac keeps its build state between jobs (owned_build_state.py).
-    "CMUX_OWNED_STATE_ROOT",
-    "CMUX_NODE_PRODUCT_CACHE_ROOT",
-    "CMUX_NODE_PRODUCT_CACHE_MAX_BYTES",
-    "CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS",
-    "CMUX_PRODUCT_RUNNER",
+    "HMUX_OWNED_STATE_ROOT",
+    "HMUX_NODE_PRODUCT_CACHE_ROOT",
+    "HMUX_NODE_PRODUCT_CACHE_MAX_BYTES",
+    "HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS",
+    "HMUX_PRODUCT_RUNNER",
     # Read only by the changed-suites steps that test the finished product.
-    "CMUX_CI_APP_HOST_ISOLATION_REQUIRED",
-    "CMUX_APP_HOST_SHARD",
-    "CMUX_APP_HOST_UNIT_SELECTORS",
-    "CMUX_APP_HOST_CAPTURE_XCRESULTS",
-    "CMUX_UNIT_TEST_TIMEOUT_SECONDS",
-    "CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS",
-    "CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET",
-    "CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS",
+    "HMUX_CI_APP_HOST_ISOLATION_REQUIRED",
+    "HMUX_APP_HOST_SHARD",
+    "HMUX_APP_HOST_UNIT_SELECTORS",
+    "HMUX_APP_HOST_CAPTURE_XCRESULTS",
+    "HMUX_UNIT_TEST_TIMEOUT_SECONDS",
+    "HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS",
+    "HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET",
+    "HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS",
     "SWIFT_BACKTRACE",
 })
 
@@ -225,7 +225,7 @@ def reaches_product(path: str) -> bool:
         return False
     if path in NON_PRODUCT_TOOLING or path.startswith(NON_PRODUCT_TOOLING_PREFIXES):
         return False
-    if path.startswith((".github/", "tests/", "tests_v2/", "docs/", "design/", "plans/", "ios/", "web/", "workers/", "config/iroh/", "cmux-tui/", "cmux-browser/", "daemon/remote/")):
+    if path.startswith((".github/", "tests/", "tests_v2/", "docs/", "design/", "plans/", "ios/", "web/", "workers/", "config/iroh/", "hmux-tui/", "hmux-browser/", "daemon/remote/")):
         return False
     if path in {".vercelignore", "vercel.json"}:
         return False
@@ -236,7 +236,7 @@ def reaches_product(path: str) -> bool:
         return False
     if path == "README.md" or (path.startswith("README.") and path.endswith(".md")):
         return False
-    if path.startswith("skills/") and path.endswith(".md") and not path.startswith("skills/cmux-cua/"):
+    if path.startswith("skills/") and path.endswith(".md") and not path.startswith("skills/hmux-cua/"):
         return False
     return True
 

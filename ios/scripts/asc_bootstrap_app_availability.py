@@ -28,7 +28,7 @@ MAX_TERRITORY_PAGES = 20
 
 
 def _api_base() -> str:
-    override = os.environ.get("CMUX_ASC_API_BASE_URL")
+    override = os.environ.get("HMUX_ASC_API_BASE_URL")
     if not override:
         return OFFICIAL_API_BASE
     parsed = urllib.parse.urlsplit(override)
@@ -37,7 +37,7 @@ def _api_base() -> str:
         "::1",
         "localhost",
     }:
-        raise RuntimeError("CMUX_ASC_API_BASE_URL is restricted to loopback tests")
+        raise RuntimeError("HMUX_ASC_API_BASE_URL is restricted to loopback tests")
     return override.rstrip("/")
 
 

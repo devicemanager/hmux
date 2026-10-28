@@ -1,11 +1,11 @@
 import AppKit
 import Bonsplit
 import Combine
-import CmuxFoundation
-import CmuxNotifications
-import CmuxSettings
-import CmuxSettingsUI
-import CmuxTestSupport
+import HmuxFoundation
+import HmuxNotifications
+import HmuxSettings
+import HmuxSettingsUI
+import HmuxTestSupport
 import Observation
 import SwiftUI
 
@@ -335,7 +335,7 @@ private final class DetachedNotificationsPopoverDelegate: NSObject, NSPopoverDel
 }
 
 extension Notification.Name {
-    static let cmuxNotificationsPopoverVisibilityDidChange = Notification.Name("cmux.notificationsPopoverVisibilityDidChange")
+    static let hmuxNotificationsPopoverVisibilityDidChange = Notification.Name("hmux.notificationsPopoverVisibilityDidChange")
 }
 
 private enum NotificationsPopoverVisibilityUserInfoKey {
@@ -421,7 +421,7 @@ private func postNotificationsPopoverVisibilityDidChange(isShown: Bool, source: 
         userInfo[NotificationsPopoverVisibilityUserInfoKey.windowNumber] = windowNumber
     }
     NotificationCenter.default.post(
-        name: .cmuxNotificationsPopoverVisibilityDidChange,
+        name: .hmuxNotificationsPopoverVisibilityDidChange,
         object: nil,
         userInfo: userInfo
     )
@@ -987,21 +987,21 @@ private final class TitlebarControlRightClickNSView: NSView {
 private struct TitlebarNotificationBadge: View {
     let unreadModel: SidebarUnreadModel
     let config: TitlebarControlsStyleConfig
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var globalFontPercent
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var globalFontPercent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
 
     var body: some View {
         let unreadCount = unreadModel.totalUnreadCount
         if unreadCount > 0 {
             Text("\(min(unreadCount, 99))")
-                .cmuxFont(
+                .hmuxFont(
                     size: titlebarNotificationBadgeFontSize(for: config)
                         / max(1, GlobalFontMagnification.scale(for: globalFontPercent)),
                     weight: .semibold
                 )
                 .foregroundColor(.white)
                 .frame(width: config.badgeSize, height: config.badgeSize)
-                .background(Circle().fill(cmuxAccent.color))
+                .background(Circle().fill(hmuxAccent.color))
                 .offset(x: config.badgeOffset.width, y: config.badgeOffset.height)
         }
     }
@@ -1142,12 +1142,12 @@ struct TitlebarControlsView: View {
                 accessibilityLabel: String(localized: "titlebar.sidebar.accessibilityLabel", defaultValue: "Toggle Sidebar"),
                 action: {
                 #if DEBUG
-                cmuxDebugLog("titlebar.toggleSidebar")
+                hmuxDebugLog("titlebar.toggleSidebar")
                 #endif
                 onToggleSidebar()
             },
                 rightClickAction: { anchorView, event in
-                    CmuxExtensionSidebarSelection.showMenu(anchorView: anchorView, event: event)
+                    HmuxExtensionSidebarSelection.showMenu(anchorView: anchorView, event: event)
                 }) {
                 sidebarIconLabel(config: config, iconGeometryKeyPrefix: "titlebarControl_toggleSidebarIcon")
             }
@@ -1160,7 +1160,7 @@ struct TitlebarControlsView: View {
                 accessibilityLabel: String(localized: "titlebar.notifications.accessibilityLabel", defaultValue: "Notifications"),
                 action: {
                 #if DEBUG
-                cmuxDebugLog("titlebar.notifications")
+                hmuxDebugLog("titlebar.notifications")
                 #endif
                 onToggleNotifications()
             }) {
@@ -1184,7 +1184,7 @@ struct TitlebarControlsView: View {
                 foregroundColor: foregroundColor,
                 onNewTab: {
                     #if DEBUG
-                    cmuxDebugLog("titlebar.newTab")
+                    hmuxDebugLog("titlebar.newTab")
                     #endif
                     onNewTab()
                 }
@@ -1411,7 +1411,7 @@ private struct TitlebarControlSymbol: View {
     @Environment(\.titlebarControlForegroundOpacity) private var foregroundOpacity
 
     var body: some View {
-        CmuxSystemSymbolImage(
+        HmuxSystemSymbolImage(
             systemName: systemName,
             pointSize: config.iconSize,
             weight: TitlebarControlIconStyle.weight,
@@ -1578,7 +1578,7 @@ struct HiddenTitlebarSidebarControlsView: View {
                 }
                 #if DEBUG
                 TitlebarChromeUITestRecorder.recordTrafficLightFrames(window: window)
-                _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "CMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
+                _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "HMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
                     payload["minimalSidebarHostWindowNumber"] = String(nextWindowNumber)
                     payload["minimalSidebarHostPinned"] = String(
                         isHoveringHost || nextHoveringWindowChrome || popoverVisibilityState.isShown(in: nextWindowNumber)
@@ -1672,7 +1672,7 @@ struct HiddenTitlebarSidebarControlsView: View {
         .onReceive(MinimalModeSidebarChromeHoverState.shared.$hoveredWindowNumber) { hoveredWindowNumber in
             isHoveringWindowChrome = hostWindowNumber == hoveredWindowNumber
             #if DEBUG
-            _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "CMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
+            _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "HMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
                 payload["minimalSidebarObservedHoverWindowNumber"] = hoveredWindowNumber.map(String.init) ?? "nil"
                 payload["minimalSidebarObservedHostWindowNumber"] = hostWindowNumber.map(String.init) ?? "nil"
                 payload["minimalSidebarObservedPinned"] = String(shouldPinControls)
@@ -1885,10 +1885,10 @@ private struct PassthroughHoverTrackingView: NSViewRepresentable {
 
         private func recordFrameForUITest() {
             #if DEBUG
-            guard ProcessInfo.processInfo.environment["CMUX_UI_TEST_BONSPLIT_TAB_DRAG_SETUP"] == "1" else { return }
+            guard ProcessInfo.processInfo.environment["HMUX_UI_TEST_BONSPLIT_TAB_DRAG_SETUP"] == "1" else { return }
             guard window != nil else { return }
             let frameInWindow = convert(bounds, to: nil)
-            _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "CMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
+            _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "HMUX_UI_TEST_BONSPLIT_TAB_DRAG_PATH") { payload in
                 payload["minimalSidebarHostFrameInWindow"] = NSStringFromRect(frameInWindow)
             }
             #endif
@@ -2019,7 +2019,7 @@ final class TitlebarControlsAccessoryViewController: NSTitlebarAccessoryViewCont
             rootView: AnyView(
                 rootView
                     .environment(\.settingsRuntime, settingsRuntime)
-                    .cmuxAccentColorEnvironment()
+                    .hmuxAccentColorEnvironment()
             )
         )
 
@@ -2271,7 +2271,7 @@ final class TitlebarControlsAccessoryViewController: NSTitlebarAccessoryViewCont
                     openPhoneForwardingSettings(in: NSApp.windows.first { ObjectIdentifier($0) == windowIdentifier })
                 }
             )
-            .cmuxAccentColorEnvironment()
+            .hmuxAccentColorEnvironment()
         )
         hostingController.view.wantsLayer = true
         hostingController.view.layer?.backgroundColor = .clear
@@ -2371,13 +2371,13 @@ private func openPhoneForwardingSettings(in window: NSWindow?) {
 private struct NotificationsPopoverView: View {
     @ObservedObject var notificationStore: TerminalNotificationStore
     @State private var keyboardShortcutSettingsObserver = KeyboardShortcutSettingsObserver.shared
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     let onDismiss: () -> Void
     let onOpenPhoneForwarding: () -> Void
 
-    @AppStorage("cmux.notifications.popover.width")
+    @AppStorage("hmux.notifications.popover.width")
     private var savedWidth: Double = Double(NotificationsPopoverMetrics.defaultWidth)
-    @AppStorage("cmux.notifications.popover.height")
+    @AppStorage("hmux.notifications.popover.height")
     private var savedHeight: Double = Double(NotificationsPopoverMetrics.defaultHeight)
 
     // Live size while the user drags the resize handle. We avoid writing through @AppStorage
@@ -2490,29 +2490,29 @@ private struct NotificationsPopoverView: View {
     private var header: some View {
         HStack(spacing: 8) {
             Text(String(localized: "notifications.title", defaultValue: "Notifications"))
-                .cmuxFont(size: 14, weight: .semibold)
+                .hmuxFont(size: 14, weight: .semibold)
             if unreadCount > 0 {
                 Text("\(unreadCount)")
-                    .cmuxFont(size: 11, weight: .semibold)
+                    .hmuxFont(size: 11, weight: .semibold)
                     .foregroundColor(.white)
                     .padding(.horizontal, 6)
                     .padding(.vertical, 1)
-                    .background(Capsule().fill(cmuxAccent.color))
+                    .background(Capsule().fill(hmuxAccent.color))
             }
             Spacer()
             Button(action: jumpToLatestUnread) {
                 HStack(spacing: 5) {
-                    CmuxSystemSymbolImage(
+                    HmuxSystemSymbolImage(
                         systemName: "arrow.down.to.line",
                         pointSize: 10,
                         weight: .semibold,
                         tint: hasUnreadNotifications ? .primary : .secondary
                     )
                     Text(String(localized: "notifications.jumpToLatest", defaultValue: "Jump to Latest"))
-                        .cmuxFont(size: 11)
+                        .hmuxFont(size: 11)
                     if !jumpToUnreadShortcut.displayString.isEmpty {
                         Text(jumpToUnreadShortcut.displayString)
-                            .cmuxFont(size: 10.5, weight: .medium)
+                            .hmuxFont(size: 10.5, weight: .medium)
                             .foregroundColor(.secondary)
                             .padding(.horizontal, 4)
                             .padding(.vertical, 1)
@@ -2545,7 +2545,7 @@ private struct NotificationsPopoverView: View {
 
             Button(action: { notificationStore.clearAll() }) {
                 Text(String(localized: "notifications.clearAll", defaultValue: "Clear All"))
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .padding(.horizontal, 8)
                     .padding(.vertical, 4)
             }
@@ -2565,16 +2565,16 @@ private struct NotificationsPopoverView: View {
     private var phoneForwardingEntry: some View {
         Button(action: onOpenPhoneForwarding) {
             HStack(spacing: 8) {
-                CmuxSystemSymbolImage(systemName: "iphone", pointSize: 12, weight: .medium, tint: .secondary)
+                HmuxSystemSymbolImage(systemName: "iphone", pointSize: 12, weight: .medium, tint: .secondary)
                 Text(
                     String(
                         localized: "notifications.forwardToPhone.title",
                         defaultValue: "Forward notifications to my iPhone"
                     )
                 )
-                .cmuxFont(size: 12, weight: .medium)
+                .hmuxFont(size: 12, weight: .medium)
                 Spacer()
-                CmuxSystemSymbolImage(systemName: "chevron.right", pointSize: 9, weight: .semibold, tint: .secondary)
+                HmuxSystemSymbolImage(systemName: "chevron.right", pointSize: 9, weight: .semibold, tint: .secondary)
             }
             .contentShape(Rectangle())
             .padding(.horizontal, 14)
@@ -2585,7 +2585,7 @@ private struct NotificationsPopoverView: View {
         .safeHelp(
             String(
                 localized: "notifications.forwardToPhone.subtitle",
-                defaultValue: "Send local agent notifications to cmux on your iPhone. Enabled by default; turn this off to stop this Mac from forwarding them."
+                defaultValue: "Send local agent notifications to hmux on your iPhone. Enabled by default; turn this off to stop this Mac from forwarding them."
             )
         )
     }
@@ -2710,13 +2710,13 @@ private struct NotificationsPopoverView: View {
 
     private func emptyState(systemImage: String, title: String, subtitle: String?) -> some View {
         VStack(spacing: 10) {
-            CmuxSystemSymbolImage(systemName: systemImage, pointSize: 30, weight: .light, tint: .secondary.opacity(0.7))
+            HmuxSystemSymbolImage(systemName: systemImage, pointSize: 30, weight: .light, tint: .secondary.opacity(0.7))
             Text(title)
-                .cmuxFont(size: 14, weight: .medium)
+                .hmuxFont(size: 14, weight: .medium)
                 .foregroundColor(.primary)
             if let subtitle {
                 Text(subtitle)
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
@@ -2766,7 +2766,7 @@ final class UpdateTitlebarAccessoryController {
     private var observers: [NSObjectProtocol] = []
     private var pendingAttachRetries: [ObjectIdentifier: Int] = [:]
     private var startupScanWorkItems: [DispatchWorkItem] = []
-    private let controlsIdentifier = NSUserInterfaceItemIdentifier("cmux.titlebarControls")
+    private let controlsIdentifier = NSUserInterfaceItemIdentifier("hmux.titlebarControls")
     private let controlsControllers = NSHashTable<TitlebarControlsAccessoryViewController>.weakObjects()
     private var lastKnownPresentationMode: WorkspacePresentationModeSettings.Mode = WorkspacePresentationModeSettings.mode()
     private var detachedNotificationsPopover: NSPopover?
@@ -2924,7 +2924,7 @@ final class UpdateTitlebarAccessoryController {
                 }
 #if DEBUG
                 let env = ProcessInfo.processInfo.environment
-                if env["CMUX_UI_TEST_MODE"] == "1" {
+                if env["HMUX_UI_TEST_MODE"] == "1" {
                     let ids = NSApp.windows.map { $0.identifier?.rawValue ?? "<nil>" }
                     let delayText = String(format: "%.2f", delay)
                     self?.updateLog.append("startup window scan (delay=\(delayText)) count=\(NSApp.windows.count) ids=\(ids.joined(separator: ","))")
@@ -2989,7 +2989,7 @@ final class UpdateTitlebarAccessoryController {
 
 #if DEBUG
         let env = ProcessInfo.processInfo.environment
-        if env["CMUX_UI_TEST_MODE"] == "1" {
+        if env["HMUX_UI_TEST_MODE"] == "1" {
             let ident = window.identifier?.rawValue ?? "<nil>"
             updateLog.append("attached titlebar accessories to window id=\(ident)")
         }
@@ -3047,7 +3047,7 @@ final class UpdateTitlebarAccessoryController {
 
 #if DEBUG
         let env = ProcessInfo.processInfo.environment
-        if env["CMUX_UI_TEST_MODE"] == "1" {
+        if env["HMUX_UI_TEST_MODE"] == "1" {
             let ident = window.identifier?.rawValue ?? "<nil>"
             updateLog.append("removed titlebar accessories from window id=\(ident)")
         }
@@ -3055,7 +3055,7 @@ final class UpdateTitlebarAccessoryController {
     }
 
     private func isSettingsWindow(_ window: NSWindow) -> Bool {
-        if window.identifier?.rawValue == "cmux.settings" {
+        if window.identifier?.rawValue == "hmux.settings" {
             return true
         }
         return window.title == "Settings"
@@ -3063,7 +3063,7 @@ final class UpdateTitlebarAccessoryController {
 
     private func isMainTerminalWindow(_ window: NSWindow) -> Bool {
         guard let raw = window.identifier?.rawValue else { return false }
-        return raw == "cmux.main" || raw.hasPrefix("cmux.main.")
+        return raw == "hmux.main" || raw.hasPrefix("hmux.main.")
     }
 
     private func canAccessTitlebarAccessories(on window: NSWindow) -> Bool {
@@ -3156,7 +3156,7 @@ final class UpdateTitlebarAccessoryController {
                     openPhoneForwardingSettings(in: NSApp.windows.first { ObjectIdentifier($0) == windowIdentifier })
                 }
             )
-            .cmuxAccentColorEnvironment()
+            .hmuxAccentColorEnvironment()
         )
 
         contentView.layoutSubtreeIfNeeded()

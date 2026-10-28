@@ -25,7 +25,7 @@ def package_step(name: str) -> str:
 
 class SwiftPackageExecutionTests(unittest.TestCase):
     def run_step(
-        self, output: str, status: int = 0, package: str = "CmuxComputerUse",
+        self, output: str, status: int = 0, package: str = "HmuxComputerUse",
         step: str = "Run Swift package unit tests",
     ) -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory(prefix="swift-package-execution-") as directory:
@@ -86,7 +86,7 @@ class SwiftPackageExecutionTests(unittest.TestCase):
         result = self.run_step(
             "error: unexpected binary framework\n"
             "✔ Test run with 0 tests passed after 0.001 seconds.\n",
-            status=1, package="CmuxTerminal",
+            status=1, package="HmuxTerminal",
         )
         self.assertNotEqual(result.returncode, 0, result.stdout)
 
@@ -94,7 +94,7 @@ class SwiftPackageExecutionTests(unittest.TestCase):
         result = self.run_step(
             "error: unexpected binary framework\n"
             "✔ Test run with 2 tests in 1 suite passed after 0.001 seconds.\n",
-            status=1, package="CmuxTerminal",
+            status=1, package="HmuxTerminal",
         )
         self.assertEqual(result.returncode, 0, result.stdout)
 
@@ -103,7 +103,7 @@ class SwiftPackageExecutionTests(unittest.TestCase):
             "error: unexpected binary framework\n"
             "warning: 'swift-crypto': skipping cache due to an error: The file “maintenance.lock” doesn’t exist.\n"
             "✔ Test run with 227 tests in 27 suites passed after 0.001 seconds.\n",
-            status=1, package="CmuxCloud",
+            status=1, package="HmuxCloud",
         )
         self.assertEqual(result.returncode, 0, result.stdout)
 
@@ -112,7 +112,7 @@ class SwiftPackageExecutionTests(unittest.TestCase):
             "error: unexpected binary framework\n"
             "Foo.swift:1:2: error: x\n"
             "✔ Test run with 227 tests in 27 suites passed after 0.001 seconds.\n",
-            status=1, package="CmuxCloud",
+            status=1, package="HmuxCloud",
         )
         self.assertEqual(result.returncode, 1, result.stdout)
 
@@ -131,7 +131,7 @@ class SwiftPackageExecutionTests(unittest.TestCase):
              + "error: Exited with unexpected signal code 10\n", 1),
         ):
             with self.subTest(output=output, status=status):
-                result = self.run_step(output, status=status, package="CmuxTerminal")
+                result = self.run_step(output, status=status, package="HmuxTerminal")
                 self.assertEqual(result.returncode, status, result.stdout)
 
     def test_bonsplit_also_requires_completed_nonempty_execution(self) -> None:

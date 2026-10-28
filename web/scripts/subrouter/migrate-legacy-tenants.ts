@@ -275,7 +275,7 @@ async function openLegacyTenantMigrationStore(
     password,
     ssl: {
       rejectUnauthorized: parseBoolean(
-        runtimeEnv.CMUX_DB_SSL_REJECT_UNAUTHORIZED,
+        runtimeEnv.HMUX_DB_SSL_REJECT_UNAUTHORIZED,
         true,
       ),
     },

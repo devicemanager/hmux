@@ -1,4 +1,4 @@
-import CmuxBrowser
+import HmuxBrowser
 import Foundation
 
 /// `browser.geolocation.set` and `browser.offline.set` on WebKit panels.

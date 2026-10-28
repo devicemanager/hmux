@@ -50,7 +50,7 @@ let personalProWelcomeEnabled = true;
 let subscriptionRetrieveError: Error | null = null;
 let retrievedSubscription: Record<string, unknown> = {
   id: "sub_test_pro",
-  metadata: { stackUserId: "user-1", plan: "pro", app: "cmux" },
+  metadata: { stackUserId: "user-1", plan: "pro", app: "hmux" },
 };
 const retrieveSubscription = mock(
   async (...args: unknown[]): Promise<{
@@ -90,7 +90,7 @@ beforeEach(() => {
   subscriptionRetrieveError = null;
   retrievedSubscription = {
     id: "sub_test_pro",
-    metadata: { stackUserId: "user-1", plan: "pro", app: "cmux" },
+    metadata: { stackUserId: "user-1", plan: "pro", app: "hmux" },
   };
   retrieveSubscription.mockClear();
 });
@@ -137,7 +137,7 @@ function signedRequest(
     createHmac("sha256", WEBHOOK_SECRET)
       .update(`${timestamp}.${body}`)
       .digest("hex");
-  return new Request("https://cmux.test/api/stripe/founders-welcome", {
+  return new Request("https://hmux.test/api/stripe/founders-welcome", {
     method: "POST",
     headers: { "stripe-signature": `t=${timestamp},v1=${v1}` },
     body,
@@ -198,7 +198,7 @@ describe("founders welcome route", () => {
       signedRequest(
         checkoutCompletedEvent({
           id: "cs_test_pro",
-          metadata: { stackUserId: "user-1", plan: "pro", app: "cmux" },
+          metadata: { stackUserId: "user-1", plan: "pro", app: "hmux" },
         }),
       ),
     );
@@ -206,7 +206,7 @@ describe("founders welcome route", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true, sent: true });
     expect(resendSend).toHaveBeenCalledTimes(1);
-    expect(sentEmails[0].payload.subject).toBe("Welcome to cmux Pro 🎉");
+    expect(sentEmails[0].payload.subject).toBe("Welcome to hmux Pro 🎉");
     expect(sentEmails[0].payload.from).toBe(
       "Austin Wang <austin@manaflow.ai>",
     );
@@ -216,7 +216,7 @@ describe("founders welcome route", () => {
       "lawrence@manaflow.ai",
     ]);
     expect(sentEmails[0].payload.replyTo).toBe("austin@manaflow.ai");
-    expect(sentEmails[0].payload.text).toContain("Thanks for joining cmux Pro!");
+    expect(sentEmails[0].payload.text).toContain("Thanks for joining hmux Pro!");
     expect(sentEmails[0].payload.text).toContain(
       "Sign up for TestFlight: https://cmux.com/dashboard/testflight",
     );
@@ -230,9 +230,9 @@ describe("founders welcome route", () => {
 
   test("preserves regional locale keys and accepts lowercase Stripe aliases", async () => {
     const cases = [
-      { locale: "pt-BR", subject: "Boas-vindas ao cmux Pro 🎉" },
-      { locale: "zh-cn", subject: "欢迎加入 cmux Pro 🎉" },
-      { locale: "zh-TW", subject: "歡迎加入 cmux Pro 🎉" },
+      { locale: "pt-BR", subject: "Boas-vindas ao hmux Pro 🎉" },
+      { locale: "zh-cn", subject: "欢迎加入 hmux Pro 🎉" },
+      { locale: "zh-TW", subject: "歡迎加入 hmux Pro 🎉" },
     ];
 
     for (const [index, testCase] of cases.entries()) {
@@ -240,7 +240,7 @@ describe("founders welcome route", () => {
         signedRequest(
           checkoutCompletedEvent({
             id: `cs_test_regional_${index}`,
-            metadata: { stackUserId: "user-1", plan: "pro", app: "cmux" },
+            metadata: { stackUserId: "user-1", plan: "pro", app: "hmux" },
             locale: testCase.locale,
           }),
         ),
@@ -259,7 +259,7 @@ describe("founders welcome route", () => {
           id: "cs_test_pro_subscription_metadata",
           metadata: {},
           subscription: {
-            metadata: { stackUserId: "user-1", plan: "pro", app: "cmux" },
+            metadata: { stackUserId: "user-1", plan: "pro", app: "hmux" },
           },
         }),
       ),
@@ -268,7 +268,7 @@ describe("founders welcome route", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true, sent: true });
     expect(resendSend).toHaveBeenCalledTimes(1);
-    expect(sentEmails[0].payload.subject).toBe("Welcome to cmux Pro 🎉");
+    expect(sentEmails[0].payload.subject).toBe("Welcome to hmux Pro 🎉");
   });
 
   test("retrieves subscription metadata when Stripe sends only a subscription id", async () => {
@@ -285,7 +285,7 @@ describe("founders welcome route", () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true, sent: true });
     expect(retrieveSubscription).toHaveBeenCalledWith("sub_test_pro");
-    expect(sentEmails[0].payload.subject).toBe("Welcome to cmux Pro 🎉");
+    expect(sentEmails[0].payload.subject).toBe("Welcome to hmux Pro 🎉");
   });
 
   test("keeps Stripe retryable when subscription metadata cannot be retrieved", async () => {
@@ -312,7 +312,7 @@ describe("founders welcome route", () => {
       signedRequest(
         checkoutCompletedEvent({
           id: "cs_test_pro_rollout_disabled",
-          metadata: { stackUserId: "user-1", plan: "pro", app: "cmux" },
+          metadata: { stackUserId: "user-1", plan: "pro", app: "hmux" },
         }),
       ),
     );
@@ -331,7 +331,7 @@ describe("founders welcome route", () => {
         checkoutCompletedEvent(
           {
             id: "cs_test_pro_async",
-            metadata: { stackUserId: "user-1", plan: "pro", app: "cmux" },
+            metadata: { stackUserId: "user-1", plan: "pro", app: "hmux" },
           },
           "checkout.session.async_payment_succeeded",
         ),
@@ -350,7 +350,7 @@ describe("founders welcome route", () => {
       signedRequest(
         checkoutCompletedEvent({
           id: "cs_test_pro_pending",
-          metadata: { stackUserId: "user-1", plan: "pro", app: "cmux" },
+          metadata: { stackUserId: "user-1", plan: "pro", app: "hmux" },
           payment_status: "unpaid",
         }),
       ),
@@ -366,7 +366,7 @@ describe("founders welcome route", () => {
       signedRequest(
         checkoutCompletedEvent({
           id: "cs_test_team",
-          metadata: { stackTeamId: "team-1", plan: "team", app: "cmux" },
+          metadata: { stackTeamId: "team-1", plan: "team", app: "hmux" },
         }),
       ),
     );

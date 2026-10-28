@@ -71,13 +71,13 @@ jobs:
           # Unset repository variables expand to the empty string, which the
           # resolver reads as "no override". Nothing here is fromJSON()-ed.
           INPUT_FLEET: ${{ inputs.fleet }}
-          CMUX_CI_RUNNER_FLEET: ${{ vars.CMUX_CI_RUNNER_FLEET }}
-          CMUX_CI_RUNNER_OVERRIDES: ${{ vars.CMUX_CI_RUNNER_OVERRIDES }}
+          HMUX_CI_RUNNER_FLEET: ${{ vars.HMUX_CI_RUNNER_FLEET }}
+          HMUX_CI_RUNNER_OVERRIDES: ${{ vars.HMUX_CI_RUNNER_OVERRIDES }}
         run: |
           set -euo pipefail
           if [ -n "${INPUT_FLEET}" ]; then
-            CMUX_CI_RUNNER_FLEET="${INPUT_FLEET}"
-            export CMUX_CI_RUNNER_FLEET
+            HMUX_CI_RUNNER_FLEET="${INPUT_FLEET}"
+            export HMUX_CI_RUNNER_FLEET
           fi
           python3 scripts/ci/resolve_runners.py
 

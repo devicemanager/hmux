@@ -43,7 +43,7 @@ extension CloudTreeOutlineView.Coordinator {
     private func beginOrganizationLift(_ session: NSDraggingSession, node: CloudTreeNode, in outline: CloudTreeNSOutlineView) {
         guard let parent = CloudSidebarOrganizationTree(nodes: nodes).parent(of: node.id) else {
 #if DEBUG
-            cmuxDebugLog("cloud.lift.organization skip=noParent node=\(node.id)")
+            hmuxDebugLog("cloud.lift.organization skip=noParent node=\(node.id)")
 #endif
             return
         }
@@ -56,7 +56,7 @@ extension CloudTreeOutlineView.Coordinator {
         // Without a picture to hand back, a drag onto a pane would be invisible.
         guard let image = dragImage(of: node, in: outline) else {
 #if DEBUG
-            cmuxDebugLog("cloud.lift.organization skip=noSnapshot node=\(node.id)")
+            hmuxDebugLog("cloud.lift.organization skip=noSnapshot node=\(node.id)")
 #endif
             return
         }
@@ -75,7 +75,7 @@ extension CloudTreeOutlineView.Coordinator {
             }
         )
 #if DEBUG
-        cmuxDebugLog("cloud.lift.organization lifted=\(lifted) node=\(node.id) siblings=\(parent.children.count)")
+        hmuxDebugLog("cloud.lift.organization lifted=\(lifted) node=\(node.id) siblings=\(parent.children.count)")
 #endif
         guard lifted else { return }
         hideDragImage(of: session, in: outline)

@@ -24,8 +24,8 @@ if (!address || typeof address === "string") throw new Error("loopback collector
 try {
   const env = {
     VERCEL_ENV: "preview",
-    CMUX_SERVER_ANALYTICS_FORCE: "1",
-    CMUX_SERVER_ANALYTICS_SMOKE: "1",
+    HMUX_SERVER_ANALYTICS_FORCE: "1",
+    HMUX_SERVER_ANALYTICS_SMOKE: "1",
     POSTHOG_HOST: `http://127.0.0.1:${address.port}`,
   };
   const fetchImpl = (input: RequestInfo | URL, init?: RequestInit) => fetch(input, init);

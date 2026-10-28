@@ -1,17 +1,17 @@
 import AppKit
 import Bonsplit
 import Combine
-import CmuxAgentChat
-import CmuxAppKitSupportUI
-import CmuxBrowser
-import CmuxCore
-import CmuxFoundation
-import CmuxHomeCore
-import CmuxNotifications
-import CmuxSettings
-import CmuxTerminal
-import CmuxTerminalCore
-import CmuxWorkspaces
+import HmuxAgentChat
+import HmuxAppKitSupportUI
+import HmuxBrowser
+import HmuxCore
+import HmuxFoundation
+import HmuxHomeCore
+import HmuxNotifications
+import HmuxSettings
+import HmuxTerminal
+import HmuxTerminalCore
+import HmuxWorkspaces
 import Observation
 import SwiftUI
 import WebKit
@@ -36,8 +36,8 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
     @ObservationIgnored var ownedPaneIds: Set<UUID> = []
 
     /// Which Dock this store backs: `.workspace` (per-workspace, seeded from the
-    /// project `.cmux/dock.json`) or `.global` (a per-window Dock seeded from
-    /// the global `~/.config/cmux/dock.json`, owner id == window id). Drives
+    /// project `.hmux/dock.json`) or `.global` (a per-window Dock seeded from
+    /// the global `~/.config/hmux/dock.json`, owner id == window id). Drives
     /// config resolution and how cross-container moves resolve a reference window.
     let scope: DockScope
 
@@ -160,7 +160,7 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
     /// The foreground process of a Dock terminal, as libghostty reports it.
     @ObservationIgnored let foregroundProcessIDProvider: @MainActor (TerminalPanel) -> Int?
     /// Reads a process's argv and environment for snapshot-time recognition.
-    @ObservationIgnored let processArgumentsProvider: (Int) -> CmuxTopProcessArguments?
+    @ObservationIgnored let processArgumentsProvider: (Int) -> HmuxTopProcessArguments?
     /// The last `claude attach` viewer observation per Dock terminal.
     @ObservationIgnored var claudeBackgroundViewerObservationsByPanelId: [UUID: ClaudeBackgroundViewerObservation] = [:]
 
@@ -329,8 +329,8 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
         foregroundProcessIDProvider: @escaping @MainActor (TerminalPanel) -> Int? = {
             $0.surface.foregroundProcessID()
         },
-        processArgumentsProvider: @escaping (Int) -> CmuxTopProcessArguments? = {
-            CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
+        processArgumentsProvider: @escaping (Int) -> HmuxTopProcessArguments? = {
+            HmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
         }
     ) {
         let tabDragTransferRegistry = tabDragTransferRegistry ?? TabDragTransferRegistry()
@@ -473,7 +473,7 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
             return false
         }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "session.restore.dockBrowser.materialize.request dock=\(workspaceId.uuidString.prefix(8)) " +
                 "panel=\(panelId.uuidString.prefix(8)) reason=\(reason)"
         )
@@ -951,7 +951,7 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
 
     private func inheritedTerminalFontSizeConfig(
         sourcePanelId: UUID?
-    ) -> CmuxSurfaceConfigTemplate? {
+    ) -> HmuxSurfaceConfigTemplate? {
         let sourceTerminalPanel = sourcePanelId.flatMap {
             panels[$0] as? TerminalPanel
         }
@@ -1019,7 +1019,7 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
             transferProjection?.representedRequestTokens
             ?? []
         )
-        var config = CmuxSurfaceConfigTemplate()
+        var config = HmuxSurfaceConfigTemplate()
         config.fontSizeLineage = lineage
         config.fontSizeChangeToken = inheritanceContext?.token
         config.fontSizeChangeTokens =
@@ -1034,7 +1034,7 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
         command: String?,
         url: URL?,
         initialRequest: URLRequest? = nil,
-        configTemplate: CmuxSurfaceConfigTemplate? = nil,
+        configTemplate: HmuxSurfaceConfigTemplate? = nil,
         environment: [String: String],
         workingDirectory: String,
         tmuxStartCommand: String? = nil,
@@ -1120,7 +1120,7 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
         useLoginShellWrapper: Bool,
         workingDirectory: String,
         environment: [String: String],
-        configTemplate: CmuxSurfaceConfigTemplate?,
+        configTemplate: HmuxSurfaceConfigTemplate?,
         tmuxStartCommand: String? = nil,
         initialInput: String? = nil,
         startupRestoreAgent: SessionRestorableAgentSnapshot? = nil,
@@ -1128,8 +1128,8 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
         controlTitle: String?
     ) -> TerminalPanel {
         var resolvedEnvironment = environment
-        if let controlId { resolvedEnvironment["CMUX_DOCK_CONTROL_ID"] = controlId }
-        if let controlTitle { resolvedEnvironment["CMUX_DOCK_CONTROL_TITLE"] = controlTitle }
+        if let controlId { resolvedEnvironment["HMUX_DOCK_CONTROL_ID"] = controlId }
+        if let controlTitle { resolvedEnvironment["HMUX_DOCK_CONTROL_TITLE"] = controlTitle }
 
         let initialCommand: String?
         if let command, !command.isEmpty {
@@ -1446,7 +1446,7 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
     func trustAndReload() {
         guard !isRetired else { return }
         if let trustRequest {
-            CmuxActionTrust.shared.trust(trustRequest.descriptor)
+            HmuxActionTrust.shared.trust(trustRequest.descriptor)
         }
         reload()
     }
@@ -1610,7 +1610,7 @@ final class DockSplitStore: BonsplitDelegate, FilePreviewTabMetadataHost {
     private func trustRequestIfNeeded(for resolution: DockConfigResolution) -> DockTrustRequest? {
         guard resolution.isProjectSource, let sourceURL = resolution.sourceURL else { return nil }
         let descriptor = Self.trustDescriptor(for: resolution)
-        guard !CmuxActionTrust.shared.isTrusted(descriptor) else { return nil }
+        guard !HmuxActionTrust.shared.isTrusted(descriptor) else { return nil }
         return DockTrustRequest(descriptor: descriptor, configPath: sourceURL.path)
     }
 

@@ -1,7 +1,7 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test";
 import { randomUUID } from "node:crypto";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const NOW = new Date("2026-10-18T06:00:00.000Z");
 type TestSql = ((strings: TemplateStringsArray, ...values: unknown[]) => Promise<unknown[]>) & { end(options?: { timeout?: number }): Promise<void>; json(value: unknown): unknown };
@@ -25,7 +25,7 @@ async function fixture(input: { readonly attempts?: number; readonly maxConcurre
   const runId = randomUUID();
   const attemptIds = Array.from({ length: input.attempts ?? 1 }, () => randomUUID());
   cleanupRunIds.push(runId);
-  const runSpec = db.json({ schema: "cmux.run/v1", resources: { maxConcurrent: input.maxConcurrent ?? 1 } });
+  const runSpec = db.json({ schema: "hmux.run/v1", resources: { maxConcurrent: input.maxConcurrent ?? 1 } });
   await db`
     insert into runs (id, user_id, owner_team_id, request_digest, source, spec, recipe, desired_attempts, status)
     values (${runId}::uuid, ${`worker-test-${runId}`}, ${`team-${runId}`}, 'sha256:worker-test', '{}'::jsonb,
@@ -44,7 +44,7 @@ async function fixture(input: { readonly attempts?: number; readonly maxConcurre
 beforeAll(async () => {
   if (!runDbTests) return;
   const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!url) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   const [postgresModule, workerModule] = await Promise.all([import("postgres"), import("../services/runs/worker")]);
   sqlClient = postgresModule.default(url, { max: 2 }) as unknown as TestSql;
   worker = workerModule;

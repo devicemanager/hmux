@@ -49,11 +49,11 @@ def _wait_for_exit(pid: int, seconds: float = 5.0) -> bool:
 
 def test_startup_deadline() -> None:
     """A runner that never connects ends at the startup deadline, not xcodebuild's ~700s."""
-    env = dict(os.environ, CMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS="0.5")
+    env = dict(os.environ, HMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS="0.5")
     # App-host log noise after "Testing started" must not count as a connected runner.
     hung = (
         "import time;print('Testing started',flush=True);"
-        "print('2026-09-25 15:57:32.533062-0700 cmux DEV[1:2] [Connection] noise',flush=True);"
+        "print('2026-09-25 15:57:32.533062-0700 hmux DEV[1:2] [Connection] noise',flush=True);"
         "time.sleep(30)"
     )
     result = subprocess.run([sys.executable, str(HELPER), sys.executable, "-c", hung],
@@ -139,8 +139,8 @@ def test_compiler_timeout_evidence() -> None:
         child = "import os,time,pathlib;pathlib.Path(os.environ['TEST_CHILD_PID_FILE']).write_text(str(os.getpid()));print('SwiftCompile ContentView.swift',flush=True);time.sleep(60)"
         env = dict(os.environ, PATH=str(root) + os.pathsep + os.environ['PATH'],
                    TEST_CHILD_PID_FILE=str(child_pid), TEST_SAMPLE_CALLS=str(calls),
-                   CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS="0.15",
-                   CMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH=str(root / "timeout.log"))
+                   HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS="0.15",
+                   HMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH=str(root / "timeout.log"))
         result = subprocess.run([sys.executable, str(HELPER), sys.executable, "-c", child],
                                 env=env, capture_output=True, text=True, timeout=12)
         assert result.returncode == 124, result.stderr
@@ -211,7 +211,7 @@ def main() -> int:
     )
     timeout_env = {
         **os.environ,
-        "CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "0.2",
+        "HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "0.2",
     }
     timeout_result = subprocess.run(
         [sys.executable, str(HELPER), sys.executable, "-c", timeout_child],
@@ -241,13 +241,13 @@ def main() -> int:
 
         print("ready", flush=True)
         for _ in range(60):
-            print("2026-09-08 14:03:49.521479+0000 cmux DEV[13904:67193] [CloudVM] GET /api/vm not_signed_in 1ms", flush=True)
+            print("2026-09-08 14:03:49.521479+0000 hmux DEV[13904:67193] [CloudVM] GET /api/vm not_signed_in 1ms", flush=True)
             time.sleep(0.05)
         """
     )
     noisy_idle_env = {
         **os.environ,
-        "CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "0.5",
+        "HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "0.5",
     }
     noisy_idle_result = subprocess.run(
         [sys.executable, str(HELPER), sys.executable, "-c", noisy_idle_child],
@@ -273,7 +273,7 @@ def main() -> int:
         import time
 
         for index in range(6):
-            print("2026-09-08 14:03:49.521479+0000 cmux DEV[13904:67193] [generic_renderer] tick", flush=True)
+            print("2026-09-08 14:03:49.521479+0000 hmux DEV[13904:67193] [generic_renderer] tick", flush=True)
             print(f"\u25c7 Test example{index}() started.", flush=True)
             time.sleep(0.25)
         print("done", flush=True)
@@ -284,7 +284,7 @@ def main() -> int:
     # reset, not scheduling latency on a loaded machine.
     progressing_env = {
         **os.environ,
-        "CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "3",
+        "HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS": "3",
     }
     progressing_result = subprocess.run(
         [sys.executable, str(HELPER), sys.executable, "-c", progressing_child],
@@ -314,7 +314,7 @@ def main() -> int:
         import time
 
         for _ in range(8):
-            print("Test Case '-[cmuxTests.FooTests testOne]' started.", flush=True)
+            print("Test Case '-[hmuxTests.FooTests testOne]' started.", flush=True)
             print({RESTART!r}, flush=True)
             time.sleep(0.05)
         time.sleep(600)
@@ -322,7 +322,7 @@ def main() -> int:
     )
     crash_loop_env = {
         **os.environ,
-        "CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET": "2",
+        "HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET": "2",
     }
     try:
         crash_loop_result = subprocess.run(
@@ -380,7 +380,7 @@ def main() -> int:
         timeout=30,
         env={
             **os.environ,
-            "CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET": "2",
+            "HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET": "2",
         },
     )
     if within_budget_result.returncode != 0:
@@ -411,7 +411,7 @@ def main() -> int:
         timeout=30,
         env={
             **os.environ,
-            "CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET": "2",
+            "HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET": "2",
         },
     )
     if slow_healthy_result.returncode != 0:
@@ -488,7 +488,7 @@ def main() -> int:
         timeout=5,
         env={
             **os.environ,
-            "CMUX_XCODEBUILD_NONINTERACTIVE_HEARTBEAT_SECONDS": "0.1",
+            "HMUX_XCODEBUILD_NONINTERACTIVE_HEARTBEAT_SECONDS": "0.1",
         },
     )
     if heartbeat_result.returncode != 0 or heartbeat_result.stdout.count(
@@ -501,7 +501,7 @@ def main() -> int:
 
     post_test_env = {
         **os.environ,
-        "CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS": "0.2",
+        "HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS": "0.2",
     }
     passing_post_test_child = textwrap.dedent(
         """
@@ -618,7 +618,7 @@ def main() -> int:
             timeout=15,
             env={
                 **os.environ,
-                "CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS": "2",
+                "HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS": "2",
             },
         )
         if (
@@ -737,7 +737,7 @@ def main() -> int:
             check=False,
             env={
                 **os.environ,
-                "CMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH": str(log_path),
+                "HMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH": str(log_path),
             },
         )
         if log_result.returncode != 0:

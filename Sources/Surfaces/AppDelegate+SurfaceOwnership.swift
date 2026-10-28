@@ -1,6 +1,6 @@
 import Bonsplit
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension AppDelegate {

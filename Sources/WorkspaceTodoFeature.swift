@@ -1,6 +1,6 @@
 import AppKit
-import CmuxSettings
-import CmuxWorkspaces
+import HmuxSettings
+import HmuxWorkspaces
 import Foundation
 import UniformTypeIdentifiers
 
@@ -18,7 +18,7 @@ enum WorkspaceTodoFeature {
     static var isEnabled: Bool {
         isEnabled(
             defaults: .standard,
-            remoteEnabled: CmuxFeatureFlags.shared.isWorkspaceTodoControlsEnabled
+            remoteEnabled: HmuxFeatureFlags.shared.isWorkspaceTodoControlsEnabled
         )
     }
 
@@ -152,7 +152,7 @@ enum WorkspaceTodoActions {
 
     /// Moves one checklist item toward a new 0-based position (staying within
     /// its completion partition). Shared by the todo pane's drag reorder, the
-    /// `workspace.todo.move` socket verb, and `cmux todo move`.
+    /// `workspace.todo.move` socket verb, and `hmux todo move`.
     static func moveChecklistItem(id: UUID, toIndex: Int, in workspace: Workspace) {
         guard workspace.moveChecklistItem(id: id, toIndex: toIndex) else { return }
         WorkspaceTodoFeature.markUsed()
@@ -160,7 +160,7 @@ enum WorkspaceTodoActions {
 
     /// Opens (or focuses) the workspace's todo pane in the workspace's
     /// focused pane. One shared path for the checklist popover footer, the
-    /// command palette, `cmux todo open`, and the `workspace.todo.open`
+    /// command palette, `hmux todo open`, and the `workspace.todo.open`
     /// socket verb. Also enables the feature (opening the pane is using it).
     @discardableResult
     static func openTodoPane(for workspace: Workspace, focus: Bool = true) -> WorkspaceTodoPanel? {
@@ -223,6 +223,6 @@ extension Notification.Name {
     /// for a workspace's very first item), or by expanding the row's inline
     /// checklist in `.inline` style.
     static let workspaceChecklistAddItemRequested = Notification.Name(
-        "cmux.workspaceChecklistAddItemRequested"
+        "hmux.workspaceChecklistAddItemRequested"
     )
 }

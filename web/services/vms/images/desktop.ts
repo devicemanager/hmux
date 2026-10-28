@@ -1,15 +1,15 @@
 /**
- * The devbox desktop contract: what a desktop-kind cmux Cloud machine promises
+ * The devbox desktop contract: what a desktop-kind hmux Cloud machine promises
  * about its screen, shared by the image definition
  * (services/vms/images/devbox/desktop), the bake and verify scripts, the
  * Freestyle driver's port-open path, and the tests that pin all of them.
  *
  * The desktop is a TigerVNC X server (`Xvnc :1`) running an openbox session
  * with a tint2 dock, started and supervised as the work user by the
- * `cmux-desktop` systemd unit (desktop/start-vnc.sh, desktop/cmux-desktop-boot).
+ * `hmux-desktop` systemd unit (desktop/start-vnc.sh, desktop/hmux-desktop-boot).
  * Two fixed ports carry it: RFB on 5901, loopback only and with no VNC-level
  * auth, and noVNC through websockify on 6901. The Mac app opens the noVNC page
- * (`CmuxTuiSnapshotParser.desktopPort`, CLI `cloudVMDesktopPort`), so these
+ * (`HmuxTuiSnapshotParser.desktopPort`, CLI `cloudVMDesktopPort`), so these
  * values are a contract with shipped clients, not tunables.
  */
 import { DEVBOX_WORK_HOME, DEVBOX_WORK_USER } from "./workUser";
@@ -25,7 +25,7 @@ export const DEVBOX_DESKTOP_NOVNC_PORT = 6901;
 
 /**
  * The account the desktop session runs as: the machine's one work user
- * (services/vms/images/workUser.ts), the same account the cmux-tui daemon
+ * (services/vms/images/workUser.ts), the same account the hmux-tui daemon
  * opens terminals as, so an app a person starts from a pane joins the session
  * bus of the screen they are watching.
  */
@@ -33,7 +33,7 @@ export const DEVBOX_DESKTOP_USER = DEVBOX_WORK_USER;
 export const DEVBOX_DESKTOP_HOME = DEVBOX_WORK_HOME;
 
 /** The systemd unit that supervises the desktop on a Freestyle machine. */
-export const DEVBOX_DESKTOP_UNIT = "cmux-desktop";
+export const DEVBOX_DESKTOP_UNIT = "hmux-desktop";
 
 /**
  * Runtime state the desktop session publishes for other processes: the shell
@@ -42,15 +42,15 @@ export const DEVBOX_DESKTOP_UNIT = "cmux-desktop";
  * can watch. systemd creates it (`RuntimeDirectory=`) owned by the work user;
  * the container boot supervisor creates it the same way.
  */
-export const DEVBOX_DESKTOP_RUNTIME_DIR = "/run/cmux-desktop";
+export const DEVBOX_DESKTOP_RUNTIME_DIR = "/run/hmux-desktop";
 export const DEVBOX_DESKTOP_ENV_FILE = `${DEVBOX_DESKTOP_RUNTIME_DIR}/env`;
 
-/** Default screen size; `CMUX_VNC_GEOMETRY` overrides it. noVNC remote resize grows it live. */
+/** Default screen size; `HMUX_VNC_GEOMETRY` overrides it. noVNC remote resize grows it live. */
 export const DEVBOX_DESKTOP_GEOMETRY = "1440x900";
 
 /** Where the desktop layer installs its entry points (the heal and supervisor contract). */
 export const DEVBOX_DESKTOP_START_SCRIPT = "/usr/local/bin/start-vnc.sh";
-export const DEVBOX_DESKTOP_SUPERVISOR = "/usr/local/bin/cmux-desktop-boot";
+export const DEVBOX_DESKTOP_SUPERVISOR = "/usr/local/bin/hmux-desktop-boot";
 
 /** The noVNC page for a machine address (an IPv6 literal is bracketed). */
 export function devboxDesktopBaseUrl(host: string): string {

@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxCloudResizeCore
+import HmuxCloud
+import HmuxCloudResizeCore
 import AppKit
 import Foundation
 

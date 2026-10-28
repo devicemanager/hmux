@@ -1,5 +1,5 @@
 import Bonsplit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension SurfaceDestination {
@@ -48,7 +48,7 @@ extension Workspace {
               catalog.ownershipRejection(for: group.resources, policy: surfaceOwnershipPolicy) == nil else { return false }
         let target = SurfaceDestination.dropDestination(workspaceID: self.id, destination: destination)
 #if DEBUG
-        cmuxDebugLog("surfaces.drop workspace=\(self.id.uuidString.prefix(5)) group=\(group.title) count=\(group.resources.count) target=\(target)")
+        hmuxDebugLog("surfaces.drop workspace=\(self.id.uuidString.prefix(5)) group=\(group.title) count=\(group.resources.count) target=\(target)")
 #endif
         if let url = catalog.cloudBrowserCopyURL(for: group, intoWorkspace: id) {
             // The normal browser creation path creates the daemon browser for this
@@ -60,7 +60,7 @@ extension Workspace {
                 SurfacePaneFactory.focus(panelID: created.panelID, in: created.workspaceID)
             } catch {
 #if DEBUG
-                cmuxDebugLog("surfaces.drop.copyFailed group=\(group.title) error=\(error)")
+                hmuxDebugLog("surfaces.drop.copyFailed group=\(group.title) error=\(error)")
 #endif
                 return false
             }
@@ -78,7 +78,7 @@ extension Workspace {
                 }
             } catch {
 #if DEBUG
-                cmuxDebugLog("surfaces.drop.failed group=\(group.title) error=\(error)")
+                hmuxDebugLog("surfaces.drop.failed group=\(group.title) error=\(error)")
 #endif
             }
         }

@@ -63,8 +63,8 @@ const productionDeps: RelayPreferenceDeps = {
     runRelayRepositoryEffect(putRelayPreference(input)),
   checkRateLimit,
   rateLimitRuleId: () =>
-    process.env.CMUX_RELAY_PREFERENCES_RATE_LIMIT_ID ??
-    process.env.CMUX_RELAY_TOKEN_RATE_LIMIT_ID,
+    process.env.HMUX_RELAY_PREFERENCES_RATE_LIMIT_ID ??
+    process.env.HMUX_RELAY_TOKEN_RATE_LIMIT_ID,
   isVercel: () => process.env.VERCEL === "1",
   isDevRateLimitBypassAllowed: ({ clientNamespace, user }) =>
     isAuthorizedDevRelayRateLimitBypass({
@@ -84,7 +84,7 @@ async function authenticatedAccount(
     throw relayAuthenticationError(error);
   }
   if (!user) return unauthorized();
-  const clientNamespace = request.headers.get("x-cmux-app-namespace") ?? "legacy";
+  const clientNamespace = request.headers.get("x-hmux-app-namespace") ?? "legacy";
   let bypassRateLimit = false;
   try {
     bypassRateLimit = await deps.isDevRateLimitBypassAllowed({

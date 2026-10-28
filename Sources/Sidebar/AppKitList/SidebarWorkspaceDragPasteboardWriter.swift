@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxSidebar
+import HmuxSidebar
 import Foundation
 
 /// Keeps a table drag's source graph alive while AppKit materializes its native session.

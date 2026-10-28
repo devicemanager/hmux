@@ -8,7 +8,7 @@ import {
 import { requestOrigin } from "../../../lib/request-origin";
 import { captureBillingError } from "../../../../services/errors";
 import {
-  isCmuxCheckoutSession,
+  isHmuxCheckoutSession,
   hasConflictingFounderMetadata,
   recordCheckoutCompletion as recordCheckoutCompletionDefault,
   recordFoundersCheckoutCompletion as recordFoundersCheckoutCompletionDefault,
@@ -44,7 +44,7 @@ export function makeBillingCompleteHandler(
   return withApiRouteSpan(
     request,
     "/api/billing/complete",
-    { "cmux.subsystem": "billing", "cmux.billing.operation": "stripe_complete" },
+    { "hmux.subsystem": "billing", "hmux.billing.operation": "stripe_complete" },
     async (span) => {
       if (!dependencies.isConfigured()) {
         return NextResponse.redirect(new URL("/pricing?billing=unavailable", requestOrigin(request)));
@@ -56,7 +56,7 @@ export function makeBillingCompleteHandler(
       }
 
       const requestedScheme = validatedNativeCallbackScheme(
-        request.nextUrl.searchParams.get("cmux_scheme"),
+        request.nextUrl.searchParams.get("hmux_scheme"),
         request,
       );
       try {
@@ -67,7 +67,7 @@ export function makeBillingCompleteHandler(
         if (hasConflictingFounderMetadata(session, expandedSubscriptionValue)) {
           return NextResponse.redirect(new URL("/pricing?billing=error", requestOrigin(request)));
         }
-        if (!isCmuxCheckoutSession(session, expandedSubscriptionValue)) {
+        if (!isHmuxCheckoutSession(session, expandedSubscriptionValue)) {
           return NextResponse.redirect(new URL("/pricing?billing=error", requestOrigin(request)));
         }
         const scheme =
@@ -134,7 +134,7 @@ function paidSessionDestination(request: NextRequest, session: Stripe.Checkout.S
   if (dashboardReturn) return dashboardReturn;
   const success = new URL("/billing/success", requestOrigin(request));
   success.searchParams.set("session_id", session.id);
-  success.searchParams.set("cmux_scheme", scheme);
+  success.searchParams.set("hmux_scheme", scheme);
   return success;
 }
 

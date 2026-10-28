@@ -4,7 +4,7 @@ Status: proposed
 
 This RFC defines a first-class way to start several independent coding-agent
 runs from one prompt while keeping the runs visible, addressable, and safe to
-retry. It builds on the detached terminal primitive used by `cmux vm agent`;
+retry. It builds on the detached terminal primitive used by `hmux vm agent`;
 it does not create a second agent launcher.
 
 ## Why this needs a protocol
@@ -12,11 +12,11 @@ it does not create a second agent launcher.
 Today an agent can start one detached run with:
 
 ```bash
-cmux vm agent --agent codex --machine vivid-newt --no-open -- \
+hmux vm agent --agent codex --machine vivid-newt --no-open -- \
   "review the authentication changes"
 ```
 
-Starting several commands in a shell loop is easy, but cmux then has no
+Starting several commands in a shell loop is easy, but hmux then has no
 parent/child relationship, no aggregate state, no stable retry operation, and
 no way for the sidebar to show that the terminals belong to one operation. A
 client that is interrupted after creating some terminals also cannot tell which
@@ -30,7 +30,7 @@ operation can be observed and resumed after the creating CLI exits.
 The first CLI surface is an extension of `vm agent`:
 
 ```text
-cmux vm agent --agent <claude|codex|opencode|pi> \
+hmux vm agent --agent <claude|codex|opencode|pi> \
   [--machine <id>] [--remote-workspace <ws>] \
   [--fan-out <count>] [--name <prefix>] [--no-open] \
   [--json] -- <prompt or agent args...>
@@ -52,9 +52,9 @@ the create request has been accepted:
 
 ```text
 Fan-out f_01J… started (8 children, 7 running, 1 failed)
-  [1/8] term_…  cmux vm open vivid-newt/ws_…/term_…
+  [1/8] term_…  hmux vm open vivid-newt/ws_…/term_…
   …
-Watch: cmux vm agent status f_01J…
+Watch: hmux vm agent status f_01J…
 ```
 
 `--json` returns the same data as a single object. Creation is asynchronous;
@@ -99,7 +99,7 @@ an operation record even when the first child cannot be started:
   "created": 8,
   "children": [
     {"index": 0, "state": "running", "terminal_id": "term_…",
-     "reattach": "cmux vm open vivid-newt/ws_…/term_…"}
+     "reattach": "hmux vm open vivid-newt/ws_…/term_…"}
   ],
   "state": "running"
 }
@@ -129,7 +129,7 @@ Request: `{ "machine": "vivid-newt", "operation_id": "f_01J…",
 This is a bounded long-poll. It returns when a child changes state, all
 children settle, or the timeout expires. Repeating it gives the same bounded
 latency behavior as `waitForVMTerminalExit` in
-`CLI/CMUXCLI+VMTransfer.swift`.
+`CLI/HMUXCLI+VMTransfer.swift`.
 
 ## Data model and persistence
 
@@ -213,7 +213,7 @@ and should reuse the agent lifecycle vocabulary already consumed by
 2. Add `vm.agent_fan_out` and status/wait socket handlers. Internally call the
    same `surfaceNewTerminal` helper used by `surface.new_terminal`; do not
    duplicate provider or projection logic.
-3. Extend `CLI/CMUXCLI+VMTransfer.swift` and `CLI/CMUXCLI+VMHelp.swift` with
+3. Extend `CLI/HMUXCLI+VMTransfer.swift` and `CLI/HMUXCLI+VMHelp.swift` with
    `--fan-out`, operation formatting, and `status`/`wait` subcommands. Keep
    `--fan-out 1` on the old path until the new method is proven equivalent.
 4. Add Cloud tree aggregate badges and operation selection. Reuse
@@ -222,11 +222,11 @@ and should reuse the agent lifecycle vocabulary already consumed by
 
 ## Tests required for the first PR
 
-- `cmuxTests/AgentFanOutOperationTests.swift`: validation, idempotent retry,
+- `hmuxTests/AgentFanOutOperationTests.swift`: validation, idempotent retry,
   partial creation, aggregate state, and count limits.
-- `cmuxTests/CLIVMTransferTests.swift`: argument parsing and JSON/non-JSON
+- `hmuxTests/CLIVMTransferTests.swift`: argument parsing and JSON/non-JSON
   output using the existing mock socket server.
-- `cmuxTests/CloudTree*Tests.swift`: aggregate badge and child selection.
+- `hmuxTests/CloudTree*Tests.swift`: aggregate badge and child selection.
 - A socket integration test proving that a duplicate request with the same
   `operation_id` creates no additional terminal.
 

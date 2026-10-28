@@ -4,8 +4,8 @@ import { getCurrentYear } from "@/app/lib/current-year";
 
 export const metadata: Metadata = legalMetadata(
   "/terms-of-service",
-  "Terms of Service — cmux",
-  "Terms of service for the cmux website and macOS application",
+  "Terms of Service — hmux",
+  "Terms of service for the hmux website and macOS application",
 );
 
 export default async function TermsOfServicePage() {
@@ -19,7 +19,7 @@ export default async function TermsOfServicePage() {
       <p>
         The website located at{" "}
         <a href="https://cmux.com">cmux.com</a> (the
-        &ldquo;Site&rdquo;) and the cmux desktop application (the
+        &ldquo;Site&rdquo;) and the hmux desktop application (the
         &ldquo;Application&rdquo;) are copyrighted works belonging to Manaflow
         (&ldquo;Company&rdquo;, &ldquo;us&rdquo;, &ldquo;our&rdquo;, and
         &ldquo;we&rdquo;). These Terms of Use (these &ldquo;Terms&rdquo;) set

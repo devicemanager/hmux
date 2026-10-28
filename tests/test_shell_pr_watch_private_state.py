@@ -22,14 +22,14 @@ import unittest
 import uuid
 
 
-ZSH_INTEGRATION = Path(__file__).resolve().parents[1] / "Resources/shell-integration/cmux-zsh-integration.zsh"
+ZSH_INTEGRATION = Path(__file__).resolve().parents[1] / "Resources/shell-integration/hmux-zsh-integration.zsh"
 CACHE_SUFFIXES = ("branch", "repo", "result", "timestamp", "no-pr-branch")
 ORIGINAL = "original\n"
 
 
 class PRWatchPrivateStateContract(unittest.TestCase):
     def setUp(self) -> None:
-        self._temp = tempfile.TemporaryDirectory(prefix="cmux-pr-state-")
+        self._temp = tempfile.TemporaryDirectory(prefix="hmux-pr-state-")
         self.directory = Path(self._temp.name)
         self.addCleanup(self._temp.cleanup)
         self.tmpdir = self.directory / "tmp"
@@ -40,7 +40,7 @@ class PRWatchPrivateStateContract(unittest.TestCase):
         self.victim = self.directory / "victim.txt"
         self.victim.write_text(ORIGINAL)
         self.panel = str(uuid.uuid4())
-        self.socket_path = self.directory / "cmux.sock"
+        self.socket_path = self.directory / "hmux.sock"
         listener = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         listener.bind(str(self.socket_path))
         self.addCleanup(listener.close)
@@ -57,18 +57,18 @@ class PRWatchPrivateStateContract(unittest.TestCase):
             "TMPDIR": str(tmpdir or self.tmpdir),
             "PATH": "/usr/bin:/bin",
             "TERM": "xterm-256color",
-            "CMUX_SOCKET_PATH": str(self.socket_path),
-            "CMUX_TAB_ID": str(uuid.uuid4()),
-            "CMUX_PANEL_ID": self.panel,
-            "CMUX_TEST_SCRIPT": str(ZSH_INTEGRATION),
+            "HMUX_SOCKET_PATH": str(self.socket_path),
+            "HMUX_TAB_ID": str(uuid.uuid4()),
+            "HMUX_PANEL_ID": self.panel,
+            "HMUX_TEST_SCRIPT": str(ZSH_INTEGRATION),
         }
         script = r'''
-source "$CMUX_TEST_SCRIPT"
-_cmux_send() { :; }
-_cmux_send_bg() { :; }
+source "$HMUX_TEST_SCRIPT"
+_hmux_send() { :; }
+_hmux_send_bg() { :; }
 gh() { return 0; }
 # Keep shell-exit cleanup from removing the files this contract inspects.
-add-zsh-hook -d zshexit _cmux_zshexit
+add-zsh-hook -d zshexit _hmux_zshexit
 ''' + body
         result = subprocess.run(
             ["/bin/zsh", "-f", "-c", script], cwd=self.repo, env=env,
@@ -84,14 +84,14 @@ add-zsh-hook -d zshexit _cmux_zshexit
         self.assertEqual(stat.S_IMODE(info.st_mode), 0o700)
 
     def test_probe_request_writes_no_file_in_shared_tmp(self):
-        self.plant_symlink(Path(f"/tmp/cmux-pr-force-{self.panel}"), self.victim)
+        self.plant_symlink(Path(f"/tmp/hmux-pr-force-{self.panel}"), self.victim)
 
         # One function call: the preexec hook clears the signal before the
         # next top-level command.
         output = self.run_zsh(r'''
 _test_probe() {
-    _cmux_pr_request_probe
-    print -r -- "SIGNAL=$(_cmux_pr_force_signal_path)"
+    _hmux_pr_request_probe
+    print -r -- "SIGNAL=$(_hmux_pr_force_signal_path)"
 }
 _test_probe
 ''')
@@ -103,11 +103,11 @@ _test_probe
 
     def test_cache_writes_no_file_in_shared_tmp(self):
         for suffix in CACHE_SUFFIXES:
-            self.plant_symlink(Path(f"/tmp/cmux-pr-cache-{self.panel}.{suffix}"), self.victim)
+            self.plant_symlink(Path(f"/tmp/hmux-pr-cache-{self.panel}.{suffix}"), self.victim)
 
         output = self.run_zsh(r'''
-_cmux_report_pr_for_path "$PWD"
-print -r -- "PREFIX=$(_cmux_pr_cache_prefix)"
+_hmux_report_pr_for_path "$PWD"
+print -r -- "PREFIX=$(_hmux_pr_cache_prefix)"
 ''')
 
         self.assertEqual(self.victim.read_text(), ORIGINAL)
@@ -125,9 +125,9 @@ gh() {
     [[ "$PWD" == "$expected_repo" ]] || return 1
     printf '123\tOPEN\thttps://github.com/example/repo/pull/123\n'
 }
-_cmux_report_pr_for_path "$expected_repo"
-_cmux_report_pr_for_path "$expected_repo"
-print -r -- "PREFIX=$(_cmux_pr_cache_prefix)"
+_hmux_report_pr_for_path "$expected_repo"
+_hmux_report_pr_for_path "$expected_repo"
+print -r -- "PREFIX=$(_hmux_pr_cache_prefix)"
 ''')
 
         self.assertFalse((self.directory / "chpwd.log").exists(), "PR refresh ran chpwd hooks")
@@ -138,11 +138,11 @@ print -r -- "PREFIX=$(_cmux_pr_cache_prefix)"
         )
 
     def test_debug_log_writes_no_file_in_shared_tmp(self):
-        self.plant_symlink(Path("/tmp/cmux-pr-debug.log"), self.victim)
+        self.plant_symlink(Path("/tmp/hmux-pr-debug.log"), self.victim)
 
         self.run_zsh(r'''
-_CMUX_PR_DEBUG=1
-_cmux_pr_debug_log contract-branch cache-miss
+_HMUX_PR_DEBUG=1
+_hmux_pr_debug_log contract-branch cache-miss
 ''')
 
         self.assertEqual(self.victim.read_text(), ORIGINAL)
@@ -150,24 +150,24 @@ _cmux_pr_debug_log contract-branch cache-miss
     def test_nonsticky_tmp_ancestor_does_not_host_state(self):
         self.tmpdir.chmod(0o777)
         self.run_zsh(r'''
-_cmux_pr_request_probe
-_cmux_report_pr_for_path "$PWD"
-_CMUX_PR_DEBUG=1
-_cmux_pr_debug_log contract-branch cache-miss
+_hmux_pr_request_probe
+_hmux_report_pr_for_path "$PWD"
+_HMUX_PR_DEBUG=1
+_hmux_pr_debug_log contract-branch cache-miss
 ''')
-        state = self.tmpdir / f"cmux-pr-{os.geteuid()}"
+        state = self.tmpdir / f"hmux-pr-{os.geteuid()}"
         self.assertTrue(not state.exists() or not any(state.iterdir()), state.exists() and list(state.iterdir()))
 
     def test_state_directory_replaced_by_a_symlink_is_not_used(self):
         elsewhere = self.directory / "elsewhere"
         elsewhere.mkdir()
-        (self.tmpdir / f"cmux-pr-{os.geteuid()}").symlink_to(elsewhere)
+        (self.tmpdir / f"hmux-pr-{os.geteuid()}").symlink_to(elsewhere)
 
         self.run_zsh(r'''
-_cmux_pr_request_probe
-_cmux_report_pr_for_path "$PWD"
-_CMUX_PR_DEBUG=1
-_cmux_pr_debug_log contract-branch cache-miss
+_hmux_pr_request_probe
+_hmux_report_pr_for_path "$PWD"
+_HMUX_PR_DEBUG=1
+_hmux_pr_debug_log contract-branch cache-miss
 ''')
 
         self.assertEqual(list(elsewhere.iterdir()), [])

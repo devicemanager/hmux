@@ -2,11 +2,11 @@ import SwiftUI
 import Foundation
 import AppKit
 import Bonsplit
-import CmuxAppKitSupportUI
-import CmuxTestSupport
-import CmuxTerminal
-import CmuxFoundation
-import CmuxSettings
+import HmuxAppKitSupportUI
+import HmuxTestSupport
+import HmuxTerminal
+import HmuxFoundation
+import HmuxSettings
 
 /// View for rendering a terminal panel
 struct TerminalPanelView: View {
@@ -19,7 +19,7 @@ struct TerminalPanelView: View {
     private var storedSessionContentMaximumWidth = SessionContentWidthSettings.noMaximumWidth
     @AppStorage(SessionContentWidthSettings.alignmentKey)
     private var storedSessionContentAlignment = SessionContentAlignment.center.rawValue
-    @State private var terminalFontSize = GhosttyConfig.loadForCmux(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent).fontSize
+    @State private var terminalFontSize = GhosttyConfig.loadForHmux(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent).fontSize
     let paneId: PaneID
     let isFocused: Bool
     let isVisibleInUI: Bool
@@ -188,7 +188,7 @@ struct TerminalPanelView: View {
         }
         .background(Color(nsColor: appearance.contentBackgroundColor))
         .onReceive(NotificationCenter.default.publisher(for: .ghosttyTerminalFontSizeDidChange)) { _ in
-            terminalFontSize = GhosttyConfig.loadForCmux(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent).fontSize
+            terminalFontSize = GhosttyConfig.loadForHmux(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent).fontSize
         }
     }
 
@@ -313,9 +313,9 @@ private struct AgentHibernationPlaceholderView: View {
                     .controlSize(.small)
                     .accessibilityIdentifier("AgentHibernationTerminationRecoveryProgress")
             case .hibernated:
-                CmuxSystemSymbolImage(magnified: "pause.circle", pointSize: 34, weight: .regular, tint: .secondary)
+                HmuxSystemSymbolImage(magnified: "pause.circle", pointSize: 34, weight: .regular, tint: .secondary)
             case .failed:
-                CmuxSystemSymbolImage(
+                HmuxSystemSymbolImage(
                     magnified: "exclamationmark.triangle",
                     pointSize: 34,
                     weight: .regular,
@@ -324,9 +324,9 @@ private struct AgentHibernationPlaceholderView: View {
             }
             VStack(spacing: 4) {
                 Text(title)
-                    .cmuxFont(.headline)
+                    .hmuxFont(.headline)
                 Text(state.agentDisplayName)
-                    .cmuxFont(.subheadline)
+                    .hmuxFont(.subheadline)
                     .foregroundStyle(.secondary)
                 Text(
                     String.localizedStringWithFormat(
@@ -334,7 +334,7 @@ private struct AgentHibernationPlaceholderView: View {
                         lastActivityText
                     )
                 )
-                .cmuxFont(.caption)
+                .hmuxFont(.caption)
                 .foregroundStyle(.tertiary)
             }
             if let actionTitle, let onAction {
@@ -383,7 +383,7 @@ private struct TerminalViewportGeometryReporter: ViewModifier {
 @MainActor
 private func recordTerminalViewportGeometryForUITest(proxy: GeometryProxy, panel: TerminalPanel) {
     let env = ProcessInfo.processInfo.environment
-    guard env["CMUX_UI_TEST_TERMINAL_VIEWPORT_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
+    guard env["HMUX_UI_TEST_TERMINAL_VIEWPORT_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false else {
         return
     }
 
@@ -399,7 +399,7 @@ private func recordTerminalViewportGeometryForUITest(proxy: GeometryProxy, panel
         hostedFrameInContent = .zero
     }
 
-    _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "CMUX_UI_TEST_TERMINAL_VIEWPORT_PATH") { payload in
+    _ = UITestCaptureSink().mutateJSONObjectIfConfigured(envKey: "HMUX_UI_TEST_TERMINAL_VIEWPORT_PATH") { payload in
         payload["terminalViewportPanelId"] = panel.id.uuidString
         payload["terminalViewportPanelWidth"] = terminalViewportFormat(proxy.size.width)
         payload["terminalViewportPanelHeight"] = terminalViewportFormat(proxy.size.height)
@@ -474,7 +474,7 @@ struct PanelAppearance {
         )
         return PanelAppearance(
             backgroundColor: backgroundColor,
-            foregroundColor: cmuxReadableForegroundNSColor(
+            foregroundColor: hmuxReadableForegroundNSColor(
                 preferred: config.foregroundColor,
                 on: backgroundColor
             ),

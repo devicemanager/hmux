@@ -77,7 +77,7 @@ assert gh_calls == [
 assets = [
     module.ReleaseAsset(
         asset_id=build * 10 + index,
-        name=f"cmux-nightly-macos-arm64-{build}-{index}.delta",
+        name=f"hmux-nightly-macos-arm64-{build}-{index}.delta",
         build=build,
     )
     for build in range(1, 5)
@@ -99,32 +99,32 @@ assert all(asset.asset_id != 1000 for asset in to_delete)
 
 # Every daemon artifact has the same lifetime as its immutable nightly DMG.
 daemon_names = [
-    "cmuxd-remote-linux-amd64-12345601",
-    "cmuxd-remote-linux-arm64-12345601",
-    "cmuxd-remote-darwin-amd64-12345601",
-    "cmuxd-remote-darwin-arm64-12345601",
-    "cmuxd-remote-checksums-12345601.txt",
-    "cmuxd-remote-manifest-12345601.json",
+    "hmuxd-remote-linux-amd64-12345601",
+    "hmuxd-remote-linux-arm64-12345601",
+    "hmuxd-remote-darwin-amd64-12345601",
+    "hmuxd-remote-darwin-arm64-12345601",
+    "hmuxd-remote-checksums-12345601.txt",
+    "hmuxd-remote-manifest-12345601.json",
 ]
 release_assets = [{"id": i, "name": name} for i, name in enumerate(daemon_names)]
 release_assets += [
-    {"id": 10, "name": "cmux-nightly-macos-arm64-12345601.dmg"},
-    {"id": 11, "name": "cmux-nightly-macos-arm64-12345701.dmg"},
-    {"id": 12, "name": "cmuxd-remote-manifest.json"},
+    {"id": 10, "name": "hmux-nightly-macos-arm64-12345601.dmg"},
+    {"id": 11, "name": "hmux-nightly-macos-arm64-12345701.dmg"},
+    {"id": 12, "name": "hmuxd-remote-manifest.json"},
 ]
 immutable, ignored = module.collect_immutable_assets({"assets": release_assets})
 assert ignored == 1
 to_delete, _ = module.partition_assets(immutable, keep_builds=1, total_assets=9, max_assets=950)
-assert {asset.name for asset in to_delete} == set(daemon_names) | {"cmux-nightly-macos-arm64-12345601.dmg"}
+assert {asset.name for asset in to_delete} == set(daemon_names) | {"hmux-nightly-macos-arm64-12345601.dmg"}
 
 # RC runs share the daemon naming contract but have independent release storage.
-rc_assets = [{**asset, "name": asset["name"].replace("cmux-nightly-macos-", "cmux-rc-macos-")}
+rc_assets = [{**asset, "name": asset["name"].replace("hmux-nightly-macos-", "hmux-rc-macos-")}
              for asset in release_assets]
 immutable, ignored = module.collect_immutable_assets(
-    {"assets": rc_assets}, module.immutable_asset_patterns("cmux-rc-macos-"))
+    {"assets": rc_assets}, module.immutable_asset_patterns("hmux-rc-macos-"))
 assert ignored == 1
 to_delete, _ = module.partition_assets(immutable, keep_builds=1, total_assets=9, max_assets=950)
-assert {asset.name for asset in to_delete} == set(daemon_names) | {"cmux-rc-macos-arm64-12345601.dmg"}
+assert {asset.name for asset in to_delete} == set(daemon_names) | {"hmux-rc-macos-arm64-12345601.dmg"}
 PY
 
 echo "PASS: nightly prune script is compatible with older macOS runner Python"

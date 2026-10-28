@@ -15,13 +15,13 @@ async function waitUntil(check: () => boolean | Promise<boolean>) {
   throw new Error("timed out waiting for fake Codex lifecycle");
 }
 
-if (!process.env.CMUX_TEST_CODEX_RECOVERY_DIR) {
-  const root = await mkdtemp(join(tmpdir(), "cmux-codex-recovery-"));
+if (!process.env.HMUX_TEST_CODEX_RECOVERY_DIR) {
+  const root = await mkdtemp(join(tmpdir(), "hmux-codex-recovery-"));
   const quote = (value: string) => `'${value.replaceAll("'", "'\\''")}'`;
   await writeFile(join(root, "codex"), `#!/bin/sh\nexec ${quote(process.execPath)} ${quote(join(import.meta.dir, "fake-codex-recovery.ts"))}\n`);
   await chmod(join(root, "codex"), 0o700);
   const child = Bun.spawn([process.execPath, import.meta.path], {
-    env: { ...process.env, PATH: `${root}:${process.env.PATH}`, CMUX_TEST_CODEX_RECOVERY_DIR: root },
+    env: { ...process.env, PATH: `${root}:${process.env.PATH}`, HMUX_TEST_CODEX_RECOVERY_DIR: root },
     stdio: ["ignore", "inherit", "inherit"],
   });
   try {
@@ -34,7 +34,7 @@ if (!process.env.CMUX_TEST_CODEX_RECOVERY_DIR) {
     await rm(root, { recursive: true, force: true });
   }
 } else {
-  const root = process.env.CMUX_TEST_CODEX_RECOVERY_DIR;
+  const root = process.env.HMUX_TEST_CODEX_RECOVERY_DIR;
   const requests = async () => (await readFile(join(root, "requests"), "utf8")).trim().split("\n").map((line) => JSON.parse(line));
   const latestPid = async () => Number((await readFile(join(root, "pids"), "utf8")).trim().split("\n").at(-1));
   function session(id: string): SessionCtx {

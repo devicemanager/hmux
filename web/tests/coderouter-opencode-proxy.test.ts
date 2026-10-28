@@ -32,18 +32,18 @@ describe("coderouter OpenCode Go proxy", () => {
           },
         },
       },
-    }, "route-token", "https://cmux.example") as {
+    }, "route-token", "https://hmux.example") as {
       go: { options: Record<string, unknown>; models: Record<string, { provider?: { api?: string } }> };
     };
     expect(rewritten.go.options).toEqual({
       mode: "go",
-      baseURL: "https://cmux.example/api/coderouter/opencode/proxy/go",
+      baseURL: "https://hmux.example/api/coderouter/opencode/proxy/go",
       apiKey: "route-token",
     });
     // Nested per-model provider endpoints route through the same origin, so
     // a Cloud VM minted against any deployment stays on that deployment.
     expect(rewritten.go.models["model-1"].provider?.api).toBe(
-      "https://cmux.example/api/coderouter/opencode/proxy/go",
+      "https://hmux.example/api/coderouter/opencode/proxy/go",
     );
     expect(JSON.stringify(rewritten)).not.toContain("coderouter.dev");
     expect(JSON.stringify(rewritten)).not.toContain("upstream-secret");
@@ -238,7 +238,7 @@ describe("coderouter OpenCode Go proxy VM-bound route tokens", () => {
   }
 
   function configRequest(headers: Record<string, string>): Request {
-    return new Request("https://cmux.example/api/coderouter/opencode/config", {
+    return new Request("https://hmux.example/api/coderouter/opencode/config", {
       headers,
     });
   }
@@ -247,8 +247,8 @@ describe("coderouter OpenCode Go proxy VM-bound route tokens", () => {
     const response = await openCodeClientConfig(
       configRequest({
         authorization: `Bearer ${VM_PLACEHOLDER_API_KEY}`,
-        "x-cmux-authorization": `Bearer ${BOUND_TOKEN}`,
-        "x-cmux-vm-id": "vm-1",
+        "x-hmux-authorization": `Bearer ${BOUND_TOKEN}`,
+        "x-hmux-vm-id": "vm-1",
       }),
       dependencies(),
     );
@@ -261,7 +261,7 @@ describe("coderouter OpenCode Go proxy VM-bound route tokens", () => {
     };
     expect(body.provider.go.options.apiKey).toBe(VM_PLACEHOLDER_API_KEY);
     expect(body.provider.go.options.baseURL).toBe(
-      "https://cmux.example/api/coderouter/opencode/proxy/go",
+      "https://hmux.example/api/coderouter/opencode/proxy/go",
     );
   });
 
@@ -288,11 +288,11 @@ describe("coderouter OpenCode Go proxy VM-bound route tokens", () => {
     });
 
     const wrong = await proxyOpenCodeRequest(
-      new Request("https://cmux.example/api/coderouter/opencode/proxy/go/chat", {
+      new Request("https://hmux.example/api/coderouter/opencode/proxy/go/chat", {
         method: "POST",
         headers: {
           "authorization": `Bearer ${BOUND_TOKEN}`,
-          "x-cmux-vm-id": "vm-2",
+          "x-hmux-vm-id": "vm-2",
         },
         body: "{}",
       }),
@@ -308,7 +308,7 @@ describe("coderouter OpenCode Go proxy VM-bound route tokens", () => {
     const response = await openCodeClientConfig(
       configRequest({
         authorization: `Bearer ${VM_PLACEHOLDER_API_KEY}`,
-        "x-cmux-vm-id": "vm-1",
+        "x-hmux-vm-id": "vm-1",
       }),
       dependencies(authenticated),
     );
@@ -318,7 +318,7 @@ describe("coderouter OpenCode Go proxy VM-bound route tokens", () => {
 
   test("rejects a provider hostname when DNS resolves it to a private address", async () => {
     const response = await proxyOpenCodeRequest(
-      new Request("https://cmux.example/api/coderouter/opencode/proxy/go/chat", {
+      new Request("https://hmux.example/api/coderouter/opencode/proxy/go/chat", {
         method: "POST",
         headers: {
           authorization: `Bearer ${CLI_TOKEN}`,
@@ -347,7 +347,7 @@ describe("coderouter OpenCode Go proxy VM-bound route tokens", () => {
       resolveFetchStarted = resolve;
     });
     const pending = proxyOpenCodeRequest(
-      new Request("https://cmux.example/api/coderouter/opencode/proxy/go/chat", {
+      new Request("https://hmux.example/api/coderouter/opencode/proxy/go/chat", {
         method: "POST",
         signal: controller.signal,
         headers: {
@@ -385,7 +385,7 @@ describe("coderouter OpenCode Go proxy VM-bound route tokens", () => {
       return await new Promise<never>(() => undefined);
     };
     const response = await proxyOpenCodeRequest(
-      new Request("https://cmux.example/api/coderouter/opencode/proxy/go/chat", {
+      new Request("https://hmux.example/api/coderouter/opencode/proxy/go/chat", {
         method: "POST",
         headers: {
           authorization: `Bearer ${CLI_TOKEN}`,
@@ -414,7 +414,7 @@ describe("coderouter OpenCode Go proxy VM-bound route tokens", () => {
       return await new Promise<never>(() => undefined);
     };
     const response = await proxyOpenCodeRequest(
-      new Request("https://cmux.example/api/coderouter/opencode/proxy/go/chat", {
+      new Request("https://hmux.example/api/coderouter/opencode/proxy/go/chat", {
         method: "POST",
         headers: {
           authorization: `Bearer ${CLI_TOKEN}`,
@@ -466,10 +466,10 @@ describe("coderouter OpenCode with no account configured", () => {
       code: "no_account_configured",
     },
   };
-  const configRequest = () => new Request("https://cmux.example/api/coderouter/opencode/config", {
+  const configRequest = () => new Request("https://hmux.example/api/coderouter/opencode/config", {
     headers: { authorization: `Bearer ${TOKEN}` },
   });
-  const proxyRequest = () => new Request("https://cmux.example/api/coderouter/opencode/proxy/go/chat", {
+  const proxyRequest = () => new Request("https://hmux.example/api/coderouter/opencode/proxy/go/chat", {
     method: "POST",
     headers: { authorization: `Bearer ${TOKEN}`, "x-coderouter-route-token": TOKEN },
     body: "{}",
@@ -494,7 +494,7 @@ describe("coderouter OpenCode with no account configured", () => {
 
   test("tells a Cloud machine that private OpenCode accounts must be shared with its team", async () => {
     const vmRequest = configRequest();
-    vmRequest.headers.set("x-cmux-vm-id", "vm-1");
+    vmRequest.headers.set("x-hmux-vm-id", "vm-1");
     const response = await openCodeClientConfig(vmRequest, noAccountDependencies(false, "vm-1").dependencies);
     expect(response.status).toBe(403);
     expect((await response.json()).error.message).toBe("No OpenCode account is shared with this Cloud machine's team. If one was added as private, the person who added it can choose Share with team at coderouter.dev, or add one here with `cr add opencode` (accounts added on a Cloud machine are shared with its team). Or use your own provider sign-in on this machine: run `cr use own opencode`, then `opencode auth login` (on older machines, start OpenCode with `env -u OPENAI_BASE_URL -u ANTHROPIC_BASE_URL opencode`).");
@@ -502,7 +502,7 @@ describe("coderouter OpenCode with no account configured", () => {
 
   test("the provider proxy gives a Cloud machine the same sharing advice", async () => {
     const vmRequest = proxyRequest();
-    vmRequest.headers.set("x-cmux-vm-id", "vm-1");
+    vmRequest.headers.set("x-hmux-vm-id", "vm-1");
     const response = await proxyOpenCodeRequest(vmRequest, "go", ["chat"], noAccountDependencies(false, "vm-1").dependencies);
     expect(response.status).toBe(403);
     expect((await response.json()).error.message).toBe("No OpenCode account is shared with this Cloud machine's team. If one was added as private, the person who added it can choose Share with team at coderouter.dev, or add one here with `cr add opencode` (accounts added on a Cloud machine are shared with its team). Or use your own provider sign-in on this machine: run `cr use own opencode`, then `opencode auth login` (on older machines, start OpenCode with `env -u OPENAI_BASE_URL -u ANTHROPIC_BASE_URL opencode`).");

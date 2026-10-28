@@ -1,4 +1,4 @@
-import CmuxControlSocket
+import HmuxControlSocket
 import Foundation
 import os
 
@@ -55,7 +55,7 @@ extension TerminalController {
             strings: ControlOverloadResponder.Strings(
                 message: String(
                     localized: "socket.overloaded.message",
-                    defaultValue: "cmux is handling too many control-socket requests right now, so this one was not run. Retry in a moment."
+                    defaultValue: "hmux is handling too many control-socket requests right now, so this one was not run. Retry in a moment."
                 )
             ),
             configuration: ControlOverloadResponder.Configuration(

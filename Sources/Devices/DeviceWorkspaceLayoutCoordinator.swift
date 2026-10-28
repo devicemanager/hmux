@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxCore
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCore
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Orders local layout intents and projects the owning Mac's accepted snapshots.

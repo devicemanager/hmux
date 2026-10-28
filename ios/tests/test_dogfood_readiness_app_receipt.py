@@ -63,12 +63,12 @@ if [[ "$1 $2 $3 $4" == "devicectl device info apps" ]]; then
 fi
 if [[ "$1 $2 $3 $4" == "devicectl device process launch" ]]; then
   {
-    printf 'nonce=%s\n' "${DEVICECTL_CHILD_CMUX_DOGFOOD_READINESS_NONCE:-}"
-    printf 'client=%s\n' "${DEVICECTL_CHILD_CMUX_DOGFOOD_CLIENT_ID:-}"
-    printf 'email_set=%s\n' "${DEVICECTL_CHILD_CMUX_UITEST_STACK_EMAIL:+1}"
-    printf 'password_set=%s\n' "${DEVICECTL_CHILD_CMUX_UITEST_STACK_PASSWORD:+1}"
-    printf 'replace=%s\n' "${DEVICECTL_CHILD_CMUX_DEV_AUTH_REPLACE_SESSION:-}"
-    printf 'mock=%s\n' "${DEVICECTL_CHILD_CMUX_UITEST_MOCK_DATA:-}"
+    printf 'nonce=%s\n' "${DEVICECTL_CHILD_HMUX_DOGFOOD_READINESS_NONCE:-}"
+    printf 'client=%s\n' "${DEVICECTL_CHILD_HMUX_DOGFOOD_CLIENT_ID:-}"
+    printf 'email_set=%s\n' "${DEVICECTL_CHILD_HMUX_UITEST_STACK_EMAIL:+1}"
+    printf 'password_set=%s\n' "${DEVICECTL_CHILD_HMUX_UITEST_STACK_PASSWORD:+1}"
+    printf 'replace=%s\n' "${DEVICECTL_CHILD_HMUX_DEV_AUTH_REPLACE_SESSION:-}"
+    printf 'mock=%s\n' "${DEVICECTL_CHILD_HMUX_UITEST_MOCK_DATA:-}"
   } > "$state/launch.env"
   exit 0
 fi
@@ -113,8 +113,8 @@ printf '%s\\n' "$*" >> "$FAKE_STATE/defaults.log"
 exit 0
 """
 
-FAKE_CMUX = """#!/usr/bin/env bash
-printf '%s\\n' "$*" >> "$FAKE_STATE/cmux.log"
+FAKE_HMUX = """#!/usr/bin/env bash
+printf '%s\\n' "$*" >> "$FAKE_STATE/hmux.log"
 exit 0
 """
 
@@ -137,17 +137,17 @@ def write_executable(path: Path, content: str) -> None:
 
 def write_app(path: Path, readiness: str | None) -> Path:
     path.mkdir(parents=True, exist_ok=True)
-    info = {"CFBundleIdentifier": "dev.cmux.ios.rdyt", "CFBundleExecutable": "cmux"}
+    info = {"CFBundleIdentifier": "dev.hmux.ios.rdyt", "CFBundleExecutable": "hmux"}
     if readiness is not None:
-        info["CMUXDogfoodReadiness"] = readiness
+        info["HMUXDogfoodReadiness"] = readiness
     (path / "Info.plist").write_bytes(plistlib.dumps(info))
-    (path / "cmux").write_text("binary")
+    (path / "hmux").write_text("binary")
     return path
 
 
 class Sandbox:
     def __init__(self) -> None:
-        self.root = Path(tempfile.mkdtemp(prefix="cmux-readiness-test-"))
+        self.root = Path(tempfile.mkdtemp(prefix="hmux-readiness-test-"))
         self.state = self.root / "state"
         self.bin = self.root / "bin"
         self.home = self.root / "home"
@@ -156,12 +156,12 @@ class Sandbox:
             directory.mkdir()
         write_executable(self.bin / "xcrun", FAKE_XCRUN)
         write_executable(self.bin / "defaults", FAKE_DEFAULTS)
-        write_executable(self.bin / "cmux", FAKE_CMUX)
+        write_executable(self.bin / "hmux", FAKE_HMUX)
         if platform.system() != "Darwin":
             write_executable(self.bin / "stat", FAKE_STAT)
         self.credentials = self.root / "personal.env"
         self.credentials.write_text(
-            f"CMUX_DOGFOOD_STACK_EMAIL={ACCOUNT}\nCMUX_DOGFOOD_STACK_PASSWORD={PASSWORD}\n"
+            f"HMUX_DOGFOOD_STACK_EMAIL={ACCOUNT}\nHMUX_DOGFOOD_STACK_PASSWORD={PASSWORD}\n"
         )
         self.credentials.chmod(0o600)
 
@@ -175,12 +175,12 @@ class Sandbox:
             "TMPDIR": str(self.root),
             "FAKE_STATE": str(self.state),
             "FAKE_DEVICE_ID": DEVICE_ID,
-            "FAKE_BUNDLE_ID": "dev.cmux.ios.rdyt",
+            "FAKE_BUNDLE_ID": "dev.hmux.ios.rdyt",
             "FAKE_ACCOUNT": ACCOUNT,
             "FAKE_SCENARIO": scenario,
             "FAKE_SESSION_SOURCE": session_source,
-            "CMUX_READINESS_RECEIPT_DIR": str(self.receipts),
-            "CMUX_APP_RECEIPT_TIMEOUT_SECONDS": "2",
+            "HMUX_READINESS_RECEIPT_DIR": str(self.receipts),
+            "HMUX_APP_RECEIPT_TIMEOUT_SECONDS": "2",
         }
         env.update(extra)
         return env
@@ -234,16 +234,16 @@ class ReadinessModeTest(unittest.TestCase):
                     app = Path(tmp) / f"{name}.app"
                     if value is not None:
                         write_app(app, None if value == "<absent>" else value)
-                    result = lib_call(f'cmux_attach_app_readiness_mode "{app}"')
+                    result = lib_call(f'hmux_attach_app_readiness_mode "{app}"')
                     self.assertEqual(result.returncode, code, result.stderr)
                     self.assertEqual(result.stdout, mode)
 
 
 class ReceiptValidationTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.tmp = Path(tempfile.mkdtemp(prefix="cmux-receipt-validate-"))
+        self.tmp = Path(tempfile.mkdtemp(prefix="hmux-receipt-validate-"))
         self.base = {
-            "schema": 1, "nonce": "n1", "client_id": "c1", "bundle_id": "dev.cmux.ios.rdyt",
+            "schema": 1, "nonce": "n1", "client_id": "c1", "bundle_id": "dev.hmux.ios.rdyt",
             "account_email": ACCOUNT, "session_source": "auto_login",
             "written_at": "2026-10-02T00:00:00Z", "user_id": "u1",
         }
@@ -259,7 +259,7 @@ class ReceiptValidationTest(unittest.TestCase):
         elif isinstance(receipt, str):
             path.write_text(receipt)
         return lib_call(
-            f'cmux_attach_validate_app_receipt "{path}" n1 c1 dev.cmux.ios.rdyt {ACCOUNT} "{source}"'
+            f'hmux_attach_validate_app_receipt "{path}" n1 c1 dev.hmux.ios.rdyt {ACCOUNT} "{source}"'
         )
 
     def test_valid_receipt_is_sanitized(self) -> None:
@@ -282,7 +282,7 @@ class ReceiptValidationTest(unittest.TestCase):
         for name, receipt in {
             "wrong account": dict(self.base, account_email="other@example.com"),
             "wrong client": dict(self.base, client_id="c2"),
-            "wrong bundle": dict(self.base, bundle_id="dev.cmux.ios.other"),
+            "wrong bundle": dict(self.base, bundle_id="dev.hmux.ios.other"),
             "string schema": dict(self.base, schema="1"),
             "unknown source": dict(self.base, session_source="guessed"),
             "secret field": dict(self.base, access_token="x"),
@@ -315,7 +315,7 @@ class LauncherTest(unittest.TestCase):
         argv = self.box.log("xcrun-argv.log")
         self.assertNotIn(launched["nonce"], argv, "nonce must travel in the environment")
         self.assertNotIn(PASSWORD, argv)
-        self.assertIn("--domain-type appDataContainer --domain-identifier dev.cmux.ios.rdyt", argv)
+        self.assertIn("--domain-type appDataContainer --domain-identifier dev.hmux.ios.rdyt", argv)
         self.assertEqual(self.box.log("defaults.log"), "", "app-receipt must not arm the tagged Mac")
         receipt = self.box.receipt()
         self.assertEqual(receipt["readiness"], "app-receipt")
@@ -337,8 +337,8 @@ class LauncherTest(unittest.TestCase):
         self.assertIn("--attach/--ensure-mac ignored", result.stdout)
 
     def test_auto_reads_the_installed_app_contract(self) -> None:
-        app = write_app(self.box.root / "cmux.app", "app-receipt-v1")
-        self.assert_app_receipt_pass(self.box.launch(CMUX_INSTALLED_APP_PATH=str(app)))
+        app = write_app(self.box.root / "hmux.app", "app-receipt-v1")
+        self.assert_app_receipt_pass(self.box.launch(HMUX_INSTALLED_APP_PATH=str(app)))
 
     def test_wrong_account_fails_with_app_receipt_retry(self) -> None:
         result = self.box.launch("--readiness", "app-receipt", scenario="wrong-account")
@@ -359,11 +359,11 @@ class LauncherTest(unittest.TestCase):
                 self.assertIn("iPhone auth gate FAILED", result.stderr)
 
     def test_default_mode_is_unchanged_mac_rpc(self) -> None:
-        # No CMUXDogfoodReadiness key (or no app path) keeps the tagged Mac
+        # No HMUXDogfoodReadiness key (or no app path) keeps the tagged Mac
         # flow: --ensure-mac arms the pairing host and, with no local Mac
         # build in this sandbox, fails before launching the phone.
         app = write_app(self.box.root / "old.app", None)
-        for env in ({}, {"CMUX_INSTALLED_APP_PATH": str(app)}):
+        for env in ({}, {"HMUX_INSTALLED_APP_PATH": str(app)}):
             with self.subTest(env=env):
                 (self.box.state / "defaults.log").unlink(missing_ok=True)
                 result = self.box.launch(**env)
@@ -379,11 +379,11 @@ class LauncherTest(unittest.TestCase):
         result = subprocess.run(
             ["bash", str(LAUNCHER), "--check-auth-contract", "--auth-profile", "personal",
              "--credentials-file", str(self.box.credentials)],
-            env=self.box.env(CMUX_INSTALLED_APP_PATH=str(app)), cwd=REPO_ROOT,
+            env=self.box.env(HMUX_INSTALLED_APP_PATH=str(app)), cwd=REPO_ROOT,
             text=True, capture_output=True, timeout=60,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn(f"CMUX_DEV_AUTH_ACCOUNT={ACCOUNT}", result.stdout)
+        self.assertIn(f"HMUX_DEV_AUTH_ACCOUNT={ACCOUNT}", result.stdout)
         self.assertNotIn(PASSWORD, result.stdout + result.stderr)
 
     def test_invalid_mode_and_release_gate_combination_are_refused(self) -> None:
@@ -416,7 +416,7 @@ class VerifierTest(unittest.TestCase):
         self.assertEqual(launched["mock"], "0")
         self.assertRegex(launched["nonce"], r"^[0-9a-f]{32}$")
         self.assertEqual(self.box.receipt()["session_source"], "restored")
-        self.assertEqual(self.box.log("cmux.log"), "")
+        self.assertEqual(self.box.log("hmux.log"), "")
 
     def test_fresh_sign_in_does_not_prove_persistence(self) -> None:
         result = self.box.verify("--readiness", "app-receipt", session_source="auto_login")

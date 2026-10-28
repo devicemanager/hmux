@@ -1,7 +1,7 @@
 #if DEBUG
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import SwiftUI
 
 /// Debug-only Cloud tree style picker (Debug → Debug Windows → Cloud Tree Style
@@ -21,7 +21,7 @@ final class CloudTreeStyleGalleryWindowController: ReleasingWindowController {
             defer: false
         )
         window.title = "Cloud Tree Style Gallery"
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.cloudTreeStyleGallery")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.cloudTreeStyleGallery")
         window.minSize = NSSize(width: 900, height: 420)
         // Float above the workspace windows so frame-capture screenshots reliably
         // target this window.
@@ -118,7 +118,7 @@ private struct CloudTreeStyleGalleryColumn: View {
                     onWillMutate: { _ in },
                     onDidMutate: {},
                     onFailure: { _ in },
-                    refresh: { Task { await CmuxTuiSurfaceProviderRegistry.shared.refresh(force: true) } },
+                    refresh: { Task { await HmuxTuiSurfaceProviderRegistry.shared.refresh(force: true) } },
                     workspaceCreationHost: { AppDelegate.shared?.tabManager.map { CloudWorkspaceCreationHost(manager: $0) } }
                 ),
                 expansionStore: expansionStore,

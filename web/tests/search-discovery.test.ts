@@ -30,7 +30,7 @@ describe("search discovery", () => {
         description: "News & updates",
         feedUrl: "https://cmux.com/feed.xml",
         language: "en",
-        title: "cmux blog",
+        title: "hmux blog",
       },
     );
 
@@ -51,17 +51,17 @@ describe("search discovery", () => {
     expect(feed).toContain("<link>https://cmux.com/ja/blog</link>");
     expect(feed).toContain('href="https://cmux.com/ja/feed.xml"');
     expect(feed).toContain("<title>30日で3670億トークンを使った方法</title>");
-    expect(feed).toContain("<title>cmux Forkの紹介</title>");
+    expect(feed).toContain("<title>hmux Forkの紹介</title>");
     expect(feed).toContain(
       "<title>スーパーリポとClaude Codeが最良のワークツリー管理ツールである理由</title>",
     );
     expect(feed).toContain(
-      "<description>cmuxにまだワークツリーマネージャーがない理由をよく聞かれます。",
+      "<description>hmuxにまだワークツリーマネージャーがない理由をよく聞かれます。",
     );
     expect(feed).not.toContain(
       "<title>Superrepos and Why Claude Code Is the Best Worktree Manager</title>",
     );
-    expect(feed).not.toContain("/ja/blog/cmux-omo");
+    expect(feed).not.toContain("/ja/blog/hmux-omo");
   });
 
   test("selects only recently modified sitemap URLs", () => {

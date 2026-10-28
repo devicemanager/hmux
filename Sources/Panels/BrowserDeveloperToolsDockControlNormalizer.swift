@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import WebKit
 
 @MainActor
@@ -26,7 +26,7 @@ struct BrowserDeveloperToolsDockControlNormalizer {
 extension BrowserPanel {
     func normalizeDeveloperToolsDockControls() {
         BrowserDeveloperToolsDockControlNormalizer().normalize(
-            inspectorFrontendWebView: webView.cmuxInspectorFrontendWebView(),
+            inspectorFrontendWebView: webView.hmuxInspectorFrontendWebView(),
             hostWindow: webView.window
         )
     }

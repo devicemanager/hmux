@@ -38,7 +38,7 @@ mock.module("@/app/lib/stack", () => ({
 
 const { teamsRouter } = await import("../orpc/server/dashboard/teams");
 
-const context = { request: new Request("https://cmux.test/api/dashboard/rpc"), serverPrefetch: true };
+const context = { request: new Request("https://hmux.test/api/dashboard/rpc"), serverPrefetch: true };
 
 beforeEach(() => {
   allowTeamApiKeys = true;

@@ -2,67 +2,67 @@
 Building for debugging...
 [0/4] Write sources
 [2/4] Write swift-version--58304C5D6DBC2206.txt
-[4/8] Compiling CmuxIrxTransport V2WireModels.swift
-[5/8] Emitting module CmuxIrxTransport
-[6/8] Compiling CmuxIrxTransport V2ControlService+Connection.swift
-[7/8] Compiling CmuxIrxTransport V2ControlService+Operations.swift
-[8/23] Compiling CmuxIrxTransport V2FileStateStore.swift
-[9/23] Compiling CmuxIrxTransport V2IdentityKeyStore.swift
-[10/23] Compiling CmuxIrxTransport V2OrderedSocket.swift
-[11/23] Compiling CmuxIrxTransport V2StateStoring.swift
-[12/23] Compiling CmuxIrxTransport V2URLSessionHTTPTransport.swift
-[13/23] Compiling CmuxIrxTransport V2URLSessionSocket.swift
-[14/23] Compiling CmuxIrxTransport V2WireSigningCodec.swift
-[15/23] Compiling CmuxIrxTransport V2ControlService+HTTP.swift
-[16/23] Compiling CmuxIrxTransport V2ControlService+Maintenance.swift
-[17/23] Compiling CmuxIrxTransport V2ControlService.swift
-[18/23] Compiling CmuxIrxTransport V2ControlSnapshot.swift
-[19/23] Compiling CmuxIrxTransport V2CachedState.swift
-[20/23] Compiling CmuxIrxTransport V2ControlConfiguration.swift
-[21/23] Compiling CmuxIrxTransport V2ControlFailure.swift
-[22/23] Compiling CmuxIrxTransport V2ControlService+Acknowledgements.swift
-[23/38] Compiling CmuxIrxTransportTests IrxDirectOnlyEndpointTests.swift
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxLiveQUICTests.swift:299:32: warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
+[4/8] Compiling HmuxIrxTransport V2WireModels.swift
+[5/8] Emitting module HmuxIrxTransport
+[6/8] Compiling HmuxIrxTransport V2ControlService+Connection.swift
+[7/8] Compiling HmuxIrxTransport V2ControlService+Operations.swift
+[8/23] Compiling HmuxIrxTransport V2FileStateStore.swift
+[9/23] Compiling HmuxIrxTransport V2IdentityKeyStore.swift
+[10/23] Compiling HmuxIrxTransport V2OrderedSocket.swift
+[11/23] Compiling HmuxIrxTransport V2StateStoring.swift
+[12/23] Compiling HmuxIrxTransport V2URLSessionHTTPTransport.swift
+[13/23] Compiling HmuxIrxTransport V2URLSessionSocket.swift
+[14/23] Compiling HmuxIrxTransport V2WireSigningCodec.swift
+[15/23] Compiling HmuxIrxTransport V2ControlService+HTTP.swift
+[16/23] Compiling HmuxIrxTransport V2ControlService+Maintenance.swift
+[17/23] Compiling HmuxIrxTransport V2ControlService.swift
+[18/23] Compiling HmuxIrxTransport V2ControlSnapshot.swift
+[19/23] Compiling HmuxIrxTransport V2CachedState.swift
+[20/23] Compiling HmuxIrxTransport V2ControlConfiguration.swift
+[21/23] Compiling HmuxIrxTransport V2ControlFailure.swift
+[22/23] Compiling HmuxIrxTransport V2ControlService+Acknowledgements.swift
+[23/38] Compiling HmuxIrxTransportTests IrxDirectOnlyEndpointTests.swift
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxLiveQUICTests.swift:299:32: warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
 297 |                     )
 298 |                 else { continue }
 299 |                 await registry.admit(
     |                                `- warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
 300 |                     deviceID: peer.deviceID, sessionID: sessionID, connection: irx)
 301 |                 Task {
-[24/38] Compiling CmuxIrxTransportTests IrxJSONCacheMigrationTests.swift
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxLiveQUICTests.swift:299:32: warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
+[24/38] Compiling HmuxIrxTransportTests IrxJSONCacheMigrationTests.swift
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxLiveQUICTests.swift:299:32: warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
 297 |                     )
 298 |                 else { continue }
 299 |                 await registry.admit(
     |                                `- warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
 300 |                     deviceID: peer.deviceID, sessionID: sessionID, connection: irx)
 301 |                 Task {
-[25/38] Compiling CmuxIrxTransportTests IrxLiveQUICTests.swift
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxLiveQUICTests.swift:299:32: warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
+[25/38] Compiling HmuxIrxTransportTests IrxLiveQUICTests.swift
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxLiveQUICTests.swift:299:32: warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
 297 |                     )
 298 |                 else { continue }
 299 |                 await registry.admit(
     |                                `- warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
 300 |                     deviceID: peer.deviceID, sessionID: sessionID, connection: irx)
 301 |                 Task {
-[26/38] Compiling CmuxIrxTransportTests IrxProtocolTests.swift
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxLiveQUICTests.swift:299:32: warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
+[26/38] Compiling HmuxIrxTransportTests IrxProtocolTests.swift
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxLiveQUICTests.swift:299:32: warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
 297 |                     )
 298 |                 else { continue }
 299 |                 await registry.admit(
     |                                `- warning: result of call to 'admit(deviceID:sessionID:connection:stillAuthorized:)' is unused [#no-usage]
 300 |                     deviceID: peer.deviceID, sessionID: sessionID, connection: irx)
 301 |                 Task {
-[27/42] Compiling CmuxIrxTransportTests IrxStateLocationTests.swift
-[28/42] Compiling CmuxIrxTransportTests MobileIrxControlLaneClaimsTests.swift
-[29/42] Compiling CmuxIrxTransportTests V2ControlServiceTests.swift
-[30/42] Compiling CmuxIrxTransportTests V2FileStateStoreTests.swift
-[31/42] Compiling CmuxIrxTransportTests V2TestBackend.swift
-[32/42] Compiling CmuxIrxTransportTests V2TestSocket.swift
-[33/42] Compiling CmuxIrxTransportTests V2TestStateStore.swift
-[34/42] Compiling CmuxIrxTransportTests V2WireSigningTests.swift
-[35/42] Compiling CmuxIrxTransportTests IrxBrokerArmingTests.swift
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+[27/42] Compiling HmuxIrxTransportTests IrxStateLocationTests.swift
+[28/42] Compiling HmuxIrxTransportTests MobileIrxControlLaneClaimsTests.swift
+[29/42] Compiling HmuxIrxTransportTests V2ControlServiceTests.swift
+[30/42] Compiling HmuxIrxTransportTests V2FileStateStoreTests.swift
+[31/42] Compiling HmuxIrxTransportTests V2TestBackend.swift
+[32/42] Compiling HmuxIrxTransportTests V2TestSocket.swift
+[33/42] Compiling HmuxIrxTransportTests V2TestStateStore.swift
+[34/42] Compiling HmuxIrxTransportTests V2WireSigningTests.swift
+[35/42] Compiling HmuxIrxTransportTests IrxBrokerArmingTests.swift
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  24 |         decoder.dateDecodingStrategy = .custom { decoder in
  25 |             let raw = try decoder.singleValueContainer().decode(String.self)
  26 |             guard let date = iso.date(from: raw) else {
@@ -78,7 +78,7 @@ Building for debugging...
 47 | @private
 48 |     CFDateFormatterRef _formatter;
 
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  13 |         decoder.dateDecodingStrategy = .custom { decoder in
  14 |             let raw = try decoder.singleValueContainer().decode(String.self)
  15 |             guard let date = iso.date(from: raw) else {
@@ -95,8 +95,8 @@ Building for debugging...
 48 |     CFDateFormatterRef _formatter;
 
 [#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
-[36/42] Compiling CmuxIrxTransportTests IrxBrokerMintRetryTests.swift
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+[36/42] Compiling HmuxIrxTransportTests IrxBrokerMintRetryTests.swift
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  24 |         decoder.dateDecodingStrategy = .custom { decoder in
  25 |             let raw = try decoder.singleValueContainer().decode(String.self)
  26 |             guard let date = iso.date(from: raw) else {
@@ -112,7 +112,7 @@ Building for debugging...
 47 | @private
 48 |     CFDateFormatterRef _formatter;
 
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  13 |         decoder.dateDecodingStrategy = .custom { decoder in
  14 |             let raw = try decoder.singleValueContainer().decode(String.self)
  15 |             guard let date = iso.date(from: raw) else {
@@ -129,8 +129,8 @@ Building for debugging...
 48 |     CFDateFormatterRef _formatter;
 
 [#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
-[37/42] Compiling CmuxIrxTransportTests IrxControlPlaneTests.swift
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+[37/42] Compiling HmuxIrxTransportTests IrxControlPlaneTests.swift
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  24 |         decoder.dateDecodingStrategy = .custom { decoder in
  25 |             let raw = try decoder.singleValueContainer().decode(String.self)
  26 |             guard let date = iso.date(from: raw) else {
@@ -146,7 +146,7 @@ Building for debugging...
 47 | @private
 48 |     CFDateFormatterRef _formatter;
 
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  13 |         decoder.dateDecodingStrategy = .custom { decoder in
  14 |             let raw = try decoder.singleValueContainer().decode(String.self)
  15 |             guard let date = iso.date(from: raw) else {
@@ -163,8 +163,8 @@ Building for debugging...
 48 |     CFDateFormatterRef _formatter;
 
 [#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
-[38/42] Compiling CmuxIrxTransportTests IrxCtlListAuthTests.swift
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+[38/42] Compiling HmuxIrxTransportTests IrxCtlListAuthTests.swift
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  24 |         decoder.dateDecodingStrategy = .custom { decoder in
  25 |             let raw = try decoder.singleValueContainer().decode(String.self)
  26 |             guard let date = iso.date(from: raw) else {
@@ -180,7 +180,7 @@ Building for debugging...
 47 | @private
 48 |     CFDateFormatterRef _formatter;
 
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  13 |         decoder.dateDecodingStrategy = .custom { decoder in
  14 |             let raw = try decoder.singleValueContainer().decode(String.self)
  15 |             guard let date = iso.date(from: raw) else {
@@ -197,8 +197,8 @@ Building for debugging...
 48 |     CFDateFormatterRef _formatter;
 
 [#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
-[39/42] Compiling CmuxIrxTransportTests IrxDeviceListTests.swift
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+[39/42] Compiling HmuxIrxTransportTests IrxDeviceListTests.swift
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  24 |         decoder.dateDecodingStrategy = .custom { decoder in
  25 |             let raw = try decoder.singleValueContainer().decode(String.self)
  26 |             guard let date = iso.date(from: raw) else {
@@ -214,7 +214,7 @@ Building for debugging...
 47 | @private
 48 |     CFDateFormatterRef _formatter;
 
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  13 |         decoder.dateDecodingStrategy = .custom { decoder in
  14 |             let raw = try decoder.singleValueContainer().decode(String.self)
  15 |             guard let date = iso.date(from: raw) else {
@@ -231,8 +231,8 @@ Building for debugging...
 48 |     CFDateFormatterRef _formatter;
 
 [#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
-[40/42] Emitting module CmuxIrxTransportTests
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+[40/42] Emitting module HmuxIrxTransportTests
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  24 |         decoder.dateDecodingStrategy = .custom { decoder in
  25 |             let raw = try decoder.singleValueContainer().decode(String.self)
  26 |             guard let date = iso.date(from: raw) else {
@@ -248,7 +248,7 @@ Building for debugging...
 47 | @private
 48 |     CFDateFormatterRef _formatter;
 
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  13 |         decoder.dateDecodingStrategy = .custom { decoder in
  14 |             let raw = try decoder.singleValueContainer().decode(String.self)
  15 |             guard let date = iso.date(from: raw) else {
@@ -266,11 +266,11 @@ Building for debugging...
 
 [#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
 [40/42] Write Objects.LinkFileList
-[41/42] Linking CmuxIrxTransportPackageTests
+[41/42] Linking HmuxIrxTransportPackageTests
 Build complete! (4.45s)
 Test Suite 'Selected tests' started at 2026-09-10 21:58:57.605.
-Test Suite 'CmuxIrxTransportPackageTests.xctest' started at 2026-09-10 21:58:57.606.
-Test Suite 'CmuxIrxTransportPackageTests.xctest' passed at 2026-09-10 21:58:57.606.
+Test Suite 'HmuxIrxTransportPackageTests.xctest' started at 2026-09-10 21:58:57.606.
+Test Suite 'HmuxIrxTransportPackageTests.xctest' passed at 2026-09-10 21:58:57.606.
 	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
 Test Suite 'Selected tests' passed at 2026-09-10 21:58:57.606.
 	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds

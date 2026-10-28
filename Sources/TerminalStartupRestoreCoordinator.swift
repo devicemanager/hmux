@@ -1,6 +1,6 @@
-import CmuxAgentChat
-import CmuxTerminal
-import CmuxWorkspaces
+import HmuxAgentChat
+import HmuxTerminal
+import HmuxWorkspaces
 import Foundation
 
 /// Commits structured terminal restores after their owning topology is authoritative.
@@ -291,7 +291,7 @@ final class TerminalStartupRestoreCoordinator {
         )
         resumeIntentRecorder.record(resumeIntent)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "session.restore.resumeBinding workspace=\(workspaceID.uuidString.prefix(8)) " +
             "surface=\(panelID.uuidString.prefix(8)) source=\(resumeIntent.source) " +
             "session=\(resumeIntent.sessionID.prefix(8))"

@@ -2,12 +2,12 @@
 Building for debugging...
 [0/4] Write sources
 [2/4] Write swift-version--58304C5D6DBC2206.txt
-[4/7] Emitting module CmuxIrxTransport
-[5/7] Compiling CmuxIrxTransport V2InboundAdmissionAuthority.swift
-[6/7] Compiling CmuxIrxTransport V2ControlService.swift
-[7/10] Compiling CmuxIrxTransportTests V2InboundAdmissionAuthorityTests.swift
-[8/10] Emitting module CmuxIrxTransportTests
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+[4/7] Emitting module HmuxIrxTransport
+[5/7] Compiling HmuxIrxTransport V2InboundAdmissionAuthority.swift
+[6/7] Compiling HmuxIrxTransport V2ControlService.swift
+[7/10] Compiling HmuxIrxTransportTests V2InboundAdmissionAuthorityTests.swift
+[8/10] Emitting module HmuxIrxTransportTests
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxControlPlaneTests.swift:26:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  24 |         decoder.dateDecodingStrategy = .custom { decoder in
  25 |             let raw = try decoder.singleValueContainer().decode(String.self)
  26 |             guard let date = iso.date(from: raw) else {
@@ -23,7 +23,7 @@ Building for debugging...
 47 | @private
 48 |     CFDateFormatterRef _formatter;
 
-/Users/cmux/cmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
+/Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/IrxCtlListAuthTests.swift:15:30: warning: capture of 'iso' with non-Sendable type 'ISO8601DateFormatter' in a '@Sendable' closure [#SendableClosureCaptures]
  13 |         decoder.dateDecodingStrategy = .custom { decoder in
  14 |             let raw = try decoder.singleValueContainer().decode(String.self)
  15 |             guard let date = iso.date(from: raw) else {
@@ -41,11 +41,11 @@ Building for debugging...
 
 [#SendableClosureCaptures]: <https://docs.swift.org/compiler/documentation/diagnostics/sendable-closure-captures>
 [8/10] Write Objects.LinkFileList
-[9/10] Linking CmuxIrxTransportPackageTests
+[9/10] Linking HmuxIrxTransportPackageTests
 Build complete! (3.07s)
 Test Suite 'Selected tests' started at 2026-09-10 22:14:23.005.
-Test Suite 'CmuxIrxTransportPackageTests.xctest' started at 2026-09-10 22:14:23.006.
-Test Suite 'CmuxIrxTransportPackageTests.xctest' passed at 2026-09-10 22:14:23.006.
+Test Suite 'HmuxIrxTransportPackageTests.xctest' started at 2026-09-10 22:14:23.006.
+Test Suite 'HmuxIrxTransportPackageTests.xctest' passed at 2026-09-10 22:14:23.006.
 	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.000) seconds
 Test Suite 'Selected tests' passed at 2026-09-10 22:14:23.006.
 	 Executed 0 tests, with 0 failures (0 unexpected) in 0.000 (0.001) seconds

@@ -4,12 +4,12 @@ Regression test for https://github.com/manaflow-ai/cmux/issues/17571.
 
 With Settings > Automation > Claude Code integration turned off, the app does
 not install the per-surface `claude` shim (#13590), so the surface exports no
-CMUX_CLAUDE_WRAPPER_SHIM_ROOT. It still installs the per-surface agent command
-shim directory and exports it as CMUX_AGENT_COMMAND_SHIM_ROOT, together with
-CMUX_CLAUDE_INTEGRATION_DISABLED=1 (see TerminalSurface+RuntimeSurfaceCreation).
+HMUX_CLAUDE_WRAPPER_SHIM_ROOT. It still installs the per-surface agent command
+shim directory and exports it as HMUX_AGENT_COMMAND_SHIM_ROOT, together with
+HMUX_CLAUDE_INTEGRATION_DISABLED=1 (see TerminalSurface+RuntimeSurfaceCreation).
 
-0.65.0 required the Claude shim root and refused every `cmux claude-teams`
-launch from such a surface with "must be launched from a cmux-managed terminal
+0.65.0 required the Claude shim root and refused every `hmux claude-teams`
+launch from such a surface with "must be launched from a hmux-managed terminal
 surface". This test builds the environment exactly as the app exports it with
 the integration off and requires that Teams:
 
@@ -30,11 +30,11 @@ from pathlib import Path
 
 from claude_teams_test_utils import (
     FOCUSED_WORKSPACE_ID,
-    focused_cmux_server,
-    resolve_cmux_cli,
+    focused_hmux_server,
+    resolve_hmux_cli,
 )
 
-MANAGED_TERMINAL_REQUIRED = "must be launched from a cmux-managed terminal surface"
+MANAGED_TERMINAL_REQUIRED = "must be launched from a hmux-managed terminal surface"
 
 
 def make_executable(path: Path, content: str) -> None:
@@ -49,11 +49,11 @@ def read_text(path: Path) -> str:
 def install_surface_shims(home: Path, surface_id: str) -> Path:
     """Mirror the app's install with the Claude integration off.
 
-    The live app roots per-surface shims at ~/.cmuxterm/cmux-cli-shims and,
+    The live app roots per-surface shims at ~/.hmuxterm/hmux-cli-shims and,
     with Claude disabled, installs every other bundled agent shim but not
     `claude`.
     """
-    root = home / ".cmuxterm" / "cmux-cli-shims" / surface_id
+    root = home / ".hmuxterm" / "hmux-cli-shims" / surface_id
     root.mkdir(parents=True)
     for directory in (root.parent.parent, root.parent, root):
         directory.chmod(0o700)
@@ -67,12 +67,12 @@ def run_claude_teams(
     surface_id: str,
     tmp: Path,
 ) -> subprocess.CompletedProcess[str]:
-    with focused_cmux_server(tmp / "cmux.sock", surface_id=surface_id) as (
+    with focused_hmux_server(tmp / "hmux.sock", surface_id=surface_id) as (
         live_socket_path,
         _,
     ):
         env = env.copy()
-        env["CMUX_SOCKET_PATH"] = live_socket_path
+        env["HMUX_SOCKET_PATH"] = live_socket_path
         return subprocess.run(
             [cli_path, "claude-teams", "integration off prompt"],
             capture_output=True,
@@ -85,13 +85,13 @@ def run_claude_teams(
 
 def main() -> int:
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
     failures: list[str] = []
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-teams-integration-off-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-teams-integration-off-") as td:
         tmp = Path(td)
         home = tmp / "home"
         real_bin = tmp / "real-bin"
@@ -107,7 +107,7 @@ def main() -> int:
             """#!/usr/bin/env bash
 set -euo pipefail
 printf '%s\\n' "$(command -v tmux)" > "$FAKE_TMUX_PATH_LOG"
-printf '%s\\n' "${CMUX_CLAUDE_TEAMS_WRAPPER_LAUNCH-__UNSET__}" > "$FAKE_WRAPPER_MARKER_LOG"
+printf '%s\\n' "${HMUX_CLAUDE_TEAMS_WRAPPER_LAUNCH-__UNSET__}" > "$FAKE_WRAPPER_MARKER_LOG"
 printf '%s\\n' "$@" > "$FAKE_CLAUDE_ARGV_LOG"
 """,
         )
@@ -115,22 +115,22 @@ printf '%s\\n' "$@" > "$FAKE_CLAUDE_ARGV_LOG"
         env = {
             key: value
             for key, value in os.environ.items()
-            if not key.startswith("CMUX") and not key.startswith("CLAUDE")
+            if not key.startswith("HMUX") and not key.startswith("CLAUDE")
         }
         env.update(
             {
                 "HOME": str(home),
                 "TMPDIR": str(tmp),
                 "PATH": f"{agent_root}:{real_bin}:/usr/bin:/bin",
-                "CMUX_WORKSPACE_ID": FOCUSED_WORKSPACE_ID,
-                "CMUX_SURFACE_ID": surface_id,
-                "CMUX_BUNDLED_CLI_PATH": cli_path,
-                "CMUX_SOCKET_CAPABILITY": "claude-teams-test-capability",
-                "CMUX_AGENT_COMMAND_SHIM_ROOT": str(agent_root),
-                "CMUX_CODEX_WRAPPER_SHIM": str(agent_root / "codex"),
-                "CMUX_CODEX_WRAPPER_SHIM_ROOT": str(agent_root),
-                "CMUX_CLAUDE_INTEGRATION_DISABLED": "1",
-                "CMUX_CLAUDE_HOOKS_DISABLED": "1",
+                "HMUX_WORKSPACE_ID": FOCUSED_WORKSPACE_ID,
+                "HMUX_SURFACE_ID": surface_id,
+                "HMUX_BUNDLED_CLI_PATH": cli_path,
+                "HMUX_SOCKET_CAPABILITY": "claude-teams-test-capability",
+                "HMUX_AGENT_COMMAND_SHIM_ROOT": str(agent_root),
+                "HMUX_CODEX_WRAPPER_SHIM": str(agent_root / "codex"),
+                "HMUX_CODEX_WRAPPER_SHIM_ROOT": str(agent_root),
+                "HMUX_CLAUDE_INTEGRATION_DISABLED": "1",
+                "HMUX_CLAUDE_HOOKS_DISABLED": "1",
                 "FAKE_TMUX_PATH_LOG": str(tmux_path_log),
                 "FAKE_CLAUDE_ARGV_LOG": str(claude_argv_log),
                 "FAKE_WRAPPER_MARKER_LOG": str(wrapper_marker_log),
@@ -163,17 +163,17 @@ printf '%s\\n' "$@" > "$FAKE_CLAUDE_ARGV_LOG"
             if (agent_root / "claude").exists():
                 failures.append("claude-teams installed a claude shim the integration toggle removed")
 
-        # 1b. Claude shim keys inherited from a parent cmux surface (for example
-        #     when cmux itself was started from a cmux terminal) must not win
+        # 1b. Claude shim keys inherited from a parent hmux surface (for example
+        #     when hmux itself was started from a hmux terminal) must not win
         #     over this surface's own agent shim root while the integration is
         #     off: the app exports no Claude shim keys for such a surface.
-        parent_root = home / ".cmuxterm" / "cmux-cli-shims" / str(uuid.uuid4())
+        parent_root = home / ".hmuxterm" / "hmux-cli-shims" / str(uuid.uuid4())
         parent_root.mkdir()
         parent_root.chmod(0o700)
         make_executable(parent_root / "claude", "#!/usr/bin/env bash\nexit 97\n")
         inherited_env = env.copy()
-        inherited_env["CMUX_CLAUDE_WRAPPER_SHIM_ROOT"] = str(parent_root)
-        inherited_env["CMUX_CLAUDE_WRAPPER_SHIM"] = str(parent_root / "claude")
+        inherited_env["HMUX_CLAUDE_WRAPPER_SHIM_ROOT"] = str(parent_root)
+        inherited_env["HMUX_CLAUDE_WRAPPER_SHIM"] = str(parent_root / "claude")
         # The parent's shim directory is inherited on PATH too; its claude must
         # never run, and this run must write its own tmux shim.
         inherited_env["PATH"] = f"{agent_root}:{parent_root}:{real_bin}:/usr/bin:/bin"
@@ -195,8 +195,8 @@ printf '%s\\n' "$@" > "$FAKE_CLAUDE_ARGV_LOG"
         # 2. Integration on but the Claude shim is missing: keep refusing, since
         #    launching without hooks would silently drop session tracking.
         enabled_env = env.copy()
-        enabled_env["CMUX_CLAUDE_INTEGRATION_DISABLED"] = "0"
-        enabled_env.pop("CMUX_CLAUDE_HOOKS_DISABLED")
+        enabled_env["HMUX_CLAUDE_INTEGRATION_DISABLED"] = "0"
+        enabled_env.pop("HMUX_CLAUDE_HOOKS_DISABLED")
         proc = run_claude_teams(cli_path, enabled_env, surface_id, tmp)
         if proc.returncode == 0 or MANAGED_TERMINAL_REQUIRED not in proc.stderr:
             failures.append(
@@ -207,7 +207,7 @@ printf '%s\\n' "$@" > "$FAKE_CLAUDE_ARGV_LOG"
         # 3. An agent shim root owned by another surface is not trusted.
         other_root = install_surface_shims(home, str(uuid.uuid4()))
         foreign_env = env.copy()
-        foreign_env["CMUX_AGENT_COMMAND_SHIM_ROOT"] = str(other_root)
+        foreign_env["HMUX_AGENT_COMMAND_SHIM_ROOT"] = str(other_root)
         foreign_env["PATH"] = f"{other_root}:{real_bin}:/usr/bin:/bin"
         proc = run_claude_teams(cli_path, foreign_env, surface_id, tmp)
         if proc.returncode == 0 or MANAGED_TERMINAL_REQUIRED not in proc.stderr:

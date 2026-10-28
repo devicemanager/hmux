@@ -18,8 +18,8 @@ import { isPriorityPath } from "./observability/sampler";
  * Response headers that hand the caller its Axiom lookup keys. A user who
  * pastes a failed request's reference gives operators the exact trace.
  */
-export const TRACE_ID_RESPONSE_HEADER = "x-cmux-trace-id";
-export const SPAN_ID_RESPONSE_HEADER = "x-cmux-span-id";
+export const TRACE_ID_RESPONSE_HEADER = "x-hmux-trace-id";
+export const SPAN_ID_RESPONSE_HEADER = "x-hmux-span-id";
 
 type AttributeValue = string | number | boolean;
 export type MaybeAttributes = Record<string, AttributeValue | null | undefined>;
@@ -49,7 +49,7 @@ export async function withSpan<T>(
         recordSpanError(span, err);
         throw err;
       } finally {
-        span.setAttribute("cmux.duration_ms", Math.round((performance.now() - start) * 100) / 100);
+        span.setAttribute("hmux.duration_ms", Math.round((performance.now() - start) * 100) / 100);
         span.end();
       }
     },
@@ -76,7 +76,7 @@ export async function withPrioritySpan<T>(
   return withSpan(
     tracerName,
     name,
-    { ...attributes, "cmux.priority": true },
+    { ...attributes, "hmux.priority": true },
     fn,
     {
       context: reRoot ? trace.deleteSpan(otelContext.active()) : undefined,
@@ -105,16 +105,16 @@ export async function withApiRouteSpan<T extends Response>(
     (parent.traceFlags & TraceFlags.SAMPLED) === 0;
   const links = reRoot && trace.isSpanContextValid(parent) ? [{ context: parent }] : undefined;
   return withSpan(
-    "cmux-api",
-    `cmux.api.${request.method} ${route}`,
+    "hmux-api",
+    `hmux.api.${request.method} ${route}`,
     {
-      "cmux.subsystem": "web",
-      "cmux.runtime": "next-api",
+      "hmux.subsystem": "web",
+      "hmux.runtime": "next-api",
       "http.request.method": request.method,
       "http.route": route,
       "url.path": path,
       ...attributes,
-      ...(options.priority === undefined ? {} : { "cmux.priority": options.priority }),
+      ...(options.priority === undefined ? {} : { "hmux.priority": options.priority }),
     },
     async (span) => {
       const source = route.startsWith("/api/cron/") || route.startsWith("/api/internal/")
@@ -124,7 +124,7 @@ export async function withApiRouteSpan<T extends Response>(
       const response = await handledRouteErrors.run(handled, () =>
         runWithCloudDbQueryTags({ source, route }, () => fn(span)));
       span.setAttribute("http.response.status_code", response.status);
-      span.setAttribute("cmux.http.response_error", response.status >= 400);
+      span.setAttribute("hmux.http.response_error", response.status >= 400);
       if (response.status >= 500) recordServerErrorResponse(span, response, handled);
       return withTraceIdHeaders(response, span);
     },
@@ -158,7 +158,7 @@ export function noteHandledRouteError(error: unknown): void {
  * `vmErrorResponse` on every error so response finalizers (analytics,
  * timing, the route span) can classify an outcome without re-parsing the body.
  */
-export const VM_ERROR_CODE_HEADER = "x-cmux-vm-error";
+export const VM_ERROR_CODE_HEADER = "x-hmux-vm-error";
 
 function recordServerErrorResponse(span: Span, response: Response, handled: HandledRouteError): void {
   if (handled.noted) {
@@ -190,16 +190,16 @@ export function recordSpanError(span: Span, err: unknown): void {
     });
     span.setStatus({ code: SpanStatusCode.ERROR, message });
     span.setAttributes({
-      "cmux.error_name": name,
-      "cmux.error_message": message,
+      "hmux.error_name": name,
+      "hmux.error_message": message,
     });
     const causes = summarizeErrorCauses(err);
     if (causes) {
       span.setAttributes(cleanAttributes({
-        "cmux.error_cause_chain": causes.chain,
-        "cmux.error_cause_depth": causes.depth,
-        "cmux.error_cause_http_status": causes.httpStatus,
-        "cmux.error_cause_code": causes.code,
+        "hmux.error_cause_chain": causes.chain,
+        "hmux.error_cause_depth": causes.depth,
+        "hmux.error_cause_http_status": causes.httpStatus,
+        "hmux.error_cause_code": causes.code,
       }));
     }
     return;
@@ -208,8 +208,8 @@ export function recordSpanError(span: Span, err: unknown): void {
   span.recordException(message);
   span.setStatus({ code: SpanStatusCode.ERROR, message });
   span.setAttributes({
-    "cmux.error_name": "NonError",
-    "cmux.error_message": message,
+    "hmux.error_name": "NonError",
+    "hmux.error_message": message,
   });
 }
 

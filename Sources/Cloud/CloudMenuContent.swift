@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSettingsUI
+import HmuxCloud
+import HmuxSettingsUI
 import Foundation
 
 /// Everything a Cloud menu needs to decide what to show, as one value.
@@ -70,7 +70,7 @@ enum CloudMenuContent {
                 id: "cloud.signIn",
                 title: isSigningIn
                     ? String(localized: "cloudMenu.signingIn", defaultValue: "Signing In…")
-                    : String(localized: "cloudMenu.signIn", defaultValue: "Sign In to cmux Cloud…"),
+                    : String(localized: "cloudMenu.signIn", defaultValue: "Sign In to hmux Cloud…"),
                 isEnabled: !isSigningIn,
                 perform: actions.signIn
             )))
@@ -173,12 +173,12 @@ enum CloudMenuContent {
             ]
         case .requiresPro:
             return [
-                .header(id: "cloud.problem", title: String(localized: "cloudMenu.problem.requiresPro", defaultValue: "Cloud machines need cmux Pro")),
+                .header(id: "cloud.problem", title: String(localized: "cloudMenu.problem.requiresPro", defaultValue: "Cloud machines need hmux Pro")),
                 .action(CloudMenuAction(id: "cloud.problem.upgrade", title: String(localized: "cloudMenu.upgrade", defaultValue: "Upgrade to Pro…"), perform: actions.upgrade)),
             ]
         case .unreachable:
             return [
-                .header(id: "cloud.problem", title: String(localized: "cloudMenu.problem.unreachable", defaultValue: "Could not reach cmux Cloud")),
+                .header(id: "cloud.problem", title: String(localized: "cloudMenu.problem.unreachable", defaultValue: "Could not reach hmux Cloud")),
                 .action(CloudMenuAction(id: "cloud.problem.retry", title: String(localized: "cloudMenu.retry", defaultValue: "Try Again"), perform: actions.retry)),
             ]
         }

@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
-import CmuxCloudMachines
+import HmuxCloudMachines
 
 /// One create the person started from the sheet, alive from the moment the
 /// CLI run launches until the machine exists (then the real fleet row takes

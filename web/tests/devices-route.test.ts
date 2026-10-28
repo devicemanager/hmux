@@ -4,7 +4,7 @@ import postgres, { type Sql } from "postgres";
 import { closeCloudDbForTests } from "../db/client";
 import { accountDeletionUserHash } from "../services/account/deletionLock";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 
 // Stack user in two teams ("team-a" default-selected, plus "team-b"), so the
@@ -82,12 +82,12 @@ function authHeaders(teamId?: string): Record<string, string> {
     "x-stack-refresh-token": `refresh-token-${currentUserId}`,
     "content-type": "application/json",
   };
-  if (teamId) base["x-cmux-team-id"] = teamId;
+  if (teamId) base["x-hmux-team-id"] = teamId;
   return base;
 }
 
 function registerRequest(body: Record<string, unknown>, teamId?: string): Request {
-  return new Request("https://cmux.test/api/devices", {
+  return new Request("https://hmux.test/api/devices", {
     method: "POST",
     headers: authHeaders(teamId),
     body: JSON.stringify(body),
@@ -95,7 +95,7 @@ function registerRequest(body: Record<string, unknown>, teamId?: string): Reques
 }
 
 function withdrawRequest(body: Record<string, unknown>, teamId?: string): Request {
-  return new Request("https://cmux.test/api/devices", {
+  return new Request("https://hmux.test/api/devices", {
     method: "PATCH",
     headers: authHeaders(teamId),
     body: JSON.stringify(body),
@@ -106,7 +106,7 @@ beforeAll(() => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!databaseURL) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   }
   sql = postgres(databaseURL, { max: 1 });
 });
@@ -137,7 +137,7 @@ describe("device registry route", () => {
     expect(withdrawn.status).toBe(200);
     expect(await withdrawn.json()).toEqual({ ok: true, withdrawn: true });
 
-    const visible = await GET(new Request("https://cmux.test/api/devices", { headers: authHeaders() }));
+    const visible = await GET(new Request("https://hmux.test/api/devices", { headers: authHeaders() }));
     const listed = await visible.json() as { devices: Array<{ instances: Array<{ tag: string; routes: unknown[] }> }> };
     expect(listed.devices[0]?.instances.map((instance) => instance.tag)).toEqual(["nightly"]);
     expect(listed.devices[0]?.instances[0]?.routes).toHaveLength(1);
@@ -162,7 +162,7 @@ describe("device registry route", () => {
     expect(otherTeam.status).toBe(200);
     expect(await otherTeam.json()).toEqual({ ok: true, withdrawn: false });
     currentUserId = "registry-user-1";
-    const unchanged = await GET(new Request("https://cmux.test/api/devices", { headers: authHeaders() }));
+    const unchanged = await GET(new Request("https://hmux.test/api/devices", { headers: authHeaders() }));
     const after = await unchanged.json() as { devices: Array<{ instances: Array<{ tag: string; routes: unknown[] }> }> };
     expect(after.devices[0]?.instances.map((instance) => instance.tag)).toEqual(["nightly"]);
     expect(after.devices[0]?.instances[0]?.routes).toHaveLength(1);
@@ -189,13 +189,13 @@ describe("device registry route", () => {
     expect(otherOwner.status).toBe(200);
     expect(otherOwner.body).toBe(JSON.stringify({ ok: true, withdrawn: false }));
     currentUserId = "registry-user-1";
-    const listed = await GET(new Request("https://cmux.test/api/devices", { headers: authHeaders() }));
+    const listed = await GET(new Request("https://hmux.test/api/devices", { headers: authHeaders() }));
     const devices = (await listed.json() as { devices: Array<{ instances: Array<{ routes: unknown[] }> }> }).devices;
     expect(devices[0]?.instances[0]?.routes).toHaveLength(1);
   });
 
   test("withdrawal requires native authentication", async () => {
-    const response = await PATCH(new Request("https://cmux.test/api/devices", {
+    const response = await PATCH(new Request("https://hmux.test/api/devices", {
       method: "PATCH",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ deviceId: DEVICE_A, tag: "default" }),
@@ -233,13 +233,13 @@ describe("device registry route", () => {
     await POST(registerRequest({ deviceId: DEVICE_A, platform: "mac", tag: "default", routes: [legacyTailscaleRoute] }));
     await POST(registerRequest({ deviceId: DEVICE_A, platform: "mac", tag: "feature", routes: [legacyTailscaleRoute] }));
     await POST(registerRequest({ deviceId: DEVICE_A, platform: "mac", tag: "feature", routes: [] }));
-    const response = await GET(new Request("https://cmux.test/api/devices", { headers: authHeaders() }));
+    const response = await GET(new Request("https://hmux.test/api/devices", { headers: authHeaders() }));
     expect(response.headers.get("cache-control")).toBe("private, no-store");
     const body = await response.json() as { devices: Array<{ instances: Array<{ tag: string }> }> };
     expect(body.devices).toHaveLength(1);
     expect(body.devices[0]?.instances.map((instance) => instance.tag)).toEqual(["default"]);
     await POST(registerRequest({ deviceId: DEVICE_A, platform: "mac", tag: "default", routes: [] }));
-    const withdrawn = await GET(new Request("https://cmux.test/api/devices", { headers: authHeaders() }));
+    const withdrawn = await GET(new Request("https://hmux.test/api/devices", { headers: authHeaders() }));
     expect((await withdrawn.json() as { devices: unknown[] }).devices).toEqual([]);
   });
 
@@ -253,7 +253,7 @@ describe("device registry route", () => {
     });
 
     const response = await GET(
-      new Request("https://cmux.test/api/devices", {
+      new Request("https://hmux.test/api/devices", {
         method: "GET",
         headers: authHeaders(),
       }),
@@ -329,7 +329,7 @@ describe("device registry route", () => {
     expect(register.status).toBe(200);
 
     const listResponse = await GET(
-      new Request("https://cmux.test/api/devices", { method: "GET", headers: authHeaders() }),
+      new Request("https://hmux.test/api/devices", { method: "GET", headers: authHeaders() }),
     );
     expect(listResponse.status).toBe(200);
     const list = (await listResponse.json()) as {
@@ -377,7 +377,7 @@ describe("device registry route", () => {
     expect(total).toBe(1);
 
     const list = (await (
-      await GET(new Request("https://cmux.test/api/devices", { method: "GET", headers: authHeaders() }))
+      await GET(new Request("https://hmux.test/api/devices", { method: "GET", headers: authHeaders() }))
     ).json()) as { devices: Array<{ instances: Array<{ routes: Array<{ endpoint: { host: string } }> }> }> };
     expect(list.devices[0].instances[0].routes[0].endpoint.host).toBe("100.9.9.9");
   });
@@ -504,7 +504,7 @@ describe("device registry route", () => {
     expect((await POST(registerRequest({ deviceId: DEVICE_B, platform: "mac", tag: "manual", manual: true, routes: [legacyTailscaleRoute] }))).status).toBe(200);
     await sql`update device_app_instances set last_seen_at = now() - interval '181 seconds' where tag = 'expired'`;
     await sql`update device_app_instances set last_seen_at = now() - interval '2 days' where tag in ('legacy-expired', 'manual')`;
-    const response = await GET(new Request("https://cmux.test/api/devices", { headers: authHeaders() }));
+    const response = await GET(new Request("https://hmux.test/api/devices", { headers: authHeaders() }));
     const body = await response.json() as { devices: Array<{ deviceId: string; instances: Array<{ tag: string }> }> };
     const byID = new Map(body.devices.map((device) => [device.deviceId, device.instances.map((instance) => instance.tag)]));
     expect(byID.get(DEVICE_A)).toEqual(["fresh"]);
@@ -627,7 +627,7 @@ describe("device registry route", () => {
     `;
     currentUserId = "registry-user-2";
     const listResponse = await GET(
-      new Request("https://cmux.test/api/devices", { method: "GET", headers: authHeaders() }),
+      new Request("https://hmux.test/api/devices", { method: "GET", headers: authHeaders() }),
     );
     expect(listResponse.status).toBe(200);
     const list = (await listResponse.json()) as {
@@ -642,7 +642,7 @@ describe("device registry route", () => {
   dbTest("registers the same device UUID in two teams the user belongs to", async () => {
     if (!sql) throw new Error("test database not initialized");
 
-    // Same physical Mac (same cmux UUID), registered under team-a then team-b.
+    // Same physical Mac (same hmux UUID), registered under team-a then team-b.
     const inA = await POST(
       registerRequest({ deviceId: DEVICE_A, platform: "mac", tag: "stable", routes: [legacyTailscaleRoute] }, "team-a"),
     );
@@ -660,7 +660,7 @@ describe("device registry route", () => {
 
     // Each team only sees its own row for the device.
     const listA = (await (
-      await GET(new Request("https://cmux.test/api/devices", { method: "GET", headers: authHeaders("team-a") }))
+      await GET(new Request("https://hmux.test/api/devices", { method: "GET", headers: authHeaders("team-a") }))
     ).json()) as { teamId: string; devices: Array<{ deviceId: string }> };
     expect(listA.teamId).toBe("team-a");
     expect(listA.devices.map((d) => d.deviceId)).toEqual([DEVICE_A]);
@@ -735,7 +735,7 @@ describe("device registry route", () => {
     await POST(registerRequest({ deviceId: DEVICE_B, platform: "mac", tag: "stable", routes: [] }));
 
     const del = await DELETE(
-      new Request("https://cmux.test/api/devices", {
+      new Request("https://hmux.test/api/devices", {
         method: "DELETE",
         headers: authHeaders(),
         body: JSON.stringify({ deviceId: DEVICE_A }),
@@ -747,7 +747,7 @@ describe("device registry route", () => {
     // Deleting an unknown deviceId is an idempotent no-op, but `deleted` is 0 so
     // the CLI can report "not found" instead of a false success.
     const noop = await DELETE(
-      new Request("https://cmux.test/api/devices", {
+      new Request("https://hmux.test/api/devices", {
         method: "DELETE",
         headers: authHeaders(),
         body: JSON.stringify({ deviceId: "99999999-9999-4999-8999-999999999999" }),
@@ -766,7 +766,7 @@ describe("device registry route", () => {
     expect(instancesTotal).toBe(0);
   });
 
-  // --- Manual remotes (cmux remotes add) ---
+  // --- Manual remotes (hmux remotes add) ---
 
   test("hostIsLoopback classifies loopback and reachable hosts", () => {
     // Loopback in every spelling a phone could be tricked into dialing itself.
@@ -952,10 +952,10 @@ describe("device registry route", () => {
     expect(resp.status).toBe(200); // not the manual path, so not rejected
 
     const list = (await (
-      await GET(new Request("https://cmux.test/api/devices", { method: "GET", headers: authHeaders() }))
+      await GET(new Request("https://hmux.test/api/devices", { method: "GET", headers: authHeaders() }))
     ).json()) as { devices: Array<{ deviceId: string; labels: Record<string, unknown> }> };
     const row = list.devices.find((d) => d.deviceId === DEVICE_A);
-    // The spoofed labels.manual was stripped, so `cmux remotes` (which filters on
+    // The spoofed labels.manual was stripped, so `hmux remotes` (which filters on
     // labels.manual === true) will NOT treat this self-registered row as manual.
     expect(row?.labels.manual ?? false).toBe(false);
   });
@@ -1017,7 +1017,7 @@ describe("device registry route", () => {
     expect(add.status).toBe(200);
 
     const list = (await (
-      await GET(new Request("https://cmux.test/api/devices", { method: "GET", headers: authHeaders() }))
+      await GET(new Request("https://hmux.test/api/devices", { method: "GET", headers: authHeaders() }))
     ).json()) as {
       devices: Array<{
         deviceId: string;
@@ -1034,7 +1034,7 @@ describe("device registry route", () => {
   dbTest("marks manual remotes with labels.manual; self-registration is unmarked", async () => {
     if (!sql) throw new Error("test database not initialized");
 
-    // A manual remote (cmux remotes add) and a self-registered Mac.
+    // A manual remote (hmux remotes add) and a self-registered Mac.
     await POST(
       registerRequest({
         deviceId: DEVICE_A,
@@ -1054,13 +1054,13 @@ describe("device registry route", () => {
     );
 
     const list = (await (
-      await GET(new Request("https://cmux.test/api/devices", { method: "GET", headers: authHeaders() }))
+      await GET(new Request("https://hmux.test/api/devices", { method: "GET", headers: authHeaders() }))
     ).json()) as {
       devices: Array<{ deviceId: string; labels: Record<string, unknown> }>;
     };
     const byId = new Map(list.devices.map((d) => [d.deviceId, d.labels]));
     // The CLI (RemotesClient.list) filters on `labels.manual === true`, so only
-    // the manual remote is listed/removable by `cmux remotes`.
+    // the manual remote is listed/removable by `hmux remotes`.
     expect(byId.get(DEVICE_A)?.manual).toBe(true);
     expect(byId.get(DEVICE_B)?.manual ?? false).toBe(false);
   });
@@ -1093,7 +1093,7 @@ describe("device registry route", () => {
     expect(total).toBe(1);
 
     const list = (await (
-      await GET(new Request("https://cmux.test/api/devices", { method: "GET", headers: authHeaders() }))
+      await GET(new Request("https://hmux.test/api/devices", { method: "GET", headers: authHeaders() }))
     ).json()) as { devices: Array<{ instances: Array<{ routes: Array<{ endpoint: { host: string } }> }> }> };
     expect(list.devices[0].instances[0].routes[0].endpoint.host).toBe("100.99.99.99");
   });
@@ -1128,7 +1128,7 @@ describe("device registry route", () => {
     expect(overwrite.status).toBe(403);
 
     await DELETE(
-      new Request("https://cmux.test/api/devices", {
+      new Request("https://hmux.test/api/devices", {
         method: "DELETE",
         headers: authHeaders(),
         body: JSON.stringify({ deviceId: DEVICE_A }),
@@ -1155,7 +1155,7 @@ describe("device registry route", () => {
     // A second same-team member tries to delete it: the row must survive.
     currentUserId = "registry-user-2";
     const del = await DELETE(
-      new Request("https://cmux.test/api/devices", {
+      new Request("https://hmux.test/api/devices", {
         method: "DELETE",
         headers: authHeaders(),
         body: JSON.stringify({ deviceId: DEVICE_A }),

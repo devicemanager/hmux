@@ -35,7 +35,7 @@ body:
   - type: dropdown
     id: area
     attributes:
-      label: Which part of cmux is this about?
+      label: Which part of hmux is this about?
       description: |
         A guess is fine, and "Not sure" is a normal answer. It only helps triage
         find the right person: https://github.com/manaflow-ai/cmux/blob/main/docs/triage.md
@@ -47,10 +47,10 @@ body:
         - sidebar
         - workspaces (sessions, worktrees, restore)
         - agents (Claude Code, Codex, ACP, agent panes)
-        - cloud (cmux Cloud, VMs, relays, the dashboard)
-        - remote (cmux ssh, tunnels, device pairing)
+        - cloud (hmux Cloud, VMs, relays, the dashboard)
+        - remote (hmux ssh, tunnels, device pairing)
         - ios
-        - cli (the cmux command, cmux-tui, SDKs)
+        - cli (the hmux command, hmux-tui, SDKs)
         - settings
         - browser
         - command-palette

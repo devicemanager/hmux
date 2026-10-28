@@ -2,7 +2,7 @@
 
 A merge freeze stops pull requests that touch some paths from merging for a few hours. Use it for
 a release cut, or while one lane reworks an area that other merges would collide with. For a
-pull request's own risk, use [risk tiers](risk-tiers.md) on feat-cmux-next instead.
+pull request's own risk, use [risk tiers](risk-tiers.md) on feat-hmux-next instead.
 
 ## Freeze an area
 
@@ -11,13 +11,13 @@ label. A label from anyone else doesn't turn the freeze on. The title is the rea
 says what is frozen and until when:
 
 ```
-paths: cmux-tui/crates/acpmux/ cmux-tui/spec/
+paths: hmux-tui/crates/acpmux/ hmux-tui/spec/
 expires: 2026-10-20T18:00Z
 owner: @lawrencecchen      (optional; the issue's author by default)
-branch: feat-cmux-next     (optional; every branch by default)
+branch: feat-hmux-next     (optional; every branch by default)
 ```
 
-- `paths:` are path prefixes. `cmux-tui/spec/` freezes everything under it, and
+- `paths:` are path prefixes. `hmux-tui/spec/` freezes everything under it, and
   `docs/app.md` freezes that one file. `docs/app` doesn't match `docs/app.md.orig`.
 - A freeze lasts at most 72 hours from when the issue was opened, whatever `expires:` says. Open a
   new issue to keep freezing.
@@ -42,7 +42,7 @@ freeze.
   as frozen wherever a merge happens. `--rate-limit-retry SECONDS` waits and reads once more
   before it gives 3.
 - `.github/workflows/merge-freeze.yml` shows a `merge freeze` check on each pull request into
-  `main` and `feat-cmux-next`. A read the rate limit refused twice (two minutes apart) shows a
+  `main` and `feat-hmux-next`. A read the rate limit refused twice (two minutes apart) shows a
   "merge freeze not checked" warning instead of a red: the rate limit says nothing about the pull
   request, and the merge paths below read the freezes again. Every hour it also closes lapsed
   freeze issues with a comment.
@@ -55,7 +55,7 @@ whether it's active, lapsed or malformed.
 
 ## What this replaces
 
-Freezes used to be `FREEZE:` lines in `~/agent-mailbox/WINDOW` on cmux-lawrence, which
+Freezes used to be `FREEZE:` lines in `~/agent-mailbox/WINDOW` on hmux-lawrence, which
 gh-merge-green read over ssh. Every token there had lapsed by 2026-10-10, but the tools kept
-refusing on them. A host that couldn't ssh to cmux-lawrence, such as Huge Blue, couldn't merge at
+refusing on them. A host that couldn't ssh to hmux-lawrence, such as Huge Blue, couldn't merge at
 all, and nobody else could see the file.

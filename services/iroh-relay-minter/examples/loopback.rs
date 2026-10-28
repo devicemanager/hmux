@@ -1,13 +1,13 @@
 use std::{convert::Infallible, env, sync::Arc, time::SystemTime};
 
-use cmux_iroh_relay_minter::{MinterConfig, handle_request};
+use hmux_iroh_relay_minter::{MinterConfig, handle_request};
 use hyper::{Request, body::Incoming, server::conn::http1, service::service_fn};
 use hyper_util::rt::TokioIo;
 use tokio::net::TcpListener;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let port = env::var("CMUX_IROH_MINT_DEV_PORT")
+    let port = env::var("HMUX_IROH_MINT_DEV_PORT")
         .ok()
         .map(|value| value.parse::<u16>())
         .transpose()?

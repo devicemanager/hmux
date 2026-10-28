@@ -64,7 +64,7 @@ struct SSHFileExplorerMutationCommand: Equatable, Sendable {
     static func rename(
         path: String,
         to destinationPath: String,
-        temporaryName: String = ".cmux-rename-\(UUID().uuidString)"
+        temporaryName: String = ".hmux-rename-\(UUID().uuidString)"
     ) -> Self {
         let directory = parent(of: path)
         var lines = [

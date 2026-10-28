@@ -47,11 +47,11 @@ def presign(args: argparse.Namespace) -> str:
     if not 1 <= args.expires_in <= 900:
         raise SystemExit("--expires-in must be between 1 and 900 seconds")
 
-    amz_date = os.environ.get("CMUX_R2_PRESIGN_AMZ_DATE")
+    amz_date = os.environ.get("HMUX_R2_PRESIGN_AMZ_DATE")
     if not amz_date:
         amz_date = dt.datetime.now(dt.timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     if len(amz_date) != 16 or not amz_date.endswith("Z"):
-        raise SystemExit("CMUX_R2_PRESIGN_AMZ_DATE must be an AWS timestamp")
+        raise SystemExit("HMUX_R2_PRESIGN_AMZ_DATE must be an AWS timestamp")
     date_stamp = amz_date[:8]
     region = os.environ.get("AWS_DEFAULT_REGION", "auto")
     scope = f"{date_stamp}/{region}/s3/aws4_request"

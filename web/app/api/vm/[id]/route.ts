@@ -32,13 +32,13 @@ export async function GET(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]",
-    { "cmux.vm.operation": "status" },
+    { "hmux.vm.operation": "status" },
     "/api/vm/[id] GET failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "hmux.vm.id": id });
       const run = await runVmRoute(getVm({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,
@@ -51,8 +51,8 @@ export async function GET(
       if (!run.ok) return run.response;
       const vm = run.value;
       // The same machine shape `GET /api/vm` lists: `kind` is what the client
-      // shows a Displays row and opens the desktop for (`cmux vm status`,
-      // `cmux vm open`), and `address` is the private address those open.
+      // shows a Displays row and opens the desktop for (`hmux vm status`,
+      // `hmux vm open`), and `address` is the private address those open.
       return jsonResponse({
         id: vm.providerVmId,
         provider: vm.provider,
@@ -74,9 +74,9 @@ export async function GET(
         })),
         address: { ipv4: vm.addressIpv4 ?? null, ipv6: vm.addressIpv6 ?? null },
         agentUpdates: vm.agentUpdates,
-        // Contract recorded when the provider attached cmux-tui. This is
+        // Contract recorded when the provider attached hmux-tui. This is
         // rollout metadata, not a live daemon probe.
-        cmuxTuiContract: vm.cmuxTuiContract,
+        hmuxTuiContract: vm.hmuxTuiContract,
       });
     },
   );
@@ -90,13 +90,13 @@ export async function PATCH(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]",
-    { "cmux.vm.operation": "rename" },
+    { "hmux.vm.operation": "rename" },
     "/api/vm/[id] PATCH failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "hmux.vm.id": id });
       let body: unknown;
       try {
         body = await request.json();
@@ -135,13 +135,13 @@ export async function DELETE(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]",
-    { "cmux.vm.operation": "destroy" },
+    { "hmux.vm.operation": "destroy" },
     "/api/vm/[id] DELETE failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "hmux.vm.id": id });
       try {
         await deleteVmPublicationsForVmDeletion({
           requesterUserId: user.id,

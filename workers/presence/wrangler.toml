@@ -1,4 +1,4 @@
-# cmux device presence service — Cloudflare Worker + Durable Objects.
+# hmux device presence service — Cloudflare Worker + Durable Objects.
 #
 # One TeamPresence Durable Object per team holds the team's ephemeral presence
 # map. Durable device identity lives in the Aurora `devices` /
@@ -18,10 +18,10 @@
 #   wrangler secret put STACK_PROJECT_ID
 #   wrangler secret put STACK_PUBLISHABLE_CLIENT_KEY
 #   wrangler secret put CONNECTIVITY_INVALIDATION_SECRET
-#   wrangler secret put VMS_PUBLISHER_SECRET   # = web CMUX_PRESENCE_VMS_PUBLISHER_SECRET
+#   wrangler secret put VMS_PUBLISHER_SECRET   # = web HMUX_PRESENCE_VMS_PUBLISHER_SECRET
 # Optional plain var STACK_API_URL defaults to https://api.stack-auth.com.
 
-name = "cmux-presence"
+name = "hmux-presence"
 main = "src/index.ts"
 compatibility_date = "2026-05-01"
 
@@ -35,7 +35,7 @@ class_name = "TeamPresence"
 # Account control plane: one DO per verified Stack user id serving the
 # /v1/control/socket WebSocket (directory + hint + relay-pass facts, proxied
 # from the Vercel broker with the connecting client's own bearer token). The
-# Vercel base URL is the optional plain var CMUX_WEB_BASE_URL (defaults to
+# Vercel base URL is the optional plain var HMUX_WEB_BASE_URL (defaults to
 # https://cmux.com in code, same pattern as STACK_API_URL).
 [[durable_objects.bindings]]
 name = "ACCOUNT_CONTROL_PLANE"

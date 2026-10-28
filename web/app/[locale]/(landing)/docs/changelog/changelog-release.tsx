@@ -37,8 +37,8 @@ export function ChangelogRelease({
   const heading =
     standaloneHeading ??
     (locale === "en" && media?.title
-      ? `cmux ${release.version}: ${media.title}`
-      : `cmux ${release.version}`);
+      ? `hmux ${release.version}: ${media.title}`
+      : `hmux ${release.version}`);
 
   return (
     <article
@@ -258,7 +258,7 @@ function HeroImage({
       <div className="overflow-hidden rounded-lg">
         <Image
           src={src}
-          alt={`cmux ${version}`}
+          alt={`hmux ${version}`}
           width={width}
           height={height}
           sizes="(max-width: 640px) 100vw, 640px"

@@ -37,7 +37,7 @@ describe("PlanetScale operator connection", () => {
   });
 
   test("refuses the obsolete TLS bypass", () => {
-    expect(() => planetScaleOperatorOptions({ DATABASE_URL: pooled, CMUX_DB_SSL_REJECT_UNAUTHORIZED: "false" }, "staging"))
+    expect(() => planetScaleOperatorOptions({ DATABASE_URL: pooled, HMUX_DB_SSL_REJECT_UNAUTHORIZED: "false" }, "staging"))
       .toThrow("require certificate verification");
   });
 

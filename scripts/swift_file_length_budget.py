@@ -12,10 +12,10 @@ def git(*args):
 GENERATED_CONTRACT_FILES = {
     # quicktype emits one monolithic Codable model file for this wire contract;
     # schema additions must change its generated line count atomically.
-    Path("Packages/Shared/CmuxIrxTransport/Sources/CmuxIrxTransport/ControlPlane/V2WireModels.swift"),
-    # generate-cmux-config-schema.py embeds web/data/cmux.schema.json line for
+    Path("Packages/Shared/HmuxIrxTransport/Sources/HmuxIrxTransport/ControlPlane/V2WireModels.swift"),
+    # generate-hmux-config-schema.py embeds web/data/hmux.schema.json line for
     # line, so every new schema key or enum value adds a line here.
-    Path("Packages/macOS/CmuxFoundation/Sources/CmuxFoundation/ConfigValidation/CmuxConfigSchema.generated.swift"),
+    Path("Packages/macOS/HmuxFoundation/Sources/HmuxFoundation/ConfigValidation/HmuxConfigSchema.generated.swift"),
 }
 
 

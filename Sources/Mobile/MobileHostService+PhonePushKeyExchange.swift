@@ -1,6 +1,6 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxPhonePush
+import HmuxCloud
+import HMUXMobileCore
+import HmuxPhonePush
 import Foundation
 
 extension MobileHostService {
@@ -23,7 +23,7 @@ extension MobileHostService {
 
             let macDeviceID = MobileHostIdentity.deviceID()
             let macInstanceTag = MobileHostIdentity.instanceTag()
-            let macBuildID = Bundle.main.bundleIdentifier ?? "cmux"
+            let macBuildID = Bundle.main.bundleIdentifier ?? "hmux"
             let macKey = try PhonePushKeyMaterial.current(bundleID: macBuildID)
 
             // The account and Mac identity are all derived locally. The phone

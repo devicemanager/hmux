@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import WebKit
 
 /// The native half of `sites.browserAuth.request`, driver method `auth.request`
@@ -19,7 +19,7 @@ import WebKit
 /// (``BrowserReplTypedSecrets/recordCredential(tab:field:value:domains:)``),
 /// so every session that reads the tab, the asking one included, gets them
 /// masked; the page itself can read a filled field, and the sheet says so.
-/// The sheet shows only what cmux verified: the frame's origin (and the
+/// The sheet shows only what hmux verified: the frame's origin (and the
 /// page's, when they differ), and each field labeled by the credential
 /// kind auth-fill.js found on the bound element, never text the page or
 /// the agent chose.
@@ -202,7 +202,7 @@ enum BrowserReplCredentialRequest {
     }
 
     /// The window that shows the tab, or, when the REPL renders the tab in an
-    /// off-screen window, the main cmux window.
+    /// off-screen window, the main hmux window.
     private static func hostWindow(for webView: WKWebView) -> NSWindow? {
         if let window = webView.window, window.isVisible,
            NSScreen.screens.contains(where: { $0.frame.intersects(window.frame) }) {
@@ -282,7 +282,7 @@ final class BrowserReplCredentialSheet: NSObject {
         }
         let note = NSTextField(wrappingLabelWithString: String(
             localized: "browser.repl.auth.notice",
-            defaultValue: "An agent asked cmux to fill this sign-in form. cmux hides the exact text you type where it appears in what the agent reads back, but not altered copies of it (such as encoded or split text), and scripts on the page can read the filled fields."
+            defaultValue: "An agent asked hmux to fill this sign-in form. hmux hides the exact text you type where it appears in what the agent reads back, but not altered copies of it (such as encoded or split text), and scripts on the page can read the filled fields."
         ))
         note.textColor = .secondaryLabelColor
         note.preferredMaxLayoutWidth = 380

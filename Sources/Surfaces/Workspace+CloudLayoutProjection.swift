@@ -1,6 +1,6 @@
 import Bonsplit
-import CmuxSurfaceCatalogModel
-import CmuxPanes
+import HmuxSurfaceCatalogModel
+import HmuxPanes
 import Foundation
 
 @MainActor

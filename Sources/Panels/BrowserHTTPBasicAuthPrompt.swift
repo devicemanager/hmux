@@ -1,6 +1,6 @@
 import AppKit
-import CmuxBrowser
-import CMUXMobileCore
+import HmuxBrowser
+import HMUXMobileCore
 import Foundation
 import WebKit
 

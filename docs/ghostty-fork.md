@@ -17,7 +17,7 @@ When we change the fork, update this document and the parent submodule SHA.
 - Branch: `issue-21374-screen-export-fd-leak`
   ([manaflow-ai/ghostty#275](https://github.com/manaflow-ai/ghostty/pull/275)).
 - Commits: `0d706c3c0` (regression test), `ef4f1570d` (fix), both based on
-  the cmux pin and the latter cherry-picked from upstream Ghostty #13644.
+  the hmux pin and the latter cherry-picked from upstream Ghostty #13644.
 - Summary: screen, scrollback, selection, and active-area exports now close
   both the temporary directory and its parent handles after dispatching the
   path, while retaining the directory contents for the consumer. `TempDir`
@@ -26,28 +26,28 @@ When we change the fork, update this document and the parent submodule SHA.
   retain cleanup, and that the retained directory remains usable.
 - Conflict notes: keep the `retain_tmp_dir` defer around `writeScreenFile` and
   keep `TempDir.close(.retain)` exhaustive so every action path releases both
-  handles. The cmux pin must continue to use this branch until its change is
+  handles. The hmux pin must continue to use this branch until its change is
   merged into fork `main`.
 
 ### Minimum contrast uses the host-painted background
 
-- Branch: `cmux-min-contrast-host-bg`
+- Branch: `hmux-min-contrast-host-bg`
   ([manaflow-ai/ghostty#269](https://github.com/manaflow-ai/ghostty/pull/269)),
-  based on the cmux pin `a53c76d06`. Merge it with a merge commit so the pin
+  based on the hmux pin `a53c76d06`. Merge it with a merge commit so the pin
   stays reachable from fork `main`.
 - Commit: `2b3fdc58e` (fix).
-  Classic cmux pins the combined commit `cb1ef7091` (#270's `fca69640e`
+  Classic hmux pins the combined commit `cb1ef7091` (#270's `fca69640e`
   with this merged in, [manaflow-ai/ghostty#271](https://github.com/manaflow-ai/ghostty/pull/271));
   see the CSI 996 entry below.
 - Summary: `macos-background-from-layer` and the macOS glass styles zero the
   background uniform's alpha, and the Metal `cell_text` vertex shader
   premultiplied it to black before running `minimum-contrast`. On a light
   theme, dark text failed the check against black and was drawn white on the
-  light background cmux's host layer paints (#4156, #3967). `updateFrame` now
+  light background hmux's host layer paints (#4156, #3967). `updateFrame` now
   sets a Metal-only `bools.host_paints_background` uniform where it zeroes the
   alpha, and the text shader treats `bg_color` as opaque for contrast and
   linear correction when it is set. The fill is still skipped.
-- Coverage: `cmuxTests/GhosttyMinimumContrastLayerBackgroundTests` reads the
+- Coverage: `hmuxTests/GhosttyMinimumContrastLayerBackgroundTests` reads the
   presented IOSurface for Flexoki Light colors with `minimum-contrast = 2`.
 - GhosttyKit: built by
   [run 38276408682](https://github.com/manaflow-ai/cmux/actions/runs/38276408682),
@@ -59,23 +59,23 @@ When we change the fork, update this document and the parent submodule SHA.
 
 ### CSI 996 reports the surface's runtime color scheme
 
-- Branch: `cmux-csi996-runtime-scheme`
+- Branch: `hmux-csi996-runtime-scheme`
   ([manaflow-ai/ghostty#270](https://github.com/manaflow-ai/ghostty/pull/270)),
-  based on the cmux pin `a53c76d06`. It carries only the termio commit of
+  based on the hmux pin `a53c76d06`. It carries only the termio commit of
   [manaflow-ai/ghostty#231](https://github.com/manaflow-ai/ghostty/pull/231).
-- Commit: `fca69640e`. cmux pins the combined classic commit `cb1ef7091`
+- Commit: `fca69640e`. hmux pins the combined classic commit `cb1ef7091`
   ([manaflow-ai/ghostty#271](https://github.com/manaflow-ai/ghostty/pull/271),
-  branch `cmux-classic-csi996-min-contrast`): `fca69640e` with #269's
+  branch `hmux-classic-csi996-min-contrast`): `fca69640e` with #269's
   `2b3fdc58e` merged in. Merge #271 with a merge commit so the pin stays
   reachable from fork `main`.
 - Summary: `CSI ? 996 n` and mode 2031 reports read a new `Termio.color_scheme`
   field instead of the parsed config's conditional state. `Surface.init` seeds
   it from the surface's conditional state and `colorSchemeCallback` updates it
   under the renderer mutex. Config reloads no longer touch it. Before, a config
-  whose final `theme` is plain (cmux always resolves one) never put `.theme` in
+  whose final `theme` is plain (hmux always resolves one) never put `.theme` in
   `_conditional_set`, so `changeConditionalState` kept the parser default and
   every dark surface answered light (manaflow-ai/cmux#14155).
-- Coverage: `cmuxTests/GhosttyColorSchemeQueryTests` sends `CSI ? 996 n` to a
+- Coverage: `hmuxTests/GhosttyColorSchemeQueryTests` sends `CSI ? 996 n` to a
   real surface with a plain dark config. GhosttyKit `fca69640e` was built and
   published by
   [run 38302975941](https://github.com/manaflow-ai/cmux/actions/runs/38302975941)
@@ -100,14 +100,14 @@ When we change the fork, update this document and the parent submodule SHA.
 
 - Branch: `link-filter`
   ([manaflow-ai/ghostty#267](https://github.com/manaflow-ai/ghostty/pull/267)),
-  based on the cmux pin `7e880f6b6`.
+  based on the hmux pin `7e880f6b6`.
 - Commits: `210d333c9` (regression test and API), `a53c76d06` (fix).
 - Summary: `ghostty_surface_set_link_filter(surface, cb, userdata)` lets the
   embedder reject a regex link before Ghostty underlines it, changes the
   pointer, reports mouse-over-link or opens it on click. The callback gets the
   matched text and runs on the renderer thread, or on the app thread with the
   terminal lock held, so it answers from what it already knows. OSC 8 links and
-  `always` / `always_mods` highlights are not asked. cmux answers per surface
+  `always` / `always_mods` highlights are not asked. hmux answers per surface
   so a Cmd-hovered path that names no file is not a link (cx-do47.1).
 - Coverage: `resolveAtFiltered: the link a filter rejects is no link` runs in
   the `build-ghosttykit.yml` "Test Ghostty link filter" step. It failed on
@@ -124,9 +124,9 @@ When we change the fork, update this document and the parent submodule SHA.
 
 ### OSC 7501 program status protocol
 
-- Branch: `feat-osc7501-program-status`, based on cmux pin `76f5f8c7c`.
+- Branch: `feat-osc7501-program-status`, based on hmux pin `76f5f8c7c`.
 - Commits: upstream `bae2c3cdbf73f2ac33a67e4b0b7811165f0f62d4` was cherry-picked
-  with `-x` as `abfda426093`; cmux-specific protocol forwarding and C ABI work
+  with `-x` as `abfda426093`; hmux-specific protocol forwarding and C ABI work
   follows through Ghostty `7e880f6b63e`.
 - Summary: OSC 7501 queries echo the fixed query body and terminator, validated
   reports reach the full-app surface action path, prompt-start and RIS clear
@@ -144,7 +144,7 @@ When we change the fork, update this document and the parent submodule SHA.
 
 ### CJK fallback avoids repeated font collection scans
 
-- Branch: `issue-18648-cjk-fallback-latency`, based on the cmux pin
+- Branch: `issue-18648-cjk-fallback-latency`, based on the hmux pin
   `17357e12a`.
 - Commits: `cf8b9d396` (regression test), `fff35f432` (fix),
   `76f5f8c7c` (backend coverage guard).
@@ -176,7 +176,7 @@ When we change the fork, update this document and the parent submodule SHA.
 
 - Branch: `fix-10733-cjk-punctuation-width`
   ([manaflow-ai/ghostty#265](https://github.com/manaflow-ai/ghostty/pull/265)),
-  based on the current cmux pin `01f4e0fe2`.
+  based on the current hmux pin `01f4e0fe2`.
 - Commits: `b970b6677` (regression test), `17357e12a` (fix).
 - Summary: the bidi run iterator no longer replaces a neutral character's
   resolved font with the preceding run's face. In `看——Ghostty` and `你……好`,
@@ -213,7 +213,7 @@ When we change the fork, update this document and the parent submodule SHA.
   `Metal.prepareDeinit` unbound them only on iOS. The macOS invalidation
   block, which already runs on main after the renderer thread joins, now
   clears both ivars, so `loopEnter` cannot rebind them. #17524 clears them
-  from the cmux side as well.
+  from the hmux side as well.
 - Coverage: Ghostty's `teardown invalidation makes display a no-op`, run by
   `build-ghosttykit.yml` before packaging. It passed in
   [run 37421168473](https://github.com/manaflow-ai/cmux/actions/runs/37421168473).
@@ -232,7 +232,7 @@ When we change the fork, update this document and the parent submodule SHA.
   ([manaflow-ai/ghostty#249](https://github.com/manaflow-ai/ghostty/pull/249)),
   based on `9d8d40319`. The same commits on top of `e1b8bf5f4` are
   [manaflow-ai/ghostty#246](https://github.com/manaflow-ai/ghostty/pull/246);
-  cmux does not pin them because of
+  hmux does not pin them because of
   [#16040](https://github.com/manaflow-ai/cmux/issues/16040).
 - Commits: `1a3d3584c` (regression test), `559740279` (fix)
 - Summary: the VT and HTML formatters wrote pending blank cells as spaces
@@ -262,7 +262,7 @@ When we change the fork, update this document and the parent submodule SHA.
   keeps Cloud Codex's grey composer band aligned with the header, prompt, and
   status after replay. The #241 implementation remains the sole owner of the
   trailing-row delimiter state.
-- Coverage: Ghostty's `Page VT preserves a fully styled blank row`, cmux-tui's
+- Coverage: Ghostty's `Page VT preserves a fully styled blank row`, hmux-tui's
   `vt_replay_preserves_blank_tail_after_history`,
   `vt_replay_preserves_codex_composer_before_incremental_redraw`, and the
   cell-level Cloud replay tests.
@@ -281,15 +281,15 @@ When we change the fork, update this document and the parent submodule SHA.
   ghostty-org/ghostty#13855), `e168fd31c` (round-trip test)
 - Summary: the embedded apprt escapes `initial_input` with
   `std.zig.stringEscape`, which writes each non-ASCII byte as `\xNN`, and
-  `config/string.zig` then encoded each `\xNN` as a UTF-8 codepoint. Text cmux
-  typed as startup input, such as a `cmux workspace create --command` that
+  `config/string.zig` then encoded each `\xNN` as a UTF-8 codepoint. Text hmux
+  typed as startup input, such as a `hmux workspace create --command` that
   prints a Korean OSC title, reached the shell as mojibake
   ([#12915](https://github.com/manaflow-ai/cmux/issues/12915)). `\xNN` is now
   one byte, as in Zig. A `text:` keybind with `\xNN` at or above `0x80` now
   sends that byte too; `\u{...}` still sends a codepoint.
 - Coverage: the Ghostty tests `parse: hex escapes are bytes` and
   `cloneParsed restores Zig-escaped bytes`, run by `build-ghosttykit.yml`
-  before packaging, and the cmux test `GhosttyStartupInputUTF8Tests`. Hosted
+  before packaging, and the hmux test `GhosttyStartupInputUTF8Tests`. Hosted
   [run 36360076795](https://github.com/manaflow-ai/cmux/actions/runs/36360076795)
   passed 75 tests with both filters at `e168fd31c` (one more than a single-test
   filter) and published GhosttyKit.
@@ -362,7 +362,7 @@ When we change the fork, update this document and the parent submodule SHA.
   restoration footer when replay requests cursor restoration. Normal formatter
   output and soft-wrap behavior are unchanged.
 - Verification: hosted Ghostty test workflow passed before the GhosttyKit build;
-  the cmux replay regression is `vt_replay_preserves_blank_tail_after_history`.
+  the hmux replay regression is `vt_replay_preserves_blank_tail_after_history`.
 - Artifact:
   https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-a3e9304c5d19c8667f58a342830f774579c74472-crashsubdir-cmux-crash-sentry-off-noi18n-v2
 - SHA-256 `98697b9a49b36e835e900f716ac054cf2476d97bf40ea2742454e735ac5aa3a9`
@@ -387,7 +387,7 @@ has SHA-256 `bee3bce68bd6d5eb1496e17ebb0e4e3e4aea48e78a2f62dfe8fe7b8e9d512cd9`, 
 `scripts/ghosttykit-checksums.txt`.
 Earlier: the submodule pinned by this branch is `559740279`, the VT replay blank-cell
 style fix (manaflow-ai/ghostty#249) on top of `9d8d40319`, which is `9961d09be`
-plus its styled blank row test fix. It leaves out `e1b8bf5f4`: with it, cmux
+plus its styled blank row test fix. It leaves out `e1b8bf5f4`: with it, hmux
 DEV.app does not open its socket on current main
 ([#16040](https://github.com/manaflow-ai/cmux/issues/16040)). Artifact
 https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-55974027991e4230210712796cd87c7b3a2018ee-crashsubdir-cmux-crash-sentry-off-noi18n-v2
@@ -408,18 +408,18 @@ frame pacing change on top of `0068ece733`. The previous pin was
 on top of `a3e9304c5d`. It keeps a primary face without an ideograph metric at
 the full two-cell terminal span, so Hangul glyphs selected through CoreText
 fallback do not leave a gap before the next terminal cell. The previous pin
-`a3e9304c5d` is a cmux-only replay fix on top of `c5c31ce819`, the upstream
+`a3e9304c5d` is a hmux-only replay fix on top of `c5c31ce819`, the upstream
 Ghostty merge commit for PR #218 after the embedded-environment lifetime fix
 from PR #227 was merged. That replay fix preserves physical blank rows until
 cursor/state restoration completes, so a restored Cloud grid cannot regain
-stale history rows. The base SHA preserves cmux's Cloud loopback link-detection
+stale history rows. The base SHA preserves hmux's Cloud loopback link-detection
 changes while adding the localhost-port punctuation fix and owned POSIX
 environment snapshots for embedded hosts.
 
 The pin before `a3e9304c5d` was `35ae29b7c2`, the merge of fork `main` at
 `3869e81a0` into the Cloud loopback link-detection branch (`46428d790`, bare localhost port links,
-`59112c1aa` its test). Fork `main` at that point carried, on top of cmux's
-previous pin `4a0e9e185` (cmux #12842): the NFD Hangul shaping fix (fork PR
+`59112c1aa` its test). Fork `main` at that point carried, on top of hmux's
+previous pin `4a0e9e185` (hmux #12842): the NFD Hangul shaping fix (fork PR
 #221, merged as `3869e81a0`; its branch tip `370f08cf1` is `4a0e9e185` merged
 into the Hangul commits), the targeted upstream picks of fork PR #224 (input
 encoding, erase/scroll state, termio lifetime), the write-pool FIFO fix of fork
@@ -446,7 +446,7 @@ resolution.
     snapshots retained by embedded Ghostty, on top of the
     the NFD Hangul shaping fix and jamo/style coverage, the fork PR #224
     upstream picks, the write-pool FIFO fix, `clear_screen` scrollback erasure
-    and bare localhost port-link detection on top of cmux's prior pin,
+    and bare localhost port-link detection on top of hmux's prior pin,
     preserving incremental embedded configuration propagation and Fish SSH
     feature gating, with the renderer/API compatibility pin and repeated
     word-selection drag anchor behavior.
@@ -465,14 +465,14 @@ resolution.
     found 1942` (the Apple SD Gothic Neo glyph ID from the report), HarfBuzz
     `expected 218, found 0` (`.notdef`). The inherited fork CI skips tests
     outside ghostty-org, so these were run by hand on a leased fleet Mac.
-  - A tagged cmux app built against the `370f08cf1` GhosttyKit renders both
-    configurations from cmux #12753 correctly where the earlier pins drew
-    unrelated symbols (cmux #12826). The `35ae29b7c2` archive itself was not
+  - A tagged hmux app built against the `370f08cf1` GhosttyKit renders both
+    configurations from hmux #12753 correctly where the earlier pins drew
+    unrelated symbols (hmux #12826). The `35ae29b7c2` archive itself was not
     run through that check.
 - Artifact:
   - https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-35ae29b7c2bcee7c721d515d0096a9bc3f3242bb-crashsubdir-cmux-crash-sentry-off-noi18n-v2
   - SHA-256 `6f83f20842140a782c8029156aabe92c246a181682794f01ad0a30ca43c76620`
-    is pinned in `scripts/ghosttykit-checksums.txt` (cmux #12669).
+    is pinned in `scripts/ghosttykit-checksums.txt` (hmux #12669).
   - The Hangul branch tip `370f08cf1` also has a published archive,
     https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-370f08cf15a6ab646b9a291f72af034bb0960fb3-crashsubdir-cmux-crash-sentry-off-noi18n-v2
     (SHA-256 `ec53b8992b466ecd9cc87b42754188fe504898ff0b139f54b3eef1dc6a441233`,
@@ -520,7 +520,7 @@ resolution.
     walking the native surface registry.
   - Keeps `ghostty_app_update_config` behavior unchanged by factoring its
     existing surface and app phases into separate internal methods.
-  - Lets cmux prioritize visible surfaces and spread offscreen derivation across
+  - Lets hmux prioritize visible surfaces and spread offscreen derivation across
     main-actor turns while sharing one finalized configuration pointer.
 - Conflict note:
   - If upstream splits app configuration from surface propagation, replace this
@@ -614,7 +614,7 @@ pinned in `scripts/ghosttykit-checksums.txt`.
     replay and derives CUP coordinates from the emitted margins and origin mode.
   - Preserves application-owned saved cursors instead of using DECSC/DECRC as
     replay scratch state.
-  - Fixes the formatter replay mismatch reported by the cmux Valgrind tests.
+  - Fixes the formatter replay mismatch reported by the hmux Valgrind tests.
 - Artifact:
   - https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-f76c132e526f124fe4aaebd39f516751656844bc-crashsubdir-cmux-crash-sentry-off-v1
   - The hosted build published the 129,284,050-byte archive and verified SHA-256
@@ -629,9 +629,9 @@ pinned in `scripts/ghosttykit-checksums.txt`.
   - `3a7fc9230` (fix: shape NFD Hangul with the resolved syllable)
   - `e5a6849dc` (test: cover Hangul jamo fonts and style fallback)
   - `6f2701078` (test: cover Hangul selection bounds, copy path, and uncomposable jamo)
-  - `370f08cf1` (merge of cmux `main`'s pin `4a0e9e185`; touches only
+  - `370f08cf1` (merge of hmux `main`'s pin `4a0e9e185`; touches only
     `src/termio` and `src/datastruct`, no overlap with `src/font`)
-  - Reached cmux `main` through the `35ae29b7c2` pin (cmux #12669), which
+  - Reached hmux `main` through the `35ae29b7c2` pin (hmux #12669), which
     contains the fork `main` merge `3869e81a0` of PR #221; `src/font` there
     is identical to `370f08cf1`.
 - `RunIterator.resolveFontInfo` carries the canonical syllable together with
@@ -714,7 +714,7 @@ pinned in `scripts/ghosttykit-checksums.txt`.
 - Summary:
   - Exposes a read-only libghostty query that reports whether the VT stream
     parser has no incomplete escape sequence buffered.
-  - Lets cmux cut a distributed terminal snapshot only at a replay-safe byte
+  - Lets hmux cut a distributed terminal snapshot only at a replay-safe byte
     boundary, while retaining later raw PTY bytes for each smart client.
 - Artifact:
   - https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-11aa609d75dec882ef2f83171e2cbe887aeddbc5-crashsubdir-cmux-crash-sentry-off-v1
@@ -783,7 +783,7 @@ and matched SHA-256
   - Moves `ensureLocale()` and `syncEnviron()` before Ghostty's crash reporting
     init so Darwin `setlocale` completes before Sentry starts its background
     initialization thread.
-  - Fixes the cmux INTERNAL TestFlight crash from August 2, 2026, where build
+  - Fixes the hmux INTERNAL TestFlight crash from August 2, 2026, where build
     `20260801151612` crashed in `ghostty_init + 1388` while the main thread was
     in `setlocale` from `GhosttyRuntime.init`.
 - Conflict note:
@@ -820,9 +820,9 @@ and matched SHA-256
 - Patch commits:
   - `7ad529298` (test: cover atomic bracketed paste encoding)
   - `f27772d10` (fix: enqueue bracketed paste atomically)
-- Current cmux Ghostty submodule pin and artifact commit:
+- Current hmux Ghostty submodule pin and artifact commit:
   - `f76c132e5` (descends from the atomic-paste patch and retains the
-    `11aa609d7` VT stream-boundary API required by current cmux TUI code)
+    `11aa609d7` VT stream-boundary API required by current hmux TUI code)
 - Files:
   - `src/input/paste.zig`
   - `src/Surface.zig`
@@ -842,9 +842,9 @@ and matched SHA-256
   - SHA-256 `af9f8f12e6f41ffe00b5b65f150bb887b19dc752e47d20d3c351696c803509af`
     is pinned in `scripts/ghosttykit-checksums.txt`.
 
-### Initial cmux theme-picker render
+### Initial hmux theme-picker render
 
-- Commit: `5068b3a37` (fix: render cmux theme picker before input)
+- Commit: `5068b3a37` (fix: render hmux theme picker before input)
 - File: `src/cli/list_themes.zig`
 - Summary:
   - Initializes the terminal dimensions, renders the theme picker, and flushes
@@ -1092,7 +1092,7 @@ macOS throttled the process-wide logging firehose
 `os_log` call in the process expensive). `exe.wait()` was only reachable by
 exiting that loop, so the child was never reaped either.
 
-Measured live on cmux 0.64.20 after ~1 day uptime: 11 zombie children matched
+Measured live on hmux 0.64.20 after ~1 day uptime: 11 zombie children matched
 one-for-one by 11 threads burning ~12.4% CPU each, ~95% of the process total
 (500-600% observed), each with 94-97% of its stack inside
 `zig_os_log_with_type`.
@@ -1154,7 +1154,7 @@ https://github.com/manaflow-ai/ghostty/pull/122 are now merged or superseded.
 The nonblocking renderer lifecycle fix landed through
 https://github.com/manaflow-ai/ghostty/pull/132 before that cumulative merge.
 The resulting main line supplies the external-frontend renderer contract used
-by cmux Browser, exact cursor state for process-separated terminal mirrors,
+by hmux Browser, exact cursor state for process-separated terminal mirrors,
 mutable-default color reset semantics, nonblocking embedded lifecycle updates,
 and the product-main renderer/link fixes described below. It also bounds each
 renderer mailbox drain turn so continuous producers cannot starve lifecycle
@@ -1391,7 +1391,7 @@ declared architecture, and `_ghostty_surface_rebuild_renderer` plus
   - `9a391205c` (feat: add external Metal presenter ABI)
   - `0f400d0f5` (feat: serialize worker recovery state)
   - `ad5d0124c` (merge the external presenter and manual-renderer lines)
-  - `d0dc34b2a` (embedded: pin combined cmux surface ABI)
+  - `d0dc34b2a` (embedded: pin combined hmux surface ABI)
   - `8c645641a` (embedded: add leased external Metal frames)
 - Files:
   - `include/ghostty.h`
@@ -1540,7 +1540,7 @@ lifecycle publication together.
 The older `b211341be` universal ReleaseFast archive remains published at
 https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-b211341be1ba902e772f57fc67c3e65d35205676-crashsubdir-cmux-crash-v1
 and pinned in `scripts/ghosttykit-checksums.txt` for reproducibility of older
-cmux revisions.
+hmux revisions.
 
 ### Indented hard-newline link continuations
 
@@ -1806,10 +1806,10 @@ https://github.com/manaflow-ai/ghostty/pull/106.
    adopting upstream's cached release position, drag guard, and renderer-lock
    ownership. The obsolete selection tests were dropped; the fork link-click
    regression test remains.
-2. `src/renderer/Thread.zig`: kept cmux's iOS external-drain ownership and
+2. `src/renderer/Thread.zig`: kept hmux's iOS external-drain ownership and
    combined it with upstream's visibility refresh and idle compression
    scheduler. Desktop embedded surfaces therefore get automatic compression
-   without a cmux-side timer.
+   without a hmux-side timer.
 3. `src/terminal/stream_terminal.zig`: used upstream's color-query response
    implementation because it supersedes the fork-only `a78fe53ef` patch while
    retaining terminal-stream APC handling.
@@ -1834,7 +1834,7 @@ https://github.com/manaflow-ai/ghostty/pull/106.
    and frees them after formatting, so full `read-screen` and clipboard reads
    no longer make cold history resident. Temporary decode allocation failures
    propagate as `OutOfMemory` through Zig and C formatter APIs.
-9. `ghostty_surface_read_screen_tail_vt` lets cmux preserve terminal history
+9. `ghostty_surface_read_screen_tail_vt` lets hmux preserve terminal history
    while replacing a completed remote-command surface. Ghostty derives the
    newest physical-row suffix from `PageList` pins and formats VT into a fixed
    byte buffer, halving the suffix on overflow so output is never cut inside a
@@ -1845,8 +1845,8 @@ https://github.com/manaflow-ai/ghostty/pull/106.
 
 Verified with Zig 0.15.2: compression, formatter, selection activity, and
 libghostty-vt compression tests,
-the cmux link-click regression test, the `wasm32-freestanding` libghostty-vt
-build, a clean universal GhosttyKit build, tagged cmux reloads `gcmp` and
+the hmux link-click regression test, the `wasm32-freestanding` libghostty-vt
+build, a clean universal GhosttyKit build, tagged hmux reloads `gcmp` and
 `gsel2`, and live accessibility reads across select-all, endpoint adjustment,
 and clearing.
 Prebuilt archive:
@@ -1854,7 +1854,7 @@ https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-eb500e9f45c8b6ff
 
 ### Previous pin
 
-The previous cmux pin was `5ae712a89`, which added the bounded VT screen-tail
+The previous hmux pin was `5ae712a89`, which added the bounded VT screen-tail
 export on top of `e215e78bf`. Before that, `1ae98c991` was superseded by
 `e215e78bf` after
 full scrollback formatting was changed to preserve compressed storage and
@@ -1868,12 +1868,12 @@ ancestors of `e215e78bf`.
 
 ### Earlier pin
 
-Previous cmux pinned fork head: `541e5e89d`, which merges the render-grid span
+Previous hmux pinned fork head: `541e5e89d`, which merges the render-grid span
 preservation head `1b454eb99` from manaflow-ai/ghostty#89 with the
 Arabic/Hebrew RTL shaping head `7a5179843` from manaflow-ai/ghostty#88.
 
 The render-grid change keeps wide or grapheme-backed cells in their own
-`cmux.render-grid.v1` spans so mobile replay receives the producer's exact
+`hmux.render-grid.v1` spans so mobile replay receives the producer's exact
 start column and `cell_width` instead of inferring per-grapheme columns from an
 aggregate same-style span.
 
@@ -1881,7 +1881,7 @@ The RTL series is based on ghostty-org/ghostty#11079 and adds the `itijah` bidi
 resolver, extends the shared `uucode` tables with bidi fields, resolves visual
 shaping runs per row, sets RTL shaping direction for CoreText/HarfBuzz, and
 anchors Arabic combining marks/tashkeel to the correct base cluster. The
-cmux-only follow-up commit adapts the new shaper tests to this pinned fork's
+hmux-only follow-up commit adapts the new shaper tests to this pinned fork's
 `vtStream().nextSlice` void-returning API. The RTL series was validated locally
 with:
 
@@ -1909,10 +1909,10 @@ and pinned in `scripts/ghosttykit-checksums.txt`.
   - Leaves unknown dynamic colors unanswered so embedders that have not supplied host defaults preserve the previous silent behavior.
   - Upstreamability: mirrors the existing termio stream handler behavior, but scoped to lib-vt's callback-based reply mechanism.
 
-The previous cmux pinned fork head was `1b454eb99`, which retained the
+The previous hmux pinned fork head was `1b454eb99`, which retained the
 Darwin-only `ghostty_surface_set_renderer_realized` C API (a
 `display_realized` renderer-thread mailbox message that drives
-`displayUnrealized()`/`displayRealized()`) on top of `5697db81`. cmux uses it to
+`displayUnrealized()`/`displayRealized()`) on top of `5697db81`. hmux uses it to
 release an occluded terminal's GPU renderer resources (Metal swap chain /
 IOSurface) while keeping its PTY alive, then rebuild them on re-show. The API
 returns whether the message was enqueued so the embedder only advances its
@@ -1933,9 +1933,9 @@ https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-7a51798436fa2cfc
 and pinned in `scripts/ghosttykit-checksums.txt`.
 
 The prior head was refreshed from upstream `main` on May 1, 2026.
-Earlier cmux pinned fork head: `34cbf180d`, merging the surface registry
+Earlier hmux pinned fork head: `34cbf180d`, merging the surface registry
 serialization for https://github.com/manaflow-ai/cmux/issues/5458 (`e5c962a72`,
-landed on cmux `main`) into the iOS render bounded-acquire line (`f78189ac1`)
+landed on hmux `main`) into the iOS render bounded-acquire line (`f78189ac1`)
 combined with the cmd-click link refresh under mouse reporting (`df789cd4b`,
 manaflow-ai/ghostty#71 and PRs #74 through #79) for
 https://github.com/manaflow-ai/cmux/issues/5128. This keeps the previous head's
@@ -1943,12 +1943,12 @@ manual embedded IO patch in https://github.com/manaflow-ai/ghostty/pull/53,
 the Metal renderer row rebuild guard for https://github.com/manaflow-ai/cmux/issues/3369,
 the URL/path regex bound for spaced file paths followed by prose, and the iOS
 render serial-queue bounded acquire fix from manaflow-ai/ghostty#80. This head
-keeps the cmux theme picker hooks, exposes the manual surface IO needed by
+keeps the hmux theme picker hooks, exposes the manual surface IO needed by
 libghostty iOS clients, bounds shaped glyph iteration during IME/preedit row
 rebuilds, prevents Cmd-hover from highlighting normal sentence text after a file
 path, and lets Cmd-click open links even while a mouse-reporting alt-screen TUI
 (Claude Code, Codex) has grabbed the mouse.
-It also supports Ctrl-N and Ctrl-P in the cmux theme picker.
+It also supports Ctrl-N and Ctrl-P in the hmux theme picker.
 The corresponding prebuilt archive is published at
 https://github.com/manaflow-ai/ghostty/releases/tag/xcframework-34cbf180d8917b802d61d9929cfb493594f2ab52-crashsubdir-cmux-crash-v1
 and pinned in `scripts/ghosttykit-checksums.txt`.
@@ -2007,32 +2007,32 @@ tend to conflict together during rebases.
   - `src/terminal/osc/parsers/kitty_notification.zig`
 - Summary:
   - Adds a parser for kitty OSC 99 notifications and wires it into the OSC dispatcher.
-  - Adapts the parser to upstream's newer capture API so the cmux OSC 99 hook survives the March 30 upstream sync.
+  - Adapts the parser to upstream's newer capture API so the hmux OSC 99 hook survives the March 30 upstream sync.
 
-### 4) cmux theme picker helper hooks
+### 4) hmux theme picker helper hooks
 
 - Commits:
-  - `66ff6ec4d` (Add cmux theme picker helper hooks)
-  - `aa650937d` (Fix cmux theme picker preview writes)
-  - `89d3612c9` (Improve cmux theme picker footer contrast)
-  - `0dc979889` (Respect system theme in cmux picker)
-  - `d9e0ab512` (Skip theme detection in cmux picker)
+  - `66ff6ec4d` (Add hmux theme picker helper hooks)
+  - `aa650937d` (Fix hmux theme picker preview writes)
+  - `89d3612c9` (Improve hmux theme picker footer contrast)
+  - `0dc979889` (Respect system theme in hmux picker)
+  - `d9e0ab512` (Skip theme detection in hmux picker)
   - `042cbaaab` (Match Ghostty theme picker startup)
-  - `eb34bcdd6` (Harden cmux theme override writes)
-  - `04ec69173` (Apply highlighted cmux theme on Enter)
-  - `4265d3428` (Apply cmux theme from picker search)
-  - `176bd550f` (Add ctrl navigation to cmux theme picker)
+  - `eb34bcdd6` (Harden hmux theme override writes)
+  - `04ec69173` (Apply highlighted hmux theme on Enter)
+  - `4265d3428` (Apply hmux theme from picker search)
+  - `176bd550f` (Add ctrl navigation to hmux theme picker)
 - Files:
   - `build.zig`
   - `src/cli/list_themes.zig`
   - `src/main_ghostty.zig`
 - Summary:
-  - Adds a `zig build cli-helper` step so cmux can bundle Ghostty's CLI helper binary on macOS.
-  - Lets `+list-themes` switch into a cmux-managed mode via env vars, writing the cmux theme override file and posting the existing cmux reload notification for live app-wide preview.
-  - Keeps the preview UI readable in light mode, matches upstream picker startup behavior, and hardens writes to the cmux-managed theme override file.
-  - Restores Enter as the cmux apply action by writing the currently highlighted theme before the picker exits.
-  - Applies the highlighted search result when Enter is pressed from search mode in cmux-managed picker sessions.
-  - Supports Ctrl-N and Ctrl-P as one-row down/up navigation in cmux-managed picker sessions.
+  - Adds a `zig build cli-helper` step so hmux can bundle Ghostty's CLI helper binary on macOS.
+  - Lets `+list-themes` switch into a hmux-managed mode via env vars, writing the hmux theme override file and posting the existing hmux reload notification for live app-wide preview.
+  - Keeps the preview UI readable in light mode, matches upstream picker startup behavior, and hardens writes to the hmux-managed theme override file.
+  - Restores Enter as the hmux apply action by writing the currently highlighted theme before the picker exits.
+  - Applies the highlighted search result when Enter is pressed from search mode in hmux-managed picker sessions.
+  - Supports Ctrl-N and Ctrl-P as one-row down/up navigation in hmux-managed picker sessions.
 
 ### 5) Color scheme mode 2031 reporting
 
@@ -2044,12 +2044,12 @@ tend to conflict together during rebases.
   - `src/termio/stream_handler.zig`
 - Summary:
   - Keeps Ghostty's mode 2031 color-scheme response aligned with the surface's actual conditional state after config reloads.
-  - Sends the initial DSR 997 report as soon as mode 2031 is enabled, which cmux relies on for immediate color-scheme awareness.
+  - Sends the initial DSR 997 report as soon as mode 2031 is enabled, which hmux relies on for immediate color-scheme awareness.
 
 ### 6) Keyboard copy mode selection C API
 
 - Commits:
-  - `0b231db94` (Re-export cmux selection APIs removed from upstream)
+  - `0b231db94` (Re-export hmux selection APIs removed from upstream)
   - `46bd03a7` (surface: add absolute screen row text read)
   - `edad0cfec` (surface: format screen row clipboard text)
   - `e81fb65f` (surface: bound screen clipboard text formatting)
@@ -2074,10 +2074,10 @@ tend to conflict together during rebases.
   - `src/terminal/render.zig`
 - Summary:
   - Restores `ghostty_surface_select_cursor_cell` and `ghostty_surface_clear_selection`.
-  - Keeps cmux keyboard copy mode working against the refreshed Ghostty base after upstream removed those exports.
+  - Keeps hmux keyboard copy mode working against the refreshed Ghostty base after upstream removed those exports.
   - Exposes exact grid dimensions, asymmetric padding, cursor position, and cursor cell width through `ghostty_surface_grid_metrics`.
   - Resolves viewport cells to canonical glyph coordinates so wide and wrapped glyphs use their actual leading cell and width.
-  - Adds tracked character and linewise viewport selection APIs. Ghostty owns selection rendering, reflow, scrolling, and clipboard formatting while cmux moves logical endpoints.
+  - Adds tracked character and linewise viewport selection APIs. Ghostty owns selection rendering, reflow, scrolling, and clipboard formatting while hmux moves logical endpoints.
   - Preserves selection mode and direction through snapshots, screen clones, reflow, and renderer caching.
   - Stores the keyboard copy cursor as a tracked screen pin, preserving logical
     cell identity across PTY output, reset, reflow, scrolling, and alternate
@@ -2119,7 +2119,7 @@ tend to conflict together during rebases.
   - Adds a `macos-background-from-layer` bool config (default false).
   - When true, sets `bg_color[3] = 0` in the per-frame uniform update so the Metal renderer skips the full-screen background fill.
   - Allows the host app to provide the terminal background via `CALayer.backgroundColor` for instant coverage during view resizes, avoiding alpha double-stacking.
-  - Replays the layer-background restore on top of the refreshed Ghostty base so cmux keeps the resize-coverage fix after the upstream sync.
+  - Replays the layer-background restore on top of the refreshed Ghostty base so hmux keeps the resize-coverage fix after the upstream sync.
 
 ### 8) TerminalStream kitty graphics APC handling
 
@@ -2128,7 +2128,7 @@ tend to conflict together during rebases.
   - `src/terminal/stream_terminal.zig`
 - Summary:
   - Wires `.apc_start`, `.apc_put`, and `.apc_end` through the shared APC parser in `TerminalStream`.
-  - Restores kitty graphics execution and APC OK/error replies for the non-termio stream path used by cmux/libghostty integrations.
+  - Restores kitty graphics execution and APC OK/error replies for the non-termio stream path used by hmux/libghostty integrations.
 
 ### 9) Config load string C API
 
@@ -2139,7 +2139,7 @@ tend to conflict together during rebases.
   - `src/config/Config.zig`
 - Summary:
   - Adds a C API for loading Ghostty config from an in-memory string.
-  - Lets cmux parse generated or override config without materializing a separate config file first.
+  - Lets hmux parse generated or override config without materializing a separate config file first.
 
 ### 10) Manual embedded IO for libghostty iOS
 
@@ -2181,7 +2181,7 @@ tend to conflict together during rebases.
   - Bounds the shaped glyph cursor before reading from the shaped-cell slice, so
     `GenericRenderer(Metal).rebuildRow` no longer assumes terminal cells and
     shaped glyph cells have one-to-one cardinality.
-  - The first commit intentionally preserves the panic so cmux can keep the
+  - The first commit intentionally preserves the panic so hmux can keep the
     required failing-test-then-fix history for https://github.com/manaflow-ai/cmux/issues/3369.
 
 ### 12) URL/path regex bounds for spaced file paths
@@ -2229,7 +2229,7 @@ tend to conflict together during rebases.
     capture. Holding the ctrl/super link-activation modifier was not considered,
     so under a mouse-grabbing alt-screen TUI (Claude Code, Codex) `over_link`
     stayed `false`, the link-click branch in `mouseButtonCallback` was skipped,
-    and the Cmd-click was reported to the program — which made cmux fall back to
+    and the Cmd-click was reported to the program — which made hmux fall back to
     the OS default browser instead of honoring the configured link-open target.
   - Adds a shared `mouseLinkRefreshAllowed` gate (pure logic in
     `mouseLinkRefreshAllowedState`) that also allows local link handling when the
@@ -2336,13 +2336,13 @@ tend to conflict together during rebases.
   - Keep `cursorBreakWrapIntoRow` limited to primary prompts: continuation
     and right prompts must keep their wrap.
 
-An earlier cmux pin was the merged head `34cbf180d`, which merges the surface
-registry serialization (`e5c962a72`, section 14, landed on cmux `main` via
+An earlier hmux pin was the merged head `34cbf180d`, which merges the surface
+registry serialization (`e5c962a72`, section 14, landed on hmux `main` via
 branch `issue-5458-surface-registry-lock`) into the Cmd-click link fix line
 (`df789cd4b`, section 13) on top of the iOS render bounded-acquire pin
 (`f78189ac1`). It is reachable from `manaflow-ai/ghostty` through branch
 `issue-5128-alt-screen-link-open`. Published
-`xcframework-34cbf180d8917b802d61d9929cfb493594f2ab52-crashsubdir-cmux-crash-v1`
+`xcframework-34cbf180d8917b802d61d9929cfb493594f2ab52-crashsubdir-hmux-crash-v1`
 and pinned its archive checksum in `scripts/ghosttykit-checksums.txt`. The
 release and checksum pin must be regenerated whenever this commit changes, even
 for comment-only amends, because the release tag is keyed by the Ghostty commit
@@ -2358,12 +2358,12 @@ SHA.
 ### zsh prompt redraw follow-ups
 
 - Were local in the fork as `8ade43ce5`, `0cf559581`, `312c7b23a`, and `404a3f175`.
-- Dropped during the March 30, 2026 rebase because newer Ghostty prompt-marking changes on the refreshed base superseded these fork-only zsh redraw patches, so cmux no longer carries them separately.
+- Dropped during the March 30, 2026 rebase because newer Ghostty prompt-marking changes on the refreshed base superseded these fork-only zsh redraw patches, so hmux no longer carries them separately.
 
 ### initial focus seeding and DECSET 1004 startup behavior
 
 - Was local in the fork as `c19c82bfd`.
-- Dropped from the current pinned fork head when cmux removed the corresponding
+- Dropped from the current pinned fork head when hmux removed the corresponding
   app-side initial focus seed and went back to post-create focus sync.
 
 ## Merge conflict notes
@@ -2372,8 +2372,8 @@ These files change frequently upstream; be careful when rebasing the fork:
 
 - April 28, 2026, upstream merge:
   - Merged upstream `659019666` into `465a9a621` without textual conflicts.
-  - Verified with `CMUX_GHOSTTYKIT_NO_PREBUILT=1 ./scripts/ensure-ghosttykit.sh`.
-  - Verified cmux with `./scripts/reload.sh --tag gtyup`.
+  - Verified with `HMUX_GHOSTTYKIT_NO_PREBUILT=1 ./scripts/ensure-ghosttykit.sh`.
+  - Verified hmux with `./scripts/reload.sh --tag gtyup`.
   - Published `xcframework-d3117e03ea19665bc83a28f7e0428c63937e6140` and pinned
     its archive checksum in `scripts/ghosttykit-checksums.txt`.
   - Merged `d3117e03e` into fork `main` with https://github.com/manaflow-ai/ghostty/pull/48.
@@ -2381,8 +2381,8 @@ These files change frequently upstream; be careful when rebasing the fork:
     macOS AppleDouble entries such as `._GhosttyKit.xcframework`.
 
 - April 28, 2026, theme picker restore:
-  - Reapplied the section 4 cmux picker hooks on top of `d3117e03e`.
-  - Enter in cmux mode must call the same selection-apply path used by keyboard/mouse navigation
+  - Reapplied the section 4 hmux picker hooks on top of `d3117e03e`.
+  - Enter in hmux mode must call the same selection-apply path used by keyboard/mouse navigation
     before setting the picker outcome to apply.
   - Verified with `zig build cli-helper -Dapp-runtime=none -Demit-macos-app=false -Demit-xcframework=false -Doptimize=ReleaseFast`.
   - Verified Enter writes `theme = light:0x96f,dark:0x96f` in a PTY temp-config run.
@@ -2390,7 +2390,7 @@ These files change frequently upstream; be careful when rebasing the fork:
     its archive checksum in `scripts/ghosttykit-checksums.txt`.
 
 - April 30, 2026, theme picker search Enter:
-  - Search-mode Enter in cmux mode must apply the current filtered selection and exit with
+  - Search-mode Enter in hmux mode must apply the current filtered selection and exit with
     outcome `apply`.
   - Escape still leaves search mode, and stock Ghostty search Enter still returns to normal mode.
   - Verified with `./scripts/reload.sh --tag thmenter`.
@@ -2406,7 +2406,7 @@ These files change frequently upstream; be careful when rebasing the fork:
     an upstream implementation when one exists.
   - Verified with `zig build test`.
   - Verified the universal macOS plus iOS xcframework path with
-    `CMUX_GHOSTTYKIT_NO_PREBUILT=1 ./scripts/ensure-ghosttykit.sh`.
+    `HMUX_GHOSTTYKIT_NO_PREBUILT=1 ./scripts/ensure-ghosttykit.sh`.
   - Published `xcframework-22fa801f88f96fa842e54ecce6c34a5d36003d19` and pinned
     its archive checksum in `scripts/ghosttykit-checksums.txt`.
   - Merged https://github.com/manaflow-ai/ghostty/pull/53 so the submodule SHA is
@@ -2420,16 +2420,16 @@ These files change frequently upstream; be careful when rebasing the fork:
   - Ensure `kitty_notification` stays imported after upstream parser reorganizations.
 
 - `src/cli/list_themes.zig`
-  - cmux now relies on the upstream picker UI plus local env-driven hooks for live preview and restore.
-    If upstream reorganizes the preview loop or key handling, re-check the cmux mode path and keep the
-    stock Ghostty behavior unchanged when the cmux env vars are absent.
-  - The April 28, 2026 restore requires Enter in cmux mode to call the same selection-apply path
+  - hmux now relies on the upstream picker UI plus local env-driven hooks for live preview and restore.
+    If upstream reorganizes the preview loop or key handling, re-check the hmux mode path and keep the
+    stock Ghostty behavior unchanged when the hmux env vars are absent.
+  - The April 28, 2026 restore requires Enter in hmux mode to call the same selection-apply path
     used by keyboard/mouse navigation before setting the picker outcome to apply.
   - The April 30, 2026 follow-up requires the same behavior from search mode, while preserving Escape
     as the search cancel path.
 
 - `build.zig`
-  - Upstream's new wasm/libghostty work touched the same build graph. Keep the cmux-only `cli-helper`
+  - Upstream's new wasm/libghostty work touched the same build graph. Keep the hmux-only `cli-helper`
     step wired in without regressing the upstream `lib-vt` or wasm build paths.
 
 - `src/main_ghostty.zig`
@@ -2437,7 +2437,7 @@ These files change frequently upstream; be careful when rebasing the fork:
     `std.fs.File.stdout().writer(&buf)` API plus explicit flush.
 
 - `include/ghostty.h`, `src/Surface.zig`, `src/apprt/embedded.zig`
-  - Upstream removed cmux-used selection exports. Preserve the re-exported
+  - Upstream removed hmux-used selection exports. Preserve the re-exported
     `ghostty_surface_select_cursor_cell` and `ghostty_surface_clear_selection` functions.
 
 - `src/renderer/generic.zig`
@@ -2452,7 +2452,7 @@ These files change frequently upstream; be careful when rebasing the fork:
 
 - `src/Surface.zig` (modifier tracking)
   - `modsChanged` and the key callback's link-highlight gate must compare binding mods against
-    binding mods (stored mouse mods are binding-only). cmux sends sided modifier bits on key
+    binding mods (stored mouse mods are binding-only). hmux sends sided modifier bits on key
     events for `macos-option-as-alt = left|right`; comparing raw mods re-dirties the screen and
     re-runs the link refresh on every event while a sided or lock modifier is held. If upstream
     refactors modifier tracking, keep the binding-normalized comparison.

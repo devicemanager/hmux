@@ -1,5 +1,5 @@
 import AppKit
-import CmuxChief
+import HmuxChief
 
 /// The quiet brain hint under the transcript header's name pill: "Opus 5.5 ·
 /// Medium" at 10 pt in the tertiary color (evaluator P2: the compose bar has
@@ -8,7 +8,7 @@ import CmuxChief
 /// text goes into the pill's tooltip through ``onToolTip``.
 ///
 /// It follows the `chief.*` settings from any entry point (this panel,
-/// Settings, cmux.json) through `UserDefaults.didChangeNotification`, no polling.
+/// Settings, hmux.json) through `UserDefaults.didChangeNotification`, no polling.
 @MainActor
 final class ChiefSettingsBrainHint {
     /// The label the host adds over its transcript; it never takes clicks.

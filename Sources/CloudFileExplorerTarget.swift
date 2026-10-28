@@ -1,4 +1,4 @@
-import CmuxAuthRuntime
+import HmuxAuthRuntime
 import Foundation
 
 /// Credential-free authority carried by every Cloud filesystem request and result.

@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxHomeCore
+import HmuxHomeCore
 
 /// Chief-specific creation and focus behavior for a right Dock.
 extension DockSplitStore {

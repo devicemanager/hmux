@@ -164,11 +164,11 @@ export interface SessionSummary {
   parentSessionId?: string;
   parentConversationId?: string;
   startRequestId?: string;
-  /** "transcript": a chat view of an agent running in a cmux terminal. */
+  /** "transcript": a chat view of an agent running in a hmux terminal. */
   mode?: "transcript";
   /** What that agent is waiting on in the terminal (permission, question). */
   attention?: string | null;
-  /** cmux agent messages waiting for that agent. */
+  /** hmux agent messages waiting for that agent. */
   queuedMessages?: QueuedAgentMessage[];
 }
 
@@ -504,7 +504,7 @@ export function useSession(): SessionState {
     pendingStartRef.current = null;
     restoreComposerDraft(draftStorage, [pending.prompt, ...pending.queuedReplies.map((reply) => reply.prompt)].join("\n\n"));
     history.replaceState(null, "", appPath("/"));
-    document.title = "cmux agent";
+    document.title = "hmux agent";
     sessionIdRef.current = null;
     optimisticUsersRef.current = [];
     setSession(null);
@@ -597,7 +597,7 @@ export function useSession(): SessionState {
             if (sessionIdRef.current !== msg.session.id) resetSessionActions();
             sessionIdRef.current = msg.session.id;
             history.replaceState(null, "", appPath("/s/" + msg.session.id));
-            document.title = msg.session.title || "cmux agent";
+            document.title = msg.session.title || "hmux agent";
             const queuedReplies = pending.queuedReplies;
             clearPendingStartTimeout();
             pendingStartRef.current = null;
@@ -626,7 +626,7 @@ export function useSession(): SessionState {
             }
             if (sessionIdRef.current !== msg.session.id) resetSessionActions();
             sessionIdRef.current = msg.session.id;
-            document.title = msg.session.title || "cmux agent";
+            document.title = msg.session.title || "hmux agent";
             serverStatusRef.current = msg.session.status;
             setSession(msg.session);
             setRouting(latestRouteStatus(msg.events as AgentEvent[]));
@@ -676,7 +676,7 @@ export function useSession(): SessionState {
             break;
           case "session-title":
             if (msg.sessionId === sessionIdRef.current && typeof msg.title === "string") {
-              document.title = msg.title || "cmux agent";
+              document.title = msg.title || "hmux agent";
               setSession((s) => (s ? { ...s, title: msg.title } : s));
             }
             break;
@@ -860,7 +860,7 @@ export function useSession(): SessionState {
     resetSessionActions();
     pendingStartRef.current = null;
     history.replaceState(null, "", appPath("/"));
-    document.title = "cmux agent";
+    document.title = "hmux agent";
     sessionIdRef.current = null;
     setRouting(null);
     setSession(null);

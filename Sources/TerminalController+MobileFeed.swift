@@ -1,5 +1,5 @@
-import CMUXAgentLaunch
-import CMUXMobileCore
+import HMUXAgentLaunch
+import HMUXMobileCore
 import Foundation
 
 /// Mobile-host agent-feed verbs: `feed.list` mirrors the Mac's workstream

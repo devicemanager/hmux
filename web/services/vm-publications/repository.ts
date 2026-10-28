@@ -495,7 +495,7 @@ export type CloudVmPublicationRepositoryShape = {
 };
 
 export class CloudVmPublicationRepository extends Context.Tag(
-  "cmux/CloudVmPublicationRepository",
+  "hmux/CloudVmPublicationRepository",
 )<CloudVmPublicationRepository, CloudVmPublicationRepositoryShape>() {}
 
 function tagged<T extends string>(

@@ -5,7 +5,7 @@ name: CI compile attribution
 # revert). Nothing here gates or slows a merge: it all happens after one.
 #
 # The compile itself is seed-derived-data.yml, which already builds every
-# push's app-host test product (the app and cmuxTests, build-for-testing) on
+# push's app-host test product (the app and hmuxTests, build-for-testing) on
 # the trusted warm minis and Blacksmith. Its first seed job whose Build fails
 # dispatches this workflow at once; its completion, and each
 # main-compile-probe.yml completion, runs it again. Every run re-derives the
@@ -67,15 +67,15 @@ jobs:
       probes: ${{ steps.analyze.outputs.probes }}
       fix: ${{ steps.analyze.outputs.fix }}
     steps:
-      - name: Mint the cmux-bot token
-        id: cmux-bot-token
-        if: vars.CMUX_BOT_APP_ID != ''
+      - name: Mint the hmux-bot token
+        id: hmux-bot-token
+        if: vars.HMUX_BOT_APP_ID != ''
         continue-on-error: true
         timeout-minutes: 1
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ vars.CMUX_BOT_APP_ID }}
-          private-key: ${{ secrets.CMUX_BOT_APP_KEY }}
+          app-id: ${{ vars.HMUX_BOT_APP_ID }}
+          private-key: ${{ secrets.HMUX_BOT_APP_KEY }}
           permission-actions: write
           permission-checks: read
           permission-contents: read
@@ -110,8 +110,8 @@ jobs:
       - name: Analyze
         id: analyze
         env:
-          GH_TOKEN: ${{ steps.cmux-bot-token.outputs.token || github.token }}
-          READ_TOKEN: ${{ steps.cmux-bot-token.outputs.token || steps.glaeda-token.outputs.token }}
+          GH_TOKEN: ${{ steps.hmux-bot-token.outputs.token || github.token }}
+          READ_TOKEN: ${{ steps.hmux-bot-token.outputs.token || steps.glaeda-token.outputs.token }}
           HEAD_INPUT: ${{ inputs.head }}
         run: |
           set -euo pipefail
@@ -143,15 +143,15 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - name: Mint the cmux-bot token
-        id: cmux-bot-token
-        if: vars.CMUX_BOT_APP_ID != ''
+      - name: Mint the hmux-bot token
+        id: hmux-bot-token
+        if: vars.HMUX_BOT_APP_ID != ''
         continue-on-error: true
         timeout-minutes: 1
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ vars.CMUX_BOT_APP_ID }}
-          private-key: ${{ secrets.CMUX_BOT_APP_KEY }}
+          app-id: ${{ vars.HMUX_BOT_APP_ID }}
+          private-key: ${{ secrets.HMUX_BOT_APP_KEY }}
           permission-actions: write
           permission-checks: read
           permission-contents: read
@@ -174,7 +174,7 @@ jobs:
       - name: Comment on the culprits
         if: ${{ needs.analyze.outputs.state == 'red' }}
         env:
-          GH_TOKEN: ${{ steps.cmux-bot-token.outputs.token || github.token }}
+          GH_TOKEN: ${{ steps.hmux-bot-token.outputs.token || github.token }}
           # A demo against an old commit (inputs.head) never pings anyone.
           DRY_RUN: ${{ (inputs.dry_run || inputs.head) && '--dry-run' || '' }}
         run: python3 scripts/ci/main_compile_attribution.py report --report "$RUNNER_TEMP/compile-report/compile-report.json" $DRY_RUN
@@ -185,7 +185,7 @@ jobs:
       - name: Probe the commits the seeds skipped
         if: ${{ needs.analyze.outputs.probes != '' && !inputs.dry_run && !inputs.head }}
         env:
-          GH_TOKEN: ${{ steps.cmux-bot-token.outputs.token || github.token }}
+          GH_TOKEN: ${{ steps.hmux-bot-token.outputs.token || github.token }}
           PROBES: ${{ needs.analyze.outputs.probes }}
           # The PR pool's root label (compile admission's), then the Blacksmith
           # pool whose seeds match its width.
@@ -221,15 +221,15 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - name: Mint the cmux-bot token
-        id: cmux-bot-token
-        if: vars.CMUX_BOT_APP_ID != ''
+      - name: Mint the hmux-bot token
+        id: hmux-bot-token
+        if: vars.HMUX_BOT_APP_ID != ''
         continue-on-error: true
         timeout-minutes: 1
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ vars.CMUX_BOT_APP_ID }}
-          private-key: ${{ secrets.CMUX_BOT_APP_KEY }}
+          app-id: ${{ vars.HMUX_BOT_APP_ID }}
+          private-key: ${{ secrets.HMUX_BOT_APP_KEY }}
           permission-actions: write
           permission-checks: read
           permission-contents: read
@@ -254,7 +254,7 @@ jobs:
       - name: Check that main's head is the analyzed commit and nothing is open for it
         id: head
         env:
-          GH_TOKEN: ${{ steps.cmux-bot-token.outputs.token || github.token }}
+          GH_TOKEN: ${{ steps.hmux-bot-token.outputs.token || github.token }}
           REPORT: ${{ runner.temp }}/compile-report/compile-report.json
         run: |
           set -euo pipefail
@@ -319,7 +319,7 @@ jobs:
           files="$(git diff --name-only | wc -l | tr -d ' ')"
           echo "The fixer changed $changed lines in $files files (mechanical: ${MECHANICAL:-unknown})." >> "$GITHUB_STEP_SUMMARY"
           if [ "${MECHANICAL:-}" = true ] && [ "$changed" -gt 0 ] && [ "$changed" -le 80 ] && [ "$files" -le 8 ] \
-             && ! git diff --name-only | grep -qvE '^(Sources|cmuxTests|cmuxUITests|CLI|Packages)/'; then
+             && ! git diff --name-only | grep -qvE '^(Sources|hmuxTests|hmuxUITests|CLI|Packages)/'; then
             echo "kind=fix" >> "$GITHUB_OUTPUT"
           else
             git checkout -- .
@@ -360,7 +360,7 @@ jobs:
             --summary "${SUMMARY:-}" --out "$RUNNER_TEMP/pr.json"
           field() { python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))[sys.argv[2]])' "$RUNNER_TEMP/pr.json" "$1"; }
           branch="$(field branch)"
-          git config user.name "cmux compile attribution"
+          git config user.name "hmux compile attribution"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           if [ "$KIND" = revert ]; then
             if [ "$(field confirmed)" != True ]; then
@@ -406,7 +406,7 @@ jobs:
       - name: Link the pull request from the culprit comment
         if: ${{ steps.pr.outputs.fix != '' || steps.pr.outputs.revert != '' }}
         env:
-          GH_TOKEN: ${{ steps.cmux-bot-token.outputs.token || github.token }}
+          GH_TOKEN: ${{ steps.hmux-bot-token.outputs.token || github.token }}
           FIX_PR: ${{ steps.pr.outputs.fix }}
           REVERT_PR: ${{ steps.pr.outputs.revert }}
         run: |

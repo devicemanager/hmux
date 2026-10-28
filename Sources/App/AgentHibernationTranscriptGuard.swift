@@ -1,4 +1,4 @@
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 import Foundation
 
 enum AgentHibernationTranscriptGuard {
@@ -326,7 +326,7 @@ enum AgentHibernationTranscriptGuard {
 
     private static func defaultSnapshotDirectoryURL() -> URL? {
         FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
-            .appendingPathComponent("cmux", isDirectory: true)
+            .appendingPathComponent("hmux", isDirectory: true)
             .appendingPathComponent("agent-transcript-teardown-snapshots", isDirectory: true)
     }
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Gates that every legacy top-level dispatch command and alias, every command
-`cmux help` lists, and every `vm` verb the legacy runner dispatches or
-`cmux vm --help` lists is declared in the ArgumentParser facade tree; that the
+`hmux help` lists, and every `vm` verb the legacy runner dispatches or
+`hmux vm --help` lists is declared in the ArgumentParser facade tree; that the
 generated completion offers each documented flag spelling (`--skill`); and that
 each hard-coded alias resolves to the same help output as its target.
 
@@ -11,7 +11,7 @@ alias that points at the wrong target. Both are caught here.
 
 Passthrough aliases (`cr`) are gated separately: they share their target's
 routing but deliberately not its help, so they are checked for alias
-declaration and for never serving the target's cmux-owned help.
+declaration and for never serving the target's hmux-owned help.
 """
 from __future__ import annotations
 
@@ -39,29 +39,29 @@ ALIASES = {
 
 # Aliases that route and complete as their target but deliberately do NOT share
 # its help, because the alias passes the invocation through to an external CLI.
-# `cmux cr ...` is always the installed CodeRouter CLI, while `cmux coderouter`
-# keeps the verbs cmux owns (`status`, `machines`, `claude`, help). See the
-# passthrough branch in CLI/cmux.swift.
+# `hmux cr ...` is always the installed CodeRouter CLI, while `hmux coderouter`
+# keeps the verbs hmux owns (`status`, `machines`, `claude`, help). See the
+# passthrough branch in CLI/hmux.swift.
 #
 # Checking these for help equality would be wrong, but dropping them would stop
 # gating the half of the contract that does hold: the alias must still be
 # declared on the target in the facade tree, and it must never serve the
-# target's cmux-owned help. Both are asserted below, and neither depends on the
+# target's hmux-owned help. Both are asserted below, and neither depends on the
 # external CLI being installed.
 PASSTHROUGH_ALIASES = {"cr": "coderouter"}
 
-# Body text unique to the cmux-owned `coderouter` help. This must be a line
+# Body text unique to the hmux-owned `coderouter` help. This must be a line
 # from the help *body*, not the banner or the "Usage:" line: a genuine alias
-# echoes the invoked name on those two lines (`cmux cloud` prints
-# "Usage: cmux cloud ...") but repeats the body verbatim, so only a body marker
+# echoes the invoked name on those two lines (`hmux cloud` prints
+# "Usage: hmux cloud ...") but repeats the body verbatim, so only a body marker
 # actually detects an alias wrongly serving its target's help.
 PASSTHROUGH_TARGET_HELP_MARKERS = {
-    "coderouter": "Team settings for the cmux coderouter model plane",
+    "coderouter": "Team settings for the hmux coderouter model plane",
 }
 
 
 
-# Controlled environment for every spawned cmux, set by main(). Ambient CMUX_*
+# Controlled environment for every spawned hmux, set by main(). Ambient HMUX_*
 # variables (a legacy-parser override, a live socket or tag) would change what
 # is gated, and the real home would let the binary read or write user state.
 CLI_ENV: dict[str, str] = {}
@@ -73,10 +73,10 @@ def build_cli_env(tmpdir: str) -> dict[str, str]:
     env = {
         key: value
         for key, value in os.environ.items()
-        if not key.startswith(("CMUX_", "CMUXD_"))
+        if not key.startswith(("HMUX_", "HMUXD_"))
     }
-    env["CMUX_CLI_SENTRY_DISABLED"] = "1"
-    env["CMUX_SOCKET_PATH"] = os.path.join(tmpdir, "absent.sock")
+    env["HMUX_CLI_SENTRY_DISABLED"] = "1"
+    env["HMUX_SOCKET_PATH"] = os.path.join(tmpdir, "absent.sock")
     env["HOME"] = home
     env["CFFIXED_USER_HOME"] = home
     return env
@@ -89,7 +89,7 @@ def run_cli(cli: str, argv: list[str]) -> subprocess.CompletedProcess[str]:
             text=True, capture_output=True, check=False, timeout=30.0, env=CLI_ENV,
         )
     except subprocess.TimeoutExpired as exc:
-        raise RuntimeError(f"`cmux {' '.join(argv)}` timed out after {exc.timeout}s") from exc
+        raise RuntimeError(f"`hmux {' '.join(argv)}` timed out after {exc.timeout}s") from exc
 
 
 def repo_root() -> Path:
@@ -97,7 +97,7 @@ def repo_root() -> Path:
 
 
 def legacy_source_lines() -> list[str]:
-    return (repo_root() / "CLI" / "cmux.swift").read_text(encoding="utf-8").splitlines()
+    return (repo_root() / "CLI" / "hmux.swift").read_text(encoding="utf-8").splitlines()
 
 
 def extract_legacy_dispatch_names() -> set[str]:
@@ -109,7 +109,7 @@ def extract_legacy_dispatch_names() -> set[str]:
             start = index
             break
     if start is None:
-        raise RuntimeError("could not locate the top-level dispatch switch in CLI/cmux.swift")
+        raise RuntimeError("could not locate the top-level dispatch switch in CLI/hmux.swift")
 
     return switch_case_labels(lines, start, "the top-level dispatch switch")
 
@@ -120,10 +120,10 @@ def extract_legacy_vm_verbs() -> set[str]:
 
     arm = next((i for i, line in enumerate(lines) if line.strip() == 'case "vm", "cloud":'), None)
     if arm is None:
-        raise RuntimeError('could not locate the `case "vm", "cloud":` arm in CLI/cmux.swift')
+        raise RuntimeError('could not locate the `case "vm", "cloud":` arm in CLI/hmux.swift')
     start = next((i for i in range(arm + 1, len(lines)) if lines[i].strip() == "switch sub {"), None)
     if start is None:
-        raise RuntimeError("could not locate the vm verb switch in CLI/cmux.swift")
+        raise RuntimeError("could not locate the vm verb switch in CLI/hmux.swift")
 
     return switch_case_labels(lines, start, "the vm verb switch")
 
@@ -230,17 +230,17 @@ def extract_documented_entries(cli: str, argv: list[str], header: str) -> tuple[
     """
     proc = run_cli(cli, argv)
     if proc.returncode != 0:
-        raise RuntimeError(f"`cmux {' '.join(argv)}` exited {proc.returncode}\n{proc.stderr}")
+        raise RuntimeError(f"`hmux {' '.join(argv)}` exited {proc.returncode}\n{proc.stderr}")
     _, found, section = proc.stdout.partition(f"\n{header}\n")
     if not found:
-        raise RuntimeError(f"could not locate the {header} section in `cmux {' '.join(argv)}`")
+        raise RuntimeError(f"could not locate the {header} section in `hmux {' '.join(argv)}`")
 
     name_pattern = re.compile(r"[a-z][a-z0-9-]*")
     flag_pattern = re.compile(r"--([a-z][a-z0-9-]*)")
     names: set[str] = set()
     flags: set[str] = set()
     # Entries sit at two spaces, or at four under a two-space group heading
-    # (`  Agents:`) in the grouped `cmux help`. Deeper lines are wrapped
+    # (`  Agents:`) in the grouped `hmux help`. Deeper lines are wrapped
     # descriptions continuing the entry above.
     entry_indent = "  "
     for line in section.splitlines():
@@ -270,7 +270,7 @@ def extract_documented_entries(cli: str, argv: list[str], header: str) -> tuple[
 
     if not names:
         # An empty set would make every "documented is declared" check pass vacuously.
-        raise RuntimeError(f"found no command entries in the {header} section of `cmux {' '.join(argv)}`")
+        raise RuntimeError(f"found no command entries in the {header} section of `hmux {' '.join(argv)}`")
     return names, flags
 
 
@@ -278,14 +278,14 @@ def extract_offered_long_flags(cli: str, path: str) -> set[str]:
     """Long flags the generated fish completion offers at exactly `path`.
 
     The command-tree dump omits the root command's own options, so the
-    completion script is the one place both `cmux --skill` and
-    `cmux vm --skill` can be observed the way a user reaches them.
+    completion script is the one place both `hmux --skill` and
+    `hmux vm --skill` can be observed the way a user reaches them.
     """
     proc = run_cli(cli, ["completion", "fish"])
     if proc.returncode != 0:
-        raise RuntimeError(f"`cmux completion fish` exited {proc.returncode}\n{proc.stderr}")
+        raise RuntimeError(f"`hmux completion fish` exited {proc.returncode}\n{proc.stderr}")
     pattern = re.compile(
-        rf"__cmux_should_offer_completions_for_flags_or_options \"{re.escape(path)}\" [^']*' -l '([^']+)'"
+        rf"__hmux_should_offer_completions_for_flags_or_options \"{re.escape(path)}\" [^']*' -l '([^']+)'"
     )
     return {match.group(1) for match in pattern.finditer(proc.stdout)}
 
@@ -296,9 +296,9 @@ def help_text(cli: str, command: str) -> str:
 
 
 def main() -> int:
-    cli = os.environ.get("CMUX_CLI_BIN")
+    cli = os.environ.get("HMUX_CLI_BIN")
     if not cli or not os.access(cli, os.X_OK):
-        print("FAIL: set CMUX_CLI_BIN to the built cmux binary")
+        print("FAIL: set HMUX_CLI_BIN to the built hmux binary")
         return 1
 
     with tempfile.TemporaryDirectory() as tmpdir:
@@ -325,7 +325,7 @@ def check_parity(cli: str) -> int:
     documented_names, documented_flags = extract_documented_entries(cli, ["help"], "Commands:")
     undeclared_documented = sorted(documented_names - declared_names)
     if undeclared_documented:
-        print("FAIL: commands listed by `cmux help` but not declared in the facade tree:")
+        print("FAIL: commands listed by `hmux help` but not declared in the facade tree:")
         for name in undeclared_documented:
             print(f"  {name}")
         return 1
@@ -335,16 +335,16 @@ def check_parity(cli: str) -> int:
     declared_vm_verbs = extract_declared_subcommand_names(cli, "vm")
     missing_vm = sorted((legacy_vm_verbs | documented_vm_verbs) - declared_vm_verbs)
     if missing_vm:
-        print("FAIL: vm verbs dispatched by the legacy runner or listed by `cmux vm --help` "
+        print("FAIL: vm verbs dispatched by the legacy runner or listed by `hmux vm --help` "
               "but not declared under vm in the facade tree:")
         for name in missing_vm:
             print(f"  {name}")
         return 1
 
     flag_failures = [
-        f"cmux --{flag}" for flag in sorted(documented_flags - extract_offered_long_flags(cli, "cmux"))
+        f"hmux --{flag}" for flag in sorted(documented_flags - extract_offered_long_flags(cli, "hmux"))
     ] + [
-        f"cmux vm --{flag}" for flag in sorted(documented_vm_flags - extract_offered_long_flags(cli, "cmux vm"))
+        f"hmux vm --{flag}" for flag in sorted(documented_vm_flags - extract_offered_long_flags(cli, "hmux vm"))
     ]
     if flag_failures:
         print("FAIL: documented flag spellings the generated completion does not offer:")
@@ -356,15 +356,15 @@ def check_parity(cli: str) -> int:
     for alias, target in ALIASES.items():
         alias_help = help_text(cli, alias)
         target_help = help_text(cli, target)
-        # Only the banner line ("cmux <name>") and the "Usage: cmux <name> ..."
+        # Only the banner line ("hmux <name>") and the "Usage: hmux <name> ..."
         # line echo the invoked command name; everything else, including any
         # example lines that happen to mention the alias by name, is shared
         # body text that must match verbatim.
         normalized_alias_help = re.sub(
-            rf"^cmux {re.escape(alias)}$", f"cmux {target}", alias_help, flags=re.MULTILINE,
+            rf"^hmux {re.escape(alias)}$", f"hmux {target}", alias_help, flags=re.MULTILINE,
         )
         normalized_alias_help = re.sub(
-            rf"^Usage: cmux {re.escape(alias)} ", f"Usage: cmux {target} ", normalized_alias_help, flags=re.MULTILINE,
+            rf"^Usage: hmux {re.escape(alias)} ", f"Usage: hmux {target} ", normalized_alias_help, flags=re.MULTILINE,
         )
         if normalized_alias_help == target_help:
             continue
@@ -375,8 +375,8 @@ def check_parity(cli: str) -> int:
         # example mentioning the target elsewhere in the help body cannot
         # pass this check.
         alias_banner_patterns = (
-            rf"^Legacy alias for 'cmux {re.escape(target)}'\.",
-            rf"^Alias for `cmux {re.escape(target)}`\.",
+            rf"^Legacy alias for 'hmux {re.escape(target)}'\.",
+            rf"^Alias for `hmux {re.escape(target)}`\.",
         )
         if any(re.search(pattern, alias_help, flags=re.MULTILINE) for pattern in alias_banner_patterns):
             continue
@@ -398,12 +398,12 @@ def check_parity(cli: str) -> int:
         marker = PASSTHROUGH_TARGET_HELP_MARKERS[target]
         if marker in help_text(cli, alias):
             passthrough_failures.append(
-                f"`cmux {alias} --help` served {target}'s cmux-owned help "
+                f"`hmux {alias} --help` served {target}'s hmux-owned help "
                 f"(found {marker!r}); it must pass through to the external CLI"
             )
         if marker not in help_text(cli, target):
             passthrough_failures.append(
-                f"`cmux {target} --help` no longer contains {marker!r}; "
+                f"`hmux {target} --help` no longer contains {marker!r}; "
                 "update PASSTHROUGH_TARGET_HELP_MARKERS"
             )
 

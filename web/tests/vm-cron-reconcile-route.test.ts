@@ -79,8 +79,8 @@ afterEach(() => {
 describe("VM reconcile cron route", () => {
   test("rejects requests without the cron bearer secret before running workflows", async () => {
     const responses = await Promise.all([
-      GET(new Request("https://cmux.test/api/cron/vm-reconcile")),
-      GET(new Request("https://cmux.test/api/cron/vm-reconcile", {
+      GET(new Request("https://hmux.test/api/cron/vm-reconcile")),
+      GET(new Request("https://hmux.test/api/cron/vm-reconcile", {
         headers: { authorization: "Bearer wrong-secret" },
       })),
     ]);
@@ -97,7 +97,7 @@ describe("VM reconcile cron route", () => {
   test("rejects all requests when CRON_SECRET is not configured", async () => {
     delete process.env.CRON_SECRET;
 
-    const response = await GET(new Request("https://cmux.test/api/cron/vm-reconcile", {
+    const response = await GET(new Request("https://hmux.test/api/cron/vm-reconcile", {
       headers: { authorization: "Bearer cron-secret" },
     }));
 
@@ -108,7 +108,7 @@ describe("VM reconcile cron route", () => {
   });
 
   test("runs the reconcile workflow for a valid cron bearer secret", async () => {
-    const response = await GET(new Request("https://cmux.test/api/cron/vm-reconcile", {
+    const response = await GET(new Request("https://hmux.test/api/cron/vm-reconcile", {
       headers: { authorization: "Bearer cron-secret" },
     }));
 
@@ -139,7 +139,7 @@ describe("VM reconcile cron route", () => {
   test("a failed tunnel reap does not fail the status reconcile", async () => {
     tunnelReapFails = true;
 
-    const response = await GET(new Request("https://cmux.test/api/cron/vm-reconcile", {
+    const response = await GET(new Request("https://hmux.test/api/cron/vm-reconcile", {
       headers: { authorization: "Bearer cron-secret" },
     }));
 

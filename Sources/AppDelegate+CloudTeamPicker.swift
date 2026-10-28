@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxCloud
+import HmuxCloud
 
 extension AppDelegate {
     @MainActor
@@ -50,7 +50,7 @@ extension AppDelegate {
         )
         state.cloudTeamPickerPresentation.isPresented = auth?.accountFlow.isAuthenticated == true
 #if DEBUG
-        cmuxDebugLog("cloud.teamPicker.open source=\(debugSource)")
+        hmuxDebugLog("cloud.teamPicker.open source=\(debugSource)")
 #endif
         return true
     }
@@ -77,7 +77,7 @@ extension AppDelegate {
         state.cloudTeamPickerPresentation.isPresented = false
         state.cloudTeamPickerPresentation.isInvitePresented = auth?.accountFlow.isAuthenticated == true
 #if DEBUG
-        cmuxDebugLog("cloud.teamInvite.open source=\(debugSource)")
+        hmuxDebugLog("cloud.teamInvite.open source=\(debugSource)")
 #endif
         return true
     }

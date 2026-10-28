@@ -43,8 +43,8 @@ def test_distribution_helper_resolves_automatic_internal_upload() -> None:
 
     decision = helper.resolve_distribution("internal", "")
 
-    assert decision.bundle_id == "dev.cmux.app.internal"
-    assert decision.display_name == "cmux INTERNAL"
+    assert decision.bundle_id == "dev.hmux.app.internal"
+    assert decision.display_name == "hmux INTERNAL"
     assert decision.profile_type == "internal"
     assert decision.assign_external_group is False
     assert decision.assign_internal_group is True
@@ -56,8 +56,8 @@ def test_distribution_helper_resolves_demo_upload() -> None:
 
     decision = helper.resolve_distribution("demo", "")
 
-    assert decision.bundle_id == "dev.cmux.app.demo"
-    assert decision.display_name == "cmux DEMO"
+    assert decision.bundle_id == "dev.hmux.app.demo"
+    assert decision.display_name == "hmux DEMO"
     assert decision.profile_type == "demo"
     assert decision.assign_external_group is False
     assert decision.assign_internal_group is True
@@ -69,8 +69,8 @@ def test_distribution_helper_resolves_manual_external_override() -> None:
 
     decision = helper.resolve_distribution("internal", "1.2.3")
 
-    assert decision.bundle_id == "dev.cmux.app.beta"
-    assert decision.display_name == "cmux BETA"
+    assert decision.bundle_id == "dev.hmux.app.beta"
+    assert decision.display_name == "hmux BETA"
     assert decision.profile_type == "beta"
     assert decision.assign_external_group is True
     assert decision.assign_internal_group is False

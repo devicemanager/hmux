@@ -1,8 +1,8 @@
 import AppKit
 import Bonsplit
-import CmuxAppKitSupportUI
-import CmuxNotifications
-import CmuxTerminal
+import HmuxAppKitSupportUI
+import HmuxNotifications
+import HmuxTerminal
 import SwiftUI
 
 /// Right-sidebar Dock. Renders the window's own Dock `BonsplitController` tree
@@ -284,7 +284,7 @@ final class DockKeyboardFocusView: NSView {
     func ownsKeyboardFocus(_ responder: NSResponder) -> Bool {
         if responder === self { return true }
         if let window, ownsDockBrowserFocus?(responder, window) == true { return true }
-        guard let ghosttyView = responder.cmuxStrictOwningGhosttyView(),
+        guard let ghosttyView = responder.hmuxStrictOwningGhosttyView(),
               let surfaceId = ghosttyView.terminalSurface?.id else {
             return false
         }

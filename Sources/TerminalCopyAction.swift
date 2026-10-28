@@ -1,10 +1,10 @@
 import AppKit
-import CmuxGit
-import CmuxTerminal
+import HmuxGit
+import HmuxTerminal
 
-/// What a cmux copy action puts on the clipboard. Shared by the configurable
-/// built-in actions (`cmux.copyWorkingDirectory`, `cmux.copyProjectRoot`,
-/// `cmux.copyScreen`), their command palette entries, and surface tab bar
+/// What a hmux copy action puts on the clipboard. Shared by the configurable
+/// built-in actions (`hmux.copyWorkingDirectory`, `hmux.copyProjectRoot`,
+/// `hmux.copyScreen`), their command palette entries, and surface tab bar
 /// buttons, so every entrypoint copies the same text.
 enum TerminalCopyAction: Sendable, Equatable {
     /// The terminal's current working directory, as its shell last reported it.
@@ -16,7 +16,7 @@ enum TerminalCopyAction: Sendable, Equatable {
     case visibleScreen
 }
 
-extension CmuxSurfaceTabBarBuiltInAction {
+extension HmuxSurfaceTabBarBuiltInAction {
     /// The copy behavior this built-in runs, or `nil` for non-copy built-ins.
     var terminalCopyAction: TerminalCopyAction? {
         switch self {

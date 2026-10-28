@@ -1,45 +1,45 @@
 import Foundation
-import CmuxFoundation
-import CmuxTerminalCore
+import HmuxFoundation
+import HmuxTerminalCore
 
-// CmuxSurfaceConfigTemplate and the surface runtime probes moved to
-// CmuxTerminalCore (SurfaceValues/CmuxSurfaceConfigTemplate.swift and
+// HmuxSurfaceConfigTemplate and the surface runtime probes moved to
+// HmuxTerminalCore (SurfaceValues/HmuxSurfaceConfigTemplate.swift and
 // Interop/GhosttySurfaceRuntimeProbe.swift). The legacy free-function names
 // below are shims forwarding existing app callers to the probe.
 
-typealias CmuxSurfaceConfigTemplate = CmuxTerminalCore.CmuxSurfaceConfigTemplate
+typealias HmuxSurfaceConfigTemplate = HmuxTerminalCore.HmuxSurfaceConfigTemplate
 
-func cmuxSurfaceContextName(_ context: ghostty_surface_context_e) -> String {
+func hmuxSurfaceContextName(_ context: ghostty_surface_context_e) -> String {
     GhosttySurfaceRuntimeProbe.contextName(context)
 }
 
-func cmuxSurfacePointerAppearsLive(_ surface: ghostty_surface_t) -> Bool {
+func hmuxSurfacePointerAppearsLive(_ surface: ghostty_surface_t) -> Bool {
     GhosttySurfaceRuntimeProbe.surfacePointerAppearsLive(surface)
 }
 
 @MainActor
-func cmuxCurrentSurfaceFontSizePoints(_ surface: ghostty_surface_t) -> Float? {
+func hmuxCurrentSurfaceFontSizePoints(_ surface: ghostty_surface_t) -> Float? {
     GhosttySurfaceRuntimeProbe.currentSurfaceFontSizePoints(surface)
 }
 
 @MainActor
-func cmuxInheritedSurfaceConfig(
+func hmuxInheritedSurfaceConfig(
     sourceSurface: ghostty_surface_t,
     context: ghostty_surface_context_e
-) -> CmuxSurfaceConfigTemplate {
+) -> HmuxSurfaceConfigTemplate {
     let inherited = ghostty_surface_inherited_config(sourceSurface, context)
     let percent = GlobalFontMagnification.storedPercent
-    var config = CmuxSurfaceConfigTemplate(
+    var config = HmuxSurfaceConfigTemplate(
         cConfig: inherited,
         globalFontMagnificationPercent: percent
     )
 
     // Capture runtime zoom for inheritance, even when Ghostty's inherit-font-size
     // config is disabled, without claiming surface-local ownership.
-    let runtimePoints = cmuxCurrentSurfaceFontSizePoints(sourceSurface)
+    let runtimePoints = hmuxCurrentSurfaceFontSizePoints(sourceSurface)
     if let points = runtimePoints {
         config.setFontSize(
-            CmuxSurfaceConfigTemplate.baseFontSize(
+            HmuxSurfaceConfigTemplate.baseFontSize(
                 fromRuntimePoints: points,
                 percent: percent
             ),
@@ -51,8 +51,8 @@ func cmuxInheritedSurfaceConfig(
     let inheritedText = String(format: "%.2f", inherited.font_size)
     let runtimeText = runtimePoints.map { String(format: "%.2f", $0) } ?? "nil"
     let finalText = String(format: "%.2f", config.fontSize)
-    cmuxDebugLog(
-        "zoom.inherit context=\(cmuxSurfaceContextName(context)) " +
+    hmuxDebugLog(
+        "zoom.inherit context=\(hmuxSurfaceContextName(context)) " +
         "inherited=\(inheritedText) runtime=\(runtimeText) final=\(finalText)"
     )
 #endif

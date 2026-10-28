@@ -1,6 +1,6 @@
-import CmuxFoundation
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxFoundation
+import HmuxTerminal
+import HmuxTerminalCore
 import Foundation
 
 /// Selects one stable lineage when a request spans unordered panel stores.

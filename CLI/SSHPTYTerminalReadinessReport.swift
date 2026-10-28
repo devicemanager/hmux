@@ -63,7 +63,7 @@ struct SSHPTYTerminalReadinessReport: Sendable {
             try reportingClient.connectWithoutRetry(responseTimeout: attemptTimeout)
             let authenticationTimeout = deadline.timeIntervalSinceNow
             guard authenticationTimeout > 0 else { return .transientFailure }
-            try CMUXCLI.authenticateSocketClientIfNeeded(
+            try HMUXCLI.authenticateSocketClientIfNeeded(
                 reportingClient,
                 explicitPassword: explicitPassword,
                 socketPath: socketPath,

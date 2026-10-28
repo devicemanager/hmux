@@ -1,7 +1,7 @@
 import AppKit
-import CmuxBrowser
-import CmuxCore
-import CmuxPanes
+import HmuxBrowser
+import HmuxCore
+import HmuxPanes
 import WebKit
 
 extension Workspace {
@@ -203,7 +203,7 @@ extension DockSplitStore {
             guard let self, let panel else { return }
             guard self.browserPanel(for: panel.id) === panel else { return }
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "dock.browser.close.requestedByPage ws=\(self.workspaceId.uuidString.prefix(5)) " +
                 "panel=\(panel.id.uuidString.prefix(5))"
             )

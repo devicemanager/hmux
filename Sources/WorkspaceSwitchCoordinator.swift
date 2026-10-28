@@ -1,12 +1,12 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 import WebKit
 
 extension Notification.Name {
-    static let terminalPortalDidBecomePresentable = Notification.Name("cmux.terminalPortalDidBecomePresentable")
-    static let browserPortalDidBecomePresentable = Notification.Name("cmux.browserPortalDidBecomePresentable")
-    static let workspaceSwitchDidFinish = Notification.Name("cmux.workspaceSwitchDidFinish")
+    static let terminalPortalDidBecomePresentable = Notification.Name("hmux.terminalPortalDidBecomePresentable")
+    static let browserPortalDidBecomePresentable = Notification.Name("hmux.browserPortalDidBecomePresentable")
+    static let workspaceSwitchDidFinish = Notification.Name("hmux.workspaceSwitchDidFinish")
 }
 
 /// Records one window's selection, presentation, and input-readiness intervals.

@@ -20,8 +20,8 @@ import unittest
 
 class TransferProgressTests(unittest.TestCase):
     def test_transfer_progress(self) -> None:
-        cli = os.environ.get("CMUX_CLI_BIN")
-        self.assertTrue(cli and os.access(cli, os.X_OK), "Set CMUX_CLI_BIN to the built CLI")
+        cli = os.environ.get("HMUX_CLI_BIN")
+        self.assertTrue(cli and os.access(cli, os.X_OK), "Set HMUX_CLI_BIN to the built CLI")
         for direction in ("pull",):
             for tty in (False, True):
                 for fail_second_chunk in (False, True):
@@ -64,8 +64,8 @@ class TransferProgressTests(unittest.TestCase):
                                     if direction == "pull":
                                         offset = (len(chunks) - 1) * 512 * 1024
                                         output = base64.b64encode(payload[offset:offset + 512 * 1024]).decode()
-                                elif "CMUX_FILE" in command:
-                                    output = "CMUX_FILE\n"
+                                elif "HMUX_FILE" in command:
+                                    output = "HMUX_FILE\n"
                                 elif command.startswith("wc -c"):
                                     output = f"{len(payload)}\n{digest}  payload\n"
                                 elif "sha256sum" in command:
@@ -86,10 +86,10 @@ class TransferProgressTests(unittest.TestCase):
 
                 server = threading.Thread(target=serve, daemon=True)
                 server.start()
-                environment = {key: value for key, value in os.environ.items() if not key.startswith("CMUX")}
+                environment = {key: value for key, value in os.environ.items() if not key.startswith("HMUX")}
                 environment.update({
                     "HOME": root, "CFFIXED_USER_HOME": root,
-                    "CMUX_SOCKET_PATH": socket_path, "CMUX_CLI_SENTRY_DISABLED": "1",
+                    "HMUX_SOCKET_PATH": socket_path, "HMUX_CLI_SENTRY_DISABLED": "1",
                     "AppleLanguages": "(en)", "LANG": "en_US.UTF-8", "LC_ALL": "en_US.UTF-8",
                 })
                 args = [cli, "vm", direction, "probe-machine"]
@@ -130,14 +130,14 @@ class TransferProgressTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 1 if fail else 0, stderr)
                 newline = b"\r\n" if tty else b"\n"
                 prefix = b"\r" if tty else b""
-                first = f"cmux vm {direction}: 1/2 chunks".encode()
+                first = f"hmux vm {direction}: 1/2 chunks".encode()
                 expected = prefix + first
                 if fail:
                     expected += newline + b"Error: probe_failure: second chunk failed" + newline
                 else:
                     if not tty:
                         expected += newline
-                    expected += prefix + f"cmux vm {direction}: 2/2 chunks".encode() + newline
+                    expected += prefix + f"hmux vm {direction}: 2/2 chunks".encode() + newline
                     if direction == "pull":
                         self.assertEqual(Path(root, "received").read_bytes(), payload)
                 self.assertEqual(stderr, expected)

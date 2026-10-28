@@ -1,6 +1,6 @@
-import CmuxAgentChat
-import CmuxMobileHost
-import CmuxSettings
+import HmuxAgentChat
+import HmuxMobileHost
+import HmuxSettings
 import Foundation
 
 private enum TerminalControllerChatArtifactIndexProvider {
@@ -367,7 +367,7 @@ extension TerminalController {
 
     private func debugLogMobileChatArtifactDenial(code: String, reason: String, path: String) {
         #if DEBUG
-        cmuxDebugLog("mobile.chat.artifact.deny code=\(code) reason=\(reason) path=\(path)")
+        hmuxDebugLog("mobile.chat.artifact.deny code=\(code) reason=\(reason) path=\(path)")
         #endif
     }
 
@@ -462,7 +462,7 @@ extension TerminalController {
                 code: "permission_denied",
                 message: String(
                     localized: "mobile.chat.artifact.error.permissionDenied",
-                    defaultValue: "cmux does not have permission to read that file."
+                    defaultValue: "hmux does not have permission to read that file."
                 ),
                 data: data
             )

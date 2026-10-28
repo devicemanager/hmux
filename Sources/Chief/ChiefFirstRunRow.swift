@@ -3,7 +3,7 @@ import QuartzCore
 
 /// One control of the Chief first-run panel, in one of two styles:
 ///
-/// - ``Style/row``: cmux-next's `HomeFirstRunRow`. A 28 pt raised rect
+/// - ``Style/row``: hmux-next's `HomeFirstRunRow`. A 28 pt raised rect
 ///   (radius 8, continuous, 1 pt hairline; never a capsule) with a leading
 ///   13 pt glyph or a workspace's 6 pt status dot, a 13 pt label, and
 ///   trailing 12 pt text: the action's shortcut (tertiary) or the status word
@@ -16,7 +16,7 @@ import QuartzCore
 /// The hover fill follows the pointer, a darker fill shows while pressed.
 /// Clicks, VoiceOver's press, and Return or keypad Enter while it has
 /// keyboard focus run `onClick` (Space and other printable keys go to the
-/// message box, as in cmux-next); arrow keys go to `onNavigate`.
+/// message box, as in hmux-next); arrow keys go to `onNavigate`.
 final class ChiefFirstRunRow: NSView {
     enum Style { case row, chip }
 

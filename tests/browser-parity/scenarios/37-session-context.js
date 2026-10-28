@@ -4,11 +4,11 @@
 // another session can neither drive that tab nor change its options; a
 // user's tab, including one a session only drives, keeps its own. The dev
 // driver cannot change the user agent, so there each check holds trivially.
-// oracle: skip (session and tab ownership are cmux-defined)
-// ---- cell cmux-only
+// oracle: skip (session and tab ownership are hmux-defined)
+// ---- cell hmux-only
 const keptForUser = await tabs.open(`${PRIMARY}/index.html?ctx-user`);
 await keptForUser.keep();
-// ---- cell session=ctxdriver cmux-only
+// ---- cell session=ctxdriver hmux-only
 const setUserAgent = async (ua) => {
   try {
     await session.configure({ userAgent: ua });
@@ -23,13 +23,13 @@ const userTab = await tabs.use(userRow.id);
 const userAgentBefore = await userTab.evaluate(() => navigator.userAgent);
 const userAgentApplies = await setUserAgent("brepl-driver-ua");
 await userTab.reload();
-emitCmux("user-tab-keeps-its-user-agent", (await userTab.evaluate(() => navigator.userAgent)) === userAgentBefore);
+emitHmux("user-tab-keeps-its-user-agent", (await userTab.evaluate(() => navigator.userAgent)) === userAgentBefore);
 const ownTab = await tabs.open(`${PRIMARY}/index.html?ctx-own`);
-emitCmux("created-tab-gets-the-user-agent", !userAgentApplies || (await ownTab.evaluate(() => navigator.userAgent)) === "brepl-driver-ua");
+emitHmux("created-tab-gets-the-user-agent", !userAgentApplies || (await ownTab.evaluate(() => navigator.userAgent)) === "brepl-driver-ua");
 await ownTab.close();
 await userTab.close();
 await setUserAgent(null);
-// ---- cell session=ctxowner cmux-only
+// ---- cell session=ctxowner hmux-only
 // The owner's tab keeps the owner's options while another session is
 // active. That session cannot drive the owner's tab (a tab another running
 // session created is refused), so its own session.configure and its
@@ -42,7 +42,7 @@ try {
   ownerApplies = false;
 }
 const ownerTab = await tabs.open(`${PRIMARY}/index.html?ctx-owner`);
-// ---- cell cmux-only
+// ---- cell hmux-only
 try {
   await session.configure({ userAgent: "brepl-other-ua" });
 } catch (e) {
@@ -61,9 +61,9 @@ try {
 // `parity-<scenario>-ctxowner-<suffix>`, followed by its workspace.
 const ownerName = /^(?:ctxowner|parity-37-session-context-ctxowner-[a-z0-9]{1,6})$/;
 const named = /belongs to the REPL session "([^"]+)"(?: \(workspace [0-9A-Fa-f-]{36}\))?, which is still running/.exec(refusal ?? "");
-emitCmux("other-session-refused-on-owner-tab", !!named && ownerName.test(named[1]));
-// ---- cell session=ctxowner cmux-only
+emitHmux("other-session-refused-on-owner-tab", !!named && ownerName.test(named[1]));
+// ---- cell session=ctxowner hmux-only
 await ownerTab.reload();
-emitCmux("owner-options-survive-another-session", !ownerApplies || (await ownerTab.evaluate(() => navigator.userAgent)) === "brepl-owner-ua");
+emitHmux("owner-options-survive-another-session", !ownerApplies || (await ownerTab.evaluate(() => navigator.userAgent)) === "brepl-owner-ua");
 await ownerTab.close();
 await session.configure({ userAgent: null }).catch((e) => { if (e.code !== "unsupported") throw e; });

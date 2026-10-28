@@ -34,13 +34,13 @@ class PreflightTests(unittest.TestCase):
         self.addCleanup(os.chdir, self.previous)
         self.calls = []
         self.missing = True
-        self.resource = "cmux-ci-artifacts-canary-123-1"
+        self.resource = "hmux-ci-artifacts-canary-123-1"
         self.denied = False
         self.public = False
 
     def api(self, path, method='GET', value=None):
         self.calls.append((path, method, value))
-        if path == 'workers/subdomain': return {'subdomain': 'cmux-test'}
+        if path == 'workers/subdomain': return {'subdomain': 'hmux-test'}
         if path.endswith('/settings'): raise cf.CloudflareError(method, path, 404)
         if path.endswith('/domains/managed'): return {'enabled': self.public}
         if path.endswith('/domains/custom'): return {'domains': []}
@@ -176,7 +176,7 @@ class PreflightTests(unittest.TestCase):
                 for path in (count, args, sleeps):
                     path.unlink(missing_ok=True)
                 env = os.environ | {
-                    'CANARY_RESOURCE': 'cmux-ci-artifacts-canary-123-1',
+                    'CANARY_RESOURCE': 'hmux-ci-artifacts-canary-123-1',
                     'FAKE_WRANGLER_COUNT': str(count),
                     'FAKE_WRANGLER_ARGS': str(args),
                     'FAKE_SLEEP_ARGS': str(sleeps),
@@ -192,7 +192,7 @@ class PreflightTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0)
             self.assertEqual(count, 3)
             self.assertEqual(sleeps, ['5', '10'])
-            self.assertIn('cmux-ci-artifacts-canary-123-1/github/manaflow-ai/cmux/10610975375/', args[0])
+            self.assertIn('hmux-ci-artifacts-canary-123-1/github/manaflow-ai/cmux/10610975375/', args[0])
 
             result, count, _, sleeps = execute(4)
             self.assertEqual(result.returncode, 1)
@@ -223,12 +223,12 @@ class MeasurementTests(unittest.TestCase):
                 self.assertNotIn('a' * 64, ' '.join(args))
                 self.assertEqual((work / 'curl-secret-config').stat().st_mode & 0o777, 0o600)
                 (work / 'artifact.zip').write_bytes(body)
-                (work / 'headers').write_text('X-Cmux-Artifact-Cache: ' + (cache or ('fill' if phase == 'cold' else 'hit')))
+                (work / 'headers').write_text('X-Hmux-Artifact-Cache: ' + (cache or ('fill' if phase == 'cold' else 'hit')))
                 return subprocess.CompletedProcess(args, exit_code, stdout='200 0.1 0.2 23', stderr='')
             with patch.object(verify, 'SIZE', len(body)), patch.object(verify, 'DIGEST', '0' * 64 if bad_digest else hashlib.sha256(body).hexdigest()), \
                  patch.object(verify.subprocess, 'run', curl), patch.dict(os.environ, {'RUNNER_TEMP': directory}):
                 try:
-                    verify.verify('https://cmux-ci-artifacts-canary.test.workers.dev', phase, receipt, work)
+                    verify.verify('https://hmux-ci-artifacts-canary.test.workers.dev', phase, receipt, work)
                 finally:
                     self.assertEqual(receipt['requests'][0]['phase'], phase)
                     self.assertNotIn('a' * 64, json.dumps(receipt))
@@ -256,16 +256,16 @@ class ReadinessTests(unittest.TestCase):
                     raise subprocess.TimeoutExpired(args, kwargs['timeout'], output='a' * 64)
                 headers = Path(args[args.index('--dump-header') + 1])
                 headers.write_text('Server: cloudflare\nCF-Ray: 0123456789abcdef-SJC\n'
-                    + f'X-Cmux-Canary-Stage: {marker}\n'
-                    + ('X-Cmux-Artifact-Cache: fill\n' if len([c for c in calls if c[0].endswith('.zip')]) == 1 else 'X-Cmux-Artifact-Cache: hit\n')
-                    + 'Set-Cookie: secret\nAuthorization: aaaaa\nX-Cmux-Canary-Token: ' + 'a' * 64 + '\n')
+                    + f'X-Hmux-Canary-Stage: {marker}\n'
+                    + ('X-Hmux-Artifact-Cache: fill\n' if len([c for c in calls if c[0].endswith('.zip')]) == 1 else 'X-Hmux-Artifact-Cache: hit\n')
+                    + 'Set-Cookie: secret\nAuthorization: aaaaa\nX-Hmux-Canary-Token: ' + 'a' * 64 + '\n')
                 Path(args[args.index('--output') + 1]).write_bytes(body if status == 200 else b'')
                 return subprocess.CompletedProcess(args, code, stdout=f'{status:03d} 0.1 0.2 {len(body) if status == 200 else 0}', stderr='a' * 64)
             with patch.object(verify, 'metadata', lambda: {'id': verify.ARTIFACT}), \
                  patch.object(verify, 'SIZE', len(body)), patch.object(verify, 'DIGEST', hashlib.sha256(body).hexdigest()), \
                  patch.object(verify.subprocess, 'run', curl), patch.object(verify.time, 'monotonic', lambda: clock[0]), \
                  patch.object(verify.time, 'sleep', advance_fake_clock), patch.dict(os.environ, {'RUNNER_TEMP': directory}), \
-                 patch('sys.argv', ['verify', '--origin', 'https://cmux-ci-artifacts-canary-123-1.test.workers.dev', '--receipt', str(output)]):
+                 patch('sys.argv', ['verify', '--origin', 'https://hmux-ci-artifacts-canary-123-1.test.workers.dev', '--receipt', str(output)]):
                 with self.assertRaises(SystemExit) as exited:
                     verify.main()
             receipt = json.loads(output.read_text())
@@ -277,7 +277,7 @@ class ReadinessTests(unittest.TestCase):
         code, receipt, calls, virtual_seconds = self.scenario([(404, '', 22), (204, 'ready-v1', 0), (200, 'artifact-v1', 0), (200, 'artifact-v1', 0)])
         self.assertEqual(code, 0)
         self.assertEqual([r['phase'] for r in receipt['requests']], ['readiness', 'readiness', 'cold', 'warm'])
-        self.assertTrue(all('__cmux_artifact_canary_ready' in url for url, _ in calls[:2]))
+        self.assertTrue(all('__hmux_artifact_canary_ready' in url for url, _ in calls[:2]))
         self.assertEqual(sum(url.endswith('.zip') for url, _ in calls), 2)
         self.assertGreaterEqual(calls[1][1] - calls[0][1], 10)
 

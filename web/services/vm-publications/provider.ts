@@ -22,17 +22,17 @@ import {
   normalizePublicationHostname,
 } from "./security";
 
-export const CMUX_PREVIEW_SESSION_COOKIE = PUBLICATION_SESSION_COOKIE;
-export const CMUX_PREVIEW_TRANSACTION_COOKIE = PUBLICATION_TRANSACTION_COOKIE;
-export const CMUX_FORWARD_AUTH_TIMEOUT_MS = 1_500;
+export const HMUX_PREVIEW_SESSION_COOKIE = PUBLICATION_SESSION_COOKIE;
+export const HMUX_PREVIEW_TRANSACTION_COOKIE = PUBLICATION_TRANSACTION_COOKIE;
+export const HMUX_FORWARD_AUTH_TIMEOUT_MS = 1_500;
 
 /** Current public DNS targets from https://www.freestyle.sh/docs/vms/domain-dns. */
 export const FREESTYLE_WEB_EDGE_HOST = "beta-web.freestyle.sh";
 export const FREESTYLE_CERTIFICATE_NAMESERVER = "beta-dns.freestyle.sh";
 
 const PROTECTED_PREVIEW_COOKIES = [
-  CMUX_PREVIEW_SESSION_COOKIE,
-  CMUX_PREVIEW_TRANSACTION_COOKIE,
+  HMUX_PREVIEW_SESSION_COOKIE,
+  HMUX_PREVIEW_TRANSACTION_COOKIE,
 ] as const;
 
 export type VmPublicationProviderOperation =
@@ -58,7 +58,7 @@ export class VmPublicationProviderError extends Data.TaggedError(
 }> {}
 
 export type EnsureSharedForwardAuthInput = {
-  /** The last shared id CMUX persisted. A missing provider resource is re-created. */
+  /** The last shared id HMUX persisted. A missing provider resource is re-created. */
   readonly existingForwardAuthId?: string | null;
   readonly url: string;
   /** Kept write-only: the gateway sends it to Freestyle and never returns it. */
@@ -71,15 +71,15 @@ export type EnsureSharedForwardAuthResult = {
 };
 
 export type PublicationTlsRuleSpec = {
-  /** One exact hostname. CMUX publications do not create wildcard rules. */
+  /** One exact hostname. HMUX publications do not create wildcard rules. */
   readonly hostname: string;
   readonly providerVmId: string;
   readonly port: number;
-  /** Omit for public access; set the shared CMUX config for personal/team access. */
+  /** Omit for public access; set the shared HMUX config for personal/team access. */
   readonly forwardAuthId?: string | null;
 };
 
-/** Provider-neutral fields CMUX needs to persist and reconcile a publication rule. */
+/** Provider-neutral fields HMUX needs to persist and reconcile a publication rule. */
 export type PublicationTlsRule = {
   readonly tlsRuleId: string;
   readonly hostname: string;
@@ -115,7 +115,7 @@ export type PublicationDnsInstruction = {
 };
 
 /**
- * CMUX's stable representation of Freestyle's verification response. The
+ * HMUX's stable representation of Freestyle's verification response. The
  * published 0.2.10 SDK calls these fields `id`, `recordName`, and
  * `verificationCode`; those names deliberately stop at this adapter.
  */
@@ -157,7 +157,7 @@ export type PublicationCertificateStatus = {
 };
 
 type DomainVerificationInput = {
-  /** The owner-scoped base domain CMUX asks Freestyle to verify. */
+  /** The owner-scoped base domain HMUX asks Freestyle to verify. */
   readonly domain: string;
   /** The apex or one-label wildcard publication hostname covered by the domain. */
   readonly hostname: string;
@@ -253,7 +253,7 @@ export type VmPublicationProviderShape = {
   ) => Effect.Effect<PublicationCertificateStatus, VmPublicationProviderError>;
 };
 
-export class VmPublicationProvider extends Context.Tag("cmux/VmPublicationProvider")<
+export class VmPublicationProvider extends Context.Tag("hmux/VmPublicationProvider")<
   VmPublicationProvider,
   VmPublicationProviderShape
 >() {}
@@ -304,7 +304,7 @@ function normalizedHttpsUrl(value: string): string {
   return parsed.href;
 }
 
-export function cmuxForwardAuthOptions(
+export function hmuxForwardAuthOptions(
   input: Pick<EnsureSharedForwardAuthInput, "url" | "serviceToken">,
 ): CreateTlsForwardAuthOptions {
   if (input.serviceToken.trim().length === 0) {
@@ -313,7 +313,7 @@ export function cmuxForwardAuthOptions(
   return {
     url: normalizedHttpsUrl(input.url),
     headers: { authorization: `Bearer ${input.serviceToken}` },
-    timeoutMs: CMUX_FORWARD_AUTH_TIMEOUT_MS,
+    timeoutMs: HMUX_FORWARD_AUTH_TIMEOUT_MS,
     protectedCookies: [...PROTECTED_PREVIEW_COOKIES],
   };
 }
@@ -332,7 +332,7 @@ function sameStringSet(left: readonly string[] | undefined, right: readonly stri
   return right.every((value) => values.has(value));
 }
 
-function isCmuxForwardAuthConfig(
+function isHmuxForwardAuthConfig(
   config: TlsForwardAuthData,
   options: CreateTlsForwardAuthOptions,
 ): boolean {
@@ -375,7 +375,7 @@ function exactKeys(value: object, expected: readonly string[]): boolean {
   return keys.length === expected.length && expected.every((key, index) => key === keys[index]);
 }
 
-/** Whether the provider rule is exactly the CMUX declaration, including public/protected mode. */
+/** Whether the provider rule is exactly the HMUX declaration, including public/protected mode. */
 export function tlsRuleMatchesPublication(
   rule: TlsRuleData,
   spec: PublicationTlsRuleSpec,
@@ -482,7 +482,7 @@ export function publicationDomainVerification(
   };
 }
 
-/** DNS routing for one exact host covered by a CMUX-owner-scoped zone. */
+/** DNS routing for one exact host covered by a HMUX-owner-scoped zone. */
 export function publicationRoutingDnsInstruction(
   requestedHostname: string,
   verifiedDomain: string,
@@ -502,7 +502,7 @@ export function publicationRoutingDnsInstruction(
 
 /**
  * One-label `style.dev` names are Freestyle's free platform zone: no
- * verification, no DNS, and the platform wildcard certificate. A CMUX-owned
+ * verification, no DNS, and the platform wildcard certificate. A HMUX-owned
  * generated zone such as `cmux.sh` is ordinary verified account inventory.
  */
 /** One `*` CNAME at the zone serves every one-label child a customer later publishes. */
@@ -572,7 +572,7 @@ const TLS_RULE_LIST_MAX_SCANS = 3;
 
 /**
  * Freestyle lists rules newest-first in offset pages with no snapshot cursor.
- * Rules span every CMUX account, so one page never suffices, and a rule
+ * Rules span every HMUX account, so one page never suffices, and a rule
  * created or deleted mid-scan shifts every later offset. A scan is trusted
  * only when every page reported the same `totalCount` and the pages added up
  * to it; otherwise it is repeated, and after a few unstable scans the caller
@@ -661,7 +661,7 @@ export function makeVmPublicationProvider(
     ensureSharedForwardAuth: (input) =>
       providerEffect("ensureSharedForwardAuth", async () => {
         const client = createClient();
-        const options = cmuxForwardAuthOptions(input);
+        const options = hmuxForwardAuthOptions(input);
         const existingId = input.existingForwardAuthId?.trim();
         if (existingId) {
           try {
@@ -677,7 +677,7 @@ export function makeVmPublicationProvider(
         // read, so every adopted config is updated to rotate the real token.
         const listed = await client.tls.forwardAuth.list();
         const reusable = listed.configs.find((config) =>
-          isCmuxForwardAuthConfig(config, options),
+          isHmuxForwardAuthConfig(config, options),
         );
         if (reusable) {
           const updated = await client.tls.forwardAuth.update(reusable.id, options);
@@ -740,7 +740,7 @@ export function makeVmPublicationProvider(
           }
         }
 
-        // Provider creation and CMUX persistence are separate commits. If the
+        // Provider creation and HMUX persistence are separate commits. If the
         // first succeeded and the process died before the second, recover that
         // exact-domain rule instead of creating a duplicate. Equal Freestyle
         // ingress matches resolve oldest-first, so converge the oldest of this
@@ -872,7 +872,7 @@ export function makeVmPublicationProvider(
         const hostname = normalizedExactHostname(value);
         // Platform names use Freestyle's standing wildcard, which is ready
         // without an account certificate row or DNS setup. Every other zone,
-        // including the CMUX generated zone, is account inventory.
+        // including the HMUX generated zone, is account inventory.
         if (isFreestylePlatformHostname(hostname)) {
           return {
             hostname,

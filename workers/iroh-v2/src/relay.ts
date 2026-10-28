@@ -6,8 +6,8 @@ import { OperationError } from "./errors";
 // These values are part of the deployed relay's offline admission contract.
 // Environment separation stays in the additional claims below; changing the
 // shared issuer or audience would make every existing relay reject the token.
-export const RELAY_TOKEN_ISSUER = "cmux";
-export const RELAY_TOKEN_AUDIENCE = "cmux-relay";
+export const RELAY_TOKEN_ISSUER = "hmux";
+export const RELAY_TOKEN_AUDIENCE = "hmux-relay";
 
 const ConfigurationSchema = z.strictObject({
   environment: identifier, projectId: identifier, issuer: identifier, audience: identifier, keyId: identifier,

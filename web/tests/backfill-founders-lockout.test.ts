@@ -208,7 +208,7 @@ describe("Founder's lockout backfill", () => {
 
     expect(result.customers[0]).toMatchObject({
       status: "skipped",
-      reason: "no_paid_cmux_purchase_found",
+      reason: "no_paid_hmux_purchase_found",
     });
     expect(provider.subscriptions.list).not.toHaveBeenCalled();
   });
@@ -427,7 +427,7 @@ describe("Founder's lockout backfill", () => {
   test("skips an already-complete repeat run after the durable rows exist", async () => {
     const stack = stackApp();
     stack.user.primaryEmailVerified = true;
-    stack.user.clientReadOnlyMetadata = { cmuxPlan: "pro" };
+    stack.user.clientReadOnlyMetadata = { hmuxPlan: "pro" };
     const provider = stripeClient();
     const provision = mock(async () => undefined);
     const fakeDb = {

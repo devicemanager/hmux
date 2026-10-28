@@ -1,9 +1,9 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import AppKit
-import CMUXMobileCore
-import CmuxSurfaceCatalogModel
-import CmuxWorkspacePresence
+import HMUXMobileCore
+import HmuxSurfaceCatalogModel
+import HmuxWorkspacePresence
 import SwiftUI
 
 /// Hosts SwiftUI row content inside an `NSOutlineView` cell while leaving every
@@ -181,7 +181,7 @@ final class CloudTreeCellView: NSTableCellView {
         self.portAction = portAction
         #if DEBUG
         if case .terminal(let row) = node.kind, row.hasUnreadNotification {
-            cmuxDebugLog("cloudTree.cell.configure unread terminal=\(row.resource.id.key.suffix(4)) node=\(node.id.suffix(12))")
+            hmuxDebugLog("cloudTree.cell.configure unread terminal=\(row.resource.id.key.suffix(4)) node=\(node.id.suffix(12))")
         }
         #endif
         let status: CloudPortsStatusPresentation? = {

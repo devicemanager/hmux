@@ -4,11 +4,11 @@
 OpenCode reads its config from `OPENCODE_CONFIG_DIR`, then `XDG_CONFIG_HOME`,
 and its sessions database from `OPENCODE_DB`, then `XDG_DATA_HOME`, with
 `OPENCODE_CONFIG` naming one more config file and `XDG_STATE_HOME` its state.
-When cmux records an OpenCode launch for restore, it kept only
+When hmux records an OpenCode launch for restore, it kept only
 `OPENCODE_CONFIG_DIR`, so a session started under any of the others resumed
 against the default roots, where its session does not exist.
 
-This drives the real `cmux hooks opencode session-start` against a fake socket
+This drives the real `hmux hooks opencode session-start` against a fake socket
 and checks the launch record the hook saves and the resume binding it sends:
 - an OpenCode launch, and an `omo` launch of OpenCode, keep all six roots;
 - a relative XDG root is dropped, since it would resolve against whatever cwd
@@ -31,7 +31,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from claude_teams_test_utils import resolve_cmux_cli  # noqa: E402
+from claude_teams_test_utils import resolve_hmux_cli  # noqa: E402
 from fake_socket_env import cli_environment, unwrap_capability  # noqa: E402
 
 WORKSPACE_ID = "11111111-1111-4111-8111-111111111111"
@@ -137,7 +137,7 @@ def run_session_start(cli_path: str, root: Path, name: str, launcher: str, extra
     workspace.mkdir()
     session_id = f"ses_{name}"
     # Unix socket paths are short, so the socket lives under /tmp.
-    socket_dir = Path(tempfile.mkdtemp(prefix="cmux-oc-", dir="/tmp"))
+    socket_dir = Path(tempfile.mkdtemp(prefix="hmux-oc-", dir="/tmp"))
     socket_path = socket_dir / "s.sock"
     executable = "/Users/example/.opencode/bin/opencode" if launcher == "opencode" else "/Users/example/.bun/bin/omo"
     argv = [executable, "--model", "anthropic/claude-sonnet-4-5"]
@@ -145,13 +145,13 @@ def run_session_start(cli_path: str, root: Path, name: str, launcher: str, extra
         socket_path,
         home=root / f"{name}-home",
         PWD=str(workspace),
-        CMUX_WORKSPACE_ID=WORKSPACE_ID,
-        CMUX_SURFACE_ID=SURFACE_ID,
-        CMUX_AGENT_HOOK_STATE_DIR=str(state_dir),
-        CMUX_AGENT_LAUNCH_KIND=launcher,
-        CMUX_AGENT_LAUNCH_EXECUTABLE=executable,
-        CMUX_AGENT_LAUNCH_ARGV_B64=launch_argv_b64(argv),
-        CMUX_AGENT_LAUNCH_CWD=str(workspace),
+        HMUX_WORKSPACE_ID=WORKSPACE_ID,
+        HMUX_SURFACE_ID=SURFACE_ID,
+        HMUX_AGENT_HOOK_STATE_DIR=str(state_dir),
+        HMUX_AGENT_LAUNCH_KIND=launcher,
+        HMUX_AGENT_LAUNCH_EXECUTABLE=executable,
+        HMUX_AGENT_LAUNCH_ARGV_B64=launch_argv_b64(argv),
+        HMUX_AGENT_LAUNCH_CWD=str(workspace),
         **extra_env,
     )
     for key in ("XDG_CONFIG_HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "OPENCODE_DB", "OPENCODE_CONFIG",
@@ -243,9 +243,9 @@ def check_drops_relative_roots(cli_path: str, root: Path) -> list[str]:
 
 
 def main() -> int:
-    cli_path = resolve_cmux_cli()
+    cli_path = resolve_hmux_cli()
     failures: list[str] = []
-    with tempfile.TemporaryDirectory(prefix="cmux-oc-roots-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="hmux-oc-roots-") as tmp:
         root = Path(tmp)
         failures += check_keeps_roots(cli_path, root, "opencode")
         failures += check_keeps_roots(cli_path, root, "omo")

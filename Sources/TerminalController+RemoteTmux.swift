@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
-import CmuxControlSocket
+import HmuxControlSocket
 import os
 
 /// Socket/CLI handlers for the remote-tmux (`ssh … tmux -CC`) beta feature.
@@ -145,7 +145,7 @@ extension TerminalController {
         if let requested = params["transport"] as? String, RemoteTmuxTransportKind.parse(requested) == nil {
             return String(
                 localized: "socket.remoteTmux.transportUnknown",
-                defaultValue: "transport is not one cmux knows; use ssh or et"
+                defaultValue: "transport is not one hmux knows; use ssh or et"
             )
         }
         if let transportPort = params["transport_port"] as? Int, !(1...65535).contains(transportPort) {
@@ -179,7 +179,7 @@ extension TerminalController {
         case .unknown(let name):
             return String(
                 localized: "socket.remoteTmux.brokerUnknown",
-                defaultValue: "no broker named '\(name)' is declared under remoteTmux.brokers in cmux.json"
+                defaultValue: "no broker named '\(name)' is declared under remoteTmux.brokers in hmux.json"
             )
         case .unusable(let name, let reason):
             return String(
@@ -408,7 +408,7 @@ extension TerminalController {
         (params["activate"] as? Bool) ?? false
     }
 
-    /// `cmux ssh-tmux --name`; see
+    /// `hmux ssh-tmux --name`; see
     /// ``RemoteTmuxController/mirrorSession(host:sessionName:sessionId:into:customTitle:)``
     /// for the cosmetic-only rationale.
     private nonisolated static func remoteTmuxWorkspaceName(from params: [String: Any]) -> String? {
@@ -461,7 +461,7 @@ extension TerminalController {
 
     /// `remote.tmux.state` — report a control client's observed control-mode state.
     ///
-    /// Diagnostics surface for verifying the ghostty → cmux event pipe end to end.
+    /// Diagnostics surface for verifying the ghostty → hmux event pipe end to end.
     nonisolated func v2RemoteTmuxState(id: Any?, params: [String: Any]) -> String {
         guard ManagedRemoteConnectionsPolicy.isEnabled else {
             return v2Error(id: id, code: "remote_connections_disabled", message: ManagedRemoteConnectionsPolicy.disabledMessage)
@@ -512,7 +512,7 @@ extension TerminalController {
 
     /// `remote.tmux.attach_progress` — where a host's attach over the shared connection stands.
     ///
-    /// `cmux ssh-tmux` asks this while its attach request is waiting, so a long login shows as a
+    /// `hmux ssh-tmux` asks this while its attach request is waiting, so a long login shows as a
     /// login that is still running instead of a command that looks hung. Read-only, and it
     /// reports only the phase and how long the transport has been quiet for the host the caller
     /// names: nothing the transport printed, and no session or window names.
@@ -555,11 +555,11 @@ extension TerminalController {
         }
     }
 
-    /// `remote.tmux.pane_surfaces` — the tmux pane id → cmux surface id map for
+    /// `remote.tmux.pane_surfaces` — the tmux pane id → hmux surface id map for
     /// EVERY mirrored window, single-pane windows included.
     ///
     /// Content oracles need this. Reading "the focused surface" cannot verify a
-    /// named pane: cmux does not follow tmux's active pane or current window
+    /// named pane: hmux does not follow tmux's active pane or current window
     /// (see handleActivePaneChanged, and %session-window-changed is only
     /// recorded), so a harness that runs `select-pane` and then reads the
     /// focused surface silently reads whatever pane the app already showed —

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxCloud
+import HmuxCloud
 import QuartzCore
 
 /// The visuals of a continuous machine or workspace drag in the Cloud tree.
@@ -58,7 +58,7 @@ final class CloudTreeMachineReorderLift: NSObject {
     private var isFinishing = false
     private let liftStyle = CloudTreeMachineLiftStyle()
 
-    private static let shiftKey = "cmux.machineLift.shift"
+    private static let shiftKey = "hmux.machineLift.shift"
     private static let liftZ: CGFloat = 10
 
     init(outline: CloudTreeNSOutlineView) {
@@ -129,7 +129,7 @@ final class CloudTreeMachineReorderLift: NSObject {
               let layout = CloudTreeReorderLiftLayout(frames: frames, blocks: blocks, sourceIndex: sourceIndex)
         else {
 #if DEBUG
-            cmuxDebugLog("cloud.lift.begin skip source=\(source.id) found=\(sourceIndex != nil) blocks=\(blocks.count)")
+            hmuxDebugLog("cloud.lift.begin skip source=\(source.id) found=\(sourceIndex != nil) blocks=\(blocks.count)")
 #endif
             ghosts.forEach { $0.layer.removeFromSuperlayer() }
             return false
@@ -148,7 +148,7 @@ final class CloudTreeMachineReorderLift: NSObject {
         )
         self.onLeave = onLeave
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "cloud.lift.begin source=\(source.id) closed=\(closing.count) grab=\(Int(grabOffset)) " +
             "scrolled=\(Int(scrolled)) borrowed=\(Int(borrowed.above))/\(Int(borrowed.below))"
         )
@@ -404,7 +404,7 @@ final class CloudTreeMachineReorderLift: NSObject {
                 fade.toValue = 1
                 fade.duration = 0.22
                 fade.timingFunction = CAMediaTimingFunction(name: .easeOut)
-                layer.add(fade, forKey: "cmux.machineLift.fadeIn")
+                layer.add(fade, forKey: "hmux.machineLift.fadeIn")
             }
         }
     }
@@ -484,7 +484,7 @@ final class CloudTreeMachineReorderLift: NSObject {
             group.timingFunction = CAMediaTimingFunction(name: .easeOut)
             ghost.layer.opacity = 0
             ghost.layer.transform = CATransform3DMakeTranslation(0, travel, 0)
-            ghost.layer.add(group, forKey: "cmux.machineLift.ghost")
+            ghost.layer.add(group, forKey: "hmux.machineLift.ghost")
         }
         CATransaction.commit()
     }

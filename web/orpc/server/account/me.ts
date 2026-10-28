@@ -37,7 +37,7 @@ export const accountMeProcedure = os
   .handler(async ({ context }): Promise<AccountMe> => {
     // requireAuth guarantees context.user is non-null here.
     const { user } = context;
-    // resolveProPlanStatus reconciles the cmuxPlan metadata against the real
+    // resolveProPlanStatus reconciles the hmuxPlan metadata against the real
     // Stripe/Stack subscription state and returns the authoritative plan.
     const status = await resolveProPlanStatus(user);
     return {

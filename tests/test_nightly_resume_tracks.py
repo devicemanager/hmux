@@ -4,7 +4,7 @@
 nightly-next publishes to its own release, feed and R2 bucket from the
 release-next environment (nightly.yml on nightly-next). This workflow runs on
 main and publishes to the `nightly` release and main's feed, so resuming a
-nightly-next run here would put a cmux-next build on main's nightly feed.
+nightly-next run here would put a hmux-next build on main's nightly feed.
 """
 
 import json

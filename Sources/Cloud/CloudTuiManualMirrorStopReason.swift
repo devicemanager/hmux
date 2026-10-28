@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 /// Why a Cloud terminal attachment stopped for good.
@@ -46,7 +46,7 @@ enum CloudTuiManualMirrorStopReason: Equatable, Sendable {
                 title: String(localized: "cloud.overlay.signedOut.title", defaultValue: "Cloud session ended"),
                 detail: String(
                     localized: "cloud.overlay.signedOut.detail",
-                    defaultValue: "Sign in to cmux to reconnect this terminal."
+                    defaultValue: "Sign in to hmux to reconnect this terminal."
                 ),
                 showsProgress: false,
                 showsReconnectButton: false
@@ -56,7 +56,7 @@ enum CloudTuiManualMirrorStopReason: Equatable, Sendable {
                 title: String(localized: "cloud.overlay.signInRevoked.title", defaultValue: "Sign in again to reconnect"),
                 detail: String(
                     localized: "cloud.overlay.signInRevoked.detail",
-                    defaultValue: "Cloud access for this Mac sign-in was revoked. Sign out of cmux, then sign in again to reconnect this machine."
+                    defaultValue: "Cloud access for this Mac sign-in was revoked. Sign out of hmux, then sign in again to reconnect this machine."
                 ),
                 showsProgress: false,
                 showsReconnectButton: false

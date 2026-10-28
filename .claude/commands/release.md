@@ -1,12 +1,12 @@
 # Release
 
-Ship a stable cmux release built by CI: bump version, update changelog, open a PR, merge, tag, then GitHub Actions builds, signs, and publishes.
+Ship a stable hmux release built by CI: bump version, update changelog, open a PR, merge, tag, then GitHub Actions builds, signs, and publishes.
 
-`skills/cmux-release/SKILL.md` owns the version-bump, pretag-guard, and tag mechanics plus the Apple signing secrets. This file owns the shared changelog and contributor procedure that `/release-nightly` and `/release-local` also use, and the PR-and-CI build path.
+`skills/hmux-release/SKILL.md` owns the version-bump, pretag-guard, and tag mechanics plus the Apple signing secrets. This file owns the shared changelog and contributor procedure that `/release-nightly` and `/release-local` also use, and the PR-and-CI build path.
 
 ## Shared prep (all three release commands)
 
-1. **Pick the version.** Read `MARKETING_VERSION` from `cmux.xcodeproj/project.pbxproj`. Bump minor unless the user says otherwise (0.12.0 to 0.13.0).
+1. **Pick the version.** Read `MARKETING_VERSION` from `hmux.xcodeproj/project.pbxproj`. Bump minor unless the user says otherwise (0.12.0 to 0.13.0).
 
 2. **Gather the changelog lines since the last stable tag.** Every PR carries its release-note line in the `## Changelog` section of its description (one `Added`/`Changed`/`Fixed`/`Removed` line, or `none`). Take the PR numbers from main's first-parent history, then fetch every PR in one GraphQL query:
 
@@ -17,7 +17,7 @@ Ship a stable cmux release built by CI: bump version, update changelog, open a P
    git log --first-parent --format=%s "$TAG"..HEAD \
      | sed -nE 's/^Merge pull request #([0-9]+) .*/\1/p; s/.*\(#([0-9]+)\)$/\1/p' | sort -un > /tmp/release-prs.txt
    {
-     echo 'query { repository(owner: "manaflow-ai", name: "cmux") {'
+     echo 'query { repository(owner: "manaflow-ai", name: "hmux") {'
      sed 's/.*/  n&: issueOrPullRequest(number: &) { ... on PullRequest { ...P } }/' /tmp/release-prs.txt
      echo '} } fragment P on PullRequest { number title body url author { __typename login }
        mergeCommit { oid } closingIssuesReferences(first: 10) { nodes { author { __typename login } } } }'
@@ -27,7 +27,7 @@ Ship a stable cmux release built by CI: bump version, update changelog, open a P
    jq -c '.data.repository[] | select(.number != null)' /tmp/release-raw.json > /tmp/release-prs.jsonl
    git log --first-parent --format='%H%n%B%n@@end@@' "$TAG"..HEAD > /tmp/release-log.txt
    jq -r -s --rawfile log /tmp/release-log.txt \
-     -f skills/cmux-release/references/changelog-lines.jq /tmp/release-prs.jsonl > /tmp/release-lines.tsv
+     -f skills/hmux-release/references/changelog-lines.jq /tmp/release-prs.jsonl > /tmp/release-lines.tsv
    ```
 
    Check that `/tmp/release-prs.jsonl` has about as many lines as `/tmp/release-prs.txt`; the gap is numbers in commit titles that are issues, not PRs. The query is one request (1,257 PRs took 8 seconds) and reads from a file, so its size isn't limited by the shell's argument list. If it times out, run it on each half of `/tmp/release-prs.txt` and concatenate the output; don't fall back to one `gh` call per PR. The search API is not a substitute: it stops at 1,000 results, which ten days of merges exceed.
@@ -48,7 +48,7 @@ Ship a stable cmux release built by CI: bump version, update changelog, open a P
 
 ## CI-built release (this command)
 
-5. **Branch, commit, push.** `git checkout -b release/vX.Y.Z`, stage `CHANGELOG.md` and `cmux.xcodeproj/project.pbxproj`, commit `Bump version to X.Y.Z`, then `git push -u origin release/vX.Y.Z`.
+5. **Branch, commit, push.** `git checkout -b release/vX.Y.Z`, stage `CHANGELOG.md` and `hmux.xcodeproj/project.pbxproj`, commit `Bump version to X.Y.Z`, then `git push -u origin release/vX.Y.Z`.
 
 6. **PR and CI.** `gh pr create --title "Release vX.Y.Z" --body "...changelog summary..."` with the changelog entries in the body, then `gh pr checks --watch`. Fix failures and push until every check passes.
 
@@ -56,18 +56,18 @@ Ship a stable cmux release built by CI: bump version, update changelog, open a P
 
 8. **Guard and tag.** `./scripts/release-pretag-guard.sh`, then `git tag vX.Y.Z && git push origin vX.Y.Z`. If the guard fails, run `./scripts/bump-version.sh`, commit the build-number bump, push and merge that change, then retry.
 
-9. **Watch the release workflow.** `gh run watch --repo manaflow-ai/cmux`. Confirm the release at https://github.com/manaflow-ai/cmux/releases exists with `cmux-macos.dmg` attached.
+9. **Watch the release workflow.** `gh run watch --repo manaflow-ai/cmux`. Confirm the release at https://github.com/manaflow-ai/cmux/releases exists with `hmux-macos.dmg` attached.
 
 10. **Verify the homebrew cask.** `update-homebrew.yml` triggers automatically once the release workflow finishes.
 
     ```bash
     gh run list --workflow=update-homebrew.yml --limit=1
     gh run watch --repo manaflow-ai/cmux <run-id>
-    cd homebrew-cmux && git pull && grep version Casks/cmux.rb
+    cd homebrew-hmux && git pull && grep version Casks/hmux.rb
     bash tests/test_homebrew_sha.sh
     ```
 
-11. **Notify.** `say "cmux release complete"` on success, `say "cmux release failed"` on failure.
+11. **Notify.** `say "hmux release complete"` on success, `say "hmux release failed"` on failure.
 
 ## Changelog guidelines
 

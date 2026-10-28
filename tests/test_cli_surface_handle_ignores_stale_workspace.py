@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """An explicit surface UUID or ref reaches its surface after the pane moved workspaces.
 
-A pane keeps the CMUX_WORKSPACE_ID it started with when it moves to another
-workspace. `close-surface --surface "$CMUX_SURFACE_ID"` and the other surface
+A pane keeps the HMUX_WORKSPACE_ID it started with when it moves to another
+workspace. `close-surface --surface "$HMUX_SURFACE_ID"` and the other surface
 commands paired that stale workspace with the surface and failed with
 `Surface not found`, so a pane could not close itself. Each case runs the real
 CLI against a fake socket that holds two workspaces in two windows and checks
@@ -19,7 +19,7 @@ import threading
 import unittest
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 from fake_socket_env import cli_environment, unwrap_capability
 
 
@@ -93,17 +93,17 @@ class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
 
 class SurfaceHandleIgnoresStaleWorkspaceTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp = tempfile.TemporaryDirectory(prefix="cmux-stale-ws-", dir="/tmp")
+        self.temp = tempfile.TemporaryDirectory(prefix="hmux-stale-ws-", dir="/tmp")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.cli = resolve_cmux_cli()
+        self.cli = resolve_hmux_cli()
 
     def run_cli(
         self, args: list[str], *, caller_workspace: str | None = OLD_WORKSPACE_ID
     ) -> tuple[subprocess.CompletedProcess[str], list[tuple[str, dict[str, object]]]]:
         """Run the CLI from a pane whose environment names `caller_workspace`."""
         case_dir = Path(tempfile.mkdtemp(dir=self.root))
-        socket_path = case_dir / "cmux.sock"
+        socket_path = case_dir / "hmux.sock"
         home = case_dir / "home"
         home.mkdir()
 
@@ -115,8 +115,8 @@ class SurfaceHandleIgnoresStaleWorkspaceTests(unittest.TestCase):
             env = cli_environment(socket_path, home=home)
             env.pop("TMUX", None)
             if caller_workspace is not None:
-                env["CMUX_WORKSPACE_ID"] = caller_workspace
-            env["CMUX_SURFACE_ID"] = MOVED_SURFACE_ID
+                env["HMUX_WORKSPACE_ID"] = caller_workspace
+            env["HMUX_SURFACE_ID"] = MOVED_SURFACE_ID
             proc = subprocess.run(
                 [self.cli, "--socket", str(socket_path), *args],
                 capture_output=True, text=True, check=False, env=env, timeout=30,
@@ -161,7 +161,7 @@ class SurfaceHandleIgnoresStaleWorkspaceTests(unittest.TestCase):
                     caller_workspace=GONE_WORKSPACE_ID)
 
     def test_a_moved_pane_reaches_itself_without_naming_a_surface(self) -> None:
-        # The CLI then takes the surface from CMUX_SURFACE_ID, which is still right.
+        # The CLI then takes the surface from HMUX_SURFACE_ID, which is still right.
         for command, _, method in OWN_PANE_COMMANDS:
             with self.subTest(command=command):
                 self.assert_addressed(command, method, NEW_WORKSPACE_ID, (MOVED_SURFACE_ID,))
@@ -196,7 +196,7 @@ class SurfaceHandleIgnoresStaleWorkspaceTests(unittest.TestCase):
         self.assertIn("Surface not found", proc.stderr)
         self.assertNotIn("surface.close", [name for name, _ in calls], calls)
 
-    def test_close_surface_outside_cmux_still_needs_a_workspace(self) -> None:
+    def test_close_surface_outside_hmux_still_needs_a_workspace(self) -> None:
         proc, calls = self.run_cli(
             ["close-surface", "--surface", MOVED_SURFACE_ID], caller_workspace=None)
         self.assertNotEqual(proc.returncode, 0, proc.stdout)

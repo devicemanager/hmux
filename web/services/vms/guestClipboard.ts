@@ -63,9 +63,9 @@ const clipboardDigest = createHash("sha256")
 /** Installs or repairs the write-only clipboard helpers. */
 export function guestClipboardInstallCommand(): string {
   const writes = GUEST_CLIPBOARD_FILES.flatMap(({ path, content, mode }) => [
-    `cmux_clipboard_tmp=$(mktemp '${path}.XXXXXX')`,
-    `printf '%s' '${Buffer.from(content).toString("base64")}' | base64 -d > "$cmux_clipboard_tmp"`,
-    `chmod ${mode} "$cmux_clipboard_tmp" && mv -f "$cmux_clipboard_tmp" '${path}'`,
+    `hmux_clipboard_tmp=$(mktemp '${path}.XXXXXX')`,
+    `printf '%s' '${Buffer.from(content).toString("base64")}' | base64 -d > "$hmux_clipboard_tmp"`,
+    `chmod ${mode} "$hmux_clipboard_tmp" && mv -f "$hmux_clipboard_tmp" '${path}'`,
   ]);
   const checks = GUEST_CLIPBOARD_FILES.map(({ path, content }) =>
     `test -x '${path}' && test "$(sha256sum '${path}' 2>/dev/null | cut -d ' ' -f 1)" = '${createHash("sha256").update(content).digest("hex")}'`,

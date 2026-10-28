@@ -69,7 +69,7 @@ function vm(id: string, overrides: Partial<VmRecord> = {}): VmRecord {
     image: "devbox",
     imageVersion: "3",
     kind: "desktop",
-    capabilities: { checkpoint: true, fork: false, attachTransports: ["ssh", "cmux-remote"] },
+    capabilities: { checkpoint: true, fork: false, attachTransports: ["ssh", "hmux-remote"] },
     createdAt: T0 - 60_000,
     displayName: null,
     slug: "sleepy-teal-otter",
@@ -324,7 +324,7 @@ describe("isVmsPublisherAuthorized", () => {
   const secret = "v".repeat(64);
   const request = (value?: string) => new Request("https://presence.example/v1/sync/vms", {
     method: "POST",
-    headers: value ? { "x-cmux-vms-publisher-secret": value } : {},
+    headers: value ? { "x-hmux-vms-publisher-secret": value } : {},
   });
 
   it("requires the exact service secret and never a user bearer", async () => {
@@ -337,7 +337,7 @@ describe("isVmsPublisherAuthorized", () => {
     // The connectivity header is a different capability.
     const wrongHeader = new Request("https://presence.example/v1/sync/vms", {
       method: "POST",
-      headers: { "x-cmux-connectivity-publisher-secret": secret },
+      headers: { "x-hmux-connectivity-publisher-secret": secret },
     });
     expect(await isVmsPublisherAuthorized(wrongHeader, secret)).toBe(false);
   });

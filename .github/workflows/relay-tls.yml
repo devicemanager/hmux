@@ -4,8 +4,8 @@ on:
   pull_request:
     paths:
       - tests/relay_tls/**
-      - Packages/Shared/CmuxIrohTransport/**
-      - Packages/Shared/CmuxIrxTransport/**
+      - Packages/Shared/HmuxIrohTransport/**
+      - Packages/Shared/HmuxIrxTransport/**
       - .github/workflows/relay-tls.yml
   workflow_dispatch:
 
@@ -31,9 +31,9 @@ jobs:
         run: ./scripts/select-ci-xcode.sh
       - name: Verify diagnostic presentation against the published framework
         run: |
-          swift test --package-path Packages/Shared/CMUXMobileCore --filter CmxIrohConnectionCheckReportTests
-          swift test --package-path Packages/Shared/CmuxIrohTransport --filter CmxIrohRelayDiagnosticObserverTests
-          swift test --package-path Packages/Shared/CmuxIrxTransport --filter IrxEndpointDiagnosticTests
+          swift test --package-path Packages/Shared/HMUXMobileCore --filter CmxIrohConnectionCheckReportTests
+          swift test --package-path Packages/Shared/HmuxIrohTransport --filter CmxIrohRelayDiagnosticObserverTests
+          swift test --package-path Packages/Shared/HmuxIrxTransport --filter IrxEndpointDiagnosticTests
 
   system-keychain:
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'macos-26' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'blacksmith-6vcpu-macos-15' || vars.CI_PAID_MACOS_OVERFLOW == '1' && vars.MACOS_RUNNER_15 || 'blacksmith-6vcpu-macos-15') }}

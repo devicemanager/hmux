@@ -7,10 +7,10 @@ import {
 
 const originalSkipEnvValidation = process.env.SKIP_ENV_VALIDATION;
 const originalPostHogProjectKey = process.env.POSTHOG_PROJECT_KEY;
-const originalClientConfigRateLimitId = process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
+const originalClientConfigRateLimitId = process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
 process.env.SKIP_ENV_VALIDATION = "1";
 process.env.POSTHOG_PROJECT_KEY = "test-project-key";
-process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cmux-client-config-test";
+process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "hmux-client-config-test";
 
 const originalVercel = process.env.VERCEL;
 const originalVercelEnvironment = process.env.VERCEL_ENV;
@@ -48,7 +48,7 @@ afterEach(() => {
   restoreEnv("VERCEL_DEPLOYMENT_ID", originalDeploymentId);
   globalThis.fetch = originalFetch;
   console.error = originalConsoleError;
-  process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cmux-client-config-test";
+  process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "hmux-client-config-test";
   checkRateLimit.mockClear();
   checkRateLimit.mockResolvedValue({ rateLimited: false, error: null });
   if (typeof originalVercel === "undefined") {
@@ -63,7 +63,7 @@ afterEach(() => {
 afterAll(() => {
   restoreEnv("SKIP_ENV_VALIDATION", originalSkipEnvValidation);
   restoreEnv("POSTHOG_PROJECT_KEY", originalPostHogProjectKey);
-  restoreEnv("CMUX_CLIENT_CONFIG_RATE_LIMIT_ID", originalClientConfigRateLimitId);
+  restoreEnv("HMUX_CLIENT_CONFIG_RATE_LIMIT_ID", originalClientConfigRateLimitId);
 });
 
 describe("client config", () => {
@@ -202,7 +202,7 @@ describe("client config", () => {
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://hmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -259,7 +259,7 @@ describe("client config", () => {
       ));
       globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-      const response = await POST(new Request("https://cmux.test/api/client-config", {
+      const response = await POST(new Request("https://hmux.test/api/client-config", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ distinctId: "browser-id" }),
@@ -274,14 +274,14 @@ describe("client config", () => {
   test("partitions the Vercel limiter by deployment and install", async () => {
     process.env.VERCEL = "1";
     process.env.VERCEL_ENV = "production";
-    process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = " cmux-client-config-test\n";
+    process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID = " hmux-client-config-test\n";
     checkRateLimit.mockResolvedValue({ rateLimited: true, error: null });
     const fetchMock = mock(async () => {
       throw new Error("PostHog flags should not be reached after a rate-limit block");
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://hmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId: "browser-id" }),
@@ -294,10 +294,10 @@ describe("client config", () => {
     const calls = (checkRateLimit as unknown as {
       mock: { calls: Array<[string, { request: Request; rateLimitKey?: string }]> };
     }).mock.calls;
-    expect(calls[0]?.[0]).toBe("cmux-client-config-test");
-    expect(calls[0]?.[1]?.request.url).toBe("https://cmux.test/api/client-config");
+    expect(calls[0]?.[0]).toBe("hmux-client-config-test");
+    expect(calls[0]?.[1]?.request.url).toBe("https://hmux.test/api/client-config");
     const installPartition = createHash("sha256")
-      .update("cmux/client-config/v1\0browser-id")
+      .update("hmux/client-config/v1\0browser-id")
       .digest("hex");
     expect(calls[0]?.[1]?.rateLimitKey).toBe(`production:${installPartition}`);
     expect(fetchMock).not.toHaveBeenCalled();
@@ -307,7 +307,7 @@ describe("client config", () => {
     process.env.VERCEL = "1";
     checkRateLimit.mockResolvedValue({ rateLimited: true, error: null });
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://hmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: "{",
@@ -321,7 +321,7 @@ describe("client config", () => {
     // An unset id means the operator wants no rate limiting; client config
     // must keep serving (it gates every app boot).
     process.env.VERCEL = "1";
-    delete process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
+    delete process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID;
     const fetchMock = mock(async () => new Response(
       JSON.stringify({
         errorsWhileComputingFlags: false,
@@ -332,7 +332,7 @@ describe("client config", () => {
     ));
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://hmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId: "browser-id" }),
@@ -357,7 +357,7 @@ describe("client config", () => {
     ));
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://hmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId: "browser-id" }),
@@ -378,7 +378,7 @@ describe("client config", () => {
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
 
-    const response = await POST(new Request("https://cmux.test/api/client-config", {
+    const response = await POST(new Request("https://hmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId: "browser-id" }),
@@ -398,7 +398,7 @@ describe("client config", () => {
     mutableEnv.NODE_ENV = "production";
     process.env.VERCEL = "1";
     mutableEnv.VERCEL_ENV = "production";
-    process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cmux-client-config-test";
+    process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "hmux-client-config-test";
     checkRateLimit.mockResolvedValue({ rateLimited: false, error: null });
     const fetchMock = mock(async () => new Response(
       JSON.stringify({
@@ -410,7 +410,7 @@ describe("client config", () => {
     ));
     globalThis.fetch = fetchMock as unknown as typeof fetch;
     const distinctId = "runtime-cache-test";
-    const request = () => new Request("https://cmux.test/api/client-config", {
+    const request = () => new Request("https://hmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId }),
@@ -421,8 +421,8 @@ describe("client config", () => {
 
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
-    expect(first.headers.get("x-cmux-client-config-cache")).toBe("miss");
-    expect(second.headers.get("x-cmux-client-config-cache")).toBe("hit");
+    expect(first.headers.get("x-hmux-client-config-cache")).toBe("miss");
+    expect(second.headers.get("x-hmux-client-config-cache")).toBe("hit");
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(checkRateLimit).toHaveBeenCalledTimes(2);
 
@@ -439,7 +439,7 @@ describe("client config", () => {
     mutableEnv.NODE_ENV = "production";
     process.env.VERCEL = "1";
     mutableEnv.VERCEL_ENV = "production";
-    process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cmux-client-config-test";
+    process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "hmux-client-config-test";
     checkRateLimit.mockResolvedValue({ rateLimited: false, error: null });
     let releaseFetch!: () => void;
     const fetchGate = new Promise<void>((resolve) => {
@@ -462,7 +462,7 @@ describe("client config", () => {
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
     const distinctId = "coalesced-test";
-    const request = () => new Request("https://cmux.test/api/client-config", {
+    const request = () => new Request("https://hmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId }),
@@ -485,8 +485,8 @@ describe("client config", () => {
     expect(checkRateLimit).toHaveBeenCalledTimes(2);
     expect(first.status).toBe(200);
     expect(second.status).toBe(200);
-    expect(first.headers.get("x-cmux-client-config-cache")).toBe("miss");
-    expect(second.headers.get("x-cmux-client-config-cache")).toBe("coalesced");
+    expect(first.headers.get("x-hmux-client-config-cache")).toBe("miss");
+    expect(second.headers.get("x-hmux-client-config-cache")).toBe("coalesced");
   });
 
   test("a blocked concurrent caller cannot join another request's evaluation", async () => {
@@ -503,7 +503,7 @@ describe("client config", () => {
       return Response.json({ errorsWhileComputingFlags: false, featureFlags: {}, featureFlagPayloads: {} });
     });
     globalThis.fetch = fetchMock as unknown as typeof fetch;
-    const request = () => new Request("https://cmux.test/api/client-config", {
+    const request = () => new Request("https://hmux.test/api/client-config", {
       method: "POST",
       body: JSON.stringify({ distinctId: "blocked-concurrent-test" }),
     });
@@ -528,7 +528,7 @@ describe("client config", () => {
     mutableEnv.NODE_ENV = "production";
     process.env.VERCEL = "1";
     mutableEnv.VERCEL_ENV = "production";
-    process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cmux-client-config-test";
+    process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "hmux-client-config-test";
     checkRateLimit.mockResolvedValue({ rateLimited: false, error: null });
     const fetchMock = mock(async () => new Response(
       JSON.stringify({
@@ -540,7 +540,7 @@ describe("client config", () => {
     ));
     globalThis.fetch = fetchMock as unknown as typeof fetch;
     const distinctId = "partial-cache-test";
-    const request = () => new Request("https://cmux.test/api/client-config", {
+    const request = () => new Request("https://hmux.test/api/client-config", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ distinctId }),

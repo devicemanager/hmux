@@ -4,13 +4,13 @@ name: Familiar intent review warning
 # change the warning policy, and it never fails a check or requests changes.
 #
 # Lives on main: GitHub takes a pull_request_target workflow from the default
-# branch whatever the pull request's base, so the feat-cmux-next copy never ran.
-# The checker is still the feat-cmux-next base's: it is checked out at the pull
+# branch whatever the pull request's base, so the feat-hmux-next copy never ran.
+# The checker is still the feat-hmux-next base's: it is checked out at the pull
 # request's base commit below, never from main. This copy is the one that runs,
 # so change it here.
 on:
   pull_request_target:
-    branches: [feat-cmux-next]
+    branches: [feat-hmux-next]
     types: [opened, reopened, synchronize, ready_for_review]
 
 permissions: {}
@@ -77,7 +77,7 @@ jobs:
             const fs = require('fs');
             const result = JSON.parse(fs.readFileSync(process.env.RESULT_JSON, 'utf8'));
             if (!result.warnings || result.warnings.length === 0) return;
-            const marker = '<!-- cmux-familiar-intent-warning -->';
+            const marker = '<!-- hmux-familiar-intent-warning -->';
             const mentions = [...new Set(result.warnings.map(item => `@${item.owner}`))].join(' ');
             const paths = [...new Set(result.warnings.map(item => `\`${item.path}\``))].join(', ');
             const body = `${marker}\n⚠️ **CodeRabbit/cubic familiar-intent warning** ${mentions}\n\nThis PR changes a hunk marked \`@intent ... stability=familiar\` in ${paths}. If the familiar behavior changes on purpose, an optional \`Intent-Delta:\` line in the description (preserved, modified, retired or new) records it. This is advisory and does not block the PR.`;

@@ -21,7 +21,7 @@ type Row = { outcome: string; failure_stage: string; team_id: string; provider: 
 
 function harness(rows: Row[] | { reason: string }, health: CoderouterHealth = healthy, env: Record<string, string> = {}) {
   const sent: AlertInput[] = [];
-  const configured = "CMUX_ALERTS_SLACK_WEBHOOK_URL" in env;
+  const configured = "HMUX_ALERTS_SLACK_WEBHOOK_URL" in env;
   const run = () => runCoderouterAlertChecks({
     env,
     health: async () => health,
@@ -34,14 +34,14 @@ function harness(rows: Row[] | { reason: string }, health: CoderouterHealth = he
   return { sent, run };
 }
 
-const webhook = { CMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x" };
+const webhook = { HMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x" };
 
 describe("coderouter alert checks", () => {
   test("requires a webhook or a plain-text acknowledgement for a missing sink", () => {
     expect(coderouterAlertSinkReady({})).toBe(false);
-    expect(coderouterAlertSinkReady({ CMUX_ALERTS_SLACK_WEBHOOK_URL: "  " })).toBe(false);
-    expect(coderouterAlertSinkReady({ CMUX_ALERTS_SINK_UNCONFIGURED_ACK: "[SENSITIVE]" })).toBe(false);
-    expect(coderouterAlertSinkReady({ CMUX_ALERTS_SINK_UNCONFIGURED_ACK: "lawrence approved the temporary gap" })).toBe(true);
+    expect(coderouterAlertSinkReady({ HMUX_ALERTS_SLACK_WEBHOOK_URL: "  " })).toBe(false);
+    expect(coderouterAlertSinkReady({ HMUX_ALERTS_SINK_UNCONFIGURED_ACK: "[SENSITIVE]" })).toBe(false);
+    expect(coderouterAlertSinkReady({ HMUX_ALERTS_SINK_UNCONFIGURED_ACK: "lawrence approved the temporary gap" })).toBe(true);
     expect(coderouterAlertSinkReady(webhook)).toBe(true);
   });
 
@@ -81,7 +81,7 @@ describe("coderouter alert checks", () => {
       { outcome: "no_usable_account", failure_stage: "upstream_transport", team_id: "t1", provider: "codex", c: 1 },
       { outcome: "provider_unavailable", failure_stage: "upstream_transport", team_id: "t3", provider: "opencode-go", c: 1 },
       { outcome: "success", failure_stage: "none", team_id: "t1", provider: "codex", c: 5 },
-    ], healthy, { ...webhook, CMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M: "5" });
+    ], healthy, { ...webhook, HMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M: "5" });
     await run();
     expect(sent.map((alert) => alert.key)).toEqual(["coderouter-upstream-failures"]);
     expect(sent[0]!.severity).toBe("warning");
@@ -186,7 +186,7 @@ describe("coderouter alert checks", () => {
     const reported: unknown[] = [];
     const captured: unknown[] = [];
     await runCoderouterAlertChecks({
-      env: { CMUX_ALERTS_REPORT_FORCE: "1" },
+      env: { HMUX_ALERTS_REPORT_FORCE: "1" },
       health: async () => healthy,
       routeEvents: async () => ({ ok: true, rows: [
         { outcome: "provider_unavailable", failure_stage: "account_selection", team_id: "t1", provider: "codex", c: 1 },
@@ -252,7 +252,7 @@ describe("coderouter alert checks", () => {
 
     const strict = harness([
       { outcome: "route_crash", failure_stage: "handler", team_id: "t1", provider: "codex", status: 503, c: 1 },
-    ], healthy, { ...webhook, CMUX_CODEROUTER_ALERT_ROUTE_CRASHES_5M: "1" });
+    ], healthy, { ...webhook, HMUX_CODEROUTER_ALERT_ROUTE_CRASHES_5M: "1" });
     await strict.run();
     expect(strict.sent.map((alert) => alert.key)).toEqual(["coderouter-route-crashes"]);
   });

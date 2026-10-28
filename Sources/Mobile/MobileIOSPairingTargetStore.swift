@@ -1,5 +1,5 @@
-import CmuxCloud
-import CMUXMobileCore
+import HmuxCloud
+import HMUXMobileCore
 import Foundation
 
 /// Persists the iOS app used when rendering a legacy pairing URL.
@@ -27,10 +27,10 @@ struct MobileIOSPairingTargetStore {
             ].compactMap { $0 }
         }
         return [
-            "com.cmux.app",
-            "dev.cmux.app.beta",
-            "dev.cmux.app.internal",
-            "dev.cmux.app.demo",
+            "com.hmux.app",
+            "dev.hmux.app.beta",
+            "dev.hmux.app.internal",
+            "dev.hmux.app.demo",
         ].compactMap(MobileIOSAppNamespace.init(bundleIdentifier:))
     }
 

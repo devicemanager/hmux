@@ -1,7 +1,7 @@
 import { directDevBackendOrigin } from "../../app/lib/direct-dev-backend-origin";
 import type { VMStats } from "./drivers/types";
 
-export const VM_RESOURCE_USAGE_KEY = "cmuxResourceUsage";
+export const VM_RESOURCE_USAGE_KEY = "hmuxResourceUsage";
 export const VM_RESOURCE_USAGE_MAX_AGE_MS = 90_000;
 export const VM_RESOURCE_USAGE_MIN_INTERVAL_MS = 15_000;
 
@@ -16,7 +16,7 @@ export type VmResourceUsage = Pick<VMStats, "cpuPercent" | "memoryUsedMb" | "dis
 export function shouldReadVmResourceStatsDirectly(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): boolean {
-  const override = environment.CMUX_DEV_RESOURCE_STATS_DIRECT;
+  const override = environment.HMUX_DEV_RESOURCE_STATS_DIRECT;
   if (override !== undefined) return override === "1";
   return environment.NODE_ENV === "development"
     && !environment.VERCEL_ENV

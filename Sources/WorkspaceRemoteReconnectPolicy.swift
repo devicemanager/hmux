@@ -1,5 +1,5 @@
 import Foundation
-import CmuxCore
+import HmuxCore
 
 /// Pure decision logic for the SSH remote workspace auto-reconnect loop
 /// (https://github.com/manaflow-ai/cmux/issues/5734).

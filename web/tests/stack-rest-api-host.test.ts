@@ -88,7 +88,7 @@ describe("Stack REST host", () => {
     expect(stackApiBaseURL()).toBe("https://server.example.test");
   });
 
-  test("the cmux-only STACK_API_BASE_URL override still wins", () => {
+  test("the hmux-only STACK_API_BASE_URL override still wins", () => {
     clearUrlEnv();
     process.env.STACK_API_BASE_URL = "https://override.example.test";
     process.env.HEXCLAVE_API_URL = "https://shared.example.test";

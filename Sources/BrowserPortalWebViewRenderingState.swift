@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import ObjectiveC
 import WebKit
 
@@ -13,9 +13,9 @@ import WebKit
 /// keeps the stale layer tree from the hidden host. A first-sized reveal also
 /// delivers a real geometry delta so WebKit recomputes scrollable content.
 
-private var cmuxBrowserPortalNeedsRenderingStateReattachKey: UInt8 = 0
-private var cmuxBrowserPortalNeedsFirstSizedRevealNudgeKey: UInt8 = 0
-private var cmuxBrowserPortalFirstSizedRevealNudgeGenerationKey: UInt8 = 0
+private var hmuxBrowserPortalNeedsRenderingStateReattachKey: UInt8 = 0
+private var hmuxBrowserPortalNeedsFirstSizedRevealNudgeKey: UInt8 = 0
+private var hmuxBrowserPortalFirstSizedRevealNudgeGenerationKey: UInt8 = 0
 
 #if DEBUG
 private func browserPortalRenderingStateDebugToken(_ view: NSView?) -> String {
@@ -59,13 +59,13 @@ extension WKWebView {
 
     fileprivate var browserPortalNeedsRenderingStateReattach: Bool {
         get {
-            (objc_getAssociatedObject(self, &cmuxBrowserPortalNeedsRenderingStateReattachKey) as? NSNumber)?
+            (objc_getAssociatedObject(self, &hmuxBrowserPortalNeedsRenderingStateReattachKey) as? NSNumber)?
                 .boolValue ?? false
         }
         set {
             objc_setAssociatedObject(
                 self,
-                &cmuxBrowserPortalNeedsRenderingStateReattachKey,
+                &hmuxBrowserPortalNeedsRenderingStateReattachKey,
                 NSNumber(value: newValue),
                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC
             )
@@ -74,13 +74,13 @@ extension WKWebView {
 
     private(set) var browserPortalNeedsFirstSizedRevealNudge: Bool {
         get {
-            (objc_getAssociatedObject(self, &cmuxBrowserPortalNeedsFirstSizedRevealNudgeKey) as? NSNumber)?
+            (objc_getAssociatedObject(self, &hmuxBrowserPortalNeedsFirstSizedRevealNudgeKey) as? NSNumber)?
                 .boolValue ?? false
         }
         set {
             objc_setAssociatedObject(
                 self,
-                &cmuxBrowserPortalNeedsFirstSizedRevealNudgeKey,
+                &hmuxBrowserPortalNeedsFirstSizedRevealNudgeKey,
                 NSNumber(value: newValue),
                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC
             )
@@ -89,13 +89,13 @@ extension WKWebView {
 
     fileprivate var browserPortalFirstSizedRevealNudgeGeneration: UInt64 {
         get {
-            (objc_getAssociatedObject(self, &cmuxBrowserPortalFirstSizedRevealNudgeGenerationKey) as? NSNumber)?
+            (objc_getAssociatedObject(self, &hmuxBrowserPortalFirstSizedRevealNudgeGenerationKey) as? NSNumber)?
                 .uint64Value ?? 0
         }
         set {
             objc_setAssociatedObject(
                 self,
-                &cmuxBrowserPortalFirstSizedRevealNudgeGenerationKey,
+                &hmuxBrowserPortalFirstSizedRevealNudgeGenerationKey,
                 NSNumber(value: newValue),
                 .OBJC_ASSOCIATION_RETAIN_NONATOMIC
             )
@@ -109,7 +109,7 @@ extension WKWebView {
     func browserPortalMarkNeedsFirstSizedRevealNudge(reason: String) {
         browserPortalNeedsFirstSizedRevealNudge = true
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "browser.portal.webview.firstSizedReveal.flag web=\(browserPortalRenderingStateDebugToken(self)) " +
             "reason=\(reason) window=\(window == nil ? 0 : 1) frame=\(browserPortalRenderingStateDebugFrame(frame))"
         )
@@ -142,9 +142,9 @@ extension WKWebView {
     }
 
     func browserPortalNotifyHidden(reason: String) {
-        guard !cmuxIsWebInspectorObject(self) else {
+        guard !hmuxIsWebInspectorObject(self) else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.hidden.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) skip=inspectorFrontend"
             )
@@ -158,7 +158,7 @@ extension WKWebView {
         }
 #if DEBUG
         if !firedSelectors.isEmpty {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.hidden web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) selectors=\(firedSelectors.joined(separator: ","))"
             )
@@ -176,7 +176,7 @@ extension WKWebView {
         return browserPortalApplyFirstSizedRevealGeometryNudgeIfNeeded(
             reason: reason,
             hasCompanionWKSubviews: companionSearchRoot.browserPortalHasVisibleWebKitCompanionSubview(for: self),
-            managedByExternalFullscreenWindow: cmuxIsManagedByExternalFullscreenWindow(relativeTo: expectedWindow)
+            managedByExternalFullscreenWindow: hmuxIsManagedByExternalFullscreenWindow(relativeTo: expectedWindow)
         )
     }
 
@@ -189,7 +189,7 @@ extension WKWebView {
         guard browserPortalNeedsFirstSizedRevealNudge else { return false }
         guard let window else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.firstSizedReveal.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) skip=noWindow frame=\(browserPortalRenderingStateDebugFrame(frame))"
             )
@@ -198,7 +198,7 @@ extension WKWebView {
         }
         guard window.isVisible, !window.isMiniaturized, window.alphaValue > 0.01 else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.firstSizedReveal.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) skip=hiddenWindow frame=\(browserPortalRenderingStateDebugFrame(frame))"
             )
@@ -207,7 +207,7 @@ extension WKWebView {
         }
         guard !isHiddenOrHasHiddenAncestor else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.firstSizedReveal.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) skip=hiddenView frame=\(browserPortalRenderingStateDebugFrame(frame))"
             )
@@ -219,7 +219,7 @@ extension WKWebView {
               frame.width > 1,
               frame.height > 1 else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.firstSizedReveal.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) skip=tinyFrame frame=\(browserPortalRenderingStateDebugFrame(frame))"
             )
@@ -229,7 +229,7 @@ extension WKWebView {
         guard !hasCompanionWKSubviews else {
             browserPortalNeedsFirstSizedRevealNudge = false
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.firstSizedReveal.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) skip=companionWKSubviews frame=\(browserPortalRenderingStateDebugFrame(frame))"
             )
@@ -239,7 +239,7 @@ extension WKWebView {
         guard !managedByExternalFullscreenWindow else {
             browserPortalNeedsFirstSizedRevealNudge = false
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.firstSizedReveal.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) skip=externalFullscreen frame=\(browserPortalRenderingStateDebugFrame(frame))"
             )
@@ -253,7 +253,7 @@ extension WKWebView {
         let nudgedFrame = NSRect(origin: originalFrame.origin, size: nudgedSize)
         guard !Self.browserPortalSizeApproximatelyEqual(originalSize, nudgedSize) else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.firstSizedReveal.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) skip=noDelta frame=\(browserPortalRenderingStateDebugFrame(frame))"
             )
@@ -266,7 +266,7 @@ extension WKWebView {
         let generation = browserPortalFirstSizedRevealNudgeGeneration
 
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "browser.portal.webview.firstSizedReveal.nudge web=\(browserPortalRenderingStateDebugToken(self)) " +
             "reason=\(reason) old=\(browserPortalRenderingStateDebugFrame(originalFrame)) " +
             "nudge=\(browserPortalRenderingStateDebugFrame(nudgedFrame))"
@@ -284,7 +284,7 @@ extension WKWebView {
             guard self.browserPortalFirstSizedRevealNudgeGeneration == generation else { return }
             guard Self.browserPortalSizeApproximatelyEqual(self.frame.size, nudgedSize) else {
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "browser.portal.webview.firstSizedReveal.restore.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                     "reason=\(reason) skip=sizeChanged current=\(browserPortalRenderingStateDebugFrame(self.frame)) " +
                     "expectedSize=\(String(format: "%.1fx%.1f", nudgedSize.width, nudgedSize.height))"
@@ -298,7 +298,7 @@ extension WKWebView {
             self.enclosingScrollView?.layoutSubtreeIfNeeded()
             self.displayIfNeeded()
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.firstSizedReveal.restore web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) frame=\(browserPortalRenderingStateDebugFrame(self.frame))"
             )
@@ -308,9 +308,9 @@ extension WKWebView {
     }
 
     private func browserPortalApplyRenderingStateRefresh(reason: String, force: Bool) {
-        guard !cmuxIsWebInspectorObject(self) else {
+        guard !hmuxIsWebInspectorObject(self) else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.portal.webview.reattach.skip web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) skip=inspectorFrontend"
             )
@@ -343,7 +343,7 @@ extension WKWebView {
 
 #if DEBUG
         if !firedSelectors.isEmpty {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "\(force ? "browser.portal.webview.forceRefresh" : "browser.portal.webview.reattach") " +
                 "web=\(browserPortalRenderingStateDebugToken(self)) " +
                 "reason=\(reason) selectors=\(firedSelectors.joined(separator: ",")) " +

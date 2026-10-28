@@ -1,10 +1,10 @@
-import CMUXMobileCore
-import CmuxAgentChat
-import CmuxAuthRuntime
-import CmuxIrohTransport
-import CmuxMobileTransport
-import CmuxSettings
-import CmuxTerminalCore
+import HMUXMobileCore
+import HmuxAgentChat
+import HmuxAuthRuntime
+import HmuxIrohTransport
+import HmuxMobileTransport
+import HmuxSettings
+import HmuxTerminalCore
 import CryptoKit
 import Foundation
 @preconcurrency import Network

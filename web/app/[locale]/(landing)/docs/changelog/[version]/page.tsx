@@ -101,7 +101,7 @@ export default async function ChangelogVersionPage({
     t("metaDescription"),
   );
   const headline = locale === "en" && media?.title
-    ? `cmux ${release.version}: ${media.title}`
+    ? `hmux ${release.version}: ${media.title}`
     : localizedVersionTitle;
   const sectionLabels = {
     added: t("sections.added"),
@@ -131,7 +131,7 @@ export default async function ChangelogVersionPage({
           { name: links("home"), path: "/" },
           { name: nav("docs"), path: "/docs" },
           { name: t("title"), path: changelogPath },
-          { name: `cmux ${release.version}`, path },
+          { name: `hmux ${release.version}`, path },
         ])}
       />
 
@@ -165,7 +165,7 @@ export default async function ChangelogVersionPage({
               href={localizedChangelogPath(locale, olderRelease.version)}
               className="text-muted hover:text-foreground transition-colors"
             >
-              <span aria-hidden>&larr;</span> cmux {olderRelease.version}
+              <span aria-hidden>&larr;</span> hmux {olderRelease.version}
             </a>
           ) : (
             <span />
@@ -175,7 +175,7 @@ export default async function ChangelogVersionPage({
               href={localizedChangelogPath(locale, newerRelease.version)}
               className="text-muted hover:text-foreground transition-colors"
             >
-              cmux {newerRelease.version} <span aria-hidden>&rarr;</span>
+              hmux {newerRelease.version} <span aria-hidden>&rarr;</span>
             </a>
           ) : (
             <span />
@@ -195,7 +195,7 @@ function versionSeoCopy(
 ) {
   const conciseTitle = localizedVersionTitle;
   const titleCandidate = locale === "en" && media?.title
-    ? `cmux ${release.version}: ${media.title}`
+    ? `hmux ${release.version}: ${media.title}`
     : conciseTitle;
   const title = seoTitle(locale, titleCandidate, {
     appendLocalizedContext: false,
@@ -209,7 +209,7 @@ function versionSeoCopy(
         )
       : joinMetadataSentences(
           locale,
-          `cmux ${release.version}`,
+          `hmux ${release.version}`,
           changelogDescription,
         );
   const description = seoDescription(locale, descriptionCandidate);

@@ -43,7 +43,7 @@ export class CloudOperationProgress {
         on conflict (user_id, operation_id, step_id) do update set outcome = excluded.outcome, ended_at = excluded.ended_at
       `);
     } catch {
-      console.error("cmux.cloud.progress.write_failed", { phase, outcome });
+      console.error("hmux.cloud.progress.write_failed", { phase, outcome });
     }
   }
 }

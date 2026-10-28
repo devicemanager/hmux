@@ -1,5 +1,5 @@
 import AppKit
-import CmuxTestSupport
+import HmuxTestSupport
 
 /// Opens a folder named in terminal output in Finder (cx-do47).
 ///
@@ -16,7 +16,7 @@ enum TerminalFolderOpener {
     /// Shows `path` in Finder: its contents, or the package selected.
     @MainActor
     static func open(_ path: String) {
-        if UITestCaptureSink().appendLineIfConfigured(envKey: "CMUX_UI_TEST_CAPTURE_OPEN_FOLDER_PATH", line: path) {
+        if UITestCaptureSink().appendLineIfConfigured(envKey: "HMUX_UI_TEST_CAPTURE_OPEN_FOLDER_PATH", line: path) {
             return
         }
         let workspace = NSWorkspace.shared

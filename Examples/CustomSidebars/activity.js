@@ -1,6 +1,6 @@
 // Triage: unread workspaces first with one-tap mark-read, everything else
 // dimmed below. Uses reactive partitioning, buttons, and hover.
-//   cp Examples/CustomSidebars/activity.js ~/.config/cmux/sidebars/ && cmux sidebar open activity
+//   cp Examples/CustomSidebars/activity.js ~/.config/hmux/sidebars/ && hmux sidebar open activity
 
 const unread = () => (data.workspaces() ?? []).filter((w) => w.unread > 0);
 const read = () => (data.workspaces() ?? []).filter((w) => !(w.unread > 0));
@@ -23,10 +23,10 @@ function row(w, dimmed) {
     .background(() => (w().selected ? "#7f7f7f3d" : null))
     .hoverBackground("#7f7f7f24")
     .frame({ maxWidth: "infinity" })
-    .onTap(() => cmux("workspace.select", { workspace_id: w().id }))
+    .onTap(() => hmux("workspace.select", { workspace_id: w().id }))
     .contextMenu([
       Button(() => (w().unread > 0 ? "Mark as Read" : "Mark as Unread"), () =>
-        cmux("workspace.action", {
+        hmux("workspace.action", {
           action: w().unread > 0 ? "mark_read" : "mark_unread",
           workspace_id: w().id,
         })),

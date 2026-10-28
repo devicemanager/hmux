@@ -1,13 +1,13 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
-// `coderouter.*` socket methods behind `cmux coderouter <status|machines|claude>`.
+// `coderouter.*` socket methods behind `hmux coderouter <status|machines|claude>`.
 // The CLI is presentation only; the app owns the Stack session and the team
 // selection, so the credential a user pastes travels CLI -> local socket ->
-// this handler -> cmux backend and nowhere else. A team holds many Claude
+// this handler -> hmux backend and nowhere else. A team holds many Claude
 // upstream accounts: `add` appends, `remove` and `update` address one by id,
 // `clear` drops them all. `set` stays as an alias of `add` for older CLIs.
-// Every other `cmux coderouter` or `cmux cr` invocation is exec'd into the
+// Every other `hmux coderouter` or `hmux cr` invocation is exec'd into the
 // installed CodeRouter CLI before the socket is opened (see `runCoderouterAlias`).
 extension TerminalController {
     nonisolated func socketWorkerCoderouterResponse(

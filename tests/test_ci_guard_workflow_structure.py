@@ -62,11 +62,11 @@ def test_cli_guard_matrix_runs_independent_slow_contracts_in_parallel() -> None:
     assert "name: workflow-guard-cli-scripts / ${{ matrix.group }}" in block
     assert "group: [tui-resolution, profiling]" in block
     assert (
-        "- name: Validate cmux-tui client commit resolution\n"
+        "- name: Validate hmux-tui client commit resolution\n"
         "        if: ${{ matrix.group == 'tui-resolution' }}"
     ) in block
     assert (
-        "- name: Validate cmux profiling support scripts\n"
+        "- name: Validate hmux profiling support scripts\n"
         "        if: ${{ matrix.group == 'profiling' }}"
     ) in block
 

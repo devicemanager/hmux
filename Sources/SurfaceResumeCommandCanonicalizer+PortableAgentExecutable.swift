@@ -1,4 +1,4 @@
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 import Darwin
 import Foundation
 
@@ -54,7 +54,7 @@ extension SurfaceResumeBindingSnapshot {
         repairPortableAgentExecutable: Bool
     ) -> String? {
         if usesLocalRestoreVerb {
-            // Bare words (` cmux restore <kind> <id>`): parses identically in
+            // Bare words (` hmux restore <kind> <id>`): parses identically in
             // POSIX shells and nushell, no dialect handling needed.
             return localRestoreCLIInput
         }
@@ -189,7 +189,7 @@ extension AgentRestoreLaunch {
         )
         if let capturedExecutable {
             assignments.append(
-                TerminalStartupShellQuoting.singleQuoted("CMUX_CUSTOM_CODEX_PATH=\(capturedExecutable)")
+                TerminalStartupShellQuoting.singleQuoted("HMUX_CUSTOM_CODEX_PATH=\(capturedExecutable)")
             )
         }
         let routedExecutableToken = capturedExecutable.map {
@@ -273,7 +273,7 @@ extension SurfaceResumeCommandCanonicalizer {
     private static func isPATHManagedAgentExecutablePath(_ path: String, executableName: String) -> Bool {
         let standardized = (path as NSString).standardizingPath
         let components = standardized.split(separator: "/").map(String.init)
-        if components.contains("cmux-cli-shims") {
+        if components.contains("hmux-cli-shims") {
             return isLocalManagedAgentExecutableCandidate(standardized) ||
                 standardized.hasPrefix("/tmp/") ||
                 standardized.hasPrefix("/private/tmp/")

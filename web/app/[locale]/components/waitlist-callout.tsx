@@ -23,7 +23,7 @@ export function WaitlistCallout({
         <button
           type="button"
           onClick={() => {
-            posthog.capture("cmuxterm_waitlist_opened", {
+            posthog.capture("hmuxterm_waitlist_opened", {
               location,
               platform: "any",
             });

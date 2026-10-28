@@ -12,7 +12,7 @@
 // detached work once the function returns), and a Worker outage only delays
 // the next list convergence (the Mac still has its REST list). The
 // Worker is service-to-service authenticated with
-// `CMUX_PRESENCE_VMS_PUBLISHER_SECRET` (no user bearer: cron reconcilers have
+// `HMUX_PRESENCE_VMS_PUBLISHER_SECRET` (no user bearer: cron reconcilers have
 // none), so the body's `teamId` is the list scope the Worker trusts. Each op
 // carries the row's `updated_at` as `sourceUpdatedAtMs` so the Worker rejects
 // out-of-order publications from concurrent web instances.
@@ -154,8 +154,8 @@ export function buildVmSyncRequest(
     readonly baseURL?: string;
     readonly publisherSecret?: string;
   } = {
-    baseURL: env.CMUX_PRESENCE_BASE_URL,
-    publisherSecret: env.CMUX_PRESENCE_VMS_PUBLISHER_SECRET,
+    baseURL: env.HMUX_PRESENCE_BASE_URL,
+    publisherSecret: env.HMUX_PRESENCE_VMS_PUBLISHER_SECRET,
   },
 ): Request | null {
   const { baseURL, publisherSecret } = configuration;
@@ -164,7 +164,7 @@ export function buildVmSyncRequest(
     method: "POST",
     headers: {
       "content-type": "application/json",
-      "x-cmux-vms-publisher-secret": publisherSecret,
+      "x-hmux-vms-publisher-secret": publisherSecret,
     },
     body: JSON.stringify({ teamId, ops }),
   });

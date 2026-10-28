@@ -37,7 +37,7 @@ import {
 
 const ROW_ID = "00000000-0000-4000-8000-00000000c0de";
 const MATERIALS: VmModelPlaneMaterials = {
-  edgeRules: [{ domain: "coderouter.cmux.internal", destinationHost: "coderouter.dev", headers: { "x-cmux-authorization": "Bearer eyJ.signed.token" } }],
+  edgeRules: [{ domain: "coderouter.hmux.internal", destinationHost: "coderouter.dev", headers: { "x-hmux-authorization": "Bearer eyJ.signed.token" } }],
 };
 
 type UsageEvent = Parameters<VmRepositoryShape["recordUsageEvent"]>[0];
@@ -63,7 +63,7 @@ function row(overrides: Partial<CloudVmRow> = {}): CloudVmRow {
     destroyedAt: null,
     failureCode: null,
     failureMessage: null,
-    providerMetadata: { cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 } },
+    providerMetadata: { hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 } },
     networkPolicy: null,
     networkPolicyStatus: null,
     agentUpdates: null,

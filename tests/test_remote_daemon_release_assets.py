@@ -29,7 +29,7 @@ class RemoteDaemonReleaseTests(unittest.TestCase):
                     args += ["--asset-suffix", suffix]
                 subprocess.run(args, check=True)
                 ending = f"-{suffix}" if suffix else ""
-                manifest = json.loads((output / f"cmuxd-remote-manifest{ending}.json").read_text())
+                manifest = json.loads((output / f"hmuxd-remote-manifest{ending}.json").read_text())
                 self.assertEqual(manifest["appVersion"], version)
                 self.assertEqual(manifest["releaseTag"], tag)
                 self.assertEqual(manifest["schemaVersion"], 1)
@@ -37,13 +37,13 @@ class RemoteDaemonReleaseTests(unittest.TestCase):
                 self.assertEqual({(e["goOS"], e["goArch"]) for e in manifest["entries"]}, TARGETS)
                 base_url = f"https://github.com/manaflow-ai/cmux/releases/download/{tag}"
                 self.assertEqual(manifest["releaseURL"], base_url)
-                checksum_name = f"cmuxd-remote-checksums{ending}.txt"
+                checksum_name = f"hmuxd-remote-checksums{ending}.txt"
                 self.assertEqual(manifest["checksumsAssetName"], checksum_name)
                 self.assertEqual(manifest["checksumsURL"], f"{base_url}/{checksum_name}")
                 checksums = dict(line.split()[::-1] for line in (output / checksum_name).read_text().splitlines())
                 self.assertEqual(len(checksums), len(TARGETS))
                 for entry in manifest["entries"]:
-                    name = f"cmuxd-remote-{entry['goOS']}-{entry['goArch']}{ending}"
+                    name = f"hmuxd-remote-{entry['goOS']}-{entry['goArch']}{ending}"
                     self.assertEqual(entry["assetName"], name)
                     self.assertEqual(entry["downloadURL"], f"{base_url}/{name}")
                     binary = output / name
@@ -55,7 +55,7 @@ class RemoteDaemonReleaseTests(unittest.TestCase):
                 # Run the artifact, rather than accepting an arbitrary file with a hash.
                 go_os = {"Darwin": "darwin", "Linux": "linux"}[platform.system()]
                 go_arch = {"arm64": "arm64", "aarch64": "arm64", "x86_64": "amd64"}[platform.machine()]
-                binary = output / f"cmuxd-remote-{go_os}-{go_arch}{ending}"
+                binary = output / f"hmuxd-remote-{go_os}-{go_arch}{ending}"
                 hello = subprocess.run([str(binary), "serve", "--stdio"],
                                        input='{"id":1,"method":"hello","params":{}}\n',
                                        capture_output=True, text=True, check=True, timeout=15)

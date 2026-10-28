@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Excuse a red check that fails the same way on the base branch.
 
-Run via scripts/gh-merge-green before it refuses a red cmux-next run or a red
+Run via scripts/gh-merge-green before it refuses a red hmux-next run or a red
 required check. A failed job on the PR head is excused only when the same job
 also failed on the base, and the head's failed steps and failing test names
 are all among the base's. Error lines are compared only when no test failed (a
@@ -19,18 +19,18 @@ were refused over "no base verdict" for reds the base had too):
    head. When one has no verdict for the job (a path filter skipped it, or the
    push run was cancelled), up to LOOKBACK commits before it are tried. Any
    workflow and event counts, so a job that runs in a different workflow on
-   push (`web / ...` in cmux-next web) is still found. The job is red on the
+   push (`web / ...` in hmux-next web) is still found. The job is red on the
    base when either line's nearest verdict fails the same way.
 2. Only when no commit in 1 has a verdict (a commit's verdict is newer than a
    run found by searching): the newest completed push, schedule or dispatch
    runs on the base branch of the head job's workflow, and of every workflow that runs a job of that name on the
    base commits read in 1 (a skipped one included). A pull request runs the web
-   jobs in ci.yml, a feat-cmux-next push in cmux-next web, and react-apps-check
+   jobs in ci.yml, a feat-hmux-next push in hmux-next web, and react-apps-check
    runs there only when the push touches webviews, so the base tip's is usually
    skipped (2026-10-20: one push in five to ten ran it). The newest of the 20
    runs that has a verdict for the job decides.
-A job the base never runs (the cmux-next checks job before it ran on
-feat-cmux-next pushes) has no base verdict; the refusal says so and lists each
+A job the base never runs (the hmux-next checks job before it ran on
+feat-hmux-next pushes) has no base verdict; the refusal says so and lists each
 commit and run it read.
 Names match exactly first; failing that, ignoring a matrix suffix (`(1)`,
 `(Xcode 26)`) and a reusable-workflow caller prefix (`web / `).
@@ -57,13 +57,13 @@ God-file, localization and concurrency lint is held to more: every line its
 failed steps printed, numbers masked, must be on the base's too. Their findings
 are lines such as `Localizable.xcstrings:key: missing uk`, not error lines, so a
 pull request adding one more missing translation to a base already red there
-would otherwise pass as the base's (2026-10-19: base reds in the cmux-next
-checks job refused every feat-cmux-next PR, and --override cannot waive lint).
+would otherwise pass as the base's (2026-10-19: base reds in the hmux-next
+checks job refused every feat-hmux-next PR, and --override cannot waive lint).
 
 A test helper that dies on a signal names different in-flight tests and
 crashed-thread frames each run, so its crash lines are not compared: the
 base's job must have died on the same signal, which makes the crash the
-base's (2026-10-09: a base SIGTRAP refused every feat-cmux-next PR). Failed
+base's (2026-10-09: a base SIGTRAP refused every feat-hmux-next PR). Failed
 steps and any test red before the crash are still compared.
 
 A red step that prints no test name, error line or crash (defaults-snapshot's
@@ -71,10 +71,10 @@ A red step that prints no test name, error line or crash (defaults-snapshot's
 numbers and hashes masked, like lint; but the head must print exactly what the
 base printed, not a part of it: a head that fails earlier, silently, prints a
 prefix of the base's output (2026-10-20: defaults-snapshot red on
-feat-cmux-next too was refused with "no failing test or error line to match").
+feat-hmux-next too was refused with "no failing test or error line to match").
 
 A base verdict older than the merge-base cannot say a red is the head's: the
-red may have landed on the base after it (2026-10-20: feat-cmux-next's CI
+red may have landed on the base after it (2026-10-20: feat-hmux-next's CI
 workflow runs only when dispatched, and its newest run, from 02:29Z, refused
 every red that landed after it). A base run, or a merge-base~N / base tip~N
 commit, that predates the merge-base still excuses a red it shares, since the
@@ -116,7 +116,7 @@ RateLimited = _evidence.RateLimited
 SETUP_STEPS = frozenset({"Set up job", "Set up runner"})
 # Jobs that only report the run's other jobs: judged by those jobs, never by themselves.
 AGGREGATES = frozenset({"ci-status"})
-HOOK_REFUSAL = "glaeda-cmux-runner-hook: refused"
+HOOK_REFUSAL = "glaeda-hmux-runner-hook: refused"
 VERDICTS = frozenset({"success", "failure"})
 # Base commits tried before the tip and before the merge-base when they have no verdict.
 # Each is read only while the ones after it have none, so a wider window costs nothing
@@ -145,7 +145,7 @@ CRASH = re.compile(r"exited with unexpected signal code (\d+)|the test helper di
 # Checks whose every finding must be the base's (gh-merge-green never waives them).
 LINT = re.compile(r"god[ -]?files?|l10n|locali[sz]ation|concurrency", re.IGNORECASE)
 # Per-run noise in what a step prints: mktemp names, a temporary folder's own name
-# (Python's mkdtemp: /tmp/cmux-prepush-foe40iki), and commit or object hashes.
+# (Python's mkdtemp: /tmp/hmux-prepush-foe40iki), and commit or object hashes.
 RUN_NOISE = re.compile(r"\btmp\.[A-Za-z0-9]{6,}|(?<=/tmp/)[^/\s'\"]+|(?<=/T/)[^/\s'\"]+|\b[0-9a-f]{7,40}\b")
 # A Python set of strings an assertion says something is missing from (`'X' not found in
 # {...}`): its order changes every run (PYTHONHASHSEED) and its items with the tree (every
@@ -177,7 +177,7 @@ ERRORISH = re.compile(r"##\[error\]|\berrors?\b|\bfatal\b|\bexceptions?\b", re.I
 # reads, never what decides how checks run or what files build to. Check code, workflows,
 # baselines and allowlists decide what a check reports without the report naming them, and
 # build inputs (manifests, lockfiles, project, container and tool config, any dotfile) change
-# what every file builds to; a test, spec, fixture, snapshot or mock (cmuxTests/, tests_v2/,
+# what every file builds to; a test, spec, fixture, snapshot or mock (hmuxTests/, tests_v2/,
 # webviews/test/, *.test.ts) changes what a test job reports. Rather than list every such
 # input, only source-type files outside dot folders are allowed, minus those.
 SOURCE_EXTENSIONS = frozenset(
@@ -235,7 +235,7 @@ def lines_of(log: str) -> list[str]:
 def soft_failed_steps(job: dict, log: str) -> set[str]:
     """Steps that logged an ##[error] although the API does not call them failed (continue-on-error).
 
-    The cmux-next checks job runs each lint as such a step and fails only in its last
+    The hmux-next checks job runs each lint as such a step and fails only in its last
     step, so these name which lints are red.
     """
     failed = {step["name"] for step in job.get("steps") or []
@@ -498,7 +498,7 @@ def head_jobs(repo: str, sha: str, runs: list[int], checks: list[str], github) -
 def verdict_checks(repo: str, sha: str, github) -> dict:
     """Per check name on a base commit, the newest GitHub Actions run of it with a verdict, else
     the newest. A commit often runs a job twice, and the newer can have none: a workflow_dispatch
-    DEV run skips the cmux-next checks job its push run failed (2026-10-24: e8697614's skipped
+    DEV run skips the hmux-next checks job its push run failed (2026-10-24: e8697614's skipped
     check 121029429698 hid push run 40146316318's red, so the base had "no verdict")."""
     ranked: dict[str, tuple[tuple[bool, int], dict]] = {}
     for page in github.json(f"repos/{repo}/commits/{sha}/check-runs?per_page=100", paginate=True):
@@ -544,7 +544,7 @@ def file_paths(text: str) -> set[str]:
     """The files a line names, each token taken whole (`assets/Foo@2x.png`, never `2x.png`)."""
     found = set()
     for token in TOKEN.findall(text) + QUOTED.findall(text):
-        # Windows paths (the cmux-tui Windows lane prints `src\foo.rs`, or `C:\a\cmux\src\foo.rs`)
+        # Windows paths (the hmux-tui Windows lane prints `src\foo.rs`, or `C:\a\hmux\src\foo.rs`)
         # compare with forward slashes, the drive letter dropped (the suffix match finds the file).
         token = re.sub(r"^[A-Za-z]:(?=[\\/])", "", token).replace("\\", "/")
         if URL_LIKE.search(token):
@@ -839,7 +839,7 @@ class Base:
     def workflow_runs(self, workflow) -> list[dict]:
         if workflow not in self._workflow_runs:
             listing = f"repos/{self.repo}/actions/workflows/{workflow}/runs?branch={self.base}&status=completed&per_page=20"
-            # Dispatched runs are read on their own too: a job that base pushes skip (feat-cmux-next's
+            # Dispatched runs are read on their own too: a job that base pushes skip (feat-hmux-next's
             # Swift suite) gets its base verdict only from a dispatched run, such as the scheduled tip
             # Swift suite, which twenty pushes on a busy base would push out of the first listing.
             listed = {}

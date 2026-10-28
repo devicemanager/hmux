@@ -1,4 +1,4 @@
-import CmuxWorkspaces
+import HmuxWorkspaces
 import Foundation
 
 /// One terminal restore transaction waiting for its topology owner to commit.

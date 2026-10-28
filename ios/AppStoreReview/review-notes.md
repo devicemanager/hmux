@@ -1,17 +1,17 @@
-# cmux iOS Review Notes
+# hmux iOS Review Notes
 
 This file is reference-only background for the team. The single canonical App
 Store Connect notes template is the pasteable notes block in
 `reviewer-setup.md`; do not paste this file into App Store Connect.
 
-cmux for iOS is a companion app for the cmux macOS terminal. It lets a signed-in
+hmux for iOS is a companion app for the hmux macOS terminal. It lets a signed-in
 user pair with their Mac, view workspaces, receive terminal notifications, and
 send input to an active terminal session from iPhone or iPad.
 
 Official App Store Connect app: Apple ID `6783338052`.
 
 Demonstration mode: the review demo account is server-flagged
-(`cmuxReviewDemoContent: true` in Stack `clientReadOnlyMetadata`, set with
+(`hmuxReviewDemoContent: true` in Stack `clientReadOnlyMetadata`, set with
 `web/scripts/set-review-demo-content.ts`). After sign-in the app shows a local
 "Demo Mac" with sample developer workspaces, notifications, and interactive
 canned terminals through the same UI as a live Mac, so the reviewer can
@@ -25,7 +25,7 @@ Reviewer access:
 - For a Mailinator demo account, put the exact demo email in the ASC demo
   account field and put the public inbox URL in ASC notes. State that the app
   sends a one-time email code and that no Mailinator account is required.
-- The reviewer does not need to own or install cmux on a Mac. Before submission,
+- The reviewer does not need to own or install hmux on a Mac. Before submission,
   keep the prepared review Mac online, signed in to the same demo account, and
   visible to the iOS app through the production device registry or relay path.
   If automatic discovery is verified, the ASC notes should say that the review
@@ -34,7 +34,7 @@ Reviewer access:
 - Keep a manual fallback ready in ASC notes if automatic discovery fails:
   - Name: `App Review Mac`
   - Host: `<TAILSCALE_MAGICDNS_OR_100_X_ADDRESS>`
-  - Port: `<CMUX_MOBILE_HOST_PORT>`
+  - Port: `<HMUX_MOBILE_HOST_PORT>`
   - Tailscale access: `<TAILSCALE_REVIEW_ACCESS>`
   - Review contact: `<REVIEW_CONTACT_EMAIL>` / `<REVIEW_CONTACT_PHONE>`
 - The prepared Mac must use a dedicated review-only macOS user, no personal or
@@ -43,7 +43,7 @@ Reviewer access:
   Review finishes.
 - The app may request Local Network permission during pairing so it can discover
   and connect to the user's Mac.
-- Camera permission is used only to scan cmux pairing QR codes.
+- Camera permission is used only to scan hmux pairing QR codes.
 - Microphone and speech recognition permissions are used only when the reviewer
   chooses voice transcription in the message box.
 - Photo library permission is used only when the reviewer attaches a photo to a
@@ -51,8 +51,8 @@ Reviewer access:
 
 Payments:
 
-- The iOS app sells the cmux Go, Pro, and Max monthly subscriptions through
-  StoreKit in-app purchase only (subscription group "cmux Plans"). Open
+- The iOS app sells the hmux Go, Pro, and Max monthly subscriptions through
+  StoreKit in-app purchase only (subscription group "hmux Plans"). Open
   Settings > Account > Plan, or Cloud > Upgrade, to see the plans screen with
   Restore Purchases, Manage Subscription, the auto-renewal terms, and links to
   the Terms of Service and Privacy Policy.
@@ -60,12 +60,12 @@ Payments:
   billing management links. Accounts that already pay on the web see a
   plain-text note and no purchase buttons.
 - The web billing surface is gated for App Store mode with
-  `cmux_distribution=appstore`; direct checkout requests with that distribution
+  `hmux_distribution=appstore`; direct checkout requests with that distribution
   are redirected before Stack or Stripe checkout creation.
-- Direct billing portal requests with `cmux_distribution=appstore` are also
+- Direct billing portal requests with `hmux_distribution=appstore` are also
   redirected before Stack or Stripe portal session creation.
 - Use a Sandbox Apple Account to test a purchase. The server verifies each
-  signed transaction and grants the plan to the signed-in cmux account.
+  signed transaction and grants the plan to the signed-in hmux account.
 
 Privacy and account handling:
 

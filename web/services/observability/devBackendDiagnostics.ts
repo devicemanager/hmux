@@ -41,16 +41,16 @@ export function makeDevBackendDiagnosticsHandler(dependencies: {
 
 /** Anonymous operational observations: no account identity, free text or client-selected destination. */
 export async function deliverDevBackendDiagnostics(events: DevBackendEvent[], env = process.env, doFetch: typeof fetch = fetch) {
-  const token = env.CMUX_DEV_BACKEND_DIAGNOSTICS_TOKEN?.trim();
+  const token = env.HMUX_DEV_BACKEND_DIAGNOSTICS_TOKEN?.trim();
   if (!token) throw new Error('dev_diagnostics_unconfigured');
   const rows = events.map(event => ({
     _time: new Date(event.startedAtMs).toISOString(), event_id:event.eventId,
-    record_type:'dev_backend_app_outcome', source:'cmux-mac-dev',
+    record_type:'dev_backend_app_outcome', source:'hmux-mac-dev',
     client_tag:event.tag, client_revision:event.revision,
     outcome:event.outcome, duration_ms:event.durationMs, attempt:event.attempt,
     error_number:event.errorNumber, http_status:event.httpStatus,
   }));
-  const result = await doFetch('https://api.axiom.co/v1/datasets/cmux-dev-otel-traces/ingest', {
+  const result = await doFetch('https://api.axiom.co/v1/datasets/hmux-dev-otel-traces/ingest', {
     method:'POST',redirect:'error',signal:AbortSignal.timeout(10_000),
     headers:{authorization:`Bearer ${token}`,'content-type':'application/json'},body:JSON.stringify(rows),
   });

@@ -47,7 +47,7 @@ def test_create_ticket_requests_simulator_injection_url_contract() -> None:
         ],
     }
 
-    def fake_cmux_rpc(method, params):
+    def fake_hmux_rpc(method, params):
         nonlocal observed_params
         assert method == "mobile.attach_ticket.create"
         observed_params = params
@@ -56,7 +56,7 @@ def test_create_ticket_requests_simulator_injection_url_contract() -> None:
             payload["attach_url"] = mobile_soak.attach_url_for_ticket(ticket)
         return payload
 
-    mobile_soak.cmux_rpc = fake_cmux_rpc
+    mobile_soak.hmux_rpc = fake_hmux_rpc
 
     created = mobile_soak.create_ticket("workspace-test")
 
@@ -68,7 +68,7 @@ def test_create_ticket_requests_simulator_injection_url_contract() -> None:
     assert created["workspace_id"] == "workspace-test"
     assert created["host"] == "127.0.0.1"
     assert created["port"] == 58465
-    assert created["attach_url"].startswith("cmux-ios-dev://attach?v=1&payload=")
+    assert created["attach_url"].startswith("hmux-ios-dev://attach?v=1&payload=")
 
 
 if __name__ == "__main__":

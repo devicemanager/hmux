@@ -306,7 +306,7 @@ describe("Freestyle publication forward-auth HTTP contract", () => {
     const result = await handleForwardAuthRequest(
       request({
         "x-forwarded-method": "POST",
-        "x-forwarded-uri": "/_cmux/auth/callback?code=abc&state=def",
+        "x-forwarded-uri": "/_hmux/auth/callback?code=abc&state=def",
         cookie: `${PUBLICATION_TRANSACTION_COOKIE}=${publicationTransactionCookieValue(
           randomPublicationToken(),
           randomPublicationToken(),
@@ -334,7 +334,7 @@ describe("Freestyle publication forward-auth HTTP contract", () => {
     const result = await handleForwardAuthRequest(
       request({
         cookie: `${PUBLICATION_TRANSACTION_COOKIE}=${publicationTransactionCookieValue(transaction, verifier)}`,
-        "x-forwarded-uri": `/_cmux/auth/callback?code=${code}&state=${state}`,
+        "x-forwarded-uri": `/_hmux/auth/callback?code=${code}&state=${state}`,
       }),
       dependencies({
         complete: async (input) => {
@@ -369,7 +369,7 @@ describe("Freestyle publication forward-auth HTTP contract", () => {
           randomPublicationToken(),
           randomPublicationToken(),
         )}`,
-        "x-forwarded-uri": "/_cmux/auth/callback?code=abc&state=def",
+        "x-forwarded-uri": "/_hmux/auth/callback?code=abc&state=def",
       }),
       dependencies({
         resolve: async () => null,

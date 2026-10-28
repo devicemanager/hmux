@@ -262,7 +262,7 @@ function nativeHref(kind: LinkKind, params: SearchParams) {
     }
   }
   const queryString = query.toString().replace(/\+/g, "%20");
-  return `cmux://${kind}${queryString ? `?${queryString}` : ""}`;
+  return `hmux://${kind}${queryString ? `?${queryString}` : ""}`;
 }
 
 /** Every reason a link cannot open, by kind of problem. */
@@ -363,7 +363,7 @@ export default async function DeeplinkPage({
   const t = await getTranslations("deeplink");
   const resolvedSearchParams = (await searchParams) ?? {};
   const definition = definitions[kind];
-  // An agent link is an address, not a command: a parameter cmux does not know,
+  // An agent link is an address, not a command: a parameter hmux does not know,
   // or a hint it cannot use, is ignored by name and the session still opens
   // (schemas/deeplinks/agent-link.json). The other kinds carry commands and stay strict.
   const agent = kind === "agent" ? agentLink(resolvedSearchParams) : null;
@@ -378,7 +378,7 @@ export default async function DeeplinkPage({
     : strictIssues(kind, resolvedSearchParams);
   // Never echo unvalidated input into a link.
   const href = agent
-    ? (agent.model?.href ?? "cmux://agent")
+    ? (agent.model?.href ?? "hmux://agent")
     : nativeHref(kind, resolvedSearchParams);
   const canOpen = agent
     ? agent.model !== null

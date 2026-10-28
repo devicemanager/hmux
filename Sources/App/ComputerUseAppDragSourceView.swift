@@ -22,7 +22,7 @@ final class ComputerUseAppDragSourceView: NSView, NSDraggingSource {
 
     /// A press here is the start of a drag into the System Settings permission
     /// list. Delay window ordering so AppKit activates nothing on mouse-down,
-    /// then suppress it entirely once the drag begins — activating cmux would
+    /// then suppress it entirely once the drag begins — activating hmux would
     /// raise the main terminal window over the pane the user is dropping into.
     override func shouldDelayWindowOrdering(for event: NSEvent) -> Bool {
         true

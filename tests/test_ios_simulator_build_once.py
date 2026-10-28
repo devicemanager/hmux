@@ -49,7 +49,7 @@ class IOSSimulatorWorkflowTests(unittest.TestCase):
         self.assertIn(" build-for-testing", producer)
         self.assertEqual(producer.count(" build-for-testing"), 1)
         self.assertIn("-configuration Debug", producer)
-        self.assertIn("-testPlan cmux-ui", producer)
+        self.assertIn("-testPlan hmux-ui", producer)
         self.assertIn("ios_simulator_test_product.py stamp", producer)
         self.assertIn("actions/upload-artifact@", producer)
         self.assertIn("steps.upload-product.outputs.artifact-id", producer)
@@ -58,7 +58,7 @@ class IOSSimulatorWorkflowTests(unittest.TestCase):
         self.assertIn("- ios-simulator-build", consumer)
         self.assertIn("artifact-ids: ${{ needs.ios-simulator-build.outputs.artifact_id }}", consumer)
         self.assertIn("ios_simulator_test_product.py restore", consumer)
-        self.assertIn('-xctestrun "$CMUX_IOS_XCTESTRUN"', consumer)
+        self.assertIn('-xctestrun "$HMUX_IOS_XCTESTRUN"', consumer)
         self.assertIn("test-without-building", consumer)
         self.assertNotIn("build-for-testing", consumer)
         self.assertNotIn("-resolvePackageDependencies", consumer)
@@ -70,10 +70,10 @@ class IOSSimulatorWorkflowTests(unittest.TestCase):
         producer = job_block("ios-simulator-build")
         consumer = job_block("ios-simulator")
 
-        self.assertIn('[[ "${TEST_FILTER:-}" == cmuxUITests/* ]]', producer)
-        self.assertIn("-testPlan cmux-ui", producer)
+        self.assertIn('[[ "${TEST_FILTER:-}" == hmuxUITests/* ]]', producer)
+        self.assertIn("-testPlan hmux-ui", producer)
         self.assertIn('-only-testing:"$TEST_FILTER"', consumer)
-        self.assertIn("-skip-testing:cmuxUITests", consumer)
+        self.assertIn("-skip-testing:hmuxUITests", consumer)
         self.assertIn("-collect-test-diagnostics never", consumer)
         self.assertIn("-test-timeouts-enabled YES", consumer)
         self.assertIn("require_selected_test_execution.sh", consumer)
@@ -98,9 +98,9 @@ class IOSSimulatorWorkflowTests(unittest.TestCase):
             if step.get("id") == "compile-product"
         )
         for selected, expected in (
-            ("", "cmux"),
-            ("cmuxFeatureTests/TerminalViewportSpacingTests", "cmux"),
-            ("cmuxUITests/cmuxUITests/testComputerPickerSelectionSurvivesAppRelaunch", "cmux-ui"),
+            ("", "hmux"),
+            ("hmuxFeatureTests/TerminalViewportSpacingTests", "hmux"),
+            ("hmuxUITests/hmuxUITests/testComputerPickerSelectionSurvivesAppRelaunch", "hmux-ui"),
         ):
             with self.subTest(selected=selected), tempfile.TemporaryDirectory() as directory:
                 root = Path(directory).resolve()
@@ -132,7 +132,7 @@ class IOSSimulatorWorkflowTests(unittest.TestCase):
                 self.assertEqual(result.returncode, 0, result.stderr)
                 arguments = json.loads(capture.read_text())
                 # build-for-testing otherwise emits all three scheme plans,
-                # even though ordinary test defaults to cmux.
+                # even though ordinary test defaults to hmux.
                 self.assertEqual(arguments.count("-testPlan"), 1)
                 self.assertEqual(arguments[arguments.index("-testPlan") + 1], expected)
                 self.assertIn("build-for-testing", arguments)
@@ -145,8 +145,8 @@ class IOSSimulatorWorkflowTests(unittest.TestCase):
             self.assertIn("IOS_VERSION: ${{ inputs.ios_version }}", block)
             self.assertIn("xcodebuild -downloadPlatform iOS -buildVersion", block)
             self.assertIn("Remove compatibility simulator", block)
-        self.assertIn("CMUX_IOS_VERSION: ${{ inputs.ios_version }}", producer)
-        self.assertIn("CMUX_IOS_VERSION: ${{ inputs.ios_version }}", consumer)
+        self.assertIn("HMUX_IOS_VERSION: ${{ inputs.ios_version }}", producer)
+        self.assertIn("HMUX_IOS_VERSION: ${{ inputs.ios_version }}", consumer)
 
 
 class IOSSimulatorProductTests(unittest.TestCase):
@@ -158,12 +158,12 @@ class IOSSimulatorProductTests(unittest.TestCase):
         self.stage = self.root / "stage"
         self.consumer = self.root / "consumer"
         products = self.source / "Build" / "Products"
-        app = products / "Debug-iphonesimulator" / "cmux.app"
-        tests = products / "Debug-iphonesimulator" / "cmuxTests.xctest"
+        app = products / "Debug-iphonesimulator" / "hmux.app"
+        tests = products / "Debug-iphonesimulator" / "hmuxTests.xctest"
         app.mkdir(parents=True)
         tests.mkdir(parents=True)
-        (app / "cmux").write_bytes(b"app")
-        (tests / "cmuxTests").write_bytes(b"tests")
+        (app / "hmux").write_bytes(b"app")
+        (tests / "hmuxTests").write_bytes(b"tests")
         manifest = {
             "TestConfigurations": [
                 {
@@ -176,7 +176,7 @@ class IOSSimulatorProductTests(unittest.TestCase):
                 }
             ]
         }
-        (products / "cmux-ios_iphonesimulator.xctestrun").write_bytes(plistlib.dumps(manifest))
+        (products / "hmux-ios_iphonesimulator.xctestrun").write_bytes(plistlib.dumps(manifest))
         shutil.copytree(products, self.stage / "Build" / "Products")
 
         self.producer_identity = {
@@ -281,7 +281,7 @@ class IOSSimulatorProductTests(unittest.TestCase):
 
     def test_corrupt_product_fails_closed(self) -> None:
         self.stamp_and_copy()
-        test_binary = self.consumer / "Build" / "Products" / "Debug-iphonesimulator" / "cmuxTests.xctest" / "cmuxTests"
+        test_binary = self.consumer / "Build" / "Products" / "Debug-iphonesimulator" / "hmuxTests.xctest" / "hmuxTests"
         test_binary.write_bytes(b"corrupt")
         self.product.identity = lambda: dict(self.consumer_identity)
 

@@ -78,7 +78,7 @@ export type StackWebhookDependencies = {
   readonly scheduleDrain?: () => void;
   readonly nowSeconds?: () => number;
   readonly log?: StackWebhookLog;
-  /** Product analytics for a new account (`cmux_account_signed_up`). */
+  /** Product analytics for a new account (`hmux_account_signed_up`). */
   readonly captureSignup?: (data: unknown) => void;
 };
 

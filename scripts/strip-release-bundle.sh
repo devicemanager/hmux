@@ -3,9 +3,9 @@ set -euo pipefail
 
 usage() {
   cat <<'EOF'
-Usage: scripts/strip-release-bundle.sh <path-to-cmux.app>
+Usage: scripts/strip-release-bundle.sh <path-to-hmux.app>
 
-Strips cmux-owned Release Mach-O binaries before codesigning: executables fully,
+Strips hmux-owned Release Mach-O binaries before codesigning: executables fully,
 plug-ins and libraries down to their global symbols.
 The dSYM UUID is preserved, so Sentry symbol upload continues to match crashes.
 EOF
@@ -27,8 +27,8 @@ if [ ! -d "$APP_PATH/Contents" ]; then
   exit 1
 fi
 
-FILE_TOOL="${CMUX_FILE_TOOL:-file}"
-STRIP_TOOL="${CMUX_STRIP_TOOL:-strip}"
+FILE_TOOL="${HMUX_FILE_TOOL:-file}"
+STRIP_TOOL="${HMUX_STRIP_TOOL:-strip}"
 
 # strip_if_macho <path> [full]. By default it uses -S -x, which keeps global
 # symbols for plug-ins, libraries and extensions.
@@ -48,7 +48,7 @@ strip_if_macho() {
   fi
 }
 
-# cmux's own executables keep only what dyld needs: plain strip on a dynamically
+# hmux's own executables keep only what dyld needs: plain strip on a dynamically
 # linked executable saves undefined and dynamically referenced symbols (-u -r).
 # Nothing looks their other symbols up at runtime, and crashes symbolicate from
 # the dSYMs uploaded to Sentry. Measured on arm64: 10.4 MB in the app, 2.8 MB in
@@ -57,22 +57,22 @@ strip_executable() {
   strip_if_macho "$1" full
 }
 
-strip_executable "$APP_PATH/Contents/MacOS/cmux"
-strip_executable "$APP_PATH/Contents/Resources/bin/cmux"
-strip_executable "$APP_PATH/Contents/Resources/bin/cmux-tui"
-strip_executable "$APP_PATH/Contents/Resources/bin/cmux-diff-sidecar"
+strip_executable "$APP_PATH/Contents/MacOS/hmux"
+strip_executable "$APP_PATH/Contents/Resources/bin/hmux"
+strip_executable "$APP_PATH/Contents/Resources/bin/hmux-tui"
+strip_executable "$APP_PATH/Contents/Resources/bin/hmux-diff-sidecar"
 
-# cmux-tui SSH bootstrap payloads are installed 0644, so strip_if_macho's
+# hmux-tui SSH bootstrap payloads are installed 0644, so strip_if_macho's
 # executable check would skip them. Only the macOS builds are Mach-O; the Linux
-# builds arrive stripped. sign-cmux-tui-ssh-payloads.sh signs these afterwards
+# builds arrive stripped. sign-hmux-tui-ssh-payloads.sh signs these afterwards
 # and re-pins their checksums in manifest.json, so the strip needs no re-pin.
-if [ -d "$APP_PATH/Contents/Resources/bin/cmux-tui-ssh" ]; then
+if [ -d "$APP_PATH/Contents/Resources/bin/hmux-tui-ssh" ]; then
   while IFS= read -r -d '' payload; do
     if "$FILE_TOOL" "$payload" | grep -q 'Mach-O'; then
-      echo "stripping cmux-tui SSH payload: $payload"
+      echo "stripping hmux-tui SSH payload: $payload"
       "$STRIP_TOOL" -S -x "$payload"
     fi
-  done < <(find "$APP_PATH/Contents/Resources/bin/cmux-tui-ssh" -maxdepth 1 -name 'cmux-tui-*-apple-darwin' -type f -print0 | sort -z)
+  done < <(find "$APP_PATH/Contents/Resources/bin/hmux-tui-ssh" -maxdepth 1 -name 'hmux-tui-*-apple-darwin' -type f -print0 | sort -z)
 fi
 
 if [ -d "$APP_PATH/Contents/PlugIns" ]; then
@@ -84,7 +84,7 @@ fi
 if [ -d "$APP_PATH/Contents/Frameworks" ]; then
   while IFS= read -r -d '' binary; do
     strip_if_macho "$binary"
-  done < <(find "$APP_PATH/Contents/Frameworks" -maxdepth 1 -name 'libcmux_*.dylib' -type f -print0)
+  done < <(find "$APP_PATH/Contents/Frameworks" -maxdepth 1 -name 'libhmux_*.dylib' -type f -print0)
 fi
 
 if [ -d "$APP_PATH/Contents/Library/SystemExtensions" ]; then

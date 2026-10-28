@@ -8,7 +8,7 @@ macOS のネイティブ Iroh リレー接続は、Apple のシステム証明�
 
 ホスト名、有効期間、証明書チェーン、macOS の信頼制限は引き続き検証されます。
 証明書検証を無効化する設定や、macOS が拒否した証明書を受け入れるフォールバックはありません。
-公開 CA と組織の CA の信頼ポリシーは macOS が管理し、cmux はルートを別のバンドルに
+公開 CA と組織の CA の信頼ポリシーは macOS が管理し、hmux はルートを別のバンドルに
 コピーしません。`SSL_CERT_FILE` と `SSL_CERT_DIR` は、この macOS Iroh ポリシーを上書きしません。
 
 iOS は従来の組み込み WebPKI 信頼ポリシーを維持します。この変更はモバイル接続の Mac 側に
@@ -25,7 +25,7 @@ WebSocket クライアントの信頼動作、SSH ホスト鍵の検証、Iroh �
 未加工のプロバイダーエラーは含まれません。
 
 ```sh
-log show --last 10m --style compact --predicate 'subsystem == "com.cmux" AND category == "RelayTLS"'
+log show --last 10m --style compact --predicate 'subsystem == "com.hmux" AND category == "RelayTLS"'
 ```
 
 | 原因 | 対処方法 |
@@ -39,7 +39,7 @@ log show --last 10m --style compact --predicate 'subsystem == "com.cmux" AND cat
 | `NetworkFailed` | DNS、経路、ファイアウォール、リレーへの到達性を確認してください。信頼とは別の問題です。 |
 | `Other` | TLS が成功しても、リレー認証やプロトコルが失敗している可能性があります。サービスの状態を確認してください。 |
 
-管理者が信頼設定やチェーンを修正した後、再接続するか cmux を再起動してください。
+管理者が信頼設定やチェーンを修正した後、再接続するか hmux を再起動してください。
 認証情報のエクスポートや証明書検証の無効化を回避策として使用しないでください。
 ルートを信頼しても、ファイアウォールや WebSocket を遮断するゲートウェイの問題は解決しません。
 
@@ -52,7 +52,7 @@ python3 tests/relay_tls/system_keychain.py \
   --allow-system-keychain --diagnostics --output relay-tls-results
 ```
 
-ハーネスは cmux が固定したネイティブフレームワークを使用します。テスト CA を生成し、
+ハーネスは hmux が固定したネイティブフレームワークを使用します。テスト CA を生成し、
 インストール前の拒否、システムキーチェーンへのインストール後の Apple と Iroh の検証成功、
 ホスト名不一致、有効期限切れ、ルート削除後の拒否を確認します。TLS 上のアプリケーション
 データ送信をもって成功と判定し、ネイティブの原因コードも検証します。診断 API がない

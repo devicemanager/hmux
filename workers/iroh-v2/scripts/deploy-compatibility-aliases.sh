@@ -7,12 +7,12 @@ cd "$(dirname "$0")/.."
 bun scripts/check-compatibility-aliases.ts
 
 for pair in \
-  "cmux-iroh-v2:cmux-v2" \
-  "cmux-iroh-v2-staging:cmux-v2-staging" \
-  "cmux-iroh-v2-development:cmux-v2-development"; do
+  "hmux-iroh-v2:hmux-v2" \
+  "hmux-iroh-v2-staging:hmux-v2-staging" \
+  "hmux-iroh-v2-development:hmux-v2-development"; do
   old_name="${pair%%:*}"
   canonical_name="${pair##*:}"
-  config_dir="$(mktemp -d "${TMPDIR:-/tmp}/cmux-v2-alias.XXXXXX")"
+  config_dir="$(mktemp -d "${TMPDIR:-/tmp}/hmux-v2-alias.XXXXXX")"
   config="$config_dir/wrangler.jsonc"
   cat >"$config" <<JSON
 {

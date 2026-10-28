@@ -1,10 +1,10 @@
-import CmuxControlSocket
+import HmuxControlSocket
 import Darwin
 import Foundation
 import Security
 
 @_silgen_name("csops_audittoken")
-private func cmuxCodeSigningOperationsForAuditToken(
+private func hmuxCodeSigningOperationsForAuditToken(
     _ processID: pid_t,
     _ operation: UInt32,
     _ destination: UnsafeMutableRawPointer?,
@@ -20,13 +20,13 @@ struct CodeRouterSocketPeerVerifier: Sendable {
 
     private static let signingRequirement: String = {
 #if DEBUG
-        return #"anchor apple generic and identifier "com.cmuxterm.coderouter" and certificate leaf[field.1.2.840.113635.100.6.1.12] exists and certificate leaf[subject.OU] = "7WLXT3NR37""#
+        return #"anchor apple generic and identifier "com.hmuxterm.coderouter" and certificate leaf[field.1.2.840.113635.100.6.1.12] exists and certificate leaf[subject.OU] = "7WLXT3NR37""#
 #else
-        return #"anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and identifier "com.cmuxterm.coderouter" and certificate leaf[subject.OU] = "7WLXT3NR37""#
+        return #"anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] exists and certificate leaf[field.1.2.840.113635.100.6.1.13] exists and identifier "com.hmuxterm.coderouter" and certificate leaf[subject.OU] = "7WLXT3NR37""#
 #endif
     }()
     private static let taggedDevelopmentSigningRequirement =
-        #"anchor apple generic and identifier "com.cmuxterm.coderouter" and certificate leaf[field.1.2.840.113635.100.6.1.12] exists and certificate leaf[subject.OU] = "7WLXT3NR37""#
+        #"anchor apple generic and identifier "com.hmuxterm.coderouter" and certificate leaf[field.1.2.840.113635.100.6.1.12] exists and certificate leaf[subject.OU] = "7WLXT3NR37""#
     private static let validFlag: UInt32 = 0x0000_0001
     private static let hardFlag: UInt32 = 0x0000_0100
     private static let killFlag: UInt32 = 0x0000_0200
@@ -96,7 +96,7 @@ struct CodeRouterSocketPeerVerifier: Sendable {
             to: &dynamicStatus
         ) { pointer in
             withUnsafeMutablePointer(to: &auditToken) { auditPointer in
-                cmuxCodeSigningOperationsForAuditToken(
+                hmuxCodeSigningOperationsForAuditToken(
                 token.processID,
                 0, // CS_OPS_STATUS
                 pointer,
@@ -107,11 +107,11 @@ struct CodeRouterSocketPeerVerifier: Sendable {
         }
         let requiredDynamicFlags = validFlag | hardFlag | killFlag
             | hardenedRuntimeFlag
-        let cmuxRealUserID = getuid()
-        let cmuxEffectiveUserID = geteuid()
-        guard cmuxRealUserID == cmuxEffectiveUserID,
-              token.effectiveUserID == cmuxEffectiveUserID,
-              token.realUserID == cmuxRealUserID,
+        let hmuxRealUserID = getuid()
+        let hmuxEffectiveUserID = geteuid()
+        guard hmuxRealUserID == hmuxEffectiveUserID,
+              token.effectiveUserID == hmuxEffectiveUserID,
+              token.realUserID == hmuxRealUserID,
               dynamicStatusResult == 0,
               dynamicStatus & requiredDynamicFlags == requiredDynamicFlags,
               dynamicStatus & debuggedFlag == 0 else {
@@ -159,7 +159,7 @@ struct CodeRouterSocketPeerVerifier: Sendable {
 #if DEBUG
         return false
 #else
-        guard Bundle.main.bundleIdentifier?.hasPrefix("com.cmuxterm.app.debug.") == true else {
+        guard Bundle.main.bundleIdentifier?.hasPrefix("com.hmuxterm.app.debug.") == true else {
             return false
         }
         var requirement: SecRequirement?

@@ -192,7 +192,7 @@ jobs:
       - name: Prepare App Store version and metadata
         run: |
           set -euo pipefail
-          VERSION="$(sed -nE 's/^[[:space:]]*CMUX_IOS_APPSTORE_MARKETING_VERSION[[:space:]]*=[[:space:]]*([^[:space:]]+).*/\1/p' ios/Config/Shared.xcconfig | tail -n 1)"
+          VERSION="$(sed -nE 's/^[[:space:]]*HMUX_IOS_APPSTORE_MARKETING_VERSION[[:space:]]*=[[:space:]]*([^[:space:]]+).*/\1/p' ios/Config/Shared.xcconfig | tail -n 1)"
           require_locale_metadata() {
             local metadata_dir="$1"
             local metadata_file
@@ -309,7 +309,7 @@ jobs:
       - name: Archive, export, and upload production build
         id: upload
         env:
-          CMUX_BUILD_NUMBER_OUT_FILE: ${{ runner.temp }}/cmux-final-appstore-build-number.txt
+          HMUX_BUILD_NUMBER_OUT_FILE: ${{ runner.temp }}/hmux-final-appstore-build-number.txt
         run: |
           set -euo pipefail
           ARGS=(--signing manual)
@@ -317,7 +317,7 @@ jobs:
             ARGS+=(--build-number "$INPUT_BUILD_NUMBER")
           fi
           ./ios/scripts/upload-app-store.sh "${ARGS[@]}"
-          FINAL_BN="$(cat "$CMUX_BUILD_NUMBER_OUT_FILE")"
+          FINAL_BN="$(cat "$HMUX_BUILD_NUMBER_OUT_FILE")"
           echo "final_build_number=$FINAL_BN" >> "$GITHUB_OUTPUT"
 
       # The archive step made the last signature. Later steps (caches, notes,
@@ -331,7 +331,7 @@ jobs:
           FINAL_BUILD_NUMBER: ${{ steps.upload.outputs.final_build_number }}
         run: |
           set -euo pipefail
-          VERSION="$(sed -nE 's/^[[:space:]]*CMUX_IOS_APPSTORE_MARKETING_VERSION[[:space:]]*=[[:space:]]*([^[:space:]]+).*/\1/p' ios/Config/Shared.xcconfig | tail -n 1)"
+          VERSION="$(sed -nE 's/^[[:space:]]*HMUX_IOS_APPSTORE_MARKETING_VERSION[[:space:]]*=[[:space:]]*([^[:space:]]+).*/\1/p' ios/Config/Shared.xcconfig | tail -n 1)"
           ./ios/scripts/validate-app-store-release.sh \
             --app "$ASC_APP_ID" \
             --version "$VERSION" \
@@ -373,7 +373,7 @@ jobs:
           {
             echo "### iOS App Store production"
             echo
-            echo "- lane: \`appstore\` (bundle id \`com.cmux.app\`)"
+            echo "- lane: \`appstore\` (bundle id \`com.hmux.app\`)"
             echo "- signing: manual (CI-imported iOS distribution cert + App Store profile)"
             echo "- build number (CFBundleVersion): \`${FINAL_BUILD_NUMBER}\`"
             echo "- submit for review: \`${INPUT_SUBMIT_FOR_REVIEW}\`"

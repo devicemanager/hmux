@@ -1,10 +1,10 @@
-import CmuxControlSocket
+import HmuxControlSocket
 import Foundation
 
 extension TerminalController {
     nonisolated static var mobileTaskComposerFeatureEnabled: Bool {
-        CmuxFeatureFlags.offMainEffectiveValue(
-            for: CmuxFeatureFlags.mobileTaskComposerFlag
+        HmuxFeatureFlags.offMainEffectiveValue(
+            for: HmuxFeatureFlags.mobileTaskComposerFlag
         )
     }
 

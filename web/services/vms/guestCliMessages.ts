@@ -13,17 +13,17 @@ export function guestMessageShell(keys?: readonly string[]): string {
     ))
     .join("\n");
 
-  return `cmux_message() {
+  return `hmux_message() {
   case "\${LC_ALL:-\${LC_MESSAGES:-\${LANG:-en}}}" in
-    ja*) cmux_message_locale=ja ;;
-    *) cmux_message_locale=en ;;
+    ja*) hmux_message_locale=ja ;;
+    *) hmux_message_locale=en ;;
   esac
-  cmux_message_key="$1"; shift
-  case "$cmux_message_locale/$cmux_message_key" in
+  hmux_message_key="$1"; shift
+  case "$hmux_message_locale/$hmux_message_key" in
 ${cases}
     *) return 1 ;;
   esac
 }`;
 }
 
-export const GUEST_CMUX_MESSAGE_SHELL = guestMessageShell();
+export const GUEST_HMUX_MESSAGE_SHELL = guestMessageShell();

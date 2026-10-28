@@ -1,13 +1,13 @@
 {
-  "metadataTitle": "Retningslinjer for personvern — cmux",
-  "metadataDescription": "Personvernerklæring for cmux",
+  "metadataTitle": "Retningslinjer for personvern — hmux",
+  "metadataDescription": "Personvernerklæring for hmux",
   "title": "Personvernerklæring",
   "lastUpdated": "Sist oppdatert: 1. september 2026",
   "sections": [
     {
       "paragraphs": [
         "Manaflow (\"Selskapet\") er forpliktet til å opprettholde robust personvern for sine brukere. Denne personvernerklæringen forklarer hvordan vi samler inn, bruker og beskytter informasjon du gir oss.",
-        "I disse retningslinjene betyr \"nettstedet\" selskapets nettsted på [cmux.com](https://cmux.com). \"Applikasjon\" betyr cmux skrivebordsapplikasjon for macOS og cmux mobilapplikasjon for iPhone og iPad. \"Tjenesten\" betyr nettstedet og applikasjonen sammen. \"Vi\", \"oss\" og \"vår\" betyr selskapet. \"Du\" betyr en bruker av tjenesten vår.",
+        "I disse retningslinjene betyr \"nettstedet\" selskapets nettsted på [cmux.com](https://cmux.com). \"Applikasjon\" betyr hmux skrivebordsapplikasjon for macOS og hmux mobilapplikasjon for iPhone og iPad. \"Tjenesten\" betyr nettstedet og applikasjonen sammen. \"Vi\", \"oss\" og \"vår\" betyr selskapet. \"Du\" betyr en bruker av tjenesten vår.",
         "Ved å bruke tjenesten vår godtar du denne personvernerklæringen og våre [vilkår for bruk](https://cmux.com/terms-of-service), og samtykker til innsamlingen, lagringen, bruken og avsløringen beskrevet her."
       ]
     },
@@ -42,7 +42,7 @@
           "paragraphs": [
             "Hvis du kontakter oss via e-post, kontaktsiden vår eller Enterprise-kontaktskjemaet, samler vi inn informasjon du oppgir, inkludert navn, e-post, firma, rolle, telefonnummer, land, distribusjonsbehov og kommentarer. Hvis du melder deg på en venteliste for plattformer, samler vi inn den innsendte e-posten din for å varsle deg når den plattformen lanseres og sender registrerings-e-posten og utvalgte plattformer til vårt private Slack-arbeidsområde.",
             "Når du logger på, mottar vi autentiseringsinformasjon som din e-postadresse og leverandøridentifikator fra Apple, Google, GitHub eller pålogging med e-postkode. Når du parer mobilappen med en Mac, behandler vi sammenkoblingsinformasjonen som er nødvendig for å koble til enhetene. Når du ser på et arbeidsområde, sender terminalinndata, legger ved valgte bilder, bruker taletranskripsjon eller mottar terminalvarsler, kan det relaterte innholdet eller transkripsjonen overføres mellom enhetene dine og tjenesten vår etter behov for å tilby denne funksjonen.",
-            "Kameratilgang brukes kun til å skanne cmux-paring av QR-koder. Mikrofon- og talegjenkjenningstilgang brukes bare når du velger taletranskripsjon i meldingsboksen. Tilgang til bildebibliotek brukes bare når du velger bilder å legge ved."
+            "Kameratilgang brukes kun til å skanne hmux-paring av QR-koder. Mikrofon- og talegjenkjenningstilgang brukes bare når du velger taletranskripsjon i meldingsboksen. Tilgang til bildebibliotek brukes bare når du velger bilder å legge ved."
           ]
         },
         {
@@ -71,7 +71,7 @@
         "Slack: private interne varsler. Hvis du blir med på en plattformventeliste, sendes e-posten og plattformene du sender til vårt private Slack-arbeidsområde."
       ],
       "afterBullets": [
-        "Hver tjeneste har sine egne retningslinjer for personvern. Når en tredjepart behandler personopplysninger for cmux, krever vi sikkerhetstiltak som er minst like beskyttende som denne policyen og begrenser bruken til å levere tjenester til cmux."
+        "Hver tjeneste har sine egne retningslinjer for personvern. Når en tredjepart behandler personopplysninger for hmux, krever vi sikkerhetstiltak som er minst like beskyttende som denne policyen og begrenser bruken til å levere tjenester til hmux."
       ]
     },
     {
@@ -123,7 +123,7 @@
     {
       "heading": "IX. Oppbevaring av data",
       "paragraphs": [
-        "Krasjrapporter og diagnostikk lagres bare så lenge som nødvendig. Maskerte øktavspillinger slettes fra Sentry 90 dager etter at de ble tatt opp. Kontoidentifikatorer og autentiseringsdata beholdes mens kontoen er aktiv, og slettes eller anonymiseres deretter, med mindre sikkerhets-, juridiske, skatte-, fakturerings- eller svindelforebyggende plikter krever oppbevaring. Enhets- og paringsmetadata beholdes til frakobling eller sletting, og Apple-tokener bare mens varsler er aktivert. Nett- og mobilanalyse, kontotilknyttet analyse, faktureringshendelser og Stripe-ID-er i PostHog lagres i opptil 24 måneder med mindre du ber om tidligere sletting. Kontoinnstillinger sletter eller anonymiserer cmux-data, sletter den tilknyttede PostHog-personen og ber om sletting av nett- og mobilanalysehendelser og opptak. Noen faktureringsdata og Stripe-ID-er kan beholdes på grunn av sikkerhets-, juridiske, skatte-, fakturerings- eller svindelforebyggende plikter. Leverandørsletting kan skje asynkront. Be om sletting i innstillingene eller via [founders@cmux.com](mailto:founders@cmux.com)."
+        "Krasjrapporter og diagnostikk lagres bare så lenge som nødvendig. Maskerte øktavspillinger slettes fra Sentry 90 dager etter at de ble tatt opp. Kontoidentifikatorer og autentiseringsdata beholdes mens kontoen er aktiv, og slettes eller anonymiseres deretter, med mindre sikkerhets-, juridiske, skatte-, fakturerings- eller svindelforebyggende plikter krever oppbevaring. Enhets- og paringsmetadata beholdes til frakobling eller sletting, og Apple-tokener bare mens varsler er aktivert. Nett- og mobilanalyse, kontotilknyttet analyse, faktureringshendelser og Stripe-ID-er i PostHog lagres i opptil 24 måneder med mindre du ber om tidligere sletting. Kontoinnstillinger sletter eller anonymiserer hmux-data, sletter den tilknyttede PostHog-personen og ber om sletting av nett- og mobilanalysehendelser og opptak. Noen faktureringsdata og Stripe-ID-er kan beholdes på grunn av sikkerhets-, juridiske, skatte-, fakturerings- eller svindelforebyggende plikter. Leverandørsletting kan skje asynkront. Be om sletting i innstillingene eller via [founders@cmux.com](mailto:founders@cmux.com)."
       ]
     }
   ]

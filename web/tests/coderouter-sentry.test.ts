@@ -21,7 +21,7 @@ describe("coderouter Sentry privacy", () => {
     ).toBe(true);
     expect(
       shouldSendSentryEvent({
-        contexts: { cmux: { service: "coderouter" } },
+        contexts: { hmux: { service: "coderouter" } },
       }),
     ).toBe(true);
     expect(
@@ -43,18 +43,18 @@ describe("coderouter Sentry privacy", () => {
   test("cloud VM operator-fault reports pass the filter", () => {
     expect(
       shouldSendSentryEvent({
-        contexts: { cmux: { subsystem: "cloud_vm_api", code: "vm_image_config_error" } },
+        contexts: { hmux: { subsystem: "cloud_vm_api", code: "vm_image_config_error" } },
       }),
     ).toBe(true);
     expect(
       shouldSendSentryEvent({
-        contexts: { cmux: { subsystem: "cloud_vm_alerts" } },
+        contexts: { hmux: { subsystem: "cloud_vm_alerts" } },
       }),
     ).toBe(true);
-    // reportError always sets the cmux context, so any deliberate report passes.
+    // reportError always sets the hmux context, so any deliberate report passes.
     expect(
       shouldSendSentryEvent({
-        contexts: { cmux: { subsystem: "billing" } },
+        contexts: { hmux: { subsystem: "billing" } },
       }),
     ).toBe(true);
   });
@@ -62,7 +62,7 @@ describe("coderouter Sentry privacy", () => {
   test("rate-limit rule reports pass the shared operational filter", () => {
     expect(
       shouldSendSentryEvent({
-        contexts: { cmux: { subsystem: "rate_limit", route: "/api/feedback" } },
+        contexts: { hmux: { subsystem: "rate_limit", route: "/api/feedback" } },
       }),
     ).toBe(true);
   });

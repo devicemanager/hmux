@@ -143,8 +143,8 @@ struct DragSurfaceToSplitCommand: SharedLegacyFacadeCommand {
 
 /// `surface` is a namespace, not a leaf: `runSurfaceCommand` dispatches `ls`,
 /// `open`, `new-terminal` into the surface catalog and `resume` into the restart
-/// metadata commands, and rejects a bare `cmux surface`. Declaring it as a single
-/// unrecognized-argument sink meant `cmux surface <TAB>` offered nothing and the
+/// metadata commands, and rejects a bare `hmux surface`. Declaring it as a single
+/// unrecognized-argument sink meant `hmux surface <TAB>` offered nothing and the
 /// options below (which really belong to `resume set`) were offered everywhere.
 ///
 /// See VMCommand's comment: no catch-all argument alongside `subcommands`, and
@@ -288,7 +288,7 @@ struct SurfaceSizeCountsCommand: SharedLegacyFacadeCommand {
 
 struct SurfaceDisconnectParticipantCommand: SharedLegacyFacadeCommand {
     @OptionGroup var target: SurfaceResumeTargetOptions
-    /// An id from `cmux surface participants`.
+    /// An id from `hmux surface participants`.
     @Argument var participant: String?
     @Argument(parsing: .allUnrecognized) var arguments: [String] = []
     static let configuration = CommandConfiguration(commandName: "disconnect-participant", helpNames: [])

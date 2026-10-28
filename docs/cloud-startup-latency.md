@@ -65,10 +65,10 @@ Measurements used, with their sample counts:
 | Source | What it measures | Window / n |
 | --- | --- | --- |
 | PostHog `cloud_vm_request` (server, schema 2) | every `/api/vm*` request the server handled, `duration_ms` per operation, by client channel/build | 14 days to 2026-09-18, 240k events |
-| PostHog `cmux_cloud_vm_request` (Mac client, schema 1) | the same requests as the client saw them, joined to the server rows by `client_trace_id` | 14 days, 415k events |
+| PostHog `hmux_cloud_vm_request` (Mac client, schema 1) | the same requests as the client saw them, joined to the server rows by `client_trace_id` | 14 days, 415k events |
 | `bench-vm-startup.mjs` | create → attach → warm attach → exec → pause → resume-attach → destroy against a deployed backend, with the create route's `Server-Timing` stages | staging n=5 sequential + n=3 concurrent + n=3 with edge probe; production n=3 sequential |
 | `bench-freestyle-floor.ts` | provider-only floor with the SDK: allocation, daemon process/listen, announce, exec/fs RTT, guest shell startup, pause/start/delete | md n=5 + burst 3; sm n=3 |
-| `bench-private-link.ts` | the app's transport path headlessly: production driver create, attach bundle, WireGuard hub, `cmux-tui remote connect --carrier`, snapshot, `bash -l`, prompt visible, reconnect | md n=3, client `e90a212` (Nightly bundle), with production's prompt identity and persisted addresses; without the model-plane edge rules (section 4.4) |
+| `bench-private-link.ts` | the app's transport path headlessly: production driver create, attach bundle, WireGuard hub, `hmux-tui remote connect --carrier`, snapshot, `bash -l`, prompt visible, reconnect | md n=3, client `e90a212` (Nightly bundle), with production's prompt identity and persisted addresses; without the model-plane edge rules (section 4.4) |
 | PR #12739 native measurements | Mac-side Cmd-D/Cmd-T phases on a warm link (Debug build) | 10+10 trials |
 | Source trace | the dependency graph in section 3 | HEAD `e4176d8d53` |
 
@@ -87,7 +87,7 @@ end of each run. No existing user machine was read or modified.
 ## 3. Dependency graph: New Machine → usable terminal → full features
 
 Click "Create" in the sheet (`NewMachineModel` → `MachineCreateCoordinator`
-→ `CloudVMActionLauncher`) spawns the bundled CLI `cmux vm new --desktop
+→ `CloudVMActionLauncher`) spawns the bundled CLI `hmux vm new --desktop
 --size N --focus false`. Everything below is **serial** unless marked.
 
 | # | Stage | Where | Measured cost (p50) | Avoidable? |
@@ -97,13 +97,13 @@ Click "Create" in the sheet (`NewMachineModel` → `MachineCreateCoordinator`
 | 3 | `POST /api/vm`: auth 0.3 ms, entitlements 0.2 ms, begin_create (DB tx, advisory lock, slug) 30–48 ms, resolve_network 35–78 ms (p90 200–500 ms), model_plane_provision 3–9 ms, **provider_create 1.30–1.31 s**, mark_running 5–10 ms, usage_events 7–17 ms; server total 1.41–1.42 s; client-observed 1.47–1.51 s | Vercel | 1.4–1.5 s (Nightly client p50 1.07 s, p90 2.97 s) | provider_create is ~0.4 s allocation + ~0.85 s guest work (row 4) |
 | 4 | Inside provider_create: `vms.create` (0.44 s), address validation, **`installGuestCli`** (fs write 35 ms + exec chmod/mv + prompt install python; since #12741 the same exec also installs the guest browser openers), **`ensureResourceReporter`** (exec: write unit, `systemctl daemon-reload`, `restart`, `enable --now`) | Vercel → guest | ~0.85 s | **yes**: bake shim, openers and reporter; prompt already re-applied at attach |
 | 5 | `vm.rename` (only when a name was typed): DB update + guest prompt-install exec, 30 s socket timeout, best-effort but synchronous in the CLI | Vercel → guest | p50 281 ms, **p90 13.9 s** (n=24) | **yes**: accept `displayName` at create |
-| 6 | `vm.cmux_remote_info` → `POST /api/vm/{id}/attach-endpoint`: auth, `requireAccessibleUserVm`, `getStatus` provider probe, **announce exec** (~100 ms), **attach bundle exec** with the settle loop (up to 3 s, 100 ms ticks, two metadata curls per tick), **shim + browser-opener check exec** (sha256 of the shim plus `guestBrowserReadyCommand`, added by #12741 on 2026-09-18, after this session's runs), **hooks-ready exec** (python), **reporter-install exec** (systemctl), lease + usage + metadata DB writes | Vercel → guest | fresh machine 1.2–1.5 s (this session, before #12741); existing machine Nightly p50 0.75 s; server p50 1.12 s, p95 14.9 s (14 d) | **yes**: one exec; skip baked components; readiness by dialing |
+| 6 | `vm.hmux_remote_info` → `POST /api/vm/{id}/attach-endpoint`: auth, `requireAccessibleUserVm`, `getStatus` provider probe, **announce exec** (~100 ms), **attach bundle exec** with the settle loop (up to 3 s, 100 ms ticks, two metadata curls per tick), **shim + browser-opener check exec** (sha256 of the shim plus `guestBrowserReadyCommand`, added by #12741 on 2026-09-18, after this session's runs), **hooks-ready exec** (python), **reporter-install exec** (systemctl), lease + usage + metadata DB writes | Vercel → guest | fresh machine 1.2–1.5 s (this session, before #12741); existing machine Nightly p50 0.75 s; server p50 1.12 s, p95 14.9 s (14 d) | **yes**: one exec; skip baked components; readiness by dialing |
 | 7 | Hub pin (`wg hub` spawn + socket ready) and route probe (SOCKS connect race across families) | Mac | hub cold 0.24 s, tunnel enroll 0.12–0.30 s (first time), probe ~1 RTT | yes: overlap with row 3 |
 | 8 | `workspace.create` (placeholder pane), `workspace.cloud_vm_bind` | Mac | ~10–20 ms | no |
 | 9 | `surface.catalog refresh:true` for the machine: link `remote connect --carrier` (**0.14 s**, reconnect 0.13 s), `session current snapshot` (57 ms), fleet list (0.2–1.2 s cold) | Mac → guest | 0.3–0.5 s | partly: the list is not needed to open the terminal |
 | 10 | `surface.new_terminal` → `workspace <ws> run -- bash -l` (132 ms) → manual-mirror attach + first frame (90–330 ms, PR #12739) | Mac → guest | 0.2–0.45 s | little |
 | 11 | Guest shell to first prompt: `bash -l` profile chain (agent-config, terminfo, desktop env) 0.51 s; interactive shell with ble.sh 1.10 s under a pty; prompt visible 1.06 s after `run` over the real link | guest | **1.1 s** | partly: ble.sh load and profile chain |
-| 12 | Desktop (Displays row): `open-port` API (p50 633 ms, 14 d) runs `systemctl start cmux-desktop` (no-op, the desktop is live in the memory snapshot) then the browser proxy + noVNC load | Vercel → guest → Mac | ~1–2 s, in parallel with 10–11 if opened | partly: skip the heal exec when the daemon reports the desktop up |
+| 12 | Desktop (Displays row): `open-port` API (p50 633 ms, 14 d) runs `systemctl start hmux-desktop` (no-op, the desktop is live in the memory snapshot) then the browser proxy + noVNC load | Vercel → guest → Mac | ~1–2 s, in parallel with 10–11 if opened | partly: skip the heal exec when the daemon reports the desktop up |
 | 13 | Model plane (coderouter edge injection) | provider edge | already answering 200 at the first probe, 3–5 s after create, in 3/3 trials | n/a |
 
 Rows 3–6 are the control plane; rows 7–11 are the Mac; rows 11–13 are
@@ -146,14 +146,14 @@ attach-time hooks and reporter installs and the settle loop entered the
 attach path in that window; the per-day series is consistent with them
 adding ~0.5 s at the median and the heal path owning the p95.
 
-Also visible: 9335 `approve_cmux_remote_enrollment` 502s with p50 33.9 s
+Also visible: 9335 `approve_hmux_remote_enrollment` 502s with p50 33.9 s
 (older clients still on the invitation flow) and 1244 tunnel-enroll 503s
 (`vm_tunnel_enrollment_unavailable`/kill switch). Neither is on the current
 trusted-carrier path but both are real user-visible waits.
 
 ### 4.2 Control-plane benchmark (`bench-vm-startup.mjs`, this session)
 
-Same image ladder (`freestyle-cmux-cloud-latency-12739-r4-md`, daemon
+Same image ladder (`freestyle-hmux-cloud-latency-12739-r4-md`, daemon
 `68df8eec`), one vantage point, throwaway Pro user. Values are p50 with the
 range in parentheses.
 
@@ -208,7 +208,7 @@ daemon that is valid for it is reachable ~0.6 s later, and a memory-preserving
 resume is ~0.14 s end to end (`resumeDaemonListenMs` is measured from before
 `start()`, so the 141 ms already contains the 92 ms start call; the first
 probe after `start()` returns already sees the listener). The supervisor's
-1 s poll (`cmux-devbox-boot`) is visible as the 0.33 s between first-exec and
+1 s poll (`hmux-devbox-boot`) is visible as the 0.33 s between first-exec and
 daemon-process; daemon start to listen is ~0.30 s.
 
 ### 4.4 Transport benchmark (`bench-private-link.ts`, md, n=3)
@@ -227,7 +227,7 @@ measures the create with them (`provider_create` in section 4.2).
 | --- | --- |
 | VPC create / tunnel create / hub ready (once per run) | 1179 / 99 / 156 ms |
 | `FreestyleProvider.create` (production driver: alloc + validate + shim + prompt + reporter) | 1140 ms (1124–1248) |
-| `openCmuxRemote` (announce + prompt + bundle + hooks + reporter) | 694 ms (626–715) |
+| `openHmuxRemote` (announce + prompt + bundle + hooks + reporter) | 694 ms (626–715) |
 | create → attach bundle OK | 1839 ms |
 | `remote connect --carrier` via hub to connection-snapshot | 139 ms (123–219) |
 | session snapshot | 57 ms |
@@ -284,15 +284,15 @@ list refresh, ble.sh with its cache, and the first-frame pipeline.
 
 ## 6. Where the time goes: avoidable work, with evidence
 
-1. **Create does three guest round trips after allocation** (`installGuestCli`: fs write + exec; `ensureResourceReporter`: exec running `systemctl daemon-reload/restart/enable`). provider_create is 1.30 s from Vercel against a 0.44 s allocation; the transport bench shows the same 1.14 s vs 0.44 s from a closer vantage. The shim and the reporter unit are static per image epoch; the bake already installs the daemon, its pin and the agent hooks the same way. The prompt identity is re-applied by the attach bundle anyway (`promptSetup` in `openCmuxRemote`).
+1. **Create does three guest round trips after allocation** (`installGuestCli`: fs write + exec; `ensureResourceReporter`: exec running `systemctl daemon-reload/restart/enable`). provider_create is 1.30 s from Vercel against a 0.44 s allocation; the transport bench shows the same 1.14 s vs 0.44 s from a closer vantage. The shim and the reporter unit are static per image epoch; the bake already installs the daemon, its pin and the agent hooks the same way. The prompt identity is re-applied by the attach bundle anyway (`promptSetup` in `openHmuxRemote`).
 2. **Attach runs five to six guest execs serially** (announce; bundle with a settle loop that runs two metadata-service curls per 100 ms tick; since #12741 a shim-sha256 + browser-opener readiness check; hooks-ready check with a python JSON parse; reporter install with systemctl) plus a `getStatus` provider probe and three DB writes. Measured 0.61 s from the Mac and 0.85–1.5 s through Vercel before #12741 landed; per-day production p50 doubled when the first of these entered the path on 2026-09-10. On current images the hooks check is always a no-op (the bake proves hooks installed), the shim/opener check is a no-op after the first attach, and the reporter compare/enable is a no-op after the first attach. Each addition is individually small (one exec is ~20 ms of RTT plus its work), which is exactly why the count keeps growing; the fix is structural (one exec, gated by the image epoch), not per-feature.
 3. **Named creates serialize a rename exec** (p90 13.9 s, n=24) before opening the shell. The server already installs the prompt name inside create when `promptIdentity` is passed; the create route just does not accept a display name.
 4. **The daemon waits for a 1 s supervisor tick**: first exec succeeds at 0.58 s, the daemon process appears at 0.91 s, listens (bound to the machine) at 1.21 s. A systemd path/oneshot triggered at resume, or an immediate check at supervisor start, removes ~0.3 s.
-5. **Resume heals twice and polls at 1 s**: `resume()` calls `ensureCmuxTuiRunning` (shim install, settle exec, hooks), then `openCmuxRemote` runs announce + bundle + hooks + reporter again; `waitForRunningStatus` sleeps 1 s between probes. Provider floor is 0.09 s start + 0.14 s daemon; measured resume-attach is 1.7–2.4 s.
+5. **Resume heals twice and polls at 1 s**: `resume()` calls `ensureHmuxTuiRunning` (shim install, settle exec, hooks), then `openHmuxRemote` runs announce + bundle + hooks + reporter again; `waitForRunningStatus` sleeps 1 s between probes. Provider floor is 0.09 s start + 0.14 s daemon; measured resume-attach is 1.7–2.4 s.
 6. **The client learns the route only from the attach-endpoint**, so the hub pin and route probe start after that request and the link after those. The driver already persists the private addresses at create (`networkIpv4`/`networkIpv6` in the row's provider metadata, surfaced today by the list and attach routes), but `POST /api/vm` does not return them yet; once it does, the daemon's Noise handshake is the real readiness proof.
 7. **Guest shell startup is 1.1 s to the first prompt**: `bash -l` profile chain 0.5 s (agent-config generators, terminfo, desktop env, ble.sh cache seeding), ble.sh source ~0.6 s. Every new terminal pays it, not only startup.
 8. **Vercel cold starts**: the first call of a route function costs ~2–3 s (exec 2.4 s vs 0.37 s warm, staging list 1.2 s cold). Production exec p90 in telemetry is 2.46 s for a 75 ms server operation.
-9. **Polling and timeouts around the path**: fleet poll 45 s (the "Creating…" row is replaced only after a refresh; the coordinator does trigger one on the marker), stats 20 s per machine (#12625), CLI `vm.cmux_remote_info` 16 min socket timeout, `VMClient.createTimeoutSeconds` 16 min, link connect 60 s, hub socket wait 45 s (#11008 owns command deadlines).
+9. **Polling and timeouts around the path**: fleet poll 45 s (the "Creating…" row is replaced only after a refresh; the coordinator does trigger one on the marker), stats 20 s per machine (#12625), CLI `vm.hmux_remote_info` 16 min socket timeout, `VMClient.createTimeoutSeconds` 16 min, link connect 60 s, hub socket wait 45 s (#11008 owns command deadlines).
 10. **Auth wait before the request** (#12624): client−server overhead is 73 ms at p50 but 0.8–1.5 s at p90/p95 for create, and the issue documents 10-minute spans.
 
 ## 7. Architectures evaluated
@@ -313,14 +313,14 @@ list refresh, ble.sh with its cache, and the first-frame pipeline.
 Each item lists the expected saving on the fresh-create path (p50), the
 proof required before claiming it, and ownership overlap.
 
-1. **Attach: one exec, no re-installs, readiness by dial** (web driver). Merge announce + settle + probe + devices + trusted-listener into one script; skip the shim/opener, hooks and reporter checks when `/etc/cmux/image-stamp` epoch ≥ the epoch that bakes them; skip the `getStatus` probe for rows created in the last minute; move lease/usage/metadata writes to `after()` where the response does not depend on them. Expected: server p50 1.12 s → ~0.35–0.45 s, p95 15 s → ≤ 2 s. Proof: `bench-vm-startup.mjs` before/after (n ≥ 10 staging, n ≥ 5 production) plus PostHog open_attach p50/p95 by build; provider tests asserting the exec count. Overlap: #12672 (create/attach outcome) — coordinate on the driver; #12537 owns the UI.
-2. **Create: allocation only** (image + web). Bake `/usr/local/bin/cmux` shim, the guest browser openers (`guestBrowser.ts`) and the `cmux-resource-stats` unit into the devbox (add them to `devboxSourceDigest`), drop `installGuestCli` and `ensureResourceReporter` from create (keep the heal-time install for pre-epoch images), accept `displayName` in `POST /api/vm` and set it in the create transaction, make the CLI's rename fire-and-forget. Expected: provider_create 1.30 s → ~0.5 s; named-create tail −14 s. Proof: Server-Timing provider_create before/after; regression test that create issues zero guest execs on a current-epoch image. Overlap: #12672.
+1. **Attach: one exec, no re-installs, readiness by dial** (web driver). Merge announce + settle + probe + devices + trusted-listener into one script; skip the shim/opener, hooks and reporter checks when `/etc/hmux/image-stamp` epoch ≥ the epoch that bakes them; skip the `getStatus` probe for rows created in the last minute; move lease/usage/metadata writes to `after()` where the response does not depend on them. Expected: server p50 1.12 s → ~0.35–0.45 s, p95 15 s → ≤ 2 s. Proof: `bench-vm-startup.mjs` before/after (n ≥ 10 staging, n ≥ 5 production) plus PostHog open_attach p50/p95 by build; provider tests asserting the exec count. Overlap: #12672 (create/attach outcome) — coordinate on the driver; #12537 owns the UI.
+2. **Create: allocation only** (image + web). Bake `/usr/local/bin/hmux` shim, the guest browser openers (`guestBrowser.ts`) and the `hmux-resource-stats` unit into the devbox (add them to `devboxSourceDigest`), drop `installGuestCli` and `ensureResourceReporter` from create (keep the heal-time install for pre-epoch images), accept `displayName` in `POST /api/vm` and set it in the create transaction, make the CLI's rename fire-and-forget. Expected: provider_create 1.30 s → ~0.5 s; named-create tail −14 s. Proof: Server-Timing provider_create before/after; regression test that create issues zero guest execs on a current-epoch image. Overlap: #12672.
 3. **Create response carries the addresses; client dials from them; hub in parallel** (web + Mac). `POST /api/vm` returns the private addresses the driver already persists at create (they are in the row's provider metadata and on the list and attach routes today, not on the create response); `vm new` then dials from them; pin the hub and probe the route while the create is in flight; dial `--carrier` immediately and call attach-endpoint only when the dial fails N times (repair). Persist the route for later opens (already done). Expected −0.75 to −1.5 s. Proof: `cli.vm.timing` stages on a tagged build; native phases from `CloudOperationRecorder` (`open.tunnel/route/connect`). Overlap: #12537 (readiness presentation), #11008 (deadlines).
 4. **Guest supervisor: start the daemon on resume** (image). Replace the 1 s tick for the clone check with an immediate check at supervisor start plus a metadata/instance-id watch, keep the 30 s announce loop. Expected −0.3 s. Proof: `bench-freestyle-floor.ts` daemonListenMs p50 1.21 s → ≤ 0.9 s on the promoted image.
 5. **Guest shell: prompt in ≤ 0.5 s** (image). Profile `/etc/profile.d` + bashrc chain; defer ble.sh sourcing until after the first prompt (or precompile), keep ghost text, prompt name and agent configs. Expected −0.5 to −0.8 s per terminal. Proof: floor bench loginShell/interactivePty before/after; `bench-private-link.ts` runToPromptMs; parity checks for ghost text and prompt name.
-6. **Resume: single heal, fast poll** (web). Skip `ensureCmuxTuiRunning` on resume when the pinned daemon is present; poll `getStatus` at 200 ms; let `openCmuxRemote` do the one exec from item 1. Expected resume-attach 1.7–2.4 s → ~0.5 s. Proof: bench resumeAttachMs.
+6. **Resume: single heal, fast poll** (web). Skip `ensureHmuxTuiRunning` on resume when the pinned daemon is present; poll `getStatus` at 200 ms; let `openHmuxRemote` do the one exec from item 1. Expected resume-attach 1.7–2.4 s → ~0.5 s. Proof: bench resumeAttachMs.
 7. **Control-plane tails** (ops + web). Measure and remove cold starts for the cloud routes (Fluid compute/keep-warm; verify with the exec p90 in PostHog), batch DB writes, keep `resolve_network` off the create path for returning users (row already holds the network id). Expected p90 −2 s.
-8. **Observability**: emit `cmux.vm.timing.*` stages and `Server-Timing` from the attach route as create does; add the three benchmarks to a scheduled staging job with thresholds (create ≤ 1.0 s server, attach ≤ 0.5 s, resume-attach ≤ 0.7 s) so regressions like the 09-10 one are caught within a day.
+8. **Observability**: emit `hmux.vm.timing.*` stages and `Server-Timing` from the attach route as create does; add the three benchmarks to a scheduled staging job with thresholds (create ≤ 1.0 s server, attach ≤ 0.5 s, resume-attach ≤ 0.7 s) so regressions like the 09-10 one are caught within a day.
 
 Not in this plan: warm inventory (section 7), provider changes (allocation
 and boot are already at 0.4 s and 0.3 s), and the auth-refresh stall (#12624
@@ -331,24 +331,24 @@ owns it; it is the largest single tail and must land regardless).
 | Feature | Where it lives | Items 1–8 keep it by |
 | --- | --- | --- |
 | Persistent home / data | machine disk, memory snapshot | untouched; no volume changes |
-| Terminal sessions and scrollback | cmux-tui daemon in the guest, journaled state | daemon and protocol unchanged; only when it starts changes |
-| Desktop / noVNC | `cmux-desktop` unit live in the snapshot; open-port over the tunnel | unchanged; optional: skip the heal exec when the daemon snapshot reports the display |
+| Terminal sessions and scrollback | hmux-tui daemon in the guest, journaled state | daemon and protocol unchanged; only when it starts changes |
+| Desktop / noVNC | `hmux-desktop` unit live in the snapshot; open-port over the tunnel | unchanged; optional: skip the heal exec when the daemon snapshot reports the display |
 | Tools and agents (Claude Code, Codex, OpenCode, pi, hooks) | baked; hooks installed at bake | the attach-time hooks check is skipped only when the image stamp proves the bake; older epochs keep the heal |
-| Guest `cmux` shim, browser openers, resource reporter | installed at create/attach today | baked into the image; heal keeps installing on pre-epoch images |
+| Guest `hmux` shim, browser openers, resource reporter | installed at create/attach today | baked into the image; heal keeps installing on pre-epoch images |
 | Auth and authorization | Stack session, team ownership, private network membership, Noise handshake, lease ledger | unchanged trust boundary; lease recorded at create or after the first dial instead of before |
 | Networking / ports / publications | VPC + WireGuard hub, `openPort`, publications | unchanged; hub started earlier, not differently |
 | Snapshots / forks / restore | provider snapshots via workflows | unchanged; restore/fork inherit the cheaper attach |
 | Reconnect / recovery | link reconnect policy, events recovery, heal on attach | attach-endpoint stays as the explicit repair path |
 | Quotas and billing | Postgres limits, usage events, credits | unchanged; usage writes may move after the response but still happen once |
-| Entry points (sheet, `cmux vm new/shell/open`, sidebar, agents over the socket) | shared `vmOpenShell` / catalog path | one shared path changes; all entry points benefit |
+| Entry points (sheet, `hmux vm new/shell/open`, sidebar, agents over the socket) | shared `vmOpenShell` / catalog path | one shared path changes; all entry points benefit |
 
 ## 10. Reproduce
 
 ```bash
 cd web && bun install --frozen-lockfile
-# Provider floor (needs FREESTYLE_API_KEY from ~/.secrets/cmux.env; creates and deletes its own VPC and machines)
+# Provider floor (needs FREESTYLE_API_KEY from ~/.secrets/hmux.env; creates and deletes its own VPC and machines)
 bun scripts/cloud-vm/bench-freestyle-floor.ts --trials 5 --burst 3 --out /tmp/floor.json
-# Transport path with the Nightly-bundled client (or --client <path to cmux-tui>)
+# Transport path with the Nightly-bundled client (or --client <path to hmux-tui>)
 bun scripts/cloud-vm/bench-private-link.ts --trials 3 --out /tmp/link.json
 # Control plane (throwaway Pro user; Vercel env pulled like the smoke script)
 bun scripts/cloud-vm/bench-vm-startup.mjs staging --trials 5 --out /tmp/api.json
@@ -359,7 +359,7 @@ bun test tests/cloud-vm-bench-stats.test.ts
 ```
 
 PostHog queries are in `docs/cloud-startup-latency/posthog-*.txt` headers
-(HogQL over `cloud_vm_request` and `cmux_cloud_vm_request`, project 244066).
+(HogQL over `cloud_vm_request` and `hmux_cloud_vm_request`, project 244066).
 
 ## 11. Incidental findings from the benchmark runs
 
@@ -381,7 +381,7 @@ PostHog queries are in `docs/cloud-startup-latency/posthog-*.txt` headers
   whether the platform allocated twice.
 - **Throwaway-user scripts leak owner networks.** `smoke-vm-api.mjs` and
   `stress-vm-api.mjs` delete their Stack user with the server key, which
-  leaves the user's provider VPC (`cmux-net-<hash>`, created by the first
+  leaves the user's provider VPC (`hmux-net-<hash>`, created by the first
   create) and its `cloud_vm_networks` row behind on every run. The eight
   networks this session's early runs left were removed by hand after
   verifying they had no machines or tunnels. `bench-vm-startup.mjs` now
@@ -392,7 +392,7 @@ PostHog queries are in `docs/cloud-startup-latency/posthog-*.txt` headers
   adopt the same cleanup.
 - **Account deletion fails on staging at its last step.** `DELETE /api/account`
   answered `500 account_delete_retryable` three times in a row for a
-  throwaway user after it had already destroyed the cmux-owned data (the
+  throwaway user after it had already destroyed the hmux-owned data (the
   Stack deletion step); the route's owner should check the staging Stack
   configuration. Until it is fixed, every staging run of
   `bench-vm-startup.mjs` ends with its throwaway user kept (named on stderr

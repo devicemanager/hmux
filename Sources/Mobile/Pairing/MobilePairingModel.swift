@@ -1,7 +1,7 @@
-import CMUXAuthCore
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxMobileHost
+import HMUXAuthCore
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxMobileHost
 import Foundation
 import Observation
 
@@ -10,7 +10,7 @@ import Observation
 /// uses the signed-in account and device identity, so it has no QR or address
 /// to display.
 ///
-/// Reads auth state from the app's shared ``CmuxAuthRuntime/AuthCoordinator``
+/// Reads auth state from the app's shared ``HmuxAuthRuntime/AuthCoordinator``
 /// (via `AppDelegate`); sign-in routes through the shared ``HostAccountFlow``
 /// and completion is observed by the view through observable auth state.
 @MainActor
@@ -252,7 +252,7 @@ final class MobilePairingModel {
                 state = .failed(
                     String(
                         localized: "mobile.pairing.error.teamUnavailable",
-                        defaultValue: "Could not load your cmux team. Check your internet connection, then try again."
+                        defaultValue: "Could not load your hmux team. Check your internet connection, then try again."
                     )
                 )
                 observeTeamScopeRecovery(coordinator)
@@ -277,30 +277,30 @@ final class MobilePairingModel {
         bundleIdentifier: String
     ) -> String {
         switch bundleIdentifier {
-        case "com.cmux.app":
+        case "com.hmux.app":
             return String(
                 localized: "mobile.pairing.target.appStore",
-                defaultValue: "cmux"
+                defaultValue: "hmux"
             )
-        case "dev.cmux.app.beta":
+        case "dev.hmux.app.beta":
             return String(
                 localized: "mobile.pairing.target.beta",
-                defaultValue: "cmux BETA"
+                defaultValue: "hmux BETA"
             )
-        case "dev.cmux.app.internal":
+        case "dev.hmux.app.internal":
             return String(
                 localized: "mobile.pairing.target.internal",
-                defaultValue: "cmux INTERNAL"
+                defaultValue: "hmux INTERNAL"
             )
-        case "dev.cmux.app.demo":
+        case "dev.hmux.app.demo":
             return String(
                 localized: "mobile.pairing.target.demo",
-                defaultValue: "cmux DEMO"
+                defaultValue: "hmux DEMO"
             )
         default:
             let format = String(
                 localized: "mobile.pairing.target.dev",
-                defaultValue: "cmux DEV %@"
+                defaultValue: "hmux DEV %@"
             )
             let tag = bundleIdentifier.split(separator: ".").last ?? ""
             return String(format: format, locale: .current, String(tag))

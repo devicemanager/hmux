@@ -1,10 +1,10 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import CryptoKit
 import Darwin
 import Foundation
-import CmuxFoundation
+import HmuxFoundation
 
-/// A validated snapshot written by the local cmux-cua runtime.
+/// A validated snapshot written by the local hmux-cua runtime.
 struct ComputerUseCuaState: Equatable, Sendable {
     private static let fractionalISO8601 = Date.ISO8601FormatStyle(
         includingFractionalSeconds: true
@@ -13,19 +13,19 @@ struct ComputerUseCuaState: Equatable, Sendable {
         includingFractionalSeconds: false
     )
     // This prefix is part of the schema-4 wire contract shared with the
-    // cmux-cua Rust writer. Keep the historical bytes while renaming the
+    // hmux-cua Rust writer. Keep the historical bytes while renaming the
     // Swift type; changing them would make every authenticated helper state
     // unreadable by the host.
     private static let authenticationDomain = Data(
-        "cmux-computer-use-state-v1\0".utf8
+        "hmux-computer-use-state-v1\0".utf8
     )
 
     let pid: Int
     /// The kernel-authenticated proxy generation that issued this action.
     let writerProcessIdentity: AgentPIDProcessIdentity
     var writerPID: Int { Int(writerProcessIdentity.pid) }
-    /// The cmux-cua session id when one was declared; `null` in the file
-    /// for cursor-less runs, and never equal to the cmux hook session id.
+    /// The hmux-cua session id when one was declared; `null` in the file
+    /// for cursor-less runs, and never equal to the hmux hook session id.
     let session: String?
     let targetApp: String
     let targetPID: Int
@@ -39,7 +39,7 @@ struct ComputerUseCuaState: Equatable, Sendable {
             let dictionary = object as? [String: Any],
             let schema = Self.positiveInt(dictionary["schema"]),
             schema == 4,
-            // The cmux-cua helper writes "driver_pid" for protocol stability;
+            // The hmux-cua helper writes "driver_pid" for protocol stability;
             // accept legacy "pid" only for
             // daemon display identity. Trusted state provenance is schema 4.
             let pid = Self.positiveInt(dictionary["driver_pid"] ?? dictionary["pid"]),

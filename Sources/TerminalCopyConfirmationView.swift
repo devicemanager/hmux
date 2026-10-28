@@ -1,8 +1,8 @@
 import AppKit
-import CmuxFoundation
-import CmuxSettings
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxFoundation
+import HmuxSettings
+import HmuxTerminal
+import HmuxTerminalCore
 import SwiftUI
 
 @MainActor
@@ -126,7 +126,7 @@ final class TerminalCopyConfirmationView: NSView {
     }
 
     private static func accent() -> Color {
-        (AppDelegate.shared?.accentColor ?? CmuxAccentColor()).color
+        (AppDelegate.shared?.accentColor ?? HmuxAccentColor()).color
     }
 }
 

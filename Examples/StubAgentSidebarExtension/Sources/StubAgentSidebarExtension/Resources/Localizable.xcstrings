@@ -6,13 +6,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "cmux did not allow that action"
+            "value" : "hmux did not allow that action"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "cmux がその操作を許可しませんでした"
+            "value" : "hmux がその操作を許可しませんでした"
           }
         }
       }

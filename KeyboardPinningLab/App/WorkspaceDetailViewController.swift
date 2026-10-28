@@ -131,7 +131,7 @@ private final class WorkspaceHeaderView: UIView {
 
         let backButton = Self.symbolButton("chevron.left")
         let titleLabel = UILabel()
-        titleLabel.text = String(localized: "workspace.title", defaultValue: "cmux DEV lab")
+        titleLabel.text = String(localized: "workspace.title", defaultValue: "hmux DEV lab")
         titleLabel.font = .preferredFont(forTextStyle: .headline)
         titleLabel.textColor = .white
 
@@ -196,7 +196,7 @@ private final class TerminalCanvasView: UIView {
         terminalText.numberOfLines = 0
         terminalText.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
         terminalText.textColor = UIColor(white: 0.79, alpha: 1)
-        terminalText.text = String(localized: "terminal.sample", defaultValue: "Last login: Fri Aug 7 19:45:12 on ttys006\n\n~/cmux  git:(feat/keyboard-pinning-lab)\n❯")
+        terminalText.text = String(localized: "terminal.sample", defaultValue: "Last login: Fri Aug 7 19:45:12 on ttys006\n\n~/hmux  git:(feat/keyboard-pinning-lab)\n❯")
         addSubview(terminalText)
 
         NSLayoutConstraint.activate([

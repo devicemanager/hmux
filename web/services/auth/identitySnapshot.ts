@@ -18,7 +18,7 @@ import type { AuthedTeam, AuthedUser } from "../vms/auth";
 const DEFAULT_SNAPSHOT_TTL_MS = 10 * 60 * 1_000;
 
 export function identitySnapshotTtlMs(
-  raw = process.env.CMUX_STACK_IDENTITY_SNAPSHOT_TTL_MS,
+  raw = process.env.HMUX_STACK_IDENTITY_SNAPSHOT_TTL_MS,
 ): number {
   const trimmed = raw?.trim();
   if (!trimmed) return DEFAULT_SNAPSHOT_TTL_MS;

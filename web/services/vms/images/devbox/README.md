@@ -1,9 +1,9 @@
-# cmux Cloud devbox image (Freestyle)
+# hmux Cloud devbox image (Freestyle)
 
-The devbox definition for cmux Cloud machines. The Dockerfile here is the
+The devbox definition for hmux Cloud machines. The Dockerfile here is the
 reference recipe: Ubuntu 24.04 (the distro every Freestyle machine runs),
 the shell layer, and the **desktop layer** from `desktop/`, started by the
-`cmux-devbox-boot` supervisor when there is no systemd (`docker build` proves
+`hmux-devbox-boot` supervisor when there is no systemd (`docker build` proves
 the whole desktop at build time). `web/scripts/build-devbox-freestyle.ts`
 builds the same devbox on top of the `freestyle/ubuntu` base VM: it reads the
 desktop package list, the Ghostty `.deb` and the agent pins from the
@@ -23,16 +23,16 @@ copies with the exact Dockerfile pins (`npm install -g` on the base's npm,
 every agent bin symlinked into `/usr/local/bin` so daemon panes resolve them
 without a login profile), and installs `bubblewrap`, codex's Linux sandbox
 prerequisite, so codex runs on the distro's `bwrap` instead of warning on
-every launch that it is falling back to its bundled copy. A cmux login banner
-(`cmux-motd`, rendered by pam_motd on SSH) replaces the stock Ubuntu and
+every launch that it is falling back to its bundled copy. A hmux login banner
+(`hmux-motd`, rendered by pam_motd on SSH) replaces the stock Ubuntu and
 Freestyle motd text.
 
 ## Agent pins: bump, epoch, promote
 
 The coding agents are exact npm releases in the Dockerfile's `ARG
-CMUX_IMAGE_<TOOL>_VERSION` lines, and machines never self-update
+HMUX_IMAGE_<TOOL>_VERSION` lines, and machines never self-update
 (`DISABLE_AUTOUPDATER=1` for Claude Code, `check_for_update_on_startup =
-false` for codex), so a new Claude Code or Codex reaches cmux Cloud only
+false` for codex), so a new Claude Code or Codex reaches hmux Cloud only
 through a rebake:
 
 ```bash
@@ -41,7 +41,7 @@ bun run devbox:pins:check            # pins next to the npm registry's current r
 bun run devbox:pins:check --write    # rewrite the ARG lines to those releases
 ```
 
-then bump `CMUX_IMAGE_EPOCH` in the same file and promote both ladders (see
+then bump `HMUX_IMAGE_EPOCH` in the same file and promote both ladders (see
 "Promote" below). `--write` touches only the ARG lines and refuses ranges,
 tags and packages the image does not bake; the chatmux devbox template
 (`chatmux:infra/sandbox-images/Dockerfile`) is bumped by hand in its own
@@ -49,7 +49,7 @@ repo to keep the parity the header describes.
 
 A machine can instead keep its agents current: with `agentUpdates: "latest"`
 (New Machine's "Keep coding agents up to date", checked by default in the
-sheet, `cmux vm agent-updates <vm> latest`, or `PUT /api/vm/{id}/agent-updates`),
+sheet, `hmux vm agent-updates <vm> latest`, or `PUT /api/vm/{id}/agent-updates`),
 create and each attach start a detached updater
 (`web/services/vms/guestAgentUpdates.ts`). On a clone that resumed less than
 10 minutes ago (the boot supervisor's `HOUSEKEEPING_DELAY`) it waits out that
@@ -61,8 +61,8 @@ installs the newest x.y.z release that has been public for 3 days and is not
 above the latest release, after checking the download's sha256, at most once a
 day and never as a downgrade. On a machine baked with the npm pins above, the
 first update moves each agent to its standalone release and removes the npm
-copy once no process uses it. Outcome in `/etc/cmux/agent-updates.state`, log
-in `/var/log/cmux-agent-updates.log`. Moving the image recipe itself off npm
+copy once no process uses it. Outcome in `/etc/hmux/agent-updates.state`, log
+in `/var/log/hmux-agent-updates.log`. Moving the image recipe itself off npm
 needs a rebake and lands separately.
 
 Two invariants keep the checked-in manifest describing the machine users get
@@ -71,7 +71,7 @@ Two invariants keep the checked-in manifest describing the machine users get
 writes):
 
 - every `defaultForKind` entry was baked at the Dockerfile's current
-  `CMUX_IMAGE_EPOCH` (the entry's `epoch`, or the `cmux devbox epoch` prefix
+  `HMUX_IMAGE_EPOCH` (the entry's `epoch`, or the `hmux devbox epoch` prefix
   of its `notes` on older entries), so an epoch bump lands together with its
   promotion and a rollback to an older ladder also reverts the sources;
 - an entry that recorded `devboxSource` (`{ layers, digest, schema }`,
@@ -99,39 +99,39 @@ manifest flags alone.
 
 ## One work user, one machine name (`workUser.ts`)
 
-Every prompt on a cmux Cloud machine reads `cmux@cmux`. Both halves are
+Every prompt on a hmux Cloud machine reads `hmux@hmux`. Both halves are
 contract, not decoration:
 
-- The work user is **`cmux`** (uid 1000, `/home/cmux`, passwordless sudo):
+- The work user is **`hmux`** (uid 1000, `/home/hmux`, passwordless sudo):
   the base's `ubuntu` account **renamed** right after the machine's own name is
   set, before any layer writes into the home or names the account. Freestyle's exec API
   resolves its default `linuxUser` to "the account holding uid 1000", so a
   rename (rather than a second account) keeps the provider's own surfaces,
-  SSH, the desktop session, and the terminals the cmux-tui daemon opens all
+  SSH, the desktop session, and the terminals the hmux-tui daemon opens all
   in one home. The base's `/etc/sudoers.d/90-freestyle` names the old
   account, so the step replaces every sudoers drop-in that does not name
-  `cmux`.
-- The machine is named **`cmux`**, not the base's `freestyle-vm`. That half is
+  `hmux`.
+- The machine is named **`hmux`**, not the base's `freestyle-vm`. That half is
   its own contract (`services/vms/images/identity.ts`): the static and live
   name, the loopback alias, per-machine SSH host keys, and a residue audit.
 - **Sessions are not root.** Coding agents refuse to run as root:
   `claude --dangerously-skip-permissions` exits before it starts. The daemon
-  drops to `cmux` (docs/cloud-cmux-tui-daemon.md), root stays one `sudo`
+  drops to `hmux` (docs/cloud-hmux-tui-daemon.md), root stays one `sudo`
   away, and the verifier proves both that the refusal is gone and that a pane
-  the daemon opens really reports `cmux@cmux`.
+  the daemon opens really reports `hmux@hmux`.
 
-The default Bash prompt shows `cmux@<vm-name>`. It reads `/etc/cmux/vm-name`
+The default Bash prompt shows `hmux@<vm-name>`. It reads `/etc/hmux/vm-name`
 with Bash's built-in `read` before each prompt. Create and attach install
 the current name. Rename updates it on a running machine. A paused or
 unreachable machine gets the saved name on its next attach. The prompt name
 uses the display label in lowercase with hyphens, or the generated slug when
 there is no usable label. Routing ids do not change.
 
-Set `PS1` after the `/etc/cmux/bashrc` source line in `~/.bashrc` to customize
-the prompt. For example, `PS1='\u@${__cmux_vm_name}:\w\$ '` keeps the live
+Set `PS1` after the `/etc/hmux/bashrc` source line in `~/.bashrc` to customize
+the prompt. For example, `PS1='\u@${__hmux_vm_name}:\w\$ '` keeps the live
 name with a different layout. A fixed prompt or a prompt tool also works.
 The line editor attaches at the first prompt, after these user settings load.
-Remove the source line to replace the full cmux shell setup. Lifecycle updates
+Remove the source line to replace the full hmux shell setup. Lifecycle updates
 only write system defaults, never user rc files or prompt settings. The
 name reader never rewrites `PS1`, runs Git, calls the network, or starts a
 child process. The shell variable is local scratch state, not exported
@@ -144,7 +144,7 @@ checks live prompt updates and user overrides.
 
 ## Desktop layer (`desktop/`)
 
-Ported from the retired Blaxel `sandbox/cmux-devbox` image, the same stack
+Ported from the retired Blaxel `sandbox/hmux-devbox` image, the same stack
 on every provider: TigerVNC serving an openbox session with the tint2 dock
 (Chrome, Files, Ghostty), Thunar, the CC0 mountain-lake wallpaper, the
 accessibility bus for computer-use, TigerVNC's clipboard helper, and noVNC
@@ -152,7 +152,7 @@ on 6901. The contract (`web/services/vms/images/desktop.ts`;
 `vm-devbox-desktop.test.ts` pins it, the Mac app's Displays row, the CLI's
 `cloudVMDesktopPort` and the Freestyle driver's `openPort` depend on it):
 
-- `start-vnc.sh` runs as the work user `cmux` with `HOME=/home/cmux`
+- `start-vnc.sh` runs as the work user `hmux` with `HOME=/home/hmux`
   and `DISPLAY=:1`, so the desktop session is the same account terminals
   and SSH land in; RFB on **5901 loopback-only** (no VNC auth: the owner's
   private network is the only ingress), noVNC via websockify on **6901**
@@ -164,13 +164,13 @@ on 6901. The contract (`web/services/vms/images/desktop.ts`;
   and X apps), a resize watcher (noVNC remote resize re-fills the wallpaper
   and nudges the dock), and websockify.
 - It publishes `DISPLAY` and the accessibility bus (`AT_SPI_BUS_ADDRESS` for
-  AT-SPI clients, `AT_SPI_BUS` for `cua-driver doctor`) at `/run/cmux-desktop/env`
-  (the unit's `RuntimeDirectory=`, owned by `cmux`, readable by all).
-  `/etc/cmux/desktop-env.sh`, sourced by `/etc/profile.d/cmux-desktop.sh`
-  and the bashrc chain (every pane the cmux-tui daemon opens, root's
+  AT-SPI clients, `AT_SPI_BUS` for `cua-driver doctor`) at `/run/hmux-desktop/env`
+  (the unit's `RuntimeDirectory=`, owned by `hmux`, readable by all).
+  `/etc/hmux/desktop-env.sh`, sourced by `/etc/profile.d/hmux-desktop.sh`
+  and the bashrc chain (every pane the hmux-tui daemon opens, root's
   included), points any shell without a `DISPLAY` at the desktop while it
   is up, so `agent-browser`, `xdotool` and `cua-driver mcp`/`call` act on
-  the screen a person can watch. The desktop session and the cmux-tui daemon
+  the screen a person can watch. The desktop session and the hmux-tui daemon
   are the same account, so an app started from a terminal pane joins the
   session bus of the screen a person is watching; root gets `DISPLAY` but not
   that bus (it admits only its owner).
@@ -179,18 +179,18 @@ on 6901. The contract (`web/services/vms/images/desktop.ts`;
   accessibility bus is awaited by name (`gdbus wait org.a11y.Bus`), the
   resize watcher reacts to RandR events (`xev`), and the unit is
   `Type=notify`: `start-vnc.sh` sends READY once the display, noVNC and the
-  published env are up, so `systemctl start cmux-desktop` (the driver's
+  published env are up, so `systemctl start hmux-desktop` (the driver's
   port-open heal, the bake) returns exactly when the screen is usable.
   websockify has no readiness signal of its own, so its 6901 bind is the one
   bounded connect wait (`wait_listening`).
-- The `cmux-desktop` systemd unit runs `cmux-desktop-boot` as `cmux`,
+- The `hmux-desktop` systemd unit runs `hmux-desktop-boot` as `hmux`,
   which re-asserts Chrome's pre-accepted first run and re-runs the
   idempotent `start-vnc.sh` every 30 s. In a container (no systemd) the
-  `cmux-devbox-boot` boot supervisor starts the same `cmux-desktop-boot` as
+  `hmux-devbox-boot` boot supervisor starts the same `hmux-desktop-boot` as
   the uid-1000 account and restarts it if it exits; under systemd it starts
   nothing (the bake and the verifier count exactly one desktop supervisor).
-- `cmux` has passwordless sudo, so coding agents' root-refusing modes
-  (`claude --dangerously-skip-permissions`) work, and the cmux-tui daemon
+- `hmux` has passwordless sudo, so coding agents' root-refusing modes
+  (`claude --dangerously-skip-permissions`) work, and the hmux-tui daemon
   runs sessions as that same account.
 - Agents are trusted everywhere. codex: `codex-managed.toml` is baked to
   `/etc/codex/managed_config.toml` with `trust_level = "trusted"` for `/root`
@@ -206,18 +206,18 @@ on 6901. The contract (`web/services/vms/images/desktop.ts`;
   (per HOME): the team's CodeRouter accounts, or the user's own sign-in
   (`/login`, `codex login`, `opencode auth login`). `/usr/local/bin/<agent>`
   (and nvm's entry, which login PATHs reach first) is the launcher
-  `/etc/cmux/<agent>` (`cmux-claude`, `cmux-codex`, `cmux-opencode`), which
-  execs `/usr/local/libexec/cmux-<agent>-real`; `agent-config.sh` defines
+  `/etc/hmux/<agent>` (`hmux-claude`, `hmux-codex`, `hmux-opencode`), which
+  execs `/usr/local/libexec/hmux-<agent>-real`; `agent-config.sh` defines
   shell functions that route through it too. `agent-auth.sh` resolves the
-  mode per launch: `CMUX_<AGENT>_AUTH`, else the `cr use own|team` choice in
-  `~/.config/cmux/agent-auth/<agent>`, else own when the agent has its own
+  mode per launch: `HMUX_<AGENT>_AUTH`, else the `cr use own|team` choice in
+  `~/.config/hmux/agent-auth/<agent>`, else own when the agent has its own
   sign-in, else team when the team has an account for it
   (`GET /api/coderouter/agent-access`, cached 60 s), else own. Team mode:
   Claude Code gets the model-plane pair (kept out of every shell as
-  `CMUX_CLAUDE_TEAM_*`, because Claude Code ranks `ANTHROPIC_API_KEY` above
-  its own login), Codex keeps the generated `cmux` provider, and OpenCode gets
+  `HMUX_CLAUDE_TEAM_*`, because Claude Code ranks `ANTHROPIC_API_KEY` above
+  its own login), Codex keeps the generated `hmux` provider, and OpenCode gets
   the CodeRouter providers through `OPENCODE_CONFIG`
-  (`~/.config/cmux/opencode-team.json`, fetched on first team launch). Own
+  (`~/.config/hmux/opencode-team.json`, fetched on first team launch). Own
   mode: Codex starts with `-c model_provider="openai"` (only over the
   generated config), and every agent's launch drops the model-plane endpoints
   and placeholder, so an own credential is never sent to CodeRouter (OpenCode
@@ -225,17 +225,17 @@ on 6901. The contract (`web/services/vms/images/desktop.ts`;
   `ANTHROPIC_BASE_URL` name). Image-only: older machines keep the old
   behavior until they are recreated.
 - Ghostty comes from a pinned community `.deb` for Ubuntu 24.04
-  (`ARG CMUX_IMAGE_GHOSTTY_DEB_URL` in the Dockerfile, verified against
-  `ARG CMUX_IMAGE_GHOSTTY_DEB_SHA256` before dpkg runs); the apt list is
-  `ARG CMUX_IMAGE_DESKTOP_PACKAGES`. `devbox-image-common.ts` reads all three.
+  (`ARG HMUX_IMAGE_GHOSTTY_DEB_URL` in the Dockerfile, verified against
+  `ARG HMUX_IMAGE_GHOSTTY_DEB_SHA256` before dpkg runs); the apt list is
+  `ARG HMUX_IMAGE_DESKTOP_PACKAGES`. `devbox-image-common.ts` reads all three.
 
 One snapshot serves both kinds: the desktop bake is promoted as the default
 for `desktop` and for `base` alike (`--kinds desktop,base`, the default for a
-desktop bake), so every machine cmux Cloud creates is this devbox with its
+desktop bake), so every machine hmux Cloud creates is this devbox with its
 screen, whatever kind a client names (`VM_IMAGE_DEFAULT_KIND` in
 `services/vms/images/resolver.ts` is desktop for a request that names none).
 `devbox:bake:freestyle --no-desktop` can still bake a shell-only image for
-experiments; it is not promoted, and the verifier reads `/etc/cmux/image-stamp`
+experiments; it is not promoted, and the verifier reads `/etc/hmux/image-stamp`
 and rejects a desktop snapshot passed as a base image.
 
 ### Which image a new machine gets
@@ -243,57 +243,57 @@ and rejects a desktop snapshot passed as a base image.
 The `defaultForKind` rows in `manifest.json` are the one source of truth, read
 only through `resolveVmImage` (`services/vms/images/resolver.ts`). Every
 default create goes through it: the Mac and iOS New Machine sheets and
-`cmux vm new` send a kind and size, never an image id; `POST /api/vm` and
+`hmux vm new` send a kind and size, never an image id; `POST /api/vm` and
 `vm base open/reset` resolve the kind and the plan's memory to a ladder row.
 There is no env, team, plan or user image pin, so merging a promotion (and
 the deploy it starts) moves every default create to the new bake. An image id
-reaches a create only from a person (`cmux vm new --image`), and in a
+reaches a create only from a person (`hmux vm new --image`), and in a
 deployed environment it must be a manifest row.
 
 Fork, restore and templates (`vm promote-template` is a named snapshot that a
 restore boots) are the exceptions: they boot the user's own machine or
-snapshot and keep the guest software it had, including its cmux-tui. Like
-every running machine, they move to a new cmux-tui only through
-`bun scripts/upgrade-fleet-cmux-tui.ts`, which defaults to the build the
+snapshot and keep the guest software it had, including its hmux-tui. Like
+every running machine, they move to a new hmux-tui only through
+`bun scripts/upgrade-fleet-hmux-tui.ts`, which defaults to the build the
 default image bakes (docs/cloud-guest-upgrades.md). Neither create nor attach
-installs or upgrades cmux-tui, so a daemon change (the cmux-tui pin) reaches
+installs or upgrades hmux-tui, so a daemon change (the hmux-tui pin) reaches
 new machines only through a rebake and promotion.
 
-The Freestyle base slug is only the input to the cmux bake. The ids recorded in
-`manifest.json` are cmux-derived snapshots, created by baking cmux-tui and its
+The Freestyle base slug is only the input to the hmux bake. The ids recorded in
+`manifest.json` are hmux-derived snapshots, created by baking hmux-tui and its
 contract first, then resizing and re-booting each shape. Never point a machine
-at a raw `freestyle/*` base, because it has no cmux-tui state or startup
+at a raw `freestyle/*` base, because it has no hmux-tui state or startup
 contract.
 
 Reaching it: the Freestyle driver's `openPort(vmId, 6901)` (the app's
-Displays row, `cmux vm open <m>:desktop`) returns
+Displays row, `hmux vm open <m>:desktop`) returns
 `http://<private VPC IPv4>:6901/vnc.html?path=websockify`, reachable only
 over the owner's WireGuard tunnel, exactly the path the daemon route takes,
-after a guest-side heal that is one blocking `systemctl start cmux-desktop`
+after a guest-side heal that is one blocking `systemctl start hmux-desktop`
 (the unit's READY is the signal). No public ingress is ever opened for it: noVNC has no
 auth of its own, so a machine outside a private network gets an error, not
 a public URL. `desktopWrapper.ts` stays the seam for a future public TLS
 edge. The daemon still runs as root, so root shells get `DISPLAY` but not
 the session bus.
 
-## Identity: the machine is `cmux`
+## Identity: the machine is `hmux`
 
 `web/services/vms/images/identity.ts` is the contract. The Freestyle base
 calls every VM `freestyle-vm` (static in `/etc/hostname`, the `127.0.1.1`
 alias in `/etc/hosts`, the comment on its SSH host keys), so before this
-contract a cmux machine introduced itself as the provider's in every pane
+contract a hmux machine introduced itself as the provider's in every pane
 (`root@freestyle-vm in ~ λ`), in `hostname`, `$HOSTNAME`, `uname -n`, the
 journal, and the host-key comments. The bake's `identity` step, right after
 the base inventory, renames it:
 
-- **Hostname `cmux`**, static and live (`hostnamectl set-hostname`, with a
-  file-plus-`sethostname` fallback), and the `127.0.1.1 cmux` alias so
-  `getent hosts cmux` and sudo resolve it. Only the alias line of
+- **Hostname `hmux`**, static and live (`hostnamectl set-hostname`, with a
+  file-plus-`sethostname` fallback), and the `127.0.1.1 hmux` alias so
+  `getent hosts hmux` and sudo resolve it. Only the alias line of
   `/etc/hosts` changes; the provider's `# BEGIN freestyle-tls-egress` block
   and every other line stay byte for byte.
 - **SSH host keys regenerated** under the new name (the base's keys were
   generated when Freestyle built its rootfs and are shared by every VM booted
-  from that base). `cmux-devbox-boot` regenerates them again on every clone,
+  from that base). `hmux-devbox-boot` regenerates them again on every clone,
   in a detached subshell so the daemon start never waits, so no two machines
   from one snapshot share a host key.
 - **The journal starts over** in the cleanup step, so a machine's log begins
@@ -320,44 +320,44 @@ alone. The container recipe has no identity step: `docker build` mounts
 `/etc/hostname` and `/etc/hosts` from the daemon and the runtime names each
 container, so the hostname there is the runtime's.
 
-## Terminal capabilities (`cmux-terminfo.src`)
+## Terminal capabilities (`hmux-terminfo.src`)
 
 Daemon-spawned shells get the TERM the Mac exports (`xterm-256color`, or
 `xterm-ghostty` when passed through) plus `COLORTERM=truecolor`, and inherit
 `TERM_PROGRAM=ghostty` with `TERM_PROGRAM_VERSION` from
-`/etc/cmux/ghostty-version` (the Ghostty .deb pin, written by the bake and
+`/etc/hmux/ghostty-version` (the Ghostty .deb pin, written by the bake and
 the Dockerfile) via the supervisor's environment, the same identity the app
 exports to local and SSH shells. Claude Code and other agents gate
 synchronized output, progress reporting, strikethrough, and Cmd-click on
 `TERM_PROGRAM`; `verify-devbox-image.ts` reads the daemon's environ to prove
 it. Programs still resolve TERM against the guest's terminfo. Stock ncurses
 `xterm-256color` advertises no truecolor (`Tc`) or styled underlines (`Su`)
-and emits SGR 90 for `setaf 8`, which the cmux renderer shows as invisible
-ghost text. `cmux-terminfo.src` is the app's `Resources/terminfo-overlay`
+and emits SGR 90 for `setaf 8`, which the hmux renderer shows as invisible
+ghost text. `hmux-terminfo.src` is the app's `Resources/terminfo-overlay`
 (Ghostty's entry under both names, bright colors 8-15 as `38;5;n`) as
 `infocmp -x` source; the bake compiles it into `/etc/terminfo`, ahead of
 `/lib` and `/usr/share` in ncurses' search order, before seeding ble.sh's
-per-TERM tput caches. Regenerate it from a cmux checkout with the command in
+per-TERM tput caches. Regenerate it from a hmux checkout with the command in
 its header when the overlay changes; `vm-devbox-image.test.ts` compiles and
 queries it, and `verify-devbox-image.ts` proves the same on a fresh machine.
 
-## Session daemon: cmux-tui
+## Session daemon: hmux-tui
 
-Machines attach through the cmux-tui remote daemon on port 1337
-(transport `cmux-remote`, docs/cloud-cmux-tui-daemon.md). The Freestyle bake
+Machines attach through the hmux-tui remote daemon on port 1337
+(transport `hmux-remote`, docs/cloud-hmux-tui-daemon.md). The Freestyle bake
 installs the pinned files.cmux.com build (sha256-verified, the driver's own
-install command) at `/home/cmux/.cmux/bin/cmux-tui`, proves the daemon answers,
+install command) at `/home/hmux/.hmux/bin/hmux-tui`, proves the daemon answers,
 then parks it, because a Freestyle snapshot is a memory image and a live
 daemon would give every machine the builder's Noise identity. The
-`cmux-devbox-boot` supervisor, run by the baked `cmux-tui-daemon` systemd
-unit with `CMUX_TUI_REMOTE_WS_BIND=[::]:1337` (the driver reaches the daemon
+`hmux-devbox-boot` supervisor, run by the baked `hmux-tui-daemon` systemd
+unit with `HMUX_TUI_REMOTE_WS_BIND=[::]:1337` (the driver reaches the daemon
 at the VM's IPv6 address, so the listener must be dual-stack), reads the
 platform instance id from the metadata service, wipes the remote identity
 when the machine is a clone, and starts the daemon. The driver runs no
 bootstrap at create and no guest work on attach, so nothing on a running
-machine changes its cmux-tui: upgrade running machines with
-`bun scripts/upgrade-fleet-cmux-tui.ts` and the in-place guest script
-`scripts/cloud-vm/cmux-tui-upgrade.sh`, under the compatibility rules in
+machine changes its hmux-tui: upgrade running machines with
+`bun scripts/upgrade-fleet-hmux-tui.ts` and the in-place guest script
+`scripts/cloud-vm/hmux-tui-upgrade.sh`, under the compatibility rules in
 docs/cloud-guest-upgrades.md. The container Dockerfile still ships only the
 supervisor and waits for a driver install.
 
@@ -365,8 +365,8 @@ Shells spawned by the daemon get the bash devshell (ble.sh ghost text,
 half-life prompt, seeded history) through the `/etc/bash.bashrc` chain.
 
 The bake also fully allocates a 1 GiB ext4 image at
-`/var/lib/cmux/cmux-tui-state.ext4` and mounts it at the daemon's
-`~/.local/state/cmux-tui` directory before the daemon starts. This gives the
+`/var/lib/hmux/hmux-tui-state.ext4` and mounts it at the daemon's
+`~/.local/state/hmux-tui` directory before the daemon starts. This gives the
 SQLite registry and journal a reserved filesystem even when general-purpose
 files fill the root filesystem. When the state filesystem falls below its
 headroom threshold, the helper doubles the image online up to 8 GiB, provided
@@ -376,10 +376,10 @@ The image consumes space from the existing root disk; it does not change the
 Freestyle VM size or the image ladder. The bake writes a reservation marker
 only after the image is fully created and seeded. The boot supervisor reads
 that marker and requires the marker, helper, image, and mount after a snapshot
-resume before starting cmux-tui. If any of those checks fail, startup is
+resume before starting hmux-tui. If any of those checks fail, startup is
 deferred instead of falling back to the root filesystem. Older images without
 the marker continue using their existing state layout until they are replaced
-or upgraded with `bun scripts/upgrade-fleet-cmux-tui.ts`.
+or upgraded with `bun scripts/upgrade-fleet-hmux-tui.ts`.
 
 ## Sizes: one bake, one snapshot per size
 
@@ -390,7 +390,7 @@ boot the bake, `vm.resize`, snapshot, delete, then boot the derived snapshot
 once more and check `nproc`, memory, the grown root filesystem and the
 daemon/desktop units. Sizes are Freestyle's own ladder
 (`web/services/vms/images/sizes.ts`, verbatim from freestyle-vms
-`catalog/snapshots.json`), so every cmux machine is a shape Freestyle already
+`catalog/snapshots.json`), so every hmux machine is a shape Freestyle already
 bills and caps:
 
 | name | vCPU | memory | disk | Freestyle base |
@@ -407,7 +407,7 @@ memoryMb, storageMb }`), each the default for its kind+size. The resolver
 picks the smallest size whose memory covers the plan's `memoryMb`
 (`defaultMemoryMbForPlan`; today's default of 8 GiB lands on `md`), so
 the driver never resizes at create and nothing has to grow at boot. Snapshot
-slugs are `cmux-devbox-<size>` (`cmux-devbox` for `md`).
+slugs are `hmux-devbox-<size>` (`hmux-devbox` for `md`).
 
 Run `bun run devbox:manifest:check` before a promotion. It requires one
 validated default for every size in both ladders and checks the recorded CPU,
@@ -416,17 +416,17 @@ memory, and disk values against `sizes.ts`.
 ### BusyBox probe
 
 `freestyle/busybox` is not a supported machine image. It has only BusyBox
-utilities and no systemd or cmux devbox contract. To measure whether a future
-shell-only image can run cmux-tui, use the disposable probe:
+utilities and no systemd or hmux devbox contract. To measure whether a future
+shell-only image can run hmux-tui, use the disposable probe:
 
 ```bash
 FREESTYLE_API_KEY=... bun run devbox:probe:busybox --fx
 ```
 
-The probe installs the pinned static cmux-tui build, starts the daemon, runs the
+The probe installs the pinned static hmux-tui build, starts the daemon, runs the
 small `fx` binary, records RSS, and deletes the VM. It never writes the image
 manifest. A BusyBox result becomes a product option only after a separate
-cmux-derived bake passes the same daemon, persistence, and attach checks as the
+hmux-derived bake passes the same daemon, persistence, and attach checks as the
 Ubuntu ladder.
 
 ## Promote: bake, verify, derive sizes, record (one command)
@@ -449,7 +449,7 @@ Snapshots are account-scoped: promote under the Freestyle account the
 deployment's `FREESTYLE_API_KEY` belongs to, or the recorded ids are
 unreachable from production.
 
-It runs the stale-checkout preflight (`CMUX_BAKE_ALLOW_BRANCH=1` for
+It runs the stale-checkout preflight (`HMUX_BAKE_ALLOW_BRANCH=1` for
 deliberate branch bakes), the bake, then `verify-devbox-image.ts`; only a
 passing verify derives the sizes and writes the manifest, appending one
 entry per kind and size flagged `defaultForKind` while demoting the
@@ -474,8 +474,8 @@ Promote both compatibility kinds together so the defaults keep sharing the
 same snapshot at every size:
 
 ```bash
-bun run devbox:bake:freestyle cmux-devbox-<tag> --out /tmp/desktop.json
-bun run devbox:promote -- freestyle --bake-result /tmp/desktop.json --kinds desktop,base --pointer-slug cmux-devbox-<tag>
+bun run devbox:bake:freestyle hmux-devbox-<tag> --out /tmp/desktop.json
+bun run devbox:promote -- freestyle --bake-result /tmp/desktop.json --kinds desktop,base --pointer-slug hmux-devbox-<tag>
 ```
 
 A promotion that verified and derived but did not write (a refused write, a
@@ -484,8 +484,8 @@ crash after `derive-devbox-sizes.ts`) is resumed without re-deriving:
 bake and adopts the derived ids (they already exist on the account, each
 booted and checked by that run).
 
-Pin the daemon for both with `CMUX_VM_CMUX_TUI_MANIFEST_URL` (one commit's
-`https://files.cmux.com/cmux-tui/<commit>/manifest.json`) so the two ladders
+Pin the daemon for both with `HMUX_VM_HMUX_TUI_MANIFEST_URL` (one commit's
+`https://files.cmux.com/hmux-tui/<commit>/manifest.json`) so the two ladders
 cannot straddle an artifacts publish.
 
 ### Two promotions in flight
@@ -509,44 +509,44 @@ demoted, for rollback.
 
 ## Bake and verify by hand
 
-Each script refuses a stale checkout (`CMUX_BAKE_ALLOW_BRANCH=1` for
+Each script refuses a stale checkout (`HMUX_BAKE_ALLOW_BRANCH=1` for
 deliberate branch bakes). No local Docker and no daemon build are needed.
 
 ```bash
-FREESTYLE_API_KEY=... bun scripts/build-devbox-freestyle.ts cmux-devbox-<tag> [--no-desktop] [--replace-slug]
+FREESTYLE_API_KEY=... bun scripts/build-devbox-freestyle.ts hmux-devbox-<tag> [--no-desktop] [--replace-slug]
 ```
 
 The container recipe builds and self-checks locally (amd64; the desktop
-comes up under `cmux-devbox-boot` during the build and is torn down before
+comes up under `hmux-devbox-boot` during the build and is torn down before
 the image is committed):
 
 ```bash
-docker build --platform linux/amd64 -t cmux-devbox:dev services/vms/images/devbox
+docker build --platform linux/amd64 -t hmux-devbox:dev services/vms/images/devbox
 ```
 
 Freestyle bakes on `freestyle/ubuntu` (4 vCPU / 8 GiB / 32 GB): VMs always
 boot at their snapshot's size and resizing is grow-only, so the builder's
-shape is what every cmux Cloud machine gets. Freestyle snapshot slugs are
+shape is what every hmux Cloud machine gets. Freestyle snapshot slugs are
 reassignable; the printed `sh-…` id is the pointer to pin. Agent pins live
 only in the Dockerfile ARG defaults; bump them together with
-`CMUX_IMAGE_EPOCH` and the chatmux template. The cmux-tui pin comes from
-the artifacts manifest at deploy time (`CMUX_VM_CMUX_TUI_MANIFEST_URL`),
+`HMUX_IMAGE_EPOCH` and the chatmux template. The hmux-tui pin comes from
+the artifacts manifest at deploy time (`HMUX_VM_HMUX_TUI_MANIFEST_URL`),
 never from the image.
 
 Each bake prints a `next` command. The verifier boots one VM from the
 snapshot, asserts the toolchain, the exact agent pins, `bwrap`, ghost text
 under a tmux PTY, byte-identical baked files, the work user and machine name
-(one uid-1000 account named `cmux`, no `ubuntu` left behind, a login prompt
-reading `cmux@cmux`, `claude --dangerously-skip-permissions` accepted), the
+(one uid-1000 account named `hmux`, no `ubuntu` left behind, a login prompt
+reading `hmux@hmux`, `claude --dangerously-skip-permissions` accepted), the
 first interactive launch of `claude --dangerously-skip-permissions` as root
-and of `codex` as root and as `cmux` reaching the ready composer with no
+and of `codex` as root and as `hmux` reaching the ready composer with no
 first-run gate on screen (onboarding, folder trust, the bypass confirmation,
 the custom API key consent, the root gate, codex's update picker and
 bubblewrap warning; readiness is the composer text itself, polled and
 bounded), codex's own verdict that every hook a daemon pane's codex starts
-with is trusted (the cmux-tui codex wrapper's exact argv, then `codex
+with is trusted (the hmux-tui codex wrapper's exact argv, then `codex
 app-server` `hooks/list`; a screen probe cannot see "Hooks need review",
-which codex shows after its composer), and (when `/etc/cmux/image-stamp` says `desktop`) the desktop
+which codex shows after its composer), and (when `/etc/hmux/image-stamp` says `desktop`) the desktop
 contract (both ports,
 RFB loopback-only, the session processes, the wallpaper on the root window,
 one supervisor, `DISPLAY` in root's and the work user's login shells,
@@ -562,8 +562,8 @@ bun scripts/verify-devbox-image.ts freestyle <sh-snapshot-id>
 
 Only after verify passes may an entry carry `validationStatus: "passed"`;
 `vm-image-manifest.test.ts` refuses a `defaultForKind` entry with any other
-status. Machines created from the old cmuxd-remote images cannot serve the
-`cmux-remote` transport and need recreation on a devbox image.
+status. Machines created from the old hmuxd-remote images cannot serve the
+`hmux-remote` transport and need recreation on a devbox image.
 
 ## Checking a private connection
 
@@ -573,11 +573,11 @@ snapshot to address an attach failure:
 
 ```bash
 # From web/, using the Freestyle account that owns this snapshot.
-# Load FREESTYLE_API_KEY from ~/.secrets/cmux.env without printing it.
-bun run devbox:verify:private-link sh-<snapshot-id> /path/to/cmux-tui
+# Load FREESTYLE_API_KEY from ~/.secrets/hmux.env without printing it.
+bun run devbox:verify:private-link sh-<snapshot-id> /path/to/hmux-tui
 ```
 
-For a Mac app, use its `Contents/Resources/bin/cmux-tui` binary. The probe
+For a Mac app, use its `Contents/Resources/bin/hmux-tui` binary. The probe
 first requires the client's `wireguard-hub` capability; an older client must
 be updated before a private-network image can be assessed. Rebuilding a guest
 image cannot add that missing capability to an installed Mac app.
@@ -604,7 +604,7 @@ new Cloud client.
 
 Human authentication is installed by `guestBrowser.ts` through the provider's
 create/attach/exec paths, rather than baked into the immutable snapshot. It installs
-`cmux-open-url`, web-only OS opener wrappers, and shell defaults while retaining
+`hmux-open-url`, web-only OS opener wrappers, and shell defaults while retaining
 Chrome/CDP/CUA on the guest desktop. The daemon's ephemeral `url-open` request
 is scoped to the source terminal and needs a live Mac acknowledgement within
 five seconds. Headless or older clients print the URL and return success.
@@ -617,16 +617,16 @@ daemon until a normal image upgrade; those older daemons print the fallback URL.
 通常の更新まで固定されたデーモンを維持し、旧バージョンでは URL を表示して
 正常終了します。ゲストデスクトップの Chrome/CDP/CUA には影響しません。
 
-HTTP(S) MIME handlers also use `cmux-open-url`, covering absolute and CLI-bundled
+HTTP(S) MIME handlers also use `hmux-open-url`, covering absolute and CLI-bundled
 `xdg-open` and GIO. File associations and direct Chrome launchers are unchanged.
-HTTP(S) の MIME ハンドラーも cmux を使用します。ファイルの関連付けと
+HTTP(S) の MIME ハンドラーも hmux を使用します。ファイルの関連付けと
 Chrome の直接起動は変更しません。
 
 ## Terminal clipboard writes
 
 The Cloud guest integration installs `xclip`, `xsel`, and `wl-copy` write shims
-through the same create/attach-heal transaction as `cmux-open-url`. They accept
+through the same create/attach-heal transaction as `hmux-open-url`. They accept
 stdin and emit a bounded OSC 52 write into the terminal stream. Read and paste
 modes fail, and no `wl-paste` helper is installed. Cloud terminal projections
-admit these writes into the Mac clipboard while cmux continues to deny terminal
+admit these writes into the Mac clipboard while hmux continues to deny terminal
 clipboard reads.

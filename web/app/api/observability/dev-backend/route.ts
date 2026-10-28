@@ -6,7 +6,7 @@ import { deliverDevBackendDiagnostics, makeDevBackendDiagnosticsHandler } from '
 export const POST = makeDevBackendDiagnosticsHandler({
   allowed: async request => {
     if (process.env.VERCEL !== '1') return true;
-    const rule = process.env.CMUX_CLOUD_DIAGNOSTICS_RATE_LIMIT_ID?.trim();
+    const rule = process.env.HMUX_CLOUD_DIAGNOSTICS_RATE_LIMIT_ID?.trim();
     if (!rule) throw new Error('dev_diagnostics_rate_limit_unconfigured');
     const result = await checkRateLimit(rule, {request});
     if (result.rateLimited || result.error === 'blocked') return false;

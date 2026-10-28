@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxBrowser
+import HMUXMobileCore
+import HmuxBrowser
 import Foundation
 
 /// `mobile.browser.*` RPC handlers for streaming and driving Mac browser panels.

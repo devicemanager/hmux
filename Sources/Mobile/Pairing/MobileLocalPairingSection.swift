@@ -1,6 +1,6 @@
 import AppKit
-import CMUXMobileCore
-import CmuxFoundation
+import HMUXMobileCore
+import HmuxFoundation
 import CoreImage.CIFilterBuiltins
 import SwiftUI
 
@@ -8,7 +8,7 @@ import SwiftUI
 ///
 /// Shows a single-use `hmux://` QR code that names this Mac's Tailscale
 /// addresses. The phone redeems it once for its own device key, so neither
-/// side needs a cmux account, relay, or cloud service.
+/// side needs a hmux account, relay, or cloud service.
 struct MobileLocalPairingSection: View {
     @State private var payload: CmxLocalPairingPayload?
     @State private var errorMessage: String?
@@ -22,12 +22,12 @@ struct MobileLocalPairingSection: View {
                 localized: "mobile.localPairing.heading",
                 defaultValue: "Pair without an account"
             ))
-                .cmuxFont(.headline)
+                .hmuxFont(.headline)
             Text(String(
                 localized: "mobile.localPairing.body",
                 defaultValue: "For a private iPhone build that connects only over Tailscale. Each code works once and expires after five minutes."
             ))
-                .cmuxFont(.callout)
+                .hmuxFont(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -43,7 +43,7 @@ struct MobileLocalPairingSection: View {
             }
             if let errorMessage {
                 Text(errorMessage)
-                    .cmuxFont(.callout)
+                    .hmuxFont(.callout)
                     .foregroundStyle(.orange)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -71,11 +71,11 @@ struct MobileLocalPairingSection: View {
                 ))
                     .fixedSize(horizontal: false, vertical: true)
                 Text(payload.hosts.map { "\($0):\(payload.port)" }.joined(separator: "\n"))
-                    .cmuxFont(.callout, design: .monospaced)
+                    .hmuxFont(.callout, design: .monospaced)
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
                 Text(expiryText(payload.expiresAt))
-                    .cmuxFont(.callout, monospacedDigit: true)
+                    .hmuxFont(.callout, monospacedDigit: true)
                     .foregroundStyle(.secondary)
                 HStack {
                     Button(String(

@@ -2,7 +2,7 @@
 # CI guard for the app-source mode of ./scripts/lint-pbxproj-test-wiring.sh.
 #
 # main stopped compiling on 2026-09-25 because a merge dropped
-# Sources/Mobile/AgentChat/AgentChatProseStreamWakeDriver.swift from the cmux
+# Sources/Mobile/AgentChat/AgentChatProseStreamWakeDriver.swift from the hmux
 # target. This checks that the lint catches that shape, and that its allowlist
 # neither hides real gaps nor goes stale.
 #
@@ -30,33 +30,33 @@ fail() {
 }
 
 # (a)
-"$LINT" --repo-root "$ROOT_DIR" --target cmux --tests-dir Sources --recursive \
+"$LINT" --repo-root "$ROOT_DIR" --target hmux --tests-dir Sources --recursive \
   --allowlist scripts/pbxproj-sources-wiring-allowlist.txt
-"$LINT" --repo-root "$ROOT_DIR" --target cmux-cli --tests-dir CLI --recursive
+"$LINT" --repo-root "$ROOT_DIR" --target hmux-cli --tests-dir CLI --recursive
 
 SANDBOX="$(mktemp -d)"
 trap 'rm -rf "$SANDBOX"' EXIT
-mkdir -p "$SANDBOX/cmux.xcodeproj" "$SANDBOX/Sources/Feature"
+mkdir -p "$SANDBOX/hmux.xcodeproj" "$SANDBOX/Sources/Feature"
 echo 'struct Wired {}' > "$SANDBOX/Sources/Wired.swift"
 echo 'struct Also {}' > "$SANDBOX/Sources/Also.swift"
 echo 'struct Dropped {}' > "$SANDBOX/Sources/Feature/Dropped.swift"
 
-# The app target uses 8-char UUIDs like the real cmux target (A5001050).
-cat > "$SANDBOX/cmux.xcodeproj/project.pbxproj" <<'PBX'
+# The app target uses 8-char UUIDs like the real hmux target (A5001050).
+cat > "$SANDBOX/hmux.xcodeproj/project.pbxproj" <<'PBX'
 /* Begin PBXBuildFile section */
 		A0000001 /* Wired.swift in Sources */ = {isa = PBXBuildFile; fileRef = A0000002 /* Wired.swift */; };
 /* End PBXBuildFile section */
 /* Begin PBXFileReference section */
 		A0000002 /* Wired.swift */ = {isa = PBXFileReference; path = Wired.swift; sourceTree = "<group>"; };
-		A0000003 /* cmux */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = cmux; sourceTree = BUILT_PRODUCTS_DIR; };
+		A0000003 /* hmux */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; path = hmux; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 /* Begin PBXNativeTarget section */
-		A5001050 /* cmux */ = {
+		A5001050 /* hmux */ = {
 			isa = PBXNativeTarget;
 			buildPhases = (
 				A5001051 /* Sources */,
 			);
-			name = cmux;
+			name = hmux;
 		};
 /* End PBXNativeTarget section */
 /* Begin PBXSourcesBuildPhase section */
@@ -70,7 +70,7 @@ cat > "$SANDBOX/cmux.xcodeproj/project.pbxproj" <<'PBX'
 PBX
 
 lint_sandbox() {
-  "$LINT" --repo-root "$SANDBOX" --target cmux --tests-dir Sources --recursive "$@" \
+  "$LINT" --repo-root "$SANDBOX" --target hmux --tests-dir Sources --recursive "$@" \
     >"$SANDBOX/out" 2>&1
 }
 
@@ -94,7 +94,7 @@ printf 'Sources/Feature/Dropped.swift\nSources/Wired.swift\n' > "$SANDBOX/allow.
 if lint_sandbox --allowlist "$SANDBOX/allow.txt"; then
   fail "(d) lint accepted an allowlist entry for a wired file" "$SANDBOX/out"
 fi
-grep -q 'Sources/Wired.swift (now a member of cmux)' "$SANDBOX/out" \
+grep -q 'Sources/Wired.swift (now a member of hmux)' "$SANDBOX/out" \
   || fail "(d) output does not report the stale wired entry" "$SANDBOX/out"
 
 # (e)
@@ -118,8 +118,8 @@ rm -r "$SANDBOX/Sources/Copy"
 # (g)
 HASHED="$SANDBOX/repo#1"
 mkdir -p "$HASHED"
-cp -R "$SANDBOX/cmux.xcodeproj" "$SANDBOX/Sources" "$HASHED/"
-if "$LINT" --repo-root "$HASHED" --target cmux --tests-dir Sources --recursive \
+cp -R "$SANDBOX/hmux.xcodeproj" "$SANDBOX/Sources" "$HASHED/"
+if "$LINT" --repo-root "$HASHED" --target hmux --tests-dir Sources --recursive \
   >"$SANDBOX/out" 2>&1; then
   fail "(g) lint passed under a repo path containing #" "$SANDBOX/out"
 fi

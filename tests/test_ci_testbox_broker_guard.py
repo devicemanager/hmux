@@ -18,13 +18,13 @@ import unittest
 import yaml
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-WORKFLOW = ROOT / ".github" / "workflows" / "cmux-tui-testbox-warmup.yml"
+WORKFLOW = ROOT / ".github" / "workflows" / "hmux-tui-testbox-warmup.yml"
 GUARD_WORKFLOW = ROOT / ".github" / "workflows" / "testbox-broker-guard.yml"
-JOB = "cmux-tui-rust"
+JOB = "hmux-tui-rust"
 BEGIN_TESTBOX = "useblacksmith/begin-testbox"
 WARM_TARGET_DISKS = {
-    "cmux-tui-target-v2-main": "/home/runner/cmux-tui-target/main",
-    "cmux-tui-target-v2-next": "/home/runner/cmux-tui-target/next",
+    "hmux-tui-target-v2-main": "/home/runner/hmux-tui-target/main",
+    "hmux-tui-target-v2-next": "/home/runner/hmux-tui-target/next",
 }
 
 
@@ -142,7 +142,7 @@ class TestboxBrokerGuardTests(unittest.TestCase):
                 continue
             text = path.read_text(encoding="utf-8")
             self.assertNotIn(
-                "cmux-tui-target",
+                "hmux-tui-target",
                 text,
                 f"{path.relative_to(ROOT)} must not mount the Testbox warm target disk",
             )

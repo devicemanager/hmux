@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""`cmux vm open` must accept the device addresses that `cmux vm tree` prints.
+"""`hmux vm open` must accept the device addresses that `hmux vm tree` prints.
 
 Another Mac signed into the same account is addressed as
 `device:<uuid>@<tag>` (see SurfaceMachineID). The tree prints
-`cmux vm open device:<uuid>@<tag>/<workspace>/<terminal>[/<tab>]` for each of
+`hmux vm open device:<uuid>@<tag>/<workspace>/<terminal>[/<tab>]` for each of
 its terminals, and the CLI must parse that address exactly as printed: the
 colon inside the device id is part of the machine, not the start of a
 `:desktop` / `:port/<n>` selector. The built CLI runs against a fake socket that
@@ -37,7 +37,7 @@ CATALOG = {
             "kind": "device",
             "link_state": "connected",
             "local": False,
-            "name": "cmux’s Mac mini (2) (issue-8001-devices-sidebar)",
+            "name": "hmux’s Mac mini (2) (issue-8001-devices-sidebar)",
             "remote_workspaces": [WORKSPACE_ROW],
         }
     ],
@@ -48,7 +48,7 @@ CATALOG = {
             "kind": "terminal",
             "machine": DEVICE,
             "title": "~",
-            "detail": "/Users/cmux",
+            "detail": "/Users/hmux",
             "open": False,
             "open_surface_ids": [],
             "open_workspace_ids": [],
@@ -137,15 +137,15 @@ class DeviceOpenSocket:
 class VMOpenDeviceTargetTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.cli = os.environ.get("CMUX_CLI_BIN", "")
+        cls.cli = os.environ.get("HMUX_CLI_BIN", "")
         if not cls.cli or not os.access(cls.cli, os.X_OK):
-            raise RuntimeError("Set CMUX_CLI_BIN to the built CLI")
+            raise RuntimeError("Set HMUX_CLI_BIN to the built CLI")
 
     def run_cli(self, path: str, args: list[str], extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
-        environment = {key: value for key, value in os.environ.items() if not key.startswith("CMUX")}
+        environment = {key: value for key, value in os.environ.items() if not key.startswith("HMUX")}
         environment.update({
-            "CMUX_SOCKET_PATH": path,
-            "CMUX_CLI_SENTRY_DISABLED": "1",
+            "HMUX_SOCKET_PATH": path,
+            "HMUX_CLI_SENTRY_DISABLED": "1",
             "AppleLanguages": "(en)",
             "LANG": "en_US.UTF-8",
             "LC_ALL": "en_US.UTF-8",
@@ -177,7 +177,7 @@ class VMOpenDeviceTargetTests(unittest.TestCase):
         return params
 
     def test_tree_address_with_tab_opens_the_device_terminal(self) -> None:
-        # Exactly what `cmux vm tree` prints for a terminal on another Mac.
+        # Exactly what `hmux vm tree` prints for a terminal on another Mac.
         target = f"{DEVICE}/{REMOTE_WORKSPACE}/{TERMINAL}/{TERMINAL}"
         with DeviceOpenSocket() as server:
             completed = self.run_cli(server.path, ["vm", "open", target, "--workspace", LOCAL_WORKSPACE, "--focus", "false"])
@@ -194,13 +194,13 @@ class VMOpenDeviceTargetTests(unittest.TestCase):
     def test_focus_defaults_to_background_for_a_script(self) -> None:
         # No terminal on stdin or stdout reads as an agent or a script: the pane opens
         # beside the person instead of taking focus. `--focus`, or an interactive run
-        # (CMUX_FOCUS_NEW=1 stands in for a terminal here), opts in; the flag always wins.
+        # (HMUX_FOCUS_NEW=1 stands in for a terminal here), opts in; the flag always wins.
         target = f"{DEVICE}/{REMOTE_WORKSPACE}/{TERMINAL}"
         cases = [
             ([], {}, False),
             (["--focus"], {}, True),
-            ([], {"CMUX_FOCUS_NEW": "1"}, True),
-            (["--no-focus"], {"CMUX_FOCUS_NEW": "1"}, False),
+            ([], {"HMUX_FOCUS_NEW": "1"}, True),
+            (["--no-focus"], {"HMUX_FOCUS_NEW": "1"}, False),
         ]
         for flags, extra_env, expected in cases:
             with self.subTest(flags=flags, env=extra_env), DeviceOpenSocket() as server:

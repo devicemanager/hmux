@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import SwiftUI
 
 /// Main's Cloud toolbar status, driven by values from the combined Cloud/Devices panel.
@@ -51,7 +51,7 @@ struct MachinesCloudStatus: View {
                 Image(systemName: "exclamationmark.triangle")
                     .font(.system(size: 10, weight: .semibold))
                 Text(safeMessage)
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .lineLimit(2)
                     .truncationMode(.tail)
                 Spacer(minLength: 0)

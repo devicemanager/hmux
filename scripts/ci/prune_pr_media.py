@@ -35,8 +35,8 @@ SHA8 = re.compile(r"[0-9a-f]{8}")
 GRAPHQL_BATCH = 50
 DETAILS_GRAPHQL_BATCH = 20
 COMMENT_PAGE_SIZE = 100
-RETENTION_INDEX = ".cmux-pr-media-retention.json"
-KEEP_MARKER = re.compile(r"<!--\s*cmux:pr-media:keep(?:\s+([^>]*?))?\s*-->", re.IGNORECASE)
+RETENTION_INDEX = ".hmux-pr-media-retention.json"
+KEEP_MARKER = re.compile(r"<!--\s*hmux:pr-media:keep(?:\s+([^>]*?))?\s*-->", re.IGNORECASE)
 RAW_MEDIA_URL = re.compile(
     r"https?://(?:"
     r"raw\.githubusercontent\.com/(?P<raw_repo>[^/\s]+)/(?P<raw_name>[^/\s]+)/"
@@ -240,7 +240,7 @@ def recent_revision_groups(checkout: Path, tip: str, now: dt.datetime,
     if git("rev-parse", "--is-shallow-repository", cwd=checkout).strip() == "true":
         return None
     raw = git("log", "--invert-grep", f"--grep=^{PRUNE_SUBJECT}",
-              "--name-only", "--format=__CMUX_COMMIT__%ct", "-z", tip, cwd=checkout)
+              "--name-only", "--format=__HMUX_COMMIT__%ct", "-z", tip, cwd=checkout)
     latest: dict[str, int] = {}
     try:
         saved = json.loads(git("show", f"{tip}:{RETENTION_INDEX}", cwd=checkout))
@@ -256,9 +256,9 @@ def recent_revision_groups(checkout: Path, tip: str, now: dt.datetime,
         record = record.strip("\n")
         if not record:
             continue
-        if record.startswith("__CMUX_COMMIT__"):
+        if record.startswith("__HMUX_COMMIT__"):
             try:
-                timestamp = int(record.removeprefix("__CMUX_COMMIT__"))
+                timestamp = int(record.removeprefix("__HMUX_COMMIT__"))
             except ValueError:
                 timestamp = None
             continue
@@ -274,7 +274,7 @@ def recent_revision_groups(checkout: Path, tip: str, now: dt.datetime,
 
 def write_tree(checkout: Path, records: list[str]) -> str:
     """Write a tree from existing ls-tree records without reading blobs."""
-    with tempfile.NamedTemporaryFile(prefix="cmux-pr-media-index-", delete=False) as handle:
+    with tempfile.NamedTemporaryFile(prefix="hmux-pr-media-index-", delete=False) as handle:
         index = Path(handle.name)
     index.unlink()
     env = {"GIT_INDEX_FILE": str(index)}

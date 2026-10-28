@@ -28,7 +28,7 @@ async function build(web: string) {
   const result = await runChild(process.execPath, ["tools/build-docs-search.mjs"], {
     cwd: web,
     timeout: 60_000,
-    env: { ...process.env, CMUX_DOCS_CHANNEL: "release" },
+    env: { ...process.env, HMUX_DOCS_CHANNEL: "release" },
   });
   if (result.status !== 0) {
     throw new Error(`Docs index failed: ${result.stderr}\n${result.stdout}`);
@@ -49,7 +49,7 @@ function outputHashes(directory: string): Record<string, string> {
 }
 
 test("restores identical search assets and rebuilds after dependency or generator changes", async () => {
-  fixture = mkdtempSync(path.join(tmpdir(), "cmux-docs-cache-"));
+  fixture = mkdtempSync(path.join(tmpdir(), "hmux-docs-cache-"));
   const web = path.join(fixture, "web");
   mkdirSync(path.join(web, "tools"), { recursive: true });
   for (const directory of ["app", "i18n", "messages", "node_modules"]) {

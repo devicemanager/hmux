@@ -1,6 +1,6 @@
-import CmuxFoundation
-import CmuxNotifications
-import CmuxAppKitSupportUI
+import HmuxFoundation
+import HmuxNotifications
+import HmuxAppKitSupportUI
 import SwiftUI
 
 /// Container-level bridge mounting the AppKit-owned default workspace list once.
@@ -42,14 +42,14 @@ struct SidebarWorkspaceTableView: NSViewRepresentable {
         let container = context.coordinator.makeContainerView()
         container.appearance = WindowAppearanceSnapshot.appKitAppearance(for: colorScheme)
         container.emptyDropIndicatorView.colorScheme = colorScheme
-        container.emptyDropIndicatorView.accentColor = context.environment.cmuxAccentColor
+        container.emptyDropIndicatorView.accentColor = context.environment.hmuxAccentColor
         return container
     }
 
     func updateNSView(_ nsView: SidebarWorkspaceTableContainerView, context: Context) {
         nsView.appearance = WindowAppearanceSnapshot.appKitAppearance(for: colorScheme)
         nsView.emptyDropIndicatorView.colorScheme = colorScheme
-        nsView.emptyDropIndicatorView.accentColor = context.environment.cmuxAccentColor
+        nsView.emptyDropIndicatorView.accentColor = context.environment.hmuxAccentColor
 #if DEBUG
         context.coordinator.reconfigurationProbe = sidebarLazyContractProbe.tableRootViewReconfigure
 #endif

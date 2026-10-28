@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import CryptoKit
 import Foundation
 import Security
@@ -129,7 +129,7 @@ final class MobileHostLocalPairing: @unchecked Sendable {
 
     static func defaultStoreURL() -> URL {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
-        let bundleID = Bundle.main.bundleIdentifier ?? "com.cmuxterm.app"
+        let bundleID = Bundle.main.bundleIdentifier ?? "com.hmuxterm.app"
         return base
             .appendingPathComponent(bundleID, isDirectory: true)
             .appendingPathComponent("mobile-local-devices.json")

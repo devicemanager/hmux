@@ -1,12 +1,12 @@
 import AppKit
-import CmuxChief
-import CmuxHomeCore
+import HmuxChief
+import HmuxHomeCore
 
 /// The transcript's "Chief will remember: prefers 14 pt font · Undo" row (P1-5)
 /// is a transcript row the owner posts (MessagesLab's `ChiefMemoryRowProvider`):
 /// it scrolls with the conversation, so it never sits over the working line or
 /// a bubble. This relay reports each note ``ChiefMemoryStore``'s file watcher
-/// sees added (whoever wrote it: `cmux chief memory add` runs in Chief's turn)
+/// sees added (whoever wrote it: `hmux chief memory add` runs in Chief's turn)
 /// to the owner, for the conversation whose turn saved it, or the one on screen
 /// when no Chief works
 /// (``ChiefService/noteMemorySaved(_:in:)``). The owner posts a note's row once,

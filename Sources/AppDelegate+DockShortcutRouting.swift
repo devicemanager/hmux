@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxPanes
+import HmuxPanes
 
 enum GhosttyGotoSplitRoute {
     case direction(NavigationDirection)
@@ -9,7 +9,7 @@ enum GhosttyGotoSplitRoute {
 }
 
 extension GhosttyGotoSplitRoute {
-    /// The rebindable cmux shortcut that performs this pane focus move.
+    /// The rebindable hmux shortcut that performs this pane focus move.
     var shortcutAction: KeyboardShortcutSettings.Action {
         switch self {
         case .direction(.left): return .focusLeft
@@ -310,7 +310,7 @@ extension AppDelegate {
         tabManager: TabManager?,
         window: NSWindow?
     ) -> Bool {
-        cmuxRememberFindSelectionBeforePanelFocusMove(tabManager: tabManager, window: window)
+        hmuxRememberFindSelectionBeforePanelFocusMove(tabManager: tabManager, window: window)
         switch route {
         case .direction(let direction):
             tabManager?.movePaneFocus(direction: direction)
@@ -400,7 +400,7 @@ extension AppDelegate {
     }
 
     /// Ghostty's imported `goto_split` bindings are compatibility fallbacks, not
-    /// peers of cmux's live shortcut configuration. Any configured cmux action
+    /// peers of hmux's live shortcut configuration. Any configured hmux action
     /// that currently owns the stroke wins. Keeping this arbitration in one
     /// place prevents cached Ghostty bindings from shadowing later handlers
     /// after a Settings rebind.

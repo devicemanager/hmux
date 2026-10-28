@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// A checkbox whose title is a sibling `Text`, not the `Toggle` label.
@@ -28,7 +28,7 @@ struct CloudCheckboxRow<Detail: View>: View {
                 // One line at its natural width: wrapped text would make the
                 // row's height depend on the offered width again.
                 Text(title)
-                    .cmuxFont(size: fontSize)
+                    .hmuxFont(size: fontSize)
                     .lineLimit(1)
                     .fixedSize()
                     .contentShape(Rectangle())

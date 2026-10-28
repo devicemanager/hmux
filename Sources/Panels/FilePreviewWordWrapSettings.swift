@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// The existing persisted word-wrap preference, shared by settings and editors.
@@ -6,7 +6,7 @@ struct FilePreviewWordWrapSettings {
     private let defaults: UserDefaults
     private static let catalog = FileEditorCatalogSection()
 
-    /// UserDefaults / cmux.json key.
+    /// UserDefaults / hmux.json key.
     static var key: String { catalog.wordWrap.userDefaultsKey }
 
     /// Wrapping is off until enabled by the user.

@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// Resolved branch and directory presentation settings shared by both sidebar renderers.

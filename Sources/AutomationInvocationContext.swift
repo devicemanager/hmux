@@ -5,7 +5,7 @@ import Foundation
 /// The chain is carried in the event envelope rather than in a user payload,
 /// so ordinary event consumers can ignore it while the automation engine can
 /// stop direct and indirect cycles deterministically.
-struct CmuxAutomationEventOrigin: Codable, Equatable, Sendable {
+struct HmuxAutomationEventOrigin: Codable, Equatable, Sendable {
     let ruleID: String
     let chain: [String]
 
@@ -33,7 +33,7 @@ struct CmuxAutomationEventOrigin: Codable, Equatable, Sendable {
 // keys and carries no process-global mutable state. It must stay free of actor
 // isolation because socket/event-bus callers read the task-local values from
 // worker executors.
-struct CmuxAutomationInvocationContext {
+struct HmuxAutomationInvocationContext {
     @TaskLocal static var focusAllowed: Bool?
-    @TaskLocal static var eventOrigin: CmuxAutomationEventOrigin?
+    @TaskLocal static var eventOrigin: HmuxAutomationEventOrigin?
 }

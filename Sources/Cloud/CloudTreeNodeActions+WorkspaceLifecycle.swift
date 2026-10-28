@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension CloudTreeNodeActions {
@@ -21,9 +21,9 @@ extension CloudTreeNodeActions {
     }
 
     /// The machine's ⌘N, shared by the sidebar's ＋ and the socket's `vm.workspace_new`:
-    /// create the cmux-tui workspace, give it a starter terminal, and open it as a new
+    /// create the hmux-tui workspace, give it a starter terminal, and open it as a new
     /// local workspace. The daemon may attach its own starter to a created workspace
-    /// (older cmux-tui builds do), so an existing terminal is reused before a second one
+    /// (older hmux-tui builds do), so an existing terminal is reused before a second one
     /// is created — ⌘N must yield exactly one pane.
     @MainActor
     static func createWorkspaceAndOpenLocally(

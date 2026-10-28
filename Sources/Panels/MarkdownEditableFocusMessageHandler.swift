@@ -2,7 +2,7 @@ import WebKit
 
 @MainActor
 final class MarkdownEditableFocusMessageHandler: NSObject, WKScriptMessageHandler {
-    static let name = "cmuxMarkdownEditableFocus"
+    static let name = "hmuxMarkdownEditableFocus"
     static let shared = MarkdownEditableFocusMessageHandler()
 
     func userContentController(

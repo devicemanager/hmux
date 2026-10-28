@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 /// Uses the existing VM API with the originating account/team pinned through token refresh.

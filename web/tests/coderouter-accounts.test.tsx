@@ -166,7 +166,7 @@ describe("coderouter account transfer", () => {
     expect(calls).toHaveLength(1);
     expect(calls[0].url).toBe("/api/coderouter/accounts/native-1/transfer");
     expect(calls[0].method).toBe("POST");
-    expect(calls[0].headers.get("x-cmux-team-id")).toBe("team-1");
+    expect(calls[0].headers.get("x-hmux-team-id")).toBe("team-1");
     expect(calls[0].body).toEqual({ destinationTeamId: "team-2" });
     // The moved account leaves this team's list on the refetch.
     expect(queryClient.getQueryState(coderouterOverviewQuery(undefined).queryKey)?.isInvalidated).toBe(true);
@@ -431,7 +431,7 @@ describe("coderouter account mutations", () => {
     });
     expect(calls[0].url).toBe("/api/coderouter/accounts");
     expect(calls[0].method).toBe("POST");
-    expect(calls[0].headers.get("x-cmux-team-id")).toBe("team-1");
+    expect(calls[0].headers.get("x-hmux-team-id")).toBe("team-1");
     expect(calls[0].headers.get("content-type")).toBe("application/json");
     expect(calls[0].body).toEqual({ provider: "openai-apikey", apiKey: "sk-proj-1" });
     expect(queryClient.getQueryState(overviewKey)?.isInvalidated).toBe(true);
@@ -474,7 +474,7 @@ describe("coderouter account mutations", () => {
     await runMutation(options, "native-1");
     expect(calls[0].url).toBe("/api/coderouter/accounts/native-1");
     expect(calls[0].method).toBe("DELETE");
-    expect(calls[0].headers.get("x-cmux-team-id")).toBe("team-1");
+    expect(calls[0].headers.get("x-hmux-team-id")).toBe("team-1");
     expect(queryClient.getQueryState(overviewKey)?.isInvalidated).toBe(true);
 
     const failure = async (next: number) => {
@@ -514,7 +514,7 @@ describe("coderouter account mutations", () => {
     });
     expect(calls[0].url).toBe("/api/coderouter/accounts/native-1/sharing");
     expect(calls[0].method).toBe("PATCH");
-    expect(calls[0].headers.get("x-cmux-team-id")).toBe("team-1");
+    expect(calls[0].headers.get("x-hmux-team-id")).toBe("team-1");
     expect(calls[0].body).toEqual({ family: "native", visibility: "team" });
   });
 
@@ -533,7 +533,7 @@ describe("coderouter account mutations", () => {
     const created = await runMutation(createApiKeyMutation(queryClient, "team-1"), "ci");
     expect(created).toMatchObject({ id: "key-9", key: "cr_live_secret" });
     expect(calls[0].url).toBe("/api/coderouter/api-keys");
-    expect(calls[0].headers.get("x-cmux-team-id")).toBe("team-1");
+    expect(calls[0].headers.get("x-hmux-team-id")).toBe("team-1");
     expect(calls[0].body).toEqual({ label: "ci" });
     expect(queryClient.getQueryState(coderouterApiKeysQueryKey("team-1"))?.isInvalidated).toBe(true);
     expect(queryClient.getQueryState(overviewKey)?.isInvalidated).toBe(false);

@@ -1,0 +1,13 @@
+{
+  "images" : [
+    {
+      "filename" : "ChiefAvatar.png",
+      "idiom" : "universal",
+      "scale" : "1x"
+    }
+  ],
+  "info" : {
+    "author" : "hmux",
+    "version" : 1
+  }
+}

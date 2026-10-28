@@ -9,7 +9,7 @@ import type {
   AttachEndpoint,
   AttachOptions,
   AttachTransport,
-  CmuxRemoteEndpoint,
+  HmuxRemoteEndpoint,
   CreateOptions,
   ExecOptions,
   ExecResult,
@@ -29,7 +29,7 @@ export type MockVMFeatures = {
   readonly ports?: boolean;
   readonly ssh?: boolean;
   readonly websocket?: boolean;
-  readonly cmuxRemote?: boolean;
+  readonly hmuxRemote?: boolean;
 };
 
 type MockVM = {
@@ -57,7 +57,7 @@ export class MockVMProvider implements VMProvider {
   openSSH?: (vmId: string) => Promise<SSHEndpoint>;
   revokeSSHIdentity?: (identityHandle: string) => Promise<void>;
   openAttach?: (vmId: string, options?: AttachOptions) => Promise<AttachEndpoint>;
-  openCmuxRemote?: (vmId: string) => Promise<CmuxRemoteEndpoint>;
+  openHmuxRemote?: (vmId: string) => Promise<HmuxRemoteEndpoint>;
 
   constructor(options?: {
     readonly id?: ProviderId;
@@ -68,16 +68,16 @@ export class MockVMProvider implements VMProvider {
     this.capabilities = options?.capabilities;
     const features = options?.features ?? {};
     const transports: AttachTransport[] = [];
-    if (features.cmuxRemote !== false) transports.push("cmux-remote");
+    if (features.hmuxRemote !== false) transports.push("hmux-remote");
     if (features.websocket) transports.push("websocket");
     if (features.ssh) transports.push("ssh");
     this.attachTransports = transports;
 
-    if (features.cmuxRemote !== false) {
-      this.openCmuxRemote = async (vmId) => {
+    if (features.hmuxRemote !== false) {
+      this.openHmuxRemote = async (vmId) => {
         this.mustGet(vmId);
         return {
-          transport: "cmux-remote",
+          transport: "hmux-remote",
           route: `wss://mock.invalid/vm/${vmId}/link`,
           token: "mock",
           expiresAtUnix: Math.floor(Date.now() / 1000) + 60,
@@ -104,7 +104,7 @@ export class MockVMProvider implements VMProvider {
         this.mustGet(vmId);
         const token = `mock-port-token-${port}`;
         const url = `https://mock.invalid/vm/${vmId}/port/${port}`;
-        return { url, token, openUrl: `${url}?cmux_token=${token}` };
+        return { url, token, openUrl: `${url}?hmux_token=${token}` };
       };
     }
     if (features.ssh) {
@@ -114,7 +114,7 @@ export class MockVMProvider implements VMProvider {
           transport: "ssh",
           host: "mock.invalid",
           port: 22,
-          username: "cmux",
+          username: "hmux",
           publicKeyFingerprint: null,
           credential: { kind: "password", value: "mock" },
           identityHandle: `mock-identity-${vmId}`,

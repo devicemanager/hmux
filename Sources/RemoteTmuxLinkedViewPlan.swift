@@ -16,9 +16,9 @@ enum RemoteTmuxLinkedViewPlan {
         let sessions: [RemoteTmuxViewSession.SessionRow]
         /// `list-windows -a -F RemoteTmuxLinkedWorkspaceModel.listFormat` rows.
         let windows: [RemoteTmuxLinkedWorkspaceModel.WindowRow]
-        /// Window ids cmux has itself linked into the view so far (ownership for
+        /// Window ids hmux has itself linked into the view so far (ownership for
         /// safe unlinking). Empty on first plan.
-        let cmuxOwnedWindowIds: Set<String>
+        let hmuxOwnedWindowIds: Set<String>
         /// The view's placeholder window id, if known.
         let placeholderWindowId: String?
     }
@@ -46,7 +46,7 @@ enum RemoteTmuxLinkedViewPlan {
         let staleViewsToKill: [String]
         /// Reconciliation actions to bring the view's contents to the desired set.
         let reconcileActions: [RemoteTmuxViewReconciler.Action]
-        /// The resulting cmux workspaces (home session → ordered window ids).
+        /// The resulting hmux workspaces (home session → ordered window ids).
         let workspaces: [RemoteTmuxLinkedWorkspaceModel.Workspace]
     }
 
@@ -64,7 +64,7 @@ enum RemoteTmuxLinkedViewPlan {
             .filter { view.isOwnStaleView($0) && $0.name != viewName }
             .map(\.name)
 
-        // Exclude EVERY view session (ours, stale, and any foreign cmux install's)
+        // Exclude EVERY view session (ours, stale, and any foreign hmux install's)
         // from workspace grouping and from the desired-link set — never surface or
         // link another owner's hidden state.
         let excluded = Set(snapshot.sessions
@@ -93,14 +93,14 @@ enum RemoteTmuxLinkedViewPlan {
             desiredWindowIds: desired,
             actualWindowIds: actual,
             placeholderWindowId: snapshot.placeholderWindowId,
-            cmuxOwnedWindowIds: snapshot.cmuxOwnedWindowIds)
+            hmuxOwnedWindowIds: snapshot.hmuxOwnedWindowIds)
 
         let workspaces = RemoteTmuxLinkedWorkspaceModel.workspaces(
             rows: snapshot.windows, excludedSessions: excluded)
 
         // Bootstrap is keyed off the SESSION list (authoritative), not the window
         // grouping: a real session exists when any listed session is not one of
-        // cmux's hidden view sessions.
+        // hmux's hidden view sessions.
         let hasRealSession = snapshot.sessions.contains { !RemoteTmuxViewSession.isAnyView($0) }
 
         return Plan(

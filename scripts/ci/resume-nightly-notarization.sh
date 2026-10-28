@@ -10,8 +10,8 @@ usage() {
 usage: resume-nightly-notarization.sh <state-file> <signed-app> <signed-dmg> <immutable-dmg>
 
 Required environment: ASC_API_KEY_ID, ASC_API_ISSUER_ID, ASC_API_KEY_P8_BASE64.
-Optional publication environment: CMUX_PUBLISH_REPO, CMUX_PUBLISH_RELEASE_ID,
-CMUX_PUBLISH_ALIAS, and GH_TOKEN. Publication is attempted only after Apple
+Optional publication environment: HMUX_PUBLISH_REPO, HMUX_PUBLISH_RELEASE_ID,
+HMUX_PUBLISH_ALIAS, and GH_TOKEN. Publication is attempted only after Apple
 returns Accepted and every local stapling and validation check passes.
 EOF
 }
@@ -26,42 +26,42 @@ APP_PATH="$2"
 DMG_RELEASE="$3"
 DMG_IMMUTABLE="$4"
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-XCRUN_TOOL="${CMUX_XCRUN_TOOL:-xcrun}"
-CODESIGN_TOOL="${CMUX_CODESIGN_TOOL:-/usr/bin/codesign}"
-DITTO_TOOL="${CMUX_DITTO_TOOL:-/usr/bin/ditto}"
-HDIUTIL_TOOL="${CMUX_HDIUTIL_TOOL:-/usr/bin/hdiutil}"
-SPCTL_TOOL="${CMUX_SPCTL_TOOL:-spctl}"
-SYSPOLICY_TOOL="${CMUX_SYSPOLICY_TOOL:-syspolicy_check}"
-SMOKE_TOOL="${CMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"
-VERIFY_METADATA_TOOL="${CMUX_VERIFY_METADATA_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-channel-metadata.sh}"
-# CMUX_DEFER_LAUNCH_SMOKES=true: skip the launch smokes here. The caller runs
+XCRUN_TOOL="${HMUX_XCRUN_TOOL:-xcrun}"
+CODESIGN_TOOL="${HMUX_CODESIGN_TOOL:-/usr/bin/codesign}"
+DITTO_TOOL="${HMUX_DITTO_TOOL:-/usr/bin/ditto}"
+HDIUTIL_TOOL="${HMUX_HDIUTIL_TOOL:-/usr/bin/hdiutil}"
+SPCTL_TOOL="${HMUX_SPCTL_TOOL:-spctl}"
+SYSPOLICY_TOOL="${HMUX_SYSPOLICY_TOOL:-syspolicy_check}"
+SMOKE_TOOL="${HMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"
+VERIFY_METADATA_TOOL="${HMUX_VERIFY_METADATA_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-channel-metadata.sh}"
+# HMUX_DEFER_LAUNCH_SMOKES=true: skip the launch smokes here. The caller runs
 # them in a separate job that holds no secrets (scripts/ci/smoke-dmg.sh on the
 # final DMG), so no bundle code runs in a job that signs, notarizes or publishes.
-DEFER_LAUNCH_SMOKES="${CMUX_DEFER_LAUNCH_SMOKES:-false}"
+DEFER_LAUNCH_SMOKES="${HMUX_DEFER_LAUNCH_SMOKES:-false}"
 launch_smokes() {
   if [ "$DEFER_LAUNCH_SMOKES" = true ]; then
     echo "Launch smokes for $1 run in the secret-free verify job"
     return 0
   fi
-  CMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$1"
-  CMUX_SMOKE_DIRECT_EXEC=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$1"
+  HMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$1"
+  HMUX_SMOKE_DIRECT_EXEC=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$1"
 }
-VERIFY_LICENSES_TOOL="${CMUX_VERIFY_LICENSES_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-licenses.sh}"
-NOTARY_WAIT_TIMEOUT="${CMUX_NOTARY_WAIT_TIMEOUT:-60m}"
-NOTARY_LOG_TIMEOUT_SECONDS="${CMUX_NOTARY_LOG_TIMEOUT_SECONDS:-300}"
-EVIDENCE_FILE="${CMUX_NOTARY_EVIDENCE_FILE:-${DMG_RELEASE}.notarization.log}"
-NOTARY_OUTPUT_FILE="${CMUX_NOTARY_OUTPUT_FILE:-${DMG_RELEASE}.resume-notarization.log}"
-GATEKEEPER_ASSESS_ATTEMPTS="${CMUX_GATEKEEPER_ASSESS_ATTEMPTS:-80}"
-GATEKEEPER_ASSESS_DELAY_SECONDS="${CMUX_GATEKEEPER_ASSESS_DELAY_SECONDS:-15}"
+VERIFY_LICENSES_TOOL="${HMUX_VERIFY_LICENSES_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-licenses.sh}"
+NOTARY_WAIT_TIMEOUT="${HMUX_NOTARY_WAIT_TIMEOUT:-60m}"
+NOTARY_LOG_TIMEOUT_SECONDS="${HMUX_NOTARY_LOG_TIMEOUT_SECONDS:-300}"
+EVIDENCE_FILE="${HMUX_NOTARY_EVIDENCE_FILE:-${DMG_RELEASE}.notarization.log}"
+NOTARY_OUTPUT_FILE="${HMUX_NOTARY_OUTPUT_FILE:-${DMG_RELEASE}.resume-notarization.log}"
+GATEKEEPER_ASSESS_ATTEMPTS="${HMUX_GATEKEEPER_ASSESS_ATTEMPTS:-80}"
+GATEKEEPER_ASSESS_DELAY_SECONDS="${HMUX_GATEKEEPER_ASSESS_DELAY_SECONDS:-15}"
 
 case "$NOTARY_LOG_TIMEOUT_SECONDS" in
   ''|*[!0-9]*)
-    echo "CMUX_NOTARY_LOG_TIMEOUT_SECONDS must be a positive integer" >&2
+    echo "HMUX_NOTARY_LOG_TIMEOUT_SECONDS must be a positive integer" >&2
     exit 2
     ;;
 esac
 if [ "$NOTARY_LOG_TIMEOUT_SECONDS" -le 0 ]; then
-  echo "CMUX_NOTARY_LOG_TIMEOUT_SECONDS must be a positive integer" >&2
+  echo "HMUX_NOTARY_LOG_TIMEOUT_SECONDS must be a positive integer" >&2
   exit 2
 fi
 
@@ -117,13 +117,13 @@ RECORDED_CHANNEL="$(state_value channel)"
 # stapled_app=true: this DMG is the one around the stapled app
 # (resume-stapled-app-notarization.sh); the app inside must have its ticket.
 STATE_STAPLED_APP="$(state_value stapled_app)"
-# CMUX_RESUME_APP_ONLY=true: staple and check the app, then stop; this DMG is
+# HMUX_RESUME_APP_ONLY=true: staple and check the app, then stop; this DMG is
 # not changed (resume-stapled-app-notarization.sh builds the DMG that ships).
-RESUME_APP_ONLY="${CMUX_RESUME_APP_ONLY:-false}"
-# CMUX_SKIP_HELPER_RECHECK=true: the caller checked this same app's Computer
+RESUME_APP_ONLY="${HMUX_RESUME_APP_ONLY:-false}"
+# HMUX_SKIP_HELPER_RECHECK=true: the caller checked this same app's Computer
 # Use helper earlier in the job (the stapled-app DMG continuation).
-SKIP_HELPER_RECHECK="${CMUX_SKIP_HELPER_RECHECK:-false}"
-CHANNEL="${CMUX_CHANNEL:-${RECORDED_CHANNEL:-nightly}}"
+SKIP_HELPER_RECHECK="${HMUX_SKIP_HELPER_RECHECK:-false}"
+CHANNEL="${HMUX_CHANNEL:-${RECORDED_CHANNEL:-nightly}}"
 if [ -z "$SUBMISSION_ID" ] || [ -z "$RECORDED_DMG" ] || [ -z "$RECORDED_SHA256" ] || [ -z "$RECORDED_IMMUTABLE" ] || [ -z "$RECORDED_CHANNEL" ]; then
   echo "Incomplete notarization state: $STATE_FILE" >&2
   exit 1
@@ -190,12 +190,12 @@ staple_app() {
 }
 
 verify_computer_use_helper() {
-  local helper_path="$APP_PATH/Contents/Library/cmux Computer Use.app"
+  local helper_path="$APP_PATH/Contents/Library/hmux Computer Use.app"
   if [ "$SKIP_HELPER_RECHECK" = true ]; then
     echo "The Computer Use helper of this app was checked earlier in this job"
     return 0
   fi
-  local standalone_helper="$TMP_DIR/cmux Computer Use.app"
+  local standalone_helper="$TMP_DIR/hmux Computer Use.app"
   if [ ! -d "$helper_path/Contents" ]; then
     echo "Recovered app is missing the Computer Use helper: $helper_path" >&2
     return 1
@@ -335,16 +335,16 @@ cp "$DMG_RELEASE" "$immutable_tmp"
 cmp -s "$DMG_RELEASE" "$immutable_tmp"
 mv -f "$immutable_tmp" "$DMG_IMMUTABLE"
 
-if [ -n "${CMUX_PUBLISH_REPO:-}" ] || [ -n "${CMUX_PUBLISH_RELEASE_ID:-}" ] || [ -n "${CMUX_PUBLISH_ALIAS:-}" ]; then
-  if [ -z "${CMUX_PUBLISH_REPO:-}" ] || [ -z "${CMUX_PUBLISH_RELEASE_ID:-}" ] || [ -z "${CMUX_PUBLISH_ALIAS:-}" ] || [ -z "${GH_TOKEN:-}" ]; then
-    echo "Publication requires CMUX_PUBLISH_REPO, CMUX_PUBLISH_RELEASE_ID, CMUX_PUBLISH_ALIAS, and GH_TOKEN" >&2
+if [ -n "${HMUX_PUBLISH_REPO:-}" ] || [ -n "${HMUX_PUBLISH_RELEASE_ID:-}" ] || [ -n "${HMUX_PUBLISH_ALIAS:-}" ]; then
+  if [ -z "${HMUX_PUBLISH_REPO:-}" ] || [ -z "${HMUX_PUBLISH_RELEASE_ID:-}" ] || [ -z "${HMUX_PUBLISH_ALIAS:-}" ] || [ -z "${GH_TOKEN:-}" ]; then
+    echo "Publication requires HMUX_PUBLISH_REPO, HMUX_PUBLISH_RELEASE_ID, HMUX_PUBLISH_ALIAS, and GH_TOKEN" >&2
     exit 1
   fi
   python3 "$ROOT_DIR/scripts/ci/publish-release-assets.py" \
-    --repo "$CMUX_PUBLISH_REPO" \
-    --release-id "$CMUX_PUBLISH_RELEASE_ID" \
+    --repo "$HMUX_PUBLISH_REPO" \
+    --release-id "$HMUX_PUBLISH_RELEASE_ID" \
     --immutable "$DMG_IMMUTABLE" \
-    --alias "$CMUX_PUBLISH_ALIAS"
+    --alias "$HMUX_PUBLISH_ALIAS"
 fi
 
 echo "Resumed notarization accepted and verified: $SUBMISSION_ID"

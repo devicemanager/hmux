@@ -16,7 +16,7 @@ mock.module("@/services/billing/dashboardBilling", () => ({
 }));
 
 const { accountRouter } = await import("../orpc/server/dashboard/account");
-const context = { request: new Request("https://cmux.test/api/dashboard/rpc"), serverPrefetch: true };
+const context = { request: new Request("https://hmux.test/api/dashboard/rpc"), serverPrefetch: true };
 
 describe("Plan & billing scope", () => {
   test("without a team, Plan & billing is the viewer's personal plan, not Stack's selected team", async () => {

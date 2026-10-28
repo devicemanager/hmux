@@ -92,8 +92,8 @@ resolve_stack_env() {
 
   if [[ -z "${NEXT_PUBLIC_STACK_PROJECT_ID:-}" || -z "${STACK_SECRET_SERVER_KEY:-}" ]]; then
     # Reuse the same env loader as web/scripts/dev-local.sh: optional
-    # ~/.secrets/cmux.env first, then Stack/web secrets from
-    # ~/.secrets/cmuxterm-dev.env or the documented legacy fallbacks.
+    # ~/.secrets/hmux.env first, then Stack/web secrets from
+    # ~/.secrets/hmuxterm-dev.env or the documented legacy fallbacks.
     # shellcheck disable=SC1091
     source "$WEB_DIR/scripts/load-dev-env.sh"
   fi
@@ -248,7 +248,7 @@ if [[ "$ALLOW_PROJECT" != "1" && "$NEXT_PUBLIC_STACK_PROJECT_ID" != "$DEV_STACK_
   die "refusing Stack project ${NEXT_PUBLIC_STACK_PROJECT_ID}; pass --allow-project for non-prod test projects"
 fi
 
-echo "cmux billing dev reset"
+echo "hmux billing dev reset"
 echo "  Stack project: $NEXT_PUBLIC_STACK_PROJECT_ID"
 echo "  Email: $EMAIL"
 if [[ -n "$DB_PORT" ]]; then
@@ -434,48 +434,48 @@ process.stdin.on("end", () => {
   const user = JSON.parse(input);
   const raw = user.client_read_only_metadata ?? user.clientReadOnlyMetadata ?? {};
   const metadata = raw && typeof raw === "object" && !Array.isArray(raw) ? { ...raw } : {};
-  const hadCmuxPlan = Object.prototype.hasOwnProperty.call(metadata, "cmuxPlan") ||
-    Object.prototype.hasOwnProperty.call(metadata, "cmuxVmPlan");
+  const hadHmuxPlan = Object.prototype.hasOwnProperty.call(metadata, "hmuxPlan") ||
+    Object.prototype.hasOwnProperty.call(metadata, "hmuxVmPlan");
   const vmPlan = "";
-  delete metadata.cmuxPlan;
+  delete metadata.hmuxPlan;
   // dev-grant.sh writes the manual override key; a reset must clear it too or the
   // account stays entitled after every "un-Pro".
-  delete metadata.cmuxVmPlan;
+  delete metadata.hmuxVmPlan;
   console.log(JSON.stringify({
-    hadCmuxPlan,
+    hadHmuxPlan,
     vmPlan,
     patchBody: { client_read_only_metadata: metadata },
   }));
 });
   '
 )"
-had_cmux_plan="$(
-  printf '%s' "$metadata_state" | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>process.stdout.write(JSON.parse(s).hadCmuxPlan ? "1" : "0"));'
+had_hmux_plan="$(
+  printf '%s' "$metadata_state" | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>process.stdout.write(JSON.parse(s).hadHmuxPlan ? "1" : "0"));'
 )"
-cmux_vm_plan="$(
+hmux_vm_plan="$(
   printf '%s' "$metadata_state" | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>process.stdout.write(JSON.parse(s).vmPlan || ""));'
 )"
-if [[ -n "$cmux_vm_plan" ]]; then
-  SUMMARY+=("WARNING cmuxVmPlan is set to '${cmux_vm_plan}' and still overrides cmuxPlan")
+if [[ -n "$hmux_vm_plan" ]]; then
+  SUMMARY+=("WARNING hmuxVmPlan is set to '${hmux_vm_plan}' and still overrides hmuxPlan")
 fi
-if [[ "$had_cmux_plan" == "1" ]]; then
+if [[ "$had_hmux_plan" == "1" ]]; then
   patch_body="$(
     printf '%s' "$metadata_state" | node -e 'let s="";process.stdin.on("data",c=>s+=c);process.stdin.on("end",()=>process.stdout.write(JSON.stringify(JSON.parse(s).patchBody)));'
   )"
   encoded_user_id="$(urlencode "$stack_user_id")"
   stack_request PATCH "/users/${encoded_user_id}" "$patch_body" >/dev/null
-  SUMMARY+=("Removed clientReadOnlyMetadata cmuxPlan/cmuxVmPlan")
+  SUMMARY+=("Removed clientReadOnlyMetadata hmuxPlan/hmuxVmPlan")
 else
-  SUMMARY+=("clientReadOnlyMetadata.cmuxPlan was already absent")
+  SUMMARY+=("clientReadOnlyMetadata.hmuxPlan was already absent")
 fi
 
 if [[ -n "$DB_PORT" ]]; then
   db_output="$(
-    PGPASSWORD="${CMUX_DB_PASSWORD:-cmux}" psql \
+    PGPASSWORD="${HMUX_DB_PASSWORD:-hmux}" psql \
       -h localhost \
       -p "$DB_PORT" \
-      -U "${CMUX_DB_USER:-cmux}" \
-      -d "${CMUX_DB_NAME:-cmux}" \
+      -U "${HMUX_DB_USER:-hmux}" \
+      -d "${HMUX_DB_NAME:-hmux}" \
       -v ON_ERROR_STOP=1 \
       -v stack_user_id="$stack_user_id" \
       -c "delete from stripe_subscriptions where stack_user_id = :'stack_user_id';" \
@@ -487,7 +487,7 @@ fi
 
 # Re-check after all cleanup: a Stack-era paid product can survive cancellation
 # until its period ends (the API has no early-revoke), and a comped grant can
-# have quantity > 0 with no subscription. These no longer grant cmux Pro, but
+# have quantity > 0 with no subscription. These no longer grant hmux Pro, but
 # they are still useful to report during dev cleanup.
 residual_body="$(stack_request GET "/payments/products/user/$(urlencode "$stack_user_id")?limit=50" || true)"
 residual="$(printf '%s' "$residual_body" | node -e '
@@ -506,7 +506,7 @@ if [ "${residual:-0}" != "0" ]; then
   SUMMARY+=("WARNING: Stack product 'pro' still present (paid period not over or comped grant; no API early-revoke). This account stays Pro until it lapses; use a private window to dogfood checkout.")
 fi
 
-checkout_port="${CMUX_PORT:-${PORT:-3777}}"
+checkout_port="${HMUX_PORT:-${PORT:-3777}}"
 checkout_url="http://localhost:${checkout_port}/api/billing/checkout?plan=pro"
 
 echo

@@ -1,7 +1,7 @@
 import AppKit
-import CmuxCloud
-import CmuxCloudMachines
-import CmuxProductAnalytics
+import HmuxCloud
+import HmuxCloudMachines
+import HmuxProductAnalytics
 import Foundation
 
 // MARK: - Cloud creation actions

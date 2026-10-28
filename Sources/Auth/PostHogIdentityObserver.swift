@@ -1,4 +1,4 @@
-import CmuxAuthRuntime
+import HmuxAuthRuntime
 import Foundation
 
 /// Keeps the usage analytics identity in step with the Cloud session.

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// Synchronous read/write access to the `chief.*` settings for Chief UI.
@@ -9,7 +9,7 @@ import Foundation
 /// `UserDefaultsSettingsStore` uses. The store observes
 /// `UserDefaults.didChangeNotification`, so a write here updates an open
 /// Settings window and every `@LiveSetting(\.chief.…)` view without extra
-/// plumbing. Values set in `cmux.json` are imported into the same keys when
+/// plumbing. Values set in `hmux.json` are imported into the same keys when
 /// the file loads or changes.
 ///
 /// ```swift
@@ -87,8 +87,8 @@ extension AppDelegate {
     /// The one Open Chief path shared by the keyboard shortcut, the View menu
     /// item and the command palette.
     ///
-    /// Posts ``Notification/Name/cmuxOpenChiefHome`` (or, with `toggle`,
-    /// ``Notification/Name/cmuxToggleChiefHome``) with `preferredWindow`
+    /// Posts ``Notification/Name/hmuxOpenChiefHome`` (or, with `toggle`,
+    /// ``Notification/Name/hmuxToggleChiefHome``) with `preferredWindow`
     /// (a main window) as the object, or no object to target the active main
     /// window, and `["source": source]` as user info. The shortcut and the
     /// View menu item (which shows the same keys) toggle, so the keys that
@@ -99,7 +99,7 @@ extension AppDelegate {
     func openChiefHome(preferredWindow: NSWindow? = nil, toggle: Bool = false, source: String) -> Bool {
         guard ChiefSettings.isEnabled else { return false }
         NotificationCenter.default.post(
-            name: toggle ? .cmuxToggleChiefHome : .cmuxOpenChiefHome,
+            name: toggle ? .hmuxToggleChiefHome : .hmuxOpenChiefHome,
             object: preferredWindow,
             userInfo: ["source": source]
         )

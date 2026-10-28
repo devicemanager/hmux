@@ -16,7 +16,7 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 SCRIPT="$ROOT_DIR/scripts/sparkle_generate_appcast.sh"
-TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cmux-appcast-no-deltas.XXXXXX")"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/hmux-appcast-no-deltas.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 FAKE_BIN="$TMP_DIR/bin"
 mkdir -p "$FAKE_BIN"
@@ -45,7 +45,7 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$scheme" ] && [ -n "$derived" ] || { echo "fake xcodebuild: missing -scheme/-derivedDataPath" >&2; exit 1; }
 mkdir -p "$derived/Build/Products/Release"
-cp "$CMUX_TEST_FAKE_TOOLS/$scheme" "$derived/Build/Products/Release/$scheme"
+cp "$HMUX_TEST_FAKE_TOOLS/$scheme" "$derived/Build/Products/Release/$scheme"
 chmod +x "$derived/Build/Products/Release/$scheme"
 XC
 
@@ -56,8 +56,8 @@ mkdir -p "$FAKE_TOOLS"
 cat > "$FAKE_TOOLS/generate_appcast" <<'GA'
 #!/usr/bin/env bash
 set -euo pipefail
-: > "$CMUX_TEST_ARGV_LOG"
-for arg in "$@"; do printf '%s\n' "$arg" >> "$CMUX_TEST_ARGV_LOG"; done
+: > "$HMUX_TEST_ARGV_LOG"
+for arg in "$@"; do printf '%s\n' "$arg" >> "$HMUX_TEST_ARGV_LOG"; done
 archives="${@: -1}"
 dmg="$(find "$archives" -maxdepth 1 -name '*.dmg' | sort | tail -n 1)"
 [ -n "$dmg" ] || { echo "fake generate_appcast: no dmg in $archives" >&2; exit 1; }
@@ -82,7 +82,7 @@ SU
 # back to generate_appcast without calling it.
 cat > "$FAKE_TOOLS/BinaryDelta" <<'BD'
 #!/usr/bin/env bash
-touch "$CMUX_TEST_BINARY_DELTA_MARKER"
+touch "$HMUX_TEST_BINARY_DELTA_MARKER"
 echo "fake BinaryDelta must not run for fixture archives" >&2
 exit 1
 BD
@@ -103,15 +103,15 @@ done
 [ "$url" = "https://github.com/sparkle-project/Sparkle/releases/download/2.8.1/Sparkle-2.8.1.tar.xz" ]
 [ -n "$out" ]
 printf fixture-tarball > "$out"
-echo download >> "$CMUX_TEST_PINNED_CALLS"
+echo download >> "$HMUX_TEST_PINNED_CALLS"
 CURL
 cat > "$PINNED_BIN/shasum" <<'SHA'
 #!/usr/bin/env bash
 set -euo pipefail
 [ "$1" = -a ] && [ "$2" = 256 ]
 [ "$(cat "$3")" = fixture-tarball ]
-echo checksum >> "$CMUX_TEST_PINNED_CALLS"
-printf '%s  %s\n' "${CMUX_TEST_PINNED_SHA:-5cddb7695674ef7704268f38eccaee80e3accbf19e61c1689efff5b6116d85be}" "$3"
+echo checksum >> "$HMUX_TEST_PINNED_CALLS"
+printf '%s  %s\n' "${HMUX_TEST_PINNED_SHA:-5cddb7695674ef7704268f38eccaee80e3accbf19e61c1689efff5b6116d85be}" "$3"
 SHA
 cat > "$PINNED_BIN/tar" <<'TAR'
 #!/usr/bin/env bash
@@ -119,8 +119,8 @@ set -euo pipefail
 [ "$1" = -xf ] && [ "$3" = -C ] && [ "$5" = ./bin ]
 [ "$(cat "$2")" = fixture-tarball ]
 mkdir -p "$4/bin"
-cp "$CMUX_TEST_FAKE_TOOLS/"* "$4/bin/"
-echo extract >> "$CMUX_TEST_PINNED_CALLS"
+cp "$HMUX_TEST_FAKE_TOOLS/"* "$4/bin/"
+echo extract >> "$HMUX_TEST_PINNED_CALLS"
 TAR
 for command in git xcodebuild; do
   printf '#!/usr/bin/env bash\necho "unexpected source build" >&2\nexit 99\n' > "$PINNED_BIN/$command"
@@ -131,16 +131,16 @@ run_script() {
   local bash_bin="$1" out="$2"
   shift 2
   PATH="$FAKE_BIN:$PATH" \
-  CMUX_TEST_FAKE_TOOLS="$FAKE_TOOLS" \
-  CMUX_TEST_ARGV_LOG="$TMP_DIR/argv.log" \
-  CMUX_TEST_BINARY_DELTA_MARKER="$TMP_DIR/binary-delta-called" \
+  HMUX_TEST_FAKE_TOOLS="$FAKE_TOOLS" \
+  HMUX_TEST_ARGV_LOG="$TMP_DIR/argv.log" \
+  HMUX_TEST_BINARY_DELTA_MARKER="$TMP_DIR/binary-delta-called" \
   SPARKLE_PRIVATE_KEY="Zml4dHVyZS1rZXk" \
   SPARKLE_VERSION="0.0.0-test" \
   "$@" \
-  "$bash_bin" "$SCRIPT" "$TMP_DIR/cmux-macos.dmg" "v0.0.0-test" "$out"
+  "$bash_bin" "$SCRIPT" "$TMP_DIR/hmux-macos.dmg" "v0.0.0-test" "$out"
 }
 
-printf 'dmg' > "$TMP_DIR/cmux-macos.dmg"
+printf 'dmg' > "$TMP_DIR/hmux-macos.dmg"
 
 # Every bash on this machine: /bin/bash is 3.2 on macOS runners (the bug), and
 # whichever bash `env` resolves is what the shebang would pick.
@@ -161,14 +161,14 @@ for bash_bin in "${candidates[@]}"; do
   fi
   [ -s "$out_dir/appcast.xml" ] || fail "bash $version: no appcast written to the requested output path"
   grep -q 'sparkle:edSignature' "$out_dir/appcast.xml" || fail "bash $version: appcast lacks sparkle:edSignature"
-  grep -q 'cmux-macos.dmg' "$out_dir/appcast.xml" || fail "bash $version: appcast does not reference the DMG"
+  grep -q 'hmux-macos.dmg' "$out_dir/appcast.xml" || fail "bash $version: appcast does not reference the DMG"
   grep -q "unbound variable" "$out_dir/run.log" && fail "bash $version: script still reports an unbound variable"
   grep -qx -- "--maximum-deltas" "$TMP_DIR/argv.log" && fail "bash $version: delta arguments passed although there were no previous archives"
   grep -qx "" "$TMP_DIR/argv.log" && fail "bash $version: generate_appcast received an empty argument"
 
   # Nightly path: previous archives present, delta arguments still flow through.
   mkdir -p "$TMP_DIR/previous"
-  printf 'old' > "$TMP_DIR/previous/cmux-macos-101.dmg"
+  printf 'old' > "$TMP_DIR/previous/hmux-macos-101.dmg"
   if ! run_script "$bash_bin" "$out_dir/appcast-deltas.xml" env SPARKLE_PREVIOUS_ARCHIVES_DIR="$TMP_DIR/previous" SPARKLE_MAXIMUM_DELTAS=1 >"$out_dir/run-deltas.log" 2>&1; then
     fail "bash $version: script failed with previous archives: $(tail -n 5 "$out_dir/run-deltas.log")"
   fi
@@ -181,13 +181,13 @@ for bash_bin in "${candidates[@]}"; do
   grep -q 'sparkle:edSignature' "$out_dir/appcast-tools.xml" || fail "bash $version: SPARKLE_TOOLS_DIR appcast lacks sparkle:edSignature"
   pinned_calls="$out_dir/pinned-calls"
   : > "$pinned_calls"
-  if ! run_script "$bash_bin" "$out_dir/appcast-pinned.xml" env -u SPARKLE_TOOLS_DIR -u SPARKLE_PREVIOUS_ARCHIVES_DIR SPARKLE_VERSION=2.8.1 CMUX_TEST_PINNED_CALLS="$pinned_calls" PATH="$PINNED_BIN:$PATH" >"$out_dir/run-pinned.log" 2>&1; then
+  if ! run_script "$bash_bin" "$out_dir/appcast-pinned.xml" env -u SPARKLE_TOOLS_DIR -u SPARKLE_PREVIOUS_ARCHIVES_DIR SPARKLE_VERSION=2.8.1 HMUX_TEST_PINNED_CALLS="$pinned_calls" PATH="$PINNED_BIN:$PATH" >"$out_dir/run-pinned.log" 2>&1; then
     fail "bash $version: pinned download path failed: $(tail -n 5 "$out_dir/run-pinned.log")"
   fi
   [ "$(paste -sd, "$pinned_calls")" = download,checksum,extract ] || fail "pinned tools did not download, verify, then extract"
   grep -q 'sparkle:edSignature' "$out_dir/appcast-pinned.xml" || fail "pinned download path produced no signed appcast"
   : > "$pinned_calls"
-  if run_script "$bash_bin" "$out_dir/appcast-bad-checksum.xml" env -u SPARKLE_TOOLS_DIR -u SPARKLE_PREVIOUS_ARCHIVES_DIR SPARKLE_VERSION=2.8.1 CMUX_TEST_PINNED_SHA=bad CMUX_TEST_PINNED_CALLS="$pinned_calls" PATH="$PINNED_BIN:$PATH" >"$out_dir/run-bad-checksum.log" 2>&1; then
+  if run_script "$bash_bin" "$out_dir/appcast-bad-checksum.xml" env -u SPARKLE_TOOLS_DIR -u SPARKLE_PREVIOUS_ARCHIVES_DIR SPARKLE_VERSION=2.8.1 HMUX_TEST_PINNED_SHA=bad HMUX_TEST_PINNED_CALLS="$pinned_calls" PATH="$PINNED_BIN:$PATH" >"$out_dir/run-bad-checksum.log" 2>&1; then
     fail "bash $version: mismatched pinned tarball checksum was accepted"
   fi
   [ "$(paste -sd, "$pinned_calls")" = download,checksum ] || fail "mismatched pinned tarball was extracted"
@@ -198,7 +198,7 @@ done
 
 # release.yml must not trust the generator's exit status alone (bash 3.2 masks it).
 RELEASE_WORKFLOW="$ROOT_DIR/.github/workflows/release.yml"
-step="$(awk '/sparkle_generate_appcast.sh cmux-macos.dmg/{p=1} p{print} p&&/^      - name:/{exit}' "$RELEASE_WORKFLOW")"
+step="$(awk '/sparkle_generate_appcast.sh hmux-macos.dmg/{p=1} p{print} p&&/^      - name:/{exit}' "$RELEASE_WORKFLOW")"
 grep -q 'test -s appcast.xml' <<<"$step" || fail "release.yml must verify appcast.xml exists after generation"
 grep -q "grep -q 'sparkle:edSignature' appcast.xml" <<<"$step" || fail "release.yml must verify the appcast is signed after generation"
 
@@ -213,13 +213,13 @@ done
 cat > "$TMP_DIR/dedup/BinaryDelta" <<'BD'
 #!/usr/bin/env bash
 if [ "$1" = create ]; then
-  basename "$4" >> "$CMUX_TEST_DELTA_CALLS"
+  basename "$4" >> "$HMUX_TEST_DELTA_CALLS"
   sleep 0.1
   touch "$4"
 fi
 BD
 chmod +x "$TMP_DIR/dedup/BinaryDelta"
-export CMUX_TEST_DELTA_CALLS="$TMP_DIR/dedup/calls"
+export HMUX_TEST_DELTA_CALLS="$TMP_DIR/dedup/calls"
 # Supply filesystem-backed DMG/plist doubles while executing the full worker
 # pipeline unchanged, including its background processes and output promotion.
 bash -c '
@@ -228,9 +228,9 @@ bash -c '
     archive="$2"
     shift 2
     while [ "$1" != -mountpoint ]; do shift; done
-    mkdir -p "$2/cmux.app/Contents"
+    mkdir -p "$2/hmux.app/Contents"
     version="${archive%.dmg}"
-    printf "%s" "${version##*-}" > "$2/cmux.app/Contents/Info.plist"
+    printf "%s" "${version##*-}" > "$2/hmux.app/Contents/Info.plist"
   }
   ditto() { cp -R "$1" "$2"; }
   function /usr/libexec/PlistBuddy() {
@@ -243,8 +243,8 @@ bash -c '
   shift
   source "$script"
 ' _ "$ROOT_DIR/scripts/prebuild_sparkle_deltas.sh" "$TMP_DIR/dedup/BinaryDelta" "$TMP_DIR/dedup" "$TMP_DIR/dedup/new-103.dmg" 2
-[ "$(sort "$CMUX_TEST_DELTA_CALLS" | uniq | wc -l | tr -d ' ')" = 2 ] || fail "duplicate versions consumed a delta slot"
-[ "$(wc -l < "$CMUX_TEST_DELTA_CALLS" | tr -d ' ')" = 2 ] || fail "duplicate delta workers ran"
-[ -f "$TMP_DIR/dedup/cmux103-101.delta" ] || fail "older distinct version was excluded"
-[ -f "$TMP_DIR/dedup/cmux103-102.delta" ] || fail "newest prior version was excluded"
+[ "$(sort "$HMUX_TEST_DELTA_CALLS" | uniq | wc -l | tr -d ' ')" = 2 ] || fail "duplicate versions consumed a delta slot"
+[ "$(wc -l < "$HMUX_TEST_DELTA_CALLS" | tr -d ' ')" = 2 ] || fail "duplicate delta workers ran"
+[ -f "$TMP_DIR/dedup/hmux103-101.delta" ] || fail "older distinct version was excluded"
+[ -f "$TMP_DIR/dedup/hmux103-102.delta" ] || fail "newest prior version was excluded"
 echo "PASS: duplicate archive versions produce distinct delta workers"

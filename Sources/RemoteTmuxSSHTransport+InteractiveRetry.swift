@@ -59,7 +59,7 @@ extension RemoteTmuxSSHTransport {
     ///
     /// Everything else here reads stderr, which is where ssh reports an auth failure. A transport
     /// that authenticates itself does not report a failure at all: it prints a prompt to its
-    /// terminal and waits. cmux gives it pipes, so the prompt lands in the pre-control output and
+    /// terminal and waits. hmux gives it pipes, so the prompt lands in the pre-control output and
     /// the stream then sits there until it is torn down — measured against a corporate ssh broker,
     /// which produced a passcode prompt and no error, so the attach failed with nothing to explain
     /// it and the transport's own log stayed empty.

@@ -4,7 +4,7 @@ Scope: production Swift source under `**/Sources/**` that is NOT under `**/Tests
 
 A test-only or debug-only seam does not belong inline in production source. If a unit test needs to observe internal state, the test target reaches that state through `@testable import` after widening the declaration from `private` to `internal`. Production source should not grow accessors, hooks, or `#if DEBUG` extensions that exist solely to let tests or a debugger peek at otherwise-private state. The compiled-out `#if DEBUG` guard does not make this acceptable: it still adds a test-shaped surface to the shipping file, encodes the test's needs into production code, and invites more of the same.
 
-The canonical case is https://github.com/manaflow-ai/cmux/pull/6452: a `#if DEBUG` `debugQueuedRequestCount()` accessor was added to the production `MobileCoreRPCSession`/`MobileCoreRPCClient` sources so a test could read the actor's private writer-queue state. The correct fix removed the production seam entirely, widened the queue state `private` -> `internal`, and observed it from `CmuxMobileRPCTests` via `@testable import CmuxMobileRPC`.
+The canonical case is https://github.com/manaflow-ai/cmux/pull/6452: a `#if DEBUG` `debugQueuedRequestCount()` accessor was added to the production `MobileCoreRPCSession`/`MobileCoreRPCClient` sources so a test could read the actor's private writer-queue state. The correct fix removed the production seam entirely, widened the queue state `private` -> `internal`, and observed it from `HmuxMobileRPCTests` via `@testable import HmuxMobileRPC`.
 
 ## Fail
 

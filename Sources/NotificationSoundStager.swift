@@ -1,11 +1,11 @@
 import AVFoundation
-import CmuxFoundation
-import CmuxSettings
+import HmuxFoundation
+import HmuxSettings
 import Foundation
 import os
 
 nonisolated private let notificationSoundStagerLogger = Logger(
-    subsystem: "com.cmuxterm.app",
+    subsystem: "com.hmuxterm.app",
     category: "notification-sound"
 )
 

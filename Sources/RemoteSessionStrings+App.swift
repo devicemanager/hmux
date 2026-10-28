@@ -1,4 +1,4 @@
-import CmuxRemoteSession
+import HmuxRemoteSession
 import Foundation
 
 // User-facing connection-state strings resolve here, in the app target, so
@@ -32,7 +32,7 @@ extension RemoteSessionStrings {
                 localized:
                     "remoteSession.controlMaster.ownershipUnavailable",
                 defaultValue:
-                    "SSH connection is busy in another cmux process."
+                    "SSH connection is busy in another hmux process."
             ),
             remoteProxyUnavailable: String(
                 localized: "remoteSession.proxy.unavailable",

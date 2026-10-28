@@ -1,5 +1,5 @@
 -- Bind a coderouter route token to one Cloud VM. The Freestyle edge injects
--- the token into that VM's sessions together with x-cmux-vm-id; coderouter
+-- the token into that VM's sessions together with x-hmux-vm-id; coderouter
 -- rejects a bound token whose request names a different VM. Null keeps the
 -- existing unbound (cr CLI) semantics.
 ALTER TABLE "coderouter_route_tokens" ADD COLUMN "vm_id" text;--> statement-breakpoint

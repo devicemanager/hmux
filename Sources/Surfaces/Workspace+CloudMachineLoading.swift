@@ -1,6 +1,6 @@
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
-import CmuxWorkspaces
+import HmuxWorkspaces
 
 @MainActor
 extension Workspace {
@@ -43,7 +43,7 @@ extension Workspace {
             showsNotificationBadge: false, isLoading: false, isPinned: false
         )
         rememberTerminalConfigInheritanceSource(terminal)
-        publishCmuxSurfaceCreated(terminal.id, paneId: pane, kind: SurfaceKind.terminal.rawValue,
+        publishHmuxSurfaceCreated(terminal.id, paneId: pane, kind: SurfaceKind.terminal.rawValue,
                                   origin: "cloud_vm_ready", focused: focus)
         if focus { focusPanel(terminal.id) } else { terminal.unfocus() }
         scheduleTerminalGeometryReconcile()

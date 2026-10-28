@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Regression test: the generated Campfire extension installs cleanly, emits cmux
+Regression test: the generated Campfire extension installs cleanly, emits hmux
 hook calls with complete payloads for the HOST role only, normalizes the
 bun-compiled launch argv, bridges campfire observer events to notifications,
 and persists restorable hook sessions without secrets or invite URLs.
@@ -19,7 +19,7 @@ import time
 import threading
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 
 
 def make_executable(path: Path, content: str) -> None:
@@ -38,7 +38,7 @@ def wait_for_text(path: Path, expected_count: int, timeout: float = 5.0) -> str:
     return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
-class MockCmuxSocket:
+class MockHmuxSocket:
     def __init__(self, path: Path, workspace_id: str, surface_id: str) -> None:
         self.path = path
         self.workspace_id = workspace_id
@@ -49,7 +49,7 @@ class MockCmuxSocket:
         self._server: socket.socket | None = None
         self._thread: threading.Thread | None = None
 
-    def __enter__(self) -> "MockCmuxSocket":
+    def __enter__(self) -> "MockHmuxSocket":
         try:
             self.path.unlink()
         except FileNotFoundError:
@@ -102,7 +102,7 @@ class MockCmuxSocket:
                 if not line_bytes:
                     return
                 line = line_bytes.decode("utf-8", errors="replace").rstrip("\n")
-                capability_prefix = "_cmux_capability_v1 "
+                capability_prefix = "_hmux_capability_v1 "
                 if line.startswith(capability_prefix):
                     envelope_parts = line.split(" ", 2)
                     if len(envelope_parts) != 3 or not envelope_parts[1] or not envelope_parts[2]:
@@ -181,7 +181,7 @@ def verify_hook_persistence(cli_path: str, root: Path, base_env: dict[str, str])
     workspace_id = "11111111-1111-1111-1111-111111111111"
     surface_id = "22222222-2222-2222-2222-222222222222"
     session_id = "campfire-hook-session-123"
-    socket_path = Path("/tmp") / f"cmux-campfire-hook-{os.getpid()}-{time.monotonic_ns()}.sock"
+    socket_path = Path("/tmp") / f"hmux-campfire-hook-{os.getpid()}-{time.monotonic_ns()}.sock"
     launch_argv = [
         "/Users/example/.local/bin/campfire",
         "--session",
@@ -197,17 +197,17 @@ def verify_hook_persistence(cli_path: str, root: Path, base_env: dict[str, str])
     hook_env.update(
         {
             "PWD": str(workspace),
-            "CMUX_SOCKET_PATH": str(socket_path),
-            "CMUX_WORKSPACE_ID": workspace_id,
-            "CMUX_SURFACE_ID": surface_id,
-            "CMUX_AGENT_HOOK_STATE_DIR": str(hook_state_dir),
-            "CMUX_AGENT_LAUNCH_KIND": "campfire",
-            "CMUX_AGENT_LAUNCH_EXECUTABLE": launch_argv[0],
-            "CMUX_AGENT_LAUNCH_ARGV_B64": base64.b64encode(
+            "HMUX_SOCKET_PATH": str(socket_path),
+            "HMUX_WORKSPACE_ID": workspace_id,
+            "HMUX_SURFACE_ID": surface_id,
+            "HMUX_AGENT_HOOK_STATE_DIR": str(hook_state_dir),
+            "HMUX_AGENT_LAUNCH_KIND": "campfire",
+            "HMUX_AGENT_LAUNCH_EXECUTABLE": launch_argv[0],
+            "HMUX_AGENT_LAUNCH_ARGV_B64": base64.b64encode(
                 b"".join(value.encode("utf-8") + b"\0" for value in launch_argv)
             ).decode("ascii"),
-            "CMUX_AGENT_LAUNCH_CWD": str(workspace),
-            "CMUX_CLI_SENTRY_DISABLED": "1",
+            "HMUX_AGENT_LAUNCH_CWD": str(workspace),
+            "HMUX_CLI_SENTRY_DISABLED": "1",
             "CAMPFIRE_RELAY_URL": "wss://relay.example/ws",
             "PI_PACKAGE_DIR": "/tmp/stale-pi-cache-should-not-persist",
             "OPENAI_API_KEY": "secret-should-not-persist",
@@ -222,7 +222,7 @@ def verify_hook_persistence(cli_path: str, root: Path, base_env: dict[str, str])
         separators=(",", ":"),
     )
 
-    with MockCmuxSocket(socket_path, workspace_id=workspace_id, surface_id=surface_id) as server:
+    with MockHmuxSocket(socket_path, workspace_id=workspace_id, surface_id=surface_id) as server:
         result = subprocess.run(
             [cli_path, "hooks", "campfire", "session-start"],
             input=hook_input,
@@ -324,12 +324,12 @@ def main() -> int:
         return 0
 
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
-    with tempfile.TemporaryDirectory(prefix="cmux-campfire-extension-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-campfire-extension-") as td:
         root = Path(td)
         home = root / "home"
         home.mkdir()
@@ -353,13 +353,13 @@ def main() -> int:
             print(f"stderr={install.stderr.strip()}")
             return 1
 
-        extension_path = home / ".campfire" / "agent" / "extensions" / "cmux-campfire-session.ts"
+        extension_path = home / ".campfire" / "agent" / "extensions" / "hmux-campfire-session.ts"
         if not extension_path.exists():
             print(f"FAIL: expected extension at {extension_path}")
             return 1
         extension_text = extension_path.read_text(encoding="utf-8")
-        if "cmux-campfire-session-extension-marker" not in extension_text:
-            print(f"FAIL: expected cmux marker in {extension_path}")
+        if "hmux-campfire-session-extension-marker" not in extension_text:
+            print(f"FAIL: expected hmux marker in {extension_path}")
             return 1
 
         reinstall = subprocess.run(
@@ -377,49 +377,49 @@ def main() -> int:
             print(f"stderr={reinstall.stderr.strip()}")
             return 1
 
-        fake_cmux = root / "fake-cmux"
-        fake_args_log = root / "fake-cmux-args.log"
-        fake_stdin_log = root / "fake-cmux-stdin.log"
-        fake_env_log = root / "fake-cmux-env.log"
-        fake_order_log = root / "fake-cmux-order.log"
+        fake_hmux = root / "fake-hmux"
+        fake_args_log = root / "fake-hmux-args.log"
+        fake_stdin_log = root / "fake-hmux-stdin.log"
+        fake_env_log = root / "fake-hmux-env.log"
+        fake_order_log = root / "fake-hmux-order.log"
         make_executable(
-            fake_cmux,
+            fake_hmux,
             """#!/usr/bin/env bash
 set -euo pipefail
-printf 'start %s\n' "$*" >> "$FAKE_CMUX_ORDER_LOG"
+printf 'start %s\n' "$*" >> "$FAKE_HMUX_ORDER_LOG"
 case "$*" in
   *notification*) sleep 1 ;;
   *) sleep 0.15 ;;
 esac
-printf '%s\n' "$*" >> "$FAKE_CMUX_ARGS_LOG"
-cat >> "$FAKE_CMUX_STDIN_LOG"
-printf '\n---\n' >> "$FAKE_CMUX_STDIN_LOG"
+printf '%s\n' "$*" >> "$FAKE_HMUX_ARGS_LOG"
+cat >> "$FAKE_HMUX_STDIN_LOG"
+printf '\n---\n' >> "$FAKE_HMUX_STDIN_LOG"
 {
-  printf 'kind=%s\n' "${CMUX_AGENT_LAUNCH_KIND-}"
-  printf 'cwd=%s\n' "${CMUX_AGENT_LAUNCH_CWD-}"
-  printf 'argv=%s\n' "${CMUX_AGENT_LAUNCH_ARGV_B64-}"
-} >> "$FAKE_CMUX_ENV_LOG"
-printf 'end %s\n' "$*" >> "$FAKE_CMUX_ORDER_LOG"
+  printf 'kind=%s\n' "${HMUX_AGENT_LAUNCH_KIND-}"
+  printf 'cwd=%s\n' "${HMUX_AGENT_LAUNCH_CWD-}"
+  printf 'argv=%s\n' "${HMUX_AGENT_LAUNCH_ARGV_B64-}"
+} >> "$FAKE_HMUX_ENV_LOG"
+printf 'end %s\n' "$*" >> "$FAKE_HMUX_ORDER_LOG"
 """,
         )
 
         check_env = env.copy()
-        check_env["CMUX_TEST_CAMPFIRE_EXTENSION_PATH"] = str(extension_path)
-        check_env["CMUX_SURFACE_ID"] = "surface-campfire-test"
-        check_env["CMUX_CAMPFIRE_CMUX_BIN"] = str(fake_cmux)
-        check_env["FAKE_CMUX_ARGS_LOG"] = str(fake_args_log)
-        check_env["FAKE_CMUX_STDIN_LOG"] = str(fake_stdin_log)
-        check_env["FAKE_CMUX_ENV_LOG"] = str(fake_env_log)
-        check_env["FAKE_CMUX_ORDER_LOG"] = str(fake_order_log)
+        check_env["HMUX_TEST_CAMPFIRE_EXTENSION_PATH"] = str(extension_path)
+        check_env["HMUX_SURFACE_ID"] = "surface-campfire-test"
+        check_env["HMUX_CAMPFIRE_HMUX_BIN"] = str(fake_hmux)
+        check_env["FAKE_HMUX_ARGS_LOG"] = str(fake_args_log)
+        check_env["FAKE_HMUX_STDIN_LOG"] = str(fake_stdin_log)
+        check_env["FAKE_HMUX_ENV_LOG"] = str(fake_env_log)
+        check_env["FAKE_HMUX_ORDER_LOG"] = str(fake_order_log)
         check_env["CAMPFIRE_SESSION_ROLE"] = "host"
-        check_env["CMUX_AGENT_LAUNCH_KIND"] = "claude"
-        check_env["CMUX_AGENT_LAUNCH_EXECUTABLE"] = "/usr/local/bin/claude"
-        check_env["CMUX_AGENT_LAUNCH_ARGV_B64"] = base64.b64encode(
+        check_env["HMUX_AGENT_LAUNCH_KIND"] = "claude"
+        check_env["HMUX_AGENT_LAUNCH_EXECUTABLE"] = "/usr/local/bin/claude"
+        check_env["HMUX_AGENT_LAUNCH_ARGV_B64"] = base64.b64encode(
             b"/usr/local/bin/claude\0--resume\0stale-parent-session\0"
         ).decode("ascii")
-        check_env["CMUX_AGENT_LAUNCH_CWD"] = "/tmp/stale-parent-project"
+        check_env["HMUX_AGENT_LAUNCH_CWD"] = "/tmp/stale-parent-project"
         check_source = """
-const extensionPath = process.env.CMUX_TEST_CAMPFIRE_EXTENSION_PATH;
+const extensionPath = process.env.HMUX_TEST_CAMPFIRE_EXTENSION_PATH;
 const mod = await import(extensionPath);
 if (typeof mod.default !== "function") throw new Error("missing default export");
 const handlers = new Map();
@@ -551,13 +551,13 @@ await new Promise((resolve) => setTimeout(resolve, 300));
 
         # The JOINER role must record nothing: its argv carries the invite URL,
         # a capability token that must never be persisted or replayed.
-        joiner_args_log = root / "fake-cmux-joiner-args.log"
+        joiner_args_log = root / "fake-hmux-joiner-args.log"
         joiner_env = check_env.copy()
         joiner_env["CAMPFIRE_SESSION_ROLE"] = "joiner"
-        joiner_env["FAKE_CMUX_ARGS_LOG"] = str(joiner_args_log)
+        joiner_env["FAKE_HMUX_ARGS_LOG"] = str(joiner_args_log)
         joiner_check = subprocess.run(
             [bun, "--eval", """
-const mod = await import(process.env.CMUX_TEST_CAMPFIRE_EXTENSION_PATH);
+const mod = await import(process.env.HMUX_TEST_CAMPFIRE_EXTENSION_PATH);
 const handlers = new Map();
 mod.default({ on(name, handler) { handlers.set(name, handler); } });
 const ctx = {
@@ -587,13 +587,13 @@ await new Promise((resolve) => setTimeout(resolve, 300));
         # globalThis), this installed extension must go silent — otherwise every
         # hook fires twice on machines that ran the installer against an older
         # campfire and then upgraded.
-        native_args_log = root / "fake-cmux-native-args.log"
+        native_args_log = root / "fake-hmux-native-args.log"
         native_env = check_env.copy()
-        native_env["FAKE_CMUX_ARGS_LOG"] = str(native_args_log)
+        native_env["FAKE_HMUX_ARGS_LOG"] = str(native_args_log)
         native_check = subprocess.run(
             [bun, "--eval", """
-globalThis[Symbol.for("campfire.cmux.bridge.v1")] = true;
-const mod = await import(process.env.CMUX_TEST_CAMPFIRE_EXTENSION_PATH);
+globalThis[Symbol.for("campfire.hmux.bridge.v1")] = true;
+const mod = await import(process.env.HMUX_TEST_CAMPFIRE_EXTENSION_PATH);
 const handlers = new Map();
 mod.default({ on(name, handler) { handlers.set(name, handler); } });
 const ctx = {
@@ -647,7 +647,7 @@ await new Promise((resolve) => setTimeout(resolve, 300));
             timeout=20,
         )
         if uninstall_foreign.returncode != 0 or not foreign_path.exists() or "Refusing to remove" not in uninstall_foreign.stdout:
-            print("FAIL: campfire extension uninstall did not preserve non-cmux file")
+            print("FAIL: campfire extension uninstall did not preserve non-hmux file")
             print(f"exit={uninstall_foreign.returncode}")
             print(f"stdout={uninstall_foreign.stdout.strip()}")
             print(f"stderr={uninstall_foreign.stderr.strip()}")
@@ -666,7 +666,7 @@ await new Promise((resolve) => setTimeout(resolve, 300));
             env=override_env,
             timeout=20,
         )
-        override_extension_path = agent_override / "extensions" / "cmux-campfire-session.ts"
+        override_extension_path = agent_override / "extensions" / "hmux-campfire-session.ts"
         if override_install.returncode != 0 or not override_extension_path.exists():
             print("FAIL: campfire extension install did not respect CAMPFIRE_CODING_AGENT_DIR")
             print(f"exit={override_install.returncode}")
@@ -687,7 +687,7 @@ await new Promise((resolve) => setTimeout(resolve, 300));
             print(f"stdout={override_uninstall.stdout.strip()}")
             print(f"stderr={override_uninstall.stderr.strip()}")
             return 1
-    print("PASS: generated Campfire extension installs, gates on the host role, emits complete cmux hook payloads, and persists hook sessions")
+    print("PASS: generated Campfire extension installs, gates on the host role, emits complete hmux hook payloads, and persists hook sessions")
     return 0
 
 

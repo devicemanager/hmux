@@ -1,12 +1,12 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import Bonsplit
-import CmuxSurfaceCatalogModel
-import CmuxWorkspaces
+import HmuxSurfaceCatalogModel
+import HmuxWorkspaces
 import Foundation
 
 /// Cmd+D / Cmd+T from a pane that projects a cloud resource create the new terminal ON
-/// that machine — in the same cmux-tui workspace — instead of a local shell. Same rule
+/// that machine — in the same hmux-tui workspace — instead of a local shell. Same rule
 /// as the remote tmux mirror: a "split" next to a remote pane means "another terminal
 /// where that pane lives". The new terminal is created through the machine's provider
 /// (`workspace <ws> run`) and projected back into this workspace at the requested spot,
@@ -204,7 +204,7 @@ extension Workspace {
         }
 
         #if DEBUG
-        cmuxDebugLog("cloud.split.reserved request=\(requestID.uuidString.prefix(8)) panel=\(reservation.panelID.uuidString.prefix(8)) layout=\(source.remoteTabID != nil ? 1 : 0)")
+        hmuxDebugLog("cloud.split.reserved request=\(requestID.uuidString.prefix(8)) panel=\(reservation.panelID.uuidString.prefix(8)) layout=\(source.remoteTabID != nil ? 1 : 0)")
         #endif
         var token: UUID?
         let beginProjectionMutation: @MainActor () -> Void = {
@@ -246,7 +246,7 @@ extension Workspace {
                 guard catalog.provider(for: machine) === provider else { throw SurfaceCatalogError.noProvider(machine) }
                 try resolvedSource.validate(created: created)
                 #if DEBUG
-                cmuxDebugLog("cloud.split.created request=\(requestID.uuidString.prefix(8)) terminal=\(created.id.key) attachment=\(created.creationAttachment != nil ? 1 : 0)")
+                hmuxDebugLog("cloud.split.created request=\(requestID.uuidString.prefix(8)) terminal=\(created.id.key) attachment=\(created.creationAttachment != nil ? 1 : 0)")
                 #endif
                 return created
             } catch {
@@ -352,7 +352,7 @@ extension Workspace {
             // The stable terminal id is available before surface attachment.
             // Route reservation input into that PTY immediately so remote shell
             // startup owns echo and line discipline just like a local shell.
-            if let cloudProvider = catalog.provider(for: created.machine) as? CmuxTuiSurfaceProvider {
+            if let cloudProvider = catalog.provider(for: created.machine) as? HmuxTuiSurfaceProvider {
                 _ = try await cloudProvider.bindOptimisticTerminalInput(
                     reservation.inputRelay,
                     terminalID: created.id.key
@@ -373,7 +373,7 @@ extension Workspace {
                 return (existing, true)
             }
             #if DEBUG
-            cmuxDebugLog("cloud.split.project terminal=\(created.id.key)")
+            hmuxDebugLog("cloud.split.project terminal=\(created.id.key)")
             #endif
             // Focus was granted when the pane appeared; adoption must not steal it
             // back from wherever the user has typed since.
@@ -389,7 +389,7 @@ extension Workspace {
             }
             self.completeReservedCloudTerminalPane(reservation, adoptedPanelID: result.projection.panelID)
             #if DEBUG
-            cmuxDebugLog("cloud.split.projected terminal=\(created.id.key)")
+            hmuxDebugLog("cloud.split.projected terminal=\(created.id.key)")
             #endif
             return result
         }
@@ -416,7 +416,7 @@ extension Workspace {
                 reservation.creationReceipt.beginAttempt()
                 onStart()
                 self?.restartReservedCloudTerminalPane(reservation)
-                (catalog.provider(for: reservation.machine) as? CmuxTuiSurfaceProvider)?
+                (catalog.provider(for: reservation.machine) as? HmuxTuiSurfaceProvider)?
                     .beginAttachHandshake(for: reservation)
             },
             onFinish: onFinish,
@@ -441,7 +441,7 @@ extension Workspace {
     @MainActor
     func presentCloudPaneCreationFailure(machine: SurfaceMachineID, error: Error, requestID: UUID, context: CloudOperationContext? = nil, sourcePanelID: UUID? = nil) {
         #if DEBUG
-        cmuxDebugLog("cloud.pane.createFailed machine=\(machine.rawValue) error=\(String(reflecting: error))")
+        hmuxDebugLog("cloud.pane.createFailed machine=\(machine.rawValue) error=\(String(reflecting: error))")
         #endif
         cloudPaneCreationFailureStore.present(machine: machine, error: error, requestID: requestID, context: context, sourcePanelID: sourcePanelID ?? focusedPanelId)
     }

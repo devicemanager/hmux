@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 extension CommandPaletteSettingsToggleCommands {

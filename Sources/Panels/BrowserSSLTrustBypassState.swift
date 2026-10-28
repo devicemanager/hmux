@@ -1,5 +1,5 @@
-import CmuxBrowser
-import CmuxSettings
+import HmuxBrowser
+import HmuxSettings
 import Foundation
 import Security
 
@@ -126,7 +126,7 @@ final class BrowserSSLTrustBypassState {
         enforcePendingBypassLimit()
 
         var components = URLComponents()
-        components.scheme = "cmux-browser-action"
+        components.scheme = "hmux-browser-action"
         components.host = "bypass-ssl"
         components.queryItems = [
             URLQueryItem(name: "token", value: token),
@@ -146,7 +146,7 @@ final class BrowserSSLTrustBypassState {
     }
 
     func consumePendingBypassAction(_ actionURL: URL) -> URLRequest? {
-        guard actionURL.scheme == "cmux-browser-action",
+        guard actionURL.scheme == "hmux-browser-action",
               actionURL.host == "bypass-ssl",
               let components = URLComponents(url: actionURL, resolvingAgainstBaseURL: false),
               let token = components.queryItems?.first(where: { $0.name == "token" })?.value else {

@@ -9,12 +9,12 @@ export async function GET(request: Request): Promise<Response> {
   return withAuthedVaultApiRoute(
     request,
     "/api/vault/summary",
-    { "cmux.vault.operation": "summary" },
+    { "hmux.vault.operation": "summary" },
     "/api/vault/summary GET failed",
     {},
     async ({ user, span }) => {
       const summary = summarizeVaultAgents(await queryVaultAgentSummary(cloudDb(), user.id));
-      setSpanAttributes(span, { "cmux.vault.result_count": summary.sessionCount });
+      setSpanAttributes(span, { "hmux.vault.result_count": summary.sessionCount });
       return jsonResponse(summary, 200, { "cache-control": "private, no-store" });
     },
   );

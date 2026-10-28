@@ -1,12 +1,12 @@
 import AppKit
 import Combine
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 @MainActor
 final class WindowToolbarController: NSObject, NSToolbarDelegate {
-    private let commandItemIdentifier = NSToolbarItem.Identifier("cmux.focusedCommand")
-    private let layoutModeItemIdentifier = NSToolbarItem.Identifier("cmux.layoutMode")
+    private let commandItemIdentifier = NSToolbarItem.Identifier("hmux.focusedCommand")
+    private let layoutModeItemIdentifier = NSToolbarItem.Identifier("hmux.layoutMode")
 
     private weak var tabManager: TabManager?
 
@@ -172,9 +172,9 @@ final class WindowToolbarController: NSObject, NSToolbarDelegate {
         guard window.toolbar == nil else { return }
         // The Cloud welcome is a glass card, not a workspace window: a toolbar
         // would turn its titlebar into a toolbar band and outline the card.
-        guard window.identifier?.rawValue != "cmux.cloud.welcome" else { return }
+        guard window.identifier?.rawValue != "hmux.cloud.welcome" else { return }
         guard !WorkspacePresentationModeSettings.isMinimal() else { return }
-        let toolbar = NSToolbar(identifier: NSToolbar.Identifier("cmux.toolbar"))
+        let toolbar = NSToolbar(identifier: NSToolbar.Identifier("hmux.toolbar"))
         toolbar.delegate = self
         toolbar.displayMode = .iconOnly
         toolbar.sizeMode = .small

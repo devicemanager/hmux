@@ -1,5 +1,5 @@
 import AppKit
-import CmuxAppKitSupportUI
+import HmuxAppKitSupportUI
 
 extension TextBoxInputContainer {
     func resolvedSubmitActionAssetName(for action: TextBoxSubmitAction) -> String? {
@@ -17,8 +17,8 @@ extension TextBoxInputContainer {
         return assetName
     }
 
-    func submitActionIconRequest(assetName: String, tintColor: NSColor? = nil) -> CmuxResolvedIconRequest {
-        CmuxResolvedIconRequest(
+    func submitActionIconRequest(assetName: String, tintColor: NSColor? = nil) -> HmuxResolvedIconRequest {
+        HmuxResolvedIconRequest(
             source: .asset(name: assetName, bundle: .main),
             size: NSSize(
                 width: TextBoxSubmitActionImageSupport.iconSize,

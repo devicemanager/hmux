@@ -1,5 +1,5 @@
 import AppKit
-import CmuxCore
+import HmuxCore
 import Darwin
 import Foundation
 /// Live delivery-target resolution for agent hook events.
@@ -28,14 +28,14 @@ import Foundation
 /// Live identity of a process: its controlling-terminal device
 /// (`proc_bsdinfo.e_tdev`) and its start-time-keyed scope cache key. nil when
 /// the process is gone.
-nonisolated func agentLiveProcessIdentity(pid: pid_t) -> (ttyDevice: Int64?, scopeCacheKey: CmuxTopProcessScopeCacheKey)? {
+nonisolated func agentLiveProcessIdentity(pid: pid_t) -> (ttyDevice: Int64?, scopeCacheKey: HmuxTopProcessScopeCacheKey)? {
     guard pid > 0 else { return nil }
     var info = proc_bsdinfo()
     let expectedSize = MemoryLayout<proc_bsdinfo>.stride
     let size = proc_pidinfo(pid, PROC_PIDTBSDINFO, 0, &info, Int32(expectedSize))
     guard size == expectedSize else { return nil }
     let device = Int64(info.e_tdev)
-    return (device > 0 ? device : nil, CmuxTopProcessSnapshot.scopeCacheKey(from: info))
+    return (device > 0 ? device : nil, HmuxTopProcessSnapshot.scopeCacheKey(from: info))
 }
 
 /// Darwin-backed process inspector kept behind the package's pure handoff
@@ -73,8 +73,8 @@ private struct LiveAgentDeliveryProcessInspector: AgentDeliveryProcessInspector 
                 scopeCacheKey: identity.scopeCacheKey
             )
         }
-        let scope: CmuxTopProcessScope?
-        switch CmuxTopProcessSnapshot.cmuxScopeProbe(
+        let scope: HmuxTopProcessScope?
+        switch HmuxTopProcessSnapshot.hmuxScopeProbe(
             for: Int(pid),
             expectedCacheKey: identity.scopeCacheKey
         ) {
@@ -100,7 +100,7 @@ private struct LiveAgentDeliveryProcessInspector: AgentDeliveryProcessInspector 
     }
 }
 
-/// Reads process identity and optional cmux scope without touching main-actor
+/// Reads process identity and optional hmux scope without touching main-actor
 /// state. The scope probe is keyed to process start time so a reused PID can
 /// never lend its environment to a later request.
 nonisolated func agentDeliveryProcessEvidence(
@@ -143,7 +143,7 @@ extension Workspace {
             invalidateReportedSurfaceTTYRuntime(panelId: panelId)
             return
         }
-        surfaceRegistry.surfaceTTYDevices[panelId] = CmuxTopProcessSnapshot.deviceIdentifier(forTTYName: ttyName)
+        surfaceRegistry.surfaceTTYDevices[panelId] = HmuxTopProcessSnapshot.deviceIdentifier(forTTYName: ttyName)
         surfaceRegistry.runtimeReportedTTYSurfaceIDs.insert(panelId)
         surfaceRegistry.runtimeReportedTTYSurfaceGenerations[panelId] =
             terminal.surface.runtimeSurfaceGeneration
@@ -261,7 +261,7 @@ extension DockSplitStore {
                transfer.ttyReportRuntimeSurfaceGeneration
                 == terminal.surface.runtimeSurfaceGeneration,
                let reportedDevice = transfer.ttyName.flatMap(
-                   CmuxTopProcessSnapshot.deviceIdentifier(forTTYName:)
+                   HmuxTopProcessSnapshot.deviceIdentifier(forTTYName:)
                ),
                !devices.contains(reportedDevice) {
                 devices.append(reportedDevice)
@@ -321,7 +321,7 @@ extension AppDelegate {
     /// The live pane that owns the given agent process right now: the
     /// process's controlling tty matched against every surface's pty device
     /// (unique-match only), with the exact live process's start-time-keyed
-    /// `CMUX_SURFACE_ID` environment re-homed through
+    /// `HMUX_SURFACE_ID` environment re-homed through
     /// `notificationSurfaceOwner` as a nested-PTY fallback. Disagreement fails
     /// closed.
     func liveAgentDeliveryTarget(
@@ -431,7 +431,7 @@ extension TerminalController {
                 code: "unavailable",
                 message: String(
                     localized: "agent.deliveryTarget.error.unavailable",
-                    defaultValue: "Delivery target resolution is unavailable; retry after cmux finishes starting."
+                    defaultValue: "Delivery target resolution is unavailable; retry after hmux finishes starting."
                 ),
                 data: nil
             )
@@ -441,7 +441,7 @@ extension TerminalController {
             guard params["tty_resolution"] as? String == ttyResolution,
                   let ttyName = params["tty_name"] as? String,
                   TerminalCallerTTYResolver.normalizedName(ttyName) != nil,
-                  let remoteWorkspaceId = v2UUID(params, "_cmux_remote_workspace_id"),
+                  let remoteWorkspaceId = v2UUID(params, "_hmux_remote_workspace_id"),
                   let authenticatedWorkspace = controlTabForSidebarMutation(id: remoteWorkspaceId),
                   authenticatedWorkspace.isRemoteWorkspace,
                   let target = appDelegate.liveRelayAgentDeliveryTarget(

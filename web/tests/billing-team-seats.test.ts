@@ -69,7 +69,7 @@ class FakeStripe implements TeamSeatStripeClient {
     return {
       id: SUBSCRIPTION_ID,
       status: this.status,
-      metadata: { app: "cmux", stackTeamId: TEAM_ID },
+      metadata: { app: "hmux", stackTeamId: TEAM_ID },
       items: {
         data: [
           ...(this.meteredFirst ? [{ id: "si_usage", price: { id: "price_ai_usage", recurring: { usage_type: "metered" } } }] : []),
@@ -180,7 +180,7 @@ describe("team seat reconciler", () => {
 
   test("skips personal-plan and unsubscribed teams but still clears them", async () => {
     const personal = standardTeam();
-    personal.teams.get(TEAM_ID)!.metadata = { cmuxPlan: "pro" };
+    personal.teams.get(TEAM_ID)!.metadata = { hmuxPlan: "pro" };
     const paidPersonal = harness({ stack: personal });
     await paidPersonal.queue.markDirty(TEAM_ID);
     expect(await reconcileTeamSeats({}, paidPersonal.deps)).toMatchObject({ skipped: 1, updated: 0 });

@@ -1,5 +1,5 @@
 // vdisplay: hold a virtual display at a chosen refresh rate until killed (or HOLD seconds).
-// Usage: VDisplay HZ HOLD_SECONDS. A copy of cmuxterm-hq's build-fleet/mini-ops/vdisplay.m
+// Usage: VDisplay HZ HOLD_SECONDS. A copy of hmuxterm-hq's build-fleet/mini-ops/vdisplay.m
 // (`fleet vdisplay`); keep the two in step.
 // Prints "ready DISPLAY_ID p50_ms" once CVDisplayLink ticks on it, so callers can check
 // the rate before measuring anything. Uses the private CGVirtualDisplay API (as

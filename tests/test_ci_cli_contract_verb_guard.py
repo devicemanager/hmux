@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """CI guard for ./scripts/check-cli-contract-verbs.py.
 
-The guarded property: every top-level verb `CMUXCLI.run()` dispatches has a row
+The guarded property: every top-level verb `HMUXCLI.run()` dispatches has a row
 in `docs/cli-contract.md`. An agent-reachability audit read that table, found no
-`layout` row, and concluded saved layouts were unreachable from the CLI; `cmux
+`layout` row, and concluded saved layouts were unreachable from the CLI; `hmux
 layout` had shipped all along.
 
 The negative cases below are what keep the guard from rotting into a no-op,
@@ -15,7 +15,7 @@ row in a table that documents something other than commands, and a table whose
 rows it cannot parse at all.
 
 Cases:
-  (a) The real cmux checkout passes.
+  (a) The real hmux checkout passes.
   (b) A minimal fixture passes, counting both dispatch routes.
   (c) A dispatched verb with no row fails, named with its line number.
   (d) An alias sharing a case arm with a documented verb is checked on its own.
@@ -34,13 +34,13 @@ Cases:
   (m) A contract with no top-level table heading fails.
   (n) A contract with no command table rows fails.
   (o) An `if command == "…"` early return before the switch is a dispatched
-      verb: `cmux diff` and `cmux version` are routed that way, and a guard
+      verb: `hmux diff` and `hmux version` are routed that way, and a guard
       reading only the switch shipped blind to 45 verbs.
   (p) A brace inside a multiline string literal does not end the switch scan, so
       arms below it are still read.
   (q) A verb name inside a comment or a string is not a dispatched verb.
   (r) A row in a table that is not a command table does not document a verb. The
-      `sessions` field of `cmux sessions --json` must not vouch for a verb.
+      `sessions` field of `hmux sessions --json` must not vouch for a verb.
   (s) A switch whose brace count ends somewhere that is not the close of a
       switch fails, instead of silently dropping every arm below it.
   (t) `command == SomeType.someConstant` is a dispatched verb, resolved by
@@ -91,14 +91,14 @@ import tempfile
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 GUARD = os.path.join(ROOT_DIR, "scripts", "check-cli-contract-verbs.py")
-CLI_RELATIVE = os.path.join("CLI", "cmux.swift")
+CLI_RELATIVE = os.path.join("CLI", "hmux.swift")
 DOC_RELATIVE = os.path.join("docs", "cli-contract.md")
 
 # Every hazard the parsers have to survive, in the shape the real file has it:
 # early returns above the switch, a nested switch, a multiline literal holding a
 # brace and a line that looks like a case arm, and verb names in comments.
 FIXTURE_CLI = '''\
-struct CMUXCLI {
+struct HMUXCLI {
     func helper() throws {
         switch subcommand {
         case "not-a-top-level-verb":
@@ -246,7 +246,7 @@ def case_c_undocumented_verb(tmp):
         '        case "canvas":\n            try runCanvasNamespace()\n        case "layout":',
     )
     root = make_fixture_root(tmp, "case-c", cli=cli)
-    expect_failure(root, "case c", "top-level verb canvas", "CLI/cmux.swift:22")
+    expect_failure(root, "case c", "top-level verb canvas", "CLI/hmux.swift:22")
 
 
 def case_d_alias_checked_separately(tmp):
@@ -304,7 +304,7 @@ def case_j_multiline_pattern(tmp):
         '        case "rename-workspace",\n             "rename-window",\n             "resize-pane":',
     )
     root = make_fixture_root(tmp, "case-j", cli=cli)
-    expect_failure(root, "case j", "top-level verb resize-pane", "CLI/cmux.swift:36")
+    expect_failure(root, "case j", "top-level verb resize-pane", "CLI/hmux.swift:36")
 
 
 def case_k_colon_inside_literal(tmp):
@@ -339,10 +339,10 @@ def case_n_no_command_table(tmp):
 
 
 def case_o_early_return_dispatch(tmp):
-    """`cmux diff` is routed above the switch and still needs a row."""
+    """`hmux diff` is routed above the switch and still needs a row."""
     doc = FIXTURE_DOC.replace("| `diff` | Open a diff viewer panel. |\n", "")
     root = make_fixture_root(tmp, "case-o", doc=doc)
-    expect_failure(root, "case o", "top-level verb diff", "CLI/cmux.swift:17")
+    expect_failure(root, "case o", "top-level verb diff", "CLI/hmux.swift:17")
 
 
 def case_p_brace_in_string_does_not_end_the_scan(tmp):

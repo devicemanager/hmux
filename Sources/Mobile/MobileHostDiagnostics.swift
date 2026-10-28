@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 import OSLog
 
@@ -11,7 +11,7 @@ final class MobileHostDiagnostics {
     )
 
     nonisolated static let logger = Logger(
-        subsystem: "dev.cmux",
+        subsystem: "dev.hmux",
         category: "mobile-host"
     )
 

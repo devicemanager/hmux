@@ -36,7 +36,7 @@ terminate_tree() {
 # Run the complete read-only probe behind a watchdog so a failed resolver
 # attempt cannot consume the enclosing CI job timeout. The timeout is
 # configurable for tests, while production callers retain the 60-second cap.
-diagnostics_timeout="${CMUX_NETWORK_DIAGNOSTICS_TIMEOUT_SECONDS:-60}"
+diagnostics_timeout="${HMUX_NETWORK_DIAGNOSTICS_TIMEOUT_SECONDS:-60}"
 run_diagnostics &
 diagnostics_pid=$!
 (

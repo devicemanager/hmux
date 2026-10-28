@@ -6,7 +6,7 @@ name: "CLA Assistant"
 # account. Co-authored-by trailers (pairing partners, AI agents) and the git
 # committer field never need to sign, and a signature is reused in every
 # later pull request. Maintainer accounts in allowlist-ids never sign. A merge
-# commit that pr-catch-up.yml verified and marked with a cmux/catch-up-merge
+# commit that pr-catch-up.yml verified and marked with a hmux/catch-up-merge
 # status from github-actions[bot] in this repository needs no signature.
 on:
   issue_comment:
@@ -86,7 +86,7 @@ jobs:
           # pr-catch-up.yml's merge commits, vouched for by a status that
           # only a token with statuses write in this repository can post.
           # 41898282 is github-actions[bot], the Actions token that posts it.
-          trusted-merge-status-context: 'cmux/catch-up-merge'
+          trusted-merge-status-context: 'hmux/catch-up-merge'
           trusted-merge-status-creator-ids: '41898282'
 
       # A signature comment runs this workflow from main, so its check run

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// Motion for small chrome a heavy user summons many times an hour (hover
@@ -162,7 +162,7 @@ struct ShortcutHintPill: View {
 
     var body: some View {
         Text(text)
-            .cmuxFont(size: fontSize, weight: .semibold, design: .rounded)
+            .hmuxFont(size: fontSize, weight: .semibold, design: .rounded)
             .monospacedDigit()
             .lineLimit(1)
             .fixedSize(horizontal: true, vertical: false)

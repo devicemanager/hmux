@@ -14,7 +14,7 @@ afterEach(() => {
 });
 
 function requestWithAuthorization(authorization?: string): Request {
-  return new Request("https://cmux.test/api/cron/vm-reconcile", {
+  return new Request("https://hmux.test/api/cron/vm-reconcile", {
     headers: authorization === undefined ? {} : { authorization },
   });
 }

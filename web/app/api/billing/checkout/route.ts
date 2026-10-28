@@ -123,15 +123,15 @@ type NativeCheckoutError =
   | TeamBillingAccessError;
 
 const NATIVE_CHECKOUT_ERRORS = {
-  unauthorized: { actionCode: "auth_login", action: "cmux auth login", status: 401 },
-  invalid_plan: { actionCode: "choose_plan", action: "cmux billing checkout --plan <go|pro|max>", status: 400 },
+  unauthorized: { actionCode: "auth_login", action: "hmux auth login", status: 401 },
+  invalid_plan: { actionCode: "choose_plan", action: "hmux billing checkout --plan <go|pro|max>", status: 400 },
   billing_unavailable: { actionCode: "open_pricing", action: "https://cmux.com/pricing", status: 503 },
-  plan_unavailable: { actionCode: "plan_unavailable", action: "cmux billing checkout --plan pro", status: 403 },
+  plan_unavailable: { actionCode: "plan_unavailable", action: "hmux billing checkout --plan pro", status: 403 },
   team_id_required: { actionCode: "open_teams", action: "https://cmux.com/dashboard/teams", status: 400 },
   // The personal entry routes to Pro/Max; Team checkout needs a real team.
   personal_team_not_upgradable_to_team: {
     actionCode: "choose_plan",
-    action: "cmux billing checkout --plan <go|pro|max>",
+    action: "hmux billing checkout --plan <go|pro|max>",
     status: teamBillingAccessStatus("personal_team_not_upgradable_to_team"),
   },
   team_not_found: { actionCode: "open_teams", action: "https://cmux.com/dashboard/teams", status: teamBillingAccessStatus("team_not_found") },
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const app = await checkoutStackServerApp();
     if (!app || !isStripeBillingConfigured()) return nativeCheckoutError("billing_unavailable");
     const attribution = nativeCheckoutAttribution();
-    const scheme = validatedNativeCallbackScheme(typeof body.cmux_scheme === "string" ? body.cmux_scheme : null, request);
+    const scheme = validatedNativeCallbackScheme(typeof body.hmux_scheme === "string" ? body.hmux_scheme : null, request);
     const response = await stripePersonalCheckout(request, app, plan, "month", scheme, attribution, user.id);
     const destination = response.headers.get("location");
     if (!destination) throw new Error("Checkout destination is unavailable");
@@ -188,7 +188,7 @@ function nativeCheckoutPlan(body: unknown): PersonalPlanId | "team" | null {
 }
 
 function nativeCheckoutAttribution(): CheckoutAttribution {
-  return checkoutAttributionFromRequest({ searchParams: new URLSearchParams({ cmux_source: "cli_billing_checkout", cmux_client: "cli" }) });
+  return checkoutAttributionFromRequest({ searchParams: new URLSearchParams({ hmux_source: "cli_billing_checkout", hmux_client: "cli" }) });
 }
 
 /**
@@ -199,13 +199,13 @@ function nativeCheckoutAttribution(): CheckoutAttribution {
 async function nativeTeamCheckout(
   request: NextRequest,
   userId: string,
-  body: { readonly teamId?: unknown; readonly cmux_scheme?: unknown },
+  body: { readonly teamId?: unknown; readonly hmux_scheme?: unknown },
 ): Promise<NextResponse> {
   const teamId = explicitTeamId(body.teamId);
   if (!teamId) return nativeCheckoutError("team_id_required");
   const app = await checkoutStackServerApp();
   if (!app || !isStripeBillingConfigured()) return nativeCheckoutError("billing_unavailable");
-  const scheme = validatedNativeCallbackScheme(typeof body.cmux_scheme === "string" ? body.cmux_scheme : null, request);
+  const scheme = validatedNativeCallbackScheme(typeof body.hmux_scheme === "string" ? body.hmux_scheme : null, request);
   const response = await stripeTeamCheckout(request, app, "month", scheme, nativeCheckoutAttribution(), {
     teamId,
     authenticatedUserId: userId,
@@ -225,8 +225,8 @@ async function nativeTeamCheckout(
 async function resolveCheckout(request: NextRequest): Promise<NextResponse> {
   if (
     isAppStoreDistributionMode({
-      cmux_distribution: request.nextUrl.searchParams.get("cmux_distribution"),
-      cmux_ios_app_store: request.nextUrl.searchParams.get("cmux_ios_app_store"),
+      hmux_distribution: request.nextUrl.searchParams.get("hmux_distribution"),
+      hmux_ios_app_store: request.nextUrl.searchParams.get("hmux_ios_app_store"),
     })
   ) {
     return NextResponse.redirect(appStorePricingUnavailableURL(requestWithOrigin(request).nextUrl));
@@ -236,7 +236,7 @@ async function resolveCheckout(request: NextRequest): Promise<NextResponse> {
   const intervalError = unavailableIntervalResponse(request, plan);
   if (intervalError) return intervalError;
   const interval = checkoutInterval(request, plan);
-  const rawCallbackScheme = request.nextUrl.searchParams.get("cmux_scheme");
+  const rawCallbackScheme = request.nextUrl.searchParams.get("hmux_scheme");
   const verifiedRelayScheme = verifiedAppPricingRelayScheme(request.nextUrl);
   const hasRelayAssertion =
     request.nextUrl.searchParams.has(CHECKOUT_RELAY_EXPIRES_PARAM) ||
@@ -259,7 +259,7 @@ async function resolveCheckout(request: NextRequest): Promise<NextResponse> {
   const configuredRelayURL = appPricingCheckoutRelayURL(request.nextUrl, {
     plan,
     interval,
-    cmuxScheme: callbackScheme,
+    hmuxScheme: callbackScheme,
   });
   // Analytics only. Which page or app button opened checkout, and from which
   // build channel; see services/analytics/checkoutAttribution.ts.
@@ -368,7 +368,7 @@ async function stripePersonalCheckout(
 
     const successUrl =
       `${requestOrigin(request)}/api/billing/complete` +
-      `?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=${encodeURIComponent(callbackScheme)}`;
+      `?session_id={CHECKOUT_SESSION_ID}&hmux_scheme=${encodeURIComponent(callbackScheme)}`;
     // A dashboard upgrade returns to the page that asked for it; only a
     // validated same-origin /dashboard path is kept.
     const returnTo = dashboardReturnPath(request.nextUrl.searchParams.get("returnTo"));
@@ -379,7 +379,7 @@ async function stripePersonalCheckout(
     const metadata = {
       stackUserId,
       plan,
-      app: "cmux",
+      app: "hmux",
       billingInterval: interval,
       nativeCallbackScheme: callbackScheme,
       ...(returnTo ? { returnTo } : {}),
@@ -511,7 +511,7 @@ async function stripeTeamCheckout(
 
     const successUrl =
       `${requestOrigin(request)}/api/billing/complete` +
-      `?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=${encodeURIComponent(callbackScheme)}`;
+      `?session_id={CHECKOUT_SESSION_ID}&hmux_scheme=${encodeURIComponent(callbackScheme)}`;
     const cancelUrl = new URL("/pricing?billing=cancelled", requestOrigin(request));
     cancelUrl.searchParams.set("interval", interval);
     const metadata = {
@@ -519,7 +519,7 @@ async function stripeTeamCheckout(
       // The purchasing admin, for support and audit. Fulfillment stays team-scoped.
       stackUserId,
       plan: "team",
-      app: "cmux",
+      app: "hmux",
       billingInterval: interval,
       nativeCallbackScheme: callbackScheme,
       ...checkoutAttributionMetadata(attribution),
@@ -577,7 +577,7 @@ async function stripeTeamCheckout(
 function checkoutSignInRedirect(request: NextRequest): NextResponse {
   const returnURL = new URL(request.url);
   returnURL.searchParams.delete("format");
-  returnURL.searchParams.set("cmux_after_sign_in", "1");
+  returnURL.searchParams.set("hmux_after_sign_in", "1");
   return NextResponse.redirect(new URL(
     vaultSignInHref(`${returnURL.pathname}${returnURL.search}`),
     requestOrigin(request),
@@ -586,9 +586,9 @@ function checkoutSignInRedirect(request: NextRequest): NextResponse {
 
 function captureCheckoutAuthenticated(request: NextRequest, userId: string, plan: string, attribution: CheckoutAttribution): void {
   void captureServerEvent({
-    event: "cmux_billing_checkout_authenticated",
+    event: "hmux_billing_checkout_authenticated",
     distinctId: userId,
-    properties: { plan, resumed_after_sign_in: request.nextUrl.searchParams.get("cmux_after_sign_in") === "1",
+    properties: { plan, resumed_after_sign_in: request.nextUrl.searchParams.get("hmux_after_sign_in") === "1",
       ...checkoutAttributionProperties(attribution) },
   });
 }
@@ -602,7 +602,7 @@ function captureCheckoutDecision(
   interval: BillingInterval = "month",
 ): void {
   void captureServerEvent({
-    event: "cmux_billing_checkout_routed",
+    event: "hmux_billing_checkout_routed",
     distinctId: userId,
     properties: { requested_plan: plan, current_plan: currentPlan, decision,
       billing_interval: interval, ...checkoutAttributionProperties(attribution) },
@@ -656,7 +656,7 @@ function isAccountDeletionInProgress(user: { readonly clientReadOnlyMetadata?: u
     metadata &&
       typeof metadata === "object" &&
       !Array.isArray(metadata) &&
-      (metadata as Record<string, unknown>).cmuxAccountDeleting === true
+      (metadata as Record<string, unknown>).hmuxAccountDeleting === true
   );
 }
 
@@ -690,7 +690,7 @@ async function teamCheckoutCustomer(
 
 /**
  * Implicit team resolution for macOS clients that predate explicit team ids:
- * the selected team, else the first team, else a new "cmux Team". An existing
+ * the selected team, else the first team, else a new "hmux Team". An existing
  * team needs the caller to be its admin, as an explicit team id does.
  */
 async function legacyCheckoutTeamCustomer(user: CheckoutTeamUser): Promise<TeamCheckoutCustomerResult> {
@@ -704,13 +704,13 @@ async function legacyCheckoutTeamCustomer(user: CheckoutTeamUser): Promise<TeamC
     throw new Error("Stack Auth user cannot create a team checkout customer");
   }
 
-  const team = await user.createTeam({ displayName: "cmux Team" });
+  const team = await user.createTeam({ displayName: "hmux Team" });
   await grantCreatorTeamAdmin(user, team);
   return { ok: true, team };
 }
 
 /**
- * Stack's creator default does not make the creator a cmux admin, and the
+ * Stack's creator default does not make the creator a hmux admin, and the
  * buyer must be able to manage billing later through the explicit,
  * admin-only paths. Same contract as services/teams createTeamForUser: a team
  * whose admin grant failed is deleted again and checkout fails, rather than
@@ -745,10 +745,10 @@ async function stripeCustomerForTeam(
   if (existing?.id) return existing.id;
 
   const customer = await stripe().customers.create({
-    name: team.displayName?.trim() || "cmux Team",
+    name: team.displayName?.trim() || "hmux Team",
     metadata: {
       stackTeamId: team.id,
-      app: "cmux",
+      app: "hmux",
     },
   });
 

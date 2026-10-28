@@ -1,6 +1,6 @@
 import AppKit
-import CmuxAuthRuntime
-import CmuxCloud
+import HmuxAuthRuntime
+import HmuxCloud
 import Foundation
 
 /// Everything the New Machine sheet shows that comes from the server: the

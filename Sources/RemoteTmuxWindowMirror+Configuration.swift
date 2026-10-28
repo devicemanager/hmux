@@ -1,6 +1,6 @@
 import Bonsplit
-import CmuxFoundation
-import CmuxRemoteSession
+import HmuxFoundation
+import HmuxRemoteSession
 import Foundation
 import Observation
 

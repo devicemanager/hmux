@@ -1,9 +1,9 @@
-import CmuxCloud
-import CmuxProductAnalytics
+import HmuxCloud
+import HmuxProductAnalytics
 
 extension ProductAnalyticsEvent {
     /// An upgrade click from `source`. The same token reaches checkout as
-    /// `cmux_source`, so this joins `cmux_billing_checkout_*` on `checkout_source`.
+    /// `hmux_source`, so this joins `hmux_billing_checkout_*` on `checkout_source`.
     static func upgradeOpened(
         _ source: ProUpgradeSource,
         plan: CheckoutPlan = .pro,

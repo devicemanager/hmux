@@ -184,7 +184,7 @@ for delta in "$archives_dir"/*.delta; do
   fi
 done
 
-# generate_appcast names deltas after the app ("cmux NIGHTLY<new>-<old>.delta"),
+# generate_appcast names deltas after the app ("hmux NIGHTLY<new>-<old>.delta"),
 # which collides across per-architecture tracks and gets mangled by GitHub
 # release assets. Rename them after the archive and rewrite the appcast URLs.
 delta_prefix="${SPARKLE_DELTA_NAME_PREFIX:-$(basename "$DMG_PATH" .dmg | sed -E 's/-[0-9]+$//')-}"

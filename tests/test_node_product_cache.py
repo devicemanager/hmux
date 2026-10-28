@@ -34,7 +34,7 @@ peer_spec.loader.exec_module(peer)
 
 class ConfiguredRootTests(unittest.TestCase):
     def test_owned_runners_get_the_default_root(self):
-        for name in ("cmux12s-mac-mini-glaeda", "cmux12s-mac-mini-glaeda-3", "cmux14-glaeda-1"):
+        for name in ("hmux12s-mac-mini-glaeda", "hmux12s-mac-mini-glaeda-3", "hmux14-glaeda-1"):
             self.assertEqual(cache.configured_root({"RUNNER_NAME": name}), cache.OWNED_DEFAULT_ROOT, name)
 
     def test_disposable_runners_keep_no_store(self):
@@ -43,23 +43,23 @@ class ConfiguredRootTests(unittest.TestCase):
             self.assertIsNone(cache.configured_store({"RUNNER_NAME": name}), name)
 
     def test_the_variable_wins_and_off_disables(self):
-        self.assertEqual(cache.configured_root({"CMUX_NODE_PRODUCT_CACHE_ROOT": "/tmp/x",
-                                                "RUNNER_NAME": "cmux14-glaeda"}), "/tmp/x")
-        self.assertEqual(cache.configured_root({"CMUX_NODE_PRODUCT_CACHE_ROOT": "/tmp/x",
+        self.assertEqual(cache.configured_root({"HMUX_NODE_PRODUCT_CACHE_ROOT": "/tmp/x",
+                                                "RUNNER_NAME": "hmux14-glaeda"}), "/tmp/x")
+        self.assertEqual(cache.configured_root({"HMUX_NODE_PRODUCT_CACHE_ROOT": "/tmp/x",
                                                 "RUNNER_NAME": "blacksmith-1"}), "/tmp/x")
         for value in ("off", "OFF", " off "):
-            self.assertIsNone(cache.configured_root({"CMUX_NODE_PRODUCT_CACHE_ROOT": value,
-                                                     "RUNNER_NAME": "cmux14-glaeda"}))
+            self.assertIsNone(cache.configured_root({"HMUX_NODE_PRODUCT_CACHE_ROOT": value,
+                                                     "RUNNER_NAME": "hmux14-glaeda"}))
 
     def test_ci_waiters_do_not_wait_for_another_fill_by_default(self):
         self.assertEqual(cache.wait_seconds({}), 0.0)
-        self.assertEqual(cache.wait_seconds({"CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS": "bad"}), 0.0)
-        self.assertEqual(cache.wait_seconds({"CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS": "90"}), 90.0)
+        self.assertEqual(cache.wait_seconds({"HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS": "bad"}), 0.0)
+        self.assertEqual(cache.wait_seconds({"HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS": "90"}), 90.0)
 
     def test_an_owned_runner_opens_a_store_at_the_root(self):
         with tempfile.TemporaryDirectory() as tmp:
             with mock.patch.object(cache, "OWNED_DEFAULT_ROOT", str(Path(tmp) / "node-products")):
-                store = cache.configured_store({"RUNNER_NAME": "cmux8s-mac-mini-glaeda-2"})
+                store = cache.configured_store({"RUNNER_NAME": "hmux8s-mac-mini-glaeda-2"})
             self.assertIsNotNone(store)
             self.assertTrue((Path(tmp) / "node-products" / "objects").is_dir())
 
@@ -107,7 +107,7 @@ class NodeProductCacheTests(unittest.TestCase):
                 info.size = len(raw)
                 tar.addfile(info, io.BytesIO(raw))
             payload = b"compiled bytes"
-            info = tarfile.TarInfo("Build/Products/Debug/cmux")
+            info = tarfile.TarInfo("Build/Products/Debug/hmux")
             info.size = len(payload)
             tar.addfile(info, io.BytesIO(payload))
 
@@ -283,7 +283,7 @@ class NodeProductCacheTests(unittest.TestCase):
 
         with mock.patch.dict(
             os.environ,
-            {"CMUX_NODE_PRODUCT_CACHE_FALLBACK_SOURCE": "r2"},
+            {"HMUX_NODE_PRODUCT_CACHE_FALLBACK_SOURCE": "r2"},
         ):
             owner = cache.acquire(
                 self.store,
@@ -583,8 +583,8 @@ class NodeProductCacheTests(unittest.TestCase):
         with mock.patch.dict(
             os.environ,
             {
-                "CMUX_NODE_PRODUCT_CACHE_ROOT": str(self.root),
-                "RUNNER_NAME": "cmux12s-mac-mini-glaeda",
+                "HMUX_NODE_PRODUCT_CACHE_ROOT": str(self.root),
+                "RUNNER_NAME": "hmux12s-mac-mini-glaeda",
             },
             clear=False,
         ), mock.patch.object(sys, "argv", ["node-product-cache.py", "reclaim", "--budget", "0"]):
@@ -600,7 +600,7 @@ class NodeProductCacheTests(unittest.TestCase):
                 cache._pressure_budget(
                     self.store,
                     10**9,
-                    {"CMUX_NODE_PRODUCT_CACHE_RECLAIM_NEED_BYTES": "1GiB"},
+                    {"HMUX_NODE_PRODUCT_CACHE_RECLAIM_NEED_BYTES": "1GiB"},
                 ),
                 0,
             )
@@ -608,7 +608,7 @@ class NodeProductCacheTests(unittest.TestCase):
             cache._pressure_budget(
                 self.store,
                 10**9,
-                {"CMUX_NODE_PRODUCT_CACHE_RECLAIM_NEED_BYTES": "bad"},
+                {"HMUX_NODE_PRODUCT_CACHE_RECLAIM_NEED_BYTES": "bad"},
             ),
             10**9,
         )
@@ -617,7 +617,7 @@ class NodeProductCacheTests(unittest.TestCase):
                 cache._pressure_budget(
                     self.store,
                     10**9,
-                    {"RUNNER_NAME": "cmux12s-mac-mini-glaeda"},
+                    {"RUNNER_NAME": "hmux12s-mac-mini-glaeda"},
                 ),
                 0,
             )
@@ -637,7 +637,7 @@ class NodeProductCacheTests(unittest.TestCase):
     def test_hit_and_verified_restore_update_bounded_measurement(self):
         self.publish(source="r2")
         destination = Path(self.temp.name) / "measured"
-        with mock.patch.dict(os.environ, {"CMUX_NODE_PRODUCT_CACHE_FALLBACK_SOURCE": "r2"}):
+        with mock.patch.dict(os.environ, {"HMUX_NODE_PRODUCT_CACHE_FALLBACK_SOURCE": "r2"}):
             hit = cache.acquire(self.store, self.identity, destination, wait=0)
         self.assertTrue(hit["hit"])
         complete = cache.finalize(

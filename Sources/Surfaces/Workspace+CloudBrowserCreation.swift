@@ -1,6 +1,6 @@
 import AppKit
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 
 @MainActor
@@ -61,7 +61,7 @@ extension Workspace {
         guard let binding = cloudVMBinding else { return nil }
         let machine = SurfaceMachineID(rawValue: binding.vmID)
         guard machine.cloudMachineID != nil,
-              SurfaceCatalog.shared.provider(for: machine) is CmuxTuiSurfaceProvider else { return nil }
+              SurfaceCatalog.shared.provider(for: machine) is HmuxTuiSurfaceProvider else { return nil }
         let boundRemoteWorkspaceID: String? = {
             guard let value = binding.remoteWorkspaceID?.trimmingCharacters(in: .whitespacesAndNewlines),
                   !value.isEmpty else { return nil }
@@ -91,7 +91,7 @@ extension Workspace {
         }()
         let remoteWorkspaceID = boundRemoteWorkspaceID
             ?? sourceView?.workspace.id
-            ?? (SurfaceCatalog.shared.provider(for: machine) as? CmuxTuiSurfaceProvider)?.info.remoteWorkspaces?.first(where: \.focused)?.id
+            ?? (SurfaceCatalog.shared.provider(for: machine) as? HmuxTuiSurfaceProvider)?.info.remoteWorkspaces?.first(where: \.focused)?.id
         guard let remoteWorkspaceID, !remoteWorkspaceID.isEmpty else { return nil }
         let url = requestedURL ?? URL(string: "about:blank")!
         return CloudBrowserCreationRoute(
@@ -107,7 +107,7 @@ extension Workspace {
     /// placeholder is kept free of a local URL until the daemon receipt binds it.
     func startCloudBrowserCreation(panel: BrowserPanel, route: CloudBrowserCreationRoute, name: String? = nil) {
         let catalog = SurfaceCatalog.shared
-        guard let provider = catalog.provider(for: route.machine) as? CmuxTuiSurfaceProvider else { return }
+        guard let provider = catalog.provider(for: route.machine) as? HmuxTuiSurfaceProvider else { return }
         let mutation = catalog.cloudWorkspaceProjectionCoordinator.beginLocalMutation(on: route.machine)
         pendingCloudBrowserPanelIDs.insert(panel.id)
         let panelID = panel.id
@@ -125,7 +125,7 @@ extension Workspace {
             do {
                 guard !Task.isCancelled, self.panels[panel.id] === panel else { throw CancellationError() }
                 guard let provider else {
-                    throw CmuxTuiSurfaceProvider.ProviderError.stateUnavailable(route.machine.rawValue)
+                    throw HmuxTuiSurfaceProvider.ProviderError.stateUnavailable(route.machine.rawValue)
                 }
                 let created = try await provider.createBrowser(
                     url: route.url,
@@ -133,17 +133,17 @@ extension Workspace {
                     remoteWorkspaceID: route.remoteWorkspaceID,
                     screenID: route.screenID,
                     paneID: route.paneID,
-                    idempotencyKey: "cmux-cloud-browser-\(requestID)",
-                    correlationKey: "cmux-cloud-browser-\(requestID)"
+                    idempotencyKey: "hmux-cloud-browser-\(requestID)",
+                    correlationKey: "hmux-cloud-browser-\(requestID)"
                 )
                 guard !Task.isCancelled, self.panels[panel.id] === panel,
                       let remoteView = created.remoteViews?.first else {
                     await self.cleanupCancelledCloudBrowser(created, provider: provider, catalog: catalog)
                     throw CancellationError()
                 }
-                guard let activeProvider = catalog.provider(for: route.machine) as? CmuxTuiSurfaceProvider,
+                guard let activeProvider = catalog.provider(for: route.machine) as? HmuxTuiSurfaceProvider,
                       activeProvider.isRegisteredInCatalog() else {
-                    throw CmuxTuiSurfaceProvider.ProviderError.stateUnavailable(route.machine.rawValue)
+                    throw HmuxTuiSurfaceProvider.ProviderError.stateUnavailable(route.machine.rawValue)
                 }
                 // Adopt the daemon identity before configuring WebKit. If route
                 // setup cannot start (for example, the proxy is unavailable),
@@ -161,12 +161,12 @@ extension Workspace {
                 ))
                 if ["http", "https"].contains(route.url.scheme?.lowercased() ?? "") {
                     guard activeProvider.configureBrowser(panel, url: route.url, resourceID: created.id) else {
-                        throw CmuxTuiSurfaceProvider.ProviderError.localForwardURLUnavailable
+                        throw HmuxTuiSurfaceProvider.ProviderError.localForwardURLUnavailable
                     }
                 } else if route.url.scheme?.lowercased() == "about" {
                     panel.cloudAccess.retainResource(created.id)
                 } else {
-                    throw CmuxTuiSurfaceProvider.ProviderError.localForwardURLUnavailable
+                    throw HmuxTuiSurfaceProvider.ProviderError.localForwardURLUnavailable
                 }
             } catch {
                 guard !Task.isCancelled, self.panels[panel.id] === panel else { return }
@@ -197,7 +197,7 @@ extension Workspace {
     /// while its cancellation-safe create is still awaiting the receipt.
     private func cleanupCancelledCloudBrowser(
         _ resource: SurfaceResource,
-        provider: CmuxTuiSurfaceProvider,
+        provider: HmuxTuiSurfaceProvider,
         catalog: SurfaceCatalog
     ) async {
         guard let view = resource.remoteViews?.first else { return }
@@ -205,7 +205,7 @@ extension Workspace {
         // machine ownership scope. Never use a provider from a different team
         // to close a committed tab or remove its catalog row.
         let activeProvider = [
-            catalog.provider(for: resource.machine) as? CmuxTuiSurfaceProvider,
+            catalog.provider(for: resource.machine) as? HmuxTuiSurfaceProvider,
             provider,
         ].compactMap { $0 }.first {
             $0.ownerTeamID == provider.ownerTeamID && !$0.hasLostAccess

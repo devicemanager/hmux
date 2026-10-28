@@ -84,13 +84,13 @@ global revocation while devices are offline.
 
 | Boundary | Mac and iOS evidence | Assessment |
 | --- | --- | --- |
-| Identity | Both use [`V2IdentityKeyStore`](../../Packages/Shared/CmuxIrxTransport/Sources/CmuxIrxTransport/V2/V2IdentityKeyStore.swift), scoped by environment, project, team, user, installation, namespace and build tag. The stored bytes are the private seed; the public ID is derived by [`V2IdentityKey`](../../Packages/Shared/CmuxIrxTransport/Sources/CmuxIrxTransport/V2/V2IdentityKey.swift). | Both production paths now use the shared Data Protection Keychain adapter with explicit non-sync and `AfterFirstUnlockThisDeviceOnly`. Signed-device migration remains a verification gate. |
+| Identity | Both use [`V2IdentityKeyStore`](../../Packages/Shared/HmuxIrxTransport/Sources/HmuxIrxTransport/V2/V2IdentityKeyStore.swift), scoped by environment, project, team, user, installation, namespace and build tag. The stored bytes are the private seed; the public ID is derived by [`V2IdentityKey`](../../Packages/Shared/HmuxIrxTransport/Sources/HmuxIrxTransport/V2/V2IdentityKey.swift). | Both production paths now use the shared Data Protection Keychain adapter with explicit non-sync and `AfterFirstUnlockThisDeviceOnly`. Signed-device migration remains a verification gate. |
 | Enrollment and directory | [`routing.ts`](../../workers/iroh-v2/src/routing.ts) authenticates before team dispatch. [`broker.ts`](../../workers/iroh-v2/src/broker.ts) verifies device signatures; [`team-store.ts`](../../workers/iroh-v2/src/storage/team-store.ts) computes visible devices and inbound permissions separately. | The directory is not an unauthenticated lookup by endpoint ID. Authorized owners, granted users and dashboard team managers can receive permitted device information. |
 | Public Mac status | [`MobileHostService`](../../Sources/Mobile/MobileHostService.swift) returns identity-free status without verified Stack ownership. Route disclosure suppresses all attach routes for `publicStatus`. | Public status must not reveal the Iroh ID. A focused disclosure test covers the shared policy. |
-| Outgoing transport | [`DeviceIrxClient`](../../Sources/Devices/DeviceIrxClient.swift) and [`MobileIrxRuntimeComposition+Dial`](../../ios/cmuxPackage/Sources/cmuxFeature/MobileIrxRuntimeComposition+Dial.swift) use `IrxEndpointSupervisor`, `IrxAdmission.performClient` and `IrxClientSession`. | Same Iroh encrypted transport and admission exchange. The Mac client additionally checks exact account, namespace, tag and host opt-in through `IrxMacPeerAuthorization`. |
-| Host admission | Both modern peer types enter [`V2InboundAdmissionAuthority`](../../Packages/Shared/CmuxIrxTransport/Sources/CmuxIrxTransport/V2/V2InboundAdmissionAuthority.swift), keyed by the QUIC-authenticated remote key. Outbound visibility is not permission to enter. | New parameterized coverage proves that a known, visible Mac or iOS endpoint is denied without inbound permission, admitted with it, and denied after removal. Existing tests cover scope, expiry and revocation. |
-| Persistence | Both compositions use [`V2FileStateStore`](../../Packages/Shared/CmuxIrxTransport/Sources/CmuxIrxTransport/V2/V2FileStateStore.swift). | Confirmed plaintext exposure; hardened here with the same encryption and migration on both platforms. |
-| Diagnostics | Both use [`IrxJournal`](../../Packages/Shared/CmuxIrxTransport/Sources/CmuxIrxTransport/IrxJournal.swift). The endpoint bind event previously recorded the complete ID at public log privacy. | Confirmed full-ID exposure; hardened here before retention and output, including IDs embedded in attribute error messages. |
+| Outgoing transport | [`DeviceIrxClient`](../../Sources/Devices/DeviceIrxClient.swift) and [`MobileIrxRuntimeComposition+Dial`](../../ios/hmuxPackage/Sources/hmuxFeature/MobileIrxRuntimeComposition+Dial.swift) use `IrxEndpointSupervisor`, `IrxAdmission.performClient` and `IrxClientSession`. | Same Iroh encrypted transport and admission exchange. The Mac client additionally checks exact account, namespace, tag and host opt-in through `IrxMacPeerAuthorization`. |
+| Host admission | Both modern peer types enter [`V2InboundAdmissionAuthority`](../../Packages/Shared/HmuxIrxTransport/Sources/HmuxIrxTransport/V2/V2InboundAdmissionAuthority.swift), keyed by the QUIC-authenticated remote key. Outbound visibility is not permission to enter. | New parameterized coverage proves that a known, visible Mac or iOS endpoint is denied without inbound permission, admitted with it, and denied after removal. Existing tests cover scope, expiry and revocation. |
+| Persistence | Both compositions use [`V2FileStateStore`](../../Packages/Shared/HmuxIrxTransport/Sources/HmuxIrxTransport/V2/V2FileStateStore.swift). | Confirmed plaintext exposure; hardened here with the same encryption and migration on both platforms. |
+| Diagnostics | Both use [`IrxJournal`](../../Packages/Shared/HmuxIrxTransport/Sources/HmuxIrxTransport/IrxJournal.swift). The endpoint bind event previously recorded the complete ID at public log privacy. | Confirmed full-ID exposure; hardened here before retention and output, including IDs embedded in attribute error messages. |
 
 ## Changes in this PR
 
@@ -132,23 +132,23 @@ Drizzle's TypeScript loader. Pinning the transitive copy to `0.28.1` matches the
 version already used by Wrangler. `bun audit` then reports no advisories; the
 Drizzle loader transform, Worker check and workerd tests pass.
 
-At audit time the pinned Iroh FFI release was `1.0.2-cmux.7.ios17.3`, source
+At audit time the pinned Iroh FFI release was `1.0.2-hmux.7.ios17.3`, source
 `af08f0e1b9bb3ddb839210b175738d5761fea686`. Querying its 483 registry lockfile
 entries against OSV identified three patchable advisories:
 
 | Package | Fix in [iroh-ffi #16](https://github.com/manaflow-ai/iroh-ffi/pull/16) | Reachability qualification |
 | --- | --- | --- |
-| `h2` 0.4.15 | 0.4.16; RUSTSEC-2026-0258 | Unbounded empty HTTP/2 DATA frames. Requires an active HTTP/2 stream; default cmux exploitation was not established. The relay data transport uses WebSocket, not this path. |
+| `h2` 0.4.15 | 0.4.16; RUSTSEC-2026-0258 | Unbounded empty HTTP/2 DATA frames. Requires an active HTTP/2 stream; default hmux exploitation was not established. The relay data transport uses WebSocket, not this path. |
 | `lru` 0.18.0 | 0.18.2; RUSTSEC-2026-0253 | Requires `pop`, a panicking key destructor and caught unwinding. The pinned consumer uses `get_key_value`/`put` with a `Copy` public key; those trigger conditions were not found. |
 | `rustls` 0.23.40 | 0.23.45, plus required `rustls-webpki` 0.103.15; RUSTSEC-2026-0285 | Wrong TLS 1.3 encryption-level boundaries can be accepted. The handshake transcript remains authenticated; this does not establish endpoint impersonation. |
 
 The dependency patch passed 28 Rust library tests on the fork's main line and
-31 tests when applied to cmux's exact pinned release source. After the patch,
+31 tests when applied to hmux's exact pinned release source. After the patch,
 OSV reports only the existing informational unmaintained notices for
 `atomic-polyfill` and `paste`. Git dependencies and the published binary's
 contents are outside that registry scan.
 
-The cmux binary now consumes the newly published XCFramework at that pin. Its
+The hmux binary now consumes the newly published XCFramework at that pin. Its
 archive checksum is `f1605640a02925dd0941c15765162fac872c449e5e56d39c035ee163d409527e`.
 The update uses a new release artifact; no existing release artifact was overwritten.
 

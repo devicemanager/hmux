@@ -1,4 +1,4 @@
-import CmuxTerminalCore
+import HmuxTerminalCore
 import Foundation
 
 enum GhosttyStartupAppearancePreviewProfile: String, CaseIterable, Identifiable {
@@ -45,12 +45,12 @@ enum GhosttyStartupAppearancePreviewProfile: String, CaseIterable, Identifiable 
         case .realUserConfig:
             return String(
                 localized: "debug.startupAppearance.profile.realUserConfig.detail",
-                defaultValue: "Loads your actual Ghostty and cmux config files."
+                defaultValue: "Loads your actual Ghostty and hmux config files."
             )
         case .freshInstall:
             return String(
                 localized: "debug.startupAppearance.profile.freshInstall.detail",
-                defaultValue: "No user Ghostty settings, so cmux applies its managed default colors."
+                defaultValue: "No user Ghostty settings, so hmux applies its managed default colors."
             )
         case .userThemePair:
             return String(
@@ -81,7 +81,7 @@ enum GhosttyStartupAppearancePreviewProfile: String, CaseIterable, Identifiable 
         case .realUserConfig:
             return nil
         case .freshInstall:
-            return GhosttyConfig.cmuxDefaultThemeConfigContents(
+            return GhosttyConfig.hmuxDefaultThemeConfigContents(
                 preferredColorScheme: preferredColorScheme
             )
         case .userThemePair:

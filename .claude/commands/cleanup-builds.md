@@ -16,4 +16,4 @@ Reclaim disk taken by tagged dev artifacts from `./scripts/reload.sh --tag <tag>
 
 ## Notes
 
-Always-on safety rules: skip running `cmux DEV <tag>` apps, and skip the tag in `/tmp/cmux-last-cli-path` (the most recent reload). An existing HQ worktree is not protection; use `--keep`. The script never touches `GhosttyKit.xcframework` symlinks, the GhosttyKit cache, or anything outside per-tag artifacts.
+Always-on safety rules: skip running `hmux DEV <tag>` apps, and skip the tag in `/tmp/hmux-last-cli-path` (the most recent reload). An existing HQ worktree is not protection; use `--keep`. The script never touches `GhosttyKit.xcframework` symlinks, the GhosttyKit cache, or anything outside per-tag artifacts.

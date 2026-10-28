@@ -38,7 +38,7 @@ export function reportError(
     // Sentry still receives the original exception below (its own scrubbing
     // applies, and grouping needs the real error).
     const log = level === "error" ? console.error : console.warn;
-    log("cmux.observability.error", safeContext, scrubErrorForLog(error));
+    log("hmux.observability.error", safeContext, scrubErrorForLog(error));
   } catch {
     // Reporting must never change the caller's control flow.
   }
@@ -52,7 +52,7 @@ export function reportError(
       .then(async (Sentry) => {
         Sentry.withScope((scope) => {
           scope.setLevel(level);
-          scope.setContext("cmux", safeContext);
+          scope.setContext("hmux", safeContext);
           scope.setTags(tags);
           if (trace) {
             // The Sentry trace context is how an issue links to its trace; we

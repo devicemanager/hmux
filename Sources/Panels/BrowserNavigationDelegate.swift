@@ -1,8 +1,8 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxBrowser
-import CmuxCore
-import CmuxSettings
+import HmuxBrowser
+import HmuxCore
+import HmuxSettings
 import Foundation
 import WebKit
 
@@ -120,7 +120,7 @@ import WebKit
 
     func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
         activeMainFrameNavigation = navigation
-        (webView as? CmuxWebView)?.clearTrustedInternalNavigationGrants()
+        (webView as? HmuxWebView)?.clearTrustedInternalNavigationGrants()
         lastAttemptedURL = lastAttemptedURL ?? webView.url ?? lastAttemptedRequest?.url
         shouldPrintAfterCurrentNavigationFinishes = false
         didClearPDFDocument?()
@@ -159,7 +159,7 @@ import WebKit
         clearActiveMainFrameNavigation(ifMatching: navigation)
         if shouldPrintAfterCurrentNavigationFinishes {
             shouldPrintAfterCurrentNavigationFinishes = false
-            webView.cmuxRunPrintOperation()
+            webView.hmuxRunPrintOperation()
         }
     }
 
@@ -172,7 +172,7 @@ import WebKit
         didFailNavigation?(webView, failedURL, error.localizedDescription, navigation)
         if isCurrentNavigation {
             owner?.failTrustedLocalFileNavigation()
-            (webView as? CmuxWebView)?.clearTrustedInternalNavigationGrants()
+            (webView as? HmuxWebView)?.clearTrustedInternalNavigationGrants()
             trustedInternalNavigationURL = nil
         }
         clearActiveMainFrameNavigation(ifMatching: navigation)
@@ -183,7 +183,7 @@ import WebKit
         if isCurrentNavigation {
             trustedInternalNavigationURL = nil
             owner?.failTrustedLocalFileNavigation()
-            (webView as? CmuxWebView)?.clearTrustedInternalNavigationGrants()
+            (webView as? HmuxWebView)?.clearTrustedInternalNavigationGrants()
         }
         let nsError = error as NSError
         NSLog("BrowserPanel provisional navigation failed: %@", error.localizedDescription)
@@ -291,7 +291,7 @@ import WebKit
 
     func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
 #if DEBUG
-        cmuxDebugLog("browser.webcontent.terminated panel=\(String(describing: self))")
+        hmuxDebugLog("browser.webcontent.terminated panel=\(String(describing: self))")
 #endif
         didTerminateWebContentProcess?(webView)
     }
@@ -415,7 +415,7 @@ import WebKit
             return
         }
 
-        let hasRecentMiddleClickIntent = CmuxWebView.hasRecentMiddleClickIntent(for: webView)
+        let hasRecentMiddleClickIntent = HmuxWebView.hasRecentMiddleClickIntent(for: webView)
         let shouldOpenInNewTab = browserNavigationShouldOpenInNewTab(
             navigationType: navigationAction.navigationType,
             modifierFlags: navigationAction.modifierFlags,
@@ -487,14 +487,14 @@ import WebKit
         }
 
         if let url = navigationAction.request.url,
-           url.scheme == "cmux-browser-action",
+           url.scheme == "hmux-browser-action",
            url.host == "bypass-ssl" {
             decisionHandler(.cancel)
             handleSSLTrustBypassAction(url, in: webView)
             return
         }
 
-        // Authenticated cmux app links carry an in-process handoff action.
+        // Authenticated hmux app links carry an in-process handoff action.
         // Consume them before generic URL rules so a broad external pattern
         // cannot divert the signed-in split placement to LaunchServices.
         // In a tab a browser REPL session drives, only the user's own click
@@ -515,7 +515,7 @@ import WebKit
             ) ?? {}
             reportTerminalCancellation()
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.nav.decidePolicy.action kind=openAppLinkInBrowserSplit " +
                 "url=\(browserNavigationDebugURL(appLink.destinationURL))"
             )
@@ -561,7 +561,7 @@ import WebKit
                 break
             case .opened:
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "browser.nav.decidePolicy.action kind=openConfiguredExternalURL " +
                     "url=\(browserNavigationDebugURL(url))"
                 )
@@ -575,7 +575,7 @@ import WebKit
             let isMainFrame = navigationAction.targetFrame?.isMainFrame != false
             let isTrustedInternal = trustedInternalNavigation(for: url, in: webView)
             if isMainFrame, !isTrustedInternal {
-                (webView as? CmuxWebView)?.clearTrustedInternalNavigationGrants()
+                (webView as? HmuxWebView)?.clearTrustedInternalNavigationGrants()
             }
             let isTrustedDocument = isMainFrame && url.isFileURL
                 && owner?.isTrustedLocalFileDocument(url) == true
@@ -600,7 +600,7 @@ import WebKit
            let droppedURLs = BrowserFileDropNavigationGuard.shared.consumeDropNavigation(webView: webView, url: url),
            handleDroppedFileNavigation?(droppedURLs) == true {
 #if DEBUG
-            cmuxDebugLog("browser.nav.decidePolicy.action kind=dropFilePreview url=\(browserNavigationDebugURL(url))")
+            hmuxDebugLog("browser.nav.decidePolicy.action kind=dropFilePreview url=\(browserNavigationDebugURL(url))")
 #endif
             decisionHandler(.cancel)
             return
@@ -655,7 +655,7 @@ import WebKit
         let requestMethod = navigationAction.request.httpMethod ?? "nil"
         let requestURL = browserNavigationDebugURL(navigationAction.request.url)
         let targetMainFrame = navigationAction.targetFrame.map { $0.isMainFrame ? "1" : "0" } ?? "nil"
-        cmuxDebugLog(
+        hmuxDebugLog(
             "browser.nav.decidePolicy navType=\(navType) button=\(navigationAction.buttonNumber) " +
             "mods=\(navigationAction.modifierFlags.rawValue) targetNil=\(navigationAction.targetFrame == nil ? 1 : 0) " +
             "targetMain=\(targetMainFrame) method=\(requestMethod) url=\(requestURL) " +
@@ -672,7 +672,7 @@ import WebKit
             let reportTerminalCancellation: @MainActor () -> Void = terminalPolicyCancellationReporter?(navigationAction, webView) ?? {}
             let opened = NSWorkspace.shared.open(url)
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.nav.decidePolicy.action kind=openExternalIntentInSystemBrowser opened=\(opened ? 1 : 0) " +
                 "url=\(browserNavigationDebugURL(url))"
             )
@@ -704,7 +704,7 @@ import WebKit
                 intent = .currentTab
             }
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.nav.decidePolicy.action kind=blockedInsecure intent=\(intent == .newTab ? "newTab" : "currentTab") " +
                 "url=\(url.absoluteString)"
             )
@@ -754,7 +754,7 @@ import WebKit
                 guard hasUserActivation || hasRecordedIntent else { decisionHandler(.cancel); return }
                 if shouldBlockInsecureHTTPSubframeDownload?(url) == true {
                     #if DEBUG
-                    cmuxDebugLog("browser.nav.decidePolicy.action kind=cancelDownload reason=insecureHTTPSubframe url=\(url.absoluteString)")
+                    hmuxDebugLog("browser.nav.decidePolicy.action kind=cancelDownload reason=insecureHTTPSubframe url=\(url.absoluteString)")
                     #endif
                     decisionHandler(.cancel)
                     return
@@ -769,7 +769,7 @@ import WebKit
         if shouldOpenInNewTab,
            let requestURL = navigationAction.request.url {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.nav.decidePolicy.action kind=openInNewTab url=\(requestURL.absoluteString)"
             )
 #endif
@@ -786,7 +786,7 @@ import WebKit
            ),
            let requestURL = navigationAction.request.url {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "browser.nav.decidePolicy.action kind=openInNewTabFromNilTarget url=\(requestURL.absoluteString)"
             )
 #endif
@@ -800,12 +800,12 @@ import WebKit
 
 #if DEBUG
         let targetURL = navigationAction.request.url?.absoluteString ?? "nil"
-        cmuxDebugLog("browser.nav.decidePolicy.action kind=allow url=\(targetURL)")
+        hmuxDebugLog("browser.nav.decidePolicy.action kind=allow url=\(targetURL)")
 #endif
         if navigationAction.targetFrame?.isMainFrame != false {
             if shouldPreserveSSLTrustBypassForErrorPageNavigation(navigationAction) {
 #if DEBUG
-                cmuxDebugLog("browser.nav.decidePolicy.action kind=preserveSSLBypassErrorPage url=\(targetURL)")
+                hmuxDebugLog("browser.nav.decidePolicy.action kind=preserveSSLBypassErrorPage url=\(targetURL)")
 #endif
             } else if let url = navigationAction.request.url,
                       let scheme = url.scheme?.lowercased(),
@@ -891,7 +891,7 @@ import WebKit
             completion: { [weak self, weak webView] delivered, returnURL in
                 guard let self, let webView else { return }
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "browser.nav.decidePolicy.action kind=deliverNativeAuthCallbackInApp " +
                     "delivered=\(delivered ? 1 : 0) scheme=\(url.scheme ?? "nil")"
                 )
@@ -1066,7 +1066,7 @@ import WebKit
             let isMainFrame = navigationResponse.isForMainFrame
             let isTrustedInternal = trustedInternalNavigation(for: url, in: webView)
             if isMainFrame, !isTrustedInternal {
-                (webView as? CmuxWebView)?.clearTrustedInternalNavigationGrants()
+                (webView as? HmuxWebView)?.clearTrustedInternalNavigationGrants()
             }
             let isTrustedDocument = isMainFrame && url.isFileURL
                 && owner?.isTrustedLocalFileDocument(url) == true
@@ -1094,7 +1094,7 @@ import WebKit
         }
 
         #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "browser.nav.response mime=\(mime) canShow=\(canShow ? 1 : 0) mainFrame=\(navigationResponse.isForMainFrame ? 1 : 0)"
         )
         #endif
@@ -1136,13 +1136,13 @@ import WebKit
                let url = navigationResponse.response.url,
                shouldBlockInsecureHTTPSubframeDownload?(url) == true {
                 #if DEBUG
-                cmuxDebugLog("download.policy=cancel reason=insecureHTTPSubframe url=\(url.absoluteString)")
+                hmuxDebugLog("download.policy=cancel reason=insecureHTTPSubframe url=\(url.absoluteString)")
                 #endif
                 decisionHandler(.cancel)
                 return
             }
             #if DEBUG
-            cmuxDebugLog("download.policy=download reason=\(reason) mime=\(mime) mainFrame=\(navigationResponse.isForMainFrame ? 1 : 0)")
+            hmuxDebugLog("download.policy=download reason=\(reason) mime=\(mime) mainFrame=\(navigationResponse.isForMainFrame ? 1 : 0)")
             #endif
             if navigationResponse.isForMainFrame {
                 // A main-frame response follows didStartProvisionalNavigation, so this is the
@@ -1189,8 +1189,8 @@ import WebKit
         if trustedInternalNavigationURL?.absoluteString == url.absoluteString {
             return true
         }
-        guard let cmuxWebView = webView as? CmuxWebView,
-              cmuxWebView.consumeTrustedInternalNavigation(url) else {
+        guard let hmuxWebView = webView as? HmuxWebView,
+              hmuxWebView.consumeTrustedInternalNavigation(url) else {
             return false
         }
         if url.isFileURL {
@@ -1255,7 +1255,7 @@ import WebKit
         let isMainFrame = navigationAction.targetFrame?.isMainFrame ?? true
         let restoreAttemptID = isMainFrame ? pendingMainFrameDownloadRestoreAttemptID : nil
         #if DEBUG
-        cmuxDebugLog("download.didBecome source=navigationAction")
+        hmuxDebugLog("download.didBecome source=navigationAction")
         #endif
         NSLog("BrowserPanel download didBecome from navigationAction")
         didBecomeDownload?(webView, isMainFrame, restoreAttemptID)
@@ -1269,7 +1269,7 @@ import WebKit
     func webView(_ webView: WKWebView, navigationResponse: WKNavigationResponse, didBecome download: WKDownload) {
         let restoreAttemptID = navigationResponse.isForMainFrame ? pendingMainFrameDownloadRestoreAttemptID : nil
         #if DEBUG
-        cmuxDebugLog("download.didBecome source=navigationResponse")
+        hmuxDebugLog("download.didBecome source=navigationResponse")
         #endif
         NSLog("BrowserPanel download didBecome from navigationResponse")
         didBecomeDownload?(webView, navigationResponse.isForMainFrame, restoreAttemptID)

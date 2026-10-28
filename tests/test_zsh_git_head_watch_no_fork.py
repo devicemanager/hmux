@@ -7,7 +7,7 @@ so many open panes produced a steady stream of process launches. The test
 starts the real watcher loop and records the PID that performs each HEAD read;
 every read must happen in the watcher process itself.
 
-The socket and repository are private fixtures; no running cmux instance is
+The socket and repository are private fixtures; no running hmux instance is
 involved.
 """
 
@@ -21,26 +21,26 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPT = ROOT / "Resources" / "shell-integration" / "cmux-zsh-integration.zsh"
+SCRIPT = ROOT / "Resources" / "shell-integration" / "hmux-zsh-integration.zsh"
 
 COMMAND = r'''
 source "$1"
 zmodload zsh/system
-_cmux_report_git_branch_for_path() { :; }
-_cmux_pr_cache_clear() { :; }
-_cmux_clear_pr_for_panel() { :; }
+_hmux_report_git_branch_for_path() { :; }
+_hmux_pr_cache_clear() { :; }
+_hmux_clear_pr_for_panel() { :; }
 # Log the PID of every HEAD read, through whichever reader helper exists.
 local reader
-for reader in _cmux_git_head_signature_into_reply _cmux_git_head_signature; do
+for reader in _hmux_git_head_signature_into_reply _hmux_git_head_signature; do
     (( $+functions[$reader] )) || continue
-    functions[_cmux_test_impl_$reader]=$functions[$reader]
-    functions[$reader]='print -r -- "$sysparams[pid]" >> "$CMUX_TEST_READ_LOG"; '"_cmux_test_impl_$reader"' "$@"'
+    functions[_hmux_test_impl_$reader]=$functions[$reader]
+    functions[$reader]='print -r -- "$sysparams[pid]" >> "$HMUX_TEST_READ_LOG"; '"_hmux_test_impl_$reader"' "$@"'
 done
-_cmux_start_git_head_watch
-[[ "${_CMUX_GIT_HEAD_WATCH_PID:-}" == <-> ]] || { print -r -- WATCHER_MISSING; exit 3; }
-print -r -- "WATCHER:$_CMUX_GIT_HEAD_WATCH_PID"
+_hmux_start_git_head_watch
+[[ "${_HMUX_GIT_HEAD_WATCH_PID:-}" == <-> ]] || { print -r -- WATCHER_MISSING; exit 3; }
+print -r -- "WATCHER:$_HMUX_GIT_HEAD_WATCH_PID"
 zselect -t 350 || true
-_cmux_stop_git_head_watch
+_hmux_stop_git_head_watch
 '''
 
 
@@ -52,10 +52,10 @@ def main() -> int:
         print("SKIP: zsh is not installed")
         return 0
 
-    tmp = Path(tempfile.mkdtemp(prefix="cmux_head_watch_"))
+    tmp = Path(tempfile.mkdtemp(prefix="hmux_head_watch_"))
     server = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
     try:
-        sock_path = tmp / "cmux.sock"
+        sock_path = tmp / "hmux.sock"
         server.bind(str(sock_path))
         server.listen(1)
         repo = tmp / "repo"
@@ -68,13 +68,13 @@ def main() -> int:
             "TMPDIR": str(tmp),
             "LC_ALL": "C",
             "TERM": "dumb",
-            "CMUX_SOCKET_PATH": str(sock_path),
-            "CMUX_TAB_ID": "tab-head-watch",
-            "CMUX_PANEL_ID": "panel-head-watch",
-            "CMUX_TEST_READ_LOG": str(read_log),
+            "HMUX_SOCKET_PATH": str(sock_path),
+            "HMUX_TAB_ID": "tab-head-watch",
+            "HMUX_PANEL_ID": "panel-head-watch",
+            "HMUX_TEST_READ_LOG": str(read_log),
         }
         result = subprocess.run(
-            ["/bin/zsh", "-f", "-c", COMMAND, "cmux-test", str(SCRIPT)],
+            ["/bin/zsh", "-f", "-c", COMMAND, "hmux-test", str(SCRIPT)],
             cwd=repo,
             env=env,
             capture_output=True,

@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: { params: Params }) {
   const t = await getTranslations({ locale, namespace: "landing.agents" });
   const name = agent.seoName ?? agent.name;
   const alternates = buildAlternates(locale, `/agents/${agent.slug}`);
-  const title = `${name}: ${t("title")} | cmux`;
+  const title = `${name}: ${t("title")} | hmux`;
   const description = seoDescription(
     locale,
     `${name}. ${t("metaDescription")}`,

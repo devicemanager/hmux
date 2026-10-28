@@ -37,8 +37,8 @@ export function resolveBillingTeamFromTeams(
     .sort((left, right) => {
       // Every billing surface (dashboard, portal, subscription, plan, TestFlight)
       // reads the real Stripe subscription by team id and never honors the
-      // operator-set cmuxVmPlan override. So a team paid only through a
-      // cmuxVmPlan override must not shadow a team holding a real cmuxPlan
+      // operator-set hmuxVmPlan override. So a team paid only through a
+      // hmuxVmPlan override must not shadow a team holding a real hmuxPlan
       // subscription, or the real subscription is masked as free.
       const leftReal = hasRealSubscriptionPlan(left.clientReadOnlyMetadata);
       const rightReal = hasRealSubscriptionPlan(right.clientReadOnlyMetadata);
@@ -67,24 +67,24 @@ export function billingPlanIdFromMetadata(metadata: unknown): string | null {
   if (!metadata || typeof metadata !== "object") return null;
   // A lower paid grant must not hide a paid Max purchase. Explicit free
   // overrides retain their operator restriction.
-  const plan = metadata as { cmuxVmPlan?: unknown; cmuxPlan?: unknown };
-  if (plan.cmuxPlan === "max" && [undefined, null, "pro", "team", "founders", "max"].includes(plan.cmuxVmPlan as never)) return "max";
-  const value = (metadata as { cmuxVmPlan?: unknown }).cmuxVmPlan ??
-    (metadata as { cmuxPlan?: unknown }).cmuxPlan;
+  const plan = metadata as { hmuxVmPlan?: unknown; hmuxPlan?: unknown };
+  if (plan.hmuxPlan === "max" && [undefined, null, "pro", "team", "founders", "max"].includes(plan.hmuxVmPlan as never)) return "max";
+  const value = (metadata as { hmuxVmPlan?: unknown }).hmuxVmPlan ??
+    (metadata as { hmuxPlan?: unknown }).hmuxPlan;
   return typeof value === "string" && value.trim() ? value.trim() : null;
 }
 
 /**
- * Paid seats on a team (`cmuxSeats`, written from the Stripe subscription
+ * Paid seats on a team (`hmuxSeats`, written from the Stripe subscription
  * quantity by syncTeamPlanMetadata). Null when absent or malformed; callers
  * treat that as a single seat. Teams recorded before seats were written are
  * backfilled without a migration: the billing-reconcile cron re-applies every
- * stored subscription through the same sync, so `cmuxSeats` lands on its next
+ * stored subscription through the same sync, so `hmuxSeats` lands on its next
  * pass (and on the next Stripe subscription event, whichever is first).
  */
 export function billingSeatsFromMetadata(metadata: unknown): number | null {
   if (!metadata || typeof metadata !== "object") return null;
-  const value = (metadata as { cmuxSeats?: unknown }).cmuxSeats;
+  const value = (metadata as { hmuxSeats?: unknown }).hmuxSeats;
   return typeof value === "number" && Number.isSafeInteger(value) && value > 0 ? value : null;
 }
 
@@ -93,11 +93,11 @@ function hasActiveBillingPlan(metadata: unknown): boolean {
   return !!planId && planId !== "free";
 }
 
-// A real Stripe subscription is reflected only by cmuxPlan (written from active
-// subscription state); cmuxVmPlan is a manual override decoupled from billing.
+// A real Stripe subscription is reflected only by hmuxPlan (written from active
+// subscription state); hmuxVmPlan is a manual override decoupled from billing.
 function hasRealSubscriptionPlan(metadata: unknown): boolean {
   if (!metadata || typeof metadata !== "object") return false;
-  const value = (metadata as { cmuxPlan?: unknown }).cmuxPlan;
+  const value = (metadata as { hmuxPlan?: unknown }).hmuxPlan;
   const planId = typeof value === "string" && value.trim() ? value.trim() : null;
   return !!planId && planId !== "free";
 }

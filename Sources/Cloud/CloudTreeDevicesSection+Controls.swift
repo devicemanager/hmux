@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSettingsUI
+import HmuxCloud
+import HmuxSettingsUI
 
 extension CloudTreeDevicesSection {
     var discoveryControl: DeviceAccessControl {

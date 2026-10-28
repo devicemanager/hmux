@@ -1,0 +1,31 @@
+{
+  "actions": {
+    "hmux.newTerminal": {
+      "type": "command",
+      "title": "Legacy File New Terminal",
+      "subtitle": "Loaded from legacy/hmux.json",
+      "command": "echo 'LEGACY NEW TERMINAL'; echo 'SOURCE=legacy/hmux.json'; pwd",
+      "target": "newTabInCurrentPane",
+      "shortcut": "cmd+shift+3",
+      "icon": { "type": "image", "path": "./icons/legacy-terminal.svg" }
+    },
+    "legacy.echo": {
+      "type": "command",
+      "title": "Legacy Echo",
+      "subtitle": "Fallback hmux.json demo",
+      "command": "echo 'LEGACY ECHO'; echo 'SOURCE=legacy/hmux.json'; pwd",
+      "target": "newTabInCurrentPane",
+      "shortcut": "cmd+shift+l",
+      "icon": { "type": "emoji", "value": "📄", "scale": 0.8 }
+    }
+  },
+  "ui": {
+    "surfaceTabBar": {
+      "buttons": [
+        "hmux.newTerminal",
+        "legacy.echo",
+        "hmux.splitDown"
+      ]
+    }
+  }
+}

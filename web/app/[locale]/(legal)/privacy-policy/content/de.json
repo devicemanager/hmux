@@ -1,13 +1,13 @@
 {
-  "metadataTitle": "Datenschutzrichtlinie – cmux",
-  "metadataDescription": "Datenschutzrichtlinie für cmux",
+  "metadataTitle": "Datenschutzrichtlinie – hmux",
+  "metadataDescription": "Datenschutzrichtlinie für hmux",
   "title": "Datenschutzrichtlinie",
   "lastUpdated": "Letzte Aktualisierung: 1. September 2026",
   "sections": [
     {
       "paragraphs": [
         "Manaflow (das „Unternehmen“) verpflichtet sich, einen strengen Datenschutz für seine Benutzer aufrechtzuerhalten. In dieser Datenschutzrichtlinie wird erläutert, wie wir die von Ihnen bereitgestellten Informationen erfassen, verwenden und schützen.",
-        "In dieser Richtlinie bezeichnet „Site“ die Website des Unternehmens unter [cmux.com](https://cmux.com). „Anwendung“ bezeichnet die cmux-Desktopanwendung für macOS und die cmux-Mobilanwendung für iPhone und iPad. „Dienst“ bezeichnet die Website und die Anwendung zusammen. Mit „wir“, „uns“ und „unser“ ist das Unternehmen gemeint. „Sie“ bezeichnet einen Benutzer unseres Dienstes.",
+        "In dieser Richtlinie bezeichnet „Site“ die Website des Unternehmens unter [cmux.com](https://cmux.com). „Anwendung“ bezeichnet die hmux-Desktopanwendung für macOS und die hmux-Mobilanwendung für iPhone und iPad. „Dienst“ bezeichnet die Website und die Anwendung zusammen. Mit „wir“, „uns“ und „unser“ ist das Unternehmen gemeint. „Sie“ bezeichnet einen Benutzer unseres Dienstes.",
         "Durch die Nutzung unseres Dienstes akzeptieren Sie diese Datenschutzrichtlinie und unsere [Nutzungsbedingungen](https://cmux.com/terms-of-service) und stimmen der hier beschriebenen Erfassung, Speicherung, Nutzung und Offenlegung zu."
       ]
     },
@@ -42,7 +42,7 @@
           "paragraphs": [
             "Wenn Sie uns per E-Mail, über unsere Kontaktseite oder über das Enterprise-Kontaktformular kontaktieren, erfassen wir die von Ihnen bereitgestellten Informationen, einschließlich Name, E-Mail-Adresse, Unternehmen, Rolle, Telefonnummer, Land, Bereitstellungsanforderungen und Kommentare. Wenn Sie sich einer Warteliste für eine Plattform anschließen, erfassen wir Ihre übermittelte E-Mail, um Sie zu benachrichtigen, wenn diese Plattform startet, und senden die Anmelde-E-Mail und ausgewählte Plattformen an unseren privaten Slack-Arbeitsbereich.",
             "Wenn Sie sich anmelden, erhalten wir Authentifizierungsinformationen wie Ihre E-Mail-Adresse und Anbieterkennung von Apple, Google, GitHub oder die E-Mail-Code-Anmeldung. Wenn Sie die mobile App mit einem Mac koppeln, verarbeiten wir die zum Verbinden der Geräte erforderlichen Kopplungsinformationen. Wenn Sie einen Arbeitsbereich ansehen, Terminaleingaben senden, ausgewählte Fotos anhängen, Sprachtranskription verwenden oder Terminalbenachrichtigungen erhalten, können die zugehörigen Inhalte oder Transkripte je nach Bedarf zwischen Ihren Geräten und unserem Dienst übertragen werden, um diese Funktion bereitzustellen.",
-            "Der Kamerazugriff wird nur zum Scannen von cmux-Pairing-QR-Codes verwendet. Der Zugriff auf Mikrofon und Spracherkennung wird nur verwendet, wenn Sie im Nachrichtenfeld die Sprachtranskription auswählen. Der Zugriff auf die Fotobibliothek wird nur verwendet, wenn Sie Fotos zum Anhängen auswählen."
+            "Der Kamerazugriff wird nur zum Scannen von hmux-Pairing-QR-Codes verwendet. Der Zugriff auf Mikrofon und Spracherkennung wird nur verwendet, wenn Sie im Nachrichtenfeld die Sprachtranskription auswählen. Der Zugriff auf die Fotobibliothek wird nur verwendet, wenn Sie Fotos zum Anhängen auswählen."
           ]
         },
         {
@@ -71,7 +71,7 @@
         "Slack: private interne Benachrichtigungen. Wenn Sie sich einer Plattform-Warteliste anschließen, werden die von Ihnen übermittelten E-Mails und Plattformen an unseren privaten Slack-Arbeitsbereich gesendet."
       ],
       "afterBullets": [
-        "Jeder Dienst hat seine eigene Datenschutzrichtlinie. Wenn ein Dritter personenbezogene Daten für cmux verarbeitet, benötigen wir Schutzmaßnahmen, die mindestens so schützend sind wie diese Richtlinie, und beschränken die Nutzung auf die Bereitstellung von Diensten für cmux."
+        "Jeder Dienst hat seine eigene Datenschutzrichtlinie. Wenn ein Dritter personenbezogene Daten für hmux verarbeitet, benötigen wir Schutzmaßnahmen, die mindestens so schützend sind wie diese Richtlinie, und beschränken die Nutzung auf die Bereitstellung von Diensten für hmux."
       ]
     },
     {
@@ -123,7 +123,7 @@
     {
       "heading": "IX. Datenaufbewahrung",
       "paragraphs": [
-        "Absturzberichte und Diagnosen werden nur so lange aufbewahrt, wie es zur Diagnose und Behebung von Problemen erforderlich ist. Maskierte Sitzungs-Replays werden 90 Tage nach der Aufnahme aus Sentry gelöscht. Identifikatoren und Authentifizierungsdaten für mobile Konten werden aufbewahrt, solange Ihr Konto aktiv ist, und nach Abschluss der Kontolöschung gelöscht oder anonymisiert, es sei denn, Sicherheits-, Rechts-, Abrechnungs- oder Betrugspräventionspflichten erfordern eine Aufbewahrung. Geräte- und Kopplungsmetadaten bleiben bis zur Entkopplung, Abmeldung und Löschung lokaler Daten, Kontolöschung oder Bereinigung veralteter Daten erhalten. Apple-Push-Tokens werden nur bei aktivierten Benachrichtigungen gespeichert. Website- und mobile Produktanalysen, kontoverknüpfte Analysen, Abrechnungsereignisse und Stripe-Kennungen in PostHog werden bis zu 24 Monate aufbewahrt, sofern Sie keine frühere Löschung beantragen. Mobile Kontoeinstellungen löschen oder anonymisieren cmux-eigene Daten, löschen die kontoverknüpfte PostHog-Person und beantragen die Löschung ihrer Website- und mobilen Analyseereignisse und Aufzeichnungen. Einige Abrechnungsdaten und Stripe-Kennungen können aus Sicherheits-, Rechts-, Steuer-, Abrechnungs- oder Betrugspräventionsgründen aufbewahrt werden. Anbieter-Löschungen können asynchron erfolgen. Beantragen Sie die Löschung in den mobilen Kontoeinstellungen oder über [founders@cmux.com](mailto:founders@cmux.com)."
+        "Absturzberichte und Diagnosen werden nur so lange aufbewahrt, wie es zur Diagnose und Behebung von Problemen erforderlich ist. Maskierte Sitzungs-Replays werden 90 Tage nach der Aufnahme aus Sentry gelöscht. Identifikatoren und Authentifizierungsdaten für mobile Konten werden aufbewahrt, solange Ihr Konto aktiv ist, und nach Abschluss der Kontolöschung gelöscht oder anonymisiert, es sei denn, Sicherheits-, Rechts-, Abrechnungs- oder Betrugspräventionspflichten erfordern eine Aufbewahrung. Geräte- und Kopplungsmetadaten bleiben bis zur Entkopplung, Abmeldung und Löschung lokaler Daten, Kontolöschung oder Bereinigung veralteter Daten erhalten. Apple-Push-Tokens werden nur bei aktivierten Benachrichtigungen gespeichert. Website- und mobile Produktanalysen, kontoverknüpfte Analysen, Abrechnungsereignisse und Stripe-Kennungen in PostHog werden bis zu 24 Monate aufbewahrt, sofern Sie keine frühere Löschung beantragen. Mobile Kontoeinstellungen löschen oder anonymisieren hmux-eigene Daten, löschen die kontoverknüpfte PostHog-Person und beantragen die Löschung ihrer Website- und mobilen Analyseereignisse und Aufzeichnungen. Einige Abrechnungsdaten und Stripe-Kennungen können aus Sicherheits-, Rechts-, Steuer-, Abrechnungs- oder Betrugspräventionsgründen aufbewahrt werden. Anbieter-Löschungen können asynchron erfolgen. Beantragen Sie die Löschung in den mobilen Kontoeinstellungen oder über [founders@cmux.com](mailto:founders@cmux.com)."
       ]
     }
   ]

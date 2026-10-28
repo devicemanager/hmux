@@ -1,6 +1,6 @@
-import CmuxCloudTui
-import CmuxTerminalSharing
-import CmuxTerminalSizing
+import HmuxCloudTui
+import HmuxTerminalSharing
+import HmuxTerminalSizing
 import Foundation
 import os
 
@@ -134,7 +134,7 @@ final class CloudTuiManualMirrorHandshake {
         let negotiated = identified ? capabilities : []
         let supportsSizing = Set(negotiated).contains(CloudTerminalSizingRelay.capability)
         connection.send(commandBuilder.setClientInfo(
-            name: "cmux cloud terminal",
+            name: "hmux cloud terminal",
             kind: "native-mirror",
             identity: supportsSizing ? identity() : nil,
             requestID: clientInfoRequestID

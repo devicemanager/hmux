@@ -1,4 +1,4 @@
-import CmuxNotifications
+import HmuxNotifications
 
 extension TerminalNotification {
     /// Converts app notification state into the value consumed by navigation.

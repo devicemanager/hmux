@@ -1,6 +1,6 @@
 {
   "oracle": {},
-  "cmux": {
+  "hmux": {
     "read-text": "clip text",
     "pasted": "clip text",
     "copied": "copy me",

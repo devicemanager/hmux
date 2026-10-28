@@ -1,14 +1,14 @@
-import CMUXMobileCore
-import CmuxAgentChat
-import CmuxIrohTransport
-import CmuxIrxTransport
+import HMUXMobileCore
+import HmuxAgentChat
+import HmuxIrohTransport
+import HmuxIrxTransport
 import Darwin
 import Dispatch
 import Foundation
 import OSLog
 
 private let mobileHostIrohLaneLog = Logger(
-    subsystem: "dev.cmux",
+    subsystem: "dev.hmux",
     category: "mobile-host-iroh-lanes"
 )
 
@@ -283,7 +283,7 @@ struct MobileHostIrohArtifactFileIdentity: Equatable, Sendable {
 /// blocks Swift's cooperative executor. Cancelling a lane stops pending I/O.
 private final class MobileHostIrohArtifactDispatchReader: @unchecked Sendable {
     private static let queue = DispatchQueue(
-        label: "dev.cmux.mobile-host-iroh-artifact-read",
+        label: "dev.hmux.mobile-host-iroh-artifact-read",
         qos: .utility
     )
 
@@ -690,7 +690,7 @@ actor MobileHostIrohApplicationLaneRouter {
     /// Terminal lanes on this dialect are served by the same code as irx
     /// lanes, so both enforce one terminal per lane and exactly-once input.
     private nonisolated static let terminalLaneJournal = IrxJournal(
-        subsystem: "dev.cmux",
+        subsystem: "dev.hmux",
         category: "iroh-terminal-lane"
     )
 

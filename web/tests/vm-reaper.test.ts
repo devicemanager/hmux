@@ -90,7 +90,7 @@ function vmRow(overrides: Partial<CloudVmRow> = {}): CloudVmRow {
     providerVmId: "stale-sandbox",
     displayName: null,
     slug: null,
-    imageId: "cmux-devbox:devbox-20260828b",
+    imageId: "hmux-devbox:devbox-20260828b",
     imageVersion: null,
     status: "provisioning",
     idempotencyKey: "reaper-key",
@@ -168,9 +168,9 @@ describe("Cloud VM reaper report", () => {
     const provider = {
       ...baseProvider(),
       listVolumes: () => Effect.succeed([
-        oldVolume("cmux-home-abcdef123456-noble-wren"),
-        oldVolume("cmux-home-abcdef123456-bold-fox", { attachedTo: "sandbox:bold-fox", attachmentState: "attached" }),
-        oldVolume("cmux-home-abcdef123456"),
+        oldVolume("hmux-home-abcdef123456-noble-wren"),
+        oldVolume("hmux-home-abcdef123456-bold-fox", { attachedTo: "sandbox:bold-fox", attachmentState: "attached" }),
+        oldVolume("hmux-home-abcdef123456"),
         oldVolume("shared-volume"),
       ]),
       deleteHomeVolume: (_provider: "freestyle", name: string) => Effect.sync(() => deleted.push(name)),
@@ -188,13 +188,13 @@ describe("Cloud VM reaper report", () => {
     expect(result.orphanVolumes.reported).toBe(1);
     expect(result.orphanVolumes.deleted).toBe(0);
     expect(result.orphanVolumes.coveragePartial).toBe(true);
-    expect(liveLookups).toEqual([["cmux-home-abcdef123456-noble-wren"]]);
+    expect(liveLookups).toEqual([["hmux-home-abcdef123456-noble-wren"]]);
     expect(deleted).toEqual([]);
     expect(usage).toHaveLength(1);
     expect(usage[0]).toMatchObject({
       eventType: "vm.reaper.orphan_volume",
       metadata: {
-        volumeName: "cmux-home-abcdef123456-noble-wren",
+        volumeName: "hmux-home-abcdef123456-noble-wren",
         attachmentState: "unattached",
         liveReference: false,
       },
@@ -215,8 +215,8 @@ describe("Cloud VM reaper report", () => {
     const provider = {
       ...baseProvider(),
       listVolumes: () => Effect.succeed([
-        { name: "cmux-home-abcdef123456-unknown-state", createdAt: 1 },
-        oldVolume("cmux-home-abcdef123456-explicit-free"),
+        { name: "hmux-home-abcdef123456-unknown-state", createdAt: 1 },
+        oldVolume("hmux-home-abcdef123456-explicit-free"),
       ]),
     } as unknown as VmProviderGatewayShape;
 
@@ -225,18 +225,18 @@ describe("Cloud VM reaper report", () => {
     expect(result.orphanVolumes.unknownAttachment).toBe(1);
     expect(result.orphanVolumes.candidates).toBe(1);
     expect(result.orphanVolumes.reported).toBe(2);
-    expect(liveLookups).toEqual([["cmux-home-abcdef123456-explicit-free"]]);
+    expect(liveLookups).toEqual([["hmux-home-abcdef123456-explicit-free"]]);
     expect(usage).toContainEqual(expect.objectContaining({
       eventType: "vm.reaper.orphan_volume_unknown_attachment",
       metadata: expect.objectContaining({
-        volumeName: "cmux-home-abcdef123456-unknown-state",
+        volumeName: "hmux-home-abcdef123456-unknown-state",
         attachmentState: "unknown",
         attachment: "unknown",
       }),
     }));
     expect(usage).not.toContainEqual(expect.objectContaining({
       eventType: "vm.reaper.orphan_volume",
-      metadata: expect.objectContaining({ volumeName: "cmux-home-abcdef123456-unknown-state" }),
+      metadata: expect.objectContaining({ volumeName: "hmux-home-abcdef123456-unknown-state" }),
     }));
   });
 
@@ -277,8 +277,8 @@ describe("Cloud VM reaper report", () => {
 
   test("excludes recent reports before applying each report limit", async () => {
     const usage: Array<Record<string, unknown>> = [];
-    const firstVolumeName = "cmux-home-aaaaaaaaaaaa-first-volume";
-    const laterVolumeName = "cmux-home-bbbbbbbbbbbb-later-volume";
+    const firstVolumeName = "hmux-home-aaaaaaaaaaaa-first-volume";
+    const laterVolumeName = "hmux-home-bbbbbbbbbbbb-later-volume";
     const firstRow = vmRow({
       id: "00000000-0000-4000-8000-000000000011",
       createdAt: new Date(NOW.getTime() - 6 * 60 * 60 * 1000),
@@ -349,10 +349,10 @@ describe("Cloud VM reaper report", () => {
     const provider = {
       ...baseProvider(),
       listVolumes: () => Effect.succeed([
-        oldVolume("cmux-home-cccccccccccc-young", {
+        oldVolume("hmux-home-cccccccccccc-young", {
           createdAt: new Date(NOW.getTime() - 30 * 60 * 1000),
         } as unknown as Partial<VMVolume>),
-        oldVolume("cmux-home-dddddddddddd-unknown", {
+        oldVolume("hmux-home-dddddddddddd-unknown", {
           createdAt: "not-a-date",
         } as unknown as Partial<VMVolume>),
       ]),
@@ -394,8 +394,8 @@ describe("Cloud VM reaper report", () => {
   test("checks live references in bounded batches and excludes referenced volumes", async () => {
     const usage: Array<Record<string, unknown>> = [];
     const lookupBatches: string[][] = [];
-    const liveName = "cmux-home-aaaaaaaaaaaa-noble-wren";
-    const orphanName = "cmux-home-bbbbbbbbbbbb-noble-wren";
+    const liveName = "hmux-home-aaaaaaaaaaaa-noble-wren";
+    const orphanName = "hmux-home-bbbbbbbbbbbb-noble-wren";
     const repo = repository({
       listLiveHomeVolumeNames: ({ volumeNames }) => Effect.sync(() => {
         lookupBatches.push([...volumeNames]);
@@ -424,10 +424,10 @@ describe("Cloud VM reaper report", () => {
     const usage: Array<Record<string, unknown>> = [];
     const calls: Array<{ limit: number; cursor?: string }> = [];
     const firstPage: VMVolume[] = [
-      oldVolume("cmux-home-aaaaaaaaaaaa-attached", { attachedTo: "sandbox:a", attachmentState: "attached" }),
+      oldVolume("hmux-home-aaaaaaaaaaaa-attached", { attachedTo: "sandbox:a", attachmentState: "attached" }),
       oldVolume("not-a-machine-volume"),
     ];
-    const secondPage: VMVolume[] = [oldVolume("cmux-home-bbbbbbbbbbbb-orphan")];
+    const secondPage: VMVolume[] = [oldVolume("hmux-home-bbbbbbbbbbbb-orphan")];
     const repo = repository({
       listLiveHomeVolumeNames: () => Effect.succeed([]),
       stuckProvisioningCandidates: () => Effect.succeed([]),
@@ -454,7 +454,7 @@ describe("Cloud VM reaper report", () => {
     expect(result.orphanVolumes.coveragePartial).toBe(false);
     expect(usage).toContainEqual(expect.objectContaining({
       eventType: "vm.reaper.orphan_volume",
-      metadata: expect.objectContaining({ volumeName: "cmux-home-bbbbbbbbbbbb-orphan" }),
+      metadata: expect.objectContaining({ volumeName: "hmux-home-bbbbbbbbbbbb-orphan" }),
     }));
   });
 
@@ -462,7 +462,7 @@ describe("Cloud VM reaper report", () => {
     const usage: Array<Record<string, unknown>> = [];
     const scannedNames: string[][] = [];
     const volumes = Array.from({ length: 20 }, (_, index) => oldVolume(
-      `cmux-home-${index.toString(16).padStart(12, "0")}-noble-wren`,
+      `hmux-home-${index.toString(16).padStart(12, "0")}-noble-wren`,
     ));
     const repo = repository({
       listLiveHomeVolumeNames: ({ volumeNames }) => Effect.sync(() => {

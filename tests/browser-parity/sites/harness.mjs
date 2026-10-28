@@ -59,7 +59,7 @@ export async function createSitesEnv({ signedIn = true, authResponder, gmailRepl
       await seed.close();
     },
   });
-  const workDir = makeTestDir("cmux-sites-");
+  const workDir = makeTestDir("hmux-sites-");
   const sessions = new Map();
 
   // The REPL's native fetch: mock hosts only, redirects followed, the

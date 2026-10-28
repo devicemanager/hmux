@@ -1,4 +1,4 @@
-// Pure mapping from verified Apple data to cmux subscription state,
+// Pure mapping from verified Apple data to hmux subscription state,
 // transaction ledger rows, and lifecycle analytics events.
 
 import type {

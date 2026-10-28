@@ -1,7 +1,7 @@
 name: Cloud VM dogfood journey
 
-# One timed trip through cmux Cloud the way a Linux user takes it with only
-# cmux-tui: create, private tunnel, attach, first prompt in the VM terminal,
+# One timed trip through hmux Cloud the way a Linux user takes it with only
+# hmux-tui: create, private tunnel, attach, first prompt in the VM terminal,
 # sleep and wake, a killed and relaunched client, delete. The job summary
 # carries every step's time; the artifact carries the JSON and the terminal
 # screens. A throwaway smoke user owns the VM and is deleted afterwards.
@@ -60,7 +60,7 @@ jobs:
       run:
         working-directory: web
     env:
-      CMUX_CLOUD_VM_ENV_SOURCE: process
+      HMUX_CLOUD_VM_ENV_SOURCE: process
       NEXT_PUBLIC_STACK_PROJECT_ID: ${{ vars.NEXT_PUBLIC_STACK_PROJECT_ID }}
       NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: ${{ vars.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY }}
       STACK_SECRET_SERVER_KEY: ${{ secrets.STACK_SECRET_SERVER_KEY }}
@@ -119,14 +119,14 @@ jobs:
             exit 1
           fi
 
-      - name: Install cmux-tui the way users do
+      - name: Install hmux-tui the way users do
         run: |
           set -euo pipefail
-          export CMUX_INSTALL="$RUNNER_TEMP/cmux"
+          export HMUX_INSTALL="$RUNNER_TEMP/hmux"
           started=$(date +%s%3N)
           curl -fsSL https://cmux.com/tui/install.sh | sh
-          echo "CMUX_TUI_BIN=$CMUX_INSTALL/bin/cmux" >> "$GITHUB_ENV"
-          echo "CMUX_TUI_INSTALL_MS=$(( $(date +%s%3N) - started ))" >> "$GITHUB_ENV"
+          echo "HMUX_TUI_BIN=$HMUX_INSTALL/bin/hmux" >> "$GITHUB_ENV"
+          echo "HMUX_TUI_INSTALL_MS=$(( $(date +%s%3N) - started ))" >> "$GITHUB_ENV"
 
       - name: Journey
         env:
@@ -136,7 +136,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p "$RUNNER_TEMP/dogfood/screens"
-          args=("$TARGET" --cmux-tui "$CMUX_TUI_BIN"
+          args=("$TARGET" --hmux-tui "$HMUX_TUI_BIN"
             --result-file "$RUNNER_TEMP/dogfood/result.json"
             --screens-dir "$RUNNER_TEMP/dogfood/screens")
           if [ "$SKIP_SLEEP" = "true" ]; then args+=(--skip-sleep); fi
@@ -157,7 +157,7 @@ jobs:
             echo
             echo "| Step | ms |"
             echo "| --- | ---: |"
-            echo "| installCmuxTui | ${CMUX_TUI_INSTALL_MS:-} |"
+            echo "| installHmuxTui | ${HMUX_TUI_INSTALL_MS:-} |"
             jq -r '.timings | to_entries[] | "| \(.key | sub("Ms$"; "")) | \(.value) |"' "$result"
             echo
             jq -r 'if .statusAfterPauseSeries then "Pause status series: " + ([.statusAfterPauseSeries[] | "\(.atMs)ms=\(.status)" + (if .providerStatus then " provider=\(.providerStatus)" else "" end)] | join(", ")) else empty end' "$result"

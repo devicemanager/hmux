@@ -1,4 +1,4 @@
-Thanks for opening your first cmux pull request!
+Thanks for opening your first hmux pull request!
 
 We're a small team and the outside-PR queue is long, so a reply can take a while, sometimes longer than we'd like. If this one goes quiet and you'd like eyes on it, comment here and we'll pick it up.
 

@@ -2,14 +2,14 @@
 # Select the Xcode for a CI compile/test gate and export DEVELOPER_DIR.
 #
 # Resolution, in order:
-#   1. An explicit pin: CMUX_CI_DEVELOPER_DIR, else CMUX_CI_XCODE_APP. A pinned
+#   1. An explicit pin: HMUX_CI_DEVELOPER_DIR, else HMUX_CI_XCODE_APP. A pinned
 #      path that is not installed fails; it never falls back.
 #   2. The pool pin: the Xcode version scripts/ci/xcode-pins.txt names for this
 #      runner's macOS major. A job that sets no pin therefore gets the same Xcode
 #      as every other job on its pool, never the image's /Applications/Xcode.app
 #      default (16.4 on GitHub's macos-15 image).
 #   3. A scan for the newest stable Xcode, only with
-#      CMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1. The SDK 15 Ghostty CLI helper in
+#      HMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1. The SDK 15 Ghostty CLI helper in
 #      ci-macos.yml's swift-package-tests is the one caller; it needs an Xcode
 #      below the floor and is not a Swift build.
 #      A fork running CI in its own repository (GITHUB_REPOSITORY_OWNER is not
@@ -26,26 +26,26 @@
 #
 # Whatever is selected must be at least the Xcode major in .xcode-version, or
 # the script stops with one ::error:: naming the found and required versions
-# (CMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1 lifts this too). Without the floor, a job
+# (HMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1 lifts this too). Without the floor, a job
 # on the wrong image compiles with the old Swift and reports hundreds of
 # unrelated compile errors instead.
 set -euo pipefail
 
 SELECT_XCODE_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SELECT_XCODE_REPO_ROOT="$(dirname "$SELECT_XCODE_SCRIPT_DIR")"
-XCODE_VERSION_FILE="${CMUX_XCODE_VERSION_FILE:-$SELECT_XCODE_REPO_ROOT/.xcode-version}"
-XCODE_PINS_FILE="${CMUX_CI_XCODE_PINS_FILE:-$SELECT_XCODE_REPO_ROOT/scripts/ci/xcode-pins.txt}"
-ALLOW_BELOW_FLOOR="${CMUX_CI_XCODE_ALLOW_BELOW_FLOOR:-0}"
+XCODE_VERSION_FILE="${HMUX_XCODE_VERSION_FILE:-$SELECT_XCODE_REPO_ROOT/.xcode-version}"
+XCODE_PINS_FILE="${HMUX_CI_XCODE_PINS_FILE:-$SELECT_XCODE_REPO_ROOT/scripts/ci/xcode-pins.txt}"
+ALLOW_BELOW_FLOOR="${HMUX_CI_XCODE_ALLOW_BELOW_FLOOR:-0}"
 # Keep in step with classify_failures.py's "xcode-pin-missing" signature.
-MACHINE_MARKER="[cmux-ci machine: xcode-pin-missing]"
+MACHINE_MARKER="[hmux-ci machine: xcode-pin-missing]"
 
-APPLICATIONS_DIR="${CMUX_XCODE_APPLICATIONS_DIR:-/Applications}"
-REQUIRED_SDK_MAJOR="${CMUX_CI_REQUIRED_MACOS_SDK_MAJOR:-}"
+APPLICATIONS_DIR="${HMUX_XCODE_APPLICATIONS_DIR:-/Applications}"
+REQUIRED_SDK_MAJOR="${HMUX_CI_REQUIRED_MACOS_SDK_MAJOR:-}"
 # A ceiling excludes unvalidated newer SDKs while retaining older-runner fallback.
-MAX_SDK_MAJOR="${CMUX_CI_MAX_MACOS_SDK_MAJOR:-}"
+MAX_SDK_MAJOR="${HMUX_CI_MAX_MACOS_SDK_MAJOR:-}"
 
 case "$MAX_SDK_MAJOR" in *[!0-9]*)
-  echo "CMUX_CI_MAX_MACOS_SDK_MAJOR must be numeric, got: $MAX_SDK_MAJOR" >&2
+  echo "HMUX_CI_MAX_MACOS_SDK_MAJOR must be numeric, got: $MAX_SDK_MAJOR" >&2
   exit 1
   ;;
 esac
@@ -90,12 +90,12 @@ check_xcode_floor() {
   found="$(xcode_version_of "$selected_dir")"
   found_major="${found%%.*}"
   case "$found_major" in ''|*[!0-9]*)
-    echo "::error::Could not read the Xcode version of $selected_dir (xcodebuild -version); cmux requires Xcode $required (.xcode-version)" >&2
+    echo "::error::Could not read the Xcode version of $selected_dir (xcodebuild -version); hmux requires Xcode $required (.xcode-version)" >&2
     exit 1
     ;;
   esac
   if [ "$found_major" -lt "$required" ]; then
-    echo "::error::Found Xcode $found at $selected_dir; cmux requires Xcode $required (.xcode-version). This runner's image does not carry the Xcode pinned for its pool in scripts/ci/xcode-pins.txt." >&2
+    echo "::error::Found Xcode $found at $selected_dir; hmux requires Xcode $required (.xcode-version). This runner's image does not carry the Xcode pinned for its pool in scripts/ci/xcode-pins.txt." >&2
     exit 1
   fi
 }
@@ -154,7 +154,7 @@ validate_sdk_constraints() {
   [ -n "$REQUIRED_SDK_MAJOR$MAX_SDK_MAJOR" ] || return 0
   if [ -n "$REQUIRED_SDK_MAJOR" ]; then
     case "$REQUIRED_SDK_MAJOR" in *[!0-9]*)
-      echo "CMUX_CI_REQUIRED_MACOS_SDK_MAJOR must be numeric, got: $REQUIRED_SDK_MAJOR" >&2
+      echo "HMUX_CI_REQUIRED_MACOS_SDK_MAJOR must be numeric, got: $REQUIRED_SDK_MAJOR" >&2
       exit 1
       ;;
     esac
@@ -187,7 +187,7 @@ select_developer_dir() {
   # Ordinary CI also aligns the system xcode-select default because some app-host
   # subprocesses ignore DEVELOPER_DIR. Shared-machine semantic workloads must not
   # mutate that host-global selector, so their reviewed environment sets the skip.
-  if [[ "${CMUX_CI_SKIP_XCODE_SELECT:-0}" == "1" ]]; then
+  if [[ "${HMUX_CI_SKIP_XCODE_SELECT:-0}" == "1" ]]; then
     echo "Skipping host-global xcode-select update; DEVELOPER_DIR is pinned for this workload"
   elif xcode-select -s "$selected_dir" 2>/dev/null; then
     echo "xcode-select default -> $selected_dir"
@@ -205,9 +205,9 @@ select_developer_dir() {
   xcrun --sdk macosx --show-sdk-path
 }
 
-PINNED_DEVELOPER_DIR="${CMUX_CI_DEVELOPER_DIR:-}"
-if [ -z "$PINNED_DEVELOPER_DIR" ] && [ -n "${CMUX_CI_XCODE_APP:-}" ]; then
-  PINNED_DEVELOPER_DIR="${CMUX_CI_XCODE_APP%/}/Contents/Developer"
+PINNED_DEVELOPER_DIR="${HMUX_CI_DEVELOPER_DIR:-}"
+if [ -z "$PINNED_DEVELOPER_DIR" ] && [ -n "${HMUX_CI_XCODE_APP:-}" ]; then
+  PINNED_DEVELOPER_DIR="${HMUX_CI_XCODE_APP%/}/Contents/Developer"
 fi
 
 if [ -n "$PINNED_DEVELOPER_DIR" ]; then
@@ -248,7 +248,7 @@ if [ "$ALLOW_BELOW_FLOOR" != "1" ]; then
     if runs_in_fork_repository; then
       echo "::warning::No Xcode is pinned for macOS $POOL_MAJOR runners in scripts/ci/xcode-pins.txt; this fork uses the newest stable Xcode on its image instead."
     else
-      echo "::error::No Xcode is pinned for macOS $POOL_MAJOR runners. Add a line to scripts/ci/xcode-pins.txt, or pin CMUX_CI_XCODE_APP for this job." >&2
+      echo "::error::No Xcode is pinned for macOS $POOL_MAJOR runners. Add a line to scripts/ci/xcode-pins.txt, or pin HMUX_CI_XCODE_APP for this job." >&2
       exit 1
     fi
   elif ! POOL_DEVELOPER_DIR="$(find_xcode_version "$POOL_VERSION")"; then
@@ -274,7 +274,7 @@ fi
 
 if [ -n "$REQUIRED_SDK_MAJOR" ]; then
   case "$REQUIRED_SDK_MAJOR" in ''|*[!0-9]*)
-    echo "CMUX_CI_REQUIRED_MACOS_SDK_MAJOR must be numeric, got: $REQUIRED_SDK_MAJOR" >&2
+    echo "HMUX_CI_REQUIRED_MACOS_SDK_MAJOR must be numeric, got: $REQUIRED_SDK_MAJOR" >&2
     exit 1
     ;;
   esac

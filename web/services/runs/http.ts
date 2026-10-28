@@ -10,7 +10,7 @@ export function validRunId(id: string) { if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-
 
 /** Existing Cloud auth and team resolution own every Run entry point. */
 export function withRunRoute(request: Request, route: string, work: (scope: RunScope) => Promise<Response>): Promise<Response> {
-  return withAuthedVmApiRoute(request, route, { "cmux.vm.operation": "run.api" }, `${route} failed`, async ({ user }) => {
+  return withAuthedVmApiRoute(request, route, { "hmux.vm.operation": "run.api" }, `${route} failed`, async ({ user }) => {
     const account = resolveVmRouteAccountScope(user, request);
     if (!account.ok) return account.response;
     const scope = { userId: user.id, ownerTeamId: account.entitlements.billingTeamId };

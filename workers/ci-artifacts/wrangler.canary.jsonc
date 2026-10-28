@@ -1,6 +1,6 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
-  "name": "cmux-ci-artifacts-canary",
+  "name": "hmux-ci-artifacts-canary",
   "main": "src/canary.ts",
   "compatibility_date": "2026-09-20",
   "compatibility_flags": [
@@ -11,7 +11,7 @@
   "r2_buckets": [
     {
       "binding": "ARTIFACTS",
-      "bucket_name": "cmux-ci-artifacts-canary"
+      "bucket_name": "hmux-ci-artifacts-canary"
     }
   ],
   "durable_objects": {

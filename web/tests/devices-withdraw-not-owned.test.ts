@@ -39,7 +39,7 @@ const { clearNativeAuthCacheForTests } = await import("../services/vms/auth");
 const DEVICE = "6f1f6f0e-8f5a-4d55-9a37-7f6c0b1a2c3d";
 
 function withdrawRequest(): Request {
-  return new Request("https://cmux.test/api/devices", {
+  return new Request("https://hmux.test/api/devices", {
     method: "PATCH",
     headers: {
       authorization: "Bearer access-2",

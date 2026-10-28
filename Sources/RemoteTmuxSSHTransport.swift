@@ -49,7 +49,7 @@ actor RemoteTmuxSSHTransport {
     /// Lists the tmux sessions on the remote server.
     ///
     /// Returns an empty array when the remote tmux server is not running yet
-    /// (cmux treats "no server running" / "no sessions" as zero sessions, not
+    /// (hmux treats "no server running" / "no sessions" as zero sessions, not
     /// an error, so the sidebar can still offer to create one).
     func listSessions() async throws -> [RemoteTmuxSession] {
         let result = try await runTmux([
@@ -97,7 +97,7 @@ actor RemoteTmuxSSHTransport {
     /// is unparseable. New tmux recognizes `-B` but may fail with "no current
     /// client" outside control mode; old tmux rejects the flag itself.
     private func serverSupportsRefreshClientSubscriptions() async throws -> Bool {
-        let result = try await runTmux(["refresh-client", "-B", "cmux_probe::#{version}"])
+        let result = try await runTmux(["refresh-client", "-B", "hmux_probe::#{version}"])
         if result.succeeded { return true }
         if Self.indicatesRefreshClientSubscriptionUnsupported(result.stderr) { return false }
         if Self.indicatesRefreshClientNeedsCurrentClient(result.stderr) { return true }
@@ -283,7 +283,7 @@ actor RemoteTmuxSSHTransport {
     /// `nonisolated` and non-`async` so it can run from the synchronous app-quit /
     /// window-close paths where awaiting an actor isn't possible. `-O exit` hits the
     /// LOCAL control socket (fast, no network round-trip) and the spawned process
-    /// runs independently of cmux, so the master is torn down even as the app exits
+    /// runs independently of hmux, so the master is torn down even as the app exits
     /// — instead of lingering for `ControlPersist` after the user closes the app or
     /// the mirror window. Best-effort: a missing/dead socket just fails fast.
     nonisolated static func spawnControlMasterExit(
@@ -404,11 +404,11 @@ actor RemoteTmuxSSHTransport {
         // et's own message when its ssh bootstrap cannot start the remote helper — wrong
         // `--terminal-path`, or a helper missing on the server. Retrying sends the same path.
         if lowered.contains("error starting et process") { return true }
-        // An argv the transport rejects outright is a bug in what cmux built, not a bad moment.
+        // An argv the transport rejects outright is a bug in what hmux built, not a bad moment.
         if lowered.contains("unrecognized option") || lowered.contains("unknown option") { return true }
         // Go's flag package wording for the same thing. Wrappers that front a transport are
         // routinely written in Go, and without this a mis-ordered argv reads as a bad moment:
-        // cmux would retry the identical rejected command forever. Measured against a real
+        // hmux would retry the identical rejected command forever. Measured against a real
         // broker, which answers "flag provided but not defined: -p" and exits 2.
         if lowered.contains("flag provided but not defined") { return true }
         return false
@@ -418,7 +418,7 @@ actor RemoteTmuxSSHTransport {
     /// the host needs **interactive** authentication or host-key confirmation
     /// that batch mode cannot service — a password, an unknown/changed host key,
     /// keyboard-interactive MFA, or a FIDO touch. Used to decide whether to hand
-    /// the user an interactive `ssh` (run in their terminal by `cmux ssh-tmux`) that
+    /// the user an interactive `ssh` (run in their terminal by `hmux ssh-tmux`) that
     /// opens the shared ControlMaster, versus surfacing a genuine
     /// unreachable/transient error.
     ///
@@ -490,7 +490,7 @@ actor RemoteTmuxSSHTransport {
         // handler is installed — and Foundation does not invoke a terminationHandler
         // assigned after the process has already ended, so the continuation would
         // never resume and the caller would hang until its timeout. This matters for
-        // the fast auth-failure exits the `cmux ssh-tmux` flow classifies.
+        // the fast auth-failure exits the `hmux ssh-tmux` flow classifies.
         let exitCode: Int32
         do {
             exitCode = try await withTaskCancellationHandler {

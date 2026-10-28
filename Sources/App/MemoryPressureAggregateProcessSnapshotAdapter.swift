@@ -1,7 +1,7 @@
-import CmuxMemoryPressure
+import HmuxMemoryPressure
 
 /// Adapts the app-owned process census to the aggregate-memory package seam.
-extension CmuxTopProcessSnapshot: MemoryPressureAggregateProcessSnapshot {
+extension HmuxTopProcessSnapshot: MemoryPressureAggregateProcessSnapshot {
     /// Returns the captured process-tree closure for aggregate accounting.
     func aggregateExpandedPIDs(rootPIDs: Set<Int>) -> Set<Int> {
         expandedPIDs(rootPIDs: rootPIDs)

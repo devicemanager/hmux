@@ -1,11 +1,11 @@
 import SwiftUI
 import Foundation
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFoundation
+import HmuxAppKitSupportUI
+import HmuxFoundation
 import Bonsplit
-import CmuxWorkspaces
-import CmuxTerminal
+import HmuxWorkspaces
+import HmuxTerminal
 
 private enum WorkspaceTitlebarInteractionMetrics {
     // Keep in sync with the minimal-mode titlebar strip so the monitor only
@@ -827,7 +827,7 @@ extension WorkspaceContentView {
         if !found {
             let ts = ISO8601DateFormatter().string(from: Date())
             let line = "[\(ts)] PANEL NOT FOUND for tabId=\(tab.id) ws=\(workspace.id) panelCount=\(workspace.panels.count)\n"
-            let logPath = "/tmp/cmux-panel-debug.log"
+            let logPath = "/tmp/hmux-panel-debug.log"
             guard let handle = OwnedLogFile(path: logPath).openForAppending() else { return }
             defer { try? handle.close() }
             try? handle.write(contentsOf: Data(line.utf8))
@@ -882,7 +882,7 @@ struct EmptyPanelView: View {
 
         var body: some View {
             Text(text)
-                .cmuxFont(size: 11, weight: .semibold, design: .rounded)
+                .hmuxFont(size: 11, weight: .semibold, design: .rounded)
                 .foregroundStyle(.white.opacity(0.9))
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
@@ -896,7 +896,7 @@ struct EmptyPanelView: View {
 
     private func createTerminal() {
         #if DEBUG
-        cmuxDebugLog("emptyPane.newTerminal pane=\(paneId.id.uuidString.prefix(5))")
+        hmuxDebugLog("emptyPane.newTerminal pane=\(paneId.id.uuidString.prefix(5))")
         #endif
         focusPane()
         _ = workspace.newTerminalSurface(inPane: paneId, inheritWorkingDirectoryFallback: true)
@@ -904,7 +904,7 @@ struct EmptyPanelView: View {
 
     private func createBrowser() {
         #if DEBUG
-        cmuxDebugLog("emptyPane.newBrowser pane=\(paneId.id.uuidString.prefix(5))")
+        hmuxDebugLog("emptyPane.newBrowser pane=\(paneId.id.uuidString.prefix(5))")
         #endif
         focusPane()
         _ = workspace.newBrowserSurface(inPane: paneId)
@@ -933,7 +933,7 @@ struct EmptyPanelView: View {
                     // `.borderedProminent` paints its label in the system's
                     // on-accent text color, so bake that semantic color rather
                     // than a literal white.
-                    CmuxSystemSymbolImage(
+                    HmuxSystemSymbolImage(
                         systemName: systemImage,
                         pointSize: 13,
                         tint: Color(nsColor: .alternateSelectedControlTextColor)
@@ -954,10 +954,10 @@ struct EmptyPanelView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            CmuxSystemSymbolImage(magnified: "terminal.fill", pointSize: 48, tint: Color(nsColor: .tertiaryLabelColor))
+            HmuxSystemSymbolImage(magnified: "terminal.fill", pointSize: 48, tint: Color(nsColor: .tertiaryLabelColor))
 
             Text(String(localized: "emptyPanel.title", defaultValue: "Empty Panel"))
-                .cmuxFont(.headline)
+                .hmuxFont(.headline)
                 .foregroundStyle(.secondary)
 
             HStack(spacing: 12) {

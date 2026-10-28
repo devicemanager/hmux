@@ -1,7 +1,7 @@
 import type { AlertInput } from "./alerts";
 
 /**
- * Freestyle caps TLS rules per account. Every cmux machine holds at least two
+ * Freestyle caps TLS rules per account. Every hmux machine holds at least two
  * (the CodeRouter and reflection aliases), allowlist domains add one each, and
  * any other workload sharing the account draws from the same pool. At the cap
  * a network policy save cannot add a rule, so operators need to hear about it

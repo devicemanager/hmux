@@ -13,10 +13,10 @@ const read = (relativePath) => fs.readFileSync(path.join(repoRoot, relativePath)
 const reload = read("ios/scripts/reload.sh");
 const sharedConfig = read("ios/Config/Shared.xcconfig");
 const releaseConfig = read("ios/Config/Release.xcconfig");
-const project = read("ios/cmux-ios.xcodeproj/project.pbxproj");
-const appEntitlements = read("ios/Config/cmux.entitlements");
+const project = read("ios/hmux-ios.xcodeproj/project.pbxproj");
+const appEntitlements = read("ios/Config/hmux.entitlements");
 const extensionEntitlements = read("ios/Config/NotificationService.entitlements");
-const releaseEntitlements = read("ios/Config/cmux-release.entitlements");
+const releaseEntitlements = read("ios/Config/hmux-release.entitlements");
 const uploadTestFlight = read("ios/scripts/upload-testflight.sh");
 const cloudTestFlight = read("ios/scripts/cloud-testflight.sh");
 
@@ -48,13 +48,13 @@ function extractShellFunction(source, name) {
 function fallbackAllowed(configuration, signingBackend, allowProvisioningUpdates) {
   const helper = extractShellFunction(
     reload,
-    "cmux_ios_tagged_device_app_group_fallback_allowed",
+    "hmux_ios_tagged_device_app_group_fallback_allowed",
   );
   return spawnSync(
     "bash",
     [
       "-c",
-      `${helper}; cmux_ios_tagged_device_app_group_fallback_allowed "$1" "$2" "$3"`,
+      `${helper}; hmux_ios_tagged_device_app_group_fallback_allowed "$1" "$2" "$3"`,
       "ios-entitlement-test",
       configuration,
       signingBackend,
@@ -65,12 +65,12 @@ function fallbackAllowed(configuration, signingBackend, allowProvisioningUpdates
 }
 
 function deviceSigningBackend(keyID, issuerID, keyPath) {
-  const helper = extractShellFunction(reload, "cmux_ios_device_signing_backend");
+  const helper = extractShellFunction(reload, "hmux_ios_device_signing_backend");
   return spawnSync(
     "bash",
     [
       "-c",
-      `${helper}; cmux_ios_device_signing_backend "$1" "$2" "$3"`,
+      `${helper}; hmux_ios_device_signing_backend "$1" "$2" "$3"`,
       "ios-signing-backend-test",
       keyID,
       issuerID,
@@ -81,19 +81,19 @@ function deviceSigningBackend(keyID, issuerID, keyPath) {
 }
 
 function detectsAppGroupProfileMismatch(logBody) {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "cmux-ios-entitlement-log-"));
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "hmux-ios-entitlement-log-"));
   const logPath = path.join(tempRoot, "build.log");
   fs.writeFileSync(logPath, logBody);
   try {
     const helper = extractShellFunction(
       reload,
-      "cmux_ios_device_build_failed_for_app_group_entitlement",
+      "hmux_ios_device_build_failed_for_app_group_entitlement",
     );
     return spawnSync(
       "bash",
       [
         "-c",
-        `${helper}; cmux_ios_device_build_failed_for_app_group_entitlement "$1"`,
+        `${helper}; hmux_ios_device_build_failed_for_app_group_entitlement "$1"`,
         "ios-entitlement-log-test",
         logPath,
       ],
@@ -105,16 +105,16 @@ function detectsAppGroupProfileMismatch(logBody) {
 }
 
 function renderFallbackEntitlements() {
-  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "cmux-ios-entitlements-"));
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "hmux-ios-entitlements-"));
   const helper = extractShellFunction(
     reload,
-    "cmux_ios_render_tagged_device_no_app_group_entitlements",
+    "hmux_ios_render_tagged_device_no_app_group_entitlements",
   );
   const result = spawnSync(
     "bash",
     [
       "-c",
-      `IOS_DIR="$1"; ${helper}; cmux_ios_render_tagged_device_no_app_group_entitlements "$2"`,
+      `IOS_DIR="$1"; ${helper}; hmux_ios_render_tagged_device_no_app_group_entitlements "$2"`,
       "ios-entitlement-render-test",
       path.join(repoRoot, "ios"),
       tempRoot,
@@ -166,10 +166,10 @@ test("tagged Debug API-key signing can retry without the App Group", () => {
   assert.equal(allowed.status, 0, allowed.stderr);
 
   for (const logBody of [
-    "error: Provisioning profile \"iOS Team Provisioning Profile: dev.cmux.ios.fresh\" " +
+    "error: Provisioning profile \"iOS Team Provisioning Profile: dev.hmux.ios.fresh\" " +
       "doesn't match the entitlements file's value for the " +
       "com.apple.security.application-groups entitlement.\n",
-    "error: Provisioning profile \"iOS Team Provisioning Profile: dev.cmux.ios.fresh\" " +
+    "error: Provisioning profile \"iOS Team Provisioning Profile: dev.hmux.ios.fresh\" " +
       "failed qualification checks: Profile doesn't match the entitlements file's value for the " +
       "com.apple.security.application-groups entitlement.\n",
   ]) {
@@ -180,7 +180,7 @@ test("tagged Debug API-key signing can retry without the App Group", () => {
   const { result, tempRoot } = renderFallbackEntitlements();
   try {
     assert.equal(result.status, 0, result.stderr);
-    const app = fs.readFileSync(path.join(tempRoot, "cmux.entitlements"), "utf8");
+    const app = fs.readFileSync(path.join(tempRoot, "hmux.entitlements"), "utf8");
     const extension = fs.readFileSync(
       path.join(tempRoot, "NotificationService.entitlements"),
       "utf8",
@@ -201,15 +201,15 @@ test("tagged Debug API-key signing can retry without the App Group", () => {
   );
   assert.match(
     reload,
-    /CMUX_APP_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/cmux\.entitlements/u,
+    /HMUX_APP_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/hmux\.entitlements/u,
   );
   assert.match(
     reload,
-    /CMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/NotificationService\.entitlements/u,
+    /HMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/NotificationService\.entitlements/u,
   );
   assert.match(
     reload,
-    /run_and_capture "\$fallback_build_log" "\$\{build_args\[@\]\}" \\\s*\n\s*"CMUX_APP_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/cmux\.entitlements" \\\s*\n\s*"CMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/NotificationService\.entitlements" \\\s*\n\s*build/u,
+    /run_and_capture "\$fallback_build_log" "\$\{build_args\[@\]\}" \\\s*\n\s*"HMUX_APP_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/hmux\.entitlements" \\\s*\n\s*"HMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/NotificationService\.entitlements" \\\s*\n\s*build/u,
   );
 });
 
@@ -241,17 +241,17 @@ test("App Group fallback is narrow and preserves capable signing paths", () => {
 
   for (const entitlements of [appEntitlements, extensionEntitlements]) {
     assert.match(entitlements, /com\.apple\.security\.application-groups/u);
-    assert.match(entitlements, /group\.dev\.cmux\.ios/u);
+    assert.match(entitlements, /group\.dev\.hmux\.ios/u);
   }
 
   const renderer = extractShellFunction(
     reload,
-    "cmux_ios_render_tagged_device_no_app_group_entitlements",
+    "hmux_ios_render_tagged_device_no_app_group_entitlements",
   );
-  assert.match(renderer, /Config\/cmux\.entitlements/u);
+  assert.match(renderer, /Config\/hmux\.entitlements/u);
   assert.match(renderer, /Config\/NotificationService\.entitlements/u);
   assert.doesNotMatch(renderer, /release/i);
-  assert.match(renderer, /expected_group = \["group\.dev\.cmux\.ios"\]/u);
+  assert.match(renderer, /expected_group = \["group\.dev\.hmux\.ios"\]/u);
 });
 
 test("tagged Simulator builds keep the existing full entitlement selection", () => {
@@ -259,11 +259,11 @@ test("tagged Simulator builds keep the existing full entitlement selection", () 
 
   assert.match(
     sharedConfig,
-    /CMUX_APP_CODE_SIGN_ENTITLEMENTS = Config\/cmux\.entitlements/u,
+    /HMUX_APP_CODE_SIGN_ENTITLEMENTS = Config\/hmux\.entitlements/u,
   );
   assert.match(
     sharedConfig,
-    /CMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS = Config\/NotificationService\.entitlements/u,
+    /HMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS = Config\/NotificationService\.entitlements/u,
   );
   assert.match(simulator, /CODE_SIGNING_ALLOWED=NO/u);
   assert.doesNotMatch(simulator, /fallback_entitlements|no-app-group/u);
@@ -272,11 +272,11 @@ test("tagged Simulator builds keep the existing full entitlement selection", () 
 test("Release and TestFlight entitlement behavior stays on the production lane", () => {
   assert.match(
     releaseConfig,
-    /CMUX_APP_CODE_SIGN_ENTITLEMENTS = Config\/cmux-release\.entitlements/u,
+    /HMUX_APP_CODE_SIGN_ENTITLEMENTS = Config\/hmux-release\.entitlements/u,
   );
   assert.match(
     releaseConfig,
-    /CODE_SIGN_ENTITLEMENTS = \$\(CMUX_APP_CODE_SIGN_ENTITLEMENTS\)/u,
+    /CODE_SIGN_ENTITLEMENTS = \$\(HMUX_APP_CODE_SIGN_ENTITLEMENTS\)/u,
   );
   assert.match(
     releaseEntitlements,
@@ -284,17 +284,17 @@ test("Release and TestFlight entitlement behavior stays on the production lane",
   );
 
   const extensionSelectorMatches = project.match(
-    /CODE_SIGN_ENTITLEMENTS = "\$\(CMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS\)";/gu,
+    /CODE_SIGN_ENTITLEMENTS = "\$\(HMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS\)";/gu,
   ) ?? [];
   assert.equal(extensionSelectorMatches.length, 2);
-  assert.match(extensionEntitlements, /group\.dev\.cmux\.ios/u);
+  assert.match(extensionEntitlements, /group\.dev\.hmux\.ios/u);
 
   assert.doesNotMatch(releaseConfig, /fallback_entitlements|no-app-group/u);
   assert.doesNotMatch(uploadTestFlight, /fallback_entitlements|no-app-group/u);
   assert.doesNotMatch(cloudTestFlight, /fallback_entitlements|no-app-group/u);
 
   // The shipping manual re-sign path still seeds from the selected distribution
-  // provisioning profile before merging cmux-release.entitlements.
+  // provisioning profile before merging hmux-release.entitlements.
   assert.match(
     uploadTestFlight,
     /plutil -extract Entitlements xml1 -o "\$PROFILE_ENTITLEMENTS"/u,
@@ -305,7 +305,7 @@ test("Release and TestFlight entitlement behavior stays on the production lane",
 test("production configurations cannot enter the tagged Debug fallback", () => {
   const helper = extractShellFunction(
     reload,
-    "cmux_ios_tagged_device_app_group_fallback_allowed",
+    "hmux_ios_tagged_device_app_group_fallback_allowed",
   );
   assert.match(helper, /"\$configuration" == "Debug"/u);
   assert.match(helper, /"\$signing_backend" == "asc-api-key"/u);
@@ -316,10 +316,10 @@ test("production configurations cannot enter the tagged Debug fallback", () => {
     'run_and_capture "$build_log" "${build_args[@]}" build',
   );
   const renderer = reload.indexOf(
-    'cmux_ios_render_tagged_device_no_app_group_entitlements "$fallback_entitlements_dir"',
+    'hmux_ios_render_tagged_device_no_app_group_entitlements "$fallback_entitlements_dir"',
   );
   const retry = reload.indexOf(
-    '"CMUX_APP_CODE_SIGN_ENTITLEMENTS=$fallback_entitlements_dir/cmux.entitlements"',
+    '"HMUX_APP_CODE_SIGN_ENTITLEMENTS=$fallback_entitlements_dir/hmux.entitlements"',
   );
   const retryCommandStart = reload.indexOf(
     'run_and_capture "$fallback_build_log" "${build_args[@]}" \\',
@@ -333,10 +333,10 @@ test("production configurations cannot enter the tagged Debug fallback", () => {
   const retryCommand = reload.slice(retryCommandStart, retryCommandEnd);
   assert.match(
     retryCommand,
-    /CMUX_APP_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/cmux\.entitlements/u,
+    /HMUX_APP_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/hmux\.entitlements/u,
   );
   assert.match(
     retryCommand,
-    /CMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/NotificationService\.entitlements/u,
+    /HMUX_NOTIFICATION_SERVICE_CODE_SIGN_ENTITLEMENTS=\$fallback_entitlements_dir\/NotificationService\.entitlements/u,
   );
 });

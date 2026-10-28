@@ -50,7 +50,7 @@ export default function NightlyPage() {
         <div className="flex items-center gap-4 mb-6">
           <img
             src="/logo-nightly.png"
-            alt="cmux NIGHTLY icon"
+            alt="hmux NIGHTLY icon"
             width={48}
             height={48}
             className="rounded-xl"

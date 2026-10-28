@@ -1,15 +1,15 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 extension TerminalController {
     /// `vm.network_get {id}` and `vm.network_update {id, edits}` behind
-    /// `cmux vm network`. Updates go through ``VMClient/updateNetworkPolicy(id:edits:)``,
+    /// `hmux vm network`. Updates go through ``VMClient/updateNetworkPolicy(id:edits:)``,
     /// the same edit rules the Network sheet applies.
     nonisolated func socketWorkerCloudNetworkResponse(method: String, id: Any?, params: [String: Any]) -> String {
         guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
             let format = String(
                 localized: "socket.cloudVM.network.idRequired",
-                defaultValue: "%@ requires `id`. Run `cmux vm ls` to find one."
+                defaultValue: "%@ requires `id`. Run `hmux vm ls` to find one."
             )
             return v2Error(id: id, code: "invalid_params", message: String(format: format, method))
         }
@@ -27,7 +27,7 @@ extension TerminalController {
                     code: "invalid_params",
                     message: String(
                         localized: "socket.cloudVM.network.invalidEdit",
-                        defaultValue: "vm.network_update received an edit it does not understand. Use `cmux vm network --help`."
+                        defaultValue: "vm.network_update received an edit it does not understand. Use `hmux vm network --help`."
                     )
                 )
             }

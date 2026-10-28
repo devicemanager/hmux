@@ -212,9 +212,9 @@ test("rewrite: top-level declarations become scope assignments; the last express
   assert.deepEqual(r.names.sort(), ["G", "a", "b", "d", "e", "f"]);
   assert.match(r.source, /^f = function f\(\) \{ return a; \};/);
   assert.match(r.source, /void \(a = 1\); void \(\(\{ b, c: \[d\] \} = o\)\);/);
-  assert.match(r.source, /__cmuxLast = \(a \+ 1\);$/);
+  assert.match(r.source, /__hmuxLast = \(a \+ 1\);$/);
   assert.deepEqual(rewriteTopLevel("for (const x of y) { const z = x; }").names, []);
-  assert.match(rewriteTopLevel('await import("node:fs")').source, /__cmuxImport\("node:fs"\)/);
+  assert.match(rewriteTopLevel('await import("node:fs")').source, /__hmuxImport\("node:fs"\)/);
 });
 
 test("rewrite: bindings persist across cells, including closures", async () => {
@@ -311,11 +311,11 @@ async function settledState(promise) {
   return probe.state;
 }
 
-// cmux replaces a tab's web view when it unloads a hidden page to save
+// hmux replaces a tab's web view when it unloads a hidden page to save
 // memory and later restores it: the new page has new frame ids. Seen live: a
 // call after a forced unload addressed the old main frame and timed out with
 // "Frame ... is detached" instead of running on the restored page.
-test("tab.replaced: calls stop naming the frames of the web view cmux replaced", async () => {
+test("tab.replaced: calls stop naming the frames of the web view hmux replaced", async () => {
   const listeners = new Map();
   const calls = [];
   const host = { setTimeout: () => 0, clearTimeout: () => {}, now: Date.now, print: () => {} };
@@ -447,7 +447,7 @@ test("url: the JavaScriptCore fallback matches WHATWG URL for common cases", () 
 });
 
 test("fs sandbox: the session directory and the temp directory only", () => {
-  const work = makeTestDir("cmux-repl-unit-");
+  const work = makeTestDir("hmux-repl-unit-");
   try {
     const op = createFsOp({ workDir: work, tmpdir: os.tmpdir() });
     op("writeFile", { path: path.join(work, "a.txt"), base64: Buffer.from("x").toString("base64") });
@@ -463,7 +463,7 @@ test("fs sandbox: the session directory and the temp directory only", () => {
 });
 
 test("fs sandbox: rm, rename and lstat act on a link itself; copy and rename keep the destination on failure", () => {
-  const base = makeTestDir("cmux-repl-unit-");
+  const base = makeTestDir("hmux-repl-unit-");
   const work = path.join(base, "work");
   const outside = path.join(base, "outside");
   fs.mkdirSync(work);
@@ -738,7 +738,7 @@ test("pointer: a page that moves another frame over the target when the click's 
 // between that check and the press.
 async function runWithPressWindow(code) {
   const browser = await createDevBrowser();
-  const dir = fs.realpathSync(makeTestDir("cmux-repl-"));
+  const dir = fs.realpathSync(makeTestDir("hmux-repl-"));
   const lines = [];
   let host = null;
   try {

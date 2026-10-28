@@ -125,7 +125,7 @@ test("buildApng: valid chunks, frame count, sequence numbers; other sizes skippe
 
 // One REPL session on the dev driver, with the app's output cap.
 async function withRepl(fn, { maxOutput, setupContext, readable } = {}) {
-  const dir = makeTestDir("cmux-repl-bu-");
+  const dir = makeTestDir("hmux-repl-bu-");
   const sessionId = `bu-${process.pid}-${Math.random().toString(36).slice(2, 8)}`;
   const browser = await createDevBrowser({ setupContext });
   const driver = browser.driver();
@@ -152,20 +152,20 @@ async function withRepl(fn, { maxOutput, setupContext, readable } = {}) {
 }
 
 // The app gives each session a private temporary directory (os.tmpdir(),
-// mode 0700) under <tmp>/cmux-browser-repl. Files the session writes go
+// mode 0700) under <tmp>/hmux-browser-repl. Files the session writes go
 // straight into it; seen on the app, images landed in
-// <session tmp>/cmux-browser-repl/<session>/image-1.png, one session
+// <session tmp>/hmux-browser-repl/<session>/image-1.png, one session
 // directory inside another (18-print).
 test("files a session writes go straight into its private temporary directory", async () => {
   const servers = await startFixtureServers();
-  const dir = makeTestDir("cmux-repl-tmp-");
+  const dir = makeTestDir("hmux-repl-tmp-");
   const browser = await createDevBrowser();
   const lines = [];
   const host = createNodeHost({ workDir: dir, sessionId: `tmp-${process.pid}`, print: (level, text) => lines.push(text) });
   const repl = createDevRepl({ host, driver: browser.driver() });
   try {
     assert.equal(fs.statSync(host.tmpdir).mode & 0o777, 0o700, "the session's temporary directory is private");
-    assert.equal(path.dirname(host.tmpdir), path.join(fs.realpathSync(os.tmpdir()), "cmux-browser-repl"));
+    assert.equal(path.dirname(host.tmpdir), path.join(fs.realpathSync(os.tmpdir()), "hmux-browser-repl"));
     const r = await repl.evaluate(`
       await page.goto(${JSON.stringify(servers.origins.primary + "/aria.html")});
       display(await screenshot());
@@ -504,7 +504,7 @@ test("cookie calls name the page's tab, so the driver uses that tab's store", as
   const browser = await createDevBrowser();
   const servers = await startFixtureServers();
   const { primary } = servers.origins;
-  const dir = makeTestDir("cmux-repl-cookie-");
+  const dir = makeTestDir("hmux-repl-cookie-");
   const driver = browser.driver();
   const calls = [];
   const call = driver.call.bind(driver);
@@ -546,7 +546,7 @@ test("a lazy page's cookie calls open its tab and never use the active tab's sto
   const browser = await createDevBrowser();
   const servers = await startFixtureServers();
   const { primary } = servers.origins;
-  const dir = makeTestDir("cmux-repl-cookie-lazy-");
+  const dir = makeTestDir("hmux-repl-cookie-lazy-");
   const driver = browser.driver();
   const calls = [];
   const call = driver.call.bind(driver);
@@ -590,7 +590,7 @@ test("fetch from a lazy current page opens its tab and never uses the active tab
   const browser = await createDevBrowser();
   const servers = await startFixtureServers();
   const { primary } = servers.origins;
-  const dir = makeTestDir("cmux-repl-fetch-lazy-");
+  const dir = makeTestDir("hmux-repl-fetch-lazy-");
   const driver = browser.driver();
   const calls = [];
   const call = driver.call.bind(driver);
@@ -639,7 +639,7 @@ test("cookie calls through a closed page fail with closed and never reach the cu
   const browser = await createDevBrowser();
   const servers = await startFixtureServers();
   const { primary, peer } = servers.origins;
-  const dir = makeTestDir("cmux-repl-cookie-closed-");
+  const dir = makeTestDir("hmux-repl-cookie-closed-");
   const driver = browser.driver();
   const repl = createDevRepl({ host: createNodeHost({ workDir: dir, sessionId: `cookie-closed-${process.pid}`, print: () => {} }), driver });
   try {
@@ -693,7 +693,7 @@ test("storage state reads and writes localStorage only in the page's own data st
   const browser = await createDevBrowser();
   const servers = await startFixtureServers();
   const { primary } = servers.origins;
-  const dir = makeTestDir("cmux-repl-store-");
+  const dir = makeTestDir("hmux-repl-store-");
   const driver = browser.driver();
   let otherId = null;
   let recording = false;
@@ -977,7 +977,7 @@ test("reference-c-parity.md: verdicts and proofs resolve", () => {
   assert.ok(rows.length > 60, `${rows.length} rows`);
   const goldenKeys = (name) => {
     const g = JSON.parse(fs.readFileSync(path.join(root, "goldens", `${name}.json`), "utf8"));
-    return [...Object.keys(g.cmux || {}), ...Object.keys(g.oracle || {})];
+    return [...Object.keys(g.hmux || {}), ...Object.keys(g.oracle || {})];
   };
   const titles = (file) => [...fs.readFileSync(path.join(root, "unit", `${file}.test.mjs`), "utf8").matchAll(/^test\("((?:[^"\\]|\\.)*)"/gm)].map((m) => m[1]);
   for (const row of rows) {
@@ -1022,7 +1022,7 @@ test("reference-c-parity.md: verdicts and proofs resolve", () => {
 // export or take its Set-Cookie.
 test("page.exportContent: the export request uses the exported tab's cookies, not the current tab's", async () => {
   const servers = await startFixtureServers();
-  const dir = makeTestDir("cmux-repl-export-bind-");
+  const dir = makeTestDir("hmux-repl-export-bind-");
   const browser = await createDevBrowser();
   const lines = [];
   const host = createNodeHost({ workDir: dir, sessionId: `export-bind-${process.pid}`, print: (level, text) => lines.push(text) });

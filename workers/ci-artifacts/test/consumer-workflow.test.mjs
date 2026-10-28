@@ -25,7 +25,7 @@ function render(expression, values) {
 for (const jobName of ["app-host-unit-tests", "tests-build-and-lag"]) {
   for (const enabled of [true, false]) {
     test(`${jobName}: actual workflow selects ${enabled ? "authenticated verified R2 bytes" : "measured GitHub fallback"}`, (t) => {
-      const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "cmux-artifact-workflow-"));
+      const temporary = fs.mkdtempSync(path.join(os.tmpdir(), "hmux-artifact-workflow-"));
       t.after(() => fs.rmSync(temporary, { recursive: true, force: true }));
       const bin = path.join(temporary, "bin");
       fs.mkdirSync(bin);
@@ -53,7 +53,7 @@ else:
     assert "header.payload.signature" not in args
     url = args[-1]
     if url.startswith("https://pipelines.actions.githubusercontent.com/oidc?"):
-        assert "audience=cmux-ci-artifacts" in url
+        assert "audience=hmux-ci-artifacts" in url
         assert "Authorization: Bearer oidc-request-token" in config.read_text()
         (work / "oidc-called").touch()
         print(json.dumps({"value":"header.payload.signature"}))
@@ -63,7 +63,7 @@ else:
         target = pathlib.Path(args[args.index("--output") + 1])
         headers = pathlib.Path(args[args.index("--dump-header") + 1])
         target.write_bytes(blob)
-        headers.write_text("HTTP/1.1 200 OK\\r\\nX-Cmux-Artifact-Cache: fill\\r\\n\\r\\n")
+        headers.write_text("HTTP/1.1 200 OK\\r\\nX-Hmux-Artifact-Cache: fill\\r\\n\\r\\n")
         (work / "broker-called").touch()
         print(f"200 0.100 0.500 {len(blob)}", end="")
 `;

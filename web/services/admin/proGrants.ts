@@ -1,10 +1,10 @@
 // Operator Pro grants.
 //
-// A grant writes `clientReadOnlyMetadata.cmuxVmPlan`, the manual override that
+// A grant writes `clientReadOnlyMetadata.hmuxVmPlan`, the manual override that
 // `resolveProPlanStatus` and Cloud VM entitlements already honor and that
 // Stripe reconciliation never touches. Removing the grant deletes the key so
 // the account falls back to its real Stripe state. Who granted what is kept in
-// `serverMetadata.cmuxAdminPlanGrant`, which end users cannot read.
+// `serverMetadata.hmuxAdminPlanGrant`, which end users cannot read.
 
 import { and, desc, eq, ilike, inArray, isNotNull, isNull, lt, or } from "drizzle-orm";
 
@@ -129,9 +129,9 @@ export type AdminUserRow = {
   readonly signedUpAt: string;
   /** Effective Pro access: Stripe subscription or a paid manual grant. */
   readonly isPro: boolean;
-  /** Current `cmuxVmPlan` override, when set. */
+  /** Current `hmuxVmPlan` override, when set. */
   readonly manualPlanId: string | null;
-  /** `cmuxPlan` mirror written from Stripe state. */
+  /** `hmuxPlan` mirror written from Stripe state. */
   readonly metadataPlanId: string | null;
   readonly stripe: {
     readonly subscriptionStatus: string | null;
@@ -271,7 +271,7 @@ export type FreshAdminUserMutation = <Result>(
 /**
  * Writes or clears the manual Pro grant under the account-mutation lease so
  * a concurrent billing or TestFlight metadata write cannot be clobbered, then
- * re-reads the user so `cmuxPlan` is reconciled against Stripe when the grant
+ * re-reads the user so `hmuxPlan` is reconciled against Stripe when the grant
  * was removed.
  */
 export async function setManualPlanGrant(
@@ -307,9 +307,9 @@ export async function setManualPlanGrant(
       await lease.refresh();
       const client = metadataRecord(user.clientReadOnlyMetadata);
       if (input.plan === null) {
-        delete client.cmuxVmPlan;
+        delete client.hmuxVmPlan;
       } else {
-        client.cmuxVmPlan = input.plan;
+        client.hmuxVmPlan = input.plan;
       }
       const server = metadataRecord(user.serverMetadata);
       const grant: AdminPlanGrantRecord = {
@@ -319,7 +319,7 @@ export async function setManualPlanGrant(
         at: now().toISOString(),
         pendingGrantId: input.pendingGrantId ?? null,
       };
-      server.cmuxAdminPlanGrant = grant;
+      server.hmuxAdminPlanGrant = grant;
       await user.update({
         clientReadOnlyMetadata: client as ProMetadataJson,
         serverMetadata: server as ProMetadataJson,
@@ -348,7 +348,7 @@ export async function setManualPlanGrant(
   }
 
   // Outside the lease: the resolver takes its own lease when it needs to
-  // rewrite `cmuxPlan` after the override stopped masking Stripe state.
+  // rewrite `hmuxPlan` after the override stopped masking Stripe state.
   const billing = input.stripeBillingStatus ?? stripeBillingStatusForUser;
   const fresh = (await app.getUser(input.targetUserId)) ?? mutated;
   await resolveProPlanStatus(fresh, {
@@ -361,7 +361,7 @@ export async function setManualPlanGrant(
 }
 
 export function grantRecordFromServerMetadata(raw: unknown): AdminPlanGrantRecord | null {
-  const record = metadataRecord(raw).cmuxAdminPlanGrant;
+  const record = metadataRecord(raw).hmuxAdminPlanGrant;
   if (!record || typeof record !== "object" || Array.isArray(record)) return null;
   const value = record as Record<string, unknown>;
   if (typeof value.byUserId !== "string" || typeof value.at !== "string") return null;
@@ -473,13 +473,13 @@ export type FreshAdminTeamMutation = <Result>(
 ) => Promise<Result>;
 
 /**
- * Writes or clears the team's `cmuxVmPlan` override. A paid team override
+ * Writes or clears the team's `hmuxVmPlan` override. A paid team override
  * gives every member the Team plan through billing team resolution, the same
- * way a Stripe Team subscription writes `cmuxPlan: "team"`.
+ * way a Stripe Team subscription writes `hmuxPlan: "team"`.
  *
  * The write runs under the shared account-mutation lease keyed by the team
  * id, and the team is re-read inside it, so two admins cannot clobber each
- * other's metadata. In the same write the `cmuxPlan` mirror is reconciled
+ * other's metadata. In the same write the `hmuxPlan` mirror is reconciled
  * against the live Stripe team subscription, so removing a grant from a team
  * whose subscription lapsed leaves no stale paid mirror behind.
  */
@@ -504,16 +504,16 @@ export async function setTeamManualPlanGrant(input: {
       await lease.refresh();
       const client = metadataRecord(team.clientReadOnlyMetadata);
       if (input.plan === null) {
-        delete client.cmuxVmPlan;
+        delete client.hmuxVmPlan;
       } else {
-        client.cmuxVmPlan = input.plan;
+        client.hmuxVmPlan = input.plan;
       }
       // Mirror reconciliation, like syncTeamPlanMetadata but clearing any
       // stale paid value: entitlements treat pro, team, and founders alike.
       if (stripeActive) {
-        client.cmuxPlan = TEAM_PLAN_ID;
-      } else if (isPaidPlanId(typeof client.cmuxPlan === "string" ? client.cmuxPlan : null)) {
-        delete client.cmuxPlan;
+        client.hmuxPlan = TEAM_PLAN_ID;
+      } else if (isPaidPlanId(typeof client.hmuxPlan === "string" ? client.hmuxPlan : null)) {
+        delete client.hmuxPlan;
       }
       const server = metadataRecord(team.serverMetadata);
       const grant: AdminPlanGrantRecord = {
@@ -522,7 +522,7 @@ export async function setTeamManualPlanGrant(input: {
         byEmail: input.admin.primaryEmail ?? null,
         at: now().toISOString(),
       };
-      server.cmuxAdminPlanGrant = grant;
+      server.hmuxAdminPlanGrant = grant;
       await team.update({
         clientReadOnlyMetadata: client as ProMetadataJson,
         serverMetadata: server as ProMetadataJson,

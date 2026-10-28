@@ -41,11 +41,11 @@ XML
 
 run_guard() {
   local mode="$1" project="$2" appcast="$3"
-  CMUX_SPARKLE_MONOTONIC_MODE="$mode" \
-  CMUX_SPARKLE_PROJECT_FILE="$project" \
-  CMUX_SPARKLE_APPCAST_URL="$appcast" \
-  CMUX_SPARKLE_APPCAST_RETRIES=0 \
-  CMUX_SPARKLE_APPCAST_RETRY_DELAY=0 \
+  HMUX_SPARKLE_MONOTONIC_MODE="$mode" \
+  HMUX_SPARKLE_PROJECT_FILE="$project" \
+  HMUX_SPARKLE_APPCAST_URL="$appcast" \
+  HMUX_SPARKLE_APPCAST_RETRIES=0 \
+  HMUX_SPARKLE_APPCAST_RETRY_DELAY=0 \
     "$GUARD"
 }
 
@@ -63,7 +63,7 @@ if ! grep -q "must be strictly greater than" <<<"$output"; then
 fi
 
 # The default is enforce, so callers that pass no mode (release-pretag-guard.sh) still fail.
-if CMUX_SPARKLE_PROJECT_FILE="$STALE" CMUX_SPARKLE_APPCAST_URL="file://$APPCAST" "$GUARD" >/dev/null 2>&1; then
+if HMUX_SPARKLE_PROJECT_FILE="$STALE" HMUX_SPARKLE_APPCAST_URL="file://$APPCAST" "$GUARD" >/dev/null 2>&1; then
   echo "FAIL: the guard must enforce by default" >&2
   exit 1
 fi
@@ -105,8 +105,8 @@ if ! grep -q "^FAIL: could not fetch the latest published Sparkle build" <<<"$ou
   echo "FAIL: enforce mode did not explain the unreachable appcast: $output" >&2
   exit 1
 fi
-if CMUX_SPARKLE_PROJECT_FILE="$FRESH" CMUX_SPARKLE_APPCAST_URL="file://$TMP_DIR/missing-appcast.xml" \
-   CMUX_SPARKLE_APPCAST_RETRIES=0 CMUX_SPARKLE_APPCAST_RETRY_DELAY=0 "$GUARD" >/dev/null 2>&1; then
+if HMUX_SPARKLE_PROJECT_FILE="$FRESH" HMUX_SPARKLE_APPCAST_URL="file://$TMP_DIR/missing-appcast.xml" \
+   HMUX_SPARKLE_APPCAST_RETRIES=0 HMUX_SPARKLE_APPCAST_RETRY_DELAY=0 "$GUARD" >/dev/null 2>&1; then
   echo "FAIL: the default mode must fail closed on an unreachable appcast" >&2
   exit 1
 fi
@@ -121,13 +121,13 @@ fi
 
 # An unknown mode is a configuration error, never a silent pass.
 if run_guard sometimes "$FRESH" "file://$APPCAST" >/dev/null 2>&1; then
-  echo "FAIL: an unknown CMUX_SPARKLE_MONOTONIC_MODE must fail" >&2
+  echo "FAIL: an unknown HMUX_SPARKLE_MONOTONIC_MODE must fail" >&2
   exit 1
 fi
 
 # release.yml must select the mode from the ref: enforce on tags, warn otherwise.
 RELEASE_WORKFLOW="$ROOT_DIR/.github/workflows/release.yml"
-if ! grep -Fq "CMUX_SPARKLE_MONOTONIC_MODE: \${{ startsWith(github.ref, 'refs/tags/') && 'enforce' || 'warn' }}" "$RELEASE_WORKFLOW"; then
+if ! grep -Fq "HMUX_SPARKLE_MONOTONIC_MODE: \${{ startsWith(github.ref, 'refs/tags/') && 'enforce' || 'warn' }}" "$RELEASE_WORKFLOW"; then
   echo "FAIL: release.yml must run the monotonic guard in enforce mode for tags and warn mode for dry runs" >&2
   exit 1
 fi

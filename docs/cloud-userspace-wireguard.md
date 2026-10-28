@@ -1,9 +1,9 @@
 # Cloud private network access
 
 Cloud VMs live in the account's Freestyle private network. They do not expose
-the cmux-tui daemon or browser ports to the public Internet.
+the hmux-tui daemon or browser ports to the public Internet.
 
-cmux uses two WireGuard role types for one physical Mac. One app channel uses
+hmux uses two WireGuard role types for one physical Mac. One app channel uses
 at most one peer for each role. Stable and Nightly use separate peers because
 they can run at the same time, but all peers belong to one access grant. The
 access grant is the single Mac shown on cmux.com. A CUA helper does not create
@@ -11,8 +11,8 @@ a peer unless it later becomes a direct Cloud network client.
 
 | role | traffic | implementation | first user action |
 | --- | --- | --- | --- |
-| terminal | cmux-tui terminal and in-app HTTP browser/Desktop traffic | user-space WireGuard hub | none |
-| browser | a system-wide route for other apps on this Mac (`cmux vpn up`) | Apple Network Extension | allow the cmux network extension |
+| terminal | hmux-tui terminal and in-app HTTP browser/Desktop traffic | user-space WireGuard hub | none |
+| browser | a system-wide route for other apps on this Mac (`hmux vpn up`) | Apple Network Extension | allow the hmux network extension |
 
 The terminal role does not create a system interface or require macOS VPN
 approval. In-app HTTP browser and Desktop pages use an authenticated loopback
@@ -24,15 +24,15 @@ They never offer VPN setup.
 ## Terminal path
 
 ```text
-cmux terminal pane
-  -> bundled cmux-tui sidecar
+hmux terminal pane
+  -> bundled hmux-tui sidecar
   -> SOCKS5 over an owner-only Unix socket
-  -> one app-owned cmux-tui WireGuard hub
+  -> one app-owned hmux-tui WireGuard hub
   -> Freestyle private network
-  -> VM cmux-tui daemon
+  -> VM hmux-tui daemon
 ```
 
-The hub uses `cmux-wg`, which combines BoringTun for WireGuard with smoltcp for
+The hub uses `hmux-wg`, which combines BoringTun for WireGuard with smoltcp for
 TCP. One app process owns one terminal peer and shares it across all VM links.
 Each sidecar receives `--wireguard-hub <socket>`. It cannot dial the private VM
 address directly.
@@ -41,7 +41,7 @@ The first terminal use creates the terminal peer through `POST /api/vm/tunnel`.
 The completed WireGuard configuration stays on the Mac with mode 0600. Later
 app launches reuse it and make no Freestyle tunnel call.
 
-cmux-tui connections need no device invitation and no approval. The VM's
+hmux-tui connections need no device invitation and no approval. The VM's
 daemon serves a trusted-carrier listener that is reachable only inside the
 private network, so the Mac dials `remote connect <route> --carrier` and is
 admitted by the network itself. Every connection uses the private route, with
@@ -79,35 +79,35 @@ refuses the daemon port. Machine removal, sign-out, and process exit close the
 proxy and its WireGuard claim. Explicit loopback forwards for other local clients
 remain separate from the browser's stable private-IP URL.
 
-## System-wide route (`cmux vpn up`)
+## System-wide route (`hmux vpn up`)
 
-The system VPN is controlled explicitly through `cmux vpn up`, `cmux vpn down`,
-and `cmux vpn status`. These commands retain the existing authenticated tunnel
+The system VPN is controlled explicitly through `hmux vpn up`, `hmux vpn down`,
+and `hmux vpn status`. These commands retain the existing authenticated tunnel
 coordinator, macOS extension approval, and cancellation behavior. There are no
 VPN setup rows, buttons, menu items, Settings entries, or setup panes in the app.
 HTTP Desktop uses the userspace hub regardless of system VPN state. HTTPS retains
 its original private host and requires a private network connection.
 
 
-`cmux vpn up` creates a separate browser peer through `POST /api/vm/tunnel`,
+`hmux vpn up` creates a separate browser peer through `POST /api/vm/tunnel`,
 saves its configuration in the Apple VPN manager, and requests activation of
 the bundled packet tunnel system extension. macOS can require one user
 approval in System Settings › General › Login Items & Extensions; the CLI
 explains what is about to be installed before the request, and the Machines
-panel shows the wait with a button to that pane. cmux must not request this at
+panel shows the wait with a button to that pane. hmux must not request this at
 launch, during machine list refresh, during terminal use, or when a Ports or
 Desktop row is opened.
 
 After approval, macOS starts the route without `sudo` or a password. Later
-`cmux vpn up` runs reuse the saved peer and VPN configuration. This route is
+`hmux vpn up` runs reuse the saved peer and VPN configuration. This route is
 for other apps on the Mac (a system browser, `ssh`, `.internal` hostnames via
-`cmux vpn hosts`); cmux's own panes never depend on it.
+`hmux vpn hosts`); hmux's own panes never depend on it.
 
 ### Activation gate
 
 Nothing on the browser path runs until `CloudActivationPolicy` admits it. The
 policy is built once at the composition root from local state only, and it is
-the single decision every tunnel consumer (browser navigation, `cmux vpn up`,
+the single decision every tunnel consumer (browser navigation, `hmux vpn up`,
 `vm.tunnel_config`, `vm.tunnel_up`) flows through:
 
 - A start is admitted only after the Cloud tab's first-use screen has completed
@@ -117,7 +117,7 @@ the single decision every tunnel consumer (browser navigation, `cmux vpn up`,
   least one machine. Launch-time decisions and status answer "has a machine"
   from a cached marker written by every machine list and create
   (`cloud.machines.cachedHasAny`; cleared on sign-out, reset to unknown by a
-  delete). An explicit start (`cmux vpn up`, a Cloud browser open) does not
+  delete). An explicit start (`hmux vpn up`, a Cloud browser open) does not
   trust that marker: it settles the count against the control plane with one
   fleet list before scheduling the start, so a machine deleted or created
   outside this app is neither trusted nor missed; while the tunnel is up or a
@@ -135,7 +135,7 @@ the single decision every tunnel consumer (browser navigation, `cmux vpn up`,
 - The activation marker is honored while the app runs: clearing
   `cloud.beta.machines.enabled` brings a running tunnel down, while the Cloud
   tab's successful first-use flow commits it and lets the next Cloud use start
-  without a relaunch. The periodic fleet read (`GET /api/vm` from the cmux-tui
+  without a relaunch. The periodic fleet read (`GET /api/vm` from the hmux-tui
   registry) runs only while `CloudMachinesFeature.isEnabled()` is true, so an
   unactivated app makes no Cloud API traffic. Sign-out clears account evidence
   and stops the poll; a delete resets the machine cache until the next list.
@@ -146,7 +146,7 @@ the single decision every tunnel consumer (browser navigation, `cmux vpn up`,
 
 `cloud_vm_access_grants` contains one row for the physical Mac. It stores the
 stable Mac ID, reported device name, user-edited display name, model, macOS
-version, CPU architecture, cmux version, build, channel, first-seen time,
+version, CPU architecture, hmux version, build, channel, first-seen time,
 last-seen time, and revoked time.
 
 `cloud_vm_tunnels` contains every channel's terminal and browser peers under
@@ -175,7 +175,7 @@ Freestyle calls required by this design are:
 1. Create or find the account private network during VM provisioning.
 2. Create one channel's terminal WireGuard peer on its first terminal, Ports,
    or Desktop use.
-3. Create one channel's browser WireGuard peer on the first `cmux vpn up`.
+3. Create one channel's browser WireGuard peer on the first `hmux vpn up`.
 4. Delete that Mac's peers across all channels on sign-out or remote revoke.
 5. Create, delete, start, stop, resize, or inspect a VM when the user requests
    that management operation.
@@ -184,24 +184,24 @@ The first attach to a machine whose daemon predates the trusted listener costs
 one control-plane request that brings the daemon to the pinned build and
 restarts it with the trusted drop-in. Nothing is approved and the Mac does not
 poll Vercel or Freestyle. Machine list refresh can use the Cloud API, but live
-workspace, terminal, pane, display, and agent metadata comes from cmux-tui
+workspace, terminal, pane, display, and agent metadata comes from hmux-tui
 through the terminal WireGuard link.
 
 ## WireGuard implementation
 
 ```text
-cmux-remote DirectWebSocketProvider
+hmux-remote DirectWebSocketProvider
   -> Dialer
      -> OsTcpDialer for non-Cloud routes
      -> WireGuardDialer for one in-process link
      -> SocksDialer for Mac sidecars
 
-cmux-wg
+hmux-wg
   -> boringtun::noise::Tunn
   -> smoltcp Interface and TCP sockets
   -> one Tokio task for UDP, WireGuard, and TCP
 
-cmux-tui wg hub --config <WireGuard configuration> --socket <Unix socket>
+hmux-tui wg hub --config <WireGuard configuration> --socket <Unix socket>
   -> one WgNet
   -> SOCKS5 CONNECT for private VM routes
 ```
@@ -211,10 +211,10 @@ so its TCP maximum segment size stays within the tunnel packet size.
 
 ## Verification
 
-- `cargo test -p cmux-wg`: configuration parsing, handshake, TCP echo, larger
+- `cargo test -p hmux-wg`: configuration parsing, handshake, TCP echo, larger
   payloads, and peer restart.
-- `cargo test -p cmux-remote`: injected WireGuard dialer and hub SOCKS path.
-- `cargo test -p cmux-tui`: hub command and required capability.
+- `cargo test -p hmux-remote`: injected WireGuard dialer and hub SOCKS path.
+- `cargo test -p hmux-tui`: hub command and required capability.
 - Web tests: one physical Mac with two role peers, multiple Stack sessions,
   rename, sign-out revoke, remote revoke, and no iOS registry coupling.
 - Tagged Mac build: with system VPN off, HTTP Desktop and browser ports use
@@ -225,5 +225,5 @@ so its TCP maximum segment size stays within the tunnel packet size.
   the hub lease follows each connection, and one machine port keeps one local
   port across a private-address change.
 - Signed Nightly build: opening a Ports or Desktop row never asks for Network
-  Extension approval; `cmux vpn up` does, the Machines panel shows the wait
+  Extension approval; `hmux vpn up` does, the Machines panel shows the wait
   with an Open System Settings button, and revoke ends both paths.

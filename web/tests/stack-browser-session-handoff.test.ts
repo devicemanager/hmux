@@ -17,7 +17,7 @@ describe("Stack browser session handoff adapter", () => {
       "12345678-1234-4123-8123-123456789abc",
     );
     const request = new NextRequest(
-      "https://cmux.test/handler/app-session-handoff",
+      "https://hmux.test/handler/app-session-handoff",
       { method: "POST" },
     );
     const response = new NextResponse(null, { status: 204 });

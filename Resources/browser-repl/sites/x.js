@@ -4,9 +4,9 @@
 // after a confirmed draft.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URL } = root.CmuxBrowserRepl.core;
+  const { URL } = root.HmuxBrowserRepl.core;
   const ORIGIN = "https://x.com";
   const SIGN_IN = [/x\.com\/(i\/flow\/login|login|i\/flow\/signup)/, /twitter\.com\/(i\/flow\/login|login)/];
 
@@ -167,7 +167,7 @@
             // to another account.
             const user = await t.inOrigin(ORIGIN, authenticatedUser, { bearer: WEB_BEARER });
             const account = user && user.screenName;
-            if (!user) throw new S.SiteError("account_unknown", "x.post: X did not say which X account the cmux browser is signed in as; nothing was drafted. If it is signed out, open https://x.com with tabs.open() and ask the user to sign in");
+            if (!user) throw new S.SiteError("account_unknown", "x.post: X did not say which X account the hmux browser is signed in as; nothing was drafted. If it is signed out, open https://x.com with tabs.open() and ask the user to sign in");
             return {
               category: "[9] representational communication (public post)",
               summary: replyTo ? `Reply on X to post ${replyTo} as @${account}` : `Publish a post on X as @${account}`,

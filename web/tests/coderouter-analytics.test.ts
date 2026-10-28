@@ -12,7 +12,7 @@ import {
 
 const config = () => ({
   ingestHost: "https://posthog.test",
-  projectKey: "phc_cmux_test",
+  projectKey: "phc_hmux_test",
 });
 
 function collector() {
@@ -100,7 +100,7 @@ describe("coderouter analytics", () => {
       }>;
     };
     const event = payload.batch[0]!;
-    expect(payload.api_key).toBe("phc_cmux_test");
+    expect(payload.api_key).toBe("phc_hmux_test");
     expect(event.distinct_id).toBe("raw-stack-user-id");
     expect(event.properties).toMatchObject({
       provider: "codex",
@@ -397,7 +397,7 @@ describe("coderouter raw trace batch", () => {
       api_key: string;
       batch: Array<{ event: string; distinct_id: string; timestamp: string; properties: Record<string, unknown> }>;
     };
-    expect(body.api_key).toBe("phc_cmux_test");
+    expect(body.api_key).toBe("phc_hmux_test");
     expect(body.batch.map((entry) => entry.event)).toEqual(["$exception"]);
     const exception = body.batch[0]!;
     expect(exception.distinct_id).toBe("coderouter-server");

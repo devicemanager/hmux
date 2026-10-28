@@ -74,7 +74,7 @@ class Parsing(unittest.TestCase):
         ])
 
     def test_absolute_runner_paths_become_web_relative(self):
-        self.assertEqual(census.web_path("/home/runner/_work/cmux/cmux/web/tests/a.test.ts"), "tests/a.test.ts")
+        self.assertEqual(census.web_path("/home/runner/_work/hmux/hmux/web/tests/a.test.ts"), "tests/a.test.ts")
         self.assertEqual(census.web_path("./tests/a.test.ts"), "tests/a.test.ts")
 
     def test_matching_by_basename_path_and_name_substring(self):

@@ -28,7 +28,7 @@ import {
   type VmPublicationProviderShape,
 } from "./provider";
 import { normalizePublicationHostname } from "./security";
-import { CMUX_TUI_PORT } from "../vms/drivers/cmuxTuiDaemon";
+import { HMUX_TUI_PORT } from "../vms/drivers/hmuxTuiDaemon";
 
 const FORWARD_AUTH_LEASE_MS = 30_000;
 // Publication routes have a 120-second execution budget. Keep the durable VM
@@ -38,7 +38,7 @@ const VM_PUBLICATION_OPERATION_LEASE_MS = 150_000;
 export type PublicationPrincipal = {
   readonly userId: string;
   readonly teamIds: readonly string[];
-  /** The account scope VM lookups follow (selected team or `X-Cmux-Team-Id`). */
+  /** The account scope VM lookups follow (selected team or `X-Hmux-Team-Id`). */
   readonly billingTeamId?: string | null;
   readonly organizationName?: string;
 };
@@ -49,9 +49,9 @@ export type PublicationForwardAuthConfig = {
 };
 
 /**
- * The CMUX-owned zone generated publication hostnames are minted under. The
- * operator verifies it once in the CMUX Freestyle account and keeps its
- * wildcard DNS and certificate live; `CMUX_VM_PUBLICATION_GENERATED_DOMAIN`
+ * The HMUX-owned zone generated publication hostnames are minted under. The
+ * operator verifies it once in the HMUX Freestyle account and keeps its
+ * wildcard DNS and certificate live; `HMUX_VM_PUBLICATION_GENERATED_DOMAIN`
  * overrides it per deployment.
  */
 export const DEFAULT_GENERATED_PUBLICATION_DOMAIN = "cmux.sh";
@@ -202,10 +202,10 @@ export function listCustomDomains(input: {
 }
 
 /**
- * `cmux cloud domains verify <domain>` verifies zones and nothing else. A zone
+ * `hmux cloud domains verify <domain>` verifies zones and nothing else. A zone
  * id, a publication id, or a publication hostname resolves to the zone it
  * belongs to; any other hostname is a zone to start verifying. Generated names
- * live on the CMUX zone and have nothing to verify.
+ * live on the HMUX zone and have nothing to verify.
  */
 export function verifyDomain(input: {
   readonly principal: PublicationPrincipal;
@@ -479,9 +479,9 @@ export function createPublication(input: {
     if (!Number.isInteger(input.port) || input.port < 1 || input.port > 65_535) {
       return yield* new PublicationInputError({ reason: "invalid_port", field: "port" });
     }
-    // The cmux-tui daemon trusts every carrier link: it is reachable only over
+    // The hmux-tui daemon trusts every carrier link: it is reachable only over
     // the VM's private VPC, never through a publication.
-    if (input.port === CMUX_TUI_PORT) {
+    if (input.port === HMUX_TUI_PORT) {
       return yield* new PublicationInputError({ reason: "reserved_port", field: "port" });
     }
 
@@ -522,7 +522,7 @@ export function createPublication(input: {
     if (target.publication.state === "active") return publicationDto(target);
     let domain = target.domain;
 
-    // Customer DNS must be installed before CMUX creates the ingress rule.
+    // Customer DNS must be installed before HMUX creates the ingress rule.
     // Reserve the owned/running Freestyle VM first, so an invalid VM id can
     // never leave an external verification orphan. The verify operation can
     // resume this durable provisioning record after any provider failure.
@@ -915,7 +915,7 @@ function normalizedRequestedHostname(
         field: "hostname",
       });
     }
-    // Customers cannot verify Freestyle's platform zone or the CMUX generated
+    // Customers cannot verify Freestyle's platform zone or the HMUX generated
     // zone, so neither may be selected as a custom hostname.
     if (
       customerProvided &&
@@ -931,7 +931,7 @@ function normalizedRequestedHostname(
   });
 }
 
-/** The generated zone apex and everything below it stay reserved for CMUX. */
+/** The generated zone apex and everything below it stay reserved for HMUX. */
 export function isWithinGeneratedPublicationZone(
   hostname: string,
   generatedDomain: string,

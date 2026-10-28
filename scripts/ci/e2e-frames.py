@@ -389,7 +389,7 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("source", help="run id, run URL, an .xcresult, or a directory of them")
     parser.add_argument("--test", help="only tests whose Class/method contains this substring")
-    parser.add_argument("--out", type=Path, help="output directory (default: $TMPDIR/cmux-ui-frames/<run>)")
+    parser.add_argument("--out", type=Path, help="output directory (default: $TMPDIR/hmux-ui-frames/<run>)")
     parser.add_argument("--repo", default=REPO)
     parser.add_argument("--summary", type=Path, help="append a Markdown report to this file")
     parser.add_argument("--json", action="store_true", help="print the summary as JSON")
@@ -399,7 +399,7 @@ def main() -> int:
     run_id = None if local.exists() else parse_run_id(args.source)
     if not local.exists() and not run_id:
         parser.error("source must be a run id, a run URL, an .xcresult, or a directory of them")
-    out = args.out or Path(tempfile.gettempdir()) / "cmux-ui-frames" / (run_id or local.stem)
+    out = args.out or Path(tempfile.gettempdir()) / "hmux-ui-frames" / (run_id or local.stem)
 
     if run_id and download(run_id, args.repo, FRAMES_ARTIFACT, out):
         summary = load_built(out, args.test)

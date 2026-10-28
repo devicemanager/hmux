@@ -91,7 +91,7 @@ class FakeSwitch:
 BLACKSMITH_STEADY = {
     "VAR_LINUX_RUNNER": "blacksmith-4vcpu-ubuntu-2404",
     "VAR_MACOS_RUNNER_PR": "blacksmith-6vcpu-macos-26",
-    "VAR_CMUX_CI_XCODE_APP_PR": PIN,
+    "VAR_HMUX_CI_XCODE_APP_PR": PIN,
 }
 
 
@@ -249,7 +249,7 @@ class MainTests(unittest.TestCase):
             "MACOS_RUNNER_PR": {"before": "blacksmith-6vcpu-macos-26", "after": "glaeda-std-xcode-26.6"}}}
         env = {"VAR_CI_CLOUD_OVERFLOW_SAVED": json.dumps(record), "VAR_LINUX_RUNNER": "ubuntu-24.04",
                "VAR_CI_PAID_MACOS_OVERFLOW": "1", "VAR_MACOS_RUNNER_PR": "macos-26",
-               "VAR_CMUX_CI_XCODE_APP_PR": PIN}
+               "VAR_HMUX_CI_XCODE_APP_PR": PIN}
         actions, writer = FakeActions(probe_job(0, status="in_progress", runner_name="bs-1")), FakeSwitch()
         code, out, summary = run_main(env, actions, writer)
         self.assertEqual(code, 0)
@@ -266,7 +266,7 @@ class MainTests(unittest.TestCase):
             "MACOS_RUNNER_PR": {"before": "blacksmith-6vcpu-macos-26", "after": "glaeda-std-xcode-26.6"}}}
         env = {"VAR_CI_CLOUD_OVERFLOW_SAVED": json.dumps(record),
                "VAR_LINUX_RUNNER": "blacksmith-4vcpu-ubuntu-2404",
-               "VAR_MACOS_RUNNER_PR": "glaeda-std-xcode-26.6", "VAR_CMUX_CI_XCODE_APP_PR": PIN}
+               "VAR_MACOS_RUNNER_PR": "glaeda-std-xcode-26.6", "VAR_HMUX_CI_XCODE_APP_PR": PIN}
         writer = FakeSwitch()
         code, out, _ = run_main(env, FakeActions(probe_job(0)), writer)
         self.assertEqual(code, 0)
@@ -313,7 +313,7 @@ class MainTests(unittest.TestCase):
         self.assertNotIn("no switch token", summary)
 
     def test_runner_values_come_from_the_block(self) -> None:
-        values = switch.current_values({"CMUX_CI_RUNNER_VARIABLES": "LINUX_RUNNER=ubuntu-24.04\nMACOS_RUNNER_PR=\n"},
+        values = switch.current_values({"HMUX_CI_RUNNER_VARIABLES": "LINUX_RUNNER=ubuntu-24.04\nMACOS_RUNNER_PR=\n"},
                                        ["LINUX_RUNNER", "MACOS_RUNNER_PR"])
         self.assertEqual(values, {"LINUX_RUNNER": "ubuntu-24.04", "MACOS_RUNNER_PR": None})
 
@@ -336,7 +336,7 @@ class WorkflowTests(unittest.TestCase):
     def test_watch_runs_off_blacksmith_and_passes_every_switched_variable(self) -> None:
         self.assertIn("runs-on: ubuntu-24.04 # github-hosted-required:", self.text)
         names = set(switch.SWITCHED_VARIABLES) | {switch.RECORD_VARIABLE, switch.OVERRIDES_VARIABLE,
-                                                  "CMUX_CI_XCODE_APP_PR"}
+                                                  "HMUX_CI_XCODE_APP_PR"}
         for name in names:
             passed = (f"VAR_{name}: ${{{{ vars.{name} }}}}" in self.text
                       or f"            {name}=${{{{ vars.{name} }}}}\n" in self.text)
@@ -366,8 +366,8 @@ class WorkflowTests(unittest.TestCase):
 
 class RepoVariableCheckTests(unittest.TestCase):
     def env(self, **extra: str) -> dict[str, str]:
-        return {"CMUX_CI_RUNNER_VARIABLES": "MACOS_RUNNER_PR=glaeda-std-xcode-26.6\nLINUX_RUNNER=ubuntu-24.04\n",
-                "CI_OWNED_POOL_SLOTS": "", "CMUX_CI_XCODE_APP_PR": PIN, **extra}
+        return {"HMUX_CI_RUNNER_VARIABLES": "MACOS_RUNNER_PR=glaeda-std-xcode-26.6\nLINUX_RUNNER=ubuntu-24.04\n",
+                "CI_OWNED_POOL_SLOTS": "", "HMUX_CI_XCODE_APP_PR": PIN, **extra}
 
     def test_an_owned_label_is_drift_without_the_record(self) -> None:
         self.assertTrue(check.problems(self.env()))

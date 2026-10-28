@@ -1,4 +1,4 @@
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 import Foundation
 
 /// Renders the terminal-visible explanation for a suppressed duplicate restore.
@@ -8,7 +8,7 @@ struct AgentRestoreLiveOwnerNotice: Sendable {
     func startupInput(dialect: TerminalStartupShellDialect) -> String {
         let format = String(
             localized: "agentRestore.liveOwner.notice",
-            defaultValue: "This agent session is already running in process %1$lld. cmux did not start another copy. To take it over here, stop process %1$lld, then run 'cmux restore --surface' again."
+            defaultValue: "This agent session is already running in process %1$lld. hmux did not start another copy. To take it over here, stop process %1$lld, then run 'hmux restore --surface' again."
         )
         let message = String(
             format: format,
@@ -92,11 +92,11 @@ enum AgentRestoreAttachCommand {
         if words.count == 11 {
             let isCanonicalPrefix = words[0] == "/usr/bin/env"
                 && words[1] == "TMUX="
-                && words[2] == "CMUX_LOCAL_TMUX=1"
+                && words[2] == "HMUX_LOCAL_TMUX=1"
             let isLegacyPrefix = words[0] == "TMUX="
-                && words[1] == "CMUX_LOCAL_TMUX=1"
+                && words[1] == "HMUX_LOCAL_TMUX=1"
                 && words[2] == "exec"
-            let conditionPrefix = "#{==:#{@cmux_local_server_id},"
+            let conditionPrefix = "#{==:#{@hmux_local_server_id},"
             let hasValidatedIdentity = words[8].hasPrefix(conditionPrefix)
                 && words[8].hasSuffix("}")
                 && UUID(

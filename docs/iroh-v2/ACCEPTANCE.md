@@ -6,7 +6,7 @@ Status: implementation and verification in progress. September 15 clarification:
 
 Implement the entire accepted IROH v2 architecture, Mac and iOS clients, relay integration, Dashboard interactions, storage, contracts, deployment and observability. Preserve Stack sign-in while ignoring previous IROH identities, credentials, grants, directory caches and settings/state that belong to the replaced architecture. New iOS uses v2 exclusively. New Macs must retain older iOS discovery, authorization and connection support on the same IROH endpoint. Older authorization cannot bypass v2 permissions for modern peers. The earlier `feat-iroh-v2` work or an existing IRX transport name is not evidence of this implementation.
 
-The original source receipts below cover revision 21 in `cmuxterm-hq-worktrees/feat-iroh-sequence-diagram/cmux-assets/main/iroh-sequence/`. Source receipts when these criteria were authored:
+The original source receipts below cover revision 21 in `hmuxterm-hq-worktrees/feat-iroh-sequence-diagram/hmux-assets/main/iroh-sequence/`. Source receipts when these criteria were authored:
 
 | File | SHA-256 |
 | --- | --- |
@@ -25,7 +25,7 @@ The required combinations are new iOS with new Mac, old iOS with new Mac, and co
 
 Two complete engaged simulator runs are required, each at least 3,600 seconds of actual foreground use. Use the deployed staging backend for automatic/direct-capable mode and the deployed production backend for relay-only mode. Also run a real-client smoke in staging relay-only and production automatic mode, so both deployments exercise both modes. Production uses only the designated test team and v2-scoped records in the existing production database. Development namespaces remain isolated from production traffic.
 
-Run an isolated tagged Mac and isolated simulator using the configured `agent` Stack profile. Record the leased fleet host, simulator UDID, Mac/iOS bundle IDs, tag, source SHA, built artifact hashes, backend URL, Worker version, database identifiers and relay release. Never use the user's active cmux or a shared simulator. A physical iPhone does not substitute for the explicitly requested simulator run; any repository-required phone handoff is additional and uses the `personal` profile with a matching Mac.
+Run an isolated tagged Mac and isolated simulator using the configured `agent` Stack profile. Record the leased fleet host, simulator UDID, Mac/iOS bundle IDs, tag, source SHA, built artifact hashes, backend URL, Worker version, database identifiers and relay release. Never use the user's active hmux or a shared simulator. A physical iPhone does not substitute for the explicitly requested simulator run; any repository-required phone handoff is additional and uses the `personal` profile with a matching Mac.
 
 | ID | Scenario and pass condition | Required proof |
 | --- | --- | --- |
@@ -61,7 +61,7 @@ Capture continuous video in bounded segments, dense frame splits around launches
 
 | ID | Requirement | Evidence that must pass |
 | --- | --- | --- |
-| A1 | New Cloudflare `/v2/` backend and fresh storage; no IROH Vercel runtime dependency. Shared local broker handles HTTP and sockets. | Deployed build/resource inventory, environment bindings, route traces and dependency boundary check actually invoked by release workflow. Exercise every HTTP fallback against v2. Other cmux non-IROH services retain their own routing. |
+| A1 | New Cloudflare `/v2/` backend and fresh storage; no IROH Vercel runtime dependency. Shared local broker handles HTTP and sockets. | Deployed build/resource inventory, environment bindings, route traces and dependency boundary check actually invoked by release workflow. Exercise every HTTP fallback against v2. Other hmux non-IROH services retain their own routing. |
 | A2 | One SQLite DO per environment, Stack project and team. User limits span the user's teams/devices/builds in that environment. | Concurrent requests by the same user through two team DOs spend the same budget; another teammate remains independent; development leaves production untouched. Reconnect, hibernation, schema ID and identity changes do not reset allowances. |
 | A3 | Worker verifies Stack user/team/permission; team membership alone never grants terminal access. Scoped HMAC tickets and device proof protect resume. | Missing/forged headers, mismatched team/project/environment/user/device, wrong key, revoked generation, stolen ticket without required proof and insufficient device permission all fail without allocating trusted device state. Valid access works. |
 | A4 | One globally unique EndpointID per complete identity tuple. One current device record and one pending challenge slot per identity. | Concurrent first enrollment, retried/lost reply, challenge replacement/expiry/replay, duplicate tuple, duplicate EndpointID, interrupted global reservation and approved key replacement tests. Retry reconciles the same result. No cross-database atomicity assumption. |

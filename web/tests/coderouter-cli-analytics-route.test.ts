@@ -32,7 +32,7 @@ const validProperties = {
 describe("CodeRouter CLI analytics route", () => {
   test("authenticates scope and forwards only the closed schema", async () => {
     captureCoderouterEvent.mockClear();
-    const response = await POST(new Request("https://cmux.test/api/coderouter/analytics", {
+    const response = await POST(new Request("https://hmux.test/api/coderouter/analytics", {
       method: "POST",
       headers: { authorization: "Bearer crt_test", "content-type": "application/json" },
       body: JSON.stringify({
@@ -53,7 +53,7 @@ describe("CodeRouter CLI analytics route", () => {
 
   test("rejects unknown fields and free-form values", async () => {
     captureCoderouterEvent.mockClear();
-    const response = await POST(new Request("https://cmux.test/api/coderouter/analytics", {
+    const response = await POST(new Request("https://hmux.test/api/coderouter/analytics", {
       method: "POST",
       headers: { authorization: "Bearer crt_test", "content-type": "application/json" },
       body: JSON.stringify({
@@ -76,7 +76,7 @@ describe("CodeRouter CLI analytics route", () => {
       event: "coderouter_cli_command_started",
       properties: { ...validProperties, outcome: "started" },
     }));
-    const response = await POST(new Request("https://cmux.test/api/coderouter/analytics", {
+    const response = await POST(new Request("https://hmux.test/api/coderouter/analytics", {
       method: "POST",
       headers: { authorization: "Bearer crt_test", "content-type": "application/json" },
       body: JSON.stringify({ events }),

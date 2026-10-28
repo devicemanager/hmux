@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 import SwiftUI
 
@@ -50,7 +50,7 @@ struct SidebarWorkspaceDescriptionText: View {
             text = Text(content.displayMarkdown)
         }
         return text
-            .cmuxFont(size: 10.5 * fontScale)
+            .hmuxFont(size: 10.5 * fontScale)
             .foregroundColor(foregroundColor)
             .multilineTextAlignment(.leading)
             .lineLimit(Self.maxDisplayedLines)
@@ -69,7 +69,7 @@ struct SidebarWorkspaceDescriptionText: View {
                 let newlineCount = markdown.reduce(into: 0) { count, character in
                     if character == "\n" { count += 1 }
                 }
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "sidebar.description.render workspaceState=appear " +
                     "len=\((markdown as NSString).length) " +
                     "newlines=\(newlineCount) " +
@@ -82,7 +82,7 @@ struct SidebarWorkspaceDescriptionText: View {
                 let newlineCount = newValue.reduce(into: 0) { count, character in
                     if character == "\n" { count += 1 }
                 }
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "sidebar.description.render workspaceState=change " +
                     "len=\((newValue as NSString).length) " +
                     "newlines=\(newlineCount) " +

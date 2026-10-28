@@ -1,6 +1,6 @@
-import CMUXAgentLaunch
-import CmuxAgentChat
-import CmuxMobileHost
+import HMUXAgentLaunch
+import HmuxAgentChat
+import HmuxMobileHost
 import Foundation
 
 /// Main-actor registry of chat-capable agent sessions, built from agent
@@ -118,7 +118,7 @@ final class AgentChatSessionRegistry {
     static let observeThrottleInterval: TimeInterval = 2
 
     /// Folds detections in: create a record for any session not already known
-    /// (state `.idle`, from cmux's own observation), and backfill a missing
+    /// (state `.idle`, from hmux's own observation), and backfill a missing
     /// binding (surface / workspace / transcript / pid) on an existing one.
     /// Observation only ADDS presence and bindings; it never downgrades
     /// hook-derived state.
@@ -130,7 +130,7 @@ final class AgentChatSessionRegistry {
             let observedHasRealHookStoreIdentity = session.agentKind == .claude
                 && !Self.isPendingClaudeSessionID(session.sessionID)
             #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "agentChat.detect session=\(targetSessionID.prefix(8)) kind=\(session.agentKind.sourceName) "
                 + "surface=\(session.surfaceID.prefix(8)) pid=\(session.pid) "
                 + "transcript=\(session.transcriptPath != nil ? "fd" : "argv-only") "
@@ -340,7 +340,7 @@ final class AgentChatSessionRegistry {
         stampVersion(&record)
         #if DEBUG
         if previous.state != record.state {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "agentChat.state session=\(sessionID.prefix(8)) "
                 + "\(Self.stateLabel(previous.state))->\(Self.stateLabel(record.state)) v\(record.version)"
             )
@@ -483,7 +483,7 @@ final class AgentChatSessionRegistry {
         )
         let kind = ChatAgentKind(source: event.source)
         #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "agentChat.hook session=\(sessionID.prefix(8)) event=\(event.hookEventName.rawValue) "
             + "source=\(event.source) tool=\(event.toolName ?? "-") "
             + "toolInput=\(event.toolInputJSON != nil ? "yes" : "no") "
@@ -648,12 +648,12 @@ final class AgentChatSessionRegistry {
         }
     }
 
-    /// Records, from cmux's own authority, that it is resuming `rawSessionID`
-    /// onto `surfaceID`. Resume is ALWAYS cmux-initiated, and some agents (codex)
+    /// Records, from hmux's own authority, that it is resuming `rawSessionID`
+    /// onto `surfaceID`. Resume is ALWAYS hmux-initiated, and some agents (codex)
     /// fire NO SessionStart hook on resume, so the hook-driven path would keep the
     /// stale pre-relaunch record: its pid is already dead, the exit watcher flips
     /// it to `.ended`, and the GUI shows it read-only with no composer (and can't
-    /// recover, since you can't submit a prompt from a hidden composer). cmux
+    /// recover, since you can't submit a prompt from a hidden composer). hmux
     /// holds the `(session, surface)` pair at resume time, so it writes that fact
     /// directly instead of waiting for a hook the agent will never send.
     ///
@@ -672,7 +672,7 @@ final class AgentChatSessionRegistry {
         let sessionID = Self.normalizedSessionID(rawSessionID, source: source)
         let now = Date()
         #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "agentChat.resumeInitiated session=\(sessionID.prefix(8)) source=\(source) "
             + "surface=\((surfaceID ?? "nil").prefix(8)) existed=\(records[sessionID] != nil)"
         )
@@ -798,7 +798,7 @@ final class AgentChatSessionRegistry {
         )
         #if DEBUG
         if before != sessionIDs, !sessionIDs.isEmpty {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "agentChat.surfaceIndex divergence surface=\(surfaceID.prefix(8)) "
                 + "indexed=\(before.count) recovered=\(sessionIDs.count)"
             )

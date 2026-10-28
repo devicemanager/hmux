@@ -1,4 +1,4 @@
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 import Foundation
 
 /// Why waking a hibernated agent would not relaunch it the way it was started.
@@ -32,7 +32,7 @@ extension SessionRestorableAgentSnapshot {
                kind: kind,
                sessionId: sessionId,
                launchCommand: launchCommand,
-               // Match `cmux restore`, which searches from the launch directory.
+               // Match `hmux restore`, which searches from the launch directory.
                workingDirectory: launchCommand?.workingDirectory ?? workingDirectory
            ) == nil,
            !AgentResumeArgv().resumeRoutesThroughOwnedLauncher(

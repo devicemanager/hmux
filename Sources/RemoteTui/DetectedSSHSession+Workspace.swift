@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxCore
+import HmuxCloud
+import HmuxCore
 import Foundation
 
 extension DetectedSSHSession {
@@ -19,7 +19,7 @@ extension WorkspaceRemoteConfiguration {
     /// The SSH options for a one-off `ssh`, `scp` or `sftp` to this workspace:
     /// a file drop, the Files explorer or a file preview.
     ///
-    /// A `cmux ssh` workspace's carrier holds the authenticated master, so these
+    /// A `hmux ssh` workspace's carrier holds the authenticated master, so these
     /// reuse its route and ControlPath; a password-only host accepts their
     /// batch-mode runs only through it.
     var fileOperationSSHOptions: [String] {

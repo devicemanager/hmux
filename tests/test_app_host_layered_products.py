@@ -25,18 +25,18 @@ class LayerRoundTrip(unittest.TestCase):
         self.derived = self.root / "producer"
         self.products = self.derived / layers.ROOT
         files = {
-            "Debug/cmux DEV.app/Contents/MacOS/cmux DEV": b"signed executable",
-            "Debug/cmux DEV.app/Contents/_CodeSignature/CodeResources": b"sealed resources include cmuxTests.xctest",
-            "Debug/cmux DEV.app/Contents/Resources/data": b"resource",
-            "Debug/cmux DEV.app/Contents/PlugIns/cmuxTests.xctest/Contents/MacOS/test": b"tests",
-            "Debug/cmux DEV.app/Contents/Frameworks/F.framework/Versions/A/F": b"runtime",
-            "Debug/cmux DEV.app/Contents/Frameworks/F.framework/Versions/A/Modules/F.swiftmodule/arm64.swiftmodule": b"sealed framework module",
-            "Debug/CmuxTerminalCoreTests.xctest/test": b"direct xctest consumer",
-            "Debug/cmux": b"cli",
+            "Debug/hmux DEV.app/Contents/MacOS/hmux DEV": b"signed executable",
+            "Debug/hmux DEV.app/Contents/_CodeSignature/CodeResources": b"sealed resources include hmuxTests.xctest",
+            "Debug/hmux DEV.app/Contents/Resources/data": b"resource",
+            "Debug/hmux DEV.app/Contents/PlugIns/hmuxTests.xctest/Contents/MacOS/test": b"tests",
+            "Debug/hmux DEV.app/Contents/Frameworks/F.framework/Versions/A/F": b"runtime",
+            "Debug/hmux DEV.app/Contents/Frameworks/F.framework/Versions/A/Modules/F.swiftmodule/arm64.swiftmodule": b"sealed framework module",
+            "Debug/HmuxTerminalCoreTests.xctest/test": b"direct xctest consumer",
+            "Debug/hmux": b"cli",
             "Debug/input.o": b"diagnostic object",
             "Debug/input.o.keep": b"unknown retained product",
-            "Debug/cmux.dSYM/Contents/Resources/DWARF/cmux": b"symbols",
-            "cmux-unit.xctestrun": b"manifest",
+            "Debug/hmux.dSYM/Contents/Resources/DWARF/hmux": b"symbols",
+            "hmux-unit.xctestrun": b"manifest",
             "Debug/private": b"private",
             "Debug/prefix/child": b"nested",
             "Debug/prefix.ext": b"sibling",
@@ -46,9 +46,9 @@ class LayerRoundTrip(unittest.TestCase):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(data)
         (self.products / "Debug/private").chmod(0o600)
-        (self.products / "Debug/cmux").chmod(0o755)
-        subprocess.run(["xattr", "-w", "com.cmux.test", "preserve", str(self.products / "Debug/cmux")], check=True)
-        framework = self.products / "Debug/cmux DEV.app/Contents/Frameworks/F.framework"
+        (self.products / "Debug/hmux").chmod(0o755)
+        subprocess.run(["xattr", "-w", "com.hmux.test", "preserve", str(self.products / "Debug/hmux")], check=True)
+        framework = self.products / "Debug/hmux DEV.app/Contents/Frameworks/F.framework"
         (framework / "Versions/Current").symlink_to("A")
         (framework / "F").symlink_to("Versions/Current/F")
         (framework / "Headers").symlink_to("Versions/Current/Headers")
@@ -75,8 +75,8 @@ class LayerRoundTrip(unittest.TestCase):
         owners = {entry["path"]: layer["name"] for layer in self.manifest["layers"] for entry in layer["entries"]}
         self.assertEqual(owners["Build/Products/Debug/input.o"], "diagnostics")
         self.assertEqual(owners["Build/Products/Debug/input.o.keep"], "app-cli")
-        self.assertEqual(owners["Build/Products/Debug/CmuxTerminalCoreTests.xctest/test"], "tests")
-        self.assertEqual(owners["Build/Products/Debug/cmux DEV.app/Contents/Frameworks/F.framework/Versions/A/Modules/F.swiftmodule/arm64.swiftmodule"], "runtime")
+        self.assertEqual(owners["Build/Products/Debug/HmuxTerminalCoreTests.xctest/test"], "tests")
+        self.assertEqual(owners["Build/Products/Debug/hmux DEV.app/Contents/Frameworks/F.framework/Versions/A/Modules/F.swiftmodule/arm64.swiftmodule"], "runtime")
 
     def test_corrupt_archive(self):
         with (self.output / "tests.aar").open("ab") as stream:
@@ -84,7 +84,7 @@ class LayerRoundTrip(unittest.TestCase):
         self.assert_rejected()
 
     def test_mixed_layer_same_filename_from_other_producer(self):
-        (self.products / "Debug/cmux").write_bytes(b"other build")
+        (self.products / "Debug/hmux").write_bytes(b"other build")
         other = self.root / "other"
         layers.pack(self.derived, other, IDENTITY)
         shutil.copyfile(other / "app-cli.aar", self.output / "app-cli.aar")
@@ -155,7 +155,7 @@ class LayerRoundTrip(unittest.TestCase):
         self.assertFalse((self.root / "escaped").exists())
 
     def test_archive_link_target_does_not_override_manifest(self):
-        framework = self.products / "Debug/cmux DEV.app/Contents/Frameworks/F.framework"
+        framework = self.products / "Debug/hmux DEV.app/Contents/Frameworks/F.framework"
         (framework / "F").unlink()
         (framework / "F").symlink_to("/etc/passwd")
         directories = self.manifest["directories"]
@@ -224,10 +224,10 @@ class LayerRoundTrip(unittest.TestCase):
             entry["xattrs"]["com.apple.provenance"] = "0" * 64
         self.write_manifest(self.manifest)
         layers.restore(self.manifest_path, self.root / "restored", IDENTITY)
-        self.assertTrue((self.root / "restored/Build/Products/Debug/cmux").is_file())
+        self.assertTrue((self.root / "restored/Build/Products/Debug/hmux").is_file())
 
     def test_other_xattr_mismatches_still_fail(self):
-        for attribute in ("com.apple.quarantine", "com.cmux.test", "com.apple.cs.CodeDirectory"):
+        for attribute in ("com.apple.quarantine", "com.hmux.test", "com.apple.cs.CodeDirectory"):
             with self.subTest(attribute=attribute):
                 manifest = copy.deepcopy(self.manifest)
                 manifest["layers"][0]["entries"][0]["xattrs"][attribute] = "0" * 64

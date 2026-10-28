@@ -9,7 +9,7 @@ import { accountDeletionAdvisoryLockKey, accountDeletionUserHash, isBlockingAcco
 import { PublicationDatabaseError, PublicationNotFoundError, PublicationConflictError, PublicationAuthArtifactError, PublicationAccountDeletionBlockedError, AUTH_ARTIFACT_SWEEP_LIMIT, AUTH_TRANSACTION_ABANDONED_AFTER_MS, MAX_PENDING_AUTH_TRANSACTIONS_PER_PUBLICATION, type CloudVmPublicationRepositoryShape } from "./repository";
 
 export type PublicationAuthRepositoryShape = Pick<CloudVmPublicationRepositoryShape, "hasEmailGrant"|"findActivePublicationForRequest"|"findRequestContext"|"createAuthTransaction"|"findPendingAuthTransaction"|"issueAuthCode"|"consumeAuthCodeAndCreateSession"|"findValidSession"|"revokePublicationSessions">;
-export class PublicationAuthRepository extends Context.Tag("cmux/PublicationAuthRepository")<PublicationAuthRepository, PublicationAuthRepositoryShape>() {}
+export class PublicationAuthRepository extends Context.Tag("hmux/PublicationAuthRepository")<PublicationAuthRepository, PublicationAuthRepositoryShape>() {}
 type AuthTx=Parameters<Parameters<Context.Tag.Service<Database>["transaction"]>[0]>[0];
 type RepositoryError=PublicationDatabaseError|PublicationNotFoundError|PublicationConflictError|PublicationAuthArtifactError|PublicationAccountDeletionBlockedError;
 function repositoryEffect<A,E>(operation:string, run:()=>Effect.Effect<A,E>):Effect.Effect<A,RepositoryError>{return tracePublicationAuthEffect(`database.${operation}`, Effect.suspend(run)).pipe(Effect.mapError(cause=>cause instanceof PublicationNotFoundError || cause instanceof PublicationConflictError || cause instanceof PublicationAuthArtifactError || cause instanceof PublicationAccountDeletionBlockedError ? cause : new PublicationDatabaseError({operation,cause})));}

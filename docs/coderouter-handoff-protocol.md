@@ -1,6 +1,6 @@
 # CodeRouter native handoff protocol
 
-This protocol transfers CodeRouter authority from an authenticated cmux-native
+This protocol transfers CodeRouter authority from an authenticated hmux-native
 process to another local/native process without putting a long-lived Stack
 credential in the handoff. It is intentionally a bearer protocol: callers must
 use TLS, keep the returned lease in process memory or an OS-protected store,
@@ -16,13 +16,13 @@ The caller **must** send the native Stack token pair:
 ```http
 Authorization: Bearer <Stack access token>
 X-Stack-Refresh-Token: <Stack refresh token>
-X-Cmux-Team-Id: <selected Stack team id>
+X-Hmux-Team-Id: <selected Stack team id>
 Content-Type: application/json
 ```
 
-`X-Cmux-Team-Id` is optional when Stack has one selected team. If supplied, it
+`X-Hmux-Team-Id` is optional when Stack has one selected team. If supplied, it
 must identify a team the Stack user belongs to. The body is empty or `{}`.
-Cookies, user-agent strings, `X-Cmux-Native`-style assertions, and route tokens
+Cookies, user-agent strings, `X-Hmux-Native`-style assertions, and route tokens
 are not authorization for minting. A malformed native pair never falls back to
 an ambient browser cookie.
 
@@ -52,7 +52,7 @@ value:
 
 Possession of a currently valid lease is the authorization assumption for this
 method. Stack credentials are therefore **not required**: this is what permits
-the authenticated cmux process to hand authority to a native CodeRouter
+the authenticated hmux process to hand authority to a native CodeRouter
 subprocess that does not have the Stack refresh token. Browser-cookie requests
 are rejected; cookies never add authority. If a caller supplies either Stack
 header, it must be a complete valid native pair; when present, the pair is
@@ -72,7 +72,7 @@ The response is the existing CodeRouter route-session shape:
 ```
 
 `openaiBaseUrl` is built from the server's trusted
-`CMUX_CODEROUTER_PUBLIC_ORIGIN` deployment setting, not from a forwarded
+`HMUX_CODEROUTER_PUBLIC_ORIGIN` deployment setting, not from a forwarded
 request host. Deployed non-preview runtimes fail closed if that origin is not
 configured. Local non-Vercel development may derive it from the local request
 URL for convenience.
@@ -107,12 +107,12 @@ authentication remains authoritative after exchange.
 - Handoff request bodies are bounded to 2 KiB and must be JSON for non-empty
   requests.
 - Deployed non-preview runtimes must configure
-  `CMUX_CODEROUTER_PUBLIC_ORIGIN` as an origin-only HTTPS URL (for example
+  `HMUX_CODEROUTER_PUBLIC_ORIGIN` as an origin-only HTTPS URL (for example
   `https://cmux.com`); no request or forwarded host is trusted for this value.
 - Lease syntax is exact: `crh_` followed by 43 URL-safe base64 characters.
 - The deployed route requires the existing durable Vercel Firewall rule
-  `CMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID`, falling back to
-  `CMUX_FEEDBACK_RATE_LIMIT_ID` for existing deployments. Missing or
+  `HMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID`, falling back to
+  `HMUX_FEEDBACK_RATE_LIMIT_ID` for existing deployments. Missing or
   unavailable durable limiting fails closed with `503`; a limited request is
   `429`. Non-production local runs use a process-local 60 requests/minute
   backstop only.

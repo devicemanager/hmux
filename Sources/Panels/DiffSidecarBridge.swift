@@ -21,14 +21,14 @@ private enum InvocationError: Error {
 /// opens a socket, and WebKit never receives filesystem paths or process access.
 @MainActor
 final class DiffSidecarBridge: NSObject, WKScriptMessageHandlerWithReply {
-    static let handlerName = "cmuxDiff"
+    static let handlerName = "hmuxDiff"
     static let shared = DiffSidecarBridge()
 
     private static var handlerInstalledKey: UInt8 = 0
     private static let maximumRequestBytes = 1024 * 1024
     private nonisolated static let maximumResponseBytes = 32 * 1024 * 1024
     private nonisolated static let processPool = DiffSidecarProcessPool(limit: 4)
-    private nonisolated static let processGroupReadyMarker = Data("cmux-diff-sidecar-process-group-ready\n".utf8)
+    private nonisolated static let processGroupReadyMarker = Data("hmux-diff-sidecar-process-group-ready\n".utf8)
     private nonisolated static let startupTimeout: TimeInterval = 5
     private nonisolated static let terminationGrace: TimeInterval = 0.25
     private static let pendingSessionID = "00000000-0000-0000-0000-000000000000"
@@ -198,7 +198,7 @@ final class DiffSidecarBridge: NSObject, WKScriptMessageHandlerWithReply {
 
     static func isTrustedSidecarURL(_ url: URL?) -> Bool {
         guard let url else { return false }
-        return CmuxDiffViewerURLSchemeHandler.shared.allowsNavigation(to: url)
+        return HmuxDiffViewerURLSchemeHandler.shared.allowsNavigation(to: url)
     }
 
     #if compiler(>=6.2)
@@ -209,17 +209,17 @@ final class DiffSidecarBridge: NSObject, WKScriptMessageHandlerWithReply {
     nonisolated fileprivate static func runSidecar(request: Data) async throws -> Data {
         let resources = Bundle.main.bundleURL
             .appendingPathComponent("Contents/Resources/bin", isDirectory: true)
-        let sidecar = resources.appendingPathComponent("cmux-diff-sidecar", isDirectory: false)
-        let cmux = resources.appendingPathComponent("cmux", isDirectory: false)
+        let sidecar = resources.appendingPathComponent("hmux-diff-sidecar", isDirectory: false)
+        let hmux = resources.appendingPathComponent("hmux", isDirectory: false)
         guard FileManager.default.isExecutableFile(atPath: sidecar.path),
-              FileManager.default.isExecutableFile(atPath: cmux.path) else {
+              FileManager.default.isExecutableFile(atPath: hmux.path) else {
             throw CocoaError(.fileNoSuchFile)
         }
 
         let root = try prepareRootDirectory()
         let process = Process()
         process.executableURL = sidecar
-        process.arguments = ["rpc", "--root", root.path, "--cmux", cmux.path, "--process-group-ready"]
+        process.arguments = ["rpc", "--root", root.path, "--hmux", hmux.path, "--process-group-ready"]
 
         let input = Pipe()
         let output = Pipe()
@@ -457,7 +457,7 @@ final class DiffSidecarBridge: NSObject, WKScriptMessageHandlerWithReply {
 
     nonisolated private static func prepareRootDirectory() throws -> URL {
         let root = URL(fileURLWithPath: "/tmp", isDirectory: true)
-            .appendingPathComponent("cmux-diff-viewer-\(Darwin.getuid())", isDirectory: true)
+            .appendingPathComponent("hmux-diff-viewer-\(Darwin.getuid())", isDirectory: true)
         try FileManager.default.createDirectory(
             at: root,
             withIntermediateDirectories: true,

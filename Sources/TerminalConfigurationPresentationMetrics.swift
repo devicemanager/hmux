@@ -1,5 +1,5 @@
 import Foundation
-import CmuxTerminalCore
+import HmuxTerminalCore
 
 /// Config-derived values observed directly by persistent SwiftUI chrome.
 struct TerminalConfigurationPresentationMetrics: Equatable {

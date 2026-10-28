@@ -52,9 +52,9 @@ export default function CustomCommandsPage() {
       <DocsHeading level={2} id="file-locations">{t("fileLocations")}</DocsHeading>
       <p>{t("fileLocationsDesc")}</p>
       <ul>
-        <li><strong>{t("localConfig")}</strong> <code>./.cmux/cmux.json</code> ({t("localConfigDesc")})</li>
-        <li><strong>{t("fallbackLocal")}</strong> <code>./cmux.json</code> ({t("fallbackLocalDesc")})</li>
-        <li><strong>{t("globalConfig")}</strong> <code>~/.config/cmux/cmux.json</code> ({t("globalConfigDesc")})</li>
+        <li><strong>{t("localConfig")}</strong> <code>./.hmux/hmux.json</code> ({t("localConfigDesc")})</li>
+        <li><strong>{t("fallbackLocal")}</strong> <code>./hmux.json</code> ({t("fallbackLocalDesc")})</li>
+        <li><strong>{t("globalConfig")}</strong> <code>~/.config/hmux/hmux.json</code> ({t("globalConfigDesc")})</li>
       </ul>
       <Callout type="info">{t("precedenceNote")}</Callout>
       <p>{t("liveReload")}</p>
@@ -64,7 +64,7 @@ export default function CustomCommandsPage() {
 
       <DocsHeading level={2} id="simple-commands">{t("simpleCommands")}</DocsHeading>
       <p>{t("simpleCommandsDesc")}</p>
-      <CodeBlock title="cmux.json" lang="json">{`{
+      <CodeBlock title="hmux.json" lang="json">{`{
   "commands": [
     {
       "name": "Format Changed Files",
@@ -102,7 +102,7 @@ export default function CustomCommandsPage() {
 
       <DocsHeading level={2} id="workspace-commands">{t("workspaceCommands")}</DocsHeading>
       <p>{t("workspaceCommandsDesc")}</p>
-      <CodeBlock title="cmux.json" lang="json">{`{
+      <CodeBlock title="hmux.json" lang="json">{`{
   "commands": [
     {
       "name": "API Stack",
@@ -231,9 +231,9 @@ export default function CustomCommandsPage() {
         {t.rich("nightlyFeatureCallout", codeTags("actions", "shortcut", "buttons"))}
       </Callout>
       <p>{t.rich("schemaIntro", codeTags("commands", "actions"))}</p>
-      <CodeBlock title="cmux.json" lang="json">{`{
+      <CodeBlock title="hmux.json" lang="json">{`{
   "actions": {
-    "cmux.newTerminal": {
+    "hmux.newTerminal": {
       "type": "agent",
       "agent": "claude",
       "title": "Claude Code",
@@ -278,8 +278,8 @@ export default function CustomCommandsPage() {
   "ui": {
     "surfaceTabBar": {
       "buttons": [
-        "cmux.newTerminal",
-        "cmux.splitRight",
+        "hmux.newTerminal",
+        "hmux.splitRight",
         "lint",
         {
           "action": "scratch-dir",
@@ -361,7 +361,7 @@ export default function CustomCommandsPage() {
       <p>
         {t.rich("settingActionsDesc", codeTags("path", "set", "toggle", "cycle", "unset", "presets"))}
       </p>
-      <CodeBlock title="~/.config/cmux/cmux.json" lang="json">{`{
+      <CodeBlock title="~/.config/hmux/hmux.json" lang="json">{`{
   "actions": {
     "scroll.cycle": {
       "type": "setting",
@@ -396,7 +396,7 @@ export default function CustomCommandsPage() {
 
       <DocsHeading level={2} id="new-workspace-button">{t("newWorkspaceButton")}</DocsHeading>
       <p>{renderCodeTagged(t.raw("newWorkspaceButtonDesc"))}</p>
-      <CodeBlock title="cmux.json" lang="json">{`{
+      <CodeBlock title="hmux.json" lang="json">{`{
   "actions": {
     "worktree-agents": {
       "type": "workspaceCommand",
@@ -417,11 +417,11 @@ export default function CustomCommandsPage() {
           "type": "separator"
         },
         {
-          "action": "cmux.newWorkspace",
+          "action": "hmux.newWorkspace",
           "title": "Blank Workspace"
         },
         {
-          "action": "cmux.newBrowser",
+          "action": "hmux.newBrowser",
           "title": "Browser"
         }
       ]
@@ -446,7 +446,7 @@ export default function CustomCommandsPage() {
                       {
                         "type": "terminal",
                         "name": "Codex",
-                        "command": "marker=\\"\${TMPDIR:-/tmp}/cmux-wt-\${CMUX_WORKSPACE_ID:-local}\\"; echo \\"Waiting for the worktree...\\"; until [ -s \\"$marker\\" ]; do sleep 0.25; done; cd \\"$(cat \\"$marker\\")\\" && exec codex --yolo"
+                        "command": "marker=\\"\${TMPDIR:-/tmp}/hmux-wt-\${HMUX_WORKSPACE_ID:-local}\\"; echo \\"Waiting for the worktree...\\"; until [ -s \\"$marker\\" ]; do sleep 0.25; done; cd \\"$(cat \\"$marker\\")\\" && exec codex --yolo"
                       }
                     ]
                   }
@@ -457,7 +457,7 @@ export default function CustomCommandsPage() {
                       {
                         "type": "terminal",
                         "name": "Claude",
-                        "command": "marker=\\"\${TMPDIR:-/tmp}/cmux-wt-\${CMUX_WORKSPACE_ID:-local}\\"; echo \\"Waiting for the worktree...\\"; until [ -s \\"$marker\\" ]; do sleep 0.25; done; cd \\"$(cat \\"$marker\\")\\" && exec claude --dangerously-skip-permissions"
+                        "command": "marker=\\"\${TMPDIR:-/tmp}/hmux-wt-\${HMUX_WORKSPACE_ID:-local}\\"; echo \\"Waiting for the worktree...\\"; until [ -s \\"$marker\\" ]; do sleep 0.25; done; cd \\"$(cat \\"$marker\\")\\" && exec claude --dangerously-skip-permissions"
                       }
                     ]
                   }
@@ -470,7 +470,7 @@ export default function CustomCommandsPage() {
                   {
                     "type": "terminal",
                     "name": "Setup",
-                    "command": "marker=\\"\${TMPDIR:-/tmp}/cmux-wt-\${CMUX_WORKSPACE_ID:-local}\\"; rm -f \\"$marker\\"; root=$(git rev-parse --show-toplevel) || exit 1; branch=\\"wt-$(date +%m%d-%H%M%S)\\"; wt=\\"$root/../$(basename \\"$root\\")-$branch\\"; git -C \\"$root\\" worktree add -b \\"$branch\\" \\"$wt\\" && printf \\"%s\\\\n\\" \\"$wt\\" > \\"$marker\\" && cd \\"$wt\\" && exec \\"\${SHELL:-/bin/zsh}\\" -l",
+                    "command": "marker=\\"\${TMPDIR:-/tmp}/hmux-wt-\${HMUX_WORKSPACE_ID:-local}\\"; rm -f \\"$marker\\"; root=$(git rev-parse --show-toplevel) || exit 1; branch=\\"wt-$(date +%m%d-%H%M%S)\\"; wt=\\"$root/../$(basename \\"$root\\")-$branch\\"; git -C \\"$root\\" worktree add -b \\"$branch\\" \\"$wt\\" && printf \\"%s\\\\n\\" \\"$wt\\" > \\"$marker\\" && cd \\"$wt\\" && exec \\"\${SHELL:-/bin/zsh}\\" -l",
                     "focus": true
                   }
                 ]
@@ -488,7 +488,7 @@ export default function CustomCommandsPage() {
 
       <DocsHeading level={2} id="workspace-layouts">{t("workspaceActions")}</DocsHeading>
       <p>{t.rich("workspaceActionsDesc", codeTags("workspace", "commands", "setup"))}</p>
-      <CodeBlock title="cmux.json" lang="json">{`{
+      <CodeBlock title="hmux.json" lang="json">{`{
   "actions": {
     "pair-review": {
       "type": "workspace",
@@ -560,9 +560,9 @@ export default function CustomCommandsPage() {
       </p>
 
       <DocsHeading level={2} id="full-example">{t("fullExample")}</DocsHeading>
-      <CodeBlock title="cmux.json" lang="json">{`{
+      <CodeBlock title="hmux.json" lang="json">{`{
   "actions": {
-    "cmux.newTerminal": {
+    "hmux.newTerminal": {
       "type": "command",
       "title": "Codex",
       "command": "codex --yolo",
@@ -603,14 +603,14 @@ export default function CustomCommandsPage() {
   "ui": {
     "surfaceTabBar": {
       "buttons": [
-        "cmux.newTerminal",
+        "hmux.newTerminal",
         "review",
         {
           "action": "typecheck",
           "title": "tsc"
         },
-        "cmux.newBrowser",
-        "cmux.splitDown"
+        "hmux.newBrowser",
+        "hmux.splitDown"
       ]
     },
     "newWorkspace": {
@@ -619,8 +619,8 @@ export default function CustomCommandsPage() {
         {
           "type": "separator"
         },
-        "cmux.newTerminal",
-        "cmux.newBrowser"
+        "hmux.newTerminal",
+        "hmux.newBrowser"
       ]
     }
   },

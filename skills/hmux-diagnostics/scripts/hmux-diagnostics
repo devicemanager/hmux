@@ -1,0 +1,187 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+include_context=0
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --include-context)
+      include_context=1
+      shift
+      ;;
+    -h|--help)
+      cat <<'EOF'
+Usage: hmux-diagnostics [--include-context]
+
+Print a read-only, support-safe hmux diagnostics report. By default this avoids
+workspace names, cwd paths, hook contents, session JSON, and secrets.
+EOF
+      exit 0
+      ;;
+    *)
+      printf 'hmux-diagnostics: unknown option: %s\n' "$1" >&2
+      exit 1
+      ;;
+  esac
+done
+
+section() {
+  printf '\n== %s ==\n' "$1"
+}
+
+safe_path() {
+  local path="$1"
+  if [[ "$path" == "$HOME" ]]; then
+    printf '~'
+  elif [[ "$path" == "$HOME"/* ]]; then
+    printf '~/%s' "${path#"$HOME"/}"
+  else
+    printf '%s' "$path"
+  fi
+}
+
+run_status() {
+  local label="$1"
+  shift
+  printf '%s: ' "$label"
+  if "$@" >/dev/null 2>&1; then
+    printf 'ok\n'
+  else
+    printf 'failed\n'
+  fi
+}
+
+file_summary() {
+  local path="$1"
+  if [[ -f "$path" ]]; then
+    local bytes modified
+    bytes="$(wc -c <"$path" 2>/dev/null | tr -d ' ' || true)"
+    modified="$(stat -f '%Sm' -t '%Y-%m-%d %H:%M:%S %z' "$path" 2>/dev/null || stat -c '%y' "$path" 2>/dev/null || printf 'unknown')"
+    printf 'present bytes=%s modified=%s\n' "${bytes:-unknown}" "$modified"
+  elif [[ -e "$path" ]]; then
+    printf 'non-regular\n'
+  else
+    printf 'missing\n'
+  fi
+}
+
+marker_summary() {
+  local path="$1"
+  local marker="$2"
+  if [[ -f "$path" ]]; then
+    if grep -Fq "$marker" "$path" 2>/dev/null; then
+      printf 'marker-present\n'
+    else
+      printf 'marker-missing\n'
+    fi
+  elif [[ -e "$path" ]]; then
+    printf 'non-regular\n'
+  else
+    printf 'missing\n'
+  fi
+}
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" >/dev/null 2>&1 && pwd)"
+skill_dir="$(cd -- "$script_dir/.." >/dev/null 2>&1 && pwd)"
+skills_root="$(cd -- "$skill_dir/.." >/dev/null 2>&1 && pwd)"
+settings_helper="$skills_root/hmux-settings/scripts/hmux-settings"
+if [[ ! -x "$settings_helper" && -x "$HOME/.agents/skills/hmux-settings/scripts/hmux-settings" ]]; then
+  settings_helper="$HOME/.agents/skills/hmux-settings/scripts/hmux-settings"
+elif [[ ! -x "$settings_helper" && -x "$HOME/.codex/skills/hmux-settings/scripts/hmux-settings" ]]; then
+  settings_helper="$HOME/.codex/skills/hmux-settings/scripts/hmux-settings"
+fi
+
+section "hmux diagnostics"
+printf 'date: %s\n' "$(date -u '+%Y-%m-%dT%H:%M:%SZ')"
+printf 'shell: %s\n' "${SHELL:-unknown}"
+printf 'inside_hmux: '
+if [[ -n "${HMUX_WORKSPACE_ID:-}" || -n "${HMUX_SURFACE_ID:-}" ]]; then
+  printf 'yes\n'
+else
+  printf 'no\n'
+fi
+printf 'hmux_workspace_id_set: %s\n' "$([[ -n "${HMUX_WORKSPACE_ID:-}" ]] && printf yes || printf no)"
+printf 'hmux_surface_id_set: %s\n' "$([[ -n "${HMUX_SURFACE_ID:-}" ]] && printf yes || printf no)"
+if [[ "${HMUX_SOCKET_PATH+x}" == "x" ]]; then
+  printf 'hmux_socket_path: %s (from HMUX_SOCKET_PATH)\n' "$(safe_path "$HMUX_SOCKET_PATH")"
+elif [[ "${HMUX_SOCKET+x}" == "x" ]]; then
+  printf 'hmux_socket_path: %s (from HMUX_SOCKET)\n' "$(safe_path "$HMUX_SOCKET")"
+else
+  printf 'hmux_socket_path: unset\n'
+fi
+printf 'hmux_socket_password_set: %s\n' "$([[ -n "${HMUX_SOCKET_PASSWORD:-}" ]] && printf yes || printf no)"
+
+section "cli"
+if command -v hmux >/dev/null 2>&1; then
+  printf 'hmux_path: %s\n' "$(safe_path "$(command -v hmux)")"
+  if hmux --version >/dev/null 2>&1; then
+    printf 'hmux_version: %s\n' "$(hmux --version 2>/dev/null | head -n 1)"
+  else
+    printf 'hmux_version: unavailable\n'
+  fi
+  run_status "hmux_ping" hmux ping
+  run_status "hmux_capabilities" hmux capabilities --json
+  if [[ "$include_context" -eq 1 ]]; then
+    printf 'identify_json:\n'
+    hmux identify --json 2>/dev/null || printf '  unavailable\n'
+  fi
+else
+  printf 'hmux_path: missing\n'
+fi
+
+section "settings"
+printf 'hmux_json: '
+file_summary "$HOME/.config/hmux/hmux.json"
+printf 'legacy_settings_json: '
+file_summary "$HOME/.config/hmux/settings.json"
+if [[ -x "$settings_helper" ]]; then
+  run_status "hmux_settings_validate" "$settings_helper" validate
+  printf 'auto_resume_agent_sessions: '
+  "$settings_helper" get terminal.autoResumeAgentSessions 2>/dev/null || printf 'default-or-unset\n'
+else
+  printf 'hmux_settings_helper: missing (%s)\n' "$(safe_path "$settings_helper")"
+fi
+
+section "hook configs"
+declare -a hook_checks=(
+  "codex:$HOME/.codex/hooks.json:hmux hooks codex"
+  "codex-config:$HOME/.codex/config.toml:codex_hooks"
+  "opencode-session:$HOME/.config/opencode/plugins/hmux-session.js:hmux hooks opencode"
+  "opencode-feed:$HOME/.config/opencode/plugins/hmux-feed.js:hmux hooks feed --source opencode"
+  "pi:$HOME/.pi/agent/extensions/hmux-session.ts:hmux hooks pi"
+  "amp:$HOME/.config/amp/plugins/hmux-session.ts:hmux hooks amp"
+  "cursor:$HOME/.cursor/hooks.json:hmux hooks cursor"
+  "gemini:$HOME/.gemini/settings.json:hmux hooks gemini"
+  "rovodev:$HOME/.rovodev/rovodev.yml:hmux hooks rovodev"
+  "hermes-agent:$HOME/.hermes/config.yaml:hmux hooks hermes-agent"
+  "copilot:$HOME/.copilot/settings.json:hmux hooks copilot"
+  "codebuddy:$HOME/.codebuddy/settings.json:hmux hooks codebuddy"
+  "factory:$HOME/.factory/settings.json:hmux hooks factory"
+  "qoder:$HOME/.qoder/settings.json:hmux hooks qoder"
+)
+for entry in "${hook_checks[@]}"; do
+  IFS=: read -r name path marker <<<"$entry"
+  printf '%s: %s ' "$name" "$(safe_path "$path")"
+  marker_summary "$path" "$marker"
+done
+
+section "session stores"
+shopt -s nullglob
+stores=("$HOME"/.hmuxterm/*-hook-sessions.json)
+if [[ "${#stores[@]}" -eq 0 ]]; then
+  printf 'session_store_files: none\n'
+else
+  printf 'session_store_files: %s\n' "${#stores[@]}"
+  for path in "${stores[@]}"; do
+    printf '%s: ' "$(basename "$path")"
+    file_summary "$path"
+  done
+fi
+
+section "agent binaries"
+for bin in claude codex opencode pi amp cursor-agent gemini rovo rovodev hermes-agent gh copilot codebuddy droid qodercli; do
+  if command -v "$bin" >/dev/null 2>&1; then
+    printf '%s: present (%s)\n' "$bin" "$(safe_path "$(command -v "$bin")")"
+  else
+    printf '%s: missing\n' "$bin"
+  fi
+done

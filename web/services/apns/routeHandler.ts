@@ -12,8 +12,8 @@ export async function withApnsApiRoute(
     request,
     route,
     {
-      "cmux.subsystem": "apns",
-      "cmux.apns.operation": operation,
+      "hmux.subsystem": "apns",
+      "hmux.apns.operation": operation,
     } satisfies MaybeAttributes,
     async (span) => {
       try {
@@ -36,20 +36,20 @@ export function recordApnsRouteOutcome(
   correlationId: string,
 ): void {
   trace.getActiveSpan()?.setAttributes({
-    "cmux.push.correlation_id": correlationId,
-    "cmux.apns.devices": summary.devices,
-    "cmux.apns.sent": summary.sent,
-    "cmux.apns.pruned": summary.pruned,
-    "cmux.apns.transient_failures": summary.transientFailures,
-    "cmux.apns.permanent_failures": summary.permanentFailures,
+    "hmux.push.correlation_id": correlationId,
+    "hmux.apns.devices": summary.devices,
+    "hmux.apns.sent": summary.sent,
+    "hmux.apns.pruned": summary.pruned,
+    "hmux.apns.transient_failures": summary.transientFailures,
+    "hmux.apns.permanent_failures": summary.permanentFailures,
   });
 }
 
 /** Correlates a safe expected-failure stage without payload or device data. */
 export function recordApnsEncryptionKeyRejection(): void {
   trace.getActiveSpan()?.setAttributes({
-    "cmux.apns.failure_stage": "push_e2e_key_missing_or_invalid",
-    "cmux.push.protocol": "notification-e2e-v1",
+    "hmux.apns.failure_stage": "push_e2e_key_missing_or_invalid",
+    "hmux.push.protocol": "notification-e2e-v1",
   });
 }
 
@@ -59,7 +59,7 @@ export function recordApnsRouteFailure(
   stage: string,
 ): void {
   trace.getActiveSpan()?.setAttributes({
-    "cmux.push.correlation_id": correlationId,
-    "cmux.apns.failure_stage": stage,
+    "hmux.push.correlation_id": correlationId,
+    "hmux.apns.failure_stage": stage,
   });
 }

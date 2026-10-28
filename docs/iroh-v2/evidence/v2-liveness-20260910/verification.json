@@ -3,27 +3,27 @@
   "baseRevision": "72ce5e9b41a83d3f8f3a21288856449f3580686e",
   "dirtyWorktree": true,
   "leaseID": "20260910211351-8258-9168",
-  "slot": "cmux11s-v.4",
-  "host": "cmux@cmux11s-mac-mini",
-  "remotePath": "~/cmux-runners/iroh-v2-integration-20260910211351-8258-9168",
+  "slot": "hmux11s-v.4",
+  "host": "hmux@hmux11s-mac-mini",
+  "remotePath": "~/hmux-runners/iroh-v2-integration-20260910211351-8258-9168",
   "compiler": "Apple Swift 6.2.4",
   "iOSSDK": "iPhoneSimulator26.2",
   "sharedTests": {
-    "command": "swift test --package-path Packages/Shared/CmuxIrxTransport -j 4 --filter \"V2|IrxDirectOnlyEndpointTests|IrxLiveQUICTests|IrxLivenessTests\"",
+    "command": "swift test --package-path Packages/Shared/HmuxIrxTransport -j 4 --filter \"V2|IrxDirectOnlyEndpointTests|IrxLiveQUICTests|IrxLivenessTests\"",
     "passed": 41,
     "suites": 8,
     "newLivenessTests": 6,
     "liveQUIC": true
   },
   "iosBuild": {
-    "command": "xcodebuild -workspace ios/cmux.xcworkspace -scheme cmux-ios -destination \"generic/platform=iOS Simulator\" -derivedDataPath /tmp/cmux-iv2a-20260910211351 -jobs 4 CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=dev.cmux.ios.iv2a CMUX_DEV_TAG=iv2a ARCHS=arm64 ONLY_ACTIVE_ARCH=YES build",
+    "command": "xcodebuild -workspace ios/hmux.xcworkspace -scheme hmux-ios -destination \"generic/platform=iOS Simulator\" -derivedDataPath /tmp/hmux-iv2a-20260910211351 -jobs 4 CODE_SIGNING_ALLOWED=NO PRODUCT_BUNDLE_IDENTIFIER=dev.hmux.ios.iv2a HMUX_DEV_TAG=iv2a ARCHS=arm64 ONLY_ACTIVE_ARCH=YES build",
     "result": "BUILD SUCCEEDED",
     "tag": "iv2a"
   },
   "sourceSnapshot": {
     "files": 76,
     "localRemoteHashesMatch": true,
-    "scope": "All CmuxIrxTransport Swift source/tests/fixtures and Package.swift, plus the three changed iOS composition/lifecycle/dial files. Snapshot was taken before parent native installer changes."
+    "scope": "All HmuxIrxTransport Swift source/tests/fixtures and Package.swift, plus the three changed iOS composition/lifecycle/dial files. Snapshot was taken before parent native installer changes."
   },
   "loopbackMeasurements": [
     {
@@ -43,7 +43,7 @@
   ],
   "measurementLimits": "Elapsed times use ContinuousClock. Journal wall times reflect the remote host clock. No physical iPhone suspension or real relay latency is represented by the loopback measurements.",
   "nativeDependencies": {
-    "ffiTag": "1.0.2-cmux.7",
+    "ffiTag": "1.0.2-hmux.7",
     "ffiRevision": "20f0e67cc3cb5179e816ef45b7a7ec5c8c58b0e0",
     "irohRevision": "4152d81047a6024881cb24e00dfd49b6cc73c65b",
     "noqRevision": "2271bbc25890f9577d2ce9bd0bb0f872af32e105",

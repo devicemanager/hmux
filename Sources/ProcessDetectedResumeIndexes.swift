@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
 struct ProcessDetectedResumeIndexes: Sendable {
@@ -37,7 +37,7 @@ struct ProcessDetectedResumeIndexes: Sendable {
         homeDirectory: String = NSHomeDirectory(),
         fileManager: FileManager = .default,
         ttyDeviceBindings: [SurfaceResumeBindingIndex.PanelKey: Int64] = [:],
-        processSnapshotService: ProcessSnapshotService<CmuxTopProcessCapture, CmuxTopProcessFields>? = nil,
+        processSnapshotService: ProcessSnapshotService<HmuxTopProcessCapture, HmuxTopProcessFields>? = nil,
         deadline: Duration = .seconds(5),
         onWorkerCreated: @escaping @MainActor @Sendable (
             Task<ProcessDetectedResumeIndexes, Never>
@@ -98,7 +98,7 @@ struct ProcessDetectedResumeIndexes: Sendable {
         homeDirectory: String = NSHomeDirectory(),
         fileManager: FileManager = .default,
         ttyDeviceBindings: [SurfaceResumeBindingIndex.PanelKey: Int64] = [:],
-        processSnapshotService: ProcessSnapshotService<CmuxTopProcessCapture, CmuxTopProcessFields>? = nil
+        processSnapshotService: ProcessSnapshotService<HmuxTopProcessCapture, HmuxTopProcessFields>? = nil
     ) async -> ProcessDetectedResumeIndexes {
         await loadOnWorker(
             homeDirectory: homeDirectory,
@@ -137,17 +137,17 @@ struct ProcessDetectedResumeIndexes: Sendable {
         maximumSnapshotAge: TimeInterval? = nil,
         cachedRestorableAgentIndex: RestorableAgentSessionIndex? = nil,
         ttyDeviceBindings: [SurfaceResumeBindingIndex.PanelKey: Int64] = [:],
-        processSnapshotService: ProcessSnapshotService<CmuxTopProcessCapture, CmuxTopProcessFields>? = nil
+        processSnapshotService: ProcessSnapshotService<HmuxTopProcessCapture, HmuxTopProcessFields>? = nil
     ) async -> ProcessDetectedResumeIndexes {
         // `nil` uses the app's shared census. Tests inject their own so a
         // fixture never depends on the whole host's process table.
         let processSnapshot = if let maximumSnapshotAge {
-            await CmuxTopProcessSnapshot.captureCached(
+            await HmuxTopProcessSnapshot.captureCached(
                 includeProcessDetails: true, includeResources: false,
                 maximumAge: maximumSnapshotAge, service: processSnapshotService
             )
         } else {
-            await CmuxTopProcessSnapshot.capture(
+            await HmuxTopProcessSnapshot.capture(
                 includeProcessDetails: true, includeResources: false, service: processSnapshotService
             )
         }
@@ -161,7 +161,7 @@ struct ProcessDetectedResumeIndexes: Sendable {
                 against: processSnapshot
             )
         } else {
-            let registry = CmuxVaultAgentRegistry.load(
+            let registry = HmuxVaultAgentRegistry.load(
                 homeDirectory: homeDirectory,
                 fileManager: fileManager
             )

@@ -10,7 +10,7 @@ const JSON_HEADERS = {
 /**
  * Boot-only identity endpoint. Prompt initialization needs the machine's
  * prompt name, not the full owner/peer reflection graph. Keeping this
- * response small lets a fresh clone refresh `/etc/cmux/vm-name` without
+ * response small lets a fresh clone refresh `/etc/hmux/vm-name` without
  * loading sibling machines. The guest re-fetches it every 30 s, so it must
  * answer the same name create and rename write (vmPromptName).
  */

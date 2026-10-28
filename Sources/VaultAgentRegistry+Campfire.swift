@@ -1,11 +1,11 @@
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 
-extension CmuxVaultAgentRegistration {
-    static var builtInCampfire: CmuxVaultAgentRegistration {
-        CmuxVaultAgentRegistration(
+extension HmuxVaultAgentRegistration {
+    static var builtInCampfire: HmuxVaultAgentRegistration {
+        HmuxVaultAgentRegistration(
             id: "campfire",
             name: "Campfire",
-            detect: CmuxVaultAgentDetectRule(
+            detect: HmuxVaultAgentDetectRule(
                 processName: "campfire",
                 alternateProcessNames: ["bun", "node", "deno", "tsx", "ts-node"],
                 alternateArgvContainsAny: [

@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 
-export const RUN_SPEC_SCHEMA = "cmux.run/v1" as const;
+export const RUN_SPEC_SCHEMA = "hmux.run/v1" as const;
 
 export type RunSpecVariant = {
   readonly id: string;

@@ -14,11 +14,11 @@ An owned Mac (a `glaeda-<class>-xcode-<version>` runner, pr_runner_pool.py)
 outlives the job, but ci-macos.yml compile admission was written for
 ephemeral runners: it restores the SwiftPM cache, downloads and adopts the
 nightly DerivedData seed, and compiles into a DerivedData it deleted first.
-On cmux11s that was 25 minutes (run 36048804178): 3.7 of cache restore, about
+On hmux11s that was 25 minutes (run 36048804178): 3.7 of cache restore, about
 3 of seed, 14 of compile.
 
-This keeps two things under STORE (CMUX_OWNED_STATE_ROOT,
-/Users/Shared/cmux-build-fleet/ci by default) instead:
+This keeps two things under STORE (HMUX_OWNED_STATE_ROOT,
+/Users/Shared/hmux-build-fleet/ci by default) instead:
 
 - `derived-data`: the admission DerivedData, stamped with the canonical
   fingerprint (Xcode build, canonical paths, file-system mode). Builds run
@@ -52,7 +52,7 @@ the seed would: the resolve step has just recreated the DerivedData, so it
 clones the kept one in and replays the input times recorded in it, as the
 seed's adopt does (seed_derived_data.py). Each job
 copies a fresh source tree into the canonical root, so without the replay
-every file is newer than the kept build and the whole `cmux` module
+every file is newer than the kept build and the whole `hmux` module
 recompiles: 2629 SwiftCompile tasks, 386 s, in job 107904138254, against
 50 s after a distance-0 seed in job 107906033416. `record` runs just before
 the compile on every owned job, warm or seeded, so the DerivedData it keeps
@@ -78,9 +78,9 @@ CI_OWNED_PREFER_SEED is set and says whether the seed should replace the kept
 DerivedData. It digests the workspace once and counts the inputs each would
 rebuild: those whose content differs from the kept RECORD, and from the
 MANIFEST of every seed in this commit's history that this Mac keeps
-(seed_derived_data.py CMUX_SEED_LOCAL_CACHE, as many as the disk holds). All are a local
+(seed_derived_data.py HMUX_SEED_LOCAL_CACHE, as many as the disk holds). All are a local
 clone, so the one with the fewest changed inputs wins, and the adopt that
-follows clones exactly that seed (CMUX_SEED_EXACT). A seed this Mac does not
+follows clones exactly that seed (HMUX_SEED_EXACT). A seed this Mac does not
 keep costs a download of about 250 s, worth about DOWNLOAD_INPUTS changed
 inputs, so it wins only when GitHub's compare of its commit with the checkout
 lists that many fewer files than the kept build changed, at most MAX_DISTANCE
@@ -90,11 +90,11 @@ newest seed is usually 5 to 8 commits behind. A start that changes at most
 DOWNLOAD_INPUTS inputs never pays for a download, and when the compare bumps
 a submodule (the counts no longer compare) only a seed
 UNKNOWN_ESTIMATE_DISTANCE commits behind is downloaded. A kept DerivedData
-without a record replays nothing and rebuilds the whole `cmux` module, so any
+without a record replays nothing and rebuilds the whole `hmux` module, so any
 seed beats it. Every error keeps the warm path.
 
 The count alone misleads when a local package's source changed (Packages/,
-vendor/, Examples/): every `cmux` file imports those modules and recompiles,
+vendor/, Examples/): every `hmux` file imports those modules and recompiles,
 whether 19 or 1,000 inputs changed. On 2026-09-25 three warm jobs cloned a
 kept seed 9 to 20 commits behind because it had fewer changed inputs than the
 kept DerivedData, and compiled for 533 to 958 s. In two of them the seed sat
@@ -120,7 +120,7 @@ The kept build's merge base comes first, when its stamp matches FINGERPRINT,
 then `pr-<n>` for the pull request it built (`keep`'s PR_NUMBER, so a re-push
 goes back to its previous push's build), then the same two keys of the mini's
 other canonical roots, then, on a mini with a single root, the commits of the
-seeds this Mac keeps for FINGERPRINT (CMUX_SEED_LOCAL_CACHE, set only when
+seeds this Mac keeps for FINGERPRINT (HMUX_SEED_LOCAL_CACHE, set only when
 CI_OWNED_PREFER_SEED lets `prefer` clone them), most recently used first,
 MAX_WARM_KEYS in all. It never fails: anything it cannot read leaves that key
 out.
@@ -135,12 +135,12 @@ not only an exact key.
 
 The other roots count because a job's root follows glaeda's free token, not
 the runner: the janitor records the keys against the runner that ran
-admission, and glaeda-cmux-runner-hook gives a routed admission the root
-whose stamp is warm for it. Root k>1 keeps its state in STORE/cmux-ci-<k>
+admission, and glaeda-hmux-runner-hook gives a routed admission the root
+whose stamp is warm for it. Root k>1 keeps its state in STORE/hmux-ci-<k>
 (ci-macos.yml build-slot), root 1 in STORE itself. Another root's fingerprint
 includes its root (compile-app-host-test-product.sh), so its stamp is checked
 by STATE_VERSION only. Seeds are left out once the mini has a second root
-(any STORE/cmux-ci-<k>): each root keeps its own seeds for its own
+(any STORE/hmux-ci-<k>): each root keeps its own seeds for its own
 fingerprint, and the hook routes by stamps only, so a routed admission lands
 on its runner's own root (or any free one), not on the root that listed the
 seed. A seed key recorded against the runner would send it there to miss.
@@ -148,7 +148,7 @@ A second root counts once its store directory exists: one whose store was
 never created still lists seeds, and a store left behind after a mini goes back to
 one root keeps them out, which costs affinity but never a wrong route.
 
-Clones are APFS clones: the canonical root (/private/tmp/cmux-ci) and STORE
+Clones are APFS clones: the canonical root (/private/tmp/hmux-ci) and STORE
 sit on the same volume, so nothing is copied. Kept state is replaced by
 renaming the new copy into place after the old one is out of the way, so an
 interrupted job leaves either the old state, the new one, or none, never one
@@ -188,7 +188,7 @@ UNREAD = ("Logs", "Index.noindex")
 # The owned record, apart from the seed's MANIFEST: a DerivedData adopted from
 # a seed still carries the seed's record, whose times belong to the seed's
 # source, not to what this Mac last compiled.
-RECORD = "cmux-owned-input-mtimes.json"
+RECORD = "hmux-owned-input-mtimes.json"
 # Appended to the canonical fingerprint in every stamp. A DerivedData kept
 # before `record` existed may hold only a seed's record, so bumping this
 # discards every older kept DerivedData instead of trusting it.
@@ -196,7 +196,7 @@ STATE_VERSION = "owned-rec1"
 # The keys owned_warm_state.py keeps per runner (its MAX_KEYS).
 MAX_WARM_KEYS = 8
 # The second and later canonical roots' stores, beside the first root's.
-ROOT_STORE_PREFIX = "cmux-ci-"
+ROOT_STORE_PREFIX = "hmux-ci-"
 SEED_KEY_PREFIX = "admission-derived-data-v1-"
 
 
@@ -297,12 +297,12 @@ def sweep_discarded(store: Path) -> None:
 # A main build is never parked, so eviction never touches one.
 PR_BUILDS = "pr-builds"
 PR_SLOTS = 2
-PR_SLOT_MAX_JOBS = int(os.environ.get("CMUX_PR_SLOT_MAX_JOBS", "80"))
+PR_SLOT_MAX_JOBS = int(os.environ.get("HMUX_PR_SLOT_MAX_JOBS", "80"))
 
 
 def parked_jobs_since(slot: Path) -> int | None:
     """Count host CI jobs started since SLOT was parked; None when telemetry is unavailable."""
-    log = Path(os.environ.get("CMUX_JOB_LOG", Path.home() / "Library/Logs/glaeda-cmux-jobs.jsonl"))
+    log = Path(os.environ.get("HMUX_JOB_LOG", Path.home() / "Library/Logs/glaeda-hmux-jobs.jsonl"))
     try:
         parked_at = slot.stat().st_mtime
         count = 0
@@ -604,7 +604,7 @@ def adopt(store: Path, derived: Path, source: Path) -> dict[str, str]:
 def record(source: Path, derived: Path, distance_out: str = "") -> dict[str, str]:
     """Record the input times this compile sees, for the next job's adopt.
 
-    With DISTANCE_OUT (CMUX_WARM_DISTANCE_START), it first compares this
+    With DISTANCE_OUT (HMUX_WARM_DISTANCE_START), it first compares this
     record with the one the adopted DerivedData carries, the kept build's own
     or the seed's MANIFEST, and writes the changed paths there for
     warm_distance.py: the exact distance from the start, at no extra digest.
@@ -755,12 +755,12 @@ def is_root_store(path: Path) -> bool:
 
 
 def mini_store(store: Path) -> Path:
-    """Root 1's store, which also holds the mini's SwiftPM scratch (STORE is it, or STORE/../cmux-ci-<k>)."""
+    """Root 1's store, which also holds the mini's SwiftPM scratch (STORE is it, or STORE/../hmux-ci-<k>)."""
     return store.parent if is_root_store(store) else store
 
 
 def other_root_stores(store: Path) -> list[Path]:
-    """The mini's other canonical roots' stores (STORE is root 1's, or STORE/../cmux-ci-<k>)."""
+    """The mini's other canonical roots' stores (STORE is root 1's, or STORE/../hmux-ci-<k>)."""
     is_root = is_root_store
     base = mini_store(store)
     try:
@@ -775,7 +775,7 @@ ROOT_FIELDS = ("merged_onto", "pr", "pr_app_swift_files", "pr_app_swift_total", 
 
 
 def root_number(store: Path, first: Path) -> int:
-    """STORE's canonical root number: 1 for FIRST (root 1's store), k for cmux-ci-<k>."""
+    """STORE's canonical root number: 1 for FIRST (root 1's store), k for hmux-ci-<k>."""
     suffix = store.name[len(ROOT_STORE_PREFIX):]
     return int(suffix) if store != first and store.name.startswith(ROOT_STORE_PREFIX) and suffix.isdigit() else 1
 
@@ -878,7 +878,7 @@ def save(store: Path, source_packages: Path, workspace: Path, package_store: Pat
 # Not build inputs of the compile, and not present at every recording.
 UNCOMPARED = (".ci-source-packages/", "GhosttyKit.xcframework/")
 # Local Swift packages the app target imports. A changed source in any of them
-# changes a module the `cmux` target imports, so every `cmux` file recompiles
+# changes a module the `hmux` target imports, so every `hmux` file recompiles
 # (2,300 to 2,700 SwiftCompile tasks, 365 to 1,053 s on an owned mini on
 # 2026-09-25), however few inputs changed: 115 changed inputs cost 958 s in
 # job 108004619872, 19 changed app inputs 222 s in job 107986723124.
@@ -909,7 +909,7 @@ def changed_inputs(current: dict[str, list], recorded: dict[str, list]) -> int:
 
 
 def rebuilds_app(paths) -> bool:
-    """Whether these changed files recompile the whole `cmux` module.
+    """Whether these changed files recompile the whole `hmux` module.
 
     A package's Tests/ are not built by the app's schemes, so they do not count.
     """
@@ -1023,7 +1023,7 @@ def prefer(store: Path, workspace: Path, prefix: str, revision: str, max_distanc
     """Whether a seed should replace this warm Mac's kept DerivedData.
 
     `seed_key` and `local` tell seed_derived_data.py which kept seed to clone
-    (CMUX_SEED_EXACT), so it adopts the seed compared here, not a newer one.
+    (HMUX_SEED_EXACT), so it adopts the seed compared here, not a newer one.
     """
     result = {"prefer": "false", "local": "false"}
     manifest = store / DERIVED / RECORD
@@ -1160,13 +1160,13 @@ def main(argv: list[str]) -> int:
         return 0
     if len(argv) in (5, 6) and argv[1] == "check":
         write_outputs(check(Path(argv[2]), argv[3], Path(argv[4]), package_store(argv),
-                            os.environ.get("CMUX_OWNED_PR", "")))
+                            os.environ.get("HMUX_OWNED_PR", "")))
         return 0
     if len(argv) == 5 and argv[1] == "adopt":
         write_outputs(adopt(Path(argv[2]), Path(argv[3]), Path(argv[4]).resolve()))
         return 0
     if len(argv) == 4 and argv[1] == "record":
-        write_outputs(record(Path(argv[2]).resolve(), Path(argv[3]), os.environ.get("CMUX_WARM_DISTANCE_START", "")))
+        write_outputs(record(Path(argv[2]).resolve(), Path(argv[3]), os.environ.get("HMUX_WARM_DISTANCE_START", "")))
         return 0
     if len(argv) in (5, 6, 7) and argv[1] == "keep":
         write_outputs(keep(Path(argv[2]), Path(argv[3]), argv[4], argv[5] if len(argv) >= 6 else "",

@@ -188,7 +188,7 @@ describe("rejoining after leaving or removal", () => {
 describe("personal plan member limit on links", () => {
   test("a full Pro roster refuses link joins without burning a use", async () => {
     const stack = standardTeam().addUser({ id: SECOND_OUTSIDER });
-    stack.teams.get(TEAM_ID)!.metadata = { cmuxPlan: "max" };
+    stack.teams.get(TEAM_ID)!.metadata = { hmuxPlan: "max" };
     stack.addUser({ id: "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee" }).addMember(TEAM_ID, "eeeeeeee-eeee-4eee-8eee-eeeeeeeeeeee", ["team_member"]);
     const store = new MemoryInviteStore();
     const access = await requireTeamAccess({ id: ADMIN_ID }, TEAM_ID, { stack: stack.app() });

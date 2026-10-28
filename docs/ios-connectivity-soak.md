@@ -61,20 +61,20 @@ observation of current state and must not be counted as another migration.
 `private_network` includes LAN, private VPN, link-local, and loopback IPs; it
 does not establish which physical network carried the packet.
 
-The backend exports span `cmux.mobile.iroh.path`. Group by user, peer alias,
+The backend exports span `hmux.mobile.iroh.path`. Group by user, peer alias,
 and session, and order by the client occurrence timestamp. Use the preview
 dataset for a preview backend; the dataset name does not identify app channel.
 
 ```apl
-['cmux-prod-otel-traces']
-| where name == 'cmux.mobile.iroh.path'
-| extend occurred = tostring(['attributes.custom']['cmux.mobile.occurred_at']),
-    user = tostring(['attributes.custom']['cmux.user_id']),
-    peer = tostring(['attributes.custom']['cmux.mobile.event_surface']),
-    session = tostring(['attributes.custom']['cmux.mobile.event_c']),
-    operation = tostring(['attributes.custom']['cmux.mobile.path_operation']),
-    path = tostring(['attributes.custom']['cmux.mobile.path']),
-    channel = tostring(['attributes.custom']['cmux.client.channel'])
+['hmux-prod-otel-traces']
+| where name == 'hmux.mobile.iroh.path'
+| extend occurred = tostring(['attributes.custom']['hmux.mobile.occurred_at']),
+    user = tostring(['attributes.custom']['hmux.user_id']),
+    peer = tostring(['attributes.custom']['hmux.mobile.event_surface']),
+    session = tostring(['attributes.custom']['hmux.mobile.event_c']),
+    operation = tostring(['attributes.custom']['hmux.mobile.path_operation']),
+    path = tostring(['attributes.custom']['hmux.mobile.path']),
+    channel = tostring(['attributes.custom']['hmux.client.channel'])
 | project occurred, user, peer, session, operation, path, channel
 | sort by occurred asc
 ```
@@ -87,7 +87,7 @@ migration, not hole punching between two separate NATs or failback after an
 interface disappears.
 
 ```sh
-CMUX_IROH_PUBLIC_RELAY_TEST=1 swift test --package-path Packages/Shared/CmuxIrxTransport --filter IrxPathMigrationTests
+HMUX_IROH_PUBLIC_RELAY_TEST=1 swift test --package-path Packages/Shared/HmuxIrxTransport --filter IrxPathMigrationTests
 ```
 
 Run the release gate in each mode when a path-selection change needs live
@@ -139,9 +139,9 @@ retain one sample per cycle. The runner rejects missing
 coverage (at least 50 basic or 300 stress cycles), old schemas, shortened
 windows and non-Iroh routes. If the contract changes, bump `planVersion` and
 update both validators in this repository and
-`cmuxterm-hq/tools/ios-connectivity-monitor/monitor.py` together.
+`hmuxterm-hq/tools/ios-connectivity-monitor/monitor.py` together.
 
-The supervisor runs from cmuxterm-hq. It records the installed source revision,
+The supervisor runs from hmuxterm-hq. It records the installed source revision,
 retains evidence, and queues every result until Slack acknowledges it. Refresh
 both tagged builds together after merging an app change. A build older than
 48 hours reports a stale-build failure rather than current app health.

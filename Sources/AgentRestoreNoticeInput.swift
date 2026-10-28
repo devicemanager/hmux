@@ -1,7 +1,7 @@
 import Foundation
 
 /// Types one localized explanation into a restored terminal as a single shell
-/// command, so the pane says why cmux did not resume an agent session there.
+/// command, so the pane says why hmux did not resume an agent session there.
 struct AgentRestoreNoticeInput: Sendable {
     let message: String
 

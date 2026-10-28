@@ -1,6 +1,6 @@
-import CmuxControlSocket
-import CmuxSimulator
-import CmuxSimulatorUI
+import HmuxControlSocket
+import HmuxSimulator
+import HmuxSimulatorUI
 import Foundation
 
 extension TerminalController {
@@ -96,7 +96,7 @@ extension TerminalController {
             ControlSimulatorWebInspectorReceipt
         ) async -> Void
     ) -> ControlSimulatorWebInspectorStartResolution {
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else { return .unavailable }
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else { return .unavailable }
         switch resolveSimulatorPanel(routing: routing) {
         case .unavailable:
             return .unavailable

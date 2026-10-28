@@ -33,7 +33,7 @@ describe("privacy policy localization", () => {
 
   test("contains no generated placeholder tokens", () => {
     for (const locale of locales) {
-      expect(allStrings(privacyPolicyContent[locale]).join("\n")).not.toMatch(/CMUXOKEN\d+X/);
+      expect(allStrings(privacyPolicyContent[locale]).join("\n")).not.toMatch(/HMUXOKEN\d+X/);
     }
   });
 

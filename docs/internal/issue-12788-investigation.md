@@ -2,7 +2,7 @@
 
 Status: no confirmed reproduction, causal diagnosis, or verified fix.
 
-The customer reports an immediately stuck workspace after updating to cmux
+The customer reports an immediately stuck workspace after updating to hmux
 0.64.24 (build 104, `f5da007dd`) on macOS 26.6.2, Apple M3 Pro. The issue has
 no reproduction steps, process sample, session fixture, or attachment.
 
@@ -30,12 +30,12 @@ the issue or describe a fix as verified.
   shell reported `sysctl.proc_translated=1`.
 - One direct launch remained alive before startup logging began. A five-second
   sample contained only `??? (in Rosetta Runtime Routines)`, reported a 244 KB
-  footprint, and provided no cmux/AppKit/SwiftUI stack. It does not attribute
+  footprint, and provided no hmux/AppKit/SwiftUI stack. It does not attribute
   a hang to the application.
 - That launch later emitted breadcrumbs through `app.init.delegate.configured`.
   The explicitly native repeat returned exit status 143 (SIGTERM), also after
   reaching that marker. No stack at that boundary established a blocked thread.
-- Another stable cmux with the same `com.cmuxterm.app` bundle ID was already
+- Another stable hmux with the same `com.hmuxterm.app` bundle ID was already
   running. `AppDelegate.observeDuplicateLaunches()` terminates same-ID launches,
   so the attempts were not isolated even with temporary HOME/CFFIXED_USER_HOME.
   The exact sender of SIGTERM was not recorded.
@@ -78,7 +78,7 @@ the issue or describe a fix as verified.
 This internal investigation note changes no product UI, CLI help, localized
 documentation site, or message catalog.
 
-Any future developer build must use `cmux-ci`, an exact pushed commit, and
+Any future developer build must use `hmux-ci`, an exact pushed commit, and
 the tag `issue-12788-workspace-update-stuck`. Retain the submission and
 terminal receipts and wait on the same job ID after a timeout. A successful
 app-build receipt does not establish GUI-test readiness or reproduce this
@@ -98,7 +98,7 @@ left alone.
 Release 0.64.23 (103) and 0.64.24 (104) were downloaded from their tagged
 GitHub release assets. The 0.64.24 DMG matched the SHA-256 above, and its
 original bundle passed deep/strict signature verification. Both app copies
-used the unique bundle ID `com.cmuxterm.app.repro12788`, a fresh profile, and
+used the unique bundle ID `com.hmuxterm.app.repro12788`, a fresh profile, and
 an explicit isolated socket. Their arm64 `__text` section digests matched
 the corresponding original release after signing. The app was launched
 natively inside the existing Aqua session with no app arguments and no

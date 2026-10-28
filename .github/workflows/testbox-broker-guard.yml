@@ -47,7 +47,7 @@ jobs:
         run: >-
           shellcheck
           scripts/blacksmith-bounded-command.sh
-          scripts/blacksmith-cmux-tui-testbox-stage.sh
+          scripts/blacksmith-hmux-tui-testbox-stage.sh
           scripts/blacksmith-testbox-cleanup.sh
           scripts/blacksmith-testbox-keepalive.sh
           scripts/ci/install-actionlint.sh

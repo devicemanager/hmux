@@ -22,7 +22,7 @@ export async function GET(
   return withAuthedVaultApiRoute(
     request,
     "/api/vault/sessions/[id]/head",
-    { "cmux.vault.operation": "sessions.head" },
+    { "hmux.vault.operation": "sessions.head" },
     "/api/vault/sessions/[id]/head GET failed",
     {},
     async ({ user, span }) => {
@@ -35,10 +35,10 @@ export async function GET(
         .where(and(eq(vaultSessions.id, id), eq(vaultSessions.userId, user.id)))
         .limit(1);
       if (!session) {
-        setSpanAttributes(span, { "cmux.vault.session_found": false });
+        setSpanAttributes(span, { "hmux.vault.session_found": false });
         return jsonResponse({ error: "not_found" }, 404);
       }
-      setSpanAttributes(span, { "cmux.vault.session_found": true });
+      setSpanAttributes(span, { "hmux.vault.session_found": true });
 
       let head: Awaited<ReturnType<typeof fetchTranscriptHeadBatch>>;
       try {
@@ -50,8 +50,8 @@ export async function GET(
         return jsonResponse({ error: "content_unavailable" }, 502);
       }
       setSpanAttributes(span, {
-        "cmux.vault.head_message_count": head.messages.length,
-        "cmux.vault.head_complete": head.complete,
+        "hmux.vault.head_message_count": head.messages.length,
+        "hmux.vault.head_complete": head.complete,
       });
       return jsonResponse(
         { messages: head.messages, complete: head.complete },

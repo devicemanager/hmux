@@ -5,18 +5,18 @@ import { Signer } from "@aws-sdk/rds-signer";
 import { awsCredentialsProvider } from "@vercel/oidc-aws-credentials-provider";
 
 const globals = globalThis as typeof globalThis & {
-  __cmuxPublicationEffectDatabase?: { key: string; runtime: ReturnType<typeof makeDatabaseRuntime>; expiresAt: number };
+  __hmuxPublicationEffectDatabase?: { key: string; runtime: ReturnType<typeof makeDatabaseRuntime>; expiresAt: number };
 };
 
 /** One Effect-owned database pool per server instance, separate from background traffic. */
 export async function publicationDatabaseRuntime() {
   const config = cloudDbConfig();
-  const configuredMax = process.env.CMUX_PUBLICATION_AUTH_DB_POOL_MAX?.trim() ?? "5";
+  const configuredMax = process.env.HMUX_PUBLICATION_AUTH_DB_POOL_MAX?.trim() ?? "5";
   if (!/^\d+$/u.test(configuredMax) || Number(configuredMax) < 1 || Number(configuredMax) > 32) {
-    throw new Error("CMUX_PUBLICATION_AUTH_DB_POOL_MAX must be between 1 and 32");
+    throw new Error("HMUX_PUBLICATION_AUTH_DB_POOL_MAX must be between 1 and 32");
   }
   const key = `${cloudDbConfigKey(config)}:publication-auth:${configuredMax}`;
-  const current = globals.__cmuxPublicationEffectDatabase;
+  const current = globals.__hmuxPublicationEffectDatabase;
   if (current?.key === key && current.expiresAt > Date.now()) return current.runtime;
   const connection = config.driver === "url"
     ? { url: Redacted.make(config.url) }
@@ -31,18 +31,18 @@ export async function publicationDatabaseRuntime() {
   const runtime = makeDatabaseRuntime({
     ...connection,
     maxConnections: Number(configuredMax),
-    applicationName: "cmux-publication-auth",
+    applicationName: "hmux-publication-auth",
   });
   // PlanetScale passwords remain valid for the lifetime of the application.
   // RDS IAM passwords are short-lived, so refresh the Effect layer before the
   // token reaches its expiry instead of reusing a dead credential.
-  globals.__cmuxPublicationEffectDatabase = { key, runtime, expiresAt: config.driver === "url" ? Number.POSITIVE_INFINITY : Date.now() + 10 * 60_000 };
+  globals.__hmuxPublicationEffectDatabase = { key, runtime, expiresAt: config.driver === "url" ? Number.POSITIVE_INFINITY : Date.now() + 10 * 60_000 };
   if (current) void current.runtime.dispose();
   return runtime;
 }
 
 export async function closePublicationAuthDb(): Promise<void> {
-  const current = globals.__cmuxPublicationEffectDatabase;
-  globals.__cmuxPublicationEffectDatabase = undefined;
+  const current = globals.__hmuxPublicationEffectDatabase;
+  globals.__hmuxPublicationEffectDatabase = undefined;
   await current?.runtime.dispose();
 }

@@ -1,4 +1,4 @@
-# Trusted pre-merge migrations for PlanetScale `cmux-next` (skills/cmux-backend-migrations).
+# Trusted pre-merge migrations for PlanetScale `hmux-next` (skills/hmux-backend-migrations).
 #
 # pull_request_target: this file and the tooling (backend/db/migrate.ts, its lockfile)
 # always come from the BASE branch. From the PR head we only read the SQL text under
@@ -10,7 +10,7 @@
 #             parsed-SQL lint.
 #   apply     adding the label `backend:apply-migrations` (same-repo PRs) consumes it and
 #             applies to staging, then production; a later push never applies without a new label.
-#   gate      `backend migrations applied` (required on feat-cmux-next and main): passes at
+#   gate      `backend migrations applied` (required on feat-hmux-next and main): passes at
 #             once when nothing under backend/db/migrations changed; otherwise the tree's
 #             migrations must be exactly what staging and production have. In a merge
 #             group it checks nothing (the queue runs PR-controlled workflow content, so it
@@ -19,14 +19,14 @@
 name: backend-migrations
 
 on:
-  # Only PRs into main and feat-cmux-next: the tooling comes from the PR base branch, so a PR
+  # Only PRs into main and feat-hmux-next: the tooling comes from the PR base branch, so a PR
   # into any other branch (whose tooling its author controls) must never run here.
   pull_request_target:
-    # edited: a base-branch change (for example main -> feat-cmux-next) re-runs the gate.
+    # edited: a base-branch change (for example main -> feat-hmux-next) re-runs the gate.
     types: [opened, synchronize, reopened, labeled, edited]
-    branches: [main, feat-cmux-next]
+    branches: [main, feat-hmux-next]
   merge_group:
-    branches: [main, feat-cmux-next]
+    branches: [main, feat-hmux-next]
 
 permissions:
   contents: read
@@ -81,7 +81,7 @@ jobs:
           BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref }}
         run: |
           set -euo pipefail
-          case "$BASE_REF" in refs/heads/main|refs/heads/feat-cmux-next|main|feat-cmux-next) ;; *) echo "::error::unexpected base branch"; exit 1 ;; esac
+          case "$BASE_REF" in refs/heads/main|refs/heads/feat-hmux-next|main|feat-hmux-next) ;; *) echo "::error::unexpected base branch"; exit 1 ;; esac
           if [ "$EVENT" = pull_request_target ]; then
             # Most PRs never touch migrations: decide that from git before using the API. The
             # installation's API quota ran out under load and failed the plan on UI PRs (#17602).
@@ -178,7 +178,7 @@ jobs:
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || contains(fromJSON('["ubuntu-24.04","blacksmith-2vcpu-ubuntu-2404","blacksmith-4vcpu-ubuntu-2404"]'), vars.CI_TRUSTED_RUNNER) && vars.CI_TRUSTED_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }} # ephemeral-required: trusted tokens; CI_TRUSTED_RUNNER picks GitHub-hosted or Blacksmith
     # Real migrations: generous so a slow apply is never cut off mid-migration.
     timeout-minutes: 30
-    environment: cmux-next-staging
+    environment: hmux-next-staging
     steps:
       - name: Consume the apply label
         env:
@@ -198,9 +198,9 @@ jobs:
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: "1.4.2"
-      - name: Apply to cmux-next/staging
+      - name: Apply to hmux-next/staging
         env:
-          CMUX_NEXT_PG_MIGRATOR_URL: ${{ secrets.CMUX_NEXT_PG_MIGRATOR_URL }}
+          HMUX_NEXT_PG_MIGRATOR_URL: ${{ secrets.HMUX_NEXT_PG_MIGRATOR_URL }}
         run: |
           (cd trusted/backend && bun install --frozen-lockfile)
           cd trusted/backend/db
@@ -212,7 +212,7 @@ jobs:
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || contains(fromJSON('["ubuntu-24.04","blacksmith-2vcpu-ubuntu-2404","blacksmith-4vcpu-ubuntu-2404"]'), vars.CI_TRUSTED_RUNNER) && vars.CI_TRUSTED_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }} # ephemeral-required: trusted tokens; CI_TRUSTED_RUNNER picks GitHub-hosted or Blacksmith
     # Real migrations: generous so a slow apply is never cut off mid-migration.
     timeout-minutes: 30
-    environment: cmux-next-production
+    environment: hmux-next-production
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -228,9 +228,9 @@ jobs:
           bun-version: "1.4.2"
       # Expand migrations are additive (parsed-SQL lint), so the code deployed from main keeps
       # working; contract migrations only come from PRs into main that contain nothing else.
-      - name: Apply to cmux-next/main (production)
+      - name: Apply to hmux-next/main (production)
         env:
-          CMUX_NEXT_PG_MIGRATOR_URL: ${{ secrets.CMUX_NEXT_PG_MIGRATOR_URL }}
+          HMUX_NEXT_PG_MIGRATOR_URL: ${{ secrets.HMUX_NEXT_PG_MIGRATOR_URL }}
         run: |
           (cd trusted/backend && bun install --frozen-lockfile)
           cd trusted/backend/db
@@ -242,15 +242,15 @@ jobs:
     needs: [plan, apply-production]
     if: always()
     # merge_group runs this file from the queue commit (PR content), so it never gets an
-    # environment or secrets (the environments allow only main and feat-cmux-next); the queue
+    # environment or secrets (the environments allow only main and feat-hmux-next); the queue
     # only admits PRs whose pull_request_target gate passed. Fork PRs never get secrets here.
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || contains(fromJSON('["ubuntu-24.04","blacksmith-2vcpu-ubuntu-2404","blacksmith-4vcpu-ubuntu-2404"]'), vars.CI_TRUSTED_RUNNER) && vars.CI_TRUSTED_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }} # ephemeral-required: trusted tokens; CI_TRUSTED_RUNNER picks GitHub-hosted or Blacksmith
     # Under 10s without migration changes; with them, bun install and a verify.
     timeout-minutes: 15
-    # The environment's deployment-branch policy (main, feat-cmux-next, their merge-queue
+    # The environment's deployment-branch policy (main, feat-hmux-next, their merge-queue
     # refs) keeps these secrets away from PR-controlled workflows; no environment (and no
     # deployment record) when nothing changed.
-    environment: ${{ github.event_name == 'pull_request_target' && needs.plan.outputs.migrations == 'true' && github.event.pull_request.head.repo.full_name == github.repository && 'cmux-next-production' || '' }}
+    environment: ${{ github.event_name == 'pull_request_target' && needs.plan.outputs.migrations == 'true' && github.event.pull_request.head.repo.full_name == github.repository && 'hmux-next-production' || '' }}
     steps:
       - name: Plan succeeded
         env:
@@ -277,8 +277,8 @@ jobs:
       - name: The tree's migrations are exactly what staging and production have
         if: needs.plan.outputs.migrations == 'true' && github.event_name == 'pull_request_target'
         env:
-          PROD_URL: ${{ secrets.CMUX_NEXT_PG_MIGRATOR_URL }}
-          STAGING_URL: ${{ secrets.CMUX_NEXT_STAGING_MIGRATOR_URL }}
+          PROD_URL: ${{ secrets.HMUX_NEXT_PG_MIGRATOR_URL }}
+          STAGING_URL: ${{ secrets.HMUX_NEXT_STAGING_MIGRATOR_URL }}
         run: |
           if [ -z "$PROD_URL" ] || [ -z "$STAGING_URL" ]; then
             echo "::error::no database access for this PR (fork PRs never get it); a maintainer carries the migration on a same-repo branch"; exit 1
@@ -286,8 +286,8 @@ jobs:
           (cd trusted/backend && bun install --frozen-lockfile)
           cd trusted/backend/db
           ok=1
-          CMUX_NEXT_PG_MIGRATOR_URL="$STAGING_URL" bun migrate.ts --env staging --verify --dir "$GITHUB_WORKSPACE/head-migrations" || ok=0
-          CMUX_NEXT_PG_MIGRATOR_URL="$PROD_URL" bun migrate.ts --env production --verify --dir "$GITHUB_WORKSPACE/head-migrations" || ok=0
+          HMUX_NEXT_PG_MIGRATOR_URL="$STAGING_URL" bun migrate.ts --env staging --verify --dir "$GITHUB_WORKSPACE/head-migrations" || ok=0
+          HMUX_NEXT_PG_MIGRATOR_URL="$PROD_URL" bun migrate.ts --env production --verify --dir "$GITHUB_WORKSPACE/head-migrations" || ok=0
           if [ "$ok" = 0 ]; then
             echo "::error::migrations are not applied (or the database has migrations this tree lacks). Merge the base, then add the label backend:apply-migrations; merging deploys."
             exit 1

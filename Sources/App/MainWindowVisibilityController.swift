@@ -63,7 +63,7 @@ final class MainWindowVisibilityController {
             orderFrontRegardless: { $0.orderFrontRegardless() },
             orderOut: { $0.orderOut(nil) },
             softHide: {
-                if let window = $0 as? CmuxMainWindow {
+                if let window = $0 as? HmuxMainWindow {
                     window.setSoftHiddenForVisibilityController(true)
                 } else {
                     $0.makeFirstResponder(nil)
@@ -72,7 +72,7 @@ final class MainWindowVisibilityController {
                 }
             },
             softShow: {
-                if let window = $0 as? CmuxMainWindow {
+                if let window = $0 as? HmuxMainWindow {
                     window.setSoftHiddenForVisibilityController(false)
                 } else {
                     $0.alphaValue = 1
@@ -544,7 +544,7 @@ final class MainWindowVisibilityController {
             let id = window.identifier?.rawValue ?? "<nil>"
             return "\(id):visible=\(dependencies.windowOperations.isVisible(window) ? 1 : 0):mini=\(dependencies.windowOperations.isMiniaturized(window) ? 1 : 0):key=\(dependencies.windowOperations.isKeyWindow(window) ? 1 : 0)"
         }
-        cmuxDebugLog("mainWindow.visibility.\(event) reason=\(reason.rawValue) windows=[\(windowTokens.joined(separator: ","))]")
+        hmuxDebugLog("mainWindow.visibility.\(event) reason=\(reason.rawValue) windows=[\(windowTokens.joined(separator: ","))]")
 #endif
     }
 
@@ -554,7 +554,7 @@ final class MainWindowVisibilityController {
             let id = window.identifier?.rawValue ?? "<nil>"
             return "\(id):visible=\(dependencies.windowOperations.isVisible(window) ? 1 : 0):mini=\(dependencies.windowOperations.isMiniaturized(window) ? 1 : 0):key=\(dependencies.windowOperations.isKeyWindow(window) ? 1 : 0)"
         }
-        cmuxDebugLog("mainWindow.visibility.\(event) reason=\(reason.rawValue) windows=[\(windowTokens.joined(separator: ","))]")
+        hmuxDebugLog("mainWindow.visibility.\(event) reason=\(reason.rawValue) windows=[\(windowTokens.joined(separator: ","))]")
 #endif
     }
 }

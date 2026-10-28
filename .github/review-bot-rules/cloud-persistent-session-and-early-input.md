@@ -1,12 +1,12 @@
 # Cloud Persistent Session and Early Input
 
-Apply this rule to Cloud terminal creation, persistent cmux-tui transport, manual mirror panes, and terminal runtime admission.
+Apply this rule to Cloud terminal creation, persistent hmux-tui transport, manual mirror panes, and terminal runtime admission.
 
 Review behavior introduced or materially worsened by the diff. Existing debt outside the change is not a new finding.
 
 ## Fail
 
-- Spawn a new `cmux-tui` client, CLI process, authenticated carrier, or event socket for each control request, split/tab, snapshot, or event subscription when the machine-owned persistent session can multiplex it.
+- Spawn a new `hmux-tui` client, CLI process, authenticated carrier, or event socket for each control request, split/tab, snapshot, or event subscription when the machine-owned persistent session can multiplex it.
 - Route control requests and revisioned events over separate physical transports without a documented protocol or isolation requirement. Independent logical terminal streams over one carrier are allowed when they preserve attachment leases, cancellation, geometry ownership, and byte routing.
 - Make the user wait for remote PTY creation, shell startup, snapshot refresh, or terminal attachment before inserting a user-created focused manual pane or starting its empty Ghostty runtime.
 - Gate a manual renderer on local shell startup work, such as installing local agent command wrappers. Manual I/O launches no local child; keep that work on the exec path.

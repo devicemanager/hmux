@@ -1,4 +1,4 @@
--- One physical Mac can use several cmux bundles, each with its own Stack login.
+-- One physical Mac can use several hmux bundles, each with its own Stack login.
 -- Remote Mac revoke must revoke every login session associated with the grant.
 
 CREATE TABLE IF NOT EXISTS "cloud_vm_access_grant_sessions" (

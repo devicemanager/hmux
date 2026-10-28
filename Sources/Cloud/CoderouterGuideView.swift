@@ -47,7 +47,7 @@ struct CoderouterGuideView: View {
                     .background(.tint.opacity(0.12), in: RoundedRectangle(cornerRadius: 5))
                 VStack(alignment: .leading, spacing: 2) {
                     Text(String(localized: "coderouter.guide.title", defaultValue: "coderouter"))
-                        .cmuxFont(size: 13, weight: .semibold)
+                        .hmuxFont(size: 13, weight: .semibold)
                     paragraph(Self.summary)
                         .foregroundStyle(.secondary)
                 }
@@ -104,7 +104,7 @@ struct CoderouterGuideView: View {
                             localized: "coderouter.guide.openAsPane",
                             defaultValue: "Open as Pane"
                         ))
-                            .cmuxFont(size: 12)
+                            .hmuxFont(size: 12)
                     }
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -122,14 +122,14 @@ struct CoderouterGuideView: View {
 
     private func heading(_ text: String) -> some View {
         Text(text)
-            .cmuxFont(size: 11, weight: .semibold)
+            .hmuxFont(size: 11, weight: .semibold)
             .foregroundStyle(.secondary)
             .padding(.top, 2)
     }
 
     private func paragraph(_ text: String) -> some View {
         Text(text)
-            .cmuxFont(size: 12)
+            .hmuxFont(size: 12)
             .fixedSize(horizontal: false, vertical: true)
     }
 
@@ -142,9 +142,9 @@ struct CoderouterGuideView: View {
                 .padding(.top, 1)
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .cmuxFont(size: 11, weight: .semibold)
+                    .hmuxFont(size: 11, weight: .semibold)
                 Text(body)
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -158,7 +158,7 @@ struct CoderouterGuideView: View {
                 .font(.system(size: 11, design: .monospaced))
                 .textSelection(.enabled)
             Text(text)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }

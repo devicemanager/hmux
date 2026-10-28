@@ -1,6 +1,6 @@
 import Foundation
 
-/// The keys of one hint-mode session (Vimium's scheme, as in cmux-next's
+/// The keys of one hint-mode session (Vimium's scheme, as in hmux-next's
 /// link hints): letters narrow the labels until one is typed in full; a
 /// letter no label continues with is ignored; Backspace undoes a letter.
 struct WindowHintKeys: Equatable {

@@ -11,22 +11,22 @@ import {
 describe("review demo content metadata", () => {
   test("enabling sets the literal true and preserves other keys", () => {
     const next = metadataApplyingReviewDemoContent(
-      { cmuxPlan: "pro", cmuxVmPlan: "founders" },
+      { hmuxPlan: "pro", hmuxVmPlan: "founders" },
       true,
     );
     expect(next).toEqual({
-      cmuxPlan: "pro",
-      cmuxVmPlan: "founders",
+      hmuxPlan: "pro",
+      hmuxVmPlan: "founders",
       [REVIEW_DEMO_CONTENT_METADATA_KEY]: true,
     });
   });
 
   test("disabling removes the key entirely", () => {
     const next = metadataApplyingReviewDemoContent(
-      { cmuxPlan: "pro", [REVIEW_DEMO_CONTENT_METADATA_KEY]: true },
+      { hmuxPlan: "pro", [REVIEW_DEMO_CONTENT_METADATA_KEY]: true },
       false,
     );
-    expect(next).toEqual({ cmuxPlan: "pro" });
+    expect(next).toEqual({ hmuxPlan: "pro" });
   });
 
   test("non-object metadata is replaced by a fresh object", () => {
@@ -50,7 +50,7 @@ describe("review demo content metadata", () => {
   test("setReviewDemoContent writes once and skips no-op updates", async () => {
     const updates: ReviewDemoContentJson[] = [];
     const user = {
-      clientReadOnlyMetadata: { cmuxPlan: "pro" } as unknown,
+      clientReadOnlyMetadata: { hmuxPlan: "pro" } as unknown,
       update: async (options: { clientReadOnlyMetadata: ReviewDemoContentJson }) => {
         updates.push(options.clientReadOnlyMetadata);
       },
@@ -59,7 +59,7 @@ describe("review demo content metadata", () => {
     const enabled = await setReviewDemoContent(user, true);
     expect(updates).toHaveLength(1);
     expect(reviewDemoContentEnabled(enabled)).toBe(true);
-    expect((enabled as Record<string, unknown>).cmuxPlan).toBe("pro");
+    expect((enabled as Record<string, unknown>).hmuxPlan).toBe("pro");
 
     // Already-off metadata: disabling writes nothing.
     const noop = await setReviewDemoContent(user, false);

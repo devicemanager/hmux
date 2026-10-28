@@ -13,8 +13,8 @@ Python dependency steps are replaced by one shared virtualenv (PYTHON_PACKAGES
 below). setup-bun and setup-python expect `bun` and `python3` on PATH.
 
 A full run on a clean tree writes a pass stamp for HEAD, which the agent merge
-guard (cmuxterm-hq tools/agent-guards) accepts in place of the CI check:
-  ${XDG_CACHE_HOME:-~/.cache}/cmux-guards/pass/<sha>
+guard (hmuxterm-hq tools/agent-guards) accepts in place of the CI check:
+  ${XDG_CACHE_HOME:-~/.cache}/hmux-guards/pass/<sha>
 
 `--step NAME` runs only the named steps (a stateful group also runs the steps
 before them), in seconds. `--root DIR` runs another checkout's ci-guards.yml
@@ -76,14 +76,14 @@ FAST_GROUPS = ("ci",)
 # Steps that assert Linux-only behavior (GNU tools, /proc, a Linux workload
 # profile). They run in CI; a macOS run skips them and says so.
 LINUX_ONLY_STEPS = {
-    "Validate CMUX workload profile contract",
+    "Validate HMUX workload profile contract",
     "Validate the scheduled main full-suite run",
 }
 # Linux-only wrappers whose payload is portable: off Linux, run the payload.
 # The workload profile runner refuses macOS, but ci-guard.sh's commands (the
 # self-hosted runner policy among them) run anywhere.
 PORTABLE_SUBSTITUTES = {
-    "Run canonical CMUX CI guard profile": "scripts/ci/run_ci_guard_payload.sh",
+    "Run canonical HMUX CI guard profile": "scripts/ci/run_ci_guard_payload.sh",
 }
 GROUP_CONDITION = re.compile(r"matrix\.group\s*==\s*'([a-z0-9-]+)'")
 EXPRESSION = re.compile(r"\$\{\{\s*(.*?)\s*\}\}")
@@ -108,7 +108,7 @@ def stop_running() -> None:
 
 def cache_root() -> Path:
     base = os.environ.get("XDG_CACHE_HOME") or str(Path.home() / ".cache")
-    return Path(base) / "cmux-guards"
+    return Path(base) / "hmux-guards"
 
 
 @dataclasses.dataclass
@@ -284,7 +284,7 @@ def run_steps(
 ) -> list[StepResult]:
     """Run steps in order in one job-like sandbox (RUNNER_TEMP, GITHUB_ENV...)."""
     results: list[StepResult] = []
-    # Not "cmux-": tests rewrite the workflows' fixed /tmp/cmux-* paths, and on
+    # Not "hmux-": tests rewrite the workflows' fixed /tmp/hmux-* paths, and on
     # Linux this directory is under /tmp, so a nested temp path would match.
     with tempfile.TemporaryDirectory(prefix="guard-steps-") as temp:
         temp_path = Path(temp)
@@ -385,7 +385,7 @@ def git(*args: str) -> str:
 
 
 def default_base(head_sha: str) -> str:
-    explicit = os.environ.get("CMUX_GUARDS_BASE_SHA")
+    explicit = os.environ.get("HMUX_GUARDS_BASE_SHA")
     if explicit:
         return explicit
     for ref in ("upstream/main", "mf/main", "origin/main"):
@@ -407,7 +407,7 @@ def write_stamp(head_sha: str, groups: list[str], skipped: list[str], seconds: f
     directory.mkdir(parents=True, exist_ok=True)
     stamp = directory / head_sha
     # The tree stamp covers a squash of this exact content pushed as another
-    # commit (`git push <cmux remote> <squash>:main`).
+    # commit (`git push <hmux remote> <squash>:main`).
     tree = git("rev-parse", f"{head_sha}^{{tree}}")
     body = (
         json.dumps(
@@ -531,10 +531,10 @@ def main(argv: list[str]) -> int:
     if sys.platform != "linux":
         # test_ci_change_areas.py forks one worker per test on Linux and runs
         # serially elsewhere (about two minutes on a Mac) unless asked.
-        env.setdefault("CMUX_TEST_WORKERS", str(max(2, (os.cpu_count() or 4) // 2)))
+        env.setdefault("HMUX_TEST_WORKERS", str(max(2, (os.cpu_count() or 4) // 2)))
     started = time.monotonic()
     print(
-        f"cmux guards: {len(units)} groups, {sum(len(u.steps) for u in units)} steps, "
+        f"hmux guards: {len(units)} groups, {sum(len(u.steps) for u in units)} steps, "
         f"head {head_sha[:12]}, base {base_sha[:12] or 'none'}, {args.jobs} workers",
         flush=True,
     )
@@ -562,7 +562,7 @@ def main(argv: list[str]) -> int:
     except KeyboardInterrupt:
         pool.shutdown(wait=False, cancel_futures=True)
         stop_running()
-        print("cmux guards: interrupted", file=sys.stderr)
+        print("hmux guards: interrupted", file=sys.stderr)
         return 130
     pool.shutdown()
     seconds = time.monotonic() - started
@@ -575,7 +575,7 @@ def main(argv: list[str]) -> int:
             if result.ok is not None:
                 outcome[result.step.name] = outcome.get(result.step.name, True) and bool(result.ok)
         Path(args.results).write_text(json.dumps(outcome, indent=2, sort_keys=True) + "\n")
-    print(f"cmux guards: {passed} steps passed, {len(failed)} failed, {len(skipped)} skipped (Linux only) in {seconds:.1f}s")
+    print(f"hmux guards: {passed} steps passed, {len(failed)} failed, {len(skipped)} skipped (Linux only) in {seconds:.1f}s")
     if args.json_path:
         write_results(args.json_path, head_sha, base_sha, units, results, seconds)
     if failed:

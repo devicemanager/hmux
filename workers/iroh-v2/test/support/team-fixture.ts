@@ -54,7 +54,7 @@ export function deterministicRandom(): () => void {
 }
 
 export function identity(teamId: string, userId: string, deviceId: string, overrides: Partial<Identity> = {}): Identity {
-  return { environment: ENVIRONMENT, projectId: PROJECT_ID, teamId, userId, deviceId, appNamespace: "com.cmux.app", buildTag: "release", ...overrides };
+  return { environment: ENVIRONMENT, projectId: PROJECT_ID, teamId, userId, deviceId, appNamespace: "com.hmux.app", buildTag: "release", ...overrides };
 }
 
 export function descriptor(key: DeviceKey, id: Identity, platform: "mac" | "ios", capabilities: string[], pairingEnabled = true): DeviceDescriptor {
@@ -69,7 +69,7 @@ export async function teamHarness(teamId: string, now: () => number) {
   const store = new TeamStore(sqliteStorage(), { environment: ENVIRONMENT, projectId: PROJECT_ID, teamId });
   store.initialize(1);
   const relays = new RelayIssuer({
-    environment: ENVIRONMENT, projectId: PROJECT_ID, issuer: "cmux", audience: "cmux-relay", keyId: "relay-1",
+    environment: ENVIRONMENT, projectId: PROJECT_ID, issuer: "hmux", audience: "hmux-relay", keyId: "relay-1",
     privateKeyPem: await relayPem(3), relayURLs: [RELAY_URL],
   });
   const broker = new TeamBroker({

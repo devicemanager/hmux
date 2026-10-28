@@ -3,7 +3,7 @@ name: Cloud machine lifecycle
 on:
   pull_request:
     paths:
-      - Packages/macOS/CmuxCloudMachines/**
+      - Packages/macOS/HmuxCloudMachines/**
       - .github/workflows/cloud-machine-tests.yml
   workflow_dispatch:
     inputs:
@@ -75,7 +75,7 @@ jobs:
                   with urllib.request.urlopen(request, timeout=20) as response:
                       files = json.load(response)
                   if any(
-                      item.get("filename", "").startswith("Packages/macOS/CmuxCloudMachines/")
+                      item.get("filename", "").startswith("Packages/macOS/HmuxCloudMachines/")
                       for item in files
                   ):
                       should_run = True
@@ -93,7 +93,7 @@ jobs:
           with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as output:
               output.write(f"should_run={'true' if should_run else 'false'}\n")
           if not should_run:
-              print("No CmuxCloudMachines package files changed; skipping macOS lifecycle tests.")
+              print("No HmuxCloudMachines package files changed; skipping macOS lifecycle tests.")
           PY
 
   lifecycle:
@@ -109,4 +109,4 @@ jobs:
       - name: Select Xcode
         run: ./scripts/select-ci-xcode.sh
       - name: Test the package without launching the app
-        run: swift test --package-path Packages/macOS/CmuxCloudMachines -Xswiftc -warnings-as-errors
+        run: swift test --package-path Packages/macOS/HmuxCloudMachines -Xswiftc -warnings-as-errors

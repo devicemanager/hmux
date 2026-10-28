@@ -36,7 +36,7 @@ from test_execution_registry import load_registry
 ROOT = Path(__file__).resolve().parents[2]
 MANIFEST = ROOT / "tests" / "test-execution.toml"
 NON_RUNNABLE_LANES = {"legacy", "manual"}
-SUPPORTED_REQUIREMENTS = {"cmux-cli", "fish"}
+SUPPORTED_REQUIREMENTS = {"hmux-cli", "fish"}
 # A hung test must fail on its own rather than hold every later test's
 # output until the job times out.
 DEFAULT_TIMEOUT_SECONDS = 900
@@ -63,14 +63,14 @@ def environment_for(entry: dict[str, object]) -> dict[str, str]:
         raise SystemExit(f"{entry.get('path')}: unsupported requirements: {', '.join(unknown)}")
 
     env = os.environ.copy()
-    if "cmux-cli" in requirements:
-        cli = env.get("CMUX_CLI_BIN", "")
+    if "hmux-cli" in requirements:
+        cli = env.get("HMUX_CLI_BIN", "")
         if not cli:
-            raise SystemExit(f"{entry.get('path')}: lane requires CMUX_CLI_BIN")
+            raise SystemExit(f"{entry.get('path')}: lane requires HMUX_CLI_BIN")
         if not Path(cli).is_file():
-            raise SystemExit(f"{entry.get('path')}: CMUX_CLI_BIN does not exist: {cli}")
+            raise SystemExit(f"{entry.get('path')}: HMUX_CLI_BIN does not exist: {cli}")
     else:
-        env.pop("CMUX_CLI_BIN", None)
+        env.pop("HMUX_CLI_BIN", None)
 
     if "fish" in requirements and shutil.which("fish", path=env.get("PATH")) is None:
         raise SystemExit(f"{entry.get('path')}: lane requires fish on PATH")
@@ -85,7 +85,7 @@ def run_one(path: str, env: dict[str, str], log_path: Path, timeout: float) -> R
     # behind cannot hold the runner open by keeping the pipe's write end.
     # The CLI finds its socket password under Foundation's home directory,
     # which follows CFFIXED_USER_HOME rather than HOME. A runner account that
-    # also runs cmux keeps a real password there, and the CLI then sends
+    # also runs hmux keeps a real password there, and the CLI then sends
     # `auth` to every fake socket fixture first. Give each test an empty home
     # unless the job already sets one; tests may still override it for their
     # own subprocesses.
@@ -208,7 +208,7 @@ def main(argv: list[str]) -> int:
     serial = [item for item in planned if item[2]]
     concurrent = [item for item in planned if not item[2]]
 
-    base = Path(tempfile.mkdtemp(prefix="cmux-lane-logs-"))
+    base = Path(tempfile.mkdtemp(prefix="hmux-lane-logs-"))
     started = time.monotonic()
     results: list[Result] = []
     try:

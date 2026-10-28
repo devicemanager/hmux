@@ -1,6 +1,6 @@
-import CMUXMobileCore
-import CmuxCore
-import CmuxSurfaceCatalogModel
+import HMUXMobileCore
+import HmuxCore
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Maps another Mac's synced workspace records onto the surface catalog: one

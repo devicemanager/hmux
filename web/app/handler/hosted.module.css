@@ -1,6 +1,6 @@
 /*
  * The hosted handler pages spin Radix's circular-arrow icon. Redraw that one
- * element in place as cmux's spinner (a fine arc on a faint track) so the
+ * element in place as hmux's spinner (a fine arc on a faint track) so the
  * loading states match the sign-in screens. Nothing else on those pages is
  * touched, and nothing is overlaid.
  */

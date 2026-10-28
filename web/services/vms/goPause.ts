@@ -3,7 +3,7 @@ import { VmDatabaseError, VmNotFoundError, VmOperationUnsupportedError } from ".
 import type { VmProviderGatewayShape } from "./providerGateway";
 import type { CloudVmRow, VmRepositoryShape } from "./repository";
 
-export const GO_PAUSE_INTENT_KEY = "cmuxGoPauseIntent";
+export const GO_PAUSE_INTENT_KEY = "hmuxGoPauseIntent";
 
 /** Provider side effects follow durable intent; failed finalization is retried by the minute job. */
 export function pauseGoVm(

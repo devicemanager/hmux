@@ -1,6 +1,6 @@
-import CmuxRemoteSession
-import CmuxNotifications
-import CmuxSettings
+import HmuxRemoteSession
+import HmuxNotifications
+import HmuxSettings
 import Foundation
 
 fileprivate struct QueuedTerminalNotificationKey: Hashable, Sendable {
@@ -271,7 +271,7 @@ final class TerminalMutationBus: @unchecked Sendable {
         lock.unlock()
 
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "notification.queue.enqueue seq=\(sequence) workspace=\(notification.key.tabId.uuidString.prefix(8)) surface=\(notification.key.surfaceId?.uuidString.prefix(8) ?? "nil") coalesces=\(coalesces ? 1 : 0) removed=\(removedCount) pending=\(pendingCount) generation=\(generation) titleLen=\(notification.title.count) subtitleLen=\(notification.subtitle.count) bodyLen=\(notification.body.count)"
         )
 #endif
@@ -473,7 +473,7 @@ final class TerminalMutationBus: @unchecked Sendable {
         lock.unlock()
 #if DEBUG
         if !batch.isEmpty {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "notification.queue.drain batch=\(batch.count) remaining=\(remaining) firstSeq=\(batch.first?.sequence ?? 0) lastSeq=\(batch.last?.sequence ?? 0)"
             )
         }
@@ -499,7 +499,7 @@ final class TerminalMutationBus: @unchecked Sendable {
             switch entry.mutation {
             case .deliverNotification(let notification):
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "notification.queue.perform seq=\(entry.sequence) workspace=\(notification.key.tabId.uuidString.prefix(8)) surface=\(notification.key.surfaceId?.uuidString.prefix(8) ?? "nil") titleLen=\(notification.title.count) subtitleLen=\(notification.subtitle.count) bodyLen=\(notification.body.count)"
                 )
 #endif
@@ -561,10 +561,10 @@ extension TerminalNotificationStore {
         }
     }
 
-    /// Effects for the out-of-band fallback path, where cmux plays feedback
+    /// Effects for the out-of-band fallback path, where hmux plays feedback
     /// itself because the OS will not deliver the banner.
     ///
-    /// A user who explicitly turned cmux notifications off (`.denied`) asked
+    /// A user who explicitly turned hmux notifications off (`.denied`) asked
     /// for silence, so the direct `NSSound` fallback must not punch through
     /// the denial (https://github.com/manaflow-ai/cmux/issues/5650). Every
     /// other state keeps the audible fallback: fresh installs

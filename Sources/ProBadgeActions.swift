@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxProductAnalytics
+import HmuxCloud
+import HmuxProductAnalytics
 
 /// What the sidebar footer's Upgrade badge does, with its analytics. The view
 /// calls these; tests call them with a recording emitter and a no-op opener.

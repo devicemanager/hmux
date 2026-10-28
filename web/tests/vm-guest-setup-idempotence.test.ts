@@ -8,18 +8,18 @@ import { guestResourceReporterInstallCommand } from "../services/vms/guestResour
 
 /** Executes the actual guest installer with filesystem paths confined to an owned directory. */
 async function fixture(body: (root: string, run: (command: string) => Promise<void>, calls: () => string[]) => Promise<void>) {
-  const root = mkdtempSync(join(tmpdir(), "cmux-guest-setup-"));
+  const root = mkdtempSync(join(tmpdir(), "hmux-guest-setup-"));
   const bin = join(root, "bin");
   mkdirSync(bin);
   mkdirSync(join(root, "etc/systemd/system"), { recursive: true });
   mkdirSync(join(root, "etc/zsh"), { recursive: true });
-  const source = `[ -r ${root}/etc/profile.d/cmux-browser.sh ] && . ${root}/etc/profile.d/cmux-browser.sh`;
+  const source = `[ -r ${root}/etc/profile.d/hmux-browser.sh ] && . ${root}/etc/profile.d/hmux-browser.sh`;
   writeFileSync(join(root, "etc/bash.bashrc"), `${source}\n`);
   writeFileSync(join(root, "etc/zsh/zshenv"), `${source}\n`);
   const tool = (name: string, script: string) => writeFileSync(join(bin, name), `#!/bin/sh\n${script}\n`, { mode: 0o755 });
   tool("getent", "exit 0");
   tool("runuser", 'shift 3; exec "$@"');
-  tool("xdg-mime", 'printf "mime\\n" >> "$FIXTURE_ROOT/calls"; printf "cmux-browser.desktop\\n"');
+  tool("xdg-mime", 'printf "mime\\n" >> "$FIXTURE_ROOT/calls"; printf "hmux-browser.desktop\\n"');
   tool("systemctl", `
 printf '%s\\n' "$*" >> "$FIXTURE_ROOT/calls"
 case "$1" in
@@ -69,14 +69,14 @@ test("an unchanged running reporter needs no systemd mutation on attach", () => 
   await run(guestResourceReporterInstallCommand());
   const mutations = () => calls().filter(call => /^(enable|restart|daemon-reload)( |$)/.test(call));
   const installed = mutations();
-  expect(installed).toContain("restart cmux-resource-stats.service");
+  expect(installed).toContain("restart hmux-resource-stats.service");
   await run(guestResourceReporterInstallCommand());
   expect(mutations()).toEqual(installed);
   rmSync(join(root, "active"));
   await run(guestResourceReporterInstallCommand());
   expect(mutations().length).toBeGreaterThan(installed.length);
   const resumed = mutations().length;
-  writeFileSync(join(root, "usr/local/lib/cmux/resource-stats.py"), "obsolete");
+  writeFileSync(join(root, "usr/local/lib/hmux/resource-stats.py"), "obsolete");
   await run(guestResourceReporterInstallCommand());
-  expect(mutations().slice(resumed)).toContain("restart cmux-resource-stats.service");
+  expect(mutations().slice(resumed)).toContain("restart hmux-resource-stats.service");
 }));

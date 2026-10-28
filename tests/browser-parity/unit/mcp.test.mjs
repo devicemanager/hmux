@@ -1,10 +1,10 @@
-// `cmux browser repl mcp`: an MCP client handshake against the built CLI.
+// `hmux browser repl mcp`: an MCP client handshake against the built CLI.
 // The CLI talks to a fake control socket that answers `browser.repl.eval`
 // and `browser.repl.reset` the way the app does, so no app is needed; the
 // test checks the JSON-RPC exchange and the socket calls each tool makes.
 //
-//   PARITY_CMUX_CLI=<built cmux CLI> node --test tests/browser-parity/unit/mcp.test.mjs
-// Skipped without PARITY_CMUX_CLI.
+//   PARITY_HMUX_CLI=<built hmux CLI> node --test tests/browser-parity/unit/mcp.test.mjs
+// Skipped without PARITY_HMUX_CLI.
 import test from "node:test";
 import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
@@ -15,17 +15,17 @@ import path from "node:path";
 import readline from "node:readline";
 import { makeTestDir, removeTestDir, removeTestDirIfEmpty } from "../lib/test-dirs.mjs";
 
-const CLI = process.env.PARITY_CMUX_CLI;
+const CLI = process.env.PARITY_HMUX_CLI;
 const BOUND_WORKSPACE = "11111111-2222-3333-4444-555555555555";
 const PNG = Buffer.from("89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489", "hex").toString("base64");
 
-function fakeSocket(file, calls, { outsideCmux = false } = {}) {
+function fakeSocket(file, calls, { outsideHmux = false } = {}) {
   const server = net.createServer((conn) => {
     const lines = readline.createInterface({ input: conn });
     lines.on("line", (line) => {
       let req;
       try {
-        // A CLI run inside cmux prefixes the request with its capability token.
+        // A CLI run inside hmux prefixes the request with its capability token.
         req = JSON.parse(line.slice(Math.max(0, line.indexOf("{"))));
       } catch {
         conn.write("OK\n");
@@ -37,9 +37,9 @@ function fakeSocket(file, calls, { outsideCmux = false } = {}) {
       if (req.method === "browser.repl.eval") {
         const code = String(p.code);
         let output = [{ level: "log", text: `ran: ${code}` }];
-        if (code.includes("cmux-mcp-image:")) output = [{ level: "log", text: `cmux-mcp-image:${PNG}` }];
+        if (code.includes("hmux-mcp-image:")) output = [{ level: "log", text: `hmux-mcp-image:${PNG}` }];
         // The app answers with the workspace it bound the session to.
-        result = { ok: !code.includes("throw"), output, duration_ms: 3, workspace_id: BOUND_WORKSPACE, outside_cmux: outsideCmux };
+        result = { ok: !code.includes("throw"), output, duration_ms: 3, workspace_id: BOUND_WORKSPACE, outside_hmux: outsideHmux };
         if (code.includes("throw")) result.error = "Error: boom";
       } else if (req.method === "browser.repl.reset") {
         result = { session: p.session, existed: true };
@@ -50,13 +50,13 @@ function fakeSocket(file, calls, { outsideCmux = false } = {}) {
   return new Promise((resolve) => server.listen(file, () => resolve(server)));
 }
 
-test("repl mcp: handshake, tools/list and each tool over the REPL socket methods", { skip: !CLI && "set PARITY_CMUX_CLI" }, async () => {
-  const dir = makeTestDir("cmux-mcp-");
+test("repl mcp: handshake, tools/list and each tool over the REPL socket methods", { skip: !CLI && "set PARITY_HMUX_CLI" }, async () => {
+  const dir = makeTestDir("hmux-mcp-");
   const socket = path.join(dir, "s.sock");
   const calls = [];
   const server = await fakeSocket(socket, calls);
-  const env = { ...process.env, CMUX_SOCKET_PATH: socket, CMUX_SOCKET: socket, CMUX_CLI_SENTRY_DISABLED: "1" };
-  delete env.CMUX_WORKSPACE_ID;
+  const env = { ...process.env, HMUX_SOCKET_PATH: socket, HMUX_SOCKET: socket, HMUX_CLI_SENTRY_DISABLED: "1" };
+  delete env.HMUX_WORKSPACE_ID;
   const child = spawn(CLI, ["browser", "repl", "mcp", "--session", "t1"], { env, stdio: ["pipe", "pipe", "pipe"] });
   let stderr = "";
   child.stderr.on("data", (d) => (stderr += d));
@@ -91,7 +91,7 @@ test("repl mcp: handshake, tools/list and each tool over the REPL socket methods
     assert.equal(init.jsonrpc, "2.0");
     assert.equal(init.result.protocolVersion, "2025-06-18");
     assert.ok(init.result.capabilities.tools);
-    assert.equal(init.result.serverInfo.name, "cmux-browser-repl");
+    assert.equal(init.result.serverInfo.name, "hmux-browser-repl");
     child.stdin.write(JSON.stringify({ jsonrpc: "2.0", method: "notifications/initialized" }) + "\n");
     // An unknown protocol version gets the newest supported one.
     assert.equal((await request("initialize", { protocolVersion: "1999-01-01" })).result.protocolVersion, "2025-06-18");
@@ -126,7 +126,7 @@ test("repl mcp: handshake, tools/list and each tool over the REPL socket methods
     assert.equal(evals.length, 5);
     assert.ok(evals.every((c) => c.params.session === "t1"), "every tool runs in the --session");
     assert.ok(evals.every((c) => c.params.session_owner === undefined), "a named session is shared by name, with no owner token");
-    assert.equal(evals.find((c) => c.params.code.includes("cmux-mcp-image:")).params.max_output, 0, "a screenshot is not cut by the output cap");
+    assert.equal(evals.find((c) => c.params.code.includes("hmux-mcp-image:")).params.max_output, 0, "a screenshot is not cut by the output cap");
     assert.deepEqual(calls.filter((c) => c.method === "browser.repl.reset").map((c) => c.params.session), ["t1"]);
     assert.deepEqual(nonJSON, [], "stdout carries only JSON-RPC");
   } finally {
@@ -169,13 +169,13 @@ function startServer(args, env) {
   return { child, request, stop };
 }
 
-test("repl mcp: without --session each server process gets its own session", { skip: !CLI && "set PARITY_CMUX_CLI" }, async () => {
-  const dir = makeTestDir("cmux-mcp-");
+test("repl mcp: without --session each server process gets its own session", { skip: !CLI && "set PARITY_HMUX_CLI" }, async () => {
+  const dir = makeTestDir("hmux-mcp-");
   const socket = path.join(dir, "s.sock");
   const calls = [];
   const server = await fakeSocket(socket, calls);
-  const env = { ...process.env, CMUX_SOCKET_PATH: socket, CMUX_SOCKET: socket, CMUX_CLI_SENTRY_DISABLED: "1" };
-  delete env.CMUX_WORKSPACE_ID;
+  const env = { ...process.env, HMUX_SOCKET_PATH: socket, HMUX_SOCKET: socket, HMUX_CLI_SENTRY_DISABLED: "1" };
+  delete env.HMUX_WORKSPACE_ID;
   const servers = [startServer([], env), startServer([], env)];
   try {
     const sessions = [];
@@ -215,13 +215,13 @@ test("repl mcp: without --session each server process gets its own session", { s
   }
 });
 
-test("repl mcp: later calls name the workspace the first call bound", { skip: !CLI && "set PARITY_CMUX_CLI" }, async () => {
-  const dir = makeTestDir("cmux-mcp-");
+test("repl mcp: later calls name the workspace the first call bound", { skip: !CLI && "set PARITY_HMUX_CLI" }, async () => {
+  const dir = makeTestDir("hmux-mcp-");
   const socket = path.join(dir, "s.sock");
   const calls = [];
   const server = await fakeSocket(socket, calls);
-  const env = { ...process.env, CMUX_SOCKET_PATH: socket, CMUX_SOCKET: socket, CMUX_CLI_SENTRY_DISABLED: "1" };
-  delete env.CMUX_WORKSPACE_ID;
+  const env = { ...process.env, HMUX_SOCKET_PATH: socket, HMUX_SOCKET: socket, HMUX_CLI_SENTRY_DISABLED: "1" };
+  delete env.HMUX_WORKSPACE_ID;
   const s = startServer([], env);
   try {
     await s.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "0" } });
@@ -239,17 +239,17 @@ test("repl mcp: later calls name the workspace the first call bound", { skip: !C
   }
 });
 
-// A server outside cmux with a shared --session name gets the session such
-// callers share (`outside_cmux: true`). Naming its workspace on later calls
+// A server outside hmux with a shared --session name gets the session such
+// callers share (`outside_hmux: true`). Naming its workspace on later calls
 // would make the app treat them as that workspace's own callers and attach
 // to the workspace's session of the same name, so nothing is pinned.
-test("repl mcp: an outside-cmux shared session is not pinned to its workspace", { skip: !CLI && "set PARITY_CMUX_CLI" }, async () => {
-  const dir = makeTestDir("cmux-mcp-");
+test("repl mcp: an outside-hmux shared session is not pinned to its workspace", { skip: !CLI && "set PARITY_HMUX_CLI" }, async () => {
+  const dir = makeTestDir("hmux-mcp-");
   const socket = path.join(dir, "s.sock");
   const calls = [];
-  const server = await fakeSocket(socket, calls, { outsideCmux: true });
-  const env = { ...process.env, CMUX_SOCKET_PATH: socket, CMUX_SOCKET: socket, CMUX_CLI_SENTRY_DISABLED: "1" };
-  delete env.CMUX_WORKSPACE_ID;
+  const server = await fakeSocket(socket, calls, { outsideHmux: true });
+  const env = { ...process.env, HMUX_SOCKET_PATH: socket, HMUX_SOCKET: socket, HMUX_CLI_SENTRY_DISABLED: "1" };
+  delete env.HMUX_WORKSPACE_ID;
   const s = startServer(["--session", "shared"], env);
   try {
     await s.request("initialize", { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "test", version: "0" } });
@@ -271,13 +271,13 @@ test("repl mcp: an outside-cmux shared session is not pinned to its workspace", 
 
 // A line longer than the CLI's input cap (15 MiB, as --eval) is refused with
 // a JSON-RPC error instead of being buffered whole; the server goes on.
-test("repl mcp: an oversized line fails with a JSON-RPC error and the server keeps serving", { skip: !CLI && "set PARITY_CMUX_CLI" }, async () => {
-  const dir = makeTestDir("cmux-mcp-");
+test("repl mcp: an oversized line fails with a JSON-RPC error and the server keeps serving", { skip: !CLI && "set PARITY_HMUX_CLI" }, async () => {
+  const dir = makeTestDir("hmux-mcp-");
   const socket = path.join(dir, "s.sock");
   const calls = [];
   const server = await fakeSocket(socket, calls);
-  const env = { ...process.env, CMUX_SOCKET_PATH: socket, CMUX_SOCKET: socket, CMUX_CLI_SENTRY_DISABLED: "1" };
-  delete env.CMUX_WORKSPACE_ID;
+  const env = { ...process.env, HMUX_SOCKET_PATH: socket, HMUX_SOCKET: socket, HMUX_CLI_SENTRY_DISABLED: "1" };
+  delete env.HMUX_WORKSPACE_ID;
   const s = startServer(["--session", "big"], env);
   const errors = [];
   readline.createInterface({ input: s.child.stdout }).on("line", (line) => {

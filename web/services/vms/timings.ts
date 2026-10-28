@@ -39,7 +39,7 @@ export class VmTimingRecorder implements VmTimingSink {
     options: { readonly startedAt?: number; readonly debugTimings?: boolean } = {},
   ) {
     this.startedAt = options.startedAt ?? performance.now();
-    this.debugTimings = options.debugTimings ?? process.env.CMUX_VM_DEBUG_TIMINGS === "1";
+    this.debugTimings = options.debugTimings ?? process.env.HMUX_VM_DEBUG_TIMINGS === "1";
   }
 
   record(stage: VmTimingStage, durationMs: number, options: { readonly endedAtMs?: number } = {}): void {
@@ -48,16 +48,16 @@ export class VmTimingRecorder implements VmTimingSink {
     // can line up a slow create with provider logs and request IDs in Axiom.
     const endedAtMs = options.endedAtMs ?? Date.now();
     const startedAtMs = endedAtMs - Math.max(0, Math.round(duration));
-    const startKey = `cmux.vm.timing.${stage}_started_at_ms`;
-    const endKey = `cmux.vm.timing.${stage}_ended_at_ms`;
+    const startKey = `hmux.vm.timing.${stage}_started_at_ms`;
+    const endKey = `hmux.vm.timing.${stage}_ended_at_ms`;
     if (!this.durations.has(stage)) this.span.setAttribute(startKey, startedAtMs);
     this.span.setAttribute(endKey, endedAtMs);
     const total = roundedMs((this.durations.get(stage) ?? 0) + duration);
     const count = (this.counts.get(stage) ?? 0) + 1;
     this.durations.set(stage, total);
     this.counts.set(stage, count);
-    this.span.setAttribute(`cmux.vm.timing.${stage}_ms`, total);
-    this.span.setAttribute(`cmux.vm.timing.${stage}_count`, count);
+    this.span.setAttribute(`hmux.vm.timing.${stage}_ms`, total);
+    this.span.setAttribute(`hmux.vm.timing.${stage}_count`, count);
   }
 
   finish(context: Record<string, unknown> = {}): void {
@@ -65,7 +65,7 @@ export class VmTimingRecorder implements VmTimingSink {
     this.finished = true;
     this.record("total", performance.now() - this.startedAt);
     if (!this.debugTimings) return;
-    console.info("cmux vm timings", JSON.stringify({
+    console.info("hmux vm timings", JSON.stringify({
       operation: this.operation,
       ...context,
       timings: this.snapshot(),
@@ -85,7 +85,7 @@ export class VmTimingRecorder implements VmTimingSink {
 }
 
 export function recordSpanTiming(span: Span, stage: VmTimingStage, durationMs: number): void {
-  span.setAttribute(`cmux.vm.timing.${stage}_ms`, roundedMs(durationMs));
+  span.setAttribute(`hmux.vm.timing.${stage}_ms`, roundedMs(durationMs));
 }
 
 export function measureVmEffect<A, E, R>(

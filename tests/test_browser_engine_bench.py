@@ -16,14 +16,14 @@ assert spec is not None and spec.loader is not None
 bench = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(bench)
 
-APP = "/tmp/apps/cmux DEV perf.app"
+APP = "/tmp/apps/hmux DEV perf.app"
 
 
 def test_classify_separates_engines_from_app_processes() -> None:
     webkit = "/System/Library/Frameworks/WebKit.framework/Versions/A/XPCServices/com.apple.WebKit.WebContent.xpc/Contents/MacOS/com.apple.WebKit.WebContent"
-    renderer = f"{APP}/Contents/Frameworks/cmux Helper (Renderer).app/Contents/MacOS/cmux Helper (Renderer)"
-    gpu = f"{APP}/Contents/Frameworks/cmux Helper (GPU).app/Contents/MacOS/cmux Helper (GPU)"
-    worker = f"{APP}/Contents/Resources/bin/cmux-paste-text-worker"
+    renderer = f"{APP}/Contents/Frameworks/hmux Helper (Renderer).app/Contents/MacOS/hmux Helper (Renderer)"
+    gpu = f"{APP}/Contents/Frameworks/hmux Helper (GPU).app/Contents/MacOS/hmux Helper (GPU)"
+    worker = f"{APP}/Contents/Resources/bin/hmux-paste-text-worker"
     assert bench.classify(webkit, APP) == "webkit"
     assert bench.classify(renderer, APP) == "chromium"
     assert bench.classify(gpu, APP) == "chromium"
@@ -56,23 +56,23 @@ def test_open_params_fall_back_to_plain_strings() -> None:
 def test_only_the_matching_tagged_bundle_is_accepted() -> None:
     workdir = Path(tempfile.gettempdir())
     for app, tag in [
-        ("/Applications/cmux.app", "x"),
-        ("/tmp/cmux DEV perf.app", "p"),
-        ("/tmp/cmux DEV perf.app", ""),
+        ("/Applications/hmux.app", "x"),
+        ("/tmp/hmux DEV perf.app", "p"),
+        ("/tmp/hmux DEV perf.app", ""),
     ]:
         try:
             bench.TaggedApp(Path(app), tag, workdir)
         except bench.BenchFailure:
             continue
         raise AssertionError(f"{app} with tag {tag!r} must be refused")
-    app = bench.TaggedApp(Path("/tmp/cmux DEV cef-perf.app"), "CEF Perf", workdir)
+    app = bench.TaggedApp(Path("/tmp/hmux DEV cef-perf.app"), "CEF Perf", workdir)
     assert app.tag == "cef-perf"
-    assert str(app.socket_path) == "/tmp/cmux-debug-cef-perf.sock"
-    assert app.bundle_id == "com.cmuxterm.app.debug.cef.perf"
+    assert str(app.socket_path) == "/tmp/hmux-debug-cef-perf.sock"
+    assert app.bundle_id == "com.hmuxterm.app.debug.cef.perf"
 
 
 def test_sibling_bundle_paths_are_not_inside_the_app() -> None:
-    assert bench.classify("/tmp/apps/cmux DEV perf.app2/Contents/MacOS/x Helper", APP) == "other"
+    assert bench.classify("/tmp/apps/hmux DEV perf.app2/Contents/MacOS/x Helper", APP) == "other"
 
 
 def test_compare_renders_every_engine_row() -> None:

@@ -79,7 +79,7 @@ RATCHET_RE = re.compile(r"^RATCHET_NEW_FAILURE (\S+)\s*$")
 # per line. Batches the ratchet does not grade (dedicated lanes such as the
 # global-search shortcuts batch) name their failures only here.
 FAILING_TESTS_HEADER = "Failing tests:"
-FAILING_TEST_RE = re.compile(r"^\t(?:cmuxTests\.)?([A-Za-z_][\w.]*)\.([A-Za-z_]\w*\(.*\))\s*$")
+FAILING_TEST_RE = re.compile(r"^\t(?:hmuxTests\.)?([A-Za-z_][\w.]*)\.([A-Za-z_]\w*\(.*\))\s*$")
 EXECUTION_FAILED_MARKERS = ("** TEST EXECUTE FAILED **", "** TEST FAILED **")
 RAN_CONCLUSIONS = frozenset({"success", "failure"})
 # app_host_result_accounting.py closes every graded batch with one of these.
@@ -130,7 +130,7 @@ CRASH_MESSAGE_WINDOW = 12
 HEX_RE = re.compile(r"0x[0-9a-fA-F]+")
 MAX_SIGNATURE_CHARS = 160
 # The shard's upload step names its diagnostics artifact (crash reports, xcresults).
-DIAGNOSTICS_ARTIFACT_RE = re.compile(r"^\s*name: (cmux-app-host-diagnostics-\S+)\s*$")
+DIAGNOSTICS_ARTIFACT_RE = re.compile(r"^\s*name: (hmux-app-host-diagnostics-\S+)\s*$")
 CATALOG = Path(__file__).resolve().parent / "app-host-known-failures.json"
 MARKER_PREFIX = "<!-- main-regression-attribution"
 MARKER_RE = re.compile(r"<!-- main-regression-attribution pr=(\d+) tests=(\w+) range=(\S+) -->")
@@ -240,7 +240,7 @@ def signature(text: str) -> str:
 
 
 def swift_test_names(sources: Iterable[str]) -> dict[str, str]:
-    """Swift Testing display name -> function name, over cmuxTests/ sources.
+    """Swift Testing display name -> function name, over hmuxTests/ sources.
 
     The live log names a Swift Testing test by its display name when it has
     one; the accounting names it `Suite/function()`. A display name two
@@ -982,9 +982,9 @@ def job_failures(
 # What decides which physical shard runs a test. The lane env vars in
 # ci-macos.yml also do, but that file changes too often to gate on.
 SHARD_INPUTS = (
-    "cmuxTests",
-    "scripts/ci/cmux-unit-test-timings.json",
-    "scripts/ci/cmux_unit_test_shard.py",
+    "hmuxTests",
+    "scripts/ci/hmux-unit-test-timings.json",
+    "scripts/ci/hmux_unit_test_shard.py",
     "scripts/ci/run-app-host-unit-batches.sh",
 )
 
@@ -1077,7 +1077,7 @@ def rank_inputs(root: Path, prs: list[PullRequest]) -> None:
         base = f"{pr.merge_sha}^1"
         try:
             status = git(root, "diff", "--no-renames", "--name-status", base, pr.merge_sha).splitlines()
-            test_diff = git(root, "diff", "--no-renames", "-U0", base, pr.merge_sha, "--", "cmuxTests")
+            test_diff = git(root, "diff", "--no-renames", "-U0", base, pr.merge_sha, "--", "hmuxTests")
             app_diff = git(
                 root, "diff", "--no-renames", "-U0", base, pr.merge_sha,
                 "--", "Sources", "Packages/macOS", "Packages/Shared", "CLI",
@@ -1103,15 +1103,15 @@ def rank_inputs(root: Path, prs: list[PullRequest]) -> None:
         files = overlay(head_files, changes)
         paths = [line.partition("\t")[2] for line in status]
         pr.paths, pr.ranked = paths, True
-        if any(path.startswith("cmuxTests/") for path in paths):
+        if any(path.startswith("hmuxTests/") for path in paths):
             with tempfile.TemporaryDirectory(prefix="attribution-") as scratch:
                 for path, text in files.items():
-                    if path.startswith("cmuxTests/"):
+                    if path.startswith("hmuxTests/"):
                         target = Path(scratch) / path
                         target.parent.mkdir(parents=True, exist_ok=True)
                         target.write_text(text, encoding="utf-8")
                 edited = test_impact.affected_suites(Path(scratch), paths, test_diff) or []
-            pr.edited_suites = {suite.removeprefix("cmuxTests/") for suite in edited}
+            pr.edited_suites = {suite.removeprefix("hmuxTests/") for suite in edited}
         pr.reached_suites = set(reverse_test_impact.select(files, app_diff).suites)
         pr.reached_suites |= reverse_test_impact.literal_suites(files, literals)
 
@@ -1152,7 +1152,7 @@ def command_report(args: argparse.Namespace) -> int:
         return 0
     known = set(json.loads(CATALOG.read_text(encoding="utf-8")).get("tests") or {})
     display_names = swift_test_names(
-        path.read_text(encoding="utf-8", errors="replace") for path in (args.root / "cmuxTests").rglob("*.swift")
+        path.read_text(encoding="utf-8", errors="replace") for path in (args.root / "hmuxTests").rglob("*.swift")
     )
     current, current_shards, _, crashes = job_failures(args.repo, jobs, known, display_names)
 

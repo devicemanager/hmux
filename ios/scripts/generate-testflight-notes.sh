@@ -25,7 +25,7 @@ usage() { sed -n '3,21p' "${BASH_SOURCE[0]}" | sed 's/^# \{0,1\}//'; }
 
 AUDIENCE="internal"
 BASE=""
-MAX="${CMUX_NOTES_MAX:-20}"
+MAX="${HMUX_NOTES_MAX:-20}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -63,7 +63,7 @@ fi
 
 # iOS-affecting paths: mirror the push-trigger filter in ios-testflight.yml so the
 # notes only mention changes that could be in this build.
-PATHS="ios Packages/iOS Packages/Shared Packages/macOS/CmuxPhonePush Sources/Mobile vendor/stack-auth-swift-sdk-prerelease ghostty ghostty.h scripts/ensure-ghosttykit.sh scripts/ghosttykit-checksums.txt scripts/install-zig-ci.sh scripts/ghostty-zig-version.sh scripts/validate-xcframework-archive.py .github/workflows/ios-testflight.yml"
+PATHS="ios Packages/iOS Packages/Shared Packages/macOS/HmuxPhonePush Sources/Mobile vendor/stack-auth-swift-sdk-prerelease ghostty ghostty.h scripts/ensure-ghosttykit.sh scripts/ghosttykit-checksums.txt scripts/install-zig-ci.sh scripts/ghostty-zig-version.sh scripts/validate-xcframework-archive.py .github/workflows/ios-testflight.yml"
 
 # First-line subjects of non-merge commits in range touching those paths. Squash
 # merges carry the PR title + "(#N)" as the subject, which is exactly what we want.

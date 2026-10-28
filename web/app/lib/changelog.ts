@@ -170,7 +170,7 @@ export function changelogVersionDescription(
     "";
   const plainText = inlineMarkdownToText(source);
   return truncateMetadataDescription(
-    plainText ? `cmux ${release.version}: ${plainText}` : `cmux ${release.version}`,
+    plainText ? `hmux ${release.version}: ${plainText}` : `hmux ${release.version}`,
   );
 }
 

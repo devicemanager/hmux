@@ -55,7 +55,7 @@ export type ConnectivityAuthorityShape = {
   ) => Effect.Effect<ScopedConnectivitySyncResponse, IrohExpectedError>;
 };
 
-export class ConnectivityAuthority extends Context.Tag("cmux/ConnectivityAuthority")<
+export class ConnectivityAuthority extends Context.Tag("hmux/ConnectivityAuthority")<
   ConnectivityAuthority,
   ConnectivityAuthorityShape
 >() {}

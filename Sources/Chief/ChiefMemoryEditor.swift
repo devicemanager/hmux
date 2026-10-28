@@ -1,5 +1,5 @@
 import AppKit
-import CmuxChief
+import HmuxChief
 
 /// What the memory sheet's sidebar lists.
 enum ChiefMemorySheetItem: Int, CaseIterable {
@@ -36,7 +36,7 @@ enum ChiefMemorySheetItem: Int, CaseIterable {
 /// selection on the right, Markdown rendered with its last-updated time and
 /// an Edit toggle to plain text, or the notes with their source, time and a
 /// ✕ to forget each. It follows the files live (``ChiefMemoryStore``), so a
-/// `cmux chief memory add` shows while the sheet is open.
+/// `hmux chief memory add` shows while the sheet is open.
 @MainActor
 final class ChiefMemoryEditor: NSObject, NSTableViewDataSource, NSTableViewDelegate {
     private static var shown: ChiefMemoryEditor?

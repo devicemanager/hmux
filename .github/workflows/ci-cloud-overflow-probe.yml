@@ -104,11 +104,11 @@ jobs:
           # only, as in ci-repo-variables.yml: a step's env is in its public log.
           VAR_CI_CLOUD_OVERFLOW_SAVED: ${{ vars.CI_CLOUD_OVERFLOW_SAVED }}
           VAR_CI_CLOUD_FAILOVER: ${{ vars.CI_CLOUD_FAILOVER }}
-          VAR_CMUX_CI_XCODE_APP_PR: ${{ vars.CMUX_CI_XCODE_APP_PR }}
+          VAR_HMUX_CI_XCODE_APP_PR: ${{ vars.HMUX_CI_XCODE_APP_PR }}
           # NAME=value per line, read ungated on purpose: the switch has to see
           # what each variable holds to put it back (the same reporting read as
           # ci-repo-variables.yml).
-          CMUX_CI_RUNNER_VARIABLES: |
+          HMUX_CI_RUNNER_VARIABLES: |
             CI_PAID_MACOS_OVERFLOW=${{ vars.CI_PAID_MACOS_OVERFLOW }}
             CI_TRUSTED_RUNNER=${{ vars.CI_TRUSTED_RUNNER }}
             LINUX_RUNNER=${{ vars.LINUX_RUNNER }}

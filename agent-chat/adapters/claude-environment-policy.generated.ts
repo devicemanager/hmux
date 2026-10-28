@@ -12,5 +12,5 @@ export const inheritedClaudeLaunchStateKeys = [
   "CLAUDE_CODE_EXECPATH",
   "CLAUDE_CODE_SSE_PORT",
   "CLAUDE_CODE_SANDBOXED",
-  "CMUX_CLAUDE_TEAMS_SANDBOXED",
+  "HMUX_CLAUDE_TEAMS_SANDBOXED",
 ] as const;

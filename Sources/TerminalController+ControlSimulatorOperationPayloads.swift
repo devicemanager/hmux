@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxSimulator
+import HmuxControlSocket
+import HmuxSimulator
 import Foundation
 
 func controlSimulatorPointerEvent(

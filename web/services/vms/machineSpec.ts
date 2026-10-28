@@ -107,18 +107,18 @@ export const DEFAULT_VM_RESOURCE_RESERVATION: VmResourceReservation = {
   diskMb: VM_DISK_MB_DEFAULT,
 };
 
-export const VM_RESOURCE_RESERVATION_METADATA_KEY = "cmuxResourceReservation";
+export const VM_RESOURCE_RESERVATION_METADATA_KEY = "hmuxResourceReservation";
 /** Internal marker for a resize whose provider call is still pending.
  * The reservation remains valid while this marker is present, so reconciliation
  * cannot lower the claim during the provider call.
  */
-export const VM_RESOURCE_RESIZE_PENDING_METADATA_KEY = "cmuxResourceResizePending";
+export const VM_RESOURCE_RESIZE_PENDING_METADATA_KEY = "hmuxResourceResizePending";
 /** Internal marker for a completed resize whose provider size is not confirmed yet. */
-export const VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY = "cmuxResourceResizeUnconfirmed";
+export const VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY = "hmuxResourceResizeUnconfirmed";
 /** Internal marker that postpones a legacy resource read until a later pass. */
-export const VM_RESOURCE_RECONCILE_RETRY_METADATA_KEY = "cmuxResourceReconcileRetry";
+export const VM_RESOURCE_RECONCILE_RETRY_METADATA_KEY = "hmuxResourceReconcileRetry";
 /** Internal marker for a native fork claim awaiting provider-confirmed shape. */
-export const VM_RESOURCE_FORK_PENDING_METADATA_KEY = "cmuxResourceForkPending";
+export const VM_RESOURCE_FORK_PENDING_METADATA_KEY = "hmuxResourceForkPending";
 
 /** Read the minimum source shape stored on a pending native fork marker. */
 export function vmResourceForkPendingFromMetadata(
@@ -318,10 +318,10 @@ function resourceReservationFromValue(value: unknown): VmResourceReservation | n
 
 /** Disk every machine is grown to at create, in MB. Env-overridable. */
 export function vmDiskMb(env: Record<string, string | undefined> = process.env): number {
-  const raw = (env.CMUX_VM_DISK_MB ?? String(VM_DISK_MB_DEFAULT)).trim();
+  const raw = (env.HMUX_VM_DISK_MB ?? String(VM_DISK_MB_DEFAULT)).trim();
   const value = Number.parseInt(raw, 10);
   if (!Number.isSafeInteger(value) || value <= 0 || String(value) !== raw) {
-    throw new Error(`CMUX_VM_DISK_MB must be a positive integer, got: ${raw}`);
+    throw new Error(`HMUX_VM_DISK_MB must be a positive integer, got: ${raw}`);
   }
   return value;
 }

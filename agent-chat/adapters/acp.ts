@@ -14,10 +14,10 @@ import { readLines, tryParse, truncate } from "./lines";
 import { prettifyModelLabel } from "./model-label";
 
 /**
- * The provider-neutral part of a durable cmux agent message that an ACP
+ * The provider-neutral part of a durable hmux agent message that an ACP
  * session needs in order to answer in context. Keeping this translation at
  * the adapter boundary lets a future mailbox deliver messages without making
- * ACP providers aware of cmux's storage or routing implementation.
+ * ACP providers aware of hmux's storage or routing implementation.
  */
 export interface AcpMailMessage {
   /** Same field names as the durable `MailEnvelope`, without importing it. */
@@ -38,7 +38,7 @@ export interface AcpMailMessage {
  */
 export function acpPromptFromMail(message: AcpMailMessage): string {
   return [
-    "cmux-agent-message-json-v1:",
+    "hmux-agent-message-json-v1:",
     JSON.stringify({
       messageId: message.id,
       threadId: message.threadId,
@@ -606,7 +606,7 @@ function handleAgentMessage(sess: SessionCtx, st: AcpState, def: ProviderDef, ms
     return;
   }
   if (msg.id != null) {
-    writeMsg({ jsonrpc: "2.0", id: msg.id, error: { code: -32601, message: "method not supported by cmux-agent-ui" } });
+    writeMsg({ jsonrpc: "2.0", id: msg.id, error: { code: -32601, message: "method not supported by hmux-agent-ui" } });
   }
 }
 

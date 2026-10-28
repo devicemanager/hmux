@@ -1,0 +1,3 @@
+public import HmuxAgentChat
+
+public typealias AgentChatArtifactGalleryBuilder = ChatArtifactGalleryBuilder

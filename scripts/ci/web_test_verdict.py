@@ -56,7 +56,7 @@ import test_touches_diff as graph  # noqa: E402
 import web_test_failure_census as census  # noqa: E402
 from guard_attribution import Writer, upsert_comment  # noqa: E402
 
-MARKER = "<!-- cmux-web-test-verdict -->"
+MARKER = "<!-- hmux-web-test-verdict -->"
 LIKELY, TOUCHED_FLAKY, ON_MAIN, FLAKE, PROBABLY = "likely this PR's", "touched, also flaky", "also red on main", \
     "unrelated flake", "probably unrelated"
 UNSAFE = "can't analyse safely"

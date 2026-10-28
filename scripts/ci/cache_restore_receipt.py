@@ -55,7 +55,7 @@ def receipt(environment, now_ns):
 
 def main():
     record = receipt(os.environ, time.monotonic_ns())
-    print("CMUX_CACHE_RESTORE " + json.dumps(record, sort_keys=True))
+    print("HMUX_CACHE_RESTORE " + json.dumps(record, sort_keys=True))
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         # JSON in an indented block also keeps arbitrary key text from creating

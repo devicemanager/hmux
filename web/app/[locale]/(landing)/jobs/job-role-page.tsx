@@ -23,11 +23,11 @@ const focusRingClass =
 const applicationEmail = "founders@cmux.com";
 const ycJobUrls = {
   foundingEngineer:
-    "https://www.ycombinator.com/companies/cmux/jobs/RcX3bDA-founding-engineer",
+    "https://www.ycombinator.com/companies/hmux/jobs/RcX3bDA-founding-engineer",
   foundingDesigner:
-    "https://www.ycombinator.com/companies/cmux/jobs/p21OZLR-founding-designer",
+    "https://www.ycombinator.com/companies/hmux/jobs/p21OZLR-founding-designer",
   foundingChromiumEngineer:
-    "https://www.ycombinator.com/companies/cmux/jobs/T4rJNKX-founding-chromium-engineer",
+    "https://www.ycombinator.com/companies/hmux/jobs/T4rJNKX-founding-chromium-engineer",
 } as const;
 
 export async function jobsMetadata({

@@ -3,7 +3,7 @@ import { organizationsGet } from "../app/api/subrouter/teams/route";
 
 test("signed VM organization requests use the token team without Stack team selection", async () => {
   const request = new Request("https://coderouter.test/api/coderouter/organizations", {
-    headers: { "x-cmux-authorization": "Bearer signed-vm-token" },
+    headers: { "x-hmux-authorization": "Bearer signed-vm-token" },
   });
   const response = await organizationsGet(
     request,

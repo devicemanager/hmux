@@ -147,7 +147,7 @@ class ReuseTests(unittest.TestCase):
 
         def runs(branch: str) -> list[dict]:
             calls.append(branch)
-            return [run(9), run(1), run(2, "someone/cmux"), run(3)]
+            return [run(9), run(1), run(2, "someone/hmux"), run(3)]
 
         found = reuse.recorded_passes("manaflow-ai/cmux", "feature", 9, runs,
                                       lambda run_id: artifacts.get(run_id, []),
@@ -179,7 +179,7 @@ class WiringTests(unittest.TestCase):
         self.job = workflow[start:end.start() if end else len(workflow)]
 
     def test_the_lane_reuses_only_when_asked_and_never_on_the_full_suite(self) -> None:
-        self.assertIn('if [ "${CMUX_PACKAGE_REUSE:-0}" = 1 ] && [ "$full_suite" != "true" ]', self.lane)
+        self.assertIn('if [ "${HMUX_PACKAGE_REUSE:-0}" = 1 ] && [ "$full_suite" != "true" ]', self.lane)
         self.assertIn("scripts/ci/reuse_package_results.py", self.lane)
 
     def test_the_lane_records_each_passing_package(self) -> None:
@@ -190,7 +190,7 @@ class WiringTests(unittest.TestCase):
         self.assertRegex(self.job, r"\n    permissions:\n      contents: read\n      actions: read\n")
         self.assertIn("name: swift-package-passed-${{ github.run_attempt }}", self.job)
         self.assertIn("steps.run-packages.outputs.passed_packages != ''", self.job)
-        reuse_env = re.search(r"CMUX_PACKAGE_REUSE: (.*)", self.job).group(1)
+        reuse_env = re.search(r"HMUX_PACKAGE_REUSE: (.*)", self.job).group(1)
         self.assertIn("github.event_name == 'pull_request'", reuse_env)
         self.assertIn("github.event.pull_request.head.repo.full_name == github.repository", reuse_env)
         self.assertIn("inputs.full_suite != 'true'", reuse_env)

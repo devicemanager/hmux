@@ -196,13 +196,13 @@ describe("billing email claim resolution", () => {
     expect(findClaims).toHaveBeenCalledWith("billingfixture@gmail.com", "target-1");
     expect(transferClaim).toHaveBeenCalledTimes(1);
     expect(customerUpdate).toHaveBeenCalledWith("cus-1", {
-      metadata: { app: "cmux", plan: "pro", stackUserId: "target-1" },
+      metadata: { app: "hmux", plan: "pro", stackUserId: "target-1" },
     });
     expect(subscriptionUpdate).toHaveBeenCalledWith("sub-1", {
-      metadata: { app: "cmux", plan: "pro", stackUserId: "target-1" },
+      metadata: { app: "hmux", plan: "pro", stackUserId: "target-1" },
     });
     expect(targetUpdate).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
   });
 
@@ -327,7 +327,7 @@ describe("billing email claim resolution", () => {
 
     expect(result).toEqual({ claimed: 0 });
     expect(targetUpdate).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
     expect(enroll).toHaveBeenCalledWith("founder@example.com", undefined, undefined);
   });

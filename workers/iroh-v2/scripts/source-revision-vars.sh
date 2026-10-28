@@ -5,7 +5,7 @@
 # predate a rule the shipped Mac app depends on (#13458).
 #
 # Output (one line, safe for unquoted expansion into a wrangler command):
-#   --var CMUX_SOURCE_REVISION:<40-hex sha or unknown>
+#   --var HMUX_SOURCE_REVISION:<40-hex sha or unknown>
 set -euo pipefail
 
 # Inherited repository-selection variables could point Git at another
@@ -18,11 +18,11 @@ if command -v git >/dev/null 2>&1 && git rev-parse --verify HEAD >/dev/null 2>&1
   # A dirty tree is not a reproducible revision; publish "unknown" so the
   # drift check reports it instead of trusting a SHA the tree does not match.
   if [[ -n "$(git status --porcelain -- . 2>/dev/null)" ]]; then
-    echo "warning: uncommitted changes under $(pwd); publishing CMUX_SOURCE_REVISION=unknown" >&2
+    echo "warning: uncommitted changes under $(pwd); publishing HMUX_SOURCE_REVISION=unknown" >&2
     revision="unknown"
   fi
 fi
 case "$revision" in
   unknown|*[!0-9a-f]*) revision="unknown" ;;
 esac
-printf -- '--var CMUX_SOURCE_REVISION:%s\n' "$revision"
+printf -- '--var HMUX_SOURCE_REVISION:%s\n' "$revision"

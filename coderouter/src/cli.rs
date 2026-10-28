@@ -34,7 +34,7 @@ Usage:
   cr org switch <name-or-id>    Switch organization and renew routing access
   cr accounts                   List shared subscriptions and usage
   cr usage                      Show subscription usage
-  cr upgrade                    Open cmux pricing
+  cr upgrade                    Open hmux pricing
   cr doctor                     Diagnose coderouter
 
 The long command name `coderouter` supports the same interface.
@@ -74,7 +74,7 @@ pub fn run(args: impl IntoIterator<Item = OsString>) -> Result<i32, Error> {
         && crate::handoff::obsolete_marker_present()
     {
         return Err(Error::Backend(
-            "coderouter handoff marker is obsolete; update cmux and retry".into(),
+            "coderouter handoff marker is obsolete; update hmux and retry".into(),
         ));
     }
 
@@ -138,7 +138,7 @@ fn run_capabilities(args: &[OsString]) -> Result<i32, Error> {
         product: "coderouter",
         cli_version: env!("CARGO_PKG_VERSION"),
         protocol_version: 2,
-        auth_modes: ["standalone-stack", "cmux-socket-v1"],
+        auth_modes: ["standalone-stack", "hmux-socket-v1"],
         features: ["route-session", "organization-scope"],
     };
     let output = serde_json::to_string(&capabilities)
@@ -668,7 +668,7 @@ fn run_upgrade(rest: &[OsString]) -> Result<i32, Error> {
         }
     };
     const PRICING_URL: &str = "https://cmux.com/pricing";
-    println!("Upgrade cmux Pro or Team:\n  {PRICING_URL}");
+    println!("Upgrade hmux Pro or Team:\n  {PRICING_URL}");
     if !no_browser && std::env::var_os("CODEROUTER_NO_BROWSER").is_none() {
         let _ = webbrowser::open(PRICING_URL);
     }
@@ -771,7 +771,7 @@ mod tests {
             product: "coderouter",
             cli_version: env!("CARGO_PKG_VERSION"),
             protocol_version: 2,
-            auth_modes: ["standalone-stack", "cmux-socket-v1"],
+            auth_modes: ["standalone-stack", "hmux-socket-v1"],
             features: ["route-session", "organization-scope"],
         };
         let value = serde_json::to_value(capabilities).unwrap();
@@ -781,7 +781,7 @@ mod tests {
                 "product": "coderouter",
                 "cliVersion": env!("CARGO_PKG_VERSION"),
                 "protocolVersion": 2,
-                "authModes": ["standalone-stack", "cmux-socket-v1"],
+                "authModes": ["standalone-stack", "hmux-socket-v1"],
                 "features": ["route-session", "organization-scope"],
             })
         );

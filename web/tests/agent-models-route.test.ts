@@ -7,7 +7,7 @@ const { GET, OPTIONS, validateAndDeduplicateCatalog } = await import("../app/api
 
 describe("agent models route", () => {
   test("serves the checked-in model catalog with cache, CORS, and a strong ETag", async () => {
-    const response = await GET(new Request("https://cmux.test/api/agent-models"));
+    const response = await GET(new Request("https://hmux.test/api/agent-models"));
     const payload = JSON.stringify(agentModelCatalog);
     const expectedEtag = `"${createHash("sha256").update(payload).digest("base64url")}"`;
 
@@ -64,11 +64,11 @@ describe("agent models route", () => {
   });
 
   test("uses the strong ETag for conditional revalidation", async () => {
-    const initial = await GET(new Request("https://cmux.test/api/agent-models"));
+    const initial = await GET(new Request("https://hmux.test/api/agent-models"));
     const etag = initial.headers.get("etag");
     expect(etag).toBeTruthy();
 
-    const revalidated = await GET(new Request("https://cmux.test/api/agent-models", {
+    const revalidated = await GET(new Request("https://hmux.test/api/agent-models", {
       headers: { "If-None-Match": etag ?? "" },
     }));
 

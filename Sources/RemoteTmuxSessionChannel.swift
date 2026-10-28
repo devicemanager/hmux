@@ -1,4 +1,4 @@
-import CmuxRemoteSession
+import HmuxRemoteSession
 import Foundation
 
 /// A per-session view over a shared per-host control stream.

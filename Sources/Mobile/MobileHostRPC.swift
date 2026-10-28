@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 
 // JSONSerialization payloads are Foundation value containers. Requests are

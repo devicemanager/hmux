@@ -10,7 +10,7 @@ import {
 } from "../services/analytics/checkoutAttribution";
 
 const WEB_ATTRIBUTION = checkoutAttributionFromRequest({
-  searchParams: new URLSearchParams("cmux_source=pricing_page&cmux_placement=hero"),
+  searchParams: new URLSearchParams("hmux_source=pricing_page&hmux_placement=hero"),
   referer: "https://cmux.com/pricing?interval=year",
 });
 
@@ -76,7 +76,7 @@ describe("Stripe billing analytics", () => {
     );
 
     const payload = JSON.parse(String(capturedInit?.body));
-    expect(payload.event).toBe("cmux_billing_checkout_completed");
+    expect(payload.event).toBe("hmux_billing_checkout_completed");
     expect(payload.properties).toMatchObject({
       distinct_id: "stack-user-1",
       $insert_id: "evt_checkout",
@@ -122,7 +122,7 @@ describe("Stripe billing analytics", () => {
     );
 
     const payload = JSON.parse(String(capturedInit?.body));
-    expect(payload.event).toBe("cmux_billing_subscription_deleted");
+    expect(payload.event).toBe("hmux_billing_subscription_deleted");
     expect(payload.properties).toMatchObject({
       is_active: false,
       billing_status: "canceled",
@@ -175,7 +175,7 @@ describe("Stripe billing analytics", () => {
     }) as typeof fetch);
 
     expect(payload).toMatchObject({
-      event: "cmux_billing_checkout_started",
+      event: "hmux_billing_checkout_started",
       properties: {
         distinct_id: "stack-user-1",
         $insert_id: "checkout-started:cs_started",
@@ -215,11 +215,11 @@ describe("Stripe billing analytics", () => {
           metadata: {
             plan: "pro",
             billingInterval: "year",
-            cmuxSource: "mac_sidebar_badge",
-            cmuxClient: "mac",
-            cmuxChannel: "nightly",
-            cmuxAppVersion: "0.65.1",
-            cmuxAppBuild: "2026090101",
+            hmuxSource: "mac_sidebar_badge",
+            hmuxClient: "mac",
+            hmuxChannel: "nightly",
+            hmuxAppVersion: "0.65.1",
+            hmuxAppBuild: "2026090101",
           },
         },
       },
@@ -235,7 +235,7 @@ describe("Stripe billing analytics", () => {
     );
 
     expect(payload).toMatchObject({
-      event: "cmux_billing_checkout_completed",
+      event: "hmux_billing_checkout_completed",
       properties: {
         checkout_source: "mac_sidebar_badge",
         checkout_client: "mac",
@@ -271,7 +271,7 @@ describe("Stripe billing analytics", () => {
           amount_total: 5000,
           currency: "usd",
           customer: null,
-          metadata: { plan: "pro", billingInterval: "month", app: "cmux" },
+          metadata: { plan: "pro", billingInterval: "month", app: "hmux" },
         },
       },
     } as unknown as Stripe.Event;
@@ -286,7 +286,7 @@ describe("Stripe billing analytics", () => {
     );
 
     expect(payload).toMatchObject({
-      event: "cmux_billing_checkout_expired",
+      event: "hmux_billing_checkout_expired",
       properties: {
         distinct_id: "stack-user-old",
         checkout_source: "unknown",
@@ -323,7 +323,7 @@ describe("Stripe billing analytics", () => {
     }) as typeof fetch);
 
     expect(payload).toMatchObject({
-      event: "cmux_billing_charge_refunded",
+      event: "hmux_billing_charge_refunded",
       properties: {
         distinct_id: "stack-user-1",
         amount_refunded: 3000,

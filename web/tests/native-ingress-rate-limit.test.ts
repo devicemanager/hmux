@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { enforceNativeIngressRateLimit } from "../services/nativeIngressRateLimit";
 
-const request = new Request("https://cmux.test/api/native");
+const request = new Request("https://hmux.test/api/native");
 
 describe("native ingress rate-limit boundary", () => {
   test("is a no-op outside Vercel", async () => {

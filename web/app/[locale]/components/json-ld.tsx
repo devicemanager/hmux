@@ -72,7 +72,7 @@ export function articleSchema(opts: {
     ...(opts.dateModified ? { dateModified: opts.dateModified } : {}),
     author: {
       "@type": opts.authorType ?? "Organization",
-      name: opts.authorName ?? "cmux",
+      name: opts.authorName ?? "hmux",
       ...(opts.authorUrl ? { url: opts.authorUrl } : {}),
       ...(opts.authorImage
         ? {
@@ -82,7 +82,7 @@ export function articleSchema(opts: {
           }
         : {}),
     },
-    publisher: { "@type": "Organization", name: "cmux", url: BASE },
+    publisher: { "@type": "Organization", name: "hmux", url: BASE },
     mainEntityOfPage: localizedUrl(opts.locale, opts.path),
   };
 }

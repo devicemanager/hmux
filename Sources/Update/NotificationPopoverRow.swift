@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 struct NotificationPopoverRow: View, Equatable {
@@ -14,7 +14,7 @@ struct NotificationPopoverRow: View, Equatable {
     let onToggleRead: () -> Void
 
     @State private var isHovering: Bool = false
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
 
     private static let rowHeight: CGFloat = 56
 
@@ -97,7 +97,7 @@ struct NotificationPopoverRow: View, Equatable {
     private var rowContent: some View {
         HStack(spacing: 0) {
             Rectangle()
-                .fill(notification.isRead ? Color.clear : cmuxAccent.color)
+                .fill(notification.isRead ? Color.clear : hmuxAccent.color)
                 .frame(width: 2.5)
                 .padding(.vertical, 6)
 
@@ -105,7 +105,7 @@ struct NotificationPopoverRow: View, Equatable {
                 HStack(alignment: .firstTextBaseline, spacing: 6) {
                     if let workspaceTitle, !workspaceTitle.isEmpty {
                         Text(workspaceTitle)
-                            .cmuxFont(size: 12.5, weight: .semibold)
+                            .hmuxFont(size: 12.5, weight: .semibold)
                             .foregroundColor(.primary)
                             .lineLimit(1)
                             .layoutPriority(1)
@@ -114,13 +114,13 @@ struct NotificationPopoverRow: View, Equatable {
                             )
                     } else {
                         Text(notification.title)
-                            .cmuxFont(size: 12.5, weight: .semibold)
+                            .hmuxFont(size: 12.5, weight: .semibold)
                             .foregroundColor(.primary)
                             .lineLimit(1)
                     }
                     Spacer(minLength: 0)
                     Text(notification.createdAt.formatted(date: .omitted, time: .shortened))
-                        .cmuxFont(size: 10.5)
+                        .hmuxFont(size: 10.5)
                         .foregroundColor(.secondary)
                         .padding(.trailing, 34)
                         .layoutPriority(2)
@@ -128,14 +128,14 @@ struct NotificationPopoverRow: View, Equatable {
 
                 if let workspaceTitle, !workspaceTitle.isEmpty {
                     Text(notification.title)
-                        .cmuxFont(size: 10.5, weight: .medium)
+                        .hmuxFont(size: 10.5, weight: .medium)
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 }
 
                 if !notification.body.isEmpty {
                     Text(notification.body)
-                        .cmuxFont(size: 11.5)
+                        .hmuxFont(size: 11.5)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
@@ -155,7 +155,7 @@ struct NotificationPopoverRow: View, Equatable {
             ZStack {
                 Circle()
                     .fill(Color.primary.opacity(0.1))
-                CmuxSystemSymbolImage(systemName: "xmark", pointSize: 9, weight: .bold, tint: .primary.opacity(0.7))
+                HmuxSystemSymbolImage(systemName: "xmark", pointSize: 9, weight: .bold, tint: .primary.opacity(0.7))
             }
             .frame(width: 20, height: 20)
         }

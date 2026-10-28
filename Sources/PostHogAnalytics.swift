@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import AppKit
 import Foundation
 import PostHog
@@ -11,11 +11,11 @@ final class PostHogAnalytics: @unchecked Sendable {
     // The PostHog project API key is intentionally embedded in the app (it's a public key).
     private let apiKey = "phc_opOVu7oFzR9wD3I6ZahFGOV2h3mqGpl5EHyQvmHciDP"
 
-    // PostHog Cloud US default (matches other cmux properties).
+    // PostHog Cloud US default (matches other hmux properties).
     private let host = "https://us.i.posthog.com"
 
-    private let dailyActiveEvent = "cmux_daily_active"
-    private let hourlyActiveEvent = "cmux_hourly_active"
+    private let dailyActiveEvent = "hmux_daily_active"
+    private let hourlyActiveEvent = "hmux_hourly_active"
     private let crashExceptionEvent = "$exception"
 
     private let lastActiveDayUTCKey = "posthog.lastActiveDayUTC"
@@ -47,7 +47,7 @@ final class PostHogAnalytics: @unchecked Sendable {
     private var activeCheckTimer: Timer?
 
     init(
-        workQueue: DispatchQueue = DispatchQueue(label: "com.cmux.posthog.analytics", qos: .utility),
+        workQueue: DispatchQueue = DispatchQueue(label: "com.hmux.posthog.analytics", qos: .utility),
         didStart: Bool = false,
         userDefaults: UserDefaults = .standard,
         now: @escaping @Sendable () -> Date = { Date() },
@@ -84,7 +84,7 @@ final class PostHogAnalytics: @unchecked Sendable {
         guard telemetryEnabled() else { return false }
 #if DEBUG
         // Avoid polluting production analytics while iterating locally.
-        return environment["CMUX_POSTHOG_ENABLE"] == "1"
+        return environment["HMUX_POSTHOG_ENABLE"] == "1"
 #else
         return !apiKey.isEmpty && apiKey != "REPLACE_WITH_POSTHOG_PUBLIC_KEY"
 #endif
@@ -270,11 +270,11 @@ final class PostHogAnalytics: @unchecked Sendable {
 #if DEBUG
         // A loopback collector exercises the real SDK without sending fixture
         // events to production. Release builds never accept this override.
-        if let rawHost = environment["CMUX_POSTHOG_TEST_HOST"],
+        if let rawHost = environment["HMUX_POSTHOG_TEST_HOST"],
            let url = URL(string: rawHost),
            url.scheme == "http", url.host == "127.0.0.1", url.port != nil,
            url.user == nil, url.password == nil {
-            config = PostHogConfig(apiKey: "phc_cmux_e2e", host: rawHost)
+            config = PostHogConfig(apiKey: "phc_hmux_e2e", host: rawHost)
             config.flushAt = 1
         } else {
             config = PostHogConfig(apiKey: apiKey, host: host)
@@ -285,7 +285,7 @@ final class PostHogAnalytics: @unchecked Sendable {
         config.captureApplicationLifecycleEvents = false
         config.captureScreenViews = false
 #if DEBUG
-        config.debug = ProcessInfo.processInfo.environment["CMUX_POSTHOG_DEBUG"] == "1"
+        config.debug = ProcessInfo.processInfo.environment["HMUX_POSTHOG_DEBUG"] == "1"
 #endif
 
         PostHogSDK.shared.setup(config)
@@ -403,7 +403,7 @@ final class PostHogAnalytics: @unchecked Sendable {
     }
 
     nonisolated static func superProperties(infoDictionary: [String: Any]) -> [String: Any] {
-        var properties: [String: Any] = ["platform": "cmuxterm"]
+        var properties: [String: Any] = ["platform": "hmuxterm"]
         properties.merge(versionProperties(infoDictionary: infoDictionary)) { _, new in new }
         return properties
     }
@@ -437,7 +437,7 @@ final class PostHogAnalytics: @unchecked Sendable {
     /// PostHog Error Tracking payload for a previous-run crash. The crashed
     /// build's version/namespace come from the crash envelope (`crash_app_*`),
     /// while `versionProperties` describe the reporting launch, matching every
-    /// other cmux event. The posthog-ios SDK additionally attaches its
+    /// other hmux event. The posthog-ios SDK additionally attaches its
     /// automatic `$app_version`/`$app_build`/`$app_namespace` at capture time.
     nonisolated static func crashExceptionProperties(
         reported: GhosttyCrashReportMetadata.ReportedException?,
@@ -459,7 +459,7 @@ final class PostHogAnalytics: @unchecked Sendable {
             "$exception_level": "error",
             // Group by crash type only; the version breakdown comes from the
             // crash_app_* and version properties, not the fingerprint.
-            "$exception_fingerprint": String("cmux-mac-crash:\(type)".prefix(200)),
+            "$exception_fingerprint": String("hmux-mac-crash:\(type)".prefix(200)),
             "$exception_list": [exception],
         ]
         if let appVersion = reported?.appVersion, !appVersion.isEmpty {
@@ -490,7 +490,7 @@ final class PostHogAnalytics: @unchecked Sendable {
 
     nonisolated static func shouldFlushAfterCapture(event: String) -> Bool {
         switch event {
-        case "cmux_daily_active", "cmux_hourly_active":
+        case "hmux_daily_active", "hmux_hourly_active":
             return true
         default:
             return false

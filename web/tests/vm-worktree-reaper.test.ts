@@ -5,13 +5,13 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { runChild } from "./helpers/run-child";
 
-// cmux-worktree-reaper removes agent worktrees whose owner is gone, after
+// hmux-worktree-reaper removes agent worktrees whose owner is gone, after
 // pushing any work in them to a wip/ branch. Each test builds a throwaway
 // home with a bare "remote", a main clone and worktrees, and runs the script
 // with --ttl-hours 0 so only liveness signals (processes, keep markers,
 // sessions) decide.
 
-const SCRIPT = path.join(import.meta.dirname, "../services/vms/hygiene/cmux-worktree-reaper");
+const SCRIPT = path.join(import.meta.dirname, "../services/vms/hygiene/hmux-worktree-reaper");
 
 setDefaultTimeout(60_000);
 
@@ -29,7 +29,7 @@ async function git(cwd: string, args: string[]) {
 }
 
 async function box(): Promise<Box> {
-  const root = mkdtempSync(path.join(tmpdir(), "cmux-reaper-"));
+  const root = mkdtempSync(path.join(tmpdir(), "hmux-reaper-"));
   fixtures.push(root);
   const home = path.join(root, "home");
   const projects = path.join(home, "Projects");
@@ -79,7 +79,7 @@ async function reap(b: Box, args: string[] = [], extraPath = "") {
 
 const line = (out: string, dir: string) => out.split("\n").find((l) => l.includes(` ${dir}`)) ?? "";
 
-describe("cmux-worktree-reaper", () => {
+describe("hmux-worktree-reaper", () => {
   test("reports by default and removes nothing", async () => {
     const b = await box();
     const done = await worktree(b, "done");
@@ -128,7 +128,7 @@ describe("cmux-worktree-reaper", () => {
     const files = await git(b.remote, ["ls-tree", "-r", "--name-only", refs]);
     expect(files.split("\n").sort()).toEqual([".gitignore", "README.md", "committed.txt", "new.txt"]);
     expect(await git(b.remote, ["show", `${refs}:README.md`])).toBe("edited");
-    const log = readFileSync(path.join(b.home, ".state", "cmux-worktree-reaper", "log.jsonl"), "utf8");
+    const log = readFileSync(path.join(b.home, ".state", "hmux-worktree-reaper", "log.jsonl"), "utf8");
     expect(log).toContain('"action":"backed-up"');
     expect(log).toContain('"action":"removed"');
   });

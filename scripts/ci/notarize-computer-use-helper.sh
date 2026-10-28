@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
-# Independently notarize and staple the nested cmux Computer Use app.
+# Independently notarize and staple the nested hmux Computer Use app.
 #
-# cmux copies this helper out of the signed host bundle before launch. An
+# hmux copies this helper out of the signed host bundle before launch. An
 # independent ticket keeps that copied app Gatekeeper-valid even when the Mac
 # cannot contact Apple's notarization service. Stapling changes the nested
-# bundle, so the outer cmux app is re-sealed afterward without re-signing the
+# bundle, so the outer hmux app is re-sealed afterward without re-signing the
 # helper and discarding its ticket.
 
 set -euo pipefail
@@ -43,37 +43,37 @@ APP_PATH="$1"
 APP_ENTITLEMENTS="$2"
 SIGNING_IDENTITY="$3"
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-DITTO_TOOL="${CMUX_DITTO_TOOL:-/usr/bin/ditto}"
-XCRUN_TOOL="${CMUX_XCRUN_TOOL:-xcrun}"
-CODESIGN_TOOL="${CMUX_CODESIGN_TOOL:-/usr/bin/codesign}"
-SPCTL_TOOL="${CMUX_SPCTL_TOOL:-spctl}"
+DITTO_TOOL="${HMUX_DITTO_TOOL:-/usr/bin/ditto}"
+XCRUN_TOOL="${HMUX_XCRUN_TOOL:-xcrun}"
+CODESIGN_TOOL="${HMUX_CODESIGN_TOOL:-/usr/bin/codesign}"
+SPCTL_TOOL="${HMUX_SPCTL_TOOL:-spctl}"
 # shellcheck source=lib/notarization-ticket.sh
 source "$ROOT_DIR/scripts/ci/lib/notarization-ticket.sh"
 # shellcheck source=lib/notary-auth.sh
 source "$ROOT_DIR/scripts/ci/lib/notary-auth.sh"
-DEFER_GATEKEEPER_ASSESSMENT="${CMUX_DEFER_GATEKEEPER_ASSESSMENT:-false}"
+DEFER_GATEKEEPER_ASSESSMENT="${HMUX_DEFER_GATEKEEPER_ASSESSMENT:-false}"
 
 case "$DEFER_GATEKEEPER_ASSESSMENT" in
   true|false) ;;
   *)
-    echo "CMUX_DEFER_GATEKEEPER_ASSESSMENT must be true or false" >&2
+    echo "HMUX_DEFER_GATEKEEPER_ASSESSMENT must be true or false" >&2
     exit 2
     ;;
 esac
 
 # shellcheck source=lib/gatekeeper-assessment.sh
 source "$ROOT_DIR/scripts/ci/lib/gatekeeper-assessment.sh"
-SIGN_BUNDLE_TOOL="${CMUX_SIGN_BUNDLE_TOOL:-$ROOT_DIR/scripts/sign-cmux-bundle.sh}"
-SIGNING_KEYCHAIN_TOOL="${CMUX_SIGNING_KEYCHAIN_TOOL:-$ROOT_DIR/scripts/ci/signing-keychain.sh}"
-HELPER_ENTITLEMENTS="${CMUX_HELPER_ENTITLEMENTS:-$ROOT_DIR/cmux-helper.entitlements}"
-HELPER_PATH="$APP_PATH/Contents/Library/cmux Computer Use.app"
+SIGN_BUNDLE_TOOL="${HMUX_SIGN_BUNDLE_TOOL:-$ROOT_DIR/scripts/sign-hmux-bundle.sh}"
+SIGNING_KEYCHAIN_TOOL="${HMUX_SIGNING_KEYCHAIN_TOOL:-$ROOT_DIR/scripts/ci/signing-keychain.sh}"
+HELPER_ENTITLEMENTS="${HMUX_HELPER_ENTITLEMENTS:-$ROOT_DIR/hmux-helper.entitlements}"
+HELPER_PATH="$APP_PATH/Contents/Library/hmux Computer Use.app"
 
 if [ ! -d "$APP_PATH/Contents" ]; then
   echo "Signed host app not found: $APP_PATH" >&2
   exit 1
 fi
 if [ ! -d "$HELPER_PATH/Contents" ]; then
-  echo "Nested cmux Computer Use app not found: $HELPER_PATH" >&2
+  echo "Nested hmux Computer Use app not found: $HELPER_PATH" >&2
   exit 1
 fi
 if [ ! -f "$APP_ENTITLEMENTS" ]; then
@@ -99,9 +99,9 @@ trap cleanup EXIT
 # The decoded API key lives in TMP_DIR, which the EXIT trap removes.
 notary_auth_init "$TMP_DIR"
 
-HELPER_ZIP="$TMP_DIR/cmux-cua-notary.zip"
+HELPER_ZIP="$TMP_DIR/hmux-cua-notary.zip"
 STANDALONE_DIR="$TMP_DIR/standalone"
-STANDALONE_HELPER="$STANDALONE_DIR/cmux Computer Use.app"
+STANDALONE_HELPER="$STANDALONE_DIR/hmux Computer Use.app"
 
 helper_cdhashes() {
   slice_cdhashes "$HELPER_PATH" | paste -sd ',' -
@@ -192,13 +192,13 @@ finish_submission() {
   fi
 
   wait_output="$TMP_DIR/helper-notary-wait-output"
-  wait_evidence="${CMUX_HELPER_NOTARY_OUTPUT_FILE:-${SUBMISSION_FILE}.log}"
+  wait_evidence="${HMUX_HELPER_NOTARY_OUTPUT_FILE:-${SUBMISSION_FILE}.log}"
   wait_evidence_parent="$(dirname "$wait_evidence")"
   if [ ! -d "$wait_evidence_parent" ] || [ ! -w "$wait_evidence_parent" ]; then
     echo "Computer Use notarization evidence parent must be an existing writable directory: $wait_evidence_parent" >&2
     exit 1
   fi
-  HELPER_WAIT_TIMEOUT="${CMUX_HELPER_WAIT_TIMEOUT:-25m}"
+  HELPER_WAIT_TIMEOUT="${HMUX_HELPER_WAIT_TIMEOUT:-25m}"
   set +e
   "$XCRUN_TOOL" notarytool wait "$submit_id" \
     "${NOTARY_AUTH_ARGS[@]}" \
@@ -313,15 +313,15 @@ PYSTATE
   # Apple can acknowledge an Accepted submission before the ticket log
   # endpoint is ready. Keep this diagnostics request bounded so a transient
   # log stall still leaves the accepted helper state available to recovery.
-  log_timeout_seconds="${CMUX_HELPER_LOG_TIMEOUT_SECONDS:-300}"
+  log_timeout_seconds="${HMUX_HELPER_LOG_TIMEOUT_SECONDS:-300}"
   case "$log_timeout_seconds" in
     ''|*[!0-9]*)
-      echo "CMUX_HELPER_LOG_TIMEOUT_SECONDS must be a positive integer" >&2
+      echo "HMUX_HELPER_LOG_TIMEOUT_SECONDS must be a positive integer" >&2
       exit 2
       ;;
   esac
   if [ "$log_timeout_seconds" -le 0 ]; then
-    echo "CMUX_HELPER_LOG_TIMEOUT_SECONDS must be a positive integer" >&2
+    echo "HMUX_HELPER_LOG_TIMEOUT_SECONDS must be a positive integer" >&2
     exit 2
   fi
   set +e
@@ -375,7 +375,7 @@ PYSTATE
   # readable by every user.
   (
     umask 022
-    CMUX_SIGN_MODE=main-only \
+    HMUX_SIGN_MODE=main-only \
       "$SIGN_BUNDLE_TOOL" "$APP_PATH" "$APP_ENTITLEMENTS" "$SIGNING_IDENTITY"
   )
   [ ! -e "$APP_PATH/Contents/_CodeSignature/CodeResources" ] || chmod 0644 "$APP_PATH/Contents/_CodeSignature/CodeResources"

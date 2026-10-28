@@ -20,12 +20,12 @@ const TEST_PUBLIC_KEY_PEM = publicKey
   .toString();
 
 // Real public nightly envelope retained as a key-compatibility fixture. It
-// proves the website's checked-in key accepts the same signed bytes as cmux
+// proves the website's checked-in key accepts the same signed bytes as hmux
 // Browser without making a network request or pinning live route behavior.
 const PRODUCTION_SIGNED_FEED =
   '{"payload":"eyJwbGF0Zm9ybXMiOnsibGludXgteDY0Ijp7ImFyY2hpdmVfcm9vdCI6ImNtdXgtYnJvd3NlciIsImV4ZWN1dGFibGUiOiJjaHJvbWUiLCJzaGEyNTYiOiI2NTdlZmM2MTljMzYwNmUxN2I0MTViNDlkZWQxZDQ2ZjhjMGYwZmI4YjFlNGRiYjNiNDU5NDgzZTgzOWUwMTNhIiwic2l6ZSI6IjY1MTk1MjUyMSIsInVybCI6Imh0dHBzOi8vZ2l0aHViLmNvbS9tYW5hZmxvdy1haS9jbXV4LXYyL3JlbGVhc2VzL2Rvd25sb2FkL25pZ2h0bHkvY211eC1saW51eC14NjQuemlwIn19LCJzY2hlbWEiOjEsInZlcnNpb24iOiIxNTEuMC43OTIyLjY0In0=","signature":"MEQCIDqsCafTkEF9jKuN+O99bUBWiEZBec7TzLXNvN2bw/swAiB+WnzF7teqNr4B1juRDY8mwwMqcBJbffQWvAzVDK7Ieg=="}';
 
-describe("cmux Browser nightly download route", () => {
+describe("hmux Browser nightly download route", () => {
   test("resolves the live Linux contract through the production update key", async () => {
     const fetchMock = feedFetch(PRODUCTION_SIGNED_FEED, 302);
 
@@ -58,7 +58,7 @@ describe("cmux Browser nightly download route", () => {
     expect(response.headers.get("location")).toBe(
       "https://github.com/manaflow-ai/cmux-v2/releases/download/nightly/cmux-linux-x64.deb",
     );
-    expect(response.headers.get("x-cmux-browser-version")).toBe(VERSION);
+    expect(response.headers.get("x-hmux-browser-version")).toBe(VERSION);
     expect(response.headers.get("cache-control")).toContain("s-maxage=300");
 
     const calls = fetchCalls(fetchMock);
@@ -76,21 +76,21 @@ describe("cmux Browser nightly download route", () => {
     const immutableTag = `nightly-${VERSION}`;
     const envelope = signedFeed({
       "mac-arm64": platformEntry(
-        `https://github.com/manaflow-ai/cmux-v2/releases/download/${immutableTag}/cmux-macos-universal.zip`,
-        "cmux-browser.app",
-        "Contents/MacOS/cmux",
+        `https://github.com/manaflow-ai/cmux-v2/releases/download/${immutableTag}/hmux-macos-universal.zip`,
+        "hmux-browser.app",
+        "Contents/MacOS/hmux",
       ),
       "mac-x64": platformEntry(
-        `https://github.com/manaflow-ai/cmux-v2/releases/download/${immutableTag}/cmux-macos-universal.zip`,
-        "cmux-browser.app",
-        "Contents/MacOS/cmux",
+        `https://github.com/manaflow-ai/cmux-v2/releases/download/${immutableTag}/hmux-macos-universal.zip`,
+        "hmux-browser.app",
+        "Contents/MacOS/hmux",
       ),
     });
 
     for (const platform of ["mac-arm64", "mac-x64"]) {
       for (const [artifact, filename] of [
-        ["dmg", "cmux-macos-universal.dmg"],
-        ["zip", "cmux-macos-universal.zip"],
+        ["dmg", "hmux-macos-universal.dmg"],
+        ["zip", "hmux-macos-universal.zip"],
       ] as const) {
         const fetchMock = feedFetch(envelope, 302);
         const response = await handleBrowserNightlyDownloadRequest(
@@ -110,14 +110,14 @@ describe("cmux Browser nightly download route", () => {
   test("resolves Universal 2 assets from an immutable R2 feed URL", async () => {
     const envelope = signedFeed({
       "mac-arm64": platformEntry(
-        `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}/cmux-macos-universal.zip`,
-        "cmux-browser.app",
-        "Contents/MacOS/cmux",
+        `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}/hmux-macos-universal.zip`,
+        "hmux-browser.app",
+        "Contents/MacOS/hmux",
       ),
     });
     const fetchMock = feedFetch(envelope, 200, {
-      "X-Cmux-Sha256": "a".repeat(64),
-      "X-Cmux-Size": "651952521",
+      "X-Hmux-Sha256": "a".repeat(64),
+      "X-Hmux-Size": "651952521",
     });
 
     const response = await handleBrowserNightlyDownloadRequest(
@@ -127,7 +127,7 @@ describe("cmux Browser nightly download route", () => {
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}/cmux-macos-universal.dmg`,
+      `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}/hmux-macos-universal.dmg`,
     );
     expect(fetchMock).toHaveBeenCalledTimes(2);
   });
@@ -135,14 +135,14 @@ describe("cmux Browser nightly download route", () => {
   test("rejects an R2 object whose signed hash or size headers differ", async () => {
     const envelope = signedFeed({
       "mac-arm64": platformEntry(
-        `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}/cmux-macos-universal.zip`,
-        "cmux-browser.app",
-        "Contents/MacOS/cmux",
+        `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}/hmux-macos-universal.zip`,
+        "hmux-browser.app",
+        "Contents/MacOS/hmux",
       ),
     });
     const fetchMock = feedFetch(envelope, 200, {
-      "X-Cmux-Sha256": "b".repeat(64),
-      "X-Cmux-Size": "651952521",
+      "X-Hmux-Sha256": "b".repeat(64),
+      "X-Hmux-Size": "651952521",
     });
 
     const response = await handleBrowserNightlyDownloadRequest(
@@ -196,7 +196,7 @@ describe("cmux Browser nightly download route", () => {
     const fetchMock = feedFetch(signedFeed({
       "windows-x64": platformEntry(
         "https://github.com/manaflow-ai/cmux-v2/releases/download/nightly/cmux-windows-x64.zip",
-        "cmux-browser",
+        "hmux-browser",
         "chrome.exe",
       ),
     }), 404);
@@ -246,11 +246,11 @@ describe("cmux Browser nightly download route", () => {
       "https://attacker.example/manaflow-ai/cmux-v2/releases/download/nightly/cmux-linux-x64.zip",
       "https://github.com/manaflow-ai/cmux-v2/releases/download/nightly/cmux-linux-x64.zip?redirect=attacker",
       "https://github.com/manaflow-ai//cmux-v2/releases/download/nightly/cmux-linux-x64.zip",
-      `https://github.com/manaflow-ai/cmux-v2/releases/download/nightly-${VERSION}.1/cmux-linux-x64.zip`,
-      `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}.1/cmux-linux-x64.zip`,
+      `https://github.com/manaflow-ai/cmux-v2/releases/download/nightly-${VERSION}.1/hmux-linux-x64.zip`,
+      `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}.1/hmux-linux-x64.zip`,
       `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}/other.zip`,
-      `${BROWSER_PUBLIC_ASSET_ORIGIN}.evil/nightly/${VERSION}/cmux-linux-x64.zip`,
-      `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}/cmux-linux-x64.zip?x=1`,
+      `${BROWSER_PUBLIC_ASSET_ORIGIN}.evil/nightly/${VERSION}/hmux-linux-x64.zip`,
+      `${BROWSER_PUBLIC_ASSET_ORIGIN}/nightly/${VERSION}/hmux-linux-x64.zip?x=1`,
     ]) {
       const fetchMock = feedFetch(signedFeed({
         "linux-x64": platformEntry(url),
@@ -290,7 +290,7 @@ describe("cmux Browser nightly download route", () => {
 
 function platformEntry(
   url: string,
-  archiveRoot = "cmux-browser",
+  archiveRoot = "hmux-browser",
   executable = "chrome",
 ): Record<string, string> {
   return {

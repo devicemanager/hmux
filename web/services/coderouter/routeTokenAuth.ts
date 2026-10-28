@@ -1,7 +1,7 @@
 // Shared credential authentication for every coderouter data-plane surface
 // (codex responses/models, opencode config/proxy, the Claude messages leg).
 //
-// VM credentials arrive only in x-cmux-authorization. Their verified claims
+// VM credentials arrive only in x-hmux-authorization. Their verified claims
 // supply identity; the repository checks revocation and current ownership.
 // Unbound CLI sessions and user API keys keep their existing authentication.
 import {
@@ -26,7 +26,7 @@ import {
 import { CHATMUX_VM_AUTHORIZATION_HEADER, verifyChatmuxVmToken } from "./chatmuxVmToken";
 
 export const ROUTE_TOKEN_HEADER = "x-coderouter-route-token";
-export const VM_ID_HEADER = "x-cmux-vm-id";
+export const VM_ID_HEADER = "x-hmux-vm-id";
 export { VM_AUTHORIZATION_HEADER };
 
 /**

@@ -56,7 +56,7 @@ export function signInEntry(input: {
 
 /**
  * A sign-in started by the Mac app: its return target is after-sign-in with
- * the app's callback and that attempt's `cmux_auth_state`. Read from the
+ * the app's callback and that attempt's `hmux_auth_state`. Read from the
  * return target, not `prompt`, so it survives a detour (a failed OAuth, the
  * error page's "back to sign in"). The pricing webview's sign-in has no
  * attempt state and after-sign-in confirms that one itself.
@@ -67,7 +67,7 @@ export function signInIsForApp(returnTo: string | null): boolean {
     const target = new URL(returnTo, "https://cmux.com");
     if (target.pathname !== "/handler/after-sign-in") return false;
     const appCallback = target.searchParams.get("native_app_return_to");
-    return appCallback !== null && new URL(appCallback).searchParams.has("cmux_auth_state");
+    return appCallback !== null && new URL(appCallback).searchParams.has("hmux_auth_state");
   } catch {
     return false;
   }
@@ -83,7 +83,7 @@ export function signInIsForApp(returnTo: string | null): boolean {
  * browser make the same decision. A hand-made link with it only skips the
  * account confirmation, which is the pre-chooser behaviour.
  */
-export const CONTINUE_PARAM = "cmux_continue";
+export const CONTINUE_PARAM = "hmux_continue";
 
 export function isReturningFromOAuth(params: { get(name: string): string | null }): boolean {
   return params.get(CONTINUE_PARAM) === "1";
@@ -157,7 +157,7 @@ export type RememberedAccount = {
   lastSeenAt: number;
 };
 
-export const ACCOUNT_HISTORY_KEY = "cmux.signIn.accounts";
+export const ACCOUNT_HISTORY_KEY = "hmux.signIn.accounts";
 export const ACCOUNT_HISTORY_LIMIT = 5;
 
 export function parseAccountHistory(raw: string | null): RememberedAccount[] {
@@ -231,7 +231,7 @@ export function otherAccounts(history: RememberedAccount[], currentId: string): 
 
 /**
  * Where a failed OAuth return should land instead of the hosted error page,
- * which prints raw service codes off-centre. Only a cmux code is passed on:
+ * which prints raw service codes off-centre. Only a hmux code is passed on:
  * the provider's text never reaches the page.
  *
  * - `/handler/oauth-callback?error=...` (the provider or service refused)
@@ -305,7 +305,7 @@ export function oauthLoginHint(provider: string, email: string | null | undefine
  * Recorded just before a remembered account leaves for its provider, so a
  * failed return can send that account to the form next time.
  */
-export const PENDING_OAUTH_KEY = "cmux.signIn.pendingOAuth";
+export const PENDING_OAUTH_KEY = "hmux.signIn.pendingOAuth";
 export const PENDING_OAUTH_MAX_AGE_MS = 10 * 60 * 1000;
 
 export function serializePendingOAuth(accountId: string, now: number = Date.now()): string {

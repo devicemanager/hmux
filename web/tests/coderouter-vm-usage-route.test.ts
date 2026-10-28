@@ -125,7 +125,7 @@ describe("GET /api/coderouter/vm-usage", () => {
       response: Response.json({ error: "unauthorized" }, { status: 401 }),
     };
     const response = await getVmUsage(
-      new Request(`https://cmux.test/api/coderouter/vm-usage?vmId=${ownedVm}`),
+      new Request(`https://hmux.test/api/coderouter/vm-usage?vmId=${ownedVm}`),
     );
     expect(response.status).toBe(401);
     expect(vmMetricsCalls).toEqual([]);
@@ -133,13 +133,13 @@ describe("GET /api/coderouter/vm-usage", () => {
 
   test("requires a vmId and hides machines outside the team", async () => {
     const missing = await getVmUsage(
-      new Request("https://cmux.test/api/coderouter/vm-usage"),
+      new Request("https://hmux.test/api/coderouter/vm-usage"),
     );
     expect(missing.status).toBe(400);
     expect(await missing.json()).toEqual({ error: "invalid_request" });
 
     const foreign = await getVmUsage(
-      new Request(`https://cmux.test/api/coderouter/vm-usage?vmId=${otherVm}`),
+      new Request(`https://hmux.test/api/coderouter/vm-usage?vmId=${otherVm}`),
     );
     expect(foreign.status).toBe(404);
     expect(foreign.headers.get("cache-control")).toBe("no-store");
@@ -150,7 +150,7 @@ describe("GET /api/coderouter/vm-usage", () => {
   test("serves the fixed per-machine contract", async () => {
     const response = await getVmUsage(
       new Request(
-        `https://cmux.test/api/coderouter/vm-usage?vmId=${ownedVm.toUpperCase()}`,
+        `https://hmux.test/api/coderouter/vm-usage?vmId=${ownedVm.toUpperCase()}`,
       ),
     );
     expect(response.status).toBe(200);
@@ -175,7 +175,7 @@ describe("GET /api/coderouter/vm-usage", () => {
   test("fails closed to an unavailable body with the same shape", async () => {
     vmMetricsKind = "unavailable";
     const response = await getVmUsage(
-      new Request(`https://cmux.test/api/coderouter/vm-usage?vmId=${ownedVm}`),
+      new Request(`https://hmux.test/api/coderouter/vm-usage?vmId=${ownedVm}`),
     );
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
@@ -203,7 +203,7 @@ describe("GET /api/coderouter/vm-usage/team", () => {
 
   test("joins usage with owned machines and drops unknown ids", async () => {
     const response = await getTeamUsage(
-      new Request("https://cmux.test/api/coderouter/vm-usage/team"),
+      new Request("https://hmux.test/api/coderouter/vm-usage/team"),
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("no-store");
@@ -241,7 +241,7 @@ describe("GET /api/coderouter/vm-usage/team", () => {
   test("returns an empty machine list when the Endpoint is unavailable", async () => {
     machinesKind = "unavailable";
     const response = await getTeamUsage(
-      new Request("https://cmux.test/api/coderouter/vm-usage/team"),
+      new Request("https://hmux.test/api/coderouter/vm-usage/team"),
     );
     expect(await response.json()).toEqual({
       teamId: "team-1",
@@ -258,7 +258,7 @@ describe("GET /api/coderouter/vm-usage/team", () => {
       response: Response.json({ error: "forbidden" }, { status: 403 }),
     };
     const response = await getTeamUsage(
-      new Request("https://cmux.test/api/coderouter/vm-usage/team"),
+      new Request("https://hmux.test/api/coderouter/vm-usage/team"),
     );
     expect(response.status).toBe(403);
     expect(machineMetricsCalls).toEqual([]);
@@ -274,8 +274,8 @@ describe("GET /api/coderouter/vm-usage/self", () => {
 
   test("rejects the placeholder bearer without an edge-injected token", async () => {
     const response = await getSelfUsage(
-      new Request("https://cmux.test/api/coderouter/vm-usage/self", {
-        headers: { authorization: "Bearer cmux-vm-edge-placeholder" },
+      new Request("https://hmux.test/api/coderouter/vm-usage/self", {
+        headers: { authorization: "Bearer hmux-vm-edge-placeholder" },
       }),
     );
     expect(response.status).toBe(401);
@@ -292,8 +292,8 @@ describe("GET /api/coderouter/vm-usage/self", () => {
   });
 
   test("a forged VM header cannot change the signed caller's usage", async () => {
-    const response = await getSelfUsage(new Request("https://cmux.test/api/coderouter/vm-usage/self", {
-      headers: { "x-cmux-authorization": `Bearer ${boundToken}`, "x-cmux-vm-id": otherVm },
+    const response = await getSelfUsage(new Request("https://hmux.test/api/coderouter/vm-usage/self", {
+      headers: { "x-hmux-authorization": `Bearer ${boundToken}`, "x-hmux-vm-id": otherVm },
     }));
     expect(response.status).toBe(200);
     expect(vmMetricsCalls[0]?.[1]).toBe(ownedVm);
@@ -301,7 +301,7 @@ describe("GET /api/coderouter/vm-usage/self", () => {
 
   test("refuses unbound CLI tokens", async () => {
     const response = await getSelfUsage(
-      new Request("https://cmux.test/api/coderouter/vm-usage/self", {
+      new Request("https://hmux.test/api/coderouter/vm-usage/self", {
         headers: { authorization: "Bearer crt_cli" },
       }),
     );
@@ -312,11 +312,11 @@ describe("GET /api/coderouter/vm-usage/self", () => {
 
   test("serves the bound machine's usage through the edge headers", async () => {
     const response = await getSelfUsage(
-      new Request("https://cmux.test/api/coderouter/vm-usage/self", {
+      new Request("https://hmux.test/api/coderouter/vm-usage/self", {
         headers: {
-          authorization: "Bearer cmux-vm-edge-placeholder",
-          "x-cmux-authorization": `Bearer ${boundToken}`,
-          "x-cmux-vm-id": ownedVm,
+          authorization: "Bearer hmux-vm-edge-placeholder",
+          "x-hmux-authorization": `Bearer ${boundToken}`,
+          "x-hmux-vm-id": ownedVm,
         },
       }),
     );
@@ -333,10 +333,10 @@ describe("GET /api/coderouter/vm-usage/self", () => {
 
   test("hides a bound machine the token's team no longer owns", async () => {
     const response = await getSelfUsage(
-      new Request("https://cmux.test/api/coderouter/vm-usage/self", {
+      new Request("https://hmux.test/api/coderouter/vm-usage/self", {
         headers: {
-          "x-cmux-authorization": `Bearer ${foreignToken}`,
-          "x-cmux-vm-id": otherVm,
+          "x-hmux-authorization": `Bearer ${foreignToken}`,
+          "x-hmux-vm-id": otherVm,
         },
       }),
     );

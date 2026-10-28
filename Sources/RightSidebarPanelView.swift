@@ -1,15 +1,15 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import Bonsplit
-import CMUXAgentLaunch
-import CmuxAppKitSupportUI
-import CmuxFoundation
-import CmuxSettings
-import CmuxSettingsUI
-import CmuxSidebarInterpreterClient
-import CmuxSidebarRemoteRender
-import CmuxSwiftRender
-import CmuxSwiftRenderUI
+import HMUXAgentLaunch
+import HmuxAppKitSupportUI
+import HmuxFoundation
+import HmuxSettings
+import HmuxSettingsUI
+import HmuxSidebarInterpreterClient
+import HmuxSidebarRemoteRender
+import HmuxSwiftRender
+import HmuxSwiftRenderUI
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -176,7 +176,7 @@ struct RightSidebarPanelView: View {
         .rightSidebarButtonBorderShape()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         // Keep every mode (including Dock and AppKit-backed file rows) on the
-        // same resolved cmux scheme as the window and left sidebar.
+        // same resolved hmux scheme as the window and left sidebar.
         .environment(\.colorScheme, windowAppearance.resolvedColorScheme)
         .background(
             RightSidebarKeyboardFocusBridge()
@@ -212,7 +212,7 @@ struct RightSidebarPanelView: View {
             refreshModeAvailabilityAndFocusIfNeeded()
         }
         .onReceive(NotificationCenter.default.publisher(for: ManagedDevicePolicy.didChangeNotification)
-            .merge(with: NotificationCenter.default.publisher(for: .cmuxFeatureFlagsDidChange))) { _ in
+            .merge(with: NotificationCenter.default.publisher(for: .hmuxFeatureFlagsDidChange))) { _ in
             managedPolicyRevision &+= 1
             refreshModeAvailabilityAndFocusIfNeeded()
         }
@@ -496,18 +496,18 @@ struct RightSidebarPanelView: View {
         }
     }
 
-    /// Custom mode: mounts the selected `~/.config/cmux/sidebars/<name>.{js,swift,json}`
+    /// Custom mode: mounts the selected `~/.config/hmux/sidebars/<name>.{js,swift,json}`
     /// through the same surface as the left sidebar and panes (file-watched,
-    /// hot-reloading, same data keys and `cmux(...)` actions).
+    /// hot-reloading, same data keys and `hmux(...)` actions).
     @ViewBuilder
     private var customSidebarPanel: some View {
         if let name = fileExplorerState.customSidebarName,
-           let fileURL = CmuxExtensionSidebarSelection.customSidebarFileURL(forName: name) {
+           let fileURL = HmuxExtensionSidebarSelection.customSidebarFileURL(forName: name) {
             TimelineView(.periodic(from: .now, by: 1)) { timeline in
                 CustomSidebarSurface(
                     fileURL: fileURL,
                     dataContext: customSidebarDataContext(timeline.date),
-                    dispatch: makeCmuxSidebarActionDispatch(),
+                    dispatch: makeHmuxSidebarActionDispatch(),
                     contentInsets: CustomSidebarContentInsets(top: 8, bottom: 8),
                     rendersInProcess: customSidebarRenderer == .inProcess,
                     client: $customSidebarWorkerClient
@@ -529,7 +529,7 @@ struct RightSidebarPanelView: View {
                 .foregroundStyle(.secondary)
                 Text(String(
                     localized: "rightSidebar.customSidebar.emptyHint",
-                    defaultValue: "Pick one with: cmux right-sidebar set custom <name>"
+                    defaultValue: "Pick one with: hmux right-sidebar set custom <name>"
                 ))
                 .font(.caption)
                 .foregroundStyle(.tertiary)
@@ -615,7 +615,7 @@ final class RightSidebarKeyboardFocusView: NSView {
         AppDelegate.shared?.keyboardFocusCoordinator(for: window)?.registerRightSidebarHost(self)
 #if DEBUG
         dlog(
-            "rs.focus.host.attach win=\(window.windowNumber) canAccept=\(cmuxCanAcceptRightSidebarKeyboardFocus ? 1 : 0) " +
+            "rs.focus.host.attach win=\(window.windowNumber) canAccept=\(hmuxCanAcceptRightSidebarKeyboardFocus ? 1 : 0) " +
             "fr=\(rightSidebarDebugResponder(window.firstResponder))"
         )
 #endif
@@ -673,7 +673,7 @@ final class RightSidebarKeyboardFocusView: NSView {
 }
 
 extension NSView {
-    var cmuxCanAcceptRightSidebarKeyboardFocus: Bool {
+    var hmuxCanAcceptRightSidebarKeyboardFocus: Bool {
         guard window != nil, !isHiddenOrHasHiddenAncestor else { return false }
         var view: NSView? = self
         while let current = view {

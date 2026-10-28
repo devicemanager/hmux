@@ -5,7 +5,7 @@ import { chmodSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync 
 import { createServer } from "node:net";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GUEST_CMUX_SHIM } from "../services/vms/guestCli";
+import { GUEST_HMUX_SHIM } from "../services/vms/guestCli";
 
 // Executable daemon fixture: rejects unsupported grammar and persists topology.
 // Terminal processes stay fixed while placements change, as in the resource API.
@@ -77,9 +77,9 @@ emit({value: item, generation: process.env.RECEIPT_GENERATION ?? graph.session.g
 `;
 
 async function fixture(peer: boolean) {
-  const dir = mkdtempSync(join(tmpdir(), "cmux-topology-"));
-  const shim = join(dir, "cmux");
-  const daemon = join(dir, "cmux-tui");
+  const dir = mkdtempSync(join(tmpdir(), "hmux-topology-"));
+  const shim = join(dir, "hmux");
+  const daemon = join(dir, "hmux-tui");
   const graph = {
     session: { generation: "generation-1", revision: "9007199254740993" },
     workspaces: [{ id: "ws_task", name: "task", index: 0 }, { id: "ws_other", name: "other", index: 1 }],
@@ -89,7 +89,7 @@ async function fixture(peer: boolean) {
       { id: "tab_other", content_kind: "terminal", content_id: "term_other", pane_id: "pane_b", index: 1 }],
     terminals: [{ id: "term_agent", pid: 42 }, { id: "term_other", pid: 43 }],
   };
-  writeFileSync(shim, GUEST_CMUX_SHIM);
+  writeFileSync(shim, GUEST_HMUX_SHIM);
   writeFileSync(daemon, DAEMON); chmodSync(daemon, 0o755);
   writeFileSync(join(dir, "graph.json"), JSON.stringify(graph));
   writeFileSync(join(dir, "calls.jsonl"), "");
@@ -98,11 +98,11 @@ async function fixture(peer: boolean) {
   const terminalRuns = new Set<() => Promise<void>>();
   if (peer) {
     await new Promise<void>((resolve, reject) => { server.once("error", reject); server.listen(socket, resolve); });
-    mkdirSync(join(dir, ".cmux/peers"), { recursive: true });
-    mkdirSync(join(dir, ".cmux/peer-links"), { recursive: true });
-    writeFileSync(join(dir, ".cmux/peers/peer.json"), "{}");
-    writeFileSync(join(dir, ".cmux/peer-links/peer.sock-path"), socket);
-    writeFileSync(join(dir, ".cmux/peer-links/peer.pid"), String(process.pid));
+    mkdirSync(join(dir, ".hmux/peers"), { recursive: true });
+    mkdirSync(join(dir, ".hmux/peer-links"), { recursive: true });
+    writeFileSync(join(dir, ".hmux/peers/peer.json"), "{}");
+    writeFileSync(join(dir, ".hmux/peer-links/peer.sock-path"), socket);
+    writeFileSync(join(dir, ".hmux/peer-links/peer.pid"), String(process.pid));
   }
   return {
     graph,
@@ -110,13 +110,13 @@ async function fixture(peer: boolean) {
     /** Runs the guest shim, routed through the peer when the fixture is a peer. */
     run: (args: string[], env = {}) => runChild("sh", [shim, ...(peer ? ["vm", args[0], args[1], "peer", ...args.slice(2)] : args)], {
       timeout: 10_000,
-      env: { NODE_ENV: "test", PATH: process.env.PATH, HOME: dir, CMUX_TUI_BIN: daemon, CMUX_TUI_TERMINAL_ID: "term_agent", ...env },
+      env: { NODE_ENV: "test", PATH: process.env.PATH, HOME: dir, HMUX_TUI_BIN: daemon, HMUX_TUI_TERMINAL_ID: "term_agent", ...env },
     }),
     runInTerminal: (script: string, ids: string[]) => {
       chmodSync(shim, 0o755);
       const child = spawn("sh", ["-c", script, "guest-burst", ...ids], {
         detached: true, stdio: ["ignore", "pipe", "pipe"],
-        env: { NODE_ENV: "test", PATH: `${dir}:${process.env.PATH}`, HOME: dir, CMUX_TUI_BIN: daemon },
+        env: { NODE_ENV: "test", PATH: `${dir}:${process.env.PATH}`, HOME: dir, HMUX_TUI_BIN: daemon },
       });
       let stdout = "", stderr = "";
       child.stdout.setEncoding("utf8").on("data", chunk => { stdout += chunk; });
@@ -229,7 +229,7 @@ for (const peer of [false, true]) test(`topology rejects invalid moves and prese
     }
     const missing = await f.run(["workspace", "rename", "ws_task"]);
     expect(missing.status).toBe(2);
-    expect(missing.stderr).toContain("cmux workspace help");
+    expect(missing.stderr).toContain("hmux workspace help");
   } finally { await f.cleanup(); }
 });
 
@@ -329,16 +329,16 @@ describe("in-terminal close loop", () => {
   test("forwards one close per workspace and stops on failure", async () => {
     const f = await fixture(false);
     activeFixture = f;
-    const ids = Array.from({ length: 15 }, (_, index) => `ws_cmux${index + 1}`);
+    const ids = Array.from({ length: 15 }, (_, index) => `ws_hmux${index + 1}`);
     f.seedWorkspaces(["ws_agi", ...ids]);
-    const result = await f.runInTerminal('set -e; for id do cmux workspace close --workspace "$id" --focus false >/dev/null; done', ids);
+    const result = await f.runInTerminal('set -e; for id do hmux workspace close --workspace "$id" --focus false >/dev/null; done', ids);
     expect(result.status).toBe(0);
     expect(result.stderr).toBe("");
     expect(f.calls()).toEqual(ids.map(id => [...f.route, "workspace", id, "close"]));
     expect(f.read().workspaces.map((workspace: { id: string }) => workspace.id)).toEqual(["ws_agi"]);
     expect(f.read().terminals).toEqual(f.graph.terminals);
 
-    const failed = await f.runInTerminal('set -e; for id do cmux workspace close --workspace "$id" --focus false >/dev/null; done', ["ws_missing", "ws_agi"]);
+    const failed = await f.runInTerminal('set -e; for id do hmux workspace close --workspace "$id" --focus false >/dev/null; done', ["ws_missing", "ws_agi"]);
     expect(failed.status).toBe(2);
     expect(f.calls().at(-1)).toEqual([...f.route, "workspace", "ws_missing", "close"]);
     expect(f.calls()).toHaveLength(ids.length + 1);
@@ -347,14 +347,14 @@ describe("in-terminal close loop", () => {
 });
 
 test("topology help is localized and works before daemon installation", async () => {
-  const dir = mkdtempSync(join(tmpdir(), "cmux-topology-help-"));
+  const dir = mkdtempSync(join(tmpdir(), "hmux-topology-help-"));
   try {
-    const shim = join(dir, "cmux"); writeFileSync(shim, GUEST_CMUX_SHIM);
+    const shim = join(dir, "hmux"); writeFileSync(shim, GUEST_HMUX_SHIM);
     for (const noun of ["workspace", "pane", "tab", "terminal"]) {
       for (const args of [[noun, "--help"], ["vm", noun, "--help"]]) {
         const run = await runChild("sh", [shim, ...args], {
           timeout: 5_000,
-          env: {NODE_ENV: "test", HOME: dir, PATH: process.env.PATH, CMUX_TUI_BIN: join(dir, "absent"), LC_ALL: "ja_JP.UTF-8"}});
+          env: {NODE_ENV: "test", HOME: dir, PATH: process.env.PATH, HMUX_TUI_BIN: join(dir, "absent"), LC_ALL: "ja_JP.UTF-8"}});
         expect(run.status).toBe(0); expect(run.stdout).toContain("配置");
       }
     }

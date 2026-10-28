@@ -8,7 +8,7 @@ import sys
 
 
 MARKER = re.compile(
-    r"<!--\s*cmux-published-sha:\s*([0-9a-f]{40})\s*-->",
+    r"<!--\s*hmux-published-sha:\s*([0-9a-f]{40})\s*-->",
     re.IGNORECASE,
 )
 

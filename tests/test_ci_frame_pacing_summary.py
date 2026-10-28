@@ -75,11 +75,11 @@ def test_a_mode_that_never_drew_says_why_instead_of_flagging() -> None:
         out = Path(temp)
         # A locked console: the flings ran but the page drew nothing.
         write_run(out, "ready 17 8.33 main=17", {"0": [(0, 0, 0, 0)], "1": []})
-        (out / "1-error.txt").write_text("mode 1: no socket at /tmp/cmux-debug-frame-pacing.sock\n")
+        (out / "1-error.txt").write_text("mode 1: no socket at /tmp/hmux-debug-frame-pacing.sock\n")
         result = run(out)
         assert result.returncode == 0, result.stderr
         assert "| capped (60 Hz) | 0 | | | | | not measured: no fling drew a frame |" in result.stdout, result.stdout
-        assert "not measured: mode 1: no socket at /tmp/cmux-debug-frame-pacing.sock" in result.stdout, result.stdout
+        assert "not measured: mode 1: no socket at /tmp/hmux-debug-frame-pacing.sock" in result.stdout, result.stdout
         assert "::warning" not in result.stderr, result.stderr
 
 

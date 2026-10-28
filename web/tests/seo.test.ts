@@ -29,7 +29,7 @@ import {
   blogIndexSeoCopy,
   blogPostSeoCopy,
   browserDownloadSeoCopy,
-  cmuxHistorySeoCopy,
+  hmuxHistorySeoCopy,
   communitySeoCopy,
   compareIndexSeoCopy,
   comparePageSeoCopy,
@@ -56,20 +56,20 @@ describe("SEO metadata helpers", () => {
     const japaneseSlugs = blogPostsForLocale("ja").map((post) => post.slug);
     const germanSlugs = blogPostsForLocale("de").map((post) => post.slug);
 
-    expect(englishSlugs).toContain("cmux-omo");
+    expect(englishSlugs).toContain("hmux-omo");
     expect(englishSlugs).toContain("gpl");
-    expect(englishSlugs).toContain("cmux-claude-teams");
-    expect(japaneseSlugs).not.toContain("cmux-omo");
+    expect(englishSlugs).toContain("hmux-claude-teams");
+    expect(japaneseSlugs).not.toContain("hmux-omo");
     expect(japaneseSlugs).not.toContain("gpl");
-    expect(japaneseSlugs).not.toContain("cmux-claude-teams");
+    expect(japaneseSlugs).not.toContain("hmux-claude-teams");
     expect(englishSlugs).toContain("367-billion-tokens");
     expect(japaneseSlugs).toContain("367-billion-tokens");
     expect(germanSlugs).not.toContain("367-billion-tokens");
     expect(englishSlugs).toContain("claude-code-best-worktree-manager");
     expect(japaneseSlugs).toContain("claude-code-best-worktree-manager");
     expect(germanSlugs).not.toContain("claude-code-best-worktree-manager");
-    expect(japaneseSlugs).toContain("cmux-ssh");
-    expect(germanSlugs).not.toContain("cmux-ssh");
+    expect(japaneseSlugs).toContain("hmux-ssh");
+    expect(germanSlugs).not.toContain("hmux-ssh");
   });
 
   test("keeps canonical URLs locale-aware", () => {
@@ -79,11 +79,11 @@ describe("SEO metadata helpers", () => {
       "https://cmux.com/ja/docs",
     );
     expect(
-      buildAlternates("en", "/blog/cmux-omo", englishFallbackContentLocales)
+      buildAlternates("en", "/blog/hmux-omo", englishFallbackContentLocales)
         .languages,
     ).toEqual({
-      en: "https://cmux.com/blog/cmux-omo",
-      "x-default": "https://cmux.com/blog/cmux-omo",
+      en: "https://cmux.com/blog/hmux-omo",
+      "x-default": "https://cmux.com/blog/hmux-omo",
     });
   });
 
@@ -95,11 +95,11 @@ describe("SEO metadata helpers", () => {
       seoDescription("ja", "CLI リファレンス。", { minLength: 110 }),
     ).toContain("macOS の AI コーディングエージェント向け。");
     expect(
-      seoDescription("ja", "Hacker Newsでcmuxをローンチした話。"),
+      seoDescription("ja", "Hacker Newsでhmuxをローンチした話。"),
     ).toContain("縦型タブ、通知、分割ペイン、ブラウザ自動化、セッション復元");
     const thaiDescription = seoDescription(
       "th",
-      "ทำไมเราถึงสร้าง cmux เทอร์มินัลใหม่สำหรับ macOS",
+      "ทำไมเราถึงสร้าง hmux เทอร์มินัลใหม่สำหรับ macOS",
     );
     expect(thaiDescription).toContain(
       "สร้างมาเพื่อเอเจนต์เขียนโค้ด AI บน macOS.",
@@ -107,14 +107,14 @@ describe("SEO metadata helpers", () => {
     expect(searchSnippetLength(thaiDescription)).toBeGreaterThanOrEqual(90);
     expect(searchSnippetLength(thaiDescription)).toBeLessThanOrEqual(160);
     const overboundWithSuffix =
-      "A detailed page about running multiple coding agents in cmux on macOS.";
+      "A detailed page about running multiple coding agents in hmux on macOS.";
     expect(seoDescription("en", overboundWithSuffix, { minLength: 110 })).toBe(
       overboundWithSuffix,
     );
   });
 
   test("appends complete localized context only when the result fits", () => {
-    const short = seoDescription("en", "News from the cmux team", {
+    const short = seoDescription("en", "News from the hmux team", {
       minLength: 110,
     });
     expect(short.length).toBeGreaterThanOrEqual(110);
@@ -137,8 +137,8 @@ describe("SEO metadata helpers", () => {
     expect(completeMetadataSentence("en", "Examples:")).toBe("Examples:");
     expect(completeMetadataSentence("km", "ឧទាហរណ៍៖")).toBe("ឧទាហរណ៍៖");
     expect(
-      joinMetadataQuestionAndAnswer("th", "ทำไมต้อง cmux", "เพราะเร็ว"),
-    ).toBe("ทำไมต้อง cmux? เพราะเร็ว.");
+      joinMetadataQuestionAndAnswer("th", "ทำไมต้อง hmux", "เพราะเร็ว"),
+    ).toBe("ทำไมต้อง hmux? เพราะเร็ว.");
   });
 
   test("preserves overbound authored copy when no complete candidate fits", () => {
@@ -163,9 +163,9 @@ describe("SEO metadata helpers", () => {
     ).toBe(safeCandidate);
     expect(
       seoTitle("en", "Compare {product} for AI coding agents", {
-        fallbackCandidates: ["Complete safe metadata title for cmux"],
+        fallbackCandidates: ["Complete safe metadata title for hmux"],
       }),
-    ).toBe("Complete safe metadata title for cmux");
+    ).toBe("Complete safe metadata title for hmux");
   });
 
   test("adds useful context to short titles and selects complete fallbacks", () => {
@@ -182,18 +182,18 @@ describe("SEO metadata helpers", () => {
   });
 
   test("can preserve a complete localized title below the generic minimum", () => {
-    const title = "cmux — 专为多任务打造的终端";
+    const title = "hmux — 专为多任务打造的终端";
     expect(seoTitle("zh-CN", title, { minLength: 0 })).toBe(title);
   });
 
   test("does not add localized copy to an English fallback description", () => {
     const fallback =
-      "Talk with cmux about Enterprise deployment, SSO, self-hosted Cloud VMs, audit logs, and committed usage.";
+      "Talk with hmux about Enterprise deployment, SSO, self-hosted Cloud VMs, audit logs, and committed usage.";
     expect(seoDescription("de", fallback)).toBe(fallback);
   });
 
   test("keeps legal descriptions limited to their legal summary", () => {
-    const summary = "The terms that govern use of cmux.";
+    const summary = "The terms that govern use of hmux.";
     expect(
       legalMetadata("/terms-of-service", "Terms", summary).description,
     ).toBe(summary);
@@ -201,14 +201,14 @@ describe("SEO metadata helpers", () => {
 
   test("adds complete shared social metadata", () => {
     expect(openGraphDefaults("en", "article")).toEqual({
-      siteName: "cmux",
+      siteName: "hmux",
       type: "article",
       images: [
         {
           url: "https://cmux.com/opengraph-image",
           width: 2400,
           height: 1260,
-          alt: "cmux - The terminal built for multitasking",
+          alt: "hmux - The terminal built for multitasking",
         },
       ],
     });
@@ -221,19 +221,19 @@ describe("SEO metadata helpers", () => {
     expect(twitterSummary("ja", "Title", "Description").images).toEqual([
       "https://cmux.com/ja/opengraph-image",
     ]);
-    expect(browserOpenGraphDefaults("Descargar cmux para Windows")).toEqual({
-      siteName: "cmux",
+    expect(browserOpenGraphDefaults("Descargar hmux para Windows")).toEqual({
+      siteName: "hmux",
       type: "website",
       images: [
         {
           url: "https://cmux.com/browser-opengraph-image",
           width: 2400,
           height: 1260,
-          alt: "Descargar cmux para Windows",
+          alt: "Descargar hmux para Windows",
         },
       ],
     });
-    expect(browserOpenGraphImage("متصفح cmux").alt).toBe("متصفح cmux");
+    expect(browserOpenGraphImage("متصفح hmux").alt).toBe("متصفح hmux");
     expect(browserTwitterSummary("Title", "Description").images).toEqual([
       "https://cmux.com/browser-opengraph-image",
     ]);
@@ -262,7 +262,7 @@ describe("SEO metadata helpers", () => {
       const siteMeta = messageLookup(messages.meta);
       const rows = [
         auditedRow("/", homeSeoCopy(locale, siteMeta), [
-          "cmux",
+          "hmux",
           messages.meta.description,
           messages.meta.ogDescription,
         ]),
@@ -285,30 +285,30 @@ describe("SEO metadata helpers", () => {
           ],
         ),
         auditedRow(
-          "/blog/cmux-history",
-          cmuxHistorySeoCopy(
+          "/blog/hmux-history",
+          hmuxHistorySeoCopy(
             locale,
-            messageLookup(messages.blog.cmuxHistory),
-            messageLookup(messages.blog.posts.cmuxHistory),
+            messageLookup(messages.blog.hmuxHistory),
+            messageLookup(messages.blog.posts.hmuxHistory),
             siteMeta,
           ),
           [
-            messages.blog.cmuxHistory.metaDescription,
-            messages.blog.posts.cmuxHistory.title,
-            messages.blog.posts.cmuxHistory.summary,
-            messages.blog.posts.cmuxHistory.p1,
-            messages.blog.posts.cmuxHistory.focusP,
-            messages.blog.posts.cmuxHistory.fullHistoryP,
-            messages.blog.posts.cmuxHistory.reopenTitle,
-            messages.blog.posts.cmuxHistory.agentTitle,
-            messages.blog.posts.cmuxHistory.focusTitle,
+            messages.blog.hmuxHistory.metaDescription,
+            messages.blog.posts.hmuxHistory.title,
+            messages.blog.posts.hmuxHistory.summary,
+            messages.blog.posts.hmuxHistory.p1,
+            messages.blog.posts.hmuxHistory.focusP,
+            messages.blog.posts.hmuxHistory.fullHistoryP,
+            messages.blog.posts.hmuxHistory.reopenTitle,
+            messages.blog.posts.hmuxHistory.agentTitle,
+            messages.blog.posts.hmuxHistory.focusTitle,
           ],
           [
-            messages.blog.cmuxHistory.metaTitle,
-            messages.blog.posts.cmuxHistory.title,
-            messages.blog.posts.cmuxHistory.reopenTitle,
-            messages.blog.posts.cmuxHistory.agentTitle,
-            messages.blog.posts.cmuxHistory.focusTitle,
+            messages.blog.hmuxHistory.metaTitle,
+            messages.blog.posts.hmuxHistory.title,
+            messages.blog.posts.hmuxHistory.reopenTitle,
+            messages.blog.posts.hmuxHistory.agentTitle,
+            messages.blog.posts.hmuxHistory.focusTitle,
           ],
         ),
         auditedRow(
@@ -330,7 +330,7 @@ describe("SEO metadata helpers", () => {
           [
             messages.landing.bestTerminal.title,
             messages.landing.bestTerminal.metaDescription,
-            messages.landing.bestTerminal.cmuxBuiltFor,
+            messages.landing.bestTerminal.hmuxBuiltFor,
           ],
         ),
         auditedRow(
@@ -399,20 +399,20 @@ describe("SEO metadata helpers", () => {
 
       const auditedBlogPosts = [
         ["367-billion-tokens", "tokenMultitasking"],
-        ["cmux-omo", "cmuxOmo"],
+        ["hmux-omo", "hmuxOmo"],
         ["gpl", "gpl"],
         ["show-hn-launch", "showHnLaunch"],
         ["session-restore", "sessionRestore"],
-        ["cmux-home", "cmuxHome"],
-        ["introducing-cmux", "introducingCmux"],
+        ["hmux-home", "hmuxHome"],
+        ["introducing-hmux", "introducingHmux"],
         ["claude-code-best-worktree-manager", "claudeCodeBestWorktreeManager"],
-        ["zen-of-cmux", "zenOfCmux"],
+        ["zen-of-hmux", "zenOfHmux"],
         ["cmd-shift-u", "cmdShiftU"],
         ["unread-shortcuts", "unreadShortcuts"],
         ["passkey-auth", "passkeyAuth"],
       ] as const;
       for (const [slug, postKey] of auditedBlogPosts) {
-        if (locale !== "en" && (postKey === "cmuxOmo" || postKey === "gpl")) {
+        if (locale !== "en" && (postKey === "hmuxOmo" || postKey === "gpl")) {
           continue;
         }
         if (
@@ -630,12 +630,12 @@ describe("SEO metadata helpers", () => {
           expect(titleLength).toBeGreaterThanOrEqual(30);
         }
         expect(titleLength).toBeLessThanOrEqual(60);
-        expect(renderedTitle).not.toMatch(/cmux\s*—\s*cmux/iu);
+        expect(renderedTitle).not.toMatch(/hmux\s*—\s*hmux/iu);
         expect(`${renderedTitle}${row.copy.description}`).not.toMatch(
           /…|<\/?(?:link|code)>/u,
         );
         expect(`${renderedTitle}${row.copy.description}`).not.toMatch(
-          /[{}]|__CMUXPH/iu,
+          /[{}]|__HMUXPH/iu,
         );
         expect(row.copy.description).not.toMatch(/[!?។៕。！？؟]\./u);
         expect(row.copy.description).not.toMatch(/[:：][.!?។៕。！？؟]/u);
@@ -664,10 +664,10 @@ describe("SEO metadata helpers", () => {
 
   test("uses deterministic code-point widths for Khmer metadata", async () => {
     const messages = await messagesFor("km");
-    const page = messages.landing.compare.pages.cmuxVsZed;
+    const page = messages.landing.compare.pages.hmuxVsZed;
     const copy = comparePageSeoCopy(
       "km",
-      "cmuxVsZed",
+      "hmuxVsZed",
       messageLookup(page),
       messageLookup(messages.landing.links),
       messageLookup(messages.meta),
@@ -714,7 +714,7 @@ describe("SEO metadata helpers", () => {
       englishMessages.docs.layoutTitle,
     );
     const englishTitle = `${englishSsh.title} — ${englishMessages.docs.layoutTitle}`;
-    expect(englishTitle).toBe("SSH — AI coding on macOS — cmux docs");
+    expect(englishTitle).toBe("SSH — AI coding on macOS — hmux docs");
     expect(englishTitle).not.toContain("terminal built for multitasking");
 
     const arabicMessages = await messagesFor("ar");
@@ -733,9 +733,9 @@ describe("SEO metadata helpers", () => {
   test("keeps docs descriptions grounded in route-specific prose", async () => {
     const cases = [
       ["en", "configuration", "Ghostty config"],
-      ["de", "ios", "cmux-App"],
+      ["de", "ios", "hmux-App"],
       ["de", "workspaceGroups", "Workspace-Gruppen"],
-      ["it", "customCommands", "cmux.json"],
+      ["it", "customCommands", "hmux.json"],
     ] as const;
 
     for (const [locale, pageKey, expectedRouteText] of cases) {
@@ -767,10 +767,10 @@ describe("SEO metadata helpers", () => {
 
   test("keeps dependent docs prose attached to its page subject", async () => {
     const cases = [
-      ["bs", "api", "cmux CLI i Unix socket API referenca."],
-      ["ar", "api", "مرجع واجهة أوامر cmux وواجهة مقابس Unix."],
+      ["bs", "api", "hmux CLI i Unix socket API referenca."],
+      ["ar", "api", "مرجع واجهة أوامر hmux وواجهة مقابس Unix."],
       ["ko", "dock", "Dock JSON으로"],
-      ["th", "api", "ใช้ cmux CLI และ Unix socket"],
+      ["th", "api", "ใช้ hmux CLI และ Unix socket"],
     ] as const;
 
     for (const [locale, pageKey, expectedStart] of cases) {
@@ -826,13 +826,13 @@ describe("SEO metadata helpers", () => {
       [
         "fr",
         "keyboardShortcuts",
-        "Utilisez les raccourcis clavier cmux pour gérer",
+        "Utilisez les raccourcis clavier hmux pour gérer",
       ],
-      ["pl", "browserAutomation", "Steruj przeglądarką cmux: nawiguj"],
+      ["pl", "browserAutomation", "Steruj przeglądarką hmux: nawiguj"],
       [
         "bs",
         "browserAutomation",
-        "Koristite cmux browser komande za navigaciju",
+        "Koristite hmux browser komande za navigaciju",
       ],
     ] as const) {
       const messages = await messagesFor(locale);
@@ -899,7 +899,7 @@ describe("SEO metadata helpers", () => {
     expect(multipleAgentsCopy.title).toContain(
       messages.landing.links.claudeTeams,
     );
-    expect(multipleAgentsCopy.title).not.toContain("cmux · Claude Code");
+    expect(multipleAgentsCopy.title).not.toContain("hmux · Claude Code");
 
     const khmerMessages = await messagesFor("km");
     const khmerMultipleAgents =
@@ -971,20 +971,20 @@ describe("SEO middleware", () => {
   let previousDocsChannel: string | undefined;
 
   beforeEach(() => {
-    previousDocsChannel = process.env.CMUX_DOCS_CHANNEL;
-    process.env.CMUX_DOCS_CHANNEL = "release";
+    previousDocsChannel = process.env.HMUX_DOCS_CHANNEL;
+    process.env.HMUX_DOCS_CHANNEL = "release";
   });
 
   afterEach(() => {
     if (previousDocsChannel === undefined) {
-      delete process.env.CMUX_DOCS_CHANNEL;
+      delete process.env.HMUX_DOCS_CHANNEL;
     } else {
-      process.env.CMUX_DOCS_CHANNEL = previousDocsChannel;
+      process.env.HMUX_DOCS_CHANNEL = previousDocsChannel;
     }
   });
 
   test("leaves public docs paths unchanged for channel routing", () => {
-    delete process.env.CMUX_DOCS_CHANNEL;
+    delete process.env.HMUX_DOCS_CHANNEL;
 
     for (const pathname of [
       "/docs/base",
@@ -1024,7 +1024,7 @@ describe("SEO middleware", () => {
   test("strips the native browser-split marker when a web request reaches the server", () => {
     const response = middleware(
       requestFor(
-        "/dashboard/testflight?cmux_open_in_browser=split-right&source=welcome",
+        "/dashboard/testflight?hmux_open_in_browser=split-right&source=welcome",
       ),
     );
     const location = new URL(response.headers.get("location")!);
@@ -1032,7 +1032,7 @@ describe("SEO middleware", () => {
     expect(response.status).toBe(307);
     expect(location.pathname).toBe("/dashboard/testflight");
     expect(location.searchParams.get("source")).toBe("welcome");
-    expect(location.searchParams.has("cmux_open_in_browser")).toBe(false);
+    expect(location.searchParams.has("hmux_open_in_browser")).toBe(false);
   });
 
   test("does not advertise unsupported locale variants globally", () => {
@@ -1216,7 +1216,7 @@ describe("SEO middleware", () => {
           url.endsWith("/pricing") ||
           url.endsWith("/blog/367-billion-tokens") ||
           url.endsWith("/blog/claude-code-best-worktree-manager") ||
-          url.endsWith("/blog/cmux-ssh") ||
+          url.endsWith("/blog/hmux-ssh") ||
           url.endsWith("/docs/agent-integrations/oh-my-pi"),
       );
     expect(urls).toEqual([
@@ -1226,8 +1226,8 @@ describe("SEO middleware", () => {
       "https://cmux.com/ja/blog/367-billion-tokens",
       "https://cmux.com/blog/claude-code-best-worktree-manager",
       "https://cmux.com/ja/blog/claude-code-best-worktree-manager",
-      "https://cmux.com/blog/cmux-ssh",
-      "https://cmux.com/ja/blog/cmux-ssh",
+      "https://cmux.com/blog/hmux-ssh",
+      "https://cmux.com/ja/blog/hmux-ssh",
       "https://cmux.com/docs/agent-integrations/oh-my-pi",
       "https://cmux.com/ja/docs/agent-integrations/oh-my-pi",
     ]);
@@ -1242,8 +1242,8 @@ describe("SEO middleware", () => {
 
   test("canonicalizes English-only blog posts", () => {
     for (const canonicalPath of [
-      "/blog/cmux-claude-teams",
-      "/blog/cmux-omo",
+      "/blog/hmux-claude-teams",
+      "/blog/hmux-omo",
       "/blog/gpl",
     ]) {
       const localized = middleware(
@@ -1269,13 +1269,13 @@ describe("SEO middleware", () => {
       .map((entry) => entry.url)
       .filter(
         (url) =>
-          url.endsWith("/blog/cmux-claude-teams") ||
-          url.endsWith("/blog/cmux-omo") ||
+          url.endsWith("/blog/hmux-claude-teams") ||
+          url.endsWith("/blog/hmux-omo") ||
           url.endsWith("/blog/gpl"),
       );
     expect(urls).toEqual([
-      "https://cmux.com/blog/cmux-claude-teams",
-      "https://cmux.com/blog/cmux-omo",
+      "https://cmux.com/blog/hmux-claude-teams",
+      "https://cmux.com/blog/hmux-omo",
       "https://cmux.com/blog/gpl",
     ]);
   });
@@ -1284,7 +1284,7 @@ describe("SEO middleware", () => {
     for (const path of [
       "/blog/367-billion-tokens",
       "/blog/claude-code-best-worktree-manager",
-      "/blog/cmux-ssh",
+      "/blog/hmux-ssh",
     ]) {
       const german = middleware(
         requestFor(`/de${path}`, { "accept-language": "de" }),
@@ -1380,7 +1380,7 @@ describe("docs markdown alternate", () => {
     expect(buildAlternates("ja", "/docs/api").types).toEqual({
       "text/markdown": "https://cmux.com/ja/docs/api.md",
     });
-    expect("types" in buildAlternates("en", "/blog/cmux-omo")).toBe(false);
+    expect("types" in buildAlternates("en", "/blog/hmux-omo")).toBe(false);
     // /docs/base has no agent-readable copy, so it must not advertise one.
     expect("types" in buildAlternates("en", "/docs/base")).toBe(false);
   });

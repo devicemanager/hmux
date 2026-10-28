@@ -35,11 +35,11 @@ describe("docsHtmlToMarkdown", () => {
       "div",
       {},
       el("h1", {}, el("a", { "data-pagefind-ignore": "all", href: "#title" }, el("svg", {})), "Getting Started"),
-      el("p", {}, "Run ", el("code", {}, "cmux ping"), " then see ", el("a", { href: "/docs/api" }, "the API"), "."),
+      el("p", {}, "Run ", el("code", {}, "hmux ping"), " then see ", el("a", { href: "/docs/api" }, "the API"), "."),
       el("h2", {}, "Install"),
     );
     expect(docsHtmlToMarkdown(root, origin)).toBe(
-      "# Getting Started\n\nRun `cmux ping` then see [the API](https://cmux.com/docs/api).\n\n## Install\n",
+      "# Getting Started\n\nRun `hmux ping` then see [the API](https://cmux.com/docs/api).\n\n## Install\n",
     );
   });
 
@@ -48,10 +48,10 @@ describe("docsHtmlToMarkdown", () => {
       "div",
       { "data-code-block": "", "data-code-lang": "bash" },
       el("div", {}, el("span", {}, "bash"), el("button", {}, "Copy code")),
-      el("pre", {}, el("code", {}, "brew tap manaflow-ai/cmux\nbrew install --cask cmux\n")),
+      el("pre", {}, el("code", {}, "brew tap manaflow-ai/cmux\nbrew install --cask hmux\n")),
     );
     expect(docsHtmlToMarkdown(el("div", {}, root), origin)).toBe(
-      "bash\n\n```bash\nbrew tap manaflow-ai/cmux\nbrew install --cask cmux\n```\n",
+      "bash\n\n```bash\nbrew tap manaflow-ai/cmux\nbrew install --cask hmux\n```\n",
     );
   });
 

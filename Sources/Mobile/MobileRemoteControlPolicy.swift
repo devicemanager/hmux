@@ -1,8 +1,8 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// MDM master switch for the Mac acting as a remote view/control host for
-/// the cmux iOS companion app.
+/// the hmux iOS companion app.
 ///
 /// When an administrator's configuration profile enforces
 /// `DisableRemoteControl`, every hosting surface shuts off: the Iroh host

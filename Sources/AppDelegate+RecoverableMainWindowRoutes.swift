@@ -1,6 +1,6 @@
 import AppKit
-import CmuxTerminalCore
-import CmuxTerminal
+import HmuxTerminalCore
+import HmuxTerminal
 
 // The retire sweep is the MainWindowRouteRetiring witness: terminal topology
 // changes prompt a coalesced lifecycle audit through the seam instead of the
@@ -149,7 +149,7 @@ extension AppDelegate {
         }.count
 #if DEBUG
         if after != before {
-            cmuxDebugLog("recoverableRoute.prune reason=\(reason) removed=\(before - after)")
+            hmuxDebugLog("recoverableRoute.prune reason=\(reason) removed=\(before - after)")
         }
 #endif
     }
@@ -702,7 +702,7 @@ extension AppDelegate {
         }
 #if DEBUG
         if removed > 0 {
-            cmuxDebugLog("recoverableRoute.prune reason=\(reason) removed=\(removed)")
+            hmuxDebugLog("recoverableRoute.prune reason=\(reason) removed=\(removed)")
         }
 #endif
     }
@@ -793,7 +793,7 @@ extension AppDelegate {
         }
         retireRecoverableMainWindowRouteIfCurrent(route, reason: "forget")
 #if DEBUG
-        cmuxDebugLog("recoverableRoute.forget windowId=\(String(windowId.uuidString.prefix(8)))")
+        hmuxDebugLog("recoverableRoute.forget windowId=\(String(windowId.uuidString.prefix(8)))")
 #endif
     }
 
@@ -860,7 +860,7 @@ extension AppDelegate {
         route.markForTeardown()
         remoteTmuxController.handleWindowWorkspacesClosed(workspaceIds: workspaceIds)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "recoverableRoute.retire reason=\(reason) windowId=\(String(route.windowId.uuidString.prefix(8)))"
         )
 #endif
@@ -981,7 +981,7 @@ extension AppDelegate {
             scheduleWindowlessRecoverableMainWindowRouteFreeze(route)
         }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "recoverableRoute.remember windowId=\(String(windowId.uuidString.prefix(8))) " +
                 "phase=orphaned"
         )
@@ -1016,7 +1016,7 @@ extension AppDelegate {
             window: window
         ) else { return false }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "recoverableRoute.teardown windowId=\(String(windowId.uuidString.prefix(8)))"
         )
 #endif

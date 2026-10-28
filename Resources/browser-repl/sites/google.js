@@ -2,9 +2,9 @@
 // parsing and Google's own export endpoints, fetched in the signed-in session.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URL, URLSearchParams } = root.CmuxBrowserRepl.core;
+  const { URL, URLSearchParams } = root.HmuxBrowserRepl.core;
 
   // Formats Google's export endpoint serves per file kind.
   // Export formats by editor kind. A kind names a path segment of a
@@ -89,7 +89,7 @@
       r = await t.fetch(url);
     }
     if (r.status === 429) throw new S.SiteError("rate_limited", `${name}: Google limits export requests (HTTP 429); retry in a few seconds`);
-    if (/^https:\/\/accounts\.google\.com\//.test(r.url) || r.status === 401) throw new S.SiteError("not_signed_in", `${name}: Google asked to sign in (no signed-in account in the cmux browser can open this file). Open ${url.split("?")[0]} with tabs.open() and ask the user to sign in.`);
+    if (/^https:\/\/accounts\.google\.com\//.test(r.url) || r.status === 401) throw new S.SiteError("not_signed_in", `${name}: Google asked to sign in (no signed-in account in the hmux browser can open this file). Open ${url.split("?")[0]} with tabs.open() and ask the user to sign in.`);
     if (r.status === 403 || r.status === 404) throw new S.SiteError(r.status === 404 ? "not_found" : "forbidden", `${name}: Google returned HTTP ${r.status}; the file does not exist or this account (uid ${new URL(url).searchParams.get("authuser") || 0}) has no access. Try another { uid } (sites.googleAccounts.list()).`);
     if (!r.ok) throw new S.SiteError("http", `${name}: Google returned HTTP ${r.status} for ${url}`);
     const type = (r.headers.get("content-type") || "").toLowerCase();

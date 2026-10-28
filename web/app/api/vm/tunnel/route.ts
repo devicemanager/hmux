@@ -52,7 +52,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/tunnel",
-    { "cmux.vm.operation": "enroll_tunnel" },
+    { "hmux.vm.operation": "enroll_tunnel" },
     "/api/vm/tunnel failed",
     async ({ user, span }) => {
       const body = await parseLenientObjectBody(request);
@@ -68,7 +68,7 @@ export async function POST(request: Request): Promise<Response> {
           error: "vm_tunnel_invalid_key",
           status: 400,
           message: "clientPublicKey must be a base64-encoded 32-byte WireGuard public key.",
-          action: "Let the cmux app generate a new WireGuard keypair on this Mac, then try again.",
+          action: "Let the hmux app generate a new WireGuard keypair on this Mac, then try again.",
           phase: "network",
           details: { field: "clientPublicKey" },
         });
@@ -79,14 +79,14 @@ export async function POST(request: Request): Promise<Response> {
       const { deviceFingerprint, deviceId, tunnelPurpose } = device;
 
       setSpanAttributes(span, {
-        "cmux.vm.provider": provider.id,
-        "cmux.vm.tunnel.device": deviceFingerprint,
+        "hmux.vm.provider": provider.id,
+        "hmux.vm.tunnel.device": deviceFingerprint,
       });
 
       const login = stackSession(request);
       if (!login) return missingStackSession();
       const membership = await tunnelTeamMembership(request, user);
-      setSpanAttributes(span, { "cmux.vm.tunnel.team_list_complete": membership.teamIdsComplete });
+      setSpanAttributes(span, { "hmux.vm.tunnel.team_list_complete": membership.teamIdsComplete });
       const enrolled = await runVmRoute(enrollVmTunnel({
         userId: user.id,
         provider: provider.id,
@@ -97,9 +97,9 @@ export async function POST(request: Request): Promise<Response> {
         modelIdentifier: boundedMetadata(body.modelIdentifier ?? body.model_identifier),
         osVersion: boundedMetadata(body.osVersion ?? body.os_version),
         architecture: boundedMetadata(body.architecture),
-        cmuxVersion: boundedMetadata(body.cmuxVersion ?? body.cmux_version),
-        cmuxBuild: boundedMetadata(body.cmuxBuild ?? body.cmux_build),
-        cmuxChannel: boundedMetadata(body.cmuxChannel ?? body.cmux_channel),
+        hmuxVersion: boundedMetadata(body.hmuxVersion ?? body.hmux_version),
+        hmuxBuild: boundedMetadata(body.hmuxBuild ?? body.hmux_build),
+        hmuxChannel: boundedMetadata(body.hmuxChannel ?? body.hmux_channel),
         stackSessionId: login.id,
         sessionIssuedAt: login.issuedAt,
         clientPublicKey,
@@ -108,9 +108,9 @@ export async function POST(request: Request): Promise<Response> {
       if (!enrolled.ok) return enrolled.response;
       const tunnel = enrolled.value;
       setSpanAttributes(span, {
-        "cmux.vm.tunnel.id": tunnel.tunnelId,
-        "cmux.vm.tunnel.created": tunnel.created,
-        "cmux.vm.tunnel.rotated": tunnel.rotated,
+        "hmux.vm.tunnel.id": tunnel.tunnelId,
+        "hmux.vm.tunnel.created": tunnel.created,
+        "hmux.vm.tunnel.rotated": tunnel.rotated,
       });
       return jsonResponse(tunnelPayload(tunnel));
     },
@@ -126,7 +126,7 @@ export async function GET(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/tunnel",
-    { "cmux.vm.operation": "get_tunnel" },
+    { "hmux.vm.operation": "get_tunnel" },
     "/api/vm/tunnel failed",
     async ({ user, span }) => {
       const account = resolveVmRouteAccountScope(user, request);
@@ -157,9 +157,9 @@ export async function GET(request: Request): Promise<Response> {
       if (!provider.ok) return provider.response;
       const membership = await tunnelTeamMembership(request, user);
       setSpanAttributes(span, {
-        "cmux.vm.provider": provider.id,
-        "cmux.vm.tunnel.device": deviceFingerprint,
-        "cmux.vm.tunnel.team_list_complete": membership.teamIdsComplete,
+        "hmux.vm.provider": provider.id,
+        "hmux.vm.tunnel.device": deviceFingerprint,
+        "hmux.vm.tunnel.team_list_complete": membership.teamIdsComplete,
       });
       const tunnel = await runVmRoute(readVmTunnel({
         userId: user.id,
@@ -179,7 +179,7 @@ export async function DELETE(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/tunnel",
-    { "cmux.vm.operation": "revoke_tunnel" },
+    { "hmux.vm.operation": "revoke_tunnel" },
     "/api/vm/tunnel failed",
     async ({ user, span }) => {
       const account = resolveVmRouteAccountScope(user, request);
@@ -194,9 +194,9 @@ export async function DELETE(request: Request): Promise<Response> {
         const provider = providerFromRequest(request, body);
         if (!provider.ok) return provider.response;
         setSpanAttributes(span, {
-          "cmux.vm.provider": provider.id,
-          "cmux.vm.tunnel.device": deviceFingerprint,
-          "cmux.vm.tunnel.purpose": tunnelPurpose,
+          "hmux.vm.provider": provider.id,
+          "hmux.vm.tunnel.device": deviceFingerprint,
+          "hmux.vm.tunnel.purpose": tunnelPurpose,
         });
         const result = await runVmRoute(revokeVmTunnel({
           userId: user.id,
@@ -221,7 +221,7 @@ export async function DELETE(request: Request): Promise<Response> {
       );
       if (!deviceId && !accessGrantId) return missingDeviceId();
       setSpanAttributes(span, {
-        "cmux.vm.access.device": deviceId ?? "by-grant-id",
+        "hmux.vm.access.device": deviceId ?? "by-grant-id",
       });
       const result = await runVmRoute(revokeVmAccessGrant({
         userId: user.id,
@@ -264,7 +264,7 @@ function roleRevocationFromRequest(
  *
  * One user can hold several teams' machines at once, so the tunnel joins every
  * team network, not only the selected team's. The route's own verification
- * resolves only the selected team (`X-Cmux-Team-Id`), so enrollment re-lists
+ * resolves only the selected team (`X-Hmux-Team-Id`), so enrollment re-lists
  * the complete membership from Stack. Enrollment is rare, so the extra Stack
  * call is cheap. When that listing fails, the tunnel still joins the teams the
  * route did verify, and nothing is detached, because the missing teams might
@@ -343,8 +343,8 @@ function missingStackSession(): Response {
   return vmErrorResponse({
     error: "auth_required",
     status: 401,
-    message: "Cloud network enrollment requires a current cmux login session.",
-    action: "Sign in to cmux, then try again.",
+    message: "Cloud network enrollment requires a current hmux login session.",
+    action: "Sign in to hmux, then try again.",
     phase: "auth",
   });
 }

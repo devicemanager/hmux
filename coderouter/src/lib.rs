@@ -86,7 +86,7 @@ mod tests {
 
         let binding = handoff::team_binding("team-handoff");
         let hidden_args = [
-            OsString::from("__cmux-handoff-v2"),
+            OsString::from("__hmux-handoff-v2"),
             OsString::from("/tmp/coderouter-run-state.sock"),
             OsString::from(binding),
             OsString::from("--"),

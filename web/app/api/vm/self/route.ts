@@ -16,9 +16,9 @@ const JSON_HEADERS = {
 } as const;
 
 const AUTH_FAILURE_MESSAGES: Record<RouteTokenAuthFailure, string> = {
-  missing_route_token: "This endpoint is only reachable from inside a cmux Cloud VM.",
-  invalid_route_token: "This machine's cmux credential expired or was revoked.",
-  vm_mismatch: "This machine's cmux credential does not match the machine it was issued to.",
+  missing_route_token: "This endpoint is only reachable from inside a hmux Cloud VM.",
+  invalid_route_token: "This machine's hmux credential expired or was revoked.",
+  vm_mismatch: "This machine's hmux credential does not match the machine it was issued to.",
 };
 
 export async function GET(request: Request): Promise<Response> {
@@ -34,7 +34,7 @@ export async function GET(request: Request): Promise<Response> {
     return Response.json(
       {
         error: "vm_bound_token_required",
-        message: "Self-discovery is only available from inside a cmux Cloud VM.",
+        message: "Self-discovery is only available from inside a hmux Cloud VM.",
         retryable: false,
       },
       { status: 403, headers: JSON_HEADERS },

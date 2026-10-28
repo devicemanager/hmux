@@ -33,7 +33,7 @@ assert "scripts/ci/compile-app-host-test-product.sh canonical-build" in admissio
 assert "Restore compiled app-host test product" in consumer
 assert "test-without-building" in consumer
 
-# CmuxTerminalCore's split-theme coverage belongs to the strict package gate.
+# HmuxTerminalCore's split-theme coverage belongs to the strict package gate.
 # Do not rebuild/relink the same package test product inside an app-host shard.
 package_array = re.search(r"(?ms)^\s*PACKAGES=\(\n(.*?)^\s*\)", packages)
 assert package_array is not None
@@ -42,14 +42,14 @@ package_entries = {
     for line in package_array.group(1).splitlines()
     if line.strip() and not line.lstrip().startswith("#")
 }
-assert "CmuxTerminalCore" in package_entries
-assert "CmuxTerminalCore-Package" not in consumer
-assert "cmux-terminal-core-split-theme" not in consumer
+assert "HmuxTerminalCore" in package_entries
+assert "HmuxTerminalCore-Package" not in consumer
+assert "hmux-terminal-core-split-theme" not in consumer
 
 for forbidden in (
     "-resolvePackageDependencies",
     ".ci-source-packages",
-    "-project cmux.xcodeproj",
+    "-project hmux.xcodeproj",
 ):
     assert forbidden not in consumer, f"app-host consumer reintroduced {forbidden}"
 

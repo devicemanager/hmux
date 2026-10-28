@@ -14,8 +14,8 @@
  *
  * Prints one line per size and a final JSON `{ sizes: { <name>: { imageId, slug, size } } }`
  * (also written to --out). Every derived VM is booted once more from its own
- * snapshot and checked (nproc, memory, root filesystem, the cmux-tui-daemon
- * and cmux-desktop units) before its id is reported; a failed check aborts.
+ * snapshot and checked (nproc, memory, root filesystem, the hmux-tui-daemon
+ * and hmux-desktop units) before its id is reported; a failed check aborts.
  *
  * The master must be at or below every requested size (bake on
  * freestyle/ubuntu-sm for the full ladder). `sm` is the master itself when
@@ -31,9 +31,9 @@ import {
   type VmImageSize,
   type VmImageSizeName,
 } from "../services/vms/images/sizes";
-import { CMUX_TUI_SESSION, cmuxTuiRunCommand } from "../services/vms/drivers/cmuxTuiDaemon";
+import { HMUX_TUI_SESSION, hmuxTuiRunCommand } from "../services/vms/drivers/hmuxTuiDaemon";
 import { DEVBOX_HOSTNAME } from "../services/vms/images/identity";
-import { argValue, cmuxTuiWebsocketSmokeCommand, devboxParkDaemonCommand, devboxPrepareTemplateTerminalCommand, devboxSettleBeforeSnapshotCommand, devboxSnapshotClockCommand, devboxWaitForDaemonCommand, hasFlag } from "./devbox-image-common";
+import { argValue, hmuxTuiWebsocketSmokeCommand, devboxParkDaemonCommand, devboxPrepareTemplateTerminalCommand, devboxSettleBeforeSnapshotCommand, devboxSnapshotClockCommand, devboxWaitForDaemonCommand, hasFlag } from "./devbox-image-common";
 
 const apiKey = process.env.FREESTYLE_API_KEY;
 const stackToken = process.env.FREESTYLE_STACK_ACCESS_TOKEN;
@@ -74,7 +74,7 @@ async function sh(vm: Exec, command: string, timeoutMs = 120_000): Promise<{ cod
 
 /** What the guest sees; disk is the root filesystem after the grow; host is the machine's own name. */
 async function measure(vm: Exec): Promise<{ cpu: number; memoryMb: number; rootMb: number; units: string; host: string }> {
-  const r = await sh(vm, "echo epoch=$(date +%s); echo clock=$(cat /sys/devices/system/clocksource/clocksource0/current_clocksource); echo cpu=$(nproc); echo mem=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo); echo root=$(df -BM --output=size / | tail -1 | tr -dc 0-9); echo units=$(systemctl is-active cmux-tui-daemon cmux-desktop 2>/dev/null | tr '\\n' ','); echo host=$(hostname)");
+  const r = await sh(vm, "echo epoch=$(date +%s); echo clock=$(cat /sys/devices/system/clocksource/clocksource0/current_clocksource); echo cpu=$(nproc); echo mem=$(awk '/MemTotal/ {print int($2/1024)}' /proc/meminfo); echo root=$(df -BM --output=size / | tail -1 | tr -dc 0-9); echo units=$(systemctl is-active hmux-tui-daemon hmux-desktop 2>/dev/null | tr '\\n' ','); echo host=$(hostname)");
   if (r.code !== 0) throw new Error(`could not measure VM: ${r.out.slice(-300)}`);
   const get = (key: string) => r.out.match(new RegExp(`${key}=([^\\n]*)`))?.[1] ?? "";
   const epoch = Number(get("epoch"));
@@ -183,8 +183,8 @@ async function deriveSize(name: VmImageSizeName): Promise<void> {
           throw new Error(`${name}: resize did not take: ${fits(m, size)} (${JSON.stringify(m)})`);
         }
         const ready = await sh(vm, devboxWaitForDaemonCommand(), 180_000);
-        if (ready.code !== 0) throw new Error(`${name}: cmux-tui daemon never came back after the resize: ${ready.out.slice(-500)}`);
-        const websocket = await sh(vm, cmuxTuiWebsocketSmokeCommand(), 300_000);
+        if (ready.code !== 0) throw new Error(`${name}: hmux-tui daemon never came back after the resize: ${ready.out.slice(-500)}`);
+        const websocket = await sh(vm, hmuxTuiWebsocketSmokeCommand(), 300_000);
         if (websocket.code !== 0) throw new Error(`${name}: WebSocket smoke failed before snapshot: ${websocket.out.slice(-1000)}`);
         // A resized clone runs a live daemon bound to its own instance id, and
         // its first shell (if the resize kept it) is already bound. Recreate
@@ -193,11 +193,11 @@ async function deriveSize(name: VmImageSizeName): Promise<void> {
         const template = await sh(vm, devboxPrepareTemplateTerminalCommand(), 120_000);
         if (template.code !== 0) throw new Error(`${name}: could not prepare the template terminal: ${template.out.slice(-500)}`);
         const parked = await sh(vm, devboxParkDaemonCommand(), 120_000);
-        if (parked.code !== 0) throw new Error(`${name}: could not park the cmux-tui daemon before the snapshot: ${parked.out.slice(-500)}`);
+        if (parked.code !== 0) throw new Error(`${name}: could not park the hmux-tui daemon before the snapshot: ${parked.out.slice(-500)}`);
         // Last guest step before the snapshot; see devboxSettleBeforeSnapshotCommand.
         const settled = await sh(vm, devboxSettleBeforeSnapshotCommand(), 60_000);
         if (settled.code !== 0) throw new Error(`${name}: pre-snapshot settle failed: ${settled.out.slice(-300)}`);
-        const snap = await vm.snapshot({ displayName: `cmux devbox ${slug} (${size.cpu} vCPU · ${size.memoryMb} MiB · ${size.storageMb} MiB)` });
+        const snap = await vm.snapshot({ displayName: `hmux devbox ${slug} (${size.cpu} vCPU · ${size.memoryMb} MiB · ${size.storageMb} MiB)` });
         if (!snap.snapshotId) throw new Error(`${name}: snapshot response carried no id`);
         imageId = snap.snapshotId;
       } finally {
@@ -212,7 +212,7 @@ async function deriveSize(name: VmImageSizeName): Promise<void> {
       // The daemon is the last thing to come up on a resumed snapshot, so
       // waiting for it also proves systemd finished; `measure` reads its units.
       const booted = await sh(check.vm, devboxWaitForDaemonCommand(), 180_000);
-      if (booted.code !== 0) throw new Error(`${name}: cmux-tui daemon did not come up on the derived snapshot ${imageId}: ${booted.out.slice(-500)}`);
+      if (booted.code !== 0) throw new Error(`${name}: hmux-tui daemon did not come up on the derived snapshot ${imageId}: ${booted.out.slice(-500)}`);
       measured = await measure(check.vm);
       const problem = fits(measured, size);
       if (problem) throw new Error(`${name}: derived snapshot ${imageId} boots wrong: ${problem}`);
@@ -224,7 +224,7 @@ async function deriveSize(name: VmImageSizeName): Promise<void> {
       // six rows: a derived snapshot differs from the master only in vCPU,
       // memory and disk, and the master already passed it in the bake.
       if (name === smokeSize) {
-        const websocket = await sh(check.vm, cmuxTuiWebsocketSmokeCommand(), 300_000);
+        const websocket = await sh(check.vm, hmuxTuiWebsocketSmokeCommand(), 300_000);
         if (websocket.code !== 0) throw new Error(`${name}: WebSocket smoke failed after snapshot boot: ${websocket.out.slice(-1000)}`);
       }
     } finally {
@@ -237,9 +237,9 @@ async function deriveSize(name: VmImageSizeName): Promise<void> {
 }
 
 // Concurrency: each row holds at most two VMs at a time, so a six-row ladder
-// peaks at twelve. CMUX_DEVBOX_DERIVE_CONCURRENCY caps it when the account
+// peaks at twelve. HMUX_DEVBOX_DERIVE_CONCURRENCY caps it when the account
 // has less headroom; 1 restores the old sequential behaviour.
-const concurrency = Math.max(1, Number(process.env.CMUX_DEVBOX_DERIVE_CONCURRENCY ?? sizes.length) || 1);
+const concurrency = Math.max(1, Number(process.env.HMUX_DEVBOX_DERIVE_CONCURRENCY ?? sizes.length) || 1);
 const queue = [...sizes];
 const t0All = Date.now();
 // allSettled, not all: a rejecting `Promise.all` would let the script exit

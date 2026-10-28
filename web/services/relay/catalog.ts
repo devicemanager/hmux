@@ -95,8 +95,8 @@ let cachedSigningKey: {
 export function relayPolicySigningKey(
   env: Readonly<Record<string, string | undefined>> = process.env,
 ): RelayPolicySigningKey {
-  const kid = env.CMUX_RELAY_POLICY_KEY_ID?.trim();
-  const pem = env.CMUX_RELAY_POLICY_PRIVATE_KEY_PEM
+  const kid = env.HMUX_RELAY_POLICY_KEY_ID?.trim();
+  const pem = env.HMUX_RELAY_POLICY_PRIVATE_KEY_PEM
     ?.replace(/\\n/g, "\n")
     .trim();
   if (!kid || !pem) {

@@ -66,7 +66,7 @@ index 537734d109b622f8fa4981b29fc5f43ad106f180..5a0cdaebc7f15f721182a3b7161df798
 +function escapeHtmlAttr(str) {
 +  return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 +}
-+// Patched (cmux): inject the SSR script outside the React tree. The ref keeps
++// Patched (hmux): inject the SSR script outside the React tree. The ref keeps
 +// streamed renders from emitting duplicate bootstrap scripts per request.
  function SsrScript(props) {
 +	const insertedRef = react.useRef(false);
@@ -160,7 +160,7 @@ index 9712b3eb0c4f503f5d32130c3a7547745f4c6a5d..fd526b0a16b0954a4af561a73f5b4885
 +function escapeHtmlAttr(str) {
 +  return str.replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 +}
-+// Patched (cmux): React 19 warns about <script> elements rendered inside
++// Patched (hmux): React 19 warns about <script> elements rendered inside
 +// components. Inject the SSR copy outside the React tree and guard it for
 +// streamed renders; the client path remains the layout-effect eval below.
  function SsrScript(props) {
@@ -219,7 +219,7 @@ index a6a641a2f913f0469700b936a325e4c71e596a89..a8004f32b8b4351cec4a6ed57f7a84d2
    readonly urls: Readonly<ResolvedHandlerUrls>;
    signInWithOAuth(provider: string, options?: {
      returnTo?: string;
-+    /** cmux patch: passed to the provider as the OIDC `login_hint` (the account's email). */
++    /** hmux patch: passed to the provider as the OIDC `login_hint` (the account's email). */
 +    loginHint?: string;
    }): Promise<void>;
    signInWithCredential(options: {
@@ -242,7 +242,7 @@ index ddbf5a043adfd9d01fb09fc38eaff0c6f5562875..e83794e56b1ea3c6618bd9332851bff1
  	}
  };
  //#endregion
-+/** cmux patch: the provider URL with the OIDC `login_hint`, so a known account skips the provider's account chooser. */
++/** hmux patch: the provider URL with the OIDC `login_hint`, so a known account skips the provider's account chooser. */
 +function withLoginHint(location, loginHint) {
 +	if (!loginHint) return location;
 +	try {
@@ -266,7 +266,7 @@ index 0e639461c5e5c2642a6b45cc0ef194463864b8d6..6855a2f1f95b9df03e7c04a31c0742d1
    readonly urls: Readonly<ResolvedHandlerUrls>;
    signInWithOAuth(provider: string, options?: {
      returnTo?: string;
-+    /** cmux patch: passed to the provider as the OIDC `login_hint` (the account's email). */
++    /** hmux patch: passed to the provider as the OIDC `login_hint` (the account's email). */
 +    loginHint?: string;
    }): Promise<void>;
    signInWithCredential(options: {
@@ -289,7 +289,7 @@ index 0d0959614b2c8a30484a21736585a39125f14b76..c4b432ccb7d14bc76bdb9d23d772f76a
  exports._HexclaveClientAppImplIncomplete = _HexclaveClientAppImplIncomplete;
  exports.stripBrowserActionQueryParam = stripBrowserActionQueryParam;
  
-+/** cmux patch: the provider URL with the OIDC `login_hint`, so a known account skips the provider's account chooser. */
++/** hmux patch: the provider URL with the OIDC `login_hint`, so a known account skips the provider's account chooser. */
 +function withLoginHint(location, loginHint) {
 +	if (!loginHint) return location;
 +	try {

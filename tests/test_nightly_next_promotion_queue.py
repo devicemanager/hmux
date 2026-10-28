@@ -3,7 +3,7 @@
 
 Main's promote-nightly-next job is dispatched once per request and serializes
 on one concurrency group, so only one job ever writes nightly-next. Requests
-for different feat-cmux-next commits arrive out of order (an older commit's
+for different feat-hmux-next commits arrive out of order (an older commit's
 Release compile or tree publication can finish after a newer one's), and
 GitHub keeps at most one waiting job per group, cancelling it when another
 arrives. A late request for an older commit therefore cancelled the waiting
@@ -32,7 +32,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github" / "workflows" / "nightly.yml"
 
-# Linear feat-cmux-next history, oldest first. nightly-next starts at BASE.
+# Linear feat-hmux-next history, oldest first. nightly-next starts at BASE.
 BASE, RUNNING, OLDER, NEWER, UNGREEN = ("1" * 40, "2" * 40, "3" * 40, "4" * 40, "5" * 40)
 HISTORY = [BASE, RUNNING, OLDER, NEWER, UNGREEN]
 
@@ -63,7 +63,7 @@ const listJobs = (params) => {
   }
   const sha = history[params.run_id - 1000];
   const green = !scenario.notGreen.includes(sha);
-  return [{ name: 'cmux-next Release compile (Xcode 26)', status: 'completed', conclusion: green ? 'success' : 'failure' }];
+  return [{ name: 'hmux-next Release compile (Xcode 26)', status: 'completed', conclusion: green ? 'success' : 'failure' }];
 };
 const runsFor = (params) => {
   if (params.workflow_id === 'nightly.yml') {
@@ -77,12 +77,12 @@ const runsFor = (params) => {
       .filter((run) => run.conclusion === params.status && run.cancelledAt <= active.arrived)
       .slice().reverse();
   }
-  if (params.workflow_id !== 'cmux-next.yml' || params.event !== 'push' || params.branch !== 'feat-cmux-next') {
+  if (params.workflow_id !== 'hmux-next.yml' || params.event !== 'push' || params.branch !== 'feat-hmux-next') {
     throw new Error(`unexpected run lookup ${JSON.stringify(params)}`);
   }
   return [{
-    id: position(params.head_sha) + 1000, head_sha: params.head_sha, head_branch: 'feat-cmux-next', event: 'push',
-    path: '.github/workflows/cmux-next.yml', head_repository: { full_name: 'manaflow-ai/cmux' },
+    id: position(params.head_sha) + 1000, head_sha: params.head_sha, head_branch: 'feat-hmux-next', event: 'push',
+    path: '.github/workflows/hmux-next.yml', head_repository: { full_name: 'manaflow-ai/cmux' },
   }];
 };
 const actions = {
@@ -105,7 +105,7 @@ const github = {
     },
     git: {
       getRef: async ({ ref }) => {
-        if (ref === 'heads/feat-cmux-next') return { data: { object: { sha: history[history.length - 1] } } };
+        if (ref === 'heads/feat-hmux-next') return { data: { object: { sha: history[history.length - 1] } } };
         if (ref !== 'heads/nightly-next') throw new Error(`unexpected ref ${ref}`);
         return { data: { object: { sha: state.target } } };
       },
@@ -150,7 +150,7 @@ const runStep = async (script, env, runId, outputs) => {
     notice: (message) => notices.push(message),
     warning: (message) => warnings.push(message),
   };
-  const context = { repo: { owner: 'manaflow-ai', repo: 'cmux' }, runId, payload: {} };
+  const context = { repo: { owner: 'manaflow-ai', repo: 'hmux' }, runId, payload: {} };
   const processForScript = { env: { ...env, GITHUB_WORKSPACE: process.env.GITHUB_WORKSPACE } };
   const run = new Function('github', 'context', 'core', 'process', 'getOctokit', 'require',
     `return (async () => {\n${script}\n})();`);

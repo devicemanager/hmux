@@ -14,7 +14,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/base/open",
-    { "cmux.vm.operation": "base.open" },
+    { "hmux.vm.operation": "base.open" },
     "/api/vm/base/open POST failed",
     async ({ user, span, authDurationMs, routeStartedAtMs, setResponseFinalizer }) => {
       const timing = new VmTimingRecorder(span, "base.open", { startedAt: routeStartedAtMs });

@@ -3,11 +3,11 @@
  *
  * A fork or checkpoint is a memory snapshot of a live machine, so the clone
  * resumes with the parent daemon's whole remote state dir
- * (~/.local/state/cmux/remote): its Noise identity and authorization under
+ * (~/.local/state/hmux/remote): its Noise identity and authorization under
  * sessions/<session>/auth, plus the lifecycle fence, shutdown record and
- * socket locks beside it. cmux-tui refuses to start when a session holds a
+ * socket locks beside it. hmux-tui refuses to start when a session holds a
  * lifecycle fence but no auth dir (it reads that as a legacy daemon whose
- * shutdown never finished). The boot supervisor (cmux-devbox-boot) deletes
+ * shutdown never finished). The boot supervisor (hmux-devbox-boot) deletes
  * only auth/ and connections/ on clone, so every fork strands its session
  * in exactly that state: the daemon crash-loops and port 1337 never listens.
  * The bake avoids it by removing the whole remote dir before its snapshot
@@ -18,24 +18,24 @@
  * no-op once a bake's supervisor drops the whole dir on clone. The
  * supervisor restarts the daemon on its next tick, about a second later.
  */
-const DEVBOX_REMOTE_STATE_HOMES = ["/home/cmux", "/root"] as const;
+const DEVBOX_REMOTE_STATE_HOMES = ["/home/hmux", "/root"] as const;
 /** The supervisor's BOUND_INSTANCE_FILE: the machine whose identity the daemon state holds. */
-const DEVBOX_BOUND_INSTANCE_FILE = "/etc/cmux/daemon-instance-id";
+const DEVBOX_BOUND_INSTANCE_FILE = "/etc/hmux/daemon-instance-id";
 /** The supervisor's instance_id(): the platform metadata service's id for this machine. */
 const DEVBOX_METADATA_INSTANCE_ID_COMMAND =
   "curl -sf -m 1 -H \"X-aws-ec2-metadata-token: $(curl -sf -m 1 -X PUT http://169.254.169.254/latest/api/token -H 'X-metadata-token-ttl-seconds: 60')\" http://169.254.169.254/latest/meta-data/instance-id";
 
 export function devboxStrandedRemoteSessionRepairCommand(homes: readonly string[] = DEVBOX_REMOTE_STATE_HOMES): string {
-  const dirs = homes.map((home) => `"${home}"/.local/state/cmux/remote/sessions/*`).join(" ");
+  const dirs = homes.map((home) => `"${home}"/.local/state/hmux/remote/sessions/*`).join(" ");
   return (
-    `for cmux_session in ${dirs}; do` +
-    ' if [ -f "$cmux_session/lifecycle-fence.json" ] && [ ! -e "$cmux_session/auth" ]; then rm -rf "$cmux_session"; fi;' +
+    `for hmux_session in ${dirs}; do` +
+    ' if [ -f "$hmux_session/lifecycle-fence.json" ] && [ ! -e "$hmux_session/auth" ]; then rm -rf "$hmux_session"; fi;' +
     " done; true"
   );
 }
 
-/** The systemd unit that runs the boot supervisor (cmux-devbox-boot) on a Freestyle image. */
-const DEVBOX_SUPERVISOR_UNIT = "cmux-tui-daemon.service";
+/** The systemd unit that runs the boot supervisor (hmux-devbox-boot) on a Freestyle image. */
+const DEVBOX_SUPERVISOR_UNIT = "hmux-tui-daemon.service";
 
 /**
  * Starts the supervisor unit when it is not running. A memory snapshot
@@ -53,13 +53,13 @@ function devboxStartSupervisorCommand(): string {
 }
 
 /** The first stderr line of a readiness timeout; `devboxForkReadinessStage` parses it. */
-export const DEVBOX_FORK_DAEMON_NOT_READY = "cmux fork daemon did not become ready";
+export const DEVBOX_FORK_DAEMON_NOT_READY = "hmux fork daemon did not become ready";
 
 /** The stalled stages the timeout report can name. */
 const FORK_READINESS_STAGES: ReadonlySet<string> = new Set([
   "metadata-unavailable", // the clone never read its own instance id
   "unbound", //              the supervisor never bound the clone (daemon-instance-id)
-  "daemon-absent", //        bound, but no cmux-tui server process runs
+  "daemon-absent", //        bound, but no hmux-tui server process runs
   "daemon-not-listening", // bound and running, but nothing listens on 1337
 ]);
 
@@ -76,12 +76,12 @@ const FORK_READINESS_SUPERVISOR_STATES: ReadonlySet<string> = new Set([
  */
 function devboxForkDaemonTimeoutReport(boundInstanceFile: string): string {
   return (
-    `cmux_unit=$(systemctl is-active ${DEVBOX_SUPERVISOR_UNIT} 2>/dev/null | head -n 1 | tr -cd 'a-z-'); [ -n "$cmux_unit" ] || cmux_unit=unknown;` +
-    ' if [ -z "$cmux_id" ]; then cmux_stage=metadata-unavailable;' +
-    ` elif [ "$cmux_id" != "$(cat "${boundInstanceFile}" 2>/dev/null)" ]; then cmux_stage=unbound;` +
-    " elif ! pgrep -f 'cmux-tui server [s]tart' >/dev/null 2>&1; then cmux_stage=daemon-absent;" +
-    " else cmux_stage=daemon-not-listening; fi;" +
-    ` echo "${DEVBOX_FORK_DAEMON_NOT_READY}: stage=$cmux_stage supervisor=$cmux_unit" >&2; exit 1`
+    `hmux_unit=$(systemctl is-active ${DEVBOX_SUPERVISOR_UNIT} 2>/dev/null | head -n 1 | tr -cd 'a-z-'); [ -n "$hmux_unit" ] || hmux_unit=unknown;` +
+    ' if [ -z "$hmux_id" ]; then hmux_stage=metadata-unavailable;' +
+    ` elif [ "$hmux_id" != "$(cat "${boundInstanceFile}" 2>/dev/null)" ]; then hmux_stage=unbound;` +
+    " elif ! pgrep -f 'hmux-tui server [s]tart' >/dev/null 2>&1; then hmux_stage=daemon-absent;" +
+    " else hmux_stage=daemon-not-listening; fi;" +
+    ` echo "${DEVBOX_FORK_DAEMON_NOT_READY}: stage=$hmux_stage supervisor=$hmux_unit" >&2; exit 1`
   );
 }
 
@@ -130,15 +130,15 @@ export function devboxForkDaemonReadyCommand(timeoutSeconds: number, options: De
     // and lose the report. The deadline is checked at the end of each pass,
     // so at least one pass always runs and the pass after the deadline is the
     // last (bounded, ~3 s).
-    `cmux_id=""; cmux_deadline=$(($(date +%s) + ${timeoutSeconds}));` +
+    `hmux_id=""; hmux_deadline=$(($(date +%s) + ${timeoutSeconds}));` +
     " while :; do" +
     ` ${devboxStartSupervisorCommand()}` +
-    ` [ -n "$cmux_id" ] || cmux_id=$(${DEVBOX_METADATA_INSTANCE_ID_COMMAND} 2>/dev/null) || cmux_id="";` +
-    ` if [ -n "$cmux_id" ] && [ "$cmux_id" = "$(cat "${boundInstanceFile}" 2>/dev/null)" ]; then` +
+    ` [ -n "$hmux_id" ] || hmux_id=$(${DEVBOX_METADATA_INSTANCE_ID_COMMAND} 2>/dev/null) || hmux_id="";` +
+    ` if [ -n "$hmux_id" ] && [ "$hmux_id" = "$(cat "${boundInstanceFile}" 2>/dev/null)" ]; then` +
     ` ${devboxStrandedRemoteSessionRepairCommand(options.homes)};` +
     " if ss -Hltn 2>/dev/null | grep -q ':1337 '; then exit 0; fi;" +
     " fi;" +
-    ' [ "$(date +%s)" -lt "$cmux_deadline" ] || break; sleep 0.5;' +
+    ' [ "$(date +%s)" -lt "$hmux_deadline" ] || break; sleep 0.5;' +
     ` done; ${devboxForkDaemonTimeoutReport(boundInstanceFile)}`
   );
 }

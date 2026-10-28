@@ -1,5 +1,5 @@
-import CmuxTerminalSharing
-import CmuxTerminalSizing
+import HmuxTerminalSharing
+import HmuxTerminalSizing
 import SwiftUI
 
 /// The shared-terminal size panel, anchored under the terminal's tab: the

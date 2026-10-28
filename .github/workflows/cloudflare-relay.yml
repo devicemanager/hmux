@@ -1,30 +1,30 @@
 name: Cloudflare relay
 
-# The Durable Object relay under cmux-tui/relays/cloudflare-do is verified here,
+# The Durable Object relay under hmux-tui/relays/cloudflare-do is verified here,
 # on the pull request that changes it.
 #
-# It used to be a job inside cmux-tui-build-package.yml behind a
+# It used to be a job inside hmux-tui-build-package.yml behind a
 # `build_cloudflare_relay` input that defaulted to true. Four of the five callers
 # passed false, so in practice the only run that ever executed it was
 # relay-publish-npm.yml -- a publishing run. That put the verification in the
 # worst possible place twice over: it never ran when the relay changed, only when
 # something shipped; and because `publish` needs `build-package`, a red relay job
-# blocked the cmux-relay publish. `npm audit --audit-level=high` and
+# blocked the hmux-relay publish. `npm audit --audit-level=high` and
 # `cargo clippy -- -D warnings` both go red on a third-party advisory or a new
 # lint with no change to this repository at all, so an unrelated upstream event
 # could stop a release.
 on:
   pull_request:
     paths:
-      - cmux-tui/relays/cloudflare-do/**
-      - .github/actions/setup-cmux-tui-rust/**
+      - hmux-tui/relays/cloudflare-do/**
+      - .github/actions/setup-hmux-tui-rust/**
       - .github/workflows/cloudflare-relay.yml
   push:
     branches:
       - main
     paths:
-      - cmux-tui/relays/cloudflare-do/**
-      - .github/actions/setup-cmux-tui-rust/**
+      - hmux-tui/relays/cloudflare-do/**
+      - .github/actions/setup-hmux-tui-rust/**
       - .github/workflows/cloudflare-relay.yml
   workflow_dispatch:
 
@@ -44,7 +44,7 @@ jobs:
       contents: read
     defaults:
       run:
-        working-directory: cmux-tui/relays/cloudflare-do
+        working-directory: hmux-tui/relays/cloudflare-do
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -56,10 +56,10 @@ jobs:
         with:
           node-version: "22.14.0"
           cache: npm
-          cache-dependency-path: cmux-tui/relays/cloudflare-do/package-lock.json
+          cache-dependency-path: hmux-tui/relays/cloudflare-do/package-lock.json
 
       - name: Set up pinned Rust toolchain
-        uses: ./.github/actions/setup-cmux-tui-rust
+        uses: ./.github/actions/setup-hmux-tui-rust
 
       - name: Install pinned Rust toolchain and Worker builder
         run: |
@@ -82,4 +82,4 @@ jobs:
         run: npm run build
 
       - name: Validate Wrangler deployment bundle
-        run: npx --no-install wrangler deploy --dry-run --outdir "$RUNNER_TEMP/cmux-cloudflare-relay"
+        run: npx --no-install wrangler deploy --dry-run --outdir "$RUNNER_TEMP/hmux-cloudflare-relay"

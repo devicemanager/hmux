@@ -38,7 +38,7 @@ export const maxDuration = 300;
 
 export async function GET(request: Request, { params }: { params: Promise<Params> }): Promise<Response> {
   const { id, operation } = await params;
-  return withAuthedVmApiRoute(request, "/api/vm/[id]/fs/[operation]", { "cmux.vm.operation": `fs_${operation}` }, "/api/vm/[id]/fs GET failed", async ({ user, span }) => {
+  return withAuthedVmApiRoute(request, "/api/vm/[id]/fs/[operation]", { "hmux.vm.operation": `fs_${operation}` }, "/api/vm/[id]/fs GET failed", async ({ user, span }) => {
     if (!OPERATIONS.has(operation) || !["dir", "read", "stat"].includes(operation)) return vmErrorResponse({ error: "vm_unknown_file_operation", status: 404, message: "Unknown Cloud VM file operation.", action: "Use dir, read, or stat." });
     const path = validatePath(new URL(request.url).searchParams.get("path"));
     if (typeof path !== "string") return path;
@@ -63,7 +63,7 @@ export async function GET(request: Request, { params }: { params: Promise<Params
 
 export async function POST(request: Request, { params }: { params: Promise<Params> }): Promise<Response> {
   const { id, operation } = await params;
-  return withAuthedVmApiRoute(request, "/api/vm/[id]/fs/[operation]", { "cmux.vm.operation": `fs_${operation}` }, "/api/vm/[id]/fs POST failed", async ({ user, span }) => {
+  return withAuthedVmApiRoute(request, "/api/vm/[id]/fs/[operation]", { "hmux.vm.operation": `fs_${operation}` }, "/api/vm/[id]/fs POST failed", async ({ user, span }) => {
     if (!["write", "mkdir"].includes(operation)) return vmErrorResponse({ error: "vm_unknown_file_operation", status: 404, message: "Unknown Cloud VM file operation.", action: "Use write or mkdir." });
     let body: unknown;
     try { body = await request.json(); } catch { return vmErrorResponse({ error: "vm_invalid_json", status: 400, message: "Cloud VM file operation expected a JSON object body.", action: "Send a JSON object with path and operation fields." }); }
@@ -85,7 +85,7 @@ export async function POST(request: Request, { params }: { params: Promise<Param
 
 export async function DELETE(request: Request, { params }: { params: Promise<Params> }): Promise<Response> {
   const { id, operation } = await params;
-  return withAuthedVmApiRoute(request, "/api/vm/[id]/fs/[operation]", { "cmux.vm.operation": `fs_${operation}` }, "/api/vm/[id]/fs DELETE failed", async ({ user, span }) => {
+  return withAuthedVmApiRoute(request, "/api/vm/[id]/fs/[operation]", { "hmux.vm.operation": `fs_${operation}` }, "/api/vm/[id]/fs DELETE failed", async ({ user, span }) => {
     if (operation !== "remove") return vmErrorResponse({ error: "vm_unknown_file_operation", status: 404, message: "Unknown Cloud VM file operation.", action: "Use remove." });
     const path = validatePath(new URL(request.url).searchParams.get("path"));
     if (typeof path !== "string") return path;
@@ -113,6 +113,6 @@ async function writeFromBody(request: Request, base: Parameters<typeof writeVmFi
 }
 
 function setSpanPath(span: { setAttribute: (key: string, value: string | number) => void }, id: string, path: string): void {
-  span.setAttribute("cmux.vm.id", id);
-  span.setAttribute("cmux.path_length", Buffer.byteLength(path, "utf8"));
+  span.setAttribute("hmux.vm.id", id);
+  span.setAttribute("hmux.path_length", Buffer.byteLength(path, "utf8"));
 }

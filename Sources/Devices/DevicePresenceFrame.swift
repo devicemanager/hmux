@@ -1,11 +1,11 @@
-import CMUXMobileCore
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HMUXMobileCore
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 
-/// One running cmux app instance on a device, as the presence service reports
+/// One running hmux app instance on a device, as the presence service reports
 /// it. Mirrors `workers/presence/src/core.ts` (`PresenceInstance`) and the iOS
-/// twin in `CmuxMobileShell/PresenceInstance.swift`; the identities match the
+/// twin in `HmuxMobileShell/PresenceInstance.swift`; the identities match the
 /// durable registry (`devices.device_uuid`, `device_app_instances.tag`).
 struct DevicePresenceInstance: Decodable, Equatable, Sendable {
     let deviceId: String

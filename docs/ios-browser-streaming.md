@@ -1,11 +1,11 @@
 # iOS browser streaming
 
-cmux iOS gets a remote browser surface: a live, pixel-accurate mirror of a
-browser pane running in cmux on the Mac, with full interaction (tap, scroll,
+hmux iOS gets a remote browser surface: a live, pixel-accurate mirror of a
+browser pane running in hmux on the Mac, with full interaction (tap, scroll,
 type, navigate) forwarded to the real `WKWebView` on the Mac. The phone shows
 exactly what the Mac tab shows, because the frames are rendered by the Mac tab.
 
-This is distinct from `CmuxMobileBrowser`, the phone-local WKWebView pane.
+This is distinct from `HmuxMobileBrowser`, the phone-local WKWebView pane.
 That pane browses on the phone with phone cookies; this surface mirrors the
 Mac's session, page state, and pixels.
 
@@ -21,13 +21,13 @@ identical to "what the Mac tab shows", including `localhost:3000`.
 
 Frames come from `WKWebView.takeSnapshot(with:)` on the pane's live web view,
 the same API the browser screenshot pipeline already uses. For the stream
-lifetime, cmux moves the web view's presentation root into the screenshot
+lifetime, hmux moves the web view's presentation root into the screenshot
 pipeline's borderless offscreen render window and sizes that window to the
 phone's point viewport. WebKit therefore reflows and snapshots in a real
 rendering host at phone width, including when the page was already loaded and
 idle. Rotation resizes the same host; it does not reparent the view per frame.
 
-The snapshot renders in the web content process, so it never picks up cmux
+The snapshot renders in the web content process, so it never picks up hmux
 chrome or overlays. No Screen Recording permission is required. ScreenCaptureKit
 was rejected for exactly those reasons: TCC prompt, captures overlays, and
 cannot capture a pane whose portal is detached. While streaming, the live web
@@ -67,7 +67,7 @@ H.264/HEVC via VideoToolbox is a planned upgrade behind the same format tag.
 ## Input (Mac)
 
 Phone gestures are replayed as real AppKit events delivered to the pane's
-`CmuxWebView`, not as synthesized DOM events, so pages see trusted events and
+`HmuxWebView`, not as synthesized DOM events, so pages see trusted events and
 native scrolling:
 
 - tap → `NSEvent` mouseDown/mouseUp pair at the page point (view-local
@@ -106,7 +106,7 @@ degrade cleanly.
 
 ## iOS surface
 
-A new `CmuxMobileBrowserStream` package following the terminal surface
+A new `HmuxMobileBrowserStream` package following the terminal surface
 pattern: an `@Observable` per-panel state object beside the shell store (kept
 out of `MobileShellComposite` so workspace re-syncs cannot clobber it), a
 `UIViewRepresentable` whose coordinator consumes an `AsyncStream` of decoded

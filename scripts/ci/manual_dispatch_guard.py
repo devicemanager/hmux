@@ -80,7 +80,7 @@ class GitHub:
         self.headers = {
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
-            "User-Agent": "cmux-manual-dispatch-guard",
+            "User-Agent": "hmux-manual-dispatch-guard",
         }
 
     def _request(self, path: str, method: str = "GET") -> Any:

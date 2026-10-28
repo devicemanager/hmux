@@ -1,4 +1,4 @@
-# Contributing to cmux
+# Contributing to hmux
 
 New here? Read [docs/start-here.md](docs/start-here.md) first: how to pick an
 issue, what you can fix without a Mac, and what happens to your pull request.
@@ -9,12 +9,12 @@ and pull requests the way the short [writing guide](STYLE.md) says.
 
 ## Prerequisites
 
-Only needed for the native app. Docs, translations, Python tooling, `cmux-tui` and
+Only needed for the native app. Docs, translations, Python tooling, `hmux-tui` and
 `web/` work on Linux; see [what you can fix without a Mac build](docs/start-here.md#2-things-you-can-fix-without-a-mac-build).
 
 - macOS 14+
 - Xcode 26 (the pinned toolchain). Xcode 16.2 on Intel Macs with macOS 14.5+ also
-  builds the app, best effort ([Swift 6.0 limits](skills/cmux-architecture/references/swift-6-0-compatibility.md)).
+  builds the app, best effort ([Swift 6.0 limits](skills/hmux-architecture/references/swift-6-0-compatibility.md)).
 - The Xcode 26 Metal compiler, which is a separate download. Select the Xcode you
   build with first (`DEVELOPER_DIR` overrides `xcode-select`), then:
 
@@ -23,7 +23,7 @@ Only needed for the native app. Docs, translations, Python tooling, `cmux-tui` a
   ```
 
 - [Zig](https://ziglang.org/): `brew install zig`
-- [Rust](https://rustup.rs). Every app build compiles the bundled `cmux-cua` engine
+- [Rust](https://rustup.rs). Every app build compiles the bundled `hmux-cua` engine
   with `cargo`, and `scripts/setup.sh` looks for `rustup` in `~/.cargo/bin`, where
   the official installer puts it:
 
@@ -38,25 +38,25 @@ Only needed for the native app. Docs, translations, Python tooling, `cmux-tui` a
 
 ```bash
 git clone --recursive https://github.com/manaflow-ai/cmux.git
-cd cmux
+cd hmux
 ./scripts/setup.sh
-CMUX_DEV_BACKEND_MODE=local ./scripts/reload.sh --tag my-feature
+HMUX_DEV_BACKEND_MODE=local ./scripts/reload.sh --tag my-feature
 ```
 
 - `setup.sh` initializes the submodules, installs the pinned Rust toolchain, and
   fetches a checksum-pinned prebuilt `GhosttyKit.xcframework` (it builds from source
-  with Zig if that fails; force that with `CMUX_GHOSTTYKIT_NO_PREBUILT=1`).
+  with Zig if that fails; force that with `HMUX_GHOSTTYKIT_NO_PREBUILT=1`).
 - `reload.sh --tag <tag>` builds a tagged Debug app and prints its path. Add
   `--launch` to open it, or `--build-only` to only compile.
-  `CMUX_DEV_BACKEND_MODE=local` points it at the local dev origin; without it a
+  `HMUX_DEV_BACKEND_MODE=local` points it at the local dev origin; without it a
   tagged build expects the maintainers' shared backend and stops. See
-  [tagged builds](skills/cmux-dev-workflow/references/tagged-builds.md) for cache
+  [tagged builds](skills/hmux-dev-workflow/references/tagged-builds.md) for cache
   reuse and Release variants.
 - `reload.sh` skips emitting the app's Swift module to make rebuilds a little
   faster, except on Xcode 26.2 and 26.3, where that build stops at the module merge
   with `error: type mismatch of function ... but used in a swift module as ...`.
   If you see that error on another Xcode, rerun with
-  `CMUX_RELOAD_APP_EMIT_MODULE=1`.
+  `HMUX_RELOAD_APP_EMIT_MODULE=1`.
 - After pulling changes to setup or the merge drivers, rerun
   `./scripts/install-git-hooks.sh`. With a custom `core.hooksPath` it prints the
   `pre-commit` and `post-merge` lines to add yourself; wire both.
@@ -111,9 +111,9 @@ for CI:
   suite runs, and an app-source change runs the suites whose tests mention what
   you changed. No label needed.
 - The broad macOS suite is label-gated. A maintainer adds `full-ci` when a change
-  needs it ([PR CI coverage](skills/cmux-testing/references/pr-ci-coverage.md)).
+  needs it ([PR CI coverage](skills/hmux-testing/references/pr-ci-coverage.md)).
   It is not a merge requirement.
-- No pull request job runs `cmuxUITests/` in full. If you touch that directory, the
+- No pull request job runs `hmuxUITests/` in full. If you touch that directory, the
   `suite-coverage` check stays red until a maintainer runs the affected classes and
   records it with `no-full-ci`.
 - On your first pull request, checks wait for a maintainer to approve the workflow
@@ -126,7 +126,7 @@ skipped job is green and is not coverage.
 
 `ghostty` points to [manaflow-ai/ghostty](https://github.com/manaflow-ai/ghostty),
 our fork of Ghostty. To change it, rebuild `GhosttyKit.xcframework` or pull in
-upstream, follow the [cmux-ghostty skill](skills/cmux-ghostty/SKILL.md): push the
+upstream, follow the [hmux-ghostty skill](skills/hmux-ghostty/SKILL.md): push the
 submodule commit to the fork before committing the pointer here. Fork changes and
 conflict notes are in [docs/ghostty-fork.md](docs/ghostty-fork.md).
 
@@ -136,11 +136,11 @@ conflict notes are in [docs/ghostty-fork.md](docs/ghostty-fork.md).
 - Fill in the template: a summary of the problem and what someone can do after
   the change, and Testing with the commands you ran.
 - For a bug fix, commit the failing regression test before the fix
-  ([regression commits](skills/cmux-testing/SKILL.md#reproduce-and-repair)).
+  ([regression commits](skills/hmux-testing/SKILL.md#reproduce-and-repair)).
 - Under `## Changelog`, write one `Added`/`Changed`/`Fixed`/`Removed` line for a
   user-visible change, or `none`. Don't edit [CHANGELOG.md](CHANGELOG.md); releases
   build it from these lines.
-- Localize user-facing strings ([localization skill](skills/cmux-localization/SKILL.md)).
+- Localize user-facing strings ([localization skill](skills/hmux-localization/SKILL.md)).
 - No unrelated formatting, generated files, vendored trees or version bumps.
 - Sign the [CLA](CLA.md) once by commenting
   `I have read the CLA Document v2.2 and I hereby sign the CLA` on your pull request.
@@ -157,5 +157,5 @@ Agents working in this repository also follow [CLAUDE.md](CLAUDE.md) (also `AGEN
 
 By contributing to this repository, you agree that:
 
-1. Your contributions are licensed under the license of the directory you contribute to: the Business Source License 1.1 (`BUSL-1.1`) for the server directories listed in [LICENSE](LICENSE) (`web/`, `workers/ci-artifacts/`, `workers/iroh-v2/`, `workers/presence/`, `services/iroh-relay-minter/`, `cmux-tui/relays/cloudflare-do/`), and the project's GNU General Public License v3.0 or later (`GPL-3.0-or-later`) everywhere else unless a file states otherwise.
+1. Your contributions are licensed under the license of the directory you contribute to: the Business Source License 1.1 (`BUSL-1.1`) for the server directories listed in [LICENSE](LICENSE) (`web/`, `workers/ci-artifacts/`, `workers/iroh-v2/`, `workers/presence/`, `services/iroh-relay-minter/`, `hmux-tui/relays/cloudflare-do/`), and the project's GNU General Public License v3.0 or later (`GPL-3.0-or-later`) everywhere else unless a file states otherwise.
 2. You grant Manaflow, Inc. a perpetual, worldwide, non-exclusive, royalty-free, irrevocable license to use, reproduce, modify, sublicense, and distribute your contributions under any license, including a commercial license offered to third parties.

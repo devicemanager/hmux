@@ -1,10 +1,10 @@
 import AppKit
 
 enum FindFocusNotificationKey {
-    static let selectAll = "cmux.find.selectAll"
+    static let selectAll = "hmux.find.selectAll"
 }
 
-func cmuxClampedFindSelection(_ range: NSRange, in text: String) -> NSRange {
+func hmuxClampedFindSelection(_ range: NSRange, in text: String) -> NSRange {
     let textLength = text.utf16.count
     guard range.location != NSNotFound else {
         return NSRange(location: textLength, length: 0)
@@ -14,14 +14,14 @@ func cmuxClampedFindSelection(_ range: NSRange, in text: String) -> NSRange {
     return NSRange(location: location, length: length)
 }
 
-func cmuxTextFieldIsFirstResponder(_ field: NSTextField, in window: NSWindow) -> Bool {
+func hmuxTextFieldIsFirstResponder(_ field: NSTextField, in window: NSWindow) -> Bool {
     let firstResponder = window.firstResponder
     if firstResponder === field { return true }
     if let editor = field.currentEditor() as? NSTextView, firstResponder === editor { return true }
-    return (firstResponder as? NSTextView).flatMap { cmuxFieldEditorOwnerView($0) } === field
+    return (firstResponder as? NSTextView).flatMap { hmuxFieldEditorOwnerView($0) } === field
 }
 
-private let cmuxFindSelectionChangingCommands: Set<String> = [
+private let hmuxFindSelectionChangingCommands: Set<String> = [
     "moveLeft:",
     "moveRight:",
     "moveBackward:",
@@ -53,50 +53,50 @@ private let cmuxFindSelectionChangingCommands: Set<String> = [
     "selectAll:",
 ]
 
-func cmuxFindCommandMayChangeSelection(_ selector: Selector) -> Bool {
-    cmuxFindSelectionChangingCommands.contains(NSStringFromSelector(selector))
+func hmuxFindCommandMayChangeSelection(_ selector: Selector) -> Bool {
+    hmuxFindSelectionChangingCommands.contains(NSStringFromSelector(selector))
 }
 
-func cmuxFindEventIsPlainEscape(_ event: NSEvent) -> Bool {
+func hmuxFindEventIsPlainEscape(_ event: NSEvent) -> Bool {
     ShortcutStroke.normalizedModifierFlags(from: event.modifierFlags).isEmpty && ShortcutStroke.isEscapeCancelEvent(event)
 }
 
-private let cmuxFindSelectionStore = NSMapTable<AnyObject, NSValue>.weakToStrongObjects()
-private let cmuxFindFieldEditorOwners = NSMapTable<NSTextView, FindSelectionTrackingTextField>.weakToWeakObjects()
+private let hmuxFindSelectionStore = NSMapTable<AnyObject, NSValue>.weakToStrongObjects()
+private let hmuxFindFieldEditorOwners = NSMapTable<NSTextView, FindSelectionTrackingTextField>.weakToWeakObjects()
 
-func cmuxStoredFindSelection(for owner: AnyObject?) -> NSRange? {
+func hmuxStoredFindSelection(for owner: AnyObject?) -> NSRange? {
     guard let owner else { return nil }
-    return cmuxFindSelectionStore.object(forKey: owner)?.rangeValue
+    return hmuxFindSelectionStore.object(forKey: owner)?.rangeValue
 }
 
-func cmuxStoreFindSelection(_ range: NSRange, for owner: AnyObject?) {
+func hmuxStoreFindSelection(_ range: NSRange, for owner: AnyObject?) {
     guard let owner else { return }
-    cmuxFindSelectionStore.setObject(NSValue(range: range), forKey: owner)
+    hmuxFindSelectionStore.setObject(NSValue(range: range), forKey: owner)
 }
 
-func cmuxTrackedFindFieldEditorOwner(_ editor: NSTextView) -> FindSelectionTrackingTextField? {
+func hmuxTrackedFindFieldEditorOwner(_ editor: NSTextView) -> FindSelectionTrackingTextField? {
     guard editor.isFieldEditor else { return nil }
-    return cmuxFindFieldEditorOwners.object(forKey: editor)
+    return hmuxFindFieldEditorOwners.object(forKey: editor)
 }
 
-func cmuxFindTextFieldOwner(for responder: NSResponder?) -> FindSelectionTrackingTextField? {
+func hmuxFindTextFieldOwner(for responder: NSResponder?) -> FindSelectionTrackingTextField? {
     if let field = responder as? FindSelectionTrackingTextField {
         return field
     }
     if let editor = responder as? NSTextView {
-        return cmuxTrackedFindFieldEditorOwner(editor) ?? (cmuxFieldEditorOwnerView(editor) as? FindSelectionTrackingTextField)
+        return hmuxTrackedFindFieldEditorOwner(editor) ?? (hmuxFieldEditorOwnerView(editor) as? FindSelectionTrackingTextField)
     }
     return nil
 }
 
 @MainActor
-func cmuxRememberFindSelectionBeforePanelFocusMove(tabManager: TabManager?, window: NSWindow?) {
+func hmuxRememberFindSelectionBeforePanelFocusMove(tabManager: TabManager?, window: NSWindow?) {
     guard let editor = window?.firstResponder as? NSTextView else { return }
-    let selection = cmuxClampedFindSelection(editor.selectedRange(), in: editor.string)
-    if let field = cmuxTrackedFindFieldEditorOwner(editor),
-       let owner = field.cmuxSelectionOwner {
-        _ = field.cmuxRememberSelection(selection, in: editor.string)
-        cmuxStoreFindSelection(selection, for: owner)
+    let selection = hmuxClampedFindSelection(editor.selectedRange(), in: editor.string)
+    if let field = hmuxTrackedFindFieldEditorOwner(editor),
+       let owner = field.hmuxSelectionOwner {
+        _ = field.hmuxRememberSelection(selection, in: editor.string)
+        hmuxStoreFindSelection(selection, for: owner)
         return
     }
     guard let workspace = tabManager?.selectedWorkspace,
@@ -104,11 +104,11 @@ func cmuxRememberFindSelectionBeforePanelFocusMove(tabManager: TabManager?, wind
     let owner = (workspace.focusedTerminalInputTarget()?.panel.searchState as AnyObject?)
         ?? (workspace.browserPanel(for: focusedPanelId)?.searchState as AnyObject?)
     guard let owner else { return }
-    cmuxStoreFindSelection(selection, for: owner)
+    hmuxStoreFindSelection(selection, for: owner)
 }
 
 @discardableResult
-func cmuxApplyFindFocusSelection(
+func hmuxApplyFindFocusSelection(
     field: FindSelectionTrackingTextField,
     selectAll: Bool,
     alreadyFocused: Bool,
@@ -116,32 +116,32 @@ func cmuxApplyFindFocusSelection(
 ) -> NSRange? {
     guard let editor = field.currentEditor() as? NSTextView, !editor.hasMarkedText() else { return nil }
     if selectAll {
-        let selection = field.cmuxRememberSelection(NSRange(location: 0, length: editor.string.utf16.count), in: editor.string)
+        let selection = field.hmuxRememberSelection(NSRange(location: 0, length: editor.string.utf16.count), in: editor.string)
         editor.setSelectedRange(selection)
         return selection
     }
     guard !alreadyFocused, let rememberedRange else { return nil }
-    let selection = field.cmuxRememberSelection(rememberedRange, in: editor.string)
+    let selection = field.hmuxRememberSelection(rememberedRange, in: editor.string)
     editor.setSelectedRange(selection)
     return selection
 }
 
 @discardableResult
-func cmuxRememberFindSelection(in root: NSView?) -> NSRange? {
+func hmuxRememberFindSelection(in root: NSView?) -> NSRange? {
     guard let root else { return nil }
     if let field = root as? FindSelectionTrackingTextField,
-       let selection = field.cmuxRememberSelectionFromCurrentEditor() {
+       let selection = field.hmuxRememberSelectionFromCurrentEditor() {
         return selection
     }
     for subview in root.subviews {
-        if let selection = cmuxRememberFindSelection(in: subview) {
+        if let selection = hmuxRememberFindSelection(in: subview) {
             return selection
         }
     }
     return nil
 }
 
-func cmuxFindResponderSnapshot() -> [String: String] {
+func hmuxFindResponderSnapshot() -> [String: String] {
     let responder = (NSApp.keyWindow ?? NSApp.mainWindow)?.firstResponder
     var updates: [String: String] = [
         "firstResponderType": responder.map { String(describing: type(of: $0)) } ?? "",
@@ -149,7 +149,7 @@ func cmuxFindResponderSnapshot() -> [String: String] {
     ]
     if let textView = responder as? NSTextView {
         updates["firstResponderSelectedRange"] = NSStringFromRange(textView.selectedRange())
-        if let owner = cmuxFieldEditorOwnerView(textView) {
+        if let owner = hmuxFieldEditorOwnerView(textView) {
             updates["fieldEditorOwnerType"] = String(describing: type(of: owner))
             updates["fieldEditorOwnerIdentifier"] = owner.identifier?.rawValue ?? ""
         }
@@ -158,156 +158,156 @@ func cmuxFindResponderSnapshot() -> [String: String] {
 }
 
 class FindSelectionTrackingTextField: NSTextField {
-    var cmuxLastSelectedRange: NSRange?
-    weak var cmuxSelectionOwner: AnyObject?
-    var cmuxOnEscape: ((NSTextView) -> Bool)?
+    var hmuxLastSelectedRange: NSRange?
+    weak var hmuxSelectionOwner: AnyObject?
+    var hmuxOnEscape: ((NSTextView) -> Bool)?
     /// Reports whether the field is actually being edited: true once it takes
     /// first responder, false when its field editor ends editing. Drives the
     /// focus stroke, which must not follow a focus request that never landed.
-    var cmuxOnEditingChanged: ((Bool) -> Void)?
-    private var cmuxSelectionObserver: NSObjectProtocol?
-    private var cmuxKeyMonitor: Any?
-    private weak var cmuxObservedEditor: NSTextView?
-    private weak var cmuxPreviousEditorNextResponder: NSResponder?
+    var hmuxOnEditingChanged: ((Bool) -> Void)?
+    private var hmuxSelectionObserver: NSObjectProtocol?
+    private var hmuxKeyMonitor: Any?
+    private weak var hmuxObservedEditor: NSTextView?
+    private weak var hmuxPreviousEditorNextResponder: NSResponder?
 
     deinit {
-        cmuxDetachSelectionObserver()
-        cmuxRemoveKeyMonitor()
+        hmuxDetachSelectionObserver()
+        hmuxRemoveKeyMonitor()
     }
 
     override func becomeFirstResponder() -> Bool {
         guard super.becomeFirstResponder() else { return false }
-        cmuxAttachSelectionObserverIfNeeded()
-        cmuxRestoreRememberedSelection()
-        cmuxOnEditingChanged?(true)
+        hmuxAttachSelectionObserverIfNeeded()
+        hmuxRestoreRememberedSelection()
+        hmuxOnEditingChanged?(true)
         return true
     }
 
     override func textDidBeginEditing(_ notification: Notification) {
         super.textDidBeginEditing(notification)
-        cmuxAttachSelectionObserverIfNeeded()
-        cmuxInstallKeyMonitorIfNeeded()
-        if cmuxLastSelectedRange == nil, cmuxStoredFindSelection(for: cmuxSelectionOwner) == nil {
-            _ = cmuxRememberSelectionFromCurrentEditor()
+        hmuxAttachSelectionObserverIfNeeded()
+        hmuxInstallKeyMonitorIfNeeded()
+        if hmuxLastSelectedRange == nil, hmuxStoredFindSelection(for: hmuxSelectionOwner) == nil {
+            _ = hmuxRememberSelectionFromCurrentEditor()
         }
     }
 
     override func textDidChange(_ notification: Notification) {
         super.textDidChange(notification)
-        _ = cmuxRememberSelectionFromCurrentEditor()
+        _ = hmuxRememberSelectionFromCurrentEditor()
     }
 
     override func textDidEndEditing(_ notification: Notification) {
-        _ = cmuxRememberSelectionFromCurrentEditor()
-        cmuxRemoveKeyMonitor()
-        cmuxDetachSelectionObserver()
+        _ = hmuxRememberSelectionFromCurrentEditor()
+        hmuxRemoveKeyMonitor()
+        hmuxDetachSelectionObserver()
         super.textDidEndEditing(notification)
-        cmuxOnEditingChanged?(false)
+        hmuxOnEditingChanged?(false)
     }
 
     override func cancelOperation(_ sender: Any?) {
-        if let editor = currentEditor() as? NSTextView, !editor.hasMarkedText(), cmuxOnEscape?(editor) == true {
+        if let editor = currentEditor() as? NSTextView, !editor.hasMarkedText(), hmuxOnEscape?(editor) == true {
             return
         }
         super.cancelOperation(sender)
     }
 
-    func cmuxRememberSelection(_ range: NSRange, in text: String) -> NSRange {
-        let selection = cmuxClampedFindSelection(range, in: text)
-        cmuxLastSelectedRange = selection
-        cmuxStoreFindSelection(selection, for: cmuxSelectionOwner)
+    func hmuxRememberSelection(_ range: NSRange, in text: String) -> NSRange {
+        let selection = hmuxClampedFindSelection(range, in: text)
+        hmuxLastSelectedRange = selection
+        hmuxStoreFindSelection(selection, for: hmuxSelectionOwner)
         return selection
     }
 
-    func cmuxRememberSelection(from textView: NSTextView) -> NSRange {
-        cmuxRememberSelection(textView.selectedRange(), in: textView.string)
+    func hmuxRememberSelection(from textView: NSTextView) -> NSRange {
+        hmuxRememberSelection(textView.selectedRange(), in: textView.string)
     }
 
-    func cmuxRememberSelectionFromCurrentEditor() -> NSRange? {
+    func hmuxRememberSelectionFromCurrentEditor() -> NSRange? {
         guard let editor = currentEditor() as? NSTextView else { return nil }
-        return cmuxRememberSelection(from: editor)
+        return hmuxRememberSelection(from: editor)
     }
 
-    private func cmuxAttachSelectionObserverIfNeeded() {
+    private func hmuxAttachSelectionObserverIfNeeded() {
         guard let editor = currentEditor() as? NSTextView else { return }
-        if let cmuxObservedEditor, cmuxObservedEditor !== editor {
-            cmuxDetachSelectionObserver()
+        if let hmuxObservedEditor, hmuxObservedEditor !== editor {
+            hmuxDetachSelectionObserver()
         }
-        cmuxAdoptFieldEditor(editor)
-        guard cmuxSelectionObserver == nil else { return }
-        cmuxSelectionObserver = NotificationCenter.default.addObserver(
+        hmuxAdoptFieldEditor(editor)
+        guard hmuxSelectionObserver == nil else { return }
+        hmuxSelectionObserver = NotificationCenter.default.addObserver(
             forName: NSTextView.didChangeSelectionNotification,
             object: editor,
             queue: .main
         ) { [weak self] notification in
             guard let self,
                   let textView = notification.object as? NSTextView else { return }
-            _ = self.cmuxRememberSelection(from: textView)
+            _ = self.hmuxRememberSelection(from: textView)
         }
     }
 
-    private func cmuxDetachSelectionObserver() {
-        if let cmuxSelectionObserver {
-            NotificationCenter.default.removeObserver(cmuxSelectionObserver)
-            self.cmuxSelectionObserver = nil
+    private func hmuxDetachSelectionObserver() {
+        if let hmuxSelectionObserver {
+            NotificationCenter.default.removeObserver(hmuxSelectionObserver)
+            self.hmuxSelectionObserver = nil
         }
-        if let editor = cmuxObservedEditor {
+        if let editor = hmuxObservedEditor {
             if editor.nextResponder === self {
-                editor.nextResponder = cmuxPreviousEditorNextResponder
+                editor.nextResponder = hmuxPreviousEditorNextResponder
             }
-            if cmuxTrackedFindFieldEditorOwner(editor) === self {
-                cmuxFindFieldEditorOwners.removeObject(forKey: editor)
+            if hmuxTrackedFindFieldEditorOwner(editor) === self {
+                hmuxFindFieldEditorOwners.removeObject(forKey: editor)
             }
         }
-        cmuxPreviousEditorNextResponder = nil
-        cmuxObservedEditor = nil
+        hmuxPreviousEditorNextResponder = nil
+        hmuxObservedEditor = nil
     }
 
-    private func cmuxAdoptFieldEditor(_ editor: NSTextView) {
-        cmuxObservedEditor = editor
-        cmuxFindFieldEditorOwners.setObject(self, forKey: editor)
+    private func hmuxAdoptFieldEditor(_ editor: NSTextView) {
+        hmuxObservedEditor = editor
+        hmuxFindFieldEditorOwners.setObject(self, forKey: editor)
         if editor.nextResponder !== self {
-            cmuxPreviousEditorNextResponder = editor.nextResponder
+            hmuxPreviousEditorNextResponder = editor.nextResponder
             editor.nextResponder = self
         }
-        cmuxInstallKeyMonitorIfNeeded()
+        hmuxInstallKeyMonitorIfNeeded()
     }
 
-    private func cmuxInstallKeyMonitorIfNeeded() {
-        guard cmuxKeyMonitor == nil else { return }
-        cmuxKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
+    private func hmuxInstallKeyMonitorIfNeeded() {
+        guard hmuxKeyMonitor == nil else { return }
+        hmuxKeyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             let eventWindow = event.window ?? (event.windowNumber > 0 ? NSApp.window(withWindowNumber: event.windowNumber) : nil)
             guard let self,
                   eventWindow == nil || eventWindow === self.window,
                   let editor = self.currentEditor() as? NSTextView,
                   self.window?.firstResponder === editor else { return event }
-            if cmuxFindEventIsPlainEscape(event), !editor.hasMarkedText(), self.cmuxOnEscape?(editor) == true { return nil }
+            if hmuxFindEventIsPlainEscape(event), !editor.hasMarkedText(), self.hmuxOnEscape?(editor) == true { return nil }
             DispatchQueue.main.async { [weak self, weak editor] in
                 guard let self, let editor else { return }
-                _ = self.cmuxRememberSelection(from: editor)
+                _ = self.hmuxRememberSelection(from: editor)
             }
             return event
         }
     }
 
-    private func cmuxRemoveKeyMonitor() {
-        if let cmuxKeyMonitor {
-            NSEvent.removeMonitor(cmuxKeyMonitor)
-            self.cmuxKeyMonitor = nil
+    private func hmuxRemoveKeyMonitor() {
+        if let hmuxKeyMonitor {
+            NSEvent.removeMonitor(hmuxKeyMonitor)
+            self.hmuxKeyMonitor = nil
         }
     }
 
-    private func cmuxRestoreRememberedSelection() {
-        guard let rememberedSelection = cmuxStoredFindSelection(for: cmuxSelectionOwner) ?? cmuxLastSelectedRange else { return }
+    private func hmuxRestoreRememberedSelection() {
+        guard let rememberedSelection = hmuxStoredFindSelection(for: hmuxSelectionOwner) ?? hmuxLastSelectedRange else { return }
         if let editor = currentEditor() as? NSTextView, !editor.hasMarkedText() {
-            let selection = cmuxRememberSelection(rememberedSelection, in: editor.string)
+            let selection = hmuxRememberSelection(rememberedSelection, in: editor.string)
             editor.setSelectedRange(selection)
         }
         DispatchQueue.main.async { [weak self] in
             guard let self,
                   let editor = self.currentEditor() as? NSTextView,
                   !editor.hasMarkedText() else { return }
-            let selection = self.cmuxRememberSelection(rememberedSelection, in: editor.string)
+            let selection = self.hmuxRememberSelection(rememberedSelection, in: editor.string)
             editor.setSelectedRange(selection)
         }
     }

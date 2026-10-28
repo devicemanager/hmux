@@ -9,11 +9,11 @@ type Environment = Record<string, string | undefined>;
 /**
  * The origin put into invite emails and invite links. Configured origins win;
  * production never trusts the request's Host, so a spoofed host header cannot
- * make Stack mail a cmux-branded link to another site. Only development uses
+ * make Stack mail a hmux-branded link to another site. Only development uses
  * the request origin (or the validated direct dev-backend origin).
  */
 export function trustedTeamInviteOrigin(request: Request, environment: Environment = process.env): string {
-  const configured = environment.CMUX_TEAM_INVITE_ORIGIN?.trim() || environment.CMUX_APP_ORIGIN?.trim();
+  const configured = environment.HMUX_TEAM_INVITE_ORIGIN?.trim() || environment.HMUX_APP_ORIGIN?.trim();
   if (configured) return httpOrigin(configured) ?? DEFAULT_TEAM_INVITE_ORIGIN;
   if (environment.VERCEL_ENV === "production" || environment.NODE_ENV === "production") {
     return DEFAULT_TEAM_INVITE_ORIGIN;

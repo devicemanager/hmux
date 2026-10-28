@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Pin count-plus-age batching of the scheduled iOS TestFlight uploads.
 
-ios-testflight.yml (CMUX INTERNAL, 20-minute polls) and ios-appstore-upload.yml
-(cmux.app, hourly) upload only when at least one relevant commit is waiting
+ios-testflight.yml (HMUX INTERNAL, 20-minute polls) and ios-appstore-upload.yml
+(hmux.app, hourly) upload only when at least one relevant commit is waiting
 AND (N are waiting OR the oldest is T minutes old). The rule lives in
 scripts/ci/ios_upload_batch_decision.py; these tests cover the rule, the git
 history reader against a real repository, and the workflow wiring.
@@ -137,7 +137,7 @@ class PathFilterTests(unittest.TestCase):
 
     def test_matches_like_the_decide_script(self):
         paths = ("ios/", "ghostty", "ghostty.h")
-        self.assertTrue(batch.touches("ios/cmux/App.swift", paths))
+        self.assertTrue(batch.touches("ios/hmux/App.swift", paths))
         self.assertTrue(batch.touches("ghostty", paths))
         self.assertFalse(batch.touches("ghostty-extra/file", paths))
         self.assertFalse(batch.touches("iosx/file", paths))
@@ -221,7 +221,7 @@ class HistoryTests(unittest.TestCase):
         times = batch.relevant_commit_times(commits, None, public=True)
         self.assertEqual(sorted(times), [NOW - 90 * 60, NOW - 20 * 60])
         self.assertFalse(batch.decide("schedule", times, NOW, batch.Thresholds(3, 180)).upload)
-        commit_file(self.repo, "Packages/macOS/CmuxPhonePush/Push.swift", NOW - 5 * 60)
+        commit_file(self.repo, "Packages/macOS/HmuxPhonePush/Push.swift", NOW - 5 * 60)
         times = batch.relevant_commit_times(batch.first_parent_commits(self.base, cwd=self.repo), None, public=True)
         self.assertTrue(batch.decide("schedule", times, NOW, batch.Thresholds(3, 180)).upload)
 
@@ -233,10 +233,10 @@ class HistoryTests(unittest.TestCase):
         function = next(node for node in module.body if isinstance(node, ast.FunctionDef) and node.name == "unrelated")
         namespace = {}
         exec(compile(ast.Module(body=[function], type_ignores=[]), "public_compare_filter", "exec"), namespace)
-        for path in ("web/app.ts", "docs/a.md", "tests/a.py", "cmuxTests/A.swift",
+        for path in ("web/app.ts", "docs/a.md", "tests/a.py", "hmuxTests/A.swift",
                      ".github/workflows/ci.yml", ".github/workflows/ios-appstore-upload.yml",
-                     ".github/workflows/ios-testflight.yml", "Packages/macOS/CmuxPhonePush/A.swift",
-                     "Packages/Shared/A.swift", "ios/cmux/A.swift", "scripts/install-zig-ci.sh",
+                     ".github/workflows/ios-testflight.yml", "Packages/macOS/HmuxPhonePush/A.swift",
+                     "Packages/Shared/A.swift", "ios/hmux/A.swift", "scripts/install-zig-ci.sh",
                      "unknown/new-input", "", None):
             with self.subTest(path=path):
                 self.assertEqual(batch.public_path_relevant(path), not namespace["unrelated"](path))
@@ -373,7 +373,7 @@ class WorkflowWiringTests(unittest.TestCase):
         )
         self.assertIn("--public-path-filter", step(steps, "Batch official uploads by commit count and age")["run"])
         decide = step(steps, "Skip an unchanged scheduled revision")["run"]
-        self.assertIn("name=cmux-app-testflight-upload", decide)
+        self.assertIn("name=hmux-app-testflight-upload", decide)
         self.assertIn(
             '[ "$LAST_SHA" = "$HEAD_SHA" ] && [ "$LAST_UPLOAD_SHA" = "$HEAD_SHA" ]', decide
         )

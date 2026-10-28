@@ -8,9 +8,9 @@ the shard's own output may omit entirely.
 Usage:
   # once per run+shard (downloads ~100-300 MB; keep off /tmp, it is a tmpfs)
   gh run download <RUN_ID> --repo manaflow-ai/cmux \
-      -n cmux-app-host-diagnostics-shard-<N>-run-1 -D <DIR>/shard<N>
+      -n hmux-app-host-diagnostics-shard-<N>-run-1 -D <DIR>/shard<N>
   gh run download <RUN_ID> --repo manaflow-ai/cmux \
-      -n cmux-app-host-test-inventory-<RUN_ID>-1 -D <DIR>/inventory
+      -n hmux-app-host-test-inventory-<RUN_ID>-1 -D <DIR>/inventory
 
   python3 replay_app_host_verdict.py --artifacts <DIR> --shard <N> --repo <CHECKOUT>
   python3 replay_app_host_verdict.py --artifacts <DIR> --shard <N> --repo <CHECKOUT> \
@@ -92,7 +92,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--artifacts", required=True, type=Path)
     ap.add_argument("--shard", required=True)
-    ap.add_argument("--repo", required=True, type=Path, help="a cmux checkout")
+    ap.add_argument("--repo", required=True, type=Path, help="a hmux checkout")
     ap.add_argument("--accounting", type=Path, help="override the module under test")
     ap.add_argument(
         "--xcode-status",
@@ -120,7 +120,7 @@ def main() -> int:
 
     total_new = 0
     for meta in metas:
-        tag = meta.name.replace("cmux-app-host-xcodebuild-", "").split("-pid-")[0]
+        tag = meta.name.replace("hmux-app-host-xcodebuild-", "").split("-pid-")[0]
         tests_json = sorted(shard_dir.glob(f"xcresults/*{tag}*.tests.json"))
         log = sorted(shard_dir.glob(f"captures/*{tag}*.log"))
         if not tests_json or not log:

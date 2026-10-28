@@ -15,12 +15,12 @@ export function withStackAuthSpan<T>(
   attributes: MaybeAttributes = {},
 ): Promise<T> {
   return withSpan(
-    "cmux-stack-auth",
-    `cmux.stack_auth.${operation}`,
+    "hmux-stack-auth",
+    `hmux.stack_auth.${operation}`,
     {
-      "cmux.external.service": "stack-auth",
-      "cmux.external.transport": "hexclave",
-      "cmux.external.operation": operation,
+      "hmux.external.service": "stack-auth",
+      "hmux.external.transport": "hexclave",
+      "hmux.external.operation": operation,
       ...attributes,
     },
     fn,

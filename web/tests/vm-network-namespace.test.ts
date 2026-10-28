@@ -18,7 +18,7 @@ import { VmRepository, type VmRepositoryShape } from "../services/vms/repository
 // dev stack enrolled its tunnels into the user's production network.
 
 const PRODUCTION = {};
-const DEV = { CMUX_VM_NETWORK_NAMESPACE: "dev-3f9a1c20" };
+const DEV = { HMUX_VM_NETWORK_NAMESPACE: "dev-3f9a1c20" };
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 function ipv4ToInt(address: string): number {
@@ -27,11 +27,11 @@ function ipv4ToInt(address: string): number {
 
 describe("network namespace", () => {
   test("unset or empty keeps the production slugs byte for byte", () => {
-    for (const env of [PRODUCTION, { CMUX_VM_NETWORK_NAMESPACE: "" }, { CMUX_VM_NETWORK_NAMESPACE: "  " }]) {
+    for (const env of [PRODUCTION, { HMUX_VM_NETWORK_NAMESPACE: "" }, { HMUX_VM_NETWORK_NAMESPACE: "  " }]) {
       expect(vmNetworkNamespace(env)).toBeNull();
-      expect(networkSlugForUser("user-1", env)).toBe("cmux-net-fa32ad2752b2459c9967835e3631f278");
-      expect(networkSlugForTeam("team-1", env)).toBe("cmux-team-net-db541021e5eec8c5590dff3a5962eb9b");
-      expect(tunnelSlugForDevice("user-1", "device-1", "terminal", env)).toBe("cmux-wg-07939e1e9fee76ccc1cc2965a0c06c0f");
+      expect(networkSlugForUser("user-1", env)).toBe("hmux-net-fa32ad2752b2459c9967835e3631f278");
+      expect(networkSlugForTeam("team-1", env)).toBe("hmux-team-net-db541021e5eec8c5590dff3a5962eb9b");
+      expect(tunnelSlugForDevice("user-1", "device-1", "terminal", env)).toBe("hmux-wg-07939e1e9fee76ccc1cc2965a0c06c0f");
     }
   });
 
@@ -41,9 +41,9 @@ describe("network namespace", () => {
       networkSlugForTeam("team-1", DEV),
       tunnelSlugForDevice("user-1", "device-1", "terminal", DEV),
     ];
-    expect(slugs[0]).toStartWith("cmux-dev-3f9a1c20-net-");
-    expect(slugs[1]).toStartWith("cmux-dev-3f9a1c20-team-net-");
-    expect(slugs[2]).toStartWith("cmux-dev-3f9a1c20-wg-");
+    expect(slugs[0]).toStartWith("hmux-dev-3f9a1c20-net-");
+    expect(slugs[1]).toStartWith("hmux-dev-3f9a1c20-team-net-");
+    expect(slugs[2]).toStartWith("hmux-dev-3f9a1c20-wg-");
     expect(slugs).not.toContain(networkSlugForUser("user-1", PRODUCTION));
     expect(slugs).not.toContain(networkSlugForTeam("team-1", PRODUCTION));
     expect(slugs).not.toContain(tunnelSlugForDevice("user-1", "device-1", "terminal", PRODUCTION));
@@ -51,13 +51,13 @@ describe("network namespace", () => {
       expect(slug.length).toBeLessThanOrEqual(63);
       expect(slug).toMatch(SLUG);
     }
-    expect(networkSlugForUser("user-1", { CMUX_VM_NETWORK_NAMESPACE: "dev-other" })).not.toBe(slugs[0]);
+    expect(networkSlugForUser("user-1", { HMUX_VM_NETWORK_NAMESPACE: "dev-other" })).not.toBe(slugs[0]);
   });
 
   test("a malformed namespace fails closed instead of falling back to production", () => {
     for (const value of ["Dev", "dev_1", "-dev", "dev-", "dev--1", "a".repeat(17), "dev 1"]) {
-      expect(() => vmNetworkNamespace({ CMUX_VM_NETWORK_NAMESPACE: value })).toThrow();
-      expect(() => networkSlugForUser("user-1", { CMUX_VM_NETWORK_NAMESPACE: value })).toThrow();
+      expect(() => vmNetworkNamespace({ HMUX_VM_NETWORK_NAMESPACE: value })).toThrow();
+      expect(() => networkSlugForUser("user-1", { HMUX_VM_NETWORK_NAMESPACE: value })).toThrow();
     }
   });
 });
@@ -116,17 +116,17 @@ async function provisionWith(env: Record<string, string | undefined>, existing: 
       ...input,
     }),
   } as unknown as VmRepositoryShape;
-  const previous = process.env.CMUX_VM_NETWORK_NAMESPACE;
-  if (env.CMUX_VM_NETWORK_NAMESPACE === undefined) delete process.env.CMUX_VM_NETWORK_NAMESPACE;
-  else process.env.CMUX_VM_NETWORK_NAMESPACE = env.CMUX_VM_NETWORK_NAMESPACE;
+  const previous = process.env.HMUX_VM_NETWORK_NAMESPACE;
+  if (env.HMUX_VM_NETWORK_NAMESPACE === undefined) delete process.env.HMUX_VM_NETWORK_NAMESPACE;
+  else process.env.HMUX_VM_NETWORK_NAMESPACE = env.HMUX_VM_NETWORK_NAMESPACE;
   try {
     const network = await Effect.runPromise(resolveOwnerNetwork({ userId: "user-1", provider: "freestyle" }).pipe(
       Effect.provide(Layer.mergeAll(Layer.succeed(VmRepository, repo), Layer.succeed(VmProviderGateway, gateway))),
     ));
     return { requests, network };
   } finally {
-    if (previous === undefined) delete process.env.CMUX_VM_NETWORK_NAMESPACE;
-    else process.env.CMUX_VM_NETWORK_NAMESPACE = previous;
+    if (previous === undefined) delete process.env.HMUX_VM_NETWORK_NAMESPACE;
+    else process.env.HMUX_VM_NETWORK_NAMESPACE = previous;
   }
 }
 

@@ -11,7 +11,7 @@
 #       Needs APPLE_CERTIFICATE_BASE64 and APPLE_CERTIFICATE_PASSWORD. Decodes
 #       the certificate into a private temporary file, imports it with the
 #       Developer ID intermediates, deletes the file, and leaves the keychain
-#       unlocked with a short idle lock (CMUX_SIGNING_KEYCHAIN_TIMEOUT seconds,
+#       unlocked with a short idle lock (HMUX_SIGNING_KEYCHAIN_TIMEOUT seconds,
 #       default 600).
 #   signing-keychain.sh unlock
 #       Unlock every keychain this job created, after a long wait (Apple
@@ -26,16 +26,16 @@
 #   signing-keychain.sh assert-deleted
 #       Exit 1 when this job still holds a signing keychain.
 #
-# State lives in $RUNNER_TEMP/cmux-signing-keychain (or
-# CMUX_SIGNING_KEYCHAIN_STATE_DIR). Outside CI there is no state, so unlock,
+# State lives in $RUNNER_TEMP/hmux-signing-keychain (or
+# HMUX_SIGNING_KEYCHAIN_STATE_DIR). Outside CI there is no state, so unlock,
 # lock, delete and is-present do nothing and local signing is unchanged.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SECURITY_TOOL="${CMUX_SECURITY_TOOL:-security}"
-TIMEOUT_SECONDS="${CMUX_SIGNING_KEYCHAIN_TIMEOUT:-600}"
-KEYCHAIN_DIR="${CMUX_KEYCHAIN_DIR:-$HOME/Library/Keychains}"
+SECURITY_TOOL="${HMUX_SECURITY_TOOL:-security}"
+TIMEOUT_SECONDS="${HMUX_SIGNING_KEYCHAIN_TIMEOUT:-600}"
+KEYCHAIN_DIR="${HMUX_KEYCHAIN_DIR:-$HOME/Library/Keychains}"
 # shellcheck source=lib/signing-runtime-guard.sh
 source "$SCRIPT_DIR/lib/signing-runtime-guard.sh"
 
@@ -61,16 +61,16 @@ done
 
 case "$TIMEOUT_SECONDS" in
   ''|*[!0-9]*)
-    echo "error: CMUX_SIGNING_KEYCHAIN_TIMEOUT must be a number of seconds" >&2
+    echo "error: HMUX_SIGNING_KEYCHAIN_TIMEOUT must be a number of seconds" >&2
     exit 2
     ;;
 esac
 if [ "$TIMEOUT_SECONDS" -gt 900 ]; then
-  echo "error: CMUX_SIGNING_KEYCHAIN_TIMEOUT must be 900 seconds or less; unlock again after a long wait instead" >&2
+  echo "error: HMUX_SIGNING_KEYCHAIN_TIMEOUT must be 900 seconds or less; unlock again after a long wait instead" >&2
   exit 2
 fi
 
-state_dir="$(cmux_signing_keychain_state_dir)"
+state_dir="$(hmux_signing_keychain_state_dir)"
 
 password_file() {
   printf '%s/%s.password\n' "$state_dir" "$1"
@@ -123,7 +123,7 @@ unlock_keychains() {
     [ -n "$name" ] || continue
     "$SECURITY_TOOL" unlock-keychain -p "$(cat "$(password_file "$name")")" "$name"
     "$SECURITY_TOOL" set-keychain-settings -lut "$TIMEOUT_SECONDS" "$name"
-  done < <(cmux_signing_keychains_present)
+  done < <(hmux_signing_keychains_present)
 }
 
 lock_keychains() {
@@ -131,14 +131,14 @@ lock_keychains() {
   while IFS= read -r name; do
     [ -n "$name" ] || continue
     "$SECURITY_TOOL" lock-keychain "$name" || true
-  done < <(cmux_signing_keychains_present)
+  done < <(hmux_signing_keychains_present)
 }
 
 delete_keychains() {
   local name names=() failed=0
   while IFS= read -r name; do
     [ -n "$name" ] && names+=("$name")
-  done < <(cmux_signing_keychains_present)
+  done < <(hmux_signing_keychains_present)
   if [ -n "$keychain" ]; then
     names+=("$keychain")
   fi
@@ -167,10 +167,10 @@ case "$command" in
   unlock) unlock_keychains ;;
   lock) lock_keychains ;;
   delete) delete_keychains ;;
-  is-present) [ -n "$(cmux_signing_keychains_present)" ] ;;
+  is-present) [ -n "$(hmux_signing_keychains_present)" ] ;;
   assert-deleted)
-    if [ -n "$(cmux_signing_keychains_present)" ]; then
-      echo "error: a CI signing keychain is still present: $(cmux_signing_keychains_present | tr '\n' ' ')" >&2
+    if [ -n "$(hmux_signing_keychains_present)" ]; then
+      echo "error: a CI signing keychain is still present: $(hmux_signing_keychains_present | tr '\n' ' ')" >&2
       exit 1
     fi
     ;;

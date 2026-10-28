@@ -32,7 +32,7 @@ jobs:
       run:
         working-directory: web
     env:
-      CMUX_CLOUD_VM_ENV_SOURCE: process
+      HMUX_CLOUD_VM_ENV_SOURCE: process
       NEXT_PUBLIC_STACK_PROJECT_ID: ${{ vars.NEXT_PUBLIC_STACK_PROJECT_ID }}
       NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: ${{ vars.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY }}
       STACK_SECRET_SERVER_KEY: ${{ secrets.STACK_SECRET_SERVER_KEY }}
@@ -68,7 +68,7 @@ jobs:
             --edge-check --skip-attach --zero-token --sweep-older-than-minutes 30 \
             --result-file "$RUNNER_TEMP/canary-result.json" 2>&1 | tee "$RUNNER_TEMP/canary.log"
 
-      # One cmux.synthetic.check event per run, the contract the cmux admin
+      # One hmux.synthetic.check event per run, the contract the hmux admin
       # /synthetics page graphs. The token can only ingest.
       - name: Send the run to Axiom
         if: ${{ always() && github.event_name == 'schedule' }}
@@ -76,7 +76,7 @@ jobs:
         working-directory: .
         env:
           AXIOM_INGEST_TOKEN: ${{ secrets.AXIOM_INGEST_TOKEN }}
-          AXIOM_DATASET: cmux-prod-otel-traces
+          AXIOM_DATASET: hmux-prod-otel-traces
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           REVISION: ${{ github.sha }}
         run: |
@@ -89,7 +89,7 @@ jobs:
           # No result file means the runner failed before the check ran.
           [ -s "$result" ] || echo '{"ok":false,"stage":"runner","error":"the check did not start"}' > "$result"
           if ! jq -c --arg run_url "$RUN_URL" --arg revision "$REVISION" '[{
-              name: "cmux.synthetic.check",
+              name: "hmux.synthetic.check",
               synthetic_check: "cloud_vm_canary",
               synthetic_target: (.target // "production"),
               synthetic_outcome: (if .ok then "pass" else "fail" end),
@@ -115,12 +115,12 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           # The same notify-only token the iOS connectivity monitor uses; the
-          # Slack bot token stays in the cmux Internal Tools worker
-          # (cmuxterm-hq tools/testflight-slackbot, POST /api/notify).
-          CMUX_NOTIFY_TOKEN: ${{ secrets.CMUX_NOTIFY_TOKEN }}
-          CMUX_NOTIFY_URL: https://cmux-testflight-founders.debussy.workers.dev
-          # #cmux-automations
-          CMUX_NOTIFY_CHANNEL: C0BA32V49FD
+          # Slack bot token stays in the hmux Internal Tools worker
+          # (hmuxterm-hq tools/testflight-slackbot, POST /api/notify).
+          HMUX_NOTIFY_TOKEN: ${{ secrets.HMUX_NOTIFY_TOKEN }}
+          HMUX_NOTIFY_URL: https://hmux-testflight-founders.debussy.workers.dev
+          # #hmux-automations
+          HMUX_NOTIFY_CHANNEL: C0BA32V49FD
           OUTCOME: ${{ steps.canary.outcome }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
@@ -139,10 +139,10 @@ jobs:
             echo "state unchanged ($previous -> $OUTCOME); no message"
             exit 0
           fi
-          if [ -z "${CMUX_NOTIFY_TOKEN:-}" ]; then
-            echo "::error::CMUX_NOTIFY_TOKEN is not set; not posting: $text"
+          if [ -z "${HMUX_NOTIFY_TOKEN:-}" ]; then
+            echo "::error::HMUX_NOTIFY_TOKEN is not set; not posting: $text"
             exit 1
           fi
-          jq -n --arg text "$text" --arg channel "$CMUX_NOTIFY_CHANNEL" '{text: $text, sender: "cloud-vm-canary", channel: $channel}' |
-            curl -fsS -X POST -H "authorization: Bearer $CMUX_NOTIFY_TOKEN" -H 'content-type: application/json' \
-              --data @- "$CMUX_NOTIFY_URL/api/notify" | jq -e '.ok == true' >/dev/null
+          jq -n --arg text "$text" --arg channel "$HMUX_NOTIFY_CHANNEL" '{text: $text, sender: "cloud-vm-canary", channel: $channel}' |
+            curl -fsS -X POST -H "authorization: Bearer $HMUX_NOTIFY_TOKEN" -H 'content-type: application/json' \
+              --data @- "$HMUX_NOTIFY_URL/api/notify" | jq -e '.ok == true' >/dev/null

@@ -1,17 +1,17 @@
 /**
- * The cmux-owned desktop wrapper: the URL a person actually sees and keeps.
+ * The hmux-owned desktop wrapper: the URL a person actually sees and keeps.
  *
  * A desktop preview gateway owns its own token query parameter and cannot be
  * asked to rename it, so instead the raw tokened preview URL stops being
  * user-visible at all. `openUrl` for a port open points at
- * `/vm/desktop/<machine>?cmux_token=…` on our origin; that page validates the
+ * `/vm/desktop/<machine>?hmux_token=…` on our origin; that page validates the
  * upstream host and token, then sends the pane to the noVNC page top-level with
  * the gateway's own parameter. It must be a top-level navigation, not an iframe:
  * the gateway answers the tokened request with a matching cookie that every
  * later asset, and the websockify upgrade, must carry, and WebKit refuses
  * third-party cookies inside a cross-site frame — an iframed desktop rendered as
  * unstyled noVNC HTML with a dead Connect button. The wrapper also knows the
- * token's expiry, so a lapsed pane shows an honest "reopen from cmux" screen
+ * token's expiry, so a lapsed pane shows an honest "reopen from hmux" screen
  * instead of a silent white one.
  *
  * DORMANT on today's driver: Freestyle's `openPort` returns the machine's
@@ -24,7 +24,7 @@
  * host suffix to whatever that edge actually uses.
  */
 
-/** Hosts the wrapper will agree to send a pane to: the cmux-branded machine domain. */
+/** Hosts the wrapper will agree to send a pane to: the hmux-branded machine domain. */
 const ALLOWED_UPSTREAM_SUFFIXES = [".vm.cmux.sh"] as const;
 
 /**
@@ -69,7 +69,7 @@ export function desktopWrapperUrl(input: {
   }
   if (!isAllowedDesktopUpstreamHost(upstreamHost)) return null;
   const wrapper = new URL(`/vm/desktop/${encodeURIComponent(input.vmId)}`, input.origin);
-  wrapper.searchParams.set("cmux_token", input.token);
+  wrapper.searchParams.set("hmux_token", input.token);
   wrapper.searchParams.set("host", upstreamHost);
   if (input.expiresAtMs && Number.isFinite(input.expiresAtMs)) {
     wrapper.searchParams.set("exp", String(Math.floor(input.expiresAtMs)));

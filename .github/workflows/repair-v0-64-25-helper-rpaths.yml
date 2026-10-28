@@ -1,4 +1,4 @@
-name: Repair v0.64.25 cmux-cua rpaths
+name: Repair v0.64.25 hmux-cua rpaths
 
 on:
   workflow_dispatch:
@@ -18,7 +18,7 @@ concurrency:
 jobs:
   # No environment and no secrets: the one check that runs bundle code (the
   # diff sidecar handshake) runs on the shipped app here. Re-signing changes
-  # only the sidecar's signature; sign-cmux-bundle.sh repeats the static
+  # only the sidecar's signature; sign-hmux-bundle.sh repeats the static
   # checks on the re-signed copy in the repair job.
   verify-shipped:
     permissions:
@@ -47,16 +47,16 @@ jobs:
           set -euo pipefail
           root="$RUNNER_TEMP/shipped"
           mkdir -p "$root/mount"
-          gh release download "$TARGET_TAG" --repo "$GITHUB_REPOSITORY" --pattern cmux-macos.dmg --dir "$root" --clobber
-          hdiutil attach "$root/cmux-macos.dmg" -nobrowse -readonly -mountpoint "$root/mount" >/dev/null
+          gh release download "$TARGET_TAG" --repo "$GITHUB_REPOSITORY" --pattern hmux-macos.dmg --dir "$root" --clobber
+          hdiutil attach "$root/hmux-macos.dmg" -nobrowse -readonly -mountpoint "$root/mount" >/dev/null
           trap 'hdiutil detach "$root/mount" >/dev/null 2>&1 || hdiutil detach -force "$root/mount" >/dev/null 2>&1 || true' EXIT
           app="$(find "$root/mount" -maxdepth 1 -type d -name '*.app' -print -quit)"
           test -n "$app"
           ./scripts/verify-diff-sidecar-artifact.sh \
-            "$app/Contents/Resources/bin/cmux-diff-sidecar" \
-            --archs "$(lipo -archs "$app/Contents/MacOS/cmux")" \
+            "$app/Contents/Resources/bin/hmux-diff-sidecar" \
+            --archs "$(lipo -archs "$app/Contents/MacOS/hmux")" \
             --require-signed
-          echo "dmg_sha256=$(shasum -a 256 "$root/cmux-macos.dmg" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+          echo "dmg_sha256=$(shasum -a 256 "$root/hmux-macos.dmg" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
 
   repair:
     needs: verify-shipped
@@ -69,9 +69,9 @@ jobs:
     timeout-minutes: 90
     env:
       TARGET_TAG: v0.64.25
-      REPAIR_ROOT: ${{ github.workspace }}/.cmux-v0.64.25-repair
-      APP_PATH: ${{ github.workspace }}/.cmux-v0.64.25-repair/cmux.app
-      DMG_PATH: ${{ github.workspace }}/cmux-macos.dmg
+      REPAIR_ROOT: ${{ github.workspace }}/.hmux-v0.64.25-repair
+      APP_PATH: ${{ github.workspace }}/.hmux-v0.64.25-repair/hmux.app
+      DMG_PATH: ${{ github.workspace }}/hmux-macos.dmg
       APPCAST_PATH: ${{ github.workspace }}/appcast.xml
     steps:
       - name: Checkout repair tooling
@@ -91,7 +91,7 @@ jobs:
       - name: Install create-dmg
         run: |
           set -euo pipefail
-          CMUX_NODE_BIN="$(command -v node)"
+          HMUX_NODE_BIN="$(command -v node)"
           npm_config_prefix="$RUNNER_TEMP/npm-global"
           export npm_config_prefix
           mkdir -p "$npm_config_prefix"
@@ -100,7 +100,7 @@ jobs:
           mkdir -p "$wrapper_dir"
           cat > "$wrapper_dir/create-dmg" <<EOF
           #!/usr/bin/env bash
-          exec "$CMUX_NODE_BIN" "$npm_config_prefix/lib/node_modules/create-dmg/cli.js" "\$@"
+          exec "$HMUX_NODE_BIN" "$npm_config_prefix/lib/node_modules/create-dmg/cli.js" "\$@"
           EOF
           chmod +x "$wrapper_dir/create-dmg"
           echo "$wrapper_dir" >> "$GITHUB_PATH"
@@ -114,12 +114,12 @@ jobs:
           mkdir -p "$REPAIR_ROOT/input"
           gh release download "$TARGET_TAG" \
             --repo "$GITHUB_REPOSITORY" \
-            --pattern cmux-macos.dmg \
+            --pattern hmux-macos.dmg \
             --dir "$REPAIR_ROOT/input" \
             --clobber
-          test -s "$REPAIR_ROOT/input/cmux-macos.dmg"
+          test -s "$REPAIR_ROOT/input/hmux-macos.dmg"
           # Repair exactly the bytes verify-shipped checked.
-          actual="$(shasum -a 256 "$REPAIR_ROOT/input/cmux-macos.dmg" | awk '{print $1}')"
+          actual="$(shasum -a 256 "$REPAIR_ROOT/input/hmux-macos.dmg" | awk '{print $1}')"
           [ "$actual" = "$VERIFIED_DMG_SHA256" ] || { echo "the downloaded DMG differs from the one verify-shipped checked" >&2; exit 1; }
 
       - name: Extract and validate shipped app
@@ -131,15 +131,15 @@ jobs:
             hdiutil detach "$mount_dir" >/dev/null 2>&1 || hdiutil detach -force "$mount_dir" >/dev/null 2>&1 || true
           }
           trap cleanup_mount EXIT
-          hdiutil attach "$REPAIR_ROOT/input/cmux-macos.dmg" -nobrowse -readonly -mountpoint "$mount_dir" >/dev/null
+          hdiutil attach "$REPAIR_ROOT/input/hmux-macos.dmg" -nobrowse -readonly -mountpoint "$mount_dir" >/dev/null
           source_app="$(find "$mount_dir" -maxdepth 1 -type d -name '*.app' -print -quit)"
           test -n "$source_app"
           ditto "$source_app" "$APP_PATH"
           version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$APP_PATH/Contents/Info.plist")"
           test "$version" = "0.64.25"
           for helper in \
-            "$APP_PATH/Contents/Resources/bin/cmux-cua" \
-            "$APP_PATH/Contents/Library/cmux Computer Use.app/Contents/MacOS/cmux-cua"; do
+            "$APP_PATH/Contents/Resources/bin/hmux-cua" \
+            "$APP_PATH/Contents/Library/hmux Computer Use.app/Contents/MacOS/hmux-cua"; do
             test -x "$helper"
             echo "$helper: $(lipo -archs "$helper")"
           done
@@ -155,9 +155,9 @@ jobs:
       - name: Strip helper toolchain rpaths
         run: |
           set -euo pipefail
-          ./scripts/strip-cmux-cua-rpaths.sh \
-            "$APP_PATH/Contents/Resources/bin/cmux-cua" \
-            "$APP_PATH/Contents/Library/cmux Computer Use.app/Contents/MacOS/cmux-cua"
+          ./scripts/strip-hmux-cua-rpaths.sh \
+            "$APP_PATH/Contents/Resources/bin/hmux-cua" \
+            "$APP_PATH/Contents/Library/hmux Computer Use.app/Contents/MacOS/hmux-cua"
 
       - name: Start helper notarization
         env:
@@ -170,7 +170,7 @@ jobs:
           ./scripts/ci/notarize-computer-use-helper.sh \
             --start "$REPAIR_ROOT/computer-use-notarization.state" \
             "$APP_PATH" \
-            cmux.release.entitlements \
+            hmux.release.entitlements \
             "$APPLE_SIGNING_IDENTITY"
 
       - name: Re-sign repaired app
@@ -179,10 +179,10 @@ jobs:
         run: |
           set -euo pipefail
           test -n "$APPLE_SIGNING_IDENTITY"
-          CMUX_SIGN_MODE=all-except-computer-use \
-            ./scripts/sign-cmux-bundle.sh \
+          HMUX_SIGN_MODE=all-except-computer-use \
+            ./scripts/sign-hmux-bundle.sh \
             "$APP_PATH" \
-            cmux.release.entitlements \
+            hmux.release.entitlements \
             "$APPLE_SIGNING_IDENTITY"
 
       - name: Verify repaired Mach-O load commands
@@ -199,7 +199,7 @@ jobs:
           ./scripts/ci/notarize-computer-use-helper.sh \
             --finish "$REPAIR_ROOT/computer-use-notarization.state" \
             "$APP_PATH" \
-            cmux.release.entitlements \
+            hmux.release.entitlements \
             "$APPLE_SIGNING_IDENTITY"
 
       - name: Notarize and staple repaired app
@@ -209,11 +209,11 @@ jobs:
           ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
         run: |
           set -euo pipefail
-          notary_tmp="$(mktemp -d "$RUNNER_TEMP/cmux-notary.XXXXXX")"
+          notary_tmp="$(mktemp -d "$RUNNER_TEMP/hmux-notary.XXXXXX")"
           trap 'rm -rf "$notary_tmp"' EXIT
           source ./scripts/ci/lib/notary-auth.sh
           notary_auth_init "$notary_tmp"
-          zip_path="$REPAIR_ROOT/cmux-notary.zip"
+          zip_path="$REPAIR_ROOT/hmux-notary.zip"
           ditto -c -k --sequesterRsrc --keepParent "$APP_PATH" "$zip_path"
           submit_json="$(xcrun notarytool submit "$zip_path" \
             "${NOTARY_AUTH_ARGS[@]}" \
@@ -236,7 +236,7 @@ jobs:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
           set -euo pipefail
-          notary_tmp="$(mktemp -d "$RUNNER_TEMP/cmux-notary.XXXXXX")"
+          notary_tmp="$(mktemp -d "$RUNNER_TEMP/hmux-notary.XXXXXX")"
           trap 'rm -rf "$notary_tmp"' EXIT
           source ./scripts/ci/lib/notary-auth.sh
           notary_auth_init "$notary_tmp"
@@ -280,15 +280,15 @@ jobs:
           ./scripts/sparkle_generate_appcast.sh "$DMG_PATH" "$TARGET_TAG" "$APPCAST_PATH"
           test -s "$APPCAST_PATH"
           grep -q 'sparkle:edSignature' "$APPCAST_PATH"
-          grep -q 'cmux-macos.dmg' "$APPCAST_PATH"
+          grep -q 'hmux-macos.dmg' "$APPCAST_PATH"
 
       - name: Upload dry-run artifacts
         if: inputs.confirmation != 'v0.64.25'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-v0.64.25-rpath-repair-dry-run
+          name: hmux-v0.64.25-rpath-repair-dry-run
           path: |
-            cmux-macos.dmg
+            hmux-macos.dmg
             appcast.xml
           if-no-files-found: error
           retention-days: 7
@@ -320,7 +320,7 @@ jobs:
           python3 scripts/ci/upload-r2-object.py \
             --file "$APPCAST_PATH" \
             --endpoint-url "$R2_ENDPOINT" \
-            --bucket cmux-binaries \
+            --bucket hmux-binaries \
             --key stable/appcast.xml \
             --content-type application/xml \
             --cache-control 'no-cache, no-store, must-revalidate'

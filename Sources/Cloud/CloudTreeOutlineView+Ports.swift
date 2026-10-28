@@ -1,6 +1,6 @@
 import AppKit
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 
 extension CloudTreeOutlineView.Coordinator {
     /// The Ports status button's action. It shares the machine's current plan gate.

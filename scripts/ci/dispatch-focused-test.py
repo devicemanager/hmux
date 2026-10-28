@@ -30,7 +30,7 @@ from e2e_runner_pool import SMALL_RUNNER  # noqa: E402
 
 REPO = "manaflow-ai/cmux"
 WORKFLOW = "test-e2e.yml"
-# Runs cmuxTests against app-host products a CI run already compiled; see
+# Runs hmuxTests against app-host products a CI run already compiled; see
 # reuse_ci_products().
 RERUN_WORKFLOW = "app-host-test-rerun.yml"
 CI_WORKFLOW_PATH = ".github/workflows/ci.yml"
@@ -40,16 +40,16 @@ PRODUCTS_POLL_SECONDS = 60.0
 # --workflow-ref is given: the repository default branch.
 DEFAULT_WORKFLOW_REF = "main"
 # `vars.MACOS_RUNNER_TESTS`, as passed by a workflow job; see default_runner().
-VARIABLE_ENV = "CMUX_MACOS_RUNNER_TESTS"
+VARIABLE_ENV = "HMUX_MACOS_RUNNER_TESTS"
 # The pool-choice variables, passed the same way; see repository_variable().
-OVERFLOW_ENV = "CMUX_" + pool.OVERFLOW_VARIABLE
-ORDER_ENV = "CMUX_" + pool.ORDER_VARIABLE
-MAX_QUEUED_ENV = "CMUX_" + pool.MAX_QUEUED_VARIABLE
-QUEUE_ROUNDS_ENV = "CMUX_" + pool.QUEUE_ROUNDS_VARIABLE
-OWNED_ENV = "CMUX_" + pool.OWNED_VARIABLE
-SLOTS_ENV = "CMUX_" + pool.SLOTS_VARIABLE
-PR_XCODE_ENV = "CMUX_" + pool.PR_XCODE_VARIABLE
-OWNED_UI_ENV = "CMUX_" + pool.OWNED_UI_VARIABLE
+OVERFLOW_ENV = "HMUX_" + pool.OVERFLOW_VARIABLE
+ORDER_ENV = "HMUX_" + pool.ORDER_VARIABLE
+MAX_QUEUED_ENV = "HMUX_" + pool.MAX_QUEUED_VARIABLE
+QUEUE_ROUNDS_ENV = "HMUX_" + pool.QUEUE_ROUNDS_VARIABLE
+OWNED_ENV = "HMUX_" + pool.OWNED_VARIABLE
+SLOTS_ENV = "HMUX_" + pool.SLOTS_VARIABLE
+PR_XCODE_ENV = "HMUX_" + pool.PR_XCODE_VARIABLE
+OWNED_UI_ENV = "HMUX_" + pool.OWNED_UI_VARIABLE
 ROOT = Path(__file__).resolve().parents[2]
 RUN_DISCOVERY_ATTEMPTS = 12
 RUN_DISCOVERY_TIMEOUT_SECONDS = 60.0
@@ -80,7 +80,7 @@ OVERFLOW_POOLS = pool.E2E_POOLS + tuple(
 MAX_CONCURRENCY_GROUP = 400
 
 SELECTOR = re.compile(
-    r"(?:(?:cmuxTests|cmuxUITests)/)?"
+    r"(?:(?:hmuxTests|hmuxUITests)/)?"
     r"[A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*"
     # Swift Testing names a method with its call suffix, and a parameterized
     # one with its argument labels: method(), method(label:), method(_:_:).
@@ -102,7 +102,7 @@ selectors = _load_selectors()
 
 
 def normalize_entry(entry: str, root: Path = ROOT) -> tuple[str, str | None]:
-    """Give a cmuxTests method selector the call suffix its declaration needs.
+    """Give a hmuxTests method selector the call suffix its declaration needs.
 
     `Suite/method` matches no Swift Testing test: xcodebuild runs nothing and
     reports success. The workflow resolves selectors against the built test
@@ -114,7 +114,7 @@ def normalize_entry(entry: str, root: Path = ROOT) -> tuple[str, str | None]:
     this checkout does not declare passes through unchanged, because --ref may
     name a revision where it exists; the workflow remains the authority.
     """
-    if not entry.startswith("cmuxTests/"):
+    if not entry.startswith("hmuxTests/"):
         return entry, None
     parts = entry.split("/")
     if len(parts) != 3:
@@ -297,7 +297,7 @@ def listed_variables() -> dict[str, str] | None:
 def repository_variable(name: str, env_name: str) -> str | None:
     """An overflow variable's value; None or empty means unset (the default).
 
-    A workflow job cannot list variables and passes them in CMUX_* instead.
+    A workflow job cannot list variables and passes them in HMUX_* instead.
     A job that passed MACOS_RUNNER_TESTS but not this one predates it, so it
     gets the default. Elsewhere an unreadable listing also means the default:
     overflow is still bounded by the queue it reads, and fails to 6vcpu.
@@ -355,7 +355,7 @@ def default_runner() -> str | None:
     reason to dispatch normally rather than to act on a runner it guessed.
 
     A workflow job's token cannot list variables, so a job that calls this
-    passes `vars.MACOS_RUNNER_TESTS` in CMUX_MACOS_RUNNER_TESTS instead. Set
+    passes `vars.MACOS_RUNNER_TESTS` in HMUX_MACOS_RUNNER_TESTS instead. Set
     and empty means the variable is unset, and the literal decides.
     """
     if VARIABLE_ENV in os.environ:
@@ -394,7 +394,7 @@ def routed_runner(default: str | None, test_target: str | None = None) -> str | 
             repository_variable(pool.ORDER_VARIABLE, ORDER_ENV),
             repository_variable(pool.MAX_QUEUED_VARIABLE, MAX_QUEUED_ENV),
             repository_variable(pool.OWNED_VARIABLE, OWNED_ENV)
-            if test_target in (None, "cmuxTests")
+            if test_target in (None, "hmuxTests")
             or (repository_variable(pool.OWNED_UI_VARIABLE, OWNED_UI_ENV) or "").strip() == "1" else "",
             repository_variable(pool.PR_XCODE_VARIABLE, PR_XCODE_ENV),
             # Unset is pull request CI's default rounds, as test-e2e.yml passes it.
@@ -613,7 +613,7 @@ def building_producer(commit: str) -> dict | None:
     """A CI run of this commit still compiling products the commit can use.
 
     A pull_request run builds the merge with its base, so it qualifies only
-    while that merge differs from the commit under cmuxTests/ alone. Main's
+    while that merge differs from the commit under hmuxTests/ alone. Main's
     ci.yml runs are dispatched by ci-main-full-suite.yml. The
     guards in main() already refuse a second test-e2e.yml compile of a commit.
     """
@@ -718,8 +718,8 @@ UNLOADABLE_SOURCES: list[str] = []
 def ui_product_source(commit: str) -> dict | None:
     """The CI run whose app-host products a UI run of this commit can adopt.
 
-    Compile admission builds the `cmux` scheme for testing, so its product
-    already holds cmuxUITests-Runner.app and the UI xctestrun next to the app.
+    Compile admission builds the `hmux` scheme for testing, so its product
+    already holds hmuxUITests-Runner.app and the UI xctestrun next to the app.
     test-e2e.yml adopts it whenever the tested tree has the same product
     inputs. A pull request run compiles `refs/pull/N/merge`, never the head, so
     a UI dispatch of the head missed it and compiled the whole app again
@@ -853,11 +853,11 @@ def usable_product(source: dict, pending: bool = False) -> bool:
 
 
 def reuse_ci_products(commit: str, entries: list[str], workflow_ref: str | None, wait: bool) -> int | None:
-    """Run cmuxTests selectors against app-host products CI compiled, if any.
+    """Run hmuxTests selectors against app-host products CI compiled, if any.
 
     A test-e2e.yml run compiles the whole app, 12 to 27 minutes, to run a few
     minutes of tests. When CI already compiled this commit's app, or is
-    compiling it now, app-host-test-rerun.yml recompiles only cmuxTests
+    compiling it now, app-host-test-rerun.yml recompiles only hmuxTests
     against those products. Returns the exit status, or None to fall back to
     a full build.
     """
@@ -894,7 +894,7 @@ def reuse_ci_products(commit: str, entries: list[str], workflow_ref: str | None,
         command.extend(["-f", f"{key}={value}"])
     print(
         f"Testing {only_testing} at {commit} against the products run {found['source_run_id']} "
-        f"compiled from {found['source_sha']}; only cmuxTests recompiles (request {dispatch_id})",
+        f"compiled from {found['source_sha']}; only hmuxTests recompiles (request {dispatch_id})",
         flush=True,
     )
     try:
@@ -930,7 +930,7 @@ def watch_run(run_id: int) -> int:
     ], cwd=ROOT).returncode
 
 
-DOGFOOD_SELECTOR = "cmuxUITests/DogfoodScenarioUITests"
+DOGFOOD_SELECTOR = "hmuxUITests/DogfoodScenarioUITests"
 # workflow_dispatch caps the whole inputs payload at 65,535 characters.
 DOGFOOD_SCENARIO_MAX_B64 = 60_000
 # --adopt-only's status when the run would have to compile the app itself:
@@ -961,17 +961,17 @@ def main() -> int:
     parser = argparse.ArgumentParser(
         description="Run one suite or method on an exact pushed commit. "
         "This focused result does not replace the full CI merge checks.",
-        epilog="Examples: scripts/run-e2e.sh cmuxTests/RemoteTmuxMirrorPaneInputMappingTests --wait; "
+        epilog="Examples: scripts/run-e2e.sh hmuxTests/RemoteTmuxMirrorPaneInputMappingTests --wait; "
         "scripts/run-e2e.sh UpdatePillUITests/testFoo --ref my-branch --no-video",
     )
     parser.add_argument(
         "test_filter",
         nargs="*",
-        help="cmuxTests/Suite[/method] or cmuxUITests/Class[/method]; bare names target UI tests. "
+        help="hmuxTests/Suite[/method] or hmuxUITests/Class[/method]; bare names target UI tests. "
         "A Swift Testing method takes its call suffix, Suite/method() or Suite/method(label:); "
         "one this checkout declares gets it added. "
         "Pass several to run them against one compile; they must share a target. "
-        "cmuxUITests/FuzzRegressions replays the UI fuzzer's checked-in repros (dogfood/fuzz/regressions) "
+        "hmuxUITests/FuzzRegressions replays the UI fuzzer's checked-in repros (dogfood/fuzz/regressions) "
         "against the app, after any UI classes named with it.",
     )
     parser.add_argument("--ref", help="remote branch, tag, or SHA; default: clean local HEAD, already pushed")
@@ -986,8 +986,8 @@ def main() -> int:
     parser.add_argument(
         "--scenario",
         type=Path,
-        help="JSON dogfood tour for cmuxUITests/DogfoodScenarioUITests (the default test with this flag); "
-        "see skills/cmux-testing/references/dogfood-scenarios.md. Combine with --frames to get its screenshots",
+        help="JSON dogfood tour for hmuxUITests/DogfoodScenarioUITests (the default test with this flag); "
+        "see skills/hmux-testing/references/dogfood-scenarios.md. Combine with --frames to get its screenshots",
     )
     parser.add_argument("--timeout", type=positive_integer, default=120, help="per-test timeout in seconds (default: 120)")
     parser.add_argument("--job-timeout", type=positive_integer, default=45, help="job timeout in minutes, including compilation (default: 45)")
@@ -1041,7 +1041,7 @@ def main() -> int:
         if not SELECTOR.fullmatch(entry):
             parser.error(
                 "test_filter must name one suite or method, optionally prefixed "
-                "with cmuxTests/ or cmuxUITests/; a Swift Testing method takes "
+                "with hmuxTests/ or hmuxUITests/; a Swift Testing method takes "
                 "its call suffix, Suite/method() or Suite/method(label:)"
             )
     normalized = []
@@ -1058,12 +1058,12 @@ def main() -> int:
         parser.error("test_filter entries must be unique")
     # One dispatch compiles once and runs one scheme, so a batch cannot span
     # both targets. Bare names keep targeting UI tests.
-    targets = {"cmuxTests" if e.startswith("cmuxTests/") else "cmuxUITests" for e in args.test_filter}
+    targets = {"hmuxTests" if e.startswith("hmuxTests/") else "hmuxUITests" for e in args.test_filter}
     if len(targets) != 1:
-        parser.error("test_filter entries must all target cmuxTests or all target cmuxUITests")
+        parser.error("test_filter entries must all target hmuxTests or all target hmuxUITests")
     test_target = targets.pop()
     test_filter = ",".join(args.test_filter)
-    if args.adopt_only and (test_target != "cmuxUITests" or args.runner not in (None, "auto") or args.full_build):
+    if args.adopt_only and (test_target != "hmuxUITests" or args.runner not in (None, "auto") or args.full_build):
         parser.error("--adopt-only takes UI selectors on the default runner, without --full-build")
     if args.adopt_main and not args.adopt_only:
         parser.error("--adopt-main goes with --adopt-only")
@@ -1093,7 +1093,7 @@ def main() -> int:
     # the revision actually dispatched.
     head = commit
     ui_source = None
-    if test_target == "cmuxUITests" and args.runner in (None, "auto") and not args.full_build:
+    if test_target == "hmuxUITests" and args.runner in (None, "auto") and not args.full_build:
         ui_source = ui_product_source(commit)
         if ui_source is not None:
             if ui_source["revision"] != head and same_product_inputs(head, ui_source["revision"]):
@@ -1235,11 +1235,11 @@ def main() -> int:
 
     # A pinned runner asks about that pool; reused products run on the pool
     # that compiled them.
-    if test_target == "cmuxTests" and not pinned and not args.full_build:
+    if test_target == "hmuxTests" and not pinned and not args.full_build:
         status = reuse_ci_products(commit, args.test_filter, args.workflow_ref, args.wait)
         if status is not None:
             if args.frames:
-                print("--frames: cmuxTests attach no screenshots, so there are no frames to extract", flush=True)
+                print("--frames: hmuxTests attach no screenshots, so there are no frames to extract", flush=True)
             return status
 
     if ui_source is not None and not ui_source["ready"]:
@@ -1294,7 +1294,7 @@ def main() -> int:
               flush=True)
         return UNLOADABLE_PRODUCT_EXIT
     dispatch_id = uuid.uuid4().hex
-    video = not args.no_video and test_target != "cmuxTests"
+    video = not args.no_video and test_target != "hmuxTests"
     fields = {
         "ref": commit,
         "test_filter": test_filter,

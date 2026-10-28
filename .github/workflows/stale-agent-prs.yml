@@ -54,7 +54,7 @@ jobs:
           git -c "http.extraheader=AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
             fetch --no-tags --depth=1 origin \
             +refs/heads/main:refs/remotes/origin/main \
-            +refs/heads/feat-cmux-next:refs/remotes/origin/feat-cmux-next
+            +refs/heads/feat-hmux-next:refs/remotes/origin/feat-hmux-next
       - name: List or close stale agent PRs
         env:
           GH_TOKEN: ${{ github.token }}

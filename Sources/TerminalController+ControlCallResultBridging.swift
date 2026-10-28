@@ -1,4 +1,4 @@
-import CmuxControlSocket
+import HmuxControlSocket
 import Foundation
 
 /// Bridges between the legacy Foundation-shaped `V2CallResult` / encoded

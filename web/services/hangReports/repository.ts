@@ -43,7 +43,7 @@ export type HangReportsRepositoryShape = {
   ) => Effect.Effect<number, HangReportStorageUnavailable>;
 };
 
-export class HangReportsRepository extends Context.Tag("cmux/HangReportsRepository")<
+export class HangReportsRepository extends Context.Tag("hmux/HangReportsRepository")<
   HangReportsRepository,
   HangReportsRepositoryShape
 >() {}

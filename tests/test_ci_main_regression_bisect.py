@@ -310,8 +310,8 @@ class ClassifyTests(unittest.TestCase):
                 self.assertEqual(steps[MODULE.TEST_STEP]["id"], "tests")
                 resolve = steps[MODULE.RESOLVE_STEP]
                 self.assertIn("steps.tests.outcome == 'failure'", resolve["if"])
-                self.assertIn("cmux-e2e-selectors-unresolved", resolve["run"])
-        marker = next(step for step in action["runs"]["steps"] if "cmux-e2e-selectors-unresolved" in str(step.get("run")))
+                self.assertIn("hmux-e2e-selectors-unresolved", resolve["run"])
+        marker = next(step for step in action["runs"]["steps"] if "hmux-e2e-selectors-unresolved" in str(step.get("run")))
         self.assertIn("steps.resolve-selectors.outcome == 'failure'", marker["if"])
 
 
@@ -475,7 +475,7 @@ class WorkflowTests(unittest.TestCase):
         self.assertIn("workflows: [CI main full suite]", self.text)
         self.assertIn("github.event.workflow_run.event == 'workflow_run'", self.text)
         self.assertIn("scripts/ci/main_regression_bisect.py advance", self.text)
-        self.assertIn("CMUX_MACOS_RUNNER_TESTS: ${{ vars.MACOS_RUNNER_TESTS }}", self.text)
+        self.assertIn("HMUX_MACOS_RUNNER_TESTS: ${{ vars.MACOS_RUNNER_TESTS }}", self.text)
 
 
 if __name__ == "__main__":

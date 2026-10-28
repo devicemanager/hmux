@@ -34,7 +34,7 @@ export function PricingView({
   useEffect(() => {
     if (capturedView.current) return;
     capturedView.current = true;
-    posthog.capture("cmuxterm_pricing_viewed", {
+    posthog.capture("hmuxterm_pricing_viewed", {
       surface,
       interval: "month",
       currency: "usd",
@@ -57,10 +57,10 @@ function planPrice(plan: PricingPlan, interval: BillingInterval) {
 }
 
 const PLAN_CTA_EVENTS = {
-  go: "cmuxterm_go_cta_clicked",
-  pro: "cmuxterm_pro_cta_clicked",
-  max: "cmuxterm_max_cta_clicked",
-  team: "cmuxterm_team_cta_clicked",
+  go: "hmuxterm_go_cta_clicked",
+  pro: "hmuxterm_pro_cta_clicked",
+  max: "hmuxterm_max_cta_clicked",
+  team: "hmuxterm_team_cta_clicked",
 } as const satisfies Record<PricingPlan, string>;
 
 export function PricingCheckoutButton({
@@ -100,7 +100,7 @@ export function PricingCheckoutButton({
       size={size}
       onClick={() => {
         if (requiresSignIn) {
-          posthog.capture("cmuxterm_pricing_sign_in_required", {
+          posthog.capture("hmuxterm_pricing_sign_in_required", {
             plan,
             location,
             interval: plan === "pro" || plan === "max" ? interval : "month",
@@ -139,12 +139,12 @@ function pricingDestination(
     [CHECKOUT_PLACEMENT_PARAM]: location,
   });
   const checkoutURL = new URL(checkoutHref, "https://cmux.com");
-  checkoutURL.searchParams.set("cmux_after_sign_in", "1");
+  checkoutURL.searchParams.set("hmux_after_sign_in", "1");
   const signInHref = vaultSignInHref(
     `${checkoutURL.pathname}${checkoutURL.search}`,
   );
   return requiresSignIn
-    ? checkoutURL.searchParams.get("cmux_external_browser") === "1"
+    ? checkoutURL.searchParams.get("hmux_external_browser") === "1"
       ? withExternalBrowserIntent(signInHref)
       : signInHref
     : checkoutHref;

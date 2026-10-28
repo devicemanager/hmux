@@ -174,14 +174,14 @@ afterAll(() => {
 describe("billing checkout route", () => {
   test.each(["go", "team"])("refuses a new annual %s checkout without creating Stripe state", async (plan) => {
     stripeConfigured = true;
-    const response = await GET(new NextRequest(`https://cmux.test/api/billing/checkout?plan=${plan}&interval=year`));
-    expect(response.headers.get("location")).toBe("https://cmux.test/pricing?billing=annual_unavailable");
+    const response = await GET(new NextRequest(`https://hmux.test/api/billing/checkout?plan=${plan}&interval=year`));
+    expect(response.headers.get("location")).toBe("https://hmux.test/pricing?billing=annual_unavailable");
     expect(createStripeSession).not.toHaveBeenCalled();
     expect(createStripeCustomer).not.toHaveBeenCalled();
   });
 
   test("CLI checkout rejects cookie-only requests before creating a session", async () => {
-    const response = await POST(new NextRequest("https://cmux.test/api/billing/checkout", { method: "POST", body: JSON.stringify({ plan: "max" }) }));
+    const response = await POST(new NextRequest("https://hmux.test/api/billing/checkout", { method: "POST", body: JSON.stringify({ plan: "max" }) }));
     expect(response.status).toBe(401);
     expect(createStripeSession).not.toHaveBeenCalled();
   });
@@ -190,14 +190,14 @@ describe("billing checkout route", () => {
     test(`direct ${plan} checkout requires sign-in and preserves the return plan`, async () => {
       stripeConfigured = true;
       userResponses = [null, anonymousUser];
-      const response = await GET(new NextRequest(`https://cmux.test/api/billing/checkout?plan=${plan}&cmux_source=pricing_page&cmux_placement=pricing_compare_header&utm_campaign=launch&format=json`));
+      const response = await GET(new NextRequest(`https://hmux.test/api/billing/checkout?plan=${plan}&hmux_source=pricing_page&hmux_placement=pricing_compare_header&utm_campaign=launch&format=json`));
       const signIn = new URL((await response.json()).url);
       expect(signIn.pathname).toBe("/handler/sign-in");
       const afterAuth = new URL(signIn.searchParams.get("after_auth_return_to")!, signIn);
       const checkout = new URL(afterAuth.searchParams.get("after_auth_return_to")!, signIn);
       expect(checkout.pathname).toBe("/api/billing/checkout");
       expect(checkout.searchParams.get("plan")).toBe(plan);
-      expect(checkout.searchParams.get("cmux_placement")).toBe("pricing_compare_header");
+      expect(checkout.searchParams.get("hmux_placement")).toBe("pricing_compare_header");
       expect(checkout.searchParams.get("utm_campaign")).toBe("launch");
       expect(checkout.searchParams.has("format")).toBe(false);
       expect(createStripeSession).not.toHaveBeenCalled();
@@ -209,14 +209,14 @@ describe("billing checkout route", () => {
   test("CLI checkout binds the Stripe purchase to the verified app account", async () => {
     stripeConfigured = true;
     userResponses = [{ ...signedInUser, clientReadOnlyMetadata: {} }];
-    const response = await POST(new NextRequest("https://cmux.test/api/billing/checkout", {
+    const response = await POST(new NextRequest("https://hmux.test/api/billing/checkout", {
       method: "POST", headers: { authorization: "Bearer app-access", "x-stack-refresh-token": "app-refresh", "content-type": "application/json" },
       body: JSON.stringify({ plan: "max" }),
     }));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({ url: "https://checkout.stripe.com/c/session", plan: "max", flow: "checkout" });
     expect(getUser).toHaveBeenCalledWith(SIGNED_IN_USER_ID);
-    expect(createdStripeSessions[0]).toMatchObject({ client_reference_id: SIGNED_IN_USER_ID, metadata: expect.objectContaining({ cmuxSource: "cli_billing_checkout", cmuxClient: "cli", plan: "max" }) });
+    expect(createdStripeSessions[0]).toMatchObject({ client_reference_id: SIGNED_IN_USER_ID, metadata: expect.objectContaining({ hmuxSource: "cli_billing_checkout", hmuxClient: "cli", plan: "max" }) });
   });
   beforeEach(() => {
     getUser.mockClear();
@@ -255,12 +255,12 @@ describe("billing checkout route", () => {
     userResponses = [null, anonymousUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://hmux.test/api/billing/checkout"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=unavailable",
+      "https://hmux.test/pricing?billing=unavailable",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(createStripeSession).not.toHaveBeenCalled();
@@ -268,12 +268,12 @@ describe("billing checkout route", () => {
 
   test("redirects to the direct dev-backend origin when Next reports the bind address", async () => {
     userResponses = [null, anonymousUser];
-    const previousTransport = process.env.CMUX_DEV_BACKEND_TRANSPORT;
-    const previousOrigin = process.env.CMUX_WWW_ORIGIN;
-    const previousHost = process.env.CMUX_DEV_BACKEND_TAILSCALE_HOST;
-    process.env.CMUX_DEV_BACKEND_TRANSPORT = "direct";
-    process.env.CMUX_DEV_BACKEND_TAILSCALE_HOST = "cmux-dev-backend-1.tail137216.ts.net";
-    process.env.CMUX_WWW_ORIGIN = "https://cmux-dev-backend-1.tail137216.ts.net:3916/";
+    const previousTransport = process.env.HMUX_DEV_BACKEND_TRANSPORT;
+    const previousOrigin = process.env.HMUX_WWW_ORIGIN;
+    const previousHost = process.env.HMUX_DEV_BACKEND_TAILSCALE_HOST;
+    process.env.HMUX_DEV_BACKEND_TRANSPORT = "direct";
+    process.env.HMUX_DEV_BACKEND_TAILSCALE_HOST = "hmux-dev-backend-1.tail137216.ts.net";
+    process.env.HMUX_WWW_ORIGIN = "https://hmux-dev-backend-1.tail137216.ts.net:3916/";
     try {
       const response = await GET(
         new NextRequest("https://0.0.0.0:3916/api/billing/checkout?plan=pro&interval=month"),
@@ -281,15 +281,15 @@ describe("billing checkout route", () => {
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toBe(
-        "https://cmux-dev-backend-1.tail137216.ts.net:3916/pricing?billing=unavailable",
+        "https://hmux-dev-backend-1.tail137216.ts.net:3916/pricing?billing=unavailable",
       );
     } finally {
-      if (previousTransport === undefined) delete process.env.CMUX_DEV_BACKEND_TRANSPORT;
-      else process.env.CMUX_DEV_BACKEND_TRANSPORT = previousTransport;
-      if (previousOrigin === undefined) delete process.env.CMUX_WWW_ORIGIN;
-      else process.env.CMUX_WWW_ORIGIN = previousOrigin;
-      if (previousHost === undefined) delete process.env.CMUX_DEV_BACKEND_TAILSCALE_HOST;
-      else process.env.CMUX_DEV_BACKEND_TAILSCALE_HOST = previousHost;
+      if (previousTransport === undefined) delete process.env.HMUX_DEV_BACKEND_TRANSPORT;
+      else process.env.HMUX_DEV_BACKEND_TRANSPORT = previousTransport;
+      if (previousOrigin === undefined) delete process.env.HMUX_WWW_ORIGIN;
+      else process.env.HMUX_WWW_ORIGIN = previousOrigin;
+      if (previousHost === undefined) delete process.env.HMUX_DEV_BACKEND_TAILSCALE_HOST;
+      else process.env.HMUX_DEV_BACKEND_TAILSCALE_HOST = previousHost;
     }
   });
 
@@ -297,12 +297,12 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=team"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=team"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=unavailable",
+      "https://hmux.test/pricing?billing=unavailable",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(createStripeSession).not.toHaveBeenCalled();
@@ -314,70 +314,70 @@ describe("billing checkout route", () => {
 
     const response = await GET(
       new NextRequest(
-        "https://cmux.test/api/billing/checkout?plan=pro&interval=month&cmux_distribution=appstore&cmux_scheme=cmux",
+        "https://hmux.test/api/billing/checkout?plan=pro&interval=month&hmux_distribution=appstore&hmux_scheme=hmux",
       ),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/app-pricing?cmux_app=1&cmux_distribution=appstore&billing=unavailable&interval=month",
+      "https://hmux.test/app-pricing?hmux_app=1&hmux_distribution=appstore&billing=unavailable&interval=month",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(createStripeSession).not.toHaveBeenCalled();
   });
 
   test("relays an app-pricing checkout through the server-configured destination", async () => {
-    const previous = process.env.CMUX_APP_PRICING_CHECKOUT_URL;
-    process.env.CMUX_APP_PRICING_CHECKOUT_URL =
+    const previous = process.env.HMUX_APP_PRICING_CHECKOUT_URL;
+    process.env.HMUX_APP_PRICING_CHECKOUT_URL =
       "https://billing.example/checkout?campaign=annual";
     try {
       const response = await GET(
         new NextRequest(
-          "https://cmux.test/api/billing/checkout?plan=team&interval=month&cmux_scheme=cmux-dev-test&cmux_app_checkout=1",
+          "https://hmux.test/api/billing/checkout?plan=team&interval=month&hmux_scheme=hmux-dev-test&hmux_app_checkout=1",
         ),
       );
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toBe(
-        "https://billing.example/checkout?campaign=annual&plan=team&interval=month&cmux_scheme=cmux",
+        "https://billing.example/checkout?campaign=annual&plan=team&interval=month&hmux_scheme=hmux",
       );
       expect(getUser).not.toHaveBeenCalled();
       expect(createStripeSession).not.toHaveBeenCalled();
     } finally {
       if (previous === undefined) {
-        delete process.env.CMUX_APP_PRICING_CHECKOUT_URL;
+        delete process.env.HMUX_APP_PRICING_CHECKOUT_URL;
       } else {
-        process.env.CMUX_APP_PRICING_CHECKOUT_URL = previous;
+        process.env.HMUX_APP_PRICING_CHECKOUT_URL = previous;
       }
     }
   });
 
   test("preserves a validated tagged callback through the configured relay", async () => {
-    const previousURL = process.env.CMUX_APP_PRICING_CHECKOUT_URL;
-    const previousSecret = process.env.CMUX_APP_PRICING_RELAY_SECRET;
-    const previousSchemes = process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES;
-    process.env.CMUX_APP_PRICING_CHECKOUT_URL =
+    const previousURL = process.env.HMUX_APP_PRICING_CHECKOUT_URL;
+    const previousSecret = process.env.HMUX_APP_PRICING_RELAY_SECRET;
+    const previousSchemes = process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES;
+    process.env.HMUX_APP_PRICING_CHECKOUT_URL =
       "https://billing.example/api/billing/checkout";
-    process.env.CMUX_APP_PRICING_RELAY_SECRET =
+    process.env.HMUX_APP_PRICING_RELAY_SECRET =
       "pricing-relay-test-secret-with-at-least-32-bytes";
-    process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES = "cmux-dev-test";
+    process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES = "hmux-dev-test";
     try {
       const relayResponse = await GET(
         new NextRequest(
-          "http://localhost:4100/api/billing/checkout?plan=pro&interval=month&cmux_scheme=cmux-dev-test&cmux_app_checkout=1",
+          "http://localhost:4100/api/billing/checkout?plan=pro&interval=month&hmux_scheme=hmux-dev-test&hmux_app_checkout=1",
         ),
       );
       const relayLocation = relayResponse.headers.get("location");
       expect(relayLocation).toBeString();
       const relayURL = new URL(relayLocation!);
       expect(relayURL.origin).toBe("https://billing.example");
-      expect(relayURL.searchParams.get("cmux_scheme")).toBe("cmux-dev-test");
-      expect(relayURL.searchParams.get("cmux_relay_expires")).toMatch(/^\d+$/);
-      expect(relayURL.searchParams.get("cmux_relay_signature")).toMatch(
+      expect(relayURL.searchParams.get("hmux_scheme")).toBe("hmux-dev-test");
+      expect(relayURL.searchParams.get("hmux_relay_expires")).toMatch(/^\d+$/);
+      expect(relayURL.searchParams.get("hmux_relay_signature")).toMatch(
         /^[a-f0-9]{64}$/,
       );
 
-      delete process.env.CMUX_APP_PRICING_CHECKOUT_URL;
+      delete process.env.HMUX_APP_PRICING_CHECKOUT_URL;
       stripeConfigured = true;
       userResponses = [signedInUser];
       const originalNow = Date.now;
@@ -395,19 +395,19 @@ describe("billing checkout route", () => {
       );
       expect(createdStripeSessions).toHaveLength(1);
       expect(createdStripeSessions[0]).toMatchObject({
-        metadata: { nativeCallbackScheme: "cmux-dev-test" },
+        metadata: { nativeCallbackScheme: "hmux-dev-test" },
         subscription_data: {
-          metadata: { nativeCallbackScheme: "cmux-dev-test" },
+          metadata: { nativeCallbackScheme: "hmux-dev-test" },
         },
         success_url:
-          "https://billing.example/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=cmux-dev-test",
+          "https://billing.example/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&hmux_scheme=hmux-dev-test",
       });
 
       createdStripeSessions.length = 0;
       userResponses = [signedInUser];
-      const signature = relayURL.searchParams.get("cmux_relay_signature")!;
+      const signature = relayURL.searchParams.get("hmux_relay_signature")!;
       relayURL.searchParams.set(
-        "cmux_relay_signature",
+        "hmux_relay_signature",
         `${signature[0] === "0" ? "1" : "0"}${signature.slice(1)}`,
       );
       const invalidRelayResponse = await GET(new NextRequest(relayURL));
@@ -417,86 +417,86 @@ describe("billing checkout route", () => {
       expect(createdStripeSessions).toHaveLength(0);
     } finally {
       if (previousURL === undefined) {
-        delete process.env.CMUX_APP_PRICING_CHECKOUT_URL;
+        delete process.env.HMUX_APP_PRICING_CHECKOUT_URL;
       } else {
-        process.env.CMUX_APP_PRICING_CHECKOUT_URL = previousURL;
+        process.env.HMUX_APP_PRICING_CHECKOUT_URL = previousURL;
       }
       if (previousSecret === undefined) {
-        delete process.env.CMUX_APP_PRICING_RELAY_SECRET;
+        delete process.env.HMUX_APP_PRICING_RELAY_SECRET;
       } else {
-        process.env.CMUX_APP_PRICING_RELAY_SECRET = previousSecret;
+        process.env.HMUX_APP_PRICING_RELAY_SECRET = previousSecret;
       }
       if (previousSchemes === undefined) {
-        delete process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES;
+        delete process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES;
       } else {
-        process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES = previousSchemes;
+        process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES = previousSchemes;
       }
     }
   });
 
   test("does not sign tagged callback relays from a public request origin", async () => {
-    const previousURL = process.env.CMUX_APP_PRICING_CHECKOUT_URL;
-    const previousSecret = process.env.CMUX_APP_PRICING_RELAY_SECRET;
-    const previousSchemes = process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES;
-    process.env.CMUX_APP_PRICING_CHECKOUT_URL =
+    const previousURL = process.env.HMUX_APP_PRICING_CHECKOUT_URL;
+    const previousSecret = process.env.HMUX_APP_PRICING_RELAY_SECRET;
+    const previousSchemes = process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES;
+    process.env.HMUX_APP_PRICING_CHECKOUT_URL =
       "https://billing.example/api/billing/checkout";
-    process.env.CMUX_APP_PRICING_RELAY_SECRET =
+    process.env.HMUX_APP_PRICING_RELAY_SECRET =
       "pricing-relay-test-secret-with-at-least-32-bytes";
-    process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES = "cmux-dev-test";
+    process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES = "hmux-dev-test";
     try {
       const response = await GET(
         new NextRequest(
-          "https://cmux.test/api/billing/checkout?plan=pro&interval=month&cmux_scheme=cmux-dev-test&cmux_app_checkout=1",
+          "https://hmux.test/api/billing/checkout?plan=pro&interval=month&hmux_scheme=hmux-dev-test&hmux_app_checkout=1",
         ),
       );
       const location = response.headers.get("location");
       expect(location).toBeString();
       const relayURL = new URL(location!);
 
-      expect(relayURL.searchParams.get("cmux_scheme")).toBe("cmux");
-      expect(relayURL.searchParams.has("cmux_relay_expires")).toBe(false);
-      expect(relayURL.searchParams.has("cmux_relay_signature")).toBe(false);
+      expect(relayURL.searchParams.get("hmux_scheme")).toBe("hmux");
+      expect(relayURL.searchParams.has("hmux_relay_expires")).toBe(false);
+      expect(relayURL.searchParams.has("hmux_relay_signature")).toBe(false);
     } finally {
       if (previousURL === undefined) {
-        delete process.env.CMUX_APP_PRICING_CHECKOUT_URL;
+        delete process.env.HMUX_APP_PRICING_CHECKOUT_URL;
       } else {
-        process.env.CMUX_APP_PRICING_CHECKOUT_URL = previousURL;
+        process.env.HMUX_APP_PRICING_CHECKOUT_URL = previousURL;
       }
       if (previousSecret === undefined) {
-        delete process.env.CMUX_APP_PRICING_RELAY_SECRET;
+        delete process.env.HMUX_APP_PRICING_RELAY_SECRET;
       } else {
-        process.env.CMUX_APP_PRICING_RELAY_SECRET = previousSecret;
+        process.env.HMUX_APP_PRICING_RELAY_SECRET = previousSecret;
       }
       if (previousSchemes === undefined) {
-        delete process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES;
+        delete process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES;
       } else {
-        process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES = previousSchemes;
+        process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES = previousSchemes;
       }
     }
   });
 
   test("rejects invalid app-pricing relay parameters before forwarding", async () => {
-    const previous = process.env.CMUX_APP_PRICING_CHECKOUT_URL;
-    process.env.CMUX_APP_PRICING_CHECKOUT_URL =
+    const previous = process.env.HMUX_APP_PRICING_CHECKOUT_URL;
+    process.env.HMUX_APP_PRICING_CHECKOUT_URL =
       "https://billing.example/checkout";
     try {
       const response = await GET(
         new NextRequest(
-          "https://cmux.test/api/billing/checkout?plan=enterprise&interval=forever&cmux_scheme=https&cmux_app_checkout=1",
+          "https://hmux.test/api/billing/checkout?plan=enterprise&interval=forever&hmux_scheme=https&hmux_app_checkout=1",
         ),
       );
 
       expect(response.status).toBe(307);
       expect(response.headers.get("location")).toBe(
-        "https://cmux.test/pricing?billing=invalid_plan",
+        "https://hmux.test/pricing?billing=invalid_plan",
       );
       expect(getUser).not.toHaveBeenCalled();
       expect(createStripeSession).not.toHaveBeenCalled();
     } finally {
       if (previous === undefined) {
-        delete process.env.CMUX_APP_PRICING_CHECKOUT_URL;
+        delete process.env.HMUX_APP_PRICING_CHECKOUT_URL;
       } else {
-        process.env.CMUX_APP_PRICING_CHECKOUT_URL = previous;
+        process.env.HMUX_APP_PRICING_CHECKOUT_URL = previous;
       }
     }
   });
@@ -506,7 +506,7 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=pro&interval=year"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=pro&interval=year"),
     );
 
     expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/session");
@@ -522,7 +522,7 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://hmux.test/api/billing/checkout"),
     );
 
     expect(response.status).toBe(307);
@@ -538,22 +538,22 @@ describe("billing checkout route", () => {
       metadata: {
         stackUserId: SIGNED_IN_USER_ID,
         plan: "pro",
-        app: "cmux",
+        app: "hmux",
         billingInterval: "month",
       },
       subscription_data: {
         metadata: {
           stackUserId: SIGNED_IN_USER_ID,
           plan: "pro",
-          app: "cmux",
+          app: "hmux",
           billingInterval: "month",
         },
       },
       allow_promotion_codes: true,
       customer_email: "signed@example.com",
       success_url:
-        "https://cmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=cmux",
-      cancel_url: "https://cmux.test/pricing?billing=cancelled&interval=month",
+        "https://hmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&hmux_scheme=hmux",
+      cancel_url: "https://hmux.test/pricing?billing=cancelled&interval=month",
     });
     expect(captureBillingCheckoutStarted).toHaveBeenCalledTimes(1);
     expect(captureBillingCheckoutStarted).toHaveBeenCalledWith({
@@ -575,11 +575,11 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://hmux.test/api/billing/checkout"),
     );
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=error",
+      "https://hmux.test/pricing?billing=error",
     );
     expect(captureBillingCheckoutStarted).not.toHaveBeenCalled();
   });
@@ -589,12 +589,12 @@ describe("billing checkout route", () => {
     stackAuthUnavailable = true;
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://hmux.test/api/billing/checkout"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=error",
+      "https://hmux.test/pricing?billing=error",
     );
     expect(createStripeSession).not.toHaveBeenCalled();
   });
@@ -604,7 +604,7 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?format=json"),
+      new NextRequest("https://hmux.test/api/billing/checkout?format=json"),
     );
 
     expect(response.status).toBe(200);
@@ -618,12 +618,12 @@ describe("billing checkout route", () => {
     stripeConfigured = false;
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?format=json"),
+      new NextRequest("https://hmux.test/api/billing/checkout?format=json"),
     );
 
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      url: "https://cmux.test/pricing?billing=unavailable",
+      url: "https://hmux.test/pricing?billing=unavailable",
     });
     expect(createStripeSession).not.toHaveBeenCalled();
   });
@@ -634,24 +634,24 @@ describe("billing checkout route", () => {
 
     await GET(
       new NextRequest(
-        "https://cmux.test/api/billing/checkout?interval=month" +
-          "&cmux_source=mac_sidebar_badge&cmux_placement=Hero&cmux_client=mac" +
-          "&cmux_channel=nightly&cmux_app_version=0.65.1&cmux_app_build=2026090101" +
+        "https://hmux.test/api/billing/checkout?interval=month" +
+          "&hmux_source=mac_sidebar_badge&hmux_placement=Hero&hmux_client=mac" +
+          "&hmux_channel=nightly&hmux_app_version=0.65.1&hmux_app_build=2026090101" +
           "&utm_source=newsletter",
-        { headers: { referer: "https://cmux.test/app-pricing?cmux_app=1" } },
+        { headers: { referer: "https://hmux.test/app-pricing?hmux_app=1" } },
       ),
     );
 
     expect(resolveProPrice).toHaveBeenCalledWith("month");
     const attributionMetadata = {
-      cmuxSource: "mac_sidebar_badge",
-      cmuxPlacement: "hero",
-      cmuxClient: "mac",
-      cmuxChannel: "nightly",
-      cmuxAppVersion: "0.65.1",
-      cmuxAppBuild: "2026090101",
-      cmuxReferrerHost: "cmux.test",
-      cmuxReferrerPath: "/app-pricing",
+      hmuxSource: "mac_sidebar_badge",
+      hmuxPlacement: "hero",
+      hmuxClient: "mac",
+      hmuxChannel: "nightly",
+      hmuxAppVersion: "0.65.1",
+      hmuxAppBuild: "2026090101",
+      hmuxReferrerHost: "hmux.test",
+      hmuxReferrerPath: "/app-pricing",
       utmSource: "newsletter",
     };
     expect(createdStripeSessions[0]).toMatchObject({
@@ -659,7 +659,7 @@ describe("billing checkout route", () => {
       line_items: [{ price: "price_month", quantity: 1 }],
       metadata: { billingInterval: "month", ...attributionMetadata },
       subscription_data: { metadata: { billingInterval: "month", ...attributionMetadata } },
-      cancel_url: "https://cmux.test/pricing?billing=cancelled&interval=month",
+      cancel_url: "https://hmux.test/pricing?billing=cancelled&interval=month",
     });
     expect(captureBillingCheckoutStarted).toHaveBeenCalledTimes(1);
     expect(captureBillingCheckoutStarted).toHaveBeenCalledWith({
@@ -674,7 +674,7 @@ describe("billing checkout route", () => {
         channel: "nightly",
         appVersion: "0.65.1",
         appBuild: "2026090101",
-        referrerHost: "cmux.test",
+        referrerHost: "hmux.test",
         referrerPath: "/app-pricing",
         utmSource: "newsletter",
         utmMedium: null,
@@ -692,7 +692,7 @@ describe("billing checkout route", () => {
     userResponses = [{ ...signedInUser, clientReadOnlyMetadata: {} }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=max&interval=month"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=max&interval=month"),
     );
 
     expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/session");
@@ -711,7 +711,7 @@ describe("billing checkout route", () => {
     userResponses = [{ ...signedInUser, clientReadOnlyMetadata: {} }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=max&interval=year"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=max&interval=year"),
     );
 
     expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/session");
@@ -726,26 +726,26 @@ describe("billing checkout route", () => {
   test("a dashboard checkout records a validated returnTo and cancels back to it", async () => {
     stripeConfigured = true;
     userResponses = [{ ...signedInUser, clientReadOnlyMetadata: {} }];
-    await GET(new NextRequest("https://cmux.test/api/billing/checkout?plan=max&returnTo=%2Fja%2Fdashboard%2Fcloud%3Fx%3D1"));
+    await GET(new NextRequest("https://hmux.test/api/billing/checkout?plan=max&returnTo=%2Fja%2Fdashboard%2Fcloud%3Fx%3D1"));
     expect(createdStripeSessions[0]).toMatchObject({
       metadata: expect.objectContaining({ plan: "max", returnTo: "/ja/dashboard/cloud" }),
-      cancel_url: "https://cmux.test/ja/dashboard/cloud",
+      cancel_url: "https://hmux.test/ja/dashboard/cloud",
     });
   });
 
   test("an external returnTo is ignored", async () => {
     stripeConfigured = true;
     userResponses = [{ ...signedInUser, clientReadOnlyMetadata: {} }];
-    await GET(new NextRequest("https://cmux.test/api/billing/checkout?plan=max&returnTo=https%3A%2F%2Fevil.example%2Fdashboard"));
+    await GET(new NextRequest("https://hmux.test/api/billing/checkout?plan=max&returnTo=https%3A%2F%2Fevil.example%2Fdashboard"));
     const created = createdStripeSessions[0] as { metadata: Record<string, string>; cancel_url: string };
     expect(created.metadata.returnTo).toBeUndefined();
-    expect(created.cancel_url).toBe("https://cmux.test/pricing?billing=cancelled&interval=month");
+    expect(created.cancel_url).toBe("https://hmux.test/pricing?billing=cancelled&interval=month");
   });
 
   test("creates a monthly Go checkout with its capped entry plan", async () => {
     stripeConfigured = true;
     userResponses = [{ ...signedInUser, clientReadOnlyMetadata: {} }];
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/checkout?plan=go&interval=month"));
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/checkout?plan=go&interval=month"));
     expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/session");
     expect(resolveGoPrice).toHaveBeenCalledTimes(1);
     expect(createdStripeSessions[0]).toMatchObject({
@@ -759,8 +759,8 @@ describe("billing checkout route", () => {
     stripeCustomerRows = [{ id: "cus_founder" }];
     stripeSubscriptionRows = [{ id: "sub_founder", plan: "pro", status: "active", raw: { metadata: { founders_edition: "true" } } }];
     stripeActiveSubscriptionRows = stripeSubscriptionRows;
-    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "pro" } }];
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/checkout?plan=max"));
+    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "pro" } }];
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/checkout?plan=max"));
     expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/session");
     expect(createdStripeSessions[0]).toMatchObject({ customer: "cus_founder", line_items: [{ price: "price_max_month", quantity: 1 }] });
   });
@@ -770,9 +770,9 @@ describe("billing checkout route", () => {
     stripeCustomerRows = [{ id: "cus_founder" }];
     stripeSubscriptionRows = [{ id: "sub_founder", plan: "pro", status: "active", raw: { metadata: { founders_edition: "true" } } }];
     stripeActiveSubscriptionRows = stripeSubscriptionRows;
-    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "pro" } }];
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/checkout?plan=pro"));
-    expect(response.headers.get("location")).toBe("https://cmux.test/pricing?welcome=active");
+    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "pro" } }];
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/checkout?plan=pro"));
+    expect(response.headers.get("location")).toBe("https://hmux.test/pricing?welcome=active");
     expect(createStripeSession).not.toHaveBeenCalled();
   });
 
@@ -785,21 +785,21 @@ describe("billing checkout route", () => {
     stripeSubscriptionRows = [
       {
         id: "sub_max", status: "active", cancelAtPeriodEnd: false, plan: "max",
-        raw: { items: { data: [{ price: { lookup_key: "cmux-max-monthly-200", recurring: { interval: "month" } } }] } },
+        raw: { items: { data: [{ price: { lookup_key: "hmux-max-monthly-200", recurring: { interval: "month" } } }] } },
       },
       { id: "sub_founder", plan: "pro", status: "active", raw: { metadata: { founders_edition: "true" } } },
     ];
     stripeActiveSubscriptionRows = stripeSubscriptionRows;
-    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "max" } }];
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/checkout?plan=pro"));
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?change=pro");
+    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "max" } }];
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/checkout?plan=pro"));
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?change=pro");
     expect(createStripeSession).not.toHaveBeenCalled();
   });
 
   test("a manually granted Pro account can buy Max", async () => {
     stripeConfigured = true;
-    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { cmuxVmPlan: "pro" } }];
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/checkout?plan=max"));
+    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { hmuxVmPlan: "pro" } }];
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/checkout?plan=max"));
     expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/session");
   });
 
@@ -811,16 +811,16 @@ describe("billing checkout route", () => {
       status: "active",
       cancelAtPeriodEnd: false,
       plan: "pro",
-      raw: { items: { data: [{ price: { lookup_key: "cmux-pro-yearly-480", recurring: { interval: "year" } } }] } },
+      raw: { items: { data: [{ price: { lookup_key: "hmux-pro-yearly-480", recurring: { interval: "year" } } }] } },
     }];
     stripeActiveSubscriptionRows = stripeSubscriptionRows;
-    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "pro" } }];
+    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "pro" } }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=max"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=max"),
     );
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?change=max");
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?change=max");
     expect(createStripeSession).not.toHaveBeenCalled();
   });
 
@@ -834,14 +834,14 @@ describe("billing checkout route", () => {
       status: "active",
       cancelAtPeriodEnd: false,
       plan: "go",
-      raw: { items: { data: [{ price: { lookup_key: "cmux-go-monthly-10", recurring: { interval: "month" } } }] } },
+      raw: { items: { data: [{ price: { lookup_key: "hmux-go-monthly-10", recurring: { interval: "month" } } }] } },
     }];
     stripeActiveSubscriptionRows = stripeSubscriptionRows;
-    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "go" } }];
+    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "go" } }];
 
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/checkout?plan=max"));
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/checkout?plan=max"));
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?change=max");
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?change=max");
     expect(createStripeSession).not.toHaveBeenCalled();
   });
 
@@ -855,14 +855,14 @@ describe("billing checkout route", () => {
       status: "active",
       cancelAtPeriodEnd: false,
       plan: "pro",
-      raw: { items: { data: [{ price: { lookup_key: "cmux-pro-monthly", recurring: { interval: "month" } } }] } },
+      raw: { items: { data: [{ price: { lookup_key: "hmux-pro-monthly", recurring: { interval: "month" } } }] } },
     }];
     stripeActiveSubscriptionRows = stripeSubscriptionRows;
-    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "pro" } }];
+    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "pro" } }];
 
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/checkout?plan=max"));
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/checkout?plan=max"));
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?change=max");
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?change=max");
     expect(createStripeSession).not.toHaveBeenCalled();
   });
 
@@ -876,13 +876,13 @@ describe("billing checkout route", () => {
       plan: "max",
     }];
     stripeActiveSubscriptionRows = stripeSubscriptionRows;
-    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "max" } }];
+    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "max" } }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=max"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=max"),
     );
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/api/billing/portal");
+    expect(response.headers.get("location")).toBe("https://hmux.test/api/billing/portal");
   });
 
   // A plan switch would leave the cancellation in place, so a subscriber
@@ -897,13 +897,13 @@ describe("billing checkout route", () => {
       plan: "pro",
     }];
     stripeActiveSubscriptionRows = stripeSubscriptionRows;
-    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "pro" } }];
+    userResponses = [{ ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "pro" } }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=max"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=max"),
     );
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/api/billing/portal");
+    expect(response.headers.get("location")).toBe("https://hmux.test/api/billing/portal");
     expect(createStripeSession).not.toHaveBeenCalled();
   });
 
@@ -916,15 +916,15 @@ describe("billing checkout route", () => {
       cancelAtPeriodEnd: false,
     }];
     stripeActiveSubscriptionRows = [];
-    const pastDueUser = { ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "pro" } };
+    const pastDueUser = { ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "pro" } };
     userResponses = [pastDueUser, pastDueUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://hmux.test/api/billing/checkout"),
     );
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/api/billing/portal",
+      "https://hmux.test/api/billing/portal",
     );
     expect(createStripeSession).not.toHaveBeenCalled();
   });
@@ -939,14 +939,14 @@ describe("billing checkout route", () => {
       plan: "pro",
     }];
     stripeActiveSubscriptionRows = stripeSubscriptionRows;
-    const pastDueUser = { ...signedInUser, clientReadOnlyMetadata: { cmuxPlan: "pro" } };
+    const pastDueUser = { ...signedInUser, clientReadOnlyMetadata: { hmuxPlan: "pro" } };
     userResponses = [pastDueUser, pastDueUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=max"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=max"),
     );
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/api/billing/portal");
+    expect(response.headers.get("location")).toBe("https://hmux.test/api/billing/portal");
     expect(createStripeSession).not.toHaveBeenCalled();
   });
 
@@ -962,7 +962,7 @@ describe("billing checkout route", () => {
     userResponses = [{ ...signedInUser, clientReadOnlyMetadata: {} }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://hmux.test/api/billing/checkout"),
     );
 
     expect(response.headers.get("location")).toBe(
@@ -976,17 +976,17 @@ describe("billing checkout route", () => {
   });
 
   test("rejects dev callback schemes on non-local Stripe checkout hosts", async () => {
-    process.env.CMUX_DEV_NATIVE_CALLBACK_SCHEMES = "cmux-dev-test";
+    process.env.HMUX_DEV_NATIVE_CALLBACK_SCHEMES = "hmux-dev-test";
     stripeConfigured = true;
     userResponses = [signedInUser];
 
     await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?cmux_scheme=cmux-dev-test"),
+      new NextRequest("https://hmux.test/api/billing/checkout?hmux_scheme=hmux-dev-test"),
     );
 
     expect(createdStripeSessions[0]).toMatchObject({
       success_url:
-        "https://cmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=cmux",
+        "https://hmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&hmux_scheme=hmux",
     });
   });
 
@@ -996,14 +996,14 @@ describe("billing checkout route", () => {
     userResponses = [signedInUser];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=team"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=team"),
     );
 
     expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/session");
     expect(resolveTeamPrice).toHaveBeenCalledWith("month");
     expect(createStripeCustomer).toHaveBeenCalledWith({
       name: "Signed Team",
-      metadata: { stackTeamId: TEAM_ID, app: "cmux" },
+      metadata: { stackTeamId: TEAM_ID, app: "hmux" },
     });
     expect(insertedStripeCustomers).toContainEqual({
       id: "cus_team",
@@ -1025,21 +1025,21 @@ describe("billing checkout route", () => {
       metadata: {
         stackTeamId: TEAM_ID,
         plan: "team",
-        app: "cmux",
+        app: "hmux",
         billingInterval: "month",
       },
       subscription_data: {
         metadata: {
           stackTeamId: TEAM_ID,
           plan: "team",
-          app: "cmux",
+          app: "hmux",
           billingInterval: "month",
         },
       },
       allow_promotion_codes: true,
       success_url:
-        "https://cmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&cmux_scheme=cmux",
-      cancel_url: "https://cmux.test/pricing?billing=cancelled&interval=month",
+        "https://hmux.test/api/billing/complete?session_id={CHECKOUT_SESSION_ID}&hmux_scheme=hmux",
+      cancel_url: "https://hmux.test/pricing?billing=cancelled&interval=month",
     });
     expect(captureBillingCheckoutStarted).toHaveBeenCalledTimes(1);
     expect(captureBillingCheckoutStarted).toHaveBeenCalledWith({
@@ -1060,7 +1060,7 @@ describe("billing checkout route", () => {
 
     await GET(
       new NextRequest(
-        "https://cmux.test/api/billing/checkout?plan=team&interval=month",
+        "https://hmux.test/api/billing/checkout?plan=team&interval=month",
       ),
     );
 
@@ -1069,7 +1069,7 @@ describe("billing checkout route", () => {
       line_items: [{ price: "price_team_month", quantity: 2 }],
       metadata: { billingInterval: "month" },
       subscription_data: { metadata: { billingInterval: "month" } },
-      cancel_url: "https://cmux.test/pricing?billing=cancelled&interval=month",
+      cancel_url: "https://hmux.test/pricing?billing=cancelled&interval=month",
     });
   });
 
@@ -1077,16 +1077,16 @@ describe("billing checkout route", () => {
     stripeConfigured = true;
     userResponses = [{
       ...signedInUser,
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout"),
+      new NextRequest("https://hmux.test/api/billing/checkout"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=account_deletion_in_progress",
+      "https://hmux.test/pricing?billing=account_deletion_in_progress",
     );
     expect(createStripeSession).not.toHaveBeenCalled();
   });
@@ -1096,16 +1096,16 @@ describe("billing checkout route", () => {
     userResponses = [{
       ...signedInUser,
       selectedTeam: teamCustomer,
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=team"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=team"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=account_deletion_in_progress",
+      "https://hmux.test/pricing?billing=account_deletion_in_progress",
     );
     expect(createStripeCustomer).not.toHaveBeenCalled();
     expect(createStripeSession).not.toHaveBeenCalled();
@@ -1113,12 +1113,12 @@ describe("billing checkout route", () => {
 
   test("rejects unknown checkout plans", async () => {
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/checkout?plan=enterprise"),
+      new NextRequest("https://hmux.test/api/billing/checkout?plan=enterprise"),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=invalid_plan",
+      "https://hmux.test/pricing?billing=invalid_plan",
     );
     expect(getUser).not.toHaveBeenCalled();
   });
@@ -1126,13 +1126,13 @@ describe("billing checkout route", () => {
   test("rejects unknown checkout intervals", async () => {
     const response = await GET(
       new NextRequest(
-        "https://cmux.test/api/billing/checkout?plan=team&interval=yearly",
+        "https://hmux.test/api/billing/checkout?plan=team&interval=yearly",
       ),
     );
 
     expect(response.status).toBe(307);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=invalid_plan",
+      "https://hmux.test/pricing?billing=invalid_plan",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(createStripeSession).not.toHaveBeenCalled();

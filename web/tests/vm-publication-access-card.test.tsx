@@ -8,12 +8,12 @@ import {
 
 const messages: PublicationAccessMessages = {
   title: "You don't have access",
-  signIn: "Sign in to cmux",
+  signIn: "Sign in to hmux",
   signedInAs: "Signed in as {identity}",
   switchAccount: "Switch account",
   invalidTitle: "This access link isn't valid",
   invalidBody: "Return to the shared site and try again.",
-  footer: "Access is managed by cmux.",
+  footer: "Access is managed by hmux.",
 };
 
 describe("Cloud VM publication access card", () => {
@@ -32,8 +32,8 @@ describe("Cloud VM publication access card", () => {
     expect(html).toContain("You don&#x27;t have access");
     expect(html).toContain("prickly-lavender-minnow.cmux.sh");
     expect(html).toContain('href="/handler/sign-in?return=opaque"');
-    expect(html).toContain("Sign in to cmux");
-    expect(html).toContain("Access is managed by cmux.");
+    expect(html).toContain("Sign in to hmux");
+    expect(html).toContain("Access is managed by hmux.");
     expect(html).toMatch(/<img[^>]*logo\.png/);
     expect(html).not.toContain("Signed in as");
     expect(html).not.toContain("Switch account");
@@ -55,7 +55,7 @@ describe("Cloud VM publication access card", () => {
     expect(html).toContain("Signed in as viewer@example.com");
     expect(html).toContain('href="/handler/sign-out-and-sign-in?after_auth_return_to=opaque"');
     expect(html).toContain("Switch account");
-    expect(html).not.toContain("Sign in to cmux<");
+    expect(html).not.toContain("Sign in to hmux<");
     expect(html).not.toContain("<form");
     expect(html).not.toContain("Request access");
   });

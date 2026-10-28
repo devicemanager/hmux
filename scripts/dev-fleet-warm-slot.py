@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Machine-local warm build slots for cmux dev-fleet tasks.
+"""Machine-local warm build slots for hmux dev-fleet tasks.
 
 Warm state is acceleration only. Every task still executes a native build, and
 callers retain their ordinary clean-checkout cold-build path.
@@ -197,11 +197,11 @@ def probe(argv: Sequence[str]) -> str:
 
 
 def toolchain() -> dict[str, Any]:
-    injected = os.environ.get("CMUX_WARM_SLOT_TOOLCHAIN_JSON")
+    injected = os.environ.get("HMUX_WARM_SLOT_TOOLCHAIN_JSON")
     if injected:
         value = json.loads(injected)
         if not isinstance(value, dict):
-            raise ValueError("CMUX_WARM_SLOT_TOOLCHAIN_JSON must be an object")
+            raise ValueError("HMUX_WARM_SLOT_TOOLCHAIN_JSON must be an object")
         return value
     if sys.platform != "darwin":
         return {"available": False, "platform": sys.platform, "arch": platform.machine()}
@@ -688,7 +688,7 @@ def _wait_cleanup_process(
 
     waiter = threading.Thread(
         target=wait_for_exit,
-        name="cmux-cold-cleanup-waiter",
+        name="hmux-cold-cleanup-waiter",
         daemon=True,
     )
     waiter.start()
@@ -1296,8 +1296,8 @@ def build_command(checkout: Path, tag: str, override: Sequence[str]) -> list[str
 
 def build_env(derived: Path, tag: str) -> dict[str, str]:
     env = os.environ.copy()
-    env["CMUX_DERIVED_DATA"] = str(derived)
-    env["CMUX_FLEET_BUILD_TAG"] = tag
+    env["HMUX_DERIVED_DATA"] = str(derived)
+    env["HMUX_FLEET_BUILD_TAG"] = tag
     return env
 
 
@@ -1318,7 +1318,7 @@ def run_native(
     run_id = uuid.uuid4().hex
     started = time.time()
     started_iso = dt.datetime.fromtimestamp(started, dt.timezone.utc).isoformat()
-    command_identity = digest({"argv": list(argv), "derived": env.get("CMUX_DERIVED_DATA")})
+    command_identity = digest({"argv": list(argv), "derived": env.get("HMUX_DERIVED_DATA")})
     before = time.monotonic()
 
     if preemptible and preempt_fd is not None and consume_preempt(preempt_fd):
@@ -1415,7 +1415,7 @@ def run_native(
             proc.wait()
             done.set()
 
-        reaper = threading.Thread(target=reap, name=f"cmux-native-reap-{run_id[:8]}", daemon=True)
+        reaper = threading.Thread(target=reap, name=f"hmux-native-reap-{run_id[:8]}", daemon=True)
 
         def force_after_grace() -> None:
             if done.wait(TERM_GRACE_SECONDS):
@@ -1437,7 +1437,7 @@ def run_native(
                 return
             thread = threading.Thread(
                 target=force_after_grace,
-                name=f"cmux-native-kill-{run_id[:8]}",
+                name=f"hmux-native-kill-{run_id[:8]}",
                 daemon=True,
             )
             force_threads.append(thread)
@@ -1474,7 +1474,7 @@ def run_native(
 
                 watcher = threading.Thread(
                     target=watch_preempt,
-                    name=f"cmux-native-preempt-{run_id[:8]}",
+                    name=f"hmux-native-preempt-{run_id[:8]}",
                     daemon=True,
                 )
                 watcher.start()
@@ -1532,7 +1532,7 @@ def run_native(
 
 
 def native_available(tc: dict[str, Any]) -> bool:
-    return bool(tc.get("available") or os.environ.get("CMUX_WARM_SLOT_ALLOW_FAKE_TOOLCHAIN"))
+    return bool(tc.get("available") or os.environ.get("HMUX_WARM_SLOT_ALLOW_FAKE_TOOLCHAIN"))
 
 
 def warm(args: argparse.Namespace) -> dict[str, Any]:

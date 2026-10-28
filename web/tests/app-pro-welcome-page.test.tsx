@@ -27,16 +27,16 @@ describe("app pro welcome page", () => {
     expect(typeof banner.ProWelcomeBanner).toBe("function");
   });
 
-  test("redirects to the dashboard billing page outside the cmux app", async () => {
+  test("redirects to the dashboard billing page outside the hmux app", async () => {
     await expect(
       AppProWelcomePage({ searchParams: Promise.resolve({}) }),
     ).rejects.toMatchObject({ href: "/dashboard/billing" });
   });
 
-  test("shows TestFlight as the current Pro benefit inside the cmux app", async () => {
+  test("shows TestFlight as the current Pro benefit inside the hmux app", async () => {
     const element = await AppProWelcomePage({
       searchParams: Promise.resolve({
-        cmux_app: "1",
+        hmux_app: "1",
         appearance: "dark",
         background: "#112233",
         foreground: "#ddeeff",
@@ -45,17 +45,17 @@ describe("app pro welcome page", () => {
     });
     const html = renderToStaticMarkup(element);
 
-    expect(html).toContain("Welcome to cmux Pro");
+    expect(html).toContain("Welcome to hmux Pro");
     expect(html).toContain("Pro includes up to 5 Cloud VMs sharing 20 vCPUs and 40 GB RAM");
-    expect(html).toContain("cmux iOS app");
+    expect(html).toContain("hmux iOS app");
     expect(html).toContain(
-      'href="/dashboard/testflight?cmux_open_in_browser=split-right"',
+      'href="/dashboard/testflight?hmux_open_in_browser=split-right"',
     );
     expect(html).toContain(
-      'href="/dashboard/billing?cmux_open_in_browser=split-right"',
+      'href="/dashboard/billing?hmux_open_in_browser=split-right"',
     );
     expect(html).toContain(
-      'href="/dashboard?cmux_open_in_browser=split-right"',
+      'href="/dashboard?hmux_open_in_browser=split-right"',
     );
     expect(html).not.toContain('target="_blank"');
     expect(html).toContain(
@@ -64,33 +64,33 @@ describe("app pro welcome page", () => {
     expect(html).not.toContain('href="/dashboard/subrouter"');
     expect(html).not.toContain('href="/dashboard/ai-accounts"');
     expect(html).toContain('data-app-pro-welcome-appearance="dark"');
-    expect(html).toContain('data-cmux-app-theme="true"');
+    expect(html).toContain('data-hmux-app-theme="true"');
     expect(html).toContain("--ghostty-background:#112233");
     expect(html).toContain("--ghostty-foreground:#ddeeff");
-    expect(html).toContain("--cmux-product-blue:#0091ff");
-    expect(html).toContain("--cmux-product-blue-on-background:#0091ff");
-    expect(html).toContain("--cmux-product-blue-on-foreground:#006CBF");
+    expect(html).toContain("--hmux-product-blue:#0091ff");
+    expect(html).toContain("--hmux-product-blue-on-background:#0091ff");
+    expect(html).toContain("--hmux-product-blue-on-foreground:#006CBF");
   });
 
   test("uses the active web locale for the Pro welcome", async () => {
     activeLocale = "fr";
     try {
       const element = await AppProWelcomePage({
-        searchParams: Promise.resolve({ cmux_app: "1" }),
+        searchParams: Promise.resolve({ hmux_app: "1" }),
       });
       const html = renderToStaticMarkup(element);
 
-      expect(html).toContain("Bienvenue dans cmux Pro");
+      expect(html).toContain("Bienvenue dans hmux Pro");
       expect(html).toContain("Pro inclut jusqu’à 5 VM Cloud partageant 20 vCPU et 40 Go de RAM");
       expect(html).toContain("Rejoindre la bêta iOS");
       expect(html).toContain(
-        'href="/fr/dashboard/testflight?cmux_open_in_browser=split-right"',
+        'href="/fr/dashboard/testflight?hmux_open_in_browser=split-right"',
       );
       expect(html).toContain(
-        'href="/fr/dashboard/billing?cmux_open_in_browser=split-right"',
+        'href="/fr/dashboard/billing?hmux_open_in_browser=split-right"',
       );
       expect(html).toContain(
-        'href="/fr/dashboard?cmux_open_in_browser=split-right"',
+        'href="/fr/dashboard?hmux_open_in_browser=split-right"',
       );
       expect(html).not.toContain('target="_blank"');
     } finally {
@@ -114,7 +114,7 @@ describe("app pro welcome page", () => {
 
       const metadata = await generateMetadata();
 
-      expect(metadata.title).toBe("Bienvenue dans cmux Pro");
+      expect(metadata.title).toBe("Bienvenue dans hmux Pro");
       expect(metadata.description).toContain("Pro inclut jusqu’à 5 VM Cloud partageant 20 vCPU et 40 Go de RAM");
     } finally {
       activeLocale = "en";

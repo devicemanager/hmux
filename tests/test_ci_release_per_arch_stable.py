@@ -2,7 +2,7 @@
 """Stable releases ship thin arm64 and x86_64 builds next to the universal one.
 
 Pins the release.yml shape that keeps existing installs and download links safe:
-- the universal cmux-macos.dmg is still built and published, so the website and
+- the universal hmux-macos.dmg is still built and published, so the website and
   Homebrew links that point at it keep working;
 - both thin variants are cut from the stripped universal app before signing and
   are signed, smoke tested, notarized and stapled like nightly's;
@@ -44,7 +44,7 @@ class ReleasePerArchStableTest(unittest.TestCase):
     def test_thin_variants_are_cut_after_strip_and_before_signing(self):
         cut = steps().get("Cut thin stable variants", "")
         self.assertIn("for arch in arm64 x86_64", cut)
-        self.assertIn('./scripts/thin-app-bundle.sh "variants/$arch/cmux.app" "$arch"', cut)
+        self.assertIn('./scripts/thin-app-bundle.sh "variants/$arch/hmux.app" "$arch"', cut)
         self.assertIn("Mach-O universal", cut, "no fat Mach-O may survive thinning")
         self.assertLess(order("Strip release binaries"), order("Cut thin stable variants"))
         self.assertLess(order("Verify Cloud tunnel engine before signing"), order("Cut thin stable variants"))
@@ -62,11 +62,11 @@ class ReleasePerArchStableTest(unittest.TestCase):
             "Gate distribution with syspolicy_check",
         ):
             body = all_steps[name]
-            self.assertIn("variants/arm64/cmux.app", body, name)
-            self.assertIn("variants/x86_64/cmux.app", body, name)
+            self.assertIn("variants/arm64/hmux.app", body, name)
+            self.assertIn("variants/x86_64/hmux.app", body, name)
         self.assertIn("all-except-computer-use", all_steps["Codesign app"])
         start = all_steps["Start thin Computer Use helper notarizations"]
-        self.assertIn('cmux-computer-use-notarization-$arch.state', start)
+        self.assertIn('hmux-computer-use-notarization-$arch.state', start)
         self.assertIn("--start", start)
 
     def test_thin_dmgs_are_notarized_and_stapled_with_stable_entitlements(self):
@@ -74,33 +74,33 @@ class ReleasePerArchStableTest(unittest.TestCase):
         # keychain after its DMG signature, so each variant imports it first.
         for arch in ARCHS:
             body = steps().get(f"Notarize thin {arch} stable DMG", "")
-            self.assertIn("CMUX_CHANNEL: stable", body)
+            self.assertIn("HMUX_CHANNEL: stable", body)
             self.assertIn(f"arch: {arch}", body)
             self.assertIn("./scripts/ci/notarize-nightly-dmg.sh", body)
-            self.assertIn('"variants/$arch/cmux.app"', body)
-            self.assertIn('"cmux-macos-$arch.dmg"', body)
-            self.assertIn('cmux-computer-use-notarization-$arch.state', body)
+            self.assertIn('"variants/$arch/hmux.app"', body)
+            self.assertIn('"hmux-macos-$arch.dmg"', body)
+            self.assertIn('hmux-computer-use-notarization-$arch.state', body)
             imported = steps().get(f"Import signing cert for the {arch} DMG", "")
             self.assertIn("./scripts/ci/signing-keychain.sh create", imported)
             self.assertLess(order("Notarize app"), order(f"Import signing cert for the {arch} DMG"))
             self.assertLess(order(f"Import signing cert for the {arch} DMG"), order(f"Notarize thin {arch} stable DMG"))
             self.assertLess(order(f"Notarize thin {arch} stable DMG"), order("Generate Sparkle appcast"))
             # The DMG around the stapled app: submitted without a wait, finished together.
-            self.assertIn(f'CMUX_STAPLED_DMG_HANDOFF_FILE="$RUNNER_TEMP/stapled-app-$arch.handoff"', body)
+            self.assertIn(f'HMUX_STAPLED_DMG_HANDOFF_FILE="$RUNNER_TEMP/stapled-app-$arch.handoff"', body)
             self.assertLess(order(f"Notarize thin {arch} stable DMG"), order("Finish the stapled-app thin DMGs"))
         finish = steps()["Finish the stapled-app thin DMGs"]
         self.assertIn("./scripts/ci/finish-stapled-app-dmgs.sh", finish)
         for arch in ARCHS:
             self.assertIn(f'"$RUNNER_TEMP/stapled-app-{arch}.handoff"', finish)
-        self.assertIn("CMUX_STAPLED_DMG_WAIT_TIMEOUT: 25m", finish)
+        self.assertIn("HMUX_STAPLED_DMG_WAIT_TIMEOUT: 25m", finish)
         self.assertLess(order("Finish the stapled-app thin DMGs"), order("Gate distribution with syspolicy_check"))
 
     def test_appcasts_are_generated_per_dmg_and_composed(self):
         body = steps()["Generate Sparkle appcast"]
-        self.assertIn('sparkle_generate_appcast.sh cmux-macos.dmg "$GITHUB_REF_NAME" appcast-universal.xml', body)
+        self.assertIn('sparkle_generate_appcast.sh hmux-macos.dmg "$GITHUB_REF_NAME" appcast-universal.xml', body)
         for arch in ARCHS:
             self.assertIn(
-                f'sparkle_generate_appcast.sh cmux-macos-{arch}.dmg "$GITHUB_REF_NAME" appcast-{arch}.xml', body
+                f'sparkle_generate_appcast.sh hmux-macos-{arch}.dmg "$GITHUB_REF_NAME" appcast-{arch}.xml', body
             )
         self.assertIn(
             "compose_stable_appcast.py --universal appcast-universal.xml"
@@ -112,7 +112,7 @@ class ReleasePerArchStableTest(unittest.TestCase):
             self.assertIn(f"grep -q 'sparkle:edSignature' {feed}", body)
 
     def test_universal_dmg_and_legacy_feed_url_stay_for_existing_links(self):
-        self.assertIn('DMG_RELEASE="cmux-macos.dmg"', WORKFLOW)
+        self.assertIn('DMG_RELEASE="hmux-macos.dmg"', WORKFLOW)
         # Thin builds resolve their own feed at runtime from this legacy URL.
         self.assertIn(
             "SUFeedURL string https://github.com/manaflow-ai/cmux/releases/latest/download/appcast.xml", WORKFLOW
@@ -121,9 +121,9 @@ class ReleasePerArchStableTest(unittest.TestCase):
     def test_dry_run_artifact_carries_every_dmg_and_feed(self):
         body = steps()["Upload build artifacts (dry-run)"]
         for name in (
-            "cmux-macos.dmg",
-            "cmux-macos-arm64.dmg",
-            "cmux-macos-x86_64.dmg",
+            "hmux-macos.dmg",
+            "hmux-macos-arm64.dmg",
+            "hmux-macos-x86_64.dmg",
             "appcast.xml",
             "appcast-arm64.xml",
             "appcast-x86_64.xml",
@@ -132,7 +132,7 @@ class ReleasePerArchStableTest(unittest.TestCase):
 
     def test_github_publish_uploads_every_dmg_then_the_legacy_feed_last(self):
         body = steps()["Upload release asset"]
-        for dmg in ("cmux-macos.dmg", "cmux-macos-arm64.dmg", "cmux-macos-x86_64.dmg"):
+        for dmg in ("hmux-macos.dmg", "hmux-macos-arm64.dmg", "hmux-macos-x86_64.dmg"):
             self.assertIn(f"--immutable {dmg}", body)
         feeds = re.findall(r"--feed (\S+)", body)
         self.assertEqual(feeds, ["appcast-arm64.xml", "appcast-x86_64.xml", "appcast.xml"])
@@ -164,7 +164,7 @@ class ReleasePerArchStableTest(unittest.TestCase):
         for arch in ARCHS:
             self.assertIn(f"cp appcast.xml appcast-{arch}.xml", script)
         self.assertRegex(script, r"gh release create .*appcast\.xml appcast-arm64\.xml appcast-x86_64\.xml")
-        self.assertRegex(script, r"gh release upload \"\$TAG\" cmux-macos\.dmg appcast\.xml appcast-arm64\.xml appcast-x86_64\.xml")
+        self.assertRegex(script, r"gh release upload \"\$TAG\" hmux-macos\.dmg appcast\.xml appcast-arm64\.xml appcast-x86_64\.xml")
 
 
 if __name__ == "__main__":

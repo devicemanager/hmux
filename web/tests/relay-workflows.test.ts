@@ -15,7 +15,7 @@ const catalog: RelayCatalog = {
   sequence: 8,
   relays: [{
     id: "managed-current",
-    provider: "cmux",
+    provider: "hmux",
     region: "US West",
     url: "https://usw1.relay.cmux.dev/",
   }],

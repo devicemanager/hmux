@@ -2,7 +2,7 @@
 
 Status: Draft
 
-This RFC defines how cmux keeps an agent session usable when its sidecar,
+This RFC defines how hmux keeps an agent session usable when its sidecar,
 surface, machine, account, provider, or chat task changes. The intended user
 experience is simple: an agent keeps its identity and context, a moved chat
 continues from the last confirmed boundary, and a model or account capacity
@@ -13,7 +13,7 @@ transient capacity failure.
 The proposal connects four existing pieces without making any one of them the
 source of truth for all the others:
 
-- cmux's stable surface binding and planned `AgentSession` authority in
+- hmux's stable surface binding and planned `AgentSession` authority in
   [`docs/agent-session-tracking-spec.md`](../agent-session-tracking-spec.md);
 - the agent-chat sidecar and its normalized provider event stream in
   [`agent-chat/README.md`](../../agent-chat/README.md);
@@ -24,14 +24,14 @@ source of truth for all the others:
 
 ## User outcome
 
-An agent session is a durable logical object. A browser tab, cmux surface,
+An agent session is a durable logical object. A browser tab, hmux surface,
 sidecar process, provider process, account, and machine are replaceable
 attachments to that object.
 
 When the user moves a chat, reconnects after a restart, opens the same session
 on another surface, or a provider account reaches capacity:
 
-1. cmux identifies the same logical session and shows its last authoritative
+1. hmux identifies the same logical session and shows its last authoritative
    state;
 2. the runtime resumes from a durable event and transcript checkpoint;
 3. an in-flight operation is either completed once, explicitly retried before
@@ -99,7 +99,7 @@ provider tooling:
 
 The [Harness Engineering source-code study](https://arxiv.org/abs/2609.00006)
 describes the harness as the layer coupling a model to tools, context, safety,
-orchestration, and extension surfaces. cmux should provide the durable runtime
+orchestration, and extension surfaces. hmux should provide the durable runtime
 and transport primitives that those harnesses can use, while leaving their
 workflow opinions replaceable.
 
@@ -110,10 +110,10 @@ state, but it must not silently become authoritative for it.
 
 | Layer | Owns | Does not own |
 | --- | --- | --- |
-| **cmux app** | Stable `surfaceID`, workspace attachment, visible session catalog, local process ownership, user actions | Provider account health or provider session IDs |
+| **hmux app** | Stable `surfaceID`, workspace attachment, visible session catalog, local process ownership, user actions | Provider account health or provider session IDs |
 | **Agent runtime / harness** | Agent process, provider protocol, native provider session ID, turn lifecycle, permissions, output boundary, transcript/event journal | Which account or machine is selected |
-| **CodeRouter** | Model/provider/account selection for its route, sticky binding, health windows, cooldowns, pre-output retry budget, route telemetry | cmux surface identity, chat transcript authority, user-visible fork lineage |
-| **Subrouter** | Account-pool brokering for requests that traverse Subrouter, hosted tenant capability and account assignment | cmux session identity or another router's mutable pool state |
+| **CodeRouter** | Model/provider/account selection for its route, sticky binding, health windows, cooldowns, pre-output retry budget, route telemetry | hmux surface identity, chat transcript authority, user-visible fork lineage |
+| **Subrouter** | Account-pool brokering for requests that traverse Subrouter, hosted tenant capability and account assignment | hmux session identity or another router's mutable pool state |
 | **Control plane** | Durable metadata, leases, idempotency records, entitlement and billing facts | Live UI state and provider output contents |
 | **Presence service** | Best-effort live device/session hints and versioned snapshots | Durable session history or authorization decisions outside its team scope |
 | **Agent-chat sidecar** | HTTP/WebSocket transport and adapter process supervision | The durable source of truth; it must be reconstructible from the journal |
@@ -126,7 +126,7 @@ event is an explicit reason to evict the temporary binding.
 
 ## Durable session model
 
-The authoritative record is keyed by a cmux-generated `sessionID`, independent
+The authoritative record is keyed by a hmux-generated `sessionID`, independent
 of both surface and provider identity. A session has at most one writable
 surface attachment, and a surface has at most one attached session. Additional
 history viewers are read-only and do not claim an attachment. A detached
@@ -144,7 +144,7 @@ terminal's lifetime; a move changes the binding, never either surface UUID.
 
 ```text
 AgentSession {
-  sessionID              // cmux logical session identity
+  sessionID              // hmux logical session identity
   attachment? {          // absent while detached
     surfaceID            // immutable identity of the currently attached terminal
     workspaceID          // presentation attribute, may change during restore
@@ -168,11 +168,11 @@ The runtime stores an append-only event journal and periodic snapshots. Events
 have a monotonic `seq`, a session `version`, an `operationID` when caused by a
 client operation, and a normalized event kind. The first implementation may use
 the sidecar's configured state directory, but the storage interface must allow
-cmux to move authority to its own daemon later. Journal writes and snapshot
+hmux to move authority to its own daemon later. Journal writes and snapshot
 writes happen off the main actor; the UI receives parsed, `Sendable` snapshots.
 
 The sidecar is started from a snapshot and journal tail. If its process dies,
-cmux reconnects to a new sidecar, verifies the session token, and asks for
+hmux reconnects to a new sidecar, verifies the session token, and asks for
 events after its last `seq`. A version gap causes a snapshot pull before any
 local event is applied. Retained `ended` state remains visible so a completed
 session is not mistaken for a missing one.
@@ -310,7 +310,7 @@ HandoffPacket {
 ```
 
 The packet contains references and digests, not provider tokens, route keys,
-raw prompts, or credentials. A local handoff uses an authenticated cmux
+raw prompts, or credentials. A local handoff uses an authenticated hmux
 channel; a remote handoff uses a short-lived capability scoped to the session
 and lease epoch. A packet is accepted only once for its `handoffID`.
 
@@ -425,7 +425,7 @@ recovering → needsInput (no safe route or provider resume)
 ```
 
 The default message names the action and next state, not internal account
-details: “The model is busy. cmux is trying another route.” If no safe fallback
+details: “The model is busy. hmux is trying another route.” If no safe fallback
 exists: “This turn started producing output and cannot be replayed safely. You
 can resume it or start a new turn.”
 
@@ -473,7 +473,7 @@ branches.
 
 Implement fenced local leases, packet persistence, source quiescing, and
 destination restore. Add explicit fork lineage and separate child operation
-namespaces. Exercise sidecar kill/restart and cmux surface reattachment in
+namespaces. Exercise sidecar kill/restart and hmux surface reattachment in
 integration tests before exposing remote moves.
 
 ### Phase 3: capacity-aware routing
@@ -539,7 +539,7 @@ demonstrated in runtime tests or production-safe canaries:
 ## Open decisions
 
 - Which local journal implementation meets durability and privacy needs without
-  making the cmux main actor perform file I/O?
+  making the hmux main actor perform file I/O?
 - Which providers support a true non-duplicating continuation after output, and
   what compatibility matrix should the UI expose?
 - Should the control plane own handoff packets for local sessions immediately,

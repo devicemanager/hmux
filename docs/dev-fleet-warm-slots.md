@@ -68,25 +68,25 @@ The helper writes inflight.json before launching native work. A pipe launch guar
 
 The default build-input fingerprint covers the complete tracked Git tree. Any tree change, including docs or platform-specific paths, schedules a native warm build. This deliberately spends extra background work until the project can provide a stronger complete input declaration.
 
-The classifier only decides whether the background warmer can advance a source receipt without executing Xcode. It never skips a task build. Swift/Xcode remain responsible for compiler-level incremental correctness. Glaeda preparation inputs are the preferred future place to narrow dependency-readiness work once the cmux native profile declares the full relevant set.
+The classifier only decides whether the background warmer can advance a source receipt without executing Xcode. It never skips a task build. Swift/Xcode remain responsible for compiler-level incremental correctness. Glaeda preparation inputs are the preferred future place to narrow dependency-readiness work once the hmux native profile declares the full relevant set.
 
 ## Worker recipe
 
 The default native command is the existing tagged reload helper and an owned DerivedData path:
 
     python3 scripts/dev-fleet-warm-slot.py warm \
-      --machine-state "$CMUX_FLEET_MACHINE_STATE" \
-      --slot "$CMUX_FLEET_SLOT" \
-      --checkout "$CMUX_FLEET_CHECKOUT" \
+      --machine-state "$HMUX_FLEET_MACHINE_STATE" \
+      --slot "$HMUX_FLEET_SLOT" \
+      --checkout "$HMUX_FLEET_CHECKOUT" \
       --target "$MAIN_SHA" \
-      --tag "warm-$CMUX_FLEET_SLOT-main"
+      --tag "warm-$HMUX_FLEET_SLOT-main"
 
 Before creating a task:
 
     python3 scripts/dev-fleet-warm-slot.py task-base \
-      --machine-state "$CMUX_FLEET_MACHINE_STATE" \
-      --slot "$CMUX_FLEET_SLOT" \
-      --checkout "$CMUX_FLEET_CHECKOUT" \
+      --machine-state "$HMUX_FLEET_MACHINE_STATE" \
+      --slot "$HMUX_FLEET_SLOT" \
+      --checkout "$HMUX_FLEET_CHECKOUT" \
       --authoritative-main "$MAIN_SHA" \
       --task-id "$TASK_ID" \
       --receipt "$TASK_GENERATION_RECEIPT"
@@ -94,9 +94,9 @@ Before creating a task:
 The controller stores base_commit, warm_generation_id, and lease_id from that receipt, creates the task branch from base_commit, and later validates the task through task-run while presenting the exact reservation:
 
     python3 scripts/dev-fleet-warm-slot.py task-run \
-      --machine-state "$CMUX_FLEET_MACHINE_STATE" \
-      --slot "$CMUX_FLEET_SLOT" \
-      --checkout "$CMUX_FLEET_CHECKOUT" \
+      --machine-state "$HMUX_FLEET_MACHINE_STATE" \
+      --slot "$HMUX_FLEET_SLOT" \
+      --checkout "$HMUX_FLEET_CHECKOUT" \
       --target "$TASK_SHA" \
       --task-id "$TASK_ID" \
       --lease-id "$WARM_SLOT_LEASE_ID" \
@@ -106,8 +106,8 @@ The controller stores base_commit, warm_generation_id, and lease_id from that re
 If task creation is abandoned before the build starts, release the exact reservation:
 
     python3 scripts/dev-fleet-warm-slot.py release \
-      --machine-state "$CMUX_FLEET_MACHINE_STATE" \
-      --slot "$CMUX_FLEET_SLOT" \
+      --machine-state "$HMUX_FLEET_MACHINE_STATE" \
+      --slot "$HMUX_FLEET_SLOT" \
       --task-id "$TASK_ID" \
       --lease-id "$WARM_SLOT_LEASE_ID"
 
@@ -118,17 +118,17 @@ The worker can inspect a decision without mutation:
 Recovery uses the exact durable run id:
 
     python3 scripts/dev-fleet-warm-slot.py recover \
-      --machine-state "$CMUX_FLEET_MACHINE_STATE" \
-      --slot "$CMUX_FLEET_SLOT" \
+      --machine-state "$HMUX_FLEET_MACHINE_STATE" \
+      --slot "$HMUX_FLEET_SLOT" \
       --run-id "$RUN_ID"
 
 ## Glaeda native Apple execution
 
 teamleaderleo/glaeda#1048 provides the useful native primitives for this lane: persistent project/toolchain cache lineage, a project build lock, exact commit/tree/clean-source admission for direct execution, dependency-readiness reuse, read-only plan/explain output, and explicit interrupted-generation recovery/quarantine.
 
-cmux PR #13383 is separately consuming that work for a compile-admission pilot. This dev-fleet experiment does not change CI routing or make that pilot a prerequisite.
+hmux PR #13383 is separately consuming that work for a compile-admission pilot. This dev-fleet experiment does not change CI routing or make that pilot a prerequisite.
 
-The warm-slot helper accepts an explicit native command after --, so the controller can switch the worker executor to Glaeda once the cmux native Apple profile lands. The slot generation remains the scheduling/source receipt; Glaeda can own the lower-level cache lineage, dependency preparation, native serialization, and recovery. Keeping those roles separate avoids a second compiler cache and avoids retaining warm-main solely for coordination.
+The warm-slot helper accepts an explicit native command after --, so the controller can switch the worker executor to Glaeda once the hmux native Apple profile lands. The slot generation remains the scheduling/source receipt; Glaeda can own the lower-level cache lineage, dependency preparation, native serialization, and recovery. Keeping those roles separate avoids a second compiler cache and avoids retaining warm-main solely for coordination.
 
 A Glaeda-backed recipe should bind the exact target commit/tree and require clean source for the warm/task invocation. It should keep native validation enabled on every task build.
 
@@ -137,17 +137,17 @@ A Glaeda-backed recipe should bind the exact target commit/tree and require clea
 First pin the exact first-parent source cases:
 
     python3 scripts/benchmark-dev-fleet-warm-slots.py discover \
-      --checkout /path/to/cmux \
+      --checkout /path/to/hmux \
       --main origin/main \
       --behind 3 \
-      --output /tmp/cmux-warm-manifest.json
+      --output /tmp/hmux-warm-manifest.json
 
 Then run on any eligible dev-fleet Mac with a new output directory:
 
     python3 scripts/benchmark-dev-fleet-warm-slots.py run \
-      --checkout /path/to/cmux \
-      --manifest /tmp/cmux-warm-manifest.json \
-      --output /private/tmp/cmux-warm-trial
+      --checkout /path/to/hmux \
+      --manifest /tmp/hmux-warm-manifest.json \
+      --output /private/tmp/hmux-warm-trial
 
 If a second installed Xcode is available, add:
 
@@ -179,7 +179,7 @@ report.json records:
 For a longer worker trial, telemetry retention is bounded to `events.jsonl.1` plus `events.jsonl`. The report reader consumes the retained archive first, then the current file, and ignores a partial crash tail:
 
     python3 scripts/benchmark-dev-fleet-warm-slots.py report \
-      --events "$CMUX_FLEET_MACHINE_STATE/events.jsonl"
+      --events "$HMUX_FLEET_MACHINE_STATE/events.jsonl"
 
 ## Trial policy and kill criteria
 

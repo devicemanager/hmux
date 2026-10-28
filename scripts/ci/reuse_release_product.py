@@ -27,10 +27,10 @@ from pathlib import Path, PurePosixPath
 import reuse_app_host_products as app_host_reuse
 
 PREFIX = "release-products-v1-"
-RECEIPT = "cmux-release-product-reuse.json"
-PROVENANCE = "cmux-release-original-producer.json"
-ARCHIVE_NAME = "cmux-release-product.tar.gz"
-APP_REL = PurePosixPath("Build/Products/Release/cmux.app")
+RECEIPT = "hmux-release-product-reuse.json"
+PROVENANCE = "hmux-release-original-producer.json"
+ARCHIVE_NAME = "hmux-release-product.tar.gz"
+APP_REL = PurePosixPath("Build/Products/Release/hmux.app")
 RECEIPT_REL = PurePosixPath("Build/Products") / RECEIPT
 MAX_ARCHIVE_BYTES = 2 * 1024**3
 MAX_MEMBER_BYTES = 4 * 1024**3
@@ -40,8 +40,8 @@ MAX_MEMBERS = 150_000
 
 # Keep this list in one place so a build-flag change is an identity change.
 BUILD_FLAGS = {
-    "project": "cmux.xcodeproj",
-    "scheme": "cmux",
+    "project": "hmux.xcodeproj",
+    "scheme": "hmux",
     "configuration": "Release",
     "destination": "generic/platform=macOS",
     "ONLY_ACTIVE_ARCH": "NO",
@@ -50,7 +50,7 @@ BUILD_FLAGS = {
     "COMPILER_INDEX_STORE_ENABLE": "NO",
     "CODE_SIGNING_ALLOWED": "NO",
     "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon-Nightly",
-    "CMUX_SKIP_ZIG_BUILD": "1",
+    "HMUX_SKIP_ZIG_BUILD": "1",
 }
 
 
@@ -74,10 +74,10 @@ def required_env(name: str, pattern: str | None = None) -> str:
 def contract() -> dict:
     """Build the exact Release product fingerprint contract for this consumer."""
     value = app_host_reuse.contract()
-    archs = required_env("CMUX_RELEASE_ARCHS")
+    archs = required_env("HMUX_RELEASE_ARCHS")
     if archs not in {"arm64", "arm64 x86_64"}:
         raise ValueError("invalid Release architectures")
-    package_resolved = Path("cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved")
+    package_resolved = Path("hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved")
     if not package_resolved.is_file():
         raise ValueError("Package.resolved is missing")
     # The tree of the commit this job actually checked out and compiles. On a
@@ -93,7 +93,7 @@ def contract() -> dict:
         # workflow_run.head_sha as the PR branch commit. Bind both identities:
         # the branch revision authenticates the producer before download and
         # the checkout tree binds the exact synthetic merge checkout bytes.
-        "source_revision": required_env("CMUX_RELEASE_SOURCE_REVISION", r"[0-9a-f]{40}"),
+        "source_revision": required_env("HMUX_RELEASE_SOURCE_REVISION", r"[0-9a-f]{40}"),
         "tree": tree,
         "configuration": "Release",
         "release_architectures": archs,
@@ -101,13 +101,13 @@ def contract() -> dict:
         "build_flags": BUILD_FLAGS,
         "ghostty_revision": app_host_reuse.read("git", "-C", "ghostty", "rev-parse", "HEAD"),
         "ghostty_helper": {
-            "sha256": required_env("CMUX_RELEASE_GHOSTTY_HELPER_SHA256", r"[0-9a-f]{64}"),
-            "toolchain_sha256": required_env("CMUX_RELEASE_GHOSTTY_HELPER_TOOLCHAIN_SHA256", r"[0-9a-f]{64}"),
-            "sdk": required_env("CMUX_RELEASE_GHOSTTY_HELPER_SDK"),
+            "sha256": required_env("HMUX_RELEASE_GHOSTTY_HELPER_SHA256", r"[0-9a-f]{64}"),
+            "toolchain_sha256": required_env("HMUX_RELEASE_GHOSTTY_HELPER_TOOLCHAIN_SHA256", r"[0-9a-f]{64}"),
+            "sdk": required_env("HMUX_RELEASE_GHOSTTY_HELPER_SDK"),
         },
-        "cmux_tui": {
-            "commit": required_env("CMUX_RELEASE_TUI_COMMIT", r"[0-9a-f]{40}"),
-            "manifest_sha256": required_env("CMUX_RELEASE_TUI_MANIFEST_SHA256", r"[0-9a-f]{64}"),
+        "hmux_tui": {
+            "commit": required_env("HMUX_RELEASE_TUI_COMMIT", r"[0-9a-f]{40}"),
+            "manifest_sha256": required_env("HMUX_RELEASE_TUI_MANIFEST_SHA256", r"[0-9a-f]{64}"),
         },
         "producer_architecture": platform.machine(),
     })
@@ -391,7 +391,7 @@ def restore(api, value: dict, derived: Path, current_run: str, current_attempt: 
     for artifact in artifacts:
         try:
             run, attempt = producer_for(api, artifact, value, current_run, current_attempt)
-            with tempfile.TemporaryDirectory(prefix="cmux-release-reuse-") as tmp:
+            with tempfile.TemporaryDirectory(prefix="hmux-release-reuse-") as tmp:
                 staging = Path(tmp)
                 archive = staging / "artifact.zip"
                 api.download(artifact["id"], archive)

@@ -1,16 +1,16 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
 import Bonsplit
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 import Combine
-import CmuxAgentSessionStore
+import HmuxAgentSessionStore
 import Darwin
 import Foundation
 import os
 import SQLite3
 
 nonisolated private let sessionIndexLogger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "com.cmuxterm.app",
+    subsystem: Bundle.main.bundleIdentifier ?? "com.hmuxterm.app",
     category: "SessionIndexStore"
 )
 
@@ -631,7 +631,7 @@ final class SessionIndexStore: ObservableObject {
 
     struct LoadedAgentOrder: Sendable {
         let agents: [SessionAgent]
-        let registry: CmuxVaultAgentRegistry
+        let registry: HmuxVaultAgentRegistry
     }
 
     nonisolated static func defaultAgentOrder(workingDirectory: String?) async -> LoadedAgentOrder {
@@ -642,16 +642,16 @@ final class SessionIndexStore: ObservableObject {
 
     nonisolated private static func defaultAgentOrderSync(workingDirectory: String?) -> LoadedAgentOrder {
         let builtInIDs = Set(SessionAgent.builtInCases.map(\.rawValue))
-        let registry = CmuxVaultAgentRegistry.load(workingDirectory: workingDirectory)
+        let registry = HmuxVaultAgentRegistry.load(workingDirectory: workingDirectory)
         let agents = SessionAgent.builtInCases + registry.registrations.compactMap {
             builtInIDs.contains($0.id) ? nil : .registered(RegisteredSessionAgent(registration: $0))
         }
         return LoadedAgentOrder(agents: agents, registry: registry)
     }
 
-    nonisolated static func vaultAgentRegistry(workingDirectory: String?) async -> CmuxVaultAgentRegistry {
+    nonisolated static func vaultAgentRegistry(workingDirectory: String?) async -> HmuxVaultAgentRegistry {
         await Task.detached(priority: .utility) {
-            CmuxVaultAgentRegistry.load(workingDirectory: workingDirectory)
+            HmuxVaultAgentRegistry.load(workingDirectory: workingDirectory)
         }.value
     }
 
@@ -1127,8 +1127,8 @@ final class SessionIndexStore: ObservableObject {
 
     nonisolated private static func decodeClaudeProjectDir(_ raw: String) -> String? {
         // Claude encodes cwd by replacing both "/" and "." with "-", so
-        // "-Users-lawrence-fun-cmuxterm-hq" comes from
-        // "/Users/lawrence/fun/cmuxterm-hq" and "-Users-me--claude" comes from
+        // "-Users-lawrence-fun-hmuxterm-hq" comes from
+        // "/Users/lawrence/fun/hmuxterm-hq" and "-Users-me--claude" comes from
         // "/Users/me/.claude" (the "/." pair encodes to "--").
         //
         // The encoding is lossy in both directions: a real path segment
@@ -1383,7 +1383,7 @@ final class SessionIndexStore: ObservableObject {
     /// schema) without requiring the helpers to throw across actor boundaries.
     final class ErrorBag: @unchecked Sendable {
         private static let logger = Logger(
-            subsystem: Bundle.main.bundleIdentifier ?? "com.cmuxterm.app",
+            subsystem: Bundle.main.bundleIdentifier ?? "com.hmuxterm.app",
             category: "SessionIndexSearch"
         )
         static let genericProviderFailure = String(
@@ -1442,7 +1442,7 @@ final class SessionIndexStore: ObservableObject {
         let totalStart = ProcessInfo.processInfo.systemUptime
         defer {
             let totalMs = (ProcessInfo.processInfo.systemUptime - totalStart) * 1000
-            cmuxDebugLog("session.search.total ms=\(String(format: "%.0f", totalMs)) needle=\"\(trimmed.prefix(20))\" offset=\(offset) limit=\(limit) errors=\(bag.snapshot().count)")
+            hmuxDebugLog("session.search.total ms=\(String(format: "%.0f", totalMs)) needle=\"\(trimmed.prefix(20))\" offset=\(offset) limit=\(limit) errors=\(bag.snapshot().count)")
         }
         #endif
         let safeOffset = max(0, offset)
@@ -1501,7 +1501,7 @@ final class SessionIndexStore: ObservableObject {
     ) async -> [SessionEntry] {
         switch scope {
         case .agent(let a):
-            let registry: CmuxVaultAgentRegistry
+            let registry: HmuxVaultAgentRegistry
             let cwdFilter: String?
             if case .registered = a {
                 let scopedCwd = currentDirectory?.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1515,7 +1515,7 @@ final class SessionIndexStore: ObservableObject {
                 )
             } else {
                 cwdFilter = nil
-                registry = CmuxVaultAgentRegistry(registrations: [])
+                registry = HmuxVaultAgentRegistry(registrations: [])
             }
             return await Self.searchAgent(
                 needle: needle, agent: a, cwdFilter: cwdFilter,
@@ -1549,7 +1549,7 @@ final class SessionIndexStore: ObservableObject {
 
     nonisolated static func loadAgents(
         _ agents: [SessionAgent],
-        registry: CmuxVaultAgentRegistry,
+        registry: HmuxVaultAgentRegistry,
         ampSessionRepository: any AmpHookSessionReading,
         needle: String,
         cwdFilter: String?,
@@ -1583,7 +1583,7 @@ final class SessionIndexStore: ObservableObject {
     nonisolated private static func timedAgent(
         needle: String, agent: SessionAgent, cwdFilter: String?,
         offset: Int, limit: Int, errorBag: ErrorBag,
-        registry: CmuxVaultAgentRegistry,
+        registry: HmuxVaultAgentRegistry,
         ampSessionRepository: any AmpHookSessionReading
     ) async -> [SessionEntry] {
         #if DEBUG
@@ -1599,7 +1599,7 @@ final class SessionIndexStore: ObservableObject {
             ampSessionRepository: ampSessionRepository
         )
         let ms = (ProcessInfo.processInfo.systemUptime - start) * 1000
-        cmuxDebugLog("session.search.agent agent=\(agent.rawValue) ms=\(String(format: "%.0f", ms)) results=\(result.count) cwd=\(cwdFilter?.suffix(40) ?? "nil")")
+        hmuxDebugLog("session.search.agent agent=\(agent.rawValue) ms=\(String(format: "%.0f", ms)) results=\(result.count) cwd=\(cwdFilter?.suffix(40) ?? "nil")")
         return result
         #else
         return await searchAgent(
@@ -1623,7 +1623,7 @@ final class SessionIndexStore: ObservableObject {
     nonisolated static func searchAgent(
         needle: String, agent: SessionAgent, cwdFilter: String?,
         offset: Int, limit: Int, errorBag: ErrorBag,
-        registry: CmuxVaultAgentRegistry,
+        registry: HmuxVaultAgentRegistry,
         ampSessionRepository: any AmpHookSessionReading
     ) async -> [SessionEntry] {
         switch agent {
@@ -1929,7 +1929,7 @@ final class SessionIndexStore: ObservableObject {
         let cachedCount = sorted.filter { $0.2 }.count
         let skippedCount = sorted.filter { $0.1 == nil && !$0.2 }.count + sorted.filter { $0.1 == nil && $0.2 }.count
         let totalMs = (ProcessInfo.processInfo.systemUptime - loopStart) * 1000
-        cmuxDebugLog("session.claude.detail target=\(target) workSize=\(workSize) matched=\(matched.count) cachedHits=\(cachedCount) skipped=\(skippedCount) parallelMs=\(Int(totalMs))")
+        hmuxDebugLog("session.claude.detail target=\(target) workSize=\(workSize) matched=\(matched.count) cachedHits=\(cachedCount) skipped=\(skippedCount) parallelMs=\(Int(totalMs))")
         #endif
         return Array(matched.prefix(target).dropFirst(offset).prefix(limit))
     }
@@ -2051,7 +2051,7 @@ final class SessionIndexStore: ObservableObject {
     ) -> [SessionEntry] {
         let snapshot: OpenCodeDatabaseSnapshot.Snapshot
         do {
-            guard let madeSnapshot = try OpenCodeDatabaseSnapshot.make(prefix: "cmux-opencode-search") else {
+            guard let madeSnapshot = try OpenCodeDatabaseSnapshot.make(prefix: "hmux-opencode-search") else {
                 return []
             }
             snapshot = madeSnapshot

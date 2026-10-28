@@ -44,19 +44,19 @@ debug="$products/Debug"
 outside="$derived/Build/Intermediates.noindex/ArchiveInputs"
 
 # Regular files, an executable, and a bundle path containing a space.
-mkdir -p "$debug/cmux DEV.app/Contents/MacOS" "$derived/Build/Intermediates.noindex"
-printf 'manifest' > "$products/cmux-unit_macosx-arm64.xctestrun"
-printf 'object' > "$debug/CmuxCore.o"
-chmod 644 "$debug/CmuxCore.o"
+mkdir -p "$debug/hmux DEV.app/Contents/MacOS" "$derived/Build/Intermediates.noindex"
+printf 'manifest' > "$products/hmux-unit_macosx-arm64.xctestrun"
+printf 'object' > "$debug/HmuxCore.o"
+chmod 644 "$debug/HmuxCore.o"
 printf 'private' > "$debug/private.bin"
 chmod 600 "$debug/private.bin"
-printf '#!/bin/sh\nexit 0\n' > "$debug/cmux DEV.app/Contents/MacOS/cmux DEV"
-chmod 755 "$debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+printf '#!/bin/sh\nexit 0\n' > "$debug/hmux DEV.app/Contents/MacOS/hmux DEV"
+chmod 755 "$debug/hmux DEV.app/Contents/MacOS/hmux DEV"
 printf 'not a product' > "$derived/Build/Intermediates.noindex/scratch"
 
 # A versioned framework as Xcode lays it out. Headers is dangling on purpose:
 # binary package frameworks in CI carry the same dangling top-level links.
-framework="$debug/cmux DEV.app/Contents/Frameworks/Sample.framework"
+framework="$debug/hmux DEV.app/Contents/Frameworks/Sample.framework"
 mkdir -p "$framework/Versions/A/Resources"
 printf 'framework binary' > "$framework/Versions/A/Sample"
 chmod 755 "$framework/Versions/A/Sample"
@@ -75,7 +75,7 @@ ln -s Versions/Current/Linked "$outside/frameworks/Linked.framework/Linked"
 printf 'outside file' > "$outside/file.txt"
 ln -s "$outside/frameworks" "$debug/PackageFrameworks"
 ln -s ../../Intermediates.noindex/ArchiveInputs/file.txt "$debug/escaping.txt"
-ln -s ../Debug/CmuxCore.o "$debug/sibling.o"
+ln -s ../Debug/HmuxCore.o "$debug/sibling.o"
 ln -s "$WORK/missing" "$debug/dangling-absolute"
 
 archive="$WORK/app-host-products.aar"
@@ -94,15 +94,15 @@ restored="$consumer/Build/Products"
 restored_debug="$restored/Debug"
 
 [ ! -e "$consumer/Build/Intermediates.noindex" ] || fail "only Build/Products may be archived"
-assert_real_file "$restored/cmux-unit_macosx-arm64.xctestrun" "manifest"
-assert_real_file "$restored_debug/CmuxCore.o" "object"
-[ "$(mode_of "$restored_debug/CmuxCore.o")" = "644" ] || fail "CmuxCore.o mode changed"
+assert_real_file "$restored/hmux-unit_macosx-arm64.xctestrun" "manifest"
+assert_real_file "$restored_debug/HmuxCore.o" "object"
+[ "$(mode_of "$restored_debug/HmuxCore.o")" = "644" ] || fail "HmuxCore.o mode changed"
 [ "$(mode_of "$restored_debug/private.bin")" = "600" ] || fail "private.bin mode changed"
-executable="$restored_debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+executable="$restored_debug/hmux DEV.app/Contents/MacOS/hmux DEV"
 [ "$(mode_of "$executable")" = "755" ] || fail "executable mode changed"
 "$executable" || fail "restored executable did not run"
 
-restored_framework="$restored_debug/cmux DEV.app/Contents/Frameworks/Sample.framework"
+restored_framework="$restored_debug/hmux DEV.app/Contents/Frameworks/Sample.framework"
 assert_link "$restored_framework/Versions/Current" "A"
 assert_link "$restored_framework/Sample" "Versions/Current/Sample"
 assert_link "$restored_framework/Resources" "Versions/Current/Resources"
@@ -137,9 +137,9 @@ import json, sys
 entries = json.loads(sys.argv[1])
 by_path = {entry["PAT"]: entry for entry in entries}
 assert all(path == "Build/Products" or path.startswith("Build/Products/") for path in by_path), by_path.keys()
-link = by_path["Build/Products/Debug/cmux DEV.app/Contents/Frameworks/Sample.framework/Versions/Current"]
+link = by_path["Build/Products/Debug/hmux DEV.app/Contents/Frameworks/Sample.framework/Versions/Current"]
 assert link["TYP"] == "L" and link["LNK"] == "A", link
-binary = by_path["Build/Products/Debug/cmux DEV.app/Contents/Frameworks/Sample.framework/Versions/A/Sample"]
+binary = by_path["Build/Products/Debug/hmux DEV.app/Contents/Frameworks/Sample.framework/Versions/A/Sample"]
 assert binary["TYP"] == "F" and binary["DAT"] == len("framework binary"), binary
 assert not any("UID" in entry or "GID" in entry for entry in entries)
 PY

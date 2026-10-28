@@ -7,17 +7,17 @@ import {
   type CheckoutAttributionParam,
 } from "../../services/analytics/checkoutAttribution";
 
-export const EXTERNAL_BROWSER_PARAM = "cmux_external_browser";
+export const EXTERNAL_BROWSER_PARAM = "hmux_external_browser";
 export const CHECKOUT_EXTERNAL_BROWSER_PARAM = EXTERNAL_BROWSER_PARAM;
-export const CHECKOUT_NATIVE_SCHEME_PARAM = "cmux_scheme";
+export const CHECKOUT_NATIVE_SCHEME_PARAM = "hmux_scheme";
 export const CHECKOUT_PLAN_PARAM = "plan";
 export const CHECKOUT_INTERVAL_PARAM = "interval";
-export const CHECKOUT_APP_RELAY_PARAM = "cmux_app_checkout";
-export const CHECKOUT_RELAY_EXPIRES_PARAM = "cmux_relay_expires";
-export const CHECKOUT_RELAY_SIGNATURE_PARAM = "cmux_relay_signature";
-export const CHECKOUT_NATIVE_RETURN_SESSION_PARAM = "cmux_checkout_session";
-export const CHECKOUT_NATIVE_RETURN_EXPIRES_PARAM = "cmux_native_return_expires";
-export const CHECKOUT_NATIVE_RETURN_SIGNATURE_PARAM = "cmux_native_return_signature";
+export const CHECKOUT_APP_RELAY_PARAM = "hmux_app_checkout";
+export const CHECKOUT_RELAY_EXPIRES_PARAM = "hmux_relay_expires";
+export const CHECKOUT_RELAY_SIGNATURE_PARAM = "hmux_relay_signature";
+export const CHECKOUT_NATIVE_RETURN_SESSION_PARAM = "hmux_checkout_session";
+export const CHECKOUT_NATIVE_RETURN_EXPIRES_PARAM = "hmux_native_return_expires";
+export const CHECKOUT_NATIVE_RETURN_SIGNATURE_PARAM = "hmux_native_return_signature";
 export const APP_PRICING_NATIVE_RETURN_QUERY_PARAMS = [
   CHECKOUT_NATIVE_RETURN_SESSION_PARAM,
   CHECKOUT_NATIVE_RETURN_EXPIRES_PARAM,
@@ -29,7 +29,7 @@ export type CheckoutInterval = "month" | "year";
 export type AppPricingCheckoutRelayParameters = {
   plan: CheckoutPlan | null;
   interval: CheckoutInterval | null;
-  cmuxScheme: string;
+  hmuxScheme: string;
 };
 export type CheckoutAttributionParams = Partial<
   Record<CheckoutAttributionParam, string | null | undefined>
@@ -66,7 +66,7 @@ export function withCheckoutInterval(
   return withSearchParam(href, CHECKOUT_INTERVAL_PARAM, interval);
 }
 
-/** Tag a checkout link with the surface that shows it (`cmux_source`). */
+/** Tag a checkout link with the surface that shows it (`hmux_source`). */
 export function withCheckoutSource(href: string, source: string): string {
   return withCheckoutAttribution(href, { [CHECKOUT_SOURCE_PARAM]: source });
 }
@@ -74,7 +74,7 @@ export function withCheckoutSource(href: string, source: string): string {
 export function appPricingCheckoutURL(
   plan: CheckoutPlan,
   requestOrigin: string | null,
-  cmuxScheme?: string | null,
+  hmuxScheme?: string | null,
   interval?: CheckoutInterval,
   attribution?: CheckoutAttributionParams,
 ): string {
@@ -84,7 +84,7 @@ export function appPricingCheckoutURL(
   if (configuredAppPricingCheckoutURL()) {
     href = withSearchParam(href, CHECKOUT_APP_RELAY_PARAM, "1");
   }
-  if (cmuxScheme) href = withSearchParam(href, CHECKOUT_NATIVE_SCHEME_PARAM, cmuxScheme);
+  if (hmuxScheme) href = withSearchParam(href, CHECKOUT_NATIVE_SCHEME_PARAM, hmuxScheme);
   if (interval) href = withCheckoutInterval(href, interval);
   if (attribution) href = withCheckoutAttribution(href, attribution);
   return href;
@@ -97,7 +97,7 @@ export function appPricingCheckoutRelayURL(
   if (requestURL.searchParams.get(CHECKOUT_APP_RELAY_PARAM) !== "1") {
     return null;
   }
-  const { plan, interval, cmuxScheme } = parameters;
+  const { plan, interval, hmuxScheme } = parameters;
   if (!plan || !interval) return null;
   const target = configuredAppPricingCheckoutURL();
   if (!target) return null;
@@ -107,11 +107,11 @@ export function appPricingCheckoutRelayURL(
   const assertion = appPricingRelayAssertion(target, {
     plan,
     interval,
-    cmuxScheme,
+    hmuxScheme,
   });
   target.searchParams.set(
     CHECKOUT_NATIVE_SCHEME_PARAM,
-    assertion?.scheme ?? safeUnassertedRelayScheme(cmuxScheme),
+    assertion?.scheme ?? safeUnassertedRelayScheme(hmuxScheme),
   );
   if (assertion) {
     target.searchParams.set(CHECKOUT_RELAY_EXPIRES_PARAM, assertion.expires);
@@ -145,7 +145,7 @@ export function verifiedAppPricingRelayScheme(requestURL: URL): string | null {
   if (!validRelayExpiry(expires)) return null;
   const expected = relaySignature(
     requestURL,
-    { plan, interval, cmuxScheme: scheme },
+    { plan, interval, hmuxScheme: scheme },
     expires,
     secret,
   );
@@ -224,18 +224,18 @@ export function verifiedAppPricingNativeReturnTo(
 }
 
 export function isAppStoreDistributionMode(params: {
-  cmux_distribution?: SearchParamValue;
-  cmux_ios_app_store?: SearchParamValue;
+  hmux_distribution?: SearchParamValue;
+  hmux_ios_app_store?: SearchParamValue;
 }): boolean {
-  const distribution = firstSearchParam(params.cmux_distribution)?.trim().toLowerCase();
+  const distribution = firstSearchParam(params.hmux_distribution)?.trim().toLowerCase();
   if (distribution === "appstore" || distribution === "app-store") return true;
-  return firstSearchParam(params.cmux_ios_app_store) === "1";
+  return firstSearchParam(params.hmux_ios_app_store) === "1";
 }
 
 export function appStorePricingUnavailableURL(requestUrl: URL): URL {
   const redirectURL = new URL("/app-pricing", requestUrl);
-  redirectURL.searchParams.set("cmux_app", "1");
-  redirectURL.searchParams.set("cmux_distribution", "appstore");
+  redirectURL.searchParams.set("hmux_app", "1");
+  redirectURL.searchParams.set("hmux_distribution", "appstore");
   redirectURL.searchParams.set("billing", "unavailable");
 
   for (const key of ["appearance", "background", "foreground", "accent"]) {
@@ -274,7 +274,7 @@ function appPricingCheckoutEntryURL(requestOrigin: string | null): string {
 }
 
 function configuredAppPricingCheckoutURL(): URL | null {
-  const configured = process.env.CMUX_APP_PRICING_CHECKOUT_URL?.trim();
+  const configured = process.env.HMUX_APP_PRICING_CHECKOUT_URL?.trim();
   if (!configured) return null;
   try {
     const target = new URL(configured);
@@ -299,7 +299,7 @@ function appPricingRelayAssertion(
     interval: CheckoutInterval;
   },
 ): { scheme: string; expires: string; signature: string } | null {
-  const scheme = parameters.cmuxScheme.trim().toLowerCase();
+  const scheme = parameters.hmuxScheme.trim().toLowerCase();
   if (!isProtectedRelayScheme(scheme)) return null;
   const secret = appPricingRelaySecret();
   if (!secret) return null;
@@ -323,12 +323,12 @@ function relaySignature(
   secret: string,
 ): string {
   const payload = [
-    "cmux-app-pricing-relay-v1",
+    "hmux-app-pricing-relay-v1",
     target.origin,
     target.pathname,
     parameters.plan,
     parameters.interval,
-    parameters.cmuxScheme,
+    parameters.hmuxScheme,
     expires,
   ].join("\n");
   return createHmac("sha256", secret).update(payload).digest("hex");
@@ -342,7 +342,7 @@ function nativeReturnSignature(
   secret: string,
 ): string {
   const payload = [
-    "cmux-app-pricing-native-return-v1",
+    "hmux-app-pricing-native-return-v1",
     target.origin,
     target.pathname,
     nativeReturnTo,
@@ -379,17 +379,17 @@ function protectedNativeReturnTo(href: string): boolean {
 }
 
 function appPricingRelaySecret(): string | null {
-  const secret = process.env.CMUX_APP_PRICING_RELAY_SECRET?.trim();
+  const secret = process.env.HMUX_APP_PRICING_RELAY_SECRET?.trim();
   return secret && secret.length >= 32 ? secret : null;
 }
 
 function safeUnassertedRelayScheme(scheme: string): string {
   const normalized = scheme.trim().toLowerCase();
-  return isProtectedRelayScheme(normalized) ? "cmux" : normalized;
+  return isProtectedRelayScheme(normalized) ? "hmux" : normalized;
 }
 
 function isProtectedRelayScheme(scheme: string): boolean {
-  return scheme === "cmux-dev" || /^cmux-dev-[a-z0-9-]+$/.test(scheme);
+  return scheme === "hmux-dev" || /^hmux-dev-[a-z0-9-]+$/.test(scheme);
 }
 
 function constantTimeHexEqual(candidate: string, expected: string): boolean {

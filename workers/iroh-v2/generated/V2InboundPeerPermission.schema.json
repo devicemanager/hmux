@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://contracts.cmux.invalid/iroh-v2/V2InboundPeerPermission.json",
+  "$id": "https://contracts.hmux.invalid/iroh-v2/V2InboundPeerPermission.json",
   "type": "object",
   "properties": {
     "device": {
-      "$ref": "https://contracts.cmux.invalid/iroh-v2/V2DeviceRecord.json"
+      "$ref": "https://contracts.hmux.invalid/iroh-v2/V2DeviceRecord.json"
     },
     "permissionExpiresAt": {
       "type": "integer",

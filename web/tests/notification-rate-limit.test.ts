@@ -10,7 +10,7 @@ import {
 } from "../services/apns/rateLimit";
 import { APNS_DEFAULT_MAX_DELIVERY_DURATION_MS } from "../services/apns/sender";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const DB_STRESS_TEST_TIMEOUT_MS = 30_000;
 
@@ -20,7 +20,7 @@ beforeAll(() => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!databaseURL) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   }
   sql = postgres(databaseURL, { max: 1 });
 });
@@ -223,7 +223,7 @@ describe("notification rate limit", () => {
     const target = {
       targetId: "00000000-0000-4000-8000-000000000001",
       deviceToken: "a".repeat(64),
-      bundleId: "com.cmux.app",
+      bundleId: "com.hmux.app",
       environment: "production",
     };
     const first = await recordPushSendOrThrow(

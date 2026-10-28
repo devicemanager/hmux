@@ -17,15 +17,15 @@ exit "${FAKE_XCODEBUILD_STATUS:-0}"
 EOF
 chmod +x "$TMP_DIR/fake-xcodebuild.sh"
 
-if ! "$WRAPPER" -- "$TMP_DIR/fake-xcodebuild.sh" -scheme cmux >"$TMP_DIR/success.log" 2>&1; then
+if ! "$WRAPPER" -- "$TMP_DIR/fake-xcodebuild.sh" -scheme hmux >"$TMP_DIR/success.log" 2>&1; then
   echo "FAIL: wrapper must preserve a successful xcodebuild exit" >&2
   exit 1
 fi
 grep -Fq 'xcodebuild exit status: 0' "$TMP_DIR/success.log"
-grep -Fq 'fake xcodebuild args: -scheme cmux' "$TMP_DIR/success.log"
+grep -Fq 'fake xcodebuild args: -scheme hmux' "$TMP_DIR/success.log"
 
 set +e
-FAKE_XCODEBUILD_STATUS=137 "$WRAPPER" -- "$TMP_DIR/fake-xcodebuild.sh" -scheme cmux >"$TMP_DIR/failure.log" 2>&1
+FAKE_XCODEBUILD_STATUS=137 "$WRAPPER" -- "$TMP_DIR/fake-xcodebuild.sh" -scheme hmux >"$TMP_DIR/failure.log" 2>&1
 status=$?
 set -e
 if [[ "$status" -ne 137 ]]; then
@@ -38,8 +38,8 @@ grep -Fq 'resource diagnostics follow' "$TMP_DIR/failure.log"
 grep -Fq -- '--- top processes by resident memory ---' "$TMP_DIR/failure.log"
 
 for invalid_interval in 0 0.0 00; do
-  if CMUX_XCODEBUILD_HEARTBEAT_SECONDS="$invalid_interval" \
-    "$WRAPPER" -- "$TMP_DIR/fake-xcodebuild.sh" -scheme cmux >"$TMP_DIR/invalid.log" 2>&1; then
+  if HMUX_XCODEBUILD_HEARTBEAT_SECONDS="$invalid_interval" \
+    "$WRAPPER" -- "$TMP_DIR/fake-xcodebuild.sh" -scheme hmux >"$TMP_DIR/invalid.log" 2>&1; then
     echo "FAIL: heartbeat interval $invalid_interval must be rejected" >&2
     exit 1
   fi
@@ -47,8 +47,8 @@ done
 
 : >"$TMP_DIR/heartbeat.log"
 FAKE_XCODEBUILD_DELAY=0.3 \
-  CMUX_XCODEBUILD_HEARTBEAT_SECONDS=0.05 \
-  "$WRAPPER" -- "$TMP_DIR/fake-xcodebuild.sh" -scheme cmux >"$TMP_DIR/heartbeat.log" 2>&1 &
+  HMUX_XCODEBUILD_HEARTBEAT_SECONDS=0.05 \
+  "$WRAPPER" -- "$TMP_DIR/fake-xcodebuild.sh" -scheme hmux >"$TMP_DIR/heartbeat.log" 2>&1 &
 wrapper_pid=$!
 for _ in {1..500}; do
   if grep -Fq 'xcodebuild heartbeat:' "$TMP_DIR/heartbeat.log"; then
@@ -81,7 +81,7 @@ EOF
 chmod +x "$TMP_DIR/fake-descendant.sh"
 : >"$TMP_DIR/descendant.log"
 FAKE_DESCENDANT_MARKER="$TMP_DIR/descendant.pid" \
-  CMUX_XCODEBUILD_HEARTBEAT_SECONDS=0.05 \
+  HMUX_XCODEBUILD_HEARTBEAT_SECONDS=0.05 \
   "$WRAPPER" -- "$TMP_DIR/fake-descendant.sh" >"$TMP_DIR/descendant.log" 2>&1 &
 wrapper_pid=$!
 for _ in {1..500}; do

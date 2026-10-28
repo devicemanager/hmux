@@ -1,5 +1,5 @@
-import CmuxSidebar
-import CmuxSurfaceCatalogModel
+import HmuxSidebar
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Value-only remote provenance for both left-sidebar renderers and accessibility.

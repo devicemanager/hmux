@@ -20,7 +20,7 @@ struct RemoteTmuxInvocation: Equatable {
     let transportHelperPath: String?
     let broker: String?
 
-    /// Parses `cmux ssh-tmux` arguments, including the list/attach subcommands.
+    /// Parses `hmux ssh-tmux` arguments, including the list/attach subcommands.
     ///
     /// The destination remains the first positional argument for compatibility with the
     /// existing command. The default action is the historical bulk mirror.
@@ -114,7 +114,7 @@ struct RemoteTmuxInvocation: Equatable {
                 index += 2
             case "--broker":
                 guard index + 1 < commandArgs.count else {
-                    throw CLIError(message: "ssh-tmux: --broker requires the name of a broker declared under remoteTmux.brokers in cmux.json")
+                    throw CLIError(message: "ssh-tmux: --broker requires the name of a broker declared under remoteTmux.brokers in hmux.json")
                 }
                 let name = commandArgs[index + 1].trimmingCharacters(in: .whitespaces)
                 guard !name.isEmpty, !name.hasPrefix("-") else {
@@ -153,7 +153,7 @@ struct RemoteTmuxInvocation: Equatable {
         }
 
         guard let destination else {
-            throw CLIError(message: "ssh-tmux requires a destination (example: cmux ssh-tmux user@host)")
+            throw CLIError(message: "ssh-tmux requires a destination (example: hmux ssh-tmux user@host)")
         }
 
         let resolvedAction: Action

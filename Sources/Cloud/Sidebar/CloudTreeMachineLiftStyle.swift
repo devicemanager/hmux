@@ -6,7 +6,7 @@ import QuartzCore
 /// never show through it.
 @MainActor
 struct CloudTreeMachineLiftStyle {
-    private static let layerName = "cmux.machineLift.card"
+    private static let layerName = "hmux.machineLift.card"
     private static let fadeIn: TimeInterval = 0.12
     private static let fadeOut: TimeInterval = 0.28
     private static let shadowOpacity: Float = 0.22
@@ -98,7 +98,7 @@ struct CloudTreeMachineLiftStyle {
         animation.toValue = opacity
         animation.duration = duration
         animation.timingFunction = CAMediaTimingFunction(name: .easeOut)
-        card.add(animation, forKey: "cmux.machineLift.fade")
+        card.add(animation, forKey: "hmux.machineLift.fade")
         CATransaction.begin()
         CATransaction.setDisableActions(true)
         card.opacity = opacity

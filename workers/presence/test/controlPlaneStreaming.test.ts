@@ -46,7 +46,7 @@ function discoveryResponse(
       endpoint_id: ENDPOINT_A,
       identity_generation: 1,
       pairing_enabled: true,
-      capabilities: ["cmux.irx.v1"],
+      capabilities: ["hmux.irx.v1"],
       path_hints: [
         {
           kind: "relay_url",
@@ -300,7 +300,7 @@ describe("hello fact streaming", () => {
     const discovery = harness.discoveryCalls();
     expect(discovery).toHaveLength(1);
     expect(discovery[0]?.init.headers.authorization).toBe("Bearer token-s1");
-    expect(discovery[0]?.init.headers["x-cmux-app-namespace"]).toBe("legacy");
+    expect(discovery[0]?.init.headers["x-hmux-app-namespace"]).toBe("legacy");
     const mint = harness.mintCalls();
     expect(mint).toHaveLength(1);
     expect(mint[0]?.init.method).toBe("POST");
@@ -596,9 +596,9 @@ describe("mint_request proxying", () => {
     const harness = new Harness();
     seed(harness);
     harness.serveMint(() => ({ status: 429, json: {}, retryAfterSeconds: 120 }));
-    const first = await harness.connect("limited", "mac:dev.cmux.app");
-    const same = await harness.connect("same", "mac:dev.cmux.app");
-    const other = await harness.connect("other", "ios:dev.cmux.app");
+    const first = await harness.connect("limited", "mac:dev.hmux.app");
+    const same = await harness.connect("same", "mac:dev.hmux.app");
+    const other = await harness.connect("other", "ios:dev.hmux.app");
     const mint = (endpointId: string) => ({ v: 1, type: "mint_request", payload: { endpointId } });
     await harness.send(first, mint(ENDPOINT_A));
     const restored = new Harness();

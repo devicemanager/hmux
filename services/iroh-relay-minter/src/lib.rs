@@ -37,10 +37,10 @@ const MAX_RESPONSE_BYTES: usize = 32 * 1_024;
 const MAX_TOKEN_BYTES: usize = 16 * 1_024;
 const CLOCK_SKEW_SECONDS: u64 = 30;
 const SERVICES_SECRET_ENV: &str = "IROH_SERVICES_API_SECRET";
-const HMAC_SECRET_ENV: &str = "CMUX_IROH_MINT_HMAC_SECRET_B64";
-const HMAC_PREVIOUS_SECRET_ENV: &str = "CMUX_IROH_MINT_HMAC_PREVIOUS_SECRET_B64";
-const TIMESTAMP_HEADER: HeaderName = HeaderName::from_static("x-cmux-iroh-timestamp");
-const SIGNATURE_HEADER: HeaderName = HeaderName::from_static("x-cmux-iroh-signature");
+const HMAC_SECRET_ENV: &str = "HMUX_IROH_MINT_HMAC_SECRET_B64";
+const HMAC_PREVIOUS_SECRET_ENV: &str = "HMUX_IROH_MINT_HMAC_PREVIOUS_SECRET_B64";
+const TIMESTAMP_HEADER: HeaderName = HeaderName::from_static("x-hmux-iroh-timestamp");
+const SIGNATURE_HEADER: HeaderName = HeaderName::from_static("x-hmux-iroh-signature");
 
 type HmacSha256 = Hmac<Sha256>;
 

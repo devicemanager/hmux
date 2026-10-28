@@ -20,15 +20,15 @@ export type VmModelPlaneGateway = {
 
 /**
  * The gateway for one provisioning call, or undefined when the local-dev
- * kill switch (CMUX_VM_CODEROUTER_ENV_ENABLED=0) asks for an unwired machine.
+ * kill switch (HMUX_VM_CODEROUTER_ENV_ENABLED=0) asks for an unwired machine.
  */
 export function vmModelPlaneGatewayFor(input: {
   readonly teamId: string;
   readonly stackUserId: string;
 }): VmModelPlaneGateway | undefined {
-  if (!vmModelPlaneEnabled(process.env.CMUX_VM_CODEROUTER_ENV_ENABLED)) {
+  if (!vmModelPlaneEnabled(process.env.HMUX_VM_CODEROUTER_ENV_ENABLED)) {
     console.warn(
-      "[vm] CMUX_VM_CODEROUTER_ENV_ENABLED is off: creating an unwired machine (local development only)",
+      "[vm] HMUX_VM_CODEROUTER_ENV_ENABLED is off: creating an unwired machine (local development only)",
     );
     return undefined;
   }

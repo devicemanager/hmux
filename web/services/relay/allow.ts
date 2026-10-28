@@ -23,7 +23,7 @@ import { createAwsRdsIamPool } from "../../db/client";
 import { cloudDbConfig, cloudDbConfigKey } from "../../db/config";
 import { isBlockingAccountDeletionTombstone } from "../account/deletionLock";
 
-export const RELAY_ALLOW_SIGNATURE_HEADER = "x-cmux-relay-allow-signature";
+export const RELAY_ALLOW_SIGNATURE_HEADER = "x-hmux-relay-allow-signature";
 
 export type RelayAllowAdmission = "allow" | "deny";
 
@@ -157,13 +157,13 @@ type AdmissionClientState = {
 };
 
 const globalForAdmission = globalThis as typeof globalThis & {
-  __cmuxRelayAllowAdmission?: AdmissionClientState;
+  __hmuxRelayAllowAdmission?: AdmissionClientState;
 };
 
 function admissionClient(): AdmissionClientState {
   const config = cloudDbConfig();
   const key = cloudDbConfigKey(config);
-  const cached = globalForAdmission.__cmuxRelayAllowAdmission;
+  const cached = globalForAdmission.__hmuxRelayAllowAdmission;
   if (cached?.key === key) return cached;
   if (cached) {
     // The database config rotated within this runtime: drop the stale client
@@ -171,7 +171,7 @@ function admissionClient(): AdmissionClientState {
     // In-flight lookups hold their own reference and settle under their phase
     // deadlines; close() (pool.end / sql.end) waits for them, so this cannot
     // interrupt an admission already running.
-    globalForAdmission.__cmuxRelayAllowAdmission = undefined;
+    globalForAdmission.__hmuxRelayAllowAdmission = undefined;
     void cached.close().catch(() => {
       // Best-effort teardown; the replacement client is unaffected.
     });
@@ -222,13 +222,13 @@ function admissionClient(): AdmissionClientState {
       close: () => sql.end(),
     };
   }
-  globalForAdmission.__cmuxRelayAllowAdmission = state;
+  globalForAdmission.__hmuxRelayAllowAdmission = state;
   return state;
 }
 
 export async function closeRelayAllowAdmissionClientForTests(): Promise<void> {
-  const state = globalForAdmission.__cmuxRelayAllowAdmission;
-  globalForAdmission.__cmuxRelayAllowAdmission = undefined;
+  const state = globalForAdmission.__hmuxRelayAllowAdmission;
+  globalForAdmission.__hmuxRelayAllowAdmission = undefined;
   await state?.close();
 }
 

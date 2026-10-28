@@ -11,7 +11,7 @@ import {
 } from "../services/iroh/publicationPolicy";
 
 describe("Next monorepo module boundary", () => {
-  test("allows generated cmux development publication origins for HMR", () => {
+  test("allows generated hmux development publication origins for HMR", () => {
     expect(nextConfig.allowedDevOrigins).toContain("*.cmux.sh");
   });
 

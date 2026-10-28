@@ -11,7 +11,7 @@ test("create, fork, and restore reject a 64 GB machine on Pro before provisionin
   let creates = 0;
   const reservation = { memoryMb: 65536, vcpus: 16, diskMb: 131072 };
   const repo = {
-    findUserVm: () => Effect.succeed({ id: "row", userId: "user", billingTeamId: "team", ownerTeamId: "team", coderouterPoolId: null, status: "running", provider: "freestyle", providerVmId: "vm", providerMetadata: { cmuxResourceReservation: reservation } }),
+    findUserVm: () => Effect.succeed({ id: "row", userId: "user", billingTeamId: "team", ownerTeamId: "team", coderouterPoolId: null, status: "running", provider: "freestyle", providerVmId: "vm", providerMetadata: { hmuxResourceReservation: reservation } }),
     hasOwnedSnapshot: () => Effect.succeed(true),
     ownedSnapshotResourceReservation: () => Effect.succeed(reservation),
     beginCreate: () => Effect.sync(() => { creates++; throw new Error("must not create"); }),
@@ -81,7 +81,7 @@ test("a gateway fork method cannot override the provider capability", async () =
   let creates = 0;
   const repo = {
     findUserVm: () => Effect.succeed({ id: "row", userId: "u", billingTeamId: "u", ownerTeamId: "u", coderouterPoolId: null, status: "running", provider: "freestyle",
-      providerVmId: "vm", providerMetadata: { cmuxResourceReservation: { memoryMb: 8192, vcpus: 4, diskMb: 32768 } } }),
+      providerVmId: "vm", providerMetadata: { hmuxResourceReservation: { memoryMb: 8192, vcpus: 4, diskMb: 32768 } } }),
     beginCreate: () => Effect.sync(() => { creates++; throw new Error("must not reserve a native fork"); }),
   } as unknown as VmRepositoryShape;
   const provider = {
@@ -115,7 +115,7 @@ test("a native fork retry returns a grandfathered oversized row to Pro", async (
     displayName: null,
     slug: null,
     providerMetadata: {
-      cmuxResourceReservation: { memoryMb: 8192, vcpus: 4, diskMb: 32768 },
+      hmuxResourceReservation: { memoryMb: 8192, vcpus: 4, diskMb: 32768 },
     },
   };
   const existing = {
@@ -123,7 +123,7 @@ test("a native fork retry returns a grandfathered oversized row to Pro", async (
     id: "fork",
     providerVmId: "fork-provider-vm",
     providerMetadata: {
-      cmuxResourceReservation: { memoryMb: 24576, vcpus: 12, diskMb: 98304 },
+      hmuxResourceReservation: { memoryMb: 24576, vcpus: 12, diskMb: 98304 },
     },
   };
   const repo = {
@@ -188,7 +188,7 @@ test("access verbs keep an existing machine larger than the caller's current pla
   const run = async (callerPlanId: string, reservation: { memoryMb: number; vcpus: number; diskMb: number }) => {
     const repo = {
       findUserVm: () => Effect.succeed({ id: "row", userId: "u", billingTeamId: "u", ownerTeamId: "u", coderouterPoolId: null, status: "running",
-        provider: "freestyle", providerVmId: "vm", providerMetadata: { cmuxResourceReservation: reservation } }),
+        provider: "freestyle", providerVmId: "vm", providerMetadata: { hmuxResourceReservation: reservation } }),
     } as unknown as VmRepositoryShape;
     // No resume/getStatus adapter: a machine that passes the plan gate
     // answers "running" without any provider call.
@@ -268,7 +268,7 @@ test("reopening an existing oversized Base remains usable during migration", asy
       createdAt: new Date("2026-01-01T00:00:00Z"),
       updatedAt: new Date("2026-01-01T00:00:00Z"),
       providerMetadata: {
-        cmuxResourceReservation: {
+        hmuxResourceReservation: {
           vcpus,
           memoryMb: vcpus * 2 * 1024,
           diskMb: 128 * 1024,
@@ -376,7 +376,7 @@ test("an idempotent create retry returns a grandfathered oversized row to Pro", 
     displayName: null,
     slug: null,
     providerMetadata: {
-      cmuxResourceReservation: { memoryMb: 24576, vcpus: 12, diskMb: 98304 },
+      hmuxResourceReservation: { memoryMb: 24576, vcpus: 12, diskMb: 98304 },
     },
   };
   const repo = {

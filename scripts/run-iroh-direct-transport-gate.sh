@@ -8,7 +8,7 @@ Usage: scripts/run-iroh-direct-transport-gate.sh --tag <tag>
 
 Runs two real relay-disabled Iroh endpoints inside a fresh iOS Simulator. The
 gate requires authenticated EndpointIDs, a bidirectional stream round trip,
-and an observed non-relay path. It never constructs cmux's raw TCP transport.
+and an observed non-relay path. It never constructs hmux's raw TCP transport.
 EOF
 }
 
@@ -35,13 +35,13 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # shellcheck source=scripts/lib/mobile-attach.sh
 source "$SCRIPT_DIR/lib/mobile-attach.sh"
-cmux_attach_validate_dev_tag "$TAG"
+hmux_attach_validate_dev_tag "$TAG"
 
-SLUG="$(cmux_attach__slug "$TAG")"
-SIMULATOR_NAME="cmux Iroh direct gate $SLUG"
+SLUG="$(hmux_attach__slug "$TAG")"
+SIMULATOR_NAME="hmux Iroh direct gate $SLUG"
 SIMULATOR_ID=""
-DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/cmux-iroh-direct-$SLUG"
-RESULT_BUNDLE="$DERIVED_DATA/CmuxIrohDirectTransportGate.xcresult"
+DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/hmux-iroh-direct-$SLUG"
+RESULT_BUNDLE="$DERIVED_DATA/HmuxIrohDirectTransportGate.xcresult"
 
 cleanup() {
   if [[ "$KEEP_SIMULATOR" -eq 1 || -z "$SIMULATOR_ID" ]]; then
@@ -114,16 +114,16 @@ fi
 rm -rf "$RESULT_BUNDLE"
 
 (
-  cd "$REPO_ROOT/Packages/Shared/CmuxIrohTransport"
+  cd "$REPO_ROOT/Packages/Shared/HmuxIrohTransport"
   python3 "$REPO_ROOT/scripts/ci/run_with_timeout.py" \
     --timeout-seconds 600 \
     -- xcodebuild \
-      -scheme CmuxIrohTransport \
+      -scheme HmuxIrohTransport \
       -destination "platform=iOS Simulator,id=$SIMULATOR_ID" \
       -derivedDataPath "$DERIVED_DATA" \
       -resultBundlePath "$RESULT_BUNDLE" \
       "$XCODEBUILD_ACTION" \
-      -only-testing:CmuxIrohTransportTests/CmxIrohDirectTransportGateTests
+      -only-testing:HmuxIrohTransportTests/CmxIrohDirectTransportGateTests
 )
 
 RESULT_BUNDLE="$RESULT_BUNDLE" /usr/bin/python3 <<'PY'

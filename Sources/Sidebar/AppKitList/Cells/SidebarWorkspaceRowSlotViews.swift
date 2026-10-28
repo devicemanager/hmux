@@ -1,6 +1,6 @@
 import AppKit
-import CmuxFoundation
-import CmuxSidebar
+import HmuxFoundation
+import HmuxSidebar
 
 /// Leaf AppKit views for the pure-AppKit workspace row: unread badge,
 /// pull-request status icons, progress bar. Each is configured with values
@@ -232,5 +232,5 @@ extension NSAttributedString.Key {
     /// Row-owned replacement for `.link`. AppKit gives no way to override the
     /// color it paints `.link` runs in, so the sidebar carries the destination
     /// here and styles the run itself.
-    static let sidebarRowLink = NSAttributedString.Key("com.cmux.sidebarRowLink")
+    static let sidebarRowLink = NSAttributedString.Key("com.hmux.sidebarRowLink")
 }

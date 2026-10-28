@@ -11,7 +11,7 @@ import { activeApplePlanForUser } from "../services/billing/apple/entitlement";
 import type { AppleSubscriptionState } from "../services/billing/apple/state";
 import { AppleOwnershipError, databaseAppleIapStore } from "../services/billing/apple/store";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const store = databaseAppleIapStore();
 const NOW = Date.now();
@@ -22,7 +22,7 @@ let sql: Sql | null = null;
 beforeAll(() => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!databaseURL) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!databaseURL) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   sql = postgres(databaseURL, { max: 2 });
 });
 
@@ -40,13 +40,13 @@ function state(overrides: Partial<AppleSubscriptionState> = {}): AppleSubscripti
   return {
     originalTransactionId: "otx-1",
     appAccountToken: null,
-    bundleId: "com.cmux.app",
+    bundleId: "com.hmux.app",
     environment: "Production",
-    productId: "com.cmux.app.pro.monthly",
+    productId: "com.hmux.app.pro.monthly",
     planId: "pro",
     status: "active",
     autoRenewEnabled: true,
-    autoRenewProductId: "com.cmux.app.pro.monthly",
+    autoRenewProductId: "com.hmux.app.pro.monthly",
     purchaseDate: new Date(NOW - DAY),
     originalPurchaseDate: new Date(NOW - DAY),
     expiresAt: new Date(NOW + 29 * DAY),
@@ -128,7 +128,7 @@ describe("Apple IAP store", () => {
 
   dbTest("transactions upsert by id and keep refunds", async () => {
     const row = {
-      transactionId: "tx-1", originalTransactionId: "otx-1", userId: "user-a", productId: "com.cmux.app.pro.monthly",
+      transactionId: "tx-1", originalTransactionId: "otx-1", userId: "user-a", productId: "com.hmux.app.pro.monthly",
       planId: "pro", environment: "Production", type: "PURCHASE", purchaseDate: new Date(NOW), expiresAt: null,
       priceMilliunits: 74990, currency: "USD", storefront: "USA", offerType: null, revokedAt: null, payload: { a: 1 },
     };
@@ -142,7 +142,7 @@ describe("Apple IAP store", () => {
 
   dbTest("an older signed copy of a transaction never replaces a newer one", async () => {
     const row = {
-      transactionId: "tx-1", originalTransactionId: "otx-1", userId: "user-a", productId: "com.cmux.app.pro.monthly",
+      transactionId: "tx-1", originalTransactionId: "otx-1", userId: "user-a", productId: "com.hmux.app.pro.monthly",
       planId: "pro", environment: "Production", type: "PURCHASE", purchaseDate: new Date(NOW), expiresAt: null,
       priceMilliunits: 74990, currency: "USD", storefront: "USA", offerType: null, revokedAt: null,
     };

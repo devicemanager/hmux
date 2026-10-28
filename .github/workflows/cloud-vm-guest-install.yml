@@ -37,13 +37,13 @@ jobs:
       postgres:
         image: postgres:16-alpine@sha256:3c5c8892d184f738f4fe282d14ddaa613a38f00f4189d2d94725ebe6f2909ddb
         env:
-          POSTGRES_DB: cmux_test
-          POSTGRES_PASSWORD: cmux
-          POSTGRES_USER: cmux
+          POSTGRES_DB: hmux_test
+          POSTGRES_PASSWORD: hmux
+          POSTGRES_USER: hmux
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U cmux -d cmux_test"
+          --health-cmd "pg_isready -U hmux -d hmux_test"
           --health-interval 1s --health-timeout 5s --health-retries 30
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
@@ -57,10 +57,10 @@ jobs:
         run: bun test tests/vm-guest-install.test.ts tests/vm-guest-install-runtime.test.ts tests/vm-guest-install-deadline.test.ts tests/vm-guest-create-response.test.ts
       - name: Migrate isolated database
         env:
-          DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
+          DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
         run: bun scripts/db-migrate.mjs
       - name: Guest provisioning and idempotency in PostgreSQL
         env:
-          CMUX_DB_TEST: "1"
-          DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
+          HMUX_DB_TEST: "1"
+          DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
         run: bun test --timeout=30000 --test-name-pattern 'guest bootstrap|unconfirmed guest' tests/vm-workflows.test.ts

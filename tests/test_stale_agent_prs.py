@@ -20,7 +20,7 @@ def ago(days=0, hours=0):
     return (NOW - dt.timedelta(days=days, hours=hours)).isoformat().replace("+00:00", "Z")
 
 
-def pr(number=1, *, idle=30, base="main", labels=(), title="cmux-next: tidy", comments=(), reviews=(), rollup="SUCCESS", mergeable="MERGEABLE"):
+def pr(number=1, *, idle=30, base="main", labels=(), title="hmux-next: tidy", comments=(), reviews=(), rollup="SUCCESS", mergeable="MERGEABLE"):
     return {
         "number": number, "title": title, "body": "", "isDraft": False, "baseRefName": base, "headRefName": "x",
         "createdAt": ago(idle + 5), "mergeable": mergeable,

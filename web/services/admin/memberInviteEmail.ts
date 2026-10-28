@@ -7,7 +7,7 @@ import { env } from "../../app/env";
 import { DEFAULT_FROM_EMAIL } from "../../app/api/stripe/founders-welcome/welcome-email";
 
 export const ADMIN_APP_URL = "https://cmux-admin.vercel.app";
-export const ADMIN_INVITE_SUBJECT = "You have been invited to cmux admin";
+export const ADMIN_INVITE_SUBJECT = "You have been invited to hmux admin";
 
 export type AdminMemberInviteEmail = {
   readonly from: string;
@@ -31,13 +31,13 @@ export function buildAdminMemberInviteEmail(params: {
   readonly to: string;
   readonly inviterEmail: string | null;
 }): AdminMemberInviteEmail {
-  const inviter = params.inviterEmail ?? "a cmux admin";
+  const inviter = params.inviterEmail ?? "a hmux admin";
   return {
     from: params.from,
     to: [params.to],
     subject: ADMIN_INVITE_SUBJECT,
     text: [
-      `${inviter} invited you to cmux admin.`,
+      `${inviter} invited you to hmux admin.`,
       "",
       `Open ${ADMIN_APP_URL} and sign in with this email address (${params.to}).`,
       "Access is tied to the invited address, so another account will not work.",
@@ -51,7 +51,7 @@ export function resolveAdminInviteEmailConfig(): AdminInviteEmailConfig | null {
   if (!resendApiKey) return null;
   return {
     resendApiKey,
-    fromEmail: env.CMUX_FEEDBACK_FROM_EMAIL || DEFAULT_FROM_EMAIL,
+    fromEmail: env.HMUX_FEEDBACK_FROM_EMAIL || DEFAULT_FROM_EMAIL,
   };
 }
 
@@ -60,7 +60,7 @@ export const sendAdminMemberInviteEmail: AdminInviteSender = async (input) => {
   if (!config) return { sent: false };
   const resend = new Resend(config.resendApiKey);
   const payload = buildAdminMemberInviteEmail({
-    from: `cmux <${config.fromEmail}>`,
+    from: `hmux <${config.fromEmail}>`,
     to: input.to,
     inviterEmail: input.inviterEmail,
   });

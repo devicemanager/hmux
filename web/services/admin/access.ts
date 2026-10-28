@@ -1,4 +1,4 @@
-// Admin access for the cmux dashboard.
+// Admin access for the hmux dashboard.
 //
 // An admin is a signed-in, non-anonymous Stack user whose VERIFIED primary
 // email is on one of the company domains below. Verification is required: a

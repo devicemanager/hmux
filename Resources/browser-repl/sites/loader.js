@@ -1,9 +1,9 @@
-// cmux browser REPL site tools: the `sites` global
+// hmux browser REPL site tools: the `sites` global
 // (docs/browser-repl/site-tools.md). Each file in sites/ registers one tool
 // with register(name, factory); createSites builds them for a REPL session.
 //
 // Rules every tool follows:
-// - It runs through the user's signed-in cmux browser session: the REPL
+// - It runs through the user's signed-in hmux browser session: the REPL
 //   `fetch` (cookie-bearing), or a background tab of the same profile where
 //   the call runs in the page's own world, same-origin. A token a site keeps
 //   in the page stays in the page; no tool returns a credential.
@@ -13,7 +13,7 @@
 //   from the site right before the write, which runs only when it matches.
 (function (root) {
   "use strict";
-  const ns = (root.CmuxBrowserRepl = root.CmuxBrowserRepl || {});
+  const ns = (root.HmuxBrowserRepl = root.HmuxBrowserRepl || {});
   // Built-ins the commit checks use, captured when the loader runs: code
   // that changes these globals later (agent code shares this realm) does
   // not change how a read-back is copied or compared.
@@ -526,7 +526,7 @@
       async run(id, site, action) {
         const where = `sites.${site}.${action}`;
         const entry = drafts.get(id);
-        if (!entry) throw new SiteError("draft_not_found", `${where}: no draft ${JSON.stringify(id)} in this REPL session. Drafts live in the session that made them; run both calls in one named session (cmux browser repl --session NAME).`);
+        if (!entry) throw new SiteError("draft_not_found", `${where}: no draft ${JSON.stringify(id)} in this REPL session. Drafts live in the session that made them; run both calls in one named session (hmux browser repl --session NAME).`);
         if (entry.site !== site || entry.action !== action) throw new SiteError("draft_mismatch", `${where}: draft ${id} is a sites.${entry.site}.${entry.action} draft`);
         if (entry.status !== "draft") throw new SiteError("draft_used", `${where}: draft ${id} is ${entry.status}; make a new draft`);
         if (now() > entry.expiresAt) {
@@ -659,13 +659,13 @@
     };
     const tabLeft = (where, want, at) => new SiteError("target_mismatch", `${where}: the site's tab left ${want} for ${at} (a redirect or navigation); nothing was sent there`);
     // fn wrapped to run only in a document whose own location.origin is
-    // __cmux.origin, checked in the script turn that calls it (location is
+    // __hmux.origin, checked in the script turn that calls it (location is
     // unforgeable, so page script cannot answer for it); else it returns
-    // { __cmuxWrongOrigin }.
+    // { __hmuxWrongOrigin }.
     const originGuarded = (fn) =>
       // eslint-disable-next-line no-new-func
-      new Function("__cmux", `if (location.origin !== __cmux.origin) return { __cmuxWrongOrigin: String(location.origin) };\nreturn (${ns.core.functionSource(fn)})(__cmux.arg);`);
-    const wrongOrigin = (r) => (r && typeof r === "object" && typeof r.__cmuxWrongOrigin === "string" && Object.keys(r).length === 1 ? r.__cmuxWrongOrigin : null);
+      new Function("__hmux", `if (location.origin !== __hmux.origin) return { __hmuxWrongOrigin: String(location.origin) };\nreturn (${ns.core.functionSource(fn)})(__hmux.arg);`);
+    const wrongOrigin = (r) => (r && typeof r === "object" && typeof r.__hmuxWrongOrigin === "string" && Object.keys(r).length === 1 ? r.__hmuxWrongOrigin : null);
     const agentCall = (page, fn, arg, what) => page._mainFrame._call("agent", ns.core.functionSource(fn), [arg], undefined, what);
     // The tab's URL and its main document must both be on its origin.
     async function checkTab(where, page) {
@@ -720,13 +720,13 @@
       // A file path for tool output: options.path, else the session's temp directory.
       outputPath(options, ext, base = "site") {
         if (options && options.path) return path.resolve(String(options.path));
-        const dir = path.join(host.tmpdir, "cmux-browser-repl", String(host.sessionId || "session").replace(/[^\w.-]/g, "_"));
+        const dir = path.join(host.tmpdir, "hmux-browser-repl", String(host.sessionId || "session").replace(/[^\w.-]/g, "_"));
         fs.mkdirSync(dir, { recursive: true });
         const safe = String(base).replace(/[^\w.-]+/g, "_").slice(0, 80) || "site";
         return path.join(dir, `${safe}-${++files}${ext}`);
       },
       outputDir(options, base) {
-        const dir = options && options.dir ? path.resolve(String(options.dir)) : path.join(host.tmpdir, "cmux-browser-repl", String(host.sessionId || "session").replace(/[^\w.-]/g, "_"), `${base}-${++files}`);
+        const dir = options && options.dir ? path.resolve(String(options.dir)) : path.join(host.tmpdir, "hmux-browser-repl", String(host.sessionId || "session").replace(/[^\w.-]/g, "_"), `${base}-${++files}`);
         fs.mkdirSync(dir, { recursive: true });
         return dir;
       },
@@ -850,7 +850,7 @@
       // Throws not_signed_in when a tab landed on a sign-in page.
       assertSignedIn(name, page, patterns) {
         const url = page.url();
-        if (patterns.some((p) => p.test(url))) throw new SiteError("not_signed_in", `${name}: the cmux browser is not signed in (landed on ${url.split("?")[0]}). Open the site with tabs.open(url) and ask the user to sign in, or use sites.browserAuth.request().`);
+        if (patterns.some((p) => p.test(url))) throw new SiteError("not_signed_in", `${name}: the hmux browser is not signed in (landed on ${url.split("?")[0]}). Open the site with tabs.open(url) and ask the user to sign in, or use sites.browserAuth.request().`);
       },
       // A private deep copy of plain data (see copyInput).
       copyInput,

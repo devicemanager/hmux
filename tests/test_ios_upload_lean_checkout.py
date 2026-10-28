@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Pin the lean macOS checkout of the two iOS TestFlight upload workflows.
 
-ios-testflight.yml (CMUX INTERNAL, every 20 min) and ios-appstore-upload.yml
-(cmux.app, hourly) used to clone with fetch-depth 0 + recursive submodules
+ios-testflight.yml (HMUX INTERNAL, every 20 min) and ios-appstore-upload.yml
+(hmux.app, hourly) used to clone with fetch-depth 0 + recursive submodules
 (~12 min) and install zig unconditionally (~6 min) on the constrained macOS
 pool. The policy now is:
 
@@ -106,8 +106,8 @@ else:
         self.assertEqual(output, {"last_upload_sha": "base", "upload": "false", "retry_build_number": "12345"})
 
     def test_public_preserves_build_inputs(self):
-        for path in ["ios/cmuxPackage/Package.swift", "Packages/macOS/CmuxPhonePush/Package.swift",
-                     "Packages/Shared/CMUXMobileCore/Protocol.swift", "Sources/Mobile/Host.swift",
+        for path in ["ios/hmuxPackage/Package.swift", "Packages/macOS/HmuxPhonePush/Package.swift",
+                     "Packages/Shared/HMUXMobileCore/Protocol.swift", "Sources/Mobile/Host.swift",
                      "scripts/lib/verify-ios-release-origins.sh", ".github/scripts/install-app-store-provisioning-profile.sh",
                      ".github/workflows/ios-appstore-upload.yml", "ghostty", "unknown-new-input"]:
             with self.subTest(path=path):
@@ -169,7 +169,7 @@ class WorkflowPolicyTests(unittest.TestCase):
                 self.assertLess(init, zig_run.index("./scripts/install-zig-ci.sh"))
 
                 self.assertEqual(steps[build].get("if"), PREBUILT_IF)
-                self.assertEqual(steps[build]["env"]["CMUX_GHOSTTYKIT_NO_PREBUILT"], "1")
+                self.assertEqual(steps[build]["env"]["HMUX_GHOSTTYKIT_NO_PREBUILT"], "1")
                 self.assertIn("./scripts/ensure-ghosttykit.sh", run_text(steps[build]))
 
                 # No other step in the job installs zig, initializes submodules,
@@ -434,7 +434,7 @@ class FetchNotesHistoryTests(unittest.TestCase):
             src, shas = build_remote(root, dates)
             base = shas[150]
             clone = shallow_clone(root, src)
-            result = fetch_history(clone, base, CMUX_NOTES_HISTORY_DEEPEN_STEP="20")
+            result = fetch_history(clone, base, HMUX_NOTES_HISTORY_DEEPEN_STEP="20")
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertTrue(is_ancestor(clone, base))
             self.assertEqual(notes(clone, base), notes(src, base))
@@ -449,7 +449,7 @@ class FetchNotesHistoryTests(unittest.TestCase):
             clone = shallow_clone(root, src)
             result = fetch_history(
                 clone, base,
-                CMUX_NOTES_HISTORY_DEEPEN_STEP="10", CMUX_NOTES_HISTORY_MAX_COMMITS="30",
+                HMUX_NOTES_HISTORY_DEEPEN_STEP="10", HMUX_NOTES_HISTORY_MAX_COMMITS="30",
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("not reached within 30", result.stderr)
@@ -466,7 +466,7 @@ class FetchNotesHistoryTests(unittest.TestCase):
                 self.assertIn(f"ios: side change {k}", expected)
 
             clone = shallow_clone(root, src)
-            result = fetch_history(clone, base, CMUX_NOTES_HISTORY_DEEPEN_STEP="5")
+            result = fetch_history(clone, base, HMUX_NOTES_HISTORY_DEEPEN_STEP="5")
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertTrue(is_ancestor(clone, base))
             self.assertEqual(git(clone, "rev-list", "--count", f"{base}..HEAD"), full_range)
@@ -480,7 +480,7 @@ class FetchNotesHistoryTests(unittest.TestCase):
             clone = shallow_clone(root, src)
             result = fetch_history(
                 clone, base,
-                CMUX_NOTES_HISTORY_DEEPEN_STEP="1", CMUX_NOTES_HISTORY_MAX_COMMITS="1",
+                HMUX_NOTES_HISTORY_DEEPEN_STEP="1", HMUX_NOTES_HISTORY_MAX_COMMITS="1",
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             # --shallow-since cuts main at the merge, so the one-commit bound is
@@ -511,7 +511,7 @@ class FetchNotesHistoryTests(unittest.TestCase):
             git(src, "config", "uploadpack.allowAnySHA1InWant", "true")
 
             clone = shallow_clone(root, src)
-            result = fetch_history(clone, base, CMUX_NOTES_HISTORY_DEEPEN_STEP="10")
+            result = fetch_history(clone, base, HMUX_NOTES_HISTORY_DEEPEN_STEP="10")
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("is not an ancestor of HEAD", result.stderr)
             # One deepen reaches the fork point; the rest of main is never walked.
@@ -531,7 +531,7 @@ class FetchNotesHistoryTests(unittest.TestCase):
             clone = shallow_clone(root, src)
             result = fetch_history(
                 clone, base,
-                CMUX_NOTES_HISTORY_DEEPEN_STEP="10", CMUX_NOTES_HISTORY_DATE_SLACK_DAYS="1",
+                HMUX_NOTES_HISTORY_DEEPEN_STEP="10", HMUX_NOTES_HISTORY_DATE_SLACK_DAYS="1",
             )
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertIn("over 1 days older", result.stderr)

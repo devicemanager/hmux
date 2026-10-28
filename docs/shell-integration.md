@@ -1,13 +1,13 @@
 # Shell integration: reducing Git watcher churn
 
-`CMUX_NO_GIT_WATCH=1` is a **supported opt-out** for cmux's zsh and bash
+`HMUX_NO_GIT_WATCH=1` is a **supported opt-out** for hmux's zsh and bash
 Git integration. Use it to mitigate shell watcher process churn, including
 frequent `sleep` launches and the resulting security-agent audit volume on
 managed Macs. It can remain enabled; it is not an experimental or temporary-only
 switch. The trade-off is losing shell-driven Git/PR updates and their immediate
 cache-invalidation hints.
 
-This is a shell setting, not an app-wide watcher switch. It does not stop cmux's
+This is a shell setting, not an app-wide watcher switch. It does not stop hmux's
 own Git filesystem watchers or shared GitHub PR polling, fix unrelated shell
 integration problems, or remove orphaned processes from older sessions. It does
 not control Git work done by your prompt theme, plugins, or commands.
@@ -17,10 +17,10 @@ not control Git work done by your prompt theme, plugins, or commands.
 Run this in each existing zsh or bash pane that needs the mitigation:
 
 ```sh
-export CMUX_NO_GIT_WATCH=1
+export HMUX_NO_GIT_WATCH=1
 ```
 
-The shell applies it when the next cmux prompt hook runs. An already-running
+The shell applies it when the next hmux prompt hook runs. An already-running
 command or child watcher has its previous environment until the shell regains
 control; this is not an immediate process-wide stop. At that prompt, the
 integration stops its tracked Git job, and zsh also stops its legacy PR loop and
@@ -35,9 +35,9 @@ reads:
   export in that file too.
 
 Put it before startup commands that launch nested shells. Open a new pane and
-check `printf '%s\n' "${CMUX_NO_GIT_WATCH:-unset}"`: it must print `1`.
+check `printf '%s\n' "${HMUX_NO_GIT_WATCH:-unset}"`: it must print `1`.
 Only the literal value `1` disables the feature; `true`, `0`, an empty value,
-and an unset variable do not. No additional `CMUX_NO_PR_WATCH` setting is needed.
+and an unset variable do not. No additional `HMUX_NO_PR_WATCH` setting is needed.
 
 For managed Macs, deploy the export through the shell startup configuration
 your organization already manages. A change in one pane does not modify
@@ -47,18 +47,18 @@ setting in their own environment/startup files; do not assume SSH or a tmux
 server forwards a later local environment change.
 
 To restore shell-driven updates, remove the startup export and run
-`unset CMUX_NO_GIT_WATCH` in affected panes, or open new panes with it unset.
+`unset HMUX_NO_GIT_WATCH` in affected panes, or open new panes with it unset.
 Updates resume through the normal prompt/command hooks.
 
 ## Exact scope in the current integrations
 
-| Behavior | With `CMUX_NO_GIT_WATCH=1` |
+| Behavior | With `HMUX_NO_GIT_WATCH=1` |
 | --- | --- |
 | Prompt-time HEAD inspection and branch refresh | Disabled in both shells, including after `cd`, a branch change, or a Git command. No new async branch-report job is started. |
 | HEAD watching during a foreground command | Disabled in zsh. Bash has no equivalent active foreground HEAD loop in the current integration. |
 | Legacy per-shell PR polling | Bash no longer has this poller. In zsh, startup is blocked; current prompt/command hooks already do **not** start it, even with the flag unset, and retained helper definitions are not evidence of active polling. |
 | Shell branch/PR badge messages | Suppresses `report_git_branch`, `clear_git_branch`, HEAD-change `clear_pr`, and prompt-time `report_pr_action` hints after successful `gh pr` commands. It does not send a one-time clear to hide existing badges. |
-| Shell PR caches and force signals | zsh still cleans up at prompts: existing per-panel `cache-<panel>.*` files and the PR force signal in the private `${TMPDIR:-/tmp}/cmux-pr-<uid>` directory are removed. Bash no longer writes these files and leaves any that an older integration wrote. Both shells discard pending action hints, and bash also removes its action-hint file. This is local cleanup, not a GitHub refresh or invalidation of the app's cache. |
+| Shell PR caches and force signals | zsh still cleans up at prompts: existing per-panel `cache-<panel>.*` files and the PR force signal in the private `${TMPDIR:-/tmp}/hmux-pr-<uid>` directory are removed. Bash no longer writes these files and leaves any that an older integration wrote. Both shells discard pending action hints, and bash also removes its action-hint file. This is local cleanup, not a GitHub refresh or invalidation of the app's cache. |
 | Git active-CWD marker | A fresh disabled shell does not create this temporary file. A marker created before enabling the flag may still be updated until shell-exit cleanup. |
 | Other shell integration | CWD and TTY reporting, prompt/running activity messages, port-scan kicks, keyboard-protocol resets, terminal history, startup/PATH integration, and agent wrappers remain enabled. Commands such as `git` and `gh` still run normally. |
 | App-owned metadata and watchers | Unchanged. The app can independently update branch/dirty/PR badges and poll GitHub; other panes and restored metadata can also supply badge state. |
@@ -84,14 +84,14 @@ and after; distinguish shell-owned watchers from app-owned watchers and other
 programs. The environment value proves configuration, not that every source of
 churn has stopped.
 
-The source contract runs without launching cmux or contacting GitHub:
+The source contract runs without launching hmux or contacting GitHub:
 
 ```sh
 python3 tests/test_shell_no_git_watch.py
 ```
 
-It sources the shipped [zsh](../Resources/shell-integration/cmux-zsh-integration.zsh)
-and [bash](../Resources/shell-integration/cmux-bash-integration.bash) integrations
+It sources the shipped [zsh](../Resources/shell-integration/hmux-zsh-integration.zsh)
+and [bash](../Resources/shell-integration/hmux-bash-integration.bash) integrations
 in isolated shells, checks disabled reports and watcher startup, zsh cache cleanup,
 preserved messages, literal-value semantics, and re-enabling reports. It replaces
 message delivery and the watcher process-creation boundary; it does not measure

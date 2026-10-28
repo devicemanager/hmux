@@ -1,6 +1,6 @@
 import Bonsplit
-import CmuxCloud
-import CmuxWorkspaces
+import HmuxCloud
+import HmuxWorkspaces
 import Foundation
 
 /// Transient workspace surface for Cloud VPN setup. Reading it never activates
@@ -55,7 +55,7 @@ extension Workspace {
         }
 
         bindSurface(tabID, toPanelId: panel.id)
-        publishCmuxSurfaceCreated(
+        publishHmuxSurfaceCreated(
             panel.id,
             paneId: paneID,
             kind: SurfaceKind.cloudVPNSetup.rawValue,

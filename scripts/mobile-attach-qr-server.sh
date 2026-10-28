@@ -7,8 +7,8 @@
 set -euo pipefail
 
 PORT="${PORT:-0}"
-TAG="${CMUX_TAG:-mobile}"
-IOS_TAG="${CMUX_IOS_TAG:-$TAG}"
+TAG="${HMUX_TAG:-mobile}"
+IOS_TAG="${HMUX_IOS_TAG:-$TAG}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 if ! command -v python3 >/dev/null 2>&1; then
@@ -38,15 +38,15 @@ PROJECT_DIR = os.path.dirname(SCRIPT_DIR)
 # the connected iPhone. The Open button shells out to it so a stale (or
 # missing) device build is brought current before launch — no manual reload.
 IOS_RELOAD = os.path.join(PROJECT_DIR, "ios", "scripts", "reload.sh")
-IOS_TEAM = os.environ.get("CMUX_IOS_TEAM", "7WLXT3NR37")
+IOS_TEAM = os.environ.get("HMUX_IOS_TEAM", "7WLXT3NR37")
 # Build can take a couple minutes (xcodebuild incremental + install over the
 # tunnel); give it generous headroom.
 IOS_BUILD_TIMEOUT_SECONDS = 600
 QR_SCRIPT = os.path.join(SCRIPT_DIR, "mobile-attach-qr.sh")
 TMP_ROOT = os.environ.get("TMPDIR", "/tmp").rstrip("/") or "/tmp"
-OUT_DIR = os.path.join(TMP_ROOT, f"cmux-mobile-attach-qr-{TAG}")
+OUT_DIR = os.path.join(TMP_ROOT, f"hmux-mobile-attach-qr-{TAG}")
 IOS_TAG_SLUG = re.sub(r"-+", "-", re.sub(r"[^a-z0-9]+", "-", IOS_TAG.lower())).strip("-") or "dev"
-IOS_BUNDLE_ID = f"dev.cmux.ios.{IOS_TAG_SLUG}"
+IOS_BUNDLE_ID = f"dev.hmux.ios.{IOS_TAG_SLUG}"
 
 _LOCK = threading.Lock()
 _LAST_GEN_TS = 0.0
@@ -59,24 +59,24 @@ DERIVED_DATA_ROOT = os.path.expanduser("~/Library/Developer/Xcode/DerivedData")
 
 def tagged_app_path() -> str:
     """The exact .app bundle that the launch path will open. Keep this in
-    lockstep with the CMUX Tag Opener's `appURL(for:)` resolution so the
+    lockstep with the HMUX Tag Opener's `appURL(for:)` resolution so the
     button label and the click handler can't drift apart."""
     return os.path.join(
         DERIVED_DATA_ROOT,
-        f"cmux-{TAG}",
+        f"hmux-{TAG}",
         "Build",
         "Products",
         "Debug",
-        f"cmux DEV {TAG}.app",
+        f"hmux DEV {TAG}.app",
     )
 
 
 def tagged_app_executable() -> str:
-    return os.path.join(tagged_app_path(), "Contents", "MacOS", "cmux DEV")
+    return os.path.join(tagged_app_path(), "Contents", "MacOS", "hmux DEV")
 
 
 def app_info() -> dict:
-    """Single source of truth for what 'Open cmux DEV <tag>' actually does.
+    """Single source of truth for what 'Open hmux DEV <tag>' actually does.
     Returned to the page so the label always reflects reality (build mtime,
     on-disk presence, whether a process is currently running)."""
     app_path = tagged_app_path()
@@ -98,7 +98,7 @@ def app_info() -> dict:
         pass
     try:
         out = subprocess.run(
-            ["pgrep", "-f", f"cmux DEV {TAG}.app/Contents/MacOS/cmux DEV"],
+            ["pgrep", "-f", f"hmux DEV {TAG}.app/Contents/MacOS/hmux DEV"],
             check=False,
             timeout=2,
             stdout=subprocess.PIPE,
@@ -118,7 +118,7 @@ def regenerate(force: bool = False) -> tuple[bool, str]:
         if not force and now - _LAST_GEN_TS < MIN_REGEN_INTERVAL_SECONDS:
             return True, "cached"
         env = os.environ.copy()
-        env["CMUX_TAG"] = TAG
+        env["HMUX_TAG"] = TAG
         try:
             subprocess.run(
                 [QR_SCRIPT, "--tag", TAG, "--out-dir", OUT_DIR],
@@ -138,7 +138,7 @@ def regenerate(force: bool = False) -> tuple[bool, str]:
 
 class Handler(http.server.BaseHTTPRequestHandler):
     def log_message(self, format: str, *args) -> None:
-        # Stay quiet, the cmux helper pane is the visible signal.
+        # Stay quiet, the hmux helper pane is the visible signal.
         return
 
     def do_GET(self):
@@ -174,7 +174,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
         # near no-op when nothing changed. This is the "auto build then open"
         # behavior — no separate manual reload.
         ios_result = self._build_and_launch_ios()
-        # macOS: launch the tagged `.app` via the CMUX Tag Opener at :17320 if
+        # macOS: launch the tagged `.app` via the HMUX Tag Opener at :17320 if
         # it is already built (it must be, to be serving this QR). We do not
         # auto-build the Mac app here — that is a heavier macOS reload that
         # would restart this very server's host app.
@@ -197,7 +197,7 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return f"no-reload-script ({IOS_RELOAD})"
         cmd = [IOS_RELOAD, "--tag", IOS_TAG, "--device-only", "--team", IOS_TEAM]
         env = os.environ.copy()
-        env["CMUX_TAG"] = IOS_TAG
+        env["HMUX_TAG"] = IOS_TAG
         try:
             proc = subprocess.run(
                 cmd,
@@ -295,8 +295,8 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return
         with open(html_path, "rb") as fh:
             html = fh.read()
-        # Inject a meta refresh + a small banner + an "Open cmux DEV <tag>"
-        # button that hits the CMUX Tag Opener at 127.0.0.1:17320.
+        # Inject a meta refresh + a small banner + an "Open hmux DEV <tag>"
+        # button that hits the HMUX Tag Opener at 127.0.0.1:17320.
         marker = b"</head>"
         injection = (
             b'<meta http-equiv="refresh" content="45">\n'
@@ -320,12 +320,12 @@ class Handler(http.server.BaseHTTPRequestHandler):
         # from `/app-info`. That endpoint shares its truth with `_open_tag`
         # so the label can't claim a build the launch path can't deliver.
         banner = (
-            b'<button class="qr-open-tag" type="button" id="cmux-open-btn" disabled '
+            b'<button class="qr-open-tag" type="button" id="hmux-open-btn" disabled '
             b'title="resolving build..." '
-            b'onclick="cmuxOpenTag(this)">resolving...</button>'
+            b'onclick="hmuxOpenTag(this)">resolving...</button>'
             + b'<div class="qr-fresh-banner">live, regenerates every 45s</div>'
             + b'<script>(function(){\n'
-            + b'var cmuxBuilding=false;\n'
+            + b'var hmuxBuilding=false;\n'
             + b'function fmtMtime(epoch){if(!epoch)return"never";\n'
             + b'  var ageS=Math.max(0,(Date.now()/1000)-epoch);\n'
             + b'  if(ageS<60)return Math.floor(ageS)+"s ago";\n'
@@ -334,28 +334,28 @@ class Handler(http.server.BaseHTTPRequestHandler):
             + b'  return Math.floor(ageS/86400)+"d ago";}\n'
             + b'function refresh(){fetch("/app-info",{cache:"no-store"})\n'
             + b'  .then(function(r){return r.json();}).then(function(info){\n'
-            + b'    var btn=document.getElementById("cmux-open-btn");\n'
-            + b'    if(!btn||cmuxBuilding)return;\n'
+            + b'    var btn=document.getElementById("hmux-open-btn");\n'
+            + b'    if(!btn||hmuxBuilding)return;\n'
             + b'    var built=fmtMtime(info.mtime);\n'
             + b'    var running=info.running_pid?(" \\u00b7 running pid "+info.running_pid):"";\n'
             + b'    if(info.exists){\n'
             + b'      btn.disabled=false;\n'
-            + b'      btn.innerHTML="Open <code>cmux DEV "+info.tag+"</code> \\u00b7 built "+built+running;\n'
+            + b'      btn.innerHTML="Open <code>hmux DEV "+info.tag+"</code> \\u00b7 built "+built+running;\n'
             + b'      btn.title=info.app_path;\n'
             + b'    }else{\n'
             + b'      btn.disabled=true;\n'
-            + b'      btn.innerHTML="<code>cmux DEV "+info.tag+"</code> not built";\n'
+            + b'      btn.innerHTML="<code>hmux DEV "+info.tag+"</code> not built";\n'
             + b'      btn.title="missing on disk: "+info.app_path;\n'
             + b'    }\n'
             + b'  }).catch(function(){});}\n'
-            + b'window.cmuxOpenTag=function(btn){\n'
+            + b'window.hmuxOpenTag=function(btn){\n'
             + b'  if(btn.disabled)return;\n'
-            + b'  cmuxBuilding=true;btn.disabled=true;\n'
+            + b'  hmuxBuilding=true;btn.disabled=true;\n'
             + b'  btn.innerHTML="building \\u0026 opening\\u2026 (~1 min)";\n'
             + b'  fetch("/open-tag",{method:"POST"}).then(function(r){return r.text();})\n'
             + b'   .then(function(t){btn.innerHTML="opened \\u00b7 "+t.replace(/\\n/g," ").trim();})\n'
             + b'   .catch(function(){btn.innerHTML="open failed (see helper pane)";})\n'
-            + b'   .finally(function(){cmuxBuilding=false;btn.disabled=false;refresh();});};\n'
+            + b'   .finally(function(){hmuxBuilding=false;btn.disabled=false;refresh();});};\n'
             + b'refresh();setInterval(refresh,2000);}());</script>\n'
         )
         if body_marker in html:

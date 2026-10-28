@@ -40,18 +40,18 @@ class SelectorsFromMetaTests(unittest.TestCase):
         meta = write_meta(
             "shard=6\n"
             "arg=-xctestrun\n"
-            "arg=/tmp/cmux-unit.xctestrun\n"
-            "arg=-only-testing:cmuxTests/FooTests/testOne()\n"
-            "arg=-only-testing:cmuxTests/BarTests\n"
+            "arg=/tmp/hmux-unit.xctestrun\n"
+            "arg=-only-testing:hmuxTests/FooTests/testOne()\n"
+            "arg=-only-testing:hmuxTests/BarTests\n"
         )
         self.assertEqual(
             replay.selectors_from_meta(meta),
-            ["cmuxTests/FooTests/testOne()", "cmuxTests/BarTests"],
+            ["hmuxTests/FooTests/testOne()", "hmuxTests/BarTests"],
         )
 
     def test_parenthesised_identifier_matches_printf_q_output(self) -> None:
         """Pin the decoding against what bash actually emits, not an assumption."""
-        identifier = "cmuxTests/FooTests/testParameterised(value:)"
+        identifier = "hmuxTests/FooTests/testParameterised(value:)"
         quoted = subprocess.run(
             ["bash", "-c", 'printf "%q" "$1"', "_", f"-only-testing:{identifier}"],
             capture_output=True,
@@ -63,7 +63,7 @@ class SelectorsFromMetaTests(unittest.TestCase):
 
     def test_shell_metacharacters_survive_printf_q(self) -> None:
         """A selector %q must escape still decodes to the original string."""
-        identifier = "cmuxTests/FooTests/test a b()"
+        identifier = "hmuxTests/FooTests/test a b()"
         quoted = subprocess.run(
             ["bash", "-c", 'printf "%q" "$1"', "_", f"-only-testing:{identifier}"],
             capture_output=True,
@@ -75,12 +75,12 @@ class SelectorsFromMetaTests(unittest.TestCase):
         self.assertEqual(replay.selectors_from_meta(meta), [identifier])
 
     def test_unparseable_argv_refuses_instead_of_guessing(self) -> None:
-        meta = write_meta("arg=-only-testing:cmuxTests/FooTests/'unbalanced\n")
+        meta = write_meta("arg=-only-testing:hmuxTests/FooTests/'unbalanced\n")
         with self.assertRaises(SystemExit):
             replay.selectors_from_meta(meta)
 
     def test_ansi_c_quoting_refuses_instead_of_mangling(self) -> None:
-        meta = write_meta("arg=$'-only-testing:cmuxTests/FooTests/test\\tOne()'\n")
+        meta = write_meta("arg=$'-only-testing:hmuxTests/FooTests/test\\tOne()'\n")
         with self.assertRaises(SystemExit):
             replay.selectors_from_meta(meta)
 
@@ -91,7 +91,7 @@ class SelectorsFromMetaTests(unittest.TestCase):
         which is the same silent shrink of the selector set the other refusals
         exist to prevent.
         """
-        meta = write_meta("arg=-only-testing:cmuxTests/FooTests -only-testing:cmuxTests/BarTests\n")
+        meta = write_meta("arg=-only-testing:hmuxTests/FooTests -only-testing:hmuxTests/BarTests\n")
         with self.assertRaises(SystemExit):
             replay.selectors_from_meta(meta)
 

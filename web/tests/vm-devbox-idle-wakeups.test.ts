@@ -29,8 +29,8 @@ function fakeProc(withHost = true): string {
     task(proc, 100, 101, "terminal-host-p", 13);
     writeFileSync(path.join(proc, "100", "cmdline"), "/proc/self/exe\0__terminal-host\0--bootstrap-stdio\0");
   }
-  task(proc, 200, 200, "cmux-tui", 1_303);
-  writeFileSync(path.join(proc, "200", "cmdline"), "/home/cmux/.cmux/bin/cmux-tui\0server\0start\0--session\0cloud\0");
+  task(proc, 200, 200, "hmux-tui", 1_303);
+  writeFileSync(path.join(proc, "200", "cmdline"), "/home/hmux/.hmux/bin/hmux-tui\0server\0start\0--session\0cloud\0");
   task(proc, 300, 300, "bash", 7);
   writeFileSync(path.join(proc, "300", "cmdline"), "bash\0-lc\0echo __terminal-host server start\0");
   return proc;
@@ -56,7 +56,7 @@ describe("devbox idle-wakeup check", () => {
     const r = await run(fakeProc(), 2);
     expect(r.code).toBe(0);
     expect(r.out).toContain("PASS 1 terminal host main thread(s) at or under 30 switches in 60s");
-    expect(r.out).toContain("daemon 200 thread 200 (cmux-tui main)");
+    expect(r.out).toContain("daemon 200 thread 200 (hmux-tui main)");
   });
 
   test("ignores a shell whose command line only mentions the markers", async () => {

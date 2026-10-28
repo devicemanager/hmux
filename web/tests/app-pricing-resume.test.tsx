@@ -18,8 +18,8 @@ const cancelScheduledPro: AppPlanSnapshot = {
 function render(snapshot: AppPlanSnapshot) {
   return renderToStaticMarkup(
     <AppPricingContent
-      params={{ cmux_app: "1" }}
-      headersList={new Headers({ host: "cmux.test" })}
+      params={{ hmux_app: "1" }}
+      headersList={new Headers({ host: "hmux.test" })}
       snapshot={snapshot}
       goPlanEnabled={false}
       section="individual"

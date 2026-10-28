@@ -73,7 +73,7 @@ jobs:
         uses: actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae # v5.0.5
         with:
           path: .ci-source-packages
-          key: tmux-corpus-spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          key: tmux-corpus-spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
           restore-keys: tmux-corpus-spm-
 
       - name: Sanitize Swift package cache
@@ -82,18 +82,18 @@ jobs:
       - name: Prepare isolated DerivedData
         run: |
           set -euo pipefail
-          DERIVED_DATA_PATH="${RUNNER_TEMP}/cmux-derived-data-tmux-corpus-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          DERIVED_DATA_PATH="${RUNNER_TEMP}/hmux-derived-data-tmux-corpus-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           rm -rf "$DERIVED_DATA_PATH"
           mkdir -p "$DERIVED_DATA_PATH"
-          echo "CMUX_DERIVED_DATA_PATH=$DERIVED_DATA_PATH" >> "$GITHUB_ENV"
+          echo "HMUX_DERIVED_DATA_PATH=$DERIVED_DATA_PATH" >> "$GITHUB_ENV"
 
       - name: Resolve Swift packages
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
           mkdir -p "$SOURCE_PACKAGES_DIR"
-          xcodebuild -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
-            -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+          xcodebuild -project hmux.xcodeproj -scheme hmux-unit -configuration Debug \
+            -derivedDataPath "$HMUX_DERIVED_DATA_PATH" \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
             -resolvePackageDependencies
 
@@ -103,15 +103,15 @@ jobs:
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
           set +e
           scripts/ci/xcodebuild_noninteractive.py \
-            xcodebuild -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
-              -derivedDataPath "$CMUX_DERIVED_DATA_PATH" \
+            xcodebuild -project hmux.xcodeproj -scheme hmux-unit -configuration Debug \
+              -derivedDataPath "$HMUX_DERIVED_DATA_PATH" \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -disableAutomaticPackageResolution \
               -destination "platform=macOS" \
-              -only-testing:cmuxTests/GhosttyCommandShiftForwardingTests \
-              -only-testing:cmuxTests/GhosttyTerminalStartupEnvironmentTests \
-              -only-testing:cmuxTests/CmuxConfigNamedColorTests \
-              -only-testing:cmuxTests/SessionPersistenceTests \
+              -only-testing:hmuxTests/GhosttyCommandShiftForwardingTests \
+              -only-testing:hmuxTests/GhosttyTerminalStartupEnvironmentTests \
+              -only-testing:hmuxTests/HmuxConfigNamedColorTests \
+              -only-testing:hmuxTests/SessionPersistenceTests \
               test 2>&1 | tee /tmp/tmux-terminal-corpus-output.txt
           EXIT_CODE=${PIPESTATUS[0]}
           OUTPUT=$(cat /tmp/tmux-terminal-corpus-output.txt)

@@ -48,7 +48,7 @@ export const errorBoundaryCopy: Record<Locale, ErrorBoundaryCopy> = {
   },
   ko: {
     title: "문제가 발생했습니다",
-    body: "페이지의 이 부분을 불러올 수 없습니다. cmux.com의 나머지 부분은 계속 사용할 수 있습니다.",
+    body: "페이지의 이 부분을 불러올 수 없습니다. hmux.com의 나머지 부분은 계속 사용할 수 있습니다.",
     section: "이 섹션을 불러올 수 없습니다.",
     retry: "다시 시도",
     home: "홈으로 이동",

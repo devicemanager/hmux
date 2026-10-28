@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// Names a new Cloud team. Create hands the name back and the sheet closes at
@@ -43,12 +43,12 @@ struct CloudCreateTeamSheet: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             Text(String(localized: "cloud.teamPicker.createSheet.title", defaultValue: "Create Team"))
-                .cmuxFont(size: 13, weight: .semibold)
+                .hmuxFont(size: 13, weight: .semibold)
             Text(String(
                 localized: "cloud.teamPicker.createSheet.message",
                 defaultValue: "The new team becomes your active team."
             ))
-            .cmuxFont(size: 11)
+            .hmuxFont(size: 11)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
             .padding(.top, 4)
@@ -64,7 +64,7 @@ struct CloudCreateTeamSheet: View {
             HStack(spacing: 8) {
                 if let pendingChangeStatus {
                     Text(pendingChangeStatus)
-                        .cmuxFont(size: 11)
+                        .hmuxFont(size: 11)
                         .foregroundStyle(.secondary)
                         .accessibilityIdentifier("CloudCreateTeamSheet.pendingChange")
                 }

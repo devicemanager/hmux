@@ -123,7 +123,7 @@ final class ComputerUseSessionPresentationController {
         var state = activeState(for: driverSessionID)
         state.activityPhase = .active
         state.focusMode = .callingTerminal
-        // Keep the cursor rendered behind cmux so returning to the target reveals
+        // Keep the cursor rendered behind hmux so returning to the target reveals
         // the existing overlay immediately instead of waiting on a helper RPC.
         state.cursorVisible = true
         state.proxySessionID = proxySessionID ?? state.proxySessionID
@@ -154,7 +154,7 @@ final class ComputerUseSessionPresentationController {
         var state = activeState(for: driverSessionID)
         state.activityPhase = .active
         state.focusMode = .computerUse
-        // The active overlay was never disabled while cmux was foregrounded.
+        // The active overlay was never disabled while hmux was foregrounded.
         state.cursorVisible = true
         state.proxySessionID = proxySessionID ?? state.proxySessionID
         state.targetWindowID = targetWindowID ?? state.targetWindowID
@@ -177,7 +177,7 @@ final class ComputerUseSessionPresentationController {
 
     /// Agent activity in calling-terminal mode keeps the helper cursor pinned
     /// to its target but never focuses the terminal. Selecting the workspace or
-    /// raising cmux here would pull the user away from whatever workspace or app
+    /// raising hmux here would pull the user away from whatever workspace or app
     /// they moved to; only an explicit menu choice may do that.
     func reassertCursorBehindCallingTerminal(
         driverSessionID: String,

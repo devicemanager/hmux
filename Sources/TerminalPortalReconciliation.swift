@@ -1,7 +1,7 @@
 import AppKit
-import CMUXMobileCore
+import HMUXMobileCore
 import Bonsplit
-import CmuxTerminal
+import HmuxTerminal
 import Foundation
 
 /// Immutable representable input consumed when the queued portal turn runs.

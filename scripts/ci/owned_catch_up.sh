@@ -7,7 +7,7 @@
 # only), adopt, record, canonical-build, keep with MERGED_ONTO = HEAD, save.
 #
 # glaeda-idle-warm runs it on an idle owned mini whose kept build is far from
-# main (cmuxterm-hq#661 WS6), so the next pull request admitted to that root
+# main (hmuxterm-hq#661 WS6), so the next pull request admitted to that root
 # starts near: it compiles its own diff and not main's drift as well. glaeda
 # holds the root's capacity tokens while this runs and kills its process group
 # the moment a job starts; every step below is safe to kill:
@@ -19,14 +19,14 @@
 # - The canonical root's src and DerivedData are the root token holder's
 #   scratch space: every compile admission clears and recreates them.
 #
-# ROOT is 1 (/private/tmp/cmux-ci, store STATE) or N (/private/tmp/cmux-ci-N,
-# store STATE/cmux-ci-N); packages live in STATE for every root. The Xcode is
-# CMUX_CI_XCODE_APP, which glaeda passes from the runner's toolchain pin. The
-# host-wide xcode-select default is left alone (CMUX_CI_SKIP_XCODE_SELECT).
+# ROOT is 1 (/private/tmp/hmux-ci, store STATE) or N (/private/tmp/hmux-ci-N,
+# store STATE/hmux-ci-N); packages live in STATE for every root. The Xcode is
+# HMUX_CI_XCODE_APP, which glaeda passes from the runner's toolchain pin. The
+# host-wide xcode-select default is left alone (HMUX_CI_SKIP_XCODE_SELECT).
 # Nothing is uploaded, and no GitHub token is used: seed history comes from
-# the checkout's own git (CMUX_SEED_GIT_DIR) and seeds from the public bucket.
+# the checkout's own git (HMUX_SEED_GIT_DIR) and seeds from the public bucket.
 #
-# With CMUX_CATCH_UP_LOG, xcodebuild's output goes there. Prints one JSON line
+# With HMUX_CATCH_UP_LOG, xcodebuild's output goes there. Prints one JSON line
 # last: {"kept": "true"|"false", "root": N, "head": SHA, "start": ..., ...}.
 set -euo pipefail
 
@@ -36,7 +36,7 @@ root_number="$1"
 state="$2"
 case "$root_number" in [1-9]|[1-9][0-9]) ;; *) usage ;; esac
 case "$state" in /*) ;; *) usage ;; esac
-: "${CMUX_CI_XCODE_APP:?CMUX_CI_XCODE_APP names the Xcode to build with}"
+: "${HMUX_CI_XCODE_APP:?HMUX_CI_XCODE_APP names the Xcode to build with}"
 
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 workspace="$(git rev-parse --show-toplevel)"
@@ -46,29 +46,29 @@ cd "$workspace"
 head="$(git rev-parse HEAD)"
 
 if [ "$root_number" = 1 ]; then
-  root=/private/tmp/cmux-ci
+  root=/private/tmp/hmux-ci
   store="$state"
 else
-  root="/private/tmp/cmux-ci-$root_number"
-  store="$state/cmux-ci-$root_number"
+  root="/private/tmp/hmux-ci-$root_number"
+  store="$state/hmux-ci-$root_number"
 fi
-export CMUX_CI_CANONICAL_ROOT="$root"
-export CMUX_CI_CANONICAL_SRC="$root/src"
-export CMUX_COMPILE_ADMISSION_DERIVED_DATA="$root/derived-data-compile-admission"
-export CMUX_COMPILE_ADMISSION_CAS="$root/compile-admission-cas"
-export CMUX_SKIP_ZIG_BUILD=1
-export CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26
-export CMUX_CI_SKIP_XCODE_SELECT=1
+export HMUX_CI_CANONICAL_ROOT="$root"
+export HMUX_CI_CANONICAL_SRC="$root/src"
+export HMUX_COMPILE_ADMISSION_DERIVED_DATA="$root/derived-data-compile-admission"
+export HMUX_COMPILE_ADMISSION_CAS="$root/compile-admission-cas"
+export HMUX_SKIP_ZIG_BUILD=1
+export HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26
+export HMUX_CI_SKIP_XCODE_SELECT=1
 export CI=true  # as in a job: build phases read it (a missing cargo fails the Nucleo FFI build instead of skipping)
 # The seed key's runner fields, as compile admission sees them on an owned mini.
 export RUNNER_OS=macOS RUNNER_ARCH=ARM64
-export CMUX_SEED_GIT_DIR="$workspace/.git"
-export CMUX_SEED_LOCAL_CACHE="$store/seeds"
+export HMUX_SEED_GIT_DIR="$workspace/.git"
+export HMUX_SEED_LOCAL_CACHE="$store/seeds"
 export CI_CACHE_R2_PUBLIC_URL="${CI_CACHE_R2_PUBLIC_URL:-https://ci-cache.cmux.com}"
 unset GITHUB_ENV GITHUB_OUTPUT GITHUB_REPOSITORY GH_TOKEN GITHUB_TOKEN
 export PATH="$HOME/.cargo/bin:/opt/homebrew/bin:/usr/local/bin:$PATH"
-dd="$CMUX_COMPILE_ADMISSION_DERIVED_DATA"
-log="${CMUX_CATCH_UP_LOG:-/dev/null}"
+dd="$HMUX_COMPILE_ADMISSION_DERIVED_DATA"
+log="${HMUX_CATCH_UP_LOG:-/dev/null}"
 
 started="$(date +%s)"
 phase=setup
@@ -92,9 +92,9 @@ last_json() { grep '^{' | tail -n 1; }
 forget_inode_override() { defaults delete com.apple.dt.XCBuild IgnoreFileSystemDeviceInodeChanges >/dev/null 2>&1 || true; }
 forget_inode_override
 
-scripts/ci/clear-dirs.sh "$dd" "$CMUX_COMPILE_ADMISSION_CAS" >>"$log" 2>&1 || fail "clear"
-CMUX_CI_XCODE_APP="$CMUX_CI_XCODE_APP" ./scripts/select-ci-xcode.sh >>"$log" 2>&1 || fail "select-ci-xcode"
-export DEVELOPER_DIR="$CMUX_CI_XCODE_APP/Contents/Developer"
+scripts/ci/clear-dirs.sh "$dd" "$HMUX_COMPILE_ADMISSION_CAS" >>"$log" 2>&1 || fail "clear"
+HMUX_CI_XCODE_APP="$HMUX_CI_XCODE_APP" ./scripts/select-ci-xcode.sh >>"$log" 2>&1 || fail "select-ci-xcode"
+export DEVELOPER_DIR="$HMUX_CI_XCODE_APP/Contents/Developer"
 ./scripts/install-rust-ci.sh >>"$log" 2>&1 || fail "install-rust-ci"
 
 phase=check
@@ -116,7 +116,7 @@ GHOSTTYKIT_ARCHIVE_CACHE_DIR="$state/ghosttykit-archives" ./scripts/download-pre
   || fail "ghosttykit"
 python3 scripts/ci/sanitize-xcode-source-packages-cache.py .ci-source-packages >>"$log" 2>&1 || fail "sanitize"
 scripts/ci/clear-dirs.sh "$dd" >>"$log" 2>&1 || fail "clear"
-CMUX_CI_MOVE_SOURCE_PACKAGES=1 scripts/ci/compile-app-host-test-product.sh canonical-resolve \
+HMUX_CI_MOVE_SOURCE_PACKAGES=1 scripts/ci/compile-app-host-test-product.sh canonical-resolve \
   "$dd" "$workspace/.ci-source-packages" >>"$log" 2>&1 || fail "resolve"
 
 phase=adopt
@@ -124,28 +124,28 @@ trap forget_inode_override EXIT
 trap 'forget_inode_override; exit 143' TERM INT HUP
 seed_hit=false
 if [ "$warm" != true ] || [ "$prefer" = true ]; then
-  seeded="$(CMUX_SEED_EXACT="$seed_key" python3 scripts/ci/seed_derived_data.py adopt "$CMUX_CI_CANONICAL_SRC" "$dd" \
+  seeded="$(HMUX_SEED_EXACT="$seed_key" python3 scripts/ci/seed_derived_data.py adopt "$HMUX_CI_CANONICAL_SRC" "$dd" \
     "admission-derived-data-v1-$RUNNER_OS-$RUNNER_ARCH-$fingerprint-" "$head" 2>>"$log" | last_json)" || seeded='{}'
   seed_hit="$(field "$seeded" hit)"
   [ "$seed_hit" = true ] && adopted="seed:$(field "$seeded" key)"
 fi
 if [ "$warm" = true ] && [ "$seed_hit" != true ]; then
-  python3 scripts/ci/owned_build_state.py adopt "$store" "$dd" "$CMUX_CI_CANONICAL_SRC" >>"$log" 2>&1 \
+  python3 scripts/ci/owned_build_state.py adopt "$store" "$dd" "$HMUX_CI_CANONICAL_SRC" >>"$log" 2>&1 \
     && adopted=kept
 fi
-python3 scripts/ci/owned_build_state.py record "$CMUX_CI_CANONICAL_SRC" "$dd" >>"$log" 2>&1 || fail "record"
+python3 scripts/ci/owned_build_state.py record "$HMUX_CI_CANONICAL_SRC" "$dd" >>"$log" 2>&1 || fail "record"
 
 phase=build
 status=0
 # Its output goes to the log once: the 4th argument would tee the same lines there again.
 scripts/ci/compile-app-host-test-product.sh canonical-build "$dd" "$workspace/.ci-source-packages" \
-  "$CMUX_COMPILE_ADMISSION_CAS" /dev/null >>"$log" 2>&1 || status=$?
+  "$HMUX_COMPILE_ADMISSION_CAS" /dev/null >>"$log" 2>&1 || status=$?
 forget_inode_override
 [ "$status" = 0 ] || fail "compile exit $status"
 
 phase=keep
 python3 scripts/ci/owned_build_state.py keep "$store" "$dd" "$fingerprint" "$head" >>"$log" 2>&1 || fail "keep"
-python3 scripts/ci/owned_build_state.py save "$store" "$CMUX_CI_CANONICAL_SRC/.ci-source-packages" "$workspace" \
+python3 scripts/ci/owned_build_state.py save "$store" "$HMUX_CI_CANONICAL_SRC/.ci-source-packages" "$workspace" \
   "$state" >>"$log" 2>&1 || true
 phase=done
 result true "kept main's head"

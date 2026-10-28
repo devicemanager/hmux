@@ -2,7 +2,7 @@ import Foundation
 
 /// Errors raised while talking to a remote tmux server over SSH.
 enum RemoteTmuxError: Error, Sendable, Equatable {
-    /// The `ssh` (or remote) command exited non-zero for a reason cmux does
+    /// The `ssh` (or remote) command exited non-zero for a reason hmux does
     /// not treat as benign. Carries the exit code and captured stderr.
     case commandFailed(exitCode: Int32, stderr: String)
 
@@ -12,7 +12,7 @@ enum RemoteTmuxError: Error, Sendable, Equatable {
     /// The remote host is not reachable / the SSH master could not be opened.
     case unreachable(String)
 
-    /// cmux could not create the local window requested for a dedicated mirror.
+    /// hmux could not create the local window requested for a dedicated mirror.
     case windowCreationFailed
 
     /// The remote tmux is older than ``RemoteTmuxVersion/minimumSupported``, so the
@@ -21,10 +21,10 @@ enum RemoteTmuxError: Error, Sendable, Equatable {
     /// string for the message.
     case unsupportedTmux(detected: String)
 
-    /// The remote host has no tmux binary anywhere cmux's resolver probes.
+    /// The remote host has no tmux binary anywhere hmux's resolver probes.
     case tmuxNotFound(destination: String)
 
-    /// The connection is waiting for credentials cmux cannot supply. Distinct from
+    /// The connection is waiting for credentials hmux cannot supply. Distinct from
     /// ``unreachable`` on purpose: the host answered, and telling the user to check the network
     /// sends them to the wrong place. Carries the destination for the message.
     case authenticationRequired(String)
@@ -76,12 +76,12 @@ extension RemoteTmuxError {
         case .windowCreationFailed:
             return String(
                 localized: "remoteTmux.error.windowCreationFailed",
-                defaultValue: "cmux could not create a new window"
+                defaultValue: "hmux could not create a new window"
             )
         case let .unsupportedTmux(detected):
             let format = String(
                 localized: "remoteTmux.error.unsupportedVersion",
-                defaultValue: "remote session server is too old (found %@; cmux needs version %@ or newer)"
+                defaultValue: "remote session server is too old (found %@; hmux needs version %@ or newer)"
             )
             return String(
                 format: format,
@@ -91,13 +91,13 @@ extension RemoteTmuxError {
         case let .authenticationRequired(detail):
             let format = String(
                 localized: "remoteTmux.error.authenticationRequired",
-                defaultValue: "%@ asked for credentials and cmux has nowhere to type them. Log in to the host, then try again."
+                defaultValue: "%@ asked for credentials and hmux has nowhere to type them. Log in to the host, then try again."
             )
             return String(format: format, Self.sanitizedDetail(detail))
         case let .tmuxNotFound(destination):
             let format = String(
                 localized: "remoteTmux.error.tmuxNotFound",
-                defaultValue: "tmux was not found on %@. cmux ssh-tmux mirrors a remote tmux server (tmux %@ or newer required).\nInstall it on the host: brew install tmux (macOS), apt install tmux (Debian/Ubuntu), dnf install tmux (Fedora)."
+                defaultValue: "tmux was not found on %@. hmux ssh-tmux mirrors a remote tmux server (tmux %@ or newer required).\nInstall it on the host: brew install tmux (macOS), apt install tmux (Debian/Ubuntu), dnf install tmux (Fedora)."
             )
             return String(
                 format: format,

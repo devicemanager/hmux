@@ -1,6 +1,6 @@
-# Public App Store iOS app identity. Beta dogfood ships under dev.cmux.app.beta;
+# Public App Store iOS app identity. Beta dogfood ships under dev.hmux.app.beta;
 # this is the public listing.
-app_identifier("com.cmux.app")
+app_identifier("com.hmux.app")
 itc_team_id("7WLXT3NR37") # Manaflow, Inc. (App Store Connect / dev team)
 team_id("7WLXT3NR37")
 

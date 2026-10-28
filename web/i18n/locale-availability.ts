@@ -63,12 +63,12 @@ const fallbackContentRoutes = [
     path: "/blog/367-billion-tokens",
     locales: fallbackContentLocales,
   },
-  { path: "/blog/cmux-ssh", locales: fallbackContentLocales },
+  { path: "/blog/hmux-ssh", locales: fallbackContentLocales },
   {
-    path: "/blog/cmux-claude-teams",
+    path: "/blog/hmux-claude-teams",
     locales: englishFallbackContentLocales,
   },
-  { path: "/blog/cmux-omo", locales: englishFallbackContentLocales },
+  { path: "/blog/hmux-omo", locales: englishFallbackContentLocales },
   { path: "/blog/gpl", locales: englishFallbackContentLocales },
 ] as const;
 

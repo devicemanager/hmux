@@ -4,7 +4,7 @@ import { API_TICKET_SECONDS, canonicalJSON, decodeBase64URL, encodeBase64URL, hm
 import { OperationError } from "./errors";
 import { AuthoritySchema } from "./routing";
 
-export const DASHBOARD_AUTHORITY_HEADER = "x-cmux-v2-dashboard-authority";
+export const DASHBOARD_AUTHORITY_HEADER = "x-hmux-v2-dashboard-authority";
 
 export const DashboardAuthoritySchema = z.strictObject({
   authority: AuthoritySchema,
@@ -13,7 +13,7 @@ export const DashboardAuthoritySchema = z.strictObject({
   canManageTeam: z.boolean(),
 });
 export const DashboardClaimsSchema = DashboardAuthoritySchema.extend({
-  version: z.literal(2), audience: z.literal("cmux-iroh-dashboard-v2"),
+  version: z.literal(2), audience: z.literal("hmux-iroh-dashboard-v2"),
   expiresAt: timestamp, keyId: identifier,
 });
 export type DashboardAuthority = z.infer<typeof DashboardAuthoritySchema>;
@@ -22,7 +22,7 @@ const encoder = new TextEncoder();
 
 /** Domain-separated browser authority. It conveys no native endpoint proof. */
 export async function issueDashboardTicket(session: DashboardAuthority, keyId: string, secret: string) {
-  const claims = DashboardClaimsSchema.parse({ ...session, version: 2, audience: "cmux-iroh-dashboard-v2",
+  const claims = DashboardClaimsSchema.parse({ ...session, version: 2, audience: "hmux-iroh-dashboard-v2",
     expiresAt: session.authority.verifiedAt + API_TICKET_SECONDS, keyId });
   const body = encodeBase64URL(encoder.encode(canonicalJSON(claims)));
   const signature = await crypto.subtle.sign("HMAC", await hmacKey(secret, "sign"), encoder.encode(body));

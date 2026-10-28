@@ -1,11 +1,11 @@
-# cmux iOS App Store Review Package
+# hmux iOS App Store Review Package
 
 This package is the source of truth for production iOS App Store submission
 readiness. Keep it separate from the TestFlight beta lane.
 
 ## Production Lane
 
-The official cmux iOS App Store Connect app is Apple ID `6783338052`.
+The official hmux iOS App Store Connect app is Apple ID `6783338052`.
 
 Upload a production App Store Connect build:
 
@@ -21,11 +21,11 @@ ios/scripts/upload-app-store.sh --export-only
 
 Defaults:
 
-- Bundle ID: `com.cmux.app`
-- Marketing version: `CMUX_IOS_APPSTORE_MARKETING_VERSION` in `ios/Config/Shared.xcconfig`
-- Display name: `cmux`
-- Provisioning profile: `cmux App Store Distribution`
-- Entitlements: `Config/cmux-appstore-release.entitlements` (VPN-free App Store build; beta keeps `Config/cmux-release.entitlements`)
+- Bundle ID: `com.hmux.app`
+- Marketing version: `HMUX_IOS_APPSTORE_MARKETING_VERSION` in `ios/Config/Shared.xcconfig`
+- Display name: `hmux`
+- Provisioning profile: `hmux App Store Distribution`
+- Entitlements: `Config/hmux-appstore-release.entitlements` (VPN-free App Store build; beta keeps `Config/hmux-release.entitlements`)
 - Review submission: not automatic
 
 The beta lane remains:

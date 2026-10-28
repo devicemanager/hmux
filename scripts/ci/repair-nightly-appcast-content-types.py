@@ -27,7 +27,7 @@ def request(args, method, body=b"", headers=None):
 
 def repair(endpoint_url, execute=False):
     for name in APPCASTS:
-        args = argparse.Namespace(endpoint_url=endpoint_url, bucket="cmux-binaries", key=f"nightly/{name}",
+        args = argparse.Namespace(endpoint_url=endpoint_url, bucket="hmux-binaries", key=f"nightly/{name}",
                                   content_type="application/xml", cache_control="")
         body, original = request(args, "GET")
         if ET.fromstring(body).tag != "rss":

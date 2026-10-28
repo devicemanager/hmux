@@ -1,5 +1,5 @@
 import AppKit
-import CmuxHomeCore
+import HmuxHomeCore
 
 extension AppDelegate {
     /// Opens the selected Chief conversation in the active window's movable

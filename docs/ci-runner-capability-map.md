@@ -8,14 +8,14 @@ This is foundation only. One workflow is wired to it
 and [`ci-runners.md`](ci-runners.md) remains the live contract for them.
 A job wired to the map stops reading its old variable: `ios-app-store.yml`'s
 upload no longer follows `MACOS_RUNNER_IOS`, so moving it takes
-`CMUX_CI_RUNNER_OVERRIDES` or `CMUX_CI_RUNNER_FLEET` instead.
+`HMUX_CI_RUNNER_OVERRIDES` or `HMUX_CI_RUNNER_FLEET` instead.
 [PR #14010](https://github.com/manaflow-ai/cmux/pull/14010) argues the general
 case for capability routing; this is the translation layer that proposal calls
 irreducible, built small enough to use.
 
 ## What a fork gets
 
-A fork of cmux cannot run macOS or Linux CI today. Blacksmith is an
+A fork of hmux cannot run macOS or Linux CI today. Blacksmith is an
 organization-level GitHub App, so a fork on a personal account has no
 Blacksmith access — and a `blacksmith-*` label there does not fail. The job
 sits `queued` indefinitely and holds the workflow's concurrency group while it
@@ -38,7 +38,7 @@ The hosted fleet is a working fleet, not an identical one. `macos_26`,
 image, which has the OS but not the 12 vCPU size. `macos-26` is also a label
 the self-hosted mini fleet carries, which is why workflows in manaflow-ai may
 not name it; the map only hands it to other owners, where no runner carries
-that label (the one on teamleaderleo/cmux is labelled `cmux-local-mac`).
+that label (the one on teamleaderleo/hmux is labelled `hmux-local-mac`).
 
 The resolver job itself runs on `ubuntu-24.04`, never on a mapped label, so it
 starts on any owner before anything is resolved.
@@ -100,8 +100,8 @@ Two repository variables, both read as plain strings:
 
 | Variable | Effect |
 | --- | --- |
-| `CMUX_CI_RUNNER_FLEET` | force a declared fleet, e.g. `hosted`, for the whole repository |
-| `CMUX_CI_RUNNER_OVERRIDES` | a JSON object of capability → label, e.g. `{"macos_26":"macos-15"}` |
+| `HMUX_CI_RUNNER_FLEET` | force a declared fleet, e.g. `hosted`, for the whole repository |
+| `HMUX_CI_RUNNER_OVERRIDES` | a JSON object of capability → label, e.g. `{"macos_26":"macos-15"}` |
 
 Neither is ever read with `fromJSON(vars.X)` in a workflow expression.
 `fromJSON()` on an unset repository variable evaluates `fromJSON('')`, which

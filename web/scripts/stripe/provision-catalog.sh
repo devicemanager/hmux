@@ -4,12 +4,12 @@ set -euo pipefail
 MODE="${1:-}"
 case "$MODE" in
   live)
-    SECRET_FILE="${HOME}/.secrets/cmux-stripe-live.env"
+    SECRET_FILE="${HOME}/.secrets/hmux-stripe-live.env"
     KEY_NAME="STRIPE_LIVE_PROVISION_KEY"
     KEY_PREFIX="live"
     ;;
   test)
-    SECRET_FILE="${HOME}/.secrets/cmux-stripe-test.env"
+    SECRET_FILE="${HOME}/.secrets/hmux-stripe-test.env"
     KEY_NAME="STRIPE_TEST_PROVISION_KEY"
     KEY_PREFIX="test"
     ;;
@@ -21,7 +21,7 @@ esac
 
 STRIPE_API_BASE="https://api.stripe.com/v1"
 WEBHOOK_URL="https://cmux.com/api/stripe/webhook"
-WEBHOOK_DESCRIPTION="cmux billing (webhook-driven entitlements)"
+WEBHOOK_DESCRIPTION="hmux billing (webhook-driven entitlements)"
 EVENTS=(
   "checkout.session.completed"
   "checkout.session.async_payment_succeeded"
@@ -100,7 +100,7 @@ product_matches_catalog_identity() {
     '
       .name == $name
       and .active == true
-      and .metadata.app == "cmux"
+      and .metadata.app == "hmux"
       and .metadata.plan == $plan
     ' <<<"$product_json" >/dev/null
 }
@@ -116,7 +116,7 @@ ensure_product() {
   while :; do
     page_args=(
       --data-urlencode "limit=100"
-      --data-urlencode "query=active:'true' AND metadata['app']:'cmux' AND metadata['plan']:'${plan}'"
+      --data-urlencode "query=active:'true' AND metadata['app']:'hmux' AND metadata['plan']:'${plan}'"
     )
     if [[ -n "$next_page" ]]; then
       page_args+=(--data-urlencode "page=${next_page}")
@@ -131,7 +131,7 @@ ensure_product() {
         | select(
             .name == $name
             and .active == true
-            and .metadata.app == "cmux"
+            and .metadata.app == "hmux"
             and .metadata.plan == $plan
           )
         | .id
@@ -159,7 +159,7 @@ ensure_product() {
     response="$(
       stripe_post "/products" \
         --data-urlencode "name=${name}" \
-        --data-urlencode "metadata[app]=cmux" \
+        --data-urlencode "metadata[app]=hmux" \
         --data-urlencode "metadata[plan]=${plan}"
     )"
     product_id="$(jq -er '.id' <<<"$response")"
@@ -301,7 +301,7 @@ ensure_personal_plan_switch_portal() {
     page_ids="$(
       jq -r '
         .data[]
-        | select(.metadata.app == "cmux" and .metadata.purpose == "personal_plan_switch")
+        | select(.metadata.app == "hmux" and .metadata.purpose == "personal_plan_switch")
         | .id
       ' <<<"$response"
     )"
@@ -320,9 +320,9 @@ ensure_personal_plan_switch_portal() {
   configuration_id="${matching_ids[0]:-}"
 
   local pro_monthly_price_id max_monthly_price_id max_yearly_price_id
-  pro_monthly_price_id="$(price_id_for_lookup_key "cmux-pro-monthly-50")"
-  max_monthly_price_id="$(price_id_for_lookup_key "cmux-max-monthly-200")"
-  max_yearly_price_id="$(price_id_for_lookup_key "cmux-max-yearly-1920")"
+  pro_monthly_price_id="$(price_id_for_lookup_key "hmux-pro-monthly-50")"
+  max_monthly_price_id="$(price_id_for_lookup_key "hmux-max-monthly-200")"
+  max_yearly_price_id="$(price_id_for_lookup_key "hmux-max-yearly-1920")"
   local -a feature_args=(
     -d "features[subscription_update][enabled]=true"
     -d "features[subscription_update][default_allowed_updates][]=price"
@@ -366,7 +366,7 @@ ensure_personal_plan_switch_portal() {
   fi
   response="$(
     stripe_post "/billing_portal/configurations" \
-      -d "metadata[app]=cmux" \
+      -d "metadata[app]=hmux" \
       -d "metadata[purpose]=personal_plan_switch" \
       "${feature_args[@]}"
   )"
@@ -375,13 +375,13 @@ ensure_personal_plan_switch_portal() {
 }
 
 echo "Resolving ${MODE} Stripe catalog…" >&2
-pro_product_id="$(canonical_product "cmux-pro-monthly" "cmux Pro" "pro")"
+pro_product_id="$(canonical_product "hmux-pro-monthly" "hmux Pro" "pro")"
 echo "Resolved Pro product." >&2
-go_product_id="$(canonical_product "cmux-go-monthly-10" "cmux Go" "go")"
+go_product_id="$(canonical_product "hmux-go-monthly-10" "hmux Go" "go")"
 echo "Resolved Go product." >&2
-max_product_id="$(canonical_product "cmux-max-monthly-200" "cmux Max" "max")"
+max_product_id="$(canonical_product "hmux-max-monthly-200" "hmux Max" "max")"
 echo "Resolved Max product." >&2
-team_product_id="$(canonical_product "cmux-team-monthly" "cmux Team" "team")"
+team_product_id="$(canonical_product "hmux-team-monthly" "hmux Team" "team")"
 echo "Resolved Team product." >&2
 
 # Checkout shows the product description. Keep it on the plan limits in
@@ -396,33 +396,33 @@ ensure_product_description() {
     --data-urlencode "description=${description}" >/dev/null
   echo "Set description for ${product_id}." >&2
 }
-ensure_product_description "$pro_product_id" "Up to 5 Cloud VMs sharing 20 vCPUs and 40 GB RAM, plus the cmux iOS app."
+ensure_product_description "$pro_product_id" "Up to 5 Cloud VMs sharing 20 vCPUs and 40 GB RAM, plus the hmux iOS app."
 ensure_product_description "$max_product_id" "Everything in Pro, with up to 5 Cloud VMs sharing 80 vCPUs and 160 GB RAM."
-ensure_product_description "$team_product_id" "Up to 5 Cloud VMs per paid seat, sharing 20 vCPUs and 40 GB RAM per paid seat across the team, plus the cmux iOS app and priority support."
+ensure_product_description "$team_product_id" "Up to 5 Cloud VMs per paid seat, sharing 20 vCPUs and 40 GB RAM per paid seat across the team, plus the hmux iOS app and priority support."
 
 # Current catalog (web/services/billing/plans.ts). Stripe Price amounts are
 # immutable, so each price change mints a new lookup key carrying the amount.
-ensure_price "$pro_product_id" "cmux-pro-monthly-50" "5000" "month" "cmux Pro Monthly"
-# Go is monthly only. Its included VM-hours are enforced by cmux, not Stripe.
-ensure_price "$go_product_id" "cmux-go-monthly-10" "1000" "month" "cmux Go Monthly"
+ensure_price "$pro_product_id" "hmux-pro-monthly-50" "5000" "month" "hmux Pro Monthly"
+# Go is monthly only. Its included VM-hours are enforced by hmux, not Stripe.
+ensure_price "$go_product_id" "hmux-go-monthly-10" "1000" "month" "hmux Go Monthly"
 # Max is sold monthly or yearly at the same 20% annual discount as Pro.
-ensure_price "$max_product_id" "cmux-max-monthly-200" "20000" "month" "cmux Max Monthly"
-ensure_price "$max_product_id" "cmux-max-yearly-1920" "192000" "year" "cmux Max Yearly"
-ensure_price "$team_product_id" "cmux-team-monthly-60" "6000" "month" "cmux Team Monthly"
+ensure_price "$max_product_id" "hmux-max-monthly-200" "20000" "month" "hmux Max Monthly"
+ensure_price "$max_product_id" "hmux-max-yearly-1920" "192000" "year" "hmux Max Yearly"
+ensure_price "$team_product_id" "hmux-team-monthly-60" "6000" "month" "hmux Team Monthly"
 # Grandfathered Prices stay active for the subscriptions already on them
 # (LEGACY_PRICE_LOOKUP_KEYS); no new checkout may use these keys.
-ensure_price "$pro_product_id" "cmux-pro-monthly" "3000" "month" "cmux Pro Monthly (Legacy \$30)"
-ensure_price "$pro_product_id" "cmux-pro-yearly" "24000" "year" "cmux Pro Yearly (Legacy \$240)"
-ensure_price "$pro_product_id" "cmux-pro-yearly-288" "28800" "year" "cmux Pro Yearly (Legacy \$288)"
-ensure_price "$team_product_id" "cmux-team-monthly" "3500" "month" "cmux Team Monthly (Legacy \$35)"
-ensure_price "$team_product_id" "cmux-team-yearly-336" "33600" "year" "cmux Team Yearly (Legacy \$336)"
+ensure_price "$pro_product_id" "hmux-pro-monthly" "3000" "month" "hmux Pro Monthly (Legacy \$30)"
+ensure_price "$pro_product_id" "hmux-pro-yearly" "24000" "year" "hmux Pro Yearly (Legacy \$240)"
+ensure_price "$pro_product_id" "hmux-pro-yearly-288" "28800" "year" "hmux Pro Yearly (Legacy \$288)"
+ensure_price "$team_product_id" "hmux-team-monthly" "3500" "month" "hmux Team Monthly (Legacy \$35)"
+ensure_price "$team_product_id" "hmux-team-yearly-336" "33600" "year" "hmux Team Yearly (Legacy \$336)"
 
 # Pro and Max are sold yearly at 20% off their monthly prices.
-ensure_price "$pro_product_id" "cmux-pro-yearly-480" "48000" "year" "cmux Pro Yearly"
+ensure_price "$pro_product_id" "hmux-pro-yearly-480" "48000" "year" "hmux Pro Yearly"
 
 # Retired annual offer; valid for existing subscribers only, never advertised
 # as a checkout or portal switch target.
-ensure_price "$team_product_id" "cmux-team-yearly-576" "57600" "year" "cmux Team Yearly (Legacy \$576)"
+ensure_price "$team_product_id" "hmux-team-yearly-576" "57600" "year" "hmux Team Yearly (Legacy \$576)"
 
 ensure_personal_plan_switch_portal "$pro_product_id" "$max_product_id"
 
@@ -483,7 +483,7 @@ if [[ "$MODE" == "live" ]]; then
     webhook_id="$(jq -er '.id' <<<"$webhook_response")"
     webhook_secret="$(jq -er '.secret' <<<"$webhook_response")"
     umask 077
-    webhook_secret_file="$(mktemp "${TMPDIR:-/tmp}/cmux-live-whsec.XXXXXX")"
+    webhook_secret_file="$(mktemp "${TMPDIR:-/tmp}/hmux-live-whsec.XXXXXX")"
     printf '%s\n' "$webhook_secret" >"$webhook_secret_file"
     chmod 600 "$webhook_secret_file"
     echo "Created webhook endpoint: $webhook_id"
@@ -493,7 +493,7 @@ if [[ "$MODE" == "live" ]]; then
   cat <<'EOF'
 
 Vercel production env commands
-Run these from a checkout linked to the cmux Vercel project:
+Run these from a checkout linked to the hmux Vercel project:
 
   vercel env add STRIPE_SECRET_KEY production --scope manaflow
   vercel env add STRIPE_WEBHOOK_SECRET production --scope manaflow

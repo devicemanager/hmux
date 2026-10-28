@@ -7,7 +7,7 @@ describe("billing success routing", () => {
   test("keeps the Stripe URL while rendering through the localized dashboard route", () => {
     const response = middleware(
       new NextRequest(
-        "https://cmux.test/billing/success?session_id=cs_123&cmux_scheme=cmux-nightly",
+        "https://hmux.test/billing/success?session_id=cs_123&hmux_scheme=hmux-nightly",
         { headers: { "accept-language": "ja" } },
       ),
     );
@@ -17,7 +17,7 @@ describe("billing success routing", () => {
     const rewritten = new URL(response.headers.get("x-middleware-rewrite")!);
     expect(rewritten.pathname).toBe("/ja/dashboard/billing/success");
     expect(rewritten.search).toBe(
-      "?session_id=cs_123&cmux_scheme=cmux-nightly",
+      "?session_id=cs_123&hmux_scheme=hmux-nightly",
     );
     expect(
       response.headers.get("x-middleware-request-x-next-intl-locale"),
@@ -26,7 +26,7 @@ describe("billing success routing", () => {
 
   test("keeps the public Founder recovery URL while localizing its page", () => {
     const response = middleware(
-      new NextRequest("https://cmux.test/billing/recover", {
+      new NextRequest("https://hmux.test/billing/recover", {
         headers: { "accept-language": "ja" },
       }),
     );

@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 import Foundation
 
 /// Executes one synchronous pasteboard preparation in an isolated subprocess.

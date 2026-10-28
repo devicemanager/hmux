@@ -6,7 +6,7 @@ import type { MobileObservabilityEvent } from "../services/observability/mobileN
 import { feedPerformanceWindow } from "./fixtures/mobile-feed-performance";
 
 const originalVercel = process.env.VERCEL;
-const originalRuleId = process.env.CMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID;
+const originalRuleId = process.env.HMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID;
 
 let authenticatedUser: { readonly id: string } | null = { id: "user-7" };
 let authError: unknown = null;
@@ -38,7 +38,7 @@ const POST = makeMobileNetworkOutcomeHandler({
 
 beforeEach(() => {
   delete process.env.VERCEL;
-  process.env.CMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID = "mobile-observability-test";
+  process.env.HMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID = "mobile-observability-test";
   authenticatedUser = { id: "user-7" };
   authError = null;
   emitError = null;
@@ -51,7 +51,7 @@ beforeEach(() => {
 
 afterAll(() => {
   restoreEnv("VERCEL", originalVercel);
-  restoreEnv("CMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID", originalRuleId);
+  restoreEnv("HMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID", originalRuleId);
 });
 
 describe("iOS mobile network observability route", () => {
@@ -497,7 +497,7 @@ describe("iOS mobile network observability route", () => {
     process.env.VERCEL = "1";
     rateLimitResult = { rateLimited: true };
 
-    const response = await POST(new Request("https://cmux.test/api/observability/mobile-network", {
+    const response = await POST(new Request("https://hmux.test/api/observability/mobile-network", {
       method: "POST",
       body: "{not-json",
     }));
@@ -564,7 +564,7 @@ describe("iOS mobile network observability route", () => {
 
   test("fails closed when deployed rate limiting is unconfigured", async () => {
     process.env.VERCEL = "1";
-    delete process.env.CMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID;
+    delete process.env.HMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID;
 
     const response = await POST(outcomeRequest([
       outcome({ phase: "rpc_ready", outcome: "success", duration_ms: 10 }),
@@ -590,7 +590,7 @@ function outcome(
       platform: "ios",
       app_version: "1.2.3",
       build_number: "456",
-      bundle_identifier: "dev.cmux.ios.axnet",
+      bundle_identifier: "dev.hmux.ios.axnet",
       os_version: "26.0",
       device_model: "iPhone",
       ...properties,
@@ -599,7 +599,7 @@ function outcome(
 }
 
 function outcomeRequest(batch: readonly Record<string, unknown>[]): Request {
-  return new Request("https://cmux.test/api/observability/mobile-network", {
+  return new Request("https://hmux.test/api/observability/mobile-network", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ batch }),

@@ -1,15 +1,15 @@
 import AppKit
-import CmuxFoundation
-import CmuxWorkspaces
+import HmuxFoundation
+import HmuxWorkspaces
 import SwiftUI
 
 struct ConfigSettingsView: View {
     static let windowID = "config-editor"
 
-    @State private var configSource: ConfigSource = .cmux
+    @State private var configSource: ConfigSource = .hmux
     @State private var snapshots: [ConfigSource: ConfigSourceSnapshot] = [:]
-    @State private var cmuxDraft = ""
-    @State private var cmuxLastLoadedContents = ""
+    @State private var hmuxDraft = ""
+    @State private var hmuxLastLoadedContents = ""
     @State private var statusMessage = ""
     @State private var statusIsError = false
 
@@ -17,27 +17,27 @@ struct ConfigSettingsView: View {
         snapshots[configSource] ?? configSource.snapshot(environment: .live())
     }
 
-    private var hasUnsavedCmuxChanges: Bool {
-        cmuxDraft != cmuxLastLoadedContents
+    private var hasUnsavedHmuxChanges: Bool {
+        hmuxDraft != hmuxLastLoadedContents
     }
 
     private var currentBannerText: String? {
         switch configSource {
-        case .cmux:
+        case .hmux:
             return String(
-                localized: "settings.config.banner.cmux",
-                defaultValue: "This is the cmux Ghostty config selected for this build. Edit it here, then Save to reload cmux."
+                localized: "settings.config.banner.hmux",
+                defaultValue: "This is the hmux Ghostty config selected for this build. Edit it here, then Save to reload hmux."
             )
         case .synced:
             if currentSnapshot.hasStandaloneGhosttyConfig {
                 return String(
                     localized: "settings.config.banner.synced",
-                    defaultValue: "This is a generated preview of the effective config. Edit the cmux tab to change what cmux reads."
+                    defaultValue: "This is a generated preview of the effective config. Edit the hmux tab to change what hmux reads."
                 )
             }
             return String(
                 localized: "settings.config.banner.syncedNoGhostty",
-                defaultValue: "This is a generated preview of the effective config. No base Ghostty config file was found, so only cmux overrides are shown."
+                defaultValue: "This is a generated preview of the effective config. No base Ghostty config file was found, so only hmux overrides are shown."
             )
         }
     }
@@ -65,7 +65,7 @@ struct ConfigSettingsView: View {
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(currentSnapshot.displayPaths, id: \.self) { path in
                     Text(verbatim: path)
-                        .cmuxFont(size: 12, weight: .regular, design: .monospaced)
+                        .hmuxFont(size: 12, weight: .regular, design: .monospaced)
                         .foregroundStyle(.secondary)
                         .copyOnlyTextSelection(for: path)
                 }
@@ -77,11 +77,11 @@ struct ConfigSettingsView: View {
             }
 
             Group {
-                if configSource == .cmux {
-                    ConfigSettingsTextView(text: $cmuxDraft, isEditable: true)
+                if configSource == .hmux {
+                    ConfigSettingsTextView(text: $hmuxDraft, isEditable: true)
                         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
                         .background(editorBackground)
-                        .accessibilityIdentifier("ConfigSettingsCmuxEditor")
+                        .accessibilityIdentifier("ConfigSettingsHmuxEditor")
                 } else {
                     ConfigSettingsTextView(text: .constant(currentSnapshot.contents), isEditable: false)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
@@ -99,7 +99,7 @@ struct ConfigSettingsView: View {
             HStack(spacing: 8) {
                 if !statusMessage.isEmpty {
                     Text(statusMessage)
-                        .cmuxFont(.caption)
+                        .hmuxFont(.caption)
                         .foregroundColor(statusIsError ? .red : .secondary)
                 }
 
@@ -124,11 +124,11 @@ struct ConfigSettingsView: View {
                 .controlSize(.small)
 
                 Button(String(localized: "settings.config.action.save", defaultValue: "Save")) {
-                    saveCmuxConfig()
+                    saveHmuxConfig()
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
-                .disabled(configSource != .cmux || !hasUnsavedCmuxChanges)
+                .disabled(configSource != .hmux || !hasUnsavedHmuxChanges)
             }
         }
         .padding(16)
@@ -140,14 +140,14 @@ struct ConfigSettingsView: View {
             }
         )
         .onAppear {
-            refreshSnapshots(preserveCmuxDraft: false)
+            refreshSnapshots(preserveHmuxDraft: false)
         }
         .onChange(of: configSource) { _ in
             statusMessage = ""
             statusIsError = false
         }
         .onReceive(NotificationCenter.default.publisher(for: .ghosttyConfigDidReload)) { _ in
-            refreshSnapshots(preserveCmuxDraft: true)
+            refreshSnapshots(preserveHmuxDraft: true)
         }
     }
 
@@ -177,19 +177,19 @@ struct ConfigSettingsView: View {
     }
 
     private func configureWindow(_ window: NSWindow) {
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.configEditor")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.configEditor")
         window.minSize = NSSize(width: 700, height: 500)
         window.tabbingMode = .disallowed
         window.animationBehavior = .utilityWindow
         // The Config editor is a top-level peer window, not a floating
         // inspector: clicking the main window must be able to raise it above
         // the editor (https://github.com/manaflow-ai/cmux/issues/5081).
-        window.adoptCmuxPeerWindowLevel()
+        window.adoptHmuxPeerWindowLevel()
         window.collectionBehavior.insert(.fullScreenAuxiliary)
     }
 
-    private func refreshSnapshots(preserveCmuxDraft: Bool) {
-        let wasDirty = hasUnsavedCmuxChanges
+    private func refreshSnapshots(preserveHmuxDraft: Bool) {
+        let wasDirty = hasUnsavedHmuxChanges
         let environment = ConfigSourceEnvironment.live()
         let newSnapshots = Dictionary(
             uniqueKeysWithValues: ConfigSource.allCases.map { source in
@@ -198,15 +198,15 @@ struct ConfigSettingsView: View {
         )
         snapshots = newSnapshots
 
-        let latestCmuxContents = newSnapshots[.cmux]?.contents ?? ""
-        if !preserveCmuxDraft || !wasDirty {
-            cmuxDraft = latestCmuxContents
+        let latestHmuxContents = newSnapshots[.hmux]?.contents ?? ""
+        if !preserveHmuxDraft || !wasDirty {
+            hmuxDraft = latestHmuxContents
         }
-        cmuxLastLoadedContents = latestCmuxContents
+        hmuxLastLoadedContents = latestHmuxContents
     }
 
     private func reloadFromDisk() {
-        refreshSnapshots(preserveCmuxDraft: false)
+        refreshSnapshots(preserveHmuxDraft: false)
         let completion: GhosttyApp.ConfigurationReloadCompletion = {
             statusMessage = String(
                 localized: "settings.config.status.reloaded",
@@ -234,20 +234,20 @@ struct ConfigSettingsView: View {
         }
     }
 
-    private func saveCmuxConfig() {
+    private func saveHmuxConfig() {
         let environment = ConfigSourceEnvironment.live()
 
         do {
-            try environment.writeCmuxConfigContents(cmuxDraft)
-            cmuxLastLoadedContents = cmuxDraft
-            refreshSnapshots(preserveCmuxDraft: true)
+            try environment.writeHmuxConfigContents(hmuxDraft)
+            hmuxLastLoadedContents = hmuxDraft
+            refreshSnapshots(preserveHmuxDraft: true)
             let completion:
                 GhosttyApp.ConfigurationReloadCompletion = {
                     statusMessage = String(
                         localized:
                             "settings.config.status.saved",
                         defaultValue:
-                            "Saved to cmux config and reloaded."
+                            "Saved to hmux config and reloaded."
                     )
                     statusIsError = false
                 }
@@ -272,7 +272,7 @@ struct ConfigSettingsView: View {
             NSSound.beep()
             statusMessage = String(
                 localized: "settings.config.status.saveFailed",
-                defaultValue: "Couldn't save the cmux config."
+                defaultValue: "Couldn't save the hmux config."
             )
             statusIsError = true
         }
@@ -289,12 +289,12 @@ struct ConfigSettingsView: View {
     }
 
     private func openCurrentSourceInEditor() {
-        guard let url = materializedCmuxConfigURL() else { return }
+        guard let url = materializedHmuxConfigURL() else { return }
         PreferredEditorService(defaults: .standard).open(url)
     }
 
     private func revealCurrentSourceInFinder() {
-        guard let url = materializedCmuxConfigURL() else { return }
+        guard let url = materializedHmuxConfigURL() else { return }
         if FileManager.default.fileExists(atPath: url.path) {
             NSWorkspace.shared.activateFileViewerSelecting([url])
         } else {
@@ -302,15 +302,15 @@ struct ConfigSettingsView: View {
         }
     }
 
-    private func materializedCmuxConfigURL() -> URL? {
+    private func materializedHmuxConfigURL() -> URL? {
         let environment = ConfigSourceEnvironment.live()
         do {
-            return try environment.materializeCmuxConfigFileIfNeeded()
+            return try environment.materializeHmuxConfigFileIfNeeded()
         } catch {
             NSSound.beep()
             statusMessage = String(
                 localized: "settings.config.status.openFailed",
-                defaultValue: "Couldn't open the cmux config."
+                defaultValue: "Couldn't open the hmux config."
             )
             statusIsError = true
             return nil
@@ -326,7 +326,7 @@ private struct ConfigSettingsBanner: View {
             Image(systemName: "info.circle")
                 .foregroundStyle(.secondary)
             Text(text)
-                .cmuxFont(.footnote)
+                .hmuxFont(.footnote)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -427,8 +427,8 @@ private struct ConfigSettingsTextView: NSViewRepresentable {
 private extension ConfigSource {
     var localizedTitle: String {
         switch self {
-        case .cmux:
-            return String(localized: "settings.config.source.cmux", defaultValue: "cmux")
+        case .hmux:
+            return String(localized: "settings.config.source.hmux", defaultValue: "hmux")
         case .synced:
             return String(localized: "settings.config.source.synced", defaultValue: "synced")
         }

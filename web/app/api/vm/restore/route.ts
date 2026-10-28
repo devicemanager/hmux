@@ -32,7 +32,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/restore",
-    { "cmux.vm.operation": "restore" },
+    { "hmux.vm.operation": "restore" },
     "/api/vm/restore POST failed",
     async ({ user: initialUser, span, authDurationMs, routeStartedAtMs, setResponseFinalizer }) => {
       const timing = new VmTimingRecorder(span, "restore", { startedAt: routeStartedAtMs });
@@ -61,7 +61,7 @@ export async function POST(request: Request): Promise<Response> {
           error: "vm_invalid_request",
           status: 400,
           message: "`snapshotId` is required.",
-          action: "Run `cmux vm snapshot <id>` first, then restore the printed snapshot id.",
+          action: "Run `hmux vm snapshot <id>` first, then restore the printed snapshot id.",
           details: { field: "snapshotId" },
         });
       }
@@ -102,9 +102,9 @@ export async function POST(request: Request): Promise<Response> {
       }
       const idempotencyKey = idempotencyKeyFromRequest(request);
       setSpanAttributes(span, {
-        "cmux.snapshot.id": snapshotId,
-        "cmux.vm.provider": provider,
-        "cmux.idempotency_key_set": !!idempotencyKey,
+        "hmux.snapshot.id": snapshotId,
+        "hmux.vm.provider": provider,
+        "hmux.idempotency_key_set": !!idempotencyKey,
       });
       const run = await runVmRoute(restoreVm({
         userId: user.id,
@@ -128,7 +128,7 @@ export async function POST(request: Request): Promise<Response> {
         onError: vmCreateLikeErrorResponders({
           operation: "restore",
           planId: entitlements.planId,
-          retryAction: "Run `cmux vm ls`, then delete an active VM with `cmux vm rm <id>` before restoring another.",
+          retryAction: "Run `hmux vm ls`, then delete an active VM with `hmux vm rm <id>` before restoring another.",
         }),
       });
       if (!run.ok) return run.response;

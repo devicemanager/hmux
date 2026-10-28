@@ -1,0 +1,28 @@
+import HmuxSimulator
+import Testing
+
+@testable import HmuxSimulatorUI
+
+@Suite("Simulator device quick controls")
+struct SimulatorDeviceQuickControlTests {
+  @Test("iPhone matches Apple's compact device controls")
+  func iPhoneControls() {
+    #expect(
+      simulatorAvailableDeviceQuickControls(for: .iPhone) == [
+        .home, .screenshot, .rotate,
+      ])
+  }
+
+  @Test("iPad adds pointer and keyboard capture")
+  func iPadControls() {
+    #expect(
+      simulatorAvailableDeviceQuickControls(for: .iPad) == [
+        .home, .screenshot, .rotate, .pointerCapture, .keyboardCapture,
+      ])
+  }
+
+  @Test("Unsupported device families have no floating controls")
+  func unsupportedFamily() {
+    #expect(simulatorAvailableDeviceQuickControls(for: nil).isEmpty)
+  }
+}

@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 /**
- * Provider floor benchmark for cmux Cloud machines (issue #12905): what
- * Freestyle itself costs, measured with the SDK and no cmux control plane.
+ * Provider floor benchmark for hmux Cloud machines (issue #12905): what
+ * Freestyle itself costs, measured with the SDK and no hmux control plane.
  *
  *   FREESTYLE_API_KEY=… bun scripts/cloud-vm/bench-freestyle-floor.ts [--trials N] [--size md] [--image sh-…] [--burst K] [--no-vpc] [--out <file.json>]
  *
  * The provider credential is read the way the runtime's client reads it:
  * FREESTYLE_API_KEY, or FREESTYLE_STACK_ACCESS_TOKEN with FREESTYLE_TEAM_ID
- * (source ~/.secrets/cmux.env).
+ * (source ~/.secrets/hmux.env).
  *
  * Per trial, from the manifest's default snapshot for the size: allocation
  * (`vms.create` returning), first successful guest exec, the baked daemon
@@ -26,7 +26,7 @@
 import { Freestyle, FreestyleApiError, type Vm } from "freestyle";
 import { randomUUID } from "node:crypto";
 import { writeFileSync, writeSync } from "node:fs";
-import { shellQuote } from "../../services/vms/drivers/cmuxTuiDaemon";
+import { shellQuote } from "../../services/vms/drivers/hmuxTuiDaemon";
 import { FREESTYLE_NETWORK_FIREWALL_RULES, freestyleFirewallRules } from "../../services/vms/drivers/freestyle";
 import { freestyleNetworkAnnouncementCommand } from "../../services/vms/drivers/freestyleNetworkAnnouncement";
 import { resolveVmImage } from "../../services/vms/images/resolver";
@@ -64,7 +64,7 @@ const image = option("--image") ?? resolveVmImage("freestyle", undefined, proces
 // settle waits are bounded by construction, and every await is also raced
 // by `bounded`.
 function exitWithoutProviderCredentials(): never {
-  console.error("bench-freestyle-floor: FREESTYLE_API_KEY, or FREESTYLE_STACK_ACCESS_TOKEN with FREESTYLE_TEAM_ID, is required (source ~/.secrets/cmux.env)");
+  console.error("bench-freestyle-floor: FREESTYLE_API_KEY, or FREESTYLE_STACK_ACCESS_TOKEN with FREESTYLE_TEAM_ID, is required (source ~/.secrets/hmux.env)");
   process.exit(2);
 }
 const providerCredentials = providerCredentialsFromEnv() ?? exitWithoutProviderCredentials();
@@ -94,8 +94,8 @@ const INSTANCE_ID_COMMAND = "curl -sf -m 2 -H \"X-aws-ec2-metadata-token: $(curl
  * The readiness probe, the image's own health predicate split into fields:
  * the daemon process runs (`[s]tart` keeps pgrep from matching the probe's
  * own shell), something listens on 1337, and the daemon is the one bound to
- * this machine. An image that binds identity ships /etc/cmux/bake-instance-id
- * and its supervisor writes the bound id to /etc/cmux/daemon-instance-id; a
+ * this machine. An image that binds identity ships /etc/hmux/bake-instance-id
+ * and its supervisor writes the bound id to /etc/hmux/daemon-instance-id; a
  * clone briefly runs the source machine's daemon until the supervisor
  * re-keys it, and that stale listener must not count as ready. Unlike the
  * production predicate, which lets an older image without the marker pass
@@ -106,9 +106,9 @@ const INSTANCE_ID_COMMAND = "curl -sf -m 2 -H \"X-aws-ec2-metadata-token: $(curl
  */
 function probeCommand(instanceId: string | null): string {
   const id = instanceId === null ? `i=$(${INSTANCE_ID_COMMAND})` : `i=${shellQuote(instanceId)}`;
-  return `${id}; l=0; grep -qi ':0539 ' /proc/net/tcp6 2>/dev/null && l=1; r=0; pgrep -f 'cmux-tui server [s]tart' >/dev/null 2>&1 && r=1; m=0; [ -f /etc/cmux/bake-instance-id ] && m=1; v=0; [ "$m" = 1 ] && [ -n "$i" ] && [ "$(cat /etc/cmux/daemon-instance-id 2>/dev/null)" = "$i" ] && v=1; echo "$l $r $m $v $i"`;
+  return `${id}; l=0; grep -qi ':0539 ' /proc/net/tcp6 2>/dev/null && l=1; r=0; pgrep -f 'hmux-tui server [s]tart' >/dev/null 2>&1 && r=1; m=0; [ -f /etc/hmux/bake-instance-id ] && m=1; v=0; [ "$m" = 1 ] && [ -n "$i" ] && [ "$(cat /etc/hmux/daemon-instance-id 2>/dev/null)" = "$i" ] && v=1; echo "$l $r $m $v $i"`;
 }
-const WORK_USER_ENV = "setpriv --reuid=cmux --regid=cmux --init-groups env HOME=/home/cmux USER=cmux LOGNAME=cmux SHELL=/bin/bash TERM=xterm-256color TERM_PROGRAM=ghostty";
+const WORK_USER_ENV = "setpriv --reuid=hmux --regid=hmux --init-groups env HOME=/home/hmux USER=hmux LOGNAME=hmux SHELL=/bin/bash TERM=xterm-256color TERM_PROGRAM=ghostty";
 // Each wrapper prints the elapsed milliseconds and then exits with the
 // measured command's own status, so a shell that failed or was killed by
 // `timeout` is a failed sample, not a fast one.
@@ -220,7 +220,7 @@ async function waitForDaemon(vm: Vm, origin: number, budgetMs = 90_000, knownIns
     milestones.probeAttempts += 1;
     const result = await probe(vm, milestones.instanceId);
     if (result.execOk && !result.identityBound) {
-      throw new Error("the image does not bind the daemon identity to the instance id (no /etc/cmux/bake-instance-id); refusing to time a daemon whose identity cannot be verified");
+      throw new Error("the image does not bind the daemon identity to the instance id (no /etc/hmux/bake-instance-id); refusing to time a daemon whose identity cannot be verified");
     }
     if (milestones.instanceId === null && result.instanceId !== null) milestones.instanceId = result.instanceId;
     const at = elapsedMs(origin);
@@ -251,7 +251,7 @@ async function reconcileRunVms(): Promise<void> {
     let page: Awaited<ReturnType<typeof fs.vms.list>> | null = null;
     for (let attempt = 0; attempt < 3 && page === null; attempt += 1) {
       try {
-        page = await bounded(fs.vms.list({ metadata: `cmux:bench,run:${runId}`, limit: 200, offset }), 60_000, "list");
+        page = await bounded(fs.vms.list({ metadata: `hmux:bench,run:${runId}`, limit: 200, offset }), 60_000, "list");
       } catch (error) {
         if (attempt === 2) listingError = error instanceof Error ? error.message : String(error);
         else await new Promise((resolve) => setTimeout(resolve, 1_500));
@@ -329,7 +329,7 @@ async function createVm(vpcId: string | null, name: string) {
     idleTimeoutSeconds: -1,
     // The run id in metadata is what exit-time reconciliation lists by, so a
     // create whose response was lost still gets its machine deleted.
-    metadata: { cmux: "bench", run: runId },
+    metadata: { hmux: "bench", run: runId },
     // Egress only, with or without a VPC: the baked daemon grants every link
     // on its listener (trusted carrier), so it must never face the Internet,
     // and this benchmark only ever reaches the guest through the exec API.

@@ -1,6 +1,6 @@
-import CmuxControlSocket
+import HmuxControlSocket
 import Foundation
-import CmuxSidebar
+import HmuxSidebar
 
 /// The live-app half of the v1 sidebar metadata commands (`set_status` /
 /// `report_meta` / `report_meta_block` / agent PID + lifecycle / `log` /
@@ -123,7 +123,7 @@ extension TerminalController: ControlSidebarContext {
         guard !AgentHibernationLifecycleStatusKeys.isManualKey(key) else {
             return false
         }
-        guard CmuxVaultAgentRegistration.isValidID(key) else {
+        guard HmuxVaultAgentRegistration.isValidID(key) else {
             return false
         }
         let scope: ControlSidebarAgentLifecycleRegistryScope? = v2MainSync {

@@ -22,7 +22,7 @@ REVIEW_NOTES="$IOS_DIR/AppStoreReview/review-notes.md"
 CHECKLIST="$IOS_DIR/AppStoreReview/metadata-screenshots-checklist.md"
 SCREENSHOT_DEVICE_TYPES=(IPHONE_69 IPAD_PRO_3GEN_129)
 SCREENSHOT_DEVICE_TYPES_EXPLICIT=0
-VALIDATE_DIGITAL_GOODS="${CMUX_APP_STORE_VALIDATE_DIGITAL_GOODS:-1}"
+VALIDATE_DIGITAL_GOODS="${HMUX_APP_STORE_VALIDATE_DIGITAL_GOODS:-1}"
 
 usage() {
   cat <<'EOF'
@@ -34,7 +34,7 @@ Usage:
     [--prepare-submission] [--stage-dry-run]
     [--submit-dry-run | --submit --confirm-submit]
 
-Runs the cmux iOS App Store validation package. The default path is read-only:
+Runs the hmux iOS App Store validation package. The default path is read-only:
 it checks the checked-in review package, runs canonical `asc validate`, and
 validates local metadata/screenshots when those directories exist.
 
@@ -109,7 +109,7 @@ done
 [[ -n "$APP" ]] || die "configured app id is required; pass --app or configure the release app id"
 [[ "$APP" =~ ^[0-9]+$ ]] || die "configured app id must be numeric; do not pass a bundle id"
 if [[ -z "$VERSION" ]]; then
-  VERSION="$(read_xcconfig_setting CMUX_IOS_APPSTORE_MARKETING_VERSION "$IOS_DIR/Config/Shared.xcconfig")"
+  VERSION="$(read_xcconfig_setting HMUX_IOS_APPSTORE_MARKETING_VERSION "$IOS_DIR/Config/Shared.xcconfig")"
 fi
 [[ "$VERSION" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]] || die "--version must be X.Y or X.Y.Z (got '${VERSION:-}')"
 if [[ -n "$BUILD_NUMBER" && -n "$BUILD_ID" ]]; then
@@ -141,7 +141,7 @@ if [[ "${#selector_args[@]}" -gt 0 ]]; then
     note "waiting for build processing"
     asc builds wait "${selector_args[@]}" --fail-on-invalid --output table
   fi
-  build_json="$(mktemp "${TMPDIR:-/tmp}/cmux-appstore-build.XXXXXX")"
+  build_json="$(mktemp "${TMPDIR:-/tmp}/hmux-appstore-build.XXXXXX")"
   trap '[[ -n "${build_json:-}" ]] && rm -f "$build_json"' EXIT
   asc builds info "${selector_args[@]}" --output json --pretty > "$build_json"
   if [[ -z "$BUILD_ID" ]]; then
@@ -210,7 +210,7 @@ if [[ "$VALIDATE_DIGITAL_GOODS" == "1" ]]; then
   asc validate iap --app "$APP" --output table
   asc validate subscriptions --app "$APP" --output table
 else
-  note "skipping IAP/subscription validation (CMUX_APP_STORE_VALIDATE_DIGITAL_GOODS=0); the App Store build sells StoreKit subscriptions, so only skip for a dry run"
+  note "skipping IAP/subscription validation (HMUX_APP_STORE_VALIDATE_DIGITAL_GOODS=0); the App Store build sells StoreKit subscriptions, so only skip for a dry run"
 fi
 
 if [[ "$STAGE_DRY_RUN" -eq 1 ]]; then

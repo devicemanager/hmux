@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// The welcome window's hero: the Cloud tree as the right sidebar shows it
@@ -40,11 +40,11 @@ struct CloudWelcomeHero: View {
     private var header: some View {
         HStack(spacing: 6) {
             Image(systemName: "cloud")
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
             Text(String(localized: "cloudTree.group.cloudMachines", defaultValue: "Cloud Machines"))
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
             Text(verbatim: "3/5")
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
                 .monospacedDigit()
                 .foregroundStyle(.tertiary)
                 .padding(.leading, -1)
@@ -59,16 +59,16 @@ struct CloudWelcomeHero: View {
             if isChild {
                 // A workspace row: disclosure chevron, then its folder.
                 Image(systemName: isOpen ? "chevron.down" : "chevron.right")
-                    .cmuxFont(size: 9, weight: .semibold)
+                    .hmuxFont(size: 9, weight: .semibold)
                     .foregroundStyle(.secondary)
                     .frame(width: 14)
             }
             Image(systemName: symbol)
-                .cmuxFont(size: isChild ? 11 : 9, weight: isChild ? .regular : .semibold)
+                .hmuxFont(size: isChild ? 11 : 9, weight: isChild ? .regular : .semibold)
                 .foregroundStyle(.secondary)
                 .frame(width: 14)
             Text(verbatim: name)
-                .cmuxFont(size: 13)
+                .hmuxFont(size: 13)
         }
         .padding(.leading, isChild ? 18 : 0)
         .frame(height: 24)
@@ -77,11 +77,11 @@ struct CloudWelcomeHero: View {
     private func leafRow(symbol: String, name: String, depth: Int) -> some View {
         HStack(spacing: 6) {
             Image(systemName: symbol)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundStyle(.secondary)
                 .frame(width: 14)
             Text(verbatim: name)
-                .cmuxFont(size: 13)
+                .hmuxFont(size: 13)
         }
         .padding(.leading, CGFloat(depth) * 18 + 20)
         .frame(height: 24)
@@ -99,7 +99,7 @@ struct CloudWelcomeHero: View {
                     .foregroundStyle(.tertiary)
             }
         }
-        .cmuxFont(size: 11)
+        .hmuxFont(size: 11)
         .padding(.horizontal, 6)
         .frame(height: 20)
         .background(

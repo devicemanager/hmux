@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
-import CmuxCloudMachines
+import HmuxCloudMachines
 
 /// Immutable resource and cost data for one Cloud machine tree section.
 final class CloudTreeMachineResourceSection: Equatable, Sendable {

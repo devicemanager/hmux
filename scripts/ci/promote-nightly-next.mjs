@@ -1,12 +1,12 @@
-// Decide and perform a nightly-next promotion (cmuxterm-hq#2053).
+// Decide and perform a nightly-next promotion (hmuxterm-hq#2053).
 //
 // nightly.yml on main runs this from main's own checkout, never from the SHA
 // under test, so the guard and .github/release-surface.txt are main's.
 //
 // decide() checks, in order:
-//   G1  the SHA is on feat-cmux-next (not a fork-network or dropped commit);
-//   G2  a cmux-next.yml push run of this repository on feat-cmux-next for that
-//       exact SHA has a successful "cmux-next Release compile (Xcode 26)" job;
+//   G1  the SHA is on feat-hmux-next (not a fork-network or dropped commit);
+//   G2  a hmux-next.yml push run of this repository on feat-hmux-next for that
+//       exact SHA has a successful "hmux-next Release compile (Xcode 26)" job;
 //       the gate workflow is itself on the release surface;
 //   G3  the files changed from the current nightly-next to the SHA. If none
 //       matches the release surface the promotion goes ahead ("promote");
@@ -20,7 +20,7 @@
 //       the approval environment counts.
 // A train commit (nightly-next-train.yml; docs/ci/nightly-next-train.md) is
 // checked by G1'/G2' in place of G1/G2:
-//   G1' its second parent is on feat-cmux-next, and its tree is that parent
+//   G1' its second parent is on feat-hmux-next, and its tree is that parent
 //       with exactly its `Nightly-Train-Revert:` reverts, which the injected
 //       verifyTrain() rebuilds (scripts/ci/nightly_next_train.py verify);
 //   G2' a nightly-next-train.yml dispatch run of this repository on a
@@ -31,10 +31,10 @@
 //
 // The functions take injected clients so tests drive them with a fake API.
 
-export const SOURCE = 'feat-cmux-next';
+export const SOURCE = 'feat-hmux-next';
 export const TARGET = 'nightly-next';
-export const GATE_WORKFLOW = '.github/workflows/cmux-next.yml';
-export const GATE_JOB = 'cmux-next Release compile (Xcode 26)';
+export const GATE_WORKFLOW = '.github/workflows/hmux-next.yml';
+export const GATE_JOB = 'hmux-next Release compile (Xcode 26)';
 export const ACK_ENVIRONMENT = 'release-surface-ack';
 const BOT_LOGINS = new Set(['web-flow', 'github-actions[bot]', 'GitHub']);
 const MAX_ACTIVITY_PAGES = 20;
@@ -93,7 +93,7 @@ const refuse = (reason, extra = {}) => ({ action: 'refuse', reason, ...extra });
 async function admitted(github, owner, repo, sha, { attempts, delayMs, sleep, core }) {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
-      owner, repo, workflow_id: 'cmux-next.yml', event: 'push', branch: SOURCE, head_sha: sha, per_page: 100,
+      owner, repo, workflow_id: 'hmux-next.yml', event: 'push', branch: SOURCE, head_sha: sha, per_page: 100,
     });
     for (const run of runs) {
       if (run.head_sha !== sha || run.head_branch !== SOURCE || run.event !== 'push') continue;
@@ -121,7 +121,7 @@ async function admitted(github, owner, repo, sha, { attempts, delayMs, sleep, co
 // source branch with the exact gate job green.
 async function newestGreenSourceCommit(github, owner, repo, targetSha, excludeSha) {
   const runs = await github.paginate(github.rest.actions.listWorkflowRuns, {
-    owner, repo, workflow_id: 'cmux-next.yml', event: 'push', branch: SOURCE, per_page: 100,
+    owner, repo, workflow_id: 'hmux-next.yml', event: 'push', branch: SOURCE, per_page: 100,
   });
   const ordered = [...runs].sort((a, b) => Date.parse(b.created_at || 0) - Date.parse(a.created_at || 0) || Number(b.id) - Number(a.id));
   const green = [];
@@ -164,7 +164,7 @@ async function newestGreenSourceCommit(github, owner, repo, targetSha, excludeSh
 }
 
 // A train commit (scripts/ci/nightly_next_train.py): two parents, the
-// nightly-next head it was made on and a feat-cmux-next tip, and the
+// nightly-next head it was made on and a feat-hmux-next tip, and the
 // `Nightly-Train: v1` trailer. Anything else (or an unreadable commit) is not a
 // train commit and goes through G1/G2, which refuse what they cannot place.
 export const TRAIN_TRAILER = 'Nightly-Train: v1';
@@ -452,7 +452,7 @@ export async function decide({
   let trainFirstParent = null;
   if (train) {
     // G1' (docs/ci/nightly-next-train.md): the second parent is on
-    // feat-cmux-next and the tree is that parent with exactly the listed
+    // feat-hmux-next and the tree is that parent with exactly the listed
     // reverts, which the verifier rebuilds itself (it trusts no list).
     const status = await onSourceStatus(train.tip);
     if (status?.error) return refuse(status.error);
@@ -473,7 +473,7 @@ export async function decide({
     }
     trainFirstParent = train.firstParent;
   } else {
-    // G1: on feat-cmux-next.
+    // G1: on feat-hmux-next.
     const onSource = await onSourceStatus(sha);
     if (onSource?.error) return refuse(onSource.error);
     if (onSource !== 'ahead' && onSource !== 'identical') {
@@ -687,7 +687,7 @@ export async function evictedPromotions({ github, owner, repo, runId, now = () =
 }
 
 // Newest request wins. A request is cheap to repeat but an approval is not, and
-// requests arrive out of order (an older commit's Release compile or cmux-tui
+// requests arrive out of order (an older commit's Release compile or hmux-tui
 // tree can finish after a newer one's). Before deciding, read the requests that
 // wait for (or just got) the release-surface-ack approval:
 // - when one of them was decided against the current nightly-next and either

@@ -71,9 +71,9 @@ func (r *Restorer) Resume(ctx context.Context, sessionID string, opts Options) (
 	}
 	if cloudSession == nil {
 		if local != nil {
-			return "", fmt.Errorf("session %s exists locally but was not found in cmux vault; rerun without --force to use the local transcript", sessionID)
+			return "", fmt.Errorf("session %s exists locally but was not found in hmux vault; rerun without --force to use the local transcript", sessionID)
 		}
-		return "", fmt.Errorf("session %s not found locally or in cmux vault", sessionID)
+		return "", fmt.Errorf("session %s not found locally or in hmux vault", sessionID)
 	}
 	detail, err := r.Client.GetSession(ctx, cloudSession.ID)
 	if err != nil {

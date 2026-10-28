@@ -42,7 +42,7 @@ describe("per-version changelog pages", () => {
 Release intro.
 
 ### Added
-- Added \`cmux example\` ([#123](https://github.com/manaflow-ai/cmux/pull/123))
+- Added \`hmux example\` ([#123](https://github.com/manaflow-ai/cmux/pull/123))
 `);
 
     expect(release).toEqual({
@@ -53,7 +53,7 @@ Release intro.
         {
           heading: "Added",
           items: [
-            "Added `cmux example` ([#123](https://github.com/manaflow-ai/cmux/pull/123))",
+            "Added `hmux example` ([#123](https://github.com/manaflow-ai/cmux/pull/123))",
           ],
         },
       ],
@@ -79,7 +79,7 @@ Release intro.
     expect(html).toContain('dateTime="2026-08-03"');
     expect(html).toContain("2026年8月3日");
     expect(html).toContain("追加");
-    expect(html).toContain("cmux example");
+    expect(html).toContain("hmux example");
   });
 
   test("refreshes and isolates injected changelog stores", () => {
@@ -154,7 +154,7 @@ Release intro.
     const release = changelogStore.versions()[0];
     const description = changelogVersionDescription(release);
 
-    expect(description.startsWith(`cmux ${release.version}:`)).toBe(true);
+    expect(description.startsWith(`hmux ${release.version}:`)).toBe(true);
     expect(description).not.toContain("https://");
     expect(description).not.toContain("[");
     expect(description.length).toBeLessThanOrEqual(160);
@@ -189,8 +189,8 @@ Release intro.
   });
 
   test("localizes dotted canonical paths and redirects the short alias", () => {
-    const previousDocsChannel = process.env.CMUX_DOCS_CHANNEL;
-    process.env.CMUX_DOCS_CHANNEL = "release";
+    const previousDocsChannel = process.env.HMUX_DOCS_CHANNEL;
+    process.env.HMUX_DOCS_CHANNEL = "release";
 
     try {
       const canonical = middleware(
@@ -212,9 +212,9 @@ Release intro.
       );
     } finally {
       if (previousDocsChannel === undefined) {
-        delete process.env.CMUX_DOCS_CHANNEL;
+        delete process.env.HMUX_DOCS_CHANNEL;
       } else {
-        process.env.CMUX_DOCS_CHANNEL = previousDocsChannel;
+        process.env.HMUX_DOCS_CHANNEL = previousDocsChannel;
       }
     }
   });
@@ -293,7 +293,7 @@ describe("changelog patch notes cards", () => {
         {
           title: "Remote",
           description: "Connect anywhere.",
-          tryIt: "Run `cmux ssh user@host` to connect.",
+          tryIt: "Run `hmux ssh user@host` to connect.",
         },
         { title: "Quiet", description: "Nothing to try." },
       ],
@@ -302,7 +302,7 @@ describe("changelog patch notes cards", () => {
     expect(count(html, "data-changelog-feature")).toBe(2);
     expect(count(html, "data-changelog-try-it")).toBe(1);
     expect(html).toContain("Try it");
-    expect(html).toContain("<code>cmux ssh user@host</code>");
+    expect(html).toContain("<code>hmux ssh user@host</code>");
   });
 
   test("text-only cards pair up and a trailing card spans the row", () => {

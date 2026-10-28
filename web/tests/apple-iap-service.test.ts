@@ -17,11 +17,11 @@ import { AppleVerificationError, createAppleSignedDataVerifier } from "../servic
 import { memoryAppleStore, type MemoryAppleStore } from "./helpers/apple-memory-store";
 import { createAppleTestSigner } from "./helpers/apple-signing";
 
-const BUNDLE = "com.cmux.app";
+const BUNDLE = "com.hmux.app";
 const ORIGINAL = "2000000000000100";
 const DAY = 24 * 60 * 60 * 1000;
 const NOW = new Date(Date.UTC(2026, 9, 15));
-const env = { APPLE_IAP_BUNDLE_IDS: `${BUNDLE},dev.cmux.app.beta`, APPLE_IAP_APP_APPLE_ID: "6783338052" };
+const env = { APPLE_IAP_BUNDLE_IDS: `${BUNDLE},dev.hmux.app.beta`, APPLE_IAP_APP_APPLE_ID: "6783338052" };
 const signer = createAppleTestSigner();
 const verifier = createAppleSignedDataVerifier({ rootCertificates: [signer.rootCertificate], onlineChecks: false, env });
 
@@ -577,7 +577,7 @@ describe("notifications about an older transaction", () => {
 });
 
 describe("subscription ownership", () => {
-  // The same Apple ID signs into cmux account B and buys again (upgrade or
+  // The same Apple ID signs into hmux account B and buys again (upgrade or
   // resubscribe). The newest transaction carries B's appAccountToken, which
   // is authoritative: the subscription moves to B and A falls back.
   function upgradeForB(overrides: Record<string, unknown> = {}) {
@@ -660,10 +660,10 @@ describe("Apple entitlement policy", () => {
     expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: BUNDLE, accountEmail: "lawrence@example.com" }, production)).toBe(true);
     expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: BUNDLE, accountEmail: "tester@example.com" }, production)).toBe(false);
     expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: BUNDLE }, production)).toBe(false);
-    expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: "dev.cmux.app.beta", accountEmail: "review@example.com" }, production)).toBe(false);
-    expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: "dev.cmux.app.beta" }, production)).toBe(false);
+    expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: "dev.hmux.app.beta", accountEmail: "review@example.com" }, production)).toBe(false);
+    expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: "dev.hmux.app.beta" }, production)).toBe(false);
     expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: BUNDLE }, { ...production, APPLE_IAP_SANDBOX_ENTITLEMENTS: "none" })).toBe(false);
-    expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: "dev.cmux.app.beta" }, {})).toBe(true);
+    expect(appleEnvironmentGrantsEntitlement({ environment: "Sandbox", bundleId: "dev.hmux.app.beta" }, {})).toBe(true);
     expect(appleEnvironmentGrantsEntitlement({ environment: "Xcode", bundleId: BUNDLE }, {})).toBe(false);
   });
 

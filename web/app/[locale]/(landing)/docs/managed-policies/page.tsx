@@ -45,14 +45,14 @@ const sampleProfile = `<?xml version="1.0" encoding="UTF-8"?>
             <key>PayloadVersion</key>
             <integer>1</integer>
             <key>PayloadIdentifier</key>
-            <string>com.example.cmux.managed-policies</string>
+            <string>com.example.hmux.managed-policies</string>
             <key>PayloadUUID</key>
             <string>6D4A3E9C-1B2F-4C8D-9E0A-5F6B7C8D9E0F</string>
             <key>PayloadDisplayName</key>
-            <string>cmux managed policies</string>
+            <string>hmux managed policies</string>
             <key>PayloadContent</key>
             <dict>
-                <key>com.cmuxterm.app</key>
+                <key>com.hmuxterm.app</key>
                 <dict>
                     <key>Forced</key>
                     <array>
@@ -102,11 +102,11 @@ const sampleProfile = `<?xml version="1.0" encoding="UTF-8"?>
     <key>PayloadVersion</key>
     <integer>1</integer>
     <key>PayloadIdentifier</key>
-    <string>com.example.cmux.managed-policies.profile</string>
+    <string>com.example.hmux.managed-policies.profile</string>
     <key>PayloadUUID</key>
     <string>2A1B3C4D-5E6F-4A7B-8C9D-0E1F2A3B4C5D</string>
     <key>PayloadDisplayName</key>
-    <string>cmux Managed Policies</string>
+    <string>hmux Managed Policies</string>
     <key>PayloadScope</key>
     <string>System</string>
 </dict>
@@ -130,7 +130,7 @@ export default async function ManagedPoliciesPage({
 
       <DocsHeading level={2} id="payload-domain">{t("domainTitle")}</DocsHeading>
       <p>{t("domainDesc")}</p>
-      <CodeBlock lang="text">{`com.cmuxterm.app`}</CodeBlock>
+      <CodeBlock lang="text">{`com.hmuxterm.app`}</CodeBlock>
       <p>{t("domainChannels")}</p>
 
       <DocsHeading level={2} id="keys">{t("keysTitle")}</DocsHeading>
@@ -305,24 +305,24 @@ http://localhost:3000    # only needed when BrowserAllowLocalhost is false`}</Co
 
       <DocsHeading level={2} id="verify">{t("verifyTitle")}</DocsHeading>
       <p>{t("verifyDesc")}</p>
-      <CodeBlock lang="bash">{`defaults read com.cmuxterm.app DisableEmbeddedBrowser
-defaults read com.cmuxterm.app DisableRemoteControl
-defaults read com.cmuxterm.app DisableCloud
-defaults read com.cmuxterm.app DisableRemoteConnections
-defaults read com.cmuxterm.app DisableFileTransfer
-defaults read com.cmuxterm.app DisableIrohNetworking
-defaults read com.cmuxterm.app DisableTelemetry
-defaults read com.cmuxterm.app DisableAutoUpdate
-defaults read com.cmuxterm.app DisableAutomationWebhooks
-defaults read com.cmuxterm.app DisableTLSTrustBypass
-defaults read com.cmuxterm.app DisableComputerUse
-defaults read com.cmuxterm.app DisableCustomSidebars
-defaults read com.cmuxterm.app DisableAICredentialUpload
-defaults read com.cmuxterm.app BrowserURLAllowlist
-defaults read com.cmuxterm.app BrowserAllowLocalhost     # absent or 1 = allowed
-defaults read com.cmuxterm.app BrowserAllowLocalFiles    # absent or 1 = allowed
-cmux browser status --json   # url_allowlist, url_allowlist_managed, url_allowlist_allows_localhost, url_allowlist_allows_local_files
-cmux vm list                 # refused: Cloud Machines are disabled by your administrator.`}</CodeBlock>
+      <CodeBlock lang="bash">{`defaults read com.hmuxterm.app DisableEmbeddedBrowser
+defaults read com.hmuxterm.app DisableRemoteControl
+defaults read com.hmuxterm.app DisableCloud
+defaults read com.hmuxterm.app DisableRemoteConnections
+defaults read com.hmuxterm.app DisableFileTransfer
+defaults read com.hmuxterm.app DisableIrohNetworking
+defaults read com.hmuxterm.app DisableTelemetry
+defaults read com.hmuxterm.app DisableAutoUpdate
+defaults read com.hmuxterm.app DisableAutomationWebhooks
+defaults read com.hmuxterm.app DisableTLSTrustBypass
+defaults read com.hmuxterm.app DisableComputerUse
+defaults read com.hmuxterm.app DisableCustomSidebars
+defaults read com.hmuxterm.app DisableAICredentialUpload
+defaults read com.hmuxterm.app BrowserURLAllowlist
+defaults read com.hmuxterm.app BrowserAllowLocalhost     # absent or 1 = allowed
+defaults read com.hmuxterm.app BrowserAllowLocalFiles    # absent or 1 = allowed
+hmux browser status --json   # url_allowlist, url_allowlist_managed, url_allowlist_allows_localhost, url_allowlist_allows_local_files
+hmux vm list                 # refused: Cloud Machines are disabled by your administrator.`}</CodeBlock>
       <Callout>{t("verifyUi")}</Callout>
     </>
   );

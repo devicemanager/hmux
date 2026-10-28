@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Turn a cmux-network.log export into a repeatable connection verdict.
+"""Turn a hmux-network.log export into a repeatable connection verdict.
 
 The iOS report is intentionally human-readable. This parser consumes the
 English timeline without needing the app's private Swift types, then reports
@@ -395,7 +395,7 @@ def analyze(lines: Iterable[str], expected_background_seconds: float = 0.0) -> d
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Check a cmux-network.log export from a repeatable iOS run."
+        description="Check a hmux-network.log export from a repeatable iOS run."
     )
     parser.add_argument("log", type=Path)
     parser.add_argument(

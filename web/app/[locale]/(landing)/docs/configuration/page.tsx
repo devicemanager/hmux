@@ -4,8 +4,8 @@ import { DocsSchema } from "../docs-schema";
 import { DocsLink as Link } from "@/app/[locale]/components/docs-link";
 import { CodeBlock } from "@/app/[locale]/components/code-block";
 import { Callout } from "@/app/[locale]/components/callout";
-import settingsSchema from "@/data/cmux.schema.json";
-import { localizedShortcutText, shortcutCategories } from "@/data/cmux-shortcuts";
+import settingsSchema from "@/data/hmux.schema.json";
+import { localizedShortcutText, shortcutCategories } from "@/data/hmux-shortcuts";
 import { DocsHeading } from "@/app/[locale]/components/docs-heading";
 
 type SchemaProperty = {
@@ -67,10 +67,10 @@ function buildSettingsFileExample(t: ConfigurationTranslation) {
   //   "appearance": "dark",
   //   "menuBarOnly": false,
   //   "newWorkspacePlacement": "afterCurrent",
-  //   "windowTitleTemplate": "[cmux:{windowToken}] {activeWorkspace}",
+  //   "windowTitleTemplate": "[hmux:{windowToken}] {activeWorkspace}",
   //   "paneResizeStepPixels": 20,
   //   "confirmQuit": "always",
-  //   "openSupportedFilesInCmux": true,
+  //   "openSupportedFilesInHmux": true,
   //   "workspaceInheritWorkingDirectory": true,
   //   "iMessageMode": true
   // },
@@ -94,7 +94,7 @@ function buildSettingsFileExample(t: ConfigurationTranslation) {
   //   // For an unlisted provider, set "defaultSearchEngine": "custom" and fill these:
   //   "customSearchEngineName": "My Search",
   //   "customSearchEngineURLTemplate": "https://search.example.com/?q={query}",
-  //   "openTerminalLinksInCmuxBrowser": true,
+  //   "openTerminalLinksInHmuxBrowser": true,
   //   "hostsToOpenInEmbeddedBrowser": ["localhost", "*.internal.example"]
   // },
 
@@ -136,7 +136,7 @@ function buildSettingsFileExample(t: ConfigurationTranslation) {
 
   // "agentChat": {
   //   "url": "http://127.0.0.1:7739",
-  //   "startCommand": "cmux-chat"
+  //   "startCommand": "hmux-chat"
   // },
 
   // "shortcuts": {
@@ -325,38 +325,38 @@ scrollback-limit = 50000000
 split-divider-color = #3e4451
 working-directory = ~/code`}</CodeBlock>
 
-      <DocsHeading level={2} id="cmux-json" className="scroll-mt-24">cmux.json</DocsHeading>
+      <DocsHeading level={2} id="hmux-json" className="scroll-mt-24">hmux.json</DocsHeading>
       <p>
-        cmux keeps app-owned settings, shortcuts, actions, custom commands, and workspace layouts in{" "}
-        <code>~/.config/cmux/cmux.json</code>. Terminal rendering still lives in Ghostty config.
-        On launch, if the file is missing, cmux writes a commented template there.
+        hmux keeps app-owned settings, shortcuts, actions, custom commands, and workspace layouts in{" "}
+        <code>~/.config/hmux/hmux.json</code>. Terminal rendering still lives in Ghostty config.
+        On launch, if the file is missing, hmux writes a commented template there.
       </p>
       <p>
-        Open cmux Settings, then use the <code>cmux.json</code> section to open the canonical file
+        Open hmux Settings, then use the <code>hmux.json</code> section to open the canonical file
         in your preferred text editor.
       </p>
       <ol>
         <li>
-          <code>~/.config/cmux/cmux.json</code>
+          <code>~/.config/hmux/hmux.json</code>
         </li>
         <li>
-          <code>.cmux/cmux.json</code> in a project for project-scoped actions and workspace commands
+          <code>.hmux/hmux.json</code> in a project for project-scoped actions and workspace commands
         </li>
       </ol>
       <Callout type="info">
-        <strong>Precedence:</strong> global <code>~/.config/cmux/cmux.json</code> settings override
-        values saved in the Settings window. Legacy <code>~/.config/cmux/settings.json</code> and
+        <strong>Precedence:</strong> global <code>~/.config/hmux/hmux.json</code> settings override
+        values saved in the Settings window. Legacy <code>~/.config/hmux/settings.json</code> and
         Application Support settings files are read only as fallback for missing settings keys.
-        Project-local <code>.cmux/cmux.json</code> can override actions, commands, UI action
+        Project-local <code>.hmux/hmux.json</code> can override actions, commands, UI action
         wiring, and notification hooks, but not global app preferences.
       </Callout>
       <Callout type="info">
         <strong>Reload:</strong> edit the file, then use <code>Cmd+Shift+,</code> or{" "}
-        <code>cmux reload-config</code> to re-read it without restarting the app.
+        <code>hmux reload-config</code> to re-read it without restarting the app.
       </Callout>
       <Callout type="warn">
         <strong>Migrations:</strong> keep <code>schemaVersion</code> at <code>1</code> for now.
-        Future cmux versions will use that field for upgrades. If cmux sees a newer schema version,
+        Future hmux versions will use that field for upgrades. If hmux sees a newer schema version,
         it logs a warning and parses known keys only.
       </Callout>
       <p>
@@ -364,14 +364,14 @@ working-directory = ~/code`}</CodeBlock>
         at <a href={schemaUrl}>{schemaUrl}</a> and the source lives at{" "}
         <a href={schemaSourceUrl}>{schemaSourceUrl}</a>.
       </p>
-      <CodeBlock title="~/.config/cmux/cmux.json" lang="json">
+      <CodeBlock title="~/.config/hmux/hmux.json" lang="json">
         {buildSettingsFileExample(t)}
       </CodeBlock>
 
       <DocsHeading level={2} id="schema-reference">Schema reference</DocsHeading>
       <p>
-        This reference covers every supported global settings key in <code>cmux.json</code>. The embedded
-        browser, terminal, sidebar, notifications, automation, and cmux-owned keyboard shortcuts
+        This reference covers every supported global settings key in <code>hmux.json</code>. The embedded
+        browser, terminal, sidebar, notifications, automation, and hmux-owned keyboard shortcuts
         all live here. Actions and workspace commands are documented on the{" "}
         <Link href="/docs/custom-commands">custom commands page</Link>.
       </p>
@@ -437,7 +437,7 @@ working-directory = ~/code`}</CodeBlock>
         <code>9</code>.
       </p>
       <p>
-        The defaults below are the same cmux-owned actions listed on the{" "}
+        The defaults below are the same hmux-owned actions listed on the{" "}
         <Link href="/docs/keyboard-shortcuts">keyboard shortcuts page</Link>.
       </p>
       {shortcutCategories.map((category) => (

@@ -30,7 +30,7 @@ describe("Cloud VM Pro gate", () => {
       billingSeats: null,
     }, {
       NODE_ENV: "development",
-      CMUX_LOCAL_DEV_PRO: "1",
+      HMUX_LOCAL_DEV_PRO: "1",
       NEXT_PUBLIC_STACK_PROJECT_ID: "454ecd03-1db2-4050-845e-4ce5b0cd9895",
     });
     expect(entitlements.planId).toBe(PRO_PLAN_ID);
@@ -41,7 +41,7 @@ describe("Cloud VM Pro gate", () => {
     expect(isPaidVmPlan("pro")).toBe(true);
     expect(isPaidVmPlan("team")).toBe(true);
     expect(isPaidVmPlan("PRO")).toBe(true);
-    // Founder's Edition: one-time purchase granted via cmuxVmPlan, no
+    // Founder's Edition: one-time purchase granted via hmuxVmPlan, no
     // subscription behind it — paid for the expiry window and the pro gate.
     expect(isPaidVmPlan("founders")).toBe(true);
     expect(isPaidVmPlan("Founders")).toBe(true);
@@ -52,32 +52,32 @@ describe("Cloud VM Pro gate", () => {
 
   test("enforcement is on by default and only an explicit allow switch opens it", () => {
     expect(isVmProGateEnforced({})).toBe(true);
-    expect(isVmProGateEnforced({ CMUX_VM_REQUIRE_PRO: "" })).toBe(true);
-    expect(isVmProGateEnforced({ CMUX_VM_REQUIRE_PRO: "1" })).toBe(true);
-    expect(isVmProGateEnforced({ CMUX_VM_ALLOW_FREE_PROVISIONING: "" })).toBe(true);
-    expect(isVmProGateEnforced({ CMUX_VM_ALLOW_FREE_PROVISIONING: "0" })).toBe(true);
-    expect(isVmProGateEnforced({ CMUX_VM_ALLOW_FREE_PROVISIONING: "false" })).toBe(true);
-    expect(isVmProGateEnforced({ CMUX_VM_ALLOW_FREE_PROVISIONING: "1" })).toBe(false);
-    expect(isVmProGateEnforced({ CMUX_VM_ALLOW_FREE_PROVISIONING: "ON" })).toBe(false);
+    expect(isVmProGateEnforced({ HMUX_VM_REQUIRE_PRO: "" })).toBe(true);
+    expect(isVmProGateEnforced({ HMUX_VM_REQUIRE_PRO: "1" })).toBe(true);
+    expect(isVmProGateEnforced({ HMUX_VM_ALLOW_FREE_PROVISIONING: "" })).toBe(true);
+    expect(isVmProGateEnforced({ HMUX_VM_ALLOW_FREE_PROVISIONING: "0" })).toBe(true);
+    expect(isVmProGateEnforced({ HMUX_VM_ALLOW_FREE_PROVISIONING: "false" })).toBe(true);
+    expect(isVmProGateEnforced({ HMUX_VM_ALLOW_FREE_PROVISIONING: "1" })).toBe(false);
+    expect(isVmProGateEnforced({ HMUX_VM_ALLOW_FREE_PROVISIONING: "ON" })).toBe(false);
   });
 
-  test("legacy CMUX_VM_REQUIRE_PRO false values remain a compatibility escape hatch", () => {
-    expect(isVmFreeProvisioningAllowed({ CMUX_VM_REQUIRE_PRO: "0" })).toBe(true);
-    expect(isVmFreeProvisioningAllowed({ CMUX_VM_REQUIRE_PRO: "false" })).toBe(true);
-    expect(isVmFreeProvisioningAllowed({ CMUX_VM_REQUIRE_PRO: "off" })).toBe(true);
-    expect(isVmFreeProvisioningAllowed({ CMUX_VM_REQUIRE_PRO: "garbage" })).toBe(false);
+  test("legacy HMUX_VM_REQUIRE_PRO false values remain a compatibility escape hatch", () => {
+    expect(isVmFreeProvisioningAllowed({ HMUX_VM_REQUIRE_PRO: "0" })).toBe(true);
+    expect(isVmFreeProvisioningAllowed({ HMUX_VM_REQUIRE_PRO: "false" })).toBe(true);
+    expect(isVmFreeProvisioningAllowed({ HMUX_VM_REQUIRE_PRO: "off" })).toBe(true);
+    expect(isVmFreeProvisioningAllowed({ HMUX_VM_REQUIRE_PRO: "garbage" })).toBe(false);
     // The new switch is authoritative when both names are present.
     expect(isVmFreeProvisioningAllowed({
-      CMUX_VM_ALLOW_FREE_PROVISIONING: "0",
-      CMUX_VM_REQUIRE_PRO: "0",
+      HMUX_VM_ALLOW_FREE_PROVISIONING: "0",
+      HMUX_VM_REQUIRE_PRO: "0",
     })).toBe(false);
   });
 
   test("production never provisions free machines, whatever the env says", () => {
     for (const env of [
-      { CMUX_VM_ALLOW_FREE_PROVISIONING: "1" },
-      { CMUX_VM_REQUIRE_PRO: "0" },
-      { CMUX_VM_ALLOW_FREE_PROVISIONING: "1", CMUX_VM_FREE_MAX_ACTIVE_VMS: "3", CMUX_VM_DEFAULT_PLAN: "pro" },
+      { HMUX_VM_ALLOW_FREE_PROVISIONING: "1" },
+      { HMUX_VM_REQUIRE_PRO: "0" },
+      { HMUX_VM_ALLOW_FREE_PROVISIONING: "1", HMUX_VM_FREE_MAX_ACTIVE_VMS: "3", HMUX_VM_DEFAULT_PLAN: "pro" },
     ]) {
       const production = { ...env, VERCEL_ENV: "production" };
       expect(isVmFreeProvisioningAllowed(production)).toBe(false);
@@ -89,7 +89,7 @@ describe("Cloud VM Pro gate", () => {
   });
 
   test("the explicit free-provisioning switch never blocks any plan", () => {
-    const env = { CMUX_VM_ALLOW_FREE_PROVISIONING: "1" };
+    const env = { HMUX_VM_ALLOW_FREE_PROVISIONING: "1" };
     expect(isVmProGateBlocked(ent("free"), env)).toBe(false);
     expect(isVmProGateBlocked(ent("pro"), {})).toBe(false);
   });
@@ -112,24 +112,24 @@ describe("vm_requires_pro response copy", () => {
     const payload = await response.json() as Record<string, unknown>;
     expect(payload).toMatchObject({
       error: "vm_requires_pro",
-      message: "Cloud VMs require a cmux Pro plan.",
-      action: "Upgrade to cmux Pro at https://cmux.com/pricing to create Cloud VMs.",
+      message: "Cloud VMs require a hmux Pro plan.",
+      action: "Upgrade to hmux Pro at https://cmux.com/pricing to create Cloud VMs.",
       upgradeRequired: true,
       upgradeUrl: "https://cmux.com/pricing",
-      ui: { title: "cmux Pro required" },
+      ui: { title: "hmux Pro required" },
     });
   });
 
   test("resolves the upgrade instruction from the requested locale", async () => {
     const payload = await (await vmRequiresProResponse("ja")).json() as Record<string, unknown>;
-    expect(payload.message).toBe("Cloud VM を利用するには cmux Pro プランが必要です。");
+    expect(payload.message).toBe("Cloud VM を利用するには hmux Pro プランが必要です。");
     expect(String(payload.action)).toContain("https://cmux.com/pricing");
-    expect(String(payload.action)).toContain("cmux Pro にアップグレード");
+    expect(String(payload.action)).toContain("hmux Pro にアップグレード");
     // Clients key off these, never the prose.
     expect(payload).toMatchObject({
       error: "vm_requires_pro",
       upgradeRequired: true,
-      ui: { title: "cmux Pro が必要です" },
+      ui: { title: "hmux Pro が必要です" },
     });
   });
 

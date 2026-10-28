@@ -43,7 +43,7 @@ test("canonical wire values are ordered and never silently lose data", () => {
 });
 
 test("Swift and Worker share exact Unicode signing bytes and nonce-bound HTTP proofs", async () => {
-  const path = new URL("../../../Packages/Shared/CmuxIrxTransport/Tests/CmuxIrxTransportTests/V2/Fixtures/signing.json", import.meta.url);
+  const path = new URL("../../../Packages/Shared/HmuxIrxTransport/Tests/HmuxIrxTransportTests/V2/Fixtures/signing.json", import.meta.url);
   const fixture = z.object({
     device: DeviceDescriptorSchema, challenge: ChallengeSchema, setup: SocketSetupSchema,
     issuedAt: z.number(), proofNonce: z.string(), httpOperation: RequestSchema,

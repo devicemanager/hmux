@@ -2,7 +2,7 @@
 // endpoint in the signed-in session (no tab).
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
   S.register(
     "googleDocs",

@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxFoundation
-import CmuxSurfaceCatalogModel
-import CmuxWorkspacePresence
+import HmuxCloud
+import HmuxFoundation
+import HmuxSurfaceCatalogModel
+import HmuxWorkspacePresence
 import SwiftUI
 enum CloudTreeIconPalette {
     static let workspace = Color.blue
@@ -66,7 +66,7 @@ struct CloudTreeRowContentView: View {
                 accessories: {
                     if let usage = Self.usageDetail(for: account) {
                         Text(usage)
-                            .cmuxFont(size: style.detailSize, design: style.fontDesign)
+                            .hmuxFont(size: style.detailSize, design: style.fontDesign)
                             .foregroundStyle(.tertiary)
                             .lineLimit(1)
                             .fixedSize()
@@ -272,7 +272,7 @@ struct CloudTreeLeafRow<Accessories: View>: View {
     var detail: String?
     /// False starts the title in the icon column, under a sibling create row's "+".
     var reservesIconSlot = true
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
     @ViewBuilder var accessories: () -> Accessories
 
     init(
@@ -344,7 +344,7 @@ struct CloudTreeLeafRow<Accessories: View>: View {
 
     private var titleText: some View {
         Text(title)
-            .cmuxFont(size: style.titleSize, weight: titleWeight, design: style.fontDesign)
+            .hmuxFont(size: style.titleSize, weight: titleWeight, design: style.fontDesign)
             .foregroundStyle(titleColor)
             .underline(false)
             .lineLimit(1)
@@ -362,7 +362,7 @@ struct CloudTreeLeafRow<Accessories: View>: View {
 
     private func detailText(_ text: String) -> some View {
         Text(text)
-            .cmuxFont(size: style.detailSize, design: style.fontDesign)
+            .hmuxFont(size: style.detailSize, design: style.fontDesign)
             .foregroundStyle(.tertiary)
             .lineLimit(1)
             .truncationMode(.middle)
@@ -394,7 +394,7 @@ extension CloudTreeLeafRow where Accessories == EmptyView {
     }
 }
 
-/// A cmux-tui terminal row with its provider mark, title, directory and optional view count.
+/// A hmux-tui terminal row with its provider mark, title, directory and optional view count.
 struct CloudTreeTerminalRowContent: View {
     let row: CloudTreeTerminalRow
     var style: CloudTreeStyle = CloudTreeStyleStore.current
@@ -479,7 +479,7 @@ struct CloudTreeTerminalRowContent: View {
 
     static func abbreviated(_ path: String) -> String {
         // A cloud machine's home reads as `~`, the way this Mac's rows do: the account
-        // name is noise in a cwd column. `/home/cmux` on a current devbox image, `/root`
+        // name is noise in a cwd column. `/home/hmux` on a current devbox image, `/root`
         // on a machine from an image that predates the non-root work user.
         if path == "/root" { return "~" }
         if path.hasPrefix("/root/") { return "~" + path.dropFirst("/root".count) }

@@ -40,7 +40,7 @@ export type CodeRouterRequestContext = {
  * provider accounts. Machine credentials (VM-bound route tokens, chatmux
  * machine tokens, `crk_` keys) never do: a Cloud VM runs agents and
  * untrusted code, so its token gets no account rights at all (Lawrence
- * 2026-10-03; cmux-next-spec cloud-and-automations.md and
+ * 2026-10-03; hmux-next-spec cloud-and-automations.md and
  * identity-and-permissions.md 4). It may still use the team's shared
  * accounts for model requests on the data plane.
  */

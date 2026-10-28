@@ -1,5 +1,5 @@
-import CmuxTerminalCore
-import CmuxWorkspaces
+import HmuxTerminalCore
+import HmuxWorkspaces
 import Foundation
 
 extension Workspace {

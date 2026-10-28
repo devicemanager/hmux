@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxCore
+import HmuxCloud
+import HmuxCore
 import Foundation
 
 extension DeviceSurfaceProvider: SurfaceProjectionLayoutProviding {

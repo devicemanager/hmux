@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Present a toast inside a RUNNING cmux iOS DEBUG build on a simulator, with
+# Present a toast inside a RUNNING hmux iOS DEBUG build on a simulator, with
 # no touch input (drives ToastDebugTrigger via defaults + a darwin
 # notification). DEBUG builds only; physical devices are not supported
 # (simctl spawn is simulator-only).
@@ -40,13 +40,13 @@ if [[ -z "$UDID" || -z "$BUNDLE_ID" ]]; then
 fi
 
 if [[ "$DISMISS_ALL" -eq 1 ]]; then
-  xcrun simctl spawn "$UDID" notifyutil -p dev.cmux.toast.debug.dismiss
+  xcrun simctl spawn "$UDID" notifyutil -p dev.hmux.toast.debug.dismiss
   echo "dismissed all toasts on $BUNDLE_ID"
   exit 0
 fi
 
 if [[ "$DEMO" -eq 1 ]]; then
-  xcrun simctl spawn "$UDID" notifyutil -p dev.cmux.toast.debug.demo
+  xcrun simctl spawn "$UDID" notifyutil -p dev.hmux.toast.debug.demo
   echo "started toast demo on $BUNDLE_ID"
   exit 0
 fi
@@ -70,6 +70,6 @@ EOF
 )"
 
 # -string: without it, defaults parses the JSON braces as a plist dictionary.
-xcrun simctl spawn "$UDID" defaults write "$BUNDLE_ID" cmux.debug.toast -string "$SPEC"
-xcrun simctl spawn "$UDID" notifyutil -p dev.cmux.toast.debug.present
+xcrun simctl spawn "$UDID" defaults write "$BUNDLE_ID" hmux.debug.toast -string "$SPEC"
+xcrun simctl spawn "$UDID" notifyutil -p dev.hmux.toast.debug.present
 echo "presented: $SPEC"

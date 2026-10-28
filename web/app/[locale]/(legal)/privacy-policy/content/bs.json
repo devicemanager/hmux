@@ -1,13 +1,13 @@
 {
-  "metadataTitle": "Politika privatnosti — cmux",
-  "metadataDescription": "Politika privatnosti za cmux",
+  "metadataTitle": "Politika privatnosti — hmux",
+  "metadataDescription": "Politika privatnosti za hmux",
   "title": "Politika privatnosti",
   "lastUpdated": "Posljednje ažuriranje: 1. septembra 2026",
   "sections": [
     {
       "paragraphs": [
         "Manaflow („Kompanija“) je posvećena održavanju robusne zaštite privatnosti za svoje korisnike. Ova Politika privatnosti objašnjava kako prikupljamo, koristimo i štitimo informacije koje nam dostavite.",
-        "U ovoj politici, \"Site\" označava web stranicu Kompanije na adresi [cmux.com](https://cmux.com). \"Aplikacija\" znači cmux desktop aplikaciju za macOS i cmux mobilnu aplikaciju za iPhone i iPad. \"Usluga\" označava stranicu i aplikaciju zajedno. \"Mi\", \"nas\" i \"naš\" znači Kompanija. \"Vi\" znači korisnik naše usluge.",
+        "U ovoj politici, \"Site\" označava web stranicu Kompanije na adresi [cmux.com](https://cmux.com). \"Aplikacija\" znači hmux desktop aplikaciju za macOS i hmux mobilnu aplikaciju za iPhone i iPad. \"Usluga\" označava stranicu i aplikaciju zajedno. \"Mi\", \"nas\" i \"naš\" znači Kompanija. \"Vi\" znači korisnik naše usluge.",
         "Korištenjem naše usluge, prihvatate ovu Politiku privatnosti i naše [Uslove korištenja](https://cmux.com/terms-of-service), te pristajete na prikupljanje, skladištenje, korištenje i otkrivanje ovdje opisanih."
       ]
     },
@@ -42,7 +42,7 @@
           "paragraphs": [
             "Ako nas kontaktirate putem e-pošte, naše kontakt stranice ili obrasca za kontakt preduzeća, prikupljamo informacije koje nam dajete, uključujući ime, e-poštu, kompaniju, ulogu, broj telefona, zemlju, potrebe za implementacijom i komentare. Ako se pridružite listi čekanja na platformi, prikupljamo vašu poslanu e-poštu kako bismo vas obavijestili kada se platforma pokrene i šaljemo e-poštu za prijavu i odabrane platforme u naš privatni Slack radni prostor.",
             "Kada se prijavite, primamo informacije o autentifikaciji kao što su vaša adresa e-pošte i identifikator provajdera od Apple, Google, GitHub ili kod prijave putem e-pošte. Kada uparite mobilnu aplikaciju sa Mac-om, obrađujemo informacije o uparivanju potrebne za povezivanje uređaja. Kada pregledate radni prostor, pošaljete unos terminala, priložite odabrane fotografije, koristite transkripciju govora ili primate obavještenja terminala, povezani sadržaj ili transkript mogu proći između vaših uređaja i naše usluge prema potrebi za pružanje te funkcije.",
-            "Pristup kameri se koristi samo za skeniranje cmux kodova uparivanja QR. Pristup mikrofonu i prepoznavanju govora se koristi samo kada odaberete transkripciju glasa u okviru za poruke. Pristup fototeci se koristi samo kada odaberete fotografije za prilaganje."
+            "Pristup kameri se koristi samo za skeniranje hmux kodova uparivanja QR. Pristup mikrofonu i prepoznavanju govora se koristi samo kada odaberete transkripciju glasa u okviru za poruke. Pristup fototeci se koristi samo kada odaberete fotografije za prilaganje."
           ]
         },
         {
@@ -71,7 +71,7 @@
         "Slack: privatne interne obavijesti. Ako se pridružite listi čekanja platforme, e-pošta i platforme koje pošaljete šalju se u naš privatni radni prostor Slack."
       ],
       "afterBullets": [
-        "Svaki servis ima svoju politiku privatnosti. Kada treća strana obrađuje lične podatke za cmux, zahtijevamo zaštitne mjere barem jednako zaštitne kao ova politika i ograničavamo upotrebu na pružanje usluga za cmux."
+        "Svaki servis ima svoju politiku privatnosti. Kada treća strana obrađuje lične podatke za hmux, zahtijevamo zaštitne mjere barem jednako zaštitne kao ova politika i ograničavamo upotrebu na pružanje usluga za hmux."
       ]
     },
     {
@@ -123,7 +123,7 @@
     {
       "heading": "IX. Zadržavanje podataka",
       "paragraphs": [
-        "Izvještaji o padu i dijagnostika čuvaju se samo koliko je potrebno. Maskirane reprodukcije sesija brišu se iz Sentry 90 dana nakon snimanja. Identifikatori računa i zapisi autentifikacije čuvaju se dok je račun aktivan, zatim se brišu ili anonimiziraju, osim kada sigurnosne, pravne, porezne, naplatne ili obaveze sprečavanja prevare zahtijevaju čuvanje. Metapodaci uređaja i uparivanja čuvaju se do prekida veze ili brisanja, a Apple tokeni samo dok su obavještenja uključena. Web i mobilna analitika, analitika povezana s računom, događaji ciklusa naplate i Stripe identifikatori u PostHog čuvaju se do 24 mjeseca, osim ako ranije zatražite brisanje. Postavke računa brišu ili anonimiziraju cmux podatke, brišu povezanu PostHog osobu i traže brisanje web i mobilnih analitičkih događaja i snimaka. Neki naplatni zapisi i Stripe identifikatori mogu se čuvati zbog sigurnosnih, pravnih, poreznih, naplatnih ili obaveza sprečavanja prevare. Brisanje kod pružatelja može biti asinhrono. Zatražite brisanje u postavkama ili putem [founders@cmux.com](mailto:founders@cmux.com)."
+        "Izvještaji o padu i dijagnostika čuvaju se samo koliko je potrebno. Maskirane reprodukcije sesija brišu se iz Sentry 90 dana nakon snimanja. Identifikatori računa i zapisi autentifikacije čuvaju se dok je račun aktivan, zatim se brišu ili anonimiziraju, osim kada sigurnosne, pravne, porezne, naplatne ili obaveze sprečavanja prevare zahtijevaju čuvanje. Metapodaci uređaja i uparivanja čuvaju se do prekida veze ili brisanja, a Apple tokeni samo dok su obavještenja uključena. Web i mobilna analitika, analitika povezana s računom, događaji ciklusa naplate i Stripe identifikatori u PostHog čuvaju se do 24 mjeseca, osim ako ranije zatražite brisanje. Postavke računa brišu ili anonimiziraju hmux podatke, brišu povezanu PostHog osobu i traže brisanje web i mobilnih analitičkih događaja i snimaka. Neki naplatni zapisi i Stripe identifikatori mogu se čuvati zbog sigurnosnih, pravnih, poreznih, naplatnih ili obaveza sprečavanja prevare. Brisanje kod pružatelja može biti asinhrono. Zatražite brisanje u postavkama ili putem [founders@cmux.com](mailto:founders@cmux.com)."
       ]
     }
   ]

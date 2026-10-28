@@ -4,7 +4,7 @@
  * slash. It resolves exactly like the Stack SDK's server app, so every
  * request we send goes to the same host as the SDK's: the server-side URL
  * variables first, then the shared ones, then the SDK default
- * `https://api.hexclave.com`. `STACK_API_BASE_URL` is a cmux-only override
+ * `https://api.hexclave.com`. `STACK_API_BASE_URL` is a hmux-only override
  * and wins. HTTPS only.
  *
  * Until 2026-10-13 this defaulted to `https://api.stack-auth.com` while the

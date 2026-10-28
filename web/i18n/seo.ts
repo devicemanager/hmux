@@ -74,26 +74,26 @@ const zeroWidthMetadataCodePoint =
   /[\p{Mark}\u200D\uFE0E\uFE0F\u{E0100}-\u{E01EF}\u{1F3FB}-\u{1F3FF}]/u;
 
 const openGraphImageAlts: Record<string, string> = {
-  en: "cmux - The terminal built for multitasking",
-  ja: "cmux - マルチタスクのために作られたターミナル",
-  "zh-CN": "cmux - 为多任务处理而生的终端",
-  "zh-TW": "cmux - 為多工處理而生的終端",
-  ko: "cmux - 멀티태스킹을 위해 설계된 터미널",
-  de: "cmux - Das Terminal für Multitasking",
-  es: "cmux - La terminal creada para la multitarea",
-  fr: "cmux - Le terminal conçu pour le multitâche",
-  it: "cmux - Il terminale creato per il multitasking",
-  da: "cmux - Terminalen bygget til multitasking",
-  pl: "cmux - Terminal stworzony do wielozadaniowości",
-  ru: "cmux - Терминал для многозадачности",
-  bs: "cmux - Terminal napravljen za multitasking",
-  ar: "cmux - الطرفية المصممة لتعدد المهام",
-  no: "cmux - Terminalen laget for multitasking",
-  "pt-BR": "cmux - O terminal criado para multitarefa",
-  th: "cmux - เทอร์มินัลที่สร้างมาเพื่อการทำงานหลายอย่าง",
-  tr: "cmux - Çoklu görev için tasarlanmış terminal",
-  km: "cmux - Terminal ដែលបង្កើតសម្រាប់ការងារច្រើន",
-  uk: "cmux - Термінал для багатозадачності",
+  en: "hmux - The terminal built for multitasking",
+  ja: "hmux - マルチタスクのために作られたターミナル",
+  "zh-CN": "hmux - 为多任务处理而生的终端",
+  "zh-TW": "hmux - 為多工處理而生的終端",
+  ko: "hmux - 멀티태스킹을 위해 설계된 터미널",
+  de: "hmux - Das Terminal für Multitasking",
+  es: "hmux - La terminal creada para la multitarea",
+  fr: "hmux - Le terminal conçu pour le multitâche",
+  it: "hmux - Il terminale creato per il multitasking",
+  da: "hmux - Terminalen bygget til multitasking",
+  pl: "hmux - Terminal stworzony do wielozadaniowości",
+  ru: "hmux - Терминал для многозадачности",
+  bs: "hmux - Terminal napravljen za multitasking",
+  ar: "hmux - الطرفية المصممة لتعدد المهام",
+  no: "hmux - Terminalen laget for multitasking",
+  "pt-BR": "hmux - O terminal criado para multitarefa",
+  th: "hmux - เทอร์มินัลที่สร้างมาเพื่อการทำงานหลายอย่าง",
+  tr: "hmux - Çoklu görev için tasarlanmış terminal",
+  km: "hmux - Terminal ដែលបង្កើតសម្រាប់ការងារច្រើន",
+  uk: "hmux - Термінал для багатозадачності",
 };
 
 const openGraphImageTaglines: Record<string, string> = {
@@ -340,7 +340,7 @@ function isSafeMetadataText(value: string) {
   return (
     !/<\/?[a-z][^>]*>/iu.test(value) &&
     !/[{}]/u.test(value) &&
-    !/__CMUXPH/iu.test(value) &&
+    !/__HMUXPH/iu.test(value) &&
     !/[:：៖]\s*$/u.test(value)
   );
 }
@@ -362,7 +362,7 @@ export function openGraphDefaults(
   type: "website" | "article" = "website",
 ) {
   return {
-    siteName: "cmux",
+    siteName: "hmux",
     type,
     images: [openGraphImage(locale)],
   };
@@ -373,7 +373,7 @@ export function browserOpenGraphDefaults(
   type: "website" | "article" = "website",
 ) {
   return {
-    siteName: "cmux",
+    siteName: "hmux",
     type,
     images: [browserOpenGraphImage(alt)],
   };

@@ -1,6 +1,6 @@
-# cmux iOS localization
+# hmux iOS localization
 
-cmux iOS supports these languages:
+hmux iOS supports these languages:
 
 - English (`en`)
 - German (`de`)

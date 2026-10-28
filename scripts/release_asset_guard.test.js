@@ -10,18 +10,18 @@ const {
 } = require("./release_asset_guard");
 
 const daemonAssets = [
-  "cmuxd-remote-darwin-arm64",
-  "cmuxd-remote-darwin-amd64",
-  "cmuxd-remote-linux-arm64",
-  "cmuxd-remote-linux-amd64",
-  "cmuxd-remote-checksums.txt",
-  "cmuxd-remote-manifest.json",
+  "hmuxd-remote-darwin-arm64",
+  "hmuxd-remote-darwin-amd64",
+  "hmuxd-remote-linux-arm64",
+  "hmuxd-remote-linux-amd64",
+  "hmuxd-remote-checksums.txt",
+  "hmuxd-remote-manifest.json",
 ];
 
 const appAssets = [
-  "cmux-macos.dmg",
-  "cmux-macos-arm64.dmg",
-  "cmux-macos-x86_64.dmg",
+  "hmux-macos.dmg",
+  "hmux-macos-arm64.dmg",
+  "hmux-macos-x86_64.dmg",
   "appcast.xml",
   "appcast-arm64.xml",
   "appcast-x86_64.xml",
@@ -33,12 +33,12 @@ test("stable ships thin DMGs and per-architecture feeds as immutable assets", ()
   }
   // A release that only has the universal build is incomplete, not done.
   const result = evaluateReleaseAssetGuard({
-    existingAssetNames: ["cmux-macos.dmg", "appcast.xml", ...daemonAssets],
+    existingAssetNames: ["hmux-macos.dmg", "appcast.xml", ...daemonAssets],
   });
   assert.equal(result.guardState, RELEASE_ASSET_GUARD_STATE.PARTIAL);
   assert.deepEqual(
     new Set(result.missingImmutableAssets),
-    new Set(["cmux-macos-arm64.dmg", "cmux-macos-x86_64.dmg", "appcast-arm64.xml", "appcast-x86_64.xml"]),
+    new Set(["hmux-macos-arm64.dmg", "hmux-macos-x86_64.dmg", "appcast-arm64.xml", "appcast-x86_64.xml"]),
   );
 });
 

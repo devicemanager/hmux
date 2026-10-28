@@ -12,7 +12,7 @@ The actual iOS app compiles with these changes. Shared tests and the exact sourc
 
 ## Native two-minute suspension limit
 
-The tested Swift package pins `iroh-ffi` tag `1.0.2-cmux.7`, commit `20f0e67cc3cb5179e816ef45b7a7ec5c8c58b0e0`. Its endpoint options expose initial stream limits but no idle-timeout setting; those limits construct the default transport configuration. [Pinned FFI endpoint source](https://github.com/manaflow-ai/iroh-ffi/blob/20f0e67cc3cb5179e816ef45b7a7ec5c8c58b0e0/src/endpoint.rs#L59).
+The tested Swift package pins `iroh-ffi` tag `1.0.2-hmux.7`, commit `20f0e67cc3cb5179e816ef45b7a7ec5c8c58b0e0`. Its endpoint options expose initial stream limits but no idle-timeout setting; those limits construct the default transport configuration. [Pinned FFI endpoint source](https://github.com/manaflow-ai/iroh-ffi/blob/20f0e67cc3cb5179e816ef45b7a7ec5c8c58b0e0/src/endpoint.rs#L59).
 
 The pinned IROH transport starts with noq defaults and enables native keepalive, while the pinned noq configuration sets a 30,000-millisecond idle timeout. The effective connection idle timeout is the minimum negotiated by both peers. [Pinned IROH transport builder](https://github.com/manaflow-ai/iroh/blob/4152d81047a6024881cb24e00dfd49b6cc73c65b/iroh/src/endpoint/quic.rs#L152), [pinned noq default](https://github.com/manaflow-ai/noq/blob/2271bbc25890f9577d2ce9bd0bb0f872af32e105/noq-proto/src/config/transport.rs#L514).
 

@@ -1,4 +1,4 @@
-import CmuxHomeCore
+import HmuxHomeCore
 import Foundation
 
 /// What a running turn is doing for the working status line above the field:

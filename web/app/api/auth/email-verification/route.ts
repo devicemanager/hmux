@@ -32,7 +32,7 @@ const productionDependencies: EmailVerificationRecoveryRouteDependencies = {
       }),
     ),
   checkRateLimit: checkVercelRateLimit,
-  rateLimitRuleID: () => process.env.CMUX_FEEDBACK_RATE_LIMIT_ID,
+  rateLimitRuleID: () => process.env.HMUX_FEEDBACK_RATE_LIMIT_ID,
   isVercel: () => process.env.VERCEL === "1",
 };
 

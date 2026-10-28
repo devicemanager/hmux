@@ -17,7 +17,7 @@ import test from "node:test";
 const repositoryRoot = path.resolve(import.meta.dir, "../..");
 
 function fixtureDirectory() {
-  const directory = mkdtempSync(path.join(os.tmpdir(), "cmux-prod-gate-test-"));
+  const directory = mkdtempSync(path.join(os.tmpdir(), "hmux-prod-gate-test-"));
   chmodSync(directory, 0o700);
   return directory;
 }
@@ -59,24 +59,24 @@ function writeGateAppPlist(
 test("release gate rejects Mac and iOS artifacts configured for different authorities", (t) => {
   const directory = fixtureDirectory();
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const macApp = path.join(directory, "cmux DEV gate.app");
-  const iosApp = path.join(directory, "cmux.app");
+  const macApp = path.join(directory, "hmux DEV gate.app");
+  const iosApp = path.join(directory, "hmux.app");
   const expected = "https://gate.example";
-  const expectedV2 = "https://cmux-v2-staging.debussy.workers.dev";
+  const expectedV2 = "https://hmux-v2-staging.debussy.workers.dev";
   const presence = "https://presence.example";
 
   writeGateAppPlist(macApp, {}, {
-    CMUX_API_BASE_URL: "https://stale.example",
-    CMUX_IROH_BROKER_BASE_URL: "https://stale.example",
-    CMUX_IROH_V2_BASE_URL: "https://stale.example",
-    CMUX_IROH_V2_ENVIRONMENT: "development",
+    HMUX_API_BASE_URL: "https://stale.example",
+    HMUX_IROH_BROKER_BASE_URL: "https://stale.example",
+    HMUX_IROH_V2_BASE_URL: "https://stale.example",
+    HMUX_IROH_V2_ENVIRONMENT: "development",
   }, "macOS");
   writeGateAppPlist(iosApp, {
-    CMUXApiBaseURL: expected,
-    CMUXIrohBrokerBaseURL: expected,
-    CMUX_IROH_V2_BASE_URL: expectedV2,
-    CMUX_IROH_V2_ENVIRONMENT: "staging",
-    CMUXPresenceBaseURL: presence,
+    HMUXApiBaseURL: expected,
+    HMUXIrohBrokerBaseURL: expected,
+    HMUX_IROH_V2_BASE_URL: expectedV2,
+    HMUX_IROH_V2_ENVIRONMENT: "staging",
+    HMUXPresenceBaseURL: presence,
   });
 
   const mismatch = run("bash", [
@@ -93,10 +93,10 @@ test("release gate rejects Mac and iOS artifacts configured for different author
   assert.match(mismatch.stderr, /rebuild without --skip-build/u);
 
   writeGateAppPlist(macApp, {}, {
-    CMUX_API_BASE_URL: expected,
-    CMUX_IROH_BROKER_BASE_URL: expected,
-    CMUX_IROH_V2_BASE_URL: expectedV2,
-    CMUX_IROH_V2_ENVIRONMENT: "staging",
+    HMUX_API_BASE_URL: expected,
+    HMUX_IROH_BROKER_BASE_URL: expected,
+    HMUX_IROH_V2_BASE_URL: expectedV2,
+    HMUX_IROH_V2_ENVIRONMENT: "staging",
   }, "macOS");
   const presenceMismatch = run("bash", [
     "scripts/lib/verify-iroh-release-gate-builds.sh",
@@ -111,11 +111,11 @@ test("release gate rejects Mac and iOS artifacts configured for different author
   assert.match(presenceMismatch.stderr, /Mac app presence.*requested backend/u);
 
   writeGateAppPlist(macApp, {}, {
-    CMUX_API_BASE_URL: expected,
-    CMUX_IROH_BROKER_BASE_URL: expected,
-    CMUX_IROH_V2_BASE_URL: expectedV2,
-    CMUX_IROH_V2_ENVIRONMENT: "staging",
-    CMUX_PRESENCE_BASE_URL: presence,
+    HMUX_API_BASE_URL: expected,
+    HMUX_IROH_BROKER_BASE_URL: expected,
+    HMUX_IROH_V2_BASE_URL: expectedV2,
+    HMUX_IROH_V2_ENVIRONMENT: "staging",
+    HMUX_PRESENCE_BASE_URL: presence,
   }, "macOS");
   const matched = run("bash", [
     "scripts/lib/verify-iroh-release-gate-builds.sh",
@@ -134,21 +134,21 @@ test("explicit credentials file is exclusive and accepts either supported key pa
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const credentialsFile = path.join(directory, "credentials.env");
   writeFileSync(credentialsFile, [
-    "CMUX_UITEST_STACK_EMAIL=temporary@example.com",
-    "CMUX_UITEST_STACK_PASSWORD=temporary-password",
+    "HMUX_UITEST_STACK_EMAIL=temporary@example.com",
+    "HMUX_UITEST_STACK_PASSWORD=temporary-password",
     "",
   ].join("\n"), { mode: 0o600 });
   chmodSync(credentialsFile, 0o600);
 
   const result = run("bash", ["-c", [
     "source scripts/lib/dev-secrets.sh",
-    "cmux_dev_secrets_load --credentials-file \"$CREDENTIALS_FILE\"",
-    "! env | grep -Eq '^CMUX_(DOGFOOD|UITEST)_STACK_(EMAIL|PASSWORD)='",
-    "printf '%s\\n%s\\n' \"$CMUX_UITEST_STACK_EMAIL\" \"$CMUX_UITEST_STACK_PASSWORD\"",
+    "hmux_dev_secrets_load --credentials-file \"$CREDENTIALS_FILE\"",
+    "! env | grep -Eq '^HMUX_(DOGFOOD|UITEST)_STACK_(EMAIL|PASSWORD)='",
+    "printf '%s\\n%s\\n' \"$HMUX_UITEST_STACK_EMAIL\" \"$HMUX_UITEST_STACK_PASSWORD\"",
   ].join("; ")], {
     CREDENTIALS_FILE: credentialsFile,
-    CMUX_DOGFOOD_STACK_EMAIL: "ambient@example.com",
-    CMUX_DOGFOOD_STACK_PASSWORD: "ambient-password",
+    HMUX_DOGFOOD_STACK_EMAIL: "ambient@example.com",
+    HMUX_DOGFOOD_STACK_PASSWORD: "ambient-password",
   });
 
   assert.equal(result.status, 0, result.stderr);
@@ -165,7 +165,7 @@ test("explicit credentials file rejects permissive modes and symlinks", (t) => {
   const directory = fixtureDirectory();
   t.after(() => rmSync(directory, { recursive: true, force: true }));
   const credentialsFile = path.join(directory, "credentials.env");
-  writeFileSync(credentialsFile, "CMUX_UITEST_STACK_EMAIL=x\nCMUX_UITEST_STACK_PASSWORD=y\n", {
+  writeFileSync(credentialsFile, "HMUX_UITEST_STACK_EMAIL=x\nHMUX_UITEST_STACK_PASSWORD=y\n", {
     mode: 0o640,
   });
   chmodSync(credentialsFile, 0o640);
@@ -175,7 +175,7 @@ test("explicit credentials file rejects permissive modes and symlinks", (t) => {
   for (const candidate of [credentialsFile, symlink]) {
     const result = run("bash", ["-c", [
       "source scripts/lib/dev-secrets.sh",
-      "cmux_dev_secrets_load --credentials-file \"$CREDENTIALS_FILE\"",
+      "hmux_dev_secrets_load --credentials-file \"$CREDENTIALS_FILE\"",
     ].join("; ")], { CREDENTIALS_FILE: candidate });
     assert.equal(result.status, 2);
     assert.doesNotMatch(result.stderr, /temporary-password|ambient-password/u);
@@ -217,7 +217,7 @@ test("release gate iOS build is isolated from the configured default iPhone", ()
   const result = run("bash", ["-c", [
     "set -euo pipefail",
     "source scripts/lib/iroh-release-gate-targets.sh",
-    "iroh_release_gate_set_ios_reload_args prodgate 'cmux Iroh gate prodgate' SIMULATOR-ID 1",
+    "iroh_release_gate_set_ios_reload_args prodgate 'hmux Iroh gate prodgate' SIMULATOR-ID 1",
     "printf '<%s>\\n' \"${IROH_RELEASE_GATE_IOS_RELOAD_ARGS[@]}\"",
   ].join("; ")]);
 
@@ -226,7 +226,7 @@ test("release gate iOS build is isolated from the configured default iPhone", ()
     "<--tag>",
     "<prodgate>",
     "<--simulator>",
-    "<cmux Iroh gate prodgate>",
+    "<hmux Iroh gate prodgate>",
     "<--simulator-id>",
     "<SIMULATOR-ID>",
     "<--simulator-only>",
@@ -239,31 +239,31 @@ test("release gate iOS build is isolated from the configured default iPhone", ()
 test("iOS release artifact gate rejects staged runtime origins", (t) => {
   const directory = fixtureDirectory();
   t.after(() => rmSync(directory, { recursive: true, force: true }));
-  const app = path.join(directory, "cmux.app");
+  const app = path.join(directory, "hmux.app");
   const args = ["scripts/lib/verify-ios-release-origins.sh", "--app", app];
 
   writeGateAppPlist(app, {
-    CFBundleIdentifier: "dev.cmux.app.internal",
-    CMUXAuthEnvironment: "production",
-    CMUXApiBaseURL: "https://cmux.com",
-    CMUXIrohBrokerBaseURL: "https://cmux.com",
-    CMUXPresenceBaseURL: "https://presence.cmux.dev",
-    CMUXDevTag: "",
+    CFBundleIdentifier: "dev.hmux.app.internal",
+    HMUXAuthEnvironment: "production",
+    HMUXApiBaseURL: "https://cmux.com",
+    HMUXIrohBrokerBaseURL: "https://cmux.com",
+    HMUXPresenceBaseURL: "https://presence.cmux.dev",
+    HMUXDevTag: "",
   });
   const valid = run("bash", args);
   assert.equal(valid.status, 0, valid.stderr);
 
   writeGateAppPlist(app, {
-    CFBundleIdentifier: "dev.cmux.app.internal",
-    CMUXAuthEnvironment: "production",
-    CMUXApiBaseURL: "https://cmux.com",
-    CMUXIrohBrokerBaseURL: "https://cmux-staging.vercel.app",
-    CMUXPresenceBaseURL: "https://presence.cmux.dev",
-    CMUXDevTag: "internal",
+    CFBundleIdentifier: "dev.hmux.app.internal",
+    HMUXAuthEnvironment: "production",
+    HMUXApiBaseURL: "https://cmux.com",
+    HMUXIrohBrokerBaseURL: "https://cmux-staging.vercel.app",
+    HMUXPresenceBaseURL: "https://presence.cmux.dev",
+    HMUXDevTag: "internal",
   });
   const invalid = run("bash", args);
   assert.notEqual(invalid.status, 0);
-  assert.match(invalid.stderr, /CMUXIrohBrokerBaseURL/u);
+  assert.match(invalid.stderr, /HMUXIrohBrokerBaseURL/u);
 });
 
 test("production release gate gives its account helper a normalized protected state directory", (t) => {
@@ -291,7 +291,7 @@ if [[ "$(uname)" == "Darwin" ]]; then
 else
   mode="$(stat -c '%a' "$state_directory")"
 fi
-printf '%s\n%s\n' "$state_file" "$mode" > "$CMUX_TEST_CAPTURE_FILE"
+printf '%s\n%s\n' "$state_file" "$mode" > "$HMUX_TEST_CAPTURE_FILE"
 exit 73
 `, { mode: 0o755 });
   chmodSync(fakeBun, 0o755);
@@ -310,7 +310,7 @@ exit 73
     "--stack-env-file", stackEnvironment,
     "--report-output", reportOutput,
   ], {
-    CMUX_TEST_CAPTURE_FILE: captureFile,
+    HMUX_TEST_CAPTURE_FILE: captureFile,
     PATH: `${fakeBin}:${process.env.PATH}`,
     TMPDIR: `${directory}/`,
   });
@@ -337,12 +337,12 @@ test("production release gate removes disposable tagged Iroh endpoint state", (t
   writeFileSync(stackEnvironment, "unused=true\n", { mode: 0o600 });
   chmodSync(stackEnvironment, 0o600);
 
-  const bundleID = "com.cmuxterm.app.debug.prodstate";
+  const bundleID = "com.hmuxterm.app.debug.prodstate";
   const endpointState = path.join(
     directory,
     "Library",
     "Application Support",
-    "cmux",
+    "hmux",
     "iroh-debug",
     bundleID,
   );
@@ -375,10 +375,10 @@ test("Mac reload documents production auth without accepting secret values", () 
   assert.match(result.stdout, /credential values never enter argv/u);
 });
 
-test("Mac reload accepts an immutable cmux-tui manifest pin", () => {
+test("Mac reload accepts an immutable hmux-tui manifest pin", () => {
   const result = run("bash", ["scripts/reload.sh", "--help"]);
   assert.equal(result.status, 0, result.stderr);
-  assert.match(result.stdout, /--cmux-tui-manifest-url <url>/u);
+  assert.match(result.stdout, /--hmux-tui-manifest-url <url>/u);
 
   const source = readFileSync(
     path.join(repositoryRoot, "scripts/reload.sh"),
@@ -386,6 +386,6 @@ test("Mac reload accepts an immutable cmux-tui manifest pin", () => {
   );
   assert.match(
     source,
-    /--manifest-url "\$CMUX_TUI_CLIENT_MANIFEST_URL_VALUE"/u,
+    /--manifest-url "\$HMUX_TUI_CLIENT_MANIFEST_URL_VALUE"/u,
   );
 });

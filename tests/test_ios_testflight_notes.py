@@ -75,15 +75,15 @@ def test_deferred_notes():
                    ASC_API_KEY_ID="fixture", ASC_API_ISSUER_ID="fixture", ASC_API_KEY_PATH="fixture",
                    SCRIPT_DIR=temp, PLISTBUDDY="false", ARCHIVE_PATH=temp,
                    RANGE_NOTES_MODE="0", NOTES_VERSION_GUARD="0", NOTES_AUDIENCE="internal",
-                   SHIPPED_BUILD_NUMBER="20260923010101", PRODUCT_BUNDLE_IDENTIFIER="dev.cmux.app.internal",
-                   CALLS=str(calls), CMUX_TESTFLIGHT_NOTES_REQUEST_FILE=str(request))
+                   SHIPPED_BUILD_NUMBER="20260923010101", PRODUCT_BUNDLE_IDENTIFIER="dev.hmux.app.internal",
+                   CALLS=str(calls), HMUX_TESTFLIGHT_NOTES_REQUEST_FILE=str(request))
         result = subprocess.run(["bash", "-euo", "pipefail", "-c", block], env=env, capture_output=True, text=True)
         _check(result.returncode == 0, "deferred notes do not fail the accepted upload")
         _check(not calls.exists(), "Mac upload does not contact ASC for deferred notes")
         _check(request.exists(), "Mac writes a portable notes request")
         if request.exists():
             args = json.loads(request.read_text())
-            _check(args == ["--build-number", "20260923010101", "--audience", "internal", "--bundle-id", "dev.cmux.app.internal"], "deferred request preserves shipped build identity")
+            _check(args == ["--build-number", "20260923010101", "--audience", "internal", "--bundle-id", "dev.hmux.app.internal"], "deferred request preserves shipped build identity")
         consumer = root / "apply-deferred-testflight-notes.py"
         shutil.copyfile(Path(REPO_ROOT, "ios/scripts/apply-deferred-testflight-notes.py"), consumer)
         if request.exists():
@@ -119,7 +119,7 @@ def test_deferred_notes():
         _check(result.returncode == 0 and not request.exists() and not calls.exists(), "missing credentials never publish a stale deferred request")
         env["ASC_API_KEY_ID"] = "fixture"
         # Local callers keep their existing synchronous behavior.
-        env.pop("CMUX_TESTFLIGHT_NOTES_REQUEST_FILE")
+        env.pop("HMUX_TESTFLIGHT_NOTES_REQUEST_FILE")
         env["SETTER_EXIT"] = "3"
         result = subprocess.run(["bash", "-euo", "pipefail", "-c", block], env=env, capture_output=True, text=True)
         _check(calls.exists(), "local uploads still apply notes directly")
@@ -137,7 +137,7 @@ def test_processing_wait_defaults_cover_apple_ingest():
            "internal group assignment waits 30 minutes by default")
     _check("DEFAULT_PROCESSING_TIMEOUT_SECONDS = 1800" in notes_source,
            "TestFlight notes wait 30 minutes by default")
-    _check('TIMEOUT_SECONDS="${CMUX_TESTFLIGHT_PROCESSING_TIMEOUT_SECONDS:-1800}"' in shell_source,
+    _check('TIMEOUT_SECONDS="${HMUX_TESTFLIGHT_PROCESSING_TIMEOUT_SECONDS:-1800}"' in shell_source,
            "shell notes setter shares the 30-minute processing default")
     _check("timeout-minutes: 40" in notes_job,
            "notes job remains alive for the full processing wait")
@@ -157,19 +157,19 @@ def main():
         base = _git(repo, "rev-parse", "HEAD").stdout.strip()
 
         # iOS-affecting commits (should appear), one per filtered path family.
-        _commit(repo, "ios/cmux/App.swift", "ios: fix the thing (#101)")
+        _commit(repo, "ios/hmux/App.swift", "ios: fix the thing (#101)")
         _commit(repo, "Packages/iOS/Foo/Bar.swift", "Mobile: add a feature (#102)")
         _commit(repo, "Packages/Shared/Baz/Qux.swift", "Shared: shared change (#103)")
         # Non-iOS commit (should NOT appear).
         _commit(repo, "web/app/page.tsx", "web: unrelated web change (#104)")
         # Noise commits (should NOT appear).
-        _commit(repo, "ios/cmux/Chore.swift", "chore: bump deps (#105)")
-        _commit(repo, "ios/cmux/Ci.swift", "ci: tweak workflow (#106)")
+        _commit(repo, "ios/hmux/Chore.swift", "chore: bump deps (#105)")
+        _commit(repo, "ios/hmux/Ci.swift", "ci: tweak workflow (#106)")
 
         # Subjects containing the literal '|' must not corrupt de-duplication
         # (regression: a '|'-delimited seen-set dropped distinct later subjects).
-        _commit(repo, "ios/cmux/Pipe.swift", "ios: support A|B mode (#107)")
-        _commit(repo, "ios/cmux/Pipe2.swift", "ios: support A (#108)")
+        _commit(repo, "ios/hmux/Pipe.swift", "ios: support A|B mode (#107)")
+        _commit(repo, "ios/hmux/Pipe2.swift", "ios: support A (#108)")
 
         internal = _gen(repo, base, "internal")
         _check("fix the thing (#101)" in internal, "internal includes iOS PR title + number")
@@ -199,7 +199,7 @@ def main():
         # an unrelated branch) must fail closed to the fallback, not emit notes for
         # a bogus range.
         _git(repo, "checkout", "-q", "-b", "side", base)
-        _commit(repo, "ios/cmux/Side.swift", "ios: side-branch only change (#900)")
+        _commit(repo, "ios/hmux/Side.swift", "ios: side-branch only change (#900)")
         side = _git(repo, "rev-parse", "HEAD").stdout.strip()
         _git(repo, "checkout", "-q", "main")
         non_ancestor = _gen(repo, side, "internal")

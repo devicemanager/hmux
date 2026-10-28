@@ -61,7 +61,7 @@ const defaultDependencies: ProFulfillmentDependencies = {
     const resend = new Resend(env.RESEND_API_KEY);
     return resend.emails.send(payload, options);
   },
-  fromEmail: () => env.CMUX_PRO_FROM_EMAIL ?? DEFAULT_PRO_FROM_EMAIL,
+  fromEmail: () => env.HMUX_PRO_FROM_EMAIL ?? DEFAULT_PRO_FROM_EMAIL,
   fulfillmentStore: {
     deliverOnce: async (input, deliver) => {
       const db = cloudDb();
@@ -79,7 +79,7 @@ const defaultDependencies: ProFulfillmentDependencies = {
             if (claim === "already_sent") return claim;
             if (claim === "delivery_abandoned") {
               console.warn(
-                "cmux Pro welcome skipped after the provider idempotency window",
+                "hmux Pro welcome skipped after the provider idempotency window",
                 { checkoutSessionId: input.checkoutSessionId },
               );
               return claim;
@@ -138,7 +138,7 @@ export async function sendProSignupWelcome(
         // the webhook. Record the no-op fulfillment once so later events do
         // not retry an impossible delivery forever.
         console.warn(
-          "cmux Pro welcome skipped: checkout is missing a customer email",
+          "hmux Pro welcome skipped: checkout is missing a customer email",
           { checkoutSessionId: sessionRef },
         );
         return;
@@ -156,7 +156,7 @@ export async function sendProSignupWelcome(
       });
       if (error) {
         throw new ProWelcomeProviderRejectedError(
-          `cmux Pro welcome email failed: ${errorMessage(error)}`,
+          `hmux Pro welcome email failed: ${errorMessage(error)}`,
         );
       }
     },
@@ -172,7 +172,7 @@ class ProWelcomeProviderRejectedError extends Error {
 
 class ProWelcomeDeliveryInProgressError extends Error {
   constructor(checkoutSessionId: string) {
-    super(`cmux Pro welcome delivery is still in progress: ${checkoutSessionId}`);
+    super(`hmux Pro welcome delivery is still in progress: ${checkoutSessionId}`);
     this.name = "ProWelcomeDeliveryInProgressError";
   }
 }
@@ -211,7 +211,7 @@ async function claimProWelcomeDelivery(
     if (existing?.sentAt) return "already_sent";
     if (existing && existing.stackUserId !== input.stackUserId) {
       throw new Error(
-        "cmux Pro welcome checkout ownership changed before fulfillment",
+        "hmux Pro welcome checkout ownership changed before fulfillment",
       );
     }
     if (
@@ -398,7 +398,7 @@ function firstName(name: string | null | undefined): string | null {
 }
 
 function formatFromAddress(email: string): string {
-  return `cmux Pro <${email}>`;
+  return `hmux Pro <${email}>`;
 }
 
 function escapeHtml(value: string): string {

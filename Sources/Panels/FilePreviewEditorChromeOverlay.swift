@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 
 /// Draws current-line highlight and indent guides over a TextKit 1 text view.
 ///

@@ -9,7 +9,7 @@ type Migration = { tag: string; new_sqlite_classes?: string[]; [key: string]: un
 type Config = { migrations: Migration[]; env: Record<string, { name: string; vars: Record<string, string>; durable_objects: { bindings: Binding[] } }> };
 type StoragePolicy = { maxSchemaVersion: number; writeSchemaVersion: number };
 
-const targets = { production: "cmux-v2", staging: "cmux-v2-staging" } as const;
+const targets = { production: "hmux-v2", staging: "hmux-v2-staging" } as const;
 type Environment = keyof typeof targets;
 export const candidateStorage: StoragePolicy = { maxSchemaVersion: STORAGE_SCHEMA_VERSION, writeSchemaVersion: STORAGE_WRITE_SCHEMA_VERSION };
 
@@ -91,7 +91,7 @@ function storageBindings(version: Version): Record<string, string> {
 
 function verifiedHealth(version: Version, health: unknown, lane: Environment) {
   const value = HealthSchema.parse(health);
-  const revision = version.resources.bindings.find(binding => binding.name === "CMUX_SOURCE_REVISION" && binding.type === "plain_text")?.text;
+  const revision = version.resources.bindings.find(binding => binding.name === "HMUX_SOURCE_REVISION" && binding.type === "plain_text")?.text;
   if (value.environment !== lane || !revision || !/^[0-9a-f]{40}$/.test(revision) || value.sourceRevision !== revision) {
     throw new Error("Health does not match the captured deployment revision and environment");
   }

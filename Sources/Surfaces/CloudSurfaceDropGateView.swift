@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import Bonsplit
 import UniformTypeIdentifiers

@@ -2,7 +2,7 @@ name: Plain paste worker controls
 on:
   pull_request:
     paths:
-      - 'workers/cmux-paste-text/**'
+      - 'workers/hmux-paste-text/**'
       - 'scripts/build-plain-text-paste-worker.sh'
       - 'tests/test_plain_text_paste_worker.py'
       - 'tests/fixtures/plain_paste_provider.m'
@@ -48,9 +48,9 @@ jobs:
             tests/fixtures/plain_paste_client.swift -o "$RUNNER_TEMP/plain-paste/client"
       - name: Exercise actual pasteboard providers and lifecycle
         env:
-          CMUX_PASTE_HELPER: ${{ runner.temp }}/plain-paste/helper
-          CMUX_PASTE_PROVIDER: ${{ runner.temp }}/plain-paste/provider
-          CMUX_PASTE_CLIENT: ${{ runner.temp }}/plain-paste/client
+          HMUX_PASTE_HELPER: ${{ runner.temp }}/plain-paste/helper
+          HMUX_PASTE_PROVIDER: ${{ runner.temp }}/plain-paste/provider
+          HMUX_PASTE_CLIENT: ${{ runner.temp }}/plain-paste/client
         run: python3 tests/test_plain_text_paste_worker.py 2>&1 | tee "$RUNNER_TEMP/plain-paste/results.log"
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a
         if: always()

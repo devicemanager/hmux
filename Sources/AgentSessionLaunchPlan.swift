@@ -1,5 +1,5 @@
 import Foundation
-import CmuxSettings
+import HmuxSettings
 
 enum AgentSessionScratchDirectory {
     private static let rootName = "agent-artifacts"
@@ -9,14 +9,14 @@ enum AgentSessionScratchDirectory {
         provider: AgentSessionProviderID,
         fileManager: FileManager = .default
     ) throws -> URL {
-        let root = CmuxStateDirectory.url(homeDirectory: fileManager.homeDirectoryForCurrentUser)
+        let root = HmuxStateDirectory.url(homeDirectory: fileManager.homeDirectoryForCurrentUser)
             .appendingPathComponent(rootName, isDirectory: true)
             .appendingPathComponent(provider.rawValue, isDirectory: true)
             .appendingPathComponent(sessionID, isDirectory: true)
         try fileManager.createDirectory(at: root, withIntermediateDirectories: true)
-        let manifest = root.appendingPathComponent(".cmux-owned", isDirectory: false)
+        let manifest = root.appendingPathComponent(".hmux-owned", isDirectory: false)
         if !fileManager.fileExists(atPath: manifest.path) {
-            try Data("cmux-agent-artifact-v1\n".utf8).write(to: manifest, options: .atomic)
+            try Data("hmux-agent-artifact-v1\n".utf8).write(to: manifest, options: .atomic)
         }
         return root
     }

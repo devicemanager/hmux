@@ -5,7 +5,7 @@ import { randomUUID } from "node:crypto";
 // origin) must end failed. When that failure escaped processClaim, the attempt
 // kept status 'running', every later cron claim threw the same way, and the
 // Run stayed "running" until callers gave up (staging dogfood, 2026-10-18).
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 type TestSql = ((strings: TemplateStringsArray, ...values: unknown[]) => Promise<Record<string, unknown>[]>) & { end(options?: { timeout?: number }): Promise<void>; json(value: unknown): unknown };
 let sqlClient: TestSql | null = null;
@@ -26,7 +26,7 @@ function database(): TestSql {
 beforeAll(async () => {
   if (!runDbTests) return;
   const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!url) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   const postgres = (await import("postgres")).default;
   sqlClient = postgres(url, { max: 2 }) as unknown as TestSql;
 });
@@ -51,7 +51,7 @@ describe("Run queue worker", () => {
     await db`
       insert into runs (id, user_id, owner_team_id, request_digest, source, spec, recipe, desired_attempts, status)
       values (${runId}::uuid, ${`runner-test-${runId}`}, ${`team-${runId}`}, 'sha256:runner-test', '{}'::jsonb,
-        ${db.json({ schema: "cmux.run/v1", resources: { maxConcurrent: 1 } })}, 'runner-test', 1, 'queued')
+        ${db.json({ schema: "hmux.run/v1", resources: { maxConcurrent: 1 } })}, 'runner-test', 1, 'queued')
     `;
     await db`
       insert into run_attempts (id, run_id, ordinal, variant, status)

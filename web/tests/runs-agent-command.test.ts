@@ -7,13 +7,13 @@ import { runChild } from "./helpers/run-child";
 
 const ATTEMPT = "4429d817-69f4-429c-9524-34e8fcd2591c";
 
-// The devbox image pins codex 0.162.1 (CMUX_IMAGE_CODEX_VERSION). That release
+// The devbox image pins codex 0.162.1 (HMUX_IMAGE_CODEX_VERSION). That release
 // exits 2 with "unexpected argument '--full-auto' found", so a flag it rejects
 // fails every instruction-bearing Run before the agent starts.
 const PINNED_CODEX_FLAGS = new Set(["--json", "--dangerously-bypass-approvals-and-sandbox", "--skip-git-repo-check"]);
 
 async function runWithStubCodex(instruction: string) {
-  const dir = mkdtempSync(path.join(tmpdir(), "cmux-run-agent-"));
+  const dir = mkdtempSync(path.join(tmpdir(), "hmux-run-agent-"));
   try {
     const argvFile = path.join(dir, "argv.json");
     const stub = path.join(dir, "codex");
@@ -32,7 +32,7 @@ console.log(JSON.stringify({ type: "thread.started", thread_id: "t" }));
     const command = variantAgentCommand(instruction, ATTEMPT, dir);
     const result = await runChild("bash", ["-se"], { input: command, env: { ...process.env, PATH: `${dir}:${process.env.PATH}` } });
     const argv = JSON.parse(readFileSync(argvFile, "utf8")) as string[];
-    const output = readFileSync(path.join(dir, `cmux-agent-output-${ATTEMPT}.jsonl`), "utf8");
+    const output = readFileSync(path.join(dir, `hmux-agent-output-${ATTEMPT}.jsonl`), "utf8");
     return { status: result.status, stderr: result.stderr, argv, output };
   } finally {
     rmSync(dir, { recursive: true, force: true });
@@ -58,11 +58,11 @@ test("variant instruction reaches codex as one literal argument", async () => {
 
 test("instruction text with String.replace patterns is inserted verbatim into the guest script", async () => {
   const { withVariantExecution } = await import("../services/runs/agentCommand");
-  const source = "set -eu\n# CMUX_VARIANT_EXECUTION\nprintf '%s\\n' 'cmux-run:marker'";
+  const source = "set -eu\n# HMUX_VARIANT_EXECUTION\nprintf '%s\\n' 'hmux-run:marker'";
   for (const instruction of ["keep $& and $' and $` literal", "plain"]) {
     const script = withVariantExecution(source, instruction, ATTEMPT);
     expect(script).toContain(`'${instruction.replace(/'/g, `'"'"'`)}'`);
-    expect(script.endsWith("printf '%s\\n' 'cmux-run:marker'")).toBe(true);
+    expect(script.endsWith("printf '%s\\n' 'hmux-run:marker'")).toBe(true);
   }
-  expect(withVariantExecution(source, undefined, ATTEMPT)).toBe(source.replace("# CMUX_VARIANT_EXECUTION", ""));
+  expect(withVariantExecution(source, undefined, ATTEMPT)).toBe(source.replace("# HMUX_VARIANT_EXECUTION", ""));
 });

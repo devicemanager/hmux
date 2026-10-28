@@ -29,7 +29,7 @@ function rowsFor(table: unknown): Array<Record<string, unknown>> {
 function appleMaxRow() {
   return {
     originalTransactionId: "otx-apple", planId: "max", status: "active", environment: "Production",
-    bundleId: "com.cmux.app", expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), gracePeriodExpiresAt: null,
+    bundleId: "com.hmux.app", expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), gracePeriodExpiresAt: null,
     autoRenewEnabled: true,
   };
 }
@@ -37,7 +37,7 @@ const proUser = {
   id: "user-pro",
   isAnonymous: false,
   primaryEmail: "pro@example.com",
-  clientReadOnlyMetadata: { cmuxPlan: "pro" } as Record<string, string>,
+  clientReadOnlyMetadata: { hmuxPlan: "pro" } as Record<string, string>,
   update: mock(async () => undefined),
 };
 let currentUser: typeof proUser | null = proUser;
@@ -45,7 +45,7 @@ const getUser = mock(async () => currentUser);
 const redirect = mock((href: unknown) => {
   throw Object.assign(new Error("redirect"), { href });
 });
-const originalVaultEnabled = process.env.CMUX_VAULT_ENABLED;
+const originalVaultEnabled = process.env.HMUX_VAULT_ENABLED;
 
 const nextNavigationMock = createNextNavigationMock(redirect);
 
@@ -116,8 +116,8 @@ const { default: PricingPage } = await import("../app/[locale]/(landing)/pricing
 
 describe("localized pricing page", () => {
   test("hides Go when the Go rollout is disabled", async () => {
-    const previous = process.env.CMUX_TEST_GO_PLAN_DISABLED;
-    process.env.CMUX_TEST_GO_PLAN_DISABLED = "1";
+    const previous = process.env.HMUX_TEST_GO_PLAN_DISABLED;
+    process.env.HMUX_TEST_GO_PLAN_DISABLED = "1";
     try {
       const html = await renderSettled(await PricingPage({ params: Promise.resolve({ locale: "en" }) }));
       expect(html).toContain("Get Pro");
@@ -126,8 +126,8 @@ describe("localized pricing page", () => {
       expect(html).not.toContain("$10");
       expect(html).toContain("25% repeat(5,15%)");
     } finally {
-      if (previous === undefined) delete process.env.CMUX_TEST_GO_PLAN_DISABLED;
-      else process.env.CMUX_TEST_GO_PLAN_DISABLED = previous;
+      if (previous === undefined) delete process.env.HMUX_TEST_GO_PLAN_DISABLED;
+      else process.env.HMUX_TEST_GO_PLAN_DISABLED = previous;
     }
   });
 
@@ -253,7 +253,7 @@ describe("localized pricing page", () => {
   });
 
   beforeEach(() => {
-    process.env.CMUX_VAULT_ENABLED = "0";
+    process.env.HMUX_VAULT_ENABLED = "0";
     stackConfigured = false;
     currentUser = proUser;
     stripeSubscriptionRows = [];
@@ -264,9 +264,9 @@ describe("localized pricing page", () => {
 
   afterEach(() => {
     if (originalVaultEnabled === undefined) {
-      delete process.env.CMUX_VAULT_ENABLED;
+      delete process.env.HMUX_VAULT_ENABLED;
     } else {
-      process.env.CMUX_VAULT_ENABLED = originalVaultEnabled;
+      process.env.HMUX_VAULT_ENABLED = originalVaultEnabled;
     }
   });
 
@@ -296,7 +296,7 @@ describe("localized pricing page", () => {
     expect(html).toContain("text-3xl font-medium tabular-nums tracking-tight");
     expect(html).not.toContain("CodeRouter");
     expect(html).not.toContain("Subrouter");
-    expect(html).not.toContain("cmux Vault");
+    expect(html).not.toContain("hmux Vault");
   });
 
   test("sells Max monthly or yearly with the annual discount, between Pro and Team", async () => {
@@ -308,10 +308,10 @@ describe("localized pricing page", () => {
 
     // The annual selector applies to Max as well as Pro.
     expect(html).toContain(
-      "plan%253Dmax%2526cmux_external_browser",
+      "plan%253Dmax%2526hmux_external_browser",
     );
     expect(html).toContain(
-      "plan%253Dmax%2526cmux_external_browser",
+      "plan%253Dmax%2526hmux_external_browser",
     );
     expect(html).toMatch(/plan%253Dmax[^\"]*interval%253Dyear/);
     expect(html).toContain("$200");
@@ -336,14 +336,14 @@ describe("localized pricing page", () => {
   });
 
   test("only advertises Vault when its release flag is enabled", async () => {
-    process.env.CMUX_VAULT_ENABLED = "1";
+    process.env.HMUX_VAULT_ENABLED = "1";
 
     const element = await PricingPage({
       params: Promise.resolve({ locale: "en" }),
     });
     const html = (await renderSettled(element));
 
-    expect(html).toContain("cmux Vault");
+    expect(html).toContain("hmux Vault");
   });
 
   test("renders Stack metadata-only Pro snapshots as Free", async () => {
@@ -380,7 +380,7 @@ describe("localized pricing page", () => {
 
   test("routes a granted Pro user's Max CTA through checkout", async () => {
     stackConfigured = true;
-    currentUser = { ...proUser, clientReadOnlyMetadata: { cmuxVmPlan: "pro" } };
+    currentUser = { ...proUser, clientReadOnlyMetadata: { hmuxVmPlan: "pro" } };
 
     const html = await renderSettled(
       await PricingPage({ params: Promise.resolve({ locale: "en" }) }),
@@ -448,8 +448,8 @@ describe("localized pricing page", () => {
     expect(html).not.toContain("$576/user/year");
     expect(html).not.toContain("$24");
     expect(html).not.toContain("$28");
-    expect(html).toContain("plan%253Dpro%2526cmux_external_browser");
-    expect(html).toContain("plan%253Dteam%2526cmux_external_browser");
+    expect(html).toContain("plan%253Dpro%2526hmux_external_browser");
+    expect(html).toContain("plan%253Dteam%2526hmux_external_browser");
     expect(html).toContain('role="tablist"');
     expect(html).toMatch(/<button[^>]*role="tab"[^>]*aria-selected="true"/);
     expect(html).not.toContain('href="?interval=');
@@ -461,17 +461,17 @@ describe("localized pricing page", () => {
       params: Promise.resolve({ locale: "en" }),
       searchParams: Promise.resolve({
         interval: "month",
-        cmux_source: "cli_free_access_expiry",
-        cmux_client: "cli",
+        hmux_source: "cli_free_access_expiry",
+        hmux_client: "cli",
         utm_source: "newsletter",
         utm_campaign: "sept",
       }),
     });
     const html = (await renderSettled(element));
 
-    expect(html).toContain("plan%253Dpro%2526cmux_external_browser");
+    expect(html).toContain("plan%253Dpro%2526hmux_external_browser");
     expect(html).toContain("utm_source%253Dnewsletter");
-    expect(html).toContain("cmux_source%253Dcli_free_access_expiry");
+    expect(html).toContain("hmux_source%253Dcli_free_access_expiry");
   });
 
   test("honors an explicit monthly billing interval", async () => {
@@ -488,8 +488,8 @@ describe("localized pricing page", () => {
     );
     expect(html).toContain("Unlimited workspaces");
     expect(html).not.toContain("Unlimited active Cloud VMs");
-    expect(html).toContain("plan%253Dpro%2526cmux_external_browser");
-    expect(html).toContain("plan%253Dteam%2526cmux_external_browser");
+    expect(html).toContain("plan%253Dpro%2526hmux_external_browser");
+    expect(html).toContain("plan%253Dteam%2526hmux_external_browser");
     expect(html).toMatch(/<button[^>]*role="tab"[^>]*aria-selected="true"/);
   });
 

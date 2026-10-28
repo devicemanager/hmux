@@ -6,16 +6,16 @@ on:
       - .github/workflows/r2-upload-tests.yml
       - .github/workflows/nightly.yml
       - .github/workflows/release.yml
-      - .github/workflows/cmux-tui-artifacts.yml
+      - .github/workflows/hmux-tui-artifacts.yml
       - scripts/ci/publish-release-assets.py
       - scripts/ci/finalize-release.py
       - tests/test_github_release_publication.py
       - scripts/ci/upload-r2-object.py
       - tests/test_ci_r2_upload_python.sh
       - tests/test_r2_upload_requests.py
-      - .github/workflows/cmux-tui-artifacts-retry.yml
-      - scripts/ci/cmux_tui_artifacts_retry.py
-      - tests/test_cmux_tui_artifacts_retry.py
+      - .github/workflows/hmux-tui-artifacts-retry.yml
+      - scripts/ci/hmux_tui_artifacts_retry.py
+      - tests/test_hmux_tui_artifacts_retry.py
   workflow_dispatch:
 
 permissions:
@@ -35,4 +35,4 @@ jobs:
       - run: python3 tests/test_github_release_publication.py
       # finalize-release.py runs only at real publish time; at least prove it loads.
       - run: python3 scripts/ci/finalize-release.py publish --help && python3 scripts/ci/finalize-release.py download --help
-      - run: python3 tests/test_cmux_tui_artifacts_retry.py
+      - run: python3 tests/test_hmux_tui_artifacts_retry.py

@@ -1,7 +1,7 @@
 // Per-machine CodeRouter usage read from the ClickHouse ledger. Mirrors
 // teamMetrics.ts: same client, timeout, five-minute cache, fail-closed
 // validation, and privacy-safe failure reporting. A machine is identified by
-// the cmux `cloud_vms.id` UUID that a VM-bound route token stamps on every
+// the hmux `cloud_vms.id` UUID that a VM-bound route token stamps on every
 // ledger row as `vm_id`. Callers must verify the team owns the machine before
 // asking for its usage.
 import { unstable_cache } from "next/cache";
@@ -53,7 +53,7 @@ LIMIT 31`;
 
 // One row per (workspace, terminal, agent, model) the machine used in the
 // period; the contract folds these into the per-workspace, per-terminal,
-// per-agent, and per-model views. Empty ids mean "outside a cmux-tui
+// per-agent, and per-model views. Empty ids mean "outside a hmux-tui
 // terminal" or "before the guest carried the origin headers".
 const VM_BREAKDOWN_SQL = `SELECT
   workspace_id, surface_id, agent, model,${USAGE_SUMS_SQL}

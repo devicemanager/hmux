@@ -25,9 +25,9 @@ class ReplayTimes(unittest.TestCase):
         self.consumer = self.root / "consumer"
         for workspace in (self.producer, self.consumer):
             (workspace / "Sources").mkdir(parents=True)
-            (workspace / "cmuxTests").mkdir()
+            (workspace / "hmuxTests").mkdir()
             (workspace / "Sources/App.swift").write_text("let app = 1\n")
-            (workspace / "cmuxTests/AppTests.swift").write_text("let test = 1\n")
+            (workspace / "hmuxTests/AppTests.swift").write_text("let test = 1\n")
         for path in self.producer.rglob("*.swift"):
             os.utime(path, ns=(BUILD_TIME_NS, BUILD_TIME_NS))
         (self.producer / "DerivedData").mkdir()
@@ -40,15 +40,15 @@ class ReplayTimes(unittest.TestCase):
 
     def test_unchanged_inputs_take_the_producer_time_and_changed_inputs_do_not(self):
         recorded = warm.record(self.producer)
-        (self.consumer / "cmuxTests/AppTests.swift").write_text("let test = 2\n")
-        (self.consumer / "cmuxTests/NewTests.swift").write_text("let added = 1\n")
+        (self.consumer / "hmuxTests/AppTests.swift").write_text("let test = 2\n")
+        (self.consumer / "hmuxTests/NewTests.swift").write_text("let added = 1\n")
 
         restored, changed = warm.replay(self.consumer, recorded)
 
         self.assertEqual((restored, changed), (1, 2))
         self.assertEqual(self.mtime("Sources/App.swift"), BUILD_TIME_NS)
-        self.assertGreater(self.mtime("cmuxTests/AppTests.swift"), BUILD_TIME_NS)
-        self.assertGreater(self.mtime("cmuxTests/NewTests.swift"), BUILD_TIME_NS)
+        self.assertGreater(self.mtime("hmuxTests/AppTests.swift"), BUILD_TIME_NS)
+        self.assertGreater(self.mtime("hmuxTests/NewTests.swift"), BUILD_TIME_NS)
 
     def test_a_changed_input_unpacked_with_an_old_time_is_still_rebuilt(self):
         recorded = warm.record(self.producer)
@@ -66,30 +66,30 @@ class ReplayTimes(unittest.TestCase):
         recorded = warm.record(self.producer)
         self.assertEqual(
             sorted(recorded),
-            ["./", "Sources/", "Sources/App.swift", "cmuxTests/", "cmuxTests/AppTests.swift"],
+            ["./", "Sources/", "Sources/App.swift", "hmuxTests/", "hmuxTests/AppTests.swift"],
         )
 
     def test_a_directory_takes_the_producer_time_only_while_its_entries_match(self):
         # Xcode signs a folder input (Assets.xcassets) by its directories'
         # times too, so a checkout-time directory reruns the asset catalog.
-        for relative in ("Sources", "cmuxTests"):
+        for relative in ("Sources", "hmuxTests"):
             os.utime(self.producer / relative, ns=(BUILD_TIME_NS, BUILD_TIME_NS))
         recorded = warm.record(self.producer)
-        (self.consumer / "cmuxTests/NewTests.swift").write_text("let added = 1\n")
+        (self.consumer / "hmuxTests/NewTests.swift").write_text("let added = 1\n")
 
         warm.replay(self.consumer, recorded)
 
         self.assertEqual(self.mtime("Sources"), BUILD_TIME_NS)
-        self.assertGreater(self.mtime("cmuxTests"), BUILD_TIME_NS)
+        self.assertGreater(self.mtime("hmuxTests"), BUILD_TIME_NS)
 
     def test_a_rename_that_keeps_the_entry_count_keeps_the_directory_new(self):
-        os.utime(self.producer / "cmuxTests", ns=(BUILD_TIME_NS, BUILD_TIME_NS))
+        os.utime(self.producer / "hmuxTests", ns=(BUILD_TIME_NS, BUILD_TIME_NS))
         recorded = warm.record(self.producer)
-        (self.consumer / "cmuxTests/AppTests.swift").rename(self.consumer / "cmuxTests/RenamedTests.swift")
+        (self.consumer / "hmuxTests/AppTests.swift").rename(self.consumer / "hmuxTests/RenamedTests.swift")
 
         warm.replay(self.consumer, recorded)
 
-        self.assertGreater(self.mtime("cmuxTests"), BUILD_TIME_NS)
+        self.assertGreater(self.mtime("hmuxTests"), BUILD_TIME_NS)
 
     def test_a_manifest_without_directories_leaves_them_at_checkout_time(self):
         os.utime(self.producer / "Sources", ns=(BUILD_TIME_NS, BUILD_TIME_NS))
@@ -234,23 +234,23 @@ class ProducerDistance(unittest.TestCase):
 
     def test_an_app_source_change_since_the_producer_skips_the_download(self):
         result, downloaded = self.restore_with(
-            "t on r @ PRODUCER", ["cmuxTests/AppTests.swift", "Packages/macOS/CmuxFoundation/Sources/A.swift"],
+            "t on r @ PRODUCER", ["hmuxTests/AppTests.swift", "Packages/macOS/HmuxFoundation/Sources/A.swift"],
         )
         self.assertFalse(downloaded)
         self.assertEqual(result["hit"], "false")
         self.assertIn("app-build-changed-since-producer", result["reason"])
 
     def test_a_test_only_difference_adopts(self):
-        _, downloaded = self.restore_with("t on r @ PRODUCER", ["cmuxTests/AppTests.swift", "docs/x.md"])
+        _, downloaded = self.restore_with("t on r @ PRODUCER", ["hmuxTests/AppTests.swift", "docs/x.md"])
         self.assertTrue(downloaded)
 
     def test_a_producer_built_from_main_uses_the_run_head(self):
-        _, downloaded = self.restore_with("t on r @ main [seed]", ["cmuxTests/AppTests.swift"])
+        _, downloaded = self.restore_with("t on r @ main [seed]", ["hmuxTests/AppTests.swift"])
         self.assertTrue(downloaded)
 
     def test_an_older_matching_seed_is_adopted_past_a_newer_distant_one(self):
         _, downloaded = self.restore_with(
-            "t on r @ PRODUCER", ["Sources/App.swift"], older=("t on r @ PRODUCER", ["cmuxTests/A.swift"]),
+            "t on r @ PRODUCER", ["Sources/App.swift"], older=("t on r @ PRODUCER", ["hmuxTests/A.swift"]),
         )
         self.assertTrue(downloaded)
         self.assertEqual(self.downloaded_ids, [4])
@@ -262,7 +262,7 @@ class ProducerDistance(unittest.TestCase):
     def test_an_unknown_producer_revision_or_huge_diff_starts_cold(self):
         result, downloaded = self.restore_with("t on r @ some-branch", [])
         self.assertEqual((result["reason"], downloaded), ("producer-revision-unknown", False))
-        result, downloaded = self.restore_with("t on r @ PRODUCER", [f"cmuxTests/T{i}.swift" for i in range(300)])
+        result, downloaded = self.restore_with("t on r @ PRODUCER", [f"hmuxTests/T{i}.swift" for i in range(300)])
         self.assertEqual((result["reason"], downloaded), ("producer-too-far", False))
 
 

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 
 /// Starts a scan for visible Cloud machines so the Ports tab count stays current
 /// before the person opens the tab.

@@ -1,5 +1,5 @@
-import CmuxAgentJournal
-import CmuxSettings
+import HmuxAgentJournal
+import HmuxSettings
 import Foundation
 
 extension AgentJournalLifecycleCenter {
@@ -137,7 +137,7 @@ extension AgentJournalLifecycleCenter {
     }
 
     static func notificationDiagnostic(_ draft: AgentJournalEventDraft, reason: String, identity: String? = nil) {
-        CmuxEventBus.shared.publish(name: "agent.notification.decision", category: "agent", source: "journal",
+        HmuxEventBus.shared.publish(name: "agent.notification.decision", category: "agent", source: "journal",
             surfaceId: draft.surfaceId, payload: ["reason": reason, "kind": draft.kind.rawValue,
                 "agent": draft.source, "identity": identity ?? "", "event_id": draft.eventId])
     }

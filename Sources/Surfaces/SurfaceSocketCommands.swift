@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxControlSocket
-import CmuxSettings
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxControlSocket
+import HmuxSettings
+import HmuxSurfaceCatalogModel
 import Foundation
 
 // The socket face of the surface catalog: `surface.catalog`, `surface.project`,
@@ -51,7 +51,7 @@ extension TerminalController {
 
         case "surface.project":
             guard let raw = Self.surfaceString(params["resource"]), let resource = SurfaceResourceID(rawValue: raw) else {
-                return v2Error(id: id, code: "invalid_params", message: "surface.project requires `resource` (an id from `cmux surface ls --json`, e.g. vivid-newt/terminal/term_…).")
+                return v2Error(id: id, code: "invalid_params", message: "surface.project requires `resource` (an id from `hmux surface ls --json`, e.g. vivid-newt/terminal/term_…).")
             }
             if resource.machine.cloudMachineID != nil, let error = cloudDisabledSocketError(id: id) { return error }
             let focus = Self.surfaceBool(params["focus"]) ?? false
@@ -140,10 +140,10 @@ extension TerminalController {
     /// → `{surface_id, workspace_id, reused}`.
     nonisolated func socketWorkerVMTerminalOpenResponse(id: Any?, params: [String: Any]) -> String {
         guard let vmId = Self.surfaceString(params["id"]), !vmId.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.terminal_open requires `id`. Run `cmux vm tree` to find one.")
+            return v2Error(id: id, code: "invalid_params", message: "vm.terminal_open requires `id`. Run `hmux vm tree` to find one.")
         }
         guard let terminalId = Self.surfaceString(params["terminal_id"]), !terminalId.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.terminal_open requires `terminal_id` (a `term_…` id from `cmux vm tree`).")
+            return v2Error(id: id, code: "invalid_params", message: "vm.terminal_open requires `terminal_id` (a `term_…` id from `hmux vm tree`).")
         }
         let resource = SurfaceResourceID(machine: .cloud(vmId), kind: .terminal, key: terminalId)
         let focus = Self.surfaceBool(params["focus"]) ?? false
@@ -175,7 +175,7 @@ extension TerminalController {
     /// → `{terminal_id, workspace_id (remote ws_…), surface_id?, resource}`.
     nonisolated func socketWorkerVMTerminalNewResponse(id: Any?, params: [String: Any]) -> String {
         guard let vmId = Self.surfaceString(params["id"]), !vmId.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.terminal_new requires `id`. Run `cmux vm ls` to find one.")
+            return v2Error(id: id, code: "invalid_params", message: "vm.terminal_new requires `id`. Run `hmux vm ls` to find one.")
         }
         let remoteWorkspaceID = Self.surfaceString(params["workspace_id"])
         let command = Self.surfaceStringArray(params["command"])
@@ -217,7 +217,7 @@ extension TerminalController {
             return v2Error(id: id, code: "cloud_disabled", message: CloudMachinesFeature.disabledMessage)
         }
         guard let vmId = Self.surfaceString(params["id"]), !vmId.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.desktop_open requires `id`. Run `cmux vm ls` to find one.")
+            return v2Error(id: id, code: "invalid_params", message: "vm.desktop_open requires `id`. Run `hmux vm ls` to find one.")
         }
         let resource = SurfaceResourceID(machine: .cloud(vmId), kind: .display, key: SurfaceResourceID.desktopDisplayKey)
         let focus = Self.surfaceBool(params["focus"]) ?? false
@@ -250,10 +250,10 @@ extension TerminalController {
             return v2Error(id: id, code: "cloud_disabled", message: CloudMachinesFeature.disabledMessage)
         }
         guard let vmId = Self.surfaceString(params["id"]), !vmId.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.port_open requires `id`. Run `cmux vm ls` to find one.")
+            return v2Error(id: id, code: "invalid_params", message: "vm.port_open requires `id`. Run `hmux vm ls` to find one.")
         }
         guard let port = Self.surfaceInt(params["port"]), (1...65535).contains(port) else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.port_open requires `port` between 1 and 65535. From the CLI, use `cmux vm open <id> <port>`.")
+            return v2Error(id: id, code: "invalid_params", message: "vm.port_open requires `port` between 1 and 65535. From the CLI, use `hmux vm open <id> <port>`.")
         }
         let resource = SurfaceResourceID(machine: .cloud(vmId), kind: .browser, key: SurfaceResourceID.portKey(port))
         let focus = Self.surfaceBool(params["focus"]) ?? false
@@ -322,7 +322,7 @@ extension TerminalController {
             // shows connection controls until VPN access is ready; this read
             // never creates a forward or requests a public preview.
             let privateURL = await catalog.resources[resource]?.url
-            guard let provider = await catalog.provider(for: resource.machine) as? CmuxTuiSurfaceProvider else {
+            guard let provider = await catalog.provider(for: resource.machine) as? HmuxTuiSurfaceProvider else {
                 throw SurfaceCatalogError.unsupported(SurfaceCatalog.portPreviewUnavailableMessage(machineID: resource.machine.rawValue))
             }
             let url = try await provider.portLinkURL(port: port)
@@ -336,24 +336,24 @@ extension TerminalController {
     /// `vm.link_socket {id}` → `{socket_path, session}`.
     nonisolated func socketWorkerVMLinkSocketResponse(id: Any?, params: [String: Any]) -> String {
         guard let vmId = Self.surfaceString(params["id"]), !vmId.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.link_socket requires `id`. Run `cmux vm ls` to find one.")
+            return v2Error(id: id, code: "invalid_params", message: "vm.link_socket requires `id`. Run `hmux vm ls` to find one.")
         }
         return v2VmCall(id: id, timeoutSeconds: 120) {
-            let link = try await CmuxTuiSurfaceProviderRegistry.shared.linkSocketPath(machineID: vmId)
+            let link = try await HmuxTuiSurfaceProviderRegistry.shared.linkSocketPath(machineID: vmId)
             return ["socket_path": link.socketPath, "session": link.session]
         }
     }
 
-    /// `vm.workspace_new {id, name?, focus?, open?}` → creates a cmux-tui workspace on the
+    /// `vm.workspace_new {id, name?, focus?, open?}` → creates a hmux-tui workspace on the
     /// machine and, when opened, gives it a starter terminal and projects it locally. A
     /// headless request stages that same workspace without projecting it locally.
     nonisolated func socketWorkerVMWorkspaceNewResponse(id: Any?, params: [String: Any]) -> String {
         guard let vmId = Self.surfaceString(params["id"]), !vmId.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.workspace_new requires `id`. Run `cmux vm ls` to find one.")
+            return v2Error(id: id, code: "invalid_params", message: "vm.workspace_new requires `id`. Run `hmux vm ls` to find one.")
         }
         let name = Self.surfaceString(params["name"])
         // `reuse`: get-or-create by exact name, so a script that runs twice does not leave
-        // two `tests` workspaces on the machine (`cmux vm workspace new --reuse`).
+        // two `tests` workspaces on the machine (`hmux vm workspace new --reuse`).
         let reuse = Self.surfaceBool(params["reuse"]) ?? false
         if reuse, name == nil {
             return v2Error(id: id, code: "invalid_params", message: "vm.workspace_new: `reuse` needs a `name` to look for.")
@@ -363,7 +363,7 @@ extension TerminalController {
             timeoutSeconds: 240,
             daemonUnavailableMessage: String(
                 localized: "socket.cloudVM.tuiDaemonUnavailable",
-                defaultValue: "Could not create a workspace on this Cloud VM. Wake the machine or retry `cmux vm workspace new`."
+                defaultValue: "Could not create a workspace on this Cloud VM. Wake the machine or retry `hmux vm workspace new`."
             )
         ) {
             let machine = SurfaceMachineID(rawValue: vmId)
@@ -377,7 +377,7 @@ extension TerminalController {
             var precreatedWorkspace: SurfaceRemoteWorkspace?
             if reuse, let name {
                 let lookup: CloudTreeRemoteWorkspaceLookup
-                if let cloudProvider = provider as? CmuxTuiSurfaceProvider {
+                if let cloudProvider = provider as? HmuxTuiSurfaceProvider {
                     let resolved = try await cloudProvider.getOrCreateRemoteWorkspace(name: name)
                     if resolved.existing {
                         lookup = .found(resolved.workspace, CloudTreeRemoteWorkspaceMembers(terminals: [], browsers: [], displays: []))
@@ -419,7 +419,7 @@ extension TerminalController {
                     ], focus: focus)
                 case .ambiguous(let matches):
                     throw SurfaceCatalogError.destinationNotFound(
-                        "several workspaces on \(vmId) are named '\(name)' (\(matches.map(\.id).joined(separator: ", "))); open one by id with `cmux vm workspace open \(vmId) <ws_…>` or pick a unique --name"
+                        "several workspaces on \(vmId) are named '\(name)' (\(matches.map(\.id).joined(separator: ", "))); open one by id with `hmux vm workspace open \(vmId) <ws_…>` or pick a unique --name"
                     )
                 case .notFound:
                     break
@@ -499,7 +499,7 @@ extension TerminalController {
             return v2Error(id: id, code: "invalid_params", message: "vm.workspace_open requires `id`.")
         }
         guard let remoteWorkspaceID = Self.surfaceString(params["workspace_id"]), !remoteWorkspaceID.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.workspace_open requires `workspace_id` (a cmux-tui workspace id from `cmux vm tree`).")
+            return v2Error(id: id, code: "invalid_params", message: "vm.workspace_open requires `workspace_id` (a hmux-tui workspace id from `hmux vm tree`).")
         }
         let here = Self.surfaceBool(params["here"]) ?? false
         // `workspace_id` is the REMOTE workspace here; the local target rides as `target_workspace_id`.
@@ -553,7 +553,7 @@ extension TerminalController {
 
     /// A machine workspace as a new local workspace bound to it: one pane per
     /// terminal and browser, mirroring the machine screen's layout when the
-    /// daemon reports one. The one path behind `cmux vm workspace open` and
+    /// daemon reports one. The one path behind `hmux vm workspace open` and
     /// the Chief's result card ("Open Workspace").
     nonisolated static func openRemoteWorkspaceAsNewLocalWorkspace(
         _ group: SurfaceResourceGroup,
@@ -603,7 +603,7 @@ extension TerminalController {
         ).workspaceID
     }
 
-    /// `vm.workspace_close {id, workspace_id}` → closes the cmux-tui workspace; its
+    /// `vm.workspace_close {id, workspace_id}` → closes the hmux-tui workspace; its
     /// terminals KEEP RUNNING and detach into the Terminals pool (the sidebar's "Close
     /// Workspace (Keep Terminals)"). Use `vm.workspace_delete` to also kill them.
     nonisolated func socketWorkerVMWorkspaceCloseResponse(id: Any?, params: [String: Any]) -> String {
@@ -643,7 +643,7 @@ extension TerminalController {
         }
     }
 
-    /// `vm.workspace_rename {id, workspace_id, name}` → renames the cmux-tui workspace
+    /// `vm.workspace_rename {id, workspace_id, name}` → renames the hmux-tui workspace
     /// (the sidebar's "Rename…", through the catalog's shared mutation lane).
     nonisolated func socketWorkerVMWorkspaceRenameResponse(id: Any?, params: [String: Any]) -> String {
         guard let vmId = Self.surfaceString(params["id"]), !vmId.isEmpty,
@@ -774,7 +774,7 @@ extension TerminalController {
     /// those details in the local debug log only.
     private nonisolated func cloudRenameSocketError(id: Any?, operation: String, error: Error) -> String {
         #if DEBUG
-        cmuxDebugLog("cloud.socket.rename.failed operation=\(operation) error=\(String(reflecting: error))")
+        hmuxDebugLog("cloud.socket.rename.failed operation=\(operation) error=\(String(reflecting: error))")
         #endif
         return v2Error(
             id: id,
@@ -805,23 +805,23 @@ extension TerminalController {
 
     // MARK: - Headless terminal I/O (agent primitives)
 
-    /// The cmux-tui provider for a cloud machine; the local machine and any provider
+    /// The hmux-tui provider for a cloud machine; the local machine and any provider
     /// without a remote session have no headless terminal I/O.
-    nonisolated static func cloudTuiProvider(machineID: String, catalog: SurfaceCatalog) async throws -> CmuxTuiSurfaceProvider {
+    nonisolated static func cloudTuiProvider(machineID: String, catalog: SurfaceCatalog) async throws -> HmuxTuiSurfaceProvider {
         let machine = SurfaceMachineID.cloud(machineID)
-        guard let provider = try await Self.surfaceProvider(for: machine, catalog: catalog) as? CmuxTuiSurfaceProvider else {
+        guard let provider = try await Self.surfaceProvider(for: machine, catalog: catalog) as? HmuxTuiSurfaceProvider else {
             throw SurfaceCatalogError.noProvider(machine)
         }
         return provider
     }
 
-    /// `vm.env_set {id, entries: [{key, value}]}` → the machine's `~/.config/cmux/env`
+    /// `vm.env_set {id, entries: [{key, value}]}` → the machine's `~/.config/hmux/env`
     /// gains (or overwrites) those variables. Values travel over the machine's link into
-    /// the in-VM `cmux env receive` (see `CloudEnvDelivery`): never through `vm.exec`, a
+    /// the in-VM `hmux env receive` (see `CloudEnvDelivery`): never through `vm.exec`, a
     /// command line, or a terminal's visible screen. The result names keys only.
     nonisolated func socketWorkerVMEnvSetResponse(id: Any?, params: [String: Any]) -> String {
         guard let vmId = Self.surfaceString(params["id"]), !vmId.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: String(localized: "cli.vm.env.setRequiresIdRunCmuxVmLsTo", defaultValue: "vm.env_set requires `id`. Run `cmux vm ls` to find one."))
+            return v2Error(id: id, code: "invalid_params", message: String(localized: "cli.vm.env.setRequiresIdRunHmuxVmLsTo", defaultValue: "vm.env_set requires `id`. Run `hmux vm ls` to find one."))
         }
         guard let rawEntries = params["entries"] as? [[String: Any]], !rawEntries.isEmpty else {
             return v2Error(id: id, code: "invalid_params", message: String(localized: "cli.vm.env.setRequiresEntriesANonEmptyArrayOf", defaultValue: "vm.env_set requires `entries`: a non-empty array of {key, value}."))
@@ -905,7 +905,7 @@ extension TerminalController {
         guard let pattern = params["pattern"] as? String, !pattern.isEmpty else {
             return v2Error(id: id, code: "invalid_params", message: "vm.terminal_wait requires a non-empty `pattern` (a regex matched against the screen text).")
         }
-        let timeoutMs = CmuxTuiSurfaceProvider.clampedWaitTimeoutMs(
+        let timeoutMs = HmuxTuiSurfaceProvider.clampedWaitTimeoutMs(
             (params["timeout_ms"] as? Int) ?? Int(Self.surfaceString(params["timeout_ms"]) ?? "")
         )
         let socketTimeout = TimeInterval(max(60, timeoutMs / 1000 + 15))
@@ -928,7 +928,7 @@ extension TerminalController {
               let terminalID = Self.surfaceString(params["terminal_id"]), !terminalID.isEmpty else {
             return v2Error(id: id, code: "invalid_params", message: "vm.terminal_wait_exit requires `id` and `terminal_id`.")
         }
-        let timeoutMs = CmuxTuiSurfaceProvider.clampedWaitTimeoutMs(
+        let timeoutMs = HmuxTuiSurfaceProvider.clampedWaitTimeoutMs(
             (params["timeout_ms"] as? Int) ?? Int(Self.surfaceString(params["timeout_ms"]) ?? "")
         )
         let socketTimeout = TimeInterval(max(60, timeoutMs / 1000 + 15))
@@ -988,12 +988,12 @@ extension TerminalController {
                 workspacesByID: owners
             )
         }) { machineID in
-            _ = await CmuxTuiSurfaceProviderRegistry.shared.providerRefreshingIfMissing(machineID: machineID)
+            _ = await HmuxTuiSurfaceProviderRegistry.shared.providerRefreshingIfMissing(machineID: machineID)
         }
     }
 
     /// `vm.workspace_open`'s workspace resolution — the sidebar row's own
-    /// (`CloudTreeNodeBuilder.lookupRemoteWorkspace`), so `cmux vm workspace open`
+    /// (`CloudTreeNodeBuilder.lookupRemoteWorkspace`), so `hmux vm workspace open`
     /// and a click on the row open the same set. A `ws_…` id or an unambiguous
     /// name; an existing workspace with nothing in it is an error that says so
     /// (the row opens nothing for it either, D9) and names the verb that starts
@@ -1009,16 +1009,16 @@ extension TerminalController {
         case .found(let workspace, let members):
             guard !members.isEmpty else {
                 throw SurfaceCatalogError.nothingToOpen(
-                    "workspace \(workspace.name) (\(workspace.id)) on \(machineID) is empty; `cmux vm open \(machineID)/\(workspace.id)` starts a terminal there"
+                    "workspace \(workspace.name) (\(workspace.id)) on \(machineID) is empty; `hmux vm open \(machineID)/\(workspace.id)` starts a terminal there"
                 )
             }
             return (workspace, members)
         case .ambiguous(let matches):
             throw SurfaceCatalogError.destinationNotFound(
-                "workspace '\(selector)' on \(machineID) is ambiguous (\(matches.map(\.id).joined(separator: ", "))); pass the ws_… id from `cmux vm tree \(machineID)`"
+                "workspace '\(selector)' on \(machineID) is ambiguous (\(matches.map(\.id).joined(separator: ", "))); pass the ws_… id from `hmux vm tree \(machineID)`"
             )
         case .notFound:
-            throw SurfaceCatalogError.destinationNotFound("workspace \(selector) on \(machineID) (see `cmux vm tree \(machineID)`)")
+            throw SurfaceCatalogError.destinationNotFound("workspace \(selector) on \(machineID) (see `hmux vm tree \(machineID)`)")
         }
     }
 

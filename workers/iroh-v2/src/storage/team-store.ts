@@ -232,14 +232,14 @@ export class TeamStore {
     const acceptsIOSPeers = !requester.revoked && requester.descriptor.metadata.platform === "mac" && requester.descriptor.metadata.pairingEnabled;
     const acceptsMacPeers = !requester.revoked && requester.descriptor.metadata.platform === "mac";
     const visible = sql`(d."user_id" = ${userId} OR outgoing."connect" = 1)`;
-    const acceptsMacs = requester.descriptor.metadata.capabilities.includes("cmux.mac-host.v1");
+    const acceptsMacs = requester.descriptor.metadata.capabilities.includes("hmux.mac-host.v1");
     // Mac access requires opt-in hosting, the same account and exact app/build.
     // Existing team grants continue to govern the iOS admission path.
     const macPeer = sql`(${acceptsMacPeers && acceptsMacs ? 1 : 0} = 1 AND d."platform" = 'mac'
       AND d."user_id" = ${userId} AND d."endpoint_id" != ${requester.descriptor.endpointId}
       AND d."app_namespace" = ${requester.descriptor.identity.appNamespace}
       AND d."build_tag" = ${requester.descriptor.identity.buildTag}
-      AND EXISTS (SELECT 1 FROM json_each(d."capabilities_json") WHERE value = 'cmux.mac-devices.v1'))`;
+      AND EXISTS (SELECT 1 FROM json_each(d."capabilities_json") WHERE value = 'hmux.mac-devices.v1'))`;
     const inbound = sql`(${acceptsIOSPeers || acceptsMacPeers ? 1 : 0} = 1 AND d."revoked" = 0 AND a."expires_at" > ${now}
       AND ((d."platform" = 'ios' AND ${acceptsIOSPeers ? 1 : 0} = 1 AND (d."user_id" = ${userId} OR incoming."connect" = 1))
         OR ${macPeer}))`;

@@ -359,7 +359,7 @@ def build_readout(raw_jobs: list[dict], stats: dict | None, seg: str, run_attemp
 
 
 def get_json(url: str, token: str | None = None, timeout: float = 15) -> dict:
-    headers = {"Accept": "application/json", "User-Agent": "cmux-ci-timing-readout"}
+    headers = {"Accept": "application/json", "User-Agent": "hmux-ci-timing-readout"}
     if token:
         headers["Authorization"] = f"Bearer {token}"
         headers["X-GitHub-Api-Version"] = "2022-11-28"

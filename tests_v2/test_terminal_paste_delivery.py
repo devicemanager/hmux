@@ -8,7 +8,7 @@ import sys
 import tempfile
 import time
 
-from cmux import cmux
+from hmux import hmux
 
 
 def wait_for(predicate, description):
@@ -21,9 +21,9 @@ def wait_for(predicate, description):
 
 
 def main():
-    socket_path = os.environ["CMUX_SOCKET_PATH"]
+    socket_path = os.environ["HMUX_SOCKET_PATH"]
     assert "12930-terminal-paste-delivery" in socket_path, "Use the isolated issue tag"
-    with tempfile.TemporaryDirectory(prefix="cmux-12930-") as directory:
+    with tempfile.TemporaryDirectory(prefix="hmux-12930-") as directory:
         root = Path(directory)
         capture = root / "bytes"
         ready = root / "ready"
@@ -38,7 +38,7 @@ with Path(__file__).with_name("bytes").open("ab", buffering=0) as output:
         output.write(os.read(0, 4096))
 ''')
         evidence = []
-        with cmux(socket_path) as client:
+        with hmux(socket_path) as client:
             workspace = client._call("workspace.create", {
                 "initial_command": f"{shlex.quote(sys.executable)} {shlex.quote(str(recorder))}"
             })["workspace_id"]

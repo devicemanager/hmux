@@ -33,7 +33,7 @@ export function GET(request: NextRequest) {
   }
 
   const nativeReturnTo = afterSignInURL.searchParams.get("native_app_return_to");
-  const shouldSetHandoff = canSetAutoHandoff(request) && nativeReturnTo?.includes("cmux_auth_state") === true;
+  const shouldSetHandoff = canSetAutoHandoff(request) && nativeReturnTo?.includes("hmux_auth_state") === true;
   let nonce: string | null = null;
   if (shouldSetHandoff) {
     nonce = randomUUID();

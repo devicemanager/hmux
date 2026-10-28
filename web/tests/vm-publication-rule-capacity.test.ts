@@ -93,10 +93,10 @@ describe("publication create at the Freestyle TLS rule cap", () => {
       async () => user as never,
     );
     expect(response.status).toBe(503);
-    const span = exporter.getFinishedSpans().find((candidate) => candidate.name === "cmux.api.POST /api/vm/publications");
+    const span = exporter.getFinishedSpans().find((candidate) => candidate.name === "hmux.api.POST /api/vm/publications");
     expect(span).toBeDefined();
-    expect(span!.attributes["cmux.vm.error_code"]).toBe("vm_publication_rule_capacity");
-    expect(String(span!.attributes["cmux.error_cause_chain"])).toContain("TLS rule limit");
+    expect(span!.attributes["hmux.vm.error_code"]).toBe("vm_publication_rule_capacity");
+    expect(String(span!.attributes["hmux.error_cause_chain"])).toContain("TLS rule limit");
     expect(span!.attributes["http.response.status_code"]).toBe(503);
   });
 
@@ -106,6 +106,6 @@ describe("publication create at the Freestyle TLS rule cap", () => {
     await withAuthedPublicationApiRoute(request, async () => new Response(null, { status: 204 }), async () => {
       throw new Error("unreachable");
     }, async () => user as never);
-    expect(exporter.getFinishedSpans().map((span) => span.name)).toContain("cmux.api.PATCH /api/vm/publications/[id]");
+    expect(exporter.getFinishedSpans().map((span) => span.name)).toContain("hmux.api.PATCH /api/vm/publications/[id]");
   });
 });

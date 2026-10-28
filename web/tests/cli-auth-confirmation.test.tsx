@@ -62,18 +62,18 @@ describe("CLI authorization account identity", () => {
 
   test("builds a different-account sign-in that preserves the CLI login code", async () => {
     const { cliAuthSwitchAccountHref } = await import("../app/handler/cli-auth-confirmation");
-    const switchURL = new URL(cliAuthSwitchAccountHref("test-login-code"), "https://cmux.test");
+    const switchURL = new URL(cliAuthSwitchAccountHref("test-login-code"), "https://hmux.test");
     expect(switchURL.pathname).toBe("/handler/sign-out-and-sign-in");
 
     const signInURL = new URL(
       switchURL.searchParams.get("after_auth_return_to")!,
-      "https://cmux.test",
+      "https://hmux.test",
     );
     expect(signInURL.pathname).toBe("/handler/sign-in");
 
     const confirmationURL = new URL(
       signInURL.searchParams.get("after_auth_return_to")!,
-      "https://cmux.test",
+      "https://hmux.test",
     );
     expect(confirmationURL.pathname).toBe("/handler/cli-auth-confirm");
     expect(confirmationURL.searchParams.get("login_code")).toBe("test-login-code");

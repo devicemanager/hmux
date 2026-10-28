@@ -12,43 +12,43 @@ export const MANAGED_IROH_RELAY_CATALOG = {
   "relays": [
     {
       "id": "usc1",
-      "provider": "cmux",
+      "provider": "hmux",
       "region": "US Central",
       "url": "https://usc1.relay.cmux.dev/"
     },
     {
       "id": "usw1",
-      "provider": "cmux",
+      "provider": "hmux",
       "region": "US West",
       "url": "https://usw1.relay.cmux.dev/"
     },
     {
       "id": "use4",
-      "provider": "cmux",
+      "provider": "hmux",
       "region": "US East",
       "url": "https://use4.relay.cmux.dev/"
     },
     {
       "id": "euw4",
-      "provider": "cmux",
+      "provider": "hmux",
       "region": "Europe West",
       "url": "https://euw4.relay.cmux.dev/"
     },
     {
       "id": "apne1",
-      "provider": "cmux",
+      "provider": "hmux",
       "region": "Asia Pacific Northeast",
       "url": "https://apne1.relay.cmux.dev/"
     },
     {
       "id": "apse1",
-      "provider": "cmux",
+      "provider": "hmux",
       "region": "Asia Pacific Southeast",
       "url": "https://apse1.relay.cmux.dev/"
     },
     {
       "id": "ape1",
-      "provider": "cmux",
+      "provider": "hmux",
       "region": "Asia Pacific East",
       "url": "https://ape1.relay.cmux.dev/"
     }

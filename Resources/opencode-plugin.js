@@ -1,14 +1,14 @@
-// cmux-feed-plugin-marker v1
-// Bridges OpenCode's plugin event bus to the cmux socket's feed.* verbs.
-// Installed by `cmux hooks setup` or `cmux hooks opencode install`.
-// DO NOT EDIT MANUALLY - cmux upgrades this file in place.
+// hmux-feed-plugin-marker v1
+// Bridges OpenCode's plugin event bus to the hmux socket's feed.* verbs.
+// Installed by `hmux hooks setup` or `hmux hooks opencode install`.
+// DO NOT EDIT MANUALLY - hmux upgrades this file in place.
 
 import net from "node:net";
 import os from "node:os";
 import fs from "node:fs";
 import path from "node:path";
 
-const DEFAULT_SOCKET = `${os.homedir()}/.config/cmux/cmux.sock`;
+const DEFAULT_SOCKET = `${os.homedir()}/.config/hmux/hmux.sock`;
 const REPLY_TIMEOUT_MS = 120_000;
 const MAX_PLAN_BYTES = 128 * 1024;
 
@@ -23,9 +23,9 @@ const isNonTerminalSessionError = (event) => {
   return NON_TERMINAL_SESSION_ERRORS.has(props.error?.name);
 };
 
-const createCMUXFeed = async (ctx, options = {}) => {
+const createHMUXFeed = async (ctx, options = {}) => {
   const environment = { ...process.env, ...options.environment };
-  const socketPath = environment.CMUX_SOCKET_PATH || DEFAULT_SOCKET;
+  const socketPath = environment.HMUX_SOCKET_PATH || DEFAULT_SOCKET;
   const ownsSession = options.ownsSession || (() => true);
   const locationForSession = options.locationForSession || (() => ctx?.location);
   let disposed = false;
@@ -478,7 +478,7 @@ const createCMUXFeed = async (ctx, options = {}) => {
       const bytes = fs.readSync(fd, buffer, 0, length, 0);
       const text = buffer.subarray(0, bytes).toString("utf8");
       if (stat.size <= bytes) return text;
-      return `${text}\n\n[cmux truncated plan file at ${bytes} bytes.]`;
+      return `${text}\n\n[hmux truncated plan file at ${bytes} bytes.]`;
     } finally {
       fs.closeSync(fd);
     }
@@ -594,7 +594,7 @@ const createCMUXFeed = async (ctx, options = {}) => {
       await replyPlanAnswer("No");
       await sendPlanFeedback(
         sid,
-        `User rejected the plan via cmux Feed and wants this change: ${feedback}\n\nUpdate the plan file, then call plan_exit again.`,
+        `User rejected the plan via hmux Feed and wants this change: ${feedback}\n\nUpdate the plan file, then call plan_exit again.`,
         ownerSessionId
       );
       return;
@@ -609,7 +609,7 @@ const createCMUXFeed = async (ctx, options = {}) => {
       await replyPlanAnswer("No");
       await sendPlanFeedback(
         sid,
-        "User chose Ultraplan via cmux Feed. Refine the plan more deeply, update the plan file, then call plan_exit again.",
+        "User chose Ultraplan via hmux Feed. Refine the plan more deeply, update the plan file, then call plan_exit again.",
         ownerSessionId
       );
       return;
@@ -626,7 +626,7 @@ const createCMUXFeed = async (ctx, options = {}) => {
       await replyPlanAnswer("No");
       await sendPlanFeedback(
         sid,
-        "cmux could not apply the selected permission mode. Ask the user to approve the plan again before switching to build mode.",
+        "hmux could not apply the selected permission mode. Ask the user to approve the plan again before switching to build mode.",
         ownerSessionId
       );
       return;
@@ -705,12 +705,12 @@ const createCMUXFeed = async (ctx, options = {}) => {
     const state = sessionState(sessionId);
     const context = extra?.context || contextForSession(sessionId);
     const workspaceId =
-      typeof environment.CMUX_WORKSPACE_ID === "string" && environment.CMUX_WORKSPACE_ID.trim()
-        ? environment.CMUX_WORKSPACE_ID.trim()
+      typeof environment.HMUX_WORKSPACE_ID === "string" && environment.HMUX_WORKSPACE_ID.trim()
+        ? environment.HMUX_WORKSPACE_ID.trim()
         : null;
     const surfaceId =
-      typeof environment.CMUX_SURFACE_ID === "string" && environment.CMUX_SURFACE_ID.trim()
-        ? environment.CMUX_SURFACE_ID.trim()
+      typeof environment.HMUX_SURFACE_ID === "string" && environment.HMUX_SURFACE_ID.trim()
+        ? environment.HMUX_SURFACE_ID.trim()
         : null;
     const event = {
       session_id: `opencode-${sessionId}`,
@@ -983,7 +983,7 @@ const createCMUXFeed = async (ctx, options = {}) => {
                 sessionId: sid,
                 requestId,
                 reply: permissionReplyForMode(mode),
-                message: mode === "deny" ? "User denied permission via cmux Feed." : undefined,
+                message: mode === "deny" ? "User denied permission via hmux Feed." : undefined,
                 ownerSessionId: ownedSessionId,
               });
             } catch (e) { /* ignore - opencode already moved on */ }
@@ -1103,24 +1103,24 @@ const createCMUXFeed = async (ctx, options = {}) => {
   };
 };
 
-export const CMUXFeed = createCMUXFeed;
+export const HMUXFeed = createHMUXFeed;
 
-const CMUX_FEED_SERVER_SCOPES_KEY = Symbol.for("cmux.feed.server.scopes");
+const HMUX_FEED_SERVER_SCOPES_KEY = Symbol.for("hmux.feed.server.scopes");
 
 const isTUIProcessServerContext = (ctx) =>
   Boolean(ctx && typeof ctx === "object" && ctx.client && ctx.serverUrl && ctx.directory);
 
 export default {
-  id: "cmux.feed",
+  id: "hmux.feed",
   async server(ctx) {
     if (!isTUIProcessServerContext(ctx)) return {};
-    // cmux-feed.js and plugins/cmux/index.js both load this source, and every
+    // hmux-feed.js and plugins/hmux/index.js both load this source, and every
     // loader in one plugin scope receives the same ctx. OpenCode keeps one
     // scope per directory, and disposes a scope's hooks when it tears it down.
-    const scopes = globalThis[CMUX_FEED_SERVER_SCOPES_KEY] ||= new WeakSet();
+    const scopes = globalThis[HMUX_FEED_SERVER_SCOPES_KEY] ||= new WeakSet();
     if (scopes.has(ctx)) return {};
     scopes.add(ctx);
-    return createCMUXFeed(ctx);
+    return createHMUXFeed(ctx);
   },
   // Compatibility alias for older V2 snapshots that called setup().
   setup() { return () => {}; },

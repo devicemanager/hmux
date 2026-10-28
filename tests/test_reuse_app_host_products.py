@@ -28,7 +28,7 @@ class ReuseProducts(TestProductHandoff):
         super().setUp()
         self.contract = {
             "product_inputs": {
-                "schema": "cmux-app-host-product-inputs/v2",
+                "schema": "hmux-app-host-product-inputs/v2",
                 "algorithm": "a" * 64,
                 "source": "b" * 64,
                 "recipe": "c" * 64,
@@ -68,7 +68,7 @@ class ReuseProducts(TestProductHandoff):
 
     def restore_reuse(self, *, current_run="13", current_attempt="1",
                       revision="def456", destination=None, report=None):
-        current = {**self.identity, "revision": revision, "checkout": "/queue/work/cmux"}
+        current = {**self.identity, "revision": revision, "checkout": "/queue/work/hmux"}
 
         def product_identity(api, source_revision):
             return api.product_identities[source_revision]
@@ -94,17 +94,17 @@ class ReuseProducts(TestProductHandoff):
         self.assertTrue(self.restore_reuse())
         receipt = json.loads((self.consumer / "Build/Products" / reuse.products.RECEIPT).read_text())
         self.assertEqual(receipt["revision"], "def456")
-        provenance = json.loads((self.consumer / "Build/Products/cmux-original-producer.json").read_text())
+        provenance = json.loads((self.consumer / "Build/Products/hmux-original-producer.json").read_text())
         self.assertEqual(provenance["revision"], "abc123")
-        value = __import__('plistlib').loads(next((self.consumer / "Build/Products").glob('cmux-unit_*.xctestrun')).read_bytes())
+        value = __import__('plistlib').loads(next((self.consumer / "Build/Products").glob('hmux-unit_*.xctestrun')).read_bytes())
         target = list(reuse.products.targets(value))[0]
-        self.assertEqual(target['EnvironmentVariables']['SOURCE'], '/queue/work/cmux/fixtures')
+        self.assertEqual(target['EnvironmentVariables']['SOURCE'], '/queue/work/hmux/fixtures')
         self.assertTrue(Path(target['DependentProductPaths'][0]).exists())
 
     def test_a_claim_picks_the_derived_data_after_the_checks(self):
         # switch_root moves the job to the product's root only once the
         # product passed every check, and the product lands in that root.
-        current = {**self.identity, "revision": "def456", "checkout": "/queue/work/cmux"}
+        current = {**self.identity, "revision": "def456", "checkout": "/queue/work/hmux"}
         moved = self.consumer.parent / "other-root" / "derived"
         claims = []
 
@@ -121,7 +121,7 @@ class ReuseProducts(TestProductHandoff):
         self.assertFalse((self.consumer / "Build/Products").exists())
 
     def test_a_refused_claim_is_a_miss_that_leaves_nothing(self):
-        current = {**self.identity, "revision": "def456", "checkout": "/queue/work/cmux"}
+        current = {**self.identity, "revision": "def456", "checkout": "/queue/work/hmux"}
         report = {}
         with mock.patch.object(reuse, "github_product_identity",
                                side_effect=lambda api, rev: api.product_identities[rev]):
@@ -138,7 +138,7 @@ class ReuseProducts(TestProductHandoff):
 
     def test_fork_wrong_workflow_and_failed_compile_are_misses(self):
         for field, value in [('event', 'workflow_dispatch'), ('path', '.github/workflows/untrusted.yml'),
-                             ('head_repository', {'full_name': 'fork/cmux'})]:
+                             ('head_repository', {'full_name': 'fork/hmux'})]:
             with self.subTest(field=field):
                 old = self.api.run[field]
                 self.api.run[field] = value
@@ -221,8 +221,8 @@ class ReuseProducts(TestProductHandoff):
         )
 
         changed_product_env = mutate_admission(
-            '      CMUX_SKIP_ZIG_BUILD: "1"\n',
-            '      CMUX_SKIP_ZIG_BUILD: "0"\n',
+            '      HMUX_SKIP_ZIG_BUILD: "1"\n',
+            '      HMUX_SKIP_ZIG_BUILD: "0"\n',
         )
         self.assertNotEqual(
             base_identity,
@@ -230,8 +230,8 @@ class ReuseProducts(TestProductHandoff):
         )
 
         changed_cache_env = mutate_admission(
-            '      CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS: ${{ vars.CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS }}\n',
-            '      CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS: "999"\n',
+            '      HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS: ${{ vars.HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS }}\n',
+            '      HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS: "999"\n',
         )
         self.assertEqual(
             base_identity,
@@ -312,13 +312,13 @@ class ReuseProducts(TestProductHandoff):
             "config/iroh/managed-relay-catalog.json",
             "vercel.json",
             ".vercelignore",
-            "cmux-browser/src/main.ts",
-            "daemon/remote/cmd/cmuxd-remote/cli.go",
+            "hmux-browser/src/main.ts",
+            "daemon/remote/cmd/hmuxd-remote/cli.go",
         ):
             self.assertFalse(identity.reaches_product(path), path)
         self.assertTrue(identity.reaches_product("config/IrohRelayPolicyProduction.xcconfig"))
         self.assertTrue(identity.reaches_product("scripts/ci/compile-app-host-test-product.sh"))
-        self.assertTrue(identity.reaches_product("cmuxTests/WorkspaceTests.swift"))
+        self.assertTrue(identity.reaches_product("hmuxTests/WorkspaceTests.swift"))
 
     def test_developer_tooling_outside_the_build_does_not_reach_product(self):
         """Editing these must not force a compile: no build or macOS lane reads them."""
@@ -346,7 +346,7 @@ class ReuseProducts(TestProductHandoff):
             "scripts/build-app-bundled-resources.sh",
             "scripts/build-plain-text-paste-worker.sh",
             "scripts/setup.sh",
-            "skills/cmux-cua/SKILL.md",
+            "skills/hmux-cua/SKILL.md",
             ".gitattributes",
         ):
             self.assertTrue(identity.reaches_product(path), path)
@@ -357,7 +357,7 @@ class ReuseProducts(TestProductHandoff):
         readers = {
             name: (root / name).read_text()
             for name in (
-                "cmux.xcodeproj/project.pbxproj",
+                "hmux.xcodeproj/project.pbxproj",
                 "scripts/ci/compile-app-host-test-product.sh",
                 "scripts/build-app-bundled-resources.sh",
                 ".github/workflows/ci-macos.yml",
@@ -381,8 +381,8 @@ class ReuseProducts(TestProductHandoff):
         base = identity.identity_from_tree_lines(tree, workflow, e2e_workflow)
 
         changed_env = e2e_workflow.replace(
-            '      CMUX_SKIP_ZIG_BUILD: "1"\n',
-            '      CMUX_SKIP_ZIG_BUILD: "1"\n'
+            '      HMUX_SKIP_ZIG_BUILD: "1"\n',
+            '      HMUX_SKIP_ZIG_BUILD: "1"\n'
             '      XCODE_XCCONFIG_FILE: /tmp/override.xcconfig\n',
             1,
         )
@@ -425,30 +425,30 @@ class ReuseProducts(TestProductHandoff):
         self.assertEqual(base, unrelated)
 
     def test_bundled_paste_worker_source_reaches_product(self):
-        """cmux.xcodeproj compiles this into the bundle, so reuse must see it."""
+        """hmux.xcodeproj compiles this into the bundle, so reuse must see it."""
         identity = reuse.product_inputs
         # The "Build Plain Text Paste Worker" phase declares main.m as an input
-        # and emits bin/cmux-paste-text-worker into the app-host bundle, which
+        # and emits bin/hmux-paste-text-worker into the app-host bundle, which
         # PlainPastePTYFixture and the paste startup suites execute. The rest of
         # workers/ is Cloudflare Worker source and stays excluded.
-        self.assertTrue(identity.reaches_product("workers/cmux-paste-text/main.m"))
+        self.assertTrue(identity.reaches_product("workers/hmux-paste-text/main.m"))
         self.assertFalse(identity.reaches_product("workers/presence/src/index.ts"))
 
         # Assert the named build phase declares it, not merely that the path
         # appears somewhere in the project file: only the inputPaths entry is
         # evidence that the worker is compiled into the bundle.
-        project = (Path(__file__).resolve().parents[1] / "cmux.xcodeproj/project.pbxproj").read_text()
+        project = (Path(__file__).resolve().parents[1] / "hmux.xcodeproj/project.pbxproj").read_text()
         phase = project.split("name = \"Build Plain Text Paste Worker\"", 1)
         self.assertEqual(len(phase), 2, "Build Plain Text Paste Worker phase is missing")
         declaration = phase[0].rsplit("isa = PBXShellScriptBuildPhase", 1)[-1]
-        self.assertIn("$(SRCROOT)/workers/cmux-paste-text/main.m", declaration)
+        self.assertIn("$(SRCROOT)/workers/hmux-paste-text/main.m", declaration)
         self.assertIn("inputPaths", declaration)
-        self.assertIn("cmux-paste-text-worker", phase[1].split("};", 1)[0])
+        self.assertIn("hmux-paste-text-worker", phase[1].split("};", 1)[0])
 
         # A commit that only touches the worker must change the fingerprint.
         workflow = (Path(__file__).resolve().parents[1] / ".github/workflows/ci-macos.yml").read_text()
-        base = ["100644 blob 1111111111111111111111111111111111111111\tworkers/cmux-paste-text/main.m"]
-        changed = ["100644 blob 2222222222222222222222222222222222222222\tworkers/cmux-paste-text/main.m"]
+        base = ["100644 blob 1111111111111111111111111111111111111111\tworkers/hmux-paste-text/main.m"]
+        changed = ["100644 blob 2222222222222222222222222222222222222222\tworkers/hmux-paste-text/main.m"]
         self.assertNotEqual(
             identity.identity_from_tree_lines(base, workflow),
             identity.identity_from_tree_lines(changed, workflow),
@@ -576,7 +576,7 @@ class ReuseProducts(TestProductHandoff):
 
         def git(*args, cwd=source):
             return subprocess.check_output(
-                ["git", "-c", "user.email=ci@cmux.test", "-c", "user.name=cmux ci", *args],
+                ["git", "-c", "user.email=ci@hmux.test", "-c", "user.name=hmux ci", *args],
                 cwd=cwd, text=True).strip()
 
         if not source.exists():
@@ -813,7 +813,7 @@ class ReuseProducts(TestProductHandoff):
         self.assertNotIn("product_provenance_invalid", report["miss_reasons"])
         self.assertEqual(report["reason"], "hit")
         provenance = json.loads(
-            (self.consumer / "Build/Products/cmux-original-producer.json").read_text())
+            (self.consumer / "Build/Products/hmux-original-producer.json").read_text())
         self.assertEqual(provenance["revision"], merge)
 
     def test_producer_revision_outside_the_attested_head_stays_a_miss(self):
@@ -856,7 +856,7 @@ class ReuseProducts(TestProductHandoff):
     def install_upstream(self, provenance):
         """Embed provenance in the producer archive and refresh its outer digest."""
         root = self.producer / "Build/Products"
-        (root / "cmux-original-producer.json").write_text(json.dumps(provenance))
+        (root / "hmux-original-producer.json").write_text(json.dumps(provenance))
         self.api.artifact["digest"] = self.package(self.producer, self.api.archive)
 
     def test_malformed_receipt_revision_is_a_normal_miss(self):
@@ -887,7 +887,7 @@ class ReuseProducts(TestProductHandoff):
                 self.assertFalse(self.restore_reuse(report=report))
                 self.assertIn("product_provenance_invalid", report["miss_reasons"])
                 self.assertFalse(self.consumer.exists())
-                (self.producer / "Build/Products/cmux-original-producer.json").unlink()
+                (self.producer / "Build/Products/hmux-original-producer.json").unlink()
                 self.seal()
 
     def test_valid_legacy_upstream_provenance_remains_eligible(self):
@@ -901,7 +901,7 @@ class ReuseProducts(TestProductHandoff):
         self.install_upstream(legacy)
         self.assertTrue(self.restore_reuse())
         provenance = json.loads(
-            (self.consumer / "Build/Products/cmux-original-producer.json").read_text())
+            (self.consumer / "Build/Products/hmux-original-producer.json").read_text())
         self.assertEqual(provenance["upstream"], legacy)
         self.assertEqual(provenance["original_producer"]["run_id"], "12")
 
@@ -930,7 +930,7 @@ class ReuseProducts(TestProductHandoff):
                         mock.patch.object(self.api, 'download', side_effect=download) as calls:
                     self.assertTrue(self.restore_reuse())
                     self.assertEqual([call.args[0] for call in calls.call_args_list], [41, 42])
-                provenance = json.loads((self.consumer / 'Build/Products/cmux-original-producer.json').read_text())
+                provenance = json.loads((self.consumer / 'Build/Products/hmux-original-producer.json').read_text())
                 self.assertEqual(provenance['artifact_id'], 42)
                 shutil.rmtree(self.consumer)
 
@@ -1257,7 +1257,7 @@ class ReuseProducts(TestProductHandoff):
                     expected,
                 )
         fork = {**base, "event": "pull_request",
-                "head_repository": {"full_name": "fork/cmux"}}
+                "head_repository": {"full_name": "fork/hmux"}}
         self.assertFalse(reuse.permitted_pair(fork, {**base, "event": "pull_request"},
                                               self.api.repository))
         self.assertFalse(reuse.permitted_pair({**base, "event": "pull_request"}, fork,
@@ -1285,13 +1285,13 @@ class ReuseProducts(TestProductHandoff):
         cases = [
             ("main_push_to_pr", self.main_push_run(), pull_request, True),
             ("main_push_to_fork_pr", self.main_push_run(),
-             {**pull_request, "head_repository": {"full_name": "fork/cmux"}}, False),
+             {**pull_request, "head_repository": {"full_name": "fork/hmux"}}, False),
             ("other_branch_push_to_pr", self.main_push_run(head_branch="feature"),
              pull_request, False),
             ("missing_branch_push_to_pr", self.main_push_run(head_branch=None),
              pull_request, False),
             ("fork_push_to_pr",
-             self.main_push_run(head_repository={"full_name": "fork/cmux"}),
+             self.main_push_run(head_repository={"full_name": "fork/hmux"}),
              pull_request, False),
             ("ci_push_to_pr", self.main_push_run(path=".github/workflows/ci.yml"),
              pull_request, False),
@@ -1353,7 +1353,7 @@ class ReuseProducts(TestProductHandoff):
         self.assertEqual(report["producer_run_id"], "12")
         self.assertEqual(report["compile_seconds_avoided"], 120.0)
         provenance = json.loads(
-            (self.consumer / "Build/Products/cmux-original-producer.json").read_text())
+            (self.consumer / "Build/Products/hmux-original-producer.json").read_text())
         self.assertEqual(provenance["original_producer"]["revision"], "abc123")
         self.assertEqual(provenance["consumer"]["revision"], "def456")
 
@@ -1392,7 +1392,7 @@ class ReuseProducts(TestProductHandoff):
             ),
             "fork_consumer": (
                 lambda: self.api.consumer_run.update(
-                    head_repository={"full_name": "fork/cmux"}),
+                    head_repository={"full_name": "fork/hmux"}),
                 "consumer_untrusted",
             ),
             "seed_job_failed": (
@@ -1439,7 +1439,7 @@ class ReuseProducts(TestProductHandoff):
         self.assertFalse(self.consumer.exists())
 
     def test_wrong_repository_provenance_is_a_miss(self):
-        self.api.run["head_repository"] = {"full_name": "other/cmux"}
+        self.api.run["head_repository"] = {"full_name": "other/hmux"}
         self.assertFalse(self.restore_reuse())
         self.assertFalse(self.consumer.exists())
 
@@ -1484,7 +1484,7 @@ class ReuseProducts(TestProductHandoff):
                     **self.api.run,
                     "id": int(path.split("/")[2]),
                     "run_attempt": 1,
-                    "head_repository": {"full_name": "other/cmux"},
+                    "head_repository": {"full_name": "other/hmux"},
                 }
             return original_get(path)
         with mock.patch.object(self.api, "get", side_effect=six_candidates):
@@ -1520,7 +1520,7 @@ class ReuseProducts(TestProductHandoff):
     def test_named_candidate_still_requires_producer_validation(self):
         cases = {
             "untrusted_producer": (
-                lambda: self.api.run.update({"head_repository": {"full_name": "fork/cmux"}}),
+                lambda: self.api.run.update({"head_repository": {"full_name": "fork/hmux"}}),
                 "producer_consumer_pair_disallowed",
             ),
             "failed_compile": (
@@ -1598,7 +1598,7 @@ class ReuseProducts(TestProductHandoff):
         first_report = {}
         self.assertTrue(self.restore_reuse(report=first_report))
         first_provenance = json.loads(
-            (self.consumer / "Build/Products/cmux-original-producer.json").read_text())
+            (self.consumer / "Build/Products/hmux-original-producer.json").read_text())
         self.assertEqual(first_provenance["original_producer"]["run_id"], "12")
         self.assertEqual(first_provenance["immediate_producer"]["run_id"], "12")
 
@@ -1645,7 +1645,7 @@ class ReuseProducts(TestProductHandoff):
             report=second_report,
         ))
         provenance = json.loads(
-            (second / "Build/Products/cmux-original-producer.json").read_text())
+            (second / "Build/Products/hmux-original-producer.json").read_text())
         self.assertEqual(provenance["original_producer"]["run_id"], "12")
         self.assertEqual(provenance["original_producer"]["revision"], "abc123")
         self.assertEqual(provenance["immediate_producer"]["run_id"], "13")
@@ -1838,34 +1838,34 @@ class ContractParity(unittest.TestCase):
         """One toolchain at one build path is one product on every pool."""
         canonical = reuse.CANONICAL_DERIVED_DATA
         blacksmith = self.contract_with({
-            "CMUX_SKIP_ZIG_BUILD": "1",
-            "CMUX_PRODUCT_RUNNER": "blacksmith-6vcpu-macos-26",
+            "HMUX_SKIP_ZIG_BUILD": "1",
+            "HMUX_PRODUCT_RUNNER": "blacksmith-6vcpu-macos-26",
             "ImageOS": "macos26", "ImageVersion": "133416",
         }, derived=canonical, os_build="25D125", os_version="26.4")
         for name, environ, os_build, os_version in (
-            ("12 vCPU", {"CMUX_PRODUCT_RUNNER": "blacksmith-12vcpu-macos-26"}, "25D125", "26.4"),
-            ("GitHub-hosted", {"CMUX_PRODUCT_RUNNER": "macos-26",
+            ("12 vCPU", {"HMUX_PRODUCT_RUNNER": "blacksmith-12vcpu-macos-26"}, "25D125", "26.4"),
+            ("GitHub-hosted", {"HMUX_PRODUCT_RUNNER": "macos-26",
                                "ImageOS": "macos26", "ImageVersion": "20260915.1"},
              "25E5207", "26.5"),
         ):
             with self.subTest(pool=name):
-                other = self.contract_with({"CMUX_SKIP_ZIG_BUILD": "1", **environ},
+                other = self.contract_with({"HMUX_SKIP_ZIG_BUILD": "1", **environ},
                                            derived=canonical, os_build=os_build,
                                            os_version=os_version)
                 self.assertEqual(reuse.key(blacksmith), reuse.key(other))
         # Still separate: another host major, and another build path.
-        other_major = self.contract_with({"CMUX_SKIP_ZIG_BUILD": "1"},
+        other_major = self.contract_with({"HMUX_SKIP_ZIG_BUILD": "1"},
                                          derived=canonical, os_version="27.0")
         self.assertNotEqual(reuse.key(blacksmith), reuse.key(other_major))
-        workspace = self.contract_with({"CMUX_SKIP_ZIG_BUILD": "1"},
-                                       derived=Path("/Users/runner/_work/cmux/cmux/DerivedData/cmux-e2e"))
+        workspace = self.contract_with({"HMUX_SKIP_ZIG_BUILD": "1"},
+                                       derived=Path("/Users/runner/_work/hmux/hmux/DerivedData/hmux-e2e"))
         self.assertNotEqual(reuse.key(blacksmith), reuse.key(workspace))
         self.assertEqual(reuse.portable_contract(workspace), blacksmith)
 
     def test_an_sdkroot_naming_the_selected_sdk_is_not_a_product_input(self):
         """/usr/bin/python3 is an xcrun shim that exports SDKROOT to the
         interpreter, so one Mac hashed the selected SDK's path and the rest
-        hashed nothing (8b593349 was 8f68380f on cmux7s, dd3ed8d1 on cmux10s)."""
+        hashed nothing (8b593349 was 8f68380f on hmux7s, dd3ed8d1 on hmux10s)."""
         with tempfile.TemporaryDirectory() as tmp:
             sdks = Path(tmp)
             real = sdks / "MacOSX26.5.sdk"
@@ -1885,29 +1885,29 @@ class ContractParity(unittest.TestCase):
                         mock.patch.object(reuse.shutil, "which", return_value=None), \
                         mock.patch.object(reuse.product_inputs, "local_identity", return_value={"source": "s"}):
                     return reuse.contract(reuse.CANONICAL_DERIVED_DATA)
-            unset = contract({"CMUX_SKIP_ZIG_BUILD": "1"})
+            unset = contract({"HMUX_SKIP_ZIG_BUILD": "1"})
             self.assertEqual(unset["environment"]["SDKROOT"], "")
             for path in (real, sdks / "MacOSX.sdk"):
                 with self.subTest(sdkroot=path.name):
-                    self.assertEqual(reuse.key(contract({"CMUX_SKIP_ZIG_BUILD": "1", "SDKROOT": str(path)})),
+                    self.assertEqual(reuse.key(contract({"HMUX_SKIP_ZIG_BUILD": "1", "SDKROOT": str(path)})),
                                      reuse.key(unset))
             # Another SDK still names another product.
-            elsewhere = contract({"CMUX_SKIP_ZIG_BUILD": "1", "SDKROOT": str(other)})
+            elsewhere = contract({"HMUX_SKIP_ZIG_BUILD": "1", "SDKROOT": str(other)})
             self.assertEqual(elsewhere["environment"]["SDKROOT"], str(other))
             self.assertNotEqual(reuse.key(elsewhere), reuse.key(unset))
 
     def test_release_contract_still_names_the_runner_pool(self):
         # reuse_release_product.py calls contract() without a DerivedData path.
-        small = self.contract_with({"CMUX_PRODUCT_RUNNER": "blacksmith-6vcpu-macos-26"})
-        large = self.contract_with({"CMUX_PRODUCT_RUNNER": "blacksmith-12vcpu-macos-26"})
+        small = self.contract_with({"HMUX_PRODUCT_RUNNER": "blacksmith-6vcpu-macos-26"})
+        large = self.contract_with({"HMUX_PRODUCT_RUNNER": "blacksmith-12vcpu-macos-26"})
         self.assertNotEqual(reuse.key(small), reuse.key(large))
         self.assertNotEqual(reuse.key(small), reuse.key(self.contract_with(
-            {"CMUX_PRODUCT_RUNNER": "blacksmith-6vcpu-macos-26"}, os_build="25E5207")))
+            {"HMUX_PRODUCT_RUNNER": "blacksmith-6vcpu-macos-26"}, os_build="25E5207")))
 
     def test_restore_also_looks_up_the_product_compiled_at_the_canonical_root(self):
         """A workspace-built lane can run a canonical product, so it asks for one."""
-        workspace = Path("/Users/runner/_work/cmux/cmux/DerivedData/cmux-e2e")
-        own = self.contract_with({"CMUX_SKIP_ZIG_BUILD": "1"}, derived=workspace)
+        workspace = Path("/Users/runner/_work/hmux/hmux/DerivedData/hmux-e2e")
+        own = self.contract_with({"HMUX_SKIP_ZIG_BUILD": "1"}, derived=workspace)
         asked = []
 
         def fake_restore(api, value, derived, run, identity, attempt, report):
@@ -1939,9 +1939,9 @@ class ContractParity(unittest.TestCase):
     def test_an_owned_mac_looks_at_its_other_roots_and_moves_to_the_hit(self):
         """About one E2E build in five starts on another root than its product."""
         tmp = Path(self.enterContext(__import__("tempfile").TemporaryDirectory()))
-        first, second = tmp / "cmux-ci", tmp / "cmux-ci-2"
+        first, second = tmp / "hmux-ci", tmp / "hmux-ci-2"
         derived = second / "derived-data-compile-admission"
-        own = self.contract_with({"CMUX_SKIP_ZIG_BUILD": "1"}, derived=derived)
+        own = self.contract_with({"HMUX_SKIP_ZIG_BUILD": "1"}, derived=derived)
         at_first = reuse.at_root(own, first)
         asked, moves = [], []
 
@@ -1962,7 +1962,7 @@ class ContractParity(unittest.TestCase):
         output = tmp / "out"
         env = {"GITHUB_OUTPUT": str(output), "GITHUB_EVENT_NAME": "workflow_dispatch",
                "GITHUB_REPOSITORY": "manaflow-ai/cmux", "GITHUB_RUN_ID": "13",
-               "GITHUB_RUN_ATTEMPT": "1", "CMUX_REUSE_SWITCH_ROOTS": "1"}
+               "GITHUB_RUN_ATTEMPT": "1", "HMUX_REUSE_SWITCH_ROOTS": "1"}
         helper = tmp / "glaeda-canonical-root"
         helper.write_text("")
         with mock.patch.dict(os.environ, env), \
@@ -1984,8 +1984,8 @@ class ContractParity(unittest.TestCase):
 
     def test_a_miss_on_every_root_keeps_the_job_where_it_is(self):
         tmp = Path(self.enterContext(__import__("tempfile").TemporaryDirectory()))
-        derived = tmp / "cmux-ci" / "derived-data-compile-admission"
-        own = self.contract_with({"CMUX_SKIP_ZIG_BUILD": "1"}, derived=derived)
+        derived = tmp / "hmux-ci" / "derived-data-compile-admission"
+        own = self.contract_with({"HMUX_SKIP_ZIG_BUILD": "1"}, derived=derived)
 
         def miss(api, value, target, run, identity, attempt, report, claim=None):
             report.update(reason="miss", miss_reasons="no_matching_contract_artifact")
@@ -1994,13 +1994,13 @@ class ContractParity(unittest.TestCase):
         output = tmp / "out"
         env = {"GITHUB_OUTPUT": str(output), "GITHUB_EVENT_NAME": "workflow_dispatch",
                "GITHUB_REPOSITORY": "manaflow-ai/cmux", "GITHUB_RUN_ID": "13",
-               "GITHUB_RUN_ATTEMPT": "1", "CMUX_REUSE_SWITCH_ROOTS": "1"}
+               "GITHUB_RUN_ATTEMPT": "1", "HMUX_REUSE_SWITCH_ROOTS": "1"}
         helper = tmp / "glaeda-canonical-root"
         helper.write_text("")
         with mock.patch.dict(os.environ, env), \
                 mock.patch.object(sys, "argv", ["reuse", "restore", str(derived)]), \
                 mock.patch.object(reuse, "ROOT_HELPER", helper), \
-                mock.patch.object(reuse, "canonical_roots", return_value=[tmp / "cmux-ci", tmp / "cmux-ci-2"]), \
+                mock.patch.object(reuse, "canonical_roots", return_value=[tmp / "hmux-ci", tmp / "hmux-ci-2"]), \
                 mock.patch.object(reuse, "switch_root", side_effect=lambda root: self.fail("moved on a miss")), \
                 mock.patch.object(reuse, "contract", return_value=own), \
                 mock.patch.object(reuse.products, "identity", return_value={}), \
@@ -2012,11 +2012,11 @@ class ContractParity(unittest.TestCase):
     def test_a_failure_after_a_move_never_cleans_the_root_the_job_left(self):
         # Another job may hold the released root by now.
         tmp = Path(self.enterContext(__import__("tempfile").TemporaryDirectory()))
-        first, second = tmp / "cmux-ci", tmp / "cmux-ci-2"
+        first, second = tmp / "hmux-ci", tmp / "hmux-ci-2"
         derived = second / "derived-data-compile-admission"
         (derived / "kept").mkdir(parents=True)
         (first / "derived-data-compile-admission" / "partial").mkdir(parents=True)
-        own = self.contract_with({"CMUX_SKIP_ZIG_BUILD": "1"}, derived=derived)
+        own = self.contract_with({"HMUX_SKIP_ZIG_BUILD": "1"}, derived=derived)
 
         def restore_then_fail(api, value, target, run, identity, attempt, report, claim=None):
             if claim is None:
@@ -2028,7 +2028,7 @@ class ContractParity(unittest.TestCase):
         output = tmp / "out"
         env = {"GITHUB_OUTPUT": str(output), "GITHUB_EVENT_NAME": "workflow_dispatch",
                "GITHUB_REPOSITORY": "manaflow-ai/cmux", "GITHUB_RUN_ID": "13",
-               "GITHUB_RUN_ATTEMPT": "1", "CMUX_REUSE_SWITCH_ROOTS": "1"}
+               "GITHUB_RUN_ATTEMPT": "1", "HMUX_REUSE_SWITCH_ROOTS": "1"}
         helper = tmp / "glaeda-canonical-root"
         helper.write_text("")
         with mock.patch.dict(os.environ, env), \
@@ -2047,7 +2047,7 @@ class ContractParity(unittest.TestCase):
 
     def test_switch_root_reports_the_move_even_when_it_cannot_empty_the_new_root(self):
         tmp = Path(self.enterContext(__import__("tempfile").TemporaryDirectory()))
-        root, env_file = tmp / "cmux-ci-2", tmp / "env"
+        root, env_file = tmp / "hmux-ci-2", tmp / "env"
         env_file.write_text("")
         done = subprocess.CompletedProcess([], 0, "", "")
         with mock.patch.dict(os.environ, {"GITHUB_ENV": str(env_file)}), \
@@ -2055,20 +2055,20 @@ class ContractParity(unittest.TestCase):
                 mock.patch.object(Path, "mkdir", side_effect=OSError("read-only")), \
                 mock.patch("sys.stdout", io.StringIO()):
             self.assertEqual(reuse.switch_root(root), root / "derived-data-compile-admission")
-        self.assertIn(f"CMUX_DERIVED_DATA_PATH={root / 'derived-data-compile-admission'}", env_file.read_text())
+        self.assertIn(f"HMUX_DERIVED_DATA_PATH={root / 'derived-data-compile-admission'}", env_file.read_text())
 
     def test_canonical_roots_are_root_one_then_numbered_roots(self):
         tmp = Path(self.enterContext(__import__("tempfile").TemporaryDirectory()))
-        first = tmp / "cmux-ci"
-        for name in ("cmux-ci", "cmux-ci-10", "cmux-ci-2", "cmux-ci-x", "cmux-ci-2-old"):
+        first = tmp / "hmux-ci"
+        for name in ("hmux-ci", "hmux-ci-10", "hmux-ci-2", "hmux-ci-x", "hmux-ci-2-old"):
             (tmp / name).mkdir()
-        (tmp / "cmux-ci-3").write_text("not a root")
+        (tmp / "hmux-ci-3").write_text("not a root")
         with mock.patch.object(reuse, "FIRST_ROOT", first):
-            self.assertEqual(reuse.canonical_roots(), [first, tmp / "cmux-ci-2", tmp / "cmux-ci-10"])
+            self.assertEqual(reuse.canonical_roots(), [first, tmp / "hmux-ci-2", tmp / "hmux-ci-10"])
 
     def test_switch_root_moves_the_job_and_its_paths(self):
         tmp = Path(self.enterContext(__import__("tempfile").TemporaryDirectory()))
-        root, env_file = tmp / "cmux-ci-2", tmp / "env"
+        root, env_file = tmp / "hmux-ci-2", tmp / "env"
         (root / "derived-data-compile-admission" / "stale").mkdir(parents=True)
         env_file.write_text("")
         calls = []
@@ -2090,8 +2090,8 @@ class ContractParity(unittest.TestCase):
         self.assertEqual(list((root / "derived-data-compile-admission").iterdir()), [])
         self.assertTrue((root / "compile-admission-cas").is_dir())
         self.assertEqual(env_file.read_text().splitlines(), [
-            f"CMUX_DERIVED_DATA_PATH={root / 'derived-data-compile-admission'}",
-            f"CMUX_E2E_COMPILATION_CACHE={root / 'compile-admission-cas'}",
+            f"HMUX_DERIVED_DATA_PATH={root / 'derived-data-compile-admission'}",
+            f"HMUX_E2E_COMPILATION_CACHE={root / 'compile-admission-cas'}",
         ])
 
     def test_contract_ignores_an_sdkroot_naming_the_default_sdk(self):
@@ -2103,13 +2103,13 @@ class ContractParity(unittest.TestCase):
             alias.symlink_to(sdk.name)
             other = Path(directory) / "MacOSX15.5.sdk"
             other.mkdir()
-            unset = self.contract_with({"CMUX_SKIP_ZIG_BUILD": "1"})
+            unset = self.contract_with({"HMUX_SKIP_ZIG_BUILD": "1"})
 
             def contract_at(sdkroot):
                 answers = {"xcodebuild": "Xcode 26.6\nBuild version 17F113",
                            ("xcrun", "--sdk", "macosx", "--show-sdk-build-version"): "25F70",
                            ("xcrun", "--sdk", "macosx", "--show-sdk-path"): str(sdk)}
-                with mock.patch.dict(os.environ, {"CMUX_SKIP_ZIG_BUILD": "1", "SDKROOT": sdkroot}, clear=True), \
+                with mock.patch.dict(os.environ, {"HMUX_SKIP_ZIG_BUILD": "1", "SDKROOT": sdkroot}, clear=True), \
                         mock.patch.object(reuse, "read", side_effect=lambda *args: answers.get(args, answers.get(args[0]))), \
                         mock.patch.object(reuse.shutil, "which", return_value=None), \
                         mock.patch.object(reuse.product_inputs, "local_identity", return_value={"source": "s"}):
@@ -2125,18 +2125,18 @@ class ContractParity(unittest.TestCase):
         # Admission pins Xcode by path; an E2E dispatch picks the same Xcode by
         # its SDK. Both select Xcode 26.6, so both must name one product.
         pinned = self.contract_with({
-            "CMUX_CI_XCODE_APP": "/Applications/Xcode_26.6.app",
-            "CMUX_CI_REQUIRED_MACOS_SDK_MAJOR": "26",
-            "CMUX_SKIP_ZIG_BUILD": "1",
+            "HMUX_CI_XCODE_APP": "/Applications/Xcode_26.6.app",
+            "HMUX_CI_REQUIRED_MACOS_SDK_MAJOR": "26",
+            "HMUX_SKIP_ZIG_BUILD": "1",
         })
-        selected = self.contract_with({"CMUX_SKIP_ZIG_BUILD": "1"})
+        selected = self.contract_with({"HMUX_SKIP_ZIG_BUILD": "1"})
         self.assertEqual(reuse.key(pinned), reuse.key(selected))
         # What was selected still separates products.
         other_xcode = self.contract_with(
-            {"CMUX_SKIP_ZIG_BUILD": "1"}, xcode="Xcode 26.7\nBuild version 17G1")
+            {"HMUX_SKIP_ZIG_BUILD": "1"}, xcode="Xcode 26.7\nBuild version 17G1")
         self.assertNotEqual(reuse.key(selected), reuse.key(other_xcode))
         # A real build control still does too.
-        zig_built = self.contract_with({"CMUX_SKIP_ZIG_BUILD": ""})
+        zig_built = self.contract_with({"HMUX_SKIP_ZIG_BUILD": ""})
         self.assertNotEqual(reuse.key(selected), reuse.key(zig_built))
 
     def test_both_lanes_set_every_hashed_build_control_alike(self):

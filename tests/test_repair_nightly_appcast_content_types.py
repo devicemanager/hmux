@@ -22,7 +22,7 @@ ORIGINAL = {"content-type": "application/x-www-form-urlencoded", "etag": '"origi
 
 class RepairTests(unittest.TestCase):
     def test_repair_request_signs_content_type_condition_and_metadata(self):
-        args = argparse.Namespace(endpoint_url="https://example.invalid", bucket="cmux-binaries",
+        args = argparse.Namespace(endpoint_url="https://example.invalid", bucket="hmux-binaries",
                                   key="nightly/appcast.xml", content_type="application/xml",
                                   cache_control=ORIGINAL["cache-control"])
         response = MagicMock()
@@ -46,7 +46,7 @@ class RepairTests(unittest.TestCase):
         objects = {f"nightly/{name}": [BODY, dict(ORIGINAL if original is None else original)] for name in repair.APPCASTS}
 
         def endpoint(args, method, body=b"", headers=None):
-            self.assertEqual(args.bucket, "cmux-binaries")
+            self.assertEqual(args.bucket, "hmux-binaries")
             self.assertEqual(args.endpoint_url, "https://example.invalid")
             self.calls.append((method, args.key, body, headers))
             current, metadata = objects[args.key]

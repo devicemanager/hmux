@@ -1,12 +1,12 @@
-import CmuxAgentChat
-import CmuxFoundation
+import HmuxAgentChat
+import HmuxFoundation
 import Foundation
 import SwiftUI
 
 /// Current-main extraction of the useful conversation-sidebar behavior from
 /// the older fork experiment.
 ///
-/// Open rows come from cmux's authoritative live agent registry. History and
+/// Open rows come from hmux's authoritative live agent registry. History and
 /// transcript search come from the native Vault index. The two projections are
 /// joined by canonical agent/session identity so a live conversation never
 /// appears twice.

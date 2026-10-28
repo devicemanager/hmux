@@ -42,12 +42,12 @@ describe("Dashboard browser bootstrap", () => {
     }), services);
     const token = (await ready.json() as any).ticket.token;
     const response = await routeDashboard(new Request("https://worker/v2/dashboard/socket", {
-      headers: { origin: "https://cmux.com", upgrade: "websocket", "sec-websocket-protocol": `cmux-v2-dashboard, ticket.${token}` },
+      headers: { origin: "https://cmux.com", upgrade: "websocket", "sec-websocket-protocol": `hmux-v2-dashboard, ticket.${token}` },
     }), services);
     expect(response.status).toBe(200);
     expect(calls.length).toBeGreaterThan(0);
-    expect(calls[calls.length - 1]?.headers.get("x-cmux-v2-dashboard-authority")).toContain("team");
+    expect(calls[calls.length - 1]?.headers.get("x-hmux-v2-dashboard-authority")).toContain("team");
     expect(calls[calls.length - 1]?.url.includes(token)).toBe(false);
-    expect(calls[calls.length - 1]?.headers.get("x-cmux-v2-dashboard-authority")).toContain("team");
+    expect(calls[calls.length - 1]?.headers.get("x-hmux-v2-dashboard-authority")).toContain("team");
   });
 });

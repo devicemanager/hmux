@@ -1,7 +1,7 @@
 import { registerOTel } from "@vercel/otel";
 import { installStackThrottleFetchGuard } from "./services/auth/stackThrottleFetchGuard";
 import { DependencySpanProcessor } from "./services/observability/dependencies";
-import { buildCmuxTraceSampler } from "./services/observability/sampler";
+import { buildHmuxTraceSampler } from "./services/observability/sampler";
 import {
   scrubSentryEvent,
   shouldSendSentryEvent,
@@ -11,14 +11,14 @@ import { preconnectFreestyle } from "./services/vms/drivers/freestyleWarmup";
 /** Compile the first-use Cloud routes while the development server is starting. */
 function prewarmDevCloudRoutes(): void {
   if (process.env.NODE_ENV !== "development" || process.env.NEXT_RUNTIME !== "nodejs") return;
-  const state = globalThis as typeof globalThis & { __cmuxDevRouteWarmupStarted?: boolean };
-  if (state.__cmuxDevRouteWarmupStarted) return;
-  state.__cmuxDevRouteWarmupStarted = true;
+  const state = globalThis as typeof globalThis & { __hmuxDevRouteWarmupStarted?: boolean };
+  if (state.__hmuxDevRouteWarmupStarted) return;
+  state.__hmuxDevRouteWarmupStarted = true;
   // Establish the provider's DNS/TLS pool while the development backend is
   // coming up. The create route still awaits this shared single-flight probe
   // as a fallback when a process starts just before the first request.
   void preconnectFreestyle();
-  const port = process.env.CMUX_PORT ?? process.env.PORT ?? "3000";
+  const port = process.env.HMUX_PORT ?? process.env.PORT ?? "3000";
   const origin = `http://127.0.0.1:${port}`;
   void (async () => {
     await Promise.all([
@@ -51,12 +51,12 @@ export async function register() {
     if (projectId) installStackThrottleFetchGuard(globalThis, projectId);
   }
   registerOTel({
-    serviceName: process.env.OTEL_SERVICE_NAME ?? "cmux-web",
-    // Keep 100% of Cloud VM traces, sample the rest (CMUX_OTEL_BASE_SAMPLE_RATIO,
+    serviceName: process.env.OTEL_SERVICE_NAME ?? "hmux-web",
+    // Keep 100% of Cloud VM traces, sample the rest (HMUX_OTEL_BASE_SAMPLE_RATIO,
     // default 2%). The unsampled firehose measured ~4M spans/15min in production.
-    traceSampler: buildCmuxTraceSampler(),
+    traceSampler: buildHmuxTraceSampler(),
     // "auto" keeps the default OTLP export; the dependency processor stamps
-    // cmux.dep.* (third party name, templated route) on every outbound span so
+    // hmux.dep.* (third party name, templated route) on every outbound span so
     // Axiom can report failure rate and latency per dependency and endpoint.
     spanProcessors: ["auto", new DependencySpanProcessor()],
   });
@@ -69,7 +69,7 @@ export async function register() {
       release: process.env.VERCEL_GIT_COMMIT_SHA,
       sendDefaultPii: false,
       // Vercel OpenTelemetry owns tracing. This project takes deliberately
-      // reported cmux errors and coderouter errors, not every request error
+      // reported hmux errors and coderouter errors, not every request error
       // served by the shared app (see shouldSendSentryEvent).
       tracesSampleRate: 0,
       // Sentry's NodeFetch integration instruments undici on the global OTel

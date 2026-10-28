@@ -4,7 +4,7 @@ import path from "node:path";
 import realManifest from "../services/vms/images/manifest.json";
 
 // A restricted (test) manifest image: never a default, and only a caller whose
-// Stack user id is in CMUX_VM_RESTRICTED_IMAGE_USER_IDS may create a machine
+// Stack user id is in HMUX_VM_RESTRICTED_IMAGE_USER_IDS may create a machine
 // on it by id. Everyone else gets the same refusal as an unknown id. This is
 // how a Move to Cloud proof machine boots a candidate devbox image without
 // promoting it (cx-rppd.14).
@@ -12,14 +12,14 @@ import realManifest from "../services/vms/images/manifest.json";
 const RESTRICTED_ID = "sh-restricted-test-image";
 const restrictedEntry = {
   ...realManifest.images.find((entry) => (entry as { defaultForKind?: boolean }).defaultForKind && (entry as { kind?: string }).kind === "desktop")!,
-  version: "freestyle-cmux-devbox-restricted-test",
+  version: "freestyle-hmux-devbox-restricted-test",
   imageId: RESTRICTED_ID,
   defaultForKind: false,
   restricted: true,
 };
 // The same image listed again under the other kind without the flag: the
 // unrestricted twin must not open it.
-const unrestrictedTwin = { ...restrictedEntry, version: "freestyle-cmux-devbox-restricted-test-base", kind: "base", restricted: undefined };
+const unrestrictedTwin = { ...restrictedEntry, version: "freestyle-hmux-devbox-restricted-test-base", kind: "base", restricted: undefined };
 mock.module("../services/vms/images/manifest.json", () => ({
   default: { ...realManifest, images: [...realManifest.images, restrictedEntry, unrestrictedTwin] },
 }));
@@ -29,7 +29,7 @@ const { VmImageConfigError } = await import("../services/vms/errors");
 const { imageManifestProblems } = await import("../scripts/devbox-image-common");
 
 const deployed = { VERCEL_ENV: "production", NODE_ENV: "production" };
-const allow = (ids: string) => ({ ...deployed, CMUX_VM_RESTRICTED_IMAGE_USER_IDS: ids });
+const allow = (ids: string) => ({ ...deployed, HMUX_VM_RESTRICTED_IMAGE_USER_IDS: ids });
 
 function refusal(fn: () => unknown): string {
   try {
@@ -58,7 +58,7 @@ describe("restricted manifest images", () => {
     expect(refusal(() => resolveVmImage("freestyle", RESTRICTED_ID, deployed, { callerUserId: "user-leo" }))).toContain("not listed");
     expect(refusal(() => resolveVmImage("freestyle", RESTRICTED_ID, allow("user-leo"), {}))).toContain("not listed");
     // Even where unmanifested images are allowed (local dev), the entry stays gated.
-    expect(refusal(() => resolveVmImage("freestyle", RESTRICTED_ID, { CMUX_VM_ALLOW_UNMANIFESTED_IMAGES: "1" }, { callerUserId: "user-leo" }))).toContain("not listed");
+    expect(refusal(() => resolveVmImage("freestyle", RESTRICTED_ID, { HMUX_VM_ALLOW_UNMANIFESTED_IMAGES: "1" }, { callerUserId: "user-leo" }))).toContain("not listed");
   });
 
   test("an unrestricted twin of the same image does not open it", () => {
@@ -90,7 +90,7 @@ describe("restricted manifest images", () => {
   test("the manifest check refuses a restricted default and a twin that disagrees", () => {
     const manifest = { schemaVersion: 1, images: [...realManifest.images, { ...restrictedEntry, defaultForKind: true }] };
     expect(imageManifestProblems(manifest as Parameters<typeof imageManifestProblems>[0])).toContain(
-      "freestyle-cmux-devbox-restricted-test: a restricted test image cannot be a default",
+      "freestyle-hmux-devbox-restricted-test: a restricted test image cannot be a default",
     );
     expect(imageManifestProblems({ schemaVersion: 1, images: [...realManifest.images, restrictedEntry, unrestrictedTwin] } as Parameters<typeof imageManifestProblems>[0])).toContain(
       `${RESTRICTED_ID}: every entry for one image must agree on restricted`,

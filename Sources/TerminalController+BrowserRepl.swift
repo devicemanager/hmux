@@ -1,5 +1,5 @@
-import CmuxBrowser
-import CmuxControlSocket
+import HmuxBrowser
+import HmuxControlSocket
 import Foundation
 
 /// Process-wide REPL state: live sessions and the bundled runtime.
@@ -11,10 +11,10 @@ final class BrowserReplHost: @unchecked Sendable {
     private var cachedBundle: Result<BrowserReplRuntimeBundle, BrowserReplRuntimeBundleError>?
 
     /// The runtime bundled in the app, in the order its `manifest.json`
-    /// gives. `CMUX_BROWSER_REPL_RUNTIME_DIR` points a development build at a
+    /// gives. `HMUX_BROWSER_REPL_RUNTIME_DIR` points a development build at a
     /// source checkout instead, re-read per session.
     func bundle() -> Result<BrowserReplRuntimeBundle, BrowserReplRuntimeBundleError> {
-        if let override = ProcessInfo.processInfo.environment["CMUX_BROWSER_REPL_RUNTIME_DIR"], !override.isEmpty {
+        if let override = ProcessInfo.processInfo.environment["HMUX_BROWSER_REPL_RUNTIME_DIR"], !override.isEmpty {
             return Self.load(URL(fileURLWithPath: override, isDirectory: true))
         }
         return lock.withLock {
@@ -42,18 +42,18 @@ final class BrowserReplHost: @unchecked Sendable {
 ///
 /// A named session belongs to one workspace (`BrowserReplSessionKey`): the
 /// workspace `workspace_id` names, else the caller's (`caller_workspace_id`).
-/// A caller outside cmux (neither, or a caller workspace this instance does
+/// A caller outside hmux (neither, or a caller workspace this instance does
 /// not know) shares one session per name with every other such caller,
 /// made in the workspace focused when it was made and never the session of
 /// that name a workspace's own callers share; its `reset` and `list` act on
 /// those sessions. `reset` and `list` act on the caller's sessions unless
 /// `all_workspaces` is true.
 ///
-/// A caller that runs in a cmux terminal is that terminal's workspace's
+/// A caller that runs in a hmux terminal is that terminal's workspace's
 /// caller: the transport's peer process id, traced through its process tree
 /// to a pane's PTY (``BrowserReplCallerLocality``), decides, not its
 /// parameters or environment. It cannot name another workspace or ask for
-/// every workspace's sessions. A same-user process outside every cmux
+/// every workspace's sessions. A same-user process outside every hmux
 /// terminal still can; a private session's owner token is the boundary
 /// against it.
 ///
@@ -91,7 +91,7 @@ extension TerminalController {
     nonisolated static var browserReplOtherUserMessage: String {
         String(
             localized: "cli.browser.repl.error.otherUser",
-            defaultValue: "The browser REPL accepts only clients that run as the same macOS user as cmux"
+            defaultValue: "The browser REPL accepts only clients that run as the same macOS user as hmux"
         )
     }
 
@@ -148,7 +148,7 @@ extension TerminalController {
             return .ok(["session": name, "existed": count > 0, "count": count])
         case .success(.caller(.outside)) where owner == nil:
             let existed = registry.reset(outsideNamed: name)
-            return .ok(["session": name, "existed": existed, "count": existed ? 1 : 0, "outside_cmux": true])
+            return .ok(["session": name, "existed": existed, "count": existed ? 1 : 0, "outside_hmux": true])
         case .success(.caller(let caller)):
             guard let workspaceID = Self.browserReplWorkspace(of: caller) else { return Self.browserReplNoWorkspaceError }
             let existed = registry.reset(BrowserReplSessionKey(workspaceID: workspaceID, name: name), owner: owner)
@@ -169,7 +169,7 @@ extension TerminalController {
         case .success(.allWorkspaces):
             entries = registry.list(workspaceID: nil, owner: owner)
         case .success(.caller(.outside)):
-            // A caller outside cmux lists the sessions such callers share.
+            // A caller outside hmux lists the sessions such callers share.
             entries = registry.listOutside()
         case .success(.caller(.inside(let id))):
             entries = registry.list(workspaceID: id, owner: owner)
@@ -180,7 +180,7 @@ extension TerminalController {
                 "workspace_id": entry.workspaceID.uuidString,
                 "cwd": entry.cwd,
                 "idle_seconds": entry.idleSeconds,
-                "outside_cmux": entry.outsideCmux,
+                "outside_hmux": entry.outsideHmux,
             ]
         }
         return .ok(["sessions": sessions])
@@ -201,7 +201,7 @@ extension TerminalController {
     }
 
     /// The workspace a call from `caller` binds a workspace's session to:
-    /// its own, or for a caller outside cmux the focused one, if any.
+    /// its own, or for a caller outside hmux the focused one, if any.
     private nonisolated static func browserReplWorkspace(of caller: BrowserReplWorkspaceBinding.Caller) -> UUID? {
         switch caller {
         case .inside(let id): id
@@ -227,14 +227,14 @@ extension TerminalController {
             let prefix = String(localized: "cli.browser.repl.error.workspaceNotFound", defaultValue: "Workspace not found")
             return .err(code: "not_found", message: "\(prefix): \(id.uuidString)", data: nil)
         case .explicitWorkspaceInvalid(let handle):
-            let prefix = String(localized: "cli.browser.repl.error.workspaceInvalid", defaultValue: "Not a workspace in this cmux instance")
+            let prefix = String(localized: "cli.browser.repl.error.workspaceInvalid", defaultValue: "Not a workspace in this hmux instance")
             return .err(code: "not_found", message: "\(prefix): \(handle.debugDescription)", data: nil)
         case .noFocusedWorkspace:
             return browserReplNoWorkspaceError
         case .otherWorkspaceDenied(let requested, let caller):
             let prefix = String(
                 localized: "cli.browser.repl.error.otherWorkspaceDenied",
-                defaultValue: "A REPL call from a cmux terminal acts only on its own workspace's sessions; run it from a terminal of that workspace"
+                defaultValue: "A REPL call from a hmux terminal acts only on its own workspace's sessions; run it from a terminal of that workspace"
             )
             return .err(
                 code: "denied",
@@ -246,7 +246,7 @@ extension TerminalController {
                 code: "denied",
                 message: String(
                     localized: "cli.browser.repl.error.allWorkspacesDenied",
-                    defaultValue: "--all-workspaces is refused in a cmux terminal: a REPL call from a cmux terminal acts only on its own workspace's sessions"
+                    defaultValue: "--all-workspaces is refused in a hmux terminal: a REPL call from a hmux terminal acts only on its own workspace's sessions"
                 ),
                 data: ["caller_workspace_id": caller.uuidString]
             )
@@ -255,7 +255,7 @@ extension TerminalController {
                 code: "denied",
                 message: String(
                     localized: "cli.browser.repl.error.callerUnresolved",
-                    defaultValue: "cmux could not trace this process to a cmux terminal or to outside cmux (its parent process chain is too deep or loops); run the REPL call from a shallower process"
+                    defaultValue: "hmux could not trace this process to a hmux terminal or to outside hmux (its parent process chain is too deep or loops); run the REPL call from a shallower process"
                 ),
                 data: nil
             )
@@ -318,11 +318,11 @@ extension TerminalController {
         case .failure(let error):
             return error
         }
-        // A shared name from outside cmux is one session per name, made in
+        // A shared name from outside hmux is one session per name, made in
         // the workspace focused then; a private session (one made with the
         // client's owner token: one-shot runs, the interactive REPL's and
         // mcp's, which pin the workspace their first call bound) and every
-        // caller inside cmux use a workspace's session. Privacy is the token,
+        // caller inside hmux use a workspace's session. Privacy is the token,
         // never the name.
         var isOutsideNamed = false
         if case .outside = caller, named != nil, owner == nil {
@@ -342,7 +342,7 @@ extension TerminalController {
         }
         // A named session is the caller's workspace's: the same name in
         // another workspace is another session, and a shared name from
-        // outside cmux is the one session such callers share. Each instance gets an id of
+        // outside hmux is the one session such callers share. Each instance gets an id of
         // its own, so driver state never outlives it into a later session
         // of the same name.
         let key: BrowserReplSessionKey
@@ -371,12 +371,12 @@ extension TerminalController {
         } catch BrowserReplSessionRegistry.Refusal.tooManySessions(let limit) {
             let prefix = String(
                 localized: "cli.browser.repl.error.tooManySessions",
-                defaultValue: "Too many browser REPL sessions are open; reset one with `cmux browser repl reset NAME` (`cmux browser repl list` lists this workspace's; from outside cmux, `cmux browser repl list --all-workspaces` lists every one)"
+                defaultValue: "Too many browser REPL sessions are open; reset one with `hmux browser repl reset NAME` (`hmux browser repl list` lists this workspace's; from outside hmux, `hmux browser repl list --all-workspaces` lists every one)"
             )
             return .err(code: "unavailable", message: "\(prefix) (\(limit))", data: nil)
         } catch BrowserReplSessionRegistry.Refusal.tooManyPrivateSessions(let limit) {
             // Only the client that made a private session resets it, so
-            // `cmux browser repl reset NAME` cannot free one.
+            // `hmux browser repl reset NAME` cannot free one.
             let prefix = String(
                 localized: "cli.browser.repl.error.tooManyPrivateSessions",
                 defaultValue: "Too many private browser REPL sessions are open (runs without --session); only the client that started one can reset it, so quit REPL clients you no longer use or wait 30 minutes for idle ones to end, or pass --session NAME to use a named session"
@@ -401,7 +401,7 @@ extension TerminalController {
         var payload: [String: Any] = [
             "session": named ?? NSNull(),
             "workspace_id": key.workspaceID.uuidString,
-            "outside_cmux": key.outsideCmux,
+            "outside_hmux": key.outsideHmux,
             "ok": outcome.error == nil,
             "output": outcome.lines.map { ["level": $0.level, "text": $0.text] },
             "duration_ms": outcome.durationMilliseconds,
@@ -411,14 +411,14 @@ extension TerminalController {
     }
 
     /// Where a call comes from, and for `list` and `reset` the sessions it
-    /// acts on. A socket peer that runs in a cmux terminal (its process tree
+    /// acts on. A socket peer that runs in a hmux terminal (its process tree
     /// traced from the transport's peer process id to a pane's PTY) is that
     /// terminal's workspace's caller, whatever it sends: `workspace_id` may
     /// name only that workspace, `caller_workspace_id` is ignored and
     /// `all_workspaces` is refused. For any other caller `workspace_id` is
     /// an explicit choice and must exist; `caller_workspace_id` (the CLI's
-    /// `CMUX_WORKSPACE_ID`) counts when this instance knows it; otherwise
-    /// the caller is outside cmux, with the focused workspace of the key or
+    /// `HMUX_WORKSPACE_ID`) counts when this instance knows it; otherwise
+    /// the caller is outside hmux, with the focused workspace of the key or
     /// frontmost window.
     private nonisolated func v2BrowserReplWorkspaceScope(
         params: [String: Any],
@@ -445,7 +445,7 @@ extension TerminalController {
                 }
             ).locality(ofPeer: peer)
             // A walk that could not finish proves neither a terminal nor
-            // outside cmux: refused, never an outside caller.
+            // outside hmux: refused, never an outside caller.
             let derived: UUID?
             switch locality {
             case .terminal(let workspace): derived = workspace

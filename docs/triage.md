@@ -1,6 +1,6 @@
 # Triage: severity, areas, and who decides
 
-cmux has more open issues than any one person can read. Labels exist so you can
+hmux has more open issues than any one person can read. Labels exist so you can
 ask "what is badly broken in the terminal" and get an answer in one click
 instead of scrolling. This page says what each label means, which rule assigns
 it, and how to overrule that rule.
@@ -72,10 +72,10 @@ what else is in flight. A maintainer can pick up an `S3` before an `S1`.
 
 | Label | Means | Examples |
 |---|---|---|
-| `S1: critical` | Work is lost, cmux will not start, or something is exposed that should not be | Reopening a session destroys the current windows; crash on launch; a token in a log |
-| `S2: major` | A crash, hang, lost session state, a connection that will not come up, or something that used to work and now does not | Crash when closing the last split; `cmux ssh` cannot connect; sidebar reorder broke in 0.64.24 |
+| `S1: critical` | Work is lost, hmux will not start, or something is exposed that should not be | Reopening a session destroys the current windows; crash on launch; a token in a log |
+| `S2: major` | A crash, hang, lost session state, a connection that will not come up, or something that used to work and now does not | Crash when closing the last split; `hmux ssh` cannot connect; sidebar reorder broke in 0.64.24 |
 | `S3: minor` | Wrong behavior you can work around | Tab title shows the old directory until you switch tabs |
-| `S4: cosmetic` | Wording or appearance, with no effect on what cmux does | A typo in Settings; a misaligned tab indicator |
+| `S4: cosmetic` | Wording or appearance, with no effect on what hmux does | A typo in Settings; a misaligned tab indicator |
 
 Two rules about severity that keep arguments short:
 
@@ -93,7 +93,7 @@ Two rules about severity that keep arguments short:
 
 ## Areas
 
-One `area:` label says which part of cmux owns the issue. Two are allowed when
+One `area:` label says which part of hmux owns the issue. Two are allowed when
 a report sits exactly on a seam and both areas are named in the title
 (`Command palette text input does not allow IME switching` gets
 `area: command-palette` and `area: input`). More than two means nobody can act
@@ -111,7 +111,7 @@ of each, which is what shows in the GitHub label picker.
 
 ### The dropdown on the issue form
 
-Both issue forms ask "Which part of cmux is this about?" with the area labels as
+Both issue forms ask "Which part of hmux is this about?" with the area labels as
 options. An answer there is used as-is and nothing else is consulted, because
 picking off a list of the real labels is better evidence than any regex over
 prose. "Not sure" is a normal answer and falls through to the rules below.
@@ -206,7 +206,7 @@ evening on it and leaves.
 
 - The change is plausibly under a few hundred lines in one area.
 - The issue names a starting point: a file, a symbol, or a command to run.
-- No pending team decision. If the answer depends on what cmux should do rather
+- No pending team decision. If the answer depends on what hmux should do rather
   than what it does, it is not a first issue.
 - It can be verified without maintainer-only CI. See the
   [verification ladder](contributor-verification.md).

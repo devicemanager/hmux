@@ -1,5 +1,5 @@
-import CMUXAgentLaunch
-import CmuxFoundation
+import HMUXAgentLaunch
+import HmuxFoundation
 import Foundation
 import os
 

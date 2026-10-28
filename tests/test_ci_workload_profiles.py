@@ -14,8 +14,8 @@ from unittest import mock
 import git_fixture_env  # noqa: F401  (disables git auto maintenance)
 
 ROOT = Path(__file__).resolve().parents[1]
-RUNNER = ROOT / "scripts/ci/cmux_workload_profile.py"
-SPEC = importlib.util.spec_from_file_location("cmux_workload_profile", RUNNER)
+RUNNER = ROOT / "scripts/ci/hmux_workload_profile.py"
+SPEC = importlib.util.spec_from_file_location("hmux_workload_profile", RUNNER)
 assert SPEC and SPEC.loader
 profile = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(profile)
@@ -23,17 +23,17 @@ SPEC.loader.exec_module(profile)
 
 def valid_result() -> dict[str, object]:
     value: dict[str, object] = {
-        "document_type": "cmux-workload-result",
+        "document_type": "hmux-workload-result",
         "schema_version": 1,
         "source": {
             "repository": "manaflow-ai/cmux",
             "commit": "1" * 40,
             "tree": "2" * 40,
         },
-        "profile": {"id": "cmux.ci.guard", "generation": 1},
-        "semantic_validator": "cmux.ci-guard/v1",
+        "profile": {"id": "hmux.ci.guard", "generation": 1},
+        "semantic_validator": "hmux.ci-guard/v1",
         "environment_class": "isolated-portable",
-        "expected_result_class": "cmux.ci-guard-result/v1",
+        "expected_result_class": "hmux.ci-guard-result/v1",
         "result": "passed",
         "parameters": {},
         "runtime_input_identities": [],
@@ -41,7 +41,7 @@ def valid_result() -> dict[str, object]:
         "validation": {"missing_required_artifact_classes": []},
         "stage_timings": [],
         "resource_summary": {
-            "resource_class": "cmux-linux-ci-small",
+            "resource_class": "hmux-linux-ci-small",
             "cpu_count": 4,
             "memory_bytes": 1024,
             "architecture": "x86_64",
@@ -110,18 +110,18 @@ class WorkloadProfileTests(unittest.TestCase):
         self.assertEqual(
             identities,
             {
-                ("cmux.macos.compile-admission", 1),
-                ("cmux.macos.dev-check", 1),
-                ("cmux.macos.app-host-test-shard", 1),
-                ("cmux.ci.guard", 1),
+                ("hmux.macos.compile-admission", 1),
+                ("hmux.macos.dev-check", 1),
+                ("hmux.macos.app-host-test-shard", 1),
+                ("hmux.ci.guard", 1),
             },
         )
 
     def test_describe_keeps_semantic_generation_explicit(self) -> None:
-        completed = self.command("describe", "cmux.macos.compile-admission")
+        completed = self.command("describe", "hmux.macos.compile-admission")
         self.assertEqual(completed.returncode, 0, completed.stderr.decode())
         value = json.loads(completed.stdout)
-        self.assertEqual(value["semantic_identity"], "cmux.macos.compile-admission@1")
+        self.assertEqual(value["semantic_identity"], "hmux.macos.compile-admission@1")
         self.assertEqual(
             value["entrypoint"],
             "scripts/ci/workloads/macos-compile-admission.sh",
@@ -132,16 +132,16 @@ class WorkloadProfileTests(unittest.TestCase):
             ROOT / "scripts/ci/workloads/macos-dev-check.sh"
         ).read_text(encoding="utf-8")
         self.assertIn('tag="profile-$attempt_id"', script)
-        self.assertIn('cmux_attach_validate_dev_tag "$tag"', script)
-        self.assertIn('tag_slug="$(cmux_attach__slug "$tag")"', script)
-        self.assertIn('cmux_attach_mac_bundle_id "$tag"', script)
-        self.assertIn('cmux DEV $tag_slug.app', script)
+        self.assertIn('hmux_attach_validate_dev_tag "$tag"', script)
+        self.assertIn('tag_slug="$(hmux_attach__slug "$tag")"', script)
+        self.assertIn('hmux_attach_mac_bundle_id "$tag"', script)
+        self.assertIn('hmux DEV $tag_slug.app', script)
         self.assertIn('./scripts/reload.sh \\', script)
         self.assertIn('--tag "$tag"', script)
         self.assertIn('--derived-data "$derived"', script)
         self.assertIn('--no-global-cli-links', script)
-        self.assertIn('CMUX_DEV_BACKEND_MODE=local', script)
-        self.assertIn('CMUX_DEV_CLOUD_ENABLED=0', script)
+        self.assertIn('HMUX_DEV_BACKEND_MODE=local', script)
+        self.assertIn('HMUX_DEV_CLOUD_ENABLED=0', script)
         self.assertNotIn('\nxcodebuild ', script)
         syntax = subprocess.run(
             ["bash", "-n", "scripts/ci/workloads/macos-dev-check.sh"],
@@ -155,7 +155,7 @@ class WorkloadProfileTests(unittest.TestCase):
 
     def test_dev_check_does_not_claim_resident_hot_state(self) -> None:
         registry = profile.load_registry()
-        dev_check = profile.profile_by_id(registry, "cmux.macos.dev-check")
+        dev_check = profile.profile_by_id(registry, "hmux.macos.dev-check")
         self.assertEqual(
             dev_check["benchmark_state_classes"],
             ["cold", "dependency-warm", "compiler-warm"],
@@ -164,10 +164,10 @@ class WorkloadProfileTests(unittest.TestCase):
     def test_environment_classes_are_explicit_and_closed(self) -> None:
         registry = profile.load_registry()
         by_id = {item["id"]: item for item in registry["profiles"]}
-        self.assertEqual(by_id["cmux.ci.guard"]["environment_class"], "isolated-portable")
-        self.assertEqual(by_id["cmux.macos.dev-check"]["environment_class"], "isolated-build")
+        self.assertEqual(by_id["hmux.ci.guard"]["environment_class"], "isolated-portable")
+        self.assertEqual(by_id["hmux.macos.dev-check"]["environment_class"], "isolated-build")
         self.assertEqual(
-            by_id["cmux.macos.app-host-test-shard"]["environment_class"],
+            by_id["hmux.macos.app-host-test-shard"]["environment_class"],
             "isolated-console-test",
         )
 
@@ -181,7 +181,7 @@ class WorkloadProfileTests(unittest.TestCase):
             clear=True,
         ):
             state = Path(directory).resolve()
-            request_profile = by_id["cmux.ci.guard"]
+            request_profile = by_id["hmux.ci.guard"]
             environment = profile.workload_environment(
                 request_profile,
                 state,
@@ -193,18 +193,18 @@ class WorkloadProfileTests(unittest.TestCase):
         self.assertNotIn("SSH_AUTH_SOCK", environment)
         self.assertNotIn("SECRET_TOKEN", environment)
         self.assertNotIn("/attacker/bin", environment["PATH"])
-        self.assertEqual(environment["CMUX_WORKLOAD_ENVIRONMENT_CLASS"], "isolated-portable")
+        self.assertEqual(environment["HMUX_WORKLOAD_ENVIRONMENT_CLASS"], "isolated-portable")
         self.assertEqual(environment["HOME"], str(state / "home"))
         self.assertEqual(environment["TMPDIR"], str(state / "tmp"))
-        self.assertEqual(environment["CMUX_CI_SKIP_XCODE_SELECT"], "1")
+        self.assertEqual(environment["HMUX_CI_SKIP_XCODE_SELECT"], "1")
 
     def test_declared_runtime_input_is_the_only_parent_value_admitted(self) -> None:
         registry = profile.load_registry()
-        app_host = profile.profile_by_id(registry, "cmux.macos.app-host-test-shard")
+        app_host = profile.profile_by_id(registry, "hmux.macos.app-host-test-shard")
         with tempfile.TemporaryDirectory() as directory, mock.patch.dict(
             profile.os.environ,
             {
-                "CMUX_APP_HOST_XCTESTRUN": "/private/exact-product/tests.xctestrun",
+                "HMUX_APP_HOST_XCTESTRUN": "/private/exact-product/tests.xctestrun",
                 "SECRET_TOKEN": "private",
                 "SSH_AUTH_SOCK": "/private/agent.sock",
             },
@@ -220,10 +220,10 @@ class WorkloadProfileTests(unittest.TestCase):
             )
 
         self.assertEqual(
-            environment["CMUX_APP_HOST_XCTESTRUN"],
+            environment["HMUX_APP_HOST_XCTESTRUN"],
             "/private/exact-product/tests.xctestrun",
         )
-        self.assertEqual(environment["CMUX_WORKLOAD_PARAM_SHARD"], "3")
+        self.assertEqual(environment["HMUX_WORKLOAD_PARAM_SHARD"], "3")
         self.assertNotIn("SECRET_TOKEN", environment)
         self.assertNotIn("SSH_AUTH_SOCK", environment)
 
@@ -241,7 +241,7 @@ class WorkloadProfileTests(unittest.TestCase):
 
     def test_result_publication_supports_trusted_sticky_tmp(self) -> None:
         value = valid_result()
-        path = Path("/tmp") / f"cmux-workload-profile-{os.getpid()}-{time.time_ns()}.json"
+        path = Path("/tmp") / f"hmux-workload-profile-{os.getpid()}-{time.time_ns()}.json"
         try:
             profile.publish_result(value, str(path))
             self.assertEqual(path.stat().st_mode & 0o777, 0o600)
@@ -262,7 +262,7 @@ class WorkloadProfileTests(unittest.TestCase):
                 return_value=str(common),
             ):
                 with profile.CheckoutMutationLease(request_profile):
-                    lock = common / "cmux-workload-isolated-build.lock"
+                    lock = common / "hmux-workload-isolated-build.lock"
                     self.assertEqual(lock.stat().st_mode & 0o777, 0o600)
                     with self.assertRaisesRegex(
                         profile.ProfileError,
@@ -283,7 +283,7 @@ class WorkloadProfileTests(unittest.TestCase):
 
     def test_parameters_are_bounded_by_profile_contract(self) -> None:
         registry = profile.load_registry()
-        shard = profile.profile_by_id(registry, "cmux.macos.app-host-test-shard")
+        shard = profile.profile_by_id(registry, "hmux.macos.app-host-test-shard")
         self.assertEqual(profile.parse_parameters(shard, ["shard=1"]), {"shard": 1})
         with self.assertRaisesRegex(profile.ProfileError, "between 1 and 6"):
             profile.parse_parameters(shard, ["shard=7"])
@@ -496,8 +496,8 @@ class WorkloadProfileTests(unittest.TestCase):
             subprocess.run(
                 [
                     "/usr/bin/git",
-                    "-c", "user.name=cmux",
-                    "-c", "user.email=cmux@example.invalid",
+                    "-c", "user.name=hmux",
+                    "-c", "user.email=hmux@example.invalid",
                     "-c", "protocol.file.allow=always",
                     "-c", "init.defaultBranch=main",
                     *arguments,
@@ -543,24 +543,24 @@ class WorkloadProfileTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             products = Path(directory) / "Build" / "Products"
             products.mkdir(parents=True)
-            xctestrun = products / "cmuxTests.xctestrun"
+            xctestrun = products / "hmuxTests.xctestrun"
             xctestrun.write_text("manifest", encoding="utf-8")
-            app = products / "Debug" / "cmux DEV.app" / "Contents" / "MacOS"
+            app = products / "Debug" / "hmux DEV.app" / "Contents" / "MacOS"
             app.mkdir(parents=True)
-            binary = app / "cmux DEV"
+            binary = app / "hmux DEV"
             binary.write_bytes(b"one")
             spec = {
                 "runtime_inputs": [{
                     "name": "app_host_xctestrun",
-                    "env": "CMUX_APP_HOST_XCTESTRUN",
-                    "class": "cmux.app-host-product-tree/v1",
+                    "env": "HMUX_APP_HOST_XCTESTRUN",
+                    "class": "hmux.app-host-product-tree/v1",
                     "identity": "parent-tree-sha256",
                     "required": True,
                 }]
             }
             with mock.patch.dict(
                 "os.environ",
-                {"CMUX_APP_HOST_XCTESTRUN": str(xctestrun)},
+                {"HMUX_APP_HOST_XCTESTRUN": str(xctestrun)},
                 clear=False,
             ):
                 first = profile.runtime_inputs(spec)[0]["sha256"]
@@ -570,7 +570,7 @@ class WorkloadProfileTests(unittest.TestCase):
 
     def test_run_refuses_source_drift_after_execution(self) -> None:
         registry = profile.load_registry()
-        workload = profile.profile_by_id(registry, "cmux.ci.guard")
+        workload = profile.profile_by_id(registry, "hmux.ci.guard")
         frozen = {
             "repository": "manaflow-ai/cmux",
             "commit": "1" * 40,
@@ -624,7 +624,7 @@ class WorkloadProfileTests(unittest.TestCase):
 
     def test_run_refuses_runtime_input_drift_after_execution(self) -> None:
         registry = profile.load_registry()
-        workload = profile.profile_by_id(registry, "cmux.ci.guard")
+        workload = profile.profile_by_id(registry, "hmux.ci.guard")
         frozen = {
             "repository": "manaflow-ai/cmux",
             "commit": "1" * 40,
@@ -641,7 +641,7 @@ class WorkloadProfileTests(unittest.TestCase):
         second = [
             {
                 "name": "fixture",
-                "class": "cmux.fixture/v1",
+                "class": "hmux.fixture/v1",
                 "identity": "file-sha256",
                 "sha256": "sha256:" + "a" * 64,
                 "bytes": 1,
@@ -685,7 +685,7 @@ class WorkloadProfileTests(unittest.TestCase):
 
     def test_forced_cleanup_receipt_reports_unsettled_process_group(self) -> None:
         registry = profile.load_registry()
-        workload = profile.profile_by_id(registry, "cmux.ci.guard")
+        workload = profile.profile_by_id(registry, "hmux.ci.guard")
         commit = subprocess.run(
             ["git", "rev-parse", "HEAD"],
             cwd=ROOT,

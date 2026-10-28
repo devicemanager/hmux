@@ -87,7 +87,7 @@ function overview(overrides: Partial<Overview> = {}): Overview {
 
 async function renderCoderouter(data: Overview, url = "/dashboard/coderouter?team=team-1") {
   const queryClient = createScreenQueryClient();
-  const team = new URL(url, "https://cmux.test").searchParams.get("team") ?? undefined;
+  const team = new URL(url, "https://hmux.test").searchParams.get("team") ?? undefined;
   queryClient.setQueryData(coderouterOverviewQuery(team).queryKey, data);
   return renderDashboardScreen({ url, queryClient, render: () => <CoderouterScreen /> });
 }
@@ -165,9 +165,9 @@ describe("cloud screen", () => {
     modelIdentifier: "Mac15,3",
     osVersion: "26.1",
     architecture: "arm64",
-    cmuxVersion: "0.70.0",
-    cmuxBuild: "123",
-    cmuxChannel: "nightly",
+    hmuxVersion: "0.70.0",
+    hmuxBuild: "123",
+    hmuxChannel: "nightly",
     createdAt: 1_780_000_000_000,
     lastControlPlaneAt: 1_780_000_100_000,
     tunnelPurposes: ["browser", "terminal"] as ("browser" | "terminal")[],

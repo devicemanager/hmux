@@ -91,11 +91,11 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           # The job token cannot list repository variables, and without the
           # runner the wrapper cannot see an identical run already in flight.
-          CMUX_MACOS_RUNNER_TESTS: ${{ vars.MACOS_RUNNER_TESTS }}
-          CMUX_CI_E2E_LARGE_POOL_OVERFLOW: ${{ vars.CI_E2E_LARGE_POOL_OVERFLOW }}
-          CMUX_CI_PR_POOL_ORDER: ${{ vars.CI_PR_POOL_ORDER }}
-          CMUX_CI_PR_POOL_MAX_QUEUED: ${{ vars.CI_PR_POOL_MAX_QUEUED }}
-          CMUX_CI_PR_POOL_QUEUE_ROUNDS: ${{ vars.CI_PR_POOL_QUEUE_ROUNDS }}
+          HMUX_MACOS_RUNNER_TESTS: ${{ vars.MACOS_RUNNER_TESTS }}
+          HMUX_CI_E2E_LARGE_POOL_OVERFLOW: ${{ vars.CI_E2E_LARGE_POOL_OVERFLOW }}
+          HMUX_CI_PR_POOL_ORDER: ${{ vars.CI_PR_POOL_ORDER }}
+          HMUX_CI_PR_POOL_MAX_QUEUED: ${{ vars.CI_PR_POOL_MAX_QUEUED }}
+          HMUX_CI_PR_POOL_QUEUE_ROUNDS: ${{ vars.CI_PR_POOL_QUEUE_ROUNDS }}
           UNIT_TEST_SUITES: ${{ inputs.unit_test_suites }}
           TEST_REF: ${{ inputs.ref || github.sha }}
           TEST_TIMEOUT: ${{ inputs.test_timeout }}
@@ -106,7 +106,7 @@ jobs:
           for suite in "${suites[@]}"; do
             suite="${suite// /}"
             # The suite path ran a repeated entry twice; the wrapper refuses one.
-            [ -n "$suite" ] && [[ " ${selectors[*]} " != *" cmuxTests/$suite "* ]] && selectors+=("cmuxTests/$suite")
+            [ -n "$suite" ] && [[ " ${selectors[*]} " != *" hmuxTests/$suite "* ]] && selectors+=("hmuxTests/$suite")
           done
           ./scripts/run-e2e.sh "${selectors[@]}" --ref "$TEST_REF" --timeout "$TEST_TIMEOUT" | tee dispatch.log
           url="$(grep -oE 'https://github.com/[^ ]+/actions/runs/[0-9]+' dispatch.log | tail -1)"
@@ -209,7 +209,7 @@ jobs:
 
       - name: Clean DerivedData
         run: |
-          rm -rf ~/Library/Developer/Xcode/DerivedData/cmux-*
+          rm -rf ~/Library/Developer/Xcode/DerivedData/hmux-*
 
       - name: Prepare clean package cache directory
         run: |
@@ -227,7 +227,7 @@ jobs:
           # Consume the Swift package seed nightly.yml saves, without
           # publishing caches from a manually selected revision. Test products
           # remain fresh.
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -240,7 +240,7 @@ jobs:
           mkdir -p "$SOURCE_PACKAGES_DIR"
 
           for attempt in 1 2 3; do
-            if xcodebuild -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
+            if xcodebuild -project hmux.xcodeproj -scheme hmux-unit -configuration Debug \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -resolvePackageDependencies; then
               if [ -d "$SOURCE_PACKAGES_DIR/artifacts/sparkle/Sparkle/Sparkle.xcframework" ] \
@@ -263,7 +263,7 @@ jobs:
         if: ${{ !inputs.skip_unit_tests }}
         env:
           UNIT_TEST_SUITES: ${{ inputs.unit_test_suites }}
-          TEST_RESULTS_ROOT: ${{ runner.temp }}/cmux-unit-results-${{ github.run_id }}-${{ github.run_attempt }}
+          TEST_RESULTS_ROOT: ${{ runner.temp }}/hmux-unit-results-${{ github.run_id }}-${{ github.run_attempt }}
         run: |
           set -euo pipefail
           SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages"
@@ -274,7 +274,7 @@ jobs:
             local result_dir
             result_dir="$(mktemp -d "$TEST_RESULTS_ROOT/suite.XXXXXX")"
             scripts/ci/xcodebuild_noninteractive.py \
-              xcodebuild -project cmux.xcodeproj -scheme cmux-unit -configuration Debug \
+              xcodebuild -project hmux.xcodeproj -scheme hmux-unit -configuration Debug \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -disableAutomaticPackageResolution \
               -destination "platform=macOS" -resultBundlePath "$result_dir/result.xcresult" "$@" test >"$output_path" 2>&1
@@ -326,7 +326,7 @@ jobs:
               log_name="${log_name%()}"
               local output_path="$TEST_RESULTS_ROOT/$log_name.log"
               set +e
-              run_unit_suite "$output_path" "-only-testing:cmuxTests/$suite"
+              run_unit_suite "$output_path" "-only-testing:hmuxTests/$suite"
               suite_status=$?
               set -e
               cat "$output_path"
@@ -357,7 +357,7 @@ jobs:
           if [ "$EXIT_CODE" -ne 0 ] && grep -q "Could not resolve package dependencies" "$TEST_OUTPUT"; then
             echo "SwiftPM package resolution failed, clearing caches and retrying once"
             rm -rf ~/Library/Caches/org.swift.swiftpm
-            rm -rf ~/Library/Developer/Xcode/DerivedData/cmux-*
+            rm -rf ~/Library/Developer/Xcode/DerivedData/hmux-*
             : > "$TEST_OUTPUT"
             set +e
             run_unit_tests 2>&1 | tee "$TEST_OUTPUT"
@@ -395,14 +395,14 @@ jobs:
 
           # Build the -only-testing argument
           if [ -n "$TEST_FILTER" ]; then
-            ONLY_TESTING="-only-testing:cmuxUITests/$TEST_FILTER"
+            ONLY_TESTING="-only-testing:hmuxUITests/$TEST_FILTER"
           else
-            ONLY_TESTING="-only-testing:cmuxUITests"
+            ONLY_TESTING="-only-testing:hmuxUITests"
           fi
 
-          UI_TEST_LOG="$RUNNER_TEMP/cmux-ui-tests.log"
+          UI_TEST_LOG="$RUNNER_TEMP/hmux-ui-tests.log"
           set +e
-          xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug \
+          xcodebuild -project hmux.xcodeproj -scheme hmux -configuration Debug \
             -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
             -disableAutomaticPackageResolution \
             -destination "platform=macOS" \
@@ -415,8 +415,8 @@ jobs:
           fi
           # A filter that matches nothing exits 0 after executing zero tests.
           if [ -n "$TEST_FILTER" ] && ! scripts/ci/require_selected_test_execution.sh \
-            "$UI_TEST_LOG" "cmuxUITests/$TEST_FILTER" >/dev/null; then
-            echo "::error::test_filter cmuxUITests/$TEST_FILTER executed zero tests; check the class and method names"
+            "$UI_TEST_LOG" "hmuxUITests/$TEST_FILTER" >/dev/null; then
+            echo "::error::test_filter hmuxUITests/$TEST_FILTER executed zero tests; check the class and method names"
             exit 1
           fi
 
@@ -425,6 +425,6 @@ jobs:
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: macos-unit-results-${{ github.run_id }}-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/cmux-unit-results-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/hmux-unit-results-${{ github.run_id }}-${{ github.run_attempt }}
           if-no-files-found: warn
           retention-days: 7

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""One source of truth for cmux severity and area labels.
+"""One source of truth for hmux severity and area labels.
 
 The severity vocabulary started in `triage-radar.py`, which scores recent
 issues for the attention feed. Auto-triage needs the same judgement to put a
@@ -35,11 +35,11 @@ HIGH_RISK_PATTERNS: list[tuple[re.Pattern[str], int, str]] = [
 ]
 
 NIGHTLY_YES = re.compile(
-    r"Can you reproduce this on cmux NIGHTLY\?.*?Yes, it still reproduces on NIGHTLY",
+    r"Can you reproduce this on hmux NIGHTLY\?.*?Yes, it still reproduces on NIGHTLY",
     re.I | re.S,
 )
 NIGHTLY_NO = re.compile(
-    r"Can you reproduce this on cmux NIGHTLY\?.*?No, it does not reproduce on NIGHTLY",
+    r"Can you reproduce this on hmux NIGHTLY\?.*?No, it does not reproduce on NIGHTLY",
     re.I | re.S,
 )
 
@@ -85,9 +85,9 @@ SEVERITY_RULES: list[SeverityRule] = [
             r"|(?:data|file|files|state|database|config|repo(?:sitory)?|index|settings) (?:is |are |get(?:s)? |was |were )?corrupt(?:s|ed|ion)?"
             r"|corrupt(?:s|ed|ing)? (?:the )?(?:data|file|files|state|database|config|repo(?:sitory)?|index|settings)"
             r"|crash(?:es|ed|ing)? on (?:launch|startup|open)|won'?t (?:launch|start)\b"
-            r"|(?:cmux|the app) won'?t open"
-            r"|(?:fails?|unable) to (?:launch|start|open) (?:cmux|the app)"
-            r"|cannot (?:launch|start|open) (?:cmux|the app)|boot ?loop|kernel panic)\b",
+            r"|(?:hmux|the app) won'?t open"
+            r"|(?:fails?|unable) to (?:launch|start|open) (?:hmux|the app)"
+            r"|cannot (?:launch|start|open) (?:hmux|the app)|boot ?loop|kernel panic)\b",
             re.I,
         ),
         "data loss, or a build that will not start",
@@ -121,7 +121,7 @@ SEVERITY_RULES: list[SeverityRule] = [
             r"|cosmetic|visual (?:nit|polish)|nitpick)\b",
             re.I,
         ),
-        "wording or appearance, with no effect on what cmux does",
+        "wording or appearance, with no effect on what hmux does",
     ),
 ]
 
@@ -140,8 +140,8 @@ AREA_RULES: list[tuple[str, re.Pattern[str]]] = [
     ("area: cloud", re.compile(r"\b(cloud (?:machine|workspace|terminal|session|connection)|iroh|relay|vm\b|machines panel|cloud-?vm|remote machine provision)\b", re.I)),
     ("area: remote", re.compile(r"\b(ssh\b|remote (?:daemon|service|host|relay|session)|tunnel|pairing|pair (?:with|a) (?:device|iphone)|tailscale|port forward)\b", re.I)),
     ("area: ios", re.compile(r"\b(ios\b|iphone|ipad|testflight|app store|mobile (?:app|client)|push (?:alert|notification))\b", re.I)),
-    ("area: cli", re.compile(r"\b(cmux (?:cli|ssh|tui|reload-config|tree|identify|list-)|\bcli\b|cmux-tui|socket (?:method|api|client)|sdk\b|json-?rpc|command line|subcommand)\b", re.I)),
-    ("area: settings", re.compile(r"\b(settings?(?: (?:ui|pane|sheet|window|screen))?|preferences?|config(?:uration)? file|cmux\.json|defaults? (?:write|value)|toggle (?:in|under) settings|opt(?:-| )in setting)\b", re.I)),
+    ("area: cli", re.compile(r"\b(hmux (?:cli|ssh|tui|reload-config|tree|identify|list-)|\bcli\b|hmux-tui|socket (?:method|api|client)|sdk\b|json-?rpc|command line|subcommand)\b", re.I)),
+    ("area: settings", re.compile(r"\b(settings?(?: (?:ui|pane|sheet|window|screen))?|preferences?|config(?:uration)? file|hmux\.json|defaults? (?:write|value)|toggle (?:in|under) settings|opt(?:-| )in setting)\b", re.I)),
     ("area: browser", re.compile(r"\b(browser|webview|web ?kit|vs ?code|inline editor|devtools|url bar|embedded (?:browser|page))\b", re.I)),
     ("area: command-palette", re.compile(r"\b(command palette|palette (?:search|input|overlay)|quick (?:open|switch)|fuzzy (?:search|find)|find (?:bar|in terminal))\b", re.I)),
     ("area: updates", re.compile(r"\b(sparkle|appcast|auto-?updat|update(?:s|d|r)? (?:to|from|check|fail)|nightly build|homebrew|brew (?:install|cask)|dmg\b|install(?:er|ation)|notariz|gatekeeper|code ?sign)\b", re.I)),
@@ -209,7 +209,7 @@ REQUEST_TITLE = re.compile(
     r")",
     re.I,
 )
-# cmux titles often lead with a scope, as in "iOS: decompose the surface view"
+# hmux titles often lead with a scope, as in "iOS: decompose the surface view"
 # or "perf: defer the probe". The words that matter come after it.
 SCOPE_PREFIX = re.compile(r"^\s*[a-z0-9][a-z0-9 ._+/-]{0,24}:\s*", re.I)
 
@@ -358,7 +358,7 @@ DECLARED_RULES: list[tuple[str, re.Pattern[str]]] = [
 
 
 # The issue forms ask this, and GitHub renders the answer as the next line.
-FORM_AREA_HEADING = re.compile(r"^#+\s*Which part of cmux is this about\?\s*$", re.I | re.M)
+FORM_AREA_HEADING = re.compile(r"^#+\s*Which part of hmux is this about\?\s*$", re.I | re.M)
 # What GitHub writes for an optional field nobody filled in.
 FORM_NO_ANSWER = {"", "not sure", "_no response_", "none"}
 
@@ -384,7 +384,7 @@ def form_area(body: str) -> str | None:
         if line.startswith("#"):
             # The next question already, so this one was left blank.
             return None
-        # Options read `sidebar` or `remote (cmux ssh, tunnels)`. Take the label.
+        # Options read `sidebar` or `remote (hmux ssh, tunnels)`. Take the label.
         answer = line.split("(")[0].strip().lower()
         if answer in FORM_NO_ANSWER:
             return None

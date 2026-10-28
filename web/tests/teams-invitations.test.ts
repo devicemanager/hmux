@@ -23,7 +23,7 @@ async function adminSetup() {
 }
 
 function jsonRequest(body: string): Request {
-  return new Request("https://cmux.test/api/teams", { method: "POST", body, headers: { "content-type": "application/json" } });
+  return new Request("https://hmux.test/api/teams", { method: "POST", body, headers: { "content-type": "application/json" } });
 }
 
 async function parsed<T>(schema: Parameters<typeof readTeamJson<T>>[1], body: unknown) {
@@ -93,7 +93,7 @@ describe("email invitations", () => {
     expect(result.invitations).toEqual([expect.objectContaining({ email: "new@example.com", role: "admin" })]);
     expect(mailer.sent).toHaveLength(1);
     expect(mailer.sent[0]).toMatchObject({ to: "new@example.com", teamName: "Acme", role: "admin", inviterName: "Name aaaa" });
-    expect(mailer.sent[0]!.acceptUrl).toMatch(/^https:\/\/cmux\.com\/en\/join\/[A-Za-z0-9_-]{43}$/);
+    expect(mailer.sent[0]!.acceptUrl).toMatch(/^https:\/\/hmux\.com\/en\/join\/[A-Za-z0-9_-]{43}$/);
     expect(stack.calls.filter((call) => call.startsWith("inviteUser:"))).toEqual([]);
   });
 
@@ -156,7 +156,7 @@ describe("personal plan member limit", () => {
 
   async function proTeam(extraMembers: readonly string[] = []) {
     const stack = standardTeam();
-    stack.teams.get(TEAM_ID)!.metadata = { cmuxPlan: "pro" };
+    stack.teams.get(TEAM_ID)!.metadata = { hmuxPlan: "pro" };
     for (const id of extraMembers) stack.addUser({ id }).addMember(TEAM_ID, id, ["team_member"]);
     const store = new MemoryInviteStore();
     const mailer = new MemoryInviteMailer();
@@ -194,7 +194,7 @@ describe("personal plan member limit", () => {
 
   test("teams without a personal plan keep soft seats", async () => {
     const stack = standardTeam();
-    stack.teams.get(TEAM_ID)!.metadata = { cmuxPlan: "team", cmuxSeats: 2 };
+    stack.teams.get(TEAM_ID)!.metadata = { hmuxPlan: "team", hmuxSeats: 2 };
     const deps = { store: new MemoryInviteStore(), mailer: new MemoryInviteMailer() };
     const access = await requireTeamAccess({ id: ADMIN_ID }, TEAM_ID, { stack: stack.app() });
     if (!access.ok) throw new Error("access refused");

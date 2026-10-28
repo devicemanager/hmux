@@ -41,8 +41,8 @@ export async function POST(request: Request) {
     request,
     "/api/enterprise/contact",
     {
-      "cmux.subsystem": "enterprise",
-      "cmux.enterprise.operation": "contact",
+      "hmux.subsystem": "enterprise",
+      "hmux.enterprise.operation": "contact",
     },
     async (span): Promise<Response> => {
       const config = resolveEnterpriseConfig();
@@ -67,7 +67,7 @@ export async function POST(request: Request) {
         }
         const { error, rateLimited } = result;
         setSpanAttributes(span, {
-          "cmux.rate_limited": rateLimited || error === "blocked",
+          "hmux.rate_limited": rateLimited || error === "blocked",
         });
         if (rateLimited || error === "blocked") {
           return jsonError("Rate limit exceeded", 429);
@@ -96,13 +96,13 @@ export async function POST(request: Request) {
 
       const lead = parsed.data;
       setSpanAttributes(span, {
-        "cmux.enterprise.company": lead.companyName,
-        "cmux.enterprise.email_domain": emailDomain(lead.businessEmail),
+        "hmux.enterprise.company": lead.companyName,
+        "hmux.enterprise.email_domain": emailDomain(lead.businessEmail),
       });
 
       const deliverable = await checkEmailDeliverable(lead.businessEmail);
       setSpanAttributes(span, {
-        "cmux.enterprise.email_check": deliverable,
+        "hmux.enterprise.email_check": deliverable,
       });
       if (deliverable === "invalid") {
         return jsonError("Business email cannot receive mail", 400);
@@ -157,9 +157,9 @@ export async function POST(request: Request) {
 
 function resolveEnterpriseConfig() {
   const resendApiKey = env.RESEND_API_KEY;
-  const fromEmail = env.CMUX_FEEDBACK_FROM_EMAIL;
+  const fromEmail = env.HMUX_FEEDBACK_FROM_EMAIL;
   // rateLimitId is optional: unset means the route runs without rate limiting.
-  const rateLimitId = env.CMUX_FEEDBACK_RATE_LIMIT_ID;
+  const rateLimitId = env.HMUX_FEEDBACK_RATE_LIMIT_ID;
   if (!resendApiKey || !fromEmail) return null;
   return {
     resendApiKey,
@@ -214,7 +214,7 @@ async function capturePostHog(
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         api_key: POSTHOG_PROJECT_KEY,
-        event: "cmux_enterprise_contact_submitted",
+        event: "hmux_enterprise_contact_submitted",
         distinct_id: lead.businessEmail,
         properties: {
           ...lead,
@@ -280,7 +280,7 @@ function enterpriseLeadEntries(lead: EnterpriseLead): [string, string][] {
 
 function slackText(lead: EnterpriseLead): string {
   const lines = [
-    ":office: New cmux Enterprise inquiry",
+    ":office: New hmux Enterprise inquiry",
     `*Name:* ${escapeSlack(`${lead.firstName} ${lead.lastName}`)}`,
     `*Company:* ${escapeSlack(lead.companyName)}`,
     `*Email:* ${escapeSlack(lead.businessEmail)}`,

@@ -4,7 +4,7 @@ import Foundation
 struct AgentSessionOwnedProcessLauncher {
     private let supervisorExecutableURL: URL?
 
-    init(supervisorExecutableURL: URL? = Bundle.main.url(forResource: "cmux", withExtension: nil, subdirectory: "bin")) {
+    init(supervisorExecutableURL: URL? = Bundle.main.url(forResource: "hmux", withExtension: nil, subdirectory: "bin")) {
         self.supervisorExecutableURL = supervisorExecutableURL
     }
 

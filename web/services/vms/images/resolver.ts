@@ -22,9 +22,9 @@ export const VM_IMAGE_KINDS: readonly VmImageKind[] = ["desktop", "base"];
 /**
  * The kind served when a request names neither an image nor a kind: a
  * machine with a screen (TigerVNC on 5901 loopback, noVNC on 6901, the
- * `cmux-desktop` unit). Shell-only is always an explicit `kind: "base"`, so
+ * `hmux-desktop` unit). Shell-only is always an explicit `kind: "base"`, so
  * older clients that send no kind (`vm base open`, third-party callers) get
- * the same default as the app's New Machine sheet and bare `cmux vm new`
+ * the same default as the app's New Machine sheet and bare `hmux vm new`
  * (#12239).
  */
 export const VM_IMAGE_DEFAULT_KIND: VmImageKind = "desktop";
@@ -58,8 +58,8 @@ export type VmImageManifestEntry = {
   readonly defaultForKind?: boolean;
   /** The shape this snapshot boots at. Entries without one are size-less (pre-ladder bakes). */
   readonly size?: VmImageManifestSize;
-  readonly cmuxdRemoteCommit: string;
-  /** The cmux commit whose devbox definition produced this image. */
+  readonly hmuxdRemoteCommit: string;
+  /** The hmux commit whose devbox definition produced this image. */
   readonly repoCommit?: string;
   readonly builtAt: string;
   readonly builderScriptVersion: string;
@@ -68,7 +68,7 @@ export type VmImageManifestEntry = {
   readonly notes?: string;
   /**
    * A test image: never a default, and requestable by id only by a caller
-   * whose Stack user id is in CMUX_VM_RESTRICTED_IMAGE_USER_IDS. Anyone else
+   * whose Stack user id is in HMUX_VM_RESTRICTED_IMAGE_USER_IDS. Anyone else
    * gets the same refusal as an id that is not in the manifest.
    */
   readonly restricted?: boolean;
@@ -96,7 +96,7 @@ export type VmImageResolveOptions = {
 };
 
 /** The env var listing the Stack user ids allowed to request restricted (test) images. */
-export const VM_RESTRICTED_IMAGE_USERS_ENV = "CMUX_VM_RESTRICTED_IMAGE_USER_IDS";
+export const VM_RESTRICTED_IMAGE_USERS_ENV = "HMUX_VM_RESTRICTED_IMAGE_USER_IDS";
 
 /** True when `userId` may request a restricted manifest image (comma- or space-separated allowlist; empty allows nobody). */
 export function vmRestrictedImageAllowed(userId: string | undefined, env: VmRuntimeEnv = process.env): boolean {
@@ -249,7 +249,7 @@ export function inferVmProviderForImage(requestedImage: string | undefined): Pro
  * selects or overrides one. Resolution order:
  *  1. an explicit `requestedImage` (must be in the manifest unless unmanifested
  *     images are allowed, which they are outside deployed runtimes or with
- *     CMUX_VM_ALLOW_UNMANIFESTED_IMAGES=1);
+ *     HMUX_VM_ALLOW_UNMANIFESTED_IMAGES=1);
  *  2. the manifest entry flagged `defaultForKind` for the requested kind
  *     (`VM_IMAGE_DEFAULT_KIND`, desktop, when the client did not ask for a
  *     kind) at the plan's size: the smallest sized default with at least

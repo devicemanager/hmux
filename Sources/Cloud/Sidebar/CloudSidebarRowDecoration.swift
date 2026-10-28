@@ -1,17 +1,17 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// An unread badge in the leading identity column, followed by an optional pin.
 /// Read rows keep the compact identity edge; unread rows reserve the badge slot.
 /// Immutable input keeps AppKit cell reuse independent of observable stores.
 struct CloudSidebarRowDecoration: ViewModifier {
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     let isPinned: Bool
     let showsAttentionSlot: Bool
     let hasUnreadNotification: Bool
     var attentionSlot: CGFloat = CloudTreeStyle.compact.rowGrid.attentionSlot
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
 
     func body(content: Content) -> some View {
         // Keep read rows flush with the outline's content edge. A row earns the
@@ -20,7 +20,7 @@ struct CloudSidebarRowDecoration: ViewModifier {
         HStack(spacing: 2) {
             if showsAttentionSlot && hasUnreadNotification {
                 Circle()
-                    .fill(cmuxAccent.color)
+                    .fill(hmuxAccent.color)
                     .frame(width: 6, height: 6)
                     .accessibilityLabel(String(localized: "cloudTree.organization.unread", defaultValue: "Unread notification"))
                     .help(String(localized: "cloudTree.organization.unread", defaultValue: "Unread notification"))
@@ -28,7 +28,7 @@ struct CloudSidebarRowDecoration: ViewModifier {
                     .allowsHitTesting(false)
             }
             if isPinned {
-                CmuxSystemSymbolImage(
+                HmuxSystemSymbolImage(
                     magnified: "pin.fill",
                     pointSize: 9,
                     weight: .semibold,
