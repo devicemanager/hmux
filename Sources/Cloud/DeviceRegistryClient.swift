@@ -1,12 +1,12 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxMobileHost
-import CmuxAuthRuntime
-import CmuxFoundation
+import HmuxCloud
+import HMUXMobileCore
+import HmuxMobileHost
+import HmuxAuthRuntime
+import HmuxFoundation
 import Foundation
 import Observation
 
-/// Registers this Mac (and its running cmux app instance's attach routes) in the
+/// Registers this Mac (and its running hmux app instance's attach routes) in the
 /// team-scoped device registry (`POST /api/devices`), so a phone can look up the
 /// Mac's current routes on reload and auto-pair instead of re-scanning a QR.
 ///
@@ -72,7 +72,7 @@ final class DeviceRegistryClient {
         }
         if teamScopeObserver == nil {
             teamScopeObserver = NotificationCenter.default.addObserver(
-                forName: .cmuxCloudTeamScopeDidChange, object: nil, queue: .main
+                forName: .hmuxCloudTeamScopeDidChange, object: nil, queue: .main
             ) { [weak self] _ in
                 MainActor.assumeIsolated {
                     // Keep the previous receipt until the ordered publication
@@ -303,7 +303,7 @@ final class DeviceRegistryClient {
         req.setValue("Bearer \(tokens.accessToken)", forHTTPHeaderField: "Authorization")
         req.setValue(tokens.refreshToken, forHTTPHeaderField: "X-Stack-Refresh-Token")
         if let teamID = registration.teamID, !teamID.isEmpty {
-            req.setValue(teamID, forHTTPHeaderField: "X-Cmux-Team-Id")
+            req.setValue(teamID, forHTTPHeaderField: "X-Hmux-Team-Id")
         }
         req.setValue("application/json", forHTTPHeaderField: "content-type")
         req.httpBody = try? JSONSerialization.data(withJSONObject: bodyDict, options: [])
@@ -323,14 +323,14 @@ final class DeviceRegistryClient {
                         ) ?? CmxRetryAfterPolicy().defaultRateLimitSeconds
                         await retryAfterGate.extend(by: seconds)
                     }
-                    NSLog("cmux.deviceRegistry register failed status=%d", http.statusCode)
+                    NSLog("hmux.deviceRegistry register failed status=%d", http.statusCode)
                 }
             }
         } catch {
             // Best-effort; the registry must never disrupt the Mac. Still log:
             // a silently unreachable registry strands every paired phone on
             // stale routes with nothing to diagnose from.
-            NSLog("cmux.deviceRegistry register unreachable: %@", String(describing: type(of: error)))
+            NSLog("hmux.deviceRegistry register unreachable: %@", String(describing: type(of: error)))
         }
         return false
     }

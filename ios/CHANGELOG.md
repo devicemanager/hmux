@@ -1,6 +1,6 @@
-# cmux iOS changelog
+# hmux iOS changelog
 
-Single source of truth for what each cmux iOS TestFlight build changed. Every
+Single source of truth for what each hmux iOS TestFlight build changed. Every
 beta cut updates this file FIRST (top entry = the build you are about to upload),
 and the upload pushes the top entry's notes to TestFlight "What to Test" so the
 build is no longer an opaque timestamp on install or auto-update.
@@ -9,7 +9,7 @@ build is no longer an opaque timestamp on install or auto-update.
 
 TestFlight shows each build as `MARKETING_VERSION (CURRENT_PROJECT_VERSION)`, for
 example `1.0.3 (20260613120501)`. `MARKETING_VERSION` is the human version
-(`CMUX_IOS_BETA_MARKETING_VERSION` in `ios/Config/Shared.xcconfig`, semver
+(`HMUX_IOS_BETA_MARKETING_VERSION` in `ios/Config/Shared.xcconfig`, semver
 `X.Y.Z`); the number in parens is the build id, a 14-digit UTC timestamp stamped
 at upload time (unique and monotonic, but not meant to be read). Testers should
 track the marketing version; the timestamp only distinguishes rapid internal
@@ -17,7 +17,7 @@ iterations of the same version.
 
 Two audiences, two notes per entry:
 
-- **Internal** (`ship ios`, the `cmux beta` group): terse, dev-facing, per-build.
+- **Internal** (`ship ios`, the `hmux beta` group): terse, dev-facing, per-build.
   Lists what changed in THIS build, including rough edges, so internal dogfood
   knows what to hit. Pushed to "What to Test" on every internal cut.
 - **External / founders** (`ship ios founders`): a curated, user-facing summary of
@@ -37,7 +37,7 @@ Keep entries short. No fluff, no AI rhetorical patterns, no em dashes (repo rule
 Newest version on top.
 
 The top entry's version MUST equal the checked-in
-`CMUX_IOS_BETA_MARKETING_VERSION` in `ios/Config/Shared.xcconfig`.
+`HMUX_IOS_BETA_MARKETING_VERSION` in `ios/Config/Shared.xcconfig`.
 `upload-testflight.sh` enforces this before upload (it refuses to attach notes
 for a different version), so bump the beta version with
 `ios/scripts/bump-ios-version.sh` in the SAME change that adds the top entry.
@@ -54,8 +54,8 @@ for a different version), so bump the beta version with
 ### External
 
 - Updated the Mac connection service and Iroh transport.
-- Requires cmux 0.64.25 or later, or NIGHTLY 0.64.25-nightly.3522337919701 or later. Enable iOS pairing in Settings > Mobile on each Mac.
-- If you cannot update your Mac, use cmux BETA 1.0.5 (20260914204800) in TestFlight > Previous Builds while available. Choose that exact build.
+- Requires hmux 0.64.25 or later, or NIGHTLY 0.64.25-nightly.3522337919701 or later. Enable iOS pairing in Settings > Mobile on each Mac.
+- If you cannot update your Mac, use hmux BETA 1.0.5 (20260914204800) in TestFlight > Previous Builds while available. Choose that exact build.
 
 ---
 
@@ -73,7 +73,7 @@ for a different version), so bump the beta version with
 
 ### External
 
-- This build is for internal cmux BETA testing only.
+- This build is for internal hmux BETA testing only.
 
 ---
 
@@ -81,7 +81,7 @@ for a different version), so bump the beta version with
 
 ### Internal
 
-- Mac+iOS pairing is now opt-in. Turn on Enable iOS pairing in Settings > Mobile for each cmux Mac app before testing discovery.
+- Mac+iOS pairing is now opt-in. Turn on Enable iOS pairing in Settings > Mobile for each hmux Mac app before testing discovery.
 - Version-sync bump: checked-in beta marketing version catches up to `1.0.4`, the version already live to external founders (an earlier upload under that version shipped stale, pre-#7636 code; the CI reship on 2026-07-09 replaced it with current `main`).
 - Fix iOS surface-teardown deadlock behind external-beta watchdog kills (#7666).
 - Add iOS account deletion and legal links (#7645).
@@ -98,7 +98,7 @@ for a different version), so bump the beta version with
 
 ### External
 
-- Each cmux Mac app now requires Enable iOS pairing in Settings > Mobile before that Mac can appear on iPhone.
+- Each hmux Mac app now requires Enable iOS pairing in Settings > Mobile before that Mac can appear on iPhone.
 - Fixed an issue where the app could freeze or crash in the background.
 - Fixed an issue that could sign you out unexpectedly after updating.
 - Terminal connections recover more reliably after switching apps or losing network.
@@ -136,7 +136,7 @@ for a different version), so bump the beta version with
 
 ### Internal
 
-- Mobile terminal foundation: faithful render-grid replay over the cmux SPM core (#5079).
+- Mobile terminal foundation: faithful render-grid replay over the hmux SPM core (#5079).
 - Multi-Mac host switcher with a hierarchical device tree; workspaces from all Mac windows; rename and pin from the phone (#5513, #5648, #5565, #5512).
 - Customizable terminal toolbar: data-driven custom actions, reorderable built-ins, redesigned default layout (#5510, #5532, #5579).
 - Paste images from the phone clipboard into the terminal (#5546).
@@ -146,7 +146,7 @@ for a different version), so bump the beta version with
 
 ### External
 
-- Mobile terminal: drive your Mac's cmux terminals from your phone.
+- Mobile terminal: drive your Mac's hmux terminals from your phone.
 - Switch between multiple Macs, see workspaces from every window, and rename or pin from the phone.
 - Customizable terminal toolbar with your own actions.
 - Paste images straight from the phone clipboard.

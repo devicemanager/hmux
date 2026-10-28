@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxCore
-import CmuxFoundation
+import HmuxCloud
+import HmuxCore
+import HmuxFoundation
 import AppKit
 import Combine
 import Foundation
@@ -493,7 +493,7 @@ final class LocalFileExplorerProvider: FileExplorerProvider {
                path.caseInsensitiveCompare(destinationPath) == .orderedSame {
                 let parentPath = (path as NSString).deletingLastPathComponent
                 let temporaryPath = (parentPath as NSString)
-                    .appendingPathComponent(".cmux-rename-\(UUID().uuidString)")
+                    .appendingPathComponent(".hmux-rename-\(UUID().uuidString)")
                 try FileManager.default.moveItem(atPath: path, toPath: temporaryPath)
                 do {
                     try FileManager.default.moveItem(atPath: temporaryPath, toPath: destinationPath)
@@ -1029,7 +1029,7 @@ final class ProcessSSHFileExplorerTransport: SSHFileExplorerTransport {
     }
 
     // Probes reuse the workspace's master through its ControlPath and must
-    // never become one, like cmux's other background ssh runs.
+    // never become one, like hmux's other background ssh runs.
     static func sshArguments(connection: SSHFileExplorerConnection, command: String) -> [String] {
         WorkspaceRemoteConfiguration(
             destination: connection.destination,
@@ -1342,7 +1342,7 @@ final class FileExplorerStore: ObservableObject {
         expectedWorkspaceRootIdentity: UUID? = nil
     ) async throws -> URL {
         // `DisableFileTransfer` (MDM): a preview copies the file off the remote
-        // host onto this Mac, which is a cmux-mediated download.
+        // host onto this Mac, which is a hmux-mediated download.
         guard !ManagedFileTransferPolicy.isDisabled else {
             throw ManagedFileTransferPolicy.refusalError()
         }
@@ -1846,7 +1846,7 @@ final class FileExplorerStore: ObservableObject {
 
     private static func remotePreviewCacheURL(displayTarget: String, remotePath: String) -> URL {
         let cacheRoot = FileManager.default.temporaryDirectory
-            .appendingPathComponent("cmux-remote-file-previews", isDirectory: true)
+            .appendingPathComponent("hmux-remote-file-previews", isDirectory: true)
         let target = sanitizedCacheComponent(displayTarget)
         let remote = sanitizedCacheComponent(remotePath)
         let basename = URL(fileURLWithPath: remotePath).lastPathComponent

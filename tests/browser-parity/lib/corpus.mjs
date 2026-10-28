@@ -13,7 +13,7 @@
 //     invariants compare against (fixtures/corpus/NAME.oracle.json): the
 //     interactive elements in Playwright's AI snapshot with each element's
 //     path, and text Chrome does not render. Scenario 27 judges each path's
-//     visibility in the engine that renders cmux (fixtures/corpus/gt.js).
+//     visibility in the engine that renders hmux (fixtures/corpus/gt.js).
 //
 // Sizes of reference A's snapshots of the same frozen pages live in
 // fixtures/corpus/reference-a-sizes.json (recorded once with reference A's REPL).
@@ -263,7 +263,7 @@ async function oracle(only) {
       const aiText = (await aiSnapshot(page)).full;
       // The AI snapshot inlines frames; parse the whole text once. Each entry
       // carries its element's path, so a check can judge visibility in the
-      // engine that renders cmux (scenario 27); Chrome's own judgement is
+      // engine that renders hmux (scenario 27); Chrome's own judgement is
       // only counted here.
       const interactive = [];
       let hiddenInChrome = 0;

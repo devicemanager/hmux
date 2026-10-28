@@ -114,14 +114,14 @@ class WorkflowWiringTests(unittest.TestCase):
     def test_restore_step_records_the_transport_it_used(self):
         for job in CONSUMERS:
             step = step_block(job_block(job), "Restore compiled app-host test product")
-            self.assertIn("CMUX_PARALLEL_PRODUCT_HIT: ${{ steps.parallel-products.outputs.hit }}", step)
+            self.assertIn("HMUX_PARALLEL_PRODUCT_HIT: ${{ steps.parallel-products.outputs.hit }}", step)
         script = (ROOT / "scripts/ci/restore-app-host-test-product.sh").read_text(encoding="utf-8")
         self.assertIn('"github-parallel" if parallel_hit else', script)
         self.assertIn('echo "$EXPECTED_SHA256  $archive" | shasum -a 256 -c -', script)
 
     def test_restore_does_not_wait_on_a_busy_canonical_root(self):
         script = (ROOT / "scripts/ci/restore-app-host-test-product.sh").read_text(encoding="utf-8")
-        self.assertIn("CMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/cmux-test-source", script)
+        self.assertIn("HMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/hmux-test-source", script)
         self.assertIn('scripts/ci/canonical-build-root.sh --runtime-source "$PWD"', script)
         self.assertNotIn("glaeda-canonical-root", script)
         self.assertNotIn("--wait 0", script)
@@ -148,11 +148,11 @@ class WorkflowWiringTests(unittest.TestCase):
         download = step_block(block, "Download compiled test product")
         self.assertIn("steps.parallel-products.outputs.hit != 'true'", download)
         restore = step_block(block, "Restore compiled test product")
-        for key in ("CMUX_R2_PRODUCT_HIT", "CMUX_PARALLEL_PRODUCT_HIT", "CMUX_ARTIFACT_R2_RESULT"):
+        for key in ("HMUX_R2_PRODUCT_HIT", "HMUX_PARALLEL_PRODUCT_HIT", "HMUX_ARTIFACT_R2_RESULT"):
             self.assertIn(f"{key}: ", restore)
         finalize = step_block(block, "Finalize node-local compiled product cache")
         self.assertIn("if: always()", finalize)
-        self.assertIn("CMUX_NODE_PRODUCT_CACHE_LEASE: ${{ steps.node-products.outputs.lease }}", finalize)
+        self.assertIn("HMUX_NODE_PRODUCT_CACHE_LEASE: ${{ steps.node-products.outputs.lease }}", finalize)
         self.assertIn("node_product_cache.py finalize", finalize)
         jobs = yaml.safe_load(WORKFLOW)["jobs"]
         # Same permissions: the R2 transport needs id-token to mint its token.
@@ -178,7 +178,7 @@ class WorkflowWiringTests(unittest.TestCase):
 
 class RangeAssemblyTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="cmux-parallel-test-")
+        self.temp = tempfile.TemporaryDirectory(prefix="hmux-parallel-test-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
 
@@ -213,7 +213,7 @@ class RangeAssemblyTests(unittest.TestCase):
 
 class RangeDeadlineTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="cmux-parallel-deadline-")
+        self.temp = tempfile.TemporaryDirectory(prefix="hmux-parallel-deadline-")
         self.addCleanup(self.temp.cleanup)
         self.target = Path(self.temp.name) / "out.bin"
         self.clock = 0.0
@@ -363,7 +363,7 @@ class AggregateRestoreTests(unittest.TestCase):
     ARCHIVE = b"compiled products" * 1000
 
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="cmux-parallel-restore-")
+        self.temp = tempfile.TemporaryDirectory(prefix="hmux-parallel-restore-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.zip_bytes = make_zip("app-host-products.tar.gz", self.ARCHIVE)
@@ -467,7 +467,7 @@ class EntryPointTests(unittest.TestCase):
                 self.assertFalse((Path(temp) / "app-host-products").exists())
 
     def test_a_miss_reports_no_hit_and_never_fails_the_job(self):
-        with tempfile.TemporaryDirectory(prefix="cmux-parallel-main-") as temp:
+        with tempfile.TemporaryDirectory(prefix="hmux-parallel-main-") as temp:
             output = Path(temp) / "github-output"
             environment = {"GITHUB_OUTPUT": str(output), "RUNNER_TEMP": temp,
                            "GITHUB_REPOSITORY": "manaflow-ai/cmux", "ARTIFACT_ID": "77",
@@ -505,7 +505,7 @@ class IOSProductTransportTests(unittest.TestCase):
         import http.server
         import threading
 
-        self.temp = tempfile.TemporaryDirectory(prefix="cmux-ios-transport-")
+        self.temp = tempfile.TemporaryDirectory(prefix="hmux-ios-transport-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.archive = os.urandom(70_000)

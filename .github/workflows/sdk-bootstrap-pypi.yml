@@ -25,7 +25,7 @@ jobs:
       - name: Require explicit bootstrap confirmation
         if: github.event.client_payload.confirm_bootstrap != true
         run: |
-          echo "Refusing to reserve cmux-sdk without confirm_bootstrap=true." >&2
+          echo "Refusing to reserve hmux-sdk without confirm_bootstrap=true." >&2
           exit 1
 
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -62,7 +62,7 @@ jobs:
 
       - name: Prepare the prerelease source tree
         env:
-          CMUX_BOOTSTRAP_VERSION: ${{ env.BOOTSTRAP_VERSION }}
+          HMUX_BOOTSTRAP_VERSION: ${{ env.BOOTSTRAP_VERSION }}
         run: |
           python3 - <<'PY'
           import os
@@ -70,14 +70,14 @@ jobs:
           import re
           import shutil
 
-          source = Path("cmux-tui/bindings/python")
-          target = Path(os.environ["RUNNER_TEMP"]) / "cmux-python-bootstrap"
+          source = Path("hmux-tui/bindings/python")
+          target = Path(os.environ["RUNNER_TEMP"]) / "hmux-python-bootstrap"
           shutil.copytree(source, target)
           manifest = target / "pyproject.toml"
           contents = manifest.read_text(encoding="utf-8")
           contents, count = re.subn(
               r'(?m)^version = "[^"]+"$',
-              f'version = "{os.environ["CMUX_BOOTSTRAP_VERSION"]}"',
+              f'version = "{os.environ["HMUX_BOOTSTRAP_VERSION"]}"',
               contents,
           )
           if count != 1:
@@ -87,7 +87,7 @@ jobs:
 
       - name: Test the prerelease source tree
         run: |
-          cd "$RUNNER_TEMP/cmux-python-bootstrap"
+          cd "$RUNNER_TEMP/hmux-python-bootstrap"
           PYTHONPATH=. python3 -m unittest discover -s tests -v
 
       - name: Build deterministic bootstrap distributions
@@ -96,16 +96,16 @@ jobs:
           SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$GITHUB_SHA")"
           python3 -m build --no-isolation --sdist --wheel \
             --outdir "$GITHUB_WORKSPACE/bootstrap-dist" \
-            "$RUNNER_TEMP/cmux-python-bootstrap"
-          python3 cmux-tui/bindings/normalize_python_sdist.py \
+            "$RUNNER_TEMP/hmux-python-bootstrap"
+          python3 hmux-tui/bindings/normalize_python_sdist.py \
             --archive bootstrap-dist/*.tar.gz \
             --epoch "$SOURCE_DATE_EPOCH"
 
       - name: Test the exact bootstrap distributions
         env:
-          CMUX_PYTHON_DIST_DIR: ${{ github.workspace }}/bootstrap-dist
+          HMUX_PYTHON_DIST_DIR: ${{ github.workspace }}/bootstrap-dist
         run: |
-          cd "$RUNNER_TEMP/cmux-python-bootstrap"
+          cd "$RUNNER_TEMP/hmux-python-bootstrap"
           PYTHONPATH=. python3 -m unittest tests.test_package_consumer -v
 
       - name: Fingerprint the bootstrap distributions
@@ -129,7 +129,7 @@ jobs:
       - id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-python-bootstrap-dist-${{ github.run_attempt }}
+          name: hmux-python-bootstrap-dist-${{ github.run_attempt }}
           path: bootstrap-dist/*
           if-no-files-found: error
 
@@ -161,7 +161,7 @@ jobs:
           from urllib.request import Request, urlopen
 
           request = Request(
-              "https://pypi.org/pypi/cmux-sdk/json",
+              "https://pypi.org/pypi/hmux-sdk/json",
               headers={"Accept": "application/json"},
           )
           try:
@@ -187,9 +187,9 @@ jobs:
         if: steps.project.outputs.status == 'exists'
         id: wheel_state
         run: |
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
+            --package hmux-sdk \
             --version "$BOOTSTRAP_VERSION" \
             --artifact bootstrap-dist/*.whl \
             --allowed-artifact bootstrap-dist/*.whl \
@@ -200,9 +200,9 @@ jobs:
         if: steps.project.outputs.status == 'exists'
         id: sdist_state
         run: |
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
+            --package hmux-sdk \
             --version "$BOOTSTRAP_VERSION" \
             --artifact bootstrap-dist/*.tar.gz \
             --allowed-artifact bootstrap-dist/*.whl \
@@ -222,7 +222,7 @@ jobs:
           elif [[ "$WHEEL_STATUS" == "match" && "$SDIST_STATUS" == "match" ]]; then
             need_publish=false
           elif [[ "$WHEEL_STATUS" == "missing" && "$SDIST_STATUS" == "missing" ]]; then
-            echo "cmux-sdk exists without the expected bootstrap release" >&2
+            echo "hmux-sdk exists without the expected bootstrap release" >&2
             exit 1
           elif { [[ "$WHEEL_STATUS" == "match" && "$SDIST_STATUS" == "missing" ]] ||
                  [[ "$WHEEL_STATUS" == "missing" && "$SDIST_STATUS" == "match" ]]; }; then
@@ -262,8 +262,8 @@ jobs:
             sdists=(bootstrap-dist/*.tar.gz)
             filenames+=(--filename "$(basename "${sdists[0]}")")
           fi
-          python3 cmux-tui/bindings/verify_pypi_provenance.py \
-            --package cmux-sdk \
+          python3 hmux-tui/bindings/verify_pypi_provenance.py \
+            --package hmux-sdk \
             --version "$BOOTSTRAP_VERSION" \
             --repository https://github.com/manaflow-ai/cmux \
             --owner lawrencecchen \
@@ -281,7 +281,7 @@ jobs:
       id-token: write
     environment:
       name: pypi-bootstrap
-      url: https://pypi.org/p/cmux-sdk
+      url: https://pypi.org/p/hmux-sdk
     outputs:
       outcome: ${{ steps.publish.outcome }}
     steps:
@@ -377,18 +377,18 @@ jobs:
       - name: Reconcile exact bootstrap distributions
         run: |
           set -euo pipefail
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
+            --package hmux-sdk \
             --version "$BOOTSTRAP_VERSION" \
             --artifact bootstrap-dist/*.whl \
             --allowed-artifact bootstrap-dist/*.whl \
             --allowed-artifact bootstrap-dist/*.tar.gz \
             --wait-seconds 300 \
             --require-match
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
+            --package hmux-sdk \
             --version "$BOOTSTRAP_VERSION" \
             --artifact bootstrap-dist/*.tar.gz \
             --allowed-artifact bootstrap-dist/*.whl \
@@ -402,8 +402,8 @@ jobs:
           shopt -s nullglob
           wheels=(bootstrap-dist/*.whl)
           sdists=(bootstrap-dist/*.tar.gz)
-          python3 cmux-tui/bindings/verify_pypi_provenance.py \
-            --package cmux-sdk \
+          python3 hmux-tui/bindings/verify_pypi_provenance.py \
+            --package hmux-sdk \
             --version "$BOOTSTRAP_VERSION" \
             --filename "$(basename "${wheels[0]}")" \
             --filename "$(basename "${sdists[0]}")" \

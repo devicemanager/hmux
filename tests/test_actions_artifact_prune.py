@@ -43,7 +43,7 @@ class FakeAPI:
             yield page
 
     def runs_since(self, workflow, since):
-        return self.release_runs if workflow == "cmux-tui-release.yml" else []
+        return self.release_runs if workflow == "hmux-tui-release.yml" else []
 
     def delete(self, artifact_id):
         self.deleted.append(artifact_id)
@@ -60,7 +60,7 @@ class Prune(unittest.TestCase):
 
     def test_build_artifacts_live_3_days_and_gallery_stages_1(self):
         api = FakeAPI([
-            art(1, "cmux-tui-x86_64-unknown-linux-musl", 4), art(2, "cmux-tui-x86_64-unknown-linux-musl", 2),
+            art(1, "hmux-tui-x86_64-unknown-linux-musl", 4), art(2, "hmux-tui-x86_64-unknown-linux-musl", 2),
             art(3, "chatmux-relay-aarch64-apple-darwin", 3.5), art(4, "pypi-wheels", 2.9),
             art(5, "gallery-stage-head-2", 1.5), art(6, "gallery-stage-base-0", 0.5),
         ])
@@ -129,7 +129,7 @@ class Prune(unittest.TestCase):
             github.delete(1)
             self.assertEqual(github.runs_since("relay-publish-npm.yml", NOW), [])
             with self.assertRaises(urllib.error.HTTPError):
-                github.runs_since("cmux-tui-release.yml", NOW)
+                github.runs_since("hmux-tui-release.yml", NOW)
 
     def test_a_failed_release_lookup_stops_before_any_delete(self):
         api = FakeAPI([art(1, "npm-packages", 10)])
@@ -140,12 +140,12 @@ class Prune(unittest.TestCase):
 
     def test_the_rules_cover_every_build_package_upload(self):
         names = prune.rules()
-        self.assertEqual(len([n for n in names if n.startswith("cmux-tui-")]), 5)
+        self.assertEqual(len([n for n in names if n.startswith("hmux-tui-")]), 5)
         self.assertEqual(len([n for n in names if n.startswith("gallery-stage-")]), 12)
-        workflow = (ROOT / ".github/workflows/cmux-tui-build-package.yml")
+        workflow = (ROOT / ".github/workflows/hmux-tui-build-package.yml")
         if workflow.exists():
             text = workflow.read_text()
-            for family in ("cmux-relay-", "chatmux-relay-", "cmux-agent-screen-detection-", "npm-packages", "pypi-wheels"):
+            for family in ("hmux-relay-", "chatmux-relay-", "hmux-agent-screen-detection-", "npm-packages", "pypi-wheels"):
                 self.assertIn(family, text)
 
 

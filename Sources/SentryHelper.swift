@@ -1,4 +1,4 @@
-import CmuxSentryReporting
+import HmuxSentryReporting
 import Foundation
 import Sentry
 
@@ -97,7 +97,7 @@ private func sentryScheduleMemoryContextRefresh(
 nonisolated func sentryRefreshMemoryContext(reason: String) async {
     guard SentrySDK.isEnabled else { return }
 
-    let processSnapshot = await CmuxTopProcessSnapshot.captureCached(
+    let processSnapshot = await HmuxTopProcessSnapshot.captureCached(
         includeProcessDetails: false,
         maximumAge: 2
     )
@@ -112,7 +112,7 @@ nonisolated func sentryRefreshMemoryContext(reason: String) async {
         )
         payload["reason"] = reason
         SentrySDK.configureScope { scope in
-            scope.setContext(value: payload, key: "cmux.memory")
+            scope.setContext(value: payload, key: "hmux.memory")
         }
     }
 }

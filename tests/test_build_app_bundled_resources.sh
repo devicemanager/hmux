@@ -2,7 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cmux-bundled-resources-test.XXXXXX")"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/hmux-bundled-resources-test.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 unset GIT_DIR GIT_WORK_TREE GIT_COMMON_DIR GIT_INDEX_FILE \
   GIT_OBJECT_DIRECTORY GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_PREFIX
@@ -14,17 +14,17 @@ mkdir -p "$SRCROOT/ghostty/zig-out/share/ghostty/nested" \
   "$SRCROOT/ghostty/src/shell-integration/zsh" \
   "$SRCROOT/Resources/shell-integration" \
   "$SRCROOT/Resources/terminfo-overlay" \
-  "$BUILD_DIR/cmux.app/Contents/Resources/CmuxFoundation_CmuxFoundation.bundle/Contents" \
+  "$BUILD_DIR/hmux.app/Contents/Resources/HmuxFoundation_HmuxFoundation.bundle/Contents" \
   "$SRCROOT/scripts" "$BUILD_DIR/Resources" "$BUILD_DIR/Products"
 
 printf 'resource-v1\n' > "$SRCROOT/ghostty/zig-out/share/ghostty/nested/file"
 printf 'shell\n' > "$SRCROOT/ghostty/src/shell-integration/zsh/ghostty-integration"
 printf 'term\n' > "$SRCROOT/ghostty/zig-out/share/terminfo/x"
-printf 'cmux\n' > "$SRCROOT/Resources/shell-integration/cmux.zsh"
+printf 'hmux\n' > "$SRCROOT/Resources/shell-integration/hmux.zsh"
 printf 'alternate\n' > "$SRCROOT/Resources/shell-integration/alternate.zsh"
-ln -s cmux.zsh "$SRCROOT/Resources/shell-integration/current.zsh"
+ln -s hmux.zsh "$SRCROOT/Resources/shell-integration/current.zsh"
 printf 'plist\n' > "$BUILD_DIR/Products/Info.plist"
-printf 'localized-v1\n' > "$BUILD_DIR/cmux.app/Contents/Resources/CmuxFoundation_CmuxFoundation.bundle/Contents/Localizable.strings"
+printf 'localized-v1\n' > "$BUILD_DIR/hmux.app/Contents/Resources/HmuxFoundation_HmuxFoundation.bundle/Contents/Localizable.strings"
 # A tracked source file outside every directory the phase copies, so only the
 # Ghostty worktree part of the stamp can notice it changing.
 printf 'helper-source-v1\n' > "$SRCROOT/ghostty/src/main.zig"
@@ -60,24 +60,24 @@ while [[ $# -gt 0 ]]; do
 done
 mkdir -p "$(dirname "$output")"
 printf 'cua-helper\n' > "$output"
-printf 'license\n' > "$(dirname "$output")/cmux-cua-LICENSE.md"
+printf 'license\n' > "$(dirname "$output")/hmux-cua-LICENSE.md"
 chmod +x "$output"
-if [[ -z "$helper_app" && "$output" == *.app/Contents/Resources/bin/cmux-cua ]]; then
-  helper_app="${output%/Resources/bin/cmux-cua}/Library/cmux Computer Use.app"
+if [[ -z "$helper_app" && "$output" == *.app/Contents/Resources/bin/hmux-cua ]]; then
+  helper_app="${output%/Resources/bin/hmux-cua}/Library/hmux Computer Use.app"
 fi
 if [[ -n "$helper_app" ]]; then
   mkdir -p "$helper_app/Contents/MacOS" "$helper_app/Contents/Resources"
-  printf 'cua-helper-app\n' > "$helper_app/Contents/MacOS/cmux-cua"
-  chmod +x "$helper_app/Contents/MacOS/cmux-cua"
+  printf 'cua-helper-app\n' > "$helper_app/Contents/MacOS/hmux-cua"
+  chmod +x "$helper_app/Contents/MacOS/hmux-cua"
   printf 'plist\n' > "$helper_app/Contents/Info.plist"
-  printf 'managed\n' > "$helper_app/Contents/Resources/.cmux-cua-managed-helper"
+  printf 'managed\n' > "$helper_app/Contents/Resources/.hmux-cua-managed-helper"
 fi
 EOF
 chmod +x "$SRCROOT/scripts-build-helper" "$SRCROOT/scripts-build-cua"
-printf 'apply-v1\n' > "$SRCROOT/scripts/apply-cmux-cua-patch.sh"
-printf 'patch-v1\n' > "$SRCROOT/scripts/cmux-cua-codex-delivery-mode.patch"
+printf 'apply-v1\n' > "$SRCROOT/scripts/apply-hmux-cua-patch.sh"
+printf 'patch-v1\n' > "$SRCROOT/scripts/hmux-cua-codex-delivery-mode.patch"
 ln -s "$SRCROOT/scripts-build-helper" "$SRCROOT/scripts/build-ghostty-cli-helper.sh"
-ln -s "$SRCROOT/scripts-build-cua" "$SRCROOT/scripts/build-cmux-cua.sh"
+ln -s "$SRCROOT/scripts-build-cua" "$SRCROOT/scripts/build-hmux-cua.sh"
 ln -s "$ROOT_DIR/scripts/build-app-bundled-resources.sh" "$SRCROOT/scripts/build-app-bundled-resources.sh"
 
 run_phase() {
@@ -93,7 +93,7 @@ run_phase() {
 run_app_phase() {
   TARGET_BUILD_DIR="$BUILD_DIR" \
   DERIVED_FILE_DIR="$BUILD_DIR/Derived" \
-  UNLOCALIZED_RESOURCES_FOLDER_PATH="cmux.app/Contents/Resources" \
+  UNLOCALIZED_RESOURCES_FOLDER_PATH="hmux.app/Contents/Resources" \
   INFOPLIST_PATH=Products/Info.plist \
   SRCROOT="$SRCROOT" \
   ARCHS=arm64 \
@@ -133,28 +133,28 @@ if grep -q 'skipping helper rebuilds' "$TMP_DIR/third.log"; then
 fi
 [[ -f "$BUILD_DIR/Resources/ghostty/nested/file" ]]
 
-APP_BIN="$BUILD_DIR/cmux.app/Contents/Resources/bin"
+APP_BIN="$BUILD_DIR/hmux.app/Contents/Resources/bin"
 mkdir -p "$APP_BIN"
-printf 'legacy-client\n' > "$APP_BIN/cmux-cua"
-chmod +x "$APP_BIN/cmux-cua"
-printf 'legacy-license\n' > "$APP_BIN/cmux-cua-LICENSE.md"
-RESOURCE_BUNDLE="$BUILD_DIR/cmux.app/Contents/Resources/CmuxFoundation_CmuxFoundation.bundle"
-CLI_RESOURCE_BUNDLE="$BUILD_DIR/cmux.app/Contents/Resources/bin/CmuxFoundation_CmuxFoundation.bundle"
+printf 'legacy-client\n' > "$APP_BIN/hmux-cua"
+chmod +x "$APP_BIN/hmux-cua"
+printf 'legacy-license\n' > "$APP_BIN/hmux-cua-LICENSE.md"
+RESOURCE_BUNDLE="$BUILD_DIR/hmux.app/Contents/Resources/HmuxFoundation_HmuxFoundation.bundle"
+CLI_RESOURCE_BUNDLE="$BUILD_DIR/hmux.app/Contents/Resources/bin/HmuxFoundation_HmuxFoundation.bundle"
 # A build directory from before the CLI linked its bundles holds a real copy.
 mkdir -p "$CLI_RESOURCE_BUNDLE/Contents"
 printf 'stale-copy\n' > "$CLI_RESOURCE_BUNDLE/Contents/Localizable.strings"
 run_app_phase > "$TMP_DIR/app-first.log"
-# The Computer Use helper's executable is the only copy of the cmux-cua
+# The Computer Use helper's executable is the only copy of the hmux-cua
 # engine in the app. A second copy in Resources/bin costs ~11.5 MiB per
 # architecture and is removed from bundles built before the change.
-if [[ -e "$APP_BIN/cmux-cua" || -e "$APP_BIN/cmux-cua-LICENSE.md" ]]; then
-  echo 'FAIL: the app bundle still ships Resources/bin/cmux-cua' >&2
+if [[ -e "$APP_BIN/hmux-cua" || -e "$APP_BIN/hmux-cua-LICENSE.md" ]]; then
+  echo 'FAIL: the app bundle still ships Resources/bin/hmux-cua' >&2
   exit 1
 fi
-[[ -x "$BUILD_DIR/cmux.app/Contents/Library/cmux Computer Use.app/Contents/MacOS/cmux-cua" ]]
+[[ -x "$BUILD_DIR/hmux.app/Contents/Library/hmux Computer Use.app/Contents/MacOS/hmux-cua" ]]
 # The CLI, one directory deeper, reaches each package bundle through a relative
 # link to the app's copy, so every bundle ships once.
-if [[ ! -L "$CLI_RESOURCE_BUNDLE" || "$(readlink "$CLI_RESOURCE_BUNDLE")" != "../CmuxFoundation_CmuxFoundation.bundle" ]]; then
+if [[ ! -L "$CLI_RESOURCE_BUNDLE" || "$(readlink "$CLI_RESOURCE_BUNDLE")" != "../HmuxFoundation_HmuxFoundation.bundle" ]]; then
   echo 'FAIL: the CLI resource bundle is not a link to the app resource bundle' >&2
   exit 1
 fi
@@ -170,34 +170,34 @@ if grep -q 'skipping helper rebuilds' "$TMP_DIR/app-bundle-changed.log"; then
 fi
 [[ "$(cat "$CLI_RESOURCE_BUNDLE/Contents/Localizable.strings")" == 'localized-v2' ]]
 
-OTHER_BUNDLE="$BUILD_DIR/cmux.app/Contents/Resources/Bonsplit_Bonsplit.bundle"
+OTHER_BUNDLE="$BUILD_DIR/hmux.app/Contents/Resources/Bonsplit_Bonsplit.bundle"
 mkdir -p "$OTHER_BUNDLE/Contents"
 printf 'other\n' > "$OTHER_BUNDLE/Contents/Info.plist"
 run_app_phase > "$TMP_DIR/app-bundle-added.log"
-[[ -L "$BUILD_DIR/cmux.app/Contents/Resources/bin/Bonsplit_Bonsplit.bundle" ]]
+[[ -L "$BUILD_DIR/hmux.app/Contents/Resources/bin/Bonsplit_Bonsplit.bundle" ]]
 rm -rf "$OTHER_BUNDLE"
 run_app_phase > "$TMP_DIR/app-bundle-removed.log"
-if [[ -e "$BUILD_DIR/cmux.app/Contents/Resources/bin/Bonsplit_Bonsplit.bundle" || -L "$BUILD_DIR/cmux.app/Contents/Resources/bin/Bonsplit_Bonsplit.bundle" ]]; then
+if [[ -e "$BUILD_DIR/hmux.app/Contents/Resources/bin/Bonsplit_Bonsplit.bundle" || -L "$BUILD_DIR/hmux.app/Contents/Resources/bin/Bonsplit_Bonsplit.bundle" ]]; then
   echo 'FAIL: a removed package bundle left its CLI link behind' >&2
   exit 1
 fi
 
-HELPER_APP="$BUILD_DIR/cmux.app/Contents/Library/cmux Computer Use.app"
+HELPER_APP="$BUILD_DIR/hmux.app/Contents/Library/hmux Computer Use.app"
 rm "$HELPER_APP/Contents/Info.plist"
 run_app_phase > "$TMP_DIR/app-missing-plist.log"
 if grep -q 'skipping helper rebuilds' "$TMP_DIR/app-missing-plist.log"; then
-  echo 'FAIL: missing cmux-cua helper Info.plist did not invalidate the manifest' >&2
+  echo 'FAIL: missing hmux-cua helper Info.plist did not invalidate the manifest' >&2
   exit 1
 fi
 [[ -f "$HELPER_APP/Contents/Info.plist" ]]
 
-rm "$HELPER_APP/Contents/Resources/.cmux-cua-managed-helper"
+rm "$HELPER_APP/Contents/Resources/.hmux-cua-managed-helper"
 run_app_phase > "$TMP_DIR/app-missing-owner.log"
 if grep -q 'skipping helper rebuilds' "$TMP_DIR/app-missing-owner.log"; then
-  echo 'FAIL: missing cmux-cua ownership marker did not invalidate the manifest' >&2
+  echo 'FAIL: missing hmux-cua ownership marker did not invalidate the manifest' >&2
   exit 1
 fi
-[[ -f "$HELPER_APP/Contents/Resources/.cmux-cua-managed-helper" ]]
+[[ -f "$HELPER_APP/Contents/Resources/.hmux-cua-managed-helper" ]]
 
 echo 'PASS: bundled-resource invalidation covers copied trees, Git environment, and complete helper bundles'
 
@@ -240,25 +240,25 @@ printf 'helper-source-v3\n' > "$SRCROOT/ghostty/src/main.zig"
 git -C "$SRCROOT/ghostty" commit -q -am 'fixture v3'
 expect_rebuild_then_skip 'a Ghostty revision change on a clean tree'
 
-printf 'patch-v2\n' > "$SRCROOT/scripts/cmux-cua-codex-delivery-mode.patch"
-expect_rebuild_then_skip 'a changed cmux-cua compatibility patch'
+printf 'patch-v2\n' > "$SRCROOT/scripts/hmux-cua-codex-delivery-mode.patch"
+expect_rebuild_then_skip 'a changed hmux-cua compatibility patch'
 
-printf 'apply-v2\n' > "$SRCROOT/scripts/apply-cmux-cua-patch.sh"
-expect_rebuild_then_skip 'a changed cmux-cua patch application helper'
+printf 'apply-v2\n' > "$SRCROOT/scripts/apply-hmux-cua-patch.sh"
+expect_rebuild_then_skip 'a changed hmux-cua patch application helper'
 
 cat > "$SRCROOT/fake-zig" <<'EOF'
 #!/usr/bin/env bash
 printf '%s\n' "${FAKE_ZIG_VERSION:-test-zig-v1}"
 EOF
 chmod +x "$SRCROOT/fake-zig"
-CMUX_ZIG="$SRCROOT/fake-zig" run_phase > "$TMP_DIR/toolchain.log"
+HMUX_ZIG="$SRCROOT/fake-zig" run_phase > "$TMP_DIR/toolchain.log"
 if grep -q 'skipping helper rebuilds' "$TMP_DIR/toolchain.log"; then
   echo 'FAIL: changed Zig toolchain did not invalidate the stamp' >&2
   exit 1
 fi
-CMUX_ZIG="$SRCROOT/fake-zig" run_phase > "$TMP_DIR/toolchain-settled.log"
+HMUX_ZIG="$SRCROOT/fake-zig" run_phase > "$TMP_DIR/toolchain-settled.log"
 grep -q 'skipping helper rebuilds' "$TMP_DIR/toolchain-settled.log"
-FAKE_ZIG_VERSION=test-zig-v2 CMUX_ZIG="$SRCROOT/fake-zig" run_phase > "$TMP_DIR/toolchain-version.log"
+FAKE_ZIG_VERSION=test-zig-v2 HMUX_ZIG="$SRCROOT/fake-zig" run_phase > "$TMP_DIR/toolchain-version.log"
 if grep -q 'skipping helper rebuilds' "$TMP_DIR/toolchain-version.log"; then
   echo 'FAIL: changed Zig version did not invalidate the stamp' >&2
   exit 1

@@ -10,7 +10,7 @@ describe("/v1/models dispatch", () => {
   test("serves Anthropic clients from the Claude leg", async () => {
     const response = await GET(
       new Request("https://coderouter.dev/v1/models", {
-        headers: { "anthropic-version": "2023-06-01", "x-api-key": "cmux-vm-edge-placeholder" },
+        headers: { "anthropic-version": "2023-06-01", "x-api-key": "hmux-vm-edge-placeholder" },
       }),
     );
     expect(response.status).toBe(401);

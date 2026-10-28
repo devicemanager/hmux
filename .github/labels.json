@@ -19,7 +19,7 @@
     {
       "name": "S4: cosmetic",
       "color": "C5DEF5",
-      "description": "Wording or appearance, with no effect on what cmux does"
+      "description": "Wording or appearance, with no effect on what hmux does"
     },
     {
       "name": "needs-triage",
@@ -64,7 +64,7 @@
     {
       "name": "area: remote",
       "color": "BFD4F2",
-      "description": "cmux ssh, remote daemon, tunnels, device pairing"
+      "description": "hmux ssh, remote daemon, tunnels, device pairing"
     },
     {
       "name": "area: ios",
@@ -74,7 +74,7 @@
     {
       "name": "area: cli",
       "color": "BFD4F2",
-      "description": "The cmux CLI, cmux-tui, the socket API and SDKs"
+      "description": "The hmux CLI, hmux-tui, the socket API and SDKs"
     },
     {
       "name": "area: settings",

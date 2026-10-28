@@ -1,7 +1,7 @@
-// Reference C parity for the cmux browser REPL
+// Reference C parity for the hmux browser REPL
 // (docs/browser-repl/reference-c-parity.md): what reference C's tools,
 // browser profile and agent offer that a REPL-driving agent can use, in this
-// REPL's Playwright-shaped API and without a model inside cmux.
+// REPL's Playwright-shaped API and without a model inside hmux.
 //
 // Globals: secret(name), secrets, search(query, options), tools.
 // session: allowedDomains, prohibitedDomains, blockIPAddresses,
@@ -14,10 +14,10 @@
 // Page._inputText; repl-host.js output and errors; api.js fetch).
 (function (root) {
   "use strict";
-  const ns = (root.CmuxBrowserRepl = root.CmuxBrowserRepl || {});
+  const ns = (root.HmuxBrowserRepl = root.HmuxBrowserRepl || {});
   const core = ns.core;
   const { Buffer } = core;
-  const AGENT = 'globalThis[Symbol.for("cmux.browserRepl.agent")]';
+  const AGENT = 'globalThis[Symbol.for("hmux.browserRepl.agent")]';
 
   // ---------------------------------------------------------------------------
   // Domain patterns, reference C's syntax (utils.match_url_with_domain_pattern
@@ -387,7 +387,7 @@
   // nodes, characters, time) and at `maxFrames` iframes; `report` and
   // `framesCut` say where it stopped.
   function markdownOfFrame(opts) {
-    const A = globalThis[Symbol.for("cmux.browserRepl.agent")];
+    const A = globalThis[Symbol.for("hmux.browserRepl.agent")];
     const B = A.budget({ maxNodes: opts.maxNodes, maxSize: opts.maxSize });
     const maxFrames = opts.maxFrames >= 0 ? opts.maxFrames : 100;
     let framesCut = false;
@@ -720,7 +720,7 @@
   // and past the budget the rest reads as null; `report` says where it
   // stopped.
   function extractInFrame(schema, opts) {
-    const A = globalThis[Symbol.for("cmux.browserRepl.agent")];
+    const A = globalThis[Symbol.for("hmux.browserRepl.agent")];
     const B = A.budget();
     const limit = opts.limit || 1000;
     const all = (sel, scope, max) => A.queryAll(sel, scope && scope !== document ? A.handleFor(scope) : undefined, max).map((h) => A.element(h));
@@ -784,15 +784,15 @@
         if (spec.length !== 1) throw new Error("page.extract: a list spec has one item: [\"selector\"] or [{ $: \"selector\", ... }]");
         const item = spec[0];
         if (typeof item === "string") return leaf(item, scope, true);
-        if (item && typeof item === "object" && Array.isArray(item.__cmuxPairs) && item.__cmuxPairs.some(([k, v]) => k === "$" && typeof v === "string")) return run(item, scope);
+        if (item && typeof item === "object" && Array.isArray(item.__hmuxPairs) && item.__hmuxPairs.some(([k, v]) => k === "$" && typeof v === "string")) return run(item, scope);
         throw new Error("page.extract: a list spec has one item: [\"selector\"] or [{ $: \"selector\", ... }]");
       }
       // Objects travel as key/value pairs both ways, so their key order
       // survives drivers whose JSON does not keep it (the app's).
-      if (spec && typeof spec === "object" && Array.isArray(spec.__cmuxPairs)) {
-        const entries = spec.__cmuxPairs;
+      if (spec && typeof spec === "object" && Array.isArray(spec.__hmuxPairs)) {
+        const entries = spec.__hmuxPairs;
         const perMatch = entries.find(([k]) => k === "$");
-        const fields = (s) => ({ __cmuxPairs: entries.filter(([k]) => k !== "$").map(([k, v]) => [k, run(v, s)]) });
+        const fields = (s) => ({ __hmuxPairs: entries.filter(([k]) => k !== "$").map(([k, v]) => [k, run(v, s)]) });
         if (perMatch && typeof perMatch[1] === "string") return each(all(perMatch[1], scope, limit), fields);
         return fields(scope);
       }
@@ -811,7 +811,7 @@
   // either side, a match at most 1,000, and what the matches return is
   // charged to a second budget. `report` says where the read stopped.
   function searchTextInFrame(opts) {
-    const A = globalThis[Symbol.for("cmux.browserRepl.agent")];
+    const A = globalThis[Symbol.for("hmux.browserRepl.agent")];
     const B = A.budget();
     const R = A.budget();
     const scope = opts.scope ? A.element(opts.scope) : document.body || document.documentElement;
@@ -916,7 +916,7 @@
   // of an ARIA popup walked, each <select> option, and their labels and
   // values are charged; `report` says where it stopped.
   function dropdownInFrame(handle) {
-    const A = globalThis[Symbol.for("cmux.browserRepl.agent")];
+    const A = globalThis[Symbol.for("hmux.browserRepl.agent")];
     const B = A.budget();
     const el = A.element(handle);
     const clean = (s) => (s || "").replace(/[\s ]+/g, " ").trim();
@@ -968,7 +968,7 @@
   }
 
   function scrollInfoInFrame(handle) {
-    const A = globalThis[Symbol.for("cmux.browserRepl.agent")];
+    const A = globalThis[Symbol.for("hmux.browserRepl.agent")];
     const el = handle ? A.element(handle) : null;
     const doc = document.scrollingElement || document.documentElement;
     const target = el || doc;
@@ -1310,7 +1310,7 @@
           const d = downloadsById.get(p.downloadId);
           if (d) Object.assign(d, { state: p.error ? "failed" : "finished", path: p.path || null, error: p.error || null });
         } else if (event === "tab.replaced" && p.reason) {
-          // The session narrowed its domain policy: cmux loaded the page of
+          // The session narrowed its domain policy: hmux loaded the page of
           // each tab it opened again, ending connections opened before.
           print("warn", `# tab ${p.targetId}: ${p.reason}`);
         } else if (event === "navigation.blocked") {
@@ -1427,7 +1427,7 @@
     // frame's storage cannot be read (a sandboxed frame).
     const localStorageOfFrame = `(maxNodes, maxSize) => {
       try {
-        const B = globalThis[Symbol.for("cmux.browserRepl.agent")].budget({ maxNodes, maxSize });
+        const B = globalThis[Symbol.for("hmux.browserRepl.agent")].budget({ maxNodes, maxSize });
         const storage = localStorage;
         const items = [];
         const count = storage.length;
@@ -1579,7 +1579,7 @@
       const page = await session.newPage(undefined, { background: true });
       try {
         const r = await page.evaluate(parseResults, { html, engine, base: url, limit });
-        if (r.blocked) throw new Error(`search: ${engine} showed a CAPTCHA; cmux does not solve CAPTCHAs. Try another engine, or open ${url} with tabs.open() and let the user answer it`);
+        if (r.blocked) throw new Error(`search: ${engine} showed a CAPTCHA; hmux does not solve CAPTCHAs. Try another engine, or open ${url} with tabs.open() and let the user answer it`);
         return r.results;
       } finally {
         await page.close().catch(() => {});
@@ -1778,16 +1778,16 @@
     }
     const unpair = (v) => {
       if (Array.isArray(v)) return v.map(unpair);
-      if (v && typeof v === "object" && Array.isArray(v.__cmuxPairs)) {
+      if (v && typeof v === "object" && Array.isArray(v.__hmuxPairs)) {
         const o = {};
-        for (const [k, x] of v.__cmuxPairs) o[k] = unpair(x);
+        for (const [k, x] of v.__hmuxPairs) o[k] = unpair(x);
         return o;
       }
       return v;
     };
     const pair = (v) => {
       if (Array.isArray(v)) return v.map(pair);
-      if (v && typeof v === "object") return { __cmuxPairs: Object.entries(v).map(([k, x]) => [k, pair(x)]) };
+      if (v && typeof v === "object") return { __hmuxPairs: Object.entries(v).map(([k, x]) => [k, pair(x)]) };
       return v;
     };
     const r = await agentCall(frame, extractInFrame, pair(schema), { scope, limit: options.limit });

@@ -45,22 +45,22 @@ export default async function SessionRestorePage({
 
       <h2>{t("agentResumeTitle")}</h2>
       <p>{t("agentResumeDesc")}</p>
-      <CodeBlock lang="bash">{`# all integrations cmux can find on PATH
-cmux hooks setup
+      <CodeBlock lang="bash">{`# all integrations hmux can find on PATH
+hmux hooks setup
 
 # or one agent at a time
-cmux hooks setup antigravity
-cmux hooks setup codex
-cmux hooks setup grok
-cmux hooks setup omp
-cmux hooks setup --agent opencode`}</CodeBlock>
+hmux hooks setup antigravity
+hmux hooks setup codex
+hmux hooks setup grok
+hmux hooks setup omp
+hmux hooks setup --agent opencode`}</CodeBlock>
       <p>{t("setupBehavior")}</p>
 
       <h2>{t("surfaceBindingsTitle")}</h2>
       <p>{t("surfaceBindingsDesc")}</p>
-      <CodeBlock lang="bash">{`cmux surface resume set --kind tmux --checkpoint work --shell "tmux attach -t work"
-cmux surface resume show --json
-cmux surface resume clear --checkpoint work`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux surface resume set --kind tmux --checkpoint work --shell "tmux attach -t work"
+hmux surface resume show --json
+hmux surface resume clear --checkpoint work`}</CodeBlock>
       <p>{t("surfaceBindingsNote")}</p>
 
       <h2>{t("supportedTitle")}</h2>
@@ -100,12 +100,12 @@ cmux surface resume clear --checkpoint work`}</CodeBlock>
       <ul>
         <li>{t("manualItemMenu")}</li>
         <li><code>⌘ ⇧ O</code></li>
-        <li><code>cmux restore-session</code></li>
+        <li><code>hmux restore-session</code></li>
       </ul>
 
       <h2>{t("disableTitle")}</h2>
       <p>{t("disableDesc")}</p>
-      <CodeBlock title="~/.config/cmux/cmux.json" lang="json">{`{
+      <CodeBlock title="~/.config/hmux/hmux.json" lang="json">{`{
   "terminal": {
     "autoResumeAgentSessions": false
   }

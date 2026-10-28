@@ -1,6 +1,6 @@
-import CMUXMobileCore
-import CmuxIrohTransport
-import CmuxSurfaceCatalogModel
+import HMUXMobileCore
+import HmuxIrohTransport
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// The pure merge behind the Devices directory: the pairing store's saved

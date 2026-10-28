@@ -1,10 +1,10 @@
 /**
- * The account and machine name every cmux Cloud machine promises, shared by
+ * The account and machine name every hmux Cloud machine promises, shared by
  * the image definition (services/vms/images/devbox), the bake and verify
- * scripts, the cmux-tui daemon contract, and the tests that pin all of them.
+ * scripts, the hmux-tui daemon contract, and the tests that pin all of them.
  *
  * ONE account owns everything a person touches on a machine: the terminals the
- * cmux-tui daemon opens, the desktop session, the provider's default exec and
+ * hmux-tui daemon opens, the desktop session, the provider's default exec and
  * SSH user, and whatever an agent writes. It is not root — coding agents
  * refuse to run as root (`claude --dangerously-skip-permissions` exits before
  * it starts) — and it holds passwordless sudo, so administering the machine is
@@ -13,12 +13,12 @@
  * It is the base image's uid-1000 account, renamed rather than added:
  * Freestyle's exec API resolves its default `linuxUser` to "the account
  * holding uid 1000", so a rename keeps the provider's own surfaces landing in
- * the same home as cmux's terminals instead of splitting the machine between
+ * the same home as hmux's terminals instead of splitting the machine between
  * two near-identical accounts.
  */
 
-/** The work user: uid 1000 on every cmux Cloud machine. */
-export const DEVBOX_WORK_USER = "cmux";
+/** The work user: uid 1000 on every hmux Cloud machine. */
+export const DEVBOX_WORK_USER = "hmux";
 export const DEVBOX_WORK_HOME = `/home/${DEVBOX_WORK_USER}`;
 export const DEVBOX_WORK_UID = 1000;
 
@@ -49,10 +49,10 @@ for f in /etc/sudoers.d/*; do
   [ -f "$f" ] || continue
   grep -q '^${user}[[:space:]]' "$f" || rm -f "$f"
 done
-printf '${user} ALL=(ALL) NOPASSWD:ALL\\n' > /etc/sudoers.d/91-cmux-work-user
-chmod 0440 /etc/sudoers.d/91-cmux-work-user
+printf '${user} ALL=(ALL) NOPASSWD:ALL\\n' > /etc/sudoers.d/91-hmux-work-user
+chmod 0440 /etc/sudoers.d/91-hmux-work-user
 # Ubuntu's user-private-group rule (USERGROUPS_ENAB yes) hands the account a
-# 002 umask, so every directory it creates is group-writable. cmux-tui refuses
+# 002 umask, so every directory it creates is group-writable. hmux-tui refuses
 # to store its Noise identity under a group-writable ancestor ("secure
 # directory ... has an ancestor writable by other users"), which is the daemon
 # on this machine, so the account uses root's 022 instead. Existing directories

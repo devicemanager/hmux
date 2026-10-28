@@ -95,7 +95,7 @@ describe("Vault sessions table", () => {
 describe("Vault overview", () => {
   test("shows the sync command when nothing is synced", () => {
     const html = render(<VaultOverviewView summary={summarizeVaultAgents([])} />);
-    expect(html).toContain("cmux-vault sync");
+    expect(html).toContain("hmux-vault sync");
   });
 
   test("shows totals and per-agent counts, largest first", () => {
@@ -112,7 +112,7 @@ describe("Vault overview", () => {
     });
     const html = render(<VaultOverviewView summary={summary} />);
     expect(html).toContain("5 codex · 2 claude");
-    expect(html).not.toContain("cmux-vault sync");
+    expect(html).not.toContain("hmux-vault sync");
   });
 });
 
@@ -147,7 +147,7 @@ describe("Vault session detail", () => {
         <p>transcript</p>
       </VaultSessionView>,
     );
-    expect(html).toContain("cmux-vault resume agent-session");
+    expect(html).toContain("hmux-vault resume agent-session");
     expect(html).toContain('href="/dashboard/vault/sessions"');
     expect(html).toContain("transcript");
     expect(html).toContain("2 KB");

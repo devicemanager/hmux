@@ -45,7 +45,7 @@ const fixtures: Record<string, unknown> = {
     },
     location: { assign(url: string) { navigations.push(url); } },
   },
-  document: { title: "cmux agent" }, location,
+  document: { title: "hmux agent" }, location,
   history: { replaceState(_state: unknown, _unused: string, path: string) { location.pathname = path; } },
   sessionStorage: { setItem() {} }, WebSocket: FakeSocket, IS_REACT_ACT_ENVIRONMENT: true,
 };

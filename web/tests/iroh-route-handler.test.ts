@@ -41,7 +41,7 @@ describe("Iroh route boundary", () => {
     );
     expect(publication?.headers.get("authorization")).toBe("Bearer test-access");
     expect(
-      publication?.headers.get("x-cmux-connectivity-publisher-secret"),
+      publication?.headers.get("x-hmux-connectivity-publisher-secret"),
     ).toBe("s".repeat(64));
     expect(await publication?.json()).toEqual({ revision: 7 });
     expect(buildConnectivityInvalidationRequest(
@@ -148,7 +148,7 @@ describe("Iroh route boundary", () => {
       published += 1;
     };
     const discover = await handleIrohRoute(
-      new Request("https://cmux.test/api/devices/iroh"),
+      new Request("https://hmux.test/api/devices/iroh"),
       "discover",
       {
         verify: async () => USER,
@@ -178,7 +178,7 @@ describe("Iroh route boundary", () => {
 
   test("requires authentication before returning the public verification-key set", async () => {
     let called = false;
-    const response = await handleIrohRoute(new Request("https://cmux.test/api/devices/iroh"), "discover", {
+    const response = await handleIrohRoute(new Request("https://hmux.test/api/devices/iroh"), "discover", {
       verify: async () => null,
       broker: broker({
         discover: () => {
@@ -262,7 +262,7 @@ describe("Iroh route boundary", () => {
   test("rejects malformed discovery cursors before broker work", async () => {
     let brokerCalled = false;
     const response = await handleIrohRoute(
-      new Request("https://cmux.test/api/devices/iroh?page_size=128&cursor=not-a-cursor"),
+      new Request("https://hmux.test/api/devices/iroh?page_size=128&cursor=not-a-cursor"),
       "discover",
       {
         verify: async () => USER,
@@ -283,7 +283,7 @@ describe("Iroh route boundary", () => {
   test("rejects oversized discovery pages before broker work", async () => {
     let brokerCalled = false;
     const response = await handleIrohRoute(
-      new Request("https://cmux.test/api/devices/iroh?page_size=129"),
+      new Request("https://hmux.test/api/devices/iroh?page_size=129"),
       "discover",
       {
         verify: async () => USER,
@@ -303,7 +303,7 @@ describe("Iroh route boundary", () => {
 
   test("authenticates before reading an oversized body", async () => {
     let called = false;
-    const response = await handleIrohRoute(new Request("https://cmux.test/api/devices/iroh/challenge", {
+    const response = await handleIrohRoute(new Request("https://hmux.test/api/devices/iroh/challenge", {
       method: "POST",
       body: "x".repeat(70_000),
     }), "challenge", {
@@ -335,7 +335,7 @@ describe("Iroh route boundary", () => {
       duplex: "half",
     };
     const oversized = await handleIrohRoute(new Request(
-      "https://cmux.test/api/devices/iroh/challenge",
+      "https://hmux.test/api/devices/iroh/challenge",
       oversizedInit,
     ), "challenge", {
       verify: async () => USER,
@@ -344,7 +344,7 @@ describe("Iroh route boundary", () => {
     expect(oversized.status).toBe(413);
     expect(called).toBe(false);
 
-    const missing = await handleIrohRoute(new Request("https://cmux.test/api/devices/iroh/challenge", {
+    const missing = await handleIrohRoute(new Request("https://hmux.test/api/devices/iroh/challenge", {
       method: "POST",
       headers: {
         authorization: "Bearer test-access",
@@ -361,7 +361,7 @@ describe("Iroh route boundary", () => {
 
   test("uses exact personal user id and ignores selected team membership", async () => {
     let receivedUserId = "";
-    const response = await handleIrohRoute(new Request("https://cmux.test/api/devices/iroh", {
+    const response = await handleIrohRoute(new Request("https://hmux.test/api/devices/iroh", {
       method: "GET",
     }), "discover", {
       verify: async () => USER,
@@ -406,13 +406,13 @@ describe("Iroh route boundary", () => {
     for (const operation of operations) {
       const base = authedPost("/api/devices/iroh", {});
       const headers = new Headers(base.headers);
-      headers.set("x-cmux-app-namespace", "dev.cmux.app.demo");
+      headers.set("x-hmux-app-namespace", "dev.hmux.app.demo");
       headers.set(
-        "x-cmux-iroh-binding-id",
+        "x-hmux-iroh-binding-id",
         "123e4567-e89b-42d3-a456-426614174000",
       );
-      headers.set("x-cmux-iroh-request-time", "1785384000");
-      headers.set("x-cmux-iroh-request-signature", "A".repeat(86));
+      headers.set("x-hmux-iroh-request-time", "1785384000");
+      headers.set("x-hmux-iroh-request-signature", "A".repeat(86));
       const response = await handleIrohRoute(
         new Request(base, { headers }),
         operation,
@@ -420,7 +420,7 @@ describe("Iroh route boundary", () => {
       );
       expect(response.status).toBe(operation === "revoke" ? 200 : 201);
     }
-    expect(received).toEqual(Array(4).fill("dev.cmux.app.demo"));
+    expect(received).toEqual(Array(4).fill("dev.hmux.app.demo"));
     expect(receivedBindingIDs).toEqual(
       Array(4).fill("123e4567-e89b-42d3-a456-426614174000"),
     );
@@ -467,9 +467,9 @@ describe("Iroh retention route", () => {
     const previous = process.env.CRON_SECRET;
     try {
       delete process.env.CRON_SECRET;
-      expect((await retentionGet(new Request("https://cmux.test/api/internal/iroh/retention"))).status).toBe(503);
+      expect((await retentionGet(new Request("https://hmux.test/api/internal/iroh/retention"))).status).toBe(503);
       process.env.CRON_SECRET = "expected-secret";
-      expect((await retentionGet(new Request("https://cmux.test/api/internal/iroh/retention", {
+      expect((await retentionGet(new Request("https://hmux.test/api/internal/iroh/retention", {
         headers: { authorization: "Bearer wrong-secret" },
       }))).status).toBe(401);
     } finally {
@@ -480,7 +480,7 @@ describe("Iroh retention route", () => {
 });
 
 function authedPost(path: string, body: unknown): Request {
-  return new Request(`https://cmux.test${path}`, {
+  return new Request(`https://hmux.test${path}`, {
     method: "POST",
     headers: {
       authorization: "Bearer test-access",

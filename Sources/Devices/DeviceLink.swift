@@ -1,12 +1,12 @@
-import CMUXMobileCore
-import CmuxCore
-import CmuxMobileRPC
-import CmuxMobileHost
-import CmuxSurfaceCatalogModel
+import HMUXMobileCore
+import HmuxCore
+import HmuxMobileRPC
+import HmuxMobileHost
+import HmuxSurfaceCatalogModel
 import Foundation
 import OSLog
 
-nonisolated private let deviceLinkLog = Logger(subsystem: "dev.cmux", category: "device-link")
+nonisolated private let deviceLinkLog = Logger(subsystem: "dev.hmux", category: "device-link")
 
 /// Errors a device link raises to its provider and mirror sessions.
 enum DeviceLinkError: Error, LocalizedError, Equatable {
@@ -28,7 +28,7 @@ enum DeviceLinkError: Error, LocalizedError, Equatable {
         case .hostRejected:
             return String(localized: "devices.link.error.hostRejected", defaultValue: "The other Mac could not complete this action. Check its connection and try again.")
         case .malformedResponse:
-            return String(localized: "devices.link.error.malformed", defaultValue: "The Mac sent an unexpected reply. Update cmux on both Macs and try again.")
+            return String(localized: "devices.link.error.malformed", defaultValue: "The Mac sent an unexpected reply. Update hmux on both Macs and try again.")
         case .identityUnproven:
             return String(localized: "devices.link.error.identityUnproven", defaultValue: "This Mac did not confirm it is signed into your account.")
         case .identityMismatch:
@@ -37,7 +37,7 @@ enum DeviceLinkError: Error, LocalizedError, Equatable {
     }
 }
 
-/// One live connection from this Mac to another Mac's cmux app: the shared
+/// One live connection from this Mac to another Mac's hmux app: the shared
 /// mobile RPC client over the route ``DeviceRouteSelector`` picked with the
 /// pairing store's grant, the synced workspace mirror (`mobile.sync.fetch` +
 /// `mobile.sync.delta`), the terminal event fan-out, and the reconnect state

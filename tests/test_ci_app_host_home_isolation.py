@@ -46,7 +46,7 @@ APP_HOST_PROCESSES = (
 )
 PREPARE_APP_HOST_PATH = ROOT / "scripts/ci/prepare-app-host-home.sh"
 APP_HOST_RECEIPT_CONSTRUCTOR = (
-    ROOT / "cmuxTests/CmuxTestWindowReleaseGuard.m"
+    ROOT / "hmuxTests/HmuxTestWindowReleaseGuard.m"
 ).read_text(encoding="utf-8")
 APP_HOST_RECEIPT_WRITER_PATH = ROOT / "Sources/AppHostProcessReceipt.swift"
 APP_HOST_RECEIPT_WRITER = (
@@ -54,12 +54,12 @@ APP_HOST_RECEIPT_WRITER = (
     if APP_HOST_RECEIPT_WRITER_PATH.is_file()
     else ""
 )
-APP_ENTRYPOINT = (ROOT / "Sources/CmuxMain.swift" if (ROOT / "Sources/CmuxMain.swift").exists() else ROOT / "Sources/cmuxApp.swift").read_text(encoding="utf-8")
+APP_ENTRYPOINT = (ROOT / "Sources/HmuxMain.swift" if (ROOT / "Sources/HmuxMain.swift").exists() else ROOT / "Sources/hmuxApp.swift").read_text(encoding="utf-8")
 UNIT_SCHEME = (
-    ROOT / "cmux.xcodeproj/xcshareddata/xcschemes/cmux-unit.xcscheme"
+    ROOT / "hmux.xcodeproj/xcshareddata/xcschemes/hmux-unit.xcscheme"
 ).read_text(encoding="utf-8")
 APP_HOST_POLICY_TESTS = (
-    ROOT / "cmuxTests/MacSentryStartupPolicyTests.swift"
+    ROOT / "hmuxTests/MacSentryStartupPolicyTests.swift"
 ).read_text(encoding="utf-8")
 
 TEST_RUNNER_ENVIRONMENT_KEYS = (
@@ -67,11 +67,11 @@ TEST_RUNNER_ENVIRONMENT_KEYS = (
     "CFFIXED_USER_HOME",
     "XDG_CONFIG_HOME",
     "SSH_AUTH_SOCK",
-    "CMUX_APP_HOST_ISOLATION_REQUIRED",
-    "CMUX_APP_HOST_EXPECTED_HOME",
-    "CMUX_APP_HOST_EXPECTED_XDG_CONFIG_HOME",
-    "CMUX_APP_HOST_KEY",
-    "CMUX_APP_HOST_RECEIPT_DIR",
+    "HMUX_APP_HOST_ISOLATION_REQUIRED",
+    "HMUX_APP_HOST_EXPECTED_HOME",
+    "HMUX_APP_HOST_EXPECTED_XDG_CONFIG_HOME",
+    "HMUX_APP_HOST_KEY",
+    "HMUX_APP_HOST_RECEIPT_DIR",
 )
 FORBIDDEN_SCHEME_ENVIRONMENT_KEYS = {
     f"TEST_RUNNER_{key}" for key in TEST_RUNNER_ENVIRONMENT_KEYS
@@ -109,7 +109,7 @@ def scheme_environment_override_keys(scheme: str) -> set[str]:
     try:
         root = ET.fromstring(scheme)
     except ET.ParseError as error:
-        raise SystemExit(f"FAIL: cmux-unit scheme is malformed: {error}") from error
+        raise SystemExit(f"FAIL: hmux-unit scheme is malformed: {error}") from error
 
     return {
         key
@@ -122,7 +122,7 @@ def require_no_test_runner_scheme_overrides(scheme: str) -> None:
     overrides = sorted(scheme_environment_override_keys(scheme))
     if overrides:
         raise SystemExit(
-            "FAIL: cmux-unit scheme must not override " + ", ".join(overrides)
+            "FAIL: hmux-unit scheme must not override " + ", ".join(overrides)
         )
 
 
@@ -266,18 +266,18 @@ def acceptance_gate_problem(condition: object, preparation_id: str) -> str:
 
 
 def published_derived_data_value(job, steps) -> str | None:
-    """Return the CMUX_DERIVED_DATA_PATH a job publishes, before expansion.
+    """Return the HMUX_DERIVED_DATA_PATH a job publishes, before expansion.
 
     Both callers compute the path in a shell variable and export it through
     `GITHUB_ENV`, so the literal that matters is the assignment, not the echo.
     """
     environment = job.get("env")
-    if isinstance(environment, dict) and environment.get("CMUX_DERIVED_DATA_PATH"):
-        return str(environment["CMUX_DERIVED_DATA_PATH"])
+    if isinstance(environment, dict) and environment.get("HMUX_DERIVED_DATA_PATH"):
+        return str(environment["HMUX_DERIVED_DATA_PATH"])
     for step in steps:
         script = str(step.get("run", ""))
         export = re.search(
-            r'CMUX_DERIVED_DATA_PATH=(?P<value>[^"\n]*)"?\s*>>\s*"?\$(?:\{)?GITHUB_ENV',
+            r'HMUX_DERIVED_DATA_PATH=(?P<value>[^"\n]*)"?\s*>>\s*"?\$(?:\{)?GITHUB_ENV',
             script,
         )
         if export is None:
@@ -307,7 +307,7 @@ def require_derived_data_under_runner_temp(where, job, steps) -> None:
     if value is None:
         raise SystemExit(
             f"FAIL: {where} prepares an app-host home without publishing "
-            "CMUX_DERIVED_DATA_PATH; cleanup requires it"
+            "HMUX_DERIVED_DATA_PATH; cleanup requires it"
         )
     if not re.match(r"\$\{?RUNNER_TEMP\}?/", value):
         raise SystemExit(
@@ -322,7 +322,7 @@ def check_every_app_host_home_is_identified_and_cleaned() -> None:
     The rest of this guard names `app-host-unit-tests` directly, so a second
     lane could adopt the pattern and be checked by nothing. One did:
     `test-e2e.yml` gained a `Prepare isolated app-host home` step whose job set
-    no `CMUX_APP_HOST_SHARD`, and `cmux_resolve_app_host_identity` rejects a
+    no `HMUX_APP_HOST_SHARD`, and `hmux_resolve_app_host_identity` rejects a
     shard that is not a decimal integer -- so every dispatch of that lane would
     have failed before running a test, with this file still green.
 
@@ -343,15 +343,15 @@ def check_every_app_host_home_is_identified_and_cleaned() -> None:
         environment = job.get("env")
         if not isinstance(environment, dict):
             raise SystemExit(f"FAIL: {where} prepares an app-host home with no job env")
-        if environment.get("CMUX_CI_APP_HOST_ISOLATION_REQUIRED") != "1":
+        if environment.get("HMUX_CI_APP_HOST_ISOLATION_REQUIRED") != "1":
             raise SystemExit(
                 f"FAIL: {where} must require app-host configuration isolation"
             )
-        shard = environment.get("CMUX_APP_HOST_SHARD")
+        shard = environment.get("HMUX_APP_HOST_SHARD")
         if not isinstance(shard, str) or not shard.strip():
             raise SystemExit(
-                f"FAIL: {where} must publish CMUX_APP_HOST_SHARD; "
-                "cmux_resolve_app_host_identity rejects an empty shard"
+                f"FAIL: {where} must publish HMUX_APP_HOST_SHARD; "
+                "hmux_resolve_app_host_identity rejects an empty shard"
             )
         require_derived_data_under_runner_temp(where, job, steps)
         cleanups = [
@@ -394,7 +394,7 @@ def check_e2e_test_derived_data_scope() -> None:
         workspace.mkdir()
         runner_temp.mkdir()
         tool_bin.mkdir()
-        workspace_derived_data = workspace / "DerivedData" / "cmux-e2e"
+        workspace_derived_data = workspace / "DerivedData" / "hmux-e2e"
         workspace_derived_data.mkdir(parents=True)
         workspace_sentinel = workspace_derived_data / "ownership-sentinel.txt"
         workspace_sentinel.write_text("workspace-owned", encoding="utf-8")
@@ -428,7 +428,7 @@ def check_e2e_test_derived_data_scope() -> None:
                 f"fixture: {prepared.stderr}"
             )
 
-        prefix = "CMUX_DERIVED_DATA_PATH="
+        prefix = "HMUX_DERIVED_DATA_PATH="
         derived_data_values = [
             line[len(prefix) :]
             for line in github_env.read_text(encoding="utf-8").splitlines()
@@ -441,7 +441,7 @@ def check_e2e_test_derived_data_scope() -> None:
         derived_data_raw = derived_data_values[0]
         derived_data = Path(derived_data_raw).resolve()
         expected = (
-            runner_temp / "cmux-e2e-products-9000000000-1"
+            runner_temp / "hmux-e2e-products-9000000000-1"
         ).resolve()
         if derived_data != expected:
             raise SystemExit(
@@ -459,8 +459,8 @@ def check_e2e_test_derived_data_scope() -> None:
 
         cleanup_environment = {
             **environment,
-            "CMUX_DERIVED_DATA_PATH": derived_data_raw,
-            "CMUX_E2E_COMPILATION_CACHE": "",
+            "HMUX_DERIVED_DATA_PATH": derived_data_raw,
+            "HMUX_E2E_COMPILATION_CACHE": "",
         }
         cleaned = subprocess.run(
             ["/bin/bash", "-e", "-o", "pipefail", "-c", cleanup_run],
@@ -488,7 +488,7 @@ def check_e2e_test_derived_data_scope() -> None:
             cwd=workspace,
             env={
                 **cleanup_environment,
-                "CMUX_DERIVED_DATA_PATH": str(workspace_derived_data),
+                "HMUX_DERIVED_DATA_PATH": str(workspace_derived_data),
             },
             capture_output=True,
             text=True,
@@ -544,10 +544,10 @@ def check_every_test_executing_lane_pins_its_home() -> None:
 def check_console_session_diagnostics():
     """Exercise fallback diagnostics without depending on the host's login state."""
     cases = [
-        ("cmux", "501", "Aqua", "already running as console user", False),
-        ("cmux", "501", "Background", "Cannot enter console user", True),
-        ("cmux", "502", "Aqua", "Cannot enter console user", True),
-        ("cmux", "501", "", "Cannot enter console user", True),
+        ("hmux", "501", "Aqua", "already running as console user", False),
+        ("hmux", "501", "Background", "Cannot enter console user", True),
+        ("hmux", "502", "Aqua", "Cannot enter console user", True),
+        ("hmux", "501", "", "Cannot enter console user", True),
         ("root", "501", "Aqua", "No logged-in console user", True),
         ("loginwindow", "501", "Aqua", "No logged-in console user", True),
         ("", "501", "Aqua", "No logged-in console user", True),
@@ -567,7 +567,7 @@ def check_console_session_diagnostics():
         for console, uid, manager, expected, warning in cases:
             env = dict(os.environ, PATH=f"{bindir}:{os.environ['PATH']}",
                        FAKE_CONSOLE_USER=console, FAKE_CURRENT_UID=uid,
-                       FAKE_MANAGER=manager, CMUX_APP_HOST_HOME="")
+                       FAKE_MANAGER=manager, HMUX_APP_HOST_HOME="")
             result = subprocess.run(
                 ["/bin/bash", str(ROOT / "scripts/ci/run-in-console-session.sh"),
                  "/bin/bash", "-c", 'printf "%s" "$1"; exit 37', "bash", "argument with spaces"],
@@ -603,14 +603,14 @@ def main() -> int:
         raise SystemExit("FAIL: app-host preparation script is missing")
     prepare_app_host = PREPARE_APP_HOST_PATH.read_text(encoding="utf-8")
     for context, needle in {
-        "shared identity derivation": "cmux_resolve_app_host_identity",
-        "published run-derived key": "CMUX_APP_HOST_KEY",
-        "external process receipt directory": "CMUX_APP_HOST_RECEIPT_DIR",
-        "target-bound cleanup confirmation": "CMUX_APP_HOST_CLEANUP_CONFIRMATION",
-        "external confirmation record": "CMUX_APP_HOST_CONFIRMATION_FILE",
-        "structured Ghostty config sentinel": "cmux CI app-host isolation sentinel",
+        "shared identity derivation": "hmux_resolve_app_host_identity",
+        "published run-derived key": "HMUX_APP_HOST_KEY",
+        "external process receipt directory": "HMUX_APP_HOST_RECEIPT_DIR",
+        "target-bound cleanup confirmation": "HMUX_APP_HOST_CLEANUP_CONFIRMATION",
+        "external confirmation record": "HMUX_APP_HOST_CONFIRMATION_FILE",
+        "structured Ghostty config sentinel": "hmux CI app-host isolation sentinel",
         "owner-only app-host access": 'chmod -R u+rwX,go-rwx "$app_host_home"',
-        "shared confirmation record": "cmux_app_host_confirmation_record",
+        "shared confirmation record": "hmux_app_host_confirmation_record",
     }.items():
         require(prepare_app_host, needle, context)
     require(
@@ -649,13 +649,13 @@ def main() -> int:
     app_host_job = require_job("app-host-unit-tests")
     app_host_job_environment = app_host_job.get("env")
     if not isinstance(app_host_job_environment, dict) or (
-        app_host_job_environment.get("CMUX_CI_APP_HOST_ISOLATION_REQUIRED") != "1"
+        app_host_job_environment.get("HMUX_CI_APP_HOST_ISOLATION_REQUIRED") != "1"
     ):
         raise SystemExit(
             "FAIL: app-host job must independently require user configuration "
             "isolation"
         )
-    if app_host_job_environment.get("CMUX_APP_HOST_SHARD") != "${{ matrix.shard }}":
+    if app_host_job_environment.get("HMUX_APP_HOST_SHARD") != "${{ matrix.shard }}":
         raise SystemExit(
             "FAIL: app-host job must publish the shard as independent identity input"
         )
@@ -667,7 +667,7 @@ def main() -> int:
         raise SystemExit("FAIL: app-host home cleanup must run after failures")
     preparation_id = setup_step.get("id")
     if not preparation_id or cleanup_step.get("env", {}).get(
-        "CMUX_APP_HOST_PREPARATION_OUTCOME"
+        "HMUX_APP_HOST_PREPARATION_OUTCOME"
     ) != "${{ steps." + preparation_id + ".outcome }}":
         raise SystemExit("FAIL: cleanup must receive the actual preparation outcome")
 
@@ -748,7 +748,7 @@ def main() -> int:
             result = subprocess.run(
                 ["/bin/bash", "-e", "-o", "pipefail", "-c", cleanup_step["run"]],
                 cwd=workspace,
-                env={**os.environ, "CMUX_APP_HOST_PREPARATION_OUTCOME": outcome},
+                env={**os.environ, "HMUX_APP_HOST_PREPARATION_OUTCOME": outcome},
                 capture_output=True,
                 text=True,
             )
@@ -776,7 +776,7 @@ def main() -> int:
                     cwd=workspace,
                     env={
                         **os.environ,
-                        "CMUX_APP_HOST_PREPARATION_OUTCOME": outcome,
+                        "HMUX_APP_HOST_PREPARATION_OUTCOME": outcome,
                         "CLEANUP_TEST_EXIT_CODE": str(exit_code),
                     },
                     capture_output=True,
@@ -797,9 +797,9 @@ def main() -> int:
             [
                 "/bin/bash",
                 "-c",
-                'source "$1"; cmux_resolve_app_host_identity; '
-                'printf "%s\\n%s\\n" "$CMUX_RESOLVED_SYSTEM_TEMP_ROOT" '
-                '"$CMUX_RESOLVED_APP_HOST_HOME"',
+                'source "$1"; hmux_resolve_app_host_identity; '
+                'printf "%s\\n%s\\n" "$HMUX_RESOLVED_SYSTEM_TEMP_ROOT" '
+                '"$HMUX_RESOLVED_APP_HOST_HOME"',
                 "bash",
                 str(ROOT / "scripts/ci/app-host-isolation.sh"),
             ],
@@ -812,7 +812,7 @@ def main() -> int:
                 "GITHUB_REPOSITORY_ID": "1234567",
                 "GITHUB_RUN_ID": "9000000000",
                 "GITHUB_RUN_ATTEMPT": "1",
-                "CMUX_APP_HOST_SHARD": "1",
+                "HMUX_APP_HOST_SHARD": "1",
             },
         ).stdout.splitlines()
     if len(identity) != 2:
@@ -825,7 +825,7 @@ def main() -> int:
     # binds its transient control socket.
     remote_tmux_bound_path = (
         representative_home
-        + "/.cmux/ssh/tmux-"
+        + "/.hmux/ssh/tmux-"
         + "-"
         + ("0" * 16)
         + ".sock."
@@ -862,7 +862,7 @@ def main() -> int:
     )
     require(
         CONSOLE_WRAPPER,
-        "cmux_validate_published_app_host_identity",
+        "hmux_validate_published_app_host_identity",
         "console-session run-derived path boundary",
     )
     require(
@@ -892,7 +892,7 @@ def main() -> int:
     )
     require(
         APP_HOST_WRAPPER,
-        'if [ "${CMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" = "1" ]',
+        'if [ "${HMUX_CI_APP_HOST_ISOLATION_REQUIRED:-0}" = "1" ]',
         "mandatory app-host isolation check",
     )
     require(
@@ -902,18 +902,18 @@ def main() -> int:
     )
     require(
         APP_HOST_WRAPPER,
-        "CMUX_APP_HOST_HOME",
+        "HMUX_APP_HOST_HOME",
         "neutral app-host home input",
     )
     require(
         APP_HOST_WRAPPER,
-        "CMUX_APP_HOST_XDG_CONFIG_HOME",
+        "HMUX_APP_HOST_XDG_CONFIG_HOME",
         "neutral app-host XDG input",
     )
     require(
         APP_HOST_WRAPPER,
         "SWIFT_ACTIVE_COMPILATION_CONDITIONS=\\$(inherited) "
-        "CMUX_CI_APP_HOST_ISOLATION_REQUIRED",
+        "HMUX_CI_APP_HOST_ISOLATION_REQUIRED",
         "independent compiled isolation assertion",
     )
     require(
@@ -923,22 +923,22 @@ def main() -> int:
     )
     require(
         APP_HOST_WRAPPER,
-        '${app_host_lock_root%/}/cmux-app-host-test.lock',
+        '${app_host_lock_root%/}/hmux-app-host-test.lock',
         "canonical machine-wide app-host lock",
     )
     require(
         APP_HOST_POLICY_TESTS,
-        "#if CMUX_CI_APP_HOST_ISOLATION_REQUIRED",
+        "#if HMUX_CI_APP_HOST_ISOLATION_REQUIRED",
         "compiled app-host isolation assertion",
     )
     require(
         APP_HOST_ISOLATION,
-        "cmux_validate_app_host_cleanup_confirmation",
+        "hmux_validate_app_host_cleanup_confirmation",
         "target-bound cleanup confirmation validation",
     )
     require(
         APP_HOST_ISOLATION,
-        "cmux_app_host_confirmation_record",
+        "hmux_app_host_confirmation_record",
         "shared cleanup confirmation record",
     )
 
@@ -956,16 +956,16 @@ def main() -> int:
         ),
         "app-host SSH agent removal": '"TEST_RUNNER_SSH_AUTH_SOCK="',
         "app-host expected HOME marker": (
-            '"TEST_RUNNER_CMUX_APP_HOST_EXPECTED_HOME=$app_host_home"'
+            '"TEST_RUNNER_HMUX_APP_HOST_EXPECTED_HOME=$app_host_home"'
         ),
         "app-host expected XDG marker": (
-            '"TEST_RUNNER_CMUX_APP_HOST_EXPECTED_XDG_CONFIG_HOME=$app_host_xdg_config_home"'
+            '"TEST_RUNNER_HMUX_APP_HOST_EXPECTED_XDG_CONFIG_HOME=$app_host_xdg_config_home"'
         ),
         "app-host process receipt directory": (
-            '"TEST_RUNNER_CMUX_APP_HOST_RECEIPT_DIR=$app_host_receipt_dir"'
+            '"TEST_RUNNER_HMUX_APP_HOST_RECEIPT_DIR=$app_host_receipt_dir"'
         ),
         "app-host run-derived key": (
-            '"TEST_RUNNER_CMUX_APP_HOST_KEY=$app_host_key"'
+            '"TEST_RUNNER_HMUX_APP_HOST_KEY=$app_host_key"'
         ),
         "Ghostty app-support path validation": (
             "validate_app_host_config_paths"
@@ -980,25 +980,25 @@ def main() -> int:
     if not APP_HOST_PROCESSES_PATH.is_file():
         raise SystemExit("FAIL: app-host process receipt helper is missing")
     for context, needle in {
-        "cleanup isolation requirement": "CMUX_CI_APP_HOST_ISOLATION_REQUIRED",
+        "cleanup isolation requirement": "HMUX_CI_APP_HOST_ISOLATION_REQUIRED",
         "cleanup canonical path validation": (
             'source "$ci_script_dir/app-host-isolation.sh"'
         ),
-        "cleanup run-derived identity": "cmux_validate_published_app_host_identity",
+        "cleanup run-derived identity": "hmux_validate_published_app_host_identity",
         "cleanup target-bound confirmation": (
-            "cmux_validate_app_host_cleanup_confirmation"
+            "hmux_validate_app_host_cleanup_confirmation"
         ),
         "cleanup root symlink refusal": (
             "FAIL: refusing app-host cleanup through a home symlink"
         ),
-        "cleanup external process receipts": "CMUX_RESOLVED_APP_HOST_RECEIPT_DIR",
+        "cleanup external process receipts": "HMUX_RESOLVED_APP_HOST_RECEIPT_DIR",
         "cleanup exact target removal": 'rm -rf -- "$app_host_home"',
         "cleanup resolved XDG target": 'xdg_target="${app_host_xdg_config_home%/}"',
         "cleanup original DerivedData validation": (
-            'cmux_validate_app_host_derived_data "$CMUX_DERIVED_DATA_PATH"'
+            'hmux_validate_app_host_derived_data "$HMUX_DERIVED_DATA_PATH"'
         ),
         "cleanup stored canonical DerivedData": (
-            'derived_data_path="$CMUX_VALIDATED_APP_HOST_DERIVED_DATA"'
+            'derived_data_path="$HMUX_VALIDATED_APP_HOST_DERIVED_DATA"'
         ),
     }.items():
         require(cleanup_script, needle, context)
@@ -1015,22 +1015,22 @@ def main() -> int:
     )
     require(
         APP_HOST_PROCESSES,
-        "cmux_app_host_receipt_descriptor_is_open",
+        "hmux_app_host_receipt_descriptor_is_open",
         "process-incarnation receipt verification",
     )
     require(
         APP_HOST_PROCESSES,
-        "cmux_run_app_host_lsof",
+        "hmux_run_app_host_lsof",
         "lsof stdout and stderr separation",
     )
     require(
         APP_HOST_PROCESSES,
-        "cmux_recover_owned_app_host_attempt",
+        "hmux_recover_owned_app_host_attempt",
         "current-run retry recovery",
     )
     require(
         APP_HOST_PROCESSES,
-        "cmux_reclaim_abandoned_app_host_scopes",
+        "hmux_reclaim_abandoned_app_host_scopes",
         "age-bounded process-free scope reclamation",
     )
 
@@ -1047,11 +1047,11 @@ def main() -> int:
             )
 
     for context, needle in {
-        "test-bundle process receipt hook": "CmuxWriteAppHostProcessReceipt",
-        "receipt isolation marker": "CMUX_APP_HOST_ISOLATION_REQUIRED",
-        "receipt external directory": "CMUX_APP_HOST_RECEIPT_DIR",
-        "receipt run-derived key": "CMUX_APP_HOST_KEY",
-        "receipt process-incarnation descriptor": "CmuxAppHostReceiptFD",
+        "test-bundle process receipt hook": "HmuxWriteAppHostProcessReceipt",
+        "receipt isolation marker": "HMUX_APP_HOST_ISOLATION_REQUIRED",
+        "receipt external directory": "HMUX_APP_HOST_RECEIPT_DIR",
+        "receipt run-derived key": "HMUX_APP_HOST_KEY",
+        "receipt process-incarnation descriptor": "HmuxAppHostReceiptFD",
         "receipt descriptor field": "receipt_fd=",
         "receipt no-follow open": "O_NOFOLLOW",
     }.items():
@@ -1059,13 +1059,13 @@ def main() -> int:
     require_atomic_receipt_publication(
         APP_HOST_RECEIPT_CONSTRUCTOR,
         "test-bundle process receipt",
-        "CmuxAppHostReceiptFD = descriptor",
+        "HmuxAppHostReceiptFD = descriptor",
     )
 
     for context, needle in {
-        "early receipt isolation marker": "CMUX_APP_HOST_ISOLATION_REQUIRED",
-        "early receipt external directory": "CMUX_APP_HOST_RECEIPT_DIR",
-        "early receipt run-derived key": "CMUX_APP_HOST_KEY",
+        "early receipt isolation marker": "HMUX_APP_HOST_ISOLATION_REQUIRED",
+        "early receipt external directory": "HMUX_APP_HOST_RECEIPT_DIR",
+        "early receipt run-derived key": "HMUX_APP_HOST_KEY",
         "early retained receipt descriptor": "retainedReceiptDescriptor",
         "early receipt descriptor field": "receipt_fd=",
         "early receipt no-follow open": "O_NOFOLLOW",
@@ -1083,11 +1083,11 @@ def main() -> int:
     )
     require(
         APP_ENTRYPOINT,
-        "CmuxWorkerEntrypoint(arguments: CommandLine.arguments).runIfRequested()",
+        "HmuxWorkerEntrypoint(arguments: CommandLine.arguments).runIfRequested()",
         "worker dispatch",
     )
     if APP_ENTRYPOINT.index("AppHostProcessReceipt.writeIfRequired()") > APP_ENTRYPOINT.index(
-        "CmuxWorkerEntrypoint(arguments: CommandLine.arguments).runIfRequested()"
+        "HmuxWorkerEntrypoint(arguments: CommandLine.arguments).runIfRequested()"
     ):
         raise SystemExit("FAIL: app-host receipt must be written before worker dispatch")
 

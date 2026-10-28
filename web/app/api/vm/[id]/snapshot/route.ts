@@ -19,7 +19,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/snapshot",
-    { "cmux.vm.operation": "snapshot" },
+    { "hmux.vm.operation": "snapshot" },
     "/api/vm/[id]/snapshot POST failed",
     async ({ user, span }) => {
       const parsedBody = await parseOptionalObjectBody(request, {
@@ -33,7 +33,7 @@ export async function POST(
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
       const idempotencyKey = idempotencyKeyFromRequest(request);
-      setSpanAttributes(span, { "cmux.vm.id": id, "cmux.snapshot.named": !!name, "cmux.idempotency_key_set": !!idempotencyKey });
+      setSpanAttributes(span, { "hmux.vm.id": id, "hmux.snapshot.named": !!name, "hmux.idempotency_key_set": !!idempotencyKey });
       const run = await runVmRoute(snapshotVm({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

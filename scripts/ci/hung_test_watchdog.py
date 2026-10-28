@@ -297,7 +297,7 @@ def sample_stacks(processes: list[tuple[int, str]], seconds: int, out: Output) -
         return
     targets = [process for process in processes if TEST_PROCESS.search(process[1])] or processes
     for pid, name in targets[:MAX_SAMPLED_PROCESSES]:
-        with tempfile.TemporaryDirectory(prefix="cmux-hung-test-sample.") as directory:
+        with tempfile.TemporaryDirectory(prefix="hmux-hung-test-sample.") as directory:
             report = Path(directory) / "sample.txt"
             try:
                 subprocess.run(

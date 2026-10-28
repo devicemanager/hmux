@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSettings
+import HmuxSettings
 
 @MainActor
 final class QuitConfirmationAlertPresenter: NSObject, NSWindowDelegate {
@@ -18,7 +18,7 @@ final class QuitConfirmationAlertPresenter: NSObject, NSWindowDelegate {
     ) {
         self.alert = alert ?? Self.makeAlert()
         self.presentingWindowProvider = presentingWindowProvider ?? {
-            NSApp.cmuxMainWindowForModalPresentation()
+            NSApp.hmuxMainWindowForModalPresentation()
         }
         self.completion = completion
         super.init()
@@ -34,9 +34,9 @@ final class QuitConfirmationAlertPresenter: NSObject, NSWindowDelegate {
     private static func makeAlert() -> NSAlert {
         let alert = NSAlert()
         alert.alertStyle = .warning
-        alert.messageText = String(localized: "dialog.quitCmux.title", defaultValue: "Quit cmux?")
-        alert.informativeText = String(localized: "dialog.quitCmux.message", defaultValue: "This will close all windows and workspaces.")
-        alert.addButton(withTitle: String(localized: "dialog.quitCmux.quit", defaultValue: "Quit"))
+        alert.messageText = String(localized: "dialog.quitHmux.title", defaultValue: "Quit hmux?")
+        alert.informativeText = String(localized: "dialog.quitHmux.message", defaultValue: "This will close all windows and workspaces.")
+        alert.addButton(withTitle: String(localized: "dialog.quitHmux.quit", defaultValue: "Quit"))
         alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel"))
         alert.showsSuppressionButton = true
         alert.suppressionButton?.title = String(localized: "dialog.dontWarnCmdQ", defaultValue: "Don't warn again for Cmd+Q")

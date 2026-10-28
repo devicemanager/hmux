@@ -19,16 +19,16 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import product_input_identity as product_inputs  # noqa: E402
 
 SCHEME_OUTPUTS = {
-    "cmux": "CMUX_UI_XCTESTRUN",
-    "cmux-unit": "CMUX_APP_HOST_XCTESTRUN",
-    # cmuxCLITests has no app host: its bundle is loaded by the platform's own
+    "hmux": "HMUX_UI_XCTESTRUN",
+    "hmux-unit": "HMUX_APP_HOST_XCTESTRUN",
+    # hmuxCLITests has no app host: its bundle is loaded by the platform's own
     # xctest agent, so the manifest names no product as its test host.
-    "cmux-cli-tests": "CMUX_CLI_TESTS_XCTESTRUN",
+    "hmux-cli-tests": "HMUX_CLI_TESTS_XCTESTRUN",
 }
 OUTPUT_ALIASES = {
-    "CMUX_NUMERIC_LOCALE_XCTESTRUN": "CMUX_APP_HOST_XCTESTRUN",
+    "HMUX_NUMERIC_LOCALE_XCTESTRUN": "HMUX_APP_HOST_XCTESTRUN",
 }
-RECEIPT = "cmux-test-products.json"
+RECEIPT = "hmux-test-products.json"
 
 
 def identity() -> dict[str, str]:
@@ -184,8 +184,8 @@ def restore(derived: Path, current: dict[str, str]) -> dict[str, str]:
         manifest.write_bytes(data)
     # The numeric-locale gate selects only GhosttyNumericLocaleTests and
     # disables parallel testing at invocation time. Its scheme has the same
-    # app/test product contract as cmux-unit; tests lock that equivalence.
-    # A profile without cmux-unit (the cli profile) has no numeric-locale gate.
+    # app/test product contract as hmux-unit; tests lock that equivalence.
+    # A profile without hmux-unit (the cli profile) has no numeric-locale gate.
     for alias, source in OUTPUT_ALIASES.items():
         if source in outputs:
             outputs[alias] = outputs[source]

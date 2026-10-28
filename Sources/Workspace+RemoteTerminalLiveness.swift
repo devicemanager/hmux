@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxCore
+import HmuxControlSocket
+import HmuxCore
 import Foundation
 
 // This file keeps the closed lifecycle vocabulary beside its only behavior

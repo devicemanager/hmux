@@ -1,6 +1,6 @@
-import CmuxAuthRuntime
-import CmuxCloud
-import CmuxCloudMachines
+import HmuxAuthRuntime
+import HmuxCloud
+import HmuxCloudMachines
 import Foundation
 
 /// Refresh ownership stays on the panel; only immutable requests survive suspension.

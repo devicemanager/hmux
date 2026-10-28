@@ -48,7 +48,7 @@ REUSABLE_GUARDS = {
 
 
 def route_decision(paths, event="pull_request", macos="false"):
-    with tempfile.TemporaryDirectory(prefix="cmux-linux-routes-") as temp:
+    with tempfile.TemporaryDirectory(prefix="hmux-linux-routes-") as temp:
         path = Path(temp) / "changed.txt"
         if paths is not None:
             path.write_text("\n".join(paths), encoding="utf-8")
@@ -107,7 +107,7 @@ class LinuxGuardRoutingTests(unittest.TestCase):
         self.assertIn("blacksmith-4vcpu-ubuntu-2404", changes)
         self.assertIn("Detect cloud-machine package changes", changes)
         self.assertIn("/pulls/{pr_number}/files?per_page=100&page={page}", changes)
-        self.assertIn('startswith("Packages/macOS/CmuxCloudMachines/")', changes)
+        self.assertIn('startswith("Packages/macOS/HmuxCloudMachines/")', changes)
         self.assertNotIn("actions/checkout", changes)
         self.assertIn("pull-requests: read", workflow)
         self.assertIn("needs: [changes, resolve-ref]", lifecycle)
@@ -120,7 +120,7 @@ class LinuxGuardRoutingTests(unittest.TestCase):
 
     def test_ios_shell_ui_test_only_change_skips_macos(self):
         actual = module.classify_files([
-            "Packages/iOS/CmuxMobileShellUI/Tests/CmuxMobileShellUITests/WorkspaceListScrollUpdateTests.swift"
+            "Packages/iOS/HmuxMobileShellUI/Tests/HmuxMobileShellUITests/WorkspaceListScrollUpdateTests.swift"
         ])
         self.assertFalse(actual.macos)
         self.assertFalse(actual.web)
@@ -128,7 +128,7 @@ class LinuxGuardRoutingTests(unittest.TestCase):
 
     def test_ios_shell_test_only_change_skips_macos(self):
         actual = module.classify_files([
-            "Packages/iOS/CmuxMobileShell/Tests/CmuxMobileShellTests/TerminalOutputDeliveryQueueTests.swift"
+            "Packages/iOS/HmuxMobileShell/Tests/HmuxMobileShellTests/TerminalOutputDeliveryQueueTests.swift"
         ])
         self.assertFalse(actual.macos)
         self.assertFalse(actual.web)
@@ -151,7 +151,7 @@ class LinuxGuardRoutingTests(unittest.TestCase):
                 helper = root / "scripts/ci/detect_linux_guard_changes.py"
                 helper.parent.mkdir(parents=True)
                 helper.write_text('raise SystemExit("candidate helper must not run")\n')
-                actual_script = script.replace("/tmp/cmux-ci-changed-files.txt", str(changed_file))
+                actual_script = script.replace("/tmp/hmux-ci-changed-files.txt", str(changed_file))
                 result = subprocess.run(
                     ["bash", "-c", actual_script], cwd=root, capture_output=True, text=True,
                     env={**os.environ, "GITHUB_OUTPUT": str(output),
@@ -273,7 +273,7 @@ class LinuxGuardRoutingTests(unittest.TestCase):
             "tests/test_cli_package_graph.py",
             "tests/test_package_resolved_policy_remote_inputs.py",
         }))
-        self.assertIn("tests/test_start_cmux_profiling.sh", inputs["linux_guard_cli"])
+        self.assertIn("tests/test_start_hmux_profiling.sh", inputs["linux_guard_cli"])
         self.assertIn("tests/test_ci_source_lint_guard_structure.py", inputs["linux_guard_source"])
         # A routing-policy path keeps the conservative fallback even though a
         # guard step runs it, so a candidate router cannot narrow its own guards.
@@ -398,8 +398,8 @@ class LinuxGuardRoutingTests(unittest.TestCase):
         self.assertEqual(groups, ("ci", "quality-determinism"))
 
     def test_host_free_cli_test_sources_reach_the_determinism_lints(self):
-        for path in ("cmuxTests/ProbeTests.swift", "cmuxCLITests/ProbeTests.swift",
-                     "cmuxCLITestSupport/ProbeSupport.swift"):
+        for path in ("hmuxTests/ProbeTests.swift", "hmuxCLITests/ProbeTests.swift",
+                     "hmuxCLITestSupport/ProbeSupport.swift"):
             with self.subTest(path=path):
                 _, groups = route_decision([path], macos="true")
                 self.assertIn("quality-determinism", groups)
@@ -415,10 +415,10 @@ class LinuxGuardRoutingTests(unittest.TestCase):
 
     def test_cloud_skill_and_its_known_test_keep_only_the_owning_guard(self):
         paths = [
-            "skills/cmux-cloud-vm/SKILL.md",
-            "skills/cmux-cloud-vm/references/agent-workflows.md",
-            "skills/cmux-cloud-vm/references/commands.md",
-            "skills/cmux-cloud-vm/references/guest.md",
+            "skills/hmux-cloud-vm/SKILL.md",
+            "skills/hmux-cloud-vm/references/agent-workflows.md",
+            "skills/hmux-cloud-vm/references/commands.md",
+            "skills/hmux-cloud-vm/references/guest.md",
             "tests/test_cloud_vm_skill_coverage.py",
         ]
         expected = {name: "true" if name == "linux_guard_tests" else "false"
@@ -442,8 +442,8 @@ class LinuxGuardRoutingTests(unittest.TestCase):
                 ))
                 self.assertEqual(result.returncode, 0, result.stderr)
         for unknown in ("tests/test_new_cloud_contract.py",
-                        "skills/cmux-cloud-vm/references/new-contract.md",
-                        "skills/cmux-cloud-vm/scripts/check.py"):
+                        "skills/hmux-cloud-vm/references/new-contract.md",
+                        "skills/hmux-cloud-vm/scripts/check.py"):
             with self.subTest(unknown=unknown):
                 self.assertEqual(route(paths + [unknown]), dict.fromkeys(JOBS, "true"))
         self.assertEqual(route(paths + ["Sources/Settings.swift"], macos="true"), {
@@ -462,7 +462,7 @@ class LinuxGuardRoutingTests(unittest.TestCase):
             "tests/test_build_graph_health.py": ("preflight", "quality-determinism"),
             "scripts/ci/swift_incremental_diagnostics.py": ("preflight", "quality-determinism"),
             "tests/test_swift_incremental_diagnostics.py": ("preflight", "quality-determinism"),
-            # cmux.ci.guard runs it too, so the ci leg observes it.
+            # hmux.ci.guard runs it too, so the ci leg observes it.
             "tests/test_ci_self_hosted_guard.sh": ("preflight", "ci", "quality-determinism"),
         }
         for path, groups in expected_groups.items():
@@ -510,24 +510,24 @@ class LinuxGuardRoutingTests(unittest.TestCase):
 
     def test_manifest_and_guard_inputs_keep_their_coverage(self):
         for path, selected in (
-            ("Packages/macOS/CmuxSettings/Package.swift", "linux_guard_history"),
-            ("cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved", "linux_guard_history"),
-            ("cmux.xcodeproj/project.pbxproj", "linux_guard_history"),
-            ("ios/cmux.xcworkspace/contents.xcworkspacedata", "linux_guard_history"),
-            ("Packages/macOS/CmuxSettings/.gitignore", "linux_guard_history"),
+            ("Packages/macOS/HmuxSettings/Package.swift", "linux_guard_history"),
+            ("hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved", "linux_guard_history"),
+            ("hmux.xcodeproj/project.pbxproj", "linux_guard_history"),
+            ("ios/hmux.xcworkspace/contents.xcworkspacedata", "linux_guard_history"),
+            ("Packages/macOS/HmuxSettings/.gitignore", "linux_guard_history"),
             ("tests/test_check_package_resolved_policy.py", "linux_guard_history"),
             ("scripts/check-package-resolved-policy.py", "linux_guard_history"),
-            ("Resources/bin/start-cmux-profiling", "linux_guard_cli"),
-            ("scripts/ci/resolve-cmux-tui-client-commit.sh", "linux_guard_cli"),
-            ("tests/test_start_cmux_profiling.sh", "linux_guard_cli"),
-            ("tests/test_ci_resolve_cmux_tui_client_commit.sh", "linux_guard_cli"),
+            ("Resources/bin/start-hmux-profiling", "linux_guard_cli"),
+            ("scripts/ci/resolve-hmux-tui-client-commit.sh", "linux_guard_cli"),
+            ("tests/test_start_hmux_profiling.sh", "linux_guard_cli"),
+            ("tests/test_ci_resolve_hmux_tui_client_commit.sh", "linux_guard_cli"),
         ):
             with self.subTest(path=path):
                 self.assertEqual(route([path])[selected], "true")
 
     def test_executable_docs_and_unknown_inputs_never_take_docs_shortcut(self):
         for path in (
-            "skills/cmux-cua/AGENTS.md", "docs/cli-contract.md",
+            "skills/hmux-cua/AGENTS.md", "docs/cli-contract.md",
             "skills/unknown/SKILL.md", "ghostty", ".gitmodules",
             "scripts/download-prebuilt-ghosttykit.sh", "scripts/ghosttykit-checksums.txt",
             ".github/workflows/ci.yml", "scripts/ci/detect_linux_guard_changes.py",
@@ -673,7 +673,7 @@ class GuardLegBalanceTests(unittest.TestCase):
         for name, step in self.steps_by_name().items():
             if "matrix.group == 'ci'" not in step.get("if", ""):
                 continue
-            if "cmux_workload_profile.py run cmux.ci.guard" in step.get("run", ""):
+            if "hmux_workload_profile.py run hmux.ci.guard" in step.get("run", ""):
                 continue
             with self.subTest(step=name):
                 rerun = profile & set(workflow_guard_groups.DIRECT_PATH.findall(step.get("run", "")))

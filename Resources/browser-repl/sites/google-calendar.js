@@ -4,9 +4,9 @@
 // event template link after a confirmed draft.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URLSearchParams } = root.CmuxBrowserRepl.core;
+  const { URLSearchParams } = root.HmuxBrowserRepl.core;
   const SIGN_IN = [/^https:\/\/accounts\.google\.com\//, /^https:\/\/workspace\.google\.com\//, /\/calendar\/about/];
   const VIEWS = ["day", "week", "month", "agenda"];
 

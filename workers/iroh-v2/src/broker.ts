@@ -53,8 +53,8 @@ export class TeamBroker {
   private assertControlEnabled(device: DeviceDescriptor): void {
     const metadata = device.metadata;
     if (metadata.platform === "mac" && !metadata.pairingEnabled
-      && !metadata.capabilities.includes("cmux.mac-devices.v1")
-      && !metadata.capabilities.includes("cmux.mac-host.v1")) {
+      && !metadata.capabilities.includes("hmux.mac-devices.v1")
+      && !metadata.capabilities.includes("hmux.mac-host.v1")) {
       throw new OperationError("permission_denied", 403);
     }
   }

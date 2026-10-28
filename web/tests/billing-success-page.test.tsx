@@ -10,7 +10,7 @@ const redirect = mock((href: unknown) => {
 });
 
 let nativeCallbackScheme: string | undefined;
-let checkoutApp = "cmux";
+let checkoutApp = "hmux";
 const retrieveSession = mock(async () => ({
   client_reference_id: "stack-user-1",
   customer_details: { email: "buyer@example.com" },
@@ -30,7 +30,7 @@ mock.module("next/headers", () => ({
   headers: async () =>
     new Headers({
       "accept-language": acceptLanguage,
-      host: "cmux.test",
+      host: "hmux.test",
       "x-forwarded-proto": "https",
     }),
   cookies: async () => ({
@@ -68,7 +68,7 @@ describe("billing success page", () => {
         searchParams: Promise.resolve({ session_id: "cs_123" }),
       });
       const html = renderToStaticMarkup(element);
-      expect(html).toContain("cmux Pro is active");
+      expect(html).toContain("hmux Pro is active");
       expect(html).toContain("You&#x27;re all set");
       expect(html).toContain("What you unlocked");
     } finally {
@@ -82,7 +82,7 @@ describe("billing success page", () => {
     });
     const html = renderToStaticMarkup(element);
 
-    expect(html).toContain("cmux Pro is active");
+    expect(html).toContain("hmux Pro is active");
     expect(html).toContain("buyer@example.com");
     expect(html).toContain("What you unlocked");
     expect(html).toContain("Cloud agents on Cloud VMs");
@@ -90,10 +90,10 @@ describe("billing success page", () => {
     expect(html).toContain("Model gateway");
     expect(html).toContain("Hosted model routing across your connected provider accounts.");
     expect(html).toContain("Connect your AI accounts");
-    expect(html).toContain("Add provider accounts so cmux can route work through them.");
-    expect(html).toContain("cmux iOS app");
-    expect(html).toContain("Use cmux on your phone.");
-    expect(html).toContain('href="https://cmux.test/handler/after-sign-in?native_app_return_to=cmux%3A%2F%2Fauth-callback"');
+    expect(html).toContain("Add provider accounts so hmux can route work through them.");
+    expect(html).toContain("hmux iOS app");
+    expect(html).toContain("Use hmux on your phone.");
+    expect(html).toContain('href="https://hmux.test/handler/after-sign-in?native_app_return_to=hmux%3A%2F%2Fauth-callback"');
     expect(html).toContain('target="_blank"');
     expect(html).toContain('href="/dashboard/coderouter"');
     expect(html).toContain('href="/dashboard/ai-accounts"');
@@ -101,7 +101,7 @@ describe("billing success page", () => {
     expect(html).toContain('href="/dashboard/billing"');
     expect(html).toContain('href="/handler/account-settings"');
     expect(html).toContain("Manage billing");
-    expect(html).toContain("Open cmux");
+    expect(html).toContain("Open hmux");
     expect(html).toContain("Manage sign-in methods");
     expect(redirect).not.toHaveBeenCalled();
     expect(retrieveSession).toHaveBeenCalledWith("cs_123", {
@@ -110,49 +110,49 @@ describe("billing success page", () => {
   });
 
   test("opens the tagged app recorded by the trusted checkout", async () => {
-    const previousSecret = process.env.CMUX_APP_PRICING_RELAY_SECRET;
-    process.env.CMUX_APP_PRICING_RELAY_SECRET =
+    const previousSecret = process.env.HMUX_APP_PRICING_RELAY_SECRET;
+    process.env.HMUX_APP_PRICING_RELAY_SECRET =
       "pricing-relay-test-secret-with-at-least-32-bytes";
-    nativeCallbackScheme = "cmux-dev-test";
+    nativeCallbackScheme = "hmux-dev-test";
     try {
       const element = await BillingSuccessPage({
         searchParams: Promise.resolve({
           session_id: "cs_123",
-          cmux_scheme: "cmux-dev-test",
+          hmux_scheme: "hmux-dev-test",
         }),
       });
       const html = renderToStaticMarkup(element);
 
       expect(html).toContain(
-        "native_app_return_to=cmux-dev-test%3A%2F%2Fauth-callback",
+        "native_app_return_to=hmux-dev-test%3A%2F%2Fauth-callback",
       );
-      expect(html).toContain("cmux_checkout_session=cs_123");
-      expect(html).toContain("cmux_native_return_expires=");
-      expect(html).toMatch(/cmux_native_return_signature=[a-f0-9]{64}/);
+      expect(html).toContain("hmux_checkout_session=cs_123");
+      expect(html).toContain("hmux_native_return_expires=");
+      expect(html).toMatch(/hmux_native_return_signature=[a-f0-9]{64}/);
     } finally {
       nativeCallbackScheme = undefined;
       if (previousSecret === undefined) {
-        delete process.env.CMUX_APP_PRICING_RELAY_SECRET;
+        delete process.env.HMUX_APP_PRICING_RELAY_SECRET;
       } else {
-        process.env.CMUX_APP_PRICING_RELAY_SECRET = previousSecret;
+        process.env.HMUX_APP_PRICING_RELAY_SECRET = previousSecret;
       }
     }
   });
 
   test("rejects a foreign Stripe session before signing a tagged callback", async () => {
     checkoutApp = "other";
-    nativeCallbackScheme = "cmux-dev-attacker";
+    nativeCallbackScheme = "hmux-dev-attacker";
     try {
       await expect(
         BillingSuccessPage({
           searchParams: Promise.resolve({
             session_id: "cs_foreign",
-            cmux_scheme: "cmux-dev-attacker",
+            hmux_scheme: "hmux-dev-attacker",
           }),
         }),
       ).rejects.toMatchObject({ href: "/pricing?billing=error" });
     } finally {
-      checkoutApp = "cmux";
+      checkoutApp = "hmux";
       nativeCallbackScheme = undefined;
     }
   });

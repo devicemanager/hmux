@@ -4,12 +4,12 @@ import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
 import { Database, makeDatabaseRuntime } from "../db/effect";
 
-const enabled = process.env.CMUX_DB_TEST === "1";
+const enabled = process.env.HMUX_DB_TEST === "1";
 const dbTest = enabled ? test : test.skip;
 const runtime = enabled ? makeDatabaseRuntime({
   url: Redacted.make(process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL!),
   maxConnections: 2,
-  applicationName: "cmux-effect-runtime-test",
+  applicationName: "hmux-effect-runtime-test",
 }) : undefined;
 
 afterAll(async () => { await runtime?.dispose(); });

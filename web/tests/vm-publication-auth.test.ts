@@ -220,7 +220,7 @@ describe("Cloud VM publication auth exchange", () => {
     expect(revoked.kind).toBe("redirect");
   });
 
-  test("turns an authorized CMUX account into a one-time callback code", async () => {
+  test("turns an authorized HMUX account into a one-time callback code", async () => {
     const transaction = randomPublicationToken();
     const state = randomPublicationToken();
     const issued: { current: Record<string, unknown> | null } = { current: null };
@@ -254,7 +254,7 @@ describe("Cloud VM publication auth exchange", () => {
     if (resolution.kind !== "authorized") throw new Error("expected callback");
     const callback = new URL(resolution.callbackUrl);
     expect(callback.origin).toBe("https://preview.example.com");
-    expect(callback.pathname).toBe("/_cmux/auth/callback");
+    expect(callback.pathname).toBe("/_hmux/auth/callback");
     expect(callback.searchParams.get("state")).toBe(state);
     expect(issued.current?.transactionHash).toBe(hashPublicationToken(transaction));
     expect(issued.current?.codeHash).toBe(
@@ -262,7 +262,7 @@ describe("Cloud VM publication auth exchange", () => {
     );
   });
 
-  test("always refreshes current team membership before the CMUX handoff", async () => {
+  test("always refreshes current team membership before the HMUX handoff", async () => {
     const transaction = randomPublicationToken();
     const state = randomPublicationToken();
     const teamPublication = {

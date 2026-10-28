@@ -22,7 +22,7 @@ export async function PUT(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/agent-updates",
-    { "cmux.vm.operation": "agent_updates_update" },
+    { "hmux.vm.operation": "agent_updates_update" },
     "/api/vm/[id]/agent-updates PUT failed",
     async ({ user, span }) => {
       const { id } = await params;
@@ -36,8 +36,8 @@ export async function PUT(
       }
       const parsed = parseAgentUpdatesBody(body);
       if (!parsed.ok) return parsed.response;
-      span.setAttribute("cmux.vm.id", id);
-      span.setAttribute("cmux.vm.agent_updates", parsed.setting);
+      span.setAttribute("hmux.vm.id", id);
+      span.setAttribute("hmux.vm.agent_updates", parsed.setting);
       const run = await runVmRoute(setVmAgentUpdates({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

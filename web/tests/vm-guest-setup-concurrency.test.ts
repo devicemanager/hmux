@@ -32,15 +32,15 @@ function fixture() {
 test("snapshot-v2 create has no guest setup or resize phase", async () => {
   const f = fixture();
   const result = await f.provider.create({ image: "sh-snapshot-v2", network: { id: "vpc-fixture" } });
-  expect(result.providerMetadata).toMatchObject({ cmuxTuiContract: "snapshot-v2" });
+  expect(result.providerMetadata).toMatchObject({ hmuxTuiContract: "snapshot-v2" });
   expect(f.commands).toEqual([]);
   expect(f.writes).toEqual([]);
 });
 
 test("snapshot-v2 attach is a persisted-route read with no healing calls", async () => {
   const f = fixture();
-  const result = await f.provider.openCmuxRemote(VM_ID, {
-    providerMetadata: { cmuxTuiContract: "snapshot-v2", networkIpv4: "10.4.0.7", networkIpv6: "fd00:4::7" },
+  const result = await f.provider.openHmuxRemote(VM_ID, {
+    providerMetadata: { hmuxTuiContract: "snapshot-v2", networkIpv4: "10.4.0.7", networkIpv6: "fd00:4::7" },
   });
   expect(result.route).toBe("ws://10.4.0.7:1337/v1/link");
   expect(result.trustedCarrier).toBe(true);

@@ -1,4 +1,4 @@
-import CmuxGit
+import HmuxGit
 import Foundation
 // MARK: - Mobile workspace changes
 extension TerminalController {
@@ -9,7 +9,7 @@ extension TerminalController {
     /// error once the flag turns off.
     @MainActor
     func v2MobileWorkspaceChanges(method: String, params: [String: Any]) async -> V2CallResult {
-        guard CmuxFeatureFlags.shared.isMobileWorkspaceChangesEnabled else {
+        guard HmuxFeatureFlags.shared.isMobileWorkspaceChangesEnabled else {
             return .err(
                 code: "capability_disabled",
                 message: String(

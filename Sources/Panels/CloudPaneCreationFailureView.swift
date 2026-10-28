@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxAppKitSupportUI
+import HmuxAppKitSupportUI
 import SwiftUI
 
 /// Mounts the latest cloud pane creation failure above one workspace's content.
@@ -217,7 +217,7 @@ struct CloudPaneCreationFailurePresentation: ViewModifier {
                 )
                 let host = card ?? NSHostingView(rootView: root)
                 if card == nil {
-                    host.identifier = NSUserInterfaceItemIdentifier("cmux.cloudPaneCreationFailure.card")
+                    host.identifier = NSUserInterfaceItemIdentifier("hmux.cloudPaneCreationFailure.card")
                     host.sizingOptions = [.intrinsicContentSize]
                     host.wantsLayer = true
                     host.layer?.backgroundColor = NSColor.clear.cgColor

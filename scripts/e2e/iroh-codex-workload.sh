@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Start real Codex sessions through a tagged Mac cmux socket while the paired
+# Start real Codex sessions through a tagged Mac hmux socket while the paired
 # iOS simulator is using that Mac over Iroh.
 set -euo pipefail
 
-TAG="${CMUX_E2E_TAG:-}"
-EVIDENCE_DIR="${CMUX_CODEX_EVIDENCE_DIR:-}"
-MODEL="${CMUX_CODEX_MODEL:-gpt-5.5-mini}"
-DURATION_SECONDS="${CMUX_CODEX_DURATION_SECONDS:-900}"
-COUNT="${CMUX_CODEX_SESSION_COUNT:-3}"
-SHUTDOWN_FILE="${CMUX_CODEX_SHUTDOWN_FILE:-}"
+TAG="${HMUX_E2E_TAG:-}"
+EVIDENCE_DIR="${HMUX_CODEX_EVIDENCE_DIR:-}"
+MODEL="${HMUX_CODEX_MODEL:-gpt-5.5-mini}"
+DURATION_SECONDS="${HMUX_CODEX_DURATION_SECONDS:-900}"
+COUNT="${HMUX_CODEX_SESSION_COUNT:-3}"
+SHUTDOWN_FILE="${HMUX_CODEX_SHUTDOWN_FILE:-}"
 [[ -n "$TAG" && -n "$EVIDENCE_DIR" ]] || {
-  echo "Usage: CMUX_E2E_TAG=<tag> CMUX_CODEX_EVIDENCE_DIR=<dir> $0" >&2
+  echo "Usage: HMUX_E2E_TAG=<tag> HMUX_CODEX_EVIDENCE_DIR=<dir> $0" >&2
   exit 2
 }
 [[ "$DURATION_SECONDS" =~ ^[0-9]+$ && "$COUNT" =~ ^[1-9][0-9]*$ ]] || {
@@ -20,7 +20,7 @@ SHUTDOWN_FILE="${CMUX_CODEX_SHUTDOWN_FILE:-}"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-CLI=(env "CMUX_TAG=$TAG" "$REPO_ROOT/scripts/cmux-debug-cli.sh")
+CLI=(env "HMUX_TAG=$TAG" "$REPO_ROOT/scripts/hmux-debug-cli.sh")
 mkdir -p "$EVIDENCE_DIR"
 LOG="$EVIDENCE_DIR/codex-workload.jsonl"
 : > "$LOG"
@@ -57,8 +57,8 @@ except OSError:
     raise SystemExit
 if size < offset:
     offset = 0
-ready_marker = f"CMUX_CODEX_{index}_READY"
-iteration_pattern = re.compile(rf"CMUX_CODEX_{index}_ITER_([0-9]+)")
+ready_marker = f"HMUX_CODEX_{index}_READY"
+iteration_pattern = re.compile(rf"HMUX_CODEX_{index}_ITER_([0-9]+)")
 error_pattern = re.compile(r"command not found|login required|authentication required", re.IGNORECASE)
 ready = False
 error = False
@@ -107,7 +107,7 @@ trap cleanup EXIT
 trap 'exit 130' INT
 trap 'exit 143' TERM
 
-TASK_ROOT="/tmp/cmux-iroh-mario"
+TASK_ROOT="/tmp/hmux-iroh-mario"
 for ((index=1; index<=COUNT+2; index++)); do
   workdir="$TASK_ROOT-$index"
   mkdir -p "$workdir"
@@ -115,8 +115,8 @@ for ((index=1; index<=COUNT+2; index++)); do
   rm -f "$session_log"
   if (( index <= COUNT )); then
     role="codex"
-    prompt="Build and iteratively improve a playable Mario-style HTML game in $workdir. Use real file edits and run local checks. Work independently for at least ten meaningful iterations. Print CMUX_CODEX_${index}_READY after the first playable version and CMUX_CODEX_${index}_ITER_<number> after every later improvement. Keep the game runnable from index.html."
-    command="while true; do codex --yolo -m $(shell_quote "$MODEL") -- $(shell_quote "$prompt") 2>&1 | tee -a $(shell_quote "$session_log"); printf 'CMUX_CODEX_${index}_RUN_COMPLETE\\n' | tee -a $(shell_quote "$session_log"); sleep 5; done"
+    prompt="Build and iteratively improve a playable Mario-style HTML game in $workdir. Use real file edits and run local checks. Work independently for at least ten meaningful iterations. Print HMUX_CODEX_${index}_READY after the first playable version and HMUX_CODEX_${index}_ITER_<number> after every later improvement. Keep the game runnable from index.html."
+    command="while true; do codex --yolo -m $(shell_quote "$MODEL") -- $(shell_quote "$prompt") 2>&1 | tee -a $(shell_quote "$session_log"); printf 'HMUX_CODEX_${index}_RUN_COMPLETE\\n' | tee -a $(shell_quote "$session_log"); sleep 5; done"
   else
     # The terminal driver must send shell input to an idle shell, never to
     # Codex or a foreground keepalive process.
@@ -150,7 +150,7 @@ while (( $(date +%s) < deadline )); do
     combined_output="$screen"
     marker_seen=0
     if (( session_number <= COUNT )); then
-      ready_marker="CMUX_CODEX_${session_number}_READY"
+      ready_marker="HMUX_CODEX_${session_number}_READY"
       log_scan="$(scan_session_log "$session_log" "${LOG_OFFSETS[$index]}" "$session_number" "${LOG_TAILS[$index]}")"
       IFS='|' read -r log_size log_ready log_markers log_error <<<"$log_scan"
       if [[ "$log_size" =~ ^[0-9]+$ ]]; then
@@ -190,7 +190,7 @@ while (( $(date +%s) < deadline )); do
         echo "error: Codex session $session_number exited or needs authentication before its ready marker" >&2
         exit 1
       fi
-    elif grep -qF "CMUX_SUPPORT_" <<<"$combined_output"; then
+    elif grep -qF "HMUX_SUPPORT_" <<<"$combined_output"; then
       marker_seen=1
     fi
     if (( marker_seen == 1 )); then
@@ -205,7 +205,7 @@ for index in "${!WORKSPACES[@]}"; do
   session_number=$((index + 1))
   if (( session_number <= COUNT )); then
     if (( READY_SESSIONS[index] != 1 )); then
-      echo "error: Codex session $session_number never emitted CMUX_CODEX_${session_number}_READY" >&2
+      echo "error: Codex session $session_number never emitted HMUX_CODEX_${session_number}_READY" >&2
       exit 1
     fi
     if (( ITERATION_COUNTS[index] < 10 )); then

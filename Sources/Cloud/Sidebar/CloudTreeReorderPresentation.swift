@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 
 /// Owns destination feedback for one native drag generation. Source completion
 /// and destination completion converge on the coordinator's existing teardown.
@@ -19,7 +19,7 @@ final class CloudTreeReorderPresentation {
     func show(_ drop: CloudSidebarOrganizationDrop, sequence: Int) {
         destination = (sequence, drop)
         outline?.addSubview(indicator, positioned: .above, relativeTo: nil)
-        indicator.accentColor = AppDelegate.shared?.accentColor ?? CmuxAccentColor()
+        indicator.accentColor = AppDelegate.shared?.accentColor ?? HmuxAccentColor()
         indicator.updateColor()
         layout()
     }

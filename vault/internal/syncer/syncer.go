@@ -338,7 +338,7 @@ func compressFile(session agentdirs.Session, tempDir string) (compressResult, er
 	}
 	defer in.Close()
 
-	tmp, err := os.CreateTemp(tempDir, "cmux-vault-*.jsonl.zst")
+	tmp, err := os.CreateTemp(tempDir, "hmux-vault-*.jsonl.zst")
 	if err != nil {
 		return result, err
 	}

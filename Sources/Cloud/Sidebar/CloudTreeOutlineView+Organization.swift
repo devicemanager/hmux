@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import AppKit
 
 extension CloudTreeOutlineView.Coordinator {

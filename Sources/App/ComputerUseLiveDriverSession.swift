@@ -1,6 +1,6 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import Foundation
-import CmuxFoundation
+import HmuxFoundation
 
 /// The logical agent session and process roots currently assigned to a Computer Use driver session.
 struct ComputerUseLiveDriverSession: Equatable, Sendable {
@@ -62,7 +62,7 @@ struct ComputerUseLiveDriverSession: Equatable, Sendable {
     }
 
     /// Revalidates a scanned action against the current generation of the same
-    /// logical agent session immediately before cmux fronts its target.
+    /// logical agent session immediately before hmux fronts its target.
     func authorizes(
         state: ComputerUseCuaState,
         currentSession: ComputerUseLiveDriverSession

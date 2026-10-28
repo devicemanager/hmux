@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// This Mac's header row, on the same grid as the cloud machine row. Single- or
@@ -8,7 +8,7 @@ struct CloudTreeLocalMachineRowContent: View {
     let row: CloudTreeLocalMachineRow
     var style: CloudTreeStyle = CloudTreeStyleStore.current
 
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
 
     var body: some View {
         switch style.machineRowLayout {
@@ -18,7 +18,7 @@ struct CloudTreeLocalMachineRowContent: View {
                     CloudTreeRowIcon(style: style, systemName: "laptopcomputer", tint: CloudTreeIconPalette.machine)
                         .frame(width: scaled(max(style.iconSlot, style.iconSize)))
                     Text(row.name)
-                        .cmuxFont(size: style.machineNameSize, weight: style.machineBand ? .semibold : .medium, design: style.fontDesign)
+                        .hmuxFont(size: style.machineNameSize, weight: style.machineBand ? .semibold : .medium, design: style.fontDesign)
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -33,13 +33,13 @@ struct CloudTreeLocalMachineRowContent: View {
                     .frame(width: scaled(max(style.iconSlot, style.iconSize)), height: scaled(style.machineNameLineHeight))
                 VStack(alignment: .leading, spacing: scaled(style.rowGrid.machineLineSpacing)) {
                     Text(row.name)
-                        .cmuxFont(size: style.machineNameSize, weight: .medium, design: style.fontDesign)
+                        .hmuxFont(size: style.machineNameSize, weight: .medium, design: style.fontDesign)
                         .foregroundStyle(.primary)
                         .lineLimit(1)
                         .truncationMode(.tail)
                         .frame(height: scaled(style.machineNameLineHeight))
                     Text(Self.summary(row))
-                        .cmuxFont(size: style.detailSize + 0.5, design: style.fontDesign)
+                        .hmuxFont(size: style.detailSize + 0.5, design: style.fontDesign)
                         .foregroundStyle(.secondary)
                         .lineLimit(1)
                         .truncationMode(.tail)

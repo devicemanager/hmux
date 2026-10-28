@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// Multiplexer transport: one shared `tmux -CC` view stream per host.
@@ -30,8 +30,8 @@ extension RemoteTmuxController {
     /// abandon an operation that is still making progress.
     nonisolated static var attachSocketTimeoutSeconds: TimeInterval? { nil }
 
-    /// A stable per-install owner id for cmux's hidden view sessions, persisted in
-    /// UserDefaults so the same cmux reattaches its own views across relaunch and
+    /// A stable per-install owner id for hmux's hidden view sessions, persisted in
+    /// UserDefaults so the same hmux reattaches its own views across relaunch and
     /// never collides with another install's.
     static var multiplexerOwnerId: String {
         let defaultsKey = "remoteTmux.multiplexer.ownerId"
@@ -323,7 +323,7 @@ extension RemoteTmuxController {
             }
             // Nothing mirrored because the stream parked for interactive credentials: hand the
             // socket caller the same interactive invocation the GA preflight returns, so the
-            // `cmux ssh-tmux` CLI can authenticate inline in the user's own terminal. The parked
+            // `hmux ssh-tmux` CLI can authenticate inline in the user's own terminal. The parked
             // view is deliberately kept: the login (CLI-run or the in-app tab) opens the shared
             // master, and the retry resumes this stream over it instead of starting over.
             let profile = host.transportProfile
@@ -458,7 +458,7 @@ extension RemoteTmuxController {
         }
     }
 
-    /// Reconciles the host's cmux workspaces + channels against the view connection's
+    /// Reconciles the host's hmux workspaces + channels against the view connection's
     /// published workspaces: creates a channel + workspace + mirror for each new home
     /// session, rescopes existing channels (a new tab adds a window id), and tears
     /// down those whose session is gone. All mirrors share the host's one view

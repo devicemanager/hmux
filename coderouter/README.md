@@ -17,7 +17,7 @@ show the account and usage summary. Agent routing is always explicit.
 CodeRouter is developed in the public
 [`manaflow-ai/cmux`](https://github.com/manaflow-ai/cmux/tree/main/coderouter)
 repository. It is licensed under
-[`GPL-3.0-or-later`](../LICENSE), the same license as cmux.
+[`GPL-3.0-or-later`](../LICENSE), the same license as hmux.
 
 ## Commands
 
@@ -39,7 +39,7 @@ cr capabilities --json        report credential-free CLI capabilities
 cr org current                show the active organization
 cr org list                   list authorized coderouter organizations
 cr org switch <name-or-id>    switch organization and routing credentials
-cr upgrade                    open cmux Pro and Team pricing
+cr upgrade                    open hmux Pro and Team pricing
 ```
 
 Organization switching is fail-closed. The server returns only organizations
@@ -54,9 +54,9 @@ The production control plane is `https://coderouter.dev`. coderouter uses a
 separate session config and never overwrites normal agent configuration.
 `CODEROUTER_API_URL` can override the origin for staging and loopback tests.
 
-## cmux hosted handoff
+## hmux hosted handoff
 
-When cmux starts a routed agent, it first arms its authenticated control socket
+When hmux starts a routed agent, it first arms its authenticated control socket
 for the exact signed CodeRouter process. CodeRouter connects to that socket
 after exec and performs a bounded protocol-v2 two-step handshake. It sends
 `coderouter.handoff.begin`, validates the server's canonical 32-byte
@@ -83,7 +83,7 @@ dedicated `CODEROUTER_HANDOFF_TEST_ORIGIN` variable permits an HTTP loopback
 origin only in debug/test builds. Normal API URL and data-directory variables
 never select the handoff origin. Help, version, and capability commands remain
 credential-free and do not connect to the handoff socket. Capability protocol
-version 2 advertises the `cmux-socket-v1` authentication mode.
+version 2 advertises the `hmux-socket-v1` authentication mode.
 
 ## Privacy-safe analytics
 

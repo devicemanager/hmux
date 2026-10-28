@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxTerminal
+import HmuxCloud
+import HmuxTerminal
 import Foundation
 
 /// The native pane and transport owner returned by cloud materialization.

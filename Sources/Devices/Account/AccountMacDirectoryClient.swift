@@ -1,4 +1,4 @@
-import CmuxIrxTransport
+import HmuxIrxTransport
 import Foundation
 
 /// A failure reported by the per-user account directory service.
@@ -596,7 +596,7 @@ actor AccountMacDirectoryClient {
         request.timeoutInterval = 30
         request.setValue("IrohTicket " + credentials.ticket.token, forHTTPHeaderField: "Authorization")
         request.setValue(try signedSetup(credentials, requestID: requestID, proof: proof),
-            forHTTPHeaderField: "x-cmux-v2-setup")
+            forHTTPHeaderField: "x-hmux-v2-setup")
         return request
     }
 
@@ -615,7 +615,7 @@ actor AccountMacDirectoryClient {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("IrohTicket " + credentials.ticket.token, forHTTPHeaderField: "Authorization")
         request.setValue(try signedSetup(credentials, requestID: requestID, proof: proof),
-            forHTTPHeaderField: "x-cmux-v2-setup")
+            forHTTPHeaderField: "x-hmux-v2-setup")
         request.httpBody = try codec.encode(operation)
         return request
     }

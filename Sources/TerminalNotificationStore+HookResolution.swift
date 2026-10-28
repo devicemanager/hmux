@@ -16,7 +16,7 @@ extension TerminalNotificationStore {
     ) async {
         if GhosttyDesktopNotificationRequest.isMachinePayload(title: title, body: body) {
 #if DEBUG
-            cmuxDebugLog("notification.desktop.drop reason=machine-payload origin=\(origin.kind) titleLen=\(title.count) bodyLen=\(body.count)")
+            hmuxDebugLog("notification.desktop.drop reason=machine-payload origin=\(origin.kind) titleLen=\(title.count) bodyLen=\(body.count)")
 #endif
             return
         }
@@ -39,9 +39,9 @@ extension TerminalNotificationStore {
             ?? appDelegate.tabManagerFor(tabId: initialTarget.tabId)
             ?? appDelegate.tabManager
         let globalConfigPath = initialManager.flatMap {
-            appDelegate.mainWindowContext(for: $0)?.cmuxConfigStore?.globalConfigPath
+            appDelegate.mainWindowContext(for: $0)?.hmuxConfigStore?.globalConfigPath
         }
-            ?? CmuxConfigStore.defaultGlobalConfigPath()
+            ?? HmuxConfigStore.defaultGlobalConfigPath()
         let policyRequestId = beginDesktopNotificationHookResolution(
             tabId: initialTarget.tabId,
             surfaceId: initialTarget.surfaceId,

@@ -42,7 +42,7 @@ final class RemoteHostColorRegistry {
     /// every pair differs by at least 11 in OKLab (x100), colors that are neighbors in this order
     /// differ by at least 26, so a host bumped to the next slot by a collision lands on a clearly
     /// different color, each differs from the grey sidebar (#A9A9A9) by at least 15, and from
-    /// cmux's built-in blue accent by at least 12. Custom accents are user-controlled and may
+    /// hmux's built-in blue accent by at least 12. Custom accents are user-controlled and may
     /// intentionally match a palette color, so no universal contrast guarantee is possible for
     /// arbitrary custom accents. `RemoteHostColorRegistryTests` checks those floors.
     static let hostPalette: [String] = [

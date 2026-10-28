@@ -9,9 +9,9 @@ telemetry consent policy applies.
 
 `https://cmux.com/api/observability/dev-backend` is independent of GCP and does
 not require sign-in. The public route accepts only a bounded versioned schema
-and applies `CMUX_CLOUD_DIAGNOSTICS_RATE_LIMIT_ID` before parsing. Its fixed
-Axiom destination is `cmux-dev-otel-traces`, authorized by the server-only
-`CMUX_DEV_BACKEND_DIAGNOSTICS_TOKEN`. Neither token nor account information is
+and applies `HMUX_CLOUD_DIAGNOSTICS_RATE_LIMIT_ID` before parsing. Its fixed
+Axiom destination is `hmux-dev-otel-traces`, authorized by the server-only
+`HMUX_DEV_BACKEND_DIAGNOSTICS_TOKEN`. Neither token nor account information is
 included in the app or event. Submitted tag/revision fields are untrusted
 operational observations, not authenticated identities.
 

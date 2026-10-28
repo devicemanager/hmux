@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxWorkspaces
+import HmuxControlSocket
+import HmuxWorkspaces
 import Foundation
 
 /// The workspace-todo witnesses for ``ControlCommandCoordinator``: resolves

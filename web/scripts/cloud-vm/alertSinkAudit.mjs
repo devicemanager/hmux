@@ -1,15 +1,15 @@
 // VM alerts deliver to Slack (services/observability/alerts.ts). Without a
 // sink a triggered alert only becomes a Sentry/PostHog record
 // (reportDroppedVmAlerts in services/observability/vmAlerts.ts), which pages
-// nobody, so CMUX_ALERTS_SLACK_WEBHOOK_URL stays a required production key.
+// nobody, so HMUX_ALERTS_SLACK_WEBHOOK_URL stays a required production key.
 //
 // Production may have a webhook after an operator provisions one. When it is
 // absent, a bare requirement makes the audit red with no recorded owner, so
 // the escape hatch is an explicit, plain-text acknowledgement in the
 // deployment env: who decided to run without a sink and why. A fresh
 // environment with neither key still fails.
-export const ALERT_SINK_KEY = "CMUX_ALERTS_SLACK_WEBHOOK_URL";
-export const ALERT_SINK_UNCONFIGURED_ACK_KEY = "CMUX_ALERTS_SINK_UNCONFIGURED_ACK";
+export const ALERT_SINK_KEY = "HMUX_ALERTS_SLACK_WEBHOOK_URL";
+export const ALERT_SINK_UNCONFIGURED_ACK_KEY = "HMUX_ALERTS_SINK_UNCONFIGURED_ACK";
 export const alertSinkAuditEnvKeys = [ALERT_SINK_UNCONFIGURED_ACK_KEY];
 
 const SENSITIVE_PLACEHOLDER = "[SENSITIVE]";

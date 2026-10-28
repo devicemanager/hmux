@@ -5,8 +5,8 @@ The guard runs from main in nightly.yml. Each case drives it against an
 in-memory GitHub API (runs, jobs, refs, commits, pull requests, repository
 activity, deployment approvals) and checks the decision the workflow acts on:
 
-- G1: a SHA that is not on feat-cmux-next is refused.
-- G2: only a cmux-next.yml push run of this repository proves the Release
+- G1: a SHA that is not on feat-hmux-next is refused.
+- G2: only a hmux-next.yml push run of this repository proves the Release
   compile; a same-named job in another workflow does not. The lookup retries
   while GitHub's index lags.
 - G3: a range that changes no release surface file is promoted; a range that
@@ -78,7 +78,7 @@ const github = {
     checks: { listAnnotations: async ({ check_run_id }) => ({ data: (scenario.annotations || {})[check_run_id] || [] }) },
     git: {
       getRef: async ({ ref }) => {
-        if (ref === 'heads/feat-cmux-next') return { data: { object: { sha: scenario.sourceHead } } };
+        if (ref === 'heads/feat-hmux-next') return { data: { object: { sha: scenario.sourceHead } } };
         if (ref === 'heads/nightly-next') return { data: { object: { sha: scenario.current } } };
         throw Object.assign(new Error('missing'), { status: 404 });
       },
@@ -112,7 +112,7 @@ const github = {
       // files capped as GitHub caps them.
       compareCommitsWithBasehead: async ({ basehead, per_page = 250, page = 1 }) => {
         const [base, head] = basehead.split('...');
-        // G1 asks sha...feat-cmux-next; the scenario states that answer.
+        // G1 asks sha...feat-hmux-next; the scenario states that answer.
         if (base === scenario.sha && head === scenario.sourceHead && base !== head) {
           return { data: { status: scenario.onSource[base] || 'diverged' } };
         }
@@ -170,7 +170,7 @@ const github = {
     // The activity API pages with a cursor: one event per page here, so the
     // guard must follow the pages instead of re-reading the first one.
     iterator: (route, params) => {
-      if (route !== 'GET /repos/{owner}/{repo}/activity' || params.ref !== 'refs/heads/feat-cmux-next') throw new Error(`unexpected iterator ${route}`);
+      if (route !== 'GET /repos/{owner}/{repo}/activity' || params.ref !== 'refs/heads/feat-hmux-next') throw new Error(`unexpected iterator ${route}`);
       return (async function* () {
         for (const event of scenario.activity) { calls.activityPages += 1; yield { data: [event] }; }
       })();
@@ -192,11 +192,11 @@ const core = { notice: (m) => notices.push(m), warning: (m) => notices.push(`war
 let newest = null;
 const decision = scenario.newest
   ? (newest = await guard.decideNewest({
-      github, core, owner: 'manaflow-ai', repo: 'cmux', sha: scenario.sha, runId: 1,
+      github, core, owner: 'manaflow-ai', repo: 'hmux', sha: scenario.sha, runId: 1,
       surfaceText: scenario.surface, sleep: async () => {},
     })).decision
   : await guard.decide({
-      github, core, owner: 'manaflow-ai', repo: 'cmux', sha: scenario.sha,
+      github, core, owner: 'manaflow-ai', repo: 'hmux', sha: scenario.sha,
       surfaceText: scenario.surface, sleep: async () => {},
       // G1' tree check: scenario.trainVerify is its answer, 'throw' a crash.
       verifyTrain: scenario.trainVerify === undefined ? null : async () => {
@@ -204,7 +204,7 @@ const decision = scenario.newest
         return scenario.trainVerify;
       },
     });
-const approvers = await guard.approvedBy({ github, owner: 'manaflow-ai', repo: 'cmux', runId: 1 });
+const approvers = await guard.approvedBy({ github, owner: 'manaflow-ai', repo: 'hmux', runId: 1 });
 let policy = { require_non_lander_approver: true };
 try { policy = guard.parsePolicy(scenario.surface); } catch (error) { /* decide() refused it */ }
 const ack = guard.ackDecision({ decision, approvers, triggeringActor: scenario.triggeringActor, expectedCurrent: scenario.current, requireNonLander: policy.require_non_lander_approver });
@@ -215,7 +215,7 @@ if (scenario.movedTo !== undefined) {
     updateRef: async () => { calls.moves += 1; },
     createRef: async () => { calls.moves += 1; },
   } } };
-  try { await guard.move({ writer: moved, github: moved, owner: 'manaflow-ai', repo: 'cmux', decision }); }
+  try { await guard.move({ writer: moved, github: moved, owner: 'manaflow-ai', repo: 'hmux', decision }); }
   catch (error) { moveError = error.message; }
 }
 console.log(JSON.stringify({ decision, ack, calls, notices, moveError, newest }));
@@ -224,14 +224,14 @@ console.log(JSON.stringify({ decision, ack, calls, notices, moveError, newest })
 
 def gate_run(**overrides) -> dict:
     run = {
-        "id": 7, "head_sha": SHA, "head_branch": "feat-cmux-next", "event": "push",
-        "path": ".github/workflows/cmux-next.yml", "head_repository": {"full_name": "manaflow-ai/cmux"},
+        "id": 7, "head_sha": SHA, "head_branch": "feat-hmux-next", "event": "push",
+        "path": ".github/workflows/hmux-next.yml", "head_repository": {"full_name": "manaflow-ai/cmux"},
     }
     run.update(overrides)
     return run
 
 
-GREEN = [{"name": "cmux-next Release compile (Xcode 26)", "status": "completed", "conclusion": "success"}]
+GREEN = [{"name": "hmux-next Release compile (Xcode 26)", "status": "completed", "conclusion": "success"}]
 
 
 def scenario(**overrides) -> dict:
@@ -335,16 +335,16 @@ def test_non_surface_range_is_promoted() -> None:
     assert out["ack"]["ok"]
 
 
-def test_sha_not_on_feat_cmux_next_is_refused() -> None:
+def test_sha_not_on_feat_hmux_next_is_refused() -> None:
     out = run(scenario(onSource={SHA: "diverged"}, sourceHead="e" * 40))
     assert out["decision"]["action"] == "refuse"
-    assert "is not on feat-cmux-next" in out["decision"]["reason"]
+    assert "is not on feat-hmux-next" in out["decision"]["reason"]
 
 
 def test_same_named_job_in_another_workflow_does_not_admit() -> None:
     out = run(scenario(runs=[gate_run(path=".github/workflows/other.yml")]))
     assert out["decision"]["action"] == "refuse"
-    out = run(scenario(runs=[gate_run(head_repository={"full_name": "someone/cmux"})]))
+    out = run(scenario(runs=[gate_run(head_repository={"full_name": "someone/hmux"})]))
     assert out["decision"]["action"] == "refuse"
 
 
@@ -493,7 +493,7 @@ def commit(sha, parents, files, who="lawrencecchen"):
 
 
 def merge_shaped(touch_surface: bool) -> dict:
-    # A lane merged origin/feat-cmux-next (the current nightly-next tip) into
+    # A lane merged origin/feat-hmux-next (the current nightly-next tip) into
     # its own branch: the tip is the SECOND parent of M, and M's first-parent
     # line never reaches it (run 38871179244 refused this as "cannot walk").
     base0, y, x, m = "0" * 39 + "1", "e" * 40, "f" * 40, "9" * 40
@@ -550,7 +550,7 @@ def test_a_range_over_200_commits_with_a_surface_change_asks_for_an_ack() -> Non
 
 
 def merged_long_range(main_count, side_count, surface_at_side=None) -> dict:
-    # A long feat-cmux-next range with a big merge (like the iOS merge
+    # A long feat-hmux-next range with a big merge (like the iOS merge
     # ebc7d9c6296): side_count commits on a side branch from CURRENT, merged
     # into a main_count-commit line. Over 1000 commits in all.
     side = [f"a{i:039x}" for i in range(1, side_count + 1)]
@@ -685,9 +685,9 @@ def test_a_merge_that_drops_the_old_tips_surface_change_asks_for_an_ack() -> Non
 
 def test_a_merge_that_changes_a_second_surface_file_is_a_lander_too() -> None:
     # Commit A (Leo) touches nightly.yml; merge S (Austin's push) resolves
-    # cmux-next.yml to a version no commit's own diff lists.
+    # hmux-next.yml to a version no commit's own diff lists.
     base0, a, mline, merge = "0" * 39 + "1", "b" * 40, "e" * 40, "9" * 40
-    nightly, gate = ".github/workflows/nightly.yml", ".github/workflows/cmux-next.yml"
+    nightly, gate = ".github/workflows/nightly.yml", ".github/workflows/hmux-next.yml"
     case = scenario(commits=[
         commit(SHA, [merge], ["Sources/App.swift"], "teamleaderleo"),
         dict(commit(merge, [mline, a], []), tree={nightly: a, gate: base0, "Sources/M.swift": mline}),
@@ -723,7 +723,7 @@ def test_a_commit_list_the_api_cannot_cover_is_refused() -> None:
 def with_waiter(waiter_sha: str, waiter_current: str, green: bool = True, status: str = "waiting") -> dict:
     """SHA is requested while run 900 waits for the approval of waiter_sha.
 
-    NEWER is the feat-cmux-next tip one commit after SHA; MID is older than SHA.
+    NEWER is the feat-hmux-next tip one commit after SHA; MID is older than SHA.
     """
     case = scenario(newest=True, sourceHead=NEWER, onSource={SHA: "ahead"},
                     runs=[gate_run(), gate_run(id=8, head_sha=NEWER)],
@@ -895,7 +895,7 @@ def test_non_macos_nightly_next_orchestration_uses_the_trusted_fast_check_fallba
         "promote-nightly-next",
         "await-release-surface-ack",
         "promote-nightly-next-acked",
-        "resolve-nightly-cmux-tui-client",
+        "resolve-nightly-hmux-tui-client",
         "publish-nightly",
         "republish-nightly-deltas",
         "report-nightly-failure",
@@ -954,7 +954,7 @@ def train_run(**overrides) -> dict:
 
 def train_case(**overrides) -> dict:
     """TRAIN = nightly-next train commit: parents CURRENT (nightly-next) and
-    SHA (a feat-cmux-next commit), trailer `Nightly-Train: v1`."""
+    SHA (a feat-hmux-next commit), trailer `Nightly-Train: v1`."""
     case = scenario(sha=TRAIN, runs=[train_run()], jobs={"9": TRAIN_GATE},
                     trainVerify={"ok": True, "reason": "tree is the tip minus 0 revert(s)"})
     case["commits"].insert(0, {"sha": TRAIN, "parents": [{"sha": CURRENT}, {"sha": SHA}],
@@ -990,10 +990,10 @@ def test_a_crashed_tree_check_is_refused() -> None:
 
 
 def test_a_train_commit_needs_its_own_train_gate_run() -> None:
-    # The cmux-next.yml push run of its second parent is not the train's gate.
+    # The hmux-next.yml push run of its second parent is not the train's gate.
     decision = run(train_case(runs=[gate_run(head_sha=TRAIN)], jobs={"7": GREEN}))["decision"]
     assert decision["action"] == "refuse" and "nightly-next-train.yml" in decision["reason"], decision
-    decision = run(train_case(runs=[train_run(head_branch="feat-cmux-next")]))["decision"]
+    decision = run(train_case(runs=[train_run(head_branch="feat-hmux-next")]))["decision"]
     assert decision["action"] == "refuse", decision
     decision = run(train_case(jobs={"9": [{**TRAIN_GATE[0], "conclusion": "failure"}]}))["decision"]
     assert decision["action"] == "refuse", decision
@@ -1007,7 +1007,7 @@ def test_a_train_commit_on_an_old_nightly_head_is_refused() -> None:
 
 
 def test_a_train_commit_whose_tip_is_not_on_the_source_is_refused() -> None:
-    # SHA is not reachable from the feat-cmux-next head MID ("behind").
+    # SHA is not reachable from the feat-hmux-next head MID ("behind").
     decision = run(train_case(sourceHead=MID))["decision"]
     assert decision["action"] == "refuse" and "second parent" in decision["reason"], decision
 

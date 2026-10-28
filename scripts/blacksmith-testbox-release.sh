@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Usage: scripts/blacksmith-testbox-release.sh <tbx_id> [wait-seconds]
 #
-# Ends your Testbox so its warm cmux-tui target dir is committed as the shared
-# sticky disk of its branch family (`cmux-tui-target-v2-main` or
-# `cmux-tui-target-v2-next`) for the next box. Use it instead of
+# Ends your Testbox so its warm hmux-tui target dir is committed as the shared
+# sticky disk of its branch family (`hmux-tui-target-v2-main` or
+# `hmux-tui-target-v2-next`) for the next box. Use it instead of
 # `blacksmith testbox stop`: stop destroys the VM before the warmup job's post
 # steps run, so nothing is committed on that path.
 #
@@ -11,7 +11,7 @@
 # warmup run to finish (prune, then the sticky disk commit). If the run is not
 # finished after [wait-seconds] (default 600), it falls back to
 # `blacksmith testbox stop`, so a box never outlives this command.
-# Run it from the same cmux worktree root as your other `testbox run` commands.
+# Run it from the same hmux worktree root as your other `testbox run` commands.
 set -euo pipefail
 
 tbx="${1:?usage: $0 <tbx_id> [wait-seconds]}"

@@ -23,8 +23,8 @@ test("relay credentials use an offline-verifiable 30-minute grant and stable use
   };
   const a = parse(first.token), b = parse(second.token);
   expect(a.claims.sub).toBe(b.claims.sub);
-  expect(a.claims.iss).toBe("cmux");
-  expect(a.claims.aud).toBe("cmux-relay");
+  expect(a.claims.iss).toBe("hmux");
+  expect(a.claims.aud).toBe("hmux-relay");
   expect(a.claims.endpoint_id).toBe(descriptor.endpointId);
   expect(a.claims.exp - a.claims.iat).toBe(1800);
   expect(await crypto.subtle.verify("Ed25519", pair.publicKey, decodeBase64URL(a.signature), new TextEncoder().encode(a.header + "." + a.body))).toBe(true);

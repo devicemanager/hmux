@@ -1,5 +1,5 @@
-import CmuxChief
-import CmuxHomeCore
+import HmuxChief
+import HmuxHomeCore
 import Foundation
 
 /// The brain the owner talks to while the user's Chief settings change.

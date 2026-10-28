@@ -50,11 +50,11 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
-            [[ "$GITHUB_REF_NAME" =~ ^cmux-sdk-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-              echo "tag must match cmux-sdk-vX.Y.Z" >&2
+            [[ "$GITHUB_REF_NAME" =~ ^hmux-sdk-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "tag must match hmux-sdk-vX.Y.Z" >&2
               exit 1
             }
-            version="${GITHUB_REF_NAME#cmux-sdk-v}"
+            version="${GITHUB_REF_NAME#hmux-sdk-v}"
             [[ "$DISPATCH_VERSION" == "$version" ]] || {
               echo "workflow_dispatch version $DISPATCH_VERSION does not match tag version $version" >&2
               exit 1
@@ -66,7 +66,7 @@ jobs:
               exit 1
             }
           fi
-          python3 cmux-tui/bindings/validate_release_version.py \
+          python3 hmux-tui/bindings/validate_release_version.py \
             --version "$version"
           python3 - "$version" <<'PY'
           import json
@@ -77,9 +77,9 @@ jobs:
           expected = sys.argv[1]
           root = pathlib.Path.cwd()
           versions = {
-              "typescript package.json": json.loads((root / "cmux-tui/bindings/typescript/package.json").read_text())["version"],
-              "python pyproject.toml": tomllib.loads((root / "cmux-tui/bindings/python/pyproject.toml").read_text())["project"]["version"],
-              "rust Cargo.toml": tomllib.loads((root / "cmux-tui/bindings/rust/Cargo.toml").read_text())["package"]["version"],
+              "typescript package.json": json.loads((root / "hmux-tui/bindings/typescript/package.json").read_text())["version"],
+              "python pyproject.toml": tomllib.loads((root / "hmux-tui/bindings/python/pyproject.toml").read_text())["project"]["version"],
+              "rust Cargo.toml": tomllib.loads((root / "hmux-tui/bindings/rust/Cargo.toml").read_text())["package"]["version"],
           }
           mismatches = {name: got for name, got in versions.items() if got != expected}
           if mismatches:
@@ -88,7 +88,7 @@ jobs:
               raise SystemExit(1)
           print(f"All package versions match {expected}")
           PY
-          python3 cmux-tui/bindings/check-versions.py \
+          python3 hmux-tui/bindings/check-versions.py \
             --published-only \
             --expected "$version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -126,9 +126,9 @@ jobs:
           rustup default "$RUST_TOOLCHAIN"
           rustc --version
 
-      - name: Build cmux-tui server
-        working-directory: cmux-tui
-        run: cargo build -p cmux-tui --bin cmux-tui --locked
+      - name: Build hmux-tui server
+        working-directory: hmux-tui
+        run: cargo build -p hmux-tui --bin hmux-tui --locked
 
       - name: Install declared Python build backend
         run: |
@@ -137,16 +137,16 @@ jobs:
             "setuptools==80.9.0"
 
       - name: Test Python SDK package
-        working-directory: cmux-tui/bindings/python
+        working-directory: hmux-tui/bindings/python
         run: PYTHONPATH=. python3 -m unittest discover -s tests -v
 
       - name: Python SDK conformance
         run: |
-          report="$RUNNER_TEMP/cmux-sdk-conformance-python.txt"
-          python3 cmux-tui/bindings/conformance/runner.py \
+          report="$RUNNER_TEMP/hmux-sdk-conformance-python.txt"
+          python3 hmux-tui/bindings/conformance/runner.py \
             --language python \
             --require python \
-            --cmux-tui-bin "$GITHUB_WORKSPACE/cmux-tui/target/debug/cmux-tui" |
+            --hmux-tui-bin "$GITHUB_WORKSPACE/hmux-tui/target/debug/hmux-tui" |
             tee "$report"
           grep -Eq '^PASS +python +live-creation-exit-restart-unix$' "$report"
 
@@ -176,7 +176,7 @@ jobs:
             "wheel==0.45.1"
 
       - name: Build sdist and wheel
-        working-directory: cmux-tui/bindings/python
+        working-directory: hmux-tui/bindings/python
         run: |
           set -euo pipefail
           SOURCE_DATE_EPOCH="$(git show -s --format=%ct "$GITHUB_SHA")"
@@ -187,16 +187,16 @@ jobs:
             --epoch "$SOURCE_DATE_EPOCH"
 
       - name: Test the exact Python distributions
-        working-directory: cmux-tui/bindings/python
+        working-directory: hmux-tui/bindings/python
         env:
-          CMUX_PYTHON_DIST_DIR: ${{ github.workspace }}/cmux-tui/bindings/python/dist
+          HMUX_PYTHON_DIST_DIR: ${{ github.workspace }}/hmux-tui/bindings/python/dist
         run: PYTHONPATH=. python3 -m unittest tests.test_package_consumer -v
 
       - name: Fingerprint the validated Python distributions
         id: package
         run: |
           set -euo pipefail
-          cd cmux-tui/bindings/python/dist
+          cd hmux-tui/bindings/python/dist
           shopt -s nullglob
           files=(*.whl *.tar.gz)
           [[ "${#files[@]}" == 2 ]] || {
@@ -211,6 +211,6 @@ jobs:
         id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-python-dist-${{ github.run_attempt }}
-          path: cmux-tui/bindings/python/dist/*
+          name: hmux-python-dist-${{ github.run_attempt }}
+          path: hmux-tui/bindings/python/dist/*
           if-no-files-found: error

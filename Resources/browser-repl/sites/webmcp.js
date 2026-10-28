@@ -8,11 +8,11 @@
 // for that call to a tool that declares readOnlyHint.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
 
   // Runs in the page world through an element handle of the document's
-  // root (handles live in cmux's agent world and resolve only in the
+  // root (handles live in hmux's agent world and resolve only in the
   // document that issued them; a new document fails them as stale before
   // this runs). arg: { op: "list" } or { op: "call", name, input,
   // descriptor, url }. Each listed tool carries `descriptor`, its name,

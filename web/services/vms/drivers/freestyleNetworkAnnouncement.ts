@@ -1,7 +1,7 @@
 import { Effect } from "effect";
 import type { Vm } from "freestyle";
 import { isIP } from "node:net";
-import { shellQuote } from "./cmuxTuiDaemon";
+import { shellQuote } from "./hmuxTuiDaemon";
 import { ProviderError } from "./types";
 
 /**

@@ -51,8 +51,8 @@ class NightlyNotarizationPollLoopTests(unittest.TestCase):
         check = workflow["jobs"]["preflight"]["steps"][0]["run"]
         program = re.search(r'<<\'PY\' > "\$RUNNER_TEMP/artifact-check"\n(.*?)\nPY', check, re.S).group(1)
         variants = ("arm64", "x86_64", "universal")
-        recovery = [f"cmux-nightly-notarization-recovery-{v}-aaaaaaa" for v in variants]
-        metadata = [f"cmux-nightly-notarization-metadata-{v}-aaaaaaa" for v in variants]
+        recovery = [f"hmux-nightly-notarization-recovery-{v}-aaaaaaa" for v in variants]
+        metadata = [f"hmux-nightly-notarization-metadata-{v}-aaaaaaa" for v in variants]
         for names, expired, ready, metadata_only in (
             (recovery, (), True, False),
             (recovery + metadata[:2], (), True, False),
@@ -95,28 +95,28 @@ shutil.copytree(pathlib.Path(os.environ['ARTIFACTS']) / name, destination)
                 artifacts = root / "artifacts"
                 kind = "metadata" if metadata_only else "recovery"
                 for variant in ("arm64", "x86_64", "universal"):
-                    artifact = artifacts / f"cmux-nightly-notarization-{kind}-{variant}-aaaaaaa"
+                    artifact = artifacts / f"hmux-nightly-notarization-{kind}-{variant}-aaaaaaa"
                     artifact.mkdir(parents=True)
-                    dmg = f"cmux-nightly-macos-{variant}.dmg"
+                    dmg = f"hmux-nightly-macos-{variant}.dmg"
                     digest = hashlib.sha256(b"signed-dmg").hexdigest()
                     manifest = {
                         "schema": 1, "source_run_id": "123", "source_run_attempt": "1",
                         "head_sha": "a" * 40, "short_sha": "aaaaaaa", "should_publish": True,
                         "channel": "nightly", "variant": variant, "release_tag": "nightly",
-                        "dmg_prefix": "cmux-nightly-macos", "build": "123", "dmg_path": dmg,
-                        "immutable_path": f"cmux-nightly-macos-{variant}-123.dmg",
-                        "app_path": "cmux-nightly-notarization-recovery-app/cmux NIGHTLY.app",
-                        "app_archive_path": "cmux-nightly-notarization-recovery-app.tar.gz",
+                        "dmg_prefix": "hmux-nightly-macos", "build": "123", "dmg_path": dmg,
+                        "immutable_path": f"hmux-nightly-macos-{variant}-123.dmg",
+                        "app_path": "hmux-nightly-notarization-recovery-app/hmux NIGHTLY.app",
+                        "app_archive_path": "hmux-nightly-notarization-recovery-app.tar.gz",
                         "state_path": f"{dmg}.notarization.state", "log_path": f"{dmg}.notarization.log",
                         "dmg_sha256": digest, "submission_id": f"submission-{variant}",
                     }
-                    (artifact / "cmux-nightly-notarization-recovery.json").write_text(json.dumps(manifest))
+                    (artifact / "hmux-nightly-notarization-recovery.json").write_text(json.dumps(manifest))
                     (artifact / manifest["state_path"]).write_text(f"submission_id=submission-{variant}\ndmg_sha256={digest}\nsubmit_exit=0\n")
                     if not metadata_only:
                         (artifact / dmg).write_bytes(b"signed-dmg")
                         (artifact / manifest["log_path"]).write_text("In Progress\n")
                         with tarfile.open(artifact / manifest["app_archive_path"], "w:gz") as archive:
-                            contents = tarfile.TarInfo("cmux NIGHTLY.app/Contents")
+                            contents = tarfile.TarInfo("hmux NIGHTLY.app/Contents")
                             contents.type = tarfile.DIRTYPE
                             archive.addfile(contents)
                 env = dict(os.environ, PATH=f"{binaries}:{os.environ['PATH']}", ARTIFACTS=str(artifacts),
@@ -130,7 +130,7 @@ shutil.copytree(pathlib.Path(os.environ['ARTIFACTS']) / name, destination)
                 self.assertIn("all_accepted=true", (root / "output").read_text())
                 for variant in ("arm64", "x86_64", "universal"):
                     recovered = root / "recovery" / variant
-                    self.assertEqual((recovered / "cmux-nightly-notarization-recovery-app").exists(), not metadata_only)
+                    self.assertEqual((recovered / "hmux-nightly-notarization-recovery-app").exists(), not metadata_only)
                     self.assertEqual(len(list(recovered.glob("*.dmg"))), 0 if metadata_only else 1)
 
     def test_staple_job_keeps_final_exact_artifact_resolution(self) -> None:

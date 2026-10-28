@@ -102,7 +102,7 @@ export async function handleIrohRoute(
     return authProviderErrorResponse(error, `iroh.${operation}.auth`);
   }
   if (!user) return unauthorized();
-  const clientNamespace = request.headers.get("x-cmux-app-namespace") ?? "legacy";
+  const clientNamespace = request.headers.get("x-hmux-app-namespace") ?? "legacy";
   if (!/^[A-Za-z0-9._:-]{1,255}$/.test(clientNamespace)) {
     return jsonResponse({ error: "invalid_client_namespace" }, 400);
   }
@@ -226,8 +226,8 @@ export function buildConnectivityInvalidationRequest(
     readonly baseURL?: string;
     readonly publisherSecret?: string;
   } = {
-    baseURL: env.CMUX_PRESENCE_BASE_URL,
-    publisherSecret: env.CMUX_CONNECTIVITY_INVALIDATION_SECRET,
+    baseURL: env.HMUX_PRESENCE_BASE_URL,
+    publisherSecret: env.HMUX_CONNECTIVITY_INVALIDATION_SECRET,
   },
 ): Request | null {
   const { baseURL, publisherSecret } = configuration;
@@ -239,7 +239,7 @@ export function buildConnectivityInvalidationRequest(
     headers: {
       authorization,
       "content-type": "application/json",
-      "x-cmux-connectivity-publisher-secret": publisherSecret,
+      "x-hmux-connectivity-publisher-secret": publisherSecret,
     },
     body: JSON.stringify({ revision }),
   });
@@ -295,9 +295,9 @@ export function parseBindingRequestProof(
   request: Request,
   body: Uint8Array,
 ): IrohBindingRequestProof | undefined | Response {
-  const bindingId = request.headers.get("x-cmux-iroh-binding-id");
-  const timestamp = request.headers.get("x-cmux-iroh-request-time");
-  const signature = request.headers.get("x-cmux-iroh-request-signature");
+  const bindingId = request.headers.get("x-hmux-iroh-binding-id");
+  const timestamp = request.headers.get("x-hmux-iroh-request-time");
+  const signature = request.headers.get("x-hmux-iroh-request-signature");
   if (!bindingId && !timestamp && !signature) return undefined;
   if (
     !bindingId

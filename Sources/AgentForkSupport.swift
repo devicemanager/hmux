@@ -1,6 +1,6 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 import Darwin
 
 /// Coordinates cancellation with `Process.run()`: Foundation raises an
@@ -296,7 +296,7 @@ enum AgentForkSupport {
 
     private static func customForkTemplateCanRenderWithoutFilesystem(
         _ template: String,
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         snapshot: SessionRestorableAgentSnapshot
     ) -> Bool {
         if template.contains("{{cwd}}"),
@@ -371,11 +371,11 @@ enum AgentForkSupport {
         switch snapshot.kind {
         case .pi:
             guard let registration = snapshot.registration else { return true }
-            return registration.forkCommand == CmuxVaultAgentRegistration.builtInPi.forkCommand
+            return registration.forkCommand == HmuxVaultAgentRegistration.builtInPi.forkCommand
         case .custom("pi"):
-            return snapshot.registration?.forkCommand == CmuxVaultAgentRegistration.builtInPi.forkCommand
+            return snapshot.registration?.forkCommand == HmuxVaultAgentRegistration.builtInPi.forkCommand
         case .custom("omp"):
-            return snapshot.registration?.forkCommand == CmuxVaultAgentRegistration.builtInOmp.forkCommand
+            return snapshot.registration?.forkCommand == HmuxVaultAgentRegistration.builtInOmp.forkCommand
         default:
             return false
         }

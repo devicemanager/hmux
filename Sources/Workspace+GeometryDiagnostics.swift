@@ -1,5 +1,5 @@
 import Foundation
-import CMUXMobileCore
+import HMUXMobileCore
 
 extension Workspace {
     /// Keeps the originating operation available to synchronous staging calls.

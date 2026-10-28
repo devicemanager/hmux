@@ -13,7 +13,7 @@ def resource_name():
     attempt = os.environ.get("GITHUB_RUN_ATTEMPT", "")
     if not re.fullmatch(r"[1-9][0-9]{0,19}", run) or not re.fullmatch(r"[1-9][0-9]{0,3}", attempt):
         raise RuntimeError("canary requires a valid GitHub run ID and attempt")
-    return f"cmux-ci-artifacts-canary-{run}-{attempt}"
+    return f"hmux-ci-artifacts-canary-{run}-{attempt}"
 
 CREATED = Path("artifacts/r2-canary/created-bucket.json")
 
@@ -117,7 +117,7 @@ def main():
     rules = lifecycle.get("rules", [])
     if not isinstance(rules, list):
         raise RuntimeError("invalid bucket lifecycle response")
-    rule = {"id": "cmux-one-artifact-canary", "enabled": True,
+    rule = {"id": "hmux-one-artifact-canary", "enabled": True,
             "conditions": {"prefix": "github/manaflow-ai/cmux/10610975375/"},
             "deleteObjectsTransition": {"condition": {"type": "Age", "maxAge": 86400}}}
     rules = [item for item in rules if item.get("id") != rule["id"]] + [rule]

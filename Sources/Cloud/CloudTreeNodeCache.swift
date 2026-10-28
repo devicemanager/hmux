@@ -1,4 +1,4 @@
-import CmuxCloudMachines
+import HmuxCloudMachines
 import Foundation
 
 /// Owns the input boundary before any tree traversal, reconciliation or formatting.

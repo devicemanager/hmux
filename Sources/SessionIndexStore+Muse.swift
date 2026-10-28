@@ -1,10 +1,10 @@
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 import Foundation
 
 extension SessionIndexStore {
     /// Loads Muse Code sessions from Muse's own read-only `session-index.db`.
     nonisolated static func loadMuseEntries(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         needle: String,
         cwdFilter: String?,
         offset: Int,

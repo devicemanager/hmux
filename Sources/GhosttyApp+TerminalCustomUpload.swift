@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxTerminalCore
+import HmuxTerminalCore
 
 extension GhosttyApp {
     @MainActor
@@ -41,7 +41,7 @@ extension GhosttyApp {
                         if outcome == .unavailable { NSSound.beep() }
                     }
 #if DEBUG
-                    cmuxDebugLog("terminal.remotePasteUpload.customFailed surface=\(callbackContext.surfaceId.uuidString.prefix(5))")
+                    hmuxDebugLog("terminal.remotePasteUpload.customFailed surface=\(callbackContext.surfaceId.uuidString.prefix(5))")
 #endif
                 }
                 guard shouldDeliverResult else {

@@ -61,7 +61,7 @@
     "export-content": true,
     "untrusted": []
   },
-  "cmux": {
+  "hmux": {
     "tap": "Count 3"
   }
 }

@@ -1,5 +1,5 @@
 export const CANARY_PATH = "/v1/manaflow-ai/cmux/artifacts/10610975375/08f56e901618eff4aacdffbd3046d9e9732b638004cba1d69ad44f447199608f.zip";
-export const READINESS_PATH = "/__cmux_artifact_canary_ready";
+export const READINESS_PATH = "/__hmux_artifact_canary_ready";
 
 export type CanaryConfiguration = {
   CANARY_ENABLED?: string;
@@ -10,7 +10,7 @@ export type CanaryConfiguration = {
 function authorized(request: Request, enabled: string | undefined, expiresAt: string | undefined, accessToken: string | undefined, now: number): boolean {
   const expiry = Date.parse(expiresAt ?? "");
   return typeof accessToken === "string" && /^[a-f0-9]{64}$/.test(accessToken)
-    && request.headers.get("X-Cmux-Canary-Token") === accessToken && Number.isFinite(expiry) && now < expiry
+    && request.headers.get("X-Hmux-Canary-Token") === accessToken && Number.isFinite(expiry) && now < expiry
     && expiry <= Date.parse("2026-09-23T18:16:23Z") && enabled === "true" && request.method === "GET" && !new URL(request.url).search;
 }
 
@@ -25,17 +25,17 @@ export async function handleCanaryRequest(request: Request, configuration: Canar
     : canaryAllowed(request, configuration.CANARY_ENABLED, configuration.CANARY_EXPIRES_AT, configuration.CANARY_ACCESS_TOKEN, now);
   if (!accepted) {
     return new Response("Not found", { status: 404, headers: {
-      "Cache-Control": "no-store", "X-Cmux-Canary-Stage": "gate-rejected",
+      "Cache-Control": "no-store", "X-Hmux-Canary-Stage": "gate-rejected",
     } });
   }
   if (path === READINESS_PATH) {
     // No broker/DO invocation, GitHub lookup, R2 request or artifact import.
     return new Response(null, { status: 204, headers: {
-      "Cache-Control": "no-store", "X-Cmux-Canary-Stage": "ready-v1",
+      "Cache-Control": "no-store", "X-Hmux-Canary-Stage": "ready-v1",
     } });
   }
   const response = await forward();
   const marked = new Response(response.body, response);
-  marked.headers.set("X-Cmux-Canary-Stage", "artifact-v1");
+  marked.headers.set("X-Hmux-Canary-Stage", "artifact-v1");
   return marked;
 }

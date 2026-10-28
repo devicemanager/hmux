@@ -1,9 +1,9 @@
-<h1 align="center">cmux</h1>
+<h1 align="center">hmux</h1>
 <p align="center">Một terminal macOS dựa trên Ghostty với tab dọc và thông báo cho các agent lập trình AI</p>
 
 <p align="center">
   <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-    <img src="./docs/assets/macos-badge.png" alt="Tải cmux cho macOS" width="180" />
+    <img src="./docs/assets/macos-badge.png" alt="Tải hmux cho macOS" width="180" />
   </a>
 </p>
 
@@ -18,11 +18,11 @@
 </p>
 
 <p align="center">
-  <img src="./docs/assets/main-first-image.png" alt="Ảnh chụp màn hình cmux" width="900" />
+  <img src="./docs/assets/main-first-image.png" alt="Ảnh chụp màn hình hmux" width="900" />
 </p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ Video demo</a> · <a href="https://cmux.com/blog/zen-of-cmux">Thiền của cmux</a>
+  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ Video demo</a> · <a href="https://cmux.com/blog/zen-of-hmux">Thiền của hmux</a>
 </p>
 
 ## Tính năng
@@ -67,16 +67,16 @@ Sidebar hiển thị nhánh git, trạng thái/số PR liên kết, thư mục l
 <tr>
 <td width="40%" valign="middle">
 <h3>SSH</h3>
-<code>cmux ssh user@remote</code> tạo workspace cho máy từ xa. Truyền <code>--command 'omp "investigate auth"'</code> để chạy một lệnh khởi đầu một lần trong terminal từ xa đầu tiên của nó. Các pane trình duyệt định tuyến qua mạng từ xa nên localhost hoạt động bình thường. Kéo ảnh vào phiên từ xa để upload qua scp.
+<code>hmux ssh user@remote</code> tạo workspace cho máy từ xa. Truyền <code>--command 'omp "investigate auth"'</code> để chạy một lệnh khởi đầu một lần trong terminal từ xa đầu tiên của nó. Các pane trình duyệt định tuyến qua mạng từ xa nên localhost hoạt động bình thường. Kéo ảnh vào phiên từ xa để upload qua scp.
 </td>
 <td width="60%">
-<img src="./docs/assets/ssh.png" alt="cmux SSH" width="100%" />
+<img src="./docs/assets/ssh.png" alt="hmux SSH" width="100%" />
 </td>
 </tr>
 <tr>
 <td width="40%" valign="middle">
 <h3>Claude Code Teams</h3>
-<code>cmux claude-teams</code> chạy chế độ teammate của Claude Code chỉ với một lệnh. Các teammate sinh ra dưới dạng split gốc với metadata sidebar và thông báo. Không cần tmux.
+<code>hmux claude-teams</code> chạy chế độ teammate của Claude Code chỉ với một lệnh. Các teammate sinh ra dưới dạng split gốc với metadata sidebar và thông báo. Không cần tmux.
 </td>
 <td width="60%">
 <img src="./docs/assets/claude-code-teams.png" alt="Claude Code Teams" width="100%" />
@@ -85,7 +85,7 @@ Sidebar hiển thị nhánh git, trạng thái/số PR liên kết, thư mục l
 </table>
 
 - **Nhập trình duyệt** — Nhập cookie, lịch sử, và phiên từ Chrome, Firefox, Arc, và hơn 20 trình duyệt khác để các pane trình duyệt khởi động đã đăng nhập sẵn
-- **Lệnh tùy chỉnh** — Định nghĩa các hành động riêng cho dự án trong [`cmux.json`](https://cmux.com/docs/custom-commands) và khởi chạy từ bảng lệnh
+- **Lệnh tùy chỉnh** — Định nghĩa các hành động riêng cho dự án trong [`hmux.json`](https://cmux.com/docs/custom-commands) và khởi chạy từ bảng lệnh
 - **Có thể script** — CLI và socket API để tạo workspace, chia pane, gửi phím, và tự động hóa trình duyệt
 - **Ứng dụng macOS gốc** — Xây bằng Swift và AppKit, không phải Electron. Khởi động nhanh, dùng ít bộ nhớ.
 - **Tương thích Ghostty** — Đọc cấu hình `~/.config/ghostty/config` hiện có của bạn cho theme, font, và màu sắc
@@ -98,22 +98,22 @@ Sidebar hiển thị nhánh git, trạng thái/số PR liên kết, thư mục l
 ### DMG (khuyến nghị)
 
 <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
-  <img src="./docs/assets/macos-badge.png" alt="Tải cmux cho macOS" width="180" />
+  <img src="./docs/assets/macos-badge.png" alt="Tải hmux cho macOS" width="180" />
 </a>
 
-Mở file `.dmg` và kéo cmux vào thư mục Applications. cmux tự cập nhật qua Sparkle, nên bạn chỉ cần tải một lần.
+Mở file `.dmg` và kéo hmux vào thư mục Applications. hmux tự cập nhật qua Sparkle, nên bạn chỉ cần tải một lần.
 
 ### Homebrew
 
 ```bash
 brew tap manaflow-ai/cmux
-brew install --cask cmux
+brew install --cask hmux
 ```
 
 Cập nhật sau này:
 
 ```bash
-brew upgrade --cask cmux
+brew upgrade --cask hmux
 ```
 
 Lần mở đầu tiên, macOS có thể yêu cầu bạn xác nhận mở app từ nhà phát triển được xác định. Nhấn **Open** để tiếp tục.
@@ -122,38 +122,38 @@ Lần mở đầu tiên, macOS có thể yêu cầu bạn xác nhận mở app t
 
 Cask Homebrew cài đặt tự động hoàn thành cho zsh, bash và fish. Hãy mở một shell mới sau khi cài. Nếu nó không được nạp, hãy kiểm tra xem các thư mục tự động hoàn thành của Homebrew đã được nối vào shell của bạn chưa (xem [tài liệu tự động hoàn thành shell của Homebrew](https://docs.brew.sh/Shell-Completion)).
 
-Nếu bạn cài cmux theo cách khác, hãy thêm dòng tương ứng vào tệp khởi động shell của bạn, rồi mở một shell mới:
+Nếu bạn cài hmux theo cách khác, hãy thêm dòng tương ứng vào tệp khởi động shell của bạn, rồi mở một shell mới:
 
 ```zsh
 autoload -Uz compinit && compinit
-eval "$(cmux completion zsh)"
+eval "$(hmux completion zsh)"
 ```
 
 ```bash
-eval "$(cmux completion bash)"
+eval "$(hmux completion bash)"
 ```
 
 ```fish
-cmux completion fish | source
+hmux completion fish | source
 ```
 
-## Vì sao cmux?
+## Vì sao hmux?
 
 Tôi chạy rất nhiều phiên Claude Code và Codex song song. Tôi từng dùng Ghostty với nhiều pane chia, và dựa vào thông báo macOS gốc để biết khi nào một agent cần tôi. Nhưng nội dung thông báo của Claude Code luôn chỉ là "Claude is waiting for your input" mà không có ngữ cảnh, và khi mở đủ nhiều tab thì tôi thậm chí không đọc được tiêu đề nữa.
 
-Tôi đã thử vài trình điều phối lập trình nhưng phần lớn là app Electron/Tauri và hiệu năng làm tôi khó chịu. Tôi cũng thích terminal hơn vì các trình điều phối GUI buộc bạn theo workflow của họ. Vì vậy tôi xây cmux như một app macOS gốc bằng Swift/AppKit. Nó dùng libghostty để render terminal và đọc cấu hình Ghostty hiện có của bạn cho theme, font, và màu sắc.
+Tôi đã thử vài trình điều phối lập trình nhưng phần lớn là app Electron/Tauri và hiệu năng làm tôi khó chịu. Tôi cũng thích terminal hơn vì các trình điều phối GUI buộc bạn theo workflow của họ. Vì vậy tôi xây hmux như một app macOS gốc bằng Swift/AppKit. Nó dùng libghostty để render terminal và đọc cấu hình Ghostty hiện có của bạn cho theme, font, và màu sắc.
 
-Những bổ sung chính là sidebar và hệ thống thông báo. Sidebar có các tab dọc hiển thị nhánh git, trạng thái/số PR liên kết, thư mục làm việc, các cổng đang lắng nghe, và dòng thông báo mới nhất cho từng workspace. Hệ thống thông báo bắt các chuỗi terminal (OSC 9/99/777) và có CLI (`cmux notify`) để bạn nối vào hook của agent cho Claude Code, OpenCode, v.v. Khi một agent đang chờ, pane của nó có vòng xanh và tab sáng lên ở sidebar, nên tôi có thể biết cái nào cần tôi giữa các split và tab. Cmd+Shift+U nhảy đến thông báo chưa đọc mới nhất.
+Những bổ sung chính là sidebar và hệ thống thông báo. Sidebar có các tab dọc hiển thị nhánh git, trạng thái/số PR liên kết, thư mục làm việc, các cổng đang lắng nghe, và dòng thông báo mới nhất cho từng workspace. Hệ thống thông báo bắt các chuỗi terminal (OSC 9/99/777) và có CLI (`hmux notify`) để bạn nối vào hook của agent cho Claude Code, OpenCode, v.v. Khi một agent đang chờ, pane của nó có vòng xanh và tab sáng lên ở sidebar, nên tôi có thể biết cái nào cần tôi giữa các split và tab. Cmd+Shift+U nhảy đến thông báo chưa đọc mới nhất.
 
 Trình duyệt trong app có API script được chuyển từ [agent-browser](https://github.com/vercel-labs/agent-browser). Agent có thể chụp cây accessibility, lấy tham chiếu phần tử, click, điền form, và chạy JS. Bạn có thể chia một pane trình duyệt cạnh terminal và để Claude Code tương tác trực tiếp với dev server của bạn.
 
 Mọi thứ đều có thể script thông qua CLI và socket API — tạo workspace/tab, chia pane, gửi phím, mở URL trong trình duyệt.
 
-## Thiền của cmux
+## Thiền của hmux
 
-cmux không áp đặt cách developer sử dụng công cụ. Nó là một terminal và trình duyệt có CLI, và phần còn lại là do bạn quyết định.
+hmux không áp đặt cách developer sử dụng công cụ. Nó là một terminal và trình duyệt có CLI, và phần còn lại là do bạn quyết định.
 
-cmux là một nguyên thủy, không phải giải pháp. Nó cung cấp terminal, trình duyệt, thông báo, workspace, split, tab, và một CLI để điều khiển tất cả. cmux không ép bạn theo một cách dùng agent lập trình đầy định kiến. Bạn xây gì từ những nguyên thủy đó là của bạn.
+hmux là một nguyên thủy, không phải giải pháp. Nó cung cấp terminal, trình duyệt, thông báo, workspace, split, tab, và một CLI để điều khiển tất cả. hmux không ép bạn theo một cách dùng agent lập trình đầy định kiến. Bạn xây gì từ những nguyên thủy đó là của bạn.
 
 Những developer giỏi nhất luôn tự xây công cụ của mình. Chưa ai tìm ra cách tốt nhất để làm việc với agent, và các đội ngũ xây sản phẩm đóng chắc chắn cũng chưa. Những developer gần codebase của họ nhất sẽ tìm ra trước.
 
@@ -161,7 +161,7 @@ Trao cho một triệu developer những nguyên thủy có thể ghép, và h�
 
 ## Tài liệu
 
-Để biết thêm về cách cấu hình cmux, [xem tài liệu của chúng tôi](https://cmux.com/docs/getting-started?utm_source=readme).
+Để biết thêm về cách cấu hình hmux, [xem tài liệu của chúng tôi](https://cmux.com/docs/getting-started?utm_source=readme).
 
 ## Phím tắt
 
@@ -261,43 +261,43 @@ Các phím tắt điều hướng bảng lệnh, bao gồm ⌃ P, cũng có th�
 
 ## Bản dựng Nightly
 
-[Tải cmux NIGHTLY](https://github.com/manaflow-ai/cmux/releases/download/nightly/cmux-nightly-macos.dmg)
+[Tải hmux NIGHTLY](https://github.com/manaflow-ai/cmux/releases/download/nightly/cmux-nightly-macos.dmg)
 
-cmux NIGHTLY là một app riêng với bundle ID riêng, nên có thể chạy song song với bản ổn định. Được build tự động từ commit `main` mới nhất và tự cập nhật qua feed Sparkle riêng.
+hmux NIGHTLY là một app riêng với bundle ID riêng, nên có thể chạy song song với bản ổn định. Được build tự động từ commit `main` mới nhất và tự cập nhật qua feed Sparkle riêng.
 
 Báo lỗi nightly trên [GitHub Issues](https://github.com/manaflow-ai/cmux/issues) hoặc trong [#nightly-bugs trên Discord](https://discord.gg/xsgFEVrWCZ).
 
 ## Khôi phục phiên
 
-Khi thoát, cmux lưu phiên hiện tại. Khi mở lại, cmux khôi phục trạng thái thuộc về app:
+Khi thoát, hmux lưu phiên hiện tại. Khi mở lại, hmux khôi phục trạng thái thuộc về app:
 - Bố cục cửa sổ/workspace/pane
 - Thư mục làm việc
 - Scrollback của terminal (cố gắng hết mức)
 - URL và lịch sử điều hướng của trình duyệt
 
-cmux không checkpoint trạng thái tiến trình đang chạy bất kỳ. tmux, vim, shell và app terminal chưa hỗ trợ sẽ mở lại như terminal bình thường.
+hmux không checkpoint trạng thái tiến trình đang chạy bất kỳ. tmux, vim, shell và app terminal chưa hỗ trợ sẽ mở lại như terminal bình thường.
 
 Các phiên agent được hỗ trợ có thể tiếp tục khi hooks đã lưu ID phiên gốc. Cài hooks sau khi cài CLI của agent để binary của nó nằm trên `PATH`:
 
 ```bash
-cmux hooks setup
-cmux hooks setup codex
-cmux hooks setup --agent opencode
+hmux hooks setup
+hmux hooks setup codex
+hmux hooks setup --agent opencode
 ```
 
-`cmux hooks setup` cài các agent được hỗ trợ mà nó tìm thấy và in bản tóm tắt cho các agent bị bỏ qua. Các tích hợp resume được hỗ trợ gồm Claude Code, Codex, Grok, OpenCode, Pi, Amp, Cursor CLI, Gemini, Rovo Dev, Copilot, CodeBuddy, Factory, và Qoder. Claude Code được xử lý bởi wrapper Claude của cmux khi tích hợp Claude được bật trong Settings.
+`hmux hooks setup` cài các agent được hỗ trợ mà nó tìm thấy và in bản tóm tắt cho các agent bị bỏ qua. Các tích hợp resume được hỗ trợ gồm Claude Code, Codex, Grok, OpenCode, Pi, Amp, Cursor CLI, Gemini, Rovo Dev, Copilot, CodeBuddy, Factory, và Qoder. Claude Code được xử lý bởi wrapper Claude của hmux khi tích hợp Claude được bật trong Settings.
 
 Người dùng nâng cao và tích hợp có thể gắn lệnh khôi phục tùy chỉnh vào surface terminal hiện tại. Điều này hữu ích cho công cụ có trạng thái bền riêng, như phiên tmux hoặc CLI agent tùy chỉnh:
 
 ```bash
-cmux surface resume set --kind tmux --checkpoint work --shell "tmux attach -t work"
-cmux surface resume show --json
-cmux surface resume clear --checkpoint work
+hmux surface resume set --kind tmux --checkpoint work --shell "tmux attach -t work"
+hmux surface resume show --json
+hmux surface resume clear --checkpoint work
 ```
 
-Binding này vẫn gắn với surface của cmux. Binding tạo qua CLI công khai hoặc socket được lưu để kiểm tra và resume thủ công trừ khi bạn phê duyệt một tiền tố lệnh đã ký để tự động resume. Các tiền tố được phê duyệt cũng gắn với thư mục làm việc và giá trị môi trường chính xác, khi có. Xem hoặc sửa phê duyệt trong **Settings > Terminal > Resume Commands**. cmux chỉ tự động chạy những resume binding được đánh dấu là đáng tin cậy, ví dụ binding tmux phát hiện từ process đang chạy hoặc tiền tố được người dùng phê duyệt. Các khóa môi trường nhạy cảm như token, mật khẩu, secret và API key sẽ bị loại bỏ trước khi lưu resume binding.
+Binding này vẫn gắn với surface của hmux. Binding tạo qua CLI công khai hoặc socket được lưu để kiểm tra và resume thủ công trừ khi bạn phê duyệt một tiền tố lệnh đã ký để tự động resume. Các tiền tố được phê duyệt cũng gắn với thư mục làm việc và giá trị môi trường chính xác, khi có. Xem hoặc sửa phê duyệt trong **Settings > Terminal > Resume Commands**. hmux chỉ tự động chạy những resume binding được đánh dấu là đáng tin cậy, ví dụ binding tmux phát hiện từ process đang chạy hoặc tiền tố được người dùng phê duyệt. Các khóa môi trường nhạy cảm như token, mật khẩu, secret và API key sẽ bị loại bỏ trước khi lưu resume binding.
 
-Để giữ các terminal agent đã khôi phục ở trạng thái nhàn rỗi thay vì tự động chạy lệnh resume của chúng, hãy tắt **Settings > Terminal > Resume Agent Sessions on Reopen** hoặc đặt thiết lập này trong `~/.config/cmux/cmux.json`:
+Để giữ các terminal agent đã khôi phục ở trạng thái nhàn rỗi thay vì tự động chạy lệnh resume của chúng, hãy tắt **Settings > Terminal > Resume Agent Sessions on Reopen** hoặc đặt thiết lập này trong `~/.config/hmux/hmux.json`:
 
 ```json
 {
@@ -307,90 +307,90 @@ Binding này vẫn gắn với surface của cmux. Binding tạo qua CLI công k
 }
 ```
 
-Điều này chỉ tắt lệnh resume tự động của agent. cmux vẫn khôi phục bố cục, thư mục làm việc, scrollback, và lịch sử trình duyệt đã lưu.
+Điều này chỉ tắt lệnh resume tự động của agent. hmux vẫn khôi phục bố cục, thư mục làm việc, scrollback, và lịch sử trình duyệt đã lưu.
 
 Nếu bạn cần áp dụng lại bản snapshot đã lưu gần nhất theo cách thủ công, hãy dùng:
 - `File > Reopen Previous Session`
 - `⌘ ⇧ O`
-- `cmux restore-session`
+- `hmux restore-session`
 
-Bên trong, cmux ghi một snapshot có phiên bản tại `~/Library/Application Support/cmux/` và các agent hook ghi ánh xạ phiên tại `~/.cmuxterm/`. Khi khôi phục, cmux dựng lại bố cục trước, rồi chạy lệnh resume gốc của agent được hỗ trợ khi resume agent tự động được bật.
+Bên trong, hmux ghi một snapshot có phiên bản tại `~/Library/Application Support/hmux/` và các agent hook ghi ánh xạ phiên tại `~/.hmuxterm/`. Khi khôi phục, hmux dựng lại bố cục trước, rồi chạy lệnh resume gốc của agent được hỗ trợ khi resume agent tự động được bật.
 
 Đọc hướng dẫn đầy đủ tại <https://cmux.com/docs/session-restore>.
 
 ## FAQ
 
-### cmux liên quan thế nào đến Ghostty?
+### hmux liên quan thế nào đến Ghostty?
 
-cmux không phải là một fork của Ghostty. Nó dùng [libghostty](https://github.com/ghostty-org/ghostty) như một thư viện để render terminal, giống như cách các app dùng WebKit cho web view. Ghostty là một terminal độc lập; cmux là một app khác xây trên engine render của nó.
+hmux không phải là một fork của Ghostty. Nó dùng [libghostty](https://github.com/ghostty-org/ghostty) như một thư viện để render terminal, giống như cách các app dùng WebKit cho web view. Ghostty là một terminal độc lập; hmux là một app khác xây trên engine render của nó.
 
 ### Nó hỗ trợ những nền tảng nào?
 
-Hiện tại chỉ macOS. cmux là một app gốc viết bằng Swift + AppKit.
+Hiện tại chỉ macOS. hmux là một app gốc viết bằng Swift + AppKit.
 
 ### Có app iOS không?
 
-Có, đang ở bản beta. Ghép iPhone với máy Mac của bạn từ cửa sổ Mobile Connect và kết nối tới các terminal từ điện thoại, có tùy chọn chuyển tiếp thông báo terminal. Nó được phát hành trên TestFlight dưới tên cmux BETA. Xem [tài liệu iOS](https://cmux.com/docs/ios).
+Có, đang ở bản beta. Ghép iPhone với máy Mac của bạn từ cửa sổ Mobile Connect và kết nối tới các terminal từ điện thoại, có tùy chọn chuyển tiếp thông báo terminal. Nó được phát hành trên TestFlight dưới tên hmux BETA. Xem [tài liệu iOS](https://cmux.com/docs/ios).
 
-### cmux hoạt động với những agent lập trình nào?
+### hmux hoạt động với những agent lập trình nào?
 
-Tất cả. cmux là một terminal, nên bất kỳ agent nào chạy trong terminal đều dùng được ngay: Claude Code, Codex, OpenCode, Gemini CLI, Kiro, Aider, Goose, Amp, Cline, Cursor Agent, và bất cứ thứ gì khác bạn có thể khởi chạy từ dòng lệnh.
+Tất cả. hmux là một terminal, nên bất kỳ agent nào chạy trong terminal đều dùng được ngay: Claude Code, Codex, OpenCode, Gemini CLI, Kiro, Aider, Goose, Amp, Cline, Cursor Agent, và bất cứ thứ gì khác bạn có thể khởi chạy từ dòng lệnh.
 
-### cmux có thể điều phối nhiều agent và subagent không?
+### hmux có thể điều phối nhiều agent và subagent không?
 
-Có. Khi một agent sinh ra subagent hoặc teammate, cmux biến chúng thành các pane và split gốc thay vì các tiến trình nền ẩn. Nó hỗ trợ điều phối đa mô hình của [Claude Code teams](https://cmux.com/docs/agent-integrations/claude-code-teams) và [oh-my-opencode](https://cmux.com/docs/agent-integrations/oh-my-opencode), nên mọi agent trong một lượt chạy đều hiển thị và điều khiển được.
+Có. Khi một agent sinh ra subagent hoặc teammate, hmux biến chúng thành các pane và split gốc thay vì các tiến trình nền ẩn. Nó hỗ trợ điều phối đa mô hình của [Claude Code teams](https://cmux.com/docs/agent-integrations/claude-code-teams) và [oh-my-opencode](https://cmux.com/docs/agent-integrations/oh-my-opencode), nên mọi agent trong một lượt chạy đều hiển thị và điều khiển được.
 
-### Tôi có thể dùng cmux với máy từ xa không?
+### Tôi có thể dùng hmux với máy từ xa không?
 
-Có. Mở workspace qua SSH và kết nối tới các phiên tmux từ xa, để agent chạy trên host từ xa trong khi bạn điều khiển chúng từ cmux. Xem [SSH và remote](https://cmux.com/docs/ssh).
+Có. Mở workspace qua SSH và kết nối tới các phiên tmux từ xa, để agent chạy trên host từ xa trong khi bạn điều khiển chúng từ hmux. Xem [SSH và remote](https://cmux.com/docs/ssh).
 
 ### Thông báo hoạt động như thế nào?
 
-Khi một tiến trình cần chú ý, cmux hiển thị vòng thông báo quanh các pane, huy hiệu chưa đọc ở sidebar, một popover thông báo, và một thông báo desktop macOS. Chúng tự động kích hoạt qua các chuỗi escape terminal tiêu chuẩn (OSC 9/99/777), hoặc bạn có thể kích hoạt chúng bằng [cmux CLI](https://cmux.com/docs/notifications#cli-usage) và [agent hooks](https://cmux.com/docs/notifications#integration-examples). Bất kỳ agent nào hỗ trợ hook hoặc OSC đều hoạt động, gồm Claude Code, Codex, OpenCode, và pi.
+Khi một tiến trình cần chú ý, hmux hiển thị vòng thông báo quanh các pane, huy hiệu chưa đọc ở sidebar, một popover thông báo, và một thông báo desktop macOS. Chúng tự động kích hoạt qua các chuỗi escape terminal tiêu chuẩn (OSC 9/99/777), hoặc bạn có thể kích hoạt chúng bằng [hmux CLI](https://cmux.com/docs/notifications#cli-usage) và [agent hooks](https://cmux.com/docs/notifications#integration-examples). Bất kỳ agent nào hỗ trợ hook hoặc OSC đều hoạt động, gồm Claude Code, Codex, OpenCode, và pi.
 
-### cmux có thể lập trình được không?
+### hmux có thể lập trình được không?
 
-Có. Mọi hành động đều có sẵn qua cmux CLI và một Unix socket: tạo workspace, mở pane chia, gửi input, đọc nội dung màn hình, chụp màn hình, và điều khiển trình duyệt trong app. Xem tài liệu [CLI reference](https://cmux.com/docs/api) và [browser automation](https://cmux.com/docs/browser-automation).
+Có. Mọi hành động đều có sẵn qua hmux CLI và một Unix socket: tạo workspace, mở pane chia, gửi input, đọc nội dung màn hình, chụp màn hình, và điều khiển trình duyệt trong app. Xem tài liệu [CLI reference](https://cmux.com/docs/api) và [browser automation](https://cmux.com/docs/browser-automation).
 
 ### Trình duyệt tích hợp làm được gì?
 
-cmux có thể chia một pane trình duyệt thật cạnh terminal, và nó hoàn toàn lập trình được: điều hướng, chụp snapshot DOM, click, gõ, chạy JavaScript, và đọc hoạt động console và mạng qua cùng một socket API. Agent dùng nó để tự kiểm tra các thay đổi web của mình mà không rời cmux. Xem [browser automation](https://cmux.com/docs/browser-automation).
+hmux có thể chia một pane trình duyệt thật cạnh terminal, và nó hoàn toàn lập trình được: điều hướng, chụp snapshot DOM, click, gõ, chạy JavaScript, và đọc hoạt động console và mạng qua cùng một socket API. Agent dùng nó để tự kiểm tra các thay đổi web của mình mà không rời hmux. Xem [browser automation](https://cmux.com/docs/browser-automation).
 
-### cmux có skill không?
+### hmux có skill không?
 
-Có. Skill là các workflow tái sử dụng mà bạn có thể trao cho bất kỳ agent nào chạy trong cmux, cho những việc như điều khiển CLI, tự động hóa workspace, cài đặt, và surface trình duyệt. Duyệt bộ sưu tập mở tại [cmux-skills](https://github.com/manaflow-ai/cmux-skills), hoặc đọc [tài liệu skill](https://cmux.com/docs/skills).
+Có. Skill là các workflow tái sử dụng mà bạn có thể trao cho bất kỳ agent nào chạy trong hmux, cho những việc như điều khiển CLI, tự động hóa workspace, cài đặt, và surface trình duyệt. Duyệt bộ sưu tập mở tại [hmux-skills](https://github.com/manaflow-ai/cmux-skills), hoặc đọc [tài liệu skill](https://cmux.com/docs/skills).
 
 ### Tôi có thể tùy chỉnh phím tắt không?
 
-Keybinding của terminal được đọc từ file cấu hình Ghostty của bạn (`~/.config/ghostty/config`). Các phím tắt riêng của cmux (workspace, split, trình duyệt, thông báo) có thể tùy chỉnh trong Settings. Xem [phím tắt mặc định](https://cmux.com/docs/keyboard-shortcuts) để có danh sách đầy đủ.
+Keybinding của terminal được đọc từ file cấu hình Ghostty của bạn (`~/.config/ghostty/config`). Các phím tắt riêng của hmux (workspace, split, trình duyệt, thông báo) có thể tùy chỉnh trong Settings. Xem [phím tắt mặc định](https://cmux.com/docs/keyboard-shortcuts) để có danh sách đầy đủ.
 
-### Tôi có thể tùy chỉnh cmux không?
+### Tôi có thể tùy chỉnh hmux không?
 
-Có. Render terminal dùng cấu hình Ghostty của bạn, nên theme, font, màu sắc, và con trỏ chuyển sang trực tiếp. Cài đặt riêng của cmux trong `~/.config/cmux/cmux.json` điều khiển sidebar, thanh tab, pane chia, và hành vi, và mọi [phím tắt](https://cmux.com/docs/keyboard-shortcuts) đều chỉnh được. Xem [cấu hình](https://cmux.com/docs/configuration).
+Có. Render terminal dùng cấu hình Ghostty của bạn, nên theme, font, màu sắc, và con trỏ chuyển sang trực tiếp. Cài đặt riêng của hmux trong `~/.config/hmux/hmux.json` điều khiển sidebar, thanh tab, pane chia, và hành vi, và mọi [phím tắt](https://cmux.com/docs/keyboard-shortcuts) đều chỉnh được. Xem [cấu hình](https://cmux.com/docs/configuration).
 
 ### Phiên của tôi có được lưu không?
 
-Có. cmux khôi phục cửa sổ, workspace, pane, thư mục làm việc, và scrollback của bạn khi mở lại, và trạng thái này sống sót qua việc khởi động lại toàn bộ máy tính, không chỉ thoát app. Các phiên agent như Claude Code, Codex, và OpenCode cũng trở lại. Xem [khôi phục phiên](https://cmux.com/docs/session-restore).
+Có. hmux khôi phục cửa sổ, workspace, pane, thư mục làm việc, và scrollback của bạn khi mở lại, và trạng thái này sống sót qua việc khởi động lại toàn bộ máy tính, không chỉ thoát app. Các phiên agent như Claude Code, Codex, và OpenCode cũng trở lại. Xem [khôi phục phiên](https://cmux.com/docs/session-restore).
 
 ### Nó so với tmux thế nào?
 
-tmux là một bộ ghép kênh terminal chạy bên trong bất kỳ terminal nào. cmux là một app macOS gốc có GUI: tab dọc, pane chia, một trình duyệt nhúng, và một socket API, tất cả đều tích hợp sẵn, không cần file cấu hình hay phím prefix. Dù vậy, nhiều người vẫn vui vẻ chạy cmux cùng SSH và tmux, và cmux có thể kết nối tới các phiên tmux từ xa của bạn một cách gốc ([beta](https://cmux.com/docs/remote-tmux)).
+tmux là một bộ ghép kênh terminal chạy bên trong bất kỳ terminal nào. hmux là một app macOS gốc có GUI: tab dọc, pane chia, một trình duyệt nhúng, và một socket API, tất cả đều tích hợp sẵn, không cần file cấu hình hay phím prefix. Dù vậy, nhiều người vẫn vui vẻ chạy hmux cùng SSH và tmux, và hmux có thể kết nối tới các phiên tmux từ xa của bạn một cách gốc ([beta](https://cmux.com/docs/remote-tmux)).
 
-### cmux có miễn phí không?
+### hmux có miễn phí không?
 
-Có, cmux miễn phí để dùng. Mã nguồn có sẵn trên [GitHub](https://github.com/manaflow-ai/cmux).
+Có, hmux miễn phí để dùng. Mã nguồn có sẵn trên [GitHub](https://github.com/manaflow-ai/cmux).
 
-### Tôi có thể hỗ trợ cmux như thế nào?
+### Tôi có thể hỗ trợ hmux như thế nào?
 
-cmux miễn phí và mã nguồn mở, và sẽ luôn như vậy. Nếu bạn muốn ủng hộ việc phát triển và có quyền truy cập sớm vào những thứ sắp tới, gồm cmux AI, app iOS, và Cloud VMs, hãy xem [cmux Founders Edition](https://github.com/manaflow-ai/cmux#founders-edition).
+hmux miễn phí và mã nguồn mở, và sẽ luôn như vậy. Nếu bạn muốn ủng hộ việc phát triển và có quyền truy cập sớm vào những thứ sắp tới, gồm hmux AI, app iOS, và Cloud VMs, hãy xem [hmux Founders Edition](https://github.com/manaflow-ai/cmux#founders-edition).
 
 ### Tôi có yêu cầu tính năng hoặc tìm thấy lỗi?
 
-Chúng tôi rất muốn nghe. Mở một [issue](https://github.com/manaflow-ai/cmux/issues) hoặc [pull request](https://github.com/manaflow-ai/cmux/pulls) trên GitHub, hoặc [gửi email cho chúng tôi](mailto:founders@cmux.com?subject=cmux%20feature%20request).
+Chúng tôi rất muốn nghe. Mở một [issue](https://github.com/manaflow-ai/cmux/issues) hoặc [pull request](https://github.com/manaflow-ai/cmux/pulls) trên GitHub, hoặc [gửi email cho chúng tôi](mailto:founders@cmux.com?subject=hmux%20feature%20request).
 
 ## Lịch sử sao
 
-<a href="https://www.star-history.com/?repos=manaflow-ai%2Fcmux&type=date&legend=top-left">
+<a href="https://www.star-history.com/?repos=manaflow-ai%2Fhmux&type=date&legend=top-left">
  <picture>
    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=manaflow-ai/cmux&type=date&theme=dark&legend=top-left&sealed_token=N5E-Mdh7zIesE2fP9_q8wEZyOg3un2Ki7u61afJnUUu6ZIUEUsrH_dsPrA8CWrw12owIEezjOyhDiXcfIEoSzAlIybOqvxTk-xCpuXbpnFk86SkJzfErObW1u0MrAuLp-_tXZDM1kAMI2jMtAeXZK3_VEe2HH9dNyhXxgMTCns6c7lMmCJ_kSIgtooYf" />
    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=manaflow-ai/cmux&type=date&legend=top-left&sealed_token=N5E-Mdh7zIesE2fP9_q8wEZyOg3un2Ki7u61afJnUUu6ZIUEUsrH_dsPrA8CWrw12owIEezjOyhDiXcfIEoSzAlIybOqvxTk-xCpuXbpnFk86SkJzfErObW1u0MrAuLp-_tXZDM1kAMI2jMtAeXZK3_VEe2HH9dNyhXxgMTCns6c7lMmCJ_kSIgtooYf" />
@@ -405,7 +405,7 @@ Cách tham gia:
 - Theo dõi chúng tôi trên X để cập nhật [@manaflowai](https://x.com/manaflowai), [@lawrencecchen](https://x.com/lawrencecchen), và [@austinywang](https://x.com/austinywang)
 - Tham gia trò chuyện trên [Discord](https://discord.gg/xsgFEVrWCZ)
 - Tạo và tham gia [GitHub issues](https://github.com/manaflow-ai/cmux/issues) và [discussions](https://github.com/manaflow-ai/cmux/discussions)
-- Cho chúng tôi biết bạn đang xây gì với cmux
+- Cho chúng tôi biết bạn đang xây gì với hmux
 
 ## Cộng đồng
 
@@ -415,21 +415,21 @@ Cách tham gia:
 - [X / Twitter](https://twitter.com/manaflowai)
 - [YouTube](https://www.youtube.com/channel/UCAa89_j-TWkrXfk9A3CbASw)
 - [LinkedIn](https://www.linkedin.com/company/manaflow-ai/)
-- [Reddit](https://www.reddit.com/r/cmux/)
+- [Reddit](https://www.reddit.com/r/hmux/)
 
 <p>
   <strong>WeChat:</strong> Quét mã QR để tham gia cộng đồng.<br />
-  <img src="./docs/assets/wechat-community-qr.jpg" alt="Mã QR WeChat để tham gia cộng đồng cmux" width="240" />
+  <img src="./docs/assets/wechat-community-qr.jpg" alt="Mã QR WeChat để tham gia cộng đồng hmux" width="240" />
 </p>
 
 ## Founder's Edition
 
-cmux miễn phí, mã nguồn mở, và sẽ luôn như vậy. Nếu bạn muốn hỗ trợ phát triển và có quyền truy cập sớm vào những thứ sắp tới:
+hmux miễn phí, mã nguồn mở, và sẽ luôn như vậy. Nếu bạn muốn hỗ trợ phát triển và có quyền truy cập sớm vào những thứ sắp tới:
 
 **[Lấy Founder's Edition](https://buy.stripe.com/3cI00j2Ld0it5OU33r5EY0q)**
 
 - **Ưu tiên yêu cầu tính năng/sửa lỗi**
-- **Truy cập sớm: cmux AI cung cấp ngữ cảnh cho mọi workspace, tab và panel**
+- **Truy cập sớm: hmux AI cung cấp ngữ cảnh cho mọi workspace, tab và panel**
 - **Truy cập sớm: ứng dụng iOS với terminal đồng bộ giữa desktop và điện thoại**
 - **Truy cập sớm: Cloud VM**
 - **Truy cập sớm: Voice mode**
@@ -437,6 +437,6 @@ cmux miễn phí, mã nguồn mở, và sẽ luôn như vậy. Nếu bạn muố
 
 ## Giấy phép
 
-cmux là mã nguồn mở theo [GPL-3.0-or-later](LICENSE). Phần mềm máy chủ của cmux (`web/`, các Cloudflare worker và các dịch vụ relay liệt kê trong [LICENSE](LICENSE)) thay vào đó dùng [Business Source License 1.1](web/LICENSE): bạn có thể đọc, sửa đổi và chạy cho mục đích không phải production; sử dụng production hoặc tự host cần giấy phép thương mại.
+hmux là mã nguồn mở theo [GPL-3.0-or-later](LICENSE). Phần mềm máy chủ của hmux (`web/`, các Cloudflare worker và các dịch vụ relay liệt kê trong [LICENSE](LICENSE)) thay vào đó dùng [Business Source License 1.1](web/LICENSE): bạn có thể đọc, sửa đổi và chạy cho mục đích không phải production; sử dụng production hoặc tự host cần giấy phép thương mại.
 
 Nếu tổ chức của bạn không thể tuân thủ GPL, giấy phép thương mại có sẵn. Liên hệ [founders@cmux.com](mailto:founders@cmux.com) để biết chi tiết.

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// The steps of a routed New Workspace that reach outside the controller: whether routing
@@ -59,7 +59,7 @@ extension RemoteTmuxController {
         /// `tmux new-session` did not create a session.
         case create
         /// The session was created and could not be attached. `removed` says
-        /// whether cmux managed to remove it again.
+        /// whether hmux managed to remove it again.
         case attach(sessionName: String, removed: Bool)
     }
 
@@ -112,7 +112,7 @@ extension RemoteTmuxController {
         // Create a detached session with a unique name. Keeping the name known before
         // the SSH round trip lets cancellation clean up even when runTmux throws before
         // returning the command's stdout.
-        let requestedName = "cmux-new-\(UUID().uuidString.lowercased().prefix(12))"
+        let requestedName = "hmux-new-\(UUID().uuidString.lowercased().prefix(12))"
         let name: String
         do {
             let result = try await transport(for: host).runTmux(
@@ -125,7 +125,7 @@ extension RemoteTmuxController {
             )
             let created = result.stdout.trimmingCharacters(in: .whitespacesAndNewlines)
             // A closed window no longer has a requester who can pick up this
-            // detached session. Remove the session cmux just created instead of
+            // detached session. Remove the session hmux just created instead of
             // leaving an unreported remote orphan behind.
             guard managerIsLive(), requestIsCurrent() else {
                 // The command may have been accepted before the window closed, including when
@@ -139,7 +139,7 @@ extension RemoteTmuxController {
             }
             if !result.succeeded, !created.isEmpty, created != requestedName {
                 #if DEBUG
-                cmuxDebugLog("remote-tmux: failed new-session returned unexpected output")
+                hmuxDebugLog("remote-tmux: failed new-session returned unexpected output")
                 #endif
                 let removed = await removeCreatedSession(host: host, name: requestedName)
                 if removed {
@@ -158,7 +158,7 @@ extension RemoteTmuxController {
             }
             guard !created.isEmpty else {
                 #if DEBUG
-                cmuxDebugLog("remote-tmux: new-session returned no session: \(result.stderr)")
+                hmuxDebugLog("remote-tmux: new-session returned no session: \(result.stderr)")
                 #endif
                 // An empty/truncated `-P` response may still follow a successful command,
                 // while a nonzero command with no output has no evidence of a session.
@@ -188,7 +188,7 @@ extension RemoteTmuxController {
             return
         } catch {
             #if DEBUG
-            cmuxDebugLog("remote-tmux: new-session on active mirror's host failed: \(error)")
+            hmuxDebugLog("remote-tmux: new-session on active mirror's host failed: \(error)")
             #endif
             guard managerIsLive(), requestIsCurrent() else { return }
             newSessionEnvironment.reportFailure(host, .create, manager)
@@ -196,7 +196,7 @@ extension RemoteTmuxController {
         }
         // Then attach to it like any discovered session. The session exists on
         // the host from here on, so a failure is a different one: it is not
-        // "could not create", and the session cmux just made must not be left
+        // "could not create", and the session hmux just made must not be left
         // behind with nothing showing it.
         do {
             guard requestIsCurrent() else {
@@ -226,7 +226,7 @@ extension RemoteTmuxController {
                 }
                 // A non-throwing miss means no mirror was admitted for the session
                 // this request just created. Treat it like an attach failure so the
-                // session cannot remain on the host with no cmux workspace showing it.
+                // session cannot remain on the host with no hmux workspace showing it.
                 let removed = await removeCreatedSession(host: host, name: name)
                 guard managerIsLive(), requestIsCurrent() else { return }
                 newSessionEnvironment.reportFailure(
@@ -239,7 +239,7 @@ extension RemoteTmuxController {
             onCreated?()
         } catch {
             #if DEBUG
-            cmuxDebugLog("remote-tmux: attaching the new session \(name) failed: \(error)")
+            hmuxDebugLog("remote-tmux: attaching the new session \(name) failed: \(error)")
             #endif
             // Nobody has attached to it and nothing runs in it but its shell.
             let removed = await removeCreatedSession(host: host, name: name)
@@ -278,11 +278,11 @@ extension RemoteTmuxController {
             message = removed
                 ? String(
                     localized: "dialog.remoteTmux.newSessionAttachFailed.removed.message",
-                    defaultValue: "The session was created, but cmux couldn't attach to it, so it was removed from the host."
+                    defaultValue: "The session was created, but hmux couldn't attach to it, so it was removed from the host."
                 )
                 : String(
                     localized: "dialog.remoteTmux.newSessionAttachFailed.left.message",
-                    defaultValue: "The session was created, but cmux couldn't attach to it. It is still running on the host."
+                    defaultValue: "The session was created, but hmux couldn't attach to it. It is still running on the host."
                 )
         }
         return (title, message)

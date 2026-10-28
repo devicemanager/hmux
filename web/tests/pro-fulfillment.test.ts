@@ -7,7 +7,7 @@ import {
   PRO_TESTFLIGHT_SIGNUP_URL,
 } from "../services/billing/proFulfillment";
 
-describe("cmux Pro checkout fulfillment", () => {
+describe("hmux Pro checkout fulfillment", () => {
   test("sends a separate Pro welcome with signup link without auto-enrolling", async () => {
     const calls: string[] = [];
     const sendEmail = mock(async () => {
@@ -33,10 +33,10 @@ describe("cmux Pro checkout fulfillment", () => {
       mock: { calls: [[Record<string, unknown>, Record<string, unknown>]] };
     }).mock.calls[0];
     expect(payload).toMatchObject({
-      from: "cmux Pro <pro@cmux.com>",
+      from: "hmux Pro <pro@cmux.com>",
       to: ["ada@example.com"],
       replyTo: "pro@cmux.com",
-      subject: "Welcome to cmux Pro 🎉",
+      subject: "Welcome to hmux Pro 🎉",
       headers: { "X-Entity-Ref-ID": "pro-welcome/cs_pro_1" },
     });
     expect(payload).not.toHaveProperty("cc");
@@ -56,14 +56,14 @@ describe("cmux Pro checkout fulfillment", () => {
 
   test("uses the Japanese Pro copy for a Japanese checkout", async () => {
     const email = await buildProWelcomeEmail({
-      from: "cmux Pro <pro@cmux.com>",
+      from: "hmux Pro <pro@cmux.com>",
       to: "a@example.com",
       customerName: "山田 太郎",
       locale: "ja",
       sessionRef: "cs_ja",
     });
 
-    expect(email.subject).toBe("cmux Pro へようこそ！");
+    expect(email.subject).toBe("hmux Pro へようこそ！");
     expect(email.text).toContain("Pro の全体的な体験を準備");
     expect(email.text).toContain("購読いただいた月数に応じた利用クレジット");
     expect(email.text).toContain("下のリンクから登録");
@@ -91,13 +91,13 @@ describe("cmux Pro checkout fulfillment", () => {
     const [payload] = (sendEmail as unknown as {
       mock: { calls: [[Record<string, unknown>]] };
     }).mock.calls[0];
-    expect(payload.subject).toBe("Bienvenue dans cmux Pro 🎉");
+    expect(payload.subject).toBe("Bienvenue dans hmux Pro 🎉");
     expect(payload.text).toContain("L’accès au cloud arrive bientôt");
   });
 
   test("escapes the customer name in the HTML email", async () => {
     const email = await buildProWelcomeEmail({
-      from: "cmux Pro <pro@cmux.com>",
+      from: "hmux Pro <pro@cmux.com>",
       to: "a@example.com",
       customerName: `<script>&"'`,
       locale: "en",

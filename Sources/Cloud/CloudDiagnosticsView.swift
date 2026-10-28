@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import SwiftUI
 
 struct CloudDiagnosticsView: View {

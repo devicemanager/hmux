@@ -2,9 +2,9 @@
 // endpoint in the signed-in session (no tab).
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URL } = root.CmuxBrowserRepl.core;
+  const { URL } = root.HmuxBrowserRepl.core;
   S.register(
     "googleSlides",
     (t) => {

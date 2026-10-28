@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 import Foundation
 
 extension Workspace {
@@ -166,22 +166,22 @@ extension Workspace {
         temporaryDirectory: URL = FileManager.default.temporaryDirectory
     ) -> String? {
         let scriptURL = temporaryDirectory.appendingPathComponent(
-            "cmux-remote-disconnect-\(UUID().uuidString.lowercased()).sh"
+            "hmux-remote-disconnect-\(UUID().uuidString.lowercased()).sh"
         )
         // Base64 keeps targets and localized text out of shell syntax, even if they contain
         // substitutions, backticks, quotes, or escape sequences.
         let encodedTarget = Data(target.utf8).base64EncodedString()
         let endedLineFormat = String(
             localized: "remote.disconnectBanner.sessionEnded",
-            defaultValue: "[cmux] remote session disconnected: %s"
+            defaultValue: "[hmux] remote session disconnected: %s"
         )
         let reconnectLine = String(
             localized: "remote.disconnectBanner.reconnectHint",
-            defaultValue: "[cmux] Press Enter to reconnect. This terminal will stay disconnected until then."
+            defaultValue: "[hmux] Press Enter to reconnect. This terminal will stay disconnected until then."
         )
         let reconnectUnavailableLine = String(
             localized: "remote.disconnectBanner.reconnectUnavailableHint",
-            defaultValue: "[cmux] Reconnect this workspace from the sidebar or by running the original cmux remote command again."
+            defaultValue: "[hmux] Reconnect this workspace from the sidebar or by running the original hmux remote command again."
         )
         let encodedEndedFormat = Data(endedLineFormat.utf8).base64EncodedString()
         let encodedReconnectLine = Data(reconnectLine.utf8).base64EncodedString()
@@ -189,57 +189,57 @@ extension Workspace {
         let encodedReconnectCommand = Data((reconnectCommand ?? "").utf8).base64EncodedString()
         let body = """
         #!/bin/sh
-        cmux_disconnect_decode() {
+        hmux_disconnect_decode() {
           printf '%s' "$1" | base64 --decode 2>/dev/null || printf '%s' "$1" | base64 -D 2>/dev/null
         }
-        cmux_disconnect_target="$(cmux_disconnect_decode '\(encodedTarget)')"
-        cmux_disconnect_ended_format="$(cmux_disconnect_decode '\(encodedEndedFormat)')"
-        cmux_disconnect_reconnect_line="$(cmux_disconnect_decode '\(encodedReconnectLine)')"
-        cmux_disconnect_reconnect_unavailable_line="$(cmux_disconnect_decode '\(encodedReconnectUnavailableLine)')"
-        cmux_disconnect_reconnect_command="$(cmux_disconnect_decode '\(encodedReconnectCommand)')"
-        cmux_disconnect_scrollback_file="${CMUX_RESTORE_SCROLLBACK_FILE:-}"
-        if [ -n "$cmux_disconnect_scrollback_file" ]; then
-          cmux_disconnect_scrollback_token="${cmux_disconnect_scrollback_file##*/}"
-          cmux_disconnect_host="$(/bin/hostname)"
-          unset CMUX_RESTORE_SCROLLBACK_FILE
-          printf '\\033]1337;CurrentDir=kitty-shell-cwd://%s/.cmux/session-scrollback-replay/%s/start\\007' "$cmux_disconnect_host" "$cmux_disconnect_scrollback_token"
-          if [ -f "$cmux_disconnect_scrollback_file" ]; then
-            /bin/cat -- "$cmux_disconnect_scrollback_file" 2>/dev/null || true
+        hmux_disconnect_target="$(hmux_disconnect_decode '\(encodedTarget)')"
+        hmux_disconnect_ended_format="$(hmux_disconnect_decode '\(encodedEndedFormat)')"
+        hmux_disconnect_reconnect_line="$(hmux_disconnect_decode '\(encodedReconnectLine)')"
+        hmux_disconnect_reconnect_unavailable_line="$(hmux_disconnect_decode '\(encodedReconnectUnavailableLine)')"
+        hmux_disconnect_reconnect_command="$(hmux_disconnect_decode '\(encodedReconnectCommand)')"
+        hmux_disconnect_scrollback_file="${HMUX_RESTORE_SCROLLBACK_FILE:-}"
+        if [ -n "$hmux_disconnect_scrollback_file" ]; then
+          hmux_disconnect_scrollback_token="${hmux_disconnect_scrollback_file##*/}"
+          hmux_disconnect_host="$(/bin/hostname)"
+          unset HMUX_RESTORE_SCROLLBACK_FILE
+          printf '\\033]1337;CurrentDir=kitty-shell-cwd://%s/.hmux/session-scrollback-replay/%s/start\\007' "$hmux_disconnect_host" "$hmux_disconnect_scrollback_token"
+          if [ -f "$hmux_disconnect_scrollback_file" ]; then
+            /bin/cat -- "$hmux_disconnect_scrollback_file" 2>/dev/null || true
           fi
-          /bin/rm -f -- "$cmux_disconnect_scrollback_file" 2>/dev/null || true
-          printf '\\033]1337;CurrentDir=kitty-shell-cwd://%s/.cmux/session-scrollback-replay/%s/end\\007' "$cmux_disconnect_host" "$cmux_disconnect_scrollback_token"
-          printf '\\033]1337;CurrentDir=kitty-shell-cwd://%s%s\\007' "$cmux_disconnect_host" "$PWD"
+          /bin/rm -f -- "$hmux_disconnect_scrollback_file" 2>/dev/null || true
+          printf '\\033]1337;CurrentDir=kitty-shell-cwd://%s/.hmux/session-scrollback-replay/%s/end\\007' "$hmux_disconnect_host" "$hmux_disconnect_scrollback_token"
+          printf '\\033]1337;CurrentDir=kitty-shell-cwd://%s%s\\007' "$hmux_disconnect_host" "$PWD"
         fi
         # Append newline + color codes ourselves rather than trusting the translator to
         # preserve them in every locale.
         printf '\\033[1;33m' >&2
-        printf "$cmux_disconnect_ended_format" "$cmux_disconnect_target" >&2
+        printf "$hmux_disconnect_ended_format" "$hmux_disconnect_target" >&2
         printf '\\033[0m\\n' >&2
         # Remove ourselves so /tmp doesn't accumulate these wrappers across sessions.
         /bin/rm -f -- "$0" 2>/dev/null || true
-        if [ -n "$cmux_disconnect_reconnect_command" ]; then
-          printf '\\033[2m%s\\033[0m\\n\\n' "$cmux_disconnect_reconnect_line" >&2
+        if [ -n "$hmux_disconnect_reconnect_command" ]; then
+          printf '\\033[2m%s\\033[0m\\n\\n' "$hmux_disconnect_reconnect_line" >&2
           IFS= read -r _ || exit 0
-          cmux_reconnect_cli="${CMUX_BUNDLED_CLI_PATH:-}"
-          if [ -z "$cmux_reconnect_cli" ] || [ ! -x "$cmux_reconnect_cli" ]; then
-            cmux_reconnect_cli="$(command -v cmux 2>/dev/null || true)"
+          hmux_reconnect_cli="${HMUX_BUNDLED_CLI_PATH:-}"
+          if [ -z "$hmux_reconnect_cli" ] || [ ! -x "$hmux_reconnect_cli" ]; then
+            hmux_reconnect_cli="$(command -v hmux 2>/dev/null || true)"
           fi
-          cmux_reconnect_socket="${CMUX_SOCKET_PATH:-${CMUX_SOCKET:-}}"
-          if [ -n "$cmux_reconnect_cli" ] && [ -n "$cmux_reconnect_socket" ] && [ -n "${CMUX_WORKSPACE_ID:-}" ]; then
-            cmux_reconnect_payload="{\\"workspace_id\\":\\"$CMUX_WORKSPACE_ID\\""
-            if [ -n "${CMUX_SURFACE_ID:-}" ]; then
-              cmux_reconnect_payload="$cmux_reconnect_payload,\\"surface_id\\":\\"$CMUX_SURFACE_ID\\""
+          hmux_reconnect_socket="${HMUX_SOCKET_PATH:-${HMUX_SOCKET:-}}"
+          if [ -n "$hmux_reconnect_cli" ] && [ -n "$hmux_reconnect_socket" ] && [ -n "${HMUX_WORKSPACE_ID:-}" ]; then
+            hmux_reconnect_payload="{\\"workspace_id\\":\\"$HMUX_WORKSPACE_ID\\""
+            if [ -n "${HMUX_SURFACE_ID:-}" ]; then
+              hmux_reconnect_payload="$hmux_reconnect_payload,\\"surface_id\\":\\"$HMUX_SURFACE_ID\\""
             fi
-            cmux_reconnect_payload="$cmux_reconnect_payload}"
-            if "$cmux_reconnect_cli" --socket "$cmux_reconnect_socket" rpc workspace.remote.reconnect "$cmux_reconnect_payload" >/dev/null 2>&1; then
-              exec /bin/sh -lc "$cmux_disconnect_reconnect_command"
+            hmux_reconnect_payload="$hmux_reconnect_payload}"
+            if "$hmux_reconnect_cli" --socket "$hmux_reconnect_socket" rpc workspace.remote.reconnect "$hmux_reconnect_payload" >/dev/null 2>&1; then
+              exec /bin/sh -lc "$hmux_disconnect_reconnect_command"
             fi
           fi
-          printf '\\033[2m%s\\033[0m\\n' "$cmux_disconnect_reconnect_unavailable_line" >&2
+          printf '\\033[2m%s\\033[0m\\n' "$hmux_disconnect_reconnect_unavailable_line" >&2
           while IFS= read -r _; do :; done
           exit 0
         fi
-        printf '\\033[2m%s\\033[0m\\n' "$cmux_disconnect_reconnect_unavailable_line" >&2
+        printf '\\033[2m%s\\033[0m\\n' "$hmux_disconnect_reconnect_unavailable_line" >&2
         while IFS= read -r _; do :; done
         exit 0
 

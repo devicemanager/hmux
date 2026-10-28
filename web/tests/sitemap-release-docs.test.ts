@@ -23,8 +23,8 @@ function releaseSitemapXml(urls: readonly string[]): string {
 
 const saved = {
   fetch: globalThis.fetch,
-  channel: process.env.CMUX_DOCS_CHANNEL,
-  origin: process.env.CMUX_RELEASE_DOCS_ORIGIN,
+  channel: process.env.HMUX_DOCS_CHANNEL,
+  origin: process.env.HMUX_RELEASE_DOCS_ORIGIN,
 };
 let requested: string[] = [];
 
@@ -37,16 +37,16 @@ function serveReleaseSitemap(response: () => Response) {
 
 beforeEach(() => {
   requested = [];
-  delete process.env.CMUX_DOCS_CHANNEL;
-  process.env.CMUX_RELEASE_DOCS_ORIGIN = "https://release-docs.test";
+  delete process.env.HMUX_DOCS_CHANNEL;
+  process.env.HMUX_RELEASE_DOCS_ORIGIN = "https://release-docs.test";
 });
 
 afterEach(() => {
   globalThis.fetch = saved.fetch;
-  if (saved.channel === undefined) delete process.env.CMUX_DOCS_CHANNEL;
-  else process.env.CMUX_DOCS_CHANNEL = saved.channel;
-  if (saved.origin === undefined) delete process.env.CMUX_RELEASE_DOCS_ORIGIN;
-  else process.env.CMUX_RELEASE_DOCS_ORIGIN = saved.origin;
+  if (saved.channel === undefined) delete process.env.HMUX_DOCS_CHANNEL;
+  else process.env.HMUX_DOCS_CHANNEL = saved.channel;
+  if (saved.origin === undefined) delete process.env.HMUX_RELEASE_DOCS_ORIGIN;
+  else process.env.HMUX_RELEASE_DOCS_ORIGIN = saved.origin;
 });
 
 describe("main site sitemap", () => {
@@ -90,7 +90,7 @@ describe("main site sitemap", () => {
 
 describe("docs zone sitemap", () => {
   test("lists the docs the zone was built with and reads no other zone", async () => {
-    process.env.CMUX_DOCS_CHANNEL = "release";
+    process.env.HMUX_DOCS_CHANNEL = "release";
     serveReleaseSitemap(() => {
       throw new Error("a docs zone must not read the release sitemap");
     });

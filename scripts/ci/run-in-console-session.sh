@@ -37,8 +37,8 @@ fi
 # let one detached child keep the CI step alive after the test runner exits.
 # run-and-capture owns the live follower separately, so descendants inherit only
 # the regular capture file. Explicit callers already inside run-and-capture set
-# CMUX_CI_FILE_CAPTURE_ACTIVE and skip this one common boundary.
-if [ "${CMUX_CI_FILE_CAPTURE_ACTIVE:-0}" != "1" ]; then
+# HMUX_CI_FILE_CAPTURE_ACTIVE and skip this one common boundary.
+if [ "${HMUX_CI_FILE_CAPTURE_ACTIVE:-0}" != "1" ]; then
   app_host_command=0
   for command_arg in "$@"; do
     case "$command_arg" in
@@ -49,9 +49,9 @@ if [ "${CMUX_CI_FILE_CAPTURE_ACTIVE:-0}" != "1" ]; then
     esac
   done
   if [ "$app_host_command" = "1" ]; then
-    capture_tag="${CMUX_TAG:-untagged}"
+    capture_tag="${HMUX_TAG:-untagged}"
     capture_tag="$(printf '%s' "$capture_tag" | tr -c 'A-Za-z0-9._-' '_')"
-    capture_path="${RUNNER_TEMP:-/tmp}/cmux-app-host-console-capture-${capture_tag}-pid-$$.log"
+    capture_path="${RUNNER_TEMP:-/tmp}/hmux-app-host-console-capture-${capture_tag}-pid-$$.log"
     exec /bin/bash "$ci_script_dir/run-and-capture.sh" "$capture_path" "$0" "$@"
   fi
 fi
@@ -65,19 +65,19 @@ esac
 # App-host CI publishes neutral paths while retaining the console user's real
 # HOME and configuration redirects for Xcode and the GUI login session. Never
 # let a reused runner's personal SSH agent leak into isolated app-host tests.
-if [ -n "${CMUX_APP_HOST_HOME:-}" ]; then
+if [ -n "${HMUX_APP_HOST_HOME:-}" ]; then
   unset SSH_AUTH_SOCK
 fi
 
 prepare_app_host_home_for_console_user() {
   local console_user="$1"
   local cleanup_requested="$2"
-  [ -n "${CMUX_APP_HOST_HOME:-}" ] || return 0
-  cmux_validate_published_app_host_identity_values || return 1
+  [ -n "${HMUX_APP_HOST_HOME:-}" ] || return 0
+  hmux_validate_published_app_host_identity_values || return 1
 
-  local app_host_home="$CMUX_RESOLVED_APP_HOST_HOME"
-  local app_host_receipt_dir="$CMUX_RESOLVED_APP_HOST_RECEIPT_DIR"
-  local app_host_confirmation_file="$CMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE"
+  local app_host_home="$HMUX_RESOLVED_APP_HOST_HOME"
+  local app_host_receipt_dir="$HMUX_RESOLVED_APP_HOST_RECEIPT_DIR"
+  local app_host_confirmation_file="$HMUX_RESOLVED_APP_HOST_CONFIRMATION_FILE"
   if sudo -n test -L "$app_host_home"; then
     echo "FAIL: refusing app-host preparation through a home symlink" >&2
     return 1
@@ -132,9 +132,9 @@ prepare_app_host_home_for_console_user() {
     scope_exists=1
   fi
 
-  local validation_function="cmux_validate_published_app_host_identity"
+  local validation_function="hmux_validate_published_app_host_identity"
   if [ "$cleanup_requested" = "1" ]; then
-    validation_function="cmux_validate_published_app_host_identity_values"
+    validation_function="hmux_validate_published_app_host_identity_values"
   fi
 
   # Cleanup may receive paths owned by either the runner account (setup failed
@@ -145,15 +145,15 @@ prepare_app_host_home_for_console_user() {
       GITHUB_REPOSITORY_ID="$GITHUB_REPOSITORY_ID" \
       GITHUB_RUN_ID="$GITHUB_RUN_ID" \
       GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" \
-      CMUX_APP_HOST_SHARD="$CMUX_APP_HOST_SHARD" \
+      HMUX_APP_HOST_SHARD="$HMUX_APP_HOST_SHARD" \
       RUNNER_TEMP="$RUNNER_TEMP" \
-      CMUX_APP_HOST_KEY="$CMUX_APP_HOST_KEY" \
-      CMUX_APP_HOST_HOME="$CMUX_APP_HOST_HOME" \
-      CMUX_APP_HOST_XDG_CONFIG_HOME="$CMUX_APP_HOST_XDG_CONFIG_HOME" \
-      CMUX_APP_HOST_RECEIPT_DIR="$CMUX_APP_HOST_RECEIPT_DIR" \
-      CMUX_APP_HOST_CLEANUP_CONFIRMATION="$CMUX_APP_HOST_CLEANUP_CONFIRMATION" \
-      CMUX_APP_HOST_CONFIRMATION_FILE="$CMUX_APP_HOST_CONFIRMATION_FILE" \
-      /bin/bash -c 'source "$1" && "$2" && cmux_validate_app_host_cleanup_confirmation' \
+      HMUX_APP_HOST_KEY="$HMUX_APP_HOST_KEY" \
+      HMUX_APP_HOST_HOME="$HMUX_APP_HOST_HOME" \
+      HMUX_APP_HOST_XDG_CONFIG_HOME="$HMUX_APP_HOST_XDG_CONFIG_HOME" \
+      HMUX_APP_HOST_RECEIPT_DIR="$HMUX_APP_HOST_RECEIPT_DIR" \
+      HMUX_APP_HOST_CLEANUP_CONFIRMATION="$HMUX_APP_HOST_CLEANUP_CONFIRMATION" \
+      HMUX_APP_HOST_CONFIRMATION_FILE="$HMUX_APP_HOST_CONFIRMATION_FILE" \
+      /bin/bash -c 'source "$1" && "$2" && hmux_validate_app_host_cleanup_confirmation' \
         bash "$ci_script_dir/app-host-isolation.sh" "$validation_function"
 
     local runner_user scope_path scope_owner
@@ -198,20 +198,20 @@ prepare_app_host_home_for_console_user() {
   # paths from the same account that will launch or tear down the app host.
   local confirmation_validation_function=:
   if [ "$scope_exists" = "1" ]; then
-    confirmation_validation_function="cmux_validate_app_host_cleanup_confirmation"
+    confirmation_validation_function="hmux_validate_app_host_cleanup_confirmation"
   fi
   sudo -n -u "$console_user" env \
     GITHUB_REPOSITORY_ID="$GITHUB_REPOSITORY_ID" \
     GITHUB_RUN_ID="$GITHUB_RUN_ID" \
     GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" \
-    CMUX_APP_HOST_SHARD="$CMUX_APP_HOST_SHARD" \
+    HMUX_APP_HOST_SHARD="$HMUX_APP_HOST_SHARD" \
     RUNNER_TEMP="$RUNNER_TEMP" \
-    CMUX_APP_HOST_KEY="$CMUX_APP_HOST_KEY" \
-    CMUX_APP_HOST_HOME="$CMUX_APP_HOST_HOME" \
-    CMUX_APP_HOST_XDG_CONFIG_HOME="$CMUX_APP_HOST_XDG_CONFIG_HOME" \
-    CMUX_APP_HOST_RECEIPT_DIR="$CMUX_APP_HOST_RECEIPT_DIR" \
-    CMUX_APP_HOST_CLEANUP_CONFIRMATION="$CMUX_APP_HOST_CLEANUP_CONFIRMATION" \
-    CMUX_APP_HOST_CONFIRMATION_FILE="$CMUX_APP_HOST_CONFIRMATION_FILE" \
+    HMUX_APP_HOST_KEY="$HMUX_APP_HOST_KEY" \
+    HMUX_APP_HOST_HOME="$HMUX_APP_HOST_HOME" \
+    HMUX_APP_HOST_XDG_CONFIG_HOME="$HMUX_APP_HOST_XDG_CONFIG_HOME" \
+    HMUX_APP_HOST_RECEIPT_DIR="$HMUX_APP_HOST_RECEIPT_DIR" \
+    HMUX_APP_HOST_CLEANUP_CONFIRMATION="$HMUX_APP_HOST_CLEANUP_CONFIRMATION" \
+    HMUX_APP_HOST_CONFIRMATION_FILE="$HMUX_APP_HOST_CONFIRMATION_FILE" \
     /bin/bash -c 'source "$1" && "$2" && "$3"' \
       bash "$ci_script_dir/app-host-isolation.sh" \
         "$validation_function" "$confirmation_validation_function"
@@ -231,19 +231,19 @@ if [ -n "$console_user" ] && [ "$console_user" != "root" ] \
   # value for an unset var (that would defeat a `${VAR:-default}` downstream).
   # HOME is set explicitly to the console user's home.
   forward=(PATH DEVELOPER_DIR GITHUB_WORKSPACE RUNNER_TEMP CI GITHUB_ACTIONS \
-    CMUX_DERIVED_DATA_PATH CMUX_CI_RUNTIME_SOURCE_ROOT CMUX_TAG CMUX_SKIP_ZIG_BUILD \
-    CMUX_UNIT_TEST_TIMEOUT_SECONDS \
-    CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS \
-    CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS \
-    CMUX_XCODEBUILD_NONINTERACTIVE_TIMEOUT_SECONDS \
-    CMUX_APP_HOST_XCODEBUILD_ATTEMPTS \
-    CMUX_CI_RUNTIME_SOURCE_ROOT \
-    CMUX_RENDERER_MEMORY_REGRESSION \
-    CMUX_APP_HOST_CAPTURE_XCRESULTS CMUX_APP_HOST_RESULT_BUNDLE_ROOT CMUX_APP_HOST_TEST_CASE_TIMEOUT_SECONDS \
-    GITHUB_REPOSITORY_ID GITHUB_RUN_ID GITHUB_RUN_ATTEMPT CMUX_APP_HOST_SHARD CMUX_APP_HOST_XCTESTRUN CMUX_NUMERIC_LOCALE_XCTESTRUN CMUX_CI_RUNTIME_SOURCE_ROOT CMUX_CI_APP_HOST_ISOLATION_REQUIRED CMUX_APP_HOST_KEY CMUX_APP_HOST_HOME CMUX_APP_HOST_XDG_CONFIG_HOME CMUX_APP_HOST_RECEIPT_DIR CMUX_APP_HOST_CLEANUP_CONFIRMATION CMUX_APP_HOST_CONFIRMATION_FILE \
+    HMUX_DERIVED_DATA_PATH HMUX_CI_RUNTIME_SOURCE_ROOT HMUX_TAG HMUX_SKIP_ZIG_BUILD \
+    HMUX_UNIT_TEST_TIMEOUT_SECONDS \
+    HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS \
+    HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS \
+    HMUX_XCODEBUILD_NONINTERACTIVE_TIMEOUT_SECONDS \
+    HMUX_APP_HOST_XCODEBUILD_ATTEMPTS \
+    HMUX_CI_RUNTIME_SOURCE_ROOT \
+    HMUX_RENDERER_MEMORY_REGRESSION \
+    HMUX_APP_HOST_CAPTURE_XCRESULTS HMUX_APP_HOST_RESULT_BUNDLE_ROOT HMUX_APP_HOST_TEST_CASE_TIMEOUT_SECONDS \
+    GITHUB_REPOSITORY_ID GITHUB_RUN_ID GITHUB_RUN_ATTEMPT HMUX_APP_HOST_SHARD HMUX_APP_HOST_XCTESTRUN HMUX_NUMERIC_LOCALE_XCTESTRUN HMUX_CI_RUNTIME_SOURCE_ROOT HMUX_CI_APP_HOST_ISOLATION_REQUIRED HMUX_APP_HOST_KEY HMUX_APP_HOST_HOME HMUX_APP_HOST_XDG_CONFIG_HOME HMUX_APP_HOST_RECEIPT_DIR HMUX_APP_HOST_CLEANUP_CONFIRMATION HMUX_APP_HOST_CONFIRMATION_FILE \
     CFFIXED_USER_HOME XDG_CONFIG_HOME CARGO_HOME RUSTUP_HOME)
-  if [ "${CMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" = "1" ]; then
-    forward+=(CMUX_CI_APP_HOST_CLEANUP_TEST_HELPER CMUX_APP_HOST_LSOF CMUX_FAKE_LSOF_STATE)
+  if [ "${HMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" = "1" ]; then
+    forward+=(HMUX_CI_APP_HOST_CLEANUP_TEST_HELPER HMUX_APP_HOST_LSOF HMUX_FAKE_LSOF_STATE)
   fi
   env_pairs=()
   for var in "${forward[@]}"; do

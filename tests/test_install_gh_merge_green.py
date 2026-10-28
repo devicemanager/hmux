@@ -50,7 +50,7 @@ else:
 
 class DefaultTestsCoverTheHelpersTests(unittest.TestCase):
     """An install runs DEFAULT_TESTS before it trusts a new main. Every scripts/ci helper gh-merge-green runs whose
-    tests/test_<helper>.py exists must be among them: cmux#23516 added merge_check_paths.py and its tests, but not
+    tests/test_<helper>.py exists must be among them: hmux#23516 added merge_check_paths.py and its tests, but not
     the module here, so an install never ran them."""
 
     def test_every_helper_with_tests_is_in_default_tests(self):
@@ -254,7 +254,7 @@ class InstallGhMergeGreenTests(unittest.TestCase):
 
     def submitter_only_mac(self, verdict):
         """This HOME is one of Leo's Macs (no local test suites); CI reads come from a fake glaeda-gh."""
-        role = self.root / ".local" / "lib" / "cmux-local-build-guards" / "build-role"
+        role = self.root / ".local" / "lib" / "hmux-local-build-guards" / "build-role"
         role.parent.mkdir(parents=True, exist_ok=True)
         role.write_text("submitter-only\n")
         fake = self.root / "fakebin" / "glaeda-gh"

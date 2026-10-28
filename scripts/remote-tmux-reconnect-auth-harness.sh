@@ -10,29 +10,29 @@
 # no network changes. Same isolation contract as the render harness.
 #
 # PREREQUISITES
-#   - A tagged Debug app built AND RUNNING; run with CMUX_TAG=<tag>.
+#   - A tagged Debug app built AND RUNNING; run with HMUX_TAG=<tag>.
 #   - remote-tmux beta on for that bundle id (a fresh tagged build defaults OFF):
-#       defaults write com.cmuxterm.app.debug.<tag> remoteTmux.beta.enabled -bool true
+#       defaults write com.hmuxterm.app.debug.<tag> remoteTmux.beta.enabled -bool true
 #   - A loopback ssh alias whose sshd this script may break, created by
-#     `scripts/remote-tmux-fuzz-host.sh <name>`. Defaults to `cmux-fuzzhost`;
-#     override with CMUX_AUTH_HOST / CMUX_AUTH_SSHD_DIR.
+#     `scripts/remote-tmux-fuzz-host.sh <name>`. Defaults to `hmux-fuzzhost`;
+#     override with HMUX_AUTH_HOST / HMUX_AUTH_SSHD_DIR.
 #
 # Exit code is the number of failed scenarios (0 = all green).
 # ============================================================================
 set -uo pipefail
 
-TAG="${CMUX_TAG:?set CMUX_TAG=<tag> of a running tagged Debug app}"
-HOST="${CMUX_AUTH_HOST:-cmux-fuzzhost}"
-SSHD_DIR="${CMUX_AUTH_SSHD_DIR:-$HOME/Library/Caches/cmux/remote-tmux-fuzz/${HOST}-sshd}"
+TAG="${HMUX_TAG:?set HMUX_TAG=<tag> of a running tagged Debug app}"
+HOST="${HMUX_AUTH_HOST:-hmux-fuzzhost}"
+SSHD_DIR="${HMUX_AUTH_SSHD_DIR:-$HOME/Library/Caches/hmux/remote-tmux-fuzz/${HOST}-sshd}"
 AUTH="$SSHD_DIR/authorized_keys"
-CLI=(scripts/cmux-debug-cli.sh)
+CLI=(scripts/hmux-debug-cli.sh)
 FAILURES=0
 
 log()  { printf '%s %s\n' "$(date '+%H:%M:%S')" "$*"; }
 pass() { printf '  ✅ %s\n' "$*"; }
 fail() { printf '  ❌ %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
 
-cli() { CMUX_QUIET=1 CMUX_TAG="$TAG" "${CLI[@]}" "$@" 2>&1; }
+cli() { HMUX_QUIET=1 HMUX_TAG="$TAG" "${CLI[@]}" "$@" 2>&1; }
 
 # Workspaces as `<ref>\t<title>`. The plain text listing decorates the selected row
 # with `* ` and `[selected]`, so comparing raw lines reports an untouched workspace as
@@ -68,10 +68,10 @@ host_sessions() {
 mirror_refs() {
   # Exported, not prefixed: a `VAR=x cmd | python3` assignment reaches only the left
   # side of the pipe, so the matcher would silently see an empty set and match nothing.
-  export CMUX_HOST_SESSIONS="$HOST_SESSIONS"
+  export HMUX_HOST_SESSIONS="$HOST_SESSIONS"
   cli list-workspaces --json 2>/dev/null | python3 -c '
 import json, os, sys
-want = {s for s in os.environ.get("CMUX_HOST_SESSIONS", "").split("\n") if s}
+want = {s for s in os.environ.get("HMUX_HOST_SESSIONS", "").split("\n") if s}
 try:
     d = json.load(sys.stdin)
 except Exception:
@@ -145,11 +145,11 @@ sshd_log_lines() { wc -l < "$SSHD_DIR/sshd.log" 2>/dev/null | tr -d ' '; }
 # A private work dir rather than fixed /tmp paths: a hardcoded name is pre-creatable by anyone
 # on the box, so the stderr this harness reads back to explain a failure could be another
 # process's file, or a symlink pointing at something of mine. Also survives two runs at once.
-WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/cmux-reconnect-auth.XXXXXX")" || exit 1
+WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/hmux-reconnect-auth.XXXXXX")" || exit 1
 cleanup() { restore_auth; rm -rf "$WORKDIR"; }
 trap cleanup EXIT
 
-control_path() { ls "$HOME"/.cmux/ssh/tmux-*"$(printf '%s' "$HOST" | tr -c 'a-z0-9' '-')"*.sock 2>/dev/null | head -1; }
+control_path() { ls "$HOME"/.hmux/ssh/tmux-*"$(printf '%s' "$HOST" | tr -c 'a-z0-9' '-')"*.sock 2>/dev/null | head -1; }
 
 # The local `ssh` processes carrying a control stream for this host. The remote command
 # is a `/bin/sh` resolver script, so the argv does NOT contain a literal "tmux -CC" —
@@ -163,7 +163,7 @@ drop_stream_unauthenticated() {
   # Order matters: master gone means the reconnect must authenticate from scratch,
   # and with authorized_keys moved aside that authentication fails.
   mv "$AUTH" "$AUTH.off" || return 1
-  [ -n "$CMUX_CP" ] && ssh -O exit -o ControlPath="$CMUX_CP" "$HOST" >/dev/null 2>&1
+  [ -n "$HMUX_CP" ] && ssh -O exit -o ControlPath="$HMUX_CP" "$HOST" >/dev/null 2>&1
   local pids; pids="$(control_stream_pids)"
   if [ -z "$pids" ]; then
     log "no control-stream process matched — the kill would be a no-op, so the drop is not real"
@@ -188,7 +188,7 @@ cd "$(dirname "$0")/.." || exit 1
 # and looking like a failure of the code under test.
 app_socket_ready() { cli list-workspaces >/dev/null 2>&1; }
 if ! await "the app's control socket" 120 app_socket_ready; then
-  log "no response on the tagged app socket for CMUX_TAG=$TAG"
+  log "no response on the tagged app socket for HMUX_TAG=$TAG"
   log "is the tagged app running? scripts/reload.sh --tag $TAG --launch"
   exit 1
 fi
@@ -211,15 +211,15 @@ fi
 MIRROR_BASELINE="$(mirror_refs)"
 pass "mirror settled ($(printf '%s\n' "$MIRROR_BASELINE" | grep -c .) workspaces for $SESSION_COUNT sessions)"
 
-# Capture cmux's own ControlPath while the socket still exists. `ssh -O exit` removes
-# it, and the resume hinges on a master appearing at THIS exact path — cmux probes its
+# Capture hmux's own ControlPath while the socket still exists. `ssh -O exit` removes
+# it, and the resume hinges on a master appearing at THIS exact path — hmux probes its
 # own socket, so a master opened anywhere else is invisible to it.
-CMUX_CP="$(control_path)"
-if [ -z "$CMUX_CP" ]; then
-  fail "could not find cmux's ssh ControlPath — cannot verify the resume"
+HMUX_CP="$(control_path)"
+if [ -z "$HMUX_CP" ]; then
+  fail "could not find hmux's ssh ControlPath — cannot verify the resume"
   exit "$FAILURES"
 fi
-log "cmux ControlPath: $CMUX_CP"
+log "hmux ControlPath: $HMUX_CP"
 
 drop_stream_unauthenticated || { fail "could not break auth"; exit "$FAILURES"; }
 if await "a login workspace" 90 login_tab_present; then
@@ -284,26 +284,26 @@ fi
 
 log "=== scenario 3: completing the login resumes the mirror"
 restore_auth
-# Stand in for the user finishing the login: open the shared master at cmux's own
-# ControlPath, which is what the login pane's `ssh` invocation does. cmux probes its own
+# Stand in for the user finishing the login: open the shared master at hmux's own
+# ControlPath, which is what the login pane's `ssh` invocation does. hmux probes its own
 # socket, so a master opened anywhere else would be invisible to it.
 master_open_attempt() {
-  ssh -o ControlMaster=auto -o ControlPath="$CMUX_CP" \
+  ssh -o ControlMaster=auto -o ControlPath="$HMUX_CP" \
       -o ControlPersist=2m -n -T "$HOST" true 2>"$WORKDIR/master-open.err"
-  ssh -O check -o ControlPath="$CMUX_CP" "$HOST" >/dev/null 2>&1
+  ssh -O check -o ControlPath="$HMUX_CP" "$HOST" >/dev/null 2>&1
 }
 # Retried, not one-shot: this runs immediately after auth is restored, and a single
 # attempt that loses its stderr turns any transient refusal into an unexplained failure.
-if ! await "a master at cmux's ControlPath (standing in for the user's login)" 30 master_open_attempt; then
-  fail "could not open a master at cmux's ControlPath — the resume cannot be tested"
+if ! await "a master at hmux's ControlPath (standing in for the user's login)" 30 master_open_attempt; then
+  fail "could not open a master at hmux's ControlPath — the resume cannot be tested"
   log "last ssh stderr: $(tr '\n' ' ' < "$WORKDIR/master-open.err" 2>/dev/null)"
   exit "$FAILURES"
 fi
 
-# Resumption means cmux spawned a NEW control stream. Checking the master itself would
+# Resumption means hmux spawned a NEW control stream. Checking the master itself would
 # be vacuous, since this script just opened it.
 stream_respawned() { [ -n "$(control_stream_pids)" ]; }
-if await "cmux to spawn a new control stream (mirror resumed)" 150 stream_respawned; then
+if await "hmux to spawn a new control stream (mirror resumed)" 150 stream_respawned; then
   pass "mirror resumed: a new control stream is live"
 else
   fail "mirror never resumed after authentication (no new control stream)"
@@ -318,7 +318,7 @@ fi
 log "=== scenario 4: a new outage offers again, and reconnecting closes that login"
 # Two things at once, and both need the reconnect from scenario 3 to have happened: the
 # dismissal from scenario 2 must no longer be in force (a reconnect ends the outage it
-# applied to), and the login cmux opens must close by itself once the host is back. Checking
+# applied to), and the login hmux opens must close by itself once the host is back. Checking
 # the close on the scenario-2 login would prove nothing, since the user closed that one.
 if ! drop_stream_unauthenticated; then
   fail "could not break auth for the second outage"
@@ -333,7 +333,7 @@ else
   restore_auth
   if [ -n "$SECOND_LOGIN" ]; then
     await "a master for the second login" 30 master_open_attempt >/dev/null || true
-    if await "cmux to close the login once the host is back" 120 login_absent; then
+    if await "hmux to close the login once the host is back" 120 login_absent; then
       pass "the login closed once the host reconnected"
     else
       fail "the login is still open after the host reconnected; a flap would stack more"

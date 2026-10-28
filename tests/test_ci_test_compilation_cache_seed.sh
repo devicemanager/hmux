@@ -49,8 +49,8 @@ echo "PASS: admission and the seeder build the app-host test product through one
 # same per-runner root before cleanup and export it for later steps.
 for line in \
   'root="$(scripts/ci/canonical-build-root.sh --print-root)"' \
-  'CMUX_COMPILE_ADMISSION_DERIVED_DATA=$root/derived-data-compile-admission' \
-  'CMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas'; do
+  'HMUX_COMPILE_ADMISSION_DERIVED_DATA=$root/derived-data-compile-admission' \
+  'HMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas'; do
   if ! grep -Fq "$line" <<<"$ADMISSION" || ! grep -Fq "$line" <<<"$SEEDER"; then
     echo "FAIL: admission and the seeder must both set $line"
     exit 1
@@ -67,8 +67,8 @@ fi
 echo "PASS: the seeder keys the test compilation cache on the canonical fingerprint"
 
 # Pull-request compile admission does not restore the test compilation cache.
-# Swift keys every compile job on its whole module, so the one-module `cmux`
-# app target (and cmuxUITests) missed on every file: 581 of 581 and 566 of 566
+# Swift keys every compile job on its whole module, so the one-module `hmux`
+# app target (and hmuxUITests) missed on every file: 581 of 581 and 566 of 566
 # in two sampled admission logs on 2026-09-24, although the key, path and
 # Xcode matched the seed exactly. Only modules unchanged since the six-hourly
 # seed hit, and those are what the adopted DerivedData seed already leaves
@@ -177,7 +177,7 @@ chmod +x "$TMP_DIR/bin/xcodebuild"
 export STUB_RESOLVE_ATTEMPTS="$TMP_DIR/resolve-attempts.txt"
 export STUB_XCODEBUILD_ARGS="$TMP_DIR/args.txt"
 # swiftpm-manifest-cache.sh runs resolves under a fixed environment.
-export CMUX_CI_SWIFTPM_KEEP_ENV="STUB_RESOLVE_ATTEMPTS STUB_XCODEBUILD_ARGS STUB_SKIP_UPDATES_FAILS STUB_RESOLVE_FAILS_UNTIL STUB_RESOLVE_ARTIFACTS_FROM STUB_XCODE_VERSION"
+export HMUX_CI_SWIFTPM_KEEP_ENV="STUB_RESOLVE_ATTEMPTS STUB_XCODEBUILD_ARGS STUB_SKIP_UPDATES_FAILS STUB_RESOLVE_FAILS_UNTIL STUB_RESOLVE_ARTIFACTS_FROM STUB_XCODE_VERSION"
 
 run_script() {
   (cd "$TMP_DIR/work" && PATH="$TMP_DIR/bin:$PATH" "$SCRIPT" "$@")
@@ -196,22 +196,22 @@ echo "PASS: the fingerprint follows the build path and the toolchain"
 run_script build "$TMP_DIR/derived" "$TMP_DIR/packages" "$TMP_DIR/cas" "$TMP_DIR/build.log" >/dev/null
 canonical_root="$("$ROOT_DIR/scripts/ci/canonical-build-root.sh" --print-root)"
 printf -v prefix_map_flags \
-  'OTHER_SWIFT_FLAGS=$(inherited) -Xfrontend -file-prefix-map -Xfrontend %s=/private/tmp/cmux-test-source -Xfrontend -debug-prefix-map -Xfrontend %s=/private/tmp/cmux-test-source $(CMUX_CI_SWIFT_FLAGS_$(TARGET_NAME))' \
+  'OTHER_SWIFT_FLAGS=$(inherited) -Xfrontend -file-prefix-map -Xfrontend %s=/private/tmp/hmux-test-source -Xfrontend -debug-prefix-map -Xfrontend %s=/private/tmp/hmux-test-source $(HMUX_CI_SWIFT_FLAGS_$(TARGET_NAME))' \
   "$canonical_root" "$canonical_root"
 for expected in \
-  cmux \
-  cmux-unit \
-  cmux-cli-tests \
+  hmux \
+  hmux-unit \
+  hmux-cli-tests \
   build-for-testing \
   -showBuildTimingSummary \
-  'COMPILATION_CACHE_ENABLE_CACHING=$(CMUX_CI_COMPILATION_CACHE_$(TARGET_NAME):default=YES)' \
-  CMUX_CI_COMPILATION_CACHE_cmuxTests=NO \
-  'SWIFT_USE_INTEGRATED_DRIVER=$(CMUX_CI_INTEGRATED_DRIVER_$(TARGET_NAME):default=YES)' \
-  CMUX_CI_INTEGRATED_DRIVER_cmuxTests=NO \
+  'COMPILATION_CACHE_ENABLE_CACHING=$(HMUX_CI_COMPILATION_CACHE_$(TARGET_NAME):default=YES)' \
+  HMUX_CI_COMPILATION_CACHE_hmuxTests=NO \
+  'SWIFT_USE_INTEGRATED_DRIVER=$(HMUX_CI_INTEGRATED_DRIVER_$(TARGET_NAME):default=YES)' \
+  HMUX_CI_INTEGRATED_DRIVER_hmuxTests=NO \
   "$prefix_map_flags" \
-  CMUX_CI_SWIFT_FLAGS_cmuxTests=-no-emit-module-separately \
-  'SWIFT_INSTALL_MODULE=$(CMUX_CI_INSTALL_MODULE_$(TARGET_NAME):default=YES)' \
-  CMUX_CI_INSTALL_MODULE_cmuxTests=NO \
+  HMUX_CI_SWIFT_FLAGS_hmuxTests=-no-emit-module-separately \
+  'SWIFT_INSTALL_MODULE=$(HMUX_CI_INSTALL_MODULE_$(TARGET_NAME):default=YES)' \
+  HMUX_CI_INSTALL_MODULE_hmuxTests=NO \
   "COMPILATION_CACHE_CAS_PATH=$TMP_DIR/cas" \
   "$TMP_DIR/derived" \
   "$TMP_DIR/packages"; do
@@ -224,29 +224,29 @@ if [ "$(grep -c '^---$' "$STUB_XCODEBUILD_ARGS")" -ne 3 ] || [ ! -d "$TMP_DIR/ca
   echo "FAIL: the build must run the app/UI, unit and CLI test schemes against an existing CAS directory"
   exit 1
 fi
-# `build` compiles no test files: the cmux-unit scheme marks cmuxTests
+# `build` compiles no test files: the hmux-unit scheme marks hmuxTests
 # buildForRunning=NO.
 if grep -Fxq -- build "$STUB_XCODEBUILD_ARGS"; then
   echo "FAIL: the app-host test product must be compiled with build-for-testing, not build"
   exit 1
 fi
-if grep -Fxq -- cmux-numeric-locale "$STUB_XCODEBUILD_ARGS"; then
-  echo "FAIL: numeric locale must reuse the cmux-unit xctestrun instead of compiling another scheme"
+if grep -Fxq -- hmux-numeric-locale "$STUB_XCODEBUILD_ARGS"; then
+  echo "FAIL: numeric locale must reuse the hmux-unit xctestrun instead of compiling another scheme"
   exit 1
 fi
-echo "PASS: the build compiles all three schemes for testing, with the compilation cache on and the module emitted outside cmuxTests"
+echo "PASS: the build compiles all three schemes for testing, with the compilation cache on and the module emitted outside hmuxTests"
 for version in 26.3 26.6 26.6.1 27.0; do
   : > "$STUB_XCODEBUILD_ARGS"
   STUB_XCODE_VERSION="$version" run_script build "$TMP_DIR/derived" "$TMP_DIR/packages" "$TMP_DIR/cas" "$TMP_DIR/build.log" >/dev/null
-  if ! grep -Fxq -- CMUX_CI_COMPILATION_CACHE_cmux=NO "$STUB_XCODEBUILD_ARGS" \
-    || ! grep -Fxq -- CMUX_CI_COMPILATION_CACHE_cmuxTests=NO "$STUB_XCODEBUILD_ARGS"; then
+  if ! grep -Fxq -- HMUX_CI_COMPILATION_CACHE_hmux=NO "$STUB_XCODEBUILD_ARGS" \
+    || ! grep -Fxq -- HMUX_CI_COMPILATION_CACHE_hmuxTests=NO "$STUB_XCODEBUILD_ARGS"; then
     echo "FAIL: on Xcode $version the app target must build without the compilation cache"
     exit 1
   fi
 done
 echo "PASS: the app target builds without the compilation cache on every Xcode"
-if ! grep -Fxq 'build output for cmux' "$TMP_DIR/derived/cmux-build.log" \
-  || grep -Fq 'build output for cmux-unit' "$TMP_DIR/derived/cmux-build.log"; then
+if ! grep -Fxq 'build output for hmux' "$TMP_DIR/derived/hmux-build.log" \
+  || grep -Fq 'build output for hmux-unit' "$TMP_DIR/derived/hmux-build.log"; then
   echo "FAIL: the warning-budget log must retain only app/UI build output"
   exit 1
 fi
@@ -291,7 +291,7 @@ echo "PASS: resolve retries until the binary artifacts exist, in both jobs"
 : > "$STUB_RESOLVE_ATTEMPTS"
 : > "$STUB_XCODEBUILD_ARGS"
 mkdir -p "$TMP_DIR/exact-packages/checkouts/kept"
-if ! CMUX_CI_SWIFTPM_CACHE_EXACT_HIT=true run_script resolve "$TMP_DIR/derived" "$TMP_DIR/exact-packages" >/dev/null 2>&1 \
+if ! HMUX_CI_SWIFTPM_CACHE_EXACT_HIT=true run_script resolve "$TMP_DIR/derived" "$TMP_DIR/exact-packages" >/dev/null 2>&1 \
   || [ "$(wc -l < "$STUB_RESOLVE_ATTEMPTS")" -ne 1 ] \
   || ! grep -Fxq -- -skipPackageUpdates "$STUB_XCODEBUILD_ARGS"; then
   echo "FAIL: an exact package-cache hit must resolve once without fetching package remotes"
@@ -299,7 +299,7 @@ if ! CMUX_CI_SWIFTPM_CACHE_EXACT_HIT=true run_script resolve "$TMP_DIR/derived" 
 fi
 : > "$STUB_RESOLVE_ATTEMPTS"
 : > "$STUB_XCODEBUILD_ARGS"
-if ! CMUX_CI_SWIFTPM_CACHE_EXACT_HIT=true STUB_SKIP_UPDATES_FAILS=1 run_script resolve "$TMP_DIR/derived" "$TMP_DIR/exact-packages" >/dev/null 2>&1 \
+if ! HMUX_CI_SWIFTPM_CACHE_EXACT_HIT=true STUB_SKIP_UPDATES_FAILS=1 run_script resolve "$TMP_DIR/derived" "$TMP_DIR/exact-packages" >/dev/null 2>&1 \
   || [ "$(wc -l < "$STUB_RESOLVE_ATTEMPTS")" -ne 2 ] \
   || [ "$(grep -cFx -- -skipPackageUpdates "$STUB_XCODEBUILD_ARGS")" -ne 1 ] \
   || [ ! -d "$TMP_DIR/exact-packages/checkouts/kept" ]; then
@@ -309,7 +309,7 @@ fi
 for hit in "" false; do
   : > "$STUB_RESOLVE_ATTEMPTS"
   : > "$STUB_XCODEBUILD_ARGS"
-  if ! CMUX_CI_SWIFTPM_CACHE_EXACT_HIT="$hit" run_script resolve "$TMP_DIR/derived" "$TMP_DIR/prefix-packages" >/dev/null 2>&1 \
+  if ! HMUX_CI_SWIFTPM_CACHE_EXACT_HIT="$hit" run_script resolve "$TMP_DIR/derived" "$TMP_DIR/prefix-packages" >/dev/null 2>&1 \
     || grep -Fxq -- -skipPackageUpdates "$STUB_XCODEBUILD_ARGS"; then
     echo "FAIL: a prefix restore or a miss must fetch package remotes as before (hit='$hit')"
     exit 1
@@ -319,7 +319,7 @@ done
 # the Package.resolved it resolved, and a matching stamp resolves offline the
 # way an exact hit does. A changed Package.resolved, or a failed offline
 # resolve, keeps the normal resolve.
-RESOLVED_DIR="$TMP_DIR/work/cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm"
+RESOLVED_DIR="$TMP_DIR/work/hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm"
 mkdir -p "$RESOLVED_DIR"
 echo '{"pins":["a"]}' > "$RESOLVED_DIR/Package.resolved"
 rm -rf "$TMP_DIR/kept-packages"
@@ -327,7 +327,7 @@ rm -rf "$TMP_DIR/kept-packages"
 : > "$STUB_XCODEBUILD_ARGS"
 if ! run_script resolve "$TMP_DIR/derived" "$TMP_DIR/kept-packages" >/dev/null 2>&1 \
   || grep -Fxq -- -skipPackageUpdates "$STUB_XCODEBUILD_ARGS" \
-  || [ ! -s "$TMP_DIR/kept-packages/.cmux-resolved-sha256" ]; then
+  || [ ! -s "$TMP_DIR/kept-packages/.hmux-resolved-sha256" ]; then
   echo "FAIL: an unstamped package directory must resolve normally and be stamped"
   exit 1
 fi
@@ -336,7 +336,7 @@ fi
 if ! run_script resolve "$TMP_DIR/derived" "$TMP_DIR/kept-packages" >/dev/null 2>&1 \
   || [ "$(wc -l < "$STUB_RESOLVE_ATTEMPTS")" -ne 1 ] \
   || ! grep -Fxq -- -skipPackageUpdates "$STUB_XCODEBUILD_ARGS" \
-  || [ ! -s "$TMP_DIR/kept-packages/.cmux-resolved-sha256" ]; then
+  || [ ! -s "$TMP_DIR/kept-packages/.hmux-resolved-sha256" ]; then
   echo "FAIL: packages stamped for this Package.resolved must resolve once without fetching package remotes"
   exit 1
 fi
@@ -344,7 +344,7 @@ fi
 : > "$STUB_XCODEBUILD_ARGS"
 if ! STUB_SKIP_UPDATES_FAILS=1 run_script resolve "$TMP_DIR/derived" "$TMP_DIR/kept-packages" >/dev/null 2>&1 \
   || [ "$(wc -l < "$STUB_RESOLVE_ATTEMPTS")" -ne 2 ] \
-  || [ ! -s "$TMP_DIR/kept-packages/.cmux-resolved-sha256" ]; then
+  || [ ! -s "$TMP_DIR/kept-packages/.hmux-resolved-sha256" ]; then
   echo "FAIL: a failed offline resolve of stamped packages must fall back to a normal resolve"
   exit 1
 fi
@@ -359,18 +359,18 @@ fi
 : > "$STUB_RESOLVE_ATTEMPTS"
 : > "$STUB_XCODEBUILD_ARGS"
 if STUB_RESOLVE_FAILS_UNTIL=9 run_script resolve "$TMP_DIR/derived" "$TMP_DIR/kept-packages" >/dev/null 2>&1 \
-  || [ -e "$TMP_DIR/kept-packages/.cmux-resolved-sha256" ]; then
+  || [ -e "$TMP_DIR/kept-packages/.hmux-resolved-sha256" ]; then
   echo "FAIL: a failed resolve must leave no stamp behind"
   exit 1
 fi
-rm -rf "$TMP_DIR/work/cmux.xcodeproj"
+rm -rf "$TMP_DIR/work/hmux.xcodeproj"
 echo "PASS: kept packages stamped for this Package.resolved resolve offline, with a normal-resolve fallback"
 
 if ! awk '
   /^      - name: / { step = $0 }
   step ~ /name: Cache Swift packages$/ && /^        id: swift-package-cache$/ { id = 1 }
-  step ~ /name: Resolve Swift packages$/ && /CMUX_CI_SWIFTPM_CACHE_EXACT_HIT: \$\{\{ steps\.swift-package-cache\.outputs\.cache-hit \}\}/ { wired = 1 }
-  step ~ /name: Resolve Swift packages$/ && /CMUX_CI_MOVE_SOURCE_PACKAGES: "1"/ { moved = 1 }
+  step ~ /name: Resolve Swift packages$/ && /HMUX_CI_SWIFTPM_CACHE_EXACT_HIT: \$\{\{ steps\.swift-package-cache\.outputs\.cache-hit \}\}/ { wired = 1 }
+  step ~ /name: Resolve Swift packages$/ && /HMUX_CI_MOVE_SOURCE_PACKAGES: "1"/ { moved = 1 }
   END { exit !(id && wired && moved) }
 ' <<<"$ADMISSION"; then
   echo "FAIL: macos-compile-admission must pass the package cache's exact-hit output to resolve and move, not copy, the cache"
@@ -384,28 +384,28 @@ if run_script bogus >/dev/null 2>&1 || run_script build only-one-arg >/dev/null 
 fi
 echo "PASS: the script rejects bad usage"
 
-# scripts/test-unit.sh, the local test-compile wrapper, builds cmuxTests the
+# scripts/test-unit.sh, the local test-compile wrapper, builds hmuxTests the
 # way CI does: no Swift module producer or installer, with target-scoped settings.
-cmuxtests_module_values() {
-  sed -n -E "s/^$1_(INTEGRATED_DRIVER|SWIFT_FLAGS|INSTALL_MODULE)_cmuxTests=(.*)$/\\1=\\2/p" "$2" | sort -u
+hmuxtests_module_values() {
+  sed -n -E "s/^$1_(INTEGRATED_DRIVER|SWIFT_FLAGS|INSTALL_MODULE)_hmuxTests=(.*)$/\\1=\\2/p" "$2" | sort -u
 }
 : > "$STUB_XCODEBUILD_ARGS"
 run_script build "$TMP_DIR/derived" "$TMP_DIR/packages" "$TMP_DIR/cas" "$TMP_DIR/build.log" >/dev/null
-ci_values="$(cmuxtests_module_values CMUX_CI "$STUB_XCODEBUILD_ARGS")"
+ci_values="$(hmuxtests_module_values HMUX_CI "$STUB_XCODEBUILD_ARGS")"
 : > "$STUB_XCODEBUILD_ARGS"
 PATH="$TMP_DIR/bin:$PATH" "$ROOT_DIR/scripts/test-unit.sh" build-for-testing >/dev/null
-local_values="$(cmuxtests_module_values CMUX_TEST "$STUB_XCODEBUILD_ARGS")"
+local_values="$(hmuxtests_module_values HMUX_TEST "$STUB_XCODEBUILD_ARGS")"
 if [ -z "$ci_values" ] || [ "$ci_values" != "$local_values" ] \
-  || ! grep -Fxq 'SWIFT_USE_INTEGRATED_DRIVER=$(CMUX_TEST_INTEGRATED_DRIVER_$(TARGET_NAME):default=YES)' "$STUB_XCODEBUILD_ARGS" \
-  || ! grep -Fxq 'SWIFT_INSTALL_MODULE=$(CMUX_TEST_INSTALL_MODULE_$(TARGET_NAME):default=YES)' "$STUB_XCODEBUILD_ARGS" \
-  || ! grep -Fxq 'OTHER_SWIFT_FLAGS=$(inherited) $(CMUX_TEST_SWIFT_FLAGS_$(TARGET_NAME))' "$STUB_XCODEBUILD_ARGS"; then
-  echo "FAIL: scripts/test-unit.sh must build cmuxTests without a Swift module, like CI"
+  || ! grep -Fxq 'SWIFT_USE_INTEGRATED_DRIVER=$(HMUX_TEST_INTEGRATED_DRIVER_$(TARGET_NAME):default=YES)' "$STUB_XCODEBUILD_ARGS" \
+  || ! grep -Fxq 'SWIFT_INSTALL_MODULE=$(HMUX_TEST_INSTALL_MODULE_$(TARGET_NAME):default=YES)' "$STUB_XCODEBUILD_ARGS" \
+  || ! grep -Fxq 'OTHER_SWIFT_FLAGS=$(inherited) $(HMUX_TEST_SWIFT_FLAGS_$(TARGET_NAME))' "$STUB_XCODEBUILD_ARGS"; then
+  echo "FAIL: scripts/test-unit.sh must build hmuxTests without a Swift module, like CI"
   exit 1
 fi
 : > "$STUB_XCODEBUILD_ARGS"
-CMUX_TEST_EMIT_MODULE=1 PATH="$TMP_DIR/bin:$PATH" "$ROOT_DIR/scripts/test-unit.sh" build-for-testing >/dev/null
-if grep -q 'cmuxTests=' "$STUB_XCODEBUILD_ARGS"; then
-  echo "FAIL: CMUX_TEST_EMIT_MODULE=1 must keep the cmuxTests module"
+HMUX_TEST_EMIT_MODULE=1 PATH="$TMP_DIR/bin:$PATH" "$ROOT_DIR/scripts/test-unit.sh" build-for-testing >/dev/null
+if grep -q 'hmuxTests=' "$STUB_XCODEBUILD_ARGS"; then
+  echo "FAIL: HMUX_TEST_EMIT_MODULE=1 must keep the hmuxTests module"
   exit 1
 fi
-echo "PASS: scripts/test-unit.sh builds cmuxTests without a Swift module, like CI, unless CMUX_TEST_EMIT_MODULE=1"
+echo "PASS: scripts/test-unit.sh builds hmuxTests without a Swift module, like CI, unless HMUX_TEST_EMIT_MODULE=1"

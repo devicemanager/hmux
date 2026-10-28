@@ -10,7 +10,7 @@ canary deliberately measures the extra packaging and transport work.
 The producer first unpacks its freshly packaged aggregate into an owned temporary
 directory. Aggregate packaging is the existing owner of build-root symlink
 normalization; the layered packer reads that normalized tree without mutating
-the original build products. `CMUX_APP_HOST_LAYER_NORMALIZE` reports the extra
+the original build products. `HMUX_APP_HOST_LAYER_NORMALIZE` reports the extra
 normalization elapsed time and outcome. Layer packaging has no default-run cost.
 
 [`app-host-product-layers.md`](app-host-product-layers.md) owns the inner manifest
@@ -22,7 +22,7 @@ signature closure evidence.
 ## Provider identity and fallback
 
 After four successful uploads, the producer writes `app-host-layer-index.json`.
-Its `cmux.app-host-layer-transport` version 1 schema contains:
+Its `hmux.app-host-layer-transport` version 1 schema contains:
 
 - The exact repository, producer workflow run and attempt, run head SHA, checkout
   source SHA, and canonical toolchain identity.
@@ -55,10 +55,10 @@ not turn into an artifact fallback or bypass.
 
 ## Canary receipts
 
-`CMUX_APP_HOST_LAYER_TRANSFER` records each index/layer attempt, including failed
+`HMUX_APP_HOST_LAYER_TRANSFER` records each index/layer attempt, including failed
 attempts: exact artifact ID, producer run and attempt, layer name, expected ZIP
 and inner bytes, received bytes, elapsed seconds and result.
-`CMUX_APP_HOST_LAYER_ASSEMBLY` records the all-layer assembly time and outcome.
+`HMUX_APP_HOST_LAYER_ASSEMBLY` records the all-layer assembly time and outcome.
 These are whole operations, not isolated wire throughput measurements.
 
 The existing flat download action and R2 broker keep their contracts. A verified

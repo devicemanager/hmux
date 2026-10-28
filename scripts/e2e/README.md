@@ -11,7 +11,7 @@ signed in, paired, and connected.
 `backend-up.sh up` starts this run's backend on the Linux runner: the iroh-v2
 and presence Workers in local workerd, Postgres, and iroh-relay behind
 `tls-forward.mjs` on the runner's tailnet address, with per-phase timings in
-the step summary. `backend-up.sh hold` serves until `CMUX_E2E_BACKEND_DONE_FILE`
+the step summary. `backend-up.sh hold` serves until `HMUX_E2E_BACKEND_DONE_FILE`
 appears, and `backend-up.sh down` removes everything `up` created.
 `backend-env.sh env` prints the app-side origins, `hosts` and `unhosts` map
 and unmap the fixed name in `/etc/hosts`, and `wait` blocks until both Workers
@@ -30,25 +30,25 @@ simulator explicitly through flags.
 | `--tag <tag>` | Shared Mac/iOS dev tag; pairing is tag-scoped. |
 | `--sim-udid <udid>` | Exact booted simulator owned by this run. The driver passes this UDID to every simctl call. |
 | `--evidence-dir <dir>` | Directory for screenshots, streamed-grid text dumps, and device logs. The workflow uploads it verbatim (`if: always()`). |
-| `--bundle-id <id>` | Optional installed bundle override. Without it, the driver discovers the isolated `dev.cmux.*` bundle on the simulator. |
+| `--bundle-id <id>` | Optional installed bundle override. Without it, the driver discovers the isolated `dev.hmux.*` bundle on the simulator. |
 | `--step-timeout <seconds>` | Optional bounded wait per terminal step; default 45 seconds. |
 
 | Env | Meaning |
 | --- | --- |
-| `CMUX_E2E_TAG` | Same shared tag as the Mac host. Pairing is tag-scoped, so a tag mismatch cannot pair. |
-| `CMUX_E2E_SIM_UDID` | The freshly created, booted simulator this run owns. Pass it to every simctl and AXe call; never resolve by name. |
-| `CMUX_E2E_EVIDENCE_DIR` | Directory for screenshots, streamed-grid text dumps, device logs, and step timings. The workflow uploads it verbatim, including on failure. |
-| `CMUX_IROH_V2_BASE_URL`, `CMUX_PRESENCE_BASE_URL` | This run's backend origins from `backend-env.sh env`, baked into both app builds. |
-| `CMUX_DOGFOOD_STACK_EMAIL` / `CMUX_DOGFOOD_STACK_PASSWORD` | Same account used by the Mac and simulator. The workflow stores it as `CMUX_UITEST_*` in a mode `0600` file for the `agent` profile. |
-| `CMUX_E2E_BACKGROUND_SECONDS` | Optional background interval for the replay step. Set to `120` or more to enforce the two-second app-side scene-active-to-terminal-frame budget and write `background.json`; the file also retains the end-to-end resume-to-Mac-input timing. |
-| `CMUX_E2E_VIDEO` | Optional simulator video output path. The driver records the whole run and stops the recorder during cleanup. |
+| `HMUX_E2E_TAG` | Same shared tag as the Mac host. Pairing is tag-scoped, so a tag mismatch cannot pair. |
+| `HMUX_E2E_SIM_UDID` | The freshly created, booted simulator this run owns. Pass it to every simctl and AXe call; never resolve by name. |
+| `HMUX_E2E_EVIDENCE_DIR` | Directory for screenshots, streamed-grid text dumps, device logs, and step timings. The workflow uploads it verbatim, including on failure. |
+| `HMUX_IROH_V2_BASE_URL`, `HMUX_PRESENCE_BASE_URL` | This run's backend origins from `backend-env.sh env`, baked into both app builds. |
+| `HMUX_DOGFOOD_STACK_EMAIL` / `HMUX_DOGFOOD_STACK_PASSWORD` | Same account used by the Mac and simulator. The workflow stores it as `HMUX_UITEST_*` in a mode `0600` file for the `agent` profile. |
+| `HMUX_E2E_BACKGROUND_SECONDS` | Optional background interval for the replay step. Set to `120` or more to enforce the two-second app-side scene-active-to-terminal-frame budget and write `background.json`; the file also retains the end-to-end resume-to-Mac-input timing. |
+| `HMUX_E2E_VIDEO` | Optional simulator video output path. The driver records the whole run and stops the recorder during cleanup. |
 
-The workflow sets `CMUX_IROH_V2_FORCE_RELAY=1` for the Mac build and writes the
+The workflow sets `HMUX_IROH_V2_FORCE_RELAY=1` for the Mac build and writes the
 relay-only defaults for both installed app bundles before
 `mobile-dev-launch.sh` starts the simulator. The driver assumes that policy is
 already configured; it does not switch transport modes during a step.
 
-`iroh-codex-workload.sh` starts three real `codex --yolo -m gpt-5.5-mini` sessions in separate Mac workspaces and two supporting workspaces. It records workspace, surface, model, and observed output markers in `codex-workload.jsonl`; set `CMUX_CODEX_DURATION_SECONDS` to keep the sessions active while the iOS gate runs.
+`iroh-codex-workload.sh` starts three real `codex --yolo -m gpt-5.5-mini` sessions in separate Mac workspaces and two supporting workspaces. It records workspace, surface, model, and observed output markers in `codex-workload.jsonl`; set `HMUX_CODEX_DURATION_SECONDS` to keep the sessions active while the iOS gate runs.
 
 On failure exit nonzero and print `E2E FAIL step=<id>` as the last stderr line,
 where `<id>` is a step id below or `sign-in`, `pair`, `connect` for setup.

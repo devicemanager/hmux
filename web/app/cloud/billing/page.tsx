@@ -72,7 +72,7 @@ export default async function CloudBillingReturnPage({
           <h2 className="text-sm font-medium">{messages.returnTitle}</h2>
           <p className="mt-2 text-sm leading-6 text-[#555550]">{messages.returnBody}</p>
           <code className="mt-4 block w-fit bg-[#171717] px-3 py-2 font-mono text-sm text-white">
-            ssh cmux.cloud
+            ssh hmux.cloud
           </code>
         </div>
       </section>

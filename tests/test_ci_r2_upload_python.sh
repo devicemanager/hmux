@@ -13,11 +13,11 @@ python3 "$ROOT_DIR/tests/test_r2_upload_requests.py"
 AWS_ACCESS_KEY_ID=AKIDEXAMPLE \
 AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG+bPxRfiCYEXAMPLEKEY \
 AWS_DEFAULT_REGION=auto \
-CMUX_R2_UPLOAD_AMZ_DATE=20260102T030405Z \
+HMUX_R2_UPLOAD_AMZ_DATE=20260102T030405Z \
 python3 "$ROOT_DIR/scripts/ci/upload-r2-object.py" \
   --file "$TMP_DIR/appcast.xml" \
   --endpoint-url "https://example-account.r2.cloudflarestorage.com" \
-  --bucket cmux-binaries \
+  --bucket hmux-binaries \
   --key nightly/appcast.xml \
   --cache-control "no-cache, no-store, must-revalidate" \
   --dry-run-json >"$TMP_DIR/request.json"
@@ -33,7 +33,7 @@ headers = {key.lower(): value for key, value in request["headers"].items()}
 authorization = headers.get("authorization", "")
 
 assert request["method"] == "PUT", request
-assert request["url"] == "https://example-account.r2.cloudflarestorage.com/cmux-binaries/nightly/appcast.xml", request
+assert request["url"] == "https://example-account.r2.cloudflarestorage.com/hmux-binaries/nightly/appcast.xml", request
 assert headers["cache-control"] == "no-cache, no-store, must-revalidate", headers
 assert headers["content-type"] in {"application/xml", "text/xml"}, headers
 assert headers["x-amz-date"] == "20260102T030405Z", headers

@@ -1,8 +1,8 @@
-// Local demo of the cmux Cloud MCP tools against a cmux-tui session on this
+// Local demo of the hmux Cloud MCP tools against a hmux-tui session on this
 // computer, for MCP Inspector or any MCP client. No auth and no Cloud: one fake
-// machine, `local`, whose guest commands run `cmux-tui` here. Binds 127.0.0.1.
+// machine, `local`, whose guest commands run `hmux-tui` here. Binds 127.0.0.1.
 //
-//   cmux-tui server ensure --session cloud
+//   hmux-tui server ensure --session cloud
 //   bun scripts/cloud-mcp-local.ts            # prints the URL
 //   npx @modelcontextprotocol/inspector --cli http://127.0.0.1:8765/mcp --transport http --method tools/list
 
@@ -19,18 +19,18 @@ declare const Bun: {
   }): unknown;
 };
 
-const port = Number(process.env.CMUX_MCP_DEMO_PORT ?? 8765);
-const cmuxTui = process.env.CMUX_TUI_BIN ?? "cmux-tui";
+const port = Number(process.env.HMUX_MCP_DEMO_PORT ?? 8765);
+const hmuxTui = process.env.HMUX_TUI_BIN ?? "hmux-tui";
 const MACHINE_ID = "local";
 
 const gateway: CloudMcpGateway = {
   listMachines: async () => [{ id: MACHINE_ID, name: "this computer", status: "running" }],
-  runCmuxTui: async (machineId, args, timeoutMs) => {
+  runHmuxTui: async (machineId, args, timeoutMs) => {
     if (machineId !== MACHINE_ID) {
       throw new CloudMcpToolError("vm_not_found", `Cloud VM ${machineId} was not found.`);
     }
     // `args` is quoted for a POSIX shell, exactly as it reaches the machine's shell.
-    const result = spawnSync("sh", ["-c", `exec "$0" ${args}`, cmuxTui], { encoding: "utf8", timeout: timeoutMs });
+    const result = spawnSync("sh", ["-c", `exec "$0" ${args}`, hmuxTui], { encoding: "utf8", timeout: timeoutMs });
     return { exitCode: result.status ?? 124, stdout: result.stdout ?? "", stderr: result.stderr ?? "" };
   },
 };
@@ -53,4 +53,4 @@ Bun.serve({
   },
 });
 
-console.log(`cmux Cloud MCP demo at http://127.0.0.1:${port}/mcp (machine id: ${MACHINE_ID})`);
+console.log(`hmux Cloud MCP demo at http://127.0.0.1:${port}/mcp (machine id: ${MACHINE_ID})`);

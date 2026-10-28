@@ -2,7 +2,7 @@ import GhosttyKit
 
 extension GhosttyApp {
     /// Removes host-action defaults before loading user files. Otherwise clearing
-    /// a cmux shortcut would revive Ghostty's fallback through the runtime callback.
+    /// a hmux shortcut would revive Ghostty's fallback through the runtime callback.
     func loadGhosttyHostKeybindDefaults(_ config: ghostty_config_t) {
         let triggers = [
             "super+n", "super+t", "super+q", "super+,", "super+enter",
@@ -14,13 +14,13 @@ extension GhosttyApp {
             triggers.map { "keybind = \($0)=unbind" }.joined(separator: "\n")
                 + "\n" + Self.numberedWorkspaceGhosttyUnbinds,
             into: config,
-            prefix: "cmux-host-keybind-defaults",
+            prefix: "hmux-host-keybind-defaults",
             logLabel: "host keybind defaults"
         )
     }
 
-    func loadCmuxOwnedGhosttyKeybindOverrides(_ config: ghostty_config_t) {
-        // cmux owns these split, close, and workspace font-size shortcuts through
+    func loadHmuxOwnedGhosttyKeybindOverrides(_ config: ghostty_config_t) {
+        // hmux owns these split, close, and workspace font-size shortcuts through
         // KeyboardShortcutSettings.
         // Remove Ghostty's default fallbacks so remapped or cleared shortcuts
         // can reach the focused terminal instead of running actions outside the
@@ -36,8 +36,8 @@ extension GhosttyApp {
             \(Self.numberedWorkspaceGhosttyUnbinds)
             """,
             into: config,
-            prefix: "cmux-owned-keybind-overrides",
-            logLabel: "cmux-owned keybind overrides"
+            prefix: "hmux-owned-keybind-overrides",
+            logLabel: "hmux-owned keybind overrides"
         )
     }
 

@@ -1,9 +1,9 @@
 import AppKit
-import CmuxCore
-import CmuxSettings
-import CmuxTerminalCore
-import CmuxTestSupport
-import CmuxWorkspaces
+import HmuxCore
+import HmuxSettings
+import HmuxTerminalCore
+import HmuxTestSupport
+import HmuxWorkspaces
 import Foundation
 
 /// Owns terminal-link policy and routes the resulting action through whichever
@@ -12,7 +12,7 @@ import Foundation
 /// Only a click in a terminal known to run on this Mac opens a local file; see
 /// ``RemoteLinkOpenPolicy/allowsLocalFile(_:localContent:remoteInitiated:)``.
 ///
-/// Local files that leave cmux go through the shared ``FileOpening`` seam
+/// Local files that leave hmux go through the shared ``FileOpening`` seam
 /// (`PreferredEditorService`), the single decision point for "open this file
 /// for the user": the preferred editor when configured, the system default
 /// otherwise. Non-file URLs go through `externalOpen` (the system browser).
@@ -114,7 +114,7 @@ struct TerminalLinkOpenCoordinator {
             }
 
             if reference.line == nil || opensInMarkdownViewer,
-               CommandClickFileOpenRouter.shouldRouteInCmux(
+               CommandClickFileOpenRouter.shouldRouteInHmux(
                    path: reference.path,
                    defaults: defaults
                ) {
@@ -156,17 +156,17 @@ struct TerminalLinkOpenCoordinator {
 
         #if DEBUG
         if UITestCaptureSink().appendLineIfConfigured(
-            envKey: "CMUX_UI_TEST_CAPTURE_OPEN_URL_PATH",
+            envKey: "HMUX_UI_TEST_CAPTURE_OPEN_URL_PATH",
             line: target.url.absoluteString
         ) {
             return true
         }
         #endif
 
-        if TerminalOpenURLFileRoutingPolicy().shouldAttemptCmuxFileRouting(
+        if TerminalOpenURLFileRoutingPolicy().shouldAttemptHmuxFileRouting(
             rawOpenURLValue: trimmed,
             target: target
-        ), CommandClickFileOpenRouter.shouldRouteInCmux(
+        ), CommandClickFileOpenRouter.shouldRouteInHmux(
             path: target.url.path,
             defaults: defaults
         ) {
@@ -194,11 +194,11 @@ struct TerminalLinkOpenCoordinator {
         switch request.destination {
         case .systemBrowser:
             return openExternally(destinations.externalURL, reason: "requested system browser")
-        case .cmuxBrowser:
+        case .hmuxBrowser:
             break
         case .followsSetting:
-            guard BrowserLinkOpenSettings.openTerminalLinksInCmuxBrowser(defaults: defaults) else {
-                return openExternally(destinations.externalURL, reason: "cmux browser disabled")
+            guard BrowserLinkOpenSettings.openTerminalLinksInHmuxBrowser(defaults: defaults) else {
+                return openExternally(destinations.externalURL, reason: "hmux browser disabled")
             }
         }
         switch target {
@@ -240,7 +240,7 @@ struct TerminalLinkOpenCoordinator {
         guard container.deferTerminalFileLinkOpen(
             sourcePanelId: sourcePanelId,
             filePath: fileURL.path,
-            fallback: { [self] in _ = openExternally(fileURL, reason: "cmux file route fallback") }
+            fallback: { [self] in _ = openExternally(fileURL, reason: "hmux file route fallback") }
         ) else {
             return openExternally(fileURL, reason: unavailableReason)
         }
@@ -270,7 +270,7 @@ struct TerminalLinkOpenCoordinator {
 
             guard let currentContainer,
                   !currentContainer.terminalLinkIsRemoteTerminal(sourcePanelId),
-                  CommandClickFileOpenRouter.shouldRouteInCmux(
+                  CommandClickFileOpenRouter.shouldRouteInHmux(
                       path: fileURL.path,
                       defaults: self.defaults
                   ) else {
@@ -302,8 +302,8 @@ struct TerminalLinkOpenCoordinator {
         return true
     }
 
-    /// Opens `url` in the cmux browser, falling back to `externalURL` in the
-    /// system browser. A nil `externalURL` means the link must stay in cmux.
+    /// Opens `url` in the hmux browser, falling back to `externalURL` in the
+    /// system browser. A nil `externalURL` means the link must stay in hmux.
     private func openEmbeddedBrowserURL(
         _ url: URL,
         externalURL: URL?,
@@ -409,7 +409,7 @@ struct TerminalLinkOpenCoordinator {
 
     private func log(_ message: @autoclosure () -> String) {
         #if DEBUG
-        if recordsDiagnostics { cmuxDebugLog(message()) }
+        if recordsDiagnostics { hmuxDebugLog(message()) }
         #endif
     }
 }

@@ -12,7 +12,7 @@ import {
 } from "../services/vms/reflection";
 import type { VmPrincipalRow } from "../services/vms/vmPrincipalContract";
 
-// GET /api/vm/[id]/reflection/[[...path]]: `cmux vm self <machine> [path]` from
+// GET /api/vm/[id]/reflection/[[...path]]: `hmux vm self <machine> [path]` from
 // the Mac. The user's session names a machine the user owns, and the answer is
 // built by the SAME payload builders and owner-machine loader the guest route
 // uses, so a machine and its owner's Mac never disagree about the machine.
@@ -119,7 +119,7 @@ const owner: AuthedUser = {
   billingCustomerType: "team",
   billingTeamId: "team-1",
   selectedTeamId: "team-1",
-  teams: [{ id: "team-1", displayName: "cmux", billingPlanId: "pro", billingSeats: 3 }],
+  teams: [{ id: "team-1", displayName: "hmux", billingPlanId: "pro", billingSeats: 3 }],
   teamIds: ["team-1"],
   userBillingPlanId: null,
   billingPlanId: "pro",
@@ -128,7 +128,7 @@ const owner: AuthedUser = {
 const teammate: AuthedUser = { ...owner, id: "user-2", displayName: "Sam", primaryEmail: "sam@example.com" };
 
 function get(path: string): Request {
-  return new Request(`https://cmux.test${path}`, {
+  return new Request(`https://hmux.test${path}`, {
     headers: { authorization: "Bearer access-token", "x-stack-refresh-token": "refresh-token" },
   });
 }

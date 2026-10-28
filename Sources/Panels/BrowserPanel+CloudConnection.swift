@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxCore
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCore
+import HmuxSurfaceCatalogModel
 import Foundation
 import WebKit
 
@@ -87,7 +87,7 @@ extension BrowserPanel {
     /// machine's provider team, else the restored team, else the selected team.
     var cloudTeamIDForSession: String? {
         guard let machineID = cloudResourceForSession?.machine.cloudMachineID else { return nil }
-        if let owner = CmuxTuiSurfaceProviderRegistry.shared.ownerTeamID(forMachineID: machineID) {
+        if let owner = HmuxTuiSurfaceProviderRegistry.shared.ownerTeamID(forMachineID: machineID) {
             return owner
         }
         return restoredCloudTeamID ?? WorkspaceCloudVMBinding.owningTeamID(forVMID: machineID, previous: nil)
@@ -110,7 +110,7 @@ extension BrowserPanel {
         retainTransferredSurfaceMachine(resource.machine)
         catalog.restore([SurfaceProjectionRecord(panelID: id, resource: resource)], workspaceID: workspaceId)
         guard activate else { return }
-        guard let provider = catalog.provider(for: resource.machine) as? CmuxTuiSurfaceProvider else {
+        guard let provider = catalog.provider(for: resource.machine) as? HmuxTuiSurfaceProvider else {
             showCloudRestoreUnavailable(
                 resource,
                 message: String(localized: "cloud.display.restoreUnavailable", defaultValue: "This Cloud display or browser is unavailable. Refresh its machine to reconnect."),
@@ -163,7 +163,7 @@ extension BrowserPanel {
     /// registered the provider or before its first resource snapshot arrives.
     private func showCloudRestoreUnavailable(
         _ resource: SurfaceResourceID,
-        provider: CmuxTuiSurfaceProvider? = nil,
+        provider: HmuxTuiSurfaceProvider? = nil,
         message: String,
         automaticRetriesRemaining: Int
     ) {
@@ -175,7 +175,7 @@ extension BrowserPanel {
                 try? await provider.refreshPortMetadata()
                 await provider.refresh(force: true)
             } else {
-                _ = await CmuxTuiSurfaceProviderRegistry.shared.refresh(force: true)
+                _ = await HmuxTuiSurfaceProviderRegistry.shared.refresh(force: true)
             }
             guard self.cloudAccess.isCurrentUnavailableRetry(request) else { return }
             self.restoreCloudResource(
@@ -224,16 +224,16 @@ extension BrowserPanel {
     ///
     /// SSH machines all use this Mac's loopback as their private address, so
     /// a loopback URL routes only to the machine that owns this browser.
-    func privateAddressRouteProvider(for url: URL) -> CmuxTuiSurfaceProvider? {
+    func privateAddressRouteProvider(for url: URL) -> HmuxTuiSurfaceProvider? {
         let catalog = SurfaceCatalog.shared
         if let resource = cloudResourceForDuplication,
            resource.machine.cloudMachineID != nil,
            resource.kind == .browser, !resource.key.hasPrefix("port:") {
-            return catalog.provider(for: resource.machine) as? CmuxTuiSurfaceProvider
+            return catalog.provider(for: resource.machine) as? HmuxTuiSurfaceProvider
         }
         if RemoteLoopbackProxyAlias.isLoopbackHost(url.host ?? ""),
            let owner = privateAddressRouteOwner, owner.cloudMachineID != nil {
-            return catalog.provider(for: owner) as? CmuxTuiSurfaceProvider
+            return catalog.provider(for: owner) as? HmuxTuiSurfaceProvider
         }
         let addresses = catalog.machines.compactMapValues(\.privateAddress)
         let machine = PrivateAddressRouteSelector<SurfaceMachineID>().machine(
@@ -241,7 +241,7 @@ extension BrowserPanel {
             owner: privateAddressRouteOwner,
             addresses: addresses
         )
-        return machine.flatMap { catalog.provider(for: $0) as? CmuxTuiSurfaceProvider }
+        return machine.flatMap { catalog.provider(for: $0) as? HmuxTuiSurfaceProvider }
     }
 
     /// SSH machines advertise `127.0.0.1`, so every loopback spelling

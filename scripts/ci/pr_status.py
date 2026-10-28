@@ -23,7 +23,7 @@ does not show both.
 Callers off GitHub (bead-autoclose.py, hq's pr-preview) cannot post as github-actions, so
 they dispatch .github/workflows/pr-status.yml (`dispatch` below), which runs `field`.
 `field` builds the text from validated values only; no caller can put free text on a pull
-request. With CMUX_CI_GITHUB_APP_ID_FILE and CMUX_CI_GITHUB_APP_KEY_FILE set (the files the
+request. With HMUX_CI_GITHUB_APP_ID_FILE and HMUX_CI_GITHUB_APP_KEY_FILE set (the files the
 fleet controller already uses for its org App), the dispatch runs as that App with an
 Actions-write-only token; without them it uses gh's own login, which shows only in Actions.
 
@@ -49,14 +49,14 @@ import urllib.request
 from pathlib import Path
 from typing import Callable, Mapping
 
-MARKER = "<!-- cmux-pr-status -->"
+MARKER = "<!-- hmux-pr-status -->"
 BOT = "github-actions[bot]"
-# The attribution workflows post with the cmux-bot App's token once vars.CMUX_BOT_APP_ID is set
+# The attribution workflows post with the hmux-bot App's token once vars.HMUX_BOT_APP_ID is set
 # (#20858); its comments are this comment too.
-BOTS = (BOT, "cmux-bot[bot]")
+BOTS = (BOT, "hmux-bot[bot]")
 SECTIONS = ("bead", "review", "preview", "attribution", "checks", "guards", "tour", "receipt")
-TITLE = "**cmux status** <sub>(one comment, edited in place; each line is updated by the job that owns it)</sub>"
-SECTION = re.compile(r"<!-- cmux-pr-status:(?P<key>[a-z-]+) -->\n(?P<text>.*?)\n<!-- /cmux-pr-status:(?P=key) -->",
+TITLE = "**hmux status** <sub>(one comment, edited in place; each line is updated by the job that owns it)</sub>"
+SECTION = re.compile(r"<!-- hmux-pr-status:(?P<key>[a-z-]+) -->\n(?P<text>.*?)\n<!-- /hmux-pr-status:(?P=key) -->",
                      re.S)
 LIMIT = 65000  # GitHub's comment cap is 65536 characters
 BEAD = re.compile(r"cx-[a-z0-9]{2,8}(?:\.[0-9]+)*")
@@ -73,8 +73,8 @@ def parse(body: str) -> dict[str, str]:
 
 def inert(text: str) -> str:
     """Section text that cannot open or close a section, so no line can pose as another."""
-    return text.strip().replace("<!-- cmux-pr-status", "<!-- (cmux-pr-status)").replace(
-        "<!-- /cmux-pr-status", "<!-- (/cmux-pr-status)")
+    return text.strip().replace("<!-- hmux-pr-status", "<!-- (hmux-pr-status)").replace(
+        "<!-- /hmux-pr-status", "<!-- (/hmux-pr-status)")
 
 
 def render(sections: Mapping[str, str]) -> str:
@@ -82,7 +82,7 @@ def render(sections: Mapping[str, str]) -> str:
     extra = sorted(k for k in sections if k not in SECTIONS and sections[k])
     parts = [MARKER, TITLE]
     for key in known + extra:
-        parts.append(f"<!-- cmux-pr-status:{key} -->\n{inert(sections[key])}\n<!-- /cmux-pr-status:{key} -->")
+        parts.append(f"<!-- hmux-pr-status:{key} -->\n{inert(sections[key])}\n<!-- /hmux-pr-status:{key} -->")
     body = "\n\n".join(parts) + "\n"
     if len(body) > LIMIT:
         # Trim the longest section (the tour's step table, in practice), never the others.
@@ -239,7 +239,7 @@ def dispatch(repo: str, pr: int, *, bead: str | None = None, preview: str | None
     """Dispatch pr-status.yml on main for one line; raises RuntimeError when it is not sent."""
     field_text(bead, preview)  # refuse a bad value here, not in a workflow run
     env = dict(os.environ if env is None else env)
-    id_file, key_file = env.get("CMUX_CI_GITHUB_APP_ID_FILE", ""), env.get("CMUX_CI_GITHUB_APP_KEY_FILE", "")
+    id_file, key_file = env.get("HMUX_CI_GITHUB_APP_ID_FILE", ""), env.get("HMUX_CI_GITHUB_APP_KEY_FILE", "")
     if id_file or key_file:
         # The App is configured: use it or fail. Never fall back to a person's login quietly.
         try:

@@ -1,4 +1,4 @@
-import CmuxSettingsUI
+import HmuxSettingsUI
 import SwiftUI
 
 /// Native menu content presented from the sidebar's computer button.

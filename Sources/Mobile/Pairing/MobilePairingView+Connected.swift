@@ -1,5 +1,5 @@
 import AppKit
-import CMUXMobileCore
+import HMUXMobileCore
 import SwiftUI
 
 extension MobilePairingView {
@@ -7,10 +7,10 @@ extension MobilePairingView {
     var connectedContent: some View {
         VStack(spacing: 12) {
             Image(systemName: "checkmark.circle.fill")
-                .cmuxFont(size: 36)
+                .hmuxFont(size: 36)
                 .foregroundStyle(.green)
             Text(String(localized: "mobile.pairing.connected.title", defaultValue: "iPhone connected"))
-                .cmuxFont(.title3, weight: .semibold)
+                .hmuxFont(.title3, weight: .semibold)
             Text(String(localized: "mobile.pairing.connected.subtitle", defaultValue: "Your terminal workspaces are now syncing to your iPhone. You can close this window."))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
@@ -33,7 +33,7 @@ extension MobilePairingView {
                     ? String(localized: "mobile.pairing.manual.copied", defaultValue: "Copied")
                     : label)
             }
-            .cmuxFont(.caption)
+            .hmuxFont(.caption)
         }
         .buttonStyle(.bordered)
         .controlSize(.small)

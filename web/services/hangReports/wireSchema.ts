@@ -2,7 +2,7 @@ import * as Either from "effect/Either";
 import * as Schema from "effect/Schema";
 
 /**
- * Wire format schema 2 of an opt-in cmux NEXT hang report. The bounds and
+ * Wire format schema 2 of an opt-in hmux NEXT hang report. The bounds and
  * patterns mirror the client's allow-list builder (hang-reports-DESIGN.md
  * section 4). Schema 2 has schema 1's fields; it marks a client with the
  * review 1 and 2 privacy fixes (Data-volume and `..` image paths are "other",

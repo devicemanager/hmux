@@ -1,4 +1,4 @@
-import CmuxSidebar
+import HmuxSidebar
 import Foundation
 
 /// Checks that an agent woken from hibernation actually came back.

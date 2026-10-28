@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { shellQuote } from "./drivers/cmuxTuiDaemon";
+import { shellQuote } from "./drivers/hmuxTuiDaemon";
 import { vmPromptName } from "./promptName";
 
 export { vmPromptName };
@@ -30,8 +30,8 @@ export function vmPromptIdentity(row: {
 // types accept it, but Bun rejects that URL instance at runtime.
 const assetPath = (relativePath: string) =>
   fileURLToPath(new URL(relativePath, import.meta.url).toString());
-const bashrc = readFileSync(assetPath("./images/devbox/cmux-bashrc"), "utf8");
-const prompt = readFileSync(assetPath("./images/devbox/cmux-prompt.bash"), "utf8");
+const bashrc = readFileSync(assetPath("./images/devbox/hmux-bashrc"), "utf8");
+const prompt = readFileSync(assetPath("./images/devbox/hmux-prompt.bash"), "utf8");
 export const guestPromptInstallFiles = {
   "prompt.bash": prompt,
   bashrc,
@@ -74,13 +74,13 @@ with (directory / ".prompt-lock").open("a") as lock:
         replace(name, content)
 `;
 
-export function guestPromptInstallCommand(identity: GuestPromptIdentity, directory = "/etc/cmux"): string {
+export function guestPromptInstallCommand(identity: GuestPromptIdentity, directory = "/etc/hmux"): string {
   if (!/^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/.test(identity.name) || !Number.isSafeInteger(identity.revision)) {
     throw new Error("Invalid Cloud prompt identity");
   }
   const files = {
-    "prompt.bash": prompt.replaceAll("/etc/cmux", directory),
-    bashrc: bashrc.replaceAll("/etc/cmux", directory),
+    "prompt.bash": prompt.replaceAll("/etc/hmux", directory),
+    bashrc: bashrc.replaceAll("/etc/hmux", directory),
   };
   return `python3 -c ${shellQuote(install)} ${shellQuote(directory)} ${shellQuote(JSON.stringify({ identity, files }))}`;
 }

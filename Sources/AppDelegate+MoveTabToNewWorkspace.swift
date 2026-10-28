@@ -1,5 +1,5 @@
 import Foundation
-import CmuxSettings
+import HmuxSettings
 
 struct SurfaceNewWorkspaceMoveResult {
     let sourceWindowId: UUID

@@ -1,6 +1,6 @@
 import Bonsplit
-import CmuxBrowser
-import CmuxPanes
+import HmuxBrowser
+import HmuxPanes
 import Foundation
 
 /// Adapts the main workspace and Dock split trees to one browser-placement path.

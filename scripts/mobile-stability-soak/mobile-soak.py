@@ -14,13 +14,13 @@ import fcntl
 from contextlib import contextmanager
 from pathlib import Path
 
-tag = os.environ.get("CMUX_TAG", "swmob")
-bundle_id = os.environ.get("MOBILE_APP_BUNDLE_ID", f"dev.cmux.ios.{tag}").strip()
-repo = Path(os.environ.get("CMUX_REPO", Path(__file__).resolve().parents[2]))
+tag = os.environ.get("HMUX_TAG", "swmob")
+bundle_id = os.environ.get("MOBILE_APP_BUNDLE_ID", f"dev.hmux.ios.{tag}").strip()
+repo = Path(os.environ.get("HMUX_REPO", Path(__file__).resolve().parents[2]))
 simulator_id = os.environ["SIMULATOR_ID"]
 client_id = os.environ.get("CLIENT_ID", "mobile-soak-cli")
 duration_seconds = int(os.environ.get("SOAK_SECONDS", str(12 * 60 * 60)))
-soak_root = Path(os.environ.get("SOAK_ROOT", f"/tmp/cmux-mobile-soak-{tag}"))
+soak_root = Path(os.environ.get("SOAK_ROOT", f"/tmp/hmux-mobile-soak-{tag}"))
 log_path = Path(os.environ.get("SOAK_LOG", soak_root / "mobile-soak.log"))
 status_path = Path(os.environ.get("SOAK_STATUS", soak_root / "mobile-soak.status"))
 color_probe_interval = int(os.environ.get("COLOR_PROBE_INTERVAL", "120"))
@@ -42,8 +42,8 @@ input_burst_commands = int(os.environ.get("MOBILE_INPUT_BURST_COMMANDS", "1"))
 screenshot_interval = int(os.environ.get("MOBILE_SCREENSHOT_INTERVAL", "120"))
 max_scrollback_rows = int(os.environ.get("MOBILE_MAX_SCROLLBACK_ROWS", "80"))
 profile = os.environ.get("SOAK_PROFILE", "steady")
-dev_origin = os.environ.get("CMUX_DEV_ORIGIN", "").strip().rstrip("/")
-dev_stack_auth_token = os.environ.get("CMUX_MOBILE_DEV_STACK_AUTH_TOKEN", "").strip()
+dev_origin = os.environ.get("HMUX_DEV_ORIGIN", "").strip().rstrip("/")
+dev_stack_auth_token = os.environ.get("HMUX_MOBILE_DEV_STACK_AUTH_TOKEN", "").strip()
 expected_min_workspaces = int(os.environ.get("MOBILE_EXPECT_MIN_WORKSPACES", "1"))
 full_workspace_list_interval = int(os.environ.get("MOBILE_FULL_WORKSPACE_LIST_INTERVAL", str(input_interval)))
 color_verify_attempts = int(os.environ.get("COLOR_VERIFY_ATTEMPTS", "5"))
@@ -53,8 +53,8 @@ terminal_output_retry_seconds = float(os.environ.get("TERMINAL_OUTPUT_RETRY_SECO
 failure_limit = int(os.environ.get("MOBILE_FAILURE_LIMIT", "1"))
 command_timeout_seconds = float(os.environ.get("MOBILE_COMMAND_TIMEOUT_SECONDS", "45"))
 diagnostics_dir = Path(os.environ.get("SOAK_DIAGNOSTICS_DIR", soak_root / "diagnostics"))
-cmux_log_path = Path(os.environ.get("CMUX_DEBUG_LOG", f"/tmp/cmux-debug-{tag}.log"))
-cmux_log_tail_lines = int(os.environ.get("CMUX_DEBUG_LOG_TAIL_LINES", "500"))
+hmux_log_path = Path(os.environ.get("HMUX_DEBUG_LOG", f"/tmp/hmux-debug-{tag}.log"))
+hmux_log_tail_lines = int(os.environ.get("HMUX_DEBUG_LOG_TAIL_LINES", "500"))
 terminal_mutation_lock_path = Path(os.environ.get("MOBILE_TERMINAL_MUTATION_LOCK", soak_root / "mobile-terminal-mutation.lock"))
 
 COLOR_PROBE_LABELS = [
@@ -67,7 +67,7 @@ COLOR_PROBE_LABELS = [
 
 def run(args, *, cwd=repo, input_text=None, check=True, extra_env=None, timeout=None):
     env = os.environ.copy()
-    env["CMUX_TAG"] = tag
+    env["HMUX_TAG"] = tag
     if extra_env:
         env.update(extra_env)
     timeout = command_timeout_seconds if timeout is None else timeout
@@ -120,8 +120,8 @@ def run_json_file(args, path):
     return output
 
 
-def cmux_rpc(method, params):
-    return json.loads(run(["scripts/cmux-debug-cli.sh", "rpc", method, json.dumps(params)]))
+def hmux_rpc(method, params):
+    return json.loads(run(["scripts/hmux-debug-cli.sh", "rpc", method, json.dumps(params)]))
 
 
 def selected_route(routes):
@@ -141,7 +141,7 @@ def selected_route(routes):
 # The soak targets one exact app bundle. Its attach URL must use that bundle's
 # exclusive scheme so simctl cannot route the URL to another installed build.
 ATTACH_URL_SCHEME = os.environ.get(
-    "MOBILE_ATTACH_URL_SCHEME", f"cmux-ios-{bundle_id}"
+    "MOBILE_ATTACH_URL_SCHEME", f"hmux-ios-{bundle_id}"
 ).strip()
 
 
@@ -194,7 +194,7 @@ def create_ticket(workspace_id=None):
     }
     if workspace_id:
         params["workspace_id"] = workspace_id
-    payload = cmux_rpc("mobile.attach_ticket.create", params)
+    payload = hmux_rpc("mobile.attach_ticket.create", params)
     return ticket_from_payload(payload, payload["attach_url"])
 
 
@@ -204,10 +204,10 @@ def launch_app_with_attach_ticket(ticket):
         ["xcrun", "simctl", "launch", "--terminate-running-process", simulator_id, bundle_id],
         cwd=Path("/"),
         extra_env={
-            "SIMCTL_CHILD_CMUX_UITEST_MOCK_DATA": "1",
-            "SIMCTL_CHILD_CMUX_UITEST_ATTACH_URL": ticket["attach_url"],
-            "SIMCTL_CHILD_CMUX_MOBILE_DEV_STACK_AUTH_TOKEN": dev_stack_auth_token,
-            "SIMCTL_CHILD_CMUX_MOBILE_SOAK_OPEN_SELECTED_WORKSPACE": "1",
+            "SIMCTL_CHILD_HMUX_UITEST_MOCK_DATA": "1",
+            "SIMCTL_CHILD_HMUX_UITEST_ATTACH_URL": ticket["attach_url"],
+            "SIMCTL_CHILD_HMUX_MOBILE_DEV_STACK_AUTH_TOKEN": dev_stack_auth_token,
+            "SIMCTL_CHILD_HMUX_MOBILE_SOAK_OPEN_SELECTED_WORKSPACE": "1",
             "SIMCTL_CHILD_AppleLanguages": "(en)",
             "SIMCTL_CHILD_AppleLocale": "en_US",
         },
@@ -295,7 +295,7 @@ def capture_attachment_fallback_screenshot():
 
 def assert_attached_ui(ticket):
     blockers = [
-        "Open in “cmux DEV",
+        "Open in “hmux DEV",
         "Sign in with Apple",
         "Sign in with Google",
         "Email address",
@@ -465,7 +465,7 @@ def write_failure_diagnostics(ticket, terminal_id, iteration, error):
             manifest["terminal_snapshot_error"] = str(snapshot_error)
 
     try:
-        host_status = framed_rpc(ticket, "mobile.host.status", {}) if external_ticket_path else cmux_rpc("mobile.host.status", {})
+        host_status = framed_rpc(ticket, "mobile.host.status", {}) if external_ticket_path else hmux_rpc("mobile.host.status", {})
         (diagnostic_root / "mobile-host-status.json").write_text(json.dumps(host_status, indent=2))
     except Exception as host_error:
         manifest["host_status_error"] = str(host_error)
@@ -517,12 +517,12 @@ def write_failure_diagnostics(ticket, terminal_id, iteration, error):
     except Exception as ps_error:
         manifest["process_error"] = str(ps_error)
 
-    if cmux_log_path.exists():
+    if hmux_log_path.exists():
         try:
-            lines = cmux_log_path.read_text(errors="replace").splitlines()
-            (diagnostic_root / "cmux-debug-tail.log").write_text("\n".join(lines[-cmux_log_tail_lines:]) + "\n")
+            lines = hmux_log_path.read_text(errors="replace").splitlines()
+            (diagnostic_root / "hmux-debug-tail.log").write_text("\n".join(lines[-hmux_log_tail_lines:]) + "\n")
         except Exception as log_error:
-            manifest["cmux_log_error"] = str(log_error)
+            manifest["hmux_log_error"] = str(log_error)
 
     (diagnostic_root / "manifest.json").write_text(json.dumps(manifest, indent=2))
     log(f"diagnostics iteration={iteration} path={diagnostic_root}")
@@ -647,7 +647,7 @@ def main():
 
             if dev_origin:
                 run(["curl", "-fsS", dev_origin], cwd=Path("/"))
-            host_status = framed_rpc(ticket, "mobile.host.status", {}) if external_ticket_path else cmux_rpc("mobile.host.status", {})
+            host_status = framed_rpc(ticket, "mobile.host.status", {}) if external_ticket_path else hmux_rpc("mobile.host.status", {})
             if not host_status["host_service"]["is_running"]:
                 raise RuntimeError(f"host not running: {host_status}")
 

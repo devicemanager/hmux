@@ -4,7 +4,7 @@ The contract between the REPL runtime (JavaScript, engine-neutral) and an engine
 driver. The runtime builds the reference A and reference B APIs on these primitives the
 same way Playwright builds its API on a browser protocol. Drivers:
 
-- `webkit`: cmux app, `WKWebView` panes (Swift).
+- `webkit`: hmux app, `WKWebView` panes (Swift).
 - `chromium`: CDP passthrough, when a Chromium engine lands.
 - `dev`: Playwright WebKit (tests/browser-parity/lib/dev-driver.mjs), used to
   develop the runtime without an app build.
@@ -31,7 +31,7 @@ Coordinates are CSS pixels relative to the top-left of the tab's viewport
 
 | Method | Params | Result |
 | --- | --- | --- |
-| `tabs.list` | `{ all? }` | `[{ targetId, title, url, active, windowId, state, dataStore, openerTargetId?, ownerSession? }]` in window order (`state`: `live`, `hibernated`, `waking` or `crashed`; listing never wakes a tab); with `all`, then the tabs of other workspaces the session may use: only tabs it created that moved there (`windowId` names the workspace). A user's tab of another workspace is not listed, and neither is its `dataStore`: reaching it needs an attach a person grants, which cmux does not offer yet (see Guards, Authority), and naming it by id fails with `denied`. A tab of the session's own workspace is a valid `targetId` for the other methods except one with `ownerSession`: another running session created it, and it lists without `dataStore`. The `url` of a tab the session did not create (another session's or the user's) has its userinfo and credential-named query and fragment parameters reading `redacted`, as in network events. Tabs with equal `dataStore` (an opaque id, never reused for another store) share cookies and storage; a hibernated tab not yet loaded since a relaunch has none |
+| `tabs.list` | `{ all? }` | `[{ targetId, title, url, active, windowId, state, dataStore, openerTargetId?, ownerSession? }]` in window order (`state`: `live`, `hibernated`, `waking` or `crashed`; listing never wakes a tab); with `all`, then the tabs of other workspaces the session may use: only tabs it created that moved there (`windowId` names the workspace). A user's tab of another workspace is not listed, and neither is its `dataStore`: reaching it needs an attach a person grants, which hmux does not offer yet (see Guards, Authority), and naming it by id fails with `denied`. A tab of the session's own workspace is a valid `targetId` for the other methods except one with `ownerSession`: another running session created it, and it lists without `dataStore`. The `url` of a tab the session did not create (another session's or the user's) has its userinfo and credential-named query and fragment parameters reading `redacted`, as in network events. Tabs with equal `dataStore` (an opaque id, never reused for another store) share cookies and storage; a hibernated tab not yet loaded since a relaunch has none |
 | `tabs.dataStore` | `{ targetId? }` | `{ dataStore }`: the store `cookies.get` uses with the same params |
 | `tabs.open` | `{ url?, background?, dataStore? }` | `{ targetId }`; resolves after commit of `url`. With `dataStore`, the tab opens in that store (and the profile of a tab that uses it); a store no tab this session may use has (another running session's tab, a tab of another workspace) fails with `invalid` |
 | `tabs.close` | `{ targetId, runBeforeUnload? }` | Only a tab the session created, or a user's tab of its workspace it is attached to (it drove it, for example after `tabs.use`); another fails with `denied` |
@@ -100,7 +100,7 @@ every address its request went through (the navigation's URL and its
 redirects, the download's own redirects, the response's URL; a `data:` or
 opaque `blob:` one is judged by the document that started the navigation,
 or for a scripted download (`<a download>`) by the frame that asked for it,
-and under a domain policy is refused when cmux has no record of either)
+and under a domain policy is refused when hmux has no record of either)
 and each local file among them lies inside the session's working or
 temporary directory. Otherwise, in a tab the session created, the download
 is cancelled and `navigation.blocked` reports why; in a user's tab it keeps
@@ -125,7 +125,7 @@ runtime's own agent-world reads hold nothing), its `tab.navigate`,
 `tab.reload` or `tab.history` until the navigation commits, or while a call
 wakes the tab,
 is sent to that session too, also in a user's tab (the call caused it, so
-cmux's own dialog or Open panel must not come up in front of the user, and
+hmux's own dialog or Open panel must not come up in front of the user, and
 the call must not wait for an answer only the user can give). A download
 the call starts keeps the user's location unless the session has a
 `download` handler in its last `tab.handleEvents` for the tab and its
@@ -162,7 +162,7 @@ outside the session's directories), nothing is sent and the keys and press
 are forgotten: later input no longer carries those modifiers, and a drag
 ends with `dragend` and no drop. Another session that stays on the tab
 keeps its own keys and press and inherits none of these. Keys and a
-press are held in the web view that got them: when cmux replaces the
+press are held in the web view that got them: when hmux replaces the
 tab's web view (a restore, a crash recovery), they are forgotten the same
 way, and a release never reaches the replacement's page. When the last
 session leaves or the tab closes, nothing more is sent; what is left is
@@ -188,7 +188,7 @@ No driver method moves the user's focus or selection except
 stays in the web view and the window's first responder stays the user's.
 A key-down no page handles is not passed on: WebKit resends such a key
 through `NSApp.sendEvent` to the key window (the user's terminal, menus), so
-keys the REPL and `cmux browser press` send carry a mark (`eventSourceUserData`; the mobile browser stream's keys, a person's, do not) and the app
+keys the REPL and `hmux browser press` send carry a mark (`eventSourceUserData`; the mobile browser stream's keys, a person's, do not) and the app
 drops a marked key that arrives outside that same event's own delivery (another web view delivering its own key at that moment does not exempt it). That
 resend is also how a Command shortcut's Edit menu command (select all, copy,
 cut, paste, undo, redo; bold, italic and underline in the REPL) is run: only
@@ -197,7 +197,7 @@ the keydown gets no command as well), on the web view itself. Telling the
 two apart needs WebKit's `_doAfterProcessingAllPendingKeyEvents:`; on a
 WebKit without it (macOS 26) such a shortcut is refused before its key-down
 leaves: `input.key` fails with `unsupported` (`blocked` first for a tab whose
-page the authority refuses) and `cmux browser press` with `unsupported`; no
+page the authority refuses) and `hmux browser press` with `unsupported`; no
 key reaches the page and no command runs. In the REPL
 bold, italic and underline run `execCommand` in the main frame through the
 frame gate, which checks the tab again and judges the document the command
@@ -217,9 +217,9 @@ typing step, so one Meta+Z takes both back (the page gets one `beforeinput`
 and one `input`, both `historyUndo`). The app's web views undo a person's Command-Z themselves, but an
 automated Meta+Z or Shift+Meta+Z is never undone that way: it reaches the
 page first, as every other key does. In a tab a
-session created (one with the page clipboard guard), `cmux browser press`
+session created (one with the page clipboard guard), `hmux browser press`
 Meta+C, Meta+X and Meta+V run nothing: that tab's clipboard is its
-session's virtual one, `cmux browser press` carries no session, and as
+session's virtual one, `hmux browser press` carries no session, and as
 agent input it never reaches the system pasteboard (the press has already
 returned). In any other tab they run the
 web view's own Copy, Cut and Paste. A key whose outcome WebKit has not reported within 5 s runs nothing.
@@ -236,7 +236,7 @@ A tab a relaunch restored but no pane has shown yet lists as `hibernated`
 too; the first call on it creates its browser, which then wakes the same
 way. Every call with a `targetId` except `tabs.close`, `tab.keep`,
 `tab.navigate` and `tab.history` first wakes a hibernated tab
-(the driver starts the restore of the page cmux unloaded, off screen) and
+(the driver starts the restore of the page hmux unloaded, off screen) and
 waits, at most 30 s on the injected clock, until the restore commits and
 the document reaches `DOMContentLoaded`. Then the call runs. On a crashed
 tab (web content process ended, Reload offered in the pane) every call but
@@ -250,9 +250,9 @@ ended is restored like a hibernated one. Errors, where `<tab>` is `tab <id> ("<t
 | Condition | Code | Message |
 | --- | --- | --- |
 | Crashed | `crashed` | `<method>: <tab> crashed: its web content process ended (a WebKit crash, or macOS reclaimed its memory). Call page.reload() or page.goto(url) to load it again; until then only navigation, tab.info and page.close() work on it` |
-| The user stopped the tab from loading | `hibernated` | `<method>: <tab> is hibernated (cmux unloaded it to save memory while it was hidden) and the user stopped it from loading, so cmux does not load it again on its own. Call page.reload() to load it, then retry` |
-| The restore ended without a page | `hibernated` | `<method>: <tab> is hibernated (cmux unloaded it to save memory while it was hidden) and loading it again did not finish with a page. Call page.reload() to load it, then retry` |
-| Still loading after 30 s | `timeout` | `<method>: <tab> was hibernated (cmux unloaded it to save memory while it was hidden) and did not load again within 30 s, so the call did not run. It is still loading: retry the call, or call page.reload()` |
+| The user stopped the tab from loading | `hibernated` | `<method>: <tab> is hibernated (hmux unloaded it to save memory while it was hidden) and the user stopped it from loading, so hmux does not load it again on its own. Call page.reload() to load it, then retry` |
+| The restore ended without a page | `hibernated` | `<method>: <tab> is hibernated (hmux unloaded it to save memory while it was hidden) and loading it again did not finish with a page. Call page.reload() to load it, then retry` |
+| Still loading after 30 s | `timeout` | `<method>: <tab> was hibernated (hmux unloaded it to save memory while it was hidden) and did not load again within 30 s, so the call did not run. It is still loading: retry the call, or call page.reload()` |
 
 ## Frames and scripts
 
@@ -331,7 +331,7 @@ modifiers held, and an uppercase letter adds no Shift of its own: with `Meta`
 or `Control` held and no `Shift`, `A` is the `a` key (`Meta+A` is Select All,
 `shiftKey` false, as `Meta+a`). Only a `Shift` in the combo makes it
 `Shift+Meta+A`. Without `Meta` or `Control`, `A` types `A` with Shift.
-`cmux browser press` follows the same rule for the modifiers it holds.
+`hmux browser press` follows the same rule for the modifiers it holds.
 `keyboard.press` releases the modifiers it pressed on every exit: a refused
 shortcut (`blocked`, `unsupported`), a timeout or any other error leaves no
 modifier held for the next key. A key-down the driver delivered whose Edit
@@ -339,7 +339,7 @@ command is then refused gets its key-up from the driver, and a modifier's
 key-up the frame gate refuses still ends that modifier's hold.
 
 A mouse `down` that opens a context menu (the right button, or the left with
-`Control`) fires the page's `contextmenu` event but never shows cmux's
+`Control`) fires the page's `contextmenu` event but never shows hmux's
 native menu. When the page cancels that event no menu comes; the person's
 next right click or Control-click in the tab still gets its menu, as does
 any after the sessions leave the tab.
@@ -397,7 +397,7 @@ refusal's reason) repeats it. A URL that holds its document rather than
 naming where it is reaches every other session as its scheme alone: a
 `data:`, `blob:` or `javascript:` URL as `data:…` (and so on), an `about:`
 URL as its name without a query or fragment (`about:srcdoc`). A diff
-viewer's URL reaches it without its capability token (`cmux-diff-viewer://redacted/...`,
+viewer's URL reaches it without its capability token (`hmux-diff-viewer://redacted/...`,
 `http://127.0.0.1:<port>/redacted/...`). An event
 `url` the driver did not type that way reaches every session in that form.
 A frame the session's domain policy blocks lists in that form even for the
@@ -410,7 +410,7 @@ session.
 | `tab.created` | `{ targetId, openerTargetId?, url }` (popups and `target=_blank`; `url` as written only for the opener's live creator) |
 | `tab.closed` | |
 | `tab.crashed` | (the web content process ended; calls other than navigation fail until a reload or navigation starts a new one) |
-| `tab.replaced` | `{ reason? }` (cmux gave the tab a new web view: it restored a page it had unloaded to save memory, or recovered a crashed one; or, with `reason`, the creating session narrowed its domain policy or left a directory with a `cwd` change and cmux loaded the page again or made it `about:blank` (see Guards); frame ids and element handles from before are gone) |
+| `tab.replaced` | `{ reason? }` (hmux gave the tab a new web view: it restored a page it had unloaded to save memory, or recovered a crashed one; or, with `reason`, the creating session narrowed its domain policy or left a directory with a `cwd` change and hmux loaded the page again or made it `about:blank` (see Guards); frame ids and element handles from before are gone) |
 | `tab.navigated` | `{ frameId, url, sameDocument }` |
 | `navigation.blocked` | `{ url, reason }`: the driver cancelled a navigation of a tab a session created because that session's domain policy blocks `url`, its file roots do, or its content rules failed; every attached session hears of it, and only the tab's live creator gets `url` as written |
 | `tab.loadState` | `{ state: "domcontentloaded"\|"load"\|"networkidle" }` |
@@ -450,7 +450,7 @@ native (`BrowserReplBoundary` in the session, and the driver):
   permission grants, the page clipboard's refusal and capture masks all ask
   it. Tab capability: a session uses only tabs of its own workspace that no
   other running session created (`denied` otherwise); a tab of another
-  workspace needs an attach a person grants, and cmux has no such grant
+  workspace needs an attach a person grants, and hmux has no such grant
   yet, so it is refused, as is a restored placeholder tab there before it
   is created. A user's tab moved to another workspace is left at once by
   the sessions attached to it that may not use it there: no event, dialog,
@@ -703,7 +703,7 @@ native (`BrowserReplBoundary` in the session, and the driver):
   protects takes nothing); past that its `secrets.load` fails with
   `limit`, naming the quota, and reads nothing. Neither the session's end
   nor a reset frees its files, so a new session after a reset has a new
-  quota but the app-wide set keeps them: cmux protects at most 4,096 such
+  quota but the app-wide set keeps them: hmux protects at most 4,096 such
   files at once for all sessions, and past that, once files that are gone
   are dropped (a file is gone when its volume, asked by the `statfs`
   volume id taken when it was protected, names no object with its inode;
@@ -755,7 +755,7 @@ native (`BrowserReplBoundary` in the session, and the driver):
   written (`..` resolved without the file system) and refused when a part
   of it below that directory is a symbolic link. The browser loads a file
   with read access to a directory, so a page could otherwise read files
-  the session's `fs` cannot; cmux's internal schemes and `javascript:` are
+  the session's `fs` cannot; hmux's internal schemes and `javascript:` are
   refused too. The driver checks the path again and starts the load while
   no REPL `fs.rename` can run (in any session; `rename` is the only `fs`
   call that can put a link at a path), and gives the page read access to
@@ -803,14 +803,14 @@ native (`BrowserReplBoundary` in the session, and the driver):
   blocked). WebKit itself refuses a file outside the directory a load
   granted (measured on macOS 27.0); these hold also when the web process
   holds a wider grant. A window a page opens from any tab a session drives
-  never loads a local file through cmux's own navigation. A string without a scheme that looks like a path (`/`, `~`,
+  never loads a local file through hmux's own navigation. A string without a scheme that looks like a path (`/`, `~`,
   `.`) is refused. The same rule refuses the session's reads and input
   (the calls a blocked page refuses, `blocked`) on any tab that shows a
   local file outside those directories, such as a user's tab opened on
   one before the session reached it, and on a tab the session did not
   create whose page is a document of a local file's origin under another
-  URL (an `about:blank` page a file page wrote). A page cmux serves through
-  its own URL scheme (`cmux-diff-viewer:`, which streams the local files a
+  URL (an `about:blank` page a file page wrote). A page hmux serves through
+  its own URL scheme (`hmux-diff-viewer:`, which streams the local files a
   diff registered), or a document of such a page's origin, counts as a
   local file outside those directories, whatever they are and with no
   domain policy in force: the session's reads, input and captures of a
@@ -819,15 +819,15 @@ native (`BrowserReplBoundary` in the session, and the driver):
   judges every frame of a web view once one of its frames loaded such a
   page), a tab the session created never loads one in any frame, and a
   load, a landed page or a session `fetch` of one is refused. The diff
-  viewer's HTTP form (`http://127.0.0.1:<port>/<token>/...#cmux-diff-viewer`,
-  a loopback server cmux runs for the same files) counts the same way: its
-  whole origin, once cmux registered the server, and any loopback page
-  that names itself `#cmux-diff-viewer`. A document of an opaque
+  viewer's HTTP form (`http://127.0.0.1:<port>/<token>/...#hmux-diff-viewer`,
+  a loopback server hmux runs for the same files) counts the same way: its
+  whole origin, once hmux registered the server, and any loopback page
+  that names itself `#hmux-diff-viewer`. A document of an opaque
   origin whose URL names no host (a `data:` page or frame, a `blob:` of an
   opaque origin, a sandboxed `about:srcdoc`) is judged there by the
   documents that made it, as under the domain policy below: it is refused
   when a local file outside those directories, or a document of a local
-  file's origin, made it, or when cmux has no record of who made it (a file
+  file's origin, made it, or when hmux has no record of who made it (a file
   can replace itself with a `data:` document that shows its content). In a tab the
   session did not create, a child frame that shows such a document (a
   local page inside the directories can frame files outside them, and
@@ -885,8 +885,8 @@ native (`BrowserReplBoundary` in the session, and the driver):
   document (and blanks or makes inert its frame) when the policy blocks one
   of them. A frame keeps every maker recorded for it for its life (WebKit
   does not say which child-frame navigation committed). Under a locked
-  policy such a document is refused also when cmux has no record of who
-  made it (a document loaded before cmux saw the navigation, or a frame
+  policy such a document is refused also when hmux has no record of who
+  made it (a document loaded before hmux saw the navigation, or a frame
   with more than 16 makers). It also judges every frame, not only the main frame, by WebKit's
   record of it (`WKFrameInfo.securityOrigin` and URL) and by its document
   (`location.origin` and `location.protocol + "//" + location.host`, read
@@ -1064,7 +1064,7 @@ native (`BrowserReplBoundary` in the session, and the driver):
   of the active app) opens as a background tab, told to no session, never
   as a key popup window. A window
   a page opens from a tab a session created becomes a popup tab through
-  cmux's own navigation, which trusts local files and cmux's internal
+  hmux's own navigation, which trusts local files and hmux's internal
   schemes, and the page controls its URL. So it goes to the sessions
   (`tab.created`) only when it is an `http`, `https`, `about:blank` or
   `blob:` (of such an origin) page that the browser's URL allowlist and
@@ -1078,7 +1078,7 @@ native (`BrowserReplBoundary` in the session, and the driver):
   Such a tab carries the session's content rules and page clipboard guard
   before it loads anything: the web view WebKit asks for loads the popup's
   request only after the session attached and put them on it, and a popup
-  tab cmux loads itself is created blank, handed to the session, and only
+  tab hmux loads itself is created blank, handed to the session, and only
   then navigated (`BrowserReplPopupOpening`). When WebKit refuses to compile the policy's
   content rules, every driver call of the session fails with `invalid`
   (`the domain policy could not be applied: ...`) until the session sets a
@@ -1160,7 +1160,7 @@ native (`BrowserReplBoundary` in the session, and the driver):
   page's or the agent's, that reaches such a document while it holds a
   gesture (a person's, or one an agent's input gave) can call that
   document's own `execCommand("copy")`, and WebKit writes the system
-  clipboard. Only a process-wide pasteboard hook could stop that, and cmux
+  clipboard. Only a process-wide pasteboard hook could stop that, and hmux
   keeps none for the clipboard (the drag pasteboard's, see `input.drag`,
   covers only the drag pasteboard's name). `WKUserScript` has no option to
   match such documents (its private initializers take URL patterns, an
@@ -1239,25 +1239,25 @@ otherwise throws the reference's own unsupported error text.
 ### Native host contract (JavaScriptCore)
 
 The app runs each REPL session in its own `JSContext` on a dedicated thread.
-Before loading the runtime it installs one global, `__cmuxNative`. The runtime
+Before loading the runtime it installs one global, `__hmuxNative`. The runtime
 (`repl-host.js`) builds `host`, timers, `fs`, `fetch` and `driver` on it. All
 structured values cross the boundary as JSON strings.
 
 | Member | Contract |
 | --- | --- |
 | `version` | `1` |
-| `sessionId`, `cwd` | session name; absolute fs root: the CLI caller's cwd, or, when the request has none, a new directory of the session's own under the temporary directory (removed on close when empty). The app refuses `/`, the home directory and any directory containing it with an error telling the agent to `cd` to a project or scratch directory; `cmux browser repl mcp` sends no cwd when started in one of those |
+| `sessionId`, `cwd` | session name; absolute fs root: the CLI caller's cwd, or, when the request has none, a new directory of the session's own under the temporary directory (removed on close when empty). The app refuses `/`, the home directory and any directory containing it with an error telling the agent to `cd` to a project or scratch directory; `hmux browser repl mcp` sends no cwd when started in one of those |
 | `capabilities` | array of driver capability names (`[]` on WebKit) |
 | (all host functions) | Every holder below reserves from the session's resource ledger, which also bounds what they hold in memory together at 512 MiB; a call past any limit fails with one message form, `REPL session limit: <what> at most <limit> …`. The full list of limits is in [README.md, Limits](README.md#limits) |
 | `print(level, text)` | append one output line; `level` is `log`, `info`, `warn`, `error` or `debug`; `text` is already formatted. An evaluation keeps at most 16 MiB of lines; the rest goes to `<tmpdir>/output-<evalId>.txt`, announced by a `# output continues in <path>` line and summed up by a last `# output truncated: …; full output: <path>` line. The file takes at most 64 MiB per evaluation, counted against the session's fs budget (2 GiB); past either, the rest is dropped with a `# output past N bytes … was dropped` line. The runtime's own error reports go through the call's output gate like `console` output |
-| `setTimer(id, delayMs, repeat)` / `clearTimer(id)` | on fire the app calls `globalThis.__cmuxHostOnTimer(id)`; repeating timers keep firing until cleared, each fire `delayMs` after the previous callback ran, so a busy thread holds at most one queued callback per timer. `setTimer` returns `false`, scheduling nothing, when the session already has 10,000 timers scheduled or fired with their callback not yet run; the runtime's `setTimeout` then throws a `RangeError`. A timer belongs to the cell running when it was set, or to the cell of the timer whose callback set it (an interval re-arming itself); when that cell times out, its timers are cancelled with its fetches and driver calls, and `__cmuxReplCancel(message, evalId, timerIds)` drops their callbacks, so none runs in a later cell. The runtime also carries the cell's own token through its leftover work: code of a cancelled cell that resumes later (an await a page event or another cell settles, also inside an async function the cell awaited, which the engine's async stack names; JavaScriptCore before macOS 27 records no async stack, so there `async-owner.js` rewrites every async function of the runtime's scripts (once per process, off the main thread, when the first session starts; a first cell's timeout starts after it) and of each cell to carry the owning cell through its awaits, catches, `for await` steps and yields, and gives a function's source as written to `toString()`) is refused every host and driver call (`setTimer`, `fs`, `fetch`, `driverCall`, `secrets`, `policy`, `readResource`; an error with code `cancelled`), and a page listener the cell registered is dropped unrun. The host and driver objects agent code can reach (`page._session.host`, `page._session.driver`) are frozen copies whose prototype is `Object.prototype`; the unchecked ones stay in the runtime's closure, so no prototype walk reaches a call that skips the check. That check reads the JavaScript stack in the context agent code shares, so it keeps a cell's own late work from acting; it is not a guard |
-| `driverCall(callId, method, paramsJSON)` | the app later calls `globalThis.__cmuxHostOnResult(callId, errorJSON, resultJSON)`; exactly one of the two is `null`; `errorJSON` is `{ code, message }`. A session runs at most 256 driver calls at once and queues up to 10,000 more in order; past that a call fails at once. A call whose `paramsJSON` is over 64 MiB (a `filechooser.respond` answer: its 256 MiB of files in Base64, plus 1 MiB) fails with `invalid` before it is parsed or queued, and so does one whose JSON holds more than 2,000,000 structural elements (each `[`, `{` and `,` outside a string) or nests deeper than 512 levels, since no timeout interrupts a parse on the session's thread (the same limits refuse the arguments of `fs` with `E2BIG`, and of `secrets` and `policy` with `invalid`, before they are parsed); one that would take the request data the session's waiting and running driver calls and fetches hold at once (their `paramsJSON` and `requestJSON`) past 512 MiB fails at once too. When a cell times out (or its session is reset or closed), the driver calls it started are cancelled (the driver stops the work where it can: a cancelled input call sends no further native mouse, drag, key or text event, since each step's tab check refuses it, also when a hidden tab borrows the render host) and its queued ones fail with `cancelled`. A call keeps its slot until the runtime has its result. A result (or error) over 64 MiB fails with `invalid` before it is masked or queued, and so does one that would take the results the runtime has not taken yet (a busy cell) past 512 MiB together, measured with secrets masked |
-| `fetch(callId, requestJSON)` | request `{ url, method, headers: [[k, v]], bodyBase64?, targetId?, credentials?, origin? }`; result via `__cmuxHostOnResult`: `{ url, status, statusText, headers: [[k, v]], bodyBase64, redirected }`. Cookies come from, and `Set-Cookie` goes back to, the attached tab's cookie store (a cookie goes to a URL its domain matches and whose path its path matches by RFC 6265: a host-only cookie, one with no leading dot, only to its exact host, and a Domain cookie to its domain and subdomains but never to an IP address by suffix, so a `/account` cookie never goes to `/accounting`, and a Secure cookie only over `https` or to a loopback host: `localhost` and its subdomains, `[::1]` and an address in 127.0.0.0/8 written as four decimal parts, never a name that only starts with `127.`), for `credentials` `include` (default) always, `same-origin` only for URLs on `origin`, `omit` never; a `Cookie` or `Cookie2` header the caller sets is sent only where those rules send cookies (it replaces the tab's cookies there), so `omit` sends none on any request. A request header the caller sets that picks the request's authority or transport (`Host`, `Connection`, `Keep-Alive`, `Proxy-Authorization`, `Proxy-Authenticate`, `Proxy-Connection`, `Transfer-Encoding`, `TE`, `Trailer`, `Upgrade`, `Content-Length`, `Expect`, in any case, and any `:`-prefixed HTTP/2 pseudo-header such as `:authority`), or whose name or value holds CR, LF or NUL, fails the fetch with `invalid` before anything is sent, so the authority is always the policy-checked URL's on the first request and every redirect hop. A response's `Set-Cookie` is stored only as a browser would take it (RFC 6265 section 5.3): its Domain attribute must be the response's host or a parent domain of it, and not a public suffix (the system's Public Suffix List), and a Secure cookie only from an `https` response, so a fetched page never plants a cookie on another site. The domain policy is checked on the URL, every redirect hop and the URL the response came from, when its headers arrive and before its cookies are stored or its body returned (an HSTS upgrade to `https` moves a request without a redirect hop) (`blocked`); the URL and each hop are judged again against the current policy in the same synchronous step that sends or follows them, after their cookies were read, so a policy narrowed or locked while a request waited is never bypassed (`blocked`, nothing sent); since that upgrade takes the request (method, headers and body) along before the delegate hears of it, an `http` URL (first or a redirect hop) whose `https` form (port 80 as 443) the policy blocks is refused with `blocked` before anything is sent, and the message says to allow the `https` form too, except on an IP address or a loopback host (`localhost`, `[::1]`, an address in 127.0.0.0/8), which HSTS does not apply to or whose request stays on the machine; once a redirect leaves the first URL's origin, the request drops `Authorization`, `Proxy-Authorization`, `Cookie` and every header whose name marks a credential (`auth`, `token`, `api-key`, `secret`, `session`, `password`, `csrf`, `xsrf`, `credential`, `signature`) and every other header the caller set except the CORS-safelisted `Accept`, `Accept-Language`, `Content-Language`, `Content-Type` and `Range` (a header's name need not say it carries a credential), also on later hops back to it, and gets only the tab cookies the credentials rules give the new URL; a request body over 64 MiB fails with `invalid` before it is decoded or queued, and so does a request whose JSON could not hold at most 64 MiB of body plus 1 MiB, or holds more than 2,000,000 structural elements or nests deeper than 512 levels (the `driverCall` limits); once parsed (off the session's thread, before anything is sent), a request whose URL, method, headers and decoded body together pass 64 MiB (one call's request limit of the session's resource ledger) fails with `invalid` too, so headers cannot take the body's room; a request counts against the 512 MiB of request data a session's waiting and running calls hold (`driverCall`); a response body over 64 MiB fails, and so does one that would take the bodies a session's fetches hold at once (received and not yet taken by the runtime, each counted once received at the size of the Base64 result that carries it, and again at its size once masked, since masking a secret's value can grow it; one that no longer fits fails) past 128 MiB; a fetch that has not finished after 10 minutes fails with `timeout`; a session has at most 16 fetches waiting for their response headers and 64 open in all, queues up to 256 more in order and fails one past that at once (`fetch: REPL session limit: fetches waiting for a slot at most 256 at once ...`); a fetch whose headers arrived leaves its slot, so un-awaited fetches of bodies that never end (event streams) cannot hold every slot; when a cell times out, the fetches it started are cancelled and its queued ones fail with `cancelled`; the session redacts the URL, headers and the body (text and other bytes alike, in one linear pass over the bytes: each value's UTF-8 bytes and their encoded and Base64 forms); a response that masking would grow by more than 8 MiB (a mask is longer than a short value) fails with `invalid` instead |
+| `setTimer(id, delayMs, repeat)` / `clearTimer(id)` | on fire the app calls `globalThis.__hmuxHostOnTimer(id)`; repeating timers keep firing until cleared, each fire `delayMs` after the previous callback ran, so a busy thread holds at most one queued callback per timer. `setTimer` returns `false`, scheduling nothing, when the session already has 10,000 timers scheduled or fired with their callback not yet run; the runtime's `setTimeout` then throws a `RangeError`. A timer belongs to the cell running when it was set, or to the cell of the timer whose callback set it (an interval re-arming itself); when that cell times out, its timers are cancelled with its fetches and driver calls, and `__hmuxReplCancel(message, evalId, timerIds)` drops their callbacks, so none runs in a later cell. The runtime also carries the cell's own token through its leftover work: code of a cancelled cell that resumes later (an await a page event or another cell settles, also inside an async function the cell awaited, which the engine's async stack names; JavaScriptCore before macOS 27 records no async stack, so there `async-owner.js` rewrites every async function of the runtime's scripts (once per process, off the main thread, when the first session starts; a first cell's timeout starts after it) and of each cell to carry the owning cell through its awaits, catches, `for await` steps and yields, and gives a function's source as written to `toString()`) is refused every host and driver call (`setTimer`, `fs`, `fetch`, `driverCall`, `secrets`, `policy`, `readResource`; an error with code `cancelled`), and a page listener the cell registered is dropped unrun. The host and driver objects agent code can reach (`page._session.host`, `page._session.driver`) are frozen copies whose prototype is `Object.prototype`; the unchecked ones stay in the runtime's closure, so no prototype walk reaches a call that skips the check. That check reads the JavaScript stack in the context agent code shares, so it keeps a cell's own late work from acting; it is not a guard |
+| `driverCall(callId, method, paramsJSON)` | the app later calls `globalThis.__hmuxHostOnResult(callId, errorJSON, resultJSON)`; exactly one of the two is `null`; `errorJSON` is `{ code, message }`. A session runs at most 256 driver calls at once and queues up to 10,000 more in order; past that a call fails at once. A call whose `paramsJSON` is over 64 MiB (a `filechooser.respond` answer: its 256 MiB of files in Base64, plus 1 MiB) fails with `invalid` before it is parsed or queued, and so does one whose JSON holds more than 2,000,000 structural elements (each `[`, `{` and `,` outside a string) or nests deeper than 512 levels, since no timeout interrupts a parse on the session's thread (the same limits refuse the arguments of `fs` with `E2BIG`, and of `secrets` and `policy` with `invalid`, before they are parsed); one that would take the request data the session's waiting and running driver calls and fetches hold at once (their `paramsJSON` and `requestJSON`) past 512 MiB fails at once too. When a cell times out (or its session is reset or closed), the driver calls it started are cancelled (the driver stops the work where it can: a cancelled input call sends no further native mouse, drag, key or text event, since each step's tab check refuses it, also when a hidden tab borrows the render host) and its queued ones fail with `cancelled`. A call keeps its slot until the runtime has its result. A result (or error) over 64 MiB fails with `invalid` before it is masked or queued, and so does one that would take the results the runtime has not taken yet (a busy cell) past 512 MiB together, measured with secrets masked |
+| `fetch(callId, requestJSON)` | request `{ url, method, headers: [[k, v]], bodyBase64?, targetId?, credentials?, origin? }`; result via `__hmuxHostOnResult`: `{ url, status, statusText, headers: [[k, v]], bodyBase64, redirected }`. Cookies come from, and `Set-Cookie` goes back to, the attached tab's cookie store (a cookie goes to a URL its domain matches and whose path its path matches by RFC 6265: a host-only cookie, one with no leading dot, only to its exact host, and a Domain cookie to its domain and subdomains but never to an IP address by suffix, so a `/account` cookie never goes to `/accounting`, and a Secure cookie only over `https` or to a loopback host: `localhost` and its subdomains, `[::1]` and an address in 127.0.0.0/8 written as four decimal parts, never a name that only starts with `127.`), for `credentials` `include` (default) always, `same-origin` only for URLs on `origin`, `omit` never; a `Cookie` or `Cookie2` header the caller sets is sent only where those rules send cookies (it replaces the tab's cookies there), so `omit` sends none on any request. A request header the caller sets that picks the request's authority or transport (`Host`, `Connection`, `Keep-Alive`, `Proxy-Authorization`, `Proxy-Authenticate`, `Proxy-Connection`, `Transfer-Encoding`, `TE`, `Trailer`, `Upgrade`, `Content-Length`, `Expect`, in any case, and any `:`-prefixed HTTP/2 pseudo-header such as `:authority`), or whose name or value holds CR, LF or NUL, fails the fetch with `invalid` before anything is sent, so the authority is always the policy-checked URL's on the first request and every redirect hop. A response's `Set-Cookie` is stored only as a browser would take it (RFC 6265 section 5.3): its Domain attribute must be the response's host or a parent domain of it, and not a public suffix (the system's Public Suffix List), and a Secure cookie only from an `https` response, so a fetched page never plants a cookie on another site. The domain policy is checked on the URL, every redirect hop and the URL the response came from, when its headers arrive and before its cookies are stored or its body returned (an HSTS upgrade to `https` moves a request without a redirect hop) (`blocked`); the URL and each hop are judged again against the current policy in the same synchronous step that sends or follows them, after their cookies were read, so a policy narrowed or locked while a request waited is never bypassed (`blocked`, nothing sent); since that upgrade takes the request (method, headers and body) along before the delegate hears of it, an `http` URL (first or a redirect hop) whose `https` form (port 80 as 443) the policy blocks is refused with `blocked` before anything is sent, and the message says to allow the `https` form too, except on an IP address or a loopback host (`localhost`, `[::1]`, an address in 127.0.0.0/8), which HSTS does not apply to or whose request stays on the machine; once a redirect leaves the first URL's origin, the request drops `Authorization`, `Proxy-Authorization`, `Cookie` and every header whose name marks a credential (`auth`, `token`, `api-key`, `secret`, `session`, `password`, `csrf`, `xsrf`, `credential`, `signature`) and every other header the caller set except the CORS-safelisted `Accept`, `Accept-Language`, `Content-Language`, `Content-Type` and `Range` (a header's name need not say it carries a credential), also on later hops back to it, and gets only the tab cookies the credentials rules give the new URL; a request body over 64 MiB fails with `invalid` before it is decoded or queued, and so does a request whose JSON could not hold at most 64 MiB of body plus 1 MiB, or holds more than 2,000,000 structural elements or nests deeper than 512 levels (the `driverCall` limits); once parsed (off the session's thread, before anything is sent), a request whose URL, method, headers and decoded body together pass 64 MiB (one call's request limit of the session's resource ledger) fails with `invalid` too, so headers cannot take the body's room; a request counts against the 512 MiB of request data a session's waiting and running calls hold (`driverCall`); a response body over 64 MiB fails, and so does one that would take the bodies a session's fetches hold at once (received and not yet taken by the runtime, each counted once received at the size of the Base64 result that carries it, and again at its size once masked, since masking a secret's value can grow it; one that no longer fits fails) past 128 MiB; a fetch that has not finished after 10 minutes fails with `timeout`; a session has at most 16 fetches waiting for their response headers and 64 open in all, queues up to 256 more in order and fails one past that at once (`fetch: REPL session limit: fetches waiting for a slot at most 256 at once ...`); a fetch whose headers arrived leaves its slot, so un-awaited fetches of bodies that never end (event streams) cannot hold every slot; when a cell times out, the fetches it started are cancelled and its queued ones fail with `cancelled`; the session redacts the URL, headers and the body (text and other bytes alike, in one linear pass over the bytes: each value's UTF-8 bytes and their encoded and Base64 forms); a response that masking would grow by more than 8 MiB (a mask is longer than a short value) fails with `invalid` instead |
 | `secrets(op, argsJSON)` | synchronous, `{"ok": value}` or `{"error": {code, message}}`: `set { name, value, domains, totp }`, `load { path, allowWeak? }` (read natively; a file over 8 MiB fails with `invalid` before it is parsed, and so does one not in UTF-8 or with a digit spelled `\u0030` to `\u0039`) or `load { object, allowWeak? }` (more than 16,384 domain patterns, or more than 16,384 name and pattern pairs in all, the most 256 secrets of 64 domains hold, fail with `invalid` before any value is looked at; without `allowWeak: true`, a value shorter than 8 characters or a common password fails the whole load with `invalid` before anything is registered, naming the secrets and never their values), `list`, `has { name }`, `delete { name }`, `clear`. No result holds a value. `load` stops with `cancelled` when the cell times out or the session ends: the file's Base64 decode every 256 KiB, and before and after its parse and between patterns (also in the weak-value check) |
 | `policy(op, argsJSON)` | synchronous, as `secrets`: `get` → `{ allowed, prohibited, blockIPs, locked }`, `check { url }` → reason or `null`, `site { host }` → the host's site (registrable domain by the Public Suffix List, or the host itself when it has none), the same site `cookies.clear` scopes to, `publicSuffix { name }` → whether the name is itself a public suffix (the runtime's `tools.register` refuses a wildcard over one); a host or name over 1,024 bytes is no host name: `site` returns it lower-cased as given and `publicSuffix` false, without Punycode or a suffix walk, `set { allowed?, prohibited?, blockIPs?, lock?, title }` (a locked policy refuses) |
 | `fs(op, argsJSON)` | synchronous; returns `{"ok": value}` or `{"error": {"code": "ENOENT"\|"EACCES"\|"EEXIST"\|"ENOTDIR"\|"EISDIR"\|"ENOTEMPTY"\|"EINVAL"\|"ELOOP"\|"ERR_FS_FILE_TOO_LARGE"\|"ERR_FS_DIR_TOO_LARGE"\|"EFBIG"\|"EDQUOT"\|"ECANCELED"\|"ENAMETOOLONG"\|"EBUSY"\|"denied", "message"}}`. A path (`path`, `from`, `to`) over 1,024 bytes (`PATH_MAX`) fails with `ENAMETOOLONG` before it is normalized or walked, and the message does not repeat it. Each root (`cwd`, `tmpdir`) is opened once when the session starts (a cell that moves the session to another `cwd` has it checked and opened when the cell is submitted, while no REPL `fs.rename` can run, refused when a link is on its path, and runs in the directory held then, refused when its path names another directory by the time the cell begins), or when an operation first opens or creates it (`mkdir -p`), by a walk from `/` with `openat` and `O_NOFOLLOW` (and `mkdirat` for missing directories) over the path as it was resolved, so a parent swapped for a link meanwhile is never followed (`EACCES`), and held: every operation walks from that held directory with `openat` and `O_NOFOLLOW`, follows a link only by reading it and while it stays inside a root, and acts relative to the directory it holds open (`fstatat`, `mkdirat`, `unlinkat`, `renameat`), so another session or local process can neither swap a link in between the check and the use nor redirect a root by renaming it away and putting a link or another directory at its path. Files open with `O_NONBLOCK` and are checked with `fstat` first: a FIFO, socket or device fails with `EINVAL` at once, `readFile` refuses a file over 64 MiB (`ERR_FS_FILE_TOO_LARGE`), and `readdir` a directory of more than 10,000 entries (`ERR_FS_DIR_TOO_LARGE`, once its read passes that many). `readFile` and `copyFile` of a file `secrets.load` read, in any session, fail with `denied` (see Secrets). While the session masks any secret value (its own or one another session typed), `copyFile` reads its source whole and writes it masked, as `writeFile` writes, so it copies at most 64 MiB then (`ERR_FS_FILE_TOO_LARGE`) and a source the masking limit refuses fails with `EINVAL`. One `writeFile` (also an append) or `copyFile` writes at most 256 MiB (`EFBIG`, before the file is opened) and a session at most 2 GiB over its life and 100,000 entry changes (each file a write or copy creates, also an empty one, directory made, entry renamed or removed, and each entry a recursive `rm` removes, taken before it is removed: past the limit the `rm` stops with `EDQUOT`, says how many entries it removed and leaves the rest; `EDQUOT`, a reset starts a new budget); they write 1 MiB at a time and stop with `ECANCELED` when the cell times out, a callback that outlived its cell passes the callback time limit, or the session ends (a stopped copy leaves no file); `readFile` (also the whole read of a masked copy and `secrets.load`) checks every 64 KiB it reads, the secret masking of file contents (`readFile`, `writeFile`, a masked `copyFile`), of a `fetch` body, of output text and of every driver result, page event and host answer (between strings and every 64 KiB of a string, before and after a JSON parse) every 64 KiB it scans, and the Base64 that carries file contents and `fetch` bodies every chunk (192 KiB encoded, 256 KiB decoded), so a synchronous call or a result delivery ends at the timeout instead of holding the session's thread (a cancelled driver result or host answer fails with `cancelled`, a page event arrives withheld, output text is replaced by a note), so a synchronous call ends at the timeout instead of holding the session's thread (a cancelled fetch body fails with `cancelled`); and so do `readdir` and a recursive `rm`, checked every 1,024 entries (for `rm`, entries handled and directories opened together, so a deep chain of empty directories stops too; a stopped `rm` leaves what it had not removed yet); `copyFile` copies the source's extended attributes after its data, each taken from the same write budget as part of the call, checking for cancellation between them; it leaves out one the destination refuses, and one past 1 MiB, unread (the copy succeeds and its result is `{ warnings: [...] }`, a line per attribute left out that names it and its size, which `fs.copyFile` prints as a `warn` line); a recursive `rm` reads a directory 1,024 entries at a time and removes them before it reads on, so it never holds a large directory's whole list nor lists it again for each subdirectory. A directory held open stays usable after it is moved, so each system call relative to a directory below a root (`openat` of what it acts on, `fstatat`, `mkdirat`, `unlinkat`, `renameat`) runs under the lock every REPL `fs.rename` holds, right after a walk up the directory's `..` entries reaches the root by identity: a directory another session (one whose root holds this one's) moved out of the root since the walk opened it fails the call with `EACCES`, and nothing is made, written or removed there (a recursive `rm` stops; a file already open stays the file opened inside the root). The lock is held for that one call only, so a slow operation holds only its own session. Residual, outside the threat model: a same-user process that changes a path inside a root between two operations changes what the second one finds there (never a path outside the roots) |
 | `readResource(op, argsJSON)` | synchronous, as `secrets`: `read { path }` → text of a bundled `Resources/browser-repl/` file, or `null`. It takes the host-call bounds of `secrets` and `policy` (arguments past the limit refused before they are copied, charged to the session's ledger while it runs) and is refused, like them, to a cancelled cell's leftover work (`cancelled`); a path over 1,024 bytes fails with `invalid` before any lookup |
-| `tmpdir`, `homedir` | the session's private temporary directory (`<app temp>/cmux-browser-repl/<session>-<random>-tmp`, mode 0700, removed on close when empty; no other session's files are in it) and the canonical home directory, for `node:os`. The directory and its parent are made with `mkdirat` and `openat` (`O_NOFOLLOW`) from the app's temporary directory: a link in place of `cmux-browser-repl`, or a parent another user owns, makes no directory (fs calls there then fail). The session holds the new directory open; output spills are created in it with `openat` |
+| `tmpdir`, `homedir` | the session's private temporary directory (`<app temp>/hmux-browser-repl/<session>-<random>-tmp`, mode 0700, removed on close when empty; no other session's files are in it) and the canonical home directory, for `node:os`. The directory and its parent are made with `mkdirat` and `openat` (`O_NOFOLLOW`) from the app's temporary directory: a link in place of `hmux-browser-repl`, or a parent another user owns, makes no directory (fs calls there then fail). The session holds the new directory open; output spills are created in it with `openat` |
 
 `fs` ops, paths relative to `cwd` (absolute paths must stay inside `cwd` or
 the session's own `tmpdir`, never the system temporary directory that other
@@ -1283,7 +1283,7 @@ while no REPL `fs.rename` and no browser file grant runs, and only while
 the temporary entry is still the regular file the copy wrote (same device
 and inode, not followed); a link moved in for it makes the copy fail with
 `EBUSY`, never publishes the link. The temporary file (named
-`.<name>.cmux-copy-<UUID>`) is made write-only (mode 0200) and gets the
+`.<name>.hmux-copy-<UUID>`) is made write-only (mode 0200) and gets the
 source's mode only after the copy checked that no `secrets.load` protected
 the source meanwhile; no session's `fs` reaches a path through such a name
 (`EACCES` for every op), `readdir` leaves it out and a tab does not load it,
@@ -1295,15 +1295,15 @@ reaches.
 
 Entry points the runtime defines, called by the app:
 
-- `__cmuxReplEval(code)` returns a Promise; the app awaits it with the eval
+- `__hmuxReplEval(code)` returns a Promise; the app awaits it with the eval
   timeout (120 s by default). Rejection is an uncaught error; the
-  app formats it with `__cmuxFormatError(error)` when defined, else
+  app formats it with `__hmuxFormatError(error)` when defined, else
   `error.stack ?? String(error)`, and the CLI exits 1. At the timeout the
   app answers the caller at once; a script still running is terminated
-  (`JSContextGroupSetExecutionTimeLimit`), then `__cmuxReplCancel(message)`
+  (`JSContextGroupSetExecutionTimeLimit`), then `__hmuxReplCancel(message)`
   settles the cell so the next one runs.
-- The runtime (`repl-host.js`) keeps `__cmuxNative` in its closures and
-  deletes the global, and its own `CmuxBrowserRepl` namespace, before any
+- The runtime (`repl-host.js`) keeps `__hmuxNative` in its closures and
+  deletes the global, and its own `HmuxBrowserRepl` namespace, before any
   cell runs. Once the runtime has loaded, the app takes the entry points
   (above and below) and deletes their globals, so no cell can call them.
 - Every call the app makes into the context (a cell, a driver result, a
@@ -1333,28 +1333,28 @@ Entry points the runtime defines, called by the app:
   the timers it set (an interval re-arming itself) are cancelled. The next
   cell's output starts with `error` lines saying how many callbacks were
   stopped, waited or were dropped. After the session closes
-  (`cmux browser repl reset`, idle expiry) every script is terminated and
+  (`hmux browser repl reset`, idle expiry) every script is terminated and
   the app makes no further call into the context.
-- `__cmuxHostOnEvent(name, payloadJSON)` delivers every driver event.
+- `__hmuxHostOnEvent(name, payloadJSON)` delivers every driver event.
   The session masks secrets in each on a queue of its own, off the
   session's thread, in the order events arrived, and a driver call's
   result goes through that queue too, so an event sent before a call
   returned is delivered before its result. A payload past 1 MiB, or one
   masking would grow past the redaction limit, arrives as
   `{ targetId, withheld }`: the tab and why its content was left out.
-- `__cmuxHostOnTimer(id)`, `__cmuxHostOnResult(callId, errorJSON, resultJSON)`.
+- `__hmuxHostOnTimer(id)`, `__hmuxHostOnResult(callId, errorJSON, resultJSON)`.
 
 Script load order: `manifest.json` in `Resources/browser-repl/`,
 `{ "repl": [...], "agent": [...] }`, paths relative to that directory. `repl`
 scripts run in order in the REPL context; `agent` scripts install in order in
 the agent world. A missing or malformed manifest, or a listed file that does
 not exist, fails the evaluation with an error naming the path; nothing is
-skipped. `cmux browser repl guide` prints `guide.md` from the same directory
+skipped. `hmux browser repl guide` prints `guide.md` from the same directory
 when present.
 
 ### Agent world
 
-- Each session has a content world of its own, `cmux-agent-<random>`
+- Each session has a content world of its own, `hmux-agent-<random>`
   (`BrowserReplSessionWorld`), in every tab it drives. Its page agent, refs
   and handles live there, and `frame.evaluate` with `world: "agent"` runs
   there; any other `world` value runs in the page's world. Two sessions that
@@ -1368,8 +1368,8 @@ when present.
 - The driver's own scripts run in private worlds that no session's
   `source` reaches: the frame gate's document, focus and frame-box probes,
   frame binding's child reports, `tab.info`, frame names, load waits, the
-  screenshot's viewport read and the clipboard shortcuts (`cmux-driver`)
-  and capture masks (`cmux-capture-mask`). What reads the session's own
+  screenshot's viewport read and the clipboard shortcuts (`hmux-driver`)
+  and capture masks (`hmux-capture-mask`). What reads the session's own
   handles runs in the session's world: element actions, the press check,
   `frame.contentFrame(s)`, `frame.ownerBox`, `input.setFiles`, the file
   chooser's element and the rich-text check of `input.insertText` (that
@@ -1381,7 +1381,7 @@ when present.
 - Scripts are added to a tab's `WKUserContentController` (document start,
   all frames), one per session world, when a session first touches the tab;
   frames that loaded earlier get the scripts on the first `frame.evaluate`.
-  Each script runs only while its world has the `cmuxReplAgent` message
+  Each script runs only while its world has the `hmuxReplAgent` message
   handler, added and removed with it; both leave the controller when the
   session detaches from the tab. What a session's agent left in documents
   already loaded stays in its world, which no later session gets, until
@@ -1397,7 +1397,7 @@ when present.
   `callAsyncJavaScript`, so `awaitPromise` is always true on WebKit.
 - `frameId` values are opaque strings. `null`/omitted means the main frame.
 - The agent is installed with the recipe in `page-agent.js` and found at
-  `globalThis[Symbol.for("cmux.browserRepl.agent")]`; `input.setFiles`
+  `globalThis[Symbol.for("hmux.browserRepl.agent")]`; `input.setFiles`
   resolves the handle there, assigns files with `DataTransfer` and dispatches
   `input` and `change`.
 - `frame.evaluate` with `world: "page"` and `handles`: handles live in the
@@ -1467,7 +1467,7 @@ The dev driver implements all of them.
   to elements in the target world and passes them before `args`, so
   `locator.evaluate` and `evaluateAll` run user functions in the page world on
   elements the agent world found. On WebKit this needs a cross-world lookup,
-  for example through `__cmuxPageAgent.resolveHandle`.
+  for example through `__hmuxPageAgent.resolveHandle`.
 - `tab.info` must answer while a JavaScript dialog is open (page script is
   blocked then): return the last known `title` and `loadState`. `loadState`
   is `commit`, `domcontentloaded` or `load`; the runtime polls it for
@@ -1478,8 +1478,8 @@ The dev driver implements all of them.
 - `input.key` carries the resolved `key` (`C` for Shift+KeyC), `code`,
   `location`, and `text` only when the key inserts text (none while Meta,
   Control or Alt is held).
-- The page agent exposes `globalThis[Symbol.for("cmux.browserRepl.agent")]`
-  and `globalThis.__cmuxPageAgent.resolveHandle(id)`, both non-enumerable.
+- The page agent exposes `globalThis[Symbol.for("hmux.browserRepl.agent")]`
+  and `globalThis.__hmuxPageAgent.resolveHandle(id)`, both non-enumerable.
   Handle ids are opaque strings (`h12.<token>`), stable per element for the
   document's life. The token is random per document, made by the agent in
   its own world when it installs in the document, so a frame that navigates

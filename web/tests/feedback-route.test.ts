@@ -77,7 +77,7 @@ function feedbackRequest(): Request {
   const form = new FormData();
   form.set("email", "user@example.test");
   form.set("message", "The app crashed while opening a workspace.");
-  return new Request("https://cmux.test/api/feedback", {
+  return new Request("https://hmux.test/api/feedback", {
     method: "POST",
     body: form,
   });

@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 /// One row of a Cloud menu, described once and rendered by both the status

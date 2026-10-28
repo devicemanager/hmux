@@ -148,7 +148,7 @@ def issue_plan(conclusion: str, has_open_issue: bool, already_reported: bool) ->
     return "none"
 
 
-SIGNATURE_PREFIX = "<!-- cmux-main-red-signature: "
+SIGNATURE_PREFIX = "<!-- hmux-main-red-signature: "
 
 
 def red_signature(jobs: Iterable[Mapping[str, object]], failures: Iterable[Mapping[str, object]] | None) -> str:

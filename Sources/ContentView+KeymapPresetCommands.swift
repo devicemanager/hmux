@@ -1,7 +1,7 @@
 import AppKit
-import CmuxCommandPalette
-import CmuxSettings
-import CmuxSettingsUI
+import HmuxCommandPalette
+import HmuxSettings
+import HmuxSettingsUI
 
 extension ContentView {
     static func keymapPresetCommandID(_ preset: ShortcutKeymapPreset) -> String {

@@ -7,7 +7,7 @@ import { normalizeRunSpec } from "../services/runs/spec";
 // A create whose background continuation died never finishes, so the worker
 // must stop retrying it: otherwise the Run stays running and holds its
 // maxConcurrent slot forever.
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 type TestSql = ((strings: TemplateStringsArray, ...values: unknown[]) => Promise<Record<string, unknown>[]>) & { end(options?: { timeout?: number }): Promise<void>; json(value: unknown): unknown };
 let sqlClient: TestSql | null = null;
@@ -24,7 +24,7 @@ mock.module("../services/runs/cloudClient", () => ({
 
 const DIGEST = `sha256:${"a".repeat(64)}`;
 const RUN_SPEC = normalizeRunSpec({
-  schema: "cmux.run/v1",
+  schema: "hmux.run/v1",
   operationId: "runner-create-pending",
   source: { repository: "manaflow-ai/cmux", ref: "main", commit: "b".repeat(40), setupManifestDigest: DIGEST },
   intent: { digest: DIGEST },
@@ -46,7 +46,7 @@ function database(): TestSql {
 beforeAll(async () => {
   if (!runDbTests) return;
   const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!url) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   const postgres = (await import("postgres")).default;
   sqlClient = postgres(url, { max: 2 }) as unknown as TestSql;
 });

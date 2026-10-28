@@ -91,11 +91,11 @@ class Pure(unittest.TestCase):
         self.assertEqual(state.keys([A]), [])
 
     def test_the_runner_comes_from_the_jobs_api(self):
-        self.assertEqual(state.record({"runner": "cmux7-glaeda", "keys": [A]}, admission("cmux7-glaeda")),
-                         ("cmux7-glaeda", [A], []))
-        lie = state.record({"runner": "cmux9-glaeda", "keys": [A]}, admission("cmux7-glaeda"))
+        self.assertEqual(state.record({"runner": "hmux7-glaeda", "keys": [A]}, admission("hmux7-glaeda")),
+                         ("hmux7-glaeda", [A], []))
+        lie = state.record({"runner": "hmux9-glaeda", "keys": [A]}, admission("hmux7-glaeda"))
         self.assertIsInstance(lie, str)
-        self.assertIn("cmux9-glaeda", lie)
+        self.assertIn("hmux9-glaeda", lie)
         self.assertIsInstance(state.record({"runner": "x", "keys": [A]}, [{"name": "changes", "runner_name": "x"}]),
                               str)
         self.assertIsInstance(state.record([A], admission("x")), str)
@@ -129,18 +129,18 @@ class Pure(unittest.TestCase):
 
 class Sweep(unittest.TestCase):
     def test_folds_new_artifacts_onto_the_previous_snapshot(self):
-        previous, blob = snapshot_artifact({"through": 20, "runners": {"cmux1-glaeda": {
+        previous, blob = snapshot_artifact({"through": 20, "runners": {"hmux1-glaeda": {
             "keys": [A], "at": "2026-09-25T18:00:00Z"}}})
         new = artifact(21, 301, created="2026-09-25T19:30:00Z")
         lie = artifact(22, 302, created="2026-09-25T19:31:00Z")
         client = FakeClient(
             snapshots=[previous], artifacts=[artifact(20, 300), new, lie],
-            jobs={301: admission("cmux1-glaeda"), 302: admission("cmux2-glaeda")},
-            blobs={500: blob, 21: zipped("warm-keys.json", {"runner": "cmux1-glaeda", "keys": [B]}),
-                   22: zipped("warm-keys.json", {"runner": "cmux3-glaeda", "keys": [C]})})
+            jobs={301: admission("hmux1-glaeda"), 302: admission("hmux2-glaeda")},
+            blobs={500: blob, 21: zipped("warm-keys.json", {"runner": "hmux1-glaeda", "keys": [B]}),
+                   22: zipped("warm-keys.json", {"runner": "hmux3-glaeda", "keys": [C]})})
         logged = []
         result = state.sweep(client, {}, NOW, log=logged.append)
-        self.assertEqual(result, {"through": 22, "runners": {"cmux1-glaeda": {
+        self.assertEqual(result, {"through": 22, "runners": {"hmux1-glaeda": {
             "keys": [B], "at": "2026-09-25T19:30:00Z"}}})
         # Artifact 20 was folded already: only 21 and 22 cost requests.
         self.assertFalse(any("/runs/300/" in call for call in client.calls))
@@ -148,13 +148,13 @@ class Sweep(unittest.TestCase):
 
     def test_reuses_the_janitors_job_listings(self):
         client = FakeClient(artifacts=[artifact(1, 301)],
-                            blobs={1: zipped("warm-keys.json", {"runner": "cmux1-glaeda", "keys": [A]})})
-        result = state.sweep(client, {301: admission("cmux1-glaeda")}, NOW, log=lambda _: None)
-        self.assertEqual(result["runners"]["cmux1-glaeda"]["keys"], [A])
+                            blobs={1: zipped("warm-keys.json", {"runner": "hmux1-glaeda", "keys": [A]})})
+        result = state.sweep(client, {301: admission("hmux1-glaeda")}, NOW, log=lambda _: None)
+        self.assertEqual(result["runners"]["hmux1-glaeda"]["keys"], [A])
         self.assertFalse(any("/jobs" in call for call in client.calls))
 
     def test_an_unreadable_artifact_is_skipped_not_fatal(self):
-        client = FakeClient(artifacts=[artifact(1, 301)], jobs={301: admission("cmux1-glaeda")},
+        client = FakeClient(artifacts=[artifact(1, 301)], jobs={301: admission("hmux1-glaeda")},
                             blobs={1: b"not a zip"})
         result = state.sweep(client, {}, NOW, log=lambda _: None)
         self.assertEqual(result, {"through": 1, "runners": {}})
@@ -234,19 +234,19 @@ class LiveWarm(unittest.TestCase):
     def client(self, count=6):
         items = [artifact(20 + index, 300 + index, created=f"2026-09-25T19:{10 + index}:00Z") for index in range(count)]
         return FakeClient(
-            artifacts=items, jobs={300 + index: admission(f"cmux{index}-glaeda") for index in range(count)},
-            blobs={20 + index: zipped("warm-keys.json", {"runner": f"cmux{index}-glaeda", "keys": [C],
+            artifacts=items, jobs={300 + index: admission(f"hmux{index}-glaeda") for index in range(count)},
+            blobs={20 + index: zipped("warm-keys.json", {"runner": f"hmux{index}-glaeda", "keys": [C],
                                                           "roots": [{"root": 1, "merged_onto": SHA_A}]})
                    for index in range(count)})
 
     def test_folds_the_newest_artifacts_past_the_snapshot_within_the_request_budget(self):
-        warm = {"through": 20, "runners": {"cmux0-glaeda": {"keys": [A], "at": "2026-09-25T19:10:00Z"}}}
+        warm = {"through": 20, "runners": {"hmux0-glaeda": {"keys": [A], "at": "2026-09-25T19:10:00Z"}}}
         client = self.client()
         result = state.live_warm(client, warm, NOW, generated_at=NOW - dt.timedelta(minutes=30), log=lambda _: None)
         # Artifacts 21..25 are new; the newest LIVE_MAX_NEW (22..25) are folded, 21 waits for the janitor.
-        self.assertEqual(sorted(result["runners"]), ["cmux0-glaeda", "cmux2-glaeda", "cmux3-glaeda", "cmux4-glaeda",
-                                                     "cmux5-glaeda"])
-        self.assertEqual(result["runners"]["cmux5-glaeda"]["roots"], [{"root": 1, "merged_onto": SHA_A}])
+        self.assertEqual(sorted(result["runners"]), ["hmux0-glaeda", "hmux2-glaeda", "hmux3-glaeda", "hmux4-glaeda",
+                                                     "hmux5-glaeda"])
+        self.assertEqual(result["runners"]["hmux5-glaeda"]["roots"], [{"root": 1, "merged_onto": SHA_A}])
         self.assertEqual(result["through"], 20)
         self.assertEqual(result["live"], {"folded": state.LIVE_MAX_NEW, "pending": 1})
         self.assertEqual(len(client.calls), 1 + 2 * state.LIVE_MAX_NEW)
@@ -263,8 +263,8 @@ class LiveWarm(unittest.TestCase):
         self.assertEqual(state.live_warm(Failing(), warm, NOW, generated_at=None, log=lambda _: None), warm)
 
     def test_a_lying_artifact_proves_nothing_live_either(self):
-        client = FakeClient(artifacts=[artifact(30, 400)], jobs={400: admission("cmux1-glaeda")},
-                            blobs={30: zipped("warm-keys.json", {"runner": "cmux9-glaeda", "keys": [C]})})
+        client = FakeClient(artifacts=[artifact(30, 400)], jobs={400: admission("hmux1-glaeda")},
+                            blobs={30: zipped("warm-keys.json", {"runner": "hmux9-glaeda", "keys": [C]})})
         result = state.live_warm(client, {"through": 0, "runners": {}}, NOW, generated_at=None, log=lambda _: None)
         self.assertEqual(result["runners"], {})
 

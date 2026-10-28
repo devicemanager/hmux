@@ -33,8 +33,8 @@ function isRequired(name: AgentParam): boolean {
 }
 
 /**
- * Path-form native URL (`cmux://agent/<harness>/<session>?host=&name=&message=`)
- * that cmux NEXT parses. Returns null unless harness and session are present and
+ * Path-form native URL (`hmux://agent/<harness>/<session>?host=&name=&message=`)
+ * that hmux NEXT parses. Returns null unless harness and session are present and
  * valid, so the page never echoes unvalidated input into a link; a hint the app
  * cannot use is left out of the link instead of killing it.
  */
@@ -57,14 +57,14 @@ export type AgentLinkResult = {
   /** The link, or null when harness or session is missing or unusable. */
   model: AgentLinkModel | null;
   /**
-   * Names, never values, of parameters cmux ignores: ones it does not know,
+   * Names, never values, of parameters hmux ignores: ones it does not know,
    * repeated ones, and hints whose value falls outside the charset. An ignored
    * name never stops the session from opening.
    */
   ignored: string[];
   /** Required parameters the link does not carry, or carries empty. */
   missing: string[];
-  /** Required parameters whose value cmux cannot use. */
+  /** Required parameters whose value hmux cannot use. */
   invalid: string[];
   /**
    * Required parameters the link carries twice. Which session a link names
@@ -86,11 +86,11 @@ function displayParamName(name: string): string {
   return name.replace(/[^A-Za-z0-9._-]/g, "").slice(0, 32) || "?";
 }
 
-/** Why cmux cannot use one parameter's value, in its own words. */
+/** Why hmux cannot use one parameter's value, in its own words. */
 type ParamIssue = "missing" | "invalid" | "duplicate" | "ignored";
 
 /**
- * One parameter as the page reads it: its value, or why cmux cannot use it. A
+ * One parameter as the page reads it: its value, or why hmux cannot use it. A
  * required parameter that is absent, empty, repeated or outside its charset
  * stops the link; an optional one is only ignored by name.
  */
@@ -142,7 +142,7 @@ export function agentLink(params: SearchParams): AgentLinkResult {
     if (allowed.has(name)) continue;
     const shown = displayParamName(name);
     // A name that prints as a parameter the link did use (`?[host]=x` beside `?host=big-red`)
-    // would read as if cmux had ignored that one, right above a link that carries it.
+    // would read as if hmux had ignored that one, right above a link that carries it.
     if (allowed.has(shown) && values[shown as AgentParam] !== undefined) continue;
     ignored.push(shown);
   }
@@ -159,7 +159,7 @@ export function agentLink(params: SearchParams): AgentLinkResult {
     if (value !== undefined) query.set(name, value);
   }
   const queryString = query.toString();
-  const href = `cmux://agent/${encodeURIComponent(harness)}/${encodeURIComponent(session)}${
+  const href = `hmux://agent/${encodeURIComponent(harness)}/${encodeURIComponent(session)}${
     queryString ? `?${queryString}` : ""
   }`;
   return {
@@ -179,7 +179,7 @@ export function agentLink(params: SearchParams): AgentLinkResult {
   };
 }
 
-// Invariant: this model holds only the URL's own harness/session/host/name/message plus the cmux:// href; no lookups, ever.
+// Invariant: this model holds only the URL's own harness/session/host/name/message plus the hmux:// href; no lookups, ever.
 export function agentLinkModel(params: SearchParams): AgentLinkModel | null {
   return agentLink(params).model;
 }

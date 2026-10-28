@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CmuxWorkspaces
+import HmuxFoundation
+import HmuxWorkspaces
 import Foundation
 import Observation
 
@@ -234,7 +234,7 @@ final class RestoredAgentLifecycleCoordinator {
         pendingStartupInputsByPanelId.removeAll(keepingCapacity: false)
     }
 
-    /// Shell integration has advanced a cmux-authored restore into its command
+    /// Shell integration has advanced a hmux-authored restore into its command
     /// phase without returning to the prompt. An observed command can instead
     /// be unrelated shell activity, so it still requires matching process evidence.
     func confirmsRunningRestoredCommand(panelId: UUID) -> Bool {
@@ -268,10 +268,10 @@ final class RestoredAgentLifecycleCoordinator {
         return snapshotsByPanelId[panelId]
     }
 
-    /// cmux queued the restore selector for the matching structured session,
+    /// hmux queued the restore selector for the matching structured session,
     /// and the shell has not returned to its prompt since: either no callback
     /// has started it yet, or shell integration reports it still running. The
-    /// command phase ends at promptIdle, so this is cmux-authored restore
+    /// command phase ends at promptIdle, so this is hmux-authored restore
     /// intent, not generic shell activity.
     func hasInFlightRestoreIntent(
         panelId: UUID,

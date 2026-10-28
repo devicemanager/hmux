@@ -37,7 +37,7 @@ while IFS= read -r remote; do
                     scripts/normalize-pbxproj.py
                 )
                 if ! git diff --quiet "$trusted_sha" -- "${trusted_inputs[@]}"; then
-                    echo "warning: cmux merge-driver installer inputs differ from trusted main; rerun from a clean checkout." >&2
+                    echo "warning: hmux merge-driver installer inputs differ from trusted main; rerun from a clean checkout." >&2
                     exit 0
                 fi
                 exec /bin/bash "$REPO_ROOT/scripts/install-git-hooks.sh"

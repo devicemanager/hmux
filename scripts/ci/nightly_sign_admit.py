@@ -57,7 +57,7 @@ DIGEST_MESSAGE = re.compile(
     r"^variant=(\S+) artifact=(\S+) sha256=([0-9a-f]{64}) publish=(true|false) fast=(true|false)$"
 )
 BUILD_JOB = "build-nightly-app"
-TARBALL = "cmux-prepared-app.tar.gz"
+TARBALL = "hmux-prepared-app.tar.gz"
 SHA40 = re.compile(r"^[0-9a-f]{40}$")
 PER_PAGE = 100
 CHUNK = 1 << 20
@@ -243,7 +243,7 @@ def producer_digest(gh: GitHub, repo: str, job: dict, variant: str, channel: str
     recorded_variant, artifact, sha256, publish, fast = match.groups()
     if recorded_variant != variant:
         fail(f"{PREPARE_JOB} ({variant}) recorded a digest for {recorded_variant}")
-    if not re.fullmatch(rf"cmux-{re.escape(channel)}-prepared-app-{re.escape(variant)}-[0-9a-f]{{7,40}}", artifact):
+    if not re.fullmatch(rf"hmux-{re.escape(channel)}-prepared-app-{re.escape(variant)}-[0-9a-f]{{7,40}}", artifact):
         fail(f"{PREPARE_JOB} ({variant}) names artifact {artifact!r}, not a {channel} {variant} prepared app")
     return artifact, sha256, publish == "true" and fast == "false"
 

@@ -1,4 +1,4 @@
-// cmux device presence service — worker entry.
+// hmux device presence service — worker entry.
 //
 // Routes (all JSON unless noted):
 //   GET  /healthz                         liveness, no auth
@@ -22,7 +22,7 @@
 //                                         DO broadcasts `vms` sync deltas
 //
 // Auth on every /v1 route: `Authorization: Bearer <Stack access token>` plus
-// optional `X-Cmux-Team-Id` / `?teamId=` team scoping, verified in auth.ts the
+// optional `X-Hmux-Team-Id` / `?teamId=` team scoping, verified in auth.ts the
 // same way web/app/api verifies native callers. The worker resolves the team,
 // derives the per-team Durable Object from the VERIFIED team id, and forwards;
 // the DO never sees unauthenticated input.
@@ -73,7 +73,7 @@ export interface Env extends AuthEnv, ControlPlaneEnv {
   WORKSPACE_PRESENCE: DurableObjectNamespace<WorkspacePresence>;
   CONNECTIVITY_INVALIDATION_SECRET?: string;
   /** Service secret for `POST /v1/sync/vms`; must equal the web backend's
-   * `CMUX_PRESENCE_VMS_PUBLISHER_SECRET`. */
+   * `HMUX_PRESENCE_VMS_PUBLISHER_SECRET`. */
   VMS_PUBLISHER_SECRET?: string;
 }
 
@@ -124,7 +124,7 @@ const worker = {
     const url = new URL(request.url);
 
     if (url.pathname === "/healthz") {
-      return json({ ok: true, service: "cmux-presence" });
+      return json({ ok: true, service: "hmux-presence" });
     }
 
     if (url.pathname === "/v1/workspace-presence") {
@@ -160,7 +160,7 @@ const worker = {
       if (request.headers.get("upgrade")?.toLowerCase() !== "websocket") {
         return json({ error: "websocket_required" }, 400);
       }
-      const namespace = request.headers.get("x-cmux-app-namespace")?.trim();
+      const namespace = request.headers.get("x-hmux-app-namespace")?.trim();
       if (namespace && !/^[A-Za-z0-9._:-]{1,255}$/.test(namespace)) {
         return json({ error: "invalid_client_namespace" }, 400);
       }
@@ -347,7 +347,7 @@ const worker = {
       //   GET   read it back (the sign-in restore path on a fresh install)
       const team = await resolveTeamOr403(request, env);
       if (!team.ok) return team.response;
-      const rawClientScope = request.headers.get("x-cmux-client-scope");
+      const rawClientScope = request.headers.get("x-hmux-client-scope");
       const trimmedClientScope = rawClientScope?.trim() ?? "";
       if (trimmedClientScope && normalizeClientScope(trimmedClientScope) === null) {
         return json({ error: "invalid_client_scope" }, 400);

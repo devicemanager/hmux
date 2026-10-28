@@ -1,5 +1,5 @@
 import Foundation
-import CmuxCore
+import HmuxCore
 
 extension BrowserPanel {
     static func restorableDisplayURL(

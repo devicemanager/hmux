@@ -1,11 +1,11 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// Two-card onboarding for the standalone local computer-use helper.
 ///
-/// Permissions belong to `cmux Computer Use`. Each initial Allow action opens
+/// Permissions belong to `hmux Computer Use`. Each initial Allow action opens
 /// the matching permanent System Settings pane directly and presents the helper
 /// as a Finder-compatible drag source when macOS has not listed it yet.
 @MainActor
@@ -155,7 +155,7 @@ struct ComputerUseOnboardingView: View {
         }
         return String(
             localized: "computerUse.onboarding.hero.detail",
-            defaultValue: "cmux Computer Use needs these permissions to use apps on your Mac.\nThese permissions are used when you ask cmux to perform tasks."
+            defaultValue: "hmux Computer Use needs these permissions to use apps on your Mac.\nThese permissions are used when you ask hmux to perform tasks."
         )
     }
 
@@ -167,7 +167,7 @@ struct ComputerUseOnboardingView: View {
 
                 Text(String(
                     localized: "computerUse.onboarding.hero.title",
-                    defaultValue: "Enable cmux Computer Use"
+                    defaultValue: "Enable hmux Computer Use"
                 ))
                 .font(.system(size: 25, weight: .bold))
                 .padding(.top, 18)
@@ -187,7 +187,7 @@ struct ComputerUseOnboardingView: View {
 
                 Text(String(
                     localized: "computerUse.onboarding.hero.helperNote",
-                    defaultValue: "cmux Computer Use runs independently from cmux. You can quit or reopen it without closing cmux or your terminal sessions."
+                    defaultValue: "hmux Computer Use runs independently from hmux. You can quit or reopen it without closing hmux or your terminal sessions."
                 ))
                 .font(.system(size: 11))
                 .foregroundStyle(Color(nsColor: .tertiaryLabelColor))
@@ -219,14 +219,14 @@ struct ComputerUseOnboardingView: View {
 
             Text(String(
                 localized: "computerUse.onboarding.done.title",
-                defaultValue: "cmux Computer Use Is Ready"
+                defaultValue: "hmux Computer Use Is Ready"
             ))
             .font(.system(size: 25, weight: .bold))
             .padding(.top, 20)
 
             Text(String(
                 localized: "computerUse.onboarding.done.detailReady",
-                defaultValue: "Setup is complete. You can now ask cmux to use apps on your Mac."
+                defaultValue: "Setup is complete. You can now ask hmux to use apps on your Mac."
             ))
             .font(.system(size: 13))
             .foregroundStyle(overviewSecondaryText)
@@ -244,11 +244,11 @@ struct ComputerUseOnboardingView: View {
         .padding(.horizontal, 48)
     }
 
-    /// The flat cmux brand blue (#2D8CFF) — the midpoint of the cursor
+    /// The flat hmux brand blue (#2D8CFF) — the midpoint of the cursor
     /// artwork's palette, used as a solid fill. Onboarding chrome stays flat;
     /// gradients live only inside the icon artwork itself.
     static let brandBlue = Color(red: 0x2D / 255.0, green: 0x8C / 255.0, blue: 0xFF / 255.0)
-    /// The flat cmux brand violet (#6C5CFF), the palette's far endpoint.
+    /// The flat hmux brand violet (#6C5CFF), the palette's far endpoint.
     static let brandViolet = Color(red: 0x6C / 255.0, green: 0x5C / 255.0, blue: 0xFF / 255.0)
 
     private var helperHeroIcon: some View {
@@ -284,7 +284,7 @@ struct ComputerUseOnboardingView: View {
                 ),
                 detail: String(
                     localized: "computerUse.onboarding.accessibility.cardDetail",
-                    defaultValue: "Allows cmux to access app interfaces"
+                    defaultValue: "Allows hmux to access app interfaces"
                 )
             )
             permissionCard(
@@ -301,7 +301,7 @@ struct ComputerUseOnboardingView: View {
                 // and offers nothing for a grant (ComputerUseHelperTrust).
                 Text(String(
                     localized: "computerUse.onboarding.helperUnavailable",
-                    defaultValue: "Computer Use is unavailable in this dev build. Install cmux NIGHTLY to use it."
+                    defaultValue: "Computer Use is unavailable in this dev build. Install hmux NIGHTLY to use it."
                 ))
                 .font(.system(size: 12.5))
                 .foregroundStyle(overviewSecondaryText)
@@ -323,7 +323,7 @@ struct ComputerUseOnboardingView: View {
         }
         return String(
             localized: "computerUse.onboarding.screenshots.cardDetail",
-            defaultValue: "cmux uses screenshots to know where to click"
+            defaultValue: "hmux uses screenshots to know where to click"
         )
     }
 
@@ -677,7 +677,7 @@ enum ComputerUsePermissionCompanionLayout {
 /// the instruction text and app tile share an exact leading edge.
 @MainActor
 struct ComputerUsePermissionCompanionView: View {
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     let permissionStep: ComputerUseOnboardingStep
     let presentationState: ComputerUseOnboardingPresentationState
     let applicationName: String
@@ -707,7 +707,7 @@ struct ComputerUsePermissionCompanionView: View {
                     .foregroundStyle(ComputerUseOnboardingView.brandBlue)
                     .frame(width: 30, height: 30)
                     .background(
-                        cmuxAccent.color.opacity(0.12),
+                        hmuxAccent.color.opacity(0.12),
                         in: Circle()
                     )
                     .frame(
@@ -833,13 +833,13 @@ struct ComputerUsePermissionCompanionView: View {
                 .fill(Color.primary.opacity(0.055))
                 .overlay {
                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                        .fill(cmuxAccent.color.opacity(0.035))
+                        .fill(hmuxAccent.color.opacity(0.035))
                 }
         }
         .overlay {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .strokeBorder(
-                    cmuxAccent.color.opacity(0.18),
+                    hmuxAccent.color.opacity(0.18),
                     lineWidth: 0.5
                 )
         }

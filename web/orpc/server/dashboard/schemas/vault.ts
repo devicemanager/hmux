@@ -58,5 +58,5 @@ export const transcriptHeadSchema = z.object({
 });
 
 export const cliAuthClientSchema = z.object({
-  client: z.enum(["cmux-vault", "subrouter"]).nullable(),
+  client: z.enum(["hmux-vault", "subrouter"]).nullable(),
 });

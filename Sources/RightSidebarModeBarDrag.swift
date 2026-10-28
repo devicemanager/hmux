@@ -1,7 +1,7 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import Observation
-import CmuxSidebar
+import HmuxSidebar
 import SwiftUI
 
 /// Owns a mode bar tab drag. Inside the bar the real tab follows the pointer
@@ -283,12 +283,12 @@ struct RightSidebarModeBarTabDrag: ViewModifier {
 /// The tab as it looks selected, for the image a carried-out drag shows.
 private struct RightSidebarModeBarDragPreview: View {
     let mode: RightSidebarMode
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var globalFontPercent
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var globalFontPercent
 
     var body: some View {
         HStack(spacing: 4) {
             // ImageRenderer cannot capture the NSViewRepresentable used by
-            // CmuxSystemSymbolImage. Supply its materialized bitmap instead.
+            // HmuxSystemSymbolImage. Supply its materialized bitmap instead.
             if let image = RenderableSystemSymbol.configuredAppKitImage(
                 systemName: mode.symbolName,
                 pointSize: GlobalFontMagnification.scaledSize(
@@ -301,7 +301,7 @@ private struct RightSidebarModeBarDragPreview: View {
                     .foregroundStyle(RightSidebarChromeControlStyle.pillForegroundColor(isSelected: true, isHovered: true))
             }
             Text(mode.label)
-                .cmuxFont(size: RightSidebarChromeControlStyle.labelSize, weight: RightSidebarChromeControlStyle.labelWeight)
+                .hmuxFont(size: RightSidebarChromeControlStyle.labelSize, weight: RightSidebarChromeControlStyle.labelWeight)
                 .lineLimit(1)
         }
         .rightSidebarChromePill(isSelected: true, isHovered: true)

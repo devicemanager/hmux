@@ -4,7 +4,7 @@ import { FreestyleApiError, type Freestyle } from "freestyle";
 import { FreestyleProvider } from "../services/vms/drivers/freestyle";
 import { FreestyleTlsRuleLimitRestoreError, reconcileFreestyleEgress } from "../services/vms/drivers/freestyleNetworkPolicy";
 import { ProviderError, ProviderTlsRuleLimitError } from "../services/vms/drivers/types";
-import { CMUX_REQUIRED_DOMAINS, compileNetworkPolicy, parseNetworkPolicy } from "../services/vms/networkPolicy";
+import { HMUX_REQUIRED_DOMAINS, compileNetworkPolicy, parseNetworkPolicy } from "../services/vms/networkPolicy";
 import { VmProviderOperationError } from "../services/vms/errors";
 import { vmWorkflowErrorResponse } from "../services/vms/routeHelpers";
 import { freestyleTlsRuleLimit, tlsRuleCapacityAlert } from "../services/observability/providerRuleCapacity";
@@ -107,18 +107,18 @@ async function failure(run: () => Promise<unknown>): Promise<unknown> {
   throw new Error("expected the provider call to fail");
 }
 
-// Freestyle caps TLS rules per account (2000), and every cmux machine plus
+// Freestyle caps TLS rules per account (2000), and every hmux machine plus
 // every other workload on the account draws from that one pool. At the cap a
 // network policy save was answered as a retryable 502 "temporarily
 // unavailable", and a domain swap failed even though it would not have grown
 // the rule count.
 describe("the account-wide Freestyle TLS rule cap", () => {
   test("a domain swap at the cap frees its own surplus rules first and converges", async () => {
-    const owned = [...CMUX_REQUIRED_DOMAINS, "old.example.com"];
+    const owned = [...HMUX_REQUIRED_DOMAINS, "old.example.com"];
     const fake = accountAtCap(owned, 2000 - owned.length, 2000);
     const plan = compileNetworkPolicy(parseNetworkPolicy({ mode: "allowlist", domains: ["new.example.com"] }));
     await reconcileFreestyleEgress(fake.client, vmId, plan, ENV);
-    expect(fake.tls.map((rule) => rule.domain).sort()).toEqual([...CMUX_REQUIRED_DOMAINS, "new.example.com"].sort());
+    expect(fake.tls.map((rule) => rule.domain).sort()).toEqual([...HMUX_REQUIRED_DOMAINS, "new.example.com"].sort());
   });
 
   test("a policy that needs more rules than the account has is a clear, non-retryable capacity refusal", async () => {
@@ -139,7 +139,7 @@ describe("the account-wide Freestyle TLS rule cap", () => {
   });
 
   test("a refused provider call still maps to the capacity error after rollback", async () => {
-    const owned = [...CMUX_REQUIRED_DOMAINS, "old.example.com"];
+    const owned = [...HMUX_REQUIRED_DOMAINS, "old.example.com"];
     const fake = accountAtCap(owned, 2000 - owned.length, 2000, { refuse: (domain) => domain === "new.example.com" });
     const provider = new FreestyleProvider({ client: () => fake.client });
     const plan = compileNetworkPolicy(parseNetworkPolicy({ mode: "allowlist", domains: ["new.example.com"] }));
@@ -148,7 +148,7 @@ describe("the account-wide Freestyle TLS rule cap", () => {
 
   // Every failure after the swap starts deleting must reconcile the VM back to
   // its original steering rules whenever the recreating creates succeed.
-  const owned = [...CMUX_REQUIRED_DOMAINS, "old-a.example.com", "old-b.example.com"];
+  const owned = [...HMUX_REQUIRED_DOMAINS, "old-a.example.com", "old-b.example.com"];
   const swapPlan = () => compileNetworkPolicy(parseNetworkPolicy({ mode: "allowlist", domains: ["new.example.com"] }));
   const refuseNew = (domain: string) => domain === "new.example.com";
   const rejectAfter = (d: string): DeleteMode => (d === "old-b.example.com" ? "reject-after-removal" : "ok");
@@ -193,7 +193,7 @@ describe("the account-wide Freestyle TLS rule cap", () => {
   }
 
   test("a change that grows the rule count at the cap deletes nothing", async () => {
-    const owned = [...CMUX_REQUIRED_DOMAINS, "old.example.com"];
+    const owned = [...HMUX_REQUIRED_DOMAINS, "old.example.com"];
     const fake = accountAtCap(owned, 2000 - owned.length, 2000);
     const plan = compileNetworkPolicy(parseNetworkPolicy({ mode: "allowlist", domains: ["a.example.com", "b.example.com"] }));
     const err = await failure(() => reconcileFreestyleEgress(fake.client, vmId, plan, ENV));
@@ -205,7 +205,7 @@ describe("the account-wide Freestyle TLS rule cap", () => {
 
   test("freeing rules at the cap never deletes another VM's rules", async () => {
     const foreign: TlsRule = { id: "tls-foreign", domain: "old.example.com", protocol: "http", source: { vmId: "vm-2" }, destination: { public: true } };
-    const owned = [...CMUX_REQUIRED_DOMAINS, "old.example.com"];
+    const owned = [...HMUX_REQUIRED_DOMAINS, "old.example.com"];
     const fake = accountAtCap(owned, 2000 - owned.length - 1, 2000, { foreign: [foreign] });
     const plan = compileNetworkPolicy(parseNetworkPolicy({ mode: "allowlist", domains: ["new.example.com"] }));
     await reconcileFreestyleEgress(fake.client, vmId, plan, ENV);

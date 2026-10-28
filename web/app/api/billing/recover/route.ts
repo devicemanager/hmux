@@ -101,7 +101,7 @@ const productionDependencies: BillingRecoveryRouteDependencies = {
   // Use the dedicated recovery rule first. The feedback rule is only a
   // migration fallback for deployments that have not created the new rule.
   rateLimitRuleID: () =>
-    env.CMUX_BILLING_RECOVERY_RATE_LIMIT_ID ?? env.CMUX_FEEDBACK_RATE_LIMIT_ID,
+    env.HMUX_BILLING_RECOVERY_RATE_LIMIT_ID ?? env.HMUX_FEEDBACK_RATE_LIMIT_ID,
   isVercel: () => process.env.VERCEL === "1",
 };
 
@@ -112,7 +112,7 @@ export function makeBillingRecoveryHandler(
     return withApiRouteSpan(
       request,
       "/api/billing/recover",
-      { "cmux.subsystem": "billing", "cmux.billing.operation": "recover" },
+      { "hmux.subsystem": "billing", "hmux.billing.operation": "recover" },
       async (span) => {
         const rateLimitResponse = await enforceRateLimit(request, dependencies);
         if (rateLimitResponse) return rateLimitResponse;

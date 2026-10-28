@@ -14,7 +14,7 @@ describe("machine tokens and account management", () => {
     test(`a ${label} is refused even when it authenticates`, async () => {
       let calls = 0;
       const resolved = await resolveCoderouterControlContext(
-        new Request("https://cmux.test/api/coderouter/accounts", { method: "POST", headers }),
+        new Request("https://hmux.test/api/coderouter/accounts", { method: "POST", headers }),
         async () => {
           calls++;
           return { ok: true, identity: vmIdentity } as never;
@@ -30,7 +30,7 @@ describe("machine tokens and account management", () => {
 
   test("a chatmux machine keeps its own refusal", async () => {
     const resolved = await resolveCoderouterControlContext(
-      new Request("https://cmux.test/api/coderouter/accounts", { method: "POST", headers: { authorization: "Bearer crt_x" } }),
+      new Request("https://hmux.test/api/coderouter/accounts", { method: "POST", headers: { authorization: "Bearer crt_x" } }),
       async () => ({ ok: true, identity: { ...vmIdentity, machine: "chatmux" } }) as never,
     );
     expect(resolved.ok).toBe(false);

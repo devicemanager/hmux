@@ -87,7 +87,7 @@ jobs:
           # its fallback because test_ci_self_hosted_guard.sh requires it on
           # every read.
           # CI_PR_POOL_ORDER is the one list that may also name owned pools.
-          CMUX_CI_RUNNER_VARIABLES: |
+          HMUX_CI_RUNNER_VARIABLES: |
             CI_LIGHT_LANE_RUNNER=${{ vars.CI_LIGHT_LANE_RUNNER }}
             CI_NIGHTLY_TRUSTED_RUNNER=${{ vars.CI_NIGHTLY_TRUSTED_RUNNER }}
             CI_NIGHTLY_NEXT_TRUSTED_POOL=${{ vars.CI_NIGHTLY_NEXT_TRUSTED_POOL }}
@@ -96,8 +96,8 @@ jobs:
             CI_SEED_TRUSTED_POOL=${{ vars.CI_SEED_TRUSTED_POOL }}
             CI_SIDE_LANE_RUNNER=${{ vars.CI_SIDE_LANE_RUNNER }}
             CI_TRUSTED_RUNNER=${{ vars.CI_TRUSTED_RUNNER }}
-            CMUX_CI_RUNNER_FLEET=${{ vars.CMUX_CI_RUNNER_FLEET }}
-            CMUX_CI_RUNNER_OVERRIDES=${{ vars.CMUX_CI_RUNNER_OVERRIDES }}
+            HMUX_CI_RUNNER_FLEET=${{ vars.HMUX_CI_RUNNER_FLEET }}
+            HMUX_CI_RUNNER_OVERRIDES=${{ vars.HMUX_CI_RUNNER_OVERRIDES }}
             LINUX_ARM64_RUNNER=${{ vars.LINUX_ARM64_RUNNER }}
             LINUX_RUNNER=${{ vars.LINUX_RUNNER }}
             MACOS_RUNNER_15=${{ vars.MACOS_RUNNER_15 }}

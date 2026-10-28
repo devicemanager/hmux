@@ -1,7 +1,7 @@
-import CMUXAgentLaunch
-import CmuxAgentChat
-import CmuxFoundation
-import CmuxMobileHost
+import HMUXAgentLaunch
+import HmuxAgentChat
+import HmuxFoundation
+import HmuxMobileHost
 import Foundation
 
 /// A coding-agent session discovered by observing the process table, with no

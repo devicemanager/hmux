@@ -8,7 +8,7 @@ import { VmRepository, UNEXPECTED_WAKE_CLAIM_METADATA_KEY, type CloudVmRow, type
 import { reconcileVmProviderStatuses, resumeVm, UNEXPECTED_WAKE_REPAUSE_LIMIT } from "../services/vms/workflows";
 
 // A paused machine that runs at the provider without a recorded resume was
-// woken by traffic (cmux#21379). The status cron pauses it again instead of
+// woken by traffic (hmux#21379). The status cron pauses it again instead of
 // relabelling it running, unless a resume landed while it confirmed.
 
 type UsageEvent = Parameters<VmRepositoryShape["recordUsageEvent"]>[0];
@@ -36,7 +36,7 @@ function row(overrides: Partial<CloudVmRow> = {}): CloudVmRow {
     destroyedAt: null,
     failureCode: null,
     failureMessage: null,
-    providerMetadata: { cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 } },
+    providerMetadata: { hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 } },
     networkPolicy: null,
     networkPolicyStatus: null,
     agentUpdates: null,

@@ -5,7 +5,7 @@ A job on an owned pool can wait for good or be refused at job start, and only
 ci-owned-pool-rescue.yml moves it (scripts/ci/owned_pool_rescue.py). That rescue
 acts only on the workflow files it knows (owned_pool_rescue.WATCHED_WORKFLOW_PATHS),
 so a workflow that takes an owned label without being listed there is never
-rescued: run 39638669325 (cmux-next-base-autofix.yml, 2026-10-21) had its Mac
+rescued: run 39638669325 (hmux-next-base-autofix.yml, 2026-10-21) had its Mac
 job refused by a mini and nothing re-ran it.
 
 This module decides it from the workflow files themselves, so the rescue's list
@@ -30,7 +30,7 @@ an input a marked value through `with:` is owned too (Workflow.why()).
 The markers are read from the scanned tree's own pr_runner_pool.py and
 runner_label_policy.py, so a branch that adds a pool variable is judged by its
 own policy. A tree is the working tree or a git ref (`git show REF:PATH`), which
-is how main's guard also checks feat-cmux-next's workflows and the reverse.
+is how main's guard also checks feat-hmux-next's workflows and the reverse.
 
 Running this file prints the owned workflows of the working tree, or of
 `--ref REF`.
@@ -53,8 +53,8 @@ POLICY_SCRIPT = "scripts/ci/runner_label_policy.py"
 # pr_runner_pool.py's label prefixes; their common prefix is the owned literal.
 LABEL_PREFIX_NAMES = ("ROOT_PREFIX", "SIDE_PREFIX", "GUI_PREFIX", "RUNNER_LABEL_PREFIX")
 # Pool variables no policy check holds to a label shape yet (docs/ci-runners.md
-# on feat-cmux-next: the trusted promote mini, the daemon tests' slot and the
-# cmux-tui-pin-* pushes' daemon pool).
+# on feat-hmux-next: the trusted promote mini, the daemon tests' slot and the
+# hmux-tui-pin-* pushes' daemon pool).
 EXTRA_OWNED_VARIABLES = frozenset({"CI_NEXT_PROMOTE_POOL", "CI_NEXT_DAEMON_POOL", "CI_PIN_DAEMON_POOL"})
 # (caller, reusable workflow) calls whose picker never places the call on an
 # owned pool, so the caller does not inherit the reusable workflow's owned job.

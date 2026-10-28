@@ -27,7 +27,7 @@ import {
   withSubrouterAuthorizationDeadline,
 } from "@/services/vms/auth";
 
-const SERVICE = "cmux-coderouter-dashboard";
+const SERVICE = "hmux-coderouter-dashboard";
 const MACHINE_PERIOD_DAYS = 30;
 
 export type CoderouterDashboardResult =
@@ -62,7 +62,7 @@ export async function loadCoderouterDashboard(
 ): Promise<CoderouterDashboardResult> {
   const authorization = await withPrioritySpan(
     SERVICE,
-    "cmux.coderouter.auth",
+    "hmux.coderouter.auth",
     { "http.route": "/api/dashboard/coderouter" },
     () => resolveCoderouterAuthorization(request, requestedTeamId),
   );
@@ -74,17 +74,17 @@ export async function loadCoderouterDashboard(
   const transferTeams = teams
     .filter((candidate) => candidate.id !== selectedTeam.id && candidate.manageAccounts)
     .map((candidate) => ({ id: candidate.id, name: candidate.name }));
-  const selected = { "cmux.team_scope": "selected" };
+  const selected = { "hmux.team_scope": "selected" };
   const [shared, metrics, claude, native, machineUsage] = await Promise.all([
-    withPrioritySpan(SERVICE, "cmux.coderouter.accounts", selected, () =>
+    withPrioritySpan(SERVICE, "hmux.coderouter.accounts", selected, () =>
       loadSharedAccounts(selectedTeam, accessToken)),
-    withPrioritySpan(SERVICE, "cmux.coderouter.team_metrics", selected, () =>
+    withPrioritySpan(SERVICE, "hmux.coderouter.team_metrics", selected, () =>
       loadCoderouterTeamMetrics(selectedTeam.id)),
-    withPrioritySpan(SERVICE, "cmux.coderouter.claude_upstream", selected, () =>
+    withPrioritySpan(SERVICE, "hmux.coderouter.claude_upstream", selected, () =>
       loadClaudeAccounts(selectedTeam.id, userId)),
-    withPrioritySpan(SERVICE, "cmux.coderouter.native_accounts", selected, () =>
+    withPrioritySpan(SERVICE, "hmux.coderouter.native_accounts", selected, () =>
       loadNativeAccounts(selectedTeam.id, userId)),
-    withPrioritySpan(SERVICE, "cmux.coderouter.machine_usage", selected, () =>
+    withPrioritySpan(SERVICE, "hmux.coderouter.machine_usage", selected, () =>
       loadMachineUsage(selectedTeam.id)),
   ]);
 
@@ -121,7 +121,7 @@ async function resolveCoderouterAuthorization(
           () => getStackServerApp().getAuthJson({
             tokenStore: { headers: { get: (name: string) => request.headers.get(name) } },
           }),
-          { "cmux.auth.flow": "coderouter_dashboard" },
+          { "hmux.auth.flow": "coderouter_dashboard" },
         ).catch(() => {
           throw new SubrouterAuthorizationUnavailableError("Stack session refresh unavailable");
         }),

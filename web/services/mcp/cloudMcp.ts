@@ -1,15 +1,15 @@
-// cmux Cloud as a remote MCP server (prototype). ChatGPT, Claude and other MCP
+// hmux Cloud as a remote MCP server (prototype). ChatGPT, Claude and other MCP
 // hosts add it as a connector; the tools act only on the caller's own machines.
 //
 // This module is the protocol and tool layer. It never decides who owns what:
 // every machine-scoped call goes through `CloudMcpGateway`, whose route binding
 // runs the existing `listUserVms` / `execVm` programs, so ownership, team scope,
 // plan gates and usage accounting are the same as `/api/vm`. On the machine, the
-// tools speak the cmux-tui resource CLI to the session the Mac app attaches to.
+// tools speak the hmux-tui resource CLI to the session the Mac app attaches to.
 
-import { CMUX_TUI_SESSION, cmuxTuiRunCommand, shellQuote } from "../vms/drivers/cmuxTuiDaemon";
+import { HMUX_TUI_SESSION, hmuxTuiRunCommand, shellQuote } from "../vms/drivers/hmuxTuiDaemon";
 
-export const CLOUD_MCP_SERVER_NAME = "cmux-cloud";
+export const CLOUD_MCP_SERVER_NAME = "hmux-cloud";
 export const CLOUD_MCP_SERVER_VERSION = "0.1.0";
 export const CLOUD_MCP_PROTOCOL_VERSIONS = ["2025-11-25", "2025-06-18", "2025-03-26"] as const;
 const LATEST_PROTOCOL_VERSION = CLOUD_MCP_PROTOCOL_VERSIONS[0];
@@ -19,9 +19,9 @@ export type CloudMcpAgent = (typeof CLOUD_MCP_AGENTS)[number];
 
 const MAX_TEXT_BYTES = 16 * 1024;
 const MAX_OUTPUT_BYTES = 64 * 1024;
-const CMUX_TUI_TIMEOUT_MS = 30_000;
+const HMUX_TUI_TIMEOUT_MS = 30_000;
 // POST /api/vm/:id/exec caps a guest command at 64 KiB. execVm itself does not,
-// so the check is on the full command: cmuxTuiRunCommand repeats the arguments
+// so the check is on the full command: hmuxTuiRunCommand repeats the arguments
 // once per layout branch, and quoting can triple a prompt.
 const MAX_GUEST_COMMAND_BYTES = 64 * 1024;
 // A batch runs its requests one after another inside one function invocation.
@@ -56,8 +56,8 @@ export class CloudMcpToolError extends Error {
  */
 export type CloudMcpGateway = {
   readonly listMachines: () => Promise<readonly CloudMcpMachine[]>;
-  /** Runs `cmux-tui <args>` on the machine as its session user; `args` is already shell-quoted. */
-  readonly runCmuxTui: (machineId: string, args: string, timeoutMs: number) => Promise<CloudMcpExecResult>;
+  /** Runs `hmux-tui <args>` on the machine as its session user; `args` is already shell-quoted. */
+  readonly runHmuxTui: (machineId: string, args: string, timeoutMs: number) => Promise<CloudMcpExecResult>;
 };
 
 type JsonObject = Record<string, unknown>;
@@ -89,7 +89,7 @@ const terminalIdSchema = {
 export const CLOUD_MCP_TOOLS: readonly ToolDefinition[] = [
   {
     name: "list_machines",
-    description: "List the caller's cmux Cloud machines with their ids and status.",
+    description: "List the caller's hmux Cloud machines with their ids and status.",
     inputSchema: { type: "object", properties: {}, additionalProperties: false },
     annotations: { title: "List machines", readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
   },
@@ -218,13 +218,13 @@ function rejectUnknownArguments(args: JsonObject, allowed: readonly string[]): v
   }
 }
 
-/** `cmux-tui --session cloud --json <words…>`, each word quoted for the guest shell. */
-export function cmuxTuiArgs(words: readonly string[]): string {
-  return ["--session", CMUX_TUI_SESSION, "--json", ...words].map(shellQuote).join(" ");
+/** `hmux-tui --session cloud --json <words…>`, each word quoted for the guest shell. */
+export function hmuxTuiArgs(words: readonly string[]): string {
+  return ["--session", HMUX_TUI_SESSION, "--json", ...words].map(shellQuote).join(" ");
 }
 
 /**
- * The one-shot argv `cmux vm agent` uses for a bare prompt (CLI/CMUXCLI+VMTransfer.swift
+ * The one-shot argv `hmux vm agent` uses for a bare prompt (CLI/HMUXCLI+VMTransfer.swift
  * vmAgentArgv), with `--` so a prompt like `--dangerously-…` stays a prompt. `pi` has no
  * documented end-of-options marker, so a leading `-` is refused for it instead.
  */
@@ -242,26 +242,26 @@ export function agentArgv(agent: CloudMcpAgent, prompt: string): string[] {
 }
 
 function guestArgsFor(words: readonly string[]): string {
-  const args = cmuxTuiArgs(words);
-  if (Buffer.byteLength(cmuxTuiRunCommand(args), "utf8") > MAX_GUEST_COMMAND_BYTES) {
+  const args = hmuxTuiArgs(words);
+  if (Buffer.byteLength(hmuxTuiRunCommand(args), "utf8") > MAX_GUEST_COMMAND_BYTES) {
     throw new CloudMcpToolError("invalid_arguments", "The request is too large once quoted for the machine. Shorten the prompt or text.");
   }
   return args;
 }
 
-async function runCmuxTuiJson(gateway: CloudMcpGateway, machineId: string, words: readonly string[]): Promise<unknown> {
+async function runHmuxTuiJson(gateway: CloudMcpGateway, machineId: string, words: readonly string[]): Promise<unknown> {
   const args = guestArgsFor(words);
-  const result = await gateway.runCmuxTui(machineId, args, CMUX_TUI_TIMEOUT_MS);
+  const result = await gateway.runHmuxTui(machineId, args, HMUX_TUI_TIMEOUT_MS);
   if (result.exitCode !== 0) {
     throw new CloudMcpToolError(
       "machine_command_failed",
-      `cmux on the machine exited ${result.exitCode}: ${(result.stderr || result.stdout).trim().slice(0, 2000)}`,
+      `hmux on the machine exited ${result.exitCode}: ${(result.stderr || result.stdout).trim().slice(0, 2000)}`,
     );
   }
   try {
     return JSON.parse(result.stdout);
   } catch {
-    throw new CloudMcpToolError("machine_command_failed", "cmux on the machine returned output that is not JSON.");
+    throw new CloudMcpToolError("machine_command_failed", "hmux on the machine returned output that is not JSON.");
   }
 }
 
@@ -278,7 +278,7 @@ function stringField(object: JsonObject, key: string, pattern: RegExp): string |
 async function listTerminals(gateway: CloudMcpGateway, args: JsonObject): Promise<ToolResult> {
   rejectUnknownArguments(args, ["machine_id"]);
   const machineId = requireMachineId(args);
-  const listed = await runCmuxTuiJson(gateway, machineId, ["terminal", "list"]);
+  const listed = await runHmuxTuiJson(gateway, machineId, ["terminal", "list"]);
   const terminals = (Array.isArray(listed) ? listed : []).flatMap((entry) => {
     if (!entry || typeof entry !== "object") return [];
     const row = entry as JsonObject;
@@ -303,7 +303,7 @@ async function runAgent(gateway: CloudMcpGateway, args: JsonObject): Promise<Too
   }
   const prompt = requireBoundedText(args, "prompt");
   const argv = agentArgv(agent as CloudMcpAgent, prompt);
-  // A login shell so the persistent-home tool paths resolve, as `cmux vm agent` does;
+  // A login shell so the persistent-home tool paths resolve, as `hmux vm agent` does;
   // the agent argv reaches it as positional parameters, never as shell text.
   const runWords = (workspaceId: string) => [
     "workspace", workspaceId, "run", "--on-exit", "keep", "--",
@@ -312,21 +312,21 @@ async function runAgent(gateway: CloudMcpGateway, args: JsonObject): Promise<Too
   ];
   guestArgsFor(runWords(`ws_${"0".repeat(64)}`)); // refuse an oversized prompt before creating anything
   const name = `${agent} (via MCP)`;
-  const created = mutationValue(await runCmuxTuiJson(gateway, machineId, ["workspace", "create", "--name", name, "--empty"]));
+  const created = mutationValue(await runHmuxTuiJson(gateway, machineId, ["workspace", "create", "--name", name, "--empty"]));
   const workspaceId = stringField(created, "workspace_id", WORKSPACE_ID_PATTERN);
   if (!workspaceId) {
-    throw new CloudMcpToolError("machine_command_failed", "cmux on the machine did not return a workspace id.");
+    throw new CloudMcpToolError("machine_command_failed", "hmux on the machine did not return a workspace id.");
   }
   let terminalId: string | null = null;
   try {
-    const run = mutationValue(await runCmuxTuiJson(gateway, machineId, runWords(workspaceId)));
+    const run = mutationValue(await runHmuxTuiJson(gateway, machineId, runWords(workspaceId)));
     terminalId = stringField(run, "terminal_id", TERMINAL_ID_PATTERN);
     if (!terminalId) {
-      throw new CloudMcpToolError("machine_command_failed", "cmux on the machine did not return a terminal id.");
+      throw new CloudMcpToolError("machine_command_failed", "hmux on the machine did not return a terminal id.");
     }
   } catch (error) {
     // Don't leave an empty workspace behind for a retry to pile onto.
-    await runCmuxTuiJson(gateway, machineId, ["workspace", workspaceId, "close"]).catch(() => undefined);
+    await runHmuxTuiJson(gateway, machineId, ["workspace", workspaceId, "close"]).catch(() => undefined);
     throw error;
   }
   return toolSuccess({ machine_id: machineId, agent, workspace_id: workspaceId, terminal_id: terminalId });
@@ -341,11 +341,11 @@ async function readTerminal(gateway: CloudMcpGateway, args: JsonObject): Promise
     throw new CloudMcpToolError("invalid_arguments", "`source` must be `screen` or `output`.");
   }
   if (source === "screen") {
-    const screen = await runCmuxTuiJson(gateway, machineId, ["terminal", terminalId, "screen", "read"]) as JsonObject | null;
+    const screen = await runHmuxTuiJson(gateway, machineId, ["terminal", terminalId, "screen", "read"]) as JsonObject | null;
     const text = typeof screen?.text === "string" ? screen.text : "";
     return toolSuccess({ machine_id: machineId, terminal_id: terminalId, source }, text);
   }
-  const output = await runCmuxTuiJson(gateway, machineId, [
+  const output = await runHmuxTuiJson(gateway, machineId, [
     "terminal", terminalId, "output", "read", "--max-bytes", String(MAX_OUTPUT_BYTES),
   ]) as JsonObject | null;
   const text = typeof output?.text === "string" ? output.text : "";
@@ -362,7 +362,7 @@ async function sendInput(gateway: CloudMcpGateway, args: JsonObject): Promise<To
     throw new CloudMcpToolError("invalid_arguments", "`submit` must be a boolean.");
   }
   // One write, with the Enter as a carriage return, so a failure never leaves the text typed but unsubmitted.
-  await runCmuxTuiJson(gateway, machineId, ["terminal", terminalId, "write", "--text", submit ? `${text}\r` : text]);
+  await runHmuxTuiJson(gateway, machineId, ["terminal", terminalId, "write", "--text", submit ? `${text}\r` : text]);
   return toolSuccess({ machine_id: machineId, terminal_id: terminalId, sent_bytes: Buffer.byteLength(text, "utf8"), submitted: submit });
 }
 
@@ -426,7 +426,7 @@ export async function handleCloudMcpMessage(gateway: CloudMcpGateway, message: u
           capabilities: { tools: { listChanged: false } },
           serverInfo: { name: CLOUD_MCP_SERVER_NAME, version: CLOUD_MCP_SERVER_VERSION },
           instructions:
-            "Control the caller's cmux Cloud machines. Call list_machines first; every other tool takes a machine_id from it. " +
+            "Control the caller's hmux Cloud machines. Call list_machines first; every other tool takes a machine_id from it. " +
             "run_agent starts a coding agent in a new terminal; poll it with read_terminal.",
         },
       };

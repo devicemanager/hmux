@@ -17,7 +17,7 @@ export async function isGoPlanEnabled(
 ): Promise<boolean> {
   // Test suites use a deterministic enabled default; the production fallback
   // remains disabled when the remote flag cannot be read.
-  if (!fetchImpl && (process.env.NODE_ENV ?? "test") === "test") return process.env.CMUX_TEST_GO_PLAN_DISABLED !== "1";
+  if (!fetchImpl && (process.env.NODE_ENV ?? "test") === "test") return process.env.HMUX_TEST_GO_PLAN_DISABLED !== "1";
   const fetcher = fetchImpl ?? fetch;
   try {
     const response = await fetcher(postHogFlagsUrl(), {

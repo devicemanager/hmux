@@ -38,7 +38,7 @@ export type UsageEventInput = {
   readonly upstreamAccountId?: string;
   readonly agent: string;
   readonly model: string | undefined;
-  /** cmux-tui workspace and terminal that launched the agent; null when unknown. */
+  /** hmux-tui workspace and terminal that launched the agent; null when unknown. */
   readonly workspaceId?: string | null;
   readonly surfaceId?: string | null;
   readonly inputTokens: number;

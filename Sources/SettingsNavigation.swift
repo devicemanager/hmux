@@ -10,7 +10,7 @@ enum SettingsNavigationTarget: String, CaseIterable, Identifiable {
     case mobile
     case cloudMachines
     /// Devices (My Devices). The raw value predates the rename and stays
-    /// because persisted navigation targets and `cmux settings open` send it.
+    /// because persisted navigation targets and `hmux settings open` send it.
     case computers
     case networking
     case sidebarAppearance
@@ -61,7 +61,7 @@ enum SettingsNavigationTarget: String, CaseIterable, Identifiable {
         case .automation:
             return String(localized: "settings.section.automation", defaultValue: "Automation")
         case .computerUse:
-            return String(localized: "settings.section.computerUse", defaultValue: "cmux Computer Use")
+            return String(localized: "settings.section.computerUse", defaultValue: "hmux Computer Use")
         case .browser:
             return String(localized: "settings.section.browser", defaultValue: "Browser")
         case .browserImport:
@@ -71,7 +71,7 @@ enum SettingsNavigationTarget: String, CaseIterable, Identifiable {
         case .keyboardShortcuts:
             return String(localized: "settings.section.keyboardShortcuts", defaultValue: "Keyboard Shortcuts")
         case .settingsJSON:
-            return String(localized: "settings.section.settingsJSON", defaultValue: "cmux.json")
+            return String(localized: "settings.section.settingsJSON", defaultValue: "hmux.json")
         case .reset:
             return String(localized: "settings.section.reset", defaultValue: "Reset")
         }
@@ -177,7 +177,7 @@ enum SettingsNavigationTarget: String, CaseIterable, Identifiable {
 }
 
 enum SettingsNavigationRequest {
-    static let notificationName = Notification.Name("cmux.settings.navigate")
+    static let notificationName = Notification.Name("hmux.settings.navigate")
     private static let targetKey = "target"
     private static let anchorKey = "anchor"
     private static let highlightKey = "highlight"

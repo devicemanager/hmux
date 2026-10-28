@@ -1,6 +1,6 @@
 """backend-migrations.yml plan: a PR that does not touch backend/db/migrations
 passes without the GitHub API. The installation's API quota ran out under load
-and failed the plan on cmux-next UI PRs (#17602, #17609) that change no SQL."""
+and failed the plan on hmux-next UI PRs (#17602, #17609) that change no SQL."""
 
 from __future__ import annotations
 

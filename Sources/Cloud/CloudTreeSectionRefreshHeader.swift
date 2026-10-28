@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// A section header ("Cloud Machines 3/5", "My Devices") with its refresh
@@ -16,7 +16,7 @@ struct CloudTreeSectionRefreshHeader: View {
     /// the only spot of the header that takes a click instead of the row.
     let onInteractiveFrame: (CGRect?) -> Void
 
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
     @State private var isHovered = false
 
     var body: some View {
@@ -43,7 +43,7 @@ struct CloudTreeSectionRefreshHeader: View {
                         .controlSize(.mini)
                         .scaleEffect(0.7)
                 } else {
-                    CmuxSystemSymbolImage(
+                    HmuxSystemSymbolImage(
                         systemName: "arrow.clockwise",
                         pointSize: scaled(max(8, style.detailSize - 2)),
                         weight: .semibold,

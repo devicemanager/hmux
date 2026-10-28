@@ -40,7 +40,7 @@ function fixture() {
   } as unknown as BrokerDependencies;
   const session: DashboardClaims = {
     version: 2,
-    audience: "cmux-iroh-dashboard-v2",
+    audience: "hmux-iroh-dashboard-v2",
     authority,
     origin: "https://cmux.com",
     clientInstanceId: "tab",

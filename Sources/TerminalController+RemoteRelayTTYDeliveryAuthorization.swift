@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxCore
+import HmuxControlSocket
+import HmuxCore
 import Foundation
 
 /// Enforces live relay ownership before returning a reported TTY target.

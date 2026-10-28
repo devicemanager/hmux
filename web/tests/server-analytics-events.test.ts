@@ -28,7 +28,7 @@ function collector(responses: number[] = [200]) {
     deferred,
     dependencies: {
       fetch: fetchImpl,
-      env: { CMUX_SERVER_ANALYTICS_FORCE: "1" },
+      env: { HMUX_SERVER_ANALYTICS_FORCE: "1" },
       defer: (task: ServerEventTask) => {
         deferred.push(task);
       },
@@ -100,7 +100,7 @@ describe("server event delivery", () => {
       { event: "cloud_vm_created", distinctId: "user-1" },
       {
         fetch: fetchImpl,
-        env: { CMUX_SERVER_ANALYTICS_FORCE: "1" },
+        env: { HMUX_SERVER_ANALYTICS_FORCE: "1" },
         defer: (task: ServerEventTask) => deferred.push(task),
         now: () => new Date("2026-09-03T00:00:00.000Z"),
       },
@@ -149,7 +149,7 @@ describe("server event delivery", () => {
       { event: "x", distinctId: "user-1" },
       {
         ...collected.dependencies,
-        env: { CMUX_SERVER_ANALYTICS_FORCE: "1", POSTHOG_HOST: "http://posthog.invalid" },
+        env: { HMUX_SERVER_ANALYTICS_FORCE: "1", POSTHOG_HOST: "http://posthog.invalid" },
       },
     );
     expect(collected.deferred).toHaveLength(1);
@@ -183,7 +183,7 @@ describe("server event delivery", () => {
       { event: "x", distinctId: "user-1" },
       {
         fetch: fetchImpl,
-        env: { CMUX_SERVER_ANALYTICS_FORCE: "1", POSTHOG_HOST: "https://posthog.example" },
+        env: { HMUX_SERVER_ANALYTICS_FORCE: "1", POSTHOG_HOST: "https://posthog.example" },
         defer: (task) => deferred.push(task),
         now: () => new Date("2026-09-03T00:00:00.000Z"),
       },
@@ -215,13 +215,13 @@ describe("server event delivery", () => {
     expect(collected.sent).toHaveLength(0);
     expect(serverAnalyticsEnabled({ VERCEL_ENV: "production" })).toBe(true);
     expect(serverAnalyticsEnabled({ VERCEL_ENV: "preview" })).toBe(false);
-    expect(serverAnalyticsEnabled({ CMUX_SERVER_ANALYTICS_FORCE: "1" })).toBe(true);
+    expect(serverAnalyticsEnabled({ HMUX_SERVER_ANALYTICS_FORCE: "1" })).toBe(true);
   });
 
   test("a test run without an injected fetch never reaches the transport", async () => {
     // process.env in bun test carries the test markers, and no fetch is injected here.
     await expect(captureServerEvent({ event: "x", distinctId: "user-1" }, {
-      env: { ...process.env, CMUX_SERVER_ANALYTICS_FORCE: "1" },
+      env: { ...process.env, HMUX_SERVER_ANALYTICS_FORCE: "1" },
     })).resolves.toBeUndefined();
   });
 
@@ -232,9 +232,9 @@ describe("server event delivery", () => {
   });
 
   test("allows HTTP only for the explicit loopback smoke harness", () => {
-    expect(isAllowedPosthogHost("http://127.0.0.1:4318", { CMUX_SERVER_ANALYTICS_SMOKE: "1" })).toBe(true);
-    expect(isAllowedPosthogHost("http://[::1]:4318", { CMUX_SERVER_ANALYTICS_SMOKE: "1" })).toBe(true);
+    expect(isAllowedPosthogHost("http://127.0.0.1:4318", { HMUX_SERVER_ANALYTICS_SMOKE: "1" })).toBe(true);
+    expect(isAllowedPosthogHost("http://[::1]:4318", { HMUX_SERVER_ANALYTICS_SMOKE: "1" })).toBe(true);
     expect(isAllowedPosthogHost("http://127.0.0.1:4318", {})).toBe(false);
-    expect(isAllowedPosthogHost("http://posthog.example", { CMUX_SERVER_ANALYTICS_SMOKE: "1" })).toBe(false);
+    expect(isAllowedPosthogHost("http://posthog.example", { HMUX_SERVER_ANALYTICS_SMOKE: "1" })).toBe(false);
   });
 });

@@ -135,11 +135,11 @@ describe("Pro roster", () => {
 
   test("scans the user directory page by page and keeps only paid manual overrides", async () => {
     const users = [
-      { id: "u1", primaryEmail: "a@example.com", primaryEmailVerified: true, isAnonymous: false, clientReadOnlyMetadata: { cmuxVmPlan: "pro" }, serverMetadata: { cmuxAdminPlanGrant: { plan: "pro", byUserId: "admin-1", byEmail: "admin@manaflow.ai", at: "2026-09-02T00:00:00.000Z" } } },
-      { id: "u2", primaryEmail: "b@example.com", primaryEmailVerified: true, isAnonymous: false, clientReadOnlyMetadata: { cmuxPlan: "pro" }, serverMetadata: {} },
-      { id: "u3", primaryEmail: "c@example.com", primaryEmailVerified: false, isAnonymous: false, clientReadOnlyMetadata: { cmuxVmPlan: "free" }, serverMetadata: {} },
-      { id: "u4", primaryEmail: "d@example.com", primaryEmailVerified: false, isAnonymous: false, clientReadOnlyMetadata: { cmuxVmPlan: "Founders" }, serverMetadata: {} },
-      { id: "u5", primaryEmail: "anon@example.com", primaryEmailVerified: true, isAnonymous: true, clientReadOnlyMetadata: { cmuxVmPlan: "pro" }, serverMetadata: {} },
+      { id: "u1", primaryEmail: "a@example.com", primaryEmailVerified: true, isAnonymous: false, clientReadOnlyMetadata: { hmuxVmPlan: "pro" }, serverMetadata: { hmuxAdminPlanGrant: { plan: "pro", byUserId: "admin-1", byEmail: "admin@manaflow.ai", at: "2026-09-02T00:00:00.000Z" } } },
+      { id: "u2", primaryEmail: "b@example.com", primaryEmailVerified: true, isAnonymous: false, clientReadOnlyMetadata: { hmuxPlan: "pro" }, serverMetadata: {} },
+      { id: "u3", primaryEmail: "c@example.com", primaryEmailVerified: false, isAnonymous: false, clientReadOnlyMetadata: { hmuxVmPlan: "free" }, serverMetadata: {} },
+      { id: "u4", primaryEmail: "d@example.com", primaryEmailVerified: false, isAnonymous: false, clientReadOnlyMetadata: { hmuxVmPlan: "Founders" }, serverMetadata: {} },
+      { id: "u5", primaryEmail: "anon@example.com", primaryEmailVerified: true, isAnonymous: true, clientReadOnlyMetadata: { hmuxVmPlan: "pro" }, serverMetadata: {} },
     ];
     const app = fakeApp({ users });
     const first = await scanManualUserGrants(null, { app, pageSize: 3 });
@@ -158,8 +158,8 @@ describe("Pro roster", () => {
 
   test("scans teams for paid manual overrides", async () => {
     const app = fakeApp({ teams: [
-      { id: "t1", displayName: "Acme", clientReadOnlyMetadata: { cmuxVmPlan: "team" }, serverMetadata: {} },
-      { id: "t2", displayName: "Free", clientReadOnlyMetadata: { cmuxPlan: "team" }, serverMetadata: {} },
+      { id: "t1", displayName: "Acme", clientReadOnlyMetadata: { hmuxVmPlan: "team" }, serverMetadata: {} },
+      { id: "t2", displayName: "Free", clientReadOnlyMetadata: { hmuxPlan: "team" }, serverMetadata: {} },
     ] });
     const page = await scanManualTeamGrants(null, { app });
     expect(page.rows.map((row) => [row.teamId, row.plan])).toEqual([["t1", "team"]]);

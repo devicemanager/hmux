@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 
 extension Workspace {
@@ -6,7 +6,7 @@ extension Workspace {
     /// another window. Accepted graph names remain unchanged behind the sheet.
     func presentCloudRenameFailure(_ error: Error) {
         #if DEBUG
-        cmuxDebugLog("cloud.rename.failed error=\(String(reflecting: error))")
+        hmuxDebugLog("cloud.rename.failed error=\(String(reflecting: error))")
         #endif
         presentCloudRenameFailure(message: String(
             localized: "socket.vm.renameFailed",

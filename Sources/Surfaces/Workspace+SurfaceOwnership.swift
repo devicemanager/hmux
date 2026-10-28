@@ -1,12 +1,12 @@
-import CmuxSSHClipboardTrust
-import CmuxCloud
+import HmuxSSHClipboardTrust
+import HmuxCloud
 import AppKit
 import Bonsplit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension Workspace {
-    /// The configured cmux-tui SSH identity for this workspace, when present.
+    /// The configured hmux-tui SSH identity for this workspace, when present.
     var configuredSSHClipboardMachine: SurfaceMachineID? {
         guard let configuration = remoteConfiguration,
               configuration.transport == .ssh else { return nil }
@@ -75,14 +75,14 @@ extension Workspace {
             return machine
         }
 
-        // Optimistic SSH cmux-tui panes are owned before their catalog
+        // Optimistic SSH hmux-tui panes are owned before their catalog
         // projection/provider session exists. Preserve that exact reservation
         // identity even when they are inserted into another remote workspace.
         if let reservation = cloudPendingCreations[panelID] {
             return reservation.machine
         }
 
-        // A live cmux-tui session can briefly outlive its catalog projection
+        // A live hmux-tui session can briefly outlive its catalog projection
         // while a restored or moved pane is being attached. Use the provider's
         // machine identity only for that live session; an arbitrary manual
         // mirror must not inherit the workspace's SSH configuration.

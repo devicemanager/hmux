@@ -235,7 +235,7 @@ test("shared web test runner fails when default discovery finds no tests", async
 });
 
 function createRunnerFixture(): string {
-  const fixtureRoot = mkdtempSync(join(tmpdir(), "cmux-web-test-runner-"));
+  const fixtureRoot = mkdtempSync(join(tmpdir(), "hmux-web-test-runner-"));
   mkdirSync(join(fixtureRoot, "scripts"));
   copyFileSync(runnerPath, join(fixtureRoot, "scripts", "run-tests.sh"));
   return fixtureRoot;

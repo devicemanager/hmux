@@ -160,11 +160,11 @@ class TestProgressParserTests(unittest.TestCase):
 
     def test_nothing_in_flight_names_the_last_output(self) -> None:
         state = progress_after("""
-            [882/884] Compiling CmuxMobileShell Shell.swift
+            [882/884] Compiling HmuxMobileShell Shell.swift
         """)
         self.assertEqual(
             watchdog.hung_summary(state),
-            "no test was in flight; last output: [882/884] Compiling CmuxMobileShell Shell.swift",
+            "no test was in flight; last output: [882/884] Compiling HmuxMobileShell Shell.swift",
         )
 
     def test_summary_bounds_the_named_tests(self) -> None:
@@ -176,7 +176,7 @@ class TestProgressParserTests(unittest.TestCase):
 
     def test_build_output_does_not_arm_the_stall_clock(self) -> None:
         progress = watchdog.TestProgress(clock=lambda: 0.0)
-        for line in ("[1/3] Compiling CmuxTerminal A.swift", "[2/3] Linking CmuxTerminalPackageTests"):
+        for line in ("[1/3] Compiling HmuxTerminal A.swift", "[2/3] Linking HmuxTerminalPackageTests"):
             progress.feed(line)
         self.assertFalse(progress.testing)
         self.assertEqual(progress.events, 0)
@@ -278,7 +278,7 @@ class WatchdogProcessTests(unittest.TestCase):
         calls = self.install_fake_sample()
         completed = self.watchdog(
             "--silence-seconds", "1",
-            "--label", "CmuxMobileShell",
+            "--label", "HmuxMobileShell",
             command=fake_test_command(f"""
                 import os, signal
                 open({str(pid_file)!r}, "w").write(str(os.getpid()))
@@ -291,7 +291,7 @@ class WatchdogProcessTests(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 124, completed.stdout)
         self.assertIn(
-            "::error title=Hung test in CmuxMobileShell::CmuxMobileShell timed out after 1s "
+            "::error title=Hung test in HmuxMobileShell::HmuxMobileShell timed out after 1s "
             "with no output, while running "
             "sameActiveScreenRenderGridDoesNotNotifyAlternateScreenObservers() "
             "(suite MobileShellAltScreenNoticeTests)",
@@ -448,7 +448,7 @@ class WatchdogProcessTests(unittest.TestCase):
             "--stall-seconds", "1",
             "--timeout-seconds", "20",
             "--sample-seconds", "0",
-            "--label", "CmuxTerminal",
+            "--label", "HmuxTerminal",
             command=fake_test_command(f"""
                 import os, time
                 open({str(pid_file)!r}, "w").write(str(os.getpid()))
@@ -463,7 +463,7 @@ class WatchdogProcessTests(unittest.TestCase):
         )
         self.assertEqual(completed.returncode, 124, completed.stdout[-2000:])
         self.assertIn(
-            "::error title=Hung test in CmuxTerminal::CmuxTerminal: "
+            "::error title=Hung test in HmuxTerminal::HmuxTerminal: "
             "selectionWritesRoundTripThroughSelectionPasteboard() made no progress for 1s",
             completed.stdout,
         )
@@ -476,9 +476,9 @@ class WatchdogProcessTests(unittest.TestCase):
             "--sample-seconds", "0",
             command=fake_test_command("""
                 import time
-                print("[1/3] Compiling CmuxTerminal A.swift")
+                print("[1/3] Compiling HmuxTerminal A.swift")
                 time.sleep(1.5)
-                print("[2/3] Linking CmuxTerminalPackageTests")
+                print("[2/3] Linking HmuxTerminalPackageTests")
                 time.sleep(1.5)
                 print("Build complete! (3.00s)")
                 for index in range(4):
@@ -523,7 +523,7 @@ class WatchdogProcessTests(unittest.TestCase):
             [
                 sys.executable, str(SCRIPT),
                 "--silence-seconds", "60",
-                "--label", "CmuxMobileShell",
+                "--label", "HmuxMobileShell",
                 "--",
                 *fake_test_command(f"""
                     import os, signal
@@ -553,7 +553,7 @@ class WatchdogProcessTests(unittest.TestCase):
                 process.communicate()
         self.assertEqual(process.returncode, 128 + signal.SIGTERM, output)
         self.assertIn(
-            "::error title=Cancelled test in CmuxMobileShell::CmuxMobileShell was stopped by "
+            "::error title=Cancelled test in HmuxMobileShell::HmuxMobileShell was stopped by "
             "SIGTERM (job cancelled or job timeout reached), while running waitsForever()",
             output,
         )

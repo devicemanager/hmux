@@ -2,7 +2,7 @@
 """Real OpenSSH/SFTP with an isolated guest directory and mock app control socket.
 
 No Cloud account, provider token, system SSH config, or external network is used.
-Run on macOS with the built CLI: python3 tests/test_vm_scp.py /path/to/cmux
+Run on macOS with the built CLI: python3 tests/test_vm_scp.py /path/to/hmux
 The live Cloud test remains a separate merge gate.
 """
 import concurrent.futures
@@ -164,8 +164,8 @@ LogLevel ERROR
 
         thread = threading.Thread(target=serve, daemon=True)
         thread.start()
-        env = {k: v for k, v in os.environ.items() if not k.startswith("CMUX_")}
-        env.update(CMUX_SOCKET_PATH=str(root / "app.sock"), CMUX_CLI_SENTRY_DISABLED="1", CMUX_VM_PUSH_WATCH_ROUNDS="1")
+        env = {k: v for k, v in os.environ.items() if not k.startswith("HMUX_")}
+        env.update(HMUX_SOCKET_PATH=str(root / "app.sock"), HMUX_CLI_SENTRY_DISABLED="1", HMUX_VM_PUSH_WATCH_ROUNDS="1")
 
         def push(local, remote, *args):
             return run([cli, "--json", "vm", "push", "test-vm", str(local), remote, *args], env=env)
@@ -200,7 +200,7 @@ LogLevel ERROR
             assert len(renewal) == 2, "near-expiry grant was not renewed before finalization"
             assert renewal[0]["params"]["public_key"] == renewal[1]["params"]["public_key"]
             assert (guest / "renewed/payload.bin").read_bytes() == payload.read_bytes()
-            assert not list(guest.rglob(".cmux-push.*"))
+            assert not list(guest.rglob(".hmux-push.*"))
             print("PASS near-expiry grant renewed with the same key before finalization", flush=True)
 
             tree = root / "tree"
@@ -212,7 +212,7 @@ LogLevel ERROR
             assert result.returncode == 0, result.stderr
             assert (guest / "work/tree/a").read_text() == "one"
             assert not (guest / "work/tree/node_modules").exists()
-            assert not list(guest.rglob(".cmux-push.*"))
+            assert not list(guest.rglob(".hmux-push.*"))
             print("PASS directory, exclusions, one extraction, staging cleanup", flush=True)
 
             before = (guest / remote).read_bytes()
@@ -220,7 +220,7 @@ LogLevel ERROR
             result = push(payload, remote)
             assert result.returncode != 0, result.stdout
             assert (guest / remote).read_bytes() == before
-            assert not list(guest.rglob(".cmux-push.*"))
+            assert not list(guest.rglob(".hmux-push.*"))
             (root / "corrupt").unlink()
             print("PASS checksum failure preserves destination and removes staging", flush=True)
 

@@ -69,7 +69,7 @@ struct TreeCommand: SharedLegacyFacadeCommand {
     static let configuration = CommandConfiguration(commandName: "tree", helpNames: [])
 }
 
-/// `CurrentTopLevelCommand`, not `CurrentCommand`: `CLI/CMUXCLI+Current.swift`
+/// `CurrentTopLevelCommand`, not `CurrentCommand`: `CLI/HMUXCLI+Current.swift`
 /// already owns that name for the legacy invocation's parsed options.
 struct CurrentTopLevelCommand: SharedLegacyFacadeCommand {
     // `--limit` stays `String?`: the legacy parser owns its 1...200 range check.
@@ -262,7 +262,7 @@ struct ShotCommand: SharedLegacyFacadeCommand {
 
 struct RecordCommand: SharedLegacyFacadeCommand {
     // See AuthCommand's comment: no catch-all argument alongside `subcommands`.
-    // `start` is the default: a bare `cmux record --gif` starts a recording.
+    // `start` is the default: a bare `hmux record --gif` starts a recording.
     static let configuration = CommandConfiguration(
         commandName: "record",
         subcommands: [
@@ -417,9 +417,9 @@ struct SSHTmuxCommand: SharedLegacyFacadeCommand {
 struct LocalTmuxCommand: SharedLegacyFacadeCommand {
     // See VMCommand's comment: no catch-all argument alongside `subcommands`, and
     // `defaultSubcommand` absorbs anything that doesn't name a declared one. The
-    // legacy parser has no default action -- bare `cmux local-tmux` throws its
+    // legacy parser has no default action -- bare `hmux local-tmux` throws its
     // usage -- but the facade only decides what ArgumentParser *accepts*: `run()`
-    // delegates to `CMUXCLI.run()`, which re-parses argv and produces the legacy
+    // delegates to `HMUXCLI.run()`, which re-parses argv and produces the legacy
     // result either way. Without a default, ArgumentParser rejects an unknown verb
     // with "Unexpected argument" before the legacy parser can report its own
     // "Unknown local-tmux subcommand" error. `list` matches the read-only default
@@ -442,19 +442,19 @@ struct LocalTmuxCommand: SharedLegacyFacadeCommand {
 
 /// `tmux` is NOT an alias of `local-tmux`: the legacy dispatch accepts it only for
 /// the `attach` action and throws `cli.localTmux.error.tmuxAliasAttachOnly` for
-/// every other verb (see CLI/cmux.swift). Declaring it as a `local-tmux` alias
+/// every other verb (see CLI/hmux.swift). Declaring it as a `local-tmux` alias
 /// would offer completions for `tmux start`, `tmux list`, and the rest, all of
 /// which the legacy parser rejects. A separate command declaring only `attach`
 /// keeps completion honest and still puts `tmux` in the derived command names.
 ///
 /// No `defaultSubcommand` either: it would hoist `attach`'s own options onto
-/// bare `cmux tmux`, so completion would offer `cmux tmux --name ...` while
+/// bare `hmux tmux`, so completion would offer `hmux tmux --name ...` while
 /// `LocalTmuxInvocation.parse` still requires an action token first and rejects
-/// every such line. Bare `cmux tmux` parses as this command and delegates, which
+/// every such line. Bare `hmux tmux` parses as this command and delegates, which
 /// is what produces the legacy usage error.
 ///
 /// The unrecognized-argument sink is what lets both of those hold at once.
-/// Without it ArgumentParser rejects `cmux tmux start` on its own, with
+/// Without it ArgumentParser rejects `hmux tmux start` on its own, with
 /// "unexpected arguments" and EX_USAGE, so the legacy attach-only diagnostic
 /// and its exit code of 1 never run. Collecting the verb instead delegates it,
 /// exactly as every other legacy-backed command does. It also swallows
@@ -649,7 +649,7 @@ struct VMPtyConnectCommand: SharedLegacyFacadeCommand {
 }
 
 /// Internal plumbing entry point, not part of the documented usage() surface.
-/// Runs inside the pane that `cmux vm tui` opens.
+/// Runs inside the pane that `hmux vm tui` opens.
 struct VMTuiConnectCommand: SharedLegacyFacadeCommand {
     @Option(name: .customLong("config"), completion: .file()) var config: String?
     @Argument(parsing: .allUnrecognized) var arguments: [String] = []
@@ -666,7 +666,7 @@ struct VMTuiApproveCommand: SharedLegacyFacadeCommand {
     static let configuration = CommandConfiguration(commandName: "vm-tui-approve", shouldDisplay: false, helpNames: [])
 }
 
-/// Hidden compatibility alias for workspaces created before the split helper was nested under `cmux vm`.
+/// Hidden compatibility alias for workspaces created before the split helper was nested under `hmux vm`.
 struct VMSSHAttachTopLevelCommand: SharedLegacyFacadeCommand {
     @Option(name: .customLong("id"), completion: vmCompletion) var id: String?
     @Argument(parsing: .allUnrecognized) var arguments: [String] = []
@@ -755,7 +755,7 @@ struct LayoutCommand: SharedLegacyFacadeCommand {
 
 struct GlaedaCommand: SharedLegacyFacadeCommand {
     // See AuthCommand's comment: no catch-all argument alongside `subcommands`.
-    // No `defaultSubcommand`: a bare `cmux glaeda` throws its usage.
+    // No `defaultSubcommand`: a bare `hmux glaeda` throws its usage.
     static let configuration = CommandConfiguration(
         commandName: "glaeda",
         subcommands: [
@@ -868,7 +868,7 @@ struct VPNRevokeCommand: SharedLegacyFacadeCommand {
 
 struct BillingCommand: SharedLegacyFacadeCommand {
     // See AuthCommand's comment: no catch-all argument alongside `subcommands`.
-    // No `defaultSubcommand`: a bare `cmux billing` throws its usage.
+    // No `defaultSubcommand`: a bare `hmux billing` throws its usage.
     static let configuration = CommandConfiguration(
         commandName: "billing",
         subcommands: [BillingCheckoutCommand.self],

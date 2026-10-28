@@ -177,7 +177,7 @@ function authenticationErrorResponse(
       ? undefined
       : {
         "retry-after": String(error.retryAfterSeconds),
-        "x-cmux-request-id": requestId,
+        "x-hmux-request-id": requestId,
       },
   );
 }
@@ -190,7 +190,7 @@ function rateLimitErrorResponse(
   const headers = error.code === "rate_limited" && error.retryAfterSeconds !== undefined
     ? {
       "retry-after": String(error.retryAfterSeconds),
-      "x-cmux-request-id": requestId,
+      "x-hmux-request-id": requestId,
     }
     : undefined;
   return jsonResponse(
@@ -236,7 +236,7 @@ function databaseErrorResponse(error: RelayDatabaseError, context: RelayErrorCon
   return jsonResponse(
     { error: "relay_policy_unavailable", requestId },
     503,
-    { "retry-after": "15", "x-cmux-request-id": requestId },
+    { "retry-after": "15", "x-hmux-request-id": requestId },
   );
 }
 

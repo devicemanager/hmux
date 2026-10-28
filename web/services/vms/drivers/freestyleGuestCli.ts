@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { Clock, Data, Effect, Exit } from "effect";
 import type { Freestyle } from "freestyle";
-import { GUEST_CMUX_SHIM, GUEST_CMUX_SHIM_PATH } from "../guestCli";
+import { GUEST_HMUX_SHIM, GUEST_HMUX_SHIM_PATH } from "../guestCli";
 import type { GuestPromptIdentity } from "../guestPrompt";
 import type { GuestCliDistribution } from "../guestCliDistribution";
 import { guestCliInstallCommand } from "./guestCliInstallCommand";
@@ -24,7 +24,7 @@ export class GuestCliInstallError extends Data.TaggedError("GuestCliInstallError
   readonly cleanupCause?: unknown;
 }> {
   get message(): string {
-    return `guest cmux shim ${this.stage}: ${this.outcome}`
+    return `guest hmux shim ${this.stage}: ${this.outcome}`
       + (typeof this.exitCode === "number" ? ` (exit ${this.exitCode})` : "")
       + (this.diagnostic ? `: ${this.diagnostic}` : "");
   }
@@ -45,10 +45,10 @@ function guestFailure(result: unknown): GuestCliInstallError | undefined {
   // Only our own bounded diagnostic record enters telemetry. Arbitrary guest
   // stdout/stderr may contain private data and is deliberately not logged.
   const marker = typeof response.stderr === "string"
-    ? response.stderr.split("\n").find((line) => line.startsWith("CMUX_GUEST_INSTALL_FAILURE=")) : undefined;
+    ? response.stderr.split("\n").find((line) => line.startsWith("HMUX_GUEST_INSTALL_FAILURE=")) : undefined;
   if (marker && marker.length < 512) {
     try {
-      const detail = JSON.parse(marker.slice("CMUX_GUEST_INSTALL_FAILURE=".length));
+      const detail = JSON.parse(marker.slice("HMUX_GUEST_INSTALL_FAILURE=".length));
       if (["validate", "verify", "browser", "prompt", "publish"].includes(detail.stage)) failure.stage = detail.stage;
       if (typeof detail.error === "string" && /^[A-Za-z]{1,40}$/.test(detail.error)) {
         failure.diagnostic = detail.error
@@ -82,13 +82,13 @@ export function installFreestyleGuestCli(
 ) {
   return Effect.gen(function* () {
     const started = yield* Clock.currentTimeMillis;
-    const temporaryPath = `${GUEST_CMUX_SHIM_PATH}.tmp-${randomBytes(12).toString("hex")}`;
+    const temporaryPath = `${GUEST_HMUX_SHIM_PATH}.tmp-${randomBytes(12).toString("hex")}`;
     let stage: InstallStage = "upload";
     let cleanupCause: unknown;
     const install = Effect.tryPromise({
       try: async (signal) => {
         const vm = client(GUEST_INSTALL_DEADLINE_MS, signal).vms.ref(vmId);
-        await vm.fs.writeTextFile(temporaryPath, GUEST_CMUX_SHIM, { mode: 0o755 });
+        await vm.fs.writeTextFile(temporaryPath, GUEST_HMUX_SHIM, { mode: 0o755 });
         signal.throwIfAborted();
         stage = "install";
         const result = await vm.exec({

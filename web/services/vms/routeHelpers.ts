@@ -109,13 +109,13 @@ export type AuthedVmRouteContext = {
 
 /** Route span attributes for a request's database pool timing (db/queryTiming.ts). */
 export function vmDbSpanAttributes(stats: VmRequestDbStats | undefined): Record<string, number> {
-  if (!stats) return { "cmux.db.query_count": 0, "cmux.db.acquire_wait_ms": 0 };
+  if (!stats) return { "hmux.db.query_count": 0, "hmux.db.acquire_wait_ms": 0 };
   return {
-    "cmux.db.query_count": stats.queries,
-    "cmux.db.acquire_wait_ms": Math.round(stats.acquireWaitMsMax),
-    "cmux.db.acquire_wait_ms_total": Math.round(stats.acquireWaitMsTotal),
-    "cmux.db.query_ms_total": Math.round(stats.queryMsTotal),
-    "cmux.db.query_failed": stats.failed,
+    "hmux.db.query_count": stats.queries,
+    "hmux.db.acquire_wait_ms": Math.round(stats.acquireWaitMsMax),
+    "hmux.db.acquire_wait_ms_total": Math.round(stats.acquireWaitMsTotal),
+    "hmux.db.query_ms_total": Math.round(stats.queryMsTotal),
+    "hmux.db.query_failed": stats.failed,
   };
 }
 
@@ -126,8 +126,8 @@ export async function withAuthedVmApiRoute(
   failureLog: string,
   handler: (context: AuthedVmRouteContext) => Promise<Response>,
 ): Promise<Response> {
-  const operation = typeof attributes["cmux.vm.operation"] === "string"
-    ? attributes["cmux.vm.operation"]
+  const operation = typeof attributes["hmux.vm.operation"] === "string"
+    ? attributes["hmux.vm.operation"]
     : "unknown";
   const requestContext: VmRequestContext = {
     route,
@@ -141,7 +141,7 @@ export async function withAuthedVmApiRoute(
   return runWithVmRequestContext(requestContext, () => withApiRouteSpan(
     request,
     route,
-    { "cmux.subsystem": "vm-cloud", ...attributes },
+    { "hmux.subsystem": "vm-cloud", ...attributes },
     async (span) => {
       const ids = spanTraceIds(span);
       if (ids) {
@@ -199,18 +199,18 @@ export async function withAuthedVmApiRoute(
         if (!user) return finalize(unauthorized());
         requestContext.userId = user.id;
         markSyntheticVmCaller(requestContext, user);
-        requestContext.operationId = cloudOperationId(request.headers.get("x-cmux-operation-id"));
+        requestContext.operationId = cloudOperationId(request.headers.get("x-hmux-operation-id"));
         if (requestContext.operationId && !isPolledVmOperation(operation)) {
           requestContext.progress = new CloudOperationProgress(user.id, requestContext.operationId);
           try { after(() => requestContext.progress!.flush()); } catch { /* Script calls have no request lifecycle. */ }
         }
         setSpanAttributes(span, {
-          "cmux.operation_id": requestContext.operationId,
-          "cmux.client.channel": requestContext.client.channel === "stable" ? "production" : requestContext.client.channel,
-          "cmux.client.revision": requestContext.client.revision,
-          "cmux.client.build": requestContext.client.build,
+          "hmux.operation_id": requestContext.operationId,
+          "hmux.client.channel": requestContext.client.channel === "stable" ? "production" : requestContext.client.channel,
+          "hmux.client.revision": requestContext.client.revision,
+          "hmux.client.build": requestContext.client.build,
           "deployment.environment.name": process.env.VERCEL_ENV ?? "development",
-          "cmux.backend.revision": process.env.VERCEL_GIT_COMMIT_SHA,
+          "hmux.backend.revision": process.env.VERCEL_GIT_COMMIT_SHA,
         });
         // The caller's default billing scope. Routes that resolve entitlements
         // refine it (a requested team, the normalized plan) through
@@ -397,7 +397,7 @@ export function vmFreeAccessExpiredResponse(input: {
     error: "vm_access_requires_pro",
     status: 402,
     message: `The free plan includes ${input.windowDays} days of access to a machine. ${input.vmId} is past that window — the machine and everything on it are preserved, and upgrading to Pro reconnects it.`,
-    action: `Upgrade to Pro at ${VM_UPGRADE_URL} to reconnect ${input.vmId}, or delete it with \`cmux vm rm ${input.vmId}\`.`,
+    action: `Upgrade to Pro at ${VM_UPGRADE_URL} to reconnect ${input.vmId}, or delete it with \`hmux vm rm ${input.vmId}\`.`,
     extra: { upgradeRequired: true, upgradeUrl: VM_UPGRADE_URL },
     details: { vmId: input.vmId, windowDays: input.windowDays },
   });
@@ -408,7 +408,7 @@ export function notFoundVm(vmId: string): Response {
     error: "vm_not_found",
     status: 404,
     message: `Cloud VM ${vmId} was not found.`,
-    action: "Run `cmux vm ls` to see available Cloud VMs. If the VM stopped while idle, start a new one with `cmux vm new`.",
+    action: "Run `hmux vm ls` to see available Cloud VMs. If the VM stopped while idle, start a new one with `hmux vm new`.",
     details: { vmId },
   });
 }
@@ -549,10 +549,10 @@ export function vmBillingTeamErrorResponse(err: {
     status: err.status,
     message: err.code === "vm_billing_team_not_found"
       ? "That team is not available for this account."
-      : "cmux needs to know which team should own this Cloud VM.",
+      : "hmux needs to know which team should own this Cloud VM.",
     action: err.code === "vm_billing_team_not_found"
-      ? "Switch to a team you belong to, or run `cmux auth login` again and retry with the correct team id."
-      : "Select a team in cmux, or pass the team id with `X-Cmux-Team-Id`.",
+      ? "Switch to a team you belong to, or run `hmux auth login` again and retry with the correct team id."
+      : "Select a team in hmux, or pass the team id with `X-Hmux-Team-Id`.",
   });
 }
 
@@ -612,7 +612,7 @@ export async function vmMemoryRequiresPlanResponse(input: {
   const memoryGb = Math.round(input.memoryMb / 1024);
   const maxGb = Math.round(input.maxMemoryMb / 1024);
   const upgradeName = input.upgradePlanId.charAt(0).toUpperCase() + input.upgradePlanId.slice(1);
-  const upgradeUrl = `https://cmux.com/api/billing/checkout?plan=${encodeURIComponent(input.upgradePlanId)}&cmux_source=vm_memory_limit`;
+  const upgradeUrl = `https://cmux.com/api/billing/checkout?plan=${encodeURIComponent(input.upgradePlanId)}&hmux_source=vm_memory_limit`;
   const copy = await vmMemoryErrorCopy("memoryPlan", locale, {
     memory: memoryGb, max: maxGb, plan: upgradeName, planId: input.upgradePlanId, upgradeUrl,
   });
@@ -675,8 +675,8 @@ export async function vmActiveLimitExceededResponse(input: {
     return vmErrorResponse({
       error: "vm_active_limit_exceeded",
       status: 402,
-      message: "Cloud VMs require a cmux Pro subscription.",
-      action: `Subscribe to cmux Pro at ${VM_UPGRADE_URL} to get access to Cloud VMs.`,
+      message: "Cloud VMs require a hmux Pro subscription.",
+      action: `Subscribe to hmux Pro at ${VM_UPGRADE_URL} to get access to Cloud VMs.`,
       extra: { limit: input.limit, upgradeRequired: true, upgradeUrl: VM_UPGRADE_URL },
       details: { limit: input.limit, upgradeRequired: true },
       ...(input.phase ? { phase: input.phase } : {}),
@@ -686,8 +686,8 @@ export async function vmActiveLimitExceededResponse(input: {
     error: "vm_active_limit_exceeded",
     status: 402,
     message: `The free plan includes ${input.limit} Cloud VM${plural}.${counted}`,
-    action: `Upgrade to cmux Pro at ${VM_UPGRADE_URL} for more active machines, ` +
-      "or free a slot with `cmux vm rm <id>`.",
+    action: `Upgrade to hmux Pro at ${VM_UPGRADE_URL} for more active machines, ` +
+      "or free a slot with `hmux vm rm <id>`.",
     extra: { limit: input.limit, upgradeRequired: true, upgradeUrl: VM_UPGRADE_URL },
     details: { limit: input.limit, upgradeRequired: true, ...countedDetails },
     ...(input.phase ? { phase: input.phase } : {}),
@@ -899,14 +899,14 @@ export function vmModelPlaneErrorResponse(
   return vmErrorResponse({
     error: "vm_model_plane_unavailable",
     status: 503,
-    message: "cmux could not connect this Cloud VM to coderouter, so no machine was created.",
+    message: "hmux could not connect this Cloud VM to coderouter, so no machine was created.",
     reason: "coderouter is unavailable.",
     action: "coderouter is unavailable; retry in a minute. If it keeps failing, contact support.",
     phase,
     retryable: true,
     retryAfterSeconds: 30,
     displayTitle: "coderouter is unavailable",
-    displayMessage: "Retrying is safe. cmux could not mint this machine's coderouter access.",
+    displayMessage: "Retrying is safe. hmux could not mint this machine's coderouter access.",
     details: { retryable: true },
   });
 }
@@ -999,8 +999,8 @@ export const vmWorkflowErrorResponders = {
       error: "vm_attach_transport_unsupported",
       status: 409,
       message: `Cloud VM ${error.vmId} does not serve the "${error.requested}" attach transport.`,
-      action: `Request the attach endpoint with transport "cmux-remote" (supported: ${supported}), ` +
-        "or update cmux — this machine runs the cmux-tui remote daemon only.",
+      action: `Request the attach endpoint with transport "hmux-remote" (supported: ${supported}), ` +
+        "or update hmux — this machine runs the hmux-tui remote daemon only.",
       phase: "attach",
       retryable: false,
       details: {
@@ -1074,7 +1074,7 @@ export const vmWorkflowErrorResponders = {
       error: "vm_private_network_unavailable",
       status: 409,
       message: "Cloud VM private networking is not available in this environment.",
-      action: "Update cmux or contact support. Retrying will not change this deployment setting.",
+      action: "Update hmux or contact support. Retrying will not change this deployment setting.",
       reason: error.reason,
       phase: "network",
       // Not retryable on purpose: this is how the deployment is configured, so
@@ -1119,7 +1119,7 @@ export const vmWorkflowErrorResponders = {
       error: "vm_access_revoked",
       status: 403,
       message: "Cloud access for this Mac login was revoked.",
-      action: "Sign out of cmux, then sign in again to enroll this Mac.",
+      action: "Sign out of hmux, then sign in again to enroll this Mac.",
       phase: "network",
     }),
   VmAccessGrantMutationBusyError: () =>
@@ -1231,7 +1231,7 @@ export const vmWorkflowErrorResponders = {
  * A provider read did not answer within the route's budget and was aborted
  * (routeDeadline.ts): a retryable provider timeout, not the generic outage.
  * Not an operator fault per request (observability.ts); its rate is read from
- * the `cmux.vm.error_code` span attribute.
+ * the `hmux.vm.error_code` span attribute.
  */
 async function vmProviderTimeoutResponse(error: VmProviderOperationError, locale: Locale): Promise<Response> {
   const copy = await vmProviderTimeoutCopy(locale);
@@ -1507,7 +1507,7 @@ function vmNetworkFullResponse(error: VmProviderOperationError): Response {
     message,
     reason: "Every address in this account's private network is assigned to a machine or an enrolled Mac.",
     action:
-      "Delete machines you no longer use with `cmux vm rm <id>`, or revoke Macs you no longer use on the " +
+      "Delete machines you no longer use with `hmux vm rm <id>`, or revoke Macs you no longer use on the " +
       "Cloud Mac access page at https://cmux.com/dashboard/cloud, then try again.",
     phase: vmPhaseForOperation(error.operation),
     retryable: false,
@@ -1534,7 +1534,7 @@ async function vmNetworkRuleCapacityResponse(error: VmProviderOperationError, lo
       operation: error.operation,
       operatorFault: true,
     },
-    { fingerprint: ["cmux-vm-provider-tls-rule-limit", error.provider] },
+    { fingerprint: ["hmux-vm-provider-tls-rule-limit", error.provider] },
   );
   const copy = await vmNetworkRuleCapacityCopy(locale);
   return vmErrorResponse({
@@ -1586,7 +1586,7 @@ function vmProviderOperationErrorResponse(error: VmProviderOperationError): Resp
       reason: "The image this machine kind resolves to is not published for this environment.",
       action:
         "Ask an admin to publish the Cloud VM image for this environment, then retry. " +
-        "A different machine kind (for example `cmux vm new --base`) may still be available.",
+        "A different machine kind (for example `hmux vm new --base`) may still be available.",
       phase,
       retryable: false,
       displayTitle: "Cloud VM image unavailable",
@@ -1702,18 +1702,18 @@ function providerCauseSummary(cause: unknown): { code?: string; message?: string
 
 function cloudServiceAction(operation: string, retryAfterSeconds: number | undefined): string {
   const retryPrefix = retryAfterSeconds
-    ? `cmux will retry in about ${retryAfterSeconds}s when this request is part of an attach loop. `
+    ? `hmux will retry in about ${retryAfterSeconds}s when this request is part of an attach loop. `
     : "";
   switch (operation) {
     case "create":
-      return `${retryPrefix}Retry once. If it fails again, run \`cmux vm ls\` to check whether a VM was created, then try \`cmux vm new\` again or contact support.`;
+      return `${retryPrefix}Retry once. If it fails again, run \`hmux vm ls\` to check whether a VM was created, then try \`hmux vm new\` again or contact support.`;
     case "openAttach":
     case "openSSH":
-      return `${retryPrefix}cmux is retrying attach while the Cloud VM service recovers. Run \`cmux vm ls\` to confirm the VM still exists.`;
+      return `${retryPrefix}hmux is retrying attach while the Cloud VM service recovers. Run \`hmux vm ls\` to confirm the VM still exists.`;
     case "exec":
-      return `${retryPrefix}Check that the VM is still running with \`cmux vm ls\`, then retry the command. For long commands, increase the exec timeout.`;
+      return `${retryPrefix}Check that the VM is still running with \`hmux vm ls\`, then retry the command. For long commands, increase the exec timeout.`;
     case "destroy":
-      return `${retryPrefix}Run \`cmux vm ls\` to see whether the VM is already gone. If it still appears, retry \`cmux vm rm <id>\`.`;
+      return `${retryPrefix}Run \`hmux vm ls\` to see whether the VM is already gone. If it still appears, retry \`hmux vm rm <id>\`.`;
     default:
       return `${retryPrefix}Retry the command. If it keeps failing, copy this error and contact support.`;
   }
@@ -1740,7 +1740,7 @@ function normalizedRetryAfterSeconds(value: number | undefined): number | undefi
 }
 
 function vmPhaseForOperation(operation: string): VmLifecyclePhase {
-  if (operation.includes("openAttach") || operation.includes("openCmuxRemote")) return "attach";
+  if (operation.includes("openAttach") || operation.includes("openHmuxRemote")) return "attach";
   if (operation.includes("openSSH")) return "ssh";
   // Before the "create" check: createTunnel/createNetwork are network setup,
   // not machine creation, and a client that read them as "create" would show
@@ -1800,17 +1800,17 @@ function vmUnavailableTitle(phase: VmLifecyclePhase): string {
 function vmUnavailableMessage(phase: VmLifecyclePhase): string {
   switch (phase) {
     case "attach":
-      return "cmux could not attach to the Cloud VM yet.";
+      return "hmux could not attach to the Cloud VM yet.";
     case "ssh":
-      return "cmux could not refresh Cloud VM SSH credentials yet.";
+      return "hmux could not refresh Cloud VM SSH credentials yet.";
     case "create":
-      return "cmux could not create the Cloud VM yet.";
+      return "hmux could not create the Cloud VM yet.";
     case "restore":
-      return "cmux could not restore the Cloud VM yet.";
+      return "hmux could not restore the Cloud VM yet.";
     case "fork":
-      return "cmux could not fork the Cloud VM yet.";
+      return "hmux could not fork the Cloud VM yet.";
     case "exec":
-      return "cmux could not run the Cloud VM command yet.";
+      return "hmux could not run the Cloud VM command yet.";
     default:
       return "The Cloud VM service could not complete this request yet.";
   }
@@ -1854,8 +1854,8 @@ function inferredProviderCode(message: string | null): string | null {
 
 export function requestedVmTeamIdFromRequest(request: Request): string | null {
   const fromHeader = normalizedOptionalString(
-    request.headers.get("x-cmux-team-id") ??
-      request.headers.get("x-cmux-billing-team-id"),
+    request.headers.get("x-hmux-team-id") ??
+      request.headers.get("x-hmux-billing-team-id"),
   );
   if (fromHeader) return fromHeader;
 
@@ -1904,11 +1904,11 @@ function requestURLOrigin(request: Request): string | null {
 let cachedAllowedOriginsEnv: string | undefined;
 let cachedAllowedOrigins: Set<string> | null = null;
 
-// CMUX_VM_ALLOWED_ORIGINS is a comma-separated list of full origins that must match
+// HMUX_VM_ALLOWED_ORIGINS is a comma-separated list of full origins that must match
 // the Origin header exactly, for example `https://app.example.com,https://staging.example.com`.
 // Do not include paths, schemeless hosts, or trailing slashes.
 function allowedBrowserOrigins(): Set<string> {
-  const raw = process.env.CMUX_VM_ALLOWED_ORIGINS;
+  const raw = process.env.HMUX_VM_ALLOWED_ORIGINS;
   if (cachedAllowedOrigins && cachedAllowedOriginsEnv === raw) return cachedAllowedOrigins;
   cachedAllowedOriginsEnv = raw;
   const configured = raw?.split(",") ?? [];
@@ -1944,5 +1944,5 @@ export function runAfterResponse(work: () => Promise<void>): void {
     console.warn(`[VM] after() unavailable, running deferred work detached: ${err instanceof Error ? err.message : String(err)}`);
     void guarded();
   }
-  trace.getActiveSpan()?.setAttribute("cmux.after_response.mode", mode);
+  trace.getActiveSpan()?.setAttribute("hmux.after_response.mode", mode);
 }

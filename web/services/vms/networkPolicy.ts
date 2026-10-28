@@ -6,8 +6,8 @@
  * - `full`: every public address (the historical default, and what a machine
  *   with no stored policy has).
  * - `allowlist`: only the listed address ranges and the listed HTTPS domains,
- *   plus the hosts cmux itself needs (see {@link CMUX_REQUIRED_DOMAINS}).
- * - `none`: only the hosts cmux itself needs.
+ *   plus the hosts hmux itself needs (see {@link HMUX_REQUIRED_DOMAINS}).
+ * - `none`: only the hosts hmux itself needs.
  *
  * Ranges become provider firewall rules (IP layer). Domains become provider
  * TLS egress rules: the provider steers the exact name to its edge through the
@@ -90,14 +90,14 @@ export const NETWORK_POLICY_PRESETS: readonly NetworkPolicyPreset[] = [
 ];
 
 /**
- * Hosts cmux needs in every mode: guest CLI and cmux-tui daemon downloads,
+ * Hosts hmux needs in every mode: guest CLI and hmux-tui daemon downloads,
  * and the coding-agent installs and updates (GUEST_AGENT_UPDATE_DOMAINS: the
  * GitHub releases API for versions, dates and asset digests, then the release
  * asset). api.github.com adds no outbound channel github.com does not already
  * open. The CodeRouter and reflection aliases are separate edge rules the
  * model plane owns; they stay reachable through the edge grant the driver adds.
  */
-export const CMUX_REQUIRED_DOMAINS: readonly string[] = [
+export const HMUX_REQUIRED_DOMAINS: readonly string[] = [
   "files.cmux.com",
   "github.com",
   "api.github.com",
@@ -225,7 +225,7 @@ export function compileNetworkPolicy(policy: NetworkPolicy): NetworkRulePlan {
   return {
     publicEgress: false,
     ranges: policy.mode === "allowlist" ? policy.ranges : [],
-    domains: dedupe([...CMUX_REQUIRED_DOMAINS, ...presetDomains, ...userDomains], (domain) => domain),
+    domains: dedupe([...HMUX_REQUIRED_DOMAINS, ...presetDomains, ...userDomains], (domain) => domain),
     dns: policy.mode === "allowlist" && policy.allowDns,
   };
 }

@@ -45,10 +45,10 @@ concurrency:
 jobs:
   analyze:
     name: Analyze
-    # A CI run of a pull request into feat-cmux-next has no fast-guard verdict: that branch's
-    # ci.yml skips `fast-guards` for its pull requests (cmux-next has its own lanes), so its
+    # A CI run of a pull request into feat-hmux-next has no fast-guard verdict: that branch's
+    # ci.yml skips `fast-guards` for its pull requests (hmux-next has its own lanes), so its
     # analysis always ended "no completed verdict" after reading the run's jobs. Skipped here.
-    if: ${{ github.repository == 'manaflow-ai/cmux' && contains(fromJSON('["success","failure","timed_out","startup_failure","action_required","cancelled"]'), github.event.workflow_run.conclusion) && (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.head_branch == 'main') && !(github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.path == '.github/workflows/ci.yml' && github.event.workflow_run.pull_requests[0].base.ref == 'feat-cmux-next') }}
+    if: ${{ github.repository == 'manaflow-ai/cmux' && contains(fromJSON('["success","failure","timed_out","startup_failure","action_required","cancelled"]'), github.event.workflow_run.conclusion) && (github.event.workflow_run.event == 'pull_request' || github.event.workflow_run.head_branch == 'main') && !(github.event.workflow_run.event == 'pull_request' && github.event.workflow_run.path == '.github/workflows/ci.yml' && github.event.workflow_run.pull_requests[0].base.ref == 'feat-hmux-next') }}
     # Analysis only reads trusted main history and the Actions/PR APIs. It
     # needs no secret or write token, so use the shared Linux runner pool.
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
@@ -64,15 +64,15 @@ jobs:
       has_patch: ${{ steps.analyze.outputs.has_patch }}
       head: ${{ steps.head.outputs.sha }}
     steps:
-      - name: Mint the cmux-bot token
-        id: cmux-bot-token
-        if: vars.CMUX_BOT_APP_ID != ''
+      - name: Mint the hmux-bot token
+        id: hmux-bot-token
+        if: vars.HMUX_BOT_APP_ID != ''
         continue-on-error: true
         timeout-minutes: 1
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ vars.CMUX_BOT_APP_ID }}
-          private-key: ${{ secrets.CMUX_BOT_APP_KEY }}
+          app-id: ${{ vars.HMUX_BOT_APP_ID }}
+          private-key: ${{ secrets.HMUX_BOT_APP_KEY }}
           permission-actions: write
           permission-checks: read
           permission-contents: read
@@ -131,8 +131,8 @@ jobs:
       - name: Analyze
         id: analyze
         env:
-          GH_TOKEN: ${{ steps.cmux-bot-token.outputs.token || github.token }}
-          READ_TOKEN: ${{ steps.cmux-bot-token.outputs.token || steps.glaeda-token.outputs.token }}
+          GH_TOKEN: ${{ steps.hmux-bot-token.outputs.token || github.token }}
+          READ_TOKEN: ${{ steps.hmux-bot-token.outputs.token || steps.glaeda-token.outputs.token }}
         run: python3 scripts/ci/guard_attribution.py analyze --out "$RUNNER_TEMP/guard-report.json"
 
       - name: Upload the report
@@ -154,15 +154,15 @@ jobs:
       issues: write
       pull-requests: write
     steps:
-      - name: Mint the cmux-bot token
-        id: cmux-bot-token
-        if: vars.CMUX_BOT_APP_ID != ''
+      - name: Mint the hmux-bot token
+        id: hmux-bot-token
+        if: vars.HMUX_BOT_APP_ID != ''
         continue-on-error: true
         timeout-minutes: 1
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ vars.CMUX_BOT_APP_ID }}
-          private-key: ${{ secrets.CMUX_BOT_APP_KEY }}
+          app-id: ${{ vars.HMUX_BOT_APP_ID }}
+          private-key: ${{ secrets.HMUX_BOT_APP_KEY }}
           permission-actions: write
           permission-checks: read
           permission-contents: read
@@ -231,7 +231,7 @@ jobs:
           branch="guard-fix/$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["sha"][:10])' "$REPORT")"
           # The index holds every path; the sparse worktree does not need to.
           git apply --cached "$RUNNER_TEMP/fix.patch"
-          git -c user.name="cmux guard attribution" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+          git -c user.name="hmux guard attribution" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
             commit -q -m "$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["title"])' "$RUNNER_TEMP/fix-pr.json")"
           auth="$(printf 'x-access-token:%s' "$APP_TOKEN" | base64 -w0)"
           echo "::add-mask::$auth"
@@ -252,8 +252,8 @@ jobs:
 
       - name: Comment, and open, update or close the tracking issue
         env:
-          GH_TOKEN: ${{ steps.cmux-bot-token.outputs.token || github.token }}
-          READ_TOKEN: ${{ steps.cmux-bot-token.outputs.token || steps.glaeda-token.outputs.token }}
+          GH_TOKEN: ${{ steps.hmux-bot-token.outputs.token || github.token }}
+          READ_TOKEN: ${{ steps.hmux-bot-token.outputs.token || steps.glaeda-token.outputs.token }}
           FIX_PR: ${{ steps.fix-pr.outputs.url }}
         run: |
           set -euo pipefail

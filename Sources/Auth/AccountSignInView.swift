@@ -1,4 +1,4 @@
-import CmuxSettingsUI
+import HmuxSettingsUI
 import SwiftUI
 
 /// Shared Stack sign-in status UI used by the Account and Mobile Pairing panes.
@@ -7,11 +7,11 @@ struct AccountSignInView: View {
     let automaticallyStartsSignIn: Bool
     /// Idle-state heading; hosts embed their own context (e.g. the Cloud
     /// machines pane) so they never stack a second header above this view.
-    var idleTitle = String(localized: "account.signIn.heading", defaultValue: "Sign in to cmux")
+    var idleTitle = String(localized: "account.signIn.heading", defaultValue: "Sign in to hmux")
     /// Idle-state supporting line under ``idleTitle``.
     var idleSubtitle = String(
         localized: "account.signIn.prompt",
-        defaultValue: "Continue with your cmux account."
+        defaultValue: "Continue with your hmux account."
     )
 
     var body: some View {
@@ -67,10 +67,10 @@ private struct AccountSignInIdleView: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "person.crop.circle.badge.plus")
-                .cmuxFont(size: 34)
+                .hmuxFont(size: 34)
                 .foregroundStyle(.tint)
             Text(title)
-                .cmuxFont(.title2, weight: .semibold)
+                .hmuxFont(.title2, weight: .semibold)
             Text(subtitle)
             .foregroundStyle(.secondary)
             .multilineTextAlignment(.center)
@@ -95,7 +95,7 @@ private struct AccountSignInLoadingView: View {
                 .controlSize(.small)
                 .accessibilityLabel(stage.title)
             Text(stage.title)
-                .cmuxFont(.headline)
+                .hmuxFont(.headline)
             Text(stage.instructions)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -129,10 +129,10 @@ private struct AccountSignInFailureView: View {
     var body: some View {
         VStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle")
-                .cmuxFont(size: 30)
+                .hmuxFont(size: 30)
                 .foregroundStyle(.orange)
             Text(failure.title)
-                .cmuxFont(.headline)
+                .hmuxFont(.headline)
             Text(failure.recovery)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -201,9 +201,9 @@ private struct AccountSignInSuccessView: View {
                 size: 56
             )
             Text(String(localized: "account.signIn.successTitle", defaultValue: "You’re signed in now"))
-                .cmuxFont(.title2, weight: .semibold)
+                .hmuxFont(.title2, weight: .semibold)
             Text(identity.displayName.isEmpty ? identity.email : identity.displayName)
-                .cmuxFont(.headline)
+                .hmuxFont(.headline)
                 .lineLimit(1)
             if !identity.email.isEmpty && identity.email != identity.displayName {
                 Text(identity.email)
@@ -212,7 +212,7 @@ private struct AccountSignInSuccessView: View {
             }
             Text(String(
                 localized: "account.signIn.successBody",
-                defaultValue: "Your cmux account is connected."
+                defaultValue: "Your hmux account is connected."
             ))
             .font(.caption)
             .foregroundStyle(.secondary)
@@ -302,7 +302,7 @@ private extension AccountSignInModel.LoadingStage {
         case .openingBrowser:
             return String(
                 localized: "account.signIn.loading.opening.instructions",
-                defaultValue: "cmux is preparing a secure sign-in window."
+                defaultValue: "hmux is preparing a secure sign-in window."
             )
         case .waiting:
             return String(
@@ -317,12 +317,12 @@ private extension AccountSignInModel.LoadingStage {
         case .finishing:
             return String(
                 localized: "account.signIn.loading.finishing.instructions",
-                defaultValue: "cmux is verifying your account. Keep this pane open."
+                defaultValue: "hmux is verifying your account. Keep this pane open."
             )
         case .rateLimited:
             return String(
                 localized: "account.signIn.loading.rateLimited.instructions",
-                defaultValue: "cmux retries automatically. Keep this pane open."
+                defaultValue: "hmux retries automatically. Keep this pane open."
             )
         }
     }
@@ -340,19 +340,19 @@ private extension AccountSignInModel.Failure {
         case .offline:
             return String(localized: "account.signIn.error.offline.title", defaultValue: "No internet connection")
         case .network:
-            return String(localized: "account.signIn.error.network.title", defaultValue: "Couldn’t reach cmux")
+            return String(localized: "account.signIn.error.network.title", defaultValue: "Couldn’t reach hmux")
         case .timedOut:
             return String(localized: "account.signIn.error.timedOut.title", defaultValue: "Sign-in timed out")
         case .server:
-            return String(localized: "account.signIn.error.server.title", defaultValue: "cmux sign-in is temporarily unavailable")
+            return String(localized: "account.signIn.error.server.title", defaultValue: "hmux sign-in is temporarily unavailable")
         case .invalidLink:
             return String(localized: "account.signIn.error.invalidLink.title", defaultValue: "That sign-in link is no longer valid")
         case .browserUnavailable:
             return String(localized: "account.signIn.error.browserUnavailable.title", defaultValue: "Couldn’t open sign-in")
         case .unauthorized:
-            return String(localized: "account.signIn.error.unauthorized.title", defaultValue: "cmux couldn’t authorize this sign-in")
+            return String(localized: "account.signIn.error.unauthorized.title", defaultValue: "hmux couldn’t authorize this sign-in")
         case .rejected:
-            return String(localized: "account.signIn.error.rejected.title", defaultValue: "cmux couldn’t complete the sign-in")
+            return String(localized: "account.signIn.error.rejected.title", defaultValue: "hmux couldn’t complete the sign-in")
         case .rateLimited:
             return String(
                 localized: "account.signIn.error.rateLimited.title",
@@ -383,12 +383,12 @@ private extension AccountSignInModel.Failure {
         case .timedOut:
             return String(
                 localized: "account.signIn.error.timedOut.recovery",
-                defaultValue: "The sign-in window did not return to cmux. Reopen the browser link or start a new attempt."
+                defaultValue: "The sign-in window did not return to hmux. Reopen the browser link or start a new attempt."
             )
         case .server:
             return String(
                 localized: "account.signIn.error.server.recovery",
-                defaultValue: "Try again in a moment. Your account and existing cmux workspaces are unchanged."
+                defaultValue: "Try again in a moment. Your account and existing hmux workspaces are unchanged."
             )
         case .invalidLink:
             return String(
@@ -403,7 +403,7 @@ private extension AccountSignInModel.Failure {
         case .unauthorized:
             return String(
                 localized: "account.signIn.error.unauthorized.recovery",
-                defaultValue: "Confirm you’re using the intended cmux account, then try again."
+                defaultValue: "Confirm you’re using the intended hmux account, then try again."
             )
         case .rejected:
             return String(
@@ -413,7 +413,7 @@ private extension AccountSignInModel.Failure {
         case .rateLimited:
             return String(
                 localized: "account.signIn.error.rateLimited.recovery",
-                defaultValue: "cmux retried automatically. Wait a minute, then try again. Your account and existing cmux workspaces are unchanged."
+                defaultValue: "hmux retried automatically. Wait a minute, then try again. Your account and existing hmux workspaces are unchanged."
             )
         case .unknown:
             return String(

@@ -1,4 +1,4 @@
-// Resolve the effective terminal background/foreground the same way cmux's
+// Resolve the effective terminal background/foreground the same way hmux's
 // embedded terminal does: ask ghostty itself (`+show-config` prints the fully
 // resolved config, including theme-file colors and repeated-key semantics).
 // Falls back to hand-parsing ~/.config/ghostty/config when no ghostty binary
@@ -42,20 +42,20 @@ export const DEFAULT_ANSI_PALETTE = [
 ] as const;
 
 const GHOSTTY_BINS = [
-  process.env.CMUX_GHOSTTY_BIN ?? "",
-  "/Applications/cmux.app/Contents/Resources/bin/ghostty",
+  process.env.HMUX_GHOSTTY_BIN ?? "",
+  "/Applications/hmux.app/Contents/Resources/bin/ghostty",
   "/Applications/Ghostty.app/Contents/MacOS/ghostty",
 ].filter(Boolean);
 
 const THEME_DIRS = [
   `${homedir()}/.config/ghostty/themes`,
-  "/Applications/cmux.app/Contents/Resources/ghostty/themes",
+  "/Applications/hmux.app/Contents/Resources/ghostty/themes",
   "/Applications/Ghostty.app/Contents/Resources/ghostty/themes",
 ];
 
 const MANAGED_CONFIGS = [
   `${homedir()}/Library/Application Support/com.mitchellh.ghostty/config`,
-  `${homedir()}/Library/Application Support/com.cmuxterm.app/config.ghostty`,
+  `${homedir()}/Library/Application Support/com.hmuxterm.app/config.ghostty`,
 ];
 
 let cached: { theme: GhosttyTheme; at: number } | null = null;

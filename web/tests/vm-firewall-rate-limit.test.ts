@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import { enforceVmFirewallRateLimit } from "../services/vms/firewallRateLimit";
 
-// Firewall mutations go to one provider account shared by every cmux user, so they are throttled per user.
-const request = new Request("https://cmux.test/api/vm/firewall", { method: "POST" });
+// Firewall mutations go to one provider account shared by every hmux user, so they are throttled per user.
+const request = new Request("https://hmux.test/api/vm/firewall", { method: "POST" });
 const base = { request, route: "vm.firewall.create", userId: "user-1", ruleId: "rl-fw", isVercel: true };
 
 describe("enforceVmFirewallRateLimit", () => {

@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxPanes
+import HmuxPanes
 import Foundation
 
 extension ContentView {

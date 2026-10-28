@@ -2,7 +2,7 @@ import AppKit
 import SwiftUI
 
 /// Shows one ``CloudCreateTeamSheet`` at a time for the Cloud surface that owns
-/// it, as a sheet on the main cmux window, or as a floating window when no main
+/// it, as a sheet on the main hmux window, or as a floating window when no main
 /// window can host it.
 @MainActor
 final class CloudCreateTeamSheetPresenter: NSObject, NSWindowDelegate {
@@ -15,7 +15,7 @@ final class CloudCreateTeamSheetPresenter: NSObject, NSWindowDelegate {
     private var sessionID: UUID?
 
     init(resolveHostWindow: @escaping @MainActor (NSWindow?) -> NSWindow? = {
-        NSApp.cmuxMainWindowForModalPresentation(preferring: $0)
+        NSApp.hmuxMainWindowForModalPresentation(preferring: $0)
     }) {
         self.resolveHostWindow = resolveHostWindow
         super.init()
@@ -58,7 +58,7 @@ final class CloudCreateTeamSheetPresenter: NSObject, NSWindowDelegate {
         ))
         let window = sheet.window
         window.styleMask = [.titled, .closable]
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.cloudCreateTeam")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.cloudCreateTeam")
         window.delegate = self
         window.title = String(localized: "cloud.teamPicker.createSheet.title", defaultValue: "Create Team")
         window.isReleasedWhenClosed = false

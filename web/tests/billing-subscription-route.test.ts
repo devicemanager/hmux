@@ -114,7 +114,7 @@ describe("billing subscription route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?billing=cancelled",
+      "https://hmux.test/dashboard/billing?billing=cancelled",
     );
     expect(updateSubscription).toHaveBeenCalledWith("sub_123", {
       cancel_at_period_end: true,
@@ -135,7 +135,7 @@ describe("billing subscription route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?billing=error",
+      "https://hmux.test/dashboard/billing?billing=error",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(updateSubscription).not.toHaveBeenCalled();
@@ -148,7 +148,7 @@ describe("billing subscription route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?billing=error",
+      "https://hmux.test/dashboard/billing?billing=error",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(updateSubscription).not.toHaveBeenCalled();
@@ -161,7 +161,7 @@ describe("billing subscription route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?billing=resumed",
+      "https://hmux.test/dashboard/billing?billing=resumed",
     );
     expect(updateSubscription).toHaveBeenCalledWith("sub_123", {
       cancel_at_period_end: false,
@@ -179,7 +179,7 @@ describe("billing subscription route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?team=team-pro&billing=cancelled",
+      "https://hmux.test/dashboard/billing?team=team-pro&billing=cancelled",
     );
     expect(updateSubscription).toHaveBeenCalledWith("sub_team", {
       cancel_at_period_end: true,
@@ -197,7 +197,7 @@ describe("billing subscription route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?team=team-b&billing=team_not_found",
+      "https://hmux.test/dashboard/billing?team=team-b&billing=team_not_found",
     );
     expect(updateSubscription).not.toHaveBeenCalled();
     expect(dbUpdates).toHaveLength(0);
@@ -208,7 +208,7 @@ describe("billing subscription route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?billing=error",
+      "https://hmux.test/dashboard/billing?billing=error",
     );
     expect(updateSubscription).not.toHaveBeenCalled();
   });
@@ -218,12 +218,12 @@ describe("billing subscription route", () => {
     anonymousIfExistsUser = null;
 
     const response = await postAction("cancel", {
-      referer: "https://cmux.test/ja/dashboard/billing",
+      referer: "https://hmux.test/ja/dashboard/billing",
     });
     const location = new URL(response.headers.get("location")!);
     const afterSignIn = new URL(
       location.searchParams.get("after_auth_return_to")!,
-      "https://cmux.test",
+      "https://hmux.test",
     );
 
     expect(response.status).toBe(303);
@@ -258,7 +258,7 @@ describe("billing subscription route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?billing=nosub",
+      "https://hmux.test/dashboard/billing?billing=nosub",
     );
     expect(updateSubscription).not.toHaveBeenCalled();
     expect(captureBillingError).not.toHaveBeenCalled();
@@ -273,7 +273,7 @@ describe("billing subscription route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?billing=error",
+      "https://hmux.test/dashboard/billing?billing=error",
     );
     expect(captureBillingError).toHaveBeenCalledWith(
       expect.objectContaining({ message: "stripe down" }),
@@ -298,8 +298,8 @@ function postAction(
 ) {
   const headers = new Headers({
     "content-type": "application/x-www-form-urlencoded",
-    origin: options.origin ?? "https://cmux.test",
-    referer: options.referer ?? "https://cmux.test/dashboard/billing",
+    origin: options.origin ?? "https://hmux.test",
+    referer: options.referer ?? "https://hmux.test/dashboard/billing",
   });
   if (options.secFetchSite) {
     headers.set("sec-fetch-site", options.secFetchSite);
@@ -310,7 +310,7 @@ function postAction(
   if (options.teamId) body.set("teamId", options.teamId);
 
   return POST(
-    new NextRequest("https://cmux.test/api/billing/subscription", {
+    new NextRequest("https://hmux.test/api/billing/subscription", {
       method: "POST",
       headers,
       body,

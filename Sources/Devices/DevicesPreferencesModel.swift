@@ -1,5 +1,5 @@
-import CmuxSettings
-import CmuxSurfaceCatalogModel
+import HmuxSettings
+import HmuxSurfaceCatalogModel
 import Foundation
 import Observation
 

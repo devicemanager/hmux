@@ -14,16 +14,16 @@ import {
   type DevboxManifestEntry,
 } from "../scripts/devbox-image-common";
 
-// Machine sizes are Freestyle's t-shirt ladder plus cmux's validated 24 GiB
-// intermediate snapshot, one cmux snapshot per size, picked by plan memory.
+// Machine sizes are Freestyle's t-shirt ladder plus hmux's validated 24 GiB
+// intermediate snapshot, one hmux snapshot per size, picked by plan memory.
 // These pin the ladder and the per-size promotion semantics.
 
 const entry = (overrides: Partial<DevboxManifestEntry> = {}): DevboxManifestEntry => ({
   provider: "freestyle",
-  version: "freestyle-cmux-devbox-test",
+  version: "freestyle-hmux-devbox-test",
   imageId: "sh-master",
   envVar: "FREESTYLE_SANDBOX_SNAPSHOT",
-  cmuxdRemoteCommit: "none-cmux-tui",
+  hmuxdRemoteCommit: "none-hmux-tui",
   builtAt: "2026-09-02T00:00:00.000Z",
   builderScriptVersion: "deadbeef",
   agentToolResolvedVersions: {},
@@ -33,7 +33,7 @@ const entry = (overrides: Partial<DevboxManifestEntry> = {}): DevboxManifestEntr
 });
 
 describe("size ladder", () => {
-  test("keeps the Freestyle ladder and cmux intermediate size, smallest first", () => {
+  test("keeps the Freestyle ladder and hmux intermediate size, smallest first", () => {
     expect(VM_IMAGE_SIZE_NAMES).toEqual(["sm", "md", "lg", "lgx", "xl", "2xl"]);
     expect(VM_IMAGE_SIZES.map((s) => [s.name, s.cpu, s.memoryMb, s.storageMb, s.freestyleBase])).toEqual([
       ["sm", 2, 4096, 16384, "freestyle/ubuntu-sm"],
@@ -55,11 +55,11 @@ describe("size ladder", () => {
   });
 
   test("the plan's memory picks the smallest size that fits", () => {
-    // cmux's plan knobs are memory-only; vCPU and disk follow the row.
+    // hmux's plan knobs are memory-only; vCPU and disk follow the row.
     expect(pickVmImageSizeForMemory(512)?.name).toBe("sm");
     expect(pickVmImageSizeForMemory(4096)?.name).toBe("sm");
     expect(pickVmImageSizeForMemory(4097)?.name).toBe("md");
-    // cmux's paid default (24 GiB) is between lg and xl: it gets xl.
+    // hmux's paid default (24 GiB) is between lg and xl: it gets xl.
     expect(pickVmImageSizeForMemory(20480)?.name).toBe("lgx");
     expect(pickVmImageSizeForMemory(24576)?.name).toBe("lgx");
     expect(pickVmImageSizeForMemory(24577)?.name).toBe("xl");
@@ -91,9 +91,9 @@ describe("promoteImageManifestEntry with sizes", () => {
     expect(next.images[0]).toMatchObject({ version: "freestyle-old", defaultForKind: false, defaultForLocalDev: false });
     expect(next.images[1]).toMatchObject({ version: "freestyle-old-desktop", defaultForKind: true });
     expect(next.images.slice(2).map((e) => [e.version, e.imageId, e.kind, e.size?.name, e.defaultForKind])).toEqual([
-      ["freestyle-cmux-devbox-test-sm", "sh-sm", "base", "sm", true],
-      ["freestyle-cmux-devbox-test-lg", "sh-lg", "base", "lg", true],
-      ["freestyle-cmux-devbox-test-xl", "sh-xl", "base", "xl", true],
+      ["freestyle-hmux-devbox-test-sm", "sh-sm", "base", "sm", true],
+      ["freestyle-hmux-devbox-test-lg", "sh-lg", "base", "lg", true],
+      ["freestyle-hmux-devbox-test-xl", "sh-xl", "base", "xl", true],
     ]);
     expect(next.images[2].size).toEqual({ name: "sm", cpu: 2, memoryMb: 4096, storageMb: 16384, freestyleBase: "freestyle/ubuntu-sm" });
     expect(next.images[2].defaultForLocalDev).toBe(true);
@@ -104,12 +104,12 @@ describe("promoteImageManifestEntry with sizes", () => {
     const next = promoteImageManifestEntry(base, entry(), { kinds: ["desktop", "base"], sizes });
     expect(imageManifestProblems(next)).toEqual([]);
     expect(next.images.slice(2).map((e) => e.version)).toEqual([
-      "freestyle-cmux-devbox-test-sm",
-      "freestyle-cmux-devbox-test-lg",
-      "freestyle-cmux-devbox-test-xl",
-      "freestyle-cmux-devbox-test-sm-base",
-      "freestyle-cmux-devbox-test-lg-base",
-      "freestyle-cmux-devbox-test-xl-base",
+      "freestyle-hmux-devbox-test-sm",
+      "freestyle-hmux-devbox-test-lg",
+      "freestyle-hmux-devbox-test-xl",
+      "freestyle-hmux-devbox-test-sm-base",
+      "freestyle-hmux-devbox-test-lg-base",
+      "freestyle-hmux-devbox-test-xl-base",
     ]);
     expect(next.images[1]).toMatchObject({ version: "freestyle-old-desktop", defaultForKind: false });
   });
@@ -118,7 +118,7 @@ describe("promoteImageManifestEntry with sizes", () => {
     const first = promoteImageManifestEntry(base, entry(), { kinds: ["base"], sizes });
     const next = promoteImageManifestEntry(
       first,
-      entry({ version: "freestyle-cmux-devbox-next", imageId: "sh-master-2" }),
+      entry({ version: "freestyle-hmux-devbox-next", imageId: "sh-master-2" }),
       { kinds: ["base"], sizes: [{ imageId: "sh-lg-2", size: { ...vmImageSize("lg") } }] },
     );
     expect(imageManifestProblems(next)).toEqual([]);

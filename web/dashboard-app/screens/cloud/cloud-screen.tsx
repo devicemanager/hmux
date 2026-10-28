@@ -79,7 +79,7 @@ export function CloudDevicesSection({ devices }: { readonly devices: readonly Cl
             <CloudDeviceActions id={device.id} name={device.name} />
           </div>
           <dl className="mt-4 grid gap-3 text-xs sm:grid-cols-2 lg:grid-cols-4">
-            <DeviceFact label={t("cmux")} value={[device.cmuxChannel, device.cmuxVersion, device.cmuxBuild && `(${device.cmuxBuild})`].filter(Boolean).join(" ") || t("unknown")} />
+            <DeviceFact label={t("hmux")} value={[device.hmuxChannel, device.hmuxVersion, device.hmuxBuild && `(${device.hmuxBuild})`].filter(Boolean).join(" ") || t("unknown")} />
             <DeviceFact label={t("access")} value={device.tunnelPurposes.length ? device.tunnelPurposes.map((purpose) => t(`purpose.${purpose}`)).join(", ") : t("none")} />
             <DeviceFact label={t("lastContact")} value={dates.format(new Date(device.lastControlPlaneAt))} />
             <DeviceFact label={t("deviceId")} value={`…${device.deviceId.slice(-8)}`} />

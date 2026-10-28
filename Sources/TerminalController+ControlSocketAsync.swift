@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxBrowser
+import HmuxControlSocket
+import HmuxBrowser
 import Foundation
 
 /// Async socket-dispatch helpers kept separate from the legacy synchronous
@@ -110,7 +110,7 @@ extension TerminalController {
             return errorResponse
         }
         let authorizedRequest = relayAuthorization.request
-        let automationOrigin = CmuxAutomationInvocationContext.eventOrigin
+        let automationOrigin = HmuxAutomationInvocationContext.eventOrigin
         if let focusError = Self.focusSuppressionResponse(
             method: authorizedRequest.method,
             id: authorizedRequest.id.map(\.foundationObject),
@@ -135,13 +135,13 @@ extension TerminalController {
                 code: ControlOverloadResponder.errorCode,
                 message: String(
                     localized: "socket.overloaded.message",
-                    defaultValue: "cmux is handling too many control-socket requests right now, so this one was not run. Retry in a moment."
+                    defaultValue: "hmux is handling too many control-socket requests right now, so this one was not run. Retry in a moment."
                 )
             )
         }
 
         let policy = Self.executionPolicy(forV2Method: authorizedRequest.method)
-        return try await CmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
+        return try await HmuxAutomationInvocationContext.$eventOrigin.withValue(automationOrigin) {
             try await withSocketCommandPolicyAsync(
                 commandKey: authorizedRequest.method,
                 isV2: true,

@@ -3,12 +3,12 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-expected_arch="${CMUX_EXPECTED_SIMULATOR_ARCH:-$(uname -m)}"
+expected_arch="${HMUX_EXPECTED_SIMULATOR_ARCH:-$(uname -m)}"
 
 case "$expected_arch" in
   arm64|x86_64) ;;
   *)
-    echo "CMUX_EXPECTED_SIMULATOR_ARCH must be arm64 or x86_64" >&2
+    echo "HMUX_EXPECTED_SIMULATOR_ARCH must be arm64 or x86_64" >&2
     exit 2
     ;;
 esac
@@ -48,7 +48,7 @@ if ! has_ios_runtime; then
 fi
 
 simulator_id="$({
-  CMUX_SIMULATOR_NAME="cmux Iroh ${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}-$$" \
+  HMUX_SIMULATOR_NAME="hmux Iroh ${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}-$$" \
     python3 - <<'PY'
 import json
 import os
@@ -114,7 +114,7 @@ def ordered_device_types(runtime: dict) -> list[dict]:
         ),
     )
 
-name = os.environ["CMUX_SIMULATOR_NAME"]
+name = os.environ["HMUX_SIMULATOR_NAME"]
 attempts: list[str] = []
 for runtime in runtimes:
     for device_type in ordered_device_types(runtime):
@@ -163,7 +163,7 @@ python3 "$repo_root/scripts/ci/run_with_timeout.py" \
   --timeout-seconds 600 \
   -- xcrun simctl bootstatus "$simulator_id" -b
 
-test_root="${RUNNER_TEMP:-/tmp}/cmux-iroh-ios-simulator-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}"
+test_root="${RUNNER_TEMP:-/tmp}/hmux-iroh-ios-simulator-${GITHUB_RUN_ID:-local}-${GITHUB_RUN_ATTEMPT:-1}"
 rm -rf "$test_root"
 mkdir -p "$test_root"
 
@@ -265,10 +265,10 @@ PY
 }
 
 run_package_tests \
-  Packages/Shared/CMUXMobileCore \
-  CMUXMobileCore \
-  CMUXMobileCoreTests
+  Packages/Shared/HMUXMobileCore \
+  HMUXMobileCore \
+  HMUXMobileCoreTests
 run_package_tests \
-  Packages/Shared/CmuxIrohTransport \
-  CmuxIrohTransport \
-  CmuxIrohTransportTests
+  Packages/Shared/HmuxIrohTransport \
+  HmuxIrohTransport \
+  HmuxIrohTransportTests

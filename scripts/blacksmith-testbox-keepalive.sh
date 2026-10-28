@@ -124,16 +124,16 @@ release_runner() {
   printf '%s; releasing the Testbox runner\n' "$1"
   # Bound the commit size. A prune failure must not fail the job: the
   # sticky disk would then skip the commit and keep the previous snapshot.
-  # hq's testbox-run.sh links cmux-tui/target to the family disk it used
-  # (/home/runner/cmux-tui-target/<family>); only that disk is pruned and
+  # hq's testbox-run.sh links hmux-tui/target to the family disk it used
+  # (/home/runner/hmux-tui-target/<family>); only that disk is pruned and
   # recorded. Both disks commit only on change, so with no link nothing is
   # committed.
   local target_dir
-  target_dir="$(readlink -f "$repo_root/cmux-tui/target" 2>/dev/null || true)"
+  target_dir="$(readlink -f "$repo_root/hmux-tui/target" 2>/dev/null || true)"
   case "$target_dir" in
-    "$HOME/cmux-tui-target/main"|"$HOME/cmux-tui-target/next") ;;
+    "$HOME/hmux-tui-target/main"|"$HOME/hmux-tui-target/next") ;;
     *)
-      printf 'no warm target family linked at cmux-tui/target; nothing to commit\n'
+      printf 'no warm target family linked at hmux-tui/target; nothing to commit\n'
       sync || true
       phone_home_with_retry completed || echo "warning: could not report completed" >&2
       exit 0 ;;
@@ -146,7 +146,7 @@ release_runner() {
   # workspace crate; that is slower, never wrong.
   if [[ -d "$target_dir" ]]; then
     timeout 300 python3 -I "$script_dir/blacksmith-testbox-source-mtimes.py" record \
-      "$repo_root" "$target_dir/.cmux-testbox-source-mtimes.tsv" \
+      "$repo_root" "$target_dir/.hmux-testbox-source-mtimes.tsv" \
       || echo "warning: could not record source mtimes" >&2
   fi
   sync || true

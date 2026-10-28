@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 
 /// Coalesced portal work and the transition attached to its diagnostic interval.
 struct TerminalPortalReconciliationRequest {

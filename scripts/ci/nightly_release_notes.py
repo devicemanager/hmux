@@ -12,7 +12,7 @@ import time
 from urllib.parse import quote
 from xml.dom import minidom
 
-MARKER = re.compile(r"<!--\s*cmux-published-sha:\s*([0-9a-f]{40})\s*-->", re.I)
+MARKER = re.compile(r"<!--\s*hmux-published-sha:\s*([0-9a-f]{40})\s*-->", re.I)
 SPARKLE = "http://www.andymatuschak.org/xml-namespaces/sparkle"
 COMMIT_BATCH = 10
 REPAIR = "https://github.com/manaflow-ai/cmuxterm-hq/blob/main/REPAIR.md"
@@ -112,7 +112,7 @@ def infrastructure(pr: dict) -> bool:
     paths = [f["path"] for f in files.get("nodes", [])]
     if not paths or len(paths) != files.get("totalCount"):
         return False
-    return all(p.startswith((".github/", "docs/", "tests/", "cmuxTests/", "cmuxUITests/", "scripts/ci/"))
+    return all(p.startswith((".github/", "docs/", "tests/", "hmuxTests/", "hmuxUITests/", "scripts/ci/"))
                or p.endswith((".md", ".mdx")) or "/Tests/" in p for p in paths)
 
 
@@ -213,12 +213,12 @@ def main() -> int:
     release = github.rest(f"releases/tags/{quote(args.tag, safe='')}")
     base = published_sha(release.get("body") or "")
     if base is None:
-        print(f"::warning::No previous publication marker; restore cmux-published-sha in the release body to recover the change range. Repair: {REPAIR}")
+        print(f"::warning::No previous publication marker; restore hmux-published-sha in the release body to recover the change range. Repair: {REPAIR}")
     prs = collect_prs(github, base, args.head, args.branch) if base else []
     markdown, plain = summarize(prs, args.repo, base, args.head)
     body = markdown + "\n## Downloads\n\n" + args.details.read_text()
     args.out.write_text(body)
-    args.out.with_suffix(".published.md").write_text(f"<!-- cmux-published-sha: {args.head} -->\n" + body)
+    args.out.with_suffix(".published.md").write_text(f"<!-- hmux-published-sha: {args.head} -->\n" + body)
     update_appcasts(args.appcasts, args.build, plain)
     print(f"Prepared nightly notes for {len(prs)} merged PRs; baseline {base or 'unavailable'}")
     return 0

@@ -4,20 +4,20 @@
 # verified notification), the needs-auth state for installs whose iPhone auth
 # gate failed (kept + truthfully notified + retryable), the human-only
 # unauthenticated-enqueue gate, and default device id resolution. Uses a fake
-# xcrun/devicectl, a fake mobile-dev-launch.sh, and a fake cmux CLI so no
+# xcrun/devicectl, a fake mobile-dev-launch.sh, and a fake hmux CLI so no
 # simulator, device, or running app is touched.
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 QUEUE_SCRIPT="$REPO_ROOT/scripts/iphone-install-queue.sh"
 
-TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cmux-iphone-queue-test.XXXXXX")"
+TMP_DIR="$(mktemp -d "${TMPDIR:-/tmp}/hmux-iphone-queue-test.XXXXXX")"
 trap 'rm -rf "$TMP_DIR"' EXIT
 
-export CMUX_IPHONE_QUEUE_DIR="$TMP_DIR/queue"
-export CMUX_CONFIG_DIR="$TMP_DIR/config"
-export CMUX_READINESS_RECEIPT_DIR="$TMP_DIR/receipts"
-unset CMUX_IPHONE_DEVICE_ID CMUX_IPHONE_QUEUE_FORCE_UNREACHABLE CMUX_IPHONE_QUEUE_CHECKOUT CMUX_ALLOW_UNAUTHENTICATED_INSTALL 2>/dev/null || true
+export HMUX_IPHONE_QUEUE_DIR="$TMP_DIR/queue"
+export HMUX_CONFIG_DIR="$TMP_DIR/config"
+export HMUX_READINESS_RECEIPT_DIR="$TMP_DIR/receipts"
+unset HMUX_IPHONE_DEVICE_ID HMUX_IPHONE_QUEUE_FORCE_UNREACHABLE HMUX_IPHONE_QUEUE_CHECKOUT HMUX_ALLOW_UNAUTHENTICATED_INSTALL 2>/dev/null || true
 
 DEVICE_ID="11111111-2222-3333-4444-555555555555"
 STATE_FILE="$TMP_DIR/device-state"   # "reachable" | "unreachable"
@@ -72,8 +72,8 @@ if [[ "\${1:-}" == "devicectl" && "\${2:-}" == "device" && "\${3:-}" == "info" &
   done
   cat > "\$out" <<JSON
 {"result": {"apps": [{
-  "bundleIdentifier": "dev.cmux.ios.tstq",
-  "url": "file:///private/var/containers/Bundle/Application/CURRENT/cmux.app/"
+  "bundleIdentifier": "dev.hmux.ios.tstq",
+  "url": "file:///private/var/containers/Bundle/Application/CURRENT/hmux.app/"
 }]}}
 JSON
   exit 0
@@ -85,7 +85,7 @@ if [[ "\${1:-}" == "devicectl" && "\${2:-}" == "device" && "\${3:-}" == "info" &
     if [[ "\${args[i]}" == "--json-output" ]]; then out="\${args[i+1]}"; fi
   done
   if [[ "\$(cat "$PROCESS_STATE_FILE")" == "running" ]]; then
-    processes='[{"executable":"file:///private/var/containers/Bundle/Application/CURRENT/cmux.app/cmux","processIdentifier":4242}]'
+    processes='[{"executable":"file:///private/var/containers/Bundle/Application/CURRENT/hmux.app/hmux","processIdentifier":4242}]'
   else
     processes='[]'
   fi
@@ -105,12 +105,12 @@ exit 1
 EOF
 chmod +x "$FAKE_BIN/xcrun"
 
-cat > "$FAKE_BIN/cmux" <<EOF
+cat > "$FAKE_BIN/hmux" <<EOF
 #!/usr/bin/env bash
-echo "cmux \$*" >> "$CALL_LOG"
+echo "hmux \$*" >> "$CALL_LOG"
 exit 0
 EOF
-chmod +x "$FAKE_BIN/cmux"
+chmod +x "$FAKE_BIN/hmux"
 
 export PATH="$FAKE_BIN:$PATH"
 
@@ -126,18 +126,18 @@ write_fake_mdl() {
 echo "mobile-dev-launch \$*" >> "$CALL_LOG"
 if [[ " \$* " == *" --check-auth-contract "* ]]; then
   printf '%s\n' \
-    'CMUX_DEV_AUTH_PROFILE=personal' \
-    'CMUX_DEV_AUTH_ACCOUNT=person@manaflow.ai'
+    'HMUX_DEV_AUTH_PROFILE=personal' \
+    'HMUX_DEV_AUTH_ACCOUNT=person@manaflow.ai'
   exit 0
 fi
 if [[ "$write_receipt" == "1" ]]; then
-  mkdir -p "$CMUX_READINESS_RECEIPT_DIR"
+  mkdir -p "$HMUX_READINESS_RECEIPT_DIR"
   if [[ " \$* " == *" --readiness app-receipt "* ]]; then
-    echo '{"schema":"cmux-ios-dogfood-readiness-v1","readiness":"app-receipt"}' \
-      > "$CMUX_READINESS_RECEIPT_DIR/tstq-$DEVICE_ID.json"
+    echo '{"schema":"hmux-ios-dogfood-readiness-v1","readiness":"app-receipt"}' \
+      > "$HMUX_READINESS_RECEIPT_DIR/tstq-$DEVICE_ID.json"
   else
-    echo '{"schema":"cmux-ios-dogfood-readiness-v1"}' \
-      > "$CMUX_READINESS_RECEIPT_DIR/tstq-$DEVICE_ID.json"
+    echo '{"schema":"hmux-ios-dogfood-readiness-v1"}' \
+      > "$HMUX_READINESS_RECEIPT_DIR/tstq-$DEVICE_ID.json"
   fi
 fi
 if [[ "$exit_code" != "0" ]]; then
@@ -148,14 +148,14 @@ EOF
   chmod +x "$FAKE_CHECKOUT/scripts/mobile-dev-launch.sh"
 }
 write_fake_mdl 0 1
-export CMUX_IPHONE_QUEUE_MOBILE_LAUNCHER="$FAKE_CHECKOUT/scripts/mobile-dev-launch.sh"
+export HMUX_IPHONE_QUEUE_MOBILE_LAUNCHER="$FAKE_CHECKOUT/scripts/mobile-dev-launch.sh"
 
 AUTH_PROFILE="personal"
 EXPECTED_ACCOUNT="person@manaflow.ai"
 CREDENTIALS_FILE="$TMP_DIR/personal.env"
 cat > "$CREDENTIALS_FILE" <<'ENV'
-CMUX_DOGFOOD_STACK_EMAIL=person@manaflow.ai
-CMUX_DOGFOOD_STACK_PASSWORD=person-pw
+HMUX_DOGFOOD_STACK_EMAIL=person@manaflow.ai
+HMUX_DOGFOOD_STACK_PASSWORD=person-pw
 ENV
 chmod 600 "$CREDENTIALS_FILE"
 AUTH_ARGS=(
@@ -165,32 +165,32 @@ AUTH_ARGS=(
 )
 
 # Fake signed app.
-APP="$TMP_DIR/cmux.app"
+APP="$TMP_DIR/hmux.app"
 mkdir -p "$APP"
 cat > "$APP/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleIdentifier</key><string>dev.cmux.ios.tstq</string>
+  <key>CFBundleIdentifier</key><string>dev.hmux.ios.tstq</string>
 </dict></plist>
 PLIST
-echo "binary" > "$APP/cmux"
+echo "binary" > "$APP/hmux"
 
 # --- default-device resolution -----------------------------------------------
 [[ -z "$("$QUEUE_SCRIPT" default-device | head -n1 | tr -d '[:space:]')" ]] \
   || fail "default-device should be empty with no config"
-mkdir -p "$CMUX_CONFIG_DIR"
-printf '%s\n' "$DEVICE_ID" > "$CMUX_CONFIG_DIR/iphone-device-id"
+mkdir -p "$HMUX_CONFIG_DIR"
+printf '%s\n' "$DEVICE_ID" > "$HMUX_CONFIG_DIR/iphone-device-id"
 [[ "$("$QUEUE_SCRIPT" default-device | head -n1 | tr -d '[:space:]')" == "$DEVICE_ID" ]] \
   || fail "default-device should read the config file"
-CMUX_IPHONE_DEVICE_ID="env-wins" "$QUEUE_SCRIPT" default-device | head -n1 | grep -q "env-wins" \
-  || fail "CMUX_IPHONE_DEVICE_ID env should win over the config file"
+HMUX_IPHONE_DEVICE_ID="env-wins" "$QUEUE_SCRIPT" default-device | head -n1 | grep -q "env-wins" \
+  || fail "HMUX_IPHONE_DEVICE_ID env should win over the config file"
 ok "default-device resolution (env > config file)"
 
 # --- enqueue -----------------------------------------------------------------
 "$QUEUE_SCRIPT" enqueue --tag tstq --app "$APP" --checkout "$FAKE_CHECKOUT" "${AUTH_ARGS[@]}" >/dev/null
-ENTRY="$CMUX_IPHONE_QUEUE_DIR/pending/tstq"
-[[ -d "$ENTRY/cmux.app" && -f "$ENTRY/meta.json" ]] || fail "enqueue should create pending entry"
+ENTRY="$HMUX_IPHONE_QUEUE_DIR/pending/tstq"
+[[ -d "$ENTRY/hmux.app" && -f "$ENTRY/meta.json" ]] || fail "enqueue should create pending entry"
 grep -q '"device_id": "'"$DEVICE_ID"'"' "$ENTRY/meta.json" || fail "meta should carry the default device id"
 grep -q '"auth_profile": "personal"' "$ENTRY/meta.json" || fail "meta should freeze the selected auth profile"
 grep -q '"expected_account": "person@manaflow.ai"' "$ENTRY/meta.json" || fail "meta should freeze the expected account"
@@ -202,7 +202,7 @@ ok "enqueue creates a pending entry with immutable identity metadata"
 
 # Re-enqueue replaces rather than duplicating.
 "$QUEUE_SCRIPT" enqueue --tag tstq --app "$APP" --checkout "$FAKE_CHECKOUT" "${AUTH_ARGS[@]}" >/dev/null
-[[ "$(ls "$CMUX_IPHONE_QUEUE_DIR/pending" | wc -l | tr -d ' ')" == "1" ]] \
+[[ "$(ls "$HMUX_IPHONE_QUEUE_DIR/pending" | wc -l | tr -d ' ')" == "1" ]] \
   || fail "re-enqueue of the same tag should replace the entry"
 ok "re-enqueue replaces the existing entry"
 
@@ -269,7 +269,7 @@ grep -q "devicectl device install" "$CALL_LOG" \
 "$QUEUE_SCRIPT" clear --tag tstq >/dev/null
 echo "unreachable" > "$STATE_FILE"
 "$QUEUE_SCRIPT" enqueue --tag tstq --app "$APP" --checkout "$FAKE_CHECKOUT" "${AUTH_ARGS[@]}" >/dev/null
-ENTRY="$CMUX_IPHONE_QUEUE_DIR/pending/tstq"
+ENTRY="$HMUX_IPHONE_QUEUE_DIR/pending/tstq"
 ok "legacy queue entries stay pending with an actionable auth-contract note"
 
 # Older queue entries can already contain the simulator-only profile. Drain
@@ -288,17 +288,17 @@ echo "reachable" > "$STATE_FILE"
 if "$QUEUE_SCRIPT" drain >/dev/null 2>&1; then
   fail "drain must reject a legacy agent-profile entry"
 fi
-[[ -d "$CMUX_IPHONE_QUEUE_DIR/failed/tstq" ]] \
+[[ -d "$HMUX_IPHONE_QUEUE_DIR/failed/tstq" ]] \
   || fail "legacy agent-profile entry should move to failed/"
 grep -q "requires auth-profile personal" \
-  "$CMUX_IPHONE_QUEUE_DIR/failed/tstq/error.txt" \
+  "$HMUX_IPHONE_QUEUE_DIR/failed/tstq/error.txt" \
   || fail "legacy agent-profile failure should explain the personal-only contract"
 grep -q "devicectl device install" "$CALL_LOG" \
   && fail "legacy agent-profile rejection must happen before device install"
 "$QUEUE_SCRIPT" clear --tag tstq >/dev/null
 echo "unreachable" > "$STATE_FILE"
 "$QUEUE_SCRIPT" enqueue --tag tstq --app "$APP" --checkout "$FAKE_CHECKOUT" "${AUTH_ARGS[@]}" >/dev/null
-ENTRY="$CMUX_IPHONE_QUEUE_DIR/pending/tstq"
+ENTRY="$HMUX_IPHONE_QUEUE_DIR/pending/tstq"
 ok "drain quarantines legacy agent-profile entries before device mutation"
 
 # --- drain with the phone unreachable: entry must stay queued -----------------
@@ -309,10 +309,10 @@ ok "drain keeps the build queued while the phone is unreachable"
 
 # --- FORCE_UNREACHABLE test hook ----------------------------------------------
 echo "reachable" > "$STATE_FILE"
-CMUX_IPHONE_QUEUE_FORCE_UNREACHABLE=1 "$QUEUE_SCRIPT" drain >/dev/null 2>&1 \
+HMUX_IPHONE_QUEUE_FORCE_UNREACHABLE=1 "$QUEUE_SCRIPT" drain >/dev/null 2>&1 \
   || fail "forced-unreachable drain should exit 0"
 [[ -d "$ENTRY" ]] || fail "FORCE_UNREACHABLE must keep the entry queued"
-ok "CMUX_IPHONE_QUEUE_FORCE_UNREACHABLE keeps the entry queued"
+ok "HMUX_IPHONE_QUEUE_FORCE_UNREACHABLE keeps the entry queued"
 
 # --- drain on reconnect: install + signed launch + notify ---------------------
 "$QUEUE_SCRIPT" drain >/dev/null 2>&1 || fail "drain with reachable phone should succeed"
@@ -327,8 +327,8 @@ grep -q -- "mobile-dev-launch --tag tstq --device --device-id $DEVICE_ID --ensur
   || fail "drain should signed-launch via mobile-dev-launch.sh with --ensure-mac pinned to mac-rpc"
 grep -q -- "--auth-profile personal --expected-account person@manaflow.ai --credentials-file $CREDENTIALS_FILE" "$CALL_LOG" \
   || fail "drain should preserve the queued auth contract"
-grep -q "cmux notify --title iPhone install queue: installed tstq" "$CALL_LOG" \
-  || fail "drain should send a cmux notification for the installed tag"
+grep -q "hmux notify --title iPhone install queue: installed tstq" "$CALL_LOG" \
+  || fail "drain should send a hmux notification for the installed tag"
 grep -q "VERIFIED signed in + paired" "$CALL_LOG" \
   || fail "the success notification must state the install was VERIFIED signed in"
 ok "reconnect drain terminates before install, signed-launches with --ensure-mac, and notifies verified"
@@ -338,14 +338,14 @@ echo "unreachable" > "$STATE_FILE"
 "$QUEUE_SCRIPT" enqueue --tag tstq --app "$APP" --checkout "$FAKE_CHECKOUT" "${AUTH_ARGS[@]}" >/dev/null
 echo "reachable" > "$STATE_FILE"
 write_fake_mdl 0 0   # exit 0 but no receipt: a launcher that lies
-rm -f "$CMUX_READINESS_RECEIPT_DIR/tstq-$DEVICE_ID.json"
+rm -f "$HMUX_READINESS_RECEIPT_DIR/tstq-$DEVICE_ID.json"
 : > "$CALL_LOG"
 if "$QUEUE_SCRIPT" drain >/dev/null 2>&1; then
   fail "drain should exit non-zero when no fresh readiness receipt backs the gate"
 fi
-[[ -d "$CMUX_IPHONE_QUEUE_DIR/needs-auth/tstq" ]] \
+[[ -d "$HMUX_IPHONE_QUEUE_DIR/needs-auth/tstq" ]] \
   || fail "receipt-less install should move to needs-auth/"
-grep -q "no fresh readiness receipt" "$CMUX_IPHONE_QUEUE_DIR/needs-auth/tstq/error.txt" \
+grep -q "no fresh readiness receipt" "$HMUX_IPHONE_QUEUE_DIR/needs-auth/tstq/error.txt" \
   || fail "needs-auth reason should mention the missing receipt"
 "$QUEUE_SCRIPT" retry --tag tstq >/dev/null || fail "retry should re-queue the needs-auth entry"
 ok "gate pass without a fresh receipt parks in needs-auth (launcher cannot lie with exit 0)"
@@ -356,25 +356,25 @@ write_fake_mdl 1 0
 if "$QUEUE_SCRIPT" drain >/dev/null 2>&1; then
   fail "drain should exit non-zero when the signed launch fails"
 fi
-[[ -d "$CMUX_IPHONE_QUEUE_DIR/needs-auth/tstq" ]] \
+[[ -d "$HMUX_IPHONE_QUEUE_DIR/needs-auth/tstq" ]] \
   || fail "auth-failed entry should move to needs-auth/ (installed app must not be dropped)"
-[[ -d "$CMUX_IPHONE_QUEUE_DIR/needs-auth/tstq/cmux.app" ]] \
+[[ -d "$HMUX_IPHONE_QUEUE_DIR/needs-auth/tstq/hmux.app" ]] \
   || fail "needs-auth entry should retain the staged app for retry"
-grep -q "fake sign-in failure" "$CMUX_IPHONE_QUEUE_DIR/needs-auth/tstq/error.txt" \
+grep -q "fake sign-in failure" "$HMUX_IPHONE_QUEUE_DIR/needs-auth/tstq/error.txt" \
   || fail "needs-auth reason should carry the launcher's error line"
 grep -q "devicectl device process launch" "$CALL_LOG" \
   && fail "a failed signed launch must never fall back to a plain launch"
-grep -q "cmux notify --title iPhone install queue: tstq installed but SIGN-IN FAILED" "$CALL_LOG" \
+grep -q "hmux notify --title iPhone install queue: tstq installed but SIGN-IN FAILED" "$CALL_LOG" \
   || fail "the notification must report the TRUE state (installed but SIGN-IN FAILED)"
 grep -q -- "Retry the queued contract: scripts/iphone-install-queue.sh retry --tag tstq" "$CALL_LOG" \
   || fail "the notification must include the immutable-contract retry"
 "$QUEUE_SCRIPT" list | grep -q "needs-auth tstq" || fail "list should show the needs-auth entry"
 "$QUEUE_SCRIPT" retry --tag tstq >/dev/null || fail "retry should re-queue the needs-auth entry"
-[[ -d "$CMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] || fail "retry should move the entry back to pending/"
+[[ -d "$HMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] || fail "retry should move the entry back to pending/"
 write_fake_mdl 0 1
 : > "$CALL_LOG"
 "$QUEUE_SCRIPT" drain >/dev/null 2>&1 || fail "drain after retry with fixed auth should succeed"
-[[ ! -d "$CMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] || fail "retried entry should drain to completion"
+[[ ! -d "$HMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] || fail "retried entry should drain to completion"
 ok "auth-failed install parks in needs-auth, notifies truthfully, and retry re-queues it"
 
 # --- locked/offline phone mid-launch (launcher exit 75) keeps entry pending ----
@@ -382,29 +382,29 @@ ok "auth-failed install parks in needs-auth, notifies truthfully, and retry re-q
 write_fake_mdl 75 0
 : > "$CALL_LOG"
 "$QUEUE_SCRIPT" drain >/dev/null 2>&1 || fail "deferred-delivery drain should exit 0 (entry simply stays queued)"
-[[ -d "$CMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] \
+[[ -d "$HMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] \
   || fail "launcher exit 75 (phone locked/offline) must keep the entry pending, not needs-auth/failed"
-grep -q "cmux notify" "$CALL_LOG" && fail "a deferred delivery must not claim an install happened"
+grep -q "hmux notify" "$CALL_LOG" && fail "a deferred delivery must not claim an install happened"
 write_fake_mdl 0 1
 "$QUEUE_SCRIPT" drain >/dev/null 2>&1 || fail "drain after unlock should succeed"
-[[ ! -d "$CMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] || fail "entry should drain once the launcher succeeds"
+[[ ! -d "$HMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] || fail "entry should drain once the launcher succeeds"
 ok "launcher exit 75 keeps the entry pending for the LaunchAgent retry"
 
 # --- readiness mode: persisted at enqueue, replayed by the drain ---------------
-RECEIPT_APP="$TMP_DIR/receipt-app/cmux.app"
+RECEIPT_APP="$TMP_DIR/receipt-app/hmux.app"
 mkdir -p "$RECEIPT_APP"
 cat > "$RECEIPT_APP/Info.plist" <<'PLIST'
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0"><dict>
-  <key>CFBundleIdentifier</key><string>dev.cmux.ios.tstq</string>
-  <key>CMUXDogfoodReadiness</key><string>app-receipt-v1</string>
+  <key>CFBundleIdentifier</key><string>dev.hmux.ios.tstq</string>
+  <key>HMUXDogfoodReadiness</key><string>app-receipt-v1</string>
 </dict></plist>
 PLIST
-echo "binary" > "$RECEIPT_APP/cmux"
+echo "binary" > "$RECEIPT_APP/hmux"
 echo "unreachable" > "$STATE_FILE"
 "$QUEUE_SCRIPT" enqueue --tag tstq --app "$RECEIPT_APP" --checkout "$FAKE_CHECKOUT" "${AUTH_ARGS[@]}" >/dev/null
-grep -q '"readiness": "app-receipt"' "$CMUX_IPHONE_QUEUE_DIR/pending/tstq/meta.json" \
+grep -q '"readiness": "app-receipt"' "$HMUX_IPHONE_QUEUE_DIR/pending/tstq/meta.json" \
   || fail "auto readiness should persist the app's declared app-receipt mode"
 echo "reachable" > "$STATE_FILE"
 write_fake_mdl 0 1
@@ -420,9 +420,9 @@ ok "app-receipt readiness is persisted at enqueue and replayed by the drain"
 
 echo "unreachable" > "$STATE_FILE"
 "$QUEUE_SCRIPT" enqueue --tag tstq --app "$RECEIPT_APP" --readiness mac-rpc --checkout "$FAKE_CHECKOUT" "${AUTH_ARGS[@]}" >/dev/null
-grep -q '"readiness": "mac-rpc"' "$CMUX_IPHONE_QUEUE_DIR/pending/tstq/meta.json" \
+grep -q '"readiness": "mac-rpc"' "$HMUX_IPHONE_QUEUE_DIR/pending/tstq/meta.json" \
   || fail "an explicit --readiness should override the app's declaration"
-/usr/bin/python3 - "$CMUX_IPHONE_QUEUE_DIR/pending/tstq/meta.json" <<'PY'
+/usr/bin/python3 - "$HMUX_IPHONE_QUEUE_DIR/pending/tstq/meta.json" <<'PY'
 import json, sys
 meta = json.load(open(sys.argv[1]))
 meta.pop("readiness")
@@ -436,21 +436,21 @@ grep -q -- "mobile-dev-launch --tag tstq --device --device-id $DEVICE_ID --ensur
 if "$QUEUE_SCRIPT" enqueue --tag tstq --app "$RECEIPT_APP" --readiness pairing --checkout "$FAKE_CHECKOUT" "${AUTH_ARGS[@]}" >/dev/null 2>&1; then
   fail "enqueue must reject an unknown --readiness"
 fi
-/usr/libexec/PlistBuddy -c 'Set :CMUXDogfoodReadiness app-receipt-v9' "$RECEIPT_APP/Info.plist"
+/usr/libexec/PlistBuddy -c 'Set :HMUXDogfoodReadiness app-receipt-v9' "$RECEIPT_APP/Info.plist"
 if "$QUEUE_SCRIPT" enqueue --tag tstq --app "$RECEIPT_APP" --checkout "$FAKE_CHECKOUT" "${AUTH_ARGS[@]}" >/dev/null 2>&1; then
   fail "enqueue must fail closed on an unsupported app readiness contract"
 fi
-[[ ! -d "$CMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] || fail "rejected enqueues must not leave an entry"
+[[ ! -d "$HMUX_IPHONE_QUEUE_DIR/pending/tstq" ]] || fail "rejected enqueues must not leave an entry"
 ok "explicit readiness overrides, legacy entries stay mac-rpc, unknown modes fail closed"
 
 # --- unauthenticated enqueue is human-only -------------------------------------
 if "$QUEUE_SCRIPT" enqueue --tag tstq --app "$APP" --checkout "$FAKE_CHECKOUT" --no-sign-in >/dev/null 2>&1; then
-  fail "enqueue --no-sign-in without CMUX_ALLOW_UNAUTHENTICATED_INSTALL must be refused"
+  fail "enqueue --no-sign-in without HMUX_ALLOW_UNAUTHENTICATED_INSTALL must be refused"
 fi
-CMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 "$QUEUE_SCRIPT" enqueue --tag tstq --app "$APP" \
+HMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 "$QUEUE_SCRIPT" enqueue --tag tstq --app "$APP" \
   --checkout "$FAKE_CHECKOUT" --no-sign-in --allow-unauthenticated >/dev/null \
   || fail "enqueue --no-sign-in with the human allowance should be accepted"
-python3 - "$CMUX_IPHONE_QUEUE_DIR/pending/tstq/meta.json" <<'PY' \
+python3 - "$HMUX_IPHONE_QUEUE_DIR/pending/tstq/meta.json" <<'PY' \
   || fail "explicit unauthenticated marker should be persisted"
 import json, sys
 with open(sys.argv[1]) as fh:

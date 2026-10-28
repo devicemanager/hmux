@@ -11,9 +11,9 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
-RECEIPT_SCHEMA = "cmux.review-fabric/v1"
-POLICY_SCHEMA = "cmux.review-fabric-policy/v1"
-EVALUATION_SCHEMA = "cmux.review-fabric-evaluation/v1"
+RECEIPT_SCHEMA = "hmux.review-fabric/v1"
+POLICY_SCHEMA = "hmux.review-fabric-policy/v1"
+EVALUATION_SCHEMA = "hmux.review-fabric-evaluation/v1"
 
 RUN_STATUSES = {"queued", "running", "completed", "failed", "cancelled", "unavailable"}
 RUN_DISPOSITIONS = {"accept", "repair", "hold", "execute", "reject", "unavailable"}

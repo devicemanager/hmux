@@ -53,7 +53,7 @@ class E2ECompilationCache(unittest.TestCase):
                         RUNNER_TEMP=str(self.root), GITHUB_RUN_ID='11', GITHUB_RUN_ATTEMPT='1',
                         GITHUB_ENV=str(self.root / 'env'), GITHUB_OUTPUT=str(self.root / 'output'),
                         PATH=str(tools) + ':' + os.environ['PATH'], FIXTURE_XCODE='Xcode 26.6',
-                        CMUX_CI_CANONICAL_ROOT=str(self.root / 'canonical'))
+                        HMUX_CI_CANONICAL_ROOT=str(self.root / 'canonical'))
 
     def run_step(self, name, job='build', **env):
         return subprocess.run(['bash', '-eu', '-o', 'pipefail', '-c', step(name, job)['run']],
@@ -71,12 +71,12 @@ class E2ECompilationCache(unittest.TestCase):
 
     def test_repeat_runs_share_cache_paths_but_start_with_clean_products(self):
         first = self.prepare()
-        product = Path(first['CMUX_DERIVED_DATA_PATH']) / 'stale-product'
+        product = Path(first['HMUX_DERIVED_DATA_PATH']) / 'stale-product'
         product.write_text('old app')
         self.env.update(GITHUB_RUN_ID='12', GITHUB_RUN_ATTEMPT='2')
         second = self.prepare()
-        self.assertEqual(first['CMUX_DERIVED_DATA_PATH'], second['CMUX_DERIVED_DATA_PATH'])
-        self.assertEqual(first['CMUX_E2E_COMPILATION_CACHE'], second['CMUX_E2E_COMPILATION_CACHE'])
+        self.assertEqual(first['HMUX_DERIVED_DATA_PATH'], second['HMUX_DERIVED_DATA_PATH'])
+        self.assertEqual(first['HMUX_E2E_COMPILATION_CACHE'], second['HMUX_E2E_COMPILATION_CACHE'])
         self.assertEqual(first['fingerprint'], second['fingerprint'])
         self.assertFalse(product.exists())
 
@@ -97,11 +97,11 @@ class E2ECompilationCache(unittest.TestCase):
         # invocation must not compile anything.
         values = self.prepare()
         script = step('Run selected tests', TESTS)['run']
-        start = script.index('if [ "$TEST_TARGET" = "cmuxTests" ]; then')
+        start = script.index('if [ "$TEST_TARGET" = "hmuxTests" ]; then')
         end = script.index('\nset +e', start)
         construction = script[start:end]
-        for target, variable in (('cmuxTests', 'CMUX_APP_HOST_XCTESTRUN'),
-                                 ('cmuxUITests', 'CMUX_UI_XCTESTRUN')):
+        for target, variable in (('hmuxTests', 'HMUX_APP_HOST_XCTESTRUN'),
+                                 ('hmuxUITests', 'HMUX_UI_XCTESTRUN')):
             with self.subTest(target=target):
                 manifest = self.root / (target + '.xctestrun')
                 manifest.write_text('fixture')
@@ -121,20 +121,20 @@ class E2ECompilationCache(unittest.TestCase):
                 self.assertNotIn('build-for-testing', args)
                 for setting in args:
                     self.assertFalse(setting.startswith('COMPILATION_CACHE_'), setting)
-                    self.assertFalse(setting.startswith('CMUX_SKIP_ZIG_BUILD'), setting)
+                    self.assertFalse(setting.startswith('HMUX_SKIP_ZIG_BUILD'), setting)
 
     def test_a_missing_manifest_fails_instead_of_silently_compiling(self):
         values = self.prepare()
         script = step('Run selected tests', TESTS)['run']
-        start = script.index('if [ "$TEST_TARGET" = "cmuxTests" ]; then')
+        start = script.index('if [ "$TEST_TARGET" = "hmuxTests" ]; then')
         end = script.index('\nset +e', start)
         result = subprocess.run(['bash', '-eu', '-c',
             'ONLY_TESTING=()\n' + script[start:end]], cwd=self.workspace,
-            env=dict(self.env, **values, TEST_TARGET='cmuxTests', TEST_TIMEOUT='120',
-                     CMUX_APP_HOST_XCTESTRUN=str(self.root / 'absent.xctestrun')),
+            env=dict(self.env, **values, TEST_TARGET='hmuxTests', TEST_TIMEOUT='120',
+                     HMUX_APP_HOST_XCTESTRUN=str(self.root / 'absent.xctestrun')),
             text=True, capture_output=True)
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn('no cmuxTests test manifest', result.stdout + result.stderr)
+        self.assertIn('no hmuxTests test manifest', result.stdout + result.stderr)
 
     def test_unit_helper_skip_uses_clang_without_invoking_zig(self):
         zig = self.root / 'bin' / 'zig'
@@ -158,7 +158,7 @@ exit 97
         result = subprocess.run([
             'bash', str(ROOT / 'scripts/build-ghostty-cli-helper.sh'),
             '--target', 'aarch64-macos', '--output', str(output),
-        ], env=dict(self.env, CMUX_SKIP_ZIG_BUILD='1', ZIG_REQUIRED='0.0.0'),
+        ], env=dict(self.env, HMUX_SKIP_ZIG_BUILD='1', ZIG_REQUIRED='0.0.0'),
             text=True, capture_output=True)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(output.read_text(), 'fixture-clang-output')
@@ -249,9 +249,9 @@ exit 97
         # takes glaeda's gui token just before them, and leaves them to the
         # `test` job when take-gui gives way (3) or times out (1).
         here = step('Run the selected tests here', 'build')
-        self.assertEqual(here['env']['OWNED'], "${{ startsWith(env.CMUX_PRODUCT_RUNNER, 'glaeda-') }}")
+        self.assertEqual(here['env']['OWNED'], "${{ startsWith(env.HMUX_PRODUCT_RUNNER, 'glaeda-') }}")
         run = here['run']
-        self.assertIn('/Users/Shared/cmux-build-fleet/bin/glaeda-canonical-root', run)
+        self.assertIn('/Users/Shared/hmux-build-fleet/bin/glaeda-canonical-root', run)
         self.assertIn('take-gui --wait 300', run)
         self.assertIn('0|2) ;;', run, 'held, or a hook that gave the token at job start')
         self.assertIn('echo "tested=false"', run)
@@ -286,7 +286,7 @@ exit 97
         before, after = by_id('upload-product'), by_id('upload-product-after-tests')
         self.assertEqual(
             before['if'],
-            "${{ (vars.CI_E2E_TEST_IN_BUILD || '1') == '0' || !startsWith(env.CMUX_PRODUCT_RUNNER, 'glaeda-') }}")
+            "${{ (vars.CI_E2E_TEST_IN_BUILD || '1') == '0' || !startsWith(env.HMUX_PRODUCT_RUNNER, 'glaeda-') }}")
         self.assertEqual(step('Run the selected tests here', 'build')['if'],
                          "${{ (vars.CI_E2E_TEST_IN_BUILD || '1') != '0' }}",
                          'the deferral must defer exactly when this job tests')
@@ -338,14 +338,14 @@ exit 97
         for artifact_id, expected in (('', None), ('42', 42)):
             with self.subTest(artifact_id=artifact_id):
                 result = subprocess.run([sys.executable, '-c', body], env=dict(
-                    self.env, CMUX_RESTORE_STARTED_NS='0', CMUX_RESTORE_STATUS='0',
-                    CMUX_PRODUCT_FROM_PRODUCER='true', GITHUB_REPOSITORY='manaflow-ai/cmux',
+                    self.env, HMUX_RESTORE_STARTED_NS='0', HMUX_RESTORE_STATUS='0',
+                    HMUX_PRODUCT_FROM_PRODUCER='true', GITHUB_REPOSITORY='manaflow-ai/cmux',
                     ARTIFACT_ID=artifact_id, ARTIFACT_PROVIDER_DIGEST='', EXPECTED_SHA256='abc',
-                    CMUX_PRODUCT_CONTRACT='key', CMUX_PRODUCT_SOURCE_REVISION='a' * 40,
-                    CMUX_PRODUCT_PRODUCER_RUN_ID='11', CMUX_PRODUCT_PRODUCER_RUN_ATTEMPT='1',
+                    HMUX_PRODUCT_CONTRACT='key', HMUX_PRODUCT_SOURCE_REVISION='a' * 40,
+                    HMUX_PRODUCT_PRODUCER_RUN_ID='11', HMUX_PRODUCT_PRODUCER_RUN_ATTEMPT='1',
                     GITHUB_STEP_SUMMARY=''), text=True, capture_output=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
-                line = next(l for l in result.stdout.splitlines() if l.startswith('CMUX_TEST_PRODUCT_RESTORE '))
+                line = next(l for l in result.stdout.splitlines() if l.startswith('HMUX_TEST_PRODUCT_RESTORE '))
                 import json
                 record = json.loads(line.split(' ', 1)[1])
                 self.assertEqual(record['artifact_id'], expected)
@@ -357,7 +357,7 @@ exit 97
             with self.subTest(value=value):
                 (self.root / 'output').write_text('')
                 result = subprocess.run(['bash', '-eu', '-o', 'pipefail', '-c', script], cwd=self.workspace,
-                    env=dict(self.env, TEST_FILTER_INPUT='cmuxTests/Foo', RECORD_VIDEO_INPUT='false',
+                    env=dict(self.env, TEST_FILTER_INPUT='hmuxTests/Foo', RECORD_VIDEO_INPUT='false',
                              RUNNER_LABEL='blacksmith-6vcpu-macos-26', JOB_TIMEOUT=value),
                     text=True, capture_output=True)
                 self.assertEqual(result.returncode, 0, result.stderr)
@@ -365,7 +365,7 @@ exit 97
         for value in ('', 'ten', '4.5'):
             with self.subTest(value=value):
                 result = subprocess.run(['bash', '-eu', '-o', 'pipefail', '-c', script], cwd=self.workspace,
-                    env=dict(self.env, TEST_FILTER_INPUT='cmuxTests/Foo', RECORD_VIDEO_INPUT='false',
+                    env=dict(self.env, TEST_FILTER_INPUT='hmuxTests/Foo', RECORD_VIDEO_INPUT='false',
                              RUNNER_LABEL='blacksmith-6vcpu-macos-26', JOB_TIMEOUT=value),
                     text=True, capture_output=True)
                 self.assertNotEqual(result.returncode, 0)
@@ -379,14 +379,14 @@ exit 97
         admission = (ROOT / '.github/workflows/ci-macos.yml').read_text()
         self.assertIn('admission-derived-data-v1-${{ runner.os }}-${{ runner.arch }}-', admission)
         key = step('Compute the DerivedData seed key')
-        self.assertIn('canonical-fingerprint "$CMUX_DERIVED_DATA_PATH"', key['run'])
+        self.assertIn('canonical-fingerprint "$HMUX_DERIVED_DATA_PATH"', key['run'])
         self.assertIn('admission-derived-data-v1-${{ runner.os }}-${{ runner.arch }}-$fingerprint-', key['run'])
         start = step('Start the DerivedData seed download')
         self.assertIn('seed_derived_data.py start', start['run'])
         self.assertIn('"$TEST_REF"', start['run'])
         adopt = step('Adopt the DerivedData seed')
         self.assertIn('seed_derived_data.py adopt', adopt['run'])
-        self.assertIn('"$CMUX_CI_CANONICAL_SRC" "$CMUX_DERIVED_DATA_PATH"', adopt['run'])
+        self.assertIn('"$HMUX_CI_CANONICAL_SRC" "$HMUX_DERIVED_DATA_PATH"', adopt['run'])
         self.assertIn('"$TEST_REF"', adopt['run'])
         self.assertIs(adopt.get('continue-on-error'), True)
         resolve = step('Resolve Swift packages')
@@ -395,12 +395,12 @@ exit 97
         self.assertLess(names.index('Resolve Swift packages'), names.index('Adopt the DerivedData seed'))
         self.assertLess(names.index('Adopt the DerivedData seed'), names.index('Build the app-host and UI test product'))
         values = self.prepare()
-        self.assertEqual(values['CMUX_DERIVED_DATA_PATH'],
+        self.assertEqual(values['HMUX_DERIVED_DATA_PATH'],
                          str(self.root / 'canonical' / 'derived-data-compile-admission'))
         # The CAS path is a compiler argument: a different one than admission
         # passes invalidates every compile the seed carries.
-        self.assertIn('CMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas', admission)
-        self.assertEqual(values['CMUX_E2E_COMPILATION_CACHE'],
+        self.assertIn('HMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas', admission)
+        self.assertEqual(values['HMUX_E2E_COMPILATION_CACHE'],
                          str(self.root / 'canonical' / 'compile-admission-cas'))
 
     def test_the_test_job_verifies_the_product_before_using_it(self):
@@ -423,16 +423,16 @@ exit 97
         values = self.prepare()
         unrelated = self.root / 'keep'
         unrelated.mkdir()
-        rejected = self.run_step('Clean owned DerivedData', **dict(values, CMUX_DERIVED_DATA_PATH=str(unrelated)))
+        rejected = self.run_step('Clean owned DerivedData', **dict(values, HMUX_DERIVED_DATA_PATH=str(unrelated)))
         self.assertNotEqual(rejected.returncode, 0)
         self.assertTrue(unrelated.exists())
-        rejected = self.run_step('Clean owned DerivedData', **dict(values, CMUX_E2E_COMPILATION_CACHE=str(unrelated)))
+        rejected = self.run_step('Clean owned DerivedData', **dict(values, HMUX_E2E_COMPILATION_CACHE=str(unrelated)))
         self.assertNotEqual(rejected.returncode, 0)
-        self.assertTrue(Path(values['CMUX_DERIVED_DATA_PATH']).exists())
+        self.assertTrue(Path(values['HMUX_DERIVED_DATA_PATH']).exists())
         result = self.run_step('Clean owned DerivedData', **values)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertFalse(Path(values['CMUX_DERIVED_DATA_PATH']).exists())
-        self.assertFalse(Path(values['CMUX_E2E_COMPILATION_CACHE']).exists())
+        self.assertFalse(Path(values['HMUX_DERIVED_DATA_PATH']).exists())
+        self.assertFalse(Path(values['HMUX_E2E_COMPILATION_CACHE']).exists())
 
     def test_the_test_steps_cleanup_after_the_build_cleanup_when_preparation_was_skipped(self):
         # Run 36168944875: the screen-capture preflight failed, which skipped
@@ -443,7 +443,7 @@ exit 97
         result = self.run_step('Clean owned DerivedData', 'build', **values)
         self.assertEqual(result.returncode, 0, result.stderr)
         handed_over = dict(line.split('=', 1) for line in (self.root / 'env').read_text().splitlines())
-        self.assertEqual(handed_over.get('CMUX_DERIVED_DATA_PATH'), '')
+        self.assertEqual(handed_over.get('HMUX_DERIVED_DATA_PATH'), '')
         result = self.run_step('Clean owned DerivedData', TESTS, **dict(values, **handed_over))
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('nothing to clean', result.stdout)
@@ -463,14 +463,14 @@ exit 97
         # under RUNNER_TEMP: app-host cleanup refuses to inspect a host whose
         # DerivedData lives anywhere else.
         values = self.prepare_test_job()
-        derived = Path(values['CMUX_DERIVED_DATA_PATH'])
+        derived = Path(values['HMUX_DERIVED_DATA_PATH'])
         self.assertTrue(derived.is_relative_to(self.root))
         self.assertFalse(derived.is_relative_to(self.workspace))
-        self.assertNotIn('CMUX_E2E_COMPILATION_CACHE', values)
+        self.assertNotIn('HMUX_E2E_COMPILATION_CACHE', values)
         unrelated = self.root / 'keep'
         unrelated.mkdir()
         rejected = self.run_step('Clean owned DerivedData', TESTS,
-                                 **dict(values, CMUX_DERIVED_DATA_PATH=str(unrelated)))
+                                 **dict(values, HMUX_DERIVED_DATA_PATH=str(unrelated)))
         self.assertNotEqual(rejected.returncode, 0)
         self.assertTrue(unrelated.exists())
         result = self.run_step('Clean owned DerivedData', TESTS, **values)
@@ -479,7 +479,7 @@ exit 97
 
     def test_only_successful_trusted_main_build_can_seed(self):
         values = self.prepare()
-        cache = Path(values['CMUX_E2E_COMPILATION_CACHE'])
+        cache = Path(values['HMUX_E2E_COMPILATION_CACHE'])
         (cache / 'compiler-entry').write_bytes(b'cached')
         for ref, selected, on_main, outcome, allowed in (
             # A revision main already contains seeds, whether or not it is the tip.
@@ -528,7 +528,7 @@ exit 97
     def test_an_owned_mac_neither_restores_nor_saves_the_cache(self):
         # 8 owned builds on 2026-09-25 hit 0 to 6 entries (one outlier, 409)
         # while the transfers cost 1.5 to 3.5 min at the owned Macs' bandwidth.
-        owned = "!startsWith(env.CMUX_PRODUCT_RUNNER, 'glaeda-')"
+        owned = "!startsWith(env.HMUX_PRODUCT_RUNNER, 'glaeda-')"
         self.assertIn(owned, step('Restore E2E compilation cache')['if'])
         self.assertIn(owned, step('Bound E2E compilation cache')['if'])
         # The save only follows a bound that allowed it.
@@ -544,7 +544,7 @@ exit 97
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn('cache is empty', result.stdout)
         self.assertNotIn('save=true', (self.root / 'output').read_text())
-        (Path(values['CMUX_E2E_COMPILATION_CACHE']) / 'compiler-entry').write_bytes(b'cached')
+        (Path(values['HMUX_E2E_COMPILATION_CACHE']) / 'compiler-entry').write_bytes(b'cached')
         fake_du = self.root / 'bin' / 'du'
         fake_du.write_text('#!/bin/sh\nprintf "6291456 cache\\n"\n')
         fake_du.chmod(0o755)
@@ -555,9 +555,9 @@ exit 97
 
     def test_failed_restore_discards_partial_cache_without_removing_products(self):
         values = self.prepare()
-        cache = Path(values['CMUX_E2E_COMPILATION_CACHE'])
+        cache = Path(values['HMUX_E2E_COMPILATION_CACHE'])
         (cache / 'partial-database').write_bytes(b'incomplete')
-        product = Path(values['CMUX_DERIVED_DATA_PATH']) / 'keep'
+        product = Path(values['HMUX_DERIVED_DATA_PATH']) / 'keep'
         product.write_text('separate build products')
         result = self.run_step('Discard incomplete E2E compilation cache', **values)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -565,7 +565,7 @@ exit 97
         self.assertEqual(list(cache.iterdir()), [])
         self.assertTrue(product.exists())
         rejected = self.run_step('Discard incomplete E2E compilation cache',
-            **dict(values, CMUX_E2E_COMPILATION_CACHE=str(product.parent)))
+            **dict(values, HMUX_E2E_COMPILATION_CACHE=str(product.parent)))
         self.assertNotEqual(rejected.returncode, 0)
         self.assertTrue(product.exists())
 
@@ -681,7 +681,7 @@ else:
                 if mode != 'ok':
                     self.assertIn('the tests ran without video', summary.read_text())
                     self.assertIn('blacksmith-12vcpu-macos-26-Runner-x', summary.read_text())
-                self.assertEqual(list(root.glob('cmux-capture-preflight-*')), [])
+                self.assertEqual(list(root.glob('hmux-capture-preflight-*')), [])
                 if mode != 'no-user':
                     self.assertTrue(trace.exists(), result.stderr)
                     import json

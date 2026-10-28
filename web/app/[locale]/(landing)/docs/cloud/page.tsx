@@ -59,11 +59,11 @@ export default async function CloudOverviewPage({
         <li>{t("stepAgent")}</li>
       </ol>
       <p>{t("stepCli")}</p>
-      <CodeBlock lang="bash">{`cmux auth login
-cmux vm new --size 8g --name "api work"
-cmux vm ls
-cmux vm open brave-otter
-cmux vm agent --agent claude --machine brave-otter --sync -- "fix the failing tests"`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux auth login
+hmux vm new --size 8g --name "api work"
+hmux vm ls
+hmux vm open brave-otter
+hmux vm agent --agent claude --machine brave-otter --sync -- "fix the failing tests"`}</CodeBlock>
 
       <DocsHeading level={2} id="cloud-in-the-app">{t("appTitle")}</DocsHeading>
       <p>{t("appSidebar")}</p>
@@ -80,16 +80,16 @@ cmux vm agent --agent claude --machine brave-otter --sync -- "fix the failing te
 
       <DocsHeading level={2} id="cloud-from-the-cli">{t("cliIntroTitle")}</DocsHeading>
       <p>{t("cliIntroDesc")}</p>
-      <CodeBlock lang="bash">{`cmux vm              # list machines
-cmux vm --help
-cmux vm new --help
-cmux vm guide        # full Markdown guide
-cmux vm ls --json`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm              # list machines
+hmux vm --help
+hmux vm new --help
+hmux vm guide        # full Markdown guide
+hmux vm ls --json`}</CodeBlock>
 
       <DocsHeading level={2} id="base-machine">{t("baseTitle")}</DocsHeading>
       <p>{t("baseDesc")}</p>
-      <CodeBlock lang="bash">{`cmux vm base
-cmux vm base reset --reason "start clean"`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm base
+hmux vm base reset --reason "start clean"`}</CodeBlock>
 
       <DocsHeading level={2} id="next-steps">{t("nextTitle")}</DocsHeading>
       <ul>

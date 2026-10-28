@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import WebKit
 
 /// Owns one cancellable async bridge around `WKWebView.takeSnapshot(with:)`.

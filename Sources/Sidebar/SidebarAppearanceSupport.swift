@@ -1,14 +1,14 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFoundation
-import CmuxSidebar
+import HmuxAppKitSupportUI
+import HmuxFoundation
+import HmuxSidebar
 import Foundation
 import SwiftUI
-import CmuxSettings
+import HmuxSettings
 
 enum SidebarMatchTerminalBackgroundSettings {
     static let userDefaultsKey = "sidebarMatchTerminalBackground"
-    static let legacyAppliedSettingsFileDefaultKey = "cmux.settingsFile.sidebarMatchTerminalBackground.appliedDefault.v1"
+    static let legacyAppliedSettingsFileDefaultKey = "hmux.settingsFile.sidebarMatchTerminalBackground.appliedDefault.v1"
 }
 
 enum SidebarTabItemFontScale {
@@ -18,10 +18,10 @@ enum SidebarTabItemFontScale {
     }
 }
 
-/// Resolves AppKit colors against cmux's concrete terminal light/dark scheme.
+/// Resolves AppKit colors against hmux's concrete terminal light/dark scheme.
 ///
 /// AppKit semantic colors otherwise resolve against the window's effective
-/// appearance, which can differ from the active cmux theme. This value type is
+/// appearance, which can differ from the active hmux theme. This value type is
 /// shared by the SwiftUI and pure-AppKit sidebar paths so they never ask
 /// AppKit to make an independent appearance decision.
 struct SidebarAppearanceColorResolver {
@@ -30,7 +30,7 @@ struct SidebarAppearanceColorResolver {
         GhosttyApp.shared.effectiveTerminalColorSchemePreference == .dark ? .dark : .light
     }
 
-    /// Resolves an AppKit semantic color against a concrete cmux scheme.
+    /// Resolves an AppKit semantic color against a concrete hmux scheme.
     func resolvedColor(
         _ color: NSColor,
         for colorScheme: ColorScheme,
@@ -64,7 +64,7 @@ struct SidebarAppearanceColorResolver {
         )
     }
 
-    /// Returns the active-control foreground for a concrete cmux scheme.
+    /// Returns the active-control foreground for a concrete hmux scheme.
     func activeForegroundColor(
         opacity: CGFloat,
         for colorScheme: ColorScheme
@@ -134,7 +134,7 @@ func titlebarControlAppearance() -> WindowAppearanceSnapshot {
 /// palette matches the icons instead of the window appearance.
 @MainActor
 func titlebarControlColorScheme() -> ColorScheme {
-    cmuxReadableColorScheme(for: titlebarControlAppearance().compositedTerminalBackgroundColor)
+    hmuxReadableColorScheme(for: titlebarControlAppearance().compositedTerminalBackgroundColor)
 }
 
 @MainActor
@@ -143,13 +143,13 @@ func titlebarControlForegroundNSColor(opacity: CGFloat) -> NSColor {
 }
 
 func titlebarControlForegroundNSColor(opacity: CGFloat, appearance: WindowAppearanceSnapshot) -> NSColor {
-    cmuxReadableForegroundNSColor(
+    hmuxReadableForegroundNSColor(
         on: appearance.compositedTerminalBackgroundColor,
         opacity: opacity
     )
 }
 
-extension CmuxAccentColor {
+extension HmuxAccentColor {
     /// The accent for a SwiftUI color scheme.
     func nsColor(for colorScheme: ColorScheme) -> NSColor {
         nsColor(isDark: colorScheme == .dark)
@@ -165,38 +165,38 @@ extension CmuxAccentColor {
 /// Fill for an unread notification badge: the Notification Badge color
 /// setting when it holds a valid hex, else `fallback`. Workspace rows and
 /// group headers both resolve through here so the setting reaches every badge.
-func cmuxNotificationBadgeNSColor(hex: String?, fallback: @autoclosure () -> NSColor) -> NSColor {
+func hmuxNotificationBadgeNSColor(hex: String?, fallback: @autoclosure () -> NSColor) -> NSColor {
     if let hex, let color = NSColor(hex: hex) {
         return color
     }
     return fallback()
 }
 
-func cmuxReadableColorScheme(for backgroundColor: NSColor) -> ColorScheme {
-    let backgroundLuminance = cmuxRelativeLuminance(backgroundColor)
-    let whiteContrast = cmuxContrastRatio(backgroundLuminance, 1.0)
-    let blackContrast = cmuxContrastRatio(backgroundLuminance, 0.0)
+func hmuxReadableColorScheme(for backgroundColor: NSColor) -> ColorScheme {
+    let backgroundLuminance = hmuxRelativeLuminance(backgroundColor)
+    let whiteContrast = hmuxContrastRatio(backgroundLuminance, 1.0)
+    let blackContrast = hmuxContrastRatio(backgroundLuminance, 0.0)
     return whiteContrast >= blackContrast ? .dark : .light
 }
 
-func cmuxReadableForegroundNSColor(on backgroundColor: NSColor, opacity: CGFloat) -> NSColor {
+func hmuxReadableForegroundNSColor(on backgroundColor: NSColor, opacity: CGFloat) -> NSColor {
     let clampedOpacity = max(0, min(opacity, 1))
-    return cmuxReadableForegroundBaseColor(on: backgroundColor)
+    return hmuxReadableForegroundBaseColor(on: backgroundColor)
         .withAlphaComponent(clampedOpacity)
 }
 
-func cmuxReadableForegroundNSColor(
+func hmuxReadableForegroundNSColor(
     preferred preferredColor: NSColor,
     on backgroundColor: NSColor,
     minimumContrast: CGFloat = 4.5
 ) -> NSColor {
     let foregroundForComparison = preferredColor.alphaComponent < 1
-        ? cmuxCompositedNSColor(preferredColor, over: backgroundColor)
+        ? hmuxCompositedNSColor(preferredColor, over: backgroundColor)
         : preferredColor
-    guard cmuxContrastRatio(foreground: foregroundForComparison, background: backgroundColor) < minimumContrast else {
+    guard hmuxContrastRatio(foreground: foregroundForComparison, background: backgroundColor) < minimumContrast else {
         return preferredColor
     }
-    return cmuxReadableForegroundNSColor(on: backgroundColor, opacity: preferredColor.alphaComponent)
+    return hmuxReadableForegroundNSColor(on: backgroundColor, opacity: preferredColor.alphaComponent)
 }
 
 /// Contrast an explicit status or log color needs against the selected row
@@ -216,9 +216,9 @@ func sidebarStatusPresentationNSColor(
     guard isActive else { return explicit }
 
     let foregroundForComparison = explicit.alphaComponent < 1
-        ? cmuxCompositedNSColor(explicit, over: selectedBackground)
+        ? hmuxCompositedNSColor(explicit, over: selectedBackground)
         : explicit
-    return cmuxContrastRatio(foreground: foregroundForComparison, background: selectedBackground)
+    return hmuxContrastRatio(foreground: foregroundForComparison, background: selectedBackground)
         >= sidebarStatusMinimumContrast
         ? explicit
         : fallback()
@@ -228,7 +228,7 @@ func sidebarLogPresentationNSColor(
     level: SidebarLogLevel,
     isActive: Bool,
     colorScheme: ColorScheme,
-    accent: CmuxAccentColor,
+    accent: HmuxAccentColor,
     selectedBackground: NSColor,
     fallback: @autoclosure () -> NSColor
 ) -> NSColor {
@@ -255,7 +255,7 @@ func sidebarLogPresentationNSColor(
     )
 }
 
-func cmuxCompositedNSColor(_ foreground: NSColor, over background: NSColor) -> NSColor {
+func hmuxCompositedNSColor(_ foreground: NSColor, over background: NSColor) -> NSColor {
     let fg = foreground.usingColorSpace(.sRGB) ?? foreground
     let bg = background.usingColorSpace(.sRGB) ?? background
     var foregroundRed: CGFloat = 0
@@ -279,18 +279,18 @@ func cmuxCompositedNSColor(_ foreground: NSColor, over background: NSColor) -> N
     )
 }
 
-func cmuxContrastRatio(foreground: NSColor, background: NSColor) -> CGFloat {
-    cmuxContrastRatio(
-        cmuxRelativeLuminance(foreground),
-        cmuxRelativeLuminance(background)
+func hmuxContrastRatio(foreground: NSColor, background: NSColor) -> CGFloat {
+    hmuxContrastRatio(
+        hmuxRelativeLuminance(foreground),
+        hmuxRelativeLuminance(background)
     )
 }
 
-private func cmuxReadableForegroundBaseColor(on backgroundColor: NSColor) -> NSColor {
-    cmuxReadableColorScheme(for: backgroundColor) == .dark ? .white : .black
+private func hmuxReadableForegroundBaseColor(on backgroundColor: NSColor) -> NSColor {
+    hmuxReadableColorScheme(for: backgroundColor) == .dark ? .white : .black
 }
 
-private func cmuxRelativeLuminance(_ color: NSColor) -> CGFloat {
+private func hmuxRelativeLuminance(_ color: NSColor) -> CGFloat {
     let srgb = color.usingColorSpace(.sRGB) ?? color
     var red: CGFloat = 0
     var green: CGFloat = 0
@@ -310,7 +310,7 @@ private func cmuxRelativeLuminance(_ color: NSColor) -> CGFloat {
         + 0.0722 * linearized(blue)
 }
 
-private func cmuxContrastRatio(_ lhs: CGFloat, _ rhs: CGFloat) -> CGFloat {
+private func hmuxContrastRatio(_ lhs: CGFloat, _ rhs: CGFloat) -> CGFloat {
     let lighter = max(lhs, rhs)
     let darker = min(lhs, rhs)
     return (lighter + 0.05) / (darker + 0.05)
@@ -360,7 +360,7 @@ enum SidebarRemoteErrorCopySupport {
 /// window's selection. Increase Contrast strengthens both. Picked from a
 /// pairwise comparison of eight treatments across accents and sidebar themes
 /// (manaflow-ai/cmux#14890).
-struct CmuxSelectionFill: Equatable {
+struct HmuxSelectionFill: Equatable {
     let color: NSColor
     let edgeColor: NSColor?
 
@@ -369,7 +369,7 @@ struct CmuxSelectionFill: Equatable {
         isEmphasized: Bool,
         increaseContrast: Bool = false,
         isSecondary: Bool = false
-    ) -> CmuxSelectionFill {
+    ) -> HmuxSelectionFill {
         let isDark = colorScheme == .dark
         let base: NSColor
         let fillAlpha: CGFloat
@@ -387,7 +387,7 @@ struct CmuxSelectionFill: Equatable {
         // primary strength so the active row stays the clear anchor.
         let scale: CGFloat = isSecondary ? 0.55 : 1
         let resolver = SidebarAppearanceColorResolver()
-        return CmuxSelectionFill(
+        return HmuxSelectionFill(
             color: resolver.resolvedColor(base, for: colorScheme, opacity: fillAlpha * scale),
             edgeColor: resolver.resolvedColor(base, for: colorScheme, opacity: edgeAlpha * scale)
         )
@@ -406,7 +406,7 @@ func sidebarSelectedWorkspaceBackgroundNSColor(
     subtleSelection: Bool = false,
     isEmphasized: Bool = true,
     increaseContrast: Bool = false,
-    accent: CmuxAccentColor = CmuxAccentColor()
+    accent: HmuxAccentColor = HmuxAccentColor()
 ) -> NSColor {
     if let hex = sidebarSelectionColorHex,
        let parsed = NSColor(hex: hex) {
@@ -416,12 +416,12 @@ func sidebarSelectedWorkspaceBackgroundNSColor(
         return accent.nsColor(for: colorScheme)
     }
     let surface = NSColor(white: colorScheme == .dark ? 0.16 : 0.93, alpha: 1)
-    let fill = CmuxSelectionFill.resolve(
+    let fill = HmuxSelectionFill.resolve(
         colorScheme: colorScheme,
         isEmphasized: isEmphasized,
         increaseContrast: increaseContrast
     )
-    return cmuxCompositedNSColor(fill.color, over: surface)
+    return hmuxCompositedNSColor(fill.color, over: surface)
 }
 
 func sidebarSelectedWorkspaceForegroundNSColor(opacity: CGFloat) -> NSColor {
@@ -436,11 +436,11 @@ func sidebarSelectedWorkspaceForegroundNSColor(
     opacity: CGFloat
 ) -> NSColor {
     let clampedOpacity = max(0, min(opacity, 1))
-    let whiteContrast = cmuxContrastRatio(foreground: .white, background: backgroundColor)
+    let whiteContrast = hmuxContrastRatio(foreground: .white, background: backgroundColor)
     guard whiteContrast < 2.75 else {
         return NSColor.white.withAlphaComponent(clampedOpacity)
     }
-    return cmuxReadableForegroundNSColor(on: backgroundColor, opacity: clampedOpacity)
+    return hmuxReadableForegroundNSColor(on: backgroundColor, opacity: clampedOpacity)
 }
 
 /// Whether selected rows paint the subtle tint and hairline. Only the
@@ -472,7 +472,7 @@ func sidebarGroupHeaderAnchorActiveEdgeNSColor(
         subtleSelection: subtleSelection,
         sidebarSelectionColorHex: sidebarSelectionColorHex
     ) else { return nil }
-    return CmuxSelectionFill.resolve(
+    return HmuxSelectionFill.resolve(
         colorScheme: colorScheme,
         isEmphasized: false,
         increaseContrast: increaseContrast
@@ -515,7 +515,7 @@ func sidebarWorkspaceRowBackgroundStyle(
     unselectedFillOpacity: Double = 0.7,
     isEmphasized: Bool = true,
     increaseContrast: Bool = false,
-    accent: CmuxAccentColor = CmuxAccentColor()
+    accent: HmuxAccentColor = HmuxAccentColor()
 ) -> SidebarWorkspaceRowBackgroundStyle {
     // Increase Contrast: the multi-selection wash is otherwise too faint to
     // read against the sidebar material.
@@ -536,7 +536,7 @@ func sidebarWorkspaceRowBackgroundStyle(
         sidebarSelectionColorHex: sidebarSelectionColorHex
     )
     func calmFill(isSecondary: Bool) -> SidebarWorkspaceRowBackgroundStyle {
-        let fill = CmuxSelectionFill.resolve(
+        let fill = HmuxSelectionFill.resolve(
             colorScheme: colorScheme,
             isEmphasized: isEmphasized,
             increaseContrast: increaseContrast,

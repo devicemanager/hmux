@@ -248,11 +248,11 @@ describe("admin users route", () => {
     currentUser = adminUser();
     directory = [
       stackUser({ id: "u1", primaryEmail: "pat@example.com" }),
-      stackUser({ id: "u2", primaryEmail: "sam@example.com", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } }),
+      stackUser({ id: "u2", primaryEmail: "sam@example.com", clientReadOnlyMetadata: { hmuxVmPlan: "pro" } }),
     ];
     teamDirectory = [
       stackTeam({ id: "t1", displayName: "Acme" }),
-      stackTeam({ id: "t2", displayName: "Pat Labs", clientReadOnlyMetadata: { cmuxVmPlan: "team" } }),
+      stackTeam({ id: "t2", displayName: "Pat Labs", clientReadOnlyMetadata: { hmuxVmPlan: "team" } }),
     ];
     pendingGrantRows = [];
     subscriptionRows = [];
@@ -284,7 +284,7 @@ describe("admin users route", () => {
       stackUser({ id: "lookalike", primaryEmail: "pat@manaflow.ai.evil.com" }),
       stackUser({ id: "subdomain", primaryEmail: "pat@sub.cmux.com" }),
       stackUser({ id: "unverified", primaryEmail: "impostor@manaflow.ai", primaryEmailVerified: false }),
-      stackUser({ id: "unverified-cmux", primaryEmail: "impostor@cmux.com", primaryEmailVerified: false }),
+      stackUser({ id: "unverified-hmux", primaryEmail: "impostor@cmux.com", primaryEmailVerified: false }),
       stackUser({ id: "no-email", primaryEmail: null }),
     ]) {
       currentUser = user;
@@ -375,8 +375,8 @@ describe("admin users route", () => {
     const body = (await response.json()) as { user: Record<string, unknown> };
     expect(body.user).toMatchObject({ id: "u1", isPro: true, manualPlanId: "pro" });
     const target = directory[0]!;
-    expect(target.clientReadOnlyMetadata).toEqual({ cmuxVmPlan: "pro" });
-    expect(target.serverMetadata.cmuxAdminPlanGrant).toMatchObject({
+    expect(target.clientReadOnlyMetadata).toEqual({ hmuxVmPlan: "pro" });
+    expect(target.serverMetadata.hmuxAdminPlanGrant).toMatchObject({
       plan: "pro",
       byUserId: "admin-1",
       byEmail: "admin@manaflow.ai",
@@ -420,8 +420,8 @@ describe("admin teams route", () => {
       isTeam: true,
       manualPlanId: "team",
     });
-    expect(teamDirectory[0]?.clientReadOnlyMetadata).toEqual({ cmuxVmPlan: "team" });
-    expect(teamDirectory[0]?.serverMetadata.cmuxAdminPlanGrant).toMatchObject({ plan: "team", byUserId: "admin-1" });
+    expect(teamDirectory[0]?.clientReadOnlyMetadata).toEqual({ hmuxVmPlan: "team" });
+    expect(teamDirectory[0]?.serverMetadata.hmuxAdminPlanGrant).toMatchObject({ plan: "team", byUserId: "admin-1" });
 
     const removed = await POST_TEAMS(postRequest({ teamId: "t1", plan: null }, {}, "/api/admin/teams"));
     expect(removed.status).toBe(200);
@@ -542,7 +542,7 @@ describe("admin pro-users routes", () => {
     subscriptionListRows = [
       { userId: "u1", subscriptionId: "sub_1", status: "active", cancelAtPeriodEnd: false, currentPeriodEnd: null, email: "pat@example.com" },
     ];
-    directory = [stackUser({ id: "u9", primaryEmail: "granted@example.com", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } })];
+    directory = [stackUser({ id: "u9", primaryEmail: "granted@example.com", clientReadOnlyMetadata: { hmuxVmPlan: "pro" } })];
     listUsers.mockClear();
   });
 

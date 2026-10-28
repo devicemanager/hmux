@@ -8,7 +8,7 @@ this, so "machine failure" means one thing everywhere.
 
 Add a signature only for an error that happens before the first test starts
 and that the code under test cannot cause. "never finished bootstrapping" is
-not one: an app-hosted test prints it when cmux itself crashes at launch.
+not one: an app-hosted test prints it when hmux itself crashes at launch.
 """
 from __future__ import annotations
 
@@ -25,9 +25,9 @@ SIGNATURES = (
     # scripts/ci/brew-ensure.sh, when a package the tests need cannot be
     # installed. Its own line, so classification does not depend on Homebrew's
     # wording reaching the log.
-    ("[cmux-ci machine: brew-provision]", "the Mac is missing a package the tests need and Homebrew could not install it"),
+    ("[hmux-ci machine: brew-provision]", "the Mac is missing a package the tests need and Homebrew could not install it"),
     # scripts/select-ci-xcode.sh, before any build, on a Mac without the pinned Xcode.
-    ("[cmux-ci machine: xcode-pin-missing]", "the Mac does not have the Xcode the job pins"),
+    ("[hmux-ci machine: xcode-pin-missing]", "the Mac does not have the Xcode the job pins"),
     ("Pinned Xcode developer dir does not exist", "the Mac does not have the Xcode the job pins"),
     ("Pinned Xcode developer dir has no usable macOS SDK", "the Mac does not have the Xcode the job pins"),
     ("the version scripts/ci/xcode-pins.txt pins for its pool", "the Mac does not have the Xcode the job pins"),

@@ -9,7 +9,7 @@ import {
 } from "../../../../../services/vms/routeHelpers";
 import { setSpanAttributes } from "../../../../../services/telemetry";
 import { runVmRoute } from "../../../../../services/vms/routeWorkflow";
-import { openAttachEndpoint, openVmCmuxRemote } from "../../../../../services/vms/workflows";
+import { openAttachEndpoint, openVmHmuxRemote } from "../../../../../services/vms/workflows";
 import { vmModelPlaneRevoker } from "../../../../../services/vms/modelPlaneGateway";
 import {
   capabilityList,
@@ -32,7 +32,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/attach-endpoint",
-    { "cmux.vm.operation": "open_attach" },
+    { "hmux.vm.operation": "open_attach" },
     "/api/vm/[id]/attach-endpoint failed",
     async ({ user, span }) => {
       const { id } = await params;
@@ -52,13 +52,13 @@ export async function POST(
       const sessionTitle = optionalString(body.title ?? body.sessionTitle ?? body.session_title);
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
-      // Transport selection: "cmux-remote" is the cmux-tui remote daemon, the only
+      setSpanAttributes(span, { "hmux.vm.id": id });
+      // Transport selection: "hmux-remote" is the hmux-tui remote daemon, the only
       // transport current Cloud machines serve. Clients that do not ask may use a
       // legacy WebSocket PTY/RPC endpoint only if a future provider advertises one;
-      // a cmux-tui-only machine answers 409 vm_attach_transport_unsupported.
+      // a hmux-tui-only machine answers 409 vm_attach_transport_unsupported.
       const transport = optionalString(body.transport);
-      if (transport === "cmux-remote") {
+      if (transport === "hmux-remote") {
         let deviceFingerprint: string | undefined;
         try {
           deviceFingerprint = optionalClientIdentifier(body.deviceFingerprint ?? body.device_fingerprint, "deviceFingerprint");
@@ -69,8 +69,8 @@ export async function POST(
           }, 400);
         }
         const clientCapabilities = capabilityList(body.clientCapabilities ?? body.client_capabilities);
-        setSpanAttributes(span, { "cmux.vm.attach.transport": "cmux-remote" });
-        const run = await runVmRoute(openVmCmuxRemote({
+        setSpanAttributes(span, { "hmux.vm.attach.transport": "hmux-remote" });
+        const run = await runVmRoute(openVmHmuxRemote({
           userId: user.id,
           billingTeamId: account.entitlements.billingTeamId,
           maxActiveVms: account.entitlements.maxActiveVms,
@@ -89,11 +89,11 @@ export async function POST(
       if (transport && transport !== "websocket") {
         return jsonResponse({
           error: "invalid_request",
-          message: `Unknown attach transport "${transport}". Use "websocket" or "cmux-remote".`,
+          message: `Unknown attach transport "${transport}". Use "websocket" or "hmux-remote".`,
         }, 400);
       }
-      setSpanAttributes(span, { "cmux.vm.attach.require_daemon": requireDaemon });
-      if (sessionId) setSpanAttributes(span, { "cmux.vm.attach.session_id": sessionId });
+      setSpanAttributes(span, { "hmux.vm.attach.require_daemon": requireDaemon });
+      if (sessionId) setSpanAttributes(span, { "hmux.vm.attach.session_id": sessionId });
       const run = await runVmRoute(openAttachEndpoint({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,
@@ -107,7 +107,7 @@ export async function POST(
       }), { request, deadline: { operation: "attach", continuationKey: `attach:${id}` } });
       if (!run.ok) return run.response;
       const endpoint = run.value;
-      setSpanAttributes(span, { "cmux.vm.attach.transport": endpoint.transport });
+      setSpanAttributes(span, { "hmux.vm.attach.transport": endpoint.transport });
       return jsonResponse(endpoint);
     },
   );

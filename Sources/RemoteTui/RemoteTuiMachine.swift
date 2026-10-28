@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxCloudTui
-import CmuxCore
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCloudTui
+import HmuxCore
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Hosting metadata for the shared terminal provider. SSH never requires a Cloud account.

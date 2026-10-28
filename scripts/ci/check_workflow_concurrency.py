@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Warn when a long, macOS or dispatched workflow can pile up runs in the queue.
 
-On 2026-10-19 cmuxterm-hq's cmux-shadow-release-compile.yml queued about 247
+On 2026-10-19 hmuxterm-hq's hmux-shadow-release-compile.yml queued about 247
 sixty-minute runs: every dispatch got its own concurrency group, so nothing
-ever superseded anything (fixed in cmuxterm-hq#2568).
+ever superseded anything (fixed in hmuxterm-hq#2568).
 
 A workflow is checked when it is triggered by workflow_dispatch,
 repository_dispatch or pull_request(_target) and at least one of its jobs runs

@@ -1,0 +1,4 @@
+interface:
+  display_name: "hmux Keyboard Shortcuts"
+  short_description: "Customize hmux shortcuts and preset layouts."
+  default_prompt: "Use this skill to help choose and apply hmux keyboard shortcut templates: inspect current bindings, propose layouts, apply selected action paths, validate hmux.json, and report exact revert commands."

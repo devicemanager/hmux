@@ -1,8 +1,8 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxBrowser
-import CmuxCore
-import CmuxSettings
+import HmuxBrowser
+import HmuxCore
+import HmuxSettings
 import Foundation
 import WebKit
 
@@ -56,14 +56,14 @@ struct BrowserExternalNavigationHandler {
         return policyCache.currentPolicy().matches(target)
     }
 
-    /// Where a link chosen in cmux UI opens.
+    /// Where a link chosen in hmux UI opens.
     enum LinkDestination: Equatable {
         case embeddedBrowser
         case systemBrowser
     }
 
     /// The destination for a link the user chose in the sidebar.
-    /// `prefersEmbeddedBrowser` is the "open sidebar links in the cmux browser"
+    /// `prefersEmbeddedBrowser` is the "open sidebar links in the hmux browser"
     /// preference. A matching external-open rule outranks it: a site listed there
     /// cannot work in the embedded web view at all. The rules are about web pages,
     /// so other schemes keep following the preference.

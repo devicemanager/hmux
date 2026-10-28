@@ -13,7 +13,7 @@ struct FixtureProcess: Sendable {
     let memorySource: FixtureMemorySource
 }
 
-struct CmuxTopProcessSnapshot: MemoryPressureAggregateProcessSnapshot {
+struct HmuxTopProcessSnapshot: MemoryPressureAggregateProcessSnapshot {
     let enumerationIsComplete: Bool
     let enumerationMissingProcessCount: Int
     private let rootPID: Int
@@ -71,7 +71,7 @@ struct CmuxTopProcessSnapshot: MemoryPressureAggregateProcessSnapshot {
 
     static func captureCached(
         includeProcessDetails: Bool,
-        includeCMUXScope: Bool,
+        includeHMUXScope: Bool,
         maximumAge: TimeInterval
     ) async -> Self {
         fatalError("The probe must use its injected process snapshot")
@@ -115,7 +115,7 @@ struct MemoryPressureCoalitionFixture {
             return
         }
 
-        let snapshot = CmuxTopProcessSnapshot(scenario: scenario)
+        let snapshot = HmuxTopProcessSnapshot(scenario: scenario)
         let sampler = DarwinMemoryPressureAggregateSampler(
             processID: 101,
             snapshotProvider: { snapshot },
@@ -135,7 +135,7 @@ struct MemoryPressureCoalitionFixture {
         let sampler = DarwinMemoryPressureAggregateSampler(
             processID: processID,
             snapshotProvider: {
-                CmuxTopProcessSnapshot(scenario: "complete-tree", rootPID: processID)
+                HmuxTopProcessSnapshot(scenario: "complete-tree", rootPID: processID)
             },
             coalitionSampler: DarwinMemoryPressureCoalitionSampler(),
             physicalMemoryProvider: { ProcessInfo.processInfo.physicalMemory },

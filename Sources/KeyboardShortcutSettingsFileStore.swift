@@ -1,28 +1,28 @@
-import CmuxBrowser
+import HmuxBrowser
 import Combine
-import CmuxFoundation
-import CmuxSettings
+import HmuxFoundation
+import HmuxSettings
 import Foundation
 import os
-nonisolated private let cmuxSettingsFileStoreLogger = Logger(subsystem: "com.cmuxterm.app", category: "SettingsStore")
+nonisolated private let hmuxSettingsFileStoreLogger = Logger(subsystem: "com.hmuxterm.app", category: "SettingsStore")
 
-final class CmuxSettingsFileStore {
+final class HmuxSettingsFileStore {
     static let currentSchemaVersion = 1
     static let schemaURLString = "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux.schema.json"
     private static let legacySchemaURLString = "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux-settings.schema.json"
-    private static let releaseBundleIdentifier = "com.cmuxterm.app"
-    private static let backupsDefaultsKey = "cmux.settingsFile.backups.v1"
-    private static let importedManagedDefaultsDefaultsKey = "cmux.settingsFile.importedManagedDefaults.v1"
+    private static let releaseBundleIdentifier = "com.hmuxterm.app"
+    private static let backupsDefaultsKey = "hmux.settingsFile.backups.v1"
+    private static let importedManagedDefaultsDefaultsKey = "hmux.settingsFile.importedManagedDefaults.v1"
     fileprivate static let socketPasswordBackupIdentifier = "automation.socketPassword"
 
     static var defaultPrimaryPath: String {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return (home as NSString).appendingPathComponent(".config/cmux/cmux.json")
+        return (home as NSString).appendingPathComponent(".config/hmux/hmux.json")
     }
 
     static var defaultFallbackPath: String? {
         let home = FileManager.default.homeDirectoryForCurrentUser.path
-        return (home as NSString).appendingPathComponent(".config/cmux/settings.json")
+        return (home as NSString).appendingPathComponent(".config/hmux/settings.json")
     }
 
     static var defaultApplicationSupportFallbackPath: String? {
@@ -74,9 +74,9 @@ final class CmuxSettingsFileStore {
     private(set) var activeSourcePath: String?
 
     init(
-        primaryPath: String = CmuxSettingsFileStore.defaultPrimaryPath,
-        fallbackPath: String? = CmuxSettingsFileStore.defaultFallbackPath,
-        additionalFallbackPaths: [String] = [CmuxSettingsFileStore.defaultApplicationSupportFallbackPath].compactMap { $0 },
+        primaryPath: String = HmuxSettingsFileStore.defaultPrimaryPath,
+        fallbackPath: String? = HmuxSettingsFileStore.defaultFallbackPath,
+        additionalFallbackPaths: [String] = [HmuxSettingsFileStore.defaultApplicationSupportFallbackPath].compactMap { $0 },
         fileManager: FileManager = .default,
         notificationCenter: NotificationCenter = .default,
         userDefaults: UserDefaults = .standard,
@@ -219,7 +219,7 @@ final class CmuxSettingsFileStore {
     }
 
     /// The `when`-clause override for an action parsed from `shortcuts.when` in
-    /// cmux.json, or `nil` when the action has no configured override (so the
+    /// hmux.json, or `nil` when the action has no configured override (so the
     /// caller falls back to the action's built-in ``shortcutContext``).
     func whenClause(for action: KeyboardShortcutSettings.Action) -> ShortcutWhenClause? {
         synchronized { whenClausesByAction[action] }
@@ -259,7 +259,7 @@ final class CmuxSettingsFileStore {
             try contents.write(to: fileURL, options: [.atomic])
             try fileManager.setAttributes([.posixPermissions: 0o600], ofItemAtPath: fileURL.path)
         } catch {
-            cmuxSettingsFileStoreLogger.warning("failed to bootstrap \(self.primaryPath, privacy: .private(mask: .hash)): \(String(describing: error), privacy: .private(mask: .hash))")
+            hmuxSettingsFileStoreLogger.warning("failed to bootstrap \(self.primaryPath, privacy: .private(mask: .hash)): \(String(describing: error), privacy: .private(mask: .hash))")
         }
     }
 
@@ -338,8 +338,8 @@ final class CmuxSettingsFileStore {
                 let fontOnlyIssues = !snapshot.invalidManagedUserDefaultKeys.isEmpty
                     && issues.count == snapshot.invalidManagedUserDefaultKeys.count
                     && issues.allSatisfy {
-                        $0.contains(CmuxJSONFontSettings.sidebarPath)
-                            || $0.contains(CmuxJSONFontSettings.surfaceTabBarPath)
+                        $0.contains(HmuxJSONFontSettings.sidebarPath)
+                            || $0.contains(HmuxJSONFontSettings.surfaceTabBarPath)
                     }
                 if fontOnlyIssues, let lastGoodResolvedSettings {
                     for key in snapshot.invalidManagedUserDefaultKeys {
@@ -398,7 +398,7 @@ final class CmuxSettingsFileStore {
             return .missing
         }
         guard let data = fileManager.contents(atPath: path), !data.isEmpty else {
-            return .invalid(Self.configurationIssue(path: path, data: Data(), message: "cmux.json is empty"))
+            return .invalid(Self.configurationIssue(path: path, data: Data(), message: "hmux.json is empty"))
         }
         do {
             let sanitized = try JSONCParser.preprocess(data: data)
@@ -407,7 +407,7 @@ final class CmuxSettingsFileStore {
                 return .invalid(Self.configurationIssue(
                     path: path,
                     data: data,
-                    message: CmuxConfigValidationLocalization().string(
+                    message: HmuxConfigValidationLocalization().string(
                         "config.validation.cli.doctor.topLevelObject",
                         defaultValue: "top-level value must be a JSON object"
                     )
@@ -426,7 +426,7 @@ final class CmuxSettingsFileStore {
             parsingIssues = []
             return .parsed(snapshot, malformedAutomation: malformedAutomation, issues: issues)
         } catch {
-            cmuxSettingsFileStoreLogger.warning("parse error at \(path, privacy: .private(mask: .hash)): \(String(describing: error), privacy: .private(mask: .hash))")
+            hmuxSettingsFileStoreLogger.warning("parse error at \(path, privacy: .private(mask: .hash)): \(String(describing: error), privacy: .private(mask: .hash))")
             return .invalid(Self.configurationIssue(path: path, data: data, message: String(describing: error)))
         }
     }
@@ -450,7 +450,7 @@ final class CmuxSettingsFileStore {
     private func parseSettingsFile(root: [String: Any], sourcePath: String) -> ResolvedSettingsSnapshot {
         let schemaVersion = jsonInt(root["schemaVersion"]) ?? 1
         if schemaVersion > Self.currentSchemaVersion {
-            cmuxSettingsFileStoreLogger.warning("\(sourcePath, privacy: .private(mask: .hash)) uses future schemaVersion \(schemaVersion, privacy: .private(mask: .hash)); parsing known fields only")
+            hmuxSettingsFileStoreLogger.warning("\(sourcePath, privacy: .private(mask: .hash)) uses future schemaVersion \(schemaVersion, privacy: .private(mask: .hash)); parsing known fields only")
         }
 
         var snapshot = ResolvedSettingsSnapshot(path: sourcePath)
@@ -825,12 +825,12 @@ final class CmuxSettingsFileStore {
             for (rawName, rawValue) in rawColors {
                 let name = rawName.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !name.isEmpty else {
-                    cmuxSettingsFileStoreLogger.warning("ignoring empty workspace color name in \(sourcePath, privacy: .private(mask: .hash))")
+                    hmuxSettingsFileStoreLogger.warning("ignoring empty workspace color name in \(sourcePath, privacy: .private(mask: .hash))")
                     continue
                 }
                 guard let hex = jsonString(rawValue),
                       let normalizedHex = WorkspaceTabColorSettings.normalizedHex(hex) else {
-                    cmuxSettingsFileStoreLogger.warning("ignoring invalid workspace color '\(name, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
+                    hmuxSettingsFileStoreLogger.warning("ignoring invalid workspace color '\(name, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
                     continue
                 }
                 normalizedPalette[name] = normalizedHex
@@ -847,12 +847,12 @@ final class CmuxSettingsFileStore {
             )
             for (name, rawValue) in rawOverrides {
                 guard validNames.contains(name) else {
-                    cmuxSettingsFileStoreLogger.warning("ignoring unknown workspace color '\(name, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
+                    hmuxSettingsFileStoreLogger.warning("ignoring unknown workspace color '\(name, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
                     continue
                 }
                 guard let hex = jsonString(rawValue),
                       let normalizedHex = WorkspaceTabColorSettings.normalizedHex(hex) else {
-                    cmuxSettingsFileStoreLogger.warning("ignoring invalid workspace color override '\(name, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
+                    hmuxSettingsFileStoreLogger.warning("ignoring invalid workspace color override '\(name, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
                     continue
                 }
                 palette[name] = normalizedHex
@@ -927,7 +927,7 @@ final class CmuxSettingsFileStore {
     ) {
         if section.keys.contains("socketControlMode") {
             let raw = jsonString(section["socketControlMode"])
-            let knownModes = Set(["off", "cmuxonly", "automation", "password", "allowall", "openaccess", "fullopenaccess", "notifications", "full"])
+            let knownModes = Set(["off", "hmuxonly", "automation", "password", "allowall", "openaccess", "fullopenaccess", "notifications", "full"])
             let normalizedRaw = raw?.replacingOccurrences(of: "-", with: "").lowercased()
             let mode = raw.flatMap { knownModes.contains(normalizedRaw ?? "") ? SocketControlSettings.migrateMode($0) : nil }
             if mode == nil { logInvalid("automation.socketControlMode", sourcePath: sourcePath) }
@@ -1056,12 +1056,12 @@ final class CmuxSettingsFileStore {
 
         for (rawAction, rawBinding) in bindings {
             guard let action = KeyboardShortcutSettings.Action(rawValue: rawAction) else {
-                cmuxSettingsFileStoreLogger.warning("ignoring unknown shortcut action '\(rawAction, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
+                hmuxSettingsFileStoreLogger.warning("ignoring unknown shortcut action '\(rawAction, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
                 continue
             }
             snapshot.managedShortcutActions.insert(action)
             guard let shortcut = parseShortcutBindingValue(rawBinding, action: action) else {
-                cmuxSettingsFileStoreLogger.warning("ignoring invalid shortcut binding for '\(rawAction, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
+                hmuxSettingsFileStoreLogger.warning("ignoring invalid shortcut binding for '\(rawAction, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
                 continue
             }
             snapshot.shortcuts[action] = shortcut
@@ -1087,12 +1087,12 @@ final class CmuxSettingsFileStore {
         }
         for (rawAction, rawClause) in whenSection {
             guard let action = KeyboardShortcutSettings.Action(rawValue: rawAction) else {
-                cmuxSettingsFileStoreLogger.warning("ignoring shortcuts.when for unknown action '\(rawAction, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
+                hmuxSettingsFileStoreLogger.warning("ignoring shortcuts.when for unknown action '\(rawAction, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
                 continue
             }
             guard let expression = jsonString(rawClause),
                   let clause = ShortcutWhenClause.parse(expression) else {
-                cmuxSettingsFileStoreLogger.warning("ignoring invalid shortcuts.when clause for '\(rawAction, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
+                hmuxSettingsFileStoreLogger.warning("ignoring invalid shortcuts.when clause for '\(rawAction, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
                 continue
             }
             snapshot.whenClauses[action] = clause
@@ -1114,7 +1114,7 @@ final class CmuxSettingsFileStore {
                     allowBareFirstStroke: action.allowsBareFirstStroke
                 )
             }
-            // Object form written by the CmuxSettings package recorder (in-app
+            // Object form written by the HmuxSettings package recorder (in-app
             // Settings UI): { "first": { key, command, ... }, "second": { ... }? }.
             // A Settings rebinding only reaches this store in that shape; decode it
             // so every action resolved here — including foreground Global Search and the
@@ -1132,7 +1132,7 @@ final class CmuxSettingsFileStore {
         return action.normalizedSettingsFileShortcut(shortcut)
     }
 
-    /// Decodes the nested-object binding the CmuxSettings package writes
+    /// Decodes the nested-object binding the HmuxSettings package writes
     /// (`{ "first": { stroke }, "second": { stroke }? }`) into the app-target
     /// ``StoredShortcut``. An empty primary key is the package's explicit
     /// "unbound" marker. Returns `nil` when `first` is missing or malformed —
@@ -1571,7 +1571,7 @@ final class CmuxSettingsFileStore {
     ) -> Bool {
         guard !forceApply else { return true }
         guard let importedDefault else { return true }
-        // Precedence: user explicit choice (UserDefaults) > cmux.json imported default > built-in default.
+        // Precedence: user explicit choice (UserDefaults) > hmux.json imported default > built-in default.
         guard let current = currentManagedUserDefaultsValue(
             for: defaultsKey,
             matching: value,
@@ -1883,7 +1883,7 @@ final class CmuxSettingsFileStore {
     }
 
     func logInvalid(_ path: String, sourcePath: String) {
-        cmuxSettingsFileStoreLogger.warning("ignoring invalid setting '\(path, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
+        hmuxSettingsFileStoreLogger.warning("ignoring invalid setting '\(path, privacy: .private(mask: .hash))' in \(sourcePath, privacy: .private(mask: .hash))")
         let data = fileManager.contents(atPath: sourcePath) ?? Data()
         parsingIssues.append(Self.configurationIssue(
             path: sourcePath,
@@ -1930,7 +1930,7 @@ final class CmuxSettingsFileStore {
 
 }
 
-typealias KeyboardShortcutSettingsFileStore = CmuxSettingsFileStore
+typealias KeyboardShortcutSettingsFileStore = HmuxSettingsFileStore
 
 struct ResolvedSettingsSnapshot {
     var path: String?
@@ -2011,7 +2011,7 @@ struct ManagedCustomSettings: Equatable {
     var managedIdentifiers: Set<String> {
         var identifiers: Set<String> = []
         if socketPassword != nil {
-            identifiers.insert(CmuxSettingsFileStore.socketPasswordBackupIdentifier)
+            identifiers.insert(HmuxSettingsFileStore.socketPasswordBackupIdentifier)
         }
         return identifiers
     }

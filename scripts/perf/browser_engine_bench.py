@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproducible browser-engine performance bench for a tagged cmux build.
+"""Reproducible browser-engine performance bench for a tagged hmux build.
 
 Measures what the Chromium (CEF) engine costs next to WebKit, and that it
 costs nothing while it is unused:
@@ -24,7 +24,7 @@ Engine selection uses `browser.open_split` params: pass
 so the bench keeps working whatever the per-open override is called. WebKit
 opens with no extra params, which is also the shipping default.
 
-Never point this at the user's cmux: it refuses a bundle without a tag and
+Never point this at the user's hmux: it refuses a bundle without a tag and
 only talks to the tagged socket it launched.
 """
 
@@ -268,7 +268,7 @@ def bundle_report(app: pathlib.Path) -> dict[str, Any]:
 # Fixture page server: a DOM-heavy page with a canvas animation so compositor
 # and main-thread costs show up the way a real app page would cause them.
 
-FIXTURE_HTML = """<!doctype html><html><head><meta charset=utf-8><title>cmux bench {n}</title>
+FIXTURE_HTML = """<!doctype html><html><head><meta charset=utf-8><title>hmux bench {n}</title>
 <style>body{{font:13px -apple-system;margin:0}}.r{{padding:2px 8px;border-bottom:1px solid #ddd}}
 canvas{{position:fixed;right:8px;top:8px}}</style></head><body>
 <canvas id=c width=240 height=160></canvas><div id=list></div>
@@ -350,28 +350,28 @@ class BenchFailure(RuntimeError):
 class TaggedApp:
     def __init__(self, app: pathlib.Path, tag: str, workdir: pathlib.Path) -> None:
         slug = sanitize(tag, "-") if tag.strip() else ""
-        if not slug or app.name != f"cmux DEV {slug}.app":
-            raise BenchFailure(f"refusing to bench {app}: expected a tagged 'cmux DEV {slug or '<tag>'}.app'")
+        if not slug or app.name != f"hmux DEV {slug}.app":
+            raise BenchFailure(f"refusing to bench {app}: expected a tagged 'hmux DEV {slug or '<tag>'}.app'")
         self.app = app
         self.tag = slug
-        self.bundle_id = f"com.cmuxterm.app.debug.{sanitize(tag, '.')}"
-        self.executable = app / "Contents/MacOS/cmux DEV"
+        self.bundle_id = f"com.hmuxterm.app.debug.{sanitize(tag, '.')}"
+        self.executable = app / "Contents/MacOS/hmux DEV"
         # Tagged Debug builds bind this path (scripts/reload.sh, perf-activation-session.py).
-        self.socket_path = pathlib.Path(f"/tmp/cmux-debug-{slug}.sock")
+        self.socket_path = pathlib.Path(f"/tmp/hmux-debug-{slug}.sock")
         self.debug_log = workdir / f"bench-{slug}.log"
-        self.cli_path = app / "Contents/Resources/bin/cmux"
+        self.cli_path = app / "Contents/Resources/bin/hmux"
         self.pid: int | None = None
-        # Extra app environment for a scenario (for example CMUX_CEF_DEBUG_URL).
+        # Extra app environment for a scenario (for example HMUX_CEF_DEBUG_URL).
         self.extra_env: dict[str, str] = {}
 
     def env(self) -> dict[str, str]:
         return {
-            "CMUX_SOCKET": str(self.socket_path),
-            "CMUX_SOCKET_PATH": str(self.socket_path),
-            "CMUX_SOCKET_MODE": "automation",
-            "CMUX_DEBUG_LOG": str(self.debug_log),
-            "CMUX_TAG": self.tag,
-            "CMUX_BUNDLE_ID": self.bundle_id,
+            "HMUX_SOCKET": str(self.socket_path),
+            "HMUX_SOCKET_PATH": str(self.socket_path),
+            "HMUX_SOCKET_MODE": "automation",
+            "HMUX_DEBUG_LOG": str(self.debug_log),
+            "HMUX_TAG": self.tag,
+            "HMUX_BUNDLE_ID": self.bundle_id,
             **self.extra_env,
         }
 
@@ -435,9 +435,9 @@ class TaggedApp:
         self.socket_path.unlink(missing_ok=True)
 
     def cli_env(self) -> dict[str, str]:
-        env = {k: v for k, v in os.environ.items() if not k.startswith("CMUX_")}
+        env = {k: v for k, v in os.environ.items() if not k.startswith("HMUX_")}
         env.update(self.env())
-        env["CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"] = "30"
+        env["HMUXTERM_CLI_RESPONSE_TIMEOUT_SEC"] = "30"
         return env
 
     def cli(self, args: list[str], timeout: float = 60) -> str:
@@ -445,9 +445,9 @@ class TaggedApp:
             proc = subprocess.run([str(self.cli_path)] + args, capture_output=True, text=True,
                                   env=self.cli_env(), timeout=timeout)
         except subprocess.TimeoutExpired as exc:
-            raise BenchFailure(f"cmux {' '.join(args)} timed out after {timeout}s") from exc
+            raise BenchFailure(f"hmux {' '.join(args)} timed out after {timeout}s") from exc
         if proc.returncode != 0:
-            raise BenchFailure(f"cmux {' '.join(args)} failed: {proc.stderr.strip() or proc.stdout.strip()}")
+            raise BenchFailure(f"hmux {' '.join(args)} failed: {proc.stderr.strip() or proc.stdout.strip()}")
         return proc.stdout.strip()
 
     def cli_json(self, args: list[str], timeout: float = 60) -> Any:
@@ -605,12 +605,12 @@ def run_engine(app: TaggedApp, engine: str, params: dict[str, Any], server: Fixt
 
 def cmd_run(args: argparse.Namespace) -> int:
     app_path = pathlib.Path(args.app).expanduser().resolve()
-    workdir = pathlib.Path(tempfile.mkdtemp(prefix="cmux-engine-bench-"))
+    workdir = pathlib.Path(tempfile.mkdtemp(prefix="hmux-engine-bench-"))
     app = TaggedApp(app_path, args.tag, workdir)
     if not args.restore_session:
         # Start every run from an empty session: a page restored from an earlier run
         # (a Chromium tab) would start its engine at launch and skew every number.
-        app.extra_env["CMUX_DISABLE_SESSION_RESTORE"] = "1"
+        app.extra_env["HMUX_DISABLE_SESSION_RESTORE"] = "1"
     if args.launches < 1:
         raise BenchFailure("--launches must be at least 1")
     open_params = parse_open_params(args.open_param)
@@ -724,7 +724,7 @@ def main(argv: list[str]) -> int:
     bundle.set_defaults(func=cmd_bundle)
 
     run = sub.add_parser("run", help="launch a tagged build and measure it")
-    run.add_argument("--app", required=True, help="path to 'cmux DEV <tag>.app'")
+    run.add_argument("--app", required=True, help="path to 'hmux DEV <tag>.app'")
     run.add_argument("--tag", required=True)
     run.add_argument("--commit", default="", help="commit the build came from (recorded only)")
     run.add_argument("--engines", default="webkit", help="comma list, e.g. webkit,chromium")
@@ -742,7 +742,7 @@ def main(argv: list[str]) -> int:
                      help="let the app restore its last session (default: start empty)")
     run.add_argument("--launch-env", action="append", default=[],
                      help="KEY=VALUE for the app; {fixture:<name>} becomes a fixture page URL, "
-                          "e.g. CMUX_CEF_DEBUG_URL={fixture:chromium-debug}")
+                          "e.g. HMUX_CEF_DEBUG_URL={fixture:chromium-debug}")
     run.add_argument("--out")
     run.set_defaults(func=cmd_run)
 

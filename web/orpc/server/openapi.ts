@@ -10,7 +10,7 @@ export async function generateOpenAPIDocument() {
 
   return generator.generate(router, {
     info: {
-      title: "cmux API",
+      title: "hmux API",
       version: "0.1.0",
     },
     servers: [

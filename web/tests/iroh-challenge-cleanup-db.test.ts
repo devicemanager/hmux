@@ -4,13 +4,13 @@ import * as Effect from "effect/Effect";
 import { Pool } from "pg";
 import { cleanupIrohChallenges } from "../scripts/cloud-vm/iroh-challenge-cleanup";
 
-const dbTest = process.env.CMUX_DB_TEST === "1" ? test : test.skip;
+const dbTest = process.env.HMUX_DB_TEST === "1" ? test : test.skip;
 const now = new Date("2026-09-10T20:00:00Z");
 const device = randomUUID();
 let pool: Pool;
 
 beforeAll(() => {
-  if (process.env.CMUX_DB_TEST !== "1") return;
+  if (process.env.HMUX_DB_TEST !== "1") return;
   pool = new Pool({
     connectionString: process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL,
     application_name: "iroh-challenge-cleanup-test",
@@ -46,9 +46,9 @@ dbTest("cleanup retains the latest pending challenge for every complete tuple", 
   await seed({ at: -2_000 });
   const keep = [await seed()];
   for (const input of [
-    { namespace: "dev.cmux.app.beta" },
-    { namespace: "dev.cmux.app.internal" },
-    { namespace: "mac:com.cmuxterm.app.nightly" },
+    { namespace: "dev.hmux.app.beta" },
+    { namespace: "dev.hmux.app.internal" },
+    { namespace: "mac:com.hmuxterm.app.nightly" },
     { tag: "nightly" }, { user: "another-user" }, { device: randomUUID() },
   ]) {
     await seed({ ...input, at: -2_000 });

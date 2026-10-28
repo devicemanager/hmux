@@ -58,27 +58,27 @@ export default function NotificationsPage() {
         </thead>
         <tbody>
           <tr>
-            <td><code>CMUX_NOTIFICATION_TITLE</code></td>
+            <td><code>HMUX_NOTIFICATION_TITLE</code></td>
             <td>{t("envTitle")}</td>
           </tr>
           <tr>
-            <td><code>CMUX_NOTIFICATION_SUBTITLE</code></td>
+            <td><code>HMUX_NOTIFICATION_SUBTITLE</code></td>
             <td>{t("envSubtitle")}</td>
           </tr>
           <tr>
-            <td><code>CMUX_NOTIFICATION_BODY</code></td>
+            <td><code>HMUX_NOTIFICATION_BODY</code></td>
             <td>{t("envBody")}</td>
           </tr>
         </tbody>
       </table>
       <CodeBlock title="Examples" lang="bash">{`# Text-to-speech
-say "$CMUX_NOTIFICATION_TITLE"
+say "$HMUX_NOTIFICATION_TITLE"
 
 # Custom sound file
 afplay /path/to/sound.aiff
 
 # Log to file
-echo "$CMUX_NOTIFICATION_TITLE: $CMUX_NOTIFICATION_BODY" >> ~/notifications.log`}</CodeBlock>
+echo "$HMUX_NOTIFICATION_TITLE: $HMUX_NOTIFICATION_BODY" >> ~/notifications.log`}</CodeBlock>
       <p>{t("customCommandNote")}</p>
 
       <DocsHeading level={2} id="notification-hooks">{t("hooksTitle")}</DocsHeading>
@@ -110,7 +110,7 @@ echo "$CMUX_NOTIFICATION_TITLE: $CMUX_NOTIFICATION_BODY" >> ~/notifications.log`
   },
   "context": {
     "cwd": "/path/to/project",
-    "configPath": "/path/to/project/.cmux/cmux.json",
+    "configPath": "/path/to/project/.hmux/hmux.json",
     "hookId": "quiet-docs",
     "appFocused": false,
     "focusedPanel": false
@@ -157,7 +157,7 @@ echo "$CMUX_NOTIFICATION_TITLE: $CMUX_NOTIFICATION_BODY" >> ~/notifications.log`
     "hooks": [
       {
         "id": "mute-subagent-completions",
-        "command": "if [ \\"\${CMUX_NOTIFICATION_AGENT_IS_SUBAGENT-0}\\" = \\"1\\" ] && [ \\"$CMUX_NOTIFICATION_AGENT_CATEGORY\\" = \\"turn-complete\\" ]; then printf '{\\"effects\\":{\\"desktop\\":false,\\"sound\\":false,\\"paneFlash\\":false}}'; fi"
+        "command": "if [ \\"\${HMUX_NOTIFICATION_AGENT_IS_SUBAGENT-0}\\" = \\"1\\" ] && [ \\"$HMUX_NOTIFICATION_AGENT_CATEGORY\\" = \\"turn-complete\\" ]; then printf '{\\"effects\\":{\\"desktop\\":false,\\"sound\\":false,\\"paneFlash\\":false}}'; fi"
       }
     ]
   }
@@ -171,8 +171,8 @@ echo "$CMUX_NOTIFICATION_TITLE: $CMUX_NOTIFICATION_BODY" >> ~/notifications.log`
       <DocsHeading level={2} id="sending">{t("sending")}</DocsHeading>
 
       <DocsHeading level={3} id="cli-usage">{t("cli")}</DocsHeading>
-      <CodeBlock lang="bash">{`cmux notify --title "Task Complete" --body "Your build finished"
-cmux notify --title "Claude Code" --subtitle "Waiting" --body "Agent needs input"`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux notify --title "Task Complete" --body "Your build finished"
+hmux notify --title "Claude Code" --subtitle "Waiting" --body "Agent needs input"`}</CodeBlock>
 
       <DocsHeading level={3} id="osc777-title">{t("osc777Title")}</DocsHeading>
       <p>{t("osc777Desc")}</p>
@@ -243,32 +243,32 @@ printf '\\e]99;i=1;e=1;d=1;p=body:All tests passed\\e\\\\'`}</CodeBlock>
       </p>
 
       <DocsHeading level={3} id="create-hook-script">{t("createHookScript")}</DocsHeading>
-      <CodeBlock title="~/.claude/hooks/cmux-notify.sh" lang="bash">{`#!/bin/bash
-# Outside cmux there is no socket to talk to, so do nothing.
-[ -S /tmp/cmux.sock ] || exit 0
+      <CodeBlock title="~/.claude/hooks/hmux-notify.sh" lang="bash">{`#!/bin/bash
+# Outside hmux there is no socket to talk to, so do nothing.
+[ -S /tmp/hmux.sock ] || exit 0
 
 payload=$(cat)
 field() { printf '%s' "$payload" | jq -r "$1 // empty"; }
 
 event=$(field .hook_event_name)
 if [ "$event" = "Stop" ]; then
-    cmux notify --title "Claude Code" --body "Session complete"
+    hmux notify --title "Claude Code" --body "Session complete"
 elif [ "$event" = "SubagentStop" ]; then
-    cmux notify --title "Claude Code" --body "Agent finished"
+    hmux notify --title "Claude Code" --body "Agent finished"
 fi`}</CodeBlock>
-      <CodeBlock lang="bash">{`chmod +x ~/.claude/hooks/cmux-notify.sh`}</CodeBlock>
+      <CodeBlock lang="bash">{`chmod +x ~/.claude/hooks/hmux-notify.sh`}</CodeBlock>
 
       <DocsHeading level={3} id="configure-claude">{t("configureClaude")}</DocsHeading>
       <CodeBlock title="~/.claude/settings.json" lang="json">{`{
   "hooks": {
     "SubagentStop": [
       {
-        "hooks": [{ "type": "command", "command": "~/.claude/hooks/cmux-notify.sh" }]
+        "hooks": [{ "type": "command", "command": "~/.claude/hooks/hmux-notify.sh" }]
       }
     ],
     "Stop": [
       {
-        "hooks": [{ "type": "command", "command": "~/.claude/hooks/cmux-notify.sh" }]
+        "hooks": [{ "type": "command", "command": "~/.claude/hooks/hmux-notify.sh" }]
       }
     ]
   }
@@ -288,28 +288,28 @@ fi`}</CodeBlock>
     "userPromptSubmitted": [
       {
         "type": "command",
-        "bash": "if command -v cmux &>/dev/null; then cmux set-status copilot_cli Running; fi",
+        "bash": "if command -v hmux &>/dev/null; then hmux set-status copilot_cli Running; fi",
         "timeoutSec": 3
       }
     ],
     "agentStop": [
       {
         "type": "command",
-        "bash": "if command -v cmux &>/dev/null; then cmux notify --title 'Copilot CLI' --body 'Done'; cmux set-status copilot_cli Idle; fi",
+        "bash": "if command -v hmux &>/dev/null; then hmux notify --title 'Copilot CLI' --body 'Done'; hmux set-status copilot_cli Idle; fi",
         "timeoutSec": 5
       }
     ],
     "errorOccurred": [
       {
         "type": "command",
-        "bash": "if command -v cmux &>/dev/null; then cmux notify --title 'Copilot CLI' --subtitle 'Error' --body 'An error occurred'; cmux set-status copilot_cli Error; fi",
+        "bash": "if command -v hmux &>/dev/null; then hmux notify --title 'Copilot CLI' --subtitle 'Error' --body 'An error occurred'; hmux set-status copilot_cli Error; fi",
         "timeoutSec": 5
       }
     ],
     "sessionEnd": [
       {
         "type": "command",
-        "bash": "if command -v cmux &>/dev/null; then cmux clear-status copilot_cli; fi",
+        "bash": "if command -v hmux &>/dev/null; then hmux clear-status copilot_cli; fi",
         "timeoutSec": 3
       }
     ]
@@ -332,9 +332,9 @@ notify-after() {
   "$@"
   local exit_code=$?
   if [ $exit_code -eq 0 ]; then
-    cmux notify --title "✓ Command Complete" --body "$1"
+    hmux notify --title "✓ Command Complete" --body "$1"
   else
-    cmux notify --title "✗ Command Failed" --body "$1 (exit $exit_code)"
+    hmux notify --title "✗ Command Failed" --body "$1 (exit $exit_code)"
   fi
   return $exit_code
 }

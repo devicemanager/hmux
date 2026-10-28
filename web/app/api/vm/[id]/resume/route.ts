@@ -8,7 +8,7 @@ import { runVmRoute } from "../../../../../services/vms/routeWorkflow";
 import { resumeVm } from "../../../../../services/vms/workflows";
 import { vmModelPlaneRevoker } from "../../../../../services/vms/modelPlaneGateway";
 
-// Wake a parked machine (`cmux vm resume <id>`) through the same suspended-resume
+// Wake a parked machine (`hmux vm resume <id>`) through the same suspended-resume
 // path every open and exec uses, so plan limits and the free window apply. A
 // running machine answers 200 `running` (idempotent); a provider without resume
 // answers 501 vm_operation_unsupported.
@@ -23,13 +23,13 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/resume",
-    { "cmux.vm.operation": "resume" },
+    { "hmux.vm.operation": "resume" },
     "/api/vm/[id]/resume POST failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "hmux.vm.id": id });
       const run = await runVmRoute(resumeVm({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

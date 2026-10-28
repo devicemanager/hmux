@@ -2,9 +2,9 @@ import { getStackServerApp, isStackConfigured } from "../../../app/lib/stack";
 import { reconcileProPlanMetadata } from "../pro";
 
 /**
- * Re-derives the user's `cmuxPlan` mirror from every billing source (Stripe
+ * Re-derives the user's `hmuxPlan` mirror from every billing source (Stripe
  * rows and Apple subscriptions, higher plan wins) under the account-deletion
- * guard Stripe fulfillment uses. An operator `cmuxVmPlan` override is left
+ * guard Stripe fulfillment uses. An operator `hmuxVmPlan` override is left
  * alone, exactly as for Stripe.
  */
 export async function applyPersonalPlanEntitlement(userId: string): Promise<void> {

@@ -21,7 +21,7 @@ REPO = "manaflow-ai/cmux"
 PREV = "p" * 40
 HEAD = "h" * 40
 LOG = """\
-2026-09-25T07:44:10.4990000Z Test Case '-[cmuxTests.FooTests testBar]' failed (0.1 seconds).
+2026-09-25T07:44:10.4990000Z Test Case '-[hmuxTests.FooTests testBar]' failed (0.1 seconds).
 2026-09-25T07:44:10.4990110Z RATCHET_NEW_FAILURE AgentSessionAutoResumeSwiftTests/splitAfterRestore()
 2026-09-25T07:44:10.4990120Z \x1b[31mRATCHET_NEW_FAILURE FooTests/testBar\x1b[0m
 2026-09-25T07:44:10.4990130Z RATCHET_KNOWN_FAILURE SidebarHiddenPresentationTests/visibility()
@@ -32,7 +32,7 @@ XCODEBUILD_LOG = """\
 2026-09-25T05:55:55.4893920Z Failing tests:
 2026-09-25T05:55:55.4894300Z \tGlobalSearchLocalMonitorChainTests.visibleSearchCloses()
 2026-09-25T05:55:55.4894300Z \tGlobalSearchLocalMonitorChainTests.visibleSearchCloses()
-2026-09-25T05:55:55.4894400Z \tcmuxTests.LegacyTests.testOld()
+2026-09-25T05:55:55.4894400Z \thmuxTests.LegacyTests.testOld()
 2026-09-25T05:55:55.4894500Z \tSidebarHiddenPresentationTests.visibility()
 2026-09-25T05:55:55.4907210Z 
 2026-09-25T05:55:55.4907400Z \x1b[1m\x1b[31m** TEST EXECUTE FAILED **
@@ -45,7 +45,7 @@ XCODEBUILD_LOG = """\
 # accounting recorded the test in flight as a new failure.
 VICTIM = "RecoverableMainWindowLifecycleTests/closingRecoveredWindowUsesNormalCloseFinalization()"
 CRASH_LOG = """\
-2026-09-27T09:06:35.6623060Z     /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild -xctestrun /x/cmux-unit.xctestrun
+2026-09-27T09:06:35.6623060Z     /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild -xctestrun /x/hmux-unit.xctestrun
 2026-09-27T09:07:36.2652870Z \u25c7 Test "Closing a recovered window uses normal close finalization" started.
 2026-09-27T09:07:36.2653460Z objc[73048]: Cannot form weak reference to instance (0x76e0e4f00) of class NSKVONotifying_NSWindow. It is possible that this object was over-released, or is in the process of deallocation.
 2026-09-27T09:07:36.2653820Z 
@@ -61,13 +61,13 @@ CRASH_LOG = """\
 2026-09-27T09:08:01.5247210Z incomplete app-host run: app host restarted after test execution
 2026-09-27T09:08:01.5247600Z RATCHET_NEW_FAILURE RecoverableMainWindowLifecycleTests/closingRecoveredWindowUsesNormalCloseFinalization()
 2026-09-27T09:08:01.5247950Z recorded verdicts: 1 new, 0 known-main; typed test cases: 845
-2026-09-27T09:08:12.2949580Z     /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild -xctestrun /x/cmux-unit.xctestrun
+2026-09-27T09:08:12.2949580Z     /Applications/Xcode_26.6.app/Contents/Developer/usr/bin/xcodebuild -xctestrun /x/hmux-unit.xctestrun
 2026-09-27T09:08:30.0000000Z Failing tests:
 2026-09-27T09:08:30.0000000Z \tOtherTests.plainFailure()
 2026-09-27T09:08:30.0000000Z 
 2026-09-27T09:08:31.0000000Z RATCHET_NEW_FAILURE OtherTests/plainFailure()
 2026-09-27T09:08:31.0000000Z recorded verdicts: 1 new, 0 known-main; typed test cases: 12
-2026-09-27T09:08:54.2024000Z   name: cmux-app-host-diagnostics-shard-7-run-1
+2026-09-27T09:08:54.2024000Z   name: hmux-app-host-diagnostics-shard-7-run-1
 """
 CRASH_SIGNATURE = "Cannot form weak reference to instance (0x*) of class NSKVONotifying_NSWindow"
 
@@ -150,7 +150,7 @@ class CrashTests(unittest.TestCase):
         crash = MODULE.host_crash(CRASH_LOG, (), "7", "https://job/7")
         self.assertEqual(crash.tests, [VICTIM])  # the next batch's plain failure is not the crash's
         self.assertEqual(crash.signatures, [CRASH_SIGNATURE])
-        self.assertEqual(crash.artifact, "cmux-app-host-diagnostics-shard-7-run-1")
+        self.assertEqual(crash.artifact, "hmux-app-host-diagnostics-shard-7-run-1")
         self.assertEqual(MODULE.log_failures(CRASH_LOG), {VICTIM, "OtherTests/plainFailure()"})
         self.assertIsNone(MODULE.host_crash(LOG))
         self.assertEqual(MODULE.host_crash(CRASH_LOG, {VICTIM}).tests, [])
@@ -161,7 +161,7 @@ class CrashTests(unittest.TestCase):
         # No backtracer header: the message before the restart names the crash.
         no_header = "\n".join(
             line for line in CRASH_LOG.splitlines() if "Program crashed" not in line
-        ).replace("objc[73048]: Cannot form", "cmux/App.swift:12: Fatal error: Cannot form")
+        ).replace("objc[73048]: Cannot form", "hmux/App.swift:12: Fatal error: Cannot form")
         self.assertEqual(
             MODULE.host_crash(no_header).signatures,
             ["Fatal error: Cannot form weak reference to instance (0x*) of class NSKVONotifying_NSWindow"],
@@ -246,7 +246,7 @@ class CrashTests(unittest.TestCase):
         # An XCTest in flight is named by the live log itself.
         xctest = two.replace(
             '\u25c7 Test "Closing a recovered window uses normal close finalization" started.',
-            "Test Case '-[cmuxTests.RecoverableMainWindowLifecycleTests silentFailure]' started.",
+            "Test Case '-[hmuxTests.RecoverableMainWindowLifecycleTests silentFailure]' started.",
         )
         self.assertEqual(MODULE.host_crash(xctest).tests, ["RecoverableMainWindowLifecycleTests/silentFailure()"])
 
@@ -285,13 +285,13 @@ class BaselineTests(unittest.TestCase):
                 return subprocess.run(["git", "-C", repo, *args], check=True, capture_output=True, text=True).stdout.strip()
             git("init", "-q")
             git("config", "user.email", "t@t"); git("config", "user.name", "t")
-            (pathlib.Path(repo) / "cmuxTests").mkdir()
-            (pathlib.Path(repo) / "cmuxTests/A.swift").write_text("a")
+            (pathlib.Path(repo) / "hmuxTests").mkdir()
+            (pathlib.Path(repo) / "hmuxTests/A.swift").write_text("a")
             git("add", "-A"); git("commit", "-qm", "a"); first = git("rev-parse", "HEAD")
             (pathlib.Path(repo) / "Sources").mkdir()
             (pathlib.Path(repo) / "Sources/B.swift").write_text("b")
             git("add", "-A"); git("commit", "-qm", "b"); second = git("rev-parse", "HEAD")
-            (pathlib.Path(repo) / "cmuxTests/A.swift").write_text("a2")
+            (pathlib.Path(repo) / "hmuxTests/A.swift").write_text("a2")
             git("add", "-A"); git("commit", "-qm", "c"); third = git("rev-parse", "HEAD")
             self.assertFalse(MODULE.shard_map_changed(pathlib.Path(repo), first, second))
             self.assertTrue(MODULE.shard_map_changed(pathlib.Path(repo), second, third))
@@ -331,7 +331,7 @@ class RankingTests(unittest.TestCase):
             "the only pull request in the range changes nothing the app host loads",
         )
         # A test-only diff is loaded by the app host, so that reason would be wrong.
-        outside.paths = ["cmuxTests/OtherTests.swift"]
+        outside.paths = ["hmuxTests/OtherTests.swift"]
         self.assertEqual(MODULE.suspects_for("Suite/test()", [outside])[1], "the only pull request in the range does not reach this suite")
         self.assertEqual(
             MODULE.suspects_for("Suite/test()", [pr(3, ranked=False)])[1],
@@ -356,11 +356,11 @@ class RankingTests(unittest.TestCase):
         import reverse_test_impact
         files = {
             "Sources/App.swift": "struct App {}\n",
-            "cmuxTests/SettingsTests.swift": (
+            "hmuxTests/SettingsTests.swift": (
                 "import XCTest\n\nfinal class SettingsTests: XCTestCase {\n"
                 "    func testTitle() {\n        XCTAssertEqual(title, \"Open the Settings Window\")\n    }\n}\n"
             ),
-            "cmuxTests/AgentTests.swift": (
+            "hmuxTests/AgentTests.swift": (
                 "import XCTest\n\nfinal class AgentTests: XCTestCase {\n"
                 "    func testName() {\n        XCTAssertEqual(name, \"Codex\")\n    }\n}\n"
             ),
@@ -377,16 +377,16 @@ class RankingTests(unittest.TestCase):
         log = "\0".join([
             "", f"{'a' * 40}\n\nSources/App.swift\ndocs/x.md\n",
             f"{'b' * 40}\n\ndocs/readme.md\nweb/app/page.tsx\nscripts/ci/foo.py\n",
-            f"{'c' * 40}\n\ncmuxTests/FooTests.swift\n",
+            f"{'c' * 40}\n\nhmuxTests/FooTests.swift\n",
             f"{'d' * 40}\n\n",
             f"{'e' * 40}\n\nPackages/macOS/Kit/Sources/K.swift\n",
         ])
         self.assertEqual(MODULE.outcome_commits(log), ["a" * 40, "c" * 40, "e" * 40])
 
     def test_overlay_reads_changed_files_at_the_merge(self):
-        files = {"Sources/A.swift": "old", "Sources/B.swift": "b", "cmuxTests/T.swift": "t"}
+        files = {"Sources/A.swift": "old", "Sources/B.swift": "b", "hmuxTests/T.swift": "t"}
         self.assertEqual(
-            MODULE.overlay(files, {"Sources/A.swift": "new", "cmuxTests/T.swift": None, "Sources/C.swift": "c"}),
+            MODULE.overlay(files, {"Sources/A.swift": "new", "hmuxTests/T.swift": None, "Sources/C.swift": "c"}),
             {"Sources/A.swift": "new", "Sources/B.swift": "b", "Sources/C.swift": "c"},
         )
         self.assertEqual(files["Sources/A.swift"], "old")
@@ -532,10 +532,10 @@ class CrashReportTests(unittest.TestCase):
         )
 
     def test_a_crash_without_a_message_points_at_the_diagnostics_artifact(self):
-        silent = MODULE.HostCrash("4", "https://job/4", tests=["A/a()"], artifact="cmux-app-host-diagnostics-shard-4-run-1")
+        silent = MODULE.HostCrash("4", "https://job/4", tests=["A/a()"], artifact="hmux-app-host-diagnostics-shard-4-run-1")
         lines = MODULE.crash_lines(run(), [MODULE.CrashFinding(silent, None)], {})
         self.assertIn(
-            "no crash message in the log; the backtrace is in the `cmux-app-host-diagnostics-shard-4-run-1` "
+            "no crash message in the log; the backtrace is in the `hmux-app-host-diagnostics-shard-4-run-1` "
             "artifact of [this run](https://github.com/x/runs/2#artifacts)", lines[1],
         )
 
@@ -664,7 +664,7 @@ class WorkflowTests(unittest.TestCase):
     def test_the_issue_sync_checkout_stays_shallow_and_attribution_deepens_it(self):
         checkout = self.report.split("      - name: Checkout\n", 1)[1].split("\n      - name:", 1)[0]
         self.assertIn("fetch-depth: 1", checkout)
-        for tree in ("scripts/ci", "cmuxTests", "Sources", "Packages/macOS", "Packages/Shared", "CLI"):
+        for tree in ("scripts/ci", "hmuxTests", "Sources", "Packages/macOS", "Packages/Shared", "CLI"):
             self.assertIn(f"            {tree}\n", checkout)
         step = self.report.split("main_regression_attribution.py", 1)[0].rsplit("- name:", 1)[1]
         self.assertIn("git fetch --no-tags --filter=blob:none --depth=", step)

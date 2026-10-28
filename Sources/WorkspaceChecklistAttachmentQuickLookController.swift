@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import Foundation
 import ObjectiveC
 import Quartz

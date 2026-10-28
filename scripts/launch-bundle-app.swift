@@ -51,20 +51,20 @@ private struct Options {
 }
 
 private let secretEnvironmentKeys = [
-    "CMUX_AUTH_CREDENTIALS_FILE",
-    "CMUX_DEV_AUTH_PROFILE",
-    "CMUX_DEV_AUTH_ACCOUNT",
-    "CMUX_DEV_AUTH_REPLACE_SESSION",
-    "CMUX_DOGFOOD_STACK_EMAIL",
-    "CMUX_DOGFOOD_STACK_PASSWORD",
-    "CMUX_UITEST_STACK_EMAIL",
-    "CMUX_UITEST_STACK_PASSWORD",
+    "HMUX_AUTH_CREDENTIALS_FILE",
+    "HMUX_DEV_AUTH_PROFILE",
+    "HMUX_DEV_AUTH_ACCOUNT",
+    "HMUX_DEV_AUTH_REPLACE_SESSION",
+    "HMUX_DOGFOOD_STACK_EMAIL",
+    "HMUX_DOGFOOD_STACK_PASSWORD",
+    "HMUX_UITEST_STACK_EMAIL",
+    "HMUX_UITEST_STACK_PASSWORD",
 ]
 
 // LaunchServices can retain environment values from a different tagged app.
-// Remove every cmux/ghostty runtime override before applying this bundle's
+// Remove every hmux/ghostty runtime override before applying this bundle's
 // LSEnvironment, so a launch for tag B cannot inherit tag A's socket or account.
-private let runtimeEnvironmentPrefixes = ["CMUX_", "GHOSTTY_"]
+private let runtimeEnvironmentPrefixes = ["HMUX_", "GHOSTTY_"]
 
 private func launchEnvironment(
     for appURL: URL,
@@ -78,7 +78,7 @@ private func launchEnvironment(
     for key in environment.keys where runtimeEnvironmentPrefixes.contains(where: key.hasPrefix) {
         environment.removeValue(forKey: key)
     }
-    environment.removeValue(forKey: "CMUXD_UNIX_PATH")
+    environment.removeValue(forKey: "HMUXD_UNIX_PATH")
 
     if let bundle = Bundle(url: appURL),
        let launchEnvironment = bundle.infoDictionary?["LSEnvironment"] as? [String: Any] {
@@ -89,11 +89,11 @@ private func launchEnvironment(
     }
 
     if let authProfile {
-        environment["CMUX_DEV_AUTH_PROFILE"] = authProfile
-        environment["CMUX_DEV_AUTH_REPLACE_SESSION"] = "1"
+        environment["HMUX_DEV_AUTH_PROFILE"] = authProfile
+        environment["HMUX_DEV_AUTH_REPLACE_SESSION"] = "1"
     }
     if let credentialsFile {
-        environment["CMUX_AUTH_CREDENTIALS_FILE"] = credentialsFile
+        environment["HMUX_AUTH_CREDENTIALS_FILE"] = credentialsFile
     }
     return environment
 }

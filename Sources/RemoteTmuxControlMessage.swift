@@ -36,8 +36,8 @@ enum RemoteTmuxControlMessage: Sendable, Equatable {
     case windowAdd(windowId: Int)
 
     /// `%unlinked-window-add @<id>` — a window was added to a session this client is not
-    /// attached to. The multiplexer's view stream sees every window created outside cmux this
-    /// way, because a window is not in the view until cmux links it.
+    /// attached to. The multiplexer's view stream sees every window created outside hmux this
+    /// way, because a window is not in the view until hmux links it.
     case unlinkedWindowAdd(windowId: Int)
 
     /// `%window-close @<id>` / `%unlinked-window-close @<id>` — a window closed.
@@ -64,7 +64,7 @@ enum RemoteTmuxControlMessage: Sendable, Equatable {
     case sessionWindowChanged(sessionId: Int, windowId: Int)
 
     /// `%subscription-changed <name> … : <value>` — a `refresh-client -B`
-    /// subscription's value changed. cmux subscribes per-pane `pane_current_path`
+    /// subscription's value changed. hmux subscribes per-pane `pane_current_path`
     /// for live working-directory tracking. Parsed leniently: `name` is the first
     /// field and `value` is everything after the first ` : ` separator, so the
     /// version-variable middle fields (session/window/pane/flags) are ignored.
@@ -77,7 +77,7 @@ enum RemoteTmuxControlMessage: Sendable, Equatable {
     /// unterminated line or command block exceeded the parser's memory budget.
     case streamError(String)
 
-    /// A recognized notification cmux does not act on (kept for diagnostics).
+    /// A recognized notification hmux does not act on (kept for diagnostics).
     case ignoredNotification(String)
 
     /// A line that could not be classified.

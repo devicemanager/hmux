@@ -74,12 +74,12 @@ const freestyleBaseDefault = realManifest.images.find(
 describe("cloud VM provider coherence audit", () => {
   test("an env default naming a removed provider fails on the code-default leg", () => {
     // The 2026-08-26 outage shape, and now also the stale-env shape: the
-    // deployed CMUX_VM_DEFAULT_PROVIDER still names a provider that has been
+    // deployed HMUX_VM_DEFAULT_PROVIDER still names a provider that has been
     // removed, while shipped clients send the code default's image ids. The
     // manifest default covers the missing snapshot env var; the missing API
     // key still makes the code default unprovisionable.
     const result = auditCloudVmProviderCoherence(
-      { CMUX_VM_DEFAULT_PROVIDER: "e2b" },
+      { HMUX_VM_DEFAULT_PROVIDER: "e2b" },
       realManifest,
     ) as Coherence;
     expect(result.selected?.provider).toBe("e2b");
@@ -135,8 +135,8 @@ describe("cloud VM provider coherence audit", () => {
   test("the validated public-platform freestyle devbox passes as the default provider", () => {
     const result = auditCloudVmProviderCoherence(
       {
-        CMUX_VM_DEFAULT_PROVIDER: "freestyle",
-        CMUX_VM_FREESTYLE_ENABLED: "1",
+        HMUX_VM_DEFAULT_PROVIDER: "freestyle",
+        HMUX_VM_FREESTYLE_ENABLED: "1",
         FREESTYLE_API_KEY: "x",
       },
       realManifest,
@@ -165,13 +165,13 @@ describe("cloud VM provider coherence audit", () => {
   test("a disabled Freestyle flag fails the selected default audit", () => {
     const result = auditCloudVmProviderCoherence(
       {
-        CMUX_VM_DEFAULT_PROVIDER: "freestyle",
-        CMUX_VM_FREESTYLE_ENABLED: "0",
+        HMUX_VM_DEFAULT_PROVIDER: "freestyle",
+        HMUX_VM_FREESTYLE_ENABLED: "0",
         FREESTYLE_API_KEY: "x",
       },
       realManifest,
     ) as Coherence;
-    expect(result.problems.join("\n")).toContain("CMUX_VM_FREESTYLE_ENABLED disables provider freestyle");
+    expect(result.problems.join("\n")).toContain("HMUX_VM_FREESTYLE_ENABLED disables provider freestyle");
   });
 
   test("a lingering FREESTYLE_SANDBOX_SNAPSHOT is stale configuration, whatever it names", () => {
@@ -180,7 +180,7 @@ describe("cloud VM provider coherence audit", () => {
     // mislead whoever reads the deployment, so the audit asks for its removal.
     for (const value of ["sh-940ec3bc46224c019e5e8d9a97053293", "sh-fb3dcf7b47894114889b10186626af5b", "sh-not-a-real-snapshot"]) {
       const result = auditCloudVmProviderCoherence(
-        { CMUX_VM_DEFAULT_PROVIDER: "freestyle", FREESTYLE_SANDBOX_SNAPSHOT: value, FREESTYLE_API_KEY: "x" },
+        { HMUX_VM_DEFAULT_PROVIDER: "freestyle", FREESTYLE_SANDBOX_SNAPSHOT: value, FREESTYLE_API_KEY: "x" },
         realManifest,
       ) as Coherence;
       expect(result.selected?.provider).toBe("freestyle");
@@ -202,14 +202,14 @@ describe("cloud VM provider coherence audit", () => {
 describe("sensitive env placeholders", () => {
   test("Vercel metadata preserves a configured Sensitive credential without exposing it", () => {
     const merged = mergeVercelSensitiveMetadata(
-      { FREESTYLE_API_KEY: "", CMUX_VM_DEFAULT_PROVIDER: "freestyle", PLAIN_EMPTY: "" },
+      { FREESTYLE_API_KEY: "", HMUX_VM_DEFAULT_PROVIDER: "freestyle", PLAIN_EMPTY: "" },
       [
         { key: "FREESTYLE_API_KEY", type: "sensitive" },
         { key: "PLAIN_EMPTY", type: "plain" },
       ],
     );
     expect(merged.FREESTYLE_API_KEY).toBe(VERCEL_SENSITIVE_PLACEHOLDER);
-    expect(merged.CMUX_VM_DEFAULT_PROVIDER).toBe("freestyle");
+    expect(merged.HMUX_VM_DEFAULT_PROVIDER).toBe("freestyle");
     expect(merged.PLAIN_EMPTY).toBe("");
 
     const result = auditProviderReadiness("freestyle", merged, realManifest) as { problems: string[] };
@@ -218,7 +218,7 @@ describe("sensitive env placeholders", () => {
 
   test("a Sensitive default-provider value is itself a problem", () => {
     const result = auditCloudVmProviderCoherence(
-      { CMUX_VM_DEFAULT_PROVIDER: "[SENSITIVE]" },
+      { HMUX_VM_DEFAULT_PROVIDER: "[SENSITIVE]" },
       realManifest,
     ) as Coherence;
     expect(result.problems.join("\n")).toContain("cannot be audited");
@@ -227,7 +227,7 @@ describe("sensitive env placeholders", () => {
   test("a Sensitive image value is itself a problem", () => {
     const result = auditCloudVmProviderCoherence(
       {
-        CMUX_VM_DEFAULT_PROVIDER: "freestyle",
+        HMUX_VM_DEFAULT_PROVIDER: "freestyle",
         FREESTYLE_SANDBOX_SNAPSHOT: "[SENSITIVE]",
         FREESTYLE_API_KEY: "x",
       },
@@ -243,12 +243,12 @@ describe("audit constants stay tied to the runtime", () => {
     // a dependency-free .mjs for CI), so this test enforces the pairing: if
     // defaultProviderId()'s fallback changes, this fails until the audit's
     // CODE_DEFAULT_PROVIDER moves with it.
-    const saved = process.env.CMUX_VM_DEFAULT_PROVIDER;
-    delete process.env.CMUX_VM_DEFAULT_PROVIDER;
+    const saved = process.env.HMUX_VM_DEFAULT_PROVIDER;
+    delete process.env.HMUX_VM_DEFAULT_PROVIDER;
     try {
       expect(CODE_DEFAULT_PROVIDER).toBe(defaultProviderId());
     } finally {
-      if (saved !== undefined) process.env.CMUX_VM_DEFAULT_PROVIDER = saved;
+      if (saved !== undefined) process.env.HMUX_VM_DEFAULT_PROVIDER = saved;
     }
   });
 
@@ -275,9 +275,9 @@ describe("required runtime env keys cover the production provider path", () => {
   test("freestyle credentials, cron auth, and the alert sink are required", () => {
     for (const key of [
       "FREESTYLE_API_KEY",
-      "CMUX_VM_FREESTYLE_ENABLED",
+      "HMUX_VM_FREESTYLE_ENABLED",
       "CRON_SECRET",
-      "CMUX_ALERTS_SLACK_WEBHOOK_URL",
+      "HMUX_ALERTS_SLACK_WEBHOOK_URL",
     ]) {
       expect(requiredRuntimeEnvKeys).toContain(key);
     }
@@ -323,9 +323,9 @@ describe("required runtime env keys cover the production provider path", () => {
 
   test("no removed provider's env keys are still demanded", () => {
     for (const key of [
-      "BL_API_KEY", "BL_WORKSPACE", "BLAXEL_SANDBOX_IMAGE", "BLAXEL_SANDBOX_DESKTOP_IMAGE", "CMUX_VM_BLAXEL_ENABLED",
-      "E2B_API_KEY", "E2B_CMUXD_WS_TEMPLATE", "E2B_SANDBOX_TEMPLATE", "CMUX_VM_E2B_ENABLED",
-      "DAYTONA_API_KEY", "DAYTONA_API_URL", "DAYTONA_SANDBOX_SNAPSHOT", "CMUX_VM_DAYTONA_ENABLED",
+      "BL_API_KEY", "BL_WORKSPACE", "BLAXEL_SANDBOX_IMAGE", "BLAXEL_SANDBOX_DESKTOP_IMAGE", "HMUX_VM_BLAXEL_ENABLED",
+      "E2B_API_KEY", "E2B_HMUXD_WS_TEMPLATE", "E2B_SANDBOX_TEMPLATE", "HMUX_VM_E2B_ENABLED",
+      "DAYTONA_API_KEY", "DAYTONA_API_URL", "DAYTONA_SANDBOX_SNAPSHOT", "HMUX_VM_DAYTONA_ENABLED",
     ]) {
       expect(requiredRuntimeEnvKeys).not.toContain(key);
       expect(recommendedRuntimeEnvKeys).not.toContain(key);
@@ -421,31 +421,31 @@ describe("free-provisioning override audit", () => {
 
   test("an explicit off value is clean", () => {
     for (const env of [
-      { CMUX_VM_ALLOW_FREE_PROVISIONING: "0" },
-      { CMUX_VM_ALLOW_FREE_PROVISIONING: "false" },
-      { CMUX_VM_REQUIRE_PRO: "1" },
+      { HMUX_VM_ALLOW_FREE_PROVISIONING: "0" },
+      { HMUX_VM_ALLOW_FREE_PROVISIONING: "false" },
+      { HMUX_VM_REQUIRE_PRO: "1" },
       // The new switch wins over a stale permissive legacy value.
-      { CMUX_VM_ALLOW_FREE_PROVISIONING: "0", CMUX_VM_REQUIRE_PRO: "0" },
+      { HMUX_VM_ALLOW_FREE_PROVISIONING: "0", HMUX_VM_REQUIRE_PRO: "0" },
     ]) {
       expect((auditFreeProvisioningOverride(env) as Audit).problems).toEqual([]);
     }
   });
 
   test("a permissive value fails the audit, not just a note", () => {
-    const result = auditFreeProvisioningOverride({ CMUX_VM_ALLOW_FREE_PROVISIONING: "1" }) as Audit;
+    const result = auditFreeProvisioningOverride({ HMUX_VM_ALLOW_FREE_PROVISIONING: "1" }) as Audit;
     expect(result.allowed).toBe(true);
     expect(result.problems.join("\n")).toContain("free Cloud VM provisioning is enabled");
-    expect(result.problems.join("\n")).toContain("CMUX_VM_ALLOW_FREE_PROVISIONING=1");
+    expect(result.problems.join("\n")).toContain("HMUX_VM_ALLOW_FREE_PROVISIONING=1");
   });
 
-  test("a lone legacy CMUX_VM_REQUIRE_PRO=0 is the same outage", () => {
-    const result = auditFreeProvisioningOverride({ CMUX_VM_REQUIRE_PRO: "0" }) as Audit;
+  test("a lone legacy HMUX_VM_REQUIRE_PRO=0 is the same outage", () => {
+    const result = auditFreeProvisioningOverride({ HMUX_VM_REQUIRE_PRO: "0" }) as Audit;
     expect(result.allowed).toBe(true);
-    expect(result.problems.join("\n")).toContain("legacy CMUX_VM_REQUIRE_PRO=0");
+    expect(result.problems.join("\n")).toContain("legacy HMUX_VM_REQUIRE_PRO=0");
   });
 
   test("a Sensitive override value cannot be audited and fails", () => {
-    const result = auditFreeProvisioningOverride({ CMUX_VM_ALLOW_FREE_PROVISIONING: "[SENSITIVE]" }) as Audit;
+    const result = auditFreeProvisioningOverride({ HMUX_VM_ALLOW_FREE_PROVISIONING: "[SENSITIVE]" }) as Audit;
     expect(result.allowed).toBe(false);
     expect(result.problems.join("\n")).toContain("cannot be audited");
   });
@@ -457,8 +457,8 @@ describe("free-provisioning override audit", () => {
     for (const allow of values) {
       for (const legacy of values) {
         const env: Record<string, string | undefined> = {};
-        if (allow !== undefined) env.CMUX_VM_ALLOW_FREE_PROVISIONING = allow;
-        if (legacy !== undefined) env.CMUX_VM_REQUIRE_PRO = legacy;
+        if (allow !== undefined) env.HMUX_VM_ALLOW_FREE_PROVISIONING = allow;
+        if (legacy !== undefined) env.HMUX_VM_REQUIRE_PRO = legacy;
         expect(isFreeProvisioningAllowed(env)).toBe(isVmFreeProvisioningAllowed(env));
         const production = { ...env, VERCEL_ENV: "production" };
         expect(isFreeProvisioningAllowed(production)).toBe(isVmFreeProvisioningAllowed(production));

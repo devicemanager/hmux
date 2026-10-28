@@ -1,4 +1,4 @@
-import CmuxWorkspaces
+import HmuxWorkspaces
 import Foundation
 
 /// Status-menu inputs belong to the same cached workspace projection as its

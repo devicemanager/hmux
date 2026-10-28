@@ -28,7 +28,7 @@ export type AppleAccountTokenApp = {
   readonly bundleId: string | null;
   readonly storeKitEnvironment: SignedAppleEnvironment | null;
   /**
-   * Periods the app can show (`x-cmux-billing-periods`). Older apps list
+   * Periods the app can show (`x-hmux-billing-periods`). Older apps list
    * every product in one plan list, so they get monthly products only.
    */
   readonly billingPeriods?: readonly AppleBillingPeriod[];
@@ -99,13 +99,13 @@ export function requestedAppleBundleId(header: string | null): string | null {
   return isAcceptedAppleBundleId(value) ? value : null;
 }
 
-/** `x-cmux-billing-periods: monthly,yearly`: the periods this app can show; monthly always. */
+/** `x-hmux-billing-periods: monthly,yearly`: the periods this app can show; monthly always. */
 export function requestedBillingPeriods(header: string | null): readonly AppleBillingPeriod[] {
   const values = new Set((header ?? "").split(",").map((value) => value.trim().toLowerCase()));
   return values.has("yearly") ? ["monthly", "yearly"] : ["monthly"];
 }
 
-/** `x-cmux-storekit-environment`: `Sandbox` or `Production`, else unknown. */
+/** `x-hmux-storekit-environment`: `Sandbox` or `Production`, else unknown. */
 export function requestedStoreKitEnvironment(header: string | null): SignedAppleEnvironment | null {
   const value = header?.trim();
   return isSignedAppleEnvironment(value) ? value : null;

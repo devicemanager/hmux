@@ -1,7 +1,7 @@
 import AppKit
-import CmuxSettings
-import CmuxSimulatorUI
-import CmuxTerminal
+import HmuxSettings
+import HmuxSimulatorUI
+import HmuxTerminal
 import WebKit
 
 struct ShortcutEventFocusContext {
@@ -99,8 +99,8 @@ struct ShortcutEventAlternateScreenCache {
 }
 
 extension Notification.Name {
-    static let debugBrowserReloadShortcutInvoked = Notification.Name("cmux.debugBrowserReloadShortcutInvoked")
-    static let debugBrowserHardReloadShortcutInvoked = Notification.Name("cmux.debugBrowserHardReloadShortcutInvoked")
+    static let debugBrowserReloadShortcutInvoked = Notification.Name("hmux.debugBrowserReloadShortcutInvoked")
+    static let debugBrowserHardReloadShortcutInvoked = Notification.Name("hmux.debugBrowserHardReloadShortcutInvoked")
 }
 
 extension AppDelegate {
@@ -284,7 +284,7 @@ extension AppDelegate {
     private func shortcutFileExplorerFocusView(for responder: NSResponder) -> NSView? {
         if let textView = responder as? NSTextView,
            textView.isFieldEditor,
-           let ownerView = cmuxFieldEditorOwnerView(textView) {
+           let ownerView = hmuxFieldEditorOwnerView(textView) {
             return fileExplorerShortcutFocusRoot(containing: ownerView)
         }
 
@@ -411,7 +411,7 @@ extension AppDelegate {
         let window = shortcutResolvedEventWindow(event) ?? NSApp.keyWindow ?? NSApp.mainWindow
         // Hosted inputs (TextBox, find field) count as the terminal they sit on,
         // so a focused TextBox over vim still reads as the alternate screen.
-        let terminalView = window?.firstResponder.cmuxTerminalFocusOwningGhosttyView()
+        let terminalView = window?.firstResponder.hmuxTerminalFocusOwningGhosttyView()
         let isActive = terminalView?.terminalSurface?.isAlternateScreenActive() ?? false
         shortcutEventAlternateScreenCache = ShortcutEventAlternateScreenCache(event: event, isActive: isActive)
         return isActive
@@ -428,7 +428,7 @@ extension AppDelegate {
         ) {
             return dockBrowser
         }
-        if responder.cmuxStrictOwningGhosttyView() != nil {
+        if responder.hmuxStrictOwningGhosttyView() != nil {
             return nil
         }
 
@@ -470,7 +470,7 @@ extension AppDelegate {
         ) {
             return dockBrowser
         }
-        if responder.cmuxStrictOwningGhosttyView() != nil {
+        if responder.hmuxStrictOwningGhosttyView() != nil {
             return nil
         }
         if let addressBarPanelId = focusedBrowserAddressBarPanelId(),
@@ -493,7 +493,7 @@ extension AppDelegate {
            let panel = shortcutBrowserPanel(webView: webView) {
             return panel
         }
-        if cmuxIsLikelyWebInspectorResponder(responder) {
+        if hmuxIsLikelyWebInspectorResponder(responder) {
             return shortcutWebInspectorFocusedBrowserPanel(in: window)
         }
         return shortcutFocusedBrowserPanel(in: window)
@@ -584,7 +584,7 @@ extension AppDelegate {
 
     private func shortcutWebInspectorFocusedBrowserPanel(in window: NSWindow?) -> BrowserPanel? {
         let responder = window?.firstResponder ?? NSApp.keyWindow?.firstResponder ?? NSApp.mainWindow?.firstResponder
-        guard cmuxIsLikelyWebInspectorResponder(responder) else { return nil }
+        guard hmuxIsLikelyWebInspectorResponder(responder) else { return nil }
 
         if let window,
            let context = mainWindowContexts[ObjectIdentifier(window)] ??
@@ -630,7 +630,7 @@ extension AppDelegate {
 
         if let textView = responder as? NSTextView,
            textView.isFieldEditor,
-           let ownerView = cmuxFieldEditorOwnerView(textView),
+           let ownerView = hmuxFieldEditorOwnerView(textView),
            let webView = shortcutOwningWebView(for: ownerView) {
             return webView
         }

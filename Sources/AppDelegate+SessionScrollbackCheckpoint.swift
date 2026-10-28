@@ -1,6 +1,6 @@
 import AppKit
-import CmuxTerminal
-import CmuxWorkspaces
+import HmuxTerminal
+import HmuxWorkspaces
 import Foundation
 
 extension AppDelegate {
@@ -17,7 +17,7 @@ extension AppDelegate {
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) {
         guard !SessionRestorePolicy.isRunningUnderAutomatedTests(environment: environment) else { return }
-        guard environment["CMUX_DISABLE_SESSION_RESTORE"] == "1" || !previousLaunchWasUnclean else { return }
+        guard environment["HMUX_DISABLE_SESSION_RESTORE"] == "1" || !previousLaunchWasUnclean else { return }
         sessionScrollbackCheckpointStore()?.prepareForLaunch(previousLaunchWasUnclean: false)
     }
 

@@ -1,6 +1,6 @@
-import CmuxAgentChat
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxAgentChat
+import HmuxTerminal
+import HmuxTerminalCore
 import Foundation
 
 /// Retains terminal render/tick notifications only while live prose streaming

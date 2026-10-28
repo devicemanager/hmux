@@ -1,7 +1,7 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxCloudMachines
-import CmuxFoundation
+import HmuxCloudMachines
+import HmuxFoundation
 
 @MainActor
 struct CloudTreeRowHeight {

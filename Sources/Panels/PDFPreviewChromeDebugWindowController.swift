@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
 import SwiftUI
 
@@ -79,7 +79,7 @@ private struct PDFPreviewChromeDebugView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 14) {
                 Text(String(localized: "debug.pdfPreviewChrome.heading", defaultValue: "PDF Preview Chrome"))
-                    .cmuxFont(.headline)
+                    .hmuxFont(.headline)
 
                 Text(
                     String(
@@ -87,7 +87,7 @@ private struct PDFPreviewChromeDebugView: View {
                         defaultValue: "Choose the floating control style used by PDF previews."
                     )
                 )
-                .cmuxFont(.subheadline)
+                .hmuxFont(.subheadline)
                 .foregroundStyle(.secondary)
 
                 GroupBox(String(localized: "debug.pdfPreviewChrome.toolbarReference", defaultValue: "Native Window Toolbar")) {
@@ -98,7 +98,7 @@ private struct PDFPreviewChromeDebugView: View {
                                 defaultValue: "Use the buttons in this debug window's titlebar toolbar to test real NSToolbar hover and press feedback."
                             )
                         )
-                        .cmuxFont(size: 12)
+                        .hmuxFont(size: 12)
                         .foregroundStyle(.secondary)
 
                         actionStatus
@@ -123,7 +123,7 @@ private struct PDFPreviewChromeDebugView: View {
                             currentVariant.title
                         )
                     )
-                    .cmuxFont(size: 11, weight: .medium)
+                    .hmuxFont(size: 11, weight: .medium)
                     .foregroundStyle(.secondary)
 
                     Spacer()
@@ -146,7 +146,7 @@ private struct PDFPreviewChromeDebugView: View {
     private var actionStatus: some View {
         if model.actionCount == 0 {
             Text(String(localized: "debug.pdfPreviewChrome.noActions", defaultValue: "No sample actions yet."))
-                .cmuxFont(size: 11, design: .monospaced)
+                .hmuxFont(size: 11, design: .monospaced)
                 .foregroundStyle(.secondary)
         } else {
             Text(
@@ -159,7 +159,7 @@ private struct PDFPreviewChromeDebugView: View {
                     model.actionCount
                 )
             )
-            .cmuxFont(size: 11, design: .monospaced)
+            .hmuxFont(size: 11, design: .monospaced)
             .foregroundStyle(.secondary)
         }
     }
@@ -174,7 +174,7 @@ private struct PDFPreviewChromeDebugView: View {
                     .frame(width: 16)
 
                 Text(variant.title)
-                    .cmuxFont(size: 13, weight: .medium)
+                    .hmuxFont(size: 13, weight: .medium)
 
                 Spacer()
 
@@ -191,7 +191,7 @@ private struct PDFPreviewChromeDebugView: View {
 
             HStack(spacing: 8) {
                 Text(String(localized: "debug.pdfPreviewChrome.sampleLabel", defaultValue: "Sample"))
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundStyle(.secondary)
                     .frame(width: 48, alignment: .leading)
 
@@ -230,7 +230,7 @@ private struct PDFPreviewChromeDebugSample: View {
     var body: some View {
         FilePreviewPDFZoomChromeView(
             chromeStyleVariant: variant,
-            fileURL: URL(fileURLWithPath: "/tmp/cmux-pdf-chrome-debug.pdf"),
+            fileURL: URL(fileURLWithPath: "/tmp/hmux-pdf-chrome-debug.pdf"),
             zoomOut: { model.record(.zoomOut) },
             actualSize: { model.record(.actualSize) },
             zoomIn: { model.record(.zoomIn) },
@@ -245,12 +245,12 @@ private struct PDFPreviewChromeDebugSample: View {
 
 final class PDFPreviewChromeDebugWindowController: ReleasingWindowController {
     static let shared = PDFPreviewChromeDebugWindowController()
-    private static let zoomOutItemID = NSToolbarItem.Identifier("cmux.pdfPreviewChromeDebug.zoomOut")
-    private static let actualSizeItemID = NSToolbarItem.Identifier("cmux.pdfPreviewChromeDebug.actualSize")
-    private static let zoomInItemID = NSToolbarItem.Identifier("cmux.pdfPreviewChromeDebug.zoomIn")
-    private static let zoomToFitItemID = NSToolbarItem.Identifier("cmux.pdfPreviewChromeDebug.zoomToFit")
-    private static let rotateLeftItemID = NSToolbarItem.Identifier("cmux.pdfPreviewChromeDebug.rotateLeft")
-    private static let rotateRightItemID = NSToolbarItem.Identifier("cmux.pdfPreviewChromeDebug.rotateRight")
+    private static let zoomOutItemID = NSToolbarItem.Identifier("hmux.pdfPreviewChromeDebug.zoomOut")
+    private static let actualSizeItemID = NSToolbarItem.Identifier("hmux.pdfPreviewChromeDebug.actualSize")
+    private static let zoomInItemID = NSToolbarItem.Identifier("hmux.pdfPreviewChromeDebug.zoomIn")
+    private static let zoomToFitItemID = NSToolbarItem.Identifier("hmux.pdfPreviewChromeDebug.zoomToFit")
+    private static let rotateLeftItemID = NSToolbarItem.Identifier("hmux.pdfPreviewChromeDebug.rotateLeft")
+    private static let rotateRightItemID = NSToolbarItem.Identifier("hmux.pdfPreviewChromeDebug.rotateRight")
 
     private let model = PDFPreviewChromeDebugModel()
 
@@ -269,7 +269,7 @@ final class PDFPreviewChromeDebugWindowController: ReleasingWindowController {
         window.titleVisibility = .visible
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.pdfPreviewChromeDebug")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.pdfPreviewChromeDebug")
         window.center()
         window.contentView = NSHostingView(rootView: PDFPreviewChromeDebugView(model: model))
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -287,7 +287,7 @@ final class PDFPreviewChromeDebugWindowController: ReleasingWindowController {
     }
 
     private func installToolbar(on window: NSWindow) {
-        let toolbar = NSToolbar(identifier: NSToolbar.Identifier("cmux.pdfPreviewChromeDebug.toolbar"))
+        let toolbar = NSToolbar(identifier: NSToolbar.Identifier("hmux.pdfPreviewChromeDebug.toolbar"))
         toolbar.delegate = self
         toolbar.displayMode = .iconOnly
         toolbar.sizeMode = .regular

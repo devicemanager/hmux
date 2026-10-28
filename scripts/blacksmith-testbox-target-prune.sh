@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Usage: blacksmith-testbox-target-prune.sh <target-dir> [max-bytes] [stale-days]
 #
-# Bounds the warm cmux-tui target dir before the Testbox commits it as the
-# sticky disk of its branch family (`cmux-tui-target-v2-<family>`). Every box of
+# Bounds the warm hmux-tui target dir before the Testbox commits it as the
+# sticky disk of its branch family (`hmux-tui-target-v2-<family>`). Every box of
 # that family clones that one snapshot,
 # so it must stay small enough to clone fast and must not grow without limit.
 #
@@ -20,7 +20,7 @@
 set -euo pipefail
 
 target="${1:?target dir}"
-# 100 GiB: a cold feat-cmux-next session (workspace build, test build, test
+# 100 GiB: a cold feat-hmux-next session (workspace build, test build, test
 # run, clippy --all-targets) leaves a 92 GB target dir (Testbox
 # tbx_01m4ga0aa7r4zkaxqjbttdj0dq, 2026-10-09). A 40 GiB bound evicted whole
 # profiles on every release, so the next box rebuilt test and clippy output.

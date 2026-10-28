@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import AppKit
-import CmuxAppKitSupportUI
+import HmuxAppKitSupportUI
 import SwiftUI
 
 /// A row glyph in the shared icon slot, drawn per the style's icon treatment:
@@ -16,11 +16,11 @@ struct CloudTreeRowIcon: View {
     var dimmed: Bool = false
     var weight: Font.Weight = .regular
     var size: CGFloat? = nil
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
 
     var body: some View {
         if let assetName {
-            CmuxResolvedIconImage(request: CmuxResolvedIconRequest(
+            HmuxResolvedIconImage(request: HmuxResolvedIconRequest(
                 source: .asset(name: assetName, bundle: .main),
                 size: NSSize(width: style.iconSize, height: style.iconSize),
                 fallbackSource: .systemSymbol(name: systemName, accessibilityDescription: nil),
@@ -59,7 +59,7 @@ struct CloudTreeRowIcon: View {
     }
 
     private func symbol(tint: Color, weight: Font.Weight, slotWidth: CGFloat? = nil) -> some View {
-        CmuxSystemSymbolImage(
+        HmuxSystemSymbolImage(
             magnified: systemName,
             pointSize: size ?? style.iconSize,
             weight: weight,

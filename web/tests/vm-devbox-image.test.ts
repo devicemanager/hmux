@@ -12,19 +12,19 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
-  CMUX_TUI_PORT,
-  CMUX_TUI_SESSION,
-  cmuxTuiDaemonCommand,
-  cmuxTuiLayoutSelector,
-} from "../services/vms/drivers/cmuxTuiDaemon";
+  HMUX_TUI_PORT,
+  HMUX_TUI_SESSION,
+  hmuxTuiDaemonCommand,
+  hmuxTuiLayoutSelector,
+} from "../services/vms/drivers/hmuxTuiDaemon";
 import {
   AGENT_PIN_ARGS,
   DEVBOX_SOURCE_SCHEMA,
   DEVBOX_TEMPLATE_FILES,
-  CMUX_TUI_STATE_MOUNT_HELPER_PATH,
-  CMUX_TUI_STATE_RESERVATION_MARKER_PATH,
-  CMUX_TUI_STATE_RESERVATION_BYTES,
-  CMUX_TUI_STATE_MAX_BYTES,
+  HMUX_TUI_STATE_MOUNT_HELPER_PATH,
+  HMUX_TUI_STATE_RESERVATION_MARKER_PATH,
+  HMUX_TUI_STATE_RESERVATION_BYTES,
+  HMUX_TUI_STATE_MAX_BYTES,
   agentPinDrift,
   devboxAgentPins,
   devboxCuaDriverVersion,
@@ -45,10 +45,10 @@ import {
   devboxWorkUserSetupCommand,
 } from "../services/vms/images/workUser";
 
-// Contract tests for the shared cmux Cloud devbox image template
+// Contract tests for the shared hmux Cloud devbox image template
 // (services/vms/images/devbox), consumed by build-devbox-freestyle.ts,
 // which replays its steps over Freestyle exec. These pin the
-// pieces other code depends on: the cmux-tui daemon contract each driver
+// pieces other code depends on: the hmux-tui daemon contract each driver
 // expects and the Dockerfile portability restrictions. The template IS the
 // artifact, so it is pinned here rather than only exercised by a live bake.
 
@@ -58,8 +58,8 @@ const read = (name: string) => readFileSync(path.join(templateDir, name), "utf8"
 const readScript = (name: string) => readFileSync(path.join(scriptsDir, name), "utf8");
 
 const dockerfile = read("Dockerfile");
-const bashrc = read("cmux-bashrc");
-const devboxBoot = read("cmux-devbox-boot");
+const bashrc = read("hmux-bashrc");
+const devboxBoot = read("hmux-devbox-boot");
 
 // A throwaway local HTTP server standing in for the coderouter opencode
 // config endpoint, and a shell run sourcing the generator against it.
@@ -84,13 +84,13 @@ const listen = (
 
 const sourceAgentConfig = (home: string, coderouterOrigin: string, fetchOpenCodeConfig = false, onFetchStarted?: () => void): Promise<void> =>
   new Promise((resolve, reject) => {
-    const child = spawn("/bin/bash", ["-c", `. ${path.join(templateDir, "agent-config.sh")}; ${fetchOpenCodeConfig ? "printf 'cmux-fetch-started\\n'; cmux_ensure_opencode_config" : ":"}`], {
+    const child = spawn("/bin/bash", ["-c", `. ${path.join(templateDir, "agent-config.sh")}; ${fetchOpenCodeConfig ? "printf 'hmux-fetch-started\\n'; hmux_ensure_opencode_config" : ":"}`], {
       env: {
         ...process.env,
         HOME: home,
         OPENAI_BASE_URL: `${coderouterOrigin}/v1`,
-        OPENAI_API_KEY: "cmux-vm-edge-placeholder",
-        CMUX_CODEROUTER_URL: coderouterOrigin,
+        OPENAI_API_KEY: "hmux-vm-edge-placeholder",
+        HMUX_CODEROUTER_URL: coderouterOrigin,
       },
       stdio: ["ignore", "pipe", "ignore"],
     });
@@ -98,7 +98,7 @@ const sourceAgentConfig = (home: string, coderouterOrigin: string, fetchOpenCode
     let reportedStart = false;
     child.stdout.on("data", (data: Buffer) => {
       output += data.toString();
-      if (!reportedStart && output.includes("cmux-fetch-started\n")) {
+      if (!reportedStart && output.includes("hmux-fetch-started\n")) {
         reportedStart = true;
         onFetchStarted?.();
       }
@@ -117,18 +117,18 @@ describe("devbox image template", () => {
       "agent-auth.sh",
       "agent-config.sh",
       "chrome-managed-policy.json",
-      "cmux-bashrc",
-      "cmux-claude",
-      "cmux-codex",
-      "cmux-devbox-boot",
-      "cmux-motd",
-      "cmux-opencode",
-      "cmux-prompt-sync",
-      "cmux-prompt.bash",
-      "cmux-python-completion.bash",
-      "cmux-terminfo.sh",
-      "cmux-terminfo.src",
-      "cmux-tui-state-mount",
+      "hmux-bashrc",
+      "hmux-claude",
+      "hmux-codex",
+      "hmux-devbox-boot",
+      "hmux-motd",
+      "hmux-opencode",
+      "hmux-prompt-sync",
+      "hmux-prompt.bash",
+      "hmux-python-completion.bash",
+      "hmux-terminfo.sh",
+      "hmux-terminfo.src",
+      "hmux-tui-state-mount",
       "codex-managed.toml",
       // The desktop layer (Freestyle only); pinned by vm-devbox-desktop.test.ts.
       "desktop",
@@ -140,17 +140,17 @@ describe("devbox image template", () => {
       "agent-auth.sh",
       "agent-config.sh",
       "chrome-managed-policy.json",
-      "cmux-bashrc",
-      "cmux-claude",
-      "cmux-codex",
-      "cmux-devbox-boot",
-      "cmux-motd",
-      "cmux-opencode",
-      "cmux-prompt.bash",
-      "cmux-python-completion.bash",
-      "cmux-terminfo.sh",
-      "cmux-terminfo.src",
-      "cmux-tui-state-mount",
+      "hmux-bashrc",
+      "hmux-claude",
+      "hmux-codex",
+      "hmux-devbox-boot",
+      "hmux-motd",
+      "hmux-opencode",
+      "hmux-prompt.bash",
+      "hmux-python-completion.bash",
+      "hmux-terminfo.sh",
+      "hmux-terminfo.src",
+      "hmux-tui-state-mount",
       "codex-managed.toml",
       "seed-history",
     ]);
@@ -158,12 +158,12 @@ describe("devbox image template", () => {
 
   test("the Ghostty version panes announce comes from the .deb pin and is a release version", () => {
     expect(devboxGhosttyVersion()).toMatch(/^\d+\.\d+\.\d+$/);
-    expect(devboxGhosttyVersion("ARG CMUX_IMAGE_GHOSTTY_DEB_URL=https://x/ghostty_1.2.3-0.ppa2_amd64_24.04.deb\n")).toBe("1.2.3");
-    expect(() => devboxGhosttyVersion("ARG CMUX_IMAGE_GHOSTTY_DEB_URL=https://x/ghostty.deb\n")).toThrow(/ghostty_<x.y.z>/);
+    expect(devboxGhosttyVersion("ARG HMUX_IMAGE_GHOSTTY_DEB_URL=https://x/ghostty_1.2.3-0.ppa2_amd64_24.04.deb\n")).toBe("1.2.3");
+    expect(() => devboxGhosttyVersion("ARG HMUX_IMAGE_GHOSTTY_DEB_URL=https://x/ghostty.deb\n")).toThrow(/ghostty_<x.y.z>/);
   });
 
-  test("agent-config.sh carries the cmux workspace and terminal ids as usage headers", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-agent-config-origin-"));
+  test("agent-config.sh carries the hmux workspace and terminal ids as usage headers", async () => {
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-agent-config-origin-"));
     try {
       const run = (extraEnv: Record<string, string>) =>
         runChild("/bin/bash", ["-c", `. ${path.join(templateDir, "agent-config.sh")}; printf '%s' "\${ANTHROPIC_CUSTOM_HEADERS-}"`], {
@@ -171,47 +171,47 @@ describe("devbox image template", () => {
             NODE_ENV: "test",
             PATH: process.env.PATH ?? "/usr/bin:/bin",
             HOME: home,
-            OPENAI_BASE_URL: "https://coderouter.cmux.test/v1",
-            OPENAI_API_KEY: "cmux-vm-edge-placeholder",
-            CMUX_CODEROUTER_URL: "https://coderouter.cmux.test",
+            OPENAI_BASE_URL: "https://coderouter.hmux.test/v1",
+            OPENAI_API_KEY: "hmux-vm-edge-placeholder",
+            HMUX_CODEROUTER_URL: "https://coderouter.hmux.test",
             ...extraEnv,
           },
         });
       expect((await run({})).stdout).toBe("");
-      expect((await run({ CMUX_WORKSPACE_ID: "ws_abc" })).stdout).toBe("x-cmux-workspace-id: ws_abc");
-      expect((await run({ CMUX_WORKSPACE_ID: "ws_abc", CMUX_SURFACE_ID: "sf_1" })).stdout).toBe(
-        "x-cmux-workspace-id: ws_abc\nx-cmux-surface-id: sf_1",
+      expect((await run({ HMUX_WORKSPACE_ID: "ws_abc" })).stdout).toBe("x-hmux-workspace-id: ws_abc");
+      expect((await run({ HMUX_WORKSPACE_ID: "ws_abc", HMUX_SURFACE_ID: "sf_1" })).stdout).toBe(
+        "x-hmux-workspace-id: ws_abc\nx-hmux-surface-id: sf_1",
       );
-      expect((await run({ CMUX_WORKSPACE_ID: "ws_abc", ANTHROPIC_CUSTOM_HEADERS: "x-mine: 1" })).stdout).toBe("x-mine: 1");
+      expect((await run({ HMUX_WORKSPACE_ID: "ws_abc", ANTHROPIC_CUSTOM_HEADERS: "x-mine: 1" })).stdout).toBe("x-mine: 1");
       const codexConfig = readFileSync(path.join(home, ".codex", "config.toml"), "utf8");
-      expect(codexConfig).toContain("[model_providers.cmux.env_http_headers]");
-      expect(codexConfig).toContain('"x-cmux-workspace-id" = "CMUX_WORKSPACE_ID"');
-      expect(codexConfig).toContain('"x-cmux-surface-id" = "CMUX_SURFACE_ID"');
-      expect(codexConfig.indexOf("[model_providers.cmux.env_http_headers]")).toBeLessThan(codexConfig.indexOf("[history]"));
+      expect(codexConfig).toContain("[model_providers.hmux.env_http_headers]");
+      expect(codexConfig).toContain('"x-hmux-workspace-id" = "HMUX_WORKSPACE_ID"');
+      expect(codexConfig).toContain('"x-hmux-surface-id" = "HMUX_SURFACE_ID"');
+      expect(codexConfig.indexOf("[model_providers.hmux.env_http_headers]")).toBeLessThan(codexConfig.indexOf("[history]"));
     } finally {
       rmSync(home, { recursive: true, force: true });
     }
   });
 
   test("every shell file parses", async () => {
-    for (const name of ["cmux-bashrc", "cmux-prompt.bash", "agent-config.sh", "cmux-terminfo.sh"]) {
+    for (const name of ["hmux-bashrc", "hmux-prompt.bash", "agent-config.sh", "hmux-terminfo.sh"]) {
       const result = await runChild("/bin/bash", ["-n", path.join(templateDir, name)]);
       expect({ name, status: result.status }).toEqual({ name, status: 0 });
     }
-    for (const name of ["cmux-devbox-boot", "cmux-tui-state-mount", "cmux-motd"]) {
+    for (const name of ["hmux-devbox-boot", "hmux-tui-state-mount", "hmux-motd"]) {
       const result = await runChild("sh", ["-n", path.join(templateDir, name)]);
       expect({ name, status: result.status }).toEqual({ name, status: 0 });
     }
   });
 
-  test("reserves an isolated, preallocated cmux-tui state filesystem with bounded growth", () => {
-    const mount = read("cmux-tui-state-mount");
+  test("reserves an isolated, preallocated hmux-tui state filesystem with bounded growth", () => {
+    const mount = read("hmux-tui-state-mount");
     const freestyle = readScript("build-devbox-freestyle.ts");
-    const upgrade = readScript("upgrade-fleet-cmux-tui.ts");
-    expect(mount).toContain(`STATE_SIZE_BYTES=${CMUX_TUI_STATE_RESERVATION_BYTES}`);
-    expect(mount).toContain(`STATE_MAX_BYTES=${CMUX_TUI_STATE_MAX_BYTES}`);
+    const upgrade = readScript("upgrade-fleet-hmux-tui.ts");
+    expect(mount).toContain(`STATE_SIZE_BYTES=${HMUX_TUI_STATE_RESERVATION_BYTES}`);
+    expect(mount).toContain(`STATE_MAX_BYTES=${HMUX_TUI_STATE_MAX_BYTES}`);
     expect(mount).toContain("grow_if_needed");
-    expect(mount).toContain("STATE_LOCK=/var/lib/cmux/cmux-tui-state.lock");
+    expect(mount).toContain("STATE_LOCK=/var/lib/hmux/hmux-tui-state.lock");
     expect(mount).toContain("flock -x 9");
     expect(mount).toContain("losetup -c");
     expect(mount).toContain("resize2fs");
@@ -219,19 +219,19 @@ describe("devbox image template", () => {
     expect(mount).toContain("ensure_locked");
     expect(mount).toContain("ROOT_MIN_FREE_KB");
     expect(upgrade).toContain('writeFileCommand(`${runDir}/state-mount.sh`, stateMountScript)');
-    expect(upgrade).toContain("CMUX_TUI_STATE_MOUNT_HELPER_PATH");
+    expect(upgrade).toContain("HMUX_TUI_STATE_MOUNT_HELPER_PATH");
     expect(mount).toContain("fallocate -l \"$STATE_SIZE_BYTES\"");
     expect(mount).toContain("mkfs.ext4 -F -m 0");
     expect(mount).toContain("mount -o loop");
     expect(mount).toContain("[ -f \"$STATE_IMAGE\" ] || return 0");
-    expect(read("cmux-devbox-boot")).toContain("cmux-tui state reservation is unavailable");
-    expect(read("cmux-devbox-boot")).toContain(`STATE_RESERVATION_MARKER=${CMUX_TUI_STATE_RESERVATION_MARKER_PATH}`);
-    expect(read("cmux-devbox-boot")).toContain("[ ! -x \"$STATE_MOUNT\" ] || [ ! -f \"$STATE_IMAGE\" ]");
-    expect(freestyle).toContain(`await put("cmux-tui-state-mount", "${CMUX_TUI_STATE_MOUNT_HELPER_PATH}", 0o755);`);
-    expect(freestyle).toContain('"cmux-tui-state-reservation"');
-    expect(freestyle).toContain("stat -c %s ${CMUX_TUI_STATE_IMAGE_PATH}");
-    expect(freestyle).toContain("printf 'cmux-tui-state-v1");
-    expect(freestyle).toContain("> ${CMUX_TUI_STATE_RESERVATION_MARKER_PATH}");
+    expect(read("hmux-devbox-boot")).toContain("hmux-tui state reservation is unavailable");
+    expect(read("hmux-devbox-boot")).toContain(`STATE_RESERVATION_MARKER=${HMUX_TUI_STATE_RESERVATION_MARKER_PATH}`);
+    expect(read("hmux-devbox-boot")).toContain("[ ! -x \"$STATE_MOUNT\" ] || [ ! -f \"$STATE_IMAGE\" ]");
+    expect(freestyle).toContain(`await put("hmux-tui-state-mount", "${HMUX_TUI_STATE_MOUNT_HELPER_PATH}", 0o755);`);
+    expect(freestyle).toContain('"hmux-tui-state-reservation"');
+    expect(freestyle).toContain("stat -c %s ${HMUX_TUI_STATE_IMAGE_PATH}");
+    expect(freestyle).toContain("printf 'hmux-tui-state-v1");
+    expect(freestyle).toContain("> ${HMUX_TUI_STATE_RESERVATION_MARKER_PATH}");
     expect(mount).toContain('if [ -d "$state" ]; then');
     expect(mount).toContain('cp -a "$state/." "$seed/"');
     expect(mount).toContain('cp -a "$seed/." "$state/"');
@@ -240,38 +240,38 @@ describe("devbox image template", () => {
     // The resource ladder remains the source of the VM's provisioned disk;
     // this fix must not smuggle in a larger storageMb or a new image size.
     expect(freestyle).not.toContain("storageMb: 65536");
-    expect(freestyle).not.toContain("CMUX_VM_DISK_MB");
+    expect(freestyle).not.toContain("HMUX_VM_DISK_MB");
   });
 
-  test("the login banner is cmux's, offline, and installed everywhere the base motd was", () => {
-    const motd = read("cmux-motd");
-    // The `cmux cloud` chevron logo from the CLI's cloud welcome
-    // (CLI/cmux.swift), same gradient and tagline.
+  test("the login banner is hmux's, offline, and installed everywhere the base motd was", () => {
+    const motd = read("hmux-motd");
+    // The `hmux cloud` chevron logo from the CLI's cloud welcome
+    // (CLI/hmux.swift), same gradient and tagline.
     expect(motd).toContain("persistent cloud VM");
     expect(motd).toContain("ready for coding agents");
     for (const rgb of ["0;212;255", "24;181;250", "48;150;245", "72;119;241", "96;88;239", "110;73;238", "124;58;237"]) {
       expect(motd).toContain(`38;2;${rgb}m`);
     }
-    expect(readFileSync(path.join(import.meta.dirname, "../../CLI/cmux.swift"), "utf8")).toContain(
+    expect(readFileSync(path.join(import.meta.dirname, "../../CLI/hmux.swift"), "utf8")).toContain(
       "x cloud\\\\033[0m",
     );
     // Seeds are readable by the work user (the seed pass runs as root and
     // ble.sh creates its cache dir 0700), and Ghostty's TERM is seeded too.
-    expect(dockerfile).toContain("chmod -R a+rX /etc/cmux/blesh-cache-seed");
-    expect(readScript("build-devbox-freestyle.ts")).toContain("chmod -R a+rX /etc/cmux/blesh-cache-seed");
+    expect(dockerfile).toContain("chmod -R a+rX /etc/hmux/blesh-cache-seed");
+    expect(readScript("build-devbox-freestyle.ts")).toContain("chmod -R a+rX /etc/hmux/blesh-cache-seed");
     expect(readScript("build-devbox-freestyle.ts")).toContain("linux xterm-ghostty; do");
     // Fast and offline: only baked files and cheap local commands.
     for (const forbidden of ["curl", "wget", "npm ", "claude --version", "apt"]) {
       expect({ forbidden, present: motd.includes(forbidden) }).toEqual({ forbidden, present: false });
     }
-    // Same sections as `cmux welcome`: shortcuts and the links.
+    // Same sections as `hmux welcome`: shortcuts and the links.
     expect(motd).toContain("Shortcuts");
     for (const line of ["New workspace", "Command palette", "Jump to latest unread", "https://cmux.com/docs", "https://discord.gg/xsgFEVrWCZ", "founders@manaflow.com"]) {
       expect(motd).toContain(line);
     }
-    expect(dockerfile).toContain("COPY cmux-motd /etc/update-motd.d/00-cmux");
+    expect(dockerfile).toContain("COPY hmux-motd /etc/update-motd.d/00-hmux");
     const freestyleScript = readScript("build-devbox-freestyle.ts");
-    expect(freestyleScript).toContain('"cmux-motd", "/etc/update-motd.d/00-cmux", 0o755');
+    expect(freestyleScript).toContain('"hmux-motd", "/etc/update-motd.d/00-hmux", 0o755');
     // The stock Ubuntu scripts stay in place but silent; the static motd is emptied.
     expect(freestyleScript).toContain("chmod -x");
     expect(freestyleScript).toContain(": > /etc/motd");
@@ -302,7 +302,7 @@ describe("devbox image template", () => {
     expect(freestyleScript).toContain("chmod a+rwxt /usr/local/share/blesh/state.d");
     expect(freestyleScript).toContain("motd.legal-displayed");
     expect(freestyleScript).toContain("chown -R ${WORK_USER}:${WORK_USER} ${WORK_HOME}");
-    // The interactive probe is a real pty (tmux) as the work user and requires the cmux prompt.
+    // The interactive probe is a real pty (tmux) as the work user and requires the hmux prompt.
     expect(freestyleScript).toContain("interactiveShellProbe(1)");
     expect(freestyleScript).toContain("interactiveShellProbe(2)");
     expect(freestyleScript).toContain('grep -q "λ"');
@@ -317,7 +317,7 @@ describe("devbox image template", () => {
   });
 
   test("ble.sh runtime files do not follow a transient XDG runtime directory", async () => {
-    const directory = mkdtempSync(path.join(tmpdir(), "cmux-blesh-runtime-"));
+    const directory = mkdtempSync(path.join(tmpdir(), "hmux-blesh-runtime-"));
     const blesh = path.join(directory, "blesh");
     const transientRuntime = path.join(directory, "transient-runtime");
     const bootRuntime = path.join(directory, "boot-runtime");
@@ -337,9 +337,9 @@ describe("devbox image template", () => {
     writeFileSync(
       rc,
       bashrc
-        .replaceAll("/etc/profile.d/cmux-terminfo.sh", path.join(directory, "terminfo.sh"))
-        .replaceAll("/etc/cmux", directory)
-        .replaceAll("/tmp/cmux-blesh-runtime-${UID}", bootRuntime)
+        .replaceAll("/etc/profile.d/hmux-terminfo.sh", path.join(directory, "terminfo.sh"))
+        .replaceAll("/etc/hmux", directory)
+        .replaceAll("/tmp/hmux-blesh-runtime-${UID}", bootRuntime)
         .replaceAll("/usr/local/share/blesh", blesh),
     );
     try {
@@ -348,7 +348,7 @@ describe("devbox image template", () => {
           NODE_ENV: "test",
           PATH: process.env.PATH!,
           HOME: directory,
-          USER: "cmux",
+          USER: "hmux",
           TERM: "dumb",
           XDG_RUNTIME_DIR: transientRuntime,
         },
@@ -369,7 +369,7 @@ describe("devbox image template", () => {
     // word has a dot, which stalled typing `python -m http.` for ~5 s.
     const python = (await runChild("bash", ["-c", "command -v python3"])).stdout.trim();
     expect(python).not.toBe("");
-    const directory = mkdtempSync(path.join(tmpdir(), "cmux-python-completion-"));
+    const directory = mkdtempSync(path.join(tmpdir(), "hmux-python-completion-"));
     const marker = path.join(directory, "imported");
     mkdirSync(path.join(directory, "noisy"));
     writeFileSync(path.join(directory, "noisy", "__init__.py"), `open(${JSON.stringify(marker)}, "w").close()\n`);
@@ -393,7 +393,7 @@ describe("devbox image template", () => {
     const completion = path.join(directory, "python-completion");
     writeFileSync(
       completion,
-      readFileSync(path.join(templateDir, "cmux-python-completion.bash"), "utf8")
+      readFileSync(path.join(templateDir, "hmux-python-completion.bash"), "utf8")
         .replaceAll("/usr/share/bash-completion/completions/python", stock),
     );
     try {
@@ -419,28 +419,28 @@ describe("devbox image template", () => {
     }
   });
 
-  test("one non-root work user named cmux, on a machine named cmux", () => {
-    // Half the complaint this answers: a cmux Cloud terminal opened as
+  test("one non-root work user named hmux, on a machine named hmux", () => {
+    // Half the complaint this answers: a hmux Cloud terminal opened as
     // `root@freestyle-vm`, and `claude --dangerously-skip-permissions` refuses
     // to start as root. The machine's own name is the other half, and its own
     // contract (services/vms/images/identity.ts, vm-devbox-identity.test.ts).
-    expect(DEVBOX_WORK_USER).toBe("cmux");
-    expect(DEVBOX_WORK_HOME).toBe("/home/cmux");
+    expect(DEVBOX_WORK_USER).toBe("hmux");
+    expect(DEVBOX_WORK_HOME).toBe("/home/hmux");
     // Renamed, not added: the provider's exec default is the uid-1000 account,
     // so a second account would split the machine between two homes.
     expect(DEVBOX_WORK_UID).toBe(1000);
     const setup = devboxWorkUserSetupCommand();
-    expect(setup).toContain("usermod -l cmux -d /home/cmux -m \"$old\"");
-    expect(setup).toContain("groupmod -n cmux \"$old\"");
+    expect(setup).toContain("usermod -l hmux -d /home/hmux -m \"$old\"");
+    expect(setup).toContain("groupmod -n hmux \"$old\"");
     // Idempotent: a re-bake over an already-renamed machine must not fail.
-    expect(setup).toContain("if ! id -u cmux >/dev/null 2>&1; then");
+    expect(setup).toContain("if ! id -u hmux >/dev/null 2>&1; then");
     // The base's NOPASSWD policy names the account being renamed away.
-    expect(setup).toContain("grep -q '^cmux[[:space:]]' \"$f\" || rm -f \"$f\"");
-    expect(setup).toContain("sudo -n -u cmux sudo -n true");
+    expect(setup).toContain("grep -q '^hmux[[:space:]]' \"$f\" || rm -f \"$f\"");
+    expect(setup).toContain("sudo -n -u hmux sudo -n true");
     // Ubuntu's user-private-group umask leaves the daemon's state dir
-    // group-writable, and cmux-tui refuses to store its identity under one.
+    // group-writable, and hmux-tui refuses to store its identity under one.
     expect(setup).toContain("USERGROUPS_ENAB no");
-    expect(setup).toContain('[ "$(sudo -n -u cmux sh -c umask)" = 0022 ]');
+    expect(setup).toContain('[ "$(sudo -n -u hmux sh -c umask)" = 0022 ]');
     // The bake sets this up before any layer writes into the home or names
     // the account, and the desktop session runs as the same user.
     const freestyleScript = readScript("build-devbox-freestyle.ts");
@@ -452,7 +452,7 @@ describe("devbox image template", () => {
     const verify = readScript("verify-devbox-image.ts");
     expect(verify).toContain("one-work-user");
     expect(verify).toContain("hostname-ok");
-    expect(verify).toContain("prompt-says-cmux-at-cmux");
+    expect(verify).toContain("prompt-says-hmux-at-hmux");
     expect(verify).toContain("claude-reaches-the-prompt");
     expect(verify).toContain("daemon-runs-as-work-user");
   });
@@ -469,12 +469,12 @@ describe("devbox image template", () => {
     // Bound to THIS machine, not merely present: a clone resumes the source
     // machine's daemon, which answers with the source's identity until the
     // supervisor re-keys it.
-    expect(wait).toContain('[ "$(cat /etc/cmux/daemon-instance-id 2>/dev/null)" = "$cmux_instance" ]');
+    expect(wait).toContain('[ "$(cat /etc/hmux/daemon-instance-id 2>/dev/null)" = "$hmux_instance" ]');
     expect(wait).toContain("latest/meta-data/instance-id");
     // Both sides non-empty: an unreachable metadata service yields an empty id
     // and an unwritten marker reads empty, so a bare comparison would call
     // "" = "" a bound identity and report ready on the first poll.
-    expect(wait).toContain('[ -n "$cmux_instance" ]');
+    expect(wait).toContain('[ -n "$hmux_instance" ]');
     // Bounded and fails closed.
     expect(wait).toContain("seq 1 240");
     expect(wait).toContain("exit 1");
@@ -487,7 +487,7 @@ describe("devbox image template", () => {
     // The ladder rows are independent, so they run concurrently, and the full
     // Noise/RPC/PTY round trip runs once per ladder instead of on all six.
     const derive = readScript("derive-devbox-sizes.ts");
-    expect(derive).toContain("CMUX_DEVBOX_DERIVE_CONCURRENCY");
+    expect(derive).toContain("HMUX_DEVBOX_DERIVE_CONCURRENCY");
     expect(derive).toContain("async function deriveSize(");
     expect(derive).toContain("if (name === smokeSize) {");
   });
@@ -495,7 +495,7 @@ describe("devbox image template", () => {
   test("the readiness wait fails closed when it cannot identify the machine", async () => {
     // Runs the generated shell for real on a host with no metadata service and
     // no marker file: the honest answer is "not ready", not an instant pass.
-    const script = path.join(mkdtempSync(path.join(tmpdir(), "cmux-ready-")), "wait.sh");
+    const script = path.join(mkdtempSync(path.join(tmpdir(), "hmux-ready-")), "wait.sh");
     writeFileSync(script, devboxWaitForDaemonCommand(1));
     const result = await runChild("/bin/sh", [script], { timeout: 20_000 });
     expect(result.status).toBe(1);
@@ -530,7 +530,7 @@ describe("devbox image template", () => {
   test("bakes ble.sh cache seeds for every shared devbox provider", () => {
     // The shared bashrc guard is useful only when each bake creates the seed.
     for (const term of ["xterm-256color", "screen-256color", "tmux-256color", "linux"]) {
-      expect(dockerfile).toContain(`test -s /etc/cmux/blesh-cache-seed/blesh/*/term.${term}`);
+      expect(dockerfile).toContain(`test -s /etc/hmux/blesh-cache-seed/blesh/*/term.${term}`);
     }
     expect(dockerfile).toContain("/usr/local/share/blesh/cache.d/0");
     expect(readScript("build-devbox-freestyle.ts")).toContain("blesh-cache-seed");
@@ -542,13 +542,13 @@ describe("devbox image template", () => {
     // stack are exactly what the bake installs (desktop pins are read from
     // this file: vm-devbox-desktop.test.ts).
     expect(dockerfile).toMatch(/^FROM ubuntu:24\.04$/m);
-    expect(dockerfile).toContain("ARG CMUX_IMAGE_DESKTOP_PACKAGES=");
-    expect(dockerfile).toContain("ARG CMUX_IMAGE_GHOSTTY_DEB_URL=");
-    // The work user is the base's uid-1000 account renamed to cmux, with
+    expect(dockerfile).toContain("ARG HMUX_IMAGE_DESKTOP_PACKAGES=");
+    expect(dockerfile).toContain("ARG HMUX_IMAGE_GHOSTTY_DEB_URL=");
+    // The work user is the base's uid-1000 account renamed to hmux, with
     // passwordless sudo, on both recipes (services/vms/images/workUser.ts).
-    expect(dockerfile).toContain('usermod -l cmux -d /home/cmux -m "$old" && groupmod -n cmux "$old"');
-    expect(dockerfile).toContain('echo "cmux ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/91-cmux-work-user');
-    expect(dockerfile).toContain('[ "$(id -u cmux)" = 1000 ]');
+    expect(dockerfile).toContain('usermod -l hmux -d /home/hmux -m "$old" && groupmod -n hmux "$old"');
+    expect(dockerfile).toContain('echo "hmux ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/91-hmux-work-user');
+    expect(dockerfile).toContain('[ "$(id -u hmux)" = 1000 ]');
     expect(readScript("build-devbox-freestyle.ts")).toContain('await step("work-user", devboxWorkUserSetupCommand());');
     // ss for the desktop's port probes (start-vnc.sh) on both recipes.
     expect(dockerfile).toContain("iproute2");
@@ -573,36 +573,36 @@ describe("devbox image template", () => {
     );
   });
 
-  test("cmux-tui is the one session daemon; nothing cmuxd-era survives", () => {
+  test("hmux-tui is the one session daemon; nothing hmuxd-era survives", () => {
     // The supervisor runs the exact daemon command the drivers use, so the
     // two can never drift apart.
-    expect(CMUX_TUI_PORT).toBe(1337);
-    expect(CMUX_TUI_SESSION).toBe("cloud");
+    expect(HMUX_TUI_PORT).toBe(1337);
+    expect(HMUX_TUI_SESSION).toBe("cloud");
     // The boot script parameterizes only the listener bind (the env Freestyle
     // public platform's systemd unit sets); everything else must match the drivers'
     // command byte for byte, so passing the shell expansion as the bind
     // reconstructs the script's exact line.
     expect(devboxBoot).toContain(
-      cmuxTuiDaemonCommand('"${CMUX_TUI_REMOTE_WS_BIND:-0.0.0.0:1337}"'),
+      hmuxTuiDaemonCommand('"${HMUX_TUI_REMOTE_WS_BIND:-0.0.0.0:1337}"'),
     );
-    expect(cmuxTuiDaemonCommand()).toContain("--remote-ws 0.0.0.0:1337");
+    expect(hmuxTuiDaemonCommand()).toContain("--remote-ws 0.0.0.0:1337");
     // The supervisor reads the daemon layout the same way the command does, so
     // the state it wipes on a clone is the state the daemon actually writes.
-    expect(devboxBoot).toContain(cmuxTuiLayoutSelector());
-    expect(devboxBoot).toContain('BIN="$CMUX_TUI_BIN"');
+    expect(devboxBoot).toContain(hmuxTuiLayoutSelector());
+    expect(devboxBoot).toContain('BIN="$HMUX_TUI_BIN"');
     expect(devboxBoot).toContain('if [ -x "$BIN" ]');
-    expect(dockerfile).toContain("COPY cmux-devbox-boot /usr/local/bin/cmux-devbox-boot");
-    expect(dockerfile).toContain("COPY cmux-tui-state-mount /usr/local/bin/cmux-tui-state-mount");
+    expect(dockerfile).toContain("COPY hmux-devbox-boot /usr/local/bin/hmux-devbox-boot");
+    expect(dockerfile).toContain("COPY hmux-tui-state-mount /usr/local/bin/hmux-tui-state-mount");
     expect(dockerfile).toContain("    e2fsprogs \\");
-    expect(readScript("build-devbox-freestyle.ts")).toContain('await put("cmux-tui-state-mount", "/usr/local/bin/cmux-tui-state-mount", 0o755);');
+    expect(readScript("build-devbox-freestyle.ts")).toContain('await put("hmux-tui-state-mount", "/usr/local/bin/hmux-tui-state-mount", 0o755);');
     // A Freestyle snapshot is a memory image: the supervisor keys the daemon
     // identity on the platform instance id and holds the daemon on the
     // builder. A fork or checkpoint of a running machine carries its parent's
     // remote identity, so a clone drops auth and connection state.
-    expect(devboxBoot).toContain('REMOTE_STATE_DIR="$CMUX_TUI_HOME/.local/state/cmux/remote"');
+    expect(devboxBoot).toContain('REMOTE_STATE_DIR="$HMUX_TUI_HOME/.local/state/hmux/remote"');
     expect(devboxBoot).toContain("/latest/meta-data/instance-id");
-    expect(devboxBoot).toContain("BOUND_INSTANCE_FILE=/etc/cmux/daemon-instance-id");
-    expect(devboxBoot).toContain("BAKE_INSTANCE_FILE=/etc/cmux/bake-instance-id");
+    expect(devboxBoot).toContain("BOUND_INSTANCE_FILE=/etc/hmux/daemon-instance-id");
+    expect(devboxBoot).toContain("BAKE_INSTANCE_FILE=/etc/hmux/bake-instance-id");
     expect(devboxBoot).toContain('find "$REMOTE_STATE_DIR/sessions"');
     expect(devboxBoot).toContain('rm -rf "$REMOTE_STATE_DIR/connections"');
     // The supervisor owns the daemon as a background child so it can stop a
@@ -617,29 +617,29 @@ describe("devbox image template", () => {
     // command, proves the daemon, and parks it before the snapshot; the size
     // derive parks before each of its snapshots too.
     const freestyleBake = readScript("build-devbox-freestyle.ts");
-    expect(freestyleBake).toContain('await step("cmux-tui-install", cmuxTuiInstallCommand(cmuxTuiSource));');
-    expect(freestyleBake).toContain('await step("cmux-tui-daemon-park", devboxParkDaemonCommand());');
+    expect(freestyleBake).toContain('await step("hmux-tui-install", hmuxTuiInstallCommand(hmuxTuiSource));');
+    expect(freestyleBake).toContain('await step("hmux-tui-daemon-park", devboxParkDaemonCommand());');
     expect(readScript("derive-devbox-sizes.ts")).toContain("await sh(vm, devboxParkDaemonCommand(), 120_000);");
-    expect(devboxParkDaemonCommand()).toContain("> /etc/cmux/bake-instance-id");
+    expect(devboxParkDaemonCommand()).toContain("> /etc/hmux/bake-instance-id");
     expect(devboxParkDaemonCommand()).toContain("daemon-parked-for-clones");
-    // The container image bakes no binary, and the old cmuxd stack is gone everywhere.
-    // The image itself carries nothing cmuxd-era, and no bake or verify
+    // The container image bakes no binary, and the old hmuxd stack is gone everywhere.
+    // The image itself carries nothing hmuxd-era, and no bake or verify
     // script installs or launches the old daemon (prose references to the
     // legacy driver are fine).
-    expect(dockerfile).not.toContain("cmuxd");
-    expect(devboxBoot).not.toContain("cmuxd");
+    expect(dockerfile).not.toContain("hmuxd");
+    expect(devboxBoot).not.toContain("hmuxd");
     for (const name of [
       "build-devbox-freestyle.ts",
       "verify-devbox-image.ts",
     ]) {
-      expect({ name, installsCmuxd: readScript(name).includes("/usr/local/bin/cmuxd-remote") })
-        .toEqual({ name, installsCmuxd: false });
+      expect({ name, installsHmuxd: readScript(name).includes("/usr/local/bin/hmuxd-remote") })
+        .toEqual({ name, installsHmuxd: false });
     }
   });
 
-  test("the daemon supervisor replaces a live but unresponsive cmux-tui", () => {
+  test("the daemon supervisor replaces a live but unresponsive hmux-tui", () => {
     // Process liveness alone misses the incident this image is meant to
-    // recover from: cmux-tui can consume a vCPU while never answering its
+    // recover from: hmux-tui can consume a vCPU while never answering its
     // local lifecycle socket. Keep this contract close to the image source so
     // a future supervisor edit cannot silently remove the recovery fence.
     expect(devboxBoot).toContain("server status --session cloud");
@@ -648,7 +648,7 @@ describe("devbox image template", () => {
     expect(devboxBoot).toContain("DAEMON_HEALTH_STARTUP_GRACE=48");
     // Recovery uses the existing lifecycle functions, which do not delete the
     // daemon's state directory or its remote terminal hosts.
-    expect(devboxBoot).toContain('REMOTE_STATE_DIR="$CMUX_TUI_HOME/.local/state/cmux/remote"');
+    expect(devboxBoot).toContain('REMOTE_STATE_DIR="$HMUX_TUI_HOME/.local/state/hmux/remote"');
   });
 
   test("the health fence waits through startup and then restarts after consecutive failures", async () => {
@@ -678,14 +678,14 @@ test "$daemon_pid" = fixture
     const result = await runChild("/bin/sh", ["-c", fixture], { timeout: 20_000 });
     expect({ status: result.status, stderr: result.stderr }).toEqual({
       status: 0,
-      stderr: "cmux-devbox-boot: cmux-tui health probe failed 3 times; restarting daemon\n",
+      stderr: "hmux-devbox-boot: hmux-tui health probe failed 3 times; restarting daemon\n",
     });
   });
 
   test("the Freestyle boot path supervises the daemon through systemd", () => {
     const freestyleScript = readScript("build-devbox-freestyle.ts");
-    expect(freestyleScript).toContain("ExecStart=/usr/local/bin/cmux-devbox-boot");
-    expect(freestyleScript).toContain("cmux-tui-daemon.service");
+    expect(freestyleScript).toContain("ExecStart=/usr/local/bin/hmux-devbox-boot");
+    expect(freestyleScript).toContain("hmux-tui-daemon.service");
     expect(freestyleScript).toContain("Restart=always");
   });
 
@@ -694,10 +694,10 @@ test "$daemon_pid" = fixture
     // and both cache targets so the provider-specific path cannot silently
     // drift while the Dockerfile path stays correct.
     const freestyleScript = readScript("build-devbox-freestyle.ts");
-    expect(freestyleScript).toContain("mkdir -p /etc/cmux/blesh-cache-seed");
+    expect(freestyleScript).toContain("mkdir -p /etc/hmux/blesh-cache-seed");
     for (const term of ["xterm-256color", "screen-256color", "tmux-256color", "linux"]) {
       expect(freestyleScript).toContain(
-        `test -s /etc/cmux/blesh-cache-seed/blesh/*/term.${term}`,
+        `test -s /etc/hmux/blesh-cache-seed/blesh/*/term.${term}`,
       );
     }
     expect(freestyleScript).toContain("/usr/local/share/blesh/cache.d/0/");
@@ -709,11 +709,11 @@ test "$daemon_pid" = fixture
 
   test("agent and CUA driver pins are exact and reach the build scripts", () => {
     for (const arg of [
-      "CMUX_IMAGE_CLAUDE_CODE_VERSION",
-      "CMUX_IMAGE_CODEX_VERSION",
-      "CMUX_IMAGE_OPENCODE_VERSION",
-      "CMUX_IMAGE_PI_VERSION",
-      "CMUX_IMAGE_AGENT_BROWSER_VERSION",
+      "HMUX_IMAGE_CLAUDE_CODE_VERSION",
+      "HMUX_IMAGE_CODEX_VERSION",
+      "HMUX_IMAGE_OPENCODE_VERSION",
+      "HMUX_IMAGE_PI_VERSION",
+      "HMUX_IMAGE_AGENT_BROWSER_VERSION",
     ]) {
       const devboxPin = new RegExp(`^ARG ${arg}=(\\S+)$`, "m").exec(dockerfile)?.[1];
       // Ranges and floating tags would make a bake unreproducible.
@@ -752,7 +752,7 @@ test "$daemon_pid" = fixture
       expect(() => rewriteDevboxAgentPins(dockerfile, { "@openai/codex": bad })).toThrow(/not an exact x\.y\.z release/);
     }
     expect(() => rewriteDevboxAgentPins(dockerfile, { "left-pad": "1.0.0" })).toThrow(/not a devbox agent pin/);
-    expect(() => rewriteDevboxAgentPins("FROM ubuntu:24.04\n", { "@openai/codex": "1.0.0" })).toThrow(/missing ARG CMUX_IMAGE_CODEX_VERSION/);
+    expect(() => rewriteDevboxAgentPins("FROM ubuntu:24.04\n", { "@openai/codex": "1.0.0" })).toThrow(/missing ARG HMUX_IMAGE_CODEX_VERSION/);
     // The drift report keys by package and flags any pin that is not the registry's latest.
     const latest = Object.fromEntries(pins.map((pin) => [pin.pkg, pin.version]));
     expect(agentPinDrift(pins, latest).every((row) => !row.behind)).toBe(true);
@@ -780,7 +780,7 @@ test "$daemon_pid" = fixture
     expect(devboxSourceDigest("base", dockerfile)).toBe(devboxSourceDigest("base", `${dockerfile}\n# a comment changes no machine\n`));
     const codex = devboxAgentPins(dockerfile).find((pin) => pin.pkg === "@openai/codex")!;
     expect(devboxSourceDigest("base", rewriteDevboxAgentPins(dockerfile, { "@openai/codex": `${codex.version}9` }))).not.toBe(devboxSourceDigest("base", dockerfile));
-    expect(devboxSourceDigest("base", dockerfile.replace(/^ENV CMUX_IMAGE_EPOCH=.*$/m, "ENV CMUX_IMAGE_EPOCH=1999-01-01-r1"))).not.toBe(devboxSourceDigest("base", dockerfile));
+    expect(devboxSourceDigest("base", dockerfile.replace(/^ENV HMUX_IMAGE_EPOCH=.*$/m, "ENV HMUX_IMAGE_EPOCH=1999-01-01-r1"))).not.toBe(devboxSourceDigest("base", dockerfile));
     // Schema 2 also sees a Dockerfile instruction change (a package added to a
     // RUN, no ARG moved) and any non-blank line change in the bake script; a
     // Dockerfile comment moves nothing. Schema 1, the formula the first
@@ -857,7 +857,7 @@ test "$daemon_pid" = fixture
 
   test("codex's own hook-trust verdict gates a daemon pane's codex launch", async () => {
     // Codex draws its composer before "Hooks need review", so the PTY probes
-    // above cannot see a cmux-tui codex wrapper whose injected trust codex
+    // above cannot see a hmux-tui codex wrapper whose injected trust codex
     // ignores (#20482); the verifier asks codex's hooks/list instead.
     const verify = readScript("verify-devbox-image.ts");
     expect(verify).toContain('codexHookTrustCheck(DEVBOX_WORK_USER, DEVBOX_WORK_HOME, "codex-pane-hooks-trusted"');
@@ -879,7 +879,7 @@ test "$daemon_pid" = fixture
     // The freestyle bake's systemd unit binds the daemon dual-stack: the
     // driver's route is the VM's public IPv6 straight to port 1337.
     expect(readScript("build-devbox-freestyle.ts")).toContain(
-      "Environment=CMUX_TUI_REMOTE_WS_BIND=[::]:1337",
+      "Environment=HMUX_TUI_REMOTE_WS_BIND=[::]:1337",
     );
     // Both the bake and the verifier must pin root: the 0.2 API's default guest
     // user is uid 1000, which the devbox image ships.
@@ -900,13 +900,13 @@ test "$daemon_pid" = fixture
 
   test("agent config generator is sourced for every shell family", () => {
     expect(dockerfile).toContain(
-      "'[ -f /etc/cmux/agent-config.sh ] && . /etc/cmux/agent-config.sh' > /etc/profile.d/cmux-agents.sh",
+      "'[ -f /etc/hmux/agent-config.sh ] && . /etc/hmux/agent-config.sh' > /etc/profile.d/hmux-agents.sh",
     );
     for (const target of ["/etc/bash.bashrc", "/etc/skel/.bashrc", "/root/.bashrc"]) {
       expect(dockerfile).toContain(
-        `'[ -f /etc/cmux/agent-config.sh ] && . /etc/cmux/agent-config.sh' >> ${target}`,
+        `'[ -f /etc/hmux/agent-config.sh ] && . /etc/hmux/agent-config.sh' >> ${target}`,
       );
-      expect(dockerfile).toContain(`'[ -f /etc/cmux/bashrc ] && . /etc/cmux/bashrc' >> ${target}`);
+      expect(dockerfile).toContain(`'[ -f /etc/hmux/bashrc ] && . /etc/hmux/bashrc' >> ${target}`);
     }
     // The image must prove generation in a throwaway HOME and ship none.
     expect(readScript("build-devbox-freestyle.ts")).toContain(
@@ -918,7 +918,7 @@ test "$daemon_pid" = fixture
     );
     expect(dockerfile).toContain("test ! -e /root/.pi/agent/models.json");
     expect(dockerfile).toContain("test ! -e /root/.config/opencode/opencode.json");
-    expect(dockerfile).toContain("test ! -e /root/.config/cmux/model-plane.env");
+    expect(dockerfile).toContain("test ! -e /root/.config/hmux/model-plane.env");
     // The build check proves the pi config generates with the placeholder JWT
     // and no route-token header (the edge injects it), that every model-plane
     // var is persisted, and that an unreachable config endpoint writes no
@@ -928,15 +928,15 @@ test "$daemon_pid" = fixture
       "! grep -q 'x-coderouter-route-token' /tmp/agent-config-check/.pi/agent/models.json",
       "! grep -q 'crt_' /tmp/agent-config-check/.pi/agent/models.json",
       "test ! -e /tmp/agent-config-check/.config/opencode/opencode.json",
-      `grep -q "export CMUX_VM_ID='vm-check'" /tmp/agent-config-check/.config/cmux/model-plane.env`,
-      `grep -q "export ANTHROPIC_BASE_URL='https://example.invalid'" /tmp/agent-config-check/.config/cmux/model-plane.env`,
+      `grep -q "export HMUX_VM_ID='vm-check'" /tmp/agent-config-check/.config/hmux/model-plane.env`,
+      `grep -q "export ANTHROPIC_BASE_URL='https://example.invalid'" /tmp/agent-config-check/.config/hmux/model-plane.env`,
     ]) {
       expect(dockerfile).toContain(check);
     }
     for (const script of ["build-devbox-freestyle.ts", "verify-devbox-image.ts"]) {
       const source = readScript(script);
-      expect(source).toContain("OPENAI_API_KEY=cmux-vm-edge-placeholder");
-      expect(source).toContain("CMUX_VM_ID=vm-check");
+      expect(source).toContain("OPENAI_API_KEY=hmux-vm-edge-placeholder");
+      expect(source).toContain("HMUX_VM_ID=vm-check");
       expect(source).toContain("x-coderouter-route-token");
       expect(source).not.toContain("OPENAI_API_KEY=crt_check");
     }
@@ -952,7 +952,7 @@ test "$daemon_pid" = fixture
     );
     // The export is guarded by the file's existence and does not override a
     // user's own setting; on this host the file is absent, so nothing leaks.
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-devbox-ca-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-devbox-ca-"));
     try {
       const result = await runChild(
         "sh",
@@ -977,17 +977,17 @@ test "$daemon_pid" = fixture
   });
 
   test("agent config generator adds the codex provider around hook trust state another writer left first", async () => {
-    // The bake runs `cmux-tui agent hook install codex` before any shell has
+    // The bake runs `hmux-tui agent hook install codex` before any shell has
     // seen a boot env, so ~/.codex/config.toml already exists with only the
     // hook trust table. The provider block goes in around it: bare key on
     // top, tables at the end, trust state untouched, one TOML document.
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-devbox-agent-config-merge-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-devbox-agent-config-merge-"));
     try {
       mkdirSync(path.join(home, ".codex"), { recursive: true });
       const hooks = [
         "[hooks]",
         "",
-        '[hooks.state."/home/cmux/.codex/hooks.json:Stop:0:0"]',
+        '[hooks.state."/home/hmux/.codex/hooks.json:Stop:0:0"]',
         'trusted_hash = "3f0c"',
         "",
       ].join("\n");
@@ -997,32 +997,32 @@ test "$daemon_pid" = fixture
         HOME: home,
         PATH: "/usr/bin:/bin",
         OPENAI_BASE_URL: "https://example.invalid/v1",
-        OPENAI_API_KEY: "cmux-vm-edge-placeholder",
-        CMUX_CODEROUTER_URL: "https://example.invalid",
+        OPENAI_API_KEY: "hmux-vm-edge-placeholder",
+        HMUX_CODEROUTER_URL: "https://example.invalid",
       };
       expect((await runChild("/bin/bash", ["-c", `. ${path.join(templateDir, "agent-config.sh")}`], { env })).status).toBe(0);
       const merged = readFileSync(path.join(home, ".codex/config.toml"), "utf8");
       const parsed = Bun.TOML.parse(merged) as Record<string, unknown>;
-      expect(parsed.model_provider).toBe("cmux");
-      expect(parsed.hooks).toEqual({ state: { "/home/cmux/.codex/hooks.json:Stop:0:0": { trusted_hash: "3f0c" } } });
+      expect(parsed.model_provider).toBe("hmux");
+      expect(parsed.hooks).toEqual({ state: { "/home/hmux/.codex/hooks.json:Stop:0:0": { trusted_hash: "3f0c" } } });
       expect(parsed.model_providers).toEqual({
-        cmux: {
-          name: "cmux",
+        hmux: {
+          name: "hmux",
           base_url: "https://example.invalid/v1",
           env_key: "OPENAI_API_KEY",
           wire_api: "responses",
           requires_openai_auth: false,
           supports_websockets: false,
           env_http_headers: {
-            "x-cmux-surface-id": "CMUX_SURFACE_ID",
-            "x-cmux-workspace-id": "CMUX_WORKSPACE_ID",
+            "x-hmux-surface-id": "HMUX_SURFACE_ID",
+            "x-hmux-workspace-id": "HMUX_WORKSPACE_ID",
           },
         },
       });
       expect(parsed.history).toEqual({ persistence: "save-all" });
       // The bare key precedes the first table header, or TOML would file it under [hooks].
-      expect(merged.indexOf('model_provider = "cmux"')).toBeLessThan(merged.indexOf("[hooks]"));
-      expect(existsSync(path.join(home, ".codex/config.toml.cmux-tmp"))).toBe(false);
+      expect(merged.indexOf('model_provider = "hmux"')).toBeLessThan(merged.indexOf("[hooks]"));
+      expect(existsSync(path.join(home, ".codex/config.toml.hmux-tmp"))).toBe(false);
       // Idempotent: a second login sees the provider and rewrites nothing.
       expect((await runChild("/bin/bash", ["-c", `. ${path.join(templateDir, "agent-config.sh")}`], { env })).status).toBe(0);
       expect(readFileSync(path.join(home, ".codex/config.toml"), "utf8")).toBe(merged);
@@ -1035,10 +1035,10 @@ test "$daemon_pid" = fixture
         '"model_provider" = "openai"\n',
         "'model_provider' = \"openai\"\n",
         '"model\\u005fprovider" = "openai"\n',
-        '[ model_providers . cmux ]\nname = "x"\n',
-        '[ "model_providers" . "cmux" ]\nname = "x"\n',
-        "[ 'model_providers' . 'cmux' ]\nname = \"x\"\n",
-        'model_providers.cmux.name = "x"\n',
+        '[ model_providers . hmux ]\nname = "x"\n',
+        '[ "model_providers" . "hmux" ]\nname = "x"\n',
+        "[ 'model_providers' . 'hmux' ]\nname = \"x\"\n",
+        'model_providers.hmux.name = "x"\n',
         ' [history]\npersistence = "none"\n',
         ' [ "history" ]\npersistence = "none"\n',
         "['history']\npersistence = \"none\"\n",
@@ -1055,8 +1055,8 @@ test "$daemon_pid" = fixture
   });
 
   test("agent config generator installs an idempotent CUA MCP server for every bundled agent", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-devbox-cua-config-"));
-    const bin = mkdtempSync(path.join(tmpdir(), "cmux-devbox-cua-bin-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-devbox-cua-config-"));
+    const bin = mkdtempSync(path.join(tmpdir(), "hmux-devbox-cua-bin-"));
     const driver = path.join(bin, "cua-driver");
     writeFileSync(driver, "#!/bin/sh\nexit 0\n", { mode: 0o755 });
     try {
@@ -1081,11 +1081,11 @@ test "$daemon_pid" = fixture
         PATH: `${bin}:${process.env.PATH ?? "/usr/bin:/bin"}`,
         OPENAI_BASE_URL: "",
         OPENAI_API_KEY: "",
-        CMUX_CODEROUTER_URL: "",
+        HMUX_CODEROUTER_URL: "",
         ANTHROPIC_BASE_URL: "",
         ANTHROPIC_API_KEY: "",
       };
-      const source = `. ${path.join(templateDir, "agent-config.sh")}; cmux_write_cua_mcp_config allow-missing`;
+      const source = `. ${path.join(templateDir, "agent-config.sh")}; hmux_write_cua_mcp_config allow-missing`;
       expect((await runChild("/bin/bash", ["-c", source], { env })).status).toBe(0);
 
       const claude = JSON.parse(readFileSync(path.join(home, ".claude.json"), "utf8")) as {
@@ -1134,10 +1134,10 @@ test "$daemon_pid" = fixture
   });
 
   test("agent config generator writes CUA to the selected OpenCode config", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-devbox-cua-opencode-selected-"));
-    const bin = mkdtempSync(path.join(tmpdir(), "cmux-devbox-cua-opencode-bin-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-devbox-cua-opencode-selected-"));
+    const bin = mkdtempSync(path.join(tmpdir(), "hmux-devbox-cua-opencode-bin-"));
     const driver = path.join(bin, "cua-driver");
-    const selected = path.join(home, ".config/cmux/opencode-team.json");
+    const selected = path.join(home, ".config/hmux/opencode-team.json");
     writeFileSync(driver, "#!/bin/sh\nexit 0\n", { mode: 0o755 });
     try {
       const env = {
@@ -1147,11 +1147,11 @@ test "$daemon_pid" = fixture
         OPENCODE_CONFIG: selected,
         OPENAI_BASE_URL: "",
         OPENAI_API_KEY: "",
-        CMUX_CODEROUTER_URL: "",
+        HMUX_CODEROUTER_URL: "",
         ANTHROPIC_BASE_URL: "",
         ANTHROPIC_API_KEY: "",
       };
-      const source = `. ${path.join(templateDir, "agent-config.sh")}; cmux_write_cua_mcp_config allow-missing`;
+      const source = `. ${path.join(templateDir, "agent-config.sh")}; hmux_write_cua_mcp_config allow-missing`;
       expect((await runChild("/bin/bash", ["-c", source], { env })).status).toBe(0);
 
       const config = JSON.parse(readFileSync(selected, "utf8")) as {
@@ -1170,8 +1170,8 @@ test "$daemon_pid" = fixture
   });
 
   test("agent config generator reports per-file write errors without a traceback", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-devbox-cua-opencode-error-"));
-    const bin = mkdtempSync(path.join(tmpdir(), "cmux-devbox-cua-opencode-error-bin-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-devbox-cua-opencode-error-"));
+    const bin = mkdtempSync(path.join(tmpdir(), "hmux-devbox-cua-opencode-error-bin-"));
     const driver = path.join(bin, "cua-driver");
     const blocked = path.join(home, "blocked");
     const selected = path.join(blocked, "opencode.json");
@@ -1185,16 +1185,16 @@ test "$daemon_pid" = fixture
         OPENCODE_CONFIG: selected,
         OPENAI_BASE_URL: "",
         OPENAI_API_KEY: "",
-        CMUX_CODEROUTER_URL: "",
+        HMUX_CODEROUTER_URL: "",
         ANTHROPIC_BASE_URL: "",
         ANTHROPIC_API_KEY: "",
       };
-      const source = `. ${path.join(templateDir, "agent-config.sh")}; cmux_write_cua_mcp_config allow-missing`;
+      const source = `. ${path.join(templateDir, "agent-config.sh")}; hmux_write_cua_mcp_config allow-missing`;
       const result = await runChild("/bin/bash", ["-c", source], { env });
       expect(result.status).toBe(0);
       const stderr = result.stderr.toString();
       expect(stderr).toBe(
-        "cmux: unable to update OpenCode computer-use configuration; keeping existing settings.\n",
+        "hmux: unable to update OpenCode computer-use configuration; keeping existing settings.\n",
       );
       expect(stderr).not.toContain("Traceback");
       expect(stderr.trim().split("\n")).toHaveLength(1);
@@ -1205,7 +1205,7 @@ test "$daemon_pid" = fixture
   });
 
   test("agent config generator materializes the coderouter plane from boot env", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-devbox-agent-config-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-devbox-agent-config-"));
     try {
       const result = await runChild(
         "bash",
@@ -1215,17 +1215,17 @@ test "$daemon_pid" = fixture
             ...process.env,
             HOME: home,
             OPENAI_BASE_URL: "https://example.invalid/v1",
-            OPENAI_API_KEY: "cmux-vm-edge-placeholder",
-            CMUX_CODEROUTER_URL: "https://example.invalid",
+            OPENAI_API_KEY: "hmux-vm-edge-placeholder",
+            HMUX_CODEROUTER_URL: "https://example.invalid",
             ANTHROPIC_BASE_URL: "https://example.invalid",
-            ANTHROPIC_API_KEY: "cmux-vm-edge-placeholder",
-            CMUX_VM_ID: "11111111-2222-4333-8444-555555555555",
+            ANTHROPIC_API_KEY: "hmux-vm-edge-placeholder",
+            HMUX_VM_ID: "11111111-2222-4333-8444-555555555555",
           },
         },
       );
       expect(result.status).toBe(0);
       const codex = readFileSync(path.join(home, ".codex/config.toml"), "utf8");
-      expect(codex).toContain('model_provider = "cmux"');
+      expect(codex).toContain('model_provider = "hmux"');
       expect(codex).toContain('base_url = "https://example.invalid/v1"');
       expect(codex).toContain('wire_api = "responses"');
       // The /v1 plane is HTTP-only; pin the Responses WebSocket transport off
@@ -1233,16 +1233,16 @@ test "$daemon_pid" = fixture
       expect(codex).toContain("supports_websockets = false");
       expect(codex).toContain('persistence = "save-all"');
       // Every model-plane var is persisted generically, single-quoted.
-      const plane = readFileSync(path.join(home, ".config/cmux/model-plane.env"), "utf8");
+      const plane = readFileSync(path.join(home, ".config/hmux/model-plane.env"), "utf8");
       expect(plane).toBe(
         [
-          "# generated by cmux from machine boot env; managed, do not edit",
+          "# generated by hmux from machine boot env; managed, do not edit",
           "export OPENAI_BASE_URL='https://example.invalid/v1'",
-          "export OPENAI_API_KEY='cmux-vm-edge-placeholder'",
-          "export CMUX_CODEROUTER_URL='https://example.invalid'",
+          "export OPENAI_API_KEY='hmux-vm-edge-placeholder'",
+          "export HMUX_CODEROUTER_URL='https://example.invalid'",
           "export ANTHROPIC_BASE_URL='https://example.invalid'",
-          "export ANTHROPIC_API_KEY='cmux-vm-edge-placeholder'",
-          "export CMUX_VM_ID='11111111-2222-4333-8444-555555555555'",
+          "export ANTHROPIC_API_KEY='hmux-vm-edge-placeholder'",
+          "export HMUX_VM_ID='11111111-2222-4333-8444-555555555555'",
           "",
         ].join("\n"),
       );
@@ -1254,7 +1254,7 @@ test "$daemon_pid" = fixture
       expect(JSON.parse(pi)).toEqual({
         providers: {
           "openai-codex": {
-            name: "cmux",
+            name: "hmux",
             baseUrl: "https://example.invalid/v1",
             apiKey:
               "e30.eyJodHRwczovL2FwaS5vcGVuYWkuY29tL2F1dGgiOnsiY2hhdGdwdF9hY2NvdW50X2lkIjoiY29kZXJvdXRlciJ9fQ.signature",
@@ -1266,14 +1266,14 @@ test "$daemon_pid" = fixture
       // claude: env only, nothing generated.
       expect(existsSync(path.join(home, ".claude"))).toBe(false);
       // opencode config is lazy; a normal shell never contacts the endpoint.
-      expect(existsSync(path.join(home, ".config/cmux/opencode-team.json"))).toBe(false);
+      expect(existsSync(path.join(home, ".config/hmux/opencode-team.json"))).toBe(false);
     } finally {
       rmSync(home, { recursive: true, force: true });
     }
   });
 
   test("opencode config is fetched from the coderouter endpoint and de-tokenized", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-devbox-opencode-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-devbox-opencode-"));
     let authorization: string | undefined;
     const server = await listen((request, response) => {
       authorization = request.headers.authorization;
@@ -1298,8 +1298,8 @@ test "$daemon_pid" = fixture
       expect(authorization).toBeUndefined();
       await sourceAgentConfig(home, server.origin, true);
       // The guest sends only the placeholder; the edge adds the route token.
-      expect(authorization).toBe("Bearer cmux-vm-edge-placeholder");
-      const configPath = path.join(home, ".config/cmux/opencode-team.json");
+      expect(authorization).toBe("Bearer hmux-vm-edge-placeholder");
+      const configPath = path.join(home, ".config/hmux/opencode-team.json");
       const written = readFileSync(configPath, "utf8");
       // A route token the endpoint inlined is swapped for a runtime env
       // reference (as is the placeholder itself), so no token lands on disk.
@@ -1326,7 +1326,7 @@ test "$daemon_pid" = fixture
   });
 
   test("concurrent OpenCode starts wait for one authenticated config and preserve a user file", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-opencode-concurrent-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-opencode-concurrent-"));
     let requests = 0;
     let started = 0;
     let releaseResponse!: () => void;
@@ -1342,7 +1342,7 @@ test "$daemon_pid" = fixture
         if (++started === 4) releaseResponse();
       })));
       expect(requests).toBe(1);
-      const config = path.join(home, ".config/cmux/opencode-team.json");
+      const config = path.join(home, ".config/hmux/opencode-team.json");
       expect(JSON.parse(readFileSync(config, "utf8")).provider.go.options.apiKey).toBe("{env:OPENAI_API_KEY}");
       writeFileSync(config, '{"provider":{"mine":{}}}');
       await sourceAgentConfig(home, server.origin, true);
@@ -1356,7 +1356,7 @@ test "$daemon_pid" = fixture
   });
 
   test("failed OpenCode config cannot launch a command without its configured provider", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-opencode-failure-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-opencode-failure-"));
     let requests = 0;
     const server = await listen((_request, response) => {
       requests += 1;
@@ -1367,7 +1367,7 @@ test "$daemon_pid" = fixture
       await expect(sourceAgentConfig(home, server.origin, true)).rejects.toThrow();
       await expect(sourceAgentConfig(home, server.origin, true)).rejects.toThrow();
       expect(requests).toBe(1);
-      expect(existsSync(path.join(home, ".config/cmux/opencode-team.json"))).toBe(false);
+      expect(existsSync(path.join(home, ".config/hmux/opencode-team.json"))).toBe(false);
     } finally {
       await server.close();
       rmSync(home, { recursive: true, force: true });
@@ -1375,7 +1375,7 @@ test "$daemon_pid" = fixture
   });
 
   test("opencode config tolerates a coderouter without a usable account", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-devbox-opencode-503-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-devbox-opencode-503-"));
     let body = JSON.stringify({ error: "no_usable_account" });
     let status = 503;
     const server = await listen((_request, response) => {
@@ -1384,12 +1384,12 @@ test "$daemon_pid" = fixture
       response.end(body);
     });
     try {
-      const configPath = path.join(home, ".config/cmux/opencode-team.json");
+      const configPath = path.join(home, ".config/hmux/opencode-team.json");
       // 503 no_usable_account: nothing written, the shell exits clean.
       await expect(sourceAgentConfig(home, server.origin, true)).rejects.toThrow();
       expect(existsSync(configPath)).toBe(false);
       // An empty catalog is not persisted either (it would block retries).
-      rmSync(path.join(home, ".cache/cmux"), { recursive: true, force: true });
+      rmSync(path.join(home, ".cache/hmux"), { recursive: true, force: true });
       body = JSON.stringify({ provider: {} });
       status = 200;
       await expect(sourceAgentConfig(home, server.origin, true)).rejects.toThrow();
@@ -1401,7 +1401,7 @@ test "$daemon_pid" = fixture
   });
 
   test("opencode config names the way out when the team has no OpenCode account", async () => {
-    const home = mkdtempSync(path.join(tmpdir(), "cmux-devbox-opencode-403-"));
+    const home = mkdtempSync(path.join(tmpdir(), "hmux-devbox-opencode-403-"));
     const message = "No OpenCode account is shared with this Cloud machine's team. Or use your own provider sign-in on this machine: run `cr use own opencode`.";
     const server = await listen((_request, response) => {
       response.statusCode = 403;
@@ -1409,19 +1409,19 @@ test "$daemon_pid" = fixture
       response.end(JSON.stringify({ error: { message, type: "invalid_request_error", code: "no_account_configured" } }));
     });
     try {
-      const result = await runChild("/bin/bash", ["-c", `. ${path.join(templateDir, "agent-config.sh")}; cmux_ensure_opencode_config`], {
+      const result = await runChild("/bin/bash", ["-c", `. ${path.join(templateDir, "agent-config.sh")}; hmux_ensure_opencode_config`], {
         env: {
           PATH: process.env.PATH ?? "/usr/bin:/bin",
           HOME: home,
-          CMUX_CODEROUTER_URL: server.origin,
+          HMUX_CODEROUTER_URL: server.origin,
           OPENAI_BASE_URL: `${server.origin}/v1`,
-          OPENAI_API_KEY: "cmux-vm-edge-placeholder",
+          OPENAI_API_KEY: "hmux-vm-edge-placeholder",
         },
       });
       expect(result.status).toBe(78);
-      expect(result.stderr).toBe(`cmux: ${message}\n`);
+      expect(result.stderr).toBe(`hmux: ${message}\n`);
       expect(result.stderr).not.toContain("retry");
-      expect(existsSync(path.join(home, ".config/cmux/opencode-team.json"))).toBe(false);
+      expect(existsSync(path.join(home, ".config/hmux/opencode-team.json"))).toBe(false);
     } finally {
       await server.close();
       rmSync(home, { recursive: true, force: true });
@@ -1458,21 +1458,21 @@ describe("model-plane env reaches provider creates", () => {
     expect(driver).not.toContain("writeModelPlaneEnv");
     expect(driver).toContain("tls: { rules: tlsRules }");
     expect(readScript("build-devbox-freestyle.ts")).toContain("renderVmGuestModelPlaneEnvFile(vmGuestModelPlaneEnv())");
-    expect(readScript("verify-devbox-image.ts")).toContain("test -s /etc/cmux/model-plane.env");
-    expect(read("agent-config.sh")).toContain("elif [ -f /etc/cmux/model-plane.env ]; then");
+    expect(readScript("verify-devbox-image.ts")).toContain("test -s /etc/hmux/model-plane.env");
+    expect(read("agent-config.sh")).toContain("elif [ -f /etc/hmux/model-plane.env ]; then");
   });
 });
 
-// The terminfo overlay the guest resolves TERM against. It is the cmux app's
+// The terminfo overlay the guest resolves TERM against. It is the hmux app's
 // Resources/terminfo-overlay (Ghostty's entry under xterm-ghostty and under
-// the xterm-256color name cmux exports, bright colors as indexed 38;5;n) as
+// the xterm-256color name hmux exports, bright colors as indexed 38;5;n) as
 // infocmp source, because Linux tic cannot read the app's compiled files.
 // Compiled here with the local tic and queried like a guest program would.
 const hasNcurses = (await runChild("tic", ["-V"])).status === 0 && (await runChild("infocmp", ["-V"])).status === 0;
 describe("devbox terminfo overlay", () => {
   let compiled: string | undefined;
   beforeEach(() => {
-    compiled = mkdtempSync(path.join(tmpdir(), "cmux-terminfo-"));
+    compiled = mkdtempSync(path.join(tmpdir(), "hmux-terminfo-"));
   });
   afterEach(() => {
     if (compiled) rmSync(compiled, { recursive: true, force: true });
@@ -1491,8 +1491,8 @@ describe("devbox terminfo overlay", () => {
     return result.stdout.toString();
   };
 
-  (hasNcurses ? test : test.skip)("compiles with tic and serves cmux's capabilities under every exported name", async () => {
-    const tic = await runChild("tic", ["-x", "-o", compiled!, path.join(templateDir, "cmux-terminfo.src")]);
+  (hasNcurses ? test : test.skip)("compiles with tic and serves hmux's capabilities under every exported name", async () => {
+    const tic = await runChild("tic", ["-x", "-o", compiled!, path.join(templateDir, "hmux-terminfo.src")]);
     expect({ status: tic.status, stderr: tic.stderr.toString() }).toMatchObject({ status: 0 });
     for (const term of ["xterm-ghostty", "ghostty", "xterm-256color"]) {
       expect((await tput(term, "colors")).trim()).toBe("256");
@@ -1514,10 +1514,10 @@ describe("devbox terminfo overlay", () => {
     const bake = readScript("build-devbox-freestyle.ts");
     expect(bake.indexOf('await step("terminfo"')).toBeGreaterThan(0);
     expect(bake.indexOf('await step("terminfo"')).toBeLessThan(bake.indexOf('await step(\n    "devshell"'));
-    expect(bake).toContain('await put("cmux-terminfo.sh", "/etc/profile.d/cmux-terminfo.sh")');
+    expect(bake).toContain('await put("hmux-terminfo.sh", "/etc/profile.d/hmux-terminfo.sh")');
     expect(dockerfile.indexOf("tic -x -o /etc/terminfo")).toBeGreaterThan(0);
     expect(dockerfile.indexOf("tic -x -o /etc/terminfo")).toBeLessThan(dockerfile.indexOf("blesh-cache-seed"));
     expect(dockerfile).toContain("xterm-ghostty; do");
-    expect(readFileSync(path.join(templateDir, "cmux-terminfo.sh"), "utf8")).toContain("TERMINFO_DIRS=/etc/terminfo:");
+    expect(readFileSync(path.join(templateDir, "hmux-terminfo.sh"), "utf8")).toContain("TERMINFO_DIRS=/etc/terminfo:");
   });
 });

@@ -1,7 +1,7 @@
 import AppKit
-import CmuxCloud
-import CmuxCloudMachines
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCloudMachines
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Launches the New Machine flow in-process while retaining the CLI-shaped coordinator contract.
@@ -21,16 +21,16 @@ enum InProcessMachineCreateLauncher {
 
     struct Dependencies {
         let create: @Sendable (Invocation, String) async throws -> VMSummary
-        let record: @MainActor (VMSummary, VMCmuxRemoteEndpoint?) async -> CmuxTuiSurfaceProvider?
-        let provider: @MainActor (String) -> CmuxTuiSurfaceProvider?
+        let record: @MainActor (VMSummary, VMHmuxRemoteEndpoint?) async -> HmuxTuiSurfaceProvider?
+        let provider: @MainActor (String) -> HmuxTuiSurfaceProvider?
         let refresh: @MainActor (Bool) async -> Void
-        let open: @MainActor (Invocation, CmuxTuiSurfaceProvider) async throws -> Void
+        let open: @MainActor (Invocation, HmuxTuiSurfaceProvider) async throws -> Void
         var validate: @MainActor (Invocation) throws -> Void = { _ in }
     }
 
     private static func dependencies(
         client: VMClient,
-        registry: CmuxTuiSurfaceProviderRegistry,
+        registry: HmuxTuiSurfaceProviderRegistry,
         host: CloudWorkspaceCreationHost
     ) -> Dependencies {
         let scope = registry.creationScope
@@ -239,7 +239,7 @@ enum InProcessMachineCreateLauncher {
     ) async -> CloudVMActionLauncher.Completion {
         var output = ""
         var machineID: String?
-        var provider: CmuxTuiSurfaceProvider?
+        var provider: HmuxTuiSurfaceProvider?
         do {
             try Task.checkCancellation()
             try dependencies.validate(invocation)
@@ -317,7 +317,7 @@ enum InProcessMachineCreateLauncher {
               let workspace = Workspace.liveWorkspace(id: invocation.workspaceID),
               let manager = workspace.owningTabManager,
               !manager.isFinalizedForWindowClose else { return false }
-        let registry = CmuxTuiSurfaceProviderRegistry.shared
+        let registry = HmuxTuiSurfaceProviderRegistry.shared
         guard registry.creationScope != nil else { return false }
         let host = CloudWorkspaceCreationHost(manager: manager, reservedWorkspaceID: invocation.workspaceID)
         guard host.isAvailable else { return false }

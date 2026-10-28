@@ -7,7 +7,7 @@ This lists each bucket the credentials can list (ListBuckets; when the key is
 scoped to buckets and cannot list them, the --bucket names), walks every
 object, and groups keys into families: the directory path up to and including
 the first segment that names one build (a commit, a version, a content hash or
-a number), so `cmux-tui/<sha>`, `cmux-tui/tree/<key>` and `cef/<version>` each
+a number), so `hmux-tui/<sha>`, `hmux-tui/tree/<key>` and `cef/<version>` each
 read as one row. Each row reports objects, bytes, how many builds it holds,
 and how its bytes split by age, which is what a keep rule is chosen against.
 
@@ -68,7 +68,7 @@ def placeholder(segment: str) -> str | None:
 def family_of(key: str) -> tuple[str, str]:
     """(family, unit): the family row and the one build inside it.
 
-    `cmux-tui/0123abcd.../linux/cmux-tui` -> (`cmux-tui/<sha>`, `cmux-tui/0123abcd...`).
+    `hmux-tui/0123abcd.../linux/hmux-tui` -> (`hmux-tui/<sha>`, `hmux-tui/0123abcd...`).
     A file at the bucket root is its own family, `(root)`.
     """
     parts = key.split("/")

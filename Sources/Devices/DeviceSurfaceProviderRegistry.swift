@@ -1,8 +1,8 @@
-import CmuxCloud
-import CmuxAuthRuntime
-import CmuxFoundation
-import CmuxSettings
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxAuthRuntime
+import HmuxFoundation
+import HmuxSettings
+import HmuxSurfaceCatalogModel
 import Foundation
 import Observation
 
@@ -19,7 +19,7 @@ final class DeviceSurfaceProviderRegistry {
     let diagnostics: DeviceLinkDiagnostics
     /// Posted by ``reveal(instance:)``; the mounted Devices panel consumes the
     /// pending request on it (userInfo `instance`: the wire value).
-    static let revealDeviceNotification = Notification.Name("cmux.devices.revealDevice")
+    static let revealDeviceNotification = Notification.Name("hmux.devices.revealDevice")
     private(set) var pendingReveal: SurfaceDeviceInstanceID?
     private var pendingWindowReveals: [UUID: SurfaceDeviceInstanceID] = [:]
 
@@ -114,7 +114,7 @@ final class DeviceSurfaceProviderRegistry {
             self?.evaluate()
         }
         if let featureFlagsObserver { center.removeObserver(featureFlagsObserver) }
-        featureFlagsObserver = center.addObserver(forName: .cmuxFeatureFlagsDidChange, object: nil, queue: .main) {
+        featureFlagsObserver = center.addObserver(forName: .hmuxFeatureFlagsDidChange, object: nil, queue: .main) {
             [weak self] _ in
             Task { @MainActor [weak self] in self?.evaluate() }
         }
@@ -126,7 +126,7 @@ final class DeviceSurfaceProviderRegistry {
             Task { @MainActor [weak self] in self?.evaluate() }
         }
         if let accessObserver { center.removeObserver(accessObserver) }
-        accessObserver = center.addObserver(forName: .cmuxCloudVMAccessDidEnd, object: nil, queue: .main) { [weak self] _ in
+        accessObserver = center.addObserver(forName: .hmuxCloudVMAccessDidEnd, object: nil, queue: .main) { [weak self] _ in
             Task { @MainActor [weak self] in self?.evaluate() }
         }
         observeAuth()

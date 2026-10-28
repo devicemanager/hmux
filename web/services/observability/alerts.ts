@@ -33,7 +33,7 @@ export async function sendAlert(
   } = {},
 ): Promise<AlertResult> {
   const env = options.env ?? process.env;
-  const webhookUrl = env.CMUX_ALERTS_SLACK_WEBHOOK_URL?.trim();
+  const webhookUrl = env.HMUX_ALERTS_SLACK_WEBHOOK_URL?.trim();
   if (!webhookUrl) return { sent: false, configured: false };
 
   const fetchImpl = options.fetch ?? fetch;

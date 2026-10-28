@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 struct AboutPanelView: View {
@@ -13,10 +13,10 @@ struct AboutPanelView: View {
     private var version: String? { Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String }
     private var build: String? { Bundle.main.infoDictionary?["CFBundleVersion"] as? String }
     private var commit: String? {
-        if let value = Bundle.main.infoDictionary?["CMUXCommit"] as? String, !value.isEmpty {
+        if let value = Bundle.main.infoDictionary?["HMUXCommit"] as? String, !value.isEmpty {
             return value
         }
-        let env = ProcessInfo.processInfo.environment["CMUX_COMMIT"] ?? ""
+        let env = ProcessInfo.processInfo.environment["HMUX_COMMIT"] ?? ""
         return env.isEmpty ? nil : env
     }
     private var copyright: String? { Bundle.main.infoDictionary?["NSHumanReadableCopyright"] as? String }
@@ -31,13 +31,13 @@ struct AboutPanelView: View {
 
             VStack(alignment: .center, spacing: 32) {
                 VStack(alignment: .center, spacing: 8) {
-                    Text(String(localized: "about.appName", defaultValue: "cmux"))
-                        .cmuxFont(.title)
+                    Text(String(localized: "about.appName", defaultValue: "hmux"))
+                        .hmuxFont(.title)
                         .bold()
                     Text(String(localized: "about.description", defaultValue: "A Ghostty-based terminal with vertical tabs\nand a notification panel for macOS."))
                         .multilineTextAlignment(.center)
                         .fixedSize(horizontal: false, vertical: true)
-                        .cmuxFont(.caption)
+                        .hmuxFont(.caption)
                         .tint(.secondary)
                         .opacity(0.8)
                 }
@@ -76,7 +76,7 @@ struct AboutPanelView: View {
 
                 if let copy = copyright, !copy.isEmpty {
                     Text(copy)
-                        .cmuxFont(.caption)
+                        .hmuxFont(.caption)
                         .textSelection(.enabled)
                         .tint(.secondary)
                         .opacity(0.8)

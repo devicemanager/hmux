@@ -1,8 +1,8 @@
 import AppKit
 import Bonsplit
-import CmuxBrowser
-import CmuxControlSocket
-import CmuxPanes
+import HmuxBrowser
+import HmuxControlSocket
+import HmuxPanes
 import Foundation
 
 /// Pane-domain witnesses keep app-coupled topology resolution in the app while

@@ -137,7 +137,7 @@ export async function isConnectivityPublisherAuthorized(
   request: Request,
   configuredSecret: string | undefined,
 ): Promise<boolean> {
-  return isPublisherAuthorized(request, "x-cmux-connectivity-publisher-secret", configuredSecret);
+  return isPublisherAuthorized(request, "x-hmux-connectivity-publisher-secret", configuredSecret);
 }
 
 /** Constant-work comparison for the server-only machine-list publisher. The
@@ -147,7 +147,7 @@ export async function isVmsPublisherAuthorized(
   request: Request,
   configuredSecret: string | undefined,
 ): Promise<boolean> {
-  return isPublisherAuthorized(request, "x-cmux-vms-publisher-secret", configuredSecret);
+  return isPublisherAuthorized(request, "x-hmux-vms-publisher-secret", configuredSecret);
 }
 
 /** Shared HMAC-based constant-time compare of a request header against a

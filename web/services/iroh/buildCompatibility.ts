@@ -1,12 +1,12 @@
 const OFFICIAL_IOS_NAMESPACES = new Set([
-  "com.cmux.app",
-  "com.cmuxterm.app",
-  "dev.cmux.app.beta",
-  "dev.cmux.app.internal",
-  "dev.cmux.app.demo",
+  "com.hmux.app",
+  "com.hmuxterm.app",
+  "dev.hmux.app.beta",
+  "dev.hmux.app.internal",
+  "dev.hmux.app.demo",
 ]);
-const DEVELOPMENT_IOS_NAMESPACE_PREFIX = "dev.cmux.ios.";
-const DEVELOPMENT_MAC_NAMESPACE_PREFIX = "mac:com.cmuxterm.app.debug";
+const DEVELOPMENT_IOS_NAMESPACE_PREFIX = "dev.hmux.ios.";
+const DEVELOPMENT_MAC_NAMESPACE_PREFIX = "mac:com.hmuxterm.app.debug";
 const NON_DEVELOPMENT_MAC_TAGS = new Set(["default", "nightly", "rc", "staging"]);
 
 type BuildBinding = {
@@ -79,7 +79,7 @@ function iosBindingMacLaneCompatible(
     return legacyDefaultFallback || caller.tag === target.tag;
   }
 
-  // iOS builds that predate the X-Cmux-App-Namespace header register as
+  // iOS builds that predate the X-Hmux-App-Namespace header register as
   // `legacy` and cannot send anything newer, so the missing namespace is the
   // migration signal. The shipped pre-namespace population is the official
   // Beta on the `default` lane; give it the same default->{default,nightly}

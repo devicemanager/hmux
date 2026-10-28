@@ -1,11 +1,11 @@
-import CmuxSurfaceCatalogModel
-import CmuxWorkspaces
+import HmuxSurfaceCatalogModel
+import HmuxWorkspaces
 import Foundation
 import Combine
 import Bonsplit
 import OSLog
 private let closedItemHistoryLogger = Logger(
-    subsystem: "com.cmuxterm.app",
+    subsystem: "com.hmuxterm.app",
     category: "ClosedItemHistory"
 )
 struct ClosedPanelSplitPlacement: Codable, Sendable {
@@ -390,7 +390,7 @@ final class ClosedItemHistoryStore: ObservableObject {
     }
 
     /// A Cloud workspace through either transport — the legacy managed remote
-    /// (`managedCloudVMID`) or the cmux-tui binding (`cloudVM`) — the same
+    /// (`managedCloudVMID`) or the hmux-tui binding (`cloudVM`) — the same
     /// definition session restore uses under `DisableCloud`, so a purge and a
     /// blocked restore agree on what a Cloud record is.
     static func workspaceSnapshotHostsCloudVM(_ snapshot: SessionWorkspaceSnapshot) -> Bool {
@@ -751,14 +751,14 @@ final class ClosedItemHistoryStore: ObservableObject {
         }
         let bundleId = (bundleIdentifier?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false)
             ? bundleIdentifier!
-            : "com.cmuxterm.app"
+            : "com.hmuxterm.app"
         let safeBundleId = bundleId.replacingOccurrences(
             of: "[^A-Za-z0-9._-]",
             with: "_",
             options: .regularExpression
         )
         return resolvedAppSupport
-            .appendingPathComponent("cmux", isDirectory: true)
+            .appendingPathComponent("hmux", isDirectory: true)
             .appendingPathComponent("closed-item-history-\(safeBundleId).json", isDirectory: false)
     }
 
@@ -829,7 +829,7 @@ final class ClosedItemHistoryStore: ObservableObject {
 }
 
 extension Notification.Name {
-    static let closedItemHistoryRevisionDidChange = Notification.Name("cmux.closedItemHistoryRevisionDidChange")
+    static let closedItemHistoryRevisionDidChange = Notification.Name("hmux.closedItemHistoryRevisionDidChange")
 }
 
 private struct ClosedItemHistoryPersistenceSnapshot: Codable, Sendable {

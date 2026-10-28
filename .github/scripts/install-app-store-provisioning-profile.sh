@@ -13,7 +13,7 @@ note() {
 }
 
 TEAM_ID="${IOS_APPSTORE_TEAM_ID:-7WLXT3NR37}"
-BUNDLE_IDENTIFIER="${IOS_APPSTORE_BUNDLE_IDENTIFIER:-com.cmux.app}"
+BUNDLE_IDENTIFIER="${IOS_APPSTORE_BUNDLE_IDENTIFIER:-com.hmux.app}"
 EXTENSION_BUNDLE_IDENTIFIER="${IOS_APPSTORE_EXTENSION_BUNDLE_IDENTIFIER:-${BUNDLE_IDENTIFIER}.NotificationService}"
 CLOUD_VPN_BUNDLE_IDENTIFIER="${IOS_APPSTORE_CLOUD_VPN_BUNDLE_IDENTIFIER:-${BUNDLE_IDENTIFIER}.CloudVPN}"
 EXPECTED_APP_ID="${TEAM_ID}.${BUNDLE_IDENTIFIER}"
@@ -21,13 +21,13 @@ EXPECTED_EXTENSION_APP_ID="${TEAM_ID}.${EXTENSION_BUNDLE_IDENTIFIER}"
 EXPECTED_CLOUD_VPN_APP_ID="${TEAM_ID}.${CLOUD_VPN_BUNDLE_IDENTIFIER}"
 KEYCHAIN_NAME="${IOS_APPSTORE_KEYCHAIN_NAME:-ios-app-store.keychain}"
 TMP_ROOT="${RUNNER_TEMP:-${TMPDIR:-/tmp}}"
-TMP_PROFILE="$TMP_ROOT/cmux-appstore.mobileprovision"
-TMP_PLIST="$TMP_ROOT/cmux-appstore-profile.plist"
-TMP_EXTENSION_PROFILE="$TMP_ROOT/cmux-appstore-extension.mobileprovision"
-TMP_EXTENSION_PLIST="$TMP_ROOT/cmux-appstore-extension-profile.plist"
-TMP_CLOUD_VPN_PROFILE="$TMP_ROOT/cmux-appstore-cloud-vpn.mobileprovision"
-TMP_CLOUD_VPN_PLIST="$TMP_ROOT/cmux-appstore-cloud-vpn-profile.plist"
-ENV_OUTPUT="${GITHUB_ENV:-$TMP_ROOT/cmux-appstore.env}"
+TMP_PROFILE="$TMP_ROOT/hmux-appstore.mobileprovision"
+TMP_PLIST="$TMP_ROOT/hmux-appstore-profile.plist"
+TMP_EXTENSION_PROFILE="$TMP_ROOT/hmux-appstore-extension.mobileprovision"
+TMP_EXTENSION_PLIST="$TMP_ROOT/hmux-appstore-extension-profile.plist"
+TMP_CLOUD_VPN_PROFILE="$TMP_ROOT/hmux-appstore-cloud-vpn.mobileprovision"
+TMP_CLOUD_VPN_PLIST="$TMP_ROOT/hmux-appstore-cloud-vpn-profile.plist"
+ENV_OUTPUT="${GITHUB_ENV:-$TMP_ROOT/hmux-appstore.env}"
 PROFILE_DIR="$HOME/Library/MobileDevice/Provisioning Profiles"
 RESOLVED_PROFILE_NAME=""
 RESOLVED_PROFILE_UUID=""
@@ -458,7 +458,7 @@ ensure_extension_profile_from_asc() {
   fi
 
   profile_suffix="${cert_serial: -8}"
-  profile_name="cmux App Store Extension CI $EXTENSION_BUNDLE_IDENTIFIER $profile_suffix"
+  profile_name="hmux App Store Extension CI $EXTENSION_BUNDLE_IDENTIFIER $profile_suffix"
   asc profiles list --profile-type IOS_APP_STORE --paginate --output json > "$profiles_json"
   profile_id="$(json_active_profile_id_by_name "$profiles_json" "$profile_name" || true)"
   if [ -z "$profile_id" ]; then
@@ -531,7 +531,7 @@ ensure_cloud_vpn_profile_from_asc() {
   fi
 
   profile_suffix="${cert_serial: -8}"
-  profile_name="cmux App Store CloudVPN CI $CLOUD_VPN_BUNDLE_IDENTIFIER $profile_suffix"
+  profile_name="hmux App Store CloudVPN CI $CLOUD_VPN_BUNDLE_IDENTIFIER $profile_suffix"
   asc profiles list --profile-type IOS_APP_STORE --paginate --output json > "$profiles_json"
   profile_id="$(json_active_profile_id_by_name "$profiles_json" "$profile_name" || true)"
   if [ -z "$profile_id" ]; then
@@ -605,7 +605,7 @@ download_profile_from_asc() {
   fi
 
   profile_suffix="${cert_serial: -8}"
-  profile_name="cmux App Store CI $profile_suffix"
+  profile_name="hmux App Store CI $profile_suffix"
   asc profiles list --profile-type IOS_APP_STORE --paginate --output json > "$profiles_json"
   profile_id="$(json_profile_id_by_name "$profiles_json" "$profile_name" || true)"
   if [ -z "$profile_id" ]; then

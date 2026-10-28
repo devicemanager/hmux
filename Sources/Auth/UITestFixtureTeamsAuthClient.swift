@@ -1,24 +1,24 @@
 #if DEBUG
-import CMUXAuthCore
-import CmuxAuthRuntime
+import HMUXAuthCore
+import HmuxAuthRuntime
 import Foundation
 
 /// UI-test auth client that serves team membership from the launch
 /// environment and forwards every session call to the real client.
 ///
-/// Opt-in only: `CMUX_UITEST_AUTH_FIXTURE=1` plus
-/// `CMUX_UITEST_AUTH_FIXTURE_TEAMS`, a JSON array of `{"id", "displayName"}`.
+/// Opt-in only: `HMUX_UITEST_AUTH_FIXTURE=1` plus
+/// `HMUX_UITEST_AUTH_FIXTURE_TEAMS`, a JSON array of `{"id", "displayName"}`.
 /// The first team starts selected so a persisted selection from an earlier
 /// run cannot change the starting scope. Optional knobs script the failure
 /// and pending paths:
-/// `CMUX_UITEST_AUTH_FIXTURE_REJECT_TEAM_NAME` fails creates with that name,
-/// `CMUX_UITEST_AUTH_FIXTURE_REJECT_TEAM_ID` fails switches to that team, and
-/// `CMUX_UITEST_AUTH_FIXTURE_TEAM_SWITCH_GATE` and
-/// `CMUX_UITEST_AUTH_FIXTURE_TEAM_CREATE_GATE` hold each switch or create
+/// `HMUX_UITEST_AUTH_FIXTURE_REJECT_TEAM_NAME` fails creates with that name,
+/// `HMUX_UITEST_AUTH_FIXTURE_REJECT_TEAM_ID` fails switches to that team, and
+/// `HMUX_UITEST_AUTH_FIXTURE_TEAM_SWITCH_GATE` and
+/// `HMUX_UITEST_AUTH_FIXTURE_TEAM_CREATE_GATE` hold each switch or create
 /// pending until the test creates a file at that path.
 actor UITestFixtureTeamsAuthClient: AuthClient {
     private let base: any AuthClient
-    private var teams: [CMUXAuthTeam]
+    private var teams: [HMUXAuthTeam]
     private var selectedID: String?
     private var createdCount = 0
     private let rejectedCreateName: String?
@@ -30,25 +30,25 @@ actor UITestFixtureTeamsAuthClient: AuthClient {
     /// A malformed team list serves no teams rather than the live ones, since
     /// session priming refreshes teams whenever the key is set.
     static func wrapping(_ base: any AuthClient, environment: [String: String]) -> any AuthClient {
-        guard environment["CMUX_UITEST_AUTH_FIXTURE"] == "1",
-              environment["CMUX_UITEST_CLEAR_AUTH"] != "1",
-              let json = environment["CMUX_UITEST_AUTH_FIXTURE_TEAMS"] else {
+        guard environment["HMUX_UITEST_AUTH_FIXTURE"] == "1",
+              environment["HMUX_UITEST_CLEAR_AUTH"] != "1",
+              let json = environment["HMUX_UITEST_AUTH_FIXTURE_TEAMS"] else {
             return base
         }
-        let teams = (try? JSONDecoder().decode([CMUXAuthTeam].self, from: Data(json.utf8))) ?? []
+        let teams = (try? JSONDecoder().decode([HMUXAuthTeam].self, from: Data(json.utf8))) ?? []
         return UITestFixtureTeamsAuthClient(
             base: base,
             teams: teams,
-            rejectedCreateName: environment["CMUX_UITEST_AUTH_FIXTURE_REJECT_TEAM_NAME"],
-            rejectedSwitchID: environment["CMUX_UITEST_AUTH_FIXTURE_REJECT_TEAM_ID"],
-            switchGate: environment["CMUX_UITEST_AUTH_FIXTURE_TEAM_SWITCH_GATE"].map { URL(fileURLWithPath: $0) },
-            createGate: environment["CMUX_UITEST_AUTH_FIXTURE_TEAM_CREATE_GATE"].map { URL(fileURLWithPath: $0) }
+            rejectedCreateName: environment["HMUX_UITEST_AUTH_FIXTURE_REJECT_TEAM_NAME"],
+            rejectedSwitchID: environment["HMUX_UITEST_AUTH_FIXTURE_REJECT_TEAM_ID"],
+            switchGate: environment["HMUX_UITEST_AUTH_FIXTURE_TEAM_SWITCH_GATE"].map { URL(fileURLWithPath: $0) },
+            createGate: environment["HMUX_UITEST_AUTH_FIXTURE_TEAM_CREATE_GATE"].map { URL(fileURLWithPath: $0) }
         )
     }
 
     private init(
         base: any AuthClient,
-        teams: [CMUXAuthTeam],
+        teams: [HMUXAuthTeam],
         rejectedCreateName: String?,
         rejectedSwitchID: String?,
         switchGate: URL?,
@@ -63,7 +63,7 @@ actor UITestFixtureTeamsAuthClient: AuthClient {
         self.createGate = createGate
     }
 
-    func listTeams() async throws -> [CMUXAuthTeam] { teams }
+    func listTeams() async throws -> [HMUXAuthTeam] { teams }
 
     func selectedTeamID() async throws -> String? { selectedID }
 
@@ -75,13 +75,13 @@ actor UITestFixtureTeamsAuthClient: AuthClient {
         selectedID = id
     }
 
-    func createTeam(displayName: String) async throws -> CMUXAuthTeam {
+    func createTeam(displayName: String) async throws -> HMUXAuthTeam {
         try await wait(for: createGate)
         if displayName == rejectedCreateName {
             throw AuthClientError.unsupported
         }
         createdCount += 1
-        let team = CMUXAuthTeam(id: "uitest-created-team-\(createdCount)", displayName: displayName)
+        let team = HMUXAuthTeam(id: "uitest-created-team-\(createdCount)", displayName: displayName)
         teams.append(team)
         return team
     }
@@ -103,7 +103,7 @@ actor UITestFixtureTeamsAuthClient: AuthClient {
 
     func forceRefreshAccessToken() async -> String? { await base.forceRefreshAccessToken() }
 
-    func currentUser(throwOnMissing: Bool) async throws -> CMUXAuthUser? {
+    func currentUser(throwOnMissing: Bool) async throws -> HMUXAuthUser? {
         try await base.currentUser(throwOnMissing: throwOnMissing)
     }
 

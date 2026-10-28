@@ -22,7 +22,7 @@ describe("Max as a personal plan", () => {
     expect(isPersonalPlanId(GO_PLAN_ID)).toBe(true);
     expect(highestPersonalPlanId([GO_PLAN_ID, "pro", "max"])).toBe("max");
     expect(personalPlanIdForSubscription({
-      items: { data: [{ price: { lookup_key: "cmux-go-monthly-10" } }] },
+      items: { data: [{ price: { lookup_key: "hmux-go-monthly-10" } }] },
       metadata: {},
     } as never)).toBe(GO_PLAN_ID);
   });
@@ -38,8 +38,8 @@ describe("Max as a personal plan", () => {
 
   test("legacy memory overrides cannot sell Max sizes to Pro", () => {
     // Pro stops at the 16 GB machine; only Max sells the larger rows.
-    expect(maxMemoryMbForPlan("pro", { CMUX_VM_PAID_MAX_MEMORY_MB: "65536" })).toBe(16384);
-    expect(maxMemoryMbForPlan("pro", { CMUX_VM_PLAN_PRO_MAX_MEMORY_MB: "65536" })).toBe(16384);
+    expect(maxMemoryMbForPlan("pro", { HMUX_VM_PAID_MAX_MEMORY_MB: "65536" })).toBe(16384);
+    expect(maxMemoryMbForPlan("pro", { HMUX_VM_PLAN_PRO_MAX_MEMORY_MB: "65536" })).toBe(16384);
     expect(maxMemoryMbForPlan("max", {})).toBe(65536);
   });
   test("max is paid, personal, and outranks pro", () => {
@@ -57,9 +57,9 @@ describe("Max as a personal plan", () => {
       metadata: { plan: "pro" },
     }) as never;
     expect(personalPlanIdForSubscription(withKey(MAX_PRICING_USD.month.lookupKey))).toBe(MAX_PLAN_ID);
-    expect(personalPlanIdForSubscription(withKey("cmux-pro-monthly"))).toBe(PRO_PLAN_ID);
+    expect(personalPlanIdForSubscription(withKey("hmux-pro-monthly"))).toBe(PRO_PLAN_ID);
     // A future Max price keeps the prefix and stays Max even before the code knows it.
-    expect(personalPlanIdForSubscription(withKey("cmux-max-monthly-250"))).toBe(MAX_PLAN_ID);
+    expect(personalPlanIdForSubscription(withKey("hmux-max-monthly-250"))).toBe(MAX_PLAN_ID);
     expect(personalPlanIdForSubscription({
       items: { data: [{ price: {} }] },
       metadata: { plan: "max" },
@@ -72,18 +72,18 @@ describe("Max as a personal plan", () => {
     expect(personalPlanIdForSubscription(withKey("unrelated-product"))).toBeNull();
   });
 
-  test("the cmuxPlan mirror is rewritten from pro to max on upgrade and cleared on lapse", async () => {
+  test("the hmuxPlan mirror is rewritten from pro to max on upgrade and cleared on lapse", async () => {
     const writes: unknown[] = [];
     const user = {
-      clientReadOnlyMetadata: { cmuxPlan: "pro", other: 1 },
+      clientReadOnlyMetadata: { hmuxPlan: "pro", other: 1 },
       update: async (options: { clientReadOnlyMetadata: unknown }) => {
         writes.push(options.clientReadOnlyMetadata);
       },
     };
     await syncProPlanMetadata(user, true, lease, "max");
-    expect(writes).toEqual([{ cmuxPlan: "max", other: 1 }]);
+    expect(writes).toEqual([{ hmuxPlan: "max", other: 1 }]);
 
-    const maxUser = { ...user, clientReadOnlyMetadata: { cmuxPlan: "max" } };
+    const maxUser = { ...user, clientReadOnlyMetadata: { hmuxPlan: "max" } };
     writes.length = 0;
     await syncProPlanMetadata(maxUser, true, lease, "max");
     expect(writes).toEqual([]);
@@ -93,7 +93,7 @@ describe("Max as a personal plan", () => {
 
   test("plan status reports max and reconciles a stale pro mirror to max", async () => {
     const written: unknown[] = [];
-    const user = { update: async () => undefined, id: "user-max", isAnonymous: false, clientReadOnlyMetadata: { cmuxPlan: "pro" } };
+    const user = { update: async () => undefined, id: "user-max", isAnonymous: false, clientReadOnlyMetadata: { hmuxPlan: "pro" } };
     const status = await resolveProPlanStatus(user, {
       activePersonalPlan: async () => "max",
       hasStripeCustomer: async () => true,
@@ -109,12 +109,12 @@ describe("Max as a personal plan", () => {
     expect(status.isPro).toBe(true);
     expect(status.billingManagement).toBe("stripe");
     expect(status.metadataChanged).toBe(true);
-    expect(written).toEqual([{ cmuxPlan: "max" }]);
+    expect(written).toEqual([{ hmuxPlan: "max" }]);
   });
 
   test("an operator max grant is Max without a subscription to manage", async () => {
     const status = await resolveProPlanStatus(
-      { update: async () => undefined, id: "user-grant", isAnonymous: false, clientReadOnlyMetadata: { cmuxVmPlan: "max" } },
+      { update: async () => undefined, id: "user-grant", isAnonymous: false, clientReadOnlyMetadata: { hmuxVmPlan: "max" } },
       { activePersonalPlan: async () => null, hasStripeCustomer: async () => false },
     );
     expect(status.planId).toBe("max");
@@ -125,7 +125,7 @@ describe("Max as a personal plan", () => {
 
   test("the legacy boolean seam still means pro", async () => {
     const status = await resolveProPlanStatus(
-      { update: async () => undefined, id: "user-legacy", isAnonymous: false, clientReadOnlyMetadata: { cmuxPlan: "pro" } },
+      { update: async () => undefined, id: "user-legacy", isAnonymous: false, clientReadOnlyMetadata: { hmuxPlan: "pro" } },
       { hasActiveStripeSubscription: async () => true, hasStripeCustomer: async () => true },
     );
     expect(status.planId).toBe("pro");

@@ -1,34 +1,34 @@
-# cmux-agent-ui
+# hmux-agent-ui
 
-MVP of the "UI mode" for cmux: a web chat surface (initial composer + chat view) rendered in cmux's existing browser surface, backed by any coding agent CLI. In production cmux launches the sidecar on a discovered loopback port and opens the unguessable token-prefixed URL it reports.
+MVP of the "UI mode" for hmux: a web chat surface (initial composer + chat view) rendered in hmux's existing browser surface, backed by any coding agent CLI. In production hmux launches the sidecar on a discovered loopback port and opens the unguessable token-prefixed URL it reports.
 
 ## Run
 
 Three entrypoints, all landing on the same server:
 
-- **CLI** (`cmux-chat`, symlinked into `~/.local/bin`): `cmux-chat` opens a composer as a new workspace tab; `cmux-chat -p codex fix the tests` starts the chat immediately; `--split` opens in the current workspace instead; `--no-open` prints the URL. It auto-starts the server if needed.
-- **Command palette**: `Cmd+Shift+P` → "New Agent Chat". Wired via `~/.config/cmux/cmux.json` (`actions.agent-chat` → `workspaceCommand` "Agent Chat" with a browser-surface layout), cmux's designed extension point, so no app build. When this productizes it becomes a built-in palette command in the cmux repo.
-- **Server** runs as a cmux sidecar. Manual dev run: `bun server.ts` (defaults to `http://127.0.0.1:7739` with no token). Production launchers set `CMUX_AGENT_CHAT_PORT=0`, `CMUX_AGENT_CHAT_TOKEN=<unguessable>`, and `CMUX_AGENT_CHAT_STATE_FILE=<path>`; after bind the server atomically writes `{"port":..., "pid":..., "protocolVersion":1}` so cmux can open `http://127.0.0.1:<port>/<token>/`.
+- **CLI** (`hmux-chat`, symlinked into `~/.local/bin`): `hmux-chat` opens a composer as a new workspace tab; `hmux-chat -p codex fix the tests` starts the chat immediately; `--split` opens in the current workspace instead; `--no-open` prints the URL. It auto-starts the server if needed.
+- **Command palette**: `Cmd+Shift+P` → "New Agent Chat". Wired via `~/.config/hmux/hmux.json` (`actions.agent-chat` → `workspaceCommand` "Agent Chat" with a browser-surface layout), hmux's designed extension point, so no app build. When this productizes it becomes a built-in palette command in the hmux repo.
+- **Server** runs as a hmux sidecar. Manual dev run: `bun server.ts` (defaults to `http://127.0.0.1:7739` with no token). Production launchers set `HMUX_AGENT_CHAT_PORT=0`, `HMUX_AGENT_CHAT_TOKEN=<unguessable>`, and `HMUX_AGENT_CHAT_STATE_FILE=<path>`; after bind the server atomically writes `{"port":..., "pid":..., "protocolVersion":1}` so hmux can open `http://127.0.0.1:<port>/<token>/`.
 
-One page = one session: `/` is the composer, `/s/<id>` a chat. When `CMUX_AGENT_CHAT_TOKEN` or `--token` is configured, every HTTP route, static asset, API route, and WebSocket upgrade except `/healthz` must be under `/<token>/...`; missing or wrong tokens return 404. There is deliberately no in-page session list or header; each chat is its own cmux workspace tab (page title = first prompt), so cmux's sidebar is the session list.
+One page = one session: `/` is the composer, `/s/<id>` a chat. When `HMUX_AGENT_CHAT_TOKEN` or `--token` is configured, every HTTP route, static asset, API route, and WebSocket upgrade except `/healthz` must be under `/<token>/...`; missing or wrong tokens return 404. There is deliberately no in-page session list or header; each chat is its own hmux workspace tab (page title = first prompt), so hmux's sidebar is the session list.
 
 ## Terminal chat view
 
-`/terminal/<surface-id>` shows a Claude Code or Codex session that is already running in a cmux terminal as a chat, without starting another agent. The sidecar looks the surface up in the hook session stores (`~/.cmuxterm/claude-hook-sessions.json`, `~/.cmuxterm/codex-hook-sessions.json`), tails the agent's own transcript (Claude `projects/<slug>/<session>.jsonl`, Codex `sessions/YYYY/MM/DD/rollout-*-<session>.jsonl`), and normalizes it into `AgentEvent`s with `adapters/transcript.ts`, so the regular chat renderer draws it. The page lives at `/s/t-<agent session id>`, which re-resolves after a sidecar restart; a view with no open page stops tailing after five minutes.
+`/terminal/<surface-id>` shows a Claude Code or Codex session that is already running in a hmux terminal as a chat, without starting another agent. The sidecar looks the surface up in the hook session stores (`~/.hmuxterm/claude-hook-sessions.json`, `~/.hmuxterm/codex-hook-sessions.json`), tails the agent's own transcript (Claude `projects/<slug>/<session>.jsonl`, Codex `sessions/YYYY/MM/DD/rollout-*-<session>.jsonl`), and normalizes it into `AgentEvent`s with `adapters/transcript.ts`, so the regular chat renderer draws it. The page lives at `/s/t-<agent session id>`, which re-resolves after a sidecar restart; a view with no open page stops tailing after five minutes.
 
-The terminal stays the source of truth. The composer types the prompt into the terminal's agent with `mobile.chat.send` (bracketed paste and submit, the delivery the iOS chat uses), and Stop or Esc sends `mobile.chat.interrupt`; both go over the cmux control socket through `cmux rpc` (`cmux-rpc.ts`, using the `CMUX_BUNDLED_CLI_PATH` and `CMUX_SOCKET_PATH` the app passes to the sidecar). The prompt shows immediately and is replaced by the transcript's own copy when it lands. Permission prompts, questions, and pickers stay in the terminal: when the hook store says the agent needs input, the view shows the request with an "Answer in terminal" button that focuses the terminal pane. Open the view with "Open terminal as chat" in the command palette (Agent Chat UI flag) or `cmux-chat --terminal --surface <surface-id>` from a shell.
+The terminal stays the source of truth. The composer types the prompt into the terminal's agent with `mobile.chat.send` (bracketed paste and submit, the delivery the iOS chat uses), and Stop or Esc sends `mobile.chat.interrupt`; both go over the hmux control socket through `hmux rpc` (`hmux-rpc.ts`, using the `HMUX_BUNDLED_CLI_PATH` and `HMUX_SOCKET_PATH` the app passes to the sidecar). The prompt shows immediately and is replaced by the transcript's own copy when it lands. Permission prompts, questions, and pickers stay in the terminal: when the hook store says the agent needs input, the view shows the request with an "Answer in terminal" button that focuses the terminal pane. Open the view with "Open terminal as chat" in the command palette (Agent Chat UI flag) or `hmux-chat --terminal --surface <surface-id>` from a shell.
 
 ## Model catalog
 
-The sidecar fetches the model catalog from `https://cmux.dev/api/agent-models` (`CMUX_AGENT_MODELS_URL` overrides it for development), revalidates it with ETags after a one-hour TTL, and caches the last-good response at `~/.cache/cmux-agent-chat/models.json` for offline startup. Refreshes happen in the background; changed catalogs are pushed to open pages so model pickers update without reloading.
+The sidecar fetches the model catalog from `https://cmux.dev/api/agent-models` (`HMUX_AGENT_MODELS_URL` overrides it for development), revalidates it with ETags after a one-hour TTL, and caches the last-good response at `~/.cache/hmux-agent-chat/models.json` for offline startup. Refreshes happen in the background; changed catalogs are pushed to open pages so model pickers update without reloading.
 
 Remote entries define the offered model order, labels, descriptions, defaults, context metadata, fast-mode support, and Claude minimum-version gates. Models reported only by the installed binary are appended. The built-in Claude and Gemini lists are used only until a remote payload has been fetched or loaded from disk. Model IDs are passed to provider CLIs verbatim, including remote-only IDs, so newly released models work without a sidecar update.
 
 ## Theming
 
-The server resolves the terminal's colors from `~/.config/ghostty/config` (theme file from `~/.config/ghostty/themes` or the cmux/Ghostty app bundle, explicit `background`/`foreground` overrides, `palette = N=#rrggbb` ANSI colors, `selection-background`, `cursor-color`, `background-opacity`, blur) and injects them as CSS variables at serve time, so the page paints with the terminal background on first frame. Syntax highlighting maps token colors to the injected Ghostty ANSI palette (`--ansi-*`), so code colors track the active terminal theme without rebuilding the client bundle. `/api/theme` exposes the resolved values. Splits opened by `cmux-chat --split` use `browser.open_split` with `transparent_background: true` plus `?transparent=1`, so the body is `rgba(bg, background-opacity)` and Ghostty transparency/blur shows through. Workspace-tab chats (palette, default CLI) are solid theme-bg because cmux workspace layout definitions don't carry a transparency flag yet; adding `transparent` to `CmuxSurfaceDefinition` in cmux would close that gap. Theme changes apply live (the server watches the config and cmux pushes its resolved theme on reload/appearance changes). The accent color is picked hue-aware from the palette (blue/cyan/violet candidates first); set `agent-chat-accent = #rrggbb` in the ghostty config to override it explicitly.
+The server resolves the terminal's colors from `~/.config/ghostty/config` (theme file from `~/.config/ghostty/themes` or the hmux/Ghostty app bundle, explicit `background`/`foreground` overrides, `palette = N=#rrggbb` ANSI colors, `selection-background`, `cursor-color`, `background-opacity`, blur) and injects them as CSS variables at serve time, so the page paints with the terminal background on first frame. Syntax highlighting maps token colors to the injected Ghostty ANSI palette (`--ansi-*`), so code colors track the active terminal theme without rebuilding the client bundle. `/api/theme` exposes the resolved values. Splits opened by `hmux-chat --split` use `browser.open_split` with `transparent_background: true` plus `?transparent=1`, so the body is `rgba(bg, background-opacity)` and Ghostty transparency/blur shows through. Workspace-tab chats (palette, default CLI) are solid theme-bg because hmux workspace layout definitions don't carry a transparency flag yet; adding `transparent` to `HmuxSurfaceDefinition` in hmux would close that gap. Theme changes apply live (the server watches the config and hmux pushes its resolved theme on reload/appearance changes). The accent color is picked hue-aware from the palette (blue/cyan/violet candidates first); set `agent-chat-accent = #rrggbb` in the ghostty config to override it explicitly.
 
-Agent-chat also reads optional font settings from `~/.config/cmux/cmux.json`:
+Agent-chat also reads optional font settings from `~/.config/hmux/hmux.json`:
 
 ```json
 {
@@ -56,7 +56,7 @@ bun test/e2e.ts               # or: bun test/e2e.ts codex pi
 
 The frontend is a small React app built with Bun and styled to match the
 terminal. Dropdowns and controls use `@base-ui-components/react` (Base UI),
-the same component library the cmux web app uses: `Select` for the provider
+the same component library the hmux web app uses: `Select` for the provider
 picker and `Popover` for the working-directory editor and overflow menus.
 Base UI ships unstyled, so every part is themed with the resolved Ghostty
 colors. The server bundles `src/main.tsx` with `Bun.build` on startup and
@@ -139,7 +139,7 @@ keyboard handler both call the same `setOption` path:
 | `ArrowDown` / `Ctrl+N` | next item while a `/`, `$`, or `@` popup is open |
 | `ArrowUp` / `Ctrl+P` | previous item while a `/`, `$`, or `@` popup is open |
 | `Enter` / `Tab` | accept the selected popup item |
-| `Ctrl+J` | insert newline by default; set `agentChat.keys.ctrlJ` to `"menu"` in `~/.config/cmux/cmux.json` to make it next-item while a popup is open |
+| `Ctrl+J` | insert newline by default; set `agentChat.keys.ctrlJ` to `"menu"` in `~/.config/hmux/hmux.json` to make it next-item while a popup is open |
 
 When focus is in a text input and no popup is open, plain `Ctrl+<letter>`
 combinations are left to the native macOS text editor bindings.
@@ -155,9 +155,9 @@ Adding a provider is either one registry entry (ACP-speaking: id + cmd) or one s
 - gemini: Google now blocks Gemini Code Assist for individuals (`IneligibleTierError`, migrate-to-Antigravity). ACP handshake works; auth fails upstream. Registry keeps it; it errors fast in the UI.
 - claude: TTFT is ~1-2 min on this machine when an `ANTHROPIC_API_KEY`/proxy auth source is active; the UI streams fine once tokens start.
 
-## What the real cmux feature needs beyond this MVP
+## What the real hmux feature needs beyond this MVP
 
-- A native `AgentChatSurface` (or a pinned browser surface type) with the composer as the new-workspace view; the server becomes a cmux-owned daemon keyed by workspace, sessions persisted to disk (each provider already has resume: claude `--resume`, codex thread ids, ACP `session/load`).
-- Permission requests routed to native cmux dialogs/notifications instead of the auto-approve toggle; ACP already models this, and claude gets it via `--permission-prompt-tool` or the ACP adapter.
-- Attach chat sessions to the workspace's terminal/worktree (cwd = worktree, show diffs via `cmux-diff`), and a "open in terminal" escape hatch that resumes the same session in the provider's TUI (`claude --resume <id>`, `codex resume <thread>`).
-- Provider registry in `~/.config/cmux/agents.json` so users can add any ACP/stream-JSON agent without code.
+- A native `AgentChatSurface` (or a pinned browser surface type) with the composer as the new-workspace view; the server becomes a hmux-owned daemon keyed by workspace, sessions persisted to disk (each provider already has resume: claude `--resume`, codex thread ids, ACP `session/load`).
+- Permission requests routed to native hmux dialogs/notifications instead of the auto-approve toggle; ACP already models this, and claude gets it via `--permission-prompt-tool` or the ACP adapter.
+- Attach chat sessions to the workspace's terminal/worktree (cwd = worktree, show diffs via `hmux-diff`), and a "open in terminal" escape hatch that resumes the same session in the provider's TUI (`claude --resume <id>`, `codex resume <thread>`).
+- Provider registry in `~/.config/hmux/agents.json` so users can add any ACP/stream-JSON agent without code.

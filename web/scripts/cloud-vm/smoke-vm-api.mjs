@@ -21,7 +21,7 @@ const shouldCreate = rest.includes("--create");
 const useVercelCurl = rest.includes("--vercel-curl");
 const skipAttach = rest.includes("--skip-attach");
 // --paid marks the throwaway smoke user as a paid plan via the billing
-// metadata key the entitlements layer reads (cmuxVmPlan). Required to
+// metadata key the entitlements layer reads (hmuxVmPlan). Required to
 // exercise provisioning now that free plans are gated (vm_requires_pro).
 const paid = rest.includes("--paid");
 // --edge-check proves the coderouter edge model plane from inside the guest:
@@ -37,15 +37,15 @@ if (snapshotCheck && !rest.includes("--create")) {
   process.exit(2);
 }
 // --claude-check extends --edge-check to the Claude leg: the smoke team gets an
-// Anthropic API key upstream (CMUX_SMOKE_CLAUDE_API_KEY, never logged) through
+// Anthropic API key upstream (HMUX_SMOKE_CLAUDE_API_KEY, never logged) through
 // PUT /api/coderouter/claude-upstream, then one `claude -p` turn runs in the
 // guest through the edge. Proves routing, upstream rewrite, and the usage row.
 const claudeCheck = rest.includes("--claude-check");
-// Either an Anthropic API key (CMUX_SMOKE_CLAUDE_API_KEY) or a full
-// PUT /api/coderouter/claude-upstream body (CMUX_SMOKE_CLAUDE_UPSTREAM_JSON,
+// Either an Anthropic API key (HMUX_SMOKE_CLAUDE_API_KEY) or a full
+// PUT /api/coderouter/claude-upstream body (HMUX_SMOKE_CLAUDE_UPSTREAM_JSON,
 // e.g. a bedrock upstream) becomes the smoke team's Claude upstream.
-const claudeUpstreamApiKey = process.env.CMUX_SMOKE_CLAUDE_API_KEY?.trim() ?? "";
-const claudeUpstreamJson = process.env.CMUX_SMOKE_CLAUDE_UPSTREAM_JSON?.trim() ?? "";
+const claudeUpstreamApiKey = process.env.HMUX_SMOKE_CLAUDE_API_KEY?.trim() ?? "";
+const claudeUpstreamJson = process.env.HMUX_SMOKE_CLAUDE_UPSTREAM_JSON?.trim() ?? "";
 const claudeUpstreamBody = claudeUpstreamJson
   ? claudeUpstreamJson
   : claudeUpstreamApiKey
@@ -81,7 +81,7 @@ if (claudeCheck && !edgeCheck) {
   process.exit(2);
 }
 if (claudeCheck && !claudeUpstreamBody) {
-  console.error("--claude-check requires CMUX_SMOKE_CLAUDE_API_KEY or CMUX_SMOKE_CLAUDE_UPSTREAM_JSON in the environment");
+  console.error("--claude-check requires HMUX_SMOKE_CLAUDE_API_KEY or HMUX_SMOKE_CLAUDE_UPSTREAM_JSON in the environment");
   process.exit(2);
 }
 const provider = optionValue(rest, "--provider") ?? "freestyle";
@@ -136,7 +136,7 @@ async function fetchWithTimeout(url, init = {}, timeoutMs = REQUEST_TIMEOUT_MS) 
 
 function vercelCurlFetch(url, init = {}, timeoutMs = REQUEST_TIMEOUT_MS) {
   const parsed = new URL(url);
-  const scratch = mkdtempSync(path.join(tmpdir(), "cmux-vercel-curl-"));
+  const scratch = mkdtempSync(path.join(tmpdir(), "hmux-vercel-curl-"));
   const responsePath = path.join(scratch, "response.txt");
   const bodyPath = path.join(scratch, "body.txt");
   const configPath = path.join(scratch, "curl.conf");
@@ -213,7 +213,7 @@ async function sessionHeaders(stackUser, expiresInMillis) {
     "x-stack-refresh-token": tokens.refreshToken,
     // Names the probe in `cloud_vm_request.client_name`. The server also tags
     // every event of this account `is_synthetic` from its smoke address.
-    "x-cmux-client": "cmux-cloud-smoke",
+    "x-hmux-client": "hmux-cloud-smoke",
   };
 }
 
@@ -260,7 +260,7 @@ try {
   const secretServerKey = env.STACK_SECRET_SERVER_KEY;
 
   const app = new StackServerApp({ projectId, publishableClientKey, secretServerKey });
-  const emailPrefix = `cmux-${project.stackLabel}-smoke+`;
+  const emailPrefix = `hmux-${project.stackLabel}-smoke+`;
   const swept = sweepOlderThanMinutes === null
     ? null
     : await timed("sweep", () => sweepLeftovers(app, emailPrefix, sweepOlderThanMinutes));
@@ -275,11 +275,11 @@ try {
     primaryEmailVerified: true,
     primaryEmailAuthEnabled: true,
     password: randomBytes(24).toString("base64url"),
-    displayName: `cmux ${project.stackLabel} smoke`,
+    displayName: `hmux ${project.stackLabel} smoke`,
   });
 
   if (paid) {
-    await user.update({ clientReadOnlyMetadata: { cmuxVmPlan: "pro" } });
+    await user.update({ clientReadOnlyMetadata: { hmuxVmPlan: "pro" } });
   }
   authHeaders = await sessionHeaders(user, 20 * 60 * 1000);
 
@@ -342,9 +342,9 @@ try {
     let attachTransport;
     let attachDurationMs;
     if (!skipAttach) {
-      // Every cmux Cloud machine runs only the cmux-tui remote daemon.
-      const expectedTransport = "cmux-remote";
-      const attachBody = { transport: "cmux-remote" };
+      // Every hmux Cloud machine runs only the hmux-tui remote daemon.
+      const expectedTransport = "hmux-remote";
+      const attachBody = { transport: "hmux-remote" };
       // First attach after create races the in-VM daemon boot; the API says
       // retryable with retryAfterSeconds and real clients loop. Retry 502s
       // within a bounded budget so the smoke measures the client contract,
@@ -382,7 +382,7 @@ try {
       }
       // Freestyle reaches the daemon straight at the VM's public IPv6 over ws.
       if (!/^wss?:\/\/.+\/v1\/link(\?|$)/.test(attached.route ?? "")) {
-        throw new Error("cmux-remote attach response missing the daemon route");
+        throw new Error("hmux-remote attach response missing the daemon route");
       }
       attachTransport = attached.transport;
     }
@@ -401,18 +401,18 @@ try {
         if (response.status !== 200) throw new Error(`POST exec expected 200, got ${response.status}: ${text}`);
         return JSON.parse(text);
       };
-      const guestEnv = "export HOME=/root; for f in /etc/profile.d/*.sh; do [ -r \"$f\" ] && . \"$f\"; done; . /etc/cmux/agent-config.sh;";
-      const originHost = await exec(`${guestEnv} printf '%s' "$CMUX_CODEROUTER_URL" | sed -e 's#^https\\?://##' -e 's#/.*$##'`);
+      const guestEnv = "export HOME=/root; for f in /etc/profile.d/*.sh; do [ -r \"$f\" ] && . \"$f\"; done; . /etc/hmux/agent-config.sh;";
+      const originHost = await exec(`${guestEnv} printf '%s' "$HMUX_CODEROUTER_URL" | sed -e 's#^https\\?://##' -e 's#/.*$##'`);
       const host = (originHost.stdout ?? "").trim();
       // Any crt_ string under the agent config roots means a token leaked into the guest.
-      const leak = await exec("grep -rslE 'crt_[A-Za-z0-9_-]{40,}' /root/.config/cmux /root/.codex /root/.pi /root/.config/opencode /etc/cmux /etc/environment /etc/profile.d 2>/dev/null; true");
+      const leak = await exec("grep -rslE 'crt_[A-Za-z0-9_-]{40,}' /root/.config/hmux /root/.codex /root/.pi /root/.config/opencode /etc/hmux /etc/environment /etc/profile.d 2>/dev/null; true");
       const tokenOnDisk = (leak.stdout ?? "").trim();
       // /v1/models needs an upstream client_version query, so the self-usage
       // route is the guest-side proof that the bound token arrived.
-      const models = await exec(`${guestEnv} curl -sS --max-time 20 -o /dev/null -w '%{http_code}' -H "authorization: Bearer $OPENAI_API_KEY" "$CMUX_CODEROUTER_URL/api/coderouter/vm-usage/self"`);
+      const models = await exec(`${guestEnv} curl -sS --max-time 20 -o /dev/null -w '%{http_code}' -H "authorization: Bearer $OPENAI_API_KEY" "$HMUX_CODEROUTER_URL/api/coderouter/vm-usage/self"`);
       const modelsStatus = (models.stdout ?? "").trim();
       const codex = zeroToken
-        ? await exec(`${guestEnv} command -v codex >/dev/null || echo 'codex-missing'; curl -sS --max-time 30 -X POST -H 'content-type: application/json' -H "authorization: Bearer $OPENAI_API_KEY" -d '{"model":"cmux-canary-no-such-model","input":"x","max_output_tokens":16,"stream":false}' "$CMUX_CODEROUTER_URL/v1/responses"; echo; echo "codex-exit $?"`)
+        ? await exec(`${guestEnv} command -v codex >/dev/null || echo 'codex-missing'; curl -sS --max-time 30 -X POST -H 'content-type: application/json' -H "authorization: Bearer $OPENAI_API_KEY" -d '{"model":"hmux-canary-no-such-model","input":"x","max_output_tokens":16,"stream":false}' "$HMUX_CODEROUTER_URL/v1/responses"; echo; echo "codex-exit $?"`)
         : await exec(`${guestEnv} cd /root && command -v codex && codex exec --skip-git-repo-check 'Reply with exactly the single word pong and nothing else.' 2>&1 | tail -20; echo "codex-exit $?"`, 240_000);
       const codexOut = `${codex.stdout ?? ""}${codex.stderr ?? ""}`;
       const codexOutcome = classifyCodexCanaryOutcome(codexOut, { zeroToken });
@@ -437,7 +437,7 @@ try {
         edge.claudeExit = claude.exitCode;
         edge.claudeOutcome = claudePong ? "answered" : /claude_upstream_not_configured|no upstream/i.test(claudeOut) ? "no_upstream" : "failed";
         edge.claudeTail = claudeOut.slice(-400);
-        const selfUsage = await exec(`${guestEnv} curl -sS --max-time 20 -H "authorization: Bearer $OPENAI_API_KEY" "$CMUX_CODEROUTER_URL/api/coderouter/vm-usage/self"`);
+        const selfUsage = await exec(`${guestEnv} curl -sS --max-time 20 -H "authorization: Bearer $OPENAI_API_KEY" "$HMUX_CODEROUTER_URL/api/coderouter/vm-usage/self"`);
         edge.selfUsage = (selfUsage.stdout ?? "").trim().slice(0, 600);
       }
       const problems = edgeCanaryProblems({

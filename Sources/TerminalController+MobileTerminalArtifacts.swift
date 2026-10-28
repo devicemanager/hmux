@@ -1,6 +1,6 @@
-import CmuxAgentChat
-import CmuxTerminal
-import CMUXMobileCore
+import HmuxAgentChat
+import HmuxTerminal
+import HMUXMobileCore
 import Foundation
 
 extension TerminalController {
@@ -186,7 +186,7 @@ extension TerminalController {
             case .forbidden(let diagnostics):
                 debugLogMobileTerminalArtifactDenial(op: "stat", path: context.requestedPath)
                 #if DEBUG
-                cmuxDebugLog("mobile.terminal.artifact.stat.deny \(diagnostics)")
+                hmuxDebugLog("mobile.terminal.artifact.stat.deny \(diagnostics)")
                 #endif
                 return mobileTerminalArtifactError(.forbidden, path: context.requestedPath)
             }
@@ -405,7 +405,7 @@ extension TerminalController {
 
     private func debugLogMobileTerminalArtifactDenial(op: String, path: String?) {
         #if DEBUG
-        cmuxDebugLog("mobile.terminal.artifact.forbidden op=\(op) path=\(path ?? "nil")")
+        hmuxDebugLog("mobile.terminal.artifact.forbidden op=\(op) path=\(path ?? "nil")")
         #endif
     }
 

@@ -55,7 +55,7 @@ describe("a private network with no free addresses", () => {
       message: "This account's private network has no free addresses.",
     });
     expect(payload.retryAfterSeconds).toBeUndefined();
-    expect(String(payload.action)).toContain("cmux vm rm");
+    expect(String(payload.action)).toContain("hmux vm rm");
     expect(JSON.stringify(payload)).not.toMatch(/retrying is safe|temporarily unavailable/i);
   });
 
@@ -69,7 +69,7 @@ describe("a private network with no free addresses", () => {
     } as unknown as Freestyle;
     const provider = new FreestyleProvider({ client: () => client });
     const cause = await failure(() => provider.privateNetworking!.createTunnel({
-      slug: "cmux-wg-full",
+      slug: "hmux-wg-full",
       clientPublicKey: TUNNEL_CLIENT_KEY,
       networkId: "vpc-1",
     }));

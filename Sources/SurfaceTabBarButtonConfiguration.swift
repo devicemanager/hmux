@@ -1,10 +1,10 @@
-import CmuxSettings
+import HmuxSettings
 
 struct SurfaceTabBarButtonConfiguration {
-    let buttons: [CmuxSurfaceTabBarButton]
+    let buttons: [HmuxSurfaceTabBarButton]
     let sourcePath: String?
     let globalConfigPath: String
-    let settingPresets: [String: CmuxSettingValue]
+    let settingPresets: [String: HmuxSettingValue]
     let terminalCommandSourcePaths: [String: String]
-    let workspaceCommands: [String: CmuxResolvedCommand]
+    let workspaceCommands: [String: HmuxResolvedCommand]
 }

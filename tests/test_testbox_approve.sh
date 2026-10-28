@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # scripts/blacksmith-testbox-approve.sh is RETIRED (2026-10-05): human approval
-# of Testbox runs was removed on purpose and the cmux-ci App approves
+# of Testbox runs was removed on purpose and the hmux-ci App approves
 # registered boxes. The helper must approve nothing, exit non-zero, and point
 # to the wrapper ($HQ_TOOLS/scripts/testbox-warmup.sh), whatever it is given.
 set -euo pipefail

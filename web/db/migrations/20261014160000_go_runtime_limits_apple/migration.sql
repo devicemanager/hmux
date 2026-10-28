@@ -5,7 +5,7 @@
 -- subscriptions grant a plan (Sandbox policy) is decided before the row gets
 -- billing_plan_id 'go'; this guard only needs the period. Same rule as
 -- services/vms/planUsage.ts. Only the period lookup changes.
-CREATE OR REPLACE FUNCTION cmux_guard_go_vm_capacity() RETURNS trigger LANGUAGE plpgsql AS $$
+CREATE OR REPLACE FUNCTION hmux_guard_go_vm_capacity() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE
   live_count integer;
   active_count integer;
@@ -16,15 +16,15 @@ BEGIN
   IF NEW.billing_plan_id IS DISTINCT FROM 'go' OR NEW.status NOT IN ('provisioning', 'running', 'paused') THEN
     RETURN NEW;
   END IF;
-  PERFORM pg_advisory_xact_lock(hashtextextended('cmux-go:' || NEW.user_id, 0));
+  PERFORM pg_advisory_xact_lock(hashtextextended('hmux-go:' || NEW.user_id, 0));
   SELECT count(*), count(*) FILTER (WHERE status IN ('provisioning','running'))
     INTO live_count, active_count FROM cloud_vms
     WHERE user_id = NEW.user_id AND id <> NEW.id AND status IN ('provisioning','running','paused');
   IF live_count >= 2 THEN
-    RAISE EXCEPTION 'Go supports two saved VMs in total' USING ERRCODE = '23514', CONSTRAINT = 'cmux_go_saved_limit';
+    RAISE EXCEPTION 'Go supports two saved VMs in total' USING ERRCODE = '23514', CONSTRAINT = 'hmux_go_saved_limit';
   END IF;
   IF NEW.status IN ('provisioning','running') AND active_count >= 1 THEN
-    RAISE EXCEPTION 'Go supports one active VM' USING ERRCODE = '23514', CONSTRAINT = 'cmux_go_active_limit';
+    RAISE EXCEPTION 'Go supports one active VM' USING ERRCODE = '23514', CONSTRAINT = 'hmux_go_active_limit';
   END IF;
   IF NEW.status IN ('provisioning','running') AND (TG_OP = 'INSERT' OR OLD.status <> NEW.status) THEN
     SELECT to_timestamp(coalesce(
@@ -43,14 +43,14 @@ BEGIN
         ORDER BY expires_at DESC NULLS LAST LIMIT 1;
     END IF;
     IF period_start IS NULL OR period_end IS NULL OR period_start >= period_end OR period_end <= clock_timestamp() THEN
-      RAISE EXCEPTION 'Go billing period is unavailable' USING ERRCODE = '23514', CONSTRAINT = 'cmux_go_period_unavailable';
+      RAISE EXCEPTION 'Go billing period is unavailable' USING ERRCODE = '23514', CONSTRAINT = 'hmux_go_period_unavailable';
     END IF;
     SELECT coalesce(sum(greatest(0, extract(epoch FROM
       least(coalesce(ended_at, clock_timestamp()), period_end) - greatest(started_at, period_start)))),0)
       INTO used_seconds FROM cloud_vm_runtime_intervals
       WHERE user_id = NEW.user_id AND started_at < period_end AND (ended_at IS NULL OR ended_at > period_start);
     IF used_seconds >= 144000 THEN
-      RAISE EXCEPTION 'Go runtime limit reached' USING ERRCODE = '23514', CONSTRAINT = 'cmux_go_hours_limit';
+      RAISE EXCEPTION 'Go runtime limit reached' USING ERRCODE = '23514', CONSTRAINT = 'hmux_go_hours_limit';
     END IF;
   END IF;
   RETURN NEW;

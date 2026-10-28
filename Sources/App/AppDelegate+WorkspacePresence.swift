@@ -1,4 +1,4 @@
-import CmuxAuthRuntime
+import HmuxAuthRuntime
 
 extension AppDelegate {
     func configureWorkspacePresence(auth: AuthCoordinator) {

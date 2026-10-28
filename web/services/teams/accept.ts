@@ -25,7 +25,7 @@ export type AcceptDependencies = {
 
 /**
  * Accept a Stack email invitation for the request's user and apply the role
- * cmux stored for it.
+ * hmux stored for it.
  *
  * 1. Stack's details endpoint names the exact team the code belongs to (and
  *    already refuses a wrong-email user).

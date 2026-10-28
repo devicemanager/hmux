@@ -25,8 +25,8 @@ function harness(metadata = vm.providerMetadata, failStore = false) {
   return { handler, writes };
 }
 function request(body: unknown, token = "valid", id = "self") {
-  return new Request("https://cmux.test/api/vm/resource-usage/self", { method: "POST",
-    headers: { "x-cmux-authorization": `Bearer ${token === "valid" ? signedToken : token}`, "x-cmux-vm-id": id, "content-type": "application/json" },
+  return new Request("https://hmux.test/api/vm/resource-usage/self", { method: "POST",
+    headers: { "x-hmux-authorization": `Bearer ${token === "valid" ? signedToken : token}`, "x-hmux-vm-id": id, "content-type": "application/json" },
     body: JSON.stringify(body) });
 }
 test("edge-authenticated report writes only the caller's gauges and server timestamp", async () => {

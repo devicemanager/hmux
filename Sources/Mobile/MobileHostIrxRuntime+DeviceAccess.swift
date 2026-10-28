@@ -1,5 +1,5 @@
-import CmuxAuthRuntime
-import CmuxIrxTransport
+import HmuxAuthRuntime
+import HmuxIrxTransport
 import Foundation
 
 extension MobileHostIrxRuntime {

@@ -97,10 +97,10 @@ CODEROUTER_API_KEY=<key> cr codex exec "run the tests"`}</CodeBlock>
       <CodeBlock lang="bash">{`# Inside a Cloud machine
 claude
 codex
-cmux coderouter agent claude "summarize the current checkout"
+hmux coderouter agent claude "summarize the current checkout"
 
 # From your Mac
-cmux coderouter agent codex --machine brave-otter -- "run the tests"`}</CodeBlock>
+hmux coderouter agent codex --machine brave-otter -- "run the tests"`}</CodeBlock>
       <p>{t("cloudAccounts")}</p>
 
       <DocsHeading level={2} id="models">{t("modelsTitle")}</DocsHeading>
@@ -108,11 +108,11 @@ cmux coderouter agent codex --machine brave-otter -- "run the tests"`}</CodeBloc
       <p>{t("modelsOpencode")}</p>
       <p>{t("modelsClaude")}</p>
       <p>{t("modelsBedrock")}</p>
-      <CodeBlock lang="bash">{`cmux coderouter claude add bedrock --region us-east-1 \\
+      <CodeBlock lang="bash">{`hmux coderouter claude add bedrock --region us-east-1 \\
   --model <claude-model-id>=<bedrock-model-id>`}</CodeBlock>
       <p>{t("modelsList")}</p>
       <CodeBlock lang="bash">{`# Inside a Cloud machine
-cmux coderouter models`}</CodeBlock>
+hmux coderouter models`}</CodeBlock>
     </>
   );
 }

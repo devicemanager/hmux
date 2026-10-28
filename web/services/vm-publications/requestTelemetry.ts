@@ -15,7 +15,7 @@ const ROUTE = "/api/freestyle/forward-auth";
 type Operation = { operation: string; offset_ms: number; duration_ms: number; failed: boolean };
 type RequestState = { now: () => number; startedAt: number; operations: Operation[]; dropped: number };
 const requests = new AsyncLocalStorage<RequestState>();
-class EffectRequestState extends Context.Tag("cmux/PublicationAuthTrace")<EffectRequestState, RequestState>() {}
+class EffectRequestState extends Context.Tag("hmux/PublicationAuthTrace")<EffectRequestState, RequestState>() {}
 const rounded = (value: number) => Math.round(value * 100) / 100;
 
 function recordOperation(state: RequestState, operation: Operation): void {
@@ -57,7 +57,7 @@ export async function tracePublicationAuthOperation<A>(operation: string, run: (
   // Box failures inside withSpan: generic exception recording can expose SQL
   // parameters or credentials embedded in provider messages. This path records
   // only the failing operation; the original error still reaches its handler.
-  const result = await withSpan("cmux-publication-auth", `cmux.publication_auth.${operation}`, {}, async span => {
+  const result = await withSpan("hmux-publication-auth", `hmux.publication_auth.${operation}`, {}, async span => {
     let failed = false;
     try {
       return { ok: true as const, value: await run() };
@@ -83,9 +83,9 @@ export async function withPublicationAuthRequest(
 ): Promise<Response> {
   const now = options.now ?? (() => performance.now());
   const state: RequestState = { now, startedAt: now(), operations: [], dropped: 0 };
-  return withSpan("cmux-publication-auth", "cmux.publication_auth.request", {
+  return withSpan("hmux-publication-auth", "hmux.publication_auth.request", {
     "http.route": ROUTE,
-    "cmux.subsystem": "publication-auth",
+    "hmux.subsystem": "publication-auth",
   }, async span => {
     const response = await requests.run(state, () => runWithCloudDbQueryTags({ source: "app", route: ROUTE }, async () => {
       try {
@@ -101,20 +101,20 @@ export async function withPublicationAuthRequest(
     const attributes = {
       "http.route": ROUTE,
       "http.response.status_code": response.status,
-      "cmux.subsystem": "publication-auth",
-      "cmux.publication_auth.duration_ms": durationMs,
-      "cmux.publication_auth.slow": slow,
-      "cmux.publication_auth.failed": failed,
-      "cmux.publication_auth.decision": decision(response.status),
-      "cmux.publication_auth.callback": /^\/_cmux\/auth\/callback(?:\?|$)/u.test(request.headers.get("x-forwarded-uri") ?? ""),
-      "cmux.publication_auth.dropped_operations": state.dropped,
+      "hmux.subsystem": "publication-auth",
+      "hmux.publication_auth.duration_ms": durationMs,
+      "hmux.publication_auth.slow": slow,
+      "hmux.publication_auth.failed": failed,
+      "hmux.publication_auth.decision": decision(response.status),
+      "hmux.publication_auth.callback": /^\/_hmux\/auth\/callback(?:\?|$)/u.test(request.headers.get("x-forwarded-uri") ?? ""),
+      "hmux.publication_auth.dropped_operations": state.dropped,
     };
     const annotate = (target: Span) => {
       target.setAttributes(attributes);
       for (const operation of state.operations) target.addEvent("authorization.operation", operation);
       const totals = new Map<string, number>();
       for (const operation of state.operations) totals.set(operation.operation, (totals.get(operation.operation) ?? 0) + operation.duration_ms);
-      for (const [operation, duration] of totals) target.setAttribute(`cmux.publication_auth.stage_ms.${operation}`, rounded(duration));
+      for (const [operation, duration] of totals) target.setAttribute(`hmux.publication_auth.stage_ms.${operation}`, rounded(duration));
       if (failed) target.setStatus({ code: SpanStatusCode.ERROR, message: "authorization unavailable" });
     };
     annotate(span);
@@ -122,7 +122,7 @@ export async function withPublicationAuthRequest(
     if (slow || failed) {
       // A root rejected by head sampling cannot be promoted. The priority
       // outcome retains stage offsets/durations and links back to that root.
-      result = await withPrioritySpan("cmux-publication-auth", "cmux.publication_auth.outcome", attributes, async retained => {
+      result = await withPrioritySpan("hmux-publication-auth", "hmux.publication_auth.outcome", attributes, async retained => {
         annotate(retained);
         return withTraceIdHeaders(response, retained);
       });

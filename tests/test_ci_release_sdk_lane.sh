@@ -55,7 +55,7 @@ for needle in \
 done
 
 for workflow in "$CI_FILE" "$RELEASE_FILE"; do
-  if ! grep -Fq "CMUX_SKIP_ZIG_BUILD=1 xcodebuild" "$workflow"; then
+  if ! grep -Fq "HMUX_SKIP_ZIG_BUILD=1 xcodebuild" "$workflow"; then
     echo "FAIL: $(basename "$workflow") must skip the in-build Zig helper on macOS 26" >&2
     exit 1
   fi
@@ -112,7 +112,7 @@ if [[ "$swift_package_section" != *"timeout-minutes: 60"* ]]; then
   exit 1
 fi
 
-if [[ "$swift_package_section" != *"CMUX_CI_HELPER_XCODE_APP"* ]]; then
+if [[ "$swift_package_section" != *"HMUX_CI_HELPER_XCODE_APP"* ]]; then
   echo "FAIL: CI swift-package-tests must use a helper-specific Xcode pin" >&2
   exit 1
 fi
@@ -133,7 +133,7 @@ if [[ "$swift_package_section" != *"actions/upload-artifact@043fb46d1a93c77aae65
 fi
 
 swift_package_before_xcode="${swift_package_section%%- name: Select Xcode*}"
-if [[ "$swift_package_before_xcode" != *"CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15"* ]]; then
+if [[ "$swift_package_before_xcode" != *"HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15"* ]]; then
   echo "FAIL: CI swift-package-tests must require a macOS 15 SDK for the helper build" >&2
   exit 1
 fi

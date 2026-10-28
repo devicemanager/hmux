@@ -118,7 +118,7 @@ def main() -> int:
     targets = [args.recovery_dir] + ([args.metadata_dir] if args.metadata_dir else [])
     for directory in targets:
         directory.mkdir(parents=True, exist_ok=True)
-        directory.joinpath("cmux-nightly-notarization-recovery.json").write_text(
+        directory.joinpath("hmux-nightly-notarization-recovery.json").write_text(
             json.dumps(manifest, indent=2) + "\n", encoding="utf-8")
         shutil.copyfile(args.state, directory / canonical_state)
         shutil.copyfile(log, directory / canonical_log)

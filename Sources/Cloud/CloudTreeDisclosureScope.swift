@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 
 /// Separates an explicit disclosure operation from AppKit's descendant callbacks.
 @MainActor

@@ -43,11 +43,11 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
-            [[ "$GITHUB_REF_NAME" =~ ^cmux-sdk-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-              echo "tag must match cmux-sdk-vX.Y.Z" >&2
+            [[ "$GITHUB_REF_NAME" =~ ^hmux-sdk-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "tag must match hmux-sdk-vX.Y.Z" >&2
               exit 1
             }
-            version="${GITHUB_REF_NAME#cmux-sdk-v}"
+            version="${GITHUB_REF_NAME#hmux-sdk-v}"
             [[ "$DISPATCH_VERSION" == "$version" ]] || {
               echo "workflow_dispatch version $DISPATCH_VERSION does not match tag version $version" >&2
               exit 1
@@ -59,7 +59,7 @@ jobs:
               exit 1
             }
           fi
-          python3 cmux-tui/bindings/validate_release_version.py \
+          python3 hmux-tui/bindings/validate_release_version.py \
             --version "$version"
           python3 - "$version" <<'PY'
           import json
@@ -70,10 +70,10 @@ jobs:
           expected = sys.argv[1]
           root = pathlib.Path.cwd()
           versions = {
-              "typescript package.json": json.loads((root / "cmux-tui/bindings/typescript/package.json").read_text())["version"],
-              "python pyproject.toml": tomllib.loads((root / "cmux-tui/bindings/python/pyproject.toml").read_text())["project"]["version"],
-              "rust Cargo.toml": tomllib.loads((root / "cmux-tui/bindings/rust/Cargo.toml").read_text())["package"]["version"],
-              "rust-sidebar Cargo.toml": tomllib.loads((root / "cmux-tui/bindings/rust-sidebar/Cargo.toml").read_text())["package"]["version"],
+              "typescript package.json": json.loads((root / "hmux-tui/bindings/typescript/package.json").read_text())["version"],
+              "python pyproject.toml": tomllib.loads((root / "hmux-tui/bindings/python/pyproject.toml").read_text())["project"]["version"],
+              "rust Cargo.toml": tomllib.loads((root / "hmux-tui/bindings/rust/Cargo.toml").read_text())["package"]["version"],
+              "rust-sidebar Cargo.toml": tomllib.loads((root / "hmux-tui/bindings/rust-sidebar/Cargo.toml").read_text())["package"]["version"],
           }
           mismatches = {name: got for name, got in versions.items() if got != expected}
           if mismatches:
@@ -82,7 +82,7 @@ jobs:
               raise SystemExit(1)
           print(f"All package versions match {expected}")
           PY
-          python3 cmux-tui/bindings/check-versions.py \
+          python3 hmux-tui/bindings/check-versions.py \
             --published-only \
             --expected "$version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -117,62 +117,62 @@ jobs:
           cargo --version
           rustc --version
 
-      - name: Build cmux-tui server
-        working-directory: cmux-tui
-        run: cargo build -p cmux-tui --bin cmux-tui --locked
+      - name: Build hmux-tui server
+        working-directory: hmux-tui
+        run: cargo build -p hmux-tui --bin hmux-tui --locked
 
       - name: Test Rust SDK packages
-        working-directory: cmux-tui
+        working-directory: hmux-tui
         env:
-          CMUX_SDK_VERSION: ${{ needs.version.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.version.outputs.version }}
         run: |
           set -euo pipefail
-          cargo test -p cmux-sdk -p cmux-sidebar --locked
-          cargo package -p cmux-sdk --locked
+          cargo test -p hmux-sdk -p hmux-sidebar --locked
+          cargo package -p hmux-sdk --locked
           cargo package \
-            -p cmux-sidebar \
+            -p hmux-sidebar \
             --locked \
             --no-verify \
             --config \
-              "patch.crates-io.cmux-sdk.path='$GITHUB_WORKSPACE/cmux-tui/bindings/rust'"
+              "patch.crates-io.hmux-sdk.path='$GITHUB_WORKSPACE/hmux-tui/bindings/rust'"
 
-          verify_root="$RUNNER_TEMP/cmux-rust-package-verify"
+          verify_root="$RUNNER_TEMP/hmux-rust-package-verify"
           mkdir -p "$verify_root"
           tar -xzf \
-            "target/package/cmux-sdk-$CMUX_SDK_VERSION.crate" \
+            "target/package/hmux-sdk-$HMUX_SDK_VERSION.crate" \
             -C "$verify_root"
           tar -xzf \
-            "target/package/cmux-sidebar-$CMUX_SDK_VERSION.crate" \
+            "target/package/hmux-sidebar-$HMUX_SDK_VERSION.crate" \
             -C "$verify_root"
           cargo test \
             --manifest-path \
-              "$verify_root/cmux-sidebar-$CMUX_SDK_VERSION/Cargo.toml" \
+              "$verify_root/hmux-sidebar-$HMUX_SDK_VERSION/Cargo.toml" \
             --config \
-              "patch.crates-io.cmux-sdk.path='$verify_root/cmux-sdk-$CMUX_SDK_VERSION'" \
+              "patch.crates-io.hmux-sdk.path='$verify_root/hmux-sdk-$HMUX_SDK_VERSION'" \
             --all-targets
 
-      - name: Upload validated cmux-sdk crate
+      - name: Upload validated hmux-sdk crate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-rust-sdk-crate
-          path: cmux-tui/target/package/cmux-sdk-${{ needs.version.outputs.version }}.crate
+          name: hmux-rust-sdk-crate
+          path: hmux-tui/target/package/hmux-sdk-${{ needs.version.outputs.version }}.crate
           if-no-files-found: error
           overwrite: true
 
-      - name: Upload validated cmux-sidebar crate
+      - name: Upload validated hmux-sidebar crate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-rust-sidebar-crate
-          path: cmux-tui/target/package/cmux-sidebar-${{ needs.version.outputs.version }}.crate
+          name: hmux-rust-sidebar-crate
+          path: hmux-tui/target/package/hmux-sidebar-${{ needs.version.outputs.version }}.crate
           if-no-files-found: error
           overwrite: true
 
       - name: Rust SDK conformance
         run: |
-          report="$RUNNER_TEMP/cmux-sdk-conformance-rust.txt"
-          python3 cmux-tui/bindings/conformance/runner.py \
+          report="$RUNNER_TEMP/hmux-sdk-conformance-rust.txt"
+          python3 hmux-tui/bindings/conformance/runner.py \
             --language rust \
             --require rust \
-            --cmux-tui-bin "$GITHUB_WORKSPACE/cmux-tui/target/debug/cmux-tui" |
+            --hmux-tui-bin "$GITHUB_WORKSPACE/hmux-tui/target/debug/hmux-tui" |
             tee "$report"
           grep -Eq '^PASS +rust +live-creation-exit-restart-unix$' "$report"

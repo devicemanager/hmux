@@ -26,7 +26,7 @@ describe("whats-new route channel targeting", () => {
   };
 
   test("serves the checked-in list, which keeps every entry off the official channel by default", async () => {
-    const response = await GET(new Request("https://cmux.test/api/whats-new"));
+    const response = await GET(new Request("https://hmux.test/api/whats-new"));
     expect(response.status).toBe(200);
     const payload = (await response.json()) as WhatsNewList;
     expect(payload).toEqual(whatsNewList);
@@ -145,7 +145,7 @@ describe("whats-new route channel targeting", () => {
   });
 
   test("serves translated release instructions with exact compatibility values", async () => {
-    const response = await GET(new Request("https://cmux.test/api/whats-new"));
+    const response = await GET(new Request("https://hmux.test/api/whats-new"));
     const payload = await response.json() as WhatsNewList;
     const notice = payload.announcements.find((entry) => entry.id === "ios-1.0.6-connections")!;
     const translations = notice.localizations!;

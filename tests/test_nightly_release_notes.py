@@ -42,13 +42,13 @@ def pull_request(number, title, *, day=1, labels=(), paths=("Sources/ContentView
 class PublishedShaTests(unittest.TestCase):
     def test_reads_full_publication_marker_case_insensitively(self):
         self.assertEqual(
-            NOTES.published_sha(f"Nightly notes\n<!-- cmux-published-sha: {BASE.upper()} -->\n"), BASE
+            NOTES.published_sha(f"Nightly notes\n<!-- hmux-published-sha: {BASE.upper()} -->\n"), BASE
         )
 
     def test_missing_or_invalid_marker_is_not_a_published_baseline(self):
         for body in (
-            "", f"Published commit: `{BASE}`", f"<!-- cmux-published-sha: {BASE[:-1]} -->",
-            f"<!-- cmux-published-sha: {BASE}a -->", "<!-- cmux-published-sha: " + "z" * 40 + " -->",
+            "", f"Published commit: `{BASE}`", f"<!-- hmux-published-sha: {BASE[:-1]} -->",
+            f"<!-- hmux-published-sha: {BASE}a -->", "<!-- hmux-published-sha: " + "z" * 40 + " -->",
         ):
             with self.subTest(body=body):
                 self.assertIsNone(NOTES.published_sha(body))
@@ -250,7 +250,7 @@ class AppcastTests(unittest.TestCase):
         for name in APPCASTS:
             (directory / name).write_text(f'''<?xml version="1.0" encoding="utf-8"?>
 <rss version="2.0" xmlns:sparkle="{SPARKLE}"><channel>
-<title>cmux nightly</title>
+<title>hmux nightly</title>
 <item><title>Current nightly</title><sparkle:version>{build}</sparkle:version>
 <description><![CDATA[Previous current description]]></description>
 <enclosure url="https://example.invalid/current.dmg" sparkle:version="{build}" sparkle:edSignature="current-signature" length="345" type="application/octet-stream" /></item>

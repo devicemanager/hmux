@@ -1,4 +1,4 @@
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension SurfaceCatalog {
@@ -12,7 +12,7 @@ extension SurfaceCatalog {
         on machine: SurfaceMachineID,
         completion: @escaping @MainActor (Bool) -> Void = { _ in }
     ) -> Bool {
-        guard let provider = provider(for: machine) as? CmuxTuiSurfaceProvider,
+        guard let provider = provider(for: machine) as? HmuxTuiSurfaceProvider,
               provider.supportsDisplayCreation else { return false }
         Task {
             await provider.refreshDisplays()
@@ -23,7 +23,7 @@ extension SurfaceCatalog {
 
     /// Names a display for every client; an empty name restores "Display N".
     func renameDisplay(_ id: SurfaceResourceID, name: String) async throws {
-        guard id.kind == .display, let provider = provider(for: id.machine) as? CmuxTuiSurfaceProvider else {
+        guard id.kind == .display, let provider = provider(for: id.machine) as? HmuxTuiSurfaceProvider else {
             throw SurfaceCatalogError.noProvider(id.machine)
         }
         try await provider.renameDisplay(displayID: id.key, name: name)
@@ -41,7 +41,7 @@ extension SurfaceCatalog {
             activeDisplayCreations.remove(machine)
             notifyChange()
         }
-        guard let provider = provider(for: machine) as? CmuxTuiSurfaceProvider else {
+        guard let provider = provider(for: machine) as? HmuxTuiSurfaceProvider else {
             throw SurfaceCatalogError.noProvider(machine)
         }
         let resource = try await provider.createDisplay()
@@ -83,7 +83,7 @@ extension SurfaceCatalog {
         at destination: SurfaceDestination,
         bestEffortOpen: Bool
     ) async throws {
-        guard let provider = provider(for: machine) as? CmuxTuiSurfaceProvider else {
+        guard let provider = provider(for: machine) as? HmuxTuiSurfaceProvider else {
             throw SurfaceCatalogError.noProvider(machine)
         }
         // A second click while this machine is already creating is dropped, as

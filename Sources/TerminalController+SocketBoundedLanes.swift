@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxCore
+import HmuxControlSocket
+import HmuxCore
 import Foundation
 
 /// A socket command's hop onto the main actor exceeded its deadline.
@@ -22,7 +22,7 @@ enum SocketCommandTaskPolicy {
     /// peer (`LOCAL_PEERPID`), or nil for an in-process call or a peer the
     /// transport could not identify. The caller cannot set it.
     @TaskLocal static var peerProcessID: pid_t?
-    /// Whether the connection's peer runs as the same user as cmux, or nil
+    /// Whether the connection's peer runs as the same user as hmux, or nil
     /// for an in-process call. The caller cannot set it.
     @TaskLocal static var peerHasSameUID: Bool?
 }
@@ -193,7 +193,7 @@ extension TerminalController {
     /// cooperative-pool thread. This is the sanctioned legacy blocking
     /// boundary, not general async work.
     private nonisolated static let socketBlockingWorkerQueue = DispatchQueue(
-        label: "com.cmux.socket.blocking-worker",
+        label: "com.hmux.socket.blocking-worker",
         qos: .userInitiated,
         attributes: .concurrent
     )
@@ -241,13 +241,13 @@ extension TerminalController {
         _ body: @escaping @Sendable () -> T
     ) async -> T {
         let policyStack = SocketCommandTaskPolicy.focusAllowanceStack
-        let focusAllowed = CmuxAutomationInvocationContext.focusAllowed
-        let eventOrigin = CmuxAutomationInvocationContext.eventOrigin
+        let focusAllowed = HmuxAutomationInvocationContext.focusAllowed
+        let eventOrigin = HmuxAutomationInvocationContext.eventOrigin
         return await withCheckedContinuation { continuation in
             Self.socketBlockingWorkerQueue.async {
                 let value = Self.withSocketCommandPolicyStack(policyStack) {
-                    CmuxAutomationInvocationContext.$focusAllowed.withValue(focusAllowed) {
-                        CmuxAutomationInvocationContext.$eventOrigin.withValue(eventOrigin) {
+                    HmuxAutomationInvocationContext.$focusAllowed.withValue(focusAllowed) {
+                        HmuxAutomationInvocationContext.$eventOrigin.withValue(eventOrigin) {
                             body()
                         }
                     }
@@ -286,14 +286,14 @@ extension TerminalController {
     private nonisolated static var socketMainHopTimeoutNotRunMessage: String {
         String(
             localized: "socket.mainActorHop.timeout.notRun",
-            defaultValue: "cmux did not respond within 10 seconds, so the command was not run. Retry in a moment."
+            defaultValue: "hmux did not respond within 10 seconds, so the command was not run. Retry in a moment."
         )
     }
 
     private nonisolated static var socketMainHopTimeoutMayHaveRunMessage: String {
         String(
             localized: "socket.mainActorHop.timeout.mayHaveRun",
-            defaultValue: "cmux did not respond within 10 seconds after the command started, so its result is unknown. Check the effect before retrying."
+            defaultValue: "hmux did not respond within 10 seconds after the command started, so its result is unknown. Check the effect before retrying."
         )
     }
 

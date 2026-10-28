@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://contracts.cmux.invalid/iroh-v2/V2ChallengeRequest.json",
+  "$id": "https://contracts.hmux.invalid/iroh-v2/V2ChallengeRequest.json",
   "type": "object",
   "properties": {
     "schemaId": {
@@ -13,7 +13,7 @@
       "maxLength": 128
     },
     "device": {
-      "$ref": "https://contracts.cmux.invalid/iroh-v2/V2DeviceDescriptor.json"
+      "$ref": "https://contracts.hmux.invalid/iroh-v2/V2DeviceDescriptor.json"
     }
   },
   "required": [

@@ -20,7 +20,7 @@ cat > "$bin_dir/xcrun" <<'EOF'
 set -euo pipefail
 case "$*" in
   "--sdk macosx --show-sdk-version")
-    if [[ -n "${CMUX_TEST_XCRUN_FAIL:-}" && "$DEVELOPER_DIR" == "$CMUX_TEST_XCRUN_FAIL" ]]; then
+    if [[ -n "${HMUX_TEST_XCRUN_FAIL:-}" && "$DEVELOPER_DIR" == "$HMUX_TEST_XCRUN_FAIL" ]]; then
       exit 1
     fi
     cat "$DEVELOPER_DIR/sdk-version"
@@ -38,7 +38,7 @@ EOF
 cat > "$bin_dir/xcode-select" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
-printf '%s\n' "$*" >> "$CMUX_TEST_XCODE_SELECT_LOG"
+printf '%s\n' "$*" >> "$HMUX_TEST_XCODE_SELECT_LOG"
 EOF
 
 cat > "$bin_dir/xcodebuild" <<'EOF'
@@ -52,7 +52,7 @@ cat > "$bin_dir/sw_vers" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
 [ "$1" = "-productVersion" ] || exit 64
-printf '%s\n' "$CMUX_TEST_MACOS_VERSION"
+printf '%s\n' "$HMUX_TEST_MACOS_VERSION"
 EOF
 chmod +x "$bin_dir/xcrun" "$bin_dir/xcode-select" "$bin_dir/xcodebuild" "$bin_dir/sw_vers"
 
@@ -93,10 +93,10 @@ run_select() {
     HOME="$tmp_dir" \
     PATH="$bin_dir:/usr/bin:/bin" \
     GITHUB_ENV="$env_file" \
-    CMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
-    CMUX_TEST_MACOS_VERSION=26.1 \
-    CMUX_XCODE_APPLICATIONS_DIR="$apps_dir" \
-    CMUX_CI_XCODE_PINS_FILE="$pins_file" \
+    HMUX_TEST_XCODE_SELECT_LOG="$xcode_select_log" \
+    HMUX_TEST_MACOS_VERSION=26.1 \
+    HMUX_XCODE_APPLICATIONS_DIR="$apps_dir" \
+    HMUX_CI_XCODE_PINS_FILE="$pins_file" \
     "$@" \
     "$SCRIPT" > "$log" 2>&1
 }
@@ -123,7 +123,7 @@ pin_meets_floor() {
 
 # 1. An explicit developer dir wins, skips the scan, and points xcode-select at it.
 log="$tmp_dir/pinned.log"
-run_select "$log" CMUX_CI_DEVELOPER_DIR="$current_developer" CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26 \
+run_select "$log" HMUX_CI_DEVELOPER_DIR="$current_developer" HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26 \
   || fail "explicit pin should select" "$log"
 grep -Fq "Selected pinned Xcode (DEVELOPER_DIR): $current_developer (macOS SDK 26.2)" "$log" \
   || fail "pinned developer dir was not selected" "$log"
@@ -135,62 +135,62 @@ expect_env "$current_developer" "$log"
 
 # 2. Shared-machine workloads keep the host-global selector untouched.
 log="$tmp_dir/skip.log"
-run_select "$log" CMUX_CI_DEVELOPER_DIR="$current_developer" CMUX_CI_SKIP_XCODE_SELECT=1 \
+run_select "$log" HMUX_CI_DEVELOPER_DIR="$current_developer" HMUX_CI_SKIP_XCODE_SELECT=1 \
   || fail "skip mode should select" "$log"
 expect_env "$current_developer" "$log"
 [[ ! -s "$xcode_select_log" ]] || fail "profile-local selection mutated the host-global selector" "$xcode_select_log"
 grep -Fq "Skipping host-global xcode-select update" "$log" || fail "skip mode not reported" "$log"
 
-# 3. CMUX_CI_XCODE_APP is the same pin, spelled as an app path.
+# 3. HMUX_CI_XCODE_APP is the same pin, spelled as an app path.
 log="$tmp_dir/app-pin.log"
-run_select "$log" CMUX_CI_XCODE_APP="$apps_dir/Xcode_26.2.app/" || fail "app pin should select" "$log"
+run_select "$log" HMUX_CI_XCODE_APP="$apps_dir/Xcode_26.2.app/" || fail "app pin should select" "$log"
 expect_env "$current_developer" "$log"
 
 # 4. A pin below the .xcode-version major stops with one clear error, before the
 #    SDK check can print its own less specific message.
 log="$tmp_dir/below-floor-pin.log"
-if run_select "$log" CMUX_CI_DEVELOPER_DIR="$old_developer" CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26; then
+if run_select "$log" HMUX_CI_DEVELOPER_DIR="$old_developer" HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26; then
   fail "a pinned Xcode below the floor should fail" "$log"
 fi
-expect_one_error "$log" "Found Xcode 16.4 at $old_developer; cmux requires Xcode 26 (.xcode-version)"
+expect_one_error "$log" "Found Xcode 16.4 at $old_developer; hmux requires Xcode 26 (.xcode-version)"
 ! grep -Fq "required major is 26" "$log" || fail "the floor should report before the SDK check" "$log"
 [[ ! -s "$env_file" ]] || fail "a refused Xcode must not be exported" "$env_file"
 
 # 5. The floor comes from .xcode-version, not a number in the script.
 printf '27.0\n' > "$tmp_dir/xcode-version-27"
 log="$tmp_dir/floor-from-file.log"
-if run_select "$log" CMUX_CI_DEVELOPER_DIR="$current_developer" CMUX_XCODE_VERSION_FILE="$tmp_dir/xcode-version-27"; then
+if run_select "$log" HMUX_CI_DEVELOPER_DIR="$current_developer" HMUX_XCODE_VERSION_FILE="$tmp_dir/xcode-version-27"; then
   fail "the floor should follow .xcode-version" "$log"
 fi
-expect_one_error "$log" "Found Xcode 26.2 at $current_developer; cmux requires Xcode 27 (.xcode-version)"
+expect_one_error "$log" "Found Xcode 26.2 at $current_developer; hmux requires Xcode 27 (.xcode-version)"
 
 # 6. A missing pinned path fails instead of falling back.
 log="$tmp_dir/missing-pin.log"
-if run_select "$log" CMUX_CI_DEVELOPER_DIR="$tmp_dir/missing/Contents/Developer"; then
+if run_select "$log" HMUX_CI_DEVELOPER_DIR="$tmp_dir/missing/Contents/Developer"; then
   fail "a missing pinned developer dir should fail" "$log"
 fi
 expect_one_error "$log" "Pinned Xcode developer dir does not exist: $tmp_dir/missing/Contents/Developer on runner "
 # The marker makes CI failure attribution call this a machine failure, and the
 # installed list tells the fleet operator what the Mac has instead.
-grep -Fq "[cmux-ci machine: xcode-pin-missing]" "$log" || fail "missing pin lacks the machine marker" "$log"
+grep -Fq "[hmux-ci machine: xcode-pin-missing]" "$log" || fail "missing pin lacks the machine marker" "$log"
 grep -Fq "Xcode_26.2.app=26.2" "$log" || fail "missing pin should list the installed Xcodes" "$log"
 log="$tmp_dir/missing-pin-runner.log"
-run_select "$log" RUNNER_NAME=cmux99-glaeda-1 CMUX_CI_XCODE_APP="$apps_dir/Xcode_26.3.app" && fail "a missing app pin should fail" "$log"
-expect_one_error "$log" "Pinned Xcode developer dir does not exist: $apps_dir/Xcode_26.3.app/Contents/Developer on runner cmux99-glaeda-1."
+run_select "$log" RUNNER_NAME=hmux99-glaeda-1 HMUX_CI_XCODE_APP="$apps_dir/Xcode_26.3.app" && fail "a missing app pin should fail" "$log"
+expect_one_error "$log" "Pinned Xcode developer dir does not exist: $apps_dir/Xcode_26.3.app/Contents/Developer on runner hmux99-glaeda-1."
 
 # 6a. A pinned Xcode with no usable SDK remains a machine failure and reports
 #     the installed inventory for fleet diagnosis.
 log="$tmp_dir/sdkless-pin.log"
-if run_select "$log" CMUX_TEST_XCRUN_FAIL="$current_developer" CMUX_CI_DEVELOPER_DIR="$current_developer"; then
+if run_select "$log" HMUX_TEST_XCRUN_FAIL="$current_developer" HMUX_CI_DEVELOPER_DIR="$current_developer"; then
   fail "a pinned Xcode without a usable SDK should fail" "$log"
 fi
 expect_one_error "$log" "Pinned Xcode developer dir has no usable macOS SDK: $current_developer on runner "
-grep -Fq "[cmux-ci machine: xcode-pin-missing]" "$log" || fail "SDK-less pin lacks the machine marker" "$log"
+grep -Fq "[hmux-ci machine: xcode-pin-missing]" "$log" || fail "SDK-less pin lacks the machine marker" "$log"
 grep -Fq "Xcode_26.2.app=26.2" "$log" || fail "SDK-less pin should list the installed Xcodes" "$log"
 
 # 7. An explicit pin must still respect the SDK ceiling.
 log="$tmp_dir/pin-over-ceiling.log"
-if run_select "$log" CMUX_CI_DEVELOPER_DIR="$future_developer" CMUX_CI_MAX_MACOS_SDK_MAJOR=26; then
+if run_select "$log" HMUX_CI_DEVELOPER_DIR="$future_developer" HMUX_CI_MAX_MACOS_SDK_MAJOR=26; then
   fail "an explicit Xcode pin must respect the SDK ceiling" "$log"
 fi
 
@@ -203,18 +203,18 @@ grep -Fq "Selected Xcode 26.2 pinned for macOS 26 runners (DEVELOPER_DIR): $curr
 
 # 9. The pool pin applies under an SDK ceiling too (test-e2e sets one).
 log="$tmp_dir/pool-ceiling.log"
-run_select "$log" CMUX_CI_MAX_MACOS_SDK_MAJOR=26 || fail "pool pin under a ceiling should select" "$log"
+run_select "$log" HMUX_CI_MAX_MACOS_SDK_MAJOR=26 || fail "pool pin under a ceiling should select" "$log"
 expect_env "$current_developer" "$log"
 
 # 10. The pool is the runner's macOS, so a macOS 15 runner gets the 15 pin.
 fifteen_developer="$(make_xcode Xcode_26.1.app 26.1 26.1)"
 log="$tmp_dir/pool-15.log"
-run_select "$log" CMUX_TEST_MACOS_VERSION=15.7.4 || fail "a macOS 15 runner should take its pin" "$log"
+run_select "$log" HMUX_TEST_MACOS_VERSION=15.7.4 || fail "a macOS 15 runner should take its pin" "$log"
 expect_env "$fifteen_developer" "$log"
 
 # 11. An explicit pin that disagrees with the pool is allowed but warned about.
 log="$tmp_dir/pin-disagrees.log"
-run_select "$log" CMUX_CI_DEVELOPER_DIR="$fifteen_developer" || fail "a disagreeing pin should still select" "$log"
+run_select "$log" HMUX_CI_DEVELOPER_DIR="$fifteen_developer" || fail "a disagreeing pin should still select" "$log"
 grep -Fq "::warning::This job pins Xcode 26.1, but scripts/ci/xcode-pins.txt pins Xcode 26.2 for macOS 26 runners" "$log" \
   || fail "a pin that disagrees with the pool should warn" "$log"
 
@@ -236,17 +236,17 @@ if run_select "$log"; then
 fi
 expect_one_error "$log" "This macOS 26 runner has no Xcode 26.2, the version scripts/ci/xcode-pins.txt pins for its pool. Installed:"
 grep -Fq "Xcode_16.4.app=16.4" "$log" || fail "the error should list the installed Xcodes" "$log"
-grep -Fq "[cmux-ci machine: xcode-pin-missing]" "$log" || fail "a missing pool pin lacks the machine marker" "$log"
+grep -Fq "[hmux-ci machine: xcode-pin-missing]" "$log" || fail "a missing pool pin lacks the machine marker" "$log"
 [[ ! -s "$env_file" ]] || fail "a failed pool selection must not export an Xcode" "$env_file"
 
 # 13b. A pool Xcode with no usable SDK reports the same machine evidence.
 mv "$tmp_dir/hidden-26.2.app" "$apps_dir/Xcode_26.2.app"
 log="$tmp_dir/pool-sdkless.log"
-if run_select "$log" CMUX_TEST_XCRUN_FAIL="$apps_dir/Xcode_26.2.app/Contents/Developer"; then
+if run_select "$log" HMUX_TEST_XCRUN_FAIL="$apps_dir/Xcode_26.2.app/Contents/Developer"; then
   fail "a pool Xcode without a usable SDK should fail" "$log"
 fi
 expect_one_error "$log" "Pool Xcode developer dir has no usable macOS SDK: $apps_dir/Xcode_26.2.app/Contents/Developer on runner "
-grep -Fq "[cmux-ci machine: xcode-pin-missing]" "$log" || fail "SDK-less pool pin lacks the machine marker" "$log"
+grep -Fq "[hmux-ci machine: xcode-pin-missing]" "$log" || fail "SDK-less pool pin lacks the machine marker" "$log"
 grep -Fq "Xcode_26.2.app=26.2" "$log" || fail "SDK-less pool pin should list the installed Xcodes" "$log"
 mv "$apps_dir/Xcode_26.2.app" "$tmp_dir/hidden-26.2.app"
 
@@ -271,21 +271,21 @@ mv "$tmp_dir/hidden-26.2.app" "$apps_dir/Xcode_26.2.app"
 
 # 14. A macOS major with no line in the pins file fails and says where to add it.
 log="$tmp_dir/pool-unknown.log"
-if run_select "$log" CMUX_TEST_MACOS_VERSION=14.7; then
+if run_select "$log" HMUX_TEST_MACOS_VERSION=14.7; then
   fail "a runner with no pool pin should fail" "$log"
 fi
 expect_one_error "$log" "No Xcode is pinned for macOS 14 runners. Add a line to scripts/ci/xcode-pins.txt"
 
 # 14a. A fork on an unpinned macOS major scans instead, still above the floor.
 log="$tmp_dir/pool-unknown-fork.log"
-run_select "$log" CMUX_TEST_MACOS_VERSION=14.7 GITHUB_REPOSITORY_OWNER=some-fork \
+run_select "$log" HMUX_TEST_MACOS_VERSION=14.7 GITHUB_REPOSITORY_OWNER=some-fork \
   || fail "a fork on an unpinned macOS should fall back to the scan" "$log"
 expect_env "$future_developer" "$log"
 
 # 15. The SDK 15 helper opts out of the pool and the floor together, and keeps
 #     the scan's required-SDK filter.
 log="$tmp_dir/helper.log"
-run_select "$log" CMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1 CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15 \
+run_select "$log" HMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1 HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15 \
   || fail "the below-floor helper scan should select" "$log"
 expect_env "$old_developer" "$log"
 grep -Fq "Skipping $apps_dir/Xcode_26.2.app -> macOS SDK 26.2; required major is 15" "$log" \
@@ -293,13 +293,13 @@ grep -Fq "Skipping $apps_dir/Xcode_26.2.app -> macOS SDK 26.2; required major is
 
 # 16. Without the opt-out, requiring SDK 15 cannot reach a below-floor Xcode.
 log="$tmp_dir/helper-without-optout.log"
-if run_select "$log" CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15; then
+if run_select "$log" HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15; then
   fail "requiring SDK 15 without the opt-out should fail" "$log"
 fi
 
 # 17. The scan still prefers stable over beta and honors the SDK ceiling.
 log="$tmp_dir/scan-ceiling.log"
-run_select "$log" CMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1 CMUX_CI_MAX_MACOS_SDK_MAJOR=26 \
+run_select "$log" HMUX_CI_XCODE_ALLOW_BELOW_FLOOR=1 HMUX_CI_MAX_MACOS_SDK_MAJOR=26 \
   || fail "the capped scan should select" "$log"
 expect_env "$current_developer" "$log"
 [[ -n "$beta_developer" ]]

@@ -1,9 +1,9 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import Bonsplit
-import CmuxSurfaceCatalogModel
-import CmuxTerminal
-import CmuxWorkspaces
+import HmuxSurfaceCatalogModel
+import HmuxTerminal
+import HmuxWorkspaces
 import Foundation
 import GhosttyKit
 
@@ -97,7 +97,7 @@ extension Workspace {
     }
 
     /// Wires the session-facing surface callbacks a native cloud pane needs.
-    /// The remote cmux-tui byte stream sends a replacement replay after every
+    /// The remote hmux-tui byte stream sends a replacement replay after every
     /// authoritative resize, so Ghostty may reflow the primary screen immediately
     /// and track its own bounds during the round trip.
     static func bindCloudManualMirrorCallbacks(

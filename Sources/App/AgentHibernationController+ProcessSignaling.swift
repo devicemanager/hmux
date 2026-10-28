@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Darwin
 import Foundation
 
@@ -20,8 +20,8 @@ extension AgentHibernationController {
             AgentPIDProcessIdentity(pid: $0)
         },
         processGroupProvider: @escaping @Sendable (pid_t) -> pid_t = { getpgid($0) },
-        processArgumentsProvider: @escaping @Sendable (Int) -> CmuxTopProcessArguments? = {
-            CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
+        processArgumentsProvider: @escaping @Sendable (Int) -> HmuxTopProcessArguments? = {
+            HmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
         },
         processTTYDeviceProvider: @escaping @Sendable (pid_t) -> Int64? = {
             agentLiveProcessIdentity(pid: $0)?.ttyDevice
@@ -72,8 +72,8 @@ extension AgentHibernationController {
             AgentPIDProcessIdentity(pid: $0)
         },
         processGroupProvider: @escaping @Sendable (pid_t) -> pid_t = { getpgid($0) },
-        processArgumentsProvider: @escaping @Sendable (Int) -> CmuxTopProcessArguments? = {
-            CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
+        processArgumentsProvider: @escaping @Sendable (Int) -> HmuxTopProcessArguments? = {
+            HmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
         },
         processTTYDeviceProvider: @escaping @Sendable (pid_t) -> Int64? = {
             agentLiveProcessIdentity(pid: $0)?.ttyDevice
@@ -127,7 +127,7 @@ extension AgentHibernationController {
                   ) == ttyDevice
               }),
               terminations.allSatisfy({ termination in
-                  processArgumentsProvider(termination.processID)?.matchesCMUXScope(
+                  processArgumentsProvider(termination.processID)?.matchesHMUXScope(
                       workspaceId: processScopeKey.workspaceId,
                       surfaceId: processScopeKey.panelId
                   ) == true

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxHomeRender
+import HmuxHomeRender
 
 /// Chief's colours from the terminal theme: the transcript takes Ghostty's
 /// default background and foreground, the sent bubble is iMessage blue on

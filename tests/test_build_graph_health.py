@@ -21,27 +21,27 @@ class BuildGraphHealthTests(unittest.TestCase):
     def test_classifies_app_cli_and_packages(self):
         self.assertEqual(health.classify_path("Sources/Mobile/Foo.swift"), ("app", "Mobile"))
         self.assertEqual(health.classify_path("Sources/AppDelegate.swift"), ("app", "<root>"))
-        self.assertEqual(health.classify_path("CLI/CMUXCLI.swift"), ("cli", "CLI"))
+        self.assertEqual(health.classify_path("CLI/HMUXCLI.swift"), ("cli", "CLI"))
         self.assertEqual(
-            health.classify_path("Packages/macOS/CmuxGit/Sources/CmuxGit/Foo.swift"),
-            ("package", "macOS/CmuxGit"),
+            health.classify_path("Packages/macOS/HmuxGit/Sources/HmuxGit/Foo.swift"),
+            ("package", "macOS/HmuxGit"),
         )
         self.assertEqual(
-            health.classify_path("Packages/Shared/CmuxCore/Sources/CmuxCore/Bar.swift"),
-            ("package", "Shared/CmuxCore"),
+            health.classify_path("Packages/Shared/HmuxCore/Sources/HmuxCore/Bar.swift"),
+            ("package", "Shared/HmuxCore"),
         )
 
     def test_requested_ref_drives_tree_inventory(self):
         with mock.patch.object(
             health,
             "git",
-            return_value="Sources/App.swift\0Packages/macOS/CmuxGit/Foo.swift\0",
+            return_value="Sources/App.swift\0Packages/macOS/HmuxGit/Foo.swift\0",
         ) as git:
             files = health.tracked_swift_files("abc123")
 
         self.assertEqual(
             files,
-            ["Sources/App.swift", "Packages/macOS/CmuxGit/Foo.swift"],
+            ["Sources/App.swift", "Packages/macOS/HmuxGit/Foo.swift"],
         )
         git.assert_called_once_with(
             "ls-tree",
@@ -121,14 +121,14 @@ class BuildGraphHealthTests(unittest.TestCase):
             "Sources/Mobile/A.swift",
             "Sources/Mobile/B.swift",
             "Sources/AppDelegate.swift",
-            "Packages/macOS/CmuxGit/Sources/CmuxGit/Git.swift",
-            "CLI/CMUXCLI.swift",
+            "Packages/macOS/HmuxGit/Sources/HmuxGit/Git.swift",
+            "CLI/HMUXCLI.swift",
         ]
         touches = Counter({
             "Sources/Mobile/A.swift": 5,
             "Sources/AppDelegate.swift": 3,
-            "Packages/macOS/CmuxGit/Sources/CmuxGit/Git.swift": 2,
-            "CLI/CMUXCLI.swift": 1,
+            "Packages/macOS/HmuxGit/Sources/HmuxGit/Git.swift": 2,
+            "CLI/HMUXCLI.swift": 1,
         })
         data = health.summarize(
             files,

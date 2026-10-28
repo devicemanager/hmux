@@ -67,7 +67,7 @@ check_cla_guard_runner() {
     'admit blacksmith-4vcpu-ubuntu-2404-56ere4cqq7ryjqvc' \
     'admit blacksmith-2vcpu-ubuntu-2404-56ere4cqq7ryjqvc' \
     'admit blacksmith-4vcpu-ubuntu-2404-Runner-337101a82d' \
-    'refuse cmuxs-mac-mini-5-glaeda-1' \
+    'refuse hmuxs-mac-mini-5-glaeda-1' \
     'refuse blacksmith-4vcpu-ubuntu-2404-glaeda' \
     'refuse blacksmith-8vcpu-ubuntu-2404-56ere4cqq7ryjqvc' \
     'refuse blacksmith-4vcpu-ubuntu-2404'; do
@@ -177,7 +177,7 @@ check_build_lag_deriveddata_cache_path() {
 
     in_job && /- name: Prepare isolated DerivedData/ { in_prepare=1; next }
     in_prepare && /^[[:space:]]*- name:/ { in_prepare=0 }
-    in_prepare && /DERIVED_DATA_PATH="\$RUNNER_TEMP\/cmux-deriveddata-tests-build-and-lag"/ { saw_prepare_path=1 }
+    in_prepare && /DERIVED_DATA_PATH="\$RUNNER_TEMP\/hmux-deriveddata-tests-build-and-lag"/ { saw_prepare_path=1 }
     in_prepare && /GITHUB_RUN_ID|GITHUB_RUN_ATTEMPT/ { saw_dynamic_prepare_path=1 }
 
     in_job && /key:[[:space:]]*deriveddata-/ { saw_deriveddata_cache=1 }
@@ -322,12 +322,12 @@ check_xcode_selection() {
 }
 
 check_release_build_signal() {
-  if ! grep -Fq './scripts/ci/verify-binary-archs.sh "$RELEASE_ARCHS" "$APP_BINARY" "$CLI_BINARY" "$CMUX_CUA_BINARY"' "$CI_MACOS_FILE"; then
-    echo "FAIL: release-build must verify the Release app, CLI, and cmux-cua contain exactly the resolved architectures"
+  if ! grep -Fq './scripts/ci/verify-binary-archs.sh "$RELEASE_ARCHS" "$APP_BINARY" "$CLI_BINARY" "$HMUX_CUA_BINARY"' "$CI_MACOS_FILE"; then
+    echo "FAIL: release-build must verify the Release app, CLI, and hmux-cua contain exactly the resolved architectures"
     exit 1
   fi
 
-  if ! grep -Fq './scripts/ci/verify-binary-archs.sh "$RELEASE_ARCHS" "$APP_BINARY" "$CLI_BINARY" "$CMUX_CUA_BINARY" "$HELPER_BINARY" "$TUI_CLIENT"' "$CI_MACOS_FILE"; then
+  if ! grep -Fq './scripts/ci/verify-binary-archs.sh "$RELEASE_ARCHS" "$APP_BINARY" "$CLI_BINARY" "$HMUX_CUA_BINARY" "$HELPER_BINARY" "$TUI_CLIENT"' "$CI_MACOS_FILE"; then
     echo "FAIL: release-build must verify both bundled helpers contain exactly the producer-selected architectures"
     exit 1
   fi
@@ -368,9 +368,9 @@ check_release_helper_artifact_from_package_lane() {
     in_job && index($0, dual_runner) { saw_dual_runner=1 }
     in_job && /vars\.MACOS_RUNNER_PR/ { saw_pr_lane=1 }
     in_job && /timeout-minutes:[[:space:]]*60/ { saw_timeout=1 }
-    in_job && /CMUX_CI_HELPER_XCODE_APP:/ { saw_helper_xcode_env=1 }
+    in_job && /HMUX_CI_HELPER_XCODE_APP:/ { saw_helper_xcode_env=1 }
     in_job && /- name: Select helper Xcode/ { saw_helper_select=1; next }
-    in_job && /CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15/ { saw_helper_sdk_pin=1 }
+    in_job && /HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15/ { saw_helper_sdk_pin=1 }
     in_job && /- name: Select Xcode/ { saw_select=1; after_select=1; next }
     in_job && /- name: Build Release Ghostty CLI helper/ {
       saw_build_step=1
@@ -389,7 +389,7 @@ check_release_helper_artifact_from_package_lane() {
       next
     }
     in_job && /uses: actions\/upload-artifact@/ { saw_upload=1 }
-    in_job && /name:[[:space:]]*cmux-ghostty-cli-helper/ { saw_artifact_name=1 }
+    in_job && /name:[[:space:]]*hmux-ghostty-cli-helper/ { saw_artifact_name=1 }
     in_job && /\[\[ "\$HELPER_SDK_VERSION" == 15\.\* \]\]/ { saw_helper_sdk_validation=1 }
 
     END {
@@ -409,7 +409,7 @@ check_release_helper_artifact_from_package_lane() {
     in_job && /- swift-package-tests/ { saw_need=1 }
     in_job && /- name: Download Release Ghostty CLI helper/ { saw_download_step=1; next }
     in_job && /uses: actions\/download-artifact@/ { saw_download=1 }
-    in_job && /name:[[:space:]]*cmux-ghostty-cli-helper/ { saw_artifact_name=1 }
+    in_job && /name:[[:space:]]*hmux-ghostty-cli-helper/ { saw_artifact_name=1 }
     in_job && /- name: Install Release helpers/ { saw_install_step=1; next }
     in_job && /\.\/scripts\/install-prebuilt-ghostty-cli-helper\.sh/ { saw_install=1 }
 
@@ -455,7 +455,7 @@ check_runtime_regressions_collapsed() {
     /^run_browser_find_focus\(\) \{/ { in_func=1; next }
     in_func && /^}/ { in_func=0 }
     in_func && /persistent_display_id="\$\(tr -d/ { saw_display_id_read=1 }
-    in_func && /CMUX_UI_TEST_TARGET_DISPLAY_ID="\$persistent_display_id"/ { saw_display_env=1 }
+    in_func && /HMUX_UI_TEST_TARGET_DISPLAY_ID="\$persistent_display_id"/ { saw_display_env=1 }
     END { exit !(saw_display_id_read && saw_display_env) }
   ' "$ROOT_DIR/scripts/ci/run-display-ui-regressions.sh"; then
     echo "FAIL: browser-find UI regression must target the persistent virtual display"
@@ -552,7 +552,7 @@ if [[ -z "$output" ]]; then
   echo "curl stub missing --output" >&2
   exit 1
 fi
-printf '%s\n' "$*" >> "$CMUX_STUB_CURL_LOG"
+printf '%s\n' "$*" >> "$HMUX_STUB_CURL_LOG"
 printf 'fake certificate\n' > "$output"
 EOF
   chmod +x "$bin_dir/curl"
@@ -562,12 +562,12 @@ EOF
 set -euo pipefail
 case "${1:-}" in
   add-certificates)
-    printf '%s\n' "$*" >> "$CMUX_STUB_SECURITY_LOG"
+    printf '%s\n' "$*" >> "$HMUX_STUB_SECURITY_LOG"
     ;;
   find-certificate)
-    added_count="$(grep -c '^add-certificates ' "$CMUX_STUB_SECURITY_LOG" 2>/dev/null || true)"
-    if [[ "${CMUX_STUB_CERT_COUNT_OVERRIDE:-}" != "" ]]; then
-      added_count="$CMUX_STUB_CERT_COUNT_OVERRIDE"
+    added_count="$(grep -c '^add-certificates ' "$HMUX_STUB_SECURITY_LOG" 2>/dev/null || true)"
+    if [[ "${HMUX_STUB_CERT_COUNT_OVERRIDE:-}" != "" ]]; then
+      added_count="$HMUX_STUB_CERT_COUNT_OVERRIDE"
     fi
     for ((i = 0; i < added_count; i++)); do
       printf '%s\n' '-----END CERTIFICATE-----'
@@ -583,7 +583,7 @@ EOF
 
   # --- Vendored path (default): the real helper has the certs committed beside
   # it, so it must import both WITHOUT touching the network. ---
-  if ! PATH="$bin_dir:/usr/bin:/bin" CMUX_STUB_CURL_LOG="$curl_log" CMUX_STUB_SECURITY_LOG="$security_log" "$helper" "$keychain" >"$tmp_dir/success.out" 2>"$tmp_dir/success.err"; then
+  if ! PATH="$bin_dir:/usr/bin:/bin" HMUX_STUB_CURL_LOG="$curl_log" HMUX_STUB_SECURITY_LOG="$security_log" "$helper" "$keychain" >"$tmp_dir/success.out" 2>"$tmp_dir/success.err"; then
     echo "FAIL: signing helper behavior test should import both intermediates from vendored copies"
     cat "$tmp_dir/success.err" >&2 || true
     exit 1
@@ -613,7 +613,7 @@ EOF
   fb_keychain="$tmp_dir/fb_build.keychain"
   touch "$fb_curl_log" "$fb_security_log" "$fb_keychain"
 
-  if ! PATH="$bin_dir:/usr/bin:/bin" CMUX_STUB_CURL_LOG="$fb_curl_log" CMUX_STUB_SECURITY_LOG="$fb_security_log" "$fb_helper" "$fb_keychain" >"$tmp_dir/fb.out" 2>"$tmp_dir/fb.err"; then
+  if ! PATH="$bin_dir:/usr/bin:/bin" HMUX_STUB_CURL_LOG="$fb_curl_log" HMUX_STUB_SECURITY_LOG="$fb_security_log" "$fb_helper" "$fb_keychain" >"$tmp_dir/fb.out" 2>"$tmp_dir/fb.err"; then
     echo "FAIL: signing helper fallback should download and import both intermediates"
     cat "$tmp_dir/fb.err" >&2 || true
     exit 1
@@ -632,7 +632,7 @@ EOF
   fi
 
   # --- Count guard: helper must fail when fewer than two intermediates land. ---
-  if PATH="$bin_dir:/usr/bin:/bin" CMUX_STUB_CURL_LOG="$curl_log" CMUX_STUB_SECURITY_LOG="$security_log" CMUX_STUB_CERT_COUNT_OVERRIDE=1 "$helper" "$keychain" >"$tmp_dir/fail.out" 2>"$tmp_dir/fail.err"; then
+  if PATH="$bin_dir:/usr/bin:/bin" HMUX_STUB_CURL_LOG="$curl_log" HMUX_STUB_SECURITY_LOG="$security_log" HMUX_STUB_CERT_COUNT_OVERRIDE=1 "$helper" "$keychain" >"$tmp_dir/fail.out" 2>"$tmp_dir/fail.err"; then
     echo "FAIL: signing helper behavior test should fail when fewer than two intermediates are visible"
     exit 1
   fi
@@ -798,7 +798,7 @@ check_dmg_signing_uses_build_keychain() {
     exit 1
   fi
   for needle in \
-    'CODESIGN_TOOL="${CMUX_CODESIGN_TOOL:-/usr/bin/codesign}"' \
+    'CODESIGN_TOOL="${HMUX_CODESIGN_TOOL:-/usr/bin/codesign}"' \
     '"$CREATE_DMG_TOOL" --no-code-sign "$app" "$work"' \
     'package_signed_dmg "$APP_PATH" "$DMG_RELEASE" "$DMG_TMP_DIR"' \
     'package_signed_dmg "$APP_PATH" "$FINAL_DMG" "$restaple_dir/work"' \
@@ -838,12 +838,12 @@ check_create_dmg_uses_run_local_npm_prefix() {
     if ! awk '
       /- name: Install build deps/ { in_step=1; next }
       in_step && /^[[:space:]]*- name:/ { in_step=0 }
-      in_step && /CMUX_NODE_BIN="\$\(command -v node\)"/ { saw_node=1 }
+      in_step && /HMUX_NODE_BIN="\$\(command -v node\)"/ { saw_node=1 }
       in_step && /export npm_config_prefix="\$RUNNER_TEMP\/npm-global"/ { saw_prefix=1 }
       in_step && /mkdir -p "\$npm_config_prefix"/ { saw_mkdir=1 }
       in_step && /npm install --global "create-dmg@\$\{CREATE_DMG_VERSION\}"/ { saw_install=1 }
       in_step && /wrapper_dir="\$RUNNER_TEMP\/create-dmg-wrapper"/ { saw_wrapper=1 }
-      in_step && /exec "\$CMUX_NODE_BIN" "\$npm_config_prefix\/lib\/node_modules\/create-dmg\/cli\.js" "\\\$@"/ { saw_exec=1 }
+      in_step && /exec "\$HMUX_NODE_BIN" "\$npm_config_prefix\/lib\/node_modules\/create-dmg\/cli\.js" "\\\$@"/ { saw_exec=1 }
       in_step && /echo "\$wrapper_dir" >> "\$GITHUB_PATH"/ { saw_path=1 }
       END { exit !(saw_node && saw_prefix && saw_mkdir && saw_install && saw_wrapper && saw_exec && saw_path) }
     ' "$file"; then
@@ -858,9 +858,9 @@ check_create_dmg_uses_run_local_npm_prefix() {
 check_gui_smoke_unsupported_launch_handling() {
   local helper="$ROOT_DIR/scripts/smoke-launch-macos-app.sh"
   for needle in \
-    'ALLOW_UNSUPPORTED_GUI="${CMUX_SMOKE_ALLOW_UNSUPPORTED_GUI:-0}"' \
-    'DIRECT_EXEC="${CMUX_SMOKE_DIRECT_EXEC:-0}"' \
-    'CMUX_UI_TEST_MODE="${CMUX_UI_TEST_MODE:-1}"' \
+    'ALLOW_UNSUPPORTED_GUI="${HMUX_SMOKE_ALLOW_UNSUPPORTED_GUI:-0}"' \
+    'DIRECT_EXEC="${HMUX_SMOKE_DIRECT_EXEC:-0}"' \
+    'HMUX_UI_TEST_MODE="${HMUX_UI_TEST_MODE:-1}"' \
     'open_log_indicates_unsupported_gui()' \
     "grep -Fq 'OSLaunchdErrorDomain Code=125'" \
     "grep -Fq 'Domain does not support specified action'" \
@@ -872,8 +872,8 @@ check_gui_smoke_unsupported_launch_handling() {
   done
 
   if ! awk '
-    /scripts\/smoke-launch-macos-app\.sh/ && /CMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1/ { saw_launchservices=1 }
-    /scripts\/smoke-launch-macos-app\.sh/ && /CMUX_SMOKE_DIRECT_EXEC=1/ { saw_direct_exec=1 }
+    /scripts\/smoke-launch-macos-app\.sh/ && /HMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1/ { saw_launchservices=1 }
+    /scripts\/smoke-launch-macos-app\.sh/ && /HMUX_SMOKE_DIRECT_EXEC=1/ { saw_direct_exec=1 }
     END { exit !(saw_launchservices && saw_direct_exec) }
   ' "$ROOT_DIR/.github/workflows/release.yml"; then
     echo "FAIL: release signing smoke must run LaunchServices smoke before direct exec CI launch mode"
@@ -887,9 +887,9 @@ check_gui_smoke_unsupported_launch_handling() {
     exit 1
   fi
   for needle in \
-    'SMOKE_TOOL="${CMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"' \
-    'CMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL"' \
-    'CMUX_SMOKE_DIRECT_EXEC=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL"'; do
+    'SMOKE_TOOL="${HMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"' \
+    'HMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL"' \
+    'HMUX_SMOKE_DIRECT_EXEC=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL"'; do
     if ! grep -Fq -- "$needle" "$nightly_helper"; then
       echo "FAIL: nightly notarization helper must preserve both launch smokes: $needle"
       exit 1
@@ -937,16 +937,16 @@ check_web_db_behavior_tests() {
   if ! awk '
     /- name: Database behavior tests/ { in_step=1; next }
     in_step && /^[[:space:]]*- name:/ { in_step=0 }
-    in_step && /CMUX_DB_TEST:[[:space:]]*"1"/ { saw_env=1 }
+    in_step && /HMUX_DB_TEST:[[:space:]]*"1"/ { saw_env=1 }
     in_step && /bun run test:db:behavior/ { saw_runner=1 }
     END { exit !(saw_env && saw_runner) }
   ' "$CI_WEB_FILE"; then
-    echo "FAIL: ci-web.yml must run the DB behavior test discovery runner with CMUX_DB_TEST=1"
+    echo "FAIL: ci-web.yml must run the DB behavior test discovery runner with HMUX_DB_TEST=1"
     exit 1
   fi
 
-  if ! grep -Fq 'grep -q "process\\.env\\.CMUX_DB_TEST"' "$db_runner"; then
-    echo "FAIL: DB behavior runner must discover CMUX_DB_TEST-gated files instead of hard-coding a subset"
+  if ! grep -Fq 'grep -q "process\\.env\\.HMUX_DB_TEST"' "$db_runner"; then
+    echo "FAIL: DB behavior runner must discover HMUX_DB_TEST-gated files instead of hard-coding a subset"
     exit 1
   fi
 
@@ -978,15 +978,15 @@ check_web_test_runner_behavior() {
 #!/usr/bin/env bash
 set -euo pipefail
 if [[ "${1:-}" == "--version" ]]; then
-  printf '%s\n' "${CMUX_WEB_TEST_RUNNER_BUN_VERSION:-1.3.14}"
+  printf '%s\n' "${HMUX_WEB_TEST_RUNNER_BUN_VERSION:-1.3.14}"
   exit 0
 fi
-printf '%s\n' "$@" > "$CMUX_WEB_TEST_RUNNER_ARGS_LOG"
+printf '%s\n' "$@" > "$HMUX_WEB_TEST_RUNNER_ARGS_LOG"
 EOF
   chmod +x "$fixture_dir/bin/bun"
 
   if ! PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_runner"; then
     rm -rf "$fixture_dir"
     echo "FAIL: shared web test runner default discovery should execute"
@@ -1002,8 +1002,8 @@ EOF
   fi
 
   if PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
-    CMUX_WEB_TEST_RUNNER_BUN_VERSION="1.2.14" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_BUN_VERSION="1.2.14" \
     /bin/bash "$fixture_runner" >/dev/null 2>&1; then
     echo "FAIL: shared web test runner must reject Bun versions with process-global mock leakage"
     rm -rf "$fixture_dir"
@@ -1011,8 +1011,8 @@ EOF
   fi
 
   if PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
-    CMUX_WEB_TEST_RUNNER_BUN_VERSION="1.3.13" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_BUN_VERSION="1.3.13" \
     /bin/bash "$fixture_runner" >/dev/null 2>&1; then
     echo "FAIL: shared web test runner must enforce the patch-level Bun isolation boundary"
     rm -rf "$fixture_dir"
@@ -1020,7 +1020,7 @@ EOF
   fi
 
   if ! PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_runner" \
     --coverage -t "fixture runs" --bail=2 --parallel=2; then
     rm -rf "$fixture_dir"
@@ -1036,7 +1036,7 @@ EOF
   fi
 
   if ! PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_runner" --changed=main; then
     rm -rf "$fixture_dir"
     echo "FAIL: shared web test runner changed-file discovery should execute"
@@ -1051,7 +1051,7 @@ EOF
   fi
 
   if ! PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_runner" tests/beta; then
     rm -rf "$fixture_dir"
     echo "FAIL: shared web test runner explicit filter should execute"
@@ -1066,7 +1066,7 @@ EOF
   fi
 
   if ! PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_runner" --bail tests/beta; then
     rm -rf "$fixture_dir"
     echo "FAIL: shared web test runner optional flag plus filter should execute"
@@ -1082,7 +1082,7 @@ EOF
 
   for live_mode in --watch --hot; do
     if ! PATH="$fixture_dir/bin:/usr/bin:/bin" \
-      CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+      HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
       /bin/bash "$fixture_runner" "$live_mode"; then
       rm -rf "$fixture_dir"
       echo "FAIL: shared web test runner $live_mode mode should execute"
@@ -1102,7 +1102,7 @@ EOF
 root = "tests"
 EOF
   if ! PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_runner"; then
     rm -rf "$fixture_dir"
     echo "FAIL: shared web test runner configured-root discovery should execute"
@@ -1118,7 +1118,7 @@ EOF
   rm -f "$fixture_dir/web/bunfig.toml"
 
   if ! PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_runner" --config=ci.bunfig.toml; then
     rm -rf "$fixture_dir"
     echo "FAIL: shared web test runner alternate-config discovery should execute"
@@ -1140,7 +1140,7 @@ EOF
   chmod +x "$fixture_dir/bin/find"
   rm -f "$args_log"
   if PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_runner" \
     >"$fixture_dir/discovery.stdout" 2>"$fixture_dir/discovery.stderr"; then
     echo "FAIL: shared web test runner must reject partial discovery results"
@@ -1164,7 +1164,7 @@ EOF
   mkdir -p "$fixture_dir/empty/scripts"
   cp "$ROOT_DIR/web/scripts/run-tests.sh" "$fixture_dir/empty/scripts/run-tests.sh"
   if ! PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_dir/empty/scripts/run-tests.sh" \
     --pass-with-no-tests; then
     rm -rf "$fixture_dir"
@@ -1180,7 +1180,7 @@ EOF
   fi
 
   if PATH="$fixture_dir/bin:/usr/bin:/bin" \
-    CMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
+    HMUX_WEB_TEST_RUNNER_ARGS_LOG="$args_log" \
     /bin/bash "$fixture_dir/empty/scripts/run-tests.sh" \
     >"$fixture_dir/empty.stdout" 2>"$fixture_dir/empty.stderr"; then
     rm -rf "$fixture_dir"
@@ -1205,8 +1205,8 @@ check_tmux_terminal_nightly_isolation() {
   if ! awk '
     /^  terminal-nightly:/ { in_job=1; next }
     in_job && /^  [^[:space:]#][^:]*:[[:space:]]*(#.*)?$/ { in_job=0 }
-    in_job && /CMUX_DERIVED_DATA_PATH/ { saw_env=1 }
-    in_job && /-derivedDataPath "\$CMUX_DERIVED_DATA_PATH"/ { saw_flag=1 }
+    in_job && /HMUX_DERIVED_DATA_PATH/ { saw_env=1 }
+    in_job && /-derivedDataPath "\$HMUX_DERIVED_DATA_PATH"/ { saw_flag=1 }
     in_job && /scripts\/ci\/xcodebuild_noninteractive\.py/ { saw_noninteractive=1 }
     in_job && /SWIFT_BACKTRACE: "interactive=no,timeout=0s,symbolicate=off,color=no"/ { saw_backtrace=1 }
     in_job && /All failures are expected, treating as pass/ { saw_expected_failure_handling=1 }
@@ -1253,14 +1253,14 @@ check_no_github_hosted_runners() {
     "coderouter-publish-npm.yml:    runs-on: ubuntu-latest # github-hosted-required: npm provenance needs a GitHub-hosted runner"
     # PyPI trusted publishing accepts only GitHub-hosted runners too.
     "coderouter-publish-pypi.yml:    runs-on: ubuntu-latest # github-hosted-required: PyPI trusted publishing needs a GitHub-hosted runner"
-    "cmux-tui-build-package.yml:    runs-on: ubuntu-latest # github-hosted-required: artifact attestations need GitHub OIDC"
+    "hmux-tui-build-package.yml:    runs-on: ubuntu-latest # github-hosted-required: artifact attestations need GitHub OIDC"
     # Detects a Blacksmith outage, so it must run where Blacksmith is not.
     "ci-cloud-overflow-probe.yml:    runs-on: ubuntu-24.04 # github-hosted-required: must run while Blacksmith starts nothing"
     # validate-cla-policy.rb pins these to ubuntu-24.04 until #17453 lands.
     "cla.yml:    runs-on: ubuntu-24.04 # github-hosted-required: write token on fork pull requests"
     "cla-policy-guard.yml:    runs-on: ubuntu-24.04"
     # pull_request_target with a write token (test_ci_fork_runner_routing).
-    "cmux-next-pr-merge-tree.yml:    runs-on: ubuntu-24.04 # github-hosted-required: pull_request_target write token"
+    "hmux-next-pr-merge-tree.yml:    runs-on: ubuntu-24.04 # github-hosted-required: pull_request_target write token"
     # Registry provenance and trusted publishing accept only GitHub-hosted runners.
     "coderouter-publish-npm.yml:    runs-on: ubuntu-latest # github-hosted-required: npm provenance needs a GitHub-hosted runner"
     "coderouter-publish-pypi.yml:    runs-on: ubuntu-latest # github-hosted-required: PyPI trusted publishing needs a GitHub-hosted runner"
@@ -1354,7 +1354,7 @@ check_no_self_hosted_fleet_runners() {
   # an owned label exactly: E2E is never a required
   # check, and its runner job hands the label on (e2e_runner_pool.py).
   local owned='glaeda-(aws-)?(xl|std|light)-xcode-[0-9]+([.][0-9]+)*'
-  local fleet='glaeda-|macos-26|warp-macos-26-arm64-6x|cmux-aws-macos|cmux-macos|cmux-local-macos|cmux-persistent-compile|cmux-persistent-macos-compile|macfleet|tart-[a-z0-9-]+|(^|[^a-z0-9-])mac4([^a-z0-9]|$)|(^|[^a-z0-9-])mac-mini([^a-z0-9]|$)|slot-[0-9]|xcode-[0-9]+-[0-9]|(^|[^a-z0-9-])cmux([^a-z0-9-]|$)'
+  local fleet='glaeda-|macos-26|warp-macos-26-arm64-6x|hmux-aws-macos|hmux-macos|hmux-local-macos|hmux-persistent-compile|hmux-persistent-macos-compile|macfleet|tart-[a-z0-9-]+|(^|[^a-z0-9-])mac4([^a-z0-9]|$)|(^|[^a-z0-9-])mac-mini([^a-z0-9]|$)|slot-[0-9]|xcode-[0-9]+-[0-9]|(^|[^a-z0-9-])hmux([^a-z0-9-]|$)'
   local allowed='blacksmith-(6|12)vcpu-macos-(15|26|latest)|warp-macos-15-arm64-6x'
   # A fork running CI in its own repository has no fleet, so its hosted
   # branch may name GitHub's macos-26 image. Only this exact short-circuit is
@@ -1372,12 +1372,12 @@ check_no_self_hosted_fleet_runners() {
   # known fleet/self-hosted label must be caught, every allowed cloud label
   # must pass. Probes are raw YAML values (no path:lineno: prefix).
   local probe
-  for probe in 'runs-on: macfleet' '- tart-canary' '- tart-dual' '- tart-small' '- tart-macos-26' '- tart-ios' '- mac4' '- mac-mini' '- slot-3' '- xcode-26-3' '- cmux' \
+  for probe in 'runs-on: macfleet' '- tart-canary' '- tart-dual' '- tart-small' '- tart-macos-26' '- tart-ios' '- mac4' '- mac-mini' '- slot-3' '- xcode-26-3' '- hmux' \
                "runs-on: \${{ vars.X || 'macos-26' }}" '- warp-macos-26-arm64-6x' \
-               '- cmux-aws-macos-15' '- cmux-macos-26' '- self-hosted' '- macOS' '- ARM64' \
+               '- hmux-aws-macos-15' '- hmux-macos-26' '- self-hosted' '- macOS' '- ARM64' \
                'runs-on: [self-hosted, macOS, ARM64]' \
-               '      labels: [self-hosted, macOS, ARM64, cmux-persistent-macos-compile]' \
-               '      group: cmux-persistent-compile' '- cmux-persistent-macos-compile' \
+               '      labels: [self-hosted, macOS, ARM64, hmux-persistent-macos-compile]' \
+               '      group: hmux-persistent-compile' '- hmux-persistent-macos-compile' \
                '- glaeda-std-xcode-26.6' '- glaeda-aws-std-xcode-26.3' "runs-on: \${{ vars.X || 'glaeda-light-xcode-26.6' }}" 'runs-on: glaeda-xl-xcode-26' \
                '- GLAEDA-std-xcode-26.6' '- Tart-canary'; do
     if ! printf '%s\n' "$probe" | grep -Eiq "($fleet)" && ! printf '%s\n' "$probe" | grep -Eq "($selfhosted)"; then
@@ -1444,8 +1444,8 @@ check_no_self_hosted_fleet_runners() {
   # items (`  - <label>`, which covers dispatch runner dropdowns and multi-line
   # `runs-on:` arrays). `- name:` / `- uses:` step entries have a colon and are
   # excluded. grep matches against file CONTENT; strip the `path:lineno:` prefix
-  # before matching the value so the checkout path (which contains "cmux") can
-  # never match the bare `cmux` label.
+  # before matching the value so the checkout path (which contains "hmux") can
+  # never match the bare `hmux` label.
   while IFS= read -r line; do
     content="${line#*:*:}"
     if [[ "$(basename "${line%%:*}")" == *nightly*.yml || "$(basename "${line%%:*}")" == *notarization*.yml ]]; then
@@ -1837,7 +1837,7 @@ CASES
 
 check_macos_xcode_pin_tracks_pull_request_lane() {
   # A pull-request macOS job picks its pool through MACOS_RUNNER_PR and its
-  # toolchain through CMUX_CI_XCODE_APP. The two macOS images carry different
+  # toolchain through HMUX_CI_XCODE_APP. The two macOS images carry different
   # Xcodes and scripts/select-ci-xcode.sh exits non-zero on a pinned path that
   # is not installed, so a value naming the macos-15 Xcode in a job whose pool
   # can move is a job that fails at Xcode selection the moment the lane moves.
@@ -1857,18 +1857,18 @@ import yaml
 # (workflow file, job id, env key) -> why this site keeps the macos-15 Xcode
 # regardless of where the pull-request lane points.
 EXEMPT = {
-    ("ci-macos.yml", "swift-package-tests", "CMUX_CI_HELPER_XCODE_APP"):
+    ("ci-macos.yml", "swift-package-tests", "HMUX_CI_HELPER_XCODE_APP"):
         "same job's SDK 15 release-helper pin",
-    ("ci.yml", "changes", "CMUX_CI_XCODE_APP_MACOS_15"):
+    ("ci.yml", "changes", "HMUX_CI_XCODE_APP_MACOS_15"):
         "a Linux job; pr_runner_pool.py hands this pin on only to a run it routes to the macOS 15 pool",
     ("seed-derived-data.yml", "decide", "XCODE_APP_MACOS_15"):
         "a Linux job; seed_decide.py fingerprints the macOS 15 pool's seed under the Xcode that pool seeds with",
-    ("seed-swiftpm-manifests.yml", "seed", "CMUX_CI_XCODE_APP"):
+    ("seed-swiftpm-manifests.yml", "seed", "HMUX_CI_XCODE_APP"):
         "seeds the manifest cache for the Xcode pr_runner_pool.py hands to runs it routes to the macOS 15 pool",
 }
 
-PINNED = ("CMUX_CI_XCODE_APP_MACOS_15", "CMUX_CI_HELPER_XCODE_APP_MACOS_15")
-LANE = ("CMUX_CI_XCODE_APP_PR", "CMUX_CI_HELPER_XCODE_APP_PR")
+PINNED = ("HMUX_CI_XCODE_APP_MACOS_15", "HMUX_CI_HELPER_XCODE_APP_MACOS_15")
+LANE = ("HMUX_CI_XCODE_APP_PR", "HMUX_CI_HELPER_XCODE_APP_PR")
 
 violations = []
 for path in sorted(Path(sys.argv[1]).glob("*.yml")):
@@ -1900,7 +1900,7 @@ PYTHON
   rm -f "$violations_file"
   if [ -n "$violations" ]; then
     echo "FAIL: a macos-15 Xcode pin does not follow the pull-request lane"
-    echo "      Route it through CMUX_CI_XCODE_APP_PR, or add its (file, job, key) to"
+    echo "      Route it through HMUX_CI_XCODE_APP_PR, or add its (file, job, key) to"
     echo "      EXEMPT with a reason."
     printf '%s\n' "$violations"
     exit 1
@@ -1910,7 +1910,7 @@ PYTHON
 
 check_macos_runner_identity_env_tracks_routing() {
   # A macOS job picks its pool in `runs-on`, and some jobs then restate that
-  # pool in an env value: `CMUX_PRODUCT_RUNNER` becomes a field of the compiled
+  # pool in an env value: `HMUX_PRODUCT_RUNNER` becomes a field of the compiled
   # product contract, and `REQUESTED_RUNNER` is what the Depot identity guard
   # validates. Those restatements are only meaningful when they name the pool
   # the job is actually on. `runs-on` sends pull requests to MACOS_RUNNER_PR

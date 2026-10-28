@@ -1,7 +1,7 @@
-import CmuxRemoteSession
+import HmuxRemoteSession
 import Bonsplit
-import CmuxControlSocket
-import CmuxPanes
+import HmuxControlSocket
+import HmuxPanes
 import Foundation
 
 @MainActor

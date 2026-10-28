@@ -26,7 +26,7 @@ const setTimer = (run: () => void, delay: number) => { const id = nextTimer++; t
 const clearTimer = (id: number) => { timers.delete(id); };
 for (const [key, value] of Object.entries({
   window: { setTimeout: setTimer, clearTimeout: clearTimer }, setTimeout: setTimer, clearTimeout: clearTimer,
-  document: { title: "cmux agent" }, location,
+  document: { title: "hmux agent" }, location,
   history: { replaceState(_state: unknown, _unused: string, path: string) { location.pathname = path; } },
   sessionStorage: { setItem(key: string, value: string) { drafts.set(key, value); } },
   WebSocket: FakeSocket, IS_REACT_ACT_ENVIRONMENT: true,

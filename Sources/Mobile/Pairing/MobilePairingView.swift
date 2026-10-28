@@ -1,8 +1,8 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxMobileHost
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxMobileHost
 import Foundation
 import SwiftUI
 
@@ -31,7 +31,7 @@ struct MobilePairingView: View {
     private let accountFlow: HostAccountFlow? = AppDelegate.shared?.auth?.accountFlow
 
     private static let tailscaleDownloadURL = URL(string: "https://tailscale.com/download")!
-    /// Where a Mac user goes to get cmux for iPhone while the beta is invite-only.
+    /// Where a Mac user goes to get hmux for iPhone while the beta is invite-only.
     static let iphoneAppURL = URL(string: "https://github.com/manaflow-ai/cmux#founders-edition")!
 
     init(onContentHeightChange: @escaping (CGFloat) -> Void = { _ in }) {
@@ -84,34 +84,34 @@ struct MobilePairingView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(String(localized: "mobile.pairing.heading", defaultValue: "Pair your iPhone"))
-                .cmuxFont(.title2, weight: .semibold)
+                .hmuxFont(.title2, weight: .semibold)
             Text(String(
                 localized: "mobile.pairing.subheading",
                 defaultValue: "Sync your terminal workspaces to your iPhone."
             ))
-                .cmuxFont(.callout)
+                .hmuxFont(.callout)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
         }
     }
 
-    /// The App Store-badge-styled button for getting cmux on the iPhone.
+    /// The App Store-badge-styled button for getting hmux on the iPhone.
     private var getIPhoneAppBadge: some View {
         Link(destination: Self.iphoneAppURL) {
             HStack(spacing: 8) {
                 Image(systemName: "apple.logo")
-                    .cmuxFont(size: 20)
+                    .hmuxFont(size: 20)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(String(
                         localized: "mobile.pairing.getApp.badge.caption",
-                        defaultValue: "Download cmux for"
+                        defaultValue: "Download hmux for"
                     ))
-                        .cmuxFont(.caption2)
+                        .hmuxFont(.caption2)
                     Text(String(
                         localized: "mobile.pairing.getApp.badge.platform",
                         defaultValue: "iPhone"
                     ))
-                        .cmuxFont(.title3, weight: .semibold)
+                        .hmuxFont(.title3, weight: .semibold)
                 }
             }
             .foregroundStyle(.white)
@@ -126,7 +126,7 @@ struct MobilePairingView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(String(
             localized: "mobile.pairing.getApp.link",
-            defaultValue: "Get cmux for iPhone"
+            defaultValue: "Get hmux for iPhone"
         ))
     }
 
@@ -174,16 +174,16 @@ struct MobilePairingView: View {
     private var pairingDisabledContent: some View {
         VStack(spacing: 12) {
             Image(systemName: "iphone.slash")
-                .cmuxFont(size: 28)
+                .hmuxFont(size: 28)
                 .foregroundStyle(.secondary)
             Text(String(
                 localized: "mobile.pairing.disabled.title",
                 defaultValue: "Enable iOS pairing"
             ))
-                .cmuxFont(.headline)
+                .hmuxFont(.headline)
             Text(String(
                 localized: "mobile.pairing.disabled.body",
-                defaultValue: "iOS pairing is off on this Mac. Open Settings and enable iOS pairing to discover this Mac from cmux on your iPhone."
+                defaultValue: "iOS pairing is off on this Mac. Open Settings and enable iOS pairing to discover this Mac from hmux on your iPhone."
             ))
                 .multilineTextAlignment(.center)
                 .foregroundStyle(.secondary)
@@ -204,7 +204,7 @@ struct MobilePairingView: View {
     private func failure(message: String) -> some View {
         VStack(spacing: 12) {
             Image(systemName: "exclamationmark.triangle")
-                .cmuxFont(size: 28)
+                .hmuxFont(size: 28)
                 .foregroundStyle(.orange)
             Text(message)
                 .multilineTextAlignment(.center)
@@ -247,13 +247,13 @@ struct MobilePairingView: View {
         VStack(alignment: .center, spacing: 14) {
             getIPhoneAppBadge
             Image(systemName: "checkmark.shield")
-                .cmuxFont(size: 34)
+                .hmuxFont(size: 34)
                 .foregroundStyle(.green)
             Text(String(
                 localized: "mobile.pairing.irohInstruction",
-                defaultValue: "Install cmux on your iPhone and sign in with the same account. It connects automatically, with no code needed."
+                defaultValue: "Install hmux on your iPhone and sign in with the same account. It connects automatically, with no code needed."
             ))
-                .cmuxFont(.callout)
+                .hmuxFont(.callout)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -287,9 +287,9 @@ struct MobilePairingView: View {
 
         Text(String(
             localized: "mobile.pairing.scanInstruction",
-            defaultValue: "In cmux on your iPhone, sign in with the same account, choose Tailscale, then scan this code."
+            defaultValue: "In hmux on your iPhone, sign in with the same account, choose Tailscale, then scan this code."
         ))
-        .cmuxFont(.caption)
+        .hmuxFont(.caption)
         .foregroundStyle(.secondary)
         .multilineTextAlignment(.center)
         .fixedSize(horizontal: false, vertical: true)
@@ -303,7 +303,7 @@ struct MobilePairingView: View {
         HStack(spacing: 6) {
             ProgressView().controlSize(.small)
             Text(String(localized: "mobile.pairing.waiting", defaultValue: "Waiting for your iPhone…"))
-                .cmuxFont(.callout)
+                .hmuxFont(.callout)
                 .foregroundStyle(.secondary)
         }
     }
@@ -322,7 +322,7 @@ struct MobilePairingView: View {
                 localized: "mobile.pairing.targetApp",
                 defaultValue: "Open with"
             ))
-                .cmuxFont(.caption)
+                .hmuxFont(.caption)
                 .foregroundStyle(.secondary)
             Picker(
                 String(
@@ -357,9 +357,9 @@ struct MobilePairingView: View {
             if reachableViaIroh {
                 Text(String(
                     localized: "mobile.pairing.irohInstruction",
-                    defaultValue: "Install cmux on your iPhone and sign in with the same account. It connects automatically — no code needed."
+                    defaultValue: "Install hmux on your iPhone and sign in with the same account. It connects automatically — no code needed."
                 ))
-                .cmuxFont(.caption)
+                .hmuxFont(.caption)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -379,7 +379,7 @@ struct MobilePairingView: View {
     @ViewBuilder
     private var tailscaleMissingBody: some View {
         Image(systemName: "network.slash")
-            .cmuxFont(size: 28)
+            .hmuxFont(size: 28)
             .foregroundStyle(.orange)
         Text(String(
             localized: "mobile.pairing.req.tailscale.missing",
@@ -412,7 +412,7 @@ struct MobilePairingView: View {
                 localized: "mobile.pairing.transport.iroh.detail",
                 defaultValue: """
                 iPhones signed in to your account find this Mac automatically over Iroh — \
-                end-to-end encrypted, direct when possible, through a cmux relay when not. No code needed.
+                end-to-end encrypted, direct when possible, through a hmux relay when not. No code needed.
                 """
             )
         ) {
@@ -437,7 +437,7 @@ struct MobilePairingView: View {
                     String(localized: "mobile.pairing.req.tailscale.get", defaultValue: "Get Tailscale"),
                     destination: Self.tailscaleDownloadURL
                 )
-                .cmuxFont(.caption)
+                .hmuxFont(.caption)
             }
         }
     }
@@ -454,13 +454,13 @@ struct MobilePairingView: View {
                 Circle()
                     .fill(healthy ? Color.green : Color.orange)
                     .frame(width: 6, height: 6)
-                Text(name).cmuxFont(.callout, weight: .medium)
-                Text(status).cmuxFont(.caption).foregroundStyle(.secondary)
+                Text(name).hmuxFont(.callout, weight: .medium)
+                Text(status).hmuxFont(.caption).foregroundStyle(.secondary)
                 Spacer(minLength: 8)
                 trailing()
             }
             Text(detail)
-                .cmuxFont(.caption)
+                .hmuxFont(.caption)
                 .foregroundStyle(.secondary)
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.leading, 12)
@@ -471,10 +471,10 @@ struct MobilePairingView: View {
     private func manualEntry(_ ready: MobilePairingModel.Ready) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(String(localized: "mobile.pairing.manual.title", defaultValue: "Can't scan? Enter this Mac's numeric Tailscale IP and port:"))
-                .cmuxFont(.caption, weight: .semibold)
+                .hmuxFont(.caption, weight: .semibold)
                 .foregroundStyle(.secondary)
             ForEach(ready.tailscaleLines, id: \.self) { line in
-                Text(line).cmuxFont(.caption, design: .monospaced)
+                Text(line).hmuxFont(.caption, design: .monospaced)
                     .textSelection(.enabled).foregroundStyle(.secondary)
             }
             if let entry = ready.manualEntry {
@@ -496,7 +496,7 @@ struct MobilePairingView: View {
                     locale: .current,
                     email
                 ))
-                    .cmuxFont(.caption)
+                    .hmuxFont(.caption)
                     .foregroundStyle(.secondary)
                     .textSelection(.enabled)
             }

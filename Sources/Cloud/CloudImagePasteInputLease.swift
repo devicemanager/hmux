@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 import Foundation
 
 /// Uses the existing clipboard input sequencer for a paste prepared before

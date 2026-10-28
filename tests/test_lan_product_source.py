@@ -39,7 +39,7 @@ json.dump({"argv": sys.argv[1:], "env": dict(os.environ)}, open(log, "w"))
 verb, sha, dest = sys.argv[1:4]
 payload = open(os.path.join(os.path.dirname(sys.argv[0]), "payload"), "rb").read()
 if mode == "hit":
-    open(dest, "wb").write(payload); print(json.dumps({"peer": "cmux13s-mac-mini", "source": "lan"})); sys.exit(0)
+    open(dest, "wb").write(payload); print(json.dumps({"peer": "hmux13s-mac-mini", "source": "lan"})); sys.exit(0)
 if mode == "wrong-bytes":
     open(dest, "wb").write(payload + b"tampered"); sys.exit(0)
 if mode == "hardlinked":  # keeps a second name for the file it hands over
@@ -76,7 +76,7 @@ class LanProductSourceTests(unittest.TestCase):
         buffer = io.BytesIO()
         with tarfile.open(fileobj=buffer, mode="w:gz") as tar:
             data = b"compiled bytes" * 1000
-            info = tarfile.TarInfo("Build/Products/Debug/cmux")
+            info = tarfile.TarInfo("Build/Products/Debug/hmux")
             info.size = len(data)
             tar.addfile(info, io.BytesIO(data))
         return buffer.getvalue()
@@ -106,7 +106,7 @@ class LanProductSourceTests(unittest.TestCase):
             entries[path] = value
         return entries
 
-    def eligible(self, entries, runner="cmux12s-mac-mini-glaeda-2", euid=501, writable=False):
+    def eligible(self, entries, runner="hmux12s-mac-mini-glaeda-2", euid=501, writable=False):
         def fake_lstat(path):
             key = os.fspath(path)
             if key not in entries:
@@ -150,11 +150,11 @@ class LanProductSourceTests(unittest.TestCase):
         self.assertIsNone(self.eligible(self.chain(), writable=True))  # an ACL grants the job write access
 
     def test_the_old_job_writable_location_is_not_used(self):
-        old = Path("/Users/Shared/cmux-build-fleet/bin/glaeda-lan-fetch")
+        old = Path("/Users/Shared/hmux-build-fleet/bin/glaeda-lan-fetch")
         entries = {str(p): (0, stat.S_IFDIR | 0o755) for p in old.parents}
         entries["/Users/Shared"] = (0, stat.S_IFDIR | 0o1777)
-        entries["/Users/Shared/cmux-build-fleet"] = (501, stat.S_IFDIR | 0o755)
-        entries["/Users/Shared/cmux-build-fleet/bin"] = (501, stat.S_IFDIR | 0o755)
+        entries["/Users/Shared/hmux-build-fleet"] = (501, stat.S_IFDIR | 0o755)
+        entries["/Users/Shared/hmux-build-fleet/bin"] = (501, stat.S_IFDIR | 0o755)
         entries[str(old)] = (0, stat.S_IFREG | 0o755)
 
         def fake_lstat(path):
@@ -177,7 +177,7 @@ class LanProductSourceTests(unittest.TestCase):
     def test_a_verified_lan_hit_lands_in_the_canonical_layout(self):
         result = self.fetch()
         self.assertTrue(result["hit"], result)
-        self.assertEqual((result["source"], result["lan_peer"]), ("lan", "cmux13s-mac-mini"))
+        self.assertEqual((result["source"], result["lan_peer"]), ("lan", "hmux13s-mac-mini"))
         self.assertEqual(result["bytes_transferred"], len(self.payload))
         self.assertEqual((self.destination / cache.ARCHIVE_NAME).read_bytes(), self.payload)
         seen = self.seen()
@@ -219,8 +219,8 @@ class LanProductSourceTests(unittest.TestCase):
         outputs.unlink(missing_ok=True)
         full = {
             "GITHUB_REPOSITORY": "manaflow-ai/cmux", "ARTIFACT_ID": "123", "ARTIFACT_PROVIDER_DIGEST": "b" * 64,
-            "EXPECTED_SHA256": self.identity.archive_digest, "CMUX_PRODUCT_CONTRACT": "c" * 64,
-            "CMUX_PRODUCT_SOURCE_REVISION": "a" * 40, "CMUX_PRODUCT_PRODUCER_RUN_ID": "456",
+            "EXPECTED_SHA256": self.identity.archive_digest, "HMUX_PRODUCT_CONTRACT": "c" * 64,
+            "HMUX_PRODUCT_SOURCE_REVISION": "a" * 40, "HMUX_PRODUCT_PRODUCER_RUN_ID": "456",
             "GITHUB_OUTPUT": str(outputs), **env,
         }
         with mock.patch.dict(os.environ, full, clear=False), \
@@ -231,7 +231,7 @@ class LanProductSourceTests(unittest.TestCase):
         return dict(line.split("=", 1) for line in outputs.read_text().splitlines())
 
     def test_fetch_tries_the_lan_first_and_reports_it(self):
-        outputs = self.run_main({"CMUX_ARTIFACT_PEER_URLS": ""}, self.helper)
+        outputs = self.run_main({"HMUX_ARTIFACT_PEER_URLS": ""}, self.helper)
         self.assertEqual((outputs["hit"], outputs["source"]), ("true", "lan"))
         self.assertIn("lan_seconds", outputs)
 
@@ -294,21 +294,21 @@ class LanSourceClassTests(unittest.TestCase):
         prefix = script.split("trap report_restore_measurement EXIT", 1)[0] + "trap report_restore_measurement EXIT\n"
         with tempfile.TemporaryDirectory() as directory:
             env = {**os.environ, "RUNNER_TEMP": directory, "GITHUB_REPOSITORY": "manaflow-ai/cmux",
-                   "EXPECTED_SHA256": "inner", "CMUX_PRODUCT_CONTRACT": "c", "CMUX_PRODUCT_SOURCE_REVISION": "r",
-                   "CMUX_PRODUCT_PRODUCER_RUN_ID": "1", "CMUX_PRODUCT_PRODUCER_RUN_ATTEMPT": "1",
-                   "CMUX_PEER_PRODUCT_HIT": "true", "CMUX_PEER_PRODUCT_SOURCE": "lan"}
+                   "EXPECTED_SHA256": "inner", "HMUX_PRODUCT_CONTRACT": "c", "HMUX_PRODUCT_SOURCE_REVISION": "r",
+                   "HMUX_PRODUCT_PRODUCER_RUN_ID": "1", "HMUX_PRODUCT_PRODUCER_RUN_ATTEMPT": "1",
+                   "HMUX_PEER_PRODUCT_HIT": "true", "HMUX_PEER_PRODUCT_SOURCE": "lan"}
             result = subprocess.run(["bash", "-c", prefix + "exit 0\n"], env=env, capture_output=True, text=True)
         record = json.loads(next(line.split(" ", 1)[1] for line in result.stdout.splitlines()
-                                 if line.startswith("CMUX_TEST_PRODUCT_RESTORE ")))
+                                 if line.startswith("HMUX_TEST_PRODUCT_RESTORE ")))
         self.assertEqual((record["route"], record["peer_source"]), ("lan", "lan"))
 
     def test_every_consumer_passes_the_lan_source_on(self):
         workflow = (ROOT / ".github/workflows/ci-macos.yml").read_text()
-        finalize = ("CMUX_NODE_PRODUCT_SOURCE_CLASS: ${{ steps.peer-products.outputs.hit == 'true' && "
+        finalize = ("HMUX_NODE_PRODUCT_SOURCE_CLASS: ${{ steps.peer-products.outputs.hit == 'true' && "
                     "(steps.peer-products.outputs.source == 'lan' && 'lan' || 'peer') || "
                     "(steps.r2-products.outputs.hit == 'true' && 'r2' || 'github') }}")
         self.assertEqual(workflow.count(finalize), 4)
-        self.assertEqual(workflow.count("CMUX_PEER_PRODUCT_SOURCE: ${{ steps.peer-products.outputs.source }}"), 4)
+        self.assertEqual(workflow.count("HMUX_PEER_PRODUCT_SOURCE: ${{ steps.peer-products.outputs.source }}"), 4)
         self.assertEqual(workflow.count("scripts/ci/peer_product_source.py fetch"), 4)
 
 

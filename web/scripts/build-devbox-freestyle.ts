@@ -1,9 +1,9 @@
 #!/usr/bin/env bun
 /**
- * Build the cmux Cloud devbox Freestyle snapshot on the public platform
+ * Build the hmux Cloud devbox Freestyle snapshot on the public platform
  * (freestyle@0.2.x; api.freestyle.sh) on top of the `freestyle/ubuntu` base,
  * plus the desktop layer (web/services/vms/images/devbox/desktop, ported
- * from the legacy cmux-devbox image): an openbox/TigerVNC desktop
+ * from the legacy hmux-devbox image): an openbox/TigerVNC desktop
  * with a tint2 dock, Ghostty, Chrome, Thunar, and noVNC on 6901.
  *
  * Usage:
@@ -19,13 +19,13 @@
  * (symlinked into /usr/local/bin), Bun, Python 3.12, uv, Docker (running from
  * boot), git, jq, tmux, and an `ubuntu` user (uid 1000, passwordless sudo,
  * the API's default exec user and the SSH default), which the bake renames to
- * `cmux` and keeps as the machine's ONE work user. The bake adds the
+ * `hmux` and keeps as the machine's ONE work user. The bake adds the
  * chatmux-devbox devtools, gh, Chrome + cua-driver, the pinned coding agents
  * (`npm install -g` on the base's Node, so the exact Dockerfile pins replace
  * the base's copies), the ble.sh devshell, the agent-config generator, the
- * login banner, and the desktop. No mise, no extra users: `cmux` (uid 1000)
+ * login banner, and the desktop. No mise, no extra users: `hmux` (uid 1000)
  * is the work user for terminals, agents, SSH, and the desktop session, and
- * the machine is renamed `cmux` so prompts read `cmux@cmux`.
+ * the machine is renamed `hmux` so prompts read `hmux@hmux`.
  *
  * Auth: FREESTYLE_API_KEY (permanent key from the Freestyle dashboard or
  * `freestyle tokens create`), or FREESTYLE_STACK_ACCESS_TOKEN +
@@ -42,13 +42,13 @@
  * Freestyle's size ladder. VMs boot at their snapshot's size and resizing is
  * grow-only, so the bake happens once at the smallest shape and
  * derive-devbox-sizes.ts turns it into one snapshot per ladder size.
- * CMUX_FREESTYLE_BUILDER_SNAPSHOT overrides the base.
+ * HMUX_FREESTYLE_BUILDER_SNAPSHOT overrides the base.
  * Outbound-only firewall; deleted whatever happens (unless --keep-builder).
  *
- * Daemon contract: the session daemon is cmux-tui (docs/cloud-cmux-tui-daemon.md).
+ * Daemon contract: the session daemon is hmux-tui (docs/cloud-hmux-tui-daemon.md).
  * The bake installs the pinned files.cmux.com build (sha256-verified, the same
  * install command the driver's attach-time heal uses) in the daemon user's home
- * and the cmux-tui-daemon systemd unit runs /usr/local/bin/cmux-devbox-boot,
+ * and the hmux-tui-daemon systemd unit runs /usr/local/bin/hmux-devbox-boot,
  * which starts and supervises it. The bake proves the daemon answers on
  * [::]:1337, then parks it: a snapshot is a memory image, so a daemon left
  * running would give every machine the builder's Noise identity. The
@@ -57,22 +57,22 @@
  * with a fresh identity, within one supervisor tick of resume. The driver
  * (web/services/vms/drivers/freestyle.ts) therefore runs no install, start, or
  * readiness exec at create; it writes the model-plane env file and returns.
- * The unit binds the listener dual-stack (CMUX_TUI_REMOTE_WS_BIND=[::]:1337)
+ * The unit binds the listener dual-stack (HMUX_TUI_REMOTE_WS_BIND=[::]:1337)
  * because the driver routes attaches to a private VPC address by default and
  * to the stable public IPv6 for legacy public-network machines. The daemon
  * itself drops to the work user, so every terminal pane is a non-root shell
  * with passwordless sudo and coding agents start.
  *
  * Desktop contract (web/services/vms/images/desktop.ts, desktop/start-vnc.sh):
- * RFB 5901 loopback, noVNC 6901, run as `cmux` by the cmux-desktop systemd
+ * RFB 5901 loopback, noVNC 6901, run as `hmux` by the hmux-desktop systemd
  * unit, which publishes DISPLAY and the accessibility bus at
- * /run/cmux-desktop/env for every other shell (/etc/cmux/desktop-env.sh). The
+ * /run/hmux-desktop/env for every other shell (/etc/hmux/desktop-env.sh). The
  * desktop packages, files and the Ghostty .deb come from the Dockerfile
  * (devbox-image-common.ts reads them), so the container recipe and this bake
  * cannot drift.
  *
  * Identity contract (web/services/vms/images/identity.ts): the machine is
- * `cmux`, not the base's `freestyle-vm`. The first step after the inventory
+ * `hmux`, not the base's `freestyle-vm`. The first step after the inventory
  * sets the static and live hostname, the 127.0.1.1 alias in /etc/hosts, and
  * regenerates the SSH host keys under that name; the last step before the
  * stamp re-checks all of it plus a whole-word residue audit, and the cleanup
@@ -86,22 +86,22 @@ import { VM_GUEST_MODEL_PLANE_ENV_PATH, renderVmGuestModelPlaneEnvFile, vmGuestM
 import { guestResourceReporterInstallCommand } from "../services/vms/guestResourceReporter";
 import { guestBrowserInstallCommand } from "../services/vms/guestBrowser";
 import { guestCliDistributionCommand } from "../services/vms/guestCliDistribution";
-import { GUEST_CMUX_SHIM, GUEST_CMUX_SHIM_PATH } from "../services/vms/guestCli";
+import { GUEST_HMUX_SHIM, GUEST_HMUX_SHIM_PATH } from "../services/vms/guestCli";
 import {
-  CMUX_TUI_LAYOUT_MARKER_PATH,
-  CMUX_TUI_SESSION,
-  CMUX_TUI_HOOK_PROVIDERS,
-  cmuxTuiHooksReadyCommand,
-  cmuxTuiInstallCommand,
-  cmuxTuiPinCheckCommand,
-  cmuxTuiRunCommand,
-  resolveCmuxTuiSource,
-} from "../services/vms/drivers/cmuxTuiDaemon";
+  HMUX_TUI_LAYOUT_MARKER_PATH,
+  HMUX_TUI_SESSION,
+  HMUX_TUI_HOOK_PROVIDERS,
+  hmuxTuiHooksReadyCommand,
+  hmuxTuiInstallCommand,
+  hmuxTuiPinCheckCommand,
+  hmuxTuiRunCommand,
+  resolveHmuxTuiSource,
+} from "../services/vms/drivers/hmuxTuiDaemon";
 import {
-  CMUX_TUI_STATE_IMAGE_PATH,
-  CMUX_TUI_STATE_MOUNT_HELPER_PATH,
-  CMUX_TUI_STATE_RESERVATION_MARKER_PATH,
-  CMUX_TUI_STATE_RESERVATION_BYTES,
+  HMUX_TUI_STATE_IMAGE_PATH,
+  HMUX_TUI_STATE_MOUNT_HELPER_PATH,
+  HMUX_TUI_STATE_RESERVATION_MARKER_PATH,
+  HMUX_TUI_STATE_RESERVATION_BYTES,
   DEVBOX_DESKTOP_INSTALLS,
   devboxTerminfoInstallCommand,
   DEVBOX_INSTANCE_ID_COMMAND,
@@ -122,7 +122,7 @@ import {
   devboxPrepareTemplateTerminalCommand,
   devboxSnapshotClockCommand,
   devboxWaitForDaemonCommand,
-  cmuxTuiWebsocketSmokeCommand,
+  hmuxTuiWebsocketSmokeCommand,
   emitBakeResult,
   hasFlag,
   manifestEntrySkeleton,
@@ -167,7 +167,7 @@ const replaceSlug = hasFlag("--replace-slug");
 
 const preflight = bakePreflight({ desktop: withDesktop });
 // Resolved before the builder exists so a manifest outage fails the bake for free.
-const cmuxTuiSource = await resolveCmuxTuiSource("freestyle");
+const hmuxTuiSource = await resolveHmuxTuiSource("freestyle");
 
 // The exec API caps timeoutMs at 300000 (5 minutes per step).
 const STEP_TIMEOUT_MS = 300_000;
@@ -182,8 +182,8 @@ const BUILD_ENV = {
 };
 
 /**
- * The work user: the base's uid-1000 account renamed to `cmux`, so the API and
- * SSH default, the desktop session, and the terminals the cmux-tui daemon
+ * The work user: the base's uid-1000 account renamed to `hmux`, so the API and
+ * SSH default, the desktop session, and the terminals the hmux-tui daemon
  * opens are all the same non-root account.
  */
 const WORK_USER = DEVBOX_WORK_USER;
@@ -191,10 +191,10 @@ const WORK_HOME = DEVBOX_WORK_HOME;
 
 const instanceIdCommand = DEVBOX_INSTANCE_ID_COMMAND;
 
-const builderSnapshot = process.env.CMUX_FREESTYLE_BUILDER_SNAPSHOT?.trim() || "freestyle/ubuntu-sm";
+const builderSnapshot = process.env.HMUX_FREESTYLE_BUILDER_SNAPSHOT?.trim() || "freestyle/ubuntu-sm";
 const { vm, vmId } = await fs.vms.create({
   snapshotId: builderSnapshot,
-  displayName: `cmux-devbox-builder ${slug}`,
+  displayName: `hmux-devbox-builder ${slug}`,
   firewall: { rules: [{ action: "allow", source: {}, destination: { public: true } }] },
 });
 console.log(`builder VM ${vmId} (base ${builderSnapshot}, desktop=${withDesktop})`);
@@ -247,7 +247,7 @@ async function put(source: string, target: string, mode = 0o644): Promise<void> 
 
 // The devshell chain goes into the per-user rc files, not /etc/bash.bashrc:
 // bash sources the system file BEFORE ~/.bashrc, and Ubuntu's stock ~/.bashrc
-// sets its own PS1, which would clobber the cmux prompt. Per-user only also
+// sets its own PS1, which would clobber the hmux prompt. Per-user only also
 // loads ble.sh exactly once per shell (the container Dockerfile appends to
 // both because its homes are shadowed by volumes at runtime).
 const rcFiles = ["/etc/skel/.bashrc", "/root/.bashrc", `${WORK_HOME}/.bashrc`];
@@ -257,11 +257,11 @@ const pins = devboxAgentPins();
  * `bash -c` and ttyless shells; `script` with a closed stdin is not a faithful
  * login either). Fails if the pane shows anything ble.sh or bash complained
  * about, the Ubuntu legal text, or (on the second run, once caches are seeded)
- * the tput-cache notice, and requires the cmux prompt. Runs as the work user
+ * the tput-cache notice, and requires the hmux prompt. Runs as the work user
  * so nothing it creates is root-owned.
  */
 const interactiveShellProbe = (run: number): string =>
-  `sudo -n -u ${WORK_USER} env -i HOME=${WORK_HOME} USER=${WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'tmux -L probe${run} new-session -d -s login -x 120 -y 30 && sleep 3 && pane="$(tmux -L probe${run} capture-pane -pt login)"; tmux -L probe${run} kill-server 2>/dev/null; printf "%s\\n" "$pane" | grep -iE "ble\\.sh|bleopt|ble-face|denied|not found|WARRANTY${run > 1 ? "|updating tput" : ""}" && { printf "%s\\n" "$pane"; exit 1; }; printf "%s\\n" "$pane" | grep -q "λ" || { printf "%s\\n" "$pane"; echo "no cmux prompt"; exit 1; }'`;
+  `sudo -n -u ${WORK_USER} env -i HOME=${WORK_HOME} USER=${WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'tmux -L probe${run} new-session -d -s login -x 120 -y 30 && sleep 3 && pane="$(tmux -L probe${run} capture-pane -pt login)"; tmux -L probe${run} kill-server 2>/dev/null; printf "%s\\n" "$pane" | grep -iE "ble\\.sh|bleopt|ble-face|denied|not found|WARRANTY${run > 1 ? "|updating tput" : ""}" && { printf "%s\\n" "$pane"; exit 1; }; printf "%s\\n" "$pane" | grep -q "λ" || { printf "%s\\n" "$pane"; echo "no hmux prompt"; exit 1; }'`;
 
 try {
   // TSC offsets can change across resized memory snapshots. Use the
@@ -278,9 +278,9 @@ try {
   await step("identity", devboxIdentityInstallCommand());
 
   // Then the account, before any layer writes into the home or names it: the
-  // base's uid-1000 `ubuntu` becomes `cmux`, home moved with it, its NOPASSWD
+  // base's uid-1000 `ubuntu` becomes `hmux`, home moved with it, its NOPASSWD
   // policy rewritten. The prompt renders \u@\h, so with the name above this is
-  // the other half of what a person reads on every line of every cmux
+  // the other half of what a person reads on every line of every hmux
   // Cloud terminal.
   await step("work-user", devboxWorkUserSetupCommand());
 
@@ -308,10 +308,10 @@ try {
   );
 
   await step("chrome-policy-dir", "mkdir -p /etc/opt/chrome/policies/managed");
-  await put("chrome-managed-policy.json", "/etc/opt/chrome/policies/managed/cmux.json");
+  await put("chrome-managed-policy.json", "/etc/opt/chrome/policies/managed/hmux.json");
   await step(
     "chrome-policy",
-    "jq -e '.DefaultSearchProviderSearchURL | test(\"duckduckgo\")' /etc/opt/chrome/policies/managed/cmux.json && echo 'export AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable' > /etc/profile.d/cmux-media.sh",
+    "jq -e '.DefaultSearchProviderSearchURL | test(\"duckduckgo\")' /etc/opt/chrome/policies/managed/hmux.json && echo 'export AGENT_BROWSER_EXECUTABLE_PATH=/usr/bin/google-chrome-stable' > /etc/profile.d/hmux-media.sh",
   );
 
   const cuaVersion = devboxCuaDriverVersion();
@@ -353,51 +353,51 @@ try {
   // devshell replays the Dockerfile devshell + ble.sh tput cache bake (same
   // echo-fed seed shells and test -s guards; see ../services/vms/images/devbox/Dockerfile).
   // Cache seeds cover root and the work user (uid 1000).
-  await step("cmux-etc", "mkdir -p /etc/cmux /etc/skel");
-  await put("cmux-bashrc", "/etc/cmux/bashrc");
-  await put("cmux-prompt.bash", "/etc/cmux/prompt.bash");
+  await step("hmux-etc", "mkdir -p /etc/hmux /etc/skel");
+  await put("hmux-bashrc", "/etc/hmux/bashrc");
+  await put("hmux-prompt.bash", "/etc/hmux/prompt.bash");
   await step("python-completion-dir", "mkdir -p /usr/local/share/bash-completion/completions");
-  await put("cmux-python-completion.bash", "/usr/local/share/bash-completion/completions/python");
+  await put("hmux-python-completion.bash", "/usr/local/share/bash-completion/completions/python");
   await step(
     "python-completion",
     `for f in /usr/share/bash-completion/completions/python?* /usr/share/bash-completion/completions/pypy* /usr/share/bash-completion/completions/micropython; do if [ -e "$f" ]; then ln -sf python "/usr/local/share/bash-completion/completions/\${f##*/}"; fi; done && bash -n /usr/local/share/bash-completion/completions/python`,
   );
-  await step("prompt-default-name", "echo cmux > /etc/cmux/vm-name");
-  await put("seed-history", "/etc/cmux/seed-history");
-  await put("cmux-terminfo.sh", "/etc/profile.d/cmux-terminfo.sh");
-  await put("cmux-terminfo.src", "/etc/cmux/terminfo.src");
+  await step("prompt-default-name", "echo hmux > /etc/hmux/vm-name");
+  await put("seed-history", "/etc/hmux/seed-history");
+  await put("hmux-terminfo.sh", "/etc/profile.d/hmux-terminfo.sh");
+  await put("hmux-terminfo.src", "/etc/hmux/terminfo.src");
   await step("terminfo", devboxTerminfoInstallCommand);
   await step(
     "devshell",
-    `curl -fsSL https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz -o /tmp/ble.tar.xz && tar xJf /tmp/ble.tar.xz -C /tmp && rm -rf /usr/local/share/blesh && mv /tmp/ble-nightly /usr/local/share/blesh && rm -f /tmp/ble.tar.xz && test -f /usr/local/share/blesh/ble.sh && bash -n /etc/cmux/bashrc && ${rcFiles.map((rc) => `echo '[ -f /etc/cmux/bashrc ] && . /etc/cmux/bashrc' >> ${rc}`).join(" && ")} && echo 'set -g default-shell /bin/bash' >> /etc/tmux.conf && bash -ic 'head -2 $HOME/.bash_history' && mkdir -p /etc/cmux/blesh-cache-seed /tmp/blesh-seed-home && echo '[ -f /etc/cmux/bashrc ] && . /etc/cmux/bashrc' > /tmp/blesh-seed-home/.bashrc && for term in xterm-256color screen-256color tmux-256color linux xterm-ghostty; do echo exit | TERM="$term" HOME=/tmp/blesh-seed-home XDG_CACHE_HOME=/etc/cmux/blesh-cache-seed script -qec 'bash -i' /dev/null >/dev/null 2>&1 || true; done && rm -rf /tmp/blesh-seed-home && chmod -R a+rX /etc/cmux/blesh-cache-seed && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.xterm-256color && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.screen-256color && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.tmux-256color && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.linux && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.xterm-ghostty && mkdir -p /usr/local/share/blesh/cache.d/0 /usr/local/share/blesh/cache.d/1000 && chmod a+rwxt /usr/local/share/blesh/cache.d && cp /etc/cmux/blesh-cache-seed/blesh/*/term.* /usr/local/share/blesh/cache.d/0/ && cp /etc/cmux/blesh-cache-seed/blesh/*/term.* /usr/local/share/blesh/cache.d/1000/ && chmod 700 /usr/local/share/blesh/cache.d/0 /usr/local/share/blesh/cache.d/1000 && chown -R 1000:1000 /usr/local/share/blesh/cache.d/1000`,
+    `curl -fsSL https://github.com/akinomyoga/ble.sh/releases/download/nightly/ble-nightly.tar.xz -o /tmp/ble.tar.xz && tar xJf /tmp/ble.tar.xz -C /tmp && rm -rf /usr/local/share/blesh && mv /tmp/ble-nightly /usr/local/share/blesh && rm -f /tmp/ble.tar.xz && test -f /usr/local/share/blesh/ble.sh && bash -n /etc/hmux/bashrc && ${rcFiles.map((rc) => `echo '[ -f /etc/hmux/bashrc ] && . /etc/hmux/bashrc' >> ${rc}`).join(" && ")} && echo 'set -g default-shell /bin/bash' >> /etc/tmux.conf && bash -ic 'head -2 $HOME/.bash_history' && mkdir -p /etc/hmux/blesh-cache-seed /tmp/blesh-seed-home && echo '[ -f /etc/hmux/bashrc ] && . /etc/hmux/bashrc' > /tmp/blesh-seed-home/.bashrc && for term in xterm-256color screen-256color tmux-256color linux xterm-ghostty; do echo exit | TERM="$term" HOME=/tmp/blesh-seed-home XDG_CACHE_HOME=/etc/hmux/blesh-cache-seed script -qec 'bash -i' /dev/null >/dev/null 2>&1 || true; done && rm -rf /tmp/blesh-seed-home && chmod -R a+rX /etc/hmux/blesh-cache-seed && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.xterm-256color && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.screen-256color && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.tmux-256color && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.linux && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.xterm-ghostty && mkdir -p /usr/local/share/blesh/cache.d/0 /usr/local/share/blesh/cache.d/1000 && chmod a+rwxt /usr/local/share/blesh/cache.d && cp /etc/hmux/blesh-cache-seed/blesh/*/term.* /usr/local/share/blesh/cache.d/0/ && cp /etc/hmux/blesh-cache-seed/blesh/*/term.* /usr/local/share/blesh/cache.d/1000/ && chmod 700 /usr/local/share/blesh/cache.d/0 /usr/local/share/blesh/cache.d/1000 && chown -R 1000:1000 /usr/local/share/blesh/cache.d/1000`,
   );
 
-  await put("agent-config.sh", "/etc/cmux/agent-config.sh");
+  await put("agent-config.sh", "/etc/hmux/agent-config.sh");
   // Agent sign-in launchers (Dockerfile parity): /usr/local/bin/<agent> is
-  // /etc/cmux/<agent>, which resolves the team or own-login mode per launch
-  // (agent-auth.sh) and execs /usr/local/libexec/cmux-<agent>-real. The base's
+  // /etc/hmux/<agent>, which resolves the team or own-login mode per launch
+  // (agent-auth.sh) and execs /usr/local/libexec/hmux-<agent>-real. The base's
   // login PATH puts nvm's bin first, so its entries point at the launchers
   // too; otherwise login shells and execs would bypass them.
-  await put("agent-auth.sh", "/etc/cmux/agent-auth.sh");
-  for (const agent of ["claude", "codex", "opencode"]) await put(`cmux-${agent}`, `/etc/cmux/${agent}`, 0o755);
-  await step("agent-launchers", 'sh -n /etc/cmux/agent-auth.sh && mkdir -p /usr/local/libexec && nvm_bin="$(dirname "$(readlink -f /usr/local/bin/node)")" && for a in claude codex opencode; do bash -n /etc/cmux/$a && ln -s "$(readlink -f /usr/local/bin/$a)" /usr/local/libexec/cmux-$a-real && test -f /usr/local/libexec/cmux-$a-real && rm -f /usr/local/bin/$a && chmod 755 /etc/cmux/$a && ln -s /etc/cmux/$a /usr/local/bin/$a && ln -sfn /etc/cmux/$a "$nvm_bin/$a" && $a --version >/dev/null || exit 1; done && sudo -n -u ' + WORK_USER + ' env -i HOME=' + WORK_HOME + ' USER=' + WORK_USER + ' TERM=xterm bash -lc \'for a in claude codex opencode; do test "$(readlink -f "$(type -P $a)")" = /etc/cmux/$a || exit 1; done\' && echo agent-launchers-on-login-path');
+  await put("agent-auth.sh", "/etc/hmux/agent-auth.sh");
+  for (const agent of ["claude", "codex", "opencode"]) await put(`hmux-${agent}`, `/etc/hmux/${agent}`, 0o755);
+  await step("agent-launchers", 'sh -n /etc/hmux/agent-auth.sh && mkdir -p /usr/local/libexec && nvm_bin="$(dirname "$(readlink -f /usr/local/bin/node)")" && for a in claude codex opencode; do bash -n /etc/hmux/$a && ln -s "$(readlink -f /usr/local/bin/$a)" /usr/local/libexec/hmux-$a-real && test -f /usr/local/libexec/hmux-$a-real && rm -f /usr/local/bin/$a && chmod 755 /etc/hmux/$a && ln -s /etc/hmux/$a /usr/local/bin/$a && ln -sfn /etc/hmux/$a "$nvm_bin/$a" && $a --version >/dev/null || exit 1; done && sudo -n -u ' + WORK_USER + ' env -i HOME=' + WORK_HOME + ' USER=' + WORK_USER + ' TERM=xterm bash -lc \'for a in claude codex opencode; do test "$(readlink -f "$(type -P $a)")" = /etc/hmux/$a || exit 1; done\' && echo agent-launchers-on-login-path');
   await step(
     "agent-config",
-    `bash -n /etc/cmux/agent-config.sh && echo '[ -f /etc/cmux/agent-config.sh ] && . /etc/cmux/agent-config.sh' > /etc/profile.d/cmux-agents.sh && ${rcFiles.map((rc) => `echo '[ -f /etc/cmux/agent-config.sh ] && . /etc/cmux/agent-config.sh' >> ${rc}`).join(" && ")} && rm -rf /tmp/agent-config-check && mkdir -p /tmp/agent-config-check && env HOME=/tmp/agent-config-check OPENAI_BASE_URL=https://example.invalid/v1 OPENAI_API_KEY=cmux-vm-edge-placeholder CMUX_CODEROUTER_URL=https://example.invalid ANTHROPIC_BASE_URL=https://example.invalid ANTHROPIC_API_KEY=cmux-vm-edge-placeholder CMUX_VM_ID=vm-check bash -lc 'true' && grep -q 'model_provider = "cmux"' /tmp/agent-config-check/.codex/config.toml && grep -q 'wire_api = "responses"' /tmp/agent-config-check/.codex/config.toml && grep -q 'supports_websockets = false' /tmp/agent-config-check/.codex/config.toml && grep -q "export OPENAI_API_KEY='cmux-vm-edge-placeholder'" /tmp/agent-config-check/.config/cmux/model-plane.env && grep -q "export ANTHROPIC_BASE_URL='https://example.invalid'" /tmp/agent-config-check/.config/cmux/model-plane.env && grep -q "export CMUX_VM_ID='vm-check'" /tmp/agent-config-check/.config/cmux/model-plane.env && [ "$(stat -c %a /tmp/agent-config-check/.config/cmux/model-plane.env)" = "600" ] && grep -qF '"apiKey": "e30.' /tmp/agent-config-check/.pi/agent/models.json && ! grep -q x-coderouter-route-token /tmp/agent-config-check/.pi/agent/models.json && ! grep -q crt_ /tmp/agent-config-check/.pi/agent/models.json && test ! -e /tmp/agent-config-check/.config/opencode/opencode.json && node -e 'const j = JSON.parse(require("fs").readFileSync("/tmp/agent-config-check/.claude.json","utf8")); if (!(j.hasCompletedOnboarding === true && j.bypassPermissionsModeAccepted === true && j.projects["/"].hasTrustDialogAccepted === true && Array.isArray(j.customApiKeyResponses.approved) && j.customApiKeyResponses.approved.includes("-vm-edge-placeholder"))) process.exit(1)' && [ "$(stat -c %a /tmp/agent-config-check/.claude.json)" = "600" ] && [ "$(env HOME=/tmp/agent-config-check bash -lc 'echo $CLAUDE_CODE_SANDBOXED:$IS_SANDBOX:$DISABLE_AUTOUPDATER')" = "1:1:1" ] && rm -rf /tmp/agent-config-check && test ! -e /root/.codex/config.toml && test ! -e /root/.pi/agent/models.json && test ! -e /root/.config/opencode/opencode.json && test ! -e ${WORK_HOME}/.codex/config.toml`,
+    `bash -n /etc/hmux/agent-config.sh && echo '[ -f /etc/hmux/agent-config.sh ] && . /etc/hmux/agent-config.sh' > /etc/profile.d/hmux-agents.sh && ${rcFiles.map((rc) => `echo '[ -f /etc/hmux/agent-config.sh ] && . /etc/hmux/agent-config.sh' >> ${rc}`).join(" && ")} && rm -rf /tmp/agent-config-check && mkdir -p /tmp/agent-config-check && env HOME=/tmp/agent-config-check OPENAI_BASE_URL=https://example.invalid/v1 OPENAI_API_KEY=hmux-vm-edge-placeholder HMUX_CODEROUTER_URL=https://example.invalid ANTHROPIC_BASE_URL=https://example.invalid ANTHROPIC_API_KEY=hmux-vm-edge-placeholder HMUX_VM_ID=vm-check bash -lc 'true' && grep -q 'model_provider = "hmux"' /tmp/agent-config-check/.codex/config.toml && grep -q 'wire_api = "responses"' /tmp/agent-config-check/.codex/config.toml && grep -q 'supports_websockets = false' /tmp/agent-config-check/.codex/config.toml && grep -q "export OPENAI_API_KEY='hmux-vm-edge-placeholder'" /tmp/agent-config-check/.config/hmux/model-plane.env && grep -q "export ANTHROPIC_BASE_URL='https://example.invalid'" /tmp/agent-config-check/.config/hmux/model-plane.env && grep -q "export HMUX_VM_ID='vm-check'" /tmp/agent-config-check/.config/hmux/model-plane.env && [ "$(stat -c %a /tmp/agent-config-check/.config/hmux/model-plane.env)" = "600" ] && grep -qF '"apiKey": "e30.' /tmp/agent-config-check/.pi/agent/models.json && ! grep -q x-coderouter-route-token /tmp/agent-config-check/.pi/agent/models.json && ! grep -q crt_ /tmp/agent-config-check/.pi/agent/models.json && test ! -e /tmp/agent-config-check/.config/opencode/opencode.json && node -e 'const j = JSON.parse(require("fs").readFileSync("/tmp/agent-config-check/.claude.json","utf8")); if (!(j.hasCompletedOnboarding === true && j.bypassPermissionsModeAccepted === true && j.projects["/"].hasTrustDialogAccepted === true && Array.isArray(j.customApiKeyResponses.approved) && j.customApiKeyResponses.approved.includes("-vm-edge-placeholder"))) process.exit(1)' && [ "$(stat -c %a /tmp/agent-config-check/.claude.json)" = "600" ] && [ "$(env HOME=/tmp/agent-config-check bash -lc 'echo $CLAUDE_CODE_SANDBOXED:$IS_SANDBOX:$DISABLE_AUTOUPDATER')" = "1:1:1" ] && rm -rf /tmp/agent-config-check && test ! -e /root/.codex/config.toml && test ! -e /root/.pi/agent/models.json && test ! -e /root/.config/opencode/opencode.json && test ! -e ${WORK_HOME}/.codex/config.toml`,
   );
 
   // Login banner: pam_motd renders /etc/update-motd.d on SSH logins. The
   // stock Ubuntu scripts stay but go silent, Freestyle's static /etc/motd is
   // emptied, and the versions the banner prints are written once here (the
   // agent line straight from the Dockerfile pins) so login never runs a tool.
-  await put("cmux-motd", "/etc/update-motd.d/00-cmux", 0o755);
+  await put("hmux-motd", "/etc/update-motd.d/00-hmux", 0o755);
   await step(
     "motd",
-    `sh -n /etc/update-motd.d/00-cmux && for f in /etc/update-motd.d/*; do [ "$f" = /etc/update-motd.d/00-cmux ] || chmod -x "$f"; done && : > /etc/motd && echo '${pins.filter((pin) => pin.binary !== "agent-browser").map((pin) => `${pin.binary} ${pin.version}`).join(" · ")}' > /etc/cmux/tool-versions && echo "node $(node --version) · python $(python3 --version | awk '{print $2}') · bun $(bun --version) · uv $(uv --version | awk '{print $2}') · gh $(gh --version | head -1 | awk '{print $3}') · docker $(docker --version 2>/dev/null | awk '{print $3}' | tr -d ,)" >> /etc/cmux/tool-versions && cat /etc/cmux/tool-versions && run-parts /etc/update-motd.d | grep -q 'persistent cloud VM' && ! run-parts /etc/update-motd.d | grep -qi 'ubuntu.com' && echo motd-ok`,
+    `sh -n /etc/update-motd.d/00-hmux && for f in /etc/update-motd.d/*; do [ "$f" = /etc/update-motd.d/00-hmux ] || chmod -x "$f"; done && : > /etc/motd && echo '${pins.filter((pin) => pin.binary !== "agent-browser").map((pin) => `${pin.binary} ${pin.version}`).join(" · ")}' > /etc/hmux/tool-versions && echo "node $(node --version) · python $(python3 --version | awk '{print $2}') · bun $(bun --version) · uv $(uv --version | awk '{print $2}') · gh $(gh --version | head -1 | awk '{print $3}') · docker $(docker --version 2>/dev/null | awk '{print $3}' | tr -d ,)" >> /etc/hmux/tool-versions && cat /etc/hmux/tool-versions && run-parts /etc/update-motd.d | grep -q 'persistent cloud VM' && ! run-parts /etc/update-motd.d | grep -qi 'ubuntu.com' && echo motd-ok`,
   );
 
   if (withDesktop) {
-    // Desktop + media stack (the Dockerfile's CMUX_IMAGE_DESKTOP_PACKAGES):
+    // Desktop + media stack (the Dockerfile's HMUX_IMAGE_DESKTOP_PACKAGES):
     // TigerVNC, openbox, tint2, Thunar, feh, noVNC + websockify, the
     // accessibility bus (at-spi2-core) and D-Bus, and the GL/Vulkan/xkb
     // libraries Ghostty and Chrome render with under Xvnc.
@@ -417,15 +417,15 @@ try {
 
     // Every desktop file, at the path the Dockerfile COPYs it to
     // (DEVBOX_DESKTOP_INSTALLS is the one map). Dock launchers and icons
-    // live under /etc/cmux so the dock never depends on a distro's
+    // live under /etc/hmux so the dock never depends on a distro's
     // /usr/share/applications or icon-theme layout.
-    await step("desktop-dirs", "mkdir -p /etc/cmux/apps /etc/cmux/icons /usr/share/backgrounds/cmux");
+    await step("desktop-dirs", "mkdir -p /etc/hmux/apps /etc/hmux/icons /usr/share/backgrounds/hmux");
     for (const install of DEVBOX_DESKTOP_INSTALLS) {
       await put(install.source, install.target, install.mode);
     }
     await step(
       "desktop-icons",
-      "cp /opt/google/chrome/product_logo_128.png /etc/cmux/icons/google-chrome.png && cp \"$(find /usr/share/icons -name 'org.xfce.thunar.png' -path '*128*' | head -1)\" /etc/cmux/icons/thunar.png && cp \"$(find /usr/share/icons -name 'com.mitchellh.ghostty.png' -path '*128*' | head -1)\" /etc/cmux/icons/ghostty.png && test -s /etc/cmux/icons/thunar.png && test -s /etc/cmux/icons/ghostty.png && test -s /etc/cmux/icons/google-chrome.png",
+      "cp /opt/google/chrome/product_logo_128.png /etc/hmux/icons/google-chrome.png && cp \"$(find /usr/share/icons -name 'org.xfce.thunar.png' -path '*128*' | head -1)\" /etc/hmux/icons/thunar.png && cp \"$(find /usr/share/icons -name 'com.mitchellh.ghostty.png' -path '*128*' | head -1)\" /etc/hmux/icons/ghostty.png && test -s /etc/hmux/icons/thunar.png && test -s /etc/hmux/icons/ghostty.png && test -s /etc/hmux/icons/google-chrome.png",
     );
 
     // Bring the desktop up under systemd as the work user and prove the
@@ -434,26 +434,26 @@ try {
     // noVNC bound, session env published), so nothing here polls. Then: both
     // ports answer (RFB loopback-only), noVNC serves its client, the window
     // manager, dock, clipboard helper and accessibility bus run, the
-    // wallpaper is on the root window, root can reach the display too (cmux
+    // wallpaper is on the root window, root can reach the display too (hmux
     // sessions run as root), exactly one desktop supervisor exists (systemd's;
-    // cmux-devbox-boot must not start a second one under systemd), login
+    // hmux-devbox-boot must not start a second one under systemd), login
     // shells of both accounts inherit DISPLAY from the published env, the
     // work user's also the accessibility and session buses, and cua-driver's
     // doctor sees the display and the accessibility bus. The "First Run"
-    // marker pre-accepts Chrome's first-run/ToS dialog (cmux-desktop-boot
+    // marker pre-accepts Chrome's first-run/ToS dialog (hmux-desktop-boot
     // re-asserts it on every boot).
-    const desktopEnvLine = `'[ -f /etc/cmux/desktop-env.sh ] && . /etc/cmux/desktop-env.sh'`;
+    const desktopEnvLine = `'[ -f /etc/hmux/desktop-env.sh ] && . /etc/hmux/desktop-env.sh'`;
     /** One login shell as `user` (its own HOME, a clean PATH) running `command`. */
     const loginAs = (user: string, home: string, command: string): string =>
       `sudo -n -u ${user} env -i HOME=${home} USER=${user} TERM=xterm PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -lc '${command}'`;
     await step(
       "desktop-unit",
       [
-        `bash -n ${DEVBOX_DESKTOP_START_SCRIPT} && sh -n ${DEVBOX_DESKTOP_SUPERVISOR} && sh -n /etc/cmux/desktop-env.sh`,
+        `bash -n ${DEVBOX_DESKTOP_START_SCRIPT} && sh -n ${DEVBOX_DESKTOP_SUPERVISOR} && sh -n /etc/hmux/desktop-env.sh`,
         `grep -q '^User=${WORK_USER}$' /etc/systemd/system/${DEVBOX_DESKTOP_UNIT}.service`,
         `grep -q '^RuntimeDirectory=${DEVBOX_DESKTOP_RUNTIME_DIR.replace("/run/", "")}$' /etc/systemd/system/${DEVBOX_DESKTOP_UNIT}.service`,
         `grep -q '^Type=notify$' /etc/systemd/system/${DEVBOX_DESKTOP_UNIT}.service && grep -q '^NotifyAccess=all$' /etc/systemd/system/${DEVBOX_DESKTOP_UNIT}.service`,
-        `echo ${desktopEnvLine} > /etc/profile.d/cmux-desktop.sh`,
+        `echo ${desktopEnvLine} > /etc/profile.d/hmux-desktop.sh`,
         ...rcFiles.map((rc) => `echo ${desktopEnvLine} >> ${rc}`),
         `mkdir -p ${WORK_HOME}/.config/google-chrome && touch '${WORK_HOME}/.config/google-chrome/First Run' && chown -R ${WORK_USER}:${WORK_USER} ${WORK_HOME}/.config`,
         `systemctl daemon-reload && systemctl enable --now ${DEVBOX_DESKTOP_UNIT} && systemctl is-active ${DEVBOX_DESKTOP_UNIT}`,
@@ -480,7 +480,7 @@ try {
   }
 
   // Re-assert the work user's private-directory permissions before the daemon
-  // first writes its identity: cmux-tui refuses a group- or other-writable
+  // first writes its identity: hmux-tui refuses a group- or other-writable
   // ancestor of its auth dir, and every layer above this ran shells as that
   // user. The umask is already 022 (devboxWorkUserSetupCommand), so this is a
   // guard, not a repair.
@@ -489,28 +489,28 @@ try {
     `find ${WORK_HOME} -type d -exec chmod g-w,o-w {} + && [ "$(find ${WORK_HOME} -type d \\( -perm -g+w -o -perm -o+w \\) | wc -l)" = 0 ] && [ "$(sudo -n -u ${WORK_USER} sh -c umask)" = 0022 ] && echo home-perms-ok`,
   );
 
-  // The pinned cmux-tui build, installed with the driver's own command so the
+  // The pinned hmux-tui build, installed with the driver's own command so the
   // bake and the attach-time heal can never disagree about path or digest.
-  console.log(`cmux-tui pin: commit ${cmuxTuiSource.commit} sha256 ${cmuxTuiSource.sha256.slice(0, 12)}…`);
-  await step("cmux-tui-install", cmuxTuiInstallCommand(cmuxTuiSource));
+  console.log(`hmux-tui pin: commit ${hmuxTuiSource.commit} sha256 ${hmuxTuiSource.sha256.slice(0, 12)}…`);
+  await step("hmux-tui-install", hmuxTuiInstallCommand(hmuxTuiSource));
   await step(
-    "cmux-tui-pin",
-    `${cmuxTuiPinCheckCommand(cmuxTuiSource)} && mkdir -p /etc/cmux && printf '%s %s\n' ${cmuxTuiSource.sha256} ${cmuxTuiSource.commit} > /etc/cmux/cmux-tui-pin && cat /etc/cmux/cmux-tui-pin`,
+    "hmux-tui-pin",
+    `${hmuxTuiPinCheckCommand(hmuxTuiSource)} && mkdir -p /etc/hmux && printf '%s %s\n' ${hmuxTuiSource.sha256} ${hmuxTuiSource.commit} > /etc/hmux/hmux-tui-pin && cat /etc/hmux/hmux-tui-pin`,
   );
 
   // The runtime VM path must not upload or install guest integration. These
   // files are immutable image assets: create only allocates the image, while
   // the boot supervisor starts the daemon and the reporter unit.
   await step("guest-cli-directory", "mkdir -p /usr/local/libexec");
-  await vm.fs.writeFile(GUEST_CMUX_SHIM_PATH, GUEST_CMUX_SHIM, { mode: 0o755 });
+  await vm.fs.writeFile(GUEST_HMUX_SHIM_PATH, GUEST_HMUX_SHIM, { mode: 0o755 });
   await step(
     "guest-cli-integration",
-    `mkdir -p /usr/local/libexec && ${guestBrowserInstallCommand()} && ${guestCliDistributionCommand()} && chmod 0755 ${GUEST_CMUX_SHIM_PATH} && test -x ${GUEST_CMUX_SHIM_PATH} && ${guestCliDistributionCommand(true)} && echo guest-cli-integration-ok`,
+    `mkdir -p /usr/local/libexec && ${guestBrowserInstallCommand()} && ${guestCliDistributionCommand()} && chmod 0755 ${GUEST_HMUX_SHIM_PATH} && test -x ${GUEST_HMUX_SHIM_PATH} && ${guestCliDistributionCommand(true)} && echo guest-cli-integration-ok`,
   );
   await step("guest-resource-reporter", guestResourceReporterInstallCommand());
 
   // The install above also wrote the work user's Claude Code and Codex hooks
-  // (cmux-tui agent hook install), so a Stop, permission request, or question
+  // (hmux-tui agent hook install), so a Stop, permission request, or question
   // in either agent reaches the daemon journal and the owner's Mac as a
   // notification with no per-machine setup. Prove the four artifacts and that
   // the daemon user's own status verb agrees; then prove the two writers of
@@ -520,32 +520,32 @@ try {
   await step(
     "agent-hooks",
     [
-      cmuxTuiHooksReadyCommand(),
-      `${cmuxTuiRunCommand(`--json agent hook status ${CMUX_TUI_HOOK_PROVIDERS.join(" ")}`)} > /tmp/hook-status.json`,
-      `node -e 'const r = JSON.parse(require("fs").readFileSync("/tmp/hook-status.json","utf8")); const rows = r.providers || []; const by = Object.fromEntries(rows.map((p) => [p.provider, p])); for (const id of ${JSON.stringify([...CMUX_TUI_HOOK_PROVIDERS])}) { if (!by[id] || by[id].state !== "installed") { console.error(id, by[id]); process.exit(1); } }'`,
+      hmuxTuiHooksReadyCommand(),
+      `${hmuxTuiRunCommand(`--json agent hook status ${HMUX_TUI_HOOK_PROVIDERS.join(" ")}`)} > /tmp/hook-status.json`,
+      `node -e 'const r = JSON.parse(require("fs").readFileSync("/tmp/hook-status.json","utf8")); const rows = r.providers || []; const by = Object.fromEntries(rows.map((p) => [p.provider, p])); for (const id of ${JSON.stringify([...HMUX_TUI_HOOK_PROVIDERS])}) { if (!by[id] || by[id].state !== "installed") { console.error(id, by[id]); process.exit(1); } }'`,
       `test "$(stat -c %U ${WORK_HOME}/.claude/settings.json ${WORK_HOME}/.codex/hooks.json ${WORK_HOME}/.codex/config.toml | sort -u)" = ${WORK_USER}`,
       `! grep -q '^model_provider = ' ${WORK_HOME}/.codex/config.toml`,
       `rm -rf /tmp/hook-merge-check && mkdir -p /tmp/hook-merge-check/.codex && cp ${WORK_HOME}/.codex/config.toml /tmp/hook-merge-check/.codex/config.toml`,
-      `env HOME=/tmp/hook-merge-check OPENAI_BASE_URL=https://example.invalid/v1 OPENAI_API_KEY=cmux-vm-edge-placeholder CMUX_CODEROUTER_URL=https://example.invalid bash -lc 'true'`,
-      `head -c 200 /tmp/hook-merge-check/.codex/config.toml | grep -q '^model_provider = "cmux"'`,
-      `grep -q '^\\[hooks' /tmp/hook-merge-check/.codex/config.toml && grep -q '^\\[model_providers.cmux\\]' /tmp/hook-merge-check/.codex/config.toml`,
-      `python3 -c 'import tomllib,sys; d = tomllib.load(open("/tmp/hook-merge-check/.codex/config.toml","rb")); assert d["model_provider"] == "cmux" and "hooks" in d and d["history"]["persistence"] == "save-all", d'`,
+      `env HOME=/tmp/hook-merge-check OPENAI_BASE_URL=https://example.invalid/v1 OPENAI_API_KEY=hmux-vm-edge-placeholder HMUX_CODEROUTER_URL=https://example.invalid bash -lc 'true'`,
+      `head -c 200 /tmp/hook-merge-check/.codex/config.toml | grep -q '^model_provider = "hmux"'`,
+      `grep -q '^\\[hooks' /tmp/hook-merge-check/.codex/config.toml && grep -q '^\\[model_providers.hmux\\]' /tmp/hook-merge-check/.codex/config.toml`,
+      `python3 -c 'import tomllib,sys; d = tomllib.load(open("/tmp/hook-merge-check/.codex/config.toml","rb")); assert d["model_provider"] == "hmux" and "hooks" in d and d["history"]["persistence"] == "save-all", d'`,
       `rm -rf /tmp/hook-merge-check /tmp/hook-status.json`,
       "echo agent-hooks-ok",
     ].join(" && "),
   );
 
   // The Ghostty generation panes announce as TERM_PROGRAM_VERSION (the
-  // supervisor exports it next to TERM_PROGRAM=ghostty; see cmux-devbox-boot).
+  // supervisor exports it next to TERM_PROGRAM=ghostty; see hmux-devbox-boot).
   await step(
     "ghostty-version",
-    `mkdir -p /etc/cmux && printf '%s\n' ${devboxGhosttyVersion()} > /etc/cmux/ghostty-version && cat /etc/cmux/ghostty-version`,
+    `mkdir -p /etc/hmux && printf '%s\n' ${devboxGhosttyVersion()} > /etc/hmux/ghostty-version && cat /etc/hmux/ghostty-version`,
   );
 
-  // The cmux-tui daemon supervisor + its systemd unit (see the header).
+  // The hmux-tui daemon supervisor + its systemd unit (see the header).
   const service = [
     "[Unit]",
-    "Description=cmux-tui session daemon supervisor",
+    "Description=hmux-tui session daemon supervisor",
     "After=network.target",
     "",
     "[Service]",
@@ -553,35 +553,35 @@ try {
     "User=root",
     // Freestyle machines are reached at a private VPC address by default, or
     // their stable public IPv6 on the legacy public-network path, so the daemon
-    // listens dual-stack ([::] accepts IPv4 too). cmux-devbox-boot
+    // listens dual-stack ([::] accepts IPv4 too). hmux-devbox-boot
     // defaults to 0.0.0.0 for the container providers, whose runtimes may have
     // IPv6 disabled entirely.
-    "Environment=CMUX_TUI_REMOTE_WS_BIND=[::]:1337",
+    "Environment=HMUX_TUI_REMOTE_WS_BIND=[::]:1337",
     // Pane shells inherit this PATH; /usr/local/bin carries the base's Node
     // and every pinned agent as symlinks, so no login shell is needed.
     "Environment=PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
-    "ExecStart=/usr/local/bin/cmux-devbox-boot",
+    "ExecStart=/usr/local/bin/hmux-devbox-boot",
     "Restart=always",
     "RestartSec=2",
     "",
     "[Install]",
     "WantedBy=multi-user.target",
   ].join("\n");
-  await put("cmux-devbox-boot", "/usr/local/bin/cmux-devbox-boot", 0o755);
-  await put("cmux-tui-state-mount", "/usr/local/bin/cmux-tui-state-mount", 0o755);
-  await put("cmux-prompt-sync", "/usr/local/bin/cmux-prompt-sync", 0o755);
-  await vm.fs.writeFile("/etc/systemd/system/cmux-tui-daemon.service", `${service}\n`, { mode: 0o644 });
+  await put("hmux-devbox-boot", "/usr/local/bin/hmux-devbox-boot", 0o755);
+  await put("hmux-tui-state-mount", "/usr/local/bin/hmux-tui-state-mount", 0o755);
+  await put("hmux-prompt-sync", "/usr/local/bin/hmux-prompt-sync", 0o755);
+  await vm.fs.writeFile("/etc/systemd/system/hmux-tui-daemon.service", `${service}\n`, { mode: 0o644 });
   await vm.fs.writeFile(
-    "/etc/systemd/system/cmux-prompt-sync.service",
+    "/etc/systemd/system/hmux-prompt-sync.service",
     [
       "[Unit]",
-      "Description=cmux Cloud prompt identity sync",
-      "After=network-online.target cmux-tui-daemon.service",
+      "Description=hmux Cloud prompt identity sync",
+      "After=network-online.target hmux-tui-daemon.service",
       "Wants=network-online.target",
       "",
       "[Service]",
       "Type=simple",
-      "ExecStart=/usr/local/bin/cmux-prompt-sync",
+      "ExecStart=/usr/local/bin/hmux-prompt-sync",
       "Restart=on-failure",
       "RestartSec=2",
       "",
@@ -596,10 +596,10 @@ try {
   // workqueue-lockup report. The switch is runtime state, which the memory
   // snapshot carries into every clone and derived size; the tmpfiles line
   // re-applies it on a cold boot. Service watchdogs and housekeeping timers
-  // are handled by cmux-devbox-boot's park branch, right before the snapshot.
+  // are handled by hmux-devbox-boot's park branch, right before the snapshot.
   await step("snapshot-resume-dirs", "mkdir -p /etc/tmpfiles.d");
   await vm.fs.writeFile(
-    "/etc/tmpfiles.d/cmux-snapshot-resume.conf",
+    "/etc/tmpfiles.d/hmux-snapshot-resume.conf",
     "# Clones resume with a monotonic clock jump; do not report a workqueue lockup.\nw- /sys/module/workqueue/parameters/watchdog_thresh - - - - 0\n",
     { mode: 0o644 },
   );
@@ -608,45 +608,45 @@ try {
     "{ [ ! -e /sys/module/workqueue/parameters/watchdog_thresh ] || echo 0 > /sys/module/workqueue/parameters/watchdog_thresh; } && " +
       "echo snapshot-resume-quiet-ok",
   );
-  // Reserve one GiB inside the existing root disk for cmux-tui's state. The
+  // Reserve one GiB inside the existing root disk for hmux-tui's state. The
   // image is fully allocated before it is mounted, then the daemon's existing
   // state (including the warm template host) is copied into it. This protects
   // SQLite/WAL writes when general-purpose files consume the rest of the disk
   // without changing the VM's provisioned disk size.
   await step(
-    "cmux-tui-state-reservation",
-    `sh -n ${CMUX_TUI_STATE_MOUNT_HELPER_PATH} && ${CMUX_TUI_STATE_MOUNT_HELPER_PATH} create ${WORK_HOME} ${WORK_USER} && mountpoint -q ${WORK_HOME}/.local/state/cmux-tui && [ "$(stat -c %s ${CMUX_TUI_STATE_IMAGE_PATH})" = ${CMUX_TUI_STATE_RESERVATION_BYTES} ] && printf 'cmux-tui-state-v1\\n' > ${CMUX_TUI_STATE_RESERVATION_MARKER_PATH} && chmod 0444 ${CMUX_TUI_STATE_RESERVATION_MARKER_PATH} && echo cmux-tui-state-reservation-ok`,
+    "hmux-tui-state-reservation",
+    `sh -n ${HMUX_TUI_STATE_MOUNT_HELPER_PATH} && ${HMUX_TUI_STATE_MOUNT_HELPER_PATH} create ${WORK_HOME} ${WORK_USER} && mountpoint -q ${WORK_HOME}/.local/state/hmux-tui && [ "$(stat -c %s ${HMUX_TUI_STATE_IMAGE_PATH})" = ${HMUX_TUI_STATE_RESERVATION_BYTES} ] && printf 'hmux-tui-state-v1\\n' > ${HMUX_TUI_STATE_RESERVATION_MARKER_PATH} && chmod 0444 ${HMUX_TUI_STATE_RESERVATION_MARKER_PATH} && echo hmux-tui-state-reservation-ok`,
   );
   await step(
-    "cmux-tui-daemon-unit",
-    "sh -n /usr/local/bin/cmux-devbox-boot && rm -f /etc/cmux/bake-instance-id && mkdir -p /etc/systemd/system/multi-user.target.wants && ln -sf /etc/systemd/system/cmux-tui-daemon.service /etc/systemd/system/multi-user.target.wants/cmux-tui-daemon.service && systemctl daemon-reload && systemctl enable cmux-tui-daemon && systemctl restart cmux-tui-daemon && systemctl is-active cmux-tui-daemon",
+    "hmux-tui-daemon-unit",
+    "sh -n /usr/local/bin/hmux-devbox-boot && rm -f /etc/hmux/bake-instance-id && mkdir -p /etc/systemd/system/multi-user.target.wants && ln -sf /etc/systemd/system/hmux-tui-daemon.service /etc/systemd/system/multi-user.target.wants/hmux-tui-daemon.service && systemctl daemon-reload && systemctl enable hmux-tui-daemon && systemctl restart hmux-tui-daemon && systemctl is-active hmux-tui-daemon",
   );
   await step(
-    "cmux-prompt-sync-unit",
-    "python3 -m py_compile /usr/local/bin/cmux-prompt-sync && systemctl daemon-reload && systemctl enable cmux-prompt-sync && systemctl is-enabled cmux-prompt-sync",
+    "hmux-prompt-sync-unit",
+    "python3 -m py_compile /usr/local/bin/hmux-prompt-sync && systemctl daemon-reload && systemctl enable hmux-prompt-sync && systemctl is-enabled hmux-prompt-sync",
   );
   // Prove the daemon contract on the builder: the supervisor started the
   // daemon on its own, the session answers, and the listener is dual-stack.
   await step(
-    "cmux-tui-daemon-up",
-    `for i in $(seq 1 30); do ${cmuxTuiRunCommand(`server status --session ${CMUX_TUI_SESSION}`)} >/dev/null 2>&1 && grep -qi ':0539 ' /proc/net/tcp6 && break; sleep 1; done && ${cmuxTuiRunCommand(`server status --session ${CMUX_TUI_SESSION}`)} && grep -qi ':0539 ' /proc/net/tcp6 && test "$(cat /etc/cmux/daemon-instance-id)" = "$(${instanceIdCommand})" && [ "$(cat ${CMUX_TUI_LAYOUT_MARKER_PATH})" = user ] && [ "$(ps -o user= -C cmux-tui | tr -d ' ' | sort -u)" = ${WORK_USER} ] && echo daemon-up-bound-to-builder`,
+    "hmux-tui-daemon-up",
+    `for i in $(seq 1 30); do ${hmuxTuiRunCommand(`server status --session ${HMUX_TUI_SESSION}`)} >/dev/null 2>&1 && grep -qi ':0539 ' /proc/net/tcp6 && break; sleep 1; done && ${hmuxTuiRunCommand(`server status --session ${HMUX_TUI_SESSION}`)} && grep -qi ':0539 ' /proc/net/tcp6 && test "$(cat /etc/hmux/daemon-instance-id)" = "$(${instanceIdCommand})" && [ "$(cat ${HMUX_TUI_LAYOUT_MARKER_PATH})" = user ] && [ "$(ps -o user= -C hmux-tui | tr -d ' ' | sort -u)" = ${WORK_USER} ] && echo daemon-up-bound-to-builder`,
   );
   // Wait after the daemon first reports ready, then exercise the real
   // WebSocket/Noise/RPC/PTY path before this machine can become a snapshot.
-  await step("cmux-tui-ready", devboxWaitForDaemonCommand());
-  await step("cmux-tui-websocket-smoke", cmuxTuiWebsocketSmokeCommand());
+  await step("hmux-tui-ready", devboxWaitForDaemonCommand());
+  await step("hmux-tui-websocket-smoke", hmuxTuiWebsocketSmokeCommand());
   // Create the warm template terminal the snapshot carries: one armed shell,
   // fully initialized and waiting at its first prompt. A clone's daemon adopts
   // its host process with fresh identity, so New Machine gets a live shell
   // without creating a workspace, terminal or PTY on its critical path.
-  await step("cmux-tui-template-terminal", devboxPrepareTemplateTerminalCommand());
+  await step("hmux-tui-template-terminal", devboxPrepareTemplateTerminalCommand());
   // Let the daemon, first PTY and desktop settle before the memory snapshot.
   // Freestyle resumes the snapshot rather than replaying these startup steps.
-  await step("cmux-tui-settle-before-snapshot", "sleep 30");
+  await step("hmux-tui-settle-before-snapshot", "sleep 30");
   // Park it (devboxParkDaemonCommand): the supervisor stops the daemon while
   // the machine's id equals the recorded bake id, and every per-machine file
   // is wiped except the template terminal's host record.
-  await step("cmux-tui-daemon-park", devboxParkDaemonCommand());
+  await step("hmux-tui-daemon-park", devboxParkDaemonCommand());
 
   await step(
     "ghost-text-smoke",
@@ -670,7 +670,7 @@ try {
   // goes in after every layer that opens a login shell: once it exists, any
   // shell materializes the harness configs, and the image must carry none.
   await vm.fs.writeFile(VM_GUEST_MODEL_PLANE_ENV_PATH, renderVmGuestModelPlaneEnvFile(vmGuestModelPlaneEnv()), { mode: 0o644 });
-  await step("model-plane-env", `sh -n ${VM_GUEST_MODEL_PLANE_ENV_PATH} && grep -q "^export OPENAI_BASE_URL='https://" ${VM_GUEST_MODEL_PLANE_ENV_PATH} && ! grep -q crt_ ${VM_GUEST_MODEL_PLANE_ENV_PATH} && env -i HOME=/tmp/mp-check bash -c '. /etc/cmux/agent-config.sh; echo $OPENAI_BASE_URL' | grep -q '^https://' && rm -rf /tmp/mp-check && echo model-plane-env-baked`);
+  await step("model-plane-env", `sh -n ${VM_GUEST_MODEL_PLANE_ENV_PATH} && grep -q "^export OPENAI_BASE_URL='https://" ${VM_GUEST_MODEL_PLANE_ENV_PATH} && ! grep -q crt_ ${VM_GUEST_MODEL_PLANE_ENV_PATH} && env -i HOME=/tmp/mp-check bash -c '. /etc/hmux/agent-config.sh; echo $OPENAI_BASE_URL' | grep -q '^https://' && rm -rf /tmp/mp-check && echo model-plane-env-baked`);
   // The identity survived every layer above, and none of them wrote the
   // provider's machine name anywhere the machine speaks for itself.
   await step("identity-final", devboxIdentityCheckCommand());
@@ -678,7 +678,7 @@ try {
   // above baked successfully, and which layers the image carries.
   await step(
     "image-stamp",
-    `mkdir -p /etc/cmux && echo "cmux-devbox ${preflight.epoch}${withDesktop ? " desktop" : ""}" > /etc/cmux/image-stamp && cat /etc/cmux/image-stamp`,
+    `mkdir -p /etc/hmux && echo "hmux-devbox ${preflight.epoch}${withDesktop ? " desktop" : ""}" > /etc/hmux/image-stamp && cat /etc/hmux/image-stamp`,
   );
 
   // The journal starts over so a machine's log begins under its own name,
@@ -700,7 +700,7 @@ try {
 
 // Snapshot slugless first (the sh-… id is the pointer), then attach the slug.
 // A slug already held by another snapshot only moves with --replace-slug.
-const displayName = `cmux devbox ${slug} (epoch ${preflight.epoch}, ${preflight.sha.slice(0, 10)})`;
+const displayName = `hmux devbox ${slug} (epoch ${preflight.epoch}, ${preflight.sha.slice(0, 10)})`;
 const snap = await vm.snapshot({ displayName });
 const snapshotId = snap.snapshotId;
 console.log("SNAPSHOT_RESULT", JSON.stringify(snap));
@@ -744,12 +744,12 @@ emitBakeResult({
       "FREESTYLE_SANDBOX_SNAPSHOT",
       metadata,
       withDesktop
-        ? `Devbox on the Freestyle public platform (api.freestyle.sh) from ${builderSnapshot}: the base's Node/Bun/Python/uv/Docker plus pinned agents, devtools, Chrome + cua-driver, ble.sh devshell, cmux login banner, and the desktop layer (openbox/TigerVNC 5901, noVNC 6901, Ghostty, Chrome, Thunar) run by the cmux-desktop systemd unit as ${WORK_USER}; ${WORK_USER} (uid 1000, NOPASSWD sudo) is the work user and the daemon's session user, so terminals are non-root; hostname ${DEVBOX_HOSTNAME} (static, live, 127.0.1.1 alias; SSH host keys regenerated under it; journal reset); baked cmux-tui daemon ${cmuxTuiSource.commit.slice(0, 10)}, identity bound to the instance id, no create-time bootstrap.`
-        : `Devbox on the Freestyle public platform (api.freestyle.sh) from ${builderSnapshot}: the base's Node/Bun/Python/uv/Docker plus pinned agents, devtools, Chrome + cua-driver, ble.sh devshell, cmux login banner; ${WORK_USER} (uid 1000, NOPASSWD sudo) is the work user and the daemon's session user, so terminals are non-root; hostname ${DEVBOX_HOSTNAME} (static, live, 127.0.1.1 alias; SSH host keys regenerated under it; journal reset); baked cmux-tui daemon ${cmuxTuiSource.commit.slice(0, 10)}, identity bound to the instance id, no create-time bootstrap.`,
+        ? `Devbox on the Freestyle public platform (api.freestyle.sh) from ${builderSnapshot}: the base's Node/Bun/Python/uv/Docker plus pinned agents, devtools, Chrome + cua-driver, ble.sh devshell, hmux login banner, and the desktop layer (openbox/TigerVNC 5901, noVNC 6901, Ghostty, Chrome, Thunar) run by the hmux-desktop systemd unit as ${WORK_USER}; ${WORK_USER} (uid 1000, NOPASSWD sudo) is the work user and the daemon's session user, so terminals are non-root; hostname ${DEVBOX_HOSTNAME} (static, live, 127.0.1.1 alias; SSH host keys regenerated under it; journal reset); baked hmux-tui daemon ${hmuxTuiSource.commit.slice(0, 10)}, identity bound to the instance id, no create-time bootstrap.`
+        : `Devbox on the Freestyle public platform (api.freestyle.sh) from ${builderSnapshot}: the base's Node/Bun/Python/uv/Docker plus pinned agents, devtools, Chrome + cua-driver, ble.sh devshell, hmux login banner; ${WORK_USER} (uid 1000, NOPASSWD sudo) is the work user and the daemon's session user, so terminals are non-root; hostname ${DEVBOX_HOSTNAME} (static, live, 127.0.1.1 alias; SSH host keys regenerated under it; journal reset); baked hmux-tui daemon ${hmuxTuiSource.commit.slice(0, 10)}, identity bound to the instance id, no create-time bootstrap.`,
       withDesktop ? "desktop" : "base",
     ),
-    cmuxTuiCommit: cmuxTuiSource.commit,
-    cmuxTuiSha256: cmuxTuiSource.sha256,
+    hmuxTuiCommit: hmuxTuiSource.commit,
+    hmuxTuiSha256: hmuxTuiSource.sha256,
   },
   next: `bun scripts/verify-devbox-image.ts freestyle ${snapshotId}`,
 });

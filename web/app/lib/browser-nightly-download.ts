@@ -10,13 +10,13 @@ export const BROWSER_NIGHTLY_FEED_URL =
 export const BROWSER_PUBLIC_ASSET_ORIGIN = "https://browser-assets.cmux.com";
 
 /**
- * P-256 update public key compiled into cmux Browser's updater.
+ * P-256 update public key compiled into hmux Browser's updater.
  *
  * This is public verification material, not a credential. Keep it byte-for-byte
- * in sync with cmux-browser's `docs/update-public-key.pem` whenever the updater
+ * in sync with hmux-browser's `docs/update-public-key.pem` whenever the updater
  * key is deliberately rotated.
  */
-export const CMUX_BROWSER_UPDATE_PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
+export const HMUX_BROWSER_UPDATE_PUBLIC_KEY_PEM = `-----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEzeE5/HttjLz27hU3LFU0h/88Ex7i
 oqZjMnYz3AN/iyfNbz1meZL/8Kyd3PsvCvoiAI62dzAdAE+gNkbNrfw6/Q==
 -----END PUBLIC KEY-----`;
@@ -41,35 +41,35 @@ interface BrowserNightlyTarget {
 const BROWSER_NIGHTLY_TARGETS = {
   "linux-x64": {
     feedPlatform: "linux-x64",
-    signedArchive: "cmux-linux-x64.zip",
+    signedArchive: "hmux-linux-x64.zip",
     artifacts: {
-      run: "cmux-linux-x64-installer.run",
-      deb: "cmux-linux-x64.deb",
-      zip: "cmux-linux-x64.zip",
+      run: "hmux-linux-x64-installer.run",
+      deb: "hmux-linux-x64.deb",
+      zip: "hmux-linux-x64.zip",
     },
   },
   "windows-x64": {
     feedPlatform: "windows-x64",
-    signedArchive: "cmux-windows-x64.zip",
+    signedArchive: "hmux-windows-x64.zip",
     artifacts: {
-      installer: "cmux-windows-x64-installer.exe",
-      zip: "cmux-windows-x64.zip",
+      installer: "hmux-windows-x64-installer.exe",
+      zip: "hmux-windows-x64.zip",
     },
   },
   "mac-arm64": {
     feedPlatform: "mac-arm64",
-    signedArchive: "cmux-macos-universal.zip",
+    signedArchive: "hmux-macos-universal.zip",
     artifacts: {
-      dmg: "cmux-macos-universal.dmg",
-      zip: "cmux-macos-universal.zip",
+      dmg: "hmux-macos-universal.dmg",
+      zip: "hmux-macos-universal.zip",
     },
   },
   "mac-x64": {
     feedPlatform: "mac-x64",
-    signedArchive: "cmux-macos-universal.zip",
+    signedArchive: "hmux-macos-universal.zip",
     artifacts: {
-      dmg: "cmux-macos-universal.dmg",
-      zip: "cmux-macos-universal.zip",
+      dmg: "hmux-macos-universal.dmg",
+      zip: "hmux-macos-universal.zip",
     },
   },
 } as const satisfies Record<string, BrowserNightlyTarget>;
@@ -114,7 +114,7 @@ export async function resolveBrowserNightlyDownload(
   const fetchImplementation = dependencies.fetch ?? globalThis.fetch;
   const payload = await fetchAndVerifyFeed(
     fetchImplementation,
-    dependencies.publicKeyPem ?? CMUX_BROWSER_UPDATE_PUBLIC_KEY_PEM,
+    dependencies.publicKeyPem ?? HMUX_BROWSER_UPDATE_PUBLIC_KEY_PEM,
   );
   const rawEntry = payload.platforms[target.config.feedPlatform];
   if (rawEntry === undefined) {
@@ -165,7 +165,7 @@ async function fetchAndVerifyFeed(
 /** Verifies the exact signed bytes before parsing or trusting any payload URL. */
 export function verifyFeedEnvelope(
   envelopeText: string,
-  publicKeyPem = CMUX_BROWSER_UPDATE_PUBLIC_KEY_PEM,
+  publicKeyPem = HMUX_BROWSER_UPDATE_PUBLIC_KEY_PEM,
 ): SignedFeedPayload {
   try {
     const envelope = JSON.parse(envelopeText) as unknown;
@@ -282,7 +282,7 @@ function verifiedAssetLocation(
   if (signedUrl.host !== "github.com") throw invalidFeed();
 
   const releasePath = signedUrl.pathname.match(
-    /^\/manaflow-ai\/cmux-v2\/releases\/download\/([^/]+)\/([^/]+)$/u,
+    /^\/manaflow-ai\/hmux-v2\/releases\/download\/([^/]+)\/([^/]+)$/u,
   );
   if (!releasePath || releasePath[2] !== expectedArchive) throw invalidFeed();
   const releaseTag = releasePath[1];
@@ -320,8 +320,8 @@ async function requirePublishedAsset(
   }
   if (location.kind === "r2" && response.status === 200) {
     if (
-      response.headers.get("x-cmux-sha256") !== location.sha256 ||
-      response.headers.get("x-cmux-size") !== location.size
+      response.headers.get("x-hmux-sha256") !== location.sha256 ||
+      response.headers.get("x-hmux-size") !== location.size
     ) {
       throw new BrowserNightlyDownloadError("unavailable");
     }

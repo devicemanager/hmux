@@ -1,8 +1,8 @@
-import CmuxChief
-import CmuxSettings
+import HmuxChief
+import HmuxSettings
 import Foundation
 
-/// Which agent CLI answers as Chief, with which model and effort: the cmux
+/// Which agent CLI answers as Chief, with which model and effort: the hmux
 /// settings `chief.harness`, `chief.model`, `chief.effort` and
 /// `chief.dangerouslySkipPermissions`.
 ///
@@ -19,7 +19,7 @@ struct ChiefEngineSettings: Equatable, Sendable {
     var dangerouslySkipPermissions: Bool
 
     /// The harness that runs: an empty or unknown value is Claude Code.
-    var resolvedHarness: CmuxChief.ChiefHarness { CmuxChief.ChiefHarness(rawValue: harness.lowercased()) ?? .claude }
+    var resolvedHarness: HmuxChief.ChiefHarness { HmuxChief.ChiefHarness(rawValue: harness.lowercased()) ?? .claude }
 
     /// The model that runs.
     var resolvedModel: String { model.isEmpty ? resolvedHarness.defaultModel : model }
@@ -28,7 +28,7 @@ struct ChiefEngineSettings: Equatable, Sendable {
     var normalized: ChiefEngineSettings {
         var copy = self
         copy.harness = copy.harness.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if CmuxChief.ChiefHarness(rawValue: copy.harness) == nil { copy.harness = "" }
+        if HmuxChief.ChiefHarness(rawValue: copy.harness) == nil { copy.harness = "" }
         copy.model = copy.model.trimmingCharacters(in: .whitespacesAndNewlines)
         copy.effort = copy.effort.trimmingCharacters(in: .whitespacesAndNewlines)
         // The catalog is the only safe source for explicit effort flags. A
@@ -44,8 +44,8 @@ struct ChiefEngineSettings: Equatable, Sendable {
 }
 
 /// Reads and writes the Chief engine settings: the `chief.*` keys of
-/// `CmuxSettings`' ``ChiefCatalogSection``, mirrored to `UserDefaults` like
-/// every `DefaultsKey`, so cmux.json, Settings and the Chief settings panel
+/// `HmuxSettings`' ``ChiefCatalogSection``, mirrored to `UserDefaults` like
+/// every `DefaultsKey`, so hmux.json, Settings and the Chief settings panel
 /// reach the same values. Changes are observed through
 /// `UserDefaults.didChangeNotification` (no polling).
 struct ChiefSettingsAccess {

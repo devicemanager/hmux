@@ -21,7 +21,7 @@ export function enforceGoRuntimeLimits() {
     const rows = yield* Effect.tryPromise({
       try: () => cloudDb().select().from(cloudVms).where(and(
         inArray(cloudVms.billingPlanId, planBudgetsEnforced() ? ["go", "pro", "max"] : ["go"]),
-        or(eq(cloudVms.status, "running"), sql`${cloudVms.providerMetadata}->'cmuxGoPauseIntent' is not null and ${cloudVms.providerMetadata}->'cmuxGoPauseIntent' <> 'null'::jsonb`),
+        or(eq(cloudVms.status, "running"), sql`${cloudVms.providerMetadata}->'hmuxGoPauseIntent' is not null and ${cloudVms.providerMetadata}->'hmuxGoPauseIntent' <> 'null'::jsonb`),
       )).orderBy(asc(cloudVms.updatedAt)),
       catch: (cause) => new VmDatabaseError({ operation: "go_runtime_candidates", cause }),
     });

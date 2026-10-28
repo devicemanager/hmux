@@ -70,18 +70,18 @@ async function readStats(
   const mutableEnvironment: Record<string, string | undefined> = process.env;
   const envKeys = [
     "NODE_ENV", "VERCEL_ENV",
-    "CMUX_DEV_RESOURCE_STATS_DIRECT",
-    "CMUX_DEV_BACKEND_TRANSPORT",
-    "CMUX_DEV_BACKEND_TAILSCALE_HOST",
-    "CMUX_WWW_ORIGIN",
+    "HMUX_DEV_RESOURCE_STATS_DIRECT",
+    "HMUX_DEV_BACKEND_TRANSPORT",
+    "HMUX_DEV_BACKEND_TAILSCALE_HOST",
+    "HMUX_WWW_ORIGIN",
   ] as const;
   const previousEnvironment = Object.fromEntries(envKeys.map((key) => [key, mutableEnvironment[key]]));
   for (const key of envKeys) delete mutableEnvironment[key];
   if (options.directBackend) {
     mutableEnvironment.NODE_ENV = "development";
-    mutableEnvironment.CMUX_DEV_BACKEND_TRANSPORT = "direct";
-    mutableEnvironment.CMUX_DEV_BACKEND_TAILSCALE_HOST = "cmux-dev-backend-1.tail137216.ts.net";
-    mutableEnvironment.CMUX_WWW_ORIGIN = "https://cmux-dev-backend-1.tail137216.ts.net:4635/";
+    mutableEnvironment.HMUX_DEV_BACKEND_TRANSPORT = "direct";
+    mutableEnvironment.HMUX_DEV_BACKEND_TAILSCALE_HOST = "hmux-dev-backend-1.tail137216.ts.net";
+    mutableEnvironment.HMUX_WWW_ORIGIN = "https://hmux-dev-backend-1.tail137216.ts.net:4635/";
   }
   for (const [key, value] of Object.entries(options.environment ?? {})) {
     if (value === undefined) delete mutableEnvironment[key];
@@ -130,9 +130,9 @@ describe("Freestyle live machine stats", () => {
   test.each([
     { label: "production", env: { NODE_ENV: "production" } },
     { label: "hosted preview", env: { VERCEL_ENV: "preview" } },
-    { label: "explicit off", env: { CMUX_DEV_RESOURCE_STATS_DIRECT: "0" } },
-    { label: "mismatched host", env: { CMUX_DEV_BACKEND_TAILSCALE_HOST: "another.ts.net" } },
-    { label: "untrusted transport", env: { CMUX_DEV_BACKEND_TRANSPORT: "ssh" } },
+    { label: "explicit off", env: { HMUX_DEV_RESOURCE_STATS_DIRECT: "0" } },
+    { label: "mismatched host", env: { HMUX_DEV_BACKEND_TAILSCALE_HOST: "another.ts.net" } },
+    { label: "untrusted transport", env: { HMUX_DEV_BACKEND_TRANSPORT: "ssh" } },
   ])("$label keeps stats on the reporter path", async ({ env }) => {
     const { result, resourceCalls } = await readStats("running", undefined, { directBackend: true, environment: env });
     expect(resourceCalls).toEqual([]);
@@ -142,7 +142,7 @@ describe("Freestyle live machine stats", () => {
   });
 
   test("the explicit operator override still enables direct sampling", async () => {
-    const { result } = await readStats("running", undefined, { environment: { CMUX_DEV_RESOURCE_STATS_DIRECT: "1" } });
+    const { result } = await readStats("running", undefined, { environment: { HMUX_DEV_RESOURCE_STATS_DIRECT: "1" } });
     expect(result.cpuPercent).toBe(gauges.cpuPercent);
   });
 

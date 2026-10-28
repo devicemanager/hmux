@@ -76,7 +76,7 @@ def main(argv: list[str], env: dict[str, str]) -> int:
     request = urllib.request.Request(url, headers={
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {env['GH_TOKEN']}",
-        "User-Agent": "cmux-ci-compile-admission",
+        "User-Agent": "hmux-ci-compile-admission",
         "X-GitHub-Api-Version": "2022-11-28",
     })
     try:

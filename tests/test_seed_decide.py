@@ -150,7 +150,7 @@ class Decide(unittest.TestCase):
         self.assertEqual(json.loads(values["far"]), [])
 
     def test_a_root_lane_is_its_own_matrix_entry_and_job(self):
-        # An owned Mac's second compile slot builds in /private/tmp/cmux-ci-2,
+        # An owned Mac's second compile slot builds in /private/tmp/hmux-ci-2,
         # part of the seed key, so the trusted pool seeds there as its own job.
         import json
         import tempfile

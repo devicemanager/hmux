@@ -2,7 +2,7 @@
 ### server cloud_vm_request: per operation, success only (14d)
 op | n | p50_ms | p90_ms | p95_ms | max_ms
 open_attach | 81299 | 1122.0 | 3389.0 | 14921.0 | 65911.0
-approve_cmux_remote_enrollment | 12705 | 159.0 | 488.0 | 553.0 | 3824.0
+approve_hmux_remote_enrollment | 12705 | 159.0 | 488.0 | 553.0 | 3824.0
 exec | 8838 | 75.0 | 981.0 | 1214.0 | 182291.0
 enroll_tunnel | 696 | 174.0 | 428.0 | 500.0 | 6307.0
 create | 221 | 935.0 | 1661.0 | 2025.0 | 5600.0
@@ -24,10 +24,10 @@ snapshot.list | 1 | 207.0 | 207.0 | 207.0 | 207.0
 op | status | n | p50_ms | max_ms
 stats | 501.0 | 102364 | 325.0 | 31635.0
 list | 503.0 | 14108 | 213.0 | 15808.0
-approve_cmux_remote_enrollment | 502.0 | 9335 | 33943.0 | 137902.0
+approve_hmux_remote_enrollment | 502.0 | 9335 | 33943.0 | 137902.0
 open_attach | 502.0 | 5744 | 4501.0 | 330958.0
 enroll_tunnel | 503.0 | 3347 | 30.0 | 1422.0
-approve_cmux_remote_enrollment | 404.0 | 257 | 10.0 | 1031.0
+approve_hmux_remote_enrollment | 404.0 | 257 | 10.0 | 1031.0
 list | 401.0 | 132 | 2.0 | 1207.0
 exec | 502.0 | 78 | 303121.0 | 662607.0
 stats | 404.0 | 41 | 721.0 | 17322.0
@@ -49,7 +49,7 @@ enroll_tunnel | 401.0 | 4 | 1.0 | 2.0
 enroll_tunnel | 403.0 | 4 | 3431.0 | 7564.0
 create | 401.0 | 4 | 1.0 | 2.0
 restore | 409.0 | 4 | 110.0 | 293.0
-approve_cmux_remote_enrollment | 401.0 | 3 | 4.0 | 14.0
+approve_hmux_remote_enrollment | 401.0 | 3 | 4.0 | 14.0
 open_attach | 401.0 | 3 | 10.0 | 11.0
 create | 503.0 | 2 | 178.0 | 352.0
 resize | 501.0 | 2 | 516.0 | 557.0
@@ -93,7 +93,7 @@ day | n | p50_ms | p90_ms | max_ms
 2026-09-17 | 1 | 2033.0 | 2033.0 | 2033.0
 2026-09-18 | 3 | 1631.0 | 1969.0 | 2054.0
 
-### client cmux_cloud_vm_request: key operations by channel (14d)
+### client hmux_cloud_vm_request: key operations by channel (14d)
 op | channel | ok | n | p50_ms | p90_ms | p95_ms | max_ms
 POST /api/vm | nightly | False | 17 | 321.0 | 929.0 | 1372.0 | 2392.0
 POST /api/vm | nightly | True | 98 | 1074.0 | 2970.0 | 3300.0 | 5653.0

@@ -12,7 +12,7 @@ enum CoderouterTeamScope: Equatable, Sendable {
     case isolatedConfiguration
 }
 
-/// Reads the same CodeRouter Cloud account view shown by `cmux cr accounts`.
+/// Reads the same CodeRouter Cloud account view shown by `hmux cr accounts`.
 /// CodeRouter's organization catalog is keyed by the Stack team UUID. Newer
 /// CLI versions accept that ID on the account read, so a sidebar refresh does
 /// not need to mutate the user's active organization.
@@ -25,7 +25,7 @@ enum CoderouterCLIAccountReader {
         let scope: CoderouterTeamScope
     }
 
-    private static let logger = Logger(subsystem: "com.cmuxterm.app", category: "coderouter-accounts")
+    private static let logger = Logger(subsystem: "com.hmuxterm.app", category: "coderouter-accounts")
 
 #if compiler(>=6.2)
     @concurrent
@@ -33,11 +33,11 @@ enum CoderouterCLIAccountReader {
     @Sendable
 #endif
     static func accounts(
-        for cmuxTeamID: String?,
-        name cmuxTeamName: String?,
+        for hmuxTeamID: String?,
+        name hmuxTeamName: String?,
         run: Run? = nil
     ) async throws -> [CloudTreeNode.CoderouterAccount] {
-        let snapshot = try await snapshot(for: cmuxTeamID, name: cmuxTeamName, run: run)
+        let snapshot = try await snapshot(for: hmuxTeamID, name: hmuxTeamName, run: run)
         return snapshot.accounts
     }
 
@@ -50,23 +50,23 @@ enum CoderouterCLIAccountReader {
     @Sendable
 #endif
     static func snapshot(
-        for cmuxTeamID: String?,
-        name cmuxTeamName: String?,
+        for hmuxTeamID: String?,
+        name hmuxTeamName: String?,
         run: Run? = nil
     ) async throws -> Snapshot {
         try Task.checkCancellation()
-        guard let teamID = normalizedID(cmuxTeamID) else {
-            throw accountError("The selected cmux team is not mapped to a coderouter organization.")
+        guard let teamID = normalizedID(hmuxTeamID) else {
+            throw accountError("The selected hmux team is not mapped to a coderouter organization.")
         }
 
         let invoke = run ?? runCLI
         guard let organizationID = try await resolvedOrganizationID(
             for: teamID,
-            name: cmuxTeamName,
+            name: hmuxTeamName,
             run: invoke
         ) else {
-            logger.error("No CodeRouter organization matched cmux team ID \(teamID, privacy: .public), name \(String(describing: cmuxTeamName), privacy: .public)")
-            throw accountError("The selected cmux team is not mapped to a coderouter organization.")
+            logger.error("No CodeRouter organization matched hmux team ID \(teamID, privacy: .public), name \(String(describing: hmuxTeamName), privacy: .public)")
+            throw accountError("The selected hmux team is not mapped to a coderouter organization.")
         }
 
         // Prefer the team-scoped read. It sends the selected organization in the
@@ -108,14 +108,14 @@ enum CoderouterCLIAccountReader {
     }
 
     private static func resolvedOrganizationID(
-        for cmuxTeamID: String,
-        name cmuxTeamName: String?,
+        for hmuxTeamID: String,
+        name hmuxTeamName: String?,
         run: Run
     ) async throws -> String? {
-        if UUID(uuidString: cmuxTeamID) != nil {
-            return cmuxTeamID
+        if UUID(uuidString: hmuxTeamID) != nil {
+            return hmuxTeamID
         }
-        return try await matchingOrganizationID(for: cmuxTeamID, name: cmuxTeamName, run: run)
+        return try await matchingOrganizationID(for: hmuxTeamID, name: hmuxTeamName, run: run)
     }
 
     /// Removes one account from the selected team. The CLI already reads the
@@ -127,24 +127,24 @@ enum CoderouterCLIAccountReader {
 #endif
     static func remove(
         accountID: String,
-        for cmuxTeamID: String?,
-        name cmuxTeamName: String?,
+        for hmuxTeamID: String?,
+        name hmuxTeamName: String?,
         run: Run? = nil
     ) async throws {
         try Task.checkCancellation()
         guard UUID(uuidString: accountID) != nil else {
             throw accountError("That coderouter account ID is not valid.")
         }
-        guard let teamID = normalizedID(cmuxTeamID) else {
-            throw accountError("The selected cmux team is not mapped to a coderouter organization.")
+        guard let teamID = normalizedID(hmuxTeamID) else {
+            throw accountError("The selected hmux team is not mapped to a coderouter organization.")
         }
         let invoke = run ?? runCLI
         guard let organizationID = try await resolvedOrganizationID(
             for: teamID,
-            name: cmuxTeamName,
+            name: hmuxTeamName,
             run: invoke
         ) else {
-            throw accountError("The selected cmux team is not mapped to a coderouter organization.")
+            throw accountError("The selected hmux team is not mapped to a coderouter organization.")
         }
         do {
             _ = try await invoke(["remove", accountID, "--yes", "--team", organizationID])
@@ -223,7 +223,7 @@ enum CoderouterCLIAccountReader {
         let home = environment["HOME"].flatMap { $0.isEmpty ? nil : $0 } ?? NSHomeDirectory()
         let sourceRoot = environment["CODEROUTER_DATA_DIR"].flatMap { $0.isEmpty ? nil : $0 }
             ?? URL(fileURLWithPath: home).appendingPathComponent("Library/Application Support").path
-        let directory = fileManager.temporaryDirectory.appendingPathComponent("cmux-coderouter-\(UUID().uuidString)")
+        let directory = fileManager.temporaryDirectory.appendingPathComponent("hmux-coderouter-\(UUID().uuidString)")
         let configDirectory = directory.appendingPathComponent("coderouter")
         try fileManager.createDirectory(at: directory, withIntermediateDirectories: false, attributes: [.posixPermissions: 0o700])
         defer { try? fileManager.removeItem(at: directory) }
@@ -251,28 +251,28 @@ enum CoderouterCLIAccountReader {
     /// any catalog line wins, wherever it appears; only then is the team name
     /// compared, and a name shared by more than one organization is an error
     /// rather than an arbitrary pick. A missing name never blocks an ID match.
-    private static func matchingOrganizationID(for cmuxTeamID: String, name cmuxTeamName: String?, run: Run) async throws -> String? {
+    private static func matchingOrganizationID(for hmuxTeamID: String, name hmuxTeamName: String?, run: Run) async throws -> String? {
         let output = try await run(["org", "list"])
         return try organizationID(
-            matching: cmuxTeamID,
-            name: cmuxTeamName,
+            matching: hmuxTeamID,
+            name: hmuxTeamName,
             inCatalog: String(decoding: output, as: UTF8.self)
         )
     }
 
     /// The pure part of ``matchingOrganizationID(for:name:run:)``: `org list`
     /// prints one organization per line, its ID in the last column.
-    static func organizationID(matching cmuxTeamID: String, name cmuxTeamName: String?, inCatalog catalog: String) throws -> String? {
+    static func organizationID(matching hmuxTeamID: String, name hmuxTeamName: String?, inCatalog catalog: String) throws -> String? {
         let organizations = catalog.split(whereSeparator: \.isNewline).compactMap { rawLine -> (id: String, name: String)? in
             let tokens = rawLine.split(whereSeparator: { $0 == " " || $0 == "\t" })
             guard let candidateID = tokens.last,
-                  UUID(uuidString: String(candidateID)) != nil || String(candidateID) == cmuxTeamID else { return nil }
+                  UUID(uuidString: String(candidateID)) != nil || String(candidateID) == hmuxTeamID else { return nil }
             let candidateName = tokens.dropLast().joined(separator: " ").trimmingCharacters(in: CharacterSet(charactersIn: "*"))
             return (String(candidateID), normalized(candidateName))
         }
-        if let exact = organizations.first(where: { $0.id == cmuxTeamID }) { return exact.id }
-        guard let cmuxTeamName = normalizedID(cmuxTeamName) else { return nil }
-        let wanted = normalized(cmuxTeamName)
+        if let exact = organizations.first(where: { $0.id == hmuxTeamID }) { return exact.id }
+        guard let hmuxTeamName = normalizedID(hmuxTeamName) else { return nil }
+        let wanted = normalized(hmuxTeamName)
         let matches = organizations.filter { $0.name == wanted }
         guard matches.count <= 1 else {
             throw accountError("More than one CodeRouter organization matches the selected team.")
@@ -300,7 +300,7 @@ enum CoderouterCLIAccountReader {
         NSError(domain: "CoderouterCLI", code: 2, userInfo: [NSLocalizedDescriptionKey: message])
     }
 
-    /// The CodeRouter CLI `cmux cr` runs, in its order (`resolveCoderouterExecutable`):
+    /// The CodeRouter CLI `hmux cr` runs, in its order (`resolveCoderouterExecutable`):
     /// the app-bundled core, then PATH (`coderouter`, then `cr`), then the
     /// installer's bin directory. Two versions sharing one config file can make
     /// it unreadable to each other, so the sidebar never runs a different one.
@@ -331,11 +331,11 @@ enum CoderouterCLIAccountReader {
 
     @Sendable private static func runCLI(_ arguments: [String], environment: [String: String]) async throws -> Data {
         guard let executable = resolvedExecutable(environment: environment) else {
-            throw accountError("coderouter is not installed. Run cmux cr in a terminal to install it.")
+            throw accountError("coderouter is not installed. Run hmux cr in a terminal to install it.")
         }
-        // Same isolation as `cmux cr`: CodeRouter never sees cmux's CMUX_* context.
+        // Same isolation as `hmux cr`: CodeRouter never sees hmux's HMUX_* context.
         let environment = environment.filter { key, _ in
-            !key.hasPrefix("CMUX_") && !key.hasPrefix("CMUXD_")
+            !key.hasPrefix("HMUX_") && !key.hasPrefix("HMUXD_")
         }
         let result = try await runProcess(
             executable: executable,

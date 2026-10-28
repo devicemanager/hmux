@@ -16,7 +16,7 @@ Two sources, cheapest first:
          ci.yml runs, read each failed or re-run run's jobs, and download the
          failed web shards' logs. One call per run inspected; --max-runs caps it.
 
-Downloads are cached under $XDG_CACHE_HOME/cmux-ci/web-test-census-v2 (reports
+Downloads are cached under $XDG_CACHE_HOME/hmux-ci/web-test-census-v2 (reports
 and logs by ID, forever; job lists only once their run completed), so a second
 census over the same window costs only the listings. The script reads the core
 REST rate limit first (that read is free) and refuses to start when the
@@ -195,7 +195,7 @@ def token() -> str:
 def cache_dir() -> Path:
     base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache")
     # v2: cached runs carry their repository IDs (a fork's main is not main).
-    return base / "cmux-ci" / "web-test-census-v2"
+    return base / "hmux-ci" / "web-test-census-v2"
 
 
 class Source:

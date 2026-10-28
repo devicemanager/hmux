@@ -33,16 +33,16 @@ class RecoveryManifestTests(unittest.TestCase):
             "schema": 1, "source_run_id": "123", "source_run_attempt": "1",
             "head_sha": "a" * 40, "short_sha": "a" * 7, "should_publish": True,
             "channel": "nightly", "variant": "arm64", "release_tag": "nightly",
-            "dmg_prefix": "cmux-nightly-macos", "build": "123",
-            "dmg_path": "cmux-nightly-macos-arm64.dmg",
-            "immutable_path": "cmux-nightly-macos-arm64-123.dmg",
-            "app_path": "cmux-nightly-notarization-recovery-app/cmux NIGHTLY.app",
-            "app_archive_path": "cmux-nightly-notarization-recovery-app.tar.gz",
-            "state_path": "cmux-nightly-macos-arm64.dmg.notarization.state",
-            "log_path": "cmux-nightly-macos-arm64.dmg.notarization.log",
+            "dmg_prefix": "hmux-nightly-macos", "build": "123",
+            "dmg_path": "hmux-nightly-macos-arm64.dmg",
+            "immutable_path": "hmux-nightly-macos-arm64-123.dmg",
+            "app_path": "hmux-nightly-notarization-recovery-app/hmux NIGHTLY.app",
+            "app_archive_path": "hmux-nightly-notarization-recovery-app.tar.gz",
+            "state_path": "hmux-nightly-macos-arm64.dmg.notarization.state",
+            "log_path": "hmux-nightly-macos-arm64.dmg.notarization.log",
             "dmg_sha256": "b" * 64, "submission_id": "fixture-id",
         }
-        path = root / "cmux-nightly-notarization-recovery.json"
+        path = root / "hmux-nightly-notarization-recovery.json"
         path.write_text(json.dumps(manifest), encoding="utf-8")
         state = root / manifest["state_path"]
         state.write_text("submission_id=fixture-id\ndmg_sha256=" + "b" * 64 + "\nsubmit_exit=0\n")
@@ -85,7 +85,7 @@ class RecoveryManifestTests(unittest.TestCase):
         for key, value in (
             ("source_run_id", "456"), ("source_run_attempt", "2"), ("head_sha", "c" * 40),
             ("channel", "rc"), ("variant", "universal"), ("should_publish", False),
-            ("state_path", "../cmux-nightly-macos-arm64.dmg.notarization.state"),
+            ("state_path", "../hmux-nightly-macos-arm64.dmg.notarization.state"),
         ):
             with self.subTest(key=key), tempfile.TemporaryDirectory() as directory:
                 manifest, path, _ = self.metadata_fixture(Path(directory))
@@ -111,27 +111,27 @@ class RecoveryManifestTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             hashes = "arm64=" + "a" * 40
-            state = root / "cmux-computer-use-notarization.state"
+            state = root / "hmux-computer-use-notarization.state"
             state.write_text(
                 f"submission_id=helper-id\ncdhashes={hashes}\nstatus=In Progress\nwait_exit=124\npending=true\n",
                 encoding="utf-8",
             )
-            (root / "cmux-computer-use-notarization.state.log").write_text("timeout\n", encoding="utf-8")
+            (root / "hmux-computer-use-notarization.state.log").write_text("timeout\n", encoding="utf-8")
             manifest = {
                 "schema": 2, "recovery_kind": "computer-use-helper",
                 "source_run_id": "123", "source_run_attempt": "1",
                 "head_sha": "a" * 40, "short_sha": "a" * 7, "should_publish": True,
                 "channel": "nightly", "variant": "arm64", "release_tag": "nightly",
-                "dmg_prefix": "cmux-nightly-macos", "build": "123",
-                "dmg_path": "cmux-nightly-macos-arm64.dmg",
-                "immutable_path": "cmux-nightly-macos-arm64-123.dmg",
-                "app_path": "cmux-nightly-notarization-recovery-app/cmux NIGHTLY.app",
-                "app_archive_path": "cmux-nightly-notarization-recovery-app.tar.gz",
+                "dmg_prefix": "hmux-nightly-macos", "build": "123",
+                "dmg_path": "hmux-nightly-macos-arm64.dmg",
+                "immutable_path": "hmux-nightly-macos-arm64-123.dmg",
+                "app_path": "hmux-nightly-notarization-recovery-app/hmux NIGHTLY.app",
+                "app_archive_path": "hmux-nightly-notarization-recovery-app.tar.gz",
                 "helper_state_path": state.name,
-                "helper_log_path": "cmux-computer-use-notarization.state.log",
+                "helper_log_path": "hmux-computer-use-notarization.state.log",
                 "submission_id": "helper-id", "helper_cdhashes": hashes,
             }
-            path = root / "cmux-nightly-notarization-recovery.json"
+            path = root / "hmux-nightly-notarization-recovery.json"
             path.write_text(json.dumps(manifest), encoding="utf-8")
             resolved = self.resolve_metadata(path)
             self.assertEqual(resolved.returncode, 0, resolved.stderr)
@@ -149,24 +149,24 @@ class RecoveryManifestTests(unittest.TestCase):
                 root = Path(directory)
                 source = root / "source"
                 source.mkdir()
-                dmg = source / "cmux-nightly-macos-arm64.dmg"
+                dmg = source / "hmux-nightly-macos-arm64.dmg"
                 dmg.write_bytes(b"signed-dmg-fixture")
                 digest = hashlib.sha256(dmg.read_bytes()).hexdigest()
                 state = source / (dmg.name + ".notarization.state")
                 evidence = source / (dmg.name + ".notarization.log")
                 evidence.write_text("submission is still processing\n")
-                app = source / "build" / "cmux NIGHTLY.app"
+                app = source / "build" / "hmux NIGHTLY.app"
                 (app / "Contents").mkdir(parents=True)
-                app_archive = source / "cmux-nightly-notarization-recovery-app.tar.gz"
+                app_archive = source / "hmux-nightly-notarization-recovery-app.tar.gz"
                 with tarfile.open(app_archive, "w:gz") as archive:
                     archive.add(app, arcname=app.name)
                 state.write_text(
                     f"submission_id=fixture-id\n"
                     f"dmg_path={dmg}\n"
                     f"dmg_sha256={digest}\n"
-                    "immutable_path=cmux-nightly-macos-arm64-123.dmg\n"
+                    "immutable_path=hmux-nightly-macos-arm64-123.dmg\n"
                     "release_tag=nightly\n"
-                    "dmg_prefix=cmux-nightly-macos\n"
+                    "dmg_prefix=hmux-nightly-macos\n"
                     "variant=arm64\n"
                     "channel=nightly\n"
                 )
@@ -181,16 +181,16 @@ class RecoveryManifestTests(unittest.TestCase):
                      "a" * 40, "a" * 7],
                     cwd=source, check=True, capture_output=True, text=True,
                 )
-                manifest = json.loads((source / "cmux-nightly-notarization-recovery.json").read_text())
+                manifest = json.loads((source / "hmux-nightly-notarization-recovery.json").read_text())
                 downloaded = root / "downloaded"
                 downloaded.mkdir()
                 for path in (state, dmg, evidence):
                     shutil.copy2(path, downloaded / path.name)
                 shutil.copy2(app_archive, downloaded / app_archive.name)
-                shutil.copytree(app, downloaded / "cmux-nightly-notarization-recovery-app" / app.name)
+                shutil.copytree(app, downloaded / "hmux-nightly-notarization-recovery-app" / app.name)
                 manifest["source_run_id"] = "123"
                 manifest["source_run_attempt"] = "1"
-                (downloaded / "cmux-nightly-notarization-recovery.json").write_text(
+                (downloaded / "hmux-nightly-notarization-recovery.json").write_text(
                     json.dumps(manifest), encoding="utf-8"
                 )
                 for key in ("state_path", "dmg_path", "app_path", "log_path", "app_archive_path"):
@@ -202,35 +202,35 @@ class RecoveryManifestTests(unittest.TestCase):
                 self.assertEqual(manifest["submission_id"], "fixture-id")
                 resolver = ROOT / "scripts/ci/resolve-notarization-recovery.py"
                 resolved = subprocess.run(
-                    [sys.executable, str(resolver), str(downloaded / "cmux-nightly-notarization-recovery.json"),
+                    [sys.executable, str(resolver), str(downloaded / "hmux-nightly-notarization-recovery.json"),
                      "123", "a" * 40, "nightly", "arm64"],
                     check=True, capture_output=True, text=True,
                 ).stdout
                 self.assertIn(f"DMG_RELEASE={(downloaded / dmg.name).resolve()}", resolved)
-                self.assertIn("IMMUTABLE_NAME=cmux-nightly-macos-arm64-123.dmg", resolved)
+                self.assertIn("IMMUTABLE_NAME=hmux-nightly-macos-arm64-123.dmg", resolved)
 
                 strict = subprocess.run(
-                    [sys.executable, str(resolver), str(downloaded / "cmux-nightly-notarization-recovery.json"),
+                    [sys.executable, str(resolver), str(downloaded / "hmux-nightly-notarization-recovery.json"),
                      "123", "a" * 40, "nightly", "arm64", "--source-run-attempt", "1", "--published"],
                     check=True, capture_output=True, text=True,
                 ).stdout
-                self.assertIn("IMMUTABLE_NAME=cmux-nightly-macos-arm64-123.dmg", strict)
+                self.assertIn("IMMUTABLE_NAME=hmux-nightly-macos-arm64-123.dmg", strict)
                 missing_attempt = subprocess.run(
-                    [sys.executable, str(resolver), str(downloaded / "cmux-nightly-notarization-recovery.json"),
+                    [sys.executable, str(resolver), str(downloaded / "hmux-nightly-notarization-recovery.json"),
                      "123", "a" * 40, "nightly", "arm64", "--strict"],
                     check=False, capture_output=True, text=True,
                 )
                 self.assertNotEqual(missing_attempt.returncode, 0)
                 self.assertIn("requires source run attempt", missing_attempt.stderr)
 
-                shutil.rmtree(downloaded / "cmux-nightly-notarization-recovery-app")
+                shutil.rmtree(downloaded / "hmux-nightly-notarization-recovery-app")
                 extracted = subprocess.run(
-                    [sys.executable, str(resolver), str(downloaded / "cmux-nightly-notarization-recovery.json"),
+                    [sys.executable, str(resolver), str(downloaded / "hmux-nightly-notarization-recovery.json"),
                      "123", "a" * 40, "nightly", "arm64", "--source-run-attempt", "1", "--extract-app"],
                     check=True, capture_output=True, text=True,
                 ).stdout
                 self.assertIn("APP_PATH=", extracted)
-                self.assertTrue((downloaded / "cmux-nightly-notarization-recovery-app" / app.name / "Contents").is_dir())
+                self.assertTrue((downloaded / "hmux-nightly-notarization-recovery-app" / app.name / "Contents").is_dir())
 
                 unpublished = dict(manifest)
                 unpublished["should_publish"] = False

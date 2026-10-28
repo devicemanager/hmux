@@ -105,7 +105,7 @@
     "reviewed_head": null,
     "status": "unsupported"
   },
-  "schema_version": "cmux-verification/v1",
+  "schema_version": "hmux-verification/v1",
   "source": {
     "after": null,
     "base_sha": "b334a7deeb0ff65bc9ee4d1c6a2bf7d454795110",

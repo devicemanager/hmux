@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""The fast gate gh-merge-green applies to pull requests into feat-cmux-next.
+"""The fast gate gh-merge-green applies to pull requests into feat-hmux-next.
 
     merge_fast_gate.py OWNER/REPO NUMBER SHA [--base BRANCH] [--next-covered]
         [--next-workflow FILE --ci-workflow FILE --web-workflow FILE]
         [--timeout SECONDS] [--interval SECONDS]
 
 It waits only for the PR's fast lanes on the exact head, not the full suites:
-path routing, the cmux-next fast tier, and the compile of each touched area that
+path routing, the hmux-next fast tier, and the compile of each touched area that
 routing started (the Swift canary, the app scheme Debug compile, the web
 react-apps-check). The full suites run after the merge, and the culprit bot and
 the base sheriff revert or fix forward. A check that already finished red in a
@@ -46,17 +46,17 @@ import time
 from pathlib import Path
 from typing import Callable
 
-ROUTING = "cmux-next path routing"
-FAST_TIER = "cmux-next fast tier"
-DEBUG_COMPILE = "cmux app scheme compile (Debug)"
+ROUTING = "hmux-next path routing"
+FAST_TIER = "hmux-next fast tier"
+DEBUG_COMPILE = "hmux app scheme compile (Debug)"
 REACT = "react-apps-check"
-# cmux-next.yml jobs the gate waits for by name.
-NEXT_LANES = (ROUTING, FAST_TIER, "cmux-next Swift canary", DEBUG_COMPILE)
-FAST = re.compile(r"^(cmux-next fast tier( \(cargo\))?|cmux-next Swift canary|cmux app scheme compile \(Debug\)|(.* / )?react-apps-check)$")
+# hmux-next.yml jobs the gate waits for by name.
+NEXT_LANES = (ROUTING, FAST_TIER, "hmux-next Swift canary", DEBUG_COMPILE)
+FAST = re.compile(r"^(hmux-next fast tier( \(cargo\))?|hmux-next Swift canary|hmux app scheme compile \(Debug\)|(.* / )?react-apps-check)$")
 GATING = re.compile(r"react-apps-check|web status|app[- ]?size|size[- ]cap|crash", re.I)
-# The full gate's own lanes on feat-cmux-next. The fast gate does not wait for them,
+# The full gate's own lanes on feat-hmux-next. The fast gate does not wait for them,
 # but one that already finished red is judged as the full gate judges it.
-FULL_LANES = {"ci-status", "cmux-next Release compile (Xcode 26)", "cmux-next swift test"}
+FULL_LANES = {"ci-status", "hmux-next Release compile (Xcode 26)", "hmux-next swift test"}
 KNOWN = {*NEXT_LANES, *FULL_LANES}
 LINT = re.compile(r"god[ -]?files?|l10n|locali[sz]ation|concurrency", re.I)
 LINT_JOB = "a god-file, l10n or concurrency lint job"
@@ -67,7 +67,7 @@ LINT_JOB = "a god-file, l10n or concurrency lint job"
 # (docs/ci/risk-tiers.md).
 WAITED_FOR = re.compile(LINT.pattern + r"|^risk evidence$", re.I)
 PASSING = {"SUCCESS", "NEUTRAL", "SKIPPED"}
-# Like the full gate's cancelled cmux-next run: nothing ran, so --override has nothing to waive.
+# Like the full gate's cancelled hmux-next run: nothing ran, so --override has nothing to waive.
 NO_VERDICT = {"CANCELLED", "TIMED_OUT", "STARTUP_FAILURE", "STALE"}
 WEB_FALLBACK_PREFIXES = ("web/", "webviews/", "config/", "Resources/markdown-viewer/", "workers/")
 
@@ -136,7 +136,7 @@ def gh_json(*args: str) -> dict:
 
 def canonical(name: str) -> str:
     """A job whose name is an expression can report under its raw text, as
-    `inputs.dev_daily == true && '...' || 'cmux app scheme compile (Debug)'` did on #21981.
+    `inputs.dev_daily == true && '...' || 'hmux app scheme compile (Debug)'` did on #21981.
     Such a check is the lane it names."""
     if name in KNOWN:
         return name
@@ -171,7 +171,7 @@ def latest(rollup: list[dict]) -> dict[str, tuple[str, str]]:
 
 def evaluate(checks: dict[str, tuple[str, str]], files: list[str], touches_next: bool) -> tuple[list[str], list[str], list[str]]:
     """(fast lanes to wait for, fast lanes seen, completed gating reds). touches_next: the
-    change is inside cmux-next.yml's pull_request paths, so a cmux-next run is coming."""
+    change is inside hmux-next.yml's pull_request paths, so a hmux-next run is coming."""
     waiting, seen, reds = [], [], []
     if touches_next and ROUTING not in checks:
         waiting.append(ROUTING)
@@ -192,7 +192,7 @@ def evaluate(checks: dict[str, tuple[str, str]], files: list[str], touches_next:
         fast = name == ROUTING or bool(FAST.match(name))
         if fast:
             if conclusion == "SKIPPED":
-                # On a PR, cmux-next.yml skips the fast tier only when push-head-preflight
+                # On a PR, hmux-next.yml skips the fast tier only when push-head-preflight
                 # is not current (a runner failure or its timeout): no verdict, not a pass.
                 if name == FAST_TIER and touches_next:
                     raise Refused(f"'{name}' was skipped on the exact head: no verdict to waive, "
@@ -314,8 +314,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--timeout", type=float, default=2400)
     parser.add_argument("--interval", type=float, default=30)
     parser.add_argument("--next-covered", action="store_true",
-                        help="the change is inside cmux-next.yml's pull_request paths")
-    parser.add_argument("--next-workflow", help="cmux-next.yml of the exact head")
+                        help="the change is inside hmux-next.yml's pull_request paths")
+    parser.add_argument("--next-workflow", help="hmux-next.yml of the exact head")
     parser.add_argument("--ci-workflow", help="ci.yml of the exact head")
     parser.add_argument("--web-workflow", help="ci-web.yml of the exact head")
     parser.add_argument("--files-from", help="the full changed-file list, one path per line")
@@ -327,7 +327,7 @@ def main(argv: list[str] | None = None) -> int:
                                         read_text(args.web_workflow))
             if missing:
                 raise Refused(f"the fast gate keys on {', '.join(missing)}, which no job in the head's "
-                              "cmux-next.yml, ci.yml or ci-web.yml reports as; update merge_fast_gate.py or merge with --full")
+                              "hmux-next.yml, ci.yml or ci-web.yml reports as; update merge_fast_gate.py or merge with --full")
         files = None
         if args.files_from is not None:
             files = [line for line in Path(args.files_from).read_text().splitlines() if line]

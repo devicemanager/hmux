@@ -1323,7 +1323,7 @@ async function sendResponses(
       url = OPENROUTER_UPSTREAM;
       headers.set("authorization", `Bearer ${credential.apiKey}`);
       headers.set("http-referer", "https://cmux.com");
-      headers.set("x-title", "cmux coderouter");
+      headers.set("x-title", "hmux coderouter");
       headers.delete("session_id");
       headers.delete("openai-beta");
       body = await openRouterBody(request);
@@ -1413,7 +1413,7 @@ function modelsRequest(
         headers: {
           authorization: `Bearer ${credential.apiKey}`,
           "http-referer": "https://cmux.com",
-          "x-title": "cmux coderouter",
+          "x-title": "hmux coderouter",
           "user-agent": userAgent,
         },
       };

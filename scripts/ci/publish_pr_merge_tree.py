@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
-"""Starts the cmux-tui tree publish for a feat-cmux-next pull request's merge tree.
+"""Starts the hmux-tui tree publish for a feat-hmux-next pull request's merge tree.
 
-cmux-next's same-tree checks (scripts/cmux-next/pin-cmux-tui.sh probe, on
-feat-cmux-next) test the cmux-tui built from a pull request's merge commit. A
-pull request that changes a cmux-tui tree input has a merge tree no push has
+hmux-next's same-tree checks (scripts/hmux-next/pin-hmux-tui.sh probe, on
+feat-hmux-next) test the hmux-tui built from a pull request's merge commit. A
+pull request that changes a hmux-tui tree input has a merge tree no push has
 published, and its pull_request run cannot start one: its token can neither
-create the cmux-tui-pin-<sha12> branch nor dispatch the artifacts workflow
-(the 403 behind the "same-tree cmux-tui unavailable" reds). No GITHUB_TOKEN
-can create a ref at a feat-cmux-next commit: GitHub asks for the workflows
+create the hmux-tui-pin-<sha12> branch nor dispatch the artifacts workflow
+(the 403 behind the "same-tree hmux-tui unavailable" reds). No GITHUB_TOKEN
+can create a ref at a feat-hmux-next commit: GitHub asks for the workflows
 permission (#19166). GitHub reads pull_request_target workflows only from the
-default branch, so this runs from main (cmux-next-pr-merge-tree.yml), for
+default branch, so this runs from main (hmux-next-pr-merge-tree.yml), for
 same-repository pull requests only, and pins with the FFI release App's token
 (contents and workflows write), minted in that job's own environment.
 
 It executes none of the pull request's code: it reads the merge commit from
 the API and, unless an artifacts run for that commit already ran or runs,
-points refs/heads/cmux-tui-pin-<sha12> at it. The App's ref is a push, which
-starts cmux-tui-artifacts.yml there (push: "**"): the run the pull request's
+points refs/heads/hmux-tui-pin-<sha12> at it. The App's ref is a push, which
+starts hmux-tui-artifacts.yml there (push: "**"): the run the pull request's
 author, who can push to this repository, could already start by hand
-(pin-cmux-tui.sh --help). A pin that already existed gets a workflow_dispatch
+(pin-hmux-tui.sh --help). A pin that already existed gets a workflow_dispatch
 with GITHUB_TOKEN instead (the App has no actions permission). The probe then
 finds the run active and defers to its publish.
 
@@ -26,19 +26,19 @@ Then it cancels the artifacts runs still queued or running for this pull
 request's older merge commits (cancel_superseded_pins): each push pins a new
 merge commit on a new ref, so the artifacts workflow cannot group them, and 21
 of 29 pin runs on 2026-10-20/21 were cancelled by hand. It cancels only a
-cmux-tui-pin-<sha12> push run whose commit is GitHub's merge commit ("Merge
+hmux-tui-pin-<sha12> push run whose commit is GitHub's merge commit ("Merge
 <head> into <base>", parents [base, head]) of an older head that GitHub lists
 under this pull request and no other (a stacked pull request may share it),
-and whose cmux-tui tree or ghostty-next gitlink differs from the new merge
+and whose hmux-tui tree or ghostty-next gitlink differs from the new merge
 commit's (so its tree key differs: a same-key run may own the publication the
 new pin waits for), and none of whose publish jobs has started and whose tree
 preflight is not running (PUBLISH_JOBS). Anything it cannot tell, and every API
 failure, keeps the run; the cancel never changes the exit status.
 
 Usage: publish_pr_merge_tree.py PR_NUMBER HEAD_SHA
-Environment: GH_TOKEN (actions: write), CMUX_PR_TREE_PIN_TOKEN (the App's
+Environment: GH_TOKEN (actions: write), HMUX_PR_TREE_PIN_TOKEN (the App's
 contents and workflows write token), GITHUB_REPOSITORY, GITHUB_API_URL (optional),
-CMUX_PR_TREE_MERGE_WAIT_SECONDS (default 90), CMUX_PR_TREE_POLL_SECONDS (default 5).
+HMUX_PR_TREE_MERGE_WAIT_SECONDS (default 90), HMUX_PR_TREE_POLL_SECONDS (default 5).
 Exit 0 when the publish is started, already under way, or not possible for a
 reason that is not this script's (a conflict, a newer head); 1 on an API error.
 """
@@ -54,26 +54,26 @@ import time
 import urllib.error
 import urllib.request
 
-WORKFLOW = "cmux-tui-artifacts.yml"
-PIN_PREFIX = "cmux-tui-pin-"
+WORKFLOW = "hmux-tui-artifacts.yml"
+PIN_PREFIX = "hmux-tui-pin-"
 # The run states a cancel can still save runner time on; one list call each.
 ACTIVE_STATUSES = ("queued", "in_progress", "waiting", "pending")
 # At most this many older pins are examined (three reads each) per publish.
 MAX_SUPERSEDED_CANDIDATES = 10
 MERGE_SUBJECT = re.compile(r"Merge ([0-9a-f]{40}) into ([0-9a-f]{40})")
-# The tree key's input list (cmux_tui_tree_key.py on feat-cmux-next), read at
+# The tree key's input list (hmux_tui_tree_key.py on feat-hmux-next), read at
 # the new merge commit. Its top-level tree and gitlink inputs are whole root
 # entries, so a root tree that differs in one of them has another key.
-TREE_INPUTS = "scripts/cmux-next/cmux-tui-tree-inputs.txt"
-# Inputs of the v1 key only (cmux_tui_tree_key.py V1_ONLY_INPUTS): the v2 key a
+TREE_INPUTS = "scripts/hmux-next/hmux-tui-tree-inputs.txt"
+# Inputs of the v1 key only (hmux_tui_tree_key.py V1_ONLY_INPUTS): the v2 key a
 # run claims leaves them out, so a difference there does not tell keys apart.
 V1_ONLY_INPUTS = frozenset({("gitlink", "ghostty")})
-# cmux-tui-artifacts.yml never cancels a started run, so no write-once upload stops halfway: a run is
+# hmux-tui-artifacts.yml never cancels a started run, so no write-once upload stops halfway: a run is
 # kept once one of these jobs started (a cancel mid-publish leaves a prefix without its manifest or
 # completion, and the next run of that key or commit fails on it), and while its tree preflight runs
 # (it may hold the tree claim another run deferred to).
 PUBLISH_JOBS = ("publish", "mark the published tree")
-PREFLIGHT_JOB = "cmux-tui tree preflight"
+PREFLIGHT_JOB = "hmux-tui tree preflight"
 
 
 class Api:
@@ -107,8 +107,8 @@ class Api:
 
 def merge_commit(api: Api, pr: str, head: str) -> str | None:
     """The pull request's merge commit once GitHub has computed it, or None (conflict, newer head)."""
-    deadline = time.monotonic() + float(os.environ.get("CMUX_PR_TREE_MERGE_WAIT_SECONDS", "90"))
-    poll = float(os.environ.get("CMUX_PR_TREE_POLL_SECONDS", "5"))
+    deadline = time.monotonic() + float(os.environ.get("HMUX_PR_TREE_MERGE_WAIT_SECONDS", "90"))
+    poll = float(os.environ.get("HMUX_PR_TREE_POLL_SECONDS", "5"))
     while True:
         status, data = api.call("GET", f"pulls/{pr}")
         if status != 200 or not isinstance(data, dict):
@@ -135,10 +135,10 @@ def artifacts_run_exists(api: Api, sha: str) -> bool:
 
 
 def pin(api: Api, sha: str) -> tuple[str, bool]:
-    """Points refs/heads/cmux-tui-pin-<sha12> at the commit: (branch, created).
+    """Points refs/heads/hmux-tui-pin-<sha12> at the commit: (branch, created).
 
     An existing pin must already point there."""
-    branch = f"cmux-tui-pin-{sha[:12]}"
+    branch = f"hmux-tui-pin-{sha[:12]}"
     status, data = api.call("POST", "git/refs", {"ref": f"refs/heads/{branch}", "sha": sha})
     if status == 201:
         return branch, True
@@ -210,7 +210,7 @@ def _superseded_verdict(api: Api, pr: str, head: str, run: dict, new_entries: di
     old_entries = _root_entries(api, tree)
     differing = [name for name in whole if old_entries.get(name) != new_entries.get(name)]
     if not differing:
-        return False, "its cmux-tui tree key may be the new merge's own"
+        return False, "its hmux-tui tree key may be the new merge's own"
     busy = _publishing(api, run["id"])
     if busy:
         return False, busy
@@ -290,11 +290,11 @@ def main(argv: list[str]) -> int:
         print("usage: publish_pr_merge_tree.py PR_NUMBER HEAD_SHA", file=sys.stderr)
         return 2
     pr, head = argv[1], argv[2]
-    pin_token = os.environ.get("CMUX_PR_TREE_PIN_TOKEN", "")
+    pin_token = os.environ.get("HMUX_PR_TREE_PIN_TOKEN", "")
     api = Api(os.environ["GH_TOKEN"])
     try:
         if not pin_token:
-            raise RuntimeError("CMUX_PR_TREE_PIN_TOKEN is empty: the release App token was not minted")
+            raise RuntimeError("HMUX_PR_TREE_PIN_TOKEN is empty: the release App token was not minted")
         sha = merge_commit(api, pr, head)
         if sha is None:
             return 0
@@ -312,7 +312,7 @@ def main(argv: list[str]) -> int:
         cancel_superseded_pins(api, pr, head, sha)
         return 0
     except RuntimeError as error:
-        print(f"::error title=cmux-tui merge tree not published::{error}")
+        print(f"::error title=hmux-tui merge tree not published::{error}")
         return 1
 
 

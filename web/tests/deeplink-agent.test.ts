@@ -121,7 +121,7 @@ describe("agent deeplink schema", () => {
 });
 
 describe("agent deeplink fallback", () => {
-  test("builds the path-form native URL cmux NEXT parses, in the app's own order", () => {
+  test("builds the path-form native URL hmux NEXT parses, in the app's own order", () => {
     expect(
       agentNativeHref({
         harness: "claude",
@@ -132,18 +132,18 @@ describe("agent deeplink fallback", () => {
         machine: "machine_0123456789abcdef0123456789abcdef",
       }),
     ).toBe(
-      "cmux://agent/claude/abc-123?host=big-red&name=Rivetmoss&message=msg-1" +
+      "hmux://agent/claude/abc-123?host=big-red&name=Rivetmoss&message=msg-1" +
         "&machine=machine_0123456789abcdef0123456789abcdef",
     );
   });
 
   test("omits absent hints", () => {
     expect(agentNativeHref({ harness: "codex", session: "s.1_x" })).toBe(
-      "cmux://agent/codex/s.1_x",
+      "hmux://agent/codex/s.1_x",
     );
     expect(
       agentNativeHref({ harness: "codex", session: "s1", name: "Lane" }),
-    ).toBe("cmux://agent/codex/s1?name=Lane");
+    ).toBe("hmux://agent/codex/s1?name=Lane");
   });
 
   test("accepts valid params", () => {
@@ -192,7 +192,7 @@ describe("agent deeplink fallback", () => {
       account: "someone@example.com",
     });
     expect(result.ignored).toEqual(["machine", "host", "message", "cwd", "account"]);
-    expect(result.model?.href).toBe("cmux://agent/claude/s1");
+    expect(result.model?.href).toBe("hmux://agent/claude/s1");
   });
 
   test.each<[string, Record<string, string>]>([
@@ -224,7 +224,7 @@ describe("agent deeplink fallback", () => {
   ])("ignores a bad %s and still opens the session", (param, params) => {
     const result = agentLink(params);
     expect(result.ignored).toContain(param);
-    expect(result.model?.href).toBe("cmux://agent/claude/s");
+    expect(result.model?.href).toBe("hmux://agent/claude/s");
     const value = params[param];
     if (value !== "") expect(JSON.stringify(result.model)).not.toContain(value);
   });
@@ -251,7 +251,7 @@ describe("agent deeplink fallback", () => {
       host: "big-red",
       name: "Rivetmoss",
       message: "msg-1",
-      href: "cmux://agent/claude/abc?host=big-red&name=Rivetmoss&message=msg-1",
+      href: "hmux://agent/claude/abc?host=big-red&name=Rivetmoss&message=msg-1",
     });
     expect(
       Object.keys(agentLinkModel({ harness: "claude", session: "abc" }) ?? {}).sort(),
@@ -264,7 +264,7 @@ describe("agent deeplink fallback", () => {
       const params = { harness: "claude", session: "abc", [extra]: "LEAK" };
       const result = agentLink(params);
       expect(result.ignored).toEqual([extra]);
-      expect(result.model?.href).toBe("cmux://agent/claude/abc");
+      expect(result.model?.href).toBe("hmux://agent/claude/abc");
       expect(JSON.stringify(result)).not.toContain("LEAK");
     },
   );
@@ -280,7 +280,7 @@ describe("agent deeplink fallback", () => {
     // `host` is in the link, so saying it was ignored would contradict the link itself; `name` is
     // not, so the sanitised name still earns its warning.
     expect(result.ignored).toEqual(["name"]);
-    expect(result.model?.href).toBe("cmux://agent/claude/s1?host=big-red");
+    expect(result.model?.href).toBe("hmux://agent/claude/s1?host=big-red");
   });
 
   test("an unknown name is printed inside the charset a name can have", () => {

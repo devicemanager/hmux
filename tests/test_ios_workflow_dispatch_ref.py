@@ -255,10 +255,10 @@ class IOSNativeLintAdmissionTests(unittest.TestCase):
         for lint, should_lint in (("success", "true"), ("skipped", "false")):
             for package, test_filter, expected in (
                 ("", "", (True, True)),
-                ("", "cmuxFeatureTests", (False, True)),
-                ("", "cmuxUITests/Focused", (False, True)),
-                ("CmuxMobileShell", "Focused", (True, False)),
-                ("CmuxMobileShell", "", (True, False)),
+                ("", "hmuxFeatureTests", (False, True)),
+                ("", "hmuxUITests/Focused", (False, True)),
+                ("HmuxMobileShell", "Focused", (True, False)),
+                ("HmuxMobileShell", "", (True, False)),
             ):
                 with self.subTest(lint=lint, package=package, test_filter=test_filter):
                     actual = tuple(self.admitted(job, lint=lint, should_lint=should_lint,

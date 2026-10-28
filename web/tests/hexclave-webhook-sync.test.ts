@@ -54,7 +54,7 @@ function harness(options: { sync?: Partial<HexclaveSyncDependencies>; deps?: Par
   const post = async (type: string, data: unknown, svixId = `msg_${++counter}`) => {
     const body = JSON.stringify({ type, data });
     const signature = createHmac("sha256", KEY).update(`${svixId}.${NOW}.${body}`).digest("base64");
-    const response = await handleStackWebhook(new Request("https://cmux.test/api/webhooks/stack", {
+    const response = await handleStackWebhook(new Request("https://hmux.test/api/webhooks/stack", {
       method: "POST",
       headers: { "content-type": "application/json", "svix-id": svixId, "svix-timestamp": String(NOW), "svix-signature": `v1,${signature}` },
       body,

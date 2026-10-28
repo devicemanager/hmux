@@ -16,14 +16,14 @@ async function* listOf(items: Stripe.Subscription[]) {
 
 describe("backfill subscriptions from Stripe", () => {
   const rows = [
-    subscription("sub_user", { app: "cmux", stackUserId: "user-1" }),
-    subscription("sub_team", { app: "cmux", stackUserId: "user-2", stackTeamId: "team-1" }),
+    subscription("sub_user", { app: "hmux", stackUserId: "user-1" }),
+    subscription("sub_team", { app: "hmux", stackUserId: "user-2", stackTeamId: "team-1" }),
     subscription("sub_other_app", { app: "other" }),
-    subscription("sub_founder", { app: "cmux", founders_edition: "true" }, "canceled"),
+    subscription("sub_founder", { app: "hmux", founders_edition: "true" }, "canceled"),
     subscription("sub_no_metadata", {}),
   ];
 
-  test("dry run counts cmux subscriptions and writes nothing", async () => {
+  test("dry run counts hmux subscriptions and writes nothing", async () => {
     const applied: string[] = [];
     const lines: string[] = [];
     const result = await backfillSubscriptionsFromStripe({
@@ -36,11 +36,11 @@ describe("backfill subscriptions from Stripe", () => {
     });
 
     expect(applied).toEqual([]);
-    expect(result).toMatchObject({ listed: 5, cmux: 3, applied: 0, skipped: 0, failed: 0 });
+    expect(result).toMatchObject({ listed: 5, hmux: 3, applied: 0, skipped: 0, failed: 0 });
     expect(lines.some((line) => line.includes("sub_team") && line.includes("team team-1"))).toBe(true);
   });
 
-  test("apply routes every cmux subscription through the webhook path and reports skips and failures", async () => {
+  test("apply routes every hmux subscription through the webhook path and reports skips and failures", async () => {
     const applied: string[] = [];
     const result = await backfillSubscriptionsFromStripe({
       apply_mode: "apply",
@@ -54,7 +54,7 @@ describe("backfill subscriptions from Stripe", () => {
     });
 
     expect(applied).toEqual(["sub_user", "sub_team", "sub_founder"]);
-    expect(result).toMatchObject({ listed: 5, cmux: 3, applied: 1, skipped: 1, failed: 1 });
+    expect(result).toMatchObject({ listed: 5, hmux: 3, applied: 1, skipped: 1, failed: 1 });
     expect(result.failures).toEqual([{ id: "sub_team", message: "Stack user not found" }]);
   });
 });

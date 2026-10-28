@@ -13,10 +13,10 @@
 #
 # Usage: resume-stapled-app-notarization.sh <state> <signed-app> <release-dmg> <immutable-dmg> <app-entitlements> <outer-state>
 #
-# - The first wait uses CMUX_NOTARY_WAIT_TIMEOUT and CMUX_NOTARY_EVIDENCE_FILE;
-#   the second wait uses CMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT (default 40m).
+# - The first wait uses HMUX_NOTARY_WAIT_TIMEOUT and HMUX_NOTARY_EVIDENCE_FILE;
+#   the second wait uses HMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT (default 40m).
 # - The DMG around the stapled app is built at
-#   <release-dmg dir>/stapled-app/<release-dmg name> (CMUX_STAPLED_APP_DMG)
+#   <release-dmg dir>/stapled-app/<release-dmg name> (HMUX_STAPLED_APP_DMG)
 #   and replaces <release-dmg> only after Apple accepted it and it is stapled.
 #   Until then <release-dmg> stays the accepted, stapled first DMG.
 # - The state of the DMG around the stapled app records the accepted first DMG
@@ -24,7 +24,7 @@
 #   <stapled-app DMG>.first.dmg) and stapled_submitted_at, the epoch of the
 #   second submission. Every hand-off keeps that state as it is.
 # - 6 h fallback: when the second submission is not Accepted (still queued or
-#   refused) CMUX_STAPLED_APP_FALLBACK_SECONDS (21600) after
+#   refused) HMUX_STAPLED_APP_FALLBACK_SECONDS (21600) after
 #   stapled_submitted_at, the accepted first DMG ships instead: its
 #   submission is checked Accepted again, its bytes against the record, and it
 #   is stapled. The app inside it has no ticket of its own, so the script
@@ -33,9 +33,9 @@
 #   unstapled DMG never ships.
 # - APPLE_CERTIFICATE_BASE64 and APPLE_CERTIFICATE_PASSWORD go only to the
 #   package tool, which makes the keychain just before the second signature
-#   (CMUX_PACKAGE_CREATES_KEYCHAIN) and deletes it after that signature.
+#   (HMUX_PACKAGE_CREATES_KEYCHAIN) and deletes it after that signature.
 # - An upload of the second DMG that fails is tried again
-#   (CMUX_STAPLED_APP_SUBMIT_ATTEMPTS, 3). When every try fails, the state
+#   (HMUX_STAPLED_APP_SUBMIT_ATTEMPTS, 3). When every try fails, the state
 #   records submission_id=unsubmitted: it is never accepted, so it reaches the
 #   6 h fallback like a refused submission.
 set -euo pipefail
@@ -51,25 +51,25 @@ APP_ENTITLEMENTS="$5"
 OUTER_STATE="$6"
 OUTER_LOG="${OUTER_STATE}.log"
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-PACKAGE_TOOL="${CMUX_NOTARIZE_NIGHTLY_DMG_TOOL:-$ROOT_DIR/scripts/ci/notarize-nightly-dmg.sh}"
-RESUME_TOOL="${CMUX_RESUME_NIGHTLY_NOTARIZATION_TOOL:-$ROOT_DIR/scripts/ci/resume-nightly-notarization.sh}"
-SIGNING_KEYCHAIN_TOOL="${CMUX_SIGNING_KEYCHAIN_TOOL:-$ROOT_DIR/scripts/ci/signing-keychain.sh}"
-STAPLED_DMG="${CMUX_STAPLED_APP_DMG:-$(dirname "$DMG_RELEASE")/stapled-app/$(basename "$DMG_RELEASE")}"
-STAPLED_WAIT_TIMEOUT="${CMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT:-40m}"
-FALLBACK_SECONDS="${CMUX_STAPLED_APP_FALLBACK_SECONDS:-21600}"
-SUBMIT_ATTEMPTS="${CMUX_STAPLED_APP_SUBMIT_ATTEMPTS:-3}"
-SUBMIT_RETRY_SECONDS="${CMUX_STAPLED_APP_SUBMIT_RETRY_SECONDS:-60}"
+PACKAGE_TOOL="${HMUX_NOTARIZE_NIGHTLY_DMG_TOOL:-$ROOT_DIR/scripts/ci/notarize-nightly-dmg.sh}"
+RESUME_TOOL="${HMUX_RESUME_NIGHTLY_NOTARIZATION_TOOL:-$ROOT_DIR/scripts/ci/resume-nightly-notarization.sh}"
+SIGNING_KEYCHAIN_TOOL="${HMUX_SIGNING_KEYCHAIN_TOOL:-$ROOT_DIR/scripts/ci/signing-keychain.sh}"
+STAPLED_DMG="${HMUX_STAPLED_APP_DMG:-$(dirname "$DMG_RELEASE")/stapled-app/$(basename "$DMG_RELEASE")}"
+STAPLED_WAIT_TIMEOUT="${HMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT:-40m}"
+FALLBACK_SECONDS="${HMUX_STAPLED_APP_FALLBACK_SECONDS:-21600}"
+SUBMIT_ATTEMPTS="${HMUX_STAPLED_APP_SUBMIT_ATTEMPTS:-3}"
+SUBMIT_RETRY_SECONDS="${HMUX_STAPLED_APP_SUBMIT_RETRY_SECONDS:-60}"
 # A continuation that the poll decided as due within its slack waits at most
 # this long for the deadline before its date check (0: no wait).
-DEADLINE_WAIT_SECONDS="${CMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS:-0}"
+DEADLINE_WAIT_SECONDS="${HMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS:-0}"
 for value in "$FALLBACK_SECONDS" "$DEADLINE_WAIT_SECONDS"; do
   case "$value" in
-    ''|*[!0-9]*) echo "CMUX_STAPLED_APP_FALLBACK_SECONDS and CMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS must be numbers of seconds" >&2; exit 2 ;;
+    ''|*[!0-9]*) echo "HMUX_STAPLED_APP_FALLBACK_SECONDS and HMUX_STAPLED_APP_DEADLINE_WAIT_SECONDS must be numbers of seconds" >&2; exit 2 ;;
   esac
 done
 # The helper recheck is skipped only for an app whose helper this process
 # (step 1 below) or its caller (resume-helper-notarization.sh) checked.
-HELPER_CHECKED_BY_CALLER="${CMUX_SKIP_HELPER_RECHECK:-false}"
+HELPER_CHECKED_BY_CALLER="${HMUX_SKIP_HELPER_RECHECK:-false}"
 STEP1_RAN=false
 # Kept out of every child process except the keychain create below.
 CERT_BASE64="${APPLE_CERTIFICATE_BASE64:-}"
@@ -146,8 +146,8 @@ continue_stapled() {
   # Skip the helper recheck only when this process or its caller checked it:
   # the continuation above exits 75 before its own helper check.
   if [ "$STEP1_RAN" = true ] || [ "$HELPER_CHECKED_BY_CALLER" = true ]; then skip_recheck=true; fi
-  CMUX_SKIP_HELPER_RECHECK="$skip_recheck" \
-  CMUX_NOTARY_WAIT_TIMEOUT=2m \
+  HMUX_SKIP_HELPER_RECHECK="$skip_recheck" \
+  HMUX_NOTARY_WAIT_TIMEOUT=2m \
     "$RESUME_TOOL" "$work/first.state" "$APP_PATH" "$work/$(basename "$target")" "$DMG_IMMUTABLE"
   /bin/mv -f "$work/$(basename "$target")" "$target"
   printf '%s\n' "$pending" > "$DMG_IMMUTABLE.stapled-app-fallback"
@@ -178,8 +178,8 @@ trap cleanup EXIT
 # 1. The first submission: staple and check the app. The first DMG keeps its
 #    submitted bytes. No publication and no keychain here.
 "$SIGNING_KEYCHAIN_TOOL" delete
-CMUX_RESUME_APP_ONLY=true \
-CMUX_DEFER_LAUNCH_SMOKES=true \
+HMUX_RESUME_APP_ONLY=true \
+HMUX_DEFER_LAUNCH_SMOKES=true \
   "$RESUME_TOOL" "$STATE_FILE" "$APP_PATH" "$DMG_RELEASE" "$DMG_IMMUTABLE"
 
 # 2. Build, sign and submit (no wait) the DMG around the stapled app at its own
@@ -194,20 +194,20 @@ while :; do
   package_status=0
   APPLE_CERTIFICATE_BASE64="$CERT_BASE64" \
   APPLE_CERTIFICATE_PASSWORD="$CERT_PASSWORD" \
-  CMUX_PACKAGE_CREATES_KEYCHAIN=true \
-  CMUX_STAPLE_APP_IN_DMG=false \
-  CMUX_COMPUTER_USE_HELPER_ALREADY_FINISHED=true \
-  CMUX_COMPUTER_USE_NOTARY_SUBMISSION_FILE="" \
-  CMUX_NOTARY_SUBMIT_ONLY=true \
-  CMUX_SKIP_NOTARY_LOG=true \
-  CMUX_NOTARY_STATE_STAPLED_APP=true \
-  CMUX_NOTARY_STATE_FIRST_SUBMISSION_ID="$FIRST_ID" \
-  CMUX_NOTARY_STATE_FIRST_DMG_SHA256="$FIRST_SHA" \
-  CMUX_NOTARY_SUBMISSION_FILE="$OUTER_STATE" \
-  CMUX_NOTARY_OUTPUT_FILE="$OUTER_LOG" \
-  CMUX_APP_ENTITLEMENTS="$APP_ENTITLEMENTS" \
-  CHANNEL_RELEASE_TAG="${CHANNEL_RELEASE_TAG:-${CMUX_CHANNEL:-nightly}}" \
-  CHANNEL_DMG_PREFIX="${CHANNEL_DMG_PREFIX:-cmux-${CMUX_CHANNEL:-nightly}-macos}" \
+  HMUX_PACKAGE_CREATES_KEYCHAIN=true \
+  HMUX_STAPLE_APP_IN_DMG=false \
+  HMUX_COMPUTER_USE_HELPER_ALREADY_FINISHED=true \
+  HMUX_COMPUTER_USE_NOTARY_SUBMISSION_FILE="" \
+  HMUX_NOTARY_SUBMIT_ONLY=true \
+  HMUX_SKIP_NOTARY_LOG=true \
+  HMUX_NOTARY_STATE_STAPLED_APP=true \
+  HMUX_NOTARY_STATE_FIRST_SUBMISSION_ID="$FIRST_ID" \
+  HMUX_NOTARY_STATE_FIRST_DMG_SHA256="$FIRST_SHA" \
+  HMUX_NOTARY_SUBMISSION_FILE="$OUTER_STATE" \
+  HMUX_NOTARY_OUTPUT_FILE="$OUTER_LOG" \
+  HMUX_APP_ENTITLEMENTS="$APP_ENTITLEMENTS" \
+  CHANNEL_RELEASE_TAG="${CHANNEL_RELEASE_TAG:-${HMUX_CHANNEL:-nightly}}" \
+  CHANNEL_DMG_PREFIX="${CHANNEL_DMG_PREFIX:-hmux-${HMUX_CHANNEL:-nightly}-macos}" \
   NIGHTLY_VARIANT="${NIGHTLY_VARIANT:-universal}" \
     "$PACKAGE_TOOL" "$APP_PATH" "$STAPLED_DMG" "$DMG_IMMUTABLE" || package_status=$?
   "$SIGNING_KEYCHAIN_TOOL" delete
@@ -227,10 +227,10 @@ while :; do
       printf 'dmg_sha256=%s\n' "$(sha256_of "$STAPLED_DMG")"
       printf 'submit_exit=%s\n' "$package_status"
       printf 'immutable_path=%s\n' "$DMG_IMMUTABLE"
-      printf 'release_tag=%s\n' "${CHANNEL_RELEASE_TAG:-${CMUX_CHANNEL:-nightly}}"
-      printf 'dmg_prefix=%s\n' "${CHANNEL_DMG_PREFIX:-cmux-${CMUX_CHANNEL:-nightly}-macos}"
+      printf 'release_tag=%s\n' "${CHANNEL_RELEASE_TAG:-${HMUX_CHANNEL:-nightly}}"
+      printf 'dmg_prefix=%s\n' "${CHANNEL_DMG_PREFIX:-hmux-${HMUX_CHANNEL:-nightly}-macos}"
       printf 'variant=%s\n' "${NIGHTLY_VARIANT:-universal}"
-      printf 'channel=%s\n' "${CMUX_CHANNEL:-nightly}"
+      printf 'channel=%s\n' "${HMUX_CHANNEL:-nightly}"
       printf 'output_file=%s\n' "$OUTER_LOG"
       printf 'stapled_app=true\n'
       printf 'stapled_submitted_at=%s\n' "$(date +%s)"
@@ -256,8 +256,8 @@ fi
 #    the caller hands <outer-state>, its log and the DMG it names to its outer
 #    recovery path. The helper of this same app was checked in step 1.
 #    Accepted, stapled and checked: only then does it replace the first DMG.
-export CMUX_SKIP_HELPER_RECHECK=true
+export HMUX_SKIP_HELPER_RECHECK=true
 STEP1_RAN=true
-export CMUX_NOTARY_WAIT_TIMEOUT="$STAPLED_WAIT_TIMEOUT"
-export CMUX_NOTARY_EVIDENCE_FILE="$OUTER_LOG"
+export HMUX_NOTARY_WAIT_TIMEOUT="$STAPLED_WAIT_TIMEOUT"
+export HMUX_NOTARY_EVIDENCE_FILE="$OUTER_LOG"
 continue_stapled "$OUTER_STATE" "$STAPLED_DMG" "$DMG_RELEASE"

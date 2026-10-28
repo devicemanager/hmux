@@ -1,9 +1,9 @@
 import Foundation
-import CmuxAgentSessionStore
+import HmuxAgentSessionStore
 
 /// Socket v2 surface for the Vault session index, so terminal agents can
 /// browse, search, checkpoint, and fork sessions exactly like the UI
-/// (`skills/cmux-shared-behavior`: same engines, no duplicated logic).
+/// (`skills/hmux-shared-behavior`: same engines, no duplicated logic).
 /// All commands run on the socket worker; `vault.fork` takes exactly one
 /// `v2MainSync` hop when asked to open the forked session, and nothing here
 /// activates the app or steals macOS focus.

@@ -4,9 +4,9 @@
 # the Durable Object migrations declared in wrangler.toml atomically with the code
 # upload, so the service's schema can never lag a deploy.
 #
-# The `target` input picks the worker: `prod` (default) deploys `cmux-presence`
+# The `target` input picks the worker: `prod` (default) deploys `hmux-presence`
 # on presence.cmux.dev; `dev` deploys the shared integration baseline
-# `cmux-presence-dev` from wrangler.dev.toml. Both use the repository's
+# `hmux-presence-dev` from wrangler.dev.toml. Both use the repository's
 # Cloudflare secrets, so nobody needs a personal Cloudflare account membership
 # to keep the shared dev worker current. Per-developer isolated workers stay on
 # `scripts/deploy-dev.sh` (they need per-instance Stack secrets at creation).

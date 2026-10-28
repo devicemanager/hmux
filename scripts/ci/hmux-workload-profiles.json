@@ -1,0 +1,170 @@
+{
+  "schema_version": 1,
+  "repository": "manaflow-ai/cmux",
+  "result_contract": "hmux-workload-result/v1",
+  "profiles": [
+    {
+      "id": "hmux.macos.compile-admission",
+      "generation": 1,
+      "entrypoint": "scripts/ci/workloads/macos-compile-admission.sh",
+      "semantic_scope": "Compile the canonical macOS app-host test products for an exact HMUX tree and validate the compile warning budget.",
+      "platform": {
+        "os": "macos",
+        "architectures": [
+          "arm64"
+        ],
+        "requirements": [
+          "xcode:.xcode-version",
+          "macos-sdk-major:26"
+        ]
+      },
+      "expected_result_class": "hmux.app-host-test-product/v1",
+      "semantic_validator": "hmux.compile-admission/v1",
+      "timeout": {
+        "class": "macos-long",
+        "seconds": 4500
+      },
+      "resource_class": "hmux-macos-compile-large",
+      "network_class": "dependency-fetch",
+      "benchmark_state_classes": [
+        "cold",
+        "dependency-warm",
+        "compiler-warm"
+      ],
+      "parameters": {},
+      "runtime_inputs": [],
+      "artifacts": [
+        {
+          "class": "hmux.app-host-xctestrun/v1",
+          "glob": "{state_root}/derived-data/Build/Products/**/*.xctestrun",
+          "required": true
+        },
+        {
+          "class": "hmux.debug-cli/v1",
+          "glob": "{state_root}/derived-data/Build/Products/Debug/hmux",
+          "required": true
+        }
+      ],
+      "environment_class": "isolated-build"
+    },
+    {
+      "id": "hmux.macos.dev-check",
+      "generation": 1,
+      "entrypoint": "scripts/ci/workloads/macos-dev-check.sh",
+      "semantic_scope": "Run HMUX's canonical tagged developer build without launch, using isolated persistent DerivedData and no global CLI links.",
+      "platform": {
+        "os": "macos",
+        "architectures": [
+          "arm64"
+        ],
+        "requirements": [
+          "xcode:.xcode-version"
+        ]
+      },
+      "expected_result_class": "hmux.debug-app/v1",
+      "semantic_validator": "cmux.dev-check/v1",
+      "timeout": {
+        "class": "macos-long",
+        "seconds": 4500
+      },
+      "resource_class": "hmux-macos-native-build-large",
+      "network_class": "dependency-fetch",
+      "benchmark_state_classes": [
+        "cold",
+        "dependency-warm",
+        "compiler-warm"
+      ],
+      "parameters": {},
+      "runtime_inputs": [],
+      "artifacts": [
+        {
+          "class": "hmux.debug-app-executable/v1",
+          "glob": "{state_root}/derived-data/Build/Products/Debug/hmux DEV*.app/Contents/MacOS/hmux DEV*",
+          "required": true
+        }
+      ],
+      "environment_class": "isolated-build"
+    },
+    {
+      "id": "hmux.macos.app-host-test-shard",
+      "generation": 1,
+      "entrypoint": "scripts/ci/workloads/macos-app-host-test-shard.sh",
+      "semantic_scope": "Execute one physical HMUX app-host unit-test shard as two deterministic logical batches against an exact compile-admission xctestrun product.",
+      "platform": {
+        "os": "macos",
+        "architectures": [
+          "arm64"
+        ],
+        "requirements": [
+          "console-session",
+          "xcode:.xcode-version",
+          "macos-sdk-major:26"
+        ]
+      },
+      "expected_result_class": "hmux.app-host-test-shard-result/v1",
+      "semantic_validator": "hmux.app-host-test-shard/v1",
+      "timeout": {
+        "class": "macos-long",
+        "seconds": 4500
+      },
+      "resource_class": "hmux-macos-app-host-test",
+      "network_class": "repository-test",
+      "benchmark_state_classes": [
+        "exact-product-reuse",
+        "resident-hot"
+      ],
+      "parameters": {
+        "shard": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 6,
+          "required": true
+        }
+      },
+      "runtime_inputs": [
+        {
+          "name": "app_host_xctestrun",
+          "env": "HMUX_APP_HOST_XCTESTRUN",
+          "class": "hmux.app-host-product-tree/v1",
+          "identity": "parent-tree-sha256",
+          "required": true
+        }
+      ],
+      "artifacts": [],
+      "environment_class": "isolated-console-test"
+    },
+    {
+      "id": "hmux.ci.guard",
+      "generation": 1,
+      "entrypoint": "scripts/ci/workloads/ci-guard.sh",
+      "semantic_scope": "Validate the portable HMUX CI routing, runner-policy, required-check, shard-definition, and test-wiring guards used to decide whether CI topology is admissible.",
+      "platform": {
+        "os": "linux",
+        "architectures": [
+          "x86_64",
+          "arm64"
+        ],
+        "requirements": [
+          "bash",
+          "python3",
+          "git"
+        ]
+      },
+      "expected_result_class": "hmux.ci-guard-result/v1",
+      "semantic_validator": "hmux.ci-guard/v1",
+      "timeout": {
+        "class": "portable-short",
+        "seconds": 600
+      },
+      "resource_class": "hmux-linux-ci-small",
+      "network_class": "none",
+      "benchmark_state_classes": [
+        "cold"
+      ],
+      "parameters": {},
+      "runtime_inputs": [],
+      "artifacts": [],
+      "environment_class": "isolated-portable"
+    }
+  ]
+}

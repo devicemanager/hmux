@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 /**
  * Boots the image the manifest currently ships and proves a client can reach
- * the cmux-tui daemon inside it.
+ * the hmux-tui daemon inside it.
  *
  * The bake already smokes the daemon, but that only covers the moment an image
  * was made. This covers the image we are shipping right now, against the
- * cmux-tui build we are shipping right now, which is the pair that can drift
+ * hmux-tui build we are shipping right now, which is the pair that can drift
  * apart without anyone touching either: the manifest pins a snapshot with a
  * baked daemon, while files.cmux.com moves to a new client with every release.
  *
@@ -21,14 +21,14 @@
  *   bun scripts/check-devbox-image-reachable.ts --print-key   # no VM, no key
  *
  * `--print-key` prints the identity of what would be tested (image ids plus
- * the live cmux-tui pin) so CI can skip a run that would test nothing new.
+ * the live hmux-tui pin) so CI can skip a run that would test nothing new.
  */
 import { Freestyle, type FirewallSpec } from "freestyle";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { cmuxTuiWebsocketSmokeCommand, devboxWaitForDaemonCommand, readImageManifest } from "./devbox-image-common";
-import { resolveCmuxTuiSource } from "../services/vms/drivers/cmuxTuiDaemon";
+import { hmuxTuiWebsocketSmokeCommand, devboxWaitForDaemonCommand, readImageManifest } from "./devbox-image-common";
+import { resolveHmuxTuiSource } from "../services/vms/drivers/hmuxTuiDaemon";
 
 const argValue = (name: string): string | undefined => {
   const index = process.argv.indexOf(name);
@@ -59,7 +59,7 @@ async function main(): Promise<void> {
     defaults.find((entry) => (entry.kind ?? "base") === kind && entry.size?.name === size)?.imageId;
 
   // The live client is what a machine created today would be driven by.
-  const live = await resolveCmuxTuiSource("freestyle");
+  const live = await resolveHmuxTuiSource("freestyle");
 
   if (hasFlag("--print-key")) {
     console.log(reachabilityKey(defaults, live.sha256));
@@ -82,7 +82,7 @@ async function main(): Promise<void> {
   const elapsed = () => `${((Date.now() - t0) / 1000).toFixed(0)}s`;
 
   console.log(`reaching ${kind}/${size} ${target} with client ${live.commit.slice(0, 10)} (${live.sha256.slice(0, 12)}…)`);
-  const { vm, vmId } = await fs.vms.create({ snapshotId: target, displayName: "cmux devbox reachability", firewall: FIREWALL });
+  const { vm, vmId } = await fs.vms.create({ snapshotId: target, displayName: "hmux devbox reachability", firewall: FIREWALL });
   console.log(`${elapsed()} booted ${vmId}`);
   let failure: string | null = null;
   try {
@@ -98,9 +98,9 @@ async function main(): Promise<void> {
     if (up.code !== 0) throw new Error(`the baked daemon never became ready: ${up.out.slice(-300)}`);
     console.log(`${elapsed()} baked daemon is ready on this machine`);
 
-    const baked = await sh("cut -d' ' -f1 /etc/cmux/cmux-tui-pin", 30_000);
+    const baked = await sh("cut -d' ' -f1 /etc/hmux/hmux-tui-pin", 30_000);
     const bakedSha = baked.out.trim();
-    const smoke = await sh(cmuxTuiWebsocketSmokeCommand());
+    const smoke = await sh(hmuxTuiWebsocketSmokeCommand());
     if (smoke.code !== 0) throw new Error(`baked client could not reach the daemon: ${smoke.out.slice(-1200)}`);
     console.log(`${elapsed()} baked client round trip ok`);
 
@@ -112,12 +112,12 @@ async function main(): Promise<void> {
       // exec runs /bin/sh (dash), so the pipefail-using script needs a bash -c.
       const install =
         `bash -c ${JSON.stringify(
-          `set -euo pipefail; curl -fsSL --retry 3 --retry-delay 2 -o /tmp/cmux-tui-live ${live.url}; ` +
-            `printf '%s  %s\n' ${live.sha256} /tmp/cmux-tui-live | sha256sum -c >/dev/null; chmod 0755 /tmp/cmux-tui-live`,
+          `set -euo pipefail; curl -fsSL --retry 3 --retry-delay 2 -o /tmp/hmux-tui-live ${live.url}; ` +
+            `printf '%s  %s\n' ${live.sha256} /tmp/hmux-tui-live | sha256sum -c >/dev/null; chmod 0755 /tmp/hmux-tui-live`,
         )}`;
       const fetched = await sh(install, 180_000);
       if (fetched.code !== 0) throw new Error(`could not install the live client in the guest: ${fetched.out.slice(-500)}`);
-      const liveSmoke = await sh(cmuxTuiWebsocketSmokeCommand("cloud", "/tmp/cmux-tui-live"));
+      const liveSmoke = await sh(hmuxTuiWebsocketSmokeCommand("cloud", "/tmp/hmux-tui-live"));
       if (liveSmoke.code !== 0) {
         throw new Error(
           `live client ${live.commit.slice(0, 10)} could not reach the daemon baked from ${bakedSha.slice(0, 12)}…: ` +

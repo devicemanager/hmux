@@ -164,7 +164,7 @@ class PlanTests(unittest.TestCase):
             uploads = MODULE.plan([clip], None, gif=False)
             self.assertEqual([(u.name, u.kind) for u in uploads], [("clip.mp4", "video")])
 
-    def test_a_gif_from_cmux_record_is_uploaded_as_it_is(self):
+    def test_a_gif_from_hmux_record_is_uploaded_as_it_is(self):
         with tempfile.TemporaryDirectory() as scratch:
             uploads = MODULE.plan([written(scratch, "already.gif")], None, gif=True)
             self.assertEqual([(u.name, u.kind, u.source_name) for u in uploads],
@@ -636,7 +636,7 @@ class PrivacyTests(unittest.TestCase):
             self.ocr_calls.append(local.name)
             data = local.read_bytes()
             # TERM: a frame showing the private-terms list's "glow-box".
-            return ["cmux@cmux7s-Mac-mini ~ %"] if b"LEAK" in data else ["ssh glow-box"] if b"TERM" in data else ["ok"]
+            return ["hmux@hmux7s-Mac-mini ~ %"] if b"LEAK" in data else ["ssh glow-box"] if b"TERM" in data else ["ok"]
 
         def lookup(numbers):
             self.lookups.append(numbers)
@@ -666,7 +666,7 @@ class PrivacyTests(unittest.TestCase):
         self.assertFalse(gh.puts)
         self.assertIn("7/02-leak.png", err)
         self.assertIn("refused", err)
-        self.assertNotIn("cmux7s", out + err)
+        self.assertNotIn("hmux7s", out + err)
 
     def test_a_clean_capture_is_uploaded_and_checked_once(self):
         clean = written(self.scratch, "shot.png", PNG)
@@ -697,7 +697,7 @@ class PrivacyTests(unittest.TestCase):
         self.assertFalse(gh.puts)
         self.assertIn("fleet Mac mini name", err)
         self.assertIn("fleet shell prompt", err)
-        self.assertNotIn("cmux7s", out + err)
+        self.assertNotIn("hmux7s", out + err)
 
     def test_the_gif_made_from_an_mp4_is_what_gets_checked(self):
         clip = written(self.scratch, "drag.mp4", MP4)

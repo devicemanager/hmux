@@ -7,7 +7,7 @@ import { setSpanAttributes } from "../../../../../../services/telemetry";
 import { runVmRoute } from "../../../../../../services/vms/routeWorkflow";
 import { deleteVmSnapshot } from "../../../../../../services/vms/workflows";
 
-// Delete one snapshot of a machine the caller owns (`cmux vm snapshot rm <m> <snapshot>`).
+// Delete one snapshot of a machine the caller owns (`hmux vm snapshot rm <m> <snapshot>`).
 // Scoped to the machine: a snapshot that does not exist, or was taken from
 // another machine, answers 404 vm_snapshot_not_found; a provider that cannot
 // delete snapshots answers 501 vm_operation_unsupported.
@@ -23,13 +23,13 @@ export async function DELETE(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/snapshots/[snapshotId]",
-    { "cmux.vm.operation": "snapshot.delete" },
+    { "hmux.vm.operation": "snapshot.delete" },
     "/api/vm/[id]/snapshots/[snapshotId] DELETE failed",
     async ({ user, span }) => {
       const { id, snapshotId } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id, "cmux.snapshot.id": snapshotId });
+      setSpanAttributes(span, { "hmux.vm.id": id, "hmux.snapshot.id": snapshotId });
       const run = await runVmRoute(deleteVmSnapshot({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

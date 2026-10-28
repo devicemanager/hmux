@@ -50,10 +50,10 @@ def validate_common_capture_boundary() -> None:
     console = CONSOLE_WRAPPER.read_text(encoding="utf-8")
     capture = CAPTURE_WRAPPER.read_text(encoding="utf-8")
     required_console_tokens = (
-        "CMUX_CI_FILE_CAPTURE_ACTIVE",
+        "HMUX_CI_FILE_CAPTURE_ACTIVE",
         "run-app-host-xcodebuild.sh",
         "run-and-capture.sh",
-        "cmux-app-host-console-capture-",
+        "hmux-app-host-console-capture-",
     )
     missing = [token for token in required_console_tokens if token not in console]
     if missing:
@@ -61,7 +61,7 @@ def validate_common_capture_boundary() -> None:
             "run-in-console-session.sh is missing app-host file capture: "
             + ", ".join(missing)
         )
-    if "CMUX_CI_FILE_CAPTURE_ACTIVE=1" not in capture:
+    if "HMUX_CI_FILE_CAPTURE_ACTIVE=1" not in capture:
         raise SystemExit("run-and-capture.sh must mark its child as file-captured")
 
 
@@ -118,7 +118,7 @@ def smoke_direct_console_capture() -> None:
             "#!/usr/bin/env bash\n"
             "echo direct-app-host-started\n"
             "sleep 60 &\n"
-            "echo $! >\"$CMUX_CAPTURE_CHILD_PID\"\n"
+            "echo $! >\"$HMUX_CAPTURE_CHILD_PID\"\n"
             "exit 7\n",
             encoding="utf-8",
         )
@@ -127,8 +127,8 @@ def smoke_direct_console_capture() -> None:
             **os.environ,
             "RUNNER_TEMP": str(root),
             "GITHUB_WORKSPACE": str(ROOT),
-            "CMUX_TAG": "pipe-capture-smoke",
-            "CMUX_CAPTURE_CHILD_PID": str(child_pid),
+            "HMUX_TAG": "pipe-capture-smoke",
+            "HMUX_CAPTURE_CHILD_PID": str(child_pid),
         }
         started = time.monotonic()
         completed = subprocess.run(
@@ -150,7 +150,7 @@ def smoke_direct_console_capture() -> None:
                 )
             if "direct-app-host-started" not in completed.stdout:
                 raise AssertionError(completed.stdout + completed.stderr)
-            captures = list(root.glob("cmux-app-host-console-capture-*.log"))
+            captures = list(root.glob("hmux-app-host-console-capture-*.log"))
             if len(captures) != 1:
                 raise AssertionError(f"expected one console capture, found {captures}")
             if "direct-app-host-started" not in captures[0].read_text(errors="replace"):

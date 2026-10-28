@@ -1,4 +1,4 @@
-import CmuxControlSocket
+import HmuxControlSocket
 import Foundation
 
 extension TerminalController {

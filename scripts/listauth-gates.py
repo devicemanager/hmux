@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Acceptance gates for the device-list authorization architecture (listauth).
 
-Gates (see cmux-assets/irx-client-resilience/irx-sequence-diagram artifact):
+Gates (see hmux-assets/irx-client-resilience/irx-sequence-diagram artifact):
   1. soak:        30 continuous engaged minutes, zero unexpected reconnects or
                   disconnects; rotations + list pushes cross without session
                   impact. --mode relay asserts every pong path is relay:*;
@@ -14,7 +14,7 @@ Gates (see cmux-assets/irx-client-resilience/irx-sequence-diagram artifact):
                   time from relaunch to admitted + fresh directory < limit.
 
 Shared evidence: journals ({ts, mono_ms, component, event, a_*} JSONL) from
-/tmp/cmux-irx-journal-mac-<tag>.jsonl and the sim app container's
+/tmp/hmux-irx-journal-mac-<tag>.jsonl and the sim app container's
 Documents/irx-journal.jsonl. Verdicts land in <out>/<gate>-<stamp>/.
 
 Usage:
@@ -57,20 +57,20 @@ def signin_env():
     credentials injected or the app lands signed out (dev-env artifact, not a
     product behavior)."""
     env = dict(os.environ)
-    secrets = pathlib.Path.home() / ".secrets" / "cmuxterm-dev.env"
+    secrets = pathlib.Path.home() / ".secrets" / "hmuxterm-dev.env"
     creds = {}
     if secrets.exists():
         for line in secrets.read_text().splitlines():
             if "=" in line and not line.lstrip().startswith("#"):
                 k, _, v = line.partition("=")
                 creds[k.strip()] = v.strip().strip('"').strip("'")
-    email = creds.get("CMUX_UITEST_STACK_EMAIL", "")
-    password = creds.get("CMUX_UITEST_STACK_PASSWORD", "")
+    email = creds.get("HMUX_UITEST_STACK_EMAIL", "")
+    password = creds.get("HMUX_UITEST_STACK_PASSWORD", "")
     if email and password:
-        env["SIMCTL_CHILD_CMUX_UITEST_STACK_EMAIL"] = email
-        env["SIMCTL_CHILD_CMUX_UITEST_STACK_PASSWORD"] = password
-        env["SIMCTL_CHILD_CMUX_UITEST_MOCK_DATA"] = "0"
-        env["SIMCTL_CHILD_CMUX_DEV_AUTH_REPLACE_SESSION"] = "0"
+        env["SIMCTL_CHILD_HMUX_UITEST_STACK_EMAIL"] = email
+        env["SIMCTL_CHILD_HMUX_UITEST_STACK_PASSWORD"] = password
+        env["SIMCTL_CHILD_HMUX_UITEST_MOCK_DATA"] = "0"
+        env["SIMCTL_CHILD_HMUX_DEV_AUTH_REPLACE_SESSION"] = "0"
     return env
 
 
@@ -82,7 +82,7 @@ def launch_app():
 stamp = time.strftime("%Y%m%d-%H%M%S")
 round_dir = pathlib.Path(args.out) / f"{args.gate}-{args.mode}-{stamp}"
 round_dir.mkdir(parents=True, exist_ok=True)
-mac_journal_path = pathlib.Path(f"/tmp/cmux-irx-journal-mac-{args.tag}.jsonl")
+mac_journal_path = pathlib.Path(f"/tmp/hmux-irx-journal-mac-{args.tag}.jsonl")
 
 
 def sim_journal_path():

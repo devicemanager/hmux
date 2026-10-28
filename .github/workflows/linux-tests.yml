@@ -36,7 +36,7 @@ on:
           - blacksmith-16vcpu-ubuntu-2404
           - blacksmith-32vcpu-ubuntu-2404
       build_bundles:
-        description: Build the cmux-next web bundles first (tests that read them need it)
+        description: Build the hmux-next web bundles first (tests that read them need it)
         required: false
         type: boolean
         default: true
@@ -171,8 +171,8 @@ jobs:
         working-directory: src
         run: |
           set -euo pipefail
-          if cut -f1 "$RUNNER_TEMP/plan.tsv" | grep -qx webviews && [ -x scripts/cmux-next/build-web-bundles.sh ]; then
-            ./scripts/cmux-next/build-web-bundles.sh --force
+          if cut -f1 "$RUNNER_TEMP/plan.tsv" | grep -qx webviews && [ -x scripts/hmux-next/build-web-bundles.sh ]; then
+            ./scripts/hmux-next/build-web-bundles.sh --force
           else
             echo "No webviews files, or no bundle build at this commit; skipping."
           fi
@@ -195,8 +195,8 @@ jobs:
             for file in $files; do
               echo "::group::$package/$file"
               start=$SECONDS
-              # A file may need longer: a `// cmux-web-test-timeout: SECONDS` header line, as in CI.
-              limit=$(head -n 20 "$package/$file" | sed -n 's|^// cmux-web-test-timeout: \([1-9][0-9]*\)$|\1|p' | head -n 1)
+              # A file may need longer: a `// hmux-web-test-timeout: SECONDS` header line, as in CI.
+              limit=$(head -n 20 "$package/$file" | sed -n 's|^// hmux-web-test-timeout: \([1-9][0-9]*\)$|\1|p' | head -n 1)
               { [ -n "$limit" ] && [ "$limit" -gt "$FILE_TIMEOUT" ]; } || limit=$FILE_TIMEOUT
               # "./" names the file; a bare path is a substring filter that also runs its namesakes.
               (cd "$package" && timeout -k 10 "$limit" bun test "./$file" < /dev/null)

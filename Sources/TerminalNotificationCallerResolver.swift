@@ -1,4 +1,4 @@
-import CmuxNotifications
+import HmuxNotifications
 import Foundation
 
 @MainActor

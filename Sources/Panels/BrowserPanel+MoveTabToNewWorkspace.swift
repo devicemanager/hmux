@@ -1,8 +1,8 @@
 import Foundation
-import CmuxBrowser
+import HmuxBrowser
 
 extension BrowserPanel {
-    func configureMoveTabToNewWorkspaceContextMenu(for webView: CmuxWebView) {
+    func configureMoveTabToNewWorkspaceContextMenu(for webView: HmuxWebView) {
         webView.contextMenuCanMoveTabToNewWorkspace = { [weak self] in
             guard let self,
                   let app = AppDelegate.shared,

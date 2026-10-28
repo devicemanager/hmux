@@ -1,25 +1,25 @@
-# cmuxd-remote (Go)
+# hmuxd-remote (Go)
 
-Go remote daemon for `cmux ssh` bootstrap, capability negotiation, and remote proxy RPC. It is not in the terminal keystroke hot path.
+Go remote daemon for `hmux ssh` bootstrap, capability negotiation, and remote proxy RPC. It is not in the terminal keystroke hot path.
 
 ## Commands
 
-1. `cmuxd-remote version`
-2. `cmuxd-remote serve --stdio`
-3. `cmuxd-remote serve --stdio --persistent --slot <slot> [--persistent-lease-port <port>]`
-4. `cmuxd-remote serve --persistent-stop --slot <slot>` — internal authenticated slot teardown
-5. `cmuxd-remote serve --ws --auth-lease-file <path> [--rpc-auth-lease-file <path>] [--listen 127.0.0.1:7777]`
-6. `cmuxd-remote cli <command> [args...]` — relay cmux commands to the local app over the reverse SSH forward
+1. `hmuxd-remote version`
+2. `hmuxd-remote serve --stdio`
+3. `hmuxd-remote serve --stdio --persistent --slot <slot> [--persistent-lease-port <port>]`
+4. `hmuxd-remote serve --persistent-stop --slot <slot>` — internal authenticated slot teardown
+5. `hmuxd-remote serve --ws --auth-lease-file <path> [--rpc-auth-lease-file <path>] [--listen 127.0.0.1:7777]`
+6. `hmuxd-remote cli <command> [args...]` — relay hmux commands to the local app over the reverse SSH forward
 
-`serve --ws` is explicit opt-in for cloud VM images only. The normal `cmux ssh`
+`serve --ws` is explicit opt-in for cloud VM images only. The normal `hmux ssh`
 code path uses `serve --stdio --persistent --slot <slot>` over an SSH exec
 channel. That stdio process is only a proxy to an authenticated per-slot daemon
-with credentials and logs under `~/.cmux/daemon/<version>/<slot>/`, so remote PTY sessions
+with credentials and logs under `~/.hmux/daemon/<version>/<slot>/`, so remote PTY sessions
 can survive local surface close, local reconnect, and app relaunch. The persistent
 server never opens a public listener; it accepts only a per-user Unix socket under
-`/tmp/cmuxd-remote-<uid>/` and the slot token.
+`/tmp/hmuxd-remote-<uid>/` and the slot token.
 
-When invoked as `cmux` (via wrapper/symlink installed during bootstrap), the binary auto-dispatches to the `cli` subcommand. This is busybox-style argv[0] detection.
+When invoked as `hmux` (via wrapper/symlink installed during bootstrap), the binary auto-dispatches to the `cli` subcommand. This is busybox-style argv[0] detection.
 
 ## RPC methods (newline-delimited JSON over stdio)
 
@@ -43,24 +43,24 @@ When invoked as `cmux` (via wrapper/symlink installed during bootstrap), the bin
 18. `pty.close`
 19. `pty.list`
 
-Current integration in cmux:
+Current integration in hmux:
 1. `workspace.remote.configure` now bootstraps this binary over SSH when missing.
 2. Client sends `hello` before enabling remote proxy transport.
 3. Local workspace proxy broker serves SOCKS5 + HTTP CONNECT and tunnels stream traffic through `proxy.*` RPC over `serve --stdio`, using daemon-pushed stream events instead of polling reads. Both handshakes require a per-tunnel credential that only the embedded browser receives.
 4. Daemon status/capabilities are exposed in `workspace.remote.status -> remote.daemon` (including `session.resize.min`).
-5. Persistent SSH terminals require the `pty.session.persistent_daemon` capability before cmux will restore a saved remote PTY session ID after relaunch.
+5. Persistent SSH terminals require the `pty.session.persistent_daemon` capability before hmux will restore a saved remote PTY session ID after relaunch.
 
 ## Persistent SSH PTY daemon
 
-`cmux ssh` uses one persistent daemon slot per CLI-launched SSH workspace. The
+`hmux ssh` uses one persistent daemon slot per CLI-launched SSH workspace. The
 slot name is generated locally, validated as `[A-Za-z0-9._-]{1,128}`, and sent
 to the remote daemon bootstrap as `--slot`.
 
 Remote slot files:
-1. `/tmp/cmuxd-remote-<uid>/cmuxd-<slot-hash>.sock` authenticated Unix socket for stdio proxies.
-2. `~/.cmux/daemon/<version>/<slot>/auth.token` random 32-byte hex token, mode `0600`.
-3. `~/.cmux/daemon/<version>/<slot>/daemon.lock` single-owner lock.
-4. `~/.cmux/daemon/<version>/<slot>/daemon.log` startup and crash diagnostics.
+1. `/tmp/hmuxd-remote-<uid>/hmuxd-<slot-hash>.sock` authenticated Unix socket for stdio proxies.
+2. `~/.hmux/daemon/<version>/<slot>/auth.token` random 32-byte hex token, mode `0600`.
+3. `~/.hmux/daemon/<version>/<slot>/daemon.lock` single-owner lock.
+4. `~/.hmux/daemon/<version>/<slot>/daemon.log` startup and crash diagnostics.
 
 Each `serve --stdio --persistent` bridge includes a fresh `bridge_lease_id` in
 its authenticated socket handshake. The persistent server tracks authenticated
@@ -71,10 +71,10 @@ the persistent PTY sessions.
 PTY lifecycle:
 1. A local attach creates or reuses a named `pty.*` session in the persistent daemon.
 2. If the local surface closes, the stdio proxy disconnects and its attachment detaches, but the PTY process and bounded scrollback remain in the daemon.
-3. `cmux ssh-session-list` calls `pty.list`; `cmux ssh-session-attach` creates a new local terminal whose startup script calls `ssh-pty-attach --require-existing`.
-4. `cmux ssh-session-cleanup` calls `pty.close` to terminate a persisted PTY session explicitly.
+3. `hmux ssh-session-list` calls `pty.list`; `hmux ssh-session-attach` creates a new local terminal whose startup script calls `ssh-pty-attach --require-existing`.
+4. `hmux ssh-session-cleanup` calls `pty.close` to terminate a persisted PTY session explicitly.
 5. Sessions with no attachments keep their last-known size and are reaped by the daemon idle TTL.
-6. Closing the owning workspace sends an authenticated slot-shutdown request, waits a bounded interval for the daemon lock to be released, and removes the relay's shell-state directory. As defense in depth, a daemon launched with `--persistent-lease-port` observes that exact `~/.cmux/relay/<port>.slot` lease, exits after the observed lease disappears and stdio disconnects, and removes the matching shell-state directory. Older callers that omit the flag retain the prior behavior without unsafe broad lease scanning.
+6. Closing the owning workspace sends an authenticated slot-shutdown request, waits a bounded interval for the daemon lock to be released, and removes the relay's shell-state directory. As defense in depth, a daemon launched with `--persistent-lease-port` observes that exact `~/.hmux/relay/<port>.slot` lease, exits after the observed lease disappears and stdio disconnects, and removes the matching shell-state directory. Older callers that omit the flag retain the prior behavior without unsafe broad lease scanning.
 
 ## Cloud WebSocket PTY transport
 
@@ -120,7 +120,7 @@ Security invariants:
 
 ## Distribution
 
-Release and nightly builds publish prebuilt `cmuxd-remote` binaries on GitHub Releases for:
+Release and nightly builds publish prebuilt `hmuxd-remote` binaries on GitHub Releases for:
 1. `darwin/arm64`
 2. `darwin/amd64`
 3. `linux/arm64`
@@ -131,80 +131,80 @@ The app embeds a compact manifest in `Info.plist` with:
 2. pinned SHA-256 digests
 3. release tag and checksums asset URL
 
-Release and nightly apps download and cache the matching binary locally, verify its SHA-256, then upload it to the remote host if needed. Dev builds can opt into a local `go build` fallback with `CMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD=1`.
+Release and nightly apps download and cache the matching binary locally, verify its SHA-256, then upload it to the remote host if needed. Dev builds can opt into a local `go build` fallback with `HMUX_REMOTE_DAEMON_ALLOW_LOCAL_BUILD=1`.
 
 To inspect what a given app build trusts, run:
-1. `cmux remote-daemon-status`
-2. `cmux remote-daemon-status --os linux --arch amd64`
+1. `hmux remote-daemon-status`
+2. `hmux remote-daemon-status --os linux --arch amd64`
 
 The command prints the exact release asset URL, expected SHA-256, local cache status, and a copy-pasteable `gh attestation verify` command for the selected platform.
 
 ## CLI relay
 
-The `cli` subcommand (or `cmux` wrapper/symlink) connects to the local cmux app through an SSH reverse forward and relays commands using the v2 JSON-RPC protocol.
+The `cli` subcommand (or `hmux` wrapper/symlink) connects to the local hmux app through an SSH reverse forward and relays commands using the v2 JSON-RPC protocol.
 
-Cloud VM images install `/usr/local/bin/cmux` as a symlink to `cmuxd-remote`,
-so `cmux --help` works before a user-specific SSH bootstrap has written
-`~/.cmux/bin/cmux`.
+Cloud VM images install `/usr/local/bin/hmux` as a symlink to `hmuxd-remote`,
+so `hmux --help` works before a user-specific SSH bootstrap has written
+`~/.hmux/bin/hmux`.
 
 Socket discovery order:
 1. `--socket <path>` flag
-2. `CMUX_SOCKET_PATH` environment variable
-3. `~/.cmux/socket_addr` file (written by the app after the reverse relay establishes)
+2. `HMUX_SOCKET_PATH` environment variable
+3. `~/.hmux/socket_addr` file (written by the app after the reverse relay establishes)
 
-For TCP addresses, the CLI dials once and only refreshes `~/.cmux/socket_addr` a single time if the first address was stale. Relay metadata is published only after the reverse forward is ready, so steady-state use does not rely on polling.
+For TCP addresses, the CLI dials once and only refreshes `~/.hmux/socket_addr` a single time if the first address was stale. Relay metadata is published only after the reverse forward is ready, so steady-state use does not rely on polling.
 
 Authenticated relay details:
 1. Each SSH workspace gets its own relay ID and relay token.
 2. The app runs a local loopback relay server that requires an HMAC-SHA256 challenge-response before forwarding a command to the real local Unix socket.
-   Authentication is mutual: the CLI sends its own nonce with its MAC and sends nothing further until the relay's success line carries `relay_mac`, an HMAC over a `cmux-relay-server-proof` label, the relay ID and both nonces. Another remote user who binds the forwarded port while it is down cannot produce it. The CLI also refuses a TCP relay address that has no relay credentials. The relay still answers clients that send no nonce with the plain v1 `{"ok":true}`.
-3. The remote shell never gets direct access to the local app socket. It only gets the reverse-forwarded relay port plus `~/.cmux/relay/<port>.auth`, which is written with `0600` permissions and removed when the relay stops.
+   Authentication is mutual: the CLI sends its own nonce with its MAC and sends nothing further until the relay's success line carries `relay_mac`, an HMAC over a `hmux-relay-server-proof` label, the relay ID and both nonces. Another remote user who binds the forwarded port while it is down cannot produce it. The CLI also refuses a TCP relay address that has no relay credentials. The relay still answers clients that send no nonce with the plain v1 `{"ok":true}`.
+3. The remote shell never gets direct access to the local app socket. It only gets the reverse-forwarded relay port plus `~/.hmux/relay/<port>.auth`, which is written with `0600` permissions and removed when the relay stops.
 4. Authentication is not authorization. `RemoteRelayCommandPolicy` rejects unlisted methods, command-bearing startup parameters, invalid selectors, and every parameter outside the selected method’s explicit schema. The app then verifies a request HMAC binding the originating workspace and active local SSH controller generation, and validates targets against its live remote terminal identities (`RemoteRelayAuthorizationPolicy`); aliases translate IDs but do not grant ownership. Local/browser panels in a remote workspace are excluded. Dispatch rechecks the controller generation and live ownership before acting; replacing or retiring the controller invalidates previously admitted requests. Input, close, scrollback, and selection reads also recheck the actual terminal target, and relay reads bypass cached topology responses. `surface.split` is withheld because its local fallback can spawn a Mac PTY. `surface.create`, `pane.create`, `surface.respawn`, `surface.send_key`, workspace/window/group creation, and global listing/navigation methods are denied. The `surface.resume.*` methods are not relay methods: a binding carries a command that would run on the Mac, and the app also refuses any relay-origin binding (manaflow-ai/cmux#14907). `notification.create_for_target` accepts no `reply_shape`; the app delivers a relayed notification with the relay origin, no reply, and the remote destination in its title. For a relay caller, `workspace.remote.status` and the `terminal_session_*` lifecycle methods return only `enabled`, `state`, and `connected` in `remote`, and omit the local `window_id` and `window_ref`. `agent.hook.enqueue` admits only Claude lifecycle events (`session-start`, `prompt-submit`, `stop`, `notification`, `session-end`, `pre-tool-use`) with `relay_backed: true` and an owned `workspace_id`/`surface_id`; the app rebuilds the hook environment from those selectors and drops host paths from the payload. `agent.hook.barrier` and decision hooks stay unavailable. Relay-side denials return `remote_relay_denied`; app-side ownership denials return `remote_relay_*_denied` without executing the requested operation.
 
 Integration additions for the relay path:
 
-1. Bootstrap installs `~/.cmux/bin/cmux` wrapper and keeps a default daemon target (`~/.cmux/bin/cmuxd-remote-current`).
-2. A background `ssh -N -R` process reverse-forwards a TCP port to the authenticated local relay server. The relay address is written to `~/.cmux/socket_addr` on the remote.
-3. Relay startup writes `~/.cmux/relay/<port>.daemon_path` so the wrapper can route each shell to the correct daemon binary when multiple local cmux instances or versions coexist.
-4. Relay startup writes `~/.cmux/relay/<port>.auth` with the relay ID and token needed for HMAC authentication.
+1. Bootstrap installs `~/.hmux/bin/hmux` wrapper and keeps a default daemon target (`~/.hmux/bin/hmuxd-remote-current`).
+2. A background `ssh -N -R` process reverse-forwards a TCP port to the authenticated local relay server. The relay address is written to `~/.hmux/socket_addr` on the remote.
+3. Relay startup writes `~/.hmux/relay/<port>.daemon_path` so the wrapper can route each shell to the correct daemon binary when multiple local hmux instances or versions coexist.
+4. Relay startup writes `~/.hmux/relay/<port>.auth` with the relay ID and token needed for HMAC authentication.
 
 ### Claude Code hooks
 
-The relay shell bootstrap writes `~/.cmux/relay/<port>.shell/bin/cmux-claude-wrapper`, which the shell integration's `claude` shim runs. When `~/.cmux/bin/cmux claude-wrapper --cmux-probe` succeeds (a local check with no relay round trip) it execs `cmux claude-wrapper`; an older CLI without the verb gets plain `claude` with the cmux shims dropped from `PATH`. `cmux claude-wrapper` resolves the real `claude` from `PATH` (skipping cmux shims) and, when the relay answers `system.ping`, adds one `--settings` file with relay hooks. Existing `--settings` arguments are merged into that file because Claude Code applies only the last one; launchers that put their own `--settings` and `CLAUDE_CONFIG_DIR` in front of `claude` keep both. A marker env var stops a launcher that re-resolves `claude` from stacking hooks twice, and the shim directories are dropped from `PATH` before exec. Merged copies live in `~/.cmux/claude-settings/` (mode `0600`) and are pruned after 7 idle days.
+The relay shell bootstrap writes `~/.hmux/relay/<port>.shell/bin/hmux-claude-wrapper`, which the shell integration's `claude` shim runs. When `~/.hmux/bin/hmux claude-wrapper --hmux-probe` succeeds (a local check with no relay round trip) it execs `hmux claude-wrapper`; an older CLI without the verb gets plain `claude` with the hmux shims dropped from `PATH`. `hmux claude-wrapper` resolves the real `claude` from `PATH` (skipping hmux shims) and, when the relay answers `system.ping`, adds one `--settings` file with relay hooks. Existing `--settings` arguments are merged into that file because Claude Code applies only the last one; launchers that put their own `--settings` and `CLAUDE_CONFIG_DIR` in front of `claude` keep both. A marker env var stops a launcher that re-resolves `claude` from stacking hooks twice, and the shim directories are dropped from `PATH` before exec. Merged copies live in `~/.hmux/claude-settings/` (mode `0600`) and are pruned after 7 idle days.
 
-Each hook runs `cmux claude-hook <event>`, which always prints `{}` and exits 0; when an event goes nowhere it appends the reason to `~/.cmux/claude-hook.log`. It sends `agent.hook.enqueue` with the surface from `CMUX_WORKSPACE_ID`/`CMUX_SURFACE_ID`, the Claude process TTY, and a payload of at most 6 KiB without `cwd` or transcript paths. `CMUX_CLAUDE_HOOKS_DISABLED=1` turns both off. With no local PID to check, the app shows this status only on a live pane that the hooks reported for, and clears it when the relay connection drops.
+Each hook runs `hmux claude-hook <event>`, which always prints `{}` and exits 0; when an event goes nowhere it appends the reason to `~/.hmux/claude-hook.log`. It sends `agent.hook.enqueue` with the surface from `HMUX_WORKSPACE_ID`/`HMUX_SURFACE_ID`, the Claude process TTY, and a payload of at most 6 KiB without `cwd` or transcript paths. `HMUX_CLAUDE_HOOKS_DISABLED=1` turns both off. With no local PID to check, the app shows this status only on a live pane that the hooks reported for, and clears it when the relay connection drops.
 
-The shim only sees launches from a shell that cmux started. A Claude session whose shell never saw cmux, such as one inside a tmux server that was running before cmux attached to it, or one a supervisor restarted, has no `CMUX_*` variables and no shim on `PATH`. For those, run `~/.cmux/bin/cmux claude-hook install` once on the host. It adds the same hook events to Claude's user settings (`$CLAUDE_CONFIG_DIR/settings.json`, else `~/.claude/settings.json`; `--settings-file <path>` picks another file), keeps every other setting, and can be repeated; `cmux claude-hook uninstall` removes only these entries. Launchers that merge the user's `~/.claude/settings.json` into their own `--settings` pick the hooks up too. The installed commands, `cmux claude-hook --user-settings <event>`:
+The shim only sees launches from a shell that hmux started. A Claude session whose shell never saw hmux, such as one inside a tmux server that was running before hmux attached to it, or one a supervisor restarted, has no `HMUX_*` variables and no shim on `PATH`. For those, run `~/.hmux/bin/hmux claude-hook install` once on the host. It adds the same hook events to Claude's user settings (`$CLAUDE_CONFIG_DIR/settings.json`, else `~/.claude/settings.json`; `--settings-file <path>` picks another file), keeps every other setting, and can be repeated; `hmux claude-hook uninstall` removes only these entries. Launchers that merge the user's `~/.claude/settings.json` into their own `--settings` pick the hooks up too. The installed commands, `hmux claude-hook --user-settings <event>`:
 
-- do nothing outside cmux, and when the CLI is missing;
-- step aside when the shim already added hooks to this Claude (the wrapper's marker variable together with its `CMUX_CLAUDE_PID` naming this process; a marker inherited from a wrapped Claude that started the tmux server does not count), and for a Claude process that has another Claude process above it, such as `claude -p` run by an agent's tool call;
-- inside tmux, when a cmux client is attached to the hook's tmux session (or a session grouped with it), route to that client: they ask tmux for the pane's window and the attached clients, prefer a client whose current window holds the pane and then the most recently active one, read its `CMUX_SOCKET_PATH`, `CMUX_WORKSPACE_ID` and `CMUX_SURFACE_ID` from the client's process environment (`/proc/<pid>/environ` on Linux, `kern.procargs2` on macOS; same user only), and send the client's TTY as `caller_tty`. If that client's relay port has no auth file any more (a persistent remote terminal that outlived a reconnect), they follow the slot named by the persistent daemon above the client to the port that leases it now. Inside tmux they never use the pane's own `CMUX_*` variables, which come from whichever shell started the tmux server, so with no cmux client attached they do nothing. Outside tmux they need `CMUX_SOCKET_PATH`, `CMUX_WORKSPACE_ID` and `CMUX_SURFACE_ID` from their own environment and never fall back to `~/.cmux/socket_addr`, which can name another workspace's relay;
+- do nothing outside hmux, and when the CLI is missing;
+- step aside when the shim already added hooks to this Claude (the wrapper's marker variable together with its `HMUX_CLAUDE_PID` naming this process; a marker inherited from a wrapped Claude that started the tmux server does not count), and for a Claude process that has another Claude process above it, such as `claude -p` run by an agent's tool call;
+- inside tmux, when a hmux client is attached to the hook's tmux session (or a session grouped with it), route to that client: they ask tmux for the pane's window and the attached clients, prefer a client whose current window holds the pane and then the most recently active one, read its `HMUX_SOCKET_PATH`, `HMUX_WORKSPACE_ID` and `HMUX_SURFACE_ID` from the client's process environment (`/proc/<pid>/environ` on Linux, `kern.procargs2` on macOS; same user only), and send the client's TTY as `caller_tty`. If that client's relay port has no auth file any more (a persistent remote terminal that outlived a reconnect), they follow the slot named by the persistent daemon above the client to the port that leases it now. Inside tmux they never use the pane's own `HMUX_*` variables, which come from whichever shell started the tmux server, so with no hmux client attached they do nothing. Outside tmux they need `HMUX_SOCKET_PATH`, `HMUX_WORKSPACE_ID` and `HMUX_SURFACE_ID` from their own environment and never fall back to `~/.hmux/socket_addr`, which can name another workspace's relay;
 - share one 3-second budget between the tmux queries and the relay round trip, inside the 5-second hook timeout they declare, so Claude always gets `{}`.
 
-Install and uninstall rewrite the file only when the hooks change: an uninstall with no settings file creates nothing, numbers keep their exact text, and a `hooks` value that is not an object is refused rather than replaced. The installed commands call the stable `~/.cmux/bin/cmux`, so they survive upgrades.
+Install and uninstall rewrite the file only when the hooks change: an uninstall with no settings file creates nothing, numbers keep their exact text, and a `hooks` value that is not an object is refused rather than replaced. The installed commands call the stable `~/.hmux/bin/hmux`, so they survive upgrades.
 
-Every Claude session in one tmux session reports to the one cmux surface attached to it. Claude reads hooks when a session starts, so sessions that were already running pick them up only after a restart (for example `claude --resume <id>`, or the launcher's own resume).
+Every Claude session in one tmux session reports to the one hmux surface attached to it. Claude reads hooks when a session starts, so sessions that were already running pick them up only after a restart (for example `claude --resume <id>`, or the launcher's own resume).
 
 ### Protocol and flags
 
 All relay commands use v2 JSON-RPC. Flags map to JSON params via `flagToParamKey` (e.g. `--workspace` → `workspace_id`). Boolean flags (`--focus`) accept `true`/`false`/`1`/`0`/`yes`/`no` and are sent as JSON booleans.
 
 Environment fallbacks:
-- `CMUX_WORKSPACE_ID` — used as `workspace_id` when `--workspace` is not provided
-- `CMUX_SURFACE_ID` — used as `surface_id` when `--surface` is not provided
+- `HMUX_WORKSPACE_ID` — used as `workspace_id` when `--workspace` is not provided
+- `HMUX_SURFACE_ID` — used as `surface_id` when `--surface` is not provided
 
 ### Migration notes
 
 **Core discovery over SSH/Mosh**:
 
 ```sh
-cmux --json rpc system.ping '{}'
-cmux --json rpc system.capabilities '{}'
-cmux --json list-workspaces
+hmux --json rpc system.ping '{}'
+hmux --json rpc system.capabilities '{}'
+hmux --json list-workspaces
 ```
 
-`cmuxd-remote` also supports the command forms `cmux --json ping` and
-`cmux --json capabilities`. The `rpc` subcommand sends the method name exactly:
+`hmuxd-remote` also supports the command forms `hmux --json ping` and
+`hmux --json capabilities`. The `rpc` subcommand sends the method name exactly:
 `rpc ping` and `rpc capabilities` are not aliases for the `system.*` methods.
 A `method_not_found` response is a failure, even if an older client printed it
 without a failing exit status. The remote daemon exits 1 for server denials and
@@ -227,7 +227,7 @@ socket path, access mode, or unrelated mobile capabilities are returned.
 
 **SSH/Mosh 経由の基本情報の取得**:
 上記の `system.ping`、`system.capabilities`、`list-workspaces` を使用してください。
-`cmuxd-remote` では `cmux --json ping` と `cmux --json capabilities` も使用できます。
+`hmuxd-remote` では `hmux --json ping` と `hmux --json capabilities` も使用できます。
 `rpc` はメソッド名をそのまま送信するため、`rpc ping` と `rpc capabilities` は別名として
 扱われません。`method_not_found` は成功ではなく、リモートデーモンはサーバー側の拒否や
 不明なメソッドに対して終了コード 1 を返します。
@@ -248,7 +248,7 @@ socket path, access mode, or unrelated mobile capabilities are returned.
 
 **Relay authorization (GHSA-9vmv-3hjw-j28c)**: the remote CLI exposes only the authorization allowlist, even if a command appears in its command table. `new-workspace`, `new-window`, `new-surface`, `new-pane`, `send-key`, global workspace/window listing, and focus/navigation commands are denied. Allowed surface operations require the explicit live remote target consumed by that handler; adding an unrelated owned selector does not authorize a request. Use `new-split` with the owning workspace and terminal surface IDs for a remote terminal split.
 
-**`send` / `send-key`**: The `--text` and `--key` flags were removed. Both commands now take their argument positionally, matching the Mac CLI convention: `cmux send "hello world"` and `cmux send-key ctrl+c`.
+**`send` / `send-key`**: The `--text` and `--key` flags were removed. Both commands now take their argument positionally, matching the Mac CLI convention: `hmux send "hello world"` and `hmux send-key ctrl+c`.
 
 **Window commands**: Prior to this release, `list-windows`, `current-window`, `new-window`, `focus-window`, and `close-window` used a v1 text protocol and returned plain-text responses (e.g. `window:abc123` per line). They now use v2 JSON-RPC and return JSON. Scripts parsing that output will need updating.
 

@@ -186,7 +186,7 @@ def trusted_pool_reason(label: str) -> str | None:
 
 
 NIGHTLY_RUNNER_VARIABLE = "CI_NIGHTLY_TRUSTED_RUNNER"
-# glaeda-cmux-runner's runner_label(): the static label only the runner
+# glaeda-hmux-runner's runner_label(): the static label only the runner
 # registered under that name carries (lowercase, [a-z0-9._-]).
 RUNNER_NAME_LABEL = re.compile(r"glaeda-runner-[a-z0-9][a-z0-9._-]*")
 
@@ -196,7 +196,7 @@ def nightly_runner_reason(label: str) -> str | None:
 
     nightly.yml's app build asks for this label together with
     CI_SEED_TRUSTED_POOL (`["<trusted pool>", "<this>"]`), so it lands only on
-    the one trusted runner both name (cmux15-glaeda): a runner's own
+    the one trusted runner both name (hmux15-glaeda): a runner's own
     glaeda-runner-<name> label. A pull request runner's name label can match
     no runner here, since those runners never carry the trusted pool label.
     The shape also keeps the value safe inside the JSON runs-on array. Empty

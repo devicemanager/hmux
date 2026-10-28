@@ -3,7 +3,7 @@
 // Two sources, listed separately so an admin can see why an account is Pro:
 // - Stripe: active user and team subscription rows, joined to the recorded
 //   customer email (no Stack calls).
-// - Manual grants: `cmuxVmPlan` overrides on Stack users and teams. Stack has
+// - Manual grants: `hmuxVmPlan` overrides on Stack users and teams. Stack has
 //   no metadata filter, so these are found by paging through all accounts in
 //   bounded pages that the page walks one request at a time.
 
@@ -418,13 +418,13 @@ function defaultProListStackApp(): ProListStackApp {
   const app = getStackServerApp();
   return {
     getTeam: (teamId) => withStackAuthSpan("get_team", () => app.getTeam(teamId), {
-      "cmux.auth.flow": "admin_pro_list",
+      "hmux.auth.flow": "admin_pro_list",
     }),
     listUsers: (options) => withStackAuthSpan("list_users", () => app.listUsers(options), {
-      "cmux.auth.flow": "admin_pro_list",
+      "hmux.auth.flow": "admin_pro_list",
     }),
     listTeams: (options) => withStackAuthSpan("list_teams", () => app.listTeams(options), {
-      "cmux.auth.flow": "admin_pro_list",
+      "hmux.auth.flow": "admin_pro_list",
     }),
   };
 }

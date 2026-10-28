@@ -29,7 +29,7 @@ export function VaultOverviewView({ summary }: { readonly summary: VaultSummary 
           body={t("emptyBody")}
           action={
             <code className="inline-block border border-border bg-code-bg px-3 py-1.5 font-mono text-xs">
-              cmux-vault sync
+              hmux-vault sync
             </code>
           }
         />

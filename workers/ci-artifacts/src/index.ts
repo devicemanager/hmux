@@ -17,7 +17,7 @@ type Cached = Artifact & { key: string; cache: "hit" | "fill" };
 
 function route(request: Request): { id: number; digest: string } | null {
   const url = new URL(request.url);
-  const match = /^\/v1\/manaflow-ai\/cmux\/artifacts\/([1-9][0-9]{0,18})\/([a-f0-9]{64})\.zip$/.exec(url.pathname);
+  const match = /^\/v1\/manaflow-ai\/hmux\/artifacts\/([1-9][0-9]{0,18})\/([a-f0-9]{64})\.zip$/.exec(url.pathname);
   if (request.method !== "GET" || url.search || !match) return null;
   const id = Number(match[1]);
   return Number.isSafeInteger(id) ? { id, digest: match[2] } : null;
@@ -39,7 +39,7 @@ async function bounded<T>(work: Promise<T>, milliseconds: number): Promise<T> {
 
 async function api(path: string, token: string, signal: AbortSignal): Promise<Record<string, unknown>> {
   const response = await fetch(`https://api.github.com/repos/${REPOSITORY}${path}`, {
-    headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "User-Agent": "cmux-ci-artifacts" },
+    headers: { Authorization: `Bearer ${token}`, Accept: "application/vnd.github+json", "User-Agent": "hmux-ci-artifacts" },
     redirect: "manual", signal,
   });
   if (!response.ok || !response.body) throw new ArtifactError("metadata unavailable");
@@ -105,7 +105,7 @@ async function authorize(
 
 async function archive(artifact: Artifact, token: string, signal: AbortSignal): Promise<Response> {
   const redirect = await fetch(`https://api.github.com/repos/${REPOSITORY}/actions/artifacts/${artifact.id}/zip`, {
-    headers: { Authorization: `Bearer ${token}`, "User-Agent": "cmux-ci-artifacts" }, redirect: "manual", signal,
+    headers: { Authorization: `Bearer ${token}`, "User-Agent": "hmux-ci-artifacts" }, redirect: "manual", signal,
   });
   await redirect.body?.cancel();
   const location = redirect.headers.get("Location");
@@ -155,7 +155,7 @@ export class RequestAdmission extends DurableObject<AdmissionEnv> {
   }
 
   async fetch(request: Request): Promise<Response> {
-    const runId = request.headers.get("X-Cmux-Run-Id") || "";
+    const runId = request.headers.get("X-Hmux-Run-Id") || "";
     if (!/^[1-9][0-9]{0,19}$/.test(runId)) return new Response("invalid admission identity", { status: 400 });
     return new Response(null, { status: await this.admit(runId) ? 204 : 429 });
   }
@@ -215,8 +215,8 @@ export class ArtifactImport extends DurableObject<Env> {
     const identity = route(request);
     if (!identity) return new Response("Not found", { status: 404 });
     try {
-      const expectedRunHeader = request.headers.get("X-Cmux-Expected-Run-Id");
-      const expectedAttemptHeader = request.headers.get("X-Cmux-Expected-Run-Attempt");
+      const expectedRunHeader = request.headers.get("X-Hmux-Expected-Run-Id");
+      const expectedAttemptHeader = request.headers.get("X-Hmux-Expected-Run-Attempt");
       const expectedRunId = expectedRunHeader === null ? undefined : Number(expectedRunHeader);
       const expectedRunAttempt = expectedAttemptHeader === null ? undefined : Number(expectedAttemptHeader);
       if ((expectedRunHeader !== null && (!Number.isSafeInteger(expectedRunId) || expectedRunId! <= 0))
@@ -242,7 +242,7 @@ export class ArtifactImport extends DurableObject<Env> {
       return new Response(result.body, { headers: {
         "Content-Type": "application/zip", "Content-Length": String(result.size),
         "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff",
-        "X-Cmux-Artifact-Cache": cached.cache,
+        "X-Hmux-Artifact-Cache": cached.cache,
       } });
     } catch (error) {
       // Do not log signed download URLs, tokens, or response bodies.
@@ -259,8 +259,8 @@ export async function artifactHandler(
   if (!identity) return new Response("Not found", { status: 404 });
   // Strip caller credentials before the request enters the artifact Durable Object.
   const headers = new Headers();
-  if (expectedRunId !== undefined) headers.set("X-Cmux-Expected-Run-Id", expectedRunId);
-  if (expectedRunAttempt !== undefined) headers.set("X-Cmux-Expected-Run-Attempt", expectedRunAttempt);
+  if (expectedRunId !== undefined) headers.set("X-Hmux-Expected-Run-Id", expectedRunId);
+  if (expectedRunAttempt !== undefined) headers.set("X-Hmux-Expected-Run-Attempt", expectedRunAttempt);
   const internal = new Request(request.url, { method: "GET", headers });
   const owner = expectedRunId === undefined ? "unbound" : `run/${expectedRunId}/${expectedRunAttempt}`;
   return env.ARTIFACT_IMPORTS.getByName(`${REPOSITORY}/${owner}/${identity.id}/${identity.digest}`).fetch(internal);
@@ -279,7 +279,7 @@ export default {
       );
       const admission = await bounded(
         env.REQUEST_ADMISSION.getByName("production").fetch(new Request("https://admission.internal/admit", {
-          headers: { "X-Cmux-Run-Id": caller.runId },
+          headers: { "X-Hmux-Run-Id": caller.runId },
         })),
         ADMISSION_TIMEOUT_MS,
       );

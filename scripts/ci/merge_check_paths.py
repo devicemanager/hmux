@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
-"""The check-path gate gh-merge-green applies to pull requests into feat-cmux-next.
+"""The check-path gate gh-merge-green applies to pull requests into feat-hmux-next.
 
-    merge_check_paths.py OWNER/REPO NUMBER SHA [--base feat-cmux-next] [--timeout SECONDS] [--interval SECONDS]
+    merge_check_paths.py OWNER/REPO NUMBER SHA [--base feat-hmux-next] [--timeout SECONDS] [--interval SECONDS]
         [--check-only]
 
 A pull request's CI judges it against the base it ran on. When a check path changed on the base after that, the
 result is stale though no file of the pull request changed: on 2026-10-21 #22967, #22975 and #23094 merged after
-#23365 added check:fixed-waits, never ran it, and turned it red on feat-cmux-next. The check paths are the base's
+#23365 added check:fixed-waits, never ran it, and turned it red on feat-hmux-next. The check paths are the base's
 scripts/ci/check-paths.txt (fnmatch patterns, one list shared with next-autoland): the check scripts, their
 baselines, the fast gates and the workflows that run them.
 
-The pull request's CI base is the `base <sha>` its `cmux-next/fast-gates` status names (the merge's first parent).
+The pull request's CI base is the `base <sha>` its `hmux-next/fast-gates` status names (the merge's first parent).
 The gate passes when that base is the tip, or an ancestor of it whose newer commits change no check path. Otherwise
 (the status names no base, or its base is not an ancestor, too far behind, or a check path changed since) it
-dispatches cmux-next-fast-gates.yml for the pull request, which merges the head into the current tip and runs the
+dispatches hmux-next-fast-gates.yml for the pull request, which merges the head into the current tip and runs the
 cheap gates and the webviews checks there, and waits for that run's status: a success whose base is fresh again
 passes; a red, a run that never reports within --timeout, or a base that changed a check path again during the
 wait refuses. Not strict up-to-date protection or a merge queue: only a stale pull request gets one cheap Linux run,
@@ -38,10 +38,10 @@ import time
 from pathlib import Path
 from typing import Callable
 
-BRANCH = "feat-cmux-next"
+BRANCH = "feat-hmux-next"
 CHECK_PATHS = "scripts/ci/check-paths.txt"
-CONTEXT = "cmux-next/fast-gates"
-WORKFLOW = "cmux-next-fast-gates.yml"
+CONTEXT = "hmux-next/fast-gates"
+WORKFLOW = "hmux-next-fast-gates.yml"
 STATUS_BASE = re.compile(r"\bbase ([0-9a-f]{40})\b")
 MAX_AHEAD = 250  # as next-autoland: further behind than this, the compare is not trusted
 MAX_FILES = 300  # GitHub's compare lists at most 300 files

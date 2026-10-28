@@ -6,7 +6,7 @@ import { machineHygieneCommand } from "./command";
 
 /** Long enough for du over a large home; the route's maxDuration covers it. */
 export const MACHINE_HYGIENE_TIMEOUT_MS = 180_000;
-/** cmux-machine-hygiene's exit code when another --apply run holds its lock. */
+/** hmux-machine-hygiene's exit code when another --apply run holds its lock. */
 export const MACHINE_HYGIENE_BUSY_EXIT = 4;
 
 export type MachineHygieneItem = {
@@ -70,7 +70,7 @@ export function parseMachineHygieneReport(stdout: string, expectedMode: "dry-run
 }
 
 /**
- * Runs cmux-machine-hygiene on one of the caller's own machines through exec.
+ * Runs hmux-machine-hygiene on one of the caller's own machines through exec.
  * Dry-run unless `apply` is true. Only the machine's owner may run it, and
  * only on a running machine: a paused one answers `not-running` without
  * being woken.

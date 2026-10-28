@@ -1,6 +1,6 @@
 # Keyboard Pinning Lab
 
-This standalone iOS app isolates the Workspace Detail keyboard geometry from cmux state and networking.
+This standalone iOS app isolates the Workspace Detail keyboard geometry from hmux state and networking.
 
 The Composer and Shortcut bars live in one `ComposerDockView`. Its bottom edge is constrained directly to `UIKeyboardLayoutGuide.topAnchor`. UIKit therefore owns the keyboard frame, the dock frame, and interrupted animation timing in one constraint graph.
 

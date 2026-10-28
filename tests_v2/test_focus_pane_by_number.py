@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """Regression: Ctrl+Cmd+1…9 focuses a pane by its spatial number (cx-zjtn.5).
 
-cmux-next jumps straight to pane N with Ctrl+Cmd+N; classic could only cycle
+hmux-next jumps straight to pane N with Ctrl+Cmd+N; classic could only cycle
 or move one pane at a time. Panes number in the same spatial order that
 Focus Next Pane walks, and 9 always picks the last pane, as Cmd+9 does for
 workspaces.
 
 Run against a TAGGED build only (never the user's default socket):
-  CMUX_SOCKET_PATH=/tmp/cmux-debug-<tag>.sock python3 tests_v2/test_focus_pane_by_number.py
+  HMUX_SOCKET_PATH=/tmp/hmux-debug-<tag>.sock python3 tests_v2/test_focus_pane_by_number.py
 
 simulate_shortcut routes through AppDelegate.debugHandleCustomShortcut, the
 same matcher and dispatch order as real keystrokes from the app-level monitor.
@@ -18,33 +18,33 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
-def _panes(c: cmux) -> list:
+def _panes(c: hmux) -> list:
     # The socket rate-limits tight polling; back off and retry.
     for _ in range(20):
         try:
             return c.list_panes()
-        except cmuxError as error:
+        except hmuxError as error:
             if "rate_limited" not in str(error):
                 raise
             time.sleep(0.3)
     return c.list_panes()
 
 
-def _pane_ids(c: cmux) -> list:
+def _pane_ids(c: hmux) -> list:
     return [pid for _i, pid, _n, _f in _panes(c)]
 
 
-def _focused(c: cmux) -> str:
+def _focused(c: hmux) -> str:
     for _i, pid, _n, focused in _panes(c):
         if focused:
             return pid
     return ""
 
 
-def _split_new_pane(c: cmux, direction: str) -> str:
+def _split_new_pane(c: hmux, direction: str) -> str:
     before = set(_pane_ids(c))
     c.new_split(direction)
     deadline = time.time() + 5.0
@@ -53,10 +53,10 @@ def _split_new_pane(c: cmux, direction: str) -> str:
         if added:
             return added[0]
         time.sleep(0.3)
-    raise cmuxError(f"split {direction} made no pane")
+    raise hmuxError(f"split {direction} made no pane")
 
 
-def _press(c: cmux, combo: str, expected: str, timeout: float = 3.0) -> str:
+def _press(c: hmux, combo: str, expected: str, timeout: float = 3.0) -> str:
     c.simulate_shortcut(combo)
     deadline = time.time() + timeout
     current = _focused(c)
@@ -69,10 +69,10 @@ def _press(c: cmux, combo: str, expected: str, timeout: float = 3.0) -> str:
 
 
 def main() -> int:
-    c = cmux()
+    c = hmux()
     c.connect()
     if not c.ping():
-        raise cmuxError("socket ping failed")
+        raise hmuxError("socket ping failed")
     c.activate_app()
     time.sleep(0.3)
 

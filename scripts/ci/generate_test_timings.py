@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate cmux-unit-test-timings.json from app-host xcodebuild CI logs.
+"""Generate hmux-unit-test-timings.json from app-host xcodebuild CI logs.
 
 Feed it the raw logs of every "app-host unit tests (N/7)" job from a few
 recent green ci.yml runs, one directory per run named after its run id
@@ -7,9 +7,9 @@ recent green ci.yml runs, one directory per run named after its run id
 
     python3 scripts/ci/generate_test_timings.py \
         runs/36043411778 runs/36056804560 runs/36062245739 \
-        --output scripts/ci/cmux-unit-test-timings.json
+        --output scripts/ci/hmux-unit-test-timings.json
 
-It extracts per-test durations from XCTest lines ("Test Case '-[cmuxTests.X
+It extracts per-test durations from XCTest lines ("Test Case '-[hmuxTests.X
 testY]' passed (N seconds).") and per-suite wall times from Swift Testing
 lines ("Suite X passed after N seconds."). The app-host batch runs its Swift
 Testing suites one after another (a batch's suite walls add up to its "Test
@@ -26,7 +26,7 @@ sums its batches. Across runs, every duration is the median of the runs that
 measured it, so one slow runner or one retried test does not skew a suite.
 Per-method entries are emitted only for suites large enough that the shard
 planner splits them by method (LARGE_SUITE_METHOD_THRESHOLD in
-cmux_unit_test_shard.py).
+hmux_unit_test_shard.py).
 """
 
 from __future__ import annotations
@@ -42,10 +42,10 @@ from pathlib import Path
 # Both scripts live in scripts/ci/, and Python puts the script's own directory
 # first on sys.path, so the planner's threshold imports directly: classes at or
 # above it are sharded per-method, so only they need per-method timings.
-from cmux_unit_test_shard import LARGE_SUITE_METHOD_THRESHOLD
+from hmux_unit_test_shard import LARGE_SUITE_METHOD_THRESHOLD
 
 XCTEST_CASE_RE = re.compile(
-    r"Test Case '-\[cmuxTests\.(\w+) (\w+)\]' (?:passed|failed) \((\d+(?:\.\d+)?) seconds\)"
+    r"Test Case '-\[hmuxTests\.(\w+) (\w+)\]' (?:passed|failed) \((\d+(?:\.\d+)?) seconds\)"
 )
 SWIFT_TESTING_SUITE_RE = re.compile(
     r"Suite (\w+|\"(?:[^\"\\]|\\.)*\") (?:passed|failed) after (\d+(?:\.\d+)?) seconds"
@@ -67,7 +67,7 @@ DECLARATION_RE = re.compile(
 def suite_display_names(root: Path) -> dict[str, str]:
     """Map each unambiguous ``@Suite("Display name")`` to its declared type."""
     candidates: dict[str, set[str]] = collections.defaultdict(set)
-    for path in sorted((root / "cmuxTests").glob("**/*.swift")):
+    for path in sorted((root / "hmuxTests").glob("**/*.swift")):
         pending: str | None = None
         for line in path.read_text(encoding="utf-8", errors="replace").splitlines():
             attribute = SUITE_ATTRIBUTE_RE.search(line)
@@ -195,7 +195,7 @@ def main() -> int:
 
     manifest = {
         "_comment": (
-            "Measured cmuxTests durations used by cmux_unit_test_shard.py to "
+            "Measured hmuxTests durations used by hmux_unit_test_shard.py to "
             "balance shards by time instead of test count. Each value is the "
             "median over source_run_ids. Regenerate from recent green runs' "
             "app-host shard logs with scripts/ci/generate_test_timings.py. "

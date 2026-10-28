@@ -229,12 +229,12 @@ export type VmEntry = {
   readonly addressIpv4: string | null;
   readonly addressIpv6: string | null;
   /**
-   * The image's cmux-tui attach contract (`"snapshot-v2"`: baked daemon with
+   * The image's hmux-tui attach contract (`"snapshot-v2"`: baked daemon with
    * the trusted private-network listener). With a private address, it is
    * everything a client needs to dial the daemon, so the create response can
    * carry it and New Machine skips the separate attach request.
    */
-  readonly cmuxTuiContract: string | null;
+  readonly hmuxTuiContract: string | null;
   /** Coding agents: "image" keeps the baked pins, "latest" updates them on attach. */
   readonly agentUpdates: VmAgentUpdatesSetting;
   /**
@@ -485,7 +485,7 @@ export function renameVm(input: {
       yield* providers.exec(updated.provider, input.providerVmId, guestPromptInstallCommand(vmPromptIdentity(updated)), {
         timeoutMs: 10_000,
         providerMetadata: updated.providerMetadata,
-        // /etc/cmux is root-owned.
+        // /etc/hmux is root-owned.
         asRoot: true,
       }).pipe(
         Effect.flatMap((result) => result.exitCode === 0 ? Effect.void : Effect.fail(new Error(`prompt update exited ${result.exitCode}`))),
@@ -1506,7 +1506,7 @@ export function createVm(input: CreateVmInput): Effect.Effect<VmEntry, VmWorkflo
       yield* recordCreateSuccessEvents(repo, input, running);
     }
     yield* schedulePromptIdentityPush(providers, running, input.deferAfterResponse);
-    // The create response carries the first connection, so openVmCmuxRemote
+    // The create response carries the first connection, so openVmHmuxRemote
     // never runs for it; start the opted-in updater here, after the response.
     if (vmAgentUpdatesFromRow(running) === "latest") {
       yield* scheduleGuestAgentUpdates(providers, running, "latest", input.deferAfterResponse);
@@ -1517,17 +1517,17 @@ export function createVm(input: CreateVmInput): Effect.Effect<VmEntry, VmWorkflo
 }
 
 /**
- * Publishes a new machine's prompt name (`cmux@<slug>`) into the guest once,
+ * Publishes a new machine's prompt name (`hmux@<slug>`) into the guest once,
  * after the create response, with the same command a rename uses.
  *
- * The guest also pulls its name from https://reflection.cmux.internal/name
+ * The guest also pulls its name from https://reflection.hmux.internal/name
  * through the Freestyle edge, but the edge can only reach a public origin: a
  * private backend (every tailnet dev stack) never answers it, so dev machines
- * kept the baked `cmux@cmux`. This push is the path that works everywhere.
+ * kept the baked `hmux@hmux`. This push is the path that works everywhere.
  * It is never on New Machine's critical path (NO-WORK INVARIANT in
  * drivers/freestyle.ts): it runs after the response when the route provides
  * the hook, detached otherwise, and a failure leaves reflection to publish
- * the name. cmux-prompt-sync redraws the prompt when the name file changes.
+ * the name. hmux-prompt-sync redraws the prompt when the name file changes.
  */
 function schedulePromptIdentityPush(
   providers: VmProviderGatewayShape,
@@ -1540,7 +1540,7 @@ function schedulePromptIdentityPush(
     providers.exec(row.provider, providerVmId, guestPromptInstallCommand(vmPromptIdentity(row)), {
       timeoutMs: 10_000,
       providerMetadata: row.providerMetadata,
-      // /etc/cmux is root-owned.
+      // /etc/hmux is root-owned.
       asRoot: true,
     })
   ).pipe(
@@ -2190,7 +2190,7 @@ export function snapshotVm(input: {
 }
 
 /**
- * The machine as the Mac-facing reflection route reads it (`cmux vm self <m>`):
+ * The machine as the Mac-facing reflection route reads it (`hmux vm self <m>`):
  * the owned row itself, so the route can build the same reflection context a
  * machine gets from inside. List/status semantics (`requireUserVm`): a locked
  * free-window machine still describes itself.
@@ -2207,7 +2207,7 @@ export function reflectVm(input: {
   });
 }
 
-/** Every snapshot taken from a machine the caller owns, newest first (`cmux vm snapshot ls`). */
+/** Every snapshot taken from a machine the caller owns, newest first (`hmux vm snapshot ls`). */
 export function listVmSnapshots(input: {
   readonly userId: string;
   readonly billingTeamId?: string | null;
@@ -2249,7 +2249,7 @@ export type VmSnapshotDeleteResult = {
 };
 
 /**
- * Delete one snapshot of a machine the caller owns (`cmux vm snapshot rm`).
+ * Delete one snapshot of a machine the caller owns (`hmux vm snapshot rm`).
  * Scoped to the machine: the provider refuses a snapshot taken from another
  * VM as not-found, which the route answers as 404 vm_snapshot_not_found. The
  * ledger records the deletion so `hasOwnedSnapshot` stops offering it to restore.
@@ -3550,7 +3550,7 @@ function reconcileObservedProviderStatus(
 /**
  * A paused row whose machine runs at the provider, with no resume recorded,
  * was woken by traffic: a client heartbeat or a request to the machine wakes
- * a paused Freestyle VM (cmux#21379). Wait out any resume still settling,
+ * a paused Freestyle VM (hmux#21379). Wait out any resume still settling,
  * then pause it again if the row is still paused and the machine still runs.
  * A machine the provider will not pause is recorded as running, so it counts.
  */
@@ -4490,7 +4490,7 @@ function execTimedOutResult(timeoutMs: number): ExecResult {
   return {
     exitCode: 124,
     stdout: "",
-    stderr: `cmux: the command did not finish within ${Math.round(timeoutMs / 1000)}s; it may still be running on the machine.\n`,
+    stderr: `hmux: the command did not finish within ${Math.round(timeoutMs / 1000)}s; it may still be running on the machine.\n`,
   };
 }
 
@@ -4616,7 +4616,7 @@ function ownsFirewallEndpoint(repo: VmRepositoryShape, input: VmFirewallInput, n
 }
 
 /**
- * The provider account is shared by every cmux user, so the provider cannot say whose a rule is.
+ * The provider account is shared by every hmux user, so the provider cannot say whose a rule is.
  * A rule is the caller's (to read or delete) when it names at least one resource and every
  * resource it names is the caller's. Creation is stricter: see createVmFirewallRule.
  */
@@ -5377,13 +5377,13 @@ export function openVmPort(input: {
 }
 
 /**
- * Attach through the cmux-tui remote daemon — the only session transport on
+ * Attach through the hmux-tui remote daemon — the only session transport on
  * machines (other providers still serve the legacy websocket/SSH attach). The ingress
  * token lands in the same lease ledger as previews so sign-out revokes it; session
  * auth is the daemon's device enrollment, which the client completes with
- * approveVmCmuxRemoteEnrollment.
+ * approveVmHmuxRemoteEnrollment.
  */
-export function openVmCmuxRemote(input: {
+export function openVmHmuxRemote(input: {
   readonly userId: string;
   readonly billingTeamId?: string | null;
   readonly teamIds?: readonly string[];
@@ -5392,7 +5392,7 @@ export function openVmCmuxRemote(input: {
   readonly maxActiveVms?: number | null;
   readonly deviceFingerprint?: string;
   readonly clientCapabilities?: readonly string[];
-  /** Caller's CURRENT billing plan; the free access window applies to cmux-tui attaches too. */
+  /** Caller's CURRENT billing plan; the free access window applies to hmux-tui attaches too. */
   readonly callerPlanId?: string | null;
   /** Runs best-effort guest work after the response (the route passes `runAfterResponse`). */
   readonly deferAfterResponse?: (work: Effect.Effect<void>) => void;
@@ -5403,20 +5403,20 @@ export function openVmCmuxRemote(input: {
     const providers = yield* VmProviderGateway;
     const vm = yield* requireAccessibleUserVm(input);
     const supportedTransports = providers.attachTransports?.(vm.provider);
-    if (supportedTransports && !supportedTransports.includes("cmux-remote")) {
+    if (supportedTransports && !supportedTransports.includes("hmux-remote")) {
       return yield* Effect.fail(new VmAttachTransportUnsupportedError({
         provider: vm.provider,
         vmId: input.providerVmId,
-        requested: "cmux-remote",
+        requested: "hmux-remote",
         supported: supportedTransports,
       }));
     }
-    if (!providers.openCmuxRemote) {
+    if (!providers.openHmuxRemote) {
       return yield* Effect.fail(
         new VmProviderOperationError({
           provider: vm.provider,
-          operation: "openCmuxRemote",
-          cause: new VmOperationUnsupportedError({ provider: vm.provider, operation: "openCmuxRemote" }),
+          operation: "openHmuxRemote",
+          cause: new VmOperationUnsupportedError({ provider: vm.provider, operation: "openHmuxRemote" }),
         }),
       );
     }
@@ -5434,7 +5434,7 @@ export function openVmCmuxRemote(input: {
       vm,
       input.providerVmId,
       "attach",
-      providers.openCmuxRemote(vm.provider, input.providerVmId, {
+      providers.openHmuxRemote(vm.provider, input.providerVmId, {
         promptIdentity: vmPromptIdentity(vm),
         deviceFingerprint: input.deviceFingerprint,
         clientCapabilities: input.clientCapabilities,
@@ -5449,7 +5449,7 @@ export function openVmCmuxRemote(input: {
       kind: "preview",
       tokenHash: hashToken(endpoint.token),
       expiresAt: new Date(endpoint.expiresAtUnix * 1000),
-      transport: "cmux-remote",
+      transport: "hmux-remote",
       metadata: { session: endpoint.session, invited: false, trustedCarrier: endpoint.trustedCarrier },
     }).pipe(
       Effect.catchAll((err) => {
@@ -5467,7 +5467,7 @@ export function openVmCmuxRemote(input: {
       eventType: "vm.attach",
       provider: vm.provider,
       imageId: vm.imageId,
-      metadata: { transport: "cmux-remote", invited: false, trustedCarrier: endpoint.trustedCarrier },
+      metadata: { transport: "hmux-remote", invited: false, trustedCarrier: endpoint.trustedCarrier },
     }).pipe(Effect.catchAll(() => Effect.void));
     // Only an opted-in machine pays this exec; the default attach stays exec-free.
     if (vmAgentUpdatesFromRow(vm) === "latest") {
@@ -5477,7 +5477,7 @@ export function openVmCmuxRemote(input: {
   });
 }
 
-export function approveVmCmuxRemoteEnrollment(input: {
+export function approveVmHmuxRemoteEnrollment(input: {
   readonly userId: string;
   readonly billingTeamId?: string | null;
   readonly teamIds?: readonly string[];
@@ -5488,16 +5488,16 @@ export function approveVmCmuxRemoteEnrollment(input: {
   return Effect.gen(function* () {
     const providers = yield* VmProviderGateway;
     const vm = yield* requireAccessibleUserVm(input);
-    if (!providers.approveCmuxRemoteEnrollment) {
+    if (!providers.approveHmuxRemoteEnrollment) {
       return yield* Effect.fail(
         new VmProviderOperationError({
           provider: vm.provider,
-          operation: "approveCmuxRemoteEnrollment",
-          cause: new VmOperationUnsupportedError({ provider: vm.provider, operation: "approveCmuxRemoteEnrollment" }),
+          operation: "approveHmuxRemoteEnrollment",
+          cause: new VmOperationUnsupportedError({ provider: vm.provider, operation: "approveHmuxRemoteEnrollment" }),
         }),
       );
     }
-    return yield* providers.approveCmuxRemoteEnrollment(vm.provider, input.providerVmId, input.invitationId, {
+    return yield* providers.approveHmuxRemoteEnrollment(vm.provider, input.providerVmId, input.invitationId, {
       providerMetadata: vm.providerMetadata,
     });
   });
@@ -5727,7 +5727,7 @@ function openAttachEndpointResult(input: OpenAttachEndpointInput) {
     const repo = yield* VmRepository;
     const providers = yield* VmProviderGateway;
     const vm = yield* requireAccessibleUserVm(input);
-    // A provider that only runs the cmux-tui daemon cannot serve the legacy
+    // A provider that only runs the hmux-tui daemon cannot serve the legacy
     // websocket/SSH attach at all; say so before waking or mutating anything.
     const supportedTransports = providers.attachTransports?.(vm.provider);
     if (supportedTransports && !supportedTransports.some((t) => t === "websocket" || t === "ssh")) {
@@ -6407,7 +6407,7 @@ function vmEntryFromRow(row: CloudVmRow): VmEntry {
     ownerTeamId: row.ownerTeamId,
     addressIpv4: typeof addressIpv4 === "string" && addressIpv4 ? addressIpv4 : null,
     addressIpv6: typeof addressIpv6 === "string" && addressIpv6 ? addressIpv6 : null,
-    cmuxTuiContract: typeof metadata["cmuxTuiContract"] === "string" ? metadata["cmuxTuiContract"] : null,
+    hmuxTuiContract: typeof metadata["hmuxTuiContract"] === "string" ? metadata["hmuxTuiContract"] : null,
     agentUpdates: vmAgentUpdatesFromRow(row),
     resourceReservation: hasVmResourceReservationMetadata(row.providerMetadata)
       ? (({ vcpus, memoryMb }) => ({ vcpus, memoryMb }))(vmResourceReservationFromMetadata(row.providerMetadata))

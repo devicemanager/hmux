@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 enum InternalFlagsPresenter {
@@ -34,12 +34,12 @@ private final class InternalFlagsWindowController: ReleasingWindowController {
             backing: .buffered,
             defer: false
         )
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.featureFlags")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.featureFlags")
         window.title = String(localized: "featureFlags.window.title", defaultValue: "Feature Flags")
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true
         window.minSize = NSSize(width: 760, height: 420)
-        window.contentView = NSHostingView(rootView: InternalFlagsView(flags: CmuxFeatureFlags.shared))
+        window.contentView = NSHostingView(rootView: InternalFlagsView(flags: HmuxFeatureFlags.shared))
         return window
     }
 
@@ -49,14 +49,14 @@ private final class InternalFlagsWindowController: ReleasingWindowController {
 }
 
 private struct InternalFlagsView: View {
-    let flags: CmuxFeatureFlags
+    let flags: HmuxFeatureFlags
 #if DEBUG
     @AppStorage(DevBuildBannerDebugSettings.sidebarBannerVisibleKey)
     private var showSidebarDevBuildBanner = DevBuildBannerDebugSettings.defaultShowSidebarBanner
 #endif
 
     private var rows: [InternalFlagRowSnapshot] {
-        CmuxFeatureFlags.allFlags.map { definition in
+        HmuxFeatureFlags.allFlags.map { definition in
             InternalFlagRowSnapshot(definition: definition, flags: flags)
         }
     }

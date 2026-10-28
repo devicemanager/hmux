@@ -15,7 +15,7 @@
  * process inside the guest happens to send something.
  *
  * So the guest announces itself: at boot and on every clone (the boot
- * supervisor, cmux-devbox-boot, keeps announcing every 30 s so an idle
+ * supervisor, hmux-devbox-boot, keeps announcing every 30 s so an idle
  * machine cannot age out of the fabric's table either). The attach path has
  * its own announce (drivers/freestyleNetworkAnnouncement.ts), which covers
  * machines from an image that predates the supervisor hook.

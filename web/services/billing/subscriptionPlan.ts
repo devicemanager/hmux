@@ -10,11 +10,11 @@ export function personalPlanIdForSubscription(
   if (subscription.metadata?.founders_edition === "true") return "pro";
   const lookupKey = planItem(subscription)?.price?.lookup_key;
   if (typeof lookupKey === "string") {
-    if (lookupKey === "cmux-go-monthly-10" || lookupKey.startsWith("cmux-go-")) return "go";
-    if (lookupKey === MAX_PRICING_USD.month.lookupKey || lookupKey.startsWith("cmux-max-")) {
+    if (lookupKey === "hmux-go-monthly-10" || lookupKey.startsWith("hmux-go-")) return "go";
+    if (lookupKey === MAX_PRICING_USD.month.lookupKey || lookupKey.startsWith("hmux-max-")) {
       return "max";
     }
-    if (lookupKey.startsWith("cmux-pro-")) return "pro";
+    if (lookupKey.startsWith("hmux-pro-")) return "pro";
     if (lookupKey.trim()) return null;
   }
   const metadataPlan = subscription.metadata?.plan ?? sessionMetadata?.plan;

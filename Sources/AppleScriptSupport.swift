@@ -1,5 +1,5 @@
 import AppKit
-import CmuxPanes
+import HmuxPanes
 
 private enum AppleScriptStrings {
     static let disabled = String(
@@ -84,7 +84,7 @@ private extension Workspace {
 @MainActor
 extension NSApplication {
     var isAppleScriptEnabled: Bool {
-        // cmux always enables AppleScript — the underlying Ghostty fork
+        // hmux always enables AppleScript — the underlying Ghostty fork
         // doesn't have the macos-applescript config key yet (added in
         // upstream ghostty commit 25fa58143, 2026-03-06), so
         // appleScriptAutomationEnabled() always returns false.
@@ -232,7 +232,7 @@ extension NSApplication {
 }
 
 @MainActor
-@objc(CmuxScriptWindow)
+@objc(HmuxScriptWindow)
 final class ScriptWindow: NSObject {
     let windowId: UUID
 
@@ -364,7 +364,7 @@ final class ScriptWindow: NSObject {
 }
 
 @MainActor
-@objc(CmuxScriptTab)
+@objc(HmuxScriptTab)
 final class ScriptTab: NSObject {
     let windowId: UUID
     let tabId: UUID
@@ -503,7 +503,7 @@ final class ScriptTab: NSObject {
 }
 
 @MainActor
-@objc(CmuxScriptTerminal)
+@objc(HmuxScriptTerminal)
 final class ScriptTerminal: NSObject {
     let workspaceId: UUID
     let terminalId: UUID
@@ -685,7 +685,7 @@ final class ScriptTerminal: NSObject {
 }
 
 @MainActor
-@objc(CmuxScriptInputTextCommand)
+@objc(HmuxScriptInputTextCommand)
 final class ScriptInputTextCommand: NSScriptCommand {
     override func performDefaultImplementation() -> Any? {
         guard NSApp.validateScript(command: self) else { return nil }

@@ -1,6 +1,6 @@
-# CMUX Sample Sidebar Extension
+# HMUX Sample Sidebar Extension
 
-This is a standalone macOS app that embeds a CMUX sidebar ExtensionKit app extension. It is the reference project for third-party sidebar authors.
+This is a standalone macOS app that embeds a HMUX sidebar ExtensionKit app extension. It is the reference project for third-party sidebar authors.
 
 ## Build and Enable
 
@@ -8,21 +8,21 @@ This is a standalone macOS app that embeds a CMUX sidebar ExtensionKit app exten
 2. Select the app and extension targets.
 3. Replace the Manaflow signing team with your own team.
 4. Replace the app and extension bundle identifiers with your own reverse-DNS identifiers.
-5. Keep the extension point identifier as `com.cmuxterm.app.cmux.sidebar`.
+5. Keep the extension point identifier as `com.hmuxterm.app.hmux.sidebar`.
 6. Keep App Sandbox enabled for the extension target. An unsandboxed appex can
    build, embed, and sign without registering with ExtensionKit.
 7. Build and launch the containing app once.
-8. In CMUX, click the puzzle button next to the sidebar help button, open Sidebar
+8. In HMUX, click the puzzle button next to the sidebar help button, open Sidebar
    Extensions, and enable the sample.
 9. In the same puzzle menu, choose the extension sidebar provider.
-10. In the extension sidebar header, choose `CMUX ExtKit Sample Sidebar` if more
+10. In the extension sidebar header, choose `HMUX ExtKit Sample Sidebar` if more
     than one sidebar extension is enabled.
 
-The sample targets macOS 14+, matching CMUX.
+The sample targets macOS 14+, matching HMUX.
 
 ## What It Shows
 
-The extension renders real workspace data supplied by CMUX:
+The extension renders real workspace data supplied by HMUX:
 
 - workspace count
 - unread total
@@ -38,15 +38,15 @@ It does not use fake workspaces. The sample requests workspace metadata, surface
 ## Authoring Pattern
 
 The sample's `@main` ExtensionKit entrypoint conforms directly to
-`CmuxSidebarExtension`. App-specific state lives in `SidebarConnectionModel`. CMUX
+`HmuxSidebarExtension`. App-specific state lives in `SidebarConnectionModel`. HMUX
 delivers workspace updates through `update(context:)`, and the model uses the typed
 host helpers for actions:
 
 ```swift
 @main
 @MainActor
-final class SampleSidebarExtension: CmuxSidebarExtension {
-    static let manifest = CmuxExtensionManifest(...)
+final class SampleSidebarExtension: HmuxSidebarExtension {
+    static let manifest = HmuxExtensionManifest(...)
     private let model = SidebarConnectionModel()
 
     required init() {}
@@ -55,7 +55,7 @@ final class SampleSidebarExtension: CmuxSidebarExtension {
         SampleSidebarView(model: model)
     }
 
-    func update(context: CmuxSidebarContext) {
+    func update(context: HmuxSidebarContext) {
         model.update(context: context)
     }
 }
@@ -63,10 +63,10 @@ final class SampleSidebarExtension: CmuxSidebarExtension {
 @Observable
 @MainActor
 final class SidebarConnectionModel {
-    private(set) var snapshot: CmuxSidebarSnapshot?
-    private var host: CmuxSidebarHost?
+    private(set) var snapshot: HmuxSidebarSnapshot?
+    private var host: HmuxSidebarHost?
 
-    func update(context: CmuxSidebarContext) {
+    func update(context: HmuxSidebarContext) {
         snapshot = context.snapshot
         host = context.host
     }
@@ -85,39 +85,39 @@ final class SidebarConnectionModel {
 }
 ```
 
-`CmuxSidebarExtension` owns the ExtensionKit scene and XPC connection, so extension
+`HmuxSidebarExtension` owns the ExtensionKit scene and XPC connection, so extension
 authors do not define `configuration`, bind an extension point in Swift, or touch
 `NSXPCConnection`.
 
-`CmuxSidebarContext` exposes one typed host channel through `context.host`.
+`HmuxSidebarContext` exposes one typed host channel through `context.host`.
 
-The manifest is the permission request CMUX shows to users. Request only the scopes
+The manifest is the permission request HMUX shows to users. Request only the scopes
 your sidebar actually needs.
 
 ## Running External Tools
 
-CMUX read scopes can supply a workspace path, but they do not grant filesystem
+HMUX read scopes can supply a workspace path, but they do not grant filesystem
 access to that path. A compiled extension that launches `git` or another
 external process must also satisfy the macOS App Sandbox, executable resolution,
 working-directory, and file-privacy rules. Follow the SDK's
-[Running external tools](../../Packages/macOS/CmuxExtensionKit/README.md#running-external-tools)
+[Running external tools](../../Packages/macOS/HmuxExtensionKit/README.md#running-external-tools)
 guide before adding `Process` code.
 
 ## Troubleshooting
 
-If the extension does not appear in CMUX, confirm that App Sandbox is enabled for
-the extension target, launch the containing app once, then reopen CMUX's Sidebar
+If the extension does not appear in HMUX, confirm that App Sandbox is enabled for
+the extension target, launch the containing app once, then reopen HMUX's Sidebar
 Extensions browser. You can also check system discovery directly:
 
 ```sh
 pluginkit -mAvvv
 ```
 
-The normal CMUX release uses `com.cmuxterm.app.cmux.sidebar`. Tagged development
-builds use the point stored in the host's `CMUXSidebarExtensionPointIdentifier`
-Info.plist key (currently `<host-bundle-id>.cmux.sidebar`), so do not filter on
+The normal HMUX release uses `com.hmuxterm.app.hmux.sidebar`. Tagged development
+builds use the point stored in the host's `HMUXSidebarExtensionPointIdentifier`
+Info.plist key (currently `<host-bundle-id>.hmux.sidebar`), so do not filter on
 the production point when diagnosing a tagged or custom host.
 
 If it appears but cannot be enabled, check signing on both the containing app and the embedded appex.
 
-If it loads but row clicks do not select workspaces, open the CMUX extension details popover and grant the requested action.
+If it loads but row clicks do not select workspaces, open the HMUX extension details popover and grant the requested action.

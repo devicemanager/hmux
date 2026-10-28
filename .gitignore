@@ -26,8 +26,8 @@ GhosttyKit.xcframework
 GhosttyKit.xcframework.bak-*/
 
 # Release artifacts
-cmux-*.zip
-cmux-macos.dmg
+hmux-*.zip
+hmux-macos.dmg
 appcast.xml
 
 # Python
@@ -51,7 +51,7 @@ tests/visual_output/
 tests/visual_report.html
 experiments/*/target/
 
-# Stale pre-rebrand Rust TUI dir (renamed to cmux-tui/; old checkouts may
+# Stale pre-rebrand Rust TUI dir (renamed to hmux-tui/; old checkouts may
 # still have an untracked mux/target that must never be committed again)
 /mux/
 
@@ -68,17 +68,17 @@ tmp-*/
 
 # Local dogfood scratch (screenshots, recordings) — never commit
 artifacts/
-!Packages/Shared/CmuxAgentChat/Sources/CmuxAgentChat/Artifacts/
-!Packages/Shared/CmuxAgentChat/Sources/CmuxAgentChat/Artifacts/*.swift
-!Packages/iOS/CmuxAgentChatUI/Sources/CmuxAgentChatUI/Artifacts/
-!Packages/iOS/CmuxAgentChatUI/Sources/CmuxAgentChatUI/Artifacts/*.swift
+!Packages/Shared/HmuxAgentChat/Sources/HmuxAgentChat/Artifacts/
+!Packages/Shared/HmuxAgentChat/Sources/HmuxAgentChat/Artifacts/*.swift
+!Packages/iOS/HmuxAgentChatUI/Sources/HmuxAgentChatUI/Artifacts/
+!Packages/iOS/HmuxAgentChatUI/Sources/HmuxAgentChatUI/Artifacts/*.swift
 
 # tmux verbose debug logs (tmux -v) that land in the cwd
 tmux-*.log
 
-# Remote-only Blacksmith cmux-tui benchmark output
+# Remote-only Blacksmith hmux-tui benchmark output
 /testbox-benchmark/
-/.cmux-scratch/
+/.hmux-scratch/
 
-# Locally downloaded prebuilt client for Packages/Shared/CmuxTerminalClient
-Packages/Shared/CmuxTerminalClient/CmuxTerminalClient.xcframework/
+# Locally downloaded prebuilt client for Packages/Shared/HmuxTerminalClient
+Packages/Shared/HmuxTerminalClient/CmuxTerminalClient.xcframework/

@@ -229,7 +229,7 @@ class GitHub:
         headers = {
             "Accept": "application/vnd.github+json",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "cmux-required-checks-drift",
+            "User-Agent": "hmux-required-checks-drift",
         }
         if self.token:
             headers["Authorization"] = f"Bearer {self.token}"

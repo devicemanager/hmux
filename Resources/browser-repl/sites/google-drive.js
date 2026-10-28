@@ -2,9 +2,9 @@
 // through Google's download and export endpoints in the signed-in session.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URL, URLSearchParams } = root.CmuxBrowserRepl.core;
+  const { URL, URLSearchParams } = root.HmuxBrowserRepl.core;
   S.register(
     "googleDrive",
     (t) => {

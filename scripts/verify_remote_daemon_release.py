@@ -18,7 +18,7 @@ import zlib
 from urllib.parse import quote
 
 
-MANIFEST_KEY = "CMUXRemoteDaemonManifestJSON"
+MANIFEST_KEY = "HMUXRemoteDaemonManifestJSON"
 TARGETS = {("darwin", "arm64"), ("darwin", "amd64"),
            ("linux", "arm64"), ("linux", "amd64")}
 
@@ -26,7 +26,7 @@ TARGETS = {("darwin", "arm64"), ("darwin", "amd64"),
 # Credentials the bundled CLI must never inherit (see
 # scripts/ci/lib/signing-runtime-guard.sh, which the shell checks use).
 SECRET_ENV = re.compile(
-    r"^(APPLE_CERTIFICATE_|ASC_API_|IOS_|APPLE_.*PROVISIONING_PROFILE|CMUX_RELEASE_APP_|CONTENT_SIGNING_|CF_R2_"
+    r"^(APPLE_CERTIFICATE_|ASC_API_|IOS_|APPLE_.*PROVISIONING_PROFILE|HMUX_RELEASE_APP_|CONTENT_SIGNING_|CF_R2_"
     r"|ACTIONS_ID_TOKEN_REQUEST_|ACTIONS_RUNTIME_TOKEN$"
     r"|(NIGHTLY_|SHARED_)?SPARKLE_(NEXT_)?PRIVATE_KEY$|AWS_SECRET_ACCESS_KEY$|AWS_ACCESS_KEY_ID$"
     r"|SENTRY_AUTH_TOKEN$|GH_TOKEN$|GITHUB_TOKEN$)"
@@ -40,8 +40,8 @@ def require(condition, message):
 
 def refuse_with_signing_keychain():
     """--verify-cli runs the bundled CLI, so the CI signing keychain must be gone."""
-    state_dir = os.environ.get("CMUX_SIGNING_KEYCHAIN_STATE_DIR") or (
-        os.path.join(os.environ["RUNNER_TEMP"], "cmux-signing-keychain") if os.environ.get("RUNNER_TEMP") else "")
+    state_dir = os.environ.get("HMUX_SIGNING_KEYCHAIN_STATE_DIR") or (
+        os.path.join(os.environ["RUNNER_TEMP"], "hmux-signing-keychain") if os.environ.get("RUNNER_TEMP") else "")
     present = sorted(path.stem for path in Path(state_dir).glob("*.password")) if state_dir else []
     require(not present, "a CI signing keychain is still present (" + " ".join(present)
             + "); run scripts/ci/signing-keychain.sh delete before --verify-cli runs the bundled CLI")
@@ -75,8 +75,8 @@ def verify_assets(manifest_path, directory):
         version_parts = manifest["appVersion"].rsplit(f"-{channel}.", 1)
         require(len(version_parts) == 2 and version_parts[1].isdigit(), f"invalid {channel} daemon version")
         suffix = "-" + version_parts[1]
-    require(manifest_path.name == f"cmuxd-remote-manifest{suffix}.json", "unexpected manifest filename")
-    require(manifest["checksumsAssetName"] == f"cmuxd-remote-checksums{suffix}.txt",
+    require(manifest_path.name == f"hmuxd-remote-manifest{suffix}.json", "unexpected manifest filename")
+    require(manifest["checksumsAssetName"] == f"hmuxd-remote-checksums{suffix}.txt",
             "unexpected checksums filename")
     checksum_path = asset_path(directory, manifest["checksumsAssetName"])
     require(manifest["checksumsURL"] == f"{release_url}/{checksum_path.name}", "unexpected checksums URL")
@@ -86,7 +86,7 @@ def verify_assets(manifest_path, directory):
     checksums = {name: digest for digest, name in checksum_lines}
     expected_names = set()
     for entry in entries:
-        name = f"cmuxd-remote-{entry['goOS']}-{entry['goArch']}{suffix}"
+        name = f"hmuxd-remote-{entry['goOS']}-{entry['goArch']}{suffix}"
         expected_names.add(name)
         require(entry["assetName"] == name, f"unexpected asset name for {name}")
         require(entry["downloadURL"] == f"{release_url}/{name}", f"unexpected download URL for {name}")
@@ -130,11 +130,11 @@ def verify_bundle(app, manifest, embed=False, verify_cli=False,
                     f"bundled daemon checksum mismatch: {entry['assetName']}")
     if not verify_cli:
         return
-    cli = app / "Contents/Resources/bin/cmux"
+    cli = app / "Contents/Resources/bin/hmux"
     refuse_with_signing_keychain()
     # A release check must never be rescued by the developer's local-build override.
     environment = {key: value for key, value in os.environ.items()
-                   if not key.startswith("CMUX_") and not SECRET_ENV.match(key)}
+                   if not key.startswith("HMUX_") and not SECRET_ENV.match(key)}
     for entry in manifest["entries"]:
         result = subprocess.run(
             [str(cli), "--json", "remote-daemon-status", "--os", entry["goOS"], "--arch", entry["goArch"]],

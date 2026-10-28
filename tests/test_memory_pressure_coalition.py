@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 class MemoryPressureCoalitionTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temp = tempfile.TemporaryDirectory(prefix="cmux-coalition-test-")
+        cls.temp = tempfile.TemporaryDirectory(prefix="hmux-coalition-test-")
         cls.addClassCleanup(cls.temp.cleanup)
         directory = Path(cls.temp.name)
         cls.binary = directory / "aggregate-memory-probe"
@@ -25,14 +25,14 @@ class MemoryPressureCoalitionTests(unittest.TestCase):
             "-swift-version", "6", "-parse-as-library",
             "-module-cache-path", str(directory / "cache"),
         ]
-        foundation = ROOT / "Packages/macOS/CmuxFoundation/Sources/CmuxFoundation/Process/DarwinSystemMemorySnapshot.swift"
+        foundation = ROOT / "Packages/macOS/HmuxFoundation/Sources/HmuxFoundation/Process/DarwinSystemMemorySnapshot.swift"
         cls.compile([
-            *flags, "-emit-module", "-emit-object", "-module-name", "CmuxFoundation",
-            str(foundation), "-emit-module-path", str(directory / "CmuxFoundation.swiftmodule"),
+            *flags, "-emit-module", "-emit-object", "-module-name", "HmuxFoundation",
+            str(foundation), "-emit-module-path", str(directory / "HmuxFoundation.swiftmodule"),
             "-o", str(directory / "foundation.o"),
         ])
         package_sources = sorted(
-            (ROOT / "Packages/macOS/CmuxMemoryPressure/Sources/CmuxMemoryPressure").glob("*.swift")
+            (ROOT / "Packages/macOS/HmuxMemoryPressure/Sources/HmuxMemoryPressure").glob("*.swift")
         )
         cls.compile([
             *flags, "-I", str(directory),

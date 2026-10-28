@@ -26,7 +26,7 @@ function subscription(
       has_more: false,
       url: "/v1/subscription_items",
     },
-    metadata: { app: "cmux", stackUserId: "redacted", plan: "pro" },
+    metadata: { app: "hmux", stackUserId: "redacted", plan: "pro" },
     ...overrides,
   } as Stripe.Subscription;
 }

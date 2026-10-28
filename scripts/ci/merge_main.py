@@ -48,7 +48,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import merge_main_resolver  # noqa: E402
 import last_green_base  # noqa: E402
 
-CMUX_REMOTE_RE = re.compile(r"github\.com[:/]manaflow-ai/cmux(?:\.git)?/?$")
+HMUX_REMOTE_RE = re.compile(r"github\.com[:/]manaflow-ai/cmux(?:\.git)?/?$")
 BASE_BRANCH = "main"
 
 
@@ -68,12 +68,12 @@ def git(repo: Path, *args: str, check: bool = True) -> str:
     return completed.stdout.strip()
 
 
-def cmux_remote(repo: Path) -> str:
+def hmux_remote(repo: Path) -> str:
     """The remote whose fetch URL is manaflow-ai/cmux; origin wins a tie, then the first by name."""
     matches: set[str] = set()
     for line in git(repo, "remote", "-v").splitlines():
         parts = line.split()
-        if len(parts) == 3 and parts[2] == "(fetch)" and CMUX_REMOTE_RE.search(parts[1]):
+        if len(parts) == 3 and parts[2] == "(fetch)" and HMUX_REMOTE_RE.search(parts[1]):
             matches.add(parts[0])
     if not matches:
         raise MergeMainError("no git remote points at github.com/manaflow-ai/cmux; add one or pass --remote")
@@ -129,7 +129,7 @@ def run_guards(repo: Path, command: GuardCommand, base: str, all_groups: bool,
     with tempfile.TemporaryDirectory(prefix="merge-main-") as scratch:
         results_path = Path(scratch) / "guards.json"
         args = [*command, "--json", str(results_path)] + (["--all"] if all_groups else [])
-        env = {**os.environ, "CMUX_GUARDS_BASE_SHA": base}
+        env = {**os.environ, "HMUX_GUARDS_BASE_SHA": base}
         completed = subprocess.run(args, cwd=repo, env=env, stdin=subprocess.DEVNULL)
         results = read_results(results_path)
     run = GuardRun(ran=True, returncode=completed.returncode, complete=bool(results))
@@ -165,7 +165,7 @@ def stamp_covers(stamp_dir: Path, base: str, tree: str, groups: set[str], steps:
 
 def stamp_dir() -> Path:
     cache = os.environ.get("XDG_CACHE_HOME") or str(Path.home() / ".cache")
-    return Path(cache) / "cmux-guards" / "pass"
+    return Path(cache) / "hmux-guards" / "pass"
 
 
 def rerun_on_base(repo: Path, failures: list[GuardFailure], base: str, command: GuardCommand) -> dict:
@@ -182,7 +182,7 @@ def rerun_on_base(repo: Path, failures: list[GuardFailure], base: str, command: 
             args += ["--group", group]
         for name in sorted({item.name for item in failures}):
             args += ["--step", name]
-        env = {**os.environ, "CMUX_GUARDS_BASE_SHA": base}
+        env = {**os.environ, "HMUX_GUARDS_BASE_SHA": base}
         subprocess.run(args, cwd=repo, env=env, stdin=subprocess.DEVNULL,
                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         return read_results(results_path)
@@ -309,7 +309,7 @@ def merge_main(options: Options, source: last_green_base.VerdictSource | None = 
     branch = git(repo, "rev-parse", "--abbrev-ref", "HEAD")
     if branch == BASE_BRANCH:
         raise MergeMainError(f"HEAD is {BASE_BRANCH} itself; run this on a feature branch")
-    remote = options.remote or cmux_remote(repo)
+    remote = options.remote or hmux_remote(repo)
     ref = f"refs/remotes/{remote}/{BASE_BRANCH}"
     if options.fetch:
         git(repo, "fetch", "--quiet", "--no-tags", remote, f"+refs/heads/{BASE_BRANCH}:{ref}")

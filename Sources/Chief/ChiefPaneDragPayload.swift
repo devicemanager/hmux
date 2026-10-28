@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxHomeCore
+import HmuxHomeCore
 import Foundation
 
 /// Process-local capability for dragging a Chief conversation into a Bonsplit pane.

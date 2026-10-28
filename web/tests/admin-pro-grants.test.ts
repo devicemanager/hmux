@@ -177,7 +177,7 @@ describe("isAdminGrantablePlanId", () => {
 
 describe("adminUserRow", () => {
   test("reports Pro from a Stripe subscription", () => {
-    const row = adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { cmuxPlan: "pro" } }), activeStripe);
+    const row = adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { hmuxPlan: "pro" } }), activeStripe);
     expect(row.isPro).toBe(true);
     expect(row.manualPlanId).toBeNull();
     expect(row.metadataPlanId).toBe("pro");
@@ -186,10 +186,10 @@ describe("adminUserRow", () => {
   });
 
   test("reports Pro from a paid manual grant without Stripe", () => {
-    expect(adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } }), noStripe).isPro).toBe(true);
-    expect(adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { cmuxVmPlan: "Founders" } }), noStripe).isPro).toBe(true);
-    expect(adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { cmuxVmPlan: "free" } }), noStripe).isPro).toBe(false);
-    expect(adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { cmuxVmPlan: "enterprise" } }), noStripe).isPro).toBe(false);
+    expect(adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { hmuxVmPlan: "pro" } }), noStripe).isPro).toBe(true);
+    expect(adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { hmuxVmPlan: "Founders" } }), noStripe).isPro).toBe(true);
+    expect(adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { hmuxVmPlan: "free" } }), noStripe).isPro).toBe(false);
+    expect(adminUserRow(fakeUser({ id: "u1", clientReadOnlyMetadata: { hmuxVmPlan: "enterprise" } }), noStripe).isPro).toBe(false);
     expect(adminUserRow(fakeUser({ id: "u1" }), noStripe).isPro).toBe(false);
   });
 
@@ -198,7 +198,7 @@ describe("adminUserRow", () => {
       fakeUser({
         id: "u1",
         serverMetadata: {
-          cmuxAdminPlanGrant: { plan: "pro", byUserId: "admin-1", byEmail: "admin@manaflow.ai", at: "2026-09-02T00:00:00.000Z" },
+          hmuxAdminPlanGrant: { plan: "pro", byUserId: "admin-1", byEmail: "admin@manaflow.ai", at: "2026-09-02T00:00:00.000Z" },
         },
       }),
       noStripe,
@@ -210,8 +210,8 @@ describe("adminUserRow", () => {
       at: "2026-09-02T00:00:00.000Z",
       pendingGrantId: null,
     });
-    expect(grantRecordFromServerMetadata({ cmuxAdminPlanGrant: "nope" })).toBeNull();
-    expect(grantRecordFromServerMetadata({ cmuxAdminPlanGrant: { plan: "pro" } })).toBeNull();
+    expect(grantRecordFromServerMetadata({ hmuxAdminPlanGrant: "nope" })).toBeNull();
+    expect(grantRecordFromServerMetadata({ hmuxAdminPlanGrant: { plan: "pro" } })).toBeNull();
     expect(grantRecordFromServerMetadata(null)).toBeNull();
   });
 });
@@ -225,7 +225,7 @@ describe("searchAdminUsers", () => {
 
   test("lists non-anonymous matches with billing state", async () => {
     const app = fakeApp([
-      fakeUser({ id: "u1", primaryEmail: "pat@example.com", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } }),
+      fakeUser({ id: "u1", primaryEmail: "pat@example.com", clientReadOnlyMetadata: { hmuxVmPlan: "pro" } }),
       fakeUser({ id: "u2", primaryEmail: "pat-anon@example.com", isAnonymous: true }),
       fakeUser({ id: "u3", primaryEmail: "other@example.com" }),
     ]);
@@ -242,8 +242,8 @@ describe("searchAdminUsers", () => {
 });
 
 describe("setManualPlanGrant", () => {
-  test("grants pro by writing cmuxVmPlan and an audit record", async () => {
-    const target = fakeUser({ id: "u1", clientReadOnlyMetadata: { cmuxPlan: "free", other: 1 } });
+  test("grants pro by writing hmuxVmPlan and an audit record", async () => {
+    const target = fakeUser({ id: "u1", clientReadOnlyMetadata: { hmuxPlan: "free", other: 1 } });
     const app = fakeApp([target]);
     const row = await setManualPlanGrant({
       targetUserId: "u1",
@@ -256,9 +256,9 @@ describe("setManualPlanGrant", () => {
     });
     expect(target.updates).toHaveLength(1);
     expect(target.updates[0]).toEqual({
-      clientReadOnlyMetadata: { cmuxPlan: "free", other: 1, cmuxVmPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "free", other: 1, hmuxVmPlan: "pro" },
       serverMetadata: {
-        cmuxAdminPlanGrant: {
+        hmuxAdminPlanGrant: {
           plan: "pro",
           byUserId: "admin-1",
           byEmail: "admin@manaflow.ai",
@@ -272,10 +272,10 @@ describe("setManualPlanGrant", () => {
     expect(row.lastGrant?.plan).toBe("pro");
   });
 
-  test("removing the grant deletes cmuxVmPlan and reconciles cmuxPlan from Stripe", async () => {
+  test("removing the grant deletes hmuxVmPlan and reconciles hmuxPlan from Stripe", async () => {
     const target = fakeUser({
       id: "u1",
-      clientReadOnlyMetadata: { cmuxVmPlan: "pro", cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxVmPlan: "pro", hmuxPlan: "pro" },
     });
     const app = fakeApp([target]);
     const row = await setManualPlanGrant({
@@ -287,8 +287,8 @@ describe("setManualPlanGrant", () => {
       stripeBillingStatus: async () => noStripe,
     });
     // First write clears the override; the resolver then drops the stale
-    // cmuxPlan mirror because there is no Stripe subscription behind it.
-    expect(target.updates[0]?.clientReadOnlyMetadata).toEqual({ cmuxPlan: "pro" });
+    // hmuxPlan mirror because there is no Stripe subscription behind it.
+    expect(target.updates[0]?.clientReadOnlyMetadata).toEqual({ hmuxPlan: "pro" });
     expect(target.clientReadOnlyMetadata).toEqual({});
     expect(row.isPro).toBe(false);
     expect(row.manualPlanId).toBeNull();
@@ -299,7 +299,7 @@ describe("setManualPlanGrant", () => {
   test("removing the grant keeps Pro for a Stripe subscriber", async () => {
     const target = fakeUser({
       id: "u1",
-      clientReadOnlyMetadata: { cmuxVmPlan: "founders", cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxVmPlan: "founders", hmuxPlan: "pro" },
     });
     const app = fakeApp([target]);
     const row = await setManualPlanGrant({
@@ -311,7 +311,7 @@ describe("setManualPlanGrant", () => {
       stripeBillingStatus: async () => activeStripe,
     });
     expect(target.updates).toHaveLength(1);
-    expect(target.clientReadOnlyMetadata).toEqual({ cmuxPlan: "pro" });
+    expect(target.clientReadOnlyMetadata).toEqual({ hmuxPlan: "pro" });
     expect(row.isPro).toBe(true);
     expect(row.manualPlanId).toBeNull();
   });
@@ -378,7 +378,7 @@ describe("teams", () => {
 
   test("searchAdminTeams reports Team access from Stripe or a manual grant", async () => {
     const app = fakeApp([], [
-      fakeTeam({ id: "t1", displayName: "Acme", members: 3, clientReadOnlyMetadata: { cmuxVmPlan: "team" } }),
+      fakeTeam({ id: "t1", displayName: "Acme", members: 3, clientReadOnlyMetadata: { hmuxVmPlan: "team" } }),
       fakeTeam({ id: "t2", displayName: "Acme Labs", members: 1 }),
       fakeTeam({ id: "t3", displayName: "Other" }),
     ]);
@@ -404,7 +404,7 @@ describe("teams", () => {
   }
 
   test("setTeamManualPlanGrant writes the override with an audit record and keeps a live Stripe mirror", async () => {
-    const team = fakeTeam({ id: "t1", members: 2, clientReadOnlyMetadata: { cmuxPlan: "team", other: 1 } });
+    const team = fakeTeam({ id: "t1", members: 2, clientReadOnlyMetadata: { hmuxPlan: "team", other: 1 } });
     const app = fakeApp([], [team]);
     const granted = await setTeamManualPlanGrant({
       teamId: "t1",
@@ -417,9 +417,9 @@ describe("teams", () => {
       stripeBillingStatus: async () => activeStripe,
     });
     expect(team.updates[0]).toEqual({
-      clientReadOnlyMetadata: { cmuxPlan: "team", other: 1, cmuxVmPlan: "team" },
+      clientReadOnlyMetadata: { hmuxPlan: "team", other: 1, hmuxVmPlan: "team" },
       serverMetadata: {
-        cmuxAdminPlanGrant: {
+        hmuxAdminPlanGrant: {
           plan: "team",
           byUserId: "admin-1",
           byEmail: "admin@manaflow.ai",
@@ -431,9 +431,9 @@ describe("teams", () => {
     expect(granted.manualPlanId).toBe("team");
   });
 
-  test("removing a team grant also drops a stale cmuxPlan mirror when Stripe lapsed", async () => {
+  test("removing a team grant also drops a stale hmuxPlan mirror when Stripe lapsed", async () => {
     for (const stale of ["team", "pro", "founders"]) {
-      const staleTeam = fakeTeam({ id: "ts", clientReadOnlyMetadata: { cmuxVmPlan: "team", cmuxPlan: stale } });
+      const staleTeam = fakeTeam({ id: "ts", clientReadOnlyMetadata: { hmuxVmPlan: "team", hmuxPlan: stale } });
       const staleApp = fakeApp([], [staleTeam]);
       await setTeamManualPlanGrant({
         teamId: "ts", plan: null, admin, app: staleApp, withFreshTeam: directTeamMutation(staleApp),
@@ -441,7 +441,7 @@ describe("teams", () => {
       });
       expect(staleTeam.clientReadOnlyMetadata).toEqual({});
     }
-    const team = fakeTeam({ id: "t1", clientReadOnlyMetadata: { cmuxVmPlan: "team", cmuxPlan: "team" } });
+    const team = fakeTeam({ id: "t1", clientReadOnlyMetadata: { hmuxVmPlan: "team", hmuxPlan: "team" } });
     const app = fakeApp([], [team]);
     const removed = await setTeamManualPlanGrant({
       teamId: "t1",
@@ -460,7 +460,7 @@ describe("teams", () => {
   });
 
   test("removing a team grant keeps Team for a paying team and writes the mirror", async () => {
-    const team = fakeTeam({ id: "t1", clientReadOnlyMetadata: { cmuxVmPlan: "team" } });
+    const team = fakeTeam({ id: "t1", clientReadOnlyMetadata: { hmuxVmPlan: "team" } });
     const app = fakeApp([], [team]);
     const removed = await setTeamManualPlanGrant({
       teamId: "t1",
@@ -471,7 +471,7 @@ describe("teams", () => {
       hasActiveTeamSubscription: async () => true,
       stripeBillingStatus: async () => activeStripe,
     });
-    expect(team.clientReadOnlyMetadata).toEqual({ cmuxPlan: "team" });
+    expect(team.clientReadOnlyMetadata).toEqual({ hmuxPlan: "team" });
     expect(removed.isTeam).toBe(true);
     expect(removed.manualPlanId).toBeNull();
   });
@@ -840,8 +840,8 @@ describe("pending email grants", () => {
     // grant is cleared.
     const other = fakeUser({
       id: "u9",
-      clientReadOnlyMetadata: { cmuxVmPlan: "founders" },
-      serverMetadata: { cmuxAdminPlanGrant: { plan: "founders", byUserId: "admin-2", byEmail: null, at: "2026-09-02T00:00:00.000Z" } },
+      clientReadOnlyMetadata: { hmuxVmPlan: "founders" },
+      serverMetadata: { hmuxAdminPlanGrant: { plan: "founders", byUserId: "admin-2", byEmail: null, at: "2026-09-02T00:00:00.000Z" } },
     });
     const app = fakeApp([other]);
     await setManualPlanGrant({
@@ -851,8 +851,8 @@ describe("pending email grants", () => {
     expect(other.updates).toEqual([]);
     const direct = fakeUser({
       id: "u7",
-      clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
-      serverMetadata: { cmuxAdminPlanGrant: { plan: "pro", byUserId: "admin-1", byEmail: null, at: "2026-09-02T00:00:00.000Z" } },
+      clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
+      serverMetadata: { hmuxAdminPlanGrant: { plan: "pro", byUserId: "admin-1", byEmail: null, at: "2026-09-02T00:00:00.000Z" } },
     });
     const app3 = fakeApp([direct]);
     await setManualPlanGrant({
@@ -862,8 +862,8 @@ describe("pending email grants", () => {
     expect(direct.updates).toEqual([]);
     const mine = fakeUser({
       id: "u8",
-      clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
-      serverMetadata: { cmuxAdminPlanGrant: { plan: "pro", byUserId: "admin-1", byEmail: null, at: "2026-09-02T00:00:00.000Z", pendingGrantId: "g1" } },
+      clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
+      serverMetadata: { hmuxAdminPlanGrant: { plan: "pro", byUserId: "admin-1", byEmail: null, at: "2026-09-02T00:00:00.000Z", pendingGrantId: "g1" } },
     });
     const app2 = fakeApp([mine]);
     await setManualPlanGrant({
@@ -953,8 +953,8 @@ describe("pending email grants", () => {
   test("an older pending grant never overwrites a newer direct admin decision", async () => {
     const target = fakeUser({
       id: "u1",
-      clientReadOnlyMetadata: { cmuxVmPlan: "founders" },
-      serverMetadata: { cmuxAdminPlanGrant: { plan: "founders", byUserId: "admin-2", byEmail: null, at: "2026-09-02T12:00:00.000Z" } },
+      clientReadOnlyMetadata: { hmuxVmPlan: "founders" },
+      serverMetadata: { hmuxAdminPlanGrant: { plan: "founders", byUserId: "admin-2", byEmail: null, at: "2026-09-02T12:00:00.000Z" } },
     });
     const app = fakeApp([target]);
     await setManualPlanGrant({
@@ -966,7 +966,7 @@ describe("pending email grants", () => {
       targetUserId: "u1", plan: "pro", admin, app, withFreshUser: directMutation(app),
       stripeBillingStatus: async () => noStripe, unlessAuditNewerThan: new Date("2026-09-02T13:00:00.000Z"),
     });
-    expect(target.clientReadOnlyMetadata).toEqual({ cmuxVmPlan: "pro" });
+    expect(target.clientReadOnlyMetadata).toEqual({ hmuxVmPlan: "pro" });
   });
 
   test("a claim stolen after the TTL is neither finalized nor compensated by the original sign-in", async () => {

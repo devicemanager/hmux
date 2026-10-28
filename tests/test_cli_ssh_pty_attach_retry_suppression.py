@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Gates that a persistent attach wrapper's retry noise stays silent.
 
-A managed reconnect wrapper exports `CMUX_SSH_PTY_ATTACH_WRAPPER_CAN_RETRY=1`
+A managed reconnect wrapper exports `HMUX_SSH_PTY_ATTACH_WRAPPER_CAN_RETRY=1`
 for each attempt that still has a retry budget, and it owns the user-facing
-retry notice. `cmux ssh-pty-attach` must therefore *not* print its own
+retry notice. `hmux ssh-pty-attach` must therefore *not* print its own
 diagnostic for a wrapper-retryable status (251/254/255 and the managed
 transport phases): a healthy reconnect would otherwise look like a fatal SSH
 failure to the person watching the pane.
 
-`ssh-pty-attach` is not facade-native: the router (`CMUXTermMain.shouldUseFacade`)
+`ssh-pty-attach` is not facade-native: the router (`HMUXTermMain.shouldUseFacade`)
 sends it to the hand-rolled runner, whose `main()` consults the suppression
 rule before writing to stderr. This therefore gates that path only; it does not
 compare parsers, because both would execute the same code. A facade-native
@@ -95,21 +95,21 @@ def accept_loop(listener: socket.socket) -> None:
 
 
 def run(cli: str, can_retry: bool, socket_path: str, home: str) -> subprocess.CompletedProcess:
-    # Every cmux-owned variable is dropped rather than allowlisted: an ambient
-    # CMUX_SOCKET_PATH points the child at the developer's running app, and an
-    # ambient CMUX_SSH_PTY_ATTACH_MANAGED_RECONNECT would make the runner exit
+    # Every hmux-owned variable is dropped rather than allowlisted: an ambient
+    # HMUX_SOCKET_PATH points the child at the developer's running app, and an
+    # ambient HMUX_SSH_PTY_ATTACH_MANAGED_RECONNECT would make the runner exit
     # through its own managed-presentation path instead of the one under test.
     env = {
         key: value
         for key, value in os.environ.items()
-        if not key.startswith(("CMUX_", "CMUXD_"))
+        if not key.startswith(("HMUX_", "HMUXD_"))
     }
     env.update({
-        "CMUX_CLI_SENTRY_DISABLED": "1",
-        "CMUX_SOCKET_PATH": socket_path,
+        "HMUX_CLI_SENTRY_DISABLED": "1",
+        "HMUX_SOCKET_PATH": socket_path,
         "HOME": home,
         "CFFIXED_USER_HOME": home,
-        "CMUX_SSH_PTY_ATTACH_WRAPPER_CAN_RETRY": "1" if can_retry else "0",
+        "HMUX_SSH_PTY_ATTACH_WRAPPER_CAN_RETRY": "1" if can_retry else "0",
     })
     return subprocess.run(
         [
@@ -124,9 +124,9 @@ def run(cli: str, can_retry: bool, socket_path: str, home: str) -> subprocess.Co
 
 
 def main() -> int:
-    cli = os.environ.get("CMUX_CLI_BIN")
+    cli = os.environ.get("HMUX_CLI_BIN")
     if not cli or not os.access(cli, os.X_OK):
-        print("FAIL: set CMUX_CLI_BIN to the built cmux binary")
+        print("FAIL: set HMUX_CLI_BIN to the built hmux binary")
         return 1
 
     failures: list[str] = []
@@ -141,7 +141,7 @@ def main() -> int:
             threading.Thread(target=accept_loop, args=(listener,), daemon=True).start()
 
             for can_retry in (False, True):
-                label = f"CMUX_SSH_PTY_ATTACH_WRAPPER_CAN_RETRY={'1' if can_retry else '0'}"
+                label = f"HMUX_SSH_PTY_ATTACH_WRAPPER_CAN_RETRY={'1' if can_retry else '0'}"
                 try:
                     result = run(cli, can_retry=can_retry, socket_path=socket_path, home=home)
                 except subprocess.TimeoutExpired as exc:

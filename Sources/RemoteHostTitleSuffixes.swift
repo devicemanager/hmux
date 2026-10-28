@@ -48,7 +48,7 @@ struct RemoteHostTitleSuffixes {
     }
 
     /// The place a workspace comes from, for naming after its title. A managed Cloud VM connects
-    /// through one shared gateway (`<vm id>+cmux@<gateway>`), so the VM id is what tells two VMs
+    /// through one shared gateway (`<vm id>+hmux@<gateway>`), so the VM id is what tells two VMs
     /// apart; every other remote workspace uses its destination.
     func origin(destination: String?, cloudVMID: String?) -> String? {
         if let cloudVMID, !cloudVMID.isEmpty { return cloudVMID }

@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSettingsUI
+import HmuxCloud
+import HmuxSettingsUI
 import Foundation
 
 /// Cloud Settings routes through the app's shared presenters.

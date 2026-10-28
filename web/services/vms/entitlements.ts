@@ -105,7 +105,7 @@ export function resolveVmEntitlements(
       resourcePool: resourcePoolForPlan(PRO_PLAN_ID, maxActiveVms),
     };
   }
-  const configuredDefaultPlan = env.CMUX_VM_DEFAULT_PLAN;
+  const configuredDefaultPlan = env.HMUX_VM_DEFAULT_PLAN;
   // A deployment-wide default is useful for local/demo fixtures, but it must
   // never grant a paid entitlement to an account with no billing metadata in
   // the normal fail-closed mode. Reusing the same explicit escape hatch keeps
@@ -175,7 +175,7 @@ function resolveBillingContext(
     throw new VmBillingTeamResolutionError({
       code: "vm_billing_team_required",
       status: 409,
-      message: "This Stack Auth user has multiple teams. Send X-Cmux-Team-Id so Cloud VM billing is explicit.",
+      message: "This Stack Auth user has multiple teams. Send X-Hmux-Team-Id so Cloud VM billing is explicit.",
     });
   }
 
@@ -233,7 +233,7 @@ export function maxMemoryMbForPlan(
 ): number {
   const normalized = normalizedPlanId(planId ?? "");
   const planKey = normalized.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase();
-  const specific = env[`CMUX_VM_PLAN_${planKey}_MAX_MEMORY_MB`];
+  const specific = env[`HMUX_VM_PLAN_${planKey}_MAX_MEMORY_MB`];
   const ceiling = normalized === MAX_PLAN_ID
     ? MAX_PLAN_MAX_MEMORY_MB
     : normalized === GO_PLAN_ID
@@ -241,7 +241,7 @@ export function maxMemoryMbForPlan(
       : normalized === "free" || !isPaidPlanId(normalized)
         ? FREE_PLAN_MAX_MEMORY_MB
         : PLAN_MAX_MEMORY_MB;
-  if (specific?.trim()) return Math.min(ceiling, positiveInteger(specific, `CMUX_VM_PLAN_${planKey}_MAX_MEMORY_MB`));
+  if (specific?.trim()) return Math.min(ceiling, positiveInteger(specific, `HMUX_VM_PLAN_${planKey}_MAX_MEMORY_MB`));
   if (normalized === MAX_PLAN_ID) return MAX_PLAN_MAX_MEMORY_MB;
   if (normalized === GO_PLAN_ID) return GO_PLAN_MAX_MEMORY_MB;
   if (normalized === "free") {
@@ -249,13 +249,13 @@ export function maxMemoryMbForPlan(
     // Where an operator opens free provisioning for a demo or dev stack, the
     // machine is at most 8 GB.
     return Math.min(ceiling, positiveInteger(
-      env.CMUX_VM_FREE_MAX_MEMORY_MB ?? String(FREE_PLAN_MAX_MEMORY_MB),
-      "CMUX_VM_FREE_MAX_MEMORY_MB",
+      env.HMUX_VM_FREE_MAX_MEMORY_MB ?? String(FREE_PLAN_MAX_MEMORY_MB),
+      "HMUX_VM_FREE_MAX_MEMORY_MB",
     ));
   }
   return Math.min(ceiling, positiveInteger(
-    env.CMUX_VM_PAID_MAX_MEMORY_MB ?? String(PLAN_MAX_MEMORY_MB),
-    "CMUX_VM_PAID_MAX_MEMORY_MB",
+    env.HMUX_VM_PAID_MAX_MEMORY_MB ?? String(PLAN_MAX_MEMORY_MB),
+    "HMUX_VM_PAID_MAX_MEMORY_MB",
   ));
 }
 
@@ -271,9 +271,9 @@ export function maxDiskMbForPlan(
     : normalized === GO_PLAN_ID
       ? 16 * 1024
       : 128 * 1024;
-  const raw = env[`CMUX_VM_PLAN_${key}_MAX_DISK_MB`];
+  const raw = env[`HMUX_VM_PLAN_${key}_MAX_DISK_MB`];
   return raw?.trim()
-    ? Math.min(fallback, positiveInteger(raw, `CMUX_VM_PLAN_${key}_MAX_DISK_MB`))
+    ? Math.min(fallback, positiveInteger(raw, `HMUX_VM_PLAN_${key}_MAX_DISK_MB`))
     : fallback;
 }
 
@@ -310,7 +310,7 @@ export function lockedMemoryOptionsMbForPlan(
 /**
  * Sizes a plan accepts: the catalog entries at or below the plan's ceiling,
  * plus the plan's configured default, so an operator memory override
- * (CMUX_VM_*_DEFAULT_MEMORY_MB / _MAX_MEMORY_MB) always names an accepted
+ * (HMUX_VM_*_DEFAULT_MEMORY_MB / _MAX_MEMORY_MB) always names an accepted
  * size instead of turning every create into a 400.
  */
 export function memoryOptionsMbForPlan(
@@ -330,19 +330,19 @@ export function defaultMemoryMbForPlan(
 ): number {
   const normalized = normalizedPlanId(planId ?? "");
   const planKey = normalized.replace(/[^a-zA-Z0-9]/g, "_").toUpperCase();
-  const specific = env[`CMUX_VM_PLAN_${planKey}_DEFAULT_MEMORY_MB`];
+  const specific = env[`HMUX_VM_PLAN_${planKey}_DEFAULT_MEMORY_MB`];
   const raw = specific?.trim()
-    ? positiveInteger(specific, `CMUX_VM_PLAN_${planKey}_DEFAULT_MEMORY_MB`)
+    ? positiveInteger(specific, `HMUX_VM_PLAN_${planKey}_DEFAULT_MEMORY_MB`)
     : normalized === GO_PLAN_ID
       ? GO_PLAN_DEFAULT_MEMORY_MB
       : normalized === "free"
       ? positiveInteger(
-        env.CMUX_VM_FREE_DEFAULT_MEMORY_MB ?? String(PLAN_MACHINE_MEMORY_MB),
-        "CMUX_VM_FREE_DEFAULT_MEMORY_MB",
+        env.HMUX_VM_FREE_DEFAULT_MEMORY_MB ?? String(PLAN_MACHINE_MEMORY_MB),
+        "HMUX_VM_FREE_DEFAULT_MEMORY_MB",
       )
       : positiveInteger(
-        env.CMUX_VM_PAID_DEFAULT_MEMORY_MB ?? String(PLAN_MACHINE_MEMORY_MB),
-        "CMUX_VM_PAID_DEFAULT_MEMORY_MB",
+        env.HMUX_VM_PAID_DEFAULT_MEMORY_MB ?? String(PLAN_MACHINE_MEMORY_MB),
+        "HMUX_VM_PAID_DEFAULT_MEMORY_MB",
       );
   return Math.min(raw, maxMemoryMbForPlan(planId, env));
 }
@@ -351,7 +351,7 @@ export function defaultMemoryMbForPlan(
  * Active-machine ceiling for a plan, or null when there is none. Paid plans
  * get the allowance sold on /pricing (PAID_MAX_ACTIVE_VMS_DEFAULT), counted
  * per billing team; a Team subscription multiplies it by its paid seats
- * (`cmuxSeats`), so "5 per user" holds for the whole team. Free plans stay
+ * (`hmuxSeats`), so "5 per user" holds for the whole team. Free plans stay
  * capped (zero unless free provisioning is allowed).
  */
 export function maxActiveVmsForPlan(
@@ -445,11 +445,11 @@ export function resourcePoolPolicyForPlan(
 export function vmFreeAccessWindowDays(
   env: Record<string, string | undefined> = process.env,
 ): number {
-  const raw = env.CMUX_VM_FREE_ACCESS_WINDOW_DAYS;
+  const raw = env.HMUX_VM_FREE_ACCESS_WINDOW_DAYS;
   if (raw === undefined || !raw.trim()) return 7;
   const parsed = Number.parseInt(raw.trim(), 10);
   if (!Number.isSafeInteger(parsed) || parsed < 0) {
-    throw new Error(`CMUX_VM_FREE_ACCESS_WINDOW_DAYS must be a non-negative integer, got: ${raw}`);
+    throw new Error(`HMUX_VM_FREE_ACCESS_WINDOW_DAYS must be a non-negative integer, got: ${raw}`);
   }
   return parsed;
 }
@@ -482,9 +482,9 @@ export function isPaidVmPlan(planId: string): boolean {
 /**
  * Whether Cloud VM provisioning is gated behind a paid plan.
  *
- * The safe default is enforced. `CMUX_VM_ALLOW_FREE_PROVISIONING=1` is an
+ * The safe default is enforced. `HMUX_VM_ALLOW_FREE_PROVISIONING=1` is an
  * explicit operator escape hatch for demos or a controlled rollback. The
- * historical `CMUX_VM_REQUIRE_PRO=0` spelling remains a compatibility alias
+ * historical `HMUX_VM_REQUIRE_PRO=0` spelling remains a compatibility alias
  * when the new switch is absent; every other unset, malformed, or truthy
  * value keeps the gate closed to free plans.
  */
@@ -508,13 +508,13 @@ export function isVmFreeProvisioningAllowed(
   if (env.VERCEL_ENV === "production") return false;
   // The new name is authoritative when present. A value must be explicitly
   // truthy; typos and explicit false values fail closed.
-  if (env.CMUX_VM_ALLOW_FREE_PROVISIONING !== undefined) {
-    return isVmTruthyFlag(env.CMUX_VM_ALLOW_FREE_PROVISIONING);
+  if (env.HMUX_VM_ALLOW_FREE_PROVISIONING !== undefined) {
+    return isVmTruthyFlag(env.HMUX_VM_ALLOW_FREE_PROVISIONING);
   }
 
   // Preserve the old opt-in gate's false values as a migration alias. An
   // absent or malformed legacy value now fails closed instead of shipping dark.
-  const legacy = env.CMUX_VM_REQUIRE_PRO;
+  const legacy = env.HMUX_VM_REQUIRE_PRO;
   return legacy !== undefined && isVmFalseFlag(legacy);
 }
 
@@ -567,15 +567,15 @@ function activeVmLimitForPlan(
   if (!isPaidVmPlan(planId)) {
     // Cloud machines are a paid feature. Keep every non-paid/unknown plan at
     // zero unless the same explicit escape hatch that disables the Pro gate is
-    // set; this prevents a stale `CMUX_VM_FREE_MAX_ACTIVE_VMS` (or a plan-
+    // set; this prevents a stale `HMUX_VM_FREE_MAX_ACTIVE_VMS` (or a plan-
     // specific override) from reopening provisioning by configuration drift.
     if (!isVmFreeProvisioningAllowed(env)) return { limit: 0, brake: false };
-    const specific = env[`CMUX_VM_PLAN_${planKey}_MAX_ACTIVE_VMS`];
+    const specific = env[`HMUX_VM_PLAN_${planKey}_MAX_ACTIVE_VMS`];
     if (specific?.trim()) {
-      return { limit: positiveInteger(specific, `CMUX_VM_PLAN_${planKey}_MAX_ACTIVE_VMS`), brake: true };
+      return { limit: positiveInteger(specific, `HMUX_VM_PLAN_${planKey}_MAX_ACTIVE_VMS`), brake: true };
     }
     return {
-      limit: nonNegativeInteger(env.CMUX_VM_FREE_MAX_ACTIVE_VMS ?? "0", "CMUX_VM_FREE_MAX_ACTIVE_VMS"),
+      limit: nonNegativeInteger(env.HMUX_VM_FREE_MAX_ACTIVE_VMS ?? "0", "HMUX_VM_FREE_MAX_ACTIVE_VMS"),
       brake: true,
     };
   }

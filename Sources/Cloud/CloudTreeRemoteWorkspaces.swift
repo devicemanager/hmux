@@ -1,8 +1,8 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 
-/// What one cmux-tui workspace on a cloud machine holds, in the order the
+/// What one hmux-tui workspace on a cloud machine holds, in the order the
 /// sidebar opens and drags it: the terminals in its layout (it views), then its
 /// browsers, then the displays it pins. One machine hosts many of these; each
 /// is a pointer list into the machine's Terminals group, never a machine of its
@@ -22,7 +22,7 @@ struct CloudTreeRemoteWorkspaceMembers: Equatable {
 }
 
 /// How a `<workspace>` selector resolves on a machine — the one answer shared
-/// by the sidebar row, the socket's `vm.workspace_open`, and `cmux vm open
+/// by the sidebar row, the socket's `vm.workspace_open`, and `hmux vm open
 /// <machine>/<workspace>`.
 enum CloudTreeRemoteWorkspaceLookup: Equatable {
     /// Exactly one workspace matched; `members` is what it opens as (an existing
@@ -48,7 +48,7 @@ extension CloudTreeNodeBuilder {
             }
     }
 
-    /// Every cmux-tui workspace on a machine, in the daemon's order: the ones the
+    /// Every hmux-tui workspace on a machine, in the daemon's order: the ones the
     /// machine itself reports (including empty workspaces needed by lookup and
     /// persistence) plus any that a resource's views name before the machine list
     /// has caught up. The sidebar applies its terminal-membership filter separately.
@@ -72,7 +72,7 @@ extension CloudTreeNodeBuilder {
     }
 
     /// The name the machine's daemon will give its next unnamed workspace,
-    /// mirroring cmux-tui's `default_workspace_name`: one past the highest
+    /// mirroring hmux-tui's `default_workspace_name`: one past the highest
     /// `workspace-N`, never below the workspace count. `pendingCreations`
     /// counts this client's other unnamed creates whose receipts have not
     /// arrived. Nil when the machine has not reported its workspaces yet.

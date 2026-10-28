@@ -1,9 +1,9 @@
 {
   "version": 1,
   "app_id": "6783338052",
-  "bundle_id": "com.cmux.app",
+  "bundle_id": "com.hmux.app",
   "locale": "en-US",
-  "notes": "Truth manifest for the cmux iOS App Store screenshot set. SnapshotUITests captures the sources deterministically from in-app preview fixtures; ios/scripts/appstore-shots.sh post-processes captures to these exact ASC pixel sizes, stages final/<DISPLAY_TYPE>/, verifies, and uploads. ASC allows at most 10 screenshots per display type.",
+  "notes": "Truth manifest for the hmux iOS App Store screenshot set. SnapshotUITests captures the sources deterministically from in-app preview fixtures; ios/scripts/appstore-shots.sh post-processes captures to these exact ASC pixel sizes, stages final/<DISPLAY_TYPE>/, verifies, and uploads. ASC allows at most 10 screenshots per display type.",
   "display_types": {
     "APP_IPHONE_67": {
       "capture_class": "iphone",

@@ -9,32 +9,32 @@ fi
 APP_PATH="$1"
 DMG_RELEASE="$2"
 DMG_IMMUTABLE="$3"
-CREATE_DMG_TOOL="${CMUX_CREATE_DMG_TOOL:-create-dmg}"
-CODESIGN_TOOL="${CMUX_CODESIGN_TOOL:-/usr/bin/codesign}"
-XCRUN_TOOL="${CMUX_XCRUN_TOOL:-xcrun}"
-HDIUTIL_TOOL="${CMUX_HDIUTIL_TOOL:-hdiutil}"
-SPCTL_TOOL="${CMUX_SPCTL_TOOL:-spctl}"
+CREATE_DMG_TOOL="${HMUX_CREATE_DMG_TOOL:-create-dmg}"
+CODESIGN_TOOL="${HMUX_CODESIGN_TOOL:-/usr/bin/codesign}"
+XCRUN_TOOL="${HMUX_XCRUN_TOOL:-xcrun}"
+HDIUTIL_TOOL="${HMUX_HDIUTIL_TOOL:-hdiutil}"
+SPCTL_TOOL="${HMUX_SPCTL_TOOL:-spctl}"
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-SMOKE_TOOL="${CMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"
-VERIFY_METADATA_TOOL="${CMUX_VERIFY_METADATA_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-channel-metadata.sh}"
-# CMUX_DEFER_LAUNCH_SMOKES=true: skip the launch smokes here. The caller runs
+SMOKE_TOOL="${HMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"
+VERIFY_METADATA_TOOL="${HMUX_VERIFY_METADATA_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-channel-metadata.sh}"
+# HMUX_DEFER_LAUNCH_SMOKES=true: skip the launch smokes here. The caller runs
 # them in a separate job that holds no secrets (scripts/ci/smoke-dmg.sh on the
 # final DMG), so no bundle code runs in a job that signs, notarizes or publishes.
-DEFER_LAUNCH_SMOKES="${CMUX_DEFER_LAUNCH_SMOKES:-false}"
+DEFER_LAUNCH_SMOKES="${HMUX_DEFER_LAUNCH_SMOKES:-false}"
 launch_smokes() {
   if [ "$DEFER_LAUNCH_SMOKES" = true ]; then
     echo "Launch smokes for $1 run in the secret-free verify job"
     return 0
   fi
-  CMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$1"
-  CMUX_SMOKE_DIRECT_EXEC=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$1"
+  HMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$1"
+  HMUX_SMOKE_DIRECT_EXEC=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$1"
 }
-VERIFY_LICENSES_TOOL="${CMUX_VERIFY_LICENSES_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-licenses.sh}"
-NOTARIZE_COMPUTER_USE_HELPER_TOOL="${CMUX_NOTARIZE_COMPUTER_USE_HELPER_TOOL:-$ROOT_DIR/scripts/ci/notarize-computer-use-helper.sh}"
-SIGNING_KEYCHAIN_TOOL="${CMUX_SIGNING_KEYCHAIN_TOOL:-$ROOT_DIR/scripts/ci/signing-keychain.sh}"
-COMPUTER_USE_NOTARY_SUBMISSION_FILE="${CMUX_COMPUTER_USE_NOTARY_SUBMISSION_FILE:-}"
-SKIP_NOTARIZATION="${CMUX_SKIP_NOTARIZATION:-false}"
-# CMUX_STAPLE_APP_IN_DMG=true (default): the app inside the shipped DMG carries
+VERIFY_LICENSES_TOOL="${HMUX_VERIFY_LICENSES_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-licenses.sh}"
+NOTARIZE_COMPUTER_USE_HELPER_TOOL="${HMUX_NOTARIZE_COMPUTER_USE_HELPER_TOOL:-$ROOT_DIR/scripts/ci/notarize-computer-use-helper.sh}"
+SIGNING_KEYCHAIN_TOOL="${HMUX_SIGNING_KEYCHAIN_TOOL:-$ROOT_DIR/scripts/ci/signing-keychain.sh}"
+COMPUTER_USE_NOTARY_SUBMISSION_FILE="${HMUX_COMPUTER_USE_NOTARY_SUBMISSION_FILE:-}"
+SKIP_NOTARIZATION="${HMUX_SKIP_NOTARIZATION:-false}"
+# HMUX_STAPLE_APP_IN_DMG=true (default): the app inside the shipped DMG carries
 # its own stapled ticket, so a copy taken out of the DMG (Sparkle installs one)
 # passes Gatekeeper without an online ticket lookup. Apple keys every ticket by
 # code-directory hash (stapler looks up the record "2/2/<cdhash>"). The first
@@ -42,31 +42,31 @@ SKIP_NOTARIZATION="${CMUX_SKIP_NOTARIZATION:-false}"
 # A DMG rebuilt around the stapled app is new data with a new hash that no
 # ticket covers yet, so that DMG is signed and submitted once more, and it
 # replaces the first DMG only after Apple accepts it and it is stapled.
-# false keeps one DMG submission. CMUX_NOTARY_SUBMIT_ONLY never reaches it:
+# false keeps one DMG submission. HMUX_NOTARY_SUBMIT_ONLY never reaches it:
 # resume-nightly-notarization.sh continues that path.
-STAPLE_APP_IN_DMG="${CMUX_STAPLE_APP_IN_DMG:-true}"
-# CMUX_STAPLED_DMG_HANDOFF_FILE: submit the DMG around the stapled app without
+STAPLE_APP_IN_DMG="${HMUX_STAPLE_APP_IN_DMG:-true}"
+# HMUX_STAPLED_DMG_HANDOFF_FILE: submit the DMG around the stapled app without
 # a wait, keep it as <release-dmg>.stapled-app.dmg, write this record and stop
 # after the app checks; scripts/ci/finish-stapled-app-dmgs.sh waits for several
 # such submissions at once and finishes them (release.yml's thin variants).
-STAPLED_DMG_HANDOFF_FILE="${CMUX_STAPLED_DMG_HANDOFF_FILE:-}"
+STAPLED_DMG_HANDOFF_FILE="${HMUX_STAPLED_DMG_HANDOFF_FILE:-}"
 case "$STAPLE_APP_IN_DMG" in
   true|false) ;;
-  *) echo "CMUX_STAPLE_APP_IN_DMG must be true or false, got: $STAPLE_APP_IN_DMG" >&2; exit 2 ;;
+  *) echo "HMUX_STAPLE_APP_IN_DMG must be true or false, got: $STAPLE_APP_IN_DMG" >&2; exit 2 ;;
 esac
 # Release channel of the app being packaged: `nightly` (default), `rc` or
 # `stable`. It selects the entitlements file and the bundle-metadata check; the
 # packaging, notarization, and stapling steps are identical for every channel.
-CHANNEL="${CMUX_CHANNEL:-nightly}"
+CHANNEL="${HMUX_CHANNEL:-nightly}"
 case "$CHANNEL" in
-  nightly|rc) DEFAULT_ENTITLEMENTS="$ROOT_DIR/cmux.${CHANNEL}.entitlements" ;;
-  stable) DEFAULT_ENTITLEMENTS="$ROOT_DIR/cmux.release.entitlements" ;;
+  nightly|rc) DEFAULT_ENTITLEMENTS="$ROOT_DIR/hmux.${CHANNEL}.entitlements" ;;
+  stable) DEFAULT_ENTITLEMENTS="$ROOT_DIR/hmux.release.entitlements" ;;
   *)
-    echo "Unsupported CMUX_CHANNEL: $CHANNEL (expected nightly, rc or stable)" >&2
+    echo "Unsupported HMUX_CHANNEL: $CHANNEL (expected nightly, rc or stable)" >&2
     exit 2
     ;;
 esac
-APP_ENTITLEMENTS="${CMUX_APP_ENTITLEMENTS:-$DEFAULT_ENTITLEMENTS}"
+APP_ENTITLEMENTS="${HMUX_APP_ENTITLEMENTS:-$DEFAULT_ENTITLEMENTS}"
 # shellcheck source=lib/notary-auth.sh
 source "$ROOT_DIR/scripts/ci/lib/notary-auth.sh"
 
@@ -86,9 +86,9 @@ fi
 # The DMG around the stapled app is signed after Apple's wait, so its signing
 # inputs must be present before any submission.
 if [ "$SKIP_NOTARIZATION" != true ] && [ "$STAPLE_APP_IN_DMG" = true ] \
-  && [ "${CMUX_NOTARY_SUBMIT_ONLY:-false}" != true ] \
+  && [ "${HMUX_NOTARY_SUBMIT_ONLY:-false}" != true ] \
   && { [ -z "${APPLE_CERTIFICATE_BASE64:-}" ] || [ -z "${APPLE_CERTIFICATE_PASSWORD:-}" ]; }; then
-  echo "Missing APPLE_CERTIFICATE_BASE64 or APPLE_CERTIFICATE_PASSWORD: the DMG around the stapled app is signed again (CMUX_STAPLE_APP_IN_DMG=false ships the app unstapled)" >&2
+  echo "Missing APPLE_CERTIFICATE_BASE64 or APPLE_CERTIFICATE_PASSWORD: the DMG around the stapled app is signed again (HMUX_STAPLE_APP_IN_DMG=false ships the app unstapled)" >&2
   exit 1
 fi
 
@@ -119,7 +119,7 @@ fi
 
 if [ "$SKIP_NOTARIZATION" = true ]; then
   echo "Skipping Computer Use and outer notarization for internal dogfood artifact"
-elif [ "${CMUX_COMPUTER_USE_HELPER_ALREADY_FINISHED:-false}" = true ]; then
+elif [ "${HMUX_COMPUTER_USE_HELPER_ALREADY_FINISHED:-false}" = true ]; then
   echo "Computer Use helper was finished by the recovery continuation"
 elif [ -n "$COMPUTER_USE_NOTARY_SUBMISSION_FILE" ]; then
   "$NOTARIZE_COMPUTER_USE_HELPER_TOOL" \
@@ -174,10 +174,10 @@ package_signed_dmg() {
   umask "$saved_umask"
 }
 
-# CMUX_PACKAGE_CREATES_KEYCHAIN=true: make the signing keychain just before
+# HMUX_PACKAGE_CREATES_KEYCHAIN=true: make the signing keychain just before
 # this signature (resume-stapled-app-notarization.sh, which passes the
 # certificate only to this tool).
-if [ "${CMUX_PACKAGE_CREATES_KEYCHAIN:-false}" = true ]; then
+if [ "${HMUX_PACKAGE_CREATES_KEYCHAIN:-false}" = true ]; then
   package_signed_dmg "$APP_PATH" "$DMG_RELEASE" "$DMG_TMP_DIR" create-keychain
 else
   package_signed_dmg "$APP_PATH" "$DMG_RELEASE" "$DMG_TMP_DIR"
@@ -202,12 +202,12 @@ fi
 # A follow-up must retain this exact DMG, verify its recorded SHA-256, wait on
 # the recorded submission id, and only then run the stapling and publication
 # checks below.
-NOTARY_WAIT_TIMEOUT="${CMUX_NOTARY_WAIT_TIMEOUT:-25m}"
-SUBMIT_ONLY="${CMUX_NOTARY_SUBMIT_ONLY:-false}"
-# The wait for the DMG around the stapled app (CMUX_STAPLE_APP_IN_DMG).
-STAPLED_DMG_WAIT_TIMEOUT="${CMUX_STAPLED_DMG_WAIT_TIMEOUT:-$NOTARY_WAIT_TIMEOUT}"
-NOTARY_SUBMISSION_FILE="${CMUX_NOTARY_SUBMISSION_FILE:-${DMG_RELEASE}.notarization.state}"
-NOTARY_OUTPUT_FILE="${CMUX_NOTARY_OUTPUT_FILE:-${DMG_RELEASE}.notarization.log}"
+NOTARY_WAIT_TIMEOUT="${HMUX_NOTARY_WAIT_TIMEOUT:-25m}"
+SUBMIT_ONLY="${HMUX_NOTARY_SUBMIT_ONLY:-false}"
+# The wait for the DMG around the stapled app (HMUX_STAPLE_APP_IN_DMG).
+STAPLED_DMG_WAIT_TIMEOUT="${HMUX_STAPLED_DMG_WAIT_TIMEOUT:-$NOTARY_WAIT_TIMEOUT}"
+NOTARY_SUBMISSION_FILE="${HMUX_NOTARY_SUBMISSION_FILE:-${DMG_RELEASE}.notarization.state}"
+NOTARY_OUTPUT_FILE="${HMUX_NOTARY_OUTPUT_FILE:-${DMG_RELEASE}.notarization.log}"
 NOTARY_SUBMIT_OUTPUT="$NOTARY_DIR/dmg-submit-output"
 for notary_sidecar in "$NOTARY_SUBMISSION_FILE" "$NOTARY_OUTPUT_FILE"; do
   notary_sidecar_parent="$(dirname "$notary_sidecar")"
@@ -279,12 +279,12 @@ write_notary_state() {
     printf 'channel=%s\n' "$CHANNEL"
     printf 'output_file=%s\n' "$NOTARY_OUTPUT_FILE"
     # The DMG around the stapled app (resume-stapled-app-notarization.sh).
-    if [ "${CMUX_NOTARY_STATE_STAPLED_APP:-false}" = true ]; then
+    if [ "${HMUX_NOTARY_STATE_STAPLED_APP:-false}" = true ]; then
       printf 'stapled_app=true\n'
       # The 6 h fallback clock and the accepted first DMG it ships.
       printf 'stapled_submitted_at=%s\n' "$DMG_SUBMITTED_AT"
-      printf 'first_submission_id=%s\n' "${CMUX_NOTARY_STATE_FIRST_SUBMISSION_ID:-}"
-      printf 'first_dmg_sha256=%s\n' "${CMUX_NOTARY_STATE_FIRST_DMG_SHA256:-}"
+      printf 'first_submission_id=%s\n' "${HMUX_NOTARY_STATE_FIRST_SUBMISSION_ID:-}"
+      printf 'first_dmg_sha256=%s\n' "${HMUX_NOTARY_STATE_FIRST_DMG_SHA256:-}"
     fi
   } > "$state_tmp"
   )
@@ -298,7 +298,7 @@ save_notary_output() {
   (
   umask 077
   /bin/cp "$NOTARY_SUBMIT_OUTPUT" "$NOTARY_OUTPUT_FILE"
-  if [ -n "$DMG_SUBMIT_ID" ] && [ "${CMUX_SKIP_NOTARY_LOG:-false}" != true ]; then
+  if [ -n "$DMG_SUBMIT_ID" ] && [ "${HMUX_SKIP_NOTARY_LOG:-false}" != true ]; then
     {
       printf '\n--- notarytool log for submission %s ---\n' "$DMG_SUBMIT_ID"
       "$XCRUN_TOOL" notarytool log "$DMG_SUBMIT_ID" "${NOTARY_AUTH_ARGS[@]}" || true
@@ -366,7 +366,7 @@ fi
 "$XCRUN_TOOL" stapler validate "$APP_PATH"
 "$SPCTL_TOOL" -a -vv --type execute "$APP_PATH"
 
-# The DMG that ships carries the stapled app (CMUX_STAPLE_APP_IN_DMG, above).
+# The DMG that ships carries the stapled app (HMUX_STAPLE_APP_IN_DMG, above).
 FINAL_DMG="$DMG_RELEASE"
 if [ "$STAPLE_APP_IN_DMG" = true ]; then
   restaple_dir="$DMG_TMP_DIR/stapled-app"
@@ -429,8 +429,8 @@ fi
 
 # Validate the delivered app inside the final stapled DMG, not only the source
 # bundle that create-dmg consumed.
-if [ -n "${CMUX_NIGHTLY_MOUNT_DIR:-}" ]; then
-  MOUNT_DIR="$CMUX_NIGHTLY_MOUNT_DIR"
+if [ -n "${HMUX_NIGHTLY_MOUNT_DIR:-}" ]; then
+  MOUNT_DIR="$HMUX_NIGHTLY_MOUNT_DIR"
   mkdir -p "$MOUNT_DIR"
 else
   MOUNT_DIR="$(mktemp -d)"

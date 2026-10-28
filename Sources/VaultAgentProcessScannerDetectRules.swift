@@ -1,6 +1,6 @@
 import Foundation
 
-extension CmuxVaultAgentRegistration {
+extension HmuxVaultAgentRegistration {
     func processDetectedSnapshotIsRestorable(for process: VaultObservedAgentProcess) -> Bool {
         switch id {
         case "campfire":
@@ -13,7 +13,7 @@ extension CmuxVaultAgentRegistration {
     }
 }
 
-extension CmuxVaultAgentDetectRule {
+extension HmuxVaultAgentDetectRule {
     func matches(_ process: VaultObservedAgentProcess) -> Bool {
         let expectedNames = primaryProcessNames
         let hasPrimaryCriteria = !expectedNames.isEmpty || !argvContains.isEmpty

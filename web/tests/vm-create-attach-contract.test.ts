@@ -6,11 +6,11 @@ const manifestEntry: VmImageManifestEntry = {
   provider: "freestyle",
   version: "snapshot-v2",
   imageId: "devbox-md",
-  envVar: "CMUX_VM_IMAGE",
+  envVar: "HMUX_VM_IMAGE",
   kind: "desktop",
   defaultForKind: true,
   size: { name: "md", cpu: 4, memoryMb: 8192, storageMb: 32768 },
-  cmuxdRemoteCommit: "daemon-commit",
+  hmuxdRemoteCommit: "daemon-commit",
   builtAt: "2026-10-01T00:00:00Z",
   builderScriptVersion: "test",
   validationStatus: "passed",
@@ -20,7 +20,7 @@ function entry(overrides: Partial<VmAttachEntry> = {}): VmAttachEntry {
   return {
     addressIpv4: "10.0.0.42",
     addressIpv6: "fd00::42",
-    cmuxTuiContract: "snapshot-v2",
+    hmuxTuiContract: "snapshot-v2",
     providerVmId: "vm-test",
     ...overrides,
   };
@@ -29,7 +29,7 @@ function entry(overrides: Partial<VmAttachEntry> = {}): VmAttachEntry {
 describe("create attach contract", () => {
   test("returns a trusted dial route with IPv4 preferred over IPv6", () => {
     expect(createAttachBlock({ entry: entry(), manifestEntry })).toEqual({
-      transport: "cmux-remote",
+      transport: "hmux-remote",
       route: "ws://10.0.0.42:1337/v1/link",
       token: "",
       session: "cloud",

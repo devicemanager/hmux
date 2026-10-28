@@ -79,7 +79,7 @@ function repo(state: World, candidates: CloudVmTunnelRow[]): VmRepositoryShape {
       userId: "user-1",
       provider: "freestyle",
       providerNetworkId: "vpc-1",
-      slug: "cmux-net-1",
+      slug: "hmux-net-1",
       cidr: "10.40.0.0/24",
       cidrV6: "fd00:40::/64",
       createdAt: new Date(NOW),
@@ -228,9 +228,9 @@ describe("stale tunnel reaping", () => {
   test("the stale window defaults to 30 days and honors a valid override", () => {
     expect(DEFAULT_VM_TUNNEL_STALE_AFTER_DAYS).toBe(30);
     expect(vmTunnelStaleAfterMs({})).toBe(30 * DAY_MS);
-    expect(vmTunnelStaleAfterMs({ CMUX_VM_TUNNEL_STALE_AFTER_DAYS: "45" })).toBe(45 * DAY_MS);
-    expect(vmTunnelStaleAfterMs({ CMUX_VM_TUNNEL_STALE_AFTER_DAYS: "0" })).toBe(30 * DAY_MS);
-    expect(vmTunnelStaleAfterMs({ CMUX_VM_TUNNEL_STALE_AFTER_DAYS: "soon" })).toBe(30 * DAY_MS);
+    expect(vmTunnelStaleAfterMs({ HMUX_VM_TUNNEL_STALE_AFTER_DAYS: "45" })).toBe(45 * DAY_MS);
+    expect(vmTunnelStaleAfterMs({ HMUX_VM_TUNNEL_STALE_AFTER_DAYS: "0" })).toBe(30 * DAY_MS);
+    expect(vmTunnelStaleAfterMs({ HMUX_VM_TUNNEL_STALE_AFTER_DAYS: "soon" })).toBe(30 * DAY_MS);
   });
 });
 

@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, mock, test } from "bun:test";
 
 let signedIn = true;
-let pendingResult: "cmux-vault" | "subrouter" | null = "subrouter";
-const pendingClient = mock(async (code: string): Promise<"cmux-vault" | "subrouter" | null> =>
+let pendingResult: "hmux-vault" | "subrouter" | null = "subrouter";
+const pendingClient = mock(async (code: string): Promise<"hmux-vault" | "subrouter" | null> =>
   code ? pendingResult : null);
 
 const realAuth = await import("../services/vms/auth");
@@ -21,16 +21,16 @@ const clientRoute = await import("../app/api/vault/cli/auth/client/route");
 const headRoute = await import("../app/api/vault/sessions/[id]/head/route");
 
 const ORIGINAL_ENV = {
-  CMUX_VAULT_ENABLED: process.env.CMUX_VAULT_ENABLED,
-  CMUX_VAULT_S3_BUCKET: process.env.CMUX_VAULT_S3_BUCKET,
+  HMUX_VAULT_ENABLED: process.env.HMUX_VAULT_ENABLED,
+  HMUX_VAULT_S3_BUCKET: process.env.HMUX_VAULT_S3_BUCKET,
 };
 
 beforeEach(() => {
   signedIn = true;
   pendingClient.mockClear();
   pendingResult = "subrouter";
-  process.env.CMUX_VAULT_ENABLED = "1";
-  process.env.CMUX_VAULT_S3_BUCKET = "test-bucket";
+  process.env.HMUX_VAULT_ENABLED = "1";
+  process.env.HMUX_VAULT_S3_BUCKET = "test-bucket";
 });
 
 afterEach(() => {
@@ -40,11 +40,11 @@ afterEach(() => {
   }
 });
 
-const get = (url: string) => new Request(`https://cmux.test${url}`);
+const get = (url: string) => new Request(`https://hmux.test${url}`);
 
 describe("GET /api/vault/summary", () => {
   test("404 while the Vault release flag is off", async () => {
-    process.env.CMUX_VAULT_ENABLED = "0";
+    process.env.HMUX_VAULT_ENABLED = "0";
     const response = await summaryRoute.GET(get("/api/vault/summary"));
     expect(response.status).toBe(404);
     expect(await response.json()).toEqual({ error: "vault_disabled" });
@@ -65,7 +65,7 @@ describe("GET /api/vault/sessions/[id]/head", () => {
   });
 
   test("404 while the Vault release flag is off", async () => {
-    process.env.CMUX_VAULT_ENABLED = "0";
+    process.env.HMUX_VAULT_ENABLED = "0";
     const id = "11111111-1111-4111-8111-111111111111";
     const response = await headRoute.GET(get(`/api/vault/sessions/${id}/head`), {
       params: Promise.resolve({ id }),
@@ -95,7 +95,7 @@ describe("GET /api/vault/cli/auth/client", () => {
   });
 
   test("works with the Vault flag off, because CodeRouter uses it", async () => {
-    process.env.CMUX_VAULT_ENABLED = "0";
+    process.env.HMUX_VAULT_ENABLED = "0";
     const response = await clientRoute.GET(get("/api/vault/cli/auth/client?code=ABCD2345"));
     expect(response.status).toBe(200);
   });

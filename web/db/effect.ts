@@ -14,7 +14,7 @@ import { tagCloudDbQuery } from "./queryTags";
 const database = PgDrizzle.makeWithDefaults({ schema });
 
 /** Effect-native PostgreSQL service shared by repositories in one workload. */
-export class Database extends Context.Tag("cmux/EffectDatabase")<
+export class Database extends Context.Tag("hmux/EffectDatabase")<
   Database, Effect.Effect.Success<typeof database>
 >() {}
 

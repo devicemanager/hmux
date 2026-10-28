@@ -1,5 +1,5 @@
 import Bonsplit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import Foundation
 
 extension Workspace {
@@ -10,7 +10,7 @@ extension Workspace {
         panelId: UUID
     ) -> Bool? {
         guard let panel = panels[panelId] as? SimulatorPanel else { return nil }
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled,
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled,
               panel.isFeatureReady,
               !urls.isEmpty else {
             return false
@@ -48,7 +48,7 @@ extension Workspace {
         restoringSession: Bool = false
     ) -> SimulatorPanel? {
         guard !isRetiredFromOwningTabManager,
-              (CmuxFeatureFlags.shared.isSimulatorEnabled || restoringSession),
+              (HmuxFeatureFlags.shared.isSimulatorEnabled || restoringSession),
               !isRemoteTmuxMirror else { return nil }
         let shouldFocus = focus ?? (bonsplitController.focusedPaneId == paneId)
         let previousFocusedPanelId = focusedPanelId
@@ -81,7 +81,7 @@ extension Workspace {
         if let targetIndex {
             _ = bonsplitController.reorderTab(tabId, toIndex: targetIndex)
         }
-        publishCmuxSurfaceCreated(
+        publishHmuxSurfaceCreated(
             panel.id,
             paneId: paneId,
             kind: SurfaceKind.simulator.rawValue,
@@ -116,7 +116,7 @@ extension Workspace {
         initialDividerPosition: CGFloat? = nil
     ) -> SimulatorPanel? {
         guard !isRetiredFromOwningTabManager,
-              CmuxFeatureFlags.shared.isSimulatorEnabled,
+              HmuxFeatureFlags.shared.isSimulatorEnabled,
               !isRemoteTmuxMirror,
               let sourceTabId = surfaceIdFromPanelId(panelId),
               let sourcePaneId = bonsplitController.allPaneIds.first(where: { paneId in
@@ -167,7 +167,7 @@ extension Workspace {
             return nil
         }
 
-        publishCmuxSplitCreated(
+        publishHmuxSplitCreated(
             newPaneId,
             sourcePaneId: sourcePaneId,
             orientation: orientation,

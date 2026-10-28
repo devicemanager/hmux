@@ -9,7 +9,7 @@ struct SidebarCloudWorkspaceBadgeView: View {
 
     var body: some View {
         if let label {
-            CmuxSystemSymbolImage(magnified: symbol, pointSize: pointSize, weight: .regular, tint: tint)
+            HmuxSystemSymbolImage(magnified: symbol, pointSize: pointSize, weight: .regular, tint: tint)
                 .fixedSize()
                 .safeHelp(label)
                 .accessibilityHidden(true)

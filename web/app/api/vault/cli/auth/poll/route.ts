@@ -21,7 +21,7 @@ async function mintStackTokens(
   userId: string,
   client: CliAuthClient,
 ): Promise<CliAuthTokens | null> {
-  if (client !== "cmux-vault" && client !== "subrouter") return null;
+  if (client !== "hmux-vault" && client !== "subrouter") return null;
   const user = await getStackServerApp().getUser(userId);
   if (!user) return null;
   // Stack sessions establish identity only. Every Subrouter route separately
@@ -36,7 +36,7 @@ export async function POST(request: Request): Promise<Response> {
   return withCliAuthApiRoute(
     request,
     "/api/vault/cli/auth/poll",
-    { "cmux.vault.operation": "cli_auth.poll" },
+    { "hmux.vault.operation": "cli_auth.poll" },
     "/api/vault/cli/auth/poll POST failed",
     async ({ span }) => {
       const body = await readVaultJsonObject(request);
@@ -46,12 +46,12 @@ export async function POST(request: Request): Promise<Response> {
       const deviceCode = typeof body.value.deviceCode === "string" ? body.value.deviceCode.trim() : "";
       if (!/^[a-f0-9]{64}$/i.test(deviceCode)) {
         setSpanAttributes(span, {
-          "cmux.vault.cli_auth.device_code_valid": false,
-          "cmux.vault.cli_auth.result_status": "expired",
+          "hmux.vault.cli_auth.device_code_valid": false,
+          "hmux.vault.cli_auth.result_status": "expired",
         });
         return jsonResponse({ status: "expired" });
       }
-      setSpanAttributes(span, { "cmux.vault.cli_auth.device_code_valid": true });
+      setSpanAttributes(span, { "hmux.vault.cli_auth.device_code_valid": true });
 
       const deviceCodeHash = createHash("sha256").update(deviceCode).digest("hex");
       const result = await claimCliAuthTokens(
@@ -60,7 +60,7 @@ export async function POST(request: Request): Promise<Response> {
         deviceCodeHash,
         new Date(),
       );
-      setSpanAttributes(span, { "cmux.vault.cli_auth.result_status": result.status });
+      setSpanAttributes(span, { "hmux.vault.cli_auth.result_status": result.status });
 
       return jsonResponse(result);
     },

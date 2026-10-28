@@ -1,4 +1,4 @@
-import CmuxSidebar
+import HmuxSidebar
 import Foundation
 
 extension Workspace {

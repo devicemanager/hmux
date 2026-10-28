@@ -50,18 +50,18 @@ body {
   padding: 0; /* hljs class already pads */
   overflow: auto;
 }
-.cmux-code-block {
+.hmux-code-block {
   position: relative;
   margin: 0 0 16px 0;
 }
-.cmux-code-block pre {
+.hmux-code-block pre {
   margin: 0;
 }
-.cmux-code-block .markdown-body pre,
-.markdown-body .cmux-code-block pre {
+.hmux-code-block .markdown-body pre,
+.markdown-body .hmux-code-block pre {
   margin: 0;
 }
-.cmux-code-copy-button {
+.hmux-code-copy-button {
   position: absolute;
   top: 8px;
   right: 8px;
@@ -78,17 +78,17 @@ body {
   box-shadow: none;
   transition: opacity 120ms ease, color 120ms ease, background-color 120ms ease;
 }
-.cmux-code-block:hover .cmux-code-copy-button,
-.cmux-code-copy-button:focus-visible {
+.hmux-code-block:hover .hmux-code-copy-button,
+.hmux-code-copy-button:focus-visible {
   opacity: 1;
   pointer-events: auto;
 }
-.cmux-code-copy-button:hover,
-.cmux-code-copy-button:focus-visible {
+.hmux-code-copy-button:hover,
+.hmux-code-copy-button:focus-visible {
   color: var(--fgColor-default);
   background: var(--bgColor-muted);
 }
-.cmux-remote-image-placeholder {
+.hmux-remote-image-placeholder {
   display: inline-flex;
   flex-wrap: wrap;
   align-items: center;
@@ -102,18 +102,18 @@ body {
   color: var(--fgColor-muted);
   font: 13px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
 }
-.cmux-remote-image-placeholder strong {
+.hmux-remote-image-placeholder strong {
   color: var(--fgColor-default);
   font-weight: 600;
 }
-.cmux-remote-image-url {
+.hmux-remote-image-url {
   flex-basis: 100%;
   min-width: 0;
   overflow-wrap: anywhere;
   font: 12px/1.4 ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
   color: var(--fgColor-muted);
 }
-.cmux-remote-image-placeholder button {
+.hmux-remote-image-placeholder button {
   padding: 3px 7px;
   border: 1px solid var(--borderColor-default);
   border-radius: 6px;
@@ -122,56 +122,56 @@ body {
   font: inherit;
   cursor: pointer;
 }
-.cmux-remote-image-placeholder button:hover,
-.cmux-remote-image-placeholder button:focus-visible {
+.hmux-remote-image-placeholder button:hover,
+.hmux-remote-image-placeholder button:focus-visible {
   background: var(--bgColor-neutral-muted);
 }
 /* Mermaid + Vega-Lite blocks. Both libs render into these containers
-   lazily; the .cmux-source <pre> holds the raw block source for the
+   lazily; the .hmux-source <pre> holds the raw block source for the
    library to read, hidden from view. */
-.cmux-mermaid, .cmux-vega {
+.hmux-mermaid, .hmux-vega {
   display: block;
   margin: 0.6em 0 0.9em 0;
   overflow-x: auto;
   text-align: center;
 }
-.cmux-mermaid svg {
+.hmux-mermaid svg {
   max-width: 100%;
   height: auto;
 }
-.cmux-mermaid svg[data-cmux-mermaid-scaled="1"] {
+.hmux-mermaid svg[data-hmux-mermaid-scaled="1"] {
   display: block;
   margin-inline: auto;
   max-width: none;
 }
-.cmux-vega canvas, .cmux-vega svg {
+.hmux-vega canvas, .hmux-vega svg {
   max-width: 100%;
   height: auto;
 }
-.cmux-mermaid .cmux-source, .cmux-vega .cmux-source { display: none; }
-.markdown-body code[data-cmux-file] {
+.hmux-mermaid .hmux-source, .hmux-vega .hmux-source { display: none; }
+.markdown-body code[data-hmux-file] {
   cursor: default;
   border-bottom: 1px dotted var(--fgColor-muted);
 }
-.markdown-body code[data-cmux-file][data-cmux-file-exists="1"] {
+.markdown-body code[data-hmux-file][data-hmux-file-exists="1"] {
   cursor: pointer;
   color: var(--fgColor-accent);
   border-bottom-color: var(--fgColor-accent);
 }
-.markdown-body a[data-cmux-file-exists="1"]::after,
-.markdown-body code[data-cmux-file][data-cmux-file-exists="1"]::after {
+.markdown-body a[data-hmux-file-exists="1"]::after,
+.markdown-body code[data-hmux-file][data-hmux-file-exists="1"]::after {
   content: " ↗";
   font-size: 0.82em;
   opacity: 0.65;
 }
-.cmux-frontmatter {
+.hmux-frontmatter {
   margin: 0 0 16px 0;
   border: 1px solid var(--borderColor-default);
   border-radius: 6px;
   background: var(--bgColor-muted);
   color: var(--fgColor-muted);
 }
-.cmux-frontmatter summary {
+.hmux-frontmatter summary {
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -181,10 +181,10 @@ body {
   font-weight: 600;
   user-select: none;
 }
-.cmux-frontmatter summary::-webkit-details-marker {
+.hmux-frontmatter summary::-webkit-details-marker {
   display: none;
 }
-.cmux-frontmatter summary::before {
+.hmux-frontmatter summary::before {
   content: "▸";
   display: inline-flex;
   align-items: center;
@@ -196,25 +196,25 @@ body {
   opacity: 0.82;
   transform: translateY(0.5px);
 }
-.cmux-frontmatter[open] summary {
+.hmux-frontmatter[open] summary {
   border-bottom: 1px solid var(--borderColor-default);
 }
-.cmux-frontmatter[open] summary::before {
+.hmux-frontmatter[open] summary::before {
   content: "▾";
 }
-.cmux-frontmatter pre {
+.hmux-frontmatter pre {
   margin: 0;
   padding: 0;
   background: transparent;
   border-radius: 0;
 }
-.cmux-frontmatter pre code.hljs {
+.hmux-frontmatter pre code.hljs {
   padding: 10px 12px;
   background: transparent;
   font-size: 12.5px;
   line-height: 1.45;
 }
-.cmux-render-error {
+.hmux-render-error {
   color: #f85149;
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 12.5px;
@@ -271,12 +271,12 @@ html { scroll-behavior: smooth; }
   window.onunhandledrejection = function(ev) {
     showBootError((ev.reason && ev.reason.stack) || ev.reason || 'unhandled rejection');
   };
-  if (!window.marked || !window.hljs || !window.CmuxMarkdownSanitizer) {
+  if (!window.marked || !window.hljs || !window.HmuxMarkdownSanitizer) {
     showBootError('marked/highlight/sanitizer libraries did not load');
   }
-  var cmuxStrings = {{localizedStringsJSON}};
-  function cmuxString(key, fallback, replacements) {
-    var value = String((cmuxStrings && cmuxStrings[key]) || fallback || key);
+  var hmuxStrings = {{localizedStringsJSON}};
+  function hmuxString(key, fallback, replacements) {
+    var value = String((hmuxStrings && hmuxStrings[key]) || fallback || key);
     Object.keys(replacements || {}).forEach(function(name) {
       value = value.split('{' + name + '}').join(String(replacements[name]));
     });
@@ -402,7 +402,7 @@ html { scroll-behavior: smooth; }
     } catch (e) {
       highlighted = escapeHtml(raw);
     }
-    return '<details class="cmux-frontmatter">'
+    return '<details class="hmux-frontmatter">'
       + '<summary><span>Show frontmatter</span></summary>'
       + '<pre><code class="hljs language-yaml">' + highlighted + '</code></pre>'
       + '</details>';
@@ -598,7 +598,7 @@ html { scroll-behavior: smooth; }
     return true;
   }
 
-  function cmuxLocalImageURL(value) {
+  function hmuxLocalImageURL(value) {
     var raw = String(value || '').trim();
     if (!isRelativeLocalImagePath(raw)) {
       return null;
@@ -607,7 +607,7 @@ html { scroll-behavior: smooth; }
     try {
       var parsed = new URL(raw, document.baseURI || window.location.href);
       if ((parsed.protocol || '').toLowerCase() !== 'file:') { return null; }
-      return 'cmux-local-image://image?url=' + encodeURIComponent(parsed.href);
+      return 'hmux-local-image://image?url=' + encodeURIComponent(parsed.href);
     } catch (e) {
       return null;
     }
@@ -616,45 +616,45 @@ html { scroll-behavior: smooth; }
   function rewriteLocalImageSources() {
     contentEl.querySelectorAll('img[src]').forEach(function(img) {
       var raw = img.getAttribute('src') || '';
-      var rewritten = cmuxLocalImageURL(raw);
+      var rewritten = hmuxLocalImageURL(raw);
       if (!rewritten) { return; }
-      img.setAttribute('data-cmux-original-src', raw);
+      img.setAttribute('data-hmux-original-src', raw);
       img.setAttribute('src', rewritten);
     });
   }
 
   var remoteImageAllowedURLs = Object.create(null);
 
-  function cmuxRemoteImageURL(value) {
+  function hmuxRemoteImageURL(value) {
     var info = remoteImageInfo(value);
     if (!info || !info.https) { return null; }
-    return 'cmux-remote-image://image?url=' + encodeURIComponent(info.href);
+    return 'hmux-remote-image://image?url=' + encodeURIComponent(info.href);
   }
 
   function removeRemoteImagePlaceholder(img) {
-    var id = img && img.getAttribute('data-cmux-remote-placeholder-id');
+    var id = img && img.getAttribute('data-hmux-remote-placeholder-id');
     if (!id) { return; }
-    var placeholder = contentEl.querySelector('[data-cmux-remote-placeholder-for="' + id + '"]');
+    var placeholder = contentEl.querySelector('[data-hmux-remote-placeholder-for="' + id + '"]');
     if (placeholder) { placeholder.remove(); }
   }
 
   function remoteImagePlaceholderForImage(img) {
-    var id = img && img.getAttribute('data-cmux-remote-placeholder-id');
+    var id = img && img.getAttribute('data-hmux-remote-placeholder-id');
     if (!id) { return null; }
-    return contentEl.querySelector('[data-cmux-remote-placeholder-for="' + id + '"]');
+    return contentEl.querySelector('[data-hmux-remote-placeholder-for="' + id + '"]');
   }
 
   function setRemoteImageLoadingState(img, loading) {
     var placeholder = remoteImagePlaceholderForImage(img);
     if (!placeholder) { return; }
-    var buttons = placeholder.querySelectorAll('button[data-cmux-remote-action="load"]');
+    var buttons = placeholder.querySelectorAll('button[data-hmux-remote-action="load"]');
     Array.prototype.slice.call(buttons).forEach(function(button) {
       if (loading) {
-        button.textContent = cmuxString('remoteImageLoading', 'Loading');
+        button.textContent = hmuxString('remoteImageLoading', 'Loading');
         button.disabled = true;
         button.setAttribute('data-loading', '1');
       } else {
-        button.textContent = cmuxString('remoteImageLoadImage', 'Load this image');
+        button.textContent = hmuxString('remoteImageLoadImage', 'Load this image');
         button.disabled = false;
         button.removeAttribute('data-loading');
       }
@@ -662,16 +662,16 @@ html { scroll-behavior: smooth; }
   }
 
   function loadRemoteImage(img) {
-    var raw = unescapeDataAttribute(img.getAttribute('data-cmux-remote-src'));
-    var rewritten = cmuxRemoteImageURL(raw);
+    var raw = unescapeDataAttribute(img.getAttribute('data-hmux-remote-src'));
+    var rewritten = hmuxRemoteImageURL(raw);
     if (!rewritten) { return false; }
-    if (img.getAttribute('data-cmux-remote-loading') === '1') { return true; }
-    img.setAttribute('data-cmux-remote-loading', '1');
+    if (img.getAttribute('data-hmux-remote-loading') === '1') { return true; }
+    img.setAttribute('data-hmux-remote-loading', '1');
     setRemoteImageLoadingState(img, true);
     function cleanup() {
       img.removeEventListener('load', onLoad);
       img.removeEventListener('error', onError);
-      img.removeAttribute('data-cmux-remote-loading');
+      img.removeAttribute('data-hmux-remote-loading');
     }
     function onLoad() {
       cleanup();
@@ -695,8 +695,8 @@ html { scroll-behavior: smooth; }
 
   function remoteImagesForHref(href) {
     var matches = [];
-    contentEl.querySelectorAll('img[data-cmux-remote-src]').forEach(function(img) {
-      var raw = unescapeDataAttribute(img.getAttribute('data-cmux-remote-src'));
+    contentEl.querySelectorAll('img[data-hmux-remote-src]').forEach(function(img) {
+      var raw = unescapeDataAttribute(img.getAttribute('data-hmux-remote-src'));
       var info = remoteImageInfo(raw);
       if (info && remoteImageCanOfferLoad(info) && info.href === href) {
         matches.push(img);
@@ -706,12 +706,12 @@ html { scroll-behavior: smooth; }
   }
 
   // The host keeps the authoritative per-view approval record: its
-  // cmux-remote-image handler fetches only URLs the reader approved here.
+  // hmux-remote-image handler fetches only URLs the reader approved here.
   function loadApprovedRemoteImage(href) {
     var images = remoteImagesForHref(href);
     images.forEach(function(img) { setRemoteImageLoadingState(img, true); });
     try {
-      window.webkit.messageHandlers.cmuxLib.postMessage({ action: 'approveRemoteImage', url: href });
+      window.webkit.messageHandlers.hmuxLib.postMessage({ action: 'approveRemoteImage', url: href });
     } catch (e) {
       images.forEach(function(img) { setRemoteImageLoadingState(img, false); });
       return false;
@@ -719,27 +719,27 @@ html { scroll-behavior: smooth; }
     return true;
   }
 
-  window.__cmuxRemoteImageApproved = function(href) {
+  window.__hmuxRemoteImageApproved = function(href) {
     remoteImageAllowedURLs[href] = true;
     remoteImagesForHref(href).forEach(loadRemoteImage);
   };
 
-  window.__cmuxRemoteImageRejected = function(href) {
+  window.__hmuxRemoteImageRejected = function(href) {
     delete remoteImageAllowedURLs[href];
     remoteImagesForHref(href).forEach(function(img) { setRemoteImageLoadingState(img, false); });
   };
 
   function appendRemoteImageText(placeholder, key, fallback, replacements) {
     var detail = document.createElement('span');
-    detail.textContent = cmuxString(key, fallback, replacements || {});
+    detail.textContent = hmuxString(key, fallback, replacements || {});
     placeholder.appendChild(detail);
     return detail;
   }
 
   function appendRemoteImageURL(placeholder, href) {
     var url = document.createElement('span');
-    url.className = 'cmux-remote-image-url';
-    url.textContent = cmuxString(
+    url.className = 'hmux-remote-image-url';
+    url.textContent = hmuxString(
       'remoteImageURL',
       'Image URL: {url}',
       { url: href }
@@ -763,21 +763,21 @@ html { scroll-behavior: smooth; }
 
   function openRemoteImageURL(href) {
     try {
-      window.webkit.messageHandlers.cmuxLib.postMessage({ action: 'openRemoteImage', url: href });
+      window.webkit.messageHandlers.hmuxLib.postMessage({ action: 'openRemoteImage', url: href });
     } catch (e) { /* no bridge */ }
   }
 
   function temporarilySetButtonLabel(button, label, restoreLabel) {
     if (!button) { return; }
-    if (button._cmuxResetLabelTimer) {
-      window.clearTimeout(button._cmuxResetLabelTimer);
+    if (button._hmuxResetLabelTimer) {
+      window.clearTimeout(button._hmuxResetLabelTimer);
     }
     button.textContent = label;
     button.setAttribute('data-copied', '1');
-    button._cmuxResetLabelTimer = window.setTimeout(function() {
+    button._hmuxResetLabelTimer = window.setTimeout(function() {
       button.textContent = restoreLabel;
       button.removeAttribute('data-copied');
-      button._cmuxResetLabelTimer = null;
+      button._hmuxResetLabelTimer = null;
     }, 1200);
   }
 
@@ -785,7 +785,7 @@ html { scroll-behavior: smooth; }
     copyTextToClipboard(href).then(function() {
       temporarilySetButtonLabel(
         button,
-        cmuxString('remoteImageCopied', 'Copied'),
+        hmuxString('remoteImageCopied', 'Copied'),
         restoreLabel
       );
     }).catch(function() {});
@@ -801,37 +801,37 @@ html { scroll-behavior: smooth; }
   }
 
   function ensureRemoteImagePlaceholder(img) {
-    if (!img || img.getAttribute('data-cmux-remote-processed') === '1') { return; }
-    var raw = unescapeDataAttribute(img.getAttribute('data-cmux-remote-src'));
+    if (!img || img.getAttribute('data-hmux-remote-processed') === '1') { return; }
+    var raw = unescapeDataAttribute(img.getAttribute('data-hmux-remote-src'));
     var info = remoteImageInfo(raw);
     if (!info) { return; }
 
-    img.setAttribute('data-cmux-remote-processed', '1');
+    img.setAttribute('data-hmux-remote-processed', '1');
     img.hidden = true;
     var canOfferLoad = remoteImageCanOfferLoad(info);
 
     var placeholderId = 'remote-image-' + Math.floor(Math.random() * 1e9).toString(36) + '-' + Date.now().toString(36);
-    img.setAttribute('data-cmux-remote-placeholder-id', placeholderId);
+    img.setAttribute('data-hmux-remote-placeholder-id', placeholderId);
 
     var placeholder = document.createElement('span');
-    placeholder.className = 'cmux-remote-image-placeholder';
-    placeholder.setAttribute('data-cmux-remote-placeholder-for', placeholderId);
+    placeholder.className = 'hmux-remote-image-placeholder';
+    placeholder.setAttribute('data-hmux-remote-placeholder-for', placeholderId);
     placeholder.setAttribute('role', 'group');
 
     var title = document.createElement('strong');
-    title.textContent = cmuxString('remoteImageBlocked', 'Remote image blocked');
+    title.textContent = hmuxString('remoteImageBlocked', 'Remote image blocked');
     placeholder.appendChild(title);
 
     if (canOfferLoad) {
       appendRemoteImageText(
         placeholder,
         'remoteImageConsentMessage',
-        'cmux will not contact this image URL until you load this image.'
+        'hmux will not contact this image URL until you load this image.'
       );
       appendRemoteImageURL(placeholder, info.href);
       var loadButton = appendRemoteImageButton(
         placeholder,
-        cmuxString(
+        hmuxString(
           'remoteImageLoadImage',
           'Load this image'
         ),
@@ -839,7 +839,7 @@ html { scroll-behavior: smooth; }
           loadApprovedRemoteImage(info.href);
         }
       );
-      loadButton.setAttribute('data-cmux-remote-action', 'load');
+      loadButton.setAttribute('data-hmux-remote-action', 'load');
     } else if (!info.https) {
       appendRemoteImageText(
         placeholder,
@@ -855,7 +855,7 @@ html { scroll-behavior: smooth; }
       );
       appendRemoteImageURL(placeholder, info.href);
     }
-    var copyURLLabel = cmuxString('remoteImageCopyURL', 'Copy image URL');
+    var copyURLLabel = hmuxString('remoteImageCopyURL', 'Copy image URL');
     appendRemoteImageButton(
       placeholder,
       copyURLLabel,
@@ -865,7 +865,7 @@ html { scroll-behavior: smooth; }
     );
     appendRemoteImageButton(
       placeholder,
-      cmuxString('remoteImageOpenURL', 'Open image URL'),
+      hmuxString('remoteImageOpenURL', 'Open image URL'),
       function() {
         openRemoteImageURL(info.href);
       }
@@ -878,7 +878,7 @@ html { scroll-behavior: smooth; }
   }
 
   function rewriteRemoteImageSources() {
-    contentEl.querySelectorAll('img[data-cmux-remote-src]').forEach(ensureRemoteImagePlaceholder);
+    contentEl.querySelectorAll('img[data-hmux-remote-src]').forEach(ensureRemoteImagePlaceholder);
   }
 
   function isSafeURLAttribute(name, value) {
@@ -917,7 +917,7 @@ html { scroll-behavior: smooth; }
   // Every rendered fragment goes through the shared allowlist sanitizer
   // (markdown-sanitizer.js). It parses in an inert document and returns DOM
   // nodes, which are inserted directly so nothing is re-parsed live.
-  var markdownSanitizerProfile = CmuxMarkdownSanitizer.markdownProfile({
+  var markdownSanitizerProfile = HmuxMarkdownSanitizer.markdownProfile({
     extraAttributes: { div: ['data-vega-mode'] },
     inlineSVGAsImage: true,
     url: function(ctx) {
@@ -937,10 +937,10 @@ html { scroll-behavior: smooth; }
       if (tag === 'img') {
         var remoteInfo = remoteImageInfo(source.getAttribute('src'));
         if (remoteInfo) {
-          clean.setAttribute('data-cmux-remote-src', escapeDataAttribute(remoteInfo.href));
-          clean.setAttribute('data-cmux-remote-host', escapeDataAttribute(remoteInfo.host));
+          clean.setAttribute('data-hmux-remote-src', escapeDataAttribute(remoteInfo.href));
+          clean.setAttribute('data-hmux-remote-host', escapeDataAttribute(remoteInfo.host));
           if (!remoteInfo.https) {
-            clean.setAttribute('data-cmux-remote-blocked-reason', 'https-only');
+            clean.setAttribute('data-hmux-remote-blocked-reason', 'https-only');
           }
         }
       }
@@ -953,17 +953,17 @@ html { scroll-behavior: smooth; }
       return true;
     }
   });
-  var diagramSanitizerProfile = CmuxMarkdownSanitizer.diagramProfile();
+  var diagramSanitizerProfile = HmuxMarkdownSanitizer.diagramProfile();
 
   function sanitizeMarkdownFragment(html) {
-    return CmuxMarkdownSanitizer.sanitizeToFragment(html, {
+    return HmuxMarkdownSanitizer.sanitizeToFragment(html, {
       document: document,
       profile: markdownSanitizerProfile
     });
   }
 
   function sanitizeDiagramFragment(svg) {
-    return CmuxMarkdownSanitizer.sanitizeToFragment(svg, {
+    return HmuxMarkdownSanitizer.sanitizeToFragment(svg, {
       document: document,
       profile: diagramSanitizerProfile
     });
@@ -971,7 +971,7 @@ html { scroll-behavior: smooth; }
 
   function renderErrorBox(el, label, message) {
     var box = document.createElement('div');
-    box.className = 'cmux-render-error';
+    box.className = 'hmux-render-error';
     box.textContent = label + ': ' + String(message);
     el.replaceChildren(box);
   }
@@ -1091,15 +1091,15 @@ html { scroll-behavior: smooth; }
 
         // Mermaid: ```mermaid ... ``` -> div the lib will swap with SVG.
         if (langName === 'mermaid') {
-          return '<div class="cmux-mermaid"><pre class="cmux-source">'
+          return '<div class="hmux-mermaid"><pre class="hmux-source">'
             + escapeHtml(raw)
             + '</pre></div>\n';
         }
         // Vega / Vega-Lite: ```vega-lite ... ``` (also vega, vegalite).
         if (langName === 'vega' || langName === 'vega-lite' || langName === 'vegalite') {
           var vegaMode = (langName === 'vega') ? 'vega' : 'vega-lite';
-          return '<div class="cmux-vega" data-vega-mode="' + vegaMode + '">'
-            + '<pre class="cmux-source">' + escapeHtml(raw) + '</pre></div>\n';
+          return '<div class="hmux-vega" data-vega-mode="' + vegaMode + '">'
+            + '<pre class="hmux-source">' + escapeHtml(raw) + '</pre></div>\n';
         }
 
         var highlighted;
@@ -1139,14 +1139,14 @@ html { scroll-behavior: smooth; }
     if (libState[name] !== 'pending') {
       libState[name] = 'pending';
       try {
-        window.webkit.messageHandlers.cmuxLib.postMessage({ lib: name });
+        window.webkit.messageHandlers.hmuxLib.postMessage({ lib: name });
       } catch (e) {
         libState[name] = undefined;
         renderLibError(name, 'bridge unavailable');
       }
     }
   }
-  window.__cmuxLibLoaded = function(name) {
+  window.__hmuxLibLoaded = function(name) {
     libState[name] = 'ready';
     var q = libQueue[name] || [];
     libQueue[name] = [];
@@ -1154,7 +1154,7 @@ html { scroll-behavior: smooth; }
   };
 
   function renderLibError(libName, msg) {
-    var sel = libName === 'mermaid' ? '.cmux-mermaid' : '.cmux-vega';
+    var sel = libName === 'mermaid' ? '.hmux-mermaid' : '.hmux-vega';
     contentEl.querySelectorAll(sel + ':not([data-rendered])').forEach(function(el) {
       el.setAttribute('data-rendered', '1');
       renderErrorBox(el, libName, msg);
@@ -1314,12 +1314,12 @@ html { scroll-behavior: smooth; }
   }
 
   var mermaidInitialized = false;
-  var cmuxMarkdownZoom = 1;
+  var hmuxMarkdownZoom = 1;
   // Whether this engine's pageZoom scales the whole CSS viewport (newer WebKit,
   // where fixed-px SVG bounds already track the prose) or only text metrics
   // (older WebKit, where Mermaid SVGs need manual compensation). Unknown until
   // the first non-default zoom supplies both host and CSS viewport widths.
-  var cmuxEngineScalesSVG = null;
+  var hmuxEngineScalesSVG = null;
   var mermaidResizeObserver = null;
   var mermaidObservedWidth = 0;
 
@@ -1352,24 +1352,24 @@ html { scroll-behavior: smooth; }
   }
 
   function mermaidRememberOriginalSizing(svg) {
-    if (svg.hasAttribute('data-cmux-mermaid-original-max-width')) { return; }
-    svg.setAttribute('data-cmux-mermaid-original-max-width', svg.style.maxWidth || '');
-    svg.setAttribute('data-cmux-mermaid-original-width', svg.style.width || '');
-    svg.setAttribute('data-cmux-mermaid-original-height', svg.style.height || '');
+    if (svg.hasAttribute('data-hmux-mermaid-original-max-width')) { return; }
+    svg.setAttribute('data-hmux-mermaid-original-max-width', svg.style.maxWidth || '');
+    svg.setAttribute('data-hmux-mermaid-original-width', svg.style.width || '');
+    svg.setAttribute('data-hmux-mermaid-original-height', svg.style.height || '');
   }
 
   function mermaidRestoreOriginalSizing(svg) {
     mermaidRememberOriginalSizing(svg);
-    svg.removeAttribute('data-cmux-mermaid-scaled');
-    svg.style.maxWidth = svg.getAttribute('data-cmux-mermaid-original-max-width') || '';
-    svg.style.width = svg.getAttribute('data-cmux-mermaid-original-width') || '';
-    svg.style.height = svg.getAttribute('data-cmux-mermaid-original-height') || '';
+    svg.removeAttribute('data-hmux-mermaid-scaled');
+    svg.style.maxWidth = svg.getAttribute('data-hmux-mermaid-original-max-width') || '';
+    svg.style.width = svg.getAttribute('data-hmux-mermaid-original-width') || '';
+    svg.style.height = svg.getAttribute('data-hmux-mermaid-original-height') || '';
   }
 
   function mermaidIntrinsicSize(svg) {
     mermaidRememberOriginalSizing(svg);
-    var cachedWidth = Number(svg.getAttribute('data-cmux-mermaid-natural-width'));
-    var cachedHeight = Number(svg.getAttribute('data-cmux-mermaid-natural-height'));
+    var cachedWidth = Number(svg.getAttribute('data-hmux-mermaid-natural-width'));
+    var cachedHeight = Number(svg.getAttribute('data-hmux-mermaid-natural-height'));
     if (
       Number.isFinite(cachedWidth) &&
       cachedWidth > 0 &&
@@ -1380,9 +1380,9 @@ html { scroll-behavior: smooth; }
     }
 
     var viewBox = mermaidViewBoxSize(svg);
-    var width = mermaidNumericLength(svg.getAttribute('data-cmux-mermaid-original-max-width'));
+    var width = mermaidNumericLength(svg.getAttribute('data-hmux-mermaid-original-max-width'));
     if (!Number.isFinite(width) || width <= 0) {
-      width = mermaidNumericLength(svg.getAttribute('data-cmux-mermaid-original-width'));
+      width = mermaidNumericLength(svg.getAttribute('data-hmux-mermaid-original-width'));
     }
     if (!Number.isFinite(width) || width <= 0) {
       width = mermaidNumericLength(svg.getAttribute('width'));
@@ -1391,7 +1391,7 @@ html { scroll-behavior: smooth; }
       width = viewBox.width;
     }
 
-    var height = mermaidNumericLength(svg.getAttribute('data-cmux-mermaid-original-height'));
+    var height = mermaidNumericLength(svg.getAttribute('data-hmux-mermaid-original-height'));
     if (!Number.isFinite(height) || height <= 0) {
       height = mermaidNumericLength(svg.getAttribute('height'));
     }
@@ -1406,13 +1406,13 @@ html { scroll-behavior: smooth; }
       return null;
     }
 
-    svg.setAttribute('data-cmux-mermaid-natural-width', String(width));
-    svg.setAttribute('data-cmux-mermaid-natural-height', String(height));
+    svg.setAttribute('data-hmux-mermaid-natural-width', String(width));
+    svg.setAttribute('data-hmux-mermaid-natural-height', String(height));
     return { width: width, height: height };
   }
 
   function mermaidCurrentBaseSize(svg, natural, containerScale) {
-    var container = svg.closest ? svg.closest('.cmux-mermaid') : svg.parentElement;
+    var container = svg.closest ? svg.closest('.hmux-mermaid') : svg.parentElement;
     var rect = container && container.getBoundingClientRect ? container.getBoundingClientRect() : null;
     var containerWidth = rect ? rect.width : NaN;
     if (!Number.isFinite(containerWidth) || containerWidth <= 0) {
@@ -1441,7 +1441,7 @@ html { scroll-behavior: smooth; }
     mermaidResizeObserver = new ResizeObserver(function(entries) {
       var width = mermaidContentWidth(entries && entries[0]);
       if (width <= 0) { return; }
-      if (Math.abs(cmuxMarkdownZoom - 1) <= 0.0001) {
+      if (Math.abs(hmuxMarkdownZoom - 1) <= 0.0001) {
         mermaidObservedWidth = width;
         return;
       }
@@ -1456,41 +1456,41 @@ html { scroll-behavior: smooth; }
     if (!svg) { return; }
     var natural = mermaidIntrinsicSize(svg);
     if (!natural) { return; }
-    if (Math.abs(cmuxMarkdownZoom - 1) <= 0.0001) {
+    if (Math.abs(hmuxMarkdownZoom - 1) <= 0.0001) {
       mermaidRestoreOriginalSizing(svg);
-      svg.setAttribute('data-cmux-mermaid-zoom', '1');
+      svg.setAttribute('data-hmux-mermaid-zoom', '1');
       return;
     }
     var width;
     var height;
-    if (cmuxEngineScalesSVG === true) {
+    if (hmuxEngineScalesSVG === true) {
       // This engine's pageZoom scales the whole viewport: the container's CSS
       // width is already divided by the zoom, and the engine multiplies any
       // CSS size we set. Pin the zoom-1 fitted size (letting a wide diagram
       // overflow and scroll at its enlarged size) and let the engine scale it;
       // multiplying here as well renders the diagram zoom-squared.
-      var pinned = mermaidCurrentBaseSize(svg, natural, cmuxMarkdownZoom);
+      var pinned = mermaidCurrentBaseSize(svg, natural, hmuxMarkdownZoom);
       width = Math.max(1, pinned.width);
       height = Math.max(1, pinned.height);
     } else {
       // Older WKWebView pageZoom scales markdown text metrics but leaves fixed
       // px SVG bounds alone, so the shell must size the diagram up itself.
       var base = mermaidCurrentBaseSize(svg, natural, 1);
-      width = Math.max(1, base.width * cmuxMarkdownZoom);
-      height = Math.max(1, base.height * cmuxMarkdownZoom);
+      width = Math.max(1, base.width * hmuxMarkdownZoom);
+      height = Math.max(1, base.height * hmuxMarkdownZoom);
     }
     svg.style.maxWidth = '';
-    svg.setAttribute('data-cmux-mermaid-scaled', '1');
+    svg.setAttribute('data-hmux-mermaid-scaled', '1');
     svg.style.width = width + 'px';
     svg.style.height = height + 'px';
-    svg.setAttribute('data-cmux-mermaid-zoom', String(cmuxMarkdownZoom));
+    svg.setAttribute('data-hmux-mermaid-zoom', String(hmuxMarkdownZoom));
   }
 
   function applyMermaidZoom(root) {
     ensureMermaidResizeObserver();
     var scope = root || contentEl;
     if (!scope || !scope.querySelectorAll) { return; }
-    Array.prototype.forEach.call(scope.querySelectorAll('.cmux-mermaid svg'), applyMermaidZoomToSVG);
+    Array.prototype.forEach.call(scope.querySelectorAll('.hmux-mermaid svg'), applyMermaidZoomToSVG);
   }
 
   function detectPageZoomViewportScaling(zoom, hostViewportWidth) {
@@ -1513,14 +1513,14 @@ html { scroll-behavior: smooth; }
     return viewportDistance < legacyDistance;
   }
 
-  window.__cmuxSetMarkdownZoom = function(zoom, hostViewportWidth) {
-    cmuxMarkdownZoom = normalizedMarkdownZoom(zoom);
+  window.__hmuxSetMarkdownZoom = function(zoom, hostViewportWidth) {
+    hmuxMarkdownZoom = normalizedMarkdownZoom(zoom);
     // Native supplies the current WKWebView width after setting pageZoom. A
     // single contemporaneous sample distinguishes the engine generations:
     // newer WebKit reports hostWidth / zoom, while older WebKit reports the
     // unscaled hostWidth. No resize-sensitive historical baseline is needed.
-    var detectedScaling = detectPageZoomViewportScaling(cmuxMarkdownZoom, hostViewportWidth);
-    if (detectedScaling !== null) { cmuxEngineScalesSVG = detectedScaling; }
+    var detectedScaling = detectPageZoomViewportScaling(hmuxMarkdownZoom, hostViewportWidth);
+    if (detectedScaling !== null) { hmuxEngineScalesSVG = detectedScaling; }
     mermaidObservedWidth = mermaidContentWidth(null);
     applyMermaidZoom(contentEl);
   };
@@ -1539,12 +1539,12 @@ html { scroll-behavior: smooth; }
       }
     } catch (e) { /* ignore reinit failure */ }
 
-    var blocks = contentEl.querySelectorAll('.cmux-mermaid:not([data-rendered])');
+    var blocks = contentEl.querySelectorAll('.hmux-mermaid:not([data-rendered])');
     Array.prototype.forEach.call(blocks, function(el, i) {
       el.setAttribute('data-rendered', '1');
-      var srcEl = el.querySelector('.cmux-source');
+      var srcEl = el.querySelector('.hmux-source');
       var src = srcEl ? srcEl.textContent : el.textContent;
-      var id = 'cmux-mermaid-' + Date.now() + '-' + i + '-' + Math.floor(Math.random() * 1e6);
+      var id = 'hmux-mermaid-' + Date.now() + '-' + i + '-' + Math.floor(Math.random() * 1e6);
       try {
         mermaid.render(id, src).then(function(res) {
           // Generated SVG is untrusted output of untrusted input. Interactive
@@ -1638,10 +1638,10 @@ html { scroll-behavior: smooth; }
   function renderVegaBlocks() {
     if (typeof vegaEmbed === 'undefined') { renderLibError('vega-lite', 'library missing'); return; }
     var isDark = darkMql.matches;
-    var blocks = contentEl.querySelectorAll('.cmux-vega:not([data-rendered])');
+    var blocks = contentEl.querySelectorAll('.hmux-vega:not([data-rendered])');
     Array.prototype.forEach.call(blocks, function(el) {
       el.setAttribute('data-rendered', '1');
-      var srcEl = el.querySelector('.cmux-source');
+      var srcEl = el.querySelector('.hmux-source');
       var raw = srcEl ? srcEl.textContent : el.textContent;
       var mode = el.getAttribute('data-vega-mode') === 'vega' ? 'vega' : 'vega-lite';
       try {
@@ -1671,10 +1671,10 @@ html { scroll-behavior: smooth; }
   }
 
   function postProcessSpecialBlocks() {
-    if (contentEl.querySelector('.cmux-mermaid:not([data-rendered])')) {
+    if (contentEl.querySelector('.hmux-mermaid:not([data-rendered])')) {
       loadLib('mermaid', renderMermaidBlocks);
     }
-    if (contentEl.querySelector('.cmux-vega:not([data-rendered])')) {
+    if (contentEl.querySelector('.hmux-vega:not([data-rendered])')) {
       loadLib('vega-lite', renderVegaBlocks);
     }
     addCodeCopyButtons();
@@ -1684,17 +1684,17 @@ html { scroll-behavior: smooth; }
   function addCodeCopyButtons() {
     contentEl.querySelectorAll('pre > code.hljs').forEach(function(code) {
       var pre = code.parentElement;
-      if (!pre || pre.closest('.cmux-source') || pre.closest('.cmux-frontmatter')) { return; }
-      if (pre.parentElement && pre.parentElement.classList.contains('cmux-code-block')) { return; }
+      if (!pre || pre.closest('.hmux-source') || pre.closest('.hmux-frontmatter')) { return; }
+      if (pre.parentElement && pre.parentElement.classList.contains('hmux-code-block')) { return; }
 
       var wrapper = document.createElement('div');
-      wrapper.className = 'cmux-code-block';
+      wrapper.className = 'hmux-code-block';
       pre.parentNode.insertBefore(wrapper, pre);
       wrapper.appendChild(pre);
 
       var button = document.createElement('button');
       button.type = 'button';
-      button.className = 'cmux-code-copy-button';
+      button.className = 'hmux-code-copy-button';
       button.textContent = 'Copy';
       button.setAttribute('aria-label', 'Copy code');
       button.addEventListener('click', function(ev) {
@@ -1719,15 +1719,15 @@ html { scroll-behavior: smooth; }
   // Local markdown file links and inline-code spans.
   // Resolution is lazy: hover/focus asks Swift whether the path exists
   // relative to the current markdown file (and PWD fallback). Click
-  // opens a new cmux markdown tab when it resolves.
+  // opens a new hmux markdown tab when it resolves.
   var mdFileResolveCache = {}; // raw path -> { exists, path }
   var mdFileResolvePending = {}; // requestId -> { rawPath, elements }
   var mdFileRequestSeq = 0;
 
   function markdownCandidateForElement(el) {
     if (!el) { return null; }
-    if (el.matches && el.matches('code[data-cmux-file]')) {
-      return unescapeDataAttribute(el.getAttribute('data-cmux-file'));
+    if (el.matches && el.matches('code[data-hmux-file]')) {
+      return unescapeDataAttribute(el.getAttribute('data-hmux-file'));
     }
     if (el.matches && el.matches('a[href]')) {
       var href = el.getAttribute('href') || '';
@@ -1740,11 +1740,11 @@ html { scroll-behavior: smooth; }
     mdFileResolveCache[rawPath] = result;
     (elements || []).forEach(function(el) {
       if (!el) { return; }
-      el.setAttribute('data-cmux-file-checked', '1');
+      el.setAttribute('data-hmux-file-checked', '1');
       if (result && result.exists) {
-        el.setAttribute('data-cmux-file-exists', '1');
+        el.setAttribute('data-hmux-file-exists', '1');
       } else {
-        el.removeAttribute('data-cmux-file-exists');
+        el.removeAttribute('data-hmux-file-exists');
       }
     });
   }
@@ -1761,7 +1761,7 @@ html { scroll-behavior: smooth; }
     var requestId = 'mdfile-' + (++mdFileRequestSeq);
     mdFileResolvePending[requestId] = { rawPath: rawPath, elements: [el], openAfterResolve: !!openAfterResolve };
     try {
-      window.webkit.messageHandlers.cmuxLib.postMessage({
+      window.webkit.messageHandlers.hmuxLib.postMessage({
         action: 'resolveMarkdownFile',
         requestId: requestId,
         path: rawPath
@@ -1770,7 +1770,7 @@ html { scroll-behavior: smooth; }
     return false;
   }
 
-  window.__cmuxMarkdownFileResolved = function(result) {
+  window.__hmuxMarkdownFileResolved = function(result) {
     var pending = result && mdFileResolvePending[result.requestId];
     if (!pending) { return; }
     delete mdFileResolvePending[result.requestId];
@@ -1782,22 +1782,22 @@ html { scroll-behavior: smooth; }
 
   function openMarkdownCandidate(rawPath) {
     try {
-      window.webkit.messageHandlers.cmuxLib.postMessage({ action: 'openMarkdownFile', path: rawPath });
+      window.webkit.messageHandlers.hmuxLib.postMessage({ action: 'openMarkdownFile', path: rawPath });
     } catch (e) { /* no bridge */ }
   }
 
   function markMarkdownFileLinks() {
-    contentEl.querySelectorAll('code:not([data-cmux-file])').forEach(function(code) {
-      if (code.closest && code.closest('pre, .cmux-source')) { return; }
+    contentEl.querySelectorAll('code:not([data-hmux-file])').forEach(function(code) {
+      if (code.closest && code.closest('pre, .hmux-source')) { return; }
       var raw = code.textContent || '';
       if (isMarkdownPathLike(raw)) {
-        code.setAttribute('data-cmux-file', escapeDataAttribute(raw));
+        code.setAttribute('data-hmux-file', escapeDataAttribute(raw));
       }
     });
     contentEl.querySelectorAll('a[href]').forEach(function(a) {
       var href = a.getAttribute('href') || '';
       if (isMarkdownPathLike(href)) {
-        a.setAttribute('data-cmux-file-candidate', href);
+        a.setAttribute('data-hmux-file-candidate', href);
         // Eagerly resolve visible markdown links so the user gets
         // immediate affordance; inline code spans remain lazy-on-hover.
         resolveMarkdownCandidate(a, false);
@@ -1806,21 +1806,21 @@ html { scroll-behavior: smooth; }
   }
 
   contentEl.addEventListener('mouseover', function(ev) {
-    var el = ev.target && ev.target.closest && ev.target.closest('code[data-cmux-file], a[href]');
+    var el = ev.target && ev.target.closest && ev.target.closest('code[data-hmux-file], a[href]');
     if (el) { resolveMarkdownCandidate(el, false); }
   });
   contentEl.addEventListener('focusin', function(ev) {
-    var el = ev.target && ev.target.closest && ev.target.closest('code[data-cmux-file], a[href]');
+    var el = ev.target && ev.target.closest && ev.target.closest('code[data-hmux-file], a[href]');
     if (el) { resolveMarkdownCandidate(el, false); }
   });
   contentEl.addEventListener('click', function(ev) {
-    if (ev.target && ev.target.closest && ev.target.closest('.cmux-remote-image-placeholder')) {
+    if (ev.target && ev.target.closest && ev.target.closest('.hmux-remote-image-placeholder')) {
       if (ev.target.closest('button')) { return; }
       ev.preventDefault();
       ev.stopPropagation();
       return;
     }
-    var el = ev.target && ev.target.closest && ev.target.closest('code[data-cmux-file], a[href]');
+    var el = ev.target && ev.target.closest && ev.target.closest('code[data-hmux-file], a[href]');
     var rawPath = markdownCandidateForElement(el);
     if (!rawPath) { return; }
     // For markdown-looking paths, always stop WebKit navigation first.
@@ -1834,7 +1834,7 @@ html { scroll-behavior: smooth; }
     openMarkdownCandidate(rawPath);
   }, true);
 
-  window.__cmuxRenderMarkdown = function(md) {
+  window.__hmuxRenderMarkdown = function(md) {
     try {
       headingSlugCounts = Object.create(null);
       var documentParts = extractFrontmatter(md || '');
@@ -1843,7 +1843,7 @@ html { scroll-behavior: smooth; }
         renderFrontmatter(documentParts.frontmatter) + marked.parse(documentParts.body || '')
       );
       // Serialized only to detect an unchanged document; never re-parsed.
-      var html = CmuxMarkdownSanitizer.serializeFragment(fragment, document);
+      var html = HmuxMarkdownSanitizer.serializeFragment(fragment, document);
       var didReplaceContent = contentEl.innerHTML !== html;
       var scrollState = didReplaceContent ? captureMarkdownScrollState() : null;
       if (didReplaceContent) {
@@ -1875,23 +1875,23 @@ html { scroll-behavior: smooth; }
     options = options || {};
     var restoreImageSources = options.restoreImageSources !== false;
     var clone = contentEl.cloneNode(true);
-    clone.querySelectorAll('.cmux-code-copy-button').forEach(function(el) {
+    clone.querySelectorAll('.hmux-code-copy-button').forEach(function(el) {
       el.remove();
     });
-    clone.querySelectorAll('.cmux-remote-image-placeholder').forEach(function(el) {
+    clone.querySelectorAll('.hmux-remote-image-placeholder').forEach(function(el) {
       el.remove();
     });
-    clone.querySelectorAll('img[data-cmux-original-src]').forEach(function(el) {
-      var originalSrc = el.getAttribute('data-cmux-original-src') || '';
+    clone.querySelectorAll('img[data-hmux-original-src]').forEach(function(el) {
+      var originalSrc = el.getAttribute('data-hmux-original-src') || '';
       if (restoreImageSources && originalSrc) {
         el.setAttribute('src', originalSrc);
       } else if (!restoreImageSources) {
         el.removeAttribute('src');
       }
-      el.removeAttribute('data-cmux-original-src');
+      el.removeAttribute('data-hmux-original-src');
     });
-    clone.querySelectorAll('img[data-cmux-remote-src]').forEach(function(el) {
-      var remoteSrc = unescapeDataAttribute(el.getAttribute('data-cmux-remote-src'));
+    clone.querySelectorAll('img[data-hmux-remote-src]').forEach(function(el) {
+      var remoteSrc = unescapeDataAttribute(el.getAttribute('data-hmux-remote-src'));
       if (restoreImageSources && remoteSrc) {
         el.setAttribute('src', remoteSrc);
         el.hidden = false;
@@ -1905,13 +1905,13 @@ html { scroll-behavior: smooth; }
         el.removeAttribute('srcset');
       });
     }
-    clone.querySelectorAll('.cmux-mermaid svg[data-cmux-mermaid-original-max-width]').forEach(function(el) {
+    clone.querySelectorAll('.hmux-mermaid svg[data-hmux-mermaid-original-max-width]').forEach(function(el) {
       mermaidRestoreOriginalSizing(el);
     });
     clone.querySelectorAll('*').forEach(function(el) {
       Array.prototype.slice.call(el.attributes || []).forEach(function(attr) {
         var name = String(attr.name || '').toLowerCase();
-        if (name.indexOf('data-cmux-') === 0) {
+        if (name.indexOf('data-hmux-') === 0) {
           el.removeAttribute(attr.name);
         }
       });
@@ -1922,13 +1922,13 @@ html { scroll-behavior: smooth; }
     return clone;
   }
 
-  window.__cmuxRenderedHTML = function() {
+  window.__hmuxRenderedHTML = function() {
     var clone = cleanRenderedContentClone({ restoreImageSources: true });
     if (!clone) { return ''; }
     return clone.innerHTML;
   };
 
-  window.__cmuxRenderedText = function() {
+  window.__hmuxRenderedText = function() {
     var clone = cleanRenderedContentClone({ restoreImageSources: false });
     if (!clone) { return ''; }
     var wrapper = document.createElement('div');
@@ -1950,7 +1950,7 @@ html { scroll-behavior: smooth; }
   };
 
   var darkMql = window.matchMedia('(prefers-color-scheme: dark)');
-  window.__cmuxApplyTheme = function() {
+  window.__hmuxApplyTheme = function() {
     var isDark = darkMql.matches;
     if (lightSheet && darkSheet) {
       lightSheet.disabled = !!isDark;
@@ -1961,15 +1961,15 @@ html { scroll-behavior: smooth; }
     mermaidInitialized = false;
   };
   if (darkMql.addEventListener) {
-    darkMql.addEventListener('change', window.__cmuxApplyTheme);
+    darkMql.addEventListener('change', window.__hmuxApplyTheme);
   } else if (darkMql.addListener) {
-    darkMql.addListener(window.__cmuxApplyTheme);
+    darkMql.addListener(window.__hmuxApplyTheme);
   }
-  window.__cmuxApplyTheme();
-  window.__cmuxPerformViewerNavigationAction = function(action) {
-    return CmuxViewerNavigation.performAction(action, markdownScroller());
+  window.__hmuxApplyTheme();
+  window.__hmuxPerformViewerNavigationAction = function(action) {
+    return HmuxViewerNavigation.performAction(action, markdownScroller());
   };
-  CmuxViewerNavigation.installManualInputReset({
+  HmuxViewerNavigation.installManualInputReset({
     target: document,
     getScroller: markdownScroller
   });

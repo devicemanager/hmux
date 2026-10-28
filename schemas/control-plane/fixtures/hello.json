@@ -9,6 +9,6 @@
     "platform": "ios",
     "appVersion": "1.5.2",
     "releaseTrack": "beta",
-    "capabilities": ["cmux.irx.v1", "cmux.ctl.ack"]
+    "capabilities": ["hmux.irx.v1", "hmux.ctl.ack"]
   }
 }

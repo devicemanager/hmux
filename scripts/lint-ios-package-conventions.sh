@@ -3,7 +3,7 @@
 #
 # Mechanical enforcement of the modular-refactor conventions (CLAUDE.md
 # "Modern Swift concurrency" + "Package design discipline") over the iOS
-# line: the mobile packages, the cmuxFeature package, and the iOS app shell.
+# line: the mobile packages, the hmuxFeature package, and the iOS app shell.
 #
 # A finding is suppressed when the offending line, or one of the two lines
 # above it, contains one of:
@@ -20,7 +20,7 @@ cd "$ROOT"
 
 BASELINE_FILE="scripts/lint-ios-package-conventions-baseline.txt"
 SCOPES=()
-for d in Packages/Shared/CMUXMobileCore Packages/iOS/CmuxMobile* Packages/Shared/CmuxAgentChat Packages/iOS/CmuxAgentChatUI Packages/Shared/CmuxSyncStore ios/cmuxPackage/Sources ios/cmux; do
+for d in Packages/Shared/HMUXMobileCore Packages/iOS/HmuxMobile* Packages/Shared/HmuxAgentChat Packages/iOS/HmuxAgentChatUI Packages/Shared/HmuxSyncStore ios/hmuxPackage/Sources ios/hmux; do
   [ -d "$d" ] && SCOPES+=("$d")
 done
 
@@ -85,14 +85,14 @@ echo "== untyped wire payloads =="
 scan untyped WARN '\[String: Any\]' 1 "${SCOPES[@]}"
 
 echo "== hardcoded global state in packages (inject instead) =="
-scan global WARN '\b(UserDefaults\.standard|FileManager\.default|Bundle\.main)\b' 1 Packages/Shared/CMUXMobileCore Packages/iOS/CmuxMobile* 2>/dev/null || true
+scan global WARN '\b(UserDefaults\.standard|FileManager\.default|Bundle\.main)\b' 1 Packages/Shared/HMUXMobileCore Packages/iOS/HmuxMobile* 2>/dev/null || true
 
 echo "== free functions (scope functionality to a type) =="
 scan free-function ERROR '^(@[A-Za-z()_ ]+ )?(public |internal |package |private |fileprivate )?func [a-zA-Z]' 0 "${SCOPES[@]}"
 
 echo "== namespace-enums and namespace-types =="
 NS_TYPE_ROOTS=()
-for d in Packages/*/*/Sources ios/cmuxPackage/Sources ios/cmux; do
+for d in Packages/*/*/Sources ios/hmuxPackage/Sources ios/hmux; do
   [ -d "$d" ] && NS_TYPE_ROOTS+=("$d")
 done
 if ! python3 scripts/lint_swift_namespaces.py \

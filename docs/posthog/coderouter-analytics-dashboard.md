@@ -43,4 +43,4 @@ GROUP BY day ORDER BY day;
 ```
 
 API-equivalent dollars are list-price estimates for the routed tokens, not
-cmux spend. Customer-facing usage and billing reports must use ClickHouse.
+hmux spend. Customer-facing usage and billing reports must use ClickHouse.

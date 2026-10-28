@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 import OSLog
-import CmuxMemoryPressure
+import HmuxMemoryPressure
 
 @MainActor
 @Observable
@@ -9,11 +9,11 @@ final class MemoryPressureMonitor {
     static let shared = MemoryPressureMonitor()
 
     private static let logger = Logger(
-        subsystem: "com.cmuxterm.app",
+        subsystem: "com.hmuxterm.app",
         category: "MemoryPressure"
     )
     private static let signposter = OSSignposter(
-        subsystem: "com.cmuxterm.app",
+        subsystem: "com.hmuxterm.app",
         category: "MemoryPressure"
     )
 
@@ -41,7 +41,7 @@ final class MemoryPressureMonitor {
     @ObservationIgnored
     private let systemPressureHoldDuration: TimeInterval
     @ObservationIgnored
-    private let queue = DispatchQueue(label: "com.cmux.memory-pressure", qos: .utility)
+    private let queue = DispatchQueue(label: "com.hmux.memory-pressure", qos: .utility)
     @ObservationIgnored
     private var memoryPressureSource: DispatchSourceMemoryPressure?
     @ObservationIgnored
@@ -60,9 +60,9 @@ final class MemoryPressureMonitor {
         footprintSampler: any MemoryPressureFootprintSampling = TaskVMInfoMemoryPressureFootprintSampler(),
         aggregateSampler: any MemoryPressureAggregateSampling = DarwinMemoryPressureAggregateSampler(
             snapshotProvider: {
-                await CmuxTopProcessSnapshot.captureCached(
+                await HmuxTopProcessSnapshot.captureCached(
                     includeProcessDetails: false,
-                    includeCMUXScope: false,
+                    includeHMUXScope: false,
                     maximumAge: 15
                 )
             }
@@ -267,7 +267,7 @@ final class MemoryPressureMonitor {
             return
         }
         lastAppliedSampledAt = sampledAt
-        // Keep aggregate severity intrinsic to cmux's coalition/tree. The
+        // Keep aggregate severity intrinsic to hmux's coalition/tree. The
         // independent Dispatch/system signal still drives the overall tracker,
         // but must not turn a low aggregate sample into a hibernation command.
         let aggregateMemoryPressure = aggregateSample.map {

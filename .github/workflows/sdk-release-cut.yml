@@ -57,8 +57,8 @@ jobs:
             exit 1
           }
 
-          sdk_tag="cmux-sdk-v$VERSION"
-          go_tag="cmux-tui/bindings/go/v$VERSION"
+          sdk_tag="hmux-sdk-v$VERSION"
+          go_tag="hmux-tui/bindings/go/v$VERSION"
           sdk_ref="$(git rev-parse -q --verify "refs/tags/$sdk_tag" || true)"
           go_ref="$(git rev-parse -q --verify "refs/tags/$go_tag" || true)"
           sdk_existing_sha="$(
@@ -75,12 +75,12 @@ jobs:
             }
           fi
 
-          git tag --list 'cmux-sdk-v*' | \
-            python3 cmux-tui/bindings/validate_release_version.py \
+          git tag --list 'hmux-sdk-v*' | \
+            python3 hmux-tui/bindings/validate_release_version.py \
               --version "$VERSION" \
               --require-latest-tag
 
-          python3 cmux-tui/bindings/check-versions.py \
+          python3 hmux-tui/bindings/check-versions.py \
             --published-only \
             --expected "$VERSION"
           python3 - <<'PY'
@@ -88,16 +88,16 @@ jobs:
           import pathlib
           import tomllib
 
-          root = pathlib.Path.cwd() / "cmux-tui" / "bindings"
+          root = pathlib.Path.cwd() / "hmux-tui" / "bindings"
           npm_name = json.loads(
               (root / "typescript" / "package.json").read_text()
           )["name"]
           pypi_name = tomllib.loads(
               (root / "python" / "pyproject.toml").read_text()
           )["project"]["name"]
-          if npm_name != "cmux-sdk" or pypi_name != "cmux-sdk":
+          if npm_name != "hmux-sdk" or pypi_name != "hmux-sdk":
               raise SystemExit(
-                  f"SDK registry names must both be cmux-sdk, got {npm_name!r} and {pypi_name!r}"
+                  f"SDK registry names must both be hmux-sdk, got {npm_name!r} and {pypi_name!r}"
               )
           PY
 
@@ -109,8 +109,8 @@ jobs:
 
       - name: Gate published SDK protocol surfaces
         run: |
-          python3 cmux-tui/scripts/check-spec-inventory.py
-          python3 cmux-tui/bindings/codegen/generate.py --check \
+          python3 hmux-tui/scripts/check-spec-inventory.py
+          python3 hmux-tui/bindings/codegen/generate.py --check \
             --language rust \
             --language go \
             --language typescript \
@@ -164,16 +164,16 @@ jobs:
           persist-credentials: false
           ref: ${{ github.sha }}
 
-      - name: Download the validated cmux-sdk crate
+      - name: Download the validated hmux-sdk crate
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-rust-sdk-crate
+          name: hmux-rust-sdk-crate
           path: validated-rust-sdk
 
-      - name: Download the validated cmux-sidebar crate
+      - name: Download the validated hmux-sidebar crate
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-rust-sidebar-crate
+          name: hmux-rust-sidebar-crate
           path: validated-sidebar
 
       - name: Download the validated npm artifact
@@ -191,7 +191,7 @@ jobs:
       - name: Reject conflicting or unusable registry state
         id: registry_state
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
           set -euo pipefail
           shopt -s nullglob
@@ -211,37 +211,37 @@ jobs:
             exit 1
           }
 
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry crates \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
-            --artifact "validated-rust-sdk/cmux-sdk-$CMUX_SDK_VERSION.crate"
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
+            --artifact "validated-rust-sdk/hmux-sdk-$HMUX_SDK_VERSION.crate"
           sleep 1
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry crates \
-            --package cmux-sidebar \
-            --version "$CMUX_SDK_VERSION" \
-            --artifact "validated-sidebar/cmux-sidebar-$CMUX_SDK_VERSION.crate"
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+            --package hmux-sidebar \
+            --version "$HMUX_SDK_VERSION" \
+            --artifact "validated-sidebar/hmux-sidebar-$HMUX_SDK_VERSION.crate"
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry npm \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --artifact "${npm_packages[0]}" \
             --write-github-output \
             --github-output-name npm
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --artifact "${python_wheels[0]}" \
             --allowed-artifact "${python_wheels[0]}" \
             --allowed-artifact "${python_sdists[0]}" \
             --write-github-output \
             --github-output-name python_wheel
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --artifact "${python_sdists[0]}" \
             --allowed-artifact "${python_wheels[0]}" \
             --allowed-artifact "${python_sdists[0]}" \
@@ -251,9 +251,9 @@ jobs:
       - name: Verify crates.io ownership
         run: |
           sleep 1
-          python3 cmux-tui/bindings/verify_crates_ownership.py \
-            --package cmux-sdk \
-            --package cmux-sidebar \
+          python3 hmux-tui/bindings/verify_crates_ownership.py \
+            --package hmux-sdk \
+            --package hmux-sidebar \
             --repository https://github.com/manaflow-ai/cmux \
             --owner-id 431397 \
             --owner-login lawrencecchen
@@ -268,11 +268,11 @@ jobs:
 
       - name: Verify the npm ownership bootstrap
         run: |
-          python3 cmux-tui/bindings/verify_npm_provenance.py \
-            --package cmux-sdk \
+          python3 hmux-tui/bindings/verify_npm_provenance.py \
+            --package hmux-sdk \
             --version 0.0.0-bootstrap.0 \
             --repository-url git+https://github.com/manaflow-ai/cmux.git \
-            --repository-directory cmux-tui/bindings/typescript \
+            --repository-directory hmux-tui/bindings/typescript \
             --owner lawrencechen \
             --workflow .github/workflows/sdk-bootstrap-npm.yml \
             --workflow-ref refs/heads/main \
@@ -291,11 +291,11 @@ jobs:
 
       - name: Verify the PyPI ownership bootstrap with pypi-attestations verify pypi
         run: |
-          python3 cmux-tui/bindings/verify_pypi_provenance.py \
-            --package cmux-sdk \
+          python3 hmux-tui/bindings/verify_pypi_provenance.py \
+            --package hmux-sdk \
             --version 0.0.0a0 \
-            --filename cmux_sdk-0.0.0a0-py3-none-any.whl \
-            --filename cmux_sdk-0.0.0a0.tar.gz \
+            --filename hmux_sdk-0.0.0a0-py3-none-any.whl \
+            --filename hmux_sdk-0.0.0a0.tar.gz \
             --repository https://github.com/manaflow-ai/cmux \
             --owner lawrencecchen \
             --workflow sdk-bootstrap-pypi.yml \
@@ -303,7 +303,7 @@ jobs:
 
       - name: Verify any existing stable provenance before creating tags
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
           NPM_STATUS: ${{ steps.registry_state.outputs.npm }}
           PYTHON_WHEEL_STATUS: ${{ steps.registry_state.outputs.python_wheel }}
           PYTHON_SDIST_STATUS: ${{ steps.registry_state.outputs.python_sdist }}
@@ -312,11 +312,11 @@ jobs:
           shopt -s nullglob
           if [[ "$NPM_STATUS" == "match" ]]; then
             npm_packages=(validated-npm/*.tgz)
-            python3 cmux-tui/bindings/verify_npm_provenance.py \
-              --package cmux-sdk \
-              --version "$CMUX_SDK_VERSION" \
+            python3 hmux-tui/bindings/verify_npm_provenance.py \
+              --package hmux-sdk \
+              --version "$HMUX_SDK_VERSION" \
               --repository-url git+https://github.com/manaflow-ai/cmux.git \
-              --repository-directory cmux-tui/bindings/typescript \
+              --repository-directory hmux-tui/bindings/typescript \
               --artifact "${npm_packages[0]}" \
               --owner lawrencechen \
               --workflow .github/workflows/sdk-release-cut.yml \
@@ -336,9 +336,9 @@ jobs:
             filenames+=(--filename "$(basename "${python_sdists[0]}")")
           fi
           if (( ${#filenames[@]} > 0 )); then
-            python3 cmux-tui/bindings/verify_pypi_provenance.py \
-              --package cmux-sdk \
-              --version "$CMUX_SDK_VERSION" \
+            python3 hmux-tui/bindings/verify_pypi_provenance.py \
+              --package hmux-sdk \
+              --version "$HMUX_SDK_VERSION" \
               --repository https://github.com/manaflow-ai/cmux \
               --owner lawrencecchen \
               --workflow sdk-release-cut.yml \
@@ -375,16 +375,16 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Download the validated cmux-sdk crate for final revalidation
+      - name: Download the validated hmux-sdk crate for final revalidation
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-rust-sdk-crate
+          name: hmux-rust-sdk-crate
           path: validated-rust-sdk
 
-      - name: Download the validated cmux-sidebar crate for final revalidation
+      - name: Download the validated hmux-sidebar crate for final revalidation
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-rust-sidebar-crate
+          name: hmux-rust-sidebar-crate
           path: validated-sidebar
 
       - name: Download the validated npm artifact for final revalidation
@@ -425,7 +425,7 @@ jobs:
           VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
           set -euo pipefail
-          cmux-tui/bindings/verify_release_registry_state.sh \
+          hmux-tui/bindings/verify_release_registry_state.sh \
             "$VERSION" \
             "$GITHUB_SHA"
 
@@ -433,8 +433,8 @@ jobs:
             {
               git ls-remote --heads origin refs/heads/main
               git ls-remote --tags origin \
-                'refs/tags/cmux-sdk-v*' \
-                'refs/tags/cmux-tui/bindings/go/v*'
+                'refs/tags/hmux-sdk-v*' \
+                'refs/tags/hmux-tui/bindings/go/v*'
             } | LC_ALL=C sort
           }
           remote_state_before="$(remote_state)"
@@ -452,8 +452,8 @@ jobs:
             echo "validated release commit $GITHUB_SHA is no longer on protected main" >&2
             exit 1
           }
-          git tag --list 'cmux-sdk-v*' | \
-            python3 cmux-tui/bindings/validate_release_version.py \
+          git tag --list 'hmux-sdk-v*' | \
+            python3 hmux-tui/bindings/validate_release_version.py \
               --version "$VERSION" \
               --require-latest-tag
 
@@ -561,11 +561,11 @@ jobs:
             echo "validated version does not match the dispatch request" >&2
             exit 1
           }
-          [[ "$SDK_TAG" == "cmux-sdk-v$VERSION" ]] || {
+          [[ "$SDK_TAG" == "hmux-sdk-v$VERSION" ]] || {
             echo "SDK tag does not match the validated version" >&2
             exit 1
           }
-          [[ "$GO_TAG" == "cmux-tui/bindings/go/v$VERSION" ]] || {
+          [[ "$GO_TAG" == "hmux-tui/bindings/go/v$VERSION" ]] || {
             echo "Go tag does not match the validated version" >&2
             exit 1
           }
@@ -583,8 +583,8 @@ jobs:
             {
               git ls-remote --heads "$release_repository" refs/heads/main
               git ls-remote --tags "$release_repository" \
-                'refs/tags/cmux-sdk-v*' \
-                'refs/tags/cmux-tui/bindings/go/v*'
+                'refs/tags/hmux-sdk-v*' \
+                'refs/tags/hmux-tui/bindings/go/v*'
             } | LC_ALL=C sort
           }
           state_sha256() {
@@ -604,7 +604,7 @@ jobs:
             if [[ "$current_main_sha" == "$GITHUB_SHA" ]]; then
               return
             fi
-            recovery_dir="$RUNNER_TEMP/cmux-sdk-recovery-main"
+            recovery_dir="$RUNNER_TEMP/hmux-sdk-recovery-main"
             mkdir -m 700 "$recovery_dir"
             git -C "$recovery_dir" init --quiet
             git -C "$recovery_dir" remote add origin "$release_repository"
@@ -752,7 +752,7 @@ jobs:
           fi
           require_fresh_authorization
 
-          release_dir="$RUNNER_TEMP/cmux-sdk-release"
+          release_dir="$RUNNER_TEMP/hmux-sdk-release"
           mkdir -m 700 "$release_dir"
           cd "$release_dir"
           git init
@@ -764,8 +764,8 @@ jobs:
             --no-tags \
             origin \
             refs/heads/main:refs/remotes/origin/main \
-            '+refs/tags/cmux-sdk-v*:refs/tags/cmux-sdk-v*' \
-            '+refs/tags/cmux-tui/bindings/go/v*:refs/tags/cmux-tui/bindings/go/v*'
+            '+refs/tags/hmux-sdk-v*:refs/tags/hmux-sdk-v*' \
+            '+refs/tags/hmux-tui/bindings/go/v*:refs/tags/hmux-tui/bindings/go/v*'
           git merge-base --is-ancestor "$GITHUB_SHA" origin/main || {
             echo "validated release commit $GITHUB_SHA is no longer on protected main" >&2
             exit 1
@@ -787,8 +787,8 @@ jobs:
             fi
             git tag -a "$tag" "$GITHUB_SHA" -m "$message"
           }
-          ensure_tag "$SDK_TAG" "cmux SDK $VERSION"
-          ensure_tag "$GO_TAG" "cmux Go SDK $VERSION"
+          ensure_tag "$SDK_TAG" "hmux SDK $VERSION"
+          ensure_tag "$GO_TAG" "hmux Go SDK $VERSION"
           for tag in "$SDK_TAG" "$GO_TAG"; do
             tag_sha="$(git rev-parse "refs/tags/$tag^{commit}")"
             [[ "$tag_sha" == "$GITHUB_SHA" ]] || {
@@ -821,7 +821,7 @@ jobs:
           SDK_TAG: ${{ needs.validate-release.outputs.sdk_tag }}
         run: |
           set -euo pipefail
-          cd "$RUNNER_TEMP/cmux-sdk-release"
+          cd "$RUNNER_TEMP/hmux-sdk-release"
           release_repository="https://github.com/manaflow-ai/cmux.git"
           authorization="$(
             printf 'x-access-token:%s' "$RELEASE_TOKEN" | base64 | tr -d '\n'
@@ -859,7 +859,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: crates-io
-      url: https://crates.io/crates/cmux-sdk
+      url: https://crates.io/crates/hmux-sdk
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -867,10 +867,10 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Download the validated cmux-sdk crate
+      - name: Download the validated hmux-sdk crate
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-rust-sdk-crate
+          name: hmux-rust-sdk-crate
           path: validated-rust-sdk
 
       - name: Require the coordinated release source
@@ -880,12 +880,12 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --force origin main --tags
-          [[ "$SDK_TAG" == "cmux-sdk-v$VERSION" ]] || {
+          [[ "$SDK_TAG" == "hmux-sdk-v$VERSION" ]] || {
             echo "unexpected coordinated SDK tag: $SDK_TAG" >&2
             exit 1
           }
-          git tag --list 'cmux-sdk-v*' | \
-            python3 cmux-tui/bindings/validate_release_version.py \
+          git tag --list 'hmux-sdk-v*' | \
+            python3 hmux-tui/bindings/validate_release_version.py \
               --version "$VERSION" \
               --require-latest-tag
           release_sha="$(git rev-parse "refs/tags/$SDK_TAG^{commit}")"
@@ -905,43 +905,43 @@ jobs:
           cargo --version
           rustc --version
 
-      - name: Reproduce the validated cmux-sdk crate without executing it
-        working-directory: cmux-tui
+      - name: Reproduce the validated hmux-sdk crate without executing it
+        working-directory: hmux-tui
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
           set -euo pipefail
-          cargo package -p cmux-sdk --locked --no-verify
-          validated="$GITHUB_WORKSPACE/validated-rust-sdk/cmux-sdk-$CMUX_SDK_VERSION.crate"
-          reproduced="target/package/cmux-sdk-$CMUX_SDK_VERSION.crate"
+          cargo package -p hmux-sdk --locked --no-verify
+          validated="$GITHUB_WORKSPACE/validated-rust-sdk/hmux-sdk-$HMUX_SDK_VERSION.crate"
+          reproduced="target/package/hmux-sdk-$HMUX_SDK_VERSION.crate"
           expected_digest="$(sha256sum "$validated" | awk '{print $1}')"
           actual_digest="$(sha256sum "$reproduced" | awk '{print $1}')"
           [[ "$actual_digest" == "$expected_digest" ]] || {
-            echo "validated crate digest mismatch for cmux-sdk@$CMUX_SDK_VERSION" >&2
+            echo "validated crate digest mismatch for hmux-sdk@$HMUX_SDK_VERSION" >&2
             exit 1
           }
 
       - name: Revalidate crates.io ownership immediately before authentication
-        run: bash cmux-tui/bindings/verify_release_registry_authority.sh crates
+        run: bash hmux-tui/bindings/verify_release_registry_authority.sh crates
 
-      - name: Authenticate cmux-sdk with crates.io trusted publishing
+      - name: Authenticate hmux-sdk with crates.io trusted publishing
         id: auth_sdk
         uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
 
-      - name: Publish cmux-sdk
-        working-directory: cmux-tui
+      - name: Publish hmux-sdk
+        working-directory: hmux-tui
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth_sdk.outputs.token }}
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
           python3 bindings/reconcile_registry_artifact.py publish \
             --registry crates \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
-            --artifact "$GITHUB_WORKSPACE/validated-rust-sdk/cmux-sdk-$CMUX_SDK_VERSION.crate" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
+            --artifact "$GITHUB_WORKSPACE/validated-rust-sdk/hmux-sdk-$HMUX_SDK_VERSION.crate" \
             --wait-seconds 120 \
             --publish-timeout-seconds 600 \
-            -- cargo publish -p cmux-sdk --locked --no-verify
+            -- cargo publish -p hmux-sdk --locked --no-verify
 
   publish-crate-sidebar:
     needs:
@@ -957,7 +957,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: crates-io
-      url: https://crates.io/crates/cmux-sidebar
+      url: https://crates.io/crates/hmux-sidebar
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -965,16 +965,16 @@ jobs:
           ref: ${{ github.sha }}
           fetch-depth: 0
 
-      - name: Download the validated cmux-sidebar crate
+      - name: Download the validated hmux-sidebar crate
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-rust-sidebar-crate
+          name: hmux-rust-sidebar-crate
           path: validated-sidebar
 
-      - name: Download the validated cmux-sdk crate
+      - name: Download the validated hmux-sdk crate
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-rust-sdk-crate
+          name: hmux-rust-sdk-crate
           path: validated-rust-sdk
 
       - name: Require the coordinated release source
@@ -984,12 +984,12 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --force origin main --tags
-          [[ "$SDK_TAG" == "cmux-sdk-v$VERSION" ]] || {
+          [[ "$SDK_TAG" == "hmux-sdk-v$VERSION" ]] || {
             echo "unexpected coordinated SDK tag: $SDK_TAG" >&2
             exit 1
           }
-          git tag --list 'cmux-sdk-v*' | \
-            python3 cmux-tui/bindings/validate_release_version.py \
+          git tag --list 'hmux-sdk-v*' | \
+            python3 hmux-tui/bindings/validate_release_version.py \
               --version "$VERSION" \
               --require-latest-tag
           release_sha="$(git rev-parse "refs/tags/$SDK_TAG^{commit}")"
@@ -1009,67 +1009,67 @@ jobs:
           cargo --version
           rustc --version
 
-      - name: Confirm the validated cmux-sdk crate reached crates.io
-        working-directory: cmux-tui
+      - name: Confirm the validated hmux-sdk crate reached crates.io
+        working-directory: hmux-tui
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
           set -euo pipefail
           python3 bindings/reconcile_registry_artifact.py check \
             --registry crates \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
-            --artifact "$GITHUB_WORKSPACE/validated-rust-sdk/cmux-sdk-$CMUX_SDK_VERSION.crate" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
+            --artifact "$GITHUB_WORKSPACE/validated-rust-sdk/hmux-sdk-$HMUX_SDK_VERSION.crate" \
             --wait-seconds 300 \
             --require-match
 
-      - name: Reproduce the validated cmux-sidebar crate without executing it
-        working-directory: cmux-tui
+      - name: Reproduce the validated hmux-sidebar crate without executing it
+        working-directory: hmux-tui
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
           set -euo pipefail
           cargo package \
-            -p cmux-sidebar \
+            -p hmux-sidebar \
             --locked \
             --no-verify \
             --config \
-              "patch.crates-io.cmux-sdk.path='$GITHUB_WORKSPACE/cmux-tui/bindings/rust'"
-          validated="$GITHUB_WORKSPACE/validated-sidebar/cmux-sidebar-$CMUX_SDK_VERSION.crate"
-          reproduced="target/package/cmux-sidebar-$CMUX_SDK_VERSION.crate"
+              "patch.crates-io.hmux-sdk.path='$GITHUB_WORKSPACE/hmux-tui/bindings/rust'"
+          validated="$GITHUB_WORKSPACE/validated-sidebar/hmux-sidebar-$HMUX_SDK_VERSION.crate"
+          reproduced="target/package/hmux-sidebar-$HMUX_SDK_VERSION.crate"
           expected_digest="$(sha256sum "$validated" | awk '{print $1}')"
           actual_digest="$(sha256sum "$reproduced" | awk '{print $1}')"
           [[ "$actual_digest" == "$expected_digest" ]] || {
-            echo "validated crate digest mismatch for cmux-sidebar@$CMUX_SDK_VERSION" >&2
+            echo "validated crate digest mismatch for hmux-sidebar@$HMUX_SDK_VERSION" >&2
             exit 1
           }
 
       - name: Revalidate crates.io ownership immediately before authentication
-        run: bash cmux-tui/bindings/verify_release_registry_authority.sh crates
+        run: bash hmux-tui/bindings/verify_release_registry_authority.sh crates
 
-      - name: Authenticate cmux-sidebar with crates.io trusted publishing
+      - name: Authenticate hmux-sidebar with crates.io trusted publishing
         id: auth_sidebar
         uses: rust-lang/crates-io-auth-action@c6f97d42243bad5fab37ca0427f495c86d5b1a18 # v1.0.5
 
-      - name: Publish cmux-sidebar
-        working-directory: cmux-tui
+      - name: Publish hmux-sidebar
+        working-directory: hmux-tui
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth_sidebar.outputs.token }}
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
           python3 bindings/reconcile_registry_artifact.py publish \
             --registry crates \
-            --package cmux-sidebar \
-            --version "$CMUX_SDK_VERSION" \
-            --artifact "$GITHUB_WORKSPACE/validated-sidebar/cmux-sidebar-$CMUX_SDK_VERSION.crate" \
+            --package hmux-sidebar \
+            --version "$HMUX_SDK_VERSION" \
+            --artifact "$GITHUB_WORKSPACE/validated-sidebar/hmux-sidebar-$HMUX_SDK_VERSION.crate" \
             --wait-seconds 120 \
             --publish-timeout-seconds 600 \
             -- cargo publish \
-              -p cmux-sidebar \
+              -p hmux-sidebar \
               --locked \
               --no-verify \
               --config \
-                "patch.crates-io.cmux-sdk.path='$GITHUB_WORKSPACE/cmux-tui/bindings/rust'"
+                "patch.crates-io.hmux-sdk.path='$GITHUB_WORKSPACE/hmux-tui/bindings/rust'"
 
   publish-npm:
     needs:
@@ -1086,7 +1086,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: npm
-      url: https://www.npmjs.com/package/cmux-sdk
+      url: https://www.npmjs.com/package/hmux-sdk
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -1101,12 +1101,12 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --force origin main --tags
-          [[ "$SDK_TAG" == "cmux-sdk-v$VERSION" ]] || {
+          [[ "$SDK_TAG" == "hmux-sdk-v$VERSION" ]] || {
             echo "unexpected coordinated SDK tag: $SDK_TAG" >&2
             exit 1
           }
-          git tag --list 'cmux-sdk-v*' | \
-            python3 cmux-tui/bindings/validate_release_version.py \
+          git tag --list 'hmux-sdk-v*' | \
+            python3 hmux-tui/bindings/validate_release_version.py \
               --version "$VERSION" \
               --require-latest-tag
           release_sha="$(git rev-parse "refs/tags/$SDK_TAG^{commit}")"
@@ -1135,11 +1135,11 @@ jobs:
         run: npm install -g npm@11.5.1
 
       - name: Revalidate npm ownership immediately before publishing
-        run: bash cmux-tui/bindings/verify_release_registry_authority.sh npm
+        run: bash hmux-tui/bindings/verify_release_registry_authority.sh npm
 
       - name: Publish package to npm
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
           EXPECTED_ARTIFACT_SHA256: ${{ needs.typescript-preflight.outputs.artifact_sha256 }}
         run: |
           set -euo pipefail
@@ -1164,15 +1164,15 @@ jobs:
           with tarfile.open(sys.argv[1], "r:gz") as archive:
               package = json.load(archive.extractfile("package/package.json"))
           if not (
-              package["name"] == "cmux-sdk"
-              and package["version"] == os.environ["CMUX_SDK_VERSION"]
+              package["name"] == "hmux-sdk"
+              and package["version"] == os.environ["HMUX_SDK_VERSION"]
           ):
               raise SystemExit("npm artifact identity does not match the release")
           PY
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py publish \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py publish \
             --registry npm \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --artifact "${packages[0]}" \
             --wait-seconds 120 \
             --publish-timeout-seconds 600 \
@@ -1194,7 +1194,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: pypi
-      url: https://pypi.org/p/cmux-sdk
+      url: https://pypi.org/p/hmux-sdk
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -1209,12 +1209,12 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --force origin main --tags
-          [[ "$SDK_TAG" == "cmux-sdk-v$VERSION" ]] || {
+          [[ "$SDK_TAG" == "hmux-sdk-v$VERSION" ]] || {
             echo "unexpected coordinated SDK tag: $SDK_TAG" >&2
             exit 1
           }
-          git tag --list 'cmux-sdk-v*' | \
-            python3 cmux-tui/bindings/validate_release_version.py \
+          git tag --list 'hmux-sdk-v*' | \
+            python3 hmux-tui/bindings/validate_release_version.py \
               --version "$VERSION" \
               --require-latest-tag
           release_sha="$(git rev-parse "refs/tags/$SDK_TAG^{commit}")"
@@ -1235,7 +1235,7 @@ jobs:
 
       - name: Select the validated wheel
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
           EXPECTED_ARTIFACT_SHA256: ${{ needs.python-preflight.outputs.artifact_sha256 }}
         run: |
           set -euo pipefail
@@ -1246,8 +1246,8 @@ jobs:
             echo "expected one validated wheel and source distribution" >&2
             exit 1
           }
-          [[ "$(basename "${wheels[0]}")" == "cmux_sdk-${CMUX_SDK_VERSION}-py3-none-any.whl" ]]
-          [[ "$(basename "${sdists[0]}")" == "cmux_sdk-${CMUX_SDK_VERSION}.tar.gz" ]]
+          [[ "$(basename "${wheels[0]}")" == "hmux_sdk-${HMUX_SDK_VERSION}-py3-none-any.whl" ]]
+          [[ "$(basename "${sdists[0]}")" == "hmux_sdk-${HMUX_SDK_VERSION}.tar.gz" ]]
           [[ "$EXPECTED_ARTIFACT_SHA256" =~ ^[0-9a-f]{64}$ ]] || exit 1
           actual_sha256="$(cd dist && sha256sum *.whl *.tar.gz | sort -k2 | sha256sum | cut -d ' ' -f 1)"
           [[ "$actual_sha256" == "$EXPECTED_ARTIFACT_SHA256" ]] || {
@@ -1260,12 +1260,12 @@ jobs:
       - name: Check the PyPI wheel state
         id: wheel_state
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --artifact upload/*.whl \
             --allowed-artifact dist/*.whl \
             --allowed-artifact dist/*.tar.gz \
@@ -1273,7 +1273,7 @@ jobs:
 
       - name: Revalidate PyPI ownership immediately before wheel upload
         if: steps.wheel_state.outputs.status == 'missing'
-        run: bash cmux-tui/bindings/verify_release_registry_authority.sh pypi
+        run: bash hmux-tui/bindings/verify_release_registry_authority.sh pypi
 
       - name: Publish wheel to PyPI
         id: publish_wheel
@@ -1287,14 +1287,14 @@ jobs:
       - name: Reconcile the PyPI wheel
         if: always() && steps.wheel_state.outputs.status == 'missing'
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
           PUBLISH_OUTCOME: ${{ steps.publish_wheel.outcome }}
         run: |
           echo "PyPI wheel publish outcome: $PUBLISH_OUTCOME"
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --artifact upload/*.whl \
             --allowed-artifact dist/*.whl \
             --allowed-artifact dist/*.tar.gz \
@@ -1317,7 +1317,7 @@ jobs:
     timeout-minutes: 30
     environment:
       name: pypi
-      url: https://pypi.org/p/cmux-sdk
+      url: https://pypi.org/p/hmux-sdk
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -1332,12 +1332,12 @@ jobs:
         run: |
           set -euo pipefail
           git fetch --force origin main --tags
-          [[ "$SDK_TAG" == "cmux-sdk-v$VERSION" ]] || {
+          [[ "$SDK_TAG" == "hmux-sdk-v$VERSION" ]] || {
             echo "unexpected coordinated SDK tag: $SDK_TAG" >&2
             exit 1
           }
-          git tag --list 'cmux-sdk-v*' | \
-            python3 cmux-tui/bindings/validate_release_version.py \
+          git tag --list 'hmux-sdk-v*' | \
+            python3 hmux-tui/bindings/validate_release_version.py \
               --version "$VERSION" \
               --require-latest-tag
           release_sha="$(git rev-parse "refs/tags/$SDK_TAG^{commit}")"
@@ -1358,7 +1358,7 @@ jobs:
 
       - name: Select the validated source distribution
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
           EXPECTED_ARTIFACT_SHA256: ${{ needs.python-preflight.outputs.artifact_sha256 }}
         run: |
           set -euo pipefail
@@ -1369,8 +1369,8 @@ jobs:
             echo "expected one validated wheel and source distribution" >&2
             exit 1
           }
-          [[ "$(basename "${wheels[0]}")" == "cmux_sdk-${CMUX_SDK_VERSION}-py3-none-any.whl" ]]
-          [[ "$(basename "${sdists[0]}")" == "cmux_sdk-${CMUX_SDK_VERSION}.tar.gz" ]]
+          [[ "$(basename "${wheels[0]}")" == "hmux_sdk-${HMUX_SDK_VERSION}-py3-none-any.whl" ]]
+          [[ "$(basename "${sdists[0]}")" == "hmux_sdk-${HMUX_SDK_VERSION}.tar.gz" ]]
           [[ "$EXPECTED_ARTIFACT_SHA256" =~ ^[0-9a-f]{64}$ ]] || exit 1
           actual_sha256="$(cd dist && sha256sum *.whl *.tar.gz | sort -k2 | sha256sum | cut -d ' ' -f 1)"
           [[ "$actual_sha256" == "$EXPECTED_ARTIFACT_SHA256" ]] || {
@@ -1383,12 +1383,12 @@ jobs:
       - name: Check the PyPI source distribution state
         id: sdist_state
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --artifact upload/*.tar.gz \
             --allowed-artifact dist/*.whl \
             --allowed-artifact dist/*.tar.gz \
@@ -1396,7 +1396,7 @@ jobs:
 
       - name: Revalidate PyPI ownership immediately before source distribution upload
         if: steps.sdist_state.outputs.status == 'missing'
-        run: bash cmux-tui/bindings/verify_release_registry_authority.sh pypi
+        run: bash hmux-tui/bindings/verify_release_registry_authority.sh pypi
 
       - name: Publish source distribution to PyPI
         id: publish_sdist
@@ -1410,14 +1410,14 @@ jobs:
       - name: Reconcile the PyPI source distribution
         if: always() && steps.sdist_state.outputs.status == 'missing'
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
           PUBLISH_OUTCOME: ${{ steps.publish_sdist.outcome }}
         run: |
           echo "PyPI source publish outcome: $PUBLISH_OUTCOME"
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry pypi \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --artifact upload/*.tar.gz \
             --allowed-artifact dist/*.whl \
             --allowed-artifact dist/*.tar.gz \
@@ -1446,9 +1446,9 @@ jobs:
 
       - name: Revalidate crates.io ownership and publishing policy
         run: |
-          python3 cmux-tui/bindings/verify_crates_ownership.py \
-            --package cmux-sdk \
-            --package cmux-sidebar \
+          python3 hmux-tui/bindings/verify_crates_ownership.py \
+            --package hmux-sdk \
+            --package hmux-sidebar \
             --repository https://github.com/manaflow-ai/cmux \
             --owner-id 431397 \
             --owner-login lawrencecchen
@@ -1485,7 +1485,7 @@ jobs:
 
       - name: Verify published stable provenance
         env:
-          CMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
+          HMUX_SDK_VERSION: ${{ needs.validate-release.outputs.version }}
         run: |
           set -euo pipefail
           shopt -s nullglob
@@ -1505,11 +1505,11 @@ jobs:
             exit 1
           }
 
-          python3 cmux-tui/bindings/verify_npm_provenance.py \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+          python3 hmux-tui/bindings/verify_npm_provenance.py \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --repository-url git+https://github.com/manaflow-ai/cmux.git \
-            --repository-directory cmux-tui/bindings/typescript \
+            --repository-directory hmux-tui/bindings/typescript \
             --artifact "${npm_packages[0]}" \
             --owner lawrencechen \
             --workflow .github/workflows/sdk-release-cut.yml \
@@ -1517,9 +1517,9 @@ jobs:
             --expected-commit "$GITHUB_SHA" \
             --dist-tag latest \
             --publisher github-actions
-          python3 cmux-tui/bindings/verify_pypi_provenance.py \
-            --package cmux-sdk \
-            --version "$CMUX_SDK_VERSION" \
+          python3 hmux-tui/bindings/verify_pypi_provenance.py \
+            --package hmux-sdk \
+            --version "$HMUX_SDK_VERSION" \
             --filename "$(basename "${python_wheels[0]}")" \
             --filename "$(basename "${python_sdists[0]}")" \
             --repository https://github.com/manaflow-ai/cmux \
@@ -1572,7 +1572,7 @@ jobs:
           STABLE_PROVENANCE_RESULT: ${{ needs.verify-stable-provenance.result }}
         run: |
           {
-            echo "### cmux SDK $VERSION"
+            echo "### hmux SDK $VERSION"
             echo
             echo "- Rust, TypeScript, and Python ref: \`$SDK_TAG\`"
             echo "- Go module ref: \`$GO_TAG\`"
@@ -1585,8 +1585,8 @@ jobs:
             echo "- Approval-fresh revalidation: \`$REVALIDATE_TAGS_RESULT\`"
             echo "- Tag creation: \`$CUT_TAGS_RESULT\`"
             echo "- Public Go tag: \`$GO_TAG_RESULT\`"
-            echo "- cmux-sdk publish: \`$CRATE_SDK_RESULT\`"
-            echo "- cmux-sidebar publish: \`$CRATE_SIDEBAR_RESULT\`"
+            echo "- hmux-sdk publish: \`$CRATE_SDK_RESULT\`"
+            echo "- hmux-sidebar publish: \`$CRATE_SIDEBAR_RESULT\`"
             echo "- npm publish: \`$NPM_RESULT\`"
             echo "- PyPI wheel publish: \`$PYTHON_WHEEL_RESULT\`"
             echo "- PyPI source publish: \`$PYTHON_SDIST_RESULT\`"

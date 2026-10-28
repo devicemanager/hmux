@@ -1,7 +1,7 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
-/// Resolves Feed workstream identities to the cmux surface recorded by an
+/// Resolves Feed workstream identities to the hmux surface recorded by an
 /// agent hook session.
 ///
 /// The compatibility helpers are nonisolated and value-only; production Feed
@@ -20,7 +20,7 @@ enum FeedJumpResolver {
     ///
     /// - Parameters:
     ///   - workstreamID: The wire `workstream_id` value.
-    ///   - homeDirectory: The home directory containing `.cmuxterm`. Injected
+    ///   - homeDirectory: The home directory containing `.hmuxterm`. Injected
     ///     for behavior tests; production callers use the current user's home.
     /// - Returns: The recorded target, or `nil` when the id is malformed,
     ///   missing, or ambiguous.
@@ -113,7 +113,7 @@ enum FeedJumpResolver {
 
     static func availableAgentIDs(homeDirectory: URL) -> [String] {
         let directory = homeDirectory.appendingPathComponent(
-            ".cmuxterm",
+            ".hmuxterm",
             isDirectory: true
         )
         guard let names = try? FileManager.default.contentsOfDirectory(
@@ -134,7 +134,7 @@ enum FeedJumpResolver {
     ) -> [String: Target]? {
         guard isSafePathComponent(agent) else { return nil }
         let file = homeDirectory
-            .appendingPathComponent(".cmuxterm", isDirectory: true)
+            .appendingPathComponent(".hmuxterm", isDirectory: true)
             .appendingPathComponent("\(agent)\(hookSessionFileSuffix)", isDirectory: false)
         guard let data = try? Data(contentsOf: file),
               let root = try? JSONSerialization.jsonObject(with: data) as? [String: Any]
@@ -165,7 +165,7 @@ enum FeedJumpResolver {
     }
 
     /// Dispatches a workspace-select + surface-focus intent through the
-    /// existing cmux notification pathway.
+    /// existing hmux notification pathway.
     @MainActor
     static func focus(workspaceId: String, surfaceId: String) {
         NotificationCenter.default.post(
@@ -227,7 +227,7 @@ actor FeedSessionStoreLookup {
     /// read per candidate, so updates within an existing file are immediate.
     private func agentIDsForCurrentDirectory() -> [String]? {
         let directory = homeDirectory.appendingPathComponent(
-            ".cmuxterm",
+            ".hmuxterm",
             isDirectory: true
         )
         guard let attributes = try? FileManager.default.attributesOfItem(
@@ -248,6 +248,6 @@ actor FeedSessionStoreLookup {
 }
 
 extension Notification.Name {
-    static let feedRequestFocus = Notification.Name("cmux.feedRequestFocus")
-    static let feedRequestSendText = Notification.Name("cmux.feedRequestSendText")
+    static let feedRequestFocus = Notification.Name("hmux.feedRequestFocus")
+    static let feedRequestSendText = Notification.Name("hmux.feedRequestSendText")
 }

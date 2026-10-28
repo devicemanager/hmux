@@ -92,7 +92,7 @@ export default function ClaudeCodeBestWorktreeManagerPage() {
       <p className="mt-6">{t("p1")}</p>
       <p>
         {t.rich("p2", {
-          zen: (chunks) => <Link href="/blog/zen-of-cmux">{chunks}</Link>,
+          zen: (chunks) => <Link href="/blog/zen-of-hmux">{chunks}</Link>,
         })}
       </p>
 
@@ -109,7 +109,7 @@ export default function ClaudeCodeBestWorktreeManagerPage() {
       <h2>{t("agentTitle")}</h2>
       <p>
         {t.rich("agentP1", {
-          cmux: (chunks) => (
+          hmux: (chunks) => (
             <a href="https://github.com/manaflow-ai/cmux">{chunks}</a>
           ),
           hq: (chunks) => <code>{chunks}</code>,
@@ -126,9 +126,9 @@ export default function ClaudeCodeBestWorktreeManagerPage() {
       <p>{t("limitsP1")}</p>
       <p>{t("limitsP2")}</p>
 
-      <h2>{t("cmuxTitle")}</h2>
+      <h2>{t("hmuxTitle")}</h2>
       <p>
-        {t.rich("cmuxP1", {
+        {t.rich("hmuxP1", {
           customCommands: (chunks) => (
             <Link href="/docs/custom-commands#new-workspace-button">
               {chunks}
@@ -139,8 +139,8 @@ export default function ClaudeCodeBestWorktreeManagerPage() {
         })}
       </p>
       <p>
-        {t.rich("cmuxP2", {
-          home: (chunks) => <Link href="/blog/cmux-home">{chunks}</Link>,
+        {t.rich("hmuxP2", {
+          home: (chunks) => <Link href="/blog/hmux-home">{chunks}</Link>,
         })}
       </p>
     </>

@@ -7,11 +7,11 @@ export type FindKeyboardBridge = {
 };
 
 /**
- * Document-level find keys. Inside cmux the native app intercepts the
+ * Document-level find keys. Inside hmux the native app intercepts the
  * configured Find shortcut and forwards it through the viewer-navigation
- * bridge, so this listener mostly serves Cmd+G/Shift+Cmd+G (which cmux
+ * bridge, so this listener mostly serves Cmd+G/Shift+Cmd+G (which hmux
  * routes into web content first) and any non-embedded (plain browser)
- * serving of the diff viewer. Cmd+Shift+F is left alone: that is cmux's
+ * serving of the diff viewer. Cmd+Shift+F is left alone: that is hmux's
  * find-in-directory shortcut.
  */
 export function useFindKeyboard(

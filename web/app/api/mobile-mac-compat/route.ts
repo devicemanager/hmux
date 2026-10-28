@@ -14,7 +14,7 @@ const ALLOW_METHODS = "GET, OPTIONS";
 const ALLOW_HEADERS = "If-None-Match, Content-Type";
 /**
  * The app renders the download URLs as "where to download" pointers, so they
- * must stay on cmux-owned or cmux-release hosts.
+ * must stay on hmux-owned or hmux-release hosts.
  */
 const ALLOWED_DOWNLOAD_URL_HOSTS = new Set([
   "cmux.com",
@@ -33,7 +33,7 @@ const ETAG = `"${createHash("sha256").update(PAYLOAD).digest("base64url")}"`;
 
 /**
  * Validates the reviewed list before it can be served: download URLs are
- * absolute https URLs on cmux-owned or cmux-release hosts, every version is
+ * absolute https URLs on hmux-owned or hmux-release hosts, every version is
  * dotted numeric in the client's one-to-three-component grammar, nightly
  * build counters are plain digits within the client's UInt64 range, and
  * entries are strictly ascending by minIOSVersion so the device's tier
@@ -178,7 +178,7 @@ function downloadURL(input: string | undefined, path: string): void {
   }
   if (!ALLOWED_DOWNLOAD_URL_HOSTS.has(url.hostname.toLowerCase())) {
     throw new Error(
-      `${path} must be on a cmux-owned or cmux-release host, got ${url.hostname}`,
+      `${path} must be on a hmux-owned or hmux-release host, got ${url.hostname}`,
     );
   }
 }

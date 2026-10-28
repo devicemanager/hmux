@@ -77,13 +77,13 @@ jobs:
 
           if [ "$EVENT_NAME" = "pull_request" ]; then
             if ! MERGE_BASE="$(git merge-base "$BASE_SHA" "$HEAD_SHA")" \
-              || ! git diff --name-only "$MERGE_BASE" "$HEAD_SHA" > /tmp/cmux-activation-changed-files.txt; then
+              || ! git diff --name-only "$MERGE_BASE" "$HEAD_SHA" > /tmp/hmux-activation-changed-files.txt; then
               echo "Could not compute PR diff; running activation benchmark." >&2
               emit_all_areas
               exit 0
             fi
 
-            if [ ! -s /tmp/cmux-activation-changed-files.txt ]; then
+            if [ ! -s /tmp/hmux-activation-changed-files.txt ]; then
               echo "PR diff is empty; running activation benchmark."
               emit_all_areas
               exit 0
@@ -91,7 +91,7 @@ jobs:
 
             # This guard runs before the PR-editable Python detector. Edits to
             # this workflow and to the detector must fail open to the benchmark.
-            if grep -Eq '^(\.github/workflows/perf-activation\.ya?ml|scripts/ci/[^/]+\.py|tests/test_ci_change_areas\.py)$' /tmp/cmux-activation-changed-files.txt; then
+            if grep -Eq '^(\.github/workflows/perf-activation\.ya?ml|scripts/ci/[^/]+\.py|tests/test_ci_change_areas\.py)$' /tmp/hmux-activation-changed-files.txt; then
               echo "CI router changed; running activation benchmark."
               emit_all_areas
               exit 0
@@ -99,7 +99,7 @@ jobs:
 
             python3 scripts/ci/detect_ci_change_areas.py \
               --event-name "$EVENT_NAME" \
-              --files-from /tmp/cmux-activation-changed-files.txt
+              --files-from /tmp/hmux-activation-changed-files.txt
             exit 0
           fi
 
@@ -169,7 +169,7 @@ jobs:
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
           path: .ci-source-packages
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -186,7 +186,7 @@ jobs:
           # check test-e2e.yml and test-macos-suite.yml already run; this workflow
           # now restores from the same shared `spm-` namespace they do.
           for attempt in 1 2 3; do
-            if xcodebuild -project cmux.xcodeproj -scheme cmux -configuration Debug \
+            if xcodebuild -project hmux.xcodeproj -scheme hmux -configuration Debug \
               -clonedSourcePackagesDirPath "$SOURCE_PACKAGES_DIR" \
               -resolvePackageDependencies; then
               if [ -d "$SOURCE_PACKAGES_DIR/artifacts/sparkle/Sparkle/Sparkle.xcframework" ] \
@@ -208,9 +208,9 @@ jobs:
       - name: Build tagged app
         run: |
           set -euo pipefail
-          CMUX_SKIP_ZIG_BUILD=1 \
-            CMUX_SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages" \
-            CMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION=1 \
+          HMUX_SKIP_ZIG_BUILD=1 \
+            HMUX_SOURCE_PACKAGES_DIR="$PWD/.ci-source-packages" \
+            HMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION=1 \
             ./scripts/reload.sh --tag "$PERF_TAG"
 
       - name: Run activation session benchmark
@@ -239,7 +239,7 @@ jobs:
           mkdir -p "$RESULTS_DIR"
           chmod 0777 "$RESULTS_DIR"
 
-          APP_PATH="$HOME/Library/Developer/Xcode/DerivedData/cmux-$PERF_TAG/Build/Products/Debug/cmux DEV $PERF_TAG.app"
+          APP_PATH="$HOME/Library/Developer/Xcode/DerivedData/hmux-$PERF_TAG/Build/Products/Debug/hmux DEV $PERF_TAG.app"
           BENCHMARK_CMD=(
             python3 scripts/perf-activation-session.py
             --tag "$PERF_TAG"
@@ -270,7 +270,7 @@ jobs:
       - name: Run Cmd-Tab activation benchmark
         run: |
           set -euo pipefail
-          APP_PATH="$HOME/Library/Developer/Xcode/DerivedData/cmux-$PERF_TAG/Build/Products/Debug/cmux DEV $PERF_TAG.app"
+          APP_PATH="$HOME/Library/Developer/Xcode/DerivedData/hmux-$PERF_TAG/Build/Products/Debug/hmux DEV $PERF_TAG.app"
           BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP_PATH/Contents/Info.plist")"
           # Prefer the console user's Aqua bootstrap when passwordless sudo is
           # available. Some self-hosted runners deliberately omit sudo; on
@@ -355,8 +355,8 @@ jobs:
       - name: Cleanup tagged app
         if: always()
         run: |
-          pkill -f "cmux DEV ${PERF_TAG}.app/Contents/MacOS/cmux DEV" || true
-          rm -f "/tmp/cmux-debug-${PERF_TAG}.sock"
+          pkill -f "hmux DEV ${PERF_TAG}.app/Contents/MacOS/hmux DEV" || true
+          rm -f "/tmp/hmux-debug-${PERF_TAG}.sock"
 
   activation-session:
     needs:

@@ -34,7 +34,7 @@ the standalone guard/variable workflow, under GITHUB_TOKEN, with no polling:
 
 Mechanical fixes (FIXERS):
   - a vars.*RUNNER* variable the runner label report does not list. A runs-on
-    label goes into both CMUX_CI_RUNNER_VARIABLES lists. A runner name list
+    label goes into both HMUX_CI_RUNNER_VARIABLES lists. A runner name list
     goes into NON_LABEL_RUNNER_VARIABLES in tests/test_runner_label_policy.py.
   - ci-repo-variables.yml's runner variable list drifting from
     ci-health-report.yml's
@@ -83,10 +83,10 @@ ISSUE_TITLES = {
     "fast-guards": "CI fast guards is red on main",
     "repo-variables": "CI repository variables is red",
 }
-ISSUE_MARKER = "<!-- cmux-guard-breakage kind={kind} -->"
-DATA_PREFIX = "<!-- cmux-guard-data "
-PR_MARKER = "<!-- cmux-fast-guards-pr -->"
-CULPRIT_MARKER = "<!-- cmux-guard-culprit pr={pr} steps={digest} -->"
+ISSUE_MARKER = "<!-- hmux-guard-breakage kind={kind} -->"
+DATA_PREFIX = "<!-- hmux-guard-data "
+PR_MARKER = "<!-- hmux-fast-guards-pr -->"
+CULPRIT_MARKER = "<!-- hmux-guard-culprit pr={pr} steps={digest} -->"
 # Earlier main runs read, newest first, before a step's baseline is given up on.
 MAX_BASELINE_RUNS = 12
 # Commits a step is bisected over. A longer range names no culprit.
@@ -255,8 +255,8 @@ def parse_step_env(text: str, command: str = "check_repo_variables.py") -> dict[
 
 def variable_values(env: Mapping[str, str]) -> dict[str, str]:
     """Each repository variable the check was handed, by name."""
-    values = {k: v for k, v in env.items() if k in ("CI_OWNED_POOL_SLOTS", "CMUX_CI_XCODE_APP_PR")}
-    for line in env.get("CMUX_CI_RUNNER_VARIABLES", "").splitlines():
+    values = {k: v for k, v in env.items() if k in ("CI_OWNED_POOL_SLOTS", "HMUX_CI_XCODE_APP_PR")}
+    for line in env.get("HMUX_CI_RUNNER_VARIABLES", "").splitlines():
         name, sep, value = line.strip().partition("=")
         if sep and re.fullmatch(r"[A-Z0-9_]+", name):
             values[name] = value
@@ -329,17 +329,17 @@ def runs_on_label(tree: Tree, name: str) -> bool:
 
 
 def add_block_line(text: str, name: str) -> str:
-    """Add NAME=${{ vars.NAME }} to the CMUX_CI_RUNNER_VARIABLES block, sorted."""
+    """Add NAME=${{ vars.NAME }} to the HMUX_CI_RUNNER_VARIABLES block, sorted."""
     lines = text.splitlines(keepends=True)
-    start = next((i for i, l in enumerate(lines) if l.strip() == "CMUX_CI_RUNNER_VARIABLES: |"), None)
+    start = next((i for i, l in enumerate(lines) if l.strip() == "HMUX_CI_RUNNER_VARIABLES: |"), None)
     if start is None:
-        raise RuntimeError("no CMUX_CI_RUNNER_VARIABLES block")
+        raise RuntimeError("no HMUX_CI_RUNNER_VARIABLES block")
     end = start + 1
     while end < len(lines) and RUNNER_BLOCK_LINE.match(lines[end].rstrip("\n")):
         end += 1
     block = lines[start + 1:end]
     if not block:
-        raise RuntimeError("empty CMUX_CI_RUNNER_VARIABLES block")
+        raise RuntimeError("empty HMUX_CI_RUNNER_VARIABLES block")
     indent = RUNNER_BLOCK_LINE.match(block[0].rstrip("\n"))[1]
     if any(RUNNER_BLOCK_LINE.match(l.rstrip("\n"))[2] == name for l in block):
         return text
@@ -354,7 +354,7 @@ def runner_block(text: str) -> list[str]:
 
 def fix_runner_variable_report(failure: TestFailure, tree: Tree) -> Fix | None:
     """test_runner_label_policy: a workflow reads vars.X*RUNNER* the report does not list."""
-    if "CMUX_CI_RUNNER_VARIABLES in" not in failure.message:
+    if "HMUX_CI_RUNNER_VARIABLES in" not in failure.message:
         return None
     names = sorted({n for n in re.findall(r"'([A-Z][A-Z0-9_]*)'", failure.message) if "RUNNER" in n})
     if not names:
@@ -368,7 +368,7 @@ def fix_runner_variable_report(failure: TestFailure, tree: Tree) -> Fix | None:
         hints.append(
             ", ".join(f"`{n}`" for n in labels) + " picks a `runs-on:` label: add "
             + ", ".join(f"`{n}=${{{{ vars.{n} }}}}`" for n in labels)
-            + " to `CMUX_CI_RUNNER_VARIABLES` in both `ci-health-report.yml` and `ci-repo-variables.yml` "
+            + " to `HMUX_CI_RUNNER_VARIABLES` in both `ci-health-report.yml` and `ci-repo-variables.yml` "
               "(the two lists must stay equal)."
         )
     if lists:
@@ -426,7 +426,7 @@ def fix_runner_variable_lists_equal(failure: TestFailure, tree: Tree) -> Fix | N
         return [REPO_VARIABLES]
 
     return Fix("`ci-repo-variables.yml` must hand the check the same runner variables as `ci-health-report.yml`: "
-               "copy the missing `NAME=${{ vars.NAME }}` lines into its `CMUX_CI_RUNNER_VARIABLES`.", edit)
+               "copy the missing `NAME=${{ vars.NAME }}` lines into its `HMUX_CI_RUNNER_VARIABLES`.", edit)
 
 
 def fix_test_registry(failure: TestFailure, tree: Tree) -> Fix | None:
@@ -498,7 +498,7 @@ def run_steps(runner_root: Path, tree_root: Path, steps: Iterable[str]) -> dict[
             args += ["--step", step]
         # Guard steps get no GitHub token: they never need one.
         env = {k: v for k, v in os.environ.items() if k not in ("GH_TOKEN", "GITHUB_TOKEN", "READ_TOKEN")}
-        env["CMUX_GUARDS_BASE_SHA"] = git(tree_root, "rev-parse", "HEAD~1", check=False)
+        env["HMUX_GUARDS_BASE_SHA"] = git(tree_root, "rev-parse", "HEAD~1", check=False)
         try:
             out = subprocess.run(args, capture_output=True, text=True, env=env, timeout=PROBE_TIMEOUT_S)
         except subprocess.TimeoutExpired:
@@ -1462,7 +1462,7 @@ def command_fix(args: argparse.Namespace) -> int:
                              capture_output=True, text=True)
         log = run.stdout + run.stderr
         if run.returncode == 0:
-            print("cmux fast guards pass; nothing to fix.")
+            print("hmux fast guards pass; nothing to fix.")
             return 0
     failures = parse_guard_log(log)
     if not failures:

@@ -64,7 +64,7 @@ const context = {
   sha: scenario.headSha,
   eventName: scenario.eventName,
   payload: { schedule: scenario.schedule },
-  repo: { owner: 'manaflow-ai', repo: 'cmux' },
+  repo: { owner: 'manaflow-ai', repo: 'hmux' },
 };
 const notFound = () => Object.assign(new Error('Not Found'), { status: 404 });
 const github = { rest: {
@@ -262,18 +262,18 @@ def test_paths_that_reach_the_app_still_build() -> None:
     for path in [
         "Sources/AppDelegate.swift",
         "Resources/bin/open-app",
-        "cmux.xcodeproj/project.pbxproj",
+        "hmux.xcodeproj/project.pbxproj",
         "package.json",
-        # The app bundles skills/cmux-cua as a folder resource, so its
+        # The app bundles skills/hmux-cua as a folder resource, so its
         # Markdown ships while other skills' Markdown does not.
-        "skills/cmux-cua/SKILL.md",
+        "skills/hmux-cua/SKILL.md",
         # Nightly signs and publishes; those helpers run in no PR lane.
-        "scripts/sign-cmux-bundle.sh",
+        "scripts/sign-hmux-bundle.sh",
         "scripts/sparkle_generate_appcast.sh",
         ".github/workflows/nightly.yml",
-        # Bundled into cmux.app and published beside it; no pull-request
+        # Bundled into hmux.app and published beside it; no pull-request
         # macOS lane builds either, so the router alone calls them neutral.
-        "cmux-tui/src/main.rs",
+        "hmux-tui/src/main.rs",
         "daemon/remote/src/lib.rs",
         # An unrecognized path is never assumed neutral.
         "unknown/new-directory/file.txt",
@@ -288,7 +288,7 @@ def test_paths_that_reach_the_app_still_build() -> None:
 
 def test_skill_markdown_outside_the_bundled_skill_is_neutral() -> None:
     assert not should_build(run_decide(event="push", interval="0",
-                                       comparison=comparison(["skills/cmux-testing/SKILL.md"])))
+                                       comparison=comparison(["skills/hmux-testing/SKILL.md"])))
 
 
 def test_renames_are_classified_by_both_names() -> None:
@@ -337,24 +337,24 @@ def test_what_the_nightly_ships_is_read_back_from_the_project() -> None:
     bundled = nightly.bundled_paths(ROOT)
     # The derivation finds the folder resource the router already knows about,
     # which is what shows it reads the real bundling phases.
-    assert "skills/cmux-cua" in bundled
+    assert "skills/hmux-cua" in bundled
     # And it finds the two the router calls neutral: each needs no Release
     # compile, so `release_build` alone would let a change to them skip.
-    for path in ("Resources/bin/open", "Resources/bin/cmux-claude-wrapper"):
+    for path in ("Resources/bin/open", "Resources/bin/hmux-claude-wrapper"):
         assert path in bundled, f"{path} is bundled but was not derived"
         assert not detect.classify_files([path]).release_build
         assert nightly.build_inputs_changed([path])[0]
 
-    # The cmux-cli product is copied into the bundle, so CLI sources ship
+    # The hmux-cli product is copied into the bundle, so CLI sources ship
     # without a Release compile ever covering them.
-    assert not detect.classify_files(["CLI/cmux_open.swift"]).release_build
-    assert nightly.build_inputs_changed(["CLI/cmux_open.swift"])[0]
+    assert not detect.classify_files(["CLI/hmux_open.swift"]).release_build
+    assert nightly.build_inputs_changed(["CLI/hmux_open.swift"])[0]
 
     # The resolver's path list decides which client gets bundled.
     tui = nightly.tui_client_paths(ROOT)
-    assert {"cmux-tui", ".github/workflows/cmux-tui-artifacts.yml",
-            ".github/workflows/cmux-tui-build-package.yml"} <= tui
-    for path in (".github/workflows/cmux-tui-artifacts.yml", "cmux-tui/src/main.rs"):
+    assert {"hmux-tui", ".github/workflows/hmux-tui-artifacts.yml",
+            ".github/workflows/hmux-tui-build-package.yml"} <= tui
+    for path in (".github/workflows/hmux-tui-artifacts.yml", "hmux-tui/src/main.rs"):
         assert nightly.build_inputs_changed([path])[0], f"{path} must rebuild"
 
     consumer = "scripts/build_remote_daemon_release_assets.sh"

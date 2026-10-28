@@ -1,9 +1,9 @@
-import CmuxCloud
-import CmuxProductAnalytics
+import HmuxCloud
+import HmuxProductAnalytics
 import Foundation
 
 /// The analytics for one shown welcome card: shown, each button, and how it
-/// closed. Exactly one `cmux_cloud_welcome_closed` per shown card.
+/// closed. Exactly one `hmux_cloud_welcome_closed` per shown card.
 @MainActor
 final class CloudWelcomeAnalyticsSession {
     let trigger: CloudWelcomeTrigger

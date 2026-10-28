@@ -1,5 +1,5 @@
 import AppKit
-import CmuxHomeCore
+import HmuxHomeCore
 
 extension Notification.Name {
     /// Shows Chief Home in a main window.
@@ -7,23 +7,23 @@ extension Notification.Name {
     /// Post with an `NSWindow` object to target that window; with no object the
     /// active main window (the one AppDelegate routes shortcuts to) is used.
     /// Shortcut, command palette, menu and CLI entrypoints all post this.
-    static let cmuxOpenChiefHome = Notification.Name("cmux.chief.openHome")
+    static let hmuxOpenChiefHome = Notification.Name("hmux.chief.openHome")
 
     /// Toggles Chief Home in a main window: Home when showing a workspace, the
-    /// workspace when showing Home. Same object rules as ``cmuxOpenChiefHome``.
-    static let cmuxToggleChiefHome = Notification.Name("cmux.chief.toggleHome")
+    /// workspace when showing Home. Same object rules as ``hmuxOpenChiefHome``.
+    static let hmuxToggleChiefHome = Notification.Name("hmux.chief.toggleHome")
 
     /// Posted with the window as object after Chief Home became that window's content.
     ///
     /// Chief's Home view observes it and makes its compose field first responder.
-    static let cmuxChiefHomeDidActivate = Notification.Name("cmux.chief.homeDidActivate")
+    static let hmuxChiefHomeDidActivate = Notification.Name("hmux.chief.homeDidActivate")
 }
 
 /// Selects Chief's persistent workspace through the native workspace navigation path.
 /// Shortcut, command palette, menu and CLI actions all resolve the same Home anchor.
 @MainActor
 struct ChiefHomeNavigation {
-    static let homeGroupExternalID = "cmux.chief.home"
+    static let homeGroupExternalID = "hmux.chief.home"
     static let hiddenConversationsKey = "chief.home.hiddenConversations"
 
     let sidebarSelectionState: SidebarSelectionState
@@ -220,7 +220,7 @@ struct ChiefHomeNavigation {
             // during this same update, after onChange runs.
             DispatchQueue.main.async { [weak window] in
                 guard let window else { return }
-                NotificationCenter.default.post(name: .cmuxChiefHomeDidActivate, object: window)
+                NotificationCenter.default.post(name: .hmuxChiefHomeDidActivate, object: window)
             }
         } else if oldValue == .home {
             tabManager.focusSelectedWorkspacePanel()

@@ -113,9 +113,9 @@ export function useClientConfigFlag(key: string): ClientConfigFlagValue | undefi
 }
 
 export const clientConfigFlags = {
-  cmuxForWindows: booleanClientConfigFlag("cmux-for-windows"),
-  cmuxForLinux: booleanClientConfigFlag("cmux-for-linux"),
-  cmuxForAndroid: booleanClientConfigFlag("cmux-for-android"),
+  hmuxForWindows: booleanClientConfigFlag("hmux-for-windows"),
+  hmuxForLinux: booleanClientConfigFlag("hmux-for-linux"),
+  hmuxForAndroid: booleanClientConfigFlag("hmux-for-android"),
   mobileConnectButtonEnabledRelease: booleanClientConfigFlag("mobile-connect-button-enabled-release"),
   iosArtifactChipEnabledRelease: booleanClientConfigFlag("ios-artifact-chip-enabled-release", true),
   goPlanEnabledRelease: booleanClientConfigFlag(FEATURE_FLAGS.goPlan.key, false),

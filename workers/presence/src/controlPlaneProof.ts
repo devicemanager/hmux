@@ -46,7 +46,7 @@ export function bindingRequestTranscript(input: Omit<
   "signature" | "endpointId" | "nowSeconds"
 >): Uint8Array {
   return new TextEncoder().encode(
-    `cmux/iroh/binding-request/v1\n${input.bindingId}\n${input.method}\n${input.path}\n${input.timestampSeconds}\n${input.bodySha256}`,
+    `hmux/iroh/binding-request/v1\n${input.bindingId}\n${input.method}\n${input.path}\n${input.timestampSeconds}\n${input.bodySha256}`,
   );
 }
 

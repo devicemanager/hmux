@@ -7,12 +7,12 @@ from pathlib import Path
 import uuid
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
 def require(condition, message):
     if not condition:
-        raise cmuxError(message)
+        raise hmuxError(message)
 
 
 def rows(client, workspace):
@@ -29,12 +29,12 @@ def check_identity(row):
 
 
 def main():
-    socket_path = os.environ.get("CMUX_SOCKET_PATH", "")
-    require(bool(socket_path), "CMUX_SOCKET_PATH must explicitly select a tagged test app")
+    socket_path = os.environ.get("HMUX_SOCKET_PATH", "")
+    require(bool(socket_path), "HMUX_SOCKET_PATH must explicitly select a tagged test app")
     token = "identity-regression-" + uuid.uuid4().hex
     created = []
     cleanup_errors = []
-    with cmux(socket_path) as client:
+    with hmux(socket_path) as client:
         try:
             for index, count in enumerate((2, 1)):
                 result = client._call("workspace.create", {

@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 
 /// The Cloud tab's outline: animation-free disclosure, the right-sidebar
 /// keyboard vocabulary (j/k, h/l, arrows, Return opens, `/` quick-search), and
@@ -103,7 +103,7 @@ final class CloudTreeNSOutlineView: NSOutlineView {
     private func pointerHitTargetBelongsToOutline(at point: NSPoint) -> Bool {
         guard let window, let contentView = window.contentView else { return false }
         let windowPoint = convert(point, to: nil)
-        guard let hit = contentView.cmuxHitTest(windowPoint: windowPoint) else { return false }
+        guard let hit = contentView.hmuxHitTest(windowPoint: windowPoint) else { return false }
         return hit === self || hit.isDescendant(of: self)
     }
 
@@ -249,7 +249,7 @@ final class CloudTreeNSOutlineView: NSOutlineView {
     /// Per-event context menu, the same presentation path the sidebar rows
     /// use. The persistent `menu` + delegate `menuNeedsUpdate` route rendered
     /// items whose actions never dispatched; building the menu in
-    /// `menu(for:)` is the pattern proven by every working cmux menu.
+    /// `menu(for:)` is the pattern proven by every working hmux menu.
     var contextMenuBuilder: ((_ row: Int) -> NSMenu?)?
 
     override func menu(for event: NSEvent) -> NSMenu? {

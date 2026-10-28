@@ -1,6 +1,6 @@
-import CMUXAgentLaunch
-import CmuxFoundation
-import CmuxControlSocket
+import HMUXAgentLaunch
+import HmuxFoundation
+import HmuxControlSocket
 import Foundation
 
 /// Outcome of the single pre-exec admission boundary for managed agent restores.
@@ -81,7 +81,7 @@ extension TerminalController {
             case .index(let index):
                 liveOwner = index.liveSessionOwner(
                     kind: inputs.kind, sessionID: inputs.sessionID, revalidateProcessEvidence: true,
-                    processArgumentsProvider: { CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0) },
+                    processArgumentsProvider: { HmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0) },
                     processPresenceProvider: { pid in
                         guard pid > 0, pid <= Int(Int32.max) else { return .absent }
                         return PIDPresence.current(pid: pid_t(pid))
@@ -92,7 +92,7 @@ extension TerminalController {
                 )
 #if DEBUG
                 if !indexComplete {
-                    cmuxDebugLog(
+                    hmuxDebugLog(
                         "agentRestore.admit.indexIncomplete kind=\(inputs.kind) " +
                         "completion=\(index.completionFingerprint.sorted().joined(separator: ","))"
                     )
@@ -100,7 +100,7 @@ extension TerminalController {
 #endif
             case .timedOut, .cancelled:
 #if DEBUG
-                cmuxDebugLog("agentRestore.admit.indexTimedOut kind=\(inputs.kind)")
+                hmuxDebugLog("agentRestore.admit.indexTimedOut kind=\(inputs.kind)")
 #endif
                 liveOwner = nil
                 indexComplete = false
@@ -332,7 +332,7 @@ extension TerminalController {
         let elapsed = startedAt.duration(to: .now).components
         let elapsedMilliseconds = elapsed.seconds * 1_000
             + elapsed.attoseconds / 1_000_000_000_000_000
-        cmuxDebugLog(
+        hmuxDebugLog(
             "agentRestore.admit kind=\(inputs.kind) session=\(inputs.sessionID) surface=\(inputs.surfaceID.uuidString) decision=\(decision.debugLabel) ms=\(elapsedMilliseconds)"
         )
 #endif
@@ -369,7 +369,7 @@ extension TerminalController {
                 code: "conflict",
                 message: String(
                     localized: "agentRestore.admission.targetChanged",
-                    defaultValue: "The surface restore record changed. Run 'cmux restore --surface' again."
+                    defaultValue: "The surface restore record changed. Run 'hmux restore --surface' again."
                 )
             )
         case .recovering:

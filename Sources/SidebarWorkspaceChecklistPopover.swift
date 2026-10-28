@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import SwiftUI
 
 /// The value snapshot the checklist popover renders (Equatable so the
@@ -252,7 +252,7 @@ struct SidebarWorkspaceChecklistPopover: View {
             Button {
                 actions.setItemState(item.id, isCompleted ? .pending : .completed)
             } label: {
-                CmuxSystemSymbolImage(
+                HmuxSystemSymbolImage(
                     systemName: checkboxSymbolName(for: item.state),
                     pointSize: Self.checkboxPointSize,
                     tint: isCompleted ? .secondary : .primary
@@ -378,7 +378,7 @@ struct SidebarWorkspaceChecklistPopover: View {
         return Button {
             actions.removeItem(item.id)
         } label: {
-            CmuxSystemSymbolImage(systemName: "xmark.circle.fill", pointSize: Self.checkboxPointSize - 2, tint: .secondary)
+            HmuxSystemSymbolImage(systemName: "xmark.circle.fill", pointSize: Self.checkboxPointSize - 2, tint: .secondary)
                 .frame(width: Self.checkboxPointSize + 6, height: Self.checkboxPointSize + 6, alignment: .center)
                 .contentShape(Rectangle())
         }
@@ -400,7 +400,7 @@ struct SidebarWorkspaceChecklistPopover: View {
         return HStack(alignment: .center, spacing: 6) {
             // A `plus.circle` "add" affordance, not an empty checkbox, so the
             // add row never reads as a real (unchecked) item.
-            CmuxSystemSymbolImage(systemName: "plus.circle", pointSize: Self.checkboxPointSize, tint: .secondary)
+            HmuxSystemSymbolImage(systemName: "plus.circle", pointSize: Self.checkboxPointSize, tint: .secondary)
             TextField(
                 placeholder,
                 text: $pendingItemText,
@@ -586,7 +586,7 @@ struct SidebarWorkspaceChecklistPopover: View {
             actions.openPane()
         } label: {
             HStack(spacing: 6) {
-                CmuxSystemSymbolImage(systemName: "rectangle.split.2x1", pointSize: 11, tint: .secondary)
+                HmuxSystemSymbolImage(systemName: "rectangle.split.2x1", pointSize: 11, tint: .secondary)
                 Text(String(localized: "sidebar.checklist.openAsPane", defaultValue: "Open as Pane"))
                     .font(.system(size: 12))
             }

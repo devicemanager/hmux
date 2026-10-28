@@ -1,5 +1,5 @@
 import type { VmAgentUpdatesSetting } from "./agentUpdates";
-import { shellQuote } from "./drivers/cmuxTuiDaemon";
+import { shellQuote } from "./drivers/hmuxTuiDaemon";
 import {
   GITHUB_API_BASE,
   GITHUB_DOWNLOAD_BASE,
@@ -13,10 +13,10 @@ import {
  * Coding-agent installs and updates on a Cloud machine, without npm.
  *
  * Every agent comes from its own GitHub release asset (services/vms/images/agents.ts).
- * A version unpacks to /opt/cmux-agents/<binary>/<version>/, and
+ * A version unpacks to /opt/hmux-agents/<binary>/<version>/, and
  * /usr/local/bin/<binary> links to the executable inside it. The
- * /usr/local/bin entries of claude, codex and opencode stay their /etc/cmux/<binary>
- * launchers, which exec /usr/local/libexec/cmux-<binary>-real, the link that
+ * /usr/local/bin entries of claude, codex and opencode stay their /etc/hmux/<binary>
+ * launchers, which exec /usr/local/libexec/hmux-<binary>-real, the link that
  * moves instead.
  *
  * One script does both jobs:
@@ -37,7 +37,7 @@ import {
  * reported its own version, by an atomic symlink swap, so a running agent keeps
  * the files it started from and a failed update leaves the old link in place.
  * The update serializes on a lock, skips when the last successful check is
- * under a day old, and records every outcome in /etc/cmux/agent-updates.state.
+ * under a day old, and records every outcome in /etc/hmux/agent-updates.state.
  * A failure (a rate-limited API, a digest mismatch) is recorded and retried on
  * the next attach, which also re-asserts the links.
  *
@@ -50,12 +50,12 @@ import {
  * Old standalone versions are pruned the same way, keeping the previous one.
  *
  * Hosts: api.github.com, github.com, and GitHub's release-asset storage, all
- * in CMUX_REQUIRED_DOMAINS, so updates work in every network mode.
+ * in HMUX_REQUIRED_DOMAINS, so updates work in every network mode.
  */
 
 export { GUEST_AGENTS } from "./images/agents";
 
-export const GUEST_AGENT_UPDATES_LOG = "/var/log/cmux-agent-updates.log";
+export const GUEST_AGENT_UPDATES_LOG = "/var/log/hmux-agent-updates.log";
 export const GUEST_AGENT_UPDATES_INTERVAL_SECONDS = 24 * 60 * 60;
 export const GUEST_AGENT_MIN_RELEASE_AGE_SECONDS = 3 * 24 * 60 * 60;
 
@@ -112,7 +112,7 @@ root = options["root"]
 setting_path = os.path.join(config_dir, "agent-updates")
 state_path = os.path.join(config_dir, "agent-updates.state")
 lock_path = os.path.join(config_dir, ".agent-updates.lock")
-# Agents whose /usr/local/bin entry is a cmux launcher (/etc/cmux/<binary>).
+# Agents whose /usr/local/bin entry is a hmux launcher (/etc/hmux/<binary>).
 wrapped = ("opencode", "claude", "codex")
 release = re.compile(r"^\d+\.\d+\.\d+$")
 reported_version = re.compile(r"(\d+\.\d+\.\d+)")
@@ -150,7 +150,7 @@ def link_atomic(target, path):
 
 def fetch(url, timeout):
     request = urllib.request.Request(url, headers={
-        "User-Agent": "cmux-agent-updates",
+        "User-Agent": "hmux-agent-updates",
         "Accept": "application/vnd.github+json",
         "X-GitHub-Api-Version": "2022-11-28",
     })
@@ -190,7 +190,7 @@ def entry(agent):
 def real_link(agent):
     # The link whose target is the tool itself: a wrapped agent's sits behind its launcher.
     if uses_wrapper(agent):
-        return os.path.join(options["libexecDir"], "cmux-" + agent["binary"] + "-real")
+        return os.path.join(options["libexecDir"], "hmux-" + agent["binary"] + "-real")
     return entry(agent)
 
 def probe_version(path):
@@ -518,7 +518,7 @@ export type GuestAgentUpdaterMode = "update" | "install";
 
 /** The updater invocation; exported so tests can run it against a temp tree. */
 export function guestAgentUpdaterCommand(
-  configDir = "/etc/cmux",
+  configDir = "/etc/hmux",
   options: GuestAgentUpdaterOptions = GUEST_AGENT_UPDATER_DEFAULTS,
   mode: GuestAgentUpdaterMode = "update",
 ): string {
@@ -532,7 +532,7 @@ export function guestAgentUpdaterCommand(
  */
 export function guestAgentInstallCommand(
   pins: Readonly<Record<string, GuestAgentPin>>,
-  configDir = "/etc/cmux",
+  configDir = "/etc/hmux",
   options: GuestAgentUpdaterOptions = GUEST_AGENT_UPDATER_DEFAULTS,
 ): string {
   for (const agent of options.agents) {
@@ -544,10 +544,10 @@ export function guestAgentInstallCommand(
 /**
  * How long after a clone resumes the updater stays off the machine. A clone's
  * disk is slow for its first minutes, and the attach that starts the updater
- * arrives seconds after resume, while the cmux-tui daemon is still starting:
+ * arrives seconds after resume, while the hmux-tui daemon is still starting:
  * a full update's downloads and unpacks there stalled the daemon's journal
  * commits past its readiness timeout, and the Mac saw the daemon port refuse
- * (https://github.com/manaflow-ai/cmux/issues/20438). Equal to cmux-devbox-boot's
+ * (https://github.com/manaflow-ai/cmux/issues/20438). Equal to hmux-devbox-boot's
  * HOUSEKEEPING_DELAY, the window the boot supervisor keeps systemd timers off
  * the same path; vm-agent-updates.test.ts pins the equality.
  */
@@ -556,8 +556,8 @@ export const GUEST_AGENT_UPDATES_RESUME_WINDOW_SECONDS = 10 * 60;
 /** A wake this much later than the requested wait is a snapshot resume, not scheduling delay. */
 const GUEST_AGENT_UPDATES_RESUME_JUMP_SLACK_SECONDS = 30;
 
-/** Written by cmux-devbox-boot when it binds a resumed clone (TEMPLATE_RUN_DIR). */
-export const GUEST_CLONE_STARTED_MARKER = "/run/cmux/clone-started";
+/** Written by hmux-devbox-boot when it binds a resumed clone (TEMPLATE_RUN_DIR). */
+export const GUEST_CLONE_STARTED_MARKER = "/run/hmux/clone-started";
 
 export type GuestAgentUpdatesPaths = {
   readonly configDir: string;
@@ -568,7 +568,7 @@ export type GuestAgentUpdatesPaths = {
 };
 
 const GUEST_AGENT_UPDATES_PATHS: GuestAgentUpdatesPaths = {
-  configDir: "/etc/cmux",
+  configDir: "/etc/hmux",
   log: GUEST_AGENT_UPDATES_LOG,
   updater: GUEST_AGENT_UPDATER_DEFAULTS,
   cloneStartedMarker: GUEST_CLONE_STARTED_MARKER,

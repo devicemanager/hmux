@@ -35,8 +35,8 @@ describe("cloud billing return page", () => {
 
       expect(html).toContain(`data-billing-status="${messageKey}"`);
       expect(html).toContain(title);
-      expect(html).toContain("Return to the terminal where you ran ssh cmux.cloud");
-      expect(html).toContain("ssh cmux.cloud");
+      expect(html).toContain("Return to the terminal where you ran ssh hmux.cloud");
+      expect(html).toContain("ssh hmux.cloud");
     }
   });
 

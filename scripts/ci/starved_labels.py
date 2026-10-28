@@ -3,7 +3,7 @@
 
 A self-hosted fleet label (``glaeda-*``) whose runners all stopped listening
 looks like an ordinary queue from GitHub's side: the job waits, nothing fails,
-and nobody hears about it (PR #23047's `cmux-next app compile (build fleet)`
+and nobody hears about it (PR #23047's `hmux-next app compile (build fleet)`
 sat queued on glaeda-side-light-xcode-26.6 for over two hours on 2026-10-22).
 The workflow tokens cannot list org runners, so this judges a label from the
 jobs the queue janitor already listed: a label is starved when a job on it has
@@ -15,7 +15,7 @@ a running sibling in its run, which may be its `needs`, is not counted, and one
 beside a queued sibling alerts only after STARVED_GATED_AFTER.
 
 Every glaeda-* label is in scope. Nothing in the tree says which runner label
-a merge-blocking job asks for (cmux-next's build-fleet compile takes
+a merge-blocking job asks for (hmux-next's build-fleet compile takes
 vars.CI_COMPILE_CHECK_GATEWAY), so the alert covers the whole fleet.
 
 queue_janitor.py calls starved() and writes the result into the
@@ -24,7 +24,7 @@ script on that snapshot: one ::error:: annotation and a step-summary line per
 starved label, and one open issue per label titled ISSUE_PREFIX + label,
 updated while it stays starved and closed only on evidence of recovery
 (a job on the label running or started, or none queued; see plan_issues()). Issues use the
-cmux-bot App token the janitor already mints with issues: write; without it a
+hmux-bot App token the janitor already mints with issues: write; without it a
 starved label fails this step instead. The heal itself runs on the minis:
 glaeda-mini-health kickstarts a stopped runner LaunchAgent (runner_stopped),
 and a listener its gate holds off for a root-only fault is reported there.
@@ -317,8 +317,8 @@ def main(argv: Sequence[str] | None = None, env: Mapping[str, str] | None = None
     repo = env.get("GH_REPO") or env.get("GITHUB_REPOSITORY") or ""
     if not token or not repo:
         if found:
-            print("::error title=Runner label starved::no cmux-bot token, so no tracking issue could be opened")
-            lines.append("- No cmux-bot token this sweep: the tracking issues were not opened or updated.")
+            print("::error title=Runner label starved::no hmux-bot token, so no tracking issue could be opened")
+            lines.append("- No hmux-bot token this sweep: the tracking issues were not opened or updated.")
             code = 1
     else:
         try:

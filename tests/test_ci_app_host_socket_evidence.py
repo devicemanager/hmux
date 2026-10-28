@@ -9,8 +9,8 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-APP_STDOUT = "StandardOutputAndStandardError-com.cmuxterm.app.debug.txt"
-LISTENER = "SocketControlServer: Listening on /tmp/cmux-test-owned.sock\n"
+APP_STDOUT = "StandardOutputAndStandardError-com.hmuxterm.app.debug.txt"
+LISTENER = "SocketControlServer: Listening on /tmp/hmux-test-owned.sock\n"
 
 # Model the two actual process boundaries: xcodebuild writes a result bundle,
 # then xcresulttool exports its per-process diagnostics. Never echo diagnostic
@@ -55,13 +55,13 @@ class SocketEvidenceTests(unittest.TestCase):
                 tool.write_text(f"#!{sys.executable}\n" + TOOL)
                 tool.chmod(0o755)
             env = {k: v for k, v in os.environ.items()
-                   if not k.startswith(("CMUX_", "TEST_RUNNER_"))}
+                   if not k.startswith(("HMUX_", "TEST_RUNNER_"))}
             env.update({
                 "PATH": str(bin_dir) + os.pathsep + env["PATH"],
                 "RUNNER_TEMP": str(root),
-                "CMUX_APP_HOST_TEST_LOCK_ACTIVE": "1",
-                "CMUX_APP_HOST_XCODEBUILD_ATTEMPTS": "1",
-                "CMUX_APP_HOST_XCRESULTTOOL_TIMEOUT_SECONDS": "1",
+                "HMUX_APP_HOST_TEST_LOCK_ACTIVE": "1",
+                "HMUX_APP_HOST_XCODEBUILD_ATTEMPTS": "1",
+                "HMUX_APP_HOST_XCRESULTTOOL_TIMEOUT_SECONDS": "1",
                 "SOCKET_EVIDENCE_FIXTURE": json.dumps(fixture),
             })
             args = ["bash", str(ROOT / "scripts/ci/run-app-host-xcodebuild.sh"), "test"]
@@ -75,7 +75,7 @@ class SocketEvidenceTests(unittest.TestCase):
                         "diagnostics": {APP_STDOUT: LISTENER},
                     }))
             elif bundle_mode == "automatic":
-                env["CMUX_APP_HOST_RESULT_BUNDLE_ROOT"] = str(root / "results")
+                env["HMUX_APP_HOST_RESULT_BUNDLE_ROOT"] = str(root / "results")
             return subprocess.run(args, cwd=ROOT, env=env, text=True,
                                   stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
                                   timeout=15)
@@ -94,7 +94,7 @@ class SocketEvidenceTests(unittest.TestCase):
 
     def test_missing_evidence_fails_closed(self):
         for diagnostics in ({}, {APP_STDOUT: "Application launched\n"},
-                            {"StandardOutputAndStandardError-com.cmuxterm.appuitests.xctrunner.txt": LISTENER},
+                            {"StandardOutputAndStandardError-com.hmuxterm.appuitests.xctrunner.txt": LISTENER},
                             {"unrelated.log": LISTENER}):
             with self.subTest(diagnostics=diagnostics):
                 result = self.run_wrapper({"diagnostics": diagnostics})
@@ -106,8 +106,8 @@ class SocketEvidenceTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout)
 
     def test_default_socket_in_app_stdout_is_rejected(self):
-        for marker in ('SocketControlServer: Listening on /tmp/cmux-debug.sock\n',
-                       'message = "socket.listener.start"; path = "/tmp/cmux-debug.sock"\n'):
+        for marker in ('SocketControlServer: Listening on /tmp/hmux-debug.sock\n',
+                       'message = "socket.listener.start"; path = "/tmp/hmux-debug.sock"\n'):
             with self.subTest(marker=marker):
                 result = self.run_wrapper({"diagnostics": {APP_STDOUT: LISTENER + marker}})
                 self.assertEqual(result.returncode, 1, result.stdout)

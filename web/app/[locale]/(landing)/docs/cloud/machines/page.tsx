@@ -30,9 +30,9 @@ export default async function CloudMachinesPage({
       <DocsHeading level={2} id="create">{t("createTitle")}</DocsHeading>
       <p>{t("createApp")}</p>
       <p>{t("createCli")}</p>
-      <CodeBlock lang="bash">{`cmux vm new
-cmux vm new --size 16g --name "search index"
-cmux vm new --detach --json`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm new
+hmux vm new --size 16g --name "search index"
+hmux vm new --detach --json`}</CodeBlock>
       <p>{t("createFailed")}</p>
 
       <DocsHeading level={2} id="sizes">{t("sizesTitle")}</DocsHeading>
@@ -74,51 +74,51 @@ cmux vm new --detach --json`}</CodeBlock>
       <p>{t("agentUpdatesDesc")}</p>
       <p>{t("agentUpdatesSource")}</p>
       <p>{t("agentUpdatesStatus")}</p>
-      <CodeBlock lang="bash">{`cat /etc/cmux/agent-updates.state
-tail /var/log/cmux-agent-updates.log`}</CodeBlock>
+      <CodeBlock lang="bash">{`cat /etc/hmux/agent-updates.state
+tail /var/log/hmux-agent-updates.log`}</CodeBlock>
       <p>{t("agentUpdatesToggle")}</p>
-      <CodeBlock lang="bash">{`cmux vm new --agent-updates latest
-cmux vm agent-updates brave-otter
-cmux vm agent-updates brave-otter image`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm new --agent-updates latest
+hmux vm agent-updates brave-otter
+hmux vm agent-updates brave-otter image`}</CodeBlock>
       <p>{t("agentUpdatesNetwork")}</p>
 
       <DocsHeading level={2} id="resize">{t("resizeTitle")}</DocsHeading>
       <p>{t("resizeDesc")}</p>
-      <CodeBlock lang="bash">{`cmux vm resize brave-otter --memory 16G
-cmux vm resize brave-otter --cpu 8 --disk 128G`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm resize brave-otter --memory 16G
+hmux vm resize brave-otter --cpu 8 --disk 128G`}</CodeBlock>
 
       <DocsHeading level={2} id="pause-and-resume">{t("pauseTitle")}</DocsHeading>
       <p>{t("pauseDesc")}</p>
       <p>{t("pauseIdle")}</p>
-      <CodeBlock lang="bash">{`cmux vm pause brave-otter
-cmux vm resume brave-otter
-cmux vm wait brave-otter --wake --timeout 180`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm pause brave-otter
+hmux vm resume brave-otter
+hmux vm wait brave-otter --wake --timeout 180`}</CodeBlock>
       <p>{t("waitDesc")}</p>
 
       <DocsHeading level={2} id="checkpoints-and-forks">{t("snapshotsTitle")}</DocsHeading>
       <p>{t("snapshotsDesc")}</p>
       <p>{t("snapshotsUse")}</p>
-      <CodeBlock lang="bash">{`cmux vm checkpoint brave-otter --name before-migration
-cmux vm snapshot ls brave-otter
-cmux vm restore <snapshot-id>
-cmux vm fork brave-otter --name try-b
-cmux vm snapshot rm brave-otter <snapshot-id>`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm checkpoint brave-otter --name before-migration
+hmux vm snapshot ls brave-otter
+hmux vm restore <snapshot-id>
+hmux vm fork brave-otter --name try-b
+hmux vm snapshot rm brave-otter <snapshot-id>`}</CodeBlock>
       <p>{t("snapshotsCapability")}</p>
 
       <DocsHeading level={2} id="rename">{t("renameTitle")}</DocsHeading>
       <p>{t("renameDesc")}</p>
-      <CodeBlock lang="bash">{`cmux vm rename brave-otter "billing api"
-cmux vm rename brave-otter --clear`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm rename brave-otter "billing api"
+hmux vm rename brave-otter --clear`}</CodeBlock>
 
       <DocsHeading level={2} id="status">{t("statusTitle")}</DocsHeading>
       <p>{t("statusDesc")}</p>
-      <CodeBlock lang="bash">{`cmux vm status brave-otter
-cmux vm stats brave-otter`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm status brave-otter
+hmux vm stats brave-otter`}</CodeBlock>
 
       <DocsHeading level={2} id="delete">{t("deleteTitle")}</DocsHeading>
       <p>{t("deleteDesc")}</p>
       <p>{t("deleteCheckpoint")}</p>
-      <CodeBlock lang="bash">{`cmux vm rm brave-otter`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux vm rm brave-otter`}</CodeBlock>
 
       <DocsHeading level={2} id="when-your-plan-ends">{t("accessTitle")}</DocsHeading>
       <p>{t("accessDesc")}</p>

@@ -21,13 +21,13 @@
 # mobile-launch tools from the queue dir. A queued feature worktree supplies
 # source/debug-CLI context only, never the auth policy implementation.
 #
-# --checkout bakes CMUX_IPHONE_QUEUE_CHECKOUT into the agent as fallback source
+# --checkout bakes HMUX_IPHONE_QUEUE_CHECKOUT into the agent as fallback source
 # context when an enqueuing worktree is pruned. Defaults to this repo root.
 set -euo pipefail
 
-LABEL="dev.cmux.iphone-install-queue"
+LABEL="dev.hmux.iphone-install-queue"
 PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
-QUEUE_DIR="${CMUX_IPHONE_QUEUE_DIR:-$HOME/Library/Application Support/cmux-dev/iphone-install-queue}"
+QUEUE_DIR="${HMUX_IPHONE_QUEUE_DIR:-$HOME/Library/Application Support/hmux-dev/iphone-install-queue}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 GUI_DOMAIN="gui/$(id -u)"
@@ -58,8 +58,8 @@ cmd_install() {
       *) echo "install: unknown argument: $1" >&2; usage >&2; exit 2 ;;
     esac
   done
-  [[ -x "$checkout/scripts/cmux-debug-cli.sh" ]] \
-    || { echo "error: --checkout $checkout has no scripts/cmux-debug-cli.sh" >&2; exit 1; }
+  [[ -x "$checkout/scripts/hmux-debug-cli.sh" ]] \
+    || { echo "error: --checkout $checkout has no scripts/hmux-debug-cli.sh" >&2; exit 1; }
   for required in \
       "$SCRIPT_DIR/iphone-install-queue.sh" \
       "$SCRIPT_DIR/ios-device-process.sh" \
@@ -100,16 +100,16 @@ cmd_install() {
   <dict>
     <key>PATH</key>
     <string>/usr/bin:/bin:/usr/sbin:/sbin:/opt/homebrew/bin:$HOME/.local/bin</string>
-    <key>CMUX_IPHONE_QUEUE_DIR</key>
+    <key>HMUX_IPHONE_QUEUE_DIR</key>
     <string>$QUEUE_DIR</string>
-    <key>CMUX_IPHONE_QUEUE_CHECKOUT</key>
+    <key>HMUX_IPHONE_QUEUE_CHECKOUT</key>
     <string>$checkout</string>
   </dict>
   <key>LaunchEvents</key>
   <dict>
     <key>com.apple.iokit.matching</key>
     <dict>
-      <key>dev.cmux.iphone.usb-attach</key>
+      <key>dev.hmux.iphone.usb-attach</key>
       <dict>
         <key>IOProviderClass</key><string>IOUSBHostDevice</string>
         <key>idVendor</key><integer>1452</integer>

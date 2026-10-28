@@ -43,11 +43,11 @@ describe("coderouter alerts cron route", () => {
     let ran = false;
     await withEnv({
       CRON_SECRET: undefined,
-      CMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x",
-      CMUX_ALERTS_SINK_UNCONFIGURED_ACK: undefined,
+      HMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x",
+      HMUX_ALERTS_SINK_UNCONFIGURED_ACK: undefined,
     }, async () => {
       const response = await handleCoderouterAlertsCron(
-        new Request("https://cmux.test/api/cron/coderouter-alerts", {
+        new Request("https://hmux.test/api/cron/coderouter-alerts", {
           headers: { authorization: "Bearer cron-secret" },
         }),
         async () => {
@@ -65,11 +65,11 @@ describe("coderouter alerts cron route", () => {
     let ran = false;
     await withEnv({
       CRON_SECRET: "cron-secret",
-      CMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x",
-      CMUX_ALERTS_SINK_UNCONFIGURED_ACK: undefined,
+      HMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x",
+      HMUX_ALERTS_SINK_UNCONFIGURED_ACK: undefined,
     }, async () => {
       const response = await handleCoderouterAlertsCron(
-        new Request("https://cmux.test/api/cron/coderouter-alerts"),
+        new Request("https://hmux.test/api/cron/coderouter-alerts"),
         async () => {
           ran = true;
           return summary;
@@ -85,11 +85,11 @@ describe("coderouter alerts cron route", () => {
     let ran = false;
     await withEnv({
       CRON_SECRET: "cron-secret",
-      CMUX_ALERTS_SLACK_WEBHOOK_URL: undefined,
-      CMUX_ALERTS_SINK_UNCONFIGURED_ACK: undefined,
+      HMUX_ALERTS_SLACK_WEBHOOK_URL: undefined,
+      HMUX_ALERTS_SINK_UNCONFIGURED_ACK: undefined,
     }, async () => {
       const response = await handleCoderouterAlertsCron(
-        new Request("https://cmux.test/api/cron/coderouter-alerts", {
+        new Request("https://hmux.test/api/cron/coderouter-alerts", {
           headers: { authorization: "Bearer cron-secret" },
         }),
         async () => {
@@ -109,11 +109,11 @@ describe("coderouter alerts cron route", () => {
   test("returns a failure when a configured Slack delivery fails", async () => {
     await withEnv({
       CRON_SECRET: "cron-secret",
-      CMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x",
-      CMUX_ALERTS_SINK_UNCONFIGURED_ACK: undefined,
+      HMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x",
+      HMUX_ALERTS_SINK_UNCONFIGURED_ACK: undefined,
     }, async () => {
       const response = await handleCoderouterAlertsCron(
-        new Request("https://cmux.test/api/cron/coderouter-alerts", {
+        new Request("https://hmux.test/api/cron/coderouter-alerts", {
           headers: { authorization: "Bearer cron-secret" },
         }),
         runner({

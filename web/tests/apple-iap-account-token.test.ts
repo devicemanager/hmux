@@ -27,38 +27,38 @@ describe("account token eligibility", () => {
   const user = { id: "user-a", clientReadOnlyMetadata: {}, update: async () => undefined };
 
   test("lists the products for the requested app, Go only when its flag is on", async () => {
-    const response = await appleAccountTokenResponse(user, app("com.cmux.app"), deps());
+    const response = await appleAccountTokenResponse(user, app("com.hmux.app"), deps());
     expect(response).toMatchObject({ eligible: true, reason: null, currentPlan: { planId: "free", source: "none" } });
     expect(response.products).toEqual([
-      { productId: "com.cmux.app.go.monthly", planId: "go", billingPeriod: "monthly" },
-      { productId: "com.cmux.app.pro.monthly", planId: "pro", billingPeriod: "monthly" },
-      { productId: "com.cmux.app.max.monthly", planId: "max", billingPeriod: "monthly" },
+      { productId: "com.hmux.app.go.monthly", planId: "go", billingPeriod: "monthly" },
+      { productId: "com.hmux.app.pro.monthly", planId: "pro", billingPeriod: "monthly" },
+      { productId: "com.hmux.app.max.monthly", planId: "max", billingPeriod: "monthly" },
     ]);
-    // An app that sends `x-cmux-billing-periods: monthly,yearly` also gets the
+    // An app that sends `x-hmux-billing-periods: monthly,yearly` also gets the
     // yearly Pro and Max products; Go stays monthly like the web.
     const periods = accountToken.requestedBillingPeriods("monthly,yearly");
-    const both = await appleAccountTokenResponse(user, { ...app("com.cmux.app"), billingPeriods: periods }, deps());
+    const both = await appleAccountTokenResponse(user, { ...app("com.hmux.app"), billingPeriods: periods }, deps());
     expect(both.products).toEqual([
-      { productId: "com.cmux.app.go.monthly", planId: "go", billingPeriod: "monthly" },
-      { productId: "com.cmux.app.pro.monthly", planId: "pro", billingPeriod: "monthly" },
-      { productId: "com.cmux.app.pro.yearly", planId: "pro", billingPeriod: "yearly" },
-      { productId: "com.cmux.app.max.monthly", planId: "max", billingPeriod: "monthly" },
-      { productId: "com.cmux.app.max.yearly", planId: "max", billingPeriod: "yearly" },
+      { productId: "com.hmux.app.go.monthly", planId: "go", billingPeriod: "monthly" },
+      { productId: "com.hmux.app.pro.monthly", planId: "pro", billingPeriod: "monthly" },
+      { productId: "com.hmux.app.pro.yearly", planId: "pro", billingPeriod: "yearly" },
+      { productId: "com.hmux.app.max.monthly", planId: "max", billingPeriod: "monthly" },
+      { productId: "com.hmux.app.max.yearly", planId: "max", billingPeriod: "yearly" },
     ]);
     expect(accountToken.requestedBillingPeriods(null)).toEqual(["monthly"]);
-    const noGo = await appleAccountTokenResponse(user, app("dev.cmux.app.beta"), deps({ goPlanEnabled: async () => false }));
-    expect(noGo.products.map((product) => product.productId)).toEqual(["dev.cmux.app.beta.pro.monthly", "dev.cmux.app.beta.max.monthly"]);
+    const noGo = await appleAccountTokenResponse(user, app("dev.hmux.app.beta"), deps({ goPlanEnabled: async () => false }));
+    expect(noGo.products.map((product) => product.productId)).toEqual(["dev.hmux.app.beta.pro.monthly", "dev.hmux.app.beta.max.monthly"]);
   });
 
   test("a Stripe subscriber or a team-billed user is not eligible", async () => {
-    expect(await appleAccountTokenResponse(user, app("com.cmux.app"), deps({ hasActiveStripeSubscription: async () => true })))
+    expect(await appleAccountTokenResponse(user, app("com.hmux.app"), deps({ hasActiveStripeSubscription: async () => true })))
       .toMatchObject({ eligible: false, reason: "stripe_subscription_active" });
-    expect(await appleAccountTokenResponse(user, app("com.cmux.app"), deps({ billedThroughTeam: async () => true })))
+    expect(await appleAccountTokenResponse(user, app("com.hmux.app"), deps({ billedThroughTeam: async () => true })))
       .toMatchObject({ eligible: false, reason: "team_billing" });
   });
 
   test("an Apple subscriber gets the App Store manage URL", async () => {
-    const response = await appleAccountTokenResponse(user, app("com.cmux.app"), deps({
+    const response = await appleAccountTokenResponse(user, app("com.hmux.app"), deps({
       planStatus: (async () => ({
         planId: "pro", isPro: true, billingManagement: "external", billingSource: "apple",
         manageUrl: "https://apps.apple.com/account/subscriptions",
@@ -73,18 +73,18 @@ describe("account token eligibility", () => {
     const unavailable = { eligible: false, reason: "purchases_unavailable", products: [] };
 
     test("production hides products from a TestFlight (Sandbox) build of the beta app", async () => {
-      expect(await appleAccountTokenResponse(user, app("dev.cmux.app.beta", "Sandbox"), deps({ env: production })))
+      expect(await appleAccountTokenResponse(user, app("dev.hmux.app.beta", "Sandbox"), deps({ env: production })))
         .toMatchObject(unavailable);
     });
 
     test("without the environment header, production treats the beta app as Sandbox", async () => {
-      expect(await appleAccountTokenResponse(user, app("dev.cmux.app.beta"), deps({ env: production })))
+      expect(await appleAccountTokenResponse(user, app("dev.hmux.app.beta"), deps({ env: production })))
         .toMatchObject(unavailable);
     });
 
     test("APPLE_IAP_SANDBOX_ENTITLEMENTS that includes the beta app sells to it", async () => {
-      const response = await appleAccountTokenResponse(user, app("dev.cmux.app.beta", "Sandbox"), deps({
-        env: { ...production, APPLE_IAP_SANDBOX_ENTITLEMENTS: "com.cmux.app,dev.cmux.app.beta" },
+      const response = await appleAccountTokenResponse(user, app("dev.hmux.app.beta", "Sandbox"), deps({
+        env: { ...production, APPLE_IAP_SANDBOX_ENTITLEMENTS: "com.hmux.app,dev.hmux.app.beta" },
       }));
       expect(response).toMatchObject({ eligible: true, reason: null });
       expect(response.products).toHaveLength(3);
@@ -94,28 +94,28 @@ describe("account token eligibility", () => {
       const env = { ...production, APPLE_IAP_SANDBOX_ACCOUNT_EMAILS: "review@example.com" };
       const reviewer = { ...user, primaryEmail: "Review@example.com", primaryEmailVerified: true };
       for (const environment of ["Production", "Sandbox", null] as const) {
-        const response = await appleAccountTokenResponse(reviewer, app("com.cmux.app", environment), deps({ env }));
+        const response = await appleAccountTokenResponse(reviewer, app("com.hmux.app", environment), deps({ env }));
         expect(response).toMatchObject({ eligible: true, reason: null });
         expect(response.products).toHaveLength(3);
       }
       const tester = { ...user, primaryEmail: "tester@example.com", primaryEmailVerified: true };
-      expect(await appleAccountTokenResponse(tester, app("com.cmux.app", "Sandbox"), deps({ env })))
+      expect(await appleAccountTokenResponse(tester, app("com.hmux.app", "Sandbox"), deps({ env })))
         .toMatchObject(unavailable);
-      expect(await appleAccountTokenResponse(tester, app("com.cmux.app", "Production"), deps({ env })))
+      expect(await appleAccountTokenResponse(tester, app("com.hmux.app", "Production"), deps({ env })))
         .toMatchObject({ eligible: true, reason: null });
       // An unverified address could be anyone's.
-      expect(await appleAccountTokenResponse({ ...reviewer, primaryEmailVerified: false }, app("com.cmux.app", "Sandbox"), deps({ env })))
+      expect(await appleAccountTokenResponse({ ...reviewer, primaryEmailVerified: false }, app("com.hmux.app", "Sandbox"), deps({ env })))
         .toMatchObject(unavailable);
     });
 
     test("other deployments sell to every Sandbox build", async () => {
-      const response = await appleAccountTokenResponse(user, app("dev.cmux.app.beta", "Sandbox"), deps({ env: {} }));
+      const response = await appleAccountTokenResponse(user, app("dev.hmux.app.beta", "Sandbox"), deps({ env: {} }));
       expect(response.eligible).toBe(true);
       expect(response.products).toHaveLength(3);
     });
 
     test("an account reason still wins over purchases_unavailable", async () => {
-      expect(await appleAccountTokenResponse(user, app("dev.cmux.app.beta", "Sandbox"), deps({
+      expect(await appleAccountTokenResponse(user, app("dev.hmux.app.beta", "Sandbox"), deps({
         env: production, hasActiveStripeSubscription: async () => true,
       }))).toMatchObject({ eligible: false, reason: "stripe_subscription_active" });
     });
@@ -131,6 +131,6 @@ describe("account token eligibility", () => {
 
   test("unknown bundle IDs get no products; a missing header means the App Store app", () => {
     expect(requestedAppleBundleId("com.example.other")).toBeNull();
-    expect(requestedAppleBundleId(null)).toBe("com.cmux.app");
+    expect(requestedAppleBundleId(null)).toBe("com.hmux.app");
   });
 });

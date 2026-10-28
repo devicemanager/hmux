@@ -1,5 +1,5 @@
 import Foundation
-import CmuxTerminal
+import HmuxTerminal
 
 /// Lazily discovers terminal identities under a bounded coordinator visit.
 ///

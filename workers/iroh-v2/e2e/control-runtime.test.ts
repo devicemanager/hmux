@@ -49,7 +49,7 @@ beforeAll(async () => {
   const rawPublic = await crypto.subtle.exportKey("raw", keyPair.publicKey);
   fixturePublicKey = Array.from(new Uint8Array(rawPublic), byte => byte.toString(16).padStart(2, "0")).join("");
   descriptor = {
-    identity: { environment, projectId, teamId, userId, deviceId: "control-device", appNamespace: "cmux", buildTag: "test" },
+    identity: { environment, projectId, teamId, userId, deviceId: "control-device", appNamespace: "hmux", buildTag: "test" },
     endpointId: fixturePublicKey,
     identityGeneration: 0,
     metadata: { platform: "mac", displayName: "Control fixture", appVersion: "1", pairingEnabled: true, capabilities: ["directory", "relay"], relayURLs: ["https://relay.test"] },
@@ -117,7 +117,7 @@ test("the unauthenticated health route names the deployed revision and the rules
   expect(body.schemaId).toBe("health.v1");
   expect(body.environment).toBe(environment);
   expect(body.sourceRevision).toMatch(/^(?:[0-9a-f]{7,64}|unknown)$/);
-  expect(body.rules).toContain("cmux.mac-peer-inbound.v1");
+  expect(body.rules).toContain("hmux.mac-peer-inbound.v1");
   expect((await mf.dispatchFetch("https://iroh.test/v2/health", { method: "POST" })).status).toBe(405);
   expect((await mf.dispatchFetch("https://iroh.test/v2/health?x=1")).status).toBe(404);
 });
@@ -128,12 +128,12 @@ test("browser dashboard upgrade survives the Worker-to-Durable-Object boundary",
     origin: "https://cmux.com", clientInstanceId: "browser-dashboard", canManageTeam: false,
   }, "k1", dashboardTicketKey);
   const response = await mf.dispatchFetch("https://iroh.test/v2/dashboard/socket", {
-    headers: { origin: "https://cmux.com", upgrade: "websocket", "sec-websocket-protocol": `cmux-v2-dashboard, ticket.${token}` },
+    headers: { origin: "https://cmux.com", upgrade: "websocket", "sec-websocket-protocol": `hmux-v2-dashboard, ticket.${token}` },
   });
   const socket = response.webSocket;
   try {
     expect(response.status).toBe(101);
-    expect(response.headers.get("sec-websocket-protocol")).toBe("cmux-v2-dashboard");
+    expect(response.headers.get("sec-websocket-protocol")).toBe("hmux-v2-dashboard");
     expect(socket).not.toBeNull();
     const connected = new Promise<any>((resolve, reject) => {
       const timer = setTimeout(() => reject(new Error("No dashboard connected frame")), 2000);
@@ -159,7 +159,7 @@ test("browser socket admission still rejects foreign origins and expired tickets
       origin: "https://cmux.com", clientInstanceId: "expired-browser", canManageTeam: false,
     }, "k1", dashboardTicketKey);
     const response = await mf.dispatchFetch("https://iroh.test/v2/dashboard/socket", {
-      headers: { origin, upgrade: "websocket", "sec-websocket-protocol": `cmux-v2-dashboard, ticket.${token}` },
+      headers: { origin, upgrade: "websocket", "sec-websocket-protocol": `hmux-v2-dashboard, ticket.${token}` },
     });
     expect(response.status).toBe(origin === "https://cmux.com" ? 401 : 403);
     expect(response.webSocket).toBeNull();
@@ -172,7 +172,7 @@ test("dashboard closes an existing socket when membership is removed", async () 
     origin: "https://cmux.com", clientInstanceId: "revocation-browser", canManageTeam: false,
   }, "k1", dashboardTicketKey);
   const response = await mf.dispatchFetch("https://iroh.test/v2/dashboard/socket", {
-    headers: { origin: "https://cmux.com", upgrade: "websocket", "sec-websocket-protocol": `cmux-v2-dashboard, ticket.${token}` },
+    headers: { origin: "https://cmux.com", upgrade: "websocket", "sec-websocket-protocol": `hmux-v2-dashboard, ticket.${token}` },
   });
   const socket = response.webSocket!;
   try {
@@ -213,7 +213,7 @@ test("the web controller loads the directory over a real dashboard socket", asyn
   let sessionRequests = 0;
   globalThis.fetch = (async (input, init) => {
     const request = new Request(input, init);
-    expect(request.url).toBe("https://cmux-v2.debussy.workers.dev/v2/dashboard/session");
+    expect(request.url).toBe("https://hmux-v2.debussy.workers.dev/v2/dashboard/session");
     expect(request.headers.get("authorization")).toBe("Bearer fixture-access");
     const setup = await request.json() as any;
     const ticket = await issueDashboardTicket({
@@ -225,7 +225,7 @@ test("the web controller loads the directory over a real dashboard socket", asyn
   }) as typeof fetch;
   globalThis.WebSocket = class extends NodeWebSocket {
     constructor(url: string, protocols: string[]) {
-      expect(url).toBe("wss://cmux-v2.debussy.workers.dev/v2/dashboard/socket");
+      expect(url).toBe("wss://hmux-v2.debussy.workers.dev/v2/dashboard/socket");
       super(fixtureURL.href, protocols, { headers: { origin: "https://cmux.com" } });
     }
   } as unknown as typeof WebSocket;
@@ -233,7 +233,7 @@ test("the web controller loads the directory over a real dashboard socket", asyn
   let rejectDirectory!: (reason: Error) => void;
   const result = new Promise<any>((resolve, reject) => { resolveDirectory = resolve; rejectDirectory = reject; });
   const controller = new V2DashboardController({
-    origin: "https://cmux-v2.debussy.workers.dev", environment, projectId, teamId, userId,
+    origin: "https://hmux-v2.debussy.workers.dev", environment, projectId, teamId, userId,
     getStackToken: async () => "fixture-access", onDirectory: resolveDirectory,
     onError: message => rejectDirectory(new Error(message)),
   });
@@ -257,7 +257,7 @@ test("production HTTP router reaches the fixture TeamControl for directory and m
   const setup = await setupFor(requestId, directory);
   const result = await json("https://iroh.test/v2/requests", {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`, "x-cmux-v2-setup": setupHeader(setup) },
+    headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`, "x-hmux-v2-setup": setupHeader(setup) },
     body: JSON.stringify(directory),
   });
   expect(result.response.status).toBe(200);
@@ -268,7 +268,7 @@ test("production HTTP router reaches the fixture TeamControl for directory and m
   const metadataSetup = await setupFor(metadata.requestId, metadata);
   const updated = await json("https://iroh.test/v2/requests", {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`, "x-cmux-v2-setup": setupHeader(metadataSetup) },
+    headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`, "x-hmux-v2-setup": setupHeader(metadataSetup) },
     body: JSON.stringify(metadata),
   });
   expect(updated.response.status).toBe(200);
@@ -288,7 +288,7 @@ test("production control session and relay paths use the same ticket authority",
   const relaySetup = await setupFor(relay.requestId, relay);
   const relayResult = await json("https://iroh.test/v2/requests", {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`, "x-cmux-v2-setup": setupHeader(relaySetup) },
+    headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`, "x-hmux-v2-setup": setupHeader(relaySetup) },
     body: JSON.stringify(relay),
   });
   expect(relayResult.response.status).toBe(200);
@@ -302,7 +302,7 @@ test("native socket setup delivers directory and relay responses", async () => {
   const socketURL = new URL("v2/control/socket", ready);
   socketURL.protocol = "ws:";
   const socket = new NodeWebSocket(socketURL.href, {
-    headers: { authorization: `IrohTicket ${ticket}`, "x-cmux-v2-setup": setupHeader(setup) },
+    headers: { authorization: `IrohTicket ${ticket}`, "x-hmux-v2-setup": setupHeader(setup) },
   });
   await new Promise<void>((resolve, reject) => { socket.once("open", resolve); socket.once("error", reject); });
   await new Promise<void>((resolve, reject) => { socket.once("pong", () => resolve()); socket.once("error", reject); socket.ping(); });
@@ -349,7 +349,7 @@ test("a socket reclaims reservations leaked by a Durable Object reset", async ()
   const socketURL = new URL("v2/control/socket", await mf.ready);
   socketURL.protocol = "ws:";
   const socket = new NodeWebSocket(socketURL.href, {
-    headers: { authorization: `IrohTicket ${ticket}`, "x-cmux-v2-setup": setupHeader(setup) },
+    headers: { authorization: `IrohTicket ${ticket}`, "x-hmux-v2-setup": setupHeader(setup) },
   });
   const messages: any[] = [];
   socket.on("message", value => messages.push(JSON.parse(value.toString())));
@@ -426,7 +426,7 @@ test("a team change during the budget call leaves the dashboard socket usable", 
     origin: "https://cmux.com", clientInstanceId: "revision-race", canManageTeam: false,
   }, "k1", dashboardTicketKey);
   const response = await mf.dispatchFetch("https://iroh.test/v2/dashboard/socket", {
-    headers: { origin: "https://cmux.com", upgrade: "websocket", "sec-websocket-protocol": `cmux-v2-dashboard, ticket.${token}` },
+    headers: { origin: "https://cmux.com", upgrade: "websocket", "sec-websocket-protocol": `hmux-v2-dashboard, ticket.${token}` },
   });
   expect(response.status).toBe(101);
   const socket = response.webSocket!;
@@ -446,7 +446,7 @@ test("a team change during the budget call leaves the dashboard socket usable", 
     const mutated = await json("https://iroh.test/v2/requests", {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`,
-        "x-cmux-v2-setup": setupHeader(await setupFor(metadata.requestId, metadata)) },
+        "x-hmux-v2-setup": setupHeader(await setupFor(metadata.requestId, metadata)) },
       body: JSON.stringify(metadata),
     });
     expect(mutated.response.status).toBe(200);
@@ -471,7 +471,7 @@ test("a native reply rejected after its budget call leaves no gap in the deliver
   const socketURL = new URL("v2/control/socket", await mf.ready);
   socketURL.protocol = "ws:";
   const socket = new NodeWebSocket(socketURL.href, {
-    headers: { authorization: `IrohTicket ${ticket}`, "x-cmux-v2-setup": setupHeader(setup) },
+    headers: { authorization: `IrohTicket ${ticket}`, "x-hmux-v2-setup": setupHeader(setup) },
   });
   const frames: any[] = [];
   socket.on("message", (value: { toString(): string }) => frames.push(JSON.parse(value.toString())));
@@ -487,7 +487,7 @@ test("a native reply rejected after its budget call leaves no gap in the deliver
     const mutated = await json("https://iroh.test/v2/requests", {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`,
-        "x-cmux-v2-setup": setupHeader(await setupFor(metadata.requestId, metadata)) },
+        "x-hmux-v2-setup": setupHeader(await setupFor(metadata.requestId, metadata)) },
       body: JSON.stringify(metadata),
     });
     expect(mutated.response.status).toBe(200);
@@ -516,7 +516,7 @@ test("forged scope is rejected before the TeamControl binding", async () => {
 
 
 test("Mac control accepts either discovery or hosting without enabling iOS pairing", async () => {
-  for (const capabilities of [[], ["cmux.mac-devices.v1"], ["cmux.mac-host.v1"]]) {
+  for (const capabilities of [[], ["hmux.mac-devices.v1"], ["hmux.mac-host.v1"]]) {
     const device = { ...descriptor, metadata: { ...descriptor.metadata,
       pairingEnabled: false, capabilities } };
     const setup = await setupFor(`capabilities-${capabilities.length}-${capabilities.join()}`, undefined, device);
@@ -538,7 +538,7 @@ test("a team at its socket cap sheds the next socket before it mutates team stat
   const socketURL = new URL("v2/control/socket", await mf.ready);
   socketURL.protocol = "ws:";
   const holder = new NodeWebSocket(socketURL.href, {
-    headers: { authorization: `IrohTicket ${ticket}`, "x-cmux-v2-setup": setupHeader(await setupFor("cap-holder", undefined)) },
+    headers: { authorization: `IrohTicket ${ticket}`, "x-hmux-v2-setup": setupHeader(await setupFor("cap-holder", undefined)) },
   });
   const frames: any[] = [];
   holder.on("message", value => frames.push(JSON.parse(value.toString())));
@@ -551,7 +551,7 @@ test("a team at its socket cap sheds the next socket before it mutates team stat
     const aheadTicket = (await issueTicket(descriptor, "k1", ticketSigningKey, Math.floor(Date.now() / 1000) + 5)).token;
     const refused = await mf.dispatchFetch("https://iroh.test/v2/control/socket", {
       headers: { upgrade: "websocket", authorization: `IrohTicket ${aheadTicket}`,
-        "x-cmux-v2-setup": setupHeader(await setupFor("over-cap", undefined)) },
+        "x-hmux-v2-setup": setupHeader(await setupFor("over-cap", undefined)) },
     });
     expect(refused.status).toBe(429);
     expect(refused.webSocket).toBeNull();
@@ -576,12 +576,12 @@ test("the account directory reaches AccountControl and the team record through t
       accountRequestSigningInput(device, requestId, issuedAt, { setup: plain, request }, nonce)));
     const setup = { ...plain, proof: { requestId, nonce, issuedAt, signature: encodeBase64URL(new Uint8Array(signature)) } };
     return json("https://iroh.test/v2/account/requests", {
-      method: "POST", headers: { "content-type": "application/json", authorization, "x-cmux-v2-setup": setupHeader(setup) },
+      method: "POST", headers: { "content-type": "application/json", authorization, "x-hmux-v2-setup": setupHeader(setup) },
       body: JSON.stringify(request),
     });
   };
   const teamRequest = async (input: { schemaId: string; requestId: string; [key: string]: unknown }) => json("https://iroh.test/v2/requests", {
-    method: "POST", headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`, "x-cmux-v2-setup": setupHeader(await setupFor(input.requestId, input)) },
+    method: "POST", headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`, "x-hmux-v2-setup": setupHeader(await setupFor(input.requestId, input)) },
     body: JSON.stringify(input),
   });
   expect((await accountCall("account.directory.v1", "account-bearer", "Bearer stack-token")).response.status).toBe(401);
@@ -592,18 +592,18 @@ test("the account directory reaches AccountControl and the team record through t
   expect(refused.response.status).toBe(403);
   expect(refused.body.code).toBe("permission_denied");
   const before = await teamRequest({ schemaId: "directory.request.v1", requestId: "team-before-account" });
-  const hosting = { ...original, capabilities: ["cmux.mac-host.v1", "cmux.mac-devices.v1"] };
+  const hosting = { ...original, capabilities: ["hmux.mac-host.v1", "hmux.mac-devices.v1"] };
   expect((await teamRequest({ schemaId: "device.metadata.v1", requestId: "account-hosting", metadata: hosting })).body.schemaId).toBe("operation.completed.v1");
   const published = await accountCall("account.publish.v1", "account-publish");
   expect(published.response.status).toBe(200);
   expect(published.body).toMatchObject({ schemaId: "account.published.v1", device: { descriptor: { endpointId: descriptor.endpointId, metadata: { capabilities: hosting.capabilities } } } });
   const directory = await accountCall("account.directory.v1", "account-directory");
   expect(directory.body.schemaId).toBe("account.directory.result.v1");
-  expect(directory.body.directory).toMatchObject({ userId, macs: [], inboundMacs: [], rules: ["cmux.mac-account-peer.v1"] });
+  expect(directory.body.directory).toMatchObject({ userId, macs: [], inboundMacs: [], rules: ["hmux.mac-account-peer.v1"] });
   // Account traffic wrote nothing to the team: only the metadata change moved its revision.
   const after = await teamRequest({ schemaId: "directory.request.v1", requestId: "team-after-account" });
   expect(after.body.directory.revision).toBe(before.body.directory.revision + 1);
-  expect(after.body.directory.rules).toEqual(["cmux.mac-peer-inbound.v1"]);
+  expect(after.body.directory.rules).toEqual(["hmux.mac-peer-inbound.v1"]);
   // Another user's valid ticket reaches only that user's object: it cannot
   // borrow this user's device, and its own object lists nothing of this user.
   const other = { ...descriptor, identity: { ...descriptor.identity, userId: "other-user" } };
@@ -639,7 +639,7 @@ test("a forgotten Mac receives its revocation and can reopen a real recovery soc
     url.protocol = "ws:";
     const setup = await setupFor(requestId, undefined);
     const socket = new NodeWebSocket(url.href, {
-      headers: { "x-cmux-v2-setup": setupHeader(setup), authorization: `IrohTicket ${ticket}` },
+      headers: { "x-hmux-v2-setup": setupHeader(setup), authorization: `IrohTicket ${ticket}` },
     });
     return { socket, ready: nextFrame(socket, "session.ready.v1") };
   };
@@ -650,7 +650,7 @@ test("a forgotten Mac receives its revocation and can reopen a real recovery soc
     const request = { schemaId: "device.revoke.v1", requestId: "forget", deviceRecordId: device.deviceRecordId };
     const response = await mf.dispatchFetch("https://iroh.test/v2/requests", {
       method: "POST", headers: { "content-type": "application/json", authorization: `IrohTicket ${ticket}`,
-        "x-cmux-v2-setup": setupHeader(await setupFor(request.requestId, request)) },
+        "x-hmux-v2-setup": setupHeader(await setupFor(request.requestId, request)) },
       body: JSON.stringify(request),
     });
     expect(response.status).toBe(200);

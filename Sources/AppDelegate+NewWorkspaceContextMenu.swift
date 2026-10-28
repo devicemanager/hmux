@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import Foundation
 
@@ -7,9 +7,9 @@ import Foundation
 @MainActor
 final class NewWorkspaceContextMenuActionBox: NSObject {
     let windowId: UUID
-    let action: CmuxResolvedConfigAction
+    let action: HmuxResolvedConfigAction
 
-    init(windowId: UUID, action: CmuxResolvedConfigAction) {
+    init(windowId: UUID, action: HmuxResolvedConfigAction) {
         self.windowId = windowId
         self.action = action
     }
@@ -27,13 +27,13 @@ extension AppDelegate {
             ?? mainWindowContext(forShortcutEvent: event, debugSource: debugSource)
             ?? preferredMainWindowContextForWorkspaceCreation(event: event, debugSource: debugSource)
         guard let context,
-              let cmuxConfigStore = context.cmuxConfigStore else {
+              let hmuxConfigStore = context.hmuxConfigStore else {
             return false
         }
 
         guard let menu = makeNewWorkspaceContextMenu(
             context: context,
-            cmuxConfigStore: cmuxConfigStore
+            hmuxConfigStore: hmuxConfigStore
         ) else {
             return false
         }
@@ -53,13 +53,13 @@ extension AppDelegate {
         let context = contextForMainWindow(anchorView.window)
             ?? preferredMainWindowContextForWorkspaceCreation(event: nil, debugSource: debugSource)
         guard let context,
-              let cmuxConfigStore = context.cmuxConfigStore else {
+              let hmuxConfigStore = context.hmuxConfigStore else {
             return false
         }
 
         guard let menu = makeNewWorkspaceContextMenu(
             context: context,
-            cmuxConfigStore: cmuxConfigStore
+            hmuxConfigStore: hmuxConfigStore
         ) else {
             return false
         }
@@ -74,29 +74,29 @@ extension AppDelegate {
 
     func makeNewWorkspaceContextMenu(
         context: MainWindowContext,
-        cmuxConfigStore: CmuxConfigStore,
+        hmuxConfigStore: HmuxConfigStore,
         isAuthenticated: Bool? = nil
     ) -> NSMenu? {
         let isAuthenticated = isAuthenticated ?? (AppDelegate.shared?.auth?.accountFlow.isAuthenticated == true)
         let model = NewWorkspaceMenuModel.build(
-            newWorkspaceContextMenuItems: cmuxConfigStore.newWorkspaceContextMenuItems.filter { item in
+            newWorkspaceContextMenuItems: hmuxConfigStore.newWorkspaceContextMenuItems.filter { item in
                 guard case .action(let menuAction) = item,
                       case .builtIn(let builtIn) = menuAction.action.action else { return true }
                 return Self.isBuiltInActionAvailableInNewWorkspaceMenu(builtIn, isAuthenticated: isAuthenticated)
             },
-            agentChatAction: resolvedBuiltInNewAgentChatAction(cmuxConfigStore: cmuxConfigStore),
+            agentChatAction: resolvedBuiltInNewAgentChatAction(hmuxConfigStore: hmuxConfigStore),
             templateNames: savedLayoutNames(),
-            loadedActions: cmuxConfigStore.loadedActions,
-            newWorkspaceActionID: cmuxConfigStore.newWorkspaceActionID,
-            deletable: { [weak self, weak cmuxConfigStore] action in
-                guard let self, let cmuxConfigStore else { return false }
-                return isDeletableGlobalAction(action, cmuxConfigStore: cmuxConfigStore)
+            loadedActions: hmuxConfigStore.loadedActions,
+            newWorkspaceActionID: hmuxConfigStore.newWorkspaceActionID,
+            deletable: { [weak self, weak hmuxConfigStore] action in
+                guard let self, let hmuxConfigStore else { return false }
+                return isDeletableGlobalAction(action, hmuxConfigStore: hmuxConfigStore)
             }
         )
         return renderNewWorkspaceContextMenu(
             model: model,
             context: context,
-            cmuxConfigStore: cmuxConfigStore
+            hmuxConfigStore: hmuxConfigStore
         )
     }
 
@@ -104,7 +104,7 @@ extension AppDelegate {
     /// opens (not at config load) so flag and setting flips apply at once.
     /// Mirrors the command palette's gates for the same actions.
     static func isBuiltInActionAvailableInNewWorkspaceMenu(
-        _ action: CmuxSurfaceTabBarBuiltInAction,
+        _ action: HmuxSurfaceTabBarBuiltInAction,
         isAuthenticated: Bool? = nil
     ) -> Bool {
         switch action {
@@ -114,7 +114,7 @@ extension AppDelegate {
         case .newBrowser, .newAgentChat:
             return BrowserAvailabilitySettings.isEnabled()
         case .newSimulator:
-            return CmuxFeatureFlags.shared.isSimulatorEnabled
+            return HmuxFeatureFlags.shared.isSimulatorEnabled
         case .mobileConnect:
             return !MobileRemoteControlPolicy.isDisabled
         case .newWorkspace, .newTerminal, .splitRight, .splitDown,
@@ -128,19 +128,19 @@ extension AppDelegate {
     }
 
     private func resolvedBuiltInNewAgentChatAction(
-        cmuxConfigStore: CmuxConfigStore
-    ) -> CmuxResolvedConfigAction? {
+        hmuxConfigStore: HmuxConfigStore
+    ) -> HmuxResolvedConfigAction? {
         // Agent chat opens a browser surface; hide it when browser surfaces
         // are disabled, matching the command palette's browserDisabled gate.
-        guard CmuxFeatureFlags.shared.isAgentChatUIEnabled else { return nil }
+        guard HmuxFeatureFlags.shared.isAgentChatUIEnabled else { return nil }
         guard BrowserAvailabilitySettings.isEnabled() else { return nil }
-        let actionID = CmuxSurfaceTabBarBuiltInAction.newAgentChat.configID
-        let action = cmuxConfigStore.resolvedAction(id: actionID)
+        let actionID = HmuxSurfaceTabBarBuiltInAction.newAgentChat.configID
+        let action = hmuxConfigStore.resolvedAction(id: actionID)
             ?? .builtIn(.newAgentChat)
         guard shouldAppendBuiltInNewAgentChatMenuItem(
             action,
             actionID: actionID,
-            cmuxConfigStore: cmuxConfigStore
+            hmuxConfigStore: hmuxConfigStore
         ) else {
             return nil
         }
@@ -148,12 +148,12 @@ extension AppDelegate {
     }
 
     private func shouldAppendBuiltInNewAgentChatMenuItem(
-        _ action: CmuxResolvedConfigAction,
+        _ action: HmuxResolvedConfigAction,
         actionID: String,
-        cmuxConfigStore: CmuxConfigStore
+        hmuxConfigStore: HmuxConfigStore
     ) -> Bool {
         if action.newWorkspaceMenu == false { return false }
-        let configuredActionIDs = Set(cmuxConfigStore.newWorkspaceContextMenuItems.compactMap { item -> String? in
+        let configuredActionIDs = Set(hmuxConfigStore.newWorkspaceContextMenuItems.compactMap { item -> String? in
             guard case .action(let menuAction) = item else { return nil }
             return menuAction.action.id
         })
@@ -176,7 +176,7 @@ extension AppDelegate {
                 skipConfiguredAction: true
             )
         } else {
-            didExecute = executeConfiguredCmuxAction(box.action, context: context, preferredWindow: window)
+            didExecute = executeConfiguredHmuxAction(box.action, context: context, preferredWindow: window)
         }
         guard didExecute else {
             NSSound.beep()

@@ -83,25 +83,25 @@ describe("vm error choke point", () => {
       diagnostics: { provider: "freestyle", image: "sh-17agfasevrc18c8f15nn", envVar: "FREESTYLE_SANDBOX_SNAPSHOT" },
       phase: "create",
     });
-    expect(attributes["cmux.vm.error_code"]).toBe("vm_image_config_error");
-    expect(attributes["cmux.vm.error_status"]).toBe(503);
-    expect(attributes["cmux.vm.error_phase"]).toBe("create");
-    expect(attributes["cmux.vm.error_operator_fault"]).toBe(true);
-    expect(attributes["cmux.vm.error_provider"]).toBe("freestyle");
-    expect(attributes["cmux.vm.error_image"]).toBe("sh-17agfasevrc18c8f15nn");
-    expect(attributes["cmux.vm.error_env_var"]).toBe("FREESTYLE_SANDBOX_SNAPSHOT");
-    expect(attributes["cmux.vm.error_reason"]).toMatch(/not listed/);
+    expect(attributes["hmux.vm.error_code"]).toBe("vm_image_config_error");
+    expect(attributes["hmux.vm.error_status"]).toBe(503);
+    expect(attributes["hmux.vm.error_phase"]).toBe("create");
+    expect(attributes["hmux.vm.error_operator_fault"]).toBe(true);
+    expect(attributes["hmux.vm.error_provider"]).toBe("freestyle");
+    expect(attributes["hmux.vm.error_image"]).toBe("sh-17agfasevrc18c8f15nn");
+    expect(attributes["hmux.vm.error_env_var"]).toBe("FREESTYLE_SANDBOX_SNAPSHOT");
+    expect(attributes["hmux.vm.error_reason"]).toMatch(/not listed/);
 
     const userFault = fakeSpan();
     annotateVmErrorSpan(userFault.span, {
       error: "vm_billing_team_required",
       status: 409,
       message: "Select a team.",
-      action: "Select a team in cmux, then retry.",
+      action: "Select a team in hmux, then retry.",
       phase: "billing",
     });
-    expect(userFault.attributes["cmux.vm.error_code"]).toBe("vm_billing_team_required");
-    expect(userFault.attributes["cmux.vm.error_operator_fault"]).toBe(false);
+    expect(userFault.attributes["hmux.vm.error_code"]).toBe("vm_billing_team_required");
+    expect(userFault.attributes["hmux.vm.error_operator_fault"]).toBe(false);
   });
 });
 
@@ -120,7 +120,7 @@ describe("cloud_vm_provision capture", () => {
     }) as typeof fetch;
     captureVmProvisionOutcome(
       { userId: "user-1", operation: "base_open", response, span },
-      { fetch: fakeFetch, env: { CMUX_VM_ANALYTICS_FORCE: "1" } },
+      { fetch: fakeFetch, env: { HMUX_VM_ANALYTICS_FORCE: "1" } },
     );
     return { body, posthogCalled };
   }
@@ -149,7 +149,7 @@ describe("cloud_vm_provision capture", () => {
       error: "vm_billing_team_required",
       status: 409,
       message: "Select a team.",
-      action: "Select a team in cmux, then retry.",
+      action: "Select a team in hmux, then retry.",
       phase: "billing",
     });
     const { body } = captured(response);
@@ -162,9 +162,9 @@ describe("cloud_vm_provision capture", () => {
     const { span, attributes } = fakeSpan();
     const { posthogCalled } = captured(new Response("{}", { status: 200 }), span);
     expect(posthogCalled).toBe(false);
-    expect(attributes["cmux.vm.provision_operation"]).toBe("base_open");
-    expect(attributes["cmux.vm.provision_success"]).toBe(true);
-    expect(attributes["cmux.vm.provision_error_code"]).toBeUndefined();
+    expect(attributes["hmux.vm.provision_operation"]).toBe("base_open");
+    expect(attributes["hmux.vm.provision_success"]).toBe(true);
+    expect(attributes["hmux.vm.provision_error_code"]).toBeUndefined();
   });
 
   test("failures annotate the span with the error code", () => {
@@ -177,8 +177,8 @@ describe("cloud_vm_provision capture", () => {
       phase: "create",
     });
     captured(response, span);
-    expect(attributes["cmux.vm.provision_success"]).toBe(false);
-    expect(attributes["cmux.vm.provision_error_code"]).toBe("vm_create_disabled");
+    expect(attributes["hmux.vm.provision_success"]).toBe(false);
+    expect(attributes["hmux.vm.provision_error_code"]).toBe("vm_create_disabled");
   });
 
   test("a 5xx without the error header still counts as operator fault", () => {
@@ -209,7 +209,7 @@ describe("cloud_vm_provision capture", () => {
             phase: "create",
           }),
         },
-        { fetch: fakeFetch, env: { CMUX_VM_ANALYTICS_FORCE: "1" } },
+        { fetch: fakeFetch, env: { HMUX_VM_ANALYTICS_FORCE: "1" } },
       );
       const properties = seen.body?.properties as Record<string, unknown>;
       expect(properties.operation).toBe(operation);

@@ -13,12 +13,12 @@
 # Mac; the Mac can accept input the phone never repaints after).
 #
 # Steps and the shipped regression class each one guards:
-#   1 echo marker round trip      input stall        (cmux #12927)
-#   2 burst output + scrollback   byte-tee append    (cmux #13432)
-#   3 alt-screen enter/exit       alt-screen freeze  (cmux #12844)
+#   1 echo marker round trip      input stall        (hmux #12927)
+#   2 burst output + scrollback   byte-tee append    (hmux #13432)
+#   3 alt-screen enter/exit       alt-screen freeze  (hmux #12844)
 #   4 Ctrl-C a running command    control keys cross the transport
-#   5 background/foreground       blank replay       (cmux #14030)
-#   6 marker after reconnect      recovery cooldown  (cmux #14124)
+#   5 background/foreground       blank replay       (hmux #14030)
+#   6 marker after reconnect      recovery cooldown  (hmux #14124)
 #
 # Waits are bounded polls on observable state (OCR text or Mac screen text),
 # never fixed sleeps standing in for synchronization. Failures name the step.
@@ -28,11 +28,11 @@ TAG=""
 SIM_UDID=""
 EVIDENCE_DIR=""
 BUNDLE_ID=""
-WORKSPACE_ID="${CMUX_E2E_WORKSPACE_ID:-}"
-SURFACE_ID="${CMUX_E2E_SURFACE_ID:-}"
+WORKSPACE_ID="${HMUX_E2E_WORKSPACE_ID:-}"
+SURFACE_ID="${HMUX_E2E_SURFACE_ID:-}"
 STEP_TIMEOUT=45
-BACKGROUND_SECONDS="${CMUX_E2E_BACKGROUND_SECONDS:-0}"
-VIDEO_PATH="${CMUX_E2E_VIDEO:-}"
+BACKGROUND_SECONDS="${HMUX_E2E_BACKGROUND_SECONDS:-0}"
+VIDEO_PATH="${HMUX_E2E_VIDEO:-}"
 VIDEO_PID=""
 
 usage() {
@@ -68,8 +68,8 @@ done
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-SOCKET="/tmp/cmux-debug-${TAG}.sock"
-AXE="${CMUX_E2E_AXE:-axe}"
+SOCKET="/tmp/hmux-debug-${TAG}.sock"
+AXE="${HMUX_E2E_AXE:-axe}"
 mkdir -p "$EVIDENCE_DIR"
 
 cleanup() {
@@ -145,11 +145,11 @@ phone_text() {
 
 mac_text() {
   if [[ -n "$WORKSPACE_ID" ]]; then
-    CMUX_TAG="$TAG" "$REPO_ROOT/scripts/cmux-debug-cli.sh" read-screen \
+    HMUX_TAG="$TAG" "$REPO_ROOT/scripts/hmux-debug-cli.sh" read-screen \
       --workspace "$WORKSPACE_ID" --surface "$SURFACE_ID" --lines 40 \
       2>/dev/null || true
   else
-    CMUX_TAG="$TAG" "$REPO_ROOT/scripts/cmux-debug-cli.sh" read-screen 2>/dev/null || true
+    HMUX_TAG="$TAG" "$REPO_ROOT/scripts/hmux-debug-cli.sh" read-screen 2>/dev/null || true
   fi
 }
 
@@ -268,7 +268,7 @@ wait_for_app_ready_trace() {
   local data_container
   data_container="$(xcrun simctl get_app_container "$SIM_UDID" "$BUNDLE_ID" data 2>/dev/null || true)"
   [[ -n "$data_container" ]] || return 1
-  local log_path="$data_container/Library/Application Support/cmux-debug.log"
+  local log_path="$data_container/Library/Application Support/hmux-debug.log"
   local surface_prefix="${target_surface:0:8}"
   surface_prefix="${surface_prefix,,}"
   local deadline=$(( $(date +%s) + STEP_TIMEOUT ))
@@ -324,15 +324,15 @@ type_line() {
 step "preflight"
 ocr_build
 [[ -S "$SOCKET" ]] || fail "tagged Mac debug socket missing: $SOCKET"
-CMUX_TAG="$TAG" "$REPO_ROOT/scripts/cmux-debug-cli.sh" identify >/dev/null \
+HMUX_TAG="$TAG" "$REPO_ROOT/scripts/hmux-debug-cli.sh" identify >/dev/null \
   || fail "tagged Mac app did not answer identify on $SOCKET"
 xcrun simctl list devices | grep -F "$SIM_UDID" | grep -q "(Booted)" \
   || fail "simulator $SIM_UDID is not booted"
 if [[ -z "$BUNDLE_ID" ]]; then
-  # The tagged dev app is the only dev.cmux.* bundle on this isolated sim.
+  # The tagged dev app is the only dev.hmux.* bundle on this isolated sim.
   BUNDLE_ID="$(xcrun simctl listapps "$SIM_UDID" 2>/dev/null \
-    | grep -oE 'dev\.cmux[A-Za-z0-9\.-]*' | sort -u | head -1)"
-  [[ -n "$BUNDLE_ID" ]] || fail "no dev.cmux bundle installed on simulator"
+    | grep -oE 'dev\.hmux[A-Za-z0-9\.-]*' | sort -u | head -1)"
+  [[ -n "$BUNDLE_ID" ]] || fail "no dev.hmux bundle installed on simulator"
 fi
 echo "bundle: $BUNDLE_ID"
 # Establish terminal input deterministically: on a cold boot nothing is first
@@ -452,7 +452,7 @@ TRACE_LOG_PATH=""
 TRACE_START_OFFSET=0
 DATA_CONTAINER="$(xcrun simctl get_app_container "$SIM_UDID" "$BUNDLE_ID" data 2>/dev/null || true)"
 if [[ -n "$DATA_CONTAINER" ]]; then
-  TRACE_LOG_PATH="$DATA_CONTAINER/Library/Application Support/cmux-debug.log"
+  TRACE_LOG_PATH="$DATA_CONTAINER/Library/Application Support/hmux-debug.log"
   if [[ -f "$TRACE_LOG_PATH" ]]; then
     TRACE_START_OFFSET="$(wc -c < "$TRACE_LOG_PATH" | tr -d ' ')"
   fi

@@ -1,4 +1,4 @@
-import CmuxBrowser
+import HmuxBrowser
 import Darwin
 import Foundation
 import WebKit
@@ -16,8 +16,8 @@ final class BrowserHiddenWebViewMemoryBudgetCoordinator {
 
     init(
         policyDefaults: UserDefaults = .standard,
-        processIdentifier: @escaping @MainActor (WKWebView) -> Int? = { CmuxWebContentProcessIdentifier.pid(for: $0) },
-        footprintBytes: @escaping (Int) -> UInt64? = { CmuxTopProcessSnapshot.resourceUsage(for: $0)?.ri_phys_footprint },
+        processIdentifier: @escaping @MainActor (WKWebView) -> Int? = { HmuxWebContentProcessIdentifier.pid(for: $0) },
+        footprintBytes: @escaping (Int) -> UInt64? = { HmuxTopProcessSnapshot.resourceUsage(for: $0)?.ri_phys_footprint },
         browserPanels: @escaping @MainActor () -> [BrowserPanel]
     ) {
         self.policyDefaults = policyDefaults
@@ -51,7 +51,7 @@ final class BrowserHiddenWebViewMemoryBudgetCoordinator {
             return count + (discarded ? 1 : 0)
         }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "browser.discard.budget budgetBytes=\(planner.budgetBytes) " +
             "hiddenBytes=\(plan.hiddenFootprintBytes) " +
             "remainingBytes=\(plan.remainingHiddenFootprintBytes) " +

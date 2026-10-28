@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxCloudMachines
+import HmuxCloud
+import HmuxCloudMachines
 import Foundation
 
 /// One bounded generation of formatted readings, shared across rows and machines.

@@ -60,7 +60,7 @@ enum LocalTmuxRegistryError: Error, CustomStringConvertible {
 
 /// File-backed source of truth for opt-in local tmux sessions.
 ///
-/// The registry is deliberately separate from cmux's layout snapshot. Its
+/// The registry is deliberately separate from hmux's layout snapshot. Its
 /// UUID remains stable when runtime workspace/surface IDs are regenerated, and
 /// its 0700/0600 boundary is the authentication boundary for headless clients.
 struct LocalTmuxSessionRegistry {
@@ -72,12 +72,12 @@ struct LocalTmuxSessionRegistry {
         self.fileManager = fileManager
     }
 
-    /// The registry at `~/.cmux/<directoryName>`, or at the path in
+    /// The registry at `~/.hmux/<directoryName>`, or at the path in
     /// `overrideVariable` when set. local-zellij keeps its records in the
     /// same format under its own directory.
     static func live(
         directoryName: String = "local-tmux",
-        overrideVariable: String = "CMUX_LOCAL_TMUX_STATE_DIR",
+        overrideVariable: String = "HMUX_LOCAL_TMUX_STATE_DIR",
         environment: [String: String] = ProcessInfo.processInfo.environment,
         fileManager: FileManager = .default
     ) -> LocalTmuxSessionRegistry {
@@ -90,7 +90,7 @@ struct LocalTmuxSessionRegistry {
             )
         } else {
             root = fileManager.homeDirectoryForCurrentUser
-                .appendingPathComponent(".cmux", isDirectory: true)
+                .appendingPathComponent(".hmux", isDirectory: true)
                 .appendingPathComponent(directoryName, isDirectory: true)
         }
         return LocalTmuxSessionRegistry(rootURL: root, fileManager: fileManager)

@@ -4,7 +4,7 @@
 // repl-host.js refuses a timed-out cell's leftover work (an await that
 // resumes after its cell timed out) every host and driver call. It finds
 // the owner on the stack: each cell body runs as a function named
-// __cmuxCell<seq>, and an engine with async stack traces names it under
+// __hmuxCell<seq>, and an engine with async stack traces names it under
 // every async function the cell awaits, also inside the runtime's own
 // async functions (tabs.list awaits before it calls the driver). Before
 // macOS 27, JavaScriptCore records no async stack trace (its
@@ -28,7 +28,7 @@
 // as it does on an engine with async stacks.
 (function (root) {
   "use strict";
-  const ns = (root.CmuxBrowserRepl = root.CmuxBrowserRepl || {});
+  const ns = (root.HmuxBrowserRepl = root.HmuxBrowserRepl || {});
   const StackError = Error;
   const nativeToString = Function.prototype.toString;
 
@@ -90,23 +90,23 @@
     },
   });
 
-  // The texts the rewrite inserts. Each names __cmuxT, so a function's
+  // The texts the rewrite inserts. Each names __hmuxT, so a function's
   // source as written is its rewritten source with every one removed.
   const T = {
-    bodyOpen: ";const __cmuxK=__cmuxT.enter();try{",
-    bodyClose: "}finally{__cmuxT.leave(__cmuxK)}",
-    arrowOpen: "{const __cmuxK=__cmuxT.enter();try{return(/*__cmuxT*/",
-    arrowClose: "/*__cmuxT*/)}finally{__cmuxT.leave(__cmuxK)}}",
-    back: "__cmuxT.back(__cmuxK,",
-    leave: "__cmuxT.leave(__cmuxK,",
-    leaveBare: " __cmuxT.leave(__cmuxK)",
-    close: "/*__cmuxT*/)",
-    resumed: "__cmuxT.back(__cmuxK);",
-    iter: "__cmuxT.iter(__cmuxK,",
-    loopBodyOpen: "{/*__cmuxT*/__cmuxT.back(__cmuxK);",
-    blockClose: "/*__cmuxT*/}",
-    loopOpen: "{/*__cmuxT*/",
-    loopClose: ";__cmuxT.back(__cmuxK)/*__cmuxT*/}",
+    bodyOpen: ";const __hmuxK=__hmuxT.enter();try{",
+    bodyClose: "}finally{__hmuxT.leave(__hmuxK)}",
+    arrowOpen: "{const __hmuxK=__hmuxT.enter();try{return(/*__hmuxT*/",
+    arrowClose: "/*__hmuxT*/)}finally{__hmuxT.leave(__hmuxK)}}",
+    back: "__hmuxT.back(__hmuxK,",
+    leave: "__hmuxT.leave(__hmuxK,",
+    leaveBare: " __hmuxT.leave(__hmuxK)",
+    close: "/*__hmuxT*/)",
+    resumed: "__hmuxT.back(__hmuxK);",
+    iter: "__hmuxT.iter(__hmuxK,",
+    loopBodyOpen: "{/*__hmuxT*/__hmuxT.back(__hmuxK);",
+    blockClose: "/*__hmuxT*/}",
+    loopOpen: "{/*__hmuxT*/",
+    loopClose: ";__hmuxT.back(__hmuxK)/*__hmuxT*/}",
   };
   const INSERTED = new RegExp(
     Object.values(T)
@@ -115,7 +115,7 @@
       .join("|"),
     "g",
   );
-  const asWritten = (source) => (source.includes("__cmuxT") ? source.replace(INSERTED, "") : source);
+  const asWritten = (source) => (source.includes("__hmuxT") ? source.replace(INSERTED, "") : source);
 
   function acornApi() {
     const acorn = root.acorn || (ns.vendor && ns.vendor.acorn);
@@ -225,10 +225,10 @@
   // and where it does, nothing is rewritten.
   let needed = false;
   let toStringInstalled = false;
-  (async function __cmuxAsyncOwnerProbe() {
+  (async function __hmuxAsyncOwnerProbe() {
     await (async () => {
       await null;
-      needed = !/__cmuxAsyncOwnerProbe/.test(String(new StackError().stack || ""));
+      needed = !/__hmuxAsyncOwnerProbe/.test(String(new StackError().stack || ""));
     })();
   })();
 
@@ -252,11 +252,11 @@
       return needed;
     },
     // A runtime script, rewritten when this engine needs it; it then runs
-    // with `__cmuxT` bound to the tracker.
+    // with `__hmuxT` bound to the tracker.
     prepareScript(source) {
       if (!needed) return source;
       installToString();
-      return `(function (__cmuxT) {${instrument(source)}\n}).call(this, CmuxBrowserRepl.asyncOwner.tracker);`;
+      return `(function (__hmuxT) {${instrument(source)}\n}).call(this, HmuxBrowserRepl.asyncOwner.tracker);`;
     },
     // A cell's body, rewritten when this engine needs it (its top level
     // then uses the token the cell's function declares), else as given.

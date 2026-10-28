@@ -1,4 +1,4 @@
-name: cmux-tui publish pypi
+name: hmux-tui publish pypi
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ on:
         required: true
         type: string
       artifact_run_id:
-        description: "Successful cmux-tui release run containing verified packages"
+        description: "Successful hmux-tui release run containing verified packages"
         required: true
         type: string
 
@@ -46,7 +46,7 @@ jobs:
             exit 1
           }
           git fetch --force origin main --tags
-          tag="cmux-tui-v$DISPATCH_VERSION"
+          tag="hmux-tui-v$DISPATCH_VERSION"
           expected_ref="refs/tags/$tag"
           if [[ "$GITHUB_REF" != "$expected_ref" ]]; then
             echo "Refusing to publish PyPI from $GITHUB_REF; dispatch this workflow on $expected_ref." >&2
@@ -83,7 +83,7 @@ jobs:
             exit 1
           }
 
-          artifact_path=".github/workflows/cmux-tui-release.yml"
+          artifact_path=".github/workflows/hmux-tui-release.yml"
           artifact_status=""
           artifact_conclusion=""
           release_sha="$RELEASE_SHA"
@@ -135,7 +135,7 @@ jobs:
       id-token: write
     environment:
       name: pypi-tui
-      url: https://pypi.org/p/cmux
+      url: https://pypi.org/p/hmux
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -152,7 +152,7 @@ jobs:
 
       - name: Revalidate PyPI wheel contract
         run: |
-          python3 cmux-tui/dist/scripts/validate_package_contract.py \
+          python3 hmux-tui/dist/scripts/validate_package_contract.py \
             --pypi-wheels dist \
             --version "${{ inputs.version }}"
 
@@ -160,7 +160,7 @@ jobs:
         run: |
           cat <<'EOF'
           PyPI Trusted Publisher required:
-          - Project: cmux
+          - Project: hmux
           - Repository: manaflow-ai/cmux
           - Workflow: tui-publish-pypi.yml
           - Environment: pypi-tui
@@ -175,4 +175,4 @@ jobs:
       - name: Verify every PyPI wheel after upload
         env:
           VERSION: ${{ inputs.version }}
-        run: bash cmux-tui/scripts/verify-pypi-tui-upload.sh dist "$VERSION"
+        run: bash hmux-tui/scripts/verify-pypi-tui-upload.sh dist "$VERSION"

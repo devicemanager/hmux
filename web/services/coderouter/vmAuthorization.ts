@@ -1,11 +1,11 @@
 import { decodeJwt, decodeProtectedHeader, jwtVerify, SignJWT } from "jose";
 import { createSecretKey, randomUUID } from "node:crypto";
 
-export const VM_AUTHORIZATION_HEADER = "x-cmux-authorization";
-export const VM_AUTHORIZATION_AUDIENCE = "cmux-vm-model-plane";
+export const VM_AUTHORIZATION_HEADER = "x-hmux-authorization";
+export const VM_AUTHORIZATION_AUDIENCE = "hmux-vm-model-plane";
 export const VM_AUTHORIZATION_ALGORITHM = "HS256" as const;
 export const VM_AUTHORIZATION_LIFETIME_SECONDS = 30 * 24 * 60 * 60;
-const TOKEN_TYPE = "cmux-vm+jwt";
+const TOKEN_TYPE = "hmux-vm+jwt";
 const KEY_ID = /^[a-zA-Z0-9_-]{1,64}$/;
 
 export type VmAuthorizationClaims = {
@@ -24,8 +24,8 @@ function secretKey(encoded: string): ReturnType<typeof createSecretKey> {
 }
 
 function signingKey() {
-  const raw = process.env.CMUX_VM_AUTH_SIGNING_KEY?.trim();
-  const kid = process.env.CMUX_VM_AUTH_SIGNING_KEY_ID?.trim();
+  const raw = process.env.HMUX_VM_AUTH_SIGNING_KEY?.trim();
+  const kid = process.env.HMUX_VM_AUTH_SIGNING_KEY_ID?.trim();
   if (!raw || !kid || !KEY_ID.test(kid)) throw new Error("VM authorization signing key and key id are required");
   return { key: secretKey(raw), kid };
 }
@@ -34,7 +34,7 @@ function verificationKey(kid: string) {
   if (!KEY_ID.test(kid)) throw new Error("invalid VM authorization key id");
   const current = signingKey();
   if (current.kid === kid) return current.key;
-  const raw = process.env.CMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS;
+  const raw = process.env.HMUX_VM_AUTH_SIGNING_PREVIOUS_KEYS;
   if (raw) {
     // Do not echo configuration or JOSE input in errors.
     let keys: unknown;
@@ -66,7 +66,7 @@ export async function signVmAuthorization(input: {
   }
   return await new SignJWT({ vm_id: input.vmId, team_id: input.teamId, owner_id: input.ownerId })
     .setProtectedHeader({ alg: VM_AUTHORIZATION_ALGORITHM, typ: TOKEN_TYPE, kid: key.kid })
-    .setIssuer("cmux")
+    .setIssuer("hmux")
     .setAudience(VM_AUTHORIZATION_AUDIENCE)
     .setJti(randomUUID())
     .setIssuedAt(iat)
@@ -129,7 +129,7 @@ export async function verifyVmAuthorization(token: string, now = new Date()): Pr
     const { payload } = await jwtVerify(token, verificationKey(header.kid), {
       algorithms: [VM_AUTHORIZATION_ALGORITHM],
       typ: TOKEN_TYPE,
-      issuer: "cmux",
+      issuer: "hmux",
       audience: VM_AUTHORIZATION_AUDIENCE,
       requiredClaims: ["vm_id", "team_id", "owner_id", "jti", "iat", "exp"],
       maxTokenAge: VM_AUTHORIZATION_LIFETIME_SECONDS,

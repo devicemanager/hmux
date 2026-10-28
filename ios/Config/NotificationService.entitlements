@@ -4,11 +4,11 @@
 <dict>
     <key>keychain-access-groups</key>
     <array>
-        <string>$(AppIdentifierPrefix)$(CMUX_HOST_BUNDLE_IDENTIFIER)</string>
+        <string>$(AppIdentifierPrefix)$(HMUX_HOST_BUNDLE_IDENTIFIER)</string>
     </array>
     <key>com.apple.security.application-groups</key>
     <array>
-        <string>group.dev.cmux.ios</string>
+        <string>group.dev.hmux.ios</string>
     </array>
 </dict>
 </plist>

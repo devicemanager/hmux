@@ -26,14 +26,14 @@ async function checkpoint(attempt: ClaimedRunAttempt, value: Record<string, unkn
  * same task twice. An interrupted nonzero command requires a new attempt. */
 export function replaySafeGuestCommand(attemptId: string, script: string): string {
   if (!/^[0-9a-f-]{36}$/i.test(attemptId)) throw new Error("Invalid attempt identity");
-  const dir = `/tmp/cmux-attempt-${attemptId}`;
+  const dir = `/tmp/hmux-attempt-${attemptId}`;
   const inner = [
     `if [ -f ${quote(`${dir}/completed`)} ]; then cat ${quote(`${dir}/completed`)}; exit 0; fi`,
-    `if [ -f ${quote(`${dir}/started`)} ]; then echo 'cmux-attempt-interrupted' >&2; exit 76; fi`,
+    `if [ -f ${quote(`${dir}/started`)} ]; then echo 'hmux-attempt-interrupted' >&2; exit 76; fi`,
     `touch ${quote(`${dir}/started`)}`,
-    `bash -se >${quote(`${dir}/receipt.tmp`)} 2>${quote(`${dir}/stderr`)} <<'CMUX_RUN_SCRIPT'`,
+    `bash -se >${quote(`${dir}/receipt.tmp`)} 2>${quote(`${dir}/stderr`)} <<'HMUX_RUN_SCRIPT'`,
     script,
-    "CMUX_RUN_SCRIPT",
+    "HMUX_RUN_SCRIPT",
     `code=$?; if [ "$code" != 0 ]; then exit "$code"; fi`,
     `mv ${quote(`${dir}/receipt.tmp`)} ${quote(`${dir}/completed`)}`,
     `cat ${quote(`${dir}/completed`)}`,
@@ -74,8 +74,8 @@ async function executeClaim(attempt: ClaimedRunAttempt, client: RunCloudClient) 
   }
   const stdout = response.stdout;
   const sourceReceipt = await labelRunStage("source-receipt", async () => parseSourceVerificationReceipt(stdout, spec));
-  if (!stdout.includes(`cmux-run:${marker}`)) throw Object.assign(new Error("Run completion marker missing"), { runStage: "completion-marker" });
-  const result = { sourceReceipt, commandReceipt: { commandDigest: `sha256:${createHash("sha256").update(command).digest("hex")}`, stdout: `cmux-run:${marker}\n` } };
+  if (!stdout.includes(`hmux-run:${marker}`)) throw Object.assign(new Error("Run completion marker missing"), { runStage: "completion-marker" });
+  const result = { sourceReceipt, commandReceipt: { commandDigest: `sha256:${createHash("sha256").update(command).digest("hex")}`, stdout: `hmux-run:${marker}\n` } };
   await labelRunStage("artifact", () => storeRunArtifact({ runId: attempt.runId, attemptId: attempt.attemptId, name: "execution-receipt", payload: result }));
   return { providerVmId, result, retainMs: spec.resources.retainMs };
 }

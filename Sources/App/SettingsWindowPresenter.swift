@@ -1,5 +1,5 @@
 import AppKit
-import CmuxTestSupport
+import HmuxTestSupport
 import os
 
 /// Outcome of a Settings show request. Every request ends in exactly one of
@@ -37,9 +37,9 @@ enum SettingsWindowShowResult: Equatable {
 /// removes it by design.
 @MainActor
 final class SettingsWindowPresenter: NSObject {
-    static let windowIdentifier = "cmux.settings"
+    static let windowIdentifier = "hmux.settings"
     static let minimumSize = NSSize(width: 820, height: 540)
-    private static let frameAutosaveName = "cmux.settings"
+    private static let frameAutosaveName = "hmux.settings"
     /// One reuse-or-create pass plus one recreate-from-scratch pass. Creation
     /// is synchronous, so more attempts cannot help: if two consecutive fresh
     /// windows refuse to order in, AppKit itself is wedged and we fail loudly.
@@ -55,10 +55,10 @@ final class SettingsWindowPresenter: NSObject {
     static let shared = SettingsWindowPresenter()
     /// Release-safe diagnostics so intermittent "Settings won't open" reports
     /// become attributable from
-    /// `log show --predicate 'subsystem == "com.cmuxterm.app" && category == "Settings"'`.
+    /// `log show --predicate 'subsystem == "com.hmuxterm.app" && category == "Settings"'`.
     /// Internal (not private) so the geometry/recovery extension file logs
     /// through the same channel.
-    nonisolated static let log = Logger(subsystem: "com.cmuxterm.app", category: "Settings")
+    nonisolated static let log = Logger(subsystem: "com.hmuxterm.app", category: "Settings")
 
     private let windowFactory: @MainActor (SettingsWindowPresenter) -> NSWindow
     /// Strong while open: the presenter owns the window's lifetime. Cleared
@@ -133,7 +133,7 @@ final class SettingsWindowPresenter: NSObject {
         activateApp: Bool = true
     ) -> SettingsWindowShowResult {
 #if DEBUG
-        cmuxDebugLog("settings.window.show path=appkitWindow")
+        hmuxDebugLog("settings.window.show path=appkitWindow")
 #endif
         let result = performShow(navigationTarget: navigationTarget, activateApp: activateApp)
 #if DEBUG
@@ -146,7 +146,7 @@ final class SettingsWindowPresenter: NSObject {
             presented = true
         }
         _ = UITestCaptureSink().mutateJSONObjectIfConfigured(
-            envKey: "CMUX_UI_TEST_SETTINGS_OPEN_CAPTURE_PATH"
+            envKey: "HMUX_UI_TEST_SETTINGS_OPEN_CAPTURE_PATH"
         ) { payload in
             payload["opened"] = presented
             payload["target"] = navigationTarget?.rawValue ?? ""
@@ -363,7 +363,7 @@ final class SettingsWindowPresenter: NSObject {
         window.isRestorable = false
         window.minSize = Self.minimumSize
         window.contentMinSize = Self.minimumSize
-        window.adoptCmuxPeerWindowLevel()
+        window.adoptHmuxPeerWindowLevel()
         if !window.setFrameUsingName(Self.frameAutosaveName) {
             window.center()
         }
@@ -403,7 +403,7 @@ final class SettingsWindowPresenter: NSObject {
             // waits out the transition via `awaitVisibility(of:timeout:)`.
             window.deminiaturize(nil)
         }
-        window.adoptCmuxPeerWindowLevel()
+        window.adoptHmuxPeerWindowLevel()
         clampToVisibleAreaIfNeeded(window)
         window.orderFrontRegardless()
     }

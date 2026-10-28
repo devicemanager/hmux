@@ -3,7 +3,7 @@
 
 This is a test fixture, not a shipping package or a replacement for app integration.
 The temporary package contains verbatim production declarations and the same fake-capability
-tests wired into cmuxTests. It makes the remaining value-package prerequisite explicit while
+tests wired into hmuxTests. It makes the remaining value-package prerequisite explicit while
 proving that navigation no longer needs app/window/catalog implementations to execute.
 """
 
@@ -34,7 +34,7 @@ def main():
             content = text
             name = Path(path).name
         if test:
-            start = content.index("#if canImport(cmux_DEV)")
+            start = content.index("#if canImport(hmux_DEV)")
             end = content.index("#endif", start) + len("#endif")
             content = content[:start] + "@testable import CloudNavigationProbe" + content[end:]
         target = (tests if test else sources) / name
@@ -49,20 +49,20 @@ def main():
                  "SurfaceResourceGroup+CloudNavigation"]:
         stage(f"Sources/Cloud/{name}.swift")
     for name in ["CloudTerminalNavigationHost", "CloudTerminalNavigationScheduling"]:
-        stage(f"Packages/macOS/CmuxCloud/Sources/CmuxCloud/Link/{name}.swift")
-    stage("Packages/macOS/CmuxSurfaceCatalogModel/Sources/CmuxSurfaceCatalogModel/SurfaceMachineID.swift", "enum SurfaceMachineID:")
+        stage(f"Packages/macOS/HmuxCloud/Sources/HmuxCloud/Link/{name}.swift")
+    stage("Packages/macOS/HmuxSurfaceCatalogModel/Sources/HmuxSurfaceCatalogModel/SurfaceMachineID.swift", "enum SurfaceMachineID:")
     for kind, name in [("enum", "SurfaceResourceKind"),
                        ("enum", "SurfaceLifecycle"), ("struct", "SurfaceAgentBadge"),
                        ("struct", "CloudCreationAttachment"), ("struct", "SurfaceResource"),
                        ("struct", "SurfaceResourceID"), ("struct", "SurfaceRemoteWorkspace"),
                        ("struct", "SurfaceRemoteView"), ("struct", "SurfaceProjection"),
                        ("enum", "SurfaceSplitDirection"), ("enum", "SurfaceCatalogError")]:
-        stage("Packages/macOS/CmuxSurfaceCatalogModel/Sources/CmuxSurfaceCatalogModel/SurfaceCatalogModel.swift", f"{kind} {name}:")
-    stage("Packages/macOS/CmuxSurfaceCatalogModel/Sources/CmuxSurfaceCatalogModel/SurfaceResourcePlacement.swift")
+        stage("Packages/macOS/HmuxSurfaceCatalogModel/Sources/HmuxSurfaceCatalogModel/SurfaceCatalogModel.swift", f"{kind} {name}:")
+    stage("Packages/macOS/HmuxSurfaceCatalogModel/Sources/HmuxSurfaceCatalogModel/SurfaceResourcePlacement.swift")
     stage("Sources/Surfaces/SurfaceCatalog+Groups.swift", "struct SurfaceResourceGroup:")
     stage("Sources/Surfaces/CloudWorkspaceLayoutTranslator.swift", "indirect enum SurfaceProjectionLayout:")
     for name in ["CloudTerminalNavigationFixture", "CloudTerminalNavigationCapabilityTests"]:
-        stage(f"cmuxTests/{name}.swift", test=True)
+        stage(f"hmuxTests/{name}.swift", test=True)
     package = '''// swift-tools-version: 6.0
 import PackageDescription
 let package = Package(

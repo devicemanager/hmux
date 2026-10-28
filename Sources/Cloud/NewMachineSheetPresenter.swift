@@ -1,8 +1,8 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import SwiftUI
 
-/// Shows one ``NewMachineSheet`` at a time as a window sheet on the main cmux
+/// Shows one ``NewMachineSheet`` at a time as a window sheet on the main hmux
 /// window (floating panel when no main window is on screen) and closes it
 /// when the model finishes. The sheet only collects the choice: Create hands
 /// the request to ``MachineCreateCoordinator`` and the sheet ends at once, so
@@ -65,7 +65,7 @@ final class NewMachineSheetPresenter: NSObject, NewMachineSheetPresenting {
                 autoWelcomeIfNeeded: false
               ) else { return nil }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "cloud.create.reserve workspace=\(workspace.id.uuidString) focus=1 " +
             "time=\(Date().timeIntervalSince1970)"
         )
@@ -83,7 +83,7 @@ final class NewMachineSheetPresenter: NSObject, NewMachineSheetPresenting {
     /// Forks a machine in the background: the Machines panel shows a pending
     /// "Fork of …" row and a reserved workspace shows the loading card at once,
     /// both before any process or network work, and the copy adopts them when
-    /// `cmux vm fork` prints its machine receipt. The row menu and the command
+    /// `hmux vm fork` prints its machine receipt. The row menu and the command
     /// palette call this; the New Machine sheet reaches the same coordinator.
     @discardableResult
     func startFork(sourceMachineID: String, sourceName: String?, preferredWindow: NSWindow?) -> Bool {
@@ -171,7 +171,7 @@ final class NewMachineSheetPresenter: NSObject, NewMachineSheetPresenting {
 #endif
         let sheet = CloudSheetWindow(rootView: NewMachineSheet(model: model, allowlistInitiallyExpanded: allowlistExpanded))
         let window = sheet.window
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.newMachine")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.newMachine")
         window.styleMask = [.titled]
         window.title = model.isBaseSetup
             ? String(localized: "machines.new.title.base", defaultValue: "Set Up Base")
@@ -195,7 +195,7 @@ final class NewMachineSheetPresenter: NSObject, NewMachineSheetPresenting {
         if NSApp.activationPolicy() == .regular {
             NSApp.activate(ignoringOtherApps: true)
         }
-        let host = NSApp.cmuxMainWindowForModalPresentation(preferring: preferredWindow)
+        let host = NSApp.hmuxMainWindowForModalPresentation(preferring: preferredWindow)
 #if DEBUG
         let hostingBuiltAt = ProcessInfo.processInfo.systemUptime
 #endif
@@ -210,7 +210,7 @@ final class NewMachineSheetPresenter: NSObject, NewMachineSheetPresenting {
         }
 #if DEBUG
         let now = ProcessInfo.processInfo.systemUptime
-        cmuxDebugLog(
+        hmuxDebugLog(
             "cloud.newMachine.timing build_ms=\(Int((hostingBuiltAt - presentStartedAt) * 1000)) " +
             "begin_sheet_ms=\(Int((now - hostingBuiltAt) * 1000)) " +
             "size=\(Int(window.frame.width))x\(Int(window.frame.height))"
@@ -220,7 +220,7 @@ final class NewMachineSheetPresenter: NSObject, NewMachineSheetPresenting {
 
     /// The one path every "New Machine" entrypoint (Machines panel ＋, the
     /// command palette) goes through: paywall check, model, sheet. Create
-    /// launches `cmux vm new …` through the shared coordinator; the Machines
+    /// launches `hmux vm new …` through the shared coordinator; the Machines
     /// panel shows the pending row and the outcome, whichever window it is in.
     /// `plan`, `memoryOptionsMb`, `lockedMemoryOptionsMb` and
     /// `memoryUpgradePlanId` come from whatever fleet page the caller already

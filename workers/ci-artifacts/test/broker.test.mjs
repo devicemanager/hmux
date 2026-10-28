@@ -113,7 +113,7 @@ async function fixture(t, options = {}) {
       }
       if (url.pathname === `${root}/actions/runs/456`) return Response.json({
         path: state.wrongWorkflow ? ".github/workflows/other.yml" : ".github/workflows/ci.yml",
-        event: "pull_request", head_repository: { full_name: state.wrongProducer ? "someone/cmux" : "manaflow-ai/cmux" },
+        event: "pull_request", head_repository: { full_name: state.wrongProducer ? "someone/hmux" : "manaflow-ai/cmux" },
         run_attempt: 1, status: "in_progress", conclusion: null,
       });
       if (url.pathname === `${root}/actions/runs/456/attempts/1/jobs`) return Response.json({ jobs: [{
@@ -138,7 +138,7 @@ test("all seven immediate consumers share one import while the overall CI run is
   }
   assert.equal(state.downloads, 1);
   const hit = await mf.dispatchFetch(`https://broker.example${path}`);
-  assert.equal(hit.headers.get("X-Cmux-Artifact-Cache"), "hit");
+  assert.equal(hit.headers.get("X-Hmux-Artifact-Cache"), "hit");
   await hit.arrayBuffer();
   assert.equal(state.downloads, 1);
 });

@@ -1,6 +1,6 @@
-# Local-first sync for cmux (and the iOS device list as its first consumer)
+# Local-first sync for hmux (and the iOS device list as its first consumer)
 
-> Provider update (2026-09-16): cmux Cloud now uses PlanetScale Postgres. Aurora references below describe the historical design and do not authorize AWS database operations. Use `skills/cmux-backend/references/cloud-vm-control-plane.md` for the current database workflow.
+> Provider update (2026-09-16): hmux Cloud now uses PlanetScale Postgres. Aurora references below describe the historical design and do not authorize AWS database operations. Use `skills/hmux-backend/references/cloud-vm-control-plane.md` for the current database workflow.
 
 Status: proposed. Phase 1 ships the generic sync substrate plus the device-list
 consumer behind a flag, with the Aurora registry kept intact as a fallback.
@@ -33,7 +33,7 @@ Lawrence's four requirements:
    local SQLite with zero network on the launch path, then reconcile against the
    DO in the background and update the UI live.
 3. Use **the most standard SQLite thing**: the repo already standardizes on the
-   raw SQLite3 C API in `CmuxMobilePairedMac`. Extend that pattern; no new GRDB
+   raw SQLite3 C API in `HmuxMobilePairedMac`. Extend that pattern; no new GRDB
    or FMDB dependency.
 4. The **sync protocol must be general and extensible**, not device-list
    specific. Device-list is the first consumer of a reusable local-first sync
@@ -60,7 +60,7 @@ devices:
   `collection` name, each record stamped with a monotone `rev`, an `updatedAt`,
   and a tombstone flag. A `cursor` lets a returning client resync only what
   changed.
-- **Local store** (`CmuxSyncStore`): one raw-SQLite3 database with a single
+- **Local store** (`HmuxSyncStore`): one raw-SQLite3 database with a single
   generic `sync_records` table keyed by `(collection, recordId)`, plus a
   `sync_cursors` table. Typed per-collection facades read/write through it. This
   mirrors `MobilePairedMacStore` exactly (actor, `Storing` protocol seam, error
@@ -80,7 +80,7 @@ materialized view; the UI renders the cache and is invalidated by deltas.
   Mac host ──heartbeat(routes,identity)──▶  TeamPresence DO  ──sync/v1 snapshot+delta──▶  iOS
                                             (authoritative                                 │
                                              durable records,                              ▼
-                                             rev-stamped)                            CmuxSyncStore
+                                             rev-stamped)                            HmuxSyncStore
                                                                                     (sync_records,
                                                                                      sync_cursors)
                                                                                           │
@@ -263,7 +263,7 @@ exactly the local fallback rows the migration promises to keep.
 
 The launch path never waits on this. Sequence:
 
-1. **t0 (launch):** UI reads the device collection straight from `CmuxSyncStore`
+1. **t0 (launch):** UI reads the device collection straight from `HmuxSyncStore`
    (synchronous-feeling, single indexed SQLite query) and renders. No network.
 2. **t0+ (background):** the sync client opens the WS. On connect it sends
    `sync.hello` with the persisted cursor for each subscribed collection.
@@ -343,7 +343,7 @@ design (Firebase/Replicache/CRDT-sync); the retention window is the only tunable
   contiguous-prefix watermark (§3.1a). Clients see a linearizable history.
 - **Across collections:** no cross-collection ordering guarantee. Each
   collection has its own `rev` space and cursor. This is intentional: it keeps
-  collections independent so adding one cannot perturb another, and no real cmux
+  collections independent so adding one cannot perturb another, and no real hmux
   feature needs "device X changed strictly before workspace Y." If a future
   feature needs cross-collection atomicity, it models the related data as one
   collection (one record, one `rev`), not two.
@@ -352,7 +352,7 @@ design (Firebase/Replicache/CRDT-sync); the retention window is the only tunable
 
 ## 4. Local SQLite schema
 
-One database, `cmux-sync.sqlite3`, opened exactly like
+One database, `hmux-sync.sqlite3`, opened exactly like
 `MobilePairedMacStore.openConnection` (`sqlite3_open_v2`,
 `SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE | SQLITE_OPEN_FULLMUTEX`, WAL,
 `foreign_keys = ON`). `PRAGMA user_version` drives lazy migrations on first
@@ -560,7 +560,7 @@ Mechanism:
    idempotent. It reads `MobilePairedMacStore.loadAll(stackUserID:)`.
 2. For each paired Mac it does **not** write the DO directly (the phone is not
    the owner of a Mac's record; the Mac is). Instead it seeds the **local**
-   `CmuxSyncStore` `devices` collection with a provisional record derived from
+   `HmuxSyncStore` `devices` collection with a provisional record derived from
    the paired Mac (deviceId, displayName, routes, lastSeenAt, online=false,
    `rev = 0` provisional, `synced_at = 0` to mark it unconfirmed). This makes the
    new local-first list render instantly on the very first launch after upgrade,
@@ -609,7 +609,7 @@ take client writes (e.g. settings, where the phone edits a value). The decision:
   optimistic copy back, per the repo's optimistic-update rule; the §10 outbox
   stores both the mutation and its rollback snapshot.
 - **Per-record, not per-field, by default.** Per-field merge (CRDT-ish) is more
-  work and only pays off for genuinely concurrent multi-writer fields. cmux's
+  work and only pays off for genuinely concurrent multi-writer fields. hmux's
   near-term collections (devices, workspaces, settings) are single-logical-writer
   per record in practice (the Mac owns its device row; the user owns their
   settings; a workspace is owned by its host). A collection that genuinely needs
@@ -617,7 +617,7 @@ take client writes (e.g. settings, where the phone edits a value). The decision:
   `SyncCollection` descriptor (each field carries its own `rev`/timestamp) without
   changing the transport. The substrate supports it; nothing in phase 1 needs it.
 - **Why not CRDTs (yet).** CRDTs buy conflict-free *concurrent multi-writer*
-  convergence without a server arbiter. cmux already has a natural per-team
+  convergence without a server arbiter. hmux already has a natural per-team
   serialization point (the DO) and a clear ownership model per record, so a CRDT
   would add payload overhead (vector clocks / tombstone sets), code complexity,
   and a harder mental model to solve a problem we do not have. The pragmatic
@@ -685,15 +685,15 @@ it is the part that can lose data if rushed.
 
 Flag: `mobileDeviceListLocalFirst`, defined with the existing DEBUG-on/Release-off
 pattern used by `PresenceServiceConfiguration` (the `#if DEBUG return true` seam),
-overridable via env (`CMUX_MOBILE_DEVICE_LIST_LOCAL_FIRST`) and `UserDefaults`
+overridable via env (`HMUX_MOBILE_DEVICE_LIST_LOCAL_FIRST`) and `UserDefaults`
 (`mobileDeviceListLocalFirst`) so it can be toggled in dogfood without a rebuild.
 
 Behavior matrix:
 
 | Flag | DO reachable | List source |
 |------|--------------|-------------|
-| on   | yes          | `CmuxSyncStore` (instant) + live DO deltas. |
-| on   | no           | `CmuxSyncStore` last-synced cache (labeled stale), retry DO. If cache empty, fall back to `GET /api/devices`, then local paired Macs. |
+| on   | yes          | `HmuxSyncStore` (instant) + live DO deltas. |
+| on   | no           | `HmuxSyncStore` last-synced cache (labeled stale), retry DO. If cache empty, fall back to `GET /api/devices`, then local paired Macs. |
 | off  | n/a          | Today's behavior exactly: `GET /api/devices` → `registryDevices`, presence overlay, paired-Mac fallback. |
 
 Release ships with the flag off, so production users are unaffected until
@@ -724,7 +724,7 @@ To add, say, a `workspaces` collection in a later phase:
 3. On the DO side, register the same name and emit `sync.delta` from whatever DO
    write produces workspace changes (or a new DO if workspaces live elsewhere;
    the transport is per-team and collection-tagged, so multiple producers fan in).
-4. Add a typed facade over `CmuxSyncStore` if the UI wants a typed view.
+4. Add a typed facade over `HmuxSyncStore` if the UI wants a typed view.
 
 That is the whole cost. The collection gets: instant local render, snapshot+delta
 sync, cursor-based catch-up, tombstones, team scoping, schema-versioned lazy
@@ -748,7 +748,7 @@ violating them reintroduces the issue-2586 100%-CPU spin:
 
 - **Snapshot boundary for list subtrees.** The device list renders inside a
   `List`/`ForEach`. No view below that boundary may hold the `@Observable`
-  `CmuxSyncStore` (no `@ObservedObject`, `@Bindable`, or a plain `let store`).
+  `HmuxSyncStore` (no `@ObservedObject`, `@Bindable`, or a plain `let store`).
   The store recomputes an immutable `[RegistryDevice]` value array on each commit;
   rows receive immutable `DeviceRecord`/`RegistryDevice` values plus closure
   action bundles only. An orthogonal delta (one device changes) must not
@@ -796,8 +796,8 @@ authenticated, team-scoped transport:
   rev-filtering + concurrent-delete-during-paging, gc-floor forced resync,
   tombstone GC, and derivation idempotency (a `seen` tick and an online↔offline
   flip do NOT bump rev; a routes/identity/membership change does).
-- iOS: new `Packages/Shared/CmuxSyncStore` raw-SQLite3 package mirroring
-  `MobilePairedMacStore` (actor, `CmuxSyncStoring` protocol, `CmuxSyncStoreError`
+- iOS: new `Packages/Shared/HmuxSyncStore` raw-SQLite3 package mirroring
+  `MobilePairedMacStore` (actor, `HmuxSyncStoring` protocol, `HmuxSyncStoreError`
   enum, `PRAGMA user_version` migrations, generic `sync_records`/`sync_cursors`);
   a generic `SyncClient` that speaks `sync/v1` over the presence WS; a `devices`
   facade producing `RegistryDevice`s; device list rendered from the store on

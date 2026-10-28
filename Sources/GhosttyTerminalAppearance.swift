@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
 enum GhosttyDefaultBackgroundUpdateScope: Int {

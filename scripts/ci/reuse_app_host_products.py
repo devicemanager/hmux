@@ -33,7 +33,7 @@ import app_host_test_products as products
 import parallel_artifact_download as parallel
 import product_input_identity as product_inputs
 
-RECEIPT = "cmux-product-reuse.json"
+RECEIPT = "hmux-product-reuse.json"
 PREFIX = "app-host-products-v1-"
 # Current product archives are ~0.8 GiB compressed. Bound every expansion layer
 # independently, including hardlink copies, with room for the UI product set.
@@ -160,14 +160,14 @@ def compile_job_admitted(job: object, publish_step: str | tuple[str, ...] | None
 # Build controls the product contract hashes. Only non-secret values belong
 # here, because the contract is published in the artifact receipt.
 #
-# CMUX_CI_XCODE_APP and CMUX_CI_REQUIRED_MACOS_SDK_MAJOR are left out on
+# HMUX_CI_XCODE_APP and HMUX_CI_REQUIRED_MACOS_SDK_MAJOR are left out on
 # purpose. They only tell scripts/select-ci-xcode.sh which Xcode to pick, and
 # the Xcode it picked is already `xcode` and `sdk` in the contract. Hashing the
 # selectors as well split one product into two names: compile admission pins
 # Xcode by path while an E2E dispatch picks the same Xcode by SDK, so neither
 # lane could adopt the other's product.
 CONTRACT_ENVIRONMENT = (
-    "CMUX_SKIP_ZIG_BUILD",
+    "HMUX_SKIP_ZIG_BUILD",
     "SDKROOT", "MACOSX_DEPLOYMENT_TARGET", "SWIFT_ACTIVE_COMPILATION_CONDITIONS",
     "OTHER_SWIFT_FLAGS", "OTHER_CFLAGS", "OTHER_CPLUSPLUSFLAGS", "OTHER_LDFLAGS",
     "RUSTFLAGS", "CFLAGS", "CXXFLAGS", "LDFLAGS",
@@ -178,7 +178,7 @@ CONTRACT_ENVIRONMENT = (
 # run time (restore-app-host-test-product.sh), so a product compiled here runs
 # on any pool.
 CANONICAL_DERIVED_DATA = (
-    Path(os.environ.get("CMUX_CI_CANONICAL_ROOT", "/private/tmp/cmux-ci"))
+    Path(os.environ.get("HMUX_CI_CANONICAL_ROOT", "/private/tmp/hmux-ci"))
     / "derived-data-compile-admission"
 )
 
@@ -252,17 +252,17 @@ def contract(derived=None):
         value["os"] = read("sw_vers", "-buildVersion")
         value["environment"].update(
             {k: os.environ.get(k, "") for k in ("ImageOS", "ImageVersion")})
-        value["runner"] = os.environ.get("CMUX_PRODUCT_RUNNER", "")
+        value["runner"] = os.environ.get("HMUX_PRODUCT_RUNNER", "")
         return value
     value["macos"] = read("sw_vers", "-productVersion").split(".", 1)[0]
     value["build_location"] = str(Path(derived).resolve())
     return value
 
 
-# glaeda's canonical-root helper on an owned Mac (glaeda-cmux-runner). A job
+# glaeda's canonical-root helper on an owned Mac (glaeda-hmux-runner). A job
 # holds one canonical root; `take ROOT --switch` moves it to another, waiting
 # for ROOT while it still holds its own, so a timeout leaves it where it was.
-ROOT_HELPER = Path("/Users/Shared/cmux-build-fleet/bin/glaeda-canonical-root")
+ROOT_HELPER = Path("/Users/Shared/hmux-build-fleet/bin/glaeda-canonical-root")
 # How long a switch waits for the product's root. Giving up means compiling
 # the whole product at the root this job holds, about 405 s at the median on
 # an owned Mac, and that holds the root and the Mac just as long. A shorter
@@ -284,14 +284,14 @@ ROOT_SWITCH_FAST_MISS_REASONS = frozenset({
     "no_matching_contract_artifact",
 })
 # Root 1. CANONICAL_DERIVED_DATA follows the job's own root instead.
-FIRST_ROOT = Path("/private/tmp/cmux-ci")
+FIRST_ROOT = Path("/private/tmp/hmux-ci")
 DERIVED_NAME = "derived-data-compile-admission"
 CAS_NAME = "compile-admission-cas"
 
 
 def canonical_roots():
-    """This Mac's canonical roots: /private/tmp/cmux-ci, then every
-    /private/tmp/cmux-ci-<n> a job has used. The helper refuses a root the Mac
+    """This Mac's canonical roots: /private/tmp/hmux-ci, then every
+    /private/tmp/hmux-ci-<n> a job has used. The helper refuses a root the Mac
     does not have, so a stray directory is only a wasted lookup."""
     base = FIRST_ROOT
     numbered = [path for path in base.parent.glob(base.name + "-*")
@@ -310,7 +310,7 @@ def switch_root(root, wait_seconds=ROOT_SWITCH_WAIT_S):
     A product's test binaries carry #filePath strings under the root that
     compiled it, which relocation cannot edit, so a product from another root
     runs only from that root. The helper points $GITHUB_ENV's
-    CMUX_CI_CANONICAL_ROOT at it; the DerivedData and cache paths follow here.
+    HMUX_CI_CANONICAL_ROOT at it; the DerivedData and cache paths follow here.
     """
     try:
         result = subprocess.run(
@@ -328,7 +328,7 @@ def switch_root(root, wait_seconds=ROOT_SWITCH_WAIT_S):
     # cleans the root it released, which another job may hold by now.
     derived, cache = root / DERIVED_NAME, root / CAS_NAME
     with open(os.environ["GITHUB_ENV"], "a") as env:
-        env.write(f"CMUX_DERIVED_DATA_PATH={derived}\nCMUX_E2E_COMPILATION_CACHE={cache}\n")
+        env.write(f"HMUX_DERIVED_DATA_PATH={derived}\nHMUX_E2E_COMPILATION_CACHE={cache}\n")
     for path in (derived, cache):
         try:
             shutil.rmtree(path, ignore_errors=True)
@@ -1047,7 +1047,7 @@ def restore(api, value, derived, current_run, current_identity, current_attempt=
 
     for artifact, run in select(api, value, current_run, current_attempt, consumer, reasons):
         lookup_seconds = time.monotonic() - reuse_started
-        with tempfile.TemporaryDirectory(prefix="cmux-reuse-") as tmp:
+        with tempfile.TemporaryDirectory(prefix="hmux-reuse-") as tmp:
             staging = Path(tmp)
             archive = staging / "artifact.zip"
             transfer_started = time.monotonic()
@@ -1087,7 +1087,7 @@ def restore(api, value, derived, current_run, current_identity, current_attempt=
                 original = json.loads((root / products.RECEIPT).read_text())
                 if original["revision"] != receipt["revision"]:
                     raise ValueError("producer revision mismatch")
-                provenance_path = root / "cmux-original-producer.json"
+                provenance_path = root / "hmux-original-producer.json"
                 upstream = json.loads(provenance_path.read_text()) if provenance_path.exists() else None
                 if upstream is not None and not valid_upstream_provenance(upstream):
                     raise ValueError("invalid upstream provenance")
@@ -1135,7 +1135,7 @@ def restore(api, value, derived, current_run, current_identity, current_attempt=
                 "macos_runner_minutes_saved": round(saved_minutes, 3) if saved_minutes is not None else None,
             }
             immediate = producer_record(run, receipt, artifact)
-            provenance = destination / "cmux-original-producer.json"
+            provenance = destination / "hmux-original-producer.json"
             provenance.write_text(json.dumps({
                 "schema": 2,
                 "original_producer": original_producer(upstream, immediate),
@@ -1218,7 +1218,7 @@ def main():
                 api = GitHub(os.environ["GITHUB_REPOSITORY"])
                 # A product this job would compile, then the same product
                 # compiled at the canonical root, which this job can also run.
-                # An owned Mac (CMUX_REUSE_SWITCH_ROOTS) has several roots
+                # An owned Mac (HMUX_REUSE_SWITCH_ROOTS) has several roots
                 # instead, and takes a product from any of them by moving to
                 # its root first (switch_root).
                 wanted = [(value, None)]
@@ -1232,7 +1232,7 @@ def main():
                         report["product_key"] = key(at_root(value, target.parent))
                     return target
 
-                if (os.environ.get("CMUX_REUSE_SWITCH_ROOTS") == "1" and ROOT_HELPER.exists()
+                if (os.environ.get("HMUX_REUSE_SWITCH_ROOTS") == "1" and ROOT_HELPER.exists()
                         and derived.name == DERIVED_NAME):
                     wanted += [(at_root(value, root), root) for root in canonical_roots()
                                if root.resolve() != here]

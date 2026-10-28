@@ -1,12 +1,12 @@
-import CmuxCloud
-import CmuxControlSocket
-import CmuxCore
-import CmuxFoundation
-import CmuxPanes
-import CmuxProductAnalytics
-import CmuxRemoteWorkspace
-import CmuxRemoteSession
-import CmuxWorkspaces
+import HmuxCloud
+import HmuxControlSocket
+import HmuxCore
+import HmuxFoundation
+import HmuxPanes
+import HmuxProductAnalytics
+import HmuxRemoteWorkspace
+import HmuxRemoteSession
+import HmuxWorkspaces
 import Foundation
 
 extension RemotePTYLifecycleCommitLease: @retroactive ControlRemotePTYLifecycleCommitLease {
@@ -602,8 +602,8 @@ extension TerminalController: ControlWorkspaceContext {
                 data: nil
             )
         }
-        // Deprecated: `cmux ssh` no longer sends this shape (TTY SSH moved to
-        // cmux-tui in #13866). A hand-written call still gets a persistent PTY
+        // Deprecated: `hmux ssh` no longer sends this shape (TTY SSH moved to
+        // hmux-tui in #13866). A hand-written call still gets a persistent PTY
         // slot, but agent resume bindings are not registered or replayed for it.
         if preserveAfterTerminalExit,
            transport == .ssh,
@@ -623,7 +623,7 @@ extension TerminalController: ControlWorkspaceContext {
         }
 
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "workspace.remote.configure.request workspace=\(workspaceId.uuidString.prefix(8)) " +
             "target=\(destination) transport=\(transport.rawValue) terminalTransport=\(terminalTransport.rawValue) " +
             "port=\(sshPort.map(String.init) ?? "nil") " +
@@ -698,10 +698,10 @@ extension TerminalController: ControlWorkspaceContext {
                 data: nil
             )
         }
-        // `cmux ssh` configures a plain remote workspace; Cloud attaches carry
+        // `hmux ssh` configures a plain remote workspace; Cloud attaches carry
         // a managed VM id and are counted by the Cloud events instead.
         if config.managedCloudVMID == nil {
-            ProductAnalytics.app.featureUsed(.cmuxSSH)
+            ProductAnalytics.app.featureUsed(.hmuxSSH)
         }
         notifyRemotePTYControllerAvailabilityChanged()
 

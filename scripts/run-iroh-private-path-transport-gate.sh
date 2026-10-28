@@ -11,7 +11,7 @@ interface. The gate requires broker-authorized custom numeric route selection,
 exact EndpointID admission, bidirectional RPC bytes, and fail-closed wrong
 identity, wrong port, and inactive-route cases.
 
-This proves cmux's provider-neutral private-path contract. It does not claim
+This proves hmux's provider-neutral private-path contract. It does not claim
 that the runner owns or traverses an external VPN tunnel.
 EOF
 }
@@ -37,11 +37,11 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # shellcheck source=scripts/lib/mobile-attach.sh
 source "$SCRIPT_DIR/lib/mobile-attach.sh"
-cmux_attach_validate_dev_tag "$TAG"
+hmux_attach_validate_dev_tag "$TAG"
 
-SLUG="$(cmux_attach__slug "$TAG")"
-DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/cmux-iroh-private-path-$SLUG"
-RESULT_BUNDLE="$DERIVED_DATA/CmuxIrohPrivatePathTransportGate.xcresult"
+SLUG="$(hmux_attach__slug "$TAG")"
+DERIVED_DATA="$HOME/Library/Developer/Xcode/DerivedData/hmux-iroh-private-path-$SLUG"
+RESULT_BUNDLE="$DERIVED_DATA/HmuxIrohPrivatePathTransportGate.xcresult"
 XCODEBUILD_ACTION="test"
 if [[ "$SKIP_BUILD" -eq 1 ]]; then
   XCODEBUILD_ACTION="test-without-building"
@@ -49,16 +49,16 @@ fi
 rm -rf "$RESULT_BUNDLE"
 
 (
-  cd "$REPO_ROOT/Packages/Shared/CmuxIrohTransport"
+  cd "$REPO_ROOT/Packages/Shared/HmuxIrohTransport"
   python3 "$REPO_ROOT/scripts/ci/run_with_timeout.py" \
     --timeout-seconds 600 \
     -- xcodebuild \
-      -scheme CmuxIrohTransport \
+      -scheme HmuxIrohTransport \
       -destination "platform=macOS" \
       -derivedDataPath "$DERIVED_DATA" \
       -resultBundlePath "$RESULT_BUNDLE" \
       "$XCODEBUILD_ACTION" \
-      -only-testing:CmuxIrohTransportTests/CmxIrohPrivatePathTransportGateTests
+      -only-testing:HmuxIrohTransportTests/CmxIrohPrivatePathTransportGateTests
 )
 
 RESULT_BUNDLE="$RESULT_BUNDLE" /usr/bin/python3 <<'PY'

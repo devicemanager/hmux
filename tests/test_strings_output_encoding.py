@@ -2,7 +2,7 @@
 """Compiled .strings ship as binary property lists.
 
 Xcode compiles each String Catalog to UTF-8 .strings and then re-encodes them
-with STRINGS_FILE_OUTPUT_ENCODING, which defaults to UTF-16. For cmux's own
+with STRINGS_FILE_OUTPUT_ENCODING, which defaults to UTF-16. For hmux's own
 catalogs that is 19.98 MiB in the app; binary property lists hold the same
 keys in 11.20 MiB, and Foundation loads them the same way.
 """
@@ -14,7 +14,7 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-PROJECT = (ROOT / "cmux.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
+PROJECT = (ROOT / "hmux.xcodeproj/project.pbxproj").read_text(encoding="utf-8")
 
 
 def configuration_list(owner: str) -> list[str]:
@@ -42,7 +42,7 @@ def build_settings(configuration: str) -> str:
 
 class StringsOutputEncodingTest(unittest.TestCase):
     def test_project_compiles_strings_to_binary_property_lists(self):
-        configurations = configuration_list('PBXProject "cmux"')
+        configurations = configuration_list('PBXProject "hmux"')
         self.assertEqual(len(configurations), 2)
         for configuration in configurations:
             self.assertRegex(

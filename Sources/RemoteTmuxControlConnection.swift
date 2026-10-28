@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CmuxRemoteSession
+import HmuxFoundation
+import HmuxRemoteSession
 import Foundation
 import os
 
@@ -26,21 +26,21 @@ enum RemoteTmuxDebugTimers {
     /// Override for the attach readiness barrier, `RemoteTmuxController.mirrorTopologyBarrierSeconds`
     /// (default 15).
     static let topologyBarrierSeconds = secondsFromEnvironment(
-        "CMUX_REMOTE_TMUX_TOPOLOGY_BARRIER_SECONDS")
+        "HMUX_REMOTE_TMUX_TOPOLOGY_BARRIER_SECONDS")
     /// Override for the deliberate-detach backstop,
     /// ``RemoteTmuxControlConnection/deliberateDetachBackstopSeconds`` (default 3).
     static let detachBackstopSeconds = secondsFromEnvironment(
-        "CMUX_REMOTE_TMUX_DETACH_BACKSTOP_SECONDS")
+        "HMUX_REMOTE_TMUX_DETACH_BACKSTOP_SECONDS")
     /// Override for the first reconnect backoff, `reconnectBaseDelaySeconds` (default 1).
     static let reconnectBaseSeconds = secondsFromEnvironment(
-        "CMUX_REMOTE_TMUX_RECONNECT_BASE_SECONDS")
+        "HMUX_REMOTE_TMUX_RECONNECT_BASE_SECONDS")
     /// Override for the reconnect backoff cap, `reconnectMaxDelaySeconds` (default 10).
     static let reconnectMaxSeconds = secondsFromEnvironment(
-        "CMUX_REMOTE_TMUX_RECONNECT_MAX_SECONDS")
+        "HMUX_REMOTE_TMUX_RECONNECT_MAX_SECONDS")
     /// Override for how long an attach must hold to count as working,
     /// ``RemoteTmuxControlConnection/workingConnectionSeconds`` (default 30).
     static let workingConnectionSeconds = secondsFromEnvironment(
-        "CMUX_REMOTE_TMUX_WORKING_CONNECTION_SECONDS")
+        "HMUX_REMOTE_TMUX_WORKING_CONNECTION_SECONDS")
 
     private static func secondsFromEnvironment(_ name: String) -> Double? {
         guard let raw = ProcessInfo.processInfo.environment[name]?
@@ -59,7 +59,7 @@ enum RemoteTmuxDebugTimers {
 /// Spawns `ssh -tt <ControlMaster> host tmux -CC attach -t <session>` as a
 /// `Process` with pipes, feeds its stdout through ``RemoteTmuxControlStreamParser``
 /// (in order, via an `AsyncStream`), and exposes the mirrored topology plus a
-/// live output callback. cmux owns the whole protocol here — so it never depends
+/// live output callback. hmux owns the whole protocol here — so it never depends
 /// on ghostty's (tmux-3.6-fragile) built-in Viewer, and there is no
 /// command-queue desync because we issue and correlate commands ourselves.
 @MainActor
@@ -139,7 +139,7 @@ final class RemoteTmuxControlConnection {
     /// (style tokens stripped) — exactly the text a native tmux client draws
     /// in that pane's header, custom formats included. Seeded by the
     /// pane-rects fetch and kept LIVE by a per-pane subscription
-    /// (`cmux_hdr_<pane>`), so a program retitling its pane updates the strip
+    /// (`hmux_hdr_<pane>`), so a program retitling its pane updates the strip
     /// the moment tmux would redraw its own border. The mirror copies its
     /// windows' subset on reconcile; the view never reads this directly.
     var paneHeaderLabels: [Int: String] = [:]
@@ -182,7 +182,7 @@ final class RemoteTmuxControlConnection {
     var rawQueryCompletions: [UUID: (RemoteTmuxRawQueryOutcome) -> Void] = [:]
     var rawQueryTimeoutTasks: [UUID: Task<Void, Never>] = [:]
     /// `true` when this connection is the multiplexer's shared per-host view stream
-    /// (a hidden `cmux-view-*` session with other sessions' windows linked in), rather
+    /// (a hidden `hmux-view-*` session with other sessions' windows linked in), rather
     /// than a dedicated per-session connection. Enables the host-wide session-digest
     /// subscription and the extra topology notifications a shared stream needs.
     var isSharedViewStream = false
@@ -222,7 +222,7 @@ final class RemoteTmuxControlConnection {
     /// a queued line at its first failing command, so the commands after it are never
     /// answered and their slots have to go when the failure arrives.
     var pendingCommandQueues: [Range<Int>] = []
-    /// A `detach-client` cmux sent is still waiting for tmux's `%exit`. That exit is cmux's own
+    /// A `detach-client` hmux sent is still waiting for tmux's `%exit`. That exit is hmux's own
     /// doing, so it must not reach the exit observers as a session that ended remotely.
     private var awaitingDeliberateDetach = false
     private var deliberateDetachBackstop: Task<Void, Never>?
@@ -241,7 +241,7 @@ final class RemoteTmuxControlConnection {
     /// the reconnect backoff reset on this instead: a connection that lasted is a recovery, and a
     /// flap is not.
     ///
-    /// DEBUG builds honor `CMUX_REMOTE_TMUX_WORKING_CONNECTION_SECONDS`, so a test can drive both
+    /// DEBUG builds honor `HMUX_REMOTE_TMUX_WORKING_CONNECTION_SECONDS`, so a test can drive both
     /// sides of the rule without holding a fake connection open for half a minute.
     static let workingConnectionSeconds: Double = {
         #if DEBUG
@@ -259,8 +259,8 @@ final class RemoteTmuxControlConnection {
     /// Always true in the product. It exists as a constant so the behaviour can be built out for a
     /// red/green comparison — the claim "without this, an externally detached mirror closes" is
     /// worth measuring rather than reading off the code path. Overridable only at compile time via
-    /// `CMUX_NO_TRANSPORT_DEATH_REATTACH`, so no runtime surface ships.
-    #if CMUX_NO_TRANSPORT_DEATH_REATTACH
+    /// `HMUX_NO_TRANSPORT_DEATH_REATTACH`, so no runtime surface ships.
+    #if HMUX_NO_TRANSPORT_DEATH_REATTACH
     static let reattachOnPossibleTransportDeath = false
     #else
     static let reattachOnPossibleTransportDeath = true
@@ -496,7 +496,7 @@ final class RemoteTmuxControlConnection {
     static let attachRedrawKickGapMs = 350
 
     /// Base reconnect backoff (seconds); doubled each attempt up to ``reconnectMaxDelaySeconds``.
-    /// DEBUG builds honor `CMUX_REMOTE_TMUX_RECONNECT_BASE_SECONDS` so a test that drives a
+    /// DEBUG builds honor `HMUX_REMOTE_TMUX_RECONNECT_BASE_SECONDS` so a test that drives a
     /// transport death does not spend a second waiting for each retry; see ``RemoteTmuxDebugTimers``.
     private static let reconnectBaseDelaySeconds: Double = {
         #if DEBUG
@@ -506,7 +506,7 @@ final class RemoteTmuxControlConnection {
     }()
     /// Cap on the reconnect backoff (seconds). Retries continue indefinitely at this
     /// interval until the network returns or the session is found to be gone.
-    /// DEBUG builds honor `CMUX_REMOTE_TMUX_RECONNECT_MAX_SECONDS`, which matters for a case that
+    /// DEBUG builds honor `HMUX_REMOTE_TMUX_RECONNECT_MAX_SECONDS`, which matters for a case that
     /// takes several attempts: without lowering the cap the backoff reaches 10 seconds per retry.
     private static let reconnectMaxDelaySeconds: Double = {
         #if DEBUG
@@ -515,7 +515,7 @@ final class RemoteTmuxControlConnection {
         return 10
     }()
     /// How long ``detachThenStop(timeout:)`` waits for tmux's `%exit` before tearing the transport
-    /// down anyway (seconds). DEBUG builds honor `CMUX_REMOTE_TMUX_DETACH_BACKSTOP_SECONDS`: a
+    /// down anyway (seconds). DEBUG builds honor `HMUX_REMOTE_TMUX_DETACH_BACKSTOP_SECONDS`: a
     /// stream that cannot publish a topology also cannot confirm a detach, so every teardown in a
     /// failure case pays this wait in full.
     nonisolated static let deliberateDetachBackstopSeconds: TimeInterval = {
@@ -543,7 +543,7 @@ final class RemoteTmuxControlConnection {
     /// Subscription-name prefix for per-pane `pane_current_path` (`refresh-client -B`).
     /// The tmux pane id is appended so an inbound `%subscription-changed` can be
     /// routed back to its pane; defined once so the writer and reader can't drift.
-    static let cwdSubscriptionPrefix = "cmux_cwd_"
+    static let cwdSubscriptionPrefix = "hmux_cwd_"
 
     /// Subscription-name prefix for per-pane reflow classification
     /// (`refresh-client -B`). The subscribed format is
@@ -551,20 +551,20 @@ final class RemoteTmuxControlConnection {
     /// and on every change, so launching/exiting an app (bash → node when claude
     /// starts) re-classifies the pane live. The tmux pane id is appended for
     /// routing, mirroring ``cwdSubscriptionPrefix``.
-    static let reflowSubscriptionPrefix = "cmux_reflow_"
+    static let reflowSubscriptionPrefix = "hmux_reflow_"
     /// Per-pane user-option subscription carrying lifecycle status from a remote
     /// Claude or Codex hook. The pane id is part of the subscription name so the
     /// control stream can route the value back to the owning mirror.
-    static let agentSubscriptionPrefix = "cmux_agent_"
+    static let agentSubscriptionPrefix = "hmux_agent_"
     /// Per-pane subscription that keeps header labels LIVE, mirroring
     /// ``cwdSubscriptionPrefix``: tmux pushes the newly-expanded
     /// `pane-border-format` whenever its value changes (a program retitling
     /// its pane, the running command changing) — the same moments native
     /// tmux redraws its own header row.
-    static let headerSubscriptionPrefix = "cmux_hdr_"
+    static let headerSubscriptionPrefix = "hmux_hdr_"
     /// Per-pane subscription for raw `pane_title`, independent of the user's
     /// `pane-border-format` (which may omit the title entirely).
-    nonisolated static let paneTitleSubscriptionPrefix = "cmux_title_"
+    nonisolated static let paneTitleSubscriptionPrefix = "hmux_title_"
 
     /// Per-WINDOW subscription to `pane-border-status`, the one layout input tmux
     /// changes with no notification of its own.
@@ -580,7 +580,7 @@ final class RemoteTmuxControlConnection {
     /// tmux pushes the value once on subscribe and again on every change, for
     /// hidden windows as well as the current one (both verified on 3.7), so the
     /// mirror learns the change on an event instead of polling for it.
-    static let borderStatusSubscriptionPrefix = "cmux_border_"
+    static let borderStatusSubscriptionPrefix = "hmux_border_"
 
     /// The last `pane-border-status` value each window's subscription reported.
     /// The initial push needs no refetch (the attach's own rects fetch is already
@@ -678,7 +678,7 @@ final class RemoteTmuxControlConnection {
     private func spawnProcess(mode: RemoteTmuxControlAttachMode) throws {
         // A fresh control stream cannot retain the prior parser or command FIFO.
         #if DEBUG
-        cmuxDebugLog("remote.stream.reset pendingCommands=\(pendingCommands.count) mode=\(mode)")
+        hmuxDebugLog("remote.stream.reset pendingCommands=\(pendingCommands.count) mode=\(mode)")
         #endif
         parser = RemoteTmuxControlStreamParser()
         pendingCommands.removeAll()
@@ -778,7 +778,7 @@ final class RemoteTmuxControlConnection {
         proc.standardError = errPipe
         let stdinWriter = RemoteTmuxControlPipeWriter(
             handle: inPipe.fileHandleForWriting,
-            label: "com.cmux.remote-tmux.stdin.\(UUID().uuidString)",
+            label: "com.hmux.remote-tmux.stdin.\(UUID().uuidString)",
             maxPendingBytes: Self.maxPendingStdinBytes,
             onFailure: { [weak self] in
                 self?.handleStdinWriteFailure()
@@ -786,7 +786,7 @@ final class RemoteTmuxControlConnection {
         )
 
         let stdoutPipeReader = RemoteTmuxProcessOutputReader(
-            label: "com.cmux.remote-tmux.stdout.\(UUID().uuidString)",
+            label: "com.hmux.remote-tmux.stdout.\(UUID().uuidString)",
             maxPendingChunks: Self.maxPendingStdoutChunks,
             maxPendingBytes: Self.maxPendingStdoutBytes,
             onOverflow: { [weak self] in
@@ -796,7 +796,7 @@ final class RemoteTmuxControlConnection {
         let reader = outPipe.fileHandleForReading
         stdoutPipeReader.attach(to: reader)
         let stderrPipeReader = RemoteTmuxProcessOutputReader(
-            label: "com.cmux.remote-tmux.stderr.\(UUID().uuidString)",
+            label: "com.hmux.remote-tmux.stderr.\(UUID().uuidString)",
             maxPendingChunks: Self.maxPendingStderrChunks,
             maxPendingBytes: Self.maxPendingStderrBytes,
             onOverflow: { [weak self] in
@@ -1103,7 +1103,7 @@ final class RemoteTmuxControlConnection {
 
     /// Ends a spawned transport and everything it started.
     ///
-    /// `Process.terminate()` signals one pid, and a transport is rarely one process: cmux may
+    /// `Process.terminate()` signals one pid, and a transport is rarely one process: hmux may
     /// launch a pty allocator that execs a broker that finally execs the client. Signalling only
     /// the allocator leaves the broker and client running, and because the client holds the
     /// remote end open they keep their session too — two such trees were found alive hours after
@@ -1189,7 +1189,7 @@ final class RemoteTmuxControlConnection {
         // cells get refilled (see repaintPaneVisibleScreen), so "did the repaint
         // fire?" must be answerable from the log rather than argued.
         if command.hasPrefix("refresh-client") || command.hasPrefix("capture-pane") {
-            cmuxDebugLog("remote.send state=\(connectionState) \(command)")
+            hmuxDebugLog("remote.send state=\(connectionState) \(command)")
         }
         #endif
         return sendBatchInternal([command], kinds: [kind])
@@ -1394,7 +1394,7 @@ final class RemoteTmuxControlConnection {
     private func parkForInteractiveAuth(reason: String) {
         guard connectionState != .ended, !awaitingInteractiveAuth else { return }
         let firstAttach = !everReachedControlMode
-        // A transport that does not authenticate through cmux's ssh master gets no login offer:
+        // A transport that does not authenticate through hmux's ssh master gets no login offer:
         // see `authenticationIsSSHShaped`. It keeps retrying instead of parking behind an edge
         // that says nothing about it.
         guard transportProfile.authenticationIsSSHShaped else {
@@ -1581,7 +1581,7 @@ final class RemoteTmuxControlConnection {
             }
         case let .exit(reason):
             record("exit\(reason.map { " " + $0 } ?? "")")
-            // tmux confirming the `detach-client` cmux asked for. The client is gone, so the
+            // tmux confirming the `detach-client` hmux asked for. The client is gone, so the
             // transport can go now — and this is not a remote end, so no exit observers.
             if awaitingDeliberateDetach {
                 record("detach-client-confirmed")
@@ -1651,7 +1651,7 @@ final class RemoteTmuxControlConnection {
             requestWindows()
         case let .unlinkedWindowAdd(id):
             // A window appeared in a session this client is not attached to. On the shared view
-            // stream that is every window created outside cmux: nothing links it into the view,
+            // stream that is every window created outside hmux: nothing links it into the view,
             // so no %window-add follows until the coordinator reconciles, and the topology notify
             // is what schedules that. A per-session client mirrors only its own session, whose
             // windows arrive as %window-add.
@@ -1699,7 +1699,7 @@ final class RemoteTmuxControlConnection {
             windowTitleRowPlacements[id] = nil
             windowOrder.removeAll { $0 == id }
             #if DEBUG
-            cmuxDebugLog("remote.window.close @\(id) order=\(windowOrder)")
+            hmuxDebugLog("remote.window.close @\(id) order=\(windowOrder)")
             #endif
             pendingLayouts[id] = nil
             initialBatchStaged[id] = nil
@@ -1737,7 +1737,7 @@ final class RemoteTmuxControlConnection {
         case let .sessionWindowChanged(_, windowId):
             record("session-window-changed @\(windowId)")
         case let .subscriptionChanged(name, value):
-            // cmux subscribes each pane's working directory as "cmux_cwd_<paneId>".
+            // hmux subscribes each pane's working directory as "hmux_cwd_<paneId>".
             if name.hasPrefix(Self.cwdSubscriptionPrefix),
                let paneId = Int(name.dropFirst(Self.cwdSubscriptionPrefix.count)) {
                 let path = value.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -1794,7 +1794,7 @@ final class RemoteTmuxControlConnection {
                 if let baseline, baseline != status {
                     record("border-status @\(windowId) \(baseline)->\(status)")
                     #if DEBUG
-                    cmuxDebugLog("remote.border.change @\(windowId) \(baseline)->\(status) refetching")
+                    hmuxDebugLog("remote.border.change @\(windowId) \(baseline)->\(status) refetching")
                     #endif
                     requestWindows()
                 }

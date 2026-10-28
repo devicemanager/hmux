@@ -1,6 +1,6 @@
 #!/bin/bash
 # ============================================================================
-# End-to-end: cmux carries a real tmux control stream over a real EternalTerminal.
+# End-to-end: hmux carries a real tmux control stream over a real EternalTerminal.
 #
 # Everything else about the seam is argv shape and decision rules, which unit tests
 # can pin. This is the only check that the app actually drives ET: the pty spawn,
@@ -10,23 +10,23 @@
 # PREREQUISITES
 #   - scripts/remote-tmux-et-host.sh has brought up a loopback etserver.
 #   - An ssh alias for that host (one-shot discovery still rides ssh by design).
-#   - A tagged Debug app running with remote-tmux beta on; pass CMUX_TAG=<tag>.
+#   - A tagged Debug app running with remote-tmux beta on; pass HMUX_TAG=<tag>.
 #
 # Exit code is the number of failed checks (0 = all green).
 # ============================================================================
 set -uo pipefail
 
-TAG="${CMUX_TAG:?set CMUX_TAG=<tag> of a running tagged Debug app}"
-HOST="${CMUX_ET_HOST:-cmux-ethost}"
-PORT="${CMUX_ET_PORT:-2039}"
-SESSION="${CMUX_ET_SESSION:-etmirror}"
-CLI=(scripts/cmux-debug-cli.sh)
+TAG="${HMUX_TAG:?set HMUX_TAG=<tag> of a running tagged Debug app}"
+HOST="${HMUX_ET_HOST:-hmux-ethost}"
+PORT="${HMUX_ET_PORT:-2039}"
+SESSION="${HMUX_ET_SESSION:-etmirror}"
+CLI=(scripts/hmux-debug-cli.sh)
 FAILURES=0
 
 log()  { printf '%s %s\n' "$(date '+%H:%M:%S')" "$*"; }
 pass() { printf '  ✅ %s\n' "$*"; }
 fail() { printf '  ❌ %s\n' "$*"; FAILURES=$((FAILURES + 1)); }
-cli()  { CMUX_QUIET=1 CMUX_TAG="$TAG" "${CLI[@]}" "$@" 2>&1; }
+cli()  { HMUX_QUIET=1 HMUX_TAG="$TAG" "${CLI[@]}" "$@" 2>&1; }
 
 await() {
   local what="$1" timeout="$2"; shift 2
@@ -43,7 +43,7 @@ cd "$(dirname "$0")/.." || exit 1
 
 app_ready() { cli list-workspaces >/dev/null 2>&1; }
 if ! await "the app's control socket" 90 app_ready; then
-  log "no response on the tagged app socket for CMUX_TAG=$TAG"
+  log "no response on the tagged app socket for HMUX_TAG=$TAG"
   exit 1
 fi
 
@@ -53,7 +53,7 @@ nc -z 127.0.0.1 "$PORT" 2>/dev/null || { log "no etserver on 127.0.0.1:$PORT"; e
 log "=== attaching session '$SESSION' over the et transport"
 # A named attach rather than discovery: this proves the control stream, without
 # mirroring whatever else happens to be on the host's default tmux server.
-# `cmux rpc` is the raw v2 call; a named attach avoids mirroring whatever else happens to
+# `hmux rpc` is the raw v2 call; a named attach avoids mirroring whatever else happens to
 # be on the host's default tmux server.
 #
 # The etserver port goes in transport_port, not port. `port` is the ssh port, and one-shot
@@ -72,7 +72,7 @@ esac
 # process proves something was spawned; only these fields prove the control protocol crossed
 # et and was understood — the two bugs this harness found both left a live process behind.
 #
-#   enter    the ESC P 1000 p handshake was parsed. cmux withholds commands until it arrives,
+#   enter    the ESC P 1000 p handshake was parsed. hmux withholds commands until it arrives,
 #            and et delivers it mid-line behind the login shell's echo.
 #   windows  a real `list-windows` result came back over the stream and was applied.
 # The transport and its port are part of the endpoint's identity, so a lookup that omits them
@@ -86,7 +86,7 @@ stream_entered() { state | grep -q '"enter_received" : true'; }
 stream_has_windows() { state | grep -qE '"window_count" : [1-9]'; }
 
 if await "the control stream to reach control mode over et" 60 stream_entered; then
-  pass "cmux parsed the control-mode handshake over et"
+  pass "hmux parsed the control-mode handshake over et"
 else
   fail "no control-mode handshake over et (enter_received stayed false)"
 fi

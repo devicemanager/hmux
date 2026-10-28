@@ -1,0 +1,128 @@
+name: hmux-next PR merge tree
+
+# Starts the hmux-tui tree publish for a same-repository feat-hmux-next pull
+# request's merge commit (scripts/ci/publish_pr_merge_tree.py), so hmux-next's
+# same-tree checks find the merge tree instead of failing with "no hmux-tui
+# artifacts run can publish tree <key>". The pull request's own run cannot start
+# it: its token gets 403 creating the hmux-tui-pin-<sha12> ref (55 same-tree
+# reds on 33 pull requests, 2026-10-10/11), and so would any GITHUB_TOKEN: a
+# ref at a feat-hmux-next commit needs the workflows permission (#19166).
+# GitHub runs pull_request_target only from the default branch, so this lives
+# on main.
+#
+# TOKEN: the pin is created with the FFI release App (manaflow-hmux-ffi-release,
+# contents and workflows write). Its key is in the `hmux-tui-merge-tree`
+# environment, used by this job alone (deployment policy: main), and the
+# minted token is for this repository only. The App's ref is a push, which
+# starts hmux-tui-artifacts.yml (push: "**"); GITHUB_TOKEN only dispatches a
+# pin that already existed (the App has no actions permission), and cancels
+# the artifacts runs still queued or running for this pull request's older
+# pins (publish_pr_merge_tree.py cancel_superseded_pins; each pin is its own
+# ref, so the artifacts workflow cannot group them by pull request).
+#
+# It runs none of the pull request's code: it checks out main, reads the merge
+# commit from the API and points hmux-tui-pin-<sha12> at it. That run is the
+# one a push of that branch starts, which a same-repository author can already
+# start by hand (pin-hmux-tui.sh --help on feat-hmux-next). Fork pull requests
+# start nothing.
+on:
+  pull_request_target:
+    branches: [feat-hmux-next]
+    types: [opened, reopened, synchronize]
+    # The hmux-tui tree inputs: feat-hmux-next's hmux-tui-artifacts.yml
+    # pull_request_target filter (scripts/hmux-next/hmux-tui-tree-inputs.txt).
+    # A pull request that changes none of them keeps the base's tree.
+    paths:
+      - "hmux-tui/**"
+      - "ghostty"
+      - "ghostty-next"
+      - "scripts/hmux-next/build-layout-reducer-ffi.sh"
+      - "scripts/ci/hmux-tui-darwin-builder"
+      - "scripts/ci/macos-cross.sh"
+      - "scripts/ci/macos_stubs.py"
+      - "scripts/ci/macho_weaken.py"
+      - "scripts/ci/macos-stubs/**"
+      - "first-party-apps/cloud/server/**"
+      - "Packages/macOS/HmuxNext/Tests/HmuxNextSidebarTests/Fixtures/sidebar-layout-cases.json"
+      - "backend/catalog/cloud-operations.json"
+      - "backend/packages/home-core/conformance/conversation-cases.json"
+      - "backend/packages/home-core/conformance/conversation-import-cases.json"
+      - "backend/packages/home-core/conformance/conversation-search-cases.json"
+      - "mux/packages/brain/conformance/chief-cases.json"
+      - "plans/hmux-next/action-surfaces.json"
+      - "schemas/chief-home/vectors.json"
+      - "schemas/agent-url-policy/vectors.json"
+      - "schemas/chief-hmux-target/vectors.json"
+      - "schemas/automation-input/vectors.json"
+      - "schemas/automation-lease/vectors.json"
+      - "schemas/ghostty-shell-features/vectors.json"
+      - "schemas/link-token/keyset-vectors.json"
+      - "schemas/remote-tab/client.json"
+      - "schemas/remote-tab/cookie-sync.json"
+      - "schemas/remote-tab/input-mapping.json"
+      - "schemas/remote-tab/menu-token.json"
+      - "schemas/remote-tab/messages.json"
+      - "schemas/remote-tab/scroll-writer.json"
+      - "schemas/remote-tab/session.json"
+      - "schemas/terminal-sizing/fixtures.json"
+      - "schemas/settings/settings-schema.json"
+      - "scripts/hmux-next/hmux-tui.pin"
+      - "skills/hmux-browser/SKILL.md"
+      - "skills/hmux-browser/references/authentication.md"
+      - "skills/hmux-browser/references/commands.md"
+      - "skills/hmux-browser/references/proxy-support.md"
+      - "skills/hmux-browser/references/session-management.md"
+      - "skills/hmux-browser/references/snapshot-refs.md"
+      - "skills/hmux-browser/references/surface-discovery.md"
+      - "skills/hmux-browser/references/video-recording.md"
+      - "skills/hmux-browser/templates/authenticated-session.sh"
+      - "skills/hmux-browser/templates/capture-workflow.sh"
+      - "skills/hmux-browser/templates/form-automation.sh"
+      - "skills/hmux-cua/SKILL.md"
+
+permissions: {}
+
+concurrency:
+  group: hmux-next-pr-merge-tree-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  publish:
+    name: publish the merge tree
+    if: github.repository == 'manaflow-ai/cmux' && github.event.pull_request.head.repo.full_name == github.repository
+    # pull_request_target with a write token: a GitHub-hosted runner only.
+    runs-on: ubuntu-24.04 # github-hosted-required: pull_request_target write token
+    timeout-minutes: 5
+    environment: hmux-tui-merge-tree
+    permissions:
+      actions: write
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+          persist-credentials: false
+          sparse-checkout: scripts/ci/publish_pr_merge_tree.py
+          sparse-checkout-cone-mode: false
+
+      - name: Mint the release App token
+        id: app-token
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          app-id: ${{ secrets.HMUX_TUI_MERGE_TREE_APP_ID }}
+          private-key: ${{ secrets.HMUX_TUI_MERGE_TREE_APP_KEY }}
+          owner: ${{ github.repository_owner }}
+          repositories: ${{ github.event.repository.name }}
+          permission-contents: write
+          permission-workflows: write
+
+      - name: Publish the merge tree
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HMUX_PR_TREE_PIN_TOKEN: ${{ steps.app-token.outputs.token }}
+          PR: ${{ github.event.pull_request.number }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          python3 scripts/ci/publish_pr_merge_tree.py "$PR" "$HEAD_SHA" | tee -a "$GITHUB_STEP_SUMMARY"

@@ -20,7 +20,7 @@ PATH_DEPENDENCY = re.compile(r'\.package\(\s*(?:name:\s*"[^"]*",\s*)?path:\s*"([
 
 # Inputs outside a package's own directory and its path dependencies.
 EXTRA_INPUTS = {
-    "CmuxCommandPalette": ("Native/CommandPaletteNucleoFFI/",),
+    "HmuxCommandPalette": ("Native/CommandPaletteNucleoFFI/",),
 }
 
 # The job itself: its workflow, the scripts its test steps call, and the pinned
@@ -63,19 +63,19 @@ UNRELATED_PREFIXES = (
     "CLI/",
     "TunnelExtension/",
     "Resources/",
-    "cmuxTests/",
-    "cmuxCLITests/",
-    "cmuxCLITestSupport/",
-    "cmuxUITests/",
-    "cmux.xcodeproj/",
-    "cmux.xcworkspace/",
+    "hmuxTests/",
+    "hmuxCLITests/",
+    "hmuxCLITestSupport/",
+    "hmuxUITests/",
+    "hmux.xcodeproj/",
+    "hmux.xcworkspace/",
     "ios/",
     "web/",
     "docs/",
     "skills/",
     "tests/",
     "daemon/",
-    "cmux-tui/",
+    "hmux-tui/",
     "Examples/",
     ".github/",
     "scripts/",

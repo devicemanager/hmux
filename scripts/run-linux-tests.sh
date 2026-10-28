@@ -15,7 +15,7 @@
 #   gh api -H 'Accept: application/vnd.github.raw' repos/manaflow-ai/cmux/contents/scripts/run-linux-tests.sh | bash -s -- ...
 set -euo pipefail
 
-repo="${CMUX_LINUX_TESTS_REPO:-manaflow-ai/cmux}"
+repo="${HMUX_LINUX_TESTS_REPO:-manaflow-ai/cmux}"
 ref=""
 runner=8
 bundles=true

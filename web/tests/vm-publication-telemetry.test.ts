@@ -2,13 +2,13 @@ import { afterAll, beforeEach, describe, expect, test } from "bun:test";
 import { context, trace } from "@opentelemetry/api";
 import { AsyncLocalStorageContextManager } from "@opentelemetry/context-async-hooks";
 import { BasicTracerProvider, InMemorySpanExporter, SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base";
-import { buildCmuxTraceSampler } from "../services/observability/sampler";
+import { buildHmuxTraceSampler } from "../services/observability/sampler";
 import { TRACE_ID_RESPONSE_HEADER } from "../services/telemetry";
 import { tracePublicationAuthOperation, withPublicationAuthRequest } from "../services/vm-publications/requestTelemetry";
 
 const exporter = new InMemorySpanExporter();
 const provider = new BasicTracerProvider({
-  sampler: buildCmuxTraceSampler({ CMUX_OTEL_BASE_SAMPLE_RATIO: "0" }),
+  sampler: buildHmuxTraceSampler({ HMUX_OTEL_BASE_SAMPLE_RATIO: "0" }),
   spanProcessors: [new SimpleSpanProcessor(exporter)],
 });
 trace.setGlobalTracerProvider(provider);
@@ -33,9 +33,9 @@ describe("publication authorization telemetry", () => {
     const spans = exporter.getFinishedSpans();
     expect(spans).toHaveLength(1);
     const span = spans[0]!;
-    expect(span.name).toBe("cmux.publication_auth.outcome");
-    expect(span.attributes["cmux.publication_auth.duration_ms"]).toBe(950);
-    expect(span.attributes["cmux.publication_auth.slow"]).toBe(true);
+    expect(span.name).toBe("hmux.publication_auth.outcome");
+    expect(span.attributes["hmux.publication_auth.duration_ms"]).toBe(950);
+    expect(span.attributes["hmux.publication_auth.slow"]).toBe(true);
     expect(span.events.map(event => event.attributes?.operation)).toEqual(["database.findRequestContext", "identity"]);
     expect(response.headers.get(TRACE_ID_RESPONSE_HEADER)).toBe(span.spanContext().traceId);
     const serialized = JSON.stringify(spans.map(span => ({ attributes: span.attributes, events: span.events })));
@@ -75,7 +75,7 @@ describe("publication authorization telemetry", () => {
     expect(response.status).toBe(503);
     const span = exporter.getFinishedSpans()[0]!;
     expect(span.events).toHaveLength(32);
-    expect(span.attributes["cmux.publication_auth.dropped_operations"]).toBe(9);
+    expect(span.attributes["hmux.publication_auth.dropped_operations"]).toBe(9);
     expect(JSON.stringify(span.events)).not.toContain("private-credential");
   });
 

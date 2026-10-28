@@ -32,18 +32,18 @@ fi
 
 case "$CHANNEL" in
   stable)
-    EXPECTED_NAME="cmux"
-    EXPECTED_BUNDLE_ID="com.cmuxterm.app"
+    EXPECTED_NAME="hmux"
+    EXPECTED_BUNDLE_ID="com.hmuxterm.app"
     EXPECTED_ICON_NAME="AppIcon"
     ;;
   nightly)
-    EXPECTED_NAME="cmux NIGHTLY"
-    EXPECTED_BUNDLE_ID="com.cmuxterm.app.nightly"
+    EXPECTED_NAME="hmux NIGHTLY"
+    EXPECTED_BUNDLE_ID="com.hmuxterm.app.nightly"
     EXPECTED_ICON_NAME="AppIcon-Nightly"
     ;;
   rc)
-    EXPECTED_NAME="cmux RC"
-    EXPECTED_BUNDLE_ID="com.cmuxterm.app.rc"
+    EXPECTED_NAME="hmux RC"
+    EXPECTED_BUNDLE_ID="com.hmuxterm.app.rc"
     EXPECTED_ICON_NAME="AppIcon-RC"
     ;;
   *)

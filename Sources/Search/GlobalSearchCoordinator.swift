@@ -24,7 +24,7 @@ final class GlobalSearchCoordinator {
     )
     private lazy var popover = MenubarSearchPopover(coordinator: self)
 
-    init(databaseURL: URL = .cmuxSearchDatabaseURL) {
+    init(databaseURL: URL = .hmuxSearchDatabaseURL) {
         self.databaseURL = databaseURL
     }
 
@@ -37,7 +37,7 @@ final class GlobalSearchCoordinator {
                 try await index.deleteAll()
             } catch {
 #if DEBUG
-                cmuxDebugLog("globalSearch.index.clear failed error=\(error.localizedDescription)")
+                hmuxDebugLog("globalSearch.index.clear failed error=\(error.localizedDescription)")
 #endif
             }
 
@@ -69,7 +69,7 @@ final class GlobalSearchCoordinator {
             return try await index.search(query, limit: 20)
         } catch {
 #if DEBUG
-            cmuxDebugLog("globalSearch.search failed error=\(error.localizedDescription)")
+            hmuxDebugLog("globalSearch.search failed error=\(error.localizedDescription)")
 #endif
             return []
         }
@@ -100,7 +100,7 @@ final class GlobalSearchCoordinator {
                 try await index.upsert(titleDocument)
             } catch {
 #if DEBUG
-                cmuxDebugLog("globalSearch.title.upsert failed panel=\(context.panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
+                hmuxDebugLog("globalSearch.title.upsert failed panel=\(context.panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
             }
 
@@ -146,7 +146,7 @@ final class GlobalSearchCoordinator {
             } catch {
                 guard !Task.isCancelled else { return }
 #if DEBUG
-                cmuxDebugLog("globalSearch.panel.purge failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
+                hmuxDebugLog("globalSearch.panel.purge failed panel=\(panelID.uuidString.prefix(5)) error=\(error.localizedDescription)")
 #endif
             }
         }
@@ -191,7 +191,7 @@ final class GlobalSearchCoordinator {
                 indexState = .failed
             }
 #if DEBUG
-            cmuxDebugLog("globalSearch.index.open failed error=\(error.localizedDescription)")
+            hmuxDebugLog("globalSearch.index.open failed error=\(error.localizedDescription)")
 #endif
             return nil
         }

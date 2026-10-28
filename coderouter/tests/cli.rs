@@ -22,7 +22,7 @@ fn both_binary_names_show_the_same_help() {
         .stdout(
             predicate::str::contains("cr add opencode")
                 .and(predicate::str::contains("cr capabilities --json"))
-                .and(predicate::str::contains("__cmux-handoff").not()),
+                .and(predicate::str::contains("__hmux-handoff").not()),
         );
     Command::cargo_bin("coderouter")
         .unwrap()
@@ -32,7 +32,7 @@ fn both_binary_names_show_the_same_help() {
         .stdout(
             predicate::str::contains("cr add codex")
                 .and(predicate::str::contains("cr capabilities --json"))
-                .and(predicate::str::contains("__cmux-handoff").not()),
+                .and(predicate::str::contains("__hmux-handoff").not()),
         );
 }
 
@@ -42,7 +42,7 @@ fn both_binary_names_report_strict_credential_free_capabilities() {
         "product": "coderouter",
         "cliVersion": env!("CARGO_PKG_VERSION"),
         "protocolVersion": 2,
-        "authModes": ["standalone-stack", "cmux-socket-v1"],
+        "authModes": ["standalone-stack", "hmux-socket-v1"],
         "features": ["route-session", "organization-scope"],
     });
 
@@ -96,7 +96,7 @@ fn capabilities_rejects_non_json_arguments_without_emitting_json() {
 fn obsolete_handoff_markers_fail_routed_commands_without_saved_fallback() {
     use std::os::unix::fs::PermissionsExt;
 
-    for marker in ["CODEROUTER_HANDOFF_FD", "CODEROUTER_CMUX_HANDOFF_SOCKET"] {
+    for marker in ["CODEROUTER_HANDOFF_FD", "CODEROUTER_HMUX_HANDOFF_SOCKET"] {
         let root = TempDir::new().unwrap();
         write_config(&root, "https://saved-route.example");
         let child_ran = root.path().join("child-ran");
@@ -127,7 +127,7 @@ fn obsolete_handoff_markers_fail_routed_commands_without_saved_fallback() {
         let hidden_output = Command::cargo_bin("cr")
             .unwrap()
             .args([
-                "__cmux-handoff-v2",
+                "__hmux-handoff-v2",
                 "/tmp/coderouter-obsolete-marker.sock",
                 "f99a68dd0ed7ed7f32ac0423736870a1ec31dfbe654e2afef6860cc587839f41",
                 "--",
@@ -150,7 +150,7 @@ fn obsolete_handoff_markers_fail_routed_commands_without_saved_fallback() {
 
 #[test]
 fn obsolete_handoff_markers_do_not_affect_credential_free_management() {
-    for marker in ["CODEROUTER_HANDOFF_FD", "CODEROUTER_CMUX_HANDOFF_SOCKET"] {
+    for marker in ["CODEROUTER_HANDOFF_FD", "CODEROUTER_HMUX_HANDOFF_SOCKET"] {
         Command::cargo_bin("cr")
             .unwrap()
             .args(["capabilities", "--json"])
@@ -182,7 +182,7 @@ fn hidden_handoff_socket_failures_have_one_safe_public_error() {
     let malformed = Command::cargo_bin("cr")
         .unwrap()
         .args([
-            "__cmux-handoff-v2",
+            "__hmux-handoff-v2",
             socket_path.to_str().unwrap(),
             binding,
             "--",
@@ -205,7 +205,7 @@ fn hidden_handoff_socket_failures_have_one_safe_public_error() {
     let unavailable = Command::cargo_bin("cr")
         .unwrap()
         .args([
-            "__cmux-handoff-v2",
+            "__hmux-handoff-v2",
             missing_path.to_str().unwrap(),
             binding,
             "--",
@@ -445,7 +445,7 @@ fn handoff_exchanges_once_disables_analytics_and_isolates_child_credentials() {
     let codex = root.path().join("codex");
     fs::write(
         &codex,
-        "#!/bin/sh\nprintf 'route=%s\\n' \"${CODEROUTER_ROUTE_TOKEN-unset}\"\nprintf 'handoff=%s\\n' \"${CODEROUTER_HANDOFF_FD-unset}\"\nprintf 'cmux_compat=%s\\n' \"${CODEROUTER_CMUX_HANDOFF_COMPAT-unset}\"\nprintf 'test_origin=%s\\n' \"${CODEROUTER_HANDOFF_TEST_ORIGIN-unset}\"\nprintf 'api_url=%s\\n' \"${CODEROUTER_API_URL-unset}\"\nprintf 'data_dir=%s\\n' \"${CODEROUTER_DATA_DIR-unset}\"\nprintf 'stack_access=%s\\n' \"${STACK_ACCESS_TOKEN-unset}\"\nprintf 'stack_refresh=%s\\n' \"${STACK_REFRESH_TOKEN-unset}\"\nprintf 'github_pat=%s\\n' \"${GITHUB_PAT-unset}\"\nprintf 'http_proxy=%s\\n' \"${HTTP_PROXY-unset}\"\nprintf 'https_proxy=%s\\n' \"${HTTPS_PROXY-unset}\"\nprintf 'all_proxy=%s\\n' \"${ALL_PROXY-unset}\"\nprintf 'no_proxy=%s\\n' \"${NO_PROXY-unset}\"\nprintf 'ssl_cert_file=%s\\n' \"${SSL_CERT_FILE-unset}\"\nprintf 'ssl_cert_dir=%s\\n' \"${SSL_CERT_DIR-unset}\"\nprintf 'ssl_keylog=%s\\n' \"${SSLKEYLOGFILE-unset}\"\nprintf 'node_extra_ca=%s\\n' \"${NODE_EXTRA_CA_CERTS-unset}\"\nprintf 'node_options=%s\\n' \"${NODE_OPTIONS-unset}\"\nprintf 'lease=%s\\n' \"${CODEROUTER_HANDOFF_LEASE-unset}\"\nprintf 'args=%s\\n' \"$*\"\n",
+        "#!/bin/sh\nprintf 'route=%s\\n' \"${CODEROUTER_ROUTE_TOKEN-unset}\"\nprintf 'handoff=%s\\n' \"${CODEROUTER_HANDOFF_FD-unset}\"\nprintf 'hmux_compat=%s\\n' \"${CODEROUTER_HMUX_HANDOFF_COMPAT-unset}\"\nprintf 'test_origin=%s\\n' \"${CODEROUTER_HANDOFF_TEST_ORIGIN-unset}\"\nprintf 'api_url=%s\\n' \"${CODEROUTER_API_URL-unset}\"\nprintf 'data_dir=%s\\n' \"${CODEROUTER_DATA_DIR-unset}\"\nprintf 'stack_access=%s\\n' \"${STACK_ACCESS_TOKEN-unset}\"\nprintf 'stack_refresh=%s\\n' \"${STACK_REFRESH_TOKEN-unset}\"\nprintf 'github_pat=%s\\n' \"${GITHUB_PAT-unset}\"\nprintf 'http_proxy=%s\\n' \"${HTTP_PROXY-unset}\"\nprintf 'https_proxy=%s\\n' \"${HTTPS_PROXY-unset}\"\nprintf 'all_proxy=%s\\n' \"${ALL_PROXY-unset}\"\nprintf 'no_proxy=%s\\n' \"${NO_PROXY-unset}\"\nprintf 'ssl_cert_file=%s\\n' \"${SSL_CERT_FILE-unset}\"\nprintf 'ssl_cert_dir=%s\\n' \"${SSL_CERT_DIR-unset}\"\nprintf 'ssl_keylog=%s\\n' \"${SSLKEYLOGFILE-unset}\"\nprintf 'node_extra_ca=%s\\n' \"${NODE_EXTRA_CA_CERTS-unset}\"\nprintf 'node_options=%s\\n' \"${NODE_OPTIONS-unset}\"\nprintf 'lease=%s\\n' \"${CODEROUTER_HANDOFF_LEASE-unset}\"\nprintf 'args=%s\\n' \"$*\"\n",
     )
     .unwrap();
     {
@@ -453,22 +453,22 @@ fn handoff_exchanges_once_disables_analytics_and_isolates_child_credentials() {
         let mut script = fs::OpenOptions::new().append(true).open(&codex).unwrap();
         writeln!(
             script,
-            "printf 'cmux_socket=%s\\n' \"${{CMUX_SOCKET-unset}}\""
+            "printf 'hmux_socket=%s\\n' \"${{HMUX_SOCKET-unset}}\""
         )
         .unwrap();
         writeln!(
             script,
-            "printf 'cmux_socket_capability=%s\\n' \"${{CMUX_SOCKET_CAPABILITY-unset}}\""
+            "printf 'hmux_socket_capability=%s\\n' \"${{HMUX_SOCKET_CAPABILITY-unset}}\""
         )
         .unwrap();
         writeln!(
             script,
-            "printf 'cmux_socket_path=%s\\n' \"${{CMUX_SOCKET_PATH-unset}}\""
+            "printf 'hmux_socket_path=%s\\n' \"${{HMUX_SOCKET_PATH-unset}}\""
         )
         .unwrap();
         writeln!(
             script,
-            "printf 'cmux_socket_password=%s\\n' \"${{CMUX_SOCKET_PASSWORD-unset}}\""
+            "printf 'hmux_socket_password=%s\\n' \"${{HMUX_SOCKET_PASSWORD-unset}}\""
         )
         .unwrap();
     }
@@ -483,7 +483,7 @@ fn handoff_exchanges_once_disables_analytics_and_isolates_child_credentials() {
     let stdout = String::from_utf8(output.stdout).unwrap();
     assert!(stdout.contains(&format!("route={route_token}")));
     assert!(stdout.contains("handoff=unset"));
-    assert!(stdout.contains("cmux_compat=unset"));
+    assert!(stdout.contains("hmux_compat=unset"));
     assert!(stdout.contains("test_origin=unset"));
     assert!(stdout.contains("api_url=unset"));
     assert!(stdout.contains("data_dir=unset"));
@@ -499,10 +499,10 @@ fn handoff_exchanges_once_disables_analytics_and_isolates_child_credentials() {
     assert!(stdout.contains("ssl_keylog=unset"));
     assert!(stdout.contains("node_extra_ca=unset"));
     assert!(stdout.contains("node_options=unset"));
-    assert!(stdout.contains("cmux_socket=unset"));
-    assert!(stdout.contains("cmux_socket_capability=unset"));
-    assert!(stdout.contains("cmux_socket_path=unset"));
-    assert!(stdout.contains("cmux_socket_password=unset"));
+    assert!(stdout.contains("hmux_socket=unset"));
+    assert!(stdout.contains("hmux_socket_capability=unset"));
+    assert!(stdout.contains("hmux_socket_path=unset"));
+    assert!(stdout.contains("hmux_socket_password=unset"));
     assert!(stdout.contains("lease=unset"));
     assert!(!stdout.contains(&lease));
 
@@ -595,7 +595,7 @@ fn ambient_and_saved_origins_cannot_steer_the_handoff_exchange() {
     let capture = received.recv_timeout(Duration::from_secs(2)).unwrap();
     assert_eq!(capture.path, "/api/coderouter/handoff/exchange");
     assert_eq!(capture.body, format!("{{\"lease\":\"{lease}\"}}"));
-    for forbidden in ["authorization", "x-stack-refresh-token", "x-cmux-team-id"] {
+    for forbidden in ["authorization", "x-stack-refresh-token", "x-hmux-team-id"] {
         assert!(
             capture
                 .headers
@@ -1115,7 +1115,7 @@ fn upgrade_is_a_supported_headless_command() {
         .assert()
         .success()
         .stdout(
-            predicate::str::contains("Upgrade cmux Pro or Team")
+            predicate::str::contains("Upgrade hmux Pro or Team")
                 .and(predicate::str::contains("https://cmux.com/pricing"))
                 .and(predicate::str::contains("unknown coderouter command").not()),
         );
@@ -1217,7 +1217,7 @@ fn org_list_uses_the_server_permission_filtered_organization_catalog() {
             "teams": [
                 {
                     "id": "team-1",
-                    "name": "cmux",
+                    "name": "hmux",
                     "personal": false,
                     "permissions": { "use": true, "manageAccounts": true }
                 }
@@ -1234,7 +1234,7 @@ fn org_list_uses_the_server_permission_filtered_organization_catalog() {
         .env("CODEROUTER_DATA_DIR", root.path())
         .assert()
         .success()
-        .stdout(predicate::eq("*\tcmux\tteam-1\n"))
+        .stdout(predicate::eq("*\thmux\tteam-1\n"))
         .stdout(predicate::str::contains("workspace").not());
 }
 
@@ -1330,7 +1330,7 @@ fn run_agent_with_handoff(
     let mut command = StdCommand::new(assert_cmd::cargo::cargo_bin("cr"));
     command
         .args([
-            "__cmux-handoff-v2",
+            "__hmux-handoff-v2",
             socket_path.to_str().unwrap(),
             "f99a68dd0ed7ed7f32ac0423736870a1ec31dfbe654e2afef6860cc587839f41",
             "--",
@@ -1354,16 +1354,16 @@ fn run_agent_with_handoff(
             "NODE_OPTIONS",
             "--tls-keylog=/tmp/hostile-node-tls-keys.log --use-openssl-ca",
         )
-        .env("CMUX_SOCKET", "/tmp/ambient-cmux.sock")
-        .env("CMUX_SOCKET_CAPABILITY", "ambient-cmux-capability")
-        .env("CMUX_SOCKET_PATH", "/tmp/ambient-cmux-path.sock")
-        .env("CMUX_SOCKET_PASSWORD", "ambient-cmux-password")
+        .env("HMUX_SOCKET", "/tmp/ambient-hmux.sock")
+        .env("HMUX_SOCKET_CAPABILITY", "ambient-hmux-capability")
+        .env("HMUX_SOCKET_PATH", "/tmp/ambient-hmux-path.sock")
+        .env("HMUX_SOCKET_PASSWORD", "ambient-hmux-password")
         .env(
             "CODEROUTER_HANDOFF_LEASE",
             "ambient-lease-must-not-reach-child",
         )
         .env(
-            "CODEROUTER_CMUX_HANDOFF_COMPAT",
+            "CODEROUTER_HMUX_HANDOFF_COMPAT",
             "ambient-compatibility-marker-must-not-reach-child",
         )
         .env("STACK_ACCESS_TOKEN", "stack-access-must-not-reach-child")

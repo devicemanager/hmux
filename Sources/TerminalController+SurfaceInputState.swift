@@ -1,13 +1,13 @@
-import CMUXAgentLaunch
-import CmuxTerminal
-import CMUXMobileCore
+import HMUXAgentLaunch
+import HmuxTerminal
+import HMUXMobileCore
 import Foundation
 
 extension TerminalController {
     /// `surface.input_state`: whether typing into a terminal could disturb a
     /// human's input. Reports the agent's lifecycle and what its prompt area
     /// holds on screen (`empty`, `draft`, `dialog`, or `unknown` when no agent
-    /// prompt is recognized). `cmux send` checks this before typing.
+    /// prompt is recognized). `hmux send` checks this before typing.
     ///
     /// Takes `surface_id`, or `workspace_id` for that workspace's focused
     /// surface. The draft text itself is never returned, only its length.

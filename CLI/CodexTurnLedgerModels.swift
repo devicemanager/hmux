@@ -1,18 +1,18 @@
 import Foundation
-import CmuxFoundation
+import HmuxFoundation
 
 /// The process identity carried by one Codex hook invocation.
 ///
-/// CMUX_CODEX_PID is a launch-time claim and is inherited by descendants.
-/// The hook shell also supplies CMUX_CODEX_HOOK_PID, identifying the process
+/// HMUX_CODEX_PID is a launch-time claim and is inherited by descendants.
+/// The hook shell also supplies HMUX_CODEX_HOOK_PID, identifying the process
 /// that actually caused the callback.
 struct CodexHookInvocation: Equatable, Sendable {
-    static let tokenEnvironmentKey = "CMUX_CODEX_INVOCATION_ID"
-    static let parentTokenEnvironmentKey = "CMUX_CODEX_PARENT_INVOCATION_ID"
-    static let ownerPIDEnvironmentKey = "CMUX_CODEX_PID"
-    static let observedPIDEnvironmentKey = "CMUX_CODEX_HOOK_PID"
-    static let ledgerPathEnvironmentKey = "CMUX_CODEX_TURN_LEDGER_PATH"
-    static let forkSessionEnvironmentKey = "CMUX_CODEX_FORK_SESSION"
+    static let tokenEnvironmentKey = "HMUX_CODEX_INVOCATION_ID"
+    static let parentTokenEnvironmentKey = "HMUX_CODEX_PARENT_INVOCATION_ID"
+    static let ownerPIDEnvironmentKey = "HMUX_CODEX_PID"
+    static let observedPIDEnvironmentKey = "HMUX_CODEX_HOOK_PID"
+    static let ledgerPathEnvironmentKey = "HMUX_CODEX_TURN_LEDGER_PATH"
+    static let forkSessionEnvironmentKey = "HMUX_CODEX_FORK_SESSION"
 
     let token: String?
     let parentToken: String?
@@ -219,7 +219,7 @@ struct CodexTurnLedgerFile: Codable {
     }
 }
 
-extension CMUXCLI {
+extension HMUXCLI {
     /// Builds one Codex invocation identity per hook. The inherited owner PID
     /// remains a claim and never supplies the nested decision alone.
     func codexHookInvocation(environment: [String: String]) -> CodexHookInvocation {

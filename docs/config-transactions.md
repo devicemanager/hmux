@@ -1,21 +1,21 @@
-# Conditional undo for cmux.json settings
+# Conditional undo for hmux.json settings
 
 A preset or agent that changes a setting may later need to take that change
 back. An unconditional reset gets this wrong in two ways: it erases a choice the
-user made after the preset, and it turns an explicit pin into inheritance. cmux
+user made after the preset, and it turns an explicit pin into inheritance. hmux
 instead records what one mutation did to one path and undoes it only while that
 path still holds the value it installed.
 
 The writer boundary and publication this builds on landed separately:
 [#13218](https://github.com/manaflow-ai/cmux/pull/13218) (lossless JSONC edits,
-the `<target>.cmux-write.lock` sidecar lock shared by the native store and the
-`cmux-settings` helper, and source-snapshot publication) and
+the `<target>.hmux-write.lock` sidecar lock shared by the native store and the
+`hmux-settings` helper, and source-snapshot publication) and
 [#13146](https://github.com/manaflow-ai/cmux/pull/13146) (the canonical
 semantic validator).
 
 ## Native store
 
-`JSONConfigStore` in `Packages/macOS/CmuxSettings`:
+`JSONConfigStore` in `Packages/macOS/HmuxSettings`:
 
 | API | Validation | Returns |
 |---|---|---|
@@ -47,10 +47,10 @@ log instead of reaching disk. The schema also declares the existing DEBUG-only
 ## Helper
 
 ```sh
-cmux-settings set computerUse.showInMenuBar false --preview
-cmux-settings set computerUse.showInMenuBar false \
+hmux-settings set computerUse.showInMenuBar false --preview
+hmux-settings set computerUse.showInMenuBar false \
   --expect-revision REVISION --receipt /private/menu-bar-undo.json
-cmux-settings undo /private/menu-bar-undo.json
+hmux-settings undo /private/menu-bar-undo.json
 ```
 
 - `--preview` prints the path's before and installed values plus a revision
@@ -94,12 +94,12 @@ outright, since there is nothing to compare.
 ## Tests
 
 ```sh
-swift test --package-path Packages/macOS/CmuxSettings --filter 'JSONConfig(Transaction|StoreSymlink)'
-swift test --package-path Packages/macOS/CmuxSettingsUI --filter JSONValueModelTransaction
-python3 tests/test_cmux_settings_transactions.py
+swift test --package-path Packages/macOS/HmuxSettings --filter 'JSONConfig(Transaction|StoreSymlink)'
+swift test --package-path Packages/macOS/HmuxSettingsUI --filter JSONValueModelTransaction
+python3 tests/test_hmux_settings_transactions.py
 ```
 
 The helper tests stub `candidate_issues` to control interleavings, and run the
-real validation path against a fake `cmux config validate` for the new-issue
+real validation path against a fake `hmux config validate` for the new-issue
 rule. Schema rejection is covered by the native transaction tests and
 `tests/test_cli_config_doctor.py`.

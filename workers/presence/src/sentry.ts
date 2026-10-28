@@ -53,7 +53,7 @@ export async function captureSentryException(
     timestamp: Date.now() / 1_000,
     platform: "javascript",
     level: "error",
-    logger: "cmux-presence",
+    logger: "hmux-presence",
     ...(distinctId ? { user: { id: distinctId.slice(0, 200) } } : {}),
     tags,
     exception: {
@@ -68,7 +68,7 @@ export async function captureSentryException(
     `${JSON.stringify({ type: "event" })}\n${JSON.stringify(event)}\n`;
   try {
     await sentryFetch(
-      `${dsn.endpoint}?sentry_version=7&sentry_key=${encodeURIComponent(dsn.publicKey)}&sentry_client=cmux-presence-worker/1.0`,
+      `${dsn.endpoint}?sentry_version=7&sentry_key=${encodeURIComponent(dsn.publicKey)}&sentry_client=hmux-presence-worker/1.0`,
       {
         method: "POST",
         headers: { "Content-Type": "application/x-sentry-envelope" },

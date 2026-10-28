@@ -18,8 +18,8 @@ export function planetScaleOperatorOptions(env, label) {
   if (sslmode && !["require", "verify-ca", "verify-full"].includes(sslmode)) {
     fail("operator connections require certificate verification");
   }
-  if (env.CMUX_DB_SSL_REJECT_UNAUTHORIZED &&
-      !["true", "1", "yes", "on"].includes(env.CMUX_DB_SSL_REJECT_UNAUTHORIZED.trim().toLowerCase())) {
+  if (env.HMUX_DB_SSL_REJECT_UNAUTHORIZED &&
+      !["true", "1", "yes", "on"].includes(env.HMUX_DB_SSL_REJECT_UNAUTHORIZED.trim().toLowerCase())) {
     fail("operator connections require certificate verification");
   }
   // The deployed URL uses PgBouncer (6432). Migrations and cleanup jobs need

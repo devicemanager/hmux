@@ -31,10 +31,10 @@ WORKFLOW = ROOT / ".github/workflows/ci-guard-attribution.yml"
 # Trimmed from run 36199352592, a PR's "CI fast guards" job log.
 CI_LOG = textwrap.dedent("""\
     2026-09-25T23:01:55.1Z ##[group]Run scripts/ci/guards-local.sh --no-stamp --jobs 8
-    2026-09-25T23:01:55.1Z cmux guards: 1 groups, 57 steps, head cd0cdece70e0, base 028a1860776a, 8 workers
+    2026-09-25T23:01:55.1Z hmux guards: 1 groups, 57 steps, head cd0cdece70e0, base 028a1860776a, 8 workers
     2026-09-25T23:02:16.6Z   FAIL    0.4s  workflow-guard-tests / ci: Validate macOS jobs select a pinned Xcode
     2026-09-25T23:02:16.6Z ##[group]Validate macOS jobs select a pinned Xcode
-    2026-09-25T23:02:16.6Z FAIL: cmux-terminal-client-xcframework.yml job build never runs scripts/select-ci-xcode.sh, so it builds with the image's default Xcode
+    2026-09-25T23:02:16.6Z FAIL: hmux-terminal-client-xcframework.yml job build never runs scripts/select-ci-xcode.sh, so it builds with the image's default Xcode
     2026-09-25T23:02:16.6Z ##[endgroup]
     2026-09-25T23:02:37.3Z   FAIL    0.9s  workflow-guard-tests / ci: Validate fork runner routing
     2026-09-25T23:02:37.3Z ##[group]Validate fork runner routing
@@ -44,7 +44,7 @@ CI_LOG = textwrap.dedent("""\
     2026-09-25T23:02:37.3Z No fork PR may queue forever on organization-only capacity.
     2026-09-25T23:02:37.3Z ----------------------------------------------------------------------
     2026-09-25T23:02:37.3Z Traceback (most recent call last):
-    2026-09-25T23:02:37.3Z   File "/home/runner/work/cmux/cmux/tests/test_ci_fork_runner_routing.py", line 845, in test_every
+    2026-09-25T23:02:37.3Z   File "/home/runner/work/hmux/hmux/tests/test_ci_fork_runner_routing.py", line 845, in test_every
     2026-09-25T23:02:37.3Z     self.assertTrue(
     2026-09-25T23:02:37.3Z AssertionError: False is not true : x.yml:41 has no GitHub-hosted macOS fork branch
     2026-09-25T23:02:37.3Z
@@ -53,7 +53,7 @@ CI_LOG = textwrap.dedent("""\
     2026-09-25T23:02:37.3Z Scheduled, dispatched and push-only workflows need a fork branch too.
     2026-09-25T23:02:37.3Z ----------------------------------------------------------------------
     2026-09-25T23:02:37.3Z Traceback (most recent call last):
-    2026-09-25T23:02:37.3Z   File "/home/runner/work/cmux/cmux/tests/test_ci_fork_runner_routing.py", line 921, in test_no
+    2026-09-25T23:02:37.3Z   File "/home/runner/work/hmux/hmux/tests/test_ci_fork_runner_routing.py", line 921, in test_no
     2026-09-25T23:02:37.3Z     self.assertEqual(errors, [], "\\n" + "\\n".join(errors))
     2026-09-25T23:02:37.3Z AssertionError: Lists differ: ["x.yml:41:[491 chars] }}"] != []
     2026-09-25T23:02:37.3Z
@@ -66,13 +66,13 @@ CI_LOG = textwrap.dedent("""\
     2026-09-25T23:02:37.3Z FAILED (failures=2)
     2026-09-25T23:02:37.3Z ##[endgroup]
     2026-09-25T23:03:35.7Z failed: workflow-guard-tests / ci: Validate macOS jobs select a pinned Xcode; workflow-guard-tests / ci: Validate fork runner routing
-    2026-09-25T23:03:35.7Z cmux guards: 55 steps passed, 2 failed, 0 skipped (Linux only) in 79.5s
+    2026-09-25T23:03:35.7Z hmux guards: 55 steps passed, 2 failed, 0 skipped (Linux only) in 79.5s
     2026-09-25T23:03:35.7Z ##[error]Process completed with exit code 1.
     """)
 
 # guards-local.sh output on a dev machine: ::group:: instead of ##[group].
 LOCAL_LOG = textwrap.dedent("""\
-    cmux guards: 1 groups, 57 steps, head 90e8953b0bb8, base 90e8953b0bb8, 8 workers
+    hmux guards: 1 groups, 57 steps, head 90e8953b0bb8, base 90e8953b0bb8, 8 workers
       FAIL    0.3s  workflow-guard-tests / ci: Validate runner label policy
     ::group::Validate runner label policy
     ...F.
@@ -81,16 +81,16 @@ LOCAL_LOG = textwrap.dedent("""\
     ----------------------------------------------------------------------
     Traceback (most recent call last):
       File "tests/test_runner_label_policy.py", line 212, in test_every_runner_variable_a_workflow_reads_is_reported
-        self.assertEqual(missing, set(), f"add to CMUX_CI_RUNNER_VARIABLES in {HEALTH_REPORT_WORKFLOW.name}")
+        self.assertEqual(missing, set(), f"add to HMUX_CI_RUNNER_VARIABLES in {HEALTH_REPORT_WORKFLOW.name}")
     AssertionError: Items in the first set but not the second:
-    'CI_SEED_KEEP_LOCAL_RUNNERS' : add to CMUX_CI_RUNNER_VARIABLES in ci-health-report.yml
+    'CI_SEED_KEEP_LOCAL_RUNNERS' : add to HMUX_CI_RUNNER_VARIABLES in ci-health-report.yml
 
     ----------------------------------------------------------------------
     Ran 5 tests in 0.1s
 
     FAILED (failures=1)
     ::endgroup::
-    cmux guards: 56 steps passed, 1 failed, 0 skipped (Linux only) in 60.0s
+    hmux guards: 56 steps passed, 1 failed, 0 skipped (Linux only) in 60.0s
     """)
 
 # The variable check's step header as GitHub prints it: a multi-line value
@@ -102,8 +102,8 @@ VARS_LOG = textwrap.dedent("""\
     2026-09-25T23:06:57.9Z env:
     2026-09-25T23:06:57.9Z   GITHUB_REPO_NAME: manaflow-ai/cmux
     2026-09-25T23:06:57.9Z   CI_OWNED_POOL_SLOTS: {"glaeda-std-xcode-26.6": 42}
-    2026-09-25T23:06:57.9Z   CMUX_CI_XCODE_APP_PR: /Applications/Xcode_26.6.app
-    2026-09-25T23:06:57.9Z   CMUX_CI_RUNNER_VARIABLES: CI_PR_POOL_ORDER=
+    2026-09-25T23:06:57.9Z   HMUX_CI_XCODE_APP_PR: /Applications/Xcode_26.6.app
+    2026-09-25T23:06:57.9Z   HMUX_CI_RUNNER_VARIABLES: CI_PR_POOL_ORDER=
     LINUX_RUNNER=blacksmith-4vcpu-ubuntu-2404
     MACOS_RUNNER_PR={pr}
 
@@ -115,7 +115,7 @@ VARS_LOG = textwrap.dedent("""\
 def fake_tree(root: Path, *, with_exemptions: bool = True) -> ga.Tree:
     workflows = root / ".github/workflows"
     workflows.mkdir(parents=True)
-    block = "          CMUX_CI_RUNNER_VARIABLES: |\n            LINUX_RUNNER=${{ vars.LINUX_RUNNER }}\n" \
+    block = "          HMUX_CI_RUNNER_VARIABLES: |\n            LINUX_RUNNER=${{ vars.LINUX_RUNNER }}\n" \
             "            WINDOWS_RUNNER=${{ vars.WINDOWS_RUNNER }}\n        run: true\n"
     (workflows / "ci-health-report.yml").write_text("jobs:\n  r:\n    steps:\n      - env:\n" + block)
     (workflows / "ci-repo-variables.yml").write_text("jobs:\n  r:\n    steps:\n      - env:\n" + block)
@@ -131,7 +131,7 @@ def fake_tree(root: Path, *, with_exemptions: bool = True) -> ga.Tree:
 REPORT_FAILURE = ga.TestFailure(
     "TheReportSeesEveryRunnerVariable.test_every_runner_variable_a_workflow_reads_is_reported",
     "AssertionError: Items in the first set but not the second:\n'CI_FOO_RUNNERS'\n'MACOS_RUNNER_NEW' : "
-    "add to CMUX_CI_RUNNER_VARIABLES in ci-health-report.yml",
+    "add to HMUX_CI_RUNNER_VARIABLES in ci-health-report.yml",
 )
 
 
@@ -154,7 +154,7 @@ class ReadingTheLog(unittest.TestCase):
     def test_local_output_reads_the_same(self) -> None:
         (step,) = ga.parse_guard_log(LOCAL_LOG)
         self.assertEqual(step.step, "Validate runner label policy")
-        self.assertIn("'CI_SEED_KEEP_LOCAL_RUNNERS' : add to CMUX_CI_RUNNER_VARIABLES", step.tests[0].message)
+        self.assertIn("'CI_SEED_KEEP_LOCAL_RUNNERS' : add to HMUX_CI_RUNNER_VARIABLES", step.tests[0].message)
 
     def test_summary_line_names_failed_steps(self) -> None:
         self.assertEqual(ga.failed_steps_summary(CI_LOG),
@@ -251,7 +251,7 @@ class MechanicalFixes(unittest.TestCase):
     def test_without_the_exemption_set_a_name_list_gets_a_hint_only(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             tree = fake_tree(Path(temp), with_exemptions=False)
-            failure = ga.TestFailure("t", "'CI_FOO_RUNNERS' : add to CMUX_CI_RUNNER_VARIABLES in ci-health-report.yml")
+            failure = ga.TestFailure("t", "'CI_FOO_RUNNERS' : add to HMUX_CI_RUNNER_VARIABLES in ci-health-report.yml")
             fix = ga.fix_runner_variable_report(failure, tree)
             self.assertIsNone(fix.edit)
             self.assertIn("exemptions in `tests/test_runner_label_policy.py`", fix.hint)
@@ -303,7 +303,7 @@ class Comments(unittest.TestCase):
         report = {"workflow": ga.FAST_WORKFLOW, "run_url": "https://run", "kind": "fast-guards", "branch": "main",
                   "state": "red", "steps": [self.step(culprit=culprit)]}
         body = ga.render_culprit_comment(report, 14724, report["steps"], 900, None)
-        self.assertTrue(body.startswith("<!-- cmux-guard-culprit pr=14724 steps="))
+        self.assertTrue(body.startswith("<!-- hmux-guard-culprit pr=14724 steps="))
         self.assertIn("**This PR broke `CI fast guards` on main.**", body)
         self.assertIn("add it to `NON_LABEL_RUNNER_VARIABLES`.", body)
         self.assertIn("scripts/ci/guards-local.sh --step 'Validate runner label policy'", body)
@@ -412,8 +412,8 @@ class Robustness(unittest.TestCase):
             self.assertEqual(ga.run_steps(runner, ROOT, {"a", "b"}), {"a": None, "b": None})
 
     def test_only_this_repositorys_pull_request_counts(self) -> None:
-        fork = {"number": 3, "base": {"repo": {"name": "cmux", "url": "https://api.github.com/repos/someone/cmux"}}}
-        ours = {"number": 9, "base": {"repo": {"name": "cmux", "url": "https://api.github.com/repos/manaflow-ai/cmux"}}}
+        fork = {"number": 3, "base": {"repo": {"name": "hmux", "url": "https://api.github.com/repos/someone/hmux"}}}
+        ours = {"number": 9, "base": {"repo": {"name": "hmux", "url": "https://api.github.com/repos/manaflow-ai/cmux"}}}
         gh = ga.GitHub("manaflow-ai/cmux", "t")
         self.assertEqual(ga.pr_number(gh, {"pull_requests": [fork, ours]}), 9)
 

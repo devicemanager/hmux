@@ -57,9 +57,9 @@ except Finished: pass
   const result = await runChild("python3", ["-c", harness], { input: guestResourceReporterScript() });
   expect(result.status).toBe(0);
   const sent = JSON.parse(result.stdout);
-  expect(sent.url).toBe("https://coderouter.cmux.internal/api/vm/resource-usage/self");
+  expect(sent.url).toBe("https://coderouter.hmux.internal/api/vm/resource-usage/self");
   expect(sent.method).toBe("POST");
-  expect(sent.headers.Authorization).toBe("Bearer cmux-vm-edge-placeholder");
+  expect(sent.headers.Authorization).toBe("Bearer hmux-vm-edge-placeholder");
   expect(sent.timeout).toBe(5);
   // Disk is available on macOS too; Linux additionally supplies CPU and RAM.
   expect(sent.body.diskUsedMb).toBeGreaterThanOrEqual(0);

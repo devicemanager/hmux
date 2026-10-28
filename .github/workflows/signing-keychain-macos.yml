@@ -7,7 +7,7 @@ on:
   # Pull requests cover other branches; push runs only for the two trunks, so
   # a PR commit does not run twice.
   push:
-    branches: [main, feat-cmux-next]
+    branches: [main, feat-hmux-next]
     paths:
       - scripts/ci/signing-keychain.sh
       - scripts/ci/lib/signing-runtime-guard.sh

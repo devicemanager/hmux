@@ -1,12 +1,12 @@
 import AppKit
-import CmuxSettingsUI
-import CmuxSettings
+import HmuxSettingsUI
+import HmuxSettings
 import IOKit.pwr_mgt
 import SwiftUI
 
 /// Owns "Sleepy Mode": a cute full-screen keep-awake screensaver. It holds
 /// IOKit power assertions so the Mac (and its display) stay awake — useful for
-/// leaving the Mac running for the cmux iOS app — and covers every screen with
+/// leaving the Mac running for the hmux iOS app — and covers every screen with
 /// the animated scene.
 ///
 /// It is deliberately NOT a security boundary: a normal macOS app cannot make
@@ -18,7 +18,7 @@ final class SleepyModeController {
     // App-lifecycle UI/window controller: it owns NSWindows and IOKit power
     // assertions tied to the app's foreground lifetime, so a process-wide
     // instance is the right ownership boundary. This matches the established
-    // cmux pattern for such controllers (TerminalController.shared,
+    // hmux pattern for such controllers (TerminalController.shared,
     // TaskManagerWindowController.shared, SystemWideHotkeyController.shared,
     // and the *WindowController singletons). Its
     // data/service dependencies — the settings store and the power-action
@@ -30,7 +30,7 @@ final class SleepyModeController {
     /// The single Sleepy Mode settings store, owned here (the app composition
     /// root) and injected into the overlay scene and the Preferences section.
     let store = SleepyModeSettingsStore(
-        configStore: JSONConfigStore(fileURL: CmuxConfigLocation().userConfigFile)
+        configStore: JSONConfigStore(fileURL: HmuxConfigLocation().userConfigFile)
     )
 
     /// Power-action service (display sleep / real Mac lock / Low Power), owned
@@ -119,7 +119,7 @@ final class SleepyModeController {
             backing: .buffered,
             defer: false
         )
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.sleepyMode")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.sleepyMode")
         window.isReleasedWhenClosed = false
         window.isOpaque = true
         window.backgroundColor = .black
@@ -170,7 +170,7 @@ final class SleepyModeController {
     /// In-process equivalent of `caffeinate -d -i`: keep the display awake so the
     /// screensaver stays visible, and stop the system from idle-sleeping.
     private func beginPowerAssertions() {
-        let reason = "cmux Sleepy Mode" as CFString
+        let reason = "hmux Sleepy Mode" as CFString
         if !hasSystemAssertion {
             var id = IOPMAssertionID(0)
             if IOPMAssertionCreateWithName(kIOPMAssertionTypePreventUserIdleSystemSleep as CFString, IOPMAssertionLevel(kIOPMAssertionLevelOn), reason, &id) == kIOReturnSuccess {

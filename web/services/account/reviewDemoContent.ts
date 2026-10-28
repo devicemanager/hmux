@@ -2,14 +2,14 @@
 //
 // The iOS app activates its demonstration computer (sample workspaces,
 // notifications, interactive canned terminals) when the signed-in account's
-// Stack `clientReadOnlyMetadata` carries `cmuxReviewDemoContent: true` — the
+// Stack `clientReadOnlyMetadata` carries `hmuxReviewDemoContent: true` — the
 // client reads it off the session payload it already fetches at sign-in
-// (`CMUXAuthUser.demonstrationContentEnabled`). This module owns the
-// server-side write, mirroring the `cmuxPlan`/`cmuxVmPlan` metadata pattern in
+// (`HMUXAuthUser.demonstrationContentEnabled`). This module owns the
+// server-side write, mirroring the `hmuxPlan`/`hmuxVmPlan` metadata pattern in
 // services/billing/pro.ts: preserve every other key and set or remove only
 // ours. Set the flag with `bun scripts/set-review-demo-content.ts`.
 
-export const REVIEW_DEMO_CONTENT_METADATA_KEY = "cmuxReviewDemoContent";
+export const REVIEW_DEMO_CONTENT_METADATA_KEY = "hmuxReviewDemoContent";
 
 // Mirrors Stack's ReadonlyJson so `user.update` stays assignable.
 export type ReviewDemoContentJson =

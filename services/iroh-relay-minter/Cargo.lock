@@ -377,31 +377,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c9ea0ac24bc397ab3c98583a3c9ba74fa56b09a4449bbe172b9b1ddb016027a"
 
 [[package]]
-name = "cmux-iroh-relay-minter"
-version = "0.1.0"
-dependencies = [
- "base64",
- "data-encoding",
- "futures-util",
- "hex",
- "hmac",
- "http-body",
- "http-body-util",
- "hyper",
- "hyper-util",
- "iroh",
- "iroh-services",
- "rcan",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "time",
- "tokio",
- "vercel_runtime",
- "zeroize",
-]
-
-[[package]]
 name = "cobs"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1260,6 +1235,31 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest 0.10.7",
+]
+
+[[package]]
+name = "hmux-iroh-relay-minter"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "data-encoding",
+ "futures-util",
+ "hex",
+ "hmac",
+ "http-body",
+ "http-body-util",
+ "hyper",
+ "hyper-util",
+ "iroh",
+ "iroh-services",
+ "rcan",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "time",
+ "tokio",
+ "vercel_runtime",
+ "zeroize",
 ]
 
 [[package]]

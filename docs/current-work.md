@@ -1,13 +1,13 @@
 # Current work
 
-`cmux current --json` and **Find Work** in the command palette read the same
-bounded snapshot of work already known to CMUX. The default CLI output renders
+`hmux current --json` and **Find Work** in the command palette read the same
+bounded snapshot of work already known to HMUX. The default CLI output renders
 that snapshot as text.
 
 ```sh
-cmux current
-cmux current --json
-cmux current --json --limit 50
+hmux current
+hmux current --json
+hmux current --json --limit 50
 ```
 
 The read includes known surface resources, their local projections and durable
@@ -23,7 +23,7 @@ resource is currently displayed; its workspace and panel IDs are runtime
 selectors. These identifiers have different lifetimes and are not a universal
 work-item ID. See [surface catalog identity](surface-catalog-identity.md).
 
-The snapshot observation time describes when CMUX read its owners. It is not
+The snapshot observation time describes when HMUX read its owners. It is not
 proof that a remote agent or PR was refreshed at that instant. Owner freshness,
 available cursor/receipt references, and evidence remain attached to their
 facts. Possible human obligations describe owner-reported attention; they do

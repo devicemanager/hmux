@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
 /// Bridges kernel process/file events into a bounded ownership observation.

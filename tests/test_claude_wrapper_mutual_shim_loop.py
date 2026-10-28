@@ -14,7 +14,7 @@ from test_claude_wrapper_hooks import generated_claude_hook_settings
 
 
 ROOT = Path(__file__).resolve().parents[1]
-WRAPPER = ROOT / "Resources" / "bin" / "cmux-claude-wrapper"
+WRAPPER = ROOT / "Resources" / "bin" / "hmux-claude-wrapper"
 GENERATED_HOOK_SETTINGS = generated_claude_hook_settings()
 
 
@@ -22,7 +22,7 @@ def generated_hook_count(name: str) -> int:
     return len(json.loads(GENERATED_HOOK_SETTINGS)["hooks"][name])
 
 # Fixtures exit at once while this is set, so priming runs none of their logic.
-PRIME_ENVIRONMENT_KEY = "CMUX_TEST_PRIME_EXEC"
+PRIME_ENVIRONMENT_KEY = "HMUX_TEST_PRIME_EXEC"
 
 
 def prime_first_exec(path: Path, environment: dict[str, str]) -> None:
@@ -63,7 +63,7 @@ def write_executable(path: Path, contents: str) -> None:
 def install_wrapper_copy(path: Path) -> None:
     """Copy the wrapper to a shim path and prime it.
 
-    Without CMUX_SURFACE_ID or a claude on PATH the wrapper exits 127 before
+    Without HMUX_SURFACE_ID or a claude on PATH the wrapper exits 127 before
     it does any work.
     """
     shutil.copy2(WRAPPER, path)
@@ -78,15 +78,15 @@ def load_settings_value(value: str) -> dict:
 
 
 def build_mutual_shim_tree(root: Path) -> tuple[Path, dict[str, str]]:
-    cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-loop"
+    hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-loop"
     delimit_primary_dir = root / "home" / ".delimit" / "shims"
     delimit_secondary_dir = root / "home" / ".delimit" / "managed-shims"
     real_dir = root / "real-bin"
-    for directory in (cmux_shim_dir, delimit_primary_dir, delimit_secondary_dir, real_dir):
+    for directory in (hmux_shim_dir, delimit_primary_dir, delimit_secondary_dir, real_dir):
         directory.mkdir(parents=True, exist_ok=True)
 
-    cmux_shim = cmux_shim_dir / "claude"
-    install_wrapper_copy(cmux_shim)
+    hmux_shim = hmux_shim_dir / "claude"
+    install_wrapper_copy(hmux_shim)
 
     shim_template = """#!/usr/bin/env bash
 printf 'delimit shim hop: %s\\n' "$0" >&2
@@ -120,19 +120,19 @@ printf 'real claude %s\\n' "$*"
 """,
     )
 
-    managed_path = f"{cmux_shim_dir}:{delimit_primary_dir}:{delimit_secondary_dir}:{real_dir}:/usr/bin:/bin"
+    managed_path = f"{hmux_shim_dir}:{delimit_primary_dir}:{delimit_secondary_dir}:{real_dir}:/usr/bin:/bin"
     env = {
         "HOME": str(root / "home"),
         "PATH": managed_path,
         "DELIMIT_MANAGED_PATH": managed_path,
-        "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-        "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
+        "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+        "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
     }
-    return cmux_shim, env
+    return hmux_shim, env
 
 
 def test_wrapper_stops_mutual_foreign_shim_loop(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-mutual-shim-loop-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-mutual-shim-loop-") as td:
         claude, env = build_mutual_shim_tree(Path(td))
         try:
             result = subprocess.run(
@@ -152,22 +152,22 @@ def test_wrapper_stops_mutual_foreign_shim_loop(failures: list[str]) -> None:
             failures.append(f"expected non-zero exit from mutual shim guard, got output: {combined_output!r}")
         if "conflicting `claude` shim" not in combined_output:
             failures.append(f"expected actionable conflicting-shim error, got: {combined_output!r}")
-        if "CMUX_CUSTOM_CLAUDE_PATH" not in combined_output:
-            failures.append(f"expected CMUX_CUSTOM_CLAUDE_PATH remedy, got: {combined_output!r}")
+        if "HMUX_CUSTOM_CLAUDE_PATH" not in combined_output:
+            failures.append(f"expected HMUX_CUSTOM_CLAUDE_PATH remedy, got: {combined_output!r}")
 
 
 def test_wrapper_stops_node_based_foreign_shim_loop(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-node-mutual-shim-loop-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-node-mutual-shim-loop-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-node-loop"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-node-loop"
         node_primary_dir = root / "home" / ".node-shim" / "primary"
         node_secondary_dir = root / "home" / ".node-shim" / "secondary"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, node_primary_dir, node_secondary_dir, real_dir):
+        for directory in (hmux_shim_dir, node_primary_dir, node_secondary_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         node_shim_template = """#!/usr/bin/env node
 const { spawnSync } = require("node:child_process");
@@ -197,17 +197,17 @@ printf 'real claude %s\\n' "$*"
         )
 
         inherited_path = os.environ.get("PATH", "/usr/bin:/bin")
-        managed_path = f"{cmux_shim_dir}:{node_primary_dir}:{node_secondary_dir}:{real_dir}:{inherited_path}"
+        managed_path = f"{hmux_shim_dir}:{node_primary_dir}:{node_secondary_dir}:{real_dir}:{inherited_path}"
         env = {
             "HOME": str(root / "home"),
             "PATH": managed_path,
             "NODE_SHIM_MANAGED_PATH": managed_path,
-            "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-            "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
+            "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+            "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
         }
         try:
             result = subprocess.run(
-                [str(cmux_shim), "--version"],
+                [str(hmux_shim), "--version"],
                 env=env,
                 capture_output=True,
                 text=True,
@@ -226,17 +226,17 @@ printf 'real claude %s\\n' "$*"
 
 
 def test_wrapper_stops_indirect_shell_foreign_shim_loop(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-indirect-mutual-shim-loop-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-indirect-mutual-shim-loop-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-indirect-loop"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-indirect-loop"
         shell_primary_dir = root / "home" / ".indirect-shim" / "primary"
         shell_secondary_dir = root / "home" / ".indirect-shim" / "secondary"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, shell_primary_dir, shell_secondary_dir, real_dir):
+        for directory in (hmux_shim_dir, shell_primary_dir, shell_secondary_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         shell_shim_template = """#!/usr/bin/env bash
 next_path=""
@@ -271,17 +271,17 @@ printf 'real claude %s\\n' "$*"
         )
 
         inherited_path = os.environ.get("PATH", "/usr/bin:/bin")
-        managed_path = f"{cmux_shim_dir}:{shell_primary_dir}:{shell_secondary_dir}:{real_dir}:{inherited_path}"
+        managed_path = f"{hmux_shim_dir}:{shell_primary_dir}:{shell_secondary_dir}:{real_dir}:{inherited_path}"
         env = {
             "HOME": str(root / "home"),
             "PATH": managed_path,
             "INDIRECT_SHIM_MANAGED_PATH": managed_path,
-            "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-            "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
+            "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+            "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
         }
         try:
             result = subprocess.run(
-                [str(cmux_shim), "--version"],
+                [str(hmux_shim), "--version"],
                 env=env,
                 capture_output=True,
                 text=True,
@@ -300,15 +300,15 @@ printf 'real claude %s\\n' "$*"
 
 
 def test_wrapper_guard_allows_child_claude_process(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-child-reentry-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-child-reentry-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-child"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-child"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, real_dir):
+        for directory in (hmux_shim_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         write_executable(
             real_dir / "claude",
@@ -336,12 +336,12 @@ process.exit(child.status ?? 1);
         inherited_path = os.environ.get("PATH", "/usr/bin:/bin")
         env = {
             "HOME": str(root / "home"),
-            "PATH": f"{cmux_shim_dir}:{real_dir}:{inherited_path}",
-            "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-            "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
+            "PATH": f"{hmux_shim_dir}:{real_dir}:{inherited_path}",
+            "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+            "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
         }
         result = subprocess.run(
-            [str(cmux_shim)],
+            [str(hmux_shim)],
             env=env,
             capture_output=True,
             text=True,
@@ -358,17 +358,17 @@ process.exit(child.status ?? 1);
 
 
 def test_wrapper_allows_finite_layered_foreign_shims(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-finite-shim-chain-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-finite-shim-chain-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-finite"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-finite"
         shim_a_dir = root / "foreign-a"
         shim_b_dir = root / "foreign-b"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, shim_a_dir, shim_b_dir, real_dir):
+        for directory in (hmux_shim_dir, shim_a_dir, shim_b_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         shim_template = """#!/usr/bin/env bash
 next_path=""
@@ -403,12 +403,12 @@ printf 'real claude reached %s\\n' "$*"
 
         env = {
             "HOME": str(root / "home"),
-            "PATH": f"{cmux_shim_dir}:{shim_a_dir}:{shim_b_dir}:{real_dir}:/usr/bin:/bin",
-            "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-            "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
+            "PATH": f"{hmux_shim_dir}:{shim_a_dir}:{shim_b_dir}:{real_dir}:/usr/bin:/bin",
+            "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+            "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
         }
         result = subprocess.run(
-            [str(cmux_shim), "--version"],
+            [str(hmux_shim), "--version"],
             env=env,
             capture_output=True,
             text=True,
@@ -425,25 +425,25 @@ printf 'real claude reached %s\\n' "$*"
 
 
 def test_app_owned_resume_keeps_authorization_across_finite_shim_reentry(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-restore-shim-chain-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-restore-shim-chain-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-restore"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-restore"
         foreign_shim_dir = root / "foreign-shim"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, foreign_shim_dir, real_dir):
+        for directory in (hmux_shim_dir, foreign_shim_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
         write_executable(
             foreign_shim_dir / "claude",
             f"""#!/usr/bin/env bash
-export PATH="{cmux_shim_dir}:{real_dir}:/usr/bin:/bin"
+export PATH="{hmux_shim_dir}:{real_dir}:/usr/bin:/bin"
 exec claude "$@"
 """,
         )
         write_executable(
-            cmux_shim_dir / "cmux",
+            hmux_shim_dir / "hmux",
             """#!/usr/bin/env bash
 if [[ "${1:-}" == "--socket" ]]; then
   shift 2
@@ -457,8 +457,8 @@ exit 0
         write_executable(
             real_dir / "claude",
             """#!/usr/bin/env bash
-printf 'restore=%s\n' "${CMUX_AGENT_RESTORE_LAUNCH-__UNSET__}" > "$FAKE_REAL_ENV_LOG"
-printf 'surface=%s\n' "${CMUX_SURFACE_ID-__UNSET__}" >> "$FAKE_REAL_ENV_LOG"
+printf 'restore=%s\n' "${HMUX_AGENT_RESTORE_LAUNCH-__UNSET__}" > "$FAKE_REAL_ENV_LOG"
+printf 'surface=%s\n' "${HMUX_SURFACE_ID-__UNSET__}" >> "$FAKE_REAL_ENV_LOG"
 printf '%s\n' "$@" > "$FAKE_REAL_ARGS_LOG"
 """,
         )
@@ -469,18 +469,18 @@ printf '%s\n' "$@" > "$FAKE_REAL_ARGS_LOG"
         stale_socket.bind(str(socket_path))
         env = {
             "HOME": str(root / "home"),
-            "PATH": f"{cmux_shim_dir}:{foreign_shim_dir}:{real_dir}:/usr/bin:/bin",
-            "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-            "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
-            "CMUX_AGENT_RESTORE_LAUNCH": f"claude:{session_id}",
-            "CMUX_SOCKET_PATH": str(socket_path),
-            "CMUX_SURFACE_ID": "surface:restore-test",
+            "PATH": f"{hmux_shim_dir}:{foreign_shim_dir}:{real_dir}:/usr/bin:/bin",
+            "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+            "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
+            "HMUX_AGENT_RESTORE_LAUNCH": f"claude:{session_id}",
+            "HMUX_SOCKET_PATH": str(socket_path),
+            "HMUX_SURFACE_ID": "surface:restore-test",
             "FAKE_REAL_ENV_LOG": str(environment_log),
             "FAKE_REAL_ARGS_LOG": str(arguments_log),
         }
         try:
             result = subprocess.run(
-                [str(cmux_shim), "--resume", session_id],
+                [str(hmux_shim), "--resume", session_id],
                 env=env,
                 capture_output=True,
                 text=True,
@@ -499,22 +499,22 @@ printf '%s\n' "$@" > "$FAKE_REAL_ARGS_LOG"
         if observed_env.get("restore") != "__UNSET__":
             failures.append(f"restore marker leaked through finite shim chain: {observed_env!r}")
         if observed_env.get("surface") != "surface:restore-test":
-            failures.append(f"finite shim chain lost cmux surface authorization: {observed_env!r}")
+            failures.append(f"finite shim chain lost hmux surface authorization: {observed_env!r}")
         if "--settings" not in observed_args or observed_args[-2:] != ["--resume", session_id]:
             failures.append(f"finite shim chain lost hook settings or resume argv: {observed_args!r}")
 
 
 def test_passthrough_real_node_claude_does_not_receive_guard_env(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-passthrough-guard-env-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-passthrough-guard-env-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-passthrough"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-passthrough"
         foreign_shim_dir = root / "foreign-shim"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, foreign_shim_dir, real_dir):
+        for directory in (hmux_shim_dir, foreign_shim_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         write_executable(
             foreign_shim_dir / "claude",
@@ -541,11 +541,11 @@ exec claude "$@"
         write_executable(
             real_dir / "claude",
             """#!/usr/bin/env node
-const upperGuard = process.env.CMUX_CLAUDE_WRAPPER_REEXEC_GUARD ?? "__unset__";
-const upperTargets = process.env.CMUX_CLAUDE_WRAPPER_REEXEC_TARGETS ?? "__unset__";
-const lowerGuard = process.env.cmux_claude_wrapper_reexec_guard ?? "__unset__";
-const lowerTargets = process.env.cmux_claude_wrapper_reexec_targets ?? "__unset__";
-const surface = process.env.CMUX_SURFACE_ID ?? "__unset__";
+const upperGuard = process.env.HMUX_CLAUDE_WRAPPER_REEXEC_GUARD ?? "__unset__";
+const upperTargets = process.env.HMUX_CLAUDE_WRAPPER_REEXEC_TARGETS ?? "__unset__";
+const lowerGuard = process.env.hmux_claude_wrapper_reexec_guard ?? "__unset__";
+const lowerTargets = process.env.hmux_claude_wrapper_reexec_targets ?? "__unset__";
+const surface = process.env.HMUX_SURFACE_ID ?? "__unset__";
 process.stdout.write(
   `upperGuard=${upperGuard}\\n` +
   `upperTargets=${upperTargets}\\n` +
@@ -559,14 +559,14 @@ process.stdout.write(
         inherited_path = os.environ.get("PATH", "/usr/bin:/bin")
         env = {
             "HOME": str(root / "home"),
-            "PATH": f"{cmux_shim_dir}:{foreign_shim_dir}:{real_dir}:{inherited_path}",
-            "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-            "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
-            "CMUX_SOCKET_PATH": str(root / "missing.sock"),
-            "CMUX_SURFACE_ID": "surface-passthrough",
+            "PATH": f"{hmux_shim_dir}:{foreign_shim_dir}:{real_dir}:{inherited_path}",
+            "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+            "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
+            "HMUX_SOCKET_PATH": str(root / "missing.sock"),
+            "HMUX_SURFACE_ID": "surface-passthrough",
         }
         result = subprocess.run(
-            [str(cmux_shim), "--version"],
+            [str(hmux_shim), "--version"],
             env=env,
             capture_output=True,
             text=True,
@@ -591,23 +591,23 @@ process.stdout.write(
 
 
 def test_custom_shim_path_with_colon_is_tracked_as_one_target(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-custom-shim-target-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-custom-shim-target-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-custom-colon"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-custom-colon"
         custom_shim_dir = root / "custom:shim"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, custom_shim_dir, real_dir):
+        for directory in (hmux_shim_dir, custom_shim_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         custom_shim = custom_shim_dir / "claude"
         write_executable(
             custom_shim,
             f"""#!/usr/bin/env bash
 printf 'custom colon shim hop\\n' >&2
-export PATH="{cmux_shim_dir}:{real_dir}:/usr/bin:/bin"
+export PATH="{hmux_shim_dir}:{real_dir}:/usr/bin:/bin"
 exec claude "$@"
 """,
         )
@@ -621,14 +621,14 @@ printf 'real claude %s\\n' "$*"
 
         env = {
             "HOME": str(root / "home"),
-            "PATH": f"{cmux_shim_dir}:{real_dir}:/usr/bin:/bin",
-            "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-            "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
-            "CMUX_CUSTOM_CLAUDE_PATH": str(custom_shim),
+            "PATH": f"{hmux_shim_dir}:{real_dir}:/usr/bin:/bin",
+            "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+            "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
+            "HMUX_CUSTOM_CLAUDE_PATH": str(custom_shim),
         }
         try:
             result = subprocess.run(
-                [str(cmux_shim), "--version"],
+                [str(hmux_shim), "--version"],
                 env=env,
                 capture_output=True,
                 text=True,
@@ -649,16 +649,16 @@ printf 'real claude %s\\n' "$*"
 
 
 def test_real_shell_claude_launcher_allows_child_claude_process(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-real-shell-launcher-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-real-shell-launcher-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-shell-launcher"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-shell-launcher"
         real_dir = root / "real-bin"
         package_dir = real_dir / "node_modules" / "@anthropic-ai" / "claude-code"
-        for directory in (cmux_shim_dir, package_dir):
+        for directory in (hmux_shim_dir, package_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         write_executable(
             real_dir / "claude",
@@ -671,8 +671,8 @@ exec node "{package_dir}/cli.js" "$@"
             """#!/usr/bin/env node
 const { spawnSync } = require("node:child_process");
 if (process.argv[2] === "child") {
-  const guard = process.env.cmux_claude_wrapper_reexec_guard ?? "__unset__";
-  const targets = process.env.cmux_claude_wrapper_reexec_targets ?? "__unset__";
+  const guard = process.env.hmux_claude_wrapper_reexec_guard ?? "__unset__";
+  const targets = process.env.hmux_claude_wrapper_reexec_targets ?? "__unset__";
   process.stdout.write(`child shell launcher ok guard=${guard} targets=${targets}\\n`);
   process.exit(0);
 }
@@ -694,12 +694,12 @@ process.exit(child.status ?? 1);
         inherited_path = os.environ.get("PATH", "/usr/bin:/bin")
         env = {
             "HOME": str(root / "home"),
-            "PATH": f"{cmux_shim_dir}:{real_dir}:{inherited_path}",
-            "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-            "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
+            "PATH": f"{hmux_shim_dir}:{real_dir}:{inherited_path}",
+            "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+            "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
         }
         result = subprocess.run(
-            [str(cmux_shim)],
+            [str(hmux_shim)],
             env=env,
             capture_output=True,
             text=True,
@@ -717,16 +717,16 @@ process.exit(child.status ?? 1);
 
 
 def test_custom_shell_wrapper_execing_real_claude_allows_child_claude(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-custom-real-wrapper-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-custom-real-wrapper-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-custom-real"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-custom-real"
         custom_dir = root / "custom-bin"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, custom_dir, real_dir):
+        for directory in (hmux_shim_dir, custom_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         custom_wrapper = custom_dir / "claude-wrapper"
         write_executable(
@@ -741,8 +741,8 @@ exec "{real_dir}/claude" "$@"
             """#!/usr/bin/env node
 const { spawnSync } = require("node:child_process");
 if (process.argv[2] === "child") {
-  const guard = process.env.cmux_claude_wrapper_reexec_guard ?? "__unset__";
-  const targets = process.env.cmux_claude_wrapper_reexec_targets ?? "__unset__";
+  const guard = process.env.hmux_claude_wrapper_reexec_guard ?? "__unset__";
+  const targets = process.env.hmux_claude_wrapper_reexec_targets ?? "__unset__";
   const wrapperSeen = process.env.CLAUDE_CUSTOM_WRAPPER_SEEN ?? "__unset__";
   process.stdout.write(`custom child ok guard=${guard} targets=${targets} wrapper=${wrapperSeen}\\n`);
   process.exit(0);
@@ -765,13 +765,13 @@ process.exit(child.status ?? 1);
         inherited_path = os.environ.get("PATH", "/usr/bin:/bin")
         env = {
             "HOME": str(root / "home"),
-            "PATH": f"{cmux_shim_dir}:{real_dir}:{inherited_path}",
-            "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-            "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
-            "CMUX_CUSTOM_CLAUDE_PATH": str(custom_wrapper),
+            "PATH": f"{hmux_shim_dir}:{real_dir}:{inherited_path}",
+            "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+            "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
+            "HMUX_CUSTOM_CLAUDE_PATH": str(custom_wrapper),
         }
         result = subprocess.run(
-            [str(cmux_shim)],
+            [str(hmux_shim)],
             env=env,
             capture_output=True,
             text=True,
@@ -789,19 +789,19 @@ process.exit(child.status ?? 1);
 
 
 def test_interactive_finite_shim_chain_does_not_duplicate_hooks(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-interactive-finite-shim-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-interactive-finite-shim-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-interactive"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-interactive"
         foreign_shim_dir = root / "foreign-shim"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, foreign_shim_dir, real_dir):
+        for directory in (hmux_shim_dir, foreign_shim_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         write_executable(
-            cmux_shim_dir / "cmux",
+            hmux_shim_dir / "hmux",
             """#!/usr/bin/env bash
 if [[ "${1:-}" == "--socket" ]]; then
   shift 2
@@ -819,7 +819,7 @@ exit 0
         write_executable(
             foreign_shim_dir / "claude",
             f"""#!/usr/bin/env bash
-export PATH="{cmux_shim_dir}:{real_dir}:/usr/bin:/bin"
+export PATH="{hmux_shim_dir}:{real_dir}:/usr/bin:/bin"
 exec claude "$@"
 """,
         )
@@ -832,21 +832,21 @@ done
 """,
         )
 
-        socket_path = str(root / "cmux.sock")
+        socket_path = str(root / "hmux.sock")
         test_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             test_socket.bind(socket_path)
             env = {
                 "HOME": str(root / "home"),
-                "PATH": f"{cmux_shim_dir}:{foreign_shim_dir}:{real_dir}:/usr/bin:/bin",
-                "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-                "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
-                "CMUX_SURFACE_ID": "surface-interactive",
-                "CMUX_SOCKET_PATH": socket_path,
+                "PATH": f"{hmux_shim_dir}:{foreign_shim_dir}:{real_dir}:/usr/bin:/bin",
+                "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+                "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
+                "HMUX_SURFACE_ID": "surface-interactive",
+                "HMUX_SOCKET_PATH": socket_path,
                 "FAKE_GENERATED_CLAUDE_HOOK_SETTINGS": GENERATED_HOOK_SETTINGS,
             }
             result = subprocess.run(
-                [str(cmux_shim)],
+                [str(hmux_shim)],
                 env=env,
                 capture_output=True,
                 text=True,
@@ -881,25 +881,25 @@ done
         stop = hooks.get("Stop", [])
         if len(session_start) != generated_hook_count("SessionStart") or len(stop) != generated_hook_count("Stop"):
             failures.append(
-                "expected one cmux hook injection after finite shim chain, "
+                "expected one hmux hook injection after finite shim chain, "
                 f"got SessionStart={len(session_start)} Stop={len(stop)} settings={settings!r}"
             )
 
 
 def test_interactive_spawning_shim_chain_refreshes_claude_pid(failures: list[str]) -> None:
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-interactive-spawn-shim-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-interactive-spawn-shim-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-spawn"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-spawn"
         foreign_shim_dir = root / "node-shim"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, foreign_shim_dir, real_dir):
+        for directory in (hmux_shim_dir, foreign_shim_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
         write_executable(
-            cmux_shim_dir / "cmux",
+            hmux_shim_dir / "hmux",
             """#!/usr/bin/env bash
 if [[ "${1:-}" == "--socket" ]]; then
   shift 2
@@ -919,7 +919,7 @@ exit 0
             foreign_shim_dir / "claude",
             f"""#!/usr/bin/env node
 const {{ spawnSync }} = require("node:child_process");
-process.env.PATH = "{cmux_shim_dir}:{real_dir}:{inherited_path}";
+process.env.PATH = "{hmux_shim_dir}:{real_dir}:{inherited_path}";
 const child = spawnSync("claude", process.argv.slice(2), {{
   env: process.env,
   encoding: "utf8",
@@ -933,7 +933,7 @@ process.exit(child.status ?? 1);
             real_dir / "claude",
             """#!/usr/bin/env bash
 printf 'real_pid=%s\\n' "$$"
-printf 'cmux_pid=%s\\n' "${CMUX_CLAUDE_PID:-__unset__}"
+printf 'hmux_pid=%s\\n' "${HMUX_CLAUDE_PID:-__unset__}"
 printf 'node_options=%s\\n' "${NODE_OPTIONS:-__unset__}"
 for arg in "$@"; do
   printf 'arg=%s\\n' "$arg"
@@ -941,21 +941,21 @@ done
 """,
         )
 
-        socket_path = str(root / "cmux.sock")
+        socket_path = str(root / "hmux.sock")
         test_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             test_socket.bind(socket_path)
             env = {
                 "HOME": str(root / "home"),
-                "PATH": f"{cmux_shim_dir}:{foreign_shim_dir}:{real_dir}:{inherited_path}",
-                "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-                "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
-                "CMUX_SURFACE_ID": "surface-spawn",
-                "CMUX_SOCKET_PATH": socket_path,
+                "PATH": f"{hmux_shim_dir}:{foreign_shim_dir}:{real_dir}:{inherited_path}",
+                "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+                "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
+                "HMUX_SURFACE_ID": "surface-spawn",
+                "HMUX_SOCKET_PATH": socket_path,
                 "FAKE_GENERATED_CLAUDE_HOOK_SETTINGS": GENERATED_HOOK_SETTINGS,
             }
             result = subprocess.run(
-                [str(cmux_shim)],
+                [str(hmux_shim)],
                 env=env,
                 capture_output=True,
                 text=True,
@@ -979,12 +979,12 @@ done
             elif "=" in line:
                 key, value = line.split("=", 1)
                 values[key] = value
-        if values.get("real_pid") != values.get("cmux_pid"):
-            failures.append(f"expected CMUX_CLAUDE_PID to match real process pid, got: {combined_output!r}")
+        if values.get("real_pid") != values.get("hmux_pid"):
+            failures.append(f"expected HMUX_CLAUDE_PID to match real process pid, got: {combined_output!r}")
             return
         node_options = values.get("node_options", "")
         if "--require=" not in node_options or "--max-old-space-size=4096" not in node_options:
-            failures.append(f"expected reentry to reinstall cmux NODE_OPTIONS, got: {combined_output!r}")
+            failures.append(f"expected reentry to reinstall hmux NODE_OPTIONS, got: {combined_output!r}")
             return
 
         settings_indexes = [index for index, arg in enumerate(args) if arg == "--settings"]
@@ -1021,7 +1021,7 @@ def verify_custom_path_reentry_result(
         inherited_path_values = inherited_path_log.read_text(encoding="utf-8").splitlines()
     if any(value == "true" for value in inherited_path_values):
         failures.append(
-            "issue #10230 custom launcher inherited cmux's shim directory on PATH: "
+            "issue #10230 custom launcher inherited hmux's shim directory on PATH: "
             f"{inherited_path_values!r}"
         )
     try:
@@ -1039,33 +1039,33 @@ def verify_custom_path_reentry_result(
         return
     if len(hooks["SessionStart"]) != generated_hook_count("SessionStart") or len(hooks["Stop"]) != generated_hook_count("Stop"):
         failures.append(
-            "issue #10230 re-entry should converge to one cmux hook block, "
+            "issue #10230 re-entry should converge to one hmux hook block, "
             f"got SessionStart={len(hooks['SessionStart'])} "
             f"Stop={len(hooks['Stop'])}: {settings!r}"
         )
 
 
 def test_custom_path_reentry_converges_to_one_settings_block(failures: list[str]) -> None:
-    """A launcher that re-enters the cmux shim once must not duplicate hooks."""
+    """A launcher that re-enters the hmux shim once must not duplicate hooks."""
     node_path = ensure_node_on_path()
     if node_path is None:
         failures.append("issue #10230 re-entry requires a Node runtime")
         return
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-issue-10230-reentry-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-issue-10230-reentry-") as td:
         root = Path(td)
-        cmux_shim_dir = root / "tmp" / "cmux-cli-shims" / "surface-10230"
+        hmux_shim_dir = root / "tmp" / "hmux-cli-shims" / "surface-10230"
         launcher_dir = root / "launcher"
         custom_dir = root / "custom"
         real_dir = root / "real-bin"
-        for directory in (cmux_shim_dir, launcher_dir, custom_dir, real_dir):
+        for directory in (hmux_shim_dir, launcher_dir, custom_dir, real_dir):
             directory.mkdir(parents=True, exist_ok=True)
 
-        cmux_shim = cmux_shim_dir / "claude"
-        install_wrapper_copy(cmux_shim)
+        hmux_shim = hmux_shim_dir / "claude"
+        install_wrapper_copy(hmux_shim)
 
-        cmux_bin = cmux_shim_dir / "cmux"
+        hmux_bin = hmux_shim_dir / "hmux"
         write_executable(
-            cmux_bin,
+            hmux_bin,
             """#!/usr/bin/env bash
 if [[ "${1:-}" == "--socket" ]]; then
   shift 2
@@ -1084,7 +1084,7 @@ exit 0
         launch_count = root / "launcher-count"
         inherited_path_log = root / "launcher-inherited-path.log"
         managed_path = (
-            f"{cmux_shim_dir}:{launcher_dir}:{real_dir}:"
+            f"{hmux_shim_dir}:{launcher_dir}:{real_dir}:"
             f"{Path(node_path).parent}:/usr/bin:/bin"
         )
         write_executable(
@@ -1094,14 +1094,14 @@ const fs = require("node:fs");
 const {{ spawnSync }} = require("node:child_process");
 const countPath = {json.dumps(str(launch_count))};
 const inheritedPathLog = {json.dumps(str(inherited_path_log))};
-fs.appendFileSync(inheritedPathLog, `${{(process.env.PATH || "").includes("/cmux-cli-shims/")}}\n`);
+fs.appendFileSync(inheritedPathLog, `${{(process.env.PATH || "").includes("/hmux-cli-shims/")}}\n`);
 const firstHop = !fs.existsSync(countPath);
 if (firstHop) fs.writeFileSync(countPath, "1");
 // The first lookup intentionally restores the managed path to reproduce a
-// downstream launcher that does not know about cmux's shim directory.
+// downstream launcher that does not know about hmux's shim directory.
 process.env.PATH = firstHop
   ? {json.dumps(managed_path)}
-  : process.env.PATH.split(":").filter((entry) => !entry.includes("/cmux-cli-shims/")).join(":");
+  : process.env.PATH.split(":").filter((entry) => !entry.includes("/hmux-cli-shims/")).join(":");
 const entries = (process.env.PATH || "").split(":");
 const target = entries.map((entry) => `${{entry}}/claude`).find((candidate) =>
   fs.existsSync(candidate) && fs.statSync(candidate).isFile()
@@ -1118,7 +1118,7 @@ process.exit(child.status ?? 1);
         write_executable(
             custom_path,
             """#!/usr/bin/env bash
-exec "$CMUX_LAUNCHER" "$@"
+exec "$HMUX_LAUNCHER" "$@"
 """,
         )
 
@@ -1140,27 +1140,27 @@ done
 """,
         )
 
-        socket_path = root / "cmux.sock"
+        socket_path = root / "hmux.sock"
         test_socket = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         try:
             test_socket.bind(str(socket_path))
             inherited_path = os.environ.get("PATH", "/usr/bin:/bin")
             env = {
                 "HOME": str(root / "home"),
-                "PATH": f"{cmux_shim_dir}:{launcher_dir}:{real_dir}:{inherited_path}",
-                "CMUX_CLAUDE_WRAPPER_SHIM": str(cmux_shim),
-                "CMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(cmux_shim_dir),
-                "CMUX_CUSTOM_CLAUDE_PATH": str(custom_path),
-                "CMUX_LAUNCHER": str(launcher_dir / "resolve-claude"),
-                "CMUX_SURFACE_ID": "surface-10230",
-                "CMUX_SOCKET_PATH": str(socket_path),
-                "CMUX_BUNDLED_CLI_PATH": str(cmux_bin),
+                "PATH": f"{hmux_shim_dir}:{launcher_dir}:{real_dir}:{inherited_path}",
+                "HMUX_CLAUDE_WRAPPER_SHIM": str(hmux_shim),
+                "HMUX_CLAUDE_WRAPPER_SHIM_ROOT": str(hmux_shim_dir),
+                "HMUX_CUSTOM_CLAUDE_PATH": str(custom_path),
+                "HMUX_LAUNCHER": str(launcher_dir / "resolve-claude"),
+                "HMUX_SURFACE_ID": "surface-10230",
+                "HMUX_SOCKET_PATH": str(socket_path),
+                "HMUX_BUNDLED_CLI_PATH": str(hmux_bin),
                 "TMPDIR": str(root / "tmp"),
                 "FAKE_SETTINGS_OUTPUT": str(settings_output),
                 "FAKE_GENERATED_CLAUDE_HOOK_SETTINGS": GENERATED_HOOK_SETTINGS,
             }
             result = subprocess.run(
-                [str(cmux_shim), "hello"],
+                [str(hmux_shim), "hello"],
                 env=env,
                 capture_output=True,
                 text=True,

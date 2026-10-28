@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import Network
 import UniformTypeIdentifiers
 import WebKit
@@ -10,7 +10,7 @@ private struct BrowserReplRawJSON {
 }
 
 /// The `webkit` REPL driver: implements `docs/browser-repl/driver-protocol.md`
-/// on cmux browser surfaces.
+/// on hmux browser surfaces.
 ///
 /// A session is bound to one workspace; its tabs are that workspace's
 /// browser surfaces, and target ids are surface ids. Every method runs on the
@@ -473,7 +473,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
         // The web view the keys and press were held in; a replacement gets
         // nothing (BrowserReplTabAttachment.deliverRelease checks again
         // after the guard's waits).
-        guard let webView = held.target.deliverable(to: panel.webView as? CmuxWebView) else {
+        guard let webView = held.target.deliverable(to: panel.webView as? HmuxWebView) else {
             attachment.forgetReleased(held)
             return
         }
@@ -629,7 +629,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
                     }
                 } else if Self.isActionOnPage(name), let panel = tabToPrepare {
                     // What the page opens while it handles this session's input
-                    // goes to this session, never to cmux's UI in front of the user.
+                    // goes to this session, never to hmux's UI in front of the user.
                     return try await attachment(panel).withInput(sessionID: sessionID) {
                         try await handle(method: method, params: params)
                     }
@@ -962,7 +962,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
     /// surfaces, never a tab another live session created (`denied`, naming
     /// that session: that tab's page, cookies, storage and clipboard are the
     /// other session's), and never a tab of another workspace (`denied`: that
-    /// needs an attach a person grants, which cmux does not offer yet).
+    /// needs an attach a person grants, which hmux does not offer yet).
     @MainActor
     private func reachablePanel(_ id: UUID) throws -> BrowserPanel? {
         if let own = try browserPanels().first(where: { $0.id == id }) { return try drivable(own) }
@@ -1039,7 +1039,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
         )
     }
 
-    /// The tab's title for the agent: the page's, else the one cmux kept
+    /// The tab's title for the agent: the page's, else the one hmux kept
     /// while the page is unloaded.
     @MainActor
     private static func title(_ panel: BrowserPanel) -> String {
@@ -1299,7 +1299,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
     /// (``BrowserReplDocumentAuthority/listing(of:)``): only tabs the
     /// session created that moved there. A user's tab of another workspace
     /// is not listed, and neither is its data store: reaching it needs an
-    /// attach a person grants, which cmux does not offer yet.
+    /// attach a person grants, which hmux does not offer yet.
     @MainActor
     private func listTabs(all: Bool = false) throws -> [[String: Any]] {
         let workspace = try workspace()
@@ -1482,7 +1482,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
 
     /// `tab.handleEvents`: the events this session has a handler for in the
     /// tab. In a user's tab only those reach the session; the rest keep
-    /// cmux's own UI (``BrowserReplTabOwnership``).
+    /// hmux's own UI (``BrowserReplTabOwnership``).
     @MainActor
     private func handleEvents(_ params: [String: Any]) throws -> Any? {
         let panel = try panel(params)
@@ -1872,7 +1872,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
         return result
     }
 
-    /// cmux browser history, most recent first, from the history stores of
+    /// hmux browser history, most recent first, from the history stores of
     /// the profiles this workspace's tabs use (the default profile when it
     /// has none).
     @MainActor
@@ -2068,10 +2068,10 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
         const __bridge = window[__key];
         delete window[__key];
         if (__bridge) window.removeEventListener(__key, __bridge.listener, true);
-        if (!__bridge || __bridge.got.length !== __count) return { __cmuxError__: { code: "stale", message: "Element handle is no longer attached to the document", name: "Error" } };
+        if (!__bridge || __bridge.got.length !== __count) return { __hmuxError__: { code: "stale", message: "Element handle is no longer attached to the document", name: "Error" } };
         """
         let body = try collect + "\n" + Self.evaluationBody(source: source, requiresAgent: false, elementsExpression: "__bridge.got")
-        let key = "__cmuxHandleBridge_\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
+        let key = "__hmuxHandleBridge_\(UUID().uuidString.replacingOccurrences(of: "-", with: ""))"
         let listen = """
         const got = [];
         const listener = (event) => { got.push(event.composedPath()[0]); event.stopImmediatePropagation(); };
@@ -2176,7 +2176,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
                 }
                 return BrowserReplRawJSON(text: text)
             }
-            if let envelope = (value as? [String: Any])?["__cmuxError__"] as? [String: Any] {
+            if let envelope = (value as? [String: Any])?["__hmuxError__"] as? [String: Any] {
                 throw BrowserReplDriverError(
                     code: envelope["code"] as? String ?? "evaluation",
                     message: envelope["message"] as? String ?? "Evaluation failed",
@@ -2375,8 +2375,8 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
     /// so each native step's tab check (``BrowserReplFrameGate/checkTab(in:)``)
     /// stops a cancelled call there too.
     @MainActor
-    private func withWindow<T: Sendable>(_ panel: BrowserPanel, _ body: @escaping @MainActor (CmuxWebView, NSWindow) async throws -> T) async throws -> T {
-        guard let webView = panel.webView as? CmuxWebView else {
+    private func withWindow<T: Sendable>(_ panel: BrowserPanel, _ body: @escaping @MainActor (HmuxWebView, NSWindow) async throws -> T) async throws -> T {
+        guard let webView = panel.webView as? HmuxWebView else {
             throw Self.error("unsupported", "This tab does not accept native input")
         }
         if let window = webView.window {
@@ -2513,7 +2513,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
         at css: CGPoint,
         clickCount: Int,
         flags: NSEvent.ModifierFlags,
-        webView: CmuxWebView,
+        webView: HmuxWebView,
         window: NSWindow,
         attachment: BrowserReplTabAttachment,
         dropAllowed: Bool = true
@@ -2572,7 +2572,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
             if let capture {
                 guard await capture.openPasteboardWindow() else {
                     if !BrowserReplDragPasteboardRedirect.shared.install() {
-                        throw Self.error("unsupported", "This macOS has no drag pasteboard lookup cmux can redirect, so a drag that would write the system's drag pasteboard is refused; the drag did not move")
+                        throw Self.error("unsupported", "This macOS has no drag pasteboard lookup hmux can redirect, so a drag that would write the system's drag pasteboard is refused; the drag did not move")
                     }
                     if capture.isFinished {
                         throw Self.error("stale", "The drag ended before it moved (the tab's drag state was reset); press the mouse button again")
@@ -2636,7 +2636,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
     /// fails.
     @MainActor
     private func startDropIfDragBegan(
-        webView: CmuxWebView,
+        webView: HmuxWebView,
         window: NSWindow,
         location: NSPoint,
         attachment: BrowserReplTabAttachment
@@ -2699,7 +2699,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
             // AppKit focus (WKWebView+AutomationFocusContainment). WebKit asks
             // for that before it answers the round trip below.
             try await webView.withAutomationFocusContainment {
-                // A shortcut's key-down goes the way `cmux browser press`
+                // A shortcut's key-down goes the way `hmux browser press`
                 // sends one (WKWebView.deliverAutomationKeyDown): after the
                 // keys before it left WebKit's queue, and watched in the
                 // delivery's turn, since WebKit reports whether a page
@@ -2785,7 +2785,7 @@ final class WebKitBrowserReplDriver: BrowserReplDriver, @unchecked Sendable {
     /// and what a Copy or Cut took lands only while the creator that held the
     /// tab when it began still does (BrowserReplTabClipboard).
     @MainActor
-    private func performEditingCommand(_ command: String, panel: BrowserPanel, webView: CmuxWebView) async throws {
+    private func performEditingCommand(_ command: String, panel: BrowserPanel, webView: HmuxWebView) async throws {
         let attachment = attachment(panel)
         switch command {
         case "copy:", "cut:", "paste:":

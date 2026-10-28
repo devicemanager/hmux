@@ -1,7 +1,7 @@
-import CmuxCloudBannerCore
-import CmuxCloud
+import HmuxCloudBannerCore
+import HmuxCloud
 import Foundation
-import CmuxSettings
+import HmuxSettings
 
 /// `vm.tunnel_*`: this Mac's membership in the user's private Cloud VM
 /// network. The terminal role uses the user-space hub. `up`, `down`, and
@@ -83,7 +83,7 @@ extension TerminalController {
                 await Self.cloudTunnelStatusPayload(manager: VMTunnelManager())
             }
         case "vm.tunnel_up":
-            // Explicit `cmux vpn up`: start now and pin the tunnel open until
+            // Explicit `hmux vpn up`: start now and pin the tunnel open until
             // `vpn down`. Returns once the outcome is known or the first
             // activation is waiting on the user (see `vm.tunnel_wait`).
             return v2CloudCall(id: id, method: method, params: params, timeoutSeconds: 120) {
@@ -134,7 +134,7 @@ extension TerminalController {
                 if let coordinator = await Self.cloudTunnelCoordinator() {
                     try? await coordinator.revoke()
                 }
-                await CmuxTuiSurfaceProviderRegistry.shared.accessDidEnd()
+                await HmuxTuiSurfaceProviderRegistry.shared.accessDidEnd()
                 VMTunnelManager(purpose: .browser).removeLocalCredentials()
                 VMTunnelManager(purpose: .terminal).removeLocalCredentials()
                 return ["revoked": revoked]
@@ -190,7 +190,7 @@ extension TerminalController {
             payload["start_refusal_message"] = refusal.error.description
         }
         let terminalManager = VMTunnelManager(purpose: .terminal)
-        let hub = await MainActor.run { CmuxTuiSurfaceProviderRegistry.shared.wireGuardHub }
+        let hub = await MainActor.run { HmuxTuiSurfaceProviderRegistry.shared.wireGuardHub }
         let hubStatus = await hub?.status()
         payload["terminal_tunnel"] = [
             "device_fingerprint": terminalManager.storedDeviceFingerprint() ?? "",

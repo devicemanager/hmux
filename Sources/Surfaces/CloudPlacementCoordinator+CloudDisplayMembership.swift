@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxCloudTui
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCloudTui
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension CloudPlacementCoordinator {
@@ -215,7 +215,7 @@ extension CloudPlacementCoordinator {
 
     private static func isTransientDisplayMembershipFailure(_ error: Error) -> Bool {
         if let error = error as? SurfaceCatalogError, case .unknownResource = error { return true }
-        if let error = error as? CmuxTuiSurfaceProvider.ProviderError, case .machineAsleep = error { return true }
+        if let error = error as? HmuxTuiSurfaceProvider.ProviderError, case .machineAsleep = error { return true }
         return false
     }
 }

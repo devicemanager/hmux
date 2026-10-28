@@ -1,14 +1,14 @@
-import CmuxFoundation
+import HmuxFoundation
 import Bonsplit
-import CmuxSettings
-import CmuxCore
+import HmuxSettings
+import HmuxCore
 import Darwin
 import Foundation
-import CmuxSidebar
+import HmuxSidebar
 
 extension Workspace {
     private static let structuredAgentHookStatusKeys = AgentHibernationLifecycleStatusKeys.allowedStatusKeys
-    private static let managedSubagentEnvironmentKey = "CMUX_AGENT_MANAGED_SUBAGENT"
+    private static let managedSubagentEnvironmentKey = "HMUX_AGENT_MANAGED_SUBAGENT"
     private static let truthyStartupEnvironmentValues: Set<String> = ["1", "true", "yes", "on", "enabled"]
     var agentPIDs: [String: pid_t] {
         get { sidebarAgentRuntimeObservation.agentPIDs }
@@ -476,7 +476,7 @@ extension Workspace {
         pendingCloudBrowserPanelIDs.remove(panelId)
         appLinkHandoffCoordinator.cancel(sourcePanelID: panelId)
         if publishSurfaceClosedEvent {
-            publishCmuxSurfaceClosed(panelId, paneId: paneId, panel: panel, origin: origin)
+            publishHmuxSurfaceClosed(panelId, paneId: paneId, panel: panel, origin: origin)
         }
 
         let closedAgentRuntimeState = agentRuntimeState(forPanelId: panelId)

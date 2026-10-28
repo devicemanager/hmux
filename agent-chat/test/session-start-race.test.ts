@@ -8,7 +8,7 @@ const timers = new Map<number, () => void>();
 const drafts = new Map<string, string>();
 let nextTimer = 1;
 const location = { pathname: "/", protocol: "http:", host: "fixture", search: "" };
-const document = { title: "cmux agent" };
+const document = { title: "hmux agent" };
 const sockets: FakeSocket[] = [];
 
 class FakeSocket {

@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 """Regression: Cmd+J labels the window's controls and typing a label clicks one (cx-zjtn.5).
 
-cmux-next's hint mode gives every clickable control in the window a one or two
+hmux-next's hint mode gives every clickable control in the window a one or two
 letter label; typing a whole label clicks that control. Classic had no way to
 reach a sidebar row or button without the mouse. Hint mode is off by default
 (feature flag `window-hints-release`) until it is styled, so this test needs
 the local override written before launch:
-  defaults write <debug bundle id> cmux.flags.override.window-hints-release -bool true
+  defaults write <debug bundle id> hmux.flags.override.window-hints-release -bool true
 
 Needs a key window, so run it where the app can be frontmost (a whole capture
 mini or a local tagged build), never against the user's default socket:
-  CMUX_SOCKET_PATH=/tmp/cmux-debug-<tag>.sock python3 tests_v2/test_window_hints_keyboard.py
+  HMUX_SOCKET_PATH=/tmp/hmux-debug-<tag>.sock python3 tests_v2/test_window_hints_keyboard.py
 """
 
 import sys
@@ -18,7 +18,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
 def _call(fn, *args):
@@ -26,29 +26,29 @@ def _call(fn, *args):
     for _ in range(20):
         try:
             return fn(*args)
-        except cmuxError as error:
+        except hmuxError as error:
             if "rate_limited" not in str(error):
                 raise
             time.sleep(0.3)
     return fn(*args)
 
 
-def _selected(c: cmux) -> str:
+def _selected(c: hmux) -> str:
     for _i, wsid, _t, selected in _call(c.list_workspaces):
         if selected:
             return wsid
     return ""
 
 
-def _hints(c: cmux) -> dict:
+def _hints(c: hmux) -> dict:
     return _call(c._call, "debug.window_hints", {}) or {}
 
 
 def main() -> int:
-    c = cmux()
+    c = hmux()
     c.connect()
     if not c.ping():
-        raise cmuxError("socket ping failed")
+        raise hmuxError("socket ping failed")
     c.activate_app()
     time.sleep(0.3)
 
@@ -69,7 +69,7 @@ def main() -> int:
 
     try:
         before = _hints(c)
-    except cmuxError as error:
+    except hmuxError as error:
         before = {"error": str(error)}
     check("no labels before cmd+j", before.get("active") is False, str(before))
 
@@ -78,7 +78,7 @@ def main() -> int:
     shown = {}
     try:
         shown = _hints(c)
-    except cmuxError as error:
+    except hmuxError as error:
         shown = {"error": str(error)}
     hints = shown.get("hints") or []
     check("cmd+j labels the window's controls", shown.get("active") is True and len(hints) > 1,
@@ -104,14 +104,14 @@ def main() -> int:
     time.sleep(0.3)
     try:
         after = _hints(c)
-    except cmuxError as error:
+    except hmuxError as error:
         after = {"error": str(error)}
     check("escape hides the labels", after.get("active") is False, str(after) if after.get("active") is not False else "")
 
     for wsid in (first, target):
         try:
             c.close_workspace(wsid)
-        except cmuxError:
+        except hmuxError:
             pass
     passed = sum(results)
     print(f"RESULT {passed}/{len(results)}")

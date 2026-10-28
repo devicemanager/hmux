@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxCloudMachines
+import HmuxCloud
+import HmuxCloudMachines
 import Foundation
 
 /// Explicit machine pins and stable fleet order for the sidebar tree. The

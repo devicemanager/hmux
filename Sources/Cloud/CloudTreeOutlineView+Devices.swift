@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// One request to expand and select a row, identified by token so SwiftUI

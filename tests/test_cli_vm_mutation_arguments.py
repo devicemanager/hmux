@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Run the VM mutation argument paths up to their first RPC with a recording client.
 
-When CMUX_CLI_BIN is set, run the built CLI against an isolated socket. Otherwise
+When HMUX_CLI_BIN is set, run the built CLI against an isolated socket. Otherwise
 the fixture compiles the production switch prefixes and option parsers, avoiding
 the app/terminal dependencies needed by the full CLI. It checks both rejected
 arguments and the requests produced by valid forms; it never contacts a VM.
@@ -29,7 +29,7 @@ def member(source: str, signature: str) -> str:
 
 
 def fixture_source() -> str:
-    source = (ROOT / "CLI/cmux.swift").read_text()
+    source = (ROOT / "CLI/hmux.swift").read_text()
     cases = []
     for label in ('"snapshot", "checkpoint"', '"fork"', '"restore"', '"promote-template"'):
         start = source.index(f'            case {label}:')
@@ -44,11 +44,11 @@ def fixture_source() -> str:
         "    func parseOpenFocusFlags(", "    static func openFocusFlag(",
         "    private static func normalizedVMProvider(",
     )]
-    routing = (ROOT / "Sources/Surfaces/CmuxTuiRemoteRouting.swift").read_text()
+    routing = (ROOT / "Sources/Surfaces/HmuxTuiRemoteRouting.swift").read_text()
     return r'''
 import Foundation
 
-enum CmuxTuiRemoteRouting {
+enum HmuxTuiRemoteRouting {
 ''' + member(routing, "    static func focusFlagValue(") + r'''
 }
 final class SocketClient {
@@ -90,10 +90,10 @@ print(String(decoding: data, as: UTF8.self))
 class VMMutationArgumentTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.cli = os.environ.get("CMUX_CLI_BIN")
+        cls.cli = os.environ.get("HMUX_CLI_BIN")
         if cls.cli:
             if not os.access(cls.cli, os.X_OK):
-                raise RuntimeError("CMUX_CLI_BIN must name an executable CLI")
+                raise RuntimeError("HMUX_CLI_BIN must name an executable CLI")
             return
         cls.scratch = tempfile.TemporaryDirectory(prefix="vm-mutation-fixture-", dir=ROOT)
         cls.addClassCleanup(cls.scratch.cleanup)
@@ -109,8 +109,8 @@ class VMMutationArgumentTests(unittest.TestCase):
 
     def run_command(self, verb: str, *arguments: str) -> dict:
         if self.cli:
-            environment = {key: value for key, value in os.environ.items() if not key.startswith("CMUX")}
-            environment.update({"CMUX_CLI_SENTRY_DISABLED": "1", "AppleLanguages": "(en)"})
+            environment = {key: value for key, value in os.environ.items() if not key.startswith("HMUX")}
+            environment.update({"HMUX_CLI_SENTRY_DISABLED": "1", "AppleLanguages": "(en)"})
             with ResizeSocket({"id": "result-vm", "snapshot_id": "result-snapshot"}) as server:
                 result = subprocess.run(
                     [self.cli, "--socket", server.path, "--json", "vm", verb, *arguments],

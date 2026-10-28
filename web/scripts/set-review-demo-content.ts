@@ -5,9 +5,9 @@
 // Requires Stack server credentials in the environment (the same
 // NEXT_PUBLIC_STACK_* / STACK_SECRET_SERVER_KEY set web uses; see
 // scripts/load-dev-env.sh for local runs). The flag lands in the user's
-// clientReadOnlyMetadata as `cmuxReviewDemoContent: true`; the iOS app reads
+// clientReadOnlyMetadata as `hmuxReviewDemoContent: true`; the iOS app reads
 // it at sign-in and shows the demonstration computer alongside any real Macs.
-// Every other metadata key (cmuxPlan, cmuxVmPlan, ...) is preserved.
+// Every other metadata key (hmuxPlan, hmuxVmPlan, ...) is preserved.
 
 import { getStackServerApp, isStackConfigured } from "../app/lib/stack";
 import {

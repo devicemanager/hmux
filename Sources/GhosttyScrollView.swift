@@ -1,6 +1,6 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
-import CmuxTerminalCore
+import HmuxTerminalCore
 
 /// One user-prompt boundary anchored to Ghostty's current absolute row space.
 ///
@@ -54,7 +54,7 @@ private final class TerminalPromptScrollMarkerOverlayView: NSView {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(accentColorDidChange),
-            name: CmuxAccentColor.didChangeNotification,
+            name: HmuxAccentColor.didChangeNotification,
             object: nil
         )
     }
@@ -76,7 +76,7 @@ private final class TerminalPromptScrollMarkerOverlayView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-        (AppDelegate.shared?.accentColor ?? CmuxAccentColor()).nsColor(for: effectiveAppearance).setFill()
+        (AppDelegate.shared?.accentColor ?? HmuxAccentColor()).nsColor(for: effectiveAppearance).setFill()
         for entry in markerEntries() where entry.rect.intersects(dirtyRect) {
             NSBezierPath(
                 roundedRect: entry.rect,

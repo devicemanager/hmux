@@ -1,7 +1,7 @@
 import type { NextRequest, NextResponse } from "next/server";
 
-export const NATIVE_HANDOFF_COOKIE_NAME = "cmux-native-auth-handoff";
-export const NATIVE_HANDOFF_QUERY_PARAM = "cmux_auth_handoff";
+export const NATIVE_HANDOFF_COOKIE_NAME = "hmux-native-auth-handoff";
+export const NATIVE_HANDOFF_QUERY_PARAM = "hmux_auth_handoff";
 
 const NATIVE_HANDOFF_COOKIE_PATH = "/handler/after-sign-in";
 const NATIVE_HANDOFF_TTL_SECONDS = 10 * 60;

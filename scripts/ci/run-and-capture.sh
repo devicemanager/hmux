@@ -14,7 +14,7 @@ mkdir -p "$(dirname "$output_path")"
 # The tested command writes to a regular file, never to the CI capture pipe.
 # A detached descendant may inherit this file descriptor without extending the
 # lifetime of the step. A separately-owned tail process provides live CI output.
-stream_dir="$(mktemp -d "${TMPDIR:-/tmp}/cmux-run-capture.XXXXXX")"
+stream_dir="$(mktemp -d "${TMPDIR:-/tmp}/hmux-run-capture.XXXXXX")"
 stream_fifo="$stream_dir/stream"
 stream_copy="$stream_dir/streamed"
 mkfifo "$stream_fifo"
@@ -58,7 +58,7 @@ trap 'forward_signal INT 130' INT
 trap 'forward_signal TERM 143' TERM
 
 set +e
-CMUX_CI_FILE_CAPTURE_ACTIVE=1 python3 -c '
+HMUX_CI_FILE_CAPTURE_ACTIVE=1 python3 -c '
 import os
 import signal
 import subprocess

@@ -10,7 +10,7 @@ const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: false });
 
 export const TicketClaimsSchema = z.strictObject({
   version: z.literal(2),
-  audience: z.literal("cmux-iroh-api-v2"),
+  audience: z.literal("hmux-iroh-api-v2"),
   identity: IdentitySchema,
   endpointId: endpointID,
   identityGeneration: revision,
@@ -63,7 +63,7 @@ export async function issueTicket(
   device: DeviceDescriptor, keyId: string, secret: string, now: number,
 ): Promise<{ token: string; expiresAt: number; refreshAfter: number }> {
   const claims = TicketClaimsSchema.parse({
-    version: 2, audience: "cmux-iroh-api-v2", identity: device.identity,
+    version: 2, audience: "hmux-iroh-api-v2", identity: device.identity,
     endpointId: device.endpointId, identityGeneration: device.identityGeneration,
     issuedAt: now, expiresAt: now + API_TICKET_SECONDS, keyId,
   });
@@ -99,11 +99,11 @@ export async function verifyTicket(
 }
 
 export function challengeSigningInput(device: DeviceDescriptor, challengeId: string, nonce: string): string {
-  return canonicalJSON({ purpose: "cmux-iroh-v2-enrollment", device, challengeId, nonce });
+  return canonicalJSON({ purpose: "hmux-iroh-v2-enrollment", device, challengeId, nonce });
 }
 
 export function requestSigningInput(device: DeviceDescriptor, requestId: string, issuedAt: number, body: unknown, nonce: string): string {
-  return canonicalJSON({ purpose: "cmux-iroh-v2-request", identity: device.identity, endpointId: device.endpointId, identityGeneration: device.identityGeneration, requestId, issuedAt, nonce, body });
+  return canonicalJSON({ purpose: "hmux-iroh-v2-request", identity: device.identity, endpointId: device.endpointId, identityGeneration: device.identityGeneration, requestId, issuedAt, nonce, body });
 }
 
 /**
@@ -111,7 +111,7 @@ export function requestSigningInput(device: DeviceDescriptor, requestId: string,
  * team request can never be replayed against the account object, or the
  * reverse. Same fields and canonical encoding as `requestSigningInput`.
  */
-export const ACCOUNT_REQUEST_PURPOSE = "cmux-iroh-v2-account-request";
+export const ACCOUNT_REQUEST_PURPOSE = "hmux-iroh-v2-account-request";
 
 export function accountRequestSigningInput(device: DeviceDescriptor, requestId: string, issuedAt: number, body: unknown, nonce: string): string {
   return canonicalJSON({ purpose: ACCOUNT_REQUEST_PURPOSE, identity: device.identity, endpointId: device.endpointId, identityGeneration: device.identityGeneration, requestId, issuedAt, nonce, body });

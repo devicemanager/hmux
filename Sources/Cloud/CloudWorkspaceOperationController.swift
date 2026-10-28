@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 import os
 
@@ -25,13 +25,13 @@ final class CloudWorkspaceOperationController {
         self.notificationCenter = notificationCenter
         availabilityObservers = [
             RightSidebarBetaFeatureSettings.didChangeNotification,
-            .cmuxFeatureFlagsDidChange,
-            .cmuxCloudVMAccessDidEnd,
-            .cmuxCloudTeamScopeDidChange
+            .hmuxFeatureFlagsDidChange,
+            .hmuxCloudVMAccessDidEnd,
+            .hmuxCloudTeamScopeDidChange
         ].map { name in
             notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated {
-                    guard name == .cmuxCloudVMAccessDidEnd || name == .cmuxCloudTeamScopeDidChange || self?.isAvailable() != true else { return }
+                    guard name == .hmuxCloudVMAccessDidEnd || name == .hmuxCloudTeamScopeDidChange || self?.isAvailable() != true else { return }
                     self?.cancelAll()
                 }
             }
@@ -57,7 +57,7 @@ final class CloudWorkspaceOperationController {
             } catch is CancellationError {
                 // Cancellation is the expected result of sign-out or disabling Cloud Machines.
             } catch {
-                Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cmuxterm.app", category: "CloudWorkspace")
+                Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.hmuxterm.app", category: "CloudWorkspace")
                     .error("Cloud workspace operation failed: \(String(describing: error), privacy: .private)")
             }
         }
@@ -82,7 +82,7 @@ final class CloudWorkspaceOperationController {
             } catch is CancellationError {
                 // Cancellation is the expected result of sign-out or disabling Cloud Machines.
             } catch {
-                Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.cmuxterm.app", category: "CloudWorkspace")
+                Logger(subsystem: Bundle.main.bundleIdentifier ?? "com.hmuxterm.app", category: "CloudWorkspace")
                     .error("Keyed Cloud workspace operation failed: \(String(describing: error), privacy: .private)")
             }
         }

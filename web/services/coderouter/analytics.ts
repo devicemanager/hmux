@@ -7,8 +7,8 @@ import {
   reportCoderouterFailure,
 } from "./observability";
 
-// Coderouter analytics live in the main cmux PostHog project, keyed by the
-// Stack user id the cmux apps identify with, so one person's app activity and
+// Coderouter analytics live in the main hmux PostHog project, keyed by the
+// Stack user id the hmux apps identify with, so one person's app activity and
 // their coderouter requests are the same person in PostHog. Team and VM ids
 // are opaque server-minted identifiers and travel as properties. What never
 // travels: prompts, outputs, headers, credentials, emails, account labels;
@@ -162,7 +162,7 @@ const defaultDependencies: AnalyticsDependencies = {
 
 /**
  * The PostHog identity of one event: the Stack user when known (a person
- * profile the cmux apps also write to), else the server identity with person
+ * profile the hmux apps also write to), else the server identity with person
  * processing off so anonymous events never create phantom persons.
  */
 function identity(userId: string | undefined, teamId: string | undefined): { distinct_id: string } {
@@ -574,7 +574,7 @@ function boundedNumber(value: unknown, maximum: number): number | null {
     : null;
 }
 
-/** The main cmux project, same key and capture host as every other server sink. */
+/** The main hmux project, same key and capture host as every other server sink. */
 export function coderouterAnalyticsConfig(): CoderouterAnalyticsConfig | null {
   const projectKey = POSTHOG_PROJECT_KEY?.trim();
   if (!projectKey) return null;

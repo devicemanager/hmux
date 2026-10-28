@@ -17,7 +17,7 @@ import { GET as accountsGet } from "../app/api/coderouter/accounts/route";
 import { GET as claudeGet } from "../app/api/coderouter/claude-upstream/route";
 import { GET as organizationsGet } from "../app/api/coderouter/organizations/route";
 
-const enabled = process.env.CMUX_DB_TEST === "1";
+const enabled = process.env.HMUX_DB_TEST === "1";
 const dbTest = enabled ? test : test.skip;
 const USER = "vm-scope-test-user";
 const TEAM_A = "vm-scope-team-a";
@@ -70,8 +70,8 @@ beforeEach(async () => {
 });
 function guest(path: string, headers: Record<string, string> = {}) {
   return new Request(`https://coderouter.test${path}`, { headers: {
-    "x-coderouter-route-token": tokenA, "x-cmux-vm-id": vmA,
-    authorization: "Bearer cmux-vm-edge-placeholder", ...headers,
+    "x-coderouter-route-token": tokenA, "x-hmux-vm-id": vmA,
+    authorization: "Bearer hmux-vm-edge-placeholder", ...headers,
   } });
 }
 function access() { return { kind: "vm" as const, vmId: vmA, poolId: poolA }; }
@@ -107,7 +107,7 @@ async function insertLegacyCodexAccount(credential: CodexCredential, visibility:
 }
 
 dbTest("VM list APIs ignore team overrides and hide private and foreign accounts", async () => {
-  const request = guest('/api/coderouter/accounts?teamId='+TEAM_B, { 'x-cmux-team-id': TEAM_B });
+  const request = guest('/api/coderouter/accounts?teamId='+TEAM_B, { 'x-hmux-team-id': TEAM_B });
   const resolved = await resolveCoderouterUsageTeam(request);
   expect(resolved).toMatchObject({ ok: true, teamId: TEAM_A, vmId: vmA, access: access() });
   const response = await accountsGet(request);
@@ -115,7 +115,7 @@ dbTest("VM list APIs ignore team overrides and hide private and foreign accounts
   const body = await response.json();
   expect(body.teamId).toBe(TEAM_A);
   expect(body.accounts.map((account: {id: string}) => account.id)).toEqual([sharedA]);
-  const claude = await claudeGet(guest('/api/coderouter/claude-upstream', { 'x-cmux-team-id': TEAM_B }));
+  const claude = await claudeGet(guest('/api/coderouter/claude-upstream', { 'x-hmux-team-id': TEAM_B }));
   expect(claude.status).toBe(200);
   expect((await claude.json()).accounts.map((account: {id: string}) => account.id)).toEqual([claudeA]);
 });
@@ -125,8 +125,8 @@ dbTest("same creator cannot authorize another team's VM", async () => {
   expect(await authenticateRouteToken(wrong.token)).toBeNull();
   const identity = await authenticateRequestRouteToken(guest('/v1/models'));
   expect(identity).toMatchObject({ ok: true, identity: { teamId: TEAM_A, vmId: vmA, poolId: poolA } });
-  expect(await authenticateRequestRouteToken(guest('/v1/models', { 'x-cmux-vm-id': vmB }))).toMatchObject({ ok: false });
-  expect(await resolveCoderouterUsageTeam(guest('/api/coderouter/accounts', { 'x-cmux-vm-id': vmB }))).toMatchObject({ ok: false });
+  expect(await authenticateRequestRouteToken(guest('/v1/models', { 'x-hmux-vm-id': vmB }))).toMatchObject({ ok: false });
+  expect(await resolveCoderouterUsageTeam(guest('/api/coderouter/accounts', { 'x-hmux-vm-id': vmB }))).toMatchObject({ ok: false });
 });
 
 dbTest("a signed VM authorization authenticates against the live VM row", async () => {
@@ -134,7 +134,7 @@ dbTest("a signed VM authorization authenticates against the live VM row", async 
   // lookup must not compare the two columns directly.
   const signed = await issueVmAuthorizationToken(TEAM_A, USER, vmA);
   expect(await authenticateRouteToken(signed.token)).toEqual({ teamId: TEAM_A, stackUserId: USER, vmId: vmA, poolId: poolA });
-  const request = new Request("https://coderouter.test/v1/models", { headers: { "x-cmux-authorization": `Bearer ${signed.token}` } });
+  const request = new Request("https://coderouter.test/v1/models", { headers: { "x-hmux-authorization": `Bearer ${signed.token}` } });
   expect(await authenticateRequestRouteToken(request)).toMatchObject({ ok: true, identity: { teamId: TEAM_A, vmId: vmA, poolId: poolA } });
   await db`update cloud_vms set status = 'destroyed' where id = ${vmA}`;
   expect(await authenticateRouteToken(signed.token)).toBeNull();
@@ -187,9 +187,9 @@ dbTest("database refuses cross-team grants, pools, and owner reassignment", asyn
 });
 
 dbTest("VM organization catalog is fixed and VM credentials cannot administer accounts", async () => {
-  const response = await organizationsGet(guest('/api/coderouter/organizations', { 'x-cmux-team-id': TEAM_B }));
+  const response = await organizationsGet(guest('/api/coderouter/organizations', { 'x-hmux-team-id': TEAM_B }));
   expect(await response.json()).toMatchObject({ fixed: true, selectedTeamId: TEAM_A, teams: [{ id: TEAM_A, permissions: { manageAccounts: false } }] });
-  const resolved = await resolveCodeRouterRequestContext(guest('/api/coderouter/session', { 'x-cmux-team-id': TEAM_B }));
+  const resolved = await resolveCodeRouterRequestContext(guest('/api/coderouter/session', { 'x-hmux-team-id': TEAM_B }));
   expect(resolved.ok).toBe(false);
   if (!resolved.ok) expect(resolved.response.status).toBe(403);
 });
@@ -247,7 +247,7 @@ dbTest("personal VMs can use their owner's private pool without granting organiz
 
 
 dbTest("a VM token gets no account rights; the repository still keeps the pool boundary", async () => {
-  const resolved = await resolveCoderouterControlContext(guest('/api/coderouter/accounts', {'x-cmux-team-id': TEAM_B}));
+  const resolved = await resolveCoderouterControlContext(guest('/api/coderouter/accounts', {'x-hmux-team-id': TEAM_B}));
   expect(resolved.ok).toBe(false);
   if (!resolved.ok) {
     expect(resolved.response.status).toBe(403);

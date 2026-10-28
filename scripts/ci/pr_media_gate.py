@@ -34,7 +34,7 @@ CANARY_PATH = "nightly-next/pr-media-gate-canary.png"
 
 
 def load_privacy():
-    spec = importlib.util.spec_from_file_location("cmux_pr_media_privacy_gate", PRIVACY_MODULE)
+    spec = importlib.util.spec_from_file_location("hmux_pr_media_privacy_gate", PRIVACY_MODULE)
     if not PRIVACY_MODULE.is_file() or spec is None or spec.loader is None:
         raise SystemExit(f"pr-media gate: {PRIVACY_MODULE} is missing; add it to the sparse checkout")
     module = importlib.util.module_from_spec(spec)

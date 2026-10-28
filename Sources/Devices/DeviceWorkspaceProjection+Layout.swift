@@ -1,6 +1,6 @@
-import CMUXMobileCore
-import CmuxCore
-import CmuxSurfaceCatalogModel
+import HMUXMobileCore
+import HmuxCore
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension DeviceWorkspaceProjection {

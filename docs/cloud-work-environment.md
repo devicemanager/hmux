@@ -32,7 +32,7 @@ do that?” without inspecting shell history.
 
 ## Setup and reuse
 
-The first `cmux vm dev` or “Set up work environment” action creates a draft,
+The first `hmux vm dev` or “Set up work environment” action creates a draft,
 detects the repository recipe, and asks once for capabilities that cannot be
 inferred. Applying the draft produces an immutable revision:
 
@@ -78,12 +78,12 @@ The first implementation can sit on existing `vm env`, `vm hooks`, `vm dev`, and
 machine identity primitives:
 
 ```text
-cmux vm env create <name> [--project <repo>] [--machine-scope user-pool]
-cmux vm env setup <name> [--from .cmux/cloud.json] [--interactive]
-cmux vm env status <name> [--json]
-cmux vm env bind <workspace> <name>
-cmux vm env credentials <name> list|attach|revoke
-cmux vm env capability <name> request|grant|revoke
+hmux vm env create <name> [--project <repo>] [--machine-scope user-pool]
+hmux vm env setup <name> [--from .hmux/cloud.json] [--interactive]
+hmux vm env status <name> [--json]
+hmux vm env bind <workspace> <name>
+hmux vm env credentials <name> list|attach|revoke
+hmux vm env capability <name> request|grant|revoke
 ```
 
 The daemon should expose the same records through `environment.get/list` and

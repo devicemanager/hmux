@@ -1,6 +1,6 @@
 import Bonsplit
-import CmuxHomeCore
-import CmuxWorkspaces
+import HmuxHomeCore
+import HmuxWorkspaces
 import Foundation
 
 /// Workspace surface creation for Chief panes: a Chief conversation as a tab or a split.
@@ -70,7 +70,7 @@ extension Workspace {
         if let targetIndex {
             _ = bonsplitController.reorderTab(newTabId, toIndex: targetIndex)
         }
-        publishCmuxSurfaceCreated(
+        publishHmuxSurfaceCreated(
             chiefPanel.id,
             paneId: paneId,
             kind: SurfaceKind.chief.rawValue,
@@ -179,7 +179,7 @@ extension Workspace {
             return nil
         }
 
-        publishCmuxSplitCreated(
+        publishHmuxSplitCreated(
             newPaneId,
             sourcePaneId: sourcePaneId,
             orientation: orientation,

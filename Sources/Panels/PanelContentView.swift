@@ -1,11 +1,11 @@
-import CmuxFoundation
-import CmuxNotifications
+import HmuxFoundation
+import HmuxNotifications
 import SwiftUI
 import Foundation
 import Bonsplit
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFeedback
+import HmuxAppKitSupportUI
+import HmuxFeedback
 
 /// View that renders the appropriate panel view based on panel type
 struct PanelContentView: View {
@@ -149,7 +149,7 @@ struct PanelContentView: View {
             }
         case .simulator:
             if let simulatorPanel = panel as? SimulatorPanel {
-                if CmuxFeatureFlags.shared.isSimulatorEnabled,
+                if HmuxFeatureFlags.shared.isSimulatorEnabled,
                    simulatorPanel.isFeatureReady {
                     SimulatorPanelView(
                         panel: simulatorPanel,
@@ -187,8 +187,8 @@ struct PanelContentView: View {
                 )
             }
         case .extensionBrowser:
-            if let extensionBrowserPanel = panel as? CMUXSidebarExtensionBrowserPanel {
-                CMUXSidebarExtensionBrowserPanelView(
+            if let extensionBrowserPanel = panel as? HMUXSidebarExtensionBrowserPanel {
+                HMUXSidebarExtensionBrowserPanelView(
                     panel: extensionBrowserPanel,
                     onRequestPanelFocus: onRequestPanelFocus
                 )
@@ -293,14 +293,14 @@ struct PanelFilePathHeader<TrailingContent: View>: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            CmuxSystemSymbolImage(
+            HmuxSystemSymbolImage(
                 systemName: iconSystemName,
                 pointSize: RightSidebarChromeMetrics.contentIconFrameSize,
                 tint: .secondary
             )
             .frame(width: RightSidebarChromeMetrics.contentIconFrameSize)
             Text(filePath)
-                .cmuxFont(size: 11, design: .monospaced)
+                .hmuxFont(size: 11, design: .monospaced)
                 .foregroundStyle(Color(nsColor: foregroundColor).opacity(0.68))
                 .lineLimit(1)
                 .truncationMode(.middle)
@@ -336,7 +336,7 @@ struct PanelHeaderIconGlyph: View {
     let systemName: String
 
     var body: some View {
-        CmuxSystemSymbolImage(
+        HmuxSystemSymbolImage(
             systemName: systemName,
             pointSize: RightSidebarChromeMetrics.headerIconSize,
             tint: .secondary

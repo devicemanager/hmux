@@ -1,6 +1,6 @@
 # iOS simulator streaming v2
 
-cmux iOS mirrors a booted iPhone/iPad Simulator hosted by the paired Mac. v2
+hmux iOS mirrors a booted iPhone/iPad Simulator hosted by the paired Mac. v2
 replaces per-frame still images pushed through the shared mobile event queue
 with a dedicated low-latency video pipeline. The design goal is that
 interaction feels immediate (touch-to-photon bounded by one encode + one
@@ -86,7 +86,7 @@ send-window so a fast drag cannot backlog; down/up never coalesce.
 
 A dedicated client-opened bidirectional iroh lane
 (`CmxIrohLane.simulatorStream`, lane code 5, resource `simstream:<panel-uuid>`)
-carrying length-prefixed binary messages (`CmuxSimulatorStreamKit`,
+carrying length-prefixed binary messages (`HmuxSimulatorStreamKit`,
 `SimStreamWireCodec`). Existing mobile RPC is reused only for discovery
 (`mobile.simulator.list` and workspace state sync). Send priorities: Mac
 video at −5 (below terminal PTY bytes at 0, above artifact bulk at −10) so

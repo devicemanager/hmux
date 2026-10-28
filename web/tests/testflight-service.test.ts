@@ -295,7 +295,7 @@ describe("TestFlight ASC service", () => {
     const update = mock(async () => undefined);
     const user = {
       clientReadOnlyMetadata: {
-        cmuxPlan: "pro",
+        hmuxPlan: "pro",
         retained: { value: true },
       },
       update,
@@ -310,12 +310,12 @@ describe("TestFlight ASC service", () => {
     ).resolves.toBe(true);
     expect(update).toHaveBeenCalledWith({
       clientReadOnlyMetadata: {
-        cmuxPlan: "pro",
+        hmuxPlan: "pro",
         retained: { value: true },
-        cmuxProTestflightOwnedLegacyGroupIDs: [
+        hmuxProTestflightOwnedLegacyGroupIDs: [
           FOUNDER_TESTFLIGHT_GROUP_ID,
         ],
-        cmuxProTestflightOwnedLegacyEmails: ["legacy@example.com"],
+        hmuxProTestflightOwnedLegacyEmails: ["legacy@example.com"],
       },
     });
   });
@@ -324,8 +324,8 @@ describe("TestFlight ASC service", () => {
     const update = mock(async () => undefined);
     const user = {
       clientReadOnlyMetadata: {
-        cmuxPlan: "pro",
-        cmuxProTestflightEnrollmentEmails: ["first@example.com"],
+        hmuxPlan: "pro",
+        hmuxProTestflightEnrollmentEmails: ["first@example.com"],
       },
       update,
     };
@@ -339,22 +339,22 @@ describe("TestFlight ASC service", () => {
     ).resolves.toBe(true);
     expect(update).toHaveBeenCalledWith({
       clientReadOnlyMetadata: {
-        cmuxPlan: "pro",
-        cmuxProTestflightEnrollmentEmails: [
+        hmuxPlan: "pro",
+        hmuxProTestflightEnrollmentEmails: [
           "first@example.com",
           "second@example.com",
         ],
-        cmuxProTestflightGrants: [
+        hmuxProTestflightGrants: [
           { email: "first@example.com", source: "user" },
           { email: "second@example.com", source: "user" },
         ],
       },
     });
     expect(proTestflightEnrollmentEmails({
-      cmuxProTestflightEnrollmentEmails: ["First@Example.com", "first@example.com"],
+      hmuxProTestflightEnrollmentEmails: ["First@Example.com", "first@example.com"],
     })).toEqual(["first@example.com"]);
     expect(proTestflightGrants({
-      cmuxProTestflightGrants: [
+      hmuxProTestflightGrants: [
         { email: "First@Example.com", source: "user" },
         { email: "first@example.com", source: "user" },
       ],
@@ -366,8 +366,8 @@ describe("TestFlight ASC service", () => {
     const updates: unknown[] = [];
     const metadata = {
       retained: true,
-      cmuxProTestflightEnrollmentEmails: ["old@example.com"],
-      cmuxProTestflightGrants: [
+      hmuxProTestflightEnrollmentEmails: ["old@example.com"],
+      hmuxProTestflightGrants: [
         { email: "old@example.com", source: "user" },
       ],
     };
@@ -405,7 +405,7 @@ describe("TestFlight ASC service", () => {
       options: { updateMetadata: (next: unknown) => Promise<void> },
     ) => Promise<number>)(null, {
       retained: true,
-      cmuxProTestflightGrants: [
+      hmuxProTestflightGrants: [
         { email: "grant@example.com", source: "user" },
       ],
     }, remover, {
@@ -422,10 +422,10 @@ describe("TestFlight ASC service", () => {
     const update = mock(async () => undefined);
     const user = {
       clientReadOnlyMetadata: {
-        cmuxProTestflightOwnedLegacyGroupIDs: [
+        hmuxProTestflightOwnedLegacyGroupIDs: [
           FOUNDER_TESTFLIGHT_GROUP_ID,
         ],
-        cmuxProTestflightOwnedLegacyEmails: ["legacy@example.com"],
+        hmuxProTestflightOwnedLegacyEmails: ["legacy@example.com"],
       },
       update,
     };
@@ -442,11 +442,11 @@ describe("TestFlight ASC service", () => {
 
   test("targets the current Pro email and the exact legacy enrollment email", () => {
     expect(proTestflightRemovalTargets("Current@Example.com", {
-      cmuxProTestflightEnrollmentEmails: ["Joined@Example.com"],
-      cmuxProTestflightOwnedLegacyGroupIDs: [
+      hmuxProTestflightEnrollmentEmails: ["Joined@Example.com"],
+      hmuxProTestflightOwnedLegacyGroupIDs: [
         FOUNDER_TESTFLIGHT_GROUP_ID,
       ],
-      cmuxProTestflightOwnedLegacyEmails: ["Legacy@Example.com"],
+      hmuxProTestflightOwnedLegacyEmails: ["Legacy@Example.com"],
     })).toEqual([
       {
         email: "current@example.com",
@@ -467,7 +467,7 @@ describe("TestFlight ASC service", () => {
 
   test("does not infer legacy Founder ownership from group metadata alone", () => {
     expect(proTestflightRemovalTargets("current@example.com", {
-      cmuxProTestflightOwnedLegacyGroupIDs: [
+      hmuxProTestflightOwnedLegacyGroupIDs: [
         FOUNDER_TESTFLIGHT_GROUP_ID,
       ],
     })).toEqual([{
@@ -478,10 +478,10 @@ describe("TestFlight ASC service", () => {
 
   test("removes a recorded legacy enrollment when the current email is absent", () => {
     expect(proTestflightRemovalTargets(null, {
-      cmuxProTestflightOwnedLegacyGroupIDs: [
+      hmuxProTestflightOwnedLegacyGroupIDs: [
         FOUNDER_TESTFLIGHT_GROUP_ID,
       ],
-      cmuxProTestflightOwnedLegacyEmails: ["legacy@example.com"],
+      hmuxProTestflightOwnedLegacyEmails: ["legacy@example.com"],
     })).toEqual([{
       email: "legacy@example.com",
       ownedLegacyGroupIDs: [

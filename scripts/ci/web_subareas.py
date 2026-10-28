@@ -87,7 +87,7 @@ def test_path_requires_db(path: str, repo_root: Path) -> bool:
         # been one of the DB-behavior cases.
         return True
     try:
-        return "CMUX_DB_TEST" in candidate.read_text(encoding="utf-8")
+        return "HMUX_DB_TEST" in candidate.read_text(encoding="utf-8")
     except (OSError, UnicodeError):
         return True
 
@@ -115,14 +115,14 @@ DIFF_SIDECAR_EXACT = {
     "scripts/generate-diff-sidecar-types.sh",
     "scripts/install-rust-ci.sh",
     "scripts/run-diff-sidecar-cargo.sh",
-    "Sources/Panels/CmuxDiffViewerURLSchemeHandler.swift",
+    "Sources/Panels/HmuxDiffViewerURLSchemeHandler.swift",
     "Sources/Panels/DiffSidecarBridge.swift",
     "webviews/bun.lock",
     "webviews/package.json",
 }
 DIFF_SIDECAR_PREFIXES = (
     "Native/DiffSidecar/",
-    "Packages/macOS/CmuxBrowser/Sources/CmuxBrowser/DiffViewer/",
+    "Packages/macOS/HmuxBrowser/Sources/HmuxBrowser/DiffViewer/",
     "webviews/bench/",
     "webviews/src/diff/",
 )

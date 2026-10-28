@@ -36,7 +36,7 @@ def run_runner(package: pathlib.Path, env: dict[str, str]) -> subprocess.Complet
 class SwiftTestingSuiteTimeoutTests(unittest.TestCase):
     def test_a_local_dependency_in_an_empty_submodule_is_populated_first(self) -> None:
         """Fleet ci-steps check the ref out with every submodule deinitialized, so
-        CmuxAppKitSupportUI (through CmuxWorkspaces' .package(path: vendor/bonsplit))
+        HmuxAppKitSupportUI (through HmuxWorkspaces' .package(path: vendor/bonsplit))
         failed at `swift test list`: vendor/bonsplit/Package.swift doesn't exist
         (step 97793621e02e, 2026-10-12). Only submodules a local dependency reaches
         are populated; ghostty is not."""
@@ -121,7 +121,7 @@ class SwiftTestingSuiteTimeoutTests(unittest.TestCase):
             fake_swift = temp / "swift"
             fake_swift.write_text(
                 "#!/usr/bin/env bash\n"
-                "printf '%s\\n' \"$*\" >> \"$CMUX_SWIFT_TEST_CALLS\"\n"
+                "printf '%s\\n' \"$*\" >> \"$HMUX_SWIFT_TEST_CALLS\"\n"
                 "if [[ \"$*\" == *\"test list\"* ]]; then\n"
                 "  echo 'ExampleTests.FirstSuite/testOne()'\n"
                 "  echo 'ExampleTests.SecondSuite/testTwo()'\n"
@@ -135,7 +135,7 @@ class SwiftTestingSuiteTimeoutTests(unittest.TestCase):
             package.mkdir()
             env = os.environ.copy()
             env["PATH"] = f"{temp}:{env['PATH']}"
-            env["CMUX_SWIFT_TEST_CALLS"] = str(calls)
+            env["HMUX_SWIFT_TEST_CALLS"] = str(calls)
 
             completed = run_runner(package, env)
 
@@ -187,7 +187,7 @@ class SwiftTestingSuiteTimeoutTests(unittest.TestCase):
             fake_swift = temp / "swift"
             fake_swift.write_text(
                 "#!/usr/bin/env bash\n"
-                "printf '%s\\n' \"$*\" >> \"$CMUX_SWIFT_TEST_CALLS\"\n"
+                "printf '%s\\n' \"$*\" >> \"$HMUX_SWIFT_TEST_CALLS\"\n"
                 "if [[ \"$*\" == *\"test list\"* ]]; then\n"
                 "  echo 'ExampleTests.RetrySuite/testOne()'\n"
                 "  exit 0\n"
@@ -196,9 +196,9 @@ class SwiftTestingSuiteTimeoutTests(unittest.TestCase):
                 "  exit 91\n"
                 "fi\n"
                 "count=0\n"
-                "if [[ -f \"$CMUX_SWIFT_TEST_ATTEMPTS\" ]]; then count=$(cat \"$CMUX_SWIFT_TEST_ATTEMPTS\"); fi\n"
+                "if [[ -f \"$HMUX_SWIFT_TEST_ATTEMPTS\" ]]; then count=$(cat \"$HMUX_SWIFT_TEST_ATTEMPTS\"); fi\n"
                 "count=$((count + 1))\n"
-                "printf '%s' \"$count\" > \"$CMUX_SWIFT_TEST_ATTEMPTS\"\n"
+                "printf '%s' \"$count\" > \"$HMUX_SWIFT_TEST_ATTEMPTS\"\n"
                 "if [[ \"$count\" -eq 1 ]]; then exit 124; fi\n"
                 "echo 'Test run with 1 test passed after 0.001 seconds.'\n",
                 encoding="utf-8",
@@ -208,8 +208,8 @@ class SwiftTestingSuiteTimeoutTests(unittest.TestCase):
             package.mkdir()
             env = os.environ.copy()
             env["PATH"] = f"{temp}:{env['PATH']}"
-            env["CMUX_SWIFT_TEST_CALLS"] = str(calls)
-            env["CMUX_SWIFT_TEST_ATTEMPTS"] = str(attempts)
+            env["HMUX_SWIFT_TEST_CALLS"] = str(calls)
+            env["HMUX_SWIFT_TEST_ATTEMPTS"] = str(attempts)
 
             completed = run_runner(package, env)
 
@@ -239,7 +239,7 @@ class SwiftTestingSuiteTimeoutTests(unittest.TestCase):
             package.mkdir()
             env = os.environ.copy()
             env["PATH"] = f"{temp}:{env['PATH']}"
-            env["CMUX_SWIFT_TEST_SUITE_TIMEOUT_SECONDS"] = "1"
+            env["HMUX_SWIFT_TEST_SUITE_TIMEOUT_SECONDS"] = "1"
 
             completed = run_runner(package, env)
 

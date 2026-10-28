@@ -50,7 +50,7 @@ def main():
         uid = run(['id', '-u', user]).stdout.strip()
         if not uid.isdecimal():
             raise RuntimeError('Cannot identify the logged-in GUI user')
-        with tempfile.TemporaryDirectory(prefix='cmux-capture-preflight-',
+        with tempfile.TemporaryDirectory(prefix='hmux-capture-preflight-',
                                          dir=os.environ.get('RUNNER_TEMP')) as temporary:
             # Match the recorder's output-directory access; do not broaden
             # runner permissions to turn an unavailable capture into a pass.

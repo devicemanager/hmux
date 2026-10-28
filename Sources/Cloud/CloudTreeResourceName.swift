@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// The name to show for a display or a browser row.

@@ -1,15 +1,15 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 extension TerminalController {
     /// `vm.agent_updates_get {id}` and `vm.agent_updates_set {id, agent_updates}`
-    /// behind `cmux vm agent-updates`. Every entrypoint (the CLI, the machine
+    /// behind `hmux vm agent-updates`. Every entrypoint (the CLI, the machine
     /// menu through the CLI) changes the setting through this one path.
     nonisolated func socketWorkerCloudAgentUpdatesResponse(method: String, id: Any?, params: [String: Any]) -> String {
         guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
             let format = String(
                 localized: "socket.cloudVM.agentUpdates.idRequired",
-                defaultValue: "%@ requires `id`. Run `cmux vm ls` to find one."
+                defaultValue: "%@ requires `id`. Run `hmux vm ls` to find one."
             )
             return v2Error(id: id, code: "invalid_params", message: String(format: format, method))
         }

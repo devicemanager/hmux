@@ -1,10 +1,10 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFoundation
+import HmuxAppKitSupportUI
+import HmuxFoundation
 
 /// Pure AppKit header bar with folder icon, path label, and hidden files toggle.
 final class FileExplorerHeaderView: NSView {
-    private let iconView = CmuxResolvedIconImageView()
+    private let iconView = HmuxResolvedIconImageView()
     private let retryButton = NSButton()
     private var retry: (() -> Void)?
     private let pathLabel = NSTextField(labelWithString: "")
@@ -102,7 +102,7 @@ final class FileExplorerHeaderView: NSView {
     private func applyHeaderState() {
         assert(Thread.isMainThread, "AppKit image updates must run on the main thread")
         if let quickSearchQuery {
-            iconView.apply(CmuxResolvedIconRequest(
+            iconView.apply(HmuxResolvedIconRequest(
                 source: .systemSymbol(name: "magnifyingglass", accessibilityDescription: nil),
                 size: NSSize(width: 14, height: 14),
                 tintColor: .secondaryLabelColor,
@@ -111,7 +111,7 @@ final class FileExplorerHeaderView: NSView {
             pathLabel.stringValue = "/" + quickSearchQuery
             pathLabel.toolTip = pathLabel.stringValue
         } else {
-            iconView.apply(CmuxResolvedIconRequest(
+            iconView.apply(HmuxResolvedIconRequest(
                 source: .systemSymbol(name: "folder.fill", accessibilityDescription: nil),
                 size: NSSize(width: 14, height: 14),
                 tintColor: .secondaryLabelColor,

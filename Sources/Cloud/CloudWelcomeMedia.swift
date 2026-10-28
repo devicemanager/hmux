@@ -1,6 +1,6 @@
 import AppKit
 import AVFoundation
-import CmuxFoundation
+import HmuxFoundation
 import ImageIO
 import Observation
 import SwiftUI
@@ -183,7 +183,7 @@ struct CloudWelcomeMediaCarousel: View {
     private static let posterFeather: CGFloat = 44
 
     /// The clip edge to edge, its bottom fading into a dark band with the app
-    /// icon and "Introducing cmux cloud", and a hairline that fills with the clip.
+    /// icon and "Introducing hmux cloud", and a hairline that fills with the clip.
     /// Always dark, like the clips, whatever the window's appearance.
     private var poster: some View {
         VStack(spacing: 0) {
@@ -241,10 +241,10 @@ struct CloudWelcomeMediaCarousel: View {
             }
             VStack(alignment: .leading, spacing: 1) {
                 Text(introducingText)
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .foregroundStyle(.white.opacity(0.55))
                 Text(titleText)
-                    .cmuxFont(size: posterShowsIcon ? 20 : 22, weight: .semibold)
+                    .hmuxFont(size: posterShowsIcon ? 20 : 22, weight: .semibold)
                     .tracking(-0.3)
                     .foregroundStyle(.white)
             }
@@ -258,15 +258,15 @@ struct CloudWelcomeMediaCarousel: View {
     private var bodyTitle: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(introducingText)
-                .cmuxFont(size: 12.5)
+                .hmuxFont(size: 12.5)
                 .foregroundStyle(.secondary)
             HStack(alignment: .firstTextBaseline, spacing: 8) {
                 Text(titleText)
-                    .cmuxFont(size: 19, weight: .semibold)
+                    .hmuxFont(size: 19, weight: .semibold)
                     .tracking(-0.2)
                 if showsNewBadge {
                     Text(String(localized: "cloud.welcome.newBadge", defaultValue: "New"))
-                        .cmuxFont(size: 10.5, weight: .semibold)
+                        .hmuxFont(size: 10.5, weight: .semibold)
                         .foregroundStyle(Color.accentColor)
                         .padding(.horizontal, 7)
                         .frame(height: 18)
@@ -283,11 +283,11 @@ struct CloudWelcomeMediaCarousel: View {
     private var introducingText: String {
         posterHeadline == nil
             ? String(localized: "cloud.welcome.introducing", defaultValue: "Introducing")
-            : String(localized: "cloud.welcome.introducingCloud", defaultValue: "Introducing cmux cloud")
+            : String(localized: "cloud.welcome.introducingCloud", defaultValue: "Introducing hmux cloud")
     }
 
     private var titleText: String {
-        posterHeadline ?? String(localized: "cloud.welcome.title.eyebrow", defaultValue: "cmux cloud")
+        posterHeadline ?? String(localized: "cloud.welcome.title.eyebrow", defaultValue: "hmux cloud")
     }
 
     // MARK: Feature list
@@ -318,19 +318,19 @@ struct CloudWelcomeMediaCarousel: View {
         return Button(action: action) {
             HStack(alignment: .firstTextBaseline, spacing: 12) {
                 Image(systemName: slide.symbol)
-                    .cmuxFont(size: 13)
+                    .hmuxFont(size: 13)
                     .foregroundStyle(ink)
                     .frame(width: 18)
                     .accessibilityHidden(true)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(slide.title)
-                        .cmuxFont(size: 13.5, weight: .medium)
+                        .hmuxFont(size: 13.5, weight: .medium)
                         .foregroundStyle(ink)
                         .fixedSize(horizontal: false, vertical: true)
                     if isCurrent {
                         // One line, so the card keeps its height in every language.
                         Text(slide.caption)
-                            .cmuxFont(size: 12.5)
+                            .hmuxFont(size: 12.5)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
                             .minimumScaleFactor(0.8)
@@ -343,7 +343,7 @@ struct CloudWelcomeMediaCarousel: View {
             .overlay(alignment: .topTrailing) {
                 if slide.id == "spin-up", let newMachineShortcut {
                     Text(newMachineShortcut)
-                        .cmuxFont(size: 11.5)
+                        .hmuxFont(size: 11.5)
                         .tracking(0.6)
                         .foregroundStyle(Color.primary.opacity(isCurrent ? 0.55 : 0.42))
                         .padding(.top, 1)
@@ -437,7 +437,7 @@ struct CloudWelcomeMediaCarousel: View {
     private func controlButton(symbol: String, label: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             Image(systemName: symbol)
-                .cmuxFont(size: 11, weight: .bold)
+                .hmuxFont(size: 11, weight: .bold)
                 .foregroundStyle(.white)
                 .frame(width: 28, height: 28)
                 .background(.ultraThinMaterial, in: Circle())
@@ -463,10 +463,10 @@ struct CloudWelcomeMediaCarousel: View {
     private func placeholder(_ slide: CloudWelcomeSlide) -> some View {
         VStack(spacing: 10) {
             Image(systemName: slide.symbol)
-                .cmuxFont(size: 34, weight: .light)
+                .hmuxFont(size: 34, weight: .light)
                 .foregroundStyle(Color.accentColor)
             Text(slide.title)
-                .cmuxFont(size: 12, weight: .medium)
+                .hmuxFont(size: 12, weight: .medium)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -529,9 +529,9 @@ struct CloudWelcomeMediaCarousel: View {
     private var caption: some View {
         VStack(spacing: 3) {
             Text(currentSlide.title)
-                .cmuxFont(size: 15, weight: .semibold)
+                .hmuxFont(size: 15, weight: .semibold)
             Text(currentSlide.caption)
-                .cmuxFont(size: 13)
+                .hmuxFont(size: 13)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)

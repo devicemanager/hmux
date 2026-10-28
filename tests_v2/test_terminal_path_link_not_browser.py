@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regression: Cmd-click on a bare relative path never opens the browser (cx-do47).
 
-Leo Cmd-clicked "build-fleet/ORG-BACKUP.md" in terminal output and cmux opened
+Leo Cmd-clicked "build-fleet/ORG-BACKUP.md" in terminal output and hmux opened
 https://build-fleet/ORG-BACKUP.md. Text without a scheme is a URL only when its
 host has a public top-level domain (or is localhost, or an IP with a port);
 "foo/bar.md" is a path. It resolves against the terminal's cwd, then the git
@@ -9,22 +9,22 @@ root; when no file exists, the click does nothing.
 
 The app must be a DEBUG build launched with the in-app Cmd-click harness, the
 terminal cwd at REPO/sub, and the printed path absent under the cwd:
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_SETUP=1
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_PATH=REPO/sub/setup.json
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_FIXTURE_DIR=REPO/sub
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_COMMAND_PATH=REPO/sub/command.json
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_FORMAT=log
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_PREFIX="see "
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_SUFFIX=.
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_FILE_NAME=build-fleet/ORG-BACKUP.md
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_SKIP_FIXTURE_FILE=1
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_CD_FIXTURE=1
-  CMUX_UI_TEST_OPEN_MARKDOWN_IN_CMUX_VIEWER=1
-  CMUX_UI_TEST_CAPTURE_OPEN_URL_PATH=REPO/open-url.log
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_SETUP=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_PATH=REPO/sub/setup.json
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_FIXTURE_DIR=REPO/sub
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_COMMAND_PATH=REPO/sub/command.json
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_FORMAT=log
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_PREFIX="see "
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_SUFFIX=.
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_FILE_NAME=build-fleet/ORG-BACKUP.md
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_SKIP_FIXTURE_FILE=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_CD_FIXTURE=1
+  HMUX_UI_TEST_OPEN_MARKDOWN_IN_HMUX_VIEWER=1
+  HMUX_UI_TEST_CAPTURE_OPEN_URL_PATH=REPO/open-url.log
 REPO is a git repository. With REPO/build-fleet/ORG-BACKUP.md present the click
 must open it in the Markdown viewer; without it the click must open nothing.
 Run it where the app can be key (a whole capture mini or a local tagged build):
-  CMUX_PATH_LINK_REPO=REPO python3 tests_v2/test_terminal_path_link_not_browser.py
+  HMUX_PATH_LINK_REPO=REPO python3 tests_v2/test_terminal_path_link_not_browser.py
 """
 
 import json
@@ -32,7 +32,7 @@ import os
 import sys
 import time
 
-REPO = os.environ.get("CMUX_PATH_LINK_REPO", os.path.expanduser("~/cmdclick-repo"))
+REPO = os.environ.get("HMUX_PATH_LINK_REPO", os.path.expanduser("~/cmdclick-repo"))
 FIX = os.path.join(REPO, "sub")
 SETUP = os.path.join(FIX, "setup.json")
 COMMAND = os.path.join(FIX, "command.json")

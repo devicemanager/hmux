@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxSettings
-import CmuxSettingsUI
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSettings
+import HmuxSettingsUI
+import HmuxSurfaceCatalogModel
 import AppKit
 import Foundation
 

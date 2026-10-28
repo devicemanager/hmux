@@ -1,16 +1,16 @@
-import CMUXMobileCore
-import CmuxIrohTransport
-import CmuxIrxTransport
+import HMUXMobileCore
+import HmuxIrohTransport
+import HmuxIrxTransport
 import Foundation
 
-/// Serves the legacy wire dialect (`cmux/mobile/1`) for old phone builds over
+/// Serves the legacy wire dialect (`hmux/mobile/1`) for old phone builds over
 /// a connection accepted by the irx endpoint. One endpoint, one identity, two
 /// protocols: old phones keep working while irx is primary, and they get
 /// irx's endpoint/credential management underneath (the flaky legacy runtime
 /// machinery stays retired). Admission, lanes, and RPC reuse the proven
 /// legacy session classes unchanged.
 enum MobileHostIrxLegacyDialectServer {
-    static let listenerDefaultsKey = "cmux.irx.legacy-listener"
+    static let listenerDefaultsKey = "hmux.irx.legacy-listener"
 
     /// The legacy listener's own brake: disabling it never touches irx.
     /// Defaults ON (old phones keep working out of the box).
@@ -24,7 +24,7 @@ enum MobileHostIrxLegacyDialectServer {
     /// The legacy wire protocol tag (`IROH_ALPN` on the backend, baked into
     /// every shipped BETA build).
     nonisolated static var legacyALPN: Data {
-        Data("cmux/mobile/1".utf8)
+        Data("hmux/mobile/1".utf8)
     }
 
     /// Runs one legacy connection end to end: admission barrier, control RPC
@@ -64,7 +64,7 @@ enum MobileHostIrxLegacyDialectServer {
             session = try CmxIrohServerSession(
                 connection: connection,
                 authorizer: admissionController,
-                protocolConfiguration: .cmuxMobileV1
+                protocolConfiguration: .hmuxMobileV1
             )
         } catch {
             journal.record(

@@ -4,10 +4,10 @@ import { promptMentionMarkdown, promptTextWithAutoContext } from "./promptMentio
 test("prompt mention serialization matches Codex markdown links", () => {
   expect(promptMentionMarkdown({
     kind: "at",
-    label: "cmux",
-    name: "cmux",
+    label: "hmux",
+    name: "hmux",
     path: "/Users/dev/project",
-  })).toBe("[cmux](/Users/dev/project)");
+  })).toBe("[hmux](/Users/dev/project)");
 
   expect(promptMentionMarkdown({
     displayName: "Codex",
@@ -35,14 +35,14 @@ test("prompt mention serialization escapes markdown labels and destinations", ()
 test("auto context prepends the workspace mention only when enabled and absent", () => {
   const mention = {
     kind: "at" as const,
-    label: "cmux",
-    name: "cmux",
+    label: "hmux",
+    name: "hmux",
     path: "/Users/dev/project",
   };
 
   expect(promptTextWithAutoContext("fix ui", mention, true))
-    .toBe("[cmux](/Users/dev/project)\n\nfix ui");
+    .toBe("[hmux](/Users/dev/project)\n\nfix ui");
   expect(promptTextWithAutoContext("fix ui", mention, false)).toBe("fix ui");
-  expect(promptTextWithAutoContext("[cmux](/Users/dev/project)\n\nfix ui", mention, true))
-    .toBe("[cmux](/Users/dev/project)\n\nfix ui");
+  expect(promptTextWithAutoContext("[hmux](/Users/dev/project)\n\nfix ui", mention, true))
+    .toBe("[hmux](/Users/dev/project)\n\nfix ui");
 });

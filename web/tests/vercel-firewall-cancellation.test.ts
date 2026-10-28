@@ -16,7 +16,7 @@ test("the Firewall SDK passes cancellation to its real transport", async () => {
   }) as unknown as typeof fetch;
 
   await checkRateLimit("test-rule", {
-    request: new Request("https://cmux.test/api/client-config", { headers: { host: "cmux.test" } }),
+    request: new Request("https://hmux.test/api/client-config", { headers: { host: "hmux.test" } }),
     rateLimitKey: "test-install",
     firewallHostForDevelopment: "ignore-for-testing",
     signal,
@@ -37,7 +37,7 @@ test("a stalled Firewall request aborts instead of retaining the shared load", a
   })) as unknown as typeof fetch;
 
   await expect(checkRateLimit("test-rule", {
-    request: new Request("https://cmux.test/api/client-config", { headers: { host: "cmux.test" } }),
+    request: new Request("https://hmux.test/api/client-config", { headers: { host: "hmux.test" } }),
     rateLimitKey: "test-install",
     firewallHostForDevelopment: "ignore-for-testing",
     signal,

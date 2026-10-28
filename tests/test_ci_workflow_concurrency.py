@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """scripts/ci/check_workflow_concurrency.py flags workflows that can flood the queue.
 
-On 2026-10-19 cmuxterm-hq's cmux-shadow-release-compile.yml queued about 247
+On 2026-10-19 hmuxterm-hq's hmux-shadow-release-compile.yml queued about 247
 sixty-minute macOS runs, because each dispatch got its own concurrency group
-(`format('shadow-release-compile-{0}', inputs.sha)`, fixed in cmuxterm-hq#2568).
+(`format('shadow-release-compile-{0}', inputs.sha)`, fixed in hmuxterm-hq#2568).
 """
 from __future__ import annotations
 
@@ -40,7 +40,7 @@ jobs:
 
 class WorkflowConcurrencyTests(unittest.TestCase):
     def setUp(self):
-        temporary = tempfile.TemporaryDirectory(prefix="cmux-concurrency-lint-")
+        temporary = tempfile.TemporaryDirectory(prefix="hmux-concurrency-lint-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
         (self.root / ".github" / "workflows").mkdir(parents=True)

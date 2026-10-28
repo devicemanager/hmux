@@ -27,12 +27,12 @@ def get_repo_root():
     if result.returncode == 0:
         return Path(result.stdout.strip())
 
-    # Fall back to finding cmux directory
+    # Fall back to finding hmux directory
     cwd = Path.cwd()
-    if cwd.name == "cmux" or (cwd / "Sources").exists():
+    if cwd.name == "hmux" or (cwd / "Sources").exists():
         return cwd
-    if (cwd.parent / "cmux").exists():
-        return cwd.parent / "cmux"
+    if (cwd.parent / "hmux").exists():
+        return cwd.parent / "hmux"
 
     # Last resort: use current directory
     return cwd

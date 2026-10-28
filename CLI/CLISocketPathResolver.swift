@@ -1,7 +1,7 @@
 import Darwin
 import Foundation
-import CmuxFoundation
-import CmuxSettings
+import HmuxFoundation
+import HmuxSettings
 
 enum CLIExecutableLocator {
     static func currentExecutableURL() -> URL? {
@@ -106,7 +106,7 @@ struct CLISocketPathResolution: Sendable {
     var failureMessage: String {
         let header = String(
             localized: "cli.socket.error.discoveryFailed",
-            defaultValue: "No live cmux socket found. Tried:"
+            defaultValue: "No live hmux socket found. Tried:"
         )
         let paths = candidatePaths.map { "  \($0)" }.joined(separator: "\n")
         return paths.isEmpty ? header : "\(header)\n\(paths)"
@@ -117,7 +117,7 @@ struct CLISocketPathResolution: Sendable {
         guard let selectedPath, didReroute else { return nil }
         let template = String(
             localized: "cli.socket.notice.rerouted",
-            defaultValue: "cmux: default socket %@ is unavailable; using %@."
+            defaultValue: "hmux: default socket %@ is unavailable; using %@."
         )
         return String.localizedStringWithFormat(template, requestedPath, selectedPath)
     }
@@ -131,12 +131,12 @@ struct CLISocketPathResolver {
         case inaccessible(errnoCode: Int32)
     }
 
-    private static let stableSocketFileName = "cmux.sock"
-    static let legacyDefaultSocketPath = "/tmp/cmux.sock"
-    private static let fallbackSocketPath = "/tmp/cmux-debug.sock"
-    private static let nightlySocketPath = "/tmp/cmux-nightly.sock"
-    private static let rcSocketPath = "/tmp/cmux-rc.sock"
-    private static let stagingSocketPath = "/tmp/cmux-staging.sock"
+    private static let stableSocketFileName = "hmux.sock"
+    static let legacyDefaultSocketPath = "/tmp/hmux.sock"
+    private static let fallbackSocketPath = "/tmp/hmux-debug.sock"
+    private static let nightlySocketPath = "/tmp/hmux-nightly.sock"
+    private static let rcSocketPath = "/tmp/hmux-rc.sock"
+    private static let stagingSocketPath = "/tmp/hmux-staging.sock"
 
     private let environment: [String: String]
     private let bundleIdentifier: String?
@@ -149,9 +149,9 @@ struct CLISocketPathResolver {
     /// Debug-only environment key that confines implicit discovery to `stateDirectory`.
     ///
     /// Tests that spawn the CLI under a temporary home set it so the machine-wide
-    /// `/tmp` marker files and legacy `/tmp` socket aliases, which a real cmux running
+    /// `/tmp` marker files and legacy `/tmp` socket aliases, which a real hmux running
     /// as the same user publishes, cannot route them to that app. Release builds ignore it.
-    static let isolatedDiscoveryEnvironmentKey = "CMUX_TEST_ISOLATED_SOCKET_DISCOVERY"
+    static let isolatedDiscoveryEnvironmentKey = "HMUX_TEST_ISOLATED_SOCKET_DISCOVERY"
 
     /// Creates a resolver with explicit discovery inputs and filesystem probes.
     ///
@@ -171,7 +171,7 @@ struct CLISocketPathResolver {
         self.currentUserID = currentUserID
         self.inspectSocketPathEntry = inspectSocketPathEntry
         self.socketAcceptsConnections = socketAcceptsConnections
-        self.stateDirectory = stateDirectory ?? CmuxStateDirectory.url(homeDirectory: fileManager.homeDirectoryForCurrentUser)
+        self.stateDirectory = stateDirectory ?? HmuxStateDirectory.url(homeDirectory: fileManager.homeDirectoryForCurrentUser)
 #if DEBUG
         self.confinesDiscoveryToStateDirectory = environment[Self.isolatedDiscoveryEnvironmentKey] == "1"
 #else
@@ -219,12 +219,12 @@ struct CLISocketPathResolver {
 
     private static func userScopedStableSocketPath(currentUserID: uid_t = getuid()) -> String {
         stableSocketDirectoryURL()?
-            .appendingPathComponent("cmux-\(currentUserID).sock", isDirectory: false)
+            .appendingPathComponent("hmux-\(currentUserID).sock", isDirectory: false)
             .path ?? legacyUserScopedStableSocketPath(currentUserID: currentUserID)
     }
 
     private static func legacyUserScopedStableSocketPath(currentUserID: uid_t = getuid()) -> String {
-        "/tmp/cmux-\(currentUserID).sock"
+        "/tmp/hmux-\(currentUserID).sock"
     }
 
     static func isImplicitDefaultPath(
@@ -338,7 +338,7 @@ struct CLISocketPathResolver {
         case .stable, .nightly, .rc, .staging, .dev:
             paths = resolvedStableImplicitDefaultPaths()
         }
-        // The legacy /tmp aliases are shared by every cmux running as this user.
+        // The legacy /tmp aliases are shared by every hmux running as this user.
         guard confinesDiscoveryToStateDirectory else { return paths }
         return paths.filter { isInsideStateDirectory($0) }
     }
@@ -347,7 +347,7 @@ struct CLISocketPathResolver {
         Self.dedupe([
             resolvedStableDefaultSocketPath,
             Self.legacyDefaultSocketPath,
-            stateDirectory.appendingPathComponent("cmux-\(currentUserID).sock", isDirectory: false).path,
+            stateDirectory.appendingPathComponent("hmux-\(currentUserID).sock", isDirectory: false).path,
             Self.legacyUserScopedStableSocketPath(currentUserID: currentUserID),
         ])
     }
@@ -525,13 +525,13 @@ struct CLISocketPathResolver {
 
     /// The directory holding the control socket and its marker files.
     ///
-    /// Resolves to ``CmuxStateDirectory`` (`~/.local/state/cmux`), matching the
+    /// Resolves to ``HmuxStateDirectory`` (`~/.local/state/hmux`), matching the
     /// app's `SocketControlSettings.stableSocketDirectoryURL()`. This keeps the
     /// CLI off the app's TCC-protected Application Support data on the agent hook
     /// path (https://github.com/manaflow-ai/cmux/issues/5146). The CLI is a
     /// composition root, so it names the concrete `FileManager.default` here.
     private static func stableSocketDirectoryURL() -> URL? {
-        CmuxStateDirectory.url(homeDirectory: FileManager.default.homeDirectoryForCurrentUser)
+        HmuxStateDirectory.url(homeDirectory: FileManager.default.homeDirectoryForCurrentUser)
     }
 
     private static func dedupe(_ paths: [String]) -> [String] {

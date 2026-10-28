@@ -49,7 +49,7 @@ export function VaultSessionView({
 }) {
   const t = useTranslations("vault.detail");
   const locale = useLocale();
-  const resumeCommand = `cmux-vault resume ${session.agentSessionId}`;
+  const resumeCommand = `hmux-vault resume ${session.agentSessionId}`;
   const cwd = session.cwd ?? t("unknownCwd");
 
   return (

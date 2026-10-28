@@ -20,7 +20,7 @@
  * host, and the error reaches our code with the 429 status in its cause chain,
  * where `hasAuthRateLimitSignal` recognizes it.
  */
-const GUARD_MARK = Symbol.for("cmux.stackThrottleFetchGuard");
+const GUARD_MARK = Symbol.for("hmux.stackThrottleFetchGuard");
 const PROJECT_HEADERS = ["x-hexclave-project-id", "x-stack-project-id"] as const;
 const SDK_NONCE_HEADER = "x-hexclave-random-nonce";
 
@@ -78,7 +78,7 @@ export function installStackThrottleFetchGuard(target: typeof globalThis, projec
 function sdkFinalThrottleResponse(response: Response): Response {
   const headers = new Headers(response.headers);
   if (!headers.has("x-hexclave-request-id") && !headers.has("x-stack-request-id")) {
-    headers.set("x-hexclave-request-id", "cmux-throttle-guard");
+    headers.set("x-hexclave-request-id", "hmux-throttle-guard");
   }
   return new Response(null, { status: 429, headers });
 }

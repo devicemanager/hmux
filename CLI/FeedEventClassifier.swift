@@ -1,13 +1,13 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// Classifies a raw agent hook event into our wire `hook_event_name` plus an
 /// `isActionable` flag.
 ///
-/// This is the single source of truth behind both the running `cmux` CLI
-/// (`cmux hooks feed …`) and the `FeedEventClassificationTests` regression
-/// suite — the file is compiled into the `cmux-cli` target and the
-/// `cmuxTests` target so the pure decision can be unit-tested without
+/// This is the single source of truth behind both the running `hmux` CLI
+/// (`hmux hooks feed …`) and the `FeedEventClassificationTests` regression
+/// suite — the file is compiled into the `hmux-cli` target and the
+/// `hmuxTests` target so the pure decision can be unit-tested without
 /// launching the app or running the CLI as a subprocess.
 ///
 /// The mapping is driven by an explicit, typed registry
@@ -28,7 +28,7 @@ struct FeedEventClassification: Equatable {
     let isActionable: Bool
     /// The agent is blocked waiting for the user in its OWN approval UI
     /// (e.g. Codex's approval reviewer). The feed event stays non-actionable
-    /// telemetry — cmux must not double-prompt — but the hook bridge must
+    /// telemetry — hmux must not double-prompt — but the hook bridge must
     /// raise the "Agent Needs Permission"-gated notification, or the blocked
     /// agent is silent indefinitely.
     /// https://github.com/manaflow-ai/cmux/issues/9592
@@ -43,7 +43,7 @@ struct FeedEventClassification: Equatable {
     /// just-raised prompt while the agent is still blocked.
     ///
     /// The clear is deliberately pane-wide and uncorrelated with any single
-    /// request: notifications carry no request identity anywhere in cmux,
+    /// request: notifications carry no request identity anywhere in hmux,
     /// and every agent integration clears the same way on progress signals —
     /// Claude's `session-start`/`prompt-submit`/`pre-tool-use` hooks, the
     /// generic `.approvalResponse` action (Hermes' resolved native
@@ -99,7 +99,7 @@ struct FeedEventClassifier {
         case toolStart
         /// The agent is blocked waiting for the user in its OWN approval
         /// UI (e.g. Codex's approval reviewer). The feed event stays
-        /// non-actionable telemetry — an actionable cmux Feed card would
+        /// non-actionable telemetry — an actionable hmux Feed card would
         /// compete with the agent's native prompt and bypass features like
         /// Codex's "Approve for me" — but the bridge raises the
         /// "Agent Needs Permission"-gated notification so the blocked
@@ -276,7 +276,7 @@ struct FeedEventClassifier {
         "codex": [
             // Codex runs PermissionRequest hooks before its own approval
             // reviewer. Keep the feed side telemetry so "Approve for me" can
-            // still use Codex's auto-review path instead of blocking on cmux
+            // still use Codex's auto-review path instead of blocking on hmux
             // Feed, but raise the permission-prompt notification: this is the
             // only hook Codex fires while blocked on the user (#9592).
             "PermissionRequest": .nativeApprovalPrompt,

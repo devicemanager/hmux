@@ -1,5 +1,5 @@
 /**
- * The ordered cmux plan tiers. Each tier includes every feature of the tiers
+ * The ordered hmux plan tiers. Each tier includes every feature of the tiers
  * below it, so gate on the ordering (`planIncludes(planId, "pro")`) rather
  * than on a plan string: Max, and any later higher tier, then keeps
  * everything Pro has.

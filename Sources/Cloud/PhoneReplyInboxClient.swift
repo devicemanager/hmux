@@ -1,11 +1,11 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxPhonePush
+import HmuxCloud
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxPhonePush
 import Foundation
 import OSLog
 
-private let phoneReplyLog = Logger(subsystem: "dev.cmux", category: "phone-reply-inbox")
+private let phoneReplyLog = Logger(subsystem: "dev.hmux", category: "phone-reply-inbox")
 
 /// One phone inline-notification reply parked in the presence worker
 /// (`workers/presence/src/replies.ts`). This client reads only the encrypted

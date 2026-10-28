@@ -45,13 +45,13 @@ export default async function RemoteTmuxPage({ params }: { params: Promise<{ loc
       <DocsHeading level={2} id="attach">{t("attachTitle")}</DocsHeading>
       <p>{t("attachIntro")}</p>
       <CodeBlock lang="bash">{`# user@host, or any Host alias from ~/.ssh/config
-cmux ssh-tmux build@devbox.internal
+hmux ssh-tmux build@devbox.internal
 
 # non-default port and key
-cmux ssh-tmux staging --port 2200 --identity ~/.ssh/staging_ed25519
+hmux ssh-tmux staging --port 2200 --identity ~/.ssh/staging_ed25519
 
-# put the mirror in its own cmux window
-cmux ssh-tmux build@devbox.internal --new-window`}</CodeBlock>
+# put the mirror in its own hmux window
+hmux ssh-tmux build@devbox.internal --new-window`}</CodeBlock>
       <p>{t("attachCli")}</p>
       <p>{t("attachNewWindow")}</p>
       <Callout>{t("moshContrast")}</Callout>
@@ -71,7 +71,7 @@ cmux ssh-tmux build@devbox.internal --new-window`}</CodeBlock>
         <thead>
           <tr>
             <th>{t("mapTmux")}</th>
-            <th>{t("mapCmux")}</th>
+            <th>{t("mapHmux")}</th>
           </tr>
         </thead>
         <tbody>

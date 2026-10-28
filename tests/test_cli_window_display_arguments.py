@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""`cmux window display` rejects arguments it doesn't accept.
+"""`hmux window display` rejects arguments it doesn't accept.
 
 It used to drop every word starting with a dash and use the first word left
 as the display name, so `window display 'LG HDR 4K' --typo` still moved
@@ -20,7 +20,7 @@ import threading
 import unittest
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 from fake_socket_env import cli_environment, unwrap_capability
 
 
@@ -47,7 +47,7 @@ class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
 
 class WindowDisplayArgumentTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp = tempfile.TemporaryDirectory(prefix="cmux-window-args-", dir="/tmp")
+        self.temp = tempfile.TemporaryDirectory(prefix="hmux-window-args-", dir="/tmp")
         self.addCleanup(self.temp.cleanup)
         self.socket_path = str(Path(self.temp.name) / "s")
         self.server = Server(self.socket_path, Recorder)
@@ -55,7 +55,7 @@ class WindowDisplayArgumentTests(unittest.TestCase):
         threading.Thread(target=self.server.serve_forever, daemon=True).start()
         self.addCleanup(self.server.server_close)
         self.addCleanup(self.server.shutdown)
-        self.cli = str(resolve_cmux_cli())
+        self.cli = str(resolve_hmux_cli())
 
     def run_cli(self, *args: str) -> subprocess.CompletedProcess[str]:
         self.server.calls.clear()  # type: ignore[attr-defined]

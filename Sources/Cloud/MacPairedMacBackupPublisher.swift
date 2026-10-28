@@ -1,10 +1,10 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxAuthRuntime
+import HmuxCloud
+import HMUXMobileCore
+import HmuxAuthRuntime
 import Foundation
 import os
 
-private let macPairedMacPublishLog = Logger(subsystem: "com.cmuxterm.app", category: "MacPairedMacPublish")
+private let macPairedMacPublishLog = Logger(subsystem: "com.hmuxterm.app", category: "MacPairedMacPublish")
 
 /// DEV convenience: publishes THIS Mac's own attach route into the signed-in
 /// user's per-user `pairedMacs` Durable Object backup (`POST /v1/sync/paired-macs`
@@ -25,7 +25,7 @@ private let macPairedMacPublishLog = Logger(subsystem: "com.cmuxterm.app", categ
 final class MacPairedMacBackupPublisher {
     static let shared = MacPairedMacBackupPublisher()
 
-    static let envKey = "CMUX_MAC_PAIRED_MAC_SELF_PUBLISH"
+    static let envKey = "HMUX_MAC_PAIRED_MAC_SELF_PUBLISH"
     static let defaultsKey = "macPairedMacSelfPublish"
 
     private let session: URLSession = .shared
@@ -85,7 +85,7 @@ final class MacPairedMacBackupPublisher {
         }
         if teamScopeObserver == nil {
             teamScopeObserver = NotificationCenter.default.addObserver(
-                forName: .cmuxCloudTeamScopeDidChange,
+                forName: .hmuxCloudTeamScopeDidChange,
                 object: nil,
                 queue: .main
             ) { [weak self] _ in
@@ -222,11 +222,11 @@ final class MacPairedMacBackupPublisher {
         request.timeoutInterval = 10
         request.setValue("Bearer \(accessToken)", forHTTPHeaderField: "Authorization")
         if let teamID, !teamID.isEmpty {
-            request.setValue(teamID, forHTTPHeaderField: "X-Cmux-Team-Id")
+            request.setValue(teamID, forHTTPHeaderField: "X-Hmux-Team-Id")
         }
         request.setValue(
             targetNamespace.serverScope,
-            forHTTPHeaderField: "X-Cmux-Client-Scope"
+            forHTTPHeaderField: "X-Hmux-Client-Scope"
         )
         request.setValue("application/json", forHTTPHeaderField: "content-type")
         request.httpBody = payload

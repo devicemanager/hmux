@@ -2,7 +2,7 @@
 import AppKit
 import SwiftUI
 
-extension cmuxApp {
+extension hmuxApp {
     /// Deliberately reopen the shipped welcome for inspection in a debug build.
     @ViewBuilder
     var cloudWelcomeDebugMenuItems: some View {

@@ -24,7 +24,7 @@ struct SimulatorFeatureDisabledView: View {
         .background(Color(nsColor: appearance.contentBackgroundColor))
         .environment(
             \.colorScheme,
-            cmuxReadableColorScheme(for: appearance.backgroundColor)
+            hmuxReadableColorScheme(for: appearance.backgroundColor)
         )
     }
 }

@@ -1,14 +1,14 @@
 import { DEVELOPMENT_STACK_PROJECT_ID } from "../auth/stackProject";
 
-const IOS_DEVELOPMENT_NAMESPACE = /^dev\.cmux\.ios\.[A-Za-z0-9._-]+$/;
-const MAC_DEVELOPMENT_NAMESPACE = /^mac:com\.cmuxterm\.app\.debug\.[A-Za-z0-9._-]+$/;
+const IOS_DEVELOPMENT_NAMESPACE = /^dev\.hmux\.ios\.[A-Za-z0-9._-]+$/;
+const MAC_DEVELOPMENT_NAMESPACE = /^mac:com\.hmuxterm\.app\.debug\.[A-Za-z0-9._-]+$/;
 const STACK_TEAM_ID = /^[A-Za-z0-9][A-Za-z0-9._:-]{0,255}$/;
 
 export { DEVELOPMENT_STACK_PROJECT_ID };
 
 export type DevRelayRateLimitBypassEnv = {
-  readonly CMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED?: string;
-  readonly CMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS?: string;
+  readonly HMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED?: string;
+  readonly HMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS?: string;
   readonly NEXT_PUBLIC_STACK_PROJECT_ID?: string;
 };
 
@@ -44,11 +44,11 @@ export function isAuthorizedDevRelayRateLimitBypass(input: {
   readonly env?: DevRelayRateLimitBypassEnv;
 }): boolean {
   const env = input.env ?? process.env;
-  if (env.CMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED !== "1") return false;
+  if (env.HMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED !== "1") return false;
   if (env.NEXT_PUBLIC_STACK_PROJECT_ID !== DEVELOPMENT_STACK_PROJECT_ID) return false;
   if (!isDevelopmentRelayClientNamespace(input.clientNamespace)) return false;
   const allowedTeamIds = parseDevRelayRateLimitBypassTeamIds(
-    env.CMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS,
+    env.HMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS,
   );
   if (allowedTeamIds.size === 0) return false;
   return input.teamIds.some((teamId) => allowedTeamIds.has(teamId.trim().toLowerCase()));

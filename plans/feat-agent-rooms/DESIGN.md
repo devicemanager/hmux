@@ -1,4 +1,4 @@
-# Agent Rooms: provider-neutral messages between cmux agent sessions
+# Agent Rooms: provider-neutral messages between hmux agent sessions
 
 Status: in progress. The provider-neutral broker and ACP prompt seam are
 implemented under `agent-chat`; persistence, UI, remote federation, and
@@ -6,7 +6,7 @@ external mail providers remain proposed.
 
 ## Problem
 
-cmux can already run several coding agents in one workspace, but a Claude
+hmux can already run several coding agents in one workspace, but a Claude
 session and a Codex session do not have a shared address or a durable way to
 ask one another for bounded work. Today a person must copy a prompt, select a
 different session, paste context, and keep the relationship in their head.
@@ -17,8 +17,8 @@ or replaced while the review request or handoff still needs to exist.
 
 ## Outcome
 
-An agent or human can send a typed message to a stable cmux conversation
-identity, for example `reviewer@payments`. The message is stored before cmux
+An agent or human can send a typed message to a stable hmux conversation
+identity, for example `reviewer@payments`. The message is stored before hmux
 tries to wake the receiving session. A live session receives it through its
 native adapter or ACP; an offline session keeps it queued. Replies retain the
 same thread and can be inspected alongside the participating panes.
@@ -33,11 +33,11 @@ to perform an external effect.
 
 - `agent-chat` already normalizes Claude stream-JSON, Codex app-server, pi,
   and ACP sessions into a common `AgentEvent` stream.
-- ACP is the local client-to-coding-agent boundary. cmux can use the official
+- ACP is the local client-to-coding-agent boundary. hmux can use the official
   Claude and Codex ACP bridges without requiring either provider to implement
   peer messaging.
 - A2A is a later network boundary for independently hosted agents. It should
-  map into cmux threads rather than replace the local message store.
+  map into hmux threads rather than replace the local message store.
 - MCP can expose mailbox operations to agents. It is a tool/data interface,
   not the durable conversation store.
 - Stensibly's responsibility/authority ledger model is a useful companion:
@@ -85,14 +85,14 @@ its last cursor and reconcile delivery receipts.
 
 The current `MailEnvelope.metadata` field is caller-supplied JSON and is
 untrusted, just like model-controlled subject, body, and attachments. It is
-not a cmux assertion and cannot be used as an authority grant. Future broker
+not a hmux assertion and cannot be used as an authority grant. Future broker
 owned provenance will be a separate field. Incoming content is untrusted input. An agent message
 cannot approve a merge, deployment, credential change, spending action, or
 other consequential effect.
 
 The broker should support bounded recipient allowlists, wake budgets, reply
 depth/fan-out limits, expiry, and human escalation. A future Stensibly or
-cmux authority record may be referenced by a message, but the message itself
+hmux authority record may be referenced by a message, but the message itself
 does not grant that authority.
 
 ## Later adapters
@@ -102,8 +102,8 @@ does not grant that authority.
   back to the thread.
 - **MCP surface:** expose `send`, `inbox`, `reply`, `acknowledge`, and
   `list_threads` as tools with explicit scopes.
-- **A2A gateway:** expose selected cmux identities as Agent Cards and map A2A
-  task/context IDs to cmux thread IDs.
+- **A2A gateway:** expose selected hmux identities as Agent Cards and map A2A
+  task/context IDs to hmux thread IDs.
 - **Mail projection:** optionally mirror a thread to email, Slack, or another
   human attention surface. RFC-style `Message-ID`, reply ancestry, and stable
   list IDs are useful projections, but are not required internally.
@@ -122,11 +122,11 @@ does not grant that authority.
 
 ## Open questions
 
-- Should durable local state use SQLite, matching other cmux stores, or a small
+- Should durable local state use SQLite, matching other hmux stores, or a small
   append-only journal first?
 - Is a stable address owned by a workspace, a task, or a role alias that can
   point to a replacement session?
-- Which message classes should cmux understand structurally (`review`,
+- Which message classes should hmux understand structurally (`review`,
   `handoff`, `question`, `answer`, `acknowledgement`) before exposing freeform
   messages?
 - When should an offline message start a fresh provider session, and when must

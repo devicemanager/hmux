@@ -22,7 +22,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/open-port",
-    { "cmux.vm.operation": "open_port" },
+    { "hmux.vm.operation": "open_port" },
     "/api/vm/[id]/open-port POST failed",
     async ({ user, span }) => {
       let rawBody: unknown;
@@ -33,7 +33,7 @@ export async function POST(
           error: "vm_invalid_json",
           status: 400,
           message: "Cloud VM open-port expected a JSON object body.",
-          action: "Send JSON like `{ \"port\": 3000 }`. From the CLI, use `cmux vm open <id> <port>`.",
+          action: "Send JSON like `{ \"port\": 3000 }`. From the CLI, use `hmux vm open <id> <port>`.",
         });
       }
       if (rawBody === null || typeof rawBody !== "object" || Array.isArray(rawBody)) {
@@ -41,7 +41,7 @@ export async function POST(
           error: "vm_invalid_request",
           status: 400,
           message: "Cloud VM open-port body must be a JSON object.",
-          action: "Send JSON like `{ \"port\": 3000 }`. From the CLI, use `cmux vm open <id> <port>`.",
+          action: "Send JSON like `{ \"port\": 3000 }`. From the CLI, use `hmux vm open <id> <port>`.",
         });
       }
       const body = rawBody as { port?: unknown };
@@ -51,7 +51,7 @@ export async function POST(
           error: "vm_invalid_port",
           status: 400,
           message: "`port` is required and must be an integer between 1 and 65535.",
-          action: "Pass the HTTP port your server listens on, for example `cmux vm open <id> 3000`.",
+          action: "Pass the HTTP port your server listens on, for example `hmux vm open <id> 3000`.",
           details: { field: "port" },
         });
       }
@@ -59,7 +59,7 @@ export async function POST(
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id, "cmux.vm.port": port });
+      setSpanAttributes(span, { "hmux.vm.id": id, "hmux.vm.port": port });
       const run = await runVmRoute(openVmPort({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,
@@ -72,8 +72,8 @@ export async function POST(
       }), { request, deadline: { operation: "openPort" } });
       if (!run.ok) return run.response;
       const endpoint = run.value;
-      // People see and keep openUrl, so it points at the cmux desktop
-      // wrapper (`cmux_token` on our origin, honest expiry screen); the raw
+      // People see and keep openUrl, so it points at the hmux desktop
+      // wrapper (`hmux_token` on our origin, honest expiry screen); the raw
       // gateway URL and token stay available for programmatic callers.
       const wrapped = desktopWrapperUrl({
         origin: new URL(request.url).origin,

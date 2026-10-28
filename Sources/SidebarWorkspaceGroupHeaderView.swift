@@ -1,9 +1,9 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxFoundation
-import CmuxSidebar
+import HmuxAppKitSupportUI
+import HmuxFoundation
+import HmuxSidebar
 import SwiftUI
-import CmuxSettings
+import HmuxSettings
 
 /// Collapsible group header that doubles as the anchor workspace row.
 struct SidebarWorkspaceGroupHeaderView: View, Equatable {
@@ -78,14 +78,14 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
     let shortcutHintXOffset: Double
     let shortcutHintYOffset: Double
     let fontScale: CGFloat
-    let cwdContextMenuItems: [CmuxResolvedConfigContextMenuItem]
+    let cwdContextMenuItems: [HmuxResolvedConfigContextMenuItem]
     let newWorkspacePlacement: WorkspaceGroupNewPlacement?
     let rowSpacing: CGFloat
     let isFirstRow: Bool
     let isBeingDragged: Bool
     let topDropIndicatorVisible: Bool
     let bottomDropIndicatorVisible: Bool
-    /// Notification Badge color setting; nil falls back to the cmux accent.
+    /// Notification Badge color setting; nil falls back to the hmux accent.
     let notificationBadgeColorHex: String?
     /// Shared group-header actions used by both the lazy SwiftUI row and the
     /// retained AppKit table cell.
@@ -95,9 +95,9 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
 
     @State private var contextMenuVisible = false
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.cmuxAccentColor) private var accentColor
+    @Environment(\.hmuxAccentColor) private var accentColor
 
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var globalFontMagnificationPercent
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var globalFontMagnificationPercent
 
 #if DEBUG
     // Plain-value environment probe set only by SidebarLazyLayoutScaleTests;
@@ -155,7 +155,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
 #endif
         HStack(spacing: 4) {
             if isPinned {
-                CmuxSystemSymbolImage(
+                HmuxSystemSymbolImage(
                     magnified: "pin.fill",
                     pointSize: metrics.pinnedIconFontSize,
                     weight: .semibold,
@@ -165,7 +165,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
                 .safeHelp(pinnedGroupTooltip)
                 .accessibilityLabel(Text(pinnedGroupTooltip))
             }
-            CmuxSystemSymbolImage(
+            HmuxSystemSymbolImage(
                 systemName: isCollapsed ? "chevron.right" : "chevron.down",
                 pointSize: metrics.chevronFontSize,
                 weight: .semibold,
@@ -184,7 +184,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
                 )
 
             HStack(spacing: 6) {
-                CmuxSystemSymbolImage(
+                HmuxSystemSymbolImage(
                     systemName: displayedIconSymbol,
                     pointSize: metrics.iconFontSize,
                     weight: .semibold,
@@ -193,7 +193,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
                     .frame(width: metrics.iconFrame, height: metrics.iconFrame)
                     .accessibilityHidden(true)
                 Text(name)
-                    .cmuxFont(size: metrics.nameFontSize, weight: .semibold)
+                    .hmuxFont(size: metrics.nameFontSize, weight: .semibold)
                     .foregroundStyle(isAnchorActive ? Color.primary : Color.primary.opacity(0.9))
                     .lineLimit(1)
                     .truncationMode(.tail)
@@ -206,11 +206,11 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
                     )
                 } else if anchorUnreadCount > 0, !compactsAgentStatus {
                     Text("\(anchorUnreadCount)")
-                        .cmuxFont(size: metrics.unreadFontSize, weight: .semibold)
+                        .hmuxFont(size: metrics.unreadFontSize, weight: .semibold)
                         .foregroundStyle(.white)
                         .padding(.horizontal, metrics.unreadHorizontalPadding)
                         .padding(.vertical, metrics.unreadVerticalPadding)
-                        .background(Capsule().fill(Color(nsColor: cmuxNotificationBadgeNSColor(
+                        .background(Capsule().fill(Color(nsColor: hmuxNotificationBadgeNSColor(
                             hex: notificationBadgeColorHex,
                             fallback: accentColor.nsColor(for: colorScheme)
                         ))))
@@ -234,7 +234,7 @@ struct SidebarWorkspaceGroupHeaderView: View, Equatable {
 
             let plusVisible = isPointerHovering && !contextMenuVisible && !showsShortcutHint
             Button(action: actions.onTapPlus) {
-                CmuxSystemSymbolImage(
+                HmuxSystemSymbolImage(
                     systemName: "plus",
                     pointSize: metrics.plusFontSize,
                     weight: .medium,

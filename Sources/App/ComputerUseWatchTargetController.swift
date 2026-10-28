@@ -1,9 +1,9 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import AppKit
 import Combine
 import Darwin
 import Foundation
-import CmuxFoundation
+import HmuxFoundation
 
 // MARK: - Dedupe decision (pure, injectable)
 
@@ -16,11 +16,11 @@ enum ComputerUseWatchFocusMode: Equatable, Sendable {
 /// Pure focus-activation policy for the computer-use "watch the target" feature.
 ///
 /// A computer-use agent runs as a background CLI process, which macOS will not
-/// reliably let front an app over the currently-active GUI app (cmux). cmux *is*
-/// the active app, so cmux fronts the driven target on the driver's behalf — but
+/// reliably let front an app over the currently-active GUI app (hmux). hmux *is*
+/// the active app, so hmux fronts the driven target on the driver's behalf — but
 /// only when a *new* target starts being driven, never on every action.
 enum ComputerUseWatchTargetDecision {
-    /// Returns the target pid cmux should bring to the front, or `nil` to do nothing.
+    /// Returns the target pid hmux should bring to the front, or `nil` to do nothing.
     ///
     /// The rule is intentionally minimal so it never fights the user's focus:
     /// - `current == nil` (no session is actively driving) -> `nil`, and the caller
@@ -29,7 +29,7 @@ enum ComputerUseWatchTargetDecision {
     ///   `lastActivated`, so we do not re-front it.
     /// - `current == lastActivated` (the same app keeps being driven) -> `nil`.
     ///   Every action rewrites the driver state file and the user may have clicked
-    ///   away in the meantime; returning `nil` here is precisely what stops cmux
+    ///   away in the meantime; returning `nil` here is precisely what stops hmux
     ///   from yanking focus back on every click.
     /// - otherwise a *different* app is now being driven -> return `current` so the
     ///   caller activates it once and records it as `lastActivated`.
@@ -219,8 +219,8 @@ struct ComputerUseWatchTargetFeed: Sendable {
 // MARK: - Controller
 
 /// Brings the app a local computer-use driver is steering to the front so the
-/// user can actually watch the automation, instead of seeing the cmux-hosted
-/// cursor click on top of cmux while the real target stays hidden behind it.
+/// user can actually watch the automation, instead of seeing the hmux-hosted
+/// cursor click on top of hmux while the real target stays hidden behind it.
 ///
 /// Fronts each distinct target exactly once (`ComputerUseWatchTargetDecision`)
 /// so it never competes with the user's own focus while a session runs. Gated by
@@ -260,9 +260,9 @@ final class ComputerUseWatchTargetController {
     private var targetWindowIDByDriverSessionID: [String: UInt32] = [:]
 
     private var directoryWatchSource: DispatchSourceFileSystemObject?
-    private let directoryWatchQueue = DispatchQueue(label: "com.cmuxterm.app.computerUseWatchTarget")
+    private let directoryWatchQueue = DispatchQueue(label: "com.hmuxterm.app.computerUseWatchTarget")
     /// The untrusted state directory is scanned here, never on the main thread.
-    private let scanQueue = DispatchQueue(label: "com.cmuxterm.app.computerUseWatchTargetScan", qos: .utility)
+    private let scanQueue = DispatchQueue(label: "com.hmuxterm.app.computerUseWatchTargetScan", qos: .utility)
     /// At most one background scan is outstanding; further ticks are dropped until
     /// it lands. A one-bit latch preserves one follow-up refresh for any writes
     /// that arrive after the active scan took its filesystem snapshot.
@@ -344,7 +344,7 @@ final class ComputerUseWatchTargetController {
         started = true
         scanGeneration &+= 1
 
-        NotificationCenter.default.publisher(for: .cmuxFeatureFlagsDidChange)
+        NotificationCenter.default.publisher(for: .hmuxFeatureFlagsDidChange)
             .receive(on: DispatchQueue.main)
             .sink { [weak self] _ in
                 Task { @MainActor in self?.reconcileObservation() }
@@ -883,7 +883,7 @@ final class ComputerUseWatchTargetController {
         guard
             let state,
             let pid = pid_t(exactly: state.targetPID),
-            // Never front cmux itself — only the external app under automation.
+            // Never front hmux itself — only the external app under automation.
             pid != ProcessInfo.processInfo.processIdentifier,
             let application = NSRunningApplication(processIdentifier: pid),
             ComputerUseTargetIdentity(state: state, runningApplication: application) != nil

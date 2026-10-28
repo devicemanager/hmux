@@ -9,7 +9,7 @@ import { startPrivateLinkClient } from "../scripts/devbox-private-link-process";
 // The fixture has bound a path, but has not announced readiness. The parent
 // controls the actual readiness event with a signal, independently of time.
 test("a socket path cannot substitute for the process readiness event", async () => {
-  const root = mkdtempSync(path.join(tmpdir(), "cmux-ready-test-"));
+  const root = mkdtempSync(path.join(tmpdir(), "hmux-ready-test-"));
   const socket = path.join(root, "hub.sock");
   const booted = path.join(root, "booted");
   writeFileSync(socket, "stale path");
@@ -41,7 +41,7 @@ test("a socket path cannot substitute for the process readiness event", async ()
 });
 
 test("child exit before readiness fails even if its old socket path exists", async () => {
-  const root = mkdtempSync(path.join(tmpdir(), "cmux-ready-exit-"));
+  const root = mkdtempSync(path.join(tmpdir(), "hmux-ready-exit-"));
   const socket = path.join(root, "link.sock");
   writeFileSync(socket, "stale path");
   try {
@@ -55,7 +55,7 @@ test("child exit before readiness fails even if its old socket path exists", asy
 
 test("shutdown escalates only after its deadline and waits for process close", async () => {
   const { Fiber, TestClock, TestContext } = await import("effect");
-  const root = mkdtempSync(path.join(tmpdir(), "cmux-close-test-"));
+  const root = mkdtempSync(path.join(tmpdir(), "hmux-close-test-"));
   const stopped = path.join(root, "sigterm");
   const socket = path.join(root, "hub.sock");
   const receivedTerminate = new Promise<void>((resolve) => {

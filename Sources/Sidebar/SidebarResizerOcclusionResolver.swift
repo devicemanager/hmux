@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 
 @MainActor
 final class SidebarResizerCursorReleaseScheduler {

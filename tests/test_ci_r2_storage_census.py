@@ -32,10 +32,10 @@ def page(objects, token=None):
 
 class Families(unittest.TestCase):
     def test_a_build_segment_ends_the_family(self):
-        self.assertEqual(census.family_of(f"cmux-tui/{SHA_A}/linux-x64/cmux-tui"),
-                         ("cmux-tui/<sha>", f"cmux-tui/{SHA_A}"))
-        self.assertEqual(census.family_of("cmux-tui/tree/k1-9f8e7d6c5b4a39281706f5e4d3c2b1a0/source.json"),
-                         ("cmux-tui/tree/<key>", "cmux-tui/tree/k1-9f8e7d6c5b4a39281706f5e4d3c2b1a0"))
+        self.assertEqual(census.family_of(f"hmux-tui/{SHA_A}/linux-x64/hmux-tui"),
+                         ("hmux-tui/<sha>", f"hmux-tui/{SHA_A}"))
+        self.assertEqual(census.family_of("hmux-tui/tree/k1-9f8e7d6c5b4a39281706f5e4d3c2b1a0/source.json"),
+                         ("hmux-tui/tree/<key>", "hmux-tui/tree/k1-9f8e7d6c5b4a39281706f5e4d3c2b1a0"))
         self.assertEqual(census.family_of("cef/146.0.6+g1a2b3c4/cef_binary.tar.bz2"),
                          ("cef/<version>", "cef/146.0.6+g1a2b3c4"))
         self.assertEqual(census.family_of("v1/macOS-ARM64/objects/spm-abc.tar.zst"),
@@ -48,17 +48,17 @@ class Families(unittest.TestCase):
 
     def test_rows_count_builds_and_split_bytes_by_age(self):
         summary = census.summarize([
-            {"key": f"cmux-tui/{SHA_A}/a", "size": 100, "last_modified": stamp(2)},
-            {"key": f"cmux-tui/{SHA_A}/b", "size": 50, "last_modified": stamp(2)},
-            {"key": f"cmux-tui/{SHA_B}/a", "size": 300, "last_modified": stamp(120)},
+            {"key": f"hmux-tui/{SHA_A}/a", "size": 100, "last_modified": stamp(2)},
+            {"key": f"hmux-tui/{SHA_A}/b", "size": 50, "last_modified": stamp(2)},
+            {"key": f"hmux-tui/{SHA_B}/a", "size": 300, "last_modified": stamp(120)},
             {"key": "latest.json", "size": 1, "last_modified": stamp(0)},
         ], NOW)
         top = summary["families"][0]
         self.assertEqual((top["family"], top["units"], top["objects"], top["bytes"]),
-                         ("cmux-tui/<sha>", 2, 3, 450))
+                         ("hmux-tui/<sha>", 2, 3, 450))
         self.assertEqual(top["bands"], {"<7d": 150, "7-30d": 0, "30-90d": 0, ">90d": 300})
         self.assertEqual((summary["objects"], summary["bytes"]), (4, 451))
-        self.assertIn("| `cmux-tui/<sha>` | 2 | 3 |", census.render("b", summary, True))
+        self.assertIn("| `hmux-tui/<sha>` | 2 | 3 |", census.render("b", summary, True))
 
 
 class Listing(unittest.TestCase):
@@ -86,10 +86,10 @@ class Listing(unittest.TestCase):
 
     def test_listed_buckets_are_returned_sorted(self):
         xml = ('<ListAllMyBucketsResult xmlns="http://s3.amazonaws.com/doc/2006-03-01/"><Buckets>'
-               "<Bucket><Name>cmux-cef</Name></Bucket><Bucket><Name>cmux-binaries</Name></Bucket>"
+               "<Bucket><Name>hmux-cef</Name></Bucket><Bucket><Name>hmux-binaries</Name></Bucket>"
                "</Buckets></ListAllMyBucketsResult>")
         self.assertEqual(census.list_buckets("https://r2.example", getter=lambda *a: xml),
-                         ["cmux-binaries", "cmux-cef"])
+                         ["hmux-binaries", "hmux-cef"])
 
 
 if __name__ == "__main__":

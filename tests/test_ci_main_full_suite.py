@@ -221,7 +221,7 @@ class ReportTests(unittest.TestCase):
         self.assertEqual(data["keys"], sorted(classify_failures.failure_key(f) for f in failures))
         # A red run whose logs named nothing still records that, so a PR does not match a stale list.
         self.assertEqual(classify_failures.parse_main_failures([MODULE.failure_body(run(), [], "", [])])["keys"], [])
-        self.assertNotIn("cmux-main-failures", MODULE.failure_body(run(), []))
+        self.assertNotIn("hmux-main-failures", MODULE.failure_body(run(), []))
 
     def test_failure_body_carries_the_attribution_section(self):
         body = MODULE.failure_body(run(), [], "### New since `abc`\n\nrow\n")

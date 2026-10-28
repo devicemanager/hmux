@@ -62,10 +62,10 @@ jobs:
         run: |
           set -euo pipefail
           for specification in \
-            "cmux-sdk:rust-sdk:sdk_sha256" \
-            "cmux-sidebar:rust-sidebar:sidebar_sha256"; do
+            "hmux-sdk:rust-sdk:sdk_sha256" \
+            "hmux-sidebar:rust-sidebar:sidebar_sha256"; do
             IFS=: read -r package source output_name <<< "$specification"
-            source_dir="cmux-tui/bindings/bootstrap/$source"
+            source_dir="hmux-tui/bindings/bootstrap/$source"
             bootstrap_dir="$RUNNER_TEMP/$package-bootstrap"
             cp -R "$source_dir" "$bootstrap_dir"
             manifest="$bootstrap_dir/Cargo.toml"
@@ -94,19 +94,19 @@ jobs:
             echo "$output_name=$artifact_sha256" >> "$GITHUB_OUTPUT"
           done
 
-      - name: Upload the cmux-sdk bootstrap crate
+      - name: Upload the hmux-sdk bootstrap crate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-sdk-bootstrap-crate
-          path: ${{ runner.temp }}/cmux-sdk-bootstrap-artifact
+          name: hmux-sdk-bootstrap-crate
+          path: ${{ runner.temp }}/hmux-sdk-bootstrap-artifact
           if-no-files-found: error
           overwrite: true
 
-      - name: Upload the cmux-sidebar bootstrap crate
+      - name: Upload the hmux-sidebar bootstrap crate
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-sidebar-bootstrap-crate
-          path: ${{ runner.temp }}/cmux-sidebar-bootstrap-artifact
+          name: hmux-sidebar-bootstrap-crate
+          path: ${{ runner.temp }}/hmux-sidebar-bootstrap-artifact
           if-no-files-found: error
           overwrite: true
 
@@ -117,12 +117,12 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - package: cmux-sdk
-            artifact: cmux-sdk-bootstrap-crate
-            decision: cmux-sdk-bootstrap-decision
-          - package: cmux-sidebar
-            artifact: cmux-sidebar-bootstrap-crate
-            decision: cmux-sidebar-bootstrap-decision
+          - package: hmux-sdk
+            artifact: hmux-sdk-bootstrap-crate
+            decision: hmux-sdk-bootstrap-decision
+          - package: hmux-sidebar
+            artifact: hmux-sidebar-bootstrap-crate
+            decision: hmux-sidebar-bootstrap-decision
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
     timeout-minutes: 10
     permissions:
@@ -153,7 +153,7 @@ jobs:
               --retry 5 \
               --retry-delay 1 \
               --retry-all-errors \
-              --user-agent 'cmux-sdk-bootstrap/1 (https://github.com/manaflow-ai/cmux; contact: https://github.com/manaflow-ai/cmux/issues)' \
+              --user-agent 'hmux-sdk-bootstrap/1 (https://github.com/manaflow-ai/cmux; contact: https://github.com/manaflow-ai/cmux/issues)' \
               --output "$metadata" \
               --write-out '%{http_code}' \
               "https://crates.io/api/v1/crates/$PACKAGE"
@@ -187,14 +187,14 @@ jobs:
             echo "expected one tested crate, found ${#artifacts[@]}" >&2
             exit 1
           }
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry crates \
             --package "$PACKAGE" \
             --version "$BOOTSTRAP_VERSION" \
             --artifact "${artifacts[0]}" \
             --require-match
           sleep 1
-          python3 cmux-tui/bindings/verify_crates_ownership.py \
+          python3 hmux-tui/bindings/verify_crates_ownership.py \
             --package "$PACKAGE" \
             --repository https://github.com/manaflow-ai/cmux \
             --owner-id 431397 \
@@ -239,12 +239,12 @@ jobs:
     steps:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-sdk-bootstrap-decision
+          name: hmux-sdk-bootstrap-decision
           path: sdk-decision
 
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-sidebar-bootstrap-decision
+          name: hmux-sidebar-bootstrap-decision
           path: sidebar-decision
 
       - name: Export protected-environment decisions
@@ -280,11 +280,11 @@ jobs:
     permissions: {}
     environment:
       name: crates-bootstrap
-      url: https://crates.io/crates/cmux-sdk
+      url: https://crates.io/crates/hmux-sdk
     steps:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-sdk-bootstrap-crate
+          name: hmux-sdk-bootstrap-crate
           path: bootstrap-crate
 
       - name: Install pinned Rust toolchain
@@ -298,7 +298,7 @@ jobs:
         id: prepare
         env:
           EXPECTED_SHA256: ${{ needs.build.outputs.sdk_sha256 }}
-          PACKAGE: cmux-sdk
+          PACKAGE: hmux-sdk
         run: |
           set -euo pipefail
           [[ "$GITHUB_REPOSITORY" == "manaflow-ai/cmux" ]] || {
@@ -430,11 +430,11 @@ jobs:
     permissions: {}
     environment:
       name: crates-bootstrap
-      url: https://crates.io/crates/cmux-sidebar
+      url: https://crates.io/crates/hmux-sidebar
     steps:
       - uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-sidebar-bootstrap-crate
+          name: hmux-sidebar-bootstrap-crate
           path: bootstrap-crate
 
       - name: Install pinned Rust toolchain
@@ -448,7 +448,7 @@ jobs:
         id: prepare
         env:
           EXPECTED_SHA256: ${{ needs.build.outputs.sidebar_sha256 }}
-          PACKAGE: cmux-sidebar
+          PACKAGE: hmux-sidebar
         run: |
           set -euo pipefail
           [[ "$GITHUB_REPOSITORY" == "manaflow-ai/cmux" ]] || {
@@ -579,10 +579,10 @@ jobs:
       max-parallel: 1
       matrix:
         include:
-          - package: cmux-sdk
-            artifact: cmux-sdk-bootstrap-crate
-          - package: cmux-sidebar
-            artifact: cmux-sidebar-bootstrap-crate
+          - package: hmux-sdk
+            artifact: hmux-sdk-bootstrap-crate
+          - package: hmux-sidebar
+            artifact: hmux-sidebar-bootstrap-crate
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}
     timeout-minutes: 10
     permissions:
@@ -610,10 +610,10 @@ jobs:
             exit 1
           }
           retry_missing_project=()
-          if [[ "$PACKAGE" == "cmux-sidebar" ]]; then
+          if [[ "$PACKAGE" == "hmux-sidebar" ]]; then
             retry_missing_project=(--retry-missing-project)
           fi
-          python3 cmux-tui/bindings/reconcile_registry_artifact.py check \
+          python3 hmux-tui/bindings/reconcile_registry_artifact.py check \
             --registry crates \
             --package "$PACKAGE" \
             --version "$BOOTSTRAP_VERSION" \
@@ -622,7 +622,7 @@ jobs:
             --wait-seconds 300 \
             --require-match
           sleep 1
-          python3 cmux-tui/bindings/verify_crates_ownership.py \
+          python3 hmux-tui/bindings/verify_crates_ownership.py \
             --package "$PACKAGE" \
             --repository https://github.com/manaflow-ai/cmux \
             --owner-id 431397 \

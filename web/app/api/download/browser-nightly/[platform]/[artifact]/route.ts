@@ -34,7 +34,7 @@ export async function handleBrowserNightlyDownloadRequest(
         "Cache-Control":
           "public, max-age=0, s-maxage=300, stale-while-revalidate=3600",
         Location: resolution.url,
-        "X-Cmux-Browser-Version": resolution.version,
+        "X-Hmux-Browser-Version": resolution.version,
         "X-Content-Type-Options": "nosniff",
       },
     });

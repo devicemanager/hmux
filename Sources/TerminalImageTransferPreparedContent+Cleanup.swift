@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 
 extension TerminalImageTransferPreparedContent {
     /// Releases temporary image files owned by the supplied pasteboard service.

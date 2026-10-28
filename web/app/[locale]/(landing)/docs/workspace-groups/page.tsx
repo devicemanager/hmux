@@ -72,34 +72,34 @@ export default function WorkspaceGroupsPage() {
       <p>{t("cliDesc")}</p>
 
       <DocsHeading level={3} id="subcommands">{t("cliSubcommandsTitle")}</DocsHeading>
-      <CodeBlock lang="bash">{`cmux workspace-group list [--json]
-cmux workspace-group create --name "manaflow" [--cwd ~/projects/manaflow] [--from <id>,<id>]
-cmux workspace-group ungroup <group-id>
-cmux workspace-group delete  <group-id>
-cmux workspace-group delete  <group-id> --close-workspaces
-cmux workspace-group rename <group-id> --name "new name"
-cmux workspace-group collapse <group-id>
-cmux workspace-group expand <group-id>
-cmux workspace-group pin <group-id>
-cmux workspace-group unpin <group-id>
-cmux workspace-group add --group <group-id> --workspace <workspace-id>
-cmux workspace-group remove --workspace <workspace-id>
-cmux workspace-group set-anchor --group <group-id> --workspace <workspace-id>
-cmux workspace-group new-workspace <group-id> [--placement afterCurrent|top|end]
-cmux workspace-group set-color <group-id> --hex "#7A4FD8"
-cmux workspace-group set-icon  <group-id> --symbol ladybug.fill
-cmux workspace-group move <group-id> (--to-index <n> | --before <group-id> | --after <group-id>)
-cmux workspace-group focus <group-id>`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux workspace-group list [--json]
+hmux workspace-group create --name "manaflow" [--cwd ~/projects/manaflow] [--from <id>,<id>]
+hmux workspace-group ungroup <group-id>
+hmux workspace-group delete  <group-id>
+hmux workspace-group delete  <group-id> --close-workspaces
+hmux workspace-group rename <group-id> --name "new name"
+hmux workspace-group collapse <group-id>
+hmux workspace-group expand <group-id>
+hmux workspace-group pin <group-id>
+hmux workspace-group unpin <group-id>
+hmux workspace-group add --group <group-id> --workspace <workspace-id>
+hmux workspace-group remove --workspace <workspace-id>
+hmux workspace-group set-anchor --group <group-id> --workspace <workspace-id>
+hmux workspace-group new-workspace <group-id> [--placement afterCurrent|top|end]
+hmux workspace-group set-color <group-id> --hex "#7A4FD8"
+hmux workspace-group set-icon  <group-id> --symbol ladybug.fill
+hmux workspace-group move <group-id> (--to-index <n> | --before <group-id> | --after <group-id>)
+hmux workspace-group focus <group-id>`}</CodeBlock>
       <p>{t("cliCreateNote")}</p>
       <p>{t("cliFlagsNote")}</p>
 
       <DocsHeading level={3} id="examples">{t("cliExamplesTitle")}</DocsHeading>
       <p>{t("cliExampleGroup")}</p>
-      <CodeBlock lang="bash">{`cmux workspace-group create --name manaflow --from workspace:1,workspace:2`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux workspace-group create --name manaflow --from workspace:1,workspace:2`}</CodeBlock>
       <p>{t("cliExampleNew")}</p>
-      <CodeBlock lang="bash">{`cmux workspace-group new-workspace workspace_group:1`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux workspace-group new-workspace workspace_group:1`}</CodeBlock>
       <p>{t("cliExampleList")}</p>
-      <CodeBlock lang="bash">{`cmux workspace-group list`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux workspace-group list`}</CodeBlock>
 
       <DocsHeading level={2} id="configuration">{t("configTitle")}</DocsHeading>
       <p>{t("configNote")}</p>

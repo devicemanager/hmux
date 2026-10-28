@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Darwin
 import Foundation
 
@@ -12,23 +12,23 @@ struct SharedLiveAgentIndexLoader {
 
     private let homeDirectory: String
     private let fileManager: FileManager
-    private let registry: CmuxVaultAgentRegistry?
-    private let processSnapshotProvider: () -> CmuxTopProcessSnapshot
+    private let registry: HmuxVaultAgentRegistry?
+    private let processSnapshotProvider: () -> HmuxTopProcessSnapshot
     private let capturedAtProvider: () -> TimeInterval
-    private let processArgumentsProvider: (Int) -> CmuxTopProcessArguments?
+    private let processArgumentsProvider: (Int) -> HmuxTopProcessArguments?
     private let processIdentityProvider: (Int) -> AgentPIDProcessIdentity?
     private let cachedAgentProcessValidator: CachedAgentProcessIdentityValidator
 
     init(
         homeDirectory: String = NSHomeDirectory(),
         fileManager: FileManager = .default,
-        registry: CmuxVaultAgentRegistry? = nil,
-        processSnapshotProvider: @escaping () -> CmuxTopProcessSnapshot,
+        registry: HmuxVaultAgentRegistry? = nil,
+        processSnapshotProvider: @escaping () -> HmuxTopProcessSnapshot,
         capturedAtProvider: @escaping () -> TimeInterval = {
             Date().timeIntervalSince1970
         },
-        processArgumentsProvider: @escaping (Int) -> CmuxTopProcessArguments? = {
-            CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
+        processArgumentsProvider: @escaping (Int) -> HmuxTopProcessArguments? = {
+            HmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
         },
         processIdentityProvider: @escaping (Int) -> AgentPIDProcessIdentity? = {
             guard $0 > 0, $0 <= Int(Int32.max) else { return nil }
@@ -52,13 +52,13 @@ struct SharedLiveAgentIndexLoader {
     @Sendable
     #endif
     static func loadFreshResult() async -> LoadResult {
-        let snapshot = await CmuxTopProcessSnapshot.capture(includeProcessDetails: true, includeResources: false)
+        let snapshot = await HmuxTopProcessSnapshot.capture(includeProcessDetails: true, includeResources: false)
         return SharedLiveAgentIndexLoader(
             processSnapshotProvider: { snapshot },
             capturedAtProvider: { snapshot.sampledAt.timeIntervalSince1970 },
             processArgumentsProvider: { pid in
                 guard let process = snapshot.process(pid: pid) else { return nil }
-                return CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: process)
+                return HmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: process)
             }
         ).loadResultSynchronously()
     }
@@ -69,11 +69,11 @@ struct SharedLiveAgentIndexLoader {
 
     func loadResultSynchronously() -> LoadResult {
         let resolvedRegistry = registry
-            ?? CmuxVaultAgentRegistry.load(homeDirectory: homeDirectory, fileManager: fileManager)
+            ?? HmuxVaultAgentRegistry.load(homeDirectory: homeDirectory, fileManager: fileManager)
         let processSnapshot = processSnapshotProvider()
         guard processSnapshot.captureIsAvailable, processSnapshot.enumerationIsComplete, !Task.isCancelled else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "liveAgentIndex.unavailable capture=\(processSnapshot.captureIsAvailable ? 1 : 0) " +
                 "complete=\(processSnapshot.enumerationIsComplete ? 1 : 0) " +
                 "missing=\(processSnapshot.enumerationMissingProcessCount) " +
@@ -97,7 +97,7 @@ struct SharedLiveAgentIndexLoader {
         }
         // Hook-backed agents such as Claude Code are never process-detected,
         // so scope their recorded PID against the same process snapshot.
-        let scopedProcessIDsByPanelKey = processSnapshot.cmuxScopedProcessIDsByPanelKey()
+        let scopedProcessIDsByPanelKey = processSnapshot.hmuxScopedProcessIDsByPanelKey()
         let index = RestorableAgentSessionIndex.load(
             homeDirectory: homeDirectory,
             fileManager: fileManager,
@@ -137,11 +137,11 @@ struct SharedLiveAgentIndexLoader {
         )
     }
 
-    static func processScopeFingerprint(from snapshot: CmuxTopProcessSnapshot) -> Set<String> {
-        Set(snapshot.cmuxScopedProcesses().map { process in
+    static func processScopeFingerprint(from snapshot: HmuxTopProcessSnapshot) -> Set<String> {
+        Set(snapshot.hmuxScopedProcesses().map { process in
             [
-                process.cmuxWorkspaceID?.uuidString ?? "",
-                process.cmuxSurfaceID?.uuidString ?? "",
+                process.hmuxWorkspaceID?.uuidString ?? "",
+                process.hmuxSurfaceID?.uuidString ?? "",
                 String(process.pid),
                 String(process.parentPID)
             ].joined(separator: "|")
@@ -150,9 +150,9 @@ struct SharedLiveAgentIndexLoader {
 
     /// Fingerprints the process scope and generation metadata consumed by
     /// hibernation safety checks, so cache reloads publish scope changes even
-    /// when the cmux-attributed process set is unchanged.
+    /// when the hmux-attributed process set is unchanged.
     static func processScopeFingerprint(
-        from snapshot: CmuxTopProcessSnapshot,
+        from snapshot: HmuxTopProcessSnapshot,
         hibernationProcessScopes: [
             RestorableAgentSessionIndex.PanelKey:
                 RestorableAgentSessionIndex.HibernationProcessScope
@@ -215,7 +215,7 @@ struct SharedLiveAgentIndexLoader {
 
     private static func forkValidatedPanels(
         in index: RestorableAgentSessionIndex,
-        processArgumentsProvider: (Int) -> CmuxTopProcessArguments?,
+        processArgumentsProvider: (Int) -> HmuxTopProcessArguments?,
         processIdentityProvider: (Int) -> AgentPIDProcessIdentity?,
         validator: CachedAgentProcessIdentityValidator
     ) -> Set<RestorableAgentSessionIndex.PanelKey> {
@@ -233,7 +233,7 @@ struct SharedLiveAgentIndexLoader {
     private static func forkEntryIsValidForForkAvailability(
         _ entry: RestorableAgentSessionIndex.Entry,
         panelKey: RestorableAgentSessionIndex.PanelKey,
-        processArgumentsProvider: (Int) -> CmuxTopProcessArguments?,
+        processArgumentsProvider: (Int) -> HmuxTopProcessArguments?,
         processIdentityProvider: (Int) -> AgentPIDProcessIdentity?,
         validator: CachedAgentProcessIdentityValidator
     ) -> Bool {
@@ -242,7 +242,7 @@ struct SharedLiveAgentIndexLoader {
             guard let expectedIdentity = entry.agentProcessIdentities[processID],
                   processIdentityProvider(processID) == expectedIdentity,
                   let process = processArgumentsProvider(processID),
-                  process.matchesCMUXScope(
+                  process.matchesHMUXScope(
                       workspaceId: panelKey.workspaceId,
                       surfaceId: panelKey.panelId
                   ),

@@ -44,13 +44,13 @@ function inviteeStack() {
 }
 
 function acceptRequest(): Request {
-  return new Request("https://cmux.test/api/teams/accept", {
+  return new Request("https://hmux.test/api/teams/accept", {
     method: "POST",
     headers: { authorization: "Bearer native-access", "x-stack-refresh-token": "native-refresh" },
   });
 }
 
-/** A stored role as cmux leaves it after sending: bound to the invitation it went out with. */
+/** A stored role as hmux leaves it after sending: bound to the invitation it went out with. */
 async function storeWithRole(email: string, role: "admin" | "member", stackInvitationId: string) {
   const store = new MemoryInviteStore();
   await store.upsertInviteRole({ stackTeamId: TEAM_ID, email, role, invitedByUserId: ADMIN_ID });

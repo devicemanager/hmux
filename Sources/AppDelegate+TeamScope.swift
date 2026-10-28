@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 
 extension AppDelegate {
@@ -48,6 +48,6 @@ extension AppDelegate {
         }
         ClosedItemHistoryStore.shared.removeManagedCloudVMRecords()
         cloudTunnelAccessDidEnd()
-        NotificationCenter.default.post(name: .cmuxCloudVMAccessDidEnd, object: self)
+        NotificationCenter.default.post(name: .hmuxCloudVMAccessDidEnd, object: self)
     }
 }

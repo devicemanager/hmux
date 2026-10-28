@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""`cmux coderouter claude add oauth-token` mints its token with the configured Claude.
+"""`hmux coderouter claude add oauth-token` mints its token with the configured Claude.
 
 With no token in the environment and a terminal on stdin, the command runs
 `claude setup-token` itself. It used to run whichever `claude` came first on
 PATH, so a user who pins Claude through `integrations.claudeCode.customClaudePath`
-(exported as CMUX_CUSTOM_CLAUDE_PATH) could mint a token from a different
+(exported as HMUX_CUSTOM_CLAUDE_PATH) could mint a token from a different
 install, or fail when PATH had none. Each case runs the real CLI on a pty with
 two fake `claude` executables that print different tokens, and checks which
 token reached the fake socket.
@@ -22,13 +22,13 @@ import threading
 import unittest
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 from fake_socket_env import cli_environment, unwrap_capability
 
 
 CUSTOM_TOKEN = "sk-ant-oat01-" + "C" * 40
 PATH_TOKEN = "sk-ant-oat01-" + "P" * 40
-WRAPPER_MARKER = "cmux claude wrapper - injects hooks and session tracking"
+WRAPPER_MARKER = "hmux claude wrapper - injects hooks and session tracking"
 
 
 class Handler(socketserver.StreamRequestHandler):
@@ -47,10 +47,10 @@ class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
 
 class CoderouterSetupTokenCustomClaudeTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp = tempfile.TemporaryDirectory(prefix="cmux-setup-token-", dir="/tmp")
+        self.temp = tempfile.TemporaryDirectory(prefix="hmux-setup-token-", dir="/tmp")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.cli = resolve_cmux_cli()
+        self.cli = resolve_hmux_cli()
 
     def fake_claude(self, directory: Path, token: str, *, wrapper: bool = False) -> Path:
         directory.mkdir(parents=True, exist_ok=True)
@@ -69,7 +69,7 @@ class CoderouterSetupTokenCustomClaudeTests(unittest.TestCase):
     ) -> tuple[subprocess.CompletedProcess[str], list[dict[str, object]]]:
         """Run the command on a pty and return it with the add requests it sent."""
         case_dir = Path(tempfile.mkdtemp(dir=self.root))
-        socket_path = case_dir / "cmux.sock"
+        socket_path = case_dir / "hmux.sock"
         home = case_dir / "home"
         home.mkdir()
         path_dir = case_dir / "path-bin"
@@ -86,9 +86,9 @@ class CoderouterSetupTokenCustomClaudeTests(unittest.TestCase):
             env = cli_environment(socket_path, home=home)
             env["PATH"] = f"{path_dir}:/usr/bin:/bin"
             env.pop("CLAUDE_CODE_OAUTH_TOKEN", None)
-            env.pop("CMUX_CUSTOM_CLAUDE_PATH", None)
+            env.pop("HMUX_CUSTOM_CLAUDE_PATH", None)
             if custom is not None:
-                env["CMUX_CUSTOM_CLAUDE_PATH"] = custom
+                env["HMUX_CUSTOM_CLAUDE_PATH"] = custom
             try:
                 proc = subprocess.run(
                     [self.cli, "--socket", str(socket_path),
@@ -137,8 +137,8 @@ class CoderouterSetupTokenCustomClaudeTests(unittest.TestCase):
             with self.subTest(custom=custom):
                 self.assert_token(PATH_TOKEN, custom=custom)
 
-    def test_cmux_wrapper_as_the_configured_path_is_not_run(self) -> None:
-        # Pointing the setting at cmux's own wrapper would hand setup-token to the
+    def test_hmux_wrapper_as_the_configured_path_is_not_run(self) -> None:
+        # Pointing the setting at hmux's own wrapper would hand setup-token to the
         # hook-injecting shim; the other launch paths skip it too.
         wrapper = self.fake_claude(self.root / "wrapper", CUSTOM_TOKEN, wrapper=True)
         self.assert_token(PATH_TOKEN, custom=str(wrapper))

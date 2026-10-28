@@ -1,4 +1,4 @@
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension SurfaceCatalog {
@@ -24,7 +24,7 @@ extension SurfaceCatalog {
               let view = projection.remoteTabID.flatMap({ tabID in views.first { $0.tabID == tabID } })
                   ?? (projection.remoteTabID == nil && views.count == 1 ? views.first : nil),
               projection.remoteWorkspaceID == nil || projection.remoteWorkspaceID == view.workspace.id,
-              let provider = provider(for: resource.machine) as? CmuxTuiSurfaceProvider,
+              let provider = provider(for: resource.machine) as? HmuxTuiSurfaceProvider,
               provider.isRegisteredInCatalog(), !provider.hasLostAccess,
               let url = browser.currentURL,
               url == SurfacePaneFactory.blankURL

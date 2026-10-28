@@ -2,7 +2,7 @@
 """List, and optionally close, agent PRs whose change already landed or that went quiet.
 
 Run nightly by .github/workflows/stale-agent-prs.yml. It reads every open PR
-by the agent author (teamleaderleo, the account every cmux agent opens PRs
+by the agent author (teamleaderleo, the account every hmux agent opens PRs
 from; never another author, whose PRs only a human may close) in batched
 GraphQL and scores each one against its base branch: the share of the lines it
 adds that are already in the base's copy of each file. Generated files
@@ -59,7 +59,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import PurePosixPath
 
-BASES = ("main", "feat-cmux-next")
+BASES = ("main", "feat-hmux-next")
 KEEP_LABELS = {"keep-open", "do-not-close", "exploration", "merge-freeze", "dev-build", "blocked"}
 BOT_LOGINS = {
     "coderabbitai", "cursor", "github-actions", "blacksmith-sh", "chatgpt-codex-connector",

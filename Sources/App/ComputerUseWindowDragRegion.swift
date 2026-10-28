@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Bridges the onboarding header to cmux's explicit AppKit window drag path.
+/// Bridges the onboarding header to hmux's explicit AppKit window drag path.
 @MainActor
 struct ComputerUseWindowDragRegion: NSViewRepresentable {
     func makeNSView(context: Context) -> TitlebarAccessoryContainerView {

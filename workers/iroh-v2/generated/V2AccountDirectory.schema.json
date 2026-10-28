@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://contracts.cmux.invalid/iroh-v2/V2AccountDirectory.json",
+  "$id": "https://contracts.hmux.invalid/iroh-v2/V2AccountDirectory.json",
   "type": "object",
   "properties": {
     "userId": {
@@ -17,14 +17,14 @@
       "maxItems": 16,
       "type": "array",
       "items": {
-        "$ref": "https://contracts.cmux.invalid/iroh-v2/V2DeviceRecord.json"
+        "$ref": "https://contracts.hmux.invalid/iroh-v2/V2DeviceRecord.json"
       }
     },
     "inboundMacs": {
       "maxItems": 16,
       "type": "array",
       "items": {
-        "$ref": "https://contracts.cmux.invalid/iroh-v2/V2InboundPeerPermission.json"
+        "$ref": "https://contracts.hmux.invalid/iroh-v2/V2InboundPeerPermission.json"
       }
     },
     "relayURLs": {

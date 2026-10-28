@@ -18,7 +18,7 @@ boundary instead:
   or its `ui-tests` job gave up) it cancels the dispatched run.
 
 Nothing from the request artifact is trusted beyond selectors that match
-`cmuxUITests/<Class>[/<method>]` and a merge SHA used only to fetch objects;
+`hmuxUITests/<Class>[/<method>]` and a merge SHA used only to fetch objects;
 the head SHA must equal the one GitHub reports for the CI run.
 """
 
@@ -46,16 +46,16 @@ DISPATCH_WORKFLOW_FILE = "ci-ui-tests.yml"
 DISPATCH_JOB_NAME = "Run requested UI tests"
 DISPATCH_STEP_NAME = "Run the requested UI test classes"
 
-SELECTOR = re.compile(r"cmuxUITests/[A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)?")
+SELECTOR = re.compile(r"hmuxUITests/[A-Za-z_][A-Za-z0-9_]*(?:/[A-Za-z_][A-Za-z0-9_]*)?")
 SHA = re.compile(r"[0-9a-f]{40}")
 # choose_ci_suite.MAX_UI_SELECTORS: more than one focused run takes is a coverage gap there.
 MAX_SELECTORS = 8
 MAX_REQUEST_BYTES = 16_384
-UI_TEST_PREFIX = "cmuxUITests/"
+UI_TEST_PREFIX = "hmuxUITests/"
 # Not a test class: test-e2e.yml reads this entry as "replay the UI fuzzer's
 # checked-in repros (dogfood/fuzz/regressions) against the app", after the
 # selected classes or alone.
-FUZZ_REGRESSIONS_SELECTOR = "cmuxUITests/FuzzRegressions"
+FUZZ_REGRESSIONS_SELECTOR = "hmuxUITests/FuzzRegressions"
 # What those repros exercise: the sidebar, splits and panes, and the main
 # window's size, plus the fuzzer and its repros. choose_ci_suite.py adds the
 # selector for a diff that touches one; a path ending in "/" is a directory.
@@ -63,10 +63,10 @@ FUZZ_REGRESSION_PATHS = (
     "dogfood/fuzz/",
     "scripts/fuzz",
     "vendor/bonsplit",
-    "Packages/macOS/CmuxPanes/",
-    "Packages/macOS/CmuxSidebar/",
+    "Packages/macOS/HmuxPanes/",
+    "Packages/macOS/HmuxSidebar/",
     "Sources/Sidebar/",
-    "Sources/App/CmuxMainWindow.swift",
+    "Sources/App/HmuxMainWindow.swift",
     "Sources/App/MainWindowFrameReconciler.swift",
     "Sources/AppDelegate+WindowFramePolicy.swift",
 )
@@ -121,7 +121,7 @@ def validate_selectors(selectors: object) -> list[str]:
         raise ValueError(f"{len(selectors)} UI test selectors; one focused run takes at most {MAX_SELECTORS}")
     for selector in selectors:
         if not isinstance(selector, str) or not SELECTOR.fullmatch(selector):
-            raise ValueError(f"refusing UI test selector {selector!r}: not cmuxUITests/<Class>[/<method>]")
+            raise ValueError(f"refusing UI test selector {selector!r}: not hmuxUITests/<Class>[/<method>]")
     if len(set(selectors)) != len(selectors):
         raise ValueError("duplicate UI test selectors")
     return list(selectors)
@@ -216,7 +216,7 @@ def fuzz_regression_path(path: str) -> bool:
 
 
 def touches_ui_tests(gh: GitHub, pull_numbers: list[int]) -> bool | None:
-    """Whether any of these pull requests changes cmuxUITests/ or a fuzz regression path; None when unknown.
+    """Whether any of these pull requests changes hmuxUITests/ or a fuzz regression path; None when unknown.
 
     Only those changes yield selectors (choose_ci_suite.changed_ui_selectors and
     FUZZ_REGRESSIONS_SELECTOR), so this spares every other pull request the wait

@@ -70,7 +70,7 @@ export default async function LocaleLayout({
   const organizationJsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
-    name: "cmux",
+    name: "hmux",
     url: "https://cmux.com",
     logo: "https://cmux.com/logo.png",
     sameAs: [
@@ -81,12 +81,12 @@ export default async function LocaleLayout({
   const webSiteJsonLd = {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "cmux",
+    name: "hmux",
     url: "https://cmux.com",
     description: webSiteDescription,
     publisher: {
       "@type": "Organization",
-      name: "cmux",
+      name: "hmux",
       url: "https://cmux.com",
       logo: "https://cmux.com/logo.png",
     },

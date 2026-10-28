@@ -1,6 +1,6 @@
-import CmuxCloudBannerCore
-import CmuxCloud
-import CmuxCore
+import HmuxCloudBannerCore
+import HmuxCloud
+import HmuxCore
 import Foundation
 import Observation
 
@@ -65,7 +65,7 @@ final class CloudPortAccessModel {
             if let coordinator, let blocker = CloudTunnelStatus(
                 backend: coordinator.backend, state: tunnelState, isPinned: false
             ).privateRouteBlocker { return blocker }
-            return String(localized: "cloud.portAccess.privateNetworkRequired", defaultValue: "This HTTPS service requires a private network connection. Run cmux vpn up, then reload.")
+            return String(localized: "cloud.portAccess.privateNetworkRequired", defaultValue: "This HTTPS service requires a private network connection. Run hmux vpn up, then reload.")
         case .closed: return String(localized: "cloud.ports.closed", defaultValue: "Closed")
         default: return nil
         }
@@ -198,7 +198,7 @@ final class CloudPortAccessModel {
         case .direct: return CloudPortRoutePolicy().privateURL(remoteURL.absoluteString, address: target.host)
         case .proxied where preservesRemoteHost:
             // WebKit bypasses its CONNECT proxy for literal loopback hosts.
-            // Use the cmux alias only on the wire; CloudBrowserAccessState maps
+            // Use the hmux alias only on the wire; CloudBrowserAccessState maps
             // the committed URL back to the guest's localhost origin for the
             // address bar and session snapshot.
             guard remoteURL.scheme?.lowercased() == "http",

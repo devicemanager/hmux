@@ -1,4 +1,4 @@
-import CmuxIrxTransport
+import HmuxIrxTransport
 import Foundation
 
 /// The per-user Mac directory served at `/v2/account/*`
@@ -7,7 +7,7 @@ import Foundation
 /// still finds that installation's current endpoint.
 struct AccountMacDirectory: Codable, Equatable, Sendable {
     /// The rule the account service names when it implements cross-team Mac peers.
-    static let accountPeerRule = "cmux.mac-account-peer.v1"
+    static let accountPeerRule = "hmux.mac-account-peer.v1"
 
     let userID: String
     let revision: Int
@@ -68,7 +68,7 @@ struct AccountMacDirectorySnapshot: Equatable, Sendable {
 
 /// Wire frames for the account socket and request route.
 enum AccountMacDirectoryWire {
-    static let requestPurpose = "cmux-iroh-v2-account-request"
+    static let requestPurpose = "hmux-iroh-v2-account-request"
 
     struct Request: Codable, Equatable, Sendable {
         let schemaId: String

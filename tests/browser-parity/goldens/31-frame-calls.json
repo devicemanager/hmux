@@ -1,6 +1,6 @@
 {
   "oracle": {},
-  "cmux": {
+  "hmux": {
     "frame-buttons": 400,
     "snapshot-scales-linearly": true,
     "main-calls": true,

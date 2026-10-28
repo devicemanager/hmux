@@ -3,7 +3,7 @@ name: reload-build
 # Dispatchable tagged dev-build for the cloud reload scripts' Blacksmith builder.
 #
 # scripts/reload-cloud.sh --builder blacksmith and scripts/reload-cloud-ios.sh
-# --builder blacksmith (in the cmuxterm-hq control repo) dispatch this workflow
+# --builder blacksmith (in the hmuxterm-hq control repo) dispatch this workflow
 # for an ephemeral branch holding the caller's working tree, then download the
 # produced artifact and install it locally. Dispatch on the default branch and
 # pass the ephemeral branch as `ref`: caches are scoped to the dispatch ref, so a
@@ -11,7 +11,7 @@ name: reload-build
 # This is the Blacksmith alternative to SSH-leasing a fleet Mac. It runs only on
 # workflow_dispatch and workflow_call: nothing here runs on push or
 # pull_request, so it never adds to the heavy CI fan-out. Nothing on main calls
-# it: cmux-next-frame-pacing.yml runs feat-cmux-next's copy, whose own
+# it: hmux-next-frame-pacing.yml runs feat-hmux-next's copy, whose own
 # reload-build.yml builds that tree.
 
 on:
@@ -47,7 +47,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: Dev build tag (becomes cmux DEV <tag> / dev.cmux.ios.<tag>)
+        description: Dev build tag (becomes hmux DEV <tag> / dev.hmux.ios.<tag>)
         required: true
         type: string
       ref:
@@ -66,7 +66,7 @@ on:
       runner:
         description: >-
           macOS runner label to build on. Blacksmith (blacksmith-6vcpu-macos-26),
-          our self-hosted fleet (cmux-macos-26 / cmux-aws-macos-15), or Warp.
+          our self-hosted fleet (hmux-macos-26 / hmux-aws-macos-15), or Warp.
           This is the dev-build offload path (reload-cloud), not required CI, so
           targeting the fleet for a build is intentional.
         required: false
@@ -111,11 +111,11 @@ jobs:
 
   build:
     needs: resolve-ref
-    # Depot is retired for cmux builds. Legacy Depot requests use Blacksmith.
+    # Depot is retired for hmux builds. Legacy Depot requests use Blacksmith.
     # The default runner (auto, or blacksmith-6vcpu-macos-26, which older
     # reload-cloud checkouts pass explicitly) builds on the std minis' side
     # runners first: attempts 1 and 2 there (ci-owned-pool-rescue.yml re-runs a
-    # stuck or refused build, and cmuxterm-hq's reload-cloud follows the
+    # stuck or refused build, and hmuxterm-hq's reload-cloud follows the
     # re-run), then Blacksmith. iOS builds stay on Blacksmith: the side runners
     # do not carry the glaeda-ios-sim capability (an iOS Simulator runtime).
     # Any other label is honored.
@@ -123,9 +123,9 @@ jobs:
     timeout-minutes: 60
     env:
       # The ghostty CLI helper zig build is skipped; GhosttyKit comes prebuilt.
-      CMUX_SKIP_ZIG_BUILD: "1"
-      CMUX_DEV_BACKEND_URL: ${{ inputs.backend_url }}
-      CMUX_DEV_BACKEND_MODE: ${{ inputs.backend_mode || 'remote' }}
+      HMUX_SKIP_ZIG_BUILD: "1"
+      HMUX_DEV_BACKEND_URL: ${{ inputs.backend_url }}
+      HMUX_DEV_BACKEND_MODE: ${{ inputs.backend_mode || 'remote' }}
       # A degraded cache must lose to a cold build instead of stalling this
       # latency-sensitive lane for actions/cache's ten-minute default.
       SEGMENT_DOWNLOAD_TIMEOUT_MINS: "2"
@@ -144,13 +144,13 @@ jobs:
           BUILD_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          if [[ "$CMUX_DEV_BACKEND_MODE" = remote && -z "$CMUX_DEV_BACKEND_URL" ]]; then
+          if [[ "$HMUX_DEV_BACKEND_MODE" = remote && -z "$HMUX_DEV_BACKEND_URL" ]]; then
             echo "::error::Set backend_url to the registered dev backend, or explicitly select backend_mode=local for a local dev server. Hosted runners cannot provision the HQ backend."
             exit 1
           fi
           if [[ -f scripts/lib/dev-backend-origin.sh ]]; then
             source scripts/lib/dev-backend-origin.sh
-            cmux_resolve_tagged_backend "$BUILD_TAG" "$GITHUB_WORKSPACE" "http://localhost:3777" >/dev/null
+            hmux_resolve_tagged_backend "$BUILD_TAG" "$GITHUB_WORKSPACE" "http://localhost:3777" >/dev/null
           fi
 
       # Self-hosted runners reuse their workspaces. The checkout action's
@@ -171,48 +171,48 @@ jobs:
           # hosted images now also carry the Xcode 27 RC, whose SDK main's
           # iOS SwiftUI does not compile under (toolbarMinimizeBehavior).
           pin_major="$(cut -d. -f1 .xcode-version 2>/dev/null || true)"
-          CMUX_CI_MAX_MACOS_SDK_MAJOR="${pin_major:-}" ./scripts/select-ci-xcode.sh
+          HMUX_CI_MAX_MACOS_SDK_MAJOR="${pin_major:-}" ./scripts/select-ci-xcode.sh
 
       - name: Setup Bun
         uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
           bun-version: "1.3.14"
 
-      # The macOS app build compiles the bundled cmux-cua (Rust) in a copy-
-      # resources phase via scripts/build-cmux-cua.sh, so the runner needs a
-      # toolchain. Guarded so source refs that predate cmux-cua are a no-op
+      # The macOS app build compiles the bundled hmux-cua (Rust) in a copy-
+      # resources phase via scripts/build-hmux-cua.sh, so the runner needs a
+      # toolchain. Guarded so source refs that predate hmux-cua are a no-op
       # (scripts come from inputs.ref); install-rust-ci.sh is idempotent.
-      - name: Provision Rust for bundled cmux-cua (macOS)
+      - name: Provision Rust for bundled hmux-cua (macOS)
         if: ${{ inputs.platform == 'macos' }}
         run: |
           set -euo pipefail
-          if [ -f scripts/build-cmux-cua.sh ] && [ -f scripts/install-rust-ci.sh ]; then
+          if [ -f scripts/build-hmux-cua.sh ] && [ -f scripts/install-rust-ci.sh ]; then
             ./scripts/install-rust-ci.sh
           else
-            echo "cmux-cua build script absent in source ref; skipping Rust provisioning"
+            echo "hmux-cua build script absent in source ref; skipping Rust provisioning"
           fi
 
-      # Reuse an immutable client built from the exact cmux-tui/Ghostty inputs.
-      # App-only changes do not require recompiling cmux-tui on a Mac.
+      # Reuse an immutable client built from the exact hmux-tui/Ghostty inputs.
+      # App-only changes do not require recompiling hmux-tui on a Mac.
       # The artifact host is not trusted: the manifest must carry the Sigstore
-      # build-provenance attestation that cmux-tui-artifacts.yml signs for this
+      # build-provenance attestation that hmux-tui-artifacts.yml signs for this
       # exact source commit before the installer reads a hash from it or the
       # client runs (`remote-probe` inside the installer, then below).
-      - name: Install and validate matching published cmux-tui client (macOS)
-        if: ${{ inputs.platform == 'macos' && hashFiles('cmux-tui/Cargo.toml') != '' }}
+      - name: Install and validate matching published hmux-tui client (macOS)
+        if: ${{ inputs.platform == 'macos' && hashFiles('hmux-tui/Cargo.toml') != '' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          client_commit="$(scripts/ci/resolve-cmux-tui-client-commit.sh)"
-          git diff --exit-code "$client_commit" HEAD -- cmux-tui ghostty
-          client_bundle="$RUNNER_TEMP/cmux-tui-prebuilt"
+          client_commit="$(scripts/ci/resolve-hmux-tui-client-commit.sh)"
+          git diff --exit-code "$client_commit" HEAD -- hmux-tui ghostty
+          client_bundle="$RUNNER_TEMP/hmux-tui-prebuilt"
           mkdir -p "$client_bundle/Contents"
-          env -u CMUX_TUI_CLIENT_LOCAL scripts/install-cmux-tui-client.sh "$client_bundle" \
-            --manifest-url "https://files.cmux.com/cmux-tui/$client_commit/manifest.json" \
+          env -u HMUX_TUI_CLIENT_LOCAL scripts/install-hmux-tui-client.sh "$client_bundle" \
+            --manifest-url "https://files.cmux.com/hmux-tui/$client_commit/manifest.json" \
             --expected-commit "$client_commit" --require-capability wireguard-hub \
-            --attest-signer-workflow "$GITHUB_REPOSITORY/.github/workflows/cmux-tui-artifacts.yml"
-          client="$client_bundle/Contents/Resources/bin/cmux-tui"
+            --attest-signer-workflow "$GITHUB_REPOSITORY/.github/workflows/hmux-tui-artifacts.yml"
+          client="$client_bundle/Contents/Resources/bin/hmux-tui"
           probe="$($client remote-probe --json)"
           version="$($client --version)"
           ghostty_sha="$(git -C ghostty rev-parse HEAD)"
@@ -222,11 +222,11 @@ jobs:
 
           probe = json.loads(os.environ["PROBE"])
           if probe.get("build_identity") != os.environ["EXPECTED_COMMIT"]:
-              raise SystemExit("published cmux-tui client has the wrong build identity")
+              raise SystemExit("published hmux-tui client has the wrong build identity")
           if os.environ["EXPECTED_GHOSTTY"] not in os.environ["VERSION"]:
-              raise SystemExit("published cmux-tui client has the wrong Ghostty identity")
+              raise SystemExit("published hmux-tui client has the wrong Ghostty identity")
           PYVERIFY
-          echo "CMUX_TUI_CLIENT_LOCAL=$client" >> "$GITHUB_ENV"
+          echo "HMUX_TUI_CLIENT_LOCAL=$client" >> "$GITHUB_ENV"
 
       - name: Prepare macOS cache metadata
         if: ${{ inputs.platform == 'macos' }}
@@ -261,7 +261,7 @@ jobs:
           runner_arch="$(printf '%s' "$(uname -m)" | tr -c 'A-Za-z0-9._-' '-')"
           runner_key="${runner_os}-${runner_os_version}-${runner_arch}"
 
-          resolved_file="cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+          resolved_file="hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
           source_sha="$(git rev-parse HEAD)"
           # Cache entries are immutable. A run-scoped save key plus a stable
           # source prefix lets a cold retry publish a newer repaired entry.
@@ -350,7 +350,7 @@ jobs:
         env:
           # The bounded download step already proved the prebuilt path failed;
           # do not let ensure-ghosttykit retry that URL with its long defaults.
-          CMUX_GHOSTTYKIT_NO_PREBUILT: "1"
+          HMUX_GHOSTTYKIT_NO_PREBUILT: "1"
         run: |
           set -euo pipefail
           start=$(date +%s)
@@ -567,8 +567,8 @@ jobs:
         id: build_macos
         env:
           BUILD_TAG: ${{ inputs.tag }}
-          CMUX_GHOSTTYKIT_PREPROVISIONED: "1"
-          CMUX_SOURCE_PACKAGES_DIR: ${{ github.workspace }}/.ci-source-packages
+          HMUX_GHOSTTYKIT_PREPROVISIONED: "1"
+          HMUX_SOURCE_PACKAGES_DIR: ${{ github.workspace }}/.ci-source-packages
           SPM_CACHE_STATUS: ${{ steps.spm_sanitize.outputs.status }}
           DERIVED_DATA_CACHE_STATUS: ${{ steps.derived_data_restore.outputs.status }}
         run: |
@@ -584,9 +584,9 @@ jobs:
               # The exact Package.resolved/state pair is safe to reuse. If it
               # is stale or corrupt, the caller clears both caches and changes
               # this marker before retrying from a normal cold resolve.
-              export CMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION=1
+              export HMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION=1
             else
-              export CMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION=0
+              export HMUX_DISABLE_AUTOMATIC_PACKAGE_RESOLUTION=0
             fi
             ./scripts/reload.sh \
               --tag "$BUILD_TAG" \
@@ -608,8 +608,8 @@ jobs:
             [ "$DERIVED_DATA_CACHE_STATUS" = "fallback_hit" ];
           }; then
             echo "::warning::Cached macOS build failed; clearing SPM and DerivedData caches and retrying cold"
-            rm -rf "$CMUX_SOURCE_PACKAGES_DIR" "$derived_data"
-            mkdir -p "$CMUX_SOURCE_PACKAGES_DIR" "$derived_data"
+            rm -rf "$HMUX_SOURCE_PACKAGES_DIR" "$derived_data"
+            mkdir -p "$HMUX_SOURCE_PACKAGES_DIR" "$derived_data"
             SPM_CACHE_STATUS=miss
             DERIVED_DATA_CACHE_STATUS=miss
             : > "$log"
@@ -627,31 +627,31 @@ jobs:
           [ -n "$app_path" ] && [ -d "$app_path" ] || { echo "could not locate built app" >&2; exit 1; }
           echo "app_path=$app_path" >> "$GITHUB_OUTPUT"
           if [ -f tests/test_cli_vm_create_name.py ]; then
-            CMUX_CLI_BIN="$app_path/Contents/Resources/bin/cmux" \
+            HMUX_CLI_BIN="$app_path/Contents/Resources/bin/hmux" \
               DYLD_FRAMEWORK_PATH="$app_path/Contents/Frameworks:$derived_data/Build/Products/Debug" \
               python3 tests/test_cli_vm_create_name.py
           fi
           mkdir -p artifact
           ( cd "$(dirname "$app_path")" && ditto -c -k --sequesterRsrc --keepParent "$(basename "$app_path")" "$GITHUB_WORKSPACE/artifact/app.zip" )
 
-      # iOS links the CmuxIrohFFI xcframework (gitignored, built from the Rust
-      # crate under Native/cmux-iroh). The macOS path builds it via
-      # reload.sh -> ensure-cmux-iroh.sh; the iOS archive below runs xcodebuild
+      # iOS links the HmuxIrohFFI xcframework (gitignored, built from the Rust
+      # crate under Native/hmux-iroh). The macOS path builds it via
+      # reload.sh -> ensure-hmux-iroh.sh; the iOS archive below runs xcodebuild
       # directly, so provision it here or SwiftPM fails with "local binary target
-      # 'CmuxIrohFFIBinary' ... does not contain a binary artifact". Guarded so
+      # 'HmuxIrohFFIBinary' ... does not contain a binary artifact". Guarded so
       # source refs that predate the crate are a no-op (scripts come from
       # inputs.ref, not this workflow's ref). install-rust-ci.sh is idempotent.
-      - name: Provision cmux-iroh FFI (iOS)
+      - name: Provision hmux-iroh FFI (iOS)
         if: ${{ inputs.platform == 'ios' }}
         run: |
           set -euo pipefail
-          if [ -f scripts/ensure-cmux-iroh.sh ]; then
+          if [ -f scripts/ensure-hmux-iroh.sh ]; then
             export PATH="$HOME/.cargo/bin:$PATH"
             [ -f scripts/install-rust-ci.sh ] && ./scripts/install-rust-ci.sh
             export PATH="$HOME/.cargo/bin:$PATH"
-            ./scripts/ensure-cmux-iroh.sh
+            ./scripts/ensure-hmux-iroh.sh
           else
-            echo "scripts/ensure-cmux-iroh.sh absent in source ref; skipping iroh FFI provisioning"
+            echo "scripts/ensure-hmux-iroh.sh absent in source ref; skipping iroh FFI provisioning"
           fi
 
       # --- iOS: build an UNSIGNED debug archive (signed locally by the caller) ---
@@ -660,17 +660,17 @@ jobs:
         id: build_ios
         env:
           BUILD_TAG: ${{ inputs.tag }}
-          CMUX_XCODEBUILD_NONINTERACTIVE_HEARTBEAT_SECONDS: "60"
+          HMUX_XCODEBUILD_NONINTERACTIVE_HEARTBEAT_SECONDS: "60"
         run: |
           set -euo pipefail
           slug="$(printf '%s' "$BUILD_TAG" | tr '[:upper:]' '[:lower:]' | tr -c 'a-z0-9-' '-' | sed 's/-\{2,\}/-/g; s/^-//; s/-$//')"
-          bundle_id="dev.cmux.ios.$slug"
-          display_name="cmux DEV $BUILD_TAG"
+          bundle_id="dev.hmux.ios.$slug"
+          display_name="hmux DEV $BUILD_TAG"
           # This archive is installed on a physical device. Its localhost is
           # the phone, not the tagged Mac or runner, so Debug device builds use
           # staging unless the dispatcher supplies an explicit reachable URL.
-          api_base_url="${CMUX_IOS_API_BASE_URL:-${CMUX_DEV_API_BASE_URL:-https://cmux-staging.vercel.app}}"
-          iroh_broker_base_url="${CMUX_IOS_IROH_BROKER_BASE_URL:-${CMUX_IROH_BROKER_BASE_URL:-https://cmux-staging.vercel.app}}"
+          api_base_url="${HMUX_IOS_API_BASE_URL:-${HMUX_DEV_API_BASE_URL:-https://cmux-staging.vercel.app}}"
+          iroh_broker_base_url="${HMUX_IOS_IROH_BROKER_BASE_URL:-${HMUX_IROH_BROKER_BASE_URL:-https://cmux-staging.vercel.app}}"
 
           # Match ios/scripts/reload.sh --swift-frontend-workaround. Optimized
           # Debug builds need this Xcode 26 codegen path disabled on every lane.
@@ -693,22 +693,22 @@ jobs:
           test -d GhosttyKit.xcframework
           out="$GITHUB_WORKSPACE/build"
           mkdir -p "$out"
-          archive="$out/cmux-ios-$slug.xcarchive"
+          archive="$out/hmux-ios-$slug.xcarchive"
           rm -rf "$archive"
           scripts/ci/xcodebuild_noninteractive.py xcodebuild archive \
-            -workspace ios/cmux.xcworkspace \
-            -scheme cmux-ios \
+            -workspace ios/hmux.xcworkspace \
+            -scheme hmux-ios \
             -configuration Debug \
             -destination 'generic/platform=iOS' \
             -archivePath "$archive" \
-            -derivedDataPath "$RUNNER_TEMP/cmux-ios-dd" \
-            CMUX_APP_BUNDLE_IDENTIFIER="$bundle_id" \
-            CMUX_HOST_BUNDLE_IDENTIFIER="$bundle_id" \
+            -derivedDataPath "$RUNNER_TEMP/hmux-ios-dd" \
+            HMUX_APP_BUNDLE_IDENTIFIER="$bundle_id" \
+            HMUX_HOST_BUNDLE_IDENTIFIER="$bundle_id" \
             PRODUCT_DISPLAY_NAME="$display_name" \
-            CMUX_GIT_SHA="$(git rev-parse --short HEAD)" \
-            CMUX_DEV_TAG="$BUILD_TAG" \
-            CMUX_API_BASE_URL="$api_base_url" \
-            CMUX_IROH_BROKER_BASE_URL="$iroh_broker_base_url" \
+            HMUX_GIT_SHA="$(git rev-parse --short HEAD)" \
+            HMUX_DEV_TAG="$BUILD_TAG" \
+            HMUX_API_BASE_URL="$api_base_url" \
+            HMUX_IROH_BROKER_BASE_URL="$iroh_broker_base_url" \
             EXCLUDED_SOURCE_FILE_NAMES=Info.plist \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
@@ -728,20 +728,20 @@ jobs:
           # unsigned simulator app gets errSecMissingEntitlement on every
           # SecItem call (SSH keys, auth tokens).
           scripts/ci/xcodebuild_noninteractive.py xcodebuild build \
-            -workspace ios/cmux.xcworkspace \
-            -scheme cmux-ios \
+            -workspace ios/hmux.xcworkspace \
+            -scheme hmux-ios \
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
-            -derivedDataPath "$RUNNER_TEMP/cmux-ios-dd" \
+            -derivedDataPath "$RUNNER_TEMP/hmux-ios-dd" \
             ARCHS=arm64 \
             ONLY_ACTIVE_ARCH=YES \
-            CMUX_APP_BUNDLE_IDENTIFIER="$bundle_id" \
-            CMUX_HOST_BUNDLE_IDENTIFIER="$bundle_id" \
+            HMUX_APP_BUNDLE_IDENTIFIER="$bundle_id" \
+            HMUX_HOST_BUNDLE_IDENTIFIER="$bundle_id" \
             PRODUCT_DISPLAY_NAME="$display_name" \
-            CMUX_GIT_SHA="$(git rev-parse --short HEAD)" \
-            CMUX_DEV_TAG="$BUILD_TAG" \
-            CMUX_API_BASE_URL="$api_base_url" \
-            CMUX_IROH_BROKER_BASE_URL="$iroh_broker_base_url" \
+            HMUX_GIT_SHA="$(git rev-parse --short HEAD)" \
+            HMUX_DEV_TAG="$BUILD_TAG" \
+            HMUX_API_BASE_URL="$api_base_url" \
+            HMUX_IROH_BROKER_BASE_URL="$iroh_broker_base_url" \
             EXCLUDED_SOURCE_FILE_NAMES=Info.plist \
             CODE_SIGNING_ALLOWED=YES \
             CODE_SIGNING_REQUIRED=NO \
@@ -753,15 +753,15 @@ jobs:
             SWIFT_COMPILATION_MODE=wholemodule \
             GCC_OPTIMIZATION_LEVEL=s \
             "${swift_workaround_args[@]}"
-          sim_app="$RUNNER_TEMP/cmux-ios-dd/Build/Products/Debug-iphonesimulator/cmux.app"
+          sim_app="$RUNNER_TEMP/hmux-ios-dd/Build/Products/Debug-iphonesimulator/hmux.app"
           [ -d "$sim_app" ] || { echo "simulator app not produced: $sim_app" >&2; exit 1; }
 
           mkdir -p artifact
-          pkg="$out/cmux-ios-$slug-pkg"
+          pkg="$out/hmux-ios-$slug-pkg"
           rm -rf "$pkg"
           mkdir -p "$pkg/simulator"
           mv "$archive" "$pkg/"
-          ditto "$sim_app" "$pkg/simulator/cmux.app"
+          ditto "$sim_app" "$pkg/simulator/hmux.app"
           ditto -c -k "$pkg" "$GITHUB_WORKSPACE/artifact/archive.zip"
 
       - name: Mark build-ready
@@ -777,9 +777,9 @@ jobs:
           # reload.sh stages the requested tagged app beside the stable base
           # product. Keep only the base product in the cache; otherwise every
           # tag accumulates another app bundle under the branch/SHA key.
-          for product in "$products"/cmux\ DEV\ *.app "$products"/.cmux\ DEV\ *.reload-*.app; do
+          for product in "$products"/hmux\ DEV\ *.app "$products"/.hmux\ DEV\ *.reload-*.app; do
             [ -d "$product" ] || continue
-            [ "$(basename "$product")" = "cmux DEV.app" ] || rm -rf -- "$product"
+            [ "$(basename "$product")" = "hmux DEV.app" ] || rm -rf -- "$product"
           done
 
       - name: Start SPM cache save timer

@@ -27,10 +27,10 @@ import {
   ProviderNetworkFullError,
   ProviderTlsRuleLimitError,
   type AttachTransport,
-  type CmuxRemoteApprovalResult,
-  type CmuxRemoteApprovalOptions,
-  type CmuxRemoteAttachOptions,
-  type CmuxRemoteEndpoint,
+  type HmuxRemoteApprovalResult,
+  type HmuxRemoteApprovalOptions,
+  type HmuxRemoteAttachOptions,
+  type HmuxRemoteEndpoint,
   type CreateOptions,
   type CreateProviderTunnelOptions,
   type EnsureProviderNetworkOptions,
@@ -71,21 +71,21 @@ import { recordSpanError, setSpanAttributes, withVmSpan } from "../telemetry";
 import { VM_PROVIDER_CREATE_TIMEOUT_MS } from "../operationTimeouts";
 import { parseSshPublicKey, scpPrepareCommand, SCP_KEY_TTL_SECONDS } from "./scp";
 import {
-  CMUX_TUI_PORT,
-  CMUX_TUI_SESSION,
+  HMUX_TUI_PORT,
+  HMUX_TUI_SESSION,
   shellQuote,
-} from "./cmuxTuiDaemon";
+} from "./hmuxTuiDaemon";
 export { preconnectFreestyle } from "./freestyleWarmup";
 export type { FreestylePreconnectOptions } from "./freestyleWarmup";
 
 // The Freestyle driver, on the public platform (api.freestyle.sh /v5, SDK
 // freestyle@0.2.x). This is the only Freestyle arm: the legacy 0.1.x platform
-// (SSH gateway, cmuxd-remote WebSocket PTY on 7777) has been removed,
-// so every Freestyle machine now attaches the same way every other cmux Cloud
+// (SSH gateway, hmuxd-remote WebSocket PTY on 7777) has been removed,
+// so every Freestyle machine now attaches the same way every other hmux Cloud
 // machine does.
 //
-// Machines attach through the cmux-tui remote daemon (transport `cmux-remote`,
-// docs/cloud-cmux-tui-daemon.md). The API has
+// Machines attach through the hmux-tui remote daemon (transport `hmux-remote`,
+// docs/cloud-hmux-tui-daemon.md). The API has
 // no HTTP ingress proxy to arbitrary VM ports (TLS edge rules need a
 // customer-verified domain), so the route addresses the daemon directly.
 //
@@ -94,7 +94,7 @@ export type { FreestylePreconnectOptions } from "./freestyleWarmup";
 // *private* address: `ws://[<vpc ipv6>]:1337/v1/link`. Nothing on that path is
 // public — the machine opens no inbound port at all, and a caller with no
 // tunnel up simply cannot reach it. Machines created before private networking
-// (and any created while CMUX_VM_PRIVATE_NETWORK_ENABLED=0 rolls it back) keep
+// (and any created while HMUX_VM_PRIVATE_NETWORK_ENABLED=0 rolls it back) keep
 // the older posture: inbound 1337 open to the Internet and the route pointed at
 // the stable public IPv6. Which posture a machine has is read from the machine
 // itself, never from the flag, so a rollback cannot strand a machine that is
@@ -103,41 +103,41 @@ export type { FreestylePreconnectOptions } from "./freestyleWarmup";
 // The daemon's Noise handshake encrypts and authenticates the session end to
 // end either way (carrier TLS is not required and the route token only feeds
 // the lease ledger). The daemon must bind dual-stack: the baked systemd unit
-// sets CMUX_TUI_REMOTE_WS_BIND=[::]:1337, which is also what makes a VPC
+// sets HMUX_TUI_REMOTE_WS_BIND=[::]:1337, which is also what makes a VPC
 // address reachable, since it is neither loopback nor the public NIC. The
 // driver never re-asserts it; a wrong bind is an image bug, fixed by a rebake.
 //
 // Creates take NO ports field, NO create-time env, and NO systemd injection;
 // `firewall` is mandatory. The model-plane env is baked into the snapshot at
-// /etc/cmux/model-plane.env (services/coderouter/vmGuestEnv.ts): the same
+// /etc/hmux/model-plane.env (services/coderouter/vmGuestEnv.ts): the same
 // bytes for every machine, so create writes nothing into the guest, and
-// /etc/cmux/agent-config.sh sources it in every shell whatever user it runs as.
+// /etc/hmux/agent-config.sh sources it in every shell whatever user it runs as.
 //
 // Create runs no guest bootstrap. The devbox snapshot carries the pinned
-// cmux-tui build, guest CLI integration, resource reporter, prompt sync, and
-// cmux-tui-daemon systemd unit. Its supervisor starts the daemon with a fresh
+// hmux-tui build, guest CLI integration, resource reporter, prompt sync, and
+// hmux-tui-daemon systemd unit. Its supervisor starts the daemon with a fresh
 // identity as soon as the machine resumes, keyed on the platform instance id.
 // Create and trusted-carrier attach therefore use provider metadata and the
 // immutable image contract, with no guest exec or filesystem upload.
 //
 // NO-WORK INVARIANT (read before adding a provider call to create, restore,
-// resume, or openCmuxRemote). These paths are on the user's New Machine
+// resume, or openHmuxRemote). These paths are on the user's New Machine
 // critical path, and every provider round trip here is paid on every create:
 //   - create: one `vms.create` with VPC and TLS rules inline. No resize (each
 //     size has its own snapshot), no `vm.exec`, no `vm.fs` write, no
 //     readiness poll, no second provider read.
 //   - restore/resume: no guest exec; the baked supervisor owns the daemon.
-//   - openCmuxRemote: built from the row's providerMetadata alone. No guest
+//   - openHmuxRemote: built from the row's providerMetadata alone. No guest
 //     exec, no install, no "heal", no enrollment round trip.
 // If the guest needs a new binary, file, hook, package, or setting, bake it
 // into the devbox snapshot (web/scripts/build-devbox-freestyle.ts, the boot
-// supervisor in services/vms/images/devbox/cmux-devbox-boot) and bump
+// supervisor in services/vms/images/devbox/hmux-devbox-boot) and bump
 // images/manifest.json. If it needs per-machine identity, derive it in the
 // guest at boot from the platform instance id, or fetch it asynchronously
-// from the guest (cmux-prompt-sync) without gating terminal access. Rows
-// without `cmuxTuiContract: "snapshot-v2"` are refused; do not reintroduce
+// from the guest (hmux-prompt-sync) without gating terminal access. Rows
+// without `hmuxTuiContract: "snapshot-v2"` are refused; do not reintroduce
 // create- or attach-time healing to support them. Running machines are
-// brought onto the contract out of band instead (an in-place cmux-tui upgrade
+// brought onto the contract out of band instead (an in-place hmux-tui upgrade
 // plus a guarded backfill): docs/cloud-guest-upgrades.md.
 // Explicit user operations (`exec`, `resize`, file push/pull) are separate
 // and stay. The one sanctioned guest exec around create is the prompt-name
@@ -149,7 +149,7 @@ export type { FreestylePreconnectOptions } from "./freestyleWarmup";
 //
 // The coderouter model plane is edge-injected: the create carries an inline
 // `tls` rule for the coderouter host whose transform overwrites the signed
-// `x-cmux-authorization` plus compatibility bearer/VM headers on every request
+// `x-hmux-authorization` plus compatibility bearer/VM headers on every request
 // the guest makes there. The platform steers the host to its edge (/etc/hosts) and
 // installs its CA at boot; rules added after boot never reach a running
 // guest, so the rule must be inline. The baked env file holds only base
@@ -167,12 +167,12 @@ export type { FreestylePreconnectOptions } from "./freestyleWarmup";
 // that is not on a private network gets no desktop URL at all rather than a
 // public one.
 
-export const FREESTYLE_REMOTE_WS_BIND = `[::]:${CMUX_TUI_PORT}`;
+export const FREESTYLE_REMOTE_WS_BIND = `[::]:${HMUX_TUI_PORT}`;
 /** The lease ledger's record of a port open; the private address itself never expires. */
 export const PORT_OPEN_LEASE_TTL_SECONDS = 7 * 24 * 60 * 60;
 /** Bounds the blocking `systemctl start` of the desktop unit (its own TimeoutStartSec is 120 s). */
 const DESKTOP_HEAL_TIMEOUT_MS = 90_000;
-export const FREESTYLE_ATTACH_TRANSPORT: AttachTransport = "cmux-remote";
+export const FREESTYLE_ATTACH_TRANSPORT: AttachTransport = "hmux-remote";
 /**
  * Driver maintenance commands are administrative — systemd, sudoers, the
  * daemon install — so they run as root. Public commands are separate: they use
@@ -203,15 +203,15 @@ const EXEC_OVERHEAD_TIMEOUT_MS = 15_000;
  * Run a public VM command with the home directory belonging to the account
  * Freestyle selected for the command. Older snapshots can leave HOME pointing
  * at the base image's former uid-1000 home even after that account was renamed
- * to cmux; resolving passwd at execution time fixes those machines without a
+ * to hmux; resolving passwd at execution time fixes those machines without a
  * reboot or image migration. The command itself remains a shell command, as it
  * was before this wrapper was added.
  */
 export function freestyleExecCommand(command: string): string {
   return [
-    'cmux_exec_home="$(getent passwd "$(id -u)" | cut -d: -f6)"',
-    'case "$cmux_exec_home" in /*) ;; *) echo "cmux: unable to resolve the exec user home" >&2; exit 125 ;; esac',
-    'export HOME="$cmux_exec_home"',
+    'hmux_exec_home="$(getent passwd "$(id -u)" | cut -d: -f6)"',
+    'case "$hmux_exec_home" in /*) ;; *) echo "hmux: unable to resolve the exec user home" >&2; exit 125 ;; esac',
+    'export HOME="$hmux_exec_home"',
     `exec /bin/sh -c ${shellQuote(command)}`,
   ].join('; ');
 }
@@ -221,7 +221,7 @@ const EDGE_DOMAIN = /^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9
 
 /**
  * The seam tests replace: the SDK client. There is deliberately no daemon
- * manifest resolver here; the driver never installs or repairs cmux-tui (the
+ * manifest resolver here; the driver never installs or repairs hmux-tui (the
  * snapshot owns it, see NO-WORK INVARIANT above).
  */
 export type FreestyleProviderDependencies = {
@@ -232,7 +232,7 @@ export type FreestyleProviderDependencies = {
 const FREESTYLE_CLIENT_CACHE_LIMIT = 8;
 
 const globalForFreestyle = globalThis as typeof globalThis & {
-  __cmuxFreestyleClients?: Map<string, Freestyle>;
+  __hmuxFreestyleClients?: Map<string, Freestyle>;
 };
 
 /**
@@ -254,7 +254,7 @@ export function freestyleClient(timeoutMs = DEFAULT_TIMEOUT_MS, signal?: AbortSi
   // it belongs to that read and is never cached.
   if (signal) return buildFreestyleClient(timeoutMs, signal);
   const cacheKey = `${freestyleApiBaseUrl() ?? "https://api.freestyle.sh"}|${freestyleCredentialKind()}|${timeoutMs}`;
-  const clients = globalForFreestyle.__cmuxFreestyleClients ??= new Map<string, Freestyle>();
+  const clients = globalForFreestyle.__hmuxFreestyleClients ??= new Map<string, Freestyle>();
   const cached = clients.get(cacheKey);
   if (cached) return cached;
   const client = buildFreestyleClient(timeoutMs);
@@ -287,7 +287,7 @@ function buildFreestyleClient(timeoutMs: number, signal?: AbortSignal): Freestyl
     ...(signal ? { signal } : {}),
     record: process.env.NODE_ENV === "development" ? (event) => {
       const traceId = currentVmRequestContext()?.traceId;
-      console.info("cmux.vm.freestyle.request", JSON.stringify({
+      console.info("hmux.vm.freestyle.request", JSON.stringify({
         ...event, traceId: traceId && /^[0-9a-f]{32}$/.test(traceId) ? traceId : undefined,
       }));
     } : undefined,
@@ -314,7 +314,7 @@ function buildFreestyleClient(timeoutMs: number, signal?: AbortSignal): Freestyl
  *   Opening 1337 to the Internet as well would hand back exactly the exposure
  *   the VPC exists to remove.
  * - Without a VPC — a machine created before private networking, or one
- *   created while CMUX_VM_PRIVATE_NETWORK_ENABLED=0 rolls the feature back —
+ *   created while HMUX_VM_PRIVATE_NETWORK_ENABLED=0 rolls the feature back —
  *   inbound 1337 is opened publicly, because that is the only way such a
  *   machine is reachable at all. Session auth is the daemon's Noise device
  *   enrollment, the same posture the e2b driver builds by hand with iptables.
@@ -336,7 +336,7 @@ export function freestyleFirewallRules(options?: {
     rules.push({
       action: "allow",
       source: { public: true },
-      destination: { port: CMUX_TUI_PORT, protocol: "tcp" },
+      destination: { port: HMUX_TUI_PORT, protocol: "tcp" },
     });
   }
   if (options?.memberIngressNetworkId) {
@@ -394,30 +394,30 @@ type FreestyleNetworkAddress = {
  * the daemon is dialed on. The public fallback below stays v6 — Freestyle
  * allocates no public v4 at all.
  */
-export function freestyleCmuxRemoteRoute(addresses: FreestyleRouteAddresses, vmId: string): string {
+export function freestyleHmuxRemoteRoute(addresses: FreestyleRouteAddresses, vmId: string): string {
   const networks = addresses.vpcs ?? addresses.networks ?? [];
   for (const network of networks) {
     const ipv4 = network.ipv4?.trim();
-    if (ipv4) return `ws://${ipv4}:${CMUX_TUI_PORT}/v1/link`;
+    if (ipv4) return `ws://${ipv4}:${HMUX_TUI_PORT}/v1/link`;
   }
   for (const network of networks) {
     const ipv6 = network.ipv6?.trim();
-    if (ipv6) return `ws://[${ipv6}]:${CMUX_TUI_PORT}/v1/link`;
+    if (ipv6) return `ws://[${ipv6}]:${HMUX_TUI_PORT}/v1/link`;
   }
   if (networks.length > 0) {
     throw new ProviderError(
       "freestyle",
-      `VM ${vmId} is attached to a private network but holds no address on it, so its cmux-tui daemon is unreachable`,
+      `VM ${vmId} is attached to a private network but holds no address on it, so its hmux-tui daemon is unreachable`,
     );
   }
   const ipv6 = addresses.publicIpv6?.trim();
   if (!ipv6) {
     throw new ProviderError(
       "freestyle",
-      `VM ${vmId} has no private network address and no public IPv6 address, so its cmux-tui daemon is unreachable (the platform has no HTTP ingress to arbitrary ports)`,
+      `VM ${vmId} has no private network address and no public IPv6 address, so its hmux-tui daemon is unreachable (the platform has no HTTP ingress to arbitrary ports)`,
     );
   }
-  return `ws://[${ipv6}]:${CMUX_TUI_PORT}/v1/link`;
+  return `ws://[${ipv6}]:${HMUX_TUI_PORT}/v1/link`;
 }
 
 /**
@@ -461,7 +461,7 @@ export function freestylePortUrls(addresses: FreestyleRouteAddresses, vmId: stri
 
 /**
  * Guest-side desktop heal, one exec, no polling: `systemctl start` on the
- * cmux-desktop unit returns when the unit is active, and the unit is
+ * hmux-desktop unit returns when the unit is active, and the unit is
  * Type=notify, so "active" means start-vnc.sh has reported READY (the display
  * accepts connections, noVNC is bound on 6901, the session env is published).
  * On a healthy machine the start is a no-op; after a cold boot or an operator
@@ -484,7 +484,7 @@ export function freestyleDesktopHealCommand(): string {
  */
 /**
  * The persisted network addresses (see {@link freestyleNetworkAddressMetadata})
- * re-shaped for {@link freestyleCmuxRemoteRoute}, so attach on a private
+ * re-shaped for {@link freestyleHmuxRemoteRoute}, so attach on a private
  * machine needs no provider read. Null when the row carries none (a public
  * ingress machine, whose public IPv6 is only known to the provider).
  */
@@ -578,12 +578,12 @@ function freestyleCreateTlsRules(edgeRules: readonly VmEdgeRule[] | undefined, n
 export const FREESTYLE_PORT_RULE_DOMAIN_SUFFIXES = ["cmux.sh", "style.dev"] as const;
 
 /** Matches a driver-minted, 96-bit capability-domain preview hostname. */
-export const FREESTYLE_PORT_RULE_DOMAIN_RE = /^cmux-([0-9a-f]{24})\.((?:cmux\.sh)|(?:cmux\.site)|(?:style\.dev))$/;
+export const FREESTYLE_PORT_RULE_DOMAIN_RE = /^hmux-([0-9a-f]{24})\.((?:hmux\.sh)|(?:hmux\.site)|(?:style\.dev))$/;
 
 /** Returns the configured legacy preview suffix first, then the safe fallback. */
 export function freestylePortRuleDomainSuffixes(env: NodeJS.ProcessEnv = process.env): readonly string[] {
-  const pinned = env.CMUX_VM_PORT_PREVIEW_DOMAIN?.trim().toLowerCase();
-  if (pinned && FREESTYLE_PORT_RULE_DOMAIN_RE.test(`cmux-${"0".repeat(24)}.${pinned}`)) {
+  const pinned = env.HMUX_VM_PORT_PREVIEW_DOMAIN?.trim().toLowerCase();
+  if (pinned && FREESTYLE_PORT_RULE_DOMAIN_RE.test(`hmux-${"0".repeat(24)}.${pinned}`)) {
     return [pinned, ...FREESTYLE_PORT_RULE_DOMAIN_SUFFIXES.filter((suffix) => suffix !== pinned)];
   }
   return FREESTYLE_PORT_RULE_DOMAIN_SUFFIXES;
@@ -591,7 +591,7 @@ export function freestylePortRuleDomainSuffixes(env: NodeJS.ProcessEnv = process
 
 /** Mints a fresh legacy capability-domain hostname. */
 export function mintFreestylePortRuleDomain(suffix: string = FREESTYLE_PORT_RULE_DOMAIN_SUFFIXES[0]): string {
-  return `cmux-${randomBytes(12).toString("hex")}.${suffix}`;
+  return `hmux-${randomBytes(12).toString("hex")}.${suffix}`;
 }
 
 export function normalizeFreestyleExecTimeout(timeoutMs: number | undefined): number {
@@ -697,12 +697,12 @@ function isNotFound(err: unknown): boolean {
 }
 
 /**
- * The Freestyle-side half of cmux private networking: one VPC per owner, and
+ * The Freestyle-side half of hmux private networking: one VPC per owner, and
  * one WireGuard tunnel per owner's computer attached to it.
  *
  * These are account-scoped resources, not machine-scoped ones — they outlive
  * every machine on them — so nothing here takes a VM id. The control plane
- * owns the mapping from cmux user to slug; this class only knows how to make
+ * owns the mapping from hmux user to slug; this class only knows how to make
  * the provider match what it is asked for.
  */
 class FreestylePrivateNetworking implements VMPrivateNetworking {
@@ -721,16 +721,16 @@ class FreestylePrivateNetworking implements VMPrivateNetworking {
     const slug = options.slug.trim();
     if (!slug) throw new ProviderError("freestyle", "ensureNetwork requires a slug");
     return withVmSpan(
-      "cmux.vm.provider.ensure_network",
+      "hmux.vm.provider.ensure_network",
       "tunnel",
-      { "cmux.vm.provider": "freestyle", "cmux.vm.operation": "ensure_network", "cmux.vm.network.slug": slug, "cmux.vm.network.heal": options.heal === true },
+      { "hmux.vm.provider": "freestyle", "hmux.vm.operation": "ensure_network", "hmux.vm.network.slug": slug, "hmux.vm.network.heal": options.heal === true },
         async (span) => {
         const fs = this.client();
         if (options.heal) {
           const existing = await this.readNetworkBySlug(fs, slug);
           if (!existing) throw new ProviderError("freestyle", `ensureNetwork(${slug}): no network to heal`);
           if (options.membersRule !== false) await this.ensureMembersRule(fs, existing.id);
-          setSpanAttributes(span, { "cmux.vm.network.id": existing.id, "cmux.vm.network.created": false });
+          setSpanAttributes(span, { "hmux.vm.network.id": existing.id, "hmux.vm.network.created": false });
           return existing;
         }
         try {
@@ -744,7 +744,7 @@ class FreestylePrivateNetworking implements VMPrivateNetworking {
             ...(options.cidr ? { cidr: options.cidr } : {}),
             firewall: { rules: options.membersRule === false ? [] : FREESTYLE_NETWORK_FIREWALL_RULES },
           });
-          setSpanAttributes(span, { "cmux.vm.network.id": data.id, "cmux.vm.network.created": true });
+          setSpanAttributes(span, { "hmux.vm.network.id": data.id, "hmux.vm.network.created": true });
           return mapFreestyleNetwork(data);
         } catch (err) {
           // Only the provider's explicit slug conflict permits reconciliation;
@@ -755,7 +755,7 @@ class FreestylePrivateNetworking implements VMPrivateNetworking {
           const existing = await this.readNetworkBySlug(fs, slug);
           if (existing) {
             if (options.membersRule !== false) await this.ensureMembersRule(fs, existing.id);
-            setSpanAttributes(span, { "cmux.vm.network.id": existing.id, "cmux.vm.network.created": false });
+            setSpanAttributes(span, { "hmux.vm.network.id": existing.id, "hmux.vm.network.created": false });
             return existing;
           }
           throw new ProviderError("freestyle", `ensureNetwork(${slug})`, err);
@@ -788,12 +788,12 @@ class FreestylePrivateNetworking implements VMPrivateNetworking {
       throw new ProviderError("freestyle", "createTunnel requires the client's public key");
     }
     return withVmSpan(
-      "cmux.vm.provider.create_tunnel",
+      "hmux.vm.provider.create_tunnel",
       "tunnel",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "create_tunnel",
-        "cmux.vm.network.id": options.networkId,
+        "hmux.vm.provider": "freestyle",
+        "hmux.vm.operation": "create_tunnel",
+        "hmux.vm.network.id": options.networkId,
       },
         async (span) => {
         try {
@@ -809,13 +809,13 @@ class FreestylePrivateNetworking implements VMPrivateNetworking {
             vpcs: [{ vpcId: options.networkId }],
           });
           const tunnel = mapFreestyleTunnel(data, options.networkId);
-          setSpanAttributes(span, { "cmux.vm.tunnel.id": tunnel.id });
+          setSpanAttributes(span, { "hmux.vm.tunnel.id": tunnel.id });
           return { tunnel, created: true, rotated: false };
         } catch (err) {
           if (!tunnelCreateMayHaveSucceeded(err)) {
             throw freestyleOperationError(`createTunnel(${options.slug})`, err);
           }
-          span.setAttribute("cmux.vm.tunnel.recovery_reason", tunnelRecoveryReason(err));
+          span.setAttribute("hmux.vm.tunnel.recovery_reason", tunnelRecoveryReason(err));
           // A duplicate create may reuse only the exact same client identity.
           // Key rotation belongs to explicit enrollment of an existing row;
           // recovery must never evict a concurrent client's working key.
@@ -826,8 +826,8 @@ class FreestylePrivateNetworking implements VMPrivateNetworking {
           );
           if (recovered) {
             setSpanAttributes(span, {
-              "cmux.vm.tunnel.id": recovered.id,
-              "cmux.vm.tunnel.recovered": true,
+              "hmux.vm.tunnel.id": recovered.id,
+              "hmux.vm.tunnel.recovered": true,
             });
             return { tunnel: recovered, created: false, rotated: false };
           }
@@ -976,7 +976,7 @@ class FreestylePrivateNetworking implements VMPrivateNetworking {
         action: "allow",
         source: { vpcId: networkId },
         destination: { vpcId: networkId },
-        description: "cmux: members reach each other (healed)",
+        description: "hmux: members reach each other (healed)",
       });
     } catch (err) {
       throw new ProviderError("freestyle", `members-rule heal failed for ${networkId}`, err);
@@ -996,9 +996,9 @@ class FreestylePrivateNetworking implements VMPrivateNetworking {
 
 function spanAttributes(vmId: string, operation: string, extra: Record<string, string | number | boolean> = {}) {
   return {
-    "cmux.vm.provider": "freestyle",
-    "cmux.vm.operation": operation,
-    "cmux.vm.id": vmId,
+    "hmux.vm.provider": "freestyle",
+    "hmux.vm.operation": operation,
+    "hmux.vm.id": vmId,
     ...extra,
   };
 }
@@ -1036,18 +1036,18 @@ function freestyleCreateResourceAttributes(
 ): Record<string, string | number | boolean> {
   if (imageSize) {
     return {
-      "cmux.vm.image_size": imageSize.name,
-      "cmux.vm.resources.cpu": imageSize.cpu,
-      "cmux.vm.resources.memory_mb": imageSize.memoryMb,
-      "cmux.vm.resources.storage_mb": imageSize.storageMb,
-      "cmux.vm.resize.requested": false,
+      "hmux.vm.image_size": imageSize.name,
+      "hmux.vm.resources.cpu": imageSize.cpu,
+      "hmux.vm.resources.memory_mb": imageSize.memoryMb,
+      "hmux.vm.resources.storage_mb": imageSize.storageMb,
+      "hmux.vm.resize.requested": false,
     };
   }
   return {
-    "cmux.vm.resources.cpu": data.resources?.cpu ?? 0,
-    "cmux.vm.resources.memory_mb": data.resources?.memory ?? 0,
-    "cmux.vm.resources.storage_mb": data.resources?.storage ?? 0,
-    "cmux.vm.resize.requested": false,
+    "hmux.vm.resources.cpu": data.resources?.cpu ?? 0,
+    "hmux.vm.resources.memory_mb": data.resources?.memory ?? 0,
+    "hmux.vm.resources.storage_mb": data.resources?.storage ?? 0,
+    "hmux.vm.resize.requested": false,
   };
 }
 
@@ -1055,7 +1055,7 @@ export class FreestyleProvider implements VMProvider {
   readonly id = "freestyle" as const;
 
   /** The normal terminal transport. SSH is an explicit legacy attach verb, not the default. */
-  readonly attachTransports: readonly AttachTransport[] = ["cmux-remote"];
+  readonly attachTransports: readonly AttachTransport[] = ["hmux-remote"];
 
   /** ``create`` honors requested memory through the grow-only size ladder. */
   /// Freestyle exposes live resource statistics and grow-only resizing.
@@ -1078,7 +1078,7 @@ export class FreestyleProvider implements VMProvider {
   }
 
   async prepareSCP(vmId: string, publicKey: string): Promise<import("./types").SCPEndpoint> {
-    return withVmSpan("cmux.vm.provider.prepare_scp", "provider", spanAttributes(vmId, "prepare_scp"), async () => {
+    return withVmSpan("hmux.vm.provider.prepare_scp", "provider", spanAttributes(vmId, "prepare_scp"), async () => {
       const key = parseSshPublicKey(publicKey);
       const vm = this.deps.client().vms.ref(vmId);
       const data = await vm.data();
@@ -1105,7 +1105,7 @@ export class FreestyleProvider implements VMProvider {
       let hostPublicKey: string;
       try { hostPublicKey = parseSshPublicKey(result.stdout ?? ""); }
       catch { throw new ProviderError("freestyle", "SCP preparation returned an invalid guest host key."); }
-      return { host, port: 22, username: "cmux", hostPublicKey, expiresAtUnix: Math.floor(expires.getTime() / 1000) };
+      return { host, port: 22, username: "hmux", hostPublicKey, expiresAtUnix: Math.floor(expires.getTime() / 1000) };
     });
   }
 
@@ -1116,26 +1116,26 @@ export class FreestyleProvider implements VMProvider {
     }
     const tlsRules = freestyleCreateTlsRules(options.edgeRules, options.networkRules);
     return withVmSpan(
-      "cmux.vm.provider.create",
+      "hmux.vm.provider.create",
       "provider",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "create",
-        "cmux.vm.image": image,
-        "cmux.vm.edge_rules": tlsRules?.length ?? 0,
-        "cmux.timeout_ms": CREATE_TIMEOUT_MS,
+        "hmux.vm.provider": "freestyle",
+        "hmux.vm.operation": "create",
+        "hmux.vm.image": image,
+        "hmux.vm.edge_rules": tlsRules?.length ?? 0,
+        "hmux.timeout_ms": CREATE_TIMEOUT_MS,
       },
       async (span) => {
         try {
           const clientStartedAt = performance.now();
           const fs = this.deps.client(CREATE_TIMEOUT_MS);
           const clientInitMs = Math.round((performance.now() - clientStartedAt) * 100) / 100;
-          setSpanAttributes(span, { "cmux.vm.provider.client_init_ms": clientInitMs });
+          setSpanAttributes(span, { "hmux.vm.provider.client_init_ms": clientInitMs });
           const networkId = options.network?.id;
           const providerStartedAt = performance.now();
           const { vm, vmId, data } = await fs.vms.create({
             snapshotId: image,
-            displayName: "cmux Cloud VM",
+            displayName: "hmux Cloud VM",
             // Do not let an account/provider idle default turn a persistent
             // machine into a one-shot box. Explicit pause/stop still works.
             idleTimeoutSeconds: FREESTYLE_PERSISTENT_IDLE_TIMEOUT_SECONDS,
@@ -1146,20 +1146,20 @@ export class FreestyleProvider implements VMProvider {
             ...(options.runtimeBudgetSeconds !== undefined
               ? { maxRunTotalSeconds: Math.max(0, Math.floor(options.runtimeBudgetSeconds)) }
               : {}),
-            metadata: { cmux: "cloud" },
+            metadata: { hmux: "cloud" },
             firewall: { rules: freestyleFirewallRules({ publicDaemonIngress: !networkId, memberIngressNetworkId: options.network?.memberIngress ? networkId : undefined, networkRules: options.networkRules }) },
             ...(networkId ? { vpcs: [{ vpcId: networkId, ipv4: true, ipv6: true }] } : {}),
             ...(tlsRules ? { tls: { rules: tlsRules } } : {}),
           });
           const providerMs = Math.round((performance.now() - providerStartedAt) * 100) / 100;
           setSpanAttributes(span, {
-            "cmux.vm.id": vmId,
-            "cmux.vm.network.private": !!networkId,
-            "cmux.vm.provider.api_provision_ms": providerMs,
+            "hmux.vm.id": vmId,
+            "hmux.vm.network.private": !!networkId,
+            "hmux.vm.provider.api_provision_ms": providerMs,
             // `vms.create` resolves only after the SDK has decoded the id;
             // retain its wall-clock receipt as an explicit correlation point.
-            "cmux.vm.provider.machine_id_received": true,
-            "cmux.vm.provider.machine_id_received_at_ms": Date.now(),
+            "hmux.vm.provider.machine_id_received": true,
+            "hmux.vm.provider.machine_id_received_at_ms": Date.now(),
           });
           try {
             if (options.forked) await this.awaitForkDaemon(vm);
@@ -1198,10 +1198,10 @@ export class FreestyleProvider implements VMProvider {
             createdAt: Date.now(),
             // The network id and addresses are persisted so listings can show a
             // machine's private IP, and attach dials the recorded address
-            // without a provider round trip (openCmuxRemote).
+            // without a provider round trip (openHmuxRemote).
             providerMetadata: {
               ...(options.providerMetadata ?? {}),
-              cmuxTuiContract: "snapshot-v2",
+              hmuxTuiContract: "snapshot-v2",
               ...(networkId ? { networkId } : {}),
               ...(freestyleNetworkAddressMetadata(data)),
             },
@@ -1216,29 +1216,29 @@ export class FreestyleProvider implements VMProvider {
 
   async applyNetworkPolicy(vmId: string, plan: NetworkRulePlan): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.apply_network_policy",
+      "hmux.vm.provider.apply_network_policy",
       "provider",
       spanAttributes(vmId, "applyNetworkPolicy", {
-        "cmux.vm.network.public_egress": plan.publicEgress,
-        "cmux.vm.network.ranges": plan.ranges.length,
-        "cmux.vm.network.domains": plan.domains.length,
-        "cmux.vm.network.dns": plan.dns,
+        "hmux.vm.network.public_egress": plan.publicEgress,
+        "hmux.vm.network.ranges": plan.ranges.length,
+        "hmux.vm.network.domains": plan.domains.length,
+        "hmux.vm.network.dns": plan.dns,
       }),
       async (span) => {
         try {
           const result = await reconcileFreestyleEgress(this.deps.client(), vmId, plan);
           setSpanAttributes(span, {
-            "cmux.vm.network.firewall_created": result.firewallCreated,
-            "cmux.vm.network.firewall_deleted": result.firewallDeleted,
-            "cmux.vm.network.tls_created": result.tlsCreated,
-            "cmux.vm.network.tls_deleted": result.tlsDeleted,
+            "hmux.vm.network.firewall_created": result.firewallCreated,
+            "hmux.vm.network.firewall_deleted": result.firewallDeleted,
+            "hmux.vm.network.tls_created": result.tlsCreated,
+            "hmux.vm.network.tls_deleted": result.tlsDeleted,
           });
         } catch (err) {
           if (isFreestyleTlsRuleLimit(err)) {
-            span.setAttribute("cmux.vm.network.tls_rule_limit", true);
+            span.setAttribute("hmux.vm.network.tls_rule_limit", true);
             if (err instanceof FreestyleTlsRuleLimitRestoreError) {
-              span.setAttribute("cmux.vm.network.tls_restored", err.restored);
-              span.setAttribute("cmux.vm.network.tls_unrestored", err.unrestored.length);
+              span.setAttribute("hmux.vm.network.tls_restored", err.restored);
+              span.setAttribute("hmux.vm.network.tls_unrestored", err.unrestored.length);
               if (err.unrestored.length > 0) {
                 console.error("[freestyle] TLS rule limit: retired rules not restored", JSON.stringify({ vmId, unrestored: err.unrestored }));
               }
@@ -1253,7 +1253,7 @@ export class FreestyleProvider implements VMProvider {
 
   async destroy(vmId: string): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.destroy",
+      "hmux.vm.provider.destroy",
       "provider",
       spanAttributes(vmId, "destroy"),
       async () => {
@@ -1269,14 +1269,14 @@ export class FreestyleProvider implements VMProvider {
 
   async getStatus(vmId: string, options?: ProviderReadOptions): Promise<VMStatus> {
     return withVmSpan(
-      "cmux.vm.provider.get_status",
+      "hmux.vm.provider.get_status",
       "provider",
       spanAttributes(vmId, "get_status"),
       async (span) => {
         try {
           const data = await this.deps.client(undefined, options?.signal).vms.get(vmId);
           const status = mapFreestyleState(data.state);
-          setSpanAttributes(span, { "cmux.vm.provider_state": data.state, "cmux.vm.status": status });
+          setSpanAttributes(span, { "hmux.vm.provider_state": data.state, "hmux.vm.status": status });
           return status;
         } catch (err) {
           if (isNotFound(err)) return "destroyed";
@@ -1293,14 +1293,14 @@ export class FreestyleProvider implements VMProvider {
    */
   async getPauseState(vmId: string): Promise<VmPauseState> {
     return withVmSpan(
-      "cmux.vm.provider.get_pause_state",
+      "hmux.vm.provider.get_pause_state",
       "provider",
       spanAttributes(vmId, "get_pause_state"),
       async (span) => {
         try {
           const data = await this.deps.client().vms.get(vmId);
           const state = freestylePauseState(data.state);
-          setSpanAttributes(span, { "cmux.vm.provider_state": data.state, "cmux.vm.pause_state": state });
+          setSpanAttributes(span, { "hmux.vm.provider_state": data.state, "hmux.vm.pause_state": state });
           return state;
         } catch (err) {
           if (isNotFound(err)) return "destroyed";
@@ -1313,7 +1313,7 @@ export class FreestyleProvider implements VMProvider {
   /** Pause freezes memory, so a later start resumes the daemon in place. */
   async pause(vmId: string): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.pause",
+      "hmux.vm.provider.pause",
       "provider",
       spanAttributes(vmId, "pause"),
       async () => {
@@ -1347,7 +1347,7 @@ export class FreestyleProvider implements VMProvider {
 
   async resume(vmId: string): Promise<VMHandle> {
     return withVmSpan(
-      "cmux.vm.provider.resume",
+      "hmux.vm.provider.resume",
       "provider",
       spanAttributes(vmId, "resume"),
       async (span) => {
@@ -1360,14 +1360,14 @@ export class FreestyleProvider implements VMProvider {
           // start payload can also name the network a VM is on before the
           // platform fills in the address assigned on it, so an unusable
           // address here is not a verdict on the machine. Prepare the route
-          // best-effort and leave readiness to openCmuxRemote, which reads the
+          // best-effort and leave readiness to openHmuxRemote, which reads the
           // authoritative addresses and fails closed on them.
           try {
             await this.announcePrivateAddresses(vm, data);
           } catch (announceError) {
             recordSpanError(span, announceError);
           }
-          // Older cmux machines were created while the provider's account
+          // Older hmux machines were created while the provider's account
           // default supplied a finite idle timeout. Clear that legacy policy
           // the first time the user wakes one so the box stays available after
           // this explicit wake. A provider rejection is non-fatal: the VM is
@@ -1375,13 +1375,13 @@ export class FreestyleProvider implements VMProvider {
           if (typeof data.idleTimeoutSeconds === "number" && data.idleTimeoutSeconds >= 0) {
             try {
               await vm.update({ idleTimeoutSeconds: FREESTYLE_PERSISTENT_IDLE_TIMEOUT_SECONDS });
-              span.setAttribute("cmux.vm.idle_timeout_seconds", FREESTYLE_PERSISTENT_IDLE_TIMEOUT_SECONDS);
+              span.setAttribute("hmux.vm.idle_timeout_seconds", FREESTYLE_PERSISTENT_IDLE_TIMEOUT_SECONDS);
             } catch (policyError) {
               recordSpanError(span, policyError);
             }
           }
           const status = mapFreestyleState(data.state);
-          setSpanAttributes(span, { "cmux.vm.provider_state": data.state, "cmux.vm.status": status });
+          setSpanAttributes(span, { "hmux.vm.provider_state": data.state, "hmux.vm.status": status });
           // A memory-preserving pause keeps the daemon; a cold boot (the VM had
           // stopped) relies on the baked systemd unit. Resume does no guest
           // work (see NO-WORK INVARIANT at the top of this file). The client's
@@ -1403,11 +1403,11 @@ export class FreestyleProvider implements VMProvider {
   async exec(vmId: string, command: string, opts?: ExecOptions): Promise<ExecResult> {
     const timeoutMs = normalizeFreestyleExecTimeout(opts?.timeoutMs);
     return withVmSpan(
-      "cmux.vm.provider.exec",
+      "hmux.vm.provider.exec",
       "provider",
       spanAttributes(vmId, "exec", {
-        "cmux.command_length": command.length,
-        "cmux.timeout_ms": timeoutMs,
+        "hmux.command_length": command.length,
+        "hmux.timeout_ms": timeoutMs,
       }),
       async (span) => {
         try {
@@ -1415,7 +1415,7 @@ export class FreestyleProvider implements VMProvider {
           const vm = fs.vms.ref(vmId);
           // Public `vm exec` commands belong to the same account as Cloud
           // terminals and coding agents. Leaving `linuxUser` unset asks the
-          // provider for its uid-1000 account (`cmux` on current images), while
+          // provider for its uid-1000 account (`hmux` on current images), while
           // preserving the provider's legacy fallback to root on older images.
           // Public commands use the provider's uid-1000 account and normalize
           // its home. Driver maintenance and explicit root commands stay
@@ -1425,15 +1425,15 @@ export class FreestyleProvider implements VMProvider {
             : { command: freestyleExecCommand(command), timeoutMs });
           // statusCode is null when the guest killed the command at its timeout.
           const exitCode = r.statusCode ?? 124;
-          setSpanAttributes(span, { "cmux.exec.exit_code": exitCode });
+          setSpanAttributes(span, { "hmux.exec.exit_code": exitCode });
           return { exitCode, stdout: r.stdout ?? "", stderr: r.stderr ?? "" };
         } catch (err) {
           if (isFreestyleExecNoExit(err)) {
-            setSpanAttributes(span, { "cmux.exec.exit_code": 124, "cmux.exec.no_exit_reported": true });
+            setSpanAttributes(span, { "hmux.exec.exit_code": 124, "hmux.exec.no_exit_reported": true });
             return {
               exitCode: 124,
               stdout: "",
-              stderr: `cmux: the command did not exit within ${Math.round(timeoutMs / 1000)}s and its output was lost; it may still be running on the machine.\n`,
+              stderr: `hmux: the command did not exit within ${Math.round(timeoutMs / 1000)}s and its output was lost; it may still be running on the machine.\n`,
             };
           }
           throw new ProviderError("freestyle", `exec(${vmId})`, err);
@@ -1485,7 +1485,7 @@ export class FreestyleProvider implements VMProvider {
   /** Read provisioned dimensions without waking the guest or inventing usage gauges. */
   async getStats(vmId: string, options?: ProviderReadOptions): Promise<VMStats> {
     return withVmSpan(
-      "cmux.vm.provider.get_stats",
+      "hmux.vm.provider.get_stats",
       "provider",
       spanAttributes(vmId, "getStats"),
       async () => {
@@ -1516,10 +1516,10 @@ export class FreestyleProvider implements VMProvider {
 
   async resize(vmId: string, options: VMResizeOptions): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.resize",
+      "hmux.vm.provider.resize",
       "provider",
       spanAttributes(vmId, "resize", {
-        "cmux.vm.resize.storage_mb": options.storageMb ?? 0,
+        "hmux.vm.resize.storage_mb": options.storageMb ?? 0,
       }),
       async () => {
         try {
@@ -1540,11 +1540,11 @@ export class FreestyleProvider implements VMProvider {
 
   async snapshot(vmId: string, name?: string): Promise<SnapshotRef> {
     return withVmSpan(
-      "cmux.vm.provider.snapshot",
+      "hmux.vm.provider.snapshot",
       "provider",
       spanAttributes(vmId, "snapshot", {
-        "cmux.snapshot.named": !!name,
-        "cmux.timeout_ms": SNAPSHOT_TIMEOUT_MS,
+        "hmux.snapshot.named": !!name,
+        "hmux.timeout_ms": SNAPSHOT_TIMEOUT_MS,
       }),
       async (span) => {
         try {
@@ -1554,7 +1554,7 @@ export class FreestyleProvider implements VMProvider {
           // and a collision would fail the snapshot for a cosmetic label.
           const out = await fs.vms.ref(vmId).snapshot(name ? { displayName: name } : undefined);
           if (!out.snapshotId) throw new Error("snapshot response missing snapshotId");
-          setSpanAttributes(span, { "cmux.snapshot.id": out.snapshotId });
+          setSpanAttributes(span, { "hmux.snapshot.id": out.snapshotId });
           return { id: out.snapshotId, createdAt: Date.now(), name };
         } catch (err) {
           throw new ProviderError("freestyle", `snapshot(${vmId})`, err);
@@ -1565,7 +1565,7 @@ export class FreestyleProvider implements VMProvider {
 
   async listSnapshots(vmId: string, options?: ProviderReadOptions): Promise<SnapshotRef[]> {
     return withVmSpan(
-      "cmux.vm.provider.list_snapshots",
+      "hmux.vm.provider.list_snapshots",
       "provider",
       spanAttributes(vmId, "listSnapshots"),
       async (span) => {
@@ -1577,7 +1577,7 @@ export class FreestyleProvider implements VMProvider {
             snapshots.push(...page.snapshots);
             if (page.snapshots.length < SNAPSHOT_LIST_PAGE || snapshots.length >= page.totalCount) break;
           }
-          setSpanAttributes(span, { "cmux.snapshot.count": snapshots.length });
+          setSpanAttributes(span, { "hmux.snapshot.count": snapshots.length });
           return snapshots
             // The filter is the provider's; the guard keeps a lax answer from
             // ever listing another machine's snapshots under this one.
@@ -1593,9 +1593,9 @@ export class FreestyleProvider implements VMProvider {
 
   async deleteSnapshot(vmId: string, snapshotId: string): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.delete_snapshot",
+      "hmux.vm.provider.delete_snapshot",
       "provider",
-      spanAttributes(vmId, "deleteSnapshot", { "cmux.snapshot.id": snapshotId }),
+      spanAttributes(vmId, "deleteSnapshot", { "hmux.snapshot.id": snapshotId }),
       async () => {
         try {
           const fs = this.deps.client();
@@ -1616,14 +1616,14 @@ export class FreestyleProvider implements VMProvider {
   async restore(snapshotId: string, options?: RestoreOptions): Promise<VMHandle> {
     const tlsRules = freestyleCreateTlsRules(options?.edgeRules, options?.networkRules);
     return withVmSpan(
-      "cmux.vm.provider.restore",
+      "hmux.vm.provider.restore",
       "provider",
       {
-        "cmux.vm.provider": "freestyle",
-        "cmux.vm.operation": "restore",
-        "cmux.snapshot.id": snapshotId,
-        "cmux.vm.edge_rules": tlsRules?.length ?? 0,
-        "cmux.timeout_ms": CREATE_TIMEOUT_MS,
+        "hmux.vm.provider": "freestyle",
+        "hmux.vm.operation": "restore",
+        "hmux.snapshot.id": snapshotId,
+        "hmux.vm.edge_rules": tlsRules?.length ?? 0,
+        "hmux.timeout_ms": CREATE_TIMEOUT_MS,
       },
       async (span) => {
         try {
@@ -1631,17 +1631,17 @@ export class FreestyleProvider implements VMProvider {
           const networkId = options?.network?.id;
           const { vm, vmId, data } = await fs.vms.create({
             snapshotId,
-            displayName: "cmux Cloud VM",
+            displayName: "hmux Cloud VM",
             automaticRestart: true,
             idleTimeoutSeconds: FREESTYLE_PERSISTENT_IDLE_TIMEOUT_SECONDS,
-            metadata: { cmux: "cloud" },
+            metadata: { hmux: "cloud" },
             firewall: { rules: freestyleFirewallRules({ publicDaemonIngress: !networkId, memberIngressNetworkId: options?.network?.memberIngress ? networkId : undefined, networkRules: options?.networkRules }) },
             ...(networkId ? { vpcs: [{ vpcId: networkId, ipv4: true, ipv6: true }] } : {}),
             ...(tlsRules ? { tls: { rules: tlsRules } } : {}),
           });
           setSpanAttributes(span, {
-            "cmux.vm.id": vmId,
-            "cmux.vm.network.private": !!networkId,
+            "hmux.vm.id": vmId,
+            "hmux.vm.network.private": !!networkId,
           });
           // The snapshot carries the daemon, guest integration, reporter, and
           // prompt sync contract. Restore has the same no-guest-bootstrap
@@ -1662,7 +1662,7 @@ export class FreestyleProvider implements VMProvider {
             createdAt: Date.now(),
             providerMetadata: {
               ...(options?.providerMetadata ?? {}),
-              cmuxTuiContract: "snapshot-v2",
+              hmuxTuiContract: "snapshot-v2",
               ...(networkId ? { networkId, ...freestyleNetworkAddressMetadata(data) } : {}),
             },
           };
@@ -1674,11 +1674,11 @@ export class FreestyleProvider implements VMProvider {
     );
   }
 
-  async openCmuxRemote(vmId: string, options?: CmuxRemoteAttachOptions): Promise<CmuxRemoteEndpoint> {
+  async openHmuxRemote(vmId: string, options?: HmuxRemoteAttachOptions): Promise<HmuxRemoteEndpoint> {
     return withVmSpan(
-      "cmux.vm.provider.open_cmux_remote",
+      "hmux.vm.provider.open_hmux_remote",
       "tunnel",
-      spanAttributes(vmId, "open_cmux_remote"),
+      spanAttributes(vmId, "open_hmux_remote"),
       async (span) => {
         try {
           // Attach never runs guest work (NO-WORK INVARIANT at the top of this
@@ -1687,37 +1687,37 @@ export class FreestyleProvider implements VMProvider {
           // addresses is refused; older running machines get the contract by
           // the upgrade and backfill in docs/cloud-guest-upgrades.md.
           const routeAddresses = freestyleRouteAddressesFromMetadata(options?.providerMetadata);
-          if (options?.providerMetadata?.cmuxTuiContract !== "snapshot-v2" || !routeAddresses) {
+          if (options?.providerMetadata?.hmuxTuiContract !== "snapshot-v2" || !routeAddresses) {
             throw new ProviderMachineRecreateRequiredError(
               "freestyle",
               `VM ${vmId} predates the snapshot-v2 machine contract (no recorded contract or private address); recreate the machine`,
             );
           }
-          span.setAttribute("cmux.vm.cmux_tui_contract", "snapshot-v2");
-          const route = freestyleCmuxRemoteRoute(routeAddresses, vmId);
-          const token = `cmux-freestyle-route-${randomBytes(32).toString("hex")}`;
+          span.setAttribute("hmux.vm.hmux_tui_contract", "snapshot-v2");
+          const route = freestyleHmuxRemoteRoute(routeAddresses, vmId);
+          const token = `hmux-freestyle-route-${randomBytes(32).toString("hex")}`;
           const expiresAtUnix = Math.floor(Date.now() / 1000) + ROUTE_TOKEN_TTL_SECONDS;
           const addresses = freestyleNetworkAddressMetadata(routeAddresses);
-          span.setAttribute("cmux.vm.network.private", (routeAddresses.vpcs ?? routeAddresses.networks ?? []).length > 0);
-          span.setAttribute("cmux.vm.cmux_remote.healed", false);
-          span.setAttribute("cmux.vm.cmux_remote.invited", false);
+          span.setAttribute("hmux.vm.network.private", (routeAddresses.vpcs ?? routeAddresses.networks ?? []).length > 0);
+          span.setAttribute("hmux.vm.hmux_remote.healed", false);
+          span.setAttribute("hmux.vm.hmux_remote.invited", false);
           const networkAddresses = {
             ...(addresses.networkIpv4 ? { ipv4: addresses.networkIpv4 } : {}),
             ...(addresses.networkIpv6 ? { ipv6: addresses.networkIpv6 } : {}),
           };
           return {
-            transport: "cmux-remote" as const,
+            transport: "hmux-remote" as const,
             route,
             token,
             expiresAtUnix,
-            session: CMUX_TUI_SESSION,
+            session: HMUX_TUI_SESSION,
             trustedCarrier: true,
             ...(Object.keys(networkAddresses).length ? { networkAddresses } : {}),
           };
         } catch (err) {
           throw err instanceof ProviderError
             ? err
-            : new ProviderError("freestyle", `openCmuxRemote(${vmId}) failed`, err);
+            : new ProviderError("freestyle", `openHmuxRemote(${vmId}) failed`, err);
         }
       },
     );
@@ -1736,11 +1736,11 @@ export class FreestyleProvider implements VMProvider {
   }
 
 
-  async approveCmuxRemoteEnrollment(
+  async approveHmuxRemoteEnrollment(
     vmId: string,
     invitationId: string,
-    options?: CmuxRemoteApprovalOptions,
-  ): Promise<CmuxRemoteApprovalResult> {
+    options?: HmuxRemoteApprovalOptions,
+  ): Promise<HmuxRemoteApprovalResult> {
     void options;
     void invitationId;
     throw new ProviderError("freestyle", `VM ${vmId} uses trusted-carrier attach and has no enrollment approval path`);
@@ -1751,18 +1751,18 @@ export class FreestyleProvider implements VMProvider {
    * address over the WireGuard tunnel, the same path the daemon route takes
    * (see the header). Nothing is minted at the platform and nothing public is
    * opened. The desktop port additionally proves the desktop is up, healing
-   * the cmux-desktop unit first when it is not, so the Displays row opens a
+   * the hmux-desktop unit first when it is not, so the Displays row opens a
    * live screen rather than a connection error. The token exists only for the
-   * lease ledger, as with the cmux-remote route.
+   * lease ledger, as with the hmux-remote route.
    */
   async openPort(vmId: string, port: number): Promise<{ url: string; token: string; openUrl: string; expiresAtMs?: number }> {
     return withVmSpan(
-      "cmux.vm.provider.open_port",
+      "hmux.vm.provider.open_port",
       "provider",
-      spanAttributes(vmId, "open_port", { "cmux.vm.port": port }),
+      spanAttributes(vmId, "open_port", { "hmux.vm.port": port }),
       async (span) => {
-        if (!Number.isInteger(port) || port < 1 || port > 65535 || port === CMUX_TUI_PORT) {
-          throw new ProviderError("freestyle", `openPort(${vmId}) requires a valid port other than the daemon's ${CMUX_TUI_PORT}`);
+        if (!Number.isInteger(port) || port < 1 || port > 65535 || port === HMUX_TUI_PORT) {
+          throw new ProviderError("freestyle", `openPort(${vmId}) requires a valid port other than the daemon's ${HMUX_TUI_PORT}`);
         }
         try {
           const fs = this.deps.client();
@@ -1770,7 +1770,7 @@ export class FreestyleProvider implements VMProvider {
           const data = await vm.data();
           const urls = freestylePortUrls(data, vmId, port);
           const desktop = port === DEVBOX_DESKTOP_NOVNC_PORT;
-          span.setAttribute("cmux.vm.port.desktop", desktop);
+          span.setAttribute("hmux.vm.port.desktop", desktop);
           if (desktop) {
             const healed = await this.execResult(vm, freestyleDesktopHealCommand(), DESKTOP_HEAL_TIMEOUT_MS);
             if (healed?.exitCode === 3) {
@@ -1785,7 +1785,7 @@ export class FreestyleProvider implements VMProvider {
           }
           return {
             ...urls,
-            token: `cmux-freestyle-port-${randomBytes(32).toString("hex")}`,
+            token: `hmux-freestyle-port-${randomBytes(32).toString("hex")}`,
             expiresAtMs: Date.now() + PORT_OPEN_LEASE_TTL_SECONDS * 1000,
           };
         } catch (err) {
@@ -1801,7 +1801,7 @@ export class FreestyleProvider implements VMProvider {
    */
   async revokeEndpointLeases(vmId: string): Promise<void> {
     return withVmSpan(
-      "cmux.vm.provider.revoke_endpoint_leases",
+      "hmux.vm.provider.revoke_endpoint_leases",
       "provider",
       spanAttributes(vmId, "revoke_endpoint_leases"),
       async () => {

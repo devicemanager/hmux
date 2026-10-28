@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-# Desktop starter for the cmux devbox image (/usr/local/bin/start-vnc.sh).
+# Desktop starter for the hmux devbox image (/usr/local/bin/start-vnc.sh).
 # CONTRACT FILE (web/services/vms/images/desktop.ts; tests/vm-devbox-desktop.test.ts
 # pins it): the desktop is reached on two fixed ports, and the Mac app
-# (CmuxTuiSnapshotParser.desktopPort), the CLI (cloudVMDesktopPort) and the
+# (HmuxTuiSnapshotParser.desktopPort), the CLI (cloudVMDesktopPort) and the
 # Freestyle driver's port-open heal depend on them:
 #   - RFB on 5901, loopback only, no VNC-level auth (the only ingress is the
 #     owner's private network; a VNC password would be a second prompt
 #     noVNC's autoconnect cannot answer).
 #   - noVNC web client via websockify on 6901, at `/`.
-# It runs as the work user `cmux` with HOME=/home/cmux and DISPLAY=:1
-# (cmux-desktop-boot under the cmux-desktop systemd unit on Freestyle, or
-# under cmux-devbox-boot in a container; a driver heal runs exactly the same
+# It runs as the work user `hmux` with HOME=/home/hmux and DISPLAY=:1
+# (hmux-desktop-boot under the hmux-desktop systemd unit on Freestyle, or
+# under hmux-devbox-boot in a container; a driver heal runs exactly the same
 # invocation), so the desktop session is the same account terminals and SSH
 # land in. This path, user, display, and ports must not change without a
 # matching driver change.
@@ -20,16 +20,16 @@
 # it), openbox, the wallpaper, the tint2 dock, TigerVNC's clipboard helper
 # (copy/paste between the noVNC pane and the apps), a resize watcher, and
 # websockify. It publishes DISPLAY and the accessibility bus address at
-# $CMUX_DESKTOP_RUNTIME_DIR/env (/run/cmux-desktop/env) for
-# /etc/cmux/desktop-env.sh, which every login and pane shell sources.
+# $HMUX_DESKTOP_RUNTIME_DIR/env (/run/hmux-desktop/env) for
+# /etc/hmux/desktop-env.sh, which every login and pane shell sources.
 #
 # Readiness is signalled by its owners, never inferred from elapsed time:
 #   - Xvnc reports its display on -displayfd once it accepts connections;
 #   - the accessibility bus is waited for by its bus name (gdbus wait);
 #   - the resize watcher reacts to RandR screen-change events (xev);
-#   - the whole desktop reports READY to systemd (sd_notify; the cmux-desktop
+#   - the whole desktop reports READY to systemd (sd_notify; the hmux-desktop
 #     unit is Type=notify) once the display, noVNC and the published env are
-#     up, so `systemctl start cmux-desktop` (the driver's heal, the bake)
+#     up, so `systemctl start hmux-desktop` (the driver's heal, the bake)
 #     returns exactly when the screen is usable.
 # The one third-party listener with no readiness signal, websockify, is
 # waited for through wait_listening, a bounded connect probe.
@@ -42,17 +42,17 @@ set -u
 # The systemd notification socket is for this script's READY at the very end
 # and for nothing else: dbus-daemon (and anything else sd_notify-aware)
 # would otherwise report READY=1 for the whole unit the moment it starts.
-CMUX_NOTIFY_SOCKET="${NOTIFY_SOCKET:-}"
+HMUX_NOTIFY_SOCKET="${NOTIFY_SOCKET:-}"
 unset NOTIFY_SOCKET
 
 DISPLAY="${DISPLAY:-:1}"
 export DISPLAY
-GEOMETRY="${CMUX_VNC_GEOMETRY:-1440x900}"
-RUNTIME_DIR="${CMUX_DESKTOP_RUNTIME_DIR:-/run/cmux-desktop}"
+GEOMETRY="${HMUX_VNC_GEOMETRY:-1440x900}"
+RUNTIME_DIR="${HMUX_DESKTOP_RUNTIME_DIR:-/run/hmux-desktop}"
 # Never let an unwritable HOME keep the desktop down: fall back to a per-user
 # tmp dir for logs and session state.
-STATE_DIR="$HOME/.cmux"
-mkdir -p "$STATE_DIR/desktop-logs" 2>/dev/null || { STATE_DIR="/tmp/cmux-desktop-$(id -u)"; mkdir -p "$STATE_DIR/desktop-logs"; }
+STATE_DIR="$HOME/.hmux"
+mkdir -p "$STATE_DIR/desktop-logs" 2>/dev/null || { STATE_DIR="/tmp/hmux-desktop-$(id -u)"; mkdir -p "$STATE_DIR/desktop-logs"; }
 LOG_DIR="$STATE_DIR/desktop-logs"
 
 # The supervisor re-runs this every 30 s, so cap each component log here: a
@@ -149,8 +149,8 @@ if ! mine -x openbox; then
 fi
 
 set_wallpaper() {
-  if [ -f /usr/share/backgrounds/cmux/wallpaper.jpg ] && command -v feh >/dev/null 2>&1; then
-    feh --no-fehbg --bg-fill /usr/share/backgrounds/cmux/wallpaper.jpg >/dev/null 2>&1 \
+  if [ -f /usr/share/backgrounds/hmux/wallpaper.jpg ] && command -v feh >/dev/null 2>&1; then
+    feh --no-fehbg --bg-fill /usr/share/backgrounds/hmux/wallpaper.jpg >/dev/null 2>&1 \
       || xsetroot -solid '#1f2430' >/dev/null 2>&1 || true
   else
     xsetroot -solid '#1f2430' >/dev/null 2>&1 || true
@@ -159,7 +159,7 @@ set_wallpaper() {
 set_wallpaper
 
 if ! mine -x tint2; then
-  tint2 -c /etc/cmux/tint2rc >>"$LOG_DIR/tint2.log" 2>&1 &
+  tint2 -c /etc/hmux/tint2rc >>"$LOG_DIR/tint2.log" 2>&1 &
 fi
 
 # TigerVNC moves clipboard text between the viewer (the noVNC pane) and X
@@ -172,20 +172,20 @@ fi
 # old size (X tiles it: the doubled-wallpaper bug) and tint2 keeps its old
 # strut. Re-fill the wallpaper and nudge tint2 on every RandR screen change,
 # delivered as events by xev; the watcher exits with the display and the next
-# supervisor pass restarts it. `bash -c '…' cmux-desktop-resize-watch` puts
+# supervisor pass restarts it. `bash -c '…' hmux-desktop-resize-watch` puts
 # the marker in $0 so the pgrep guard finds the loop on the next idempotent
 # pass.
-if ! mine -f cmux-desktop-resize-watch; then
+if ! mine -f hmux-desktop-resize-watch; then
   bash -c '
     xev -root -event randr 2>/dev/null | while read -r line; do
       case $line in
         *RRScreenChangeNotify*)
-          feh --no-fehbg --bg-fill /usr/share/backgrounds/cmux/wallpaper.jpg >/dev/null 2>&1 || true
+          feh --no-fehbg --bg-fill /usr/share/backgrounds/hmux/wallpaper.jpg >/dev/null 2>&1 || true
           pkill -USR1 -U "$(id -u)" -x tint2 >/dev/null 2>&1 || true
           ;;
       esac
     done
-  ' cmux-desktop-resize-watch >>"$LOG_DIR/resize-watch.log" 2>&1 &
+  ' hmux-desktop-resize-watch >>"$LOG_DIR/resize-watch.log" 2>&1 &
 fi
 
 # noVNC uses a dual-stack listener so either private address can reach the desktop.
@@ -194,7 +194,7 @@ if ! listening 6901; then
     >>"$LOG_DIR/websockify.log" 2>&1 &
 fi
 
-# Publish the session for other shells (/etc/cmux/desktop-env.sh): the
+# Publish the session for other shells (/etc/hmux/desktop-env.sh): the
 # display, and the accessibility bus once its name is owned on the session
 # bus (gdbus wait is the owner's signal), under both names clients use
 # (AT_SPI_BUS_ADDRESS is what the atspi library connects to; AT_SPI_BUS is
@@ -215,18 +215,18 @@ if [ -d "$RUNTIME_DIR" ] && [ -w "$RUNTIME_DIR" ]; then
     echo "export DISPLAY='$DISPLAY'"
     [ -n "$a11y_bus" ] && echo "export AT_SPI_BUS_ADDRESS='$a11y_bus'"
     [ -n "$a11y_bus" ] && echo "export AT_SPI_BUS='$a11y_bus'"
-    echo "CMUX_DESKTOP_UID=$(id -u)"
-    [ -n "$DBUS_SESSION_BUS_ADDRESS" ] && echo "CMUX_DESKTOP_SESSION_BUS='$DBUS_SESSION_BUS_ADDRESS'"
+    echo "HMUX_DESKTOP_UID=$(id -u)"
+    [ -n "$DBUS_SESSION_BUS_ADDRESS" ] && echo "HMUX_DESKTOP_SESSION_BUS='$DBUS_SESSION_BUS_ADDRESS'"
   } > "$RUNTIME_DIR/env.tmp" 2>/dev/null && chmod 0644 "$RUNTIME_DIR/env.tmp" && mv -f "$RUNTIME_DIR/env.tmp" "$RUNTIME_DIR/env" && published=1
 fi
 
-# READY for systemd (cmux-desktop is Type=notify, NotifyAccess=all): the
+# READY for systemd (hmux-desktop is Type=notify, NotifyAccess=all): the
 # display accepts connections, noVNC is bound, and the env is published.
 # Repeating it on later passes is harmless; a pass that finds something
 # down leaves the unit's state to systemd (Restart=always) and this loop.
-if [ -n "$CMUX_NOTIFY_SOCKET" ] && command -v systemd-notify >/dev/null 2>&1; then
+if [ -n "$HMUX_NOTIFY_SOCKET" ] && command -v systemd-notify >/dev/null 2>&1; then
   if listening 5901 && wait_listening 6901 10 && [ "$published" = 1 ]; then
-    NOTIFY_SOCKET="$CMUX_NOTIFY_SOCKET" systemd-notify --ready --status="desktop up on $DISPLAY: RFB 5901 (loopback), noVNC 6901" 2>>"$LOG_DIR/notify.log" || true
+    NOTIFY_SOCKET="$HMUX_NOTIFY_SOCKET" systemd-notify --ready --status="desktop up on $DISPLAY: RFB 5901 (loopback), noVNC 6901" 2>>"$LOG_DIR/notify.log" || true
   fi
 fi
 

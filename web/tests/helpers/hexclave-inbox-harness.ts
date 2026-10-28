@@ -35,7 +35,7 @@ export function inboxHarness(inbox: HexclaveInboxStore = new MemoryInbox()) {
   const post = (type: string, data: unknown, svixId: string) => {
     const body = JSON.stringify({ type, data });
     const signature = createHmac("sha256", KEY).update(`${svixId}.${NOW_SECONDS}.${body}`).digest("base64");
-    return handleStackWebhook(new Request("https://cmux.test/api/webhooks/stack", {
+    return handleStackWebhook(new Request("https://hmux.test/api/webhooks/stack", {
       method: "POST",
       headers: { "content-type": "application/json", "svix-id": svixId, "svix-timestamp": String(NOW_SECONDS), "svix-signature": `v1,${signature}` },
       body,

@@ -23,7 +23,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/exec",
-    { "cmux.vm.operation": "exec" },
+    { "hmux.vm.operation": "exec" },
     "/api/vm/[id]/exec POST failed",
     async ({ user, span, routeStartedAtMs }) => {
       let rawBody: unknown;
@@ -34,7 +34,7 @@ export async function POST(
           error: "vm_invalid_json",
           status: 400,
           message: "Cloud VM exec expected a JSON object body.",
-          action: "Send JSON like `{ \"command\": \"pwd\" }`. From the CLI, use `cmux vm exec <id> -- pwd`.",
+          action: "Send JSON like `{ \"command\": \"pwd\" }`. From the CLI, use `hmux vm exec <id> -- pwd`.",
         });
       }
       if (rawBody === null || typeof rawBody !== "object" || Array.isArray(rawBody)) {
@@ -42,7 +42,7 @@ export async function POST(
           error: "vm_invalid_request",
           status: 400,
           message: "Cloud VM exec body must be a JSON object.",
-          action: "Send JSON like `{ \"command\": \"pwd\" }`. From the CLI, use `cmux vm exec <id> -- pwd`.",
+          action: "Send JSON like `{ \"command\": \"pwd\" }`. From the CLI, use `hmux vm exec <id> -- pwd`.",
         });
       }
       const body = rawBody as { command?: unknown; timeoutMs?: unknown };
@@ -52,7 +52,7 @@ export async function POST(
           error: "vm_invalid_command",
           status: 400,
           message: "`command` is required and must be a non-empty string.",
-          action: "Pass a shell command, for example `cmux vm exec <id> -- uname -a`.",
+          action: "Pass a shell command, for example `hmux vm exec <id> -- uname -a`.",
           details: { field: "command" },
         });
       }
@@ -82,9 +82,9 @@ export async function POST(
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
       setSpanAttributes(span, {
-        "cmux.vm.id": id,
-        "cmux.command_length": commandBytes,
-        "cmux.timeout_ms": timeoutMs,
+        "hmux.vm.id": id,
+        "hmux.command_length": commandBytes,
+        "hmux.timeout_ms": timeoutMs,
       });
       const run = await runVmRoute(execVm({
         userId: user.id,
@@ -102,7 +102,7 @@ export async function POST(
       }), { request });
       if (!run.ok) return run.response;
       const result = run.value;
-      setSpanAttributes(span, { "cmux.exec.exit_code": result.exitCode });
+      setSpanAttributes(span, { "hmux.exec.exit_code": result.exitCode });
       return jsonResponse(result);
     },
   );

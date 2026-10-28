@@ -17,7 +17,7 @@ import { runVmRoute } from "../../../../../../services/vms/routeWorkflow";
 import { reflectVm } from "../../../../../../services/vms/workflows";
 import type { AuthedUser } from "../../../../../../services/vms/auth";
 
-// cmux Reflection from the Mac (`cmux vm self <machine> [path]`): the same
+// hmux Reflection from the Mac (`hmux vm self <machine> [path]`): the same
 // answer a machine gets from inside (app/api/vm/reflection), read with the
 // user's session for a machine the user owns. Same payload builders and the
 // same owner-machine loader, so the Mac and the guest never disagree about a
@@ -31,14 +31,14 @@ export async function GET(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/reflection",
-    { "cmux.vm.operation": "reflection" },
+    { "hmux.vm.operation": "reflection" },
     "/api/vm/[id]/reflection GET failed",
     async ({ user, span }) => {
       const { id, path: segments = [] } = await params;
       const path = normalizeReflectionPath(segments.join("/"));
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id, "cmux.reflection.path": path });
+      setSpanAttributes(span, { "hmux.vm.id": id, "hmux.reflection.path": path });
       const run = await runVmRoute(reflectVm({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

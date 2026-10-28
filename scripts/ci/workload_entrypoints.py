@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Scripts a workflow `run:` reaches through `cmux_workload_profile.py run <id>`.
+"""Scripts a workflow `run:` reaches through `hmux_workload_profile.py run <id>`.
 
 A workload profile step names only the profile runner, but it executes the
 profile's checked-in entrypoint and everything that script runs. Guard routing
 and the test execution registry both need to see through that indirection, so
-they share this one reader of scripts/ci/cmux-workload-profiles.json.
+they share this one reader of scripts/ci/hmux-workload-profiles.json.
 """
 
 from __future__ import annotations
@@ -14,8 +14,8 @@ import re
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PROFILES = Path("scripts/ci/cmux-workload-profiles.json")
-PROFILE_RUN = re.compile(r"scripts/ci/cmux_workload_profile\.py\s+run\s+([A-Za-z0-9_.-]+)")
+PROFILES = Path("scripts/ci/hmux-workload-profiles.json")
+PROFILE_RUN = re.compile(r"scripts/ci/hmux_workload_profile\.py\s+run\s+([A-Za-z0-9_.-]+)")
 
 
 def entrypoints(run: str, root: Path = ROOT) -> list[tuple[str, str]]:

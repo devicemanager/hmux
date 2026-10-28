@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Publish real cmux showcase media where a PR reader can see it.
+"""Publish real hmux showcase media where a PR reader can see it.
 
 The command moves captures out of the private screenshot archive and into the
 public ``pr-media`` branch, replaces one marked Showcase section in the PR
@@ -9,13 +9,13 @@ media to the existing Austin review feed.
 Examples::
 
     scripts/showcase-publish.py --pr 19049 \
-        --capture-root ~/Projects/cmux-app-screenshots-worktrees/showcase-d0d \
+        --capture-root ~/Projects/hmux-app-screenshots-worktrees/showcase-d0d \
         --from-body
     scripts/showcase-publish.py --pr 19049 captures/*.png motion.mp4
     scripts/showcase-publish.py --pr 19049 captures/ --dry-run --no-feed
 
 ``--from-body`` reads the PR's existing capture links. Private
-``cmux-app-screenshots`` links are resolved under ``--capture-root``; already
+``hmux-app-screenshots`` links are resolved under ``--capture-root``; already
 public media links are retained. A missing private capture is an error rather
 than a private URL being copied into the public Showcase section.
 """
@@ -42,12 +42,12 @@ PUBLIC_RE = re.compile(
     r"https?://[^\s)]+(?:\.gif|\.jpe?g|\.mp4|\.mov|\.png)(?:\?[^\s)]*)?",
     re.IGNORECASE,
 )
-MARKER_RE = re.compile(r"\n?<!-- cmux-showcase:start -->.*?<!-- cmux-showcase:end -->\n?", re.DOTALL)
+MARKER_RE = re.compile(r"\n?<!-- hmux-showcase:start -->.*?<!-- hmux-showcase:end -->\n?", re.DOTALL)
 
 
 def load_pr_media() -> object:
     path = Path(__file__).with_name("pr-media.py")
-    spec = importlib.util.spec_from_file_location("cmux_pr_media", path)
+    spec = importlib.util.spec_from_file_location("hmux_pr_media", path)
     if spec is None or spec.loader is None:
         raise RuntimeError(f"cannot load {path}")
     module = importlib.util.module_from_spec(spec)
@@ -121,7 +121,7 @@ def public_sources(body: str, live_url: str) -> list[str]:
     out: list[str] = []
     for url in PUBLIC_RE.findall(body):
         url = url.rstrip(".,")
-        if "cmux-app-screenshots" in url:
+        if "hmux-app-screenshots" in url:
             continue
         if gallery_hostname and urllib.parse.urlparse(url).hostname == gallery_hostname:
             continue
@@ -211,10 +211,10 @@ def scrub_gallery_host(text: str, live_url: str, body_path: str) -> str:
 
 def showcase_section(markdown: str, gallery_path: str) -> str:
     body = markdown.strip()
-    lines = ["<!-- cmux-showcase:start -->", "## Showcase", ""]
+    lines = ["<!-- hmux-showcase:start -->", "## Showcase", ""]
     if body:
         lines.extend([body, ""])
-    lines.extend([f"[Open the live gallery]({gallery_path})", "", "<!-- cmux-showcase:end -->"])
+    lines.extend([f"[Open the live gallery]({gallery_path})", "", "<!-- hmux-showcase:end -->"])
     return "\n".join(lines)
 
 
@@ -240,9 +240,9 @@ def post_feed(pr: int, stills: list[str], videos: list[str], live_url: str, app:
         return
     body = {"pr": f"https://github.com/{REPO}/pull/{pr}", "app": app,
             "preview": live_url, "stills": stills, "video": videos[0] if videos else "",
-            "by": os.environ.get("CMUX_LANE", "showcase-publish")}
-    feed_path = os.environ.get("CMUX_FEED_POST", "~/.local/bin/feed-post")
-    feed_url = os.environ.get("CMUX_FEED_URL", "").rstrip("/")
+            "by": os.environ.get("HMUX_LANE", "showcase-publish")}
+    feed_path = os.environ.get("HMUX_FEED_POST", "~/.local/bin/feed-post")
+    feed_url = os.environ.get("HMUX_FEED_URL", "").rstrip("/")
     if feed_url:
         command = ["curl", "-sS", "--connect-timeout", "10", "--max-time", "60",
                    "-X", "POST", "-H", "Content-Type: application/json",
@@ -251,7 +251,7 @@ def post_feed(pr: int, stills: list[str], videos: list[str], live_url: str, app:
     else:
         remote = "curl -sS --connect-timeout 10 --max-time 60 -X POST -H 'Content-Type: application/json' --data-binary @- -w '\\n%{http_code}' http://127.0.0.1:18791/api/posts"
         done = subprocess.run(["ssh", "-o", "ConnectTimeout=10", "-o", "ServerAliveInterval=15",
-                               "-o", "ServerAliveCountMax=3", os.environ.get("CMUX_FEED_SSH", "cmux-lawrence"), remote],
+                               "-o", "ServerAliveCountMax=3", os.environ.get("HMUX_FEED_SSH", "hmux-lawrence"), remote],
                               input=json.dumps(body), capture_output=True, text=True)
     if done.returncode:
         raise RuntimeError(f"feed-post: {(done.stderr or done.stdout).strip()}")
@@ -266,9 +266,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("media_pos", nargs="*", type=Path, help="local stills, strips, gifs or video")
     parser.add_argument("--media", action="append", type=Path, default=[], help="local still, strip, gif or video (repeatable)")
     parser.add_argument("--pr", type=int, required=True)
-    parser.add_argument("--capture-root", type=Path, help="local cmux-app-screenshots checkout")
+    parser.add_argument("--capture-root", type=Path, help="local hmux-app-screenshots checkout")
     parser.add_argument("--from-body", action="store_true", help="reuse media links already in the PR body")
-    parser.add_argument("--live-url", default="https://cmux-lawrences-mac-mini.tail137216.ts.net:18796/live/")
+    parser.add_argument("--live-url", default="https://hmux-lawrences-mac-mini.tail137216.ts.net:18796/live/")
     parser.add_argument("--gif-fps", type=int, default=10)
     parser.add_argument("--gif-width", type=int, default=900)
     parser.add_argument("--app", choices=("next", "classic", "ios", "infra"), default="next")
@@ -293,7 +293,7 @@ def main() -> int:
         # the old private references and the public Showcase URLs. Reuse the
         # public set on an idempotent rerun; a private-only body still requires
         # an explicit checkout so a private URL is never copied blindly.
-        has_published_showcase = "<!-- cmux-showcase:start -->" in body and bool(public)
+        has_published_showcase = "<!-- hmux-showcase:start -->" in body and bool(public)
         if private_links and not args.capture_root and not has_published_showcase:
             raise SystemExit("--from-body requires --capture-root for private capture links")
         if args.capture_root:

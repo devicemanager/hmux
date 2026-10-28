@@ -41,7 +41,7 @@ const defaultDependencies: HandoffExchangeDependencies = {
   // CodeRouter access follows the current membership-only control-plane policy.
   hostedProRequired: () => false,
   rateLimit: defaultCoderouterHandoffRateLimiter,
-  publicOrigin: () => env.CMUX_CODEROUTER_PUBLIC_ORIGIN,
+  publicOrigin: () => env.HMUX_CODEROUTER_PUBLIC_ORIGIN,
   now: () => new Date(),
 };
 

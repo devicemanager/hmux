@@ -48,7 +48,7 @@ ios_pool = load("ios_runner_pool", ROOT / "scripts/ci/ios_runner_pool.py")
 NOW = dt.datetime(2026, 9, 24, 10, 30, tzinfo=dt.timezone.utc)
 SMALL, LARGE, OLD = pool.DEFAULT_RUNNER, pool.LARGE_RUNNER, pool.MACOS_15_RUNNER
 XCODE_15 = "/Applications/Xcode_26.3.app"
-PINS = {"CMUX_CI_XCODE_APP_MACOS_15": XCODE_15}
+PINS = {"HMUX_CI_XCODE_APP_MACOS_15": XCODE_15}
 
 
 FORK_SETTINGS = {"lane": SMALL, "overflow": "", "order": "", "max_queued": "", "queue_rounds": "0"}
@@ -233,12 +233,12 @@ class FailSafe(unittest.TestCase):
         self.assert_default(choose(backlog(), event="merge_group"))
         self.assert_default(choose(backlog(), event="workflow_dispatch"))
         self.assert_default(choose(backlog(), head=""))
-        self.assert_default(choose(backlog(), head="someone/cmux", event="push"))
+        self.assert_default(choose(backlog(), head="someone/hmux", event="push"))
 
     def test_fork_heads_follow_the_settings_the_janitor_copied(self):
         # A fork run sees no repository variables: empty lane, no Xcode pins,
         # and whatever reached its env is ignored in favour of the snapshot.
-        fork = dict(head="someone/cmux", default="", pins={}, overflow="0", order=OLD)
+        fork = dict(head="someone/hmux", default="", pins={}, overflow="0", order=OLD)
         self.assertEqual(choose(backlog(small=0, large=0), **fork).runner, LARGE)
         choice = choose(backlog(small=21, large=15, old=0), **fork)
         self.assertEqual((choice.runner, choice.xcode_app), (OLD, ""))
@@ -256,15 +256,15 @@ class FailSafe(unittest.TestCase):
 
     def test_fork_heads_only_use_ephemeral_pools(self):
         self.assertTrue(all(label.startswith(pool.EPHEMERAL_PREFIX) for label in pool.DEFAULT_ORDER))
-        owned = "cmux-owned-mac-mini"
+        owned = "hmux-owned-mac-mini"
         original = dict(pool.POOLS)
         pool.POOLS[owned] = ""
         try:
             copied = dict(FORK_SETTINGS, order=f"{owned},{SMALL}")
             snap = backlog(small=0, settings=copied)
-            self.assertEqual(choose(snap, head="someone/cmux", default="").runner, SMALL)
+            self.assertEqual(choose(snap, head="someone/hmux", default="").runner, SMALL)
             self.assert_default(choose(backlog(settings=dict(FORK_SETTINGS, order=owned)),
-                                       head="someone/cmux", default=""))
+                                       head="someone/hmux", default=""))
             # A same-repository run may use it.
             self.assertEqual(choose(snap, order=f"{owned},{SMALL}").runner, owned)
         finally:
@@ -305,7 +305,7 @@ class FailSafe(unittest.TestCase):
             out, summary = Path(tmp, "out"), Path(tmp, "summary")
             env = {"EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": "manaflow-ai/cmux",
                    "HEAD_REPO": "manaflow-ai/cmux", "DEFAULT_RUNNER": SMALL,
-                   "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
+                   "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
                    "GITHUB_OUTPUT": str(out), "GITHUB_STEP_SUMMARY": str(summary)}
             stdout = io.StringIO()
             old, sys.stdout = sys.stdout, stdout
@@ -413,12 +413,12 @@ class JanitorSnapshot(unittest.TestCase):
         # pr_runner_pool.py's warm routing estimates a busy warm runner's wait from it.
         runs = [{"id": 1, "name": "CI", "path": ".github/workflows/ci.yml"}]
         root = "glaeda-root-std-xcode-26.6"
-        running = {**self.job(root, "in_progress"), "runner_name": "cmux14-glaeda-1",
+        running = {**self.job(root, "in_progress"), "runner_name": "hmux14-glaeda-1",
                    "name": "macOS / macOS compile admission", "started_at": "2026-09-24T10:25:00Z"}
         jobs = {1: [running, {**self.job(root, "queued"), "runner_name": ""},
                     {**self.job(SMALL, "in_progress"), "runner_name": "blacksmith-1"}]}
         snap = janitor.pool_load_snapshot(runs, jobs, now=NOW)
-        self.assertEqual(snap["running"], {"cmux14-glaeda-1": {"job": "macOS / macOS compile admission",
+        self.assertEqual(snap["running"], {"hmux14-glaeda-1": {"job": "macOS / macOS compile admission",
                                                                "started_at": "2026-09-24T10:25:00Z"}})
 
     def test_owned_pool_commitments_count_jobs_not_created_yet(self):
@@ -551,7 +551,7 @@ def warm_lane(index: str = "") -> str:
     """root_lane() for compile admission: the pin admission-placement made in this attempt, else on attempt 1
     the picker's warm pin, may come first.
 
-    runs-on reads the JSON array itself; CMUX_PRODUCT_RUNNER (index "[0]")
+    runs-on reads the JSON array itself; HMUX_PRODUCT_RUNNER (index "[0]")
     names its first label, the root label.
     """
     placed = "needs.admission-placement.outputs.runner"
@@ -568,7 +568,7 @@ def warm_lane(index: str = "") -> str:
 PR_XCODE = "/Applications/Xcode_26.6.app"
 MINI = "glaeda-std-xcode-26.6"
 LIGHT = "glaeda-light-xcode-26.6"
-OWNED_PINS = {**PINS, "CMUX_CI_XCODE_APP_PR": PR_XCODE}
+OWNED_PINS = {**PINS, "HMUX_CI_XCODE_APP_PR": PR_XCODE}
 
 
 def fleet(busy=0, queued=0, age=2, **kwargs) -> dict:
@@ -631,7 +631,7 @@ class ShardSpread(unittest.TestCase):
             path.write_text(json.dumps(snap))
             base = {"EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": "manaflow-ai/cmux",
                     "HEAD_REPO": "manaflow-ai/cmux", "DEFAULT_RUNNER": SMALL, "GITHUB_OUTPUT": str(out),
-                    "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15, "RUN_MACOS": "true"}
+                    "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15, "RUN_MACOS": "true"}
             for full, expected in (("true", SMALL), ("false", "")):
                 out.write_text("")
                 with unittest.mock.patch("sys.stdout", io.StringIO()):
@@ -671,7 +671,7 @@ class OwnedPools(unittest.TestCase):
         def runner(labels, status="online", busy=False):
             return {"status": status, "busy": busy, "labels": [{"name": name} for name in labels]}
         runners = [runner(["self-hosted", MINI]), runner([MINI], busy=True), runner([MINI], status="offline"),
-                   runner([MINI, "glaeda-root-std-xcode-26.6"]), runner([LIGHT]), runner(["cmux15"])]
+                   runner([MINI, "glaeda-root-std-xcode-26.6"]), runner([LIGHT]), runner(["hmux15"])]
         self.assertEqual(pool.live_owned_free(runners, (MINI, LIGHT)), {MINI: 2, LIGHT: 1})
 
     def test_live_capacity_replaces_the_slot_count_and_snapshot_age(self):
@@ -686,7 +686,7 @@ class OwnedPools(unittest.TestCase):
         # Too few idle for the run's owned peak.
         self.assertEqual(owned_choice(fleet(busy=0), live_owned={MINI: 2}, jobs=3).runner, LARGE)
         # A fork never uses it.
-        fork = choose(fleet(busy=0), owned="1", jobs=3, live_owned={MINI: 9}, head="someone/cmux",
+        fork = choose(fleet(busy=0), owned="1", jobs=3, live_owned={MINI: 9}, head="someone/hmux",
                       default="", pins={})
         self.assertFalse(fork.runner.startswith("glaeda-"))
 
@@ -720,7 +720,7 @@ class OwnedPools(unittest.TestCase):
                 env = {"EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": "manaflow-ai/cmux", "GH_TOKEN": "t",
                        "HEAD_REPO": "manaflow-ai/cmux", "DEFAULT_RUNNER": SMALL, "POOL_OWNED": "1",
                        "OWNED_SLOTS": json.dumps({MINI: 11}), "ROUTE_TOKEN": token, "POOL_QUEUE_ROUNDS": "0",
-                       "CMUX_CI_XCODE_APP_PR": PR_XCODE, "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
+                       "HMUX_CI_XCODE_APP_PR": PR_XCODE, "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
                        "GITHUB_RUN_ATTEMPT": "1", "GITHUB_OUTPUT": str(out), "RUN_MACOS": "true"}
                 pool.main([], env)
                 values = dict(line.split("=", 1) for line in out.read_text().splitlines())
@@ -742,7 +742,7 @@ class OwnedPools(unittest.TestCase):
         mint = steps[ids.index("route-token")]
         self.assertLess(ids.index("route-token"), ids.index("macos-pool"))
         self.assertIn("contains(fromJSON(env.CI_OWNED_HEAD_REPOS)", mint["if"])
-        self.assertIn("teamleaderleo/cmux", yaml.safe_load((WORKFLOWS / "ci.yml").read_text()).get("env", {}).get("CI_OWNED_HEAD_REPOS", ""))
+        self.assertIn("teamleaderleo/hmux", yaml.safe_load((WORKFLOWS / "ci.yml").read_text()).get("env", {}).get("CI_OWNED_HEAD_REPOS", ""))
         self.assertIs(mint["continue-on-error"], True)
         self.assertTrue(mint["uses"].startswith("actions/create-github-app-token@"))
         self.assertEqual(mint["with"]["permission-administration"], "read")
@@ -795,7 +795,7 @@ class OwnedPools(unittest.TestCase):
         return client, calls
 
     REPO_RUNNERS = "/repos/manaflow-ai/cmux/actions/runners?per_page=100&page=1"
-    GROUPS = "/orgs/manaflow-ai/actions/runner-groups?per_page=100&visible_to_repository=cmux"
+    GROUPS = "/orgs/manaflow-ai/actions/runner-groups?per_page=100&visible_to_repository=hmux"
     GROUP_RUNNERS = "/orgs/manaflow-ai/actions/runner-groups/23/runners?per_page=100&page=1"
 
     def test_runners_lists_the_org_glaeda_minis_group_beside_the_repository(self):
@@ -867,7 +867,7 @@ class OwnedPools(unittest.TestCase):
         self.assertEqual(owned_choice(idle, owned_slots=slots, attempt=2, actor=bot, queue_rounds="").runner, LARGE)
         # A fork never reaches an owned pool.
         fork = choose(snap, owned="1", owned_slots=slots, jobs=3, attempt=2, actor=bot,
-                      head="someone/cmux", default="", pins={})
+                      head="someone/hmux", default="", pins={})
         self.assertFalse(fork.runner.startswith("glaeda-"))
         # The workflows ask who started a later re-run: only github-actions[bot]'s goes to Blacksmith.
         self.assertIn("github.run_attempt > 2 && github.triggering_actor == 'github-actions[bot]'",
@@ -884,7 +884,7 @@ class OwnedPools(unittest.TestCase):
                 env = {"EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": "manaflow-ai/cmux", "GH_TOKEN": "t",
                        "HEAD_REPO": "manaflow-ai/cmux", "DEFAULT_RUNNER": SMALL, "POOL_OWNED": "1",
                        "OWNED_SLOTS": slots, "GITHUB_TRIGGERING_ACTOR": actor,
-                       "CMUX_CI_XCODE_APP_PR": PR_XCODE, "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
+                       "HMUX_CI_XCODE_APP_PR": PR_XCODE, "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
                        "GITHUB_RUN_ATTEMPT": attempt, "GITHUB_OUTPUT": str(out), "RUN_MACOS": "true"}
                 pool.main([], env)
                 values = dict(line.split("=", 1) for line in out.read_text().splitlines() if "=" in line)
@@ -1139,7 +1139,7 @@ class OwnedPools(unittest.TestCase):
 
     def test_main_flags_bad_slots_only_on_same_repo_prs_while_owned_pools_are_on(self):
         cases = (("1", "pull_request", "manaflow-ai/cmux", True), ("", "pull_request", "manaflow-ai/cmux", False),
-                 ("1", "push", "", False), ("1", "pull_request", "someone/cmux", False))
+                 ("1", "push", "", False), ("1", "pull_request", "someone/hmux", False))
         for owned, event, head, flagged in cases:
             with tempfile.TemporaryDirectory() as tmp:
                 stdout = io.StringIO()
@@ -1147,7 +1147,7 @@ class OwnedPools(unittest.TestCase):
                 snapshot.write_text(json.dumps(fleet()))
                 env = {"EVENT_NAME": event, "GITHUB_REPOSITORY": "manaflow-ai/cmux", "HEAD_REPO": head,
                        "DEFAULT_RUNNER": SMALL, "POOL_OWNED": owned, "OWNED_SLOTS": '{"glaeda-std": 3}',
-                       "CMUX_CI_XCODE_APP_PR": PR_XCODE, "GITHUB_STEP_SUMMARY": str(Path(tmp, "summary"))}
+                       "HMUX_CI_XCODE_APP_PR": PR_XCODE, "GITHUB_STEP_SUMMARY": str(Path(tmp, "summary"))}
                 with unittest.mock.patch("sys.stdout", stdout):
                     pool.main(["--snapshot", str(snapshot)], env)
                 case = (owned, event, head)
@@ -1185,7 +1185,7 @@ class OwnedPools(unittest.TestCase):
 
     def test_fork_never_takes_an_owned_pool(self):
         settings = dict(FORK_SETTINGS, order=f"{MINI},{SMALL}")
-        self.assertEqual(owned_choice(fleet(small=0, settings=settings), head="someone/cmux").runner, SMALL)
+        self.assertEqual(owned_choice(fleet(small=0, settings=settings), head="someone/hmux").runner, SMALL)
 
     def test_a_host_fault_retry_past_attempt_two_skips_the_owned_pool(self):
         # github-actions[bot]'s attempt 3 is the rescue moving a job stuck or refused on attempt 2
@@ -1223,7 +1223,7 @@ class OwnedPools(unittest.TestCase):
             env = {"EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": "manaflow-ai/cmux",
                    "HEAD_REPO": "manaflow-ai/cmux", "DEFAULT_RUNNER": SMALL, "POOL_OWNED": owned,
                    "OWNED_SLOTS": json.dumps({MINI: 3}),
-                   "CMUX_CI_XCODE_APP_PR": PR_XCODE, "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
+                   "HMUX_CI_XCODE_APP_PR": PR_XCODE, "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
                    "GITHUB_RUN_ATTEMPT": str(attempt), "GITHUB_OUTPUT": str(out), "GITHUB_TRIGGERING_ACTOR": actor,
                    "RUN_MACOS": "true"}
             with unittest.mock.patch("sys.stdout", io.StringIO()):
@@ -1410,7 +1410,7 @@ class PerJobPlacement(unittest.TestCase):
                    "HEAD_REPO": "manaflow-ai/cmux", "DEFAULT_RUNNER": SMALL, "POOL_OWNED": "1",
                    "POOL_OWNED_SPLIT": split, "POOL_OWNED_GUI": gui, "OWNED_SLOTS": json.dumps({MINI: 11}),
                    "POOL_QUEUE_ROUNDS": rounds,
-                   "CMUX_CI_XCODE_APP_PR": PR_XCODE, "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
+                   "HMUX_CI_XCODE_APP_PR": PR_XCODE, "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
                    "GITHUB_RUN_ATTEMPT": "1", "GITHUB_OUTPUT": str(out), "RUN_MACOS": "true",
                    **routing_env}
             with unittest.mock.patch("sys.stdout", io.StringIO()):
@@ -1433,7 +1433,7 @@ class PerJobPlacement(unittest.TestCase):
         self.assertEqual((light["owned_jobs"], light["jobs"]), (" admission cli-product cli-regressions-1 ", "2"))
         # Selected suites a compile admission would run itself move to shard 8.
         suites = self.output(busy=0, RUN_UNIT_SUITE="true", RUN_UNIT_IN_ADMISSION="true",
-                             RUN_UNIT_SELECTORS="cmuxTests/SomeSuite")
+                             RUN_UNIT_SELECTORS="hmuxTests/SomeSuite")
         self.assertEqual(suites["owned_jobs"], " admission shard-8 ")
         # Split off: the whole-run rule over the owned-eligible jobs only.
         # (admission, cli-product and the three cli-regressions shards beside the side lane: 6).
@@ -1690,7 +1690,7 @@ class QueueBehindBusyRunners(unittest.TestCase):
     def test_forks_read_the_rounds_the_janitor_copied(self):
         snap = backlog(small=12, large=8, old=30, settings={**FORK_SETTINGS, "queue_rounds": "0"})
         snap["pools"][LARGE]["running"] = 5
-        fork = dict(head="someone/cmux", default="", pins={})
+        fork = dict(head="someone/hmux", default="", pins={})
         self.assertEqual(choose(snap, **fork).runner, SMALL)
         snap["settings"].pop("queue_rounds")
         self.assertEqual(choose(snap, **fork).runner, LARGE)
@@ -1706,7 +1706,7 @@ class QueueBehindBusyRunners(unittest.TestCase):
             env = {"EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": "manaflow-ai/cmux",
                    "HEAD_REPO": "manaflow-ai/cmux", "DEFAULT_RUNNER": SMALL, "POOL_OWNED": "1",
                    "OWNED_SLOTS": json.dumps({MINI: 11}), "POOL_QUEUE_ROUNDS": "",
-                   "CMUX_CI_XCODE_APP_PR": PR_XCODE, "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
+                   "HMUX_CI_XCODE_APP_PR": PR_XCODE, "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
                    "GITHUB_RUN_ATTEMPT": "1", "GITHUB_OUTPUT": str(out), "RUN_MACOS": "true"}
             with unittest.mock.patch("sys.stdout", io.StringIO()):
                 pool.main(["--snapshot", str(snapshot)], env)
@@ -1926,7 +1926,7 @@ class RootRunners(unittest.TestCase):
         self.assertEqual((choice.runner, choice.root_runner), (MINI, ""))
         # A fork or a Blacksmith pick never gets one.
         slots = json.dumps({MINI: 40, ROOT_MINI: 10})
-        fork = choose(fleet(busy=0), owned="1", owned_slots=slots, head="someone/cmux", default="", pins={},
+        fork = choose(fleet(busy=0), owned="1", owned_slots=slots, head="someone/hmux", default="", pins={},
                       root_jobs=1)
         self.assertEqual(fork.root_runner, "")
         self.assertEqual(owned_choice(fleet(busy=40), owned_slots=slots, root_jobs=1).root_runner, "")
@@ -1957,7 +1957,7 @@ class RootRunners(unittest.TestCase):
             env = {"EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": "manaflow-ai/cmux",
                    "HEAD_REPO": "manaflow-ai/cmux", "DEFAULT_RUNNER": SMALL, "POOL_OWNED": "1",
                    "POOL_OWNED_SPLIT": "1", "OWNED_SLOTS": '{"std": 40, "root-std": 10}', "POOL_QUEUE_ROUNDS": "0",
-                   "CMUX_CI_XCODE_APP_PR": PR_XCODE, "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
+                   "HMUX_CI_XCODE_APP_PR": PR_XCODE, "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
                    "GITHUB_RUN_ATTEMPT": "1", "GITHUB_OUTPUT": str(out), "RUN_MACOS": "true",
                    "RUN_FULL_SUITE": "true", "RUN_CLI": "true", "RUN_REMOTE_DAEMON": "true"}
             with unittest.mock.patch("sys.stdout", io.StringIO()):
@@ -2021,13 +2021,13 @@ class RootRunners(unittest.TestCase):
             output = io.StringIO()
             with unittest.mock.patch("sys.stdout", output):
                 e2e_pool.main(
-                    ["--requested", "auto", "--test-filter", "cmuxUITests/DogfoodScenarioUITests",
+                    ["--requested", "auto", "--test-filter", "hmuxUITests/DogfoodScenarioUITests",
                      "--owned", "1", "--owned-ui", "1", "--owned-slots",
                      json.dumps({MINI: 4, ROOT_MINI: 2, GUI_MINI: 2}), "--pr-xcode-app", PR_XCODE],
                     env={"GITHUB_REPOSITORY": "manaflow-ai/cmux"},
                 )
         self.assertEqual(output.getvalue().strip(), GUI_MINI)
-        self.assertEqual(resolve.call_args.kwargs["test_filter"], "cmuxUITests/DogfoodScenarioUITests")
+        self.assertEqual(resolve.call_args.kwargs["test_filter"], "hmuxUITests/DogfoodScenarioUITests")
 
     def test_ui_auto_resolve_selects_gui_label_from_measured_capacity(self):
         """The real resolver keeps a UI tour on the GUI label when minis are busy."""
@@ -2042,7 +2042,7 @@ class RootRunners(unittest.TestCase):
             owned="1",
             owned_slots=json.dumps({MINI: 4, ROOT_MINI: 0, GUI_MINI: 2}),
             pr_xcode_app=PR_XCODE,
-            test_filter="cmuxUITests/DogfoodScenarioUITests",
+            test_filter="hmuxUITests/DogfoodScenarioUITests",
             owned_ui="1",
             queue_rounds="0",
         )
@@ -2052,7 +2052,7 @@ class RootRunners(unittest.TestCase):
         self.assertEqual(
             e2e_pool.ui_owned_runner(
                 LARGE,
-                test_filter="cmuxUITests/DogfoodScenarioUITests",
+                test_filter="hmuxUITests/DogfoodScenarioUITests",
                 owned="1",
                 owned_ui="1",
                 order="",
@@ -2066,7 +2066,7 @@ class RootRunners(unittest.TestCase):
         self.assertEqual(
             e2e_pool.ui_owned_runner(
                 LARGE,
-                test_filter="cmuxUITests/DogfoodScenarioUITests",
+                test_filter="hmuxUITests/DogfoodScenarioUITests",
                 owned="1",
                 owned_ui="1",
                 order="",
@@ -2080,7 +2080,7 @@ class RootRunners(unittest.TestCase):
         self.assertEqual(
             e2e_pool.ui_owned_runner(
                 LARGE,
-                test_filter="cmuxUITests/DogfoodScenarioUITests",
+                test_filter="hmuxUITests/DogfoodScenarioUITests",
                 owned="1",
                 owned_ui="1",
                 order="",
@@ -2096,14 +2096,14 @@ KEY = MERGE_BASE[:12]
 
 
 def live_runner(runner_id, *labels, busy=False, status="online", own=True):
-    """Runner cmux<id>, carrying its own static glaeda-runner- label unless `own` is False."""
-    name = f"cmux{runner_id}-glaeda"
+    """Runner hmux<id>, carrying its own static glaeda-runner- label unless `own` is False."""
+    name = f"hmux{runner_id}-glaeda"
     return {"id": runner_id, "name": name, "status": status, "busy": busy,
             "labels": [{"name": label} for label in (*labels, *([f"glaeda-runner-{name}"] if own else []))]}
 
 
 def warm(*runner_ids, keys=(KEY,)):
-    return {"through": 9, "runners": {f"cmux{runner_id}-glaeda": {"keys": list(keys), "at": "2026-09-25T00:00:00Z"}
+    return {"through": 9, "runners": {f"hmux{runner_id}-glaeda": {"keys": list(keys), "at": "2026-09-25T00:00:00Z"}
                                       for runner_id in runner_ids}}
 
 
@@ -2122,24 +2122,24 @@ class WarmAffinity(unittest.TestCase):
 
     def test_a_merge_base_match_beats_a_pull_request_match(self):
         pr_warm = {"through": 9, "runners": {
-            "cmux1-glaeda": {"keys": ["ffffffffffff", "pr-7"], "at": "2026-09-25T00:00:00Z"},
-            "cmux2-glaeda": {"keys": [KEY, "pr-8"], "at": "2026-09-25T00:00:00Z"}}}
+            "hmux1-glaeda": {"keys": ["ffffffffffff", "pr-7"], "at": "2026-09-25T00:00:00Z"},
+            "hmux2-glaeda": {"keys": [KEY, "pr-8"], "at": "2026-09-25T00:00:00Z"}}}
         runners = [live_runner(1, MINI, ROOT_MINI), live_runner(2, MINI, ROOT_MINI)]
         pick = pool.warm_admission_runner
         self.assertEqual(json.loads(pick(runners, ROOT_MINI, MERGE_BASE, pr_warm, "7"))[1],
-                         "glaeda-runner-cmux2-glaeda")
+                         "glaeda-runner-hmux2-glaeda")
         # A re-push onto a new main commit goes where its previous push was kept.
         self.assertEqual(json.loads(pick(runners, ROOT_MINI, "e" * 40, pr_warm, "7"))[1],
-                         "glaeda-runner-cmux1-glaeda")
+                         "glaeda-runner-hmux1-glaeda")
         self.assertEqual(pick(runners, ROOT_MINI, "e" * 40, pr_warm, "9"), "")
         self.assertEqual(pick(runners, ROOT_MINI, "e" * 40, pr_warm, None), "")
 
     def test_runner_label_matches_glaedas(self):
-        self.assertEqual(pool.runner_label("cmux7s-glaeda-1"), "glaeda-runner-cmux7s-glaeda-1")
+        self.assertEqual(pool.runner_label("hmux7s-glaeda-1"), "glaeda-runner-hmux7s-glaeda-1")
         self.assertEqual(pool.runner_label("Mini 6_A"), "glaeda-runner-mini-6_a")
 
     def test_only_an_idle_warm_root_runner_with_its_own_label_is_picked(self):
-        own = "glaeda-runner-cmux1-glaeda"
+        own = "glaeda-runner-hmux1-glaeda"
         expected = json.dumps([ROOT_MINI, own], separators=(",", ":"))
         idle = live_runner(1, MINI, ROOT_MINI)
         self.assertEqual(pool.warm_admission_runner([idle], ROOT_MINI, MERGE_BASE, warm(1)), expected)
@@ -2160,7 +2160,7 @@ class WarmAffinity(unittest.TestCase):
         # A busy warm runner is skipped for an idle one.
         both = [live_runner(1, MINI, ROOT_MINI, busy=True), live_runner(2, MINI, ROOT_MINI)]
         self.assertEqual(json.loads(pool.warm_admission_runner(both, ROOT_MINI, MERGE_BASE, warm(1, 2))),
-                         [ROOT_MINI, "glaeda-runner-cmux2-glaeda"])
+                         [ROOT_MINI, "glaeda-runner-hmux2-glaeda"])
 
     def outputs(self, runners, *, merged_onto=MERGE_BASE, slots='{"std": 40, "root-std": 10}', token="app-token",
                 owned_warm="1", state=None, attempt="1", pr_number="", running=None, rounds="", distance="0",
@@ -2184,7 +2184,7 @@ class WarmAffinity(unittest.TestCase):
             env = {"EVENT_NAME": "pull_request", "GITHUB_REPOSITORY": "manaflow-ai/cmux", "GH_TOKEN": "t",
                    "HEAD_REPO": "manaflow-ai/cmux", "DEFAULT_RUNNER": SMALL, "POOL_OWNED": "1",
                    "POOL_OWNED_SPLIT": "1", "OWNED_SLOTS": slots, "ROUTE_TOKEN": token,
-                   "CMUX_CI_XCODE_APP_PR": PR_XCODE, "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
+                   "HMUX_CI_XCODE_APP_PR": PR_XCODE, "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
                    "GITHUB_RUN_ATTEMPT": attempt, "GITHUB_OUTPUT": str(out), "GITHUB_STEP_SUMMARY": str(summary),
                    "RUN_MACOS": "true", "MERGED_ONTO": merged_onto, "OWNED_WARM": owned_warm,
                    "PR_NUMBER": pr_number, "POOL_QUEUE_ROUNDS": rounds, "OWNED_WARM_DISTANCE": distance,
@@ -2286,21 +2286,21 @@ class WarmAffinity(unittest.TestCase):
         self.assertEqual(pool.run_marker([artifact], {"id": 7, "run_attempt": 1}), (MINI, 0))
 
     def test_main_names_the_warm_runner_for_admission(self):
-        own = "glaeda-runner-cmux2-glaeda"
+        own = "glaeda-runner-hmux2-glaeda"
         runners = [live_runner(1, MINI, ROOT_MINI), live_runner(2, MINI, ROOT_MINI), live_runner(3, MINI)]
         values = self.outputs(runners)
         self.assertEqual((values["runner"], values["root_runner"]), (MINI, ROOT_MINI))
         self.assertIn(" admission ", values["owned_jobs"])
         self.assertEqual(json.loads(values["admission_runner"]), [ROOT_MINI, own])
         self.assertIn(f"`{own}`", values["summary"])
-        self.assertEqual(json.loads(values["admission_warm"]), [["cmux2-glaeda"]])
+        self.assertEqual(json.loads(values["admission_warm"]), [["hmux2-glaeda"]])
         # Another merge base, a busy warm runner, or no root count: admission keeps the root label.
         self.assertEqual(self.outputs(runners, merged_onto="f" * 40)["admission_runner"], "")
         busy = [live_runner(1, MINI, ROOT_MINI), live_runner(2, MINI, ROOT_MINI, busy=True)]
         busy_values = self.outputs(busy)
         self.assertEqual(busy_values["admission_runner"], "")
         # admission-placement still gets the warm names; it re-reads which are idle.
-        self.assertEqual(json.loads(busy_values["admission_warm"]), [["cmux2-glaeda"]])
+        self.assertEqual(json.loads(busy_values["admission_warm"]), [["hmux2-glaeda"]])
         # No root runner online carries the root label: no root routing, whatever the variable says.
         self.assertEqual(self.outputs([live_runner(1, MINI), live_runner(2, MINI)])["admission_runner"], "")
         # The runners read live turn root routing on without a root count in CI_OWNED_POOL_SLOTS.
@@ -2315,54 +2315,54 @@ class WarmAffinity(unittest.TestCase):
             self.assertEqual((values["admission_runner"], values["admission_warm"]), ("", ""), off)
 
     def test_main_waits_for_a_busy_warm_runner_when_it_costs_less(self):
-        # cmux2 is warm and a minute from done (its admission ran 400 of a 420 s p50): 60 + 100 s
-        # beats the idle cmux1's 400 s cold compile, within the one queue round's wait limit.
+        # hmux2 is warm and a minute from done (its admission ran 400 of a 420 s p50): 60 + 100 s
+        # beats the idle hmux1's 400 s cold compile, within the one queue round's wait limit.
         runners = [live_runner(1, MINI, ROOT_MINI), live_runner(2, MINI, ROOT_MINI, busy=True)]
         started = (dt.datetime.now(dt.timezone.utc) - dt.timedelta(seconds=400)).strftime("%Y-%m-%dT%H:%M:%SZ")
-        running = {"cmux2-glaeda": {"job": "macOS / macOS compile admission", "started_at": started}}
+        running = {"hmux2-glaeda": {"job": "macOS / macOS compile admission", "started_at": started}}
         values = self.outputs(runners, running=running)
-        self.assertEqual(json.loads(values["admission_runner"]), [ROOT_MINI, "glaeda-runner-cmux2-glaeda"])
+        self.assertEqual(json.loads(values["admission_runner"]), [ROOT_MINI, "glaeda-runner-hmux2-glaeda"])
         # With no queue rounds the rescue budget covers no wait: idle runners only.
         self.assertEqual(self.outputs(runners, running=running, rounds="0")["admission_runner"], "")
         # A job that just started leaves too long a wait to pay.
-        running["cmux2-glaeda"]["started_at"] = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+        running["hmux2-glaeda"]["started_at"] = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
         self.assertEqual(self.outputs(runners, running=running)["admission_runner"], "")
 
     def test_main_hands_admission_placement_the_pull_request_tier_too(self):
         state = {"through": 9, "runners": {
-            "cmux1-glaeda": {"keys": ["ffffffffffff", "pr-7"], "at": "2026-09-25T00:00:00Z"},
-            "cmux2-glaeda": {"keys": [KEY, "pr-8"], "at": "2026-09-25T00:00:00Z"}}}
+            "hmux1-glaeda": {"keys": ["ffffffffffff", "pr-7"], "at": "2026-09-25T00:00:00Z"},
+            "hmux2-glaeda": {"keys": [KEY, "pr-8"], "at": "2026-09-25T00:00:00Z"}}}
         runners = [live_runner(1, MINI, ROOT_MINI), live_runner(2, MINI, ROOT_MINI)]
         values = self.outputs(runners, state=state, pr_number="7")
-        self.assertEqual(json.loads(values["admission_warm"]), [["cmux2-glaeda"], ["cmux1-glaeda"]])
-        self.assertEqual(json.loads(values["admission_runner"])[1], "glaeda-runner-cmux2-glaeda")
+        self.assertEqual(json.loads(values["admission_warm"]), [["hmux2-glaeda"], ["hmux1-glaeda"]])
+        self.assertEqual(json.loads(values["admission_runner"])[1], "glaeda-runner-hmux2-glaeda")
         # A re-push onto a new main commit: the pull request's tier alone.
         values = self.outputs(runners, state=state, pr_number="7", merged_onto="e" * 40)
-        self.assertEqual(json.loads(values["admission_warm"]), [["cmux1-glaeda"]])
-        self.assertEqual(json.loads(values["admission_runner"])[1], "glaeda-runner-cmux1-glaeda")
+        self.assertEqual(json.loads(values["admission_warm"]), [["hmux1-glaeda"]])
+        self.assertEqual(json.loads(values["admission_runner"])[1], "glaeda-runner-hmux1-glaeda")
 
     def test_distance_routing_pins_the_nearest_kept_build_on_any_mini(self):
-        # No runner holds this run's merge base exactly. cmux2's root 1 sits two app Swift files behind it
-        # (near, 140 s); cmux1's only root is 40 behind (far, 266.5 s). GitHub's pick of the two costs
+        # No runner holds this run's merge base exactly. hmux2's root 1 sits two app Swift files behind it
+        # (near, 140 s); hmux1's only root is 40 behind (far, 266.5 s). GitHub's pick of the two costs
         # their mean, 203 s; the pin saves 63 s, past ROUTE_MARGIN_SECONDS.
         near_base, far_base = "1" * 40, "2" * 40
         state = {"through": 9, "runners": {
-            "cmux1-glaeda": {"keys": [], "at": "2026-09-25T00:00:00Z",
+            "hmux1-glaeda": {"keys": [], "at": "2026-09-25T00:00:00Z",
                              "roots": [{"root": 1, "merged_onto": far_base, "pr": 5, "pr_app_swift_files": [],
                                         "pr_app_swift_total": 0, "pr_package_interface": False}]},
-            "cmux2-glaeda": {"keys": [], "at": "2026-09-25T00:00:00Z",
+            "hmux2-glaeda": {"keys": [], "at": "2026-09-25T00:00:00Z",
                              "roots": [{"root": 1, "merged_onto": near_base, "pr": 6, "pr_app_swift_files": [],
                                         "pr_app_swift_total": 0, "pr_package_interface": False}, {"root": 2}]}}}
         changes = {near_base: ({"Sources/A.swift", "Sources/B.swift"}, False),
                    far_base: ({f"Sources/F{index}.swift" for index in range(40)}, False)}
         runners = [live_runner(1, MINI, ROOT_MINI), live_runner(2, MINI, ROOT_MINI)]
         values = self.outputs(runners, state=state, distance="", changes=changes)
-        self.assertEqual(json.loads(values["admission_runner"]), [ROOT_MINI, "glaeda-runner-cmux2-glaeda"])
+        self.assertEqual(json.loads(values["admission_runner"]), [ROOT_MINI, "glaeda-runner-hmux2-glaeda"])
         route = json.loads(values["admission_route"])
         self.assertEqual((route["mode"], route["chosen"], route["predicted"], route["baseline"], route["tier"]),
-                         ("distance", "cmux2-glaeda", 140.0, 203.2, "near"))
+                         ("distance", "hmux2-glaeda", 140.0, 203.2, "near"))
         self.assertEqual([(row["runner"], row["tier"]) for row in route["candidates"]],
-                         [("cmux2-glaeda", "near"), ("cmux1-glaeda", "far")])
+                         [("hmux2-glaeda", "near"), ("hmux1-glaeda", "far")])
         # CI_OWNED_WARM_DISTANCE=0: exact keys only, and neither runner holds one.
         values = self.outputs(runners, state=state, distance="0", changes=changes)
         self.assertEqual(values["admission_runner"], "")
@@ -2391,10 +2391,10 @@ class SpreadFirstAdmission(unittest.TestCase):
     """Compile admission goes to an idle root runner on a mini with no root job running."""
 
     def test_runner_member_strips_the_glaeda_suffix(self):
-        self.assertEqual(pool.runner_member("cmux7s-glaeda"), "cmux7s")
-        self.assertEqual(pool.runner_member("cmux7s-glaeda-2"), "cmux7s")
+        self.assertEqual(pool.runner_member("hmux7s-glaeda"), "hmux7s")
+        self.assertEqual(pool.runner_member("hmux7s-glaeda-2"), "hmux7s")
         self.assertEqual(pool.runner_member("mini-a-glaeda-12"), "mini-a")
-        for name in ("", "cmux15", "glaeda", "-glaeda", "cmux7s-glaeda-x"):
+        for name in ("", "hmux15", "glaeda", "-glaeda", "hmux7s-glaeda-x"):
             self.assertEqual(pool.runner_member(name), "", name)
 
     def test_spreads_to_an_empty_mini(self):
@@ -2490,8 +2490,8 @@ class SpreadFirstAdmission(unittest.TestCase):
         self.assertEqual(spread(runners)[0], "glaeda-runner-mini-b-glaeda")
         self.assertEqual(spread(runners[:1]), ("", False))
         # A runner named outside glaeda's scheme has no known mini.
-        stray = {"name": "cmux15", "status": "online", "busy": False,
-                 "labels": [{"name": ROOT_MINI}, {"name": "glaeda-runner-cmux15"}]}
+        stray = {"name": "hmux15", "status": "online", "busy": False,
+                 "labels": [{"name": ROOT_MINI}, {"name": "glaeda-runner-hmux15"}]}
         self.assertEqual(spread([stray]), ("", False))
 
 
@@ -2506,7 +2506,7 @@ class LiveCapacity(unittest.TestCase):
     def test_aws_namespace_does_not_count_as_office_pool_capacity(self):
         aws = mini_runner("aws-m4pro-9", 0, MINI, ROOT_MINI,
                           "glaeda-aws-std-xcode-26.6", "glaeda-aws-root-std-xcode-26.6")
-        office = mini_runner("cmux7s", 0, MINI, ROOT_MINI)
+        office = mini_runner("hmux7s", 0, MINI, ROOT_MINI)
         self.assertEqual(pool.live_online([aws, office], (MINI, ROOT_MINI)),
                          {MINI: 1, ROOT_MINI: 1})
         self.assertEqual(pool.live_owned_free([aws, office], (MINI, ROOT_MINI)),
@@ -2631,7 +2631,7 @@ class Wiring(unittest.TestCase):
             # label first.
             "ci.yml": "(contains(needs.changes.outputs.macos_pr_light_side_jobs, ' claude-wrapper ') && needs.changes.outputs.macos_pr_light_side_runner || needs.changes.outputs.macos_pr_side_runner) || needs.changes.outputs.macos_pr_runner "
                       "|| vars.MACOS_RUNNER_PR || 'blacksmith-6vcpu-macos-15'",
-            # Compile admission (and its CMUX_PRODUCT_RUNNER mirror) and
+            # Compile admission (and its HMUX_PRODUCT_RUNNER mirror) and
             # tests-build-and-lag each test their own owned_jobs key, and are
             # root jobs; the side lanes are not. tests-build-and-lag is a GUI
             # job: the gui label first, where the picker names one.
@@ -2700,12 +2700,12 @@ class Wiring(unittest.TestCase):
         # tests/test_ci_fork_runner_routing.py); main's dispatch still does.
         same = "contains(fromJSON(inputs.owned_head_repos), github.event.pull_request.head.repo.full_name)"
         dispatch_lane = (f"(inputs.pr_xcode_app || (github.event_name != 'pull_request' || {same}) "
-                         "&& vars.CMUX_CI_XCODE_APP_PR || vars.CMUX_CI_XCODE_APP_MACOS_15)")
+                         "&& vars.HMUX_CI_XCODE_APP_PR || vars.HMUX_CI_XCODE_APP_MACOS_15)")
         main_dispatch = ("${{ (github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch')"
-                         f" && {dispatch_lane} || vars.CMUX_CI_XCODE_APP_MACOS_15 }}}}")
+                         f" && {dispatch_lane} || vars.HMUX_CI_XCODE_APP_MACOS_15 }}}}")
         macos = self.workflow("ci-macos.yml")["jobs"]
         for job in ("macos-compile-admission", "tests-build-and-lag"):
-            self.assertEqual(macos[job]["env"]["CMUX_CI_XCODE_APP"], main_dispatch, job)
+            self.assertEqual(macos[job]["env"]["HMUX_CI_XCODE_APP"], main_dispatch, job)
 
     def test_build_input_fingerprint_keys_on_the_chosen_xcode(self):
         # A run moved to the macOS 15 pool compiles under another Xcode, so it
@@ -2717,8 +2717,8 @@ class Wiring(unittest.TestCase):
             step = steps[ids.index(step_id)]
             self.assertEqual(step["env"]["XCODE_APP"],
                              "${{ steps.macos-pool.outputs.xcode_app || "
-                             "contains(fromJSON(env.CI_OWNED_HEAD_REPOS), github.event.pull_request.head.repo.full_name) && vars.CMUX_CI_XCODE_APP_PR "
-                             "|| vars.CMUX_CI_XCODE_APP_MACOS_15 }}", step_id)
+                             "contains(fromJSON(env.CI_OWNED_HEAD_REPOS), github.event.pull_request.head.repo.full_name) && vars.HMUX_CI_XCODE_APP_PR "
+                             "|| vars.HMUX_CI_XCODE_APP_MACOS_15 }}", step_id)
 
     def test_reusable_inputs_default_to_todays_route(self):
         for name, keys in (("ci-macos.yml", ("pr_runner", "pr_retry_runner", "pr_xcode_app")),
@@ -2746,7 +2746,7 @@ class Wiring(unittest.TestCase):
                       "|| github.run_attempt == 1 && inputs.pr_admission_runner && "
                       "fromJSON(inputs.pr_admission_runner) ||", admission["runs-on"])
         # Only admission reads it (warm pin and overflow borrow, in runs-on and
-        # CMUX_PRODUCT_RUNNER); its consumers follow its root label.
+        # HMUX_PRODUCT_RUNNER); its consumers follow its root label.
         text = (WORKFLOWS / "ci-macos.yml").read_text()
         self.assertEqual(text.count("fromJSON(inputs.pr_admission_runner)"), 4)
         self.assertEqual(text.count("fromJSON(needs.admission-placement.outputs.runner)"), 2)
@@ -2765,7 +2765,7 @@ class Wiring(unittest.TestCase):
         self.assertIs(listed["continue-on-error"], True)
         self.assertIs(upload["continue-on-error"], True)
         self.assertIn("steps.owned-state.outputs.fingerprint != ''", listed["if"])
-        self.assertIn('owned_build_state.py warm-keys "$CMUX_OWNED_STATE_ROOT" "$RUNNER_NAME"', listed["run"])
+        self.assertIn('owned_build_state.py warm-keys "$HMUX_OWNED_STATE_ROOT" "$RUNNER_NAME"', listed["run"])
         # The kept build's merge base and pull request are what warm-keys lists first.
         self.assertIn('"$MERGED_ONTO" "$PR_NUMBER"', steps[keep]["run"])
         self.assertEqual(steps[keep]["env"]["PR_NUMBER"], "${{ github.event.pull_request.number }}")
@@ -2811,15 +2811,15 @@ class Wiring(unittest.TestCase):
         self.assertIn("fromJSON(inputs.owned_head_repos)", job["runs-on"])
         self.assertIn("contains(inputs.pr_owned_jobs, ' swift-package ')", job["runs-on"])
         self.assertNotIn("github.event.pull_request.head.repo.full_name != github.repository && 'blacksmith", job["runs-on"])
-        self.assertIn("contains(fromJSON(inputs.owned_head_repos)", job["env"]["CMUX_CI_XCODE_APP"])
-        self.assertIn("contains(inputs.pr_owned_jobs, ' swift-package ')", job["env"]["CMUX_CI_XCODE_APP"])
-        self.assertIn("inputs.pr_xcode_app || vars.CMUX_CI_XCODE_APP_PR", job["env"]["CMUX_CI_XCODE_APP"])
+        self.assertIn("contains(fromJSON(inputs.owned_head_repos)", job["env"]["HMUX_CI_XCODE_APP"])
+        self.assertIn("contains(inputs.pr_owned_jobs, ' swift-package ')", job["env"]["HMUX_CI_XCODE_APP"])
+        self.assertIn("inputs.pr_xcode_app || vars.HMUX_CI_XCODE_APP_PR", job["env"]["HMUX_CI_XCODE_APP"])
         self.assertEqual(job["runs-on"].count("swift-package"), 1)
         self.assertEqual(job["runs-on"].count("blacksmith-6vcpu-macos-15"), 2)
         # The Xcode follows the same condition: the lane pin on the owned
         # label, the macOS 15 pin everywhere else.
-        self.assertIn("inputs.owned_head_repos", job["env"]["CMUX_CI_XCODE_APP"])
-        self.assertIn("inputs.pr_xcode_app || vars.CMUX_CI_XCODE_APP_PR", job["env"]["CMUX_CI_XCODE_APP"])
+        self.assertIn("inputs.owned_head_repos", job["env"]["HMUX_CI_XCODE_APP"])
+        self.assertIn("inputs.pr_xcode_app || vars.HMUX_CI_XCODE_APP_PR", job["env"]["HMUX_CI_XCODE_APP"])
         block = yaml.safe_dump(job)
         for lane in ("pr_retry_runner", "pr_root_runner", "pr_shard_runner", "MACOS_RUNNER_PR"):
             self.assertNotIn(lane, block, lane)
@@ -2843,10 +2843,10 @@ class Wiring(unittest.TestCase):
                  "contains(inputs.pr_owned_jobs, ' release-build ') && (inputs.pr_side_runner || inputs.pr_runner)")
         self.assertIn("fromJSON(inputs.owned_head_repos)", job["runs-on"])
         self.assertIn("contains(inputs.pr_owned_jobs, ' release-build ')", job["runs-on"])
-        self.assertEqual(job["runs-on"], job["env"]["CMUX_PRODUCT_RUNNER"])
+        self.assertEqual(job["runs-on"], job["env"]["HMUX_PRODUCT_RUNNER"])
         # The Xcode follows the same condition: the lane pin on the owned label.
-        self.assertIn("inputs.owned_head_repos", job["env"]["CMUX_CI_XCODE_APP"])
-        self.assertIn("inputs.pr_xcode_app || vars.CMUX_CI_XCODE_APP_PR", job["env"]["CMUX_CI_XCODE_APP"])
+        self.assertIn("inputs.owned_head_repos", job["env"]["HMUX_CI_XCODE_APP"])
+        self.assertIn("inputs.pr_xcode_app || vars.HMUX_CI_XCODE_APP_PR", job["env"]["HMUX_CI_XCODE_APP"])
         self.assertEqual(pool.RELEASE_BUILD_JOB, "release-build")
 
     def test_release_build_is_a_side_lane_of_a_full_suite_with_release_build(self):
@@ -2884,7 +2884,7 @@ IOS_SLOTS = {MINI: 40, ROOT_MINI: 10, IOS_SIM: 2}
 
 # test-ios.yml's per-job Xcode pin: only on an owned Mac, and never for a fork's pull request.
 IOS_XCODE_PIN = ("${{ startsWith(needs.runner.outputs.label, 'glaeda-') && (github.event_name == 'workflow_dispatch' || "
-                 "github.event.pull_request.head.repo.full_name == github.repository) && vars.CMUX_CI_XCODE_APP_PR || '' }}")
+                 "github.event.pull_request.head.repo.full_name == github.repository) && vars.HMUX_CI_XCODE_APP_PR || '' }}")
 
 
 def ios_route(snap=None, *, lane="test-ios", requested="auto", variable="", ios_owned="1", owned="1",
@@ -2997,7 +2997,7 @@ class MainFullSuite(unittest.TestCase):
             env = {"EVENT_NAME": "workflow_dispatch", "GITHUB_REF": "refs/heads/main",
                    "GITHUB_REPOSITORY": "manaflow-ai/cmux", "HEAD_REPO": "", "DEFAULT_RUNNER": SMALL,
                    "POOL_OWNED": "1", "POOL_OWNED_SPLIT": "1", "OWNED_SLOTS": '{"std": 36, "root-std": 14}',
-                   "CMUX_CI_XCODE_APP_PR": PR_XCODE, "CMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
+                   "HMUX_CI_XCODE_APP_PR": PR_XCODE, "HMUX_CI_XCODE_APP_MACOS_15": XCODE_15,
                    "GITHUB_RUN_ATTEMPT": "1", "GITHUB_OUTPUT": str(out), "RUN_MACOS": "true",
                    "RUN_FULL_SUITE": "true", "RUN_CLI": "true", "RUN_CLAUDE_WRAPPER": "true",
                    "RUN_REMOTE_DAEMON": "true"}
@@ -3037,7 +3037,7 @@ class MainFullSuite(unittest.TestCase):
         self.assertNotIn("if", picker)
         self.assertIn("github.event_name == 'workflow_dispatch'", mint["if"])
         self.assertIn("github.event_name == 'workflow_dispatch'",
-                      picker["env"]["CMUX_CI_XCODE_APP_PR"])
+                      picker["env"]["HMUX_CI_XCODE_APP_PR"])
 
 
 class PullRequestAdmissionRootQueue(unittest.TestCase):
@@ -3189,16 +3189,16 @@ class IOSRouting(unittest.TestCase):
             ios_route(requested="owned", seed_cache="true")
 
     def test_a_package_only_run_needs_no_simulator(self):
-        self.assertEqual(ios_pool.sim_jobs("test-ios", "", "CmuxMobileShell"), 0)
+        self.assertEqual(ios_pool.sim_jobs("test-ios", "", "HmuxMobileShell"), 0)
         self.assertEqual(ios_pool.sim_jobs("test-ios", "both", ""), 2)
-        self.assertEqual(ios_pool.run_jobs("test-ios", "CmuxMobileShell"), 1)
+        self.assertEqual(ios_pool.run_jobs("test-ios", "HmuxMobileShell"), 1)
         # Every simulator mini busy, or no simulator slots at all: still owned.
-        route, calls = ios_route(sim_fleet(running=2, committed=5), swift_package="CmuxMobileShell", ios_since=3)
+        route, calls = ios_route(sim_fleet(running=2, committed=5), swift_package="HmuxMobileShell", ios_since=3)
         self.assertEqual((route.persistent, json.loads(route.package_runs_on), calls), (True, MINI, 1))
-        route, _ = ios_route(sim_fleet(), slots={MINI: 40}, swift_package="CmuxMobileShell")
+        route, _ = ios_route(sim_fleet(), slots={MINI: 40}, swift_package="HmuxMobileShell")
         self.assertTrue(route.persistent)
         # One pool machine is enough.
-        self.assertTrue(ios_route(sim_fleet(busy=39), swift_package="CmuxMobileShell")[0].persistent)
+        self.assertTrue(ios_route(sim_fleet(busy=39), swift_package="HmuxMobileShell")[0].persistent)
         self.assertFalse(ios_route(sim_fleet(busy=39))[0].persistent)
 
     def incident_snapshot(self):
@@ -3308,7 +3308,7 @@ class IOSRouting(unittest.TestCase):
         self.assertEqual(charged(title()), 2)
         self.assertEqual(charged(title(family="iphone")), 1)
         self.assertEqual(charged(title(runner="owned")), 2)
-        self.assertEqual(charged(title(package="CmuxMobileShell")), 0)
+        self.assertEqual(charged(title(package="HmuxMobileShell")), 0)
         self.assertEqual(charged(title(runner="blacksmith-6vcpu-macos-26")), 0)
         # A title from before the runner field, or another workflow's, is charged in full.
         self.assertEqual(charged({"display_title": "iOS tests · main · simulator · full suite · iphone · iOS default"}), 2)
@@ -3620,7 +3620,7 @@ class IOSRouting(unittest.TestCase):
         self.assertIn("::error::", err.getvalue())
         out = io.StringIO()
         with unittest.mock.patch("sys.stdout", out):
-            ios_pool.main(["--lane", "test-ios", "--swift-package", "CmuxSyncStore"], env={})
+            ios_pool.main(["--lane", "test-ios", "--swift-package", "HmuxSyncStore"], env={})
         outputs = dict(line.split("=", 1) for line in out.getvalue().splitlines())
         self.assertEqual((outputs["jobs"], outputs["sim_jobs"]), ("1", "0"))
 
@@ -3637,8 +3637,8 @@ class IOSRouting(unittest.TestCase):
         self.assertFalse(self.live(1, 2).persistent)
         self.assertTrue(self.live(2, 1, device_family="iphone").persistent)
         # A package run holds one machine and no simulator.
-        self.assertTrue(self.live(1, 0, swift_package="CmuxSyncStore").persistent)
-        self.assertFalse(self.live(0, 0, swift_package="CmuxSyncStore").persistent)
+        self.assertTrue(self.live(1, 0, swift_package="HmuxSyncStore").persistent)
+        self.assertFalse(self.live(0, 0, swift_package="HmuxSyncStore").persistent)
         # Not even a live read moves a non-default or blocked run.
         self.assertFalse(self.live(9, 9, variable="blacksmith-12vcpu-macos-26").persistent)
         self.assertFalse(self.live(9, 9, ios_version="26.4").persistent)
@@ -3667,7 +3667,7 @@ class IOSRouting(unittest.TestCase):
         title = "iOS tests · main · {} · all · {} · default · on {}"
         fresh = pool.iso(NOW - dt.timedelta(minutes=1))
         recent = [{"display_title": title.format("simulator", "iphone", "auto"), "created_at": fresh},  # 2, 1 sim
-                  {"display_title": title.format("CmuxSyncStore", "all", "auto"), "created_at": fresh},  # 1, 0
+                  {"display_title": title.format("HmuxSyncStore", "all", "auto"), "created_at": fresh},  # 1, 0
                   {"display_title": title.format("simulator", "all", "blacksmith-6vcpu-macos-26")},  # none
                   {"display_title": "iOS screenshots"}]  # unparsed: in full
         # Unread runs are charged their whole need, and neither count goes below zero.
@@ -3793,7 +3793,7 @@ class E2EQueueRounds(unittest.TestCase):
         self.assertIn('--queue-rounds "$POOL_QUEUE_ROUNDS"', step["run"])
         for name in ("test-macos-suite.yml", "main-regression-bisect.yml"):
             text = (WORKFLOWS / name).read_text()
-            self.assertIn("CMUX_CI_PR_POOL_QUEUE_ROUNDS: ${{ vars.CI_PR_POOL_QUEUE_ROUNDS }}", text, name)
+            self.assertIn("HMUX_CI_PR_POOL_QUEUE_ROUNDS: ${{ vars.CI_PR_POOL_QUEUE_ROUNDS }}", text, name)
         self.assertIn("pool.QUEUE_ROUNDS_VARIABLE, QUEUE_ROUNDS_ENV",
                       (ROOT / "scripts/ci/dispatch-focused-test.py").read_text())
 
@@ -3813,9 +3813,9 @@ class IrohReleaseGateWiring(unittest.TestCase):
         self.assertEqual(job["runs-on"], "${{ github.repository_owner != 'manaflow-ai' && 'macos-26' || "
                                          "(github.run_attempt == 1 && needs.runner.outputs.label || "
                                          f"{self.BLACKSMITH}) }}}}")
-        self.assertEqual(job["env"]["CMUX_CI_XCODE_APP"],
+        self.assertEqual(job["env"]["HMUX_CI_XCODE_APP"],
                          "${{ github.run_attempt == 1 && needs.runner.outputs.label != '' && "
-                         "vars.CMUX_CI_XCODE_APP_PR || vars.CMUX_CI_XCODE_APP_MACOS_15 }}")
+                         "vars.HMUX_CI_XCODE_APP_PR || vars.HMUX_CI_XCODE_APP_MACOS_15 }}")
         names = [step.get("name") for step in job["steps"]]
         self.assertLess(names.index("Take this Mac's gui token"), names.index("Run deterministic version-skew gate"))
 
@@ -3885,7 +3885,7 @@ class IOSWiring(unittest.TestCase):
         self.assertIn('--seed-cache "$SEED_CACHE"', step["run"])
         pin = IOS_XCODE_PIN
         for name in ("mobile-core-package", "ios-simulator-build", "ios-simulator"):
-            self.assertEqual(jobs[name]["env"]["CMUX_CI_XCODE_APP"], pin, name)
+            self.assertEqual(jobs[name]["env"]["HMUX_CI_XCODE_APP"], pin, name)
         # PyYAML reads the `on:` key as True.
         options = self.workflow("test-ios.yml")[True]["workflow_dispatch"]["inputs"]["runner"]["options"]
         self.assertEqual(options, ["auto", "blacksmith-6vcpu-macos-26", "owned"])
@@ -3904,11 +3904,11 @@ class IOSWiring(unittest.TestCase):
                          "${{ !contains(github.workflow_ref, '/.github/workflows/ios-screenshots.yml@') }}")
         self.assertNotIn("GH_TOKEN", step["env"])
         screenshots = jobs["screenshots"]
-        self.assertEqual(screenshots["env"]["CMUX_CI_XCODE_APP"],
-                         "${{ startsWith(needs.runner.outputs.label, 'glaeda-') && vars.CMUX_CI_XCODE_APP_PR || '' }}")
+        self.assertEqual(screenshots["env"]["HMUX_CI_XCODE_APP"],
+                         "${{ startsWith(needs.runner.outputs.label, 'glaeda-') && vars.HMUX_CI_XCODE_APP_PR || '' }}")
         capture = next(step for step in screenshots["steps"] if step.get("name") == "Capture screenshots")
         self.assertEqual(capture["env"]["SNAPSHOT_DERIVED_DATA_PATH"],
-                         "${{ runner.temp }}/cmux-ios-snapshot-derived-data")
+                         "${{ runner.temp }}/hmux-ios-snapshot-derived-data")
 
     def test_a_persistent_pick_publishes_the_rescue_marker(self):
         for name in ("test-ios.yml", "ios-screenshots.yml"):
@@ -4055,7 +4055,7 @@ class LiveIdleRunners(unittest.TestCase):
         self.assertIn("no readable pool snapshot; no owned pool has room", full.reason)
         # A stale snapshot's warm keys are kept for warm affinity.
         stale = fleet(busy=11, age=120)
-        stale["warm"] = {"runners": {"cmux1-glaeda": {"keys": ["pr-7"]}}}
+        stale["warm"] = {"runners": {"hmux1-glaeda": {"keys": ["pr-7"]}}}
         _, snap = pool.choose(
             event="pull_request", repo="manaflow-ai/cmux", head_repo="manaflow-ai/cmux", default_runner=SMALL,
             overflow="", order="", max_queued="", xcode_pins=OWNED_PINS, owned="1",
@@ -4083,7 +4083,7 @@ class LiveIdleRunners(unittest.TestCase):
         self.assertEqual(owned_choice(busy, **dict(kwargs, routed=dataclasses.replace(unknown, live_unknown=3))).runner,
                          LARGE)
         # A fork run still needs the janitor's copied settings.
-        self.assertEqual(choose(None, head="someone/cmux", default="", pins={}, live_owned={MINI: 9}).runner, "")
+        self.assertEqual(choose(None, head="someone/hmux", default="", pins={}, live_owned={MINI: 9}).runner, "")
 
     def test_the_summary_says_the_owned_pools_were_read_live(self):
         choice, snap = pool.choose(

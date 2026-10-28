@@ -208,7 +208,7 @@ def main():
     bgs_p = bg_list(BG_P_DIR, os.path.join(HERE, "bg_portrait.jpg"))
     bgs_l = bg_list(BG_L_DIR, os.path.join(HERE, "bg_landscape.jpg"))
     frame = ensure_iphone_frame()
-    mask = os.path.join(tempfile.gettempdir(), "cmux_iphone_opening_mask.png")
+    mask = os.path.join(tempfile.gettempdir(), "hmux_iphone_opening_mask.png")
     build_opening_mask(frame, mask)
     en, loc = load_titles()
     jobs = []
@@ -238,7 +238,7 @@ def main():
     # ImageMagick runs in child processes, so worker threads provide real parallel
     # composition while keeping each image's temporary files isolated. Four workers
     # stays below the memory envelope of the six-core macOS CI lane.
-    workers = int(os.environ.get("CMUX_FRAME_WORKERS", min(4, os.cpu_count() or 1)))
+    workers = int(os.environ.get("HMUX_FRAME_WORKERS", min(4, os.cpu_count() or 1)))
     workers = max(1, min(workers, len(jobs))) if jobs else 1
     with ThreadPoolExecutor(max_workers=workers) as executor:
         list(executor.map(compose, jobs))

@@ -209,7 +209,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=joined",
+      "https://hmux.test/dashboard/testflight?testflight=joined",
     );
     expect(ascFetch).toHaveBeenCalledWith(
       "/v1/betaTesters",
@@ -223,8 +223,8 @@ describe("TestFlight route", () => {
     });
     expect(update).toHaveBeenCalledWith({
       clientReadOnlyMetadata: {
-        cmuxProTestflightEnrollmentEmails: ["pro@example.com"],
-        cmuxProTestflightGrants: [
+        hmuxProTestflightEnrollmentEmails: ["pro@example.com"],
+        hmuxProTestflightGrants: [
           { email: "pro@example.com", source: "user" },
         ],
       },
@@ -245,7 +245,7 @@ describe("TestFlight route", () => {
     });
     const freshUser = createTestflightUser();
     freshUser.clientReadOnlyMetadata = {
-      cmuxPlan: "pro",
+      hmuxPlan: "pro",
       retained: true,
     };
     freshUser.update = mock(async (options: unknown) => {
@@ -259,7 +259,7 @@ describe("TestFlight route", () => {
     mockImplementation(isTestflightEligible, async (candidate: unknown) => {
       if (candidate === staleUser) {
         await staleUser.update({
-          clientReadOnlyMetadata: { cmuxPlan: "pro" },
+          clientReadOnlyMetadata: { hmuxPlan: "pro" },
         });
       }
       return true;
@@ -270,15 +270,15 @@ describe("TestFlight route", () => {
     expect(response.status).toBe(303);
     expect(getUser).toHaveBeenCalledTimes(2);
     expect(staleUpdates).toEqual([
-      { clientReadOnlyMetadata: { cmuxPlan: "pro" } },
+      { clientReadOnlyMetadata: { hmuxPlan: "pro" } },
     ]);
     expect(freshUpdates).toEqual([
       {
         clientReadOnlyMetadata: {
-          cmuxPlan: "pro",
+          hmuxPlan: "pro",
           retained: true,
-          cmuxProTestflightEnrollmentEmails: ["pro@example.com"],
-          cmuxProTestflightGrants: [
+          hmuxProTestflightEnrollmentEmails: ["pro@example.com"],
+          hmuxProTestflightGrants: [
             { email: "pro@example.com", source: "user" },
           ],
         },
@@ -294,7 +294,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=ineligible",
+      "https://hmux.test/dashboard/testflight?testflight=ineligible",
     );
     expect(ascFetch).not.toHaveBeenCalled();
   });
@@ -321,7 +321,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=ineligible",
+      "https://hmux.test/dashboard/testflight?testflight=ineligible",
     );
     expect(isTestflightEligible).toHaveBeenCalledTimes(2);
     expect(ascFetch).toHaveBeenCalledWith(
@@ -339,7 +339,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=left",
+      "https://hmux.test/dashboard/testflight?testflight=left",
     );
     expect(ascFetch).toHaveBeenCalledWith(
       `/v1/betaGroups/${PRO_TESTFLIGHT_GROUP_ID}/relationships/betaTesters`,
@@ -352,7 +352,7 @@ describe("TestFlight route", () => {
       ...createTestflightUser(),
       primaryEmail: null,
       clientReadOnlyMetadata: {
-        cmuxProTestflightEnrollmentEmails: ["historical@example.com"],
+        hmuxProTestflightEnrollmentEmails: ["historical@example.com"],
       },
     } as never;
     user = currentUser;
@@ -361,7 +361,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=left",
+      "https://hmux.test/dashboard/testflight?testflight=left",
     );
     expect(ascFetch).toHaveBeenCalledWith(
       `/v1/betaTesters?filter[email]=${encodeURIComponent("historical@example.com")}&limit=1`,
@@ -376,12 +376,12 @@ describe("TestFlight route", () => {
     user = null;
 
     const response = await postAction("join", {
-      referer: "https://cmux.test/ja/dashboard/testflight",
+      referer: "https://hmux.test/ja/dashboard/testflight",
     });
     const location = new URL(response.headers.get("location")!);
     const afterSignIn = new URL(
       location.searchParams.get("after_auth_return_to")!,
-      "https://cmux.test",
+      "https://hmux.test",
     );
 
     expect(response.status).toBe(303);
@@ -400,7 +400,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=error",
+      "https://hmux.test/dashboard/testflight?testflight=error",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(ascFetch).not.toHaveBeenCalled();
@@ -413,7 +413,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=busy",
+      "https://hmux.test/dashboard/testflight?testflight=busy",
     );
     expect(captureAscError).not.toHaveBeenCalled();
     expect(isTestflightEligible).not.toHaveBeenCalled();
@@ -435,7 +435,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=error",
+      "https://hmux.test/dashboard/testflight?testflight=error",
     );
     expect(ascFetch).toHaveBeenCalledWith(
       "/v1/betaTesters",
@@ -457,7 +457,7 @@ describe("TestFlight route", () => {
     const response = await postAction("join");
 
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=busy",
+      "https://hmux.test/dashboard/testflight?testflight=busy",
     );
     expect(captureAscError).not.toHaveBeenCalled();
     expect(ascFetch).not.toHaveBeenCalled();
@@ -470,7 +470,7 @@ describe("TestFlight route", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?testflight=unavailable",
+      "https://hmux.test/dashboard/testflight?testflight=unavailable",
     );
     expect(ascFetch).not.toHaveBeenCalled();
   });
@@ -486,15 +486,15 @@ function postAction(
 ) {
   const headers = new Headers({
     "content-type": "application/x-www-form-urlencoded",
-    origin: options.origin ?? "https://cmux.test",
-    referer: options.referer ?? "https://cmux.test/dashboard/testflight",
+    origin: options.origin ?? "https://hmux.test",
+    referer: options.referer ?? "https://hmux.test/dashboard/testflight",
   });
   if (options.secFetchSite) {
     headers.set("sec-fetch-site", options.secFetchSite);
   }
 
   return POST(
-    new NextRequest("https://cmux.test/api/testflight", {
+    new NextRequest("https://hmux.test/api/testflight", {
       method: "POST",
       headers,
       body: new URLSearchParams({ action }),

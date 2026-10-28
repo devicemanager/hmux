@@ -65,20 +65,20 @@ export function vmPrincipalFailureStatus(reason: VmPrincipalFailure): number {
 
 const FAILURE_MESSAGES: Record<VmPrincipalFailure, { message: string; action: string }> = {
   missing_route_token: {
-    message: "Reflection answers only a cmux Cloud machine: this request carried no machine credential.",
-    action: "Call it from inside the machine through its alias origin (CMUX_CODEROUTER_URL); the platform edge adds the credential.",
+    message: "Reflection answers only a hmux Cloud machine: this request carried no machine credential.",
+    action: "Call it from inside the machine through its alias origin (HMUX_CODEROUTER_URL); the platform edge adds the credential.",
   },
   invalid_route_token: {
     message: "This machine's credential expired or was revoked.",
-    action: "Reconnect the machine from the Mac (cmux vm tree <machine> --refresh) so its edge rule is re-provisioned, then retry.",
+    action: "Reconnect the machine from the Mac (hmux vm tree <machine> --refresh) so its edge rule is re-provisioned, then retry.",
   },
   vm_mismatch: {
     message: "This machine's credential does not match the machine it was issued to.",
     action: "The edge rule was provisioned for another machine; recreate the machine or contact support.",
   },
   vm_bound_token_required: {
-    message: "Reflection is only available from inside a cmux Cloud machine.",
-    action: "Run `cmux whoami` inside the machine; from the Mac use `cmux vm status <machine>`.",
+    message: "Reflection is only available from inside a hmux Cloud machine.",
+    action: "Run `hmux whoami` inside the machine; from the Mac use `hmux vm status <machine>`.",
   },
   vm_not_found: {
     message: "The machine this credential names no longer exists.",

@@ -1,5 +1,5 @@
-import CmuxAgentJournal
-import CmuxControlSocket
+import HmuxAgentJournal
+import HmuxControlSocket
 import Foundation
 
 /// Where a message goes, resolved on the main actor.
@@ -9,7 +9,7 @@ struct AgentMessageRecipient: Sendable {
     let surfaceRef: String
     let workspaceRef: String
     let workspaceTitle: String
-    /// True when cmux has seen agent hook activity on the surface.
+    /// True when hmux has seen agent hook activity on the surface.
     let hasAgent: Bool
 }
 
@@ -162,7 +162,7 @@ extension TerminalController {
                 code: "storage_failed",
                 message: String(
                     localized: "socket.agentMessage.error.notSaved",
-                    defaultValue: "The message was not sent: cmux could not save it to the message journal."
+                    defaultValue: "The message was not sent: hmux could not save it to the message journal."
                 ),
                 data: ["reason": error.reason]
             )
@@ -356,11 +356,11 @@ extension TerminalController {
             let message = timeout.retryable
                 ? String(
                     localized: "socket.mainActorHop.timeout.notRun",
-                    defaultValue: "cmux did not respond within 10 seconds, so the command was not run. Retry in a moment."
+                    defaultValue: "hmux did not respond within 10 seconds, so the command was not run. Retry in a moment."
                 )
                 : String(
                     localized: "socket.mainActorHop.timeout.mayHaveRun",
-                    defaultValue: "cmux did not respond within 10 seconds after the command started, so its result is unknown. Check the effect before retrying."
+                    defaultValue: "hmux did not respond within 10 seconds after the command started, so its result is unknown. Check the effect before retrying."
                 )
             return .err(
                 code: "timeout",
@@ -499,7 +499,7 @@ extension TerminalController {
         return trimmed.isEmpty ? nil : trimmed
     }
 
-    /// Hooks pass the surface UUID from `CMUX_SURFACE_ID`; stored ids use the
+    /// Hooks pass the surface UUID from `HMUX_SURFACE_ID`; stored ids use the
     /// canonical uppercase form.
     nonisolated static func agentMessageSurfaceUUID(_ raw: Any?) -> String? {
         guard let string = agentMessageTrimmed(raw), let uuid = UUID(uuidString: string) else { return nil }

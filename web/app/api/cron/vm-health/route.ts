@@ -6,7 +6,7 @@ import { sweepVmHealth } from "../../../../services/vms/health/sweep";
 import { runVmWorkflow } from "../../../../services/vms/workflows";
 
 // The sweep stops starting probes at its own budget (VM_HEALTH_DEFAULT_BUDGET_MS,
-// or the capped CMUX_VM_HEALTH_BUDGET_MS override in services/vms/health/cron.ts);
+// or the capped HMUX_VM_HEALTH_BUDGET_MS override in services/vms/health/cron.ts);
 // this cap only guards a provider call that ignores its abort signal.
 export const maxDuration = 300;
 

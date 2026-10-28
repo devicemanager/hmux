@@ -13,7 +13,7 @@ export const STACK_PERMISSION_BY_NAME = {
   manageApiKeys: "$manage_api_keys",
 } as const satisfies Record<Exclude<TeamPermissionName, "manageBilling">, string>;
 
-/** Map a member's recursive Stack grants onto the role cmux shows. */
+/** Map a member's recursive Stack grants onto the role hmux shows. */
 export function roleFromGrants(grants: ReadonlySet<string>): TeamRole {
   return grants.has(TEAM_ADMIN_PERMISSION) ? "admin" : "member";
 }

@@ -145,7 +145,7 @@ FORK_PULL_REQUEST_LABEL = re.compile(
     r"blacksmith-\d+vcpu-(?:macos|ubuntu)-[a-z0-9.]+|macos-\d+|ubuntu-[a-z0-9.-]+"
 )
 # Values that can resolve to an owned self-hosted label. A variable counts on
-# any line (env mirrors such as CMUX_PRODUCT_RUNNER must agree with runs-on); a
+# any line (env mirrors such as HMUX_PRODUCT_RUNNER must agree with runs-on); a
 # matrix pool or the pull request pool picker's output only where it picks the
 # runner.
 #
@@ -886,7 +886,7 @@ class ForkRunnerRoutingTests(unittest.TestCase):
 
         select-ci-xcode.sh fails on a pinned Xcode the image does not carry, so a
         fork PR routed to the macOS 15 default while still reading
-        CMUX_CI_XCODE_APP_PR would fail at Xcode selection.
+        HMUX_CI_XCODE_APP_PR would fail at Xcode selection.
         """
         same_repository = "github.event.pull_request.head.repo.full_name == github.repository"
         trusted_repository = "contains(fromJSON(env.CI_OWNED_HEAD_REPOS), github.event.pull_request.head.repo.full_name)"
@@ -895,7 +895,7 @@ class ForkRunnerRoutingTests(unittest.TestCase):
         failures = []
         for path in fork_exercised_workflows():
             for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
-                if line.lstrip().startswith("#") or not re.search(r"vars\.CMUX_(?:CI|CI_HELPER)_XCODE_APP_PR\b", line):
+                if line.lstrip().startswith("#") or not re.search(r"vars\.HMUX_(?:CI|CI_HELPER)_XCODE_APP_PR\b", line):
                     continue
                 checked += 1
                 if not any(clause in line for clause in (same_repository, trusted_repository, trusted_input)):
@@ -1117,7 +1117,7 @@ class ForkRunnerRoutingTests(unittest.TestCase):
             ("self-hosted", "blacksmith-4vcpu-ubuntu-2404-Runner-337101a82d"): False,
             ("github-hosted", "GitHub Actions 12"): False,
             # Owned glaeda hosts, even under a Blacksmith-looking name.
-            ("self-hosted", "cmuxs-mac-mini-5-glaeda-1"): True,
+            ("self-hosted", "hmuxs-mac-mini-5-glaeda-1"): True,
             ("self-hosted", "blacksmith-4vcpu-ubuntu-2404-glaeda"): True,
             ("github-hosted", "x-glaeda-1"): True,
             # Labels outside the runs-on allowlist, and the bare label.

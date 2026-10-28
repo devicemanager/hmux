@@ -1,5 +1,5 @@
 import AppKit
-import CmuxTerminal
+import HmuxTerminal
 
 extension GhosttyNSView {
     // MARK: - Accessibility
@@ -128,7 +128,7 @@ extension GhosttyNSView {
         guard !content.isEmpty else { return }
 
 #if DEBUG
-        cmuxDebugLog("ime.ax.insert len=\(content.count)")
+        hmuxDebugLog("ime.ax.insert len=\(content.count)")
 #endif
 
         let (body, lineBreaks) = TerminalAccessibilityText.splitTrailingLineBreaks(content)

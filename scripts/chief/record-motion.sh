@@ -1,21 +1,21 @@
 #!/usr/bin/env bash
 # Records Chief Home's send morph (1 and 2 lines), receipts, typing and an
 # incoming message from a running tagged DEBUG app with the scripted brain,
-# through `cmux record` (permission-free, cmux windows only), then splits
+# through `hmux record` (permission-free, hmux windows only), then splits
 # each clip into labeled frames with the verify-ui-video splitter.
 #
 # Usage:
-#   CMUX_TAG=<tag> scripts/chief/record-motion.sh [--out <dir>] [--fps <1-30>]
+#   HMUX_TAG=<tag> scripts/chief/record-motion.sh [--out <dir>] [--fps <1-30>]
 #
-# The tagged app must run with CMUX_CHIEF_BRAIN=scripted (see
+# The tagged app must run with HMUX_CHIEF_BRAIN=scripted (see
 # .chief-work/motion-proof.md: reload.sh does not pass it through yet).
-# `cmux record` caps --fps at 30; 60 fps evidence comes from the
+# `hmux record` caps --fps at 30; 60 fps evidence comes from the
 # MessagesLabHomeTests golden harness, not from these clips.
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-: "${CMUX_TAG:?CMUX_TAG is required}"
-OUT="${TMPDIR:-/tmp}/chief-motion-${CMUX_TAG}"
+: "${HMUX_TAG:?HMUX_TAG is required}"
+OUT="${TMPDIR:-/tmp}/chief-motion-${HMUX_TAG}"
 FPS=30
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -24,10 +24,10 @@ while [[ $# -gt 0 ]]; do
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
-SPLIT="${CMUX_VERIFY_UI_VIDEO_SPLIT:-$HOME/manaflow/cmuxterm-hq/skills/debug/verify-ui-video/scripts/split-ui-video-frames.sh}"
+SPLIT="${HMUX_VERIFY_UI_VIDEO_SPLIT:-$HOME/manaflow/hmuxterm-hq/skills/debug/verify-ui-video/scripts/split-ui-video-frames.sh}"
 mkdir -p "$OUT"
 
-cli() { "$ROOT/scripts/cmux-debug-cli.sh" "$@"; }
+cli() { "$ROOT/scripts/hmux-debug-cli.sh" "$@"; }
 
 json_field() { python3 -I -c 'import json,sys; v=json.load(sys.stdin); print(json.dumps(v.get(sys.argv[1])))' "$1"; }
 

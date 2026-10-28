@@ -14,7 +14,7 @@ const CATALOG: RelayCatalog = {
   sequence: 1,
   relays: [{
     id: "managed-one",
-    provider: "cmux",
+    provider: "hmux",
     region: "us-west",
     url: "https://relay-one.cmux.dev/",
   }],
@@ -40,7 +40,7 @@ function deps(overrides: Partial<RelayPreferenceDeps> = {}): RelayPreferenceDeps
 function getRequest(clientNamespace?: string): Request {
   return new Request("https://cmux.dev/api/relay/preferences", {
     headers: clientNamespace
-      ? { "x-cmux-app-namespace": clientNamespace }
+      ? { "x-hmux-app-namespace": clientNamespace }
       : undefined,
   });
 }
@@ -168,7 +168,7 @@ describe("/api/relay/preferences", () => {
   test("skips preference limits for an authorized development team", async () => {
     let checks = 0;
     const response = await handleGetRelayPreference(
-      getRequest("dev.cmux.ios.grid"),
+      getRequest("dev.hmux.ios.grid"),
       deps({
         isVercel: () => true,
         rateLimitRuleId: () => "relay-preference",

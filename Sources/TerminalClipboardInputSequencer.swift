@@ -1,5 +1,5 @@
 import Foundation
-import CmuxTerminalCore
+import HmuxTerminalCore
 import os
 
 /// Preserves terminal input order while Ghostty is resolving a clipboard read.

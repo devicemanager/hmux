@@ -1,10 +1,10 @@
-import CmuxBrowser
-import CmuxSettings
+import HmuxBrowser
+import HmuxSettings
 import Foundation
 
 /// Settings-file parsing for the browser Memory Saver keys, extracted from
 /// `KeyboardShortcutSettingsFileStore.swift`, which sits at its file-length budget.
-extension CmuxSettingsFileStore {
+extension HmuxSettingsFileStore {
     /// Applies `browser.hiddenWebViewDiscardMode`, `browser.hiddenWebViewMemoryBudgetMB`
     /// and `browser.hiddenWebViewDiscardDelaySeconds`. Returns `false` for an invalid
     /// delay so the caller keeps its existing behavior of skipping the rest of the

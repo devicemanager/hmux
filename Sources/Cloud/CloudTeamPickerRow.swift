@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CmuxSettingsUI
+import HmuxFoundation
+import HmuxSettingsUI
 import SwiftUI
 
 /// Shows the active team in the Cloud header and pulls its team menu down from
@@ -36,7 +36,7 @@ struct CloudTeamPickerRow: View {
     @Environment(\.isEnabled) private var isEnabled
     @Environment(\.layoutDirection) private var layoutDirection
     @Environment(\.colorScheme) private var colorScheme
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var globalFontMagnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var globalFontMagnification
 
     var body: some View {
         Button {
@@ -62,7 +62,7 @@ struct CloudTeamPickerRow: View {
                         )
                         .environment(\.layoutDirection, layoutDirection)
                         .environment(\.colorScheme, colorScheme)
-                        .environment(\.cmuxGlobalFontMagnificationPercent, globalFontMagnification)
+                        .environment(\.hmuxGlobalFontMagnificationPercent, globalFontMagnification)
                     )
                 },
                 makeMenu: makeMenu,
@@ -137,7 +137,7 @@ struct CloudTeamPickerRow: View {
             Image(systemName: "person.2")
                 .font(.system(size: 10, weight: .semibold))
             Text(teamName)
-                .cmuxFont(size: 11, weight: .medium)
+                .hmuxFont(size: 11, weight: .medium)
                 .lineLimit(1)
                 .layoutPriority(1)
             Image(systemName: "chevron.down")

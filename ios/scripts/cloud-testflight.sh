@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Turnkey cloud TestFlight lane for the cmux iOS beta.
+# Turnkey cloud TestFlight lane for the hmux iOS beta.
 #
 #   ios/scripts/cloud-testflight.sh --no-upload          # dry run: archive + export + re-sign + verify, NO upload
 #   ios/scripts/cloud-testflight.sh                       # full lane: build on the fleet, upload to TestFlight
@@ -8,21 +8,21 @@
 # The heavy GhosttyKit + Swift Release compile runs on a leased fleet Mac (the
 # same maclease pool/exclusions reload-cloud-ios uses, m1ultra excluded). The
 # fleet builds an UNSIGNED Release archive for the beta bundle id
-# (dev.cmux.app.beta): no signing material ever lands on the shared Macs (they
+# (dev.hmux.app.beta): no signing material ever lands on the shared Macs (they
 # also run GitHub Actions, i.e. arbitrary PR code). The archive is downloaded
 # locally and handed to ios/scripts/upload-testflight.sh --archive-path, which
 # does the local export, re-sign with the Apple Distribution cert (re-adding
 # aps-environment=production), strict codesign verification, and TestFlight
 # upload.
 #
-# The cloud build is provided by the cmuxterm-hq script scripts/reload-cloud-ios.sh
+# The cloud build is provided by the hmuxterm-hq script scripts/reload-cloud-ios.sh
 # (located the same way the worktree shim ios/scripts/reload-cloud.sh finds it).
 # That script also owns builder resilience: an unreachable leased slot is released
 # and the next builder is tried, and beta-archive mode applies a pre-build disk
 # floor (RELOAD_CLOUD_IOS_MIN_FREE_GB, default 20G) so a nearly-full fleet host
-# (cmux-aws-m4pro routinely sits ~99.7% APFS-full) is skipped instead of dying
+# (hmux-aws-m4pro routinely sits ~99.7% APFS-full) is skipped instead of dying
 # mid-archive; it also prunes its remote work dir after the download. A standalone
-# cmux clone with no hq checkout transparently falls back to a LOCAL Release
+# hmux clone with no hq checkout transparently falls back to a LOCAL Release
 # archive on this Mac. Either way the archive is then handed to
 # upload-testflight.sh, so the export/re-sign/verify/upload path is identical.
 #
@@ -38,7 +38,7 @@
 #
 # FIRST EXTERNAL BUILD OF A VERSION: an --external build must pass a one-time
 # Apple Beta App Review (~24h) before external testers can install it. Internal
-# testers (the "cmux beta" group) get every build instantly with no review.
+# testers (the "hmux beta" group) get every build instantly with no review.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -48,15 +48,15 @@ REPO_ROOT="$(cd "$IOS_DIR/.." && pwd)"
 # Distribution archives, including the INTERNAL TestFlight lane, are always
 # production-level artifacts. These values are exported for the cloud archive
 # serializer and repeated as xcodebuild settings in the local fallback.
-export CMUX_IOS_AUTH_ENV=production
-export CMUX_API_BASE_URL=https://cmux.com
-export CMUX_IROH_BROKER_BASE_URL=https://cmux.com
-export CMUX_PRESENCE_BASE_URL=https://presence.cmux.dev
+export HMUX_IOS_AUTH_ENV=production
+export HMUX_API_BASE_URL=https://cmux.com
+export HMUX_IROH_BROKER_BASE_URL=https://cmux.com
+export HMUX_PRESENCE_BASE_URL=https://presence.cmux.dev
 PRODUCTION_RUNTIME_BUILD_ARGS=(
-  CMUX_IOS_AUTH_ENV=production
-  CMUX_API_BASE_URL=https://cmux.com
-  CMUX_IROH_BROKER_BASE_URL=https://cmux.com
-  CMUX_PRESENCE_BASE_URL=https://presence.cmux.dev
+  HMUX_IOS_AUTH_ENV=production
+  HMUX_API_BASE_URL=https://cmux.com
+  HMUX_IROH_BROKER_BASE_URL=https://cmux.com
+  HMUX_PRESENCE_BASE_URL=https://presence.cmux.dev
 )
 
 LANE="beta"
@@ -80,7 +80,7 @@ WAIT_SECONDS="${CLOUD_TESTFLIGHT_WAIT:-1200}"
 # Force a local Release archive on this Mac instead of the fleet (offline cloud,
 # or deliberate). Also the automatic fallback when no hq cloud script is found.
 FORCE_LOCAL="${CLOUD_TESTFLIGHT_FORCE_LOCAL:-0}"
-BETA_BUNDLE_ID="${IOS_BETA_BUNDLE_ID:-dev.cmux.app.beta}"
+BETA_BUNDLE_ID="${IOS_BETA_BUNDLE_ID:-dev.hmux.app.beta}"
 
 err() { printf 'cloud-testflight: %s\n' "$*" >&2; }
 die() { err "$*"; exit 1; }
@@ -92,13 +92,13 @@ Usage: ios/scripts/cloud-testflight.sh [--lane beta|appstore] [--no-upload] [--e
                                        [--host <name>] [--wait <seconds>]
                                        [--local] [--keep-artifacts]
 
-Build an UNSIGNED Release archive for cmux iOS on a leased fleet Mac, download
+Build an UNSIGNED Release archive for hmux iOS on a leased fleet Mac, download
 it, then export/re-sign/verify/upload via upload-testflight.sh.
 
   --lane <beta|appstore>
-                     Distribution lane. beta (default) = dev.cmux.app.beta;
-                     appstore = com.cmux.app (public App Store record). Both
-                     archive an unsigned Release build with display name "cmux"
+                     Distribution lane. beta (default) = dev.hmux.app.beta;
+                     appstore = com.hmux.app (public App Store record). Both
+                     archive an unsigned Release build with display name "hmux"
                      on the fleet; upload-testflight.sh picks the matching
                      provisioning profile and uploads to that record's
                      TestFlight (the appstore build is then attached to the App
@@ -110,7 +110,7 @@ it, then export/re-sign/verify/upload via upload-testflight.sh.
                      --export-only.
   --external         Make the build eligible for EXTERNAL TestFlight testers
                      (requires a one-time Apple Beta App Review per version).
-                     Default is internal-only (instant for the "cmux beta" group).
+                     Default is internal-only (instant for the "hmux beta" group).
   --tag <tag>        Build tag for the lease description / remote work dir
                      (default: beta). Does not change the bundle id.
   --host <name>      Force a specific fleet builder (skips host preference).
@@ -149,25 +149,25 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Resolve the archive bundle id + on-device display name per lane. The fleet
-# build (reload-cloud-ios.sh --mode beta-archive) bakes DISPLAY_NAME="cmux" for
+# build (reload-cloud-ios.sh --mode beta-archive) bakes DISPLAY_NAME="hmux" for
 # either lane already; LANE_DISPLAY_NAME only feeds the LOCAL fallback archive,
-# which otherwise inherits Release.xcconfig's "cmux BETA".
+# which otherwise inherits Release.xcconfig's "hmux BETA".
 LANE_DISPLAY_NAME=""
 case "$LANE" in
   beta)
-    : "${BETA_BUNDLE_ID:=dev.cmux.app.beta}"
-    export CMUX_CRASH_REPORTING_ENABLED="YES"
+    : "${BETA_BUNDLE_ID:=dev.hmux.app.beta}"
+    export HMUX_CRASH_REPORTING_ENABLED="YES"
     ;;
   appstore|prod)
-    BETA_BUNDLE_ID="com.cmux.app"
-    LANE_DISPLAY_NAME="cmux"
+    BETA_BUNDLE_ID="com.hmux.app"
+    LANE_DISPLAY_NAME="hmux"
     [[ "$TAG" == "beta" ]] && TAG="appstore"
     # The App Store lane ships with crash reporting on, matching beta.
     # upload-testflight.sh enforces the lane value at export time, so the
     # fleet archive must bake it in (the hq cloud script forwards this env
     # into the remote xcodebuild archive). The in-app telemetry consent
     # toggle remains the user-facing opt-out for crash reports and analytics.
-    export CMUX_CRASH_REPORTING_ENABLED="YES"
+    export HMUX_CRASH_REPORTING_ENABLED="YES"
     ;;
   *)
     die "unsupported lane: $LANE (expected beta or appstore)"
@@ -179,7 +179,7 @@ esac
 # a rejected archive 25 minutes into a fleet build.
 [[ -z "$MARKETING_VERSION_OVERRIDE" || "$MARKETING_VERSION_OVERRIDE" =~ ^[0-9]+(\.[0-9]+){1,2}$ ]] \
   || die "invalid --marketing-version (want X.Y or X.Y.Z): $MARKETING_VERSION_OVERRIDE"
-[[ -d "$IOS_DIR/cmux.xcworkspace" ]] || die "run from a cmux checkout containing ios/cmux.xcworkspace"
+[[ -d "$IOS_DIR/hmux.xcworkspace" ]] || die "run from a hmux checkout containing ios/hmux.xcworkspace"
 
 # Pin the expected beta version before any archive path runs. The local fallback
 # and the fleet build both stamp this version into the archive; upload-testflight.sh
@@ -191,9 +191,9 @@ else
 fi
 
 # --- locate the hq cloud build script (mirrors ios/scripts/reload-cloud.sh) ---
-# scripts/reload-cloud-ios.sh lives in the cmuxterm-hq checkout, two levels up
-# from the worktree's git common dir (.../cmuxterm-hq/repo/.git -> cmuxterm-hq).
-# A standalone cmux clone has no such file; we fall back to a local build.
+# scripts/reload-cloud-ios.sh lives in the hmuxterm-hq checkout, two levels up
+# from the worktree's git common dir (.../hmuxterm-hq/repo/.git -> hmuxterm-hq).
+# A standalone hmux clone has no such file; we fall back to a local build.
 find_hq_cloud_ios() {
   local git_common_dir hq_root real
   git_common_dir="$(git -C "$REPO_ROOT" rev-parse --git-common-dir 2>/dev/null || true)"
@@ -221,7 +221,7 @@ resolve_appstore_extension_profile() {
 
   local team_id plistbuddy app_bundle_identifier extension_bundle_identifier
   team_id="${IOS_APPSTORE_TEAM_ID:-7WLXT3NR37}"
-  app_bundle_identifier="${IOS_APPSTORE_BUNDLE_ID:-${IOS_APPSTORE_BUNDLE_IDENTIFIER:-com.cmux.app}}"
+  app_bundle_identifier="${IOS_APPSTORE_BUNDLE_ID:-${IOS_APPSTORE_BUNDLE_IDENTIFIER:-com.hmux.app}}"
   extension_bundle_identifier="${app_bundle_identifier}.NotificationService"
   export IOS_APPSTORE_BUNDLE_IDENTIFIER="$app_bundle_identifier"
   export IOS_APPSTORE_EXTENSION_BUNDLE_IDENTIFIER="$extension_bundle_identifier"
@@ -267,7 +267,7 @@ build_archive_cloud() {
   local args=( --mode beta-archive --tag "$TAG" --keep-artifacts --beta-bundle-id "$BETA_BUNDLE_ID" )
   [[ -n "$HOST_FILTER" ]] && args+=( --host "$HOST_FILTER" )
   [[ "$WAIT_SECONDS" =~ ^[0-9]+$ && "$WAIT_SECONDS" -gt 0 ]] && args+=( --wait "$WAIT_SECONDS" )
-  # Run from the repo root so the hq script's "run from a cmux checkout" check and
+  # Run from the repo root so the hq script's "run from a hmux checkout" check and
   # its dirty-tree rsync pick up THIS worktree.
   #
   # RELOAD_CLOUD_IOS_FALLBACK_LOCAL=0 pins the hq script's no-cloud-slot behavior
@@ -295,21 +295,21 @@ build_archive_local() {
   out="$ARTIFACT_ROOT/$TAG-$(date -u +%Y%m%d%H%M%S)"
   mkdir -p "$out"
   build_number="$(date -u +%Y%m%d%H%M%S)"
-  ARCHIVE_PATH="$out/cmux-ios-beta.xcarchive"
+  ARCHIVE_PATH="$out/hmux-ios-beta.xcarchive"
   [[ -x "$REPO_ROOT/scripts/ensure-ghosttykit.sh" ]] && ( cd "$REPO_ROOT" && ./scripts/ensure-ghosttykit.sh ) || true
   # Same UNSIGNED Release archive the fleet builds, so the downstream export/
   # re-sign/upload path is identical. CODE_SIGNING_ALLOWED=NO keeps signing out of
   # the archive; upload-testflight.sh does all signing.
   ( cd "$REPO_ROOT" && xcodebuild archive \
-      -workspace ios/cmux.xcworkspace \
-      -scheme cmux-ios \
+      -workspace ios/hmux.xcworkspace \
+      -scheme hmux-ios \
       -configuration Release \
       -destination 'generic/platform=iOS' \
       -archivePath "$ARCHIVE_PATH" \
       -derivedDataPath "$out/DerivedData" \
-      CMUX_APP_BUNDLE_IDENTIFIER="$BETA_BUNDLE_ID" \
-      CMUX_HOST_BUNDLE_IDENTIFIER="$BETA_BUNDLE_ID" \
-      CMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER="$(bash "$SCRIPT_DIR/notification-service-bundle-id.sh" "$BETA_BUNDLE_ID")" \
+      HMUX_APP_BUNDLE_IDENTIFIER="$BETA_BUNDLE_ID" \
+      HMUX_HOST_BUNDLE_IDENTIFIER="$BETA_BUNDLE_ID" \
+      HMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER="$(bash "$SCRIPT_DIR/notification-service-bundle-id.sh" "$BETA_BUNDLE_ID")" \
       ${LANE_DISPLAY_NAME:+PRODUCT_DISPLAY_NAME="$LANE_DISPLAY_NAME"} \
       CURRENT_PROJECT_VERSION="$build_number" \
       ${MARKETING_VERSION_OVERRIDE:+MARKETING_VERSION="$MARKETING_VERSION_OVERRIDE"} \
@@ -331,7 +331,7 @@ else
       build_archive_local
     }
   else
-    err "no cmuxterm-hq cloud build script found; building locally"
+    err "no hmuxterm-hq cloud build script found; building locally"
     build_archive_local
   fi
 fi

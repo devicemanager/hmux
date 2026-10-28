@@ -4,18 +4,18 @@ Tracing is DEBUG-only and off by default. For a tagged Mac build, enable it for
 that bundle and relaunch:
 
 ```bash
-defaults write com.cmuxterm.app.debug.slat cmux.debug.latency-trace -bool true
+defaults write com.hmuxterm.app.debug.slat hmux.debug.latency-trace -bool true
 ./scripts/reload.sh --tag slat --launch
 ```
 
-`CMUX_LATENCY_TRACE=1` is the equivalent process environment gate. The Mac log
-is `/tmp/cmux-debug-slat.log`.
+`HMUX_LATENCY_TRACE=1` is the equivalent process environment gate. The Mac log
+is `/tmp/hmux-debug-slat.log`.
 
 For an iOS Simulator, enable tracing and the optional typing probe at launch:
 
 ```bash
-SIMCTL_CHILD_CMUX_LATENCY_TRACE=1 \
-SIMCTL_CHILD_CMUX_LATENCY_PROBE=40:250 \
+SIMCTL_CHILD_HMUX_LATENCY_TRACE=1 \
+SIMCTL_CHILD_HMUX_LATENCY_PROBE=40:250 \
 xcrun simctl launch <udid> <ios-bundle-id>
 ```
 
@@ -27,14 +27,14 @@ Find the simulator log with:
 
 ```bash
 data_dir="$(xcrun simctl get_app_container <udid> <ios-bundle-id> data)"
-ios_log="$data_dir/Library/Application Support/cmux-debug.log"
+ios_log="$data_dir/Library/Application Support/hmux-debug.log"
 ```
 
 Simulator and Mac uptime share a clock domain, so analyze with `--same-clock`:
 
 ```bash
 python3 scripts/mobile-latency-trace/analyze.py \
-  --mac-log /tmp/cmux-debug-slat.log \
+  --mac-log /tmp/hmux-debug-slat.log \
   --ios-log "$ios_log" \
   --same-clock
 ```

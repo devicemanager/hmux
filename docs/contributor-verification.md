@@ -78,8 +78,8 @@ does not establish trust: never run candidate code with privileged
 For example, when changing the control socket package on macOS:
 
 ```bash
-swift test --package-path Packages/macOS/CmuxControlSocket --filter ControlClientLineReaderTests
-swift test --package-path Packages/macOS/CmuxControlSocket
+swift test --package-path Packages/macOS/HmuxControlSocket --filter ControlClientLineReaderTests
+swift test --package-path Packages/macOS/HmuxControlSocket
 ```
 
 Replace the package and filter with the actual owner. Check the reported test names
@@ -104,7 +104,7 @@ For an ordinary local contributor, build the tagged app without shared backend
 credentials:
 
 ```bash
-CMUX_DEV_BACKEND_MODE=local ./scripts/reload.sh --tag contributor-check --build-only
+HMUX_DEV_BACKEND_MODE=local ./scripts/reload.sh --tag contributor-check --build-only
 ```
 
 This selects the local backend origin; it does not start a backend or make Cloud
@@ -121,7 +121,7 @@ compile the app-host unit test product:
 
 The wrapper uses the same test-module settings as CI. This is compilation only;
 do not open its untagged product. For UI or dedicated test schemes, follow the
-[test guide](../skills/cmux-testing/references/local-vs-ci-validation.md).
+[test guide](../skills/hmux-testing/references/local-vs-ci-validation.md).
 Confirm the command succeeded and preserve the build log. `build-for-testing`
 proves that the selected app and test product compile, **not** that any test ran. It does not replace the tagged runtime
 step below or required CI checks.
@@ -129,7 +129,7 @@ step below or required CI checks.
 ## 4. Exercise an isolated runtime
 
 A tagged `--launch` requires an authorized development account and a credentials
-file, even with `CMUX_DEV_BACKEND_MODE=local`. Local mode selects the backend
+file, even with `HMUX_DEV_BACKEND_MODE=local`. Local mode selects the backend
 origin; it does not bypass authentication. Team members provision their credentials
 with [`scripts/setup-team-dev.sh`](../scripts/setup-team-dev.sh); the launcher
 requires a current-user-owned file with mode `0600`. Cloning the public repository
@@ -142,7 +142,7 @@ are preserved on rerun; use `--refresh` to replace the personal profile or
 
 **Account passwords are required for this automation, including production.**
 If you normally sign in with an email code, first set a password on your own
-account through the Hexclave account portal for the matching cmux environment.
+account through the Hexclave account portal for the matching hmux environment.
 Team members who want automated production verification should set their own
 production account password before configuring that optional profile. Agents
 should direct developers to this prerequisite when an account has no password;
@@ -151,12 +151,12 @@ a one-time sign-in code cannot be used in the setup script's password prompt.
 Setup also offers an optional production account for developers who may want
 to verify against the production environment. Press Enter or answer `no` to
 skip it. Production credentials are verified against production and stored in
-`~/.secrets/cmuxterm-prod.env`, separately from development credentials.
+`~/.secrets/hmuxterm-prod.env`, separately from development credentials.
 Use `--refresh-production` to configure or replace them later. A production
 verification launcher must explicitly select that file with `--credentials-file`
 and use the production environment; normal development launches do not read it.
 If the production file is absent, setup adopts a complete, protected
-`~/.secrets/cmux-beta-production.env` by copying it to the production path.
+`~/.secrets/hmux-beta-production.env` by copying it to the production path.
 The legacy file remains intact for callers that explicitly select it. Setup
 never overwrites an existing production file or combines partial profiles.
 
@@ -169,10 +169,10 @@ Once the credentials file is configured, build and launch your tag, then explici
 route local socket checks to that tag's socket:
 
 ```bash
-CMUX_DEV_BACKEND_MODE=local ./scripts/reload.sh --tag contributor-check \
-  --no-global-cli-links --credentials-file "$HOME/.secrets/cmuxterm-dev.env" \
+HMUX_DEV_BACKEND_MODE=local ./scripts/reload.sh --tag contributor-check \
+  --no-global-cli-links --credentials-file "$HOME/.secrets/hmuxterm-dev.env" \
   --auth-profile personal --launch
-CMUX_SOCKET_PATH=/tmp/cmux-debug-contributor-check.sock python3 tests_v2/test_ctrl_socket.py
+HMUX_SOCKET_PATH=/tmp/hmux-debug-contributor-check.sock python3 tests_v2/test_ctrl_socket.py
 ```
 
 The socket script is an example, not a mandatory full suite. Pick the reproduction
@@ -198,13 +198,13 @@ Contributors do not need GitHub Actions dispatch permission or a private Mac fle
 A maintainer with access can use the existing exact-revision dispatcher:
 
 ```bash
-python3 scripts/ci/dispatch-focused-test.py cmuxTests/SessionPersistenceTests --ref <pushed-commit-sha> --wait
+python3 scripts/ci/dispatch-focused-test.py hmuxTests/SessionPersistenceTests --ref <pushed-commit-sha> --wait
 ```
 
 Replace the selector with the regression; UI selectors use
-`cmuxUITests/ClassName[/methodName]`. The dispatcher validates the revision/selector
+`hmuxUITests/ClassName[/methodName]`. The dispatcher validates the revision/selector
 and prints the run URL. For UI tests, `scripts/ui-test ClassName` does the same and then shows
-one frame per test action ([guide](../skills/cmux-testing/references/ui-test-frames.md)).
+one frame per test action ([guide](../skills/hmux-testing/references/ui-test-frames.md)).
 This path needs authenticated `gh` access to the upstream
 workflow and its runner capacity. It does not grant access to contributors or
 replace the PR's required checks. Preserve the selected-test count, run URL,
@@ -220,7 +220,7 @@ across restart, or real display behavior. State exactly what you exercised.
 
 For iPhone changes, a simulator pass does not establish physical input, networking,
 or reconnection behavior. Use `ios/scripts/reload.sh --help` and the project's
-[development workflow](../skills/cmux-dev-workflow/SKILL.md) to build the same-tag
+[development workflow](../skills/hmux-dev-workflow/SKILL.md) to build the same-tag
 Mac companion and install on an authorized physical device. Team sign-in/pairing
 uses personal credentials outside the repository; it is not a prerequisite for
 unrelated local contributions. Do not claim phone dogfood for a signed-out build

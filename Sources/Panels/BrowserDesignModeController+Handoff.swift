@@ -1,4 +1,4 @@
-import CmuxBrowser
+import HmuxBrowser
 import Foundation
 
 extension BrowserDesignModeController {

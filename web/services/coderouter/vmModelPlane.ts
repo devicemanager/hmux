@@ -1,8 +1,8 @@
 // Cloud VM model plane: how a machine reaches coderouter without holding a
 // credential. At create, the control plane mints one route token bound to
-// the cmux Cloud VM row id and hands the provider an edge rule for the
+// the hmux Cloud VM row id and hands the provider an edge rule for the
 // coderouter host. The provider's TLS edge injects the signed
-// `x-cmux-authorization` header plus compatibility bearer/VM headers into
+// `x-hmux-authorization` header plus compatibility bearer/VM headers into
 // every request the guest makes to that host; the
 // guest env carries only OPENAI_BASE_URL / ANTHROPIC_BASE_URL and a public
 // placeholder key. coderouter rejects the token when the injected VM id
@@ -10,10 +10,10 @@
 //
 // Provisioning is mandatory: a coderouter outage fails the create and the
 // workflow rolls the machine back. Outside production a machine is wired
-// only when CMUX_CODEROUTER_EDGE_ORIGIN names a reachable origin (see
+// only when HMUX_CODEROUTER_EDGE_ORIGIN names a reachable origin (see
 // resolveEdgeOrigin). There is no plan or entitlement gate;
 // every team member's machine gets a token. The only exception is the
-// local-dev kill switch CMUX_VM_CODEROUTER_ENV_ENABLED=0, which creates an
+// local-dev kill switch HMUX_VM_CODEROUTER_ENV_ENABLED=0, which creates an
 // unwired machine (no env, no rule, still no secret). Never set it in
 // production. The edge rule cannot change on a running machine, so a token
 // lives as long as its machine: revocation (destroy, team removal) and the
@@ -32,7 +32,7 @@ import type { VmEdgeRule } from "../vms/drivers/types";
 
 export const VM_ROUTE_TOKEN_LABEL = "vm-signed";
 export const DEFAULT_CODEROUTER_EDGE_ORIGIN = "https://coderouter.dev";
-export const CODEROUTER_EDGE_ORIGIN_ENV = "CMUX_CODEROUTER_EDGE_ORIGIN";
+export const CODEROUTER_EDGE_ORIGIN_ENV = "HMUX_CODEROUTER_EDGE_ORIGIN";
 
 export type VmModelPlaneInput = {
   readonly teamId: string;
@@ -57,7 +57,7 @@ export class VmModelPlaneUnavailableError extends Error {
 export type VmModelPlaneDependencies = {
   readonly issueToken: typeof issueVmAuthorizationToken;
   readonly revokeTokensForVm: typeof revokeRouteTokensForVm;
-  /** The raw CMUX_CODEROUTER_EDGE_ORIGIN value; validated by {@link coderouterEdgeOrigin}. */
+  /** The raw HMUX_CODEROUTER_EDGE_ORIGIN value; validated by {@link coderouterEdgeOrigin}. */
   readonly edgeOriginEnv: () => string | undefined;
   /** Vercel deployment facts: a preview serves itself as the edge origin. */
   readonly vercelEnv: () => string | undefined;
@@ -78,7 +78,7 @@ const defaultDependencies: VmModelPlaneDependencies = {
 };
 
 /**
- * The origin guests dial. An explicit CMUX_CODEROUTER_EDGE_ORIGIN wins; a
+ * The origin guests dial. An explicit HMUX_CODEROUTER_EDGE_ORIGIN wins; a
  * Vercel preview serves itself (its branch URL), so a PR can be tested end to
  * end without touching production; production uses coderouter.dev.
  *
@@ -106,7 +106,7 @@ export function edgeOriginHeaders(dependencies: Pick<VmModelPlaneDependencies, "
 }
 
 /**
- * Local-dev kill switch: CMUX_VM_CODEROUTER_ENV_ENABLED=0 creates unwired
+ * Local-dev kill switch: HMUX_VM_CODEROUTER_ENV_ENABLED=0 creates unwired
  * machines (no env, no edge rule). It exists so a checkout without a
  * coderouter database can still create machines. Never set it in production.
  */
@@ -126,7 +126,7 @@ export function vmModelPlaneEnabled(flag: string | undefined): boolean {
 
 /**
  * The origin guests dial for coderouter. Defaults to the public host; a
- * Vercel preview can be tested by pointing CMUX_CODEROUTER_EDGE_ORIGIN at it.
+ * Vercel preview can be tested by pointing HMUX_CODEROUTER_EDGE_ORIGIN at it.
  * Must be a bare https origin: the edge rule matches a host name, so a path,
  * query, explicit port, or plain http is a configuration error.
  */
@@ -203,7 +203,7 @@ export async function provisionVmModelPlane(
         headers,
       },
       // The same identity on a second alias, marked so the proxy serves the
-      // guest-facing reflection API at `https://reflection.cmux.internal/…`
+      // guest-facing reflection API at `https://reflection.hmux.internal/…`
       // (exe.dev-style self discovery). Same token, same binding check.
       {
         domain: vmReflectionAliasDomain(),

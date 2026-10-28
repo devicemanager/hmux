@@ -1,6 +1,6 @@
-import CMUXMobileCore
-import CmuxIrohTransport
-import CmuxIrxTransport
+import HMUXMobileCore
+import HmuxIrohTransport
+import HmuxIrxTransport
 import Foundation
 
 /// Which directory authorized an outgoing Mac target. A dial's post-admit

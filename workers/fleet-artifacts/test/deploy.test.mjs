@@ -28,10 +28,10 @@ function config(overrides = {}) {
 
 test("preflight only reads the fixed existing bucket and account routing", async () => {
   const { options, calls } = config();
-  assert.equal(await preflight(options), "https://cmux-fleet-artifacts.example-account.workers.dev");
+  assert.equal(await preflight(options), "https://hmux-fleet-artifacts.example-account.workers.dev");
   assert.equal(calls.length, 4);
   assert.ok(calls.every((call) => call.method === "GET"));
-  assert.ok(calls.slice(0, 3).every((call) => new URL(call.url).pathname.includes("/r2/buckets/cmux-fleet-artifacts")));
+  assert.ok(calls.slice(0, 3).every((call) => new URL(call.url).pathname.includes("/r2/buckets/hmux-fleet-artifacts")));
 });
 
 test("invalid public key or credentials are rejected before API access", async () => {
@@ -68,7 +68,7 @@ test("API failure never triggers bucket creation or another account", async () =
 
 test("post-deploy verification checks an unsigned request with exact denial response", async () => {
   let requests = 0;
-  await verifyUnsigned("https://cmux-fleet-artifacts.example-account.workers.dev", async (url) => {
+  await verifyUnsigned("https://hmux-fleet-artifacts.example-account.workers.dev", async (url) => {
     requests++;
     assert.equal(new URL(url).search, "");
     assert.equal(new URL(url).pathname, `/artifacts/${"0".repeat(64)}`);
@@ -79,12 +79,12 @@ test("post-deploy verification checks an unsigned request with exact denial resp
 
 test("verification rejects an exposed object or unrelated platform denial", async () => {
   for (const response of [new Response("artifact", { status: 200 }), new Response("Platform error", { status: 403 }), new Response("Artifact unavailable", { status: 403 })]) {
-    await assert.rejects(verifyUnsigned("https://cmux-fleet-artifacts.example-account.workers.dev", async () => response));
+    await assert.rejects(verifyUnsigned("https://hmux-fleet-artifacts.example-account.workers.dev", async () => response));
   }
 });
 
 test("verification cannot send requests to arbitrary destinations", async () => {
-  for (const origin of ["http://cmux-fleet-artifacts.example.workers.dev", "https://other.example.workers.dev", "https://cmux-fleet-artifacts.example.workers.dev/extra", "https://cmux-fleet-artifacts.example.workers.dev?token=1"]) {
+  for (const origin of ["http://hmux-fleet-artifacts.example.workers.dev", "https://other.example.workers.dev", "https://hmux-fleet-artifacts.example.workers.dev/extra", "https://hmux-fleet-artifacts.example.workers.dev?token=1"]) {
     let requests = 0;
     await assert.rejects(verifyUnsigned(origin, async () => { requests++; }));
     assert.equal(requests, 0);

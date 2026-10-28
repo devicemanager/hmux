@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 
 final class FileExplorerSearchResultCellView: NSTableCellView {
     private let pathLabel = NSTextField(labelWithString: "")

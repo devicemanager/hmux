@@ -27,7 +27,7 @@ Blacksmith host CPU makes every binary that links it die with SIGILL on
 another. `record` stores a CPU fingerprint next to the manifest. `restore`
 removes those packages' build and fingerprint dirs when the fingerprint is
 missing or different, and Cargo then reruns their build scripts. Output built
-with CMUX_GHOSTTY_VT_ZIG_CPU=baseline runs on every x86-64 host (hq's
+with HMUX_GHOSTTY_VT_ZIG_CPU=baseline runs on every x86-64 host (hq's
 testbox-run.sh sets it on every Testbox command). On a CPU change only the
 build script runs that did not record that value are dropped (with their out
 dirs); compile units and baseline runs stay. Measured
@@ -47,17 +47,17 @@ import shutil
 import sys
 
 SKIP_DIRS = {".git", "target", ".zig-cache", "zig-cache", "zig-out", "node_modules", ".build", "DerivedData", "testbox-benchmark"}
-MANIFEST_VERSION = "cmux-testbox-source-mtimes-v2"
-CPU_RECORD = ".cmux-testbox-cpu"
+MANIFEST_VERSION = "hmux-testbox-source-mtimes-v2"
+CPU_RECORD = ".hmux-testbox-cpu"
 # Packages whose build script compiles for the host CPU (zig native target).
 NATIVE_CPU_PACKAGES = ("ghostty-vt-sys",)
 # The build script input that makes their output portable, and its value.
-PORTABLE_CPU_ENV = ("CMUX_GHOSTTY_VT_ZIG_CPU", "baseline")
+PORTABLE_CPU_ENV = ("HMUX_GHOSTTY_VT_ZIG_CPU", "baseline")
 
 
 def cpu_fingerprint() -> str:
     """Hash of the CPU model and feature flags: what zig's native target uses."""
-    path = os.environ.get("CMUX_TESTBOX_CPUINFO", "/proc/cpuinfo")
+    path = os.environ.get("HMUX_TESTBOX_CPUINFO", "/proc/cpuinfo")
     model = flags = ""
     try:
         with open(path, encoding="utf-8", errors="replace") as handle:
@@ -215,7 +215,7 @@ def listing_id(path: str) -> str:
 def source_entries(repo: str):
     """Yield (kind, path): "F" for regular files, "D" for directories.
 
-    The whole checkout but SKIP_DIRS: cmux-tui crates include_str! files from
+    The whole checkout but SKIP_DIRS: hmux-tui crates include_str! files from
     schemas/, backend/, plans/ and skills/, so those are Cargo inputs too
     (about 21,000 files in all)."""
     for dirpath, dirnames, filenames in os.walk(repo):

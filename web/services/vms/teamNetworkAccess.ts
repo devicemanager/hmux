@@ -8,7 +8,7 @@ import { VmRepository, type CloudVmTunnelRow, type VmRepositoryShape } from "./r
 /**
  * Team network membership for enrolled computers.
  *
- * A team's machines trust their private network: cmux-tui and the desktop
+ * A team's machines trust their private network: hmux-tui and the desktop
  * accept any peer that can send packets on it. A computer reaches a team's
  * machines only while its tunnel is attached to that team's network, so
  * detaching the tunnel is what revokes access, including terminals and

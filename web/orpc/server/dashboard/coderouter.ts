@@ -26,7 +26,7 @@ const teamInput = z.object({ teamId: z.string().trim().min(1).max(200) });
 const accountInput = teamInput.extend({ accountId: z.string().trim().min(1).max(200) });
 
 function teamHeader(teamId: string) {
-  return { "x-cmux-team-id": teamId };
+  return { "x-hmux-team-id": teamId };
 }
 
 /** Deletes where "already gone" is what the viewer wanted. */

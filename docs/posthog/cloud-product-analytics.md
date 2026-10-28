@@ -1,10 +1,10 @@
 # Cloud VM and CodeRouter product analytics (PostHog)
 
-Project: the main cmux project (`244066`), the same project as desktop
-`cmux_daily_active`, signed-in web, iOS and Stripe billing events.
+Project: the main hmux project (`244066`), the same project as desktop
+`hmux_daily_active`, signed-in web, iOS and Stripe billing events.
 
 Dashboard: **Cloud VMs + CodeRouter (product)**, built and refreshed by
-`scripts/posthog-cloud-dashboard.py` in cmuxterm-hq. The daily analytics email
+`scripts/posthog-cloud-dashboard.py` in hmuxterm-hq. The daily analytics email
 (`scripts/analytics-report.py`) reads the same query catalog
 (`scripts/posthog_cloud_metrics.py`) and links to the dashboard.
 
@@ -18,7 +18,7 @@ These events are emitted by the web server. No CLI or Swift client sends them.
 | `$groups.stack_team` | Stack billing team id, for account-level rollups. |
 | person `$set` | `billing_plan` from the plan that authorized a Cloud VM event. |
 | person `$set_once` | `cloud_vm_first_created_at` and `cloud_vm_first_attached_at` for Cloud VM lifecycle events. |
-| `$lib` | `cmux-web-server` on Cloud VM events sent through `services/analytics/serverEvents.ts`. |
+| `$lib` | `hmux-web-server` on Cloud VM events sent through `services/analytics/serverEvents.ts`. |
 
 The shared sender accepts only bounded opaque Stack ids (`[A-Za-z0-9_-]`),
 trims and bounds all strings, drops free-form metadata, disables IP
@@ -76,29 +76,29 @@ makes a rerun of the same hour idempotent. At most 5,000 machines per run.
 The Cloud VM canary (`.github/workflows/cloud-vm-canary.yml`, every five
 minutes) and the smoke, dogfood, stress and startup-bench scripts in
 `web/scripts/cloud-vm/` create a throwaway account
-`cmux-<prod|staging>-<smoke|stress|bench>+...@manaflow.dev` per run, create a
+`hmux-<prod|staging>-<smoke|stress|bench>+...@manaflow.dev` per run, create a
 machine and destroy it within a minute. In October 2026 that was about 95% of
 `cloud_vm_created` users. Every Cloud VM event, `cloud_vm_ready`,
 `cloud_vm_usage_hourly`, `cloud_vm_request`, `cloud_vm_provision` and
-`cmux_account_signed_up` of such an account carries `is_synthetic: true`.
+`hmux_account_signed_up` of such an account carries `is_synthetic: true`.
 Exclude it with `properties.is_synthetic != true` (the property is absent on
 real traffic).
 
 ## Accounts
 
-`cmux_account_signed_up` is sent when the Stack `user.created` webhook is
-accepted (insert id `cmux_account_signed_up:<user id>`): `signup_source`
+`hmux_account_signed_up` is sent when the Stack `user.created` webhook is
+accepted (insert id `hmux_account_signed_up:<user id>`): `signup_source`
 (`oauth_<provider>`, `password`, `email_code`, `passkey`, `anonymous`,
 `unknown`), `signup_client` (`server` for probe accounts, `anonymous`, else
 `unknown`: Stack does not record which app started the sign-up), and
-`is_anonymous`. Person `$set_once`: `cmux_signed_up_at`.
+`is_anonymous`. Person `$set_once`: `hmux_signed_up_at`.
 
 Request telemetry (`cloud_vm_request`, schema 3, and
 `cloud_vm_provision`, schema 4) carries the request machine name, billing
 scope, client fields and the `stack_team` group. Paywall and limit failures
 (`vm_requires_pro`, `vm_active_limit_exceeded`, `vm_access_requires_pro`,
 `vm_create_credits_insufficient`) can therefore be broken down by plan and
-team. `approve_cmux_remote_enrollment` is a polled operation: successful
+team. `approve_hmux_remote_enrollment` is a polled operation: successful
 polls do not produce request rows, while failures still do.
 
 The account-deletion destroy row is intentionally not mirrored. The deletion
@@ -122,7 +122,7 @@ Lifecycle events carry `product: coderouter` and the current schema version.
 Non-caller failures also produce a `$exception`. The route request id is
 shared with ClickHouse and Axiom, but no request-level LLM trace or token event
 is sent to PostHog. ClickHouse stores the versioned API-equivalent list-price
-estimate, not cmux spend.
+estimate, not hmux spend.
 
 The application no longer writes new CodeRouter events to the former dedicated
 project (`549394`). Its old dashboards and environment keys are legacy; remove
@@ -169,6 +169,6 @@ GROUP BY d ORDER BY d
 ## Enabling outside production
 
 `services/analytics/serverEvents.ts` sends Cloud VM product events only when
-`VERCEL_ENV=production` or `CMUX_SERVER_ANALYTICS_FORCE=1`. CodeRouter uses
+`VERCEL_ENV=production` or `HMUX_SERVER_ANALYTICS_FORCE=1`. CodeRouter uses
 `VERCEL_ENV=production` or `CODEROUTER_ANALYTICS_FORCE=1`. Test runs do not reach
 the PostHog transport unless a test supplies its own fetch implementation.

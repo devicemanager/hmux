@@ -16,8 +16,8 @@ trap 'rm -rf "$work"' EXIT
 
 tbx="tbx_01testfixture0000000000000"
 token="0123456789abcdef0123456789abcdef"
-workflow=".github/workflows/cmux-tui-testbox-warmup.yml"
-job="cmux-tui-rust"
+workflow=".github/workflows/hmux-tui-testbox-warmup.yml"
+job="hmux-tui-rust"
 sha="1111111111111111111111111111111111111111"
 tree="2222222222222222222222222222222222222222"
 ghostty="3333333333333333333333333333333333333333"
@@ -48,11 +48,11 @@ cat >"$stub/blacksmith" <<STUB
 case "\$2" in
   list)
     echo "ID STATUS REPO WORKFLOW JOB REF CREATED"
-    echo "$tbx stopped cmux $workflow $job main 2026-08-18T00:00:00.000000Z"
+    echo "$tbx stopped hmux $workflow $job main 2026-08-18T00:00:00.000000Z"
     ;;
   status)
     echo "ID STATUS REPO WORKFLOW JOB REF CREATED"
-    echo "$tbx stopped cmux $workflow $job main 2026-08-18T00:00:00.000000Z"
+    echo "$tbx stopped hmux $workflow $job main 2026-08-18T00:00:00.000000Z"
     ;;
   *) exit 1 ;;
 esac

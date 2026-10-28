@@ -71,10 +71,10 @@ CI_WORKFLOW_PATH = ".github/workflows/ci.yml"
 GUARD_WORKFLOW_PATH = ".github/workflows/ci-guards.yml"
 WEB_WORKFLOW_PATH = ".github/workflows/ci-web.yml"
 MACOS_WORKFLOW_PATH = ".github/workflows/ci-macos.yml"
-MACOS_XCODE_PROJECT_PATH = "cmux.xcodeproj/project.pbxproj"
-MACOS_PRODUCT_TARGET = "cmux"
-CLI_PRODUCT_TARGET = "cmux-cli"
-XCODE_SHARED_SCHEMES_PREFIX = "cmux.xcodeproj/xcshareddata/xcschemes/"
+MACOS_XCODE_PROJECT_PATH = "hmux.xcodeproj/project.pbxproj"
+MACOS_PRODUCT_TARGET = "hmux"
+CLI_PRODUCT_TARGET = "hmux-cli"
+XCODE_SHARED_SCHEMES_PREFIX = "hmux.xcodeproj/xcshareddata/xcschemes/"
 
 _LOCAL_PATH_DEPENDENCY_RE = re.compile(
     r'\.package\(\s*(?:name:\s*"[^"]*"\s*,\s*)?path:\s*"([^"]+)"'
@@ -119,13 +119,13 @@ CI_CONTROL_PLANE_ONLY = frozenset({
     "scripts/ci/app_host_failure_census.py",
     "scripts/ci/build_graph_health.py",
     "scripts/ci/cleanup-stale-runs.py",
-    "scripts/ci/cmux_workload_profile.py",
+    "scripts/ci/hmux_workload_profile.py",
     "scripts/ci/notify-indexnow.py",
     "scripts/ci/queue_janitor.py",
     "scripts/ci/r2-canary-cloudflare.py",
     "scripts/ci/r2_cache_census.py",
     "scripts/ci/r2_cache_prune.py",
-    "scripts/ci/cmux_binaries_prune.py",
+    "scripts/ci/hmux_binaries_prune.py",
     "scripts/ci/r2_storage_census.py",
     "scripts/ci/swift_incremental_diagnostics.py",
     "scripts/ci/triage-radar.py",
@@ -255,7 +255,7 @@ def forces_all_areas(path: str) -> bool:
 
 
 _TEST_REFERENCE_RE = re.compile(r"tests/[A-Za-z0-9_./-]*")
-_CI_GUARD_PROFILE_MARKER = "scripts/ci/cmux_workload_profile.py run cmux.ci.guard"
+_CI_GUARD_PROFILE_MARKER = "scripts/ci/hmux_workload_profile.py run hmux.ci.guard"
 _CI_GUARD_ENTRYPOINT = "scripts/ci/workloads/ci-guard.sh"
 
 
@@ -768,7 +768,7 @@ def macos_job_test_references(
 
 # Set by ci.yml when the trusted base router classifies a routing-policy PR:
 # the PR's own checkout, whose workflows may name tests the base has never seen.
-HEAD_TEST_REFERENCE_ROOT_ENV = "CMUX_CI_HEAD_TEST_REFERENCE_ROOT"
+HEAD_TEST_REFERENCE_ROOT_ENV = "HMUX_CI_HEAD_TEST_REFERENCE_ROOT"
 
 
 def load_macos_job_test_references(
@@ -833,23 +833,23 @@ SHARED_WEB_WORKFLOW_EXACT = frozenset({
     "scripts/generate-diff-sidecar-types.sh",
     "scripts/install-rust-ci.sh",
     "scripts/run-diff-sidecar-cargo.sh",
-    "Sources/Panels/CmuxDiffViewerURLSchemeHandler.swift",
+    "Sources/Panels/HmuxDiffViewerURLSchemeHandler.swift",
     "Sources/Panels/DiffSidecarBridge.swift",
 })
 
 SHARED_WEB_WORKFLOW_PREFIXES = (
     "Native/DiffSidecar/",
-    "Packages/macOS/CmuxBrowser/Sources/CmuxBrowser/DiffViewer/",
+    "Packages/macOS/HmuxBrowser/Sources/HmuxBrowser/DiffViewer/",
 )
 
 
 # Everything the CLI lane (compile admission's CLI product and its early CLI
-# smoke checks, then cli-product-tests) runs besides the cmux-cli target's own
+# smoke checks, then cli-product-tests) runs besides the hmux-cli target's own
 # compile inputs, which cli_target_inputs() reads from the Xcode project.
 CLI_LANE_EXACT_INPUTS = frozenset({
     # Checked-out submodules: bonsplit is a local package of the project the
     # lane resolves, and ghostty supplies the GhosttyKit.xcframework binary
-    # target that CmuxTerminalCore (in the cmux-cli closure) re-vends.
+    # target that HmuxTerminalCore (in the hmux-cli closure) re-vends.
     "vendor/bonsplit",
     "ghostty",
     "scripts/download-prebuilt-ghosttykit.sh",
@@ -874,9 +874,9 @@ CLI_LANE_EXACT_INPUTS = frozenset({
     "tests/test_cli_glaeda_execution.py",
     "tests/fixtures/glaeda-external-request.json",
     "tests/fixtures/glaeda-external-result.json",
-    "scripts/generate-cmux-config-schema.py",
-    "web/data/cmux.schema.json",
-    "skills/cmux-settings/scripts/cmux-settings",
+    "scripts/generate-hmux-config-schema.py",
+    "web/data/hmux.schema.json",
+    "skills/hmux-settings/scripts/hmux-settings",
     # ci-macos.yml's cli-product-tests restores the compiled product and runs
     # the host-free bundle through these. Without them here, a change to one
     # would compile admission without ever running the lane that reads it.
@@ -908,11 +908,11 @@ CLI_LANE_EXACT_INPUTS = frozenset({
 
 CLI_LANE_INPUT_PREFIXES = (
     "CLI/",
-    "cmuxCLITests/",
-    "cmuxCLITestSupport/",
-    # The lane builds the cmux-cli target of this project and keys its package
+    "hmuxCLITests/",
+    "hmuxCLITestSupport/",
+    # The lane builds the hmux-cli target of this project and keys its package
     # cache on the project's Package.resolved.
-    "cmux.xcodeproj/",
+    "hmux.xcodeproj/",
     ".github/actions/cache-restore/",
     # cli-product-tests' canonical fallback download of the compiled product.
     ".github/actions/download-test-product/",
@@ -1042,7 +1042,7 @@ def shadows_cli_lane_import(path: str) -> bool:
 
 @dataclass(frozen=True)
 class CliTargetInputs:
-    """Compile inputs of the cmux-cli Xcode target outside CLI/."""
+    """Compile inputs of the hmux-cli Xcode target outside CLI/."""
 
     package_directories: frozenset[str]
     source_file_names: frozenset[str]
@@ -1069,7 +1069,7 @@ def is_cli_change(
         return is_macos_change(path, macos_ios_packages)
     for directory in cli_inputs.package_directories:
         if path == directory or path.startswith(f"{directory}/"):
-            # A package's test sources never reach the cmux-cli binary; the
+            # A package's test sources never reach the hmux-cli binary; the
             # swift-package-tests lane runs them (swift_package_test_selection).
             return not path.startswith(f"{directory}/Tests/")
     return path.rsplit("/", 1)[-1] in cli_inputs.source_file_names
@@ -1321,7 +1321,7 @@ def _reachable_target_products(project: str, target_name: str = MACOS_PRODUCT_TA
 def macos_ios_package_closure(root: Path) -> frozenset[str]:
     """Return Packages/iOS package directories reachable by the macOS product.
 
-    Xcode's cmux target (plus native targets it depends on) supplies the local
+    Xcode's hmux target (plus native targets it depends on) supplies the local
     Swift-package roots. Package.swift path dependencies supply every transitive
     edge. Anything the lightweight parsers cannot prove is rejected so the
     caller can keep conservative macOS routing.
@@ -1443,7 +1443,7 @@ def _flat_object(objects: dict[str, str], identifier: str) -> str:
 
 
 def cli_target_inputs(root: Path) -> CliTargetInputs:
-    """Read the cmux-cli target's compiled file names and package closure.
+    """Read the hmux-cli target's compiled file names and package closure.
 
     Files outside CLI/ that the target compiles (shared Sources/ helpers) are
     matched by file name; Swift requires those to be unique within the module.
@@ -1481,10 +1481,10 @@ def cli_target_inputs(root: Path) -> CliTargetInputs:
 # the lane rather than skipping it.
 CLI_ROUTE_UNBUILT_TARGETS = frozenset({
     MACOS_PRODUCT_TARGET,
-    "cmuxTests",
-    "cmuxUITests",
-    "CmuxDockTilePlugin",
-    "cmuxTunnelExtension",
+    "hmuxTests",
+    "hmuxUITests",
+    "HmuxDockTilePlugin",
+    "hmuxTunnelExtension",
 })
 _PBX_TARGET_ISAS = frozenset({"PBXNativeTarget", "PBXAggregateTarget", "PBXLegacyTarget"})
 _PBX_TOKEN_RE = re.compile(
@@ -1629,7 +1629,7 @@ def cli_xcode_project_change_is_neutral(base: str, head: str) -> bool:
 def cli_xcode_project_unchanged(base_path: Optional[Path]) -> bool:
     if base_path is None:
         return False
-    root = Path(os.environ.get("CMUX_CI_HEAD_TEST_REFERENCE_ROOT") or Path.cwd())
+    root = Path(os.environ.get("HMUX_CI_HEAD_TEST_REFERENCE_ROOT") or Path.cwd())
     try:
         neutral = cli_xcode_project_change_is_neutral(
             base_path.read_text(encoding="utf-8"),
@@ -1648,7 +1648,7 @@ def load_cli_target_inputs() -> Optional[CliTargetInputs]:
         return cli_target_inputs(root)
     except Exception as error:
         print(
-            "Could not derive the cmux-cli target inputs; routing every "
+            "Could not derive the hmux-cli target inputs; routing every "
             f"macOS-relevant change to the CLI lane: {error}",
             file=sys.stderr,
         )
@@ -1718,7 +1718,7 @@ def is_macos_neutral(
     if re.match(r"Packages/iOS/[^/]+/Tests/", path):
         return True
     # Agent instructions at any depth, and skill documentation. The app bundles
-    # skills/cmux-cua as a folder resource, and skill scripts and manifests are
+    # skills/hmux-cua as a folder resource, and skill scripts and manifests are
     # executable inputs, so only Markdown outside that folder is neutral.
     if path.rsplit("/", 1)[-1] in {"CLAUDE.md", "AGENTS.md"}:
         return True
@@ -1747,7 +1747,7 @@ def is_macos_neutral(
     ):
         return True
 
-    # `cmux-tui/` is the standalone cmux-tui Rust project, gated by its own
+    # `hmux-tui/` is the standalone hmux-tui Rust project, gated by its own
     # workflow. Packages/iOS is decided above from the desktop package graph;
     # an unknown graph deliberately falls through as macOS-relevant.
     if path.startswith(
@@ -1758,15 +1758,15 @@ def is_macos_neutral(
             "ios/",
             "web/",
             "webviews/",
-            "cmux-tui/",
-            "cmux-browser/",
+            "hmux-tui/",
+            "hmux-browser/",
             "daemon/remote/",
         )
     ):
         return True
     if path == "README.md" or (path.startswith("README.") and path.endswith(".md")):
         return True
-    return path.startswith("skills/") and path.endswith(".md") and not path.startswith("skills/cmux-cua/")
+    return path.startswith("skills/") and path.endswith(".md") and not path.startswith("skills/hmux-cua/")
 
 
 def is_macos_change(
@@ -1788,9 +1788,9 @@ _PACKAGE_TESTS_RE = re.compile(r"Packages/[^/]+/[^/]+/Tests/")
 
 
 def is_test_only_source(path: str) -> bool:
-    # The Release app builds only the cmux target, so test sources cannot reach
+    # The Release app builds only the hmux target, so test sources cannot reach
     # it. A new test file also edits project.pbxproj, which is not matched here.
-    return path.startswith(("cmuxTests/", "cmuxCLITests/", "cmuxCLITestSupport/", "cmuxUITests/")) or bool(_PACKAGE_TESTS_RE.match(path))
+    return path.startswith(("hmuxTests/", "hmuxCLITests/", "hmuxCLITestSupport/", "hmuxUITests/")) or bool(_PACKAGE_TESTS_RE.match(path))
 
 
 RELEASE_BUILD_NEUTRAL_INPUTS = frozenset({
@@ -1799,19 +1799,19 @@ RELEASE_BUILD_NEUTRAL_INPUTS = frozenset({
     # compiled binaries' slices. Their focused regression suites and app-host
     # tests are the useful signal, so avoid paying for a universal app build.
     # Text scripts only: test_resources_bin_release_neutral_inputs_are_text_scripts
-    # fails if one of these becomes a binary. cmux-claude-wrapper is absent
+    # fails if one of these becomes a binary. hmux-claude-wrapper is absent
     # because its own standalone lane already owns it.
-    "Resources/bin/cmux-amp-wrapper",
-    "Resources/bin/cmux-codex-wrapper",
-    "Resources/bin/cmux-hermes-agent-wrapper",
-    "Resources/bin/cmux-hermes-python-wrapper",
-    "Resources/bin/cmux-hermes-sitecustomize.py",
-    "Resources/bin/cmux-sudo",
+    "Resources/bin/hmux-amp-wrapper",
+    "Resources/bin/hmux-codex-wrapper",
+    "Resources/bin/hmux-hermes-agent-wrapper",
+    "Resources/bin/hmux-hermes-python-wrapper",
+    "Resources/bin/hmux-hermes-sitecustomize.py",
+    "Resources/bin/hmux-sudo",
     "Resources/bin/grok",
     "Resources/bin/muse",
     "Resources/bin/open",
-    "Resources/bin/start-cmux-profiling",
-    "Resources/bin/submit-cmux-profile",
+    "Resources/bin/start-hmux-profiling",
+    "Resources/bin/submit-hmux-profile",
     "tests/test_open_wrapper.py",
 })
 
@@ -1855,7 +1855,7 @@ def test_registry_change_is_linux_only(base: str, head: str) -> bool:
 def test_registry_linux_only(base_path: Optional[Path]) -> bool:
     if base_path is None:
         return False
-    root = Path(os.environ.get("CMUX_CI_HEAD_TEST_REFERENCE_ROOT") or Path.cwd())
+    root = Path(os.environ.get("HMUX_CI_HEAD_TEST_REFERENCE_ROOT") or Path.cwd())
     try:
         return test_registry_change_is_linux_only(
             base_path.read_text(encoding="utf-8"),
@@ -1889,7 +1889,7 @@ def classify_files(paths: Iterable[str], *,
         path = normalize_path(raw_path)
         if not path:
             continue
-        if path in {"Resources/bin/cmux-claude-wrapper", "tests/test_claude_wrapper_hooks.py"}:
+        if path in {"Resources/bin/hmux-claude-wrapper", "tests/test_claude_wrapper_hooks.py"}:
             # The independent macos-claude-wrapper lane executes the wrapper
             # with fake clients and a Unix socket; it does not need app bytes.
             continue

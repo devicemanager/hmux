@@ -1,9 +1,9 @@
 import Bonsplit
-import CMUXAgentLaunch
-import CmuxTerminal
-import CmuxTerminalCore
-import CmuxWorkspaces
-import CmuxHomeCore
+import HMUXAgentLaunch
+import HmuxTerminal
+import HmuxTerminalCore
+import HmuxWorkspaces
+import HmuxHomeCore
 import Foundation
 
 extension DockSplitStore {
@@ -339,7 +339,7 @@ extension DockSplitStore {
                 resumeBinding: resumeBinding,
                 wasAgentRunning: terminalSnapshot.wasAgentRunning
             )
-        // Match workspace restore: keep the cmux restore execution boundary.
+        // Match workspace restore: keep the hmux restore execution boundary.
         let shouldAutoResumeAgent = autoResumeAgentSessions &&
             (agentWasRunning || shouldAutoResumeNormallyEndedClaude) &&
             !suppressesResumeForBackgroundSession
@@ -728,7 +728,7 @@ extension DockSplitStore {
         applyVisibility(to: browser)
         scheduleDockPortalReconcile(reason: "dock.browserMaterialize")
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "session.restore.dockBrowser.materialize dock=\(workspaceId.uuidString.prefix(8)) " +
                 "panel=\(deferredPanel.id.uuidString.prefix(8))"
         )

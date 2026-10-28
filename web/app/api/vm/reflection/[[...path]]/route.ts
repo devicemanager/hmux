@@ -1,8 +1,8 @@
 import { coderouterControlRoute } from "@/services/coderouter/requestTelemetry";
-// cmux Reflection: the guest-facing read surface a machine reaches through its
-// alias origin (`https://coderouter.cmux.internal/api/vm/reflection[/<path>]`, or
-// `https://reflection.cmux.internal/<path>` via the proxy rewrite). The platform
-// edge injects the machine's signed `x-cmux-authorization` header; the guest
+// hmux Reflection: the guest-facing read surface a machine reaches through its
+// alias origin (`https://coderouter.hmux.internal/api/vm/reflection[/<path>]`, or
+// `https://reflection.hmux.internal/<path>` via the proxy rewrite). The platform
+// edge injects the machine's signed `x-hmux-authorization` header; the guest
 // itself only sends the public placeholder bearer. Identity comes from that
 // injection (services/vms/vmPrincipal.ts) and nothing else: no Stack session is
 // accepted here, and no other `/api/vm/*` route accepts a machine.

@@ -1,4 +1,4 @@
-import CmuxCore
+import HmuxCore
 
 @MainActor
 extension Workspace {

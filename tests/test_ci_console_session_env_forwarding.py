@@ -9,7 +9,7 @@ and forgets to extend that allowlist fails silently: the variable
 never reaches the command, the test it gates stays skipped, and CI still reports
 success.
 
-That is not hypothetical. `CMUX_RENDERER_MEMORY_REGRESSION=1` was added to the
+That is not hypothetical. `HMUX_RENDERER_MEMORY_REGRESSION=1` was added to the
 renderer-memory step and never reached `run-app-host-xcodebuild.sh`, so the
 regression it gates skipped itself on every run.
 

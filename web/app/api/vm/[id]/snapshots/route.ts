@@ -7,7 +7,7 @@ import { setSpanAttributes } from "../../../../../services/telemetry";
 import { runVmRoute } from "../../../../../services/vms/routeWorkflow";
 import { listVmSnapshots } from "../../../../../services/vms/workflows";
 
-// Every snapshot taken from a machine the caller owns (`cmux vm snapshot ls <m>`),
+// Every snapshot taken from a machine the caller owns (`hmux vm snapshot ls <m>`),
 // newest first. The provider is the source of truth for what still exists; a
 // provider that cannot enumerate snapshots answers 501 vm_operation_unsupported.
 
@@ -22,13 +22,13 @@ export async function GET(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/snapshots",
-    { "cmux.vm.operation": "snapshot.list" },
+    { "hmux.vm.operation": "snapshot.list" },
     "/api/vm/[id]/snapshots GET failed",
     async ({ user, span }) => {
       const { id } = await params;
       const account = resolveVmRouteAccountScope(user, request);
       if (!account.ok) return account.response;
-      setSpanAttributes(span, { "cmux.vm.id": id });
+      setSpanAttributes(span, { "hmux.vm.id": id });
       const run = await runVmRoute(listVmSnapshots({
         userId: user.id,
         billingTeamId: account.entitlements.billingTeamId,

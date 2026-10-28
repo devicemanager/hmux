@@ -8,4 +8,4 @@ Scenario: iPhone 17 Pro Max simulator on iOS 26.5, dark appearance, keyboard ini
 
 Result: the live layout diagnostic remained `PIN GAP 0.0 pt`. The final run was sampled at 15 fps, including steady, partial-hide, hidden, partial-show, reversed, and final frames. The invariant held in every sampled frame.
 
-Durable evidence is stored at `cmux-assets/feat-keyboard-pinning-lab/rapid-toggle-final/` in the cmuxterm-hq checkout. The directory contains the raw recording, annotated frames, contact sheet, and manifest with the success criterion.
+Durable evidence is stored at `hmux-assets/feat-keyboard-pinning-lab/rapid-toggle-final/` in the hmuxterm-hq checkout. The directory contains the raw recording, annotated frames, contact sheet, and manifest with the success criterion.

@@ -55,7 +55,7 @@ class GitHub:
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "cmux-stale-run-janitor",
+            "User-Agent": "hmux-stale-run-janitor",
         }
 
     def request(self, method: str, path: str, *, missing_is_empty: bool = False) -> Any:

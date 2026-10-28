@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxProductAnalytics
+import HmuxCloud
+import HmuxProductAnalytics
 import Foundation
 
 extension VMClientTelemetry {

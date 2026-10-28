@@ -30,10 +30,10 @@ TAG=""
 # The web API and legacy compatibility broker remain on their existing staging
 # origin. The v2 control plane is verified separately through the canonical
 # Cloudflare Worker. A caller can override either origin for an isolated test.
-STAGING_BASE_URL="${CMUX_IROH_RELEASE_GATE_BASE_URL:-https://cmux-staging.vercel.app}"
-V2_BASE_URL="${CMUX_IROH_RELEASE_GATE_V2_BASE_URL:-https://cmux-v2-staging.debussy.workers.dev}"
+STAGING_BASE_URL="${HMUX_IROH_RELEASE_GATE_BASE_URL:-https://cmux-staging.vercel.app}"
+V2_BASE_URL="${HMUX_IROH_RELEASE_GATE_V2_BASE_URL:-https://hmux-v2-staging.debussy.workers.dev}"
 V2_ENVIRONMENT="staging"
-PRESENCE_BASE_URL="${CMUX_PRESENCE_BASE_URL:-}"
+PRESENCE_BASE_URL="${HMUX_PRESENCE_BASE_URL:-}"
 SKIP_BUILD=0
 KEEP_SIMULATOR=0
 PROVIDED_SIMULATOR_ID=""
@@ -45,7 +45,7 @@ V2_BASE_URL_WAS_EXPLICIT=0
 PRINT_PLAN=0
 SOAK_PROFILE=""
 REPORT_TIMEOUT=480
-PHASE_TIMEOUT_SECONDS="${CMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS:-2400}"
+PHASE_TIMEOUT_SECONDS="${HMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS:-2400}"
 DOGFOOD_CREDENTIALS_FILE=""
 REAL_USAGE=0
 
@@ -82,10 +82,10 @@ if [[ "$REAL_USAGE" -eq 1 && -z "$REPORT_OUTPUT" ]]; then
   exit 2
 fi
 [[ "$PHASE_TIMEOUT_SECONDS" =~ ^[1-9][0-9]*$ ]] || {
-  echo "error: CMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS must be a positive integer" >&2
+  echo "error: HMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS must be a positive integer" >&2
   exit 2
 }
-export CMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS="$PHASE_TIMEOUT_SECONDS"
+export HMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS="$PHASE_TIMEOUT_SECONDS"
 if [[ "$PRODUCTION" -eq 1 && "$BASE_URL_WAS_EXPLICIT" -eq 1 ]]; then
   echo "error: --production cannot be combined with --staging-base-url" >&2
   exit 2
@@ -108,7 +108,7 @@ if [[ "$PRODUCTION" -eq 1 && "$SKIP_BUILD" -eq 1 ]]; then
 fi
 if [[ "$PRODUCTION" -eq 1 ]]; then
   STAGING_BASE_URL="https://cmux.com"
-  V2_BASE_URL="https://cmux-v2.debussy.workers.dev"
+  V2_BASE_URL="https://hmux-v2.debussy.workers.dev"
   V2_ENVIRONMENT="production"
   # Production clients resolve presence.cmux.dev from their auth channel.
   # Never inherit a development worker override from the caller's shell.
@@ -186,10 +186,10 @@ source "$SCRIPT_DIR/lib/mobile-attach.sh"
 source "$SCRIPT_DIR/lib/dev-secrets.sh"
 # shellcheck source=scripts/lib/iroh-release-gate-targets.sh
 source "$SCRIPT_DIR/lib/iroh-release-gate-targets.sh"
-cmux_attach_validate_dev_tag "$TAG"
+hmux_attach_validate_dev_tag "$TAG"
 if [[ -n "$DOGFOOD_CREDENTIALS_FILE" ]]; then
   [[ "$PRODUCTION" -eq 0 ]] || { echo "error: --credentials-file is for staging only" >&2; exit 2; }
-  cmux_dev_secrets_validate_file "$DOGFOOD_CREDENTIALS_FILE"
+  hmux_dev_secrets_validate_file "$DOGFOOD_CREDENTIALS_FILE"
 fi
 
 ACTIVE_BUILD_WRAPPER_PID=""
@@ -239,7 +239,7 @@ run_build_with_heartbeat() {
   shift
   local status build_log
 
-  build_log="${RUNNER_TEMP:-/tmp}/cmux-iroh-${TAG}-${label}.log"
+  build_log="${RUNNER_TEMP:-/tmp}/hmux-iroh-${TAG}-${label}.log"
 
   /usr/bin/python3 - "$label" "$build_log" "$@" <<'PY' &
 import os
@@ -249,7 +249,7 @@ import sys
 import time
 
 label, build_log, *command = sys.argv[1:]
-phase_timeout = int(os.environ.get("CMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS", "1500"))
+phase_timeout = int(os.environ.get("HMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS", "1500"))
 start_time = time.monotonic()
 interrupted_by = None
 termination_deadline = None
@@ -285,7 +285,7 @@ with open(build_log, "wb") as output:
             pass
 
     while True:
-        timeout = min(60, int(os.environ.get("CMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS", "2400")))
+        timeout = min(60, int(os.environ.get("HMUX_IROH_RELEASE_GATE_PHASE_TIMEOUT_SECONDS", "2400")))
         if termination_deadline is not None:
             timeout = max(0.1, termination_deadline - time.monotonic())
         try:
@@ -357,16 +357,16 @@ if [[ "$GATE_PLAN" == "host-private-path-transport" ]]; then
   exec "$SCRIPT_DIR/run-iroh-private-path-transport-gate.sh" "${PRIVATE_GATE_ARGUMENTS[@]}"
 fi
 
-SLUG="$(cmux_attach__slug "$TAG")"
-MAC_BUNDLE_ID="$(cmux_attach_mac_bundle_id "$TAG")"
-IOS_BUNDLE_ID="dev.cmux.ios.$SLUG"
-MAC_APP="$(cmux_attach_mac_app_path "$TAG")"
-IOS_APP="$HOME/Library/Developer/Xcode/DerivedData/cmux-ios-$SLUG/Build/Products/Debug-iphonesimulator/cmux.app"
-SIMULATOR_NAME="cmux Iroh gate $SLUG"
+SLUG="$(hmux_attach__slug "$TAG")"
+MAC_BUNDLE_ID="$(hmux_attach_mac_bundle_id "$TAG")"
+IOS_BUNDLE_ID="dev.hmux.ios.$SLUG"
+MAC_APP="$(hmux_attach_mac_app_path "$TAG")"
+IOS_APP="$HOME/Library/Developer/Xcode/DerivedData/hmux-ios-$SLUG/Build/Products/Debug-iphonesimulator/hmux.app"
+SIMULATOR_NAME="hmux Iroh gate $SLUG"
 SIMULATOR_ID=""
 DATA_CONTAINER=""
-REPORT_FILENAME="cmux-iroh-release-gate.json"
-REPORT_READY_NOTIFICATION="dev.cmux.ios.iroh-release-gate.report-ready"
+REPORT_FILENAME="hmux-iroh-release-gate.json"
+REPORT_READY_NOTIFICATION="dev.hmux.ios.iroh-release-gate.report-ready"
 REPORT_WAITER_PID=""
 UI_CAPTURE_WAITER_PID=""
 UI_CAPTURE_DIR=""
@@ -430,8 +430,8 @@ capture_ios_release_gate_diagnostics() {
       local destination
       case "$(basename "$source")" in
         iroh-v2-journal.jsonl) destination="${prefix}-ios-iroh-v2-journal-${label}-${index}.jsonl" ;;
-        cmux-debug.log) destination="${prefix}-ios-debug-${label}-${index}.log" ;;
-        cmux-debug.log.1) destination="${prefix}-ios-debug-rotated-${label}-${index}.log" ;;
+        hmux-debug.log) destination="${prefix}-ios-debug-${label}-${index}.log" ;;
+        hmux-debug.log.1) destination="${prefix}-ios-debug-rotated-${label}-${index}.log" ;;
         *) continue ;;
       esac
       sed -E \
@@ -442,8 +442,8 @@ capture_ios_release_gate_diagnostics() {
       index=$((index + 1))
     done < <(find "$support_root" -type f \( \
       -name 'iroh-v2-journal.jsonl' -o \
-      -name 'cmux-debug.log' -o \
-      -name 'cmux-debug.log.1' \
+      -name 'hmux-debug.log' -o \
+      -name 'hmux-debug.log.1' \
     \) -print 2>/dev/null)
   fi
 }
@@ -480,14 +480,14 @@ cleanup() {
       xcrun simctl io "$SIMULATOR_ID" screenshot "${failure_prefix}-ios-failure.png" >/dev/null 2>&1 || true
       capture_ios_release_gate_diagnostics "$failure_prefix" "failure"
       xcrun simctl spawn "$SIMULATOR_ID" log show --style compact --last 30m \
-        --predicate 'subsystem == "dev.cmux.ios"' 2>/dev/null \
+        --predicate 'subsystem == "dev.hmux.ios"' 2>/dev/null \
         | sed -E 's/[[:alnum:]._%+-]+@[[:alnum:].-]+\.[[:alpha:]]+/<redacted-email>/g; s/[A-Za-z0-9_-]{24,}/<redacted-token>/g' \
         > "${failure_prefix}-ios-failure.log" || true
     fi
     if [[ -n "$TAG" ]]; then
-      if ! CMUX_TAG="$TAG" "$SCRIPT_DIR/cmux-debug-cli.sh" iroh-diag \
-        > "${failure_prefix}-mac-failure.cmuxdiag" 2>/dev/null; then
-        rm -f "${failure_prefix}-mac-failure.cmuxdiag"
+      if ! HMUX_TAG="$TAG" "$SCRIPT_DIR/hmux-debug-cli.sh" iroh-diag \
+        > "${failure_prefix}-mac-failure.hmuxdiag" 2>/dev/null; then
+        rm -f "${failure_prefix}-mac-failure.hmuxdiag"
       fi
     fi
   fi
@@ -513,20 +513,20 @@ cleanup() {
   if [[ -n "$VERCEL_DIR" ]]; then
     rm -rf "$VERCEL_DIR"
   fi
-  defaults delete "$MAC_BUNDLE_ID" cmux.iroh.debug.transport-mode >/dev/null 2>&1 || true
-  defaults delete "$MAC_BUNDLE_ID" cmux.iroh.v2.force-relay >/dev/null 2>&1 || true
+  defaults delete "$MAC_BUNDLE_ID" hmux.iroh.debug.transport-mode >/dev/null 2>&1 || true
+  defaults delete "$MAC_BUNDLE_ID" hmux.iroh.v2.force-relay >/dev/null 2>&1 || true
   defaults delete "$MAC_BUNDLE_ID" presenceServiceURL >/dev/null 2>&1 || true
-  pkill -f "cmux DEV ${SLUG}.app/Contents/MacOS/cmux DEV" 2>/dev/null || true
+  pkill -f "hmux DEV ${SLUG}.app/Contents/MacOS/hmux DEV" 2>/dev/null || true
   if [[ "$PRODUCTION" -eq 1 ]]; then
     # Production uses a disposable account and must remove its local tokens.
     # The endpoint key and verified-policy cache live outside the ordinary
     # tagged app support directory, so clear that exact tagged identity too.
     # Staging keeps its tagged state so a failed gate remains inspectable and a
     # later --skip-build run can reuse the same authenticated build.
-    rm -rf "$HOME/Library/Application Support/cmux/$MAC_BUNDLE_ID"
-    rm -rf "$HOME/Library/Application Support/cmux/iroh-debug/$MAC_BUNDLE_ID"
-    security delete-generic-password -s "$MAC_BUNDLE_ID.auth" -a cmux-auth-access-token >/dev/null 2>&1 || true
-    security delete-generic-password -s "$MAC_BUNDLE_ID.auth" -a cmux-auth-refresh-token >/dev/null 2>&1 || true
+    rm -rf "$HOME/Library/Application Support/hmux/$MAC_BUNDLE_ID"
+    rm -rf "$HOME/Library/Application Support/hmux/iroh-debug/$MAC_BUNDLE_ID"
+    security delete-generic-password -s "$MAC_BUNDLE_ID.auth" -a hmux-auth-access-token >/dev/null 2>&1 || true
+    security delete-generic-password -s "$MAC_BUNDLE_ID.auth" -a hmux-auth-refresh-token >/dev/null 2>&1 || true
   fi
   if [[ -n "$PROVIDED_SIMULATOR_ID" && -n "$SIMULATOR_ID" ]]; then
     xcrun simctl terminate "$SIMULATOR_ID" "$IOS_BUNDLE_ID" >/dev/null 2>&1 || true
@@ -579,24 +579,24 @@ if [[ "$PRODUCTION" -eq 1 ]]; then
   # absolute and syntactically normalized without changing symlink identity.
   TEMPORARY_ROOT="$(cd -L "${TMPDIR:-/private/tmp}" && pwd -L)"
   TEMPORARY_PREFIX="${TEMPORARY_ROOT%/}"
-  STATE_DIR="$(mktemp -d "$TEMPORARY_PREFIX/cmux-iroh-production-${SLUG}.XXXXXX")"
+  STATE_DIR="$(mktemp -d "$TEMPORARY_PREFIX/hmux-iroh-production-${SLUG}.XXXXXX")"
   chmod 700 "$STATE_DIR"
   PROD_ACCOUNT_STATE_FILE="$STATE_DIR/account.json"
   PROD_CREDENTIALS_FILE="$STATE_DIR/credentials.env"
-  RECOVERY_DIR="$TEMPORARY_PREFIX/cmux-iroh-production-gate-recovery-$(id -u)"
+  RECOVERY_DIR="$TEMPORARY_PREFIX/hmux-iroh-production-gate-recovery-$(id -u)"
   mkdir -p "$RECOVERY_DIR"
   chmod 700 "$RECOVERY_DIR"
   PROD_RECOVERY_FILE="$RECOVERY_DIR/${SLUG}.json"
 
   if [[ -n "$STACK_ENV_FILE" ]]; then
-    cmux_dev_secrets_validate_file "$STACK_ENV_FILE"
+    hmux_dev_secrets_validate_file "$STACK_ENV_FILE"
     PROD_ENV_FILE="$STACK_ENV_FILE"
   else
     VERCEL_DIR="$STATE_DIR/vercel-project"
     mkdir -p "$VERCEL_DIR"
     chmod 700 "$VERCEL_DIR"
     PROD_ENV_FILE="$STATE_DIR/vercel-production.env"
-    bunx vercel link --yes --project cmux --scope manaflow --cwd "$VERCEL_DIR"
+    bunx vercel link --yes --project hmux --scope manaflow --cwd "$VERCEL_DIR"
     bunx vercel env pull "$PROD_ENV_FILE" \
       --environment production \
       --yes \
@@ -620,7 +620,7 @@ listing = json.loads(subprocess.check_output(["xcrun", "simctl", "list", "device
 match = [device for devices in listing["devices"].values() for device in devices
          if device["udid"].lower() == os.environ["PROVIDED_SIMULATOR_ID"].lower()]
 if (len(match) != 1 or not match[0].get("isAvailable", False)
-        or match[0]["name"] != "cmux Iroh monitor " + os.environ["MONITOR_TAG"]):
+        or match[0]["name"] != "hmux Iroh monitor " + os.environ["MONITOR_TAG"]):
     raise SystemExit("simulator is not this tag's dedicated monitor device")
 print(match[0]["state"])
 PY
@@ -686,38 +686,38 @@ if [[ "$SKIP_BUILD" -ne 1 ]]; then
     "$TAG" "$SIMULATOR_NAME" "$SIMULATOR_ID" "$PRODUCTION"
   if [[ "$PRODUCTION" -eq 1 ]]; then
     run_build_with_heartbeat Mac env \
-      CMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
-      CMUX_DEV_API_BASE_URL="$STAGING_BASE_URL" \
-      CMUX_IROH_BROKER_BASE_URL="$STAGING_BASE_URL" \
-      CMUX_IROH_V2_ENVIRONMENT="$V2_ENVIRONMENT" \
-      CMUX_IROH_V2_BASE_URL="$V2_BASE_URL" \
+      HMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
+      HMUX_DEV_API_BASE_URL="$STAGING_BASE_URL" \
+      HMUX_IROH_BROKER_BASE_URL="$STAGING_BASE_URL" \
+      HMUX_IROH_V2_ENVIRONMENT="$V2_ENVIRONMENT" \
+      HMUX_IROH_V2_BASE_URL="$V2_BASE_URL" \
       ./scripts/reload.sh \
         --tag "$TAG" \
         --prod-auth \
         --credentials-file "$PROD_CREDENTIALS_FILE"
     run_build_with_heartbeat iOS env \
-      CMUX_XCODEBUILD_JOBS="${CMUX_IROH_RELEASE_GATE_XCODEBUILD_JOBS:-2}" \
-      CMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
-      CMUX_DEV_API_BASE_URL="$STAGING_BASE_URL" \
-      CMUX_IROH_BROKER_BASE_URL="$STAGING_BASE_URL" \
-      CMUX_IROH_V2_ENVIRONMENT="$V2_ENVIRONMENT" \
-      CMUX_IROH_V2_BASE_URL="$V2_BASE_URL" \
+      HMUX_XCODEBUILD_JOBS="${HMUX_IROH_RELEASE_GATE_XCODEBUILD_JOBS:-2}" \
+      HMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
+      HMUX_DEV_API_BASE_URL="$STAGING_BASE_URL" \
+      HMUX_IROH_BROKER_BASE_URL="$STAGING_BASE_URL" \
+      HMUX_IROH_V2_ENVIRONMENT="$V2_ENVIRONMENT" \
+      HMUX_IROH_V2_BASE_URL="$V2_BASE_URL" \
       ./ios/scripts/reload.sh "${IROH_RELEASE_GATE_IOS_RELOAD_ARGS[@]}"
   else
     run_build_with_heartbeat Mac env \
-      CMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
-      CMUX_DEV_API_BASE_URL="$STAGING_BASE_URL" \
-      CMUX_IROH_BROKER_BASE_URL="$STAGING_BASE_URL" \
-      CMUX_IROH_V2_ENVIRONMENT="$V2_ENVIRONMENT" \
-      CMUX_IROH_V2_BASE_URL="$V2_BASE_URL" \
+      HMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
+      HMUX_DEV_API_BASE_URL="$STAGING_BASE_URL" \
+      HMUX_IROH_BROKER_BASE_URL="$STAGING_BASE_URL" \
+      HMUX_IROH_V2_ENVIRONMENT="$V2_ENVIRONMENT" \
+      HMUX_IROH_V2_BASE_URL="$V2_BASE_URL" \
       ./scripts/reload.sh --tag "$TAG"
     run_build_with_heartbeat iOS env \
-      CMUX_XCODEBUILD_JOBS="${CMUX_IROH_RELEASE_GATE_XCODEBUILD_JOBS:-2}" \
-      CMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
-      CMUX_DEV_API_BASE_URL="$STAGING_BASE_URL" \
-      CMUX_IROH_BROKER_BASE_URL="$STAGING_BASE_URL" \
-      CMUX_IROH_V2_ENVIRONMENT="$V2_ENVIRONMENT" \
-      CMUX_IROH_V2_BASE_URL="$V2_BASE_URL" \
+      HMUX_XCODEBUILD_JOBS="${HMUX_IROH_RELEASE_GATE_XCODEBUILD_JOBS:-2}" \
+      HMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
+      HMUX_DEV_API_BASE_URL="$STAGING_BASE_URL" \
+      HMUX_IROH_BROKER_BASE_URL="$STAGING_BASE_URL" \
+      HMUX_IROH_V2_ENVIRONMENT="$V2_ENVIRONMENT" \
+      HMUX_IROH_V2_BASE_URL="$V2_BASE_URL" \
       ./ios/scripts/reload.sh "${IROH_RELEASE_GATE_IOS_RELOAD_ARGS[@]}"
   fi
 else
@@ -728,8 +728,8 @@ fi
 # Retained simulators must never contribute a prior run's report or UI image.
 DATA_CONTAINER="$(xcrun simctl get_app_container "$SIMULATOR_ID" "$IOS_BUNDLE_ID" data)"
 rm -f "$DATA_CONTAINER/Library/Caches/$REPORT_FILENAME" \
-  "$DATA_CONTAINER/Library/Caches/cmux-iroh-ui-workspaces.png" \
-  "$DATA_CONTAINER/Library/Caches/cmux-iroh-ui-terminal.png"
+  "$DATA_CONTAINER/Library/Caches/hmux-iroh-ui-workspaces.png" \
+  "$DATA_CONTAINER/Library/Caches/hmux-iroh-ui-terminal.png"
 
 [[ -d "$MAC_APP" ]] || { echo "error: tagged Mac app is missing: $MAC_APP" >&2; exit 1; }
 "$SCRIPT_DIR/lib/verify-iroh-release-gate-builds.sh" \
@@ -752,10 +752,10 @@ import os
 import plistlib
 
 setting_names = (
-    "CMUX_IROH_RELAY_POLICY_KEY_ID",
-    "CMUX_IROH_RELAY_POLICY_PUBLIC_KEY_BASE64",
-    "CMUX_IROH_RELAY_POLICY_NEXT_KEY_ID",
-    "CMUX_IROH_RELAY_POLICY_NEXT_PUBLIC_KEY_BASE64",
+    "HMUX_IROH_RELAY_POLICY_KEY_ID",
+    "HMUX_IROH_RELAY_POLICY_PUBLIC_KEY_BASE64",
+    "HMUX_IROH_RELAY_POLICY_NEXT_KEY_ID",
+    "HMUX_IROH_RELAY_POLICY_NEXT_PUBLIC_KEY_BASE64",
 )
 settings = {}
 with open(os.environ["PRODUCTION_RELAY_POLICY_XCCONFIG"], encoding="utf-8") as handle:
@@ -772,12 +772,12 @@ if missing:
 
 expected_trust = [
     {
-        "keyID": settings["CMUX_IROH_RELAY_POLICY_KEY_ID"],
-        "publicKeyBase64": settings["CMUX_IROH_RELAY_POLICY_PUBLIC_KEY_BASE64"],
+        "keyID": settings["HMUX_IROH_RELAY_POLICY_KEY_ID"],
+        "publicKeyBase64": settings["HMUX_IROH_RELAY_POLICY_PUBLIC_KEY_BASE64"],
     },
     {
-        "keyID": settings["CMUX_IROH_RELAY_POLICY_NEXT_KEY_ID"],
-        "publicKeyBase64": settings["CMUX_IROH_RELAY_POLICY_NEXT_PUBLIC_KEY_BASE64"],
+        "keyID": settings["HMUX_IROH_RELAY_POLICY_NEXT_KEY_ID"],
+        "publicKeyBase64": settings["HMUX_IROH_RELAY_POLICY_NEXT_PUBLIC_KEY_BASE64"],
     },
 ]
 
@@ -787,11 +787,11 @@ for label, environment_name in (
 ):
     with open(os.environ[environment_name], "rb") as handle:
         info = plistlib.load(handle)
-    if info.get("CMUXIrohRelayPolicyKeyID") != expected_trust[0]["keyID"]:
+    if info.get("HMUXIrohRelayPolicyKeyID") != expected_trust[0]["keyID"]:
         raise SystemExit(f"{label} production gate app has the wrong relay-policy key ID")
-    if info.get("CMUXIrohRelayPolicyPublicKeyBase64") != expected_trust[0]["publicKeyBase64"]:
+    if info.get("HMUXIrohRelayPolicyPublicKeyBase64") != expected_trust[0]["publicKeyBase64"]:
         raise SystemExit(f"{label} production gate app has the wrong relay-policy public key")
-    if info.get("CMUXIrohRelayPolicyTrustKeys") != expected_trust:
+    if info.get("HMUXIrohRelayPolicyTrustKeys") != expected_trust:
         raise SystemExit(f"{label} production gate app has the wrong relay-policy trust set")
 
 print("==> production relay-policy pins verified in Mac and iOS build artifacts")
@@ -800,7 +800,7 @@ fi
 
 # Both endpoints read the mode before constructing their Iroh endpoint. Write
 # after installation so a fresh simulator app container cannot replace it.
-defaults write "$MAC_BUNDLE_ID" cmux.iroh.debug.transport-mode -string "$RAW_MODE"
+defaults write "$MAC_BUNDLE_ID" hmux.iroh.debug.transport-mode -string "$RAW_MODE"
 # Pin the Worker scope in both UserDefaults stores as well as the build
 # metadata. This prevents a retained dev app from reusing a prior environment
 # override when a production or staging gate is launched with a new tag.
@@ -808,8 +808,8 @@ defaults write "$MAC_BUNDLE_ID" cmux.iroh.debug.transport-mode -string "$RAW_MOD
   echo "error: v2 environment and base URL must be resolved before app launch" >&2
   exit 2
 }
-defaults write "$MAC_BUNDLE_ID" cmux.iroh.v2.config.CMUX_IROH_V2_ENVIRONMENT -string "$V2_ENVIRONMENT"
-defaults write "$MAC_BUNDLE_ID" cmux.iroh.v2.config.CMUX_IROH_V2_BASE_URL -string "$V2_BASE_URL"
+defaults write "$MAC_BUNDLE_ID" hmux.iroh.v2.config.HMUX_IROH_V2_ENVIRONMENT -string "$V2_ENVIRONMENT"
+defaults write "$MAC_BUNDLE_ID" hmux.iroh.v2.config.HMUX_IROH_V2_BASE_URL -string "$V2_BASE_URL"
 # The current Iroh implementation owns a separate endpoint configuration.
 # Constrain both generations so a same-host direct route cannot satisfy a
 # check advertised as exercising the relay fleet.
@@ -819,31 +819,31 @@ if [[ "$RAW_MODE" == relayOnly ]]; then
   FORCE_RELAY=1
   FORCE_RELAY_BOOLEAN=true
 fi
-defaults write "$MAC_BUNDLE_ID" cmux.iroh.v2.force-relay -bool "$FORCE_RELAY_BOOLEAN"
+defaults write "$MAC_BUNDLE_ID" hmux.iroh.v2.force-relay -bool "$FORCE_RELAY_BOOLEAN"
 if [[ -n "$PRESENCE_BASE_URL" ]]; then
   defaults write "$MAC_BUNDLE_ID" presenceServiceURL -string "$PRESENCE_BASE_URL"
 else
   defaults delete "$MAC_BUNDLE_ID" presenceServiceURL >/dev/null 2>&1 || true
 fi
 xcrun simctl spawn "$SIMULATOR_ID" defaults write \
-  "$IOS_BUNDLE_ID" cmux.iroh.debug.transport-mode -string "$RAW_MODE"
+  "$IOS_BUNDLE_ID" hmux.iroh.debug.transport-mode -string "$RAW_MODE"
 xcrun simctl spawn "$SIMULATOR_ID" defaults write \
-  "$IOS_BUNDLE_ID" cmux.iroh.v2.config.CMUX_IROH_V2_ENVIRONMENT -string "$V2_ENVIRONMENT"
+  "$IOS_BUNDLE_ID" hmux.iroh.v2.config.HMUX_IROH_V2_ENVIRONMENT -string "$V2_ENVIRONMENT"
 xcrun simctl spawn "$SIMULATOR_ID" defaults write \
-  "$IOS_BUNDLE_ID" cmux.iroh.v2.config.CMUX_IROH_V2_BASE_URL -string "$V2_BASE_URL"
+  "$IOS_BUNDLE_ID" hmux.iroh.v2.config.HMUX_IROH_V2_BASE_URL -string "$V2_BASE_URL"
 xcrun simctl spawn "$SIMULATOR_ID" defaults write \
-  "$IOS_BUNDLE_ID" cmux.iroh.v2.config.CMUX_IROH_V2_FORCE_RELAY -string "$FORCE_RELAY"
+  "$IOS_BUNDLE_ID" hmux.iroh.v2.config.HMUX_IROH_V2_FORCE_RELAY -string "$FORCE_RELAY"
 # Enable the app-side monotonic latency trace before the measured process
 # launch. The e2e driver pairs scene.active with the target terminal's first
 # rd.present, excluding simctl, OCR, AXe, and Mac polling overhead from the
 # foreground budget.
 xcrun simctl spawn "$SIMULATOR_ID" defaults write \
-  "$IOS_BUNDLE_ID" cmux.debug.latency-trace -bool true
+  "$IOS_BUNDLE_ID" hmux.debug.latency-trace -bool true
 
 # The driver owns this unique tag, so restart it unconditionally. A live pairing
-# socket can otherwise make `cmux_attach_ensure_mac` return without relaunching,
+# socket can otherwise make `hmux_attach_ensure_mac` return without relaunching,
 # leaving a prior run's transport mode active.
-MAC_PROCESS_PATTERN="cmux DEV ${SLUG}.app/Contents/MacOS/cmux DEV"
+MAC_PROCESS_PATTERN="hmux DEV ${SLUG}.app/Contents/MacOS/hmux DEV"
 MAC_PROCESS_IDS="$(pgrep -f "$MAC_PROCESS_PATTERN" | tr '\n' ' ' || true)"
 pkill -f "$MAC_PROCESS_PATTERN" 2>/dev/null || true
 if [[ -n "$MAC_PROCESS_IDS" ]]; then
@@ -895,16 +895,16 @@ fi
 # Unix-domain socket inodes can outlive a cleanly observed process exit. The
 # tag is uniquely owned by this driver, and the exact executable is now absent,
 # so remove only this validated tag's socket before relaunching.
-cmux_attach_remove_stale_socket "$TAG"
+hmux_attach_remove_stale_socket "$TAG"
 MAC_AUTH_ARGS=()
 if [[ -n "$DOGFOOD_CREDENTIALS_FILE" ]]; then
-  cmux_dev_secrets_load --profile agent --credentials-file "$DOGFOOD_CREDENTIALS_FILE" >/dev/null
-  MAC_AUTH_ARGS=(0 agent "$DOGFOOD_CREDENTIALS_FILE" "$CMUX_DEV_AUTH_ACCOUNT")
+  hmux_dev_secrets_load --profile agent --credentials-file "$DOGFOOD_CREDENTIALS_FILE" >/dev/null
+  MAC_AUTH_ARGS=(0 agent "$DOGFOOD_CREDENTIALS_FILE" "$HMUX_DEV_AUTH_ACCOUNT")
 fi
-CMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
-CMUX_ATTACH_ALLOW_RELAUNCH=1 \
-CMUX_ATTACH_MINT_MAX_ATTEMPTS=600 \
-cmux_attach_ensure_mac "$TAG" "$REPO_ROOT" physical_device ${MAC_AUTH_ARGS[@]+"${MAC_AUTH_ARGS[@]}"}
+HMUX_PRESENCE_BASE_URL="$PRESENCE_BASE_URL" \
+HMUX_ATTACH_ALLOW_RELAUNCH=1 \
+HMUX_ATTACH_MINT_MAX_ATTEMPTS=600 \
+hmux_attach_ensure_mac "$TAG" "$REPO_ROOT" physical_device ${MAC_AUTH_ARGS[@]+"${MAC_AUTH_ARGS[@]}"}
 
 MOBILE_LAUNCH_ARGS=(
   --tag "$TAG"
@@ -924,7 +924,7 @@ fi
 # reuses that state and measures the cached-credential path.
 if [[ -n "$SOAK_PROFILE" ]]; then
   echo "==> prewarming cached Stack and v2 state before the measured launch"
-  CMUX_DEV_AUTH_REPLACE_SESSION=1 \
+  HMUX_DEV_AUTH_REPLACE_SESSION=1 \
     run_phase_with_timeout prewarm ./scripts/mobile-dev-launch.sh "${MOBILE_LAUNCH_ARGS[@]}"
   # The first launch verified sign-in and pairing. The measured launch must
   # restore those saved values through the same startup path as a user launch.
@@ -986,7 +986,7 @@ MOBILE_LAUNCH_ARGS+=(--iroh-release-gate "$RAW_MODE")
 # for this acknowledgement before navigating back; capture time is excluded
 # from the already-recorded latency.
 if [[ -n "$SOAK_PROFILE" ]]; then
-  UI_CAPTURE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/cmux-iroh-ui-${TAG}.XXXXXX")"
+  UI_CAPTURE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/hmux-iroh-ui-${TAG}.XXXXXX")"
   UI_CAPTURE_READY_FIFO="$UI_CAPTURE_DIR/listener-ready.fifo"
   mkfifo "$UI_CAPTURE_READY_FIFO"
   # Keep a reader open before the helper can observe registration, avoiding
@@ -1004,7 +1004,7 @@ def interrupted(*_):
 
 signal.signal(signal.SIGTERM, interrupted)
 base = ["xcrun", "simctl", "spawn", os.environ["SIMULATOR_ID"], "notifyutil"]
-target = "dev.cmux.ios.iroh-release-gate.ui-terminal-ready"
+target = "dev.hmux.ios.iroh-release-gate.ui-terminal-ready"
 waiter = subprocess.Popen(
     base + ["-2", target],
     stdout=subprocess.PIPE,
@@ -1044,7 +1044,7 @@ try:
     subprocess.run(["xcrun", "simctl", "io", os.environ["SIMULATOR_ID"], "screenshot",
                     os.path.join(os.environ["UI_CAPTURE_DIR"], "terminal.png")],
                    check=True, timeout=10, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.run(base + ["-p", "dev.cmux.ios.iroh-release-gate.ui-terminal-captured"],
+    subprocess.run(base + ["-p", "dev.hmux.ios.iroh-release-gate.ui-terminal-captured"],
                    check=True, timeout=5)
 finally:
     try:
@@ -1119,14 +1119,14 @@ raise SystemExit(return_code)
 PY_LAUNCH
 }
 
-GATE_LAUNCH_LOG="$(mktemp "${TMPDIR:-/tmp}/cmux-iroh-launch-${TAG}.XXXXXX")"
+GATE_LAUNCH_LOG="$(mktemp "${TMPDIR:-/tmp}/hmux-iroh-launch-${TAG}.XXXXXX")"
 launch_status=0
-CMUX_DEV_AUTH_REPLACE_SESSION="$([[ -n "$SOAK_PROFILE" ]] && printf 0 || printf 1)" \
-CMUX_ATTACH_MINT_MAX_ATTEMPTS=600 \
-CMUX_ATTACH_READY_TIMEOUT_SECONDS="${CMUX_IROH_RELEASE_GATE_ATTACH_READY_TIMEOUT_SECONDS:-90}" \
-CMUX_IROH_RELEASE_GATE_SCENARIO="$GATE_SCENARIO" \
-CMUX_IROH_SOAK_PROFILE="$SOAK_PROFILE" \
-CMUX_IROH_DISABLE_RELAY_CREDENTIAL_REFRESH="$([[ "$GATE_SCENARIO" == "relay_expiry" ]] && printf 1 || printf 0)" \
+HMUX_DEV_AUTH_REPLACE_SESSION="$([[ -n "$SOAK_PROFILE" ]] && printf 0 || printf 1)" \
+HMUX_ATTACH_MINT_MAX_ATTEMPTS=600 \
+HMUX_ATTACH_READY_TIMEOUT_SECONDS="${HMUX_IROH_RELEASE_GATE_ATTACH_READY_TIMEOUT_SECONDS:-90}" \
+HMUX_IROH_RELEASE_GATE_SCENARIO="$GATE_SCENARIO" \
+HMUX_IROH_SOAK_PROFILE="$SOAK_PROFILE" \
+HMUX_IROH_DISABLE_RELAY_CREDENTIAL_REFRESH="$([[ "$GATE_SCENARIO" == "relay_expiry" ]] && printf 1 || printf 0)" \
 run_release_gate_launch "$GATE_LAUNCH_LOG" ./scripts/mobile-dev-launch.sh "${MOBILE_LAUNCH_ARGS[@]}" || launch_status=$?
 sed -E \
   -e 's/^(==> dev sign-in account:).*/\1 [redacted]/' \
@@ -1144,11 +1144,11 @@ if [[ "$REAL_USAGE" -eq 1 ]]; then
   CODEX_SHUTDOWN_FILE="$REAL_USAGE_DIR/shutdown"
   rm -f "$CODEX_SHUTDOWN_FILE"
   echo "==> starting real Codex workload in three Mac workspaces"
-  CMUX_E2E_TAG="$TAG" \
-  CMUX_CODEX_EVIDENCE_DIR="$REAL_USAGE_DIR" \
-  CMUX_CODEX_MODEL="${CMUX_CODEX_MODEL:-gpt-5.5-mini}" \
-  CMUX_CODEX_DURATION_SECONDS="${CMUX_CODEX_DURATION_SECONDS:-900}" \
-  CMUX_CODEX_SHUTDOWN_FILE="$CODEX_SHUTDOWN_FILE" \
+  HMUX_E2E_TAG="$TAG" \
+  HMUX_CODEX_EVIDENCE_DIR="$REAL_USAGE_DIR" \
+  HMUX_CODEX_MODEL="${HMUX_CODEX_MODEL:-gpt-5.5-mini}" \
+  HMUX_CODEX_DURATION_SECONDS="${HMUX_CODEX_DURATION_SECONDS:-900}" \
+  HMUX_CODEX_SHUTDOWN_FILE="$CODEX_SHUTDOWN_FILE" \
   "$SCRIPT_DIR/e2e/iroh-codex-workload.sh" \
     > "$REAL_USAGE_DIR/codex-workload.log" 2>&1 &
   CODEX_WORKLOAD_PID=$!
@@ -1177,7 +1177,7 @@ if [[ -n "$REPORT_OUTPUT" ]]; then
   mkdir -p "$(dirname "$REPORT_OUTPUT")"
   cp "$REPORT_PATH" "$REPORT_OUTPUT"
   for ui_step in workspaces; do
-    ui_snapshot="$DATA_CONTAINER/Library/Caches/cmux-iroh-ui-$ui_step.png"
+    ui_snapshot="$DATA_CONTAINER/Library/Caches/hmux-iroh-ui-$ui_step.png"
     if [[ -f "$ui_snapshot" ]]; then
       cp "$ui_snapshot" "${REPORT_OUTPUT%.json}-ui-$ui_step.png"
     fi
@@ -1192,8 +1192,8 @@ if [[ -n "$REPORT_OUTPUT" ]]; then
   # The host owns admission and stream lifetime, so an iOS-only report cannot
   # distinguish a control-session exit from a client-side RPC failure.
   # Diagnostic capture is best-effort and must never replace the gate verdict.
-  HOST_DIAGNOSTIC_OUTPUT="${REPORT_OUTPUT%.json}-mac.cmuxdiag"
-  if ! CMUX_TAG="$TAG" "$SCRIPT_DIR/cmux-debug-cli.sh" iroh-diag \
+  HOST_DIAGNOSTIC_OUTPUT="${REPORT_OUTPUT%.json}-mac.hmuxdiag"
+  if ! HMUX_TAG="$TAG" "$SCRIPT_DIR/hmux-debug-cli.sh" iroh-diag \
     > "$HOST_DIAGNOSTIC_OUTPUT"
   then
     rm -f "$HOST_DIAGNOSTIC_OUTPUT"
@@ -1371,13 +1371,13 @@ PY_TARGET
     background_seconds=0
     if [[ "$cycle" -eq 2 ]]; then background_seconds=120; fi
     echo "==> running iOS foreground/background cycle $cycle (background=${background_seconds}s)"
-    CMUX_E2E_TAG="$TAG" \
-    CMUX_E2E_SIM_UDID="$SIMULATOR_ID" \
-    CMUX_E2E_EVIDENCE_DIR="$cycle_dir" \
-    CMUX_E2E_WORKSPACE_ID="$TARGET_WORKSPACE_ID" \
-    CMUX_E2E_SURFACE_ID="$TARGET_SURFACE_ID" \
-    CMUX_E2E_BACKGROUND_SECONDS="$background_seconds" \
-    CMUX_E2E_VIDEO="$cycle_dir/ios-e2e.mp4" \
+    HMUX_E2E_TAG="$TAG" \
+    HMUX_E2E_SIM_UDID="$SIMULATOR_ID" \
+    HMUX_E2E_EVIDENCE_DIR="$cycle_dir" \
+    HMUX_E2E_WORKSPACE_ID="$TARGET_WORKSPACE_ID" \
+    HMUX_E2E_SURFACE_ID="$TARGET_SURFACE_ID" \
+    HMUX_E2E_BACKGROUND_SECONDS="$background_seconds" \
+    HMUX_E2E_VIDEO="$cycle_dir/ios-e2e.mp4" \
       "$SCRIPT_DIR/e2e/ios-e2e-run.sh" \
         --tag "$TAG" \
         --sim-udid "$SIMULATOR_ID" \

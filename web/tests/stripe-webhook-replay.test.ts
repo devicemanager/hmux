@@ -23,7 +23,7 @@ function replayer(input: {
             id: "sub_1",
             customer: "cus_1",
             status: "active",
-            metadata: { stackUserId: "user_1", app: "cmux" },
+            metadata: { stackUserId: "user_1", app: "hmux" },
           }),
         },
       }) as never,

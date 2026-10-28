@@ -96,7 +96,7 @@ from test_touches_diff import RUNNER_FILES  # noqa: E402
 from pr_runner_pool import LAST_OWNED_ATTEMPT  # noqa: E402
 
 MACHINE, CODE, DERIVED, UNKNOWN = "machine", "code", "derived", "unknown"
-MARKER = "<!-- cmux-ci-failure-attribution -->"
+MARKER = "<!-- hmux-ci-failure-attribution -->"
 BOT = "github-actions[bot]"
 RED = {"failure", "timed_out"}
 # Jobs that only read other jobs' results. Their names as the jobs API reports
@@ -135,9 +135,9 @@ DOWNLOAD_ARTIFACT_STEP = r"^actions/download-artifact@"
 SIGNATURES = (
     sig("admission-declined", DERIVED, r"macOS admission gate declined: ",
         "compile admission stopped because a Linux job failed"),
-    sig("runner-hook-refused", MACHINE, r"glaeda-cmux-runner-hook: refused: ",
+    sig("runner-hook-refused", MACHINE, r"glaeda-hmux-runner-hook: refused: ",
         "the owned runner refused the job (host busy or out of capacity)"),
-    sig("product-restore-failed", MACHINE, r'^CMUX_TEST_PRODUCT_RESTORE \{.*"outcome": "failure"',
+    sig("product-restore-failed", MACHINE, r'^HMUX_TEST_PRODUCT_RESTORE \{.*"outcome": "failure"',
         "the compiled app-host products did not restore on this runner"),
     sig("app-host-preparation", MACHINE, r"Unexpected app-host preparation outcome",
         "the isolated app-host home was not prepared"),
@@ -157,7 +157,7 @@ SIGNATURES = (
     # marker is today's text; the anchored messages are what a pull request
     # branched before it prints (the classifier runs main's copy on any head).
     sig("xcode-pin-missing", MACHINE,
-        r"\[cmux-ci machine: xcode-pin-missing\]|^Pinned Xcode developer dir (?:does not exist|has no usable macOS SDK): "
+        r"\[hmux-ci machine: xcode-pin-missing\]|^Pinned Xcode developer dir (?:does not exist|has no usable macOS SDK): "
         r"|^This macOS \d+ runner has no Xcode \S+, the version scripts/ci/xcode-pins\.txt pins",
         "the runner does not have the Xcode this job pins (install it: scripts/ci/xcode_pin_audit.py)"),
     # `Download compiled (app-host) test product`: GitHub's artifact storage did not deliver the
@@ -290,7 +290,7 @@ SWIFT_ISSUE = re.compile(
     r'^✘ Test (?P<test>"(?:[^"\\]|\\.)*"|\S+) recorded an issue (?:.*? )?at '
     r"(?P<path>[\w+.\-/]+\.swift):(?P<line>\d+):\d+: (?P<message>.*)$")
 SWIFT_FAILED = re.compile(r'^✘ Test (?P<test>"(?:[^"\\]|\\.)*"|\S+) (?:with \d+ test cases? )?failed after ')
-# XCTest: `<path>/<File>.swift:<line>: error: -[cmuxTests.Suite testName] : XCTAssert... failed: ...`.
+# XCTest: `<path>/<File>.swift:<line>: error: -[hmuxTests.Suite testName] : XCTAssert... failed: ...`.
 XCTEST_ISSUE = re.compile(
     r"^(?P<path>\S+\.swift):(?P<line>\d+): error: -\[(?:\w+\.)?(?P<suite>\w+) (?P<test>\w+)\] : (?P<message>.*)$")
 XCTEST_FAILED = re.compile(r"^Test Case '-\[(?:\w+\.)?(?P<suite>\w+) (?P<test>\w+)\]' failed \(")
@@ -309,8 +309,8 @@ NOISE = re.compile(
     r"^error: (?:Error Domain=|<dictionary|UpdateFailed|read-only cache client|failed to update cache)"
     r"|Error Domain=(?:RBSServiceErrorDomain|NSCocoaErrorDomain) Code=")
 HEX = re.compile(r"0x[0-9a-fA-F]+")
-# Where a CI checkout's paths start (/tmp/cmux-ci/src/Sources/X.swift is Sources/X.swift).
-REPO_ROOTS = re.compile(r"(?:^|/)((?:Sources|cmuxTests|cmuxUITests|Packages|CLI|TunnelExtension|ios|web|scripts|tests)/.+)$")
+# Where a CI checkout's paths start (/tmp/hmux-ci/src/Sources/X.swift is Sources/X.swift).
+REPO_ROOTS = re.compile(r"(?:^|/)((?:Sources|hmuxTests|hmuxUITests|Packages|CLI|TunnelExtension|ios|web|scripts|tests)/.+)$")
 MAX_FAILURES_PER_JOB = 8
 MAX_RENDERED_FAILURES = 10
 MAX_FAILURE_MESSAGE_CHARS = 160
@@ -517,10 +517,10 @@ def macos_ran(jobs: Iterable[Mapping]) -> bool:
 MACOS_PREREQUISITES = ("changes", "Fast static checks")
 STATIC_CHECKS_JOB = "Fast static checks"
 # Pull requests into this base run CI from its ci.yml, which skips `Fast static checks` (and so
-# `macos`) by design: cmux-next.yml owns their app checks. That skip is routing, not a gap, and a
+# `macos`) by design: hmux-next.yml owns their app checks. That skip is routing, not a gap, and a
 # green run there never needs its jobs read (tests/test_ci_classify_failures.py pins this to
-# feat-cmux-next's ci.yml when the branch is fetched).
-NEXT_BASE = "feat-cmux-next"
+# feat-hmux-next's ci.yml when the branch is fetched).
+NEXT_BASE = "feat-hmux-next"
 
 
 def run_base(run: Mapping, repo: str) -> str:
@@ -587,7 +587,7 @@ def run_pull(gh: GitHub, run: Mapping, pr: int | None = ...) -> tuple[int | None
 
 
 # Paths whose change means the macOS jobs should have run (detect_ci_change_areas.py routes more).
-APP_PATHS = ("Sources/", "cmuxTests/", "cmuxUITests/", "CLI/", "Packages/", "TunnelExtension/", "cmux.xcodeproj/")
+APP_PATHS = ("Sources/", "hmuxTests/", "hmuxUITests/", "CLI/", "Packages/", "TunnelExtension/", "hmux.xcodeproj/")
 MAX_FILE_PAGES = 10
 
 
@@ -617,7 +617,7 @@ def touches_app(files: Iterable[str]) -> bool:
 
 # main_full_suite.py keeps one open issue while main's full suite is red, and
 # writes the concrete failures of each red run it reports into it as data.
-MAIN_FAILURES_PREFIX = "<!-- cmux-main-failures "
+MAIN_FAILURES_PREFIX = "<!-- hmux-main-failures "
 MAIN_FAILURES_RE = re.compile(re.escape(MAIN_FAILURES_PREFIX) + r"(\{.*?\}) -->")
 
 
@@ -698,7 +698,7 @@ def main_red(gh: GitHub) -> dict:
 # otherwise plant failures to excuse another PR's. Concurrent runs may drop each other's update; the
 # record is evidence, not a ledger.
 SEEN_ISSUE = 17286
-SEEN_PREFIX = "<!-- cmux-pr-failures-seen "
+SEEN_PREFIX = "<!-- hmux-pr-failures-seen "
 SEEN_RE = re.compile(re.escape(SEEN_PREFIX) + r"(\{.*?\}) -->", re.DOTALL)
 SEEN_DAYS = 14
 MAX_SEEN_PRS = 5
@@ -824,7 +824,7 @@ def seen_body(body: str, record: Mapping[str, Mapping[str, str]]) -> str:
 
 # The head and state the comment speaks for, so a push can mark it stale.
 # Older comments name their head only in the text (LEGACY_HEAD).
-HEAD_RE = re.compile(r"<!-- cmux-ci-failure-attribution head=([0-9a-f]+) state=([\w-]+) -->")
+HEAD_RE = re.compile(r"<!-- hmux-ci-failure-attribution head=([0-9a-f]+) state=([\w-]+) -->")
 LEGACY_HEAD = re.compile(r"CI (?:passes|failed|stopped) on `([0-9a-f]{7,40})`")
 VERDICT_PREFIX = "**"
 MACOS_SKIPPED = "macOS jobs did not run: compile and app tests were skipped"
@@ -832,7 +832,7 @@ MAX_VERDICT_ITEMS = 3
 
 
 def head_marker(sha: str, state: str) -> str:
-    return f"<!-- cmux-ci-failure-attribution head={sha} state={state} -->"
+    return f"<!-- hmux-ci-failure-attribution head={sha} state={state} -->"
 
 
 def comment_head(body: str) -> tuple[str, str]:
@@ -1271,7 +1271,7 @@ def main(argv: list[str]) -> int:
         print(f"run {run.get('id')} concluded {run.get('conclusion')}; nothing to attribute")
         return 0
     # A green run's jobs are read too (no logs): its macOS jobs may never have run. Into
-    # feat-cmux-next they never do, by design, so there the comments are read first instead.
+    # feat-hmux-next they never do, by design, so there the comments are read first instead.
     report = (green_next_report(gh, run) if args.command == "act" else None) or classify_run(gh, run)
     if args.command == "classify":
         print(json.dumps(report, indent=2))

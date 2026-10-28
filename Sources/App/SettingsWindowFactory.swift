@@ -1,6 +1,6 @@
 import AppKit
-import CmuxFoundation
-import CmuxSettingsUI
+import HmuxFoundation
+import HmuxSettingsUI
 import SwiftUI
 import os
 
@@ -13,7 +13,7 @@ import os
 /// ends with a visible window. SwiftUI is used only for the window's content.
 @MainActor
 enum SettingsWindowFactory {
-    private nonisolated static let log = Logger(subsystem: "com.cmuxterm.app", category: "Settings")
+    private nonisolated static let log = Logger(subsystem: "com.hmuxterm.app", category: "Settings")
 
     /// `onContentAppear` is invoked from the hosted content's `onAppear`, so
     /// the presenter that owns this window learns when the content's
@@ -22,7 +22,7 @@ enum SettingsWindowFactory {
     /// factory drain their own pending navigation).
     ///
     /// `initialNavigationTarget` is the section a targeted show is about to
-    /// navigate to (`cmux settings open <target>`, sidebar deep links), so
+    /// navigate to (`hmux settings open <target>`, sidebar deep links), so
     /// the content can mount that section first instead of the last-viewed
     /// one and then re-mounting on delivery
     /// (https://github.com/manaflow-ai/cmux/issues/12134).
@@ -68,7 +68,7 @@ enum SettingsWindowFactory {
         // scene/window bridge. On macOS 27 it can alternate SwiftUI content
         // measurement with AppKit window layout while the window is being
         // created, overflowing the main-thread stack before the presenter can
-        // apply its re-entrancy guard (CMUXTERM-MACOS-27J7).
+        // apply its re-entrancy guard (HMUXTERM-MACOS-27J7).
         window.contentView = hostingView
         // [flexible space, sidebar toggle, sidebar tracking separator] is the
         // exact item layout the SwiftUI-owned 0.64.17 window built for its
@@ -88,10 +88,10 @@ enum SettingsWindowFactory {
 /// mutation path in ``SettingsWindowRoot``.
 @MainActor
 final class SettingsSidebarToolbarController: NSObject, NSToolbarDelegate {
-    static let toggleSidebarItemIdentifier = NSToolbarItem.Identifier("cmux.settings.toggleSidebar")
+    static let toggleSidebarItemIdentifier = NSToolbarItem.Identifier("hmux.settings.toggleSidebar")
 
     func makeToolbar() -> NSToolbar {
-        let toolbar = NSToolbar(identifier: "cmux.settings.toolbar")
+        let toolbar = NSToolbar(identifier: "hmux.settings.toolbar")
         toolbar.delegate = self
         toolbar.displayMode = .iconOnly
         toolbar.allowsUserCustomization = false
@@ -181,8 +181,8 @@ struct SettingsWindowHostRoot: View {
 
     var body: some View {
         content
-            .cmuxFontMagnificationEnvironment()
-            .cmuxAppearanceColorScheme(appearanceMode)
+            .hmuxFontMagnificationEnvironment()
+            .hmuxAppearanceColorScheme(appearanceMode)
             .onAppear(perform: onContentAppear)
     }
 
@@ -193,11 +193,11 @@ struct SettingsWindowHostRoot: View {
                 .settingsRuntime(runtime)
         } else {
             // Unreachable in a normally-launched app (the runtime is created
-            // in cmuxApp.init before any UI); kept so a lifecycle regression
+            // in hmuxApp.init before any UI); kept so a lifecycle regression
             // surfaces as a visible message instead of a silent no-op.
             Text(String(
                 localized: "settings.window.runtimeUnavailable",
-                defaultValue: "Settings could not load. Please restart cmux and report this issue."
+                defaultValue: "Settings could not load. Please restart hmux and report this issue."
             ))
             .padding(40)
             .frame(

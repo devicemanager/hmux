@@ -9,7 +9,7 @@ description: >-
   revision, as they always did.
 inputs:
   target:
-    description: cmuxTests or cmuxUITests (the filter job's `target`).
+    description: hmuxTests or hmuxUITests (the filter job's `target`).
     required: true
   filter:
     description: The first normalized filter (the filter job's `filter`).
@@ -43,8 +43,8 @@ inputs:
     default: "120"
   dogfood-scenario:
     description: >-
-      Base64 JSON scenario for cmuxUITests/DogfoodScenarioUITests, passed to
-      the test runner as CMUX_DOGFOOD_SCENARIO_B64. Empty for every other run.
+      Base64 JSON scenario for hmuxUITests/DogfoodScenarioUITests, passed to
+      the test runner as HMUX_DOGFOOD_SCENARIO_B64. Empty for every other run.
     required: false
     default: ""
   ref-display:
@@ -87,27 +87,27 @@ inputs:
 runs:
   using: composite
   steps:
-    # The product is compiled with CMUX_CI_APP_HOST_ISOLATION_REQUIRED, so
+    # The product is compiled with HMUX_CI_APP_HOST_ISOLATION_REQUIRED, so
     # the app host demands the prepared home and refuses to start without it.
     # ci-macos.yml feeds the shard from its test matrix; this lane runs one
     # set of tests, so it names the only shard there is. test-without-building
     # takes no -derivedDataPath, so its result bundle would land under
     # ~/Library/Developer/Xcode and never be uploaded;
-    # CMUX_APP_HOST_CAPTURE_XCRESULTS makes the app-host wrapper write it to
-    # $RUNNER_TEMP/cmux-app-host-xcresults instead, where the upload reads.
+    # HMUX_APP_HOST_CAPTURE_XCRESULTS makes the app-host wrapper write it to
+    # $RUNNER_TEMP/hmux-app-host-xcresults instead, where the upload reads.
     # Set here, after the compile, so the build job's compile never sees them
     # wherever these steps run.
     - name: Set the app-host test environment
       shell: bash
       run: |
         {
-          echo "CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1"
-          echo "CMUX_APP_HOST_SHARD=1"
-          echo "CMUX_APP_HOST_CAPTURE_XCRESULTS=1"
+          echo "HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1"
+          echo "HMUX_APP_HOST_SHARD=1"
+          echo "HMUX_APP_HOST_CAPTURE_XCRESULTS=1"
         } >> "$GITHUB_ENV"
 
     - name: Create virtual display
-      if: ${{ inputs.target == 'cmuxUITests' && inputs.filter != 'DisplayResolutionRegressionUITests' }}
+      if: ${{ inputs.target == 'hmuxUITests' && inputs.filter != 'DisplayResolutionRegressionUITests' }}
       shell: bash
       run: |
         set -euo pipefail
@@ -116,9 +116,9 @@ runs:
         echo ""
         clang -framework Foundation -framework CoreGraphics \
           -o /tmp/create-virtual-display scripts/create-virtual-display.m
-        VDISPLAY_READY="$RUNNER_TEMP/cmux-virtual-display.ready"
-        VDISPLAY_ID_PATH="$RUNNER_TEMP/cmux-virtual-display.id"
-        VDISPLAY_LOG="$RUNNER_TEMP/cmux-virtual-display.log"
+        VDISPLAY_READY="$RUNNER_TEMP/hmux-virtual-display.ready"
+        VDISPLAY_ID_PATH="$RUNNER_TEMP/hmux-virtual-display.id"
+        VDISPLAY_LOG="$RUNNER_TEMP/hmux-virtual-display.log"
         rm -f "$VDISPLAY_READY" "$VDISPLAY_ID_PATH" "$VDISPLAY_LOG"
 
         /tmp/create-virtual-display \
@@ -229,7 +229,7 @@ runs:
     # seconds with the runner's state. The script is the tested revision's,
     # which may predate it.
     - name: Verify the runner can activate apps
-      if: ${{ inputs.target == 'cmuxUITests' }}
+      if: ${{ inputs.target == 'hmuxUITests' }}
       shell: bash
       run: |
         if [ -f scripts/ci/preflight-e2e-gui-activation.py ]; then
@@ -264,10 +264,10 @@ runs:
         # It sits under RUNNER_TEMP because app-host cleanup refuses to
         # inspect a host whose DerivedData lives anywhere else, which is
         # also where ci-macos.yml puts its test shards.
-        DERIVED_DATA_PATH="$RUNNER_TEMP/cmux-e2e-products-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+        DERIVED_DATA_PATH="$RUNNER_TEMP/hmux-e2e-products-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
         rm -rf -- "$DERIVED_DATA_PATH"
         mkdir -p "$DERIVED_DATA_PATH"
-        echo "CMUX_DERIVED_DATA_PATH=$DERIVED_DATA_PATH" >> "$GITHUB_ENV"
+        echo "HMUX_DERIVED_DATA_PATH=$DERIVED_DATA_PATH" >> "$GITHUB_ENV"
 
     - name: Restore the compiled test product
       id: restore
@@ -275,13 +275,13 @@ runs:
         ARTIFACT_ID: ${{ inputs.artifact-id }}
         ARTIFACT_PROVIDER_DIGEST: ${{ inputs.artifact-digest }}
         EXPECTED_SHA256: ${{ inputs.sha256 }}
-        CMUX_PRODUCT_CONTRACT: ${{ inputs.product-contract }}
-        CMUX_PRODUCT_SOURCE_REVISION: ${{ inputs.source-revision }}
-        CMUX_PRODUCT_PRODUCER_RUN_ID: ${{ github.run_id }}
-        CMUX_PRODUCT_PRODUCER_RUN_ATTEMPT: ${{ github.run_attempt }}
-        CMUX_PRODUCT_FROM_PRODUCER: ${{ inputs.product-from-producer }}
-        CMUX_PARALLEL_PRODUCT_HIT: ${{ inputs.parallel-product-hit }}
-        CMUX_PARALLEL_PRODUCT_TRANSFER_SECONDS: ${{ inputs.parallel-product-transfer-seconds }}
+        HMUX_PRODUCT_CONTRACT: ${{ inputs.product-contract }}
+        HMUX_PRODUCT_SOURCE_REVISION: ${{ inputs.source-revision }}
+        HMUX_PRODUCT_PRODUCER_RUN_ID: ${{ github.run_id }}
+        HMUX_PRODUCT_PRODUCER_RUN_ATTEMPT: ${{ github.run_attempt }}
+        HMUX_PRODUCT_FROM_PRODUCER: ${{ inputs.product-from-producer }}
+        HMUX_PARALLEL_PRODUCT_HIT: ${{ inputs.parallel-product-hit }}
+        HMUX_PARALLEL_PRODUCT_TRANSFER_SECONDS: ${{ inputs.parallel-product-transfer-seconds }}
       shell: bash
       run: |
         set -euo pipefail
@@ -289,7 +289,7 @@ runs:
         # admission does for its changed suites, so the tests run the exact
         # bytes every other consumer downloads. It uploads them before the
         # tests, or after them on an owned Mac.
-        if [ "$CMUX_PRODUCT_FROM_PRODUCER" = true ]; then
+        if [ "$HMUX_PRODUCT_FROM_PRODUCER" = true ]; then
           mkdir -p "$RUNNER_TEMP/app-host-products"
           ln -f "$RUNNER_TEMP/app-host-products.tar.gz" "$RUNNER_TEMP/app-host-products/app-host-products.tar.gz"
         fi
@@ -297,20 +297,20 @@ runs:
 
     - name: Prepare isolated app-host home
       id: prepare-app-host-home
-      if: ${{ inputs.target == 'cmuxTests' }}
+      if: ${{ inputs.target == 'hmuxTests' }}
       shell: bash
       run: scripts/ci/prepare-app-host-home.sh
 
     - name: Resolve selectors against the built tests
       id: resolve-selectors
-      if: ${{ inputs.target == 'cmuxTests' }}
+      if: ${{ inputs.target == 'hmuxTests' }}
       env:
         TEST_SELECTORS: ${{ inputs.selectors }}
       shell: bash
       run: |
         set -euo pipefail
         # A Swift Testing method selector without its call suffix, such as
-        # cmuxTests/Suite/method instead of cmuxTests/Suite/method(), matches
+        # hmuxTests/Suite/method instead of hmuxTests/Suite/method(), matches
         # nothing, and xcodebuild reports zero executed tests as success.
         # Enumerate what the restored product contains, the same way the
         # app-host shards do, and give each selector the name the inventory
@@ -323,15 +323,15 @@ runs:
           echo "::notice::This revision predates selector resolution; running selectors as given."
           exit 0
         fi
-        enumeration_json="$RUNNER_TEMP/cmux-app-host-test-enumeration.json"
-        inventory_json="$RUNNER_TEMP/cmux-app-host-test-inventory.json"
-        enumeration_log="$RUNNER_TEMP/cmux-app-host-test-enumeration.log"
+        enumeration_json="$RUNNER_TEMP/hmux-app-host-test-enumeration.json"
+        inventory_json="$RUNNER_TEMP/hmux-app-host-test-inventory.json"
+        enumeration_log="$RUNNER_TEMP/hmux-app-host-test-enumeration.log"
         rm -f -- "$enumeration_json" "$inventory_json" "$enumeration_log"
         if ! bash scripts/ci/run-and-capture.sh "$enumeration_log" \
           scripts/ci/run-in-console-session.sh \
           xcodebuild test-without-building \
           -enumerate-tests \
-          -xctestrun "$CMUX_APP_HOST_XCTESTRUN" \
+          -xctestrun "$HMUX_APP_HOST_XCTESTRUN" \
           -destination "platform=macOS" \
           -test-enumeration-style hierarchical \
           -test-enumeration-format json \
@@ -353,14 +353,14 @@ runs:
     - name: Record a selector that matched no built test
       if: ${{ failure() && steps.resolve-selectors.outcome == 'failure' }}
       shell: bash
-      run: touch "$RUNNER_TEMP/cmux-e2e-selectors-unresolved"
+      run: touch "$RUNNER_TEMP/hmux-e2e-selectors-unresolved"
 
     # Inline, not a scripts/ci file: this action ships from the workflow
     # revision, and the tested revision may predate any new script.
     #
     # Owned macOS runners keep one GUI session across jobs and reboots. On one
     # (2026-09-27) a crash report ("Reopen / Ignore / Report...") and
-    # Spotlight's password prompt for the cmux-ci test keychain (read while it
+    # Spotlight's password prompt for the hmux-ci test keychain (read while it
     # was still locked after a reboot) sat over every UI test for hours, and
     # XCUITest could not activate the app or focus its fields. Both run as the
     # runner user, so no sudo. Crash dialogs stay off on the host afterwards;
@@ -378,7 +378,7 @@ runs:
           fi
         done
         # Diagnostics Reporter draws "Your computer was restarted because of a
-        # problem" after a kernel panic and "cmux DEV cannot be opened because
+        # problem" after a kernel panic and "hmux DEV cannot be opened because
         # of a problem" after a crashed launch; on owned macOS runners
         # (2026-09-27) one sat over UI tests from boot. launchd starts it
         # whenever one of its QueueDirectories (/var/db/PanicReporter,
@@ -442,7 +442,7 @@ runs:
         # App-host crash recovery must not stall on interactive backtraces
         # (mirrors ci.yml's tests job hardening).
         SWIFT_BACKTRACE: "interactive=no,timeout=0s,symbolicate=off,color=no"
-        CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS: "45"
+        HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS: "45"
       shell: bash
       run: |
         set -euo pipefail
@@ -459,9 +459,9 @@ runs:
         done
         DISPLAY_ENV_PREFIX=()
 
-        if [ "$TEST_SELECTOR_COUNT" = "1" ] && [ "$TEST_TARGET" = "cmuxUITests" ] && [ "$NORMALIZED_FILTER" = "DisplayResolutionRegressionUITests" ]; then
+        if [ "$TEST_SELECTOR_COUNT" = "1" ] && [ "$TEST_TARGET" = "hmuxUITests" ] && [ "$NORMALIZED_FILTER" = "DisplayResolutionRegressionUITests" ]; then
           HELPER_PATH="/tmp/create-virtual-display"
-          MANIFEST_PATH="/tmp/cmux-ui-test-display-harness.json"
+          MANIFEST_PATH="/tmp/hmux-ui-test-display-harness.json"
 
           rm -f "$MANIFEST_PATH"
           trap 'rm -f "$MANIFEST_PATH"' EXIT
@@ -532,11 +532,11 @@ runs:
         # with the prefix stripped; sudo -u above resets the environment, so
         # the scenario has to ride in this list.
         if [ -n "${DOGFOOD_SCENARIO_B64:-}" ]; then
-          XCODEBUILD_ENV+=("TEST_RUNNER_CMUX_DOGFOOD_SCENARIO_B64=$DOGFOOD_SCENARIO_B64")
+          XCODEBUILD_ENV+=("TEST_RUNNER_HMUX_DOGFOOD_SCENARIO_B64=$DOGFOOD_SCENARIO_B64")
         fi
 
         RUN_XCODEBUILD=(env "${XCODEBUILD_ENV[@]}")
-        if [ "$TEST_TARGET" = "cmuxUITests" ]; then
+        if [ "$TEST_TARGET" = "hmuxUITests" ]; then
           CURRENT_USER="$(id -un)"
           GUI_USER="$(stat -f %Su /dev/console 2>/dev/null || true)"
           if [ -n "$GUI_USER" ] && [ "$GUI_USER" != "root" ] && GUI_UID="$(id -u "$GUI_USER" 2>/dev/null)"; then
@@ -564,8 +564,8 @@ runs:
         # above, so this runs the tests and nothing else. `-only-testing:`
         # narrows execution; it never narrowed compilation, which is why a
         # one-class dispatch used to pay a full cold build.
-        if [ "$TEST_TARGET" = "cmuxTests" ]; then
-          XCTESTRUN_PATH="$CMUX_APP_HOST_XCTESTRUN"
+        if [ "$TEST_TARGET" = "hmuxTests" ]; then
+          XCTESTRUN_PATH="$HMUX_APP_HOST_XCTESTRUN"
           XCODEBUILD_CMD=(
             scripts/ci/run-in-console-session.sh
             scripts/ci/run-app-host-xcodebuild.sh
@@ -576,18 +576,18 @@ runs:
             test-without-building
           )
         else
-          XCTESTRUN_PATH="$CMUX_UI_XCTESTRUN"
-          mkdir -p "$RUNNER_TEMP/cmux-app-host-xcresults"
+          XCTESTRUN_PATH="$HMUX_UI_XCTESTRUN"
+          mkdir -p "$RUNNER_TEMP/hmux-app-host-xcresults"
           XCODEBUILD_CMD=(
             # UI dispatches used to invoke xcodebuild directly, bypassing the
             # per-machine app-host lock and bounded retries already used by
-            # cmuxTests. Keep UI's existing non-isolated host environment,
+            # hmuxTests. Keep UI's existing non-isolated host environment,
             # while applying the same runner-communication recovery. The
             # wrapper removes a caller-owned result bundle before each retry.
-            env CMUX_CI_APP_HOST_ISOLATION_REQUIRED=0
+            env HMUX_CI_APP_HOST_ISOLATION_REQUIRED=0
             scripts/ci/run-app-host-xcodebuild.sh
             -xctestrun "$XCTESTRUN_PATH"
-            -resultBundlePath "$RUNNER_TEMP/cmux-app-host-xcresults/cmuxUITests.xcresult"
+            -resultBundlePath "$RUNNER_TEMP/hmux-app-host-xcresults/hmuxUITests.xcresult"
             -destination "platform=macOS"
             -maximum-test-execution-time-allowance "$TEST_TIMEOUT"
             ${ONLY_TESTING[@]+"${ONLY_TESTING[@]}"}
@@ -640,15 +640,15 @@ runs:
         # every selector to its own typed results: each must account for at
         # least one executed Test Case.
         if [ -f scripts/ci/focused_test_selectors.py ]; then
-          if [ "$TEST_TARGET" = "cmuxUITests" ]; then
-            ui_bundle="$RUNNER_TEMP/cmux-app-host-xcresults/cmuxUITests.xcresult"
+          if [ "$TEST_TARGET" = "hmuxUITests" ]; then
+            ui_bundle="$RUNNER_TEMP/hmux-app-host-xcresults/hmuxUITests.xcresult"
             if [ -d "$ui_bundle" ]; then
               xcrun xcresulttool get test-results tests --path "$ui_bundle" --compact \
                 > "${ui_bundle%.xcresult}.tests.json" 2>/dev/null || true
             fi
           fi
           shopt -s nullglob
-          typed_results=("$RUNNER_TEMP"/cmux-app-host-xcresults/*.tests.json)
+          typed_results=("$RUNNER_TEMP"/hmux-app-host-xcresults/*.tests.json)
           shopt -u nullglob
           if [ "${#typed_results[@]}" -eq 0 ]; then
             echo "::warning::No typed test results; only the aggregate executed-count guard applied."
@@ -678,7 +678,7 @@ runs:
         #   swift-testing bare  Suite Name started.
         #   swift-testing named Suite "A Display Name" started.
         # A @Suite("...") display name is not the identifier that
-        # -only-testing: takes, and 293 of the 821 suites in cmuxTests carry
+        # -only-testing: takes, and 293 of the 821 suites in hmuxTests carry
         # one. Failing on an unmatched name would turn those green runs red,
         # so report and let require_selected_test_execution.sh above own the
         # pass/fail decision.
@@ -733,7 +733,7 @@ runs:
           echo "::error::This revision has no scripts/fuzz, so there are no fuzz regressions to replay."
           exit 1
         fi
-        app="$CMUX_DERIVED_DATA_PATH/Build/Products/Debug/cmux DEV.app"
+        app="$HMUX_DERIVED_DATA_PATH/Build/Products/Debug/hmux DEV.app"
         if [ ! -d "$app" ]; then
           echo "::error::The restored product has no $app."
           exit 1
@@ -755,7 +755,7 @@ runs:
           echo '```'
         } >> "$GITHUB_STEP_SUMMARY"
         if [ "$status" -ne 0 ]; then
-          echo "::error::A fuzz regression reproduced, or the replay could not run (exit $status). Replay one locally with scripts/fuzz replay <repro> --app <cmux DEV.app>; the fuzz-regressions artifact has each replay's steps, frames and debug log."
+          echo "::error::A fuzz regression reproduced, or the replay could not run (exit $status). Replay one locally with scripts/fuzz replay <repro> --app <hmux DEV.app>; the fuzz-regressions artifact has each replay's steps, frames and debug log."
           exit "$status"
         fi
 
@@ -839,7 +839,7 @@ runs:
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: test-results
-        path: ${{ runner.temp }}/cmux-app-host-xcresults/**/*.xcresult
+        path: ${{ runner.temp }}/hmux-app-host-xcresults/**/*.xcresult
         if-no-files-found: warn
         retention-days: 7
 
@@ -847,11 +847,11 @@ runs:
     # summary. The script comes from this workflow's revision (checked out
     # into .e2e-workflow beside this action), since the tested one may predate it.
     - name: Build UI test steps
-      if: ${{ always() && inputs.target == 'cmuxUITests' }}
+      if: ${{ always() && inputs.target == 'hmuxUITests' }}
       shell: bash
       run: |
         script="$GITHUB_WORKSPACE/.e2e-workflow/scripts/ci/e2e-frames.py"
-        results="$RUNNER_TEMP/cmux-app-host-xcresults"
+        results="$RUNNER_TEMP/hmux-app-host-xcresults"
         if [ ! -f "$script" ] || [ ! -d "$results" ]; then
           echo "No UI test results or frames script; skipping."
           exit 0
@@ -861,7 +861,7 @@ runs:
     - name: Upload UI test steps
       # No hashFiles gate: it ignores paths outside the workspace, and
       # runner.temp is outside it. if-no-files-found covers an empty build.
-      if: ${{ always() && inputs.target == 'cmuxUITests' }}
+      if: ${{ always() && inputs.target == 'hmuxUITests' }}
       uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
       with:
         name: ui-frames
@@ -946,9 +946,9 @@ runs:
       shell: bash
       run: |
         set -euo pipefail
-        derived_data_path="${CMUX_DERIVED_DATA_PATH:-}"
+        derived_data_path="${HMUX_DERIVED_DATA_PATH:-}"
         case "$derived_data_path" in
-          "$RUNNER_TEMP/cmux-e2e-products-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}")
+          "$RUNNER_TEMP/hmux-e2e-products-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}")
             rm -rf -- "$derived_data_path"
             ;;
           "")

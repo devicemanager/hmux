@@ -1,7 +1,7 @@
 # Cloud ターミナルへの画像貼り付け
 
 管理対象の Cloud ターミナルで Cmd+V を押すと、準備済みの画像が認証済みの
-cmux-tui 接続で VM に送られ、リモート側のファイル名が貼り付けられます。
+hmux-tui 接続で VM に送られ、リモート側のファイル名が貼り付けられます。
 デーモンのブラケット付き貼り付け処理を使うため、Codex と Claude は VM 上の
 画像を読み込めます。Mac 側のファイル名は Cloud のプロセスに送信されません。
 
@@ -78,10 +78,10 @@ OS 上のセキュリティ境界は VM の Unix アカウントです。同じ�
 デーモンのテストでは実際の `Surface.write_paste` のブラケット付きバイト列と、
 生成されたファイルを読み込めることを確認します。
 
-cmux-tui はホストされた環境で検証してください。
+hmux-tui はホストされた環境で検証してください。
 
 ```sh
-./scripts/verify-cmux-tui-hosted.sh --filter cloud_image_paste
+./scripts/verify-hmux-tui-hosted.sh --filter cloud_image_paste
 ```
 
 `CloudImagePasteMirrorIntegrationTests` は実際のミラー接続とフレームデコーダーを

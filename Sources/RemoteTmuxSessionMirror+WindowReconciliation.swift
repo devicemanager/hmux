@@ -1,5 +1,5 @@
 import Foundation
-import CmuxRemoteSession
+import HmuxRemoteSession
 
 @MainActor
 extension RemoteTmuxSessionMirror {

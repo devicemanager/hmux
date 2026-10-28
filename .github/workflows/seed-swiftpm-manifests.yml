@@ -5,7 +5,7 @@ name: Seed SwiftPM manifests
 # seed-derived-data.yml already seeds the macOS 26 pool on every main push that
 # changes the build. The cache key names the Xcode, and the pull
 # request pool picker sends some jobs to blacksmith-6vcpu-macos-15 with
-# CMUX_CI_XCODE_APP_MACOS_15, so without this those jobs always miss: 40-121 s
+# HMUX_CI_XCODE_APP_MACOS_15, so without this those jobs always miss: 40-121 s
 # resolves against 12-24 s on the seeded pool (#14257).
 #
 # A schedule rather than every main push: that pool has the longest queue, and
@@ -35,8 +35,8 @@ jobs:
     environment: ${{ github.ref == 'refs/heads/main' && 'ci-cache-writer' || '' }}
     timeout-minutes: 20
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_15 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_CI_XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_MACOS_15 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
@@ -73,7 +73,7 @@ jobs:
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
           path: .ci-source-packages
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -88,7 +88,7 @@ jobs:
         run: |
           set -euo pipefail
           scripts/ci/swiftpm-manifest-cache.sh clear
-          root="${CMUX_CI_CANONICAL_ROOT:-/private/tmp/cmux-ci}"
+          root="${HMUX_CI_CANONICAL_ROOT:-/private/tmp/hmux-ci}"
           scripts/ci/compile-app-host-test-product.sh canonical-resolve \
             "$root/derived-data-compile-admission" "$PWD/.ci-source-packages"
           scripts/ci/swiftpm-manifest-cache.sh stage "$RUNNER_TEMP/swiftpm-manifests"

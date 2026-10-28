@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 import os
 

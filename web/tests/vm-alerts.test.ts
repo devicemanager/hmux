@@ -4,7 +4,7 @@ import { closeCloudDbForTests, cloudDb } from "../db/client";
 import { runVmAlertChecks } from "../services/observability/vmAlerts";
 import type { AlertInput, AlertResult } from "../services/observability/alerts";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 
 let sql: Sql | null = null;
@@ -12,7 +12,7 @@ let sql: Sql | null = null;
 function databaseURL() {
   const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!url) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   }
   return url;
 }
@@ -126,8 +126,8 @@ describe("VM alert checks", () => {
       db: cloudDb(),
       now: runNow,
       env: {
-        CMUX_VM_ALERT_CREATE_FAILURES_15M: "3",
-        CMUX_VM_ALERT_EXPIRED_LEASES: "50",
+        HMUX_VM_ALERT_CREATE_FAILURES_15M: "3",
+        HMUX_VM_ALERT_EXPIRED_LEASES: "50",
       },
       sendAlert: async (input): Promise<AlertResult> => {
         alerts.push(input);
@@ -186,7 +186,7 @@ describe("VM alert checks", () => {
     const run = (runNow: Date) => runVmAlertChecks({
       db: cloudDb(),
       now: runNow,
-      env: { CMUX_VM_ALERT_EXPIRED_LEASES: "50" },
+      env: { HMUX_VM_ALERT_EXPIRED_LEASES: "50" },
       sendAlert: async (): Promise<AlertResult> => {
         attempts += 1;
         return attempts === 1
@@ -210,7 +210,7 @@ describe("VM alert checks", () => {
       )
       values (
         'user-health', 'team-health', 'free', 'freestyle', 'provider-health', 'snapshot-health', 'running',
-        jsonb_build_object('cmuxResourceUsage', jsonb_build_object(
+        jsonb_build_object('hmuxResourceUsage', jsonb_build_object(
           'providerVmId', 'provider-health', 'receivedAt', ${now.getTime() - 6 * 60 * 1000}::bigint
         )), ${new Date(now.getTime() - 6 * 60 * 1000)}
       )
@@ -227,14 +227,14 @@ describe("VM alert checks", () => {
       await sql`
         insert into cloud_vms (user_id, provider, provider_vm_id, image_id, status, provider_metadata)
         values ('user-health', 'freestyle', ${`excluded-${suffix}`}, 'snapshot-health',
-          ${status}, ${sql.json({ cmuxResourceUsage: sample })})
+          ${status}, ${sql.json({ hmuxResourceUsage: sample })})
       `;
     }
     const alerts: AlertInput[] = [];
     const summary = await runVmAlertChecks({
       db: cloudDb(),
       now,
-      env: { CMUX_VM_ALERT_HEALTH_STALE_MS: String(5 * 60 * 1000) },
+      env: { HMUX_VM_ALERT_HEALTH_STALE_MS: String(5 * 60 * 1000) },
       sendAlert: async (input): Promise<AlertResult> => {
         alerts.push(input);
         return { sent: true, configured: true, status: 200 };
@@ -271,7 +271,7 @@ describe("VM alert checks", () => {
     const summary = await runVmAlertChecks({
       db: cloudDb(),
       now,
-      env: { CMUX_VM_ALERT_CREATE_FAILURES_15M: "3" },
+      env: { HMUX_VM_ALERT_CREATE_FAILURES_15M: "3" },
       sendAlert: async (input): Promise<AlertResult> => {
         alerts.push(input);
         return { sent: true, configured: true, status: 200 };

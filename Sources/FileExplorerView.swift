@@ -1,10 +1,10 @@
 import AppKit
 import Bonsplit
 import Combine
-import CmuxAppKitSupportUI
-import CmuxFoundation
-import CmuxWorkspaces
-import CmuxSettings
+import HmuxAppKitSupportUI
+import HmuxFoundation
+import HmuxWorkspaces
+import HmuxSettings
 import SwiftUI
 
 #if DEBUG
@@ -1038,7 +1038,7 @@ struct FileExplorerPanelView: NSViewRepresentable {
             }
             alert.addButton(withTitle: String(localized: "fileExplorer.contextMenu.delete", defaultValue: "Delete"))
             alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel"))
-            return alert.runCmuxModal(presentingWindow: containerView?.window) == .alertFirstButtonReturn
+            return alert.runHmuxModal(presentingWindow: containerView?.window) == .alertFirstButtonReturn
         }
 
         private func promptForName(title: String, initialName: String?, confirmTitle: String) -> String? {
@@ -1053,7 +1053,7 @@ struct FileExplorerPanelView: NSViewRepresentable {
             alert.addButton(withTitle: String(localized: "common.cancel", defaultValue: "Cancel"))
             let alertWindow = alert.window
             alertWindow.initialFirstResponder = input
-            guard alert.runCmuxModal(presentingWindow: containerView?.window) == .alertFirstButtonReturn else { return nil }
+            guard alert.runHmuxModal(presentingWindow: containerView?.window) == .alertFirstButtonReturn else { return nil }
             let name = input.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
             guard !name.isEmpty else {
                 showMutationError(FileExplorerError.invalidMutationName)
@@ -1081,7 +1081,7 @@ struct FileExplorerPanelView: NSViewRepresentable {
             alert.messageText = String(localized: "fileExplorer.error.mutationTitle", defaultValue: "File operation failed")
             alert.informativeText = error.localizedDescription
             alert.addButton(withTitle: String(localized: "common.ok", defaultValue: "OK"))
-            _ = alert.runCmuxModal(presentingWindow: containerView?.window)
+            _ = alert.runHmuxModal(presentingWindow: containerView?.window)
         }
 
         @objc private func contextMenuOpenExternally(_ sender: NSMenuItem) {
@@ -1434,7 +1434,7 @@ final class FileExplorerContainerView: NSView {
         }
 #if DEBUG
         dlog(
-            "file.focus.host.attach win=\(window.windowNumber) canAccept=\(cmuxCanAcceptRightSidebarKeyboardFocus ? 1 : 0) " +
+            "file.focus.host.attach win=\(window.windowNumber) canAccept=\(hmuxCanAcceptRightSidebarKeyboardFocus ? 1 : 0) " +
             "rows=\(outlineView.numberOfRows) hidden=\(isHiddenOrHasHiddenAncestor ? 1 : 0) " +
             "fr=\(fileExplorerDebugResponder(window.firstResponder))"
         )
@@ -1541,7 +1541,7 @@ final class FileExplorerContainerView: NSView {
 
     @discardableResult
     func focusSearchField() -> Bool {
-        guard let window, cmuxCanAcceptRightSidebarKeyboardFocus else {
+        guard let window, hmuxCanAcceptRightSidebarKeyboardFocus else {
 #if DEBUG
             dlog(
                 "file.focus.search.end result=0 reason=unavailable " +
@@ -1569,14 +1569,14 @@ final class FileExplorerContainerView: NSView {
 #if DEBUG
         dlog(
             "file.focus.outline.begin win=\(window?.windowNumber ?? -1) " +
-            "canAccept=\(cmuxCanAcceptRightSidebarKeyboardFocus ? 1 : 0) " +
+            "canAccept=\(hmuxCanAcceptRightSidebarKeyboardFocus ? 1 : 0) " +
             "hostHidden=\(isHiddenOrHasHiddenAncestor ? 1 : 0) scrollHidden=\(scrollView.isHidden ? 1 : 0) " +
             "outlineHidden=\(outlineView.isHiddenOrHasHiddenAncestor ? 1 : 0) " +
             "rows=\(outlineView.numberOfRows) selected=\(outlineView.selectedRow) " +
             "fr=\(fileExplorerDebugResponder(window?.firstResponder))"
         )
 #endif
-        guard let window, cmuxCanAcceptRightSidebarKeyboardFocus else {
+        guard let window, hmuxCanAcceptRightSidebarKeyboardFocus else {
 #if DEBUG
             dlog(
                 "file.focus.outline.end result=0 reason=unavailable " +
@@ -1943,7 +1943,7 @@ final class FileExplorerContainerView: NSView {
         guard currentResourceContextID == coordinator.store.resourceContextID, row >= 0, row < searchSnapshot.results.count else { return }
         let path = searchSnapshot.results[row].path
         // Editor/preferred-editor actions operate on local file paths via
-        // NSWorkspace; for non-local providers fall back to the cmux preview.
+        // NSWorkspace; for non-local providers fall back to the hmux preview.
         guard coordinator.store.provider is LocalFileExplorerProvider else {
             coordinator.onOpenFilePreview(path)
             return
@@ -1955,7 +1955,7 @@ final class FileExplorerContainerView: NSView {
         openSelectedSearchResult()
     }
 
-    @objc private func contextMenuOpenSearchResultInCmux(_ sender: NSMenuItem) {
+    @objc private func contextMenuOpenSearchResultInHmux(_ sender: NSMenuItem) {
         guard let result = searchResult(forMenuItem: sender) else { return }
         coordinator.onOpenFilePreview(result.path)
     }
@@ -2231,14 +2231,14 @@ extension FileExplorerContainerView: NSSearchFieldDelegate, NSTableViewDataSourc
             searchResultsView.selectRowIndexes(IndexSet(integer: clickedRow), byExtendingSelection: false)
         }
 
-        let openInCmuxItem = NSMenuItem(
-            title: String(localized: "fileExplorer.contextMenu.openInCmux", defaultValue: "Open in cmux"),
-            action: #selector(contextMenuOpenSearchResultInCmux(_:)),
+        let openInHmuxItem = NSMenuItem(
+            title: String(localized: "fileExplorer.contextMenu.openInHmux", defaultValue: "Open in hmux"),
+            action: #selector(contextMenuOpenSearchResultInHmux(_:)),
             keyEquivalent: ""
         )
-        openInCmuxItem.target = self
-        openInCmuxItem.representedObject = NSNumber(value: row)
-        menu.addItem(openInCmuxItem)
+        openInHmuxItem.target = self
+        openInHmuxItem.representedObject = NSNumber(value: row)
+        menu.addItem(openInHmuxItem)
 
         if coordinator.store.provider is LocalFileExplorerProvider {
             FileExplorerExternalOpenMenuItems(

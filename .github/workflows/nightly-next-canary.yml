@@ -1,7 +1,7 @@
 name: nightly-next canary
 
-# The post-publication canary of cmux NEXT (docs/ci/nightly-next-canary.md).
-# Every 15 minutes it reads the cmux NEXT feed and, for a build it has not
+# The post-publication canary of hmux NEXT (docs/ci/nightly-next-canary.md).
+# Every 15 minutes it reads the hmux NEXT feed and, for a build it has not
 # checked yet, downloads that exact DMG from the feed, checks Gatekeeper and
 # the notary tickets, and runs the canary on the app inside it on a CI Mac:
 # a visible window, a New Tab, an agent session that answers a prompt, and no
@@ -32,7 +32,7 @@ on:
     paths:
       - .github/workflows/nightly-next-canary.yml
       - scripts/smoke-signed-app-cli.sh
-      - scripts/cmux-next/signed-app-canary-checks.py
+      - scripts/hmux-next/signed-app-canary-checks.py
       - scripts/ci/nightly_next_canary_mode.py
 
 permissions: {}
@@ -84,7 +84,7 @@ jobs:
           BUILD: ${{ inputs.build }}
         run: |
           set -euo pipefail
-          curl -fsSL --retry 3 -A "cmux-nightly-next-canary/1" -H "Cache-Control: no-cache" -o feed.xml "$NIGHTLY_NEXT_FEED?canary=$GITHUB_RUN_ID"
+          curl -fsSL --retry 3 -A "hmux-nightly-next-canary/1" -H "Cache-Control: no-cache" -o feed.xml "$NIGHTLY_NEXT_FEED?canary=$GITHUB_RUN_ID"
           python3 - feed.xml "$BUILD" >> "$GITHUB_OUTPUT" <<'PY'
           import re, sys
           text, wanted = open(sys.argv[1], encoding="utf-8").read(), sys.argv[2]
@@ -130,8 +130,8 @@ jobs:
       # Gatekeeper, ticket or build-number check (a download error is none).
       verdict: ${{ steps.run.outputs.verdict || steps.broken.outputs.verdict }}
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_26 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_CI_XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_MACOS_26 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
       BUILD: ${{ needs.pick.outputs.build }}
       DMG_URL: ${{ needs.pick.outputs.url }}
       DMG_LENGTH: ${{ needs.pick.outputs.length }}
@@ -175,7 +175,7 @@ jobs:
           codesign --verify --deep --strict "$installed"
           spctl -a -vv --type execute "$installed"
           echo "app=$installed" >> "$GITHUB_OUTPUT"
-          echo "commit=$(/usr/libexec/PlistBuddy -c 'Print :CMUXCommit' "$app/Contents/Info.plist")" >> "$GITHUB_OUTPUT"
+          echo "commit=$(/usr/libexec/PlistBuddy -c 'Print :HMUXCommit' "$app/Contents/Info.plist")" >> "$GITHUB_OUTPUT"
 
       # The harness runs from the build's own commit, so it speaks that
       # build's control protocol. A pull request tests its own harness.
@@ -187,12 +187,12 @@ jobs:
           SHORT: ${{ steps.app.outputs.commit }}
         run: |
           set -euo pipefail
-          [[ "$SHORT" =~ ^[0-9a-f]{7,40}$ ]] || { echo "invalid CMUXCommit '$SHORT'" >&2; exit 1; }
+          [[ "$SHORT" =~ ^[0-9a-f]{7,40}$ ]] || { echo "invalid HMUXCommit '$SHORT'" >&2; exit 1; }
           sha="$(gh api "repos/$GITHUB_REPOSITORY/commits/$SHORT" --jq .sha)"
           git fetch --no-tags --depth=1 origin "$sha"
           git worktree add --detach "$RUNNER_TEMP/build-src" "$sha"
           echo "dir=$RUNNER_TEMP/build-src" >> "$GITHUB_OUTPUT"
-          echo "harness from $sha (CMUXCommit $SHORT)"
+          echo "harness from $sha (HMUXCommit $SHORT)"
 
       # Two attempts: one flaky run must not pull a build.
       - name: Run the canary
@@ -210,13 +210,13 @@ jobs:
           for attempt in 1 2; do
             if "$HARNESS/scripts/smoke-signed-app-cli.sh" "$APP" --canary; then
               echo "verdict=pass" >> "$GITHUB_OUTPUT"
-              echo "### cmux NEXT build $BUILD passed the canary (attempt $attempt)" >> "$GITHUB_STEP_SUMMARY"
+              echo "### hmux NEXT build $BUILD passed the canary (attempt $attempt)" >> "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             echo "::warning title=nightly-next canary::attempt $attempt failed"
           done
           echo "verdict=fail" >> "$GITHUB_OUTPUT"
-          echo "### cmux NEXT build $BUILD failed the canary twice" >> "$GITHUB_STEP_SUMMARY"
+          echo "### hmux NEXT build $BUILD failed the canary twice" >> "$GITHUB_STEP_SUMMARY"
           echo "::error title=nightly-next canary::build $BUILD failed the canary twice"
           exit 1
 
@@ -236,7 +236,7 @@ jobs:
           fi
 
   # The durable verdict (nightly-next-verdict.yml writes verdicts/<build>.json
-  # next to the cmux NEXT appcast in R2). The train's base is the newest feed
+  # next to the hmux NEXT appcast in R2). The train's base is the newest feed
   # build whose verdict is `pass`; the Actions cache above only marks a build
   # checked, and it expires.
   verdict:
@@ -351,7 +351,7 @@ jobs:
               : process.env.PULL === 'failure'
                 ? `Requesting the pull FAILED, so the build is still on the feed. Pull it: ${pull}`
                 : `The canary is in \`${process.env.MODE}\` mode, so the build stays on the feed. Pull it: ${pull}`;
-            const body = `cmux NEXT build ${process.env.BUILD} failed the canary twice: ${run}\n\n${action}`;
+            const body = `hmux NEXT build ${process.env.BUILD} failed the canary twice: ${run}\n\n${action}`;
             const open = await github.paginate(github.rest.issues.listForRepo, { ...context.repo, state: 'open', per_page: 100, creator: 'github-actions[bot]' });
             const issue = open.find(i => i.title === title && !i.pull_request);
             if (issue) {

@@ -22,21 +22,21 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORKFLOWS = os.path.join(ROOT, ".github", "workflows")
 FAILURES = []
 
-# Publishing a commit-addressed cmux-tui build is not a production release:
-# cmux-next pins daemon builds from helper branches (cmux-tui-pin-*). That job
-# runs in the `artifacts` environment (policy: main, feat-cmux-next,
-# cmux-tui-pin-*), which holds only the R2 upload credentials.
+# Publishing a commit-addressed hmux-tui build is not a production release:
+# hmux-next pins daemon builds from helper branches (hmux-tui-pin-*). That job
+# runs in the `artifacts` environment (policy: main, feat-hmux-next,
+# hmux-tui-pin-*), which holds only the R2 upload credentials.
 ARTIFACT_JOBS = {
-    "cmux-tui-artifacts.yml": ["publish"],
+    "hmux-tui-artifacts.yml": ["publish"],
     "dogfood-artifact-publish.yml": ["publish"],
 }
 ARTIFACT_SECRETS = {
     "CF_R2_ACCESS_KEY_ID",
     "CF_R2_SECRET_ACCESS_KEY",
     "CF_R2_ACCOUNT_ID",
-    "CMUX_CEF_R2_ACCESS_KEY_ID",
-    "CMUX_CEF_R2_SECRET_ACCESS_KEY",
-    "CMUX_CEF_R2_ACCOUNT_ID",
+    "HMUX_CEF_R2_ACCESS_KEY_ID",
+    "HMUX_CEF_R2_SECRET_ACCESS_KEY",
+    "HMUX_CEF_R2_ACCOUNT_ID",
 }
 
 RELEASE_JOBS = {
@@ -51,7 +51,7 @@ RELEASE_JOBS = {
     "update-homebrew.yml": ["update-cask"],
 }
 
-# The cmux NEXT feed's own token lives in `release-next` (policy: branch
+# The hmux NEXT feed's own token lives in `release-next` (policy: branch
 # nightly-next only). main carries nightly-next-rollback.yml only so GitHub
 # lists it for dispatch; its job runs only on nightly-next.
 RELEASE_NEXT_JOBS = {

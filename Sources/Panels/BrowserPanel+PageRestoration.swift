@@ -1,6 +1,6 @@
 import AppKit
-import CmuxBrowser
-import CmuxSettings
+import HmuxBrowser
+import HmuxSettings
 import Foundation
 import WebKit
 
@@ -180,7 +180,7 @@ extension BrowserPanel {
         // bookkeeping falls back to matching the restore URL.
         pendingDiscardRestoreNavigation = nil
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "browser.discard.restore panel=\(id.uuidString.prefix(5)) method=interactionState " +
             "bytes=\(interactionState.count) started=\(webView.isLoading ? 1 : 0)"
         )

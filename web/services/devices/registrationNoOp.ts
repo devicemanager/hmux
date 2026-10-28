@@ -26,12 +26,12 @@
  * every 15 seconds over its own path; the registry timestamp only orders and
  * labels the device list a phone shows. Raising it further trades nothing but
  * the ordering of two Macs that were both active inside the same window, and
- * `CMUX_DEVICE_PRESENCE_TOUCH_INTERVAL_MS` retunes it without a deploy.
+ * `HMUX_DEVICE_PRESENCE_TOUCH_INTERVAL_MS` retunes it without a deploy.
  */
 const DEFAULT_PRESENCE_TOUCH_INTERVAL_MS = 300_000;
 
 export function presenceTouchIntervalMs(
-  raw = process.env.CMUX_DEVICE_PRESENCE_TOUCH_INTERVAL_MS,
+  raw = process.env.HMUX_DEVICE_PRESENCE_TOUCH_INTERVAL_MS,
 ): number {
   const trimmed = raw?.trim();
   if (!trimmed) return DEFAULT_PRESENCE_TOUCH_INTERVAL_MS;

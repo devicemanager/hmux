@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// The machine menu's Network sheet: the shared editor over the stored
@@ -13,7 +13,7 @@ struct CloudNetworkPolicySheet: View {
                 format: String(localized: "cloud.network.sheet.title", defaultValue: "Network for %@"),
                 model.machineLabel
             ))
-            .cmuxFont(size: 15, weight: .semibold)
+            .hmuxFont(size: 15, weight: .semibold)
             .lineLimit(1)
             .truncationMode(.middle)
 
@@ -22,7 +22,7 @@ struct CloudNetworkPolicySheet: View {
                 HStack(spacing: 6) {
                     ProgressView().controlSize(.small)
                     Text(String(localized: "cloud.network.sheet.loading", defaultValue: "Loading the network policy…"))
-                        .cmuxFont(size: 12)
+                        .hmuxFont(size: 12)
                         .foregroundStyle(.secondary)
                 }
             case .loadFailed(let message):
@@ -56,7 +56,7 @@ struct CloudNetworkPolicySheet: View {
                     : applied.state == .pending ? "clock" : "exclamationmark.triangle.fill")
                     .foregroundStyle(applied.state == .failed ? Color.red : Color.secondary)
                 Text(applied.title)
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundStyle(applied.state == .failed ? Color.red : Color.secondary)
                     .lineLimit(1)
             }
@@ -69,7 +69,7 @@ struct CloudNetworkPolicySheet: View {
 
     private func messageBox(_ text: String, isError: Bool) -> some View {
         Text(text)
-            .cmuxFont(size: 11)
+            .hmuxFont(size: 11)
             .foregroundStyle(isError ? Color.red : Color.secondary)
             .frame(maxWidth: .infinity, alignment: .leading)
             .fixedSize(horizontal: false, vertical: true)

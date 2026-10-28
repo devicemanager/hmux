@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 
 /// Fences one clipboard request to the native surface lifetime that admitted it.
 struct TerminalClipboardRequestSurfaceIdentity: Equatable, Sendable {

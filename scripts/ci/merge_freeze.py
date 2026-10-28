@@ -4,10 +4,10 @@
 A freeze is an open issue in the repository with the `merge-freeze` label. The title is the
 reason. The body names what it covers and until when, one field per line:
 
-    paths: cmux-tui/crates/acpmux/ cmux-tui/spec/
+    paths: hmux-tui/crates/acpmux/ hmux-tui/spec/
     expires: 2026-10-20T18:00Z
     owner: @someone          (optional; defaults to the issue's author)
-    branch: feat-cmux-next   (optional; default: every branch)
+    branch: feat-hmux-next   (optional; default: every branch)
 
 Only an admin or maintainer turns a freeze on, by adding the label; a label from anyone else,
 or a body edited after the label went on, leaves the issue inactive until a maintainer adds the
@@ -119,7 +119,7 @@ def parse_issue(issue: dict) -> Freeze:
     elif any(p.strip("/") in ("", "*", ".") for p in freeze.paths):
         freeze.problems.append("`paths:` names the whole repository; name the directories instead")
     elif any(re.search(r"[*?\[]", p) for p in freeze.paths):
-        freeze.problems.append("`paths:` takes path prefixes, not globs (`cmux-tui/`, not `cmux-tui/*`)")
+        freeze.problems.append("`paths:` takes path prefixes, not globs (`hmux-tui/`, not `hmux-tui/*`)")
     if "expires" not in fields:
         freeze.problems.append("no `expires:` line")
     else:

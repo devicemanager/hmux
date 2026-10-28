@@ -1,4 +1,4 @@
-import CmuxBrowser
+import HmuxBrowser
 import CryptoKit
 import Foundation
 import WebKit
@@ -144,7 +144,7 @@ enum ReactGrabScriptLoader {
 
 // MARK: - WKScriptMessageHandler
 
-private let reactGrabMessageHandlerName = "cmuxReactGrab"
+private let reactGrabMessageHandlerName = "hmuxReactGrab"
 
 enum ReactGrabBridgeMessage {
     case stateChange(isActive: Bool)
@@ -187,9 +187,9 @@ class ReactGrabMessageHandler: NSObject, WKScriptMessageHandler {
         #if DEBUG
         switch bridgeMessage {
         case .stateChange(let isActive):
-            cmuxDebugLog("reactGrab.messageHandler type=stateChange isActive=\(isActive) mainFrame=\(isMainFrame ? 1 : 0)")
+            hmuxDebugLog("reactGrab.messageHandler type=stateChange isActive=\(isActive) mainFrame=\(isMainFrame ? 1 : 0)")
         case .copySuccess(let content, _):
-            cmuxDebugLog("reactGrab.messageHandler type=copySuccess len=\(content.count) mainFrame=\(isMainFrame ? 1 : 0)")
+            hmuxDebugLog("reactGrab.messageHandler type=copySuccess len=\(content.count) mainFrame=\(isMainFrame ? 1 : 0)")
         }
         #endif
         Task { @MainActor in
@@ -197,9 +197,9 @@ class ReactGrabMessageHandler: NSObject, WKScriptMessageHandler {
             #if DEBUG
             switch bridgeMessage {
             case .stateChange(let isActive):
-                cmuxDebugLog("reactGrab.messageHandler.mainActor type=stateChange isActive=\(isActive)")
+                hmuxDebugLog("reactGrab.messageHandler.mainActor type=stateChange isActive=\(isActive)")
             case .copySuccess(let content, _):
-                cmuxDebugLog("reactGrab.messageHandler.mainActor type=copySuccess len=\(content.count)")
+                hmuxDebugLog("reactGrab.messageHandler.mainActor type=copySuccess len=\(content.count)")
             }
             #endif
             onMessage(bridgeMessage, isMainFrame)
@@ -215,7 +215,7 @@ extension BrowserPanel {
     /// The script message handler, the relay, and the round-trip token all
     /// live here. A content world shares the DOM but not JavaScript globals,
     /// so page scripts can neither post to the native handler nor read the
-    /// token; only the cmux-injected relay in this world can. The react-grab
+    /// token; only the hmux-injected relay in this world can. The react-grab
     /// library itself stays in the page world (component inspection needs
     /// page-world React internals) and talks to the relay through
     /// `window.postMessage` without any native authority.
@@ -246,7 +246,7 @@ extension BrowserPanel {
 
     func armReactGrabRoundTrip(returnTo panelId: UUID) {
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "reactGrab.pasteback h3.arm " +
             "workspace=\(workspaceId.uuidString.prefix(5)) " +
             "browser=\(id.uuidString.prefix(5)) " +
@@ -261,7 +261,7 @@ extension BrowserPanel {
         let previousTarget = reactGrabPasteback.armedReturnPanelId.map {
             String($0.uuidString.prefix(5))
         } ?? "nil"
-        cmuxDebugLog(
+        hmuxDebugLog(
             "reactGrab.pasteback h3.clear " +
             "workspace=\(workspaceId.uuidString.prefix(5)) " +
             "browser=\(id.uuidString.prefix(5)) " +
@@ -280,7 +280,7 @@ extension BrowserPanel {
             let pendingTarget = reactGrabPasteback.armedReturnPanelId.map {
                 String($0.uuidString.prefix(5))
             } ?? "nil"
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "reactGrab.pasteback h3.stateChange " +
                 "workspace=\(workspaceId.uuidString.prefix(5)) " +
                 "browser=\(id.uuidString.prefix(5)) " +
@@ -296,7 +296,7 @@ extension BrowserPanel {
             switch verdict {
             case .accepted(let returnPanelId):
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "reactGrab.pasteback h3.copySuccess " +
                     "workspace=\(workspaceId.uuidString.prefix(5)) " +
                     "browser=\(id.uuidString.prefix(5)) " +
@@ -316,7 +316,7 @@ extension BrowserPanel {
                 )
             case .rejectedSubframe, .rejectedUnarmed, .rejectedTokenMismatch, .rejectedOversizeContent:
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "reactGrab.pasteback h3.copySuccess.drop " +
                     "workspace=\(workspaceId.uuidString.prefix(5)) " +
                     "browser=\(id.uuidString.prefix(5)) reason=\(verdict) len=\(content.count)"
@@ -341,7 +341,7 @@ extension BrowserPanel {
                     continuation.resume(returning: (value as? Bool) ?? false)
                 case .failure(let error):
 #if DEBUG
-                    cmuxDebugLog("reactGrab.relay.install.error error=\(error.localizedDescription)")
+                    hmuxDebugLog("reactGrab.relay.install.error error=\(error.localizedDescription)")
 #endif
                     continuation.resume(returning: false)
                 }
@@ -364,7 +364,7 @@ extension BrowserPanel {
                     continuation.resume(returning: (value as? Bool) ?? false)
                 case .failure(let error):
 #if DEBUG
-                    cmuxDebugLog("reactGrab.relay.tokenSync.error error=\(error.localizedDescription)")
+                    hmuxDebugLog("reactGrab.relay.tokenSync.error error=\(error.localizedDescription)")
 #endif
                     continuation.resume(returning: false)
                 }
@@ -374,21 +374,21 @@ extension BrowserPanel {
 
     private func injectReactGrab() async {
         #if DEBUG
-        cmuxDebugLog("reactGrab.inject.start")
+        hmuxDebugLog("reactGrab.inject.start")
         #endif
         guard let scriptSource = await ReactGrabScriptLoader.fetch() else {
             #if DEBUG
-            cmuxDebugLog("reactGrab.inject.fetchFailed")
+            hmuxDebugLog("reactGrab.inject.fetchFailed")
             #endif
             return
         }
         #if DEBUG
-        cmuxDebugLog("reactGrab.inject.fetched len=\(scriptSource.count)")
+        hmuxDebugLog("reactGrab.inject.fetched len=\(scriptSource.count)")
         #endif
 
         guard await installReactGrabRelay() else {
             #if DEBUG
-            cmuxDebugLog("reactGrab.inject.relayInstallFailed")
+            hmuxDebugLog("reactGrab.inject.relayInstallFailed")
             #endif
             isReactGrabActive = false
             return
@@ -397,34 +397,34 @@ extension BrowserPanel {
 
         let combined = ReactGrabBridgeScripts.pageBridgeSource() + "\n" + scriptSource
         #if DEBUG
-        cmuxDebugLog("reactGrab.inject.evalJS len=\(combined.count)")
+        hmuxDebugLog("reactGrab.inject.evalJS len=\(combined.count)")
         #endif
         webView.evaluateJavaScript(combined, in: nil, in: .page) { [weak self] result in
             if case .failure(let error) = result {
                 #if DEBUG
-                cmuxDebugLog("reactGrab.inject.evalJS.done error=\(error.localizedDescription)")
+                hmuxDebugLog("reactGrab.inject.evalJS.done error=\(error.localizedDescription)")
                 #endif
                 NSLog("ReactGrab: injection failed: %@", error.localizedDescription)
                 Task { @MainActor in self?.isReactGrabActive = false }
             } else {
                 #if DEBUG
-                cmuxDebugLog("reactGrab.inject.evalJS.done error=none")
+                hmuxDebugLog("reactGrab.inject.evalJS.done error=none")
                 #endif
             }
         }
         #if DEBUG
-        cmuxDebugLog("reactGrab.inject.end")
+        hmuxDebugLog("reactGrab.inject.end")
         #endif
     }
 
     private func toggleReactGrab() {
         #if DEBUG
-        cmuxDebugLog("reactGrab.toggle.start")
+        hmuxDebugLog("reactGrab.toggle.start")
         #endif
         let script = "window.__REACT_GRAB__?.toggle()"
         webView.evaluateJavaScript(script, completionHandler: nil)
         #if DEBUG
-        cmuxDebugLog("reactGrab.toggle.end")
+        hmuxDebugLog("reactGrab.toggle.end")
         #endif
     }
 
@@ -456,7 +456,7 @@ extension BrowserPanel {
         let pendingTarget = reactGrabPasteback.armedReturnPanelId.map {
             String($0.uuidString.prefix(5))
         } ?? "nil"
-        cmuxDebugLog(
+        hmuxDebugLog(
             "reactGrab.pasteback h3.reset " +
             "workspace=\(workspaceId.uuidString.prefix(5)) " +
             "browser=\(id.uuidString.prefix(5)) " +

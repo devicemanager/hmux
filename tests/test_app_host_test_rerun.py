@@ -57,18 +57,18 @@ class EligibilityTests(unittest.TestCase):
     def test_stops_at_the_first_ancestor_with_an_app_change(self) -> None:
         older_app = self.repo.commit("Sources/App.swift", "1")
         same_app = self.repo.commit("Sources/App.swift", "2")
-        built = self.repo.commit("cmuxTests/ATests.swift", "a")
-        head = self.repo.commit("cmuxTests/BTests.swift", "b")
+        built = self.repo.commit("hmuxTests/ATests.swift", "a")
+        head = self.repo.commit("hmuxTests/BTests.swift", "b")
         eligible, blocker = rerun.eligible_revisions(head, 50, cwd=str(self.repo.path))
         self.assertEqual(eligible, [head, built, same_app])
         self.assertEqual(blocker["revision"], older_app)
         self.assertEqual(blocker["paths"], ["Sources/App.swift"])
 
     def test_a_project_file_change_is_not_test_only(self) -> None:
-        self.repo.commit("cmuxTests/ATests.swift", "a")
-        base = self.repo.commit("cmux.xcodeproj/project.pbxproj", "x")
-        head = self.repo.commit("cmux.xcodeproj/project.pbxproj", "y")
-        self.assertEqual(rerun.non_test_changes(base, head, cwd=str(self.repo.path)), ["cmux.xcodeproj/project.pbxproj"])
+        self.repo.commit("hmuxTests/ATests.swift", "a")
+        base = self.repo.commit("hmux.xcodeproj/project.pbxproj", "x")
+        head = self.repo.commit("hmux.xcodeproj/project.pbxproj", "y")
+        self.assertEqual(rerun.non_test_changes(base, head, cwd=str(self.repo.path)), ["hmux.xcodeproj/project.pbxproj"])
 
     def test_docs_and_ci_changes_do_not_change_the_app(self) -> None:
         base = self.repo.commit("Sources/App.swift", "1")
@@ -81,21 +81,21 @@ class EligibilityTests(unittest.TestCase):
         # The app copies these into its resources; the rerun keeps CI's app.
         base = self.repo.commit("Sources/App.swift", "1")
         self.repo.commit("Resources/en.lproj/cloud-agent-skill.md", "x")
-        head = self.repo.commit("skills/cmux-cua/SKILL.md", "x")
+        head = self.repo.commit("skills/hmux-cua/SKILL.md", "x")
         self.assertEqual(
             rerun.non_test_changes(base, head, cwd=str(self.repo.path)),
-            ["Resources/en.lproj/cloud-agent-skill.md", "skills/cmux-cua/SKILL.md"],
+            ["Resources/en.lproj/cloud-agent-skill.md", "skills/hmux-cua/SKILL.md"],
         )
 
     def test_no_neutral_path_is_referenced_by_the_project(self) -> None:
-        paths = re.findall(r'path = "?([^";]+)"?;', (ROOT / "cmux.xcodeproj" / "project.pbxproj").read_text())
+        paths = re.findall(r'path = "?([^";]+)"?;', (ROOT / "hmux.xcodeproj" / "project.pbxproj").read_text())
         for path in paths:
             if path.startswith(rerun.OUTSIDE_THE_APP) or path + "/" in rerun.OUTSIDE_THE_APP:
-                self.assertIn(path, ("cmuxTests", "cmuxUITests"), path)
+                self.assertIn(path, ("hmuxTests", "hmuxUITests"), path)
 
     def test_limit_bounds_the_walk(self) -> None:
         for index in range(5):
-            head = self.repo.commit("cmuxTests/ATests.swift", str(index))
+            head = self.repo.commit("hmuxTests/ATests.swift", str(index))
         eligible, blocker = rerun.eligible_revisions(head, 3, cwd=str(self.repo.path))
         self.assertEqual(len(eligible), 3)
         self.assertIsNone(blocker)
@@ -145,7 +145,7 @@ class PullRequestProductTests(unittest.TestCase):
         self.addCleanup(self.repo.close)
         self.base = self.repo.commit("Sources/App.swift", "1")
         run_git(self.repo.path, "checkout", "-q", "-b", "topic")
-        self.head = self.repo.commit("cmuxTests/ATests.swift", "a")
+        self.head = self.repo.commit("hmuxTests/ATests.swift", "a")
         run_git(self.repo.path, "checkout", "-q", "main")
         self.base = self.repo.commit("Sources/Other.swift", "base moved")
         run_git(self.repo.path, "merge", "-q", "--no-ff", "-m", "Merge topic", "topic")
@@ -176,7 +176,7 @@ class PullRequestProductTests(unittest.TestCase):
             self.built(run)
 
     def dispatched_run(self, built: str, run_id: int = 6) -> dict:
-        title = f"cmuxTests/ATests on blacksmith-6vcpu-macos-26 @ {built} [abc123]"
+        title = f"hmuxTests/ATests on blacksmith-6vcpu-macos-26 @ {built} [abc123]"
         return {"id": run_id, "event": "workflow_dispatch", "head_sha": self.head, "display_title": title,
                 "path": ".github/workflows/test-e2e.yml"}
 
@@ -191,7 +191,7 @@ class PullRequestProductTests(unittest.TestCase):
 
     def test_a_dispatched_run_without_a_full_revision_is_rejected(self) -> None:
         run = self.dispatched_run(self.base)
-        run["display_title"] = "cmuxTests/ATests on blacksmith-6vcpu-macos-26 @ my-branch"
+        run["display_title"] = "hmuxTests/ATests on blacksmith-6vcpu-macos-26 @ my-branch"
         with self.assertRaisesRegex(ValueError, "no full revision"):
             self.built(run)
 
@@ -224,7 +224,7 @@ class PullRequestProductTests(unittest.TestCase):
         run_git(self.repo.path, "merge", "-q", "--no-ff", "-m", "Merge topic", "topic")
         self.merge = run_git(self.repo.path, "rev-parse", "HEAD")
         run_git(self.repo.path, "checkout", "-q", "topic")
-        tested = self.repo.commit("cmuxTests/BTests.swift", "b")
+        tested = self.repo.commit("hmuxTests/BTests.swift", "b")
 
         def api(path: str) -> dict:
             if path.endswith("/artifacts?per_page=100"):
@@ -233,7 +233,7 @@ class PullRequestProductTests(unittest.TestCase):
 
         planned = self.plan(tested, "5", api)
         self.assertEqual(planned["source_sha"], self.merge)
-        self.assertEqual(planned["changed_tests"], "cmuxTests/BTests.swift")
+        self.assertEqual(planned["changed_tests"], "hmuxTests/BTests.swift")
 
     def test_a_source_run_that_adopted_its_product_names_where_to_look(self) -> None:
         # test-e2e.yml builds that adopted a product upload none of their own.
@@ -242,7 +242,7 @@ class PullRequestProductTests(unittest.TestCase):
                 return {"artifacts": []}
             return {**self.pull_request_run(), "path": ".github/workflows/test-e2e.yml",
                     "event": "workflow_dispatch", "head_sha": self.head,
-                    "display_title": f"cmuxUITests/A on glaeda-std-xcode-26.6 @ {self.head} [x]"}
+                    "display_title": f"hmuxUITests/A on glaeda-std-xcode-26.6 @ {self.head} [x]"}
 
         with self.assertRaises(SystemExit) as raised:
             self.plan(self.head, "5", api)
@@ -334,8 +334,8 @@ class ProductRunnerTests(unittest.TestCase):
 class SelectorTests(unittest.TestCase):
     def test_normalizes_separators_and_prefix(self) -> None:
         self.assertEqual(
-            rerun.parse_selectors("Suite/testA,\ncmuxTests/Suite/testB()  -only-testing:Other"),
-            ["cmuxTests/Suite/testA", "cmuxTests/Suite/testB()", "cmuxTests/Other"],
+            rerun.parse_selectors("Suite/testA,\nhmuxTests/Suite/testB()  -only-testing:Other"),
+            ["hmuxTests/Suite/testA", "hmuxTests/Suite/testB()", "hmuxTests/Other"],
         )
 
     def test_rejects_shell_and_empty_input(self) -> None:
@@ -359,7 +359,7 @@ PROJECT = """// !$*UTF8*$!
 \t\t\t);
 \t\t\trunOnlyForDeploymentPostprocessing = 0;
 \t\t};
-\t\tT1 /* cmuxTests */ = {
+\t\tT1 /* hmuxTests */ = {
 \t\t\tisa = PBXNativeTarget;
 \t\t\tbuildPhases = (
 \t\t\t\tS1 /* Sources */,
@@ -368,17 +368,17 @@ PROJECT = """// !$*UTF8*$!
 \t\t\tdependencies = (
 \t\t\t\tD1 /* PBXTargetDependency */,
 \t\t\t);
-\t\t\tname = cmuxTests;
+\t\t\tname = hmuxTests;
 \t\t\tpackageProductDependencies = (
 \t\t\t\tP1 /* Pkg */,
 \t\t\t);
 \t\t};
-\t\tT2 /* cmux */ = {
+\t\tT2 /* hmux */ = {
 \t\t\tisa = PBXNativeTarget;
 \t\t\tdependencies = (
 \t\t\t\tD2 /* PBXTargetDependency */,
 \t\t\t);
-\t\t\tname = cmux;
+\t\t\tname = hmux;
 \t\t\tpackageProductDependencies = (
 \t\t\t\tP2 /* Other */,
 \t\t\t);
@@ -397,20 +397,20 @@ class DetachTests(unittest.TestCase):
     def test_cuts_only_the_test_target_loose(self) -> None:
         text, products = rerun.detach_project(PROJECT)
         self.assertEqual(products, ["Pkg"])
-        test_target = text[text.index("T1 /* cmuxTests */") : text.index("T2 /* cmux */")]
+        test_target = text[text.index("T1 /* hmuxTests */") : text.index("T2 /* hmux */")]
         self.assertNotIn("D1", test_target)
         self.assertNotIn("P1 /* Pkg */,", test_target)
-        phase = text[text.index("PH1 /* Frameworks */ = {") : text.index("T1 /* cmuxTests */")]
+        phase = text[text.index("PH1 /* Frameworks */ = {") : text.index("T1 /* hmuxTests */")]
         self.assertNotIn("B1", phase)
         self.assertIn("B2 /* XCTest.framework in Frameworks */,", phase)
-        app_target = text[text.index("T2 /* cmux */") :]
+        app_target = text[text.index("T2 /* hmux */") :]
         self.assertIn("D2 /* PBXTargetDependency */,", app_target)
         self.assertIn("P2 /* Other */,", app_target)
 
     def test_the_real_project_still_has_a_detachable_test_target(self) -> None:
-        original = (ROOT / "cmux.xcodeproj" / "project.pbxproj").read_text()
+        original = (ROOT / "hmux.xcodeproj" / "project.pbxproj").read_text()
         text, products = rerun.detach_project(original)
-        self.assertIn("CmuxFoundation", products)
+        self.assertIn("HmuxFoundation", products)
         self.assertLess(len(text), len(original))
         # Only removals: every surviving line was already in the project.
         self.assertTrue(set(text.splitlines()) <= set(original.splitlines()))
@@ -444,13 +444,13 @@ class DetachTests(unittest.TestCase):
             project.write_text(PROJECT)
             (debug / "PackageFrameworks" / "Pkg_1_PackageProduct.framework").mkdir(parents=True)
             host = debug / "Host App.app" / "Contents"
-            (host / "PlugIns" / "cmuxTests.xctest").mkdir(parents=True)
+            (host / "PlugIns" / "hmuxTests.xctest").mkdir(parents=True)
             (host / "MacOS").mkdir()
             (host / "MacOS" / "Host App.debug.dylib").write_text("")
             self.assertEqual(rerun.c_module_targets(debug), ["AtomicsC"])
             args = argparse.Namespace(
                 project=str(project), derived_data=str(root), xcconfig=str(root / "x.xcconfig"),
-                target="cmuxTests", package_root=[str(root / "Packages")],
+                target="hmuxTests", package_root=[str(root / "Packages")],
             )
             with unittest.mock.patch("sys.stdout"):
                 rerun.detach(args, dump=lambda _: {"targets": [{"name": "AtomicsC", "path": None, "publicHeadersPath": "include"}]})
@@ -468,7 +468,7 @@ class DetachTests(unittest.TestCase):
             debug = root / "Build" / "Products" / "Debug"
             (debug / "PackageFrameworks" / "Pkg_1_PackageProduct.framework").mkdir(parents=True)
             host = debug / "Host App.app" / "Contents"
-            (host / "PlugIns" / "cmuxTests.xctest").mkdir(parents=True)
+            (host / "PlugIns" / "hmuxTests.xctest").mkdir(parents=True)
             # Runtime copies can survive while Xcode removes importable build products.
             for name in ("Sparkle", "Iroh", "Existing"):
                 (host / "Frameworks" / f"{name}.framework").mkdir(parents=True)
@@ -501,7 +501,7 @@ class DetachTests(unittest.TestCase):
             project.write_text(PROJECT)
             config = root / "detached.xcconfig"
             args = argparse.Namespace(
-                project=str(project), derived_data=str(root), xcconfig=str(config), target="cmuxTests",
+                project=str(project), derived_data=str(root), xcconfig=str(config), target="hmuxTests",
                 package_root=[], xcframework_root=[str(artifacts)], arch="arm64",
             )
             with unittest.mock.patch("sys.stdout"):
@@ -594,28 +594,28 @@ class SourcePruningTests(unittest.TestCase):
         self.assertIsNone(self.closure({"ATests", "MissingTests"}))
 
     def test_prunes_only_test_sources_and_keeps_everything_else(self) -> None:
-        original = (ROOT / "cmux.xcodeproj" / "project.pbxproj").read_text()
-        sources = {path.name for path in (ROOT / "cmuxTests").rglob("*.swift")}
-        text, dropped = rerun.prune_project(original, {"CmuxPopoverGroupTests.swift"}, sources)
+        original = (ROOT / "hmux.xcodeproj" / "project.pbxproj").read_text()
+        sources = {path.name for path in (ROOT / "hmuxTests").rglob("*.swift")}
+        text, dropped = rerun.prune_project(original, {"HmuxPopoverGroupTests.swift"}, sources)
         self.assertEqual(dropped, len(sources) - 1)
         # Only removals; the rewritten list may re-indent the lines it keeps.
         self.assertTrue({line.strip() for line in text.splitlines()} <= {line.strip() for line in original.splitlines()})
         phase = text[text.index("F1000005A1B2C3D4E5F60718 /* Sources */ = {"):]
         phase = phase[: phase.index("};")]
-        self.assertIn("CmuxPopoverGroupTests.swift in Sources", phase)
+        self.assertIn("HmuxPopoverGroupTests.swift in Sources", phase)
         # The bundle also compiles CLI sources and the Objective-C release guard.
         self.assertIn("CLIError.swift in Sources", phase)
-        self.assertIn("CmuxTestWindowReleaseGuard.m in Sources", phase)
+        self.assertIn("HmuxTestWindowReleaseGuard.m in Sources", phase)
 
     def test_the_real_suites_reach_a_small_closure(self) -> None:
-        sources = {path.name: path.read_text(errors="replace") for path in (ROOT / "cmuxTests").rglob("*.swift")}
-        kept = rerun.source_closure(sources, {"CmuxPopoverGroupTests"})
-        self.assertIn("CmuxPopoverGroupTests.swift", kept)
+        sources = {path.name: path.read_text(errors="replace") for path in (ROOT / "hmuxTests").rglob("*.swift")}
+        kept = rerun.source_closure(sources, {"HmuxPopoverGroupTests"})
+        self.assertIn("HmuxPopoverGroupTests.swift", kept)
         self.assertLess(len(kept), len(sources) // 10)
 
     def test_the_workflow_falls_back_to_every_source(self) -> None:
         text = WORKFLOW.read_text()
-        step = text[text.index("- name: Compile only the cmuxTests bundle"): text.index("- name: Stage and validate products")]
+        step = text[text.index("- name: Compile only the hmuxTests bundle"): text.index("- name: Stage and validate products")]
         self.assertLess(step.index("app_host_test_rerun.py\" prune"), step.index('cp "$RUNNER_TEMP/detached.pbxproj"'))
         self.assertIn("&& compile; then", step)
 
@@ -638,25 +638,25 @@ class WorkflowTests(unittest.TestCase):
                 binaries / "ditto": '#!/bin/bash\nexec cp -R "$1" "$2"\n',
                 scripts / "run-in-console-session.sh": (
                     '#!/bin/bash\nprintf "%s\\n" "$*" >> "$RUNNER_TEMP/launched"\n'
-                    'echo captured > "$RUNNER_TEMP/cmux-app-host-console-capture-${CMUX_TAG:-rebuilt}.log"\n'
+                    'echo captured > "$RUNNER_TEMP/hmux-app-host-console-capture-${HMUX_TAG:-rebuilt}.log"\n'
                 ),
             }
             for path, content in commands.items():
                 path.write_text(content)
                 path.chmod(0o755)
-            captures = ["cmux-app-host-xcodebuild-selected.log", "cmux-app-host-xcodebuild-selected.meta"]
+            captures = ["hmux-app-host-xcodebuild-selected.log", "hmux-app-host-xcodebuild-selected.meta"]
             for name in captures:
                 (temporary / name).write_text(name)
             (temporary / "unrelated.log").write_text("unrelated")
-            (temporary / "prebuilt-cmuxTests.xctest").mkdir()
-            (temporary / "cmux-app-host-xcresults").mkdir()
-            (temporary / "cmux-app-host-xcresults" / "receipt").write_text("result")
+            (temporary / "prebuilt-hmuxTests.xctest").mkdir()
+            (temporary / "hmux-app-host-xcresults").mkdir()
+            (temporary / "hmux-app-host-xcresults" / "receipt").write_text("result")
             derived = root / "derived"
-            (derived / "Build/Products/Debug/cmux DEV.app/Contents/PlugIns/cmuxTests.xctest").mkdir(parents=True)
+            (derived / "Build/Products/Debug/hmux DEV.app/Contents/PlugIns/hmuxTests.xctest").mkdir(parents=True)
             env = {**os.environ, "PATH": f"{binaries}:{os.environ['PATH']}", "HOME": str(root),
-                   "RUNNER_TEMP": str(temporary), "CMUX_DERIVED_DATA_PATH": str(derived),
-                   "CMUX_APP_HOST_XCTESTRUN": str(root / "test.xctestrun"),
-                   "SELECTORS": "cmuxTests/ExampleTests", "TEST_ITERATIONS": "1"}
+                   "RUNNER_TEMP": str(temporary), "HMUX_DERIVED_DATA_PATH": str(derived),
+                   "HMUX_APP_HOST_XCTESTRUN": str(root / "test.xctestrun"),
+                   "SELECTORS": "hmuxTests/ExampleTests", "TEST_ITERATIONS": "1"}
             for name in names:
                 step = workflow.split(f"      - name: {name}\n", 1)[1].split("\n      - name:", 1)[0]
                 command = textwrap.dedent(step.split("        run: |\n", 1)[1])
@@ -665,11 +665,11 @@ class WorkflowTests(unittest.TestCase):
             self.assertFalse((temporary / "sudo-attempts").exists())
             self.assertEqual(len((temporary / "launched").read_text().splitlines()), 2)
             out = temporary / "rerun-out"
-            for name in captures + ["cmux-app-host-console-capture-rebuilt.log"]:
+            for name in captures + ["hmux-app-host-console-capture-rebuilt.log"]:
                 self.assertEqual((out / name).read_text(), (temporary / name).read_text())
                 self.assertTrue((out / "rebuilt" / name).is_file())
-            self.assertTrue((out / "cmux-app-host-console-capture-baseline.log").is_file())
-            self.assertEqual((out / "cmux-app-host-xcresults" / "receipt").read_text(), "result")
+            self.assertTrue((out / "hmux-app-host-console-capture-baseline.log").is_file())
+            self.assertEqual((out / "hmux-app-host-xcresults" / "receipt").read_text(), "result")
             self.assertFalse((out / "unrelated.log").exists())
             self.assertEqual((temporary / "unrelated.log").read_text(), "unrelated")
 
@@ -714,16 +714,16 @@ class CanonicalRootTests(unittest.TestCase):
     def take(self, derived: str | None, env_root: str | None = None, helper_exit: int = 0,
              helper: bool = True) -> tuple[int, str, list[str]]:
         with tempfile.TemporaryDirectory() as tmp:
-            receipt = Path(tmp, "cmux-test-products.json")
+            receipt = Path(tmp, "hmux-test-products.json")
             receipt.write_text("{}" if derived is None else '{"derived": "%s"}' % derived)
             calls = Path(tmp, "calls")
             fake = Path(tmp, "glaeda-canonical-root")
             fake.write_text(f'#!/bin/sh\necho "$*" >> "{calls}"\necho /ignored\nexit {helper_exit}\n')
             fake.chmod(0o755)
             env = {"PATH": os.environ["PATH"],
-                   "CMUX_CI_CANONICAL_ROOT_HELPER": str(fake) if helper else str(Path(tmp, "missing"))}
+                   "HMUX_CI_CANONICAL_ROOT_HELPER": str(fake) if helper else str(Path(tmp, "missing"))}
             if env_root is not None:
-                env["CMUX_CI_CANONICAL_ROOT"] = env_root
+                env["HMUX_CI_CANONICAL_ROOT"] = env_root
             result = subprocess.run([str(TAKE_ROOT), str(receipt)], env=env, capture_output=True, text=True)
             taken = calls.read_text().splitlines() if calls.exists() else []
             return result.returncode, result.stdout.strip(), taken
@@ -731,25 +731,25 @@ class CanonicalRootTests(unittest.TestCase):
     def test_a_per_runner_root_is_kept_on_a_mac_without_glaeda(self) -> None:
         # A fleet Mac without the glaeda helper builds at a per-runner root
         # (canonical-build-root.sh); the rerun must build there too.
-        derived = "/private/tmp/cmux-ci-aws-m4pro-7-glaeda-2/derived-data-compile-admission"
+        derived = "/private/tmp/hmux-ci-aws-m4pro-7-glaeda-2/derived-data-compile-admission"
         code, out, taken = self.take(derived, helper=False)
-        self.assertEqual((code, out, taken), (0, "/private/tmp/cmux-ci-aws-m4pro-7-glaeda-2", []))
-        code, out, _ = self.take(None, env_root="/private/tmp/cmux-ci-aws-m4pro-7-glaeda-2", helper=False)
-        self.assertEqual((code, out), (0, "/private/tmp/cmux-ci-aws-m4pro-7-glaeda-2"))
+        self.assertEqual((code, out, taken), (0, "/private/tmp/hmux-ci-aws-m4pro-7-glaeda-2", []))
+        code, out, _ = self.take(None, env_root="/private/tmp/hmux-ci-aws-m4pro-7-glaeda-2", helper=False)
+        self.assertEqual((code, out), (0, "/private/tmp/hmux-ci-aws-m4pro-7-glaeda-2"))
 
     def test_glaeda_still_refuses_a_per_runner_root(self) -> None:
-        derived = "/private/tmp/cmux-ci-aws-m4pro-7-glaeda-2/derived-data-compile-admission"
-        code, _, taken = self.take(derived, env_root="/private/tmp/cmux-ci-aws-m4pro-7-glaeda-2")
+        derived = "/private/tmp/hmux-ci-aws-m4pro-7-glaeda-2/derived-data-compile-admission"
+        code, _, taken = self.take(derived, env_root="/private/tmp/hmux-ci-aws-m4pro-7-glaeda-2")
         self.assertNotEqual(code, 0)
         self.assertEqual(taken, [])
 
     def test_the_workflow_names_no_canonical_root_itself(self) -> None:
-        # The root comes from the product's receipt, or CMUX_CI_CANONICAL_ROOT,
-        # falling back to /private/tmp/cmux-ci only inside the helper.
+        # The root comes from the product's receipt, or HMUX_CI_CANONICAL_ROOT,
+        # falling back to /private/tmp/hmux-ci only inside the helper.
         code = [line for line in WORKFLOW.read_text().splitlines() if not line.lstrip().startswith("#")]
-        offending = [line for line in code if re.search(r"/private/tmp/cmux-ci\b", line)]
+        offending = [line for line in code if re.search(r"/private/tmp/hmux-ci\b", line)]
         self.assertEqual(offending, [])
-        self.assertIn('root="${CMUX_CI_CANONICAL_ROOT:-/private/tmp/cmux-ci}"', TAKE_ROOT.read_text())
+        self.assertIn('root="${HMUX_CI_CANONICAL_ROOT:-/private/tmp/hmux-ci}"', TAKE_ROOT.read_text())
         rerun_env = WORKFLOW.read_text().split("\n  rerun:\n", 1)[1].split("\n    steps:\n", 1)[0]
         self.assertNotIn("CANONICAL_ROOT:", rerun_env)
         self.assertNotIn("COMPILE_DERIVED_DATA:", rerun_env)
@@ -765,63 +765,63 @@ class CanonicalRootTests(unittest.TestCase):
         # The products are unpacked beside the job, not over a root, until then.
         self.assertIn('-C "$staged"', step)
         self.assertLess(step.index('"$GITHUB_WORKSPACE/.rerun-tools/scripts/ci/clear-dirs.sh" "$COMPILE_DERIVED_DATA"'), step.index('mv "$staged" "$COMPILE_DERIVED_DATA"'))
-        # canonical-resolve reads CMUX_CI_CANONICAL_ROOT, so it must agree.
-        for name in ("CMUX_CI_CANONICAL_ROOT", "CANONICAL_ROOT", "COMPILE_DERIVED_DATA"):
+        # canonical-resolve reads HMUX_CI_CANONICAL_ROOT, so it must agree.
+        for name in ("HMUX_CI_CANONICAL_ROOT", "CANONICAL_ROOT", "COMPILE_DERIVED_DATA"):
             self.assertIn(f'echo "{name}=', step)
         # The tests run from DerivedData of this job's own, as the shard jobs do.
-        self.assertIn('derived="$RUNNER_TEMP/cmux-derived-data-rerun"', self.step("Stage and validate products"))
+        self.assertIn('derived="$RUNNER_TEMP/hmux-derived-data-rerun"', self.step("Stage and validate products"))
 
     def test_the_helper_takes_the_producers_root(self) -> None:
-        for root in ("/private/tmp/cmux-ci", "/private/tmp/cmux-ci-2", "/private/tmp/cmux-ci-12"):
+        for root in ("/private/tmp/hmux-ci", "/private/tmp/hmux-ci-2", "/private/tmp/hmux-ci-12"):
             # The producer's root wins over the one glaeda handed this job.
-            code, out, taken = self.take(f"{root}/derived-data-compile-admission", env_root="/private/tmp/cmux-ci-3")
+            code, out, taken = self.take(f"{root}/derived-data-compile-admission", env_root="/private/tmp/hmux-ci-3")
             self.assertEqual((code, out, taken), (0, root, [f"take {root} --wait 1800"]), root)
 
     def test_a_receipt_without_a_canonical_root_keeps_this_jobs(self) -> None:
         # Blacksmith: nothing exported, so the historical root.
-        self.assertEqual(self.take(None), (0, "/private/tmp/cmux-ci", ["take /private/tmp/cmux-ci --wait 1800"]))
-        self.assertEqual(self.take("/Users/runner/elsewhere", env_root="/private/tmp/cmux-ci-2"),
-                         (0, "/private/tmp/cmux-ci-2", ["take /private/tmp/cmux-ci-2 --wait 1800"]))
-        for bad in ("/tmp/elsewhere", "/private/tmp/cmux-ci-x", "/private/tmp/cmux-ci/../x"):
+        self.assertEqual(self.take(None), (0, "/private/tmp/hmux-ci", ["take /private/tmp/hmux-ci --wait 1800"]))
+        self.assertEqual(self.take("/Users/runner/elsewhere", env_root="/private/tmp/hmux-ci-2"),
+                         (0, "/private/tmp/hmux-ci-2", ["take /private/tmp/hmux-ci-2 --wait 1800"]))
+        for bad in ("/tmp/elsewhere", "/private/tmp/hmux-ci-x", "/private/tmp/hmux-ci/../x"):
             code, _, taken = self.take(None, env_root=bad)
             self.assertNotEqual(code, 0, bad)
             self.assertEqual(taken, [], bad)
-        for bad in ("/private/tmp/cmux-ci-x/derived-data-compile-admission",
-                    "/private/tmp/cmux-ci/../x/derived-data-compile-admission"):
-            self.assertEqual(self.take(bad)[1], "/private/tmp/cmux-ci", bad)
+        for bad in ("/private/tmp/hmux-ci-x/derived-data-compile-admission",
+                    "/private/tmp/hmux-ci/../x/derived-data-compile-admission"):
+            self.assertEqual(self.take(bad)[1], "/private/tmp/hmux-ci", bad)
 
     def test_ephemeral_runners_have_no_helper_and_a_busy_root_fails(self) -> None:
-        self.assertEqual(self.take("/private/tmp/cmux-ci-2/derived-data-compile-admission", helper=False),
-                         (0, "/private/tmp/cmux-ci-2", []))
-        code, out, taken = self.take("/private/tmp/cmux-ci/derived-data-compile-admission", helper_exit=1)
+        self.assertEqual(self.take("/private/tmp/hmux-ci-2/derived-data-compile-admission", helper=False),
+                         (0, "/private/tmp/hmux-ci-2", []))
+        code, out, taken = self.take("/private/tmp/hmux-ci/derived-data-compile-admission", helper_exit=1)
         self.assertEqual((code, out), (1, ""))
-        self.assertEqual(taken, ["take /private/tmp/cmux-ci --wait 1800"])
+        self.assertEqual(taken, ["take /private/tmp/hmux-ci --wait 1800"])
 
     def test_compiled_file_paths_are_independent_of_the_producer_root(self) -> None:
         compile_script = COMPILE_PRODUCT.read_text()
         restore_script = RESTORE_PRODUCT.read_text()
         run_script = (ROOT / "scripts" / "ci" / "run-app-host-xcodebuild.sh").read_text()
-        self.assertIn("FILE_PATH_ROOT=/private/tmp/cmux-test-source", compile_script)
+        self.assertIn("FILE_PATH_ROOT=/private/tmp/hmux-test-source", compile_script)
         self.assertIn("-file-prefix-map", compile_script)
         self.assertIn("-debug-prefix-map", compile_script)
-        helper_text = (ROOT / "cmuxTests" / "SwiftTestingAssertions.swift").read_text()
+        helper_text = (ROOT / "hmuxTests" / "SwiftTestingAssertions.swift").read_text()
         source_helpers = [
-            path for path in (ROOT / "cmuxTests").glob("*.swift")
+            path for path in (ROOT / "hmuxTests").glob("*.swift")
             if path.name != "SwiftTestingAssertions.swift"
         ]
         source_text = "\n".join(path.read_text() for path in source_helpers)
         self.assertIn("static func sourceURL", helper_text)
         self.assertIn("appendingPathComponent(fileID)", helper_text)
-        self.assertIn("TEST_RUNNER_CMUX_CI_RUNTIME_SOURCE_ROOT", run_script)
-        self.assertIn('"CMUX_CI_RUNTIME_SOURCE_ROOT"', helper_text)
+        self.assertIn("TEST_RUNNER_HMUX_CI_RUNTIME_SOURCE_ROOT", run_script)
+        self.assertIn('"HMUX_CI_RUNTIME_SOURCE_ROOT"', helper_text)
         self.assertNotIn("URL(fileURLWithPath: #filePath)", source_text)
-        self.assertIn("CMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/cmux-test-source", restore_script)
+        self.assertIn("HMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/hmux-test-source", restore_script)
         self.assertNotIn("glaeda-canonical-root", restore_script)
         self.assertNotIn("producer_derived", restore_script)
 
     def test_rerun_baseline_aliases_the_stable_file_path_root(self) -> None:
         step = self.step("Unpack products at the path CI compiled them")
-        self.assertIn("CMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/cmux-test-source", step)
+        self.assertIn("HMUX_CI_RUNTIME_SOURCE_ROOT=/private/tmp/hmux-test-source", step)
         self.assertIn("canonical-build-root.sh", step)
         self.assertIn("--runtime-source \"$PWD\"", step)
         self.assertLess(step.index("--runtime-source \"$PWD\""), step.index('cat "$receipt"'))

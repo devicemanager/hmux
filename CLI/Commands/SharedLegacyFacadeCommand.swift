@@ -6,7 +6,7 @@ import Foundation
 /// helpers exist in exactly one place.
 ///
 /// The router does not hand these commands to ArgumentParser at all (see
-/// `CMUXTermMain.shouldUseFacade`): their declarations drive completion and typo
+/// `HMUXTermMain.shouldUseFacade`): their declarations drive completion and typo
 /// suggestions, and `run()` is reached only once a family is routed here.
 ///
 /// Conforming commands declare every option as `String?` even when the legacy
@@ -14,7 +14,7 @@ import Foundation
 /// types before `run()` delegates, so a numeric declaration would reject values
 /// the legacy parser accepts (and would skip its fallbacks, such as defaulting an
 /// unparsable `resize-pane --amount` to 1). Parsing stays with the legacy parser.
-/// `AsyncParsableCommand`, not `ParsableCommand`: `CMUXCLI.run()` is `async`, and
+/// `AsyncParsableCommand`, not `ParsableCommand`: `HMUXCLI.run()` is `async`, and
 /// ArgumentParser skips an `async run()` declared on a plain `ParsableCommand`.
 protocol SharedLegacyFacadeCommand: AsyncParsableCommand {}
 
@@ -25,7 +25,7 @@ extension SharedLegacyFacadeCommand {
 
     /// Stands in for the value of a bare `--surface`, which `restore` and `fork`
     /// document as "use the calling surface". ArgumentParser has no optional-value
-    /// option without a `defaultAsFlag`, and without one `cmux restore --surface`
+    /// option without a `defaultAsFlag`, and without one `hmux restore --surface`
     /// fails with "missing value" before `run()` can hand the argv to the legacy
     /// parser that implements the form. The value itself is never read: `run()`
     /// re-parses the raw argv, so this only widens what ArgumentParser accepts.

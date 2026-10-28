@@ -7,8 +7,8 @@ appear, selects the internal beta group, and attaches the build to that group.
 Internal groups do not require beta app review submission.
 
 Group selection:
-- `--group-id` / `CMUX_TESTFLIGHT_INTERNAL_GROUP_ID` wins.
-- Else `--group-name` / `CMUX_TESTFLIGHT_INTERNAL_GROUP_NAME` exact-matches.
+- `--group-id` / `HMUX_TESTFLIGHT_INTERNAL_GROUP_ID` wins.
+- Else `--group-name` / `HMUX_TESTFLIGHT_INTERNAL_GROUP_NAME` exact-matches.
 - Else it auto-selects the app's single internal beta group.
 
 If multiple internal groups exist and no selector is provided, it fails loudly so
@@ -232,8 +232,8 @@ def _select_group(groups: List[Dict], group_id: str, group_name: str) -> Dict:
         raise RuntimeError("no internal beta groups found for this app")
     if len(internal_groups) > 1:
         raise RuntimeError(
-            "multiple internal beta groups found; set CMUX_TESTFLIGHT_INTERNAL_GROUP_ID "
-            "or CMUX_TESTFLIGHT_INTERNAL_GROUP_NAME. Candidates: "
+            "multiple internal beta groups found; set HMUX_TESTFLIGHT_INTERNAL_GROUP_ID "
+            "or HMUX_TESTFLIGHT_INTERNAL_GROUP_NAME. Candidates: "
             + ", ".join(_describe_group(group) for group in internal_groups)
         )
     return internal_groups[0]
@@ -265,11 +265,11 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--bundle-id", required=True)
     parser.add_argument("--build-number", required=True, help="CFBundleVersion of the uploaded build")
-    parser.add_argument("--group-id", default=os.environ.get("CMUX_TESTFLIGHT_INTERNAL_GROUP_ID", ""))
-    parser.add_argument("--group-name", default=os.environ.get("CMUX_TESTFLIGHT_INTERNAL_GROUP_NAME", ""))
+    parser.add_argument("--group-id", default=os.environ.get("HMUX_TESTFLIGHT_INTERNAL_GROUP_ID", ""))
+    parser.add_argument("--group-name", default=os.environ.get("HMUX_TESTFLIGHT_INTERNAL_GROUP_NAME", ""))
     parser.add_argument("--timeout-seconds", type=int, default=DEFAULT_PROCESSING_TIMEOUT_SECONDS)
     parser.add_argument("--poll-seconds", type=int, default=20)
-    parser.add_argument("--state-out", default=os.environ.get("CMUX_TESTFLIGHT_ASSIGN_STATE_OUT_FILE", ""))
+    parser.add_argument("--state-out", default=os.environ.get("HMUX_TESTFLIGHT_ASSIGN_STATE_OUT_FILE", ""))
     args = parser.parse_args()
 
     if args.group_id and args.group_name:

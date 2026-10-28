@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import SwiftUI
 
 /// A persistent create row in its owning Cloud category: New Workspace at the

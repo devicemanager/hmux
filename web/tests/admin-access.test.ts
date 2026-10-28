@@ -12,7 +12,7 @@ describe("admin access", () => {
     expect(isAdminEmail("austin@manaflow.com")).toBe(true);
     expect(isAdminEmail("hello@cmux.com")).toBe(true);
     expect(isAdminEmail("  Austin@MANAFLOW.AI ")).toBe(true);
-    expect(isAdminEmail("Some.One+tag@Cmux.Com")).toBe(true);
+    expect(isAdminEmail("Some.One+tag@Hmux.Com")).toBe(true);
   });
 
   test("isAdminEmail rejects other domains, subdomains, and lookalikes", () => {
@@ -24,11 +24,11 @@ describe("admin access", () => {
       "someone@manaflow.ai.evil.com",
       "someone@cmux.com.evil.com",
       "someone@notmanaflow.ai",
-      "someone@xcmux.com",
+      "someone@xhmux.com",
       "someone@manaflow.ai.",
       "someone@manaflow.io",
       "someone@manaflow.co",
-      "someone@cmux.co",
+      "someone@hmux.co",
       "someone@cmux.dev",
       "someone@manaflow.a",
       "someone@manaflow.ai​", // zero-width space

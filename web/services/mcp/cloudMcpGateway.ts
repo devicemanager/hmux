@@ -1,4 +1,4 @@
-import { cmuxTuiRunCommand } from "../vms/drivers/cmuxTuiDaemon";
+import { hmuxTuiRunCommand } from "../vms/drivers/hmuxTuiDaemon";
 import type { VmRouteResult } from "../vms/routeWorkflow";
 import { execVm, listUserVms, type VmModelPlaneRevoker, type VmWorkflowProgram } from "../vms/workflows";
 import { CloudMcpToolError, type CloudMcpGateway } from "./cloudMcp";
@@ -60,7 +60,7 @@ export function cloudMcpGatewayFor(
         status: entry.status,
       }));
     },
-    runCmuxTui: async (machineId, args, timeoutMs) => {
+    runHmuxTui: async (machineId, args, timeoutMs) => {
       const scope = await caller.accessScope();
       const result = await run(execVm({
         userId: caller.userId,
@@ -69,7 +69,7 @@ export function cloudMcpGatewayFor(
         maxActiveVms: scope.maxActiveVms,
         callerPlanId: scope.planId,
         providerVmId: machineId,
-        command: cmuxTuiRunCommand(args),
+        command: hmuxTuiRunCommand(args),
         timeoutMs,
         modelPlane,
       }));

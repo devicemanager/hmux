@@ -21,17 +21,17 @@ class BackendScriptContractTests(unittest.TestCase):
     def run_script(self, script: Path, *args: str, env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
         child_env = os.environ.copy()
         for name in (
-            "CMUX_E2E_BACKEND_NAME",
-            "CMUX_E2E_BACKEND_TAILNET_HOSTNAME",
-            "CMUX_E2E_BACKEND_STATE_DIR",
-            "CMUX_E2E_BACKEND_DONE_FILE",
-            "CMUX_E2E_WAIT_TIMEOUT_SECONDS",
-            "CMUX_E2E_STACK_PROJECT_ID",
-            "CMUX_E2E_STACK_PUBLISHABLE_KEY",
-            "CMUX_E2E_STACK_SERVER_KEY",
-            "CMUX_E2E_IROH_RELAY_BIN",
-            "CMUX_E2E_TLS_CERT",
-            "CMUX_E2E_TLS_KEY",
+            "HMUX_E2E_BACKEND_NAME",
+            "HMUX_E2E_BACKEND_TAILNET_HOSTNAME",
+            "HMUX_E2E_BACKEND_STATE_DIR",
+            "HMUX_E2E_BACKEND_DONE_FILE",
+            "HMUX_E2E_WAIT_TIMEOUT_SECONDS",
+            "HMUX_E2E_STACK_PROJECT_ID",
+            "HMUX_E2E_STACK_PUBLISHABLE_KEY",
+            "HMUX_E2E_STACK_SERVER_KEY",
+            "HMUX_E2E_IROH_RELAY_BIN",
+            "HMUX_E2E_TLS_CERT",
+            "HMUX_E2E_TLS_KEY",
         ):
             child_env.pop(name, None)
         child_env.update(env or {})
@@ -63,7 +63,7 @@ class BackendScriptContractTests(unittest.TestCase):
 
             env = os.environ.copy()
             env.update({
-                "CMUX_E2E_BACKEND_STATE_DIR": str(Path(directory) / "state"),
+                "HMUX_E2E_BACKEND_STATE_DIR": str(Path(directory) / "state"),
                 "PATH": f"{fake_bin}:{env['PATH']}",
             })
             return subprocess.run(
@@ -77,21 +77,21 @@ class BackendScriptContractTests(unittest.TestCase):
 
     def test_backend_env_emits_the_four_origins_and_simulator_copies(self) -> None:
         result = self.run_script(BACKEND_ENV, "env", "--simctl", env={
-            "CMUX_E2E_BACKEND_NAME": "cmux-e2e-backend.example.ts.net",
+            "HMUX_E2E_BACKEND_NAME": "hmux-e2e-backend.example.ts.net",
         })
         self.assertEqual(result.returncode, 0, result.stderr)
         lines = result.stdout.splitlines()
         self.assertEqual(
             lines,
             [
-                "CMUX_IROH_V2_BASE_URL=https://cmux-e2e-backend.example.ts.net:8443",
-                "SIMCTL_CHILD_CMUX_IROH_V2_BASE_URL=https://cmux-e2e-backend.example.ts.net:8443",
-                "CMUX_IROH_V2_ENVIRONMENT=development",
-                "SIMCTL_CHILD_CMUX_IROH_V2_ENVIRONMENT=development",
-                "CMUX_IROH_V2_FORCE_RELAY=1",
-                "SIMCTL_CHILD_CMUX_IROH_V2_FORCE_RELAY=1",
-                "CMUX_PRESENCE_BASE_URL=https://cmux-e2e-backend.example.ts.net:8444",
-                "SIMCTL_CHILD_CMUX_PRESENCE_BASE_URL=https://cmux-e2e-backend.example.ts.net:8444",
+                "HMUX_IROH_V2_BASE_URL=https://hmux-e2e-backend.example.ts.net:8443",
+                "SIMCTL_CHILD_HMUX_IROH_V2_BASE_URL=https://hmux-e2e-backend.example.ts.net:8443",
+                "HMUX_IROH_V2_ENVIRONMENT=development",
+                "SIMCTL_CHILD_HMUX_IROH_V2_ENVIRONMENT=development",
+                "HMUX_IROH_V2_FORCE_RELAY=1",
+                "SIMCTL_CHILD_HMUX_IROH_V2_FORCE_RELAY=1",
+                "HMUX_PRESENCE_BASE_URL=https://hmux-e2e-backend.example.ts.net:8444",
+                "SIMCTL_CHILD_HMUX_PRESENCE_BASE_URL=https://hmux-e2e-backend.example.ts.net:8444",
             ],
         )
 
@@ -105,18 +105,18 @@ class BackendScriptContractTests(unittest.TestCase):
                 "wait",
                 "1",
                 env={
-                    "CMUX_E2E_BACKEND_NAME": "cmux-e2e-backend.example.ts.net",
+                    "HMUX_E2E_BACKEND_NAME": "hmux-e2e-backend.example.ts.net",
                     "PATH": f"{directory}:{os.environ['PATH']}",
                 },
             )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("https://cmux-e2e-backend.example.ts.net:8443/v2/health", result.stdout)
-        self.assertIn("https://cmux-e2e-backend.example.ts.net:8444/healthz", result.stdout)
+        self.assertIn("https://hmux-e2e-backend.example.ts.net:8443/v2/health", result.stdout)
+        self.assertIn("https://hmux-e2e-backend.example.ts.net:8444/healthz", result.stdout)
 
     def test_backend_env_requires_the_fixed_certificate_name(self) -> None:
         result = self.run_script(BACKEND_ENV, "env")
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("CMUX_E2E_BACKEND_NAME is required", result.stderr)
+        self.assertIn("HMUX_E2E_BACKEND_NAME is required", result.stderr)
 
     def test_backend_env_cleanup_does_not_require_the_backend_name(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -137,27 +137,27 @@ class BackendScriptContractTests(unittest.TestCase):
                 BACKEND_UP,
                 "up",
                 env={
-                    "CMUX_E2E_BACKEND_NAME": "cmux-e2e-backend.example.ts.net",
-                    "CMUX_E2E_BACKEND_STATE_DIR": directory,
-                    "CMUX_E2E_STACK_PROJECT_ID": "project",
-                    "CMUX_E2E_STACK_PUBLISHABLE_KEY": "publishable",
-                    "CMUX_E2E_STACK_SERVER_KEY": secret,
-                    "CMUX_E2E_IROH_RELAY_BIN": "/bin/sh",
-                    "CMUX_E2E_TLS_CERT": "certificate",
+                    "HMUX_E2E_BACKEND_NAME": "hmux-e2e-backend.example.ts.net",
+                    "HMUX_E2E_BACKEND_STATE_DIR": directory,
+                    "HMUX_E2E_STACK_PROJECT_ID": "project",
+                    "HMUX_E2E_STACK_PUBLISHABLE_KEY": "publishable",
+                    "HMUX_E2E_STACK_SERVER_KEY": secret,
+                    "HMUX_E2E_IROH_RELAY_BIN": "/bin/sh",
+                    "HMUX_E2E_TLS_CERT": "certificate",
                 },
             )
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("CMUX_E2E_TLS_KEY", result.stderr)
+        self.assertIn("HMUX_E2E_TLS_KEY", result.stderr)
         self.assertNotIn(secret, result.stdout + result.stderr)
 
     def test_backend_up_hold_times_out_cleanly_and_accepts_completion(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             done_file = Path(directory) / "done"
             base_env = {
-                "CMUX_E2E_BACKEND_NAME": "cmux-e2e-backend.example.ts.net",
-                "CMUX_E2E_BACKEND_STATE_DIR": directory,
-                "CMUX_E2E_BACKEND_DONE_FILE": str(done_file),
-                "CMUX_E2E_WAIT_TIMEOUT_SECONDS": "0",
+                "HMUX_E2E_BACKEND_NAME": "hmux-e2e-backend.example.ts.net",
+                "HMUX_E2E_BACKEND_STATE_DIR": directory,
+                "HMUX_E2E_BACKEND_DONE_FILE": str(done_file),
+                "HMUX_E2E_WAIT_TIMEOUT_SECONDS": "0",
             }
             timed_out = self.run_script(BACKEND_UP, "hold", env=base_env)
             done_file.touch()
@@ -174,10 +174,10 @@ class BackendScriptContractTests(unittest.TestCase):
                 BACKEND_UP,
                 "hold",
                 env={
-                    "CMUX_E2E_BACKEND_NAME": "cmux-e2e-backend.example.ts.net",
-                    "CMUX_E2E_BACKEND_STATE_DIR": directory,
-                    "CMUX_E2E_BACKEND_DONE_FILE": str(Path(directory) / "done"),
-                    "CMUX_E2E_WAIT_TIMEOUT_SECONDS": "1",
+                    "HMUX_E2E_BACKEND_NAME": "hmux-e2e-backend.example.ts.net",
+                    "HMUX_E2E_BACKEND_STATE_DIR": directory,
+                    "HMUX_E2E_BACKEND_DONE_FILE": str(Path(directory) / "done"),
+                    "HMUX_E2E_WAIT_TIMEOUT_SECONDS": "1",
                 },
             )
 
@@ -187,7 +187,7 @@ class BackendScriptContractTests(unittest.TestCase):
 
     def test_backend_up_rejects_unknown_commands(self) -> None:
         result = self.run_script(BACKEND_UP, "unknown", env={
-            "CMUX_E2E_BACKEND_NAME": "cmux-e2e-backend.example.ts.net",
+            "HMUX_E2E_BACKEND_NAME": "hmux-e2e-backend.example.ts.net",
         })
         self.assertEqual(result.returncode, 2)
         self.assertRegex(result.stderr, r"usage: .*backend-up\.sh up\|hold\|down")
@@ -205,7 +205,7 @@ class BackendScriptContractTests(unittest.TestCase):
             shutil.copy2(IOS_E2E_RUN, e2e_dir / IOS_E2E_RUN.name)
             shutil.copy2(ROOT / "scripts/e2e/ocr.swift", e2e_dir / "ocr.swift")
 
-            debug_cli = fixture / "scripts/cmux-debug-cli.sh"
+            debug_cli = fixture / "scripts/hmux-debug-cli.sh"
             debug_cli.parent.mkdir(parents=True, exist_ok=True)
             debug_cli.write_text("#!/bin/sh\nexit 0\n", encoding="utf-8")
             debug_cli.chmod(0o755)

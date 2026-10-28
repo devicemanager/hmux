@@ -810,7 +810,7 @@ describe("codex responses proxy with no account configured", () => {
 
   test("tells a Cloud machine that private accounts must be shared with its team", async () => {
     const run = noAccountProxy(false, "vm-1");
-    const response = await run.proxy(responsesRequest({ "x-cmux-vm-id": "vm-1" }));
+    const response = await run.proxy(responsesRequest({ "x-hmux-vm-id": "vm-1" }));
     expect(response.status).toBe(403);
     expect(await response.json()).toEqual({
       error: {
@@ -983,11 +983,11 @@ describe("codex responses proxy VM-bound route tokens", () => {
     });
   }
 
-  test("a bound token with the matching x-cmux-vm-id header is routed", async () => {
+  test("a bound token with the matching x-hmux-vm-id header is routed", async () => {
     accountsToServe = [{ id: "acct-1", sticky: false }];
     const response = await proxy(edgeRequest({
-      "x-cmux-authorization": `Bearer ${BOUND_TOKEN}`,
-      "x-cmux-vm-id": "vm-1",
+      "x-hmux-authorization": `Bearer ${BOUND_TOKEN}`,
+      "x-hmux-vm-id": "vm-1",
     }));
     expect(response.status).toBe(200);
     expect(authenticatedTokens).toEqual([BOUND_TOKEN]);
@@ -997,7 +997,7 @@ describe("codex responses proxy VM-bound route tokens", () => {
   test("a signed new-machine token reaches the typed no-account outcome", async () => {
     accountsToServe = [];
     const response = await proxy(edgeRequest({
-      "x-cmux-authorization": `Bearer ${SIGNED_VM_TOKEN}`,
+      "x-hmux-authorization": `Bearer ${SIGNED_VM_TOKEN}`,
     }));
     expect(response.status).toBe(503);
     expect(await response.json()).toMatchObject({
@@ -1007,7 +1007,7 @@ describe("codex responses proxy VM-bound route tokens", () => {
     expect(selectInputs[0]?.teamId).toBe("team-1");
   });
 
-  test("a signed token without x-cmux-vm-id uses its VM claim", async () => {
+  test("a signed token without x-hmux-vm-id uses its VM claim", async () => {
     accountsToServe = [{ id: "acct-1", sticky: false }];
     const response = await proxy(edgeRequest({
       authorization: `Bearer ${BOUND_TOKEN}`,
@@ -1017,11 +1017,11 @@ describe("codex responses proxy VM-bound route tokens", () => {
     expect(selectInputs[0]?.teamId).toBe("team-1");
   });
 
-  test("a signed token ignores a forged x-cmux-vm-id", async () => {
+  test("a signed token ignores a forged x-hmux-vm-id", async () => {
     accountsToServe = [{ id: "acct-1", sticky: false }];
     const response = await proxy(edgeRequest({
       authorization: `Bearer ${BOUND_TOKEN}`,
-      "x-cmux-vm-id": "vm-2",
+      "x-hmux-vm-id": "vm-2",
     }));
     expect(response.status).toBe(200);
     expect(authenticatedTokens).toEqual([BOUND_TOKEN]);
@@ -1030,14 +1030,14 @@ describe("codex responses proxy VM-bound route tokens", () => {
 
   test("a VM header cannot substitute an unbound token", async () => {
     accountsToServe = [{ id: "acct-1", sticky: false }];
-    const response = await proxy(responsesRequest({ "x-cmux-vm-id": "vm-9" }));
+    const response = await proxy(responsesRequest({ "x-hmux-vm-id": "vm-9" }));
     expect(response.status).toBe(401);
     expect(selectInputs).toHaveLength(0);
   });
 
   test("the placeholder API key alone is never a credential", async () => {
     accountsToServe = [{ id: "acct-1", sticky: false }];
-    const response = await proxy(edgeRequest({ "x-cmux-vm-id": "vm-1" }));
+    const response = await proxy(edgeRequest({ "x-hmux-vm-id": "vm-1" }));
     expect(response.status).toBe(401);
     expect(authenticatedTokens).toEqual([]);
     const body = await response.json() as { message: string };

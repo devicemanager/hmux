@@ -28,7 +28,7 @@ function row(overrides: Partial<CloudVmRow>): CloudVmRow {
     providerVmId: "live-machine",
     displayName: null,
     slug: null,
-    imageId: "cmux-devbox",
+    imageId: "hmux-devbox",
     imageVersion: null,
     status: "running",
     idempotencyKey: null,

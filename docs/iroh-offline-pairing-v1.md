@@ -25,10 +25,10 @@ Revoked bindings and bindings owned by another account return `binding_not_found
 
 The web deployment requires these server-only values:
 
-- `CMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64`: 32 random bytes in standard base64.
-- `CMUX_IROH_GRANT_SIGNING_KEY_P8`: an Ed25519 PKCS#8 private key in PEM form.
-- `CMUX_IROH_GRANT_SIGNING_KID`: the current key ID.
-- `CMUX_IROH_GRANT_VERIFICATION_KEYS_JSON`: the version 1 current plus optional
+- `HMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64`: 32 random bytes in standard base64.
+- `HMUX_IROH_GRANT_SIGNING_KEY_P8`: an Ed25519 PKCS#8 private key in PEM form.
+- `HMUX_IROH_GRANT_SIGNING_KID`: the current key ID.
+- `HMUX_IROH_GRANT_VERIFICATION_KEYS_JSON`: the version 1 current plus optional
   previous public-key set shown by the API.
 
 Generate signing material with:
@@ -60,7 +60,7 @@ The attestation is a compact JWS signed with Ed25519. The protected header has
 exactly these fields:
 
 ```json
-{"alg":"EdDSA","typ":"cmux-endpoint-attestation-v1+jwt","kid":"<current key ID>"}
+{"alg":"EdDSA","typ":"hmux-endpoint-attestation-v1+jwt","kid":"<current key ID>"}
 ```
 
 The payload has exactly these fields:
@@ -78,8 +78,8 @@ The payload has exactly these fields:
   "iat": 1783627200,
   "nbf": 1783627195,
   "exp": 1783713600,
-  "alpn": "cmux/mobile/1",
-  "scope": "cmux.offline-pair.same-account"
+  "alpn": "hmux/mobile/1",
+  "scope": "hmux.offline-pair.same-account"
 }
 ```
 

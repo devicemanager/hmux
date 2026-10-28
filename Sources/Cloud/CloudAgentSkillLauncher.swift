@@ -1,17 +1,17 @@
 import AppKit
 import Foundation
 
-/// One shared path for "give me a coding agent that knows cmux Cloud".
+/// One shared path for "give me a coding agent that knows hmux Cloud".
 ///
 /// The Machines panel menu and the `vm.cloud_agent_open` socket method both
 /// launch a local terminal through `TerminalController.surfaceNewTerminal`
 /// running the chosen agent with a kickoff prompt; "Copy Cloud Prompt" and
 /// `vm.cloud_prompt` expose the same prompt for any other terminal. Every
 /// entrypoint first installs the bundled skill file at a stable path under
-/// `~/.config/cmux/skills/` so the prompt's file reference resolves for any
+/// `~/.config/hmux/skills/` so the prompt's file reference resolves for any
 /// agent, with no network access.
 enum CloudAgentSkillLauncher {
-    static let installedSkillRelativePath = ".config/cmux/skills/cmux-cloud.md"
+    static let installedSkillRelativePath = ".config/hmux/skills/hmux-cloud.md"
 
     /// The bundled skill markdown (`Resources/en.lproj/cloud-agent-skill.md`).
     static func skillMarkdown(bundle: Bundle = .main) -> String? {
@@ -47,9 +47,9 @@ enum CloudAgentSkillLauncher {
     static func kickoffPrompt(skillPath: String) -> String {
         """
         Read \(skillPath) before doing anything else. It explains how to work \
-        with my cmux Cloud machines through the `cmux` CLI (`cmux vm ...`); when \
-        it disagrees with the CLI, `cmux vm <subcommand> --help` wins. Start by \
-        running `cmux vm ls`, summarize my machines in one line each, and ask \
+        with my hmux Cloud machines through the `hmux` CLI (`hmux vm ...`); when \
+        it disagrees with the CLI, `hmux vm <subcommand> --help` wins. Start by \
+        running `hmux vm ls`, summarize my machines in one line each, and ask \
         what I want to do.
         """
     }

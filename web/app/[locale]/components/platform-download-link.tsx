@@ -30,7 +30,7 @@ export function PlatformDownloadLink({
       style={style}
       onClick={() =>
         posthog.capture(
-          "cmux_browser_download_clicked",
+          "hmux_browser_download_clicked",
           {
             platform,
             artifact,

@@ -21,8 +21,8 @@ struct GhosttyDialogTheme: Equatable {
         let opaqueForeground = (foreground.usingColorSpace(.sRGB) ?? foreground).withAlphaComponent(1)
         return GhosttyDialogTheme(
             background: opaqueBackground,
-            foreground: cmuxReadableForegroundNSColor(preferred: opaqueForeground, on: opaqueBackground),
-            colorScheme: cmuxReadableColorScheme(for: opaqueBackground)
+            foreground: hmuxReadableForegroundNSColor(preferred: opaqueForeground, on: opaqueBackground),
+            colorScheme: hmuxReadableColorScheme(for: opaqueBackground)
         )
     }
 

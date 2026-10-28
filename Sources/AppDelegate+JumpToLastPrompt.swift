@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSidebar
+import HmuxSidebar
 import Foundation
 
 /// "Jump to Last Prompt": focus the surface where the user most recently

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxNotifications
+import HmuxNotifications
 import SwiftUI
 
 struct MinimalModeSidebarTitlebarControlsOverlay: View {

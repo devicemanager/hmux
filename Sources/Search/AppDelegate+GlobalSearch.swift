@@ -1,5 +1,5 @@
 import AppKit
-import CmuxTerminal
+import HmuxTerminal
 import Foundation
 
 extension AppDelegate {

@@ -8,7 +8,7 @@ lives in ``.github/runners.json`` so it is reviewed, diffable and -- the point
 
 Fleet selection:
 
-1. ``--fleet`` / ``CMUX_CI_RUNNER_FLEET``, when non-empty, wins. This is the
+1. ``--fleet`` / ``HMUX_CI_RUNNER_FLEET``, when non-empty, wins. This is the
    operator escape hatch: routing changes without a merge.
 2. Otherwise the repository owner is looked up in ``owners``.
 3. An owner that is not listed -- which is every fork, because a fork lives on
@@ -17,7 +17,7 @@ Fleet selection:
    a ``blacksmith-*`` label on a personal account does not error, it queues
    forever and wedges the workflow's concurrency group.
 
-Per-capability overrides come in as ``--overrides`` / ``CMUX_CI_RUNNER_OVERRIDES``
+Per-capability overrides come in as ``--overrides`` / ``HMUX_CI_RUNNER_OVERRIDES``
 holding a JSON *object as a string*. They are read here, in Python, and never
 with ``fromJSON(vars.X)`` in a workflow expression: ``fromJSON()`` on an unset
 repository variable is an empty string, and ``fromJSON('')`` fails the whole
@@ -46,8 +46,8 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_MAP = ROOT / ".github" / "runners.json"
 
-FLEET_ENV = "CMUX_CI_RUNNER_FLEET"
-OVERRIDES_ENV = "CMUX_CI_RUNNER_OVERRIDES"
+FLEET_ENV = "HMUX_CI_RUNNER_FLEET"
+OVERRIDES_ENV = "HMUX_CI_RUNNER_OVERRIDES"
 OWNER_ENV = "GITHUB_REPOSITORY_OWNER"
 
 

@@ -28,7 +28,7 @@ function subscriptionOn(lookupKey: string, cancelAtPeriodEnd = false, interval: 
     id: "sub_1",
     customer: "cus_1",
     cancel_at_period_end: cancelAtPeriodEnd,
-    metadata: { app: "cmux", plan: lookupKey.includes("max") ? "max" : lookupKey.includes("go") ? "go" : "pro" },
+    metadata: { app: "hmux", plan: lookupKey.includes("max") ? "max" : lookupKey.includes("go") ? "go" : "pro" },
     items: {
       data: [{
         id: "si_1",
@@ -92,7 +92,7 @@ beforeEach(() => {
     hasCustomer: true,
     hasActiveSubscription: true,
   };
-  subscription = subscriptionOn("cmux-pro-monthly-50");
+  subscription = subscriptionOn("hmux-pro-monthly-50");
   preview = { currency: "usd", amount_due: 10_000, lines: { data: [] } };
   renewalPreview = {
     id: "upcoming_1",
@@ -157,7 +157,7 @@ describe("personal plan change", () => {
   });
 
   test("a downgrade charges nothing today and credits the unused time net of the new plan's remaining time", async () => {
-    subscription = subscriptionOn("cmux-max-monthly-200");
+    subscription = subscriptionOn("hmux-max-monthly-200");
     status = { ...status, activePlanId: "max" };
     preview = {
       currency: "usd",
@@ -188,7 +188,7 @@ describe("personal plan change", () => {
         proration_behavior: "always_invoice",
         proration_date: NOW - 60,
         payment_behavior: "error_if_incomplete",
-        metadata: { app: "cmux", plan: "max" },
+        metadata: { app: "hmux", plan: "max" },
       },
     ]);
     expect(synced).toEqual([{ ...subscription, updated: true }]);
@@ -206,7 +206,7 @@ describe("personal plan change", () => {
     expect(synced).toEqual([]);
   });
   test("a Pro yearly subscriber upgrades to Max yearly, keeping the billing interval", async () => {
-    subscription = subscriptionOn("cmux-pro-yearly-480", false, "year");
+    subscription = subscriptionOn("hmux-pro-yearly-480", false, "year");
     preview = { currency: "usd", amount_due: 79_000, lines: { data: [] } };
     renewalPreview = {
       id: "upcoming_1",
@@ -236,7 +236,7 @@ describe("personal plan change", () => {
   });
 
   test("a grandfathered Pro yearly price also upgrades to Max yearly", async () => {
-    subscription = subscriptionOn("cmux-pro-yearly", false, "year");
+    subscription = subscriptionOn("hmux-pro-yearly", false, "year");
     await previewPersonalPlanChange({ userId: "u1", target: "max" }, deps);
     const previewCall = calls.find((call) => call.method === "createPreview")!;
     expect((previewCall.args[0] as { subscription_details: { items: unknown } }).subscription_details.items)
@@ -244,14 +244,14 @@ describe("personal plan change", () => {
   });
 
   test("a grandfathered Pro monthly price upgrades to the current Max monthly price", async () => {
-    subscription = subscriptionOn("cmux-pro-monthly", false, "month");
+    subscription = subscriptionOn("hmux-pro-monthly", false, "month");
     await applyPersonalPlanChange({ userId: "u1", target: "max", prorationDate: NOW }, deps);
     const update = calls.find((call) => call.method === "update")!;
     expect((update.args[1] as { items: unknown }).items).toEqual([{ id: "si_1", price: "price_max_month" }]);
   });
 
   test("a Max yearly subscriber downgrades to Pro yearly", async () => {
-    subscription = subscriptionOn("cmux-max-yearly-1920", false, "year");
+    subscription = subscriptionOn("hmux-max-yearly-1920", false, "year");
     status = { ...status, activePlanId: "max" };
     await applyPersonalPlanChange({ userId: "u1", target: "pro", prorationDate: NOW }, deps);
     const update = calls.find((call) => call.method === "update")!;
@@ -359,7 +359,7 @@ describe("personal plan change", () => {
   });
 
   test("quotes the yearly catalog price when the renewal preview itself fails", async () => {
-    subscription = subscriptionOn("cmux-pro-yearly-480", false, "year");
+    subscription = subscriptionOn("hmux-pro-yearly-480", false, "year");
     renewalPreviewError = new Error("Stripe unavailable");
     const result = await previewPersonalPlanChange({ userId: "u1", target: "max" }, deps);
     expect(result.amountDueToday).toBe(10_000);
@@ -372,7 +372,7 @@ describe("personal plan change", () => {
   // leave Max by cancelling it instead.
   test("refuses to move a Founder's Edition Max subscription onto paid Pro", async () => {
     status = { ...status, activePlanId: "max", hasFoundersEdition: true };
-    subscription = subscriptionOn("cmux-max-monthly-200");
+    subscription = subscriptionOn("hmux-max-monthly-200");
     expect(await refusal(previewPersonalPlanChange({ userId: "u1", target: "pro" }, deps))).toBe("not_switchable");
     expect(await refusal(applyPersonalPlanChange({ userId: "u1", target: "pro", prorationDate: NOW }, deps))).toBe("not_switchable");
     expect(calls.some((call) => call.method === "update")).toBe(false);

@@ -1,11 +1,11 @@
-// `cmux_account_signed_up`: one server event per Stack account, emitted when
+// `hmux_account_signed_up`: one server event per Stack account, emitted when
 // Stack's `user.created` webhook is accepted. The webhook is the one place
 // every account creation passes through (web sign-up, native sign-in that
 // creates the account, anonymous checkout users, server-created probe
 // accounts), and the natural insert id keeps a Svix redelivery from counting
 // twice.
 //
-// Stack does not record which cmux client started the sign-up, so
+// Stack does not record which hmux client started the sign-up, so
 // `signup_client` names only what the server can prove: a probe account
 // (`server`), an anonymous account (`anonymous`), else `unknown`. Join the
 // person's first client event (`ios_sign_in_completed`, the macOS sign-in
@@ -17,7 +17,7 @@ import {
 } from "./serverEvents";
 import { isSyntheticAccountEmail } from "./syntheticAccounts";
 
-export const ACCOUNT_SIGNED_UP_EVENT = "cmux_account_signed_up";
+export const ACCOUNT_SIGNED_UP_EVENT = "hmux_account_signed_up";
 
 export type SignupSource =
   | "anonymous"
@@ -48,7 +48,7 @@ export function accountSignedUpEvent(data: unknown, now: Date = new Date()): Ser
       is_synthetic: synthetic ? true : undefined,
       schema_version: 1,
     },
-    setOnce: { cmux_signed_up_at: signedUpAt.toISOString() },
+    setOnce: { hmux_signed_up_at: signedUpAt.toISOString() },
     insertId: `${ACCOUNT_SIGNED_UP_EVENT}:${userId}`,
     timestamp: signedUpAt,
   };

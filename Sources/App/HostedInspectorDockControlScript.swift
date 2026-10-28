@@ -43,13 +43,13 @@ struct HostedInspectorDockControlScript {
                 return String(configuration).toLowerCase() === literal;
             }
             function enforceDockControls() {
-                const disallowSideDock = !WI.__cmuxAllowSideDock;
+                const disallowSideDock = !WI.__hmuxAllowSideDock;
                 const dockConfiguration = WI.DockConfiguration || {};
                 const dockedLeft = dockMatches(dockConfiguration.Left, "left");
                 const dockedRight = dockMatches(dockConfiguration.Right, "right");
-                const dockedBottom = !WI.__cmuxDetachedFromHostWindow &&
+                const dockedBottom = !WI.__hmuxDetachedFromHostWindow &&
                     dockMatches(dockConfiguration.Bottom, "bottom");
-                const detached = WI.__cmuxDetachedFromHostWindow ||
+                const detached = WI.__hmuxDetachedFromHostWindow ||
                     dockMatches(dockConfiguration.Detached, "detached") ||
                     dockMatches(dockConfiguration.Undocked, "undocked");
                 updateButton(WI._dockLeftTabBarButton, disallowSideDock || (!detached && dockedLeft));
@@ -66,36 +66,36 @@ struct HostedInspectorDockControlScript {
                     WI._undockButton,
                 ], detached);
             }
-            WI.__cmuxAllowSideDock = allowSideDock;
-            WI.__cmuxDetachedFromHostWindow = detachedFromHostWindow;
-            installWrapper("_dockLeft", "__cmuxOriginalDockLeft", function(event) {
-                if (!WI.__cmuxAllowSideDock)
+            WI.__hmuxAllowSideDock = allowSideDock;
+            WI.__hmuxDetachedFromHostWindow = detachedFromHostWindow;
+            installWrapper("_dockLeft", "__hmuxOriginalDockLeft", function(event) {
+                if (!WI.__hmuxAllowSideDock)
                     return callOriginal(WI._dockBottom, event);
-                return callOriginal(WI.__cmuxOriginalDockLeft, event);
+                return callOriginal(WI.__hmuxOriginalDockLeft, event);
             });
-            installWrapper("_dockRight", "__cmuxOriginalDockRight", function(event) {
-                if (!WI.__cmuxAllowSideDock)
+            installWrapper("_dockRight", "__hmuxOriginalDockRight", function(event) {
+                if (!WI.__hmuxAllowSideDock)
                     return callOriginal(WI._dockBottom, event);
-                return callOriginal(WI.__cmuxOriginalDockRight, event);
+                return callOriginal(WI.__hmuxOriginalDockRight, event);
             });
-            installWrapper("_togglePreviousDockConfiguration", "__cmuxOriginalTogglePreviousDockConfiguration", function(event) {
+            installWrapper("_togglePreviousDockConfiguration", "__hmuxOriginalTogglePreviousDockConfiguration", function(event) {
                 const dockConfiguration = WI.DockConfiguration || {};
                 const previousSideDock = WI._previousDockConfiguration === dockConfiguration.Left ||
                     WI._previousDockConfiguration === dockConfiguration.Right;
-                if (!WI.__cmuxAllowSideDock && previousSideDock)
+                if (!WI.__hmuxAllowSideDock && previousSideDock)
                     return callOriginal(WI._dockBottom, event);
-                return callOriginal(WI.__cmuxOriginalTogglePreviousDockConfiguration, event);
+                return callOriginal(WI.__hmuxOriginalTogglePreviousDockConfiguration, event);
             });
-            installWrapper("_updateDockNavigationItems", "__cmuxOriginalUpdateDockNavigationItems", function(...args) {
-                if (typeof WI.__cmuxOriginalUpdateDockNavigationItems === "function")
-                    WI.__cmuxOriginalUpdateDockNavigationItems.apply(WI, args);
+            installWrapper("_updateDockNavigationItems", "__hmuxOriginalUpdateDockNavigationItems", function(...args) {
+                if (typeof WI.__hmuxOriginalUpdateDockNavigationItems === "function")
+                    WI.__hmuxOriginalUpdateDockNavigationItems.apply(WI, args);
                 enforceDockControls();
             });
             if (typeof WI._updateDockNavigationItems === "function")
                 WI._updateDockNavigationItems();
             else
                 enforceDockControls();
-            return WI.__cmuxAllowSideDock;
+            return WI.__hmuxAllowSideDock;
         })();
         """
     }

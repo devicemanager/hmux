@@ -12,7 +12,7 @@ import unittest
 
 
 ROOT = Path(__file__).resolve().parents[2]
-HELPER = ROOT / "Resources/bin/cmux-tmux-agent.py"
+HELPER = ROOT / "Resources/bin/hmux-tmux-agent.py"
 
 
 def codex_override_paths(argv):
@@ -40,11 +40,11 @@ import json, os, sys
 log = os.environ['TMUX_LOG']
 args = sys.argv[1:]
 with open(log, 'a') as f: f.write(json.dumps(args) + '\\n')
-if 'show-options' in args and '@cmux_agent_owner' in args:
+if 'show-options' in args and '@hmux_agent_owner' in args:
     print(os.environ.get('TMUX_OWNER', 'owner'))
 elif 'show-options' in args and 'default-command' in args:
     print(os.environ.get('TMUX_DEFAULT_COMMAND', ''))
-elif 'show-options' in args and '@cmux_agent_default_command' in args:
+elif 'show-options' in args and '@hmux_agent_default_command' in args:
     print(os.environ.get('TMUX_OWNED_COMMAND', ''))
 elif 'show-options' in args and 'default-shell' in args:
     print(os.environ.get('TMUX_DEFAULT_SHELL', '/bin/sh'))
@@ -121,7 +121,7 @@ with open(os.environ['PROVIDER_LOG'], 'w') as f: json.dump(sys.argv[1:], f)
             self.assertIn(f'"/<session-flags>/config.toml:{label}:0:0"={{trusted_hash="sha256:', state[0])
         self.assertEqual(argv[-2:], ["exec", "hello"])
         calls = self._tmux_calls()
-        self.assertTrue(any("@cmux_agent_owner" in call for call in calls))
+        self.assertTrue(any("@hmux_agent_owner" in call for call in calls))
 
     def test_hook_uses_embedded_route_without_environment(self):
         context = {
@@ -234,7 +234,7 @@ with open(os.environ['PROVIDER_LOG'], 'w') as f: json.dump(sys.argv[1:], f)
 
     def test_management_commands_pass_through(self):
         module_source = HELPER.read_text()
-        namespace = {"__name__": "cmux_tmux_agent_test"}
+        namespace = {"__name__": "hmux_tmux_agent_test"}
         exec(compile(module_source, str(HELPER), "exec"), namespace)
         self.assertFalse(namespace["session_launch"]("codex", ["--help"]))
         self.assertFalse(namespace["session_launch"]("codex", ["mcp", "list"]))
@@ -255,7 +255,7 @@ with open(os.environ['PROVIDER_LOG'], 'w') as f: json.dump(sys.argv[1:], f)
                 calls.append((path, argv))
                 raise ExecCalled
 
-        namespace = {"__name__": "cmux_tmux_agent_test", "__file__": str(HELPER)}
+        namespace = {"__name__": "hmux_tmux_agent_test", "__file__": str(HELPER)}
         exec(compile(module_source, str(HELPER), "exec"), namespace)
         namespace["os"] = FakeOS
         for shell in ("/bin/bash", "/bin/zsh"):

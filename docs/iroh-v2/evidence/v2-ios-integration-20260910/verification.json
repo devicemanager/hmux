@@ -1,12 +1,12 @@
 {
   "baseRevision": "72ce5e9b41a83d3f8f3a21288856449f3580686e",
   "leaseID": "20260910211351-8258-9168",
-  "slot": "cmux11s-v.4",
-  "host": "cmux@cmux11s-mac-mini",
-  "remotePath": "~/cmux-runners/iroh-v2-integration-20260910211351-8258-9168",
-  "derivedData": "/tmp/cmux-iv2a-20260910211351",
+  "slot": "hmux11s-v.4",
+  "host": "hmux@hmux11s-mac-mini",
+  "remotePath": "~/hmux-runners/iroh-v2-integration-20260910211351-8258-9168",
+  "derivedData": "/tmp/hmux-iv2a-20260910211351",
   "tag": "iv2a",
-  "bundleID": "dev.cmux.ios.iv2a",
+  "bundleID": "dev.hmux.ios.iv2a",
   "compiler": "Apple Swift 6.2.4",
   "sdk": "iPhoneSimulator26.2",
   "simulatorID": "9331CE0B-B058-4320-AB0F-C5853BB4E723",
@@ -17,7 +17,7 @@
     "sharedProtocolAndDirectQUIC": {
       "passed": 18,
       "suites": 5,
-      "command": "swift test --package-path Packages/Shared/CmuxIrxTransport -j 4 --filter \"V2|IrxDirectOnlyEndpointTests\""
+      "command": "swift test --package-path Packages/Shared/HmuxIrxTransport -j 4 --filter \"V2|IrxDirectOnlyEndpointTests\""
     },
     "iOSConnection": {
       "passed": 13,
@@ -31,12 +31,12 @@
     },
     "AuthCoordinatorTeamScope": {
       "passed": 1,
-      "command": "swift test --package-path Packages/Shared/CmuxAuthRuntime --filter teamScopeChangesFenceWorkEvenWhenAStreamCoalescesTransitions"
+      "command": "swift test --package-path Packages/Shared/HmuxAuthRuntime --filter teamScopeChangesFenceWorkEvenWhenAStreamCoalescesTransitions"
     },
     "localAddresses": {
       "passed": 2,
       "parameterizedCases": 10,
-      "command": "swift test --package-path Packages/Shared/CMUXMobileCore --filter CmxIrohLocalSocketAddressTests"
+      "command": "swift test --package-path Packages/Shared/HMUXMobileCore --filter CmxIrohLocalSocketAddressTests"
     },
     "localization": {
       "keys": 8,
@@ -45,7 +45,7 @@
     },
     "diffCheck": "passed"
   },
-  "testPlan": "Remote cmux.xctestplan includes only cmuxFeatureTests and CmuxMobileShellUITests; exact -only-testing selectors are recorded in the logs. Local test plan unchanged.",
+  "testPlan": "Remote hmux.xctestplan includes only hmuxFeatureTests and HmuxMobileShellUITests; exact -only-testing selectors are recorded in the logs. Local test plan unchanged.",
   "build": "Full iOS app and both test targets compiled as part of the final Simulator test action. No local Xcode build, signing, install or user UI interaction.",
   "notVerified": [
     "Live v2 Mac admission",

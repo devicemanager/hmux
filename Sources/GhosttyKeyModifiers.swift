@@ -3,7 +3,7 @@ import GhosttyKit
 
 /// Translates NSEvent modifier flags into the libghostty mods bitfield for
 /// key events (`ghostty_surface_key`, `ghostty_surface_key_translation_mods`).
-nonisolated func cmuxGhosttyModsFromFlags(modifierFlagsRawValue rawValue: UInt) -> ghostty_input_mods_e {
+nonisolated func hmuxGhosttyModsFromFlags(modifierFlagsRawValue rawValue: UInt) -> ghostty_input_mods_e {
     let flags = NSEvent.ModifierFlags(rawValue: rawValue)
     var mods = GHOSTTY_MODS_NONE.rawValue
     if flags.contains(.shift) { mods |= GHOSTTY_MODS_SHIFT.rawValue }
@@ -29,9 +29,9 @@ nonisolated func cmuxGhosttyModsFromFlags(modifierFlagsRawValue rawValue: UInt) 
 /// affect the mouse") but compares incoming mods against that stored value,
 /// so sending side bits would make every event with a held right-side
 /// modifier look like a modifier change and re-dirty the screen. Key events
-/// must keep the side bits (`cmuxGhosttyModsFromFlags`); mouse paths send
+/// must keep the side bits (`hmuxGhosttyModsFromFlags`); mouse paths send
 /// the normalized binding bits libghostty stores.
-nonisolated func cmuxGhosttyMouseModsFromFlags(modifierFlagsRawValue rawValue: UInt) -> ghostty_input_mods_e {
+nonisolated func hmuxGhosttyMouseModsFromFlags(modifierFlagsRawValue rawValue: UInt) -> ghostty_input_mods_e {
     let flags = NSEvent.ModifierFlags(rawValue: rawValue)
     var mods = GHOSTTY_MODS_NONE.rawValue
     if flags.contains(.shift) { mods |= GHOSTTY_MODS_SHIFT.rawValue }
@@ -45,7 +45,7 @@ nonisolated func cmuxGhosttyMouseModsFromFlags(modifierFlagsRawValue rawValue: U
 /// participate in character translation after settings such as
 /// `macos-option-as-alt` are applied) back onto an event's modifier flags,
 /// preserving flags libghostty does not model (function, numeric pad, ...).
-nonisolated func cmuxTranslationModifierFlags(
+nonisolated func hmuxTranslationModifierFlags(
     original eventFlags: NSEvent.ModifierFlags,
     ghosttyTranslationMods: ghostty_input_mods_e
 ) -> NSEvent.ModifierFlags {

@@ -63,13 +63,13 @@ jobs:
         env:
           # Valid fixtures, no production credentials or validation bypasses.
           RESEND_API_KEY: re_ci_build
-          CMUX_FEEDBACK_FROM_EMAIL: ci@example.test
+          HMUX_FEEDBACK_FROM_EMAIL: ci@example.test
           STACK_SECRET_SERVER_KEY: ci-build-only
           NEXT_PUBLIC_STACK_PROJECT_ID: 00000000-0000-4000-8000-000000000000
           NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: ci-build-only
-          DATABASE_URL: postgres://cmux:cmux@127.0.0.1:1/cmux
-          DIRECT_DATABASE_URL: postgres://cmux:cmux@127.0.0.1:1/cmux
-          CMUX_ANALYTICS_TEST_MODE: '1'
+          DATABASE_URL: postgres://hmux:hmux@127.0.0.1:1/hmux
+          DIRECT_DATABASE_URL: postgres://hmux:hmux@127.0.0.1:1/hmux
+          HMUX_ANALYTICS_TEST_MODE: '1'
         run: bun run vercel-build
 
   tests:
@@ -94,7 +94,7 @@ jobs:
       - run: bunx playwright install --with-deps chromium
       - run: bun run test:instant
         env:
-          CMUX_INSTANT_SKIP_TYPECHECK: "1"
+          HMUX_INSTANT_SKIP_TYPECHECK: "1"
 
   database:
     name: web-database-tests
@@ -109,17 +109,17 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: cmux_test
-          POSTGRES_PASSWORD: cmux
-          POSTGRES_USER: cmux
+          POSTGRES_DB: hmux_test
+          POSTGRES_PASSWORD: hmux
+          POSTGRES_USER: hmux
         ports: [5432:5432]
         options: >-
-          --health-cmd "pg_isready -U cmux -d cmux_test"
+          --health-cmd "pg_isready -U hmux -d hmux_test"
           --health-interval 1s --health-timeout 5s --health-retries 30
     env:
-      CMUX_DB_TEST: '1'
-      DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
-      DIRECT_DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
+      HMUX_DB_TEST: '1'
+      DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
+      DIRECT_DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:

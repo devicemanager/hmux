@@ -42,8 +42,8 @@ function routeRequest(incomingRequest: NextRequest) {
   const host = request.headers.get("host") ?? "";
   const { pathname } = request.nextUrl;
 
-  // A cmux Cloud machine dialing its reflection alias
-  // (`https://reflection.cmux.internal/<path>`): the platform edge marks the
+  // A hmux Cloud machine dialing its reflection alias
+  // (`https://reflection.hmux.internal/<path>`): the platform edge marks the
   // request with this header while injecting the machine's credential. Serve the
   // guest-facing reflection API; the header is a routing hint, never auth.
   if (request.headers.get(VM_REFLECTION_ALIAS_HEADER) === VM_REFLECTION_ALIAS_VALUE) {
@@ -146,7 +146,7 @@ function handleHostAndMachineRoutes(
 
   // coderouter has one hostname-independent landing page. In particular,
   // cmux.com/coderouter must not be rewritten to /<locale>/coderouter, because
-  // the page deliberately lives outside the localized cmux site tree.
+  // the page deliberately lives outside the localized hmux site tree.
   if (isCoderouterLandingPath(pathname)) {
     return NextResponse.next();
   }
@@ -157,14 +157,14 @@ function handleHostAndMachineRoutes(
     return NextResponse.next({ request: { headers: requestHeaders } });
   }
 
-  // cmux consumes this marker before navigation. If an ordinary browser
+  // hmux consumes this marker before navigation. If an ordinary browser
   // reaches the server, canonicalize the URL while preserving every public
   // query parameter.
   if (
-    request.nextUrl.searchParams.get("cmux_open_in_browser") === "split-right"
+    request.nextUrl.searchParams.get("hmux_open_in_browser") === "split-right"
   ) {
     const url = request.nextUrl.clone();
-    url.searchParams.delete("cmux_open_in_browser");
+    url.searchParams.delete("hmux_open_in_browser");
     return NextResponse.redirect(url, 307);
   }
 
@@ -208,7 +208,7 @@ function handleAgentAndImageRoutes(
     url.pathname = "/agent-page-variant";
     url.searchParams.set("path", pathname);
     const requestHeaders = new Headers(request.headers);
-    requestHeaders.set("x-cmux-agent-page-path", pathname);
+    requestHeaders.set("x-hmux-agent-page-path", pathname);
     return NextResponse.rewrite(url, {
       request: { headers: requestHeaders },
     });
@@ -290,14 +290,14 @@ function handleBillingAndCloudRoutes(
     return NextResponse.next();
   }
 
-  // Stripe returns cmux Cloud users to one fixed, status-qualified URL.
+  // Stripe returns hmux Cloud users to one fixed, status-qualified URL.
   // Keep it outside the localized route tree so every Checkout and portal
   // session can share the same production URL.
   if (pathname === "/cloud/billing" || pathname === "/cloud/billing/") {
     return NextResponse.next();
   }
 
-  // Protected VM domains hand users back to one fixed CMUX origin. Keep the
+  // Protected VM domains hand users back to one fixed HMUX origin. Keep the
   // opaque auth transaction URL stable while still selecting localized copy.
   if (pathname === "/cloud/access" || pathname === "/cloud/access/") {
     const requestHeaders = new Headers(request.headers);

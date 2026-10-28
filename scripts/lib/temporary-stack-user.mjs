@@ -111,8 +111,8 @@ function loadStackServerApp(configuration) {
 
 function credentialFileContents(email, password) {
   return [
-    `CMUX_UITEST_STACK_EMAIL=${JSON.stringify(email)}`,
-    `CMUX_UITEST_STACK_PASSWORD=${JSON.stringify(password)}`,
+    `HMUX_UITEST_STACK_EMAIL=${JSON.stringify(email)}`,
+    `HMUX_UITEST_STACK_PASSWORD=${JSON.stringify(password)}`,
     "",
   ].join("\n");
 }
@@ -127,7 +127,7 @@ export async function createTemporaryStackUser({
     throw new Error("state and credentials files must share one protected directory");
   }
   assertSecureDirectory(path.dirname(stateFile));
-  const email = `cmux-iroh-gate+${randomUUID()}@manaflow.ai`;
+  const email = `hmux-iroh-gate+${randomUUID()}@manaflow.ai`;
   const password = randomBytes(24).toString("base64url");
   let user;
   let operation = "createUser";
@@ -137,7 +137,7 @@ export async function createTemporaryStackUser({
       primaryEmailVerified: true,
       primaryEmailAuthEnabled: true,
       password,
-      displayName: "cmux Iroh production gate",
+      displayName: "hmux Iroh production gate",
     });
     const initialState = {
       schemaVersion: 1,

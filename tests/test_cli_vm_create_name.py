@@ -13,13 +13,13 @@ from test_cli_vm_resize import ResizeSocket
 class VMCreateNameTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
-        cls.cli = os.environ.get("CMUX_CLI_BIN", "")
+        cls.cli = os.environ.get("HMUX_CLI_BIN", "")
         if not cls.cli or not os.access(cls.cli, os.X_OK):
-            raise RuntimeError("Set CMUX_CLI_BIN to the built CLI")
+            raise RuntimeError("Set HMUX_CLI_BIN to the built CLI")
 
     def create(self, server: ResizeSocket, name: str | None) -> None:
-        environment = {key: value for key, value in os.environ.items() if not key.startswith("CMUX")}
-        environment.update({"CMUX_CLI_SENTRY_DISABLED": "1", "AppleLanguages": "(en)"})
+        environment = {key: value for key, value in os.environ.items() if not key.startswith("HMUX")}
+        environment.update({"HMUX_CLI_SENTRY_DISABLED": "1", "AppleLanguages": "(en)"})
         arguments = [self.cli, "--socket", server.path, "vm", "new", "--detach"]
         if name is not None:
             arguments += ["--name", name]

@@ -1,6 +1,6 @@
 import AppKit
-import CMUXMobileCore
-import CmuxWorkspaces
+import HMUXMobileCore
+import HmuxWorkspaces
 import Foundation
 
 // MARK: - Mobile workspace list (iOS-facing payloads)
@@ -243,7 +243,7 @@ extension TerminalController {
         }
         let simulatorEncoder = MobileSimulatorWireEncoder()
         let simulators: [[String: Any]]
-        if CmuxFeatureFlags.shared.isSimulatorEnabled {
+        if HmuxFeatureFlags.shared.isSimulatorEnabled {
             simulators = mobileSimulatorPanels(in: workspace).compactMap { panel in
                 simulatorEncoder.object(MobileHostService.shared.mobileSimulatorStreamCoordinator.descriptor(
                     panel: panel
@@ -489,7 +489,7 @@ extension TerminalController {
         var currentDirectoryByWorkspaceID: [UUID: String] = [:]
         currentDirectoryByWorkspaceID.reserveCapacity(tabs.count)
         let configStore = tabManager.flatMap {
-            AppDelegate.shared?.mainWindowContext(for: $0)?.cmuxConfigStore
+            AppDelegate.shared?.mainWindowContext(for: $0)?.hmuxConfigStore
         }
         for workspace in tabs {
             currentDirectoryByWorkspaceID[workspace.id] = workspace.currentDirectory
@@ -527,11 +527,11 @@ extension TerminalController {
     }
 
     /// Resolves the icon the Mac row actually renders, including per-directory
-    /// `cmux.json` configuration and the shared validated folder fallback.
+    /// `hmux.json` configuration and the shared validated folder fallback.
     func mobileWorkspaceGroupEffectiveIconSymbol(
         _ group: WorkspaceGroup,
         anchorCwd: String?,
-        configStore: CmuxConfigStore?
+        configStore: HmuxConfigStore?
     ) -> String {
         let configured = configStore?
             .resolveWorkspaceGroupConfig(forCwd: anchorCwd)?

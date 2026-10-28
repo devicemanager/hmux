@@ -1,9 +1,9 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import WebKit
 
 @MainActor
-final class AgentSessionWebView: CmuxUndoableWebView {
+final class AgentSessionWebView: HmuxUndoableWebView {
     var onPointerDown: (() -> Void)?
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
@@ -11,7 +11,7 @@ final class AgentSessionWebView: CmuxUndoableWebView {
     }
 
     override func isWebContentUndoRedoCommandEquivalent(_ event: NSEvent) -> Bool {
-        event.cmuxIsUndoRedoCommandEquivalent
+        event.hmuxIsUndoRedoCommandEquivalent
     }
 
     override func mouseDown(with event: NSEvent) {

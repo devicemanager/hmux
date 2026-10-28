@@ -126,7 +126,7 @@ export function registrationTranscript(input: {
   readonly payloadSha256: string;
 }): Uint8Array {
   return Buffer.from(
-    `cmux/iroh/device-registration/v1\n${input.challengeId}\n${input.nonce}\n${input.payloadSha256}`,
+    `hmux/iroh/device-registration/v1\n${input.challengeId}\n${input.nonce}\n${input.payloadSha256}`,
     "utf8",
   );
 }
@@ -167,7 +167,7 @@ export function bindingRequestTranscript(input: Omit<
   "signature"
 >): Uint8Array {
   return Buffer.from(
-    `cmux/iroh/binding-request/v1\n${input.bindingId}\n${input.method}\n${input.path}\n${input.timestampSeconds}\n${input.bodySha256}`,
+    `hmux/iroh/binding-request/v1\n${input.bindingId}\n${input.method}\n${input.path}\n${input.timestampSeconds}\n${input.bodySha256}`,
     "utf8",
   );
 }
@@ -217,7 +217,7 @@ export function deriveLanRendezvousKey(
     throw new IrohConfigurationError({ component: "lan_discovery" });
   }
   return createHmac("sha256", secret)
-    .update("cmux/iroh/lan-rendezvous/v1\0", "utf8")
+    .update("hmux/iroh/lan-rendezvous/v1\0", "utf8")
     .update(userId, "utf8")
     .update("\0", "utf8")
     .update(String(generation), "utf8")
@@ -233,7 +233,7 @@ export function deriveAccountSubject(
     throw new IrohConfigurationError({ component: "account_subject" });
   }
   return createHmac("sha256", secret)
-    .update("cmux/iroh/account-subject/v1\0", "utf8")
+    .update("hmux/iroh/account-subject/v1\0", "utf8")
     .update(userId, "utf8")
     .digest("base64url");
 }
@@ -879,7 +879,7 @@ function offlinePairProofHash(
 ): string {
   return sha256(Buffer.concat([
     Buffer.from(
-      `cmux/iroh/offline-pair-session/v1\n${sessionId}\n${acceptor.bindingId}\n${acceptor.deviceId}\n${acceptor.endpointId}\n${acceptor.identityGeneration}\n${acceptor.platform}\n`,
+      `hmux/iroh/offline-pair-session/v1\n${sessionId}\n${acceptor.bindingId}\n${acceptor.deviceId}\n${acceptor.endpointId}\n${acceptor.identityGeneration}\n${acceptor.platform}\n`,
       "utf8",
     ),
     Buffer.from(proof),

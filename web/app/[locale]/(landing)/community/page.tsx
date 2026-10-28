@@ -5,11 +5,11 @@ import { communitySeoCopy } from "@/i18n/audited-seo";
 import { SiteHeader } from "@/app/[locale]/components/site-header";
 import { OfficialLinks } from "@/app/[locale]/components/official-links";
 import {
-  awesomeCmuxCategoryOrder,
-  awesomeCmuxCuratedProjectRows,
-  awesomeCmuxProjects,
-  awesomeCmuxSourceUrl,
-} from "./awesome-cmux-projects";
+  awesomeHmuxCategoryOrder,
+  awesomeHmuxCuratedProjectRows,
+  awesomeHmuxProjects,
+  awesomeHmuxSourceUrl,
+} from "./awesome-hmux-projects";
 import { CommunityProjectBrowser } from "./project-browser";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
@@ -32,16 +32,16 @@ export async function generateMetadata({ params }: { params: Promise<{ locale: s
   };
 }
 
-const categorySummaries = awesomeCmuxCategoryOrder
+const categorySummaries = awesomeHmuxCategoryOrder
   .map((category) => ({
     category,
-    count: awesomeCmuxProjects.filter((project) =>
+    count: awesomeHmuxProjects.filter((project) =>
       (project.categories as readonly string[]).includes(category),
     ).length,
   }))
   .filter(({ count }) => count > 0);
 
-const categoryPlacementCount = awesomeCmuxProjects.reduce(
+const categoryPlacementCount = awesomeHmuxProjects.reduce(
   (total, project) => total + project.categories.length,
   0,
 );
@@ -52,7 +52,7 @@ export default function CommunityPage() {
   const numberFormatter = new Intl.NumberFormat(locale);
   const stats = [
     {
-      value: awesomeCmuxProjects.length,
+      value: awesomeHmuxProjects.length,
       label: t("projectsLabel"),
     },
     {
@@ -80,7 +80,7 @@ export default function CommunityPage() {
 
         <div className="mb-8 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <a
-            href={awesomeCmuxSourceUrl}
+            href={awesomeHmuxSourceUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="font-medium underline underline-offset-2 decoration-link-underline transition-colors hover:decoration-foreground"
@@ -88,7 +88,7 @@ export default function CommunityPage() {
             {t("sourceAction")}
           </a>
           <span className="text-muted">
-            {numberFormatter.format(awesomeCmuxCuratedProjectRows)}{" "}
+            {numberFormatter.format(awesomeHmuxCuratedProjectRows)}{" "}
             {t("sourceRowsLabel")}
           </span>
         </div>
@@ -108,7 +108,7 @@ export default function CommunityPage() {
         </div>
 
         <CommunityProjectBrowser
-          projects={awesomeCmuxProjects}
+          projects={awesomeHmuxProjects}
           categorySummaries={categorySummaries}
         />
       </main>

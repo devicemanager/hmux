@@ -1,6 +1,6 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxWorkspaces
+import HmuxAppKitSupportUI
+import HmuxWorkspaces
 import SwiftUI
 
 extension TextBoxInputContainer {
@@ -326,7 +326,7 @@ extension TextBoxInputContainer {
             submit()
         } label: {
             submitButtonActionImage(presentation.action, canSend: canSend)
-                .cmuxFont(size: TextBoxLayout.sendSymbolSize, weight: .bold)
+                .hmuxFont(size: TextBoxLayout.sendSymbolSize, weight: .bold)
                 .frame(
                     width: TextBoxSubmitActionImageSupport.iconSize,
                     height: TextBoxSubmitActionImageSupport.iconSize
@@ -387,7 +387,7 @@ extension TextBoxInputContainer {
                     height: TextBoxSubmitActionImageSupport.iconSize
                 )
         } else if let assetName = resolvedSubmitActionAssetName(for: action) {
-            CmuxResolvedIconImage(request: submitActionIconRequest(
+            HmuxResolvedIconImage(request: submitActionIconRequest(
                 assetName: assetName,
                 tintColor: action.id == "codex" ? .black : nil
             ))
@@ -418,7 +418,7 @@ extension TextBoxInputContainer {
                     height: TextBoxSubmitActionImageSupport.iconSize
                 )
         } else if let assetName = resolvedSubmitActionAssetName(for: action) {
-            CmuxResolvedIconImage(request: submitActionIconRequest(assetName: assetName))
+            HmuxResolvedIconImage(request: submitActionIconRequest(assetName: assetName))
                 .frame(
                     width: TextBoxSubmitActionImageSupport.iconSize,
                     height: TextBoxSubmitActionImageSupport.iconSize

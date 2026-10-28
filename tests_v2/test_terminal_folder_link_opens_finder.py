@@ -6,23 +6,23 @@ it went to the configured editor like a file (a VS Code window for a folder).
 
 The app must be a DEBUG build launched with the in-app Cmd-click harness
 printing the folder's absolute path:
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_SETUP=1
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_PATH=FIX/setup.json
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_FIXTURE_DIR=FIX
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_COMMAND_PATH=FIX/command.json
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_FORMAT=log
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_PREFIX="wrote "
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_SUFFIX=.
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_AS_ABSOLUTE_PATH=1
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_FILE_NAME=reports
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_SKIP_FIXTURE_FILE=1
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_CD_FIXTURE=1
-  CMUX_UI_TEST_CAPTURE_OPEN_PATH=FIX/open-editor.log
-  CMUX_UI_TEST_CAPTURE_OPEN_FOLDER_PATH=FIX/open-folder.log
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_SETUP=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_PATH=FIX/setup.json
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_FIXTURE_DIR=FIX
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_COMMAND_PATH=FIX/command.json
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_FORMAT=log
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_PREFIX="wrote "
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_SUFFIX=.
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_AS_ABSOLUTE_PATH=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_FILE_NAME=reports
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_SKIP_FIXTURE_FILE=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_CD_FIXTURE=1
+  HMUX_UI_TEST_CAPTURE_OPEN_PATH=FIX/open-editor.log
+  HMUX_UI_TEST_CAPTURE_OPEN_FOLDER_PATH=FIX/open-folder.log
 With FIX/reports present as a folder the click must open it in Finder; with no
 such folder or file the click must open nothing (no editor on a missing path).
 Run it where the app can be key (a whole capture mini or a local tagged build):
-  CMUX_FOLDER_LINK_FIXTURE=FIX python3 tests_v2/test_terminal_folder_link_opens_finder.py
+  HMUX_FOLDER_LINK_FIXTURE=FIX python3 tests_v2/test_terminal_folder_link_opens_finder.py
 """
 
 import json
@@ -30,7 +30,7 @@ import os
 import sys
 import time
 
-FIX = os.environ.get("CMUX_FOLDER_LINK_FIXTURE", os.path.expanduser("~/cmdclick-folder"))
+FIX = os.environ.get("HMUX_FOLDER_LINK_FIXTURE", os.path.expanduser("~/cmdclick-folder"))
 SETUP = os.path.join(FIX, "setup.json")
 COMMAND = os.path.join(FIX, "command.json")
 FOLDER = os.path.join(FIX, "reports")

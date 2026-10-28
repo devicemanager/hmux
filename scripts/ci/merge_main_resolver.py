@@ -20,14 +20,14 @@ from pathlib import Path
 
 DEFAULT_TOOLS_ROOT = Path(__file__).resolve().parents[2]
 
-PBXPROJ = "cmux.xcodeproj/project.pbxproj"
-SCHEMA_JSON = "web/data/cmux.schema.json"
+PBXPROJ = "hmux.xcodeproj/project.pbxproj"
+SCHEMA_JSON = "web/data/hmux.schema.json"
 SCHEMA_SWIFT = (
-    "Packages/macOS/CmuxFoundation/Sources/CmuxFoundation/ConfigValidation/"
-    "CmuxConfigSchema.generated.swift"
+    "Packages/macOS/HmuxFoundation/Sources/HmuxFoundation/ConfigValidation/"
+    "HmuxConfigSchema.generated.swift"
 )
 NORMALIZER = "scripts/normalize-pbxproj.py"
-SCHEMA_GENERATOR = "scripts/generate-cmux-config-schema.py"
+SCHEMA_GENERATOR = "scripts/generate-hmux-config-schema.py"
 XCSTRINGS_MERGER = "scripts/merge-xcstrings.py"
 
 # Wide conflict markers so a line of seven `<` inside the file cannot pass
@@ -558,10 +558,10 @@ class Resolver:
             self.tools_root, SCHEMA_GENERATOR, ["--root", str(self.repo.path)], self.repo.path,
         )
         if completed.returncode != 0:
-            self.block(SCHEMA_SWIFT, f"generate-cmux-config-schema.py failed: {tail(completed.stderr)}")
+            self.block(SCHEMA_SWIFT, f"generate-hmux-config-schema.py failed: {tail(completed.stderr)}")
             return
         method = "regenerated from the merged schema" + ("" if conflicted else " (both sides changed the schema)")
-        self.done(SCHEMA_SWIFT, "generate-cmux-config-schema.py, " + method)
+        self.done(SCHEMA_SWIFT, "generate-hmux-config-schema.py, " + method)
 
 
 def tail(text: str, limit: int = 300) -> str:
@@ -633,7 +633,7 @@ def finish(repo: Repo, result: Result, resolver: Resolver, unmerged: dict[str, s
         elif path == SCHEMA_SWIFT:
             continue  # regenerated below, once the schema JSON is known to be merged
         elif path == SCHEMA_JSON:
-            resolver.block(path, "schema source conflicts; resolve it, then run generate-cmux-config-schema.py")
+            resolver.block(path, "schema source conflicts; resolve it, then run generate-hmux-config-schema.py")
         elif path.endswith(".xcstrings"):
             resolver.xcstrings(path)
         elif path == PBXPROJ:

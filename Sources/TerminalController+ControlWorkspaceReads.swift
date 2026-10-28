@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxCore
+import HmuxControlSocket
+import HmuxCore
 import Foundation
 
 /// Workspace snapshots are built at the live main-actor ownership boundary.
@@ -20,7 +20,7 @@ extension TerminalController {
             customColor: workspace.customColor,
             latestConversationMessage: workspace.latestConversationMessage,
             latestSubmittedMessage: workspace.latestSubmittedMessage,
-            latestSubmittedAt: workspace.latestSubmittedAt.map(CmuxEventBus.isoTimestamp)
+            latestSubmittedAt: workspace.latestSubmittedAt.map(HmuxEventBus.isoTimestamp)
         )
     }
 

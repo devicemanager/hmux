@@ -27,9 +27,9 @@ GOOD_SLOTS = '{"glaeda-std-xcode-26.6": 42, "glaeda-light-xcode-26.6": 4, "glaed
 
 def env(**overrides: str) -> dict[str, str]:
     base = {
-        "CMUX_CI_RUNNER_VARIABLES": GOOD_RUNNERS,
+        "HMUX_CI_RUNNER_VARIABLES": GOOD_RUNNERS,
         "CI_OWNED_POOL_SLOTS": GOOD_SLOTS,
-        "CMUX_CI_XCODE_APP_PR": "/Applications/Xcode_26.6.app",
+        "HMUX_CI_XCODE_APP_PR": "/Applications/Xcode_26.6.app",
     }
     base.update(overrides)
     return base
@@ -55,21 +55,21 @@ class Values(unittest.TestCase):
     def test_runner_labels_the_guard_refuses_fail(self) -> None:
         for label in ("warp-macos-26-arm64-12x", "glaeda-std-xcode-26.6"):
             with self.subTest(label=label):
-                found = check.problems(env(CMUX_CI_RUNNER_VARIABLES=f"MACOS_RUNNER_PR={label}\n"))
+                found = check.problems(env(HMUX_CI_RUNNER_VARIABLES=f"MACOS_RUNNER_PR={label}\n"))
                 self.assertEqual(len(found), 1)
                 self.assertIn("MACOS_RUNNER_PR", found[0])
 
     def test_daemon_tests_never_share_the_pull_request_side_label(self) -> None:
         side = "CI_SIDE_LANE_RUNNER=glaeda-side-std-xcode-26.6\n"
-        found = check.problems(env(CMUX_CI_RUNNER_VARIABLES=GOOD_RUNNERS + side, CI_NEXT_DAEMON_POOL="glaeda-side-std-xcode-26.6"))
+        found = check.problems(env(HMUX_CI_RUNNER_VARIABLES=GOOD_RUNNERS + side, CI_NEXT_DAEMON_POOL="glaeda-side-std-xcode-26.6"))
         self.assertEqual(len(found), 1)
         self.assertIn("CI_NEXT_DAEMON_POOL", found[0])
         for pool in ("glaeda-side-light-xcode-26.6", ""):
             with self.subTest(pool=pool):
-                self.assertEqual(check.problems(env(CMUX_CI_RUNNER_VARIABLES=GOOD_RUNNERS + side, CI_NEXT_DAEMON_POOL=pool)), [])
+                self.assertEqual(check.problems(env(HMUX_CI_RUNNER_VARIABLES=GOOD_RUNNERS + side, CI_NEXT_DAEMON_POOL=pool)), [])
 
     def test_pin_daemon_tests_never_share_the_side_lane_or_the_promotion_pool(self) -> None:
-        # 2026-10-21: cmux-tui-pin-* pushes (one per merged pull request) take
+        # 2026-10-21: hmux-tui-pin-* pushes (one per merged pull request) take
         # CI_PIN_DAEMON_POOL, else CI_LIGHT_LANE_RUNNER. On the side label they
         # flooded pull request lanes; on CI_NEXT_DAEMON_POOL they would stall
         # the nightly-next promotion.
@@ -83,7 +83,7 @@ class Values(unittest.TestCase):
         for why, values, name in failing:
             with self.subTest(why):
                 light_line = f"CI_LIGHT_LANE_RUNNER={values.pop('light', light)}\n"
-                found = check.problems(env(CMUX_CI_RUNNER_VARIABLES=runners + light_line, **values))
+                found = check.problems(env(HMUX_CI_RUNNER_VARIABLES=runners + light_line, **values))
                 pin_found = [problem for problem in found if "pin" in problem]
                 self.assertEqual(len(pin_found), 1, found)
                 self.assertIn(name, pin_found[0])
@@ -95,13 +95,13 @@ class Values(unittest.TestCase):
         for why, values in passing:
             with self.subTest(why):
                 light_line = f"CI_LIGHT_LANE_RUNNER={light}\n"
-                self.assertEqual(check.problems(env(CMUX_CI_RUNNER_VARIABLES=runners + light_line, **values)), [])
+                self.assertEqual(check.problems(env(HMUX_CI_RUNNER_VARIABLES=runners + light_line, **values)), [])
             with self.subTest(why, warnings=True):
-                self.assertEqual(check.warnings(env(CMUX_CI_RUNNER_VARIABLES=runners + light_line, **values)), [])
+                self.assertEqual(check.warnings(env(HMUX_CI_RUNNER_VARIABLES=runners + light_line, **values)), [])
         # claude-sr2, 2026-10-21: until promotion gets its own label, the
         # light lane may serve both the promotion's daemon tests and the pin
         # pushes (CI_PIN_DAEMON_POOL unset): a warning, not a failure.
-        shared = env(CMUX_CI_RUNNER_VARIABLES=runners + f"CI_LIGHT_LANE_RUNNER={light}\n",
+        shared = env(HMUX_CI_RUNNER_VARIABLES=runners + f"CI_LIGHT_LANE_RUNNER={light}\n",
                      CI_PIN_DAEMON_POOL="", CI_NEXT_DAEMON_POOL=light)
         self.assertEqual(check.problems(shared), [])
         warned = check.warnings(shared)
@@ -110,20 +110,20 @@ class Values(unittest.TestCase):
         self.assertIn("CI_NEXT_DAEMON_POOL", warned[0])
         self.assertIn(light, warned[0])
         # A pin pool that is set never falls back to a warning.
-        self.assertTrue(check.problems(env(CMUX_CI_RUNNER_VARIABLES=runners + f"CI_LIGHT_LANE_RUNNER={light}\n",
+        self.assertTrue(check.problems(env(HMUX_CI_RUNNER_VARIABLES=runners + f"CI_LIGHT_LANE_RUNNER={light}\n",
                                            CI_PIN_DAEMON_POOL=light, CI_NEXT_DAEMON_POOL=light)))
         # Empties are ignored: no pin pool and no light lane is not a match.
-        self.assertEqual(check.problems(env(CMUX_CI_RUNNER_VARIABLES=GOOD_RUNNERS + "CI_LIGHT_LANE_RUNNER=\n",
+        self.assertEqual(check.problems(env(HMUX_CI_RUNNER_VARIABLES=GOOD_RUNNERS + "CI_LIGHT_LANE_RUNNER=\n",
                                             CI_PIN_DAEMON_POOL="", CI_NEXT_DAEMON_POOL="")), [])
 
     def test_nothing_to_check_is_a_failure_not_a_pass(self) -> None:
-        self.assertTrue(check.problems(env(CMUX_CI_RUNNER_VARIABLES="")))
-        self.assertTrue(check.problems(env(CMUX_CI_RUNNER_VARIABLES="not a pair")))
+        self.assertTrue(check.problems(env(HMUX_CI_RUNNER_VARIABLES="")))
+        self.assertTrue(check.problems(env(HMUX_CI_RUNNER_VARIABLES="not a pair")))
 
     def test_a_repeated_name_fails_instead_of_the_last_value_winning(self) -> None:
         # A value with a newline in it can read as a second NAME=value line.
         runners = "MACOS_RUNNER_PR=warp-macos-26-arm64-12x\nMACOS_RUNNER_PR=blacksmith-6vcpu-macos-26\n"
-        found = check.problems(env(CMUX_CI_RUNNER_VARIABLES=runners))
+        found = check.problems(env(HMUX_CI_RUNNER_VARIABLES=runners))
         self.assertEqual(len(found), 1)
         self.assertIn("repeats MACOS_RUNNER_PR", found[0])
 

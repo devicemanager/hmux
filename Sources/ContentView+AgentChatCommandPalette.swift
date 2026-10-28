@@ -1,6 +1,6 @@
 import AppKit
-import CmuxCommandPalette
-import CmuxTerminal
+import HmuxCommandPalette
+import HmuxTerminal
 import Foundation
 
 extension ContentView {
@@ -8,37 +8,37 @@ extension ContentView {
     func commandPaletteConfigActionID(for commandId: String) -> String? {
         switch commandId {
         case "palette.newTerminalTab":
-            return CmuxSurfaceTabBarBuiltInAction.newTerminal.configID
+            return HmuxSurfaceTabBarBuiltInAction.newTerminal.configID
         case "palette.newBrowserTab":
-            return CmuxSurfaceTabBarBuiltInAction.newBrowser.configID
+            return HmuxSurfaceTabBarBuiltInAction.newBrowser.configID
         case "palette.newSimulatorPane":
-            return CmuxSurfaceTabBarBuiltInAction.newSimulator.configID
+            return HmuxSurfaceTabBarBuiltInAction.newSimulator.configID
         case "palette.newAgentChat":
-            return CmuxSurfaceTabBarBuiltInAction.newAgentChat.configID
+            return HmuxSurfaceTabBarBuiltInAction.newAgentChat.configID
         case "palette.terminalSplitRight":
-            return CmuxSurfaceTabBarBuiltInAction.splitRight.configID
+            return HmuxSurfaceTabBarBuiltInAction.splitRight.configID
         case "palette.terminalSplitDown":
-            return CmuxSurfaceTabBarBuiltInAction.splitDown.configID
+            return HmuxSurfaceTabBarBuiltInAction.splitDown.configID
         case Self.commandPaletteCopyActionCommandID(.copyWorkingDirectory):
-            return CmuxSurfaceTabBarBuiltInAction.copyWorkingDirectory.configID
+            return HmuxSurfaceTabBarBuiltInAction.copyWorkingDirectory.configID
         case Self.commandPaletteCopyActionCommandID(.copyProjectRoot):
-            return CmuxSurfaceTabBarBuiltInAction.copyProjectRoot.configID
+            return HmuxSurfaceTabBarBuiltInAction.copyProjectRoot.configID
         case Self.commandPaletteCopyActionCommandID(.copyScreen):
-            return CmuxSurfaceTabBarBuiltInAction.copyScreen.configID
+            return HmuxSurfaceTabBarBuiltInAction.copyScreen.configID
         default:
             return nil
         }
     }
 
     /// Palette command id for a built-in copy action, e.g.
-    /// `palette.copyWorkingDirectory` for `cmux.copyWorkingDirectory`.
-    static func commandPaletteCopyActionCommandID(_ action: CmuxSurfaceTabBarBuiltInAction) -> String {
-        "palette." + action.configID.replacingOccurrences(of: "cmux.", with: "")
+    /// `palette.copyWorkingDirectory` for `hmux.copyWorkingDirectory`.
+    static func commandPaletteCopyActionCommandID(_ action: HmuxSurfaceTabBarBuiltInAction) -> String {
+        "palette." + action.configID.replacingOccurrences(of: "hmux.", with: "")
     }
 
     /// Returns the built-in Agent Chat palette contribution when its rollout is enabled.
     static func commandPaletteNewAgentChatContributions() -> [CommandPaletteCommandContribution] {
-        guard CmuxFeatureFlags.shared.isAgentChatUIEnabled else { return [] }
+        guard HmuxFeatureFlags.shared.isAgentChatUIEnabled else { return [] }
         return [CommandPaletteCommandContribution(
             commandId: "palette.newAgentChat",
             title: { _ in String(localized: "command.newAgentChat.title", defaultValue: "New agent chat") },
@@ -60,7 +60,7 @@ extension ContentView {
     /// Registers the shared Agent Chat action path with the command palette.
     func registerAgentChatCommandPaletteHandler(_ registry: inout CommandPaletteHandlerRegistry) {
         registry.register(commandId: "palette.newAgentChat") {
-            guard CmuxFeatureFlags.shared.isAgentChatUIEnabled else {
+            guard HmuxFeatureFlags.shared.isAgentChatUIEnabled else {
                 NSSound.beep()
                 return
             }
@@ -68,8 +68,8 @@ extension ContentView {
                 NSSound.beep()
                 return
             }
-            if !appDelegate.executeConfiguredCmuxAction(
-                id: CmuxSurfaceTabBarBuiltInAction.newAgentChat.configID,
+            if !appDelegate.executeConfiguredHmuxAction(
+                id: HmuxSurfaceTabBarBuiltInAction.newAgentChat.configID,
                 tabManager: tabManager,
                 preferredWindow: appDelegate.mainWindow(for: windowId)
             ) {
@@ -119,7 +119,7 @@ extension ContentView {
                         defaultValue: "Claude Code Teams"
                     )
                 },
-                subtitle: { _ in "cmux claude-teams" },
+                subtitle: { _ in "hmux claude-teams" },
                 keywords: ["claude", "claude-teams", "teams", "agent", "launcher"],
                 when: canLaunchFromCurrentWorkspace
             ))
@@ -133,7 +133,7 @@ extension ContentView {
                         defaultValue: "Codex Teams"
                     )
                 },
-                subtitle: { _ in "cmux codex-teams" },
+                subtitle: { _ in "hmux codex-teams" },
                 keywords: ["codex", "codex-teams", "teams", "agent", "launcher"],
                 when: canLaunchFromCurrentWorkspace
             ))

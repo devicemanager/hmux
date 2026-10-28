@@ -95,7 +95,7 @@ export async function POST(request: NextRequest) {
           markAscMutated();
           if (!(await isTestflightEligible(freshUser))) {
             // Protect against a non-cooperating eligibility writer. The shared
-            // lock handles cmux billing updates; this compensation closes any
+            // lock handles hmux billing updates; this compensation closes any
             // remaining change that becomes visible during ASC enrollment.
             const compensationUser = await stackApp.getUser(user.id);
             await removeProTesterAccess(

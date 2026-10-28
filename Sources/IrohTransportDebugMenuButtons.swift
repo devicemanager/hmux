@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxIrohTransport
+import HMUXMobileCore
+import HmuxIrohTransport
 import SwiftUI
 
 #if DEBUG

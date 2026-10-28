@@ -120,17 +120,17 @@ describe("billing portal route", () => {
   test("opens Stripe's plan switch flow on the active Pro subscription for flow=switch_plan", async () => {
     stripeSubscriptionRows = [{
       id: "sub_pro", status: "active", cancelAtPeriodEnd: false, plan: "pro",
-      raw: { items: { data: [{ price: { lookup_key: "cmux-pro-monthly-50" } }] } },
+      raw: { items: { data: [{ price: { lookup_key: "hmux-pro-monthly-50" } }] } },
     }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal?flow=switch_plan&plan=max"),
+      new NextRequest("https://hmux.test/api/billing/portal?flow=switch_plan&plan=max"),
     );
 
     expect(response.status).toBe(302);
     expect(createPortalSession).toHaveBeenCalledWith({
       customer: "cus_123",
-      return_url: "https://cmux.test/dashboard/billing",
+      return_url: "https://hmux.test/dashboard/billing",
       configuration: "bpc_switch",
       flow_data: {
         type: "subscription_update",
@@ -146,31 +146,31 @@ describe("billing portal route", () => {
     stripeSubscriptionRows = [];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal?flow=switch_plan&plan=max&cmux_source=pricing"),
+      new NextRequest("https://hmux.test/api/billing/portal?flow=switch_plan&plan=max&hmux_source=pricing"),
     );
 
     expect(response.status).toBe(302);
-    expect(response.headers.get("location")).toBe("https://cmux.test/api/billing/checkout?plan=max&cmux_source=pricing");
+    expect(response.headers.get("location")).toBe("https://hmux.test/api/billing/checkout?plan=max&hmux_source=pricing");
     expect(createPortalSession).not.toHaveBeenCalled();
   });
 
   test("sends a granted account without a Stripe customer from a switch link to checkout", async () => {
     customerRows = [];
-    returnNullUser = { ...signedInUser, clientReadOnlyMetadata: { cmuxVmPlan: "pro" } };
+    returnNullUser = { ...signedInUser, clientReadOnlyMetadata: { hmuxVmPlan: "pro" } };
 
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/portal?flow=switch_plan&plan=max"));
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/portal?flow=switch_plan&plan=max"));
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/api/billing/checkout?plan=max");
+    expect(response.headers.get("location")).toBe("https://hmux.test/api/billing/checkout?plan=max");
     expect(createPortalSession).not.toHaveBeenCalled();
   });
 
   test("sends a switch link for a price the switch portal does not list to the dashboard switch", async () => {
     stripeSubscriptionRows = [{
       id: "sub_pro", status: "active", cancelAtPeriodEnd: false, plan: "pro",
-      raw: { items: { data: [{ price: { lookup_key: "cmux-pro-yearly-288" } }] } },
+      raw: { items: { data: [{ price: { lookup_key: "hmux-pro-yearly-288" } }] } },
     }];
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/portal?flow=switch_plan&plan=max"));
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?change=max");
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/portal?flow=switch_plan&plan=max"));
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?change=max");
     expect(createPortalSession).not.toHaveBeenCalled();
   });
 
@@ -181,7 +181,7 @@ describe("billing portal route", () => {
         items: {
           data: [{
             price: {
-              lookup_key: "cmux-pro-yearly-480",
+              lookup_key: "hmux-pro-yearly-480",
               recurring: { interval: "year" },
             },
           }],
@@ -189,16 +189,16 @@ describe("billing portal route", () => {
       },
     }];
 
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/portal?flow=switch_plan&plan=max"));
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/portal?flow=switch_plan&plan=max"));
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?change=max");
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?change=max");
     expect(createPortalSession).not.toHaveBeenCalled();
   });
 
   test("sends a lifetime Founder's switch link to Max checkout, never the plan switch flow", async () => {
     stripeSubscriptionRows = [{ id: "sub_founder", status: "active", plan: "pro", raw: { metadata: { founders_edition: "true" } } }];
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/portal?flow=switch_plan&plan=max"));
-    expect(response.headers.get("location")).toBe("https://cmux.test/api/billing/checkout?plan=max");
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/portal?flow=switch_plan&plan=max"));
+    expect(response.headers.get("location")).toBe("https://hmux.test/api/billing/checkout?plan=max");
     expect(createPortalSession).not.toHaveBeenCalled();
   });
 
@@ -208,18 +208,18 @@ describe("billing portal route", () => {
     stripeSubscriptionRows = [
       {
         id: "sub_max", status: "active", cancelAtPeriodEnd: false, plan: "max",
-        raw: { items: { data: [{ price: { lookup_key: "cmux-max-monthly-200", recurring: { interval: "month" } } }] } },
+        raw: { items: { data: [{ price: { lookup_key: "hmux-max-monthly-200", recurring: { interval: "month" } } }] } },
       },
       { id: "sub_founder", status: "active", plan: "pro", raw: { metadata: { founders_edition: "true" } } },
     ];
-    const response = await GET(new NextRequest("https://cmux.test/api/billing/portal?flow=switch_plan&plan=pro"));
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?change=pro");
+    const response = await GET(new NextRequest("https://hmux.test/api/billing/portal?flow=switch_plan&plan=pro"));
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?change=pro");
     expect(createPortalSession).not.toHaveBeenCalled();
   });
 
   test("redirects signed-in users with a Stripe customer row to the portal session", async () => {
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://hmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
@@ -228,49 +228,49 @@ describe("billing portal route", () => {
     );
     expect(createPortalSession).toHaveBeenCalledWith({
       customer: "cus_123",
-      return_url: "https://cmux.test/dashboard/billing",
+      return_url: "https://hmux.test/dashboard/billing",
     });
     expect(getUser).toHaveBeenCalledWith({ or: "return-null" });
   });
 
   test("App Store portal block redirects to the direct dev-backend origin", async () => {
-    const previousTransport = process.env.CMUX_DEV_BACKEND_TRANSPORT;
-    const previousOrigin = process.env.CMUX_WWW_ORIGIN;
-    const previousHost = process.env.CMUX_DEV_BACKEND_TAILSCALE_HOST;
-    process.env.CMUX_DEV_BACKEND_TRANSPORT = "direct";
-    process.env.CMUX_DEV_BACKEND_TAILSCALE_HOST = "cmux-dev-backend-1.tail137216.ts.net";
-    process.env.CMUX_WWW_ORIGIN = "https://cmux-dev-backend-1.tail137216.ts.net:3916/";
+    const previousTransport = process.env.HMUX_DEV_BACKEND_TRANSPORT;
+    const previousOrigin = process.env.HMUX_WWW_ORIGIN;
+    const previousHost = process.env.HMUX_DEV_BACKEND_TAILSCALE_HOST;
+    process.env.HMUX_DEV_BACKEND_TRANSPORT = "direct";
+    process.env.HMUX_DEV_BACKEND_TAILSCALE_HOST = "hmux-dev-backend-1.tail137216.ts.net";
+    process.env.HMUX_WWW_ORIGIN = "https://hmux-dev-backend-1.tail137216.ts.net:3916/";
     try {
       const response = await GET(
         new NextRequest(
-          "https://0.0.0.0:3916/api/billing/portal?interval=year&cmux_distribution=appstore&cmux_scheme=cmux",
+          "https://0.0.0.0:3916/api/billing/portal?interval=year&hmux_distribution=appstore&hmux_scheme=hmux",
         ),
       );
 
       expect(response.status).toBe(302);
       expect(response.headers.get("location")).toBe(
-        "https://cmux-dev-backend-1.tail137216.ts.net:3916/app-pricing?cmux_app=1&cmux_distribution=appstore&billing=unavailable&interval=year",
+        "https://hmux-dev-backend-1.tail137216.ts.net:3916/app-pricing?hmux_app=1&hmux_distribution=appstore&billing=unavailable&interval=year",
       );
     } finally {
-      if (previousTransport === undefined) delete process.env.CMUX_DEV_BACKEND_TRANSPORT;
-      else process.env.CMUX_DEV_BACKEND_TRANSPORT = previousTransport;
-      if (previousOrigin === undefined) delete process.env.CMUX_WWW_ORIGIN;
-      else process.env.CMUX_WWW_ORIGIN = previousOrigin;
-      if (previousHost === undefined) delete process.env.CMUX_DEV_BACKEND_TAILSCALE_HOST;
-      else process.env.CMUX_DEV_BACKEND_TAILSCALE_HOST = previousHost;
+      if (previousTransport === undefined) delete process.env.HMUX_DEV_BACKEND_TRANSPORT;
+      else process.env.HMUX_DEV_BACKEND_TRANSPORT = previousTransport;
+      if (previousOrigin === undefined) delete process.env.HMUX_WWW_ORIGIN;
+      else process.env.HMUX_WWW_ORIGIN = previousOrigin;
+      if (previousHost === undefined) delete process.env.HMUX_DEV_BACKEND_TAILSCALE_HOST;
+      else process.env.HMUX_DEV_BACKEND_TAILSCALE_HOST = previousHost;
     }
   });
 
   test("blocks direct portal requests from the iOS App Store distribution", async () => {
     const response = await GET(
       new NextRequest(
-        "https://cmux.test/api/billing/portal?interval=year&cmux_distribution=appstore&cmux_scheme=cmux",
+        "https://hmux.test/api/billing/portal?interval=year&hmux_distribution=appstore&hmux_scheme=hmux",
       ),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/app-pricing?cmux_app=1&cmux_distribution=appstore&billing=unavailable&interval=year",
+      "https://hmux.test/app-pricing?hmux_app=1&hmux_distribution=appstore&billing=unavailable&interval=year",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(createPortalSession).not.toHaveBeenCalled();
@@ -282,7 +282,7 @@ describe("billing portal route", () => {
     customerRows = [{ id: "cus_anonymous" }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://hmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
@@ -294,7 +294,7 @@ describe("billing portal route", () => {
     expect(getUser).toHaveBeenCalledWith({ or: "anonymous-if-exists[deprecated]" });
     expect(createPortalSession).toHaveBeenCalledWith({
       customer: "cus_anonymous",
-      return_url: "https://cmux.test/dashboard/billing",
+      return_url: "https://hmux.test/dashboard/billing",
     });
   });
 
@@ -303,7 +303,7 @@ describe("billing portal route", () => {
     customerRows = [{ id: "cus_team" }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal?scope=team"),
+      new NextRequest("https://hmux.test/api/billing/portal?scope=team"),
     );
 
     expect(response.status).toBe(302);
@@ -313,7 +313,7 @@ describe("billing portal route", () => {
     // Legacy implicit team: the portal returns to that team's billing view.
     expect(createPortalSession).toHaveBeenCalledWith({
       customer: "cus_team",
-      return_url: "https://cmux.test/dashboard/billing?team=team-pro",
+      return_url: "https://hmux.test/dashboard/billing?team=team-pro",
     });
   });
 
@@ -321,13 +321,13 @@ describe("billing portal route", () => {
     customerRows = [{ id: "cus_user" }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal?scope=team"),
+      new NextRequest("https://hmux.test/api/billing/portal?scope=team"),
     );
 
     expect(response.status).toBe(302);
     expect(createPortalSession).toHaveBeenCalledWith({
       customer: "cus_user",
-      return_url: "https://cmux.test/dashboard/billing",
+      return_url: "https://hmux.test/dashboard/billing",
     });
   });
 
@@ -336,12 +336,12 @@ describe("billing portal route", () => {
     anonymousIfExistsUser = null;
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://hmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing",
+      "https://hmux.test/pricing",
     );
     expect(createPortalSession).not.toHaveBeenCalled();
   });
@@ -350,12 +350,12 @@ describe("billing portal route", () => {
     stripeConfigured = false;
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://hmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=unavailable",
+      "https://hmux.test/pricing?billing=unavailable",
     );
     expect(getUser).not.toHaveBeenCalled();
     expect(createPortalSession).not.toHaveBeenCalled();
@@ -365,12 +365,12 @@ describe("billing portal route", () => {
     customerRows = [];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://hmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=unavailable",
+      "https://hmux.test/pricing?billing=unavailable",
     );
     expect(captureBillingError).not.toHaveBeenCalled();
     expect(createPortalSession).not.toHaveBeenCalled();
@@ -381,12 +381,12 @@ describe("billing portal route", () => {
     stripeSubscriptionRows = [{ id: "sub_123", status: "active", plan: "pro", scope: "user" }];
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://hmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=unavailable",
+      "https://hmux.test/pricing?billing=unavailable",
     );
     expect(captureBillingError).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -407,12 +407,12 @@ describe("billing portal route", () => {
     });
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://hmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=error",
+      "https://hmux.test/pricing?billing=error",
     );
     expect(captureBillingError).toHaveBeenCalled();
   });
@@ -423,12 +423,12 @@ describe("billing portal route", () => {
     });
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/portal"),
+      new NextRequest("https://hmux.test/api/billing/portal"),
     );
 
     expect(response.status).toBe(302);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/pricing?billing=error",
+      "https://hmux.test/pricing?billing=error",
     );
     expect(captureBillingError).toHaveBeenCalledWith(
       expect.objectContaining({

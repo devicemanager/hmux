@@ -40,7 +40,7 @@ jobs:
       BUN_INSTALL_CACHE_DIR: /home/runner/.cache/fast-checks/bun
       PLAYWRIGHT_BROWSERS_PATH: /home/runner/.cache/fast-checks/browsers
       ZIG_GLOBAL_CACHE_DIR: /home/runner/.cache/fast-checks/zig
-      CMUX_GHOSTTY_VT_ZIG_CPU: baseline
+      HMUX_GHOSTTY_VT_ZIG_CPU: baseline
     steps:
       - name: Validate request
         env:
@@ -57,7 +57,7 @@ jobs:
       - name: Mount warm checkout
         uses: useblacksmith/stickydisk@3f6be1451e3cad893b778bc93495c80452a5da26 # v1.7.2
         with:
-          key: cmux-fast-checks-checkout-v1
+          key: hmux-fast-checks-checkout-v1
           path: ${{ github.workspace }}/.fast-checks-checkout
           commit: on-change
 
@@ -102,7 +102,7 @@ jobs:
       - name: Mount package and compilation caches
         uses: useblacksmith/stickydisk@3f6be1451e3cad893b778bc93495c80452a5da26 # v1.7.2
         with:
-          key: cmux-fast-checks-v1
+          key: hmux-fast-checks-v1
           path: /home/runner/.cache/fast-checks
           commit: on-change
 
@@ -140,8 +140,8 @@ jobs:
       - name: Prepare full webview tests
         if: inputs.setup == 'webviews'
         run: |
-          if [[ -x scripts/cmux-next/build-web-bundles.sh ]]; then
-            ./scripts/cmux-next/build-web-bundles.sh --force
+          if [[ -x scripts/hmux-next/build-web-bundles.sh ]]; then
+            ./scripts/hmux-next/build-web-bundles.sh --force
           fi
           if [[ -x webviews/node_modules/.bin/playwright ]]; then
             cd webviews
@@ -162,7 +162,7 @@ jobs:
             fi
           fi
           bunx --no-install playwright install --with-deps chromium webkit
-          echo 'CMUX_GALLERY_IN_VM=1' >> "$GITHUB_ENV"
+          echo 'HMUX_GALLERY_IN_VM=1' >> "$GITHUB_ENV"
 
       - name: Initialize Rust native dependencies
         if: inputs.setup == 'rust'
@@ -180,7 +180,7 @@ jobs:
 
       - name: Set up pinned Rust
         if: inputs.setup == 'rust'
-        uses: ./.fast-checks-checkout/.github/actions/setup-cmux-tui-rust
+        uses: ./.fast-checks-checkout/.github/actions/setup-hmux-tui-rust
 
       - name: Run fast checks
         env:

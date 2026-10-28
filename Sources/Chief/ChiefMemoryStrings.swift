@@ -44,7 +44,7 @@ enum ChiefMemoryStrings {
     static func updated(_ relative: String) -> String {
         String(format: String(localized: "chief.memory.sheet.updated", defaultValue: "Updated %@"), relative)
     }
-    /// Who saved a note: Chief in a turn (`chief`), someone running `cmux chief memory add` in a
+    /// Who saved a note: Chief in a turn (`chief`), someone running `hmux chief memory add` in a
     /// terminal (`cli`; notes Chief saved before turns were told apart carry it too, so it names
     /// the command line, not a person), the user in the app (`app`), or another tag shown as is.
     static func source(_ tag: String) -> String {

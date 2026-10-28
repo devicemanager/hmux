@@ -22,7 +22,7 @@ export type VmHealthStaffView = {
     readonly stale: boolean;
   } | null;
   readonly report: VmHealthReport | null;
-  /** Keyed by cmux user id. Only staff ever receive this map. */
+  /** Keyed by hmux user id. Only staff ever receive this map. */
   readonly owners: Readonly<Record<string, VmHealthOwnerContact>>;
 };
 

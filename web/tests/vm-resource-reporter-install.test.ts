@@ -15,7 +15,7 @@ describe("snapshot-v2 guest contract", () => {
   test.each(["create", "restore"])("does not install guest assets during %s", async (operation) => {
     const { provider, commands, writes } = fixture();
     const result = operation === "create" ? await provider.create({ image: "sh-snapshot-v2", imageSize: { name: "md", cpu: 8, memoryMb: 16384, storageMb: 65536 }, network: { id: "vpc-snapshot" } }) : await provider.restore("sh-snapshot-v2", { network: { id: "vpc-snapshot" } });
-    expect(result.providerMetadata).toMatchObject({ cmuxTuiContract: "snapshot-v2" });
+    expect(result.providerMetadata).toMatchObject({ hmuxTuiContract: "snapshot-v2" });
     expect(commands).toEqual([]);
     expect(writes).toEqual([]);
   });

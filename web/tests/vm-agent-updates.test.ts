@@ -40,7 +40,7 @@ import {
   type GuestAgentUpdatesPaths,
 } from "../services/vms/guestAgentUpdates";
 import { GUEST_AGENT_UPDATE_DOMAINS, type GuestAgent } from "../services/vms/images/agents";
-import { CMUX_REQUIRED_DOMAINS } from "../services/vms/networkPolicy";
+import { HMUX_REQUIRED_DOMAINS } from "../services/vms/networkPolicy";
 
 // A fake GitHub: the releases API (latest + list) and the release-asset
 // downloads, both read from files in `dir` on every request so a test can
@@ -225,7 +225,7 @@ function npmInstalled(g: Guest, binary: string, version: string): void {
 function relink(g: Guest, binary: string, target: string): void {
   const entry = path.join(g.options.binDir, binary);
   if (binary === "opencode") {
-    const real = path.join(g.options.libexecDir, "cmux-opencode-real");
+    const real = path.join(g.options.libexecDir, "hmux-opencode-real");
     rmSync(real, { force: true });
     symlinkSync(target, real);
     rmSync(entry, { force: true });
@@ -238,10 +238,10 @@ function relink(g: Guest, binary: string, target: string): void {
 
 /** A guest with every agent standalone at 1.0.0, and a channel whose latest is that release, published long ago. */
 async function guest(setting: "latest" | "image" | null = "latest"): Promise<Guest> {
-  const root = realpathSync(mkdtempSync(path.join(tmpdir(), "cmux-agent-updates-")));
+  const root = realpathSync(mkdtempSync(path.join(tmpdir(), "hmux-agent-updates-")));
   roots.push(root);
   const github = path.join(root, "github");
-  const configDir = path.join(root, "etc/cmux");
+  const configDir = path.join(root, "etc/hmux");
   const nvmBin = path.join(root, "nvm/bin");
   const binDir = path.join(root, "usr/local/bin");
   const libexecDir = path.join(root, "usr/local/libexec");
@@ -262,7 +262,7 @@ async function guest(setting: "latest" | "image" | null = "latest"): Promise<Gue
     nvmBin,
     options: {
       ...GUEST_AGENT_UPDATER_DEFAULTS,
-      root: path.join(root, "opt/cmux-agents"),
+      root: path.join(root, "opt/hmux-agents"),
       node: path.join(binDir, "node"),
       binDir,
       libexecDir,
@@ -374,7 +374,7 @@ function fakeClock(g: Guest, opts: { jumps?: number[]; rewriteMarkerAt?: number 
 
 /** What `binary` on PATH runs now: its --version output, through the real links. */
 async function runs(g: Guest, binary: string): Promise<string> {
-  const entry = binary === "opencode" ? path.join(g.options.libexecDir, "cmux-opencode-real") : path.join(g.options.binDir, binary);
+  const entry = binary === "opencode" ? path.join(g.options.libexecDir, "hmux-opencode-real") : path.join(g.options.binDir, binary);
   return (await runChild(entry, ["--version"])).stdout.trim();
 }
 
@@ -383,7 +383,7 @@ describe("guest agent updates", () => {
     expect(GUEST_AGENTS.map(({ npm, binary }) => ({ pkg: npm, binary })))
       .toEqual(AGENT_PIN_ARGS.map(({ pkg, binary }) => ({ pkg, binary })));
     expect(GUEST_AGENTS.map(({ npm }) => npm)).toEqual(devboxAgentPins().map((pin) => pin.pkg));
-    for (const domain of GUEST_AGENT_UPDATE_DOMAINS) expect(CMUX_REQUIRED_DOMAINS).toContain(domain);
+    for (const domain of GUEST_AGENT_UPDATE_DOMAINS) expect(HMUX_REQUIRED_DOMAINS).toContain(domain);
     // No npm anywhere in what the guest runs.
     for (const mode of ["update", "install"] as const) {
       const command = mode === "install"
@@ -397,7 +397,7 @@ describe("guest agent updates", () => {
   test("image only records the setting; latest also starts a detached updater", async () => {
     const image = guestAgentUpdatesCommand("image");
     expect(image).toContain("image > \"$tmp\"");
-    expect(image).toContain("/etc/cmux/agent-updates");
+    expect(image).toContain("/etc/hmux/agent-updates");
     expect(image).not.toContain("setsid");
     const latest = guestAgentUpdatesCommand("latest");
     expect(latest).toContain("latest > \"$tmp\"");
@@ -437,12 +437,12 @@ describe("guest agent updates", () => {
   });
 
   test("the resume window equals the boot supervisor's housekeeping delay", () => {
-    const boot = readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "../services/vms/images/devbox/cmux-devbox-boot"), "utf8");
+    const boot = readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), "../services/vms/images/devbox/hmux-devbox-boot"), "utf8");
     const delay = /^HOUSEKEEPING_DELAY=(\d+)min$/m.exec(boot);
     expect(delay).not.toBeNull();
     expect(Number(delay![1]) * 60).toBe(GUEST_AGENT_UPDATES_RESUME_WINDOW_SECONDS);
     expect(boot).toContain(': > "$TEMPLATE_RUN_DIR/clone-started"');
-    expect(GUEST_CLONE_STARTED_MARKER).toBe("/run/cmux/clone-started");
+    expect(GUEST_CLONE_STARTED_MARKER).toBe("/run/hmux/clone-started");
   });
 
   test("a just-resumed clone waits out its resume window before fetching anything", async () => {
@@ -562,7 +562,7 @@ describe("guest agent updates", () => {
         const version = state(g).versions[binary];
         expect(entry).toBe(binary === "opencode" ? path.join(g.configDir, "opencode") : path.join(g.options.root, binary, version!, member));
       }
-      expect(readlinkSync(path.join(g.options.libexecDir, "cmux-opencode-real"))).toBe(path.join(g.options.root, "opencode/1.2.0/opencode"));
+      expect(readlinkSync(path.join(g.options.libexecDir, "hmux-opencode-real"))).toBe(path.join(g.options.root, "opencode/1.2.0/opencode"));
       // The previous version stays for anything still running it.
       expect(existsSync(path.join(g.options.root, "claude/1.0.0/claude"))).toBe(true);
     })();
@@ -570,12 +570,12 @@ describe("guest agent updates", () => {
 
   test("an update keeps claude behind its sign-in launcher and moves the real link", async () => {
     const g = await guest();
-    // An image with the claude launcher (/etc/cmux/claude): the entry is the
-    // launcher, the version sits behind cmux-claude-real.
+    // An image with the claude launcher (/etc/hmux/claude): the entry is the
+    // launcher, the version sits behind hmux-claude-real.
     writeFileSync(path.join(g.configDir, "claude"), "#!/bin/bash\n");
     chmodSync(path.join(g.configDir, "claude"), 0o755);
     const entry = path.join(g.options.binDir, "claude");
-    const real = path.join(g.options.libexecDir, "cmux-claude-real");
+    const real = path.join(g.options.libexecDir, "hmux-claude-real");
     symlinkSync(readlinkSync(entry), real);
     rmSync(entry);
     symlinkSync(path.join(g.configDir, "claude"), entry);
@@ -681,7 +681,7 @@ describe("guest agent updates", () => {
     // pi rewrites its command line to "pi"; only the shell's "_" names its nvm link.
     mkdirSync(path.join(g.options.procRoot, "4343"));
     writeFileSync(path.join(g.options.procRoot, "4343/cmdline"), "pi\0");
-    writeFileSync(path.join(g.options.procRoot, "4343/environ"), `HOME=/home/cmux\0_=${path.join(g.nvmBin, "pi")}\0`);
+    writeFileSync(path.join(g.options.procRoot, "4343/environ"), `HOME=/home/hmux\0_=${path.join(g.nvmBin, "pi")}\0`);
     npmInstalled(g, "pi", "1.0.0");
     // Our own finished installs of these do not exist yet.
     for (const binary of ["claude", "codex", "opencode", "pi"]) rmSync(path.join(g.options.root, binary), { recursive: true });
@@ -693,7 +693,7 @@ describe("guest agent updates", () => {
     expect(state(g).versions).toMatchObject({ claude: "1.1.0", codex: "1.0.0", opencode: "1.0.0" });
     expect(realpathSync(path.join(g.options.binDir, "codex"))).toBe(path.join(g.options.root, "codex/1.0.0/bin/codex"));
     expect(readlinkSync(path.join(g.options.binDir, "opencode"))).toBe(path.join(g.configDir, "opencode"));
-    expect(readlinkSync(path.join(g.options.libexecDir, "cmux-opencode-real"))).toBe(path.join(g.options.root, "opencode/1.0.0/opencode"));
+    expect(readlinkSync(path.join(g.options.libexecDir, "hmux-opencode-real"))).toBe(path.join(g.options.root, "opencode/1.0.0/opencode"));
     // nvm's entry points are gone, so login shells (nvm first on PATH) reach the standalone copies.
     for (const binary of ["claude", "codex", "opencode"]) expect(existsSync(path.join(g.nvmBin, binary))).toBe(false);
     // Unused packages are deleted; the one a process runs from stays until it exits.

@@ -1,5 +1,5 @@
-import CmuxBrowser
-import CmuxControlSocket
+import HmuxBrowser
+import HmuxControlSocket
 import Foundation
 
 extension TerminalController {

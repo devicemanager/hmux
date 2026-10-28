@@ -1,5 +1,5 @@
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxTerminal
+import HmuxTerminalCore
 import Foundation
 
 extension WorkspaceTerminalFontSizeCoordinator {

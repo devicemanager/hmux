@@ -4,35 +4,35 @@
 # an app-authored receipt outside its redirected HOME and lsof's executable
 # vnode for the live PID. Nothing in this file reads a process command line.
 
-cmux_select_app_host_lsof() {
-  if [ "${CMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" = "1" ]; then
-    case "${CMUX_APP_HOST_LSOF:-}" in
+hmux_select_app_host_lsof() {
+  if [ "${HMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" = "1" ]; then
+    case "${HMUX_APP_HOST_LSOF:-}" in
       /*) ;;
       *)
         echo "FAIL: app-host test lsof override must be an absolute path" >&2
         return 1
         ;;
     esac
-    if [ ! -x "$CMUX_APP_HOST_LSOF" ]; then
+    if [ ! -x "$HMUX_APP_HOST_LSOF" ]; then
       echo "FAIL: app-host test lsof override is not executable" >&2
       return 1
     fi
-    CMUX_SELECTED_APP_HOST_LSOF="$CMUX_APP_HOST_LSOF"
+    HMUX_SELECTED_APP_HOST_LSOF="$HMUX_APP_HOST_LSOF"
     return 0
   fi
 
-  CMUX_SELECTED_APP_HOST_LSOF=/usr/sbin/lsof
-  if [ ! -x "$CMUX_SELECTED_APP_HOST_LSOF" ]; then
+  HMUX_SELECTED_APP_HOST_LSOF=/usr/sbin/lsof
+  if [ ! -x "$HMUX_SELECTED_APP_HOST_LSOF" ]; then
     echo "FAIL: /usr/sbin/lsof is unavailable for app-host verification" >&2
     return 1
   fi
 }
 
-cmux_run_app_host_lsof() {
-  "$CMUX_SELECTED_APP_HOST_LSOF" -w "$@"
+hmux_run_app_host_lsof() {
+  "$HMUX_SELECTED_APP_HOST_LSOF" -w "$@"
 }
 
-cmux_validate_app_host_key() {
+hmux_validate_app_host_key() {
   case "$1" in
     [0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f])
       return 0
@@ -44,7 +44,7 @@ cmux_validate_app_host_key() {
   esac
 }
 
-cmux_validate_app_host_receipt_dir() {
+hmux_validate_app_host_receipt_dir() {
   local receipt_dir="$1"
   case "$receipt_dir" in
     /)
@@ -71,10 +71,10 @@ cmux_validate_app_host_receipt_dir() {
     echo "FAIL: app-host receipt directory changed identity" >&2
     return 1
   fi
-  CMUX_VALIDATED_APP_HOST_RECEIPT_DIR="$resolved_receipt_dir"
+  HMUX_VALIDATED_APP_HOST_RECEIPT_DIR="$resolved_receipt_dir"
 }
 
-cmux_validate_app_host_derived_data() {
+hmux_validate_app_host_derived_data() {
   local derived_data_path="$1"
   case "$derived_data_path" in
     /)
@@ -101,12 +101,12 @@ cmux_validate_app_host_derived_data() {
     echo "FAIL: app-host DerivedData path changed identity" >&2
     return 1
   fi
-  CMUX_VALIDATED_APP_HOST_DERIVED_DATA="$resolved_derived_data"
+  HMUX_VALIDATED_APP_HOST_DERIVED_DATA="$resolved_derived_data"
 }
 
 # Return success only for the one executable layout produced by an Xcode
 # DerivedData root. The configuration component is exactly one path segment.
-cmux_app_host_executable_is_scoped() {
+hmux_app_host_executable_is_scoped() {
   local derived_data_path="$1"
   local executable="$2"
   local products_prefix remainder configuration
@@ -119,15 +119,15 @@ cmux_app_host_executable_is_scoped() {
   if [ -z "$configuration" ] || [ "$configuration" = "." ] || [ "$configuration" = ".." ]; then
     return 1
   fi
-  [ "$remainder" = "$configuration/cmux DEV.app/Contents/MacOS/cmux DEV" ]
+  [ "$remainder" = "$configuration/hmux DEV.app/Contents/MacOS/hmux DEV" ]
 }
 
-cmux_validate_app_host_executable_scope() {
+hmux_validate_app_host_executable_scope() {
   local derived_data_path="$1"
   local executable="$2"
-  cmux_validate_app_host_derived_data "$derived_data_path" || return 1
-  if ! cmux_app_host_executable_is_scoped \
-    "$CMUX_VALIDATED_APP_HOST_DERIVED_DATA" "$executable"; then
+  hmux_validate_app_host_derived_data "$derived_data_path" || return 1
+  if ! hmux_app_host_executable_is_scoped \
+    "$HMUX_VALIDATED_APP_HOST_DERIVED_DATA" "$executable"; then
     echo "FAIL: app-host receipt executable is outside the supplied DerivedData target" >&2
     return 1
   fi
@@ -151,10 +151,10 @@ cmux_validate_app_host_executable_scope() {
   fi
 }
 
-cmux_read_app_host_receipt() {
+hmux_read_app_host_receipt() {
   local receipt_file="$1"
   local expected_key="$2"
-  cmux_validate_app_host_key "$expected_key" || return 1
+  hmux_validate_app_host_key "$expected_key" || return 1
   if [ -L "$receipt_file" ] || [ ! -f "$receipt_file" ]; then
     echo "FAIL: app-host process receipt is unavailable" >&2
     return 1
@@ -214,19 +214,19 @@ cmux_read_app_host_receipt() {
       ;;
   esac
 
-  CMUX_PARSED_APP_HOST_RECEIPT_PID="$receipt_pid"
-  CMUX_PARSED_APP_HOST_RECEIPT_EXECUTABLE="$receipt_executable"
-  CMUX_PARSED_APP_HOST_RECEIPT_FD="$receipt_fd"
+  HMUX_PARSED_APP_HOST_RECEIPT_PID="$receipt_pid"
+  HMUX_PARSED_APP_HOST_RECEIPT_EXECUTABLE="$receipt_executable"
+  HMUX_PARSED_APP_HOST_RECEIPT_FD="$receipt_fd"
 }
 
-# Set CMUX_APP_HOST_PRIMARY_EXECUTABLE. Return 2 when the PID has no text vnode,
+# Set HMUX_APP_HOST_PRIMARY_EXECUTABLE. Return 2 when the PID has no text vnode,
 # which means the receipt is stale. Return 1 for malformed lsof output.
-cmux_app_host_primary_executable() {
+hmux_app_host_primary_executable() {
   local pid="$1"
-  cmux_select_app_host_lsof || return 1
+  hmux_select_app_host_lsof || return 1
 
   local output status line reported_pid first_executable
-  if output="$(cmux_run_app_host_lsof -a -p "$pid" -d txt -Ffn)"; then
+  if output="$(hmux_run_app_host_lsof -a -p "$pid" -d txt -Ffn)"; then
     status=0
   else
     status=$?
@@ -273,16 +273,16 @@ cmux_app_host_primary_executable() {
   fi
   # macOS appends this literal suffix when the process still owns the vnode
   # after its product tree was removed. The receipt records the launch path.
-  CMUX_APP_HOST_PRIMARY_EXECUTABLE="${first_executable% (deleted)}"
+  HMUX_APP_HOST_PRIMARY_EXECUTABLE="${first_executable% (deleted)}"
 }
 
 # lsof exits 1 both for a search that found nothing and for an error, so an
 # empty filtered query proves nothing on its own. Positive evidence that a
 # live PID does not hold the receipt: lsof lists that PID's open files, at
 # least one of them, and none is the receipt file on any descriptor.
-cmux_app_host_pid_lists_without_receipt() {
+hmux_app_host_pid_lists_without_receipt() {
   local pid="$1" receipt_file="$2" output line listed=0 files=0
-  output="$(cmux_run_app_host_lsof -a -p "$pid" -Ffn)" || return 1
+  output="$(hmux_run_app_host_lsof -a -p "$pid" -Ffn)" || return 1
   while IFS= read -r line; do
     case "$line" in
       "p$pid") listed=1 ;;
@@ -298,14 +298,14 @@ cmux_app_host_pid_lists_without_receipt() {
 # Return 0 when PID holds the receipt descriptor, 2 when PID has exited, 3
 # when lsof lists the live PID's open files without the receipt, and 1 when
 # the descriptor could not be inspected or did not match.
-cmux_app_host_receipt_descriptor_is_open() {
+hmux_app_host_receipt_descriptor_is_open() {
   local pid="$1"
   local receipt_fd="$2"
   local receipt_file="$3"
-  cmux_select_app_host_lsof || return 1
+  hmux_select_app_host_lsof || return 1
 
   local output status line reported_pid reported_fd reported_access reported_path
-  if output="$(cmux_run_app_host_lsof \
+  if output="$(hmux_run_app_host_lsof \
     -a -p "$pid" -d "$receipt_fd" -Fafn -- "$receipt_file")"; then
     status=0
   else
@@ -316,7 +316,7 @@ cmux_app_host_receipt_descriptor_is_open() {
       return 2
     fi
     if [ "$status" -eq 1 ] \
-      && cmux_app_host_pid_lists_without_receipt "$pid" "$receipt_file"; then
+      && hmux_app_host_pid_lists_without_receipt "$pid" "$receipt_file"; then
       echo "FAIL: live app-host PID $pid does not hold its process receipt" >&2
       return 3
     fi
@@ -392,9 +392,9 @@ cmux_app_host_receipt_descriptor_is_open() {
 # executable and confirmably does not hold the receipt is a new process, and
 # the receipt is stale. Return 1 when that PID holds the receipt, which no
 # reuse can explain, or when lsof could not tell.
-cmux_app_host_receipt_pid_was_reused() {
+hmux_app_host_receipt_pid_was_reused() {
   local status detail
-  if detail="$(cmux_app_host_receipt_descriptor_is_open "$1" "$2" "$3" 2>&1 >/dev/null)"; then
+  if detail="$(hmux_app_host_receipt_descriptor_is_open "$1" "$2" "$3" 2>&1 >/dev/null)"; then
     return 1
   else
     status=$?
@@ -415,20 +415,20 @@ cmux_app_host_receipt_pid_was_reused() {
 
 # Return 0 for an exact live identity, 2 for a stale receipt, and 1 for any
 # mismatch. Callers must never signal a PID after a 1 or 2 result.
-cmux_verify_app_host_receipt() {
+hmux_verify_app_host_receipt() {
   local receipt_file="$1"
   local expected_key="$2"
   local derived_data_path="$3"
-  cmux_read_app_host_receipt "$receipt_file" "$expected_key" || return 1
+  hmux_read_app_host_receipt "$receipt_file" "$expected_key" || return 1
 
   local receipt_pid receipt_executable receipt_fd primary_status receipt_status
-  receipt_pid="$CMUX_PARSED_APP_HOST_RECEIPT_PID"
-  receipt_executable="$CMUX_PARSED_APP_HOST_RECEIPT_EXECUTABLE"
-  receipt_fd="$CMUX_PARSED_APP_HOST_RECEIPT_FD"
-  cmux_validate_app_host_executable_scope \
+  receipt_pid="$HMUX_PARSED_APP_HOST_RECEIPT_PID"
+  receipt_executable="$HMUX_PARSED_APP_HOST_RECEIPT_EXECUTABLE"
+  receipt_fd="$HMUX_PARSED_APP_HOST_RECEIPT_FD"
+  hmux_validate_app_host_executable_scope \
     "$derived_data_path" "$receipt_executable" || return 1
 
-  if cmux_app_host_primary_executable "$receipt_pid"; then
+  if hmux_app_host_primary_executable "$receipt_pid"; then
     primary_status=0
   else
     primary_status=$?
@@ -439,13 +439,13 @@ cmux_verify_app_host_receipt() {
   if [ "$primary_status" -ne 0 ]; then
     return 1
   fi
-  if [ "$CMUX_APP_HOST_PRIMARY_EXECUTABLE" != "$receipt_executable" ]; then
-    cmux_app_host_receipt_pid_was_reused \
+  if [ "$HMUX_APP_HOST_PRIMARY_EXECUTABLE" != "$receipt_executable" ]; then
+    hmux_app_host_receipt_pid_was_reused \
       "$receipt_pid" "$receipt_fd" "$receipt_file" && return 2
     echo "FAIL: app-host receipt does not match the PID executable vnode" >&2
     return 1
   fi
-  if cmux_app_host_receipt_descriptor_is_open \
+  if hmux_app_host_receipt_descriptor_is_open \
     "$receipt_pid" "$receipt_fd" "$receipt_file"; then
     receipt_status=0
   else
@@ -457,28 +457,28 @@ cmux_verify_app_host_receipt() {
   if [ "$receipt_status" -ne 0 ]; then
     return 1
   fi
-  CMUX_VERIFIED_APP_HOST_PID="$receipt_pid"
-  CMUX_VERIFIED_APP_HOST_EXECUTABLE="$receipt_executable"
+  HMUX_VERIFIED_APP_HOST_PID="$receipt_pid"
+  HMUX_VERIFIED_APP_HOST_EXECUTABLE="$receipt_executable"
 }
 
-cmux_app_host_add_pid() {
+hmux_app_host_add_pid() {
   local current="$1"
   local pid="$2"
   case " $current " in
-    *" $pid "*) CMUX_APP_HOST_UPDATED_PIDS="$current" ;;
-    *) CMUX_APP_HOST_UPDATED_PIDS="${current:+$current }$pid" ;;
+    *" $pid "*) HMUX_APP_HOST_UPDATED_PIDS="$current" ;;
+    *) HMUX_APP_HOST_UPDATED_PIDS="${current:+$current }$pid" ;;
   esac
 }
 
 # Inspect the first text vnode for every visible process and retain only exact
-# cmux DEV executable layouts beneath the supplied DerivedData root.
-cmux_scan_app_host_target_pids() {
+# hmux DEV executable layouts beneath the supplied DerivedData root.
+hmux_scan_app_host_target_pids() {
   local derived_data_path="$1"
-  cmux_validate_app_host_derived_data "$derived_data_path" || return 1
-  cmux_select_app_host_lsof || return 1
+  hmux_validate_app_host_derived_data "$derived_data_path" || return 1
+  hmux_select_app_host_lsof || return 1
 
   local output status line current_pid first_executable target_pids scoped_executable
-  if output="$(cmux_run_app_host_lsof -d txt -Ffn)"; then
+  if output="$(hmux_run_app_host_lsof -d txt -Ffn)"; then
     status=0
   else
     status=$?
@@ -496,10 +496,10 @@ cmux_scan_app_host_target_pids() {
       p*)
         if [ -n "$current_pid" ] && [ -n "$first_executable" ]; then
           scoped_executable="${first_executable% (deleted)}"
-          if cmux_app_host_executable_is_scoped \
-            "$CMUX_VALIDATED_APP_HOST_DERIVED_DATA" "$scoped_executable"; then
-            cmux_app_host_add_pid "$target_pids" "$current_pid"
-            target_pids="$CMUX_APP_HOST_UPDATED_PIDS"
+          if hmux_app_host_executable_is_scoped \
+            "$HMUX_VALIDATED_APP_HOST_DERIVED_DATA" "$scoped_executable"; then
+            hmux_app_host_add_pid "$target_pids" "$current_pid"
+            target_pids="$HMUX_APP_HOST_UPDATED_PIDS"
           fi
         fi
         current_pid="${line#p}"
@@ -528,31 +528,31 @@ cmux_scan_app_host_target_pids() {
   done < <(printf '%s\n' "$output")
   if [ -n "$current_pid" ] && [ -n "$first_executable" ]; then
     scoped_executable="${first_executable% (deleted)}"
-    if cmux_app_host_executable_is_scoped \
-      "$CMUX_VALIDATED_APP_HOST_DERIVED_DATA" "$scoped_executable"; then
-      cmux_app_host_add_pid "$target_pids" "$current_pid"
-      target_pids="$CMUX_APP_HOST_UPDATED_PIDS"
+    if hmux_app_host_executable_is_scoped \
+      "$HMUX_VALIDATED_APP_HOST_DERIVED_DATA" "$scoped_executable"; then
+      hmux_app_host_add_pid "$target_pids" "$current_pid"
+      target_pids="$HMUX_APP_HOST_UPDATED_PIDS"
     fi
   fi
-  CMUX_APP_HOST_TARGET_PIDS="$target_pids"
+  HMUX_APP_HOST_TARGET_PIDS="$target_pids"
 }
 
 # Print every live PID authorized by a matching receipt. If lsof sees any target
 # app host without such a receipt, return failure and print nothing.
-cmux_app_host_verified_pids() {
+hmux_app_host_verified_pids() {
   local receipt_dir="$1"
   local expected_key="$2"
   local derived_data_path="$3"
-  cmux_validate_app_host_receipt_dir "$receipt_dir" || return 1
-  cmux_validate_app_host_key "$expected_key" || return 1
-  cmux_validate_app_host_derived_data "$derived_data_path" || return 1
+  hmux_validate_app_host_receipt_dir "$receipt_dir" || return 1
+  hmux_validate_app_host_key "$expected_key" || return 1
+  hmux_validate_app_host_derived_data "$derived_data_path" || return 1
 
   local verified_pids receipt_file verify_status verified_pid target_pid
   verified_pids=""
-  for receipt_file in "$CMUX_VALIDATED_APP_HOST_RECEIPT_DIR"/*.receipt; do
+  for receipt_file in "$HMUX_VALIDATED_APP_HOST_RECEIPT_DIR"/*.receipt; do
     [ -e "$receipt_file" ] || continue
-    if cmux_verify_app_host_receipt \
-      "$receipt_file" "$expected_key" "$CMUX_VALIDATED_APP_HOST_DERIVED_DATA"; then
+    if hmux_verify_app_host_receipt \
+      "$receipt_file" "$expected_key" "$HMUX_VALIDATED_APP_HOST_DERIVED_DATA"; then
       verify_status=0
     else
       verify_status=$?
@@ -563,13 +563,13 @@ cmux_app_host_verified_pids() {
     if [ "$verify_status" -ne 0 ]; then
       return 1
     fi
-    verified_pid="$CMUX_VERIFIED_APP_HOST_PID"
-    cmux_app_host_add_pid "$verified_pids" "$verified_pid"
-    verified_pids="$CMUX_APP_HOST_UPDATED_PIDS"
+    verified_pid="$HMUX_VERIFIED_APP_HOST_PID"
+    hmux_app_host_add_pid "$verified_pids" "$verified_pid"
+    verified_pids="$HMUX_APP_HOST_UPDATED_PIDS"
   done
 
-  cmux_scan_app_host_target_pids "$CMUX_VALIDATED_APP_HOST_DERIVED_DATA" || return 1
-  for target_pid in $CMUX_APP_HOST_TARGET_PIDS; do
+  hmux_scan_app_host_target_pids "$HMUX_VALIDATED_APP_HOST_DERIVED_DATA" || return 1
+  for target_pid in $HMUX_APP_HOST_TARGET_PIDS; do
     case " $verified_pids " in
       *" $target_pid "*) ;;
       *)
@@ -584,13 +584,13 @@ cmux_app_host_verified_pids() {
   done
 }
 
-cmux_wait_for_app_host_exit() {
+hmux_wait_for_app_host_exit() {
   local pid="$1"
   local expected_executable="$2"
   local attempt primary_status
   attempt=0
   while [ "$attempt" -lt 50 ]; do
-    if cmux_app_host_primary_executable "$pid"; then
+    if hmux_app_host_primary_executable "$pid"; then
       primary_status=0
     else
       primary_status=$?
@@ -601,7 +601,7 @@ cmux_wait_for_app_host_exit() {
     if [ "$primary_status" -ne 0 ]; then
       return 1
     fi
-    if [ "$CMUX_APP_HOST_PRIMARY_EXECUTABLE" != "$expected_executable" ]; then
+    if [ "$HMUX_APP_HOST_PRIMARY_EXECUTABLE" != "$expected_executable" ]; then
       return 0
     fi
     /bin/sleep 0.1
@@ -610,20 +610,20 @@ cmux_wait_for_app_host_exit() {
   return 2
 }
 
-cmux_terminate_one_verified_app_host() {
+hmux_terminate_one_verified_app_host() {
   local receipt_file="$1"
   local expected_key="$2"
   local derived_data_path="$3"
   local missing_product_runner_root="${4:-}"
   local verify_status pid executable wait_status
   if [ -n "$missing_product_runner_root" ]; then
-    if cmux_verify_stale_app_host_receipt \
+    if hmux_verify_stale_app_host_receipt \
       "$receipt_file" "$expected_key" "$missing_product_runner_root"; then
       verify_status=0
     else
       verify_status=$?
     fi
-  elif cmux_verify_app_host_receipt \
+  elif hmux_verify_app_host_receipt \
     "$receipt_file" "$expected_key" "$derived_data_path"; then
     verify_status=0
   else
@@ -635,11 +635,11 @@ cmux_terminate_one_verified_app_host() {
   if [ "$verify_status" -ne 0 ]; then
     return 1
   fi
-  pid="$CMUX_VERIFIED_APP_HOST_PID"
-  executable="$CMUX_VERIFIED_APP_HOST_EXECUTABLE"
+  pid="$HMUX_VERIFIED_APP_HOST_PID"
+  executable="$HMUX_VERIFIED_APP_HOST_EXECUTABLE"
 
   /bin/kill -TERM "$pid" 2>/dev/null || {
-    if cmux_wait_for_app_host_exit "$pid" "$executable"; then
+    if hmux_wait_for_app_host_exit "$pid" "$executable"; then
       wait_status=0
     else
       wait_status=$?
@@ -648,7 +648,7 @@ cmux_terminate_one_verified_app_host() {
     echo "FAIL: verified app-host PID $pid could not be terminated" >&2
     return 1
   }
-  if cmux_wait_for_app_host_exit "$pid" "$executable"; then
+  if hmux_wait_for_app_host_exit "$pid" "$executable"; then
     wait_status=0
   else
     wait_status=$?
@@ -662,13 +662,13 @@ cmux_terminate_one_verified_app_host() {
 
   # Re-authenticate immediately before escalating the signal.
   if [ -n "$missing_product_runner_root" ]; then
-    if cmux_verify_stale_app_host_receipt \
+    if hmux_verify_stale_app_host_receipt \
       "$receipt_file" "$expected_key" "$missing_product_runner_root"; then
       verify_status=0
     else
       verify_status=$?
     fi
-  elif cmux_verify_app_host_receipt \
+  elif hmux_verify_app_host_receipt \
     "$receipt_file" "$expected_key" "$derived_data_path"; then
     verify_status=0
   else
@@ -681,7 +681,7 @@ cmux_terminate_one_verified_app_host() {
     return 1
   fi
   /bin/kill -KILL "$pid" 2>/dev/null || true
-  if cmux_wait_for_app_host_exit "$pid" "$executable"; then
+  if hmux_wait_for_app_host_exit "$pid" "$executable"; then
     wait_status=0
   else
     wait_status=$?
@@ -692,21 +692,21 @@ cmux_terminate_one_verified_app_host() {
   fi
 }
 
-cmux_terminate_verified_app_hosts() {
+hmux_terminate_verified_app_hosts() {
   local receipt_dir="$1"
   local expected_key="$2"
   local derived_data_path="$3"
   local verified_pids pid receipt_file remaining_pids
-  verified_pids="$(cmux_app_host_verified_pids \
+  verified_pids="$(hmux_app_host_verified_pids \
     "$receipt_dir" "$expected_key" "$derived_data_path")" || return 1
 
   for pid in $verified_pids; do
     receipt_file="${receipt_dir%/}/app-host-$pid.receipt"
-    cmux_terminate_one_verified_app_host \
+    hmux_terminate_one_verified_app_host \
       "$receipt_file" "$expected_key" "$derived_data_path" || return 1
   done
 
-  remaining_pids="$(cmux_app_host_verified_pids \
+  remaining_pids="$(hmux_app_host_verified_pids \
     "$receipt_dir" "$expected_key" "$derived_data_path")" || return 1
   if [ -n "$remaining_pids" ]; then
     echo "FAIL: verified app-host processes remain after termination" >&2
@@ -714,7 +714,7 @@ cmux_terminate_verified_app_hosts() {
   fi
 }
 
-cmux_app_host_derived_data_from_executable() {
+hmux_app_host_derived_data_from_executable() {
   local runner_root="$1"
   local executable="$2"
   local suffix derived_data_path resolved_runner_root
@@ -732,12 +732,12 @@ cmux_app_host_derived_data_from_executable() {
     "$resolved_runner_root"/*) ;;
     *) return 1 ;;
   esac
-  cmux_app_host_executable_is_scoped \
+  hmux_app_host_executable_is_scoped \
     "$derived_data_path" "$executable" || return 1
-  CMUX_APP_HOST_RECEIPT_DERIVED_DATA="$derived_data_path"
+  HMUX_APP_HOST_RECEIPT_DERIVED_DATA="$derived_data_path"
 }
 
-cmux_validate_app_host_runner_root() {
+hmux_validate_app_host_runner_root() {
   local runner_root="$1"
   case "$runner_root" in
     /)
@@ -760,31 +760,31 @@ cmux_validate_app_host_runner_root() {
     echo "FAIL: app-host runner root changed identity" >&2
     return 1
   fi
-  CMUX_VALIDATED_APP_HOST_RUNNER_ROOT="$resolved_runner_root"
+  HMUX_VALIDATED_APP_HOST_RUNNER_ROOT="$resolved_runner_root"
 }
 
 # This verifier deliberately does not require the DerivedData root to exist.
 # A live process can retain its deleted executable vnode after Xcode products
 # are removed. The canonical runner root, receipt path, and lsof vnode still
 # provide independent lexical boundaries in that state.
-cmux_verify_stale_app_host_receipt() {
+hmux_verify_stale_app_host_receipt() {
   local receipt_file="$1"
   local expected_key="$2"
   local runner_root="$3"
-  cmux_validate_app_host_runner_root "$runner_root" || return 1
-  runner_root="$CMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
-  cmux_read_app_host_receipt "$receipt_file" "$expected_key" || return 1
+  hmux_validate_app_host_runner_root "$runner_root" || return 1
+  runner_root="$HMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
+  hmux_read_app_host_receipt "$receipt_file" "$expected_key" || return 1
 
   local receipt_pid receipt_executable receipt_fd primary_status receipt_status
-  receipt_pid="$CMUX_PARSED_APP_HOST_RECEIPT_PID"
-  receipt_executable="$CMUX_PARSED_APP_HOST_RECEIPT_EXECUTABLE"
-  receipt_fd="$CMUX_PARSED_APP_HOST_RECEIPT_FD"
-  if ! cmux_app_host_derived_data_from_executable \
+  receipt_pid="$HMUX_PARSED_APP_HOST_RECEIPT_PID"
+  receipt_executable="$HMUX_PARSED_APP_HOST_RECEIPT_EXECUTABLE"
+  receipt_fd="$HMUX_PARSED_APP_HOST_RECEIPT_FD"
+  if ! hmux_app_host_derived_data_from_executable \
     "$runner_root" "$receipt_executable"; then
     echo "FAIL: stale app-host receipt executable is outside the runner work root" >&2
     return 1
   fi
-  if cmux_app_host_primary_executable "$receipt_pid"; then
+  if hmux_app_host_primary_executable "$receipt_pid"; then
     primary_status=0
   else
     primary_status=$?
@@ -795,13 +795,13 @@ cmux_verify_stale_app_host_receipt() {
   if [ "$primary_status" -ne 0 ]; then
     return 1
   fi
-  if [ "$CMUX_APP_HOST_PRIMARY_EXECUTABLE" != "$receipt_executable" ]; then
-    cmux_app_host_receipt_pid_was_reused \
+  if [ "$HMUX_APP_HOST_PRIMARY_EXECUTABLE" != "$receipt_executable" ]; then
+    hmux_app_host_receipt_pid_was_reused \
       "$receipt_pid" "$receipt_fd" "$receipt_file" && return 2
     echo "FAIL: stale app-host receipt does not match the PID executable vnode" >&2
     return 1
   fi
-  if cmux_app_host_receipt_descriptor_is_open \
+  if hmux_app_host_receipt_descriptor_is_open \
     "$receipt_pid" "$receipt_fd" "$receipt_file"; then
     receipt_status=0
   else
@@ -814,34 +814,34 @@ cmux_verify_stale_app_host_receipt() {
     return 1
   fi
 
-  CMUX_VERIFIED_APP_HOST_PID="$receipt_pid"
-  CMUX_VERIFIED_APP_HOST_EXECUTABLE="$receipt_executable"
+  HMUX_VERIFIED_APP_HOST_PID="$receipt_pid"
+  HMUX_VERIFIED_APP_HOST_EXECUTABLE="$receipt_executable"
 }
 
-cmux_record_runner_app_host_target() {
+hmux_record_runner_app_host_target() {
   local runner_root="$1"
   local pid="$2"
   local lsof_executable="$3"
   local executable="${lsof_executable% (deleted)}"
-  if ! cmux_app_host_derived_data_from_executable \
+  if ! hmux_app_host_derived_data_from_executable \
     "$runner_root" "$executable"; then
     return 0
   fi
-  local target_index="${#CMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}"
-  CMUX_APP_HOST_RUNNER_TARGET_PIDS[target_index]="$pid"
-  CMUX_APP_HOST_RUNNER_TARGET_EXECUTABLES[target_index]="$executable"
+  local target_index="${#HMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}"
+  HMUX_APP_HOST_RUNNER_TARGET_PIDS[target_index]="$pid"
+  HMUX_APP_HOST_RUNNER_TARGET_EXECUTABLES[target_index]="$executable"
 }
 
 # Enumerate process executable vnodes, not command lines. The first txt vnode
 # in each lsof process record is the launched executable on macOS.
-cmux_scan_runner_app_host_targets() {
+hmux_scan_runner_app_host_targets() {
   local runner_root="$1"
-  cmux_validate_app_host_runner_root "$runner_root" || return 1
-  runner_root="$CMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
-  cmux_select_app_host_lsof || return 1
+  hmux_validate_app_host_runner_root "$runner_root" || return 1
+  runner_root="$HMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
+  hmux_select_app_host_lsof || return 1
 
   local output status line current_pid first_executable
-  if output="$(cmux_run_app_host_lsof -d txt -Ffn)"; then
+  if output="$(hmux_run_app_host_lsof -d txt -Ffn)"; then
     status=0
   else
     status=$?
@@ -851,15 +851,15 @@ cmux_scan_runner_app_host_targets() {
     return 1
   fi
 
-  CMUX_APP_HOST_RUNNER_TARGET_PIDS=()
-  CMUX_APP_HOST_RUNNER_TARGET_EXECUTABLES=()
+  HMUX_APP_HOST_RUNNER_TARGET_PIDS=()
+  HMUX_APP_HOST_RUNNER_TARGET_EXECUTABLES=()
   current_pid=""
   first_executable=""
   while IFS= read -r line; do
     case "$line" in
       p*)
         if [ -n "$current_pid" ] && [ -n "$first_executable" ]; then
-          cmux_record_runner_app_host_target \
+          hmux_record_runner_app_host_target \
             "$runner_root" \
             "$current_pid" "$first_executable"
         fi
@@ -888,13 +888,13 @@ cmux_scan_runner_app_host_targets() {
     esac
   done < <(printf '%s\n' "$output")
   if [ -n "$current_pid" ] && [ -n "$first_executable" ]; then
-    cmux_record_runner_app_host_target \
+    hmux_record_runner_app_host_target \
       "$runner_root" \
       "$current_pid" "$first_executable"
   fi
 }
 
-cmux_app_host_scope_mtime() {
+hmux_app_host_scope_mtime() {
   local scope_path="$1"
   local mtime
   if mtime="$(/usr/bin/stat -f '%m' "$scope_path" 2>/dev/null)"; then
@@ -911,10 +911,10 @@ cmux_app_host_scope_mtime() {
       return 1
       ;;
   esac
-  CMUX_APP_HOST_SCOPE_MTIME="$mtime"
+  HMUX_APP_HOST_SCOPE_MTIME="$mtime"
 }
 
-cmux_app_host_scope_file_identity() {
+hmux_app_host_scope_file_identity() {
   local scope_path="$1"
   local identity
   if identity="$(/usr/bin/stat -f '%d:%i:%m' "$scope_path" 2>/dev/null)"; then
@@ -931,17 +931,17 @@ cmux_app_host_scope_file_identity() {
       return 1
       ;;
   esac
-  CMUX_APP_HOST_SCOPE_FILE_IDENTITY="$identity"
+  HMUX_APP_HOST_SCOPE_FILE_IDENTITY="$identity"
 }
 
 # The newest confirmation may belong to a job that has prepared its scope but
 # is still waiting for the canonical machine lock. Only authenticated v3 files
 # owned by this account with private permissions participate. Shared /tmp debris
 # cannot weaken newest-scope protection or authorize a process signal.
-cmux_newest_app_host_confirmation_mtime() {
+hmux_newest_app_host_confirmation_mtime() {
   local system_temp_root="$1"
-  cmux_validate_app_host_runner_root "$system_temp_root" || return 1
-  system_temp_root="$CMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
+  hmux_validate_app_host_runner_root "$system_temp_root" || return 1
+  system_temp_root="$HMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
 
   local current_uid confirmation_file confirmation_name key
   local newest_mtime mtime initial_identity final_identity
@@ -950,30 +950,30 @@ cmux_newest_app_host_confirmation_mtime() {
     return 1
   }
   newest_mtime=0
-  for confirmation_file in "$system_temp_root"/cmux-ah-*.confirm; do
+  for confirmation_file in "$system_temp_root"/hmux-ah-*.confirm; do
     if [ -L "$confirmation_file" ] || [ ! -f "$confirmation_file" ]; then
       continue
     fi
     confirmation_name="${confirmation_file##*/}"
-    key="${confirmation_name#cmux-ah-}"
+    key="${confirmation_name#hmux-ah-}"
     key="${key%.confirm}"
-    if ! cmux_validate_app_host_key "$key" >/dev/null 2>&1 \
-      || ! cmux_app_host_scope_file_identity \
+    if ! hmux_validate_app_host_key "$key" >/dev/null 2>&1 \
+      || ! hmux_app_host_scope_file_identity \
         "$confirmation_file" >/dev/null 2>&1; then
       continue
     fi
-    initial_identity="$CMUX_APP_HOST_SCOPE_FILE_IDENTITY"
-    if ! cmux_validate_stale_app_host_confirmation \
+    initial_identity="$HMUX_APP_HOST_SCOPE_FILE_IDENTITY"
+    if ! hmux_validate_stale_app_host_confirmation \
       "$confirmation_file" "$system_temp_root" "$key" >/dev/null 2>&1 \
-      || ! cmux_app_host_scope_metadata \
+      || ! hmux_app_host_scope_metadata \
         "$confirmation_file" >/dev/null 2>&1 \
-      || [ "$CMUX_APP_HOST_SCOPE_UID" != "$current_uid" ] \
-      || [ "$CMUX_APP_HOST_SCOPE_MODE" != "600" ] \
-      || ! cmux_app_host_scope_file_identity \
+      || [ "$HMUX_APP_HOST_SCOPE_UID" != "$current_uid" ] \
+      || [ "$HMUX_APP_HOST_SCOPE_MODE" != "600" ] \
+      || ! hmux_app_host_scope_file_identity \
         "$confirmation_file" >/dev/null 2>&1; then
       continue
     fi
-    final_identity="$CMUX_APP_HOST_SCOPE_FILE_IDENTITY"
+    final_identity="$HMUX_APP_HOST_SCOPE_FILE_IDENTITY"
     if [ "$final_identity" != "$initial_identity" ]; then
       continue
     fi
@@ -982,12 +982,12 @@ cmux_newest_app_host_confirmation_mtime() {
       newest_mtime="$mtime"
     fi
   done
-  CMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME="$newest_mtime"
+  HMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME="$newest_mtime"
 }
 
-# Set CMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE to 1 only for an authenticated v3
+# Set HMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE to 1 only for an authenticated v3
 # scope that is old enough, is not current, and is not tied for newest.
-cmux_classify_app_host_scope_recovery_eligibility() {
+hmux_classify_app_host_scope_recovery_eligibility() {
   local key="$1"
   local preserved_key="$2"
   local version="$3"
@@ -995,7 +995,7 @@ cmux_classify_app_host_scope_recovery_eligibility() {
   local newest_mtime="$5"
   local now_epoch="$6"
   local minimum_age_seconds="$7"
-  CMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE=0
+  HMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE=0
 
   if [ "$version" != "3" ] \
     || [ -z "$mtime" ] \
@@ -1007,26 +1007,26 @@ cmux_classify_app_host_scope_recovery_eligibility() {
   if [ $((now_epoch - mtime)) -lt "$minimum_age_seconds" ]; then
     return 0
   fi
-  CMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE=1
+  HMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE=1
 }
 
 # Validate a complete or confirmation-only process-free scope. Missing mutable
 # roots are allowed because the confirmation is published before either mkdir;
 # any root that does exist must retain its deterministic path, private mode,
 # owner, type, and canonical identity.
-cmux_validate_abandoned_app_host_scope() {
+hmux_validate_abandoned_app_host_scope() {
   local system_temp_root="$1"
   local key="$2"
   local expected_uid="$3"
-  local app_host_home="$system_temp_root/cmux-ah-$key"
-  local app_host_receipt_dir="$system_temp_root/cmux-ah-$key-receipts"
-  local confirmation_file="$system_temp_root/cmux-ah-$key.confirm"
+  local app_host_home="$system_temp_root/hmux-ah-$key"
+  local app_host_receipt_dir="$system_temp_root/hmux-ah-$key-receipts"
+  local confirmation_file="$system_temp_root/hmux-ah-$key.confirm"
 
-  cmux_validate_stale_app_host_confirmation \
+  hmux_validate_stale_app_host_confirmation \
     "$confirmation_file" "$system_temp_root" "$key" || return 1
-  if [ "$CMUX_VALIDATED_STALE_APP_HOST_HOME" != "$app_host_home" ] \
-    || [ "$CMUX_VALIDATED_STALE_APP_HOST_RECEIPT_DIR" != "$app_host_receipt_dir" ] \
-    || [ "$CMUX_VALIDATED_STALE_APP_HOST_CONFIRMATION_FILE" != "$confirmation_file" ]; then
+  if [ "$HMUX_VALIDATED_STALE_APP_HOST_HOME" != "$app_host_home" ] \
+    || [ "$HMUX_VALIDATED_STALE_APP_HOST_RECEIPT_DIR" != "$app_host_receipt_dir" ] \
+    || [ "$HMUX_VALIDATED_STALE_APP_HOST_CONFIRMATION_FILE" != "$confirmation_file" ]; then
     echo "FAIL: abandoned app-host scope changed identity" >&2
     return 1
   fi
@@ -1068,26 +1068,26 @@ cmux_validate_abandoned_app_host_scope() {
         fi
         ;;
     esac
-    cmux_app_host_scope_metadata "$scope_path" || return 1
-    if [ "$CMUX_APP_HOST_SCOPE_UID" != "$expected_uid" ]; then
+    hmux_app_host_scope_metadata "$scope_path" || return 1
+    if [ "$HMUX_APP_HOST_SCOPE_UID" != "$expected_uid" ]; then
       echo "FAIL: abandoned app-host scope owner is not trusted" >&2
       return 1
     fi
-    if [ "$CMUX_APP_HOST_SCOPE_MODE" != "$expected_mode" ]; then
+    if [ "$HMUX_APP_HOST_SCOPE_MODE" != "$expected_mode" ]; then
       echo "FAIL: abandoned app-host scope permissions are not private" >&2
       return 1
     fi
   done
 
-  CMUX_VALIDATED_ABANDONED_APP_HOST_HOME="$app_host_home"
-  CMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR="$app_host_receipt_dir"
-  CMUX_VALIDATED_ABANDONED_APP_HOST_CONFIRMATION_FILE="$confirmation_file"
+  HMUX_VALIDATED_ABANDONED_APP_HOST_HOME="$app_host_home"
+  HMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR="$app_host_receipt_dir"
+  HMUX_VALIDATED_ABANDONED_APP_HOST_CONFIRMATION_FILE="$confirmation_file"
 }
 
 # Match one runner-scoped live PID to one old prior-run authority scope. This
 # is only an admission check. The caller completes a runner-wide preflight and
 # revalidates every admitted authority before any signal is sent.
-cmux_find_eligible_prior_app_host_receipt() {
+hmux_find_eligible_prior_app_host_receipt() {
   local runner_root="$1"
   local system_temp_root="$2"
   local preserved_key="$3"
@@ -1114,18 +1114,18 @@ cmux_find_eligible_prior_app_host_receipt() {
   matched_confirmation_mtime=""
 
   for receipt_file in \
-    "$system_temp_root"/cmux-ah-*-receipts/"app-host-$target_pid.receipt"; do
+    "$system_temp_root"/hmux-ah-*-receipts/"app-host-$target_pid.receipt"; do
     if [ ! -e "$receipt_file" ] && [ ! -L "$receipt_file" ]; then
       continue
     fi
     receipt_dir="$(dirname "$receipt_file")"
-    cmux_validate_app_host_receipt_dir "$receipt_dir" || return 1
+    hmux_validate_app_host_receipt_dir "$receipt_dir" || return 1
     receipt_dir_name="$(basename "$receipt_dir")"
-    expected_key="${receipt_dir_name#cmux-ah-}"
+    expected_key="${receipt_dir_name#hmux-ah-}"
     expected_key="${expected_key%-receipts}"
-    cmux_validate_app_host_key "$expected_key" || return 1
-    cmux_read_app_host_receipt "$receipt_file" "$expected_key" || return 1
-    if [ "$CMUX_PARSED_APP_HOST_RECEIPT_EXECUTABLE" != "$target_executable" ]; then
+    hmux_validate_app_host_key "$expected_key" || return 1
+    hmux_read_app_host_receipt "$receipt_file" "$expected_key" || return 1
+    if [ "$HMUX_PARSED_APP_HOST_RECEIPT_EXECUTABLE" != "$target_executable" ]; then
       continue
     fi
     matching_receipts=$((matching_receipts + 1))
@@ -1134,26 +1134,26 @@ cmux_find_eligible_prior_app_host_receipt() {
       return 1
     fi
 
-    cmux_validate_abandoned_app_host_scope \
+    hmux_validate_abandoned_app_host_scope \
       "$system_temp_root" "$expected_key" "$current_uid" || return 1
-    if [ ! -d "$CMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR" ]; then
+    if [ ! -d "$HMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR" ]; then
       echo "FAIL: prior app-host receipt root is unavailable" >&2
       return 1
     fi
-    confirmation_file="$CMUX_VALIDATED_ABANDONED_APP_HOST_CONFIRMATION_FILE"
-    cmux_app_host_scope_mtime "$confirmation_file" || return 1
-    mtime="$CMUX_APP_HOST_SCOPE_MTIME"
-    cmux_classify_app_host_scope_recovery_eligibility \
+    confirmation_file="$HMUX_VALIDATED_ABANDONED_APP_HOST_CONFIRMATION_FILE"
+    hmux_app_host_scope_mtime "$confirmation_file" || return 1
+    mtime="$HMUX_APP_HOST_SCOPE_MTIME"
+    hmux_classify_app_host_scope_recovery_eligibility \
       "$expected_key" "$preserved_key" 3 "$mtime" "$newest_mtime" \
       "$now_epoch" "$minimum_age_seconds" || return 1
-    if [ "$CMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -ne 1 ]; then
+    if [ "$HMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -ne 1 ]; then
       echo "FAIL: foreign app-host PID $target_pid is not eligible for prior-run recovery" >&2
       return 1
     fi
-    cmux_app_host_scope_file_identity "$confirmation_file" || return 1
-    confirmation_identity="$CMUX_APP_HOST_SCOPE_FILE_IDENTITY"
+    hmux_app_host_scope_file_identity "$confirmation_file" || return 1
+    confirmation_identity="$HMUX_APP_HOST_SCOPE_FILE_IDENTITY"
 
-    if cmux_verify_stale_app_host_receipt \
+    if hmux_verify_stale_app_host_receipt \
       "$receipt_file" "$expected_key" "$runner_root"; then
       verify_status=0
     else
@@ -1167,7 +1167,7 @@ cmux_find_eligible_prior_app_host_receipt() {
     fi
     matched_receipt="$receipt_file"
     matched_key="$expected_key"
-    matched_derived_data="$CMUX_APP_HOST_RECEIPT_DERIVED_DATA"
+    matched_derived_data="$HMUX_APP_HOST_RECEIPT_DERIVED_DATA"
     matched_confirmation="$confirmation_file"
     matched_confirmation_identity="$confirmation_identity"
     matched_confirmation_mtime="$mtime"
@@ -1175,8 +1175,8 @@ cmux_find_eligible_prior_app_host_receipt() {
 
   if [ "$matching_receipts" -eq 0 ]; then
     # Avoid a false missing-receipt error if the target exited during preflight.
-    if cmux_app_host_primary_executable "$target_pid"; then
-      if [ "$CMUX_APP_HOST_PRIMARY_EXECUTABLE" != "$target_executable" ]; then
+    if hmux_app_host_primary_executable "$target_pid"; then
+      if [ "$HMUX_APP_HOST_PRIMARY_EXECUTABLE" != "$target_executable" ]; then
         return 2
       fi
     else
@@ -1194,18 +1194,18 @@ cmux_find_eligible_prior_app_host_receipt() {
     return 1
   fi
 
-  CMUX_PRIOR_APP_HOST_RECEIPT="$matched_receipt"
-  CMUX_PRIOR_APP_HOST_KEY="$matched_key"
-  CMUX_PRIOR_APP_HOST_DERIVED_DATA="$matched_derived_data"
-  CMUX_PRIOR_APP_HOST_CONFIRMATION_FILE="$matched_confirmation"
-  CMUX_PRIOR_APP_HOST_CONFIRMATION_IDENTITY="$matched_confirmation_identity"
-  CMUX_PRIOR_APP_HOST_CONFIRMATION_MTIME="$matched_confirmation_mtime"
+  HMUX_PRIOR_APP_HOST_RECEIPT="$matched_receipt"
+  HMUX_PRIOR_APP_HOST_KEY="$matched_key"
+  HMUX_PRIOR_APP_HOST_DERIVED_DATA="$matched_derived_data"
+  HMUX_PRIOR_APP_HOST_CONFIRMATION_FILE="$matched_confirmation"
+  HMUX_PRIOR_APP_HOST_CONFIRMATION_IDENTITY="$matched_confirmation_identity"
+  HMUX_PRIOR_APP_HOST_CONFIRMATION_MTIME="$matched_confirmation_mtime"
 }
 
 # Reclaim only authenticated, process-free scopes older than the grace period.
 # The current key and every scope tied for newest confirmation are preserved.
 # All candidates are validated and previewed before the first deletion.
-cmux_reclaim_abandoned_app_host_scopes() {
+hmux_reclaim_abandoned_app_host_scopes() {
   local runner_root="$1"
   local system_temp_root="$2"
   local preserved_key="$3"
@@ -1213,11 +1213,11 @@ cmux_reclaim_abandoned_app_host_scopes() {
   local minimum_age_seconds="$5"
   shift 5
 
-  cmux_validate_app_host_runner_root "$runner_root" || return 1
-  runner_root="$CMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
-  cmux_validate_app_host_runner_root "$system_temp_root" || return 1
-  system_temp_root="$CMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
-  cmux_validate_app_host_key "$preserved_key" || return 1
+  hmux_validate_app_host_runner_root "$runner_root" || return 1
+  runner_root="$HMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
+  hmux_validate_app_host_runner_root "$system_temp_root" || return 1
+  system_temp_root="$HMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
+  hmux_validate_app_host_key "$preserved_key" || return 1
   case "$now_epoch:$minimum_age_seconds" in
     *[!0-9:]*|:*|*:)
       echo "FAIL: abandoned app-host scope age inputs are invalid" >&2
@@ -1225,8 +1225,8 @@ cmux_reclaim_abandoned_app_host_scopes() {
       ;;
   esac
 
-  cmux_scan_runner_app_host_targets "$runner_root" || return 1
-  if [ "${#CMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}" -ne 0 ]; then
+  hmux_scan_runner_app_host_targets "$runner_root" || return 1
+  if [ "${#HMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}" -ne 0 ]; then
     echo "FAIL: refusing abandoned scope reclamation while an app host is live" >&2
     return 1
   fi
@@ -1246,27 +1246,27 @@ cmux_reclaim_abandoned_app_host_scopes() {
   candidate_mtimes=()
   seen_keys=""
   key_count=0
-  cmux_newest_app_host_confirmation_mtime "$system_temp_root" || return 1
-  newest_mtime="$CMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME"
+  hmux_newest_app_host_confirmation_mtime "$system_temp_root" || return 1
+  newest_mtime="$HMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME"
 
   if [ "$#" -gt 0 ]; then
     for key in "$@"; do
       case " $seen_keys " in *" $key "*) continue ;; esac
-      cmux_validate_app_host_key "$key" || return 1
+      hmux_validate_app_host_key "$key" || return 1
       seen_keys="${seen_keys:+$seen_keys }$key"
       scope_keys[key_count]="$key"
       key_count=$((key_count + 1))
     done
   else
-    for confirmation_file in "$system_temp_root"/cmux-ah-*.confirm; do
+    for confirmation_file in "$system_temp_root"/hmux-ah-*.confirm; do
       if [ ! -e "$confirmation_file" ] && [ ! -L "$confirmation_file" ]; then
         continue
       fi
       confirmation_name="${confirmation_file##*/}"
-      key="${confirmation_name#cmux-ah-}"
+      key="${confirmation_name#hmux-ah-}"
       key="${key%.confirm}"
       case " $seen_keys " in *" $key "*) continue ;; esac
-      cmux_validate_app_host_key "$key" || return 1
+      hmux_validate_app_host_key "$key" || return 1
       seen_keys="${seen_keys:+$seen_keys }$key"
       scope_keys[key_count]="$key"
       key_count=$((key_count + 1))
@@ -1276,7 +1276,7 @@ cmux_reclaim_abandoned_app_host_scopes() {
   key_index=0
   while [ "$key_index" -lt "$key_count" ]; do
     key="${scope_keys[$key_index]}"
-    confirmation_file="$system_temp_root/cmux-ah-$key.confirm"
+    confirmation_file="$system_temp_root/hmux-ah-$key.confirm"
     if [ -L "$confirmation_file" ]; then
       echo "FAIL: abandoned app-host confirmation is a symlink" >&2
       return 1
@@ -1289,8 +1289,8 @@ cmux_reclaim_abandoned_app_host_scopes() {
       echo "FAIL: abandoned app-host confirmation could not be read" >&2
       return 1
     }
-    cmux_app_host_scope_mtime "$confirmation_file" || return 1
-    mtime="$CMUX_APP_HOST_SCOPE_MTIME"
+    hmux_app_host_scope_mtime "$confirmation_file" || return 1
+    mtime="$HMUX_APP_HOST_SCOPE_MTIME"
     scope_mtimes[key_index]="$mtime"
     if [ "$first_line" != "version=3" ]; then
       echo "Preserving unsupported app-host confirmation: $confirmation_file"
@@ -1306,26 +1306,26 @@ cmux_reclaim_abandoned_app_host_scopes() {
   while [ "$key_index" -lt "$key_count" ]; do
     key="${scope_keys[$key_index]}"
     mtime="${scope_mtimes[$key_index]:-}"
-    cmux_classify_app_host_scope_recovery_eligibility \
+    hmux_classify_app_host_scope_recovery_eligibility \
       "$key" "$preserved_key" "${scope_versions[$key_index]:-}" \
       "$mtime" "$newest_mtime" "$now_epoch" "$minimum_age_seconds" \
       || return 1
-    if [ "$CMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -ne 1 ]; then
+    if [ "$HMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -ne 1 ]; then
       key_index=$((key_index + 1))
       continue
     fi
-    cmux_validate_abandoned_app_host_scope \
+    hmux_validate_abandoned_app_host_scope \
       "$system_temp_root" "$key" "$current_uid" || return 1
     candidate_keys[candidate_count]="$key"
     candidate_mtimes[candidate_count]="$mtime"
     candidate_count=$((candidate_count + 1))
-    echo "Confirmed abandoned app-host cleanup candidate: $system_temp_root/cmux-ah-$key"
+    echo "Confirmed abandoned app-host cleanup candidate: $system_temp_root/hmux-ah-$key"
     key_index=$((key_index + 1))
   done
 
   # Recheck global liveness after candidate preflight and before mutation.
-  cmux_scan_runner_app_host_targets "$runner_root" || return 1
-  if [ "${#CMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}" -ne 0 ]; then
+  hmux_scan_runner_app_host_targets "$runner_root" || return 1
+  if [ "${#HMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}" -ne 0 ]; then
     echo "FAIL: an app host became live before abandoned scope reclamation" >&2
     return 1
   fi
@@ -1333,20 +1333,20 @@ cmux_reclaim_abandoned_app_host_scopes() {
   candidate_index=0
   while [ "$candidate_index" -lt "$candidate_count" ]; do
     key="${candidate_keys[$candidate_index]}"
-    cmux_validate_abandoned_app_host_scope \
+    hmux_validate_abandoned_app_host_scope \
       "$system_temp_root" "$key" "$current_uid" || return 1
-    confirmation_file="$CMUX_VALIDATED_ABANDONED_APP_HOST_CONFIRMATION_FILE"
-    cmux_app_host_scope_mtime "$confirmation_file" || return 1
-    if [ "$CMUX_APP_HOST_SCOPE_MTIME" != "${candidate_mtimes[$candidate_index]}" ]; then
+    confirmation_file="$HMUX_VALIDATED_ABANDONED_APP_HOST_CONFIRMATION_FILE"
+    hmux_app_host_scope_mtime "$confirmation_file" || return 1
+    if [ "$HMUX_APP_HOST_SCOPE_MTIME" != "${candidate_mtimes[$candidate_index]}" ]; then
       echo "FAIL: abandoned app-host confirmation changed during cleanup" >&2
       return 1
     fi
-    rm -rf -- "$CMUX_VALIDATED_ABANDONED_APP_HOST_HOME"
-    rm -rf -- "$CMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR"
+    rm -rf -- "$HMUX_VALIDATED_ABANDONED_APP_HOST_HOME"
+    rm -rf -- "$HMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR"
     rm -f -- "$confirmation_file"
     for scope_path in \
-      "$CMUX_VALIDATED_ABANDONED_APP_HOST_HOME" \
-      "$CMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR" \
+      "$HMUX_VALIDATED_ABANDONED_APP_HOST_HOME" \
+      "$HMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR" \
       "$confirmation_file"
     do
       if [ -e "$scope_path" ] || [ -L "$scope_path" ]; then
@@ -1364,7 +1364,7 @@ cmux_reclaim_abandoned_app_host_scopes() {
 # and admitted confirmation is preflighted twice before any signal. Process-free
 # scope deletion retains the reclamation grace and remains advisory after process
 # safety is established.
-cmux_recover_owned_app_host_attempt() {
+hmux_recover_owned_app_host_attempt() {
   local receipt_dir="$1"
   local expected_key="$2"
   local derived_data_path="$3"
@@ -1375,21 +1375,21 @@ cmux_recover_owned_app_host_attempt() {
   local live_recovery_minimum_age_seconds=0
   shift "$(( $# < 7 ? $# : 7 ))"
 
-  if [ "${CMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" != "1" ] \
-    && [ "${CMUX_APP_HOST_TEST_LOCK_ACTIVE:-0}" != "1" ]; then
+  if [ "${HMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" != "1" ] \
+    && [ "${HMUX_APP_HOST_TEST_LOCK_ACTIVE:-0}" != "1" ]; then
     echo "FAIL: app-host recovery requires the canonical machine lock" >&2
     return 1
   fi
 
-  cmux_validate_app_host_receipt_dir "$receipt_dir" || return 1
-  receipt_dir="$CMUX_VALIDATED_APP_HOST_RECEIPT_DIR"
-  cmux_validate_app_host_key "$expected_key" || return 1
-  cmux_validate_app_host_derived_data "$derived_data_path" || return 1
-  derived_data_path="$CMUX_VALIDATED_APP_HOST_DERIVED_DATA"
-  cmux_validate_app_host_runner_root "$runner_root" || return 1
-  runner_root="$CMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
-  cmux_validate_app_host_runner_root "$system_temp_root" || return 1
-  system_temp_root="$CMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
+  hmux_validate_app_host_receipt_dir "$receipt_dir" || return 1
+  receipt_dir="$HMUX_VALIDATED_APP_HOST_RECEIPT_DIR"
+  hmux_validate_app_host_key "$expected_key" || return 1
+  hmux_validate_app_host_derived_data "$derived_data_path" || return 1
+  derived_data_path="$HMUX_VALIDATED_APP_HOST_DERIVED_DATA"
+  hmux_validate_app_host_runner_root "$runner_root" || return 1
+  runner_root="$HMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
+  hmux_validate_app_host_runner_root "$system_temp_root" || return 1
+  system_temp_root="$HMUX_VALIDATED_APP_HOST_RUNNER_ROOT"
   if [ -z "$now_epoch" ]; then
     now_epoch="$(/bin/date +%s)" || return 1
   fi
@@ -1418,17 +1418,17 @@ cmux_recover_owned_app_host_attempt() {
   local -a prior_pids prior_executables prior_receipts prior_keys
   local -a prior_derived_data prior_confirmations prior_confirmation_identities
   local -a prior_confirmation_mtimes maintenance_keys
-  verified_pids="$(cmux_app_host_verified_pids \
+  verified_pids="$(hmux_app_host_verified_pids \
     "$receipt_dir" "$expected_key" "$derived_data_path")" || return 1
   verified_pid_tokens=""
   for verified_pid in $verified_pids; do
     verified_pid_tokens="${verified_pid_tokens:+$verified_pid_tokens }$verified_pid"
   done
   verified_pids="$verified_pid_tokens"
-  cmux_newest_app_host_confirmation_mtime "$system_temp_root" || return 1
-  newest_mtime="$CMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME"
-  cmux_scan_runner_app_host_targets "$runner_root" || return 1
-  target_count="${#CMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}"
+  hmux_newest_app_host_confirmation_mtime "$system_temp_root" || return 1
+  newest_mtime="$HMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME"
+  hmux_scan_runner_app_host_targets "$runner_root" || return 1
+  target_count="${#HMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}"
   initial_target_pids=()
   initial_target_executables=()
   prior_pids=()
@@ -1442,8 +1442,8 @@ cmux_recover_owned_app_host_attempt() {
   prior_count=0
   target_index=0
   while [ "$target_index" -lt "$target_count" ]; do
-    target_pid="${CMUX_APP_HOST_RUNNER_TARGET_PIDS[$target_index]}"
-    target_executable="${CMUX_APP_HOST_RUNNER_TARGET_EXECUTABLES[$target_index]}"
+    target_pid="${HMUX_APP_HOST_RUNNER_TARGET_PIDS[$target_index]}"
+    target_executable="${HMUX_APP_HOST_RUNNER_TARGET_EXECUTABLES[$target_index]}"
     initial_target_pids[target_index]="$target_pid"
     initial_target_executables[target_index]="$target_executable"
     case " $verified_pids " in
@@ -1453,7 +1453,7 @@ cmux_recover_owned_app_host_attempt() {
         ;;
     esac
 
-    if cmux_find_eligible_prior_app_host_receipt \
+    if hmux_find_eligible_prior_app_host_receipt \
       "$runner_root" "$system_temp_root" "$expected_key" \
       "$target_pid" "$target_executable" "$newest_mtime" \
       "$now_epoch" "$live_recovery_minimum_age_seconds"; then
@@ -1470,12 +1470,12 @@ cmux_recover_owned_app_host_attempt() {
     fi
     prior_pids[prior_count]="$target_pid"
     prior_executables[prior_count]="$target_executable"
-    prior_receipts[prior_count]="$CMUX_PRIOR_APP_HOST_RECEIPT"
-    prior_keys[prior_count]="$CMUX_PRIOR_APP_HOST_KEY"
-    prior_derived_data[prior_count]="$CMUX_PRIOR_APP_HOST_DERIVED_DATA"
-    prior_confirmations[prior_count]="$CMUX_PRIOR_APP_HOST_CONFIRMATION_FILE"
-    prior_confirmation_identities[prior_count]="$CMUX_PRIOR_APP_HOST_CONFIRMATION_IDENTITY"
-    prior_confirmation_mtimes[prior_count]="$CMUX_PRIOR_APP_HOST_CONFIRMATION_MTIME"
+    prior_receipts[prior_count]="$HMUX_PRIOR_APP_HOST_RECEIPT"
+    prior_keys[prior_count]="$HMUX_PRIOR_APP_HOST_KEY"
+    prior_derived_data[prior_count]="$HMUX_PRIOR_APP_HOST_DERIVED_DATA"
+    prior_confirmations[prior_count]="$HMUX_PRIOR_APP_HOST_CONFIRMATION_FILE"
+    prior_confirmation_identities[prior_count]="$HMUX_PRIOR_APP_HOST_CONFIRMATION_IDENTITY"
+    prior_confirmation_mtimes[prior_count]="$HMUX_PRIOR_APP_HOST_CONFIRMATION_MTIME"
     prior_count=$((prior_count + 1))
     target_index=$((target_index + 1))
   done
@@ -1483,24 +1483,24 @@ cmux_recover_owned_app_host_attempt() {
   # Preparation can publish a waiting scope outside the machine lock. Recheck
   # both the complete live target set and the global newest confirmation before
   # signaling current or prior owners.
-  cmux_scan_runner_app_host_targets "$runner_root" || return 1
-  if [ "${#CMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}" -ne "$target_count" ]; then
+  hmux_scan_runner_app_host_targets "$runner_root" || return 1
+  if [ "${#HMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}" -ne "$target_count" ]; then
     echo "FAIL: runner app-host set changed before recovery" >&2
     return 1
   fi
   target_index=0
   while [ "$target_index" -lt "$target_count" ]; do
-    if [ "${CMUX_APP_HOST_RUNNER_TARGET_PIDS[$target_index]}" \
+    if [ "${HMUX_APP_HOST_RUNNER_TARGET_PIDS[$target_index]}" \
         != "${initial_target_pids[$target_index]}" ] \
-      || [ "${CMUX_APP_HOST_RUNNER_TARGET_EXECUTABLES[$target_index]}" \
+      || [ "${HMUX_APP_HOST_RUNNER_TARGET_EXECUTABLES[$target_index]}" \
         != "${initial_target_executables[$target_index]}" ]; then
       echo "FAIL: runner app-host identity changed before recovery" >&2
       return 1
     fi
     target_index=$((target_index + 1))
   done
-  cmux_newest_app_host_confirmation_mtime "$system_temp_root" || return 1
-  if [ "$CMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME" != "$newest_mtime" ]; then
+  hmux_newest_app_host_confirmation_mtime "$system_temp_root" || return 1
+  if [ "$HMUX_NEWEST_APP_HOST_CONFIRMATION_MTIME" != "$newest_mtime" ]; then
     echo "FAIL: app-host confirmation set changed before recovery" >&2
     return 1
   fi
@@ -1511,38 +1511,38 @@ cmux_recover_owned_app_host_attempt() {
   }
   target_index=0
   while [ "$target_index" -lt "$prior_count" ]; do
-    cmux_validate_abandoned_app_host_scope \
+    hmux_validate_abandoned_app_host_scope \
       "$system_temp_root" "${prior_keys[$target_index]}" "$current_uid" \
       || return 1
-    if [ "$CMUX_VALIDATED_ABANDONED_APP_HOST_CONFIRMATION_FILE" \
+    if [ "$HMUX_VALIDATED_ABANDONED_APP_HOST_CONFIRMATION_FILE" \
         != "${prior_confirmations[$target_index]}" ] \
-      || [ ! -d "$CMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR" ]; then
+      || [ ! -d "$HMUX_VALIDATED_ABANDONED_APP_HOST_RECEIPT_DIR" ]; then
       echo "FAIL: prior app-host authority changed before recovery" >&2
       return 1
     fi
-    cmux_app_host_scope_mtime \
+    hmux_app_host_scope_mtime \
       "${prior_confirmations[$target_index]}" || return 1
-    if [ "$CMUX_APP_HOST_SCOPE_MTIME" \
+    if [ "$HMUX_APP_HOST_SCOPE_MTIME" \
         != "${prior_confirmation_mtimes[$target_index]}" ]; then
       echo "FAIL: prior app-host confirmation changed before recovery" >&2
       return 1
     fi
-    cmux_app_host_scope_file_identity \
+    hmux_app_host_scope_file_identity \
       "${prior_confirmations[$target_index]}" || return 1
-    if [ "$CMUX_APP_HOST_SCOPE_FILE_IDENTITY" \
+    if [ "$HMUX_APP_HOST_SCOPE_FILE_IDENTITY" \
         != "${prior_confirmation_identities[$target_index]}" ]; then
       echo "FAIL: prior app-host confirmation identity changed before recovery" >&2
       return 1
     fi
-    cmux_classify_app_host_scope_recovery_eligibility \
+    hmux_classify_app_host_scope_recovery_eligibility \
       "${prior_keys[$target_index]}" "$expected_key" 3 \
       "${prior_confirmation_mtimes[$target_index]}" "$newest_mtime" \
       "$now_epoch" "$live_recovery_minimum_age_seconds" || return 1
-    if [ "$CMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -ne 1 ]; then
+    if [ "$HMUX_APP_HOST_SCOPE_RECOVERY_ELIGIBLE" -ne 1 ]; then
       echo "FAIL: prior app-host scope became ineligible before recovery" >&2
       return 1
     fi
-    if cmux_verify_stale_app_host_receipt \
+    if hmux_verify_stale_app_host_receipt \
       "${prior_receipts[$target_index]}" \
       "${prior_keys[$target_index]}" "$runner_root"; then
       find_status=0
@@ -1554,10 +1554,10 @@ cmux_recover_owned_app_host_attempt() {
       return 1
     fi
     if [ "$find_status" -ne 0 ] \
-      || [ "$CMUX_VERIFIED_APP_HOST_PID" != "${prior_pids[$target_index]}" ] \
-      || [ "$CMUX_VERIFIED_APP_HOST_EXECUTABLE" \
+      || [ "$HMUX_VERIFIED_APP_HOST_PID" != "${prior_pids[$target_index]}" ] \
+      || [ "$HMUX_VERIFIED_APP_HOST_EXECUTABLE" \
         != "${prior_executables[$target_index]}" ] \
-      || [ "$CMUX_APP_HOST_RECEIPT_DERIVED_DATA" \
+      || [ "$HMUX_APP_HOST_RECEIPT_DERIVED_DATA" \
         != "${prior_derived_data[$target_index]}" ]; then
       echo "FAIL: prior app-host receipt changed before recovery" >&2
       return 1
@@ -1565,11 +1565,11 @@ cmux_recover_owned_app_host_attempt() {
     target_index=$((target_index + 1))
   done
 
-  cmux_terminate_verified_app_hosts \
+  hmux_terminate_verified_app_hosts \
     "$receipt_dir" "$expected_key" "$derived_data_path" || return 1
   target_index=0
   while [ "$target_index" -lt "$prior_count" ]; do
-    cmux_terminate_one_verified_app_host \
+    hmux_terminate_one_verified_app_host \
       "${prior_receipts[$target_index]}" \
       "${prior_keys[$target_index]}" \
       "${prior_derived_data[$target_index]}" \
@@ -1577,8 +1577,8 @@ cmux_recover_owned_app_host_attempt() {
     target_index=$((target_index + 1))
   done
 
-  cmux_scan_runner_app_host_targets "$runner_root" || return 1
-  if [ "${#CMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}" -ne 0 ]; then
+  hmux_scan_runner_app_host_targets "$runner_root" || return 1
+  if [ "${#HMUX_APP_HOST_RUNNER_TARGET_PIDS[@]}" -ne 0 ]; then
     echo "FAIL: an app host remained live after authenticated retry recovery" >&2
     return 1
   fi
@@ -1600,8 +1600,8 @@ cmux_recover_owned_app_host_attempt() {
   done
 
   if [ "$requested_scope_count" -gt 0 ] \
-    || [ "${CMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" = "1" ]; then
-    cmux_reclaim_abandoned_app_host_scopes \
+    || [ "${HMUX_CI_APP_HOST_CLEANUP_TEST_HELPER:-0}" = "1" ]; then
+    hmux_reclaim_abandoned_app_host_scopes \
       "$runner_root" "$system_temp_root" "$expected_key" \
       "$now_epoch" "$reclamation_minimum_age_seconds" \
       "${maintenance_keys[@]}" || {
@@ -1609,7 +1609,7 @@ cmux_recover_owned_app_host_attempt() {
       return 0
     }
   else
-    cmux_reclaim_abandoned_app_host_scopes \
+    hmux_reclaim_abandoned_app_host_scopes \
       "$runner_root" "$system_temp_root" "$expected_key" \
       "$now_epoch" "$reclamation_minimum_age_seconds" || {
       echo "WARNING: abandoned app-host scope reclamation was skipped" >&2
@@ -1618,7 +1618,7 @@ cmux_recover_owned_app_host_attempt() {
   fi
 }
 
-cmux_app_host_scope_metadata() {
+hmux_app_host_scope_metadata() {
   local scope_path="$1"
   local metadata
   if metadata="$(/usr/bin/stat -f '%u %Lp' "$scope_path" 2>/dev/null)"; then
@@ -1629,6 +1629,6 @@ cmux_app_host_scope_metadata() {
     echo "FAIL: stale app-host scope metadata is unavailable" >&2
     return 1
   fi
-  CMUX_APP_HOST_SCOPE_UID="${metadata%% *}"
-  CMUX_APP_HOST_SCOPE_MODE="${metadata#* }"
+  HMUX_APP_HOST_SCOPE_UID="${metadata%% *}"
+  HMUX_APP_HOST_SCOPE_MODE="${metadata#* }"
 }

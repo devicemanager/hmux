@@ -1,5 +1,5 @@
 import AppKit
-import CmuxSettingsUI
+import HmuxSettingsUI
 
 /// Builds the Cloud header's team pull-down from one snapshot of account state.
 ///

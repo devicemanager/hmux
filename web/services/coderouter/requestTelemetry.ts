@@ -229,25 +229,25 @@ export function recordCoderouterIdentity(
   const span = trace.getActiveSpan();
   if (span) {
     setSpanAttributes(span, {
-      "cmux.coderouter.bound_to_vm": identity.vmId !== null,
-      "cmux.coderouter.vm_id": identity.vmId ?? undefined,
-      "cmux.coderouter.auth_mode": authMode,
-      "cmux.coderouter.pool_id": identity.poolId ?? undefined,
+      "hmux.coderouter.bound_to_vm": identity.vmId !== null,
+      "hmux.coderouter.vm_id": identity.vmId ?? undefined,
+      "hmux.coderouter.auth_mode": authMode,
+      "hmux.coderouter.pool_id": identity.poolId ?? undefined,
     });
   }
 }
 
 /**
  * Puts the refusal reason on the active route span, so a flood of 401s can be
- * split by cause in Axiom (`cmux.coderouter.auth_failure_detail`).
+ * split by cause in Axiom (`hmux.coderouter.auth_failure_detail`).
  */
 export function recordCoderouterAuthFailure(reason: string, detail: string | undefined, keyId?: string): void {
   const span = trace.getActiveSpan();
   if (!span) return;
   setSpanAttributes(span, {
-    "cmux.coderouter.auth_failure": reason,
-    "cmux.coderouter.auth_failure_detail": detail,
-    "cmux.coderouter.auth_key_id": keyId,
+    "hmux.coderouter.auth_failure": reason,
+    "hmux.coderouter.auth_failure_detail": detail,
+    "hmux.coderouter.auth_key_id": keyId,
   });
 }
 
@@ -285,16 +285,16 @@ export function recordCoderouterOutcome(outcome: CoderouterOutcome): void {
   const span = trace.getActiveSpan();
   if (span) {
     setSpanAttributes(span, {
-      "cmux.coderouter.outcome": outcome.outcome,
-      "cmux.coderouter.failure_stage": outcome.failureStage,
-      "cmux.coderouter.provider": outcome.provider,
-      "cmux.coderouter.agent": outcome.agent,
-      "cmux.coderouter.attempts": outcome.attempts,
-      "cmux.coderouter.refresh_retries": outcome.refreshRetries,
-      "cmux.coderouter.held_ms": outcome.heldMs,
-      "cmux.coderouter.hold_count": outcome.holdCount,
-      "cmux.coderouter.upstream_kind": outcome.upstreamKind,
-      "cmux.coderouter.response_streamed": outcome.responseStreamed,
+      "hmux.coderouter.outcome": outcome.outcome,
+      "hmux.coderouter.failure_stage": outcome.failureStage,
+      "hmux.coderouter.provider": outcome.provider,
+      "hmux.coderouter.agent": outcome.agent,
+      "hmux.coderouter.attempts": outcome.attempts,
+      "hmux.coderouter.refresh_retries": outcome.refreshRetries,
+      "hmux.coderouter.held_ms": outcome.heldMs,
+      "hmux.coderouter.hold_count": outcome.holdCount,
+      "hmux.coderouter.upstream_kind": outcome.upstreamKind,
+      "hmux.coderouter.response_streamed": outcome.responseStreamed,
     });
   }
 }
@@ -666,7 +666,7 @@ export function withCoderouterRoute<Context = unknown>(
         withApiRouteSpan(
           request,
           options.route,
-          { "cmux.subsystem": "coderouter", "cmux.coderouter.request_id": context.requestId },
+          { "hmux.subsystem": "coderouter", "hmux.coderouter.request_id": context.requestId },
           async (span) => {
             const ids = spanTraceIds(span);
             if (ids) {
@@ -778,17 +778,17 @@ function finalize(
   const fault = classifyCoderouterFault(outcome);
   const attribution = coderouterAttribution(context);
   setSpanAttributes(span, {
-    "cmux.coderouter.surface": context.surface,
-    "cmux.coderouter.request_success": status < 400,
-    "cmux.coderouter.request_duration_ms": durationMs,
-    "cmux.coderouter.fault": fault,
-    "cmux.coderouter.outcome": outcome.outcome,
-    "cmux.coderouter.failure_stage": outcome.failureStage,
-    "cmux.coderouter.team_id": attribution.teamId,
-    "cmux.coderouter.vm_id": attribution.vmId,
-    "cmux.coderouter.identity_source": attribution.source,
-    "cmux.user_id": attribution.stackUserId,
-    "cmux.vercel.request_id": context.vercelRequestId,
+    "hmux.coderouter.surface": context.surface,
+    "hmux.coderouter.request_success": status < 400,
+    "hmux.coderouter.request_duration_ms": durationMs,
+    "hmux.coderouter.fault": fault,
+    "hmux.coderouter.outcome": outcome.outcome,
+    "hmux.coderouter.failure_stage": outcome.failureStage,
+    "hmux.coderouter.team_id": attribution.teamId,
+    "hmux.coderouter.vm_id": attribution.vmId,
+    "hmux.coderouter.identity_source": attribution.source,
+    "hmux.user_id": attribution.stackUserId,
+    "hmux.vercel.request_id": context.vercelRequestId,
   });
   if (thrown !== undefined) recordRouteCrash(context, span, outcome, attribution, durationMs, thrown);
   addCoderouterBreadcrumb("request", "Route finished", {
@@ -824,12 +824,12 @@ function recordRouteCrash(
   try {
     const cause = safeErrorCause(thrown);
     setSpanAttributes(span, {
-      "cmux.coderouter.provider": outcome.provider,
-      "cmux.coderouter.error_class": cause.errorClass,
-      "cmux.coderouter.error_cause_class": cause.causeClass,
-      "cmux.coderouter.db_sqlstate": cause.dbSqlstate,
-      "cmux.coderouter.db_operation": cause.dbOperation,
-      "cmux.coderouter.error_code": cause.errorCode,
+      "hmux.coderouter.provider": outcome.provider,
+      "hmux.coderouter.error_class": cause.errorClass,
+      "hmux.coderouter.error_cause_class": cause.causeClass,
+      "hmux.coderouter.db_sqlstate": cause.dbSqlstate,
+      "hmux.coderouter.db_operation": cause.dbOperation,
+      "hmux.coderouter.error_code": cause.errorCode,
     });
   } catch {
     // Span annotation is diagnostic only.

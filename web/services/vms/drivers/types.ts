@@ -253,19 +253,19 @@ export type WebSocketPtyEndpoint = {
 export type AttachEndpoint = SSHEndpoint | WebSocketPtyEndpoint;
 
 /** Session transports a provider can hand out; `attachTransports` on VMProvider lists a driver's. */
-export type AttachTransport = "ssh" | "websocket" | "cmux-remote";
+export type AttachTransport = "ssh" | "websocket" | "hmux-remote";
 
 /**
- * Attach through the cmux-tui remote daemon running in the VM
- * (docs/cloud-cmux-tui-daemon.md). The route
+ * Attach through the hmux-tui remote daemon running in the VM
+ * (docs/cloud-hmux-tui-daemon.md). The route
  * is the provider's tokenized ingress to the daemon's `/v1/link` listener; the
  * token only gates reachability — session auth is the daemon's Noise device
  * enrollment. `invitation` is present when the caller's device is not yet
  * enrolled: the client connects with `remote connect --invite-file`, then asks
  * the control plane to approve the pending enrollment it minted.
  */
-export type CmuxRemoteEndpoint = {
-  transport: "cmux-remote";
+export type HmuxRemoteEndpoint = {
+  transport: "hmux-remote";
   /** `wss://<host>/v1/link?<provider-token>` — carries the ingress token, so it is never embedded in an invitation. */
   route: string;
   /** Ingress token (hashed into the lease ledger, never persisted raw). */
@@ -292,7 +292,7 @@ export type CmuxRemoteEndpoint = {
   trustedCarrier: boolean;
   /** @deprecated Never returned since the trusted listener; kept so older clients decode. */
   invitation?: {
-    /** Single-use `cmux://enroll/...` URI; the client must pass it via `--invite-file`, never argv. */
+    /** Single-use `hmux://enroll/...` URI; the client must pass it via `--invite-file`, never argv. */
     uri: string;
     /** Identifier the client returns to the approve endpoint. */
     invitationId: string;
@@ -307,16 +307,16 @@ export type CmuxRemoteEndpoint = {
   networkAddresses?: { ipv4?: string; ipv6?: string };
 };
 
-export type CmuxRemoteAttachOptions = {
+export type HmuxRemoteAttachOptions = {
   /** Authoritative display name and revision, refreshed before returning the terminal. */
   promptIdentity?: GuestPromptIdentity;
   /**
-   * The caller's cmux-tui device fingerprint, when it already enrolled with this
+   * The caller's hmux-tui device fingerprint, when it already enrolled with this
    * VM's daemon. Lets the provider skip minting an invitation.
    */
   deviceFingerprint?: string;
   /**
-   * Transport capabilities the caller's cmux-tui client advertises (`remote-probe
+   * Transport capabilities the caller's hmux-tui client advertises (`remote-probe
    * --json` → `capabilities`). `direct-ws-user-agent` lets the provider hand out the
    * branded machine host, whose ingress refuses upgrades without a User-Agent.
    */
@@ -324,7 +324,7 @@ export type CmuxRemoteAttachOptions = {
   providerMetadata?: Record<string, unknown>;
 };
 
-export type CmuxRemoteApprovalResult = {
+export type HmuxRemoteApprovalResult = {
   approved: boolean;
   /** Fingerprint of the device that claimed the invitation, when approved. */
   deviceFingerprint?: string;
@@ -332,14 +332,14 @@ export type CmuxRemoteApprovalResult = {
   state: "approved" | "pending" | "already_enrolled";
 };
 
-export type CmuxRemoteApprovalOptions = {
+export type HmuxRemoteApprovalOptions = {
   /** Server-side metadata persisted with the VM row, used for durable-home routing. */
   readonly providerMetadata?: Record<string, unknown>;
 };
 
 export type AttachOptions = {
   /**
-   * Workspace attaches need a cmuxd RPC endpoint so browser panels can proxy remote
+   * Workspace attaches need a hmuxd RPC endpoint so browser panels can proxy remote
    * loopback URLs. PTY-only split attaches can omit it and only mint a terminal lease.
    */
   requireDaemon?: boolean;
@@ -392,7 +392,7 @@ export type ExecOptions = {
   readonly timeoutMs?: number;
   /**
    * Run as root instead of the work user. Every exec ran as root before
-   * public `vm exec` moved to the work user (#16769); cmux's own guest
+   * public `vm exec` moved to the work user (#16769); hmux's own guest
    * maintenance that writes root-owned paths still needs it.
    */
   readonly asRoot?: boolean;
@@ -455,7 +455,7 @@ export type ProviderNetwork = {
  * private network.
  *
  * `clientConfig` is a complete `wg-quick` config whose `PrivateKey` is blank —
- * cmux always supplies its own public key, so the provider never mints (or
+ * hmux always supplies its own public key, so the provider never mints (or
  * sees) a private key, and the client fills its own in from its keystore.
  */
 export type ProviderTunnel = {
@@ -493,7 +493,7 @@ export type ProviderTunnelCreateResult = {
 export type CreateProviderTunnelOptions = {
   readonly slug: string;
   readonly displayName?: string;
-  /** Base64 Curve25519 public key. Required: cmux never lets the provider mint a private key. */
+  /** Base64 Curve25519 public key. Required: hmux never lets the provider mint a private key. */
   readonly clientPublicKey: string;
   readonly networkId: string;
 };
@@ -587,7 +587,7 @@ export interface VMProvider {
   listVolumes?(options?: VMVolumeListOptions): Promise<VMVolumeInventory>;
   /**
    * Optional account-wide, read-only inventory for the staff health sweep. It
-   * covers every VM and TLS rule on the provider account, not only cmux rows.
+   * covers every VM and TLS rule on the provider account, not only hmux rows.
    */
   readonly healthInventory?: VmHealthInventory;
 
@@ -653,29 +653,29 @@ export interface VMProvider {
   fork?(vmId: string): Promise<VMHandle>;
 
   // Session transports this driver supports. Undefined means the legacy set (`websocket`
-  // and/or `ssh` via openAttach/openSSH). A driver that lists only `cmux-remote`
+  // and/or `ssh` via openAttach/openSSH). A driver that lists only `hmux-remote`
   // never serves openAttach: workflows fail such requests with
   // VmAttachTransportUnsupportedError before reaching the provider.
   readonly attachTransports?: readonly AttachTransport[];
 
-  // Optional: a live attach endpoint the client can dial into — a cmuxd-remote WebSocket
+  // Optional: a live attach endpoint the client can dial into — a hmuxd-remote WebSocket
   // PTY with a short-lived one-use lease. A driver only implements this when it lists
   // `websocket` in attachTransports; workflows refuse the transport before reaching a
   // driver that omits it.
   openAttach?(vmId: string, options?: AttachOptions): Promise<AttachEndpoint>;
 
-  // Optional: attach through the cmux-tui remote daemon in the VM (see CmuxRemoteEndpoint).
-  // Every cmux Cloud machine runs this daemon; providers that have not been migrated
+  // Optional: attach through the hmux-tui remote daemon in the VM (see HmuxRemoteEndpoint).
+  // Every hmux Cloud machine runs this daemon; providers that have not been migrated
   // leave this undefined.
-  openCmuxRemote?(vmId: string, options?: CmuxRemoteAttachOptions): Promise<CmuxRemoteEndpoint>;
+  openHmuxRemote?(vmId: string, options?: HmuxRemoteAttachOptions): Promise<HmuxRemoteEndpoint>;
   // Optional, compatibility only: the trusted listener needs no approval, so a
   // provider answers `approved` without touching the machine. Older Mac builds
   // still call it once after their first connect.
-  approveCmuxRemoteEnrollment?(
+  approveHmuxRemoteEnrollment?(
     vmId: string,
     invitationId: string,
-    options?: CmuxRemoteApprovalOptions,
-  ): Promise<CmuxRemoteApprovalResult>;
+    options?: HmuxRemoteApprovalOptions,
+  ): Promise<HmuxRemoteApprovalResult>;
 
   // Optional: a live SSH endpoint the client can dial into. Drivers are responsible for
   // ensuring sshd is running (some providers need an explicit start step). Only drivers

@@ -4,7 +4,7 @@
 `capture_screenshots` does not raise when the scheme's test build fails. It
 records the failure and returns. The lane deliberately passes no `testplan:`
 (with `-testPlan` the UI test passes but fastlane collects zero screenshots), so
-the plain `cmux-ios` scheme invocation requires every test target in the
+the plain `hmux-ios` scheme invocation requires every test target in the
 scheme's default plan to compile before any screenshot is taken.
 
 When one does not, nothing raises. The lane captures nothing for all nine
@@ -12,8 +12,8 @@ languages on both devices, and the failure finally surfaces from the `frame`
 lane as "no localized raws in ios/fastlane/screenshots; run capture first",
 which names the wrong thing entirely. Release run 35225939389 (v0.64.25) spent
 47 minutes that way because
-Packages/iOS/CmuxMobileTerminal/Tests/CmuxMobileTerminalTests/GhosttySurfaceWorkQueueTests.swift
-was missing `@testable import CmuxMobileTerminal`, so `GhosttySurfaceWorkQueue`
+Packages/iOS/HmuxMobileTerminal/Tests/HmuxMobileTerminalTests/GhosttySurfaceWorkQueueTests.swift
+was missing `@testable import HmuxMobileTerminal`, so `GhosttySurfaceWorkQueue`
 was out of scope and xcodebuild exited 65.
 
 Where a Ruby is available this also syntax-checks the Fastfile.

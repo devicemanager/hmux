@@ -64,8 +64,8 @@ class UpdateReleaseTagTests(unittest.TestCase):
                 mock.patch.object(MODULE.time, "sleep") as sleep, \
                 mock.patch.dict(MODULE.os.environ, {
                     "GH_TOKEN": "test-token",
-                    "CMUX_NIGHTLY_TAG_API_MAX_ATTEMPTS": "4",
-                    "CMUX_NIGHTLY_TAG_API_RETRY_DELAY_SECONDS": "2",
+                    "HMUX_NIGHTLY_TAG_API_MAX_ATTEMPTS": "4",
+                    "HMUX_NIGHTLY_TAG_API_RETRY_DELAY_SECONDS": "2",
                 }, clear=False):
             MODULE.update_tag("owner/repo", "nightly", self.SHA)
         return calls, sleep

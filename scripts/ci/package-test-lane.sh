@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # The swift-package-tests lane of ci-macos.yml as one script, so the same code
-# runs on a GitHub runner and as a fleet ci-step (`cmux-ci run`, hq#794) from a
+# runs on a GitHub runner and as a fleet ci-step (`hmux-ci run`, hq#794) from a
 # fresh checkout of the commit on a mini.
 #
 # Usage: package-test-lane.sh [run|select|bonsplit|packages|ghostty-sha]
@@ -77,7 +77,7 @@ ensure_parent() {
   git fetch --no-tags --no-write-fetch-head ${depth[@]+"${depth[@]}"} "$remote" "$(git rev-parse HEAD)" || true
 }
 
-# A same-repository pull request run (the workflow sets CMUX_PACKAGE_REUSE=1)
+# A same-repository pull request run (the workflow sets HMUX_PACKAGE_REUSE=1)
 # keys each selected package's test inputs (scripts/ci/package_input_key.py)
 # and, unless it is the full suite, drops the packages whose key passed on an
 # earlier run of this branch (scripts/ci/reuse_package_results.py). The select
@@ -86,17 +86,17 @@ ensure_parent() {
 package_keys="$work/package-input-keys.json"
 reused_packages="$work/reused-packages.txt"
 reuse_package_results() {
-  [ "${CMUX_PACKAGE_REUSE:-0}" = 1 ] && [ -s "$selected" ] || return 0
+  [ "${HMUX_PACKAGE_REUSE:-0}" = 1 ] && [ -s "$selected" ] || return 0
   if [ ! -f "$package_keys" ] && ! python3 scripts/ci/package_input_key.py --packages-file "$selected" \
-      --extra "xcode=${CMUX_CI_XCODE_APP:-}" --extra "macos=$(sw_vers -productVersion 2>/dev/null || true)" \
+      --extra "xcode=${HMUX_CI_XCODE_APP:-}" --extra "macos=$(sw_vers -productVersion 2>/dev/null || true)" \
       --output "$package_keys"; then
     rm -f "$package_keys"
     return 0
   fi
-  if [ "${CMUX_PACKAGE_REUSE:-0}" = 1 ] && [ "$full_suite" != "true" ] && [ "$event" = "pull_request" ]; then
+  if [ "${HMUX_PACKAGE_REUSE:-0}" = 1 ] && [ "$full_suite" != "true" ] && [ "$event" = "pull_request" ]; then
     if [ ! -f "$reused_packages" ]; then
       python3 scripts/ci/reuse_package_results.py --repository "${GITHUB_REPOSITORY:-}" \
-        --branch "${CMUX_PACKAGE_REUSE_BRANCH:-}" --current-run-id "${GITHUB_RUN_ID:-0}" \
+        --branch "${HMUX_PACKAGE_REUSE_BRANCH:-}" --current-run-id "${GITHUB_RUN_ID:-0}" \
         --selected "$selected" --keys "$package_keys" --reused "$reused_packages" || : > "$reused_packages"
     fi
     grep -vxF -f "$reused_packages" "$selected" > "$selected.remaining" || true
@@ -121,73 +121,73 @@ PY
 
 select_packages() {
   PACKAGES=(
-    CMUXAuthCore
-    CmuxBrowser
-    CmuxCanvasUI
-    CmuxCloud
-    CmuxCloudMachines
-    CmuxCloudTui
-    CmuxComputerUse
-    CmuxCore
-    CmuxRemoteDaemon
-    CmuxRemoteWorkspace
-    CmuxRemoteSession
-    CmuxAgentChat
-    CmuxAgentQuestion
-    CmuxChief
-    CmuxHomeCore
-    CmuxHomeRender
-    CmuxMessagesLab
-    CmuxAgentSessionStore
-    CmuxAuthRuntime
-    CmuxWorkspacePresence
-    CmuxIrohTransport
-    CmuxIrxTransport
-    CmuxHive
-    CmuxCommandPalette
-    CmuxControlSocket
-    CmuxFoundation
-    CmuxGit
-    CmuxMobileTerminalKit
-    CmuxMobileWorkspace
-    CmuxNotifications
-    CmuxSettings
-    CmuxSettingsUI
-    CmuxSidebarGit
-    CmuxSurfaceCatalogModel
-    CmuxSudoBroker
-    CmuxSudoBrokerUI
-    CmuxTerminal
-    CmuxTerminalCore
-    CmuxTerminalImport
-    CmuxTerminalPrediction
-    CmuxUpdater
-    CmuxWorkspaces
-    CMUXAgentLaunch
-    CmuxAgentJournal
-    CmuxFilePreviewCore
-    CmuxSyntaxHighlighting
-    CmuxAppKitSupportUI
-    CmuxCanvas
-    CmuxCloudBannerCore
-    CmuxCloudImagePaste
-    CmuxCloudTunnelCore
-    CMUXDebugLog
-    CmuxExtensionKit
-    CmuxFeedback
-    CmuxLiveEval
-    CmuxPanes
-    CmuxPhonePush
-    CMUXProjectModel
-    CmuxSidebar
-    CmuxSidebarInterpreterService
-    CmuxSimulator
-    CmuxSwiftRender
-    CmuxSwiftRenderUI
-    CmuxTestSupport
-    CmuxUpdaterUI
-    CmuxWindowing
-    CmuxTextActions
+    HMUXAuthCore
+    HmuxBrowser
+    HmuxCanvasUI
+    HmuxCloud
+    HmuxCloudMachines
+    HmuxCloudTui
+    HmuxComputerUse
+    HmuxCore
+    HmuxRemoteDaemon
+    HmuxRemoteWorkspace
+    HmuxRemoteSession
+    HmuxAgentChat
+    HmuxAgentQuestion
+    HmuxChief
+    HmuxHomeCore
+    HmuxHomeRender
+    HmuxMessagesLab
+    HmuxAgentSessionStore
+    HmuxAuthRuntime
+    HmuxWorkspacePresence
+    HmuxIrohTransport
+    HmuxIrxTransport
+    HmuxHive
+    HmuxCommandPalette
+    HmuxControlSocket
+    HmuxFoundation
+    HmuxGit
+    HmuxMobileTerminalKit
+    HmuxMobileWorkspace
+    HmuxNotifications
+    HmuxSettings
+    HmuxSettingsUI
+    HmuxSidebarGit
+    HmuxSurfaceCatalogModel
+    HmuxSudoBroker
+    HmuxSudoBrokerUI
+    HmuxTerminal
+    HmuxTerminalCore
+    HmuxTerminalImport
+    HmuxTerminalPrediction
+    HmuxUpdater
+    HmuxWorkspaces
+    HMUXAgentLaunch
+    HmuxAgentJournal
+    HmuxFilePreviewCore
+    HmuxSyntaxHighlighting
+    HmuxAppKitSupportUI
+    HmuxCanvas
+    HmuxCloudBannerCore
+    HmuxCloudImagePaste
+    HmuxCloudTunnelCore
+    HMUXDebugLog
+    HmuxExtensionKit
+    HmuxFeedback
+    HmuxLiveEval
+    HmuxPanes
+    HmuxPhonePush
+    HMUXProjectModel
+    HmuxSidebar
+    HmuxSidebarInterpreterService
+    HmuxSimulator
+    HmuxSwiftRender
+    HmuxSwiftRenderUI
+    HmuxTestSupport
+    HmuxUpdaterUI
+    HmuxWindowing
+    HmuxTextActions
   )
 
   changed="$work/changed-files.txt"
@@ -225,12 +225,12 @@ select_packages() {
   output "selected_packages=$selected"
   output "selected_count=$count"
 
-  if grep -qxE 'CmuxTerminal|CmuxTerminalCore|CmuxCloudTui|CmuxCloud' "$selected"; then
+  if grep -qxE 'HmuxTerminal|HmuxTerminalCore|HmuxCloudTui|HmuxCloud' "$selected"; then
     needs_ghosttykit=true
   else
     needs_ghosttykit=false
   fi
-  if grep -qxF CmuxCommandPalette "$selected"; then
+  if grep -qxF HmuxCommandPalette "$selected"; then
     needs_rust=true
   else
     needs_rust=false
@@ -249,7 +249,7 @@ select_xcode() {
   fi
   local env_file="$work/xcode.env"
   : > "$env_file"
-  GITHUB_ENV="$env_file" CMUX_CI_SKIP_XCODE_SELECT=1 ./scripts/select-ci-xcode.sh
+  GITHUB_ENV="$env_file" HMUX_CI_SKIP_XCODE_SELECT=1 ./scripts/select-ci-xcode.sh
   DEVELOPER_DIR="$(sed -n 's/^DEVELOPER_DIR=//p' "$env_file" | tail -n 1)"
   test -n "$DEVELOPER_DIR"
   export DEVELOPER_DIR
@@ -311,8 +311,8 @@ run_bonsplit_tests() {
   run_swift_test() {
     test_status=0
     python3 scripts/ci/hung_test_watchdog.py \
-      --stall-seconds "${CMUX_SWIFT_TEST_STALL_SECONDS:-180}" \
-      --timeout-seconds "${CMUX_SWIFT_PACKAGE_TEST_TIMEOUT_SECONDS:-900}" \
+      --stall-seconds "${HMUX_SWIFT_TEST_STALL_SECONDS:-180}" \
+      --timeout-seconds "${HMUX_SWIFT_PACKAGE_TEST_TIMEOUT_SECONDS:-900}" \
       --sample-seconds 5 --label Bonsplit --log "$log" \
       -- swift test --package-path vendor/bonsplit < /dev/null || test_status=$?
   }
@@ -345,7 +345,7 @@ package_args() {
   # Preserve the notification workflow's warning gate without a
   # second package build or changing the existing startup retry.
   case "$pkg" in
-    CMUXAgentLaunch|CmuxAgentJournal)
+    HMUXAgentLaunch|HmuxAgentJournal)
       swift_test_args+=(-Xswiftc -warnings-as-errors)
       ;;
   esac
@@ -358,7 +358,7 @@ prebuild_one() {
   local pkg="$1" log="$2" started=$SECONDS status=0
   package_args "$pkg" > "$log" 2>&1 || { echo "Prebuild skipped $pkg (not found)."; return 0; }
   python3 scripts/ci/run_with_timeout.py \
-    --timeout-seconds "${CMUX_SWIFT_PACKAGE_TEST_TIMEOUT_SECONDS:-900}" \
+    --timeout-seconds "${HMUX_SWIFT_PACKAGE_TEST_TIMEOUT_SECONDS:-900}" \
     -- swift build --build-tests "${swift_test_args[@]}" > "$log" 2>&1 < /dev/null || status=$?
   if [ "$status" -eq 0 ]; then
     echo "Prebuilt $pkg in $((SECONDS - started))s."
@@ -371,11 +371,11 @@ prebuild_one() {
 # package compiles its whole dependency closure from scratch, and most of a
 # package's lane time is that build. Build and test one after another left the
 # runner mostly idle: one package build rarely fills the cores. Build the
-# selected packages CMUX_SWIFT_PACKAGE_BUILD_JOBS at a time first; the test
+# selected packages HMUX_SWIFT_PACKAGE_BUILD_JOBS at a time first; the test
 # pass below then finds each build up to date and runs the tests serially as
 # before, so no two packages' tests ever overlap.
 prebuild_packages() {
-  local jobs="${CMUX_SWIFT_PACKAGE_BUILD_JOBS:-3}"
+  local jobs="${HMUX_SWIFT_PACKAGE_BUILD_JOBS:-3}"
   if ! [[ "$jobs" =~ ^[0-9]+$ ]] || [ "$jobs" -le 1 ] || [ "${SELECTED_COUNT:-0}" -le 1 ]; then
     return 0
   fi
@@ -390,14 +390,14 @@ prebuild_packages() {
 }
 
 run_package_tests() {
-  # The cmux-unit scheme only runs the cmuxTests app-host suite; it does
+  # The hmux-unit scheme only runs the hmuxTests app-host suite; it does
   # not execute the SPM package test targets. Run them here so package
   # tests (settings stores, secret-file migration, socket-control
   # convergence, etc.) are a real CI gate, not just compiled.
   # Scoped to packages that build headlessly via SwiftPM (no GhosttyKit /
   # app-target dependency). Add a package here once its `swift test`
   # is confirmed to resolve standalone. The GhosttyKit-referencing
-  # packages (CmuxTerminalCore and the terminal packages stacked on
+  # packages (HmuxTerminalCore and the terminal packages stacked on
   # it) are the exception: their binaryTarget only needs the
   # xcframework present at the repo root (downloaded earlier in this
   # lane), and their test runners link a C stub for the @_silgen_name
@@ -418,7 +418,7 @@ run_package_tests() {
   #
   # Every `swift test` below streams live and into "$log" through the
   # hang watchdog. Once the build is done, no test starting or
-  # finishing for CMUX_SWIFT_TEST_STALL_SECONDS is a hang: the watchdog
+  # finishing for HMUX_SWIFT_TEST_STALL_SECONDS is a hang: the watchdog
   # names the unfinished tests, samples the xctest and
   # swiftpm-testing-helper stacks into the log, kills the tree and
   # exits 124, which fails the package. The longest single test in
@@ -428,8 +428,8 @@ run_package_tests() {
   run_swift_test() {
     test_status=0
     python3 scripts/ci/hung_test_watchdog.py \
-      --stall-seconds "${CMUX_SWIFT_TEST_STALL_SECONDS:-180}" \
-      --timeout-seconds "${CMUX_SWIFT_PACKAGE_TEST_TIMEOUT_SECONDS:-900}" \
+      --stall-seconds "${HMUX_SWIFT_TEST_STALL_SECONDS:-180}" \
+      --timeout-seconds "${HMUX_SWIFT_PACKAGE_TEST_TIMEOUT_SECONDS:-900}" \
       --sample-seconds 5 --label "$pkg" --log "$log" \
       -- swift test "${swift_test_args[@]}" < /dev/null || test_status=$?
   }
@@ -442,12 +442,12 @@ run_package_tests() {
       END { exit found ? 0 : 1 }
     ' "$log"
   }
-  if grep -qxF CmuxCommandPalette "$selected"; then
-    # CmuxCommandPalette's nucleo FFI tests load the Rust dylib through
-    # CMUX_NUCLEO_FFI_LIB (they skip when it is absent, so build it here
+  if grep -qxF HmuxCommandPalette "$selected"; then
+    # HmuxCommandPalette's nucleo FFI tests load the Rust dylib through
+    # HMUX_NUCLEO_FFI_LIB (they skip when it is absent, so build it here
     # to keep the FFI parity suite a real gate).
     cargo build --manifest-path Native/CommandPaletteNucleoFFI/Cargo.toml --release
-    export CMUX_NUCLEO_FFI_LIB="$PWD/Native/CommandPaletteNucleoFFI/target/release/libcmux_command_palette_nucleo_ffi.dylib"
+    export HMUX_NUCLEO_FFI_LIB="$PWD/Native/CommandPaletteNucleoFFI/target/release/libhmux_command_palette_nucleo_ffi.dylib"
   fi
   # Every selected package runs even after another one fails, so one
   # broken or hung package cannot hide the results of the packages
@@ -458,13 +458,13 @@ run_package_tests() {
     local pkg="$1"
     package_args "$pkg" || return 1
     case "$pkg" in
-    # CmuxFoundation has several process-tree suites whose child
+    # HmuxFoundation has several process-tree suites whose child
     # fixtures share global process resources; run each suite in its
     # own Swift Testing process just like the auth/transport suites.
-    CmuxAgentChat|CmuxAuthRuntime|CmuxFoundation|CmuxIrohTransport|CmuxIrxTransport)
+    HmuxAgentChat|HmuxAuthRuntime|HmuxFoundation|HmuxIrohTransport|HmuxIrxTransport)
       ./scripts/ci/run-swift-testing-suites.sh "$pkgdir" || return $?
       ;;
-    CmuxTerminal|CmuxTerminalCore|CmuxCloudTui|CmuxCloud)
+    HmuxTerminal|HmuxTerminalCore|HmuxCloudTui|HmuxCloud)
       run_swift_test
       if [ "$test_status" -ne 0 ]; then
         if [ "$test_status" -eq 1 ] \

@@ -1,6 +1,6 @@
 import Foundation
 
-/// The transports cmux can carry a control stream over.
+/// The transports hmux can carry a control stream over.
 ///
 /// A closed set rather than a free-form string, so an unknown value is rejected at the
 /// socket boundary instead of becoming an unspawnable host.
@@ -172,7 +172,7 @@ protocol RemoteTmuxTransportProfile: Sendable {
     /// `tcsetattr` on fd 0 are called *without checking their return values*
     /// (`PsuedoTerminalConsole.hpp`). On a pipe those calls simply fail and the data path carries
     /// on, so control mode is reached over pipes — measured, including with no controlling terminal
-    /// at all, which is precisely how cmux spawns it.
+    /// at all, which is precisely how hmux spawns it.
     ///
     /// The pty earns its place for a different reason. With no usable termios the client cannot put
     /// the terminal in raw mode, so the same session's stream arrives far larger, padded
@@ -180,7 +180,7 @@ protocol RemoteTmuxTransportProfile: Sendable {
     /// bare multiple, because they came from different setups and a lone ratio hides which:
     /// 1324 bytes with a pty vs 44576 without, one session against a loopback server; and
     /// 1006 vs 44628 for the same session spawned under `setsid` with no controlling terminal.
-    /// cmux parses that stream and budgets its buffers against it, so the wrapper is about a
+    /// hmux parses that stream and budgets its buffers against it, so the wrapper is about a
     /// bounded, clean stream rather than about existence.
     ///
     /// `-N` is not the alternative it looks like. It suppresses the console, and the remote's output
@@ -207,20 +207,20 @@ protocol RemoteTmuxTransportProfile: Sendable {
 
     /// Whether the remote end keeps running after the local client process exits.
     ///
-    /// This decides whether cmux has to detach in tmux's own terms. Killing an ssh client closes
+    /// This decides whether hmux has to detach in tmux's own terms. Killing an ssh client closes
     /// the pty it handed tmux, so tmux reaps that control client by itself and tearing the
     /// transport down is a complete detach. et is built to survive a dead client: `etterminal`
     /// stays up holding the pty so a later `et` can resume it, which also means the tmux control
     /// client stays attached to the session.
     ///
     /// Measured on 2026-07-22 with five mirrors of one host: closing one mirror left 4 local `et`
-    /// clients (cmux's teardown did land) against 5 `etterminal` processes and 5 attached control
+    /// clients (hmux's teardown did land) against 5 `etterminal` processes and 5 attached control
     /// clients. Five more clients from an app that had already quit were still attached 46 minutes
     /// later. Stale clients accumulate one per closed mirror, and because a window's usable size
     /// is bounded by the smallest attached client, a stale narrow one can clamp a live mirror.
     var remoteHalfSurvivesLocalExit: Bool { get }
 
-    /// Whether cmux's interactive login can fix this transport's authentication failure.
+    /// Whether hmux's interactive login can fix this transport's authentication failure.
     ///
     /// That login is one shape: open a terminal running `ssh <host> true`, and resume once the
     /// shared ControlMaster socket appears. A transport that does not connect through that master
@@ -233,7 +233,7 @@ protocol RemoteTmuxTransportProfile: Sendable {
     /// The environment the control-stream process runs with, given the app's own.
     ///
     /// A GUI app's PATH is launchd's `/usr/bin:/bin:/usr/sbin:/sbin`, and the transport's child
-    /// inherits it. That is harmless while cmux names every binary by absolute path, but a broker
+    /// inherits it. That is harmless while hmux names every binary by absolute path, but a broker
     /// runs its own client by name.
     func childProcessEnvironment(inheriting base: [String: String]) -> [String: String]
 }
@@ -247,13 +247,13 @@ extension RemoteTmuxTransportProfile {
         mode: RemoteTmuxControlAttachMode
     ) -> (actual: Int, budget: Int)? { nil }
 
-    /// cmux's own ssh invocation is the default shape.
+    /// hmux's own ssh invocation is the default shape.
     var authenticationIsSSHShaped: Bool { true }
 }
 
 /// What end-of-stream on the control connection means.
 ///
-/// cmux's recovery is built on stdout EOF: the stream ends, so respawn with backoff.
+/// hmux's recovery is built on stdout EOF: the stream ends, so respawn with backoff.
 ///
 /// The tempting rule is that a transport owning its own reconnection does not end for a network
 /// drop, so its exit must mean the session ended. Measured against et 6.2.11+7, that is false:
@@ -265,7 +265,7 @@ extension RemoteTmuxTransportProfile {
 /// gone session from what the reattach reports. The failure such a transport still needs watching
 /// for is the one EOF never reports at all — alive but wedged.
 enum RemoteTmuxStreamEndDisposition: Sendable, Equatable {
-    /// cmux owns recovery: respawn the transport with backoff.
+    /// hmux owns recovery: respawn the transport with backoff.
     case reconnect
     /// The transport owned recovery, so its exit is terminal.
     case sessionOver
@@ -292,9 +292,9 @@ enum RemoteTmuxStreamEndDisposition: Sendable, Equatable {
 /// the real client with whatever endpoint it produced. Those details are the broker's business,
 /// and a transport that tries to reconstruct them ends up encoding one site's topology.
 ///
-/// So cmux does not reconstruct them. A brokered host names the wrapper and its flags, and cmux
+/// So hmux does not reconstruct them. A brokered host names the wrapper and its flags, and hmux
 /// invokes `<executable> <leadingArguments> <destination> <client args…>`. The broker supplies the
-/// port, the tunnel and the credentials; cmux supplies only the remote command. Measured against a
+/// port, the tunnel and the credentials; hmux supplies only the remote command. Measured against a
 /// real broker: this shape reaches control mode where a direct connection cannot reach the host at
 /// all.
 ///
@@ -315,8 +315,8 @@ struct RemoteTmuxTransportBroker: Sendable, Equatable {
     /// Whether this broker supplies the transport's own endpoint flags.
     ///
     /// Always true today, and named rather than assumed: a broker that resolves reachability is by
-    /// definition the thing that knows the port and the helper path, so cmux passing its own would
-    /// fight it. Keeping it explicit means a future broker that needs cmux's values can say so.
+    /// definition the thing that knows the port and the helper path, so hmux passing its own would
+    /// fight it. Keeping it explicit means a future broker that needs hmux's values can say so.
     var suppliesEndpointFlags: Bool { true }
 }
 
@@ -327,10 +327,10 @@ struct RemoteTmuxTransportBroker: Sendable, Equatable {
 /// landed, which is the worse direction to be wrong in for a seam that launches a process.
 ///
 /// The whole path, so it can be checked rather than trusted: a user declares brokers under
-/// `remoteTmux.brokers`, `CmuxConfigFile` decodes them and publishes the registry plus the reasons
+/// `remoteTmux.brokers`, `HmuxConfigFile` decodes them and publishes the registry plus the reasons
 /// for any it refused (``RemoteTmuxBrokerSnapshot``), the socket boundary reads a `transport_broker`
 /// name and refuses the host outright when it does not resolve
-/// (``TerminalController/remoteTmuxHost(from:selectBroker:)``), `cmux ssh-tmux --broker <name>`
+/// (``TerminalController/remoteTmuxHost(from:selectBroker:)``), `hmux ssh-tmux --broker <name>`
 /// forwards that name, ``select(requestedName:registry:rejected:)`` makes the trust decision,
 /// ``RemoteTmuxETTransportProfile`` builds the argv, and ``isAcceptableExecutable`` is applied to
 /// `executablePath()` before `Process` runs it.
@@ -378,13 +378,13 @@ struct RemoteTmuxBrokerRegistry: Sendable, Equatable {
     }
 }
 
-/// A broker as a user declares it in `~/.config/cmux/cmux.json`, under `remoteTmux.brokers`.
+/// A broker as a user declares it in `~/.config/hmux/hmux.json`, under `remoteTmux.brokers`.
 ///
 /// Declared by name so the control socket can only ever pick something already written down. The
 /// socket is reachable by anything running as the user, and letting it name an executable inline
 /// would be a wider local-execution surface than the `-oProxyCommand=…` injection the boundary
 /// already refuses.
-struct CmuxRemoteTmuxBrokerDefinition: Codable, Hashable, Sendable {
+struct HmuxRemoteTmuxBrokerDefinition: Codable, Hashable, Sendable {
     /// Absolute path to the wrapper. Absolute because the pty wrapper resolves its argument
     /// against the app's PATH, which for a GUI app is not the user's.
     var executable: String
@@ -410,21 +410,21 @@ struct CmuxRemoteTmuxBrokerDefinition: Codable, Hashable, Sendable {
 }
 
 /// The `remoteTmux` section of the config file.
-struct CmuxRemoteTmuxConfigDefinition: Codable, Hashable, Sendable {
-    var brokers: [String: CmuxRemoteTmuxBrokerDefinition]
+struct HmuxRemoteTmuxConfigDefinition: Codable, Hashable, Sendable {
+    var brokers: [String: HmuxRemoteTmuxBrokerDefinition]
 
     private enum CodingKeys: String, CodingKey {
         case brokers
     }
 
-    init(brokers: [String: CmuxRemoteTmuxBrokerDefinition] = [:]) {
+    init(brokers: [String: HmuxRemoteTmuxBrokerDefinition] = [:]) {
         self.brokers = brokers
     }
 
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         brokers = try container.decodeIfPresent(
-            [String: CmuxRemoteTmuxBrokerDefinition].self, forKey: .brokers
+            [String: HmuxRemoteTmuxBrokerDefinition].self, forKey: .brokers
         ) ?? [:]
     }
 }
@@ -454,7 +454,7 @@ extension RemoteTmuxBrokerRegistry {
     /// cannot be used instead of claiming it was never declared. Silently dropping them would turn
     /// a fixable path mistake into a phantom typo.
     static func make(
-        from definition: CmuxRemoteTmuxConfigDefinition,
+        from definition: HmuxRemoteTmuxConfigDefinition,
         fileExists: (String) -> Bool = { FileManager.default.isExecutableFile(atPath: $0) }
     ) -> (registry: RemoteTmuxBrokerRegistry, rejected: [String: String]) {
         var usable: [String: RemoteTmuxTransportBroker] = [:]
@@ -553,8 +553,8 @@ final class RemoteTmuxBrokerSnapshot: @unchecked Sendable {
 
 /// A command to run before opening a connection to a host.
 ///
-/// Some hosts need a step cmux has no business knowing about: minting a short-lived
-/// credential, unlocking an agent, refreshing a token. Rather than teaching cmux any of
+/// Some hosts need a step hmux has no business knowing about: minting a short-lived
+/// credential, unlocking an agent, refreshing a token. Rather than teaching hmux any of
 /// them, a host can carry a command, run as `<command> <destination>`.
 ///
 /// Two rules come out of wiring one of these up for real:
@@ -562,7 +562,7 @@ final class RemoteTmuxBrokerSnapshot: @unchecked Sendable {
 /// - It runs once per connection, not once per command. Anything minting a single-use
 ///   credential must not race itself — two mints can invalidate each other — so the right
 ///   home is the single-flight path that opens the shared master, not a per-command hook.
-/// - A non-zero exit is not fatal. cmux proceeds and lets the connection fail on its own
+/// - A non-zero exit is not fatal. hmux proceeds and lets the connection fail on its own
 ///   terms, so a broken hook cannot make a host unreachable.
 struct RemoteTmuxPreConnectHook: Sendable, Equatable {
     /// The executable to run. `nil` means today's behavior: no hook.
@@ -613,26 +613,26 @@ struct RemoteTmuxSSHTransportProfile: RemoteTmuxTransportProfile {
             + ["--", host.destination, remoteCommand]
     }
 
-    /// ssh is happy on pipes, which is what cmux spawns today.
+    /// ssh is happy on pipes, which is what hmux spawns today.
     var requiresPseudoTerminal: Bool { false }
 
     /// Killing the ssh client closes tmux's pty, so tmux drops the control client itself.
     var remoteHalfSurvivesLocalExit: Bool { false }
 }
 
-/// How cmux gives a transport a controlling terminal.
+/// How hmux gives a transport a controlling terminal.
 ///
-/// cmux spawns its control stream on pipes, which a terminal client like EternalTerminal
+/// hmux spawns its control stream on pipes, which a terminal client like EternalTerminal
 /// refuses to work with. Rather than reimplement `posix_openpt`/`grantpt`/`TIOCSCTTY`
 /// plumbing, wrap the transport in the system's own pty allocator, which is also how the
 /// behavior was verified by hand.
 ///
 /// Two measured facts make this safe for a control protocol:
 ///
-/// - The pty echoes whatever cmux writes to stdin. Those echoed lines are not control-mode
+/// - The pty echoes whatever hmux writes to stdin. Those echoed lines are not control-mode
 ///   notifications, so the parser ignores them; they cost bytes, not correctness.
 /// - Anything written before the control stream is up is consumed by the transport's *login
-///   shell*, not by tmux. cmux already withholds commands until `%enter`, so this is
+///   shell*, not by tmux. hmux already withholds commands until `%enter`, so this is
 ///   already respected — but it is why that ordering is load-bearing rather than incidental.
 enum RemoteTmuxPseudoTerminal {
     /// BSD `script` runs a command with a pty attached and copies the session to a file;
@@ -655,7 +655,7 @@ enum RemoteTmuxPseudoTerminal {
 /// See ``RemoteTmuxTransportProfile/requiresPseudoTerminal``.
 /// - **It types the command into a login shell** rather than exec'ing it, appending
 ///   `; exit`. A real `tmux -CC` stream therefore arrives after ~1.2 KB of preamble: the
-///   echoed command line, then prompt escapes, and only then `%begin`. cmux's parser
+///   echoed command line, then prompt escapes, and only then `%begin`. hmux's parser
 ///   already tolerates this (unrecognized lines yield no messages) and already strips the
 ///   pty's `\r`, so the protocol survives — but the preamble is not optional, it is what
 ///   this transport always does.
@@ -703,17 +703,17 @@ struct RemoteTmuxETTransportProfile: RemoteTmuxTransportProfile {
     /// and not a style guide: a longer line never completes, the shell runs nothing, and the attach
     /// dies on a timeout with nothing to explain it.
     ///
-    /// The value is the smaller of the platforms cmux reaches, deliberately. It is 4096 on Linux,
+    /// The value is the smaller of the platforms hmux reaches, deliberately. It is 4096 on Linux,
     /// so a bound of 1024 is safe against either — but only as a *starting* figure, because the
-    /// whole line is not cmux's to spend. See ``deliverableCommandBytes``.
+    /// whole line is not hmux's to spend. See ``deliverableCommandBytes``.
     static let maxCanonicalLineBytes = 1024
 
-    /// How much of that line cmux may actually fill.
+    /// How much of that line hmux may actually fill.
     ///
     /// Measured, because assuming the whole line was available was wrong: against et 6.2.11+7 on
     /// macOS, delivery stops between 953 and 1016 bytes, not at 1024. et appends `; exit` to
     /// whatever it is given and the shell's own line editing costs more on top, so roughly 70
-    /// bytes of a 1024-byte line are already spent before cmux's command starts. A budget compared
+    /// bytes of a 1024-byte line are already spent before hmux's command starts. A budget compared
     /// against the raw `MAX_CANON` therefore passes its own check and still gets truncated, which
     /// is the failure this constant exists to prevent.
     ///
@@ -805,7 +805,7 @@ struct RemoteTmuxETTransportProfile: RemoteTmuxTransportProfile {
         // accepted and passed along.
         //
         // The endpoint flags are dropped rather than reordered. The broker resolved the
-        // endpoint; it already knows the port and the helper path, and handing it cmux's
+        // endpoint; it already knows the port and the helper path, and handing it hmux's
         // guesses would override the values it just worked out.
         if let broker, broker.suppliesEndpointFlags {
             return broker.leadingArguments + [host.destination, "-c", "exec \(remote)"]

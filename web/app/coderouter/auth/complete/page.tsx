@@ -23,7 +23,7 @@ export default async function CoderouterAuthCompletePage() {
       <header className={styles.header}>
         <div className={styles.brand}>
           <Image src="/logo.png" alt="" width={24} height={24} />
-          <span className={styles.brandName}>cmux</span>
+          <span className={styles.brandName}>hmux</span>
           <span className={styles.divider} aria-hidden="true">/</span>
           <span className={styles.product}>coderouter</span>
         </div>

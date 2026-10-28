@@ -1,6 +1,6 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
-import CMUXProjectModel
+import HMUXProjectModel
 import SwiftUI
 
 /// Top-level SwiftUI view for a ``ProjectPanel``.
@@ -8,7 +8,7 @@ import SwiftUI
 /// Renders the project chrome (project name, scheme/configuration pickers,
 /// tab strip) and dispatches into the per-tab subviews.
 struct ProjectPanelView: View {
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     @ObservedObject var panel: ProjectPanel
     let isFocused: Bool
     let onRequestPanelFocus: () -> Void
@@ -33,7 +33,7 @@ struct ProjectPanelView: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 10) {
                 Label(panel.displayTitle, systemImage: "hammer.fill")
-                    .cmuxFont(size: 13, weight: .semibold)
+                    .hmuxFont(size: 13, weight: .semibold)
                     .help(panel.projectURL.path)
                 schemePicker
                 configurationPicker
@@ -42,7 +42,7 @@ struct ProjectPanelView: View {
                     panel.reload()
                 } label: {
                     Image(systemName: "arrow.clockwise")
-                        .cmuxFont(size: 11, weight: .semibold)
+                        .hmuxFont(size: 11, weight: .semibold)
                 }
                 .buttonStyle(.plain)
                 .safeHelp(String(localized: "projectPanel.reload", defaultValue: "Reload Project"))
@@ -51,12 +51,12 @@ struct ProjectPanelView: View {
             if let error = panel.lastLoadError, case .loaded = panel.loadState {
                 HStack(spacing: 6) {
                     Image(systemName: "exclamationmark.triangle.fill")
-                        .cmuxFont(size: 10)
+                        .hmuxFont(size: 10)
                     Text(String(
                         format: String(localized: "projectPanel.reloadErrors", defaultValue: "Reload returned errors: %@"),
                         error
                     ))
-                        .cmuxFont(size: 10)
+                        .hmuxFont(size: 10)
                         .lineLimit(1)
                         .truncationMode(.tail)
                     Spacer()
@@ -64,7 +64,7 @@ struct ProjectPanelView: View {
                         panel.lastLoadError = nil
                     } label: {
                         Image(systemName: "xmark")
-                            .cmuxFont(size: 9)
+                            .hmuxFont(size: 9)
                     }
                     .buttonStyle(.plain)
                     .safeHelp(String(localized: "projectPanel.dismissReloadErrors", defaultValue: "Dismiss Errors"))
@@ -158,13 +158,13 @@ struct ProjectPanelView: View {
             ForEach(ProjectPanelTab.allCases, id: \.self) { tab in
                 Button(action: { panel.activeTab = tab }) {
                     Text(tab.displayLabel)
-                        .cmuxFont(size: 11, weight: .medium)
+                        .hmuxFont(size: 11, weight: .medium)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 4)
                         .background(
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(panel.activeTab == tab
-                                      ? cmuxAccent.color
+                                      ? hmuxAccent.color
                                       : Color.secondary.opacity(0.10))
                         )
                         .foregroundStyle(panel.activeTab == tab ? Color.white : Color.primary)
@@ -221,7 +221,7 @@ struct ProjectPanelStatusView: View {
             HStack {
                 Spacer()
                 Text(message)
-                    .cmuxFont(size: 13)
+                    .hmuxFont(size: 13)
                     .foregroundStyle(.secondary)
                 Spacer()
             }
@@ -244,13 +244,13 @@ struct ProjectEmptyDetailView: View {
         VStack(spacing: 6) {
             Spacer()
             Image(systemName: systemImage)
-                .cmuxFont(size: 28, weight: .light)
+                .hmuxFont(size: 28, weight: .light)
                 .foregroundStyle(.tertiary)
             Text(title)
-                .cmuxFont(size: 13, weight: .semibold)
+                .hmuxFont(size: 13, weight: .semibold)
                 .foregroundStyle(.primary)
             Text(hint)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundStyle(.secondary)
             Spacer()
         }

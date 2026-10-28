@@ -1,6 +1,6 @@
 name: Nightly signing
 
-# Signing for the nightly track, split out of nightly.yml (cmuxterm-hq#2053).
+# Signing for the nightly track, split out of nightly.yml (hmuxterm-hq#2053).
 #
 # A `workflow_run` workflow runs from the default branch, so every step here is
 # main's code. It never checks out or runs code from the source run's ref: the

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxCloud
+import HmuxCloud
 import SwiftUI
 
 extension MachinesPanelView {

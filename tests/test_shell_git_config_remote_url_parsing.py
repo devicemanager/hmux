@@ -21,8 +21,8 @@ from pathlib import Path
 def _shell_command() -> str:
     return textwrap.dedent(
         """\
-        source "$CMUX_TEST_SCRIPT"
-        _cmux_github_repo_slug_for_path "$CMUX_TEST_REPO"
+        source "$HMUX_TEST_SCRIPT"
+        _hmux_github_repo_slug_for_path "$HMUX_TEST_REPO"
         """
     )
 
@@ -109,8 +109,8 @@ def _run_case(
         return 1, f"unknown config mode {config_mode}"
 
     env = dict(os.environ)
-    env["CMUX_TEST_SCRIPT"] = str(script)
-    env["CMUX_TEST_REPO"] = str(repo)
+    env["HMUX_TEST_SCRIPT"] = str(script)
+    env["HMUX_TEST_REPO"] = str(repo)
 
     result = subprocess.run(
         [shell, *shell_args, _shell_command()],
@@ -131,10 +131,10 @@ def _run_case(
 def main() -> int:
     root = Path(__file__).resolve().parents[1]
     cases = [
-        ("zsh", ["-f", "-c"], root / "Resources/shell-integration/cmux-zsh-integration.zsh"),
+        ("zsh", ["-f", "-c"], root / "Resources/shell-integration/hmux-zsh-integration.zsh"),
     ]
 
-    base = Path("/tmp") / f"cmux_shell_git_config_remote_url_{os.getpid()}"
+    base = Path("/tmp") / f"hmux_shell_git_config_remote_url_{os.getpid()}"
     try:
         shutil.rmtree(base, ignore_errors=True)
         base.mkdir(parents=True, exist_ok=True)

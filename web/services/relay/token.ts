@@ -1,17 +1,17 @@
-// Pure token-minting logic for the private cmux iroh relay fleet, kept separate
+// Pure token-minting logic for the private hmux iroh relay fleet, kept separate
 // from the HTTP route so it is testable without the auth/DB/telemetry graph.
 //
 // The web API is the token issuer: it holds the Ed25519 PRIVATE signing key
-// (`CMUX_RELAY_JWT_PRIVATE_KEY_PEM`); every relay VM holds only the matching
+// (`HMUX_RELAY_JWT_PRIVATE_KEY_PEM`); every relay VM holds only the matching
 // PUBLIC key and verifies tokens offline. A minted token is a short-TTL EdDSA
-// JWT with `iss=cmux`, `aud=cmux-relay`, `sub=<user>`, and a required
+// JWT with `iss=hmux`, `aud=hmux-relay`, `sub=<user>`, and a required
 // `endpoint_id` binding (so a leaked token cannot be replayed from another key).
 
 import { createPrivateKey, sign as edSign, type KeyObject } from "node:crypto";
 import { configuredRelayCatalog } from "./catalog";
 
-export const RELAY_TOKEN_ISS = "cmux";
-export const RELAY_TOKEN_AUD = "cmux-relay";
+export const RELAY_TOKEN_ISS = "hmux";
+export const RELAY_TOKEN_AUD = "hmux-relay";
 export const RELAY_TOKEN_TTL_SECONDS = 300; // short-lived; the client refreshes
 export const RELAY_TOKEN_REFRESH_LEAD_SECONDS = 60;
 
@@ -23,7 +23,7 @@ export type ManagedRelayCredentialGrant = {
   readonly ttlSeconds: number;
 };
 
-// iroh EndpointId is a 32-byte Ed25519 public key. The cmux relay parses the
+// iroh EndpointId is a 32-byte Ed25519 public key. The hmux relay parses the
 // JWT claim with `EndpointId::from_str`, which (in iroh-base 1.0.0-rc.1) accepts
 // EXACTLY 64-char lowercase hex OR 52-char RFC 4648 base32 (A-Z2-7,
 // case-insensitive; `to_string()` emits hex). z-base-32 is a SEPARATE from_z32
@@ -62,7 +62,7 @@ export function isValidEndpointId(value: string): boolean {
 let cached: { pem: string; key: KeyObject } | null = null;
 
 export function relaySigningKey(): KeyObject | null {
-  const pem = process.env.CMUX_RELAY_JWT_PRIVATE_KEY_PEM;
+  const pem = process.env.HMUX_RELAY_JWT_PRIVATE_KEY_PEM;
   if (!pem || !pem.includes("BEGIN")) return null;
   if (cached && cached.pem === pem) return cached.key;
   try {

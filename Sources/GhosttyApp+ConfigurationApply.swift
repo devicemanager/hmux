@@ -1,5 +1,5 @@
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxTerminal
+import HmuxTerminalCore
 import Foundation
 import os
 
@@ -36,7 +36,7 @@ extension GhosttyApp {
         let completionBox =
             TerminalConfigurationApplyCompletion(completion)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "reload.config.surfaceApply.begin source=\(snapshot.source) prioritized=\(prioritizedLifecycleIDs.count)"
         )
 #endif
@@ -81,7 +81,7 @@ extension GhosttyApp {
             },
             completion: {
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "reload.config.surfaceApply.end source=\(snapshot.source)"
                 )
 #endif

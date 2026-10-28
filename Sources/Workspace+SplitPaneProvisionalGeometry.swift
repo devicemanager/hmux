@@ -81,7 +81,7 @@ extension Workspace {
             )
         }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "split.provisionalGeometry original=\(originalPane.id.uuidString.prefix(5)) " +
             "new=\(newPane.id.uuidString.prefix(5)) orientation=\(split.orientation) " +
             "sourceIsFirst=\(request.sourceIsFirst ? 1 : 0) divider=\(String(format: "%.3f", split.dividerPosition)) " +

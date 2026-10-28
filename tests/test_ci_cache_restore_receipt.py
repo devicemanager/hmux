@@ -131,7 +131,7 @@ class CacheRestoreReceiptTests(unittest.TestCase):
             for name, expression in report["env"].items():
                 env[name] = values[expression.removeprefix("${{ ").removesuffix(" }}")]
             output = subprocess.check_output(["bash", "-e", "-c", report["run"]], env=env, text=True)
-            record = json.loads(output.removeprefix("CMUX_CACHE_RESTORE "))
+            record = json.loads(output.removeprefix("HMUX_CACHE_RESTORE "))
             self.assertEqual(record["action_route"], "github-cache")
             self.assertEqual(record["requested_backend"], "warp")
             self.assertEqual(record["result"], "prefix")

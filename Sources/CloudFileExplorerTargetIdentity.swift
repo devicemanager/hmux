@@ -1,4 +1,4 @@
-import CmuxAuthRuntime
+import HmuxAuthRuntime
 import Foundation
 
 /// The credential-free identity used to validate one Cloud filesystem target.

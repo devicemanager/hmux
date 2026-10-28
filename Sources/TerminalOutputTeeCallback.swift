@@ -1,8 +1,8 @@
-import CmuxTerminal
+import HmuxTerminal
 import Foundation
 
-/// One C callback fans raw PTY output out to every opt-in cmux consumer.
-let cmuxTerminalOutputTeeCallback: @convention(c) (
+/// One C callback fans raw PTY output out to every opt-in hmux consumer.
+let hmuxTerminalOutputTeeCallback: @convention(c) (
     UnsafeMutableRawPointer?, UnsafePointer<CChar>?, UInt
 ) -> Void = { userdata, bytes, length in
     guard let userdata, let bytes, length > 0 else { return }

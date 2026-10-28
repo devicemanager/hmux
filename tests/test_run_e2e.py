@@ -37,7 +37,7 @@ def e2e_run(runner, run_id, *, status="in_progress"):
     return {
         "id": run_id, "status": status, "name": "E2E test with video recording",
         "path": ".github/workflows/test-e2e.yml", "event": "workflow_dispatch",
-        "display_title": f"cmuxTests/Other{run_id} on {runner} @ {'c' * 40} [x{run_id}]",
+        "display_title": f"hmuxTests/Other{run_id} on {runner} @ {'c' * 40} [x{run_id}]",
     }
 
 
@@ -160,13 +160,13 @@ def real_swift_testing_method():
     spec.loader.exec_module(selectors)
     suite_re = re.compile(r"^(?:@\w+\s+)*(?:final\s+)?struct\s+(\w+Tests)\b", re.M)
     test_re = re.compile(r"^\s*@Test\s+func\s+(\w+)\(\)", re.M)
-    for path in sorted((ROOT / "cmuxTests").glob("*.swift")):
+    for path in sorted((ROOT / "hmuxTests").glob("*.swift")):
         source = path.read_text(encoding="utf-8", errors="replace")
         suites, tests = suite_re.findall(source), test_re.findall(source)
         if len(suites) == 1 and tests:
             if f"{suites[0]}/{tests[0]}()" in selectors.source_inventory(ROOT, suites[0]):
                 return suites[0], tests[0]
-    raise AssertionError("no argument-free @Test method found under cmuxTests")
+    raise AssertionError("no argument-free @Test method found under hmuxTests")
 
 
 class FocusedLauncherTests(unittest.TestCase):
@@ -212,7 +212,7 @@ class FocusedLauncherTests(unittest.TestCase):
         return json.loads((self.root / "dispatch.json").read_text())
 
     def test_default_dispatches_exact_local_commit_and_finds_its_own_run(self):
-        result = self.launch("cmuxTests/ExampleTests")
+        result = self.launch("hmuxTests/ExampleTests")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.dispatch()["ref"], HEAD)
         self.assertTrue(self.dispatch()["dispatch_id"])
@@ -228,7 +228,7 @@ class FocusedLauncherTests(unittest.TestCase):
         result = self.launch("--scenario", str(path))
         self.assertEqual(result.returncode, 0, result.stderr)
         dispatch = self.dispatch()
-        self.assertEqual(dispatch["test_filter"], "cmuxUITests/DogfoodScenarioUITests")
+        self.assertEqual(dispatch["test_filter"], "hmuxUITests/DogfoodScenarioUITests")
         self.assertEqual(json.loads(base64.b64decode(dispatch["dogfood_scenario"])), tour)
 
     def test_a_scenario_without_steps_is_refused_before_dispatch(self):
@@ -245,15 +245,15 @@ class FocusedLauncherTests(unittest.TestCase):
         self.assertIn("--scenario", result.stderr)
 
     def test_only_unpinned_runs_without_full_build_look_for_ci_products(self):
-        for args in (["cmuxTests/ExampleTests"], ["cmuxTests/ExampleTests", "--full-build"],
-                     ["cmuxTests/ExampleTests", "--runner", SMALL], ["ExampleUITests"],
+        for args in (["hmuxTests/ExampleTests"], ["hmuxTests/ExampleTests", "--full-build"],
+                     ["hmuxTests/ExampleTests", "--runner", SMALL], ["ExampleUITests"],
                      ["ExampleUITests", "--full-build"], ["ExampleUITests", "--runner", SMALL]):
             with self.subTest(args=args):
                 (self.root / "calls.jsonl").unlink(missing_ok=True)
                 result = self.launch(*args)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 looked = any("head_sha=" in call[-1] for call in self.calls() if call[:1] == ["api"])
-                self.assertEqual(looked, args in (["cmuxTests/ExampleTests"], ["ExampleUITests"]))
+                self.assertEqual(looked, args in (["hmuxTests/ExampleTests"], ["ExampleUITests"]))
                 self.assertEqual(self.dispatch()["ref"], HEAD)
 
     PR_CI = {"id": 500, "path": ".github/workflows/ci.yml", "event": "pull_request", "status": "completed",
@@ -265,7 +265,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def ci_env(self, run=None, *, artifacts=PRODUCTS, jobs=ADMISSION_26, status="completed"):
         return {
-            "CMUX_CI_E2E_OWNED_UI": "1",
+            "HMUX_CI_E2E_OWNED_UI": "1",
             "LAUNCHER_CI_RUNS": json.dumps([run or self.PR_CI]),
             "LAUNCHER_CI_ARTIFACTS": json.dumps(artifacts),
             "LAUNCHER_CI_JOBS": json.dumps(jobs),
@@ -321,12 +321,12 @@ class FocusedLauncherTests(unittest.TestCase):
         self.assertFalse((self.root / "dispatch.json").exists(), "must not dispatch")
 
     def test_adopt_only_exits_when_the_product_is_on_a_pool_ui_runs_cannot_use(self):
-        result = self.adopt_only(**{**self.ci_env(), "CMUX_CI_E2E_OWNED_UI": ""})
+        result = self.adopt_only(**{**self.ci_env(), "HMUX_CI_E2E_OWNED_UI": ""})
         self.assertEqual(result.returncode, 4, result.stderr)
         self.assertFalse((self.root / "dispatch.json").exists(), "must not dispatch")
 
     def test_adopt_only_takes_ui_runs_on_the_default_runner(self):
-        for args in (["cmuxTests/ExampleTests", "--adopt-only"], ["ExampleUITests", "--adopt-only", "--full-build"],
+        for args in (["hmuxTests/ExampleTests", "--adopt-only"], ["ExampleUITests", "--adopt-only", "--full-build"],
                      ["ExampleUITests", "--adopt-only", "--runner", SMALL]):
             with self.subTest(args=args):
                 result = self.launch(*args)
@@ -350,7 +350,7 @@ class FocusedLauncherTests(unittest.TestCase):
         self.assertEqual(self.dispatch()["runner"], MINI)
 
     def test_an_owned_product_is_not_adopted_while_ui_runs_stay_off_owned_macs(self):
-        result = self.launch("ExampleUITests", **{**self.ci_env(), "CMUX_CI_E2E_OWNED_UI": ""})
+        result = self.launch("ExampleUITests", **{**self.ci_env(), "HMUX_CI_E2E_OWNED_UI": ""})
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.dispatch()["ref"], HEAD)
         self.assertNotEqual(self.dispatch().get("runner"), MINI)
@@ -417,7 +417,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_a_ui_run_ignores_products_it_could_not_adopt(self):
         cases = {
-            "fork": {"run": {**self.PR_CI, "head_repository": {"full_name": "someone/cmux"}}},
+            "fork": {"run": {**self.PR_CI, "head_repository": {"full_name": "someone/hmux"}}},
             "macos 15": {"jobs": [{"name": "macos / macOS compile admission", "labels": [OLD]}]},
             "owned xcode without a choice": {"jobs": [{"name": "macos / macOS compile admission",
                                                         "labels": ["glaeda-root-std-xcode-27.0"]}]},
@@ -443,7 +443,7 @@ class FocusedLauncherTests(unittest.TestCase):
         self.assertEqual(self.dispatch()["ref"], HEAD)
 
     def test_explicit_remote_ref_is_resolved_before_dispatch(self):
-        result = self.launch("cmuxTests/ExampleTests/testOne", "--ref", "topic/fix")
+        result = self.launch("hmuxTests/ExampleTests/testOne", "--ref", "topic/fix")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.dispatch()["ref"], REMOTE_HEAD)
 
@@ -452,7 +452,7 @@ class FocusedLauncherTests(unittest.TestCase):
         choices = workflow["on" if "on" in workflow else True]["workflow_dispatch"]["inputs"]["runner"]["options"]
         for runner in choices:
             with self.subTest(runner=runner):
-                result = self.launch("cmuxTests/ExampleTests", "--runner", runner)
+                result = self.launch("hmuxTests/ExampleTests", "--runner", runner)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 # `auto` is decided here and named, so the title is exact.
                 expected = SMALL if runner == "auto" else runner
@@ -463,7 +463,7 @@ class FocusedLauncherTests(unittest.TestCase):
                 if call[:1] == ["api"] and "/actions/" in call[-1] and "head_sha=" not in call[-1]]
 
     def routed(self, state, *args, **env):
-        result = self.launch("cmuxTests/ExampleTests", *args, LAUNCHER_QUEUE=json.dumps(state), **env)
+        result = self.launch("hmuxTests/ExampleTests", *args, LAUNCHER_QUEUE=json.dumps(state), **env)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertLessEqual(len(self.queue_reads()), 4)
         return self.dispatch()["runner"], result.stderr
@@ -522,14 +522,14 @@ class FocusedLauncherTests(unittest.TestCase):
         self.assertEqual(self.routed(queue(**base, pr_since=2))[0], LARGE)
 
     def test_an_unreadable_or_stale_queue_keeps_e2e_on_6vcpu(self):
-        result = self.launch("cmuxTests/ExampleTests", LAUNCHER_QUEUE=IDLE, LAUNCHER_QUEUE_FAIL="1")
+        result = self.launch("hmuxTests/ExampleTests", LAUNCHER_QUEUE=IDLE, LAUNCHER_QUEUE_FAIL="1")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.dispatch()["runner"], SMALL)
         self.assertIn("staying on", result.stderr)
         for state in (queue(age=60), None):
             with self.subTest(state=state):
                 self.setUp()
-                result = self.launch("cmuxTests/ExampleTests",
+                result = self.launch("hmuxTests/ExampleTests",
                                      **({"LAUNCHER_QUEUE": json.dumps(state)} if state else {}))
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(self.dispatch()["runner"], SMALL)
@@ -546,7 +546,7 @@ class FocusedLauncherTests(unittest.TestCase):
         for order in (OLD, "not-a-pool"):
             with self.subTest(order=order):
                 self.setUp()
-                result = self.launch("cmuxTests/ExampleTests", LAUNCHER_QUEUE=IDLE,
+                result = self.launch("hmuxTests/ExampleTests", LAUNCHER_QUEUE=IDLE,
                                      LAUNCHER_VARIABLES=variables(CI_PR_POOL_ORDER=order))
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertEqual(self.dispatch()["runner"], SMALL)
@@ -554,7 +554,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_an_explicit_runner_is_never_rerouted(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", "--ref", "topic/fix",
+            "hmuxTests/ExampleTests", "--ref", "topic/fix",
             "--runner", SMALL, LAUNCHER_QUEUE=IDLE,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -563,7 +563,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_an_admin_runner_variable_is_never_overflowed(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", "--ref", "topic/fix", LAUNCHER_QUEUE=IDLE,
+            "hmuxTests/ExampleTests", "--ref", "topic/fix", LAUNCHER_QUEUE=IDLE,
             LAUNCHER_VARIABLES=json.dumps([
                 {"name": "MACOS_RUNNER_TESTS", "value": "blacksmith-6vcpu-macos-15"},
             ]),
@@ -581,7 +581,7 @@ class FocusedLauncherTests(unittest.TestCase):
                 with self.subTest(runner=runner, queue=queue_state):
                     self.setUp()
                     result = self.launch(
-                        "cmuxTests/ExampleTests",
+                        "hmuxTests/ExampleTests",
                         LAUNCHER_PRIOR_RUNS=self._live(runner=runner),
                         LAUNCHER_QUEUE=queue_state,
                     )
@@ -592,15 +592,15 @@ class FocusedLauncherTests(unittest.TestCase):
                     self.assertEqual(self.queue_reads(), [])
 
     def test_an_overlapping_run_on_the_other_macos_26_pool_is_refused(self):
-        live = self._live(selector="cmuxTests/ExampleTests,cmuxTests/OtherTests", runner=LARGE)
-        result = self.launch("cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=live)
+        live = self._live(selector="hmuxTests/ExampleTests,hmuxTests/OtherTests", runner=LARGE)
+        result = self.launch("hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=live)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn(f"already in_progress at {HEAD} on {LARGE}", result.stderr)
         self.assertFalse((self.root / "dispatch.json").exists(), "must not dispatch")
 
     def test_a_failure_on_the_12vcpu_pool_refuses_an_unpinned_repeat(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._prior("failure", runner=LARGE),
+            "hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._prior("failure", runner=LARGE),
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("already failed", result.stderr)
@@ -608,19 +608,19 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_a_pinned_pool_ignores_a_run_on_the_other_macos_26_pool(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", "--runner", SMALL,
+            "hmuxTests/ExampleTests", "--runner", SMALL,
             LAUNCHER_PRIOR_RUNS=self._live(runner=LARGE),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.dispatch()["runner"], SMALL)
 
     def test_invalid_runner_is_rejected_before_github_access(self):
-        result = self.launch("cmuxTests/ExampleTests", "--runner", "macos-15")
+        result = self.launch("hmuxTests/ExampleTests", "--runner", "macos-15")
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(self.calls(), [])
 
     def test_dirty_default_checkout_does_not_dispatch(self):
-        result = self.launch("cmuxTests/ExampleTests", LAUNCHER_DIRTY=" M Sources/App.swift")
+        result = self.launch("hmuxTests/ExampleTests", LAUNCHER_DIRTY=" M Sources/App.swift")
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.root / "dispatch.json").exists())
 
@@ -631,40 +631,40 @@ class FocusedLauncherTests(unittest.TestCase):
         self.assertEqual(self.dispatch()["record_video"], "true")
 
     def test_unpushed_commit_does_not_dispatch(self):
-        result = self.launch("cmuxTests/ExampleTests", LAUNCHER_MISSING_COMMIT="1")
+        result = self.launch("hmuxTests/ExampleTests", LAUNCHER_MISSING_COMMIT="1")
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse((self.root / "dispatch.json").exists())
 
     def test_wait_preserves_failure_and_watches_matching_run(self):
-        result = self.launch("cmuxTests/ExampleTests", "--wait", LAUNCHER_WATCH_STATUS="1")
+        result = self.launch("hmuxTests/ExampleTests", "--wait", LAUNCHER_WATCH_STATUS="1")
         self.assertEqual(result.returncode, 1, result.stderr)
         watch = next(call for call in self.calls() if call[:2] == ["run", "watch"])
         self.assertIn("123", watch)
         self.assertNotIn("999", watch)
 
     def test_wait_uses_the_shared_waiter_when_it_answers(self):
-        result = self.launch("cmuxTests/ExampleTests", "--wait", LAUNCHER_GLAEDA_STATUS="1")
+        result = self.launch("hmuxTests/ExampleTests", "--wait", LAUNCHER_GLAEDA_STATUS="1")
         self.assertEqual(result.returncode, 1, result.stderr)
         self.assertIn("wait run manaflow-ai/cmux/123", (self.root / "glaeda.calls").read_text())
         self.assertFalse([call for call in self.calls() if call[:2] == ["run", "watch"]], "gh must not poll")
 
     def test_wait_falls_back_to_a_slow_poll_when_the_waiter_is_down(self):
-        result = self.launch("cmuxTests/ExampleTests", "--wait", LAUNCHER_WATCH_STATUS="0")
+        result = self.launch("hmuxTests/ExampleTests", "--wait", LAUNCHER_WATCH_STATUS="0")
         self.assertEqual(result.returncode, 0, result.stderr)
         polled = next(call for call in self.calls() if call[:2] == ["run", "watch"])
         self.assertEqual(polled[-2:], ["--interval", "300"])
 
     def test_rejects_invalid_selectors_before_dispatch(self):
-        for selector in ("", "cmuxTests/", "cmuxTests/Example/extra/method", "cmuxTests/A\ndispatch_id=bad", "cmuxTests/A;echo bad"):
+        for selector in ("", "hmuxTests/", "hmuxTests/Example/extra/method", "hmuxTests/A\ndispatch_id=bad", "hmuxTests/A;echo bad"):
             with self.subTest(selector=selector):
                 self.assertNotEqual(self.launch(selector).returncode, 0)
         self.assertFalse((self.root / "dispatch.json").exists())
 
     def test_swift_testing_call_suffixes_are_accepted_as_written(self):
         for selector in (
-            "cmuxTests/ExampleTests/plain()",
-            "cmuxTests/ExampleTests/parameterized(value:)",
-            "cmuxTests/ExampleTests/unlabeled(_:_:)",
+            "hmuxTests/ExampleTests/plain()",
+            "hmuxTests/ExampleTests/parameterized(value:)",
+            "hmuxTests/ExampleTests/unlabeled(_:_:)",
         ):
             with self.subTest(selector=selector):
                 result = self.launch(selector)
@@ -672,8 +672,8 @@ class FocusedLauncherTests(unittest.TestCase):
                 self.assertEqual(self.dispatch()["test_filter"], selector)
 
     def test_malformed_call_suffixes_are_rejected_before_dispatch(self):
-        for selector in ("cmuxTests/ExampleTests/plain(value)", "cmuxTests/ExampleTests/plain(value:",
-                         "cmuxTests/ExampleTests/plain(:)"):
+        for selector in ("hmuxTests/ExampleTests/plain(value)", "hmuxTests/ExampleTests/plain(value:",
+                         "hmuxTests/ExampleTests/plain(:)"):
             with self.subTest(selector=selector):
                 result = self.launch(selector)
                 self.assertNotEqual(result.returncode, 0)
@@ -685,17 +685,17 @@ class FocusedLauncherTests(unittest.TestCase):
         # that as a successful run of zero tests. Use a real declaration so the
         # launcher is proven against the tree it actually reads.
         suite, method = real_swift_testing_method()
-        result = self.launch(f"cmuxTests/{suite}/{method}")
+        result = self.launch(f"hmuxTests/{suite}/{method}")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.dispatch()["test_filter"], f"cmuxTests/{suite}/{method}()")
-        self.assertIn(f"cmuxTests/{suite}/{method}()", result.stderr)
+        self.assertEqual(self.dispatch()["test_filter"], f"hmuxTests/{suite}/{method}()")
+        self.assertIn(f"hmuxTests/{suite}/{method}()", result.stderr)
 
     def test_batched_filters_dispatch_one_run_against_one_compile(self):
-        result = self.launch("cmuxTests/AlphaTests", "cmuxTests/BetaTests")
+        result = self.launch("hmuxTests/AlphaTests", "hmuxTests/BetaTests")
         self.assertEqual(result.returncode, 0, result.stderr)
         # One dispatch, one comma-joined filter: the workflow expands it into
         # several -only-testing: flags and compiles once.
-        self.assertEqual(self.dispatch()["test_filter"], "cmuxTests/AlphaTests,cmuxTests/BetaTests")
+        self.assertEqual(self.dispatch()["test_filter"], "hmuxTests/AlphaTests,hmuxTests/BetaTests")
         self.assertEqual(self.dispatch()["ref"], HEAD)
         self.assertEqual(self.dispatch()["record_video"], "false")
 
@@ -711,7 +711,7 @@ class FocusedLauncherTests(unittest.TestCase):
             workflow,
             "the dispatcher's length check copies this group; update both together",
         )
-        suite = "cmuxTests/AppDelegateEqualizeSplitsShortcutTests/"
+        suite = "hmuxTests/AppDelegateEqualizeSplitsShortcutTests/"
         selectors = [suite + f"testConfigurationReloadCase{n}RemainsActiveUntilAsyncReconciliationCompletes()" for n in range(3)]
         # Three selectors: the filter alone is 377 characters, under 400, but
         # the whole group is 448. A check on the filter alone would let it through.
@@ -725,17 +725,17 @@ class FocusedLauncherTests(unittest.TestCase):
         self.assertEqual(self.dispatch()["test_filter"], ",".join(selectors[:2]))
 
     def test_batched_ui_filters_keep_video_recording(self):
-        result = self.launch("cmuxUITests/AlphaUITests", "BetaUITests")
+        result = self.launch("hmuxUITests/AlphaUITests", "BetaUITests")
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.dispatch()["test_filter"], "cmuxUITests/AlphaUITests,BetaUITests")
+        self.assertEqual(self.dispatch()["test_filter"], "hmuxUITests/AlphaUITests,BetaUITests")
         self.assertEqual(self.dispatch()["record_video"], "true")
 
     def test_rejects_batches_that_mix_targets_or_repeat_entries(self):
         for entries in (
-            ("cmuxTests/AlphaTests", "cmuxUITests/BetaUITests"),
-            ("cmuxTests/AlphaTests", "BetaUITests"),
-            ("cmuxTests/AlphaTests", "cmuxTests/AlphaTests"),
-            ("cmuxTests/AlphaTests", "cmuxTests/"),
+            ("hmuxTests/AlphaTests", "hmuxUITests/BetaUITests"),
+            ("hmuxTests/AlphaTests", "BetaUITests"),
+            ("hmuxTests/AlphaTests", "hmuxTests/AlphaTests"),
+            ("hmuxTests/AlphaTests", "hmuxTests/"),
         ):
             with self.subTest(entries=entries):
                 self.assertNotEqual(self.launch(*entries).returncode, 0)
@@ -746,7 +746,7 @@ class FocusedLauncherTests(unittest.TestCase):
             with self.subTest(args=args):
                 self.assertNotEqual(self.launch("ExampleTests", *args).returncode, 0)
         self.assertFalse((self.root / "dispatch.json").exists())
-    def _prior(self, conclusion, *, selector="cmuxTests/ExampleTests", commit=HEAD, runner="mac",
+    def _prior(self, conclusion, *, selector="hmuxTests/ExampleTests", commit=HEAD, runner="mac",
                workflow_ref="main", count=1):
         return json.dumps([{
             "databaseId": 555,
@@ -757,7 +757,7 @@ class FocusedLauncherTests(unittest.TestCase):
             "url": "https://github.com/manaflow-ai/cmux/actions/runs/555",
         }] * count)
 
-    def _live(self, *, selector="cmuxTests/ExampleTests", commit=HEAD,
+    def _live(self, *, selector="hmuxTests/ExampleTests", commit=HEAD,
               runner=DEFAULT_RUNNER, status="in_progress", workflow_ref="main"):
         return json.dumps([{
             "databaseId": 777,
@@ -770,7 +770,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_failure_on_another_runner_allows_explicit_runner_proof(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", "--runner", "blacksmith-6vcpu-macos-26",
+            "hmuxTests/ExampleTests", "--runner", "blacksmith-6vcpu-macos-26",
             LAUNCHER_PRIOR_RUNS=self._prior("failure", runner="blacksmith-6vcpu-macos-15"),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -780,7 +780,7 @@ class FocusedLauncherTests(unittest.TestCase):
         prior = json.loads(self._prior("failure", runner="blacksmith-6vcpu-macos-26"))
         prior += json.loads(self._prior("success", runner="blacksmith-6vcpu-macos-15"))
         result = self.launch(
-            "cmuxTests/ExampleTests", "--runner", "blacksmith-6vcpu-macos-26",
+            "hmuxTests/ExampleTests", "--runner", "blacksmith-6vcpu-macos-26",
             LAUNCHER_PRIOR_RUNS=json.dumps(prior),
         )
         self.assertNotEqual(result.returncode, 0)
@@ -789,7 +789,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_explicit_auto_preserves_existing_repeat_guard(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", "--runner", "auto",
+            "hmuxTests/ExampleTests", "--runner", "auto",
             LAUNCHER_PRIOR_RUNS=self._prior("failure", runner="blacksmith-6vcpu-macos-15"),
         )
         self.assertNotEqual(result.returncode, 0)
@@ -798,7 +798,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_repeat_of_a_failed_selector_at_the_same_commit_is_refused(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._prior("failure")
+            "hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._prior("failure")
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("already failed", result.stderr)
@@ -809,42 +809,42 @@ class FocusedLauncherTests(unittest.TestCase):
         # The batch shares one compile, so a single known-red selector makes
         # the whole dispatch a reprint of an answer we already have.
         result = self.launch(
-            "cmuxTests/AlphaTests", "cmuxTests/ExampleTests",
+            "hmuxTests/AlphaTests", "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._prior("failure"),
         )
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("cmuxTests/ExampleTests already failed", result.stderr)
+        self.assertIn("hmuxTests/ExampleTests already failed", result.stderr)
         self.assertFalse((self.root / "dispatch.json").exists(), "must not dispatch")
 
     def test_an_earlier_batch_counts_as_a_prior_attempt_for_each_entry(self):
         # A prior run named several selectors before " on ". Matching only a
         # title prefix would let batching bypass the guard entirely.
-        prior = self._prior("failure", selector="cmuxTests/AlphaTests,cmuxTests/ExampleTests")
-        result = self.launch("cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=prior)
+        prior = self._prior("failure", selector="hmuxTests/AlphaTests,hmuxTests/ExampleTests")
+        result = self.launch("hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=prior)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("already failed", result.stderr)
         self.assertFalse((self.root / "dispatch.json").exists(), "must not dispatch")
 
     MACHINE_LOG = (
-        "build\tRun selected tests\t2026-09-27T10:45:36Z cmuxUITests-Runner[39090] Failed to initialize "
+        "build\tRun selected tests\t2026-09-27T10:45:36Z hmuxUITests-Runner[39090] Failed to initialize "
         "for UI testing: \"Timed out while enabling automation mode.\"\n"
         "build\tRun selected tests\t2026-09-27T10:45:40Z ** TEST EXECUTE FAILED **\n"
     )
 
     def test_a_machine_failure_is_dispatched_again_without_force(self):
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._prior("failure"), LAUNCHER_FAILED_LOG=self.MACHINE_LOG,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("before any test started", result.stdout)
         self.assertIn("Automation Mode", result.stdout)
-        self.assertEqual(self.dispatch()["test_filter"], "cmuxTests/ExampleTests")
+        self.assertEqual(self.dispatch()["test_filter"], "hmuxTests/ExampleTests")
 
     def test_a_failure_where_a_test_started_is_still_refused(self):
-        log = self.MACHINE_LOG + "Test Case '-[cmuxTests.ExampleTests testA]' started.\n"
+        log = self.MACHINE_LOG + "Test Case '-[hmuxTests.ExampleTests testA]' started.\n"
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._prior("failure"), LAUNCHER_FAILED_LOG=log,
         )
         self.assertNotEqual(result.returncode, 0)
@@ -853,7 +853,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_two_machine_failures_are_still_redispatched(self):
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._prior("failure", count=2), LAUNCHER_FAILED_LOG=self.MACHINE_LOG,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -861,7 +861,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_an_unreadable_log_is_refused(self):
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._prior("failure"), LAUNCHER_FAILED_LOG_FAIL="1",
         )
         self.assertNotEqual(result.returncode, 0)
@@ -870,7 +870,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_repeated_machine_failures_stop_redispatching(self):
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._prior("failure", count=3), LAUNCHER_FAILED_LOG=self.MACHINE_LOG,
         )
         self.assertNotEqual(result.returncode, 0)
@@ -879,28 +879,28 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_force_dispatches_despite_an_earlier_failure(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", "--force",
+            "hmuxTests/ExampleTests", "--force",
             LAUNCHER_PRIOR_RUNS=self._prior("failure"),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.dispatch()["test_filter"], "cmuxTests/ExampleTests")
+        self.assertEqual(self.dispatch()["test_filter"], "hmuxTests/ExampleTests")
 
     def test_earlier_success_does_not_block_a_repeat(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._prior("success")
+            "hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._prior("success")
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_failure_of_a_different_selector_does_not_block(self):
         result = self.launch(
-            "cmuxTests/ExampleTests",
-            LAUNCHER_PRIOR_RUNS=self._prior("failure", selector="cmuxTests/OtherTests"),
+            "hmuxTests/ExampleTests",
+            LAUNCHER_PRIOR_RUNS=self._prior("failure", selector="hmuxTests/OtherTests"),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_failure_at_a_different_commit_does_not_block(self):
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._prior("failure", commit="c" * 40),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -909,7 +909,7 @@ class FocusedLauncherTests(unittest.TestCase):
         # Dispatching here would match the workflow's concurrency group and
         # cancel the run already compiling, restarting that compile from cold.
         result = self.launch(
-            "cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._live()
+            "hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._live()
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("actions/runs/777", result.stdout)
@@ -917,7 +917,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_queued_identical_run_is_reused(self):
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._live(status="queued"),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -925,7 +925,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_reused_run_is_watched_and_reports_its_result(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", "--wait",
+            "hmuxTests/ExampleTests", "--wait",
             LAUNCHER_PRIOR_RUNS=self._live(), LAUNCHER_WATCH_STATUS="1",
         )
         self.assertEqual(result.returncode, 1)
@@ -934,9 +934,9 @@ class FocusedLauncherTests(unittest.TestCase):
         self.assertFalse((self.root / "dispatch.json").exists(), "must not dispatch")
 
     def test_identical_batch_in_flight_is_reused_regardless_of_order(self):
-        live = self._live(selector="cmuxTests/ExampleTests,cmuxTests/AlphaTests")
+        live = self._live(selector="hmuxTests/ExampleTests,hmuxTests/AlphaTests")
         result = self.launch(
-            "cmuxTests/AlphaTests", "cmuxTests/ExampleTests",
+            "hmuxTests/AlphaTests", "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=live,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -946,8 +946,8 @@ class FocusedLauncherTests(unittest.TestCase):
         # A different batch does not share the concurrency group, so this would
         # pay a second full compile of identical source for an answer already
         # in flight. There is no single run to attach to, so refuse instead.
-        live = self._live(selector="cmuxTests/ExampleTests,cmuxTests/OtherTests")
-        result = self.launch("cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=live)
+        live = self._live(selector="hmuxTests/ExampleTests,hmuxTests/OtherTests")
+        result = self.launch("hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=live)
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("already in_progress", result.stderr)
         self.assertIn("actions/runs/777", result.stderr)
@@ -955,14 +955,14 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_force_dispatches_over_an_in_flight_run(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", "--force", LAUNCHER_PRIOR_RUNS=self._live()
+            "hmuxTests/ExampleTests", "--force", LAUNCHER_PRIOR_RUNS=self._live()
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.dispatch()["test_filter"], "cmuxTests/ExampleTests")
+        self.assertEqual(self.dispatch()["test_filter"], "hmuxTests/ExampleTests")
 
     def test_in_flight_run_at_a_different_commit_does_not_block(self):
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._live(commit="c" * 40),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -970,7 +970,7 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_in_flight_run_on_another_runner_does_not_block_explicit_runner(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", "--runner", "blacksmith-6vcpu-macos-26",
+            "hmuxTests/ExampleTests", "--runner", "blacksmith-6vcpu-macos-26",
             LAUNCHER_PRIOR_RUNS=self._live(runner="blacksmith-6vcpu-macos-15"),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -981,12 +981,12 @@ class FocusedLauncherTests(unittest.TestCase):
         # and under --wait attaching would report macOS 15's result to someone
         # who asked the default pool. Dispatch instead.
         result = self.launch(
-            "cmuxTests/ExampleTests", "--wait",
+            "hmuxTests/ExampleTests", "--wait",
             LAUNCHER_PRIOR_RUNS=self._live(runner="blacksmith-6vcpu-macos-latest"),
             LAUNCHER_WATCH_STATUS="0",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.dispatch()["test_filter"], "cmuxTests/ExampleTests")
+        self.assertEqual(self.dispatch()["test_filter"], "hmuxTests/ExampleTests")
         self.assertNotIn("actions/runs/777", result.stdout)
 
     def test_the_repository_variable_decides_which_runner_auto_means(self):
@@ -994,7 +994,7 @@ class FocusedLauncherTests(unittest.TestCase):
         # The workflow literal is now the wrong answer, so a run named for it
         # must not be attached to...
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._live(), LAUNCHER_VARIABLES=variables,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -1002,7 +1002,7 @@ class FocusedLauncherTests(unittest.TestCase):
         # ...while a run named for the variable's value is.
         self.setUp()
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._live(runner="warp-macos-15-arm64-6x"),
             LAUNCHER_VARIABLES=variables,
         )
@@ -1016,22 +1016,22 @@ class FocusedLauncherTests(unittest.TestCase):
         # definition under test never runs.
         for history in (
             self._live(workflow_ref="ci/other-definition"),
-            self._live(selector="cmuxTests/ExampleTests,cmuxTests/OtherTests",
+            self._live(selector="hmuxTests/ExampleTests,hmuxTests/OtherTests",
                        workflow_ref="ci/other-definition"),
             self._prior("failure", workflow_ref="ci/other-definition"),
         ):
             with self.subTest(history=history):
                 (self.root / "dispatch.json").unlink(missing_ok=True)
-                result = self.launch("cmuxTests/ExampleTests", "--workflow-ref", "ci/under-test",
+                result = self.launch("hmuxTests/ExampleTests", "--workflow-ref", "ci/under-test",
                                      LAUNCHER_PRIOR_RUNS=history)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertNotIn("reusing", result.stdout)
-                self.assertEqual(self.dispatch()["test_filter"], "cmuxTests/ExampleTests")
+                self.assertEqual(self.dispatch()["test_filter"], "hmuxTests/ExampleTests")
         # The same definition still gets the guards, including the default one.
-        result = self.launch("cmuxTests/ExampleTests", "--workflow-ref", "ci/under-test",
+        result = self.launch("hmuxTests/ExampleTests", "--workflow-ref", "ci/under-test",
                              LAUNCHER_PRIOR_RUNS=self._live(workflow_ref="ci/under-test"))
         self.assertIn("reusing", result.stdout)
-        result = self.launch("cmuxTests/ExampleTests",
+        result = self.launch("hmuxTests/ExampleTests",
                              LAUNCHER_PRIOR_RUNS=self._live(workflow_ref="ci/other-definition"))
         self.assertNotIn("reusing", result.stdout)
 
@@ -1041,7 +1041,7 @@ class FocusedLauncherTests(unittest.TestCase):
         for extra, expected in (((), "main"), (("--workflow-ref", "ci/under-test"), "ci/under-test")):
             with self.subTest(workflow_ref=expected):
                 (self.root / "calls.jsonl").unlink(missing_ok=True)
-                result = self.launch("cmuxTests/ExampleTests", *extra, LAUNCHER_PRIOR_RUNS="[]")
+                result = self.launch("hmuxTests/ExampleTests", *extra, LAUNCHER_PRIOR_RUNS="[]")
                 self.assertEqual(result.returncode, 0, result.stderr)
                 guard_reads = [
                     call for call in self.calls()
@@ -1055,10 +1055,10 @@ class FocusedLauncherTests(unittest.TestCase):
         # A job token cannot list variables. Passed in, the variable still
         # decides the runner, and the in-flight guard still attaches.
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._live(runner="warp-macos-15-arm64-6x"),
             LAUNCHER_VARIABLES="not json",
-            CMUX_MACOS_RUNNER_TESTS="warp-macos-15-arm64-6x",
+            HMUX_MACOS_RUNNER_TESTS="warp-macos-15-arm64-6x",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.root / "dispatch.json").exists(), "must not dispatch")
@@ -1066,9 +1066,9 @@ class FocusedLauncherTests(unittest.TestCase):
         # An unset variable arrives empty, and the workflow literal decides.
         self.setUp()
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._live(), LAUNCHER_VARIABLES="not json",
-            CMUX_MACOS_RUNNER_TESTS="",
+            HMUX_MACOS_RUNNER_TESTS="",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.root / "dispatch.json").exists(), "must not dispatch")
@@ -1078,17 +1078,17 @@ class FocusedLauncherTests(unittest.TestCase):
         steps = workflow["jobs"]["focused"]["steps"]
         wrapper = next(step for step in steps if "run-e2e.sh" in step.get("run", ""))
         self.assertEqual(
-            wrapper["env"].get("CMUX_MACOS_RUNNER_TESTS"), "${{ vars.MACOS_RUNNER_TESTS }}"
+            wrapper["env"].get("HMUX_MACOS_RUNNER_TESTS"), "${{ vars.MACOS_RUNNER_TESTS }}"
         )
         # The kill switch, order and threshold too: without them the wrapper
         # would route on defaults after an admin changed them.
         for name in ("CI_E2E_LARGE_POOL_OVERFLOW", "CI_PR_POOL_ORDER", "CI_PR_POOL_MAX_QUEUED"):
-            self.assertEqual(wrapper["env"].get("CMUX_" + name), "${{ vars.%s }}" % name)
+            self.assertEqual(wrapper["env"].get("HMUX_" + name), "${{ vars.%s }}" % name)
         self.assertNotIn("SPLIT", json.dumps(wrapper["env"]))
 
     def test_the_kill_switch_keeps_e2e_on_6vcpu_without_reading_the_queue(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", LAUNCHER_QUEUE=IDLE,
+            "hmuxTests/ExampleTests", LAUNCHER_QUEUE=IDLE,
             LAUNCHER_VARIABLES=json.dumps([
                 {"name": "CI_E2E_LARGE_POOL_OVERFLOW", "value": "0"},
             ]),
@@ -1099,18 +1099,18 @@ class FocusedLauncherTests(unittest.TestCase):
 
     def test_a_workflow_job_passes_the_overflow_variables_it_cannot_list(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", LAUNCHER_QUEUE=IDLE,
+            "hmuxTests/ExampleTests", LAUNCHER_QUEUE=IDLE,
             LAUNCHER_VARIABLES="not json",
-            CMUX_MACOS_RUNNER_TESTS="", CMUX_CI_E2E_LARGE_POOL_OVERFLOW="0",
+            HMUX_MACOS_RUNNER_TESTS="", HMUX_CI_E2E_LARGE_POOL_OVERFLOW="0",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.dispatch()["runner"], SMALL)
         self.assertNotIn(["variable", "list"], [call[:2] for call in self.calls()])
         self.setUp()
         result = self.launch(
-            "cmuxTests/ExampleTests", LAUNCHER_QUEUE=json.dumps(queue(small_running=0)),
+            "hmuxTests/ExampleTests", LAUNCHER_QUEUE=json.dumps(queue(small_running=0)),
             LAUNCHER_VARIABLES="not json",
-            CMUX_MACOS_RUNNER_TESTS="", CMUX_CI_PR_POOL_ORDER=f"{SMALL},{LARGE}",
+            HMUX_MACOS_RUNNER_TESTS="", HMUX_CI_PR_POOL_ORDER=f"{SMALL},{LARGE}",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.dispatch()["runner"], SMALL)
@@ -1122,12 +1122,12 @@ class FocusedLauncherTests(unittest.TestCase):
         # runs these guards exist to protect.
         live = json.dumps([{
             "databaseId": 777,
-            "displayTitle": f"cmuxTests/ExampleTests on {DEFAULT_RUNNER} @ {HEAD}",
+            "displayTitle": f"hmuxTests/ExampleTests on {DEFAULT_RUNNER} @ {HEAD}",
             "headBranch": "main",
             "conclusion": None, "status": "in_progress",
             "url": "https://github.com/manaflow-ai/cmux/actions/runs/777",
         }])
-        result = self.launch("cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=live)
+        result = self.launch("hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=live)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("actions/runs/777", result.stdout)
         self.assertFalse((self.root / "dispatch.json").exists(), "must not dispatch")
@@ -1136,24 +1136,24 @@ class FocusedLauncherTests(unittest.TestCase):
         # These guards are an economy measure, never a gate. An entry with no
         # id cannot be watched, so the caller gets the run they asked for.
         live = json.dumps([{
-            "displayTitle": f"cmuxTests/ExampleTests on {DEFAULT_RUNNER} @ {HEAD} [deadbeef]",
+            "displayTitle": f"hmuxTests/ExampleTests on {DEFAULT_RUNNER} @ {HEAD} [deadbeef]",
             "headBranch": "main",
             "conclusion": None, "status": "in_progress", "url": "",
         }])
-        result = self.launch("cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=live)
+        result = self.launch("hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=live)
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(self.dispatch()["test_filter"], "cmuxTests/ExampleTests")
+        self.assertEqual(self.dispatch()["test_filter"], "hmuxTests/ExampleTests")
 
     def test_an_unknown_status_is_not_treated_as_occupying_a_runner(self):
         result = self.launch(
-            "cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._live(status="")
+            "hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=self._live(status="")
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertTrue((self.root / "dispatch.json").exists())
 
     def test_unreadable_variables_dispatch_rather_than_guess_a_runner(self):
         result = self.launch(
-            "cmuxTests/ExampleTests",
+            "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS=self._live(), LAUNCHER_VARIABLES="not json",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -1163,7 +1163,7 @@ class FocusedLauncherTests(unittest.TestCase):
         for payload in ("null", '{"runs": []}', '[null, 3]'):
             with self.subTest(payload=payload):
                 self.setUp()
-                result = self.launch("cmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=payload)
+                result = self.launch("hmuxTests/ExampleTests", LAUNCHER_PRIOR_RUNS=payload)
                 self.assertEqual(result.returncode, 0, result.stderr)
                 self.assertTrue((self.root / "dispatch.json").exists())
 
@@ -1171,7 +1171,7 @@ class FocusedLauncherTests(unittest.TestCase):
         # The guards used to re-list runs once per entry, spending shared
         # GitHub API budget to receive the same page back.
         result = self.launch(
-            "cmuxTests/AlphaTests", "cmuxTests/ExampleTests",
+            "hmuxTests/AlphaTests", "hmuxTests/ExampleTests",
             LAUNCHER_PRIOR_RUNS="[]",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -1196,8 +1196,8 @@ class RunDiscoveryTests(unittest.TestCase):
     def test_normalize_entry_repairs_only_what_the_checkout_declares(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            (root / "cmuxTests").mkdir()
-            (root / "cmuxTests/ModernTests.swift").write_text(
+            (root / "hmuxTests").mkdir()
+            (root / "hmuxTests/ModernTests.swift").write_text(
                 "struct ModernTests {\n"
                 "    @Test func plain() {}\n"
                 "    @Test(arguments: [1]) func parameterized(value: Int) {}\n"
@@ -1206,22 +1206,22 @@ class RunDiscoveryTests(unittest.TestCase):
                 "}\n"
             )
             normalize = self.dispatch.normalize_entry
-            self.assertEqual(normalize("cmuxTests/ModernTests/plain", root)[0],
-                             "cmuxTests/ModernTests/plain()")
-            self.assertEqual(normalize("cmuxTests/ModernTests/parameterized", root)[0],
-                             "cmuxTests/ModernTests/parameterized(value:)")
-            self.assertEqual(normalize("cmuxTests/ModernTests/plain()", root),
-                             ("cmuxTests/ModernTests/plain()", None))
-            self.assertEqual(normalize("cmuxTests/ModernTests", root),
-                             ("cmuxTests/ModernTests", None))
+            self.assertEqual(normalize("hmuxTests/ModernTests/plain", root)[0],
+                             "hmuxTests/ModernTests/plain()")
+            self.assertEqual(normalize("hmuxTests/ModernTests/parameterized", root)[0],
+                             "hmuxTests/ModernTests/parameterized(value:)")
+            self.assertEqual(normalize("hmuxTests/ModernTests/plain()", root),
+                             ("hmuxTests/ModernTests/plain()", None))
+            self.assertEqual(normalize("hmuxTests/ModernTests", root),
+                             ("hmuxTests/ModernTests", None))
             # A name this checkout does not declare may exist at --ref; the
             # workflow's built inventory decides, so it passes through.
-            for entry in ("cmuxTests/ModernTests/elsewhere", "cmuxTests/OtherTests/method",
-                          "cmuxUITests/ModernTests/plain", "ModernTests/plain"):
+            for entry in ("hmuxTests/ModernTests/elsewhere", "hmuxTests/OtherTests/method",
+                          "hmuxUITests/ModernTests/plain", "ModernTests/plain"):
                 with self.subTest(entry=entry):
                     self.assertEqual(normalize(entry, root)[0], entry)
             with self.assertRaises(self.dispatch.selectors.AmbiguousSelector):
-                normalize("cmuxTests/ModernTests/run", root)
+                normalize("hmuxTests/ModernTests/run", root)
 
     def test_runner_choices_match_the_workflow(self):
         workflow = yaml.safe_load((ROOT / ".github/workflows/test-e2e.yml").read_text())
@@ -1230,16 +1230,16 @@ class RunDiscoveryTests(unittest.TestCase):
 
     def test_waits_for_matching_dispatch_without_choosing_another_run(self):
         other = {"databaseId": 999, "displayTitle": "Other on mac @ " + HEAD + " [other]"}
-        own = {"databaseId": 123, "displayTitle": "cmuxTests/Example on mac @ " + HEAD + " [mine]"}
+        own = {"databaseId": 123, "displayTitle": "hmuxTests/Example on mac @ " + HEAD + " [mine]"}
         with mock.patch.object(self.dispatch, "output", side_effect=[json.dumps([other]), json.dumps([other, own])]), mock.patch.object(self.dispatch, "wait_for_retry", return_value=False) as wait:
-            result = self.dispatch.find_run(HEAD, "cmuxTests/Example", "mine")
+            result = self.dispatch.find_run(HEAD, "hmuxTests/Example", "mine")
         self.assertEqual(result["databaseId"], 123)
         wait.assert_called_once_with(mock.ANY, 1)
 
     def test_missing_dispatch_fails_without_redispatching(self):
         with mock.patch.object(self.dispatch, "output", return_value="[]") as output, mock.patch.object(self.dispatch, "wait_for_retry", return_value=False) as wait:
             with self.assertRaisesRegex(ValueError, "before dispatching again"):
-                self.dispatch.find_run(HEAD, "cmuxTests/Example", "mine")
+                self.dispatch.find_run(HEAD, "hmuxTests/Example", "mine")
         self.assertEqual(output.call_count, 12)
         self.assertEqual(wait.call_count, 11)
         self.assertTrue(all(call.args[1:3] == ("run", "list") for call in output.call_args_list))
@@ -1250,7 +1250,7 @@ class RunDiscoveryTests(unittest.TestCase):
         with mock.patch.object(self.dispatch, "output", return_value="[]"):
             with self.assertRaisesRegex(ValueError, "cancelled"):
                 self.dispatch.find_run(
-                    HEAD, "cmuxTests/Example", "mine", cancel_event=cancelled
+                    HEAD, "hmuxTests/Example", "mine", cancel_event=cancelled
                 )
 
     def test_cancellation_terminates_inflight_command(self):
@@ -1277,10 +1277,10 @@ class RunDiscoveryTests(unittest.TestCase):
         self.assertIs(self.dispatch.signal.getsignal(self.dispatch.signal.SIGINT), original)
 
     def test_ambiguous_dispatch_fails(self):
-        run = {"databaseId": 123, "displayTitle": "cmuxTests/Example on mac @ " + HEAD + " [mine]"}
+        run = {"databaseId": 123, "displayTitle": "hmuxTests/Example on mac @ " + HEAD + " [mine]"}
         with mock.patch.object(self.dispatch, "output", return_value=json.dumps([run, run])):
             with self.assertRaisesRegex(ValueError, "refusing to guess"):
-                self.dispatch.find_run(HEAD, "cmuxTests/Example", "mine")
+                self.dispatch.find_run(HEAD, "hmuxTests/Example", "mine")
 
 
 NOW = __import__("datetime").datetime(2026, 9, 24, 12, 0, tzinfo=__import__("datetime").timezone.utc)
@@ -1518,7 +1518,7 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
                 return json.dumps({"artifacts": [artifact]})
             return json.dumps({"workflow_runs": []})
 
-        variables = {"CMUX_MACOS_RUNNER_TESTS": "", "CMUX_CI_E2E_LARGE_POOL_OVERFLOW": ""}
+        variables = {"HMUX_MACOS_RUNNER_TESTS": "", "HMUX_CI_E2E_LARGE_POOL_OVERFLOW": ""}
         with mock.patch.dict(os.environ, variables), \
                 mock.patch.object(self.dispatch, "output", side_effect=gh) as output, \
                 mock.patch.object(self.dispatch.subprocess, "check_output",
@@ -1553,7 +1553,7 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
             # The routing App's token; empty, as when the mint step is skipped.
             "${{ steps.route-token.outputs.token || steps.route-token-repo.outputs.token }}": "",
             "${{ github.repository }}": "manaflow-ai/cmux",
-            "${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}": "other/cmux",
+            "${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name || github.repository }}": "other/hmux",
             "${{ inputs.runner }}": requested,
             "${{ vars.MACOS_RUNNER_TESTS }}": variable,
             "${{ vars.CI_E2E_LARGE_POOL_OVERFLOW }}": overflow,
@@ -1562,8 +1562,8 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
             "${{ vars.CI_PR_POOL_QUEUE_ROUNDS }}": "",
             "${{ vars.CI_PR_POOL_OWNED }}": "1",
             "${{ vars.CI_OWNED_POOL_SLOTS }}": json.dumps({MINI: 8}),
-            "${{ vars.CMUX_CI_XCODE_APP_PR }}": "/Applications/Xcode_26.6.app",
-            "${{ inputs.test_filter }}": "cmuxTests/ExampleTests",
+            "${{ vars.HMUX_CI_XCODE_APP_PR }}": "/Applications/Xcode_26.6.app",
+            "${{ inputs.test_filter }}": "hmuxTests/ExampleTests",
             "${{ vars.CI_E2E_OWNED_UI }}": "",
         }
         for name, expression in step["env"].items():
@@ -1647,13 +1647,13 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
                 text = yaml.safe_dump(job)
                 self.assertNotIn("inputs.runner", text)
                 self.assertNotIn("vars.MACOS_RUNNER_TESTS", text)
-        self.assertEqual(self.jobs["build"]["env"]["CMUX_PRODUCT_RUNNER"], runs_on)
+        self.assertEqual(self.jobs["build"]["env"]["HMUX_PRODUCT_RUNNER"], runs_on)
 
     # Owned Macs -----------------------------------------------------------
 
     def owned(self, *, running=0, queued=0, committed=0, age=5, owned="1", slots=None,
               pin="/Applications/Xcode_26.6.app", requested="auto",
-              test_filter="cmuxTests/ExampleTests", owned_ui=""):
+              test_filter="hmuxTests/ExampleTests", owned_ui=""):
         state = queue(age=age)
         state["pools"][MINI] = {"queued": queued, "running": running, "committed": committed}
         client = FakeActions(state)
@@ -1665,7 +1665,7 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
         )
 
     def live(self, idle, *, running=8, e2e_runs=(), pr_runs=(), online=None):
-        """An `auto` cmuxTests pick with `idle` owned runners read live, over a snapshot showing the pool full."""
+        """An `auto` hmuxTests pick with `idle` owned runners read live, over a snapshot showing the pool full."""
         state = queue(age=20)
         state["pools"][MINI] = {"queued": 3, "running": running, "committed": running}
         state["e2e_runs"], state["pr_runs"] = list(e2e_runs), list(pr_runs)
@@ -1674,7 +1674,7 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
         label = self.pool.resolve(
             "auto", "", overflow="", order="", max_queued="",
             owned="1", owned_slots=json.dumps({MINI: 8}), pr_xcode_app="/Applications/Xcode_26.6.app",
-            test_filter="cmuxTests/ExampleTests",
+            test_filter="hmuxTests/ExampleTests",
             measure=lambda: self.pool.measure_load(client, now=NOW, live_owned={MINI: idle},
                                                    live_online=None if online is None else {MINI: online}),
             now=NOW,
@@ -1702,7 +1702,7 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
         window = NOW - __import__("datetime").timedelta(minutes=self.pool.pr_runner_pool.LIVE_WINDOW_MINUTES)
         stamp = lambda moment: moment.strftime("%Y-%m-%dT%H:%M:%SZ")  # noqa: E731
         old, new = stamp(window - __import__("datetime").timedelta(minutes=5)), stamp(NOW)
-        title = f"cmuxTests/A on {MINI} @ main"
+        title = f"hmuxTests/A on {MINI} @ main"
         # Five older PR runs are Blacksmith-only by now: one idle machine is still free.
         prs = [{"id": 100 + n, "status": "in_progress", "created_at": old} for n in range(5)]
         self.assertEqual(self.live(1, pr_runs=prs)[0], MINI)
@@ -1783,7 +1783,7 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
             "no Xcode pin": dict(pin=""),
             "snapshot too old for an owned pool": dict(age=self.pool.pr_runner_pool.MAX_SNAPSHOT_MINUTES + 1),
             "a UI run": dict(test_filter="ExampleUITests"),
-            "a mixed filter": dict(test_filter="cmuxTests/A, cmuxUITests/B"),
+            "a mixed filter": dict(test_filter="hmuxTests/A, hmuxUITests/B"),
         }
         for why, kwargs in cases.items():
             with self.subTest(why=why):
@@ -1791,7 +1791,7 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
 
     def test_ui_runs_take_an_owned_mac_only_once_enabled(self):
         self.assertEqual(self.owned(test_filter="ExampleUITests", owned_ui="1"), MINI)
-        self.assertEqual(self.owned(test_filter="cmuxTests/A, cmuxTests/B"), MINI)
+        self.assertEqual(self.owned(test_filter="hmuxTests/A, hmuxTests/B"), MINI)
         self.assertEqual(self.owned(requested=MINI, test_filter="ExampleUITests"), MINI)
 
     def test_a_re_run_never_takes_an_owned_mac(self):
@@ -1802,16 +1802,16 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
 
     def test_a_ui_run_waits_for_an_owned_mac_instead_of_blacksmith(self):
         # Blacksmith sessions sit at a locked screen, so UI tests cannot run there.
-        full = dict(running=8, queued=40, committed=48, test_filter="cmuxUITests/ExampleUITests", owned_ui="1")
-        self.assertIn(self.owned(**{**full, "test_filter": "cmuxTests/ExampleTests"}), self.pool.E2E_POOLS)
+        full = dict(running=8, queued=40, committed=48, test_filter="hmuxUITests/ExampleUITests", owned_ui="1")
+        self.assertIn(self.owned(**{**full, "test_filter": "hmuxTests/ExampleTests"}), self.pool.E2E_POOLS)
         self.assertEqual(self.owned(**full), GUI_MINI)
         self.assertEqual(self.pool.retry_runner(MINI, ui=True), MINI)
         self.assertEqual(self.pool.retry_runner(SMALL, ui=True), SMALL)
-        self.assertTrue(self.pool.ui_run("cmuxTests/A, cmuxUITests/B"))
-        self.assertFalse(self.pool.ui_run("cmuxTests/A, cmuxTests/B"))
+        self.assertTrue(self.pool.ui_run("hmuxTests/A, hmuxUITests/B"))
+        self.assertFalse(self.pool.ui_run("hmuxTests/A, hmuxTests/B"))
 
     def test_the_ui_rule_holds_over_every_fallback_but_a_drained_fleet(self):
-        move = dict(test_filter="cmuxUITests/A", owned="1", owned_ui="1", order="",
+        move = dict(test_filter="hmuxUITests/A", owned="1", owned_ui="1", order="",
                     owned_slots=json.dumps({MINI: 8}), pr_xcode_app="/Applications/Xcode_26.6.app")
         for label in (SMALL, LARGE):
             self.assertEqual(self.pool.ui_owned_runner(label, **move), GUI_MINI)
@@ -1819,7 +1819,7 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
         self.assertEqual(self.pool.ui_owned_runner(SMALL, **{**move, "owned_slots": json.dumps({MINI: 8, root: 4})}),
                          GUI_MINI)
         kept = {
-            "a cmuxTests run": dict(test_filter="cmuxTests/A"),
+            "a hmuxTests run": dict(test_filter="hmuxTests/A"),
             "owned pools off": dict(owned="0"),
             "UI runs not allowed on owned Macs": dict(owned_ui=""),
             "a drained fleet": dict(owned_slots="{}"),
@@ -1836,19 +1836,19 @@ class WorkflowRunnerPoolTests(unittest.TestCase):
         self.assertEqual(self.pool.ui_owned_runner(MINI, **move), MINI)
         # A snapshot too old to route on still keeps a UI run off Blacksmith.
         stale = self.pool.pr_runner_pool.MAX_SNAPSHOT_MINUTES + 1
-        self.assertEqual(self.owned(age=stale, test_filter="cmuxUITests/A", owned_ui="1"), GUI_MINI)
+        self.assertEqual(self.owned(age=stale, test_filter="hmuxUITests/A", owned_ui="1"), GUI_MINI)
 
     def test_a_ui_run_pinned_to_blacksmith_macos_26_moves_to_an_owned_mac(self):
         # Blacksmith macOS 26 sessions cannot capture the screen, so a pinned UI
         # run failed its capture preflight (run 36426283823, 2026-09-28).
-        ui = dict(test_filter="cmuxUITests/ExampleUITests", owned_ui="1")
+        ui = dict(test_filter="hmuxUITests/ExampleUITests", owned_ui="1")
         for requested in (SMALL, LARGE, "blacksmith-6vcpu-macos-latest"):
             with self.subTest(requested=requested):
                 self.assertEqual(self.owned(requested=requested, **ui), GUI_MINI)
                 self.assertEqual(self.owned(requested=requested, running=8, queued=40, **ui), GUI_MINI)
         kept = {
-            "a cmuxTests run": dict(test_filter="cmuxTests/ExampleTests", owned_ui="1"),
-            "UI runs not allowed on owned Macs": dict(test_filter="cmuxUITests/ExampleUITests", owned_ui=""),
+            "a hmuxTests run": dict(test_filter="hmuxTests/ExampleTests", owned_ui="1"),
+            "UI runs not allowed on owned Macs": dict(test_filter="hmuxUITests/ExampleUITests", owned_ui=""),
             "owned pools off": dict(owned="0", **ui),
             "a drained fleet": dict(slots={}, **ui),
         }
@@ -1895,12 +1895,12 @@ class SuiteWorkflowForwardsFocusedRuns(unittest.TestCase):
         # It hands off and exits; waiting would hold a runner for the whole test.
         self.assertNotIn("--wait", run)
         self.assertTrue(run.rstrip().endswith("exit 1"))
-        self.assertIn('"cmuxTests/$suite"', run)
+        self.assertIn('"hmuxTests/$suite"', run)
         self.assertEqual(jobs["focused"]["permissions"], {"actions": "write", "contents": "read"})
 
 
 class CIProductReuseTests(unittest.TestCase):
-    """cmuxTests selectors run against products CI compiled instead of a second full build."""
+    """hmuxTests selectors run against products CI compiled instead of a second full build."""
 
     PLAN = {"source_run_id": "500", "source_sha": "d" * 40, "sha": HEAD}
     PRODUCTS = {"id": 7, "name": "app-host-products-v1-x-1", "expired": False}
@@ -1929,7 +1929,7 @@ class CIProductReuseTests(unittest.TestCase):
         ).start()
         mock.patch.object(self.dispatch, "wait_for_retry", return_value=False).start()
 
-    def reuse(self, entries=("cmuxTests/ExampleTests",)):
+    def reuse(self, entries=("hmuxTests/ExampleTests",)):
         return self.dispatch.reuse_ci_products(HEAD, list(entries), None, False)
 
     def dispatched_fields(self):
@@ -1940,11 +1940,11 @@ class CIProductReuseTests(unittest.TestCase):
     def test_existing_products_dispatch_the_rerun_instead_of_a_build(self):
         with mock.patch.object(self.dispatch, "planned_products", return_value=self.PLAN) as plan:
             self.assertEqual(self.reuse(), 0)
-        plan.assert_called_once_with(HEAD, "cmuxTests/ExampleTests")
+        plan.assert_called_once_with(HEAD, "hmuxTests/ExampleTests")
         fields = self.dispatched_fields()
         self.assertEqual(
             {key: fields[key] for key in ("ref", "only_testing", "source_run_id")},
-            {"ref": HEAD, "only_testing": "cmuxTests/ExampleTests", "source_run_id": "500"},
+            {"ref": HEAD, "only_testing": "hmuxTests/ExampleTests", "source_run_id": "500"},
         )
         self.assertTrue(fields["dispatch_id"])
         self.assertEqual(self.find_run.call_args.kwargs["workflow"], "app-host-test-rerun.yml")
@@ -1964,7 +1964,7 @@ class CIProductReuseTests(unittest.TestCase):
                 mock.patch.object(rerun, "non_test_changes", return_value=[]), \
                 mock.patch.object(rerun, "products_artifact", side_effect=lambda *a: next(artifacts)):
             self.assertEqual(self.reuse(), 0)
-        self.assertEqual(plan.call_args_list[-1].args, (HEAD, "cmuxTests/ExampleTests", "500"))
+        self.assertEqual(plan.call_args_list[-1].args, (HEAD, "hmuxTests/ExampleTests", "500"))
         self.assertEqual(self.dispatched_fields()["source_run_id"], "500")
 
     def test_a_merge_that_moved_app_code_is_not_awaited(self):
@@ -2064,15 +2064,15 @@ class CIProductReuseTests(unittest.TestCase):
             with self.subTest(label):
                 self.dispatch.rerun.gh_api.side_effect = lambda path, label=label: {
                     "jobs": [{"name": "macos / macOS compile admission", "labels": [label]}]}
-                with mock.patch.dict(os.environ, {"CMUX_CI_E2E_OWNED_UI": "1"}):
+                with mock.patch.dict(os.environ, {"HMUX_CI_E2E_OWNED_UI": "1"}):
                     self.assertEqual(self.dispatch.product_family({"id": 5}), MINI)
-                with mock.patch.dict(os.environ, {"CMUX_CI_E2E_OWNED_UI": "0"}):
+                with mock.patch.dict(os.environ, {"HMUX_CI_E2E_OWNED_UI": "0"}):
                     self.assertIsNone(self.dispatch.product_family({"id": 5}))
         self.assertIsNone(self.dispatch.owned_class(SMALL))
 
     def test_selectors_the_rerun_cannot_express_fall_back_to_a_full_build(self):
         with mock.patch.object(self.dispatch, "planned_products") as plan:
-            self.assertIsNone(self.reuse(["cmuxTests/ExampleTests/method(label:)"]))
+            self.assertIsNone(self.reuse(["hmuxTests/ExampleTests/method(label:)"]))
         plan.assert_not_called()
 
 

@@ -27,7 +27,7 @@
     ],
     "untrusted-events": []
   },
-  "cmux": {
+  "hmux": {
     "element-at-canvas": {
       "ref": "e1",
       "role": "canvas",

@@ -124,13 +124,13 @@ jobs:
       - name: Vercel production build
         env:
           RESEND_API_KEY: re_ci_build
-          CMUX_FEEDBACK_FROM_EMAIL: ci@example.test
+          HMUX_FEEDBACK_FROM_EMAIL: ci@example.test
           STACK_SECRET_SERVER_KEY: ci-build-only
           NEXT_PUBLIC_STACK_PROJECT_ID: 00000000-0000-4000-8000-000000000000
           NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY: ci-build-only
-          DATABASE_URL: postgres://cmux:cmux@127.0.0.1:1/cmux
-          DIRECT_DATABASE_URL: postgres://cmux:cmux@127.0.0.1:1/cmux
-          CMUX_ANALYTICS_TEST_MODE: "1"
+          DATABASE_URL: postgres://hmux:hmux@127.0.0.1:1/hmux
+          DIRECT_DATABASE_URL: postgres://hmux:hmux@127.0.0.1:1/hmux
+          HMUX_ANALYTICS_TEST_MODE: "1"
         run: bun run vercel-build
 
   web-tests:
@@ -231,10 +231,10 @@ jobs:
         env:
           # web-typecheck is an independent required sibling in the same
           # reusable workflow, so this browser lane does not launch tsgo again.
-          CMUX_INSTANT_SKIP_TYPECHECK: "1"
+          HMUX_INSTANT_SKIP_TYPECHECK: "1"
         run: bun run test:instant
 
-  # Checks for in-app React webviews (currently the diff viewer; more cmux React
+  # Checks for in-app React webviews (currently the diff viewer; more hmux React
   # surfaces will live alongside it).
 
   react-apps-check:
@@ -320,8 +320,8 @@ jobs:
       - name: Verify generated protocol types
         run: ./scripts/generate-diff-sidecar-types.sh --check
 
-      # The diff-viewer performance budgets (scripts/benchmark-diff-viewer.sh) run in the cmux-next perf
-      # cron on feat-cmux-next (cmux-next-perf-budgets.yml), not here: no perf check on the push or pull
+      # The diff-viewer performance budgets (scripts/benchmark-diff-viewer.sh) run in the hmux-next perf
+      # cron on feat-hmux-next (hmux-next-perf-budgets.yml), not here: no perf check on the push or pull
       # request path (Lawrence 2026-10-23).
 
   web-db-migrations:
@@ -337,13 +337,13 @@ jobs:
       postgres:
         image: postgres:16-alpine
         env:
-          POSTGRES_DB: cmux_test
-          POSTGRES_PASSWORD: cmux
-          POSTGRES_USER: cmux
+          POSTGRES_DB: hmux_test
+          POSTGRES_PASSWORD: hmux
+          POSTGRES_USER: hmux
         ports:
           - 5432:5432
         options: >-
-          --health-cmd "pg_isready -U cmux -d cmux_test"
+          --health-cmd "pg_isready -U hmux -d hmux_test"
           --health-interval 1s
           --health-timeout 5s
           --health-retries 30
@@ -367,21 +367,21 @@ jobs:
 
       - name: Apply migrations
         env:
-          DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
-          DIRECT_DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
+          DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
+          DIRECT_DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
         run: bun scripts/db-migrate.mjs
 
       - name: Re-apply migrations
         env:
-          DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
-          DIRECT_DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
+          DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
+          DIRECT_DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
         run: bun scripts/db-migrate.mjs
 
       - name: Database behavior tests
         env:
-          CMUX_DB_TEST: "1"
-          DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
-          DIRECT_DATABASE_URL: postgres://cmux:cmux@localhost:5432/cmux_test
+          HMUX_DB_TEST: "1"
+          DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
+          DIRECT_DATABASE_URL: postgres://hmux:hmux@localhost:5432/hmux_test
         run: bun run test:db:behavior
 
   agent-session-web-resources:

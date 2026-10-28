@@ -1,41 +1,41 @@
 import AppKit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import Foundation
 
 /// Opens workspace-group configuration and documentation surfaces.
 enum SidebarWorkspaceGroupConfigOpener {
-    /// Opens the cmux config file (`~/.config/cmux/cmux.json`) in the user's
+    /// Opens the hmux config file (`~/.config/hmux/hmux.json`) in the user's
     /// configured editor, materializing an empty config first if none exists.
     @MainActor
-    static func openCmuxConfigInEditor() {
+    static func openHmuxConfigInEditor() {
         let opener = PreferredEditorService(defaults: .standard)
-        openCmuxConfigInEditor(
+        openHmuxConfigInEditor(
             home: FileManager.default.homeDirectoryForCurrentUser,
             open: { opener.open($0) }
         )
     }
 
-    /// Testable seam: resolves the cmux config path under `home`, materializes
+    /// Testable seam: resolves the hmux config path under `home`, materializes
     /// an empty config if absent, then hands the file to `open`.
     ///
-    /// The public ``openCmuxConfigInEditor()`` entry point passes
+    /// The public ``openHmuxConfigInEditor()`` entry point passes
     /// `PreferredEditorService.open` so the config file honors
     /// `preferredEditorCommand` (with an OS-default fallback). Tests inject a
     /// capturing closure to assert the config file is routed through `open`.
-    static func openCmuxConfigInEditor(home: URL, open: (URL) -> Void) {
-        open(materializedCmuxConfigURL(home: home))
+    static func openHmuxConfigInEditor(home: URL, open: (URL) -> Void) {
+        open(materializedHmuxConfigURL(home: home))
     }
 
-    /// Resolves `~/.config/cmux/cmux.json` under `home`, materializing an empty
+    /// Resolves `~/.config/hmux/hmux.json` under `home`, materializing an empty
     /// config first if none exists. Shared by the external-editor path above and
     /// in-app openers (e.g. the plus-button menu's "Customize Workspace Layouts…").
-    static func materializedCmuxConfigURL(
+    static func materializedHmuxConfigURL(
         home: URL = FileManager.default.homeDirectoryForCurrentUser
     ) -> URL {
         let configURL = home
             .appendingPathComponent(".config", isDirectory: true)
-            .appendingPathComponent("cmux", isDirectory: true)
-            .appendingPathComponent("cmux.json", isDirectory: false)
+            .appendingPathComponent("hmux", isDirectory: true)
+            .appendingPathComponent("hmux.json", isDirectory: false)
         if !FileManager.default.fileExists(atPath: configURL.path) {
             try? FileManager.default.createDirectory(
                 at: configURL.deletingLastPathComponent(),

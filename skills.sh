@@ -5,7 +5,7 @@ usage() {
   cat <<'EOF'
 Usage: skills.sh [options]
 
-Install cmux agent skills into the Codex skills directory.
+Install hmux agent skills into the Codex skills directory.
 
 Options:
   --dest DIR       Destination directory. Default: ${CODEX_HOME:-$HOME/.codex}/skills
@@ -19,7 +19,7 @@ Options:
 Examples:
   ./skills.sh
   ./skills.sh --list
-  ./skills.sh --skill cmux --skill cmux-browser
+  ./skills.sh --skill hmux --skill hmux-browser
   curl -fsSL https://raw.githubusercontent.com/manaflow-ai/cmux/main/skills.sh | bash
 EOF
 }
@@ -43,7 +43,7 @@ normalize_source_dir() {
 
 dest_dir="${CODEX_HOME:-$HOME/.codex}/skills"
 source_dir=""
-ref="${CMUX_SKILLS_REF:-main}"
+ref="${HMUX_SKILLS_REF:-main}"
 list_only=0
 dry_run=0
 selected_skills=()
@@ -110,7 +110,7 @@ if [[ -z "$source_dir" ]]; then
   need_cmd tar
   need_cmd mktemp
 
-  tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/cmux-skills.XXXXXX")"
+  tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/hmux-skills.XXXXXX")"
   archive_url="https://codeload.github.com/manaflow-ai/cmux/tar.gz/${ref}"
   curl -fsSL "$archive_url" | tar -xz -C "$tmp_dir"
   checkout_dir="$(find "$tmp_dir" -mindepth 1 -maxdepth 1 -type d | head -n 1)"

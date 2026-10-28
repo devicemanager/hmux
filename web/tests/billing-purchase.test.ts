@@ -10,8 +10,8 @@ import {
 import { FOUNDER_TESTFLIGHT_GROUP_ID } from "../services/asc/testflightOwnership";
 
 process.env.RESEND_API_KEY ??= "test-resend-key";
-process.env.CMUX_FEEDBACK_FROM_EMAIL ??= "feedback@example.com";
-process.env.CMUX_FEEDBACK_RATE_LIMIT_ID ??= "test-feedback-rate-limit";
+process.env.HMUX_FEEDBACK_FROM_EMAIL ??= "feedback@example.com";
+process.env.HMUX_FEEDBACK_RATE_LIMIT_ID ??= "test-feedback-rate-limit";
 process.env.STACK_SECRET_SERVER_KEY ??= "test-stack-secret";
 process.env.NEXT_PUBLIC_STACK_PROJECT_ID ??= "00000000-0000-4000-8000-000000000000";
 process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY ??= "test-stack-publishable";
@@ -21,7 +21,7 @@ const {
   canonicalizeEmailForMatching,
   findBillingUserByEmail,
   findUserIdByEmail,
-  isCmuxCheckoutSession,
+  isHmuxCheckoutSession,
   isActiveStripeSubscriptionStatus,
   latestStripeSubscriptionForSession,
   recordCheckoutCompletion,
@@ -144,13 +144,13 @@ function checkoutInput(customerId = "cus_123") {
       id: "sub_123",
       customer: customerId,
       status: "active",
-      metadata: { stackUserId: "user_123", app: "cmux" },
+      metadata: { stackUserId: "user_123", app: "hmux" },
       cancel_at_period_end: false,
       items: {
         data: [
           {
             current_period_end: 1_800_000_000,
-            price: { id: "price_123", lookup_key: "cmux-pro-monthly-50" },
+            price: { id: "price_123", lookup_key: "hmux-pro-monthly-50" },
           },
         ],
       },
@@ -167,7 +167,7 @@ function teamCheckoutInput(customerId = "cus_team", stackUserId?: string) {
   const metadata = {
     stackTeamId: "team_123",
     plan: "team",
-    app: "cmux",
+    app: "hmux",
     ...(stackUserId ? { stackUserId } : {}),
   };
   return {
@@ -245,35 +245,35 @@ describe("billing email matching", () => {
     );
   });
 
-  test("recognizes Founder's Edition sessions as cmux checkouts", () => {
+  test("recognizes Founder's Edition sessions as hmux checkouts", () => {
     expect(
-      isCmuxCheckoutSession({
+      isHmuxCheckoutSession({
         client_reference_id: null,
         metadata: { founders_edition: "true" },
       }),
     ).toBe(true);
   });
 
-  test("does not let a cmux subscription override a foreign session marker", () => {
+  test("does not let a hmux subscription override a foreign session marker", () => {
     expect(
-      isCmuxCheckoutSession(
+      isHmuxCheckoutSession(
         {
           client_reference_id: "foreign-user",
           metadata: { app: "other", plan: "pro" },
         },
-        { metadata: { app: "cmux", plan: "pro" } },
+        { metadata: { app: "hmux", plan: "pro" } },
       ),
     ).toBe(false);
   });
 
   test("does not let Founder metadata override a foreign session marker", () => {
     expect(
-      isCmuxCheckoutSession(
+      isHmuxCheckoutSession(
         {
           client_reference_id: "foreign-user",
           metadata: { app: "other", founders_edition: "true" },
         },
-        { metadata: { app: "cmux", founders_edition: "true" } },
+        { metadata: { app: "hmux", founders_edition: "true" } },
       ),
     ).toBe(false);
   });
@@ -418,7 +418,7 @@ describe("Founder success read-back", () => {
           id: "cs_pro_fixture",
           customer: "cus_fixture",
           subscription: null,
-          metadata: { app: "cmux", plan: "pro" },
+          metadata: { app: "hmux", plan: "pro" },
         } as never,
         fakeDb() as never,
       ),
@@ -430,7 +430,7 @@ describe("Founder success read-back", () => {
     const unrelatedRow = {
       id: "sub_pro",
       status: "active",
-      raw: { metadata: { app: "cmux", plan: "pro" } },
+      raw: { metadata: { app: "hmux", plan: "pro" } },
     };
     const founderRow = {
       id: "founders_cs_fixture",
@@ -582,7 +582,7 @@ describe("recordFoundersCheckoutCompletion", () => {
       ),
     ).toBe(true);
     expect(update).not.toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
     expect(enroll).not.toHaveBeenCalled();
   });
@@ -667,7 +667,7 @@ describe("recordFoundersCheckoutCompletion", () => {
       primaryEmailVerified: false,
       primaryEmailAuthEnabled: true,
       isAnonymous: false,
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
       update,
     };
     selectResults = Array.from({ length: 20 }, () => []);
@@ -877,7 +877,7 @@ describe("recordFoundersCheckoutCompletion", () => {
       id: "founder_replay",
       primaryEmail: "replay@example.com",
       primaryEmailVerified: true,
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update,
     };
     const listUsers = mock(async () => [
@@ -971,7 +971,7 @@ describe("recordFoundersCheckoutCompletion", () => {
     const user = {
       id: "user_123",
       primaryEmail: "founder@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update,
     };
     selectResults = [
@@ -1004,7 +1004,7 @@ describe("recordFoundersCheckoutCompletion", () => {
         status: "canceled",
         metadata: {
           founders_edition: "true",
-          app: "cmux",
+          app: "hmux",
           plan: "pro",
           stackUserId: "founder_webhook",
         },
@@ -1057,13 +1057,13 @@ describe("recordFoundersCheckoutCompletion", () => {
           customer: "cus_alias",
           customer_details: { email: "billing.fixture@gmail.com" },
           subscription: "sub_alias",
-          metadata: { app: "cmux", plan: "pro" },
+          metadata: { app: "hmux", plan: "pro" },
         } as never,
         subscription: {
           id: "sub_alias",
           customer: "cus_alias",
           status: "active",
-          metadata: { app: "cmux", plan: "pro", stackUserId: anonymous.id },
+          metadata: { app: "hmux", plan: "pro", stackUserId: anonymous.id },
           cancel_at_period_end: false,
           items: { data: [{ price: { id: "price_pro" } }] },
         } as never,
@@ -1135,7 +1135,7 @@ describe("recordFoundersCheckoutCompletion", () => {
           id: "sub_alias_parked",
           customer: "cus_alias_parked",
           status: "active",
-          metadata: { app: "cmux", plan: "pro", stackUserId: anonymous.id },
+          metadata: { app: "hmux", plan: "pro", stackUserId: anonymous.id },
           cancel_at_period_end: false,
           items: { data: [] },
         } as never,
@@ -1195,7 +1195,7 @@ describe("recordCheckoutCompletion", () => {
       callbackUrl: "https://cmux.com/handler/after-sign-in",
     });
     expect(update).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
   });
 
@@ -1244,7 +1244,7 @@ describe("recordCheckoutCompletion", () => {
       primaryEmailAuthEnabled: true,
     });
     expect(user.update).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
     expect(sendMagicLinkEmail).toHaveBeenCalledWith("buyer@example.com", {
       callbackUrl: "https://cmux.com/handler/after-sign-in",
@@ -1408,7 +1408,7 @@ describe("recordCheckoutCompletion", () => {
         },
         subscription: {
           ...checkoutInput("cus_unverified_email_owner").subscription,
-          metadata: { app: "cmux", plan: "pro", stackUserId: source.id },
+          metadata: { app: "hmux", plan: "pro", stackUserId: source.id },
         },
       } as never,
       {
@@ -1435,7 +1435,7 @@ describe("recordCheckoutCompletion", () => {
     const user = {
       id: "user_123",
       primaryEmail: null,
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
       update,
     };
 
@@ -1550,7 +1550,7 @@ describe("recordCheckoutCompletion", () => {
     });
 
     expect(update).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
     expect(lockCount).toBeGreaterThanOrEqual(2);
   });
@@ -1567,7 +1567,7 @@ describe("recordCheckoutCompletion", () => {
     const deletingUser = {
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
       update: deletingUpdate,
     };
     let getUserCalls = 0;
@@ -1628,7 +1628,7 @@ describe("recordCheckoutCompletion", () => {
       ),
     ).toBe(true);
     expect(update).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
   });
 
@@ -1694,7 +1694,7 @@ describe("recordCheckoutCompletion", () => {
       ),
     ).toBe(true);
     expect(update).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
   });
 
@@ -1728,7 +1728,7 @@ describe("recordCheckoutCompletion", () => {
       ),
     ).toBe(true);
     expect(update).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
   });
 
@@ -1763,7 +1763,7 @@ describe("recordCheckoutCompletion", () => {
       isRestricted: false,
       primaryEmail: "buyer@example.com",
       primaryEmailVerified: true,
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update: mock(async () => undefined),
     };
     const mappedOwner = {
@@ -1772,7 +1772,7 @@ describe("recordCheckoutCompletion", () => {
       isRestricted: false,
       primaryEmail: "different@example.com",
       primaryEmailVerified: true,
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update: mock(async () => undefined),
     };
     const getUser = mock(async (rawID: unknown) =>
@@ -1797,7 +1797,7 @@ describe("recordCheckoutCompletion", () => {
       isAnonymous: true,
       primaryEmail: "billing.fixture@gmail.com",
       primaryEmailVerified: false,
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update: mock(async () => undefined),
     };
     const target = {
@@ -1826,14 +1826,14 @@ describe("recordCheckoutCompletion", () => {
           client_reference_id: source.id,
           customer: "cus_recovery",
           customer_details: { email: "billing.fixture@gmail.com" },
-          metadata: { app: "cmux", plan: "pro" },
+          metadata: { app: "hmux", plan: "pro" },
           subscription: "sub_recovery",
         } as never,
         subscription: {
           id: "sub_recovery",
           customer: "cus_recovery",
           status: "active",
-          metadata: { app: "cmux", plan: "pro", stackUserId: source.id },
+          metadata: { app: "hmux", plan: "pro", stackUserId: source.id },
           cancel_at_period_end: false,
           items: { data: [] },
         } as never,
@@ -1933,14 +1933,14 @@ describe("recordCheckoutCompletion", () => {
           client_reference_id: source.id,
           customer: "cus_deferred_recovery",
           customer_details: { email: "billing.fixture@gmail.com" },
-          metadata: { app: "cmux", plan: "pro" },
+          metadata: { app: "hmux", plan: "pro" },
           subscription: "sub_deferred_recovery",
         } as never,
         subscription: {
           id: "sub_deferred_recovery",
           customer: "cus_deferred_recovery",
           status: "active",
-          metadata: { app: "cmux", plan: "pro", stackUserId: source.id },
+          metadata: { app: "hmux", plan: "pro", stackUserId: source.id },
           cancel_at_period_end: false,
           items: { data: [] },
         } as never,
@@ -2016,14 +2016,14 @@ describe("recordCheckoutCompletion", () => {
           id: "cs_new_unverified_recovery",
           customer: "cus_new_unverified_recovery",
           customer_details: { email: "buyer@example.com" },
-          metadata: { app: "cmux", plan: "pro" },
+          metadata: { app: "hmux", plan: "pro" },
           subscription: "sub_new_unverified_recovery",
         } as never,
         subscription: {
           id: "sub_new_unverified_recovery",
           customer: "cus_new_unverified_recovery",
           status: "active",
-          metadata: { app: "cmux", plan: "pro" },
+          metadata: { app: "hmux", plan: "pro" },
           cancel_at_period_end: false,
           items: { data: [] },
         } as never,
@@ -2065,7 +2065,7 @@ describe("recordCheckoutCompletion", () => {
       deliveryEmail: "buyer@example.com",
     });
     expect(targetUpdate).not.toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
     expect(
       inserts.some(
@@ -2083,7 +2083,7 @@ describe("recordCheckoutCompletion", () => {
       isAnonymous: true,
       primaryEmail: null,
       primaryEmailVerified: false,
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update: mock(async () => undefined),
     };
     const target = {
@@ -2111,12 +2111,12 @@ describe("recordCheckoutCompletion", () => {
             client_reference_id: source.id,
             customer: "cus_unverified_recovery",
             customer_details: { email: "billing.fixture@gmail.com" },
-            metadata: { app: "cmux", plan: "pro" },
+            metadata: { app: "hmux", plan: "pro" },
           },
           subscription: {
             ...checkoutInput("cus_unverified_recovery").subscription,
             customer: "cus_unverified_recovery",
-            metadata: { app: "cmux", plan: "pro", stackUserId: source.id },
+            metadata: { app: "hmux", plan: "pro", stackUserId: source.id },
           },
           customer: {
             id: "cus_unverified_recovery",
@@ -2158,7 +2158,7 @@ describe("recordCheckoutCompletion", () => {
     const user = {
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update,
     };
     selectResults = [[], [{ id: "cus_old" }]];
@@ -2181,7 +2181,7 @@ describe("recordCheckoutCompletion", () => {
     const user = {
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update,
     };
     selectResults = [[]];
@@ -2254,7 +2254,7 @@ describe("recordCheckoutCompletion", () => {
       ),
     ).toBe(true);
     expect(updateTeam).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "team", cmuxSeats: 4 },
+      clientReadOnlyMetadata: { hmuxPlan: "team", hmuxSeats: 4 },
     });
   });
 
@@ -2305,7 +2305,7 @@ describe("recordCheckoutCompletion", () => {
       ),
     ).toBe(true);
     expect(updateTeam).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "team", cmuxSeats: 4 },
+      clientReadOnlyMetadata: { hmuxPlan: "team", hmuxSeats: 4 },
     });
   });
 
@@ -2315,7 +2315,7 @@ describe("recordCheckoutCompletion", () => {
     const owner = {
       id: "owner_123",
       primaryEmail: "owner@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
       update: mock(async () => undefined),
     };
     selectResults = [[{ id: "cus_team", stackUserId: "owner_123" }], []];
@@ -2353,7 +2353,7 @@ describe("recordCheckoutCompletion", () => {
     const owner = {
       id: "owner_123",
       primaryEmail: "owner@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
       update: mock(async () => undefined),
     };
 
@@ -2423,7 +2423,7 @@ describe("recordCheckoutCompletion", () => {
     const owner = {
       id: "owner_123",
       primaryEmail: "owner@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
       update: mock(async () => undefined),
     };
     selectResults = [[{ id: "cus_team_existing", stackUserId: "owner_123" }], []];
@@ -2461,7 +2461,7 @@ describe("recordCheckoutCompletion", () => {
     const owner = {
       id: "owner_123",
       primaryEmail: "owner@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
       update: mock(async () => undefined),
     };
     selectResults = [[{ id: "cus_team_old", stackUserId: "owner_123" }], []];
@@ -2497,7 +2497,7 @@ describe("recordCheckoutCompletion", () => {
     const updateTeam = mock(async () => undefined);
     const team = {
       id: "team_123",
-      clientReadOnlyMetadata: { cmuxPlan: "team", cmuxVmPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "team", hmuxVmPlan: "pro" },
       update: updateTeam,
     };
     selectResults = [[{ stackUserId: "owner_123" }], [{ stackUserId: "owner_123" }], []];
@@ -2507,7 +2507,7 @@ describe("recordCheckoutCompletion", () => {
         id: "sub_team",
         customer: "cus_team",
         status: "canceled",
-        metadata: { stackTeamId: "team_123", plan: "team", app: "cmux" },
+        metadata: { stackTeamId: "team_123", plan: "team", app: "hmux" },
         cancel_at_period_end: false,
         items: {
           data: [
@@ -2543,7 +2543,7 @@ describe("recordCheckoutCompletion", () => {
       ),
     ).toBe(true);
     expect(updateTeam).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
     });
   });
 
@@ -2554,7 +2554,7 @@ describe("recordCheckoutCompletion", () => {
     const updateTeam = mock(async () => undefined);
     const team = {
       id: "team_123",
-      clientReadOnlyMetadata: { cmuxPlan: "team", cmuxVmPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "team", hmuxVmPlan: "pro" },
       update: updateTeam,
     };
     selectResults = [[{ stackUserId: "team_123" }], [{ stackUserId: "team_123" }]];
@@ -2564,7 +2564,7 @@ describe("recordCheckoutCompletion", () => {
         id: "sub_team",
         customer: "cus_team",
         status: "canceled",
-        metadata: { stackTeamId: "team_123", plan: "team", app: "cmux" },
+        metadata: { stackTeamId: "team_123", plan: "team", app: "hmux" },
         cancel_at_period_end: false,
         items: {
           data: [
@@ -2596,7 +2596,7 @@ describe("recordCheckoutCompletion", () => {
       ),
     ).toBe(true);
     expect(updateTeam).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
     });
   });
 
@@ -2611,7 +2611,7 @@ describe("recordCheckoutCompletion", () => {
         id: "sub_team",
         customer: "cus_team",
         status: "canceled",
-        metadata: { stackTeamId: "team_123", plan: "team", app: "cmux" },
+        metadata: { stackTeamId: "team_123", plan: "team", app: "hmux" },
         cancel_at_period_end: false,
         items: {
           data: [
@@ -2651,7 +2651,7 @@ describe("recordCheckoutCompletion", () => {
         id: "sub_team",
         customer: "cus_team",
         status: "active",
-        metadata: { stackTeamId: "team_123", plan: "team", app: "cmux" },
+        metadata: { stackTeamId: "team_123", plan: "team", app: "hmux" },
         cancel_at_period_end: false,
         items: {
           data: [
@@ -2695,7 +2695,7 @@ describe("recordCheckoutCompletion", () => {
           stackTeamId: "team_123",
           stackUserId: "owner_123",
           plan: "team",
-          app: "cmux",
+          app: "hmux",
         },
         cancel_at_period_end: false,
         items: {
@@ -2749,7 +2749,7 @@ describe("recordCheckoutCompletion", () => {
     const user = {
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update,
     };
     selectResults = [[{ stackUserId: "user_123" }], [{ id: "sub_user" }]];
@@ -2787,9 +2787,9 @@ describe("recordCheckoutCompletion", () => {
       id: "user_123",
       primaryEmail: "buyer@example.com",
       clientReadOnlyMetadata: {
-        cmuxPlan: "pro",
-        cmuxProTestflightEnrollmentEmails: ["buyer@example.com"],
-        cmuxProTestflightGrants: [
+        hmuxPlan: "pro",
+        hmuxProTestflightEnrollmentEmails: ["buyer@example.com"],
+        hmuxProTestflightGrants: [
           { email: "buyer@example.com", source: "user" },
         ],
       },
@@ -2810,7 +2810,7 @@ describe("recordCheckoutCompletion", () => {
     );
 
     expect(metadataWrites).toHaveLength(2);
-    expect(metadataWrites[0]).not.toHaveProperty("cmuxPlan");
+    expect(metadataWrites[0]).not.toHaveProperty("hmuxPlan");
     expect(metadataWrites[1]).toEqual({});
   });
 
@@ -2820,11 +2820,11 @@ describe("recordCheckoutCompletion", () => {
       id: "user_123",
       primaryEmail: "current@example.com",
       clientReadOnlyMetadata: {
-        cmuxPlan: "pro",
-        cmuxProTestflightOwnedLegacyGroupIDs: [
+        hmuxPlan: "pro",
+        hmuxProTestflightOwnedLegacyGroupIDs: [
           FOUNDER_TESTFLIGHT_GROUP_ID,
         ],
-        cmuxProTestflightOwnedLegacyEmails: ["legacy@example.com"],
+        hmuxProTestflightOwnedLegacyEmails: ["legacy@example.com"],
       },
       update: mock(async () => undefined),
     };
@@ -2862,7 +2862,7 @@ describe("recordCheckoutCompletion", () => {
     const user = {
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update: mock(async () => undefined),
     };
     selectResults = [[{ stackUserId: "user_123" }], [{ id: "sub_user" }]];
@@ -2899,7 +2899,7 @@ describe("recordCheckoutCompletion", () => {
     const user = {
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update: mock(async () => undefined),
     };
     selectResults = [[{ stackUserId: "user_123" }], [{ id: "sub_user" }]];
@@ -2923,7 +2923,7 @@ describe("recordCheckoutCompletion", () => {
     const getUser = mock(async () => ({
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true, cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true, hmuxPlan: "pro" },
       update: mock(async () => undefined),
     }));
     selectResults = [[], []];
@@ -2947,7 +2947,7 @@ describe("recordCheckoutCompletion", () => {
     const getUser = mock(async () => ({
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true, cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true, hmuxPlan: "pro" },
       update,
     }));
     selectResults = [[{ stackUserId: "user_123" }], [{ id: "sub_user" }]];
@@ -2994,13 +2994,13 @@ describe("recordCheckoutCompletion", () => {
     const staleUser = {
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       update: staleUpdate,
     };
     const deletingUser = {
       id: "user_123",
       primaryEmail: "buyer@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true, cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true, hmuxPlan: "pro" },
       update: deletingUpdate,
     };
     let getUserCalls = 0;
@@ -3131,7 +3131,7 @@ describe("recordCheckoutCompletion", () => {
       ),
     ).toBe(true);
     expect(update).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
   });
 
@@ -3144,13 +3144,13 @@ describe("recordCheckoutCompletion", () => {
       {
         id: "si_usage",
         current_period_end: 1_800_000_000,
-        price: { id: "price_ai_usage", lookup_key: "cmux-ai-usage-test", recurring: { usage_type: "metered" } },
+        price: { id: "price_ai_usage", lookup_key: "hmux-ai-usage-test", recurring: { usage_type: "metered" } },
       },
       {
         id: "si_plan",
         quantity: 1,
         current_period_end: 1_800_000_000,
-        price: { id: "price_max", lookup_key: "cmux-max-monthly-200", recurring: { usage_type: "licensed" } },
+        price: { id: "price_max", lookup_key: "hmux-max-monthly-200", recurring: { usage_type: "licensed" } },
       },
     ] as never;
 
@@ -3162,7 +3162,7 @@ describe("recordCheckoutCompletion", () => {
     expect(result).toEqual({ scope: "user", stackUserId: "user_123", isActive: true });
     const row = inserts.find((insert) => insert.table === stripeSubscriptions)?.values;
     expect(row).toMatchObject({ id: "sub_user", priceId: "price_max", plan: "max" });
-    expect(update).toHaveBeenCalledWith({ clientReadOnlyMetadata: { cmuxPlan: "max" } });
+    expect(update).toHaveBeenCalledWith({ clientReadOnlyMetadata: { hmuxPlan: "max" } });
   });
 
   test("creates a missing user subscription row when the customer mapping already exists", async () => {
@@ -3202,7 +3202,7 @@ describe("recordCheckoutCompletion", () => {
     const removeTester = mock(async () => undefined);
     const team = {
       id: "team_123",
-      clientReadOnlyMetadata: { cmuxPlan: "team" },
+      clientReadOnlyMetadata: { hmuxPlan: "team" },
       update: mock(async () => undefined),
     };
     selectResults = [[{ stackUserId: "owner_123" }], [{ stackUserId: "owner_123" }], []];
@@ -3212,7 +3212,7 @@ describe("recordCheckoutCompletion", () => {
         id: "sub_team",
         customer: "cus_team",
         status: "canceled",
-        metadata: { stackTeamId: "team_123", plan: "team", app: "cmux" },
+        metadata: { stackTeamId: "team_123", plan: "team", app: "hmux" },
         cancel_at_period_end: false,
         items: {
           data: [
@@ -3275,13 +3275,13 @@ function userSubscriptionUpdate({ status }: { status: string }) {
     id: "sub_user",
     customer: "cus_user",
     status,
-    metadata: { stackUserId: "user_123", plan: "pro", app: "cmux" },
+    metadata: { stackUserId: "user_123", plan: "pro", app: "hmux" },
     cancel_at_period_end: false,
     items: {
       data: [
         {
           current_period_end: 1_800_000_000,
-          price: { id: "price_123", lookup_key: "cmux-pro-monthly-50" },
+          price: { id: "price_123", lookup_key: "hmux-pro-monthly-50" },
         },
       ],
     },

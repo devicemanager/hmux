@@ -1,11 +1,11 @@
 import AppKit
-import CmuxChief
+import HmuxChief
 import Foundation
 import MessagesLabSidebar
 
 /// Chief's look: the header and list avatar text (at most two characters;
 /// an emoji counts as one) and an optional picture, kept in
-/// `<Chief home>/state/profile.json` beside the conversations (cmux-next
+/// `<Chief home>/state/profile.json` beside the conversations (hmux-next
 /// keeps it in `profile.json` too). The picture wins over the text; with
 /// neither, the conversation's initials show.
 struct ChiefProfile: Codable, Equatable {
@@ -105,7 +105,7 @@ struct ChiefProfile: Codable, Equatable {
 /// - a profile picture, as is;
 /// - avatar text: white initials on Messages' grey gradient
 ///   (MessagesLab `SidebarPalette.monogramTop/Bottom`), or an emoji on the grey disc (`groupDisc`);
-/// - otherwise cmux-next's default Chief face, the bundled `ChiefAvatar` art
+/// - otherwise hmux-next's default Chief face, the bundled `ChiefAvatar` art
 ///   (`HomeHostView.defaultAvatar`).
 enum ChiefAvatarArtwork {
     enum Kind: Equatable {
@@ -153,7 +153,7 @@ enum ChiefAvatarArtwork {
     /// The list's avatar for `kind`. The list draws pictures from files, so
     /// the default face is written once to the state directory.
     @MainActor
-    static func listAvatar(_ kind: Kind) -> CmuxSidebarEntry.Avatar? {
+    static func listAvatar(_ kind: Kind) -> HmuxSidebarEntry.Avatar? {
         switch kind {
         case .picture(let url): return .image(url.absoluteString)
         case .monogram(let text): return .monogram(text)

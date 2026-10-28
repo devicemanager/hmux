@@ -1,26 +1,26 @@
 {
   "cloud.welcome.title.eyebrow": {
     "class": "brand",
-    "source": "cmux cloud"
+    "source": "hmux cloud"
   },
   "actions.discovery.menuTitle": {
-    "source": "Actions · cmux.json…",
+    "source": "Actions · hmux.json…",
     "identityLocales": {
       "fr": {
-        "reason": "Actions is the standard French noun for this UI label, and cmux.json is an invariant filename. The translated French entry is still required.",
+        "reason": "Actions is the standard French noun for this UI label, and hmux.json is an invariant filename. The translated French entry is still required.",
         "values": [
-          "Actions · cmux.json…"
+          "Actions · hmux.json…"
         ]
       }
     }
   },
   "actions.discovery.dialogTitle": {
-    "source": "Actions · cmux.json",
+    "source": "Actions · hmux.json",
     "identityLocales": {
       "fr": {
-        "reason": "Actions is the standard French noun for this UI label, and cmux.json is an invariant filename. The translated French entry is still required.",
+        "reason": "Actions is the standard French noun for this UI label, and hmux.json is an invariant filename. The translated French entry is still required.",
         "values": [
-          "Actions · cmux.json"
+          "Actions · hmux.json"
         ]
       }
     }
@@ -64,12 +64,12 @@
     }
   },
   "CFBundleDisplayName": {
-    "source": "cmux Cloud Tunnel",
+    "source": "hmux Cloud Tunnel",
     "class": "brand"
   },
   "about.appName": {
     "class": "brand",
-    "source": "cmux"
+    "source": "hmux"
   },
   "about.commit": {
     "source": "Commit",
@@ -368,7 +368,7 @@
     "class": "format",
     "source": "%@ -> %@"
   },
-  "browser.import.destination.cmux": {
+  "browser.import.destination.hmux": {
     "source": "Destination",
     "identityLocales": {
       "fr": "Established UI or technical term with the same spelling in this locale; a translated entry is still required."
@@ -693,7 +693,7 @@
     }
   },
   "cloudTunnel.vpnConfiguration.name": {
-    "source": "cmux Cloud",
+    "source": "hmux Cloud",
     "class": "brand"
   },
   "command.applyUpdateIfAvailable.subtitle": {
@@ -781,11 +781,11 @@
       "fr": "Reviewed shared native developer term, abbreviation, or borrowed technical noun. The translated entry is still required."
     }
   },
-  "command.cmuxConfig.builtInSubtitle": {
+  "command.hmuxConfig.builtInSubtitle": {
     "class": "brand",
-    "source": "cmux"
+    "source": "hmux"
   },
-  "command.cmuxConfig.defaultClaudeCodeTitle": {
+  "command.hmuxConfig.defaultClaudeCodeTitle": {
     "source": "Claude Code",
     "identityLocales": {
       "ar": "Agent product names are invariant brand names; the translated entry is still required.",
@@ -809,7 +809,7 @@
       "zh-Hant": "Agent product names are invariant brand names; the translated entry is still required."
     }
   },
-  "command.cmuxConfig.defaultCodexTitle": {
+  "command.hmuxConfig.defaultCodexTitle": {
     "source": "Codex",
     "identityLocales": {
       "ar": "Agent product names are invariant brand names; the translated entry is still required.",
@@ -833,7 +833,7 @@
       "zh-Hant": "Agent product names are invariant brand names; the translated entry is still required."
     }
   },
-  "command.cmuxConfig.defaultOpenCodeTitle": {
+  "command.hmuxConfig.defaultOpenCodeTitle": {
     "source": "OpenCode",
     "identityLocales": {
       "ar": "Agent product names are invariant brand names; the translated entry is still required.",
@@ -857,17 +857,17 @@
       "zh-Hant": "Agent product names are invariant brand names; the translated entry is still required."
     }
   },
-  "command.cmuxConfig.issue.schemaError.detail": {
+  "command.hmuxConfig.issue.schemaError.detail": {
     "class": "format",
     "source": "%@"
   },
-  "command.cmuxConfig.issue.subtitle": {
+  "command.hmuxConfig.issue.subtitle": {
     "class": "format",
     "source": "%@: %@"
   },
-  "command.cmuxConfig.subtitle": {
+  "command.hmuxConfig.subtitle": {
     "class": "syntax",
-    "source": "cmux.json"
+    "source": "hmux.json"
   },
   "command.installCLI.subtitle": {
     "class": "technical",
@@ -1033,7 +1033,7 @@
   },
   "computerUse.menu.title": {
     "class": "brand",
-    "source": "cmux Computer Use"
+    "source": "hmux Computer Use"
   },
   "computerUse.menu.unknownTarget": {
     "source": "App",
@@ -1147,7 +1147,7 @@
   },
   "debug.tabBarBackdropLab.terminal.prompt": {
     "class": "syntax",
-    "source": "lawrence in ~/cmux"
+    "source": "lawrence in ~/hmux"
   },
   "debug.tabBarBackdropLab.titlebarSample": {
     "class": "syntax",
@@ -1177,15 +1177,15 @@
       "fr": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required."
     }
   },
-  "dialog.cmuxConfig.disclosure.cwd": {
+  "dialog.hmuxConfig.disclosure.cwd": {
     "source": "cwd: %@",
     "class": "format"
   },
-  "dialog.cmuxConfig.disclosure.cwdCommand": {
+  "dialog.hmuxConfig.disclosure.cwdCommand": {
     "source": "cwd %1$@: %2$@",
     "class": "format"
   },
-  "dialog.cmuxConfig.disclosure.url": {
+  "dialog.hmuxConfig.disclosure.url": {
     "source": "url: %@",
     "class": "format"
   },
@@ -1302,7 +1302,7 @@
       "zh-Hant": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
       "ko": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
       "ar": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
-      "zh-Hans": "Dock is the cmux right-sidebar feature name, not the macOS Dock; this market keeps the English product name, as reviewed in #12958."
+      "zh-Hans": "Dock is the hmux right-sidebar feature name, not the macOS Dock; this market keeps the English product name, as reviewed in #12958."
     }
   },
   "dock.source.title": {
@@ -1315,7 +1315,7 @@
       "zh-Hant": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
       "ko": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
       "ar": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
-      "zh-Hans": "Dock is the cmux right-sidebar feature name, not the macOS Dock; this market keeps the English product name, as reviewed in #12958."
+      "zh-Hans": "Dock is the hmux right-sidebar feature name, not the macOS Dock; this market keeps the English product name, as reviewed in #12958."
     }
   },
   "emptyPanel.action.browser": {
@@ -1932,7 +1932,7 @@
       "zh-Hant": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
       "ko": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
       "ar": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
-      "zh-Hans": "Dock is the cmux right-sidebar feature name, not the macOS Dock; this market keeps the English product name, as reviewed in #12958."
+      "zh-Hans": "Dock is the hmux right-sidebar feature name, not the macOS Dock; this market keeps the English product name, as reviewed in #12958."
     }
   },
   "menu.help.notifications": {
@@ -2036,23 +2036,23 @@
   },
   "mobile.pairing.target.appStore": {
     "class": "brand",
-    "source": "cmux"
+    "source": "hmux"
   },
   "mobile.pairing.target.beta": {
     "class": "brand",
-    "source": "cmux BETA"
+    "source": "hmux BETA"
   },
   "mobile.pairing.target.demo": {
     "class": "brand",
-    "source": "cmux DEMO"
+    "source": "hmux DEMO"
   },
   "mobile.pairing.target.dev": {
     "class": "brand",
-    "source": "cmux DEV %@"
+    "source": "hmux DEV %@"
   },
   "mobile.pairing.target.internal": {
     "class": "brand",
-    "source": "cmux INTERNAL"
+    "source": "hmux INTERNAL"
   },
   "mode.compact": {
     "source": "Compact",
@@ -2135,7 +2135,7 @@
   },
   "pricing.native.eyebrow": {
     "class": "brand",
-    "source": "cmux Pro"
+    "source": "hmux Pro"
   },
   "pricing.native.free.price": {
     "class": "price",
@@ -2183,11 +2183,11 @@
   },
   "pricing.pro.name": {
     "class": "brand",
-    "source": "cmux Pro"
+    "source": "hmux Pro"
   },
   "pricing.pro.workspace.title": {
     "class": "brand",
-    "source": "cmux Pro"
+    "source": "hmux Pro"
   },
   "pricing.team.name": {
     "source": "Team",
@@ -2197,7 +2197,7 @@
   },
   "pricing.window.title": {
     "class": "brand",
-    "source": "cmux Pro"
+    "source": "hmux Pro"
   },
   "projectSchemes.badge.personal": {
     "source": "personal",
@@ -2241,17 +2241,17 @@
       "zh-Hant": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
       "ko": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
       "ar": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
-      "zh-Hans": "Dock is the cmux right-sidebar feature name, not the macOS Dock; this market keeps the English product name, as reviewed in #12958."
+      "zh-Hans": "Dock is the hmux right-sidebar feature name, not the macOS Dock; this market keeps the English product name, as reviewed in #12958."
     }
   },
   "rightSidebar.mode.feed": {
     "source": "Feed",
     "identityLocales": {
       "de": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
-      "ar": "Feed is the cmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
-      "es": "Feed is the cmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
-      "zh-Hant": "Feed is the cmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
-      "zh-Hans": "Feed is the cmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958."
+      "ar": "Feed is the hmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
+      "es": "Feed is the hmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
+      "zh-Hant": "Feed is the hmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
+      "zh-Hans": "Feed is the hmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958."
     }
   },
   "rightSidebar.mode.machines": {
@@ -2506,7 +2506,7 @@
   },
   "settings.account.pro.title": {
     "class": "brand",
-    "source": "cmux Pro"
+    "source": "hmux Pro"
   },
   "settings.app.markdownFontFamily.placeholder": {
     "source": "System",
@@ -2551,10 +2551,10 @@
     "source": "Feed",
     "identityLocales": {
       "de": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required.",
-      "ar": "Feed is the cmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
-      "es": "Feed is the cmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
-      "zh-Hant": "Feed is the cmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
-      "zh-Hans": "Feed is the cmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958."
+      "ar": "Feed is the hmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
+      "es": "Feed is the hmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
+      "zh-Hant": "Feed is the hmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958.",
+      "zh-Hans": "Feed is the hmux right-sidebar feature name; this market keeps the English product name, as reviewed in #12958."
     }
   },
   "settings.betaFeatures.workspaceTodosChecklistStyle.inline": {
@@ -2698,9 +2698,9 @@
       "de": "Reviewed native UI spelling, established developer terminology, or the named macOS Dock component; an explicit translated entry remains required."
     }
   },
-  "settings.config.source.cmux": {
+  "settings.config.source.hmux": {
     "class": "brand",
-    "source": "cmux"
+    "source": "hmux"
   },
   "settings.customSidebars.renderer": {
     "source": "Renderer",
@@ -2909,7 +2909,7 @@
   },
   "settings.section.settingsJSON": {
     "class": "technical",
-    "source": "cmux.json"
+    "source": "hmux.json"
   },
   "globalSearch.kind.terminal": {
     "source": "Terminal",
@@ -3162,7 +3162,7 @@
   },
   "sidebar.provider.default.subtitle": {
     "class": "brand",
-    "source": "cmux"
+    "source": "hmux"
   },
   "sidebar.remote.badge": {
     "class": "technical",
@@ -3424,13 +3424,13 @@
       "es": "Reviewed native word, technical abbreviation, or SaaS tier name with the same spelling in this context."
     }
   },
-  "sleepyMode.glow.cmux": {
+  "sleepyMode.glow.hmux": {
     "class": "brand",
-    "source": "cmux"
+    "source": "hmux"
   },
-  "sleepyMode.theme.cmux": {
+  "sleepyMode.theme.hmux": {
     "class": "brand",
-    "source": "cmux"
+    "source": "hmux"
   },
   "sleepyMode.theme.mono": {
     "source": "Mono",
@@ -4222,102 +4222,102 @@
   "cli.workflow.literal.codex": {
     "source": "codex",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
   "cli.workflow.literal.claude": {
     "source": "claude",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal..cmux/cmux.json": {
-    "source": ".cmux/cmux.json",
+  "cli.workflow.literal..hmux/hmux.json": {
+    "source": ".hmux/hmux.json",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.~/.config/cmux/cmux.json": {
-    "source": "~/.config/cmux/cmux.json",
+  "cli.workflow.literal.~/.config/hmux/hmux.json": {
+    "source": "~/.config/hmux/hmux.json",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal..cmux/dock.json": {
-    "source": ".cmux/dock.json",
+  "cli.workflow.literal..hmux/dock.json": {
+    "source": ".hmux/dock.json",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
   "cli.workflow.literal.actions.workspaceCommand": {
     "source": "actions.workspaceCommand",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
   "cli.workflow.literal.ui.newWorkspace.action": {
     "source": "ui.newWorkspace.action",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
   "cli.workflow.literal.ui.newWorkspace.contextMenu": {
     "source": "ui.newWorkspace.contextMenu",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
   "cli.workflow.literal.commands[].workspace.layout": {
     "source": "commands[].workspace.layout",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
   "cli.workflow.literal.actions.agent": {
     "source": "actions.agent",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
   "cli.workflow.literal.ui.surfaceTabBar.buttons": {
     "source": "ui.surfaceTabBar.buttons",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.cmux markdown": {
-    "source": "cmux markdown",
+  "cli.workflow.literal.hmux markdown": {
+    "source": "hmux markdown",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.cmux feed tui --opentui": {
-    "source": "cmux feed tui --opentui",
+  "cli.workflow.literal.hmux feed tui --opentui": {
+    "source": "hmux feed tui --opentui",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.cmux reload-config": {
-    "source": "cmux reload-config",
+  "cli.workflow.literal.hmux reload-config": {
+    "source": "hmux reload-config",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.cmux docs workflows --json": {
-    "source": "cmux docs workflows --json",
+  "cli.workflow.literal.hmux docs workflows --json": {
+    "source": "hmux docs workflows --json",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.cmux layout list --json": {
-    "source": "cmux layout list --json",
+  "cli.workflow.literal.hmux layout list --json": {
+    "source": "hmux layout list --json",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.cmux layout get <name>": {
-    "source": "cmux layout get <name>",
+  "cli.workflow.literal.hmux layout get <name>": {
+    "source": "hmux layout get <name>",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.cmux layout open <name> --cwd <project>": {
-    "source": "cmux layout open <name> --cwd <project>",
+  "cli.workflow.literal.hmux layout open <name> --cwd <project>": {
+    "source": "hmux layout open <name> --cwd <project>",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.cmux layout save <name> --description \"<what this creates>\"": {
-    "source": "cmux layout save <name> --description \"<what this creates>\"",
+  "cli.workflow.literal.hmux layout save <name> --description \"<what this creates>\"": {
+    "source": "hmux layout save <name> --description \"<what this creates>\"",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
-  "cli.workflow.literal.cmux layout delete <name>": {
-    "source": "cmux layout delete <name>",
+  "cli.workflow.literal.hmux layout delete <name>": {
+    "source": "hmux layout delete <name>",
     "class": "syntax",
-    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/CMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
+    "reason": "Literal command, executable, JSON path, or filesystem path in CLI/HMUXCLI+DocsSettings.swift. Kept invariant for execution and configuration."
   },
   "cloudMenu.team": {
     "source": "Team",
@@ -4328,17 +4328,17 @@
   "cloudMenu.title": {
     "source": "Cloud",
     "identityLocales": {
-      "de": "Product name cmux Cloud keeps its English spelling in this language.",
-      "fr": "Product name cmux Cloud keeps its English spelling in this language.",
-      "es": "Product name cmux Cloud keeps its English spelling in this language."
+      "de": "Product name hmux Cloud keeps its English spelling in this language.",
+      "fr": "Product name hmux Cloud keeps its English spelling in this language.",
+      "es": "Product name hmux Cloud keeps its English spelling in this language."
     }
   },
   "menu.cloud.title": {
     "source": "Cloud",
     "identityLocales": {
-      "de": "Product name cmux Cloud keeps its English spelling in this language.",
-      "fr": "Product name cmux Cloud keeps its English spelling in this language.",
-      "es": "Product name cmux Cloud keeps its English spelling in this language."
+      "de": "Product name hmux Cloud keeps its English spelling in this language.",
+      "fr": "Product name hmux Cloud keeps its English spelling in this language.",
+      "es": "Product name hmux Cloud keeps its English spelling in this language."
     }
   },
   "sidebar.agentStatus.glyph.tooltip": {
@@ -4407,25 +4407,25 @@
   "mobile.tabs.cloud": {
     "source": "Cloud",
     "identityLocales": {
-      "de": "cmux Cloud is a product name; German uses the English word unchanged.",
-      "fr": "cmux Cloud is a product name; French uses the English word unchanged.",
-      "es": "cmux Cloud is a product name; Spanish uses the English word unchanged.",
-      "zh-Hant": "cmux Cloud is a product name, left in Latin script in this locale.",
-      "zh-Hans": "cmux Cloud is a product name, left in Latin script in this locale.",
-      "ko": "cmux Cloud is a product name, left in Latin script in this locale.",
-      "ja": "cmux Cloud is a product name, left in Latin script in this locale."
+      "de": "hmux Cloud is a product name; German uses the English word unchanged.",
+      "fr": "hmux Cloud is a product name; French uses the English word unchanged.",
+      "es": "hmux Cloud is a product name; Spanish uses the English word unchanged.",
+      "zh-Hant": "hmux Cloud is a product name, left in Latin script in this locale.",
+      "zh-Hans": "hmux Cloud is a product name, left in Latin script in this locale.",
+      "ko": "hmux Cloud is a product name, left in Latin script in this locale.",
+      "ja": "hmux Cloud is a product name, left in Latin script in this locale."
     }
   },
   "mobile.cloud.title": {
     "source": "Cloud",
     "identityLocales": {
-      "de": "cmux Cloud is a product name; German uses the English word unchanged.",
-      "fr": "cmux Cloud is a product name; French uses the English word unchanged.",
-      "es": "cmux Cloud is a product name; Spanish uses the English word unchanged.",
-      "zh-Hant": "cmux Cloud is a product name, left in Latin script in this locale.",
-      "zh-Hans": "cmux Cloud is a product name, left in Latin script in this locale.",
-      "ko": "cmux Cloud is a product name, left in Latin script in this locale.",
-      "ja": "cmux Cloud is a product name, left in Latin script in this locale."
+      "de": "hmux Cloud is a product name; German uses the English word unchanged.",
+      "fr": "hmux Cloud is a product name; French uses the English word unchanged.",
+      "es": "hmux Cloud is a product name; Spanish uses the English word unchanged.",
+      "zh-Hant": "hmux Cloud is a product name, left in Latin script in this locale.",
+      "zh-Hans": "hmux Cloud is a product name, left in Latin script in this locale.",
+      "ko": "hmux Cloud is a product name, left in Latin script in this locale.",
+      "ja": "hmux Cloud is a product name, left in Latin script in this locale."
     }
   },
   "mobile.cloud.machines.header": {
@@ -4849,53 +4849,53 @@
   "cloudTree.device.build.dev": {
     "source": "DEV",
     "identityLocales": {
-      "ar": "DEV is the invariant cmux build channel name.",
-      "de": "DEV is the invariant cmux build channel name.",
-      "es": "DEV is the invariant cmux build channel name.",
-      "fr": "DEV is the invariant cmux build channel name.",
-      "ja": "DEV is the invariant cmux build channel name.",
-      "ko": "DEV is the invariant cmux build channel name.",
-      "zh-Hans": "DEV is the invariant cmux build channel name.",
-      "zh-Hant": "DEV is the invariant cmux build channel name."
+      "ar": "DEV is the invariant hmux build channel name.",
+      "de": "DEV is the invariant hmux build channel name.",
+      "es": "DEV is the invariant hmux build channel name.",
+      "fr": "DEV is the invariant hmux build channel name.",
+      "ja": "DEV is the invariant hmux build channel name.",
+      "ko": "DEV is the invariant hmux build channel name.",
+      "zh-Hans": "DEV is the invariant hmux build channel name.",
+      "zh-Hant": "DEV is the invariant hmux build channel name."
     }
   },
   "cloudTree.device.build.nightly": {
     "source": "Nightly",
     "identityLocales": {
-      "ar": "Nightly is the invariant cmux build channel name.",
-      "de": "Nightly is the invariant cmux build channel name.",
-      "es": "Nightly is the invariant cmux build channel name.",
-      "fr": "Nightly is the invariant cmux build channel name.",
-      "ja": "Nightly is the invariant cmux build channel name.",
-      "ko": "Nightly is the invariant cmux build channel name.",
-      "zh-Hans": "Nightly is the invariant cmux build channel name.",
-      "zh-Hant": "Nightly is the invariant cmux build channel name."
+      "ar": "Nightly is the invariant hmux build channel name.",
+      "de": "Nightly is the invariant hmux build channel name.",
+      "es": "Nightly is the invariant hmux build channel name.",
+      "fr": "Nightly is the invariant hmux build channel name.",
+      "ja": "Nightly is the invariant hmux build channel name.",
+      "ko": "Nightly is the invariant hmux build channel name.",
+      "zh-Hans": "Nightly is the invariant hmux build channel name.",
+      "zh-Hant": "Nightly is the invariant hmux build channel name."
     }
   },
   "cloudTree.device.build.rc": {
     "source": "RC",
     "identityLocales": {
-      "ar": "RC is the invariant cmux build channel name.",
-      "de": "RC is the invariant cmux build channel name.",
-      "es": "RC is the invariant cmux build channel name.",
-      "fr": "RC is the invariant cmux build channel name.",
-      "ja": "RC is the invariant cmux build channel name.",
-      "ko": "RC is the invariant cmux build channel name.",
-      "zh-Hans": "RC is the invariant cmux build channel name.",
-      "zh-Hant": "RC is the invariant cmux build channel name."
+      "ar": "RC is the invariant hmux build channel name.",
+      "de": "RC is the invariant hmux build channel name.",
+      "es": "RC is the invariant hmux build channel name.",
+      "fr": "RC is the invariant hmux build channel name.",
+      "ja": "RC is the invariant hmux build channel name.",
+      "ko": "RC is the invariant hmux build channel name.",
+      "zh-Hans": "RC is the invariant hmux build channel name.",
+      "zh-Hant": "RC is the invariant hmux build channel name."
     }
   },
   "cloudTree.device.build.staging": {
     "source": "Staging",
     "identityLocales": {
-      "ar": "Staging is the invariant cmux build channel name.",
-      "de": "Staging is the invariant cmux build channel name.",
-      "es": "Staging is the invariant cmux build channel name.",
-      "fr": "Staging is the invariant cmux build channel name.",
-      "ja": "Staging is the invariant cmux build channel name.",
-      "ko": "Staging is the invariant cmux build channel name.",
-      "zh-Hans": "Staging is the invariant cmux build channel name.",
-      "zh-Hant": "Staging is the invariant cmux build channel name."
+      "ar": "Staging is the invariant hmux build channel name.",
+      "de": "Staging is the invariant hmux build channel name.",
+      "es": "Staging is the invariant hmux build channel name.",
+      "fr": "Staging is the invariant hmux build channel name.",
+      "ja": "Staging is the invariant hmux build channel name.",
+      "ko": "Staging is the invariant hmux build channel name.",
+      "zh-Hans": "Staging is the invariant hmux build channel name.",
+      "zh-Hant": "Staging is the invariant hmux build channel name."
     }
   },
   "cloudTree.device.build.tagged": {
@@ -4983,54 +4983,54 @@
     "source": "Claude"
   },
   "settings.account.max.title": {
-    "source": "cmux Max",
+    "source": "hmux Max",
     "identityLocales": {
       "de": {
-        "reason": "Product and plan name cmux Max is a brand name and is not translated.",
+        "reason": "Product and plan name hmux Max is a brand name and is not translated.",
         "values": [
-          "cmux Max"
+          "hmux Max"
         ]
       },
       "fr": {
-        "reason": "Product and plan name cmux Max is a brand name and is not translated.",
+        "reason": "Product and plan name hmux Max is a brand name and is not translated.",
         "values": [
-          "cmux Max"
+          "hmux Max"
         ]
       },
       "ar": {
-        "reason": "Product and plan name cmux Max is a brand name and is not translated.",
+        "reason": "Product and plan name hmux Max is a brand name and is not translated.",
         "values": [
-          "cmux Max"
+          "hmux Max"
         ]
       },
       "es": {
-        "reason": "Product and plan name cmux Max is a brand name and is not translated.",
+        "reason": "Product and plan name hmux Max is a brand name and is not translated.",
         "values": [
-          "cmux Max"
+          "hmux Max"
         ]
       },
       "zh-Hant": {
-        "reason": "Product and plan name cmux Max is a brand name and is not translated.",
+        "reason": "Product and plan name hmux Max is a brand name and is not translated.",
         "values": [
-          "cmux Max"
+          "hmux Max"
         ]
       },
       "zh-Hans": {
-        "reason": "Product and plan name cmux Max is a brand name and is not translated.",
+        "reason": "Product and plan name hmux Max is a brand name and is not translated.",
         "values": [
-          "cmux Max"
+          "hmux Max"
         ]
       },
       "ko": {
-        "reason": "Product and plan name cmux Max is a brand name and is not translated.",
+        "reason": "Product and plan name hmux Max is a brand name and is not translated.",
         "values": [
-          "cmux Max"
+          "hmux Max"
         ]
       },
       "ja": {
-        "reason": "Product and plan name cmux Max is a brand name and is not translated.",
+        "reason": "Product and plan name hmux Max is a brand name and is not translated.",
         "values": [
-          "cmux Max"
+          "hmux Max"
         ]
       }
     }

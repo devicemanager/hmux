@@ -7,14 +7,14 @@
 # (team prefix + bundle id) that the provisioning profile must name. #11789
 # passed the team-prefixed App ID as the bundle identifier, so the first
 # release dry run after #12149 failed in "Verify binary architectures":
-#   system extension identifier is 'com.cmuxterm.app.tunnel', expected
-#   '7WLXT3NR37.com.cmuxterm.app.tunnel'
+#   system extension identifier is 'com.hmuxterm.app.tunnel', expected
+#   '7WLXT3NR37.com.hmuxterm.app.tunnel'
 # Derive all three from the Xcode project so the workflow cannot drift again.
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-WORKFLOW="${CMUX_RELEASE_WORKFLOW_FILE:-$ROOT_DIR/.github/workflows/release.yml}"
-PROJECT="${CMUX_PROJECT_FILE:-$ROOT_DIR/cmux.xcodeproj/project.pbxproj}"
+WORKFLOW="${HMUX_RELEASE_WORKFLOW_FILE:-$ROOT_DIR/.github/workflows/release.yml}"
+PROJECT="${HMUX_PROJECT_FILE:-$ROOT_DIR/hmux.xcodeproj/project.pbxproj}"
 
 # The tunnel target's Release identifier is the one without a .debug segment.
 bundle_id="$(grep -E 'PRODUCT_BUNDLE_IDENTIFIER = [A-Za-z0-9.-]+\.tunnel;' "$PROJECT" | sed -E 's/.*= ([A-Za-z0-9.-]+);.*/\1/' | grep -v '\.debug\.' | sort -u)"
@@ -22,9 +22,9 @@ if [ "$(wc -l <<<"$bundle_id" | tr -d ' ')" != "1" ] || [ -z "$bundle_id" ]; the
   echo "FAIL: expected exactly one non-debug tunnel PRODUCT_BUNDLE_IDENTIFIER in $PROJECT, got: $(tr '\n' ' ' <<<"$bundle_id")" >&2
   exit 1
 fi
-team_prefix="$(grep -E 'CMUX_TEAM_ID_PREFIX = "[A-Z0-9]+\.";' "$PROJECT" | sed -E 's/.*= "([A-Z0-9]+\.)";.*/\1/' | sort -u)"
+team_prefix="$(grep -E 'HMUX_TEAM_ID_PREFIX = "[A-Z0-9]+\.";' "$PROJECT" | sed -E 's/.*= "([A-Z0-9]+\.)";.*/\1/' | sort -u)"
 if [ "$(wc -l <<<"$team_prefix" | tr -d ' ')" != "1" ] || [ -z "$team_prefix" ]; then
-  echo "FAIL: expected exactly one CMUX_TEAM_ID_PREFIX in $PROJECT, got: $(tr '\n' ' ' <<<"$team_prefix")" >&2
+  echo "FAIL: expected exactly one HMUX_TEAM_ID_PREFIX in $PROJECT, got: $(tr '\n' ' ' <<<"$team_prefix")" >&2
   exit 1
 fi
 app_id="${team_prefix}${bundle_id}"

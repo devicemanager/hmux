@@ -54,10 +54,10 @@ jobs:
           import json, os, secrets
           from pathlib import Path
           token = secrets.token_hex(32)
-          target = Path(os.environ["RUNNER_TEMP"]) / "cmux-r2-canary-access-token"
+          target = Path(os.environ["RUNNER_TEMP"]) / "hmux-r2-canary-access-token"
           target.touch(mode=0o600)
           target.write_text(token)
-          bundle = Path(os.environ["RUNNER_TEMP"]) / "cmux-r2-canary-secrets.json"
+          bundle = Path(os.environ["RUNNER_TEMP"]) / "hmux-r2-canary-secrets.json"
           bundle.touch(mode=0o600)
           bundle.write_text(json.dumps({"GITHUB_ARTIFACT_TOKEN": os.environ["GITHUB_ARTIFACT_TOKEN"], "CANARY_ACCESS_TOKEN": token}))
           PYTHON
@@ -69,7 +69,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
           expiry=$(date -u -d '+20 minutes' +%Y-%m-%dT%H:%M:%SZ)
-          ./node_modules/.bin/wrangler deploy --config wrangler.canary.runtime.json --var CANARY_ENABLED:true --var "CANARY_EXPIRES_AT:$expiry" --secrets-file "$RUNNER_TEMP/cmux-r2-canary-secrets.json"
+          ./node_modules/.bin/wrangler deploy --config wrangler.canary.runtime.json --var CANARY_ENABLED:true --var "CANARY_EXPIRES_AT:$expiry" --secrets-file "$RUNNER_TEMP/hmux-r2-canary-secrets.json"
       - name: Measure cold import then warm read on Linux
         env:
           GH_TOKEN: ${{ github.token }}
@@ -121,7 +121,7 @@ jobs:
         run: python3 scripts/ci/r2-canary-cloudflare.py cleanup-bucket
       - name: Remove runner-local access token
         if: always()
-        run: rm -f "$RUNNER_TEMP/cmux-r2-canary-access-token" "$RUNNER_TEMP/cmux-r2-canary-secrets.json"
+        run: rm -f "$RUNNER_TEMP/hmux-r2-canary-access-token" "$RUNNER_TEMP/hmux-r2-canary-secrets.json"
       - name: Preserve measurement receipt
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

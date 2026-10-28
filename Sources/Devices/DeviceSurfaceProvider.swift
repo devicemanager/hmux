@@ -1,14 +1,14 @@
-import CMUXMobileCore
-import CmuxCloud
-import CmuxCore
-import CmuxSurfaceCatalogModel
-import CmuxTerminal
+import HMUXMobileCore
+import HmuxCloud
+import HmuxCore
+import HmuxSurfaceCatalogModel
+import HmuxTerminal
 import Foundation
 
 /// Another Mac as a surface provider: its synced workspaces and terminals are
 /// the resources, its presence and link state are the machine info, and a
 /// projection is a manual-mirror Ghostty pane fed by ``DeviceTerminalMirrorSession``.
-/// The Devices tree, drag-and-drop, `surface.catalog`, and `cmux vm tree` all
+/// The Devices tree, drag-and-drop, `surface.catalog`, and `hmux vm tree` all
 /// read this through the catalog, so a device row and a cloud row are the same
 /// shape to every action path.
 @MainActor

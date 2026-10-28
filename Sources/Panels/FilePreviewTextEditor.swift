@@ -1,8 +1,8 @@
 import AppKit
-import CmuxFoundation
-import CmuxSettings
-import CmuxSettingsUI
-import CmuxSyntaxHighlighting
+import HmuxFoundation
+import HmuxSettings
+import HmuxSettingsUI
+import HmuxSyntaxHighlighting
 import SwiftUI
 
 @MainActor

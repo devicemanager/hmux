@@ -15,7 +15,7 @@ SCRIPT = ROOT / "scripts/ci/take-canonical-root.sh"
 
 
 class CanonicalRootTests(unittest.TestCase):
-    def run_helper(self, exit_code: int, placed: str = "", *, requested: str = "/private/tmp/cmux-ci") -> subprocess.CompletedProcess[str]:
+    def run_helper(self, exit_code: int, placed: str = "", *, requested: str = "/private/tmp/hmux-ci") -> subprocess.CompletedProcess[str]:
         with tempfile.TemporaryDirectory() as tmp:
             temp = Path(tmp)
             helper = temp / "helper-glaeda-canonical-root"
@@ -26,31 +26,31 @@ class CanonicalRootTests(unittest.TestCase):
             environment = {
                 "PATH": os.environ["PATH"],
                 "RUNNER_TEMP": str(temp),
-                "CMUX_CI_CANONICAL_ROOT": requested,
-                "CMUX_CI_CANONICAL_ROOT_HELPER": str(helper),
-                "CMUX_PRODUCT_RUNNER": "glaeda-std-xcode-26.6",
+                "HMUX_CI_CANONICAL_ROOT": requested,
+                "HMUX_CI_CANONICAL_ROOT_HELPER": str(helper),
+                "HMUX_PRODUCT_RUNNER": "glaeda-std-xcode-26.6",
             }
             return subprocess.run([str(SCRIPT)], env=environment, capture_output=True, text=True)
 
     def test_helper_holds_requested_root(self) -> None:
         result = self.run_helper(0)
         self.assertEqual(result.returncode, 0)
-        self.assertEqual(result.stdout.strip(), "/private/tmp/cmux-ci")
+        self.assertEqual(result.stdout.strip(), "/private/tmp/hmux-ci")
 
     def test_different_held_root_fails_closed(self) -> None:
-        result = self.run_helper(2, "/private/tmp/cmux-ci-2")
+        result = self.run_helper(2, "/private/tmp/hmux-ci-2")
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("different root", result.stderr)
 
     def test_invalid_roots_are_rejected(self) -> None:
-        result = self.run_helper(0, requested="/private/tmp/cmux-ci-1")
+        result = self.run_helper(0, requested="/private/tmp/hmux-ci-1")
         self.assertNotEqual(result.returncode, 0)
 
     def test_owned_runner_without_helper_fails_closed(self) -> None:
         environment = {
             "PATH": os.environ["PATH"],
-            "CMUX_PRODUCT_RUNNER": "glaeda-std-xcode-26.6",
-            "CMUX_CI_CANONICAL_ROOT_HELPER": "/tmp/does-not-exist",
+            "HMUX_PRODUCT_RUNNER": "glaeda-std-xcode-26.6",
+            "HMUX_CI_CANONICAL_ROOT_HELPER": "/tmp/does-not-exist",
         }
         result = subprocess.run([str(SCRIPT)], env=environment, capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)

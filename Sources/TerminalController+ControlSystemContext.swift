@@ -1,8 +1,8 @@
 import AppKit
 import Bonsplit
-import CmuxControlSocket
-import CmuxFeedback
-import CmuxWorkspaces
+import HmuxControlSocket
+import HmuxFeedback
+import HmuxWorkspaces
 import Foundation
 
 /// The system-domain witnesses: the byte-faithful bodies of the former
@@ -298,7 +298,7 @@ extension TerminalController: ControlSystemContext {
                     message: String(
                         format: String(
                             localized: "session.import.error.unknownChannel",
-                            defaultValue: "Unknown cmux channel \"%@\". Use stable, nightly, rc, staging, debug:<tag>, or a path to a session file."
+                            defaultValue: "Unknown hmux channel \"%@\". Use stable, nightly, rc, staging, debug:<tag>, or a path to a session file."
                         ),
                         name
                     ),
@@ -327,7 +327,7 @@ extension TerminalController: ControlSystemContext {
             // Count what restore will actually open: crash-diagnostic windows
             // are dropped and the window count is capped.
             let windowCount = min(
-                SessionPersistencePolicy.pruningCmuxCrashDiagnosticWindows(from: snapshot)
+                SessionPersistencePolicy.pruningHmuxCrashDiagnosticWindows(from: snapshot)
                     .snapshot?.windows.count ?? 0,
                 SessionPersistencePolicy.maxWindowsPerSnapshot
             )
@@ -366,7 +366,7 @@ extension TerminalController: ControlSystemContext {
                 code: "not_found",
                 message: String(
                     localized: "session.export.error.noSnapshot",
-                    defaultValue: "cmux has not saved a session yet. Try again in a few seconds."
+                    defaultValue: "hmux has not saved a session yet. Try again in a few seconds."
                 ),
                 path: nil
             )
@@ -388,7 +388,7 @@ extension TerminalController: ControlSystemContext {
                 message: String(
                     format: String(
                         localized: "session.export.error.destinationIsLive",
-                        defaultValue: "%@ is this cmux's own session file. Choose another path."
+                        defaultValue: "%@ is this hmux's own session file. Choose another path."
                     ),
                     url.path
                 ),
@@ -429,7 +429,7 @@ extension TerminalController: ControlSystemContext {
             return String(
                 format: String(
                     localized: "session.import.error.fileNotFound",
-                    defaultValue: "No saved cmux session at %@."
+                    defaultValue: "No saved hmux session at %@."
                 ),
                 path
             )
@@ -442,7 +442,7 @@ extension TerminalController: ControlSystemContext {
             return String(
                 format: String(
                     localized: "session.import.error.notASnapshot",
-                    defaultValue: "%@ is not a cmux session snapshot."
+                    defaultValue: "%@ is not a hmux session snapshot."
                 ),
                 path
             )
@@ -450,7 +450,7 @@ extension TerminalController: ControlSystemContext {
             return String(
                 format: String(
                     localized: "session.import.error.newerSchema",
-                    defaultValue: "%1$@ was saved by a newer cmux (session format %2$@, this cmux reads %3$@). Update cmux to import it."
+                    defaultValue: "%1$@ was saved by a newer hmux (session format %2$@, this hmux reads %3$@). Update hmux to import it."
                 ),
                 path,
                 String(found),
@@ -460,7 +460,7 @@ extension TerminalController: ControlSystemContext {
             return String(
                 format: String(
                     localized: "session.import.error.olderSchema",
-                    defaultValue: "%1$@ uses an older session format (%2$@) that this cmux no longer reads (%3$@)."
+                    defaultValue: "%1$@ uses an older session format (%2$@) that this hmux no longer reads (%3$@)."
                 ),
                 path,
                 String(found),
@@ -478,7 +478,7 @@ extension TerminalController: ControlSystemContext {
             return String(
                 format: String(
                     localized: "session.import.error.liveSnapshot",
-                    defaultValue: "%@ is the session this cmux is saving right now. Run cmux restore-session without --from to reopen the previous launch."
+                    defaultValue: "%@ is the session this hmux is saving right now. Run hmux restore-session without --from to reopen the previous launch."
                 ),
                 path
             )
@@ -549,7 +549,7 @@ extension TerminalController: ControlSystemContext {
         }
 
         // Int64 → Int is lossless on 64-bit macOS.
-        let sequence = Int(max(0, CmuxEventBus.shared.latestSequence))
+        let sequence = Int(max(0, HmuxEventBus.shared.latestSequence))
         let selectedWorkspaceId = tabManager.selectedTabId
         let workspaces = tabManager.tabs.enumerated().map { index, workspace in
             extensionSidebarWorkspaceRow(
@@ -599,7 +599,7 @@ extension TerminalController: ControlSystemContext {
             latestNotificationText: latestNotificationText,
             latestConversationMessage: workspace.latestConversationMessage,
             latestSubmittedMessage: workspace.latestSubmittedMessage,
-            latestSubmittedAtISO: workspace.latestSubmittedAt.map(CmuxEventBus.isoTimestamp),
+            latestSubmittedAtISO: workspace.latestSubmittedAt.map(HmuxEventBus.isoTimestamp),
             listeningPorts: workspace.listeningPorts,
             pullRequestURLs: workspace.sidebarPullRequestsInDisplayOrder().map { $0.url.absoluteString },
             panelDirectories: workspace.sidebarFilesystemDirectoriesInDisplayOrder(),

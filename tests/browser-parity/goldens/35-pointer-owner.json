@@ -1,6 +1,6 @@
 {
   "oracle": {},
-  "cmux": {
+  "hmux": {
     "held": true,
     "bounded": true,
     "names-holder": true,

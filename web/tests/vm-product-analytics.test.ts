@@ -49,7 +49,7 @@ describe("cloud vm ledger to PostHog mapping", () => {
         perMachineHome: false,
         idempotencyKeySet: true,
         // Free-form keys never reach PostHog.
-        homeVolume: "cmux-home-secret",
+        homeVolume: "hmux-home-secret",
         message: "provider said no",
       },
     }), NOW);
@@ -114,10 +114,10 @@ describe("cloud vm ledger to PostHog mapping", () => {
   test("attach, exec and the other lifecycle rows map with their typed metadata", () => {
     const attach = vmProductEventFromLedger(ledgerRow({
       eventType: "vm.attach",
-      metadata: { transport: "cmux-remote", invited: false },
+      metadata: { transport: "hmux-remote", invited: false },
     }), NOW);
     expect(attach!.event).toBe("cloud_vm_attached");
-    expect(attach!.properties).toMatchObject({ transport: "cmux-remote", invited: false });
+    expect(attach!.properties).toMatchObject({ transport: "hmux-remote", invited: false });
     expect(attach!.setOnce).toEqual({ cloud_vm_first_attached_at: NOW.toISOString() });
     expect(attach!.insertId).toBeUndefined();
 
@@ -247,7 +247,7 @@ describe("repository analytics sink", () => {
     const deferred: Array<() => Promise<void>> = [];
     captureVmProductEvent(ledgerRow(), {
       fetch: fetchImpl,
-      env: { CMUX_SERVER_ANALYTICS_FORCE: "1" },
+      env: { HMUX_SERVER_ANALYTICS_FORCE: "1" },
       defer: (task) => {
         deferred.push(task);
       },
@@ -268,7 +268,7 @@ describe("cloud_vm_request scope", () => {
       method: "POST",
       operation: "exec",
       startedAtMs: 0,
-      client: { name: "cmux-mac" },
+      client: { name: "hmux-mac" },
       userId: "user-1",
       ...overrides,
     };
@@ -286,17 +286,17 @@ describe("cloud_vm_request scope", () => {
     }) as unknown as typeof fetch;
     captureVmRequestOutcome(
       { context: ctx, response, durationMs: 10 },
-      { fetch: fakeFetch, env: { CMUX_VM_ANALYTICS_FORCE: "1" } },
+      { fetch: fakeFetch, env: { HMUX_VM_ANALYTICS_FORCE: "1" } },
     );
     return body;
   }
 
   test("the machine id comes from the URL of per-machine routes only", () => {
-    const perMachine = new Request("https://cmux.test/api/vm/noble-wren/exec");
+    const perMachine = new Request("https://hmux.test/api/vm/noble-wren/exec");
     expect(vmIdFromRequestPath(perMachine, "/api/vm/[id]/exec")).toBe("noble-wren");
-    expect(vmIdFromRequestPath(new Request("https://cmux.test/api/vm/base/open"), "/api/vm/base/open")).toBeUndefined();
-    expect(vmIdFromRequestPath(new Request("https://cmux.test/api/vm"), "/api/vm")).toBeUndefined();
-    expect(vmIdFromRequestPath(new Request("https://cmux.test/api/vm/%3Cscript%3E/exec"), "/api/vm/[id]/exec")).toBeUndefined();
+    expect(vmIdFromRequestPath(new Request("https://hmux.test/api/vm/base/open"), "/api/vm/base/open")).toBeUndefined();
+    expect(vmIdFromRequestPath(new Request("https://hmux.test/api/vm"), "/api/vm")).toBeUndefined();
+    expect(vmIdFromRequestPath(new Request("https://hmux.test/api/vm/%3Cscript%3E/exec"), "/api/vm/[id]/exec")).toBeUndefined();
   });
 
   test("billing annotation lands on the active request context and the PostHog row", () => {
@@ -334,11 +334,11 @@ describe("cloud_vm_request scope", () => {
   });
 
   test("polled operations, including remote-enrollment approval, stay out of PostHog on success", () => {
-    expect(isPolledVmOperation("approve_cmux_remote_enrollment")).toBe(true);
+    expect(isPolledVmOperation("approve_hmux_remote_enrollment")).toBe(true);
     expect(isPolledVmOperation("exec")).toBe(false);
-    const polled = capture(context({ operation: "approve_cmux_remote_enrollment" }), new Response("{}", { status: 200 }));
+    const polled = capture(context({ operation: "approve_hmux_remote_enrollment" }), new Response("{}", { status: 200 }));
     expect(polled).toBeNull();
-    const failed = capture(context({ operation: "approve_cmux_remote_enrollment" }), new Response("{}", { status: 500 }));
+    const failed = capture(context({ operation: "approve_hmux_remote_enrollment" }), new Response("{}", { status: 500 }));
     expect(failed!.batch[0].event).toBe("cloud_vm_request");
   });
 });

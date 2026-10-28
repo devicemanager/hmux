@@ -1,4 +1,4 @@
-// Pure construction of the cmux Founder's Edition welcome email payload.
+// Pure construction of the hmux Founder's Edition welcome email payload.
 //
 // Kept free of Stripe/Resend/env imports so it can be unit-tested directly
 // (web/tests/founders-welcome-email.test.ts) without booting the webhook route
@@ -14,7 +14,7 @@ import type { Locale } from "../../../../i18n/routing";
 export const DEFAULT_FROM_EMAIL = "austin@manaflow.ai";
 export const FOUNDER_CC = ["austin@manaflow.ai", "lawrence@manaflow.ai"];
 export const REPLY_TO = "austin@manaflow.ai";
-export const EMAIL_SUBJECT = "cmux Founder's Edition";
+export const EMAIL_SUBJECT = "hmux Founder's Edition";
 
 // Custom header that defeats Gmail's subject-based conversation grouping.
 // Gmail collapses messages that share a normalized subject among the same
@@ -33,17 +33,17 @@ function buildBody(name: string): string {
   return [
     `Hi ${name}!`,
     "",
-    "Thank you for being one of the first ever customers of cmux :)",
+    "Thank you for being one of the first ever customers of hmux :)",
     "",
     "My number is +1(714) 699-0169 and Lawrence's number is +1(949) 302-0749. " +
       "Our emails are austin@manaflow.ai and lawrence@manaflow.ai. Feel free to " +
       "text me on iMessage or WhatsApp, or we can just continue talking here. " +
       "I've CC'd my cofounder as well.",
     "",
-    "cmux iOS Beta is out for cmux Founder's Edition! To connect this purchase " +
-      "to your cmux account, use the email from this purchase at " +
+    "hmux iOS Beta is out for hmux Founder's Edition! To connect this purchase " +
+      "to your hmux account, use the email from this purchase at " +
       "https://cmux.com/billing/recover. We will send a secure sign-in link. " +
-      "If you already use cmux with another email, reply to this message so we " +
+      "If you already use hmux with another email, reply to this message so we " +
       "can verify both addresses and move access safely.",
     "",
     "Best,",
@@ -89,17 +89,17 @@ type ProWelcomeCopy = {
 };
 
 const ENGLISH_PRO_WELCOME_FALLBACK: ProWelcomeCopy = {
-  subject: "Welcome to cmux Pro 🎉",
+  subject: "Welcome to hmux Pro 🎉",
   fallbackName: "there",
   greeting: "Hey {name},",
   thanks:
-    "Thanks for joining cmux Pro! We’re still putting the full Pro experience together, and cloud access is on the way.",
+    "Thanks for joining hmux Pro! We’re still putting the full Pro experience together, and cloud access is on the way.",
   cloudStatus:
     "When cloud access launches, we’ll add usage credits to your account based on how many months you’ve been subscribed.",
   currentBenefit:
-    "In the meantime, your Pro benefit is early access to cmux on iOS. Sign up through the link below, and Apple will send your TestFlight invitation once you’re registered.",
+    "In the meantime, your Pro benefit is early access to hmux on iOS. Sign up through the link below, and Apple will send your TestFlight invitation once you’re registered.",
   testflightLink: "Sign up for TestFlight: {url}",
-  signoff: "Glad to have you here!\nThe cmux team",
+  signoff: "Glad to have you here!\nThe hmux team",
 };
 
 const DEFAULT_PRO_WELCOME_COPY: ProWelcomeCopy = {

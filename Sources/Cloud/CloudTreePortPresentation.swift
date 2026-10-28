@@ -1,4 +1,4 @@
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Describes the port identity without adding an inline open action.

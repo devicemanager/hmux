@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Feature smoke for a signed cmux app bundle: launch the app, then drive it
+# Feature smoke for a signed hmux app bundle: launch the app, then drive it
 # through the CLI bundled inside the same .app over its control socket.
 #
 # smoke-launch-macos-app.sh only proves the process stays alive. This script
@@ -8,13 +8,13 @@
 #
 # Usage: smoke-signed-app-cli.sh <app-path>
 #
-# CI only: cmux enforces a single instance per bundle id, so launching a
+# CI only: hmux enforces a single instance per bundle id, so launching a
 # bundle whose channel you are using on this Mac terminates your running copy.
 #
 # Environment:
-#   CMUX_CLI_SMOKE_SOCKET_TIMEOUT_SECONDS  wait for the socket (default 45)
-#   CMUX_CLI_SMOKE_WINDOW_TIMEOUT_SECONDS  wait for the first workspace (default 30)
-#   CMUX_CLI_SMOKE_REQUIRED_HELP_COMMANDS  space separated commands `--help` must list
+#   HMUX_CLI_SMOKE_SOCKET_TIMEOUT_SECONDS  wait for the socket (default 45)
+#   HMUX_CLI_SMOKE_WINDOW_TIMEOUT_SECONDS  wait for the first workspace (default 30)
+#   HMUX_CLI_SMOKE_REQUIRED_HELP_COMMANDS  space separated commands `--help` must list
 set -euo pipefail
 
 if [[ $# -ne 1 ]]; then
@@ -32,7 +32,7 @@ fi
 # keychain exists and gives the app no signing or publishing credentials.
 # shellcheck source=ci/lib/signing-runtime-guard.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/ci/lib/signing-runtime-guard.sh"
-cmux_signing_runtime_guard
+hmux_signing_runtime_guard
 
 INFO_PLIST="$APP_PATH/Contents/Info.plist"
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$INFO_PLIST")"
@@ -40,7 +40,7 @@ EXECUTABLE_NAME="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleExecutable' "$INFO
 SHORT_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$INFO_PLIST")"
 BUILD_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_PLIST")"
 EXECUTABLE_PATH="$APP_PATH/Contents/MacOS/$EXECUTABLE_NAME"
-CLI_PATH="$APP_PATH/Contents/Resources/bin/cmux"
+CLI_PATH="$APP_PATH/Contents/Resources/bin/hmux"
 
 if [[ ! -x "$CLI_PATH" ]]; then
   echo "error: bundled CLI missing or not executable at $CLI_PATH" >&2
@@ -60,14 +60,14 @@ if command -v lipo >/dev/null 2>&1 && ! lipo "$EXECUTABLE_PATH" -verify_arch "$H
   fi
 fi
 
-SOCKET_TIMEOUT_SECONDS="${CMUX_CLI_SMOKE_SOCKET_TIMEOUT_SECONDS:-45}"
-WINDOW_TIMEOUT_SECONDS="${CMUX_CLI_SMOKE_WINDOW_TIMEOUT_SECONDS:-30}"
-REQUIRED_HELP_COMMANDS="${CMUX_CLI_SMOKE_REQUIRED_HELP_COMMANDS:-ping capabilities identify list-workspaces new-workspace close-workspace remote-daemon-status version}"
-DISABLE_ICON_PERSISTENCE_KEY="cmuxDisableBundleIconPersistence"
+SOCKET_TIMEOUT_SECONDS="${HMUX_CLI_SMOKE_SOCKET_TIMEOUT_SECONDS:-45}"
+WINDOW_TIMEOUT_SECONDS="${HMUX_CLI_SMOKE_WINDOW_TIMEOUT_SECONDS:-30}"
+REQUIRED_HELP_COMMANDS="${HMUX_CLI_SMOKE_REQUIRED_HELP_COMMANDS:-ping capabilities identify list-workspaces new-workspace close-workspace remote-daemon-status version}"
+DISABLE_ICON_PERSISTENCE_KEY="hmuxDisableBundleIconPersistence"
 
 # A short private socket path: sun_path is limited to 104 bytes, and a private
-# path cannot collide with a socket another cmux on the runner already owns.
-WORK_DIR="$(mktemp -d /tmp/cmux-cli-smoke.XXXXXX)"
+# path cannot collide with a socket another hmux on the runner already owns.
+WORK_DIR="$(mktemp -d /tmp/hmux-cli-smoke.XXXXXX)"
 SOCKET_PATH="$WORK_DIR/s.sock"
 APP_LOG="$WORK_DIR/app.log"
 APP_PID=""
@@ -92,7 +92,7 @@ cleanup() {
     fi
     local log_name startup_log
     log_name="$(printf '%s' "$BUNDLE_ID" | sed -E 's/[^A-Za-z0-9._-]/-/g')"
-    startup_log="$HOME/Library/Logs/cmux/startup-${log_name}.log"
+    startup_log="$HOME/Library/Logs/hmux/startup-${log_name}.log"
     if [[ -f "$startup_log" ]]; then
       echo "--- startup breadcrumbs (last 60 lines) ---" >&2
       tail -n 60 "$startup_log" >&2 || true
@@ -113,10 +113,10 @@ cli() {
   local timeout_seconds="${CLI_TIMEOUT_SECONDS:-20}"
   local out_file="$WORK_DIR/cli.out"
   local err_file="$WORK_DIR/cli.err"
-  # Drop caller context a cmux terminal would export, so a local run inside
-  # cmux cannot route these commands at the caller's own workspace.
-  env -u CMUX_WORKSPACE_ID -u CMUX_SURFACE_ID -u CMUX_TAB_ID -u CMUX_PANEL_ID \
-    -u CMUX_SOCKET_PASSWORD CMUX_SOCKET_PATH="$SOCKET_PATH" \
+  # Drop caller context a hmux terminal would export, so a local run inside
+  # hmux cannot route these commands at the caller's own workspace.
+  env -u HMUX_WORKSPACE_ID -u HMUX_SURFACE_ID -u HMUX_TAB_ID -u HMUX_PANEL_ID \
+    -u HMUX_SOCKET_PASSWORD HMUX_SOCKET_PATH="$SOCKET_PATH" \
     "$CLI_PATH" --socket "$SOCKET_PATH" "$@" >"$out_file" 2>"$err_file" &
   local pid=$!
   local deadline=$((SECONDS + timeout_seconds))
@@ -124,7 +124,7 @@ cli() {
     if (( SECONDS >= deadline )); then
       kill -9 "$pid" 2>/dev/null || true
       wait "$pid" 2>/dev/null || true
-      echo "cmux $* timed out after ${timeout_seconds}s" >&2
+      echo "hmux $* timed out after ${timeout_seconds}s" >&2
       cat "$err_file" >&2 || true
       return 124
     fi
@@ -133,7 +133,7 @@ cli() {
   local status=0
   wait "$pid" || status=$?
   if [[ $status -ne 0 ]]; then
-    echo "cmux $* exited $status" >&2
+    echo "hmux $* exited $status" >&2
     cat "$out_file" >&2 || true
     cat "$err_file" >&2 || true
     return "$status"
@@ -149,14 +149,14 @@ json_field() {
 echo "==> CLI smoke for $APP_PATH ($BUNDLE_ID $SHORT_VERSION build $BUILD_VERSION)"
 
 # 1. Socket-free CLI checks.
-STEP="cmux --version"
+STEP="hmux --version"
 VERSION_OUT="$(cli --version)"
-EXPECTED_VERSION_PREFIX="cmux $SHORT_VERSION ($BUILD_VERSION)"
+EXPECTED_VERSION_PREFIX="hmux $SHORT_VERSION ($BUILD_VERSION)"
 [[ "$VERSION_OUT" == "$EXPECTED_VERSION_PREFIX"* ]] \
   || fail "bundled CLI reports '$VERSION_OUT', expected it to start with '$EXPECTED_VERSION_PREFIX'"
 echo "ok: $VERSION_OUT"
 
-STEP="cmux --help"
+STEP="hmux --help"
 HELP_OUT="$(cli --help)"
 missing_help=()
 for command in $REQUIRED_HELP_COMMANDS; do
@@ -164,25 +164,25 @@ for command in $REQUIRED_HELP_COMMANDS; do
     missing_help+=("$command")
   fi
 done
-(( ${#missing_help[@]} == 0 )) || fail "cmux --help is missing top-level commands: ${missing_help[*]}"
+(( ${#missing_help[@]} == 0 )) || fail "hmux --help is missing top-level commands: ${missing_help[*]}"
 echo "ok: --help lists $REQUIRED_HELP_COMMANDS"
 
-STEP="cmux remote-daemon-status"
+STEP="hmux remote-daemon-status"
 DAEMON_JSON="$(cli --json remote-daemon-status)"
 [[ "$(json_field 'd.get("manifest_present")' <<<"$DAEMON_JSON")" == "True" ]] \
   || fail "remote-daemon-status reports no embedded SSH daemon manifest: $DAEMON_JSON"
 echo "ok: remote daemon manifest present ($(json_field 'd.get("release_tag")' <<<"$DAEMON_JSON"), $(json_field 'd.get("asset_name")' <<<"$DAEMON_JSON"))"
 
 # 2. Launch the signed app with the socket open to this script. Release builds
-# honor these overrides only with CMUX_ALLOW_SOCKET_OVERRIDE=1; allowAll lets a
-# process that cmux did not spawn talk to the socket.
+# honor these overrides only with HMUX_ALLOW_SOCKET_OVERRIDE=1; allowAll lets a
+# process that hmux did not spawn talk to the socket.
 STEP="launch app"
 /usr/bin/defaults write "$BUNDLE_ID" "$DISABLE_ICON_PERSISTENCE_KEY" -bool YES
-CMUX_UI_TEST_MODE=1 \
-CMUX_ALLOW_SOCKET_OVERRIDE=1 \
-CMUX_SOCKET_PATH="$SOCKET_PATH" \
-CMUX_SOCKET_MODE=allowAll \
-  "$EXECUTABLE_PATH" -ApplePersistenceIgnoreState YES --cmux-disable-bundle-icon-persistence >"$APP_LOG" 2>&1 &
+HMUX_UI_TEST_MODE=1 \
+HMUX_ALLOW_SOCKET_OVERRIDE=1 \
+HMUX_SOCKET_PATH="$SOCKET_PATH" \
+HMUX_SOCKET_MODE=allowAll \
+  "$EXECUTABLE_PATH" -ApplePersistenceIgnoreState YES --hmux-disable-bundle-icon-persistence >"$APP_LOG" 2>&1 &
 APP_PID=$!
 echo "app pid $APP_PID, socket $SOCKET_PATH"
 
@@ -194,7 +194,7 @@ until [[ -S "$SOCKET_PATH" ]]; do
   sleep 0.25
 done
 
-STEP="cmux ping"
+STEP="hmux ping"
 PING_OUT=""
 until PING_OUT="$(CLI_TIMEOUT_SECONDS=5 cli ping 2>/dev/null)" && [[ "$PING_OUT" == "PONG" ]]; do
   kill -0 "$APP_PID" 2>/dev/null || fail "app exited while waiting for ping"
@@ -204,7 +204,7 @@ done
 echo "ok: ping -> PONG"
 
 # 3. Socket protocol checks.
-STEP="cmux capabilities"
+STEP="hmux capabilities"
 CAPS_JSON="$(cli --json capabilities)"
 missing_methods="$(python3 -c '
 import json, sys
@@ -215,7 +215,7 @@ print(" ".join(m for m in required if m not in methods))
 [[ -z "$missing_methods" ]] || fail "capabilities is missing socket methods: $missing_methods"
 echo "ok: capabilities lists workspace.list/create/close"
 
-STEP="cmux workspace list (initial window)"
+STEP="hmux workspace list (initial window)"
 deadline=$((SECONDS + WINDOW_TIMEOUT_SECONDS))
 while :; do
   LIST_JSON="$(CLI_TIMEOUT_SECONDS=10 cli --json --id-format uuids workspace list 2>/dev/null || true)"
@@ -232,7 +232,7 @@ echo "ok: $initial_count workspace(s) at startup"
 
 # 4. Workspace round trip: create, see it listed, close it, see it gone.
 SMOKE_NAME="cli-smoke-$$-$RANDOM"
-STEP="cmux workspace create"
+STEP="hmux workspace create"
 CREATE_JSON="$(cli --json --id-format uuids workspace create --name "$SMOKE_NAME" --focus false)"
 WS_ID="$(json_field 'd.get("workspace_id") or ""' <<<"$CREATE_JSON")"
 [[ -n "$WS_ID" ]] || fail "workspace create returned no workspace_id: $CREATE_JSON"
@@ -248,17 +248,17 @@ for ws in json.load(sys.stdin).get("workspaces", []):
 ' "$1"
 }
 
-STEP="cmux workspace list (after create)"
+STEP="hmux workspace list (after create)"
 LIST_JSON="$(cli --json --id-format uuids workspace list)"
 listed_title="$(workspace_titles_for_id "$WS_ID" <<<"$LIST_JSON")"
 [[ "$listed_title" == "$SMOKE_NAME" ]] \
   || fail "workspace $WS_ID is not listed with title '$SMOKE_NAME' (got '$listed_title'): $LIST_JSON"
 echo "ok: workspace list shows '$SMOKE_NAME'"
 
-STEP="cmux workspace close"
+STEP="hmux workspace close"
 cli --json --id-format uuids workspace close --workspace "$WS_ID" >/dev/null
 
-STEP="cmux workspace list (after close)"
+STEP="hmux workspace list (after close)"
 deadline=$((SECONDS + 10))
 while :; do
   LIST_JSON="$(cli --json --id-format uuids workspace list)"

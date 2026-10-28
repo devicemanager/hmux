@@ -1,8 +1,8 @@
 import AppKit
-import CmuxCommandPalette
-import CmuxWorkspaces
-import CmuxSidebar
-import CmuxSwiftRender
+import HmuxCommandPalette
+import HmuxWorkspaces
+import HmuxSidebar
+import HmuxSwiftRender
 
 extension ContentView {
     static func commandPaletteShortcutAction(forCommandID commandId: String) -> KeyboardShortcutSettings.Action? {
@@ -142,7 +142,7 @@ extension ContentView {
         }
 
         // Palette execution resolves through the mode's shortcut action;
-        // customSidebar has none yet (a new cmux-owned shortcut carries the
+        // customSidebar has none yet (a new hmux-owned shortcut carries the
         // full settings/config/docs policy), so it stays out of the palette
         // until that lands. The mode bar, CLI, and socket verb cover it.
         return RightSidebarMode.availableModes().filter { $0.shortcutAction != nil }.map { mode in

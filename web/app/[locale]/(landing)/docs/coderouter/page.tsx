@@ -55,8 +55,8 @@ export default async function CoderouterOverviewPage({
           <tr><td>{t("accountOpenRouterKey")}</td><td>Codex, Pi</td><td>{t("addDashboard")}</td></tr>
           <tr><td>{t("accountOpencodeGo")}</td><td>OpenCode</td><td><code>cr add opencode</code></td></tr>
           <tr><td>{t("accountClaudeSubscription")}</td><td>Claude Code</td><td><code>cr add claude</code></td></tr>
-          <tr><td>{t("accountAnthropicKey")}</td><td>Claude Code</td><td><code>cmux coderouter claude add api-key</code></td></tr>
-          <tr><td>{t("accountBedrock")}</td><td>Claude Code</td><td><code>cmux coderouter claude add bedrock</code></td></tr>
+          <tr><td>{t("accountAnthropicKey")}</td><td>Claude Code</td><td><code>hmux coderouter claude add api-key</code></td></tr>
+          <tr><td>{t("accountBedrock")}</td><td>Claude Code</td><td><code>hmux coderouter claude add bedrock</code></td></tr>
         </tbody>
       </table>
       <p>{t("accountsDashboard")} <Link href="/dashboard/coderouter" className={linkClass}>cmux.com/dashboard/coderouter</Link></p>
@@ -100,7 +100,7 @@ cr remove [account]`}</CodeBlock>
       <p>{t("usageEstimate")}</p>
       <CodeBlock lang="bash">{`cr
 cr usage --watch
-cmux coderouter machines`}</CodeBlock>
+hmux coderouter machines`}</CodeBlock>
 
       <DocsHeading level={2} id="credentials">{t("privacyTitle")}</DocsHeading>
       <ul>

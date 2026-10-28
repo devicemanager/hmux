@@ -22,7 +22,7 @@ extension AppDelegate {
     func presentComputerUseOnboarding(
         startingAt startingPoint: ComputerUseOnboardingWindowController.StartingPoint = .overview
     ) -> Bool {
-        guard CmuxFeatureFlags.shared.isComputerUseUXEnabled,
+        guard HmuxFeatureFlags.shared.isComputerUseUXEnabled,
               computerUseRuntimeService != nil else {
             return false
         }

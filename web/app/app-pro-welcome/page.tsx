@@ -9,7 +9,7 @@ import {
   appPricingStyle,
 } from "../app-pricing/appearance";
 
-const APP_BROWSER_QUERY = "cmux_open_in_browser=split-right";
+const APP_BROWSER_QUERY = "hmux_open_in_browser=split-right";
 
 type WelcomeStepKey = "iosApp" | "billing";
 
@@ -42,13 +42,13 @@ export default async function AppProWelcomePage({
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  // The cmux app only opens this page for a Pro user (the native presenter is
+  // The hmux app only opens this page for a Pro user (the native presenter is
   // gated on the billing plan) and it carries no sensitive data. Web auth is
   // not enforced here yet because the in-app webview does not share the desktop
   // Stack session; once app-browser SSO lands, a getUser + Pro check can gate
-  // this like the dashboard. The cmux_app flag keeps it out of the localized
+  // this like the dashboard. The hmux_app flag keeps it out of the localized
   // route tree.
-  if (appPricingFirstParam(params.cmux_app) !== "1") redirect("/dashboard/billing");
+  if (appPricingFirstParam(params.hmux_app) !== "1") redirect("/dashboard/billing");
 
   const theme = appPricingTheme(params);
   const locale = supportedLocale(await getLocale());
@@ -66,8 +66,8 @@ export default async function AppProWelcomePage({
       `}</style>
       <main
         className="min-h-screen w-full px-6 py-10 text-foreground sm:py-12"
-        data-cmux-app-theme="true"
-        data-cmux-app-theme-appearance={theme.appearance}
+        data-hmux-app-theme="true"
+        data-hmux-app-theme-appearance={theme.appearance}
         data-app-pro-welcome-appearance={theme.appearance}
         style={appPricingStyle(theme)}
       >

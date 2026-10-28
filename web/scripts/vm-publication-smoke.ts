@@ -32,11 +32,11 @@ const run = <A>(effect: Effect.Effect<A, unknown>) => Effect.runPromise(effect a
 
 // ---------------- phase 1: read-only ----------------
 const domains = await client.domains.list();
-log("domains.list", { count: domains.length, hasCmuxSh: domains.some((d) => d.domain === "cmux.sh"), sample: domains.slice(0, 5).map((d) => d.domain) });
+log("domains.list", { count: domains.length, hasHmuxSh: domains.some((d) => d.domain === "cmux.sh"), sample: domains.slice(0, 5).map((d) => d.domain) });
 
 const certificates = await client.domains.certificates.list();
 const wildcard = certificates.find((c) => c.domain === "cmux.sh" && c.wildcard);
-log("certificates.list", { count: certificates.length, cmuxShWildcard: wildcard ?? null });
+log("certificates.list", { count: certificates.length, hmuxShWildcard: wildcard ?? null });
 
 const page1 = await client.tls.rules.list({ limit: 2, offset: 0 });
 const page2 = await client.tls.rules.list({ limit: 2, offset: 2 });
@@ -68,7 +68,7 @@ if (process.env.SMOKE_MUTATE !== "1") {
 const cleanup: Array<() => Promise<void>> = [];
 try {
   // (a) What does completion return before the TXT proof exists?
-  const probeDomain = `cmux-smoke-${rand}.example.org`;
+  const probeDomain = `hmux-smoke-${rand}.example.org`;
   const verification = await client.domains.verifications.create(probeDomain);
   cleanup.push(async () => {
     await client.domains.verifications.delete(verification.id);
@@ -104,7 +104,7 @@ try {
 
   // (c) A generated hostname routed to a throwaway VM, served over TLS, then swept.
   const created = await client.vms.create({
-    displayName: `cmux-smoke-${rand}`,
+    displayName: `hmux-smoke-${rand}`,
     firewall: { rules: [] },
     idleTimeoutSeconds: 120,
   });
@@ -121,7 +121,7 @@ try {
   );
   log("vm listener", { stdout: started.stdout?.trim().slice(0, 200), stderr: started.stderr?.trim().slice(0, 200) });
 
-  const hostname = `cmux-smoke-${friendlyPublicationLabel()}.cmux.sh`;
+  const hostname = `hmux-smoke-${friendlyPublicationLabel()}.cmux.sh`;
   const reconciled = await run(provider.reconcileTlsRule(null, { hostname, providerVmId: vmId, port: 3000 }));
   cleanup.push(async () => {
     const swept = await run(provider.deletePublicationTlsRules([{

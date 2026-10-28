@@ -1,11 +1,11 @@
-import CmuxTerminalSizing
+import HmuxTerminalSizing
 
 /// A weak reference to the Cloud mirror that relays phones for one surface.
 struct CloudSizingRelayReference {
     weak var value: (any CloudSizingPhoneRelaying)?
 }
 
-/// A Cloud mirror session that forwards paired phones to its cmux-tui host.
+/// A Cloud mirror session that forwards paired phones to its hmux-tui host.
 @MainActor
 protocol CloudSizingPhoneRelaying: AnyObject {
     /// Whether the daemon speaks shared sizing and the mirror is attached.

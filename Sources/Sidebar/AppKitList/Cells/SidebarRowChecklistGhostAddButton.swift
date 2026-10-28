@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import SwiftUI
 
 /// The ghost "+ Add item" button (icon + label, single click target).

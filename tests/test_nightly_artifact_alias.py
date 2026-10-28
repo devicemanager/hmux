@@ -51,7 +51,7 @@ class NightlyArtifactAliasTests(unittest.TestCase):
             for variant in ("arm64", "x86_64", "universal"):
                 folder = verified / f"accepted-{variant}-TEST"
                 folder.mkdir(parents=True)
-                immutable = folder / f"cmux-nightly-macos-{variant}-123.dmg"
+                immutable = folder / f"hmux-nightly-macos-{variant}-123.dmg"
                 payload = f"signed-and-stapled-{variant}".encode()
                 immutable.write_bytes(payload)
                 payloads[variant] = payload
@@ -62,7 +62,7 @@ class NightlyArtifactAliasTests(unittest.TestCase):
                 (tested / f"tested-{variant}.sha256").write_text(
                     f"{hashlib.sha256(payload).hexdigest()}  {immutable.name}\n", encoding="utf-8"
                 )
-                (folder / "cmux-nightly-notarization-recovery.json").write_text(
+                (folder / "hmux-nightly-notarization-recovery.json").write_text(
                     json.dumps({
                         "build": 123,
                         "immutable_path": immutable.name,
@@ -74,7 +74,7 @@ class NightlyArtifactAliasTests(unittest.TestCase):
             env = os.environ.copy()
             env.update({
                 "SHORT_SHA": "TEST",
-                "DMG_PREFIX": "cmux-nightly-macos",
+                "DMG_PREFIX": "hmux-nightly-macos",
                 "GITHUB_ENV": str(root / "github.env"),
             })
             # Air's system Bash is 3.2 and cannot parse `${var,,}`. The real
@@ -95,11 +95,11 @@ class NightlyArtifactAliasTests(unittest.TestCase):
             self.assertEqual(result.returncode, 0, result.stderr)
             for variant, payload in payloads.items():
                 self.assertEqual(
-                    (root / "nightly-out" / f"cmux-nightly-macos-{variant}.dmg").read_bytes(),
+                    (root / "nightly-out" / f"hmux-nightly-macos-{variant}.dmg").read_bytes(),
                     payload,
                 )
             self.assertEqual(
-                (root / "nightly-out" / "cmux-nightly-macos.dmg").read_bytes(),
+                (root / "nightly-out" / "hmux-nightly-macos.dmg").read_bytes(),
                 payloads["universal"],
             )
 

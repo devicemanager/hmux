@@ -7,7 +7,7 @@ import {
 
 function request(
   email: string,
-  url = "https://cmux.test/api/billing/recover",
+  url = "https://hmux.test/api/billing/recover",
 ): Request {
   return new Request(url, {
     method: "POST",
@@ -174,7 +174,7 @@ describe("billing recovery route", () => {
     expect(await response.json()).toEqual(acceptedResponse());
 
     const japaneseRequest = new Request(
-      "https://cmux.test/api/billing/recover",
+      "https://hmux.test/api/billing/recover",
       {
         method: "POST",
         headers: {
@@ -237,7 +237,7 @@ describe("billing recovery route", () => {
   test("rejects malformed input without sending mail", async () => {
     const deps = dependencies();
     const response = await makeBillingRecoveryHandler(deps)(
-      new Request("https://cmux.test/api/billing/recover", {
+      new Request("https://hmux.test/api/billing/recover", {
         method: "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ email: "not-an-email" }),

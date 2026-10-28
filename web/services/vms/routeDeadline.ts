@@ -42,7 +42,7 @@ export const VM_ROUTE_ANSWER_MARGIN_MS = 5_000;
 export const VM_ROUTE_MIN_WINDOW_MS = 10_000;
 
 /** Request header in which a client states, in milliseconds, how long it waits for this response. */
-export const VM_CLIENT_TIMEOUT_HEADER = "x-cmux-client-timeout-ms";
+export const VM_CLIENT_TIMEOUT_HEADER = "x-hmux-client-timeout-ms";
 
 type VmRouteDeadlineEntry = {
   /** The smallest legacy caller's timeout, used when the client sends no budget header. */
@@ -116,7 +116,7 @@ export const VM_ROUTE_DEADLINES = {
    */
   tunnelRevoke: { clientTimeoutMs: 20_000, maxDurationMs: 300_000, mutating: true },
   /**
-   * SSH attach 16 min (cmux-remote 20 s, iOS 90 s; both state their budget).
+   * SSH attach 16 min (hmux-remote 20 s, iOS 90 s; both state their budget).
    * Attach may resume the machine (~107 s at the median), so builds that send
    * no budget keep the long wait. Attach is re-entrant: a retry mints a new
    * endpoint for the same machine.
@@ -268,15 +268,15 @@ export function logContinuationResult(label: string, outcome: string, detail: Re
  */
 function recordContinuationSpan(label: string, outcome: string, detail: Record<string, unknown>): Promise<void> {
   const attributes: MaybeAttributes = {
-    "cmux.vm.continuation.route": label,
-    "cmux.vm.continuation.outcome": outcome,
+    "hmux.vm.continuation.route": label,
+    "hmux.vm.continuation.outcome": outcome,
   };
   for (const [key, value] of Object.entries(detail)) {
     if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-      attributes[`cmux.vm.continuation.${key}`] = value;
+      attributes[`hmux.vm.continuation.${key}`] = value;
     }
   }
-  return withPrioritySpan("cmux-vm", "cmux.vm.continuation", attributes, () => undefined)
+  return withPrioritySpan("hmux-vm", "hmux.vm.continuation", attributes, () => undefined)
     .then(async () => { await forceFlushTraces(); })
     .catch(() => undefined);
 }

@@ -11,7 +11,7 @@ The test opens a workspace holding a 16-deep chain of downward splits, shows
 it, and times how long a main-actor request (`pane.list`) waits afterwards.
 `ping` is answered off the main actor, so it cannot detect the stall. Run it
 against a tagged build, never the user's default socket:
-  CMUX_SOCKET_PATH=/tmp/cmux-debug-<tag>.sock python3 tests_v2/test_deep_split_chain_stays_responsive.py
+  HMUX_SOCKET_PATH=/tmp/hmux-debug-<tag>.sock python3 tests_v2/test_deep_split_chain_stays_responsive.py
 """
 
 import sys
@@ -19,7 +19,7 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 DEPTH = 16
 STALL_LIMIT_S = 1.0
@@ -34,13 +34,13 @@ def chain(depth: int) -> dict:
     return node
 
 
-def is_timeout(error: cmuxError) -> bool:
+def is_timeout(error: hmuxError) -> bool:
     """True for a request that timed out, on the client or at the main-actor deadline."""
     text = str(error)
     return text.startswith("timeout:") or text == "Timed out waiting for response"
 
 
-def main_actor_stall(c: cmux, workspace: str):
+def main_actor_stall(c: hmux, workspace: str):
     """Seconds until a main-actor request on the workspace answers, or None after GIVE_UP_S.
 
     Only timeouts are retried; any other error is a real failure and is raised.
@@ -50,7 +50,7 @@ def main_actor_stall(c: cmux, workspace: str):
         try:
             panes = (c._call("pane.list", {"workspace_id": workspace}) or {}).get("panes") or []
             return time.monotonic() - start, len(panes)
-        except cmuxError as error:
+        except hmuxError as error:
             if not is_timeout(error):
                 raise
             # A late reply to the timed-out request would answer the next one.
@@ -60,10 +60,10 @@ def main_actor_stall(c: cmux, workspace: str):
 
 
 def main() -> int:
-    c = cmux()
+    c = hmux()
     c.connect()
     if not c.ping():
-        raise cmuxError("socket ping failed")
+        raise hmuxError("socket ping failed")
 
     results = []
 
@@ -77,13 +77,13 @@ def main() -> int:
     payload = c._call("workspace.create", {"title": "deep-split-chain", "layout": chain(DEPTH)}) or {}
     workspace = str(payload.get("workspace_id") or "")
     if not workspace:
-        raise cmuxError(f"workspace.create returned no workspace_id: {payload}")
+        raise hmuxError(f"workspace.create returned no workspace_id: {payload}")
 
     for step, target in (("showing the deep workspace", workspace), ("switching away", home),
                          ("switching back to the deep workspace", workspace)):
         try:
             c.select_workspace(target)
-        except cmuxError:
+        except hmuxError:
             pass
         time.sleep(1.0)
         stall, panes = main_actor_stall(c, workspace)
@@ -96,7 +96,7 @@ def main() -> int:
     try:
         c.select_workspace(home)
         c.close_workspace(workspace)
-    except cmuxError:
+    except hmuxError:
         pass
 
     passed = sum(results)

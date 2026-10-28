@@ -11,15 +11,15 @@ environments whose deployment policy admits the refs that really release:
 - `release`: branch main, branches rc/** and tags v*
 - `release-next`: branch nightly-next
 - `content-signing`: the content-signing key only
-- `ffi-release`: branch feat-cmux-next, the FFI release App credentials
-  (CMUX_FFI_RELEASE_APP_*) only, read by app-ffi-release.yml's publish and
-  repin jobs. The release App credentials (CMUX_RELEASE_APP_*) never enter it.
+- `ffi-release`: branch feat-hmux-next, the FFI release App credentials
+  (HMUX_FFI_RELEASE_APP_*) only, read by app-ffi-release.yml's publish and
+  repin jobs. The release App credentials (HMUX_RELEASE_APP_*) never enter it.
 - `nightly-next-promote` and `release-surface-ack`: the release App
-  credentials (CMUX_RELEASE_APP_*) only, read by nightly.yml's promote guard
+  credentials (HMUX_RELEASE_APP_*) only, read by nightly.yml's promote guard
   jobs (promote-nightly-next and promote-nightly-next-acked) to move
   nightly-next. No other signing secret enters them.
-- `nightly-next-train`: branch feat-cmux-next, the release App credentials
-  (CMUX_RELEASE_APP_*) only, read by nightly-next-train.yml's drive job to push
+- `nightly-next-train`: branch feat-hmux-next, the release App credentials
+  (HMUX_RELEASE_APP_*) only, read by nightly-next-train.yml's drive job to push
   train commits once NIGHTLY_NEXT_TRAIN is on. No other signing secret enters it.
 
 A job without such an environment would read nothing once the repository-level
@@ -55,8 +55,8 @@ SIGNING_SECRET = re.compile(
     r"|ASC_API_[A-Z0-9_]+"
     r"|IOS_[A-Z0-9_]+"
     r"|(NIGHTLY_)?SPARKLE_(NEXT_)?PRIVATE_KEY"
-    r"|CMUX_RELEASE_APP_[A-Z0-9_]+"
-    r"|CMUX_FFI_RELEASE_APP_[A-Z0-9_]+"
+    r"|HMUX_RELEASE_APP_[A-Z0-9_]+"
+    r"|HMUX_FFI_RELEASE_APP_[A-Z0-9_]+"
     r"|CONTENT_SIGNING_[A-Z0-9_]+)$"
 )
 SECRET_REFERENCE = re.compile(r"secrets\.([A-Za-z0-9_]+)|secrets\[\s*['\"]([A-Za-z0-9_]+)['\"]\s*\]")
@@ -70,13 +70,13 @@ SET_ENVIRONMENT = re.compile(r"setOutput\(\s*['\"]environment['\"]\s*,\s*([^;\n]
 
 
 def allowed_for(secret: str, reader: tuple[str, str] | None = None) -> set[str]:
-    if secret.startswith("CMUX_RELEASE_APP_") and reader in PROMOTE_READERS:
+    if secret.startswith("HMUX_RELEASE_APP_") and reader in PROMOTE_READERS:
         return RELEASE_ENVIRONMENTS | PROMOTE_ENVIRONMENTS
-    if secret.startswith("CMUX_RELEASE_APP_") and reader in TRAIN_READERS:
+    if secret.startswith("HMUX_RELEASE_APP_") and reader in TRAIN_READERS:
         return TRAIN_ENVIRONMENTS
     if secret.startswith("CONTENT_SIGNING_"):
         return CONTENT_SIGNING_ENVIRONMENTS
-    if secret.startswith("CMUX_FFI_RELEASE_APP_"):
+    if secret.startswith("HMUX_FFI_RELEASE_APP_"):
         return FFI_RELEASE_ENVIRONMENTS
     return RELEASE_ENVIRONMENTS
 
@@ -141,7 +141,7 @@ def main() -> int:
                 secrets = {"<dynamic secrets[...] lookup>"}
             signing_jobs += 1
             where = f"{path.name} {job_name}"
-            if any(secret.startswith("CMUX_FFI_RELEASE_APP_") for secret in secrets):
+            if any(secret.startswith("HMUX_FFI_RELEASE_APP_") for secret in secrets):
                 ffi_readers.add((path.name, job_name))
             if "uses" in job:
                 failures.append(
@@ -166,7 +166,7 @@ def main() -> int:
                         f"{where}: reads {secret} in environment {sorted(entered)}; "
                         f"it lives only in {sorted(allowed)}"
                     )
-    # A subset check: main has no FFI release workflow, feat-cmux-next has both readers.
+    # A subset check: main has no FFI release workflow, feat-hmux-next has both readers.
     if not ffi_readers <= FFI_RELEASE_READERS:
         failures.append(
             f"the FFI release App credentials are read by {sorted(ffi_readers)}; "

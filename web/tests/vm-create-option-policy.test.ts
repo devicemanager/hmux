@@ -4,7 +4,7 @@ import { createOptionPolicy } from "../app/api/vm/route";
 
 describe("createOptionPolicy", () => {
   test("home-volume flags on a provider without home volumes are ignored, not rejected", () => {
-    // What every shipped `cmux vm new` sends on the default create.
+    // What every shipped `hmux vm new` sends on the default create.
     const policy = createOptionPolicy(
       { sizing: true, persistentHome: false },
       { persistentHome: true, perMachineHome: true, kind: "desktop" },

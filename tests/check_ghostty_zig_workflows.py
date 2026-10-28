@@ -23,7 +23,7 @@ CONSUMER_NAMES = (
 CHECKOUT_ACTION = "actions/checkout@"
 SETUP_ZIG_ACTION = "mlugg/setup-zig@"
 SETUP_ZIG_VERSION = "${{ steps.ghostty-zig-version.outputs.version }}"
-TUI_WORKFLOW_NAMES = frozenset({"cmux-tui-build-package.yml", "cmux-tui.yml"})
+TUI_WORKFLOW_NAMES = frozenset({"hmux-tui-build-package.yml", "hmux-tui.yml"})
 SHELL_INTERPRETERS = {"bash", "sh", "zsh"}
 ASSIGNMENT = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*=")
 QUOTED_HEREDOC = re.compile(r"(<<-?\s*)(['\"])([A-Za-z_][A-Za-z0-9_]*)(\2)")

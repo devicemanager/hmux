@@ -111,7 +111,7 @@ def main():
     # and fresh files. Full release runs always include en-US, while a focused
     # locale run may provide only (for example) de-DE.
     source_dirs = sorted(set(SOURCE_LOCALE.values()))
-    with tempfile.TemporaryDirectory(prefix="cmux-locale-raws-") as staged:
+    with tempfile.TemporaryDirectory(prefix="hmux-locale-raws-") as staged:
         available = {}
         for source in source_dirs:
             capture_dir = next(

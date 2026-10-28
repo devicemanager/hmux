@@ -5,21 +5,21 @@ import { mkdtempSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
-import { GUEST_CMUX_SHIM } from "../services/vms/guestCli";
+import { GUEST_HMUX_SHIM } from "../services/vms/guestCli";
 
 // Run with the shipped daemon, without rebuilding Rust:
-// CMUX_TUI_TEST_BIN=/path/to/cmux-tui bun test tests/vm-guest-layout-real.test.ts
+// HMUX_TUI_TEST_BIN=/path/to/hmux-tui bun test tests/vm-guest-layout-real.test.ts
 // This integration test compares the daemon's resulting graph, not CLI argv.
-const binary = process.env.CMUX_TUI_TEST_BIN;
+const binary = process.env.HMUX_TUI_TEST_BIN;
 (binary ? test : test.skip)("guest layouts retain asymmetric and nested split geometry on the real daemon", async () => {
-  const root = mkdtempSync(join(tmpdir(), "cmux-layout-real-"));
+  const root = mkdtempSync(join(tmpdir(), "hmux-layout-real-"));
   const home = join(root, "home");
   mkdirSync(home);
-  const shim = join(root, "cmux");
-  writeFileSync(shim, GUEST_CMUX_SHIM);
+  const shim = join(root, "hmux");
+  writeFileSync(shim, GUEST_HMUX_SHIM);
   const env = { ...process.env, HOME: home, CFFIXED_USER_HOME: home, XDG_CONFIG_HOME: join(home, ".config"),
-    CMUX_TUI_BIN: binary!, CMUX_TUI_SESSION: `layout-real-${process.pid}`, SHELL: "/bin/bash", TERM: "xterm-256color" };
-  const daemonArgs = [binary!, "--session", env.CMUX_TUI_SESSION];
+    HMUX_TUI_BIN: binary!, HMUX_TUI_SESSION: `layout-real-${process.pid}`, SHELL: "/bin/bash", TERM: "xterm-256color" };
+  const daemonArgs = [binary!, "--session", env.HMUX_TUI_SESSION];
   /** Runs a daemon or guest-shim command and returns its parsed JSON value; throws on failure. */
   const run = async (args: string[], guest = false) => {
     const result = await runChild(guest ? "/bin/sh" : binary!, guest ? [shim, ...args] : [...daemonArgs.slice(1), "--json", ...args],

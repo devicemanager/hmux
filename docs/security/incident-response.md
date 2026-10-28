@@ -46,7 +46,7 @@ and sensitive material has been removed.
 
 ## If you think you are affected
 
-Contact the reporting address with the cmux version, approximate time and time
+Contact the reporting address with the hmux version, approximate time and time
 zone, observed behavior, and any relevant Request ID or Trace ID. Share only
 the minimum information needed; terminal output and screenshots can contain
 secrets. Follow mitigation instructions specific to the incident and use the

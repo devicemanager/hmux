@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxNotifications
+import HmuxNotifications
 
 /// Builds the window's workspace pane overlay (the tmux-style unread rings,
 /// the attention flash and the active pane border) from the selected

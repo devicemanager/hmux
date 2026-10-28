@@ -36,11 +36,11 @@ function argValue(name: string): string | undefined {
   return i >= 0 ? Bun.argv[i + 1] : undefined;
 }
 
-const PORT = Number(argValue("--port") ?? process.env.CMUX_AGENT_CHAT_PORT ?? process.env.CMUX_AGENT_UI_PORT ?? 7739);
-const AUTH_TOKEN = argValue("--token") ?? process.env.CMUX_AGENT_CHAT_TOKEN ?? "";
-if (AUTH_TOKEN.includes("/")) throw new Error("CMUX_AGENT_CHAT_TOKEN must be a single path segment");
+const PORT = Number(argValue("--port") ?? process.env.HMUX_AGENT_CHAT_PORT ?? process.env.HMUX_AGENT_UI_PORT ?? 7739);
+const AUTH_TOKEN = argValue("--token") ?? process.env.HMUX_AGENT_CHAT_TOKEN ?? "";
+if (AUTH_TOKEN.includes("/")) throw new Error("HMUX_AGENT_CHAT_TOKEN must be a single path segment");
 const AUTH_PREFIX = AUTH_TOKEN ? `/${encodeURIComponent(AUTH_TOKEN)}` : "";
-const STATE_FILE = process.env.CMUX_AGENT_CHAT_STATE_FILE ?? "";
+const STATE_FILE = process.env.HMUX_AGENT_CHAT_STATE_FILE ?? "";
 
 // The sidecar binds loopback only, but browsers can still reach loopback from
 // arbitrary web origins (CSRF against the WS control plane) and DNS rebinding
@@ -100,7 +100,7 @@ async function writeStateFilePath(path: string, port: number) {
   // launchId lets the app match the file to ITS launch: with a stable state
   // path, a stale file from a previous sidecar (different token) must never
   // satisfy a new launch's discovery.
-  const launchId = process.env.CMUX_AGENT_CHAT_LAUNCH_ID ?? null;
+  const launchId = process.env.HMUX_AGENT_CHAT_LAUNCH_ID ?? null;
   await writeFile(tmp, JSON.stringify({ port, pid: process.pid, protocolVersion: 1, launchId }) + "\n", "utf8");
   await rename(tmp, path);
 }
@@ -186,14 +186,14 @@ interface Session extends SessionCtx {
   adapter: Adapter;
   sockets: Set<Bun.ServerWebSocket<WsData>>;
   createdAt: number;
-  /** Set for chat views of an agent running in a cmux terminal. */
+  /** Set for chat views of an agent running in a hmux terminal. */
   transcript?: {
     agent: TranscriptAgent;
     path: string;
     disposeTimer?: ReturnType<typeof setTimeout>;
     /** What the agent is waiting on in the terminal (permission, question), if anything. */
     attention?: string | null;
-    /** cmux agent messages waiting for the agent, and when they were last read. */
+    /** hmux agent messages waiting for the agent, and when they were last read. */
     queuedMessages?: QueuedAgentMessage[];
     queuedCheckedAt?: number;
     queuedInflight?: boolean;
@@ -207,7 +207,7 @@ interface WsData {
 const sessions = new Map<string, Session>();
 const allSockets = new Set<Bun.ServerWebSocket<WsData>>();
 let fileTheme = resolveGhosttyTheme();
-let cmuxThemeOverride: GhosttyTheme | null = null;
+let hmuxThemeOverride: GhosttyTheme | null = null;
 let currentTheme = fileTheme;
 const startRequests = new Map<string, { promise: Promise<Session>; settledAt?: number; stopped?: boolean; session?: Session }>();
 const startRequestSessions = new Map<string, { session: Session; stopped?: boolean }>();
@@ -359,7 +359,7 @@ function syncCatalogProviderDefs() {
 
 async function applyAgentModelCatalog() {
   syncCatalogProviderDefs();
-  const cwd = process.env.CMUX_AGENT_UI_CWD ?? DEFAULT_CWD;
+  const cwd = process.env.HMUX_AGENT_UI_CWD ?? DEFAULT_CWD;
   const providers = ["claude", "codex", "gemini"];
   const options = new Map<string, SessionOption[]>();
   await Promise.all(providers.map(async (provider) => {
@@ -740,7 +740,7 @@ function refreshTranscriptAttention(sess: Session, source: TranscriptSource) {
   for (const ws of sess.sockets) ws.send(payload);
 }
 
-// Queued cmux agent messages live in the app, not the transcript. Each read
+// Queued hmux agent messages live in the app, not the transcript. Each read
 // spawns the CLI, so it runs at most every couple of seconds while a page is
 // open; delivered messages then appear in the transcript itself.
 const QUEUED_MESSAGES_REFRESH_MS = 2_000;
@@ -811,7 +811,7 @@ function transcriptNotFoundPage(): Response {
   const body = `<!doctype html><meta charset="utf-8"><title>No agent session</title>
 <body style="font:14px -apple-system,sans-serif;padding:32px;color:#888;background:transparent">
 <p>No Claude Code or Codex session is recorded for this terminal yet.</p>
-<p>Start the agent in the terminal (cmux hooks must be enabled), then reopen the chat view.</p></body>`;
+<p>Start the agent in the terminal (hmux hooks must be enabled), then reopen the chat view.</p></body>`;
   return new Response(body, { status: 404, headers: { "content-type": "text/html; charset=utf-8" } });
 }
 
@@ -1117,7 +1117,7 @@ async function cachedCommands(provider: string, cwd: string): Promise<{ trigger:
 
 async function readKeyConfig(): Promise<{ ctrlJ: "newline" | "menu" }> {
   try {
-    const text = await Bun.file(resolve(homedir(), ".config/cmux/cmux.json")).text();
+    const text = await Bun.file(resolve(homedir(), ".config/hmux/hmux.json")).text();
     const parsed = JSON.parse(text);
     const value = parsed?.agentChat?.keys?.ctrlJ;
     return { ctrlJ: value === "menu" ? "menu" : "newline" };
@@ -1147,7 +1147,7 @@ function resolveUiConfig(): UiConfig {
 
 function readUiConfig(): UiConfig {
   try {
-    const text = readFileSync(resolve(homedir(), ".config/cmux/cmux.json"), "utf8");
+    const text = readFileSync(resolve(homedir(), ".config/hmux/hmux.json"), "utf8");
     const parsed = JSON.parse(text);
     const fonts = parsed?.agentChat?.fonts ?? {};
     const num = (value: unknown) => typeof value === "number" && Number.isFinite(value) && value > 0 ? value : undefined;
@@ -1790,7 +1790,7 @@ function requiredColor(value: unknown): string {
   throw new Error("invalid theme color");
 }
 
-export function validateCmuxThemePayload(body: unknown): GhosttyTheme {
+export function validateHmuxThemePayload(body: unknown): GhosttyTheme {
   if (!body || typeof body !== "object" || Array.isArray(body)) throw new Error("theme payload must be an object");
   const obj = body as Record<string, unknown>;
   // JSON encoders commonly omit null fields entirely (Swift's synthesized
@@ -1804,7 +1804,7 @@ export function validateCmuxThemePayload(body: unknown): GhosttyTheme {
   const allowed = new Set<string>([...THEME_POST_KEYS, ...THEME_POST_OPTIONAL_KEYS]);
   if (keys.some((key) => !allowed.has(key))) throw new Error("theme payload has unexpected keys");
   if (expected.some((key) => !(key in obj))) throw new Error("theme payload is missing required keys");
-  if (obj.source !== "cmux") throw new Error("theme source must be cmux");
+  if (obj.source !== "hmux") throw new Error("theme source must be hmux");
   if (!Array.isArray(obj.palette) || obj.palette.length !== 16 || !obj.palette.every(isColor)) throw new Error("theme palette must contain 16 colors");
   const fontSize = obj.fontSize;
   if (fontSize !== null && (typeof fontSize !== "number" || !Number.isFinite(fontSize) || fontSize <= 0)) throw new Error("theme fontSize must be positive or null");
@@ -1826,7 +1826,7 @@ export function validateCmuxThemePayload(body: unknown): GhosttyTheme {
     blur,
     isLight: Boolean(obj.isLight),
     accent: "accent" in obj ? nullableColor(obj.accent) : null,
-    source: "cmux",
+    source: "hmux",
     sources: [],
   };
 }
@@ -1840,16 +1840,16 @@ function broadcastTheme(theme: GhosttyTheme) {
   for (const ws of allSockets) ws.send(payload);
 }
 
-function setCurrentTheme(theme: GhosttyTheme, source: "cmux" | "ghostty") {
-  if (source === "cmux") cmuxThemeOverride = theme;
-  else cmuxThemeOverride = null;
+function setCurrentTheme(theme: GhosttyTheme, source: "hmux" | "ghostty") {
+  if (source === "hmux") hmuxThemeOverride = theme;
+  else hmuxThemeOverride = null;
   currentTheme = theme;
 }
 
-export function themeOverrideStateForTest(action: "cmux" | "ghostty", theme: GhosttyTheme): { current: GhosttyTheme; hasOverride: boolean } {
+export function themeOverrideStateForTest(action: "hmux" | "ghostty", theme: GhosttyTheme): { current: GhosttyTheme; hasOverride: boolean } {
   if (action === "ghostty") fileTheme = theme;
   setCurrentTheme(theme, action);
-  return { current: currentTheme, hasOverride: cmuxThemeOverride !== null };
+  return { current: currentTheme, hasOverride: hmuxThemeOverride !== null };
 }
 
 let themeWatchers: FSWatcher[] = [];
@@ -1947,7 +1947,7 @@ export function themeMessageForTest(theme: GhosttyTheme): string {
 // transparent_background, so only genuinely transparent surfaces get an alpha
 // body; `?opacity=` is a dogfood override.
 function renderPage(url: URL, prefix = AUTH_PREFIX): string {
-  if (!cmuxThemeOverride) {
+  if (!hmuxThemeOverride) {
     fileTheme = resolveGhosttyTheme();
     currentTheme = fileTheme;
   }
@@ -1966,7 +1966,7 @@ function renderPage(url: URL, prefix = AUTH_PREFIX): string {
 <html lang="en"><head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>cmux agent</title>
+<title>hmux agent</title>
 <base href="${base}">
 <script>window.__AGENT_CHAT_BASE__=${JSON.stringify(prefix)};</script>
 <link rel="stylesheet" href="app.css">
@@ -1989,7 +1989,7 @@ interface StaticAsset {
 }
 
 // Bundle the frontend entries with Bun. Built once at startup and cached by
-// default; rebuilt on request only when CMUX_AGENT_UI_DEV=1 (dev iteration).
+// default; rebuilt on request only when HMUX_AGENT_UI_DEV=1 (dev iteration).
 let assetCache: Map<string, StaticAsset> | null = null;
 let cssAssetCache: StaticAsset | null = null;
 let assetBuildPromise: Promise<Map<string, StaticAsset>> | null = null;
@@ -2021,8 +2021,8 @@ function bundleSizeLine(assets: Map<string, StaticAsset>): string {
 }
 
 export async function buildBundles(): Promise<Map<string, StaticAsset>> {
-  if (assetCache && process.env.CMUX_AGENT_UI_DEV !== "1") return assetCache;
-  if (assetBuildPromise && process.env.CMUX_AGENT_UI_DEV !== "1") return assetBuildPromise;
+  if (assetCache && process.env.HMUX_AGENT_UI_DEV !== "1") return assetCache;
+  if (assetBuildPromise && process.env.HMUX_AGENT_UI_DEV !== "1") return assetBuildPromise;
   assetBuildPromise = buildBundlesFresh().finally(() => {
     assetBuildPromise = null;
   });
@@ -2036,7 +2036,7 @@ async function buildBundlesFresh(): Promise<Map<string, StaticAsset>> {
     target: "browser",
     minify: true,
     splitting: true,
-    outdir: `/tmp/cmux-agent-ui-${process.pid}`,
+    outdir: `/tmp/hmux-agent-ui-${process.pid}`,
     define: { "process.env.NODE_ENV": '"production"' },
   });
   if (!out.success) {
@@ -2056,8 +2056,8 @@ async function buildBundlesFresh(): Promise<Map<string, StaticAsset>> {
 }
 
 export async function cssAsset(): Promise<StaticAsset> {
-  if (cssAssetCache && process.env.CMUX_AGENT_UI_DEV !== "1") return cssAssetCache;
-  if (cssAssetPromise && process.env.CMUX_AGENT_UI_DEV !== "1") return cssAssetPromise;
+  if (cssAssetCache && process.env.HMUX_AGENT_UI_DEV !== "1") return cssAssetCache;
+  if (cssAssetPromise && process.env.HMUX_AGENT_UI_DEV !== "1") return cssAssetPromise;
   cssAssetPromise = cssAssetFresh().finally(() => {
     cssAssetPromise = null;
   });
@@ -2143,11 +2143,11 @@ function startServer() {
     if (url.pathname === "/api/theme" && req.method === "POST") {
       if (!hasTrustedOrigin(req)) return Response.json({ error: "forbidden" }, { status: 403 });
       try {
-        const theme = validateCmuxThemePayload(await req.json());
-        // cmux's payload has no accent field, so a push must not clobber the
+        const theme = validateHmuxThemePayload(await req.json());
+        // hmux's payload has no accent field, so a push must not clobber the
         // file-configured agent-chat-accent override.
         if (!theme.accent) theme.accent = fileTheme.accent ?? null;
-        setCurrentTheme(theme, "cmux");
+        setCurrentTheme(theme, "hmux");
         broadcastTheme(theme);
         return Response.json(themeForClient(theme));
       } catch (err) {
@@ -2155,7 +2155,7 @@ function startServer() {
       }
     }
     if (url.pathname === "/api/theme") {
-      if (!cmuxThemeOverride) {
+      if (!hmuxThemeOverride) {
         fileTheme = resolveGhosttyTheme();
         currentTheme = fileTheme;
         armThemeWatchers(fileTheme);
@@ -2206,10 +2206,10 @@ function startServer() {
         harnessCatalogs,
         harnesses: [
           ...harnessRecommendations(),
-          ...discoverHarnesses({ cwd: process.env.CMUX_AGENT_UI_CWD ?? DEFAULT_CWD }),
+          ...discoverHarnesses({ cwd: process.env.HMUX_AGENT_UI_CWD ?? DEFAULT_CWD }),
         ],
         capabilities: capabilitiesMap(),
-        defaultCwd: process.env.CMUX_AGENT_UI_CWD ?? DEFAULT_CWD,
+        defaultCwd: process.env.HMUX_AGENT_UI_CWD ?? DEFAULT_CWD,
         keys: keyConfig,
       }));
       ws.send(JSON.stringify({
@@ -2254,7 +2254,7 @@ function startServer() {
   );
 
   for (const p of PROVIDERS) {
-    refreshCatalog(p.id, process.env.CMUX_AGENT_UI_CWD ?? DEFAULT_CWD).catch((err) => {
+    refreshCatalog(p.id, process.env.HMUX_AGENT_UI_CWD ?? DEFAULT_CWD).catch((err) => {
       console.warn(`catalog warm failed for ${p.id}: ${String(err)}`);
     });
   }
@@ -2268,7 +2268,7 @@ function startServer() {
   startThemeWatcher();
   writeStateFile(server.port).catch((err) => console.error(`failed to write agent-chat state file: ${String(err)}`));
 
-  console.log(`cmux-agent-ui listening on http://127.0.0.1:${server.port}`);
+  console.log(`hmux-agent-ui listening on http://127.0.0.1:${server.port}`);
 }
 
 function sendWsError(ws: Bun.ServerWebSocket<WsData>, op: string, err: unknown) {

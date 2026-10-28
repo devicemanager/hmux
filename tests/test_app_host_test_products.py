@@ -25,42 +25,42 @@ class TestProductHandoff(unittest.TestCase):
         self.producer = root / "producer" / "derived"
         self.consumer = root / "consumer" / "different-temp" / "derived"
         self.identity = {"revision": "abc123", "architecture": "arm64", "xcode": "Xcode 26.5\nBuild 123",
-                         "developer": "/producer/Xcode.app/Contents/Developer", "checkout": "/producer/work/cmux"}
+                         "developer": "/producer/Xcode.app/Contents/Developer", "checkout": "/producer/work/hmux"}
         products = self.producer / "Build/Products"
-        self.bundle = Path("Debug/cmux DEV.app/Contents/PlugIns/cmuxTests.xctest")
+        self.bundle = Path("Debug/hmux DEV.app/Contents/PlugIns/hmuxTests.xctest")
         (products / self.bundle).mkdir(parents=True)
-        executable = products / "Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+        executable = products / "Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
         executable.parent.mkdir(parents=True)
         executable.write_text("binary")
-        self.cli_bundle = Path("Debug/cmuxCLITests.xctest")
+        self.cli_bundle = Path("Debug/hmuxCLITests.xctest")
         (products / self.cli_bundle).mkdir(parents=True)
-        for scheme in ("cmux", "cmux-unit", "cmux-cli-tests"):
+        for scheme in ("hmux", "hmux-unit", "hmux-cli-tests"):
             target = {
-                "TestHostPath": "__TESTROOT__/Debug/cmux DEV.app",
-                "TestBundlePath": "__TESTHOST__/Contents/PlugIns/cmuxTests.xctest",
-                "EnvironmentVariables": {"SOURCE": "/producer/work/cmux/fixtures"},
+                "TestHostPath": "__TESTROOT__/Debug/hmux DEV.app",
+                "TestBundlePath": "__TESTHOST__/Contents/PlugIns/hmuxTests.xctest",
+                "EnvironmentVariables": {"SOURCE": "/producer/work/hmux/fixtures"},
                 "DependentProductPaths": [str(products / self.bundle)],
             }
-            if scheme == "cmux":
-                self.ui_bundle = Path("Debug/cmuxUITests-Runner.app/Contents/PlugIns/cmuxUITests.xctest")
+            if scheme == "hmux":
+                self.ui_bundle = Path("Debug/hmuxUITests-Runner.app/Contents/PlugIns/hmuxUITests.xctest")
                 (products / self.ui_bundle).mkdir(parents=True)
                 target.update({
-                    "TestHostPath": "__TESTROOT__/Debug/cmuxUITests-Runner.app",
-                    "TestBundlePath": "__TESTHOST__/Contents/PlugIns/cmuxUITests.xctest",
-                    "UITargetAppPath": "__TESTROOT__/Debug/cmux DEV.app",
+                    "TestHostPath": "__TESTROOT__/Debug/hmuxUITests-Runner.app",
+                    "TestBundlePath": "__TESTHOST__/Contents/PlugIns/hmuxUITests.xctest",
+                    "UITargetAppPath": "__TESTROOT__/Debug/hmux DEV.app",
                     "DependentProductPaths": [str(products / self.ui_bundle)],
                 })
-            if scheme == "cmux-cli-tests":
+            if scheme == "hmux-cli-tests":
                 # A unit-test target without TEST_HOST is loaded by the
                 # platform's own xctest agent, which is not in Build/Products.
                 target = {
                     "TestHostPath": "__PLATFORMS__/MacOSX.platform/Developer/Library/Xcode/Agents/xctest",
-                    "TestBundlePath": "__TESTROOT__/Debug/cmuxCLITests.xctest",
-                    "EnvironmentVariables": {"SOURCE": "/producer/work/cmux/fixtures"},
+                    "TestBundlePath": "__TESTROOT__/Debug/hmuxCLITests.xctest",
+                    "EnvironmentVariables": {"SOURCE": "/producer/work/hmux/fixtures"},
                     "DependentProductPaths": [str(products / self.cli_bundle)],
                 }
             # Cover both manifest versions Xcode has shipped.
-            value = {"cmuxTests": target} if scheme == "cmux-unit" else {"TestConfigurations": [{"TestTargets": [target]}]}
+            value = {"hmuxTests": target} if scheme == "hmux-unit" else {"TestConfigurations": [{"TestTargets": [target]}]}
             (products / f"{scheme}_macosx26.5-arm64.xctestrun").write_bytes(plistlib.dumps(value))
 
     def test_cli_profile_needs_only_its_own_manifest(self):
@@ -69,17 +69,17 @@ class TestProductHandoff(unittest.TestCase):
         # refuse the same tree as partial -- otherwise a CLI-only build could
         # answer an app-host consumer's restore.
         products = self.producer / "Build/Products"
-        for scheme in ("cmux", "cmux-unit"):
+        for scheme in ("hmux", "hmux-unit"):
             (products / f"{scheme}_macosx26.5-arm64.xctestrun").unlink()
 
-        with mock.patch.dict(os.environ, {"CMUX_PRODUCT_PROFILE": "cli"}):
+        with mock.patch.dict(os.environ, {"HMUX_PRODUCT_PROFILE": "cli"}):
             found = module.manifests(products)
-        self.assertEqual(list(found), ["cmux-cli-tests"])
+        self.assertEqual(list(found), ["hmux-cli-tests"])
 
-        with mock.patch.dict(os.environ, {"CMUX_PRODUCT_PROFILE": "app-host"}):
+        with mock.patch.dict(os.environ, {"HMUX_PRODUCT_PROFILE": "app-host"}):
             with self.assertRaises(ValueError) as caught:
                 module.manifests(products)
-        self.assertIn("cmux", str(caught.exception))
+        self.assertIn("hmux", str(caught.exception))
 
     def transfer(self):
         module.stamp(self.producer, self.identity)
@@ -89,13 +89,13 @@ class TestProductHandoff(unittest.TestCase):
     def test_invalid_later_manifest_does_not_rewrite_earlier_products(self):
         self.transfer()
         products = self.consumer / "Build/Products"
-        manifest = products / "cmux-cli-tests_macosx26.5-arm64.xctestrun"
+        manifest = products / "hmux-cli-tests_macosx26.5-arm64.xctestrun"
         invalid = plistlib.loads(manifest.read_bytes())
         target = list(module.targets(invalid))[0]
         target["TestBundlePath"] = "__TESTROOT__/missing.xctest"
         manifest.write_bytes(plistlib.dumps(invalid))
         before = {path: path.read_bytes() for path in products.glob("*.xctestrun")}
-        current = {**self.identity, "checkout": "/consumer/work/cmux"}
+        current = {**self.identity, "checkout": "/consumer/work/hmux"}
 
         with self.assertRaisesRegex(ValueError, "missing or unscoped test bundle"):
             module.restore(self.consumer, current)
@@ -104,22 +104,22 @@ class TestProductHandoff(unittest.TestCase):
 
     def test_relocation_preserves_nested_bundles_and_publishes_all_manifests(self):
         self.transfer()
-        current = {**self.identity, "checkout": "/consumer/work/cmux", "developer": "/consumer/Xcode.app/Contents/Developer"}
+        current = {**self.identity, "checkout": "/consumer/work/hmux", "developer": "/consumer/Xcode.app/Contents/Developer"}
         outputs = module.restore(self.consumer, current)
         self.assertEqual(
             set(outputs),
             {
-                "CMUX_APP_HOST_XCTESTRUN",
-                "CMUX_CLI_TESTS_XCTESTRUN",
-                "CMUX_NUMERIC_LOCALE_XCTESTRUN",
-                "CMUX_UI_XCTESTRUN",
+                "HMUX_APP_HOST_XCTESTRUN",
+                "HMUX_CLI_TESTS_XCTESTRUN",
+                "HMUX_NUMERIC_LOCALE_XCTESTRUN",
+                "HMUX_UI_XCTESTRUN",
             },
         )
-        self.assertEqual(outputs["CMUX_NUMERIC_LOCALE_XCTESTRUN"], outputs["CMUX_APP_HOST_XCTESTRUN"])
+        self.assertEqual(outputs["HMUX_NUMERIC_LOCALE_XCTESTRUN"], outputs["HMUX_APP_HOST_XCTESTRUN"])
         for path in outputs.values():
             value = plistlib.loads(Path(path).read_bytes())
             target = list(module.targets(value))[0]
-            self.assertEqual(target["EnvironmentVariables"]["SOURCE"], "/consumer/work/cmux/fixtures")
+            self.assertEqual(target["EnvironmentVariables"]["SOURCE"], "/consumer/work/hmux/fixtures")
             if "UITargetAppPath" in target:
                 bundle = self.ui_bundle
             elif not module.hosted_by_product(target):
@@ -133,21 +133,21 @@ class TestProductHandoff(unittest.TestCase):
         self.assertEqual(
             module.SCHEME_OUTPUTS,
             {
-                "cmux": "CMUX_UI_XCTESTRUN",
-                "cmux-unit": "CMUX_APP_HOST_XCTESTRUN",
-                "cmux-cli-tests": "CMUX_CLI_TESTS_XCTESTRUN",
+                "hmux": "HMUX_UI_XCTESTRUN",
+                "hmux-unit": "HMUX_APP_HOST_XCTESTRUN",
+                "hmux-cli-tests": "HMUX_CLI_TESTS_XCTESTRUN",
             },
         )
         self.assertEqual(
             module.OUTPUT_ALIASES,
             {
-                "CMUX_NUMERIC_LOCALE_XCTESTRUN": "CMUX_APP_HOST_XCTESTRUN",
+                "HMUX_NUMERIC_LOCALE_XCTESTRUN": "HMUX_APP_HOST_XCTESTRUN",
             },
         )
 
     def test_numeric_locale_scheme_matches_unit_product_contract(self):
         root = HELPER.parents[2]
-        schemes = root / "cmux.xcodeproj/xcshareddata/xcschemes"
+        schemes = root / "hmux.xcodeproj/xcshareddata/xcschemes"
 
         def element_signature(element):
             return (
@@ -221,10 +221,10 @@ class TestProductHandoff(unittest.TestCase):
                 "environment": env,
             }
 
-        self.assertEqual(signature("cmux-unit"), signature("cmux-numeric-locale"))
+        self.assertEqual(signature("hmux-unit"), signature("hmux-numeric-locale"))
 
     def test_canonical_producer_relocates_through_admission_then_shard(self):
-        canonical = {**self.identity, "checkout": "/private/tmp/cmux-ci/src"}
+        canonical = {**self.identity, "checkout": "/private/tmp/hmux-ci/src"}
         products = self.producer / "Build/Products"
         for manifest in module.manifests(products).values():
             value = module.map_strings(plistlib.loads(manifest.read_bytes()),
@@ -235,11 +235,11 @@ class TestProductHandoff(unittest.TestCase):
         # product reuse takes the same second leg without a canonical rebuild.
         module.restore(self.producer, self.identity)
         self.transfer()
-        shard = {**self.identity, "checkout": "/shard/work/cmux"}
+        shard = {**self.identity, "checkout": "/shard/work/hmux"}
         outputs = module.restore(self.consumer, shard)
         for path in outputs.values():
             target = list(module.targets(plistlib.loads(Path(path).read_bytes())))[0]
-            self.assertEqual(target["EnvironmentVariables"]["SOURCE"], "/shard/work/cmux/fixtures")
+            self.assertEqual(target["EnvironmentVariables"]["SOURCE"], "/shard/work/hmux/fixtures")
             self.assertTrue(all(Path(path).exists() for path in target["DependentProductPaths"]))
 
     def test_rejects_mismatched_source_toolchain_or_architecture(self):
@@ -273,11 +273,11 @@ class TestProductHandoff(unittest.TestCase):
 
     def test_missing_or_ambiguous_manifest_is_rejected(self):
         products = self.producer / "Build/Products"
-        manifest = next(products.glob("cmux-unit_*.xctestrun"))
-        shutil.copy2(manifest, products / "cmux-unit_old.xctestrun")
+        manifest = next(products.glob("hmux-unit_*.xctestrun"))
+        shutil.copy2(manifest, products / "hmux-unit_old.xctestrun")
         with self.assertRaisesRegex(ValueError, "found 2"):
             module.stamp(self.producer, self.identity)
-        for path in products.glob("cmux-unit_*.xctestrun"):
+        for path in products.glob("hmux-unit_*.xctestrun"):
             path.unlink()
         with self.assertRaisesRegex(ValueError, "found 0"):
             module.stamp(self.producer, self.identity)
@@ -290,7 +290,7 @@ class TestProductHandoff(unittest.TestCase):
 
     def test_unscoped_ui_target_is_rejected(self):
         products = self.producer / "Build/Products"
-        manifest = next(products.glob("cmux_*.xctestrun"))
+        manifest = next(products.glob("hmux_*.xctestrun"))
         value = plistlib.loads(manifest.read_bytes())
         list(module.targets(value))[0]["UITargetAppPath"] = str(self.producer.parent)
         manifest.write_bytes(plistlib.dumps(value))
@@ -299,7 +299,7 @@ class TestProductHandoff(unittest.TestCase):
 
     def test_empty_manifest_cannot_claim_success(self):
         products = self.producer / "Build/Products"
-        next(products.glob("cmux-unit_*.xctestrun")).write_bytes(plistlib.dumps({}))
+        next(products.glob("hmux-unit_*.xctestrun")).write_bytes(plistlib.dumps({}))
         with self.assertRaisesRegex(ValueError, "no test targets"):
             module.stamp(self.producer, self.identity)
 

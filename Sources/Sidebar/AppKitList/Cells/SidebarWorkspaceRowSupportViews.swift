@@ -1,7 +1,7 @@
 import AppKit
-import CmuxFoundation
-import CmuxSidebar
-import CmuxWorkspaces
+import HmuxFoundation
+import HmuxSidebar
+import HmuxWorkspaces
 import SwiftUI
 
 /// Row-owned color helpers that preserve native semantic variants while
@@ -14,10 +14,10 @@ struct SidebarRowPalette {
 
     var colorScheme: ColorScheme { model.colorSchemeIsDark ? .dark : .light }
 
-    /// The resolved cmux accent from the settings snapshot.
-    var accent: CmuxAccentColor { model.settings.accentColor }
+    /// The resolved hmux accent from the settings snapshot.
+    var accent: HmuxAccentColor { model.settings.accentColor }
 
-    /// The accent in the row's concrete cmux scheme.
+    /// The accent in the row's concrete hmux scheme.
     var accentColor: NSColor { accent.nsColor(for: colorScheme) }
 
     var selectedBackground: NSColor {
@@ -36,7 +36,7 @@ struct SidebarRowPalette {
         sidebarSelectedWorkspaceForegroundNSColor(on: selectedBackground, opacity: opacity)
     }
 
-    /// Resolves semantic colors against the row's concrete cmux scheme.
+    /// Resolves semantic colors against the row's concrete hmux scheme.
     func semantic(_ color: NSColor, opacity: CGFloat? = nil) -> NSColor {
         SidebarAppearanceColorResolver().resolvedColor(
             color,

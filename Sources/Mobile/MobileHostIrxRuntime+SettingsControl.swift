@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxIrxTransport
+import HMUXMobileCore
+import HmuxIrxTransport
 import Foundation
 
 /// Thrown for Settings mutations the irx runtime does not support yet

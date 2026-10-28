@@ -34,7 +34,7 @@ describe("cron alert checks", () => {
       ]);
     });
     const summary = await runCronAlertChecks({
-      env: { CMUX_AXIOM_READ_TOKEN: "t", CMUX_AXIOM_TRACES_DATASET: "cmux-prod-otel-traces" },
+      env: { HMUX_AXIOM_READ_TOKEN: "t", HMUX_AXIOM_TRACES_DATASET: "hmux-prod-otel-traces" },
       fetch: fetch as never,
       sendAlert: async (input) => { sent.push(input); return { sent: true, configured: true }; },
     });
@@ -60,7 +60,7 @@ describe("cron alert checks", () => {
   test("an Axiom outage does not itself page and does not throw", async () => {
     const sent: AlertInput[] = [];
     const summary = await runCronAlertChecks({
-      env: { CMUX_AXIOM_READ_TOKEN: "t" },
+      env: { HMUX_AXIOM_READ_TOKEN: "t" },
       fetch: mock(async () => new Response("nope", { status: 503 })) as never,
       sendAlert: async (input) => { sent.push(input); return { sent: true, configured: true }; },
     });

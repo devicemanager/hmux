@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import CryptoKit
-import CmuxIrxTransport
+import HmuxIrxTransport
 import Foundation
 
 struct MobileHostV2Configuration: Sendable {
@@ -17,22 +17,22 @@ struct MobileHostV2Configuration: Sendable {
         defaults: UserDefaults = .standard,
         bundle: Bundle = .main
     ) throws -> Self {
-        let namespace = bundle.bundleIdentifier ?? "dev.cmux"
+        let namespace = bundle.bundleIdentifier ?? "dev.hmux"
         func configuredValue(_ value: String?) -> String? {
             guard let value else { return nil }
             let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
             return trimmed.isEmpty ? nil : trimmed
         }
-        for key in ["CMUX_IROH_V2_ENVIRONMENT", "CMUX_IROH_V2_BASE_URL", "CMUX_IROH_V2_FORCE_RELAY"] {
+        for key in ["HMUX_IROH_V2_ENVIRONMENT", "HMUX_IROH_V2_BASE_URL", "HMUX_IROH_V2_FORCE_RELAY"] {
             if let value = configuredValue(values[key]) {
-                defaults.set(value, forKey: "cmux.iroh.v2.config." + key)
+                defaults.set(value, forKey: "hmux.iroh.v2.config." + key)
             }
         }
         func override(_ key: String) -> String? {
             // Xcode expands unset Info.plist build settings to empty strings.
             // They are absent overrides, not an environment or Worker URL.
             configuredValue(values[key])
-                ?? configuredValue(defaults.string(forKey: "cmux.iroh.v2.config." + key))
+                ?? configuredValue(defaults.string(forKey: "hmux.iroh.v2.config." + key))
                 ?? configuredValue(bundle.object(forInfoDictionaryKey: key) as? String)
         }
         #if DEBUG
@@ -40,15 +40,15 @@ struct MobileHostV2Configuration: Sendable {
         #else
         let fallback = namespace.contains("staging") ? "staging" : "production"
         #endif
-        let environment = override("CMUX_IROH_V2_ENVIRONMENT") ?? fallback
+        let environment = override("HMUX_IROH_V2_ENVIRONMENT") ?? fallback
         let origin: String
         switch environment {
-        case "production": origin = "https://cmux-v2.debussy.workers.dev"
-        case "staging": origin = "https://cmux-v2-staging.debussy.workers.dev"
-        case "development": origin = "https://cmux-v2-development.debussy.workers.dev"
+        case "production": origin = "https://hmux-v2.debussy.workers.dev"
+        case "staging": origin = "https://hmux-v2-staging.debussy.workers.dev"
+        case "development": origin = "https://hmux-v2-development.debussy.workers.dev"
         default: throw V2ControlFailure.scopeMismatch
         }
-        guard let url = URL(string: override("CMUX_IROH_V2_BASE_URL") ?? origin),
+        guard let url = URL(string: override("HMUX_IROH_V2_BASE_URL") ?? origin),
               url.scheme == "https", url.host != nil, url.user == nil, url.password == nil,
               url.query == nil, url.fragment == nil else { throw V2ControlFailure.scopeMismatch }
         let support = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first ?? FileManager.default.temporaryDirectory
@@ -105,7 +105,7 @@ actor MobileHostV2Installation {
 
     #if DEBUG
     private func debugDirectory() throws -> URL {
-        let directory = configuration.stateDirectory.appendingPathComponent("cmux-iroh-v2/development-keys", isDirectory: true)
+        let directory = configuration.stateDirectory.appendingPathComponent("hmux-iroh-v2/development-keys", isDirectory: true)
         try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true, attributes: [.posixPermissions: 0o700])
         return directory
     }

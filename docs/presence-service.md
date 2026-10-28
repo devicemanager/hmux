@@ -1,7 +1,7 @@
 # Device presence service
 
-Realtime device presence for cmux: every team member sees which of the team's
-devices (Macs, iPhones, and their tagged cmux app instances) are online or
+Realtime device presence for hmux: every team member sees which of the team's
+devices (Macs, iPhones, and their tagged hmux app instances) are online or
 offline, live. Source: `workers/presence/`. Deploy: `.github/workflows/presence.yml`.
 
 ## Backend decision: Cloudflare Durable Objects (not RivetKit)
@@ -51,7 +51,7 @@ GET  /v1/presence/subscribe -> forward w/ verified team ------> WS (hibernation)
   server-owned and can change without shipping new host builds.
 - **Auth** (`src/auth.ts`): `Authorization: Bearer <Stack access token>`,
   verified against Stack's REST API (the same backend the web SDK wraps), with
-  team scoping via `X-Cmux-Team-Id` / `?teamId=` and a membership check,
+  team scoping via `X-Hmux-Team-Id` / `?teamId=` and a membership check,
   mirroring `web/services/vms/auth.ts` + the device-registry route.
   Verification results are cached in isolate memory for at most 60s, bounded
   by the token's own expiry. The worker derives the DO id from the verified
@@ -152,7 +152,7 @@ after the response with `after()`; cron and reconcile writers, which run with
 no request scope where Vercel would freeze detached work, await the bounded
 publish inline before the write resolves.
 The route is service-to-service only: Worker secret `VMS_PUBLISHER_SECRET`
-must equal web `CMUX_PRESENCE_VMS_PUBLISHER_SECRET` (set once per Worker with
+must equal web `HMUX_PRESENCE_VMS_PUBLISHER_SECRET` (set once per Worker with
 `wrangler secret put VMS_PUBLISHER_SECRET` on production and on the dev
 instance); the body's `teamId` is the list scope (`ownerTeamId`) and is trusted
 only behind that secret. No new Durable Object migration: the collection adds
@@ -178,7 +178,7 @@ devices for one account, expires active leases after 45 seconds, and closes the
 connection at the bounded authentication deadline. Disconnects, backgrounding, scope switches, and account changes
 therefore remove a viewer without requiring a separate leave mutation.
 
-The shared `CmuxWorkspacePresence` package owns scope validation, the wire
+The shared `HmuxWorkspacePresence` package owns scope validation, the wire
 snapshot, WebSocket transport, reconnect/backoff model, and injected-clock
 tests. The Mac controller follows the foreground window's selected workspace,
 including a Cloud binding that arrives after selection. Mounted Cloud workspace
@@ -214,8 +214,8 @@ strict view messages, and bounded profile projection.
   `CLOUDFLARE_ACCOUNT_ID`. One-time Worker secrets (survive deploys):
   `STACK_PROJECT_ID`, `STACK_PUBLISHABLE_CLIENT_KEY`.
 
-A dev/staging instance (`cmux-presence-dev`, dev Stack project) is live at
-`https://cmux-presence-dev.debussy.workers.dev` on the team Cloudflare
+A dev/staging instance (`hmux-presence-dev`, dev Stack project) is live at
+`https://hmux-presence-dev.debussy.workers.dev` on the team Cloudflare
 account; see `workers/presence/README.md` for how to redeploy it and point a
 dev Mac build at it. Production deploys serve `https://presence.cmux.dev`
 (a `custom_domain` route in `wrangler.toml`; the cmux.dev zone lives on the
@@ -229,7 +229,7 @@ the first production deploy and dogfood.
   default on against the dev instance (dev Stack identity); Release defaults
   off until the production worker URL ships with its Settings surface. Both
   are explicitly overridable (`presenceHeartbeatEnabled` +
-  `presenceServiceURL` / `CMUX_PRESENCE_BASE_URL`). Follows the
+  `presenceServiceURL` / `HMUX_PRESENCE_BASE_URL`). Follows the
   `DeviceRegistryClient` / `PhonePushClient` pattern: same device UUID, same
   tag, best-effort, never disturbs the Mac. Every beat carries the full
   current attach-route set, a route change triggers one immediate
@@ -238,7 +238,7 @@ the first production deploy and dogfood.
   owned by `MachinesPanelViewModel`): a second subscribe socket per visible
   machines panel whose `sync.hello` asks only for `vms`, from the cursor and
   epoch it last applied (0/0 on the first connect and after a team switch).
-  It sends the same `X-Cmux-Team-Id` header as `VMClient`
+  It sends the same `X-Hmux-Team-Id` header as `VMClient`
   (`auth.resolvedTeamID`; omitted for a personal account without teams) and
   fails closed on an account or team change, after which the panel
   resubscribes under the new scope. Frames decode records with the REST list
@@ -252,7 +252,7 @@ the first production deploy and dogfood.
   `DeviceDirectory`'s (`1, 2, 5, 10, 30` s; at once after the 15-minute clean
   close). The socket exists exactly while the panel polls (Cloud enabled,
   signed in, visible, online).
-- **iOS** (`Packages/iOS/CmuxMobileShell/Sources/CmuxMobileShell/PresenceClient.swift`):
+- **iOS** (`Packages/iOS/HmuxMobileShell/Sources/HmuxMobileShell/PresenceClient.swift`):
   typed WebSocket subscribe client. `MobileShellComposite` owns the
   subscription (starts on sign-in, blanks and stops on sign-out, backoff
   reconnect with snapshot-first resync), reduces frames into `PresenceMap`,
@@ -260,7 +260,7 @@ the first production deploy and dogfood.
   (https://github.com/manaflow-ai/cmux/pull/5648) rows, writes pushed routes
   through to the paired-Mac store, and kicks a reconnect when the active Mac
   comes online while the phone is disconnected.
-- **Workspace viewer clients** (`CmuxWorkspacePresence` plus the Mac controller
+- **Workspace viewer clients** (`HmuxWorkspacePresence` plus the Mac controller
   and iOS announcer): use the dedicated viewing protocol described above. They
   never add workspace identifiers or collaborator metadata to device heartbeat
   payloads.
@@ -277,10 +277,10 @@ bun run dev          # wrangler dev (needs .dev.vars or --var Stack config)
 Full lifecycle proof against real dev-Stack auth:
 
 ```bash
-set -a; source ~/.secrets/cmuxterm-dev.env; set +a
+set -a; source ~/.secrets/hmuxterm-dev.env; set +a
 STACK_PROJECT_ID="$NEXT_PUBLIC_STACK_PROJECT_ID" \
 STACK_PUBLISHABLE_CLIENT_KEY="$NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY" \
-STACK_EMAIL="$CMUX_DOGFOOD_STACK_EMAIL" \
-STACK_PASSWORD="$CMUX_DOGFOOD_STACK_PASSWORD" \
+STACK_EMAIL="$HMUX_DOGFOOD_STACK_EMAIL" \
+STACK_PASSWORD="$HMUX_DOGFOOD_STACK_PASSWORD" \
 workers/presence/scripts/local-proof.sh
 ```

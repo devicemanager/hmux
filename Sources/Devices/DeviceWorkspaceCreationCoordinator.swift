@@ -1,5 +1,5 @@
-import CmuxProductAnalytics
-import CmuxSurfaceCatalogModel
+import HmuxProductAnalytics
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Shares device workspace creation between synchronous shortcut and menu actions.

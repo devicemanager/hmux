@@ -46,7 +46,7 @@ class AppStoreEntitlementTests(unittest.TestCase):
     def test_profile_only_network_capabilities_are_removed(self):
         module = load_filter_module()
         source = {
-            "application-identifier": "7WLXT3NR37.com.cmux.app",
+            "application-identifier": "7WLXT3NR37.com.hmux.app",
             "aps-environment": "production",
             "com.apple.developer.applesignin": ["Default"],
             "com.apple.developer.networking.networkextension": [
@@ -55,7 +55,7 @@ class AppStoreEntitlementTests(unittest.TestCase):
             ],
             "com.apple.developer.networking.vpn.api": ["allow-vpn"],
             "com.apple.developer.usernotifications.time-sensitive": True,
-            "keychain-access-groups": ["7WLXT3NR37.com.cmux.app"],
+            "keychain-access-groups": ["7WLXT3NR37.com.hmux.app"],
         }
 
         filtered, removed = module.filter_app_store_entitlements(source)
@@ -72,7 +72,7 @@ class AppStoreEntitlementTests(unittest.TestCase):
         )
         self.assertEqual(filtered["com.apple.developer.networking.vpn.api"], ["allow-vpn"])
         self.assertEqual(filtered["aps-environment"], "production")
-        self.assertEqual(filtered["keychain-access-groups"], ["7WLXT3NR37.com.cmux.app"])
+        self.assertEqual(filtered["keychain-access-groups"], ["7WLXT3NR37.com.hmux.app"])
 
     def test_filter_cli_rewrites_a_profile_baseline(self):
         source = {
@@ -146,7 +146,7 @@ class AppStoreEntitlementTests(unittest.TestCase):
 
     def test_app_store_release_entitlements_omit_network_extension(self):
         entitlements = plistlib.loads(
-            (REPO_ROOT / "ios/Config/cmux-appstore-release.entitlements").read_bytes()
+            (REPO_ROOT / "ios/Config/hmux-appstore-release.entitlements").read_bytes()
         )
         self.assertNotIn("com.apple.developer.networking.networkextension", entitlements)
 

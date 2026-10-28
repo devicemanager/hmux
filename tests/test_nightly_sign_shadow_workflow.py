@@ -2,7 +2,7 @@
 """nightly-sign.yml in shadow mode cannot sign, notarize or publish (no network).
 
 nightly-sign.yml runs from main on every completed "Nightly macOS build" run
-(cmuxterm-hq#2053). Until the comparison runs are done it must stay inert:
+(hmuxterm-hq#2053). Until the comparison runs are done it must stay inert:
 
 - every job is gated `vars.NIGHTLY_SIGN == 'shadow' && (...)`, so with the
   variable unset (the default) or set to any other value no job runs;
@@ -187,7 +187,7 @@ def check_nightly_producer() -> None:
     check(echo in run, "nightly.yml must record the digest in the format the admit tool parses")
     check(record_step["env"].get("NIGHTLY_SHOULD_PUBLISH") == "${{ needs.decide.outputs.should_publish }}",
           "nightly.yml must record decide's should_publish")
-    sample = "variant=arm64 artifact=cmux-nightly-prepared-app-arm64-cc2280f sha256=" + "a" * 64 + " publish=true fast=false"
+    sample = "variant=arm64 artifact=hmux-nightly-prepared-app-arm64-cc2280f sha256=" + "a" * 64 + " publish=true fast=false"
     check(bool(nightly_sign_admit.DIGEST_MESSAGE.match(sample)), "the admit tool must parse the recorded format")
 
 

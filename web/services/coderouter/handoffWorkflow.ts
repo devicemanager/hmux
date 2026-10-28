@@ -155,7 +155,7 @@ export type HandoffWorkflowShape = {
 };
 
 export class HandoffWorkflow extends Context.Tag(
-  "cmux/CodeRouterHandoffWorkflow",
+  "hmux/CodeRouterHandoffWorkflow",
 )<HandoffWorkflow, HandoffWorkflowShape>() {}
 
 export type HandoffMintResult = Awaited<

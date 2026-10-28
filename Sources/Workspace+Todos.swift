@@ -1,5 +1,5 @@
-import CmuxSidebar
-import CmuxWorkspaces
+import HmuxSidebar
+import HmuxWorkspaces
 import Foundation
 
 /// Workspace-level todo logic: sampling the live signals that drive
@@ -220,7 +220,7 @@ extension Workspace {
 
     /// Atomically replaces the checklist, preserving identity (and origin)
     /// for incoming items whose id matches an existing item. See
-    /// `Array.replaceChecklist(with:)` in CmuxWorkspaces for the merge rules.
+    /// `Array.replaceChecklist(with:)` in HmuxWorkspaces for the merge rules.
     ///
     /// - Parameter items: The full desired checklist.
     /// - Returns: The resulting checklist, or the rejection reason (nothing

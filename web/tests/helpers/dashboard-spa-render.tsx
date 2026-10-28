@@ -28,7 +28,7 @@ export async function renderDashboardScreen(input: {
   readonly queryClient: QueryClient;
   readonly render: () => ReactNode;
 }): Promise<string> {
-  const pathname = new URL(input.url, "https://cmux.test").pathname;
+  const pathname = new URL(input.url, "https://hmux.test").pathname;
   const rootRoute = createRootRoute();
   const screenRoute = createRoute({
     getParentRoute: () => rootRoute,

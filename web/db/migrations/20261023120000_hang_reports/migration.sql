@@ -1,4 +1,4 @@
--- Opt-in hang reports from cmux NEXT Nightly. Additive: only the new
+-- Opt-in hang reports from hmux NEXT Nightly. Additive: only the new
 -- /api/hang-reports route writes this table and only the new retention cron
 -- and the read-only top-frames script read it, so old app code runs unchanged
 -- before and after the migration. No IP address or user agent column exists.

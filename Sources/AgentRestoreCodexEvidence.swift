@@ -1,5 +1,5 @@
-import CMUXAgentLaunch
-import CmuxControlSocket
+import HMUXAgentLaunch
+import HmuxControlSocket
 import Foundation
 
 /// Provider evidence is scoped to the account the restoring CLI will actually exec.

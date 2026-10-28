@@ -1,6 +1,6 @@
-import CmuxSettings
+import HmuxSettings
 
-extension CmuxSettingsFileStore {
+extension HmuxSettingsFileStore {
     func parseSidebarIndicatorPositionSettings(
         _ section: [String: Any],
         sourcePath: String,

@@ -116,7 +116,7 @@ export async function resolveSubrouterRequestContext(
         const authoritativeTokens = await withStackAuthSpan(
           "get_auth_json",
           () => getStackServerApp().getAuthJson({ tokenStore }),
-          { "cmux.auth.flow": "subrouter_request" },
+          { "hmux.auth.flow": "subrouter_request" },
         );
         accessToken = authoritativeTokens?.accessToken;
       } catch (error) {

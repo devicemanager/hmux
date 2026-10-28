@@ -1,7 +1,7 @@
 # Bash watcher process churn (#15067)
 
 The bash integration no longer ships the obsolete per-pane PR poller. Git
-filesystem watching and GitHub polling already belong to cmux. Bash still
+filesystem watching and GitHub polling already belong to hmux. Bash still
 reports the current directory and branch at prompts, clears stale PR badges
 when HEAD changes, and sends successful PR command hints to the app.
 
@@ -11,8 +11,8 @@ At `0485e93ec0`, the two reported bash countdowns were:
 
 | Function | Work while active | Lifecycle |
 | --- | --- | --- |
-| `_cmux_start_pr_poll_loop` | One `sleep 1` per countdown tick, between 45-second PR probes | Disowned child; stopped by a process-group kill or parent PID/start-time guard |
-| `_cmux_run_pr_probe_with_timeout` | One `sleep 1` per tick while a probe runs; up to two `sleep 0.2` calls during timeout cleanup | Child of the poller; supervises the PR probe and its descendants |
+| `_hmux_start_pr_poll_loop` | One `sleep 1` per countdown tick, between 45-second PR probes | Disowned child; stopped by a process-group kill or parent PID/start-time guard |
+| `_hmux_run_pr_probe_with_timeout` | One `sleep 1` per tick while a probe runs; up to two `sleep 0.2` calls during timeout cleanup | Child of the poller; supervises the PR probe and its descendants |
 
 These are nested phases of one poller, not two simultaneous bash watchers.
 The poller has **no production caller** on this revision or on the reported
@@ -22,7 +22,7 @@ invoked the leftover function. Bash has no persistent HEAD watcher either.
 Its HEAD read happens at the prompt. The zsh HEAD watcher is still called from
 preexec and is outside this change.
 
-The report of about 160 sleeps/second across 166 panes on cmux 0.64.25 is useful
+The report of about 160 sleeps/second across 166 panes on hmux 0.64.25 is useful
 incident evidence, but this audit does not establish that those processes came
 from the current bash prompt path. It cannot establish a reduction in the
 reported 12 GB/hour of security logs. Existing shells retain sourced function
@@ -53,14 +53,14 @@ no longer exists. Zsh's legacy cache cleanup still has its own coverage.
 
 ## Existing app ownership
 
-- `CmuxSidebarGit/SidebarGitMetadataService` owns FSEvents-backed
+- `HmuxSidebarGit/SidebarGitMetadataService` owns FSEvents-backed
   `RecursivePathWatcher` instances. Registrations share a watcher by watched
   paths, event-filter identity, and coalescing interval. Worktree-specific paths
   remain distinct. Panel/directory changes release membership; the last member
   releases the native watcher and event consumer. Workspace removal cancels
   pending registrations, and generation checks reject stale completions.
-- `CmuxSidebarGit/PullRequestPollService` owns cancellable poll deadlines and
-  per-workspace/panel state. `CmuxGit/PullRequestProbeService` groups candidates
+- `HmuxSidebarGit/PullRequestPollService` owns cancellable poll deadlines and
+  per-workspace/panel state. `HmuxGit/PullRequestProbeService` groups candidates
   by repository slug and fetches repository results once per refresh group,
   using the shared short-lived repository cache. Existing selected/background
   cadence, command-hint handling, and transient-error behavior are preserved.

@@ -9,7 +9,7 @@ import postgres, { type Sql } from "postgres";
 import { closeCloudDbForTests } from "../db/client";
 import { buildAnalyticsReport, loadAnalyticsInputs, parseAnalyticsQuery } from "../services/billing/analytics/query";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 const NOW = new Date("2026-03-15T00:00:00.000Z");
 
@@ -18,7 +18,7 @@ let sql: Sql | null = null;
 beforeAll(() => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!databaseURL) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!databaseURL) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   sql = postgres(databaseURL, { max: 2 });
 });
 
@@ -42,7 +42,7 @@ async function seed(db: Sql) {
       auto_renew_enabled, purchase_date, original_purchase_date, expires_at, storefront, currency,
       price_milliunits, state_signed_at
     ) values (
-      ${id}, ${`user-${id}`}, 'com.cmux.app', ${environment}, 'com.cmux.app.pro.monthly', 'pro', 'active',
+      ${id}, ${`user-${id}`}, 'com.hmux.app', ${environment}, 'com.hmux.app.pro.monthly', 'pro', 'active',
       false, '2026-03-01T00:00:00Z', '2026-03-01T00:00:00Z', '2026-04-01T00:00:00Z', ${storefront}, ${currency},
       ${price}, '2026-03-01T00:00:00Z'
     )`;
@@ -50,7 +50,7 @@ async function seed(db: Sql) {
       transaction_id, original_transaction_id, user_id, product_id, plan_id, environment, purchase_date,
       expires_at, price_milliunits, currency, storefront, payload
     ) values (
-      ${`${id}-1`}, ${id}, ${`user-${id}`}, 'com.cmux.app.pro.monthly', 'pro', ${environment},
+      ${`${id}-1`}, ${id}, ${`user-${id}`}, 'com.hmux.app.pro.monthly', 'pro', ${environment},
       '2026-03-01T00:00:00Z', '2026-04-01T00:00:00Z', ${price}, ${currency}, ${storefront}, ${db.json({})}
     )`;
   }
@@ -58,7 +58,7 @@ async function seed(db: Sql) {
     transaction_id, original_transaction_id, user_id, product_id, plan_id, environment, purchase_date,
     expires_at, price_milliunits, currency, storefront, revoked_at, payload
   ) values (
-    'otx-prod-refunded', 'otx-prod', 'user-otx-prod', 'com.cmux.app.pro.monthly', 'pro', 'Production',
+    'otx-prod-refunded', 'otx-prod', 'user-otx-prod', 'com.hmux.app.pro.monthly', 'pro', 'Production',
     '2026-02-01T00:00:00Z', '2026-03-01T00:00:00Z', 9990, 'EUR', 'DEU', '2026-02-03T00:00:00Z',
     ${db.json({ revocationReason: 0 })}
   )`;
@@ -67,7 +67,7 @@ async function seed(db: Sql) {
     processed_at
   ) values (
     'n-1', 'SUBSCRIBED', 'INITIAL_BUY', 'Production', 'otx-prod', '2026-03-01T00:00:00Z',
-    ${db.json({ data: { transactionInfo: { productId: "com.cmux.app.pro.monthly", price: 9990, currency: "EUR", storefront: "DEU" } } })},
+    ${db.json({ data: { transactionInfo: { productId: "com.hmux.app.pro.monthly", price: 9990, currency: "EUR", storefront: "DEU" } } })},
     '2026-03-01T00:00:01Z'
   )`;
   for (const [id, livemode, quantity] of [["sub_live", true, 3], ["sub_test", false, 1]] as const) {

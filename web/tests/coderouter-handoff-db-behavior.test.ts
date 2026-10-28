@@ -16,7 +16,7 @@ import {
   revokeRouteTokensForTeam,
 } from "../services/coderouter/repository";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 
 type HandoffFixture = {
@@ -31,7 +31,7 @@ beforeAll(() => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!databaseURL) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   }
   sql = postgres(databaseURL, { max: 8 });
 });

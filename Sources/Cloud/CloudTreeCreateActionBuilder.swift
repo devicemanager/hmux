@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 
 /// Adds persistent create rows to their categories after the catalog tree is built.
 /// A machine's Workspaces category leads with its own New Workspace. New Cloud

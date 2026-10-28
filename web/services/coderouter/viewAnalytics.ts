@@ -9,7 +9,7 @@
 // dashboard sends it when a page loads the team catalog; server-rendered
 // dashboard reads that do not pass through these routes keep emitting.
 
-export const CODEROUTER_VIEW_OPEN_HEADER = "x-cmux-view-open";
+export const CODEROUTER_VIEW_OPEN_HEADER = "x-hmux-view-open";
 
 /** True when the client says this request opened a view (not a refresh or poll). */
 export function isCoderouterViewOpenRequest(request: Request): boolean {

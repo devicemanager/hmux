@@ -1,12 +1,12 @@
 # CI efficiency measurement receipt
 
-Captured 2026-10-08T05:20Z from local `cmux-ci status`, fleet runner status,
+Captured 2026-10-08T05:20Z from local `hmux-ci status`, fleet runner status,
 and the controller's worker and storage receipts. The status export contains
-1,190 jobs; this readout uses 387 `cmux` jobs with a named worker. No GitHub
+1,190 jobs; this readout uses 387 `hmux` jobs with a named worker. No GitHub
 API or retired ci-dash utilization data was used.
 
-The current receipt inventory is 424 `cmux`, 719 `ci-step`, 33 `ios`, 7
-`cef`, and 7 `cmux-browser` rows. The `cmux` state counts are 269 done, 94
+The current receipt inventory is 424 `hmux`, 719 `ci-step`, 33 `ios`, 7
+`cef`, and 7 `hmux-browser` rows. The `hmux` state counts are 269 done, 94
 failed, 58 cancelled, and 3 running. The phase measurements below use
 controller timestamps and phase receipts. AWS means the AWS pool; mini means
 the named local Mac mini workers. Percentiles are inclusive p50 and p90 in
@@ -16,7 +16,7 @@ seconds.
 | --- | ---: | ---: | --- |
 | controller queue | 120 / 284 / 962 | 267 / 34 / 1,602 | `created_at` to `started_at` |
 | controller admission phase | 120 / 0 / 0 | 264 / 0 / 0 | controller decision only; not host setup |
-| `cmux_build` compile | 114 / 144 / 182 | 239 / 379 / 924 | compile phase duration |
+| `hmux_build` compile | 114 / 144 / 182 | 239 / 379 / 924 | compile phase duration |
 | artifact upload | 84 / 8.5 / 11.9 | 185 / 5.4 / 8.4 | upload phase duration |
 | storage cleanup snapshot | 120 / 0.018 / 0.028 | 264 / 0.162 / 1.686 | `after_cleanup` minus `before_cleanup` |
 
@@ -66,7 +66,7 @@ transport.
 
 ## AWS relay canary
 
-Run 20 unchanged cmux builds during ordinary load through the AWS relay lane,
+Run 20 unchanged hmux builds during ordinary load through the AWS relay lane,
 retaining the controller receipt and the matching host JSONL row for every
 job. Include eligible relay rows and one local-mini control without forcing
 placement; leave any host without an eligibility receipt out until it is
@@ -75,7 +75,7 @@ repaired. Split the rows by relay host and local mini, then calculate:
 1. `created_at` to `started_at` (controller queue).
 2. `started_at` to `runner_ready_at` (host admission and setup).
 3. `runner_ready_at` to the first host recipe phase (runner handoff).
-4. First host recipe phase to `cmux_build` completion (compile).
+4. First host recipe phase to `hmux_build` completion (compile).
 5. Cleanup start to cleanup finish, with the existing blocked-process and
    contention fields (cleanup and eviction).
 

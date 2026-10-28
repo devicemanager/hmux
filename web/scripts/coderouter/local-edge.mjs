@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Local stand-in for the Freestyle TLS egress edge, for verifying the coderouter
 // model plane end to end on one machine: it terminates TLS with a private CA,
-// OVERWRITES the signed `x-cmux-authorization` header and its compatibility
+// OVERWRITES the signed `x-hmux-authorization` header and its compatibility
 // bearer/route-token/VM-id headers on new VM rules, or the legacy route-token
 // plus VM-id headers for old VM rules, like the real
 // edge does, and re-originates to a coderouter
@@ -24,8 +24,8 @@ import https from "node:https";
 import { tmpdir } from "node:os";
 import path from "node:path";
 
-const VM_AUTHORIZATION_HEADER = "x-cmux-authorization";
-const PLACEHOLDER = "cmux-vm-edge-placeholder";
+const VM_AUTHORIZATION_HEADER = "x-hmux-authorization";
+const PLACEHOLDER = "hmux-vm-edge-placeholder";
 
 const args = process.argv.slice(2);
 function option(name, fallback) {
@@ -46,10 +46,10 @@ function options(name) {
 const originText = option("--origin", "http://127.0.0.1:3777");
 const origin = new URL(originText);
 const inject = !args.includes("--no-inject");
-const routeToken = option("--route-token", process.env.CMUX_LOCAL_EDGE_ROUTE_TOKEN ?? "");
-const vmId = option("--vm-id", process.env.CMUX_LOCAL_EDGE_VM_ID ?? "");
+const routeToken = option("--route-token", process.env.HMUX_LOCAL_EDGE_ROUTE_TOKEN ?? "");
+const vmId = option("--vm-id", process.env.HMUX_LOCAL_EDGE_VM_ID ?? "");
 const port = Number(option("--port", "8443"));
-const stateDir = option("--state-dir", path.join(tmpdir(), "cmux-local-edge"));
+const stateDir = option("--state-dir", path.join(tmpdir(), "hmux-local-edge"));
 // --dump-dir writes each /v1 request and response body (bodies only, never the
 // injected headers) so a client's exact wire shape can be compared against the
 // origin's answer when a leg fails.
@@ -83,7 +83,7 @@ const leafCert = path.join(stateDir, "edge.crt");
 if (!existsSync(caCert) || !existsSync(leafCert)) {
   const openssl = (...a) => execFileSync("openssl", a, { stdio: ["ignore", "ignore", "inherit"] });
   openssl("req", "-x509", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes",
-    "-keyout", caKey, "-out", caCert, "-days", "3650", "-subj", "/CN=cmux local edge CA",
+    "-keyout", caKey, "-out", caCert, "-days", "3650", "-subj", "/CN=hmux local edge CA",
     "-addext", "basicConstraints=critical,CA:TRUE", "-addext", "keyUsage=critical,keyCertSign,cRLSign");
   const csr = path.join(stateDir, "edge.csr");
   const ext = path.join(stateDir, "edge.ext");
@@ -94,7 +94,7 @@ if (!existsSync(caCert) || !existsSync(leafCert)) {
     "subjectAltName=DNS:localhost,IP:127.0.0.1,IP:::1",
   ].join("\n") + "\n");
   openssl("req", "-newkey", "ec", "-pkeyopt", "ec_paramgen_curve:prime256v1", "-nodes",
-    "-keyout", leafKey, "-out", csr, "-subj", "/CN=cmux local edge");
+    "-keyout", leafKey, "-out", csr, "-subj", "/CN=hmux local edge");
   openssl("x509", "-req", "-in", csr, "-CA", caCert, "-CAkey", caKey, "-CAcreateserial",
     "-out", leafCert, "-days", "825", "-extfile", ext);
 }
@@ -113,16 +113,16 @@ const server = https.createServer({ key: readFileSync(leafKey), cert: readFileSy
   delete headers.authorization;
   delete headers[VM_AUTHORIZATION_HEADER];
   delete headers["x-coderouter-route-token"];
-  delete headers["x-cmux-vm-id"];
+  delete headers["x-hmux-vm-id"];
   if (inject) {
     if (legacyInjection) {
       headers.authorization = `Bearer ${routeToken}`;
       headers["x-coderouter-route-token"] = routeToken;
-      headers["x-cmux-vm-id"] = vmId;
+      headers["x-hmux-vm-id"] = vmId;
     } else {
       headers.authorization = `Bearer ${routeToken}`;
       headers["x-coderouter-route-token"] = routeToken;
-      headers["x-cmux-vm-id"] = vmId;
+      headers["x-hmux-vm-id"] = vmId;
       headers[VM_AUTHORIZATION_HEADER] = `Bearer ${routeToken}`;
     }
   }
@@ -180,5 +180,5 @@ server.listen(port, "127.0.0.1", () => {
   console.log(`export SSL_CERT_FILE=${caCert} NODE_EXTRA_CA_CERTS=${caCert} CURL_CA_BUNDLE=${caCert}`);
   console.log(`export OPENAI_BASE_URL=${base}/v1 OPENAI_API_KEY=${PLACEHOLDER}`);
   console.log(`export ANTHROPIC_BASE_URL=${base} ANTHROPIC_API_KEY=${PLACEHOLDER}`);
-  console.log(`export CMUX_CODEROUTER_URL=${base}${vmId ? ` CMUX_VM_ID=${vmId}` : ""}`);
+  console.log(`export HMUX_CODEROUTER_URL=${base}${vmId ? ` HMUX_VM_ID=${vmId}` : ""}`);
 });

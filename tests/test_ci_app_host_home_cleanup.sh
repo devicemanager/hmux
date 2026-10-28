@@ -37,7 +37,7 @@ case "${0##*/}" in
           "$state_pid" "$state_executable"
       fi
       found=1
-    done < "$CMUX_FAKE_LSOF_STATE"
+    done < "$HMUX_FAKE_LSOF_STATE"
     [ "$found" -eq 1 ] || [ -z "$pid_filter" ]
     exit
     ;;
@@ -47,7 +47,7 @@ case "${0##*/}" in
       exit 0
     fi
     if [ "${1:-}" = "-f" ] && [ "${2:-}" = "%Su" ]; then
-      if [ "${3:-}" = "${CMUX_FAKE_UNTRUSTED_SCOPE_PATH:-}" ]; then
+      if [ "${3:-}" = "${HMUX_FAKE_UNTRUSTED_SCOPE_PATH:-}" ]; then
         printf 'untrusted-local-user\n'
       else
         /usr/bin/id -un
@@ -87,8 +87,8 @@ case "${0##*/}" in
     case "${1:-}" in
       true) exit 0 ;;
       chown|chmod)
-        if [ -n "${CMUX_FAKE_MUTATION_LOG:-}" ]; then
-          printf '%s\n' "$*" >> "$CMUX_FAKE_MUTATION_LOG"
+        if [ -n "${HMUX_FAKE_MUTATION_LOG:-}" ]; then
+          printf '%s\n' "$*" >> "$HMUX_FAKE_MUTATION_LOG"
         fi
         exit 0
         ;;
@@ -122,14 +122,14 @@ cleanup() {
   [ -z "$APP_HOST_HOME" ] || rm -rf -- "$APP_HOST_HOME"
   [ -z "$OUTSIDE_HOME" ] || rm -rf -- "$OUTSIDE_HOME"
   [ -z "${RUNNER_TEMP_DIR:-}" ] || chmod u+rwx "$RUNNER_TEMP_DIR" 2>/dev/null || true
-  [ -z "${CMUX_APP_HOST_RECEIPT_DIR:-}" ] || rm -rf -- "$CMUX_APP_HOST_RECEIPT_DIR"
-  [ -z "${CMUX_APP_HOST_CONFIRMATION_FILE:-}" ] || rm -f -- "$CMUX_APP_HOST_CONFIRMATION_FILE"
+  [ -z "${HMUX_APP_HOST_RECEIPT_DIR:-}" ] || rm -rf -- "$HMUX_APP_HOST_RECEIPT_DIR"
+  [ -z "${HMUX_APP_HOST_CONFIRMATION_FILE:-}" ] || rm -f -- "$HMUX_APP_HOST_CONFIRMATION_FILE"
   rm -rf -- "$TMP_DIR"
 }
 trap cleanup EXIT
 
 RUNNER_TEMP_DIR="$TMP_DIR/runner-temp"
-DERIVED_DATA_PATH="$RUNNER_TEMP_DIR/cmux-derived-data-tests-123-1-shard-1"
+DERIVED_DATA_PATH="$RUNNER_TEMP_DIR/hmux-derived-data-tests-123-1-shard-1"
 FAKE_BIN="$TMP_DIR/fake-bin"
 FAKE_LSOF="$FAKE_BIN/fake-lsof"
 FAKE_LSOF_STATE="$TMP_DIR/lsof-state"
@@ -144,12 +144,12 @@ export GITHUB_ENV="$TMP_DIR/github-env"
 export GITHUB_REPOSITORY_ID=1234567
 export GITHUB_RUN_ID="920000$$"
 export GITHUB_RUN_ATTEMPT="3"
-export CMUX_APP_HOST_SHARD="1"
-export CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1
-export CMUX_DERIVED_DATA_PATH="$DERIVED_DATA_PATH"
-export CMUX_CI_APP_HOST_CLEANUP_TEST_HELPER=1
-export CMUX_APP_HOST_LSOF="$FAKE_LSOF"
-export CMUX_FAKE_LSOF_STATE="$FAKE_LSOF_STATE"
+export HMUX_APP_HOST_SHARD="1"
+export HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1
+export HMUX_DERIVED_DATA_PATH="$DERIVED_DATA_PATH"
+export HMUX_CI_APP_HOST_CLEANUP_TEST_HELPER=1
+export HMUX_APP_HOST_LSOF="$FAKE_LSOF"
+export HMUX_FAKE_LSOF_STATE="$FAKE_LSOF_STATE"
 export GITHUB_WORKSPACE="$ROOT_DIR"
 
 prepare_scope() {
@@ -159,9 +159,9 @@ prepare_scope() {
   # shellcheck disable=SC1090
   source "$GITHUB_ENV"
   set +a
-  APP_HOST_HOME="$CMUX_APP_HOST_HOME"
-  CMUX_DERIVED_DATA_PATH="$DERIVED_DATA_PATH"
-  export CMUX_DERIVED_DATA_PATH
+  APP_HOST_HOME="$HMUX_APP_HOST_HOME"
+  HMUX_DERIVED_DATA_PATH="$DERIVED_DATA_PATH"
+  export HMUX_DERIVED_DATA_PATH
   : > "$FAKE_LSOF_STATE"
 }
 
@@ -180,23 +180,23 @@ different_digest() {
 discard_corrupted_scope_fixture() {
   local system_temp_root
   system_temp_root="$(cd /tmp && pwd -P)"
-  if [ "$CMUX_APP_HOST_HOME" != "/tmp/cmux-ah-$CMUX_APP_HOST_KEY" ]; then
+  if [ "$HMUX_APP_HOST_HOME" != "/tmp/hmux-ah-$HMUX_APP_HOST_KEY" ]; then
     echo "FAIL: refusing to discard an unexpected cleanup-test home"
     exit 1
   fi
-  if [ "$CMUX_APP_HOST_RECEIPT_DIR" != \
-    "$system_temp_root/cmux-ah-$CMUX_APP_HOST_KEY-receipts" ]; then
+  if [ "$HMUX_APP_HOST_RECEIPT_DIR" != \
+    "$system_temp_root/hmux-ah-$HMUX_APP_HOST_KEY-receipts" ]; then
     echo "FAIL: refusing to discard unexpected cleanup-test receipts"
     exit 1
   fi
-  if [ "$CMUX_APP_HOST_CONFIRMATION_FILE" != \
-    "$system_temp_root/cmux-ah-$CMUX_APP_HOST_KEY.confirm" ]; then
+  if [ "$HMUX_APP_HOST_CONFIRMATION_FILE" != \
+    "$system_temp_root/hmux-ah-$HMUX_APP_HOST_KEY.confirm" ]; then
     echo "FAIL: refusing to discard an unexpected cleanup-test confirmation"
     exit 1
   fi
-  rm -rf -- "$CMUX_APP_HOST_HOME"
-  rm -rf -- "$CMUX_APP_HOST_RECEIPT_DIR"
-  rm -f -- "$CMUX_APP_HOST_CONFIRMATION_FILE"
+  rm -rf -- "$HMUX_APP_HOST_HOME"
+  rm -rf -- "$HMUX_APP_HOST_RECEIPT_DIR"
+  rm -f -- "$HMUX_APP_HOST_CONFIRMATION_FILE"
 }
 
 unset CARGO_HOME RUSTUP_HOME
@@ -227,15 +227,15 @@ CARGO_HOME="$shared_cargo_home" RUSTUP_HOME="$shared_rustup_home" \
   "/Users/ci-console|$GITHUB_REPOSITORY_ID|$shared_cargo_home|$shared_rustup_home" ] \
   || { echo "FAIL: configured shared toolchain homes were not forwarded"; exit 1; }
 
-APP_HOST_EXECUTABLE="$DERIVED_DATA_PATH/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+APP_HOST_EXECUTABLE="$DERIVED_DATA_PATH/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
 mkdir -p "$(dirname "$APP_HOST_EXECUTABLE")"
 : > "$APP_HOST_EXECUTABLE"
 /bin/bash -c 'trap "exit 0" TERM; while :; do /bin/sleep 0.1; done' &
 APP_HOST_PID=$!
 printf '%s|%s\n' "$APP_HOST_PID" "$APP_HOST_EXECUTABLE" > "$FAKE_LSOF_STATE"
 printf 'version=2\nkey=%s\npid=%s\nexecutable=%s\nreceipt_fd=9\n' \
-  "$CMUX_APP_HOST_KEY" "$APP_HOST_PID" "$APP_HOST_EXECUTABLE" \
-  > "$CMUX_APP_HOST_RECEIPT_DIR/app-host-$APP_HOST_PID.receipt"
+  "$HMUX_APP_HOST_KEY" "$APP_HOST_PID" "$APP_HOST_EXECUTABLE" \
+  > "$HMUX_APP_HOST_RECEIPT_DIR/app-host-$APP_HOST_PID.receipt"
 
 # Model the supported split-account runner: the console user owns the exact
 # app-host targets but cannot modify the runner account's RUNNER_TEMP parent.
@@ -251,9 +251,9 @@ fi
 chmod 0755 "$RUNNER_TEMP_DIR"
 wait "$APP_HOST_PID" 2>/dev/null || true
 APP_HOST_PID=""
-if [ -e "$CMUX_APP_HOST_HOME" ] \
-  || [ -e "$CMUX_APP_HOST_RECEIPT_DIR" ] \
-  || [ -e "$CMUX_APP_HOST_CONFIRMATION_FILE" ]; then
+if [ -e "$HMUX_APP_HOST_HOME" ] \
+  || [ -e "$HMUX_APP_HOST_RECEIPT_DIR" ] \
+  || [ -e "$HMUX_APP_HOST_CONFIRMATION_FILE" ]; then
   cat "$TMP_DIR/success.log"
   echo "FAIL: cleanup left an identity-owned target behind"
   exit 1
@@ -272,8 +272,8 @@ grep -Fq "already absent" "$TMP_DIR/already-absent.log"
 # Location alone never authorizes signalling: require the current receipt and
 # its exact executable even when that product lives in the workspace.
 runner_derived_data_path="$DERIVED_DATA_PATH"
-DERIVED_DATA_PATH="$TMP_DIR/workspace/DerivedData/cmux-e2e"
-APP_HOST_EXECUTABLE="$DERIVED_DATA_PATH/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV"
+DERIVED_DATA_PATH="$TMP_DIR/workspace/DerivedData/hmux-e2e"
+APP_HOST_EXECUTABLE="$DERIVED_DATA_PATH/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV"
 mkdir -p "$(dirname "$APP_HOST_EXECUTABLE")"
 : > "$APP_HOST_EXECUTABLE"
 prepare_scope
@@ -286,22 +286,22 @@ if run_cleanup > "$TMP_DIR/workspace-missing-receipt.log" 2>&1; then
   exit 1
 fi
 /bin/kill -0 "$APP_HOST_PID"
-[ -d "$CMUX_APP_HOST_HOME" ]
+[ -d "$HMUX_APP_HOST_HOME" ]
 
 printf 'version=2\nkey=%s\npid=%s\nexecutable=%s\nreceipt_fd=9\n' \
-  "$CMUX_APP_HOST_KEY" "$APP_HOST_PID" \
-  "$runner_derived_data_path/Build/Products/Debug/cmux DEV.app/Contents/MacOS/cmux DEV" \
-  > "$CMUX_APP_HOST_RECEIPT_DIR/app-host-$APP_HOST_PID.receipt"
+  "$HMUX_APP_HOST_KEY" "$APP_HOST_PID" \
+  "$runner_derived_data_path/Build/Products/Debug/hmux DEV.app/Contents/MacOS/hmux DEV" \
+  > "$HMUX_APP_HOST_RECEIPT_DIR/app-host-$APP_HOST_PID.receipt"
 if run_cleanup > "$TMP_DIR/workspace-wrong-product.log" 2>&1; then
   echo "FAIL: workspace cleanup accepted another product's receipt"
   exit 1
 fi
 /bin/kill -0 "$APP_HOST_PID"
-[ -d "$CMUX_APP_HOST_HOME" ]
+[ -d "$HMUX_APP_HOST_HOME" ]
 
 printf 'version=2\nkey=%s\npid=%s\nexecutable=%s\nreceipt_fd=9\n' \
-  "$CMUX_APP_HOST_KEY" "$APP_HOST_PID" "$APP_HOST_EXECUTABLE" \
-  > "$CMUX_APP_HOST_RECEIPT_DIR/app-host-$APP_HOST_PID.receipt"
+  "$HMUX_APP_HOST_KEY" "$APP_HOST_PID" "$APP_HOST_EXECUTABLE" \
+  > "$HMUX_APP_HOST_RECEIPT_DIR/app-host-$APP_HOST_PID.receipt"
 if ! run_cleanup > "$TMP_DIR/workspace-success.log" 2>&1; then
   cat "$TMP_DIR/workspace-success.log"
   echo "FAIL: cleanup rejected the receipt-owned workspace product"
@@ -310,9 +310,9 @@ fi
 wait "$APP_HOST_PID" 2>/dev/null || true
 APP_HOST_PID=""
 for removed_target in \
-  "$CMUX_APP_HOST_HOME" \
-  "$CMUX_APP_HOST_RECEIPT_DIR" \
-  "$CMUX_APP_HOST_CONFIRMATION_FILE"
+  "$HMUX_APP_HOST_HOME" \
+  "$HMUX_APP_HOST_RECEIPT_DIR" \
+  "$HMUX_APP_HOST_CONFIRMATION_FILE"
 do
   [ ! -e "$removed_target" ] || {
     echo "FAIL: workspace cleanup left an identity-owned target behind"
@@ -329,20 +329,20 @@ DERIVED_DATA_PATH="$runner_derived_data_path"
 # before either mutable scope root is claimed. Teardown must remove the exact
 # confirmation instead of leaving a run key that preparation can never reuse.
 prepare_scope
-rm -rf -- "$CMUX_APP_HOST_HOME" "$CMUX_APP_HOST_RECEIPT_DIR"
+rm -rf -- "$HMUX_APP_HOST_HOME" "$HMUX_APP_HOST_RECEIPT_DIR"
 run_cleanup > "$TMP_DIR/confirmation-only-partial.log"
-if [ -e "$CMUX_APP_HOST_CONFIRMATION_FILE" ]; then
+if [ -e "$HMUX_APP_HOST_CONFIRMATION_FILE" ]; then
   cat "$TMP_DIR/confirmation-only-partial.log"
   echo "FAIL: cleanup left a confirmation-only partial scope behind"
   exit 1
 fi
 
 prepare_scope
-rm -f -- "$CMUX_APP_HOST_CONFIRMATION_FILE"
+rm -f -- "$HMUX_APP_HOST_CONFIRMATION_FILE"
 : > "$TMP_DIR/unauthenticated-mutations.log"
 set +e
 PATH="$FAKE_BIN:$PATH" \
-CMUX_FAKE_MUTATION_LOG="$TMP_DIR/unauthenticated-mutations.log" \
+HMUX_FAKE_MUTATION_LOG="$TMP_DIR/unauthenticated-mutations.log" \
   bash "$ROOT_DIR/scripts/ci/run-in-console-session.sh" \
     scripts/ci/cleanup-app-host-home.sh \
     > "$TMP_DIR/unauthenticated-cleanup.log" 2>&1
@@ -361,8 +361,8 @@ prepare_scope
 : > "$TMP_DIR/untrusted-owner-mutations.log"
 set +e
 PATH="$FAKE_BIN:$PATH" \
-CMUX_FAKE_MUTATION_LOG="$TMP_DIR/untrusted-owner-mutations.log" \
-CMUX_FAKE_UNTRUSTED_SCOPE_PATH="$(cd "$CMUX_APP_HOST_HOME" && pwd -P)" \
+HMUX_FAKE_MUTATION_LOG="$TMP_DIR/untrusted-owner-mutations.log" \
+HMUX_FAKE_UNTRUSTED_SCOPE_PATH="$(cd "$HMUX_APP_HOST_HOME" && pwd -P)" \
   bash "$ROOT_DIR/scripts/ci/run-in-console-session.sh" \
     scripts/ci/cleanup-app-host-home.sh \
     > "$TMP_DIR/untrusted-owner-cleanup.log" 2>&1
@@ -378,32 +378,32 @@ fi
 run_cleanup >/dev/null
 
 prepare_scope
-real_confirmation="$CMUX_APP_HOST_CLEANUP_CONFIRMATION"
-CMUX_APP_HOST_CLEANUP_CONFIRMATION="$(different_digest "$real_confirmation")"
-[ "$CMUX_APP_HOST_CLEANUP_CONFIRMATION" != "$real_confirmation" ] || {
+real_confirmation="$HMUX_APP_HOST_CLEANUP_CONFIRMATION"
+HMUX_APP_HOST_CLEANUP_CONFIRMATION="$(different_digest "$real_confirmation")"
+[ "$HMUX_APP_HOST_CLEANUP_CONFIRMATION" != "$real_confirmation" ] || {
   echo "FAIL: wrong-confirmation fixture did not change the digest"
   exit 1
 }
-export CMUX_APP_HOST_CLEANUP_CONFIRMATION
+export HMUX_APP_HOST_CLEANUP_CONFIRMATION
 if run_cleanup > "$TMP_DIR/wrong-confirmation.log" 2>&1; then
   echo "FAIL: cleanup accepted a confirmation for another target"
   exit 1
 fi
-[ -f "$CMUX_APP_HOST_HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty" ] || {
+[ -f "$HMUX_APP_HOST_HOME/Library/Application Support/com.mitchellh.ghostty/config.ghostty" ] || {
   echo "FAIL: rejected cleanup changed the app-host home"
   exit 1
 }
-CMUX_APP_HOST_CLEANUP_CONFIRMATION="$real_confirmation"
-export CMUX_APP_HOST_CLEANUP_CONFIRMATION
+HMUX_APP_HOST_CLEANUP_CONFIRMATION="$real_confirmation"
+export HMUX_APP_HOST_CLEANUP_CONFIRMATION
 run_cleanup >/dev/null
 
 prepare_scope
-rm -f -- "$CMUX_APP_HOST_CONFIRMATION_FILE"
+rm -f -- "$HMUX_APP_HOST_CONFIRMATION_FILE"
 if run_cleanup > "$TMP_DIR/missing-confirmation.log" 2>&1; then
   echo "FAIL: cleanup accepted a missing external confirmation record"
   exit 1
 fi
-[ -d "$CMUX_APP_HOST_HOME" ] || {
+[ -d "$HMUX_APP_HOST_HOME" ] || {
   echo "FAIL: cleanup removed a home without its confirmation record"
   exit 1
 }
@@ -415,8 +415,8 @@ prepare_scope
 OUTSIDE_HOME="$TMP_DIR/outside-home"
 mkdir -p "$OUTSIDE_HOME"
 printf 'keep\n' > "$OUTSIDE_HOME/sentinel"
-rm -rf -- "$CMUX_APP_HOST_HOME"
-ln -s "$OUTSIDE_HOME" "$CMUX_APP_HOST_HOME"
+rm -rf -- "$HMUX_APP_HOST_HOME"
+ln -s "$OUTSIDE_HOME" "$HMUX_APP_HOST_HOME"
 if run_cleanup > "$TMP_DIR/symlink.log" 2>&1; then
   echo "FAIL: cleanup followed a replacement home symlink"
   exit 1
@@ -426,21 +426,21 @@ grep -Fxq "FAIL: refusing app-host cleanup through a home symlink" "$TMP_DIR/sym
   echo "FAIL: cleanup changed a symlink target outside its identity"
   exit 1
 }
-rm -f -- "$CMUX_APP_HOST_HOME"
+rm -f -- "$HMUX_APP_HOST_HOME"
 discard_corrupted_scope_fixture
 prepare_scope
 run_cleanup >/dev/null
 
 for mutated_xdg_kind in regular-file dangling-symlink; do
   prepare_scope
-  rm -rf -- "$CMUX_APP_HOST_XDG_CONFIG_HOME"
+  rm -rf -- "$HMUX_APP_HOST_XDG_CONFIG_HOME"
   if [ "$mutated_xdg_kind" = "regular-file" ]; then
-    printf 'corrupt\n' > "$CMUX_APP_HOST_XDG_CONFIG_HOME"
+    printf 'corrupt\n' > "$HMUX_APP_HOST_XDG_CONFIG_HOME"
   else
-    ln -s "$TMP_DIR/missing-xdg-target" "$CMUX_APP_HOST_XDG_CONFIG_HOME"
+    ln -s "$TMP_DIR/missing-xdg-target" "$HMUX_APP_HOST_XDG_CONFIG_HOME"
   fi
   run_cleanup > "$TMP_DIR/$mutated_xdg_kind.log"
-  [ ! -e "$CMUX_APP_HOST_HOME" ] || {
+  [ ! -e "$HMUX_APP_HOST_HOME" ] || {
     cat "$TMP_DIR/$mutated_xdg_kind.log"
     echo "FAIL: cleanup did not remove a home with a mutated XDG leaf"
     exit 1
@@ -456,9 +456,9 @@ if run_cleanup > "$TMP_DIR/derived-data-symlink.log" 2>&1; then
   exit 1
 fi
 for preserved_path in \
-  "$CMUX_APP_HOST_HOME" \
-  "$CMUX_APP_HOST_RECEIPT_DIR" \
-  "$CMUX_APP_HOST_CONFIRMATION_FILE"
+  "$HMUX_APP_HOST_HOME" \
+  "$HMUX_APP_HOST_RECEIPT_DIR" \
+  "$HMUX_APP_HOST_CONFIRMATION_FILE"
 do
   [ -e "$preserved_path" ] || {
     echo "FAIL: rejected DerivedData symlink changed the app-host scope"
@@ -470,24 +470,24 @@ mv "$derived_data_target" "$DERIVED_DATA_PATH"
 run_cleanup >/dev/null
 
 prepare_scope
-real_home="$CMUX_APP_HOST_HOME"
-CMUX_APP_HOST_HOME="$HOME"
-export CMUX_APP_HOST_HOME
+real_home="$HMUX_APP_HOST_HOME"
+HMUX_APP_HOST_HOME="$HOME"
+export HMUX_APP_HOST_HOME
 if run_cleanup > "$TMP_DIR/wrong-home.log" 2>&1; then
   echo "FAIL: cleanup accepted the console-user home as its target"
   exit 1
 fi
-CMUX_APP_HOST_HOME="$real_home"
-export CMUX_APP_HOST_HOME
+HMUX_APP_HOST_HOME="$real_home"
+export HMUX_APP_HOST_HOME
 run_cleanup >/dev/null
 
 /usr/bin/env \
-  -u CMUX_APP_HOST_KEY \
-  -u CMUX_APP_HOST_HOME \
-  -u CMUX_APP_HOST_XDG_CONFIG_HOME \
-  -u CMUX_APP_HOST_RECEIPT_DIR \
-  -u CMUX_APP_HOST_CLEANUP_CONFIRMATION \
-  -u CMUX_APP_HOST_CONFIRMATION_FILE \
+  -u HMUX_APP_HOST_KEY \
+  -u HMUX_APP_HOST_HOME \
+  -u HMUX_APP_HOST_XDG_CONFIG_HOME \
+  -u HMUX_APP_HOST_RECEIPT_DIR \
+  -u HMUX_APP_HOST_CLEANUP_CONFIRMATION \
+  -u HMUX_APP_HOST_CONFIRMATION_FILE \
   bash "$CLEANUP_SCRIPT" > "$TMP_DIR/unpublished.log"
 grep -Fq "cleanup skipped" "$TMP_DIR/unpublished.log"
 

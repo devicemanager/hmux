@@ -2,7 +2,7 @@
 """Evidence required before --main-fix may waive an existing Swift test failure.
 
 Run via scripts/gh-merge-green. Missing, skipped, stale and unparseable evidence
-refuses the merge. This exception currently has a contract only for cmux-next.
+refuses the merge. This exception currently has a contract only for hmux-next.
 """
 from __future__ import annotations
 
@@ -15,10 +15,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-RELEASE = "cmux-next Release compile (Xcode 26)"
-DEBUG = "cmux app scheme compile (Debug)"
-SWIFT = "cmux-next swift test"
-BUILDS = {RELEASE: "Release compile", DEBUG: "Compile the cmux scheme", SWIFT: "Build package and tests"}
+RELEASE = "hmux-next Release compile (Xcode 26)"
+DEBUG = "hmux app scheme compile (Debug)"
+SWIFT = "hmux-next swift test"
+BUILDS = {RELEASE: "Release compile", DEBUG: "Compile the hmux scheme", SWIFT: "Build package and tests"}
 TEST_STEPS = {
     "Regenerate action surface export",
     "Run package tests (excluding control deadline and WebKit driver tests)",
@@ -233,8 +233,8 @@ def validate(repo: str, number: int, github: GitHub) -> str:
     if pr.get("mergeable") is False:
         raise Refused("PR has merge conflicts")
     head, base = pr["head"]["sha"], pr["base"]["sha"]
-    if pr["base"]["ref"] != "feat-cmux-next":
-        raise Refused("--main-fix compile evidence is defined for feat-cmux-next only; use normal green merging for other bases")
+    if pr["base"]["ref"] != "feat-hmux-next":
+        raise Refused("--main-fix compile evidence is defined for feat-hmux-next only; use normal green merging for other bases")
     checks = latest_checks(repo, head, github)
     jobs = {}
     audit = [f"--main-fix evidence for head `{head}`, base `{base}`:"]

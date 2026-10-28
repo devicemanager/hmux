@@ -1,6 +1,6 @@
 import AppKit
-import CmuxCloud
-import CmuxCloudMachines
+import HmuxCloud
+import HmuxCloudMachines
 import Foundation
 import Observation
 
@@ -66,7 +66,7 @@ final class CloudMenuModel {
         self.pinStore = pinStore
         self.scope = scope ?? { pinStore()?.scopeIdentifier }
         self.mainMenu = mainMenu
-        observers = [Notification.Name.cmuxCloudVMAccessDidEnd, .cmuxCloudTeamScopeDidChange].map { name in
+        observers = [Notification.Name.hmuxCloudVMAccessDidEnd, .hmuxCloudTeamScopeDidChange].map { name in
             center.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 // Posted on the main queue by the auth and team-scope owners.
                 MainActor.assumeIsolated { self?.reset() }
@@ -226,5 +226,5 @@ final class CloudMenuModel {
     /// The one fleet both Cloud menus read.
     static let shared = CloudMenuModel()
 
-    static let didChangeNotification = Notification.Name("cmux.cloudMenuModel.didChange")
+    static let didChangeNotification = Notification.Name("hmux.cloudMenuModel.didChange")
 }

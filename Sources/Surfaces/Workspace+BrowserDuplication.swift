@@ -1,4 +1,4 @@
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Browser view duplication retains resource provenance before navigation.

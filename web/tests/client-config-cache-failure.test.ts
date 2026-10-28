@@ -25,7 +25,7 @@ beforeEach(() => {
   process.env.VERCEL = "1";
   process.env.VERCEL_ENV = "preview";
   process.env.VERCEL_DEPLOYMENT_ID = "cache-failure-test";
-  process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cache-failure-test";
+  process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID = "cache-failure-test";
   timestamp += 60_000;
   clock = spyOn(Date, "now").mockImplementation(() => timestamp);
   readCache = async () => undefined;
@@ -43,14 +43,14 @@ afterEach(() => {
 afterAll(() => {
   if (originalContext === undefined) Reflect.deleteProperty(globalThis, contextSymbol);
   else Reflect.set(globalThis, contextSymbol, originalContext);
-  for (const key of ["NODE_ENV", "VERCEL", "VERCEL_ENV", "VERCEL_DEPLOYMENT_ID", "SKIP_ENV_VALIDATION", "CMUX_CLIENT_CONFIG_RATE_LIMIT_ID"]) {
+  for (const key of ["NODE_ENV", "VERCEL", "VERCEL_ENV", "VERCEL_DEPLOYMENT_ID", "SKIP_ENV_VALIDATION", "HMUX_CLIENT_CONFIG_RATE_LIMIT_ID"]) {
     if (originalEnv[key] === undefined) delete process.env[key];
     else process.env[key] = originalEnv[key];
   }
 });
 
 function request(id = crypto.randomUUID()): Request {
-  return new Request("https://cmux.test/api/client-config", {
+  return new Request("https://hmux.test/api/client-config", {
     method: "POST",
     body: JSON.stringify({ distinctId: id }),
   });

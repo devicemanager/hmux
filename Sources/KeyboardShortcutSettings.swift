@@ -1,16 +1,16 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
 import Bonsplit
 import Carbon
-import CmuxSettings
-import CmuxSettingsUI
+import HmuxSettings
+import HmuxSettingsUI
 import SwiftUI
 
 /// Stores customizable keyboard shortcuts (definitions + persistence).
 enum KeyboardShortcutSettings {
-    static let didChangeNotification = Notification.Name("cmux.keyboardShortcutSettingsDidChange")
+    static let didChangeNotification = Notification.Name("hmux.keyboardShortcutSettingsDidChange")
     static let actionUserInfoKey = "action"
-    static let settingsFileDisplayPath = "~/.config/cmux/cmux.json"
+    static let settingsFileDisplayPath = "~/.config/hmux/hmux.json"
     static var settingsFileStore: KeyboardShortcutSettingsFileStore = .appLive {
         didSet { notifySettingsFileDidChange() }
     }
@@ -250,7 +250,7 @@ enum KeyboardShortcutSettings {
             case .newWindow: return String(localized: "shortcut.newWindow.label", defaultValue: "New Window")
             case .closeWindow: return String(localized: "shortcut.closeWindow.label", defaultValue: "Close Window")
             case .toggleFullScreen: return String(localized: "command.toggleFullScreen.title", defaultValue: "Toggle Full Screen")
-            case .quit: return String(localized: "menu.quitCmux", defaultValue: "Quit cmux")
+            case .quit: return String(localized: "menu.quitHmux", defaultValue: "Quit hmux")
             case .toggleSidebar: return String(localized: "shortcut.toggleLeftSidebar.label", defaultValue: "Toggle Left Sidebar")
             case .focusSidebar: return String(localized: "shortcut.focusSidebar.label", defaultValue: "Focus Sidebar")
             case .showWindowHints: return String(localized: "shortcut.showWindowHints.label", defaultValue: "Click by Hint")
@@ -463,12 +463,12 @@ enum KeyboardShortcutSettings {
                 // Control+Option+Cmd+N: the local-workspace escape hatch, next to
                 // New Workspace (Cmd+N), New Window (Cmd+Shift+N), and New Browser
                 // Workspace (Option+Cmd+N). Control+Cmd+N belongs to New Pane (Auto
-                // Layout); this one is unused by cmux defaults and is not an
+                // Layout); this one is unused by hmux defaults and is not an
                 // AppKit-reserved keystroke.
                 return StoredShortcut(key: "n", command: true, shift: false, option: true, control: true)
             case .newBrowserWorkspace:
                 // Option+Cmd+N: sits next to New Workspace (Cmd+N) and New Window (Cmd+Shift+N)
-                // without colliding with any cmux default or an AppKit-reserved keystroke.
+                // without colliding with any hmux default or an AppKit-reserved keystroke.
                 return StoredShortcut(key: "n", command: true, shift: false, option: true, control: false)
             case .newCloudWorkspace:
                 // Cmd+Y creates a Cloud workspace on the last usable Cloud
@@ -670,17 +670,17 @@ enum KeyboardShortcutSettings {
                 // would be self-referential, so users opt in via Settings; it stays reachable through the command palette and the `send_key ctrl-f` socket command.
                 return .unbound
             case .sizeTerminalToMyWindow:
-                // Ctrl+Opt+Cmd+=: "make the shared terminal my size". Unused by cmux
+                // Ctrl+Opt+Cmd+=: "make the shared terminal my size". Unused by hmux
                 // and Ghostty defaults (Cmd+= zooms, Ctrl+Cmd+= and Opt+Cmd+= are taken).
                 return StoredShortcut(key: "=", command: true, shift: false, option: true, control: true)
             case .pasteLastScreenshot:
                 // Unbound by default: reachable through the command palette; users opt into a
-                // key in Settings or cmux.json.
+                // key in Settings or hmux.json.
                 return .unbound
             case .clearScreenKeepScrollback:
                 // Cmd+Shift+K: the less-destructive sibling of Ghostty's Cmd+K (clear_screen),
                 // which also wipes scrollback. Shift+K is unbound in both Ghostty defaults and
-                // cmux, and sits next to the full-clear chord. Rebindable in Settings → Keyboard Shortcuts.
+                // hmux, and sits next to the full-clear chord. Rebindable in Settings → Keyboard Shortcuts.
                 return StoredShortcut(key: "k", command: true, shift: true, option: false, control: false)
             case .selectWorkspaceByNumber:
                 return StoredShortcut(key: "1", command: true, shift: false, option: false, control: false)
@@ -742,8 +742,8 @@ enum KeyboardShortcutSettings {
             case .toggleBrowserFocusMode:
                 // Option+Cmd+Return: "enter" focus mode mnemonic. Option+Cmd is a modifier tier web
                 // pages rarely bind, so it stays out of the page's way while focus mode is off and
-                // cmux owns the shortcut, and it avoids the Ctrl+Cmd+Return global hotkey some
-                // screen recorders use. Exit stays double-Escape; rebind in Settings or cmux.json.
+                // hmux owns the shortcut, and it avoids the Ctrl+Cmd+Return global hotkey some
+                // screen recorders use. Exit stays double-Escape; rebind in Settings or hmux.json.
                 return StoredShortcut(key: "\r", command: true, shift: false, option: true, control: false)
             case .toggleBrowserDesignMode:
                 return StoredShortcut(key: "d", command: true, shift: false, option: true, control: true)
@@ -753,7 +753,7 @@ enum KeyboardShortcutSettings {
                 // Cmd+Ctrl+Shift+D. The plain Cmd+Ctrl+D chord is reserved by macOS for "Look Up &
                 // data detectors" — the OS swallows it before it reaches the app's key monitor — and
                 // the rest of the Cmd-based "D" family is taken by split actions (Cmd+D, Cmd+Shift+D,
-                // Cmd+Opt+D, Cmd+Shift+Opt+D). Adding Shift yields a chord that reaches cmux while
+                // Cmd+Opt+D, Cmd+Shift+Opt+D). Adding Shift yields a chord that reaches hmux while
                 // keeping the "D for Diff" mnemonic. Rebindable in Settings → Keyboard Shortcuts.
                 return StoredShortcut(key: "d", command: true, shift: true, option: false, control: true)
             case .diffViewerScrollDown:
@@ -816,10 +816,10 @@ enum KeyboardShortcutSettings {
             }
 
             // Defer system-wide reservation checks for the global hotkey until
-            // cmux-owned bindings have had a chance to report their more useful
+            // hmux-owned bindings have had a chance to report their more useful
             // conflict reason. The reservation helper includes those bindings
             // so Carbon registration fails safely, but that must not hide a
-            // conflict with a cmux action from the recorder UI.
+            // conflict with a hmux action from the recorder UI.
             let resolved = resolvedRecordedShortcutIgnoringConflicts(
                 shortcut,
                 checkingSystemWideConflicts: self != .showHideAllWindows
@@ -839,7 +839,7 @@ enum KeyboardShortcutSettings {
         }
 
         func normalizedSettingsFileShortcut(_ shortcut: StoredShortcut) -> StoredShortcut? {
-            // cmux.json can load while the global settings store is still initializing.
+            // hmux.json can load while the global settings store is still initializing.
             // Keep this path free of conflict and hotkey checks that consult global shortcut state.
             if shortcut.isUnbound {
                 return .unbound
@@ -1301,7 +1301,7 @@ final class SystemWideHotkeyController {
         ) { [weak self] _ in
             self?.refreshRegistration()
         }
-        // The live Settings UI uses the CmuxSettingsUI package recorder, which signals
+        // The live Settings UI uses the HmuxSettingsUI package recorder, which signals
         // arm/disarm through its own notification (it cannot post the app-target
         // `KeyboardShortcutRecorderActivity` one). Without this, recording a system-wide
         // hotkey in Settings would not unregister the existing Carbon hotkey, so the
@@ -1335,7 +1335,7 @@ final class SystemWideHotkeyController {
 
     private func refreshRegistration() {
         let shortcut = SystemWideHotkeySettings.shortcut()
-        // Stand down while either recorder is armed (legacy app-target recorder or the CmuxSettingsUI
+        // Stand down while either recorder is armed (legacy app-target recorder or the HmuxSettingsUI
         // package recorder) so the opt-in hotkey is captured rather than fired while being rebound.
         let isShortcutRecordingActive = KeyboardShortcutRecorderActivity.isAnyRecorderActive
             || RecorderHostButton.isActivelyRecording
@@ -1378,7 +1378,7 @@ final class SystemWideHotkeyController {
 
         guard status == noErr, let hotKeyRef else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "globalHotkey.register failed action=\(Self.action.rawValue) shortcut=\(normalizedShortcut.displayString) " +
                 "keyCode=\(registration.keyCode) modifiers=\(registration.modifiers) status=\(status)"
             )
@@ -1391,7 +1391,7 @@ final class SystemWideHotkeyController {
         registeredHotKeyRegistration = registration
 
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "globalHotkey.register success action=\(Self.action.rawValue) shortcut=\(normalizedShortcut.displayString) " +
             "keyCode=\(registration.keyCode) modifiers=\(registration.modifiers)"
         )
@@ -1418,7 +1418,7 @@ final class SystemWideHotkeyController {
 
 #if DEBUG
         if status != noErr {
-            cmuxDebugLog("globalHotkey.handlerInstall failed status=\(status)")
+            hmuxDebugLog("globalHotkey.handlerInstall failed status=\(status)")
         }
 #endif
     }
@@ -1462,7 +1462,7 @@ final class SystemWideHotkeyController {
 
 #if DEBUG
         let shortcut = registeredShortcut?.displayString ?? "unknown"
-        cmuxDebugLog(
+        hmuxDebugLog(
             "globalHotkey.fire action=\(Self.action.rawValue) " +
             "shortcut=\(shortcut) active=\(NSApp.isActive ? 1 : 0)"
         )
@@ -2585,8 +2585,8 @@ extension StoredShortcut {
 }
 
 enum KeyboardShortcutRecorderActivity {
-    static let didChangeNotification = Notification.Name("cmux.keyboardShortcutRecorderActivityDidChange")
-    static let stopAllNotification = Notification.Name("cmux.keyboardShortcutRecorderActivityStopAll")
+    static let didChangeNotification = Notification.Name("hmux.keyboardShortcutRecorderActivityDidChange")
+    static let stopAllNotification = Notification.Name("hmux.keyboardShortcutRecorderActivityStopAll")
     private static var activeRecorderCount = 0
 
     static var isAnyRecorderActive: Bool {

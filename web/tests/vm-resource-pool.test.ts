@@ -17,15 +17,15 @@ import { vmResourceReservationForCreate } from "../services/vms/machineSpec";
 import { VmBillingGateway, noOpVmBillingGateway } from "../services/vms/billingGateway";
 import { VmRepository, VmRepositoryLive, type VmRepositoryShape } from "../services/vms/repository";
 import { VmProviderGateway, type VmProviderGatewayShape } from "../services/vms/providerGateway";
-import { forkVm, openVmCmuxRemote, resizeVm, resumeVm } from "../services/vms/workflows";
+import { forkVm, openVmHmuxRemote, resizeVm, resumeVm } from "../services/vms/workflows";
 import { VmResourcePoolExceededError } from "../services/vms/errors";
 import { respondVmWorkflowError } from "../services/vms/routeHelpers";
 
 const serialTest = (test as typeof test & { serial: typeof test }).serial;
-const dbTest = process.env.CMUX_DB_TEST === "1" ? serialTest : test.skip;
+const dbTest = process.env.HMUX_DB_TEST === "1" ? serialTest : test.skip;
 let sql: Sql;
 beforeAll(() => {
-  if (process.env.CMUX_DB_TEST === "1") {
+  if (process.env.HMUX_DB_TEST === "1") {
     sql = postgres(process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL!, { max: 1 });
   }
 });
@@ -87,7 +87,7 @@ async function seedVm(team: string, input: {
       ? { vcpus: input.vcpus, memoryMb: input.memoryMb, diskMb: 32768 }
       : undefined;
   const metadata = {
-    ...(marker === undefined ? {} : { cmuxResourceReservation: marker }),
+    ...(marker === undefined ? {} : { hmuxResourceReservation: marker }),
     ...input.extraMetadata,
   };
   await sql`
@@ -337,7 +337,7 @@ describe("Cloud VM resource pool", () => {
     const target = await seedVm(team, {
       status: "running", vcpus: 4, memoryMb: 8 * GB,
       extraMetadata: {
-        cmuxResourceResizePending: {
+        hmuxResourceResizePending: {
           operationId: "concurrent-disk-resize", requestedDiskMb: 65536, previousDiskMb: 32768, createdAtMs: Date.now(),
         },
       },
@@ -358,7 +358,7 @@ describe("Cloud VM resource pool", () => {
     if (result._tag === "Left") expect(result.left).toMatchObject({ _tag: "VmResizeInProgressError" });
     expect(resizes).toBe(0);
     const [row] = await sql`
-      select provider_metadata->'cmuxResourceReservation' as reservation
+      select provider_metadata->'hmuxResourceReservation' as reservation
       from cloud_vms where provider_vm_id = ${target}
     `;
     expect(row?.reservation).toMatchObject({ vcpus: 4, memoryMb: 8 * GB });
@@ -381,11 +381,11 @@ describe("Cloud VM resource pool", () => {
         status = "running";
         return { provider: "freestyle", providerVmId, image: "snapshot-test", status: "running", createdAt: Date.now() };
       }),
-      openCmuxRemote: () => Effect.suspend(() => {
+      openHmuxRemote: () => Effect.suspend(() => {
         attaches += 1;
         if (attaches > 1) {
           return Effect.succeed({
-            transport: "cmux-remote", route: "ws://10.0.0.5:1337/v1/link", token: "test-token",
+            transport: "hmux-remote", route: "ws://10.0.0.5:1337/v1/link", token: "test-token",
             session: "test-session", expiresAtUnix: 2_000_000_000, trustedCarrier: true,
           });
         }
@@ -397,7 +397,7 @@ describe("Cloud VM resource pool", () => {
         }).pipe(Effect.andThen(Effect.fail(new Error("vm is paused"))));
       }),
     } as unknown as VmProviderGatewayShape;
-    const result = await runWorkflow(openVmCmuxRemote({
+    const result = await runWorkflow(openVmHmuxRemote({
       userId: team, billingTeamId: team, teamIds: [team], providerVmId: target,
       maxActiveVms: 5, callerPlanId: "pro",
     }), provider);

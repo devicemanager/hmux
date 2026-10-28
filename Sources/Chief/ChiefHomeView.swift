@@ -1,13 +1,13 @@
 import AppKit
-import CmuxFoundation
-import CmuxHomeCore
+import HmuxFoundation
+import HmuxHomeCore
 import MessagesLabHome
 import MessagesLabSidebar
 import Observation
 
 /// Chief Home for one main window. While Home is selected the window's left
 /// sidebar becomes the conversation list (``list``, hosted under the pinned
-/// Chief row, as cmux-next's rail item swaps its one navigation column and as
+/// Chief row, as hmux-next's rail item swaps its one navigation column and as
 /// Messages has one list beside one transcript), and this view, the content
 /// area, shows the selected conversation's ``ChiefTranscriptView``. There is no
 /// third column.
@@ -37,7 +37,7 @@ final class ChiefHomeView: NSView {
     private var hiddenConversations: Set<String>
     private let defaults: UserDefaults
     /// The Chief's avatar as the list draws it (``ChiefAvatarArtwork``).
-    private var listAvatar: CmuxSidebarEntry.Avatar?
+    private var listAvatar: HmuxSidebarEntry.Avatar?
     /// Home was activated before this view joined its window (first entry):
     /// the composer takes focus once it does.
     private var focusOnWindow = false
@@ -48,7 +48,7 @@ final class ChiefHomeView: NSView {
 
     /// Called after the list projection changes. The compact Home disclosure
     /// uses this value snapshot instead of reaching through the AppKit list.
-    var onRowsChanged: (([CmuxSidebarEntry]) -> Void)?
+    var onRowsChanged: (([HmuxSidebarEntry]) -> Void)?
 
     /// Whether the host shows Home now; a hidden Home sends no read receipts.
     var isActive = true {
@@ -164,7 +164,7 @@ final class ChiefHomeView: NSView {
         let defaultID = ChiefService.shared.defaultConversationID.rawValue
         rows.canDelete = { id in id != defaultID }
         rows.menuItems = { [weak self] _ in
-            [CmuxSidebarMenuItem(title: ChiefStrings.newConversation) { self?.newConversation() }]
+            [HmuxSidebarMenuItem(title: ChiefStrings.newConversation) { self?.newConversation() }]
         }
     }
 
@@ -195,7 +195,7 @@ final class ChiefHomeView: NSView {
             .sorted { ($0.summary.pinRank ?? 0, $0.id.rawValue) < ($1.summary.pinRank ?? 0, $1.id.rawValue) }
             .map(\.id)
         let pinnedSet = Set(pinned)
-        let entries = rows.map { row -> CmuxSidebarEntry in
+        let entries = rows.map { row -> HmuxSidebarEntry in
             let others = row.summary.participants.filter { $0.id != me }
             let marked = unreadMarks.contains(row.id.rawValue)
             // While a card waits the row says what it waits on ("Needs your approval: …"), never the typing
@@ -203,10 +203,10 @@ final class ChiefHomeView: NSView {
             let waiting = ChiefService.shared.hasPendingApproval(row.id)
             let working = ChiefService.shared.isWorking(row.id)
             let line = ChiefService.shared.listPreview(for: row)
-            return CmuxSidebarEntry(
+            return HmuxSidebarEntry(
                 id: row.id.rawValue,
                 title: row.title.isEmpty ? (others.first?.displayName ?? ChiefStrings.chiefName) : row.title,
-                people: others.map { CmuxSidebarEntry.Person(id: $0.id.rawValue, name: $0.displayName, initials: $0.initials) },
+                people: others.map { HmuxSidebarEntry.Person(id: $0.id.rawValue, name: $0.displayName, initials: $0.initials) },
                 // No message yet: no time (the list draws none for `.distantPast`), as Messages shows a new thread.
                 preview: Self.listPreview(row, line: line, waiting: waiting), previewSender: nil,
                 lastAt: Self.hasNoMessages(row) ? .distantPast : row.timestamp,
@@ -239,7 +239,7 @@ final class ChiefHomeView: NSView {
 
     /// A row's preview line, as Messages draws it in a 1:1: the newest
     /// message's text with no sender prefix (MessagesLab's `SidebarStrings.preview`
-    /// leaves `previewSender` out of a 1:1, mine included; cmux-next
+    /// leaves `previewSender` out of a 1:1, mine included; hmux-next
     /// `InboxRow.homePreview`), the Chief's Markdown without its markers as
     /// the transcript shows it. An attachment-only message says so; a
     /// conversation with no message yet shows a quiet invitation (the list
@@ -407,7 +407,7 @@ final class ChiefHomeView: NSView {
 
     private func observeNotifications() {
         let center = NotificationCenter.default
-        observers.append(center.addObserver(forName: .cmuxChiefHomeDidActivate, object: nil, queue: .main) { [weak self] note in
+        observers.append(center.addObserver(forName: .hmuxChiefHomeDidActivate, object: nil, queue: .main) { [weak self] note in
             MainActor.assumeIsolated { // main-proof: observer on queue: .main
                 self?.homeDidActivate(in: note.object as? NSWindow)
             }

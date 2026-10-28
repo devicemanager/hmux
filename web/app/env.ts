@@ -14,8 +14,8 @@ const trimEnv = (value: string | undefined): string | undefined =>
   typeof value === "string" ? value.trim() : value;
 
 const isDocsZone =
-  process.env.CMUX_DOCS_CHANNEL === "release" ||
-  process.env.CMUX_DOCS_CHANNEL === "nightly";
+  process.env.HMUX_DOCS_CHANNEL === "release" ||
+  process.env.HMUX_DOCS_CHANNEL === "nightly";
 const skipEnvValidation =
   process.env.SKIP_ENV_VALIDATION === "1" ||
   process.env.VERCEL_ENV === "preview" ||
@@ -29,7 +29,7 @@ const isVercelNonPreviewDeployment =
   !isDocsZone;
 const irohMinterUrlPolicy: IrohMinterUrlPolicy = {
   allowInsecureLoopback:
-    trimEnv(process.env.CMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER) === "1",
+    trimEnv(process.env.HMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER) === "1",
   deploymentEnvironment:
     process.env.VERCEL_ENV ?? process.env.NODE_ENV ?? "development",
   isVercelDeployment: process.env.VERCEL === "1",
@@ -70,9 +70,9 @@ const retiredEnvValue = (
     }
   });
 const privateRelayEnvNames = new Set([
-  "CMUX_RELAY_JWT_PRIVATE_KEY_PEM",
-  "CMUX_RELAY_POLICY_KEY_ID",
-  "CMUX_RELAY_POLICY_PRIVATE_KEY_PEM",
+  "HMUX_RELAY_JWT_PRIVATE_KEY_PEM",
+  "HMUX_RELAY_POLICY_KEY_ID",
+  "HMUX_RELAY_POLICY_PRIVATE_KEY_PEM",
 ]);
 const publicEnvValidationIssues = (issues: readonly unknown[]): readonly unknown[] => {
   const publicIssues: unknown[] = [];
@@ -122,7 +122,7 @@ const irohMinterUrl = z.string().url().superRefine((value, context) => {
     context.addIssue({
       code: z.ZodIssueCode.custom,
       message:
-        "CMUX_IROH_MINT_URL must use HTTPS, except for an opted-in local loopback development minter",
+        "HMUX_IROH_MINT_URL must use HTTPS, except for an opted-in local loopback development minter",
     });
   }
 });
@@ -150,10 +150,10 @@ const bareHttpsOrigin = (name: string) => z.string().url().superRefine((value, c
     });
   }
 });
-const publicationAuthOrigin = bareHttpsOrigin("CMUX_VM_PUBLICATION_AUTH_ORIGIN");
+const publicationAuthOrigin = bareHttpsOrigin("HMUX_VM_PUBLICATION_AUTH_ORIGIN");
 const publicationForwardAuthOrigin = z.preprocess(
   (value) => typeof value === "string" && value.trim() === "" ? undefined : value,
-  bareHttpsOrigin("CMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN").optional(),
+  bareHttpsOrigin("HMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN").optional(),
 );
 const irohBindingLimit = z.string().regex(/^[1-9][0-9]{0,3}$/).superRefine((value, context) => {
   if (Number(value) > 4_096) {
@@ -170,7 +170,7 @@ const coderouterPublicOrigin = z.string().url().superRefine((value, context) => 
   } catch {
     context.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "CMUX_CODEROUTER_PUBLIC_ORIGIN must be a valid origin",
+      message: "HMUX_CODEROUTER_PUBLIC_ORIGIN must be a valid origin",
     });
     return;
   }
@@ -185,7 +185,7 @@ const coderouterPublicOrigin = z.string().url().superRefine((value, context) => 
     context.addIssue({
       code: z.ZodIssueCode.custom,
       message:
-        "CMUX_CODEROUTER_PUBLIC_ORIGIN must be an origin-only HTTPS URL",
+        "HMUX_CODEROUTER_PUBLIC_ORIGIN must be an origin-only HTTPS URL",
     });
   }
 });
@@ -216,53 +216,53 @@ const coderouterHeadersTimeoutEnv = z.string()
 export const env = createEnv({
   server: {
     RESEND_API_KEY: z.string().min(1),
-    CMUX_FEEDBACK_FROM_EMAIL: z.string().email(),
-    CMUX_TEAM_INVITE_FROM_EMAIL: z.string().email().optional(),
+    HMUX_FEEDBACK_FROM_EMAIL: z.string().email(),
+    HMUX_TEAM_INVITE_FROM_EMAIL: z.string().email().optional(),
     // Rate-limit rule ids are all optional: an unset id means that route runs
     // without rate limiting (the operator removed the limits deliberately).
-    CMUX_BILLING_RECOVERY_RATE_LIMIT_ID: z.string().min(1).optional(),
-    CMUX_FEEDBACK_RATE_LIMIT_ID: z.string().min(1).optional(),
-    CMUX_CLIENT_CONFIG_RATE_LIMIT_ID: z.string().min(1).optional(),
-    CMUX_ANALYTICS_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_BILLING_RECOVERY_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_FEEDBACK_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_CLIENT_CONFIG_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_ANALYTICS_RATE_LIMIT_ID: z.string().min(1).optional(),
     // Team invite, invite-link, team-create, join, and accept routes.
-    CMUX_TEAM_INVITE_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_TEAM_INVITE_RATE_LIMIT_ID: z.string().min(1).optional(),
     // Cloud VM firewall rule create and delete, per signed-in user.
-    CMUX_VM_FIREWALL_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_VM_FIREWALL_RATE_LIMIT_ID: z.string().min(1).optional(),
     // Native ingress gates run before Stack verification, so provider outages
     // cannot turn reconnect/readiness fan-out into an auth-request storm.
-    CMUX_PUSH_RATE_LIMIT_ID: z.string().min(1).optional(),
-    CMUX_DEVICE_REGISTRY_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_PUSH_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_DEVICE_REGISTRY_RATE_LIMIT_ID: z.string().min(1).optional(),
     // Native app and CodeRouter handoff routes fail closed when this limiter
     // (and the existing feedback fallback) is absent.
-    CMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID: z.string().min(1).optional(),
     // Canonical origin returned with CodeRouter route tokens. Deployed
     // non-preview runtimes must set this; handoff exchange never trusts a
     // forwarded/request host in production.
-    CMUX_CODEROUTER_PUBLIC_ORIGIN: requireVercelNonPreviewValue(
-      "CMUX_CODEROUTER_PUBLIC_ORIGIN",
+    HMUX_CODEROUTER_PUBLIC_ORIGIN: requireVercelNonPreviewValue(
+      "HMUX_CODEROUTER_PUBLIC_ORIGIN",
       coderouterPublicOrigin,
     ),
     STACK_SECRET_SERVER_KEY: z.string().min(1),
     // APNs push (iOS notifications). Optional: the app boots without them; the
     // push route returns a clear "not configured" error until they are set.
-    // CMUX_APNS_KEY_P8 holds the .p8 PEM (literal "\n" escapes are normalized
+    // HMUX_APNS_KEY_P8 holds the .p8 PEM (literal "\n" escapes are normalized
     // by the sender).
-    CMUX_APNS_KEY_P8: z.string().min(1).optional(),
-    CMUX_APNS_KEY_ID: z.string().min(1).optional(),
-    CMUX_APNS_TEAM_ID: z.string().min(1).optional(),
-    // cmux Founder's Edition welcome email (Stripe webhook -> Resend). Optional:
+    HMUX_APNS_KEY_P8: z.string().min(1).optional(),
+    HMUX_APNS_KEY_ID: z.string().min(1).optional(),
+    HMUX_APNS_TEAM_ID: z.string().min(1).optional(),
+    // hmux Founder's Edition welcome email (Stripe webhook -> Resend). Optional:
     // the /api/stripe/founders-welcome route returns "not configured" until the
-    // webhook signing secret is set. CMUX_FOUNDERS_FROM_EMAIL overrides the
+    // webhook signing secret is set. HMUX_FOUNDERS_FROM_EMAIL overrides the
     // sender (defaults to austin@manaflow.ai) so the verified Resend domain can
     // change without a code edit.
     STRIPE_FOUNDERS_WEBHOOK_SECRET: z.string().min(1).optional(),
     // The dedicated personal Pro welcome endpoint is opt-in. Keep the legacy
     // billing-webhook sender active until the Stripe endpoint is registered
     // and verified in production.
-    CMUX_PERSONAL_PRO_WELCOME_ENABLED: z.enum(["0", "1"]).optional(),
-    CMUX_FOUNDERS_FROM_EMAIL: z.string().email().optional(),
-    CMUX_PRO_FROM_EMAIL: z.string().email().optional(),
-    // Direct Stripe billing for cmux Pro. Optional: when unset, checkout is
+    HMUX_PERSONAL_PRO_WELCOME_ENABLED: z.enum(["0", "1"]).optional(),
+    HMUX_FOUNDERS_FROM_EMAIL: z.string().email().optional(),
+    HMUX_PRO_FROM_EMAIL: z.string().email().optional(),
+    // Direct Stripe billing for hmux Pro. Optional: when unset, checkout is
     // unavailable.
     STRIPE_SECRET_KEY: z.string().min(1).optional(),
     STRIPE_WEBHOOK_SECRET: z.string().min(1).optional(),
@@ -313,8 +313,8 @@ export const env = createEnv({
       "STRIPE_TEAM_YEARLY_576_PRICE_ID",
     ),
     STRIPE_TEAM_YEARLY_576_PRICE_ID: z.string().min(1).optional(),
-    CMUX_APP_PRICING_CHECKOUT_URL: z.string().url().optional(),
-    CMUX_APP_PRICING_RELAY_SECRET: z.string().min(32).optional(),
+    HMUX_APP_PRICING_CHECKOUT_URL: z.string().url().optional(),
+    HMUX_APP_PRICING_RELAY_SECRET: z.string().min(32).optional(),
     // App Store Connect API for server-side TestFlight enrollment. Optional:
     // the dashboard shows enrollment unavailable until these credentials are set.
     // ASC_PRIVATE_KEY accepts PEM contents with literal "\n" escapes;
@@ -323,58 +323,58 @@ export const env = createEnv({
     ASC_ISSUER_ID: z.string().min(1).optional(),
     ASC_PRIVATE_KEY: z.string().min(1).optional(),
     ASC_PRIVATE_KEY_PATH: z.string().min(1).optional(),
-    CMUX_TESTFLIGHT_APP_ID: z.string().min(1).optional(),
-    CMUX_PRO_TESTFLIGHT_GROUP_ID: z.string().min(1).optional(),
+    HMUX_TESTFLIGHT_APP_ID: z.string().min(1).optional(),
+    HMUX_PRO_TESTFLIGHT_GROUP_ID: z.string().min(1).optional(),
     SENTRY_DSN: z.string().url().optional(),
     // Cloud VM provisioning is paid-plan-only by default. The allow switch is
     // intentionally opt-in for controlled demos/rollbacks; the legacy require
     // flag remains accepted by the entitlement layer for migration parity.
-    CMUX_VM_ALLOW_FREE_PROVISIONING: z.string().optional(),
-    CMUX_VM_REQUIRE_PRO: z.string().optional(),
-    CMUX_VM_DEFAULT_PLAN: z.string().optional(),
+    HMUX_VM_ALLOW_FREE_PROVISIONING: z.string().optional(),
+    HMUX_VM_REQUIRE_PRO: z.string().optional(),
+    HMUX_VM_DEFAULT_PLAN: z.string().optional(),
     // Freestyle authenticates every protected-domain subrequest with this
     // write-only token. Publication routes fail closed while it is absent.
-    CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET:
+    HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET:
       z.string().min(32).max(512).optional(),
-    // Canonical CMUX web origin used for the cross-domain sign-in handoff and
+    // Canonical HMUX web origin used for the cross-domain sign-in handoff and
     // pushed to Freestyle as the account-wide forward-auth target. It is never
     // derived from a request; protected publications fail closed without it.
-    CMUX_VM_PUBLICATION_AUTH_ORIGIN: publicationAuthOrigin.optional(),
+    HMUX_VM_PUBLICATION_AUTH_ORIGIN: publicationAuthOrigin.optional(),
     // Optional origin Freestyle calls for forward-auth when it differs from
     // the sign-in origin, e.g. a tunnel to a development stack the edge can't
     // reach. Unset in production: the auth origin serves both.
-    CMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN: publicationForwardAuthOrigin.optional(),
+    HMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN: publicationForwardAuthOrigin.optional(),
     // Zone generated Cloud VM publication hostnames are minted under
-    // (<random>.<zone>). The CMUX Freestyle account must own it: verify the
+    // (<random>.<zone>). The HMUX Freestyle account must own it: verify the
     // zone, CNAME `*` to the Freestyle edge, delegate `_acme-challenge`, and
     // request its wildcard certificate. Defaults to cmux.sh.
-    CMUX_VM_PUBLICATION_GENERATED_DOMAIN: z
+    HMUX_VM_PUBLICATION_GENERATED_DOMAIN: z
       .string()
       .regex(
         /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/u,
-        "CMUX_VM_PUBLICATION_GENERATED_DOMAIN must be a lowercase DNS zone with at least two labels",
+        "HMUX_VM_PUBLICATION_GENERATED_DOMAIN must be a lowercase DNS zone with at least two labels",
       )
       // A hostname is at most 253 characters; leave room for the generated label.
-      .max(200, "CMUX_VM_PUBLICATION_GENERATED_DOMAIN must leave room for a generated label")
+      .max(200, "HMUX_VM_PUBLICATION_GENERATED_DOMAIN must leave room for a generated label")
       .optional(),
     // Vercel Firewall rule id that throttles sign-in transaction creation per
     // client and hostname on the Freestyle forward-auth route. Unset (or off
     // Vercel) applies no limit.
-    CMUX_VM_PUBLICATION_SIGN_IN_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_VM_PUBLICATION_SIGN_IN_RATE_LIMIT_ID: z.string().min(1).optional(),
     // Hosted coderouter and Subrouter have no plan, permission, or team
     // allow-list gate: team membership is the only access requirement.
     CRON_SECRET: z.string().min(1).optional(),
-    CMUX_ALERTS_SLACK_WEBHOOK_URL: z.string().url().optional(),
+    HMUX_ALERTS_SLACK_WEBHOOK_URL: z.string().url().optional(),
     // Preserve the legacy VM alert range. The VM consumers already apply
     // their compatibility fallback for zero and unsafe values.
-    CMUX_VM_ALERT_CREATE_FAILURES_15M: z.string().regex(/^\d+$/).optional(),
-    CMUX_VM_ALERT_EXPIRED_LEASES: z.string().regex(/^\d+$/).optional(),
+    HMUX_VM_ALERT_CREATE_FAILURES_15M: z.string().regex(/^\d+$/).optional(),
+    HMUX_VM_ALERT_EXPIRED_LEASES: z.string().regex(/^\d+$/).optional(),
     // Coderouter alert thresholds (per five-minute window) and the bound on
     // time-to-headers for upstream model calls. Defaults live next to the code.
-    CMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M: positiveSafeIntegerEnv("CMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M").optional(),
-    CMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M: positiveSafeIntegerEnv("CMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M").optional(),
-    CMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M: positiveSafeIntegerEnv("CMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M").optional(),
-    CMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M: positiveSafeIntegerEnv("CMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M").optional(),
+    HMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M: positiveSafeIntegerEnv("HMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M").optional(),
+    HMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M: positiveSafeIntegerEnv("HMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M").optional(),
+    HMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M: positiveSafeIntegerEnv("HMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M").optional(),
+    HMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M: positiveSafeIntegerEnv("HMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M").optional(),
     CODEROUTER_UPSTREAM_HEADERS_TIMEOUT_MS: coderouterHeadersTimeoutEnv.optional(),
     // Slack Incoming Webhook for the #website-waitlist channel. Optional: the
     // /api/waitlist route silently skips the Slack ping when it is unset.
@@ -405,84 +405,84 @@ export const env = createEnv({
     // Iroh trust broker. The Services API key deliberately has no TypeScript
     // env entry: only the isolated Rust relay minter may hold it. These values
     // are server-only and routes fail closed when an operation's key is absent.
-    CMUX_IROH_LAN_DISCOVERY_SECRET_B64: requireVercelNonPreviewValue(
-      "CMUX_IROH_LAN_DISCOVERY_SECRET_B64",
+    HMUX_IROH_LAN_DISCOVERY_SECRET_B64: requireVercelNonPreviewValue(
+      "HMUX_IROH_LAN_DISCOVERY_SECRET_B64",
       z.string().max(512).regex(/^[A-Za-z0-9+/]{43,}={0,2}$/),
     ),
-    CMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64: requireVercelNonPreviewValue(
-      "CMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64",
+    HMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64: requireVercelNonPreviewValue(
+      "HMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64",
       z.string().max(512).regex(/^[A-Za-z0-9+/]{43,}={0,2}$/),
     ),
-    CMUX_IROH_GRANT_SIGNING_KEY_P8: requireVercelNonPreviewValue(
-      "CMUX_IROH_GRANT_SIGNING_KEY_P8",
+    HMUX_IROH_GRANT_SIGNING_KEY_P8: requireVercelNonPreviewValue(
+      "HMUX_IROH_GRANT_SIGNING_KEY_P8",
       z.string().min(64).max(16_384),
     ),
-    CMUX_IROH_GRANT_SIGNING_KID: requireVercelNonPreviewValue(
-      "CMUX_IROH_GRANT_SIGNING_KID",
+    HMUX_IROH_GRANT_SIGNING_KID: requireVercelNonPreviewValue(
+      "HMUX_IROH_GRANT_SIGNING_KID",
       z.string().regex(/^[A-Za-z0-9._-]{1,64}$/),
     ),
-    CMUX_IROH_GRANT_VERIFICATION_KEYS_JSON: requireVercelNonPreviewValue(
-      "CMUX_IROH_GRANT_VERIFICATION_KEYS_JSON",
+    HMUX_IROH_GRANT_VERIFICATION_KEYS_JSON: requireVercelNonPreviewValue(
+      "HMUX_IROH_GRANT_VERIFICATION_KEYS_JSON",
       z.string().min(2).max(32_768),
     ),
     // Optional compatibility path for n0-hosted relay credentials. The
     // self-hosted fleet mints endpoint-bound JWTs through /api/relay/token.
-    CMUX_IROH_MINT_URL: irohMinterUrl.optional(),
-    CMUX_IROH_MINT_HMAC_SECRET_B64:
+    HMUX_IROH_MINT_URL: irohMinterUrl.optional(),
+    HMUX_IROH_MINT_HMAC_SECRET_B64:
       z.string().max(512).regex(/^[A-Za-z0-9+/]{43,}={0,2}$/).optional(),
     // Optional: leave unset to disable iroh rate limiting entirely. When unset,
     // the firewall gate in routeHandler.ts is skipped. Matches the other
     // optional rate-limit IDs (for example
-    // CMUX_RELAY_PREFERENCES_RATE_LIMIT_ID).
-    CMUX_IROH_RATE_LIMIT_ID: z.string().min(1).optional(),
+    // HMUX_RELAY_PREFERENCES_RATE_LIMIT_ID).
+    HMUX_IROH_RATE_LIMIT_ID: z.string().min(1).optional(),
     // Account-scoped route invalidations. The payload is revision-only; apps
     // reconcile through /api/connectivity/v2/sync. Optional so previews and
     // local tests can run without a presence worker.
-    CMUX_PRESENCE_BASE_URL: z.string().url().optional(),
+    HMUX_PRESENCE_BASE_URL: z.string().url().optional(),
     // Server-to-worker authentication for revision publication. Native clients
     // hold only their Stack access token and can never mint invalidations.
-    CMUX_CONNECTIVITY_INVALIDATION_SECRET: z.string().min(32).max(512).optional(),
+    HMUX_CONNECTIVITY_INVALIDATION_SECRET: z.string().min(32).max(512).optional(),
     // Server-to-worker authentication for Cloud machine list (`vms` sync)
     // publication. Must equal the presence Worker's VMS_PUBLISHER_SECRET.
     // Optional: unset skips publication and the Mac list keeps polling.
-    CMUX_PRESENCE_VMS_PUBLISHER_SECRET: z.string().min(32).max(512).optional(),
-    CMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER: localDevelopmentOptIn(
-      "CMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER",
+    HMUX_PRESENCE_VMS_PUBLISHER_SECRET: z.string().min(32).max(512).optional(),
+    HMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER: localDevelopmentOptIn(
+      "HMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER",
     ),
-    CMUX_IROH_DEV_BINDING_OVERRIDE_ENABLED: z.enum(["0", "1"]).optional(),
-    CMUX_IROH_DEV_BINDING_OVERRIDE_USER_IDS: z.string().max(8_192).optional(),
-    CMUX_IROH_DEV_BINDING_OVERRIDE_ENVIRONMENTS: z.string().max(256).optional(),
-    CMUX_IROH_DEV_BINDING_ACCOUNT_LIMIT: irohBindingLimit.optional(),
-    CMUX_IROH_DEV_BINDING_DEVICE_LIMIT: irohBindingLimit.optional(),
+    HMUX_IROH_DEV_BINDING_OVERRIDE_ENABLED: z.enum(["0", "1"]).optional(),
+    HMUX_IROH_DEV_BINDING_OVERRIDE_USER_IDS: z.string().max(8_192).optional(),
+    HMUX_IROH_DEV_BINDING_OVERRIDE_ENVIRONMENTS: z.string().max(256).optional(),
+    HMUX_IROH_DEV_BINDING_ACCOUNT_LIMIT: irohBindingLimit.optional(),
+    HMUX_IROH_DEV_BINDING_DEVICE_LIMIT: irohBindingLimit.optional(),
     // Explicit opt-in for the hosted DEV relay limiter exemption. The route
     // still requires the development Stack project, a tagged debug namespace,
-    // and membership in CMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS.
-    CMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED: z.enum(["0", "1"]).optional(),
-    CMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS: z.string().max(8_192).optional(),
+    // and membership in HMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS.
+    HMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED: z.enum(["0", "1"]).optional(),
+    HMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS: z.string().max(8_192).optional(),
     // Self-hosted relay fleet. Preview and local builds remain credential-free,
     // while every deployed non-preview runtime must be able to mint endpoint-
     // bound credentials, sign the fleet policy, and enforce its account limit.
-    CMUX_RELAY_JWT_PRIVATE_KEY_PEM: requireVercelRelayValue(
+    HMUX_RELAY_JWT_PRIVATE_KEY_PEM: requireVercelRelayValue(
       z.string().min(64).max(16_384),
     ),
-    CMUX_RELAY_POLICY_KEY_ID: requireVercelRelayValue(
+    HMUX_RELAY_POLICY_KEY_ID: requireVercelRelayValue(
       z.string().regex(/^[A-Za-z0-9](?:[A-Za-z0-9._-]{0,62}[A-Za-z0-9])?$/),
     ),
-    CMUX_RELAY_POLICY_PRIVATE_KEY_PEM: requireVercelRelayValue(
+    HMUX_RELAY_POLICY_PRIVATE_KEY_PEM: requireVercelRelayValue(
       z.string().min(64).max(16_384),
     ),
     // Optional: leave unset to disable relay-token rate limiting entirely.
     // When unset, enforceRelayRateLimit skips the firewall gate. Matches
-    // CMUX_IROH_RATE_LIMIT_ID and CMUX_RELAY_PREFERENCES_RATE_LIMIT_ID.
-    CMUX_RELAY_TOKEN_RATE_LIMIT_ID: z.string().min(1).optional(),
+    // HMUX_IROH_RATE_LIMIT_ID and HMUX_RELAY_PREFERENCES_RATE_LIMIT_ID.
+    HMUX_RELAY_TOKEN_RATE_LIMIT_ID: z.string().min(1).optional(),
     // Optional dedicated rule. Preferences deliberately fall back to the token
     // rule so existing deployments keep one shared account-scoped limiter.
-    CMUX_RELAY_PREFERENCES_RATE_LIMIT_ID: z.string().min(1).optional(),
+    HMUX_RELAY_PREFERENCES_RATE_LIMIT_ID: z.string().min(1).optional(),
     // Shared secret for the relay fleet's per-connection access-control hook
     // (POST /api/relay/allow). Optional: when unset the route answers 503 and
     // the fleet fails closed for new endpoint admissions. Same base64 shape as
-    // CMUX_IROH_MINT_HMAC_SECRET_B64.
-    CMUX_RELAY_ALLOW_HMAC_SECRET_B64:
+    // HMUX_IROH_MINT_HMAC_SECRET_B64.
+    HMUX_RELAY_ALLOW_HMAC_SECRET_B64:
       z.string().max(512).regex(/^[A-Za-z0-9+/]{43,}={0,2}$/).optional(),
   },
   client: {
@@ -491,35 +491,35 @@ export const env = createEnv({
   },
   runtimeEnv: {
     RESEND_API_KEY: trimEnv(process.env.RESEND_API_KEY),
-    CMUX_BILLING_RECOVERY_RATE_LIMIT_ID: trimEnv(
-      process.env.CMUX_BILLING_RECOVERY_RATE_LIMIT_ID,
+    HMUX_BILLING_RECOVERY_RATE_LIMIT_ID: trimEnv(
+      process.env.HMUX_BILLING_RECOVERY_RATE_LIMIT_ID,
     ),
-    CMUX_FEEDBACK_FROM_EMAIL: trimEnv(process.env.CMUX_FEEDBACK_FROM_EMAIL),
-    CMUX_TEAM_INVITE_FROM_EMAIL: trimEnv(process.env.CMUX_TEAM_INVITE_FROM_EMAIL),
-    CMUX_FEEDBACK_RATE_LIMIT_ID: trimEnv(process.env.CMUX_FEEDBACK_RATE_LIMIT_ID),
-    CMUX_CLIENT_CONFIG_RATE_LIMIT_ID: trimEnv(process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID),
-    CMUX_ANALYTICS_RATE_LIMIT_ID: trimEnv(process.env.CMUX_ANALYTICS_RATE_LIMIT_ID),
-    CMUX_TEAM_INVITE_RATE_LIMIT_ID: trimEnv(process.env.CMUX_TEAM_INVITE_RATE_LIMIT_ID),
-    CMUX_VM_FIREWALL_RATE_LIMIT_ID: trimEnv(process.env.CMUX_VM_FIREWALL_RATE_LIMIT_ID),
-    CMUX_PUSH_RATE_LIMIT_ID: trimEnv(process.env.CMUX_PUSH_RATE_LIMIT_ID),
-    CMUX_DEVICE_REGISTRY_RATE_LIMIT_ID: trimEnv(
-      process.env.CMUX_DEVICE_REGISTRY_RATE_LIMIT_ID,
+    HMUX_FEEDBACK_FROM_EMAIL: trimEnv(process.env.HMUX_FEEDBACK_FROM_EMAIL),
+    HMUX_TEAM_INVITE_FROM_EMAIL: trimEnv(process.env.HMUX_TEAM_INVITE_FROM_EMAIL),
+    HMUX_FEEDBACK_RATE_LIMIT_ID: trimEnv(process.env.HMUX_FEEDBACK_RATE_LIMIT_ID),
+    HMUX_CLIENT_CONFIG_RATE_LIMIT_ID: trimEnv(process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID),
+    HMUX_ANALYTICS_RATE_LIMIT_ID: trimEnv(process.env.HMUX_ANALYTICS_RATE_LIMIT_ID),
+    HMUX_TEAM_INVITE_RATE_LIMIT_ID: trimEnv(process.env.HMUX_TEAM_INVITE_RATE_LIMIT_ID),
+    HMUX_VM_FIREWALL_RATE_LIMIT_ID: trimEnv(process.env.HMUX_VM_FIREWALL_RATE_LIMIT_ID),
+    HMUX_PUSH_RATE_LIMIT_ID: trimEnv(process.env.HMUX_PUSH_RATE_LIMIT_ID),
+    HMUX_DEVICE_REGISTRY_RATE_LIMIT_ID: trimEnv(
+      process.env.HMUX_DEVICE_REGISTRY_RATE_LIMIT_ID,
     ),
-    CMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID: trimEnv(
-      process.env.CMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID,
+    HMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID: trimEnv(
+      process.env.HMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID,
     ),
-    CMUX_CODEROUTER_PUBLIC_ORIGIN: trimEnv(
-      process.env.CMUX_CODEROUTER_PUBLIC_ORIGIN,
+    HMUX_CODEROUTER_PUBLIC_ORIGIN: trimEnv(
+      process.env.HMUX_CODEROUTER_PUBLIC_ORIGIN,
     ),
-    CMUX_APNS_KEY_P8: trimEnv(process.env.CMUX_APNS_KEY_P8),
-    CMUX_APNS_KEY_ID: trimEnv(process.env.CMUX_APNS_KEY_ID),
-    CMUX_APNS_TEAM_ID: trimEnv(process.env.CMUX_APNS_TEAM_ID),
+    HMUX_APNS_KEY_P8: trimEnv(process.env.HMUX_APNS_KEY_P8),
+    HMUX_APNS_KEY_ID: trimEnv(process.env.HMUX_APNS_KEY_ID),
+    HMUX_APNS_TEAM_ID: trimEnv(process.env.HMUX_APNS_TEAM_ID),
     STRIPE_FOUNDERS_WEBHOOK_SECRET: trimEnv(process.env.STRIPE_FOUNDERS_WEBHOOK_SECRET),
-    CMUX_PERSONAL_PRO_WELCOME_ENABLED: trimEnv(
-      process.env.CMUX_PERSONAL_PRO_WELCOME_ENABLED,
+    HMUX_PERSONAL_PRO_WELCOME_ENABLED: trimEnv(
+      process.env.HMUX_PERSONAL_PRO_WELCOME_ENABLED,
     ),
-    CMUX_FOUNDERS_FROM_EMAIL: trimEnv(process.env.CMUX_FOUNDERS_FROM_EMAIL),
-    CMUX_PRO_FROM_EMAIL: trimEnv(process.env.CMUX_PRO_FROM_EMAIL),
+    HMUX_FOUNDERS_FROM_EMAIL: trimEnv(process.env.HMUX_FOUNDERS_FROM_EMAIL),
+    HMUX_PRO_FROM_EMAIL: trimEnv(process.env.HMUX_PRO_FROM_EMAIL),
     STRIPE_SECRET_KEY: trimEnv(process.env.STRIPE_SECRET_KEY),
     STRIPE_WEBHOOK_SECRET: trimEnv(process.env.STRIPE_WEBHOOK_SECRET),
     APPLE_IAP_KEY_ID: trimEnv(process.env.APPLE_IAP_KEY_ID),
@@ -547,46 +547,46 @@ export const env = createEnv({
     STRIPE_TEAM_MONTHLY_60_PRICE_ID: trimEnv(process.env.STRIPE_TEAM_MONTHLY_60_PRICE_ID),
     STRIPE_TEAM_YEARLY_PRICE_ID: trimEnv(process.env.STRIPE_TEAM_YEARLY_PRICE_ID),
     STRIPE_TEAM_YEARLY_576_PRICE_ID: trimEnv(process.env.STRIPE_TEAM_YEARLY_576_PRICE_ID),
-    CMUX_APP_PRICING_CHECKOUT_URL: trimEnv(
-      process.env.CMUX_APP_PRICING_CHECKOUT_URL,
+    HMUX_APP_PRICING_CHECKOUT_URL: trimEnv(
+      process.env.HMUX_APP_PRICING_CHECKOUT_URL,
     ),
-    CMUX_APP_PRICING_RELAY_SECRET: trimEnv(
-      process.env.CMUX_APP_PRICING_RELAY_SECRET,
+    HMUX_APP_PRICING_RELAY_SECRET: trimEnv(
+      process.env.HMUX_APP_PRICING_RELAY_SECRET,
     ),
     ASC_KEY_ID: trimEnv(process.env.ASC_KEY_ID),
     ASC_ISSUER_ID: trimEnv(process.env.ASC_ISSUER_ID),
     ASC_PRIVATE_KEY: trimEnv(process.env.ASC_PRIVATE_KEY),
     ASC_PRIVATE_KEY_PATH: trimEnv(process.env.ASC_PRIVATE_KEY_PATH),
-    CMUX_TESTFLIGHT_APP_ID: trimEnv(process.env.CMUX_TESTFLIGHT_APP_ID),
-    CMUX_PRO_TESTFLIGHT_GROUP_ID: trimEnv(process.env.CMUX_PRO_TESTFLIGHT_GROUP_ID),
+    HMUX_TESTFLIGHT_APP_ID: trimEnv(process.env.HMUX_TESTFLIGHT_APP_ID),
+    HMUX_PRO_TESTFLIGHT_GROUP_ID: trimEnv(process.env.HMUX_PRO_TESTFLIGHT_GROUP_ID),
     SENTRY_DSN: trimEnv(process.env.SENTRY_DSN),
-    CMUX_VM_ALLOW_FREE_PROVISIONING: trimEnv(process.env.CMUX_VM_ALLOW_FREE_PROVISIONING),
-    CMUX_VM_REQUIRE_PRO: trimEnv(process.env.CMUX_VM_REQUIRE_PRO),
-    CMUX_VM_DEFAULT_PLAN: trimEnv(process.env.CMUX_VM_DEFAULT_PLAN),
-    CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: trimEnv(
-      process.env.CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET,
+    HMUX_VM_ALLOW_FREE_PROVISIONING: trimEnv(process.env.HMUX_VM_ALLOW_FREE_PROVISIONING),
+    HMUX_VM_REQUIRE_PRO: trimEnv(process.env.HMUX_VM_REQUIRE_PRO),
+    HMUX_VM_DEFAULT_PLAN: trimEnv(process.env.HMUX_VM_DEFAULT_PLAN),
+    HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET: trimEnv(
+      process.env.HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET,
     ),
-    CMUX_VM_PUBLICATION_AUTH_ORIGIN: trimEnv(
-      process.env.CMUX_VM_PUBLICATION_AUTH_ORIGIN,
+    HMUX_VM_PUBLICATION_AUTH_ORIGIN: trimEnv(
+      process.env.HMUX_VM_PUBLICATION_AUTH_ORIGIN,
     ),
     // Blank (as in .env.example) means unset, not an invalid origin.
-    CMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN: trimEnv(
-      process.env.CMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN,
+    HMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN: trimEnv(
+      process.env.HMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN,
     ) || undefined,
-    CMUX_VM_PUBLICATION_GENERATED_DOMAIN: trimEnv(
-      process.env.CMUX_VM_PUBLICATION_GENERATED_DOMAIN,
+    HMUX_VM_PUBLICATION_GENERATED_DOMAIN: trimEnv(
+      process.env.HMUX_VM_PUBLICATION_GENERATED_DOMAIN,
     ),
-    CMUX_VM_PUBLICATION_SIGN_IN_RATE_LIMIT_ID: trimEnv(
-      process.env.CMUX_VM_PUBLICATION_SIGN_IN_RATE_LIMIT_ID,
+    HMUX_VM_PUBLICATION_SIGN_IN_RATE_LIMIT_ID: trimEnv(
+      process.env.HMUX_VM_PUBLICATION_SIGN_IN_RATE_LIMIT_ID,
     ),
     CRON_SECRET: trimEnv(process.env.CRON_SECRET),
-    CMUX_ALERTS_SLACK_WEBHOOK_URL: trimEnv(process.env.CMUX_ALERTS_SLACK_WEBHOOK_URL),
-    CMUX_VM_ALERT_CREATE_FAILURES_15M: trimEnv(process.env.CMUX_VM_ALERT_CREATE_FAILURES_15M),
-    CMUX_VM_ALERT_EXPIRED_LEASES: trimEnv(process.env.CMUX_VM_ALERT_EXPIRED_LEASES),
-    CMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M: trimEnv(process.env.CMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M),
-    CMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M: trimEnv(process.env.CMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M),
-    CMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M: trimEnv(process.env.CMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M),
-    CMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M: trimEnv(process.env.CMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M),
+    HMUX_ALERTS_SLACK_WEBHOOK_URL: trimEnv(process.env.HMUX_ALERTS_SLACK_WEBHOOK_URL),
+    HMUX_VM_ALERT_CREATE_FAILURES_15M: trimEnv(process.env.HMUX_VM_ALERT_CREATE_FAILURES_15M),
+    HMUX_VM_ALERT_EXPIRED_LEASES: trimEnv(process.env.HMUX_VM_ALERT_EXPIRED_LEASES),
+    HMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M: trimEnv(process.env.HMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M),
+    HMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M: trimEnv(process.env.HMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M),
+    HMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M: trimEnv(process.env.HMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M),
+    HMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M: trimEnv(process.env.HMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M),
     CODEROUTER_UPSTREAM_HEADERS_TIMEOUT_MS: trimEnv(process.env.CODEROUTER_UPSTREAM_HEADERS_TIMEOUT_MS),
     SLACK_WAITLIST_WEBHOOK_URL: trimEnv(process.env.SLACK_WAITLIST_WEBHOOK_URL),
     SLACK_ENTERPRISE_WEBHOOK_URL: trimEnv(process.env.SLACK_ENTERPRISE_WEBHOOK_URL),
@@ -600,44 +600,44 @@ export const env = createEnv({
     SUBROUTER_STACK_AUTH_TIMEOUT_MS: trimEnv(
       process.env.SUBROUTER_STACK_AUTH_TIMEOUT_MS,
     ),
-    CMUX_IROH_LAN_DISCOVERY_SECRET_B64: trimEnv(process.env.CMUX_IROH_LAN_DISCOVERY_SECRET_B64),
-    CMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64: trimEnv(process.env.CMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64),
-    CMUX_IROH_GRANT_SIGNING_KEY_P8: trimEnv(process.env.CMUX_IROH_GRANT_SIGNING_KEY_P8),
-    CMUX_IROH_GRANT_SIGNING_KID: trimEnv(process.env.CMUX_IROH_GRANT_SIGNING_KID),
-    CMUX_IROH_GRANT_VERIFICATION_KEYS_JSON: trimEnv(process.env.CMUX_IROH_GRANT_VERIFICATION_KEYS_JSON),
-    CMUX_IROH_MINT_URL: trimEnv(process.env.CMUX_IROH_MINT_URL),
-    CMUX_IROH_MINT_HMAC_SECRET_B64: trimEnv(process.env.CMUX_IROH_MINT_HMAC_SECRET_B64),
-    CMUX_IROH_RATE_LIMIT_ID: trimEnv(process.env.CMUX_IROH_RATE_LIMIT_ID),
-    CMUX_PRESENCE_BASE_URL: trimEnv(process.env.CMUX_PRESENCE_BASE_URL),
-    CMUX_CONNECTIVITY_INVALIDATION_SECRET: trimEnv(
-      process.env.CMUX_CONNECTIVITY_INVALIDATION_SECRET,
+    HMUX_IROH_LAN_DISCOVERY_SECRET_B64: trimEnv(process.env.HMUX_IROH_LAN_DISCOVERY_SECRET_B64),
+    HMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64: trimEnv(process.env.HMUX_IROH_ACCOUNT_SUBJECT_SECRET_B64),
+    HMUX_IROH_GRANT_SIGNING_KEY_P8: trimEnv(process.env.HMUX_IROH_GRANT_SIGNING_KEY_P8),
+    HMUX_IROH_GRANT_SIGNING_KID: trimEnv(process.env.HMUX_IROH_GRANT_SIGNING_KID),
+    HMUX_IROH_GRANT_VERIFICATION_KEYS_JSON: trimEnv(process.env.HMUX_IROH_GRANT_VERIFICATION_KEYS_JSON),
+    HMUX_IROH_MINT_URL: trimEnv(process.env.HMUX_IROH_MINT_URL),
+    HMUX_IROH_MINT_HMAC_SECRET_B64: trimEnv(process.env.HMUX_IROH_MINT_HMAC_SECRET_B64),
+    HMUX_IROH_RATE_LIMIT_ID: trimEnv(process.env.HMUX_IROH_RATE_LIMIT_ID),
+    HMUX_PRESENCE_BASE_URL: trimEnv(process.env.HMUX_PRESENCE_BASE_URL),
+    HMUX_CONNECTIVITY_INVALIDATION_SECRET: trimEnv(
+      process.env.HMUX_CONNECTIVITY_INVALIDATION_SECRET,
     ),
-    CMUX_PRESENCE_VMS_PUBLISHER_SECRET: trimEnv(
-      process.env.CMUX_PRESENCE_VMS_PUBLISHER_SECRET,
+    HMUX_PRESENCE_VMS_PUBLISHER_SECRET: trimEnv(
+      process.env.HMUX_PRESENCE_VMS_PUBLISHER_SECRET,
     ),
-    CMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER: trimEnv(
-      process.env.CMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER,
+    HMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER: trimEnv(
+      process.env.HMUX_IROH_DEV_ALLOW_INSECURE_LOOPBACK_MINTER,
     ),
-    CMUX_IROH_DEV_BINDING_OVERRIDE_ENABLED: trimEnv(process.env.CMUX_IROH_DEV_BINDING_OVERRIDE_ENABLED),
-    CMUX_IROH_DEV_BINDING_OVERRIDE_USER_IDS: trimEnv(process.env.CMUX_IROH_DEV_BINDING_OVERRIDE_USER_IDS),
-    CMUX_IROH_DEV_BINDING_OVERRIDE_ENVIRONMENTS: trimEnv(process.env.CMUX_IROH_DEV_BINDING_OVERRIDE_ENVIRONMENTS),
-    CMUX_IROH_DEV_BINDING_ACCOUNT_LIMIT: trimEnv(process.env.CMUX_IROH_DEV_BINDING_ACCOUNT_LIMIT),
-    CMUX_IROH_DEV_BINDING_DEVICE_LIMIT: trimEnv(process.env.CMUX_IROH_DEV_BINDING_DEVICE_LIMIT),
-    CMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED: trimEnv(
-      process.env.CMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED,
+    HMUX_IROH_DEV_BINDING_OVERRIDE_ENABLED: trimEnv(process.env.HMUX_IROH_DEV_BINDING_OVERRIDE_ENABLED),
+    HMUX_IROH_DEV_BINDING_OVERRIDE_USER_IDS: trimEnv(process.env.HMUX_IROH_DEV_BINDING_OVERRIDE_USER_IDS),
+    HMUX_IROH_DEV_BINDING_OVERRIDE_ENVIRONMENTS: trimEnv(process.env.HMUX_IROH_DEV_BINDING_OVERRIDE_ENVIRONMENTS),
+    HMUX_IROH_DEV_BINDING_ACCOUNT_LIMIT: trimEnv(process.env.HMUX_IROH_DEV_BINDING_ACCOUNT_LIMIT),
+    HMUX_IROH_DEV_BINDING_DEVICE_LIMIT: trimEnv(process.env.HMUX_IROH_DEV_BINDING_DEVICE_LIMIT),
+    HMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED: trimEnv(
+      process.env.HMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED,
     ),
-    CMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS: trimEnv(
-      process.env.CMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS,
+    HMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS: trimEnv(
+      process.env.HMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS,
     ),
-    CMUX_RELAY_JWT_PRIVATE_KEY_PEM: trimEnv(process.env.CMUX_RELAY_JWT_PRIVATE_KEY_PEM),
-    CMUX_RELAY_POLICY_KEY_ID: trimEnv(process.env.CMUX_RELAY_POLICY_KEY_ID),
-    CMUX_RELAY_POLICY_PRIVATE_KEY_PEM: trimEnv(process.env.CMUX_RELAY_POLICY_PRIVATE_KEY_PEM),
-    CMUX_RELAY_TOKEN_RATE_LIMIT_ID: trimEnv(process.env.CMUX_RELAY_TOKEN_RATE_LIMIT_ID),
-    CMUX_RELAY_PREFERENCES_RATE_LIMIT_ID: trimEnv(
-      process.env.CMUX_RELAY_PREFERENCES_RATE_LIMIT_ID,
+    HMUX_RELAY_JWT_PRIVATE_KEY_PEM: trimEnv(process.env.HMUX_RELAY_JWT_PRIVATE_KEY_PEM),
+    HMUX_RELAY_POLICY_KEY_ID: trimEnv(process.env.HMUX_RELAY_POLICY_KEY_ID),
+    HMUX_RELAY_POLICY_PRIVATE_KEY_PEM: trimEnv(process.env.HMUX_RELAY_POLICY_PRIVATE_KEY_PEM),
+    HMUX_RELAY_TOKEN_RATE_LIMIT_ID: trimEnv(process.env.HMUX_RELAY_TOKEN_RATE_LIMIT_ID),
+    HMUX_RELAY_PREFERENCES_RATE_LIMIT_ID: trimEnv(
+      process.env.HMUX_RELAY_PREFERENCES_RATE_LIMIT_ID,
     ),
-    CMUX_RELAY_ALLOW_HMAC_SECRET_B64: trimEnv(
-      process.env.CMUX_RELAY_ALLOW_HMAC_SECRET_B64,
+    HMUX_RELAY_ALLOW_HMAC_SECRET_B64: trimEnv(
+      process.env.HMUX_RELAY_ALLOW_HMAC_SECRET_B64,
     ),
     NEXT_PUBLIC_STACK_PROJECT_ID: stackEnv(
       process.env.NEXT_PUBLIC_STACK_PROJECT_ID,

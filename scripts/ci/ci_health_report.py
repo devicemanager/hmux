@@ -611,7 +611,7 @@ def paid_runner_minutes(
     return jobs, minutes, breakdown
 
 
-RUNNER_VARIABLES_ENV = "CMUX_CI_RUNNER_VARIABLES"
+RUNNER_VARIABLES_ENV = "HMUX_CI_RUNNER_VARIABLES"
 
 
 def _runner_variable_drift_lines() -> list[str]:
@@ -1210,7 +1210,7 @@ class GitHub:
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "cmux-ci-health-report",
+            "User-Agent": "hmux-ci-health-report",
             # A page of 100 workflow runs is well over a megabyte of JSON, and
             # this job reads hundreds of pages. Asking for gzip cuts that by
             # more than an order of magnitude on the wire.

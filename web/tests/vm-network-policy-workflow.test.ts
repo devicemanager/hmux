@@ -65,7 +65,7 @@ function harness(options: { vm?: CloudVmRow; apply?: (plan: NetworkRulePlan) => 
     findNetwork: () => Effect.succeed(null),
     upsertNetwork: () => Effect.succeed({
       id: "network-row", userId: "user-net", provider: "freestyle" as const, providerNetworkId: "network-1",
-      slug: "cmux-net", cidr: "10.0.0.0/24", cidrV6: "fd00::/64", createdAt: NOW, updatedAt: NOW,
+      slug: "hmux-net", cidr: "10.0.0.0/24", cidrV6: "fd00::/64", createdAt: NOW, updatedAt: NOW,
     }),
   } as unknown as VmRepositoryShape;
   const providers = {
@@ -77,7 +77,7 @@ function harness(options: { vm?: CloudVmRow; apply?: (plan: NetworkRulePlan) => 
     destroy: () => Effect.void,
     exec: () => Effect.succeed({ exitCode: 0, stdout: "", stderr: "" }),
     supportsPrivateNetworking: () => true,
-    ensureNetwork: () => Effect.succeed({ id: "network-1", slug: "cmux-net", cidr: "10.0.0.0/24", cidrV6: "fd00::/64" }),
+    ensureNetwork: () => Effect.succeed({ id: "network-1", slug: "hmux-net", cidr: "10.0.0.0/24", cidrV6: "fd00::/64" }),
     ...(options.supportsApply === false ? {} : {
       applyNetworkPolicy: (_provider: string, _vmId: string, plan: NetworkRulePlan) =>
         (options.apply?.(plan) ?? Effect.void).pipe(Effect.tap(() => Effect.sync(() => { applied.push(plan); }))),
@@ -135,7 +135,7 @@ describe("network policy workflows", () => {
 
     const body = await networkPolicyResponseBody({ policy: allowlist, status: { state: "failed", errorCode: "network_rule_capacity" } }, "ja");
     expect(body.applied).toMatchObject({ state: "failed", errorCode: "network_rule_capacity" });
-    expect(body.applied.error).toContain("cmux チーム");
+    expect(body.applied.error).toContain("hmux チーム");
   });
 
   test("a legacy failed row with English provider text reads as a generic failure code", async () => {

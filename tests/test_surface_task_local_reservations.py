@@ -3,7 +3,7 @@
 
 The reservations hold Foundation UUIDs. With the Xcode 26 SDK their size is
 only known at run time, which sends an async TaskLocal.withValue binding down
-the back-deployed code path that aborted cmux 0.65.0 on macOS 14 with "freed
+the back-deployed code path that aborted hmux 0.65.0 on macOS 14 with "freed
 pointer was not the last allocation". The test-only availability symbol from
 tests/cloud_task_local forces that path on a modern host without replacing
 Swift's task allocator. No source-text assertions or timing sleeps.
@@ -21,24 +21,24 @@ FIXTURE = ROOT / "tests/surface_task_local"
 LEGACY = ROOT / "tests/cloud_task_local/LegacyAvailability.c"
 PRODUCTION = [ROOT / "Sources/Surfaces/CloudMachineLoadingReservation.swift"]
 # The shared reference carrier, compiled as its own module like the app links it.
-TASK_LOCAL_REFERENCE = ROOT / "Packages/macOS/CmuxFoundation/Sources/CmuxFoundation/Concurrency/TaskLocalReference.swift"
+TASK_LOCAL_REFERENCE = ROOT / "Packages/macOS/HmuxFoundation/Sources/HmuxFoundation/Concurrency/TaskLocalReference.swift"
 # Module imports the standalone stubs replace inside the probe module.
-STUBBED_IMPORTS = re.compile(r"^import (CmuxCloud|CmuxSurfaceCatalogModel)\n", re.MULTILINE)
+STUBBED_IMPORTS = re.compile(r"^import (HmuxCloud|HmuxSurfaceCatalogModel)\n", re.MULTILINE)
 
 
 @unittest.skipUnless(platform.system() == "Darwin", "requires the macOS Swift runtime")
 class SurfaceTaskLocalReservationTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        cls.temp = tempfile.TemporaryDirectory(prefix="cmux-surface-task-local-")
+        cls.temp = tempfile.TemporaryDirectory(prefix="hmux-surface-task-local-")
         cls.addClassCleanup(cls.temp.cleanup)
         directory = Path(cls.temp.name)
         target = platform.machine() + "-apple-macos14.0"
         flags = ["-target", target, "-swift-version", "5", "-warnings-as-errors"]
         subprocess.run([
             "xcrun", "swiftc", "-target", target, "-swift-version", "6", "-warnings-as-errors", "-O",
-            "-emit-module", "-emit-object", "-parse-as-library", "-module-name", "CmuxFoundation",
-            str(TASK_LOCAL_REFERENCE), "-emit-module-path", str(directory / "CmuxFoundation.swiftmodule"),
+            "-emit-module", "-emit-object", "-parse-as-library", "-module-name", "HmuxFoundation",
+            str(TASK_LOCAL_REFERENCE), "-emit-module-path", str(directory / "HmuxFoundation.swiftmodule"),
             "-o", str(directory / "foundation.o"),
         ], check=True)
         subprocess.run([
@@ -60,10 +60,10 @@ class SurfaceTaskLocalReservationTests(unittest.TestCase):
 
     def run_probe(self, legacy):
         environment = os.environ.copy()
-        environment.pop("CMUX_TEST_LEGACY_TASK_LOCAL", None)
+        environment.pop("HMUX_TEST_LEGACY_TASK_LOCAL", None)
         environment["SWIFT_BACKTRACE"] = "interactive=no,timeout=0s,symbolicate=off,color=no"
         if legacy:
-            environment["CMUX_TEST_LEGACY_TASK_LOCAL"] = "1"
+            environment["HMUX_TEST_LEGACY_TASK_LOCAL"] = "1"
         result = subprocess.run(
             [str(self.binary)], env=environment, capture_output=True, text=True,
         )

@@ -1,15 +1,15 @@
 import AppKit
-import CmuxChief
-import CmuxHomeCore
+import HmuxChief
+import HmuxHomeCore
 import Observation
 
 /// Chief's settings, a right panel inside the transcript that the header's
-/// "Chief >" name pill toggles (cmux-next `HomeChiefSidebar`, feat-cmux-next
-/// `Packages/macOS/CmuxNext/Sources/CmuxNextHomeEngine/HomeChiefSidebar.swift`).
+/// "Chief >" name pill toggles (hmux-next `HomeChiefSidebar`, feat-hmux-next
+/// `Packages/macOS/HmuxNext/Sources/HmuxNextHomeEngine/HomeChiefSidebar.swift`).
 /// Grouped sections, each a rounded card:
 ///
 /// - Profile: Chief's name and avatar.
-/// - Brain: harness, model and effort (the `chief.*` cmux settings, applied
+/// - Brain: harness, model and effort (the `chief.*` hmux settings, applied
 ///   from the next turn). Each picker's first item names what the default
 ///   resolves to ("Default (Opus 5.5)"), the menus check the current choice,
 ///   and a line under Effort says what the level trades (references:
@@ -332,9 +332,9 @@ final class ChiefSettingsPanel: NSView {
         }
         let settings = ChiefService.shared.engineSettings
         let harnessValue = settings.resolvedHarness
-        fill(harness, CmuxChief.ChiefHarness.allCases.map { ($0.rawValue, $0.displayName) },
+        fill(harness, HmuxChief.ChiefHarness.allCases.map { ($0.rawValue, $0.displayName) },
              current: settings.harness.isEmpty ? nil : settings.harness,
-             defaultTitle: ChiefSettingsStrings.defaultItem(CmuxChief.ChiefHarness.claude.displayName))
+             defaultTitle: ChiefSettingsStrings.defaultItem(HmuxChief.ChiefHarness.claude.displayName))
         let defaultModel = harnessValue.defaultModel
         fill(model, harnessValue.models
                 .map { ($0.id, ChiefSettingsStrings.modelName($0.id, harness: harnessValue.rawValue)) },

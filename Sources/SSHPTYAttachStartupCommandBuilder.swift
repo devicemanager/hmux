@@ -1,6 +1,6 @@
 import Foundation
-import CmuxCore
-import CmuxFoundation
+import HmuxCore
+import HmuxFoundation
 
 enum SSHPTYAttachStartupCommandBuilder {
     struct ForegroundAuth {
@@ -41,18 +41,18 @@ enum SSHPTYAttachStartupCommandBuilder {
     ) -> String {
         let backoffBuilder = SSHRetryBackoffScriptBuilder(context: .attach)
         var lines = [
-            "cmux_ssh_attach_cli=\"${CMUX_BUNDLED_CLI_PATH:-}\"",
-            "if [ -z \"$cmux_ssh_attach_cli\" ] || [ ! -x \"$cmux_ssh_attach_cli\" ]; then cmux_ssh_attach_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi",
-            "if [ -z \"$cmux_ssh_attach_cli\" ]; then printf '%s\\n' '[cmux] bundled CLI not found for SSH PTY attach.' >&2; exit 127; fi",
-            "if [ -z \"${CMUX_SOCKET_PATH:-}\" ]; then printf '%s\\n' '[cmux] required configuration missing for SSH PTY attach.' >&2; exit 1; fi",
-            "if [ -z \"${CMUX_WORKSPACE_ID:-}\" ]; then printf '%s\\n' '[cmux] required workspace context missing for SSH PTY attach.' >&2; exit 1; fi",
+            "hmux_ssh_attach_cli=\"${HMUX_BUNDLED_CLI_PATH:-}\"",
+            "if [ -z \"$hmux_ssh_attach_cli\" ] || [ ! -x \"$hmux_ssh_attach_cli\" ]; then hmux_ssh_attach_cli=\"$(command -v hmux 2>/dev/null || true)\"; fi",
+            "if [ -z \"$hmux_ssh_attach_cli\" ]; then printf '%s\\n' '[hmux] bundled CLI not found for SSH PTY attach.' >&2; exit 127; fi",
+            "if [ -z \"${HMUX_SOCKET_PATH:-}\" ]; then printf '%s\\n' '[hmux] required configuration missing for SSH PTY attach.' >&2; exit 1; fi",
+            "if [ -z \"${HMUX_WORKSPACE_ID:-}\" ]; then printf '%s\\n' '[hmux] required workspace context missing for SSH PTY attach.' >&2; exit 1; fi",
         ]
         if let sessionID = normalized(sessionID) {
-            lines.append("cmux_ssh_attach_session_id=\(shellQuote(sessionID))")
+            lines.append("hmux_ssh_attach_session_id=\(shellQuote(sessionID))")
         } else {
             lines += [
-                "cmux_ssh_attach_session_id=\"${CMUX_SSH_PTY_SESSION_ID:-}\"",
-                "if [ -z \"$cmux_ssh_attach_session_id\" ]; then if [ -z \"${CMUX_SURFACE_ID:-}\" ]; then printf '%s\\n' '[cmux] required terminal context missing for SSH PTY attach.' >&2; exit 1; fi; cmux_ssh_attach_session_id=\"ssh-$CMUX_WORKSPACE_ID-$CMUX_SURFACE_ID\"; fi",
+                "hmux_ssh_attach_session_id=\"${HMUX_SSH_PTY_SESSION_ID:-}\"",
+                "if [ -z \"$hmux_ssh_attach_session_id\" ]; then if [ -z \"${HMUX_SURFACE_ID:-}\" ]; then printf '%s\\n' '[hmux] required terminal context missing for SSH PTY attach.' >&2; exit 1; fi; hmux_ssh_attach_session_id=\"ssh-$HMUX_WORKSPACE_ID-$HMUX_SURFACE_ID\"; fi",
             ]
         }
         if let foregroundAuth {
@@ -60,37 +60,37 @@ enum SSHPTYAttachStartupCommandBuilder {
             // variable for every retry, and out of the environment of the
             // commands this script starts.
             lines += SSHForegroundAuthenticationLaunch(token: foregroundAuth.token)
-                .tokenLoadShellLines(into: "cmux_ssh_attach_auth_token")
+                .tokenLoadShellLines(into: "hmux_ssh_attach_auth_token")
             lines += foregroundAuthLines(foregroundAuth)
             lines.append(
                 SSHForegroundAuthenticationRetryPolicy().processTreeTerminationShellFunction()
             )
         }
-        lines.append("cmux_ssh_attach_lifecycle_id=\"${CMUX_SSH_PTY_LIFECYCLE_ID:-}\"")
-        lines.append("if [ -z \"$cmux_ssh_attach_lifecycle_id\" ]; then cmux_ssh_attach_lifecycle_id=$(/usr/bin/uuidgen | /usr/bin/tr '[:upper:]' '[:lower:]') || exit 1; fi")
+        lines.append("hmux_ssh_attach_lifecycle_id=\"${HMUX_SSH_PTY_LIFECYCLE_ID:-}\"")
+        lines.append("if [ -z \"$hmux_ssh_attach_lifecycle_id\" ]; then hmux_ssh_attach_lifecycle_id=$(/usr/bin/uuidgen | /usr/bin/tr '[:upper:]' '[:lower:]') || exit 1; fi")
         lines += [
-            "cmux_ssh_attach_lifecycle_ended=0",
-            "cmux_ssh_attach_auth_pid=",
-            "cmux_ssh_attach_auth_event_token=",
-            "cmux_ssh_attach_lifecycle_end() { if [ \"$cmux_ssh_attach_lifecycle_ended\" = 1 ]; then return; fi; cmux_ssh_attach_lifecycle_ended=1; \"$cmux_ssh_attach_cli\" --socket \"$CMUX_SOCKET_PATH\" ssh-session-end --lifecycle-only --workspace \"$CMUX_WORKSPACE_ID\" --surface \"${CMUX_SURFACE_ID:-}\" --terminal-lifecycle-id \"${CMUX_TERMINAL_LIFECYCLE_ID:-}\" --session-id \"$cmux_ssh_attach_session_id\" --lifecycle-id \"$cmux_ssh_attach_lifecycle_id\" >/dev/null 2>&1 || true; }",
-            "cmux_ssh_attach_signal_exit() { cmux_ssh_attach_signal_status=\"$1\"; cmux_ssh_attach_signal_name=\"$2\"; if [ -n \"${cmux_ssh_attach_auth_pid:-}\" ]; then cmux_ssh_terminate_auth_process_tree \"$cmux_ssh_attach_auth_pid\" \"$$\" 1 \"${cmux_ssh_attach_auth_event_token:-}\"; wait \"$cmux_ssh_attach_auth_pid\" 2>/dev/null || true; cmux_ssh_attach_auth_pid=; \(backoffBuilder.signalHandlerBranches) elif [ \"${cmux_ssh_attach_auth_launching:-0}\" = 1 ]; then cmux_ssh_attach_pending_signal=\"$cmux_ssh_attach_signal_status\"; cmux_ssh_attach_pending_signal_name=\"$cmux_ssh_attach_signal_name\"; return; fi; cmux_ssh_attach_restore_terminal; trap - EXIT HUP INT TERM; cmux_ssh_attach_lifecycle_end; exit \"$cmux_ssh_attach_signal_status\"; }",
-            "trap 'cmux_ssh_attach_lifecycle_end' EXIT",
-            "trap 'cmux_ssh_attach_signal_exit 129 HUP' HUP",
-            "trap 'cmux_ssh_attach_signal_exit 130 INT' INT",
-            "trap 'cmux_ssh_attach_signal_exit 143 TERM' TERM",
+            "hmux_ssh_attach_lifecycle_ended=0",
+            "hmux_ssh_attach_auth_pid=",
+            "hmux_ssh_attach_auth_event_token=",
+            "hmux_ssh_attach_lifecycle_end() { if [ \"$hmux_ssh_attach_lifecycle_ended\" = 1 ]; then return; fi; hmux_ssh_attach_lifecycle_ended=1; \"$hmux_ssh_attach_cli\" --socket \"$HMUX_SOCKET_PATH\" ssh-session-end --lifecycle-only --workspace \"$HMUX_WORKSPACE_ID\" --surface \"${HMUX_SURFACE_ID:-}\" --terminal-lifecycle-id \"${HMUX_TERMINAL_LIFECYCLE_ID:-}\" --session-id \"$hmux_ssh_attach_session_id\" --lifecycle-id \"$hmux_ssh_attach_lifecycle_id\" >/dev/null 2>&1 || true; }",
+            "hmux_ssh_attach_signal_exit() { hmux_ssh_attach_signal_status=\"$1\"; hmux_ssh_attach_signal_name=\"$2\"; if [ -n \"${hmux_ssh_attach_auth_pid:-}\" ]; then hmux_ssh_terminate_auth_process_tree \"$hmux_ssh_attach_auth_pid\" \"$$\" 1 \"${hmux_ssh_attach_auth_event_token:-}\"; wait \"$hmux_ssh_attach_auth_pid\" 2>/dev/null || true; hmux_ssh_attach_auth_pid=; \(backoffBuilder.signalHandlerBranches) elif [ \"${hmux_ssh_attach_auth_launching:-0}\" = 1 ]; then hmux_ssh_attach_pending_signal=\"$hmux_ssh_attach_signal_status\"; hmux_ssh_attach_pending_signal_name=\"$hmux_ssh_attach_signal_name\"; return; fi; hmux_ssh_attach_restore_terminal; trap - EXIT HUP INT TERM; hmux_ssh_attach_lifecycle_end; exit \"$hmux_ssh_attach_signal_status\"; }",
+            "trap 'hmux_ssh_attach_lifecycle_end' EXIT",
+            "trap 'hmux_ssh_attach_signal_exit 129 HUP' HUP",
+            "trap 'hmux_ssh_attach_signal_exit 130 INT' INT",
+            "trap 'hmux_ssh_attach_signal_exit 143 TERM' TERM",
         ]
         let requireExistingFlag = requireExisting ? " --require-existing" : ""
         let commandB64Flag = normalized(remoteCommand).map {
             " --command-b64 \(shellQuote(Data($0.utf8).base64EncodedString()))"
         } ?? ""
-        let attachCommand = "\"$cmux_ssh_attach_cli\" --socket \"$CMUX_SOCKET_PATH\" ssh-pty-attach --wait\(requireExistingFlag) --workspace \"$CMUX_WORKSPACE_ID\" --session-id \"$cmux_ssh_attach_session_id\" --lifecycle-id \"$cmux_ssh_attach_lifecycle_id\" --attachment-id \"${CMUX_SURFACE_ID:-}\"\(commandB64Flag)"
+        let attachCommand = "\"$hmux_ssh_attach_cli\" --socket \"$HMUX_SOCKET_PATH\" ssh-pty-attach --wait\(requireExistingFlag) --workspace \"$HMUX_WORKSPACE_ID\" --session-id \"$hmux_ssh_attach_session_id\" --lifecycle-id \"$hmux_ssh_attach_lifecycle_id\" --attachment-id \"${HMUX_SURFACE_ID:-}\"\(commandB64Flag)"
         lines += [
-            "cmux_ssh_attach_register_attempt() { cmux_ssh_attach_launch_payload=\"{\\\"workspace_id\\\":\\\"$CMUX_WORKSPACE_ID\\\",\\\"surface_id\\\":\\\"${CMUX_SURFACE_ID:-}\\\",\\\"terminal_lifecycle_id\\\":\\\"${CMUX_TERMINAL_LIFECYCLE_ID:-}\\\",\\\"attempt_id\\\":\\\"$CMUX_SSH_ATTEMPT_ID\\\"}\"; CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=2 \"$cmux_ssh_attach_cli\" --socket \"$CMUX_SOCKET_PATH\" rpc workspace.remote.terminal_session_launching \"$cmux_ssh_attach_launch_payload\" >/dev/null 2>&1; }",
-        ] + SSHPTYAttachRetryScriptBuilder().launchRegistrationRetryLines(functionPrefix: "cmux_ssh_attach") + [
-            "cmux_ssh_attach_attempt() { cmux_ssh_attach_begin_attempt || return \"$?\"; \(attachCommand); }",
+            "hmux_ssh_attach_register_attempt() { hmux_ssh_attach_launch_payload=\"{\\\"workspace_id\\\":\\\"$HMUX_WORKSPACE_ID\\\",\\\"surface_id\\\":\\\"${HMUX_SURFACE_ID:-}\\\",\\\"terminal_lifecycle_id\\\":\\\"${HMUX_TERMINAL_LIFECYCLE_ID:-}\\\",\\\"attempt_id\\\":\\\"$HMUX_SSH_ATTEMPT_ID\\\"}\"; HMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=2 \"$hmux_ssh_attach_cli\" --socket \"$HMUX_SOCKET_PATH\" rpc workspace.remote.terminal_session_launching \"$hmux_ssh_attach_launch_payload\" >/dev/null 2>&1; }",
+        ] + SSHPTYAttachRetryScriptBuilder().launchRegistrationRetryLines(functionPrefix: "hmux_ssh_attach") + [
+            "hmux_ssh_attach_attempt() { hmux_ssh_attach_begin_attempt || return \"$?\"; \(attachCommand); }",
         ]
         lines += SSHPTYAttachRetryScriptBuilder().lines(
-            command: "cmux_ssh_attach_attempt",
+            command: "hmux_ssh_attach_attempt",
             reauthenticates: foregroundAuth != nil
         )
         return "/bin/sh -c \(shellQuote(lines.joined(separator: "\n")))"
@@ -106,8 +106,8 @@ enum SSHPTYAttachStartupCommandBuilder {
             shellFeatures: RemoteInteractiveShellBootstrapBuilder.shellFeatures(),
             initialCommand: initialCommand,
             configuredRemoteCommand: configuredRemoteCommand,
-            bundledZshIntegration: RemoteInteractiveShellBootstrapBuilder.bundledShellIntegrationScript(named: "cmux-zsh-integration.zsh"),
-            bundledBashIntegration: RemoteInteractiveShellBootstrapBuilder.bundledShellIntegrationScript(named: "cmux-bash-integration.bash"),
+            bundledZshIntegration: RemoteInteractiveShellBootstrapBuilder.bundledShellIntegrationScript(named: "hmux-zsh-integration.zsh"),
+            bundledBashIntegration: RemoteInteractiveShellBootstrapBuilder.bundledShellIntegrationScript(named: "hmux-bash-integration.bash"),
             bundledFishIntegration: RemoteInteractiveShellBootstrapBuilder.bundledShellIntegrationScript(named: "fish/config.fish"),
             protectsFromHangup: true
         )
@@ -118,7 +118,7 @@ enum SSHPTYAttachStartupCommandBuilder {
             foregroundAuthenticationReadyShellLines(
                 includeResolvedControlPath: true,
                 requireSuccess: true,
-                cliVariable: "CMUX_SSH_ATTACH_CLI"
+                cliVariable: "HMUX_SSH_ATTACH_CLI"
             )
         let (sshCommand, reportsReadiness) =
             sshForegroundAuthCommand(
@@ -126,29 +126,29 @@ enum SSHPTYAttachStartupCommandBuilder {
                 successShellLines: readinessInsideResolvedLock
             )
         var lines = [
-            "cmux_ssh_attach_foreground_auth() {",
+            "hmux_ssh_attach_foreground_auth() {",
             "  \(sshCommand)",
-            "cmux_ssh_auth_status=$?",
-            "  if [ \"$cmux_ssh_auth_status\" -ne 0 ]; then return \"$cmux_ssh_auth_status\"; fi",
+            "hmux_ssh_auth_status=$?",
+            "  if [ \"$hmux_ssh_auth_status\" -ne 0 ]; then return \"$hmux_ssh_auth_status\"; fi",
         ]
         if !reportsReadiness {
-            lines.append("cmux_ssh_auth_token=\"$cmux_ssh_attach_auth_token\";")
+            lines.append("hmux_ssh_auth_token=\"$hmux_ssh_attach_auth_token\";")
             lines += foregroundAuthenticationReadyShellLines(
                 includeResolvedControlPath: false,
                 requireSuccess: false,
-                cliVariable: "cmux_ssh_attach_cli"
+                cliVariable: "hmux_ssh_attach_cli"
             )
         }
         if let postAuthenticationCommand = normalized(auth.postAuthenticationCommand) {
             lines += [
                 "  \(postAuthenticationCommand)",
-                "  cmux_ssh_post_auth_status=$?",
-                "  if [ \"$cmux_ssh_post_auth_status\" -ne 0 ]; then return \"$cmux_ssh_post_auth_status\"; fi",
-                "  unset cmux_ssh_post_auth_status",
+                "  hmux_ssh_post_auth_status=$?",
+                "  if [ \"$hmux_ssh_post_auth_status\" -ne 0 ]; then return \"$hmux_ssh_post_auth_status\"; fi",
+                "  unset hmux_ssh_post_auth_status",
             ]
         }
         lines += [
-            "unset cmux_ssh_auth_status",
+            "unset hmux_ssh_auth_status",
             "}",
         ]
         return lines
@@ -220,28 +220,28 @@ enum SSHPTYAttachStartupCommandBuilder {
         }
         let inFlightPath = lockPath + ".inflight"
         var lockedCommand = SSHForegroundAuthenticationLaunch(token: auth.token)
-            .tokenLoadShellLines(into: "cmux_ssh_auth_token")
+            .tokenLoadShellLines(into: "hmux_ssh_auth_token")
         lockedCommand += [
             "umask 077",
-            "cmux_ssh_auth_inflight_path=\(shellQuote(inFlightPath))",
-            "cmux_ssh_auth_lock_path=\(shellQuote(lockPath))",
-            "printf '%s\\n' \"$$\" > \"$cmux_ssh_auth_inflight_path\" || exit 255",
-            "cmux_ssh_clear_auth_inflight() { if [ \"$(/bin/cat -- \"$cmux_ssh_auth_inflight_path\" 2>/dev/null || true)\" = \"$$\" ]; then /bin/rm -f -- \"$cmux_ssh_auth_inflight_path\" 2>/dev/null || true; fi; }",
-            "trap 'cmux_ssh_clear_auth_inflight' EXIT",
-            "trap 'cmux_ssh_clear_auth_inflight; exit 129' HUP",
-            "trap 'cmux_ssh_clear_auth_inflight; exit 130' INT",
-            "trap 'cmux_ssh_clear_auth_inflight; exit 143' TERM",
-            ": >> \"$cmux_ssh_auth_lock_path\" || exit 255",
+            "hmux_ssh_auth_inflight_path=\(shellQuote(inFlightPath))",
+            "hmux_ssh_auth_lock_path=\(shellQuote(lockPath))",
+            "printf '%s\\n' \"$$\" > \"$hmux_ssh_auth_inflight_path\" || exit 255",
+            "hmux_ssh_clear_auth_inflight() { if [ \"$(/bin/cat -- \"$hmux_ssh_auth_inflight_path\" 2>/dev/null || true)\" = \"$$\" ]; then /bin/rm -f -- \"$hmux_ssh_auth_inflight_path\" 2>/dev/null || true; fi; }",
+            "trap 'hmux_ssh_clear_auth_inflight' EXIT",
+            "trap 'hmux_ssh_clear_auth_inflight; exit 129' HUP",
+            "trap 'hmux_ssh_clear_auth_inflight; exit 130' INT",
+            "trap 'hmux_ssh_clear_auth_inflight; exit 143' TERM",
+            ": >> \"$hmux_ssh_auth_lock_path\" || exit 255",
             "zmodload zsh/system || exit 255",
-            "zsystem flock -t 45 -e -f cmux_ssh_auth_lock_fd \"$cmux_ssh_auth_lock_path\" || exit 255",
+            "zsystem flock -t 45 -e -f hmux_ssh_auth_lock_fd \"$hmux_ssh_auth_lock_path\" || exit 255",
         ]
         lockedCommand += resolvedAuthenticationLockLines
         lockedCommand += [
             preflight,
-            preflight == nil ? nil : "cmux_ssh_preflight_control_path",
+            preflight == nil ? nil : "hmux_ssh_preflight_control_path",
             "command \(command)",
-            "cmux_ssh_auth_status=$?",
-            "if [ \"$cmux_ssh_auth_status\" -ne 0 ]; then exit \"$cmux_ssh_auth_status\"; fi",
+            "hmux_ssh_auth_status=$?",
+            "if [ \"$hmux_ssh_auth_status\" -ne 0 ]; then exit \"$hmux_ssh_auth_status\"; fi",
         ].compactMap { $0 }
         lockedCommand += successShellLines
         lockedCommand += sharingOptions.successfulForegroundAuthenticationCleanupShellLines()
@@ -249,9 +249,9 @@ enum SSHPTYAttachStartupCommandBuilder {
         let classifiedCommand = SSHForegroundAuthenticationRetryPolicy()
             .classifyingTransientFailure(in: lockedCommand.joined(separator: "\n"))
         let tokenEnvironment = SSHForegroundAuthenticationLaunch
-            .environmentAssignment(from: "cmux_ssh_attach_auth_token")
+            .environmentAssignment(from: "hmux_ssh_attach_auth_token")
         return (
-            "\(tokenEnvironment) CMUX_SSH_ATTACH_CLI=\"$cmux_ssh_attach_cli\" \(classifiedCommand)",
+            "\(tokenEnvironment) HMUX_SSH_ATTACH_CLI=\"$hmux_ssh_attach_cli\" \(classifiedCommand)",
             true
         )
     }
@@ -262,12 +262,12 @@ enum SSHPTYAttachStartupCommandBuilder {
         cliVariable: String
     ) -> [String] {
         SSHForegroundAuthenticationLaunch.readyShellLines(
-            tokenVariable: "cmux_ssh_auth_token",
-            payloadVariable: "cmux_ssh_auth_payload",
+            tokenVariable: "hmux_ssh_auth_token",
+            payloadVariable: "hmux_ssh_auth_payload",
             cliVariable: cliVariable,
-            socketVariable: "CMUX_SOCKET_PATH",
+            socketVariable: "HMUX_SOCKET_PATH",
             controlPathVariable: includeResolvedControlPath
-                ? "cmux_ssh_resolved_control_path"
+                ? "hmux_ssh_resolved_control_path"
                 : nil,
             requireSuccess: requireSuccess
         )
@@ -279,7 +279,7 @@ enum SSHPTYAttachStartupCommandBuilder {
         destination: String,
         options: [String]
     ) -> [String] {
-        guard sharingOptions.cmuxOwnedControlPath(in: options) != nil,
+        guard sharingOptions.hmuxOwnedControlPath(in: options) != nil,
               let socketPattern = sharingOptions.resolvedControlPathShellPattern else {
             return []
         }
@@ -290,21 +290,21 @@ enum SSHPTYAttachStartupCommandBuilder {
             isDirectory: true
         )
         .appendingPathComponent(
-            "cmux-ssh-\(sharingOptions.userID)-resolved-auth-",
+            "hmux-ssh-\(sharingOptions.userID)-resolved-auth-",
             isDirectory: false
         )
         .path
         return [
-            #"cmux_ssh_resolved_control_path="$(command \#(sshPrefix) -G \#(quotedDestination) 2>/dev/null | awk 'tolower($1) == "controlpath" { $1 = ""; sub(/^[[:space:]]+/, ""); print; exit }')" "#,
-            "case \"$cmux_ssh_resolved_control_path\" in",
+            #"hmux_ssh_resolved_control_path="$(command \#(sshPrefix) -G \#(quotedDestination) 2>/dev/null | awk 'tolower($1) == "controlpath" { $1 = ""; sub(/^[[:space:]]+/, ""); print; exit }')" "#,
+            "case \"$hmux_ssh_resolved_control_path\" in",
             "  \(socketPattern)) ;;",
             "  *) exit 255 ;;",
             "esac",
-            "cmux_ssh_resolved_control_basename=\"${cmux_ssh_resolved_control_path##*/}\"",
-            "case \"$cmux_ssh_resolved_control_basename\" in ''|*[!A-Za-z0-9._-]*) exit 255 ;; esac",
-            "cmux_ssh_resolved_auth_lock_path=\(shellQuote(lockPrefix))\"$cmux_ssh_resolved_control_basename.lock\"",
-            ": >> \"$cmux_ssh_resolved_auth_lock_path\" || exit 255",
-            "zsystem flock -t 45 -e -f cmux_ssh_resolved_auth_lock_fd \"$cmux_ssh_resolved_auth_lock_path\" || exit 255",
+            "hmux_ssh_resolved_control_basename=\"${hmux_ssh_resolved_control_path##*/}\"",
+            "case \"$hmux_ssh_resolved_control_basename\" in ''|*[!A-Za-z0-9._-]*) exit 255 ;; esac",
+            "hmux_ssh_resolved_auth_lock_path=\(shellQuote(lockPrefix))\"$hmux_ssh_resolved_control_basename.lock\"",
+            ": >> \"$hmux_ssh_resolved_auth_lock_path\" || exit 255",
+            "zsystem flock -t 45 -e -f hmux_ssh_resolved_auth_lock_fd \"$hmux_ssh_resolved_auth_lock_path\" || exit 255",
         ]
     }
 

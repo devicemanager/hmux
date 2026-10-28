@@ -28,27 +28,27 @@ import {
 
 // Contract tests for the devbox desktop layer
 // (services/vms/images/devbox/desktop): TigerVNC + openbox + the tint2 dock +
-// noVNC, ported from the retired Blaxel cmux-devbox image, baked by the
-// Dockerfile (started from cmux-devbox-boot) and by build-devbox-freestyle.ts
-// (started from the cmux-desktop systemd unit). The Mac app opens the
-// machine's screen on 6901 (CmuxTuiSnapshotParser.desktopPort), the CLI on
+// noVNC, ported from the retired Blaxel hmux-devbox image, baked by the
+// Dockerfile (started from hmux-devbox-boot) and by build-devbox-freestyle.ts
+// (started from the hmux-desktop systemd unit). The Mac app opens the
+// machine's screen on 6901 (HmuxTuiSnapshotParser.desktopPort), the CLI on
 // cloudVMDesktopPort, and the Freestyle driver's openPort heals the unit, so
 // the ports, user, display, file paths and the session env are pinned here.
 
 const read = (name: string) => readFileSync(path.join(devboxDesktopDir, name), "utf8");
 const startVnc = read("start-vnc.sh");
-const unit = read("cmux-desktop.service");
-const boot = read("cmux-desktop-boot");
+const unit = read("hmux-desktop.service");
+const boot = read("hmux-desktop-boot");
 const desktopEnv = read("desktop-env.sh");
 const dockerfile = readFileSync(path.join(devboxDesktopDir, "../Dockerfile"), "utf8");
-const devboxBoot = readFileSync(path.join(devboxDesktopDir, "../cmux-devbox-boot"), "utf8");
+const devboxBoot = readFileSync(path.join(devboxDesktopDir, "../hmux-devbox-boot"), "utf8");
 const freestyleBake = readFileSync(path.join(import.meta.dirname, "../scripts/build-devbox-freestyle.ts"), "utf8");
 const verify = readFileSync(path.join(import.meta.dirname, "../scripts/verify-devbox-image.ts"), "utf8");
 const driver = readFileSync(path.join(import.meta.dirname, "../services/vms/drivers/freestyle.ts"), "utf8");
 
 /** Runs start-vnc.sh with stub binaries and returns the arguments websockify received. */
 async function launchedWebsockifyArguments(): Promise<string[]> {
-  const root = mkdtempSync(path.join(tmpdir(), "cmux-desktop-launch-"));
+  const root = mkdtempSync(path.join(tmpdir(), "hmux-desktop-launch-"));
   const bin = path.join(root, "bin");
   mkdirSync(bin);
   try {
@@ -73,7 +73,7 @@ async function launchedWebsockifyArguments(): Promise<string[]> {
         ...process.env,
         PATH: `${bin}:${process.env.PATH}`,
         HOME: root,
-        CMUX_DESKTOP_RUNTIME_DIR: path.join(root, "absent-runtime"),
+        HMUX_DESKTOP_RUNTIME_DIR: path.join(root, "absent-runtime"),
         DBUS_SESSION_BUS_PID: String(process.pid),
         DBUS_SESSION_BUS_ADDRESS: "test-session",
         NOTIFY_SOCKET: "",
@@ -89,18 +89,18 @@ async function launchedWebsockifyArguments(): Promise<string[]> {
 
 describe("devbox desktop contract (services/vms/images/desktop.ts)", () => {
   test("the values shipped clients hardcode", () => {
-    // CmuxTuiSnapshotParser.desktopPort / CLI cloudVMDesktopPort open 6901;
+    // HmuxTuiSnapshotParser.desktopPort / CLI cloudVMDesktopPort open 6901;
     // the verifier and the driver's heal read the same constants.
     expect(DEVBOX_DESKTOP_NOVNC_PORT).toBe(6901);
     expect(DEVBOX_DESKTOP_RFB_PORT).toBe(5901);
     expect(DEVBOX_DESKTOP_DISPLAY).toBe(":1");
-    expect(DEVBOX_DESKTOP_USER).toBe("cmux");
-    expect(DEVBOX_DESKTOP_HOME).toBe("/home/cmux");
-    expect(DEVBOX_DESKTOP_UNIT).toBe("cmux-desktop");
-    expect(DEVBOX_DESKTOP_RUNTIME_DIR).toBe("/run/cmux-desktop");
-    expect(DEVBOX_DESKTOP_ENV_FILE).toBe("/run/cmux-desktop/env");
+    expect(DEVBOX_DESKTOP_USER).toBe("hmux");
+    expect(DEVBOX_DESKTOP_HOME).toBe("/home/hmux");
+    expect(DEVBOX_DESKTOP_UNIT).toBe("hmux-desktop");
+    expect(DEVBOX_DESKTOP_RUNTIME_DIR).toBe("/run/hmux-desktop");
+    expect(DEVBOX_DESKTOP_ENV_FILE).toBe("/run/hmux-desktop/env");
     expect(DEVBOX_DESKTOP_START_SCRIPT).toBe("/usr/local/bin/start-vnc.sh");
-    expect(DEVBOX_DESKTOP_SUPERVISOR).toBe("/usr/local/bin/cmux-desktop-boot");
+    expect(DEVBOX_DESKTOP_SUPERVISOR).toBe("/usr/local/bin/hmux-desktop-boot");
   });
 
   test("noVNC URLs: a query for clients to append display options to, IPv6 bracketed", () => {
@@ -108,7 +108,7 @@ describe("devbox desktop contract (services/vms/images/desktop.ts)", () => {
     expect(devboxDesktopOpenUrl("10.0.0.5")).toBe("http://10.0.0.5:6901/vnc.html?path=websockify");
     expect(devboxDesktopOpenUrl("fd00:1::2")).toBe("http://[fd00:1::2]:6901/vnc.html?path=websockify");
     expect(devboxDesktopOpenUrl("[fd00:1::2]")).toBe("http://[fd00:1::2]:6901/vnc.html?path=websockify");
-    // The app appends `&autoconnect=1&resize=remote&…` (CmuxTuiSnapshotParser.desktopURL).
+    // The app appends `&autoconnect=1&resize=remote&…` (HmuxTuiSnapshotParser.desktopURL).
     expect(new URL(`${devboxDesktopOpenUrl("10.0.0.5")}&autoconnect=1&resize=remote`).searchParams.get("resize")).toBe("remote");
   });
 });
@@ -120,7 +120,7 @@ describe("devbox desktop layer", () => {
 
   test("every shell file parses", async () => {
     expect((await runChild("bash", ["-n", path.join(devboxDesktopDir, "start-vnc.sh")])).status).toBe(0);
-    expect((await runChild("sh", ["-n", path.join(devboxDesktopDir, "cmux-desktop-boot")])).status).toBe(0);
+    expect((await runChild("sh", ["-n", path.join(devboxDesktopDir, "hmux-desktop-boot")])).status).toBe(0);
     expect((await runChild("sh", ["-n", path.join(devboxDesktopDir, "desktop-env.sh")])).status).toBe(0);
   });
 
@@ -163,18 +163,18 @@ describe("devbox desktop layer", () => {
       expect({ required, present: packages.includes(required) }).toEqual({ required, present: true });
     }
     expect(new Set(packages).size).toBe(packages.length);
-    expect(dockerfile).toContain("apt-get install -y --no-install-recommends $CMUX_IMAGE_DESKTOP_PACKAGES");
+    expect(dockerfile).toContain("apt-get install -y --no-install-recommends $HMUX_IMAGE_DESKTOP_PACKAGES");
     expect(freestyleBake).toContain("${devboxDesktopPackages().join(\" \")}");
     // Ghostty ships no upstream .deb; the pin is a release asset for Ubuntu 24.04, never a moving tag.
     expect(devboxGhosttyDebUrl(dockerfile)).toMatch(
       /ghostty-ubuntu\/releases\/download\/[0-9][^\s]*\/ghostty_[0-9][^\s]*_amd64_24\.04\.deb$/,
     );
-    expect(dockerfile).toContain('curl -fsSL -o /tmp/ghostty.deb "$CMUX_IMAGE_GHOSTTY_DEB_URL"');
+    expect(dockerfile).toContain('curl -fsSL -o /tmp/ghostty.deb "$HMUX_IMAGE_GHOSTTY_DEB_URL"');
     expect(freestyleBake).toContain("${devboxGhosttyDebUrl()}");
     expect(freestyleBake).toContain("ghostty +version");
     // Both recipes verify the downloaded bytes against the checked-in digest before dpkg runs as root.
     expect(devboxGhosttyDebSha256(dockerfile)).toMatch(/^[0-9a-f]{64}$/);
-    expect(dockerfile).toContain('echo "$CMUX_IMAGE_GHOSTTY_DEB_SHA256  /tmp/ghostty.deb" | sha256sum -c -');
+    expect(dockerfile).toContain('echo "$HMUX_IMAGE_GHOSTTY_DEB_SHA256  /tmp/ghostty.deb" | sha256sum -c -');
     expect(dockerfile.indexOf("sha256sum -c -")).toBeLessThan(dockerfile.indexOf("apt-get install -y --no-install-recommends /tmp/ghostty.deb"));
     expect(freestyleBake).toContain("echo '${devboxGhosttyDebSha256()}  /tmp/ghostty.deb' | sha256sum -c - && apt-get update -q && apt-get install -y --no-install-recommends /tmp/ghostty.deb");
   });
@@ -205,15 +205,15 @@ describe("devbox desktop layer", () => {
     expect(unit).toContain(`User=${DEVBOX_DESKTOP_USER}`);
     expect(unit).toContain(`Environment=HOME=${DEVBOX_DESKTOP_HOME}`);
     expect(unit).toContain(`Environment=DISPLAY=${DEVBOX_DESKTOP_DISPLAY}`);
-    expect(unit).toContain(`Environment=CMUX_DESKTOP_RUNTIME_DIR=${DEVBOX_DESKTOP_RUNTIME_DIR}`);
-    expect(unit).toContain("RuntimeDirectory=cmux-desktop");
+    expect(unit).toContain(`Environment=HMUX_DESKTOP_RUNTIME_DIR=${DEVBOX_DESKTOP_RUNTIME_DIR}`);
+    expect(unit).toContain("RuntimeDirectory=hmux-desktop");
     expect(unit).toContain("RuntimeDirectoryMode=0755");
     // Readiness is the unit's own signal (Type=notify, READY from start-vnc.sh,
     // a child of the supervisor), what the driver's heal and the bake block on.
     expect(unit).toContain("Type=notify");
     expect(unit).toContain("NotifyAccess=all");
     expect(unit).toMatch(/^TimeoutStartSec=\d+$/m);
-    expect(startVnc).toContain('NOTIFY_SOCKET="$CMUX_NOTIFY_SOCKET" systemd-notify --ready');
+    expect(startVnc).toContain('NOTIFY_SOCKET="$HMUX_NOTIFY_SOCKET" systemd-notify --ready');
     // Only the final notify may see the socket: dbus-daemon and other
     // sd_notify-aware children would report READY for the whole unit early.
     expect(startVnc).toContain("unset NOTIFY_SOCKET");
@@ -223,7 +223,7 @@ describe("devbox desktop layer", () => {
     expect(unit).toContain(`ExecStart=${DEVBOX_DESKTOP_SUPERVISOR}`);
     expect(unit).toContain("Restart=always");
     expect(boot).toContain(`bash ${DEVBOX_DESKTOP_START_SCRIPT}`);
-    expect(boot).toContain(`CMUX_DESKTOP_RUNTIME_DIR="${"${CMUX_DESKTOP_RUNTIME_DIR:-"}${DEVBOX_DESKTOP_RUNTIME_DIR}}"`);
+    expect(boot).toContain(`HMUX_DESKTOP_RUNTIME_DIR="${"${HMUX_DESKTOP_RUNTIME_DIR:-"}${DEVBOX_DESKTOP_RUNTIME_DIR}}"`);
     // Chrome's first run is pre-accepted for the desktop user on every boot.
     expect(boot).toContain('touch "$HOME/.config/google-chrome/First Run"');
     expect(freestyleBake).toContain("systemctl daemon-reload && systemctl enable --now ${DEVBOX_DESKTOP_UNIT} && systemctl is-active ${DEVBOX_DESKTOP_UNIT}");
@@ -236,10 +236,10 @@ describe("devbox desktop layer", () => {
     expect(verify).toContain("systemctl is-active ${DEVBOX_DESKTOP_UNIT}");
   });
 
-  test("a container without systemd gets the same desktop from cmux-devbox-boot, and only then", () => {
-    // The boot supervisor starts cmux-desktop-boot as the uid-1000 account
+  test("a container without systemd gets the same desktop from hmux-devbox-boot, and only then", () => {
+    // The boot supervisor starts hmux-desktop-boot as the uid-1000 account
     // (root without one) when there is no systemd to own it; under systemd
-    // the cmux-desktop unit is the single supervisor, and the bake and the
+    // the hmux-desktop unit is the single supervisor, and the bake and the
     // verifier count exactly one.
     expect(devboxBoot).toContain(`DESKTOP_BOOT=${DEVBOX_DESKTOP_SUPERVISOR}`);
     expect(devboxBoot).toContain(`DESKTOP_RUNTIME_DIR=${DEVBOX_DESKTOP_RUNTIME_DIR}`);
@@ -250,14 +250,14 @@ describe("devbox desktop layer", () => {
     // The desktop is started at the top of every supervisor tick, before the
     // daemon branch, so one never gates the other.
     expect(devboxBoot).toContain('start_desktop\n  # A driver can install the binary after boot');
-    expect(devboxBoot).toContain('[ -x "$BIN" ] || cmux_tui_layout\n  if [ -x "$BIN" ]');
+    expect(devboxBoot).toContain('[ -x "$BIN" ] || hmux_tui_layout\n  if [ -x "$BIN" ]');
     expect(freestyleBake).toContain('[ "$(pgrep -u ${WORK_USER} -f ${DEVBOX_DESKTOP_SUPERVISOR} | wc -l)" = 1 ]');
     expect(verify).toContain("single-desktop-supervisor");
     // The Dockerfile proves the container path at build time through the
     // real supervisor and ships no live desktop (no stale X lock).
-    expect(dockerfile).toContain("cmux-devbox-boot >/tmp/cmux-devbox-boot.log 2>&1 &");
+    expect(dockerfile).toContain("hmux-devbox-boot >/tmp/hmux-devbox-boot.log 2>&1 &");
     expect(dockerfile).toContain("desktop-self-check-ok");
-    expect(dockerfile).toContain("rm -rf /run/cmux-desktop /tmp/.X1-lock /tmp/.X11-unix/X1");
+    expect(dockerfile).toContain("rm -rf /run/hmux-desktop /tmp/.X1-lock /tmp/.X11-unix/X1");
   });
 
   test("the session publishes DISPLAY and the accessibility bus, and every shell family picks them up", () => {
@@ -278,7 +278,7 @@ describe("devbox desktop layer", () => {
     expect(startVnc).toContain("/usr/libexec/at-spi-bus-launcher");
     expect(startVnc).toContain('"$launcher" --launch-immediately');
     expect(startVnc).toContain("org.a11y.Bus.GetAddress");
-    expect(startVnc).toContain(`RUNTIME_DIR="${"${CMUX_DESKTOP_RUNTIME_DIR:-"}${DEVBOX_DESKTOP_RUNTIME_DIR}}"`);
+    expect(startVnc).toContain(`RUNTIME_DIR="${"${HMUX_DESKTOP_RUNTIME_DIR:-"}${DEVBOX_DESKTOP_RUNTIME_DIR}}"`);
     expect(startVnc).toContain("echo \"export DISPLAY='$DISPLAY'\"");
     expect(startVnc).toContain("echo \"export AT_SPI_BUS_ADDRESS='$a11y_bus'\"");
     expect(startVnc).toContain("echo \"export AT_SPI_BUS='$a11y_bus'\"");
@@ -287,16 +287,16 @@ describe("devbox desktop layer", () => {
     // desktop-env.sh: only a shell with no DISPLAY, only while the display is
     // up, and the session bus only for the session's own user.
     expect(desktopEnv).toContain(`[ -z "\${DISPLAY-}" ] && [ -r ${DEVBOX_DESKTOP_ENV_FILE} ] && [ -S /tmp/.X11-unix/X1 ]`);
-    expect(desktopEnv).toContain('[ "${CMUX_DESKTOP_UID-}" = "$(id -u)" ]');
+    expect(desktopEnv).toContain('[ "${HMUX_DESKTOP_UID-}" = "$(id -u)" ]');
     // Chained into login shells and every rc file the devshell uses, in both recipes.
-    const chain = "'[ -f /etc/cmux/desktop-env.sh ] && . /etc/cmux/desktop-env.sh'";
-    expect(dockerfile).toContain(`echo ${chain} > /etc/profile.d/cmux-desktop.sh`);
+    const chain = "'[ -f /etc/hmux/desktop-env.sh ] && . /etc/hmux/desktop-env.sh'";
+    expect(dockerfile).toContain(`echo ${chain} > /etc/profile.d/hmux-desktop.sh`);
     for (const target of ["/etc/bash.bashrc", "/etc/skel/.bashrc", "/root/.bashrc"]) {
       expect(dockerfile).toContain(`echo ${chain} >> ${target}`);
     }
-    expect(freestyleBake).toContain("const desktopEnvLine = `'[ -f /etc/cmux/desktop-env.sh ] && . /etc/cmux/desktop-env.sh'`");
+    expect(freestyleBake).toContain("const desktopEnvLine = `'[ -f /etc/hmux/desktop-env.sh ] && . /etc/hmux/desktop-env.sh'`");
     expect(freestyleBake).toContain("...rcFiles.map((rc) => `echo ${desktopEnvLine} >> ${rc}`)");
-    expect(freestyleBake).toContain("echo ${desktopEnvLine} > /etc/profile.d/cmux-desktop.sh");
+    expect(freestyleBake).toContain("echo ${desktopEnvLine} > /etc/profile.d/hmux-desktop.sh");
     // Both bakes and the verifier prove it end to end: DISPLAY in a root login
     // shell and in the work user's, the buses only for the work user, the
     // accessibility bus reachable by cua-driver's doctor.
@@ -325,25 +325,25 @@ describe("devbox desktop layer", () => {
   });
 
   test("desktop polish: pre-accepted Chrome, CC0 wallpaper, clipboard helper, no clock, dock order", () => {
-    expect(read("google-chrome-cmux.desktop")).toContain("--no-first-run");
-    for (const app of ["google-chrome-cmux.desktop", "thunar-cmux.desktop", "ghostty-cmux.desktop"]) {
-      expect(read(app)).toMatch(/^Icon=\/etc\/cmux\/icons\/[a-z-]+\.png$/m);
+    expect(read("google-chrome-hmux.desktop")).toContain("--no-first-run");
+    for (const app of ["google-chrome-hmux.desktop", "thunar-hmux.desktop", "ghostty-hmux.desktop"]) {
+      expect(read(app)).toMatch(/^Icon=\/etc\/hmux\/icons\/[a-z-]+\.png$/m);
     }
     for (const icon of ["google-chrome.png", "thunar.png", "ghostty.png"]) {
-      expect(dockerfile).toContain(`/etc/cmux/icons/${icon}`);
-      expect(freestyleBake).toContain(`/etc/cmux/icons/${icon}`);
+      expect(dockerfile).toContain(`/etc/hmux/icons/${icon}`);
+      expect(freestyleBake).toContain(`/etc/hmux/icons/${icon}`);
     }
     expect(read("WALLPAPER.md")).toContain("CC0 1.0 Universal");
-    expect(startVnc).toContain("feh --no-fehbg --bg-fill /usr/share/backgrounds/cmux/wallpaper.jpg");
+    expect(startVnc).toContain("feh --no-fehbg --bg-fill /usr/share/backgrounds/hmux/wallpaper.jpg");
     expect(startVnc).toContain("vncconfig -nowin");
     const tint2 = read("tint2rc");
     expect(tint2).toContain("panel_items = LT");
     expect(tint2).not.toContain("time1_format");
     expect(tint2.split("\n").filter((line) => line.startsWith("launcher_item_app")).join("\n")).toBe(
       [
-        "launcher_item_app = /etc/cmux/apps/google-chrome-cmux.desktop",
-        "launcher_item_app = /etc/cmux/apps/thunar-cmux.desktop",
-        "launcher_item_app = /etc/cmux/apps/ghostty-cmux.desktop",
+        "launcher_item_app = /etc/hmux/apps/google-chrome-hmux.desktop",
+        "launcher_item_app = /etc/hmux/apps/thunar-hmux.desktop",
+        "launcher_item_app = /etc/hmux/apps/ghostty-hmux.desktop",
       ].join("\n"),
     );
   });
@@ -372,7 +372,7 @@ describe("devbox desktop layer", () => {
 
   test("the bake stamps the layer and the verifier keys on the stamp", () => {
     expect(freestyleBake).toContain('withDesktop ? " desktop" : ""');
-    expect(dockerfile).toContain('echo "cmux-devbox ${CMUX_IMAGE_EPOCH} desktop" > /etc/cmux/image-stamp');
+    expect(dockerfile).toContain('echo "hmux-devbox ${HMUX_IMAGE_EPOCH} desktop" > /etc/hmux/image-stamp');
     expect(verify).toContain("/\\bdesktop\\b/.test(stamp.output)");
   });
 });

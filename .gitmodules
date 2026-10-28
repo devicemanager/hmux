@@ -2,8 +2,8 @@
 	path = ghostty
 	url = https://github.com/manaflow-ai/ghostty.git
 	branch = main
-[submodule "homebrew-cmux"]
-	path = homebrew-cmux
+[submodule "homebrew-hmux"]
+	path = homebrew-hmux
 	url = https://github.com/manaflow-ai/homebrew-cmux.git
 [submodule "vendor/bonsplit"]
 	path = vendor/bonsplit

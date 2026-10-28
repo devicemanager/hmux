@@ -1,4 +1,4 @@
-import CmuxControlSocket
+import HmuxControlSocket
 import Foundation
 
 /// Mobile todo verbs adapted onto the existing control-socket todo coordinator.

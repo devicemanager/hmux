@@ -8,7 +8,7 @@ import { parseCredential, transferAccount } from "../services/coderouter/account
 import { changeAccountVisibility } from "../services/coderouter/accountSharing";
 import { Effect } from "effect";
 
-const enabled = process.env.CMUX_DB_TEST === "1";
+const enabled = process.env.HMUX_DB_TEST === "1";
 const dbTest = enabled ? test : test.skip;
 const source = "transfer-test-source";
 const destination = "transfer-test-destination";

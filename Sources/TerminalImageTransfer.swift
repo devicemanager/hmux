@@ -1,8 +1,8 @@
 import Foundation
-import CmuxCloudImagePaste
-import CmuxTerminal
+import HmuxCloudImagePaste
+import HmuxTerminal
 import AppKit
-import CmuxRemoteSession
+import HmuxRemoteSession
 import UniformTypeIdentifiers
 
 enum TerminalImageTransferMode: Codable, Sendable {
@@ -524,7 +524,7 @@ enum TerminalImageTransferPlanner {
                 .map(escapeForShell)
                 .joined(separator: " ")
             guard !content.isEmpty else {
-                onFailure(NSError(domain: "cmux.remote.drop", code: 5))
+                onFailure(NSError(domain: "hmux.remote.drop", code: 5))
                 return
             }
             insertText(content)

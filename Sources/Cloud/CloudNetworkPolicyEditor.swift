@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// The Network sheet's editor: the mode menu with the security info button,
@@ -89,7 +89,7 @@ struct CloudNetworkAllowlistSummary: View {
         let counts = [model.policy.presets.count, model.policy.domains.count, model.policy.ranges.count]
             .map { NumberFormatter.localizedString(from: NSNumber(value: $0), number: .decimal) }
         Text(String(format: format, counts[0], counts[1], counts[2]))
-            .cmuxFont(size: 12)
+            .hmuxFont(size: 12)
             .lineLimit(1)
     }
 }
@@ -101,7 +101,7 @@ struct CloudNetworkInputError: View {
     var body: some View {
         if let error = model.inputError {
             Text(error)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundStyle(.red)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("CloudNetworkPolicyEditor.inputError")
@@ -110,7 +110,7 @@ struct CloudNetworkInputError: View {
 }
 
 /// The allowlist itself: presets, domains, IP ranges, DNS, and the domains
-/// cmux always allows. Small row labels, one line each; the longer notes
+/// hmux always allows. Small row labels, one line each; the longer notes
 /// are tooltips.
 struct CloudNetworkAllowlistDetails: View {
     @Bindable var model: CloudNetworkPolicyEditorModel
@@ -198,7 +198,7 @@ struct CloudNetworkAllowlistDetails: View {
                     .accessibilityIdentifier("CloudNetworkPolicyEditor.dns")
                     if let note = model.requiredDomainsNote {
                         Text(note)
-                            .cmuxFont(size: 11)
+                            .hmuxFont(size: 11)
                             .foregroundStyle(.tertiary)
                             .lineLimit(1)
                             .truncationMode(.tail)
@@ -213,7 +213,7 @@ struct CloudNetworkAllowlistDetails: View {
     /// Top-aligned rows; the label drops to the first control's text line.
     private func rowLabel(_ title: String) -> some View {
         Text(title)
-            .cmuxFont(size: 11)
+            .hmuxFont(size: 11)
             .foregroundStyle(.secondary)
             .lineLimit(1)
             .fixedSize()

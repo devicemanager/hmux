@@ -178,7 +178,7 @@ const GET = (request: Request) =>
   procedureResponse(overview, { team: new URL(request.url).searchParams.get("team") }, request);
 
 async function get(team?: string) {
-  const url = new URL("https://cmux.test/api/dashboard/coderouter");
+  const url = new URL("https://hmux.test/api/dashboard/coderouter");
   if (team) url.searchParams.set("team", team);
   const response = await GET(new Request(url, { headers: { cookie: "stack-refresh=1" } }));
   const text = await response.text();

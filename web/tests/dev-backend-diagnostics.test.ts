@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { makeDevBackendDiagnosticsHandler } from '../services/observability/devBackendDiagnostics';
 const now = 1_800_000_000_000;
 const event = { eventId: 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', tag: 'pr-123-check', revision: 'a'.repeat(40), startedAtMs: now, durationMs: 25, attempt: 0, outcome: 'unreachable', errorNumber: -1004 };
-const request = (value: unknown) => new Request('https://cmux.test/api/observability/dev-backend', {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(value)});
+const request = (value: unknown) => new Request('https://hmux.test/api/observability/dev-backend', {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(value)});
 describe('dev app diagnostics', () => {
   test('accepts a signed-out fixed-schema event only after delivery', async () => {
     let delivered = false;

@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 
 /// Regroups a Cloud machine's rows for display, after the catalog tree is
 /// built: New Workspace and its workspaces sit directly under the machine,

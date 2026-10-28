@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// A top-level section header (Cloud Machines, My Devices): the section's
@@ -9,7 +9,7 @@ struct CloudTreeSectionHeaderRow<Label: View>: View {
     let style: CloudTreeStyle
     let symbol: String
     @ViewBuilder var label: () -> Label
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
 
     var body: some View {
         HStack(alignment: .center, spacing: GlobalFontMagnification.scaledSize(style.iconGap, percent: magnification)) {

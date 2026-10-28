@@ -1,10 +1,10 @@
-import CmuxAuthRuntime
-import CmuxCloud
-import CmuxControlSocket
+import HmuxAuthRuntime
+import HmuxCloud
+import HmuxControlSocket
 import Foundation
 import OSLog
 
-private let authTeamLog = Logger(subsystem: "ai.manaflow.cmux", category: "auth-team")
+private let authTeamLog = Logger(subsystem: "ai.manaflow.hmux", category: "auth-team")
 
 extension TerminalController {
     /// Every `auth.team.*` socket method. Mutations and roster reads run on
@@ -217,7 +217,7 @@ extension TerminalController {
                 code: "timeout",
                 message: String(
                     localized: "socket.authTeam.committedStatusTimedOut",
-                    defaultValue: "The team change was applied, but cmux did not report the updated status within 10 seconds. Run `cmux auth status` to confirm."
+                    defaultValue: "The team change was applied, but hmux did not report the updated status within 10 seconds. Run `hmux auth status` to confirm."
                 ),
                 data: [
                     "retryable": false,

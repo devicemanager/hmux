@@ -56,10 +56,10 @@ export function goCapacityConstraint(cause: unknown): "saved" | "active" | "hour
     seen.add(cause);
     const value = cause as { constraint?: string; cause?: unknown; constraint_name?: string };
     const name = value.constraint ?? value.constraint_name;
-    if (name === "cmux_go_saved_limit") return "saved";
-    if (name === "cmux_go_active_limit") return "active";
-    if (name === "cmux_go_hours_limit") return "hours";
-    if (name === "cmux_go_period_unavailable") return "period";
+    if (name === "hmux_go_saved_limit") return "saved";
+    if (name === "hmux_go_active_limit") return "active";
+    if (name === "hmux_go_hours_limit") return "hours";
+    if (name === "hmux_go_period_unavailable") return "period";
     cause = value.cause;
   }
   return null;

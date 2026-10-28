@@ -19,13 +19,13 @@ struct GlobalOptions: ParsableArguments {
 
     /// Delegates to the legacy runner, which re-parses `CommandLine.arguments`
     /// itself (including --password precedence: --password, then
-    /// CMUX_SOCKET_PASSWORD, then the password saved in Settings). The parsed
+    /// HMUX_SOCKET_PASSWORD, then the password saved in Settings). The parsed
     /// values on this struct are not passed through; they exist only so
     /// ArgumentParser recognizes and completes the global options.
-    func makeCLI() -> CMUXCLI {
-        CMUXCLI(
+    func makeCLI() -> HMUXCLI {
+        HMUXCLI(
             args: CommandLine.arguments,
-            initialSIGPIPEInspectionPayload: CMUXCLI.currentSIGPIPEInspectionPayload()
+            initialSIGPIPEInspectionPayload: HMUXCLI.currentSIGPIPEInspectionPayload()
         )
     }
 }

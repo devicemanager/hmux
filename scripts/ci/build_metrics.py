@@ -337,7 +337,7 @@ def main() -> int:
         # embeds it in the completed host job record.
         args.host_telemetry.write_text(
             json.dumps({
-                "schema": "cmux-compile-telemetry/v1",
+                "schema": "hmux-compile-telemetry/v1",
                 "run_id": os.environ.get("GITHUB_RUN_ID"),
                 "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
                 **dict(receipt["compiler_cache"]),

@@ -83,11 +83,11 @@ PAID_OVERFLOW_GATE_PREFIX = re.compile(
 # the configuration is clean no matter what the variable actually holds. The
 # one place that can see runner values would go blind exactly when it matters.
 GATE_EXEMPT_REPORTING_READS = {
-    ("ci-health-report.yml", "CMUX_CI_RUNNER_VARIABLES"):
+    ("ci-health-report.yml", "HMUX_CI_RUNNER_VARIABLES"):
         "reports each runner variable's value; gating would report empty",
-    ("ci-repo-variables.yml", "CMUX_CI_RUNNER_VARIABLES"):
+    ("ci-repo-variables.yml", "HMUX_CI_RUNNER_VARIABLES"):
         "validates each runner variable's value; gating would validate empty",
-    ("ci-cloud-overflow-probe.yml", "CMUX_CI_RUNNER_VARIABLES"):
+    ("ci-cloud-overflow-probe.yml", "HMUX_CI_RUNNER_VARIABLES"):
         "the overflow switch records each value to put back; gating would record empty",
 }
 
@@ -252,7 +252,7 @@ def self_test_gate_matcher(errors: list[str]) -> None:
          "    env:\n      SOME_OTHER_KEY: |\n        A=${{ vars.MACOS_RUNNER_15 }}",
          1, "an ungated read under a non-exempt env key"),
         ("ci-health-report.yml",
-         "    env:\n      CMUX_CI_RUNNER_VARIABLES: |\n        A=${{ vars.MACOS_RUNNER_15 }}",
+         "    env:\n      HMUX_CI_RUNNER_VARIABLES: |\n        A=${{ vars.MACOS_RUNNER_15 }}",
          0, "the exempt reporting block"),
     )
     with tempfile.TemporaryDirectory() as directory:

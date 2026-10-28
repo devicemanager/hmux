@@ -1,5 +1,5 @@
 import Foundation
-import CmuxMemoryPressure
+import HmuxMemoryPressure
 
 extension MemoryPressureMonitor {
     /// Exposes the monitor's last applied sample without sampling or changing pressure.

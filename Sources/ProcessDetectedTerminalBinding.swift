@@ -1,4 +1,4 @@
-import CmuxHerdrResume
+import HmuxHerdrResume
 import Foundation
 
 /// Picks the process-detected resume binding for one foreground terminal
@@ -10,12 +10,12 @@ enum ProcessDetectedTerminalBinding {
     static func binding(
         processName: String,
         processPath: String?,
-        processArguments: CmuxTopProcessArguments,
+        processArguments: HmuxTopProcessArguments,
         capturedAt: TimeInterval
     ) -> SurfaceResumeBindingSnapshot? {
         let arguments = processArguments.arguments
         let environment = processArguments.environment
-        // A process inside a herdr pane carries the CMUX_* scope of the
+        // A process inside a herdr pane carries the HMUX_* scope of the
         // surface that first started the herdr server, but it runs on herdr's
         // own PTY. Letting it through would bind an `ssh` or `tmux` from deep
         // inside herdr to that surface, where it could outrank the surface's

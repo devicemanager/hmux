@@ -37,7 +37,7 @@ test("googleSheets.write to a shared sheet is a draft; the confirmed draft paste
 });
 
 test("googleSheets.write types the cells when the editor drops the paste", async () => {
-  const f = await s.value('sites.googleDrive.create("spreadsheets", "cmux REPL paste fallback")');
+  const f = await s.value('sites.googleDrive.create("spreadsheets", "hmux REPL paste fallback")');
   files.get(f.id).ignorePaste = true;
   assert.deepEqual(await s.confirmed(`sites.googleSheets.write(${JSON.stringify(f.url)}, "A1", [["a", "b"]])`), { status: "written", range: "A1:B1", verified: true });
   assert.deepEqual(files.get(f.id).edits, ["typed", "typed"]);
@@ -48,7 +48,7 @@ test("googleSheets.write types the cells when the editor drops the paste", async
 // write rows below the confirmed range. Such a value is refused before
 // any draft, as a tab or LF is.
 test("googleSheets.write and append refuse a value with a carriage return; nothing outside the confirmed range changes", async () => {
-  const f = await s.value('sites.googleDrive.create("spreadsheets", "cmux REPL CR")');
+  const f = await s.value('sites.googleDrive.create("spreadsheets", "hmux REPL CR")');
   try {
     for (const v of ["a\rb", "a\r\nb", "a\r"]) {
       assert.match(await s.error(`sites.googleSheets.write(${JSON.stringify(f.url)}, "A1", [[${JSON.stringify(v)}]])`), /invalid|line break/, `${JSON.stringify(v)} was drafted`);
@@ -64,7 +64,7 @@ test("googleSheets.write and append refuse a value with a carriage return; nothi
 // paste or typed text may end a row or a line at them): refused before
 // any draft, as CR, LF and TAB are.
 test("googleSheets.write and append refuse a value with U+2028, U+2029 or U+0085", async () => {
-  const f = await s.value('sites.googleDrive.create("spreadsheets", "cmux REPL unicode breaks")');
+  const f = await s.value('sites.googleDrive.create("spreadsheets", "hmux REPL unicode breaks")');
   try {
     for (const v of ["a\u2028b", "a\u2029b", "a\u0085b"]) {
       assert.match(String(await s.error(`sites.googleSheets.write(${JSON.stringify(f.url)}, "A1", [[${JSON.stringify(v)}]])`)), /line break/, `${JSON.stringify(v)} was drafted`);
@@ -81,7 +81,7 @@ test("googleSheets.write and append refuse a value with U+2028, U+2029 or U+0085
 // the confirmation instead of reporting a verified write (and does not
 // type the cells again on top of it).
 test("googleSheets.write: a paste that changes a cell next to the confirmed range fails the confirmation", async () => {
-  const f = await s.value('sites.googleDrive.create("spreadsheets", "cmux REPL spill")');
+  const f = await s.value('sites.googleDrive.create("spreadsheets", "hmux REPL spill")');
   try {
     files.get(f.id).pasteSpill = "spilled";
     const err = await s.error(`(async () => { const d = await sites.googleSheets.write(${JSON.stringify(f.url)}, "A1", [["a", "b"]]); return sites.googleSheets.write(d.id, { confirm: true }); })()`);
@@ -93,10 +93,10 @@ test("googleSheets.write: a paste that changes a cell next to the confirmed rang
 });
 
 test("googleSheets.append, write and clear on a private sheet are drafts too; confirmed, they write and verify", async () => {
-  const f = await s.value('sites.googleDrive.create("spreadsheets", "cmux REPL test")');
+  const f = await s.value('sites.googleDrive.create("spreadsheets", "hmux REPL test")');
   assert.match(f.url, /^https:\/\/docs\.google\.com\/spreadsheets\/d\/[\w-]+\/edit$/);
-  assert.equal(f.title, "cmux REPL test");
-  assert.equal(files.get(f.id).title, "cmux REPL test", "the rename reached the file");
+  assert.equal(f.title, "hmux REPL test");
+  assert.equal(files.get(f.id).title, "hmux REPL test", "the rename reached the file");
   assert.deepEqual(await s.confirmed(`sites.googleSheets.write(${JSON.stringify(f.url)}, "A1", [["a", "b"], ["1", "=SUM(A2:A2)"]])`), { status: "written", range: "A1:B2", verified: true });
   assert.deepEqual(await s.confirmed(`sites.googleSheets.append(${JSON.stringify(f.url)}, [["2", "x"]])`), { status: "written", range: "A3:B3", verified: true });
   assert.deepEqual((await s.value(`sites.googleSheets.read(${JSON.stringify(f.url)})`)).rows, [["a", "b"], ["1", "1"], ["2", "x"]]);
@@ -270,7 +270,7 @@ test("googleSheets.cells refuses offsets outside the archive", async () => {
 // keys too, so an editor (or another session) that moved it sends nothing
 // to a cell or slide the draft did not show.
 test("googleSheets.write: a selection the editor moved elsewhere before the paste writes nothing (target_mismatch)", async () => {
-  const f = await s.value('sites.googleDrive.create("spreadsheets", "cmux REPL moved selection")');
+  const f = await s.value('sites.googleDrive.create("spreadsheets", "hmux REPL moved selection")');
   const file = files.get(f.id);
   file.redirectSelection = "Z9";
   const d = await s.value(`sites.googleSheets.write(${JSON.stringify(f.url)}, "A1", [["a", "b"]])`);

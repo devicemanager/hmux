@@ -3,21 +3,21 @@ import Foundation
 /// Identity and ownership for the hidden aggregate **view** session used by the
 /// remote-tmux multiplexer (`remoteTmux.multiplexer.beta.enabled`).
 ///
-/// The view session is cmux-created remote state: one per (host, cmux owner). The
+/// The view session is hmux-created remote state: one per (host, hmux owner). The
 /// single `tmux -CC` control client attaches to it and every mirrored window is
 /// `link-window`ed in. Because it is real, visible remote state, it must be:
-/// - **uniquely named** so two cmux owners (or a re-launch) never collide,
+/// - **uniquely named** so two hmux owners (or a re-launch) never collide,
 /// - **tagged** with tmux user options so discovery can tell a view from a real
-///   workspace session and tell *our* view from one owned by another cmux,
+///   workspace session and tell *our* view from one owned by another hmux,
 /// - **reattachable** by the same owner across reconnect/relaunch,
 /// - **safe to garbage-collect** when stale, while *never* touching a session
-///   that is not a cmux view or is owned by someone else.
+///   that is not a hmux view or is owned by someone else.
 ///
 /// Pure value type: builds names, the tmux option-set commands, and the
 /// classification predicates. No tmux/SSH here so the policy is unit-testable.
 struct RemoteTmuxViewSession: Equatable, Sendable {
-    /// Stable per-cmux-install owner id (e.g. a UUID persisted in defaults). Lets
-    /// us reattach our own view and avoid other cmux installs' views.
+    /// Stable per-hmux-install owner id (e.g. a UUID persisted in defaults). Lets
+    /// us reattach our own view and avoid other hmux installs' views.
     let ownerId: String
 
     /// Session name format version, so a future incompatible view layout is recreated
@@ -33,14 +33,14 @@ struct RemoteTmuxViewSession: Equatable, Sendable {
     static let formatVersion = 1
 
     /// tmux user-option keys stamped on the view session (read via
-    /// `#{@cmux_view}` etc.). User options must start with `@`.
-    static let optView = "@cmux_view"
-    static let optOwner = "@cmux_view_owner"
-    static let optVersion = "@cmux_view_version"
+    /// `#{@hmux_view}` etc.). User options must start with `@`.
+    static let optView = "@hmux_view"
+    static let optOwner = "@hmux_view_owner"
+    static let optVersion = "@hmux_view_version"
 
     /// Prefix all view sessions share, for a cheap first-pass filter and so a
     /// human running `tmux ls` can tell what these are.
-    static let namePrefix = "cmux-view-"
+    static let namePrefix = "hmux-view-"
 
     /// The deterministic view session name for this owner and format version.
     ///
@@ -91,7 +91,7 @@ struct RemoteTmuxViewSession: Equatable, Sendable {
     /// remote tmux client is not flagged UTF-8 (common on non-interactive SSH to a
     /// non-UTF-8-locale host), tmux runs `-F` output through `utf8_sanitize()` which
     /// rewrites every non-printable byte to `_`, which would collapse the fields and
-    /// drop every row. The controlled fields (`@cmux_view` = "1"/"" , owner =
+    /// drop every row. The controlled fields (`@hmux_view` = "1"/"" , owner =
     /// colon-free id, version = int) come first; the free-text `session_name` is
     /// LAST and is rejoined from the remainder, so a `:` in a name (tmux already
     /// rewrites those to `_`) can't shift fields.
@@ -101,9 +101,9 @@ struct RemoteTmuxViewSession: Equatable, Sendable {
     /// One parsed `list-sessions` row (from ``listFormat``).
     struct SessionRow: Equatable, Sendable {
         let name: String
-        let isView: Bool       // @cmux_view == "1"
-        let owner: String      // @cmux_view_owner ("" if unset)
-        let version: Int?      // @cmux_view_version
+        let isView: Bool       // @hmux_view == "1"
+        let owner: String      // @hmux_view_owner ("" if unset)
+        let version: Int?      // @hmux_view_version
     }
 
     static func parseRows(_ output: String) -> [SessionRow] {
@@ -114,8 +114,8 @@ struct RemoteTmuxViewSession: Equatable, Sendable {
 
     // MARK: - Classification (the safety surface)
 
-    /// Any session that is one of cmux's hidden view sessions — tagged with the
-    /// `@cmux_view` option AND carrying the reserved name prefix. Both are required
+    /// Any session that is one of hmux's hidden view sessions — tagged with the
+    /// `@hmux_view` option AND carrying the reserved name prefix. Both are required
     /// so a real user session that merely inherited/copied the option (tmux user
     /// options can be set on anything) is never mistaken for a view. The set of
     /// these is what the workspace model excludes, so a *foreign* owner's view is
@@ -124,14 +124,14 @@ struct RemoteTmuxViewSession: Equatable, Sendable {
         row.isView && row.name.hasPrefix(namePrefix)
     }
 
-    /// This row is *our* view: a cmux view (tagged + prefixed), owned by us, the
+    /// This row is *our* view: a hmux view (tagged + prefixed), owned by us, the
     /// current format, with the exact name we use. Only a match is reattached.
     func isOwnView(_ row: SessionRow) -> Bool {
         Self.isAnyView(row) && row.owner == ownerId && row.version == Self.formatVersion
             && row.name == sessionName
     }
 
-    /// A stale view owned by *us* that we may garbage-collect: a cmux view
+    /// A stale view owned by *us* that we may garbage-collect: a hmux view
     /// (tagged + prefixed), our owner, but a different name/version than the one we
     /// use now (e.g. an old format from a previous build). The prefix requirement
     /// means a non-view session can never be collected even if its options were
@@ -140,7 +140,7 @@ struct RemoteTmuxViewSession: Equatable, Sendable {
         Self.isAnyView(row) && row.owner == ownerId && !isOwnView(row)
     }
 
-    /// A view owned by a *different* cmux install. Must never be touched.
+    /// A view owned by a *different* hmux install. Must never be touched.
     static func isForeignView(_ row: SessionRow, ownerId: String) -> Bool {
         isAnyView(row) && !row.owner.isEmpty && row.owner != ownerId
     }

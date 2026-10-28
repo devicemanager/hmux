@@ -1,12 +1,12 @@
-import CmuxCloud
-import CmuxFoundation
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxFoundation
+import HmuxSurfaceCatalogModel
 import Foundation
-import CmuxCore
-import CmuxWorkspaces
+import HmuxCore
+import HmuxWorkspaces
 import Darwin
-import CmuxNotifications
-import CmuxSidebar
+import HmuxNotifications
+import HmuxSidebar
 
 extension Workspace {
     struct DetachedAgentRuntimeState {

@@ -16,11 +16,11 @@ import urllib.error
 import urllib.request
 
 
-DEFAULT_NAME_PREFIX = "cmux-nightly-macos-"
+DEFAULT_NAME_PREFIX = "hmux-nightly-macos-"
 
 
 def immutable_asset_patterns(name_prefix: str) -> list[re.Pattern[str]]:
-    """Immutable asset names of one channel, e.g. cmux-nightly-macos- or cmux-rc-macos-."""
+    """Immutable asset names of one channel, e.g. hmux-nightly-macos- or hmux-rc-macos-."""
     prefix = re.escape(name_prefix)
     patterns = [
         re.compile(rf"^{prefix}(?P<build>\d+)\.dmg$"),
@@ -32,13 +32,13 @@ def immutable_asset_patterns(name_prefix: str) -> list[re.Pattern[str]]:
     # these patterns channel-independent so nightly and RC releases prune the
     # matching daemon binaries, checksums, and manifest together.
     patterns.extend([
-        re.compile(r"^cmuxd-remote-(?:darwin|linux)-(?:arm64|amd64)-(?P<build>\d+)$"),
-        re.compile(r"^cmuxd-remote-checksums-(?P<build>\d+)\.txt$"),
-        re.compile(r"^cmuxd-remote-manifest-(?P<build>\d+)\.json$"),
+        re.compile(r"^hmuxd-remote-(?:darwin|linux)-(?:arm64|amd64)-(?P<build>\d+)$"),
+        re.compile(r"^hmuxd-remote-checksums-(?P<build>\d+)\.txt$"),
+        re.compile(r"^hmuxd-remote-manifest-(?P<build>\d+)\.json$"),
     ])
     if name_prefix == DEFAULT_NAME_PREFIX:
         # Pre-variant nightly naming that still exists on the nightly release.
-        patterns.append(re.compile(r"^cmux-nightly-universal-macos-(?P<build>\d+)\.dmg$"))
+        patterns.append(re.compile(r"^hmux-nightly-universal-macos-(?P<build>\d+)\.dmg$"))
     return patterns
 
 
@@ -65,7 +65,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--name-prefix",
         default=DEFAULT_NAME_PREFIX,
-        help="Immutable asset name prefix of the channel (cmux-nightly-macos- or cmux-rc-macos-)",
+        help="Immutable asset name prefix of the channel (hmux-nightly-macos- or hmux-rc-macos-)",
     )
     parser.add_argument(
         "--keep-builds",
@@ -148,14 +148,14 @@ def github_api_json(method: str, path: str) -> dict:
             headers={
                 "Accept": "application/vnd.github+json",
                 "Authorization": f"Bearer {token}",
-                "User-Agent": "cmux-nightly-prune",
+                "User-Agent": "hmux-nightly-prune",
                 "X-GitHub-Api-Version": "2022-11-28",
             },
         )
         attempts = max(int(_retry_setting(
-            "CMUX_NIGHTLY_GITHUB_API_MAX_ATTEMPTS", 4, integer=True
+            "HMUX_NIGHTLY_GITHUB_API_MAX_ATTEMPTS", 4, integer=True
         )), 1)
-        base_delay = _retry_setting("CMUX_NIGHTLY_GITHUB_API_RETRY_DELAY_SECONDS", 2.0)
+        base_delay = _retry_setting("HMUX_NIGHTLY_GITHUB_API_RETRY_DELAY_SECONDS", 2.0)
         for attempt in range(attempts):
             try:
                 # A stalled connection would otherwise block until the job ceiling.

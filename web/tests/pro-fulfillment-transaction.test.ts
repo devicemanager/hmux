@@ -15,8 +15,8 @@ import {
 } from "../db/schema";
 
 process.env.RESEND_API_KEY ??= "test-resend-key";
-process.env.CMUX_FEEDBACK_FROM_EMAIL ??= "feedback@example.com";
-process.env.CMUX_FEEDBACK_RATE_LIMIT_ID ??= "test-feedback-rate-limit";
+process.env.HMUX_FEEDBACK_FROM_EMAIL ??= "feedback@example.com";
+process.env.HMUX_FEEDBACK_RATE_LIMIT_ID ??= "test-feedback-rate-limit";
 process.env.STACK_SECRET_SERVER_KEY ??= "test-stack-secret";
 process.env.NEXT_PUBLIC_STACK_PROJECT_ID ??=
   "00000000-0000-4000-8000-000000000000";
@@ -127,7 +127,7 @@ beforeEach(() => {
   });
 });
 
-describe("cmux Pro welcome transaction lifecycle", () => {
+describe("hmux Pro welcome transaction lifecycle", () => {
   test("commits its delivery claim before calling Resend", async () => {
     await sendProSignupWelcome({
       session: {
@@ -154,7 +154,7 @@ describe("cmux Pro welcome transaction lifecycle", () => {
       "connection reset after request write",
     );
     await expect(sendWelcome()).rejects.toThrow(
-      "cmux Pro welcome delivery is still in progress",
+      "hmux Pro welcome delivery is still in progress",
     );
 
     expect(sendEmail).toHaveBeenCalledTimes(1);
@@ -171,7 +171,7 @@ describe("cmux Pro welcome transaction lifecycle", () => {
     });
 
     await expect(sendWelcome()).rejects.toThrow(
-      "cmux Pro welcome email failed: rejected",
+      "hmux Pro welcome email failed: rejected",
     );
     await expect(sendWelcome()).resolves.toBeUndefined();
 

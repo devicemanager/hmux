@@ -1,5 +1,5 @@
-import CmuxSidebar
-import CmuxWorkspaces
+import HmuxSidebar
+import HmuxWorkspaces
 import Foundation
 
 /// Workspace sidebar snapshot value types extracted from `ContentView.swift`, which sits at its file-length budget.

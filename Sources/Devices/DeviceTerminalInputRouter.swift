@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 import Foundation
 
 /// Delivers keystrokes from a manual-mirror Ghostty surface to another Mac's
@@ -25,7 +25,7 @@ final class DeviceTerminalInputRouter: @unchecked Sendable {
 
     // @unchecked Sendable: mutable input and task state are only touched under
     // `queue`; callers cross the boundary with immutable Data values.
-    private let queue = DispatchQueue(label: "dev.cmux.devices.terminal-input", qos: .userInitiated)
+    private let queue = DispatchQueue(label: "dev.hmux.devices.terminal-input", qos: .userInitiated)
     private var pending = Data()
     private var draining = false
     private var drainTask: Task<Void, Never>?

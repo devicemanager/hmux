@@ -1,7 +1,7 @@
 import Foundation
-import CmuxFoundation
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxFoundation
+import HmuxTerminal
+import HmuxTerminalCore
 import OSLog
 
 @MainActor
@@ -27,7 +27,7 @@ final class WorkspaceTerminalFontSizeCoordinator {
     private static let mutationRetryBackoffInterval: TimeInterval = 0.05
 
     private static let logger = Logger(
-        subsystem: "com.cmuxterm.app",
+        subsystem: "com.hmuxterm.app",
         category: "WorkspaceTerminalFontSize"
     )
 
@@ -88,7 +88,7 @@ final class WorkspaceTerminalFontSizeCoordinator {
             terminalPanel,
             configuredRuntimePoints,
             magnificationPercent in
-            cmuxApplyTerminalFontSizeChange(
+            hmuxApplyTerminalFontSizeChange(
                 change,
                 to: terminalPanel,
                 configuredRuntimePoints: configuredRuntimePoints,

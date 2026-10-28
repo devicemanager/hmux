@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 
 /// Mac-side owner of mobile state sync v2 (`docs/mobile-state-sync-v2.md`).
@@ -138,7 +138,7 @@ final class MobileStateSyncHost {
             let currentDirectoryByWorkspaceID = Dictionary(
                 uniqueKeysWithValues: tabs.map { ($0.id, $0.currentDirectory) }
             )
-            let configStore = app.mainWindowContext(for: windowTabManager)?.cmuxConfigStore
+            let configStore = app.mainWindowContext(for: windowTabManager)?.hmuxConfigStore
             for group in windowTabManager.workspaceGroups where seenGroupIDs.insert(group.id).inserted {
                 groupRows.append(
                     GroupSyncRecord(
@@ -210,7 +210,7 @@ final class MobileStateSyncHost {
         }
         let simulatorEncoder = MobileSimulatorWireEncoder()
         let simulators: [MobileSimulatorPanelDescriptor]
-        if CmuxFeatureFlags.shared.isSimulatorEnabled {
+        if HmuxFeatureFlags.shared.isSimulatorEnabled {
             simulators = controller.mobileSimulatorPanels(in: workspace).map { panel in
                 MobileHostService.shared.mobileSimulatorStreamCoordinator.descriptor(
                     panel: panel

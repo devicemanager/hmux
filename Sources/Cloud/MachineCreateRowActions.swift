@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import Foundation
 
@@ -61,7 +61,7 @@ struct MachineCreateRowActions {
             format: String(localized: "machines.pending.failure.lead", defaultValue: "%@ did not get created. The command reported:"),
             operation.request.displayName
         )
-        let content = CmuxAlertContent(flattenedText: "\(lead)\n\n\(output)", separatingScrollableDetails: output)
+        let content = HmuxAlertContent(flattenedText: "\(lead)\n\n\(output)", separatingScrollableDetails: output)
         let window = CloudVMActionLauncher.presentationWindow(
             preferred: nil,
             key: NSApp.keyWindow,

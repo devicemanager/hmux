@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// Value-only SwiftUI environment forwarded into each independently hosted Vault row.
@@ -20,6 +20,6 @@ struct SessionIndexTableEnvironmentSnapshot {
     func apply<Content: View>(to content: Content) -> some View {
         content
             .environment(\.colorScheme, colorScheme)
-            .environment(\.cmuxGlobalFontMagnificationPercent, globalFontMagnificationPercent)
+            .environment(\.hmuxGlobalFontMagnificationPercent, globalFontMagnificationPercent)
     }
 }

@@ -44,8 +44,8 @@ const catalog: RelayCatalog = {
   sequence: 17,
   relays: [
     {
-      id: "cmux-us-west",
-      provider: "cmux",
+      id: "hmux-us-west",
+      provider: "hmux",
       region: "us-west",
       url: "https://relay-us-west.cmux.dev/",
     },
@@ -136,7 +136,7 @@ describe("signed relay policy", () => {
       const response = relayErrorResponse(error, { requestId: "req-test" });
       expect(response.status).toBe(503);
       expect(response.headers.get("retry-after")).toBe("15");
-      expect(response.headers.get("x-cmux-request-id")).toBe("req-test");
+      expect(response.headers.get("x-hmux-request-id")).toBe("req-test");
       expect(await response.json()).toEqual({
         error: "relay_policy_unavailable",
         requestId: "req-test",
@@ -182,8 +182,8 @@ describe("signed relay policy", () => {
       relays: [
         ...current.relays,
         {
-          id: "cmux-rotation",
-          provider: "cmux",
+          id: "hmux-rotation",
+          provider: "hmux",
           region: "rotation",
           url: "https://rotation.relay.cmux.dev/",
         },
@@ -197,8 +197,8 @@ describe("signed relay policy", () => {
       relays: [
         ...added.relays.slice(1),
         {
-          id: "cmux-replacement",
-          provider: "cmux",
+          id: "hmux-replacement",
+          provider: "hmux",
           region: "replacement",
           url: "https://replacement.relay.cmux.dev/",
         },
@@ -231,12 +231,12 @@ describe("signed relay policy", () => {
     const { privateKey } = generateKeyPairSync("ed25519");
     const pem = privateKey.export({ type: "pkcs8", format: "pem" }).toString();
     expect(() => relayPolicySigningKey({
-      CMUX_RELAY_POLICY_KEY_ID: "relay-policy-test",
-      CMUX_RELAY_JWT_PRIVATE_KEY_PEM: pem,
+      HMUX_RELAY_POLICY_KEY_ID: "relay-policy-test",
+      HMUX_RELAY_JWT_PRIVATE_KEY_PEM: pem,
     })).toThrow();
     expect(relayPolicySigningKey({
-      CMUX_RELAY_POLICY_KEY_ID: "relay-policy-test",
-      CMUX_RELAY_POLICY_PRIVATE_KEY_PEM: pem,
+      HMUX_RELAY_POLICY_KEY_ID: "relay-policy-test",
+      HMUX_RELAY_POLICY_PRIVATE_KEY_PEM: pem,
     }).key.asymmetricKeyType).toBe("ed25519");
   });
 
@@ -325,7 +325,7 @@ describe("signed relay policy", () => {
       ...catalog,
       relays: Array.from({ length: 17 }, (_, index) => ({
         id: `relay-${index}`,
-        provider: "cmux",
+        provider: "hmux",
         region: `region-${index}`,
         url: `https://relay-${index}.cmux.dev/`,
       })),
@@ -354,7 +354,7 @@ describe("signed relay policy", () => {
   test("resolves selected managed IDs only against the verified catalog", () => {
     expect(() => assertManagedSelectionExists({
       mode: "managed",
-      selectedManagedRelayIds: ["cmux-us-west"],
+      selectedManagedRelayIds: ["hmux-us-west"],
       customRelays: [],
     }, catalog)).not.toThrow();
     expect(() => assertManagedSelectionExists({
@@ -395,19 +395,19 @@ describe("signed relay policy", () => {
       expectedRevision: 7,
       preference: {
         mode: "automatic",
-        selectedManagedRelayIds: ["cmux-us-west"],
+        selectedManagedRelayIds: ["hmux-us-west"],
         customRelays: [customRelay],
       },
     });
     expect(automatic.preference).toEqual({
       mode: "automatic",
-      selectedManagedRelayIds: ["cmux-us-west"],
+      selectedManagedRelayIds: ["hmux-us-west"],
       customRelays: [customRelay],
     });
     expect(() => parseRelayPreferenceUpdate({
       preference: {
         mode: "custom",
-        selectedManagedRelayIds: ["cmux-us-west"],
+        selectedManagedRelayIds: ["hmux-us-west"],
         customRelays: [],
       },
     })).toThrow();

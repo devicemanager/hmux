@@ -39,7 +39,7 @@ describe("isConnectivityPublisherAuthorized", () => {
     "https://presence.example/v1/connectivity/invalidate",
     {
       headers: value
-        ? { "x-cmux-connectivity-publisher-secret": value }
+        ? { "x-hmux-connectivity-publisher-secret": value }
         : {},
     },
   );

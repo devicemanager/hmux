@@ -27,9 +27,9 @@ export function safeRunAdmissionError(error: unknown): Record<string, string> {
 
 export async function runAdmissionProbe(): Promise<boolean> {
   const nonce = randomUUID();
-  const scope = { userId: `cmux-admission-probe-${nonce}`, ownerTeamId: `cmux-admission-probe-${nonce}` };
+  const scope = { userId: `hmux-admission-probe-${nonce}`, ownerTeamId: `hmux-admission-probe-${nonce}` };
   const key = `probe-${nonce}`;
-  const receipt: Record<string, unknown> = { schema: "cmux.run-admission-probe/v1", ok: false };
+  const receipt: Record<string, unknown> = { schema: "hmux.run-admission-probe/v1", ok: false };
   let stage = "config";
   let admissionAttempted = false;
   const rollback = new Error("Admission probe rollback");
@@ -54,7 +54,7 @@ export async function runAdmissionProbe(): Promise<boolean> {
     `));
     const digest = `sha256:${"b".repeat(64)}`;
     const spec = normalizeRunSpec({
-      schema: "cmux.run/v1", operationId: key,
+      schema: "hmux.run/v1", operationId: key,
       source: { repository: "manaflow-ai/cmux", ref: "main", commit: "a".repeat(40), setupManifestDigest: digest },
       intent: { digest }, recipe: { id: "cloud-vm-dogfood", version: 1 },
       variants: [{ id: "probe", label: "Admission probe", instructionDigest: digest }],

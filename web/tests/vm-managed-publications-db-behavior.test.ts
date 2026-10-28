@@ -10,14 +10,14 @@ import { publicationDatabaseRuntime, closePublicationAuthDb } from "../services/
 import { evaluatePublicationRequest, resolvePublicationAccess, PublicationViewerResolver } from "../services/vm-publications/auth";
 import { hashPublicationToken, publicationPkceChallenge, randomPublicationToken } from "../services/vm-publications/security";
 
-const dbTest = process.env.CMUX_DB_TEST === "1" ? test : test.skip;
+const dbTest = process.env.HMUX_DB_TEST === "1" ? test : test.skip;
 const now = new Date("2026-09-05T01:00:00Z");
 let db: Sql;
 let repository: CloudVmPublicationRepositoryShape;
 const owners: string[] = [];
 
 beforeAll(async () => {
-  if (process.env.CMUX_DB_TEST !== "1") return;
+  if (process.env.HMUX_DB_TEST !== "1") return;
   db = postgres(process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL!, { max: 6 });
   repository = { ...await Effect.runPromise(CloudVmPublicationRepository.pipe(Effect.provide(CloudVmPublicationRepositoryLive))), ...await (await publicationDatabaseRuntime()).runPromise(makePublicationAuthRepository) };
 });

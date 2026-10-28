@@ -1,6 +1,6 @@
-import CmuxControlSocket
-import CmuxSimulator
-import CmuxSimulatorUI
+import HmuxControlSocket
+import HmuxSimulator
+import HmuxSimulatorUI
 import Foundation
 
 enum ResolvedSimulatorPanel {
@@ -15,7 +15,7 @@ extension TerminalController: ControlSimulatorContext {
         routing: ControlRoutingSelectors,
         text: String
     ) -> ControlSimulatorTypeStartResolution {
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else { return .inputUnavailable }
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else { return .inputUnavailable }
         switch resolveSimulatorPanel(routing: routing) {
         case .unavailable:
             return .inputUnavailable

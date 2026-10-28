@@ -1,6 +1,6 @@
-import CmuxFoundation
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxFoundation
+import HmuxTerminal
+import HmuxTerminalCore
 import Foundation
 
 /// Predicts descendant font lineage while a bounded workspace request drains.

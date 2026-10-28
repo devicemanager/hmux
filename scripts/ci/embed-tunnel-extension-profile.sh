@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Embed the Developer ID provisioning profile for the cmux Cloud tunnel system
+# Embed the Developer ID provisioning profile for the hmux Cloud tunnel system
 # extension into a built app bundle, verifying it names the expected App ID and
 # grants the packet-tunnel system-extension capability.
 #
@@ -36,8 +36,8 @@ if [[ -z "$SYSEXT" ]]; then
   exit 1
 fi
 
-TMP_PROFILE="$(mktemp "${TMPDIR:-/tmp}/cmux-tunnel-profile.XXXXXX")"
-TMP_PLIST="$(mktemp "${TMPDIR:-/tmp}/cmux-tunnel-profile.XXXXXX.plist")"
+TMP_PROFILE="$(mktemp "${TMPDIR:-/tmp}/hmux-tunnel-profile.XXXXXX")"
+TMP_PLIST="$(mktemp "${TMPDIR:-/tmp}/hmux-tunnel-profile.XXXXXX.plist")"
 trap 'rm -f "$TMP_PROFILE" "$TMP_PLIST"' EXIT
 
 printf '%s' "$PROFILE_BASE64" | base64 --decode > "$TMP_PROFILE"

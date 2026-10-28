@@ -6,7 +6,7 @@ export async function GET(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/network-presets",
-    { "cmux.vm.operation": "network_presets" },
+    { "hmux.vm.operation": "network_presets" },
     "/api/vm/network-presets GET failed",
     async () => jsonResponse(networkPolicyCatalog()),
   );

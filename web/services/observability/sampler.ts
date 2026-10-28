@@ -43,11 +43,11 @@ const PRIORITY_PATH_ATTRIBUTE_KEYS = ["http.route", "url.path", "http.target"] a
  * Whether a root span, judged only by what is available at creation time,
  * belongs to Cloud VM work. Matches the request path when the runtime
  * provides it at start, the span name when it embeds the route, and the
- * `cmux.subsystem` attribute that `withApiRouteSpan` stamps on re-rooted
+ * `hmux.subsystem` attribute that `withApiRouteSpan` stamps on re-rooted
  * VM spans (the guaranteed signal: we control it).
  */
 export function isVmPrioritySpan(spanName: string, attributes: Attributes): boolean {
-  if (attributes["cmux.subsystem"] === "vm-cloud") return true;
+  if (attributes["hmux.subsystem"] === "vm-cloud") return true;
   for (const key of PRIORITY_PATH_ATTRIBUTE_KEYS) {
     const value = attributes[key];
     if (typeof value === "string" && isVmPriorityPath(value)) return true;
@@ -61,9 +61,9 @@ export function isVmPrioritySpan(spanName: string, attributes: Attributes): bool
 export function isPrioritySpan(spanName: string, attributes: Attributes): boolean {
   // A high-volume endpoint can opt out of the always-kept path set while
   // retaining the same route wrapper and response headers.
-  if (attributes["cmux.priority"] === false) return false;
-  if (attributes["cmux.priority"] === true) return true;
-  const subsystem = attributes["cmux.subsystem"];
+  if (attributes["hmux.priority"] === false) return false;
+  if (attributes["hmux.priority"] === true) return true;
+  const subsystem = attributes["hmux.subsystem"];
   if (typeof subsystem === "string" && PRIORITY_SUBSYSTEMS.has(subsystem)) return true;
   for (const key of PRIORITY_PATH_ATTRIBUTE_KEYS) {
     const value = attributes[key];
@@ -109,11 +109,11 @@ class VmPriorityRootSampler implements Sampler {
 /**
  * The app-wide trace sampler: keep 100% of priority-path traces (Cloud VM,
  * coderouter, admin, operational routes, account deletion), head-sample
- * everything else at `CMUX_OTEL_BASE_SAMPLE_RATIO` (default 2%). Children
+ * everything else at `HMUX_OTEL_BASE_SAMPLE_RATIO` (default 2%). Children
  * follow their root's decision, so a kept VM trace keeps its pg/fetch/
  * provider child spans and a dropped page-load trace drops all of its own.
  */
-export function buildCmuxTraceSampler(
+export function buildHmuxTraceSampler(
   env: Record<string, string | undefined> = process.env,
 ): Sampler {
   const ratio = baseSampleRatio(env);
@@ -133,7 +133,7 @@ export function buildCmuxTraceSampler(
 export const DEFAULT_BASE_SAMPLE_RATIO = 0.02;
 
 function baseSampleRatio(env: Record<string, string | undefined>): number {
-  const raw = env.CMUX_OTEL_BASE_SAMPLE_RATIO?.trim();
+  const raw = env.HMUX_OTEL_BASE_SAMPLE_RATIO?.trim();
   if (!raw) return DEFAULT_BASE_SAMPLE_RATIO;
   const parsed = Number(raw);
   if (!Number.isFinite(parsed) || parsed < 0 || parsed > 1) return DEFAULT_BASE_SAMPLE_RATIO;

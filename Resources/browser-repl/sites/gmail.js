@@ -6,9 +6,9 @@
 // sites.googleAccounts.list()).
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const core = root.CmuxBrowserRepl.core;
+  const core = root.HmuxBrowserRepl.core;
   const { URL, URLSearchParams } = core;
   const SIGN_IN = [/^https:\/\/accounts\.google\.com\//, /^https:\/\/workspace\.google\.com\//, /\/gmail\/about/];
   // Confirmed replies are off until a live check passes (decisions.md,

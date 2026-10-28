@@ -2,14 +2,14 @@
 /**
  * The floor for New Machine: create one VM straight from a devbox snapshot
  * with the Freestyle SDK, attached to an existing private network, and time
- * until its cmux-tui daemon accepts TCP on 1337 through the Mac's WireGuard
- * hub. No cmux backend, database, auth, billing, or app is involved.
+ * until its hmux-tui daemon accepts TCP on 1337 through the Mac's WireGuard
+ * hub. No hmux backend, database, auth, billing, or app is involved.
  *
  *   FREESTYLE_API_KEY=... bun scripts/cloud-vm/bench-raw-vm-create.ts \
  *     --snapshot sh-... --vpc <vpcId> --hub <hub socket> [--runs 3] [--slug-prefix x]
  *
  * `--vpc` is the owner's network (read it from any of their VMs); `--hub` is
- * the socket `vm.cmux_remote_info` returns as `wireguard_hub_socket`.
+ * the socket `vm.hmux_remote_info` returns as `wireguard_hub_socket`.
  * Every VM this script creates is deleted before it exits.
  */
 import { connect, isIPv4 } from "node:net";
@@ -76,7 +76,7 @@ for (let run = 1; run <= runs; run++) {
     snapshotId,
     ...(slug ? { slug } : {}),
     idleTimeoutSeconds: 600,
-    metadata: { cmux: "bench-raw" },
+    metadata: { hmux: "bench-raw" },
     firewall: { rules: [{ action: "allow", source: {}, destination: { public: true } }] },
     vpcs: [{ vpcId, ipv4: true, ipv6: true }],
   });

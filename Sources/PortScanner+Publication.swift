@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CmuxCore
+import HmuxFoundation
+import HmuxCore
 import Foundation
 
 extension PortScanner {

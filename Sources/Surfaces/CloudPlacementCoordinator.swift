@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 import Observation
 
@@ -36,7 +36,7 @@ final class CloudPlacementCoordinator {
     var displayReopenGenerations: [SurfaceResourceID: UInt64] = [:]
     var retryingDisplayRemovals: Set<String> = []
     var displayRemovalAttempts: [String: Int] = [:]
-    /// View IDs of display panes this process recorded. Another cmux on this
+    /// View IDs of display panes this process recorded. Another hmux on this
     /// Mac shares the client ID, so only these tokens are this process's to prune.
     var ownedDisplayViewIDs: Set<String> = []
     static let maxDisplayRemovalAttempts = 3

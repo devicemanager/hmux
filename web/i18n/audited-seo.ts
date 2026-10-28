@@ -13,15 +13,15 @@ import {
 export type SeoMessageLookup = (key: string) => string;
 
 export type AuditedBlogPostKey =
-  | "cmuxOmo"
+  | "hmuxOmo"
   | "gpl"
   | "showHnLaunch"
   | "sessionRestore"
-  | "cmuxHome"
-  | "introducingCmux"
+  | "hmuxHome"
+  | "introducingHmux"
   | "claudeCodeBestWorktreeManager"
   | "tokenMultitasking"
-  | "zenOfCmux"
+  | "zenOfHmux"
   | "cmdShiftU"
   | "unreadShortcuts"
   | "passkeyAuth";
@@ -30,12 +30,12 @@ const blogDescriptionCandidateKeys: Record<
   AuditedBlogPostKey,
   readonly string[]
 > = {
-  cmuxOmo: ["summary"],
+  hmuxOmo: ["summary"],
   gpl: ["summary", "p1"],
   showHnLaunch: ["summary"],
   sessionRestore: ["summary", "p1", "p2", "agentP2", "limitsP"],
-  cmuxHome: ["summary", "p2", "p3", "p4"],
-  introducingCmux: ["summary", "p1", "whyP"],
+  hmuxHome: ["summary", "p2", "p3", "p4"],
+  introducingHmux: ["summary", "p1", "whyP"],
   claudeCodeBestWorktreeManager: ["summary", "p1"],
   tokenMultitasking: [
     "summary",
@@ -44,7 +44,7 @@ const blogDescriptionCandidateKeys: Record<
     "workflowClose",
     "closing",
   ],
-  zenOfCmux: ["summary", "p1", "p2", "p3", "p4"],
+  zenOfHmux: ["summary", "p1", "p2", "p3", "p4"],
   cmdShiftU: ["summary", "p1"],
   unreadShortcuts: ["summary", "p1", "p2", "p3", "p4", "p5"],
   passkeyAuth: ["summary", "p1", "p3"],
@@ -106,16 +106,16 @@ const shortTitleContexts: Record<string, string> = {
 };
 
 const historyShortDescriptions: Partial<Record<string, string>> = {
-  th: "cmux history ช่วยเปิดเทอร์มินัล เบราว์เซอร์ และเซสชัน AI ที่ปิดไป พร้อมเลื่อนโฟกัสบน macOS.",
+  th: "hmux history ช่วยเปิดเทอร์มินัล เบราว์เซอร์ และเซสชัน AI ที่ปิดไป พร้อมเลื่อนโฟกัสบน macOS.",
 };
 
 const khmerComparePageFallbacks = new Set([
-  "cmuxVsDevin",
-  "cmuxVsIterm2",
-  "cmuxVsKitty",
-  "cmuxVsTmux",
-  "cmuxVsVscode",
-  "cmuxVsWezterm",
+  "hmuxVsDevin",
+  "hmuxVsIterm2",
+  "hmuxVsKitty",
+  "hmuxVsTmux",
+  "hmuxVsVscode",
+  "hmuxVsWezterm",
 ]);
 
 function selectTitle(
@@ -127,9 +127,9 @@ function selectTitle(
   const tagline = openGraphImageTagline(locale);
   const shortContext = shortTitleContexts[locale] ?? shortTitleContexts.en;
   const contextualCandidates = authoredCandidates.flatMap((candidate) => {
-    const brandCandidate = /cmux/iu.test(candidate)
+    const brandCandidate = /hmux/iu.test(candidate)
       ? []
-      : [`${candidate} — cmux`];
+      : [`${candidate} — hmux`];
     return [
       candidate,
       ...brandCandidate,
@@ -194,9 +194,9 @@ function selectDocsSocialTitle(
   return seoTitle(locale, original, {
     minLength: conciseTitleLocales.has(locale) ? 0 : undefined,
     fallbackCandidates: fallbackTitles.flatMap((candidate) => [
-      `${candidate} — ${shortContext} — cmux`,
+      `${candidate} — ${shortContext} — hmux`,
       `${candidate} — ${shortContext}`,
-      `${candidate} — cmux`,
+      `${candidate} — hmux`,
       candidate,
     ]),
     appendLocalizedContext: false,
@@ -255,8 +255,8 @@ export function homeSeoCopy(locale: string, meta: SeoMessageLookup) {
   const description = selectDescription(locale, meta("description"), {
     completeCandidates: [meta("ogDescription")],
     contextFragments: [
-      `cmux — ${shortTitleContexts[locale] ?? shortTitleContexts.en}`,
-      "cmux",
+      `hmux — ${shortTitleContexts[locale] ?? shortTitleContexts.en}`,
+      "hmux",
       openGraphImageAlt(locale),
     ],
   });
@@ -443,12 +443,12 @@ export function bestTerminalSeoCopy(
     title: selectTitle(locale, t("metaTitle"), siteMeta, [t("title")]),
     description: selectDescription(locale, t("metaDescription"), {
       completeCandidates: [t("intro")],
-      contextFragments: [t("title"), t("cmuxBuiltFor")],
+      contextFragments: [t("title"), t("hmuxBuiltFor")],
     }),
   };
 }
 
-export function cmuxHistorySeoCopy(
+export function hmuxHistorySeoCopy(
   locale: string,
   metadata: SeoMessageLookup,
   post: SeoMessageLookup,

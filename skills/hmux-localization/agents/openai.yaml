@@ -1,0 +1,4 @@
+interface:
+  display_name: "hmux Localization"
+  short_description: "Localize and audit every hmux user-facing string change."
+  default_prompt: "Use this skill whenever changing hmux UI text, settings labels, menu items, shortcut metadata, schema/config text, docs, command/help output, alerts, tooltips, or web messages."

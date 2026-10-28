@@ -38,7 +38,7 @@ export interface FeatureHighlight {
   video?: FeatureVideo;
   /**
    * How to try the feature: a shortcut, Settings path, or CLI command.
-   * Backticks render as code, e.g. "Run `cmux ssh user@host`".
+   * Backticks render as code, e.g. "Run `hmux ssh user@host`".
    */
   tryIt?: string;
 }
@@ -59,8 +59,8 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Reliable Agent Restores",
         description:
-          "Agent sessions come back after a relaunch: Codex retries a busy lock, Claude Code resumes in the right directory, agy and OpenCode auto-resume, and Running/Idle stays accurate when a Stop hook never arrives. Codex no longer asks to review cmux's own hooks.",
-        tryIt: "Quit cmux while Claude Code or Codex is running, then reopen it.",
+          "Agent sessions come back after a relaunch: Codex retries a busy lock, Claude Code resumes in the right directory, agy and OpenCode auto-resume, and Running/Idle stays accurate when a Stop hook never arrives. Codex no longer asks to review hmux's own hooks.",
+        tryIt: "Quit hmux while Claude Code or Codex is running, then reopen it.",
       },
       {
         title: "Steadier Cloud",
@@ -100,14 +100,14 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Program Status in the Sidebar",
         description:
-          "Programs can report idle, working, blocked, done, or error with OSC 7501, and the workspace sidebar shows it. Scripts can follow program_status.changed on the cmux-events stream.",
+          "Programs can report idle, working, blocked, done, or error with OSC 7501, and the workspace sidebar shows it. Scripts can follow program_status.changed on the hmux-events stream.",
         tryIt: "Run `printf '\\e]7501;state=working\\e\\\\'; sleep 5` and watch the workspace in the sidebar.",
       },
       {
         title: "Smaller Download",
         description:
           "Stable ships thin arm64 and x86_64 builds in a smaller DMG with a one-hop update path.",
-        tryIt: "Download cmux from cmux.com, or update from the cmux menu.",
+        tryIt: "Download hmux from cmux.com, or update from the hmux menu.",
       },
     ],
   },
@@ -117,8 +117,8 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Agents on SSH Hosts",
         description:
-          "Claude Code and Codex on a cmux ssh host show Running, Needs input, or Idle in the sidebar, like local agents. A stopped Claude Code session can move between your Mac and a host with its transcript and git working tree.",
-        tryIt: "Run `cmux session move <session-id> --to user@host`.",
+          "Claude Code and Codex on a hmux ssh host show Running, Needs input, or Idle in the sidebar, like local agents. A stopped Claude Code session can move between your Mac and a host with its transcript and git working tree.",
+        tryIt: "Run `hmux session move <session-id> --to user@host`.",
       },
       {
         title: "Predictive Local Echo",
@@ -130,7 +130,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
         title: "Crash-Proof Sessions",
         description:
           "Terminal scrollback is checkpointed, and interrupted Claude sessions can be recovered after a crash. Agents whose turn ends on a retryable error, such as model capacity or a dropped connection, are told to continue automatically.",
-        tryIt: "Run `cmux session restore` to bring back interrupted agent sessions.",
+        tryIt: "Run `hmux session restore` to bring back interrupted agent sessions.",
       },
       {
         title: "Redesigned Settings",
@@ -142,7 +142,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
         title: "Bring Your Terminal Setup",
         description:
           "Import settings from iTerm2, Terminal, Alacritty, Kitty, WezTerm, or Warp, and pick a Base Keymap preset that matches the shortcuts you already know.",
-        tryIt: "Run `cmux import`, or open Settings > Keyboard Shortcuts.",
+        tryIt: "Run `hmux import`, or open Settings > Keyboard Shortcuts.",
       },
       {
         title: "Jump to Your Prompts",
@@ -172,15 +172,15 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "SSH Workspaces Connect Again",
         description:
-          "Released builds ship a checksum-verified cmuxd-remote again, so SSH workspaces bootstrap on macOS and Linux hosts. A session that cannot become ready reports an actionable error within 60 seconds instead of sitting at Last login, terminals keep raw input across reconnects, and new splits open in the remote directory.",
-        tryIt: "Run `cmux ssh user@host` to open a workspace on the remote machine.",
+          "Released builds ship a checksum-verified hmuxd-remote again, so SSH workspaces bootstrap on macOS and Linux hosts. A session that cannot become ready reports an actionable error within 60 seconds instead of sitting at Last login, terminals keep raw input across reconnects, and new splits open in the remote directory.",
+        tryIt: "Run `hmux ssh user@host` to open a workspace on the remote machine.",
       },
       {
         title: "Steady Agent Layouts",
         description:
-          "Agents resumed with cmux restore or cmux fork receive terminal resizes again, so their layout no longer garbles after a restore. Images dropped or pasted into a terminal stay on disk long enough for Claude Code and Codex to read them.",
+          "Agents resumed with hmux restore or hmux fork receive terminal resizes again, so their layout no longer garbles after a restore. Images dropped or pasted into a terminal stay on disk long enough for Claude Code and Codex to read them.",
         tryIt:
-          "Run `cmux restore --surface <ref>` or `cmux fork --surface <ref>` on a saved agent session, then resize its pane.",
+          "Run `hmux restore --surface <ref>` or `hmux fork --surface <ref>` on a saved agent session, then resize its pane.",
       },
       {
         title: "Light Mode Terminals",
@@ -222,7 +222,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Vault Search, Checkpoints, and Fork",
         description:
-          "Every agent session lands in a recency-first Vault with day sections and filters, search with agent:, repo:, ws:, before:, and after: operators, and checkpoints you can fork from for Claude Code, Codex, Pi, and Grok, in the app or through cmux vault and cmux fork.",
+          "Every agent session lands in a recency-first Vault with day sections and filters, search with agent:, repo:, ws:, before:, and after: operators, and checkpoints you can fork from for Claude Code, Codex, Pi, and Grok, in the app or through hmux vault and hmux fork.",
       },
       {
         title: "Reply to Agents from Notifications",
@@ -230,7 +230,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
           "Answer an agent straight from the macOS banner or the iPhone Lock Screen: type a reply on turn-complete and idle notifications, pick an option on AskUserQuestion banners, or send a revision on exit-plan banners. Automations, agent-event context for notification hooks, and per-agent sounds round out the pipeline.",
       },
       {
-        title: "cmux in Nine Languages",
+        title: "hmux in Nine Languages",
         description:
           "The macOS app is fully localized in German, French, Spanish, Arabic, Korean, Simplified and Traditional Chinese, and Japanese alongside English.",
       },
@@ -245,9 +245,9 @@ export const changelogMedia: Record<string, VersionMedia> = {
           "Workspace switching no longer ghosts or hangs, idle CPU burn from logging and git watchers is gone, terminals in hidden windows release about 40 MB each, persistent SSH reconnects survive sleep and network changes, and Google Sheets no longer pins a core.",
       },
       {
-        title: "cmux on iPhone (beta)",
+        title: "hmux on iPhone (beta)",
         description:
-          "Each Computer picks its own connection method with an honest Tailscale Only mode, Simulator panes stream as low-latency video with touch forwarding, the Task Composer keeps drafts and attachments, and workspaces sort, group, and reconnect quietly. Current iOS builds need cmux 0.64.23 on the Mac.",
+          "Each Computer picks its own connection method with an honest Tailscale Only mode, Simulator panes stream as low-latency video with touch forwarding, the Task Composer keeps drafts and attachments, and workspaces sort, group, and reconnect quietly. Current iOS builds need hmux 0.64.23 on the Mac.",
       },
     ],
   },
@@ -257,7 +257,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Native Simulator Panes",
         description:
-          "Run iPhone and iPad Simulators as first-class cmux panes, rendered crisply at real size, with their own commands and automation so an agent can drive the simulator next to the terminal that built it.",
+          "Run iPhone and iPad Simulators as first-class hmux panes, rendered crisply at real size, with their own commands and automation so an agent can drive the simulator next to the terminal that built it.",
       },
       {
         title: "Mosh for Remote Workspaces",
@@ -267,7 +267,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Idle CPU and Memory Reclaimed",
         description:
-          "Leaked openThread loops that burned about 90% of cmux idle CPU are gone, hidden Ghostty renderers release their memory, workspace switching no longer freezes the renderer, and idle background agents hibernate under critical memory pressure.",
+          "Leaked openThread loops that burned about 90% of hmux idle CPU are gone, hidden Ghostty renderers release their memory, workspace switching no longer freezes the renderer, and idle background agents hibernate under critical memory pressure.",
       },
       {
         title: "Navigation and Restore",
@@ -275,7 +275,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
           "Cmd+Shift+T reopens the last closed item, Cmd+[ and Cmd+] walk global workspace focus history, surfaces move between panes with automatic directional splits, and Dock panes, workspace IDs, and per-tab terminal zoom all survive a restart.",
       },
       {
-        title: "cmux on iPhone (beta)",
+        title: "hmux on iPhone (beta)",
         description:
           "Stream Mac browser panes to the phone interactively, follow a chronological notification feed, launch agent workspaces from the task composer, and scroll terminals locally on screen-anchored render grids over a rebuilt peer-to-peer transport.",
       },
@@ -297,7 +297,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Mouse Input for TUI Apps",
         description:
-          "cmux now forwards mouse input to TUI applications running in the terminal, so tools that own the pointer respond to clicks, drags, and scrolls as expected.",
+          "hmux now forwards mouse input to TUI applications running in the terminal, so tools that own the pointer respond to clicks, drags, and scrolls as expected.",
       },
       {
         title: "Stability and Performance",
@@ -323,7 +323,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Per-Monitor Window Memory",
         description:
-          "cmux remembers window position and size per monitor configuration and refits windows when displays change, so docking and undocking a laptop no longer scrambles your setup.",
+          "hmux remembers window position and size per monitor configuration and refits windows when displays change, so docking and undocking a laptop no longer scrambles your setup.",
       },
       {
         title: "Stability and Performance",
@@ -339,12 +339,12 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Global Font Magnification",
         description:
-          "Scale the entire cmux interface up or down with a single magnification control, not just the terminal font.",
+          "Scale the entire hmux interface up or down with a single magnification control, not just the terminal font.",
       },
       {
         title: "Remote tmux Mirroring (Beta)",
         description:
-          "Mirror a remote tmux session over SSH using -CC control mode, so remote windows show up as native cmux tabs that stay in sync with renames and reorders.",
+          "Mirror a remote tmux session over SSH using -CC control mode, so remote windows show up as native hmux tabs that stay in sync with renames and reorders.",
       },
       {
         title: "Browser and Diff Viewer Polish",
@@ -365,7 +365,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "AI Auto-Naming for Workspaces and Tabs",
         description:
-          "Opt in to have cmux name your workspaces and tabs from the agent conversation running inside them, so a wall of sessions stays readable at a glance.",
+          "Opt in to have hmux name your workspaces and tabs from the agent conversation running inside them, so a wall of sessions stays readable at a glance.",
       },
       {
         title: "Per-Workspace Environment Variables",
@@ -422,7 +422,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "iPhone Companion App (Beta)",
         description:
-          "Pair an iPhone with your Mac from the new Mobile Connect window and attach to your terminals from your phone, with opt-in forwarding of terminal notifications. The iOS beta ships on TestFlight as cmux BETA.",
+          "Pair an iPhone with your Mac from the new Mobile Connect window and attach to your terminals from your phone, with opt-in forwarding of terminal notifications. The iOS beta ships on TestFlight as hmux BETA.",
       },
       {
         title: "Cross-Window Workspace Drag",
@@ -432,7 +432,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Out-of-Process Custom Sidebars",
         description:
-          "Custom sidebar extensions now run in their own process with an isolated interpreter, so a broken sidebar can't hang or crash cmux, and the interpreter covers a broader set of SwiftUI primitives.",
+          "Custom sidebar extensions now run in their own process with an isolated interpreter, so a broken sidebar can't hang or crash hmux, and the interpreter covers a broader set of SwiftUI primitives.",
       },
       {
         title: "Browser Polish",
@@ -442,7 +442,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Agent Session Fixes",
         description:
-          "Claude resume keeps cmux hooks attached so notifications and status tracking survive resumes, Agent Hibernation works for node-backed Claude sessions, and Codex resume preserves CODEX_HOME and pane order.",
+          "Claude resume keeps hmux hooks attached so notifications and status tracking survive resumes, Agent Hibernation works for node-backed Claude sessions, and Codex resume preserves CODEX_HOME and pane order.",
       },
     ],
   },
@@ -458,7 +458,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "SSH Agent Forwarding",
         description:
-          "`cmux ssh` now forwards your local SSH agent, so remote sessions can use your local keys for git pushes and further hops without copying private keys onto the remote.",
+          "`hmux ssh` now forwards your local SSH agent, so remote sessions can use your local keys for git pushes and further hops without copying private keys onto the remote.",
       },
       {
         title: "Vibe-Codable Custom Sidebars (Beta)",
@@ -484,7 +484,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Diff Viewer Shortcut",
         description:
-          "Open the diff viewer with a keyboard shortcut, configurable and editable in Settings alongside every other cmux shortcut.",
+          "Open the diff viewer with a keyboard shortcut, configurable and editable in Settings alongside every other hmux shortcut.",
       },
       {
         title: "Markdown Viewer Zoom",
@@ -499,7 +499,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Prompt & Remote SSH Fixes",
         description:
-          "Starship and other custom bash prompts no longer go static: the prompt bootstrap composes with your existing PROMPT_COMMAND instead of overwriting it. And `cmux ssh` now reports remote PTY allocation failures loudly instead of failing silently when a plain ssh would have worked.",
+          "Starship and other custom bash prompts no longer go static: the prompt bootstrap composes with your existing PROMPT_COMMAND instead of overwriting it. And `hmux ssh` now reports remote PTY allocation failures loudly instead of failing silently when a plain ssh would have worked.",
       },
       {
         title: "Restored Sidebar Views & Scrollback Colors",
@@ -515,7 +515,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Workspace Groups",
         description:
-          "Select sidebar workspaces and press ⌘⇧G to gather them under a collapsible header. Each group has an anchor workspace, its own color and icon, and an unread badge on the header. Drag workspaces in and out, reorder inside a group, and control where new workspaces land per group or via cmux.json. A full `cmux workspace-group` CLI namespace creates, colors, moves, focuses, and deletes groups from scripts.",
+          "Select sidebar workspaces and press ⌘⇧G to gather them under a collapsible header. Each group has an anchor workspace, its own color and icon, and an unread badge on the header. Drag workspaces in and out, reorder inside a group, and control where new workspaces land per group or via hmux.json. A full `hmux workspace-group` CLI namespace creates, colors, moves, focuses, and deletes groups from scripts.",
       },
       {
         title: "Focus & Recently Closed History",
@@ -540,7 +540,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Fork Conversation, Browser Mute, Diff Viewer",
         description:
-          "Fork Conversation moves into the tab right-click menu with configurable destinations, browser tabs gain an audio mute toggle, and `cmux diff` opens a CodeView diff viewer that streams large git diffs before full render.",
+          "Fork Conversation moves into the tab right-click menu with configurable destinations, browser tabs gain an audio mute toggle, and `hmux diff` opens a CodeView diff viewer that streams large git diffs before full render.",
       },
     ],
   },
@@ -554,7 +554,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
           "Highlighting text in the terminal now copies it to the clipboard the instant the mouse is released. The setting is off by default and toggles from Settings so existing selection behavior stays untouched for anyone who relies on it.",
       },
       {
-        title: "CmuxExtensionKit Sidebar Prototypes",
+        title: "HmuxExtensionKit Sidebar Prototypes",
         description:
           "An in-tree preview of the upcoming extension API for custom workspace sidebars. Sample sidebars cover an attention queue, browser stack, dev server status, last prompt, and project worktree views, each rendered through the same provider/reducer surface a third-party extension will use.",
       },
@@ -571,7 +571,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Workspace Reorder CLI",
         description:
-          "`cmux reorder-workspaces` accepts batch input, supports `--dry-run`, and emits reorder events so scripted layouts can plan a full sidebar reshuffle in one call and react to the changes via the socket.",
+          "`hmux reorder-workspaces` accepts batch input, supports `--dry-run`, and emits reorder events so scripted layouts can plan a full sidebar reshuffle in one call and react to the changes via the socket.",
       },
       {
         title: "Tab Close Guards",
@@ -602,17 +602,17 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Antigravity CLI Integration",
         description:
-          "Antigravity joins the supported coding-agent lineup with hook notifications, task manager attribution, and Vault session restore, the same way Claude, Codex, Gemini, and Grok already work in cmux.",
+          "Antigravity joins the supported coding-agent lineup with hook notifications, task manager attribution, and Vault session restore, the same way Claude, Codex, Gemini, and Grok already work in hmux.",
       },
       {
         title: "Native Grok Vault Resume",
         description:
-          "Grok sessions can now be resumed natively from Vault. cmux parses registered Grok transcripts by layout, deduplicates sessions across shell-Grok homes, and quotes built-in resume commands so they round-trip cleanly.",
+          "Grok sessions can now be resumed natively from Vault. hmux parses registered Grok transcripts by layout, deduplicates sessions across shell-Grok homes, and quotes built-in resume commands so they round-trip cleanly.",
       },
       {
         title: "CLI Window Targeting",
         description:
-          "cmux CLI commands now accept `--window` to scope workspace, pane, surface, SSH, VM, notifications, tree, and top flows to a specific window. Refs resolve inside the targeted window, and cross-window pane handles are rejected before they mutate state.",
+          "hmux CLI commands now accept `--window` to scope workspace, pane, surface, SSH, VM, notifications, tree, and top flows to a specific window. Refs resolve inside the targeted window, and cross-window pane handles are rejected before they mutate state.",
       },
       {
         title: "Browser Screenshot Clipboard Actions",
@@ -638,7 +638,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Grok Build CLI Integration",
         description:
-          "Grok Build joins the supported coding-agent lineup with notifications, task manager attribution, and session restore, the same way Claude, Codex, and Gemini already work in cmux.",
+          "Grok Build joins the supported coding-agent lineup with notifications, task manager attribution, and session restore, the same way Claude, Codex, and Gemini already work in hmux.",
       },
       {
         title: "Browser Memory Reclaim and Background Preload",
@@ -653,7 +653,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Crash Diagnostics from Notifications",
         description:
-          "When cmux logs a crash, the notification now opens directly into the crash diagnostics view so you can inspect the breadcrumb trail without digging through state.",
+          "When hmux logs a crash, the notification now opens directly into the crash diagnostics view so you can inspect the breadcrumb trail without digging through state.",
       },
       {
         title: "Bug Fixes",
@@ -668,7 +668,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "SSH Typing Restored",
         description:
-          "Fixes a critical regression in 0.64.5 where cmux ssh sessions would connect and render the remote prompt but drop every keystroke. The backgrounded ssh inside the startup wrapper now inherits the wrapper's stdin via <&0, so typing reaches the remote shell again. Thanks @kays0x for the community fix.",
+          "Fixes a critical regression in 0.64.5 where hmux ssh sessions would connect and render the remote prompt but drop every keystroke. The backgrounded ssh inside the startup wrapper now inherits the wrapper's stdin via <&0, so typing reaches the remote shell again. Thanks @kays0x for the community fix.",
       },
       {
         title: "Command Palette Settings Toggles",
@@ -683,7 +683,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Cloud VM Error Guidance",
         description:
-          "cmux vm errors now include actionable next steps: sign-in instructions when not authenticated, suggested fixes for unknown flags, and usage examples for missing arguments.",
+          "hmux vm errors now include actionable next steps: sign-in instructions when not authenticated, suggested fixes for unknown flags, and usage examples for missing arguments.",
       },
     ],
   },
@@ -693,7 +693,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Codex Teams Subagent Panes",
         description:
-          "cmux codex-teams now maps Codex's subagent sessions into native cmux panes, the same way claude-teams does for Claude Code. Spawned subagents stack in a right column with sidebar metadata and notifications routed through cmux.",
+          "hmux codex-teams now maps Codex's subagent sessions into native hmux panes, the same way claude-teams does for Claude Code. Spawned subagents stack in a right column with sidebar metadata and notifications routed through hmux.",
       },
       {
         title: "Menubar Global Search",
@@ -723,7 +723,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "SSH Files Polish",
         description:
-          "The Files sidebar now follows SSH workspaces and shows the remote root instead of the local macOS path. SSH workspace descriptors restore on relaunch, and new guarded cmux://ssh deep links prompt before launching ssh so unfamiliar links can't run arbitrary commands.",
+          "The Files sidebar now follows SSH workspaces and shows the remote root instead of the local macOS path. SSH workspace descriptors restore on relaunch, and new guarded hmux://ssh deep links prompt before launching ssh so unfamiliar links can't run arbitrary commands.",
       },
       {
         title: "Vault Pi and Hermes",
@@ -733,7 +733,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Browser Cookie Import",
         description:
-          "A new cmux browser cookies import CLI brings cookies from other browsers into cmux's browser panes so logged-in sessions follow you over.",
+          "A new hmux browser cookies import CLI brings cookies from other browsers into hmux's browser panes so logged-in sessions follow you over.",
       },
       {
         title: "Quality-of-life Polish",
@@ -748,12 +748,12 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Session Restore on Quit",
         description:
-          "Closing the last window with the red X no longer drops your work. cmux restores prior panes on relaunch and resumes Claude Code, Codex, OpenCode, Gemini, and Rovo Dev sessions where you left off.",
+          "Closing the last window with the red X no longer drops your work. hmux restores prior panes on relaunch and resumes Claude Code, Codex, OpenCode, Gemini, and Rovo Dev sessions where you left off.",
       },
       {
         title: "Passkeys, WebAuthn, and FIDO2",
         description:
-          "Sign in to passkey-protected sites directly inside cmux browser panes. Reworked inside-out signing keeps the notarized Developer ID build compatible with macOS authentication services.",
+          "Sign in to passkey-protected sites directly inside hmux browser panes. Reworked inside-out signing keeps the notarized Developer ID build compatible with macOS authentication services.",
       },
       {
         title: "File Explorer",
@@ -763,7 +763,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Task Manager",
         description:
-          "A built-in Task Manager window plus cmux top CLI shows a live snapshot of windows, workspaces, panes, surfaces, and browser webviews, with jumps from the manager into the matching surface.",
+          "A built-in Task Manager window plus hmux top CLI shows a live snapshot of windows, workspaces, panes, surfaces, and browser webviews, with jumps from the manager into the matching surface.",
       },
     ],
   },
@@ -773,22 +773,22 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "SSH",
         description:
-          "cmux ssh user@remote creates a workspace for a remote machine. Browser panes route through the remote network so localhost just works. Drag an image into a remote session to upload via scp. Coding agent notifications come home to your local sidebar. Reconnects on drops.",
+          "hmux ssh user@remote creates a workspace for a remote machine. Browser panes route through the remote network so localhost just works. Drag an image into a remote session to upload via scp. Coding agent notifications come home to your local sidebar. Reconnects on drops.",
       },
       {
         title: "Claude Code Teams",
         description:
-          "cmux claude-teams launches Claude Code's experimental teammate mode with one command. It sets up the environment, fakes a tmux session, and translates tmux commands into native cmux splits. Teammates stack vertically in a right column with sidebar metadata and notifications.",
+          "hmux claude-teams launches Claude Code's experimental teammate mode with one command. It sets up the environment, fakes a tmux session, and translates tmux commands into native hmux splits. Teammates stack vertically in a right column with sidebar metadata and notifications.",
       },
       {
         title: "oh-my-openagent",
         description:
-          "cmux omo integrates oh-my-openagent (formerly oh-my-opencode), which orchestrates specialist agents across Claude, GPT, and Gemini in parallel. Same tmux shim as claude-teams, auto-installs the plugin, notifications route through cmux.",
+          "hmux omo integrates oh-my-openagent (formerly oh-my-opencode), which orchestrates specialist agents across Claude, GPT, and Gemini in parallel. Same tmux shim as claude-teams, auto-installs the plugin, notifications route through hmux.",
       },
       {
         title: "Browser Profile Import",
         description:
-          "Import cookies, history, and sessions from Chrome, Arc, Brave, Firefox, Safari, and 20+ browsers. The import wizard detects installed browsers, lets you pick profiles, and injects everything into cmux's browser panes so you're already logged in.",
+          "Import cookies, history, and sessions from Chrome, Arc, Brave, Firefox, Safari, and 20+ browsers. The import wizard detects installed browsers, lets you pick profiles, and injects everything into hmux's browser panes so you're already logged in.",
       },
       {
         title: "Minimal Mode",
@@ -798,7 +798,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Custom Commands",
         description:
-          "Define project-specific actions in cmux.json that launch from the command palette. One file per repo, no global config needed.",
+          "Define project-specific actions in hmux.json that launch from the command palette. One file per repo, no global config needed.",
       },
     ],
   },
@@ -813,7 +813,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Find in Browser",
         description:
-          "Browser panels now support Cmd+F with inline find controls, so you can search long docs, dashboards, and issue threads without leaving cmux.",
+          "Browser panels now support Cmd+F with inline find controls, so you can search long docs, dashboards, and issue threads without leaving hmux.",
       },
       {
         title: "Vi Copy Mode",
@@ -828,7 +828,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Expanded Localization",
         description:
-          "cmux now includes Japanese plus 16 additional languages, and a per-app language override lets you change the UI language without changing macOS system settings.",
+          "hmux now includes Japanese plus 16 additional languages, and a per-app language override lets you change the UI language without changing macOS system settings.",
       },
     ],
   },
@@ -844,7 +844,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Command Palette",
         description:
-          "Hit Cmd+Shift+P to open a searchable command palette. Every action in cmux is here: creating workspaces, toggling the sidebar, checking for updates, switching windows. Keyboard shortcuts are shown inline so you can learn them as you go.",
+          "Hit Cmd+Shift+P to open a searchable command palette. Every action in hmux is here: creating workspaces, toggling the sidebar, checking for updates, switching windows. Keyboard shortcuts are shown inline so you can learn them as you go.",
         image: "/changelog/0.61.0-command-palette.png",
       },
       {
@@ -879,7 +879,7 @@ export const changelogMedia: Record<string, VersionMedia> = {
       {
         title: "Browser DevTools",
         description:
-          "The embedded browser now has full WebKit DevTools. Open them with the standard shortcut and they persist across tab switches. Inspect elements, debug JavaScript, and monitor network requests without leaving cmux.",
+          "The embedded browser now has full WebKit DevTools. Open them with the standard shortcut and they persist across tab switches. Inspect elements, debug JavaScript, and monitor network requests without leaving hmux.",
         image: "/changelog/0.60.0-devtools.png",
       },
       {

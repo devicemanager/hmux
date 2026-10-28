@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Which cmuxTests/ suites can observe a diff to app code. Report only.
+"""Which hmuxTests/ suites can observe a diff to app code. Report only.
 
-test_impact.py walks a cmuxTests/ diff forward to the suites it edits. A pull
+test_impact.py walks a hmuxTests/ diff forward to the suites it edits. A pull
 request that changes only Sources/ selects nothing there, so today it runs no
 app-host behavior test at all. This walks the other way: each changed app
-declaration is named, the name is searched for in cmuxTests/, a referencing
+declaration is named, the name is searched for in hmuxTests/, a referencing
 line inside a helper continues the trail through the helper's own name (as in
 test_impact.py), and a referencing line inside a suite selects that suite.
 
@@ -42,7 +42,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from choose_ci_suite import CHANGED_SUITES_BUDGET_MS  # noqa: E402
-from cmux_unit_test_shard import (  # noqa: E402
+from hmux_unit_test_shard import (  # noqa: E402
     DEFAULT_TIMINGS_PATH,
     FALLBACK_TEST_MS,
     discover_selectors,
@@ -55,7 +55,7 @@ SCHEMA = 1
 APP_PREFIX = "Sources/"
 PACKAGE_SOURCES_RE = re.compile(r"^Packages/(?:macOS|Shared)/[^/]+/Sources/")
 # The trees a selection reads: the app, the packages it links, and the tests.
-TREE_PREFIXES = ("Sources", "Packages/macOS", "Packages/Shared", "cmuxTests")
+TREE_PREFIXES = ("Sources", "Packages/macOS", "Packages/Shared", "hmuxTests")
 
 # A changed name more test files mention than this is "hot": searching it
 # selects much of the suite without telling which part the change reaches.
@@ -84,7 +84,7 @@ APP_DECLARATION_RE = re.compile(
 
 # Changed string literals shorter than this ("ok", "--json") match too much.
 MIN_LITERAL_CHARS = 8
-# Each literal is a text search over all of cmuxTests/; a diff with more than
+# Each literal is a text search over all of hmuxTests/; a diff with more than
 # this many (a generated file, a mass rename) keeps the job inside its timeout.
 MAX_LITERAL_SEEDS = 1500
 STRING_LITERAL_RE = re.compile(r'"((?:[^"\\\n]|\\.)*)"')
@@ -93,7 +93,7 @@ INTERPOLATION_RE = re.compile(r"\\\((?:[^()]|\([^()]*\))*\)")
 
 
 def is_literal_source(path: str) -> bool:
-    """Swift whose string literals a cmuxTests/ suite can observe: app code, and CLI/."""
+    """Swift whose string literals a hmuxTests/ suite can observe: app code, and CLI/."""
     return path.endswith(".swift") and (is_app_path(path) or path.startswith("CLI/"))
 
 
@@ -147,7 +147,7 @@ def changed_literals(diff: str) -> dict[str, set[str]]:
 
 
 def is_app_path(path: str) -> bool:
-    """App code a cmuxTests/ suite can observe: Sources/ and the macOS/Shared packages."""
+    """App code a hmuxTests/ suite can observe: Sources/ and the macOS/Shared packages."""
     return path.startswith(APP_PREFIX) or PACKAGE_SOURCES_RE.match(path) is not None
 
 
@@ -245,10 +245,10 @@ def changed_seeds(path: str, lines: list[str], changed: set[int]) -> tuple[list[
 
 
 class TestIndex:
-    """cmuxTests/ text, which files mention each identifier, and outlines."""
+    """hmuxTests/ text, which files mention each identifier, and outlines."""
 
     def __init__(self, files: dict[str, str]):
-        self.text = {path: text for path, text in files.items() if path.startswith("cmuxTests/")}
+        self.text = {path: text for path, text in files.items() if path.startswith("hmuxTests/")}
         self.lines = {path: text.splitlines() for path, text in self.text.items()}
         # One search here rules out most changed text before a per-file scan.
         self.all_text = "\n".join(self.text.values())
@@ -339,10 +339,10 @@ def reach(
 
 
 def declared_names(files: dict[str, str]) -> dict[str, int]:
-    """How many app files outside cmuxTests/ declare each name."""
+    """How many app files outside hmuxTests/ declare each name."""
     declared: dict[str, int] = {}
     for path, text in files.items():
-        if not path.startswith("cmuxTests/"):
+        if not path.startswith("hmuxTests/"):
             for word in set(APP_DECLARATION_RE.findall(text)):
                 declared[word] = declared.get(word, 0) + 1
     return declared
@@ -380,8 +380,8 @@ def select(files: dict[str, str], diff: str | None) -> Selection:
     if diff.strip() and not hunks:
         selection.fallback = "diff not parseable"
         return selection
-    if not any(path.startswith("cmuxTests/") for path in files):
-        selection.fallback = "cmuxTests/ not found"
+    if not any(path.startswith("hmuxTests/") for path in files):
+        selection.fallback = "hmuxTests/ not found"
         return selection
     seeds: list[Seed] = []
     literals = changed_literals(diff)
@@ -396,7 +396,7 @@ def select(files: dict[str, str], diff: str | None) -> Selection:
             searched_literals.add(literal)
             seeds.append(Seed(literal, None, "string"))
         if path.startswith("CLI/"):
-            # The CLI is its own module; cmuxTests/ reaches it only through
+            # The CLI is its own module; hmuxTests/ reaches it only through
             # the binary, so its literals are all there is to follow.
             selection.app_files.append(path)
             continue
@@ -435,7 +435,7 @@ def select(files: dict[str, str], diff: str | None) -> Selection:
 
 
 def suite_costs(root: Path, timings: dict | None) -> dict[str, int]:
-    """Measured milliseconds per cmuxTests suite, as choose_ci_suite.py weighs them.
+    """Measured milliseconds per hmuxTests suite, as choose_ci_suite.py weighs them.
 
     Suites discover_selectors() leaves to their own strict steps fall back to
     the timings table, then to one default test.
@@ -444,7 +444,7 @@ def suite_costs(root: Path, timings: dict | None) -> dict[str, int]:
     try:
         selectors, _ = reweight_selectors(discover_selectors(root), timings)
     except SystemExit as error:  # discover_selectors reports problems this way
-        print(f"Could not enumerate cmuxTests selectors: {error}", file=sys.stderr)
+        print(f"Could not enumerate hmuxTests selectors: {error}", file=sys.stderr)
         selectors = []
     for selector in selectors:
         suite = selector.identifier.split("/")[1]

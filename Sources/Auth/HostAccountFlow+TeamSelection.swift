@@ -1,7 +1,7 @@
-import CMUXAuthCore
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxSettingsUI
+import HMUXAuthCore
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxSettingsUI
 import Foundation
 import Observation
 

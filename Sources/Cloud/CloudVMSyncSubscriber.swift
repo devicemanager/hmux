@@ -1,9 +1,9 @@
-import CmuxAuthRuntime
-import CmuxCloud
+import HmuxAuthRuntime
+import HmuxCloud
 import Foundation
 import OSLog
 
-nonisolated private let cloudVMSyncLog = Logger(subsystem: "dev.cmux", category: "cloud-vm-sync")
+nonisolated private let cloudVMSyncLog = Logger(subsystem: "dev.hmux", category: "cloud-vm-sync")
 
 /// Keeps one machines panel subscribed to its team's `vms` sync collection on
 /// the presence worker (`workers/presence/src/syncVms.ts`), so a machine
@@ -15,7 +15,7 @@ nonisolated private let cloudVMSyncLog = Logger(subsystem: "dev.cmux", category:
 /// asks for `vms` from the last cursor this instance applied (0/0 on the first
 /// connect and after every scope change), so a reconnect after the server's
 /// 15-minute deadline catches up with deltas. Every socket presents the same
-/// team header ``VMClient`` sends (`X-Cmux-Team-Id` = `auth.resolvedTeamID`,
+/// team header ``VMClient`` sends (`X-Hmux-Team-Id` = `auth.resolvedTeamID`,
 /// none for a personal account without teams), and its token source fails
 /// closed once the account or team changes, at which point the owner calls
 /// ``start()`` again and the subscriber resubscribes under the new scope.

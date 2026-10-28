@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
 # Finish the DMGs around stapled apps that notarize-nightly-dmg.sh submitted
-# without a wait (CMUX_STAPLED_DMG_HANDOFF_FILE). All submissions are waited on
+# without a wait (HMUX_STAPLED_DMG_HANDOFF_FILE). All submissions are waited on
 # at once, so several variants share one bounded wait instead of one each.
 # For each: require Accepted from both `notarytool wait` and `notarytool log`,
 # require the DMG bytes the handoff recorded, staple the DMG, validate it and the app inside it
 # (its own ticket, Gatekeeper, metadata, licenses, launch smokes unless
-# CMUX_DEFER_LAUNCH_SMOKES), then move it to the release path and copy it to
+# HMUX_DEFER_LAUNCH_SMOKES), then move it to the release path and copy it to
 # the immutable path.
 #
 # Usage: finish-stapled-app-dmgs.sh <handoff-file>...
 set -euo pipefail
 [ "$#" -ge 1 ] || { echo "usage: finish-stapled-app-dmgs.sh <handoff-file>..." >&2; exit 2; }
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-XCRUN_TOOL="${CMUX_XCRUN_TOOL:-xcrun}"
-HDIUTIL_TOOL="${CMUX_HDIUTIL_TOOL:-hdiutil}"
-SPCTL_TOOL="${CMUX_SPCTL_TOOL:-spctl}"
-SMOKE_TOOL="${CMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"
-VERIFY_METADATA_TOOL="${CMUX_VERIFY_METADATA_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-channel-metadata.sh}"
-VERIFY_LICENSES_TOOL="${CMUX_VERIFY_LICENSES_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-licenses.sh}"
-DEFER_LAUNCH_SMOKES="${CMUX_DEFER_LAUNCH_SMOKES:-false}"
-WAIT_TIMEOUT="${CMUX_STAPLED_DMG_WAIT_TIMEOUT:-25m}"
+XCRUN_TOOL="${HMUX_XCRUN_TOOL:-xcrun}"
+HDIUTIL_TOOL="${HMUX_HDIUTIL_TOOL:-hdiutil}"
+SPCTL_TOOL="${HMUX_SPCTL_TOOL:-spctl}"
+SMOKE_TOOL="${HMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"
+VERIFY_METADATA_TOOL="${HMUX_VERIFY_METADATA_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-channel-metadata.sh}"
+VERIFY_LICENSES_TOOL="${HMUX_VERIFY_LICENSES_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-licenses.sh}"
+DEFER_LAUNCH_SMOKES="${HMUX_DEFER_LAUNCH_SMOKES:-false}"
+WAIT_TIMEOUT="${HMUX_STAPLED_DMG_WAIT_TIMEOUT:-25m}"
 for tool in ASC_API_KEY_ID ASC_API_ISSUER_ID ASC_API_KEY_P8_BASE64; do
   [ -n "${!tool:-}" ] || { echo "Missing notarization secret $tool" >&2; exit 1; }
 done
@@ -122,8 +122,8 @@ for handoff in "${handoffs[@]}"; do
   "$XCRUN_TOOL" stapler validate "$app"
   "$SPCTL_TOOL" -a -vv --type execute "$app"
   if [ "$DEFER_LAUNCH_SMOKES" != true ]; then
-    CMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$app"
-    CMUX_SMOKE_DIRECT_EXEC=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$app"
+    HMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$app"
+    HMUX_SMOKE_DIRECT_EXEC=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$app"
   fi
   "$VERIFY_METADATA_TOOL" "$app" "$channel"
   "$VERIFY_LICENSES_TOOL" "$app"

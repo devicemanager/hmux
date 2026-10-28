@@ -6,13 +6,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Keep this app installed. In cmux, open Sidebar Extensions, enable CMUX Sample Sidebar Extension, choose it from the sidebar picker, and confirm Workspace Signals shows your real workspaces."
+            "value" : "Keep this app installed. In hmux, open Sidebar Extensions, enable HMUX Sample Sidebar Extension, choose it from the sidebar picker, and confirm Workspace Signals shows your real workspaces."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "このアプリをインストールしたままにしてください。cmuxでサイドバー拡張機能を開き、CMUX Sample Sidebar Extensionを有効にして、サイドバーピッカーから選択し、Workspace Signalsに実際のワークスペースが表示されることを確認してください。"
+            "value" : "このアプリをインストールしたままにしてください。hmuxでサイドバー拡張機能を開き、HMUX Sample Sidebar Extensionを有効にして、サイドバーピッカーから選択し、Workspace Signalsに実際のワークスペースが表示されることを確認してください。"
           }
         }
       }
@@ -22,13 +22,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Extension ID: co.manaflow.CMUXExtKitSampleSidebarApp.Extension"
+            "value" : "Extension ID: co.manaflow.HMUXExtKitSampleSidebarApp.Extension"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "拡張機能ID: co.manaflow.CMUXExtKitSampleSidebarApp.Extension"
+            "value" : "拡張機能ID: co.manaflow.HMUXExtKitSampleSidebarApp.Extension"
           }
         }
       }
@@ -54,13 +54,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "CMUX Sample Sidebar Extension"
+            "value" : "HMUX Sample Sidebar Extension"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "CMUX サンプルサイドバー拡張機能"
+            "value" : "HMUX サンプルサイドバー拡張機能"
           }
         }
       }

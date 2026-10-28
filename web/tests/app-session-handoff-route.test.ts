@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 
 process.env.SKIP_ENV_VALIDATION = "1";
 process.env.VERCEL = "1";
-process.env.CMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID = "app-session-handoff";
+process.env.HMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID = "app-session-handoff";
 process.env.NEXT_PUBLIC_STACK_PROJECT_ID = "12345678-1234-4123-8123-123456789abc";
 process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY = "test-publishable-key";
 process.env.STACK_SECRET_SERVER_KEY = "test-secret-key";
@@ -48,11 +48,11 @@ function handoffRequest(
   body: Record<string, string>,
   headers: Record<string, string> = {},
 ): NextRequest {
-  return new NextRequest("https://cmux.test/handler/app-session-handoff", {
+  return new NextRequest("https://hmux.test/handler/app-session-handoff", {
     method: "POST",
     headers: {
       "content-type": "application/x-www-form-urlencoded",
-      "x-cmux-app-session-handoff": "1",
+      "x-hmux-app-session-handoff": "1",
       "user-agent": "bun-test",
       "x-forwarded-for": "203.0.113.10",
       ...headers,
@@ -85,7 +85,7 @@ describe("app session handoff", () => {
 
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight?plan=pro#join",
+      "https://hmux.test/dashboard/testflight?plan=pro#join",
     );
     expect(response.headers.get("location")).not.toContain("native-refresh");
     expect(response.headers.get("cache-control")).toBe("no-store");
@@ -123,12 +123,12 @@ describe("app session handoff", () => {
       access_token: "native-access",
       after: "/dashboard/testflight?plan=pro#join",
     }, {
-      "x-cmux-app-session-response": "cookies",
+      "x-hmux-app-session-response": "cookies",
     }));
 
     expect(response.status).toBe(204);
     expect(response.headers.get("location")).toBeNull();
-    expect(response.headers.get("x-cmux-app-session-handoff")).toBe("ready");
+    expect(response.headers.get("x-hmux-app-session-handoff")).toBe("ready");
     expect(response.headers.get("set-cookie")).toContain("hexclave-access=");
   });
 
@@ -139,7 +139,7 @@ describe("app session handoff", () => {
       refresh_token: "bad-refresh",
       after: "/dashboard/testflight",
     }, {
-      "x-cmux-app-session-response": "cookies",
+      "x-hmux-app-session-response": "cookies",
     }));
 
     expect(response.status).toBe(401);
@@ -188,14 +188,14 @@ describe("app session handoff", () => {
       after: "/handler/app-session-handoff?after=%2Fdashboard",
     }));
 
-    expect(offOrigin.headers.get("location")).toBe("https://cmux.test/");
-    expect(recursive.headers.get("location")).toBe("https://cmux.test/");
+    expect(offOrigin.headers.get("location")).toBe("https://hmux.test/");
+    expect(recursive.headers.get("location")).toBe("https://hmux.test/");
     expect(getUser).not.toHaveBeenCalled();
   });
 
   test("rejects malformed request bodies without throwing", async () => {
     const response = await POST(new NextRequest(
-      "https://cmux.test/handler/app-session-handoff",
+      "https://hmux.test/handler/app-session-handoff",
       {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -204,7 +204,7 @@ describe("app session handoff", () => {
     ));
 
     expect(response.status).toBe(303);
-    expect(response.headers.get("location")).toBe("https://cmux.test/");
+    expect(response.headers.get("location")).toBe("https://hmux.test/");
     expect(getUser).not.toHaveBeenCalled();
   });
 
@@ -215,11 +215,11 @@ describe("app session handoff", () => {
     }, {
       origin: "https://evil.test",
       "sec-fetch-site": "cross-site",
-      "x-cmux-app-session-handoff": "",
+      "x-hmux-app-session-handoff": "",
     }));
 
     expect(response.status).toBe(303);
-    expect(response.headers.get("location")).toBe("https://cmux.test/");
+    expect(response.headers.get("location")).toBe("https://hmux.test/");
     expect(response.headers.get("set-cookie")).toBeNull();
     expect(getUser).not.toHaveBeenCalled();
   });
@@ -283,7 +283,7 @@ describe("app session handoff", () => {
     const response = await POST(request);
 
     expect(response.status).toBe(303);
-    expect(response.headers.get("location")).toBe("https://cmux.test/");
+    expect(response.headers.get("location")).toBe("https://hmux.test/");
     expect(readBody).not.toHaveBeenCalled();
     expect(getUser).not.toHaveBeenCalled();
   });
@@ -295,7 +295,7 @@ describe("app session handoff", () => {
       refresh_token: "native-refresh",
       after: "/dashboard/testflight",
     }, {
-      "x-cmux-app-session-response": "cookies",
+      "x-hmux-app-session-response": "cookies",
       "x-forwarded-for": "203.0.113.21",
     }));
 
@@ -321,7 +321,7 @@ describe("app session handoff", () => {
         "x-forwarded-for": `203.0.113.${index}`,
       }));
       expect(response.headers.get("location")).toBe(
-        "https://cmux.test/dashboard/testflight",
+        "https://hmux.test/dashboard/testflight",
       );
     }
 
@@ -374,7 +374,7 @@ describe("app session handoff", () => {
     }, headers));
 
     expect(reset.headers.get("location")).toBe(
-      "https://cmux.test/dashboard/testflight",
+      "https://hmux.test/dashboard/testflight",
     );
   });
 
@@ -392,7 +392,7 @@ describe("app session handoff", () => {
         refresh_token: "native-refresh",
         after: "/dashboard/testflight",
       }, {
-        "x-cmux-app-session-response": "cookies",
+        "x-hmux-app-session-response": "cookies",
       }));
 
       expect(response.status).toBe(503);

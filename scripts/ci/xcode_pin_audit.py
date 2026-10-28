@@ -17,7 +17,7 @@ import sys
 
 
 APP_NAME = re.compile(r"^Xcode_(\d+(?:\.\d+)*)\.app$")
-VAR_NAME = re.compile(r"^CMUX_CI_XCODE_APP_[A-Z0-9_]+$")
+VAR_NAME = re.compile(r"^HMUX_CI_XCODE_APP_[A-Z0-9_]+$")
 DEFAULT_PINS = Path(__file__).with_name("xcode-pins.txt")
 
 
@@ -77,7 +77,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--pins-file", type=Path, default=DEFAULT_PINS)
     parser.add_argument("--pin", action="append", default=[], help="pool Xcode version; repeat for remote use")
     parser.add_argument("--app", action="append", default=[], metavar="NAME=PATH")
-    parser.add_argument("--github-vars", metavar="OWNER/REPO", help="read CMUX_CI_XCODE_APP_* repo variables")
+    parser.add_argument("--github-vars", metavar="OWNER/REPO", help="read HMUX_CI_XCODE_APP_* repo variables")
     parser.add_argument("--applications-dir", type=Path, default=Path("/Applications"))
     args = parser.parse_args(argv)
     try:

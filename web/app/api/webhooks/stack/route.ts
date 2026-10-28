@@ -24,7 +24,7 @@ export async function POST(request: Request): Promise<Response> {
   return withApiRouteSpan(
     request,
     "/api/webhooks/stack",
-    { "cmux.subsystem": "auth", "cmux.auth.operation": "stack_webhook" },
+    { "hmux.subsystem": "auth", "hmux.auth.operation": "stack_webhook" },
     () => handleStackWebhook(request, {
       webhookSecret: () => env.STACK_WEBHOOK_SECRET,
       sync: () => hexclaveSyncDependencies({

@@ -30,7 +30,7 @@
     "devbox:promote": "bun scripts/promote-devbox-image.ts",
     "devbox:manifest:check": "bun scripts/validate-devbox-ladder.ts",
     "devbox:pins:check": "bun scripts/check-devbox-agent-pins.ts",
-    "devbox:probe:busybox": "bun scripts/probe-busybox-cmux-tui.ts",
+    "devbox:probe:busybox": "bun scripts/probe-busybox-hmux-tui.ts",
     "db:check": "bunx drizzle-kit check --config drizzle.config.ts",
     "db:down": "bash scripts/db-local.sh down",
     "db:generate": "bunx drizzle-kit generate --config drizzle.config.ts",

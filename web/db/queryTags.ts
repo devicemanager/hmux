@@ -30,20 +30,20 @@ export function runWithCloudDbQueryTags<T>(
 
 /**
  * The active tags: an explicit context wins; otherwise a script or cron can
- * name itself through the environment (`CMUX_DB_QUERY_SOURCE`,
- * `CMUX_DB_QUERY_JOB`), which is how the operator backfills and the Vercel
+ * name itself through the environment (`HMUX_DB_QUERY_SOURCE`,
+ * `HMUX_DB_QUERY_JOB`), which is how the operator backfills and the Vercel
  * cron routes identify themselves without a request wrapper.
  */
 export function currentCloudDbQueryTags(): CloudDbQueryTags | undefined {
   const stored = tagStorage.getStore();
   if (stored) return stored;
-  const source = process.env.CMUX_DB_QUERY_SOURCE?.trim();
-  const job = process.env.CMUX_DB_QUERY_JOB?.trim();
+  const source = process.env.HMUX_DB_QUERY_SOURCE?.trim();
+  const job = process.env.HMUX_DB_QUERY_JOB?.trim();
   if (!source && !job) return undefined;
   return { source: source || "script", ...(job ? { job } : {}) };
 }
 
-const APPLICATION = "cmux-web";
+const APPLICATION = "hmux-web";
 const MAX_VALUE_LENGTH = 120;
 
 function releaseTag(): string | undefined {

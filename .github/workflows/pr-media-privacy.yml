@@ -1,9 +1,9 @@
 name: PR media privacy
 
 # Every default clone fetches the public pr-media branch, and many tools write
-# captures to it (cmux-next-media.yml tours, nightly.yml reels,
+# captures to it (hmux-next-media.yml tours, nightly.yml reels,
 # scripts/pr-media.py, scripts/showcase-publish.py, the UI fuzzer, HQ tools).
-# Captures from the fleet minis have shown terminal prompts (`cmux@<host>`),
+# Captures from the fleet minis have shown terminal prompts (`hmux@<host>`),
 # the Inspector's machine name and the capture account's home path.
 # scripts/pr-media.py and the fuzzer run the same check before they push; this
 # gate sits on the branch itself, so it also covers every other writer and the

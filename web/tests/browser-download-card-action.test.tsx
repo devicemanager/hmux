@@ -45,7 +45,7 @@ describe("Browser download card action", () => {
       for (const [index, scenario] of scenarios.entries()) {
         expect(capture).toHaveBeenNthCalledWith(
           index + 1,
-          "cmux_browser_download_clicked",
+          "hmux_browser_download_clicked",
           {
             platform: scenario.platform,
             artifact: scenario.artifact,

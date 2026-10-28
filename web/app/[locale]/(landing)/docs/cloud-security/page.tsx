@@ -6,7 +6,7 @@ import { DocsSchema } from "../docs-schema";
 import { Callout } from "@/app/[locale]/components/callout";
 import { DocsHeading } from "@/app/[locale]/components/docs-heading";
 import { Link } from "@/i18n/navigation";
-import { CMUX_REQUIRED_DOMAINS } from "@/services/vms/networkPolicy";
+import { HMUX_REQUIRED_DOMAINS } from "@/services/vms/networkPolicy";
 
 function assertSupportedLocale(locale: string) {
   if (
@@ -95,7 +95,7 @@ export default async function CloudSecurityPage({
       <DocsHeading level={3} id="always-allowed-hosts">{t("requiredTitle")}</DocsHeading>
       <p>{t("requiredDesc")}</p>
       <ul>
-        {CMUX_REQUIRED_DOMAINS.map((domain) => (
+        {HMUX_REQUIRED_DOMAINS.map((domain) => (
           <li key={domain}><code>{domain}</code></li>
         ))}
       </ul>

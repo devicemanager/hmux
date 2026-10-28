@@ -29,7 +29,7 @@ pub fn run_attached_with_env(
 }
 
 /// Run a routed child with a clean credential boundary.  This is used for the
-/// cmux handoff path: only the newly exchanged route credential is added back
+/// hmux handoff path: only the newly exchanged route credential is added back
 /// after inherited token-like variables are removed.
 pub fn run_attached_with_env_isolated(
     executable: &Path,
@@ -60,7 +60,7 @@ fn run_attached_with_env_inner(
     // socket paths, test origins, or compatibility values to a provider.
     for (key, _) in std::env::vars_os() {
         let upper = key.to_string_lossy().to_ascii_uppercase();
-        if upper.starts_with("CODEROUTER_HANDOFF_") || upper.starts_with("CODEROUTER_CMUX_HANDOFF_")
+        if upper.starts_with("CODEROUTER_HANDOFF_") || upper.starts_with("CODEROUTER_HMUX_HANDOFF_")
         {
             command.env_remove(key);
         }
@@ -121,15 +121,15 @@ fn remove_inherited_credentials(command: &mut Command) {
     // Keep explicit aliases here as a reviewable contract for Stack and
     // CodeRouter handoff values.
     for key in [
-        // Do not pass cmux's socket transport context to the routed provider.
-        // In particular, CMUX_SOCKET_CAPABILITY is a bearer for socket
+        // Do not pass hmux's socket transport context to the routed provider.
+        // In particular, HMUX_SOCKET_CAPABILITY is a bearer for socket
         // authorization and must not cross the handoff boundary.
-        "CMUX_SOCKET",
-        "CMUX_SOCKET_CAPABILITY",
-        "CMUX_SOCKET_ENABLE",
-        "CMUX_SOCKET_MODE",
-        "CMUX_SOCKET_PASSWORD",
-        "CMUX_SOCKET_PATH",
+        "HMUX_SOCKET",
+        "HMUX_SOCKET_CAPABILITY",
+        "HMUX_SOCKET_ENABLE",
+        "HMUX_SOCKET_MODE",
+        "HMUX_SOCKET_PASSWORD",
+        "HMUX_SOCKET_PATH",
         // The routed child receives its trusted base URL through the provider
         // configuration. It does not need the CLI's origin or credential-file
         // location, which could otherwise expose a saved Stack session.
@@ -142,8 +142,8 @@ fn remove_inherited_credentials(command: &mut Command) {
         "STACK_REFRESH_TOKEN",
         "X_STACK_ACCESS_TOKEN",
         "X_STACK_REFRESH_TOKEN",
-        "CMUX_STACK_ACCESS_TOKEN",
-        "CMUX_STACK_REFRESH_TOKEN",
+        "HMUX_STACK_ACCESS_TOKEN",
+        "HMUX_STACK_REFRESH_TOKEN",
         "GITHUB_PAT",
         "GH_PAT",
         "GITLAB_PAT",

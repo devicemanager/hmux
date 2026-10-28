@@ -32,7 +32,7 @@ afterEach(() => {
 describe("billing reconciliation cron", () => {
   test("fails closed without configured bearer authentication", async () => {
     delete process.env.CRON_SECRET;
-    expect((await GET(new Request("https://cmux.test/api/cron/billing-reconcile"))).status)
+    expect((await GET(new Request("https://hmux.test/api/cron/billing-reconcile"))).status)
       .toBe(401);
     expect(reconcileStripeSubscriptions).not.toHaveBeenCalled();
   });
@@ -40,7 +40,7 @@ describe("billing reconciliation cron", () => {
   test("runs reconciliation with a valid cron secret", async () => {
     process.env.CRON_SECRET = "expected";
     const response = await GET(new Request(
-      "https://cmux.test/api/cron/billing-reconcile",
+      "https://hmux.test/api/cron/billing-reconcile",
       { headers: { authorization: "Bearer expected" } },
     ));
     expect(response.status).toBe(200);
@@ -58,7 +58,7 @@ describe("billing reconciliation cron", () => {
     process.env.CRON_SECRET = "expected";
     reconcileError = new Error("database unavailable");
     const response = await GET(new Request(
-      "https://cmux.test/api/cron/billing-reconcile",
+      "https://hmux.test/api/cron/billing-reconcile",
       { headers: { authorization: "Bearer expected" } },
     ));
     expect(response.status).toBe(503);

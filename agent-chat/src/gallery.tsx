@@ -23,7 +23,7 @@ import { groupTurns } from "./turns";
 import { agentChatText } from "./i18n";
 import { RepositorySlugContext } from "./context";
 
-const cwd = "/Users/lawrence/fun/cmuxterm-hq/worktrees/feat-agent-chat-ui/agent-chat";
+const cwd = "/Users/lawrence/fun/hmuxterm-hq/worktrees/feat-agent-chat-ui/agent-chat";
 const noLoadingProviders = new Set<string>();
 const codexModelsLoading = new Set(["codex"]);
 
@@ -344,7 +344,7 @@ export function GalleryApp() {
           </div>
         </Section>
 
-        <Section id="agent-messages" title="cmux agent messages">
+        <Section id="agent-messages" title="hmux agent messages">
           <div className="gallery-grid two">
             <div className="gallery-transcript small">
               <div className="gallery-label">Delivered, in the turn they arrived in</div>

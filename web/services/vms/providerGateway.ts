@@ -36,10 +36,10 @@ import {
   type VMStats,
   type VMResourceStatsResult,
   type VMResizeOptions,
-  type CmuxRemoteApprovalResult,
-  type CmuxRemoteApprovalOptions,
-  type CmuxRemoteAttachOptions,
-  type CmuxRemoteEndpoint,
+  type HmuxRemoteApprovalResult,
+  type HmuxRemoteApprovalOptions,
+  type HmuxRemoteAttachOptions,
+  type HmuxRemoteEndpoint,
   type VmCapabilities,
   type EnsureProviderNetworkOptions,
   vmCapabilitiesFor,
@@ -93,12 +93,12 @@ export type VmProviderGatewayShape = {
     snapshotId: string,
     options?: RestoreOptions,
   ) => Effect.Effect<VMHandle, VmProviderOperationError>;
-  /** Every snapshot taken from the machine, newest first (`cmux vm snapshot ls`). */
+  /** Every snapshot taken from the machine, newest first (`hmux vm snapshot ls`). */
   readonly listSnapshots?: (
     provider: ProviderId,
     vmId: string,
   ) => Effect.Effect<SnapshotRef[], VmProviderOperationError>;
-  /** Delete one snapshot taken from the machine (`cmux vm snapshot rm`). */
+  /** Delete one snapshot taken from the machine (`hmux vm snapshot rm`). */
   readonly deleteSnapshot?: (
     provider: ProviderId,
     vmId: string,
@@ -151,17 +151,17 @@ export type VmProviderGatewayShape = {
     vmId: string,
     options?: AttachOptions,
   ) => Effect.Effect<AttachEndpoint, VmProviderOperationError>;
-  readonly openCmuxRemote?: (
+  readonly openHmuxRemote?: (
     provider: ProviderId,
     vmId: string,
-    options?: CmuxRemoteAttachOptions,
-  ) => Effect.Effect<CmuxRemoteEndpoint, VmProviderOperationError>;
-  readonly approveCmuxRemoteEnrollment?: (
+    options?: HmuxRemoteAttachOptions,
+  ) => Effect.Effect<HmuxRemoteEndpoint, VmProviderOperationError>;
+  readonly approveHmuxRemoteEnrollment?: (
     provider: ProviderId,
     vmId: string,
     invitationId: string,
-    options?: CmuxRemoteApprovalOptions,
-  ) => Effect.Effect<CmuxRemoteApprovalResult, VmProviderOperationError>;
+    options?: HmuxRemoteApprovalOptions,
+  ) => Effect.Effect<HmuxRemoteApprovalResult, VmProviderOperationError>;
   readonly prepareSCP?: (provider: ProviderId, vmId: string, publicKey: string) => Effect.Effect<SCPEndpoint, VmProviderOperationError>;
   readonly openSSH: (provider: ProviderId, vmId: string) => Effect.Effect<SSHEndpoint, VmProviderOperationError>;
   readonly revokeSSHIdentity: (
@@ -219,7 +219,7 @@ export type VmProviderGatewayShape = {
   readonly deleteFirewallRule?: (provider: ProviderId, ruleId: string) => Effect.Effect<void, VmProviderOperationError>;
 };
 
-export class VmProviderGateway extends Context.Tag("cmux/VmProviderGateway")<
+export class VmProviderGateway extends Context.Tag("hmux/VmProviderGateway")<
   VmProviderGateway,
   VmProviderGatewayShape
 >() {}
@@ -474,21 +474,21 @@ export const VmProviderGatewayLive = Layer.succeed(VmProviderGateway, {
       }
       return await impl.openAttach(vmId, options);
     }),
-  openCmuxRemote: (provider, vmId, options) =>
-    providerEffect(provider, "openCmuxRemote", () => {
+  openHmuxRemote: (provider, vmId, options) =>
+    providerEffect(provider, "openHmuxRemote", () => {
       const impl = getProvider(provider);
-      if (!impl.openCmuxRemote) {
-        throw new VmOperationUnsupportedError({ provider, operation: "openCmuxRemote" });
+      if (!impl.openHmuxRemote) {
+        throw new VmOperationUnsupportedError({ provider, operation: "openHmuxRemote" });
       }
-      return impl.openCmuxRemote(vmId, options);
+      return impl.openHmuxRemote(vmId, options);
     }),
-  approveCmuxRemoteEnrollment: (provider, vmId, invitationId, options) =>
-    providerEffect(provider, "approveCmuxRemoteEnrollment", () => {
+  approveHmuxRemoteEnrollment: (provider, vmId, invitationId, options) =>
+    providerEffect(provider, "approveHmuxRemoteEnrollment", () => {
       const impl = getProvider(provider);
-      if (!impl.approveCmuxRemoteEnrollment) {
-        throw new VmOperationUnsupportedError({ provider, operation: "approveCmuxRemoteEnrollment" });
+      if (!impl.approveHmuxRemoteEnrollment) {
+        throw new VmOperationUnsupportedError({ provider, operation: "approveHmuxRemoteEnrollment" });
       }
-      return impl.approveCmuxRemoteEnrollment(vmId, invitationId, options);
+      return impl.approveHmuxRemoteEnrollment(vmId, invitationId, options);
     }),
   prepareSCP: (provider, vmId, publicKey) =>
     providerEffect(provider, "prepareSCP", async () => {

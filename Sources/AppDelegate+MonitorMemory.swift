@@ -1,10 +1,10 @@
 import AppKit
 import CoreGraphics
-import CmuxWindowing
+import HmuxWindowing
 import Foundation
 
 // CoreGraphics requires a C callback; this trampoline only forwards to AppDelegate on the main queue.
-private func cmuxDisplayReconfigurationCallback(
+private func hmuxDisplayReconfigurationCallback(
     _ _: CGDirectDisplayID,
     _ flags: CGDisplayChangeSummaryFlags,
     _ userInfo: UnsafeMutableRawPointer?
@@ -13,7 +13,7 @@ private func cmuxDisplayReconfigurationCallback(
     let appDelegate = Unmanaged<AppDelegate>.fromOpaque(userInfo).takeUnretainedValue()
     let isBeginning = flags.contains(.beginConfigurationFlag)
     NotificationCenter.default.post(
-        name: Notification.Name("com.cmuxterm.app.displayReconfiguration"),
+        name: Notification.Name("com.hmuxterm.app.displayReconfiguration"),
         object: appDelegate,
         userInfo: ["isBeginning": isBeginning]
     )
@@ -61,8 +61,8 @@ extension AppDelegate {
         guard let screen else { return nil }
 
         return SessionDisplaySnapshot(
-            displayID: screen.cmuxDisplayID,
-            stableID: screen.cmuxStableDisplayKey,
+            displayID: screen.hmuxDisplayID,
+            stableID: screen.hmuxStableDisplayKey,
             frame: SessionRectSnapshot(screen.frame),
             visibleFrame: SessionRectSnapshot(screen.visibleFrame)
         )
@@ -93,7 +93,7 @@ extension AppDelegate {
     func registerDisplayReconfigurationCallbackIfNeeded() {
         guard !didRegisterDisplayReconfigurationCallback else { return }
         let result = CGDisplayRegisterReconfigurationCallback(
-            cmuxDisplayReconfigurationCallback,
+            hmuxDisplayReconfigurationCallback,
             Unmanaged.passUnretained(self).toOpaque()
         )
         didRegisterDisplayReconfigurationCallback = result == .success
@@ -102,7 +102,7 @@ extension AppDelegate {
     func unregisterDisplayReconfigurationCallbackIfNeeded() {
         guard didRegisterDisplayReconfigurationCallback else { return }
         CGDisplayRemoveReconfigurationCallback(
-            cmuxDisplayReconfigurationCallback,
+            hmuxDisplayReconfigurationCallback,
             Unmanaged.passUnretained(self).toOpaque()
         )
         didRegisterDisplayReconfigurationCallback = false
@@ -155,7 +155,7 @@ extension AppDelegate {
             didObserveUnknownVisibleFrameFitTopology || $0 != lastVisibleFrameFitTopologySignature
         } ?? false
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "monitorMemory.reconcile displays=\(displays.available.count) " +
                 "sigChanged=\(signatureChanged ? 1 : 0) " +
                 "was=\(Self.signatureLogToken(lastAppliedConfigurationSignature)) " +
@@ -198,7 +198,7 @@ extension AppDelegate {
         // below because their frame is owned by AppKit's Space machinery.
         let mainWindows = mainWindowsForVisibilityController()
         for window in mainWindows {
-            guard let window = window as? CmuxMainWindow else { continue }
+            guard let window = window as? HmuxMainWindow else { continue }
             // AppKit owns inactive-Space placement while it restores a display
             // topology. Setting a frame on those windows moves them onto the
             // currently visible Space instead of letting macOS restore them.
@@ -215,7 +215,7 @@ extension AppDelegate {
                 topologyTrusted: visibleFrameFitTopologySignature != nil
             ) else { continue }
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "window.reconcile " +
                     "from={\(nsRectLogDescription(currentFrame))} " +
                     "to={\(nsRectLogDescription(corrected))}"
@@ -226,7 +226,7 @@ extension AppDelegate {
         // Keep inactive-Space windows out of the fit pass for the same reason:
         // the reconciler applies frames even when reachability needed no fix.
         let activeSpaceWindows = mainWindows.filter { window in
-            guard let window = window as? CmuxMainWindow else { return false }
+            guard let window = window as? HmuxMainWindow else { return false }
             return Self.shouldReconcileWindowAfterScreenChange(
                 isOnActiveSpace: window.isOnActiveSpace
             )
@@ -259,9 +259,9 @@ extension AppDelegate {
         skippingZoomedWindows: Bool = false
     ) {
         for window in mainWindowsForVisibilityController() {
-            guard let window = window as? CmuxMainWindow else { continue }
+            guard let window = window as? HmuxMainWindow else { continue }
             guard !window.styleMask.contains(.fullScreen) else { continue }
-            guard !(skippingZoomedWindows && window.cmuxWantsZoomedFrame) else { continue }
+            guard !(skippingZoomedWindows && window.hmuxWantsZoomedFrame) else { continue }
             guard Self.shouldReconcileWindowAfterScreenChange(
                 isOnActiveSpace: window.isOnActiveSpace
             ) else { continue }
@@ -270,7 +270,7 @@ extension AppDelegate {
             guard let entry = windowConfigFrames[context.windowId]?.entry(for: signature) else {
 #if DEBUG
                 let known = windowConfigFrames[context.windowId]?.entries.count ?? 0
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "monitorMemory.restore.miss window=\(windowTag) " +
                         "sig=\(Self.signatureLogToken(signature)) rememberedConfigs=\(known)"
                 )
@@ -284,7 +284,7 @@ extension AppDelegate {
                 fallbackDisplay: displays.fallback
             ) else { continue }
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "monitorMemory.restore.hit window=\(windowTag) " +
                     "sig=\(Self.signatureLogToken(signature)) " +
                     "remembered={\(sessionRectLogDescription(entry.frame))} " +
@@ -407,7 +407,7 @@ extension AppDelegate {
         let existing = windowConfigFrames[context.windowId] ?? SessionConfigFrameRing()
         windowConfigFrames[context.windowId] = existing.upserting(entry)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "monitorMemory.capture window=\(context.windowId.uuidString.prefix(8)) " +
                 "reason=\(reason) sig=\(Self.signatureLogToken(signature)) " +
                 "frame={\(nsRectLogDescription(frame))} " +
@@ -419,7 +419,7 @@ extension AppDelegate {
     func logCaptureSkipped(_ window: NSWindow, reason: String, guardName: String) {
 #if DEBUG
         let tag = contextForMainTerminalWindow(window)?.windowId.uuidString.prefix(8) ?? "??"
-        cmuxDebugLog(
+        hmuxDebugLog(
             "monitorMemory.capture.skip window=\(tag) reason=\(reason) guard=\(guardName) " +
                 "frame={\(nsRectLogDescription(window.frame))}"
         )

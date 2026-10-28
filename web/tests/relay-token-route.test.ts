@@ -22,11 +22,11 @@ const PAYLOAD: RelayPolicyPayload = {
   iat: 1_700_000_000,
   nbf: 1_700_000_000,
   exp: 1_700_000_300,
-  aud: "cmux-iroh-relay-policy",
+  aud: "hmux-iroh-relay-policy",
   relay_protocol: "iroh-relay-v1",
   relays: [{
     id: "managed-one",
-    provider: "cmux",
+    provider: "hmux",
     region: "us-west",
     url: "https://relay-one.cmux.dev/",
   }],
@@ -77,13 +77,13 @@ function request(
     headers: {
       "content-type": "application/json",
       ...(clientNamespace
-        ? { "x-cmux-app-namespace": clientNamespace }
+        ? { "x-hmux-app-namespace": clientNamespace }
         : {}),
       ...(includesBindingProof
         ? {
-          "x-cmux-iroh-binding-id": "123e4567-e89b-42d3-a456-426614174090",
-          "x-cmux-iroh-request-time": "1700000000",
-          "x-cmux-iroh-request-signature": "a".repeat(86),
+          "x-hmux-iroh-binding-id": "123e4567-e89b-42d3-a456-426614174090",
+          "x-hmux-iroh-request-time": "1700000000",
+          "x-hmux-iroh-request-signature": "a".repeat(86),
         }
         : {}),
     },
@@ -136,7 +136,7 @@ describe("POST /api/relay/token", () => {
     let authorizations = 0;
     let policyReads = 0;
     const response = await handleRelayTokenRequest(
-      request({ endpointId: ENDPOINT_ID }, "dev.cmux.app.beta", true),
+      request({ endpointId: ENDPOINT_ID }, "dev.hmux.app.beta", true),
       deps({
         isVercel: () => true,
         rateLimitRuleId: () => "relay-token",
@@ -153,7 +153,7 @@ describe("POST /api/relay/token", () => {
   test("skips relay-token limits for an authorized development team", async () => {
     let checks = 0;
     const response = await handleRelayTokenRequest(
-      request({ endpointId: ENDPOINT_ID }, "dev.cmux.ios.grid", true),
+      request({ endpointId: ENDPOINT_ID }, "dev.hmux.ios.grid", true),
       deps({
         isVercel: () => true,
         rateLimitRuleId: () => "relay-token",
@@ -171,7 +171,7 @@ describe("POST /api/relay/token", () => {
   test("keeps the relay-token limit for callers that are not authorized", async () => {
     let checks = 0;
     const response = await handleRelayTokenRequest(
-      request({ endpointId: ENDPOINT_ID }, "dev.cmux.ios.grid", true),
+      request({ endpointId: ENDPOINT_ID }, "dev.hmux.ios.grid", true),
       deps({
         isVercel: () => true,
         rateLimitRuleId: () => "relay-token",
@@ -221,8 +221,8 @@ describe("POST /api/relay/token", () => {
       Buffer.from(signature, "base64url"),
     )).toBe(true);
     expect(JSON.parse(Buffer.from(payload, "base64url").toString())).toEqual({
-      iss: "cmux",
-      aud: "cmux-relay",
+      iss: "hmux",
+      aud: "hmux-relay",
       sub: "account-a",
       iat: 1_700_000_000,
       exp: 1_700_000_300,
@@ -284,7 +284,7 @@ describe("POST /api/relay/token", () => {
   test("passes the exact app namespace into endpoint ownership checks", async () => {
     let checkedNamespace = "";
     const response = await handleRelayTokenRequest(
-      request({ endpointId: ENDPOINT_ID }, "dev.cmux.app.beta", true),
+      request({ endpointId: ENDPOINT_ID }, "dev.hmux.app.beta", true),
       deps({
         isEndpointAuthorized: async (input) => {
           checkedNamespace = input.clientNamespace;
@@ -294,7 +294,7 @@ describe("POST /api/relay/token", () => {
     );
 
     expect(response.status).toBe(403);
-    expect(checkedNamespace).toBe("dev.cmux.app.beta");
+    expect(checkedNamespace).toBe("dev.hmux.app.beta");
     const body = await response.json() as Record<string, unknown>;
     expect(body.error).toBe("invalid_binding_request_proof");
   });
@@ -302,7 +302,7 @@ describe("POST /api/relay/token", () => {
   test("requires binding proof before accepting a namespaced endpoint claim", async () => {
     let rateLimitChecks = 0;
     const response = await handleRelayTokenRequest(
-      request({ endpointId: ENDPOINT_ID }, "dev.cmux.app.beta"),
+      request({ endpointId: ENDPOINT_ID }, "dev.hmux.app.beta"),
       deps({
         isVercel: () => true,
         rateLimitRuleId: () => "relay-token",

@@ -8,7 +8,7 @@
 # compares CFBundleVersion (CURRENT_PROJECT_VERSION) against <sparkle:version>
 # — the marketing string is informational only.
 #
-# Modes (CMUX_SPARKLE_MONOTONIC_MODE):
+# Modes (HMUX_SPARKLE_MONOTONIC_MODE):
 #   enforce (default) - a stale build number fails, and so does an appcast that
 #                       cannot be fetched: a tag push is about to publish, and a
 #                       missing signal must fail closed rather than let a stale
@@ -21,14 +21,14 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-PROJECT_FILE="${CMUX_SPARKLE_PROJECT_FILE:-$ROOT_DIR/cmux.xcodeproj/project.pbxproj}"
-APPCAST_URL="${CMUX_SPARKLE_APPCAST_URL:-https://github.com/manaflow-ai/cmux/releases/latest/download/appcast.xml}"
-MODE="${CMUX_SPARKLE_MONOTONIC_MODE:-enforce}"
+PROJECT_FILE="${HMUX_SPARKLE_PROJECT_FILE:-$ROOT_DIR/hmux.xcodeproj/project.pbxproj}"
+APPCAST_URL="${HMUX_SPARKLE_APPCAST_URL:-https://github.com/manaflow-ai/cmux/releases/latest/download/appcast.xml}"
+MODE="${HMUX_SPARKLE_MONOTONIC_MODE:-enforce}"
 
 case "$MODE" in
   enforce|warn) ;;
   *)
-    echo "FAIL: CMUX_SPARKLE_MONOTONIC_MODE must be 'enforce' or 'warn' (got '$MODE')" >&2
+    echo "FAIL: HMUX_SPARKLE_MONOTONIC_MODE must be 'enforce' or 'warn' (got '$MODE')" >&2
     exit 1
     ;;
 esac
@@ -56,7 +56,7 @@ fi
 # Retry transient fetch failures so enforce mode does not fail a real release
 # on a blip; the retry knobs exist so tests can exercise the unreachable path fast.
 PUBLISHED_BUILD=$(curl -fsSL --max-time 15 \
-  --retry "${CMUX_SPARKLE_APPCAST_RETRIES:-3}" --retry-delay "${CMUX_SPARKLE_APPCAST_RETRY_DELAY:-2}" --retry-all-errors \
+  --retry "${HMUX_SPARKLE_APPCAST_RETRIES:-3}" --retry-delay "${HMUX_SPARKLE_APPCAST_RETRY_DELAY:-2}" --retry-all-errors \
   "$APPCAST_URL" 2>/dev/null \
   | sed -n 's#.*<sparkle:version>\([0-9][0-9]*\)</sparkle:version>.*#\1#p' \
   | head -n1 || true)
@@ -73,7 +73,7 @@ FAIL: could not fetch the latest published Sparkle build from
       so enforce mode cannot prove CURRENT_PROJECT_VERSION ($LOCAL_BUILD) is newer
       than what users already run. A tag push must not publish on a missing
       signal. Check connectivity and that the latest GitHub release carries
-      appcast.xml; a non-publishing check can use CMUX_SPARKLE_MONOTONIC_MODE=warn.
+      appcast.xml; a non-publishing check can use HMUX_SPARKLE_MONOTONIC_MODE=warn.
 EOF
   exit 1
 fi

@@ -1,14 +1,14 @@
 # Simulator panes
 
-cmux can host one booted iPhone or iPad Simulator in a native pane. The pane renders live Simulator frames, forwards input, and exposes device tools without a browser server.
+hmux can host one booted iPhone or iPad Simulator in a native pane. The pane renders live Simulator frames, forwards input, and exposes device tools without a browser server.
 
 Create a pane from File > New Simulator Pane, the command palette, or the CLI:
 
 ```sh
-cmux new-surface --type simulator --pane pane:1 --focus true
+hmux new-surface --type simulator --pane pane:1 --focus true
 ```
 
-Choose an installed iPhone or iPad from the pane toolbar. cmux remembers its device identifier. If that identifier disappears, restoration requires an explicit device selection; saved runtime and device-type fields are descriptive metadata only.
+Choose an installed iPhone or iPad from the pane toolbar. hmux remembers its device identifier. If that identifier disappears, restoration requires an explicit device selection; saved runtime and device-type fields are descriptive metadata only.
 
 ## Input
 
@@ -16,21 +16,21 @@ Choose an installed iPhone or iPad from the pane toolbar. cmux remembers its dev
 - Hold Option while dragging for a two-finger pinch.
 - Hold Option and Shift while dragging for a parallel two-finger pan.
 - Use a mouse wheel or trackpad to send a paced touch scroll.
-- Type with the physical keyboard. cmux forwards mapped keys and modifier chords.
+- Type with the physical keyboard. hmux forwards mapped keys and modifier chords.
 - Use the rendered device buttons or Tools for Home, app switcher, Lock, Siri, and side-button input.
 - Rotate from the toolbar or Tools. Input coordinates follow the displayed orientation.
 
 The CLI uses normalized coordinates from `0` to `1`:
 
 ```sh
-cmux simulator tap 0.5 0.5 --surface surface:1
-cmux simulator swipe 0.5 0.8 0.5 0.2 12 --surface surface:1
-cmux simulator button home --surface surface:1
-cmux simulator rotate landscape_left --surface surface:1
-cmux simulator type 'Hello from cmux' --surface surface:1
+hmux simulator tap 0.5 0.5 --surface surface:1
+hmux simulator swipe 0.5 0.8 0.5 0.2 12 --surface surface:1
+hmux simulator button home --surface surface:1
+hmux simulator rotate landscape_left --surface surface:1
+hmux simulator type 'Hello from hmux' --surface surface:1
 ```
 
-Run `cmux simulator` for gesture JSON, two-finger input, camera, permission, accessibility, Core Animation, and Web Inspector command syntax.
+Run `hmux simulator` for gesture JSON, two-finger input, camera, permission, accessibility, Core Animation, and Web Inspector command syntax.
 
 ## Tools
 
@@ -50,12 +50,12 @@ These controls cover the iPhone and iPad device capabilities in [serve-sim](http
 
 ## Crash containment
 
-Private CoreSimulator, SimulatorKit, Indigo, HID, accessibility, camera, and Web Inspector work runs in a supervised child process. The worker resolves framebuffer GPU synchronization and writes a permission-restricted packed-BGRA ring. cmux copies stable slots off-main into immutable images and never gives Core Animation worker-owned storage.
+Private CoreSimulator, SimulatorKit, Indigo, HID, accessibility, camera, and Web Inspector work runs in a supervised child process. The worker resolves framebuffer GPU synchronization and writes a permission-restricted packed-BGRA ring. hmux copies stable slots off-main into immutable images and never gives Core Animation worker-owned storage.
 
-The first worker crash restarts the selected device session. A second consecutive crash trips a fuse and leaves cmux responsive with the last safe frame. Use Recover in the pane or call the recovery RPC to start a fresh session:
+The first worker crash restarts the selected device session. A second consecutive crash trips a fuse and leaves hmux responsive with the last safe frame. Use Recover in the pane or call the recovery RPC to start a fresh session:
 
 ```sh
-cmux rpc simulator.recover '{"surface_id":"surface:1"}'
+hmux rpc simulator.recover '{"surface_id":"surface:1"}'
 ```
 
 Recovery completes only after the replacement worker reports a live frame stream. Closing the pane joins pending cleanup, releases held input, stops capture helpers, and removes its shared-memory names.

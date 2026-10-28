@@ -3,8 +3,8 @@ import Foundation
 enum TerminalNotificationClickAction: Codable, Hashable, Sendable {
     case revealInFinder(path: String)
 
-    private static let kindUserInfoKey = "cmuxClickAction"
-    private static let revealInFinderPathUserInfoKey = "cmuxRevealInFinderPath"
+    private static let kindUserInfoKey = "hmuxClickAction"
+    private static let revealInFinderPathUserInfoKey = "hmuxRevealInFinderPath"
     private static let revealInFinderKind = "revealInFinder"
 
     var userInfo: [String: String] {

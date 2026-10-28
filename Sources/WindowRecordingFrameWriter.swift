@@ -1,5 +1,5 @@
 import AVFoundation
-import CmuxFoundation
+import HmuxFoundation
 import CoreGraphics
 import CoreVideo
 import Foundation

@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension DeviceSurfaceProvider {
@@ -103,7 +103,7 @@ extension DeviceSurfaceProvider {
             notificationFeed = DeviceNotificationFeed(response: response)
             notificationSync.apply(rows: notificationFeed.rows)
             #if DEBUG
-            cmuxDebugLog("device.notifications.sync machine=\(machine.rawValue) rows=\(notificationFeed.rows.count) unreadTerminals=\(notificationSync.unreadTerminalIDs.count) pending=\(notificationSync.state.pendingAcks.count)")
+            hmuxDebugLog("device.notifications.sync machine=\(machine.rawValue) rows=\(notificationFeed.rows.count) unreadTerminals=\(notificationSync.unreadTerminalIDs.count) pending=\(notificationSync.state.pendingAcks.count)")
             #endif
         } while notificationFeedRefetch && !Task.isCancelled
     }

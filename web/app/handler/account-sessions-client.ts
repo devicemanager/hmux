@@ -99,7 +99,7 @@ export async function forgetAllSessions(options: { keepalive?: boolean } = {}): 
       // try again
     }
   }
-  console.error("[cmux sign-in] ending the other saved sessions failed");
+  console.error("[hmux sign-in] ending the other saved sessions failed");
 }
 
 /**

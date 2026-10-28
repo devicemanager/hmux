@@ -41,7 +41,7 @@ export function makeMobileNetworkOutcomeHandler(
     return withApiRouteSpan(
       request,
       ROUTE,
-      { "cmux.subsystem": "mobile-network" },
+      { "hmux.subsystem": "mobile-network" },
       async (span) => {
         const rateLimitResponse = await enforceRateLimit(request, dependencies);
         if (rateLimitResponse) return rateLimitResponse;
@@ -89,9 +89,9 @@ export function makeMobileNetworkOutcomeHandler(
             || ("stage" in outcome),
         ).length;
         setSpanAttributes(span, {
-          "cmux.user_id": user.id,
-          "cmux.mobile.outcome_count": accepted.length,
-          "cmux.mobile.failure_count": failureCount,
+          "hmux.user_id": user.id,
+          "hmux.mobile.outcome_count": accepted.length,
+          "hmux.mobile.failure_count": failureCount,
         });
         try {
           await dependencies.emitOutcomes(user.id, accepted);
@@ -126,7 +126,7 @@ async function enforceRateLimit(
   request: Request,
   dependencies: MobileNetworkOutcomeRouteDependencies,
 ): Promise<Response | null> {
-  const rateLimitId = process.env.CMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID?.trim();
+  const rateLimitId = process.env.HMUX_MOBILE_OBSERVABILITY_RATE_LIMIT_ID?.trim();
   if (process.env.VERCEL !== "1") return null;
   if (!rateLimitId) {
     void reportMissingRateLimitRule({ route: ROUTE, reason: "unset" });

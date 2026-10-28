@@ -69,7 +69,7 @@ enum ProBadgeStyle: String, CaseIterable, Identifiable {
         }
     }
 
-    /// How the badge is tinted: plain secondary-label chrome, the cmux logo
+    /// How the badge is tinted: plain secondary-label chrome, the hmux logo
     /// gradient as a soft tint, or the gradient as a solid fill.
     enum Appearance {
         case plain
@@ -142,8 +142,8 @@ final class ProBadgeStyleStore {
     }
 }
 
-/// A narrow slice of the cmux logo chevron gradient
-/// (web/public/cmux-icon.svg: #12c7f5 -> #2d8cff@0.52 -> #6c5cff). The
+/// A narrow slice of the hmux logo chevron gradient
+/// (web/public/hmux-icon.svg: #12c7f5 -> #2d8cff@0.52 -> #6c5cff). The
 /// icon spreads that ramp across the whole chevron, so any local patch
 /// only shifts hue slightly; the badge samples t=0.35...0.75 of the ramp
 /// (#249FFC -> #4B75FF) to match that local subtlety instead of showing
@@ -211,7 +211,7 @@ struct ProBadgeContent: View {
             }
             if let text = style.text {
                 Text(text)
-                    .cmuxFont(size: 10, weight: .semibold)
+                    .hmuxFont(size: 10, weight: .semibold)
                     .foregroundStyle(foreground)
             }
         }
@@ -261,7 +261,7 @@ struct ProBadgeView: View {
     var actions = ProBadgeActions()
 
     private var helpTitle: String {
-        String(localized: "menu.help.upgradeToPro", defaultValue: "Upgrade to cmux Pro…")
+        String(localized: "menu.help.upgradeToPro", defaultValue: "Upgrade to hmux Pro…")
     }
 
     private var dismissTitle: String {
@@ -342,7 +342,7 @@ final class ProBadgeDebugWindowController: ReleasingWindowController {
         window.titleVisibility = .visible
         window.titlebarAppearsTransparent = false
         window.isMovableByWindowBackground = true
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.proBadgeDebug")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.proBadgeDebug")
         window.center()
         window.contentView = NSHostingView(rootView: ProBadgeDebugView())
         AppDelegate.shared?.applyWindowDecorations(to: window)
@@ -360,7 +360,7 @@ private struct ProBadgeDebugView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 2) {
                 Text("Applies live to the sidebar footer and titlebar badge.")
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundColor(.secondary)
                     .padding(.bottom, 6)
                 if ProBadgeStyleStore.shared.isDismissed {
@@ -379,7 +379,7 @@ private struct ProBadgeDebugView: View {
                                 .foregroundStyle(current == style ? Color.accentColor : Color.secondary)
                             ProBadgeLabel(style: style)
                             Text(style.displayName)
-                                .cmuxFont(size: 12)
+                                .hmuxFont(size: 12)
                             Spacer(minLength: 0)
                         }
                         .padding(.horizontal, 8)

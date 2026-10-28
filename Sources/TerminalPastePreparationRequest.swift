@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 
 /// One immutable request submitted to the process-wide paste-preparation lane.
 struct TerminalPastePreparationRequest: Codable, Sendable {

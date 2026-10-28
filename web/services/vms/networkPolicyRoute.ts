@@ -1,5 +1,5 @@
 import {
-  CMUX_REQUIRED_DOMAINS,
+  HMUX_REQUIRED_DOMAINS,
   DEFAULT_NETWORK_POLICY,
   NETWORK_POLICY_PRESETS,
   NetworkPolicyValidationError,
@@ -16,7 +16,7 @@ import type { Locale } from "../../i18n/routing";
 export function networkPolicyCatalog() {
   return {
     presets: NETWORK_POLICY_PRESETS,
-    requiredDomains: CMUX_REQUIRED_DOMAINS,
+    requiredDomains: HMUX_REQUIRED_DOMAINS,
     /** The hosts coding-agent updates reach; clients warn when a policy blocks one. */
     agentUpdateDomains: GUEST_AGENT_UPDATE_DOMAINS,
     defaultPolicy: DEFAULT_NETWORK_POLICY,

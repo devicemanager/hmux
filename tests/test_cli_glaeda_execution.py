@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Contract tests for the shipped CMUX -> Glaeda semantic request seam."""
+"""Contract tests for the shipped HMUX -> Glaeda semantic request seam."""
 from __future__ import annotations
 
 import copy
@@ -11,18 +11,18 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-CLI = os.environ.get("CMUX_CLI_BIN")
+CLI = os.environ.get("HMUX_CLI_BIN")
 REQUEST = ROOT / "tests/fixtures/glaeda-external-request.json"
 RECEIPT = ROOT / "tests/fixtures/glaeda-external-result.json"
 
 
-@unittest.skipUnless(CLI, "CMUX_CLI_BIN is required")
+@unittest.skipUnless(CLI, "HMUX_CLI_BIN is required")
 class GlaedaExecutionCLITests(unittest.TestCase):
     maxDiff = None
 
     def run_cli(self, *args: str, stdin: bytes | None = None) -> subprocess.CompletedProcess[bytes]:
         env = os.environ.copy()
-        env["CMUX_SOCKET_PATH"] = "/tmp/cmux-glaeda-contract-no-socket.sock"
+        env["HMUX_SOCKET_PATH"] = "/tmp/hmux-glaeda-contract-no-socket.sock"
         return subprocess.run(
             [CLI, *args],
             input=stdin,
@@ -38,9 +38,9 @@ class GlaedaExecutionCLITests(unittest.TestCase):
             "glaeda",
             "request",
             "--request-ref",
-            "cmux:exec:1050:fixture-1",
+            "hmux:exec:1050:fixture-1",
             "--work-ref",
-            "cmux:work:1050",
+            "hmux:work:1050",
             "--repository",
             "teamleaderleo/glaeda",
             "--commit",
@@ -114,10 +114,10 @@ class GlaedaExecutionCLITests(unittest.TestCase):
         self.assertEqual(
             json.loads(result.stdout),
             {
-                "document_type": "cmux-glaeda-execution-observation",
+                "document_type": "hmux-glaeda-execution-observation",
                 "schema_version": 1,
-                "external_request_ref": "cmux:exec:1050:fixture-1",
-                "work_ref": "cmux:work:1050",
+                "external_request_ref": "hmux:exec:1050:fixture-1",
+                "work_ref": "hmux:work:1050",
                 "state": "planned",
                 "request_sha256": "sha256:c10e23961f34eaabb979f890ce830efeca737ef63f4534f0b8cf9346fadf9d60",
                 "workload_receipt_sha256": None,
@@ -300,7 +300,7 @@ class GlaedaExecutionCLITests(unittest.TestCase):
     def test_help_is_available_without_socket(self) -> None:
         result = self.run_cli("glaeda", "--help")
         self.assertEqual(result.returncode, 0, result.stderr.decode())
-        self.assertIn(b"Usage: cmux glaeda <request|observe>", result.stdout)
+        self.assertIn(b"Usage: hmux glaeda <request|observe>", result.stdout)
         self.assertNotIn(b"socket", result.stderr.lower())
 
 

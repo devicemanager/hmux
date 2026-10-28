@@ -20,11 +20,11 @@
 #      check alone silently drops them from the notes.
 #
 # All fetches use --filter=blob:none. Steps 3 and 4 share one bound: at most
-# CMUX_NOTES_HISTORY_MAX_COMMITS (default 20000; blobless commits are cheap)
+# HMUX_NOTES_HISTORY_MAX_COMMITS (default 20000; blobless commits are cheap)
 # commits beyond the --shallow-since fetch. Deepening also stops early when a
 # fetch brings in no new commits, or, while the base is not yet an ancestor,
 # once <base>..HEAD has no shallow boundary left or every boundary in it is more
-# than CMUX_NOTES_HISTORY_DATE_SLACK_DAYS (default 7) days older than the
+# than HMUX_NOTES_HISTORY_DATE_SLACK_DAYS (default 7) days older than the
 # cutoff: the base is then not in HEAD's history (e.g. it was force-pushed
 # away).
 #
@@ -35,10 +35,10 @@
 set -uo pipefail
 
 BASE="${1:-}"
-REMOTE="${CMUX_NOTES_HISTORY_REMOTE:-origin}"
-MAX_COMMITS="${CMUX_NOTES_HISTORY_MAX_COMMITS:-20000}"
-DEEPEN_STEP="${CMUX_NOTES_HISTORY_DEEPEN_STEP:-250}"
-SLACK_DAYS="${CMUX_NOTES_HISTORY_DATE_SLACK_DAYS:-7}"
+REMOTE="${HMUX_NOTES_HISTORY_REMOTE:-origin}"
+MAX_COMMITS="${HMUX_NOTES_HISTORY_MAX_COMMITS:-20000}"
+DEEPEN_STEP="${HMUX_NOTES_HISTORY_DEEPEN_STEP:-250}"
+SLACK_DAYS="${HMUX_NOTES_HISTORY_DATE_SLACK_DAYS:-7}"
 MARGIN_SECONDS=86400
 
 # The history fetches are blobless (commits and trees only: ~10x faster here,

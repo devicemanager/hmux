@@ -31,11 +31,11 @@ async function captureFrames(): Promise<Record<string, string>> {
   const now = () => NOW;
   const team = await teamHarness("team-x", now);
   const [macAKey, macBKey, phoneKey, teammateKey, newMacKey] = await Promise.all([11, 12, 13, 14, 15].map(deviceKey));
-  const macA = descriptor(macAKey!, identity("team-x", "user-u", "mac-a"), "mac", ["cmux.mac-host.v1", "cmux.mac-devices.v1"]);
-  const macB = descriptor(macBKey!, identity("team-x", "user-u", "mac-b"), "mac", ["cmux.mac-devices.v1"], false);
+  const macA = descriptor(macAKey!, identity("team-x", "user-u", "mac-a"), "mac", ["hmux.mac-host.v1", "hmux.mac-devices.v1"]);
+  const macB = descriptor(macBKey!, identity("team-x", "user-u", "mac-b"), "mac", ["hmux.mac-devices.v1"], false);
   const phone = descriptor(phoneKey!, identity("team-x", "user-u", "iphone"), "ios", []);
-  const teammate = descriptor(teammateKey!, identity("team-x", "user-t", "mac-t"), "mac", ["cmux.mac-host.v1", "cmux.mac-devices.v1"]);
-  const newMac = descriptor(newMacKey!, identity("team-x", "user-u", "mac-new"), "mac", ["cmux.mac-host.v1"]);
+  const teammate = descriptor(teammateKey!, identity("team-x", "user-t", "mac-t"), "mac", ["hmux.mac-host.v1", "hmux.mac-devices.v1"]);
+  const newMac = descriptor(newMacKey!, identity("team-x", "user-u", "mac-new"), "mac", ["hmux.mac-host.v1"]);
   for (const device of [macA, macB, phone, teammate]) team.enroll(device, NOW - 100);
   team.store.observeAuthority("user-u", NOW - 50, NOW - 50 + 3600, NOW);
   team.store.observeAuthority("user-t", NOW - 40, NOW - 40 + 3600, NOW);

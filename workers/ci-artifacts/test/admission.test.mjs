@@ -31,7 +31,7 @@ async function fixture(t) {
 
 function admit(mf, runId) {
   return mf.dispatchFetch("https://admission.example/admit", {
-    headers: runId === undefined ? {} : { "X-Cmux-Run-Id": String(runId) },
+    headers: runId === undefined ? {} : { "X-Hmux-Run-Id": String(runId) },
   });
 }
 

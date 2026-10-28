@@ -12,7 +12,7 @@ import git_fixture_env  # disables git auto maintenance
 SOURCE = Path(__file__).resolve().parents[1]
 MARKER = '''import os
 from pathlib import Path
-Path(os.environ["CMUX_FIXTURE_MARKER"]).write_text("candidate code executed")
+Path(os.environ["HMUX_FIXTURE_MARKER"]).write_text("candidate code executed")
 '''
 CHECK_CALLER = '''import subprocess, sys
 from pathlib import Path
@@ -22,7 +22,7 @@ subprocess.run([sys.executable, str(Path(__file__).with_name("candidate-check.py
 
 class PreflightTrustTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="cmux-trust-fixture-")
+        self.temporary = tempfile.TemporaryDirectory(prefix="hmux-trust-fixture-")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.repo = self.root / "repository"
@@ -31,7 +31,7 @@ class PreflightTrustTests(unittest.TestCase):
         self.marker = self.root / "marker"
         self.env = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
         self.env.update(GIT_CONFIG_NOSYSTEM="1", GIT_CONFIG_GLOBAL=os.devnull,
-                        CMUX_FIXTURE_MARKER=str(self.marker), PYTHONDONTWRITEBYTECODE="1")
+                        HMUX_FIXTURE_MARKER=str(self.marker), PYTHONDONTWRITEBYTECODE="1")
         git_fixture_env.without_auto_maintenance(self.env)
         self.git("init", "--quiet", "--initial-branch=main")
         self.git("config", "user.name", "Trust fixture")
@@ -73,7 +73,7 @@ class PreflightTrustTests(unittest.TestCase):
         common = Path(self.git("rev-parse", "--git-common-dir").stdout.strip())
         if not common.is_absolute():
             common = self.repo / common
-        installed_hooks = common / "cmux-git-hooks"
+        installed_hooks = common / "hmux-git-hooks"
         self.assertEqual(
             Path(self.git("config", "--get", "core.hooksPath").stdout.strip()).resolve(),
             installed_hooks.resolve(),
@@ -124,7 +124,7 @@ class PreflightTrustTests(unittest.TestCase):
         before = self.git("status", "--porcelain").stdout
         self.git("push", "origin", "HEAD:refs/heads/main")
         self.assertFalse(self.marker.exists())
-        self.assertFalse((self.repo / ".local/cmux-pre-push").exists())
+        self.assertFalse((self.repo / ".local/hmux-pre-push").exists())
         self.assertEqual(self.git("status", "--porcelain").stdout, before)
 
 

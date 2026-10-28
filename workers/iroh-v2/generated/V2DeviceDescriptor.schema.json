@@ -1,10 +1,10 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://contracts.cmux.invalid/iroh-v2/V2DeviceDescriptor.json",
+  "$id": "https://contracts.hmux.invalid/iroh-v2/V2DeviceDescriptor.json",
   "type": "object",
   "properties": {
     "identity": {
-      "$ref": "https://contracts.cmux.invalid/iroh-v2/V2Identity.json"
+      "$ref": "https://contracts.hmux.invalid/iroh-v2/V2Identity.json"
     },
     "endpointId": {
       "type": "string",
@@ -16,7 +16,7 @@
       "maximum": 9007199254740991
     },
     "metadata": {
-      "$ref": "https://contracts.cmux.invalid/iroh-v2/V2DeviceMetadata.json"
+      "$ref": "https://contracts.hmux.invalid/iroh-v2/V2DeviceMetadata.json"
     }
   },
   "required": [

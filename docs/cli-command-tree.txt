@@ -1187,7 +1187,7 @@ command  set-status  aliases=-
   arg  key  kind=argument  completion=-
   arg  value  kind=argument  completion=-
 command  settings  aliases=-
-  arg  arguments  kind=argument  completion=list(account,app,automation,browser,browser-import,cmux-json,computers,custom-sidebars,docs,global-hotkey,keyboard-shortcuts,networking,open,path,reset,sidebar-appearance,terminal,themes,workspace-colors)
+  arg  arguments  kind=argument  completion=list(account,app,automation,browser,browser-import,hmux-json,computers,custom-sidebars,docs,global-hotkey,keyboard-shortcuts,networking,open,path,reset,sidebar-appearance,terminal,themes,workspace-colors)
 command  setup-hooks  aliases=-
   arg  arguments  kind=argument  completion=-
 command  shortcuts  aliases=-

@@ -38,12 +38,12 @@ jobs:
           set -euo pipefail
           ./scripts/select-ci-xcode.sh
       - name: Test retained text and UTF-8 pagination
-        run: swift test --package-path Packages/macOS/CMUXAgentLaunch --filter WorkstreamFullTextTests
+        run: swift test --package-path Packages/macOS/HMUXAgentLaunch --filter WorkstreamFullTextTests
       - name: Test mobile reading and authorization
         run: |
-          swift test --package-path Packages/iOS/CmuxMobileShell --filter MobileAgentFeedTerminalReplyTests
-          swift test --package-path Packages/iOS/CmuxMobileRPC --filter MobileCoreRPCNotificationFeedAuthTests
-          swift test --package-path Packages/iOS/CmuxMobileShellModel --filter MobileAgentFeedItemTests
+          swift test --package-path Packages/iOS/HmuxMobileShell --filter MobileAgentFeedTerminalReplyTests
+          swift test --package-path Packages/iOS/HmuxMobileRPC --filter MobileCoreRPCNotificationFeedAuthTests
+          swift test --package-path Packages/iOS/HmuxMobileShellModel --filter MobileAgentFeedItemTests
   verify:
     if: ${{ !inputs.full_text_only }}
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'macos-26' || 'blacksmith-6vcpu-macos-26' }}
@@ -70,7 +70,7 @@ jobs:
           mkdir -p "$GITHUB_WORKSPACE/reply-evidence" "$RUNNER_TEMP/reply-provider-tools"
           echo "ARTIFACTS=$GITHUB_WORKSPACE/reply-evidence" >> "$GITHUB_ENV"
           echo "PROVIDER_TOOLS=$RUNNER_TEMP/reply-provider-tools" >> "$GITHUB_ENV"
-          echo "CMUX_SOCKET_PATH=/tmp/cmux-debug-$BUILD_TAG.sock" >> "$GITHUB_ENV"
+          echo "HMUX_SOCKET_PATH=/tmp/hmux-debug-$BUILD_TAG.sock" >> "$GITHUB_ENV"
 
       - name: Wait for the requested build
         env:
@@ -103,18 +103,18 @@ jobs:
 
       - name: Check Feed state and provider identity
         run: |
-          swift test --package-path Packages/macOS/CmuxNotifications \
+          swift test --package-path Packages/macOS/HmuxNotifications \
             --scratch-path "$RUNNER_TEMP/swift-notifications" \
             --filter NotificationDeliveryCoordinatorTests \
             2>&1 | tee "$ARTIFACTS/notification-delivery.log"
-          swift test --package-path Packages/macOS/CMUXAgentLaunch \
+          swift test --package-path Packages/macOS/HMUXAgentLaunch \
             --scratch-path "$RUNNER_TEMP/swift-agent-launch" \
             --filter WorkstreamStoreTests 2>&1 | tee "$ARTIFACTS/feed-ingestion.log"
-          swift test --package-path Packages/iOS/CmuxMobileShell \
+          swift test --package-path Packages/iOS/HmuxMobileShell \
             --scratch-path "$RUNNER_TEMP/swift-mobile-shell" \
             --filter 'MobileAgentFeedTerminalReplyTests|MobileShellAgentFeedStateTests' \
             2>&1 | tee "$ARTIFACTS/feed-replies.log"
-          swift test --package-path Packages/macOS/CmuxControlSocket \
+          swift test --package-path Packages/macOS/HmuxControlSocket \
             --scratch-path "$RUNNER_TEMP/swift-control" \
             --filter ControlCommandCoordinatorMobileHostTests \
             2>&1 | tee "$ARTIFACTS/control-dispatch.log"
@@ -122,21 +122,21 @@ jobs:
       - name: Launch the isolated tagged app
         run: |
           ditto -x -k downloaded-app/app.zip "$RUNNER_TEMP/reply-app"
-          app="$RUNNER_TEMP/reply-app/cmux DEV $BUILD_TAG.app"
+          app="$RUNNER_TEMP/reply-app/hmux DEV $BUILD_TAG.app"
           export REPLY_APP="$app"
           python3 - <<'PY'
           import os, pathlib, plistlib
           app = pathlib.Path(os.environ['REPLY_APP'])
           path = app / 'Contents/Info.plist'
           data = plistlib.loads(path.read_bytes())
-          assert data['CFBundleIdentifier'] == 'com.cmuxterm.app.debug.' + os.environ['BUILD_TAG']
+          assert data['CFBundleIdentifier'] == 'com.hmuxterm.app.debug.' + os.environ['BUILD_TAG']
           env = data.setdefault('LSEnvironment', {})
           env.update({
-              'CMUXTERM_REPO_ROOT': os.environ['GITHUB_WORKSPACE'],
-              'CMUX_SOCKET_PATH': os.environ['CMUX_SOCKET_PATH'],
-              'CMUX_DEBUG_LOG': os.environ['ARTIFACTS'] + '/mac.log',
-              'CMUX_BUNDLED_CLI_PATH': str(app / 'Contents/Resources/bin/cmux'),
-              'CMUX_SHELL_INTEGRATION_DIR': str(app / 'Contents/Resources/shell-integration'),
+              'HMUXTERM_REPO_ROOT': os.environ['GITHUB_WORKSPACE'],
+              'HMUX_SOCKET_PATH': os.environ['HMUX_SOCKET_PATH'],
+              'HMUX_DEBUG_LOG': os.environ['ARTIFACTS'] + '/mac.log',
+              'HMUX_BUNDLED_CLI_PATH': str(app / 'Contents/Resources/bin/hmux'),
+              'HMUX_SHELL_INTEGRATION_DIR': str(app / 'Contents/Resources/shell-integration'),
           })
           path.write_bytes(plistlib.dumps(data))
           PY
@@ -145,7 +145,7 @@ jobs:
           python3 - <<'PY'
           import os, time
           for _ in range(60):
-              if os.path.exists(os.environ['CMUX_SOCKET_PATH']): break
+              if os.path.exists(os.environ['HMUX_SOCKET_PATH']): break
               time.sleep(1)
           else: raise RuntimeError('Tagged app did not open its control socket')
           PY
@@ -170,7 +170,7 @@ jobs:
       - name: Stop the test app
         if: always()
         run: |
-          app="$RUNNER_TEMP/reply-app/cmux DEV $BUILD_TAG.app/Contents/MacOS/cmux DEV"
+          app="$RUNNER_TEMP/reply-app/hmux DEV $BUILD_TAG.app/Contents/MacOS/hmux DEV"
           export REPLY_EXECUTABLE="$app"
           python3 - <<'PY'
           import os, signal, subprocess

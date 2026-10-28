@@ -1,4 +1,4 @@
-import CmuxComputerUse
+import HmuxComputerUse
 
 /// The presentation boundary for deliberate Settings and protected-tool requests.
 ///

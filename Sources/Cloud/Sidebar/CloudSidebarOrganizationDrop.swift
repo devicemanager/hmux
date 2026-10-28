@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import AppKit
 
 /// Converts AppKit's hierarchy-relative proposal into sidebar organization or

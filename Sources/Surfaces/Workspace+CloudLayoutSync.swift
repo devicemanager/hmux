@@ -1,5 +1,5 @@
 import Bonsplit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 
 @MainActor

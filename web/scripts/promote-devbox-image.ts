@@ -1,13 +1,13 @@
 #!/usr/bin/env bun
 /**
- * Bake, verify, and record a cmux Cloud devbox image in one command. The
+ * Bake, verify, and record a hmux Cloud devbox image in one command. The
  * checked-in manifest (web/services/vms/images/manifest.json) is the source
  * of truth for the image users get, so the output of this script is a
  * manifest diff to commit; the LAST stdout line is `IMAGE_ID <id>`.
  *
  * Usage:
- *   bun scripts/promote-devbox-image.ts freestyle [--slug cmux-devbox-<tag>]
- *       [--kinds desktop,base] [--pointer-slug cmux-devbox]
+ *   bun scripts/promote-devbox-image.ts freestyle [--slug hmux-devbox-<tag>]
+ *       [--kinds desktop,base] [--pointer-slug hmux-devbox]
  *       [--image <existing snapshot id>] [--skip-verify] [--out <json>]
  *       [--replace-slug] [--no-desktop] [--dry-run]
  *
@@ -29,7 +29,7 @@
  *               bake, base for --no-desktop). Product defaults use one desktop
  *               bake serving both kinds; --no-desktop is for experiments.
  *   --pointer-slug  After promotion, move this account-local
- *               snapshot slug onto the new id (default cmux-devbox; "none"
+ *               snapshot slug onto the new id (default hmux-devbox; "none"
  *               disables). A human/dashboard convenience: production boots
  *               from the immutable id in the manifest, never from the slug.
  *               With sizes, it is the prefix the derived snapshots are
@@ -106,7 +106,7 @@ const kinds = requestedKinds as DevboxImageKind[];
 if (kinds.includes("desktop") && !withDesktop) {
   throw new Error("--kinds desktop needs a desktop bake (drop --no-desktop)");
 }
-const pointerSlug = argValue("--pointer-slug") ?? "cmux-devbox";
+const pointerSlug = argValue("--pointer-slug") ?? "hmux-devbox";
 const skipVerify = hasFlag("--skip-verify");
 const sizesArg = argValue("--sizes") ?? VM_IMAGE_SIZE_NAMES.join(",");
 const sizeNames = sizesArg === "none" ? [] : sizesArg.split(",").map((name) => name.trim()).filter(Boolean);
@@ -119,10 +119,10 @@ if (new Set(sizeNames).size !== sizeNames.length) {
 const dryRun = hasFlag("--dry-run");
 const existingImage = argValue("--image");
 const tag = defaultBakeTag();
-const slug = argValue("--slug") ?? `cmux-${tag}`;
+const slug = argValue("--slug") ?? `hmux-${tag}`;
 
 const scriptsDir = path.dirname(fileURLToPath(import.meta.url));
-const workDir = mkdtempSync(path.join(tmpdir(), "cmux-devbox-promote-"));
+const workDir = mkdtempSync(path.join(tmpdir(), "hmux-devbox-promote-"));
 
 function run(label: string, args: string[]): number {
   console.log(`\n===== ${label}: bun ${args.join(" ")} =====`);

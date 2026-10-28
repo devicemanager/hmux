@@ -151,7 +151,7 @@ export function Chat() {
       <div id="messages" ref={scrollRef} onScroll={onScroll}>
         {!ready ? (
           <div className="connection-notice" role="status">
-            {connectionEpoch > 0 ? "Connection lost. Reconnecting… Your draft stays here." : "Connecting to cmux…"}
+            {connectionEpoch > 0 ? "Connection lost. Reconnecting… Your draft stays here." : "Connecting to hmux…"}
           </div>
         ) : null}
         <Blocks

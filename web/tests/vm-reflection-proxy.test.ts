@@ -6,7 +6,7 @@ import {
   VM_REFLECTION_ALIAS_VALUE,
 } from "../services/coderouter/vmGuestEnv";
 
-// A cmux Cloud machine dialing `https://reflection.cmux.internal/<path>` reaches
+// A hmux Cloud machine dialing `https://reflection.hmux.internal/<path>` reaches
 // this deployment through the platform edge, which adds the alias marker header
 // next to the machine's credential. The proxy serves the guest-facing reflection
 // API for such requests and leaves everything else alone.

@@ -36,8 +36,8 @@ import {
 import type { ProviderId } from "../services/vms/drivers";
 
 process.env.RESEND_API_KEY ??= "test-resend-key";
-process.env.CMUX_FEEDBACK_FROM_EMAIL ??= "feedback@example.com";
-process.env.CMUX_FEEDBACK_RATE_LIMIT_ID ??= "test-feedback-rate-limit";
+process.env.HMUX_FEEDBACK_FROM_EMAIL ??= "feedback@example.com";
+process.env.HMUX_FEEDBACK_RATE_LIMIT_ID ??= "test-feedback-rate-limit";
 process.env.STACK_SECRET_SERVER_KEY ??= "test-stack-secret";
 process.env.NEXT_PUBLIC_STACK_PROJECT_ID ??= "00000000-0000-4000-8000-000000000000";
 process.env.NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY ??= "test-stack-publishable";
@@ -419,7 +419,7 @@ let publicationDeletionTargets: PublicationAccountDeletionTarget[] = [];
 let publicationDeletionError: unknown = null;
 let stackUserSelectedTeam: unknown = null;
 let stackUserTeams: StackList = [];
-let stackUserClientReadOnlyMetadata: unknown = { cmuxPlan: "pro" };
+let stackUserClientReadOnlyMetadata: unknown = { hmuxPlan: "pro" };
 let useAccountRouteStubs = false;
 let lastRevokeIdentityCall: { readonly userId: string; readonly afterBatch?: unknown } | null = null;
 let vaultLockUsers: string[] = [];
@@ -833,7 +833,7 @@ beforeEach(() => {
   lastRevokeIdentityCall = null;
   stackUserSelectedTeam = null;
   stackUserTeams = [];
-  stackUserClientReadOnlyMetadata = { cmuxPlan: "pro" };
+  stackUserClientReadOnlyMetadata = { hmuxPlan: "pro" };
   vaultLockUsers = [];
   postHogDeleteRequests = [];
   hostedTenantDeleteRequests = [];
@@ -883,14 +883,14 @@ describe("account deletion route", () => {
   });
 
   test("requires native auth headers", async () => {
-    const response = await DELETE(new Request("https://cmux.test/api/account", { method: "DELETE" }));
+    const response = await DELETE(new Request("https://hmux.test/api/account", { method: "DELETE" }));
 
     expect(response.status).toBe(401);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(transaction).not.toHaveBeenCalled();
   });
 
-  test("destroys personal VMs, deletes cmux rows, then deletes the Stack user", async () => {
+  test("destroys personal VMs, deletes hmux rows, then deletes the Stack user", async () => {
     selectResults = [
       [{ id: "sub_user_active" }],
       [{ id: "cus_user" }],
@@ -967,7 +967,7 @@ describe("account deletion route", () => {
     expect(deletedStripeCustomers).toEqual(["cus_user"]);
     expectPostHogAccountDeleteRequest();
     expect(updateStackUser).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(getUser).toHaveBeenCalledTimes(1);
     expect(deleteStackUser).toHaveBeenCalledTimes(1);
@@ -1096,7 +1096,7 @@ describe("account deletion route", () => {
     expect(updateStackUser).toHaveBeenCalledTimes(1);
   });
 
-  test("blocks cmux row deletion while a phone push delivery lease is active", async () => {
+  test("blocks hmux row deletion while a phone push delivery lease is active", async () => {
     listedPersonalVmIds = [];
     transactionSelectResults = [
       [],
@@ -1620,7 +1620,7 @@ describe("account deletion route", () => {
       contexts: captured.contexts as NonNullable<Event["contexts"]>,
     });
     expect(event.tags).toMatchObject({ deletion_stage: "posthog" });
-    expect(event.contexts?.cmux).toMatchObject({
+    expect(event.contexts?.hmux).toMatchObject({
       operation: "account_deletion",
       stage: "posthog",
       tombstone_status: "failed",
@@ -1964,7 +1964,7 @@ describe("account deletion route", () => {
     expect(await response.json()).toEqual({ ok: true, destroyedVms: 2 });
     expect(routeEvents).toContain("tombstone-upsert");
     expect(updateStackUser).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(deleteStackUser).toHaveBeenCalledTimes(1);
   });
@@ -2122,10 +2122,10 @@ describe("account deletion route", () => {
     }));
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenNthCalledWith(2, {
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
   });
 
@@ -2174,8 +2174,8 @@ describe("account deletion route", () => {
     ascConfigured = true;
     listedPersonalVmIds = [];
     stackUserClientReadOnlyMetadata = {
-      cmuxPlan: "pro",
-      cmuxProTestflightEnrollmentEmails: ["previous@example.com"],
+      hmuxPlan: "pro",
+      hmuxProTestflightEnrollmentEmails: ["previous@example.com"],
     };
     removeTesterErrors = [null, new Error("second TestFlight removal failed")];
 
@@ -2193,7 +2193,7 @@ describe("account deletion route", () => {
     expect(updateStackUser).toHaveBeenCalledTimes(1);
   });
 
-  test("revokes active account SSH identities before deleting cmux rows", async () => {
+  test("revokes active account SSH identities before deleting hmux rows", async () => {
     const response = await DELETE(accountDeletionRequest());
 
     expect(response.status).toBe(200);
@@ -2221,10 +2221,10 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenNthCalledWith(2, {
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
     expect(consoleError).toHaveBeenCalledWith(
       "account.delete.failed",
@@ -2250,7 +2250,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
   });
@@ -2272,10 +2272,10 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenNthCalledWith(2, {
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
     expect(deletedTables).not.toContain(cloudVmLeases);
   });
@@ -2303,10 +2303,10 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenNthCalledWith(2, {
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
     expect(consoleError).toHaveBeenCalledWith(
       "account.delete.failed",
@@ -2336,7 +2336,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalledWith(
@@ -2374,7 +2374,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalledWith(
@@ -2452,7 +2452,7 @@ describe("account deletion route", () => {
       providerVmId: "provider-vm-destroyed",
       status: "destroyed",
       providerMetadata: {
-        cmuxObservedDestroyCleanup: { homeVolume: "legacy-home-volume" },
+        hmuxObservedDestroyCleanup: { homeVolume: "legacy-home-volume" },
       },
     }]];
 
@@ -2479,7 +2479,7 @@ describe("account deletion route", () => {
       providerVmId: "provider-vm-destroyed",
       status: "destroyed",
       providerMetadata: {
-        cmuxObservedDestroyCleanup: { modelPlane: true },
+        hmuxObservedDestroyCleanup: { modelPlane: true },
       },
     }]];
 
@@ -2613,7 +2613,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
   });
@@ -2642,7 +2642,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
   });
@@ -2668,7 +2668,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
   });
@@ -2693,7 +2693,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
   });
@@ -2725,7 +2725,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalledWith(
@@ -2765,7 +2765,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
     expect(consoleError).toHaveBeenCalledWith(
@@ -2797,14 +2797,14 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(2);
     expect(deleteStackUser).not.toHaveBeenCalled();
     expect(updateStackUser).toHaveBeenNthCalledWith(1, {
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenNthCalledWith(2, {
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
     });
   });
 
-  test("returns a retryable partial-failure response when Stack deletion fails after cmux data deletion", async () => {
+  test("returns a retryable partial-failure response when Stack deletion fails after hmux data deletion", async () => {
     stackDeleteError = new Error(
       "raw eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJhY2NvdW50LXVzZXItMSJ9.signaturePart leaked by upstream",
     );
@@ -2820,7 +2820,7 @@ describe("account deletion route", () => {
     expect(transaction).toHaveBeenCalledTimes(3);
     expect(deletedTableCount).toBeGreaterThan(10);
     expect(updateStackUser).toHaveBeenCalledWith({
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
     });
     expect(updateStackUser).toHaveBeenCalledTimes(1);
     expectPostHogAccountDeleteRequest();
@@ -2989,7 +2989,7 @@ describe("account deletion route", () => {
 });
 
 function accountDeletionRequest(): Request {
-  return new Request("https://cmux.test/api/account", {
+  return new Request("https://hmux.test/api/account", {
     method: "DELETE",
     headers: {
       authorization: "Bearer access-token",
@@ -3109,7 +3109,7 @@ describe("account deletion resume cron", () => {
   });
 
   function cronRequest(secret = "cron-secret"): Request {
-    return new Request("https://cmux.test/api/account", {
+    return new Request("https://hmux.test/api/account", {
       headers: { authorization: `Bearer ${secret}` },
     });
   }

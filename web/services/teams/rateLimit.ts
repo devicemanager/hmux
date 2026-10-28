@@ -23,7 +23,7 @@ export async function enforceTeamRateLimit(input: {
   readonly isVercel?: boolean;
 }): Promise<Response | null> {
   if (!(input.isVercel ?? process.env.VERCEL === "1")) return null;
-  const ruleId = (input.ruleId ?? process.env.CMUX_TEAM_INVITE_RATE_LIMIT_ID)?.trim();
+  const ruleId = (input.ruleId ?? process.env.HMUX_TEAM_INVITE_RATE_LIMIT_ID)?.trim();
   if (!ruleId) {
     void reportMissingRateLimitRule({ route: input.route, reason: "unset" });
     return null;

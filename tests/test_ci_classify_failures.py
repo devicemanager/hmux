@@ -31,35 +31,35 @@ ESC = "\x1b"
 
 RESTORE_FAILED = textwrap.dedent(f"""\
     2026-09-27T09:27:44.4138020Z Validated app-host test products for 89e82bd1f4ca15e8655b2edf4dd78873c1bb61be
-    2026-09-27T09:27:44.4680740Z glaeda-cmux-runner-hook: take-root: '/private/tmp/cmux-ci-2' is not one of this mini's 1 canonical root(s) (/private/tmp/cmux-ci, /private/tmp/cmux-ci-N or N)
-    2026-09-27T09:27:44.4859810Z CMUX_TEST_PRODUCT_RESTORE {{"archive_bytes": 0, "artifact_id": 10928258685, "job": "app-host-unit-tests", "layer_hit": true, "outcome": "failure", "producer_run_attempt": 1}}
+    2026-09-27T09:27:44.4680740Z glaeda-hmux-runner-hook: take-root: '/private/tmp/hmux-ci-2' is not one of this mini's 1 canonical root(s) (/private/tmp/hmux-ci, /private/tmp/hmux-ci-N or N)
+    2026-09-27T09:27:44.4859810Z HMUX_TEST_PRODUCT_RESTORE {{"archive_bytes": 0, "artifact_id": 10928258685, "job": "app-host-unit-tests", "layer_hit": true, "outcome": "failure", "producer_run_attempt": 1}}
     2026-09-27T09:27:44.4886770Z ##[error]Process completed with exit code 2.
-    2026-09-27T09:27:45.9700000Z ##[group]Run case "$CMUX_APP_HOST_PREPARATION_OUTCOME" in
-    2026-09-27T09:27:45.9706630Z {ESC}[36;1m    echo "::error::Unexpected app-host preparation outcome: $CMUX_APP_HOST_PREPARATION_OUTCOME"{ESC}[0m
+    2026-09-27T09:27:45.9700000Z ##[group]Run case "$HMUX_APP_HOST_PREPARATION_OUTCOME" in
+    2026-09-27T09:27:45.9706630Z {ESC}[36;1m    echo "::error::Unexpected app-host preparation outcome: $HMUX_APP_HOST_PREPARATION_OUTCOME"{ESC}[0m
     2026-09-27T09:27:45.9710000Z ##[endgroup]
     """)
 
 HOOK_REFUSED = textwrap.dedent("""\
     2026-09-27T10:26:16.9930940Z   pr_refused_retry_runner: glaeda-std-xcode-26.6
-    2026-09-27T10:26:17.2532030Z glaeda-cmux-runner-hook: refused: capacity: 0 of 5 units free, swift-package-tests (light) needs 1
-    2026-09-27T10:26:17.2547700Z ##[error]glaeda-cmux-runner-hook: refused: capacity: 0 of 5 units free, swift-package-tests (light) needs 1
+    2026-09-27T10:26:17.2532030Z glaeda-hmux-runner-hook: refused: capacity: 0 of 5 units free, swift-package-tests (light) needs 1
+    2026-09-27T10:26:17.2547700Z ##[error]glaeda-hmux-runner-hook: refused: capacity: 0 of 5 units free, swift-package-tests (light) needs 1
     2026-09-27T10:26:17.2594190Z ##[error]Process completed with exit code 1.
-    2026-09-27T10:26:17.7508430Z glaeda-cmux-runner-hook: no host lock holder to release
+    2026-09-27T10:26:17.7508430Z glaeda-hmux-runner-hook: no host lock holder to release
     2026-09-27T10:26:17.8437740Z Cleaning up orphan processes
     """)
 
 # The shard's CLI tests failed by the dozen; the dyld line says why.
 MIXED_PRODUCTS = textwrap.dedent("""\
-    2026-09-27T10:19:26.7431580Z /tmp/cmux-ci-2/src/cmuxTests/CLIAmpLifecycleIntegrationTests.swift:260: error: -[cmuxTests.CLINotifyProcessIntegrationRegressionTests testAmpCancelledTurnSettlesWithoutCompletionNotification] : XCTAssertEqual failed: ("6") is not equal to ("0") - dyld[9231]: Symbol not found: _$s15CMUXAgentLaunch05AgentB18CaptureArgvVerdictO
-    2026-09-27T10:19:26.7433260Z   Referenced from: <4150A975-C72E-3C4B-A99A-7113745B2919> /Users/cmux/actions-runner-glaeda-4/_work/_temp/cmux-derived-data-tests-36308928998-2-shard-7/Build/Products/Debug/cmux DEV.app/Contents/Resources/bin/cmux
-    2026-09-27T10:19:26.7434490Z   Expected in:     <AEE55255-798E-3AEB-B342-06D79CC6F0CA> /private/tmp/cmux-ci-2/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks/CMUXAgentLaunch_-158D461BD47E196A_PackageProduct.framework/Versions/A/CMUXAgentLaunch_-158D461BD47E196A_PackageProduct
+    2026-09-27T10:19:26.7431580Z /tmp/hmux-ci-2/src/hmuxTests/CLIAmpLifecycleIntegrationTests.swift:260: error: -[hmuxTests.CLINotifyProcessIntegrationRegressionTests testAmpCancelledTurnSettlesWithoutCompletionNotification] : XCTAssertEqual failed: ("6") is not equal to ("0") - dyld[9231]: Symbol not found: _$s15HMUXAgentLaunch05AgentB18CaptureArgvVerdictO
+    2026-09-27T10:19:26.7433260Z   Referenced from: <4150A975-C72E-3C4B-A99A-7113745B2919> /Users/hmux/actions-runner-glaeda-4/_work/_temp/hmux-derived-data-tests-36308928998-2-shard-7/Build/Products/Debug/hmux DEV.app/Contents/Resources/bin/hmux
+    2026-09-27T10:19:26.7434490Z   Expected in:     <AEE55255-798E-3AEB-B342-06D79CC6F0CA> /private/tmp/hmux-ci-2/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks/HMUXAgentLaunch_-158D461BD47E196A_PackageProduct.framework/Versions/A/HMUXAgentLaunch_-158D461BD47E196A_PackageProduct
     2026-09-27T10:21:17.5608820Z ✘ Test singleArgumentCommandStringIsSplitShellStyle() recorded an issue at CLITmuxCompatRemoteSplitTests.swift:119:13: Expectation failed: (result.status → 6) == 0
     2026-09-27T10:26:29.4506340Z RATCHET_NEW_FAILURE CLINotifyProcessIntegrationRegressionTests/testAmpCancelledTurnSettlesWithoutCompletionNotification()
     2026-09-27T10:26:29.4510000Z ##[error]Process completed with exit code 65.
     """)
 
 TEST_FAILED = textwrap.dedent("""\
-    2026-09-27T09:28:02.4500070Z ✘ Test testAmbientTaggedCLIListsEveryDeadSocketCandidateOnFailure() recorded an issue at CMUXCLITestAssertions.swift:33:13: Expectation failed: try expression()
+    2026-09-27T09:28:02.4500070Z ✘ Test testAmbientTaggedCLIListsEveryDeadSocketCandidateOnFailure() recorded an issue at HMUXCLITestAssertions.swift:33:13: Expectation failed: try expression()
     2026-09-27T09:31:30.4047700Z RATCHET_NEW_FAILURE WorkspaceClosePanelFallbackTests/fallbackRefusesToCloseSelectedTabOwnedByAnotherPanel()
     2026-09-27T09:31:30.4083830Z ##[error]Process completed with exit code 65.
     """)
@@ -76,11 +76,11 @@ PARAMETERIZED_TEST_FAILED = (
     "SSHForegroundAuthenticationRetryPolicyTests.swift:863:13: Expectation failed\n"
 )
 DISPLAY_NAME_TEST_FAILED = (
-    "2026-09-27T10:40:00.0000000Z ✘ Test \"each change describes itself as the equivalent cmux config command\" "
+    "2026-09-27T10:40:00.0000000Z ✘ Test \"each change describes itself as the equivalent hmux config command\" "
     "failed after 0.100 seconds with 1 issue.\n"
 )
 COMPILE_FAILED = (
-    "2026-09-27T10:40:00.0000000Z /tmp/cmux-ci/src/cmuxTests/SidebarWidthPolicyTests.swift:672:57: error: "
+    "2026-09-27T10:40:00.0000000Z /tmp/hmux-ci/src/hmuxTests/SidebarWidthPolicyTests.swift:672:57: error: "
     "ambiguous use of 'init'\n"
 )
 STATIC_CHECK_FAILED = "2026-09-27T10:40:00.0000000Z FAILED config-schema (0.03s)\n"
@@ -88,7 +88,7 @@ ADMISSION_DECLINED = (
     "2026-09-27T10:40:00.0000000Z macOS admission gate declined: a fast Linux job failed. The product compiled "
     "and was uploaded; re-run failed jobs to collect macOS results anyway.\n"
 )
-# Run 36553044270's swift-package-tests on cmux14 (glaeda-std-xcode-26.6), as
+# Run 36553044270's swift-package-tests on hmux14 (glaeda-std-xcode-26.6), as
 # the job printed it then (a head branched before the marker), and as
 # scripts/select-ci-xcode.sh prints it now.
 XCODE_PIN_MISSING_LEGACY = textwrap.dedent("""\
@@ -100,8 +100,8 @@ XCODE_PIN_MISSING_LEGACY = textwrap.dedent("""\
     """)
 XCODE_PIN_MISSING = (
     "2026-09-29T12:23:37.1000000Z ##[error]Pinned Xcode developer dir does not exist: "
-    "/Applications/Xcode_26.3.app/Contents/Developer on runner cmux14-glaeda-1. "
-    "[cmux-ci machine: xcode-pin-missing] Installed: Xcode.app=26.3 Xcode_26.6.app=26.6\n"
+    "/Applications/Xcode_26.3.app/Contents/Developer on runner hmux14-glaeda-1. "
+    "[hmux-ci machine: xcode-pin-missing] Installed: Xcode.app=26.3 Xcode_26.6.app=26.6\n"
 )
 POOL_XCODE_MISSING = (
     "2026-09-29T12:23:37.1000000Z ##[error]This macOS 26 runner has no Xcode 26.6, the version "
@@ -137,10 +137,10 @@ ARTIFACT_DOWNLOAD_RETRIES = textwrap.dedent(f"""\
     2026-10-06T00:51:27.3736820Z {ESC}[36;1m    # Includes artifact lookup, download/retries, and outer ZIP extraction.{ESC}[0m
     2026-10-06T00:51:27.3819150Z ##[endgroup]
     2026-10-06T00:51:27.4105780Z ##[error]The action has timed out.
-    2026-10-06T00:51:39.1700000Z ##[group]Run CMUX_CLI_BIN="$CMUX_CLI_PATH" python3 tests/test_cli_creation_initial_command.py
-    2026-10-06T00:51:39.1700100Z {ESC}[36;1mCMUX_CLI_BIN="$CMUX_CLI_PATH" python3 tests/test_cli_creation_initial_command.py{ESC}[0m
+    2026-10-06T00:51:39.1700000Z ##[group]Run HMUX_CLI_BIN="$HMUX_CLI_PATH" python3 tests/test_cli_creation_initial_command.py
+    2026-10-06T00:51:39.1700100Z {ESC}[36;1mHMUX_CLI_BIN="$HMUX_CLI_PATH" python3 tests/test_cli_creation_initial_command.py{ESC}[0m
     2026-10-06T00:51:39.1700200Z ##[endgroup]
-    2026-10-06T00:51:39.2700000Z FAIL: Unable to find cmux CLI binary. Set CMUX_CLI_BIN or run ./scripts/reload.sh --tag <tag> first.
+    2026-10-06T00:51:39.2700000Z FAIL: Unable to find hmux CLI binary. Set HMUX_CLI_BIN or run ./scripts/reload.sh --tag <tag> first.
     2026-10-06T00:51:39.2727560Z ##[error]Process completed with exit code 1.
     """)
 # Run 37388340030 attempt 2 ("macos / app-host unit tests (changed suites)"):
@@ -238,7 +238,7 @@ class SignatureTests(unittest.TestCase):
         self.assertEqual(self.verdict(restore_ok), (cf.UNKNOWN, None))
 
     def test_a_lost_runner_is_read_from_its_annotation(self) -> None:
-        annotation = "The self-hosted runner: cmux7s-mac-mini-glaeda-4 lost communication with the server."
+        annotation = "The self-hosted runner: hmux7s-mac-mini-glaeda-4 lost communication with the server."
         result = cf.classify_text("", [annotation])
         self.assertEqual((result["verdict"], result["signature"]), (cf.MACHINE, "runner-lost"))
 
@@ -330,7 +330,7 @@ class RunTests(unittest.TestCase):
         job(5, "macos / release-build", conclusion="cancelled"),
         job(6, "macos / macOS status"),
         job(7, "ci-status"),
-        job(8, "guards / workflow-guard-tests / preflight", step="Validate embedded cmux.json schema generation"),
+        job(8, "guards / workflow-guard-tests / preflight", step="Validate embedded hmux.json schema generation"),
         job(9, "macos / cli-product-tests", conclusion="success"),
     ]
     TEXTS = {1: (RESTORE_FAILED, []), 2: (HOOK_REFUSED, []), 3: (TEST_FAILED, []),
@@ -341,7 +341,7 @@ class RunTests(unittest.TestCase):
         self.assertEqual({j["id"]: j["verdict"] for j in jobs},
                          {1: cf.MACHINE, 2: cf.MACHINE, 3: cf.CODE, 8: cf.UNKNOWN})
         unknown = next(j for j in jobs if j["id"] == 8)
-        self.assertIn("Validate embedded cmux.json schema generation", unknown["why"])
+        self.assertIn("Validate embedded hmux.json schema generation", unknown["why"])
         self.assertFalse(cf.all_machine(jobs))
 
     def test_only_machine_failures_are_all_machine(self) -> None:
@@ -509,7 +509,7 @@ class ActTests(unittest.TestCase):
 
     def report(self, verdicts: list[str], conclusion: str = "failure") -> dict:
         jobs = [{"name": f"job {i}", "verdict": v, "why": "because", "evidence": "line `x`", "url": None,
-                 "runner": "cmux7s-mac-mini-glaeda-4"} for i, v in enumerate(verdicts)]
+                 "runner": "hmux7s-mac-mini-glaeda-4"} for i, v in enumerate(verdicts)]
         return {"run_id": 42, "attempt": 1, "head_sha": "a" * 40, "run_url": "https://run",
                 "conclusion": conclusion, "jobs": jobs}
 
@@ -573,9 +573,9 @@ PR_17074_LOG = textwrap.dedent("""\
     2026-10-05T02:30:00.0000000Z ##[group]Run scripts/ci/run-app-host-unit-batches.sh
     2026-10-05T02:30:00.0000000Z \x1b[36;1mscripts/ci/run-app-host-unit-batches.sh\x1b[0m
     2026-10-05T02:30:00.0000000Z ##[endgroup]
-    2026-10-05T02:33:24.8768510Z Test Case '-[cmuxTests.CLINotifyProcessIntegrationRegressionTests testSSHPTYAttachUnknownFlagStaysFatal]' started.
-    2026-10-05T02:33:24.8769270Z Test Case '-[cmuxTests.CLINotifyProcessIntegrationRegressionTests testSSHPTYAttachUnknownFlagStaysFatal]' passed (0.039 seconds).
-    2026-10-05T02:34:00.0000000Z 2026-10-04 19:34:00.000000-0700 cmux DEV[43530:62173076] [ProcessSuspension] error: Error Domain=RBSServiceErrorDomain Code=1 "(originator doesn't have entitlement com.apple.runningboard.assertions.webkit)"
+    2026-10-05T02:33:24.8768510Z Test Case '-[hmuxTests.CLINotifyProcessIntegrationRegressionTests testSSHPTYAttachUnknownFlagStaysFatal]' started.
+    2026-10-05T02:33:24.8769270Z Test Case '-[hmuxTests.CLINotifyProcessIntegrationRegressionTests testSSHPTYAttachUnknownFlagStaysFatal]' passed (0.039 seconds).
+    2026-10-05T02:34:00.0000000Z 2026-10-04 19:34:00.000000-0700 hmux DEV[43530:62173076] [ProcessSuspension] error: Error Domain=RBSServiceErrorDomain Code=1 "(originator doesn't have entitlement com.apple.runningboard.assertions.webkit)"
     2026-10-05T02:34:00.1000000Z error: Error Domain=NSCocoaErrorDomain Code=4097 "connection to service named com.apple.linkd.autoShortcut"
     2026-10-05T02:34:00.2000000Z error: <dictionary: 0x1f2c3a4b5> { count = 1 }
     2026-10-05T02:34:00.3000000Z error: UpdateFailed
@@ -596,8 +596,8 @@ PR_17074_LOG = textwrap.dedent("""\
     2026-10-05T02:37:42.2893580Z RATCHET_NEW_FAILURE DeviceDiscoverabilityGatingTests/unavailableDevicesKeepGatedControls()
     2026-10-05T02:37:42.2936340Z ##[error]Process completed with exit code 65.
     """)
-PR_17074_FILES = ["Sources/Cloud/CloudPortsDiscoveryDemand.swift", "cmuxTests/CloudPortsVPNAffordanceTests.swift",
-                  "cmuxTests/DeviceDiscoverabilityGatingTests.swift", "cmuxTests/CloudSidebarPolishTests.swift"]
+PR_17074_FILES = ["Sources/Cloud/CloudPortsDiscoveryDemand.swift", "hmuxTests/CloudPortsVPNAffordanceTests.swift",
+                  "hmuxTests/DeviceDiscoverabilityGatingTests.swift", "hmuxTests/CloudSidebarPolishTests.swift"]
 
 # Run 37301425463 (#17232 at b5691441b0), job 111735129083 "macos / macOS
 # compile admission", trimmed: the one real error sat under 411 cache warnings
@@ -610,22 +610,22 @@ PR_17232_LOG = (
     + "2026-10-05T11:15:39.7000000Z error: read-only cache client\n" * 3
     + "2026-10-05T11:15:40.0000000Z error: failed to update cache: cache poisoned\n" * 45
     + textwrap.dedent("""\
-    2026-10-05T11:16:38.8339440Z /tmp/cmux-ci/src/Sources/TerminalController.swift:119:16: note: static property declared here
-    2026-10-05T11:16:38.8340200Z /tmp/cmux-ci/src/Sources/AppDelegate.swift:20553:39: error: cannot find type 'UpdateRelaunchBlockers' in scope
+    2026-10-05T11:16:38.8339440Z /tmp/hmux-ci/src/Sources/TerminalController.swift:119:16: note: static property declared here
+    2026-10-05T11:16:38.8340200Z /tmp/hmux-ci/src/Sources/AppDelegate.swift:20553:39: error: cannot find type 'UpdateRelaunchBlockers' in scope
     2026-10-05T11:16:38.8340570Z     func updaterRelaunchBlockers() -> UpdateRelaunchBlockers {
-    2026-10-05T11:16:38.8341110Z /tmp/cmux-ci/src/Sources/AppDelegate.swift:20588:10: error: cannot find type 'UpdateRelaunchBlockers' in scope
-    2026-10-05T11:16:38.8342050Z /tmp/cmux-ci/src/Sources/AppDelegate.swift:2028:87: warning: 'activateIgnoringOtherApps' was deprecated in macOS 14.0
-    2026-10-05T11:16:38.8407140Z /tmp/cmux-ci/src/Sources/AppDelegate.swift:20589:24: error: cannot find 'UpdateRelaunchBlockers' in scope
+    2026-10-05T11:16:38.8341110Z /tmp/hmux-ci/src/Sources/AppDelegate.swift:20588:10: error: cannot find type 'UpdateRelaunchBlockers' in scope
+    2026-10-05T11:16:38.8342050Z /tmp/hmux-ci/src/Sources/AppDelegate.swift:2028:87: warning: 'activateIgnoringOtherApps' was deprecated in macOS 14.0
+    2026-10-05T11:16:38.8407140Z /tmp/hmux-ci/src/Sources/AppDelegate.swift:20589:24: error: cannot find 'UpdateRelaunchBlockers' in scope
     2026-10-05T11:16:43.4671470Z ** TEST BUILD FAILED **
-    2026-10-05T11:16:43.4671900Z \tSwiftCompile normal arm64 Compiling\\ AppDelegate.swift /tmp/cmux-ci/src/Sources/AppDelegate.swift (in target 'cmux' from project 'cmux')
+    2026-10-05T11:16:43.4671900Z \tSwiftCompile normal arm64 Compiling\\ AppDelegate.swift /tmp/hmux-ci/src/Sources/AppDelegate.swift (in target 'hmux' from project 'hmux')
     2026-10-05T11:16:43.9931880Z ##[error]Process completed with exit code 65.
     """))
 
 # XCTest, a crash, the warning budget and the CLI help contract, as their scripts print them.
 OTHER_FAILURES_LOG = textwrap.dedent("""\
-    2026-10-05T13:00:00.0000000Z /Users/cmux/actions-runner/_work/cmux/cmux/cmuxTests/WorkspaceTabTests.swift:88: error: -[cmuxTests.WorkspaceTabTests testCloseKeepsSelection] : XCTAssertEqual failed: ("1") is not equal to ("2")
-    2026-10-05T13:00:00.1000000Z Test Case '-[cmuxTests.WorkspaceTabTests testCloseKeepsSelection]' failed (0.120 seconds).
-    2026-10-05T13:00:00.2000000Z Test Case '-[cmuxTests.SidebarDropTests testDropReorders]' failed (0.050 seconds).
+    2026-10-05T13:00:00.0000000Z /Users/hmux/actions-runner/_work/hmux/hmux/hmuxTests/WorkspaceTabTests.swift:88: error: -[hmuxTests.WorkspaceTabTests testCloseKeepsSelection] : XCTAssertEqual failed: ("1") is not equal to ("2")
+    2026-10-05T13:00:00.1000000Z Test Case '-[hmuxTests.WorkspaceTabTests testCloseKeepsSelection]' failed (0.120 seconds).
+    2026-10-05T13:00:00.2000000Z Test Case '-[hmuxTests.SidebarDropTests testDropReorders]' failed (0.050 seconds).
     2026-10-05T13:08:10.7508640Z objc[68679]: Cannot form weak reference to instance (0xaacbf7c00) of class NSKVONotifying_NSWindow. It is possible that this object was over-released, or is in the process of deallocation.
     2026-10-05T13:08:10.7509000Z *** Program crashed: Aborted at 0x000000018eaf2b10 ***
     2026-10-05T13:09:00.0000000Z Swift warning budget exceeded.
@@ -635,8 +635,8 @@ OTHER_FAILURES_LOG = textwrap.dedent("""\
     2026-10-05T13:09:00.0000000Z Fix the new warnings or refresh the budget only when accepting known debt.
     2026-10-05T13:10:00.0000000Z FAIL: CLI help contract probes failed
     2026-10-05T13:10:00.0000000Z
-    2026-10-05T13:10:00.0000000Z cmux settings --help: stale literal target usage still present
-    2026-10-05T13:10:00.0000000Z stdout='Usage: cmux settings [open|path|docs|target]'
+    2026-10-05T13:10:00.0000000Z hmux settings --help: stale literal target usage still present
+    2026-10-05T13:10:00.0000000Z stdout='Usage: hmux settings [open|path|docs|target]'
     2026-10-05T13:10:00.0000000Z ##[error]Process completed with exit code 1.
     """)
 
@@ -688,7 +688,7 @@ class ExtractTests(unittest.TestCase):
         ])
         self.assertIn("NSKVONotifying_NSWindow", found[2]["message"])
         self.assertEqual(found[3]["message"], "Aborted")
-        self.assertEqual(found[5]["message"], "cmux settings --help: stale literal target usage still present")
+        self.assertEqual(found[5]["message"], "hmux settings --help: stale literal target usage still present")
 
     def test_failures_outside_failed_steps_and_in_echoed_scripts_do_not_count(self) -> None:
         log = textwrap.dedent(f"""\
@@ -756,7 +756,7 @@ class OwnershipTests(unittest.TestCase):
         self.assertIn("not on main, whose full suite is green", self.verdict(body))
 
     def test_a_test_of_a_changed_source_file_is_yours(self) -> None:
-        item = cf.failure("test", "cmuxTests/DevicesCloudTreeBuilderTests.swift", 48, "builds")
+        item = cf.failure("test", "hmuxTests/DevicesCloudTreeBuilderTests.swift", 48, "builds")
         self.assertEqual(cf.owner(item, ["Sources/Cloud/DevicesCloudTreeBuilder.swift"], []),
                          (cf.YOURS, "tests DevicesCloudTreeBuilder.swift, which this PR changes"))
 
@@ -898,21 +898,21 @@ class ReviewFixTests(unittest.TestCase):
         self.assertEqual(len(writer.log), 1)
 
     def test_a_compiler_path_matches_only_that_file(self) -> None:
-        item = cf.failure("compile", "/tmp/cmux-ci/src/Packages/macOS/CmuxCloud/Sources/CmuxCloud/Helpers.swift", 3,
+        item = cf.failure("compile", "/tmp/hmux-ci/src/Packages/macOS/HmuxCloud/Sources/HmuxCloud/Helpers.swift", 3,
                           message="x")
         self.assertEqual(cf.owner(item, ["Sources/A/Helpers.swift"], [])[0], cf.NEW)
-        self.assertEqual(cf.owner(item, ["Packages/macOS/CmuxCloud/Sources/CmuxCloud/Helpers.swift"], [])[0],
+        self.assertEqual(cf.owner(item, ["Packages/macOS/HmuxCloud/Sources/HmuxCloud/Helpers.swift"], [])[0],
                          cf.YOURS)
         # Swift Testing names only the file: two changed files of that name say so.
         test = cf.failure("test", "HelpersTests.swift", 9, "t")
-        self.assertEqual(cf.owner(test, ["cmuxTests/HelpersTests.swift"], []), (cf.YOURS, "a file this PR changes"))
-        self.assertEqual(cf.owner(test, ["cmuxTests/HelpersTests.swift", "Packages/X/Tests/HelpersTests.swift"], []),
+        self.assertEqual(cf.owner(test, ["hmuxTests/HelpersTests.swift"], []), (cf.YOURS, "a file this PR changes"))
+        self.assertEqual(cf.owner(test, ["hmuxTests/HelpersTests.swift", "Packages/X/Tests/HelpersTests.swift"], []),
                          (cf.YOURS, "this PR changes 2 files named HelpersTests.swift"))
 
     def test_the_branch_is_url_encoded_and_job_names_cannot_break_out(self) -> None:
         gh = FakeGitHub(closed=[{"number": 9, "head": {"sha": "a" * 40}, "merged_at": "t"}])
         run = {"id": 1, "head_sha": "a" * 40, "head_branch": "feat/a&b#c", "pull_requests": [],
-               "head_repository": {"full_name": "fork/cmux"}}
+               "head_repository": {"full_name": "fork/hmux"}}
         self.assertEqual(cf.run_pull(gh, run)[0], 9)
         self.assertIn("head=fork%3Afeat%2Fa%26b%23c&", gh.reads[-1])
         report = red_report("no signature", "evil `job` name")
@@ -926,7 +926,7 @@ PR_17258_CRASH_LOG = textwrap.dedent("""\
     2026-10-06T00:42:32.9827160Z ##[group]Run scripts/ci/run-app-host-unit-batches.sh
     2026-10-06T00:42:32.9827550Z \x1b[36;1mscripts/ci/run-app-host-unit-batches.sh\x1b[0m
     2026-10-06T00:42:32.9879150Z ##[endgroup]
-    2026-10-06T00:51:22.7162210Z Test Case '-[cmuxTests.TerminalNotificationDirectInteractionTests testKeyDownRecoveryDoesNotRecreateClosedSurface]' started.
+    2026-10-06T00:51:22.7162210Z Test Case '-[hmuxTests.TerminalNotificationDirectInteractionTests testKeyDownRecoveryDoesNotRecreateClosedSurface]' started.
     2026-10-06T00:51:27.7329470Z *** Signal 11: Backtracing from 0x18717e124... done ***
     2026-10-06T00:51:27.7330000Z *** Program crashed: Bad pointer dereference at 0x000048300000021f ***
     2026-10-06T00:53:23.6044660Z Failing tests:
@@ -935,7 +935,7 @@ PR_17258_CRASH_LOG = textwrap.dedent("""\
     2026-10-06T00:53:33.7302110Z RATCHET_NEW_FAILURE TerminalNotificationDirectInteractionTests/testKeyDownRecoveryDoesNotRecreateClosedSurface()
     2026-10-06T00:53:33.7362680Z ##[error]Process completed with exit code 65.
     """)
-PR_17258_FILES = ["Sources/Panels/BrowserPanel.swift", "cmuxTests/BrowserLinkHoverURLSettingsFileTests.swift"]
+PR_17258_FILES = ["Sources/Panels/BrowserPanel.swift", "hmuxTests/BrowserLinkHoverURLSettingsFileTests.swift"]
 TEST_KEY = ("test:TerminalNotificationDirectInteractionTests.swift:"
             "TerminalNotificationDirectInteractionTests.testKeyDownRecoveryDoesNotRecreateClosedSurface()")
 CRASH_KEY = f"crash:Bad pointer dereference in {TEST_KEY}"
@@ -998,7 +998,7 @@ class KnownElsewhereTests(unittest.TestCase):
     """A failure the bot saw on another pull request's run is likely flaky, not this PR's."""
 
     SAME_REPO_RUN = {**ActTests.RUN, "head_repository": {"full_name": "manaflow-ai/cmux"}}
-    FORK_RUN = {**ActTests.RUN, "head_repository": {"full_name": "someone/cmux"}}
+    FORK_RUN = {**ActTests.RUN, "head_repository": {"full_name": "someone/hmux"}}
 
     def setUp(self) -> None:
         from unittest import mock
@@ -1106,7 +1106,7 @@ class KnownElsewhereTests(unittest.TestCase):
         self.assertEqual(writes, [])
 
     def test_own_files_and_main_failures_are_not_recorded(self) -> None:
-        gh = FakeGitHub(files=["cmuxTests/TerminalNotificationDirectInteractionTests.swift"])
+        gh = FakeGitHub(files=["hmuxTests/TerminalNotificationDirectInteractionTests.swift"])
         _, writes = self.act(gh)
         (write,) = writes  # only the crash, which no changed file names
         recorded = cf.parse_seen(write.split("\n", 1)[1])
@@ -1240,7 +1240,7 @@ class WebTestTests(unittest.TestCase):
         item = cf.failure("test", "web/tests/vm-workflows.test.ts", test="t")
         self.assertEqual(cf.owner(item, ["web/bun.lock"], []),
                          (cf.YOURS, "this PR changes the web test runner (web/bun.lock)"))
-        swift = cf.failure("test", "cmuxTests/FooTests.swift", 1, "t")
+        swift = cf.failure("test", "hmuxTests/FooTests.swift", 1, "t")
         self.assertEqual(cf.owner(swift, ["web/bun.lock"], [])[0], cf.NEW)
 
     def test_a_web_test_another_pr_hit_first_is_likely_flaky_and_is_recorded(self) -> None:

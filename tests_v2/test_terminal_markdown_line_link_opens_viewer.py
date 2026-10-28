@@ -3,26 +3,26 @@
 
 A Markdown path printed with a line (`build-fleet/ORG-BACKUP.md:12`, as agents
 cite files) went to the configured editor because the `:line` branch ran
-before the Markdown route. A Markdown file opens in cmux's Markdown viewer
+before the Markdown route. A Markdown file opens in hmux's Markdown viewer
 whether or not a line follows it.
 
 The app must be a DEBUG build launched with the in-app Cmd-click harness, the
 terminal cwd at REPO/sub, and REPO/build-fleet/ORG-BACKUP.md present:
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_SETUP=1
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_PATH=REPO/sub/setup.json
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_FIXTURE_DIR=REPO/sub
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_COMMAND_PATH=REPO/sub/command.json
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_FORMAT=log
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_PREFIX="see "
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_SUFFIX=:12
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_FILE_NAME=build-fleet/ORG-BACKUP.md
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_SKIP_FIXTURE_FILE=1
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_CD_FIXTURE=1
-  CMUX_UI_TEST_CAPTURE_OPEN_PATH=REPO/open-editor.log
-  CMUX_UI_TEST_CAPTURE_OPEN_URL_PATH=REPO/open-url.log
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_SETUP=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_PATH=REPO/sub/setup.json
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_FIXTURE_DIR=REPO/sub
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_COMMAND_PATH=REPO/sub/command.json
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_FORMAT=log
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_PREFIX="see "
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_SUFFIX=:12
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_FILE_NAME=build-fleet/ORG-BACKUP.md
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_SKIP_FIXTURE_FILE=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_CD_FIXTURE=1
+  HMUX_UI_TEST_CAPTURE_OPEN_PATH=REPO/open-editor.log
+  HMUX_UI_TEST_CAPTURE_OPEN_URL_PATH=REPO/open-url.log
 REPO is a git repository. Run it where the app can be key (a whole capture
 mini or a local tagged build):
-  CMUX_PATH_LINK_REPO=REPO python3 tests_v2/test_terminal_markdown_line_link_opens_viewer.py
+  HMUX_PATH_LINK_REPO=REPO python3 tests_v2/test_terminal_markdown_line_link_opens_viewer.py
 """
 
 import json
@@ -30,7 +30,7 @@ import os
 import sys
 import time
 
-REPO = os.environ.get("CMUX_PATH_LINK_REPO", os.path.expanduser("~/cmdclick-repo"))
+REPO = os.environ.get("HMUX_PATH_LINK_REPO", os.path.expanduser("~/cmdclick-repo"))
 FIX = os.path.join(REPO, "sub")
 SETUP = os.path.join(FIX, "setup.json")
 COMMAND = os.path.join(FIX, "command.json")

@@ -7,10 +7,10 @@ run-name: >-
       || github.event_name == 'schedule' && format('Nightly macOS build · {0}', github.event.schedule)
       || '' }}
 
-# One workflow, two publish channels. A push to `main` publishes cmux NIGHTLY
-# (bundle id com.cmuxterm.app.nightly, GitHub release `nightly`, feed
-# files.cmux.com/nightly). A push to an `rc/**` branch publishes cmux RC
-# (com.cmuxterm.app.rc, release `rc`, feed files.cmux.com/rc). The two channels
+# One workflow, two publish channels. A push to `main` publishes hmux NIGHTLY
+# (bundle id com.hmuxterm.app.nightly, GitHub release `nightly`, feed
+# files.cmux.com/nightly). A push to an `rc/**` branch publishes hmux RC
+# (com.hmuxterm.app.rc, release `rc`, feed files.cmux.com/rc). The two channels
 # install side by side with each other and with stable, and each Sparkle feed
 # only ever advances within its own channel. Everything channel-specific is
 # resolved once in `decide`; every later job reads it from there.
@@ -63,7 +63,7 @@ on:
           - warp
           - r2
       promote_nightly_next_sha:
-        description: Main only. Move branch nightly-next to this green feat-cmux-next commit (40 hex) and build nothing in this run; the push run on nightly-next publishes it. Prefix it with "dry-run:" to only decide and print why, moving nothing.
+        description: Main only. Move branch nightly-next to this green feat-hmux-next commit (40 hex) and build nothing in this run; the push run on nightly-next publishes it. Prefix it with "dry-run:" to only decide and print why, moving nothing.
         required: false
         default: ''
         type: string
@@ -184,7 +184,7 @@ jobs:
             const fastBuild = !buildOnly && process.env.FAST_BUILD === 'true';
             // Nightly ships one universal DMG for downloads plus one thin DMG per
             // architecture for updates. Browsers cannot tell Apple silicon from
-            // Intel, so `cmux-nightly-macos.dmg` and the legacy `appcast.xml`
+            // Intel, so `hmux-nightly-macos.dmg` and the legacy `appcast.xml`
             // feed stay universal; the app's feed resolver moves every install
             // onto its architecture's feed at the first update check.
             // A manually dispatched fast build is a branch-dogfood artifact only.
@@ -207,25 +207,25 @@ jobs:
             const channel = isRcRef ? 'rc' : 'nightly';
             const channelIdentity = {
               nightly: {
-                bundleId: 'com.cmuxterm.app.nightly',
-                appName: 'cmux NIGHTLY',
-                urlScheme: 'cmux-nightly',
-                dmgPrefix: 'cmux-nightly-macos',
+                bundleId: 'com.hmuxterm.app.nightly',
+                appName: 'hmux NIGHTLY',
+                urlScheme: 'hmux-nightly',
+                dmgPrefix: 'hmux-nightly-macos',
                 releaseTag: 'nightly',
                 releaseName: 'Nightly',
                 feedBase: 'https://files.cmux.com/nightly',
-                entitlements: 'cmux.nightly.entitlements',
+                entitlements: 'hmux.nightly.entitlements',
                 iconName: 'AppIcon-Nightly',
               },
               rc: {
-                bundleId: 'com.cmuxterm.app.rc',
-                appName: 'cmux RC',
-                urlScheme: 'cmux-rc',
-                dmgPrefix: 'cmux-rc-macos',
+                bundleId: 'com.hmuxterm.app.rc',
+                appName: 'hmux RC',
+                urlScheme: 'hmux-rc',
+                dmgPrefix: 'hmux-rc-macos',
                 releaseTag: 'rc',
                 releaseName: 'Release Candidate',
                 feedBase: 'https://files.cmux.com/rc',
-                entitlements: 'cmux.rc.entitlements',
+                entitlements: 'hmux.rc.entitlements',
                 iconName: 'AppIcon-RC',
               },
             }[channel];
@@ -467,17 +467,17 @@ jobs:
               ])
               .write();
 
-  # Moves the protected branch `nightly-next` (the cmux-next NIGHTLY track,
-  # which publishes from its own push run) to a feat-cmux-next commit. Runs
+  # Moves the protected branch `nightly-next` (the hmux-next NIGHTLY track,
+  # which publishes from its own push run) to a feat-hmux-next commit. Runs
   # only here on main, in the `release` environment, with the release App (the
-  # only bypass actor of the nightly-next ruleset). cmux-next.yml on
-  # feat-cmux-next requests it after a green Release compile without debounce; a person
+  # only bypass actor of the nightly-next ruleset). hmux-next.yml on
+  # feat-hmux-next requests it after a green Release compile without debounce; a person
   # can Run workflow with the SHA (no debounce). The commit counts only through
-  # a cmux-next.yml push run on feat-cmux-next for that exact SHA whose
-  # "cmux-next Release compile (Xcode 26)" job passed.
+  # a hmux-next.yml push run on feat-hmux-next for that exact SHA whose
+  # "hmux-next Release compile (Xcode 26)" job passed.
   # The promote guard (scripts/ci/promote-nightly-next.mjs, run from this
   # main checkout, never from the SHA under test): the SHA must be on
-  # feat-cmux-next and green in a trusted cmux-next.yml push run. A promotion
+  # feat-hmux-next and green in a trusted hmux-next.yml push run. A promotion
   # whose range changes a file in .github/release-surface.txt waits for an
   # approval (await-release-surface-ack, then promote-nightly-next-acked moves
   # it); the surface file's policy line says whether a lander of the range may
@@ -492,7 +492,7 @@ jobs:
   # whose commit contains this request's, through the same guard.
   promote-nightly-next:
     if: github.event_name == 'workflow_dispatch' && inputs.promote_nightly_next_sha != '' && github.ref == 'refs/heads/main' && github.repository == 'manaflow-ai/cmux'
-    # Holds only the release App credentials (CMUX_RELEASE_APP_*).
+    # Holds only the release App credentials (HMUX_RELEASE_APP_*).
     environment: nightly-next-promote
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || 'blacksmith-2vcpu-ubuntu-2404' }}
     timeout-minutes: 10
@@ -566,8 +566,8 @@ jobs:
         if: (steps.decide.outputs.action == 'promote' || steps.decide.outputs.action == 'needs-ack') && steps.decide.outputs.dry_run != 'true'
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ secrets.CMUX_RELEASE_APP_ID }}
-          private-key: ${{ secrets.CMUX_RELEASE_APP_KEY }}
+          app-id: ${{ secrets.HMUX_RELEASE_APP_ID }}
+          private-key: ${{ secrets.HMUX_RELEASE_APP_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
@@ -637,7 +637,7 @@ jobs:
     # Legacy condition retained for workflow-contract compatibility; approval is retired.
     # if: needs.await-release-surface-ack.result == 'success' && needs.promote-nightly-next.outputs.action == 'needs-ack' && needs.promote-nightly-next.outputs.dry_run != 'true'
     if: false
-    # Holds only the release App credentials (CMUX_RELEASE_APP_*). The approval
+    # Holds only the release App credentials (HMUX_RELEASE_APP_*). The approval
     # was given to release-surface-ack on this run; guard.approvedBy() reads it.
     environment: nightly-next-promote
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || 'blacksmith-2vcpu-ubuntu-2404' }}
@@ -701,8 +701,8 @@ jobs:
         if: steps.ack.outputs.decision != ''
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
-          app-id: ${{ secrets.CMUX_RELEASE_APP_ID }}
-          private-key: ${{ secrets.CMUX_RELEASE_APP_KEY }}
+          app-id: ${{ secrets.HMUX_RELEASE_APP_ID }}
+          private-key: ${{ secrets.HMUX_RELEASE_APP_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
@@ -752,8 +752,8 @@ jobs:
     # by design; scheduled run 35134963192 was cancelled at 45 minutes.
     timeout-minutes: 90
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_26 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_CI_XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_MACOS_26 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
     steps:
       - name: Clear stale git locks (self-hosted reused workspace)
         shell: bash
@@ -805,7 +805,7 @@ jobs:
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
           path: .spm-cache
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -823,7 +823,7 @@ jobs:
         if: steps.compilation-cache-restore.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
-          CMUX_SKIP_ZIG_BUILD=1 xcodebuild -scheme cmux -configuration Release -derivedDataPath build-universal \
+          HMUX_SKIP_ZIG_BUILD=1 xcodebuild -scheme hmux -configuration Release -derivedDataPath build-universal \
             -destination 'generic/platform=macOS' \
             -clonedSourcePackagesDirPath .spm-cache \
             -packageCachePath "$PWD/.spm-cache/.package-cache" \
@@ -899,7 +899,7 @@ jobs:
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
           path: .spm-cache
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
 
   refresh-test-compilation-cache:
     permissions:
@@ -942,9 +942,9 @@ jobs:
     timeout-minutes: 75
     env:
       # As seed-derived-data.yml: the macOS 15 pool's own Xcode, else the lane's.
-      CMUX_CI_XCODE_APP: ${{ endsWith(matrix.pool, 'vcpu-macos-15') && vars.CMUX_CI_XCODE_APP_MACOS_15 || vars.CMUX_CI_XCODE_APP_PR || vars.CMUX_CI_XCODE_APP_MACOS_15 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
-      CMUX_SKIP_ZIG_BUILD: "1"
+      HMUX_CI_XCODE_APP: ${{ endsWith(matrix.pool, 'vcpu-macos-15') && vars.HMUX_CI_XCODE_APP_MACOS_15 || vars.HMUX_CI_XCODE_APP_PR || vars.HMUX_CI_XCODE_APP_MACOS_15 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_SKIP_ZIG_BUILD: "1"
     steps:
       - name: Clear stale git locks (self-hosted reused workspace)
         shell: bash
@@ -973,9 +973,9 @@ jobs:
           root="$(scripts/ci/canonical-build-root.sh --print-root)"
           scripts/ci/clear-dirs.sh "$root/derived-data-compile-admission" "$root/compile-admission-cas"
           {
-            echo "CMUX_CI_CANONICAL_ROOT=$root"
-            echo "CMUX_COMPILE_ADMISSION_DERIVED_DATA=$root/derived-data-compile-admission"
-            echo "CMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas"
+            echo "HMUX_CI_CANONICAL_ROOT=$root"
+            echo "HMUX_COMPILE_ADMISSION_DERIVED_DATA=$root/derived-data-compile-admission"
+            echo "HMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas"
           } >> "$GITHUB_ENV"
 
       - name: Select Xcode
@@ -985,7 +985,7 @@ jobs:
         id: compilation-cache-key
         run: |
           set -euo pipefail
-          echo "fingerprint=$(scripts/ci/compile-app-host-test-product.sh canonical-fingerprint "$CMUX_COMPILE_ADMISSION_DERIVED_DATA")" >> "$GITHUB_OUTPUT"
+          echo "fingerprint=$(scripts/ci/compile-app-host-test-product.sh canonical-fingerprint "$HMUX_COMPILE_ADMISSION_DERIVED_DATA")" >> "$GITHUB_OUTPUT"
 
       - name: Restore test compilation cache
         id: compilation-cache-restore
@@ -998,7 +998,7 @@ jobs:
         uses: ./.github/actions/cache-restore
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ env.CMUX_COMPILE_ADMISSION_CAS }}
+          path: ${{ env.HMUX_COMPILE_ADMISSION_CAS }}
           key: xcode-compilation-test-${{ runner.os }}-${{ runner.arch }}-${{ steps.compilation-cache-key.outputs.fingerprint }}-${{ needs.decide.outputs.head_sha }}
 
       - name: Install compilation dependencies
@@ -1014,7 +1014,7 @@ jobs:
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
           path: .ci-source-packages
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -1026,7 +1026,7 @@ jobs:
         run: |
           set -euo pipefail
           scripts/ci/compile-app-host-test-product.sh canonical-resolve \
-            "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" "$PWD/.ci-source-packages"
+            "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" "$PWD/.ci-source-packages"
 
       # ci-macos.yml compile admission adopts this build's DerivedData for pull
       # requests. The recorded content and times are how it tells which inputs
@@ -1035,23 +1035,23 @@ jobs:
         id: derived-data-record
         if: steps.compilation-cache-restore.outputs.cache-hit != 'true'
         continue-on-error: true
-        run: python3 scripts/ci/seed_derived_data.py record "$CMUX_CI_CANONICAL_SRC" "$CMUX_COMPILE_ADMISSION_DERIVED_DATA"
+        run: python3 scripts/ci/seed_derived_data.py record "$HMUX_CI_CANONICAL_SRC" "$HMUX_COMPILE_ADMISSION_DERIVED_DATA"
 
       - name: Refresh test compilation cache
         if: steps.compilation-cache-restore.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
           scripts/ci/compile-app-host-test-product.sh canonical-build \
-            "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" \
+            "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" \
             "$PWD/.ci-source-packages" \
-            "$CMUX_COMPILE_ADMISSION_CAS"
+            "$HMUX_COMPILE_ADMISSION_CAS"
 
       - name: Bound test compilation cache size
         id: compilation-cache-bound
         if: steps.compilation-cache-restore.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
-          cache_path="$CMUX_COMPILE_ADMISSION_CAS"
+          cache_path="$HMUX_COMPILE_ADMISSION_CAS"
           max_cache_kib=$((5 * 1024 * 1024))
           if [ -d "$cache_path" ]; then
             # See `refresh-compilation-cache`: a warm build leaves a dead CAS
@@ -1084,7 +1084,7 @@ jobs:
           CI_CACHE_R2_BUCKET: ${{ vars.CI_CACHE_R2_BUCKET }}
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
-          path: ${{ env.CMUX_COMPILE_ADMISSION_CAS }}
+          path: ${{ env.HMUX_COMPILE_ADMISSION_CAS }}
           key: xcode-compilation-test-${{ runner.os }}-${{ runner.arch }}-${{ steps.compilation-cache-key.outputs.fingerprint }}-${{ needs.decide.outputs.head_sha }}
 
       # canonical-resolve copies the workspace to the canonical root and
@@ -1095,7 +1095,7 @@ jobs:
         if: steps.compilation-cache-restore.outputs.cache-hit != 'true' && steps.swift-packages-restore.outputs.cache-hit != 'true'
         run: |
           set -euo pipefail
-          resolved="$CMUX_CI_CANONICAL_ROOT/src/.ci-source-packages"
+          resolved="$HMUX_CI_CANONICAL_ROOT/src/.ci-source-packages"
           test -d "$resolved/.package-cache"
           rsync -a --delete "$resolved/" .ci-source-packages/
 
@@ -1111,7 +1111,7 @@ jobs:
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
           path: .ci-source-packages
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
 
       # R2 only: a multi-gigabyte entry in the GitHub store evicts the seeds
       # above (#13160). A failure here never fails the seed.
@@ -1119,7 +1119,7 @@ jobs:
         id: derived-data-bound
         if: steps.compilation-cache-restore.outputs.cache-hit != 'true' && steps.derived-data-record.outcome == 'success' && (inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2') == 'r2'
         continue-on-error: true
-        run: python3 scripts/ci/seed_derived_data.py prune "$CMUX_COMPILE_ADMISSION_DERIVED_DATA"
+        run: python3 scripts/ci/seed_derived_data.py prune "$HMUX_COMPILE_ADMISSION_DERIVED_DATA"
 
       # Seeds serve only the Swift job width they were built at; see
       # scripts/ci/seed_derived_data.py.
@@ -1143,7 +1143,7 @@ jobs:
           CI_CACHE_R2_BUCKET: ${{ vars.CI_CACHE_R2_BUCKET }}
         with:
           backend: r2
-          path: ${{ env.CMUX_COMPILE_ADMISSION_DERIVED_DATA }}
+          path: ${{ env.HMUX_COMPILE_ADMISSION_DERIVED_DATA }}
           key: ${{ steps.derived-data-seed-key.outputs.scoped }}${{ needs.decide.outputs.head_sha }}
 
   build-nightly-ghostty-cli-helper:
@@ -1204,7 +1204,7 @@ jobs:
       - name: Upload Ghostty CLI helper
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-nightly-ghostty-cli-helper
+          name: hmux-nightly-ghostty-cli-helper
           path: nightly-helper/ghostty
           if-no-files-found: error
           retention-days: 1
@@ -1224,9 +1224,9 @@ jobs:
     # are set: runs-on asks for the trusted pool label (vars.CI_SEED_TRUSTED_POOL,
     # glaeda-trusted-<class>-xcode-<version>) and that runner's own label
     # (vars.CI_NIGHTLY_TRUSTED_RUNNER, glaeda-runner-<runner name>), so only a
-    # runner carrying both can take it. Today that is cmux15-glaeda: the
+    # runner carrying both can take it. Today that is hmux15-glaeda: the
     # trusted mini with no pull request runners and no dev-build worker. The
-    # other trusted mini (cmuxs-mac-mini-6) builds team dev builds as the same
+    # other trusted mini (hmuxs-mac-mini-6) builds team dev builds as the same
     # user, so it keeps seeding but never builds the shipped app. Its
     # job-started hook admits only main's own push and schedule jobs. Not the
     # pull request pool: this job holds the ci-cache-writer R2 keys and the
@@ -1252,8 +1252,8 @@ jobs:
     # build, not only a warm one.
     timeout-minutes: 90
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_26 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_CI_XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_MACOS_26 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
       NIGHTLY_FAST_BUILD: ${{ needs.decide.outputs.fast_build }}
       CHANNEL_ICON_NAME: ${{ needs.decide.outputs.icon_name }}
     steps:
@@ -1298,16 +1298,16 @@ jobs:
               # Earlier jobs linked build-universal to a tree kept per channel
               # and toolchain. Delete this channel's trees, so no later change
               # can link one back and they stop using disk. Another channel's
-              # trees (for example cmux-nightly-rc-*) are not touched.
+              # trees (for example hmux-nightly-rc-*) are not touched.
               # The name ends in the 64-digit toolchain hash (plus the suffix
               # clear-dirs.sh adds when a delete did not finish), so the match
               # never reaches another name with the same prefix. The
               # nightly-next track keeps its state under
-              # ~/Library/Caches/cmux-nightly-next, which this never touches.
+              # ~/Library/Caches/hmux-nightly-next, which this never touches.
               shopt -s nullglob
               stale=()
-              for tree in "$HOME"/Library/Developer/Xcode/DerivedData/cmux-nightly-${{ needs.decide.outputs.channel }}-*; do
-                if [[ "${tree##*/}" =~ ^cmux-nightly-${{ needs.decide.outputs.channel }}-[0-9a-f]{64}(\.stale\..+)?$ ]]; then
+              for tree in "$HOME"/Library/Developer/Xcode/DerivedData/hmux-nightly-${{ needs.decide.outputs.channel }}-*; do
+                if [[ "${tree##*/}" =~ ^hmux-nightly-${{ needs.decide.outputs.channel }}-[0-9a-f]{64}(\.stale\..+)?$ ]]; then
                   stale+=("$tree")
                 fi
               done
@@ -1357,26 +1357,26 @@ jobs:
       # cross-platform R2 artifact matrix. Main and release keep the immutable
       # manifest path below, so their machine and distribution artifacts stay
       # complete.
-      - name: Install Zig for fast cmux-tui client
+      - name: Install Zig for fast hmux-tui client
         if: env.NIGHTLY_FAST_BUILD == 'true'
         run: ./scripts/install-zig-ci.sh
 
-      - name: Build fast arm64 cmux-tui client
+      - name: Build fast arm64 hmux-tui client
         if: env.NIGHTLY_FAST_BUILD == 'true'
-        working-directory: cmux-tui
+        working-directory: hmux-tui
         env:
-          CMUX_TUI_DISTRIBUTION_VERSION: 0.0.0-nightly-${{ needs.decide.outputs.short_sha }}
+          HMUX_TUI_DISTRIBUTION_VERSION: 0.0.0-nightly-${{ needs.decide.outputs.short_sha }}
         run: |
           set -euo pipefail
-          unset CMUX_GHOSTTY_SRC
-          CMUX_TUI_BUILD_COMMIT="$(git -C .. rev-parse HEAD)"
-          CMUX_TUI_GHOSTTY_COMMIT="$(git -C ../ghostty rev-parse HEAD)"
-          export CMUX_TUI_BUILD_COMMIT CMUX_TUI_GHOSTTY_COMMIT
-          cargo build -p cmux-tui --bin cmux-tui --release --locked --target aarch64-apple-darwin
-          binary="target/aarch64-apple-darwin/release/cmux-tui"
+          unset HMUX_GHOSTTY_SRC
+          HMUX_TUI_BUILD_COMMIT="$(git -C .. rev-parse HEAD)"
+          HMUX_TUI_GHOSTTY_COMMIT="$(git -C ../ghostty rev-parse HEAD)"
+          export HMUX_TUI_BUILD_COMMIT HMUX_TUI_GHOSTTY_COMMIT
+          cargo build -p hmux-tui --bin hmux-tui --release --locked --target aarch64-apple-darwin
+          binary="target/aarch64-apple-darwin/release/hmux-tui"
           test -x "$binary"
           probe="$($binary remote-probe --json)"
-          PROBE="$probe" EXPECTED_COMMIT="$CMUX_TUI_BUILD_COMMIT" python3 - <<'PY'
+          PROBE="$probe" EXPECTED_COMMIT="$HMUX_TUI_BUILD_COMMIT" python3 - <<'PY'
           import json
           import os
 
@@ -1384,10 +1384,10 @@ jobs:
           expected = os.environ["EXPECTED_COMMIT"]
           if probe.get("build_identity") != expected:
               raise SystemExit(
-                  f"cmux-tui build identity {probe.get('build_identity')!r} != {expected!r}"
+                  f"hmux-tui build identity {probe.get('build_identity')!r} != {expected!r}"
               )
           if "wireguard-hub" not in probe.get("capabilities", []):
-              raise SystemExit("fast cmux-tui client lacks wireguard-hub capability")
+              raise SystemExit("fast hmux-tui client lacks wireguard-hub capability")
           PY
 
       - name: Cache Swift packages
@@ -1396,7 +1396,7 @@ jobs:
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
           path: .spm-cache
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -1419,7 +1419,7 @@ jobs:
             only_active="NO"
           fi
           # Let xcodebuild fan out across the host. The two whole-module Swift
-          # compiles of the cmux target (about 10 and 16 minutes) miss the
+          # compiles of the hmux target (about 10 and 16 minutes) miss the
           # compilation cache on every push because every push changes the
           # module, and `-jobs 1` made them run back to back: the warm build
           # step went from 21 minutes to 31-40 (#12704). The diagnostics
@@ -1435,7 +1435,7 @@ jobs:
             --derived-data build-universal --configuration Release --archs "$archs" \
             --log "$RUNNER_TEMP/helper-prebuild.log" -- \
           ./scripts/ci/run-xcodebuild-with-diagnostics.sh -- \
-            env CMUX_SKIP_ZIG_BUILD=1 xcodebuild -scheme cmux -configuration Release -derivedDataPath build-universal \
+            env HMUX_SKIP_ZIG_BUILD=1 xcodebuild -scheme hmux -configuration Release -derivedDataPath build-universal \
             -destination 'generic/platform=macOS' \
             -clonedSourcePackagesDirPath .spm-cache \
             -packageCachePath "$PWD/.spm-cache/.package-cache" \
@@ -1510,21 +1510,21 @@ jobs:
         with:
           backend: ${{ inputs.cache_backend != 'default' && inputs.cache_backend || vars.CI_CACHE_BACKEND || 'r2' }}
           path: .spm-cache
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
 
       # The fast arm64 build bundles the client it just compiled. Full builds
       # take the published client in build-sign-notarize-nightly instead: the
-      # commit is resolved by resolve-nightly-cmux-tui-client while this job
+      # commit is resolved by resolve-nightly-hmux-tui-client while this job
       # compiles, so the history deepen (1.5 to 11 minutes) is off this path.
-      - name: Bundle the fast cmux-tui client
+      - name: Bundle the fast hmux-tui client
         if: env.NIGHTLY_FAST_BUILD == 'true'
         run: |
           set -euo pipefail
-          app="build-universal/Build/Products/Release/cmux.app"
-          local_client="$GITHUB_WORKSPACE/cmux-tui/target/aarch64-apple-darwin/release/cmux-tui"
+          app="build-universal/Build/Products/Release/hmux.app"
+          local_client="$GITHUB_WORKSPACE/hmux-tui/target/aarch64-apple-darwin/release/hmux-tui"
           test -x "$local_client"
-          CMUX_TUI_CLIENT_LOCAL="$local_client" \
-            ./scripts/install-cmux-tui-client.sh "$app" \
+          HMUX_TUI_CLIENT_LOCAL="$local_client" \
+            ./scripts/install-hmux-tui-client.sh "$app" \
             --require-capability wireguard-hub
 
       - name: Build immutable SSH daemon assets once for every app variant
@@ -1532,7 +1532,7 @@ jobs:
         id: remote_daemon
         run: |
           set -euo pipefail
-          app="build-universal/Build/Products/Release/cmux.app"
+          app="build-universal/Build/Products/Release/hmux.app"
           base_version="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' "$app/Contents/Info.plist")"
           build="${GITHUB_RUN_ID}$(printf '%02d' "${GITHUB_RUN_ATTEMPT:-1}")"
           version="${base_version}-${{ needs.decide.outputs.channel }}.${build}"
@@ -1546,14 +1546,14 @@ jobs:
         if: needs.decide.outputs.build_only != 'true'
         uses: actions/attest-build-provenance@a2bbfa25375fe432b6a289bc6b6cd05ecd0c4c32 # v4.1.0
         with:
-          subject-path: remote-daemon-assets/cmuxd-remote-*
+          subject-path: remote-daemon-assets/hmuxd-remote-*
 
       - name: Upload SSH daemon assets
         if: needs.decide.outputs.build_only != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-nightly-remote-daemon
-          path: remote-daemon-assets/cmuxd-remote-*
+          name: hmux-nightly-remote-daemon
+          path: remote-daemon-assets/hmuxd-remote-*
           if-no-files-found: error
           retention-days: 14
 
@@ -1561,12 +1561,12 @@ jobs:
         run: |
           set -euo pipefail
           products="build-universal/Build/Products/Release"
-          ./scripts/strip-release-bundle.sh "$products/cmux.app"
+          ./scripts/strip-release-bundle.sh "$products/hmux.app"
 
       - name: Verify Cloud tunnel engine before transfer
         run: |
           set -euo pipefail
-          app="build-universal/Build/Products/Release/cmux.app"
+          app="build-universal/Build/Products/Release/hmux.app"
           sysext="$(find "$app/Contents/Library/SystemExtensions" -mindepth 1 -maxdepth 1 -name '*.systemextension' -print -quit 2>/dev/null || true)"
           if [[ -z "$sysext" ]]; then
             echo "::error::Cloud tunnel system extension is missing"
@@ -1581,18 +1581,18 @@ jobs:
         run: |
           set -euo pipefail
           products="build-universal/Build/Products/Release"
-          if [ ! -d "$products/cmux.app" ]; then
-            echo "Built app not found at $products/cmux.app" >&2
+          if [ ! -d "$products/hmux.app" ]; then
+            echo "Built app not found at $products/hmux.app" >&2
             exit 1
           fi
-          tar -C "$products" -czf "$RUNNER_TEMP/cmux-nightly-unsigned.tar.gz" cmux.app
+          tar -C "$products" -czf "$RUNNER_TEMP/hmux-nightly-unsigned.tar.gz" hmux.app
 
       - name: Upload unsigned nightly app
         if: needs.decide.outputs.build_only != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-nightly-unsigned-app
-          path: ${{ runner.temp }}/cmux-nightly-unsigned.tar.gz
+          name: hmux-nightly-unsigned-app
+          path: ${{ runner.temp }}/hmux-nightly-unsigned.tar.gz
           # The tar.gz is already compressed; avoid wasting runner CPU on outer deflate.
           compression-level: 0
           if-no-files-found: error
@@ -1603,14 +1603,14 @@ jobs:
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: manaflow
-          SENTRY_PROJECT: cmuxterm-macos
+          SENTRY_PROJECT: hmuxterm-macos
         # Retried, and only a warning when Sentry stays down: a nightly is never lost to symbolication.
         run: ./scripts/upload-sentry-dsyms.sh build-universal/Build/Products/Release/
 
   # Runs beside build-nightly-app. Deepening the shallow clone to find the
-  # newest published cmux-tui commit took 1.5 to 11 minutes after the Xcode
+  # newest published hmux-tui commit took 1.5 to 11 minutes after the Xcode
   # compile (runs 36044415287, 36051668491); here it overlaps the compile.
-  resolve-nightly-cmux-tui-client:
+  resolve-nightly-hmux-tui-client:
     needs: decide
     if: needs.decide.outputs.should_build == 'true' && (github.event_name != 'schedule' || github.event.schedule == '47 8 * * *') && needs.decide.outputs.build_only != 'true'
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || 'blacksmith-2vcpu-ubuntu-2404' }}
@@ -1628,24 +1628,24 @@ jobs:
           submodules: false
 
       # The fast arm64 build bundles its own compiled client instead.
-      - name: Resolve cmux-tui client commit
+      - name: Resolve hmux-tui client commit
         id: resolve
         if: needs.decide.outputs.fast_build != 'true'
         run: |
           set -euo pipefail
-          # actions/checkout is depth 1 here, so a bare `git log -1 -- cmux-tui` would answer
+          # actions/checkout is depth 1 here, so a bare `git log -1 -- hmux-tui` would answer
           # HEAD. The resolver deepens as needed and may bundle the newest *published*
-          # client when the latest cmux-tui commit has no artifacts yet (it warns when it does).
-          cmux_tui_commit="$(./scripts/ci/resolve-cmux-tui-client-commit.sh --max-fallback 5)"
-          [[ "$cmux_tui_commit" =~ ^[0-9a-f]{40}$ ]]
-          echo "commit=$cmux_tui_commit" >> "$GITHUB_OUTPUT"
+          # client when the latest hmux-tui commit has no artifacts yet (it warns when it does).
+          hmux_tui_commit="$(./scripts/ci/resolve-hmux-tui-client-commit.sh --max-fallback 5)"
+          [[ "$hmux_tui_commit" =~ ^[0-9a-f]{40}$ ]]
+          echo "commit=$hmux_tui_commit" >> "$GITHUB_OUTPUT"
 
   prepare-nightly-variant:
     # No environment and no secrets: this job runs code from the bundle (the
-    # cmux-tui probe, the CLI and helper regressions, the sidecar handshake)
+    # hmux-tui probe, the CLI and helper regressions, the sidecar handshake)
     # before signing. build-sign-notarize-nightly signs exactly the app it uploads
     # and runs no bundle code itself.
-    needs: [decide, build-nightly-ghostty-cli-helper, build-nightly-app, resolve-nightly-cmux-tui-client]
+    needs: [decide, build-nightly-ghostty-cli-helper, build-nightly-app, resolve-nightly-hmux-tui-client]
     if: needs.decide.outputs.should_build == 'true' && (github.event_name != 'schedule' || github.event.schedule == '47 8 * * *') && needs.decide.outputs.build_only != 'true'
     # actions:read lets the parallel artifact download resolve the blob URL.
     permissions:
@@ -1658,8 +1658,8 @@ jobs:
       matrix:
         variant: ${{ fromJSON(needs.decide.outputs.variants) }}
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_26 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_CI_XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_MACOS_26 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
       NIGHTLY_VARIANT: ${{ matrix.variant }}
       NIGHTLY_FAST_BUILD: ${{ needs.decide.outputs.fast_build }}
     steps:
@@ -1682,10 +1682,10 @@ jobs:
           ref: ${{ needs.decide.outputs.head_sha }}
           # Main and RC signing do not need submodules. nightly-next's notice
           # check reads ghostty-next/build.zig.zon, so initialize that optional
-          # submodule in the next step only for the cmux-next track.
+          # submodule in the next step only for the hmux-next track.
           submodules: false
 
-      - name: Initialize cmux-next notices submodule
+      - name: Initialize hmux-next notices submodule
         if: github.ref_name == 'nightly-next'
         shell: bash
         run: bash scripts/ci/init-submodule.sh ghostty-next
@@ -1705,16 +1705,16 @@ jobs:
           set +e
           mkdir -p nightly-inputs/app nightly-inputs/ghostty remote-daemon-assets
           python3 scripts/ci/download-run-artifact.py \
-            --name cmux-nightly-unsigned-app --out nightly-inputs/app \
+            --name hmux-nightly-unsigned-app --out nightly-inputs/app \
             --connections 64 \
             >"$RUNNER_TEMP/nightly-app-download.log" 2>&1 &
           app_pid=$!
           python3 scripts/ci/download-run-artifact.py \
-            --name cmux-nightly-remote-daemon --out remote-daemon-assets \
+            --name hmux-nightly-remote-daemon --out remote-daemon-assets \
             >"$RUNNER_TEMP/nightly-daemon-download.log" 2>&1 &
           daemon_pid=$!
           python3 scripts/ci/download-run-artifact.py \
-            --name cmux-nightly-ghostty-cli-helper --out nightly-inputs/ghostty \
+            --name hmux-nightly-ghostty-cli-helper --out nightly-inputs/ghostty \
             >"$RUNNER_TEMP/nightly-helper-download.log" 2>&1 &
           helper_pid=$!
           wait "$app_pid"; app_status=$?
@@ -1741,21 +1741,21 @@ jobs:
         if: steps.signing-inputs-parallel.outputs.app_ok != 'true'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: cmux-nightly-unsigned-app
+          name: hmux-nightly-unsigned-app
           path: nightly-inputs/app
 
       - name: Download SSH daemon assets
         if: steps.signing-inputs-parallel.outputs.daemon_ok != 'true'
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-nightly-remote-daemon
+          name: hmux-nightly-remote-daemon
           path: remote-daemon-assets
 
       - name: Download universal Ghostty CLI helper
         if: steps.signing-inputs-parallel.outputs.helper_ok != 'true'
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: cmux-nightly-ghostty-cli-helper
+          name: hmux-nightly-ghostty-cli-helper
           path: nightly-inputs/ghostty
 
       - name: Restore unsigned nightly products
@@ -1763,12 +1763,12 @@ jobs:
           set -euo pipefail
           products="build-universal/Build/Products/Release"
           mkdir -p "$products"
-          tar -C "$products" -xzf nightly-inputs/app/cmux-nightly-unsigned.tar.gz
+          tar -C "$products" -xzf nightly-inputs/app/hmux-nightly-unsigned.tar.gz
 
       - name: Inject universal Ghostty CLI helper
         run: |
           set -euo pipefail
-          APP_DIR="build-universal/Build/Products/Release/cmux.app"
+          APP_DIR="build-universal/Build/Products/Release/hmux.app"
           if [ ! -d "$APP_DIR" ]; then
             echo "Built app not found at $APP_DIR" >&2
             exit 1
@@ -1778,26 +1778,26 @@ jobs:
           install -m 755 nightly-inputs/ghostty/ghostty "$DEST"
           echo "Injected Ghostty CLI helper architectures: $(lipo -archs "$DEST")"
 
-      # Every variant installs the one commit resolve-nightly-cmux-tui-client
+      # Every variant installs the one commit resolve-nightly-hmux-tui-client
       # chose, from its attested immutable manifest, before thinning.
-      - name: Bundle the cmux-tui client
+      - name: Bundle the hmux-tui client
         if: needs.decide.outputs.fast_build != 'true'
         env:
-          # install-cmux-tui-client.sh verifies the manifest's build-provenance
+          # install-hmux-tui-client.sh verifies the manifest's build-provenance
           # attestation with gh before trusting it.
           GH_TOKEN: ${{ github.token }}
-          CMUX_TUI_CLIENT_COMMIT: ${{ needs.resolve-nightly-cmux-tui-client.outputs.commit }}
+          HMUX_TUI_CLIENT_COMMIT: ${{ needs.resolve-nightly-hmux-tui-client.outputs.commit }}
           # Per-job cache, so legs sharing a host never race on one download.
-          CMUX_TUI_CLIENT_CACHE: ${{ runner.temp }}/cmux-tui-client
+          HMUX_TUI_CLIENT_CACHE: ${{ runner.temp }}/hmux-tui-client
         run: |
           set -euo pipefail
-          app="build-universal/Build/Products/Release/cmux.app"
-          cmux_tui_commit="$CMUX_TUI_CLIENT_COMMIT"
-          [[ "$cmux_tui_commit" =~ ^[0-9a-f]{40}$ ]] || { echo "resolve-nightly-cmux-tui-client produced no commit" >&2; exit 1; }
-          ./scripts/install-cmux-tui-client.sh \
+          app="build-universal/Build/Products/Release/hmux.app"
+          hmux_tui_commit="$HMUX_TUI_CLIENT_COMMIT"
+          [[ "$hmux_tui_commit" =~ ^[0-9a-f]{40}$ ]] || { echo "resolve-nightly-hmux-tui-client produced no commit" >&2; exit 1; }
+          ./scripts/install-hmux-tui-client.sh \
             "$app" \
-            --manifest-url "https://files.cmux.com/cmux-tui/${cmux_tui_commit}/manifest.json" \
-            --expected-commit "$cmux_tui_commit" \
+            --manifest-url "https://files.cmux.com/hmux-tui/${hmux_tui_commit}/manifest.json" \
+            --expected-commit "$hmux_tui_commit" \
             --require-capability wireguard-hub
           # The client and its SSH payloads arrive after the build job's strip, so
           # strip again; already-stripped binaries are unchanged.
@@ -1806,36 +1806,36 @@ jobs:
       - name: Run bundled Ghostty theme picker helper regression
         run: |
           set -euo pipefail
-          CMUX_APP_PATH="build-universal/Build/Products/Release/cmux.app" \
+          HMUX_APP_PATH="build-universal/Build/Products/Release/hmux.app" \
             ./tests/test_bundled_ghostty_theme_picker_helper.sh
 
       - name: Run CLI version memory guard regression
         run: |
           set -euo pipefail
-          CLI_BINARY="build-universal/Build/Products/Release/cmux.app/Contents/Resources/bin/cmux"
-          [ -x "$CLI_BINARY" ] || { echo "cmux CLI binary not found at $CLI_BINARY" >&2; exit 1; }
-          CMUX_CLI_BIN="$CLI_BINARY" python3 tests/test_cli_version_memory_guard.py
+          CLI_BINARY="build-universal/Build/Products/Release/hmux.app/Contents/Resources/bin/hmux"
+          [ -x "$CLI_BINARY" ] || { echo "hmux CLI binary not found at $CLI_BINARY" >&2; exit 1; }
+          HMUX_CLI_BIN="$CLI_BINARY" python3 tests/test_cli_version_memory_guard.py
 
       - name: Thin bundle to the variant architecture
-        # The fast build is already compiled arm64, but the downloaded cmux-tui
+        # The fast build is already compiled arm64, but the downloaded hmux-tui
         # client can still be universal. Thin every non-universal artifact before
         # signing so the architecture gate remains meaningful.
         if: matrix.variant != 'universal'
         run: |
           set -euo pipefail
-          ./scripts/thin-app-bundle.sh build-universal/Build/Products/Release/cmux.app "$NIGHTLY_VARIANT"
+          ./scripts/thin-app-bundle.sh build-universal/Build/Products/Release/hmux.app "$NIGHTLY_VARIANT"
 
       - name: Verify nightly binary architectures
         run: |
           set -euo pipefail
-          APP="build-universal/Build/Products/Release/cmux.app"
+          APP="build-universal/Build/Products/Release/hmux.app"
           for binary in \
-            "$APP/Contents/MacOS/cmux" \
-            "$APP/Contents/Resources/bin/cmux" \
+            "$APP/Contents/MacOS/hmux" \
+            "$APP/Contents/Resources/bin/hmux" \
             "$APP/Contents/Resources/bin/ghostty" \
-            "$APP/Contents/Resources/bin/cmux-tui" \
-            "$APP/Contents/Resources/bin/cmux-diff-sidecar" \
-            "$APP/Contents/Library/cmux Computer Use.app/Contents/MacOS/cmux-cua"
+            "$APP/Contents/Resources/bin/hmux-tui" \
+            "$APP/Contents/Resources/bin/hmux-diff-sidecar" \
+            "$APP/Contents/Library/hmux Computer Use.app/Contents/MacOS/hmux-cua"
           do
             archs="$(lipo -archs "$binary")"
             echo "$binary: $archs"
@@ -1855,34 +1855,34 @@ jobs:
             fi
           fi
           if [ "$NIGHTLY_VARIANT" = "universal" ]; then
-            ./scripts/verify-diff-sidecar-artifact.sh "$APP/Contents/Resources/bin/cmux-diff-sidecar" --archs "arm64 x86_64"
+            ./scripts/verify-diff-sidecar-artifact.sh "$APP/Contents/Resources/bin/hmux-diff-sidecar" --archs "arm64 x86_64"
           else
-            ./scripts/verify-diff-sidecar-artifact.sh "$APP/Contents/Resources/bin/cmux-diff-sidecar" --archs "$NIGHTLY_VARIANT"
+            ./scripts/verify-diff-sidecar-artifact.sh "$APP/Contents/Resources/bin/hmux-diff-sidecar" --archs "$NIGHTLY_VARIANT"
           fi
 
       - name: Package prepared app for signing
         run: |
           set -euo pipefail
           mkdir -p prepared-app-handoff
-          tar -C build-universal/Build/Products/Release -czf prepared-app-handoff/cmux-prepared-app.tar.gz cmux.app
+          tar -C build-universal/Build/Products/Release -czf prepared-app-handoff/hmux-prepared-app.tar.gz hmux.app
 
       # nightly-sign.yml (run from main) reads this annotation of this job
       # through the checks API and refuses a tarball with another sha256.
       - name: Record prepared app digest
         env:
-          PREPARED_APP_ARTIFACT: cmux-${{ needs.decide.outputs.channel }}-prepared-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
+          PREPARED_APP_ARTIFACT: hmux-${{ needs.decide.outputs.channel }}-prepared-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
           NIGHTLY_SHOULD_PUBLISH: ${{ needs.decide.outputs.should_publish }}
         run: |
           set -euo pipefail
-          digest="$(shasum -a 256 prepared-app-handoff/cmux-prepared-app.tar.gz | awk '{print $1}')"
+          digest="$(shasum -a 256 prepared-app-handoff/hmux-prepared-app.tar.gz | awk '{print $1}')"
           [[ "$digest" =~ ^[0-9a-f]{64}$ ]] || { echo "no sha256 for the prepared app" >&2; exit 1; }
           echo "::notice title=nightly-prepared-app::variant=${NIGHTLY_VARIANT} artifact=${PREPARED_APP_ARTIFACT} sha256=${digest} publish=${NIGHTLY_SHOULD_PUBLISH} fast=${NIGHTLY_FAST_BUILD}"
 
       - name: Upload prepared app for signing
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.decide.outputs.channel }}-prepared-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
-          path: prepared-app-handoff/cmux-prepared-app.tar.gz
+          name: hmux-${{ needs.decide.outputs.channel }}-prepared-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
+          path: prepared-app-handoff/hmux-prepared-app.tar.gz
           compression-level: 0
           if-no-files-found: error
           retention-days: 3
@@ -1916,8 +1916,8 @@ jobs:
       matrix:
         variant: ${{ fromJSON(needs.decide.outputs.variants) }}
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_26 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_CI_XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_MACOS_26 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
       NIGHTLY_VARIANT: ${{ matrix.variant }}
       NIGHTLY_FAST_BUILD: ${{ needs.decide.outputs.fast_build }}
       NIGHTLY_BUILD: ${{ needs.build-nightly-app.outputs.daemon_build }}
@@ -1953,10 +1953,10 @@ jobs:
           ref: ${{ needs.decide.outputs.head_sha }}
           # Main and RC signing do not need submodules. nightly-next's notice
           # check reads ghostty-next/build.zig.zon, so initialize that optional
-          # submodule in the next step only for the cmux-next track.
+          # submodule in the next step only for the hmux-next track.
           submodules: false
 
-      - name: Initialize cmux-next notices submodule
+      - name: Initialize hmux-next notices submodule
         if: github.ref_name == 'nightly-next'
         shell: bash
         run: bash scripts/ci/init-submodule.sh ghostty-next
@@ -1967,13 +1967,13 @@ jobs:
       - name: Download prepared app
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-${{ needs.decide.outputs.channel }}-prepared-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
+          name: hmux-${{ needs.decide.outputs.channel }}-prepared-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
           path: prepared-app
 
       - name: Download SSH daemon assets
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-nightly-remote-daemon
+          name: hmux-nightly-remote-daemon
           path: remote-daemon-assets
 
       - name: Restore prepared app
@@ -1981,7 +1981,7 @@ jobs:
           set -euo pipefail
           products="build-universal/Build/Products/Release"
           mkdir -p "$products"
-          tar -C "$products" -xzf prepared-app/cmux-prepared-app.tar.gz
+          tar -C "$products" -xzf prepared-app/hmux-prepared-app.tar.gz
 
       # Provide node/npm explicitly. The build/sign/notarize job can land on a
       # self-hosted macOS runner (the iOS-CI minis match the same label) that has
@@ -1995,7 +1995,7 @@ jobs:
 
       - name: Install build deps
         run: |
-          CMUX_NODE_BIN="$(command -v node)"
+          HMUX_NODE_BIN="$(command -v node)"
           export npm_config_prefix="$RUNNER_TEMP/npm-global"
           mkdir -p "$npm_config_prefix"
           npm install --global "create-dmg@${CREATE_DMG_VERSION}"
@@ -2003,7 +2003,7 @@ jobs:
           mkdir -p "$wrapper_dir"
           cat > "$wrapper_dir/create-dmg" <<EOF
           #!/usr/bin/env bash
-          exec "$CMUX_NODE_BIN" "$npm_config_prefix/lib/node_modules/create-dmg/cli.js" "\$@"
+          exec "$HMUX_NODE_BIN" "$npm_config_prefix/lib/node_modules/create-dmg/cli.js" "\$@"
           EOF
           chmod +x "$wrapper_dir/create-dmg"
           echo "$wrapper_dir" >> "$GITHUB_PATH"
@@ -2054,7 +2054,7 @@ jobs:
             local app_dir="$1"
             local bundle_id="$2"
             local feed_url="$3"
-            local app_plist="$app_dir/cmux.app/Contents/Info.plist"
+            local app_plist="$app_dir/hmux.app/Contents/Info.plist"
 
             /usr/libexec/PlistBuddy -c "Set :CFBundleName ${CHANNEL_APP_NAME}" "$app_plist"
             /usr/libexec/PlistBuddy -c "Set :CFBundleDisplayName ${CHANNEL_APP_NAME}" "$app_plist"
@@ -2072,21 +2072,21 @@ jobs:
             /usr/libexec/PlistBuddy -c "Add :SUFeedURL string ${feed_url}" "$app_plist"
             /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${NIGHTLY_MARKETING_VERSION}" "$app_plist"
             /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${NIGHTLY_BUILD}" "$app_plist"
-            /usr/libexec/PlistBuddy -c "Delete :CMUXCommit" "$app_plist" >/dev/null 2>&1 || true
-            /usr/libexec/PlistBuddy -c "Add :CMUXCommit string ${SHORT_SHA}" "$app_plist"
+            /usr/libexec/PlistBuddy -c "Delete :HMUXCommit" "$app_plist" >/dev/null 2>&1 || true
+            /usr/libexec/PlistBuddy -c "Add :HMUXCommit string ${SHORT_SHA}" "$app_plist"
             # The bundled Cloud tunnel extension follows the app's identity:
             # <bundle id>.tunnel, team-prefixed mach service, same version.
             local sysext
-            sysext="$(find "$app_dir/cmux.app/Contents/Library/SystemExtensions" -mindepth 1 -maxdepth 1 -name '*.systemextension' -print -quit 2>/dev/null || true)"
+            sysext="$(find "$app_dir/hmux.app/Contents/Library/SystemExtensions" -mindepth 1 -maxdepth 1 -name '*.systemextension' -print -quit 2>/dev/null || true)"
             if [[ -n "$sysext" ]]; then
               local sysext_plist="$sysext/Contents/Info.plist"
               /usr/libexec/PlistBuddy -c "Set :CFBundleIdentifier ${bundle_id}.tunnel" "$sysext_plist"
               /usr/libexec/PlistBuddy -c "Set :NetworkExtension:NEMachServiceName 7WLXT3NR37.${bundle_id}.tunnel" "$sysext_plist"
               /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${NIGHTLY_MARKETING_VERSION}" "$sysext_plist"
               /usr/libexec/PlistBuddy -c "Set :CFBundleVersion ${NIGHTLY_BUILD}" "$sysext_plist"
-              ./scripts/normalize-system-extension-bundle.sh "$app_dir/cmux.app" "${bundle_id}.tunnel"
+              ./scripts/normalize-system-extension-bundle.sh "$app_dir/hmux.app" "${bundle_id}.tunnel"
             fi
-            mv "$app_dir/cmux.app" "$app_dir/${CHANNEL_APP_NAME}.app"
+            mv "$app_dir/hmux.app" "$app_dir/${CHANNEL_APP_NAME}.app"
           }
 
           prepare_variant \
@@ -2112,7 +2112,7 @@ jobs:
             bundle_args+=(--bundle-assets)
           fi
           python3 scripts/verify_remote_daemon_release.py \
-            --manifest "remote-daemon-assets/cmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
+            --manifest "remote-daemon-assets/hmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
             --assets-dir remote-daemon-assets \
             --app "$CHANNEL_APP_PATH" --embed "${bundle_args[@]}"
 
@@ -2133,7 +2133,7 @@ jobs:
           ASC_API_KEY_P8_BASE64: ${{ secrets.ASC_API_KEY_P8_BASE64 }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
         run: |
-          state="$RUNNER_TEMP/cmux-computer-use-notarization.state"
+          state="$RUNNER_TEMP/hmux-computer-use-notarization.state"
           rm -f "$state"
           ./scripts/ci/notarize-computer-use-helper.sh \
             --start "$state" \
@@ -2156,8 +2156,8 @@ jobs:
 
           APP_PATH="$CHANNEL_APP_PATH"
           PROFILE_PATH="$APP_PATH/Contents/embedded.provisionprofile"
-          TMP_PROFILE="$(mktemp /tmp/cmux-channel-profile.XXXXXX)"
-          TMP_PLIST="$(mktemp /tmp/cmux-channel-profile.XXXXXX.plist)"
+          TMP_PROFILE="$(mktemp /tmp/hmux-channel-profile.XXXXXX)"
+          TMP_PLIST="$(mktemp /tmp/hmux-channel-profile.XXXXXX.plist)"
           trap 'rm -f "$TMP_PROFILE" "$TMP_PLIST"' EXIT
 
           echo "$APP_PROVISIONING_PROFILE_BASE64" | base64 --decode > "$TMP_PROFILE"
@@ -2171,7 +2171,7 @@ jobs:
 
           # The WebAuthn browser entitlement is an Apple-approved capability
           # request. Nightly has it; the RC App ID's request has been pending
-          # since 2026-07-10, so cmux.rc.entitlements does not ask for it and
+          # since 2026-07-10, so hmux.rc.entitlements does not ask for it and
           # RC ships without passkey sign-in in the embedded browser until Apple
           # approves. The check follows the channel's entitlements file so the
           # profile can never silently lag behind what the app requests.
@@ -2219,8 +2219,8 @@ jobs:
           else
             sign_mode=all-except-computer-use
           fi
-          CMUX_SIGN_MODE="$sign_mode" \
-            ./scripts/sign-cmux-bundle.sh \
+          HMUX_SIGN_MODE="$sign_mode" \
+            ./scripts/sign-hmux-bundle.sh \
             "$CHANNEL_APP_PATH" \
             "$CHANNEL_ENTITLEMENTS" \
             "$APPLE_SIGNING_IDENTITY"
@@ -2236,13 +2236,13 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p signed-app-handoff
-          tar -C "$(dirname "$CHANNEL_APP_PATH")" -czf signed-app-handoff/cmux-signed-app.tar.gz "$(basename "$CHANNEL_APP_PATH")"
-          (cd signed-app-handoff && shasum -a 256 cmux-signed-app.tar.gz > cmux-signed-app.tar.gz.sha256)
+          tar -C "$(dirname "$CHANNEL_APP_PATH")" -czf signed-app-handoff/hmux-signed-app.tar.gz "$(basename "$CHANNEL_APP_PATH")"
+          (cd signed-app-handoff && shasum -a 256 hmux-signed-app.tar.gz > hmux-signed-app.tar.gz.sha256)
 
       - name: Upload signed app for the verify job
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.decide.outputs.channel }}-signed-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
+          name: hmux-${{ needs.decide.outputs.channel }}-signed-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
           path: signed-app-handoff/*
           compression-level: 0
           if-no-files-found: error
@@ -2264,16 +2264,16 @@ jobs:
           # A build that publishes submits only (resume-stapled-app-notarization.sh
           # continues it and signs there), so it gets no certificate. Any other
           # build waits here and then signs and notarizes the DMG around the
-          # stapled app (CMUX_STAPLE_APP_IN_DMG).
+          # stapled app (HMUX_STAPLE_APP_IN_DMG).
           APPLE_CERTIFICATE_BASE64: ${{ needs.decide.outputs.should_publish != 'true' && secrets.APPLE_CERTIFICATE_BASE64 || '' }}
           APPLE_CERTIFICATE_PASSWORD: ${{ needs.decide.outputs.should_publish != 'true' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
-          CMUX_STAPLED_DMG_WAIT_TIMEOUT: 25m
-          CMUX_NOTARY_SUBMIT_ONLY: ${{ needs.decide.outputs.should_publish }}
-          CMUX_DEFER_GATEKEEPER_ASSESSMENT: ${{ needs.decide.outputs.should_publish }}
-          CMUX_COMPUTER_USE_NOTARY_SUBMISSION_FILE: ${{ runner.temp }}/cmux-computer-use-notarization.state
-          CMUX_CHANNEL: ${{ needs.decide.outputs.channel }}
+          HMUX_STAPLED_DMG_WAIT_TIMEOUT: 25m
+          HMUX_NOTARY_SUBMIT_ONLY: ${{ needs.decide.outputs.should_publish }}
+          HMUX_DEFER_GATEKEEPER_ASSESSMENT: ${{ needs.decide.outputs.should_publish }}
+          HMUX_COMPUTER_USE_NOTARY_SUBMISSION_FILE: ${{ runner.temp }}/hmux-computer-use-notarization.state
+          HMUX_CHANNEL: ${{ needs.decide.outputs.channel }}
           # The final-DMG launch smokes run in verify-signed-nightly.
-          CMUX_DEFER_LAUNCH_SMOKES: "true"
+          HMUX_DEFER_LAUNCH_SMOKES: "true"
         run: |
           ./scripts/ci/notarize-nightly-dmg.sh \
             "$CHANNEL_APP_PATH" \
@@ -2284,8 +2284,8 @@ jobs:
         if: needs.decide.outputs.fast_build == 'true'
         env:
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
-          CMUX_CHANNEL: ${{ needs.decide.outputs.channel }}
-          CMUX_SKIP_NOTARIZATION: "true"
+          HMUX_CHANNEL: ${{ needs.decide.outputs.channel }}
+          HMUX_SKIP_NOTARIZATION: "true"
         run: |
           ./scripts/ci/notarize-nightly-dmg.sh \
             "$CHANNEL_APP_PATH" \
@@ -2308,7 +2308,7 @@ jobs:
           recovery_state="$NIGHTLY_DMG_RELEASE.notarization.state"
           recovery_log="$NIGHTLY_DMG_RELEASE.notarization.log"
           if [ ! -e "$NIGHTLY_DMG_RELEASE" ]; then
-            helper_state="$RUNNER_TEMP/cmux-computer-use-notarization.state"
+            helper_state="$RUNNER_TEMP/hmux-computer-use-notarization.state"
             helper_log="${helper_state}.log"
             for required in "$helper_state" "$helper_log" "$CHANNEL_APP_PATH"; do
               if [ ! -e "$required" ]; then
@@ -2327,13 +2327,13 @@ jobs:
               fi
             done
           fi
-          recovery_app_archive="cmux-nightly-notarization-recovery-app.tar.gz"
+          recovery_app_archive="hmux-nightly-notarization-recovery-app.tar.gz"
           rm -f "$recovery_app_archive"
           tar -C "$(dirname "$CHANNEL_APP_PATH")" -czf "$recovery_app_archive" "$(basename "$CHANNEL_APP_PATH")"
-          recovery_staging="cmux-nightly-notarization-recovery-staging"
+          recovery_staging="hmux-nightly-notarization-recovery-staging"
           rm -rf "$recovery_staging"
           mkdir -p "$recovery_staging"
-          metadata_staging="cmux-nightly-notarization-metadata-staging"
+          metadata_staging="hmux-nightly-notarization-metadata-staging"
           rm -rf "$metadata_staging"
           mkdir -p "$metadata_staging"
           echo "kind=$recovery_kind" >> "$GITHUB_OUTPUT"
@@ -2371,7 +2371,7 @@ jobs:
               raise SystemExit("helper state has invalid CDHash evidence")
           if state.get("wait_exit", "0") == "0" and state.get("status") == "Accepted" and state.get("post_wait_pending") != "true":
               raise SystemExit("accepted helper must not be uploaded as pending recovery")
-          pathlib.Path("cmux-nightly-notarization-recovery.json").write_text(
+          pathlib.Path("hmux-nightly-notarization-recovery.json").write_text(
               json.dumps({
                   "schema": 2,
                   "recovery_kind": "computer-use-helper",
@@ -2384,15 +2384,15 @@ jobs:
                   "build": build,
                   "head_sha": head_sha,
                   "short_sha": short_sha,
-                  "dmg_path": f"cmux-{channel}-macos-{variant}.dmg",
-                  "app_path": f"cmux-nightly-notarization-recovery-app/{pathlib.Path(app_path).name}",
-                  "app_archive_path": "cmux-nightly-notarization-recovery-app.tar.gz",
+                  "dmg_path": f"hmux-{channel}-macos-{variant}.dmg",
+                  "app_path": f"hmux-nightly-notarization-recovery-app/{pathlib.Path(app_path).name}",
+                  "app_archive_path": "hmux-nightly-notarization-recovery-app.tar.gz",
                   "app_entitlements_path": pathlib.Path(entitlements_path).name,
                   "app_entitlements_sha256": hashlib.sha256(pathlib.Path(entitlements_path).read_bytes()).hexdigest(),
                   "helper_state_path": pathlib.Path(state_path).name,
                   "helper_log_path": pathlib.Path(log_path).name,
-                  "immutable_path": f"cmux-{channel}-macos-{variant}-{build}.dmg",
-                  "dmg_prefix": f"cmux-{channel}-macos",
+                  "immutable_path": f"hmux-{channel}-macos-{variant}-{build}.dmg",
+                  "dmg_prefix": f"hmux-{channel}-macos",
                   "submission_id": submission_id,
                   "helper_cdhashes": cdhashes,
               }, indent=2) + "\n",
@@ -2443,7 +2443,7 @@ jobs:
               raise SystemExit("notarization state metadata does not match the build")
           if state.get("dmg_path", "").split("/")[-1] != pathlib.Path(dmg_path).name:
               raise SystemExit("notarization state points at a different DMG")
-          pathlib.Path("cmux-nightly-notarization-recovery.json").write_text(
+          pathlib.Path("hmux-nightly-notarization-recovery.json").write_text(
               json.dumps({
                   "schema": 1,
                   "source_run_id": "${{ github.run_id }}",
@@ -2456,8 +2456,8 @@ jobs:
                   "head_sha": head_sha,
                   "short_sha": short_sha,
                   "dmg_path": pathlib.Path(dmg_path).name,
-                  "app_path": f"cmux-nightly-notarization-recovery-app/{pathlib.Path(app_path).name}",
-                  "app_archive_path": "cmux-nightly-notarization-recovery-app.tar.gz",
+                  "app_path": f"hmux-nightly-notarization-recovery-app/{pathlib.Path(app_path).name}",
+                  "app_archive_path": "hmux-nightly-notarization-recovery-app.tar.gz",
                   "state_path": pathlib.Path(state_path).name,
                   "log_path": f"{pathlib.Path(dmg_path).name}.notarization.log",
                   "immutable_path": state.get("immutable_path", ""),
@@ -2470,10 +2470,10 @@ jobs:
           PY
           fi
           cp "$recovery_state" "$metadata_staging/"
-          cp cmux-nightly-notarization-recovery.json "$metadata_staging/"
+          cp hmux-nightly-notarization-recovery.json "$metadata_staging/"
           if [ "$recovery_kind" = computer-use-helper ]; then
-            cp "$recovery_state" "$recovery_staging/cmux-computer-use-notarization.state"
-            cp "$recovery_log" "$recovery_staging/cmux-computer-use-notarization.state.log"
+            cp "$recovery_state" "$recovery_staging/hmux-computer-use-notarization.state"
+            cp "$recovery_log" "$recovery_staging/hmux-computer-use-notarization.state.log"
             cp "$CHANNEL_ENTITLEMENTS" "$recovery_staging/$(basename "$CHANNEL_ENTITLEMENTS")"
           else
             cp "$NIGHTLY_DMG_RELEASE" "$recovery_staging/$(basename "$NIGHTLY_DMG_RELEASE")"
@@ -2481,14 +2481,14 @@ jobs:
             cp "$recovery_log" "$recovery_staging/$(basename "$recovery_log")"
           fi
           cp "$recovery_app_archive" "$recovery_staging/"
-          cp cmux-nightly-notarization-recovery.json "$recovery_staging/"
+          cp hmux-nightly-notarization-recovery.json "$recovery_staging/"
 
       - name: Upload pending notarization recovery artifact
         if: always() && steps.prepare-notarization-recovery.outcome == 'success' && steps.prepare-notarization-recovery.outputs.kind == 'dmg'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.decide.outputs.channel }}-notarization-recovery-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
-          path: cmux-nightly-notarization-recovery-staging/*
+          name: hmux-${{ needs.decide.outputs.channel }}-notarization-recovery-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
+          path: hmux-nightly-notarization-recovery-staging/*
           compression-level: 0
           if-no-files-found: error
           retention-days: 14
@@ -2497,8 +2497,8 @@ jobs:
         if: always() && steps.prepare-notarization-recovery.outcome == 'success' && steps.prepare-notarization-recovery.outputs.kind == 'computer-use-helper'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.decide.outputs.channel }}-notarization-recovery-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
-          path: cmux-nightly-notarization-recovery-staging/*
+          name: hmux-${{ needs.decide.outputs.channel }}-notarization-recovery-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
+          path: hmux-nightly-notarization-recovery-staging/*
           compression-level: 0
           if-no-files-found: error
           retention-days: 14
@@ -2507,8 +2507,8 @@ jobs:
         if: always() && steps.prepare-notarization-recovery.outcome == 'success' && steps.prepare-notarization-recovery.outputs.kind == 'dmg'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.decide.outputs.channel }}-notarization-metadata-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
-          path: cmux-nightly-notarization-metadata-staging/*
+          name: hmux-${{ needs.decide.outputs.channel }}-notarization-metadata-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
+          path: hmux-nightly-notarization-metadata-staging/*
           if-no-files-found: error
           retention-days: 14
 
@@ -2516,8 +2516,8 @@ jobs:
         if: always() && steps.prepare-notarization-recovery.outcome == 'success' && steps.prepare-notarization-recovery.outputs.kind == 'computer-use-helper'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-${{ needs.decide.outputs.channel }}-notarization-metadata-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
-          path: cmux-nightly-notarization-metadata-staging/*
+          name: hmux-${{ needs.decide.outputs.channel }}-notarization-metadata-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
+          path: hmux-nightly-notarization-metadata-staging/*
           if-no-files-found: error
           retention-days: 14
 
@@ -2548,7 +2548,7 @@ jobs:
         if: needs.decide.outputs.fast_build != 'true' && needs.decide.outputs.should_publish != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-nightly-variant-${{ matrix.variant }}
+          name: hmux-nightly-variant-${{ matrix.variant }}
           path: |
             ${{ needs.decide.outputs.dmg_prefix }}-*.dmg
             ${{ needs.decide.outputs.dmg_prefix }}-*.delta
@@ -2560,11 +2560,11 @@ jobs:
         if: needs.decide.outputs.fast_build == 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-nightly-fast-${{ needs.decide.outputs.short_sha }}
+          name: hmux-nightly-fast-${{ needs.decide.outputs.short_sha }}
           path: |
             ${{ needs.decide.outputs.dmg_prefix }}-arm64.dmg
             ${{ needs.decide.outputs.dmg_prefix }}-arm64-*.dmg
-            remote-daemon-assets/cmuxd-remote-*
+            remote-daemon-assets/hmuxd-remote-*
           if-no-files-found: error
           retention-days: 3
 
@@ -2592,8 +2592,8 @@ jobs:
       matrix:
         variant: ${{ fromJSON(needs.decide.outputs.variants) }}
     env:
-      CMUX_CI_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_MACOS_26 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_CI_XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_MACOS_26 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
       NIGHTLY_VARIANT: ${{ matrix.variant }}
       NIGHTLY_BUILD: ${{ needs.build-nightly-app.outputs.daemon_build }}
       BUNDLE_REMOTE_DAEMON_ASSETS: ${{ needs.decide.outputs.fast_build == 'true' || needs.decide.outputs.should_publish != 'true' }}
@@ -2609,7 +2609,7 @@ jobs:
           submodules: false
 
       # nightly-next's license check reads ghostty-next/build.zig.zon.
-      - name: Initialize cmux-next notices submodule
+      - name: Initialize hmux-next notices submodule
         if: github.ref_name == 'nightly-next'
         shell: bash
         run: bash scripts/ci/init-submodule.sh ghostty-next
@@ -2620,21 +2620,21 @@ jobs:
       - name: Download signed app
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-${{ needs.decide.outputs.channel }}-signed-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
+          name: hmux-${{ needs.decide.outputs.channel }}-signed-app-${{ matrix.variant }}-${{ needs.decide.outputs.short_sha }}
           path: signed-app-handoff
 
       - name: Download SSH daemon assets
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-nightly-remote-daemon
+          name: hmux-nightly-remote-daemon
           path: remote-daemon-assets
 
       - name: Restore signed app
         run: |
           set -euo pipefail
-          (cd signed-app-handoff && shasum -a 256 -c cmux-signed-app.tar.gz.sha256)
+          (cd signed-app-handoff && shasum -a 256 -c hmux-signed-app.tar.gz.sha256)
           mkdir -p signed
-          tar -C signed -xzf signed-app-handoff/cmux-signed-app.tar.gz
+          tar -C signed -xzf signed-app-handoff/hmux-signed-app.tar.gz
           test -d "$CHANNEL_APP_PATH"
           /usr/bin/codesign --verify --deep --strict --verbose=2 "$CHANNEL_APP_PATH"
 
@@ -2642,8 +2642,8 @@ jobs:
         run: |
           set -euo pipefail
           ./scripts/verify-diff-sidecar-artifact.sh \
-            "$CHANNEL_APP_PATH/Contents/Resources/bin/cmux-diff-sidecar" \
-            --archs "$(lipo -archs "$CHANNEL_APP_PATH/Contents/MacOS/cmux")" \
+            "$CHANNEL_APP_PATH/Contents/Resources/bin/hmux-diff-sidecar" \
+            --archs "$(lipo -archs "$CHANNEL_APP_PATH/Contents/MacOS/hmux")" \
             --require-signed
 
       - name: Verify signed app SSH daemon contract
@@ -2653,14 +2653,14 @@ jobs:
             bundle_args+=(--require-bundled-assets)
           fi
           python3 scripts/verify_remote_daemon_release.py \
-            --manifest "remote-daemon-assets/cmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
+            --manifest "remote-daemon-assets/hmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
             --assets-dir remote-daemon-assets \
             --app "$CHANNEL_APP_PATH" --verify-cli "${bundle_args[@]}"
 
       - name: Smoke launch signed app
         run: |
           set -euo pipefail
-          CMUX_SMOKE_DIRECT_EXEC=1 CMUX_SMOKE_DEBUG_LOGS=1 \
+          HMUX_SMOKE_DIRECT_EXEC=1 HMUX_SMOKE_DEBUG_LOGS=1 \
             ./scripts/smoke-launch-macos-app.sh \
             "$CHANNEL_APP_PATH"
 
@@ -2681,7 +2681,7 @@ jobs:
         if: needs.decide.outputs.fast_build != 'true' && needs.decide.outputs.should_publish != 'true'
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-nightly-variant-${{ matrix.variant }}
+          name: hmux-nightly-variant-${{ matrix.variant }}
           path: final-dmg
 
       - name: Smoke final DMG
@@ -2708,7 +2708,7 @@ jobs:
         if: needs.decide.outputs.fast_build != 'true' && needs.decide.outputs.should_publish != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-nightly-tested-${{ matrix.variant }}
+          name: hmux-nightly-tested-${{ matrix.variant }}
           path: tested/tested-${{ matrix.variant }}.sha256
           if-no-files-found: error
           retention-days: 3
@@ -2753,7 +2753,7 @@ jobs:
       - name: Download nightly variant artifacts
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          pattern: cmux-nightly-variant-*
+          pattern: hmux-nightly-variant-*
           path: nightly-out
           merge-multiple: true
 
@@ -2761,7 +2761,7 @@ jobs:
       - name: Download tested DMG digests
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          pattern: cmux-nightly-tested-*
+          pattern: hmux-nightly-tested-*
           path: tested
           merge-multiple: true
 
@@ -2785,13 +2785,13 @@ jobs:
       - name: Download SSH daemon assets for publication
         uses: actions/download-artifact@37930b1c2abaa49bbe596cd826c3c89aef350131 # v7.0.0
         with:
-          name: cmux-nightly-remote-daemon
+          name: hmux-nightly-remote-daemon
           path: nightly-out
 
       - name: Verify SSH daemon assets survived artifact transfer
         run: |
           python3 scripts/verify_remote_daemon_release.py \
-            --manifest "nightly-out/cmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
+            --manifest "nightly-out/hmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
             --assets-dir nightly-out
 
       - name: Assemble legacy nightly names
@@ -2803,7 +2803,7 @@ jobs:
             [ -f "${CHANNEL_DMG_PREFIX}-${variant}.dmg" ] || { echo "missing ${CHANNEL_DMG_PREFIX}-${variant}.dmg" >&2; exit 1; }
             [ -f "appcast-${variant}.xml" ] || { echo "missing appcast-${variant}.xml" >&2; exit 1; }
           done
-          # `cmux-nightly-macos.dmg` and `appcast.xml` are the download and feed
+          # `hmux-nightly-macos.dmg` and `appcast.xml` are the download and feed
           # every pre-existing link and install uses. They stay universal: the
           # universal variant generates appcast.xml itself, and installs move to
           # their architecture's feed on the next update check.
@@ -2835,7 +2835,7 @@ jobs:
           EOF
           # Read the live completed publication under the channel writer lock,
           # rather than the decide job's baseline from before the build started.
-          # nightly_release_notes.py preserves the cmux-published-sha: marker
+          # nightly_release_notes.py preserves the hmux-published-sha: marker
           # used for the next exact range and its repair/recovery path.
           python3 scripts/ci/nightly_release_notes.py \
             --repo "$GITHUB_REPOSITORY" --tag "$CHANNEL_RELEASE_TAG" \
@@ -2847,12 +2847,12 @@ jobs:
         if: needs.decide.outputs.should_publish != 'true'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-nightly-${{ needs.decide.outputs.short_sha }}
+          name: hmux-nightly-${{ needs.decide.outputs.short_sha }}
           path: |
             nightly-out/${{ needs.decide.outputs.dmg_prefix }}*.dmg
             nightly-out/${{ needs.decide.outputs.dmg_prefix }}*.delta
             nightly-out/appcast*.xml
-            nightly-out/cmuxd-remote-*
+            nightly-out/hmuxd-remote-*
           if-no-files-found: error
 
       - name: Prune old nightly release assets
@@ -2881,12 +2881,12 @@ jobs:
             --immutable "nightly-out/${CHANNEL_DMG_PREFIX}-arm64-${NIGHTLY_BUILD}.dmg" \
             --immutable "nightly-out/${CHANNEL_DMG_PREFIX}-x86_64-${NIGHTLY_BUILD}.dmg" \
             --immutable "nightly-out/${CHANNEL_DMG_PREFIX}-universal-${NIGHTLY_BUILD}.dmg" \
-            --immutable "nightly-out/cmuxd-remote-linux-arm64-${NIGHTLY_BUILD}" \
-            --immutable "nightly-out/cmuxd-remote-linux-amd64-${NIGHTLY_BUILD}" \
-            --immutable "nightly-out/cmuxd-remote-darwin-arm64-${NIGHTLY_BUILD}" \
-            --immutable "nightly-out/cmuxd-remote-darwin-amd64-${NIGHTLY_BUILD}" \
-            --immutable "nightly-out/cmuxd-remote-checksums-${NIGHTLY_BUILD}.txt" \
-            --immutable "nightly-out/cmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
+            --immutable "nightly-out/hmuxd-remote-linux-arm64-${NIGHTLY_BUILD}" \
+            --immutable "nightly-out/hmuxd-remote-linux-amd64-${NIGHTLY_BUILD}" \
+            --immutable "nightly-out/hmuxd-remote-darwin-arm64-${NIGHTLY_BUILD}" \
+            --immutable "nightly-out/hmuxd-remote-darwin-amd64-${NIGHTLY_BUILD}" \
+            --immutable "nightly-out/hmuxd-remote-checksums-${NIGHTLY_BUILD}.txt" \
+            --immutable "nightly-out/hmuxd-remote-manifest-${NIGHTLY_BUILD}.json" \
             --alias "nightly-out/${CHANNEL_DMG_PREFIX}-arm64.dmg" \
             --alias "nightly-out/${CHANNEL_DMG_PREFIX}-x86_64.dmg" \
             --alias "nightly-out/${CHANNEL_DMG_PREFIX}-universal.dmg" \
@@ -2935,7 +2935,7 @@ jobs:
             python3 scripts/ci/upload-r2-object.py \
               --file "nightly-out/$appcast" \
               --endpoint-url "$R2_ENDPOINT" \
-              --bucket cmux-binaries \
+              --bucket hmux-binaries \
               --key "${CHANNEL_RELEASE_TAG}/$appcast" \
               --content-type "application/xml" \
               --cache-control "no-cache, no-store, must-revalidate"
@@ -2975,8 +2975,8 @@ jobs:
           # The release App (Contents + Workflows write only); its id and key
           # live only in the release environment. manaflow-glaeda-route has
           # no contents permission, so it could never move this tag.
-          app-id: ${{ secrets.CMUX_RELEASE_APP_ID }}
-          private-key: ${{ secrets.CMUX_RELEASE_APP_KEY }}
+          app-id: ${{ secrets.HMUX_RELEASE_APP_ID }}
+          private-key: ${{ secrets.HMUX_RELEASE_APP_KEY }}
           owner: ${{ github.repository_owner }}
           repositories: ${{ github.event.repository.name }}
           permission-contents: write
@@ -3071,7 +3071,7 @@ jobs:
       - name: Download published variant
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: cmux-nightly-variant-${{ matrix.variant }}
+          name: hmux-nightly-variant-${{ matrix.variant }}
           path: nightly-delta/input
 
       - name: Fetch one previous track archive
@@ -3121,7 +3121,7 @@ jobs:
       - name: Upload delta result
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-nightly-deltas-${{ matrix.variant }}
+          name: hmux-nightly-deltas-${{ matrix.variant }}
           path: nightly-delta/output/*
           if-no-files-found: error
           retention-days: 3
@@ -3152,7 +3152,7 @@ jobs:
       - name: Download delta results
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          pattern: cmux-nightly-deltas-*
+          pattern: hmux-nightly-deltas-*
           path: nightly-deltas
           merge-multiple: true
 
@@ -3204,7 +3204,7 @@ jobs:
             python3 scripts/ci/upload-r2-object.py \
               --file "$feed" \
               --endpoint-url "$R2_ENDPOINT" \
-              --bucket cmux-binaries \
+              --bucket hmux-binaries \
               --key "${CHANNEL_RELEASE_TAG}/$name" \
               --content-type "application/xml" \
               --cache-control "no-cache, no-store, must-revalidate"
@@ -3214,7 +3214,7 @@ jobs:
   # leaves the assets, release metadata, and feeds available, so the incident
   # must say that explicitly instead of claiming installs stopped updating.
   report-nightly-failure:
-    needs: [decide, build-nightly-ghostty-cli-helper, build-nightly-app, resolve-nightly-cmux-tui-client, prepare-nightly-variant, build-sign-notarize-nightly, verify-signed-nightly, publish-nightly, generate-nightly-deltas, republish-nightly-deltas]
+    needs: [decide, build-nightly-ghostty-cli-helper, build-nightly-app, resolve-nightly-hmux-tui-client, prepare-nightly-variant, build-sign-notarize-nightly, verify-signed-nightly, publish-nightly, generate-nightly-deltas, republish-nightly-deltas]
     if: always() && needs.decide.outputs.should_publish == 'true' && (contains(needs.*.result, 'failure') || needs.publish-nightly.outputs.tag_status == 'stale')
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || 'blacksmith-2vcpu-ubuntu-2404' }}
     permissions:

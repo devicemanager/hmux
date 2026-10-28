@@ -87,7 +87,7 @@ const STRIPPED_HEADERS = new Set([
   "authorization",
   "x-api-key",
   "x-coderouter-route-token",
-  "x-cmux-vm-id",
+  "x-hmux-vm-id",
   "host",
   "content-length",
   "connection",
@@ -101,7 +101,7 @@ const STRIPPED_HEADERS = new Set([
   "forwarded",
   "via",
 ]);
-const STRIPPED_HEADER_PREFIXES = ["x-forwarded-", "x-vercel-", "x-real-ip", "cf-", "x-cmux-"];
+const STRIPPED_HEADER_PREFIXES = ["x-forwarded-", "x-vercel-", "x-real-ip", "cf-", "x-hmux-"];
 
 const RESPONSE_HEADERS = ["content-type", "request-id", "x-request-id", "retry-after", "x-should-retry"];
 const RESPONSE_HEADER_PREFIXES = ["anthropic-ratelimit-"];

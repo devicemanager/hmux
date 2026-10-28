@@ -115,7 +115,7 @@ def main() -> None:
         device_type = device_type or (device_types[-1] if device_types else None)
         if runtime is None or device_type is None:
             raise SystemExit(f"No available {family} simulator or creatable iOS runtime/device type found")
-        created_name = f"cmux CI {os.environ.get('GITHUB_RUN_ID', 'local')} {device_type['name']}"
+        created_name = f"hmux CI {os.environ.get('GITHUB_RUN_ID', 'local')} {device_type['name']}"
         udid = subprocess.check_output(
             ["xcrun", "simctl", "create", created_name, device_type["identifier"], runtime["identifier"]],
             text=True,

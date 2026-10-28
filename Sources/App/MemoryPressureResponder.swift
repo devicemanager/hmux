@@ -1,5 +1,5 @@
 import Foundation
-import CmuxMemoryPressure
+import HmuxMemoryPressure
 
 /// Identifies which pressure signal is allowed to invoke a responder.
 ///

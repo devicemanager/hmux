@@ -69,7 +69,7 @@ export function ProPlanCard({
   const radioName = useId();
   const select = (next: BillingInterval) => {
     setInterval(next);
-    posthog.capture("cmuxterm_pricing_interval_selected", {
+    posthog.capture("hmuxterm_pricing_interval_selected", {
       surface,
       plan,
       interval: next,

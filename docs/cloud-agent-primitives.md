@@ -18,17 +18,17 @@ keep running when the laptop closes.
 | `vm exec`, `vm terminal send/read/wait` (drive anything headlessly) | shipped |
 | `vm dev` (detect/record/replay environment, named workspace) | designed (cloud-project-environments.md) |
 | `vm push --watch` (fs-event incremental sync) | next |
-| Browser device authentication (`cmux open-url`, `BROWSER`, OS URL openers; exact terminal projection, acknowledgement, headless fallback) | implemented; updated guest/Mac binaries required |
+| Browser device authentication (`hmux open-url`, `BROWSER`, OS URL openers; exact terminal projection, acknowledgement, headless fallback) | implemented; updated guest/Mac binaries required |
 | `vm repo clone <url>` (clone *in* the cloud — big repos never transit the Mac; gh auth via edge-injected credentials, never a token in the guest) | next |
 
 ## Goal 2 — agents that outlive the laptop
 
-Detached cmux-tui terminals already survive disconnects: `vm agent` starts a
+Detached hmux-tui terminals already survive disconnects: `vm agent` starts a
 coding agent in the machine's session and it keeps running with the Mac closed.
 What completes the story:
 
 - **Notify without a Mac attached** — the notification relay (this branch)
-  bubbles in-VM `cmux notify` into the daemon's durable ledger; the Mac drains
+  bubbles in-VM `hmux notify` into the daemon's durable ledger; the Mac drains
   it on reconnect. Next: the control plane forwards ledger events to push
   (iOS/APNs) so "agent finished" reaches a closed laptop.
 - **`vm agent --until-done`** — a supervisor terminal that watches the agent's
@@ -41,22 +41,22 @@ What completes the story:
 
 ## Goal 3 — layouts as data (shipped)
 
-One declarative document on both sides — the `CmuxLayoutNode` schema the Mac
-already uses for `cmux new-workspace --layout`, `cmux layout save|get|open` and
-cmux.json workspaces (`{"pane":{"surfaces":[…]}}` leaves, `{"direction","split",
+One declarative document on both sides — the `HmuxLayoutNode` schema the Mac
+already uses for `hmux new-workspace --layout`, `hmux layout save|get|open` and
+hmux.json workspaces (`{"pane":{"surfaces":[…]}}` leaves, `{"direction","split",
 "children"}` splits). The daemon's own `LayoutDocument` (pane/tab ids, split ids)
 stays the wire truth; the declarative form is what people and agents write.
 
 ```bash
-cmux vm layout export <machine> [<ws>] [--raw]        # {"name","cwd","layout"}; --raw: the LayoutDocument
-cmux vm layout apply  <machine> <file|-> [--name <n>|--workspace <empty-ws>] [--cwd <dir>] [--from-saved <mac-layout>] [--open]
+hmux vm layout export <machine> [<ws>] [--raw]        # {"name","cwd","layout"}; --raw: the LayoutDocument
+hmux vm layout apply  <machine> <file|-> [--name <n>|--workspace <empty-ws>] [--cwd <dir>] [--from-saved <mac-layout>] [--open]
 ```
 
 - **One implementation, three entrypoints.** `layout export|apply` live in the
-  in-VM `cmux` shim (POSIX sh + jq over the daemon's v2 verbs: `workspace run`,
+  in-VM `hmux` shim (POSIX sh + jq over the daemon's v2 verbs: `workspace run`,
   `pane split --ratio --cwd`, `pane run`, `tab create browser`, `terminal write|keys`).
   The Mac CLI runs that implementation over the exec channel; inside a machine
-  the same verb works locally and toward linked peers (`cmux vm layout … <peer>`).
+  the same verb works locally and toward linked peers (`hmux vm layout … <peer>`).
   Presets are just files (a layout saved on the Mac applies with `--from-saved`).
 - **Author without opening**: `apply` builds a new (or an empty) workspace
   headlessly; `command`s are typed into login shells so panes survive them and
@@ -81,9 +81,9 @@ The checklist an agent runs through, each item a primitive (not a doc):
 3. **Toolchain + deps**: `vm dev` detect→record→replay; devcontainer.json
    honored — designed.
 4. **Secrets**: `vm env set|ls|rm` — shipped machine-local (0600 file on the
-   persistent volume, sourced by every shell cmux starts: terminals, `vm exec`,
-   `vm agent`, layout panes, in-VM `cmux agent`). Values never ride `vm.exec`:
-   they cross the machine's end-to-end link into `cmux env receive` with PTY
+   persistent volume, sourced by every shell hmux starts: terminals, `vm exec`,
+   `vm agent`, layout panes, in-VM `hmux agent`). Values never ride `vm.exec`:
+   they cross the machine's end-to-end link into `hmux env receive` with PTY
    echo off (`CloudEnvDelivery`), so no server, command line, or screen ever
    holds them; per-(user, project) storage and edge-resident values remain the
    long game (docs/vm-identity-edge-auth.md).
@@ -93,34 +93,34 @@ The checklist an agent runs through, each item a primitive (not a doc):
    shipped; the person's click reproduces the geometry.
 7. **Verification**: recipe `checks` in a durable terminal; the exit receipt is
    the proof the environment works — designed.
-9. **Identity**: a machine knows who it is — `cmux self [peers|integrations|owner|machine]`
+9. **Identity**: a machine knows who it is — `hmux self [peers|integrations|owner|machine]`
    (exe.dev-style reflection on the edge-asserted route-token identity; shipped) —
    and finds its peers itself (`/peers`, trusted-carrier routes). Scoped mutations
    and git credentials for the machine principal are next (docs/vm-identity-edge-auth.md).
-8. **Handoff**: `vm handoff` (shipped), `cmux notify` from inside (this
+8. **Handoff**: `vm handoff` (shipped), `hmux notify` from inside (this
    branch), peer links for multi-machine pipelines (`vm link`, shipped) — and,
    inside a machine, the Mac's own verbs for its session and its peers
-   (`cmux terminal send|read|wait`, `send-key`, `new-workspace`, `layout`,
-   `env`, `cmux vm agent <peer> …`): an agent in the cloud has parity with an
+   (`hmux terminal send|read|wait`, `send-key`, `new-workspace`, `layout`,
+   `env`, `hmux vm agent <peer> …`): an agent in the cloud has parity with an
    agent on the Mac.
 
 ## Sequencing
 
 1. ~~`vm layout export/apply`~~ shipped, with geometry-honoring open and the
-   in-VM parity verbs (`cmux terminal|send-key|new-workspace|layout|env`,
-   `cmux vm … <peer>`).
+   in-VM parity verbs (`hmux terminal|send-key|new-workspace|layout|env`,
+   `hmux vm … <peer>`).
 2. ~~`vm env set|ls|rm`~~ shipped machine-local; control-plane/edge storage later.
 3. ~~`vm dev` P1~~ shipped: route + sync + detect (`package.json` by lockfile,
    cargo, go, django, uv, make dev) + named workspace (`--reuse`) + built-in or
    `--layout` document + geometry-honoring open; `--command`/`--port` override.
 4. ~~`vm push --watch`~~ shipped (mtime/size scan, same excludes); `vm push --secret`
-   shipped (one file over the link into `cmux file receive`, the env receiver
+   shipped (one file over the link into `hmux file receive`, the env receiver
    generalized). Still open: `vm repo clone`, recipe `services`.
 5. ~~`vm agent --wait --output`~~ shipped on `vm agent`, `vm run`, and the in-VM
-   `cmux agent`/peer `cmux vm agent` (until-done, exit code passes through).
+   `hmux agent`/peer `hmux vm agent` (until-done, exit code passes through).
    Still open: push-notification forwarding for the ledger, `--fan-out` (today:
    one `vm agent` per task, then `terminal wait-exit` each).
-6. Identity: ~~reflection~~ shipped (`cmux self`, `cmux vm self <m>` on the Mac,
+6. Identity: ~~reflection~~ shipped (`hmux self`, `hmux vm self <m>` on the Mac,
    `GET /api/vm/reflection` ⊇ `/api/vm/self`, vanity alias). Still open:
    per-peer authorization (the private network is the trust boundary today),
    edge-injected git credentials.

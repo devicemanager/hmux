@@ -39,9 +39,9 @@ export const maxDuration = 45;
 
 function apnsConfig(): ApnsConfig | null {
   return resolveApnsProviderConfiguration(
-    env.CMUX_APNS_KEY_P8,
-    env.CMUX_APNS_KEY_ID,
-    env.CMUX_APNS_TEAM_ID,
+    env.HMUX_APNS_KEY_P8,
+    env.HMUX_APNS_KEY_ID,
+    env.HMUX_APNS_TEAM_ID,
   );
 }
 
@@ -130,7 +130,7 @@ function summaryResponse(
       status: 200,
       headers: {
         "content-type": "application/json",
-        "x-cmux-push-correlation-id": correlationId,
+        "x-hmux-push-correlation-id": correlationId,
         ...extraHeaders,
       },
     },
@@ -263,7 +263,7 @@ async function sendPush(
       result.right.summary,
       correlationId,
       result.right.replayed
-        ? { "x-cmux-push-replayed": "true" }
+        ? { "x-hmux-push-replayed": "true" }
         : {},
     );
   } catch {
@@ -291,7 +291,7 @@ function validatePushRouting(
   // exact iOS bundle, and APNs delivery selects the matching payload per token.
   // A present-but-unknown value remains a hard error.
   const targetNamespaceResult = resolveTargetNamespace(
-    request.headers.get("x-cmux-ios-target-namespace"),
+    request.headers.get("x-hmux-ios-target-namespace"),
   );
   if (!targetNamespaceResult.ok) {
     return {
@@ -337,7 +337,7 @@ function deliveryErrorResponse(
           headers: {
             "content-type": "application/json",
             "retry-after": String(error.retryAfterSeconds),
-            "x-cmux-push-correlation-id": correlationId,
+            "x-hmux-push-correlation-id": correlationId,
           },
         },
       );
@@ -383,7 +383,7 @@ function correlatedErrorResponse(
     status,
     headers: {
       "content-type": "application/json",
-      "x-cmux-push-correlation-id": correlationId,
+      "x-hmux-push-correlation-id": correlationId,
       ...headers,
     },
   });

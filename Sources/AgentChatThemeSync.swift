@@ -1,11 +1,11 @@
 import AppKit
-import CMUXMobileCore
-import CmuxFoundation
+import HMUXMobileCore
+import HmuxFoundation
 import Foundation
 import os
 
 private nonisolated let agentChatThemeSyncLogger = Logger(
-    subsystem: "com.cmuxterm.app",
+    subsystem: "com.hmuxterm.app",
     category: "AgentChatThemeSync"
 )
 
@@ -36,7 +36,7 @@ struct AgentChatThemePayload: Codable, Equatable {
         case source
     }
 
-    init(config: GhosttyConfig, accent: CmuxAccentColor = CmuxAccentColor()) {
+    init(config: GhosttyConfig, accent: HmuxAccentColor = HmuxAccentColor()) {
         let terminalTheme = TerminalTheme(ghosttyConfig: config)
         let webTheme = AgentSessionWebTheme.resolve(appearance: .fromConfig(config), accent: accent)
         let trimmedFontFamily = config.fontFamily.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -51,7 +51,7 @@ struct AgentChatThemePayload: Codable, Equatable {
         opacity = min(1, max(0, config.backgroundOpacity))
         blur = config.backgroundBlur.agentChatThemeValue
         isLight = !webTheme.isDark
-        source = "cmux"
+        source = "hmux"
     }
 
     func encode(to encoder: Encoder) throws {
@@ -84,7 +84,7 @@ enum AgentChatThemeSync {
 
     @MainActor
     static var isEnabled: Bool {
-        CmuxFeatureFlags.shared.isAgentChatUIEnabled
+        HmuxFeatureFlags.shared.isAgentChatUIEnabled
     }
 
     @MainActor
@@ -133,7 +133,7 @@ enum AgentChatThemeSync {
     }
 
     @MainActor
-    static func syncNow(agentChat: CmuxAgentChatConfiguration) {
+    static func syncNow(agentChat: HmuxAgentChatConfiguration) {
         guard isEnabled else { return }
         let url = themeURL(for: agentChat)
         Task { @MainActor in
@@ -166,15 +166,15 @@ enum AgentChatThemeSync {
         var config = WorkspaceContentView.resolveGhosttyAppearanceConfig(
             reason: "agentChatThemeSync",
             loadConfig: {
-                GhosttyConfig.loadForCmux(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent)
+                GhosttyConfig.loadForHmux(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent)
             }
         )
         config.backgroundBlur = GhosttyApp.shared.defaultBackgroundBlur
-        return AgentChatThemePayload(config: config, accent: AppDelegate.shared?.accentColor ?? CmuxAccentColor())
+        return AgentChatThemePayload(config: config, accent: AppDelegate.shared?.accentColor ?? HmuxAccentColor())
     }
 
     static func themeURL(for baseURL: URL) -> URL {
-        // Root-anchored like CmuxAgentChatConfiguration.healthURL: the sidecar
+        // Root-anchored like HmuxAgentChatConfiguration.healthURL: the sidecar
         // serves /api/theme at the origin root, so any path in agentChat.url
         // must not prefix the endpoint or every push 404s.
         var components = URLComponents(url: baseURL, resolvingAgainstBaseURL: false)
@@ -185,7 +185,7 @@ enum AgentChatThemeSync {
     }
 
     @MainActor
-    static func themeURL(for agentChat: CmuxAgentChatConfiguration) -> URL {
+    static func themeURL(for agentChat: HmuxAgentChatConfiguration) -> URL {
         if !agentChat.hasExplicitURL,
            agentChat.startCommand != nil,
            let session = AgentChatActionInFlightGate.ownedServerSession() {
@@ -196,10 +196,10 @@ enum AgentChatThemeSync {
 
     @MainActor
     private static func currentThemeURL() -> URL {
-        if let store = AppDelegate.shared?.mainWindowContexts.values.compactMap(\.cmuxConfigStore).first {
+        if let store = AppDelegate.shared?.mainWindowContexts.values.compactMap(\.hmuxConfigStore).first {
             return themeURL(for: store.agentChat)
         }
-        return themeURL(for: CmuxAgentChatConfiguration.default.url)
+        return themeURL(for: HmuxAgentChatConfiguration.default.url)
     }
 
     @MainActor

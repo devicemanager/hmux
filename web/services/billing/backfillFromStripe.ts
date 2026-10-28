@@ -16,7 +16,7 @@ import { stripe } from "./stripe";
  */
 export type StripeBackfillResult = {
   readonly listed: number;
-  readonly cmux: number;
+  readonly hmux: number;
   readonly applied: number;
   readonly skipped: number;
   readonly failed: number;
@@ -30,8 +30,8 @@ export type StripeBackfillDependencies = {
   readonly log?: (line: string) => void;
 };
 
-export function isCmuxSubscription(subscription: Stripe.Subscription): boolean {
-  return subscription.metadata?.app === "cmux";
+export function isHmuxSubscription(subscription: Stripe.Subscription): boolean {
+  return subscription.metadata?.app === "hmux";
 }
 
 export async function backfillSubscriptionsFromStripe(
@@ -43,15 +43,15 @@ export async function backfillSubscriptionsFromStripe(
   const log = dependencies.log ?? (() => undefined);
 
   let listed = 0;
-  let cmux = 0;
+  let hmux = 0;
   let applied = 0;
   let skipped = 0;
   const failures: { id: string; message: string }[] = [];
 
   for await (const subscription of list()) {
     listed += 1;
-    if (!isCmuxSubscription(subscription)) continue;
-    cmux += 1;
+    if (!isHmuxSubscription(subscription)) continue;
+    hmux += 1;
     const owner = subscription.metadata?.stackTeamId
       ? `team ${subscription.metadata.stackTeamId}`
       : `user ${subscription.metadata?.stackUserId ?? "<no stackUserId>"}`;
@@ -75,7 +75,7 @@ export async function backfillSubscriptionsFromStripe(
     }
   }
 
-  return { listed, cmux, applied, skipped, failed: failures.length, failures };
+  return { listed, hmux, applied, skipped, failed: failures.length, failures };
 }
 
 async function* defaultList(): AsyncIterable<Stripe.Subscription> {

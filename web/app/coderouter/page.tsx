@@ -56,14 +56,14 @@ export default function CoderouterLandingPage() {
 
         <p className="mt-8 font-mono text-[11px] leading-5 text-black/40">
           Codex and OpenCode Go are available now. Pi is experimental. Hosted
-          routing requires cmux Pro or Team; self-hosting remains available.
+          routing requires hmux Pro or Team; self-hosting remains available.
         </p>
       </section>
 
       <footer className="mx-auto flex h-16 max-w-2xl items-center justify-between border-t border-[#d9d2c5] px-6 font-mono text-[11px] text-black/30">
         <span>coderouter.dev</span>
         <a className="underline underline-offset-4" href="https://cmux.com">
-          by cmux
+          by hmux
         </a>
       </footer>
     </main>

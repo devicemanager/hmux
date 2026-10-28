@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxSurfaceCatalogModel
+import HMUXMobileCore
+import HmuxSurfaceCatalogModel
 import Foundation
 
 /// Joins the two identities one Mac app instance is known by.

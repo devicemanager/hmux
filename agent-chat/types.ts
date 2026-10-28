@@ -20,7 +20,7 @@ export type AgentEvent =
   | { kind: "options"; options: SessionOption[]; actions?: SessionActions }
   | { kind: "commands"; trigger: CommandTrigger; commands: CommandEntry[] }
   | { kind: "user"; text: string }
-  /** A cmux agent message the agent received (`cmux agent message`). */
+  /** A hmux agent message the agent received (`hmux agent message`). */
   | { kind: "agent-message"; id: string; from: string; body: string }
   | { kind: "status"; text: string }
   | { kind: "plan"; entries: AgentPlanEntry[] }

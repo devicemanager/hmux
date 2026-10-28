@@ -53,7 +53,7 @@ DEFAULT_SERVER_MAX_ACTIVE_REQUESTS = 16
 OBJECT_PATH_PREFIX = "/v1/objects/"
 OBJECT_KEY_RE = re.compile(r"[a-f0-9]{64}")
 # glaeda-lan-fetch (glaeda scripts/glaeda-lan-fetch), installed root-owned by the operator
-# (glaeda-seed-lan helper-install). Not under /Users/Shared/cmux-build-fleet: the fleet
+# (glaeda-seed-lan helper-install). Not under /Users/Shared/hmux-build-fleet: the fleet
 # user owns that tree, so a job could rename a root-owned file there.
 LAN_FETCH_HELPER = Path("/Library/Application Support/glaeda/bin/glaeda-lan-fetch")
 # Its own lookup (6 s) and transfer (180 s) limits, plus margin.
@@ -205,7 +205,7 @@ def _read_secret(path: Path) -> str:
 
 
 def configured_sources(env=os.environ) -> list[PeerSource]:
-    raw = env.get("CMUX_ARTIFACT_PEER_URLS", "").strip()
+    raw = env.get("HMUX_ARTIFACT_PEER_URLS", "").strip()
     if not raw:
         return []
     values = [value.strip() for value in raw.split(",") if value.strip()]
@@ -218,7 +218,7 @@ def configured_sources(env=os.environ) -> list[PeerSource]:
 
 
 def configured_token_loader(env=os.environ) -> Callable[[PeerSource], str]:
-    raw = env.get("CMUX_ARTIFACT_PEER_TOKEN_FILE", "").strip()
+    raw = env.get("HMUX_ARTIFACT_PEER_TOKEN_FILE", "").strip()
     if not raw:
         def unavailable(_source: PeerSource) -> str:
             raise PeerUnavailable("peer token file is unavailable")
@@ -319,10 +319,10 @@ def probe_http(
             raise PeerUnavailable(f"peer probe returned HTTP {response.status}")
         try:
             return PeerAvailability(
-                object_key=response.getheader("X-Cmux-Object-Key", ""),
-                schema_generation=int(response.getheader("X-Cmux-Object-Schema", "0")),
+                object_key=response.getheader("X-Hmux-Object-Key", ""),
+                schema_generation=int(response.getheader("X-Hmux-Object-Schema", "0")),
                 size_bytes=int(response.getheader("Content-Length", "0")),
-                content_digest=response.getheader("X-Cmux-Content-Sha256", ""),
+                content_digest=response.getheader("X-Hmux-Content-Sha256", ""),
             )
         except (TypeError, ValueError) as error:
             raise PeerUnavailable("peer availability response is invalid") from error
@@ -435,7 +435,7 @@ def fetch_exact(
                 continue
             offer.validate_for(identity)
             transfer_started = time.monotonic()
-            with tempfile.TemporaryDirectory(prefix="cmux-peer-product-", dir=destination.parent) as raw:
+            with tempfile.TemporaryDirectory(prefix="hmux-peer-product-", dir=destination.parent) as raw:
                 staging = Path(raw)
                 obj = staging / cache.ARCHIVE_NAME
                 transfer(source, object_key, token, obj, offer.size_bytes)
@@ -545,7 +545,7 @@ def lan_fetch_exact(
         return {**miss, "lan_status": "destination-occupied"}
     try:
         destination.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix="cmux-lan-product-", dir=destination.parent) as raw:
+        with tempfile.TemporaryDirectory(prefix="hmux-lan-product-", dir=destination.parent) as raw:
             staging = Path(raw)
             obj = staging / cache.ARCHIVE_NAME
             env = {"PATH": "/usr/bin:/bin", "HOME": pwd.getpwuid(os.getuid()).pw_dir, "LANG": "C"}
@@ -628,7 +628,7 @@ def _report(result: dict) -> None:
         "runner_name": os.environ.get("RUNNER_NAME"),
         **result,
     }
-    print("CMUX_PEER_PRODUCT_SOURCE " + json.dumps(record, sort_keys=True))
+    print("HMUX_PEER_PRODUCT_SOURCE " + json.dumps(record, sort_keys=True))
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         with contextlib.suppress(OSError):
@@ -643,7 +643,7 @@ def _draining(marker: Path | None) -> bool:
 
 
 class PeerRequestHandler(BaseHTTPRequestHandler):
-    server_version = "cmux-peer-artifact/1"
+    server_version = "hmux-peer-artifact/1"
     protocol_version = "HTTP/1.1"
 
     def log_message(self, _format: str, *_args) -> None:
@@ -664,9 +664,9 @@ class PeerRequestHandler(BaseHTTPRequestHandler):
         self.send_response(200)
         self.send_header("Content-Type", "application/octet-stream")
         self.send_header("Content-Length", str(offer.size_bytes))
-        self.send_header("X-Cmux-Object-Key", offer.object_key)
-        self.send_header("X-Cmux-Object-Schema", str(offer.schema_generation))
-        self.send_header("X-Cmux-Content-Sha256", offer.content_digest)
+        self.send_header("X-Hmux-Object-Key", offer.object_key)
+        self.send_header("X-Hmux-Object-Schema", str(offer.schema_generation))
+        self.send_header("X-Hmux-Content-Sha256", offer.content_digest)
         self.send_header("Cache-Control", "private, immutable")
         self.end_headers()
 
@@ -814,7 +814,7 @@ def serve(args: argparse.Namespace) -> None:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="CMUX exact immutable peer artifact source")
+    parser = argparse.ArgumentParser(description="HMUX exact immutable peer artifact source")
     sub = parser.add_subparsers(dest="command", required=True)
     fetch_parser = sub.add_parser("fetch")
     fetch_parser.add_argument("destination", type=Path)

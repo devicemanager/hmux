@@ -87,7 +87,7 @@ export type RelayRepositoryShape = {
   >;
 };
 
-export class RelayRepository extends Context.Tag("cmux/RelayRepository")<
+export class RelayRepository extends Context.Tag("hmux/RelayRepository")<
   RelayRepository,
   RelayRepositoryShape
 >() {}
@@ -136,7 +136,7 @@ export const RelayRepositoryLive = Layer.succeed(RelayRepository, {
         const digest = relayCatalogDigest(catalog);
         await cloudDb().transaction(async (tx) => {
           await tx.execute(
-            sql`select pg_advisory_xact_lock(hashtextextended('cmux/iroh-relay-catalog', 0))`,
+            sql`select pg_advisory_xact_lock(hashtextextended('hmux/iroh-relay-catalog', 0))`,
           );
           const [current] = await tx
             .select()
@@ -254,7 +254,7 @@ export const RelayRepositoryLive = Layer.succeed(RelayRepository, {
             throw cause;
           }
           await tx.execute(
-            sql`select pg_advisory_xact_lock(hashtextextended(${`cmux/iroh-relay-preference/${accountId}`}, 0))`,
+            sql`select pg_advisory_xact_lock(hashtextextended(${`hmux/iroh-relay-preference/${accountId}`}, 0))`,
           );
           const [current] = await tx
             .select()

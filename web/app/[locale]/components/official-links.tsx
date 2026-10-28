@@ -35,7 +35,7 @@ function CommunityLink({
 }
 
 /**
- * The official cmux links (Discord, GitHub, X, YouTube, LinkedIn) rendered as a
+ * The official hmux links (Discord, GitHub, X, YouTube, LinkedIn) rendered as a
  * responsive card grid. Shared between the Community page and the download
  * confirmation page so both stay in sync. Reads copy from the `community`
  * message namespace. Pass `heading={false}` to omit the section title.

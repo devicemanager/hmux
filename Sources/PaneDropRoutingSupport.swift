@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import AppKit
 import Bonsplit
 import Foundation
@@ -261,7 +261,7 @@ final class PaneDropZoneOverlayAnimator {
 
     static func applyStyle(to view: NSView) {
         view.wantsLayer = true
-        let accent = (AppDelegate.shared?.accentColor ?? CmuxAccentColor()).themeNSColor
+        let accent = (AppDelegate.shared?.accentColor ?? HmuxAccentColor()).themeNSColor
         view.layer?.backgroundColor = accent.withAlphaComponent(0.25).cgColor
         view.layer?.borderColor = accent.cgColor
         view.layer?.borderWidth = 2

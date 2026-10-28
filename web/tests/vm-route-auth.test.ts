@@ -43,8 +43,8 @@ const destroyVm = mock(() => ({ workflow: "destroy" }));
 const execVm = mock(() => ({ workflow: "exec" }));
 const forkVm = mock(() => ({ workflow: "fork" }));
 const openAttachEndpoint = mock(() => ({ workflow: "attach" }));
-const openVmCmuxRemote = mock(() => ({ workflow: "cmux-remote" }));
-const approveVmCmuxRemoteEnrollment = mock(() => ({ workflow: "cmux-remote-approve" }));
+const openVmHmuxRemote = mock(() => ({ workflow: "hmux-remote" }));
+const approveVmHmuxRemoteEnrollment = mock(() => ({ workflow: "hmux-remote-approve" }));
 const restoreVm = mock(() => ({ workflow: "restore" }));
 const snapshotVm = mock(() => ({ workflow: "snapshot" }));
 const revokeUserVmAccess = mock(() => ({ workflow: "revoke-access" }));
@@ -53,21 +53,21 @@ const deleteVmPublicationsForVmDeletion = mock(async () => ({
   providerRules: 0,
 }));
 const VM_ENV_KEYS = [
-  "CMUX_VM_CREATE_ENABLED",
-  "CMUX_VM_FREESTYLE_ENABLED",
-  "CMUX_VM_PRIVATE_NETWORK_ENABLED",
-  "CMUX_VM_ALLOWED_ORIGINS",
-  "CMUX_VM_ALLOW_UNMANIFESTED_IMAGES",
-  "CMUX_VM_FREE_MAX_ACTIVE_VMS",
-  "CMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS",
-  "CMUX_VM_FREE_MAX_MEMORY_MB",
-  "CMUX_VM_PAID_MAX_MEMORY_MB",
-  "CMUX_VM_PLAN_PRO_MAX_MEMORY_MB",
-  "CMUX_VM_PLAN_PRO_DEFAULT_MEMORY_MB",
-  "CMUX_VM_REQUIRE_PRO",
-  "CMUX_VM_ALLOW_FREE_PROVISIONING",
-  "CMUX_VM_DEFAULT_PLAN",
-  "CMUX_VM_DEFAULT_PROVIDER",
+  "HMUX_VM_CREATE_ENABLED",
+  "HMUX_VM_FREESTYLE_ENABLED",
+  "HMUX_VM_PRIVATE_NETWORK_ENABLED",
+  "HMUX_VM_ALLOWED_ORIGINS",
+  "HMUX_VM_ALLOW_UNMANIFESTED_IMAGES",
+  "HMUX_VM_FREE_MAX_ACTIVE_VMS",
+  "HMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS",
+  "HMUX_VM_FREE_MAX_MEMORY_MB",
+  "HMUX_VM_PAID_MAX_MEMORY_MB",
+  "HMUX_VM_PLAN_PRO_MAX_MEMORY_MB",
+  "HMUX_VM_PLAN_PRO_DEFAULT_MEMORY_MB",
+  "HMUX_VM_REQUIRE_PRO",
+  "HMUX_VM_ALLOW_FREE_PROVISIONING",
+  "HMUX_VM_DEFAULT_PLAN",
+  "HMUX_VM_DEFAULT_PROVIDER",
   "VERCEL",
   "VERCEL_ENV",
 ] as const;
@@ -92,8 +92,8 @@ const realGetVm = workflowsModule.getVm;
 const realListUserVms = workflowsModule.listUserVms;
 const realOpenBaseVm = workflowsModule.openBaseVm;
 const realOpenAttachEndpoint = workflowsModule.openAttachEndpoint;
-const realOpenVmCmuxRemote = workflowsModule.openVmCmuxRemote;
-const realApproveVmCmuxRemoteEnrollment = workflowsModule.approveVmCmuxRemoteEnrollment;
+const realOpenVmHmuxRemote = workflowsModule.openVmHmuxRemote;
+const realApproveVmHmuxRemoteEnrollment = workflowsModule.approveVmHmuxRemoteEnrollment;
 const realResetBaseVm = workflowsModule.resetBaseVm;
 const realRestoreVm = workflowsModule.restoreVm;
 const realRunVmWorkflow = workflowsModule.runVmWorkflow;
@@ -155,10 +155,10 @@ mock.module("../services/vms/workflows", () => ({
     useWorkflowStubs ? callMock(openBaseVm, args) : realOpenBaseVm(...args)) as typeof realOpenBaseVm,
   openAttachEndpoint: ((...args: Parameters<typeof realOpenAttachEndpoint>) =>
     useWorkflowStubs ? callMock(openAttachEndpoint, args) : realOpenAttachEndpoint(...args)) as typeof realOpenAttachEndpoint,
-  openVmCmuxRemote: ((...args: Parameters<typeof realOpenVmCmuxRemote>) =>
-    useWorkflowStubs ? callMock(openVmCmuxRemote, args) : realOpenVmCmuxRemote(...args)) as typeof realOpenVmCmuxRemote,
-  approveVmCmuxRemoteEnrollment: ((...args: Parameters<typeof realApproveVmCmuxRemoteEnrollment>) =>
-    useWorkflowStubs ? callMock(approveVmCmuxRemoteEnrollment, args) : realApproveVmCmuxRemoteEnrollment(...args)) as typeof realApproveVmCmuxRemoteEnrollment,
+  openVmHmuxRemote: ((...args: Parameters<typeof realOpenVmHmuxRemote>) =>
+    useWorkflowStubs ? callMock(openVmHmuxRemote, args) : realOpenVmHmuxRemote(...args)) as typeof realOpenVmHmuxRemote,
+  approveVmHmuxRemoteEnrollment: ((...args: Parameters<typeof realApproveVmHmuxRemoteEnrollment>) =>
+    useWorkflowStubs ? callMock(approveVmHmuxRemoteEnrollment, args) : realApproveVmHmuxRemoteEnrollment(...args)) as typeof realApproveVmHmuxRemoteEnrollment,
   resetBaseVm: ((...args: Parameters<typeof realResetBaseVm>) =>
     useWorkflowStubs ? callMock(resetBaseVm, args) : realResetBaseVm(...args)) as typeof realResetBaseVm,
   restoreVm: ((...args: Parameters<typeof realRestoreVm>) =>
@@ -223,7 +223,7 @@ const baseResetRoute = await import("../app/api/vm/base/reset/route");
 const vmIdRoute = await import("../app/api/vm/[id]/route");
 const { DELETE } = vmIdRoute;
 const attachRoute = await import("../app/api/vm/[id]/attach-endpoint/route");
-const cmuxRemoteApproveRoute = await import("../app/api/vm/[id]/cmux-remote/approve/route");
+const hmuxRemoteApproveRoute = await import("../app/api/vm/[id]/hmux-remote/approve/route");
 const execRoute = await import("../app/api/vm/[id]/exec/route");
 const forkRoute = await import("../app/api/vm/[id]/fork/route");
 const _snapshotRoute = await import("../app/api/vm/[id]/snapshot/route");
@@ -278,8 +278,8 @@ beforeEach(() => {
   openBaseVm.mockClear();
   resetBaseVm.mockClear();
   destroyVm.mockClear();
-  openVmCmuxRemote.mockClear();
-  approveVmCmuxRemoteEnrollment.mockClear();
+  openVmHmuxRemote.mockClear();
+  approveVmHmuxRemoteEnrollment.mockClear();
   openAttachEndpoint.mockClear();
   execVm.mockClear();
   forkVm.mockClear();
@@ -304,7 +304,7 @@ afterEach(() => {
 describe("VM REST auth", () => {
   test("rejects unauthenticated Cloud VM lease revocation before the workflow", async () => {
     const response = await revokeAccessRoute.POST(
-      new Request("https://cmux.test/api/vm/leases/revoke", { method: "POST" }),
+      new Request("https://hmux.test/api/vm/leases/revoke", { method: "POST" }),
     );
 
     expect(response.status).toBe(401);
@@ -325,7 +325,7 @@ describe("VM REST auth", () => {
     );
 
     const response = await revokeAccessRoute.POST(
-      new Request("https://cmux.test/api/vm/leases/revoke", {
+      new Request("https://hmux.test/api/vm/leases/revoke", {
         method: "POST",
         headers: {
           authorization: "Bearer access-signout",
@@ -341,7 +341,7 @@ describe("VM REST auth", () => {
 
   test("rejects unauthenticated provisioning before reaching Postgres or providers", async () => {
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
         body: JSON.stringify({ provider: "freestyle" }),
       }),
@@ -354,7 +354,7 @@ describe("VM REST auth", () => {
   });
 
   test("rejects unauthenticated VM listing before reaching Postgres", async () => {
-    const response = await GET(new Request("https://cmux.test/api/vm"));
+    const response = await GET(new Request("https://hmux.test/api/vm"));
 
     expect(response.status).toBe(401);
     expect(await response.json()).toEqual({ error: "unauthorized" });
@@ -367,13 +367,13 @@ describe("VM REST auth", () => {
       id: "user-1",
       displayName: null,
       primaryEmail: "user@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
       selectedTeam: null,
       listTeams: async () => [],
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
@@ -400,7 +400,7 @@ describe("VM REST auth", () => {
       id: "user-1", displayName: null, primaryEmail: "user@example.com",
       clientReadOnlyMetadata: {}, selectedTeam: first, listTeams,
     });
-    const request = new Request("https://cmux.test/api/vm/publications", {
+    const request = new Request("https://hmux.test/api/vm/publications", {
       headers: { authorization: "Bearer access-token", "x-stack-refresh-token": "refresh-token" },
     });
     const options = { forceCompleteTeamList: true, requireFreshTeamMembership: true };
@@ -416,13 +416,13 @@ describe("VM REST auth", () => {
       id: "user-1",
       displayName: null,
       primaryEmail: "user@example.com",
-      clientReadOnlyMetadata: { cmuxAccountDeleting: true },
+      clientReadOnlyMetadata: { hmuxAccountDeleting: true },
       selectedTeam: null,
       listTeams: async () => [],
     });
 
     const user = await verifyRequest(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
@@ -436,10 +436,10 @@ describe("VM REST auth", () => {
   test("rejects unauthenticated VM mutations before reaching workflows", async () => {
     const context = { params: Promise.resolve({ id: "provider-vm-1" }) };
     const responses = await Promise.all([
-      DELETE(new Request("https://cmux.test/api/vm/provider-vm-1", { method: "DELETE" }), context),
-      attachRoute.POST(new Request("https://cmux.test/api/vm/provider-vm-1/attach-endpoint", { method: "POST" }), context),
+      DELETE(new Request("https://hmux.test/api/vm/provider-vm-1", { method: "DELETE" }), context),
+      attachRoute.POST(new Request("https://hmux.test/api/vm/provider-vm-1/attach-endpoint", { method: "POST" }), context),
       execRoute.POST(
-        new Request("https://cmux.test/api/vm/provider-vm-1/exec", {
+        new Request("https://hmux.test/api/vm/provider-vm-1/exec", {
           method: "POST",
           body: JSON.stringify({ command: "true" }),
         }),
@@ -456,8 +456,8 @@ describe("VM REST auth", () => {
 
   test("rejects unauthenticated Base open and reset before reaching workflows", async () => {
     const responses = await Promise.all([
-      baseOpenRoute.POST(new Request("https://cmux.test/api/vm/base/open", { method: "POST", body: "{}" })),
-      baseResetRoute.POST(new Request("https://cmux.test/api/vm/base/reset", { method: "POST", body: "{}" })),
+      baseOpenRoute.POST(new Request("https://hmux.test/api/vm/base/open", { method: "POST", body: "{}" })),
+      baseResetRoute.POST(new Request("https://hmux.test/api/vm/base/reset", { method: "POST", body: "{}" })),
     ]);
 
     for (const response of responses) {
@@ -472,7 +472,7 @@ describe("VM REST auth", () => {
   test("authenticated provisioning runs the Effect VM workflow", async () => {
     const listTeams = mock(async () => [{
       id: "team-1",
-      clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
     }]);
     getUser.mockResolvedValue({
       id: "user-1",
@@ -480,7 +480,7 @@ describe("VM REST auth", () => {
       primaryEmail: "user@example.com",
       selectedTeam: {
         id: "team-1",
-        clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
+        clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
       },
       listTeams,
     });
@@ -492,14 +492,14 @@ describe("VM REST auth", () => {
       createdByUserId: "user-1",
       addressIpv4: "10.16.0.9",
       addressIpv6: null,
-      cmuxTuiContract: "snapshot-v2",
+      hmuxTuiContract: "snapshot-v2",
       resourceReservation: { vcpus: 4, memoryMb: 8192 },
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { "idempotency-key": "idem-1", origin: "https://cmux.test" },
+        headers: { "idempotency-key": "idem-1", origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -522,7 +522,7 @@ describe("VM REST auth", () => {
         desktop: true,
         sizing: true,
         persistentHome: false,
-        attachTransports: ["cmux-remote"],
+        attachTransports: ["hmux-remote"],
       },
       // The author the list would show for this machine. A client that appends
       // the create response to its list must not end up with one unattributed
@@ -532,7 +532,7 @@ describe("VM REST auth", () => {
       // New Machine dials the baked daemon from these two fields instead of
       // re-reading the fleet and calling POST /attach-endpoint.
       address: { ipv4: "10.16.0.9", ipv6: null },
-      cmuxTuiContract: "snapshot-v2",
+      hmuxTuiContract: "snapshot-v2",
       resources: { vcpus: 4, memoryMb: 8192 },
       resourceReservation: { vcpus: 4, memoryMb: 8192 },
     });
@@ -554,12 +554,12 @@ describe("VM REST auth", () => {
 
   test.each(["cookie", "native"])("hydrates an ID-only selected team for paid VM list limits (%s)", async (auth) => {
     const listTeams = mock(async () => [
-      { id: "team-other", clientReadOnlyMetadata: { cmuxVmPlan: "free" } },
-      { id: "team-1", displayName: "Paid team", clientReadOnlyMetadata: { cmuxPlan: "team", cmuxSeats: 4 } },
+      { id: "team-other", clientReadOnlyMetadata: { hmuxVmPlan: "free" } },
+      { id: "team-1", displayName: "Paid team", clientReadOnlyMetadata: { hmuxPlan: "team", hmuxSeats: 4 } },
     ]);
     getUser.mockResolvedValue({
       ...authedStackUser(),
-      clientReadOnlyMetadata: { cmuxPlan: "free" },
+      clientReadOnlyMetadata: { hmuxPlan: "free" },
       selectedTeam: { id: "team-1" },
       listTeams,
     });
@@ -576,7 +576,7 @@ describe("VM REST auth", () => {
       resourceReservation: { vcpus: 32, memoryMb: 65536 },
     }]);
 
-    const response = await GET(new Request("https://cmux.test/api/vm", {
+    const response = await GET(new Request("https://hmux.test/api/vm", {
       headers: auth === "native" ? {
         authorization: "Bearer access-token", "x-stack-refresh-token": "refresh-token",
       } : {},
@@ -607,11 +607,11 @@ describe("VM REST auth", () => {
   test.each([undefined, "team-1"])("hydrates an ID-only selected team with bounded auth (requested %s)", async (requestedTeamId) => {
     const listTeams = mock(async () => [{
       id: "team-1", displayName: "Paid team",
-      clientReadOnlyMetadata: { cmuxPlan: "team", cmuxSeats: 4 },
+      clientReadOnlyMetadata: { hmuxPlan: "team", hmuxSeats: 4 },
     }]);
     getUser.mockResolvedValue({ ...authedStackUser(), selectedTeam: { id: "team-1" }, listTeams });
 
-    const user = await verifyRequest(new Request("https://cmux.test/api/vm"), {
+    const user = await verifyRequest(new Request("https://hmux.test/api/vm"), {
       requestedTeamId, subrouterAuthorizationSignal: new AbortController().signal,
     });
 
@@ -626,16 +626,16 @@ describe("VM REST auth", () => {
 
   test("hydrates the ID-only selected team even when bounded auth requests another team", async () => {
     const listTeams = mock(async (options?: { query?: string }) => options?.query === "team-other"
-      ? [{ id: "team-other", clientReadOnlyMetadata: { cmuxVmPlan: "free" } }]
-      : [{ id: "team-1", displayName: "Paid team", clientReadOnlyMetadata: { cmuxPlan: "team", cmuxSeats: 4 } }]);
+      ? [{ id: "team-other", clientReadOnlyMetadata: { hmuxVmPlan: "free" } }]
+      : [{ id: "team-1", displayName: "Paid team", clientReadOnlyMetadata: { hmuxPlan: "team", hmuxSeats: 4 } }]);
     getUser.mockResolvedValue({
       ...authedStackUser(),
-      clientReadOnlyMetadata: { cmuxPlan: "free" },
+      clientReadOnlyMetadata: { hmuxPlan: "free" },
       selectedTeam: { id: "team-1" },
       listTeams,
     });
 
-    const user = await verifyRequest(new Request("https://cmux.test/api/vm"), {
+    const user = await verifyRequest(new Request("https://hmux.test/api/vm"), {
       requestedTeamId: "team-other",
       subrouterAuthorizationSignal: new AbortController().signal,
     });
@@ -647,11 +647,11 @@ describe("VM REST auth", () => {
 
   test("paginates complete membership when hydrating an ID-only selected team", async () => {
     const listTeams = mock(async (options?: { cursor?: string }) => options?.cursor === "page-2"
-      ? [{ id: "team-second", clientReadOnlyMetadata: { cmuxVmPlan: "free" } }]
-      : Object.assign([{ id: "team-1", clientReadOnlyMetadata: { cmuxPlan: "team" } }], { nextCursor: "page-2" }));
+      ? [{ id: "team-second", clientReadOnlyMetadata: { hmuxVmPlan: "free" } }]
+      : Object.assign([{ id: "team-1", clientReadOnlyMetadata: { hmuxPlan: "team" } }], { nextCursor: "page-2" }));
     getUser.mockResolvedValue({ ...authedStackUser(), selectedTeam: { id: "team-1" }, listTeams });
 
-    const user = await verifyRequest(new Request("https://cmux.test/api/vm"));
+    const user = await verifyRequest(new Request("https://hmux.test/api/vm"));
 
     expect(user?.teamIds).toEqual(["team-1", "team-second"]);
     expect(listTeams).toHaveBeenNthCalledWith(1, { cursor: undefined, limit: 100 });
@@ -662,17 +662,17 @@ describe("VM REST auth", () => {
     const listTeams = mock(async (options?: { cursor?: string }) => Object.assign([
       {
         id: options?.cursor ? "team-other" : "team-first",
-        clientReadOnlyMetadata: { cmuxPlan: "team", cmuxSeats: 4 },
+        clientReadOnlyMetadata: { hmuxPlan: "team", hmuxSeats: 4 },
       },
     ], { nextCursor: "stuck" }));
     getUser.mockResolvedValue({
       ...authedStackUser(),
-      clientReadOnlyMetadata: { cmuxPlan: "free" },
+      clientReadOnlyMetadata: { hmuxPlan: "free" },
       selectedTeam: { id: "team-1" },
       listTeams,
     });
 
-    const user = await verifyRequest(new Request("https://cmux.test/api/vm"));
+    const user = await verifyRequest(new Request("https://hmux.test/api/vm"));
 
     expect(user).toMatchObject({
       billingTeamId: "team-1",
@@ -686,12 +686,12 @@ describe("VM REST auth", () => {
   test("does not borrow another paid team's details when the selected team is absent from the lookup", async () => {
     getUser.mockResolvedValue({
       ...authedStackUser(),
-      clientReadOnlyMetadata: { cmuxPlan: "free" },
+      clientReadOnlyMetadata: { hmuxPlan: "free" },
       selectedTeam: { id: "team-1" },
-      listTeams: async () => [{ id: "team-other", clientReadOnlyMetadata: { cmuxPlan: "team", cmuxSeats: 4 } }],
+      listTeams: async () => [{ id: "team-other", clientReadOnlyMetadata: { hmuxPlan: "team", hmuxSeats: 4 } }],
     });
 
-    const user = await verifyRequest(new Request("https://cmux.test/api/vm"));
+    const user = await verifyRequest(new Request("https://hmux.test/api/vm"));
 
     expect(user).toMatchObject({ billingTeamId: "team-1", billingPlanId: "free", billingSeats: null });
   });
@@ -709,7 +709,7 @@ describe("VM REST auth", () => {
     });
     const payload = Buffer.from(JSON.stringify({ refresh_token_id: "session-test", iat: 1_700_000_000 })).toString("base64url");
     const headers = { authorization: `Bearer access-token.${payload}.test`, "x-stack-refresh-token": "refresh-token" };
-    const posted = await tunnelPOST(new Request("https://cmux.test/api/vm/tunnel", {
+    const posted = await tunnelPOST(new Request("https://hmux.test/api/vm/tunnel", {
       method: "POST", headers,
       body: JSON.stringify({ deviceId: "device-test", deviceFingerprint: "device-test", tunnelPurpose: "browser", clientPublicKey: Buffer.alloc(32, 1).toString("base64") }),
     }));
@@ -717,7 +717,7 @@ describe("VM REST auth", () => {
     const enrollInput = (enrollVmTunnel as unknown as { mock: { calls: unknown[][] } }).mock.calls[0]?.[0] as { teamIds?: readonly string[]; teamIdsComplete?: boolean };
     expect(enrollInput.teamIds).toEqual(["team-1", "team-2"]);
     expect(enrollInput.teamIdsComplete).toBe(true);
-    const read = await tunnelGET(new Request("https://cmux.test/api/vm/tunnel?deviceFingerprint=device-test&tunnelPurpose=browser", { headers }));
+    const read = await tunnelGET(new Request("https://hmux.test/api/vm/tunnel?deviceFingerprint=device-test&tunnelPurpose=browser", { headers }));
     expect(read.status).toBe(200);
     const readInput = (readVmTunnel as unknown as { mock: { calls: unknown[][] } }).mock.calls[0]?.[0] as { teamIds?: readonly string[]; teamIdsComplete?: boolean };
     expect(readInput.teamIds).toEqual(["team-1", "team-2"]);
@@ -740,7 +740,7 @@ describe("VM REST auth", () => {
     });
     const payload = Buffer.from(JSON.stringify({ refresh_token_id: "session-test", iat: 1_700_000_000 })).toString("base64url");
     const headers = { authorization: `Bearer access-token.${payload}.test`, "x-stack-refresh-token": "refresh-token" };
-    const posted = await tunnelPOST(new Request("https://cmux.test/api/vm/tunnel", {
+    const posted = await tunnelPOST(new Request("https://hmux.test/api/vm/tunnel", {
       method: "POST", headers,
       body: JSON.stringify({ deviceId: "device-test", deviceFingerprint: "device-test", tunnelPurpose: "browser", clientPublicKey: Buffer.alloc(32, 1).toString("base64") }),
     }));
@@ -760,16 +760,16 @@ describe("VM REST auth", () => {
     });
     const payload = Buffer.from(JSON.stringify({ refresh_token_id: "session-test", iat: 1_700_000_000 })).toString("base64url");
     const headers = { authorization: `Bearer access-token.${payload}.test`, "x-stack-refresh-token": "refresh-token" };
-    const authedUser = await verifyRequest(new Request("https://cmux.test/api/vm/tunnel", { headers }));
+    const authedUser = await verifyRequest(new Request("https://hmux.test/api/vm/tunnel", { headers }));
     expect(authedUser?.teamIds).toEqual(["team-1"]);
-    const posted = await tunnelPOST(new Request("https://cmux.test/api/vm/tunnel", {
+    const posted = await tunnelPOST(new Request("https://hmux.test/api/vm/tunnel", {
       method: "POST", headers,
       body: JSON.stringify({ deviceId: "device-test", deviceFingerprint: "device-test", tunnelPurpose: "browser", clientPublicKey: Buffer.alloc(32, 1).toString("base64") }),
     }));
     expect(posted.status).toBe(200);
     const enrollCalls = (enrollVmTunnel as unknown as { mock: { calls: unknown[][] } }).mock.calls;
     expect((enrollCalls[0]?.[0] as { teamIds?: readonly string[] } | undefined)?.teamIds).toEqual(authedUser?.teamIds);
-    const read = await tunnelGET(new Request("https://cmux.test/api/vm/tunnel?deviceFingerprint=device-test&tunnelPurpose=browser", { headers }));
+    const read = await tunnelGET(new Request("https://hmux.test/api/vm/tunnel?deviceFingerprint=device-test&tunnelPurpose=browser", { headers }));
     expect(read.status).toBe(200);
     const readCalls = (readVmTunnel as unknown as { mock: { calls: unknown[][] } }).mock.calls;
     expect((readCalls[0]?.[0] as { teamIds?: readonly string[] } | undefined)?.teamIds).toEqual(authedUser?.teamIds);
@@ -777,10 +777,10 @@ describe("VM REST auth", () => {
 
   test("passes the team directory only for capable create clients", async () => {
     getUser.mockResolvedValue(authedStackUser());
-    runVmWorkflow.mockResolvedValue({ providerVmId: "provider-vm-1", provider: "freestyle", image: "snapshot-test", createdAt: 1_777_000_000_000, addressIpv4: "10.16.0.9", addressIpv6: null, cmuxTuiContract: "snapshot-v2" });
-    const capable = await POST(new Request("https://cmux.test/api/vm", {
+    runVmWorkflow.mockResolvedValue({ providerVmId: "provider-vm-1", provider: "freestyle", image: "snapshot-test", createdAt: 1_777_000_000_000, addressIpv4: "10.16.0.9", addressIpv6: null, hmuxTuiContract: "snapshot-v2" });
+    const capable = await POST(new Request("https://hmux.test/api/vm", {
       method: "POST",
-      headers: { origin: "https://cmux.test", "x-cmux-private-network-routing": "team-networks" },
+      headers: { origin: "https://hmux.test", "x-hmux-private-network-routing": "team-networks" },
       body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
     }));
     expect(capable.status).toBe(200);
@@ -788,9 +788,9 @@ describe("VM REST auth", () => {
     const capableInput = createCalls[0]?.[0] as { teamDirectory?: { listMemberIds?: unknown } } | undefined;
     expect(typeof capableInput?.teamDirectory?.listMemberIds).toBe("function");
     createVm.mockClear();
-    const legacy = await POST(new Request("https://cmux.test/api/vm", {
+    const legacy = await POST(new Request("https://hmux.test/api/vm", {
       method: "POST",
-      headers: { origin: "https://cmux.test" },
+      headers: { origin: "https://hmux.test" },
       body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
     }));
     expect(legacy.status).toBe(200);
@@ -803,9 +803,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const create = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ kind: "gpu" }),
       }),
     );
@@ -816,9 +816,9 @@ describe("VM REST auth", () => {
     });
 
     const open = await baseOpenRoute.POST(
-      new Request("https://cmux.test/api/vm/base/open", {
+      new Request("https://hmux.test/api/vm/base/open", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ kind: 7 }),
       }),
     );
@@ -843,9 +843,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", kind: "base" }),
       }),
     );
@@ -869,8 +869,8 @@ describe("VM REST auth", () => {
         imageVersion: null, status: "running", createdAt: 1_777_000_000_000,
         baseId: "base-test", baseName: "Base", generation: 1,
       });
-      const response = await route.POST(new Request(`https://cmux.test/api/vm/base/${operation}`, {
-        method: "POST", headers: { origin: "https://cmux.test" },
+      const response = await route.POST(new Request(`https://hmux.test/api/vm/base/${operation}`, {
+        method: "POST", headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ kind: "base" }),
       }));
       expect(response.status).toBe(200);
@@ -888,9 +888,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const create = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", kind: "desktop" }),
       }),
     );
@@ -911,9 +911,9 @@ describe("VM REST auth", () => {
     expectNoCloudVmImplementationLeaks(createPayload);
 
     const open = await baseOpenRoute.POST(
-      new Request("https://cmux.test/api/vm/base/open", {
+      new Request("https://hmux.test/api/vm/base/open", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", kind: "desktop" }),
       }),
     );
@@ -932,7 +932,7 @@ describe("VM REST auth", () => {
       { providerVmId: "base", provider: "freestyle", image: "sh-fb3dcf7b47894114889b10186626af5b", imageVersion: null, status: "running", createdAt: 1_777_000_000_000 },
     ]);
 
-    const response = await GET(new Request("https://cmux.test/api/vm"));
+    const response = await GET(new Request("https://hmux.test/api/vm"));
     expect(response.status).toBe(200);
     const payload = await response.json() as {
       vms: Array<{ id: string; kind: string }>;
@@ -956,7 +956,7 @@ describe("VM REST auth", () => {
   });
 
   test("passes the advertised allowance despite a retired deployment override", async () => {
-    process.env.CMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS = "25";
+    process.env.HMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS = "25";
     getUser.mockResolvedValue(authedStackUser());
     runVmWorkflow.mockResolvedValue({
       providerVmId: "provider-vm-plan-limit",
@@ -967,9 +967,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -993,9 +993,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test", memoryMb: 20480 }),
       }),
     );
@@ -1015,9 +1015,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { "idempotency-key": "idem-off-ladder", origin: "https://cmux.test" },
+        headers: { "idempotency-key": "idem-off-ladder", origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test", memoryMb: 1000 }),
       }),
     );
@@ -1030,7 +1030,7 @@ describe("VM REST auth", () => {
     // Nightlies built before the 2026-09-02 pricing change send their old
     // 128 GB default on every create; the server must still hand them the
     // plan machine instead of failing every New Machine until they update.
-    process.env.CMUX_VM_ALLOW_FREE_PROVISIONING = "1";
+    process.env.HMUX_VM_ALLOW_FREE_PROVISIONING = "1";
     getUser.mockResolvedValue(freePlanStackUser());
     runVmWorkflow.mockResolvedValue({
       providerVmId: "provider-vm-legacy-size",
@@ -1041,9 +1041,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test", memoryMb: 131072 }),
       }),
     );
@@ -1053,7 +1053,7 @@ describe("VM REST auth", () => {
   });
 
   test("resolves a memory request below the plan machine to the plan machine", async () => {
-    process.env.CMUX_VM_ALLOW_FREE_PROVISIONING = "1";
+    process.env.HMUX_VM_ALLOW_FREE_PROVISIONING = "1";
     getUser.mockResolvedValue(freePlanStackUser());
     runVmWorkflow.mockResolvedValue({
       providerVmId: "provider-vm-small-size",
@@ -1064,9 +1064,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test", memoryMb: 8192 }),
       }),
     );
@@ -1079,9 +1079,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test", memoryMb: 65536 }),
       }),
     );
@@ -1092,7 +1092,7 @@ describe("VM REST auth", () => {
       error: "vm_memory_requires_plan",
       upgradeRequired: true,
       upgradePlanId: "max",
-      upgradeUrl: "https://cmux.com/api/billing/checkout?plan=max&cmux_source=vm_memory_limit",
+      upgradeUrl: "https://cmux.com/api/billing/checkout?plan=max&hmux_source=vm_memory_limit",
       memoryMb: 65536,
       maxMemoryMb: 16384,
     });
@@ -1110,9 +1110,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test", memoryMb: 32768 }),
       }),
     );
@@ -1125,9 +1125,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test", memoryMb: "8g" }),
       }),
     );
@@ -1139,13 +1139,13 @@ describe("VM REST auth", () => {
   });
 
   test("blocks a free plan by default even when its legacy active limit is permissive", async () => {
-    process.env.CMUX_VM_FREE_MAX_ACTIVE_VMS = "5";
+    process.env.HMUX_VM_FREE_MAX_ACTIVE_VMS = "5";
     getUser.mockResolvedValue(freePlanStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1156,16 +1156,16 @@ describe("VM REST auth", () => {
   });
 
   test("create carries the chosen display name into provisioning without a rename", async () => {
-    process.env.CMUX_VM_CREATE_ENABLED = "1";
-    process.env.CMUX_VM_FREESTYLE_ENABLED = "1";
-    process.env.CMUX_VM_ALLOW_UNMANIFESTED_IMAGES = "1";
+    process.env.HMUX_VM_CREATE_ENABLED = "1";
+    process.env.HMUX_VM_FREESTYLE_ENABLED = "1";
+    process.env.HMUX_VM_ALLOW_UNMANIFESTED_IMAGES = "1";
     getUser.mockResolvedValue(stackUserForPlan("pro"));
     runVmWorkflow.mockResolvedValue({
       providerVmId: "named-machine", provider: "freestyle", image: "snapshot-test",
       imageVersion: null, createdAt: 1_777_000_000_000, displayName: "Build box",
     });
-    const response = await POST(new Request("https://cmux.test/api/vm", {
-      method: "POST", headers: { origin: "https://cmux.test" },
+    const response = await POST(new Request("https://hmux.test/api/vm", {
+      method: "POST", headers: { origin: "https://hmux.test" },
       body: JSON.stringify({ provider: "freestyle", image: "snapshot-test", displayName: "  Build box  " }),
     }));
     expect(response.status).toBe(200);
@@ -1175,8 +1175,8 @@ describe("VM REST auth", () => {
 
   test.each([42, "x".repeat(65), "bad\nname"])("rejects invalid create display names before allocation: %p", async (displayName) => {
     getUser.mockResolvedValue(stackUserForPlan("pro"));
-    const response = await POST(new Request("https://cmux.test/api/vm", {
-      method: "POST", headers: { origin: "https://cmux.test" }, body: JSON.stringify({ displayName }),
+    const response = await POST(new Request("https://hmux.test/api/vm", {
+      method: "POST", headers: { origin: "https://hmux.test" }, body: JSON.stringify({ displayName }),
     }));
     expect(response.status).toBe(400);
     expect(createVm).not.toHaveBeenCalled();
@@ -1188,9 +1188,9 @@ describe("VM REST auth", () => {
 
   test("an invalid create display name is rejected in the client's locale", async () => {
     getUser.mockResolvedValue(stackUserForPlan("pro"));
-    const response = await POST(new Request("https://cmux.test/api/vm", {
+    const response = await POST(new Request("https://hmux.test/api/vm", {
       method: "POST",
-      headers: { origin: "https://cmux.test", "x-next-intl-locale": "ja" },
+      headers: { origin: "https://hmux.test", "x-next-intl-locale": "ja" },
       body: JSON.stringify({ displayName: "x".repeat(65) }),
     }));
     expect(response.status).toBe(400);
@@ -1204,9 +1204,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(freePlanStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test", "x-next-intl-locale": "ja" },
+        headers: { origin: "https://hmux.test", "x-next-intl-locale": "ja" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1216,16 +1216,16 @@ describe("VM REST auth", () => {
       error: string; message: string; action: string; upgradeUrl: string; ui: { title: string };
     };
     expect(payload.error).toBe("vm_requires_pro");
-    expect(payload.message).toBe("Cloud VM を利用するには cmux Pro プランが必要です。");
-    expect(payload.ui.title).toBe("cmux Pro が必要です");
+    expect(payload.message).toBe("Cloud VM を利用するには hmux Pro プランが必要です。");
+    expect(payload.ui.title).toBe("hmux Pro が必要です");
     expect(payload.action).toContain("https://cmux.com/pricing");
     expect(payload.upgradeUrl).toBe("https://cmux.com/pricing");
     expect(createVm).not.toHaveBeenCalled();
   });
 
   test("an explicit free-provisioning switch reopens the configured demo allowance", async () => {
-    process.env.CMUX_VM_ALLOW_FREE_PROVISIONING = "1";
-    process.env.CMUX_VM_FREE_MAX_ACTIVE_VMS = "5";
+    process.env.HMUX_VM_ALLOW_FREE_PROVISIONING = "1";
+    process.env.HMUX_VM_FREE_MAX_ACTIVE_VMS = "5";
     getUser.mockResolvedValue(freePlanStackUser());
     runVmWorkflow.mockResolvedValue({
       providerVmId: "provider-vm-free-demo",
@@ -1236,9 +1236,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1251,13 +1251,13 @@ describe("VM REST auth", () => {
   });
 
   test("a paid deployment default cannot grant a paid plan to an account without metadata", async () => {
-    process.env.CMUX_VM_DEFAULT_PLAN = "pro";
+    process.env.HMUX_VM_DEFAULT_PLAN = "pro";
     getUser.mockResolvedValue(stackUserForPlan(undefined));
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1267,11 +1267,11 @@ describe("VM REST auth", () => {
     expect(createVm).not.toHaveBeenCalled();
   });
 
-  test("blocks a team-less free account from provisioning when CMUX_VM_REQUIRE_PRO is enforced", async () => {
+  test("blocks a team-less free account from provisioning when HMUX_VM_REQUIRE_PRO is enforced", async () => {
     // The user-scoped billing fallback (#11225) must never widen access: an
     // account with zero Stack teams and no subscription resolves to the free
     // plan and hits the same Pro gate as team-based free users.
-    process.env.CMUX_VM_REQUIRE_PRO = "1";
+    process.env.HMUX_VM_REQUIRE_PRO = "1";
     getUser.mockResolvedValue({
       id: "user-1",
       displayName: null,
@@ -1281,9 +1281,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1299,8 +1299,8 @@ describe("VM REST auth", () => {
     // the freemium policy still applies unchanged: user-scoped billing carries
     // the free plan's machine ceiling into the create workflow, where the
     // active-VM limit is enforced.
-    process.env.CMUX_VM_ALLOW_FREE_PROVISIONING = "1";
-    process.env.CMUX_VM_FREE_MAX_ACTIVE_VMS = "1";
+    process.env.HMUX_VM_ALLOW_FREE_PROVISIONING = "1";
+    process.env.HMUX_VM_FREE_MAX_ACTIVE_VMS = "1";
     getUser.mockResolvedValue({
       id: "user-1",
       displayName: null,
@@ -1317,9 +1317,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1334,8 +1334,8 @@ describe("VM REST auth", () => {
     }));
   });
 
-  test("lets a pro plan provision even when CMUX_VM_REQUIRE_PRO is enforced", async () => {
-    process.env.CMUX_VM_REQUIRE_PRO = "1";
+  test("lets a pro plan provision even when HMUX_VM_REQUIRE_PRO is enforced", async () => {
+    process.env.HMUX_VM_REQUIRE_PRO = "1";
     getUser.mockResolvedValue(authedStackUser());
     runVmWorkflow.mockResolvedValue({
       providerVmId: "provider-vm-pro-gate-ok",
@@ -1346,9 +1346,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1363,9 +1363,9 @@ describe("VM REST auth", () => {
         name: "create",
         constructor: createVm,
         invoke: () => POST(
-          new Request("https://cmux.test/api/vm", {
+          new Request("https://hmux.test/api/vm", {
             method: "POST",
-            headers: { origin: "https://cmux.test" },
+            headers: { origin: "https://hmux.test" },
             // Deliberately use an unknown image and disable provider creates:
             // a free caller must still receive the entitlement response first.
             body: JSON.stringify({ provider: "freestyle", image: "not-a-real-image" }),
@@ -1376,9 +1376,9 @@ describe("VM REST auth", () => {
         name: "base-open",
         constructor: openBaseVm,
         invoke: () => baseOpenRoute.POST(
-          new Request("https://cmux.test/api/vm/base/open", {
+          new Request("https://hmux.test/api/vm/base/open", {
             method: "POST",
-            headers: { origin: "https://cmux.test" },
+            headers: { origin: "https://hmux.test" },
             body: JSON.stringify({ provider: "freestyle", image: "not-a-real-image" }),
           }),
         ),
@@ -1387,9 +1387,9 @@ describe("VM REST auth", () => {
         name: "base-reset",
         constructor: resetBaseVm,
         invoke: () => baseResetRoute.POST(
-          new Request("https://cmux.test/api/vm/base/reset", {
+          new Request("https://hmux.test/api/vm/base/reset", {
             method: "POST",
-            headers: { origin: "https://cmux.test" },
+            headers: { origin: "https://hmux.test" },
             body: JSON.stringify({ provider: "freestyle", image: "not-a-real-image" }),
           }),
         ),
@@ -1398,9 +1398,9 @@ describe("VM REST auth", () => {
         name: "fork",
         constructor: forkVm,
         invoke: () => forkRoute.POST(
-          new Request("https://cmux.test/api/vm/provider-vm-1/fork", {
+          new Request("https://hmux.test/api/vm/provider-vm-1/fork", {
             method: "POST",
-            headers: { origin: "https://cmux.test" },
+            headers: { origin: "https://hmux.test" },
             body: "{}",
           }),
           { params: Promise.resolve({ id: "provider-vm-1" }) },
@@ -1410,9 +1410,9 @@ describe("VM REST auth", () => {
         name: "restore",
         constructor: restoreVm,
         invoke: () => restoreRoute.POST(
-          new Request("https://cmux.test/api/vm/restore", {
+          new Request("https://hmux.test/api/vm/restore", {
             method: "POST",
-            headers: { origin: "https://cmux.test" },
+            headers: { origin: "https://hmux.test" },
             body: JSON.stringify({ snapshotId: "snapshot-1", provider: "freestyle" }),
           }),
         ),
@@ -1462,11 +1462,11 @@ describe("VM REST auth", () => {
     // provider kill switch is also off here to prove entitlement wins before
     // provider/configuration checks.
     for (const plan of ["free", undefined]) {
-      process.env.CMUX_VM_CREATE_ENABLED = "0";
-      process.env.CMUX_VM_ALLOW_FREE_PROVISIONING = "0";
-      delete process.env.CMUX_VM_REQUIRE_PRO;
-      delete process.env.CMUX_VM_DEFAULT_PLAN;
-      process.env.CMUX_VM_FREE_MAX_ACTIVE_VMS = "5";
+      process.env.HMUX_VM_CREATE_ENABLED = "0";
+      process.env.HMUX_VM_ALLOW_FREE_PROVISIONING = "0";
+      delete process.env.HMUX_VM_REQUIRE_PRO;
+      delete process.env.HMUX_VM_DEFAULT_PLAN;
+      process.env.HMUX_VM_FREE_MAX_ACTIVE_VMS = "5";
       getUser.mockResolvedValue(stackUserForPlan(plan));
       for (const route of provisioningRoutes) {
         for (const constructor of provisioningConstructors) constructor.mockClear();
@@ -1490,11 +1490,11 @@ describe("VM REST auth", () => {
 
     // All paid plan ids recognized by the server gate continue through their
     // corresponding workflow, including Founder's Edition operator grants.
-    process.env.CMUX_VM_CREATE_ENABLED = "1";
-    process.env.CMUX_VM_ALLOW_FREE_PROVISIONING = "0";
-    process.env.CMUX_VM_ALLOW_UNMANIFESTED_IMAGES = "1";
-    process.env.CMUX_VM_FREESTYLE_ENABLED = "1";
-    delete process.env.CMUX_VM_REQUIRE_PRO;
+    process.env.HMUX_VM_CREATE_ENABLED = "1";
+    process.env.HMUX_VM_ALLOW_FREE_PROVISIONING = "0";
+    process.env.HMUX_VM_ALLOW_UNMANIFESTED_IMAGES = "1";
+    process.env.HMUX_VM_FREESTYLE_ENABLED = "1";
+    delete process.env.HMUX_VM_REQUIRE_PRO;
     for (const plan of ["pro", "team", "founders"] as const) {
       getUser.mockResolvedValue(stackUserForPlan(plan));
       for (const route of provisioningRoutes) {
@@ -1515,11 +1515,11 @@ describe("VM REST auth", () => {
   });
 
   test("still lists VMs for a free plan under Pro enforcement (management is not gated)", async () => {
-    process.env.CMUX_VM_REQUIRE_PRO = "1";
+    process.env.HMUX_VM_REQUIRE_PRO = "1";
     getUser.mockResolvedValue(freePlanStackUser());
     runVmWorkflow.mockResolvedValue([]);
 
-    const response = await GET(new Request("https://cmux.test/api/vm"));
+    const response = await GET(new Request("https://hmux.test/api/vm"));
     expect(response.status).toBe(200);
     expect(createVm).not.toHaveBeenCalled();
   });
@@ -1531,7 +1531,7 @@ describe("VM REST auth", () => {
       { providerVmId: "newer", provider: "freestyle", image: "sh-fb3dcf7b47894114889b10186626af5b", imageVersion: "v", status: "running", createdAt: 1_777_100_000_000 },
     ]);
 
-    const response = await GET(new Request("https://cmux.test/api/vm"));
+    const response = await GET(new Request("https://hmux.test/api/vm"));
     expect(response.status).toBe(200);
     const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
     expect(await response.json()).toMatchObject({
@@ -1554,7 +1554,7 @@ describe("VM REST auth", () => {
       { providerVmId: "pro-vm", provider: "freestyle", image: "sh-fb3dcf7b47894114889b10186626af5b", imageVersion: "v", status: "running", createdAt: 1_777_000_000_000 },
     ]);
 
-    const response = await GET(new Request("https://cmux.test/api/vm"));
+    const response = await GET(new Request("https://hmux.test/api/vm"));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       vms: [{ id: "pro-vm", freeAccessExpiresAt: null }],
@@ -1574,15 +1574,15 @@ describe("VM REST auth", () => {
       displayName: "Ada Lovelace",
     });
     runVmWorkflow.mockResolvedValue([
-      { providerVmId: "mine", provider: "freestyle", image: "sh-fb3dcf7b47894114889b10186626af5b", imageVersion: "v", status: "running", createdAt: 1_777_000_000_000, createdByUserId: "user-1", cmuxTuiContract: "snapshot-v2" },
-      { providerVmId: "theirs", provider: "freestyle", image: "sh-fb3dcf7b47894114889b10186626af5b", imageVersion: "v", status: "running", createdAt: 1_777_000_000_000, createdByUserId: "user-2", cmuxTuiContract: null },
+      { providerVmId: "mine", provider: "freestyle", image: "sh-fb3dcf7b47894114889b10186626af5b", imageVersion: "v", status: "running", createdAt: 1_777_000_000_000, createdByUserId: "user-1", hmuxTuiContract: "snapshot-v2" },
+      { providerVmId: "theirs", provider: "freestyle", image: "sh-fb3dcf7b47894114889b10186626af5b", imageVersion: "v", status: "running", createdAt: 1_777_000_000_000, createdByUserId: "user-2", hmuxTuiContract: null },
     ]);
-    const response = await GET(new Request("https://cmux.test/api/vm"));
+    const response = await GET(new Request("https://hmux.test/api/vm"));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       vms: [
-        { id: "mine", createdBy: { userId: "user-1", displayName: "Ada Lovelace" }, cmuxTuiContract: "snapshot-v2" },
-        { id: "theirs", createdBy: { userId: "user-2", displayName: null }, cmuxTuiContract: null },
+        { id: "mine", createdBy: { userId: "user-1", displayName: "Ada Lovelace" }, hmuxTuiContract: "snapshot-v2" },
+        { id: "theirs", createdBy: { userId: "user-2", displayName: null }, hmuxTuiContract: null },
       ],
     });
   });
@@ -1595,7 +1595,7 @@ describe("VM REST auth", () => {
     runVmWorkflow.mockResolvedValue([
       { providerVmId: "desk", provider: "freestyle", image: "sh-fb3dcf7b47894114889b10186626af5b", imageVersion: "v", status: "running", createdAt: 1_777_000_000_000 },
     ]);
-    const response = await GET(new Request("https://cmux.test/api/vm"));
+    const response = await GET(new Request("https://hmux.test/api/vm"));
     expect(response.status).toBe(200);
     expect(await response.json()).toMatchObject({
       vms: [{ id: "desk", capabilities: { snapshot: true, restore: true, fork: false } }],
@@ -1613,9 +1613,9 @@ describe("VM REST auth", () => {
     );
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { "idempotency-key": "idem-failed", origin: "https://cmux.test" },
+        headers: { "idempotency-key": "idem-failed", origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1635,16 +1635,16 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
     rejectRunVmWorkflowWith(
       new VmCreateCreditsInsufficientError({
-        itemId: "cmux-vm-create-credit",
+        itemId: "hmux-vm-create-credit",
         billingCustomerId: "team-1",
         amount: 1,
       }),
     );
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { "idempotency-key": "idem-credits", origin: "https://cmux.test" },
+        headers: { "idempotency-key": "idem-credits", origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1665,9 +1665,9 @@ describe("VM REST auth", () => {
     );
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { "idempotency-key": "idem-model-plane", origin: "https://cmux.test" },
+        headers: { "idempotency-key": "idem-model-plane", origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1690,22 +1690,22 @@ describe("VM REST auth", () => {
       id: "user-1",
       displayName: null,
       primaryEmail: "user@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       selectedTeam: null,
       listTeams: async () => [],
     });
     rejectRunVmWorkflowWith(
       new VmCreateCreditsInsufficientError({
-        itemId: "cmux-vm-create-credit",
+        itemId: "hmux-vm-create-credit",
         billingCustomerId: "user-1",
         amount: 1,
       }),
     );
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { "idempotency-key": "idem-credits-user", origin: "https://cmux.test" },
+        headers: { "idempotency-key": "idem-credits-user", origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -1722,15 +1722,15 @@ describe("VM REST auth", () => {
   });
 
   test("uses the native client's requested Stack team for billing", async () => {
-    process.env.CMUX_VM_ALLOW_FREE_PROVISIONING = "1";
+    process.env.HMUX_VM_ALLOW_FREE_PROVISIONING = "1";
     const listTeams = mock(async () => [
       {
         id: "team-1",
-        clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
+        clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
       },
       {
         id: "team-2",
-        clientReadOnlyMetadata: { cmuxVmPlan: "free" },
+        clientReadOnlyMetadata: { hmuxVmPlan: "free" },
       },
     ]);
     getUser.mockResolvedValue({
@@ -1739,7 +1739,7 @@ describe("VM REST auth", () => {
       primaryEmail: "user@example.com",
       selectedTeam: {
         id: "team-1",
-        clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
+        clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
       },
       listTeams,
     });
@@ -1752,12 +1752,12 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-team-id": "team-2",
+          "x-hmux-team-id": "team-2",
         },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
@@ -1774,15 +1774,15 @@ describe("VM REST auth", () => {
   });
 
   test("validates a JSON body team id only when it differs from the selected team", async () => {
-    process.env.CMUX_VM_ALLOW_FREE_PROVISIONING = "1";
+    process.env.HMUX_VM_ALLOW_FREE_PROVISIONING = "1";
     const listTeams = mock(async () => [
       {
         id: "team-1",
-        clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
+        clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
       },
       {
         id: "team-2",
-        clientReadOnlyMetadata: { cmuxVmPlan: "free" },
+        clientReadOnlyMetadata: { hmuxVmPlan: "free" },
       },
     ]);
     getUser.mockResolvedValue({
@@ -1791,7 +1791,7 @@ describe("VM REST auth", () => {
       primaryEmail: "user@example.com",
       selectedTeam: {
         id: "team-1",
-        clientReadOnlyMetadata: { cmuxVmPlan: "pro" },
+        clientReadOnlyMetadata: { hmuxVmPlan: "pro" },
       },
       listTeams,
     });
@@ -1804,7 +1804,7 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
@@ -1837,14 +1837,14 @@ describe("VM REST auth", () => {
     // a provisioning route that skips the re-verify refuses a genuine member of
     // team-2 with vm_billing_team_not_found.
     const listTeams = mock(async () => [
-      { id: "team-1", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } },
-      { id: "team-2", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } },
+      { id: "team-1", clientReadOnlyMetadata: { hmuxVmPlan: "pro" } },
+      { id: "team-2", clientReadOnlyMetadata: { hmuxVmPlan: "pro" } },
     ]);
     getUser.mockResolvedValue({
       id: "user-1",
       displayName: null,
       primaryEmail: "user@example.com",
-      selectedTeam: { id: "team-1", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } },
+      selectedTeam: { id: "team-1", clientReadOnlyMetadata: { hmuxVmPlan: "pro" } },
       listTeams,
     });
 
@@ -1864,7 +1864,7 @@ describe("VM REST auth", () => {
         generation: 1,
       });
       const response = await route.POST(
-        new Request(`https://cmux.test/api/vm/base/${operation}`, {
+        new Request(`https://hmux.test/api/vm/base/${operation}`, {
           method: "POST",
           headers: {
             authorization: "Bearer access-token",
@@ -1895,7 +1895,7 @@ describe("VM REST auth", () => {
       ["reset", baseResetRoute, resetBaseVm],
     ] as const) {
       const response = await route.POST(
-        new Request(`https://cmux.test/api/vm/base/${operation}`, {
+        new Request(`https://hmux.test/api/vm/base/${operation}`, {
           method: "POST",
           headers: {
             authorization: "Bearer access-token",
@@ -1917,19 +1917,19 @@ describe("VM REST auth", () => {
   test("rejects blank team ids before reaching workflows", async () => {
     getUser.mockResolvedValue(authedStackUser());
     const requests = [
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test", teamId: "   " }),
       }),
-      new Request("https://cmux.test/api/vm?teamId=%20%20", {
+      new Request("https://hmux.test/api/vm?teamId=%20%20", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test", "x-cmux-team-id": "  " },
+        headers: { origin: "https://hmux.test", "x-hmux-team-id": "  " },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     ];
@@ -1952,12 +1952,12 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-team-id": "team-other",
+          "x-hmux-team-id": "team-other",
         },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
@@ -1970,15 +1970,15 @@ describe("VM REST auth", () => {
     });
     expectNoCloudVmImplementationLeaks(payload);
     expect(payload.message).toContain("team");
-    expect(payload.action).toContain("cmux auth login");
+    expect(payload.action).toContain("hmux auth login");
     expect(runVmWorkflow).not.toHaveBeenCalled();
   });
 
   test("uses the single Stack team when personal team auto-create populated listTeams", async () => {
-    process.env.CMUX_VM_ALLOW_FREE_PROVISIONING = "1";
+    process.env.HMUX_VM_ALLOW_FREE_PROVISIONING = "1";
     const listTeams = mock(async () => [{
       id: "team-personal",
-      clientReadOnlyMetadata: { cmuxVmPlan: "free" },
+      clientReadOnlyMetadata: { hmuxVmPlan: "free" },
     }]);
     getUser.mockResolvedValue({
       id: "user-1",
@@ -1996,9 +1996,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -2021,7 +2021,7 @@ describe("VM REST auth", () => {
       id: "user-1",
       displayName: null,
       primaryEmail: "user@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "pro" },
+      clientReadOnlyMetadata: { hmuxPlan: "pro" },
       selectedTeam: null,
       listTeams: async () => [],
     });
@@ -2034,9 +2034,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -2056,11 +2056,11 @@ describe("VM REST auth", () => {
       id: "user-1",
       displayName: null,
       primaryEmail: "user@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "free" },
+      clientReadOnlyMetadata: { hmuxPlan: "free" },
       selectedTeam: null,
       listTeams: async () => [
-        { id: "team-1", clientReadOnlyMetadata: { cmuxVmPlan: "free" } },
-        { id: "team-2", clientReadOnlyMetadata: { cmuxPlan: "team", cmuxSeats: 4 } },
+        { id: "team-1", clientReadOnlyMetadata: { hmuxVmPlan: "free" } },
+        { id: "team-2", clientReadOnlyMetadata: { hmuxPlan: "team", hmuxSeats: 4 } },
       ],
     });
     runVmWorkflow.mockResolvedValue({
@@ -2072,9 +2072,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -2095,18 +2095,18 @@ describe("VM REST auth", () => {
       id: "user-1",
       displayName: null,
       primaryEmail: "user@example.com",
-      clientReadOnlyMetadata: { cmuxPlan: "free" },
+      clientReadOnlyMetadata: { hmuxPlan: "free" },
       selectedTeam: null,
       listTeams: async () => [
-        { id: "team-1", clientReadOnlyMetadata: { cmuxVmPlan: "free" } },
-        { id: "team-2", clientReadOnlyMetadata: { cmuxPlan: "" } },
+        { id: "team-1", clientReadOnlyMetadata: { hmuxVmPlan: "free" } },
+        { id: "team-2", clientReadOnlyMetadata: { hmuxPlan: "" } },
       ],
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -2128,8 +2128,8 @@ describe("VM REST auth", () => {
 
   test("filters VM list to the requested Stack team", async () => {
     const listTeams = mock(async () => [
-      { id: "team-1", clientReadOnlyMetadata: { cmuxVmPlan: "free" } },
-      { id: "team-2", clientReadOnlyMetadata: { cmuxVmPlan: "pro" } },
+      { id: "team-1", clientReadOnlyMetadata: { hmuxVmPlan: "free" } },
+      { id: "team-2", clientReadOnlyMetadata: { hmuxVmPlan: "pro" } },
     ]);
     getUser.mockResolvedValue({
       id: "user-1",
@@ -2137,25 +2137,25 @@ describe("VM REST auth", () => {
       primaryEmail: "user@example.com",
       selectedTeam: {
         id: "team-1",
-        clientReadOnlyMetadata: { cmuxVmPlan: "free" },
+        clientReadOnlyMetadata: { hmuxVmPlan: "free" },
       },
       listTeams,
     });
     runVmWorkflow.mockResolvedValue([{
       providerVmId: "provider-vm-team-2",
       provider: "freestyle",
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       imageVersion: "test-version",
       status: "paused",
       createdAt: 1_777_000_000_000,
     }]);
 
     const response = await GET(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-team-id": "team-2",
+          "x-hmux-team-id": "team-2",
         },
       }),
     );
@@ -2168,11 +2168,11 @@ describe("VM REST auth", () => {
     });
   });
 
-  test("attach-endpoint routes transport=cmux-remote to the cmux-tui workflow with the caller's device", async () => {
+  test("attach-endpoint routes transport=hmux-remote to the hmux-tui workflow with the caller's device", async () => {
     getUser.mockResolvedValue(authedStackUser());
     const context = { params: Promise.resolve({ id: "provider-vm-team-1" }) };
     runVmWorkflow.mockResolvedValue({
-      transport: "cmux-remote",
+      transport: "hmux-remote",
       route: "wss://machine.vm.cmux.sh/v1/link?bl_preview_token=t",
       token: "t",
       expiresAtUnix: 1_777_000_300,
@@ -2180,15 +2180,15 @@ describe("VM REST auth", () => {
       trustedCarrier: true,
     });
     const response = await attachRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1/attach-endpoint", {
+      new Request("https://hmux.test/api/vm/provider-vm-team-1/attach-endpoint", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
-        body: JSON.stringify({ transport: "cmux-remote", deviceFingerprint: "fp-device-1", clientCapabilities: ["direct-ws-user-agent", "Bad Token!", 42] }),
+        headers: { origin: "https://hmux.test" },
+        body: JSON.stringify({ transport: "hmux-remote", deviceFingerprint: "fp-device-1", clientCapabilities: ["direct-ws-user-agent", "Bad Token!", 42] }),
       }),
       context,
     );
     expect(response.status).toBe(200);
-    const { deferAfterResponse, ...attachInput } = (openVmCmuxRemote.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
+    const { deferAfterResponse, ...attachInput } = (openVmHmuxRemote.mock.calls[0] as unknown[])[0] as Record<string, unknown>;
     expect(attachInput).toEqual({
       userId: "user-1",
       billingTeamId: "team-1",
@@ -2204,12 +2204,12 @@ describe("VM REST auth", () => {
     expect(typeof deferAfterResponse).toBe("function");
     expect(openAttachEndpoint).not.toHaveBeenCalled();
     const payload = await response.json();
-    expect(payload.transport).toBe("cmux-remote");
+    expect(payload.transport).toBe("hmux-remote");
     expect(payload.trustedCarrier).toBe(true);
     expect(payload.invitation).toBeUndefined();
   });
 
-  test("attach-endpoint answers 409 vm_attach_transport_unsupported when the machine only runs cmux-tui", async () => {
+  test("attach-endpoint answers 409 vm_attach_transport_unsupported when the machine only runs hmux-tui", async () => {
     getUser.mockResolvedValue(authedStackUser());
     const context = { params: Promise.resolve({ id: "provider-vm-team-1" }) };
     (runVmWorkflow as unknown as { mockImplementation(next: () => Promise<never>): void }).mockImplementation(
@@ -2218,14 +2218,14 @@ describe("VM REST auth", () => {
           provider: "freestyle",
           vmId: "provider-vm-team-1",
           requested: "websocket",
-          supported: ["cmux-remote"],
+          supported: ["hmux-remote"],
         });
       },
     );
     const response = await attachRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1/attach-endpoint", {
+      new Request("https://hmux.test/api/vm/provider-vm-team-1/attach-endpoint", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ requireDaemon: true }),
       }),
       context,
@@ -2237,55 +2237,55 @@ describe("VM REST auth", () => {
     expect(payload.details).toMatchObject({
       provider: "freestyle",
       requestedTransport: "websocket",
-      supportedTransports: ["cmux-remote"],
+      supportedTransports: ["hmux-remote"],
       phase: "attach",
     });
-    expect(payload.action).toContain('transport "cmux-remote"');
+    expect(payload.action).toContain('transport "hmux-remote"');
     expect(openAttachEndpoint).toHaveBeenCalledTimes(1);
-    expect(openVmCmuxRemote).not.toHaveBeenCalled();
+    expect(openVmHmuxRemote).not.toHaveBeenCalled();
   });
 
   test("attach-endpoint rejects an unknown transport before any workflow runs", async () => {
     getUser.mockResolvedValue(authedStackUser());
     const context = { params: Promise.resolve({ id: "provider-vm-team-1" }) };
     const response = await attachRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1/attach-endpoint", {
+      new Request("https://hmux.test/api/vm/provider-vm-team-1/attach-endpoint", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ transport: "carrier-pigeon" }),
       }),
       context,
     );
     expect(response.status).toBe(400);
-    expect(openVmCmuxRemote).not.toHaveBeenCalled();
+    expect(openVmHmuxRemote).not.toHaveBeenCalled();
     expect(openAttachEndpoint).not.toHaveBeenCalled();
   });
 
-  test("cmux-remote/approve validates the invitation id and passes the account scope through", async () => {
+  test("hmux-remote/approve validates the invitation id and passes the account scope through", async () => {
     getUser.mockResolvedValue(authedStackUser());
     const context = { params: Promise.resolve({ id: "provider-vm-team-1" }) };
-    const bad = await cmuxRemoteApproveRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1/cmux-remote/approve", {
+    const bad = await hmuxRemoteApproveRoute.POST(
+      new Request("https://hmux.test/api/vm/provider-vm-team-1/hmux-remote/approve", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ invitationId: "not valid; rm -rf /" }),
       }),
       context,
     );
     expect(bad.status).toBe(400);
-    expect(approveVmCmuxRemoteEnrollment).not.toHaveBeenCalled();
+    expect(approveVmHmuxRemoteEnrollment).not.toHaveBeenCalled();
 
     runVmWorkflow.mockResolvedValue({ approved: true, state: "approved", deviceFingerprint: "fp-device-1" });
-    const ok = await cmuxRemoteApproveRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1/cmux-remote/approve", {
+    const ok = await hmuxRemoteApproveRoute.POST(
+      new Request("https://hmux.test/api/vm/provider-vm-team-1/hmux-remote/approve", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ invitationId: "inv_abc-123" }),
       }),
       context,
     );
     expect(ok.status).toBe(200);
-    expect(approveVmCmuxRemoteEnrollment).toHaveBeenCalledWith({
+    expect(approveVmHmuxRemoteEnrollment).toHaveBeenCalledWith({
       userId: "user-1",
       billingTeamId: "team-1",
       teamIds: ["team-1"],
@@ -2296,7 +2296,7 @@ describe("VM REST auth", () => {
   });
 
   test("GET /api/vm/[id] echoes the machine kind and private address like the list does", async () => {
-    // `cmux vm status` and `cmux vm open` read this route; without `kind` the
+    // `hmux vm status` and `hmux vm open` read this route; without `kind` the
     // client infers a shell-only machine from the snapshot id and never
     // opens the desktop of a machine created with the defaults (#12239).
     getUser.mockResolvedValue(authedStackUser());
@@ -2311,10 +2311,10 @@ describe("VM REST auth", () => {
       slug: "giddy-cherry-emu",
       addressIpv4: "10.16.170.11",
       addressIpv6: null,
-      cmuxTuiContract: "snapshot-v2",
+      hmuxTuiContract: "snapshot-v2",
     });
     const response = await vmIdRoute.GET(
-      new Request("https://cmux.test/api/vm/provider-vm-status"),
+      new Request("https://hmux.test/api/vm/provider-vm-status"),
       { params: Promise.resolve({ id: "provider-vm-status" }) },
     );
     expect(response.status).toBe(200);
@@ -2324,7 +2324,7 @@ describe("VM REST auth", () => {
       kind: "desktop",
       capabilities: vmCapabilitiesFor("freestyle"),
       address: { ipv4: "10.16.170.11", ipv6: null },
-      cmuxTuiContract: "snapshot-v2",
+      hmuxTuiContract: "snapshot-v2",
     });
   });
 
@@ -2347,7 +2347,7 @@ describe("VM REST auth", () => {
       createdByUserId: "user-1",
     });
     const response = await vmIdRoute.GET(
-      new Request("https://cmux.test/api/vm/provider-vm-author"),
+      new Request("https://hmux.test/api/vm/provider-vm-author"),
       { params: Promise.resolve({ id: "provider-vm-author" }) },
     );
     expect(response.status).toBe(200);
@@ -2370,7 +2370,7 @@ describe("VM REST auth", () => {
       createdAt: 1_777_000_000_000,
     });
     await vmIdRoute.GET(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1"),
+      new Request("https://hmux.test/api/vm/provider-vm-team-1"),
       context,
     );
     // objectContaining, not an exact shape: the route also passes a model-plane
@@ -2385,9 +2385,9 @@ describe("VM REST auth", () => {
 
     runVmWorkflow.mockResolvedValue(undefined);
     await DELETE(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1", {
+      new Request("https://hmux.test/api/vm/provider-vm-team-1", {
         method: "DELETE",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
       }),
       context,
     );
@@ -2419,9 +2419,9 @@ describe("VM REST auth", () => {
       expiresAtUnix: 1_777_000_300,
     });
     await attachRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1/attach-endpoint", {
+      new Request("https://hmux.test/api/vm/provider-vm-team-1/attach-endpoint", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: "{}",
       }),
       context,
@@ -2435,9 +2435,9 @@ describe("VM REST auth", () => {
 
     runVmWorkflow.mockResolvedValue({ exitCode: 0, stdout: "", stderr: "" });
     await execRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1/exec", {
+      new Request("https://hmux.test/api/vm/provider-vm-team-1/exec", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ command: "true" }),
       }),
       context,
@@ -2472,9 +2472,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await DELETE(
-      new Request("https://cmux.test/api/vm/provider-vm-team-1", {
+      new Request("https://hmux.test/api/vm/provider-vm-team-1", {
         method: "DELETE",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
       }),
       { params: Promise.resolve({ id: "provider-vm-team-1" }) },
     );
@@ -2492,7 +2492,7 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
         headers: {
           origin: "https://evil.example",
@@ -2514,13 +2514,13 @@ describe("VM REST auth", () => {
     console.error = mock(() => {}) as unknown as typeof console.error;
     try {
       const response = await withAuthedVmApiRoute(
-        new Request("https://cmux.test/api/vm", {
+        new Request("https://hmux.test/api/vm", {
           method: "POST",
-          headers: { origin: "https://cmux.test" },
+          headers: { origin: "https://hmux.test" },
           body: "{}",
         }),
         "/api/vm",
-        { "cmux.vm.operation": "create" },
+        { "hmux.vm.operation": "create" },
         "/api/vm POST failed",
         async ({ setResponseFinalizer }) => {
           setResponseFinalizer((mappedResponse) => {
@@ -2597,13 +2597,13 @@ describe("VM REST auth", () => {
         "POST https://api.freestyle.sh/v5/vms -> 404: {\"code\":\"NOT_FOUND\",\"message\":\"Snapshot 'sh-fb3dcf7b47894114889b10186626af5b' not found.\"}",
       );
       const response = await withAuthedVmApiRoute(
-        new Request("https://cmux.test/api/vm", {
+        new Request("https://hmux.test/api/vm", {
           method: "POST",
-          headers: { origin: "https://cmux.test", "content-type": "application/json" },
+          headers: { origin: "https://hmux.test", "content-type": "application/json" },
           body: JSON.stringify({ kind: "desktop" }),
         }),
         "/api/vm",
-        { "cmux.vm.operation": "create" },
+        { "hmux.vm.operation": "create" },
         "/api/vm failed",
         async () => {
           throw new VmProviderOperationError({
@@ -2639,13 +2639,13 @@ describe("VM REST auth", () => {
     try {
       const providerCause = new Error("INTERNAL_ERROR: Internal server error");
       const response = await withAuthedVmApiRoute(
-        new Request("https://cmux.test/api/vm/provider-vm-1/attach-endpoint", {
+        new Request("https://hmux.test/api/vm/provider-vm-1/attach-endpoint", {
           method: "POST",
-          headers: { origin: "https://cmux.test" },
+          headers: { origin: "https://hmux.test" },
           body: "{}",
         }),
         "/api/vm/[id]/attach-endpoint",
-        { "cmux.vm.operation": "open_attach" },
+        { "hmux.vm.operation": "open_attach" },
         "/api/vm/[id]/attach-endpoint failed",
         async () => {
           throw new VmProviderOperationError({
@@ -2661,13 +2661,13 @@ describe("VM REST auth", () => {
       const payload = await response.json();
       expect(payload).toMatchObject({
         error: "vm_cloud_service_unavailable",
-        message: "cmux could not attach to the Cloud VM yet.",
+        message: "hmux could not attach to the Cloud VM yet.",
         phase: "attach",
         retryable: true,
         retryAfterSeconds: 2,
         ui: {
           title: "Reconnecting Cloud VM",
-          message: "cmux could not attach to the Cloud VM yet. Retrying in 2s.",
+          message: "hmux could not attach to the Cloud VM yet. Retrying in 2s.",
           phase: "attach",
           severity: "warning",
           retryable: true,
@@ -2691,7 +2691,7 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
         headers: { "sec-fetch-site": "same-origin" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
@@ -2712,10 +2712,10 @@ describe("VM REST auth", () => {
     };
 
     const responses = await Promise.all([
-      DELETE(new Request("https://cmux.test/api/vm/provider-vm-1", { method: "DELETE", headers }), context),
-      attachRoute.POST(new Request("https://cmux.test/api/vm/provider-vm-1/attach-endpoint", { method: "POST", headers }), context),
+      DELETE(new Request("https://hmux.test/api/vm/provider-vm-1", { method: "DELETE", headers }), context),
+      attachRoute.POST(new Request("https://hmux.test/api/vm/provider-vm-1/attach-endpoint", { method: "POST", headers }), context),
       execRoute.POST(
-        new Request("https://cmux.test/api/vm/provider-vm-1/exec", {
+        new Request("https://hmux.test/api/vm/provider-vm-1/exec", {
           method: "POST",
           headers,
           body: JSON.stringify({ command: "true" }),
@@ -2736,9 +2736,9 @@ describe("VM REST auth", () => {
     const context = { params: Promise.resolve({ id: "provider-vm-1" }) };
 
     const response = await execRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-1/exec", {
+      new Request("https://hmux.test/api/vm/provider-vm-1/exec", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ command: "   " }),
       }),
       context,
@@ -2751,7 +2751,7 @@ describe("VM REST auth", () => {
       details: { field: "command" },
     });
     expect(payload.message).toContain("command");
-    expect(payload.action).toContain("cmux vm exec");
+    expect(payload.action).toContain("hmux vm exec");
     expect(runVmWorkflow).not.toHaveBeenCalled();
   });
 
@@ -2759,9 +2759,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
     const context = { params: Promise.resolve({ id: "provider-vm-1" }) };
     const response = await execRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-1/exec", {
+      new Request("https://hmux.test/api/vm/provider-vm-1/exec", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ command: "x".repeat(64 * 1024 + 1) }),
       }),
       context,
@@ -2781,9 +2781,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "aws" }),
       }),
     );
@@ -2804,9 +2804,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const malformed = await restoreRoute.POST(
-      new Request("https://cmux.test/api/vm/restore", {
+      new Request("https://hmux.test/api/vm/restore", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: "{",
       }),
     );
@@ -2818,9 +2818,9 @@ describe("VM REST auth", () => {
     expect(runVmWorkflow).not.toHaveBeenCalled();
 
     const invalidProvider = await restoreRoute.POST(
-      new Request("https://cmux.test/api/vm/restore", {
+      new Request("https://hmux.test/api/vm/restore", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ snapshotId: "snap-1", provider: "aws" }),
       }),
     );
@@ -2844,7 +2844,7 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
@@ -2864,7 +2864,7 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const nativeOnlyUser = await verifyRequest(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: { cookie: "stack-auth-cookie=present" },
         body: "{}",
@@ -2876,7 +2876,7 @@ describe("VM REST auth", () => {
     expect(getUser).not.toHaveBeenCalled();
 
     const cookieUser = await verifyRequest(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: { cookie: "stack-auth-cookie=present" },
         body: "{}",
@@ -2902,7 +2902,7 @@ describe("VM REST auth", () => {
     });
 
     const user = await verifyRequest(
-      new Request("https://cmux.test/api/subrouter/accounts", {
+      new Request("https://hmux.test/api/subrouter/accounts", {
         headers: {
           authorization: "Bearer invalid-access",
           "x-stack-refresh-token": "invalid-refresh",
@@ -2916,13 +2916,13 @@ describe("VM REST auth", () => {
   });
 
   test("blocks VM create kill switch before workflow", async () => {
-    process.env.CMUX_VM_CREATE_ENABLED = "0";
+    process.env.HMUX_VM_CREATE_ENABLED = "0";
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -2948,9 +2948,9 @@ describe("VM REST auth", () => {
     );
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -2977,9 +2977,9 @@ describe("VM REST auth", () => {
     );
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "snapshot-test" }),
       }),
     );
@@ -2998,13 +2998,13 @@ describe("VM REST auth", () => {
   });
 
   test("blocks provider kill switch before workflow", async () => {
-    process.env.CMUX_VM_FREESTYLE_ENABLED = "false";
+    process.env.HMUX_VM_FREESTYLE_ENABLED = "false";
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "sh-fb3dcf7b47894114889b10186626af5b" }),
       }),
     );
@@ -3020,13 +3020,13 @@ describe("VM REST auth", () => {
   });
 
   test("blocks VM restore kill switch before workflow", async () => {
-    process.env.CMUX_VM_CREATE_ENABLED = "0";
+    process.env.HMUX_VM_CREATE_ENABLED = "0";
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await restoreRoute.POST(
-      new Request("https://cmux.test/api/vm/restore", {
+      new Request("https://hmux.test/api/vm/restore", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ snapshotId: "snap-1", provider: "freestyle" }),
       }),
     );
@@ -3040,13 +3040,13 @@ describe("VM REST auth", () => {
   });
 
   test("blocks provider kill switch on restore before workflow", async () => {
-    process.env.CMUX_VM_FREESTYLE_ENABLED = "false";
+    process.env.HMUX_VM_FREESTYLE_ENABLED = "false";
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await restoreRoute.POST(
-      new Request("https://cmux.test/api/vm/restore", {
+      new Request("https://hmux.test/api/vm/restore", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ snapshotId: "snap-1", provider: "freestyle" }),
       }),
     );
@@ -3068,9 +3068,9 @@ describe("VM REST auth", () => {
     );
 
     const response = await forkRoute.POST(
-      new Request("https://cmux.test/api/vm/provider-vm-1/fork", {
+      new Request("https://hmux.test/api/vm/provider-vm-1/fork", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({}),
       }),
       { params: Promise.resolve({ id: "provider-vm-1" }) },
@@ -3093,9 +3093,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", image: "unknown-snapshot" }),
       }),
     );
@@ -3122,9 +3122,9 @@ describe("VM REST auth", () => {
     getUser.mockResolvedValue(authedStackUser());
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle", kind: "desktop" }),
       }),
     );
@@ -3158,9 +3158,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ provider: "freestyle" }),
       }),
     );
@@ -3177,7 +3177,7 @@ describe("VM REST auth", () => {
   test("the shell-only base image the CLI sends for `vm new --base` is manifest-listed", async () => {
     process.env.VERCEL = "1";
     process.env.VERCEL_ENV = "preview";
-    process.env.CMUX_VM_DEFAULT_PROVIDER = "freestyle";
+    process.env.HMUX_VM_DEFAULT_PROVIDER = "freestyle";
     getUser.mockResolvedValue(authedStackUser());
     runVmWorkflow.mockResolvedValue({
       providerVmId: "provider-vm-freestyle-base",
@@ -3188,9 +3188,9 @@ describe("VM REST auth", () => {
     });
 
     const response = await POST(
-      new Request("https://cmux.test/api/vm", {
+      new Request("https://hmux.test/api/vm", {
         method: "POST",
-        headers: { origin: "https://cmux.test" },
+        headers: { origin: "https://hmux.test" },
         body: JSON.stringify({ image: "sh-fb3dcf7b47894114889b10186626af5b" }),
       }),
     );
@@ -3223,10 +3223,10 @@ function freePlanStackUser() {
 }
 
 function stackUserForPlan(plan: string | undefined) {
-  const clientReadOnlyMetadata = plan ? { cmuxVmPlan: plan } : {};
+  const clientReadOnlyMetadata = plan ? { hmuxVmPlan: plan } : {};
   return {
     id: "user-1",
-    ...(plan === "max" ? { clientReadOnlyMetadata: { cmuxVmPlan: "max" } } : {}),
+    ...(plan === "max" ? { clientReadOnlyMetadata: { hmuxVmPlan: "max" } } : {}),
     displayName: null,
     primaryEmail: "user@example.com",
     selectedTeam: {
@@ -3250,6 +3250,6 @@ function accountDeletionAuthTombstone(userId: string, status: string, updatedAt:
 
 function expectNoCloudVmImplementationLeaks(payload: unknown): void {
   expect(JSON.stringify(payload)).not.toMatch(
-    /Stack Auth|Freestyle|E2B|freestyle|e2b|CMUX_VM_|FREESTYLE_|E2B_|billingTeamId|itemId|billingCustomerId|manifest|snapshot|database|migration|\bsh-[a-z0-9]{8,24}\b|\bteam-[a-z0-9-]+\b/,
+    /Stack Auth|Freestyle|E2B|freestyle|e2b|HMUX_VM_|FREESTYLE_|E2B_|billingTeamId|itemId|billingCustomerId|manifest|snapshot|database|migration|\bsh-[a-z0-9]{8,24}\b|\bteam-[a-z0-9-]+\b/,
   );
 }

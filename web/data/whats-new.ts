@@ -4,7 +4,7 @@ import { ios106Localizations } from "./whats-new-localizations";
  * The remote What's New list served by GET /api/whats-new.
  *
  * This list is the authoritative visibility switch for the What's New pages
- * compiled into cmux iOS binaries: the app renders a binary page only when
+ * compiled into hmux iOS binaries: the app renders a binary page only when
  * its id appears in `visibleEntryIds`, so a bad or mistimed page can be
  * hidden remotely after release. Devices cache the last fetched list and the
  * cache wins while offline; a device that has never fetched the list shows
@@ -17,7 +17,7 @@ import { ios106Localizations } from "./whats-new-localizations";
  * 1. `nativeEntryId` marks the announcement as a duplicate of that binary
  *    page: devices where the page is remotely visible drop the announcement
  *    (the content already shows natively), all others use the fallbacks.
- * 2. `webUrl` (cmux-owned https host only): rendered in an in-app webview.
+ * 2. `webUrl` (hmux-owned https host only): rendered in an in-app webview.
  * 3. Inline `features` rows. A `title` is required whenever fallback
  *    content exists.
  *
@@ -39,8 +39,8 @@ import { ios106Localizations } from "./whats-new-localizations";
 
 /**
  * One canonical vocabulary with the iOS client's `MobileBuildType.token`:
- * "prod" is the official App Store app (bundle id com.cmux.app), "beta" is
- * dev.cmux.app.beta, "internal" is dev.cmux.app.internal, "dev" is local
+ * "prod" is the official App Store app (bundle id com.hmux.app), "beta" is
+ * dev.hmux.app.beta, "internal" is dev.hmux.app.internal, "dev" is local
  * DEBUG builds, "demo" is the controlled-demo distribution.
  */
 export type WhatsNewChannel = "dev" | "beta" | "internal" | "demo" | "prod";

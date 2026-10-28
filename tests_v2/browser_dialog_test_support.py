@@ -3,18 +3,18 @@
 import time
 from concurrent.futures import ThreadPoolExecutor
 
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
 def run_with_dialogs(socket_path, method, params, answers):
     def invoke():
-        with cmux(socket_path) as page:
+        with hmux(socket_path) as page:
             return page._call(method, params)
 
     responses = []
     with ThreadPoolExecutor(max_workers=1) as pool:
         operation = pool.submit(invoke)
-        with cmux(socket_path) as responder:
+        with hmux(socket_path) as responder:
             for accept, text in answers:
                 deadline = time.monotonic() + 4
                 while True:
@@ -28,7 +28,7 @@ def run_with_dialogs(socket_path, method, params, answers):
                         )
                         responses.append(response)
                         break
-                    except cmuxError as error:
+                    except hmuxError as error:
                         if "not_found" not in str(error) or time.monotonic() >= deadline:
                             raise
                         time.sleep(0.02)

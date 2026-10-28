@@ -1,18 +1,18 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 extension TerminalController {
     /// `vm.file_put {id, path, mode?, data_base64}` → one file lands on the machine at
     /// `path` (mode `mode`, default 600) over its link, through the in-VM
-    /// `cmux file receive` (see `CloudFileDelivery`): never through `vm.exec`, a command
-    /// line, or a terminal's visible screen. Backs `cmux vm push --secret`.
+    /// `hmux file receive` (see `CloudFileDelivery`): never through `vm.exec`, a command
+    /// line, or a terminal's visible screen. Backs `hmux vm push --secret`.
     /// Result: `{machine, path, mode, bytes, transport: "link"}`.
     nonisolated func socketWorkerVMFilePutResponse(id: Any?, params: [String: Any]) -> String {
         guard !ManagedFileTransferPolicy.isDisabled else {
             return v2Error(id: id, code: "file_transfer_disabled", message: ManagedFileTransferPolicy.disabledMessage)
         }
         guard let vmId = Self.surfaceString(params["id"]), !vmId.isEmpty else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.file_put requires `id`. Run `cmux vm ls` to find one.")
+            return v2Error(id: id, code: "invalid_params", message: "vm.file_put requires `id`. Run `hmux vm ls` to find one.")
         }
         guard let path = Self.surfaceString(params["path"]), !path.isEmpty else {
             return v2Error(id: id, code: "invalid_params", message: "vm.file_put requires `path`: where the file lands on the machine (relative paths resolve against its home).")
@@ -28,7 +28,7 @@ extension TerminalController {
             return v2Error(id: id, code: "invalid_params", message: "vm.file_put: the file is empty; nothing to deliver.")
         }
         guard data.count <= CloudFileDelivery.maxPayloadBytes else {
-            return v2Error(id: id, code: "invalid_params", message: "vm.file_put: \(data.count) bytes exceeds the \(CloudFileDelivery.maxPayloadBytes)-byte limit for link delivery; use `cmux vm push` without --secret for large, non-secret files.")
+            return v2Error(id: id, code: "invalid_params", message: "vm.file_put: \(data.count) bytes exceeds the \(CloudFileDelivery.maxPayloadBytes)-byte limit for link delivery; use `hmux vm push` without --secret for large, non-secret files.")
         }
         let request = CloudFileDelivery.Request(path: path, mode: mode, data: data)
         return v2VmCall(id: id, timeoutSeconds: 240) {

@@ -1,7 +1,7 @@
 {
   "workflows": {
     "ios-app-store-validate": {
-      "description": "Validate the cmux iOS production App Store review package.",
+      "description": "Validate the hmux iOS production App Store review package.",
       "steps": [
         {
           "name": "package_files",

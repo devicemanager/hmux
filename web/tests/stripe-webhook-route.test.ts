@@ -49,7 +49,7 @@ const paidCheckoutSession = {
   id: "cs_1",
   payment_status: "paid",
   client_reference_id: "user_1",
-  metadata: { app: "cmux", plan: "pro" },
+  metadata: { app: "hmux", plan: "pro" },
   subscription: { id: "sub_1", status: "active" },
   customer: { id: "cus_1" },
 };
@@ -59,7 +59,7 @@ let retrievedSubscription: Record<string, unknown> = {
   id: "sub_1",
   customer: "cus_1",
   status: "active",
-  metadata: { stackUserId: "user_1", app: "cmux" },
+  metadata: { stackUserId: "user_1", app: "hmux" },
   cancel_at_period_end: false,
   items: { data: [{ current_period_end: 1_800_000_000, price: { id: "price_1" } }] },
 };
@@ -138,7 +138,7 @@ describe("Stripe billing webhook route", () => {
         object: {
           id: "cs_1",
           client_reference_id: "user_1",
-          metadata: { app: "cmux", plan: "pro" },
+          metadata: { app: "hmux", plan: "pro" },
         },
       },
     };
@@ -165,7 +165,7 @@ describe("Stripe billing webhook route", () => {
       id: "sub_1",
       customer: "cus_1",
       status: "active",
-      metadata: { stackUserId: "user_1", app: "cmux" },
+      metadata: { stackUserId: "user_1", app: "hmux" },
       cancel_at_period_end: false,
       items: {
         data: [{
@@ -235,7 +235,7 @@ describe("Stripe billing webhook route", () => {
       subscription: {
         id: "sub_retrieved_foreign",
         status: "active",
-        metadata: { app: "cmux", plan: "pro" },
+        metadata: { app: "hmux", plan: "pro" },
       },
     };
 
@@ -246,7 +246,7 @@ describe("Stripe billing webhook route", () => {
     expect(recordCheckoutCompletion).not.toHaveBeenCalled();
   });
 
-  test("records cmux checkout completions", async () => {
+  test("records hmux checkout completions", async () => {
     const response = await POST(webhookRequest());
 
     expect(response.status).toBe(200);
@@ -336,7 +336,7 @@ describe("Stripe billing webhook route", () => {
       client_reference_id: "team_1",
       metadata: {
         founders_edition: "true",
-        app: "cmux",
+        app: "hmux",
         plan: "team",
         stackTeamId: "team_1",
       },
@@ -345,7 +345,7 @@ describe("Stripe billing webhook route", () => {
         status: "active",
         metadata: {
           founders_edition: "true",
-          app: "cmux",
+          app: "hmux",
           plan: "team",
           stackTeamId: "team_1",
         },
@@ -359,7 +359,7 @@ describe("Stripe billing webhook route", () => {
           id: "cs_conflicting_scope",
           metadata: {
             founders_edition: "true",
-            app: "cmux",
+            app: "hmux",
             plan: "team",
             stackTeamId: "team_1",
           },
@@ -383,7 +383,7 @@ describe("Stripe billing webhook route", () => {
       id: "cs_conflicting_pro",
       metadata: {
         founders_edition: "true",
-        app: "cmux",
+        app: "hmux",
         plan: "pro",
       },
       subscription: {
@@ -391,7 +391,7 @@ describe("Stripe billing webhook route", () => {
         status: "active",
         metadata: {
           founders_edition: "true",
-          app: "cmux",
+          app: "hmux",
           plan: "pro",
         },
       },
@@ -404,7 +404,7 @@ describe("Stripe billing webhook route", () => {
           id: "cs_conflicting_pro",
           metadata: {
             founders_edition: "true",
-            app: "cmux",
+            app: "hmux",
             plan: "pro",
           },
         },
@@ -425,11 +425,11 @@ describe("Stripe billing webhook route", () => {
     retrievedCheckoutSession = {
       ...paidCheckoutSession,
       id: "cs_stale_founder_event",
-      metadata: { app: "cmux", plan: "pro" },
+      metadata: { app: "hmux", plan: "pro" },
       subscription: {
         id: "sub_stale_founder_event",
         status: "active",
-        metadata: { app: "cmux", plan: "pro" },
+        metadata: { app: "hmux", plan: "pro" },
       },
     };
     currentEvent = {
@@ -519,7 +519,7 @@ describe("Stripe billing webhook route", () => {
         object: {
           id: "cs_1",
           client_reference_id: "user_1",
-          metadata: { app: "cmux", plan: "pro" },
+          metadata: { app: "hmux", plan: "pro" },
         },
       },
     };
@@ -590,7 +590,7 @@ describe("Stripe billing webhook route", () => {
           id: "sub_1",
           customer: "cus_1",
           status: "canceled",
-          metadata: { stackUserId: "user_1", app: "cmux" },
+          metadata: { stackUserId: "user_1", app: "hmux" },
         },
       },
     };
@@ -635,7 +635,7 @@ describe("Stripe billing webhook route", () => {
           id: "sub_team",
           customer: "cus_team",
           status: "canceled",
-          metadata: { stackTeamId: "team_1", app: "cmux", plan: "team" },
+          metadata: { stackTeamId: "team_1", app: "hmux", plan: "team" },
         },
       },
     };
@@ -660,7 +660,7 @@ describe("Stripe billing webhook route", () => {
         object: {
           id: "sub_1",
           status: "canceled",
-          metadata: { stackUserId: "user_1", app: "cmux" },
+          metadata: { stackUserId: "user_1", app: "hmux" },
         },
       },
     };
@@ -668,7 +668,7 @@ describe("Stripe billing webhook route", () => {
       id: "sub_1",
       customer: "cus_1",
       status: "active",
-      metadata: { stackUserId: "user_1", app: "cmux" },
+      metadata: { stackUserId: "user_1", app: "hmux" },
       cancel_at_period_end: false,
       items: { data: [] },
     };
@@ -829,7 +829,7 @@ describe("Stripe billing webhook route", () => {
   });
 });
 
-function webhookRequest(origin = "https://cmux.test"): Request {
+function webhookRequest(origin = "https://hmux.test"): Request {
   return new Request(`${origin}/api/stripe/webhook`, {
     method: "POST",
     headers: { "stripe-signature": "t=1,v1=test" },

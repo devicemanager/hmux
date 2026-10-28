@@ -1,6 +1,6 @@
 import AppKit
-import CMUXAgentLaunch
-import CmuxProductAnalytics
+import HMUXAgentLaunch
+import HmuxProductAnalytics
 
 extension AppDelegate {
     /// Starts product analytics for the launch: records the launch itself and

@@ -7,50 +7,50 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
-SOCKET_PATH = os.environ.get("CMUX_SOCKET_PATH", "/tmp/cmux-debug.sock")
+SOCKET_PATH = os.environ.get("HMUX_SOCKET_PATH", "/tmp/hmux-debug.sock")
 
 
 def _must(condition: bool, message: str) -> None:
     if not condition:
-        raise cmuxError(message)
+        raise hmuxError(message)
 
 
-def _eval(client: cmux, surface_id: str, script: str):
+def _eval(client: hmux, surface_id: str, script: str):
     payload = client._call("browser.eval", {"surface_id": surface_id, "script": script}) or {}
     return payload.get("value")
 
 
-def _expect_invalid(client: cmux, method: str, params: dict) -> None:
+def _expect_invalid(client: hmux, method: str, params: dict) -> None:
     try:
         client._call(method, params)
-    except cmuxError as exc:
+    except hmuxError as exc:
         _must("invalid_params" in str(exc), f"Expected invalid_params from {method}: {exc}")
         return
-    raise cmuxError(f"Expected {method} to reject {params!r}")
+    raise hmuxError(f"Expected {method} to reject {params!r}")
 
 
-def _reported_position(client: cmux, surface_id: str):
+def _reported_position(client: hmux, surface_id: str):
     _eval(
         client,
         surface_id,
-        "window.__cmuxPosition = null;"
+        "window.__hmuxPosition = null;"
         "navigator.geolocation.getCurrentPosition((p) => {"
-        "  window.__cmuxPosition = [p.coords.latitude, p.coords.longitude, p.coords.accuracy];"
+        "  window.__hmuxPosition = [p.coords.latitude, p.coords.longitude, p.coords.accuracy];"
         "}); true",
     )
     deadline = time.monotonic() + 5
     while time.monotonic() < deadline:
-        value = _eval(client, surface_id, "window.__cmuxPosition")
+        value = _eval(client, surface_id, "window.__hmuxPosition")
         if value:
             return [float(item) for item in value]
-    raise cmuxError("getCurrentPosition never answered with the override")
+    raise hmuxError("getCurrentPosition never answered with the override")
 
 
 def main() -> int:
-    with cmux(SOCKET_PATH) as client:
+    with hmux(SOCKET_PATH) as client:
         opened = client._call("browser.open_split", {"url": "about:blank"}) or {}
         sid = str(opened.get("surface_id") or "")
         _must(bool(sid), f"browser.open_split returned no surface_id: {opened}")

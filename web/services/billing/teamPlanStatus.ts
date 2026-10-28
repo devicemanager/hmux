@@ -12,7 +12,7 @@ import {
 export type TeamPlanStatus = {
   readonly planId: typeof FREE_PLAN_ID | typeof TEAM_PLAN_ID;
   readonly billingManagement: BillingManagementKind;
-  /** True for an operator team grant (`cmuxVmPlan`) with no subscription. */
+  /** True for an operator team grant (`hmuxVmPlan`) with no subscription. */
   readonly granted: boolean;
 };
 
@@ -25,7 +25,7 @@ export async function teamPlanStatusForTeam(team: {
   if (stripeActive) {
     return { planId: TEAM_PLAN_ID, billingManagement: "stripe", granted: false };
   }
-  // An operator team grant (`cmuxVmPlan` on the team) is the Team plan
+  // An operator team grant (`hmuxVmPlan` on the team) is the Team plan
   // without a subscription to manage.
   if (isPaidPlanId(manualVmPlanOverride(team.clientReadOnlyMetadata))) {
     return { planId: TEAM_PLAN_ID, billingManagement: "none", granted: true };

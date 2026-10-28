@@ -3,8 +3,8 @@
 
 Many tools write screenshots, GIFs and videos to the public ``pr-media``
 branch. Captures from the fleet minis show terminal prompts such as
-``cmux@cmux7s-Mac-mini``, the Inspector's ``cmux7's Mac mini`` and the capture
-account's ``/Users/cmux``. This module is the one shared check, run twice.
+``hmux@hmux7s-Mac-mini``, the Inspector's ``hmux7's Mac mini`` and the capture
+account's ``/Users/hmux``. This module is the one shared check, run twice.
 
 Before the push (``check_upload()``, or ``pr_media_privacy.py check``), by the
 writers in this repository:
@@ -12,8 +12,8 @@ writers in this repository:
 - ``scripts/pr-media.py``: ``main()`` checks the whole batch, generated gifs
   included, before its first upload, and ``put_file()`` checks each file for
   library callers (``scripts/ci/pr_media.py publish``, ``scripts/showcase-publish.py``,
-  and the HQ and feat-cmux-next tools that import or run pr-media.py);
-- ``dogfood/fuzz/cmuxfuzz/triage.py``: the UI fuzzer's frames under ``fuzz/``.
+  and the HQ and feat-hmux-next tools that import or run pr-media.py);
+- ``dogfood/fuzz/hmuxfuzz/triage.py``: the UI fuzzer's frames under ``fuzz/``.
 
 Text files are read directly; images, GIF frames and one video frame per
 second go through Apple Vision (``pr_media_ocr.swift``, compiled once and
@@ -26,7 +26,7 @@ never the matched text.
 After the push (no subcommand), ``.github/workflows/pr-media-privacy.yml``
 diffs the last scanned commit (``refs/pr-media-privacy/scanned``) against the
 branch tip and reads the added and modified files, so writers that run no
-check (cmux-next-media.yml tours, nightly.yml reels, older checkouts) and the
+check (hmux-next-media.yml tours, nightly.yml reels, older checkouts) and the
 media a Linux writer skipped are still covered.
 
 Matching folds Cyrillic and Greek look-alikes, which Vision often returns
@@ -84,7 +84,7 @@ PUSH_ATTEMPTS = 3
 AUTHOR_BATCH = 50
 
 # Cyrillic and Greek letters Vision reads in place of Latin ones. Digits are
-# never folded: `cmux7` and `cmux1` must stay different machines.
+# never folded: `hmux7` and `hmux1` must stay different machines.
 LOOK_ALIKES = str.maketrans({
     "а": "a", "в": "b", "е": "e", "к": "k", "м": "m", "н": "h", "о": "o",
     "р": "p", "с": "c", "т": "m", "у": "y", "х": "x", "и": "u", "і": "i",
@@ -97,8 +97,8 @@ LOOK_ALIKES = str.maketrans({
 
 # Private terms match many-to-one: each letter of a term also matches what
 # Vision reads in its place, including digits (`g1ow`, `b0x`). A digit in a term
-# stays a literal digit, so a term `cmux1` never matches `cmux7`. Shared with
-# cmuxterm-hq build-fleet/pr_capture/driver.py.
+# stays a literal digit, so a term `hmux1` never matches `hmux7`. Shared with
+# hmuxterm-hq build-fleet/pr_capture/driver.py.
 TERM_LOOK_ALIKES = {
     "a": "аα", "b": "ьвβ", "c": "сϲς", "d": "ԁ", "e": "еёε", "g": "ɡ", "h": "һнη", "i": "іїι1l",
     "j": "ј", "k": "кκ", "l": "i1ıӏ", "m": "мтμ", "n": "пην", "o": "оοσ0", "p": "рρ", "r": "г",
@@ -110,24 +110,24 @@ TO_LATIN = str.maketrans({character: latin for latin, characters in TERM_LOOK_AL
                           for character in characters if not character.isascii()})
 HQ_TERMS_FILE = "build-fleet/pr_capture/private-terms.json"
 AGENT_AUTHORS_FILE = "Projects/leo-workspace/machines/agent-authors.json"
-# Local account and host names too common to mean a machine (a capture mini's user is `cmux`).
-COMMON_NAMES = frozenset({"cmux", "root", "runner", "admin", "user", "shared", "localhost"})
+# Local account and host names too common to mean a machine (a capture mini's user is `hmux`).
+COMMON_NAMES = frozenset({"hmux", "root", "runner", "admin", "user", "shared", "localhost"})
 # Shorter terms match ordinary words and numbers once look-alikes are folded.
 MIN_TERM_LENGTH = 4
-OCR_CACHE = "Library/Caches/cmux-pr-media-privacy"
+OCR_CACHE = "Library/Caches/hmux-pr-media-privacy"
 
 # Generic shapes of the capture and fleet machines; none names one machine.
 # A lookbehind keeps each from firing inside a longer word.
 _EDGE = r"(?<![a-z0-9_])"
 GENERIC_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = tuple(
     (name, re.compile(_EDGE + pattern)) for name, pattern in (
-        ("mini-name", r"cmux\d*'?s[- ]mac[- ]mini(?:-\d+)?(?![a-z0-9])"),
-        ("mini-host", r"cmux-mac-mini(?:-cua)?(?:-\d+)?(?![a-z0-9])"),
-        ("mini-host", r"cmux-austin-mini(?:-\d+)?(?![a-z0-9])"),
-        ("fleet-host", r"cmux\d{1,2}(?![a-z0-9_])"),
-        ("shell-prompt", r"cmux@[\w.-]+"),
-        ("capture-account", r"/users/cmux(?![a-z0-9_])"),
-        ("capture-account", r"/users/shared/cmux-capture"),
+        ("mini-name", r"hmux\d*'?s[- ]mac[- ]mini(?:-\d+)?(?![a-z0-9])"),
+        ("mini-host", r"hmux-mac-mini(?:-cua)?(?:-\d+)?(?![a-z0-9])"),
+        ("mini-host", r"hmux-austin-mini(?:-\d+)?(?![a-z0-9])"),
+        ("fleet-host", r"hmux\d{1,2}(?![a-z0-9_])"),
+        ("shell-prompt", r"hmux@[\w.-]+"),
+        ("capture-account", r"/users/hmux(?![a-z0-9_])"),
+        ("capture-account", r"/users/shared/hmux-capture"),
     )
 )
 EMAIL = re.compile(r"(?<![a-z0-9._%+-])[a-z0-9._%+-]+@([a-z0-9-]+(?:\.[a-z0-9-]+)*\.[a-z]{2,})(?![a-z0-9-])")
@@ -259,8 +259,8 @@ def load_private_terms(env: Mapping[str, str] = os.environ) -> tuple[list[str], 
     """(terms, where they came from); the description names no term.
 
     The first source found wins: $PR_MEDIA_PRIVATE_TERMS (JSON),
-    $PR_MEDIA_PRIVATE_TERMS_FILE, $CMUX_HQ's private-terms.json, then
-    ~/Projects/cmuxterm-hq's. Outside CI this machine's own names are added.
+    $PR_MEDIA_PRIVATE_TERMS_FILE, $HMUX_HQ's private-terms.json, then
+    ~/Projects/hmuxterm-hq's. Outside CI this machine's own names are added.
     """
     home = Path(env.get("HOME") or Path.home())
     terms: list[str] = []
@@ -276,9 +276,9 @@ def load_private_terms(env: Mapping[str, str] = os.environ) -> tuple[list[str], 
             if not path.is_file():
                 raise BadInput("PR_MEDIA_PRIVATE_TERMS_FILE names no file")
             candidates.append((path, "$PR_MEDIA_PRIVATE_TERMS_FILE"))
-        if env.get("CMUX_HQ", "").strip():
-            candidates.append((Path(env["CMUX_HQ"]).expanduser() / HQ_TERMS_FILE, f"$CMUX_HQ/{HQ_TERMS_FILE}"))
-        candidates.append((home / "Projects/cmuxterm-hq" / HQ_TERMS_FILE, f"~/Projects/cmuxterm-hq/{HQ_TERMS_FILE}"))
+        if env.get("HMUX_HQ", "").strip():
+            candidates.append((Path(env["HMUX_HQ"]).expanduser() / HQ_TERMS_FILE, f"$HMUX_HQ/{HQ_TERMS_FILE}"))
+        candidates.append((home / "Projects/hmuxterm-hq" / HQ_TERMS_FILE, f"~/Projects/hmuxterm-hq/{HQ_TERMS_FILE}"))
         for path, label in candidates:
             if path.is_file():
                 terms, source = parse_terms(path.read_text(encoding="utf-8"), label), label
@@ -338,7 +338,7 @@ def ocr_lines(ocr: str, repo: Path, commit: str, path: str) -> list[str]:
                           check=True, capture_output=True).stdout
     if suffix in TEXT_SUFFIXES:
         return data.decode("utf-8", errors="replace").splitlines()
-    with tempfile.TemporaryDirectory(prefix="cmux-pr-media-privacy-") as directory:
+    with tempfile.TemporaryDirectory(prefix="hmux-pr-media-privacy-") as directory:
         local = Path(directory) / Path(path).name
         local.write_bytes(data)
         return ocr_file(ocr, local)
@@ -357,7 +357,7 @@ def ocr_binary(env: Mapping[str, str] = os.environ, out: TextIO | None = None) -
 
     $PR_MEDIA_PRIVACY_OCR overrides: a path to a compiled tool, or `none`. On
     macOS the tool is compiled once per source revision into
-    ~/Library/Caches/cmux-pr-media-privacy/<sha256>/ocr and reused after.
+    ~/Library/Caches/hmux-pr-media-privacy/<sha256>/ocr and reused after.
     """
     override = env.get("PR_MEDIA_PRIVACY_OCR", "").strip()
     if override:
@@ -562,7 +562,7 @@ def remove_paths(repo: Path, tip: str, paths: dict[str, str], message: str) -> s
     targets = [path for path, blob in paths.items() if present.get(path) == blob]
     if not targets:
         return tip
-    with tempfile.NamedTemporaryFile(prefix="cmux-pr-media-privacy-index-", delete=False) as handle:
+    with tempfile.NamedTemporaryFile(prefix="hmux-pr-media-privacy-index-", delete=False) as handle:
         index = Path(handle.name)
     index.unlink()
     env = {"GIT_INDEX_FILE": str(index)}

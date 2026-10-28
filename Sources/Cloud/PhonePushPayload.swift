@@ -1,4 +1,4 @@
-import CmuxPhonePush
+import HmuxPhonePush
 
 extension PhonePushPayload {
     /// Builds the phone banner payload from the stored notification identity.

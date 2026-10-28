@@ -32,17 +32,17 @@ import {
 
 const passedEntry = (overrides: Partial<DevboxManifestEntry> = {}): DevboxManifestEntry => ({
   provider: "freestyle",
-  version: "freestyle-cmux-devbox-test",
+  version: "freestyle-hmux-devbox-test",
   imageId: "sh-0000000000000000000000000000test",
   envVar: "FREESTYLE_SANDBOX_SNAPSHOT",
   defaultForLocalDev: false,
-  cmuxdRemoteCommit: "none-cmux-tui",
+  hmuxdRemoteCommit: "none-hmux-tui",
   repoCommit: "abc123",
   builtAt: "2026-09-02T00:00:00.000Z",
   builderScriptVersion: "deadbeef",
   agentToolResolvedVersions: { "@anthropic-ai/claude-code": "2.1.267" },
   validationStatus: "passed",
-  notes: "cmux devbox epoch test",
+  notes: "hmux devbox epoch test",
   ...overrides,
 });
 
@@ -67,7 +67,7 @@ describe("checked-in image manifest", () => {
   test("every default was baked from this checkout's devbox sources", () => {
     // The manifest is the only source of truth for the image users get, so
     // main must not describe a machine the promoted default is not: every
-    // default carries the Dockerfile's CMUX_IMAGE_EPOCH and, once recorded,
+    // default carries the Dockerfile's HMUX_IMAGE_EPOCH and, once recorded,
     // the digest of the files and pins the bake took from this checkout. A
     // pin or template change lands together with its promotion, and a
     // rollback reverts the promotion commit whole (sources included).
@@ -84,7 +84,7 @@ describe("devboxSourceDriftProblems", () => {
       defaultForKind: true,
       epoch,
       devboxSource: { layers, digest: devboxSourceDigest(layers, dockerfile), schema: DEVBOX_SOURCE_SCHEMA },
-      notes: `cmux devbox epoch ${epoch}`,
+      notes: `hmux devbox epoch ${epoch}`,
       ...overrides,
     });
   const manifestOf = (...images: DevboxManifestEntry[]): DevboxImageManifest => ({ schemaVersion: 1, images });
@@ -109,10 +109,10 @@ describe("devboxSourceDriftProblems", () => {
     expect(stale[0]).toContain(`the Dockerfile is at ${epoch}`);
     // Older entries carry the epoch only in `notes`; a promoted ladder from before
     // an epoch bump is the exact case this catches.
-    const legacy = passedEntry({ kind: "base", defaultForKind: true, notes: "cmux devbox epoch 1999-01-01-r1 Devbox on Freestyle." });
+    const legacy = passedEntry({ kind: "base", defaultForKind: true, notes: "hmux devbox epoch 1999-01-01-r1 Devbox on Freestyle." });
     expect(manifestEntryEpoch(legacy)).toBe("1999-01-01-r1");
     expect(devboxSourceDriftProblems(manifestOf(legacy))).toHaveLength(1);
-    expect(devboxSourceDriftProblems(manifestOf(passedEntry({ kind: "base", defaultForKind: true, notes: `cmux devbox epoch ${epoch}` })))).toEqual([]);
+    expect(devboxSourceDriftProblems(manifestOf(passedEntry({ kind: "base", defaultForKind: true, notes: `hmux devbox epoch ${epoch}` })))).toEqual([]);
     expect(manifestEntryEpoch(passedEntry({ notes: "no epoch here" }))).toBeUndefined();
   });
 
@@ -131,7 +131,7 @@ describe("devboxSourceDriftProblems", () => {
     expect(devboxSourceDriftProblems(manifestOf(current("base", { devboxSource: { layers: "base", digest: devboxSourceDigest("base", dockerfile, 1), schema: 2 } })))).toHaveLength(1);
     expect(devboxSourceDriftProblems(manifestOf(current("base", { devboxSource: { layers: "base", digest: "x", schema: 9 } })))[0]).toContain("is not a known formula");
     // A Dockerfile change is what makes the checkout drift from the default.
-    const bumped = dockerfile.replace(/^ENV CMUX_IMAGE_EPOCH=.*$/m, "ENV CMUX_IMAGE_EPOCH=2099-01-01-r1");
+    const bumped = dockerfile.replace(/^ENV HMUX_IMAGE_EPOCH=.*$/m, "ENV HMUX_IMAGE_EPOCH=2099-01-01-r1");
     const problems = devboxSourceDriftProblems(manifestOf(current("desktop")), "freestyle", bumped);
     expect(problems.some((problem) => problem.includes("baked at devbox epoch"))).toBe(true);
     expect(problems.some((problem) => problem.includes("baked from devbox sources"))).toBe(true);
@@ -214,8 +214,8 @@ describe("promoteImageManifestEntry", () => {
       passedEntry({
         provider: "e2b" as unknown as DevboxManifestEntry["provider"],
         version: "e2b-x",
-        imageId: "cmux-devbox:x",
-        envVar: "E2B_CMUXD_WS_TEMPLATE",
+        imageId: "hmux-devbox:x",
+        envVar: "E2B_HMUXD_WS_TEMPLATE",
         kind: "base",
         defaultForKind: true,
       }),
@@ -238,10 +238,10 @@ describe("promoteImageManifestEntry", () => {
       ["e2b-x", true],
     ]);
     expect(next.images.slice(3)).toMatchObject([
-      { version: "freestyle-cmux-devbox-test", kind: "desktop", defaultForKind: true },
-      { version: "freestyle-cmux-devbox-test-base", kind: "base", defaultForKind: true },
+      { version: "freestyle-hmux-devbox-test", kind: "desktop", defaultForKind: true },
+      { version: "freestyle-hmux-devbox-test-base", kind: "base", defaultForKind: true },
     ]);
-    expect(next.images[3].notes).toBe("cmux devbox epoch test Validated in test.");
+    expect(next.images[3].notes).toBe("hmux devbox epoch test Validated in test.");
   });
 
   test("promoting one kind leaves the other kind's default alone", () => {
@@ -250,7 +250,7 @@ describe("promoteImageManifestEntry", () => {
       ["freestyle-old-desktop", "desktop", true],
       ["freestyle-old-base", "base", false],
       ["e2b-x", "base", true],
-      ["freestyle-cmux-devbox-test", "base", true],
+      ["freestyle-hmux-devbox-test", "base", true],
     ]);
   });
 
@@ -376,7 +376,7 @@ describe("upgradeDevboxSourceRecords (promote --upgrade-source-schema)", () => {
     // exists in every checkout, shallow ones included.
     const head = (await runChild("git", ["rev-parse", "HEAD"], { cwd: path.join(import.meta.dirname, "../..") })).stdout.trim();
     expect(head).toMatch(/^[0-9a-f]{40}$/);
-    expect(devboxDockerfileAtCommit(head)).toContain("CMUX_IMAGE_EPOCH=");
+    expect(devboxDockerfileAtCommit(head)).toContain("HMUX_IMAGE_EPOCH=");
   });
 });
 
@@ -396,7 +396,7 @@ describe("appendImageManifestEntries (promote --replay)", () => {
         defaultForKind: true,
         size: size(name, index === 0 ? 4096 : 8192),
         epoch,
-        notes: `cmux devbox epoch ${epoch}`,
+        notes: `hmux devbox epoch ${epoch}`,
         ...(kind === "base" && name === "sm" ? { defaultForLocalDev: true } : {}),
       }),
     );

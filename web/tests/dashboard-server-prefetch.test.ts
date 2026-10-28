@@ -44,7 +44,7 @@ const { sessionQuery } = await import("../dashboard-app/lib/session");
 const { dashboardBillingQuery } = await import("../dashboard-app/queries/billing");
 const { teamDetailQuery } = await import("../dashboard-app/queries/teams");
 
-const request = new Request("https://cmux.test/dashboard/billing", { headers: { cookie: "session=1" } });
+const request = new Request("https://hmux.test/dashboard/billing", { headers: { cookie: "session=1" } });
 
 beforeEach(() => {
   sessionStatus = 200;

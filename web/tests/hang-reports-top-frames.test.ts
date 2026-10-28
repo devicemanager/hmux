@@ -19,7 +19,7 @@ const OURS_UUID = "C1B2C3D4-0000-1111-2222-333344445555";
 
 const appKit: StoredFrame = { image: "AppKit", uuid: "8B1E0C5A-1111-2222-3333-444455556666", offset: 0x10 };
 const kernel: StoredFrame = { image: "libsystem_kernel.dylib", uuid: "A1B2C3D4-0000-1111-2222-333344445555", offset: 0x20 };
-const ours = (offset: number): StoredFrame => ({ image: "cmux NEXT", uuid: OURS_UUID.toLowerCase(), offset });
+const ours = (offset: number): StoredFrame => ({ image: "hmux NEXT", uuid: OURS_UUID.toLowerCase(), offset });
 
 function report(installId: string, build: string, hangs: StoredReport["payload"]["hangs"], extra: Partial<StoredReport["payload"]> = {}): StoredReport {
   return { installId, appVersion: "0.70.0", appBuild: build, channel: "nightly", payload: { hangs, ...extra } };
@@ -27,8 +27,8 @@ function report(installId: string, build: string, hangs: StoredReport["payload"]
 
 describe("hang report top frames", () => {
   test("classifies Apple, other and our images", () => {
-    expect(isOurImage("cmux NEXT")).toBe(true);
-    expect(isOurImage("CmuxNextControl")).toBe(true);
+    expect(isOurImage("hmux NEXT")).toBe(true);
+    expect(isOurImage("HmuxNextControl")).toBe(true);
     expect(isOurImage("GhosttyKit")).toBe(true);
     expect(isOurImage("Chromium Embedded Framework")).toBe(true);
     expect(isOurImage("AppKit")).toBe(false);
@@ -60,7 +60,7 @@ describe("hang report top frames", () => {
     const groups = groupHangs(reports);
     expect(groups).toHaveLength(2);
     expect(groups[0]).toMatchObject({
-      signature: "cmux NEXT+0x40",
+      signature: "hmux NEXT+0x40",
       count: 4,
       installs: 2,
       p50DurationMs: 2500,
@@ -93,9 +93,9 @@ describe("hang report top frames", () => {
       report("m3", "1", [hang([ours(0xb)])]),
     ];
     expect(groupHangs(reports).map((group) => [group.signature, group.installs, group.count])).toEqual([
-      ["cmux NEXT+0xb", 3, 3],
-      ["cmux NEXT+0xc", 2, 3],
-      ["cmux NEXT+0xa", 1, 10],
+      ["hmux NEXT+0xb", 3, 3],
+      ["hmux NEXT+0xc", 2, 3],
+      ["hmux NEXT+0xa", 1, 10],
     ]);
   });
 
@@ -147,18 +147,18 @@ describe("hang report top frames", () => {
       { source: "metrickit", kind: "hang", durationMs: 2000, frames: [ours(0x40)] },
     ])]);
     expect([...symbolicationRequests(groups)]).toEqual([[OURS_UUID, [0x10, 0x40]]]);
-    expect(atosArguments("/d/cmux.dSYM/Contents/Resources/DWARF/cmux", "arm64", [0x10])).toEqual([
-      "-o", "/d/cmux.dSYM/Contents/Resources/DWARF/cmux", "-arch", "arm64", "-l", "0x100000000", "0x100000010",
+    expect(atosArguments("/d/hmux.dSYM/Contents/Resources/DWARF/hmux", "arm64", [0x10])).toEqual([
+      "-o", "/d/hmux.dSYM/Contents/Resources/DWARF/hmux", "-arch", "arm64", "-l", "0x100000000", "0x100000010",
     ]);
   });
 
   test("parses dwarfdump UUID lines", () => {
     const output = [
-      `UUID: ${OURS_UUID} (arm64) /d/cmux.dSYM/Contents/Resources/DWARF/cmux NEXT`,
-      "UUID: 11111111-2222-3333-4444-555555555555 (x86_64) /d/cmux.dSYM/Contents/Resources/DWARF/cmux NEXT",
+      `UUID: ${OURS_UUID} (arm64) /d/hmux.dSYM/Contents/Resources/DWARF/hmux NEXT`,
+      "UUID: 11111111-2222-3333-4444-555555555555 (x86_64) /d/hmux.dSYM/Contents/Resources/DWARF/hmux NEXT",
     ].join("\n");
     const parsed = parseDwarfdumpUuids(output);
-    expect(parsed.get(OURS_UUID)).toEqual({ arch: "arm64", path: "/d/cmux.dSYM/Contents/Resources/DWARF/cmux NEXT" });
+    expect(parsed.get(OURS_UUID)).toEqual({ arch: "arm64", path: "/d/hmux.dSYM/Contents/Resources/DWARF/hmux NEXT" });
     expect(parsed.size).toBe(2);
   });
 });

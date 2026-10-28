@@ -5,14 +5,14 @@ import { Database } from "../db/effect";
 import { cloudDb, closeCloudDbForTests } from "../db/client";
 import { closePublicationAuthDb, publicationDatabaseRuntime } from "../services/vm-publications/database";
 
-const dbTest = process.env.CMUX_DB_TEST === "1" ? test : test.skip;
-const originalMax = process.env.CMUX_DB_POOL_MAX;
-beforeAll(() => { process.env.CMUX_DB_POOL_MAX = "1"; });
+const dbTest = process.env.HMUX_DB_TEST === "1" ? test : test.skip;
+const originalMax = process.env.HMUX_DB_POOL_MAX;
+beforeAll(() => { process.env.HMUX_DB_POOL_MAX = "1"; });
 afterAll(async () => {
   await closeCloudDbForTests();
   await closePublicationAuthDb();
-  if (originalMax === undefined) delete process.env.CMUX_DB_POOL_MAX;
-  else process.env.CMUX_DB_POOL_MAX = originalMax;
+  if (originalMax === undefined) delete process.env.HMUX_DB_POOL_MAX;
+  else process.env.HMUX_DB_POOL_MAX = originalMax;
 });
 
 describe("publication authorization capacity", () => {

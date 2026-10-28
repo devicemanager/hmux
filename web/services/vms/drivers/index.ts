@@ -40,7 +40,7 @@ export function volumeCapableProviderId(): ProviderId | null {
 }
 
 export function defaultProviderId(): ProviderId {
-  const configured = process.env.CMUX_VM_DEFAULT_PROVIDER;
+  const configured = process.env.HMUX_VM_DEFAULT_PROVIDER;
   if (isProviderId(configured)) return configured;
   // Freestyle (the public platform) is the only provider; the env override
   // survives so an operator can still pin it explicitly.
@@ -64,7 +64,7 @@ export function vmCapabilitiesFor(id: ProviderId): VmCapabilities {
 export function vmCapabilitiesOf(provider: VMProvider): VmCapabilities {
   const declared = provider.capabilities ?? {};
   const structuralTransports: AttachTransport[] = [];
-  if (typeof provider.openCmuxRemote === "function") structuralTransports.push("cmux-remote");
+  if (typeof provider.openHmuxRemote === "function") structuralTransports.push("hmux-remote");
   if (typeof provider.openAttach === "function") structuralTransports.push("websocket");
   if (typeof provider.openSSH === "function") structuralTransports.push("ssh");
   return {

@@ -1,10 +1,10 @@
 /**
- * Single source of truth for cmux download links.
+ * Single source of truth for hmux download links.
  *
  * `DOWNLOAD_URL` is the native macOS terminal release asset. Windows and Linux
- * ship the cross-platform cmux Browser workspace instead; their stable website
+ * ship the cross-platform hmux Browser workspace instead; their stable website
  * endpoints are kept in `PLATFORM_DOWNLOADS` so landing pages, menus, and tests
- * share the same URLs. Those server-side endpoints verify cmux Browser's signed
+ * share the same URLs. Those server-side endpoints verify hmux Browser's signed
  * nightly update feed before redirecting to an allowlisted public release asset.
  *
  * `DOWNLOAD_CONFIRMATION_PATH` is the locale-agnostic in-app route that every
@@ -30,7 +30,7 @@ export const DOWNLOAD_INTENT_PARAM = "dl";
 
 export const DOWNLOAD_CONFIRMATION_HREF = `${DOWNLOAD_CONFIRMATION_PATH}?${DOWNLOAD_INTENT_PARAM}=1`;
 
-/** Public repository that owns cmux Browser binaries and corresponding source. */
+/** Public repository that owns hmux Browser binaries and corresponding source. */
 export const BROWSER_RELEASE_REPOSITORY_URL =
   "https://github.com/manaflow-ai/cmux-v2";
 
@@ -38,7 +38,7 @@ export const BROWSER_RELEASE_REPOSITORY_URL =
 export const BROWSER_NIGHTLY_RELEASE_URL =
   `${BROWSER_RELEASE_REPOSITORY_URL}/releases/tag/nightly`;
 
-/** Discoverable landing page for the cross-platform cmux Browser nightly. */
+/** Discoverable landing page for the cross-platform hmux Browser nightly. */
 export const BROWSER_NIGHTLY_PAGE = "/browser";
 
 const BROWSER_NIGHTLY_DOWNLOAD_PATH = "/api/download/browser-nightly";
@@ -59,7 +59,7 @@ export const BROWSER_MACOS_NIGHTLY_DOWNLOAD = {
 export const BROWSER_MACOS_NIGHTLY_AVAILABLE = false;
 
 /**
- * Stable cross-platform cmux Browser download endpoints. The browser never
+ * Stable cross-platform hmux Browser download endpoints. The browser never
  * receives a private source-repository URL or a version hard-coded into the
  * website. The endpoint resolves the current signed public feed and can follow
  * either today's moving `nightly` tag or a future immutable
@@ -159,7 +159,7 @@ export type WaitlistTarget = WaitlistPlatform | "any";
  * rather than only as a raw event.
  */
 export const WAITLIST_EARLY_ACCESS_FLAGS: Record<WaitlistPlatform, string> = {
-  linux: "cmux-for-linux",
-  android: "cmux-for-android",
-  windows: "cmux-for-windows",
+  linux: "hmux-for-linux",
+  android: "hmux-for-android",
+  windows: "hmux-for-windows",
 };

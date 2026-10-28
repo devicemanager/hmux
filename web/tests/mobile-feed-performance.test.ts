@@ -10,12 +10,12 @@ describe("Feed performance ingestion", () => {
     expect(event).not.toBeNull();
     if (!event) throw new Error("Expected valid event");
     const attributes = mobileFeedPerformanceAttributes("authenticated-user", event);
-    expect(attributes["cmux.user_id"]).toBe("authenticated-user");
-    expect(attributes["cmux.mobile.occurred_at"]).toBe("2026-10-08T04:00:00Z");
-    expect(attributes["cmux.mobile.feed.build_sha"]).toBe("a".repeat(40));
-    expect(attributes["cmux.mobile.feed.callback_gap_histogram"]).toBe("[0,0,1,0,0,0,0,1,0,0]");
-    expect(attributes["cmux.mobile.feed.is_simulator"]).toBe(true);
-    expect(attributes["cmux.mobile.feed.measurement"]).toBe("display_link_callback_gap");
+    expect(attributes["hmux.user_id"]).toBe("authenticated-user");
+    expect(attributes["hmux.mobile.occurred_at"]).toBe("2026-10-08T04:00:00Z");
+    expect(attributes["hmux.mobile.feed.build_sha"]).toBe("a".repeat(40));
+    expect(attributes["hmux.mobile.feed.callback_gap_histogram"]).toBe("[0,0,1,0,0,0,0,1,0,0]");
+    expect(attributes["hmux.mobile.feed.is_simulator"]).toBe(true);
+    expect(attributes["hmux.mobile.feed.measurement"]).toBe("display_link_callback_gap");
     expect(parseMobileObservabilityEvent(feedPerformanceWindow())).toEqual(event);
   });
 
@@ -56,7 +56,7 @@ describe("Feed performance ingestion", () => {
     const accepted = parseMobileFeedPerformanceEvent(event);
     expect(accepted).not.toBeNull();
     if (!accepted) throw new Error("Expected valid anomaly");
-    expect(mobileFeedPerformanceAttributes("server-user", accepted)["cmux.mobile.feed.sentry_event_id"]).toBe("b".repeat(32));
+    expect(mobileFeedPerformanceAttributes("server-user", accepted)["hmux.mobile.feed.sentry_event_id"]).toBe("b".repeat(32));
     expect(parseMobileFeedPerformanceEvent({ ...event, properties: { ...event.properties, sentry_event_id: "private" } })).toBeNull();
     expect(parseMobileFeedPerformanceEvent({ ...event, properties: { ...event.properties, callback_gap_max_ms: 50 } })).toBeNull();
   });

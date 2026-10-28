@@ -4,35 +4,35 @@ import Foundation
 
 /// Resolves dogfood Stack credentials for the macOS DEBUG auto-sign-in path.
 ///
-/// A tagged `cmux DEV` build is a separate bundle (separate keychain), so it
+/// A tagged `hmux DEV` build is a separate bundle (separate keychain), so it
 /// starts signed out and shows the sign-in window. iOS already auto-signs-in on
-/// DEBUG launch by injecting `CMUX_UITEST_STACK_EMAIL` / `CMUX_UITEST_STACK_PASSWORD`
+/// DEBUG launch by injecting `HMUX_UITEST_STACK_EMAIL` / `HMUX_UITEST_STACK_PASSWORD`
 /// into the app's environment (SIMCTL / devicectl), which the existing
-/// `CMUXAuthAutoLoginCredentials` path reads. The macOS app needs the same
-/// behavior, but a `cmux DEV` opened from Finder or the CMUX Tag Opener does
+/// `HMUXAuthAutoLoginCredentials` path reads. The macOS app needs the same
+/// behavior, but a `hmux DEV` opened from Finder or the HMUX Tag Opener does
 /// **not** inherit a shell's environment, so an env-only approach never fires on
 /// those launches. This resolver adds a file-read fallback so the creds are
 /// found regardless of how the app was launched.
 ///
 /// With no explicit profile, resolution is **dogfood account first, then agent
 /// account**, so the dog Mac comes up as the human dogfood account
-/// (`lawrence@manaflow.ai`) even when an agent's `CMUX_UITEST_*` creds are also
+/// (`lawrence@manaflow.ai`) even when an agent's `HMUX_UITEST_*` creds are also
 /// present (the iOS dogfood flow commonly leaves those in the environment /
 /// `~/.secrets`). An explicit `personal` or `agent` profile selects only its
 /// matching account; an unknown non-empty profile resolves no account. Within
-/// each permitted account, the verified `~/.secrets/cmuxterm-dev.env` file wins
-/// over ambient env, and `~/.secrets/cmux.env` is the lower-precedence file
+/// each permitted account, the verified `~/.secrets/hmuxterm-dev.env` file wins
+/// over ambient env, and `~/.secrets/hmux.env` is the lower-precedence file
 /// fallback:
 ///
-///   1. file `~/.secrets/cmuxterm-dev.env` dogfood keys
-///   2. file `~/.secrets/cmux.env` dogfood keys
-///   3. env `CMUX_DOGFOOD_STACK_EMAIL` / `CMUX_DOGFOOD_STACK_PASSWORD`
-///   4. file `~/.secrets/cmuxterm-dev.env` uitest keys
-///   5. file `~/.secrets/cmux.env` uitest keys
-///   6. env `CMUX_UITEST_STACK_EMAIL` / `CMUX_UITEST_STACK_PASSWORD`
+///   1. file `~/.secrets/hmuxterm-dev.env` dogfood keys
+///   2. file `~/.secrets/hmux.env` dogfood keys
+///   3. env `HMUX_DOGFOOD_STACK_EMAIL` / `HMUX_DOGFOOD_STACK_PASSWORD`
+///   4. file `~/.secrets/hmuxterm-dev.env` uitest keys
+///   5. file `~/.secrets/hmux.env` uitest keys
+///   6. env `HMUX_UITEST_STACK_EMAIL` / `HMUX_UITEST_STACK_PASSWORD`
 ///
 /// The resolved pair is merged into the launch environment dict as the existing
-/// `CMUX_UITEST_STACK_*` keys, so the already-tested `CMUXAuthAutoLoginCredentials`
+/// `HMUX_UITEST_STACK_*` keys, so the already-tested `HMUXAuthAutoLoginCredentials`
 /// + `AuthLaunchOptions.shouldStartAutoLogin` gate (`hasCredentials && !hasStoredTokens`)
 /// fires unchanged. This type holds no autoLogin logic of its own.
 ///
@@ -41,8 +41,8 @@ import Foundation
 /// `init`, so tests drive every precedence branch without touching the real
 /// filesystem or `~/.secrets`.
 struct DebugDogfoodCredentialResolver {
-    static let explicitCredentialsFileEnvironmentKey = "CMUX_AUTH_CREDENTIALS_FILE"
-    static let authProfileEnvironmentKey = "CMUX_DEV_AUTH_PROFILE"
+    static let explicitCredentialsFileEnvironmentKey = "HMUX_AUTH_CREDENTIALS_FILE"
+    static let authProfileEnvironmentKey = "HMUX_DEV_AUTH_PROFILE"
 
     /// A resolved email/password pair.
     ///
@@ -92,8 +92,8 @@ struct DebugDogfoodCredentialResolver {
     /// - Parameters:
     ///   - environment: The launch environment (env-var credential source).
     ///   - secretFilePaths: Ordered secret-file candidates, highest precedence
-    ///     first. Defaults to `~/.secrets/cmuxterm-dev.env` then
-    ///     `~/.secrets/cmux.env`, resolved from the environment's `HOME`.
+    ///     first. Defaults to `~/.secrets/hmuxterm-dev.env` then
+    ///     `~/.secrets/hmux.env`, resolved from the environment's `HOME`.
     ///   - readFile: Reads a file's UTF-8 contents, or `nil` if unreadable.
     ///     Defaults to a `FileManager`-free `String(contentsOfFile:)` read.
     init(
@@ -114,14 +114,14 @@ struct DebugDogfoodCredentialResolver {
     }
 
     /// The default ordered secret-file candidates, resolved against `HOME`.
-    /// `cmuxterm-dev.env` (cmux-terminal-specific Stack creds) is preferred over
-    /// the broader `cmux.env`.
+    /// `hmuxterm-dev.env` (hmux-terminal-specific Stack creds) is preferred over
+    /// the broader `hmux.env`.
     private static func defaultSecretFilePaths(environment: [String: String]) -> [String] {
         guard let home = environment["HOME"], !home.isEmpty else { return [] }
         let base = home as NSString
         return [
-            base.appendingPathComponent(".secrets/cmuxterm-dev.env"),
-            base.appendingPathComponent(".secrets/cmux.env"),
+            base.appendingPathComponent(".secrets/hmuxterm-dev.env"),
+            base.appendingPathComponent(".secrets/hmux.env"),
         ]
     }
 
@@ -136,15 +136,15 @@ struct DebugDogfoodCredentialResolver {
 
         var emailKey: String {
             switch self {
-            case .dogfood: return "CMUX_DOGFOOD_STACK_EMAIL"
-            case .uitest: return "CMUX_UITEST_STACK_EMAIL"
+            case .dogfood: return "HMUX_DOGFOOD_STACK_EMAIL"
+            case .uitest: return "HMUX_UITEST_STACK_EMAIL"
             }
         }
 
         var passwordKey: String {
             switch self {
-            case .dogfood: return "CMUX_DOGFOOD_STACK_PASSWORD"
-            case .uitest: return "CMUX_UITEST_STACK_PASSWORD"
+            case .dogfood: return "HMUX_DOGFOOD_STACK_PASSWORD"
+            case .uitest: return "HMUX_UITEST_STACK_PASSWORD"
             }
         }
     }

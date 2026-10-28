@@ -1,6 +1,6 @@
 # Acceptance test: a reconnect that needs a login
 
-When a mirror's control stream drops and the reconnect cannot authenticate, cmux offers a
+When a mirror's control stream drops and the reconnect cannot authenticate, hmux offers a
 login and resumes afterwards. The reconnect runs `BatchMode=yes` on pipes with no tty, so a
 password / MFA / security-key touch cannot be satisfied by retrying.
 
@@ -20,11 +20,11 @@ first; the steps here are for manual verification on a real 2FA host.
 2. The mirror's workspaces and their scrollback are **still there** while you log in —
    nothing is torn down, because the connection is parked, not ended.
 3. Completing the login **resumes the mirror by itself**, with no further prompt and no
-   manual reattach, and the login workspace closes once the host is back — cmux opened it,
+   manual reattach, and the login workspace closes once the host is back — hmux opened it,
    its purpose is served, and leaving it means a flapping host collects one per flap.
 4. Cancelling instead (close the login tab) leaves the mirror intact and recoverable: it
    goes back to retrying, so a later failure offers a fresh login rather than leaving that
-   host stuck until cmux restarts.
+   host stuck until hmux restarts.
 5. One login tab per host, even when several sessions on that host drop at once.
 
 ## Path A — hermetic, no 2FA, no network games (preferred)
@@ -35,15 +35,15 @@ break and restore on demand. Deterministic on any machine.
 ```bash
 # 1. Bring up the loopback sshd (generated keys, isolated TMUX_TMPDIR), then attach a
 #    mirror to it. The sshd and its ssh alias come from the fuzz host script.
-scripts/remote-tmux-fuzz-host.sh cmux-fuzzhost
-cmux ssh-tmux cmux-fuzzhost
+scripts/remote-tmux-fuzz-host.sh hmux-fuzzhost
+hmux ssh-tmux hmux-fuzzhost
 
 # 2. Break authentication for the NEXT connection only, leaving the live one alone.
-AUTH=~/Library/Caches/cmux/remote-tmux-fuzz/cmux-fuzzhost-sshd/authorized_keys
+AUTH=~/Library/Caches/hmux/remote-tmux-fuzz/hmux-fuzzhost-sshd/authorized_keys
 mv "$AUTH" "$AUTH.off"
 
-# 3. Drop the shared master and the control stream, so cmux must reconnect and re-auth.
-ssh -O exit -o ControlPath="$HOME/.cmux/ssh/tmux-cmux-fuzzhost-<hash>.sock" cmux-fuzzhost
+# 3. Drop the shared master and the control stream, so hmux must reconnect and re-auth.
+ssh -O exit -o ControlPath="$HOME/.hmux/ssh/tmux-hmux-fuzzhost-<hash>.sock" hmux-fuzzhost
 # The remote command is a /bin/sh resolver script, so no argv contains "tmux -CC" —
 # a pattern built on that matches nothing and the kill silently does nothing. Match
 # `attach-session` and narrow to this host, or you drop every mirror on the machine.
@@ -52,11 +52,11 @@ drop_streams() {
     ps -o command= -p "$p" | grep -q "$1" && kill "$p"
   done
 }
-drop_streams cmux-fuzzhost
+drop_streams hmux-fuzzhost
 ```
 
 Expect: the reconnect fails `Permission denied (publickey)`, the retry loop stops, and the
-"Sign in to cmux-fuzzhost" tab appears. The mirror is still populated.
+"Sign in to hmux-fuzzhost" tab appears. The mirror is still populated.
 
 ```bash
 # 4. Restore auth, then complete the login in that tab (just press return in it).
@@ -80,19 +80,19 @@ No network unplugging needed; killing the master is enough, because the reconnec
 to authenticate from scratch.
 
 ```bash
-cmux ssh-tmux <2fa-host>                       # attach, wait for the mirror to populate
-ssh -O exit -o ControlPath="$HOME/.cmux/ssh/tmux-<slug>-<hash>.sock" <2fa-host>
+hmux ssh-tmux <2fa-host>                       # attach, wait for the mirror to populate
+ssh -O exit -o ControlPath="$HOME/.hmux/ssh/tmux-<slug>-<hash>.sock" <2fa-host>
 drop_streams <2fa-host>                        # stream EOF -> reconnect -> cannot 2FA
                                                # (drop_streams as defined in Path A)
 ```
 
 Expect the login tab, complete the 2FA in it, and the mirror resumes. The exact
-`ControlPath` for a host is `~/.cmux/ssh/tmux-<slug>-<fnv1a64>.sock`; `ls ~/.cmux/ssh/`
+`ControlPath` for a host is `~/.hmux/ssh/tmux-<slug>-<fnv1a64>.sock`; `ls ~/.hmux/ssh/`
 while the mirror is up shows it.
 
 ## What the automated tests cover
 
-`cmuxTests/RemoteTmuxAuthTests` pins the decision this rests on
+`hmuxTests/RemoteTmuxAuthTests` pins the decision this rests on
 (`RemoteTmuxReconnectDisposition.classify`), which is the part that was wrong:
 
 - an auth failure classifies `.authRequired`, not `.transient` (5 stderr forms),

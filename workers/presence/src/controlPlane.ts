@@ -1,7 +1,7 @@
 // Account control plane — pure core (no Workers APIs, bun-testable).
 //
 // One AccountControlPlane Durable Object per verified Stack user id serves a
-// WebSocket over which a signed-in cmux device receives, as revisioned facts,
+// WebSocket over which a signed-in hmux device receives, as revisioned facts,
 // everything it needs to connect to its Macs: the account directory (bindings
 // + home-relay hints + grant verification keys + relay fleet), relay passes,
 // and live hint updates. Phase A: the DO is a smart proxy over the existing
@@ -79,9 +79,9 @@ export const DIRECTORY_TTL_SECONDS = 86_400;
 /** Advertised in every hello_ack so clients can feature-gate on the server:
  * device-list overlay, ack tracking, and account-owner revocation. */
 export const CONTROL_SERVER_CAPABILITIES: readonly string[] = [
-  "cmux.ctl.listv2",
-  "cmux.ctl.ack",
-  "cmux.ctl.revocation",
+  "hmux.ctl.listv2",
+  "hmux.ctl.ack",
+  "hmux.ctl.revocation",
 ];
 
 /** Ack retry ladder: a socket that has not acked the newest broadcast revision
@@ -785,7 +785,7 @@ export interface CtlAttachment {
    * production control adapter uses a non-expiring sentinel after authenticating
    * the upgrade in the worker. */
   expiresAt?: number;
-  /** Validated x-cmux-app-namespace from the upgrade request; forwarded on
+  /** Validated x-hmux-app-namespace from the upgrade request; forwarded on
    * upstream calls so discovery/mint see the same namespace the client's own
    * HTTPS calls would carry. */
   namespace?: string;
@@ -931,7 +931,7 @@ function upstreamHeaders(credentials: StoredCtlCredentials, namespace: string | 
     ...(credentials.refresh ? { "x-stack-refresh-token": credentials.refresh } : {}),
     accept: "application/json",
     ...(json ? { "content-type": "application/json" } : {}),
-    ...(namespace ? { "x-cmux-app-namespace": namespace } : {}),
+    ...(namespace ? { "x-hmux-app-namespace": namespace } : {}),
   };
 }
 

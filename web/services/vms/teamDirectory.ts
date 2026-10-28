@@ -19,7 +19,7 @@ export function vmTeamDirectory(): VmTeamDirectory {
 }
 
 export function vmClientRoutesTeamNetworks(request: Request): boolean {
-  return request.headers.get("x-cmux-private-network-routing")
+  return request.headers.get("x-hmux-private-network-routing")
     ?.split(",")
     .map((token) => token.trim())
     .includes("team-networks") ?? false;

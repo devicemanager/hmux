@@ -1,4 +1,4 @@
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 
 // MARK: - Mobile attach-ticket creation

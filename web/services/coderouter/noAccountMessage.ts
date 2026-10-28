@@ -4,7 +4,7 @@ export type NoAccountFamily = "codex" | "claude" | "opencode";
 
 const FAMILY: Record<NoAccountFamily, { readonly name: string; readonly hostAdd: string; readonly vmAdd: string }> = {
   codex: { name: "Codex", hostAdd: "`cr add codex`", vmAdd: "`cr add codex`" },
-  claude: { name: "Claude upstream", hostAdd: "`cmux coderouter claude add`", vmAdd: "`cr add claude`" },
+  claude: { name: "Claude upstream", hostAdd: "`hmux coderouter claude add`", vmAdd: "`cr add claude`" },
   opencode: { name: "OpenCode", hostAdd: "`cr add opencode`", vmAdd: "`cr add opencode`" },
 };
 

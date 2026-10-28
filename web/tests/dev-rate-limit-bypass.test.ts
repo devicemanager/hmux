@@ -9,10 +9,10 @@ import {
 
 describe("authorized development relay rate-limit bypass", () => {
   test("recognizes only tagged development namespaces", () => {
-    expect(isDevelopmentRelayClientNamespace("dev.cmux.ios.grid")).toBe(true);
-    expect(isDevelopmentRelayClientNamespace("mac:com.cmuxterm.app.debug.grid")).toBe(true);
-    expect(isDevelopmentRelayClientNamespace("dev.cmux.app.beta")).toBe(false);
-    expect(isDevelopmentRelayClientNamespace("mac:com.cmuxterm.app")).toBe(false);
+    expect(isDevelopmentRelayClientNamespace("dev.hmux.ios.grid")).toBe(true);
+    expect(isDevelopmentRelayClientNamespace("mac:com.hmuxterm.app.debug.grid")).toBe(true);
+    expect(isDevelopmentRelayClientNamespace("dev.hmux.app.beta")).toBe(false);
+    expect(isDevelopmentRelayClientNamespace("mac:com.hmuxterm.app")).toBe(false);
     expect(isDevelopmentRelayClientNamespace("legacy")).toBe(false);
   });
 
@@ -25,11 +25,11 @@ describe("authorized development relay rate-limit bypass", () => {
 
   test("requires explicit enablement, the dev Stack project, a debug namespace, and membership", () => {
     const base = {
-      clientNamespace: "dev.cmux.ios.grid",
+      clientNamespace: "dev.hmux.ios.grid",
       teamIds: ["team-a"],
       env: {
-        CMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED: "1",
-        CMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS: "team-a,team-b",
+        HMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED: "1",
+        HMUX_IROH_DEV_RATE_LIMIT_BYPASS_TEAM_IDS: "team-a,team-b",
         NEXT_PUBLIC_STACK_PROJECT_ID: DEVELOPMENT_STACK_PROJECT_ID,
       },
     };
@@ -40,13 +40,13 @@ describe("authorized development relay rate-limit bypass", () => {
     })).toBe(false);
     expect(isAuthorizedDevRelayRateLimitBypass({
       ...base,
-      clientNamespace: "dev.cmux.app.beta",
+      clientNamespace: "dev.hmux.app.beta",
     })).toBe(false);
     expect(isAuthorizedDevRelayRateLimitBypass({
       ...base,
       env: {
         ...base.env,
-        CMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED: "0",
+        HMUX_IROH_DEV_RATE_LIMIT_BYPASS_ENABLED: "0",
       },
     })).toBe(false);
     expect(isAuthorizedDevRelayRateLimitBypass({

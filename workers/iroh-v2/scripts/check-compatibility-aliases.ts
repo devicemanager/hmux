@@ -1,8 +1,8 @@
 const expectedAccount = "0c1675e0def6de1ab3a50a4e17dc5656";
 const pairs = [
-  ["cmux-iroh-v2", "cmux-v2"],
-  ["cmux-iroh-v2-staging", "cmux-v2-staging"],
-  ["cmux-iroh-v2-development", "cmux-v2-development"],
+  ["hmux-iroh-v2", "hmux-v2"],
+  ["hmux-iroh-v2-staging", "hmux-v2-staging"],
+  ["hmux-iroh-v2-development", "hmux-v2-development"],
 ] as const;
 
 type Settings = { bindings: { name: string; type: string; service?: string; class_name?: string }[] };

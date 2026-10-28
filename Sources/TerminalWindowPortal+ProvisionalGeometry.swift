@@ -68,7 +68,7 @@ extension WindowTerminalPortal {
         )
         entriesByHostedId[hostedId] = entry
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "portal.provisional.apply hosted=\(portalDebugToken(hostedView)) " +
             "anchor=\(portalDebugToken(entry.anchorView)) old=\(portalDebugFrame(hostedView.frame)) " +
             "frame=\(portalDebugFrame(frameInHost)) transaction=\(transactionID.uuidString.prefix(5)) " +
@@ -129,7 +129,7 @@ extension WindowTerminalPortal {
         entry.provisionalGeometry = nil
         entriesByHostedId[hostedId]?.provisionalGeometry = nil
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "portal.provisional.release hosted=\(portalDebugToken(entry.hostedView)) reason=anchorMoved " +
             "anchorFrame=\(portalDebugFrame(anchorFrameInWindow)) target=\(portalDebugFrame(anchorFrameInHost))"
         )
@@ -161,7 +161,7 @@ extension WindowTerminalPortal {
                   isReleased(provisional.transactionID) else { continue }
             entriesByHostedId[hostedId]?.provisionalGeometry = nil
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "portal.provisional.release hosted=\(portalDebugToken(entry.hostedView)) reason=transactionEnded " +
                 "transaction=\(provisional.transactionID.uuidString.prefix(5))"
             )

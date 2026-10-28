@@ -1,12 +1,12 @@
-import CmuxCloud
-import CmuxFoundation
-import CmuxSettings
+import HmuxCloud
+import HmuxFoundation
+import HmuxSettings
 import Darwin
 import Foundation
 
 /// Runs a user-configured custom upload command (see ``TerminalUploadCommand``)
 /// in place of the built-in `scp`, once per dropped/pasted file, and produces the
-/// single string cmux types into the terminal.
+/// single string hmux types into the terminal.
 ///
 /// Isolated from the built-in transport on purpose: when no rule matches the
 /// destination the terminal takes the normal `scp` path unchanged. Only when a
@@ -35,7 +35,7 @@ struct TerminalCustomUploadRunner {
     private let runProcess: ProcessRunner
     /// `DisableFileTransfer` (MDM), injected so tests can force it.
     private let isFileTransferDisabled: () -> Bool
-    /// The `terminal.uploadCommands` rules. The settings catalog (cmux.json) by default,
+    /// The `terminal.uploadCommands` rules. The settings catalog (hmux.json) by default,
     /// injected so tests can supply rules without a settings runtime.
     private let uploadRules: @MainActor () -> [TerminalUploadCommandRule]
 
@@ -72,7 +72,7 @@ struct TerminalCustomUploadRunner {
     /// Runs `command` once per file and returns the space-joined string to type
     /// (see ``TerminalUploadCommand/emittedText(commandStdout:remotePath:)`` for
     /// how each file's piece is derived). Fails (fail-closed) on any non-zero
-    /// exit, timeout, or cancellation — cmux then types nothing, exactly like an
+    /// exit, timeout, or cancellation — hmux then types nothing, exactly like an
     /// `scp` failure today.
     func run(
         fileURLs: [URL],
@@ -161,7 +161,7 @@ struct TerminalCustomUploadRunner {
         guard case .uploadFiles(let fileURLs, .detectedSSH(let session)) = plan else {
             return false
         }
-        // `DisableFileTransfer` (MDM): a custom upload command is still cmux
+        // `DisableFileTransfer` (MDM): a custom upload command is still hmux
         // mediating a transfer, so it fails closed exactly like the built-in
         // transport — and takes ownership before any rule is consulted, so
         // neither a configured command nor the built-in path can run.
@@ -202,7 +202,7 @@ struct TerminalCustomUploadRunner {
     // MARK: - Process bridge
 
     private static func uploadError(_ message: String) -> NSError {
-        NSError(domain: "cmux.upload.command", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
+        NSError(domain: "hmux.upload.command", code: 1, userInfo: [NSLocalizedDescriptionKey: message])
     }
 
     /// Default ``ProcessRunner``: spawns `/bin/sh -c command` as its own process
@@ -253,7 +253,7 @@ struct TerminalCustomUploadRunner {
         try operation.throwIfCancelled()
 
         // Inherit the app environment (so PATH/HOME etc. resolve the user's tools)
-        // and layer the CMUX_UPLOAD_* context on top.
+        // and layer the HMUX_UPLOAD_* context on top.
         var mergedEnvironment = ProcessInfo.processInfo.environment
         for (key, value) in environment {
             mergedEnvironment[key] = value

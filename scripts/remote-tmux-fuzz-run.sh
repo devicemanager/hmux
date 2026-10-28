@@ -7,7 +7,7 @@
 #   detachThenStop() the control-client count drops by one; with plain stop() it does not move,
 #   the local et client dies anyway, and the remote half keeps the client forever.
 #
-#   DEAD-STREAM (bug: barrier-disabled). Against a stream cmux cannot publish a topology from,
+#   DEAD-STREAM (bug: barrier-disabled). Against a stream hmux cannot publish a topology from,
 #   the attach RPC must answer an error and leave no workspace behind. With the readiness
 #   barrier removed the same attach answers ok and leaves workspaces wired to nothing.
 #
@@ -37,7 +37,7 @@
 #
 # Usage:
 #   scripts/remote-tmux-fuzz-run.sh [case ...]        # default: both cases
-#   CMUX_TAG=etbroker scripts/remote-tmux-fuzz-run.sh HEALTHY-DETACH
+#   HMUX_TAG=etbroker scripts/remote-tmux-fuzz-run.sh HEALTHY-DETACH
 #   FUZZ_BREAK_ORACLE=healthy-drop scripts/remote-tmux-fuzz-run.sh   # self-test: must FAIL
 #   FUZZ_BREAK_ORACLE=dead-ok      scripts/remote-tmux-fuzz-run.sh   # self-test: must FAIL
 #
@@ -47,22 +47,22 @@ set -u
 set -o pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-TAG="${CMUX_TAG:-etbroker}"
-HOST="${FUZZ_HOST:-cmux-ethost}"
-HAIRPIN="${FUZZ_HAIRPIN:-cmux-srvA}"
+TAG="${HMUX_TAG:-etbroker}"
+HOST="${FUZZ_HOST:-hmux-ethost}"
+HAIRPIN="${FUZZ_HAIRPIN:-hmux-srvA}"
 TMUX_BIN="${FUZZ_TMUX_BIN:-/opt/homebrew/bin/tmux}"
 # The et client the app spawns. Counted and reaped by this path, so resolve it the way the app's
 # PATH would instead of assuming one install location.
 ET_CLIENT_BIN="${ET_CLIENT:-$(command -v et || echo /usr/local/bin/et)}"
-# The "remote" host is this machine over loopback, so the tmux cmux mirrors is the default
+# The "remote" host is this machine over loopback, so the tmux hmux mirrors is the default
 # server. Address it by socket path rather than bare `tmux` so nothing here can start or kill a
 # server by accident: list-clients/list-sessions on a missing socket just fail.
 TMUX_SOCKET="${FUZZ_TMUX_SOCKET:-/private/tmp/tmux-$(id -u)/default}"
 HEALTHY_BROKER="${FUZZ_HEALTHY_BROKER:-local}"
 DEAD_BROKER="${FUZZ_DEAD_BROKER:-pipe}"
-DEAD_BROKER_EXEC="${FUZZ_DEAD_BROKER_EXEC:-$HOME/.cmux/et-pipebroker}"
-CMUX_JSON="${FUZZ_CMUX_JSON:-$HOME/.config/cmux/cmux.json}"
-APP_BUNDLE="${FUZZ_APP_BUNDLE:-$HOME/Library/Developer/Xcode/DerivedData/cmux-${TAG}/Build/Products/Debug/cmux DEV ${TAG}.app}"
+DEAD_BROKER_EXEC="${FUZZ_DEAD_BROKER_EXEC:-$HOME/.hmux/et-pipebroker}"
+HMUX_JSON="${FUZZ_HMUX_JSON:-$HOME/.config/hmux/hmux.json}"
+APP_BUNDLE="${FUZZ_APP_BUNDLE:-$HOME/Library/Developer/Xcode/DerivedData/hmux-${TAG}/Build/Products/Debug/hmux DEV ${TAG}.app}"
 DEAD_ERROR_NEEDLE="${FUZZ_DEAD_ERROR_NEEDLE:-could not mirror any tmux session}"
 EXPECT_DROP="${FUZZ_EXPECT_DROP:-1}"
 BREAK_ORACLE="${FUZZ_BREAK_ORACLE:-}"
@@ -75,7 +75,7 @@ RECONNECT_BASE_SECONDS="${FUZZ_RECONNECT_BASE_SECONDS:-1}"
 RECONNECT_MAX_SECONDS="${FUZZ_RECONNECT_MAX_SECONDS:-2}"
 
 RUN_ID="$(date +%Y%m%d-%H%M%S)"
-WORK_DIR="${FUZZ_WORK_DIR:-/tmp/cmux-fuzz-run-$RUN_ID}"
+WORK_DIR="${FUZZ_WORK_DIR:-/tmp/hmux-fuzz-run-$RUN_ID}"
 mkdir -p "$WORK_DIR"
 LOG_FILE="$WORK_DIR/run.log"
 
@@ -118,10 +118,10 @@ count_etclient() { ps -Ao command= | awk -v et="$ET_CLIENT_BIN" '$1==et' | wc -l
 # plain pattern kills the very connection running it (measured: ssh died with 144 and the rest of
 # the reap never ran). Writing one character as a class keeps the pattern from matching its own
 # argv while still matching the target.
-APP_PATTERN="cmux DEV ${TAG}[.]app/Contents/MacOS"
+APP_PATTERN="hmux DEV ${TAG}[.]app/Contents/MacOS"
 app_pids() { pgrep -f "$APP_PATTERN" || true; }
 
-cli() { CMUX_TAG="$TAG" "$REPO_ROOT/scripts/cmux-debug-cli.sh" "$@"; }
+cli() { HMUX_TAG="$TAG" "$REPO_ROOT/scripts/hmux-debug-cli.sh" "$@"; }
 
 # Wait on an observed edge, with a bounded backstop. Never a sleep as the primary wait.
 wait_edge() {
@@ -137,18 +137,18 @@ wait_edge() {
   done
 }
 
-# ---------------------------------------------------------------- cmux.json (the user's file)
+# ---------------------------------------------------------------- hmux.json (the user's file)
 
 CONFIG_BACKUP=""
 CONFIG_TOUCHED=0
 
 restore_config() {
   if [ "$CONFIG_TOUCHED" = 1 ] && [ -n "$CONFIG_BACKUP" ] && [ -f "$CONFIG_BACKUP" ]; then
-    cp "$CONFIG_BACKUP" "$CMUX_JSON"
-    if cmp -s "$CONFIG_BACKUP" "$CMUX_JSON"; then
-      log "cmux.json restored from $CONFIG_BACKUP (byte-identical); brokers now: $(declared_brokers)"
+    cp "$CONFIG_BACKUP" "$HMUX_JSON"
+    if cmp -s "$CONFIG_BACKUP" "$HMUX_JSON"; then
+      log "hmux.json restored from $CONFIG_BACKUP (byte-identical); brokers now: $(declared_brokers)"
     else
-      log "cmux.json RESTORE MISMATCH — backup kept at $CONFIG_BACKUP"
+      log "hmux.json RESTORE MISMATCH — backup kept at $CONFIG_BACKUP"
     fi
     CONFIG_TOUCHED=0
   fi
@@ -157,7 +157,7 @@ declared_brokers() {
   python3 -c 'import json,sys
 try: cfg = json.load(open(sys.argv[1]))
 except Exception: raise SystemExit(0)
-print(",".join(((cfg.get("remoteTmux") or {}).get("brokers") or {}).keys()))' "$CMUX_JSON" 2>/dev/null
+print(",".join(((cfg.get("remoteTmux") or {}).get("brokers") or {}).keys()))' "$HMUX_JSON" 2>/dev/null
 }
 # Restore on every exit path, including a failure or an interrupt: the file belongs to the user.
 trap 'rc=$?; touch "$WORK_DIR/stop-sampler" 2>/dev/null; restore_config; exit $rc' EXIT
@@ -165,21 +165,21 @@ trap 'exit 130' INT TERM
 
 # Sets CONFIG_BACKUP, CONFIG_TOUCHED and REG_STATUS in this shell. Never call it inside a
 # command substitution: that runs in a subshell, the backup bookkeeping is lost with it, and the
-# exit trap then leaves the user's cmux.json carrying this script's broker entry (measured).
+# exit trap then leaves the user's hmux.json carrying this script's broker entry (measured).
 REG_STATUS=""
 ensure_dead_broker_registered() {
   REG_STATUS=""
-  if [ ! -f "$CMUX_JSON" ]; then
-    REG_STATUS="missing $CMUX_JSON"
+  if [ ! -f "$HMUX_JSON" ]; then
+    REG_STATUS="missing $HMUX_JSON"
     return 1
   fi
-  CONFIG_BACKUP="$CMUX_JSON.fuzzbak.$RUN_ID"
-  if ! cp "$CMUX_JSON" "$CONFIG_BACKUP"; then
-    REG_STATUS="could not back up $CMUX_JSON"
+  CONFIG_BACKUP="$HMUX_JSON.fuzzbak.$RUN_ID"
+  if ! cp "$HMUX_JSON" "$CONFIG_BACKUP"; then
+    REG_STATUS="could not back up $HMUX_JSON"
     return 1
   fi
   CONFIG_TOUCHED=1
-  REG_STATUS="$(python3 - "$CMUX_JSON" "$DEAD_BROKER" "$DEAD_BROKER_EXEC" <<'PY'
+  REG_STATUS="$(python3 - "$HMUX_JSON" "$DEAD_BROKER" "$DEAD_BROKER_EXEC" <<'PY'
 import json, sys
 path, name, executable = sys.argv[1], sys.argv[2], sys.argv[3]
 with open(path) as fh:
@@ -209,7 +209,7 @@ launch_app() {
   local before_pids
   before_pids="$(app_pids | tr '\n' ' ')"
   local open_out
-  open_out="$(hp "open -n --env CMUX_REMOTE_TMUX_TOPOLOGY_BARRIER_SECONDS=$BARRIER_SECONDS --env CMUX_REMOTE_TMUX_DETACH_BACKSTOP_SECONDS=$BACKSTOP_SECONDS --env CMUX_REMOTE_TMUX_RECONNECT_BASE_SECONDS=$RECONNECT_BASE_SECONDS --env CMUX_REMOTE_TMUX_RECONNECT_MAX_SECONDS=$RECONNECT_MAX_SECONDS $(shquote "$APP_BUNDLE"); echo OPENRC=\$?")"
+  open_out="$(hp "open -n --env HMUX_REMOTE_TMUX_TOPOLOGY_BARRIER_SECONDS=$BARRIER_SECONDS --env HMUX_REMOTE_TMUX_DETACH_BACKSTOP_SECONDS=$BACKSTOP_SECONDS --env HMUX_REMOTE_TMUX_RECONNECT_BASE_SECONDS=$RECONNECT_BASE_SECONDS --env HMUX_REMOTE_TMUX_RECONNECT_MAX_SECONDS=$RECONNECT_MAX_SECONDS $(shquote "$APP_BUNDLE"); echo OPENRC=\$?")"
   log "    launch: $(printf '%s' "$open_out" | tr '\n' ' ')"
   case "$open_out" in
     *OPENRC=0*) ;;
@@ -240,7 +240,7 @@ reap() {
   ctl0="$(count_control)"; ett0="$(count_etterminal)"; et0="$(count_etclient)"
   log "  reap ($label): before control=$ctl0 etterminal=$ett0 et=$et0"
   # Order matters: kill the app first. While a mirror is still open, killing its etterminal
-  # only makes cmux reattach and spawn a fresh one (measured).
+  # only makes hmux reattach and spawn a fresh one (measured).
   kill_app || log "    app did not exit"
   # Safe because the baseline gate proved there were no etterminal/et processes before the
   # case, so everything alive now was caused by it.
@@ -354,7 +354,7 @@ if d.get("mirrored") is True:
     return 0
   fi
 
-  # Edge: the control clients cmux just created show up on the host's tmux.
+  # Edge: the control clients hmux just created show up on the host's tmux.
   wait_edge "control clients reach $id_count" 30 control_at_least "$id_count" || true
   local ctl_before ett_before et_before plain_before
   ctl_before="$(count_control)"; ett_before="$(count_etterminal)"; et_before="$(count_etclient)"; plain_before="$(count_plain_clients)"
@@ -430,10 +430,10 @@ case_dead_stream() {
     return 0
   fi
   if ! ensure_dead_broker_registered; then
-    record "$name" INCONCLUSIVE "could not register broker '$DEAD_BROKER' in $CMUX_JSON: $REG_STATUS"
+    record "$name" INCONCLUSIVE "could not register broker '$DEAD_BROKER' in $HMUX_JSON: $REG_STATUS"
     return 0
   fi
-  log "  broker '$DEAD_BROKER' in $CMUX_JSON: $REG_STATUS (backup $CONFIG_BACKUP)"
+  log "  broker '$DEAD_BROKER' in $HMUX_JSON: $REG_STATUS (backup $CONFIG_BACKUP)"
   if ! require_clean_baseline; then
     record "$name" INCONCLUSIVE "baseline not clean: $BASELINE_EVIDENCE"
     return 0
@@ -452,7 +452,7 @@ case_dead_stream() {
   # is the positive artifact that binds the error verdict to a real transport: an unknown broker,
   # a typo or a dead etserver produces the same error with nothing ever arriving on the far end.
   # The window has to outlast the RPC. Measured here: the RPC gives up at the barrier (2.2s) and
-  # cmux kills the local et clients, and only a second later do the remote halves' control
+  # hmux kills the local et clients, and only a second later do the remote halves' control
   # clients finish attaching — the leak this case exists to observe. Sampling only while the RPC
   # runs saw a peak of zero and graded a real transport as never reached.
   local sample="$WORK_DIR/dead-samples.txt" stop="$WORK_DIR/stop-sampler"
@@ -509,7 +509,7 @@ case_dead_stream() {
       *"$DEAD_ERROR_NEEDLE"*) ;;
       *) fails="$fails; reply did not carry '$DEAD_ERROR_NEEDLE'" ;;
     esac
-    [ "$rc" != "0" ] || fails="$fails; attach exited 0 on a stream cmux cannot publish"
+    [ "$rc" != "0" ] || fails="$fails; attach exited 0 on a stream hmux cannot publish"
     [ "$new_ws" = "0" ] || fails="$fails; $new_ws workspace(s) left behind wired to nothing"
   else
     # Self-test arm: demand the barrier-disabled signature (ok plus workspaces) from a build
@@ -552,7 +552,7 @@ if [ ! -d "$APP_BUNDLE" ]; then
   exit 3
 fi
 if ! tmx list-sessions >/dev/null; then
-  log "no tmux server on $TMUX_SOCKET — the host cmux mirrors has nothing to attach to"
+  log "no tmux server on $TMUX_SOCKET — the host hmux mirrors has nothing to attach to"
   exit 3
 fi
 

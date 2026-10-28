@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 /// The verbs a machine offers in every Cloud menu: the sidebar context menu,
@@ -32,7 +32,7 @@ struct CloudMachineMenuVerbs {
         if machine.isDesktop {
             entries.append(action("openDesktop", id, String(localized: "machines.menu.openDesktop", defaultValue: "Open Desktop")) { openDesktop(id) })
         }
-        entries.append(action("openFullClient", id, String(localized: "cloudTree.menu.openFullClient", defaultValue: "Open Full cmux-tui Client")) { runCommand(id, ["vm", "tui"]) })
+        entries.append(action("openFullClient", id, String(localized: "cloudTree.menu.openFullClient", defaultValue: "Open Full hmux-tui Client")) { runCommand(id, ["vm", "tui"]) })
         return entries
     }
 

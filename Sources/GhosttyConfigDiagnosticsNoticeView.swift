@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CmuxTerminalCore
+import HmuxFoundation
+import HmuxTerminalCore
 import SwiftUI
 
 /// Compact card listing the first Ghostty config errors, shown by
@@ -19,13 +19,13 @@ struct GhosttyConfigDiagnosticsNoticeView: View {
                     localized: "ghosttyConfigDiagnostics.notice.title",
                     defaultValue: "Ghostty config errors"
                 ))
-                .cmuxFont(.headline)
+                .hmuxFont(.headline)
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 ForEach(notice.listedDiagnostics, id: \.message) { diagnostic in
                     Text(verbatim: abbreviated(diagnostic.message))
-                        .cmuxFont(size: 11, design: .monospaced)
+                        .hmuxFont(size: 11, design: .monospaced)
                         .lineLimit(2)
                         .truncationMode(.middle)
                 }
@@ -34,16 +34,16 @@ struct GhosttyConfigDiagnosticsNoticeView: View {
                         localized: "ghosttyConfigDiagnostics.notice.more",
                         defaultValue: "More errors are not shown."
                     ))
-                    .cmuxFont(.caption)
+                    .hmuxFont(.caption)
                     .foregroundStyle(.secondary)
                 }
             }
 
             Text(String(
                 localized: "ghosttyConfigDiagnostics.notice.hint",
-                defaultValue: "Fix the file and save it; cmux reloads the config automatically."
+                defaultValue: "Fix the file and save it; hmux reloads the config automatically."
             ))
-            .cmuxFont(.caption)
+            .hmuxFont(.caption)
             .foregroundStyle(.secondary)
             .fixedSize(horizontal: false, vertical: true)
 

@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import MessagesLabSidebar
 
 /// Home's conversation list as the window's left sidebar shows it while Home
@@ -18,7 +18,7 @@ final class ChiefConversationListView: NSView {
     /// MessagesLab's search field starts this far down (its titlebar strip).
     static let messagesTitlebarStrip: CGFloat = 52
 
-    let list = CmuxSidebarView()
+    let list = HmuxSidebarView()
 
     override init(frame: NSRect) {
         super.init(frame: frame)
@@ -33,7 +33,7 @@ final class ChiefConversationListView: NSView {
 
     override var isFlipped: Bool { true }
 
-    /// The sidebar's content appearance and the cmux accent: the unread dot and
+    /// The sidebar's content appearance and the hmux accent: the unread dot and
     /// the selected row take the accent, as a selected workspace row does.
     func apply(isDark: Bool, accent: NSColor) {
         appearance = NSAppearance(named: isDark ? .darkAqua : .aqua)

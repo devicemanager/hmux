@@ -12,16 +12,16 @@ type Environment = Record<string, string | undefined>;
 export function directDevBackendOrigin(
   environment: Environment = process.env,
 ): URL | undefined {
-  const transport = environment.CMUX_DEV_BACKEND_TRANSPORT?.trim().toLowerCase();
+  const transport = environment.HMUX_DEV_BACKEND_TRANSPORT?.trim().toLowerCase();
   if (transport !== "direct") return undefined;
 
-  const configured = environment.CMUX_WWW_ORIGIN?.trim();
+  const configured = environment.HMUX_WWW_ORIGIN?.trim();
   if (!configured) return undefined;
 
   // The native handoff pins the origin to the owner-provided Tailscale host.
   // Apply the same pin here: without a declared host, fail closed, so the web
   // and native paths trust exactly one backend for auth and billing URLs.
-  const trustedHost = environment.CMUX_DEV_BACKEND_TAILSCALE_HOST?.trim().toLowerCase();
+  const trustedHost = environment.HMUX_DEV_BACKEND_TAILSCALE_HOST?.trim().toLowerCase();
   if (!trustedHost) return undefined;
 
   try {

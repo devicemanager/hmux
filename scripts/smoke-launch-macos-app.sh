@@ -16,7 +16,7 @@ fi
 # keychain exists and gives the app no signing or publishing credentials.
 # shellcheck source=ci/lib/signing-runtime-guard.sh
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/ci/lib/signing-runtime-guard.sh"
-cmux_signing_runtime_guard
+hmux_signing_runtime_guard
 
 INFO_PLIST="$APP_PATH/Contents/Info.plist"
 BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$INFO_PLIST")"
@@ -35,15 +35,15 @@ if command -v lipo >/dev/null 2>&1 && ! lipo "$EXECUTABLE_PATH" -verify_arch "$H
     exit 0
   fi
 fi
-STARTUP_TIMEOUT_SECONDS="${CMUX_SMOKE_STARTUP_TIMEOUT_SECONDS:-10}"
-STABLE_SECONDS="${CMUX_SMOKE_STABLE_SECONDS:-5}"
-OPEN_LOG="$(mktemp -t cmux-smoke-open.XXXXXX)"
+STARTUP_TIMEOUT_SECONDS="${HMUX_SMOKE_STARTUP_TIMEOUT_SECONDS:-10}"
+STABLE_SECONDS="${HMUX_SMOKE_STABLE_SECONDS:-5}"
+OPEN_LOG="$(mktemp -t hmux-smoke-open.XXXXXX)"
 APP_PID=""
 PREEXISTING_PIDS="$(pgrep -f "$EXECUTABLE_PATH" 2>/dev/null || true)"
-DEBUG_LOGS="${CMUX_SMOKE_DEBUG_LOGS:-0}"
-ALLOW_UNSUPPORTED_GUI="${CMUX_SMOKE_ALLOW_UNSUPPORTED_GUI:-0}"
-DIRECT_EXEC="${CMUX_SMOKE_DIRECT_EXEC:-0}"
-DISABLE_ICON_PERSISTENCE_KEY="cmuxDisableBundleIconPersistence"
+DEBUG_LOGS="${HMUX_SMOKE_DEBUG_LOGS:-0}"
+ALLOW_UNSUPPORTED_GUI="${HMUX_SMOKE_ALLOW_UNSUPPORTED_GUI:-0}"
+DIRECT_EXEC="${HMUX_SMOKE_DIRECT_EXEC:-0}"
+DISABLE_ICON_PERSISTENCE_KEY="hmuxDisableBundleIconPersistence"
 
 cleanup() {
   if [[ -n "$APP_PID" ]] && kill -0 "$APP_PID" 2>/dev/null; then
@@ -73,7 +73,7 @@ dump_open_log() {
   if [[ "$DEBUG_LOGS" == "1" ]]; then
     cat "$OPEN_LOG" >&2
   else
-    echo "open launcher output captured (set CMUX_SMOKE_DEBUG_LOGS=1 to print)" >&2
+    echo "open launcher output captured (set HMUX_SMOKE_DEBUG_LOGS=1 to print)" >&2
   fi
 }
 
@@ -81,7 +81,7 @@ dump_system_log() {
   if [[ "$DEBUG_LOGS" == "1" ]]; then
     /usr/bin/log show --last 2m --style compact --predicate "process == '$EXECUTABLE_NAME' OR eventMessage CONTAINS '$BUNDLE_ID'" 2>/dev/null | tail -n 160 >&2 || true
   else
-    echo "system log capture skipped (set CMUX_SMOKE_DEBUG_LOGS=1 to print)" >&2
+    echo "system log capture skipped (set HMUX_SMOKE_DEBUG_LOGS=1 to print)" >&2
   fi
 }
 
@@ -96,11 +96,11 @@ echo "==> smoke launching $APP_PATH"
 # defaults domain before LaunchServices starts the app.
 /usr/bin/defaults write "$BUNDLE_ID" "$DISABLE_ICON_PERSISTENCE_KEY" -bool YES
 if [[ "$DIRECT_EXEC" == "1" ]]; then
-  CMUX_UI_TEST_MODE="${CMUX_UI_TEST_MODE:-1}" \
-    "$EXECUTABLE_PATH" -ApplePersistenceIgnoreState YES --cmux-disable-bundle-icon-persistence >"$OPEN_LOG" 2>&1 &
+  HMUX_UI_TEST_MODE="${HMUX_UI_TEST_MODE:-1}" \
+    "$EXECUTABLE_PATH" -ApplePersistenceIgnoreState YES --hmux-disable-bundle-icon-persistence >"$OPEN_LOG" 2>&1 &
 else
-  CMUX_UI_TEST_MODE="${CMUX_UI_TEST_MODE:-1}" \
-    /usr/bin/open -n -g "$APP_PATH" --args -ApplePersistenceIgnoreState YES --cmux-disable-bundle-icon-persistence >"$OPEN_LOG" 2>&1 &
+  HMUX_UI_TEST_MODE="${HMUX_UI_TEST_MODE:-1}" \
+    /usr/bin/open -n -g "$APP_PATH" --args -ApplePersistenceIgnoreState YES --hmux-disable-bundle-icon-persistence >"$OPEN_LOG" 2>&1 &
 fi
 OPEN_PID=$!
 
@@ -139,7 +139,7 @@ for _ in $(seq 1 "$STABLE_SECONDS"); do
     echo "error: app process $APP_PID exited during ${STABLE_SECONDS}s launch smoke" >&2
     dump_open_log
     LOG_NAME="$(printf '%s' "$BUNDLE_ID" | sed -E 's/[^A-Za-z0-9._-]/-/g')"
-    STARTUP_LOG="$HOME/Library/Logs/cmux/startup-${LOG_NAME}.log"
+    STARTUP_LOG="$HOME/Library/Logs/hmux/startup-${LOG_NAME}.log"
     if [[ -f "$STARTUP_LOG" ]]; then
       echo "startup breadcrumbs:" >&2
       tail -n 80 "$STARTUP_LOG" >&2 || true

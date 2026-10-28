@@ -6,9 +6,9 @@ commit span (`--since` the previous published commit, `--head` the published
 one). Every first-parent, non-merge commit whose subject ends in "(#1234)"
 names a PR. First-parent keeps out history merged in from elsewhere: a
 merged-in repository's own "(#5)" subjects, or main's PRs arriving on
-feat-cmux-next through a sync merge.
+feat-hmux-next through a sync merge.
 
-Each PR gets one comment, marked `<!-- cmux-published-in -->`, holding one
+Each PR gets one comment, marked `<!-- hmux-published-in -->`, holding one
 line per build: the first build creates it, later ones (a nightly, then a
 stable release) edit it in place. A rerun of the same build changes nothing.
 Existing comments are read in batched GraphQL, then each write is one REST
@@ -30,7 +30,7 @@ import subprocess
 import sys
 import time
 
-MARKER = "<!-- cmux-published-in -->"
+MARKER = "<!-- hmux-published-in -->"
 PR_SUFFIX = re.compile(r"\(#(\d+)\)\s*$")
 BOT = "github-actions[bot]"
 

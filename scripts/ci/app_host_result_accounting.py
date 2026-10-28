@@ -42,14 +42,14 @@ def canonical_identifier(value: str) -> str:
     value = value.strip()
     if value.startswith("test://"):
         pieces = [piece for piece in value.split("/") if piece]
-        if "cmuxTests" in pieces:
-            value = "/".join(pieces[pieces.index("cmuxTests") + 1 :])
+        if "hmuxTests" in pieces:
+            value = "/".join(pieces[pieces.index("hmuxTests") + 1 :])
         elif len(pieces) >= 2:
             value = "/".join(pieces[-2:])
-    if value.startswith("cmuxTests/"):
-        value = value[len("cmuxTests/") :]
-    if value.startswith("cmuxTests."):
-        value = value[len("cmuxTests.") :]
+    if value.startswith("hmuxTests/"):
+        value = value[len("hmuxTests/") :]
+    if value.startswith("hmuxTests."):
+        value = value[len("hmuxTests.") :]
     return value.strip("/")
 
 
@@ -112,10 +112,10 @@ def parse_enumeration(data: Any) -> set[str]:
                 # Hierarchical Xcode enumeration groups plan -> target -> suite
                 # -> test. Drop all plan/target ancestors and retain the nearest
                 # suite path plus leaf test. Nested Swift Testing suites remain
-                # represented because every suite level after cmuxTests is kept.
+                # represented because every suite level after hmuxTests is kept.
                 pieces = [piece for piece in (*path, clean_name) if piece]
-                if "cmuxTests" in pieces:
-                    pieces = pieces[pieces.index("cmuxTests") + 1 :]
+                if "hmuxTests" in pieces:
+                    pieces = pieces[pieces.index("hmuxTests") + 1 :]
                 elif len(pieces) >= 2:
                     pieces = pieces[-2:]
                 if len(pieces) >= 2:

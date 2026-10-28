@@ -55,7 +55,7 @@ beforeEach(() => {
 });
 
 function request(body: unknown): Request {
-  return new Request("https://cmux.test/api/support/contact", {
+  return new Request("https://hmux.test/api/support/contact", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -124,7 +124,7 @@ describe("support contact route", () => {
       (fetchCalls[1]?.[1] as RequestInit).body as string,
     );
     expect(posthogBody).toMatchObject({
-      event: "cmux_support_request_submitted",
+      event: "hmux_support_request_submitted",
       distinct_id: "ada@good.test",
       properties: {
         topic: "Bug report",

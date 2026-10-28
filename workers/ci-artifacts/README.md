@@ -30,7 +30,7 @@ to this transport; neither packaging implementation is changed here.
   private, without an R2 public domain or `r2.dev` access that bypasses these
   checks. This is separate from the existing public `ci-cache.cmux.com` store.
 - Production callers present a short-lived GitHub Actions OIDC token with
-  audience `cmux-ci-artifacts`. The Worker verifies GitHub's signature plus the
+  audience `hmux-ci-artifacts`. The Worker verifies GitHub's signature plus the
   repository ID, owner ID, public visibility, `ci.yml` workflow ref, event,
   run ID and token lifetime before touching artifact state. A global Durable
   Object admits at most 16 requests per run per minute and 120 total per minute.
@@ -62,7 +62,7 @@ Activation remains an administrator operation:
    in #13342.
 2. Run the main-only canary while its current real artifact is still valid. It
    must prove one cold `fill`, one warm `hit`, exact size/digest, and cleanup.
-3. Provision or confirm the dedicated `cmux-ci-artifacts` bucket, disable
+3. Provision or confirm the dedicated `hmux-ci-artifacts` bucket, disable
    `r2.dev`, confirm no enabled custom domain, and set a three-day lifecycle
    for `github/manaflow-ai/cmux/`. Keep the general compilation-cache bucket
    tracked in #13182 unchanged.
@@ -70,7 +70,7 @@ Activation remains an administrator operation:
    Actions-read secret and deploy this reviewed Worker, including the
    `ARTIFACT_IMPORTS` and `REQUEST_ADMISSION` Durable Object migrations.
 5. Set repository variable `CI_ARTIFACT_R2_URL` to the production
-   `https://cmux-ci-artifacts.<account>.workers.dev` origin with no path,
+   `https://hmux-ci-artifacts.<account>.workers.dev` origin with no path,
    credentials, query or fragment. Removing that variable returns every
    consumer to the measured GitHub artifact path.
 
@@ -91,12 +91,12 @@ OIDC credential handling and the default-disabled GitHub fallback. Python tests
 cover OIDC issuer pinning, secret-file permissions, transfer receipts, bad ZIPs,
 wrong producer IDs, stale outputs and traversal/symlink rejection.
 
-`CMUX_TEST_PRODUCT_TRANSFER` records transport, cache result, bytes, broker
+`HMUX_TEST_PRODUCT_TRANSFER` records transport, cache result, bytes, broker
 first-byte wait and transfer time for R2; the existing GitHub composite records
 its end-to-end artifact action duration and payload bytes.
-`CMUX_TEST_PRODUCT_RESTORE` separately records the authoritative inner archive
+`HMUX_TEST_PRODUCT_RESTORE` separately records the authoritative inner archive
 hash/extraction/product-receipt restore duration. Failed broker attempts emit
-`CMUX_R2_ARTIFACT_ATTEMPT` with a bounded fallback reason and then use GitHub.
+`HMUX_R2_ARTIFACT_ATTEMPT` with a bounded fallback reason and then use GitHub.
 `scripts/ci/measure-r2-artifact-run.py` combines those receipts with Actions
 job timestamps to report producer-to-last-consumer wall time and aggregate
 producer/consumer runner minutes.
@@ -120,7 +120,7 @@ secret header, and fails closed after a twenty-minute lease or artifact expiry.
 The generic broker stays unreachable, and `CI_ARTIFACT_R2_URL` is never changed.
 
 The workflow uses the existing repository Cloudflare account/token. It may create
-only `cmux-ci-artifacts-canary-<run-id>-<attempt>` after authenticated lookups
+only `hmux-ci-artifacts-canary-<run-id>-<attempt>` after authenticated lookups
 confirm that run's Worker and bucket are absent;
 permission failures do not trigger fallback to another account or public bucket.
 It verifies public access is disabled and adds a one-day lifecycle for this one

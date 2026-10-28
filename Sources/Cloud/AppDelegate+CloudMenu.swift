@@ -1,5 +1,5 @@
 import AppKit
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 /// Binds the shared Cloud menu (status item and main-menu Cloud menu) to the
@@ -27,7 +27,7 @@ extension AppDelegate {
         return CloudMenuContext(account: .signedIn(account), machines: model.machines, loadState: model.loadState)
     }
 
-    /// The Cloud verbs. `fromStatusItem` brings cmux forward first, because a
+    /// The Cloud verbs. `fromStatusItem` brings hmux forward first, because a
     /// status item click leaves the app inactive and Cloud creation only
     /// navigates a window that is key when it finishes.
     @MainActor

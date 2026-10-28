@@ -87,7 +87,7 @@ function firstExisting(paths: string[], cwd: string, home: string, exists: (path
 /**
  * Discover installed workflow harnesses without starting a process or reading
  * project contents. A result is only returned when a command or config path
- * gives cmux concrete evidence that the workflow is available.
+ * gives hmux concrete evidence that the workflow is available.
  */
 export function discoverHarnesses(options: HarnessDiscoveryOptions = {}): HarnessRecommendation[] {
   const cwd = options.cwd ?? process.cwd();

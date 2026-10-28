@@ -20,7 +20,7 @@ extension AppDelegate {
         }
     ) {
 #if DEBUG
-        cmuxDebugLog("settings.open.present path=appkitWindow")
+        hmuxDebugLog("settings.open.present path=appkitWindow")
 #endif
         let present = presentSettingsWindow
             ?? { SettingsWindowPresenter.show(navigationTarget: $0) }
@@ -32,14 +32,14 @@ extension AppDelegate {
         }
         activateApplication()
 #if DEBUG
-        cmuxDebugLog("settings.open.present activate=1")
+        hmuxDebugLog("settings.open.present activate=1")
 #endif
     }
 
     @MainActor
     func openPreferencesWindow(debugSource: String, navigationTarget: SettingsNavigationTarget? = nil) {
 #if DEBUG
-        cmuxDebugLog("settings.open.request source=\(debugSource)")
+        hmuxDebugLog("settings.open.request source=\(debugSource)")
 #endif
         Self.presentPreferencesWindow(navigationTarget: navigationTarget)
     }

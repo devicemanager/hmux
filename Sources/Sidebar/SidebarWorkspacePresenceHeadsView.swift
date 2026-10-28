@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWorkspacePresence
+import HmuxWorkspacePresence
 import SwiftUI
 
 /// Renders the compact collaborator heads attached to a Cloud workspace row.

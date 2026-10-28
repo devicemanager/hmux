@@ -21,7 +21,7 @@ import { setSpanAttributes, withApiRouteSpan } from "../../../services/telemetry
 import { jsonResponse } from "../../../services/vms/routeHelpers";
 
 /*
- * Anonymous opt-in hang reports from cmux NEXT Nightly (schema 2; schema 1 refused).
+ * Anonymous opt-in hang reports from hmux NEXT Nightly (schema 2; schema 1 refused).
  *
  * Privacy: this handler never reads a client address header
  * (x-forwarded-for, x-real-ip, or similar) or the user agent, never logs or
@@ -61,7 +61,7 @@ export const POST = makeHangReportsHandler();
 
 export function makeHangReportsHandler(dependencies: HangReportsRouteDependencies = defaultDependencies) {
   return async function POST(request: Request): Promise<Response> {
-    return withApiRouteSpan(request, ROUTE, { "cmux.subsystem": "hang-reports" }, async (span) => {
+    return withApiRouteSpan(request, ROUTE, { "hmux.subsystem": "hang-reports" }, async (span) => {
       const limited = await enforceRateLimit(request, dependencies);
       if (limited) return limited;
 
@@ -75,8 +75,8 @@ export function makeHangReportsHandler(dependencies: HangReportsRouteDependencie
       const exit = await dependencies.run(ingestHangReport(body.value, dependencies.now()));
       if (Exit.isSuccess(exit)) {
         setSpanAttributes(span, {
-          "cmux.hang_reports.outcome": exit.value.outcome,
-          "cmux.hang_reports.hang_count": exit.value.hangCount,
+          "hmux.hang_reports.outcome": exit.value.outcome,
+          "hmux.hang_reports.hang_count": exit.value.hangCount,
         });
         return new Response(null, { status: 204, headers: NO_STORE });
       }
@@ -117,7 +117,7 @@ async function enforceRateLimit(
   dependencies: HangReportsRouteDependencies,
 ): Promise<Response | null> {
   if (process.env.VERCEL !== "1") return null;
-  const ruleId = process.env.CMUX_HANG_REPORTS_RATE_LIMIT_ID?.trim();
+  const ruleId = process.env.HMUX_HANG_REPORTS_RATE_LIMIT_ID?.trim();
   if (!ruleId) {
     // Fail closed: without the edge rule nothing bounds a flood of fresh
     // install ids. The client keeps the report and retries later.

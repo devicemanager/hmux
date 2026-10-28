@@ -1,9 +1,9 @@
 import AppKit
-import CmuxBrowser
-import CmuxTerminal
+import HmuxBrowser
+import HmuxTerminal
 
 extension NSEvent {
-    var cmuxIsUndoRedoCommandEquivalent: Bool {
+    var hmuxIsUndoRedoCommandEquivalent: Bool {
         let normalizedFlags = modifierFlags
             .intersection(.deviceIndependentFlagsMask)
             .subtracting([.numericPad, .function, .capsLock])
@@ -14,7 +14,7 @@ extension NSEvent {
 }
 
 /// Identity of a key event currently being force-dispatched into a responder's
-/// `keyDown(with:)` by `NSWindow.cmux_performKeyEquivalent(with:)`.
+/// `keyDown(with:)` by `NSWindow.hmux_performKeyEquivalent(with:)`.
 ///
 /// Forwarding keyDown can re-enter `performKeyEquivalent` with the same event
 /// while the dispatch is still on the stack: WebKit replays unhandled keys
@@ -29,7 +29,7 @@ extension NSEvent {
 /// copy. Key autorepeat produces distinct events (fresh timestamps), so
 /// repeat typing is never throttled. The dispatching window's number is part
 /// of the identity so windows cannot suppress each other's dispatches.
-private struct CmuxForceDispatchedKeyEventIdentity: Hashable {
+private struct HmuxForceDispatchedKeyEventIdentity: Hashable {
     let windowNumber: Int
     let eventType: UInt
     let keyCode: UInt16
@@ -50,38 +50,38 @@ private struct CmuxForceDispatchedKeyEventIdentity: Hashable {
 /// before `keyDown(with:)` and removed when the dispatch unwinds, so WebKit's
 /// legitimate replay of an unhandled key (which arrives after the original
 /// dispatch has fully unwound) is still force-dispatched normally.
-private var cmuxInFlightForceDispatchedKeyEventIdentities = Set<CmuxForceDispatchedKeyEventIdentity>()
+private var hmuxInFlightForceDispatchedKeyEventIdentities = Set<HmuxForceDispatchedKeyEventIdentity>()
 
 extension NSApplication {
     /// Routes undo and redo before AppKit can invoke the shared window undo
     /// manager, whose registrations may belong to a view that was closed.
-    func cmuxRouteApplicationUndoRedoCommandEquivalent(_ event: NSEvent) -> Bool {
+    func hmuxRouteApplicationUndoRedoCommandEquivalent(_ event: NSEvent) -> Bool {
         let window = event.window
             ?? AppDelegate.shared?.shortcutRoutingActiveWindow
             ?? keyWindow
             ?? mainWindow
-        return window?.cmuxRouteApplicationUndoRedoCommandEquivalent(event) == true
+        return window?.hmuxRouteApplicationUndoRedoCommandEquivalent(event) == true
     }
 }
 
 extension NSWindow {
     /// Identifies synchronous replay of the exact key this window is forwarding.
-    func cmuxIsForceDispatchingKeyDown(_ event: NSEvent) -> Bool {
-        cmuxInFlightForceDispatchedKeyEventIdentities.contains(
-            CmuxForceDispatchedKeyEventIdentity(event, windowNumber: windowNumber)
+    func hmuxIsForceDispatchingKeyDown(_ event: NSEvent) -> Bool {
+        hmuxInFlightForceDispatchedKeyEventIdentities.contains(
+            HmuxForceDispatchedKeyEventIdentity(event, windowNumber: windowNumber)
         )
     }
 
-    /// Routes an application undo or redo command through the focused cmux
+    /// Routes an application undo or redo command through the focused hmux
     /// surface, keeping AppKit's shared window undo stack out of the path.
-    func cmuxRouteApplicationUndoRedoCommandEquivalent(_ event: NSEvent) -> Bool {
-        guard event.cmuxIsUndoRedoCommandEquivalent else { return false }
+    func hmuxRouteApplicationUndoRedoCommandEquivalent(_ event: NSEvent) -> Bool {
+        guard event.hmuxIsUndoRedoCommandEquivalent else { return false }
 
-        let terminalView = firstResponder.cmuxTerminalKeyEquivalentOwningGhosttyView()
+        let terminalView = firstResponder.hmuxTerminalKeyEquivalentOwningGhosttyView()
         let webView = firstResponder.flatMap {
-            NSWindow.cmuxOwningWebViewForKeyRouting(for: $0, in: self, event: event)
-        } ?? firstResponder.flatMap { cmuxOwningUndoableWebView(for: $0) }
-        return cmuxRouteUndoRedoCommandEquivalentAwayFromAppKit(
+            NSWindow.hmuxOwningWebViewForKeyRouting(for: $0, in: self, event: event)
+        } ?? firstResponder.flatMap { hmuxOwningUndoableWebView(for: $0) }
+        return hmuxRouteUndoRedoCommandEquivalentAwayFromAppKit(
             event,
             terminalView: terminalView,
             webView: webView,
@@ -89,27 +89,27 @@ extension NSWindow {
         )
     }
 
-    func cmuxRouteUndoRedoCommandEquivalentAwayFromAppKit(
+    func hmuxRouteUndoRedoCommandEquivalentAwayFromAppKit(
         _ event: NSEvent,
         terminalView: GhosttyNSView?,
-        webView: CmuxUndoableWebView?,
+        webView: HmuxUndoableWebView?,
         webKitKeyDownReentry: Bool
     ) -> Bool {
-        guard event.cmuxIsUndoRedoCommandEquivalent,
-              !cmuxFirstResponderPreservesLocalUndoRedo,
-              !cmuxIsLikelyWebInspectorResponder(firstResponder) else {
+        guard event.hmuxIsUndoRedoCommandEquivalent,
+              !hmuxFirstResponderPreservesLocalUndoRedo,
+              !hmuxIsLikelyWebInspectorResponder(firstResponder) else {
             return false
         }
         if let terminalView {
             if terminalView.performKeyEquivalentAfterMenuMiss(with: event) {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo routed to terminal before AppKit menu")
+                hmuxDebugLog("  -> undo/redo routed to terminal before AppKit menu")
 #endif
                 return true
             }
-            if cmuxForceDispatchKeyDownOnce(event, to: terminalView, reason: "terminal undo/redo") {
+            if hmuxForceDispatchKeyDownOnce(event, to: terminalView, reason: "terminal undo/redo") {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo keyDown fallback routed to terminal")
+                hmuxDebugLog("  -> undo/redo keyDown fallback routed to terminal")
 #endif
                 return true
             }
@@ -118,19 +118,19 @@ extension NSWindow {
         if let webView {
             if webKitKeyDownReentry {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo browser reentry suppressed before AppKit menu")
+                hmuxDebugLog("  -> undo/redo browser reentry suppressed before AppKit menu")
 #endif
                 return true
             }
             if webView.performKeyEquivalent(with: event) {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo routed to browser before AppKit menu")
+                hmuxDebugLog("  -> undo/redo routed to browser before AppKit menu")
 #endif
                 return true
             }
-            if cmuxForceDispatchKeyDownOnce(event, to: webView, reason: "browser undo/redo") {
+            if hmuxForceDispatchKeyDownOnce(event, to: webView, reason: "browser undo/redo") {
 #if DEBUG
-                cmuxDebugLog("  -> undo/redo keyDown fallback routed to browser")
+                hmuxDebugLog("  -> undo/redo keyDown fallback routed to browser")
 #endif
                 return true
             }
@@ -139,13 +139,13 @@ extension NSWindow {
             // editable AppKit responders and Web Inspector are exempted above.
             return true
         }
-        // No cmux surface owns an application-level undo operation here. Do
+        // No hmux surface owns an application-level undo operation here. Do
         // not expose the shared window stack to an unknown target: it can
         // contain an edit command whose view was already torn down.
         return true
     }
 
-    private var cmuxFirstResponderPreservesLocalUndoRedo: Bool {
+    private var hmuxFirstResponderPreservesLocalUndoRedo: Bool {
         guard let responder = firstResponder else { return false }
         if let textView = responder as? NSTextView {
             return textView.isEditable || textView.isFieldEditor
@@ -157,7 +157,7 @@ extension NSWindow {
     }
 
     /// Single chokepoint for every direct `keyDown(with:)` force-dispatch made
-    /// by `cmux_performKeyEquivalent(with:)`.
+    /// by `hmux_performKeyEquivalent(with:)`.
     ///
     /// Dispatches `event` into `target`'s `keyDown(with:)` unless the same
     /// event is already being force-dispatched lower on this window's call
@@ -166,22 +166,22 @@ extension NSWindow {
     /// handling) instead of dispatching themselves; re-dispatching the same
     /// in-flight event is the infinite key-routing loop from
     /// https://github.com/manaflow-ai/cmux/issues/5887.
-    func cmuxForceDispatchKeyDownOnce(
+    func hmuxForceDispatchKeyDownOnce(
         _ event: NSEvent,
         to target: NSResponder,
         reason: @autoclosure () -> String
     ) -> Bool {
-        let identity = CmuxForceDispatchedKeyEventIdentity(event, windowNumber: windowNumber)
-        guard !cmuxInFlightForceDispatchedKeyEventIdentities.contains(identity) else {
+        let identity = HmuxForceDispatchedKeyEventIdentity(event, windowNumber: windowNumber)
+        guard !hmuxInFlightForceDispatchedKeyEventIdentities.contains(identity) else {
 #if DEBUG
-            cmuxDebugLog("  → \(reason()) reentry; declining force-dispatch of in-flight key event")
+            hmuxDebugLog("  → \(reason()) reentry; declining force-dispatch of in-flight key event")
 #endif
             return false
         }
-        cmuxInFlightForceDispatchedKeyEventIdentities.insert(identity)
-        defer { cmuxInFlightForceDispatchedKeyEventIdentities.remove(identity) }
+        hmuxInFlightForceDispatchedKeyEventIdentities.insert(identity)
+        defer { hmuxInFlightForceDispatchedKeyEventIdentities.remove(identity) }
 #if DEBUG
-        cmuxDebugLog("  → \(reason()) routed to firstResponder.keyDown")
+        hmuxDebugLog("  → \(reason()) routed to firstResponder.keyDown")
 #endif
         target.keyDown(with: event)
         return true

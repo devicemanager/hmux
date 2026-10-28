@@ -19,10 +19,10 @@ declare global {
 
 const passiveFetchAttributeNames = new Set(["poster", "src", "srcset", "xlink:href"]);
 
-let agentSessionProfile: CmuxMarkdownSanitizerProfile | null = null;
+let agentSessionProfile: HmuxMarkdownSanitizerProfile | null = null;
 
-function markdownProfile(): CmuxMarkdownSanitizerProfile {
-  agentSessionProfile ??= CmuxMarkdownSanitizer.markdownProfile({
+function markdownProfile(): HmuxMarkdownSanitizerProfile {
+  agentSessionProfile ??= HmuxMarkdownSanitizer.markdownProfile({
     // Transcript markdown never fetches media on render.
     removeElements: ["img"],
     url: ({ tag, name, value }) => sanitizedMarkdownURLAttribute(tag, name, value) ?? null,
@@ -47,7 +47,7 @@ export function renderMarkdownFragment(
         renderer: rawHTMLAsTextRenderer(parser),
       });
       if (typeof rendered === "string") {
-        return CmuxMarkdownSanitizer.sanitizeToFragment(rendered, {
+        return HmuxMarkdownSanitizer.sanitizeToFragment(rendered, {
           document: targetDocument,
           profile: markdownProfile(),
         });

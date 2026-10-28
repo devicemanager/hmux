@@ -12,7 +12,7 @@ export async function GET(request: Request): Promise<Response> {
       // A deployment without Cloud Axiom delivery is a deliberate setup, not
       // a failure: the caller still sees 503, but the monitor stays healthy
       // and no Sentry issue opens.
-      console.warn("cmux.cron.cloud_diagnostics.unconfigured");
+      console.warn("hmux.cron.cloud_diagnostics.unconfigured");
       return { response: jsonNoStore(result, 503), checkInStatus: "ok" as const };
     } catch (error) {
       reportCronFailure("cloud-diagnostics", error);

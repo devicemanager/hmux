@@ -7,12 +7,12 @@ import { sql } from "drizzle-orm";
 import { cloudDb } from "../db/client";
 import { acceptCloudTelemetry, claimCloudDiagnostics, cloudDiagnosticsFinishStatement, expireCloudDiagnostics, finishCloudDiagnostics } from "../services/observability/cloudTelemetryRepository";
 import { CLOUD_TELEMETRY_REFUSAL_SPAN, CloudTelemetryConflictError, makeCloudTelemetryHandler } from "../services/observability/cloudTelemetryIngest";
-import { buildCmuxTraceSampler } from "../services/observability/sampler";
+import { buildHmuxTraceSampler } from "../services/observability/sampler";
 import { CloudOperationProgress, readCloudOperationProgress } from "../services/observability/cloudOperationProgress";
 import type { CloudTelemetryBatch, CloudTelemetrySpan } from "../services/observability/cloudTelemetryContract";
 import { parseCloudTelemetryBatch } from "../services/observability/cloudTelemetryContract";
 
-const enabled = process.env.CMUX_DB_TEST === "1";
+const enabled = process.env.HMUX_DB_TEST === "1";
 const dbTest = enabled ? test : test.skip;
 const owners: string[] = [];
 function fixture(): { owner: string; batch: CloudTelemetryBatch } {
@@ -170,7 +170,7 @@ describe("Cloud diagnostic durable storage", () => {
 // spans that are always kept reach the exporter.
 const exporter = new InMemorySpanExporter();
 const provider = new BasicTracerProvider({
-  sampler: buildCmuxTraceSampler({ CMUX_OTEL_BASE_SAMPLE_RATIO: "0" }),
+  sampler: buildHmuxTraceSampler({ HMUX_OTEL_BASE_SAMPLE_RATIO: "0" }),
   spanProcessors: [new SimpleSpanProcessor(exporter)],
 });
 trace.disable();
@@ -203,7 +203,7 @@ async function upload(owner: string, spans: CloudTelemetrySpan[], ingress: boole
   exporter.reset();
   const response = await trace.getTracer("cloud-diagnostics-test").startActiveSpan("POST /api/observability/cloud", async (span) => {
     try {
-      return await handler(new Request("https://cmux.test/api/observability/cloud", {
+      return await handler(new Request("https://hmux.test/api/observability/cloud", {
         method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(body),
       }));
     } finally { span.end(); }
@@ -228,8 +228,8 @@ async function storedEventIds(owner: string): Promise<Set<string>> {
 describe("Cloud diagnostic ingest refusals", () => {
   dbTest("routine detail that fills an account's minute cannot refuse its failures, and every refusal is counted", async () => {
     const owner = fixture().owner;
-    const previousKey = process.env.CMUX_CLOUD_TELEMETRY_ID_KEY;
-    process.env.CMUX_CLOUD_TELEMETRY_ID_KEY = identityKey;
+    const previousKey = process.env.HMUX_CLOUD_TELEMETRY_ID_KEY;
+    process.env.HMUX_CLOUD_TELEMETRY_ID_KEY = identityKey;
     try {
       // Successful command spans are not sampled, so 40 per upload fill the routine budget in a few uploads.
       const full = await uploadUntilRefused(owner, () => routine(40));
@@ -237,10 +237,10 @@ describe("Cloud diagnostic ingest refusals", () => {
       // The route span is head-sampled away; the refusal is still exported, once.
       expect(full.routeSpanExported).toBe(false);
       expect(full.refusals).toEqual([expect.objectContaining({
-        "cmux.telemetry.refusal": "account_byte_budget", "http.response.status_code": 429, "cmux.priority": true,
-        "cmux.telemetry.submitted_spans": 40, "cmux.telemetry.accepted_spans": 0,
-        "cmux.account_key": createHmac("sha256", identityKey).update(owner).digest("hex"),
-        "cmux.client.instance_id": instanceId,
+        "hmux.telemetry.refusal": "account_byte_budget", "http.response.status_code": 429, "hmux.priority": true,
+        "hmux.telemetry.submitted_spans": 40, "hmux.telemetry.accepted_spans": 0,
+        "hmux.account_key": createHmac("sha256", identityKey).update(owner).digest("hex"),
+        "hmux.client.instance_id": instanceId,
       })]);
 
       // Evidence that shares a batch with routine detail is stored on the first attempt; the batch still answers 429.
@@ -259,7 +259,7 @@ describe("Cloud diagnostic ingest refusals", () => {
       }
       expect(refusedMixed.status).toBe(429);
       expect(refusedMixed.refusals[0]).toMatchObject({
-        "cmux.telemetry.refusal": "account_byte_budget", "cmux.telemetry.accepted_spans": 0, "cmux.telemetry.stored_spans": 2,
+        "hmux.telemetry.refusal": "account_byte_budget", "hmux.telemetry.accepted_spans": 0, "hmux.telemetry.stored_spans": 2,
       });
       // The kept evidence is delivered now, not at the next cron drain.
       expect(refusedMixed.drains).toBe(1);
@@ -277,29 +277,29 @@ describe("Cloud diagnostic ingest refusals", () => {
       // The reserve is bounded: an account that sends only failures is still refused.
       expect((await uploadUntilRefused(owner, () => failures(40))).status).toBe(429);
     } finally {
-      if (previousKey === undefined) delete process.env.CMUX_CLOUD_TELEMETRY_ID_KEY;
-      else process.env.CMUX_CLOUD_TELEMETRY_ID_KEY = previousKey;
+      if (previousKey === undefined) delete process.env.HMUX_CLOUD_TELEMETRY_ID_KEY;
+      else process.env.HMUX_CLOUD_TELEMETRY_ID_KEY = previousKey;
     }
   });
 
   dbTest("firewall refusals answer 429 before authentication, store nothing, and a flood leaves one counted span per window", async () => {
     const owner = fixture().owner;
-    const rule = { rateLimitRule: `cmux-analytics-${randomUUID()}` };
+    const rule = { rateLimitRule: `hmux-analytics-${randomUUID()}` };
     const start = Date.now();
     const refused = await upload(owner, failures(1), rule, start);
     expect(refused.status).toBe(429);
     expect(refused.refusals).toEqual([expect.objectContaining({
-      "cmux.telemetry.refusal": "ingress_rate_limited", "cmux.telemetry.rate_limit_rule": rule.rateLimitRule,
-      "http.response.status_code": 429, "cmux.telemetry.refusal_count": 1,
+      "hmux.telemetry.refusal": "ingress_rate_limited", "hmux.telemetry.rate_limit_rule": rule.rateLimitRule,
+      "http.response.status_code": 429, "hmux.telemetry.refusal_count": 1,
     })]);
-    expect(refused.refusals[0]!["cmux.account_key"]).toBeUndefined();
+    expect(refused.refusals[0]!["hmux.account_key"]).toBeUndefined();
     // Within the window the refusals are still answered but only counted.
     for (let index = 0; index < 5; index += 1) {
       const flooded = await upload(owner, failures(1), rule, start + 1_000);
       expect([flooded.status, flooded.refusals.length]).toEqual([429, 0]);
     }
     const next = await upload(owner, failures(1), rule, start + 10_000);
-    expect(next.refusals).toEqual([expect.objectContaining({ "cmux.telemetry.refusal_count": 6 })]);
+    expect(next.refusals).toEqual([expect.objectContaining({ "hmux.telemetry.refusal_count": 6 })]);
     expect((await storedEventIds(owner)).size).toBe(0);
   });
 

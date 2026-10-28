@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxTerminal
+import HmuxControlSocket
+import HmuxTerminal
 import Foundation
 import GhosttyKit
 import OSLog
@@ -15,7 +15,7 @@ import OSLog
 @MainActor
 struct ControlTerminalSocketTarget {
     nonisolated private static let logger = Logger(
-        subsystem: "com.cmuxterm.app",
+        subsystem: "com.hmuxterm.app",
         category: "socket.terminal-binding"
     )
 

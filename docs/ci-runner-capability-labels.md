@@ -8,7 +8,7 @@ cost.
 
 ## The problem
 
-A cmux job names the company that owns the machine it wants:
+A hmux job names the company that owns the machine it wants:
 
 ```yaml
 # today, ci-macos.yml — names who owns the machine
@@ -24,7 +24,7 @@ The consequences are countable on `main` today:
 - **9 distinct `vars.MACOS_RUNNER_*` variables** are referenced by workflows
   (`_15`, `_26`, `_26_LARGE`, `_BACKGROUND`, `_DISPLAY`, `_DUAL_XCODE`,
   `_IOS`, `_PR`, `_TESTS`), plus `CI_PAID_MACOS_OVERFLOW` and
-  `CMUX_CI_XCODE_APP_PR`.
+  `HMUX_CI_XCODE_APP_PR`.
 - Between them they carry **three distinct macOS label values** —
   `blacksmith-6vcpu-macos-15`, `blacksmith-6vcpu-macos-26`,
   `blacksmith-12vcpu-macos-26` — plus "unset".
@@ -48,7 +48,7 @@ The forecast makes this worse, not better. The owner's requirement, verbatim:
 Under the current scheme, each new machine class needs a label, a variable or
 a guard exemption, and probably all three. `check_no_self_hosted_fleet_runners`
 already carries a hand-maintained regex of every machine name anyone has ever
-enrolled (`cmux-aws-macos`, `cmux-local-macos`, `macfleet`, `mac4`, `mac-mini`,
+enrolled (`hmux-aws-macos`, `hmux-local-macos`, `macfleet`, `mac4`, `mac-mini`,
 `slot-[0-9]`, `xcode-[0-9]+-[0-9]`) purely so those names cannot appear in a
 `runs-on`.
 
@@ -92,7 +92,7 @@ proposed for a requirement no job has.
 | --- | --- | --- | --- |
 | `macos-14`, `macos-15`, `macos-26` | the macOS major version, and therefore the default SDK | every macOS job; `macos-14` only by the `ci-macos-compat.yml` and `relay-publish-npm.yml` compat legs | `MACOS_RUNNER_15`, `MACOS_RUNNER_26`, the `matrix.os` compat legs |
 | `x86_64` | Intel silicon | `ci-macos-compat.yml`'s `macos-15-intel` leg, the only job in the tree that needs it | the bare hosted labels the guard exempts by exact line |
-| `sdk-15` | carries an SDK 15 Xcode *alongside* the pinned one | `swift-package-tests`, which pins `CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15` for the Release helper and then asserts `HELPER_SDK_VERSION == 15.*` | `MACOS_RUNNER_DUAL_XCODE` |
+| `sdk-15` | carries an SDK 15 Xcode *alongside* the pinned one | `swift-package-tests`, which pins `HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15` for the Release helper and then asserts `HELPER_SDK_VERSION == 15.*` | `MACOS_RUNNER_DUAL_XCODE` |
 | `gui` | a foreground Aqua login session, not just a macOS shell | `tests-build-and-lag` (XCUITest, virtual display) | `MACOS_RUNNER_DISPLAY` |
 | `ios-simulator` | installed iOS runtimes and a working `simctl` | `test-ios.yml`, `ios-testflight.yml`, `ios-screenshots.yml`, `ios-app-store.yml`, `iroh-v2.yml` | `MACOS_RUNNER_IOS` |
 | `macos-large` | the larger machine tier: more vCPU, memory and disk | the changed-revision universal Nightly build | `MACOS_RUNNER_26_LARGE` |
@@ -168,7 +168,7 @@ capability set                          →  label
 ```
 
 Owned capacity is the case where the translation is the identity function,
-because CMUX controls what labels those machines register with. That is the
+because HMUX controls what labels those machines register with. That is the
 whole win: the translation layer shrinks as owned capacity grows, and a Mac
 Ultra never enters the table at all.
 
@@ -179,7 +179,7 @@ free pool, fall back to the paid one" — GitHub has no preference ordering
 between eligible runners, so a job whose labels match both free and paid
 capacity will take whichever the scheduler hands it.
 
-This is not a regression. cmux has no automatic overflow today either;
+This is not a regression. hmux has no automatic overflow today either;
 `ci-runners.md` says so outright, and `CI_PAID_MACOS_OVERFLOW` is a manual
 two-action switch precisely because between 2026-09-19 and 2026-09-23 the
 gated variables pointed at Warp and nothing in the repository could see it.
@@ -195,8 +195,8 @@ fallback in the tree must be audited for the string `warp-`.
 ## What this deletes
 
 **Repository variables.** 9 `MACOS_RUNNER_*`, `CI_PAID_MACOS_OVERFLOW`, and
-`CMUX_CI_XCODE_APP_PR` — 11 in all — collapse to the
-translation table plus a single cost control. `CMUX_CI_XCODE_APP_PR` is the
+`HMUX_CI_XCODE_APP_PR` — 11 in all — collapse to the
+translation table plus a single cost control. `HMUX_CI_XCODE_APP_PR` is the
 least certain of these: it exists because the pool and its Xcode pin must move
 together, which a capability label makes structural rather than conventional,
 but `scripts/select-ci-xcode.sh` still has to resolve a concrete
@@ -234,7 +234,7 @@ routing surface, not the file.
 
 The `.github/actionlint.yaml` label list also shrinks to the capability
 vocabulary, and `warp-macos-26-arm64-6x` — listed there today only to record
-that CMUX minis carry that label and GitHub would prefer them — stops being a
+that HMUX minis carry that label and GitHub would prefer them — stops being a
 hazard that needs a comment.
 
 ## Migration
@@ -327,7 +327,7 @@ timing-sensitive jobs pinned to specific capacity. **Unresolved, and it should
 be resolved before `tests-build-and-lag` converts** — it is the last lane to
 move, not the first.
 
-**`CMUX_PRODUCT_RUNNER` needs replacing, not porting.** It is a field of the
+**`HMUX_PRODUCT_RUNNER` needs replacing, not porting.** It is a field of the
 compiled-product contract (`scripts/ci/reuse_app_host_products.py`) and a
 required product-identity key for E2E
 (`scripts/ci/product_input_identity.py`), and today it holds a pool name
@@ -341,7 +341,7 @@ identity — `xcodebuild -version`, the SDK build version, `sw_vers
 -buildVersion`, `platform.machine()`, and the `ImageOS`/`ImageVersion`
 environment variables. Those discriminate a machine image more precisely than
 any pool name, and they are collected on the machine rather than asserted by
-the workflow. The proposal is to drop `CMUX_PRODUCT_RUNNER` in favour of them.
+the workflow. The proposal is to drop `HMUX_PRODUCT_RUNNER` in favour of them.
 Two things block that: `ImageOS` and `ImageVersion` are set by GitHub-hosted
 and provider images, and it is **not established** what owned machines set
 them to, if anything; and changing a product-identity key invalidates every
@@ -352,4 +352,4 @@ document.
 the `macos-15-intel` and `macos-14` compatibility legs (which need hosted
 images no provider offers, so they may simply stay pinned and exempt), and
 what the translation table's own review process is — it is operator policy
-living in the repository, which is a shape cmux does not have elsewhere.
+living in the repository, which is a shape hmux does not have elsewhere.

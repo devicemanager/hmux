@@ -17,20 +17,20 @@ const projectRoot = path.resolve(fileURLToPath(new URL("..", import.meta.url)));
 const repoRoot = path.resolve(projectRoot, "..");
 const siteDir = path.join(projectRoot, ".pagefind-site");
 const outputDir = path.join(projectRoot, "public", "pagefind");
-const cacheDir = path.join(projectRoot, ".next", "cache", "cmux-docs-search");
+const cacheDir = path.join(projectRoot, ".next", "cache", "hmux-docs-search");
 const cacheOutputDir = path.join(cacheDir, "pagefind");
 const cacheManifestPath = path.join(cacheDir, "manifest");
 const rawMessagesCache = new Map();
 const mergedMessagesCache = new Map();
 
 function docsSearchChannel() {
-  return process.env.CMUX_DOCS_CHANNEL === "nightly" ? "nightly" : "release";
+  return process.env.HMUX_DOCS_CHANNEL === "nightly" ? "nightly" : "release";
 }
 
 const searchAliases = {
   apiReference: [
     "CLI reference",
-    "cmux CLI",
+    "hmux CLI",
     "command line",
     "API reference",
     "socket API",
@@ -48,22 +48,22 @@ const searchAliases = {
     "console logs",
   ],
   claudeCodeTeams: ["Claude teams", "teammate mode", "tmux shim"],
-  configuration: ["settings.json", "cmux.json", "Ghostty config"],
-  customCommands: ["command palette", "project commands", "cmux.json"],
+  configuration: ["settings.json", "hmux.json", "Ghostty config"],
+  customCommands: ["command palette", "project commands", "hmux.json"],
   dock: ["dock", "agent dock", "workspace dock"],
   notifications: ["OSC 777", "OSC 99", "hooks", "notification rings"],
   ohMyClaudeCode: ["omc", "oh my claude", "oh-my-claudecode"],
   ohMyCodex: ["omx", "oh my codex", "oh-my-codex"],
   ohMyOpenCode: ["omo", "oh-my-opencode", "oh-my-openagent"],
-  cloudOverview: ["cloud VM", "cloud machine", "remote agents", "cmux vm"],
+  cloudOverview: ["cloud VM", "cloud machine", "remote agents", "hmux vm"],
   cloudMachines: ["VM size", "snapshot", "checkpoint", "fork", "pause", "resize", "agent updates"],
   cloudWorkspaces: ["cloud agents", "durable terminals", "vm agent", "vm run"],
   cloudNetworking: ["vm push", "port forwarding", "public URL", "custom domain", "WireGuard", "VPN"],
-  cloudCli: ["cmux vm", "cmux cloud", "vm commands"],
+  cloudCli: ["hmux vm", "hmux cloud", "vm commands"],
   cloudTroubleshooting: ["cloud errors", "cloud security"],
   coderouterOverview: ["coderouter", "model router", "failover", "shared subscriptions", "cr"],
   coderouterAgents: ["cr codex", "cr opencode", "cr pi", "ANTHROPIC_BASE_URL", "crk_ API key", "Bedrock"],
-  coderouterCli: ["cr login", "cr add", "cmux coderouter", "coderouter errors"],
+  coderouterCli: ["cr login", "cr add", "hmux coderouter", "coderouter errors"],
   ssh: ["remote sessions", "SSH relay", "scp uploads"],
 };
 

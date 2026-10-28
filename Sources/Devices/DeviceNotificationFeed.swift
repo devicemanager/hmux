@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
 
 /// Another Mac's `notification.feed.list` reply as rows for the shared

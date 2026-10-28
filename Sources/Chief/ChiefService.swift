@@ -1,11 +1,11 @@
 import AppKit
-import CmuxChief
-import CmuxHomeCore
+import HmuxChief
+import HmuxHomeCore
 import Foundation
 import Observation
 import OSLog
 
-private nonisolated let chiefServiceLog = Logger(subsystem: "com.cmuxterm.app", category: "Chief")
+private nonisolated let chiefServiceLog = Logger(subsystem: "com.hmuxterm.app", category: "Chief")
 
 /// The app's local Chief: one ``ChiefConversationOwner`` for this build's
 /// Chief home, the ``HomeStore`` every Chief view reads, and the brain chosen
@@ -60,7 +60,7 @@ final class ChiefService {
     /// The first-run panel's "Open a terminal" and "Start an agent" rows run
     /// this; nil hides the two rows. The app wires it to its own actions.
     @ObservationIgnored var onFirstRunAction: ((ChiefFirstRunAction) -> Void)?
-    /// A click on an app link (`cmux://…`) in Chief's text; nil opens it with the system.
+    /// A click on an app link (`hmux://…`) in Chief's text; nil opens it with the system.
     @ObservationIgnored var onAppLink: ((URL) -> Void)?
 
     private init() {}
@@ -233,20 +233,20 @@ final class ChiefService {
     }
 
 #if DEBUG
-    /// `CMUX_CHIEF_BRAIN=scripted` (DEBUG builds): every turn runs ``ChiefScriptedBrain``.
+    /// `HMUX_CHIEF_BRAIN=scripted` (DEBUG builds): every turn runs ``ChiefScriptedBrain``.
     static var usesScriptedBrain: Bool {
-        ProcessInfo.processInfo.environment["CMUX_CHIEF_BRAIN"] == "scripted"
+        ProcessInfo.processInfo.environment["HMUX_CHIEF_BRAIN"] == "scripted"
     }
 #endif
 
-    /// This build's Chief home. A scripted DEBUG run without `CMUX_CHIEF_HOME`
+    /// This build's Chief home. A scripted DEBUG run without `HMUX_CHIEF_HOME`
     /// gets a fresh one, so it starts empty and never touches real history.
     /// - Returns: The home, and whether it is that fresh temporary one.
     private static func resolveHome() -> (ChiefHome, temporary: Bool) {
 #if DEBUG
         if usesScriptedBrain, ProcessInfo.processInfo.environment[ChiefHome.environmentKey]?.isEmpty ?? true {
             return (ChiefHome(root: FileManager.default.temporaryDirectory
-                .appendingPathComponent("cmux-chief-scripted-\(UUID().uuidString)", isDirectory: true)), true)
+                .appendingPathComponent("hmux-chief-scripted-\(UUID().uuidString)", isDirectory: true)), true)
         }
 #endif
         return (ChiefHome.resolve(), false)

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Exercise bundled CLI naming against strict Pi/OMP subprocess fixtures.
 
-Run with --cli /path/to/tagged/app/Contents/Resources/bin/cmux.
+Run with --cli /path/to/tagged/app/Contents/Resources/bin/hmux.
 The fake socket and HOME are isolated; no running app or provider is required.
 """
 import argparse
@@ -84,10 +84,10 @@ def run_case(cli, agent, override=None):
         try:
             environment = {
                 "HOME": temporary, "PATH": f"{temporary}:/usr/bin:/bin",
-                "CMUX_AGENT_HOOK_STATE_DIR": temporary,
-                "CMUX_CLAUDE_HOOK_STATE_PATH": str(store),
-                "CMUX_SOCKET_PATH": socket_path,
-                "CMUX_CLI_SENTRY_DISABLED": "1",
+                "HMUX_AGENT_HOOK_STATE_DIR": temporary,
+                "HMUX_CLAUDE_HOOK_STATE_PATH": str(store),
+                "HMUX_SOCKET_PATH": socket_path,
+                "HMUX_CLI_SENTRY_DISABLED": "1",
             }
             result = subprocess.run([
                 cli, "--socket", socket_path, "--password", FIXTURE_SOCKET_PASSWORD,
@@ -112,9 +112,9 @@ def run_case(cli, agent, override=None):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--cli", default=os.environ.get("CMUX_CLI_BIN"))
+    parser.add_argument("--cli", default=os.environ.get("HMUX_CLI_BIN"))
     args = parser.parse_args()
     if not args.cli:
-        parser.error("--cli or CMUX_CLI_BIN is required")
+        parser.error("--cli or HMUX_CLI_BIN is required")
     for agent, override in [("omp", None), ("pi", None), ("pi", "omp")]:
         run_case(str(Path(args.cli).resolve()), agent, override)

@@ -3,15 +3,15 @@
     "Sources/TerminalLinkOpenCoordinator.swift",
     "Sources/Ghostty*",
     "Sources/*Terminal*Link*",
-    "Packages/macOS/CmuxTerminalCore/*",
-    "Packages/macOS/CmuxGit/*"
+    "Packages/macOS/HmuxTerminalCore/*",
+    "Packages/macOS/HmuxGit/*"
   ],
   "steps": [
     {
       "socket": "workspace.create",
       "params": {
         "title": "GitLab remote",
-        "initial_input": "mkdir -p /tmp/cmux-ref-tour/gitlab/.git/objects /tmp/cmux-ref-tour/gitlab/.git/refs/heads && cd /tmp/cmux-ref-tour/gitlab && printf '[core]\\n\\trepositoryformatversion = 0\\n\\tbare = false\\n[remote \"origin\"]\\n\\turl = git@gitlab.com:manaflow-ai/cmux-reference-fixture.git\\n\\tfetch = +refs/heads/*:refs/remotes/origin/*\\n' > .git/config && printf 'ref: refs/heads/main\\n' > .git/HEAD && clear; for i in $(seq 60); do echo '#847 #847 #847 #847 #847 #847 #847 #847 '; done\n",
+        "initial_input": "mkdir -p /tmp/hmux-ref-tour/gitlab/.git/objects /tmp/hmux-ref-tour/gitlab/.git/refs/heads && cd /tmp/hmux-ref-tour/gitlab && printf '[core]\\n\\trepositoryformatversion = 0\\n\\tbare = false\\n[remote \"origin\"]\\n\\turl = git@gitlab.com:manaflow-ai/cmux-reference-fixture.git\\n\\tfetch = +refs/heads/*:refs/remotes/origin/*\\n' > .git/config && printf 'ref: refs/heads/main\\n' > .git/HEAD && clear; for i in $(seq 60); do echo '#847 #847 #847 #847 #847 #847 #847 #847 '; done\n",
         "focus": true
       },
       "save": "gitlab"
@@ -53,7 +53,7 @@
       "socket": "workspace.create",
       "params": {
         "title": "Bare ref",
-        "initial_input": "mkdir -p /tmp/cmux-ref-tour/bare/.git/objects /tmp/cmux-ref-tour/bare/.git/refs/heads && cd /tmp/cmux-ref-tour/bare && printf '[core]\\n\\trepositoryformatversion = 0\\n\\tbare = false\\n[remote \"origin\"]\\n\\turl = https://github.com/manaflow-ai/cmux.git\\n\\tfetch = +refs/heads/*:refs/remotes/origin/*\\n' > .git/config && printf 'ref: refs/heads/main\\n' > .git/HEAD && clear; for i in $(seq 60); do echo '#15221 #15221 #15221 #15221 #15221 #15221 #15221 #15221 '; done\n",
+        "initial_input": "mkdir -p /tmp/hmux-ref-tour/bare/.git/objects /tmp/hmux-ref-tour/bare/.git/refs/heads && cd /tmp/hmux-ref-tour/bare && printf '[core]\\n\\trepositoryformatversion = 0\\n\\tbare = false\\n[remote \"origin\"]\\n\\turl = https://github.com/manaflow-ai/cmux.git\\n\\tfetch = +refs/heads/*:refs/remotes/origin/*\\n' > .git/config && printf 'ref: refs/heads/main\\n' > .git/HEAD && clear; for i in $(seq 60); do echo '#15221 #15221 #15221 #15221 #15221 #15221 #15221 #15221 '; done\n",
         "focus": true
       },
       "save": "bare"
@@ -86,7 +86,7 @@
       "socket": "workspace.create",
       "params": {
         "title": "Slug ref, no repository",
-        "initial_input": "mkdir -p /tmp/cmux-ref-tour/plain && cd /tmp/cmux-ref-tour/plain && clear; for i in $(seq 60); do echo 'manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 '; done\n",
+        "initial_input": "mkdir -p /tmp/hmux-ref-tour/plain && cd /tmp/hmux-ref-tour/plain && clear; for i in $(seq 60); do echo 'manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 manaflow-ai/cmux#847 '; done\n",
         "focus": true
       },
       "save": "plain"
@@ -119,7 +119,7 @@
       "socket": "workspace.create",
       "params": {
         "title": "Commit ref",
-        "initial_input": "mkdir -p /tmp/cmux-ref-tour/commit/.git/objects /tmp/cmux-ref-tour/commit/.git/refs/heads && cd /tmp/cmux-ref-tour/commit && printf '[core]\\n\\trepositoryformatversion = 0\\n\\tbare = false\\n[remote \"origin\"]\\n\\turl = https://github.com/manaflow-ai/cmux.git\\n\\tfetch = +refs/heads/*:refs/remotes/origin/*\\n' > .git/config && printf 'ref: refs/heads/main\\n' > .git/HEAD && clear; for i in $(seq 60); do echo '9eb402dbb8f 9eb402dbb8f 9eb402dbb8f 9eb402dbb8f 9eb402dbb8f 9eb402dbb8f '; done\n",
+        "initial_input": "mkdir -p /tmp/hmux-ref-tour/commit/.git/objects /tmp/hmux-ref-tour/commit/.git/refs/heads && cd /tmp/hmux-ref-tour/commit && printf '[core]\\n\\trepositoryformatversion = 0\\n\\tbare = false\\n[remote \"origin\"]\\n\\turl = https://github.com/manaflow-ai/cmux.git\\n\\tfetch = +refs/heads/*:refs/remotes/origin/*\\n' > .git/config && printf 'ref: refs/heads/main\\n' > .git/HEAD && clear; for i in $(seq 60); do echo '9eb402dbb8f 9eb402dbb8f 9eb402dbb8f 9eb402dbb8f 9eb402dbb8f 9eb402dbb8f '; done\n",
         "focus": true
       },
       "save": "commit"

@@ -1,7 +1,7 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 import Bonsplit
-import CmuxHomeCore
+import HmuxHomeCore
 import Foundation
 
 /// The behavior boundary for a pane-level drop target. Main-area panes and Dock

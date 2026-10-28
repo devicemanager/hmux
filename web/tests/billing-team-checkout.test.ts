@@ -55,11 +55,11 @@ mock.module("../services/vms/auth", () => ({
 const { GET, POST } = await import("../app/api/billing/checkout/route");
 
 function checkoutGet(query: string) {
-  return GET(new NextRequest(`https://cmux.test/api/billing/checkout?${query}`));
+  return GET(new NextRequest(`https://hmux.test/api/billing/checkout?${query}`));
 }
 
 function checkoutPost(body: Record<string, unknown>) {
-  return POST(new NextRequest("https://cmux.test/api/billing/checkout", {
+  return POST(new NextRequest("https://hmux.test/api/billing/checkout", {
     method: "POST",
     headers: {
       authorization: "Bearer app-access",
@@ -99,7 +99,7 @@ describe("explicit team checkout", () => {
     expect(params.metadata).toMatchObject({ stackTeamId: "team-b", stackUserId: USER_ID, plan: "team" });
     expect((params.subscription_data as { metadata: unknown }).metadata).toMatchObject({ stackTeamId: "team-b", stackUserId: USER_ID });
     expect(currentUser?.hasPermission).toHaveBeenCalledWith(teamB, "team_admin");
-    expect(createCustomer).toHaveBeenCalledWith({ name: "Team B", metadata: { stackTeamId: "team-b", app: "cmux" } });
+    expect(createCustomer).toHaveBeenCalledWith({ name: "Team B", metadata: { stackTeamId: "team-b", app: "hmux" } });
   });
 
   test("refuses a member who is not an admin with 403 JSON and creates no Stripe state", async () => {
@@ -130,9 +130,9 @@ describe("explicit team checkout", () => {
 
   test("browser navigations redirect refusals to the dashboard billing banner, not JSON", async () => {
     const cases: Array<[string, string]> = [
-      ["team-a", "https://cmux.test/dashboard/billing?team=team-a&billing=team_admin_required"],
-      ["team-foreign", "https://cmux.test/dashboard/billing?billing=team_not_found"],
-      [USER_ID, "https://cmux.test/dashboard/billing?billing=personal_team_not_upgradable_to_team"],
+      ["team-a", "https://hmux.test/dashboard/billing?team=team-a&billing=team_admin_required"],
+      ["team-foreign", "https://hmux.test/dashboard/billing?billing=team_not_found"],
+      [USER_ID, "https://hmux.test/dashboard/billing?billing=personal_team_not_upgradable_to_team"],
     ];
     for (const [teamId, location] of cases) {
       const response = await checkoutGet(`plan=team&teamId=${teamId}`);
@@ -143,7 +143,7 @@ describe("explicit team checkout", () => {
       throw new Error("Stack unavailable");
     });
     expect((await checkoutGet("plan=team&teamId=team-b")).headers.get("location")).toBe(
-      "https://cmux.test/dashboard/billing?team=team-b&billing=authorization_unavailable",
+      "https://hmux.test/dashboard/billing?team=team-b&billing=authorization_unavailable",
     );
     expect(createSession).not.toHaveBeenCalled();
   });
@@ -184,7 +184,7 @@ describe("explicit team checkout", () => {
       flow: "checkout",
     });
     expect(getUser).toHaveBeenCalledWith(USER_ID);
-    expect(sessionParams().metadata).toMatchObject({ stackTeamId: "team-b", stackUserId: USER_ID, cmuxClient: "cli" });
+    expect(sessionParams().metadata).toMatchObject({ stackTeamId: "team-b", stackUserId: USER_ID, hmuxClient: "cli" });
   });
 
   test("POST team requires an explicit teamId", async () => {
@@ -216,7 +216,7 @@ describe("explicit team checkout", () => {
     });
     expect(createPortal).toHaveBeenCalledWith({
       customer: "cus_team_b",
-      return_url: "https://cmux.test/dashboard/billing?team=team-b",
+      return_url: "https://hmux.test/dashboard/billing?team=team-b",
     });
   });
 });
@@ -243,7 +243,7 @@ describe("legacy implicit team checkout", () => {
 
     const response = await checkoutGet("plan=team");
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/dashboard/billing?billing=team_admin_required");
+    expect(response.headers.get("location")).toBe("https://hmux.test/dashboard/billing?billing=team_admin_required");
     expect(createSession).not.toHaveBeenCalled();
   });
 
@@ -253,7 +253,7 @@ describe("legacy implicit team checkout", () => {
     const response = await checkoutGet("plan=team");
 
     expect(response.headers.get("location")).toBe("https://checkout.stripe.com/c/team");
-    expect(currentUser.createTeam).toHaveBeenCalledWith({ displayName: "cmux Team" });
+    expect(currentUser.createTeam).toHaveBeenCalledWith({ displayName: "hmux Team" });
     expect(currentUser.grantPermission).toHaveBeenCalledWith(
       expect.objectContaining({ id: "created-team" }),
       "team_admin",
@@ -271,7 +271,7 @@ describe("legacy implicit team checkout", () => {
 
     const response = await checkoutGet("plan=team");
 
-    expect(response.headers.get("location")).toBe("https://cmux.test/pricing?billing=error");
+    expect(response.headers.get("location")).toBe("https://hmux.test/pricing?billing=error");
     expect(created.delete).toHaveBeenCalled();
     expect(createSession).not.toHaveBeenCalled();
   });

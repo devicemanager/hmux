@@ -1,13 +1,13 @@
 import AppKit
-import CMUXMobileCore
-import CmuxBrowser
+import HMUXMobileCore
+import HmuxBrowser
 import WebKit
 
 @MainActor
 extension BrowserPanel {
     static let mobileBrowserDirtyBeaconScript = """
     (() => {
-      const handlerName = 'cmuxMobileBrowserStream';
+      const handlerName = 'hmuxMobileBrowserStream';
       const editableFocused = () => {
         // Descend shadow roots: document.activeElement reports the shadow
         // host, and the phone keyboard must rise for widget-wrapped inputs.
@@ -28,7 +28,7 @@ extension BrowserPanel {
           return false;
         }
       };
-      const existing = window.__cmuxMobileBrowserStreamBeacon;
+      const existing = window.__hmuxMobileBrowserStreamBeacon;
       if (existing) {
         existing.enabled = true;
         existing.markDirty();
@@ -93,7 +93,7 @@ extension BrowserPanel {
           nativeRequestAnimationFrame(state.tick);
         }
       };
-      window.__cmuxMobileBrowserStreamBeacon = state;
+      window.__hmuxMobileBrowserStreamBeacon = state;
       // Canvas/WebGL pages repaint via their own rAF without mutating the DOM,
       // so DOM listeners and MutationObserver never see them. Wrapping the
       // public rAF marks the stream dirty whenever page code schedules a frame.
@@ -354,7 +354,7 @@ extension BrowserPanel {
     }
 
     private var mobileBrowserStreamCanUseOffscreenRenderHost: Bool {
-        guard !webView.cmuxIsElementFullscreenActiveOrTransitioning else { return false }
+        guard !webView.hmuxIsElementFullscreenActiveOrTransitioning else { return false }
         if let host = webView.superview,
            host.browserPortalHasVisibleWebKitCompanionSubview(for: webView) {
             return false
@@ -373,9 +373,9 @@ extension BrowserPanel {
 
         if mobileBrowserStreamPreviousViewportWasCaptured,
            mobileBrowserStreamPreviousViewport == nil,
-           webView.cmuxBrowserViewportUsesHost,
+           webView.hmuxBrowserViewportUsesHost,
            let nativeLayout = BrowserViewportLayout(
-               containerBounds: webView.cmuxBrowserViewportContainerBounds
+               containerBounds: webView.hmuxBrowserViewportContainerBounds
                    ?? CGRect(origin: .zero, size: webView.bounds.size),
                viewport: nil,
                pageZoom: Double(webView.pageZoom)
@@ -423,7 +423,7 @@ extension BrowserPanel {
         let activeWebView = webView
         Task { @MainActor [weak activeWebView] in
             try? await activeWebView?.evaluateJavaScript(
-                "window.__cmuxMobileBrowserStreamBeacon && (window.__cmuxMobileBrowserStreamBeacon.enabled = false);",
+                "window.__hmuxMobileBrowserStreamBeacon && (window.__hmuxMobileBrowserStreamBeacon.enabled = false);",
                 contentWorld: .page
             )
         }

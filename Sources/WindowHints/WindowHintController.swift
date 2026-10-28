@@ -1,7 +1,7 @@
 import AppKit
 import SwiftUI
 
-/// Hint mode (Show Hints, Cmd-J; cx-zjtn.5, ported from cmux-next): every
+/// Hint mode (Show Hints, Cmd-J; cx-zjtn.5, ported from hmux-next): every
 /// clickable control in the window gets a one or two letter label and
 /// typing a whole label clicks that control, as the person's own click.
 /// Typing a label's last letter with Shift right-clicks the control instead,
@@ -70,7 +70,7 @@ final class WindowHintController {
         let hints = zip(keys.labels, targets).map { Hint(label: $0.0, target: $0.1) }
         let overlay = WindowHintOverlayWindow(over: window)
         window.addChildWindow(overlay, ordered: .above)
-        // A click anywhere ends the session, as in cmux-next.
+        // A click anywhere ends the session, as in hmux-next.
         let mouseMonitor = NSEvent.addLocalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown, .otherMouseDown]) { event in
             MainActor.assumeIsolated { WindowHintController.shared.cancel() }
             return event

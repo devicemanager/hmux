@@ -2,16 +2,16 @@
 set -euo pipefail
 
 root="$(CDPATH= cd -- "$(dirname -- "$0")/../../.." && pwd)"
-state="${CMUX_WORKLOAD_STATE_ROOT:?CMUX_WORKLOAD_STATE_ROOT is required}"
-xctestrun="${CMUX_APP_HOST_XCTESTRUN:?CMUX_APP_HOST_XCTESTRUN is required}"
-physical_shard="${CMUX_WORKLOAD_PARAM_SHARD:?CMUX_WORKLOAD_PARAM_SHARD is required}"
-attempt_id="${CMUX_WORKLOAD_ATTEMPT_ID:?CMUX_WORKLOAD_ATTEMPT_ID is required}"
+state="${HMUX_WORKLOAD_STATE_ROOT:?HMUX_WORKLOAD_STATE_ROOT is required}"
+xctestrun="${HMUX_APP_HOST_XCTESTRUN:?HMUX_APP_HOST_XCTESTRUN is required}"
+physical_shard="${HMUX_WORKLOAD_PARAM_SHARD:?HMUX_WORKLOAD_PARAM_SHARD is required}"
+attempt_id="${HMUX_WORKLOAD_ATTEMPT_ID:?HMUX_WORKLOAD_ATTEMPT_ID is required}"
 physical_total=6
 logical_total=12
 profile_env="$state/profile.env"
 
 stage() {
-  python3 "$root/scripts/ci/cmux_workload_profile.py" stage "$1" "$2"
+  python3 "$root/scripts/ci/hmux_workload_profile.py" stage "$1" "$2"
 }
 
 case "$physical_shard" in
@@ -26,14 +26,14 @@ export PATH="$HOME/.cargo/bin:$PATH"
 export GITHUB_REPOSITORY_ID=1
 export GITHUB_RUN_ID="$attempt_id"
 export GITHUB_RUN_ATTEMPT=1
-export CMUX_APP_HOST_SHARD="$physical_shard"
-export CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1
-export CMUX_DERIVED_DATA_PATH="$derived"
-export CMUX_UNIT_TEST_TIMEOUT_SECONDS=1800
-export CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=1200
-export CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS=45
-export CMUX_APP_HOST_RESERVED_WALL_SECONDS="1=474 4=235 5=320 6=284"
-export CMUX_UNIT_TEST_CASE_TIMEOUT_SECONDS=300
+export HMUX_APP_HOST_SHARD="$physical_shard"
+export HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1
+export HMUX_DERIVED_DATA_PATH="$derived"
+export HMUX_UNIT_TEST_TIMEOUT_SECONDS=1800
+export HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=1200
+export HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS=45
+export HMUX_APP_HOST_RESERVED_WALL_SECONDS="1=474 4=235 5=320 6=284"
+export HMUX_UNIT_TEST_CASE_TIMEOUT_SECONDS=300
 export SWIFT_BACKTRACE="interactive=no,timeout=0s,symbolicate=off,color=no"
 
 prepared=0
@@ -55,7 +55,7 @@ trap cleanup_profile_app_host EXIT
 
 stage start setup
 : > "$profile_env"
-GITHUB_ENV="$profile_env" CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26 \
+GITHUB_ENV="$profile_env" HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=26 \
   ./scripts/select-ci-xcode.sh
 while IFS= read -r assignment; do
   case "$assignment" in
@@ -66,7 +66,7 @@ done < "$profile_env"
 GITHUB_ENV="$profile_env" scripts/ci/prepare-app-host-home.sh
 while IFS= read -r assignment; do
   case "$assignment" in
-    DEVELOPER_DIR=*|CMUX_APP_HOST_*=*) export "$assignment" ;;
+    DEVELOPER_DIR=*|HMUX_APP_HOST_*=*) export "$assignment" ;;
   esac
 done < "$profile_env"
 prepared=1
@@ -78,12 +78,12 @@ run_batch() {
   local batch_output="$state/shard-${logical_shard}-of-${logical_total}.log"
   local reserve_args=()
   local reservation
-  for reservation in ${CMUX_APP_HOST_RESERVED_WALL_SECONDS:-}; do
+  for reservation in ${HMUX_APP_HOST_RESERVED_WALL_SECONDS:-}; do
     reserve_args+=(--reserve "$reservation")
   done
 
   local plan_status=0
-  python3 scripts/ci/cmux_unit_test_shard.py \
+  python3 scripts/ci/hmux_unit_test_shard.py \
     --shard-index "$logical_shard" \
     --shard-total "$logical_total" \
     --physical-shard-total "$physical_total" \
@@ -109,9 +109,9 @@ run_batch() {
     -destination "platform=macOS" \
     "${only_testing_args[@]}" \
     -test-timeouts-enabled YES \
-    -default-test-execution-time-allowance "$CMUX_UNIT_TEST_CASE_TIMEOUT_SECONDS" \
-    -maximum-test-execution-time-allowance "$CMUX_UNIT_TEST_CASE_TIMEOUT_SECONDS" \
-    CMUX_SKIP_ZIG_BUILD=1 \
+    -default-test-execution-time-allowance "$HMUX_UNIT_TEST_CASE_TIMEOUT_SECONDS" \
+    -maximum-test-execution-time-allowance "$HMUX_UNIT_TEST_CASE_TIMEOUT_SECONDS" \
+    HMUX_SKIP_ZIG_BUILD=1 \
     test-without-building 2>&1 | tee "$batch_output"
   local status="${PIPESTATUS[0]}"
   set -e

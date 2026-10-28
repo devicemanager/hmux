@@ -1,5 +1,5 @@
-import CmuxSettingsUI
-import CmuxSettings
+import HmuxSettingsUI
+import HmuxSettings
 import Foundation
 
 /// Loads the agent rows used by the notification-sound matrix.
@@ -10,7 +10,7 @@ import Foundation
 actor NotificationSoundAgentRegistryLoader {
     func load(homeDirectory: String) -> [NotificationSoundAgentOption] {
         var optionsByID: [String: NotificationSoundAgentOption] = [:]
-        for definition in CmuxTaskManagerCodingAgentDefinition.builtIns {
+        for definition in HmuxTaskManagerCodingAgentDefinition.builtIns {
             guard NotificationSoundOverrideContext.isValidAgentID(definition.id) else {
                 continue
             }
@@ -20,8 +20,8 @@ actor NotificationSoundAgentRegistryLoader {
             )
         }
 
-        let registry = CmuxVaultAgentRegistry.load(homeDirectory: homeDirectory)
-        // Keep the eager Settings grid bounded even when cmux.json contains a
+        let registry = HmuxVaultAgentRegistry.load(homeDirectory: homeDirectory)
+        // Keep the eager Settings grid bounded even when hmux.json contains a
         // very large (but schema-valid) Vault registry. Built-ins occupy their
         // slots first; user registrations fill only the remaining capacity.
         let remainingCapacity = max(

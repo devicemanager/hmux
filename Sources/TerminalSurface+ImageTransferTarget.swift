@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 import Foundation
 
 extension TerminalSurface {
@@ -22,7 +22,7 @@ extension TerminalSurface {
         if workspace.isRemoteTerminalSurface(id) {
             return .remote(.workspaceRemote)
         }
-        // A restored `cmux ssh` pane keeps its remote PTY binding while it
+        // A restored `hmux ssh` pane keeps its remote PTY binding while it
         // waits for the remote to report the session connected. That stored
         // binding, not the `ssh` running on its TTY, makes it remote.
         if workspace.remoteConfiguration?.transport == .ssh,
@@ -65,9 +65,9 @@ extension TerminalSurface {
     /// The TTY to check for a user-started SSH session, or nil when the
     /// transfer is local without any process lookup.
     ///
-    /// Only a pane in a workspace without a `cmux ssh` remote configuration
+    /// Only a pane in a workspace without a `hmux ssh` remote configuration
     /// is checked: plain `ssh` typed into a local workspace's terminal. In a
-    /// `cmux ssh` workspace the stored configuration and pane ownership
+    /// `hmux ssh` workspace the stored configuration and pane ownership
     /// decided the target in ``resolvedImageTransferTarget(mode:in:)``.
     ///
     /// Every drop and paste calls this on the main actor, and a nil result
@@ -84,7 +84,7 @@ extension TerminalSurface {
     ) -> String? {
         let workspace = workspace ?? owningWorkspace()
         guard resolvedImageTransferTarget(mode: mode, in: workspace) == .local,
-              // A workspace `cmux ssh` created routes from its stored remote
+              // A workspace `hmux ssh` created routes from its stored remote
               // configuration and pane ownership alone, never from the
               // processes on its TTYs. A local workspace has none, so this is
               // one in-memory read before its existing detection.
@@ -95,12 +95,12 @@ extension TerminalSurface {
         }
         // The fast check reads this surface's own PTY. It applies only when the
         // reported TTY is that PTY: inside tmux the report can name a tmux
-        // pane's TTY, whose foreground job the cmux PTY cannot see. Without a
+        // pane's TTY, whose foreground job the hmux PTY cannot see. Without a
         // live PTY, on a mismatch, or when the group cannot be read at all
         // (`nil` rather than `false`), keep the async lookup so an unknown job
         // is never assumed local.
         if let surfaceDevice = controllingTTYDeviceIdentifier,
-           surfaceDevice == CmuxTopProcessSnapshot.deviceIdentifier(forTTYName: ttyName),
+           surfaceDevice == HmuxTopProcessSnapshot.deviceIdentifier(forTTYName: ttyName),
            let processGroupID = foregroundProcessID(),
            TerminalSSHSessionDetector.foregroundJobHasRemoteShell(
                processGroupID: Int32(processGroupID),

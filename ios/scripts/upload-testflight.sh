@@ -349,10 +349,10 @@ PY
     echo "error: generated notification extension entitlements are invalid" >&2
     return 1
   fi
-  if "$PLISTBUDDY" -c 'Print :CMUXKeychainAccessGroup' "$extension/Info.plist" >/dev/null 2>&1; then
-    "$PLISTBUDDY" -c "Set :CMUXKeychainAccessGroup $DEVELOPMENT_TEAM.$host_bundle_id" "$extension/Info.plist"
+  if "$PLISTBUDDY" -c 'Print :HMUXKeychainAccessGroup' "$extension/Info.plist" >/dev/null 2>&1; then
+    "$PLISTBUDDY" -c "Set :HMUXKeychainAccessGroup $DEVELOPMENT_TEAM.$host_bundle_id" "$extension/Info.plist"
   else
-    "$PLISTBUDDY" -c "Add :CMUXKeychainAccessGroup string $DEVELOPMENT_TEAM.$host_bundle_id" "$extension/Info.plist"
+    "$PLISTBUDDY" -c "Add :HMUXKeychainAccessGroup string $DEVELOPMENT_TEAM.$host_bundle_id" "$extension/Info.plist"
   fi
   codesign --force --sign "$identity" --entitlements "$merged_entitlements" --timestamp "$extension"
   codesign --verify --strict --verbose=2 "$extension"
@@ -485,9 +485,9 @@ verify_ipa_bundle_identity() {
     return 1
   fi
   if [[ -n "$expected_crash_reporting" ]]; then
-    plist_crash_reporting="$("$PLISTBUDDY" -c 'Print :CMUXCrashReportingEnabled' "$app/Info.plist" 2>/dev/null || true)"
+    plist_crash_reporting="$("$PLISTBUDDY" -c 'Print :HMUXCrashReportingEnabled' "$app/Info.plist" 2>/dev/null || true)"
     if [[ "$plist_crash_reporting" != "$expected_crash_reporting" ]]; then
-      echo "error: signed IPA CMUXCrashReportingEnabled is '${plist_crash_reporting:-<absent>}', expected '$expected_crash_reporting': $ipa" >&2
+      echo "error: signed IPA HMUXCrashReportingEnabled is '${plist_crash_reporting:-<absent>}', expected '$expected_crash_reporting': $ipa" >&2
       rm -rf "$workdir"
       return 1
     fi
@@ -542,13 +542,13 @@ PY
     rm -rf "$workdir"
     return 1
   fi
-  # The runtime reads CMUXKeychainAccessGroup verbatim for kSecAttrAccessGroup.
+  # The runtime reads HMUXKeychainAccessGroup verbatim for kSecAttrAccessGroup.
   # An unsigned archive bakes it without the $(AppIdentifierPrefix) team prefix,
   # a group the signature never grants, which kills every SecItem call at
   # runtime (silent dead transport). Fail the upload instead of shipping it.
-  plist_keychain_group="$("$PLISTBUDDY" -c 'Print :CMUXKeychainAccessGroup' "$app/Info.plist" 2>/dev/null || true)"
+  plist_keychain_group="$("$PLISTBUDDY" -c 'Print :HMUXKeychainAccessGroup' "$app/Info.plist" 2>/dev/null || true)"
   if [[ -n "$plist_keychain_group" && "$plist_keychain_group" != "$expected_app_id" ]]; then
-    echo "error: Info.plist CMUXKeychainAccessGroup is '$plist_keychain_group', expected '$expected_app_id' (unsigned-archive AppIdentifierPrefix bake); refusing to upload a keychain-broken build: $app" >&2
+    echo "error: Info.plist HMUXKeychainAccessGroup is '$plist_keychain_group', expected '$expected_app_id' (unsigned-archive AppIdentifierPrefix bake); refusing to upload a keychain-broken build: $app" >&2
     rm -rf "$workdir"
     return 1
   fi
@@ -593,9 +593,9 @@ PY
     rm -rf "$workdir"
     return 1
   fi
-  extension_group="$($PLISTBUDDY -c 'Print :CMUXKeychainAccessGroup' "$extension/Info.plist" 2>/dev/null || true)"
+  extension_group="$($PLISTBUDDY -c 'Print :HMUXKeychainAccessGroup' "$extension/Info.plist" 2>/dev/null || true)"
   if [[ "$extension_group" != "$expected_app_id" ]]; then
-    echo "error: signed IPA notification extension CMUXKeychainAccessGroup is '${extension_group:-<absent>}', expected '$expected_app_id': $ipa" >&2
+    echo "error: signed IPA notification extension HMUXKeychainAccessGroup is '${extension_group:-<absent>}', expected '$expected_app_id': $ipa" >&2
     rm -rf "$workdir"
     return 1
   fi
@@ -695,7 +695,7 @@ verify_ipa_framework_minimum_os_versions() {
 # .symbols files that an app-store-connect export places in the IPA's
 # top-level Symbols/ directory (extracted from the archive's dSYMs when the
 # export options carry uploadSymbols=YES). Without them ASC reports "No dSYM
-# files available" and every crash arrives as raw `cmux + offset` frames.
+# files available" and every crash arrives as raw `hmux + offset` frames.
 # Check the IPA that actually ships: a re-zip that packs only Payload/
 # silently drops Symbols/, which is exactly how every beta through build
 # 20260730090940 shipped unsymbolicatable.
@@ -741,18 +741,18 @@ Usage:
                                   [--signing manual|automatic] [--external]
                                   [--archive-path <path>] [--export-only]
 
-Archives cmux iOS, exports an App Store Connect IPA, and uploads it to
+Archives hmux iOS, exports an App Store Connect IPA, and uploads it to
 App Store Connect. The default lane is beta and preserves the existing
 TestFlight behavior:
 
-  bundle id: dev.cmux.app.beta
-  profile:   cmux Beta Distribution
+  bundle id: dev.hmux.app.beta
+  profile:   hmux Beta Distribution
 
 The production App Store lane uses:
 
-  bundle id: com.cmux.app
-  profile:   cmux App Store Distribution
-  display:   cmux
+  bundle id: com.hmux.app
+  profile:   hmux App Store Distribution
+  display:   hmux
 
 On the manual signing path the exported app is RE-SIGNED with the full
 entitlements before upload. The archive is built unsigned (to avoid
@@ -761,7 +761,7 @@ and silently DROPS app-capability entitlements like aps-environment. That is
 the https://github.com/manaflow-ai/cmux/pull/5496 regression that killed
 beta/prod push. A config-level entitlements file alone does not prove the
 entitlement reaches the signed binary; only codesign -d --entitlements on the
-exported app does. So the re-sign merges Config/cmux-release.entitlements into
+exported app does. So the re-sign merges Config/hmux-release.entitlements into
 the export baseline and signs with the local distribution cert, gated on
 codesign showing aps-environment and a strict signature verify.
 
@@ -802,7 +802,7 @@ Options:
                             the highest build as an update).
   --signing <mode>          Export signing mode: manual (default) or automatic.
                             manual uses the "Apple Distribution" certificate and
-                            the "cmux Beta Distribution" provisioning profile from
+                            the "hmux Beta Distribution" provisioning profile from
                             the local keychain (for local/dev exports). automatic
                             uses Xcode cloud-managed signing via the ASC API key
                             and -allowProvisioningUpdates, so CI does not need an
@@ -810,26 +810,26 @@ Options:
   --external                Make the build eligible for EXTERNAL TestFlight
                             testers (sets testFlightInternalTestingOnly=NO).
                             Default is internal-only: builds reach internal
-                            groups (e.g. "cmux beta") instantly but can never
+                            groups (e.g. "hmux beta") instantly but can never
                             be added to an external group. External-eligible
                             builds must pass Apple Beta App Review (~24h) before
                             external testers can install the first build of a new
                             MARKETING_VERSION. With ASC API-key auth, the script
                             also assigns the processed build to the Founder's
-                            Edition group (CMUX_TESTFLIGHT_EXTERNAL_GROUP_ID /
+                            Edition group (HMUX_TESTFLIGHT_EXTERNAL_GROUP_ID /
                             _NAME) and the Pro group
-                            (CMUX_TESTFLIGHT_PRO_GROUP_ID)
+                            (HMUX_TESTFLIGHT_PRO_GROUP_ID)
                             and auto-submits a new MARKETING_VERSION for Beta App
                             Review when Apple reports READY_FOR_BETA_SUBMISSION.
                             Also set via
-                            CMUX_TESTFLIGHT_EXTERNAL=1.
+                            HMUX_TESTFLIGHT_EXTERNAL=1.
   --archive-path <path>     Reuse an existing archive instead of archiving.
   --export-only             Stop after exporting the signed IPA.
   --skip-notes              Do not set the TestFlight "What to Test" notes after
                             upload. By default a successful upload pushes the top
                             ios/CHANGELOG.md entry to the build (the Internal block,
                             or the External block with --external). Also via
-                            CMUX_TESTFLIGHT_SKIP_NOTES=1.
+                            HMUX_TESTFLIGHT_SKIP_NOTES=1.
   --notes-from-range <base> Auto-generate the "What to Test" notes from the
                             iOS-affecting commits in <base>..HEAD instead of the
                             ios/CHANGELOG.md top entry (used by the every-main-push
@@ -917,26 +917,26 @@ EXPORT_ONLY=0
 SIGNING="manual"
 # Whether the exported build is eligible for external TestFlight testers.
 # Default 0 keeps the historical internal-only behavior (fast dogfood, no Apple
-# review). Set to 1 by --external or CMUX_TESTFLIGHT_EXTERNAL=1 to drop the
+# review). Set to 1 by --external or HMUX_TESTFLIGHT_EXTERNAL=1 to drop the
 # testFlightInternalTestingOnly flag so the build can be added to an external
 # group; such builds then require a one-time Apple Beta App Review per beta
 # marketing version.
 EXTERNAL_TESTING=0
-if [[ "${CMUX_TESTFLIGHT_EXTERNAL:-}" == "1" ]]; then
+if [[ "${HMUX_TESTFLIGHT_EXTERNAL:-}" == "1" ]]; then
   EXTERNAL_TESTING=1
 fi
 # Whether this invocation should assign an uploaded external build to its
 # subscriber groups. Internal-only automation disables this; manual external
 # cuts keep assignment inline after upload.
 ASSIGN_EXTERNAL_GROUP=1
-if [[ "${CMUX_TESTFLIGHT_ASSIGN_EXTERNAL_GROUP:-1}" == "0" ]]; then
+if [[ "${HMUX_TESTFLIGHT_ASSIGN_EXTERNAL_GROUP:-1}" == "0" ]]; then
   ASSIGN_EXTERNAL_GROUP=0
 fi
 # After a successful upload, push the top ios/CHANGELOG.md entry to the build's
 # TestFlight "What to Test" so testers see what changed instead of an opaque
-# timestamp. Set to 1 by --skip-notes or CMUX_TESTFLIGHT_SKIP_NOTES=1.
+# timestamp. Set to 1 by --skip-notes or HMUX_TESTFLIGHT_SKIP_NOTES=1.
 SKIP_NOTES=0
-if [[ "${CMUX_TESTFLIGHT_SKIP_NOTES:-}" == "1" ]]; then
+if [[ "${HMUX_TESTFLIGHT_SKIP_NOTES:-}" == "1" ]]; then
   SKIP_NOTES=1
 fi
 # --notes-from-range <base>: auto-generate the "What to Test" notes from the
@@ -1010,15 +1010,15 @@ done
 
 case "$LANE" in
   beta)
-    PRODUCT_BUNDLE_IDENTIFIER="${IOS_BETA_BUNDLE_ID:-dev.cmux.app.beta}"
-    PROVISIONING_PROFILE_NAME="${IOS_BETA_PROVISIONING_PROFILE_NAME:-cmux Beta Distribution}"
-    PRODUCT_DISPLAY_NAME="${IOS_BETA_DISPLAY_NAME:-cmux BETA}"
+    PRODUCT_BUNDLE_IDENTIFIER="${IOS_BETA_BUNDLE_ID:-dev.hmux.app.beta}"
+    PROVISIONING_PROFILE_NAME="${IOS_BETA_PROVISIONING_PROFILE_NAME:-hmux Beta Distribution}"
+    PRODUCT_DISPLAY_NAME="${IOS_BETA_DISPLAY_NAME:-hmux BETA}"
     CRASH_REPORTING_ENABLED="YES"
     ;;
   appstore)
-    PRODUCT_BUNDLE_IDENTIFIER="${IOS_APPSTORE_BUNDLE_ID:-com.cmux.app}"
-    PROVISIONING_PROFILE_NAME="${IOS_APPSTORE_PROVISIONING_PROFILE_NAME:-cmux App Store Distribution}"
-    PRODUCT_DISPLAY_NAME="${IOS_APPSTORE_DISPLAY_NAME:-cmux}"
+    PRODUCT_BUNDLE_IDENTIFIER="${IOS_APPSTORE_BUNDLE_ID:-com.hmux.app}"
+    PROVISIONING_PROFILE_NAME="${IOS_APPSTORE_PROVISIONING_PROFILE_NAME:-hmux App Store Distribution}"
+    PRODUCT_DISPLAY_NAME="${IOS_APPSTORE_DISPLAY_NAME:-hmux}"
     CRASH_REPORTING_ENABLED="YES"
     ;;
   *)
@@ -1051,8 +1051,8 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 IOS_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 REPO_ROOT="$(cd "$IOS_DIR/.." && pwd)"
 NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER="$(bash "$SCRIPT_DIR/notification-service-bundle-id.sh" "$PRODUCT_BUNDLE_IDENTIFIER")"
-WORKSPACE="$IOS_DIR/cmux.xcworkspace"
-SCHEME="cmux-ios"
+WORKSPACE="$IOS_DIR/hmux.xcworkspace"
+SCHEME="hmux-ios"
 DEVELOPMENT_TEAM="${IOS_DEVELOPMENT_TEAM:-7WLXT3NR37}"
 CLOUD_VPN_BUNDLE_IDENTIFIER="${PRODUCT_BUNDLE_IDENTIFIER}.CloudVPN"
 # The beta app has a provisioned packet-tunnel extension. The official App
@@ -1061,7 +1061,7 @@ CLOUD_VPN_BUNDLE_IDENTIFIER="${PRODUCT_BUNDLE_IDENTIFIER}.CloudVPN"
 # Internal/demo app identities are separate Apple registrations and do not opt
 # in implicitly.
 CLOUD_VPN_REQUIRED=0
-if [[ "$LANE" == "beta" && "$PRODUCT_BUNDLE_IDENTIFIER" == "dev.cmux.app.beta" ]]; then
+if [[ "$LANE" == "beta" && "$PRODUCT_BUNDLE_IDENTIFIER" == "dev.hmux.app.beta" ]]; then
   CLOUD_VPN_REQUIRED=1
 fi
 APPSTORE_SYSTEM_VPN_DISABLED=0
@@ -1069,8 +1069,8 @@ if [[ "$LANE" == "appstore" ]]; then
   APPSTORE_SYSTEM_VPN_DISABLED=1
 fi
 SHARED_XCCONFIG="$IOS_DIR/Config/Shared.xcconfig"
-CHECKED_IN_BETA_MARKETING_VERSION="$(read_xcconfig_setting CMUX_IOS_BETA_MARKETING_VERSION "$SHARED_XCCONFIG")"
-CHECKED_IN_APPSTORE_MARKETING_VERSION="$(read_xcconfig_setting CMUX_IOS_APPSTORE_MARKETING_VERSION "$SHARED_XCCONFIG")"
+CHECKED_IN_BETA_MARKETING_VERSION="$(read_xcconfig_setting HMUX_IOS_BETA_MARKETING_VERSION "$SHARED_XCCONFIG")"
+CHECKED_IN_APPSTORE_MARKETING_VERSION="$(read_xcconfig_setting HMUX_IOS_APPSTORE_MARKETING_VERSION "$SHARED_XCCONFIG")"
 
 case "$LANE" in
   beta)
@@ -1088,25 +1088,25 @@ require_marketing_version "$LANE" "$LANE_MARKETING_VERSION"
 # staging environment, a stale shell export, or a reused archive from silently
 # producing a production-auth app that talks to staging Iroh infrastructure.
 PRODUCTION_RUNTIME_BUILD_ARGS=(
-  CMUX_IOS_AUTH_ENV=production
-  CMUX_API_BASE_URL=https://cmux.com
-  CMUX_IROH_BROKER_BASE_URL=https://cmux.com
-  CMUX_PRESENCE_BASE_URL=https://presence.cmux.dev
+  HMUX_IOS_AUTH_ENV=production
+  HMUX_API_BASE_URL=https://cmux.com
+  HMUX_IROH_BROKER_BASE_URL=https://cmux.com
+  HMUX_PRESENCE_BASE_URL=https://presence.cmux.dev
 )
 
 # Apple review rejected the system VPN API in the public App Store binary.
 # Keep the feature available to beta/internal builds, but compile it out of the
 # official App Store lane and use an entitlement contract without Network
 # Extension permissions. The command-line condition is inherited by the local
-# Swift packages that make up cmuxFeature.
+# Swift packages that make up hmuxFeature.
 BUILD_FEATURE_ARGS=()
 if [[ "$APPSTORE_SYSTEM_VPN_DISABLED" -eq 1 ]]; then
   BUILD_FEATURE_ARGS+=(
-    SWIFT_ACTIVE_COMPILATION_CONDITIONS=CMUX_APPSTORE
-    CMUX_APPSTORE_BUILD=YES
-    CMUX_APP_CODE_SIGN_ENTITLEMENTS=Config/cmux-appstore-release.entitlements
-    CODE_SIGN_ENTITLEMENTS=Config/cmux-appstore-release.entitlements
-    CMUX_CLOUD_VPN_PROVIDER_BUNDLE_IDENTIFIER=
+    SWIFT_ACTIVE_COMPILATION_CONDITIONS=HMUX_APPSTORE
+    HMUX_APPSTORE_BUILD=YES
+    HMUX_APP_CODE_SIGN_ENTITLEMENTS=Config/hmux-appstore-release.entitlements
+    CODE_SIGN_ENTITLEMENTS=Config/hmux-appstore-release.entitlements
+    HMUX_CLOUD_VPN_PROVIDER_BUNDLE_IDENTIFIER=
   )
 fi
 
@@ -1114,7 +1114,7 @@ fi
 NOTES_AUDIENCE="internal"
 [[ "$EXTERNAL_TESTING" == "1" ]] && NOTES_AUDIENCE="external"
 
-# Both beta and the official com.cmux.app upload are TestFlight lanes. The
+# Both beta and the official com.hmux.app upload are TestFlight lanes. The
 # production marketing version has its own independent sequence, so its notes
 # use the current changelog entry without requiring that entry's version to
 # equal the production version.
@@ -1336,29 +1336,29 @@ SHIPPED_BUILD_NUMBER="$BUILD_NUMBER"
 if [[ "$GUARD_REUSED_ARCHIVE" -eq 1 && "${ARCHIVE_BUILD_NUMBER:-}" =~ ^[0-9]+$ ]]; then
   SHIPPED_BUILD_NUMBER="$ARCHIVE_BUILD_NUMBER"
 fi
-if [[ -n "${CMUX_BUILD_NUMBER_OUT_FILE:-}" ]]; then
-  printf '%s\n' "$SHIPPED_BUILD_NUMBER" > "$CMUX_BUILD_NUMBER_OUT_FILE"
+if [[ -n "${HMUX_BUILD_NUMBER_OUT_FILE:-}" ]]; then
+  printf '%s\n' "$SHIPPED_BUILD_NUMBER" > "$HMUX_BUILD_NUMBER_OUT_FILE"
 fi
 
-OUT_DIR="${CMUX_IOS_UPLOAD_DIR:-/tmp/cmux-ios-$LANE-$BUILD_NUMBER}"
+OUT_DIR="${HMUX_IOS_UPLOAD_DIR:-/tmp/hmux-ios-$LANE-$BUILD_NUMBER}"
 DERIVED_DATA="$OUT_DIR/DerivedData"
 EXPORT_PATH="$OUT_DIR/export"
 EXPORT_OPTIONS="$OUT_DIR/ExportOptions.plist"
 
 mkdir -p "$OUT_DIR"
 
-# CI caches, both opt-in. CMUX_IOS_SPM_CACHE_DIR reuses cloned Swift packages
-# (the ios-spm- cache test-ios.yml seeds). CMUX_IOS_COMPILATION_CACHE=1 turns
+# CI caches, both opt-in. HMUX_IOS_SPM_CACHE_DIR reuses cloned Swift packages
+# (the ios-spm- cache test-ios.yml seeds). HMUX_IOS_COMPILATION_CACHE=1 turns
 # on Xcode's compilation cache, stored under $DERIVED_DATA/CompilationCache.noindex
 # so the workflow can restore and save it around this script.
 BUILD_CACHE_ARGS=()
-if [[ -n "${CMUX_IOS_SPM_CACHE_DIR:-}" ]]; then
+if [[ -n "${HMUX_IOS_SPM_CACHE_DIR:-}" ]]; then
   BUILD_CACHE_ARGS+=(
-    -clonedSourcePackagesDirPath "$CMUX_IOS_SPM_CACHE_DIR"
-    -packageCachePath "$CMUX_IOS_SPM_CACHE_DIR/.package-cache"
+    -clonedSourcePackagesDirPath "$HMUX_IOS_SPM_CACHE_DIR"
+    -packageCachePath "$HMUX_IOS_SPM_CACHE_DIR/.package-cache"
   )
 fi
-if [[ "${CMUX_IOS_COMPILATION_CACHE:-0}" == "1" ]]; then
+if [[ "${HMUX_IOS_COMPILATION_CACHE:-0}" == "1" ]]; then
   BUILD_CACHE_ARGS+=(
     COMPILATION_CACHE_ENABLE_CACHING=YES
     COMPILATION_CACHE_LIMIT_SIZE=3221225472
@@ -1375,7 +1375,7 @@ if [[ -n "${ASC_API_KEY_ID:-}" && -n "${ASC_API_ISSUER_ID:-}" && -n "${ASC_API_K
 fi
 
 if [[ -z "$ARCHIVE_PATH" ]]; then
-  ARCHIVE_PATH="$OUT_DIR/cmux.xcarchive"
+  ARCHIVE_PATH="$OUT_DIR/hmux.xcarchive"
   if [[ "$SIGNING" == "automatic" ]]; then
     # Automatic signing must archive a signed app so Xcode has the requested
     # Release entitlements to preserve during App Store Connect export. The
@@ -1393,12 +1393,12 @@ if [[ -z "$ARCHIVE_PATH" ]]; then
       -allowProvisioningUpdates \
       ${XCODE_AUTH_ARGS[@]+"${XCODE_AUTH_ARGS[@]}"} \
       DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
-      CMUX_APP_BUNDLE_IDENTIFIER="$PRODUCT_BUNDLE_IDENTIFIER" \
-      CMUX_HOST_BUNDLE_IDENTIFIER="$PRODUCT_BUNDLE_IDENTIFIER" \
-      CMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER="$NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER" \
+      HMUX_APP_BUNDLE_IDENTIFIER="$PRODUCT_BUNDLE_IDENTIFIER" \
+      HMUX_HOST_BUNDLE_IDENTIFIER="$PRODUCT_BUNDLE_IDENTIFIER" \
+      HMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER="$NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER" \
       PRODUCT_DISPLAY_NAME="$PRODUCT_DISPLAY_NAME" \
       CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
-      CMUX_CRASH_REPORTING_ENABLED="$CRASH_REPORTING_ENABLED" \
+      HMUX_CRASH_REPORTING_ENABLED="$CRASH_REPORTING_ENABLED" \
       ${MARKETING_VERSION_ARGS[@]+"${MARKETING_VERSION_ARGS[@]}"} \
       "${PRODUCTION_RUNTIME_BUILD_ARGS[@]}" \
       ${BUILD_FEATURE_ARGS[@]+"${BUILD_FEATURE_ARGS[@]}"} \
@@ -1420,12 +1420,12 @@ if [[ -z "$ARCHIVE_PATH" ]]; then
       -derivedDataPath "$DERIVED_DATA" \
       ${BUILD_CACHE_ARGS[@]+"${BUILD_CACHE_ARGS[@]}"} \
       DEVELOPMENT_TEAM="$DEVELOPMENT_TEAM" \
-      CMUX_APP_BUNDLE_IDENTIFIER="$PRODUCT_BUNDLE_IDENTIFIER" \
-      CMUX_HOST_BUNDLE_IDENTIFIER="$PRODUCT_BUNDLE_IDENTIFIER" \
-      CMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER="$NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER" \
+      HMUX_APP_BUNDLE_IDENTIFIER="$PRODUCT_BUNDLE_IDENTIFIER" \
+      HMUX_HOST_BUNDLE_IDENTIFIER="$PRODUCT_BUNDLE_IDENTIFIER" \
+      HMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER="$NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER" \
       PRODUCT_DISPLAY_NAME="$PRODUCT_DISPLAY_NAME" \
       CURRENT_PROJECT_VERSION="$BUILD_NUMBER" \
-      CMUX_CRASH_REPORTING_ENABLED="$CRASH_REPORTING_ENABLED" \
+      HMUX_CRASH_REPORTING_ENABLED="$CRASH_REPORTING_ENABLED" \
       ${MARKETING_VERSION_ARGS[@]+"${MARKETING_VERSION_ARGS[@]}"} \
       "${PRODUCTION_RUNTIME_BUILD_ARGS[@]}" \
       ${BUILD_FEATURE_ARGS[@]+"${BUILD_FEATURE_ARGS[@]}"} \
@@ -1458,9 +1458,9 @@ if [[ -n "$ARCHIVE_APP" && -d "$ARCHIVE_APP" ]]; then
     exit 1
   fi
   if [[ "$LANE" == "appstore" ]]; then
-    ARCHIVE_CRASH_REPORTING_ENABLED="$("$PLISTBUDDY" -c 'Print :CMUXCrashReportingEnabled' "$ARCHIVE_APP/Info.plist" 2>/dev/null || true)"
+    ARCHIVE_CRASH_REPORTING_ENABLED="$("$PLISTBUDDY" -c 'Print :HMUXCrashReportingEnabled' "$ARCHIVE_APP/Info.plist" 2>/dev/null || true)"
     if [[ "$ARCHIVE_CRASH_REPORTING_ENABLED" != "$CRASH_REPORTING_ENABLED" ]]; then
-      echo "error: App Store archive CMUXCrashReportingEnabled is '${ARCHIVE_CRASH_REPORTING_ENABLED:-<absent>}', expected '$CRASH_REPORTING_ENABLED'; refusing to export" >&2
+      echo "error: App Store archive HMUXCrashReportingEnabled is '${ARCHIVE_CRASH_REPORTING_ENABLED:-<absent>}', expected '$CRASH_REPORTING_ENABLED'; refusing to export" >&2
       exit 1
     fi
   fi
@@ -1471,16 +1471,16 @@ if [[ "$APPSTORE_SYSTEM_VPN_DISABLED" -eq 1 ]]; then
     echo "error: App Store builds without the system VPN must use manual signing so the archive can be stripped and re-signed without Network Extension permissions" >&2
     exit 2
   fi
-  ARCHIVE_APPSTORE_BUILD="$($PLISTBUDDY -c 'Print :CMUXAppStoreBuild' "$ARCHIVE_APP/Info.plist" 2>/dev/null || true)"
+  ARCHIVE_APPSTORE_BUILD="$($PLISTBUDDY -c 'Print :HMUXAppStoreBuild' "$ARCHIVE_APP/Info.plist" 2>/dev/null || true)"
   if [[ "$ARCHIVE_APPSTORE_BUILD" != "YES" ]]; then
-    echo "error: App Store VPN-free export requires an archive built with CMUX_APPSTORE; the reused archive is missing CMUXAppStoreBuild=YES" >&2
+    echo "error: App Store VPN-free export requires an archive built with HMUX_APPSTORE; the reused archive is missing HMUXAppStoreBuild=YES" >&2
     exit 2
   fi
   if [[ -d "$ARCHIVE_APP/PlugIns/CloudVPN.appex" ]]; then
     rm -rf "$ARCHIVE_APP/PlugIns/CloudVPN.appex"
     echo "removed CloudVPN.appex from the App Store archive"
   fi
-  "$PLISTBUDDY" -c 'Delete :CMUXCloudVPNProviderBundleIdentifier' "$ARCHIVE_APP/Info.plist" 2>/dev/null || true
+  "$PLISTBUDDY" -c 'Delete :HMUXCloudVPNProviderBundleIdentifier' "$ARCHIVE_APP/Info.plist" 2>/dev/null || true
   echo "removed the App Store archive's CloudVPN provider declaration"
 fi
 
@@ -1513,7 +1513,7 @@ fi
 
 # For beta, the archived marketing version (CFBundleShortVersionString) must
 # match the changelog entry before export/upload, so a build never gets notes for
-# the wrong beta version. The official com.cmux.app lane has an independent
+# the wrong beta version. The official com.hmux.app lane has an independent
 # production version stream and validates the changelog structure without this
 # equality check. Skipped for --export-only / --skip-notes. If the archive's
 # version is unreadable, the lane version guard above fails closed before this
@@ -1612,13 +1612,13 @@ xcodebuild -exportArchive \
   ${XCODE_AUTH_ARGS[@]+"${XCODE_AUTH_ARGS[@]}"} \
   | tee "$OUT_DIR/export.log"
 
-IPA_PATH="$EXPORT_PATH/cmux.ipa"
+IPA_PATH="$EXPORT_PATH/hmux.ipa"
 if [[ ! -f "$IPA_PATH" ]]; then
   echo "error: IPA was not exported at $IPA_PATH" >&2
   exit 1
 fi
 # The VPN strip runs from a temporary unpack directory; keep the output path
-# absolute so a caller-provided relative CMUX_IOS_UPLOAD_DIR still works.
+# absolute so a caller-provided relative HMUX_IOS_UPLOAD_DIR still works.
 IPA_PATH="$(cd "$(dirname "$IPA_PATH")" && pwd)/$(basename "$IPA_PATH")"
 
 if [[ "$APPSTORE_SYSTEM_VPN_DISABLED" -eq 1 ]]; then
@@ -1638,7 +1638,7 @@ if [[ "$APPSTORE_SYSTEM_VPN_DISABLED" -eq 1 ]]; then
     rm -rf "$IPA_APP/PlugIns/CloudVPN.appex"
     echo "removed CloudVPN.appex from the App Store IPA"
   fi
-  "$PLISTBUDDY" -c 'Delete :CMUXCloudVPNProviderBundleIdentifier' "$IPA_APP/Info.plist" 2>/dev/null || true
+  "$PLISTBUDDY" -c 'Delete :HMUXCloudVPNProviderBundleIdentifier' "$IPA_APP/Info.plist" 2>/dev/null || true
   rm -f "$IPA_PATH"
   IPA_MEMBERS=(Payload)
   for ipa_member in Symbols SwiftSupport BCSymbolMaps; do
@@ -1663,7 +1663,7 @@ fi
 # https://github.com/manaflow-ai/cmux/pull/5496 (June 2026): the signed beta IPA
 # had aps-environment absent entirely, so the device registered no push token and
 # beta/prod push was dead. The per-config entitlements file fix
-# (Config/cmux-release.entitlements) is necessary but NOT sufficient on its own:
+# (Config/hmux-release.entitlements) is necessary but NOT sufficient on its own:
 # a config-level entitlement only ships if it survives into the signed binary,
 # and only `codesign -d --entitlements` on the EXPORTED app proves that. So we
 # re-sign here with the export baseline MERGED with the Release entitlements file.
@@ -1672,7 +1672,7 @@ fi
 # both directions (hit 2026-06-11, ASC error 90163): App Store Connect rejects
 # any signed entitlement key the profile does not authorize. The Release file
 # carries com.apple.developer.usernotifications.time-sensitive, the App ID has
-# the capability enabled, but the installed "cmux Beta Distribution" profile
+# the capability enabled, but the installed "hmux Beta Distribution" profile
 # predates it and does not list the key, so a naive baseline+Release merge is
 # rejected at upload ("bundle contains a key not in the provisioning profile").
 # The same naive merge also SHIPS WITHOUT keychain-access-groups (authorized by
@@ -1692,11 +1692,11 @@ fi
 # would put distribution material on shared Macs.
 if [[ "$SIGNING" == "manual" ]]; then
   # Resolve the Release entitlements file. Release.xcconfig statically sets
-  # CODE_SIGN_ENTITLEMENTS = Config/cmux-release.entitlements, so default to that
+  # CODE_SIGN_ENTITLEMENTS = Config/hmux-release.entitlements, so default to that
   # path rather than parsing xcodebuild -showBuildSettings (slower, more brittle).
-  RELEASE_ENTITLEMENTS="${IOS_RELEASE_ENTITLEMENTS:-$IOS_DIR/Config/cmux-release.entitlements}"
+  RELEASE_ENTITLEMENTS="${IOS_RELEASE_ENTITLEMENTS:-$IOS_DIR/Config/hmux-release.entitlements}"
   if [[ "$APPSTORE_SYSTEM_VPN_DISABLED" -eq 1 && -z "${IOS_RELEASE_ENTITLEMENTS:-}" ]]; then
-    RELEASE_ENTITLEMENTS="$IOS_DIR/Config/cmux-appstore-release.entitlements"
+    RELEASE_ENTITLEMENTS="$IOS_DIR/Config/hmux-appstore-release.entitlements"
   fi
   RESIGN_IDENTITY="${IOS_DISTRIBUTION_IDENTITY:-Apple Distribution: Manaflow, Inc. (7WLXT3NR37)}"
 
@@ -1864,7 +1864,7 @@ with open(merged_path, "wb") as f:
 PY
   # A wildcard in the provisioning profile is only an authorization envelope.
   # The app signature must claim the one exact group for this bundle, otherwise
-  # sibling cmux apps signed by the same team can read each other's items.
+  # sibling hmux apps signed by the same team can read each other's items.
   plutil -replace keychain-access-groups \
     -json "[\"$DEVELOPMENT_TEAM.$PRODUCT_BUNDLE_IDENTIFIER\"]" \
     "$MERGED_ENTITLEMENTS"
@@ -1881,16 +1881,16 @@ PY
   plutil -lint "$MERGED_ENTITLEMENTS" >/dev/null
 
   # The archive is built unsigned, so $(AppIdentifierPrefix) in Info.plist
-  # expanded to an empty string and CMUXKeychainAccessGroup baked as the bare
+  # expanded to an empty string and HMUXKeychainAccessGroup baked as the bare
   # bundle id. The runtime reads that key verbatim for kSecAttrAccessGroup, and
   # the entitlements above never grant a prefix-less group, so every SecItem
   # call fails with errSecMissingEntitlement and the iroh transport dies before
   # any broker fetch. Rewrite the key to the exact group the entitlements
   # grant, then sign, so the signature covers the corrected plist.
-  if "$PLISTBUDDY" -c 'Print :CMUXKeychainAccessGroup' "$RESIGN_APP/Info.plist" >/dev/null 2>&1; then
-    "$PLISTBUDDY" -c "Set :CMUXKeychainAccessGroup $DEVELOPMENT_TEAM.$PRODUCT_BUNDLE_IDENTIFIER" \
+  if "$PLISTBUDDY" -c 'Print :HMUXKeychainAccessGroup' "$RESIGN_APP/Info.plist" >/dev/null 2>&1; then
+    "$PLISTBUDDY" -c "Set :HMUXKeychainAccessGroup $DEVELOPMENT_TEAM.$PRODUCT_BUNDLE_IDENTIFIER" \
       "$RESIGN_APP/Info.plist"
-    echo "Patched CMUXKeychainAccessGroup -> $DEVELOPMENT_TEAM.$PRODUCT_BUNDLE_IDENTIFIER"
+    echo "Patched HMUXKeychainAccessGroup -> $DEVELOPMENT_TEAM.$PRODUCT_BUNDLE_IDENTIFIER"
   fi
 
   codesign --force --sign "$RESIGN_IDENTITY" --entitlements "$MERGED_ENTITLEMENTS" --timestamp "$RESIGN_APP"
@@ -1920,7 +1920,7 @@ PY
   # the export put in the IPA. The include list stays explicit because this
   # script also writes loose entitlements/profile plists into $RESIGN_DIR that
   # must never ship.
-  RESIGNED_IPA="$EXPORT_PATH/cmux-resigned.ipa"
+  RESIGNED_IPA="$EXPORT_PATH/hmux-resigned.ipa"
   rm -f "$RESIGNED_IPA"
   IPA_MEMBERS=(Payload)
   for ipa_member in Symbols SwiftSupport BCSymbolMaps; do
@@ -1946,7 +1946,7 @@ else
   # keychain to re-sign with, so we cannot re-add a dropped entitlement here. The
   # archive is unsigned and -exportArchive does NOT mine the profile's
   # app-capability entitlements (verified: even a manual export with the
-  # push-capable "cmux Beta Distribution" profile produced only the 4-key baseline
+  # push-capable "hmux Beta Distribution" profile produced only the 4-key baseline
   # with no aps-environment), so an automatic export almost certainly drops it too.
   #
   # Rather than upload a known-push-broken build with only a warning (CI warnings
@@ -2191,9 +2191,9 @@ fi
 # Audience: --external uses the External audience; the default internal cut uses
 # the terse Internal block. SHIPPED_BUILD_NUMBER is the CFBundleVersion that
 # actually shipped (post-guard, or the reused archive's embedded version).
-if [[ -n "${CMUX_TESTFLIGHT_NOTES_REQUEST_FILE:-}" ]]; then
+if [[ -n "${HMUX_TESTFLIGHT_NOTES_REQUEST_FILE:-}" ]]; then
   # Reused runner directories must never upload a previous build's request.
-  rm -f "$CMUX_TESTFLIGHT_NOTES_REQUEST_FILE"
+  rm -f "$HMUX_TESTFLIGHT_NOTES_REQUEST_FILE"
 fi
 if [[ "$TESTFLIGHT_NOTES_LANE" -ne 1 ]]; then
   echo "note: lane '$LANE' is not a TestFlight lane; skipping TestFlight What to Test notes" >&2
@@ -2246,8 +2246,8 @@ else
   # CI can release the Mac before Apple's processing wait. Keep the exact
   # validated/generated arguments; credentials stay in the downstream job.
   # Standalone callers retain the synchronous behavior below.
-  if [[ -n "${CMUX_TESTFLIGHT_NOTES_REQUEST_FILE:-}" ]]; then
-    if ! python3 - "$CMUX_TESTFLIGHT_NOTES_REQUEST_FILE" \
+  if [[ -n "${HMUX_TESTFLIGHT_NOTES_REQUEST_FILE:-}" ]]; then
+    if ! python3 - "$HMUX_TESTFLIGHT_NOTES_REQUEST_FILE" \
       --build-number "$SHIPPED_BUILD_NUMBER" \
       --audience "$NOTES_AUDIENCE" \
       --bundle-id "$PRODUCT_BUNDLE_IDENTIFIER" \
@@ -2286,14 +2286,14 @@ if [[ "$LANE" == "beta" && "$EXPORT_ONLY" -ne 1 && "$EXTERNAL_TESTING" -eq 1 && 
     exit 1
   fi
   EXTERNAL_GROUP_SELECTOR=()
-  if [[ -n "${CMUX_TESTFLIGHT_EXTERNAL_GROUP_ID:-}" ]]; then
-    EXTERNAL_GROUP_SELECTOR=( --group-id "$CMUX_TESTFLIGHT_EXTERNAL_GROUP_ID" )
-  elif [[ -n "${CMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME:-}" ]]; then
-    EXTERNAL_GROUP_SELECTOR=( --group-name "$CMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME" )
+  if [[ -n "${HMUX_TESTFLIGHT_EXTERNAL_GROUP_ID:-}" ]]; then
+    EXTERNAL_GROUP_SELECTOR=( --group-id "$HMUX_TESTFLIGHT_EXTERNAL_GROUP_ID" )
+  elif [[ -n "${HMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME:-}" ]]; then
+    EXTERNAL_GROUP_SELECTOR=( --group-name "$HMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME" )
   else
     EXTERNAL_GROUP_SELECTOR=( --group-id "3ee84bfa-10ad-4f23-a45c-f9a3b037373e" )
   fi
-  PRO_TESTFLIGHT_GROUP_ID="${CMUX_TESTFLIGHT_PRO_GROUP_ID:-34fbede5-3880-4560-b1bb-a45787249780}"
+  PRO_TESTFLIGHT_GROUP_ID="${HMUX_TESTFLIGHT_PRO_GROUP_ID:-34fbede5-3880-4560-b1bb-a45787249780}"
   echo "assigning external TestFlight build $SHIPPED_BUILD_NUMBER to the Founder's Edition and Pro beta groups" >&2
   ASC_API_KEY_ID="$ASC_API_KEY_ID" ASC_API_ISSUER_ID="$ASC_API_ISSUER_ID" \
     ASC_API_KEY_PATH="${ASC_API_KEY_PATH:-}" ASC_API_KEY_P8_BASE64="${ASC_API_KEY_P8_BASE64:-}" \

@@ -27,7 +27,7 @@ END_MARKER = "<!-- triage-radar:end -->"
 
 STOP_WORDS = {
     "a", "about", "after", "again", "all", "also", "an", "and", "another", "are", "as", "at",
-    "be", "because", "before", "but", "by", "can", "cmux", "could", "custom", "does", "for",
+    "be", "because", "before", "but", "by", "can", "hmux", "could", "custom", "does", "for",
     "from", "has", "have", "how", "i", "in", "into", "is", "it", "its", "keeps", "latest",
     "new", "of", "on", "or", "our", "please", "request", "rfc", "setting", "should", "still",
     "support", "that", "the", "their", "this", "to", "under", "use", "using", "version", "when", "with",
@@ -396,7 +396,7 @@ class GitHub:
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "cmux-triage-radar",
+            "User-Agent": "hmux-triage-radar",
         }
 
     def request(self, method: str, path: str, payload: dict[str, Any] | None = None) -> Any:

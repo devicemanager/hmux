@@ -12,7 +12,7 @@ const app = new StackServerApp({ tokenStore: "memory", projectId: required("NEXT
 const q = (value: string) => "'" + value.replaceAll("'", "''") + "'";
 function sql(statement: string) {
   return execFileSync("ssh", ["-o", "BatchMode=yes", sqlHost, "docker", "exec", "-i", sqlContainer,
-    "psql", "-X", "-v", "ON_ERROR_STOP=1", "-U", "cmux", "-d", "cmux", "-At"], { input: statement, encoding: "utf8" }).trim();
+    "psql", "-X", "-v", "ON_ERROR_STOP=1", "-U", "hmux", "-d", "hmux", "-At"], { input: statement, encoding: "utf8" }).trim();
 }
 const checks: string[] = [];
 function passed(name: string) { checks.push(name); console.log(`PASS ${name}`); }
@@ -36,15 +36,15 @@ async function guest(command: string) {
   return result.stdout as string;
 }
 try {
-  user = await app.createUser({ displayName: `VM scope E2E ${suffix}`, primaryEmail: `cmux-vm-scope+${suffix}@manaflow.dev`,
+  user = await app.createUser({ displayName: `VM scope E2E ${suffix}`, primaryEmail: `hmux-vm-scope+${suffix}@manaflow.dev`,
     primaryEmailVerified: true, primaryEmailAuthEnabled: true, password: randomBytes(24).toString("base64url"),
-    clientReadOnlyMetadata: { cmuxVmPlan: "pro" } });
+    clientReadOnlyMetadata: { hmuxVmPlan: "pro" } });
   teamA = await user.createTeam({ displayName: `VM scope A ${suffix}` });
   teamB = await user.createTeam({ displayName: `VM scope B ${suffix}` });
   const session = await user.createSession({ expiresInMillis: 60 * 60 * 1000, isImpersonation: true });
   const tokens = await session.getTokens();
   assert(tokens.accessToken && tokens.refreshToken);
-  headers = { authorization: `Bearer ${tokens.accessToken}`, "x-stack-refresh-token": tokens.refreshToken, "x-cmux-team-id": teamA.id };
+  headers = { authorization: `Bearer ${tokens.accessToken}`, "x-stack-refresh-token": tokens.refreshToken, "x-hmux-team-id": teamA.id };
   const created = await api('/api/vm', { provider: 'freestyle', memoryMb: 4096, billingTeamId: teamA.id });
   vmId = created.id;
   assert(vmId);
@@ -57,24 +57,24 @@ try {
     (${q(teamA.id)}, 'anthropic_api_key', 'Claude A', 'fixture', 'team', ${q(user.id)}, 'x', 'x', 'x', 'x', 'x'),
     (${q(teamB.id)}, 'anthropic_api_key', 'Claude B', 'fixture', 'team', ${q(user.id)}, 'x', 'x', 'x', 'x', 'x');`);
   // Force the real driver's guest-CLI heal before invoking the new command.
-  await api(`/api/vm/${vmId}/attach-endpoint`, { transport: 'cmux-remote' });
-  const env = '. /etc/cmux/model-plane.env; ';
-  const list = JSON.parse(await guest(env + 'cmux coderouter accounts --json'));
+  await api(`/api/vm/${vmId}/attach-endpoint`, { transport: 'hmux-remote' });
+  const env = '. /etc/hmux/model-plane.env; ';
+  const list = JSON.parse(await guest(env + 'hmux coderouter accounts --json'));
   assert.equal(list.teamId, teamA.id);
   assert.deepEqual(list.accounts.map((a: { label: string }) => a.label).sort(), ['Claude A', 'Shared A']);
   passed('real guest lists only its team shared accounts across native and Claude catalogs');
-  const org = JSON.parse(await guest(env + 'cmux coderouter org current --json'));
+  const org = JSON.parse(await guest(env + 'hmux coderouter org current --json'));
   assert.deepEqual(org, { teamId: teamA.id, fixed: true });
   passed('real guest organization is fixed to its VM team');
-  const forged = JSON.parse(await guest(env + `curl -fsS -H ${q('x-cmux-team-id: '+teamB.id)} "$CMUX_CODEROUTER_URL/api/coderouter/accounts?teamId=${teamB.id}"`));
+  const forged = JSON.parse(await guest(env + `curl -fsS -H ${q('x-hmux-team-id: '+teamB.id)} "$HMUX_CODEROUTER_URL/api/coderouter/accounts?teamId=${teamB.id}"`));
   assert.equal(forged.teamId, teamA.id);
   assert.deepEqual(forged.accounts.map((a: { label: string }) => a.label), ['Shared A']);
   passed('query and header attempts to select the creator’s other team are ignored');
-  assert.equal((await guest(env + 'curl -sS -o /dev/null -w "%{http_code}" -X POST "$CMUX_CODEROUTER_URL/api/coderouter/session"')).trim(), '403');
+  assert.equal((await guest(env + 'curl -sS -o /dev/null -w "%{http_code}" -X POST "$HMUX_CODEROUTER_URL/api/coderouter/session"')).trim(), '403');
   passed('guest cannot mint another organization session');
   const privateAccountId = sql(`select id from coderouter_accounts where team_id = ${q(teamA.id)} and provider_account_id = 'e2e-private-a'`);
   await api(`/api/coderouter/accounts/${privateAccountId}/sharing`, { family: 'native', visibility: 'team' }, 'PATCH');
-  const sharedList = JSON.parse(await guest(env + 'cmux coderouter accounts --json'));
+  const sharedList = JSON.parse(await guest(env + 'hmux coderouter accounts --json'));
   assert(sharedList.accounts.some((account: { label: string }) => account.label === 'Private A'));
   await api(`/api/coderouter/accounts/${privateAccountId}/sharing`, { family: 'native', visibility: 'private' }, 'PATCH');
   passed('team administrator can explicitly share and unshare a private import');
@@ -87,15 +87,15 @@ try {
   const memberTokens = await (await member.createSession({ expiresInMillis: 600_000, isImpersonation: true })).getTokens();
   const denied = await fetch(new URL(`/api/coderouter/accounts/${privateAccountId}/sharing`, origin), {
     method: 'PATCH', headers: { authorization: `Bearer ${memberTokens.accessToken}`, 'x-stack-refresh-token': memberTokens.refreshToken!,
-      'x-cmux-team-id': teamA.id, 'content-type': 'application/json' }, body: JSON.stringify({ family: 'native', visibility: 'team' }),
+      'x-hmux-team-id': teamA.id, 'content-type': 'application/json' }, body: JSON.stringify({ family: 'native', visibility: 'team' }),
   });
   assert.equal(denied.status, 403);
   passed('ordinary team membership cannot administer provider accounts');
   // Remove every eligible model account. Private and other-team accounts must
   // never become fallback candidates, including after a pool grant is removed.
   sql(`delete from coderouter_pool_accounts where team_id = ${q(teamA.id)};`);
-  assert.equal((await guest(env + 'curl -sS -o /tmp/scope-model.json -w "%{http_code}" "$CMUX_CODEROUTER_URL/v1/models"')).trim(), '503');
-  const empty = JSON.parse(await guest(env + 'cmux coderouter accounts --json'));
+  assert.equal((await guest(env + 'curl -sS -o /tmp/scope-model.json -w "%{http_code}" "$HMUX_CODEROUTER_URL/v1/models"')).trim(), '503');
+  const empty = JSON.parse(await guest(env + 'hmux coderouter accounts --json'));
   assert.equal(empty.accounts.length, 0);
   assert.equal(sql(`select count(*) from coderouter_accounts where team_id in (${q(teamA.id)},${q(teamB.id)}) and last_used_at is not null`), '0');
   passed('model routing fails closed after revocation without using private or foreign accounts');

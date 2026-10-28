@@ -71,7 +71,7 @@ else:
             calls = root / "calls.jsonl"
             env = dict(os.environ, PATH=f"{bindir}:{os.environ['PATH']}",
                        RUNNER_TEMP=str(root), CALLS=str(calls), OUTCOME=outcome,
-                       FAIL_SUITE=fail_suite, CMUX_APP_HOST_XCTESTRUN="/products/cmux-unit.xctestrun")
+                       FAIL_SUITE=fail_suite, HMUX_APP_HOST_XCTESTRUN="/products/hmux-unit.xctestrun")
             result = subprocess.run(["/bin/bash", "-c", script], cwd=root, env=env,
                                     text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
             invocations = [json.loads(line) for line in calls.read_text().splitlines()] if calls.exists() else []
@@ -83,8 +83,8 @@ else:
         self.assertEqual(len(calls), len(SUITES))
         for suite, call in zip(SUITES, calls):
             args = call["args"]
-            self.assertIn(f"-only-testing:cmuxTests/{suite}", args)
-            self.assertEqual(args[args.index("-xctestrun") + 1], "/products/cmux-unit.xctestrun")
+            self.assertIn(f"-only-testing:hmuxTests/{suite}", args)
+            self.assertEqual(args[args.index("-xctestrun") + 1], "/products/hmux-unit.xctestrun")
             self.assertIn("test-without-building", args)
             self.assertNotIn("test", args)
             self.assertNotIn("build-for-testing", args)
@@ -179,7 +179,7 @@ print('Test run with 4 tests in 1 suite passed after 0.1 seconds.')
                 RUNNER_TEMP=str(runner_temp),
                 SELECTED_PACKAGES=str(selected),
                 SELECTED_COUNT=str(len(package_names)),
-                CMUX_SWIFT_PACKAGE_BUILD_JOBS="3",
+                HMUX_SWIFT_PACKAGE_BUILD_JOBS="3",
             )
             result = subprocess.run(["/bin/bash", "-c", script], cwd=root, env=env,
                                     text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
@@ -189,7 +189,7 @@ print('Test run with 4 tests in 1 suite passed after 0.1 seconds.')
     def test_package_warning_gates_run_once(self):
         result, calls = self.run_packages()
         self.assertEqual(result.returncode, 0, result.stdout)
-        for package in ("CMUXAgentLaunch", "CmuxAgentJournal"):
+        for package in ("HMUXAgentLaunch", "HmuxAgentJournal"):
             matching = [args for args in calls if args[args.index('--package-path') + 1].endswith('/' + package)]
             # One prebuild and one test run, with the same flags, so the test
             # run finds the prebuilt products up to date.
@@ -211,26 +211,26 @@ print('Test run with 4 tests in 1 suite passed after 0.1 seconds.')
         self.assertIn("at a time", result.stdout)
 
     def test_package_warning_is_still_fatal(self):
-        for package in ("CMUXAgentLaunch", "CmuxAgentJournal"):
+        for package in ("HMUXAgentLaunch", "HmuxAgentJournal"):
             with self.subTest(package=package):
                 result, _ = self.run_packages(package)
                 self.assertNotEqual(result.returncode, 0, result.stdout)
 
     def test_a_failing_package_does_not_hide_later_packages(self):
-        # CMUXAgentLaunch sorts first, so every other package runs after it.
-        result, calls = self.run_packages("CMUXAgentLaunch")
+        # HMUXAgentLaunch sorts first, so every other package runs after it.
+        result, calls = self.run_packages("HMUXAgentLaunch")
         self.assertNotEqual(result.returncode, 0, result.stdout)
         ran = {Path(args[args.index('--package-path') + 1]).name for args in calls}
-        self.assertIn("CmuxTerminal", ran)
-        self.assertIn("CmuxUpdater", ran)
+        self.assertIn("HmuxTerminal", ran)
+        self.assertIn("HmuxUpdater", ran)
         self.assertIn(
-            "::error title=Swift package tests failed::CMUXAgentLaunch failed with exit status 1",
+            "::error title=Swift package tests failed::HMUXAgentLaunch failed with exit status 1",
             result.stdout,
         )
         self.assertEqual(result.stdout.count("::error title=Swift package tests failed::"), 1)
         table = result.stdout.split("Swift package test results:\n", 1)[1]
-        self.assertRegex(table, r"CMUXAgentLaunch +failed \(exit 1\)")
-        self.assertRegex(table, r"CmuxUpdater +passed")
+        self.assertRegex(table, r"HMUXAgentLaunch +failed \(exit 1\)")
+        self.assertRegex(table, r"HmuxUpdater +passed")
         self.assertIn("1 of ", result.stdout)
 
 

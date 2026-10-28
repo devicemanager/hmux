@@ -428,16 +428,16 @@ class ClassificationTests(TempRepoCase):
 
 
 class RemoteTests(unittest.TestCase):
-    def test_detects_the_cmux_remote_by_url(self) -> None:
+    def test_detects_the_hmux_remote_by_url(self) -> None:
         with tempfile.TemporaryDirectory() as scratch, mock.patch.dict(os.environ, GIT_ENV):
             repo = Path(scratch)
             git(repo, "init", "-q")
-            git(repo, "remote", "add", "origin", "git@github.com:someone/cmux.git")
+            git(repo, "remote", "add", "origin", "git@github.com:someone/hmux.git")
             git(repo, "remote", "add", "upstream", "https://github.com/manaflow-ai/cmux.git")
             git(repo, "remote", "add", "mf", "git@github.com:manaflow-ai/cmux.git")
-            self.assertEqual(merge_main.cmux_remote(repo), "mf")
+            self.assertEqual(merge_main.hmux_remote(repo), "mf")
             git(repo, "remote", "set-url", "origin", "https://github.com/manaflow-ai/cmux")
-            self.assertEqual(merge_main.cmux_remote(repo), "origin")
+            self.assertEqual(merge_main.hmux_remote(repo), "origin")
 
 
 if __name__ == "__main__":

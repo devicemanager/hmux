@@ -234,13 +234,13 @@ class DecideTests(Case):
                       self.skip_reason({h1: "success"}))
 
     def test_main_editing_ui_tests_does_not_apply(self) -> None:
-        # No pull request job runs cmuxUITests/, so suite-coverage fails any
+        # No pull request job runs hmuxUITests/, so suite-coverage fails any
         # routed diff that touches it. Main's edit there is not this pull
         # request's, however small the delta.
         h1 = self.origin.commit("pr", {"app/a.txt": "a-pr\n", "app/b.txt": "b-pr\n"}, "pull request work")
-        self.origin.commit("main", {"cmuxUITests/SidebarUITests.swift": "main edit\n"})
+        self.origin.commit("main", {"hmuxUITests/SidebarUITests.swift": "main edit\n"})
         self.origin.merge_main_into_pr()
-        self.assertIn("touch files no pull request job runs: cmuxUITests/SidebarUITests.swift",
+        self.assertIn("touch files no pull request job runs: hmuxUITests/SidebarUITests.swift",
                       self.skip_reason({h1: "success"}))
 
     def test_pull_request_that_changes_ci_policy_keeps_its_whole_diff(self) -> None:
@@ -498,7 +498,7 @@ class WorkflowTests(unittest.TestCase):
 
     def test_delta_step_runs_only_for_same_repository_pull_requests_with_the_switch_on(self) -> None:
         step = self.steps["delta"]
-        same, fork = "manaflow-ai/cmux", "someone/cmux"
+        same, fork = "manaflow-ai/cmux", "someone/hmux"
         cases = [
             # event, head repository, CI_DELTA_SINCE_GREEN (None: unset), runs
             ("pull_request", same, None, True),
@@ -533,7 +533,7 @@ class WorkflowTests(unittest.TestCase):
         run = detect["run"]
         override = run.index('BASE_SHA="$DELTA_BASE_SHA"')
         self.assertLess(run.index('BASE_SHA="$(git rev-parse "$MERGE_SHA^1")"'), override)
-        self.assertLess(override, run.index("> /tmp/cmux-ci-changed-files.txt"))
+        self.assertLess(override, run.index("> /tmp/hmux-ci-changed-files.txt"))
 
     def test_dev_build_label_builds_a_head_that_only_merged_main(self) -> None:
         # The delta routes a merge-only head from its last green head, so the

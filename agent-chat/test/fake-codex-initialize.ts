@@ -2,7 +2,7 @@ import { appendFileSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { readLines } from "../adapters/lines";
 
-const directory = process.env.CMUX_CODEX_INIT_TEST_DIRECTORY;
+const directory = process.env.HMUX_CODEX_INIT_TEST_DIRECTORY;
 if (!directory) throw new Error("missing initialization fixture directory");
 const mode = readFileSync(join(directory, "mode"), "utf8").trim();
 appendFileSync(join(directory, "processes.jsonl"), JSON.stringify({ pid: process.pid, mode }) + "\n");

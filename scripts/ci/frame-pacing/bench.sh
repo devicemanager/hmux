@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-# Fling bench for the cmux-next agent pane on a 120 Hz virtual display.
+# Fling bench for the hmux-next agent pane on a 120 Hz virtual display.
 #
 # usage: bench.sh WORK_DIR [FLINGS]
 #   WORK_DIR holds the tagged app (app/*.app), VDisplay.app (built from
 #   vdisplay.m) and an out/ directory. Run it in the console user's GUI session
-#   (scripts/ci/run-in-console-session.sh); CMUX_TAG is the app's baked tag.
+#   (scripts/ci/run-in-console-session.sh); HMUX_TAG is the app's baked tag.
 #
-# For each render rate (CMUX_NEXT_AGENT_PANE_FULL_RATE=0 capped, =1 full) it
+# For each render rate (HMUX_NEXT_AGENT_PANE_FULL_RATE=0 capped, =1 full) it
 # launches the app with the mock agent pane, seeds 5000 rows, runs one warm-up
 # fling and FLINGS measured flings (3 by default; an argument, because
 # run-in-console-session.sh forwards only a fixed list of variables), and writes out/<mode>-<n>.json with the
@@ -16,17 +16,17 @@
 set -uo pipefail
 
 work="${1:?usage: bench.sh WORK_DIR}"
-tag="${CMUX_TAG:?set CMUX_TAG to the baked tag of the app}"
+tag="${HMUX_TAG:?set HMUX_TAG to the baked tag of the app}"
 flings="${2:-3}"
 case "$flings" in ""|*[!0-9]*) echo "FLINGS must be a number, got: $flings" >&2; exit 1 ;; esac
 out="$work/out"
 mkdir -p "$out"
 app="$(ls -d "$work"/app/*.app 2>/dev/null | head -1)"
 [ -n "$app" ] || { echo "no app under $work/app" >&2; exit 1; }
-cli="$app/Contents/Resources/bin/cmux"
-# The debug socket follows the tag's path slug (scripts/cmux-debug-cli.sh).
+cli="$app/Contents/Resources/bin/hmux"
+# The debug socket follows the tag's path slug (scripts/hmux-debug-cli.sh).
 slug="$(printf '%s' "$tag" | tr '[:upper:]' '[:lower:]' | sed -E -e 's/[^a-z0-9]+/-/g' -e 's/^-+//' -e 's/-+$//')"
-socket="/tmp/cmux-debug-$slug.sock"
+socket="/tmp/hmux-debug-$slug.sock"
 
 teardown() {
   pkill -f "$app/" 2>/dev/null || true
@@ -45,13 +45,13 @@ cp "$out/vdisplay.out" "$out/display.txt" 2>/dev/null || echo "error: the virtua
 cat "$out/display.txt"
 grep -q '^ready' "$out/display.txt" || exit 0
 
-rpc() { CMUX_SOCKET_PATH="$socket" "$cli" rpc debug.agent_pane "$1" 2>&1; }
+rpc() { HMUX_SOCKET_PATH="$socket" "$cli" rpc debug.agent_pane "$1" 2>&1; }
 
 for mode in 0 1; do
   rm -f "$socket"
-  open -n "$app" --env CMUX_TAG="$tag" --env CMUX_NEXT_AGENT_PANE_MOCK=1 \
-    --env CMUX_NEXT_SOCKET_MODE=automation --env CMUX_NEXT_NO_ACTIVATE=1 \
-    --env CMUX_DEV_BACKEND_MODE=local --env CMUX_NEXT_AGENT_PANE_FULL_RATE="$mode"
+  open -n "$app" --env HMUX_TAG="$tag" --env HMUX_NEXT_AGENT_PANE_MOCK=1 \
+    --env HMUX_NEXT_SOCKET_MODE=automation --env HMUX_NEXT_NO_ACTIVATE=1 \
+    --env HMUX_DEV_BACKEND_MODE=local --env HMUX_NEXT_AGENT_PANE_FULL_RATE="$mode"
   for _ in $(seq 90); do [ -S "$socket" ] && break; sleep 1; done
   if [ ! -S "$socket" ]; then
     echo "mode $mode: no socket at $socket" | tee "$out/$mode-error.txt"
@@ -59,7 +59,7 @@ for mode in 0 1; do
     continue
   fi
   sleep 3
-  CMUX_SOCKET_PATH="$socket" "$cli" agent new-chat >/dev/null 2>&1
+  HMUX_SOCKET_PATH="$socket" "$cli" agent new-chat >/dev/null 2>&1
   sleep 4
   rpc '{"action":"seed_rows","count":5000}' >/dev/null
   sleep 3

@@ -1,0 +1,31 @@
+{
+  "actions": {
+    "hmux.newTerminal": {
+      "type": "command",
+      "title": "Dot HMUX Wins",
+      "subtitle": "Same-directory .hmux/hmux.json should beat hmux.json",
+      "command": "echo 'DOT HMUX WINS'; echo 'SOURCE=legacy/prefer-dot-hmux/.hmux/hmux.json'; pwd",
+      "target": "newTabInCurrentPane",
+      "shortcut": "cmd+shift+4",
+      "icon": { "type": "image", "path": "./icons/winner-terminal.svg" }
+    },
+    "winner.echo": {
+      "type": "command",
+      "title": "Winner Echo",
+      "subtitle": "If you see this, .hmux precedence is working",
+      "command": "echo 'WINNER ECHO'; echo 'SOURCE=legacy/prefer-dot-hmux/.hmux/hmux.json'; pwd",
+      "target": "newTabInCurrentPane",
+      "shortcut": "cmd+shift+p",
+      "icon": { "type": "emoji", "value": "🏆" }
+    }
+  },
+  "ui": {
+    "surfaceTabBar": {
+      "buttons": [
+        "hmux.newTerminal",
+        "winner.echo",
+        "hmux.newBrowser"
+      ]
+    }
+  }
+}

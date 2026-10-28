@@ -1,1 +1,1 @@
-../../Packages/macOS/CmuxSettingsUI/Sources/CmuxSettingsUI/Resources/CustomSidebars/starter.swift
+../../Packages/macOS/HmuxSettingsUI/Sources/HmuxSettingsUI/Resources/CustomSidebars/starter.swift

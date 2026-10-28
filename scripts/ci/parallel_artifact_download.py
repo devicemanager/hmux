@@ -275,7 +275,7 @@ def restore_aggregate(repository, artifact_id, run_id, expected_digest, destinat
         raise TransportError("artifact does not match this run's pinned product")
     destination.parent.mkdir(parents=True, exist_ok=True)
     started = time.monotonic()
-    with tempfile.TemporaryDirectory(prefix="cmux-parallel-artifact-", dir=destination.parent) as work:
+    with tempfile.TemporaryDirectory(prefix="hmux-parallel-artifact-", dir=destination.parent) as work:
         staging = Path(work)
         zip_path = staging / "artifact.zip"
         fetch_zip(repository, artifact_id, zip_path, size, token)
@@ -323,8 +323,8 @@ def main() -> int:
               "using actions/download-artifact.")
         return 0
     record.update({"run_id": os.environ.get("GITHUB_RUN_ID"), "job": os.environ.get("GITHUB_JOB"),
-                   "shard": os.environ.get("CMUX_APP_HOST_SHARD"), "runner_name": os.environ.get("RUNNER_NAME")})
-    print("CMUX_TEST_PRODUCT_PARALLEL_TRANSFER " + json.dumps(record, sort_keys=True))
+                   "shard": os.environ.get("HMUX_APP_HOST_SHARD"), "runner_name": os.environ.get("RUNNER_NAME")})
+    print("HMUX_TEST_PRODUCT_PARALLEL_TRANSFER " + json.dumps(record, sort_keys=True))
     emit(hit="true", transfer_seconds=record["transfer_seconds"])
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:

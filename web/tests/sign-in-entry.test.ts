@@ -91,26 +91,26 @@ describe("sign-in entry", () => {
 });
 
 describe("sign-ins for the Mac app", () => {
-  const appCallback = "cmux://auth-callback?cmux_auth_state=state-123";
+  const appCallback = "hmux://auth-callback?hmux_auth_state=state-123";
   const afterSignIn = (callback: string) => `/handler/after-sign-in?native_app_return_to=${encodeURIComponent(callback)}`;
 
   test("an app attempt's return target counts, relative or absolute", () => {
     expect(signInIsForApp(afterSignIn(appCallback))).toBe(true);
     expect(signInIsForApp(`https://cmux.com${afterSignIn(appCallback)}`)).toBe(true);
-    expect(signInIsForApp(`${afterSignIn(appCallback)}&cmux_auth_handoff=nonce`)).toBe(true);
+    expect(signInIsForApp(`${afterSignIn(appCallback)}&hmux_auth_handoff=nonce`)).toBe(true);
   });
 
   test("web sign-ins, the pricing webview and malformed targets do not", () => {
     expect(signInIsForApp(null)).toBe(false);
     expect(signInIsForApp("/dashboard")).toBe(false);
-    expect(signInIsForApp(afterSignIn("cmux://auth-callback"))).toBe(false);
+    expect(signInIsForApp(afterSignIn("hmux://auth-callback"))).toBe(false);
     expect(signInIsForApp(`/dashboard?native_app_return_to=${encodeURIComponent(appCallback)}`)).toBe(false);
     expect(signInIsForApp(afterSignIn("not a url"))).toBe(false);
   });
 });
 
 describe("OAuth return marker", () => {
-  const page = "https://cmux.test/handler/sign-in?after_auth_return_to=%2Fdashboard&prompt=select_account";
+  const page = "https://hmux.test/handler/sign-in?after_auth_return_to=%2Fdashboard&prompt=select_account";
 
   test("the provider returns to this page with the marker, other params kept", () => {
     const returnTo = oauthReturnTo(`${page}#top`);
@@ -124,8 +124,8 @@ describe("OAuth return marker", () => {
   });
 
   test("a page with no return target leaves the provider's default return", () => {
-    expect(oauthReturnTo("https://cmux.test/handler/sign-in")).toBeUndefined();
-    expect(oauthReturnTo("https://cmux.test/handler/sign-in?prompt=select_account")).toBeUndefined();
+    expect(oauthReturnTo("https://hmux.test/handler/sign-in")).toBeUndefined();
+    expect(oauthReturnTo("https://hmux.test/handler/sign-in?prompt=select_account")).toBeUndefined();
   });
 
   test("only the exact marker value counts", () => {
@@ -142,14 +142,14 @@ describe("links that keep the return target", () => {
 
   test("password sign-up waits on the pending page with all three return params", () => {
     const current = new URL(
-      "https://cmux.test/handler/sign-up?after_auth_return_to=%2Fa&web_return_to=%2Fb&native_app_return_to=cmux%3A%2F%2Fauth-callback&other=x",
+      "https://hmux.test/handler/sign-up?after_auth_return_to=%2Fa&web_return_to=%2Fb&native_app_return_to=hmux%3A%2F%2Fauth-callback&other=x",
     );
     const pending = new URL(signUpPendingHref(current));
     expect(pending.pathname).toBe("/handler/auth-error");
     expect(pending.searchParams.get("code")).toBe("signup-pending");
     expect(pending.searchParams.get("after_auth_return_to")).toBe("/a");
     expect(pending.searchParams.get("web_return_to")).toBe("/b");
-    expect(pending.searchParams.get("native_app_return_to")).toBe("cmux://auth-callback");
+    expect(pending.searchParams.get("native_app_return_to")).toBe("hmux://auth-callback");
     expect(pending.searchParams.has("other")).toBe(false);
   });
 
@@ -161,10 +161,10 @@ describe("links that keep the return target", () => {
 });
 
 describe("native sign-in prompt", () => {
-  const afterSignIn = "/handler/after-sign-in?native_app_return_to=cmux%3A%2F%2Fauth-callback%3Fcmux_auth_state%3Dstate-123";
+  const afterSignIn = "/handler/after-sign-in?native_app_return_to=hmux%3A%2F%2Fauth-callback%3Fhmux_auth_state%3Dstate-123";
 
   function start(extra: string) {
-    const url = `https://cmux.test/handler/native-sign-in?after_auth_return_to=${encodeURIComponent(afterSignIn)}${extra}`;
+    const url = `https://hmux.test/handler/native-sign-in?after_auth_return_to=${encodeURIComponent(afterSignIn)}${extra}`;
     return startNativeSignIn(new NextRequest(url, { headers: { "sec-fetch-site": "none" } }));
   }
 
@@ -273,7 +273,7 @@ describe("hosted error pages", () => {
     expect(hostedAuthErrorRedirect("oauth-callback", q("error=access_denied"))).toBe("/handler/auth-error");
     expect(hostedAuthErrorRedirect("oauth-callback", q("code=abc&state=xyz"))).toBeNull();
     // The return target survives, so "back to sign in" still finishes the original sign-in.
-    const kept = new URL(hostedAuthErrorRedirect("error", q("errorCode=X&after_auth_return_to=%2Fdashboard&other=1"))!, "https://cmux.test");
+    const kept = new URL(hostedAuthErrorRedirect("error", q("errorCode=X&after_auth_return_to=%2Fdashboard&other=1"))!, "https://hmux.test");
     expect(kept.searchParams.get("after_auth_return_to")).toBe("/dashboard");
     expect(kept.searchParams.has("other")).toBe(false);
     expect(hostedAuthErrorRedirect("sign-in", q("error=x"))).toBeNull();
@@ -356,10 +356,10 @@ describe("login hint for a remembered account", () => {
 describe("switch account from the dashboard", () => {
   test("opens the chooser and comes back to the dashboard through after-sign-in", async () => {
     const { vaultSwitchAccountHref } = await import("../app/lib/vault-auth");
-    const href = new URL(vaultSwitchAccountHref("/en/dashboard"), "https://cmux.test");
+    const href = new URL(vaultSwitchAccountHref("/en/dashboard"), "https://hmux.test");
     expect(href.pathname).toBe("/handler/sign-in");
     expect(href.searchParams.get("prompt")).toBe(SELECT_ACCOUNT_PROMPT);
-    const afterSignIn = new URL(href.searchParams.get("after_auth_return_to")!, "https://cmux.test");
+    const afterSignIn = new URL(href.searchParams.get("after_auth_return_to")!, "https://hmux.test");
     expect(afterSignIn.pathname).toBe("/handler/after-sign-in");
     expect(afterSignIn.searchParams.get("after_auth_return_to")).toBe("/en/dashboard");
     expect(signInEntry({ ...signedIn, prompt: href.searchParams.get("prompt") })).toBe("choose-account");

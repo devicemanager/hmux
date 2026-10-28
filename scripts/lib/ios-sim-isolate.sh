@@ -1,24 +1,24 @@
 # shellcheck shell=bash
 # Per-tag isolated iOS simulators. Agent sessions must never share a visible
 # or booted simulator with the user or another agent, so each tag gets its own
-# uniquely named device: "cmux-dev-<slug>". Created on demand from a base
-# device type (default "iPhone 17", override CMUX_IOS_SIM_BASE_DEVICE) and the
+# uniquely named device: "hmux-dev-<slug>". Created on demand from a base
+# device type (default "iPhone 17", override HMUX_IOS_SIM_BASE_DEVICE) and the
 # newest available iOS runtime.
 
-# cmux_ios_isolated_sim_name <slug>
-cmux_ios_isolated_sim_name() {
-  printf 'cmux-dev-%s' "$1"
+# hmux_ios_isolated_sim_name <slug>
+hmux_ios_isolated_sim_name() {
+  printf 'hmux-dev-%s' "$1"
 }
 
-# cmux_ios_isolated_sim_udid <slug>
+# hmux_ios_isolated_sim_udid <slug>
 # Prints the UDID of the isolated simulator for the slug, creating the device
 # if it does not exist yet. Returns non-zero when the device cannot be
 # resolved or created.
-cmux_ios_isolated_sim_udid() {
+hmux_ios_isolated_sim_udid() {
   local slug="$1"
   local name base
-  name="$(cmux_ios_isolated_sim_name "$slug")"
-  base="${CMUX_IOS_SIM_BASE_DEVICE:-iPhone 17}"
+  name="$(hmux_ios_isolated_sim_name "$slug")"
+  base="${HMUX_IOS_SIM_BASE_DEVICE:-iPhone 17}"
   SIM_NAME="$name" BASE_DEVICE="$base" /usr/bin/python3 - <<'PY'
 import json, os, subprocess, sys
 

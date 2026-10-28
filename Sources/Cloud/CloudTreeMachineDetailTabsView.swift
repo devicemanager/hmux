@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// One row of tabs under a Cloud machine's workspaces: Ports, Terminals,
@@ -18,7 +18,7 @@ struct CloudTreeMachineDetailTabsView: View {
     var leading: CGFloat = CloudTreeHoverStyle.horizontalInset
     let select: (CloudTreeMachineDetailTab) -> Void
     @Namespace private var selectionNamespace
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
@@ -107,7 +107,7 @@ private struct CloudTreeMachineDetailTabButton: View {
     let action: () -> Void
     @State private var isHovered = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @Environment(\.cmuxGlobalFontMagnificationPercent) private var magnification
+    @Environment(\.hmuxGlobalFontMagnificationPercent) private var magnification
 
     private static let height = CloudTreeMachineDetailTabButtonMetrics.height
 
@@ -116,13 +116,13 @@ private struct CloudTreeMachineDetailTabButton: View {
             // The smaller count sits on the title's baseline, not its middle.
             HStack(alignment: .firstTextBaseline, spacing: 4) {
                 Text(tab.title)
-                    .cmuxFont(size: style.detailSize + 0.5, weight: isSelected ? .medium : .regular, design: style.fontDesign)
+                    .hmuxFont(size: style.detailSize + 0.5, weight: isSelected ? .medium : .regular, design: style.fontDesign)
                     .foregroundStyle(isSelected || isHovered ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
                     .lineLimit(1)
                     .truncationMode(.tail)
                 if let count {
                     Text(count, format: .number)
-                        .cmuxFont(size: style.detailSize - 0.5, design: style.fontDesign, monospacedDigit: true)
+                        .hmuxFont(size: style.detailSize - 0.5, design: style.fontDesign, monospacedDigit: true)
                         .foregroundStyle(.tertiary)
                         .lineLimit(1)
                         .fixedSize()

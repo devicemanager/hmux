@@ -45,10 +45,10 @@ def _load(name: str, path: Path):
 
 
 accounting = _load("app_host_result_accounting", HERE / "app_host_result_accounting.py")
-shard = _load("cmux_unit_test_shard", HERE / "cmux_unit_test_shard.py")
+shard = _load("hmux_unit_test_shard", HERE / "hmux_unit_test_shard.py")
 source_mask = _load("swift_source_mask", HERE.parent / "swift_source_mask.py")
 
-TARGETS = ("cmuxTests/", "cmuxUITests/")
+TARGETS = ("hmuxTests/", "hmuxUITests/")
 CALL_SUFFIX_RE = re.compile(r"\([^()]*\)$")
 FUNC_RE = re.compile(r"\bfunc\s+([A-Za-z_][A-Za-z0-9_]*)\s*\(")
 TEST_ATTRIBUTE_RE = re.compile(r"@Test\b")
@@ -67,7 +67,7 @@ class UnknownSelector(SelectorError):
 
 
 def split_target(selector: str) -> tuple[str, str]:
-    """Split `cmuxTests/Suite/method` into its target prefix and test path."""
+    """Split `hmuxTests/Suite/method` into its target prefix and test path."""
     selector = selector.strip()
     for target in TARGETS:
         if selector.startswith(target):
@@ -197,7 +197,7 @@ def source_inventory(root: Path, suite: str) -> set[str]:
     built inventory the workflow enumerates stays the authority.
     """
     tests: set[str] = set()
-    test_root = root / "cmuxTests"
+    test_root = root / "hmuxTests"
     if not test_root.is_dir():
         return tests
     declaration = re.compile(

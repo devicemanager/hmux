@@ -9,20 +9,20 @@ web address it would open; anything else is no link.
 
 The app must be a DEBUG build launched with the in-app Cmd-click harness, the
 terminal cwd at REPO/sub, and the printed path absent under the cwd:
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_SETUP=1
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_PATH=REPO/sub/setup.json
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_FIXTURE_DIR=REPO/sub
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_COMMAND_PATH=REPO/sub/command.json
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_FORMAT=log
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_PREFIX="see "
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_SUFFIX=.
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_FILE_NAME=build-fleet/ORG-BACKUP.md
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_SKIP_FIXTURE_FILE=1
-  CMUX_UI_TEST_TERMINAL_CMD_CLICK_CD_FIXTURE=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_SETUP=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_PATH=REPO/sub/setup.json
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_FIXTURE_DIR=REPO/sub
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_COMMAND_PATH=REPO/sub/command.json
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_FORMAT=log
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_LINE_PREFIX="see "
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_DISPLAY_SUFFIX=.
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_FILE_NAME=build-fleet/ORG-BACKUP.md
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_SKIP_FIXTURE_FILE=1
+  HMUX_UI_TEST_TERMINAL_CMD_CLICK_CD_FIXTURE=1
 REPO is a git repository. With REPO/build-fleet/ORG-BACKUP.md present, Cmd-hover
 must report the link; without it, Cmd-hover must report no link.
 Run it where the app can be key (a whole capture mini or a local tagged build):
-  CMUX_PATH_LINK_REPO=REPO python3 tests_v2/test_terminal_path_link_hover_needs_file.py
+  HMUX_PATH_LINK_REPO=REPO python3 tests_v2/test_terminal_path_link_hover_needs_file.py
 """
 
 import json
@@ -30,7 +30,7 @@ import os
 import sys
 import time
 
-REPO = os.environ.get("CMUX_PATH_LINK_REPO", os.path.expanduser("~/cmdclick-repo"))
+REPO = os.environ.get("HMUX_PATH_LINK_REPO", os.path.expanduser("~/cmdclick-repo"))
 FIX = os.path.join(REPO, "sub")
 SETUP = os.path.join(FIX, "setup.json")
 COMMAND = os.path.join(FIX, "command.json")

@@ -1,9 +1,9 @@
-import CmuxControlSocket
+import HmuxControlSocket
 import Dispatch
 import Foundation
 import os
 
-/// One-process launch grants for the cmux CLI -> signed CodeRouter `exec`
+/// One-process launch grants for the hmux CLI -> signed CodeRouter `exec`
 /// transition.
 ///
 /// An arm is non-secret. It authorizes only one later audit-token transition

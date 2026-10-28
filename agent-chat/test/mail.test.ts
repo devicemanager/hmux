@@ -191,7 +191,7 @@ test("append stays idempotent when a retry reorders the recipients", () => {
 
 
 test("JSONL journal replays queued mail and delivery receipts", async () => {
-  const root = await mkdtemp(join(tmpdir(), "cmux-mail-journal-"));
+  const root = await mkdtemp(join(tmpdir(), "hmux-mail-journal-"));
   const path = join(root, "mail.jsonl");
   try {
     const first = await JsonlMailJournal.open(path);
@@ -207,7 +207,7 @@ test("JSONL journal replays queued mail and delivery receipts", async () => {
 });
 
 test("JSONL journal rejects malformed receipts with a line number", async () => {
-  const root = await mkdtemp(join(tmpdir(), "cmux-mail-journal-invalid-"));
+  const root = await mkdtemp(join(tmpdir(), "hmux-mail-journal-invalid-"));
   const path = join(root, "mail.jsonl");
   try {
     const message = {
@@ -246,7 +246,7 @@ test("broker restore validates all receipts before committing the envelope", () 
 });
 
 test("journal stops accepting mutations after a write failure", async () => {
-  const root = await mkdtemp(join(tmpdir(), "cmux-mail-journal-write-failure-"));
+  const root = await mkdtemp(join(tmpdir(), "hmux-mail-journal-write-failure-"));
   const path = join(root, "mail.jsonl");
   try {
     const journal = await JsonlMailJournal.open(path);

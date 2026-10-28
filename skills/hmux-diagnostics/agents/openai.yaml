@@ -1,0 +1,4 @@
+interface:
+  display_name: "hmux Diagnostics"
+  short_description: "Check hmux hooks, restore, CLI, and settings."
+  default_prompt: "Use $hmux-diagnostics to collect a read-only hmux health report and explain any hook or session restore problems."

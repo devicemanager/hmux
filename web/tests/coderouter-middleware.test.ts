@@ -69,7 +69,7 @@ describe("coderouter middleware", () => {
         "https://cmux.com/ja/dashboard/coderouter?team=team-1",
         {
           headers: {
-            "x-cmux-dashboard-return-path": "/pricing",
+            "x-hmux-dashboard-return-path": "/pricing",
             cookie: `stack-refresh-${process.env.NEXT_PUBLIC_STACK_PROJECT_ID ?? "test-project"}=refresh-token`,
           },
         },
@@ -77,7 +77,7 @@ describe("coderouter middleware", () => {
     );
 
     expect(
-      response.headers.get("x-middleware-request-x-cmux-dashboard-return-path"),
+      response.headers.get("x-middleware-request-x-hmux-dashboard-return-path"),
     ).toBe("/dashboard/coderouter?team=team-1");
   });
 
@@ -94,7 +94,7 @@ describe("coderouter middleware", () => {
 
     expect(await request.text()).toBe("action=join");
     expect(
-      response.headers.get("x-middleware-request-x-cmux-dashboard-return-path"),
+      response.headers.get("x-middleware-request-x-hmux-dashboard-return-path"),
     ).toBe("/dashboard/testflight");
   });
 });

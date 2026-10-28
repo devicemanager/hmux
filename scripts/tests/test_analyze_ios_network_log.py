@@ -40,7 +40,7 @@ class AnalyzerTests(unittest.TestCase):
 
     def test_parses_app_log_timestamp_format_and_exposes_route_diagnosis(self):
         lines = [
-            "cmux network diagnostics log · cmux · built 2026-08-12",
+            "hmux network diagnostics log · hmux · built 2026-08-12",
             "2026-08-12T10:00:00.000Z Direct dial plan assembled (Peer: 9, Public paths: 1, Private fallback paths: 0, Public relay URLs: 1)",
             "2026-08-12T10:00:00.100Z Iroh route discovery succeeded (Peer: 9, Duration: 340 ms)",
             "2026-08-12T10:00:00.200Z Direct dial leg failed (Peer: 9, Leg: Public paths, Failure: No route available, Duration: 5.000 seconds)",

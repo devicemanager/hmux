@@ -30,7 +30,7 @@ struct AboutLicenseContent {
         ) ?? missingMessage
         let projectHeading = String(
             localized: "about.licenses.projectHeading",
-            defaultValue: "cmux Project License",
+            defaultValue: "hmux Project License",
             bundle: bundle
         )
         let projectSourceLabel = String(
@@ -62,7 +62,7 @@ struct AboutLicenseContent {
         correspondingSourceURL(
             version: bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
             bundleIdentifier: bundle.bundleIdentifier,
-            commit: bundle.object(forInfoDictionaryKey: "CMUXCommit") as? String
+            commit: bundle.object(forInfoDictionaryKey: "HMUXCommit") as? String
         )
     }
 
@@ -71,7 +71,7 @@ struct AboutLicenseContent {
         bundleIdentifier: String?,
         commit: String?
     ) -> URL {
-        if bundleIdentifier == "com.cmuxterm.app", let version = normalized(version) {
+        if bundleIdentifier == "com.hmuxterm.app", let version = normalized(version) {
             return repositoryURL
                 .appendingPathComponent("tree", isDirectory: true)
                 .appendingPathComponent("v\(version)")

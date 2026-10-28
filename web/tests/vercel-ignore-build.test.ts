@@ -59,7 +59,7 @@ async function ignoreBuild(
 }
 
 beforeEach(async () => {
-  repository = mkdtempSync(join(tmpdir(), "cmux-vercel-ignore-"));
+  repository = mkdtempSync(join(tmpdir(), "hmux-vercel-ignore-"));
   mkdirSync(join(repository, "web", "app"), { recursive: true });
   mkdirSync(join(repository, "web", "tools"), { recursive: true });
   mkdirSync(join(repository, "config", "iroh"), { recursive: true });
@@ -203,7 +203,7 @@ test("recovers the previous deployment from outside a shallow clone", async () =
   }
   const head = await git("rev-parse", "HEAD");
 
-  const shallow = mkdtempSync(join(tmpdir(), "cmux-vercel-shallow-"));
+  const shallow = mkdtempSync(join(tmpdir(), "hmux-vercel-shallow-"));
   shallowClone = shallow;
   rmSync(shallow, { recursive: true, force: true });
   await runChildOk("git", [
@@ -221,7 +221,7 @@ test("recovers the previous deployment from outside a shallow clone", async () =
 
 test("still builds when the previous deployment cannot be fetched at all", async () => {
   const base = await commit("base");
-  const shallow = mkdtempSync(join(tmpdir(), "cmux-vercel-unreachable-"));
+  const shallow = mkdtempSync(join(tmpdir(), "hmux-vercel-unreachable-"));
   shallowClone = shallow;
   rmSync(shallow, { recursive: true, force: true });
   await runChildOk("git", [

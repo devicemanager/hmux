@@ -1,144 +1,144 @@
 {
-  "$comment": "Every reference A and reference B browser capability (tests/browser-parity/reference) mapped to its cmux equivalent and the scenario:key that proves it, or to an exclusion from docs/browser-repl/README.md. unit/capabilities.test.mjs keeps this complete.",
+  "$comment": "Every reference A and reference B browser capability (tests/browser-parity/reference) mapped to its hmux equivalent and the scenario:key that proves it, or to an exclusion from docs/browser-repl/README.md. unit/capabilities.test.mjs keeps this complete.",
   "reference-a": {
     "globals": {
       "page": {
-        "cmux": "page",
+        "hmux": "page",
         "cases": [
           "tabs.open-current"
         ]
       },
       "tabs": {
-        "cmux": "tabs.list(), tabs.current()",
+        "hmux": "tabs.list(), tabs.current()",
         "cases": [
           "tabs.list-get"
         ]
       },
       "listBrowserTabs": {
-        "cmux": "tabs.list()",
+        "hmux": "tabs.list()",
         "cases": [
           "tabs.list-get"
         ]
       },
       "attachBrowserTab": {
-        "cmux": "tabs.use(id)",
+        "hmux": "tabs.use(id)",
         "cases": [
           "tabs.attach"
         ]
       },
       "attachActiveBrowserTab": {
-        "cmux": "tabs.use((await tabs.list()).find((t) => t.active).id)",
+        "hmux": "tabs.use((await tabs.list()).find((t) => t.active).id)",
         "cases": [
           "tabs.attach"
         ]
       },
       "getTabByTargetId": {
-        "cmux": "tabs.get(id)",
+        "hmux": "tabs.get(id)",
         "cases": [
           "tabs.list-get"
         ]
       },
       "openTab": {
-        "cmux": "tabs.open(url)",
+        "hmux": "tabs.open(url)",
         "cases": [
           "tabs.open-current",
           "tabs.open-errors"
         ]
       },
       "closeTab": {
-        "cmux": "page.close()",
+        "hmux": "page.close()",
         "cases": [
           "page.close"
         ]
       },
       "snapshot": {
-        "cmux": "snapshot(target?, options?)",
+        "hmux": "snapshot(target?, options?)",
         "cases": [
           "snapshot.full",
           "dialogs.snapshot-blocked"
         ]
       },
       "snapshot.interactive": {
-        "cmux": "snapshot({ interactive: true })",
+        "hmux": "snapshot({ interactive: true })",
         "cases": [
           "snapshot.interactive"
         ]
       },
       "snapshot.showHidden": {
-        "cmux": "snapshot({ showHidden: true })",
+        "hmux": "snapshot({ showHidden: true })",
         "cases": [
           "snapshot.show-hidden"
         ]
       },
       "snapshot.ref": {
-        "cmux": "snapshot(ref)",
+        "hmux": "snapshot(ref)",
         "cases": [
           "snapshot.full",
           "snapshot.scoped"
         ]
       },
       "snapshot.selector": {
-        "cmux": "snapshot(page.locator(selector))",
+        "hmux": "snapshot(page.locator(selector))",
         "cases": [
           "snapshot.scoped"
         ]
       },
       "snapshot.diff": {
-        "cmux": "printing a snapshot, or .diff",
+        "hmux": "printing a snapshot, or .diff",
         "cases": [
           "snapshot.diff"
         ]
       },
       "annotatedScreenshot": {
-        "cmux": "screenshot({ annotate: true })",
+        "hmux": "screenshot({ annotate: true })",
         "cases": [
           "screenshot.annotated"
         ]
       },
       "fetch": {
-        "cmux": "fetch(url, init)",
+        "hmux": "fetch(url, init)",
         "cases": [
           "fetch.cookies"
         ]
       },
       "fs": {
-        "cmux": "fs (node:fs)",
+        "hmux": "fs (node:fs)",
         "cases": [
           "node.fs-path-buffer"
         ]
       },
       "path": {
-        "cmux": "path (node:path)",
+        "hmux": "path (node:path)",
         "cases": [
           "node.fs-path-buffer"
         ]
       },
       "Buffer": {
-        "cmux": "Buffer",
+        "hmux": "Buffer",
         "cases": [
           "node.fs-path-buffer"
         ]
       },
       "sleep": {
-        "cmux": "sleep(ms)",
+        "hmux": "sleep(ms)",
         "cases": [
           "page.wait-for-timeout"
         ]
       },
       "display": {
-        "cmux": "display(value)",
+        "hmux": "display(value)",
         "cases": [
           "print.display-console"
         ]
       },
       "pwd": {
-        "cmux": "path.resolve(\".\")",
+        "hmux": "path.resolve(\".\")",
         "cases": [
           "node.fs-path-buffer"
         ]
       },
       "console": {
-        "cmux": "console.log()",
+        "hmux": "console.log()",
         "cases": [
           "print.display-console"
         ]
@@ -146,7 +146,7 @@
     },
     "Page": {
       "goto": {
-        "cmux": "page.goto(url)",
+        "hmux": "page.goto(url)",
         "cases": [
           "page.goto.basic",
           "page.goto.wait-until",
@@ -155,160 +155,160 @@
         ]
       },
       "reload": {
-        "cmux": "page.reload()",
+        "hmux": "page.reload()",
         "cases": [
           "page.reload",
           "page.reload.options"
         ]
       },
       "goBack": {
-        "cmux": "page.goBack()",
+        "hmux": "page.goBack()",
         "cases": [
           "page.back-forward",
           "page.back-forward.no-entry"
         ]
       },
       "goForward": {
-        "cmux": "page.goForward()",
+        "hmux": "page.goForward()",
         "cases": [
           "page.back-forward",
           "page.back-forward.no-entry"
         ]
       },
       "url": {
-        "cmux": "page.url()",
+        "hmux": "page.url()",
         "cases": [
           "page.url-title.push-state"
         ]
       },
       "title": {
-        "cmux": "page.title()",
+        "hmux": "page.title()",
         "cases": [
           "page.url-title.push-state"
         ]
       },
       "content": {
-        "cmux": "page.content()",
+        "hmux": "page.content()",
         "cases": [
           "page.content"
         ]
       },
       "evaluate": {
-        "cmux": "page.evaluate(fn, arg)",
+        "hmux": "page.evaluate(fn, arg)",
         "cases": [
           "page.evaluate.forms",
           "page.evaluate.mutation"
         ]
       },
       "$": {
-        "cmux": "page.$(selector)",
+        "hmux": "page.$(selector)",
         "cases": [
           "page.query.dollar"
         ]
       },
       "$$": {
-        "cmux": "page.$$(selector)",
+        "hmux": "page.$$(selector)",
         "cases": [
           "page.query.dollar"
         ]
       },
       "$$eval": {
-        "cmux": "page.$$eval(selector, fn)",
+        "hmux": "page.$$eval(selector, fn)",
         "cases": [
           "page.query.dollar"
         ]
       },
       "locator": {
-        "cmux": "page.locator(selector or ref)",
+        "hmux": "page.locator(selector or ref)",
         "cases": [
           "page.getters.page-level",
           "page.getters.errors"
         ]
       },
       "getByRole": {
-        "cmux": "page.getByRole(role, options)",
+        "hmux": "page.getByRole(role, options)",
         "cases": [
           "page.getters.page-level",
           "page.getters.errors"
         ]
       },
       "getByText": {
-        "cmux": "page.getByText(text)",
+        "hmux": "page.getByText(text)",
         "cases": [
           "page.getters.page-level"
         ]
       },
       "getByLabel": {
-        "cmux": "page.getByLabel(text)",
+        "hmux": "page.getByLabel(text)",
         "cases": [
           "page.getters.page-level"
         ]
       },
       "frameLocator": {
-        "cmux": "page.frameLocator(selector)",
+        "hmux": "page.frameLocator(selector)",
         "cases": [
           "page.frame-locator",
           "page.frame-locator.nested"
         ]
       },
       "frames": {
-        "cmux": "page.frames()",
+        "hmux": "page.frames()",
         "cases": [
           "page.frames"
         ]
       },
       "mainFrame": {
-        "cmux": "page.mainFrame()",
+        "hmux": "page.mainFrame()",
         "cases": [
           "page.frames"
         ]
       },
       "click": {
-        "cmux": "page.click(selector)",
+        "hmux": "page.click(selector)",
         "cases": [
           "page.click-fill"
         ]
       },
       "fill": {
-        "cmux": "page.fill(selector, value)",
+        "hmux": "page.fill(selector, value)",
         "cases": [
           "page.click-fill"
         ]
       },
       "screenshot": {
-        "cmux": "page.screenshot()",
+        "hmux": "page.screenshot()",
         "cases": [
           "page.screenshot.forms",
           "page.screenshot.errors"
         ]
       },
       "pdf": {
-        "cmux": "page.pdf(options)",
+        "hmux": "page.pdf(options)",
         "cases": [
           "page.pdf"
         ]
       },
       "waitForSelector": {
-        "cmux": "page.waitForSelector(selector)",
+        "hmux": "page.waitForSelector(selector)",
         "cases": [
           "page.wait-for-selector"
         ]
       },
       "waitForLoadState": {
-        "cmux": "page.waitForLoadState(state)",
+        "hmux": "page.waitForLoadState(state)",
         "cases": [
           "page.wait-for-load-state"
         ]
       },
       "waitForURL": {
-        "cmux": "page.waitForURL(url)",
+        "hmux": "page.waitForURL(url)",
         "cases": [
           "page.wait-for-url",
           "navigation.expect"
         ]
       },
       "waitForEvent": {
-        "cmux": "page.waitForEvent(event)",
+        "hmux": "page.waitForEvent(event)",
         "cases": [
           "page.wait-for-event.popup-console",
           "page.wait-for-event.errors",
@@ -316,49 +316,49 @@
         ]
       },
       "on": {
-        "cmux": "page.on(event, handler)",
+        "hmux": "page.on(event, handler)",
         "cases": [
           "page.on-off"
         ]
       },
       "off": {
-        "cmux": "page.off(event, handler)",
+        "hmux": "page.off(event, handler)",
         "cases": [
           "page.on-off"
         ]
       },
       "viewportSize": {
-        "cmux": "page.viewportSize(), page.setViewportSize(size)",
+        "hmux": "page.viewportSize(), page.setViewportSize(size)",
         "cases": [
           "page.viewport"
         ]
       },
       "bringToFront": {
-        "cmux": "page.bringToFront()",
+        "hmux": "page.bringToFront()",
         "cases": [
           "page.bring-to-front"
         ]
       },
       "close": {
-        "cmux": "page.close()",
+        "hmux": "page.close()",
         "cases": [
           "page.close"
         ]
       },
       "keyboard": {
-        "cmux": "page.keyboard",
+        "hmux": "page.keyboard",
         "cases": [
           "page.keyboard-mouse-objects"
         ]
       },
       "mouse": {
-        "cmux": "page.mouse",
+        "hmux": "page.mouse",
         "cases": [
           "page.keyboard-mouse-objects"
         ]
       },
       "video": {
-        "cmux": "page.video() (null: no recording)",
+        "hmux": "page.video() (null: no recording)",
         "cases": [
           "page.video"
         ]
@@ -366,7 +366,7 @@
     },
     "Locator": {
       "click": {
-        "cmux": "locator.click()",
+        "hmux": "locator.click()",
         "cases": [
           "loc.click.options",
           "loc.click.more-options",
@@ -375,14 +375,14 @@
         ]
       },
       "dblclick": {
-        "cmux": "locator.dblclick()",
+        "hmux": "locator.dblclick()",
         "cases": [
           "loc.dblclick.options",
           "loc.errors.missing"
         ]
       },
       "fill": {
-        "cmux": "locator.fill(value)",
+        "hmux": "locator.fill(value)",
         "cases": [
           "loc.timeout-options",
           "loc.errors.missing",
@@ -391,222 +391,222 @@
         ]
       },
       "type": {
-        "cmux": "locator.type(text)",
+        "hmux": "locator.type(text)",
         "cases": [
           "loc.timeout-options",
           "loc.typing"
         ]
       },
       "press": {
-        "cmux": "locator.press(key)",
+        "hmux": "locator.press(key)",
         "cases": [
           "loc.timeout-options",
           "loc.typing"
         ]
       },
       "pressSequentially": {
-        "cmux": "locator.pressSequentially(text)",
+        "hmux": "locator.pressSequentially(text)",
         "cases": [
           "loc.timeout-options",
           "loc.typing"
         ]
       },
       "hover": {
-        "cmux": "locator.hover()",
+        "hmux": "locator.hover()",
         "cases": [
           "loc.hover"
         ]
       },
       "focus": {
-        "cmux": "locator.focus()",
+        "hmux": "locator.focus()",
         "cases": [
           "loc.focus-blur"
         ]
       },
       "blur": {
-        "cmux": "locator.blur()",
+        "hmux": "locator.blur()",
         "cases": [
           "loc.focus-blur"
         ]
       },
       "check": {
-        "cmux": "locator.check()",
+        "hmux": "locator.check()",
         "cases": [
           "loc.check.options",
           "loc.errors.missing"
         ]
       },
       "uncheck": {
-        "cmux": "locator.uncheck()",
+        "hmux": "locator.uncheck()",
         "cases": [
           "loc.check.options"
         ]
       },
       "setChecked": {
-        "cmux": "locator.setChecked(checked)",
+        "hmux": "locator.setChecked(checked)",
         "cases": [
           "loc.check.options"
         ]
       },
       "selectOption": {
-        "cmux": "locator.selectOption(value)",
+        "hmux": "locator.selectOption(value)",
         "cases": [
           "loc.errors.missing",
           "loc.select-option.forms"
         ]
       },
       "setInputFiles": {
-        "cmux": "locator.setInputFiles(files)",
+        "hmux": "locator.setInputFiles(files)",
         "cases": [
           "loc.set-input-files"
         ]
       },
       "dragTo": {
-        "cmux": "locator.dragTo(target)",
+        "hmux": "locator.dragTo(target)",
         "cases": [
           "loc.drag-to"
         ]
       },
       "tap": {
-        "cmux": "locator.tap() (a click: panes have no touch screen)",
+        "hmux": "locator.tap() (a click: panes have no touch screen)",
         "cases": [
           "loc.tap"
         ]
       },
       "clear": {
-        "cmux": "locator.clear()",
+        "hmux": "locator.clear()",
         "cases": [
           "loc.fill.forms"
         ]
       },
       "scrollIntoViewIfNeeded": {
-        "cmux": "locator.scrollIntoViewIfNeeded()",
+        "hmux": "locator.scrollIntoViewIfNeeded()",
         "cases": [
           "loc.scroll-into-view"
         ]
       },
       "screenshot": {
-        "cmux": "locator.screenshot(), screenshot(locator)",
+        "hmux": "locator.screenshot(), screenshot(locator)",
         "cases": [
           "loc.screenshot"
         ]
       },
       "boundingBox": {
-        "cmux": "locator.boundingBox()",
+        "hmux": "locator.boundingBox()",
         "cases": [
           "loc.scroll-into-view"
         ]
       },
       "textContent": {
-        "cmux": "locator.textContent()",
+        "hmux": "locator.textContent()",
         "cases": [
           "loc.timeout-options",
           "loc.reads"
         ]
       },
       "innerText": {
-        "cmux": "locator.innerText()",
+        "hmux": "locator.innerText()",
         "cases": [
           "loc.timeout-options",
           "loc.reads"
         ]
       },
       "innerHTML": {
-        "cmux": "locator.innerHTML()",
+        "hmux": "locator.innerHTML()",
         "cases": [
           "loc.reads"
         ]
       },
       "inputValue": {
-        "cmux": "locator.inputValue()",
+        "hmux": "locator.inputValue()",
         "cases": [
           "loc.fill.forms",
           "loc.reads"
         ]
       },
       "getAttribute": {
-        "cmux": "locator.getAttribute(name)",
+        "hmux": "locator.getAttribute(name)",
         "cases": [
           "loc.timeout-options",
           "loc.reads"
         ]
       },
       "isVisible": {
-        "cmux": "locator.isVisible()",
+        "hmux": "locator.isVisible()",
         "cases": [
           "loc.states"
         ]
       },
       "isHidden": {
-        "cmux": "locator.isHidden()",
+        "hmux": "locator.isHidden()",
         "cases": [
           "loc.states"
         ]
       },
       "isEnabled": {
-        "cmux": "locator.isEnabled()",
+        "hmux": "locator.isEnabled()",
         "cases": [
           "loc.states"
         ]
       },
       "isDisabled": {
-        "cmux": "locator.isDisabled()",
+        "hmux": "locator.isDisabled()",
         "cases": [
           "loc.states"
         ]
       },
       "isChecked": {
-        "cmux": "locator.isChecked()",
+        "hmux": "locator.isChecked()",
         "cases": [
           "loc.states"
         ]
       },
       "isEditable": {
-        "cmux": "locator.isEditable()",
+        "hmux": "locator.isEditable()",
         "cases": [
           "loc.states"
         ]
       },
       "count": {
-        "cmux": "locator.count()",
+        "hmux": "locator.count()",
         "cases": [
           "loc.collections"
         ]
       },
       "all": {
-        "cmux": "locator.all()",
+        "hmux": "locator.all()",
         "cases": [
           "loc.collections"
         ]
       },
       "first": {
-        "cmux": "locator.first()",
+        "hmux": "locator.first()",
         "cases": [
           "loc.collections"
         ]
       },
       "last": {
-        "cmux": "locator.last()",
+        "hmux": "locator.last()",
         "cases": [
           "loc.collections"
         ]
       },
       "nth": {
-        "cmux": "locator.nth(index)",
+        "hmux": "locator.nth(index)",
         "cases": [
           "loc.composition-errors",
           "loc.collections"
         ]
       },
       "filter": {
-        "cmux": "locator.filter(options)",
+        "hmux": "locator.filter(options)",
         "cases": [
           "loc.composition-errors",
           "loc.filter-options"
         ]
       },
       "locator": {
-        "cmux": "locator.locator(selector)",
+        "hmux": "locator.locator(selector)",
         "cases": [
           "loc.composition-errors",
           "loc.filter-options",
@@ -614,28 +614,28 @@
         ]
       },
       "waitFor": {
-        "cmux": "locator.waitFor(options)",
+        "hmux": "locator.waitFor(options)",
         "cases": [
           "loc.errors.missing",
           "loc.wait-for.states"
         ]
       },
       "evaluate": {
-        "cmux": "locator.evaluate(fn, arg)",
+        "hmux": "locator.evaluate(fn, arg)",
         "cases": [
           "loc.errors.evaluate",
           "loc.evaluate"
         ]
       },
       "evaluateAll": {
-        "cmux": "locator.evaluateAll(fn)",
+        "hmux": "locator.evaluateAll(fn)",
         "cases": [
           "loc.errors.evaluate",
           "loc.evaluate"
         ]
       },
       "dispatchEvent": {
-        "cmux": "locator.dispatchEvent(type)",
+        "hmux": "locator.dispatchEvent(type)",
         "cases": [
           "loc.dispatch-event"
         ]
@@ -643,19 +643,19 @@
     },
     "Keyboard": {
       "down": {
-        "cmux": "page.keyboard.down(key)",
+        "hmux": "page.keyboard.down(key)",
         "cases": [
           "keyboard.members"
         ]
       },
       "up": {
-        "cmux": "page.keyboard.up(key)",
+        "hmux": "page.keyboard.up(key)",
         "cases": [
           "keyboard.members"
         ]
       },
       "press": {
-        "cmux": "page.keyboard.press(combo)",
+        "hmux": "page.keyboard.press(combo)",
         "cases": [
           "keyboard.members",
           "keyboard.errors",
@@ -663,13 +663,13 @@
         ]
       },
       "type": {
-        "cmux": "page.keyboard.type(text)",
+        "hmux": "page.keyboard.type(text)",
         "cases": [
           "keyboard.members"
         ]
       },
       "insertText": {
-        "cmux": "page.keyboard.insertText(text)",
+        "hmux": "page.keyboard.insertText(text)",
         "cases": [
           "keyboard.members"
         ]
@@ -677,37 +677,37 @@
     },
     "Mouse": {
       "click": {
-        "cmux": "page.mouse.click(x, y)",
+        "hmux": "page.mouse.click(x, y)",
         "cases": [
           "mouse.members"
         ]
       },
       "dblclick": {
-        "cmux": "page.mouse.dblclick(x, y)",
+        "hmux": "page.mouse.dblclick(x, y)",
         "cases": [
           "mouse.members"
         ]
       },
       "down": {
-        "cmux": "page.mouse.down()",
+        "hmux": "page.mouse.down()",
         "cases": [
           "mouse.members"
         ]
       },
       "up": {
-        "cmux": "page.mouse.up()",
+        "hmux": "page.mouse.up()",
         "cases": [
           "mouse.members"
         ]
       },
       "move": {
-        "cmux": "page.mouse.move(x, y)",
+        "hmux": "page.mouse.move(x, y)",
         "cases": [
           "mouse.members"
         ]
       },
       "wheel": {
-        "cmux": "page.mouse.wheel(dx, dy)",
+        "hmux": "page.mouse.wheel(dx, dy)",
         "cases": [
           "mouse.members"
         ]
@@ -716,43 +716,43 @@
   },
   "reference-b": {
     "Agent.browsers": {
-      "cmux": "tabs (one browser: the workspace's panes)",
+      "hmux": "tabs (one browser: the workspace's panes)",
       "cases": [
         "tabs.open-current"
       ]
     },
     "Agent.documentation": {
-      "cmux": "session.guide(), cmux browser repl guide",
+      "hmux": "session.guide(), hmux browser repl guide",
       "cases": [
         "session.name-docs"
       ]
     },
     "Browsers.get": {
-      "cmux": "not needed: the session drives its workspace's browser; tabs",
+      "hmux": "not needed: the session drives its workspace's browser; tabs",
       "cases": [
         "tabs.open-errors"
       ]
     },
     "Browsers.getDefault": {
-      "cmux": "not needed: the session drives its workspace's browser; tabs",
+      "hmux": "not needed: the session drives its workspace's browser; tabs",
       "cases": [
         "tabs.open-current"
       ]
     },
     "Browsers.getForUrl": {
-      "cmux": "not needed: the session drives its workspace's browser; tabs.open(url)",
+      "hmux": "not needed: the session drives its workspace's browser; tabs.open(url)",
       "cases": [
         "tabs.open-errors"
       ]
     },
     "Browsers.list": {
-      "cmux": "not needed: one browser per workspace; tabs.list()",
+      "hmux": "not needed: one browser per workspace; tabs.list()",
       "cases": [
         "tabs.open-errors"
       ]
     },
     "Browser.browserId": {
-      "cmux": "session.id",
+      "hmux": "session.id",
       "cases": [
         "tabs.open-errors"
       ]
@@ -761,219 +761,219 @@
       "excluded": "Raw CDP: WebKit has no DevTools protocol, so there is no page.cdp; reference B also withholds it by default (case browser.capabilities records both lacking it). Its viewport capability is page.setViewportSize()."
     },
     "Browser.tabs": {
-      "cmux": "tabs",
+      "hmux": "tabs",
       "cases": [
         "tabs.open-current"
       ]
     },
     "Browser.user": {
-      "cmux": "tabs.list() lists every workspace tab; tabs.use(id) attaches one",
+      "hmux": "tabs.list() lists every workspace tab; tabs.use(id) attaches one",
       "cases": [
         "tabs.list-get"
       ]
     },
     "Browser.documentation": {
-      "cmux": "session.guide()",
+      "hmux": "session.guide()",
       "cases": [
         "session.name-docs"
       ]
     },
     "Browser.history": {
-      "cmux": "tabs.history({ query, from, to, limit }): cmux browser history, most recent first, as { url, title, dateVisited }",
+      "hmux": "tabs.history({ query, from, to, limit }): hmux browser history, most recent first, as { url, title, dateVisited }",
       "cases": [
         "browser.history"
       ]
     },
     "Browser.nameSession": {
-      "cmux": "session.name(label)",
+      "hmux": "session.name(label)",
       "cases": [
         "session.name-docs"
       ]
     },
     "BrowserUser.claimTab": {
-      "cmux": "tabs.use(id) attaches a user's tab of the session's own workspace; a user's tab of another workspace needs a person's grant, which cmux does not offer yet, so it is refused",
+      "hmux": "tabs.use(id) attaches a user's tab of the session's own workspace; a user's tab of another workspace needs a person's grant, which hmux does not offer yet, so it is refused",
       "cases": [
         "tabs.attach",
         "tabs.claim-other-workspace"
       ]
     },
     "BrowserUser.getTabContext": {
-      "cmux": "snapshot(await tabs.get(id)) reads a tab without switching to it",
+      "hmux": "snapshot(await tabs.get(id)) reads a tab without switching to it",
       "cases": [
         "tabs.attach"
       ]
     },
     "BrowserUser.openTabs": {
-      "cmux": "tabs.list()",
+      "hmux": "tabs.list()",
       "cases": [
         "tabs.list-get",
         "tabs.claim-other-workspace"
       ]
     },
     "Tabs.content": {
-      "cmux": "tabs.content({ urls, format: text|markdown|html|snapshot }) loads each URL in a background tab, extracts it and closes the tab",
+      "hmux": "tabs.content({ urls, format: text|markdown|html|snapshot }) loads each URL in a background tab, extracts it and closes the tab",
       "cases": [
         "tabs.content"
       ]
     },
     "Tabs.get": {
-      "cmux": "tabs.get(id)",
+      "hmux": "tabs.get(id)",
       "cases": [
         "tabs.list-get"
       ]
     },
     "Tabs.list": {
-      "cmux": "tabs.list()",
+      "hmux": "tabs.list()",
       "cases": [
         "tabs.list-get"
       ]
     },
     "Tabs.new": {
-      "cmux": "tabs.open(url?)",
+      "hmux": "tabs.open(url?)",
       "cases": [
         "tabs.open-current",
         "tabs.open-errors"
       ]
     },
     "Tabs.selected": {
-      "cmux": "tabs.current(), page",
+      "hmux": "tabs.current(), page",
       "cases": [
         "tabs.open-current"
       ]
     },
     "Tab.ax": {
-      "cmux": "snapshot() and refs",
+      "hmux": "snapshot() and refs",
       "cases": [
         "snapshot.full"
       ]
     },
     "Tab.capabilities": {
-      "cmux": "page.setViewportSize(), page.viewportSize() (the viewport capability); raw CDP is excluded (Browser.capabilities)",
+      "hmux": "page.setViewportSize(), page.viewportSize() (the viewport capability); raw CDP is excluded (Browser.capabilities)",
       "cases": [
         "page.viewport"
       ]
     },
     "Tab.clipboard": {
-      "cmux": "page.clipboard",
+      "hmux": "page.clipboard",
       "cases": [
         "clipboard.members"
       ]
     },
     "Tab.content": {
-      "cmux": "page.exportContent(options)",
+      "hmux": "page.exportContent(options)",
       "cases": [
         "content.export"
       ]
     },
     "Tab.cua": {
-      "cmux": "page.mouse, page.keyboard",
+      "hmux": "page.mouse, page.keyboard",
       "cases": [
         "page.keyboard-mouse-objects"
       ]
     },
     "Tab.dev": {
-      "cmux": "page.consoleMessages(), page.errors()",
+      "hmux": "page.consoleMessages(), page.errors()",
       "cases": [
         "page.on-off"
       ]
     },
     "Tab.dom_cua": {
-      "cmux": "snapshot refs with locator actions",
+      "hmux": "snapshot refs with locator actions",
       "cases": [
         "dom-cua.forms"
       ]
     },
     "Tab.id": {
-      "cmux": "page.id",
+      "hmux": "page.id",
       "cases": [
         "tabs.list-get"
       ]
     },
     "Tab.playwright": {
-      "cmux": "page",
+      "hmux": "page",
       "cases": [
         "page.evaluate.forms"
       ]
     },
     "Tab.back": {
-      "cmux": "page.goBack()",
+      "hmux": "page.goBack()",
       "cases": [
         "page.back-forward",
         "page.back-forward.no-entry"
       ]
     },
     "Tab.close": {
-      "cmux": "page.close()",
+      "hmux": "page.close()",
       "cases": [
         "page.close"
       ]
     },
     "Tab.forward": {
-      "cmux": "page.goForward()",
+      "hmux": "page.goForward()",
       "cases": [
         "page.back-forward",
         "page.back-forward.no-entry"
       ]
     },
     "Tab.getJsDialog": {
-      "cmux": "page.dialog()",
+      "hmux": "page.dialog()",
       "cases": [
         "dialogs.held",
         "dialogs.snapshot-blocked"
       ]
     },
     "Tab.goto": {
-      "cmux": "page.goto(url)",
+      "hmux": "page.goto(url)",
       "cases": [
         "page.goto.basic",
         "page.goto.errors"
       ]
     },
     "Tab.markDeliverable": {
-      "cmux": "page.keep()",
+      "hmux": "page.keep()",
       "cases": [
         "tabs.keep-deliverable"
       ]
     },
     "Tab.markHandoff": {
-      "cmux": "page.keep(); a later call attaches it with tabs.use(id)",
+      "hmux": "page.keep(); a later call attaches it with tabs.use(id)",
       "cases": [
         "tabs.keep-deliverable"
       ]
     },
     "Tab.reload": {
-      "cmux": "page.reload()",
+      "hmux": "page.reload()",
       "cases": [
         "page.reload"
       ]
     },
     "Tab.requestManualHandoff": {
-      "cmux": "page.bringToFront(): panes are local, so the user can take over any tab",
+      "hmux": "page.bringToFront(): panes are local, so the user can take over any tab",
       "cases": [
         "page.bring-to-front"
       ]
     },
     "Tab.screenshot": {
-      "cmux": "screenshot(), page.screenshot()",
+      "hmux": "screenshot(), page.screenshot()",
       "cases": [
         "page.screenshot.forms",
         "page.screenshot.errors"
       ]
     },
     "Tab.title": {
-      "cmux": "page.title()",
+      "hmux": "page.title()",
       "cases": [
         "page.url-title.push-state"
       ]
     },
     "Tab.url": {
-      "cmux": "page.url() (includes history.pushState changes)",
+      "hmux": "page.url() (includes history.pushState changes)",
       "cases": [
         "page.url-title.push-state"
       ]
     },
     "AXAPI.click": {
-      "cmux": "page.locator(ref).click(), page.mouse.click(x, y)",
+      "hmux": "page.locator(ref).click(), page.mouse.click(x, y)",
       "cases": [
         "snapshot.full",
         "snapshot.ax-errors",
@@ -981,14 +981,14 @@
       ]
     },
     "AXAPI.drag": {
-      "cmux": "page.mouse.down/move/up, locator.dragTo()",
+      "hmux": "page.mouse.down/move/up, locator.dragTo()",
       "cases": [
         "loc.drag-to",
         "loc.drag-to.ax"
       ]
     },
     "AXAPI.get": {
-      "cmux": "snapshot()",
+      "hmux": "snapshot()",
       "cases": [
         "snapshot.full",
         "snapshot.diff",
@@ -996,31 +996,31 @@
       ]
     },
     "AXAPI.get#2": {
-      "cmux": "screenshot()",
+      "hmux": "screenshot()",
       "cases": [
         "snapshot.ax-get-modes"
       ]
     },
     "AXAPI.get#3": {
-      "cmux": "snapshot() and screenshot()",
+      "hmux": "snapshot() and screenshot()",
       "cases": [
         "snapshot.ax-get-modes"
       ]
     },
     "AXAPI.paste": {
-      "cmux": "page.clipboard.writeText(text); page.keyboard.press(\"Meta+v\")",
+      "hmux": "page.clipboard.writeText(text); page.keyboard.press(\"Meta+v\")",
       "cases": [
         "ax.text-forms"
       ]
     },
     "AXAPI.performSecondaryAction": {
-      "cmux": "page.locator(ref).click() on an [expanded=false] control",
+      "hmux": "page.locator(ref).click() on an [expanded=false] control",
       "cases": [
         "ax.secondary-action"
       ]
     },
     "AXAPI.pressKey": {
-      "cmux": "page.locator(ref).press(key), page.keyboard.press(key)",
+      "hmux": "page.locator(ref).press(key), page.keyboard.press(key)",
       "cases": [
         "keyboard.errors",
         "keyboard.shortcuts",
@@ -1028,96 +1028,96 @@
       ]
     },
     "AXAPI.scroll": {
-      "cmux": "page.mouse.wheel(dx, dy) over a [scrollable] ref, locator.scrollIntoViewIfNeeded()",
+      "hmux": "page.mouse.wheel(dx, dy) over a [scrollable] ref, locator.scrollIntoViewIfNeeded()",
       "cases": [
         "loc.scroll-into-view",
         "ax.scroll-forms"
       ]
     },
     "AXAPI.selectText": {
-      "cmux": "page.locator(ref).selectText()",
+      "hmux": "page.locator(ref).selectText()",
       "cases": [
         "ax.text-forms"
       ]
     },
     "AXAPI.setValue": {
-      "cmux": "page.locator(ref).fill(), .selectOption(), .setChecked()",
+      "hmux": "page.locator(ref).fill(), .selectOption(), .setChecked()",
       "cases": [
         "ax.text-forms"
       ]
     },
     "AXAPI.typeText": {
-      "cmux": "page.locator(ref).pressSequentially(text), page.keyboard.type(text)",
+      "hmux": "page.locator(ref).pressSequentially(text), page.keyboard.type(text)",
       "cases": [
         "ax.text-forms"
       ]
     },
     "AXAPI.write": {
-      "cmux": "print snapshot() (the diff when shorter)",
+      "hmux": "print snapshot() (the diff when shorter)",
       "cases": [
         "snapshot.diff",
         "snapshot.ax-errors"
       ]
     },
     "AXAPI.write#2": {
-      "cmux": "print screenshot()",
+      "hmux": "print screenshot()",
       "cases": [
         "snapshot.ax-get-modes"
       ]
     },
     "AXAPI.write#3": {
-      "cmux": "display(await snapshot()); display(await screenshot())",
+      "hmux": "display(await snapshot()); display(await screenshot())",
       "cases": [
         "snapshot.ax-get-modes"
       ]
     },
     "ContentAPI.export": {
-      "cmux": "page.exportContent() writes the page as Markdown and returns the file path",
+      "hmux": "page.exportContent() writes the page as Markdown and returns the file path",
       "cases": [
         "content.export"
       ]
     },
     "ContentAPI.exportGsuite": {
-      "cmux": "page.exportContent({ format: pdf|md|docx|xlsx|csv|pptx|... }) on a Google Docs, Sheets or Slides tab",
+      "hmux": "page.exportContent({ format: pdf|md|docx|xlsx|csv|pptx|... }) on a Google Docs, Sheets or Slides tab",
       "cases": [
         "content.export-site"
       ]
     },
     "ContentAPI.exportYouTubeTranscript": {
-      "cmux": "page.exportContent({ transcript: true }) on a YouTube watch page",
+      "hmux": "page.exportContent({ transcript: true }) on a YouTube watch page",
       "cases": [
         "content.export-site"
       ]
     },
     "CUAAPI.click": {
-      "cmux": "page.mouse.click(x, y, { button })",
+      "hmux": "page.mouse.click(x, y, { button })",
       "cases": [
         "mouse.members",
         "cua.options"
       ]
     },
     "CUAAPI.double_click": {
-      "cmux": "page.mouse.dblclick(x, y)",
+      "hmux": "page.mouse.dblclick(x, y)",
       "cases": [
         "mouse.members",
         "cua.options"
       ]
     },
     "CUAAPI.downloadMedia": {
-      "cmux": "page.waitForEvent(\"download\") around a click",
+      "hmux": "page.waitForEvent(\"download\") around a click",
       "cases": [
         "cua.download-media"
       ]
     },
     "CUAAPI.drag": {
-      "cmux": "page.mouse.down(), .move(x, y, { steps }), .up()",
+      "hmux": "page.mouse.down(), .move(x, y, { steps }), .up()",
       "cases": [
         "loc.drag-to",
         "cua.options"
       ]
     },
     "CUAAPI.keypress": {
-      "cmux": "page.keyboard.press(combo)",
+      "hmux": "page.keyboard.press(combo)",
       "cases": [
         "keyboard.members",
         "keyboard.errors",
@@ -1125,7 +1125,7 @@
       ]
     },
     "CUAAPI.move": {
-      "cmux": "page.mouse.move(x, y)",
+      "hmux": "page.mouse.move(x, y)",
       "cases": [
         "loc.hover",
         "mouse.members",
@@ -1133,14 +1133,14 @@
       ]
     },
     "CUAAPI.scroll": {
-      "cmux": "page.mouse.move(x, y); page.mouse.wheel(dx, dy)",
+      "hmux": "page.mouse.move(x, y); page.mouse.wheel(dx, dy)",
       "cases": [
         "mouse.members",
         "cua.options"
       ]
     },
     "CUAAPI.type": {
-      "cmux": "page.keyboard.type(text)",
+      "hmux": "page.keyboard.type(text)",
       "cases": [
         "keyboard.members",
         "keyboard.errors",
@@ -1148,70 +1148,70 @@
       ]
     },
     "DomCUAAPI.click": {
-      "cmux": "page.locator(ref).click()",
+      "hmux": "page.locator(ref).click()",
       "cases": [
         "dom-cua.forms"
       ]
     },
     "DomCUAAPI.double_click": {
-      "cmux": "page.locator(ref).dblclick()",
+      "hmux": "page.locator(ref).dblclick()",
       "cases": [
         "dom-cua.forms"
       ]
     },
     "DomCUAAPI.downloadMedia": {
-      "cmux": "page.waitForEvent(\"download\") around page.locator(ref).click()",
+      "hmux": "page.waitForEvent(\"download\") around page.locator(ref).click()",
       "cases": [
         "cua.download-media"
       ]
     },
     "DomCUAAPI.get_visible_dom": {
-      "cmux": "snapshot({ interactive: true })",
+      "hmux": "snapshot({ interactive: true })",
       "cases": [
         "snapshot.interactive",
         "dom-cua.forms"
       ]
     },
     "DomCUAAPI.keypress": {
-      "cmux": "page.keyboard.press(combo)",
+      "hmux": "page.keyboard.press(combo)",
       "cases": [
         "dom-cua.forms"
       ]
     },
     "DomCUAAPI.scroll": {
-      "cmux": "page.mouse.wheel(dx, dy) over a ref's box",
+      "hmux": "page.mouse.wheel(dx, dy) over a ref's box",
       "cases": [
         "dom-cua.forms",
         "ax.scroll-forms"
       ]
     },
     "DomCUAAPI.type": {
-      "cmux": "page.keyboard.type(text)",
+      "hmux": "page.keyboard.type(text)",
       "cases": [
         "dom-cua.forms"
       ]
     },
     "PlaywrightAPI.domSnapshot": {
-      "cmux": "snapshot() (frames inlined), page.content()",
+      "hmux": "snapshot() (frames inlined), page.content()",
       "cases": [
         "page.content"
       ]
     },
     "PlaywrightAPI.elementInfo": {
-      "cmux": "page.elementAt(x, y)",
+      "hmux": "page.elementAt(x, y)",
       "cases": [
         "element-at"
       ]
     },
     "PlaywrightAPI.elementScreenshot": {
-      "cmux": "screenshot({ annotate: true }), screenshot(locator)",
+      "hmux": "screenshot({ annotate: true }), screenshot(locator)",
       "cases": [
         "screenshot.annotated",
         "loc.screenshot"
       ]
     },
     "PlaywrightAPI.evaluate": {
-      "cmux": "page.evaluate(fn, arg)",
+      "hmux": "page.evaluate(fn, arg)",
       "cases": [
         "page.evaluate.forms",
         "page.evaluate.mutation",
@@ -1219,20 +1219,20 @@
       ]
     },
     "PlaywrightAPI.expectNavigation": {
-      "cmux": "click, then page.waitForURL(url)",
+      "hmux": "click, then page.waitForURL(url)",
       "cases": [
         "navigation.expect"
       ]
     },
     "PlaywrightAPI.frameLocator": {
-      "cmux": "page.frameLocator(selector)",
+      "hmux": "page.frameLocator(selector)",
       "cases": [
         "page.getters.errors",
         "page.frame-locator"
       ]
     },
     "PlaywrightAPI.getByLabel": {
-      "cmux": "page.getByLabel(text)",
+      "hmux": "page.getByLabel(text)",
       "cases": [
         "page.getters.page-level",
         "page.getters.errors",
@@ -1240,7 +1240,7 @@
       ]
     },
     "PlaywrightAPI.getByPlaceholder": {
-      "cmux": "page.getByPlaceholder(text)",
+      "hmux": "page.getByPlaceholder(text)",
       "cases": [
         "page.getters.page-level",
         "page.getters.errors",
@@ -1248,7 +1248,7 @@
       ]
     },
     "PlaywrightAPI.getByRole": {
-      "cmux": "page.getByRole(role, options)",
+      "hmux": "page.getByRole(role, options)",
       "cases": [
         "page.getters.page-level",
         "page.getters.errors",
@@ -1256,14 +1256,14 @@
       ]
     },
     "PlaywrightAPI.getByTestId": {
-      "cmux": "page.getByTestId(id)",
+      "hmux": "page.getByTestId(id)",
       "cases": [
         "page.getters.page-level",
         "page.getters.errors"
       ]
     },
     "PlaywrightAPI.getByText": {
-      "cmux": "page.getByText(text)",
+      "hmux": "page.getByText(text)",
       "cases": [
         "page.getters.page-level",
         "page.getters.errors",
@@ -1271,98 +1271,98 @@
       ]
     },
     "PlaywrightAPI.locator": {
-      "cmux": "page.locator(selector or ref)",
+      "hmux": "page.locator(selector or ref)",
       "cases": [
         "page.getters.page-level",
         "page.getters.errors"
       ]
     },
     "PlaywrightAPI.waitForEvent": {
-      "cmux": "page.waitForEvent(\"download\")",
+      "hmux": "page.waitForEvent(\"download\")",
       "cases": [
         "page.wait-for-event.errors",
         "loc.download-media"
       ]
     },
     "PlaywrightAPI.waitForEvent#2": {
-      "cmux": "page.waitForEvent(\"filechooser\"); page.fileChooser() without a listener",
+      "hmux": "page.waitForEvent(\"filechooser\"); page.fileChooser() without a listener",
       "cases": [
         "page.wait-for-event.errors",
         "filechooser.event"
       ]
     },
     "PlaywrightAPI.waitForLoadState": {
-      "cmux": "page.waitForLoadState(state)",
+      "hmux": "page.waitForLoadState(state)",
       "cases": [
         "page.wait-for-load-state"
       ]
     },
     "PlaywrightAPI.waitForTimeout": {
-      "cmux": "page.waitForTimeout(ms), sleep(ms)",
+      "hmux": "page.waitForTimeout(ms), sleep(ms)",
       "cases": [
         "page.wait-for-timeout"
       ]
     },
     "PlaywrightAPI.waitForURL": {
-      "cmux": "page.waitForURL(url)",
+      "hmux": "page.waitForURL(url)",
       "cases": [
         "page.wait-for-url"
       ]
     },
     "PlaywrightFrameLocator.frameLocator": {
-      "cmux": "frameLocator.frameLocator(selector)",
+      "hmux": "frameLocator.frameLocator(selector)",
       "cases": [
         "page.frame-locator.nested"
       ]
     },
     "PlaywrightFrameLocator.getByLabel": {
-      "cmux": "frameLocator.getByLabel()",
+      "hmux": "frameLocator.getByLabel()",
       "cases": [
         "page.frame-locator",
         "loc.regexp-getters"
       ]
     },
     "PlaywrightFrameLocator.getByPlaceholder": {
-      "cmux": "frameLocator.getByPlaceholder()",
+      "hmux": "frameLocator.getByPlaceholder()",
       "cases": [
         "page.frame-locator",
         "loc.regexp-getters"
       ]
     },
     "PlaywrightFrameLocator.getByRole": {
-      "cmux": "frameLocator.getByRole()",
+      "hmux": "frameLocator.getByRole()",
       "cases": [
         "page.frame-locator",
         "loc.regexp-getters"
       ]
     },
     "PlaywrightFrameLocator.getByTestId": {
-      "cmux": "frameLocator.getByTestId()",
+      "hmux": "frameLocator.getByTestId()",
       "cases": [
         "page.frame-locator"
       ]
     },
     "PlaywrightFrameLocator.getByText": {
-      "cmux": "frameLocator.getByText()",
+      "hmux": "frameLocator.getByText()",
       "cases": [
         "page.frame-locator",
         "loc.regexp-getters"
       ]
     },
     "PlaywrightFrameLocator.locator": {
-      "cmux": "frameLocator.locator()",
+      "hmux": "frameLocator.locator()",
       "cases": [
         "page.frame-locator"
       ]
     },
     "PlaywrightLocator.all": {
-      "cmux": "locator.all()",
+      "hmux": "locator.all()",
       "cases": [
         "loc.collections"
       ]
     },
     "PlaywrightLocator.allTextContents": {
-      "cmux": "locator.allTextContents()",
+      "hmux": "locator.allTextContents()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.evaluate",
@@ -1370,21 +1370,21 @@
       ]
     },
     "PlaywrightLocator.and": {
-      "cmux": "locator.and()",
+      "hmux": "locator.and()",
       "cases": [
         "loc.composition-errors",
         "loc.and-or"
       ]
     },
     "PlaywrightLocator.check": {
-      "cmux": "locator.check()",
+      "hmux": "locator.check()",
       "cases": [
         "loc.check.options",
         "loc.errors.missing"
       ]
     },
     "PlaywrightLocator.click": {
-      "cmux": "locator.click()",
+      "hmux": "locator.click()",
       "cases": [
         "loc.click.options",
         "loc.errors.missing",
@@ -1392,26 +1392,26 @@
       ]
     },
     "PlaywrightLocator.count": {
-      "cmux": "locator.count()",
+      "hmux": "locator.count()",
       "cases": [
         "loc.collections"
       ]
     },
     "PlaywrightLocator.dblclick": {
-      "cmux": "locator.dblclick()",
+      "hmux": "locator.dblclick()",
       "cases": [
         "loc.dblclick.options",
         "loc.errors.missing"
       ]
     },
     "PlaywrightLocator.downloadMedia": {
-      "cmux": "page.waitForEvent(\"download\") around locator.click()",
+      "hmux": "page.waitForEvent(\"download\") around locator.click()",
       "cases": [
         "loc.download-media"
       ]
     },
     "PlaywrightLocator.evaluate": {
-      "cmux": "locator.evaluate()",
+      "hmux": "locator.evaluate()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.evaluate",
@@ -1419,7 +1419,7 @@
       ]
     },
     "PlaywrightLocator.evaluateAll": {
-      "cmux": "locator.evaluateAll()",
+      "hmux": "locator.evaluateAll()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.evaluate",
@@ -1427,7 +1427,7 @@
       ]
     },
     "PlaywrightLocator.fill": {
-      "cmux": "locator.fill()",
+      "hmux": "locator.fill()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.missing",
@@ -1436,20 +1436,20 @@
       ]
     },
     "PlaywrightLocator.filter": {
-      "cmux": "locator.filter()",
+      "hmux": "locator.filter()",
       "cases": [
         "loc.composition-errors",
         "loc.filter-options"
       ]
     },
     "PlaywrightLocator.first": {
-      "cmux": "locator.first()",
+      "hmux": "locator.first()",
       "cases": [
         "loc.collections"
       ]
     },
     "PlaywrightLocator.getAttribute": {
-      "cmux": "locator.getAttribute()",
+      "hmux": "locator.getAttribute()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.missing",
@@ -1457,7 +1457,7 @@
       ]
     },
     "PlaywrightLocator.getByLabel": {
-      "cmux": "locator.getByLabel()",
+      "hmux": "locator.getByLabel()",
       "cases": [
         "loc.composition-errors",
         "loc.regexp-getters",
@@ -1465,7 +1465,7 @@
       ]
     },
     "PlaywrightLocator.getByPlaceholder": {
-      "cmux": "locator.getByPlaceholder()",
+      "hmux": "locator.getByPlaceholder()",
       "cases": [
         "loc.composition-errors",
         "loc.regexp-getters",
@@ -1473,7 +1473,7 @@
       ]
     },
     "PlaywrightLocator.getByRole": {
-      "cmux": "locator.getByRole()",
+      "hmux": "locator.getByRole()",
       "cases": [
         "loc.composition-errors",
         "loc.regexp-getters",
@@ -1481,14 +1481,14 @@
       ]
     },
     "PlaywrightLocator.getByTestId": {
-      "cmux": "locator.getByTestId()",
+      "hmux": "locator.getByTestId()",
       "cases": [
         "loc.composition-errors",
         "loc.scoped-getters"
       ]
     },
     "PlaywrightLocator.getByText": {
-      "cmux": "locator.getByText()",
+      "hmux": "locator.getByText()",
       "cases": [
         "loc.composition-errors",
         "loc.regexp-getters",
@@ -1496,7 +1496,7 @@
       ]
     },
     "PlaywrightLocator.innerText": {
-      "cmux": "locator.innerText()",
+      "hmux": "locator.innerText()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.missing",
@@ -1504,25 +1504,25 @@
       ]
     },
     "PlaywrightLocator.isEnabled": {
-      "cmux": "locator.isEnabled()",
+      "hmux": "locator.isEnabled()",
       "cases": [
         "loc.states"
       ]
     },
     "PlaywrightLocator.isVisible": {
-      "cmux": "locator.isVisible()",
+      "hmux": "locator.isVisible()",
       "cases": [
         "loc.states"
       ]
     },
     "PlaywrightLocator.last": {
-      "cmux": "locator.last()",
+      "hmux": "locator.last()",
       "cases": [
         "loc.collections"
       ]
     },
     "PlaywrightLocator.locator": {
-      "cmux": "locator.locator()",
+      "hmux": "locator.locator()",
       "cases": [
         "loc.composition-errors",
         "loc.filter-options",
@@ -1530,21 +1530,21 @@
       ]
     },
     "PlaywrightLocator.nth": {
-      "cmux": "locator.nth()",
+      "hmux": "locator.nth()",
       "cases": [
         "loc.composition-errors",
         "loc.collections"
       ]
     },
     "PlaywrightLocator.or": {
-      "cmux": "locator.or()",
+      "hmux": "locator.or()",
       "cases": [
         "loc.composition-errors",
         "loc.and-or"
       ]
     },
     "PlaywrightLocator.press": {
-      "cmux": "locator.press()",
+      "hmux": "locator.press()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.missing",
@@ -1552,7 +1552,7 @@
       ]
     },
     "PlaywrightLocator.pressSequentially": {
-      "cmux": "locator.pressSequentially()",
+      "hmux": "locator.pressSequentially()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.missing",
@@ -1560,21 +1560,21 @@
       ]
     },
     "PlaywrightLocator.selectOption": {
-      "cmux": "locator.selectOption()",
+      "hmux": "locator.selectOption()",
       "cases": [
         "loc.errors.missing",
         "loc.select-option.forms"
       ]
     },
     "PlaywrightLocator.setChecked": {
-      "cmux": "locator.setChecked()",
+      "hmux": "locator.setChecked()",
       "cases": [
         "loc.check.options",
         "loc.errors.missing"
       ]
     },
     "PlaywrightLocator.textContent": {
-      "cmux": "locator.textContent()",
+      "hmux": "locator.textContent()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.missing",
@@ -1582,7 +1582,7 @@
       ]
     },
     "PlaywrightLocator.type": {
-      "cmux": "locator.type()",
+      "hmux": "locator.type()",
       "cases": [
         "loc.timeout-options",
         "loc.errors.missing",
@@ -1590,14 +1590,14 @@
       ]
     },
     "PlaywrightLocator.uncheck": {
-      "cmux": "locator.uncheck()",
+      "hmux": "locator.uncheck()",
       "cases": [
         "loc.check.options",
         "loc.errors.missing"
       ]
     },
     "PlaywrightLocator.waitFor": {
-      "cmux": "locator.waitFor()",
+      "hmux": "locator.waitFor()",
       "cases": [
         "page.wait-for-selector",
         "loc.errors.missing",
@@ -1605,379 +1605,379 @@
       ]
     },
     "PlaywrightDownload.path": {
-      "cmux": "download.path()",
+      "hmux": "download.path()",
       "cases": [
         "loc.download-media"
       ]
     },
     "PlaywrightFileChooser.isMultiple": {
-      "cmux": "fileChooser.isMultiple(), page.fileChooser().multiple",
+      "hmux": "fileChooser.isMultiple(), page.fileChooser().multiple",
       "cases": [
         "loc.set-input-files",
         "filechooser.event"
       ]
     },
     "PlaywrightFileChooser.setFiles": {
-      "cmux": "fileChooser.setFiles(files), page.fileChooser().setFiles(files)",
+      "hmux": "fileChooser.setFiles(files), page.fileChooser().setFiles(files)",
       "cases": [
         "loc.set-input-files",
         "filechooser.event"
       ]
     },
     "TabClipboardAPI.read": {
-      "cmux": "page.clipboard.read()",
+      "hmux": "page.clipboard.read()",
       "cases": [
         "clipboard.members"
       ]
     },
     "TabClipboardAPI.readText": {
-      "cmux": "page.clipboard.readText()",
+      "hmux": "page.clipboard.readText()",
       "cases": [
         "clipboard.members"
       ]
     },
     "TabClipboardAPI.write": {
-      "cmux": "page.clipboard.write(items)",
+      "hmux": "page.clipboard.write(items)",
       "cases": [
         "clipboard.members"
       ]
     },
     "TabClipboardAPI.writeText": {
-      "cmux": "page.clipboard.writeText(text)",
+      "hmux": "page.clipboard.writeText(text)",
       "cases": [
         "ax.text-forms",
         "clipboard.members"
       ]
     },
     "TabDevAPI.logs": {
-      "cmux": "page.consoleMessages({ level, filter, limit })",
+      "hmux": "page.consoleMessages({ level, filter, limit })",
       "cases": [
         "page.on-off",
         "dev.logs"
       ]
     },
     "AlertDialog.type": {
-      "cmux": "page.dialog().type",
+      "hmux": "page.dialog().type",
       "cases": [
         "dialogs.held"
       ]
     },
     "AlertDialog.dismiss": {
-      "cmux": "page.dialog().dismiss()",
+      "hmux": "page.dialog().dismiss()",
       "cases": [
         "dialogs.held"
       ]
     },
     "BeforeUnloadDialog.type": {
-      "cmux": "page.dialog().type is \"beforeunload\" when WebKit raises the prompt; navigations the agent starts leave without one, as reference B's Chrome accepts it itself",
+      "hmux": "page.dialog().type is \"beforeunload\" when WebKit raises the prompt; navigations the agent starts leave without one, as reference B's Chrome accepts it itself",
       "note": "Same held-dialog path as the other types. Playwright's headless WebKit (the dev driver) never fires beforeunload, so this type is unproven outside the app.",
       "cases": [
         "dialogs.beforeunload"
       ]
     },
     "BeforeUnloadDialog.dismiss": {
-      "cmux": "page.dialog().dismiss()",
+      "hmux": "page.dialog().dismiss()",
       "note": "Same held-dialog path as the other types; beforeunload itself is unproven in the dev driver.",
       "cases": [
         "dialogs.beforeunload"
       ]
     },
     "ConfirmDialog.type": {
-      "cmux": "page.dialog().type",
+      "hmux": "page.dialog().type",
       "cases": [
         "dialogs.held"
       ]
     },
     "ConfirmDialog.accept": {
-      "cmux": "page.dialog().accept()",
+      "hmux": "page.dialog().accept()",
       "cases": [
         "dialogs.held",
         "dialogs.errors"
       ]
     },
     "ConfirmDialog.dismiss": {
-      "cmux": "page.dialog().dismiss()",
+      "hmux": "page.dialog().dismiss()",
       "cases": [
         "dialogs.held"
       ]
     },
     "Documentation.get": {
-      "cmux": "session.guide()",
+      "hmux": "session.guide()",
       "cases": [
         "session.name-docs"
       ]
     },
     "PromptDialog.type": {
-      "cmux": "page.dialog().type",
+      "hmux": "page.dialog().type",
       "cases": [
         "dialogs.held"
       ]
     },
     "PromptDialog.accept": {
-      "cmux": "page.dialog().accept(text)",
+      "hmux": "page.dialog().accept(text)",
       "cases": [
         "dialogs.held",
         "dialogs.errors"
       ]
     },
     "PromptDialog.dismiss": {
-      "cmux": "page.dialog().dismiss()",
+      "hmux": "page.dialog().dismiss()",
       "cases": [
         "dialogs.held"
       ]
     }
   },
   "sites": {
-    "$comment": "Site integrations: every reference A site global and method (reference A CLI 1.26.916 skills and REPL globals) and every reference B site capability, mapped to the cmux sites.*/tabs.* equivalent with proving tests (sites/<file>: <test title prefix> in tests/browser-parity/sites, or diff:<case id>), or to a pending user decision with its reason (docs/browser-repl/site-tools.md, Decisions). reference/site-surface.txt lists the members; unit/capabilities.test.mjs fails on an unmapped one.",
+    "$comment": "Site integrations: every reference A site global and method (reference A CLI 1.26.916 skills and REPL globals) and every reference B site capability, mapped to the hmux sites.*/tabs.* equivalent with proving tests (sites/<file>: <test title prefix> in tests/browser-parity/sites, or diff:<case id>), or to a pending user decision with its reason (docs/browser-repl/site-tools.md, Decisions). reference/site-surface.txt lists the members; unit/capabilities.test.mjs fails on an unmapped one.",
     "reference-a": {
       "gmail": {
-        "cmux": "sites.gmail (search, inbox, thread, attachment, send as a confirmed draft)",
+        "hmux": "sites.gmail (search, inbox, thread, attachment, send as a confirmed draft)",
         "tests": [
           "sites/google-mail-calendar.test.mjs: gmail.search and inbox",
           "sites/google-mail-calendar.test.mjs: gmail.send returns a draft"
         ]
       },
       "gmail.search": {
-        "cmux": "sites.gmail.search(q, { limit, page, uid })",
+        "hmux": "sites.gmail.search(q, { limit, page, uid })",
         "tests": [
           "sites/google-mail-calendar.test.mjs: gmail.search and inbox"
         ]
       },
       "gmail.getInbox": {
-        "cmux": "sites.gmail.inbox()",
+        "hmux": "sites.gmail.inbox()",
         "tests": [
           "sites/google-mail-calendar.test.mjs: gmail.search and inbox"
         ]
       },
       "gmail.getThread": {
-        "cmux": "sites.gmail.thread(id, { format })",
+        "hmux": "sites.gmail.thread(id, { format })",
         "tests": [
           "sites/google-mail-calendar.test.mjs: gmail.thread expands"
         ]
       },
       "gmail.openThreadDetailsPage": {
-        "cmux": "sites.gmail.thread(id); tabs.open(threadURL) for the page itself",
+        "hmux": "sites.gmail.thread(id); tabs.open(threadURL) for the page itself",
         "tests": [
           "sites/google-mail-calendar.test.mjs: gmail.thread expands"
         ]
       },
       "gmail.downloadAttachment": {
-        "cmux": "sites.gmail.attachment(id, name)",
+        "hmux": "sites.gmail.attachment(id, name)",
         "tests": [
           "sites/google-mail-calendar.test.mjs: gmail.attachment downloads"
         ]
       },
       "gmail.openComposer": {
-        "cmux": "sites.gmail.send({ to, cc, bcc, subject, body }) returns a draft; send(draft.id, { confirm: true }) sends",
+        "hmux": "sites.gmail.send({ to, cc, bcc, subject, body }) returns a draft; send(draft.id, { confirm: true }) sends",
         "tests": [
           "sites/google-mail-calendar.test.mjs: gmail.send returns a draft"
         ]
       },
       "gmail.openReplyComposer": {
-        "cmux": "sites.gmail.send({ threadId, body, replyAll }) draft, then confirmed",
+        "hmux": "sites.gmail.send({ threadId, body, replyAll }) draft, then confirmed",
         "tests": [
           "sites/google-mail-calendar.test.mjs: gmail.send: a reply goes into the thread"
         ]
       },
       "googleAccounts": {
-        "cmux": "sites.googleAccounts",
+        "hmux": "sites.googleAccounts",
         "tests": [
           "sites/google-workspace.test.mjs: googleAccounts.list"
         ]
       },
       "googleAccounts.list": {
-        "cmux": "sites.googleAccounts.list()",
+        "hmux": "sites.googleAccounts.list()",
         "tests": [
           "sites/google-workspace.test.mjs: googleAccounts.list"
         ]
       },
       "googleAccounts.print": {
-        "cmux": "sites.googleAccounts.list() (printing the value shows it)",
+        "hmux": "sites.googleAccounts.list() (printing the value shows it)",
         "tests": [
           "sites/google-workspace.test.mjs: googleAccounts.list"
         ]
       },
       "googleDocs": {
-        "cmux": "sites.googleDocs (read, export); page.exportContent({ format })",
+        "hmux": "sites.googleDocs (read, export); page.exportContent({ format })",
         "tests": [
           "sites/google-workspace.test.mjs: googleDocs.read",
           "diff:content.export-site"
         ]
       },
       "googleDocs.getDocumentHTML": {
-        "cmux": "sites.googleDocs.read(url, { format: \"html\" })",
+        "hmux": "sites.googleDocs.read(url, { format: \"html\" })",
         "tests": [
           "sites/google-workspace.test.mjs: googleDocs.read"
         ]
       },
       "googleDocs.getDocumentText": {
-        "cmux": "sites.googleDocs.read(url, { format: \"txt\" })",
+        "hmux": "sites.googleDocs.read(url, { format: \"txt\" })",
         "tests": [
           "sites/google-workspace.test.mjs: googleDocs.read"
         ]
       },
       "googleDocs.getLiveText": {
-        "cmux": "sites.googleDocs.read(url) (Docs saves as you type; the export is the current text)",
+        "hmux": "sites.googleDocs.read(url) (Docs saves as you type; the export is the current text)",
         "tests": [
           "sites/google-workspace.test.mjs: googleDocs.read"
         ]
       },
       "googleDocs.getTitle": {
-        "cmux": "(await sites.googleDocs.read(url)).title",
+        "hmux": "(await sites.googleDocs.read(url)).title",
         "tests": [
           "sites/google-workspace.test.mjs: googleDocs.read"
         ]
       },
       "googleDocs.parseUrl": {
-        "cmux": "sites.googleDocs.* take the document URL; /u/N/ picks the account",
+        "hmux": "sites.googleDocs.* take the document URL; /u/N/ picks the account",
         "tests": [
           "sites/google-workspace.test.mjs: googleDocs: the account comes from"
         ]
       },
       "googleDocs.connect": {
-        "cmux": "not needed: the tools are stateless and take the URL",
+        "hmux": "not needed: the tools are stateless and take the URL",
         "tests": [
           "sites/google-workspace.test.mjs: googleDocs.read"
         ]
       },
       "googleDocs.dispose": {
-        "cmux": "not needed: the tools are stateless and take the URL",
+        "hmux": "not needed: the tools are stateless and take the URL",
         "tests": [
           "sites/google-workspace.test.mjs: googleDocs.read"
         ]
       },
       "googleDocs.getSelectedContent": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleDocs.selectAll": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleDocs.selectTextRange": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleDocs.deleteSelection": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleDocs.insertText": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleDocs.insertHtmlContent": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleDocs.pasteFromMarkdown": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleDocs.applyDiffs": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleDocs.applyDiffsAsSuggestions": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleDocs.addComment": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleSheets": {
-        "cmux": "sites.googleSheets (info, read, readAll, export)",
+        "hmux": "sites.googleSheets (info, read, readAll, export)",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.getSpreadsheetInfo": {
-        "cmux": "sites.googleSheets.info(url)",
+        "hmux": "sites.googleSheets.info(url)",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.readSheet": {
-        "cmux": "sites.googleSheets.read(url, { gid | sheet, range })",
+        "hmux": "sites.googleSheets.read(url, { gid | sheet, range })",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.readAllSheets": {
-        "cmux": "sites.googleSheets.readAll(url)",
+        "hmux": "sites.googleSheets.readAll(url)",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.readSheetRich": {
-        "cmux": "sites.googleSheets.export(url, { format: \"xlsx\" }) keeps formatting",
+        "hmux": "sites.googleSheets.export(url, { format: \"xlsx\" }) keeps formatting",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.readSelection": {
-        "cmux": "sites.googleSheets.read(url, { range })",
+        "hmux": "sites.googleSheets.read(url, { range })",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.navigateToCell": {
-        "cmux": "sites.googleSheets.read(url, { range }) reads a cell without moving the user's cursor",
+        "hmux": "sites.googleSheets.read(url, { range }) reads a cell without moving the user's cursor",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.switchSheet": {
-        "cmux": "sites.googleSheets.read(url, { sheet })",
+        "hmux": "sites.googleSheets.read(url, { sheet })",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.connect": {
-        "cmux": "not needed: the tools are stateless and take the URL",
+        "hmux": "not needed: the tools are stateless and take the URL",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.dispose": {
-        "cmux": "not needed: the tools are stateless and take the URL",
+        "hmux": "not needed: the tools are stateless and take the URL",
         "tests": [
           "sites/google-workspace.test.mjs: googleSheets.info"
         ]
       },
       "googleSheets.writeMatrix": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleSheets.writeTsv": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleSheets.writeHtml": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleSheets.setNote": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googleSheets.addComment": {
         "decision": "doc-editing",
-        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a cmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
+        "reason": "Editing a Google document in place (selection, typing, pasting, diffs, comments, notes, cell writes) is a write the user sees as theirs; a hmux version would be a draft of the change, confirmed, applied with real input in the document tab (docs/browser-repl/site-tools.md, decision 6)."
       },
       "googlePeople": {
         "decision": "contacts",
-        "reason": "Google Contacts lookup reads the user's address book; cmux has no contacts tool yet and whether agents may read contacts is the user's call. Gmail search (sites.gmail.search(\"from:name\")) finds addresses in mail."
+        "reason": "Google Contacts lookup reads the user's address book; hmux has no contacts tool yet and whether agents may read contacts is the user's call. Gmail search (sites.gmail.search(\"from:name\")) finds addresses in mail."
       },
       "googleSearch": {
-        "cmux": "sites.googleSearch",
+        "hmux": "sites.googleSearch",
         "tests": [
           "sites/youtube-search.test.mjs: googleSearch.search: results from"
         ]
       },
       "googleSearch.search": {
-        "cmux": "sites.googleSearch.search(q, { limit, start, language, country, safeSearch, time })",
+        "hmux": "sites.googleSearch.search(q, { limit, start, language, country, safeSearch, time })",
         "tests": [
           "sites/youtube-search.test.mjs: googleSearch.search: results from",
           "sites/youtube-search.test.mjs: googleSearch.search: runs one query"
@@ -1992,93 +1992,93 @@
         "reason": "Image generation is not a browser operation and needs an API credential; reference A's imagegen printed OAuth tokens in a probe (docs/browser-repl/site-tools.md, decision 4)."
       },
       "youtube": {
-        "cmux": "sites.youtube",
+        "hmux": "sites.youtube",
         "tests": [
           "sites/youtube-search.test.mjs: youtube.search"
         ]
       },
       "youtube.search": {
-        "cmux": "sites.youtube.search(q, { limit })",
+        "hmux": "sites.youtube.search(q, { limit })",
         "tests": [
           "sites/youtube-search.test.mjs: youtube.search"
         ]
       },
       "youtube.getMetadata": {
-        "cmux": "sites.youtube.metadata(v)",
+        "hmux": "sites.youtube.metadata(v)",
         "tests": [
           "sites/youtube-search.test.mjs: youtube.metadata and captions"
         ]
       },
       "youtube.listTranscriptLanguages": {
-        "cmux": "sites.youtube.captions(v)",
+        "hmux": "sites.youtube.captions(v)",
         "tests": [
           "sites/youtube-search.test.mjs: youtube.metadata and captions"
         ]
       },
       "youtube.getTranscript": {
-        "cmux": "sites.youtube.transcript(v, { lang, timestamps, format }); page.exportContent({ transcript: true })",
+        "hmux": "sites.youtube.transcript(v, { lang, timestamps, format }); page.exportContent({ transcript: true })",
         "tests": [
           "sites/youtube-search.test.mjs: youtube.transcript: text, timestamps",
           "sites/youtube-search.test.mjs: youtube.transcript: a track that needs"
         ]
       },
       "youtube.getComments": {
-        "cmux": "sites.youtube.comments(v, { limit, continuation })",
+        "hmux": "sites.youtube.comments(v, { limit, continuation })",
         "tests": [
           "sites/youtube-search.test.mjs: youtube.comments"
         ]
       },
       "linkedin": {
-        "cmux": "sites.linkedin (me, profile, search, feed, post as a draft)",
+        "hmux": "sites.linkedin (me, profile, search, feed, post as a draft)",
         "tests": [
           "sites/social.test.mjs: linkedin.me and profile"
         ]
       },
       "linkedin.getMe": {
-        "cmux": "sites.linkedin.me()",
+        "hmux": "sites.linkedin.me()",
         "tests": [
           "sites/social.test.mjs: linkedin.me and profile"
         ]
       },
       "linkedin.getProfile": {
-        "cmux": "sites.linkedin.profile(id)",
+        "hmux": "sites.linkedin.profile(id)",
         "tests": [
           "sites/social.test.mjs: linkedin.me and profile"
         ]
       },
       "linkedin.searchPeople": {
-        "cmux": "sites.linkedin.search(q, { type: \"people\" })",
+        "hmux": "sites.linkedin.search(q, { type: \"people\" })",
         "tests": [
           "sites/social.test.mjs: linkedin.search and feed"
         ]
       },
       "linkedin.searchCompanies": {
-        "cmux": "sites.linkedin.search(q, { type: \"companies\" })",
+        "hmux": "sites.linkedin.search(q, { type: \"companies\" })",
         "tests": [
           "sites/social.test.mjs: linkedin.search and feed"
         ]
       },
       "linkedin.getCompany": {
-        "cmux": "tabs.content({ urls: [companyURL], format: \"markdown\" }) with the session",
+        "hmux": "tabs.content({ urls: [companyURL], format: \"markdown\" }) with the session",
         "tests": [
           "diff:tabs.content"
         ]
       },
       "linkedin.getJob": {
-        "cmux": "tabs.content({ urls: [jobURL], format: \"markdown\" }) with the session",
+        "hmux": "tabs.content({ urls: [jobURL], format: \"markdown\" }) with the session",
         "tests": [
           "diff:tabs.content"
         ]
       },
       "linkedin.getUserPosts": {
-        "cmux": "tabs.content({ urls: [activityURL] }); sites.linkedin.feed() for the user's own feed",
+        "hmux": "tabs.content({ urls: [activityURL] }); sites.linkedin.feed() for the user's own feed",
         "tests": [
           "sites/social.test.mjs: linkedin.search and feed",
           "diff:tabs.content"
         ]
       },
       "linkedin.invalidateCache": {
-        "cmux": "not needed: the tools keep no cache",
+        "hmux": "not needed: the tools keep no cache",
         "tests": [
           "sites/social.test.mjs: linkedin.me and profile"
         ]
@@ -2120,67 +2120,67 @@
         "reason": "Messages, invitations, likes, follows, reposts, blocks and mutes act as the user toward other people; each is a separate write the user has not approved yet (docs/browser-repl/site-tools.md, decision 7)."
       },
       "twitter": {
-        "cmux": "sites.x (user, userTweets, timeline, search, tweet, post as a draft)",
+        "hmux": "sites.x (user, userTweets, timeline, search, tweet, post as a draft)",
         "tests": [
           "sites/social.test.mjs: x.user, timeline"
         ]
       },
       "twitter.getMe": {
-        "cmux": "sites.x.user() for the signed-in account",
+        "hmux": "sites.x.user() for the signed-in account",
         "tests": [
           "sites/social.test.mjs: x.user, timeline"
         ]
       },
       "twitter.getUser": {
-        "cmux": "sites.x.user(handle)",
+        "hmux": "sites.x.user(handle)",
         "tests": [
           "sites/social.test.mjs: x.user, timeline"
         ]
       },
       "twitter.getTweet": {
-        "cmux": "sites.x.tweet(id)",
+        "hmux": "sites.x.tweet(id)",
         "tests": [
           "sites/social.test.mjs: x.user, timeline"
         ]
       },
       "twitter.getTweetThread": {
-        "cmux": "sites.x.tweet(id) (the post and its replies)",
+        "hmux": "sites.x.tweet(id) (the post and its replies)",
         "tests": [
           "sites/social.test.mjs: x.user, timeline"
         ]
       },
       "twitter.getTimeline": {
-        "cmux": "sites.x.timeline()",
+        "hmux": "sites.x.timeline()",
         "tests": [
           "sites/social.test.mjs: x.user, timeline"
         ]
       },
       "twitter.search": {
-        "cmux": "sites.x.search(q)",
+        "hmux": "sites.x.search(q)",
         "tests": [
           "sites/social.test.mjs: x.user, timeline"
         ]
       },
       "twitter.getUserTweets": {
-        "cmux": "sites.x.userTweets(handle)",
+        "hmux": "sites.x.userTweets(handle)",
         "tests": [
           "sites/social.test.mjs: x.user, timeline"
         ]
       },
       "twitter.getBookmarks": {
-        "cmux": "tabs.content({ urls: [\"https://x.com/i/bookmarks\"] }) with the session",
+        "hmux": "tabs.content({ urls: [\"https://x.com/i/bookmarks\"] }) with the session",
         "tests": [
           "diff:tabs.content"
         ]
       },
       "twitter.tweet": {
-        "cmux": "sites.x.post(text) draft, then confirmed",
+        "hmux": "sites.x.post(text) draft, then confirmed",
         "tests": [
           "sites/social.test.mjs: x.post"
         ]
       },
       "twitter.reply": {
-        "cmux": "sites.x.post({ text, replyTo }) draft, then confirmed",
+        "hmux": "sites.x.post({ text, replyTo }) draft, then confirmed",
         "tests": [
           "sites/social.test.mjs: x.post"
         ]
@@ -2210,56 +2210,56 @@
         "reason": "Messages, invitations, likes, follows, reposts, blocks and mutes act as the user toward other people; each is a separate write the user has not approved yet (docs/browser-repl/site-tools.md, decision 7)."
       },
       "notion": {
-        "cmux": "sites.notion (accounts, search, read as Markdown, append as a draft)",
+        "hmux": "sites.notion (accounts, search, read as Markdown, append as a draft)",
         "tests": [
           "sites/work-apps.test.mjs: notion: accounts"
         ]
       },
       "notion.getClient": {
-        "cmux": "sites.notion.* (same-origin calls in the page; the token never reaches the REPL)",
+        "hmux": "sites.notion.* (same-origin calls in the page; the token never reaches the REPL)",
         "tests": [
           "sites/work-apps.test.mjs: notion: accounts",
           "sites/work-apps.test.mjs: notion.append"
         ]
       },
       "notion.listAccounts": {
-        "cmux": "sites.notion.accounts()",
+        "hmux": "sites.notion.accounts()",
         "tests": [
           "sites/work-apps.test.mjs: notion: accounts"
         ]
       },
       "notion.invalidateCache": {
-        "cmux": "not needed: the tools keep no cache",
+        "hmux": "not needed: the tools keep no cache",
         "tests": [
           "sites/work-apps.test.mjs: notion: accounts"
         ]
       },
       "blockToMarkdown": {
-        "cmux": "sites.notion.read(url) returns Markdown",
+        "hmux": "sites.notion.read(url) returns Markdown",
         "tests": [
           "sites/work-apps.test.mjs: notion: accounts"
         ]
       },
       "markdownToBlockSpecs": {
-        "cmux": "sites.notion.append(page, markdown) converts Markdown to blocks",
+        "hmux": "sites.notion.append(page, markdown) converts Markdown to blocks",
         "tests": [
           "sites/work-apps.test.mjs: notion.append"
         ]
       },
       "slack": {
-        "cmux": "sites.slack (workspaces, channels, history, replies, search, user, read-only call, post as a draft)",
+        "hmux": "sites.slack (workspaces, channels, history, replies, search, user, read-only call, post as a draft)",
         "tests": [
           "sites/work-apps.test.mjs: slack reads"
         ]
       },
       "slack.listWorkspaces": {
-        "cmux": "sites.slack.workspaces()",
+        "hmux": "sites.slack.workspaces()",
         "tests": [
           "sites/work-apps.test.mjs: slack.workspaces"
         ]
       },
       "slack.getClient": {
-        "cmux": "sites.slack.* and sites.slack.call(team, readMethod, params); the token stays in the page",
+        "hmux": "sites.slack.* and sites.slack.call(team, readMethod, params); the token stays in the page",
         "tests": [
           "sites/work-apps.test.mjs: slack reads",
           "sites/work-apps.test.mjs: slack.post"
@@ -2271,7 +2271,7 @@
       },
       "captcha": {
         "decision": "captcha",
-        "reason": "Solving CAPTCHAs defeats a site's check that a person is present; cmux reports the captcha code and stops (docs/browser-repl/site-tools.md, decision 1)."
+        "reason": "Solving CAPTCHAs defeats a site's check that a person is present; hmux reports the captcha code and stops (docs/browser-repl/site-tools.md, decision 1)."
       },
       "applePasswords": {
         "decision": "password-managers",
@@ -2282,14 +2282,14 @@
         "reason": "Reading or autofilling a password manager puts vault access behind an agent; sites.browserAuth covers sign-in without it (docs/browser-repl/site-tools.md, decision 2)."
       },
       "cua": {
-        "cmux": "page.mouse, page.keyboard (native input in the page); desktop control outside the browser is not the REPL's job",
+        "hmux": "page.mouse, page.keyboard (native input in the page); desktop control outside the browser is not the REPL's job",
         "tests": [
           "diff:mouse.members",
           "diff:keyboard.members"
         ]
       },
       "chrome": {
-        "cmux": "tabs.history (history), tabs.list({ all: true }) (open tabs), download events (downloads); Chrome bookmarks, top sites and tab groups have no WebKit counterpart",
+        "hmux": "tabs.history (history), tabs.list({ all: true }) (open tabs), download events (downloads); Chrome bookmarks, top sites and tab groups have no WebKit counterpart",
         "tests": [
           "diff:browser.history",
           "diff:tabs.claim-other-workspace",
@@ -2297,19 +2297,19 @@
         ]
       },
       "installPageScript": {
-        "cmux": "page.addScriptTag({ content }) or page.evaluate(fn) in the current document",
+        "hmux": "page.addScriptTag({ content }) or page.evaluate(fn) in the current document",
         "tests": [
           "diff:page.evaluate.forms"
         ]
       },
       "referenceA.pdf": {
-        "cmux": "page.pdf(options)",
+        "hmux": "page.pdf(options)",
         "tests": [
           "diff:page.pdf"
         ]
       },
       "referenceA.sessions": {
-        "cmux": "named REPL sessions (cmux browser repl --session NAME, reset)",
+        "hmux": "named REPL sessions (hmux browser repl --session NAME, reset)",
         "tests": [
           "diff:edge.sessions-two-tabs",
           "diff:edge.sessions-same-tab"
@@ -2317,100 +2317,100 @@
       },
       "referenceA.settings": {
         "decision": "agent-platform",
-        "reason": "Reference A's own daemon settings, projects, routines and chat channels manage reference A, not a browser; cmux's equivalents are its app settings and workspaces, which an agent changes only if the user decides it may."
+        "reason": "Reference A's own daemon settings, projects, routines and chat channels manage reference A, not a browser; hmux's equivalents are its app settings and workspaces, which an agent changes only if the user decides it may."
       },
       "referenceA.projects": {
         "decision": "agent-platform",
-        "reason": "Reference A's own daemon settings, projects, routines and chat channels manage reference A, not a browser; cmux's equivalents are its app settings and workspaces, which an agent changes only if the user decides it may."
+        "reason": "Reference A's own daemon settings, projects, routines and chat channels manage reference A, not a browser; hmux's equivalents are its app settings and workspaces, which an agent changes only if the user decides it may."
       },
       "referenceA.routines": {
         "decision": "agent-platform",
-        "reason": "Reference A's own daemon settings, projects, routines and chat channels manage reference A, not a browser; cmux's equivalents are its app settings and workspaces, which an agent changes only if the user decides it may."
+        "reason": "Reference A's own daemon settings, projects, routines and chat channels manage reference A, not a browser; hmux's equivalents are its app settings and workspaces, which an agent changes only if the user decides it may."
       },
       "referenceA.channels": {
         "decision": "agent-platform",
-        "reason": "Reference A's own daemon settings, projects, routines and chat channels manage reference A, not a browser; cmux's equivalents are its app settings and workspaces, which an agent changes only if the user decides it may."
+        "reason": "Reference A's own daemon settings, projects, routines and chat channels manage reference A, not a browser; hmux's equivalents are its app settings and workspaces, which an agent changes only if the user decides it may."
       }
     },
     "reference-b": {
       "content.exportGsuite": {
-        "cmux": "sites.googleDocs/googleSheets/googleSlides.export(url, { format }); page.exportContent({ format })",
+        "hmux": "sites.googleDocs/googleSheets/googleSlides.export(url, { format }); page.exportContent({ format })",
         "tests": [
           "sites/google-workspace.test.mjs: googleDocs.export writes the file",
           "diff:content.export-site"
         ]
       },
       "content.exportYouTubeTranscript": {
-        "cmux": "sites.youtube.transcript(v); page.exportContent({ transcript: true })",
+        "hmux": "sites.youtube.transcript(v); page.exportContent({ transcript: true })",
         "tests": [
           "sites/youtube-search.test.mjs: youtube.transcript: a track that needs",
           "diff:content.export-site"
         ]
       },
       "tabs.content": {
-        "cmux": "tabs.content({ urls, format })",
+        "hmux": "tabs.content({ urls, format })",
         "tests": [
           "diff:tabs.content"
         ]
       },
       "pageAssets.list": {
-        "cmux": "sites.pageAssets.list(page?)",
+        "hmux": "sites.pageAssets.list(page?)",
         "tests": [
           "sites/page-tools.test.mjs: pageAssets.list inventories"
         ]
       },
       "pageAssets.bundle": {
-        "cmux": "sites.pageAssets.bundle(inventory, { kinds, assetIds, dir })",
+        "hmux": "sites.pageAssets.bundle(inventory, { kinds, assetIds, dir })",
         "tests": [
           "sites/page-tools.test.mjs: pageAssets.bundle downloads"
         ]
       },
       "webmcp.fetchTools": {
-        "cmux": "sites.webmcp.tools(page?)",
+        "hmux": "sites.webmcp.tools(page?)",
         "tests": [
           "sites/page-tools.test.mjs: webmcp: lists a page's tools"
         ]
       },
       "webmcp.tools.call": {
-        "cmux": "sites.webmcp.call(name, input) (non-read-only tools are drafts)",
+        "hmux": "sites.webmcp.call(name, input) (non-read-only tools are drafts)",
         "tests": [
           "sites/page-tools.test.mjs: webmcp: lists a page's tools"
         ]
       },
       "browserAuth.request": {
-        "cmux": "sites.browserAuth.request(page?, { origin, fields, submit })",
+        "hmux": "sites.browserAuth.request(page?, { origin, fields, submit })",
         "tests": [
           "sites/page-tools.test.mjs: browserAuth.request: the app fills",
           "sites/page-tools.test.mjs: browserAuth.request: cancel"
         ]
       },
       "history": {
-        "cmux": "tabs.history({ query, from, to, limit })",
+        "hmux": "tabs.history({ query, from, to, limit })",
         "tests": [
           "diff:browser.history"
         ]
       },
       "user.openTabs": {
-        "cmux": "tabs.list({ all: true })",
+        "hmux": "tabs.list({ all: true })",
         "tests": [
           "diff:tabs.claim-other-workspace"
         ]
       },
       "user.claimTab": {
-        "cmux": "tabs.use(id) on a user's tab of the session's own workspace; another workspace's user tab is refused",
+        "hmux": "tabs.use(id) on a user's tab of the session's own workspace; another workspace's user tab is refused",
         "tests": [
           "diff:tabs.claim-other-workspace"
         ]
       },
       "user.getTabContext": {
-        "cmux": "snapshot(await tabs.get(id)) reads a tab without switching to it",
+        "hmux": "snapshot(await tabs.get(id)) reads a tab without switching to it",
         "tests": [
           "diff:tabs.attach"
         ]
       },
       "botDetection.report": {
         "decision": "bot-evasion",
-        "reason": "Reference B's botDetection is telemetry to its cloud; cmux reports CAPTCHA and sign-in blocks as error codes and does not disguise automation (docs/browser-repl/site-tools.md, decision 5)."
+        "reason": "Reference B's botDetection is telemetry to its cloud; hmux reports CAPTCHA and sign-in blocks as error codes and does not disguise automation (docs/browser-repl/site-tools.md, decision 5)."
       }
     }
   }

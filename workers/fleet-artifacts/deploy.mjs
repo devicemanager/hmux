@@ -1,7 +1,7 @@
 import { appendFile } from "node:fs/promises";
 import { pathToFileURL } from "node:url";
 
-export const workerName = "cmux-fleet-artifacts";
+export const workerName = "hmux-fleet-artifacts";
 
 export async function preflight({ accountId, token, publicKey, request = fetch }) {
   if (!/^[a-f0-9]{32}$/.test(accountId ?? "") || !token) throw Error("Missing configured Cloudflare repository secrets");
@@ -33,7 +33,7 @@ export async function preflight({ accountId, token, publicKey, request = fetch }
 
 export async function verifyUnsigned(origin, request = fetch) {
   const url = new URL(origin);
-  if (url.protocol !== "https:" || !/^cmux-fleet-artifacts\.[a-z0-9-]+\.workers\.dev$/.test(url.hostname)
+  if (url.protocol !== "https:" || !/^hmux-fleet-artifacts\.[a-z0-9-]+\.workers\.dev$/.test(url.hostname)
       || url.port || url.pathname !== "/" || url.search || url.hash || url.username || url.password) {
     throw Error("Invalid fleet artifact Worker origin");
   }

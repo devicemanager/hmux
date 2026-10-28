@@ -1,6 +1,6 @@
 # Event-log batching evidence (#12984)
 
-The issue reported per-line FileHandle writes during agent/feed bursts. The incident's app-wide CPU/footprint numbers also include other subsystems; this change proves reduced write amplification in `CmuxEventLogWriter`, not resolution of that entire incident.
+The issue reported per-line FileHandle writes during agent/feed bursts. The incident's app-wide CPU/footprint numbers also include other subsystems; this change proves reduced write amplification in `HmuxEventLogWriter`, not resolution of that entire incident.
 
 ## Reproduction and fix
 
@@ -25,14 +25,14 @@ The 1,152-event overload keeps the newest 1,024 records and drops 128 before flu
 Reproduce from the clone root on an authorized Mac:
 
 ```sh
-python3 scripts/benchmark-event-log-writes.py --baseline c4881822f28ade0934a512ee154514c9838a2922 --output /tmp/cmux-12984-benchmark.json
+python3 scripts/benchmark-event-log-writes.py --baseline c4881822f28ade0934a512ee154514c9838a2922 --output /tmp/hmux-12984-benchmark.json
 ```
 
 This compiles only the actual writer, test spy, and benchmark, without building or launching the app. The baseline includes the identical injected write dependency so observations have the same overhead.
 
 ## Behavior coverage and limits
 
-`CmuxEventLogWriterTests` is wired into the app test target. Ten Swift Testing methods cover empty/single/32/256/1024-record batches, below/exact/across the real 16 MiB boundary, full-existing-log rotation, maximum-sized producer records, multiple rotations, UTF-8/newline byte accounting, oversized records, backpressure, and failures before/after rotation followed by recovery. The standalone focused run passes with warnings as errors. Full app target and hosted verification are tracked in the PR.
+`HmuxEventLogWriterTests` is wired into the app test target. Ten Swift Testing methods cover empty/single/32/256/1024-record batches, below/exact/across the real 16 MiB boundary, full-existing-log rotation, maximum-sized producer records, multiple rotations, UTF-8/newline byte accounting, oversized records, backpressure, and failures before/after rotation followed by recovery. The standalone focused run passes with warnings as errors. Full app target and hosted verification are tracked in the PR.
 
 The extra buffer contains at most one log segment for ordinary records (normally at most 16 MiB); it is released after each append call. A single oversized record still writes whole, and the existing next-rotation cleanup discards that oversized active log. This pre-existing exception does not become a truncation or new drop policy. Rotation still retains only the active file and one archive, so multiple rotations retain the same last two segments.
 

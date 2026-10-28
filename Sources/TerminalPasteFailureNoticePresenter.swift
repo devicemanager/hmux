@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 
 /// Shows a ``TerminalPasteFailureNotice`` briefly over one terminal.
 ///

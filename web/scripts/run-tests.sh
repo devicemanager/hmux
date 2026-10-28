@@ -116,7 +116,7 @@ if arguments_require_bun_discovery "$@" || default_config_controls_discovery; th
   exec bun test --isolate "$@"
 fi
 
-discovery_file="$(mktemp "${TMPDIR:-/tmp}/cmux-web-test-discovery.XXXXXX")"
+discovery_file="$(mktemp "${TMPDIR:-/tmp}/hmux-web-test-discovery.XXXXXX")"
 cleanup_discovery_file() {
   rm -f "$discovery_file"
 }

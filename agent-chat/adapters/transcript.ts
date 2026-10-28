@@ -1,11 +1,11 @@
 // Terminal chat view: renders the JSONL transcript a terminal agent (Claude
-// Code, Codex) writes as it runs, so a cmux terminal can be shown as a chat
+// Code, Codex) writes as it runs, so a hmux terminal can be shown as a chat
 // without starting a second agent process. The terminal stays the source of
 // truth: this adapter tails the file and normalizes it into AgentEvent, and
-// prompts and interrupts go to the terminal through the cmux control socket.
+// prompts and interrupts go to the terminal through the hmux control socket.
 import { open, stat } from "node:fs/promises";
 import type { Adapter, AgentEvent, OptionValue, SessionCtx } from "../types";
-import { cmuxRpc, type CmuxRpcResult } from "../cmux-rpc";
+import { hmuxRpc, type HmuxRpcResult } from "../hmux-rpc";
 import { tryParse, truncate } from "./lines";
 
 export type TranscriptAgent = "claude" | "codex";
@@ -16,11 +16,11 @@ export interface TranscriptTarget {
   surfaceId?: string;
 }
 
-type Rpc = (method: string, params: Record<string, unknown>) => Promise<CmuxRpcResult>;
-let rpc: Rpc = cmuxRpc;
+type Rpc = (method: string, params: Record<string, unknown>) => Promise<HmuxRpcResult>;
+let rpc: Rpc = hmuxRpc;
 
 export function setTranscriptRpcForTest(next: Rpc | null) {
-  rpc = next ?? cmuxRpc;
+  rpc = next ?? hmuxRpc;
 }
 
 export function transcriptTarget(sess: SessionCtx): TranscriptTarget | undefined {
@@ -29,11 +29,11 @@ export function transcriptTarget(sess: SessionCtx): TranscriptTarget | undefined
 
 function rpcErrorMessage(err: unknown): string {
   const message = err instanceof Error ? err.message : String(err);
-  return message.trim().slice(0, 300) || "the cmux control request failed";
+  return message.trim().slice(0, 300) || "the hmux control request failed";
 }
 
 /** Focuses the terminal pane that runs the agent (for prompts the view cannot answer). */
-export async function focusTranscriptTerminal(sess: SessionCtx): Promise<CmuxRpcResult> {
+export async function focusTranscriptTerminal(sess: SessionCtx): Promise<HmuxRpcResult> {
   const surfaceId = transcriptTarget(sess)?.surfaceId;
   if (!surfaceId) return { ok: false, error: "The terminal for this session is unknown." };
   try {
@@ -43,7 +43,7 @@ export async function focusTranscriptTerminal(sess: SessionCtx): Promise<CmuxRpc
   }
 }
 
-/** A cmux agent message waiting for this terminal's agent to take it. */
+/** A hmux agent message waiting for this terminal's agent to take it. */
 export interface QueuedAgentMessage {
   id: string;
   from: string;
@@ -123,26 +123,26 @@ function textOf(content: unknown): string {
 
 function tagValue(text: string, tag: string): string | undefined {
   // Task results are untrusted tool output; quoted reminders must not become
-  // delivered cmux messages.
+  // delivered hmux messages.
   const safeText = text.replace(/<(?:task-result|tool_result|tool-result)(?:\s[^>]*)?>[\s\S]*?<\/(?:task-result|tool_result|tool-result)>/gi, "");
   const match = safeText.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`));
   return match?.[1]?.trim();
 }
 
-// cmux delivers agent messages through agent hooks, so they reach the
+// hmux delivers agent messages through agent hooks, so they reach the
 // transcript as hook context, stop feedback, or a wake reminder. Every path
 // carries the same text (AgentMessagePromptRenderer.swift): a header line, a
 // `Message id:` line, other metadata, `---`, the body, and a closing line
 // that carries the id. The closing line is searched for by id and parsing
 // resumes after it, so text inside a body (a quoted header, a forged
 // message) is never read as a message of its own.
-const CMUX_AGENT_MESSAGE_HEADER = /\[cmux agent message(?: \(\d+ of \d+\))?\] from ([^\n]+)\nMessage id: ([^\n]+)\n/g;
+const HMUX_AGENT_MESSAGE_HEADER = /\[hmux agent message(?: \(\d+ of \d+\))?\] from ([^\n]+)\nMessage id: ([^\n]+)\n/g;
 
-type CmuxAgentMessage = Extract<AgentEvent, { kind: "agent-message" }>;
+type HmuxAgentMessage = Extract<AgentEvent, { kind: "agent-message" }>;
 
-export function cmuxAgentMessages(text: string): CmuxAgentMessage[] {
-  const out: CmuxAgentMessage[] = [];
-  const header = new RegExp(CMUX_AGENT_MESSAGE_HEADER.source, "g");
+export function hmuxAgentMessages(text: string): HmuxAgentMessage[] {
+  const out: HmuxAgentMessage[] = [];
+  const header = new RegExp(HMUX_AGENT_MESSAGE_HEADER.source, "g");
   let match: RegExpExecArray | null;
   while ((match = header.exec(text))) {
     const id = match[2].trim();
@@ -157,10 +157,10 @@ export function cmuxAgentMessages(text: string): CmuxAgentMessage[] {
 }
 
 /** Keeps the first sighting of each message; replays and resumes repeat them. */
-class CmuxAgentMessageDedupe {
+class HmuxAgentMessageDedupe {
   private seen = new Set<string>();
-  take(text: string): CmuxAgentMessage[] {
-    return cmuxAgentMessages(text).filter((m) => !this.seen.has(m.id) && Boolean(this.seen.add(m.id)));
+  take(text: string): HmuxAgentMessage[] {
+    return hmuxAgentMessages(text).filter((m) => !this.seen.has(m.id) && Boolean(this.seen.add(m.id)));
   }
 }
 
@@ -180,7 +180,7 @@ class ClaudeTranscriptParser implements TranscriptParser {
   private seen = new Set<string>();
   private turnOpen = false;
   private endedMessageIds = new Set<string>();
-  private agentMessages = new CmuxAgentMessageDedupe();
+  private agentMessages = new HmuxAgentMessageDedupe();
 
   parse(line: string): AgentEvent[] {
     const events = this.parseLine(line);
@@ -239,10 +239,10 @@ class ClaudeTranscriptParser implements TranscriptParser {
     if (ev.isMeta || ev.isCompactSummary || ev.isVisibleInTranscriptOnly) return [];
     if (originKind === "task-notification") {
       const text = typeof content === "string" ? content : textOf(content);
-      // An idle agent woken by cmux (asyncRewake) records the message here.
-      // Only the reminder is cmux's; a task's own result may quote anything.
+      // An idle agent woken by hmux (asyncRewake) records the message here.
+      // Only the reminder is hmux's; a task's own result may quote anything.
       const reminder = tagValue(text, "system-reminder") ?? "";
-      if (cmuxAgentMessages(reminder).length) return this.agentMessages.take(reminder);
+      if (hmuxAgentMessages(reminder).length) return this.agentMessages.take(reminder);
       const summary = tagValue(text, "summary") ?? tagValue(text, "status");
       return [{ kind: "status", text: summary ? `Background task: ${truncate(summary, 160)}` : "Background task update" }];
     }
@@ -352,7 +352,7 @@ class CodexTranscriptParser implements TranscriptParser {
   cwd?: string;
   private lastUser?: string;
   private sinceUser = 0;
-  private agentMessages = new CmuxAgentMessageDedupe();
+  private agentMessages = new HmuxAgentMessageDedupe();
 
   parse(line: string): AgentEvent[] {
     const ev = tryParse(line);

@@ -88,7 +88,7 @@ describe("Stripe catalog provisioning", () => {
         (call) =>
           call.args.includes("https://api.stripe.com/v1/prices") &&
           call.args.includes("POST") &&
-          call.args.includes("lookup_key=cmux-pro-yearly-480") &&
+          call.args.includes("lookup_key=hmux-pro-yearly-480") &&
           call.args.includes("unit_amount=48000"),
       ),
     ).toBe(true);
@@ -97,7 +97,7 @@ describe("Stripe catalog provisioning", () => {
         (call) =>
           call.args.includes("https://api.stripe.com/v1/prices") &&
           call.args.includes("POST") &&
-          call.args.includes("lookup_key=cmux-team-yearly-576") &&
+          call.args.includes("lookup_key=hmux-team-yearly-576") &&
           call.args.includes("unit_amount=57600"),
       ),
     ).toBe(true);
@@ -110,9 +110,9 @@ describe("Stripe catalog provisioning", () => {
     const description = (productId: string) => result.calls
       .find((call) => call.args.includes(`https://api.stripe.com/v1/products/${productId}`) && call.args.includes("POST"))
       ?.args.find((argument) => argument.startsWith("description="));
-    expect(description("prod_pro")).toBe("description=Up to 5 Cloud VMs sharing 20 vCPUs and 40 GB RAM, plus the cmux iOS app.");
+    expect(description("prod_pro")).toBe("description=Up to 5 Cloud VMs sharing 20 vCPUs and 40 GB RAM, plus the hmux iOS app.");
     expect(description("prod_max")).toBe("description=Everything in Pro, with up to 5 Cloud VMs sharing 80 vCPUs and 160 GB RAM.");
-    expect(description("prod_team")).toBe("description=Up to 5 Cloud VMs per paid seat, sharing 20 vCPUs and 40 GB RAM per paid seat across the team, plus the cmux iOS app and priority support.");
+    expect(description("prod_team")).toBe("description=Up to 5 Cloud VMs per paid seat, sharing 20 vCPUs and 40 GB RAM per paid seat across the team, plus the hmux iOS app and priority support.");
   });
 
   test("provisions monthly and yearly Max prices and the Pro/Max plan switch portal", async () => {
@@ -122,11 +122,11 @@ describe("Stripe catalog provisioning", () => {
     const maxPriceLookups = result.calls.filter(
       (call) =>
         call.args.includes("https://api.stripe.com/v1/prices") &&
-        call.args.includes("lookup_keys[]=cmux-max-monthly-200"),
+        call.args.includes("lookup_keys[]=hmux-max-monthly-200"),
     );
     expect(maxPriceLookups.length).toBeGreaterThan(0);
-    expect(result.calls.some((call) => call.args.includes("lookup_keys[]=cmux-go-monthly-10"))).toBe(true);
-    expect(result.calls.some((call) => call.args.some((argument) => argument.includes("lookup_keys[]=cmux-max-yearly-1920")))).toBe(true);
+    expect(result.calls.some((call) => call.args.includes("lookup_keys[]=hmux-go-monthly-10"))).toBe(true);
+    expect(result.calls.some((call) => call.args.some((argument) => argument.includes("lookup_keys[]=hmux-max-yearly-1920")))).toBe(true);
     const portalCreate = result.calls.find(
       (call) =>
         call.args.includes("https://api.stripe.com/v1/billing_portal/configurations") &&
@@ -142,7 +142,7 @@ describe("Stripe catalog provisioning", () => {
     expect(portalArgs).toContain("features[subscription_update][products][1][product]=prod_max");
     expect(portalArgs).toContain("features[subscription_update][products][1][prices][]=price_max_month_200");
     expect(portalArgs).toContain("features[subscription_update][products][1][prices][]=price_max_year_1920");
-    expect(portalArgs).toContain("business_profile[headline]=cmux");
+    expect(portalArgs).toContain("business_profile[headline]=hmux");
   });
 
   // Every listed price is also a choice for any subscriber in the portal.
@@ -225,7 +225,7 @@ describe("Stripe catalog provisioning", () => {
         (call) =>
           call.args.includes("https://api.stripe.com/v1/products") &&
           call.args.includes("POST") &&
-          call.args.includes("name=cmux Pro"),
+          call.args.includes("name=hmux Pro"),
       ),
     ).toBe(false);
     expect(
@@ -247,7 +247,7 @@ describe("Stripe catalog provisioning", () => {
 
     expect(result.exitCode).toBe(1);
     expect(result.stderr).toContain(
-      "cmux-pro-monthly exists with unexpected configuration",
+      "hmux-pro-monthly exists with unexpected configuration",
     );
   });
 
@@ -312,7 +312,7 @@ async function runProvision(
   mode: "test" | "live",
   scenario: string,
 ): Promise<ProvisionResult> {
-  const root = mkdtempSync(join(tmpdir(), "cmux-stripe-catalog-test-"));
+  const root = mkdtempSync(join(tmpdir(), "hmux-stripe-catalog-test-"));
   temporaryRoots.push(root);
   const home = join(root, "home");
   const bin = join(root, "bin");
@@ -330,7 +330,7 @@ async function runProvision(
     ? "sk_live_mock_secret"
     : "sk_test_mock_secret";
   writeFileSync(
-    join(home, ".secrets", `cmux-stripe-${mode}.env`),
+    join(home, ".secrets", `hmux-stripe-${mode}.env`),
     `${keyName}=${key}\n`,
     { mode: 0o600 },
   );
@@ -403,97 +403,97 @@ const respond = (value) => {
 const products = {
   pro: {
     id: "prod_pro",
-    name: "cmux Pro",
+    name: "hmux Pro",
     active: true,
-    metadata: { app: "cmux", plan: "pro" },
+    metadata: { app: "hmux", plan: "pro" },
   },
   team: {
     id: "prod_team",
-    name: "cmux Team",
+    name: "hmux Team",
     active: true,
-    metadata: { app: "cmux", plan: "team" },
+    metadata: { app: "hmux", plan: "team" },
   },
   max: {
     id: "prod_max",
-    name: "cmux Max",
+    name: "hmux Max",
     active: true,
-    metadata: { app: "cmux", plan: "max" },
+    metadata: { app: "hmux", plan: "max" },
   },
   go: {
     id: "prod_go",
-    name: "cmux Go",
+    name: "hmux Go",
     active: true,
-    metadata: { app: "cmux", plan: "go" },
+    metadata: { app: "hmux", plan: "go" },
   },
 };
 const prices = {
-  "cmux-go-monthly-10": {
+  "hmux-go-monthly-10": {
     id: "price_go_month_10",
     unit_amount: 1000,
     interval: "month",
     product: "go",
   },
-  "cmux-pro-monthly-50": {
+  "hmux-pro-monthly-50": {
     id: "price_pro_month_50",
     unit_amount: 5000,
     interval: "month",
     product: "pro",
   },
-  "cmux-pro-yearly-480": {
+  "hmux-pro-yearly-480": {
     id: "price_pro_year_480",
     unit_amount: 48000,
     interval: "year",
     product: "pro",
   },
-  "cmux-max-monthly-200": {
+  "hmux-max-monthly-200": {
     id: "price_max_month_200",
     unit_amount: 20000,
     interval: "month",
     product: "max",
   },
-  "cmux-max-yearly-1920": {
+  "hmux-max-yearly-1920": {
     id: "price_max_year_1920",
     unit_amount: 192000,
     interval: "year",
     product: "max",
   },
-  "cmux-team-monthly-60": {
+  "hmux-team-monthly-60": {
     id: "price_team_month_60",
     unit_amount: 6000,
     interval: "month",
     product: "team",
   },
-  "cmux-team-yearly-576": {
+  "hmux-team-yearly-576": {
     id: "price_team_year_576",
     unit_amount: 57600,
     interval: "year",
     product: "team",
   },
-  "cmux-pro-monthly": {
+  "hmux-pro-monthly": {
     id: "price_pro_month",
     unit_amount: 3000,
     interval: "month",
     product: "pro",
   },
-  "cmux-pro-yearly": {
+  "hmux-pro-yearly": {
     id: "price_pro_year_legacy",
     unit_amount: 24000,
     interval: "year",
     product: "pro",
   },
-  "cmux-pro-yearly-288": {
+  "hmux-pro-yearly-288": {
     id: "price_pro_year",
     unit_amount: 28800,
     interval: "year",
     product: "pro",
   },
-  "cmux-team-monthly": {
+  "hmux-team-monthly": {
     id: "price_team_month",
     unit_amount: 3500,
     interval: "month",
     product: "team",
   },
-  "cmux-team-yearly-336": {
+  "hmux-team-yearly-336": {
     id: "price_team_year",
     unit_amount: 33600,
     interval: "year",
@@ -507,14 +507,14 @@ if (url.endsWith("/prices") && !isPost) {
     (
       scenario === "unrelated-product" &&
       (
-        lookupKey?.startsWith("cmux-pro") ||
-        lookupKey === "cmux-team-yearly-336" ||
-        lookupKey === "cmux-team-yearly-576"
+        lookupKey?.startsWith("hmux-pro") ||
+        lookupKey === "hmux-team-yearly-336" ||
+        lookupKey === "hmux-team-yearly-576"
       )
     ) ||
     (
       scenario === "canonical-product-second-page" &&
-      lookupKey?.startsWith("cmux-pro")
+      lookupKey?.startsWith("hmux-pro")
     )
   ) {
     respond({ data: [] });
@@ -522,7 +522,7 @@ if (url.endsWith("/prices") && !isPost) {
     const product = products[price.product];
     const returnedProduct =
       scenario === "wrong-product-metadata" &&
-      lookupKey === "cmux-pro-monthly" &&
+      lookupKey === "hmux-pro-monthly" &&
       expandedProduct
         ? { ...product, metadata: { app: "other", plan: "pro" } }
         : product;
@@ -535,7 +535,7 @@ if (url.endsWith("/prices") && !isPost) {
           interval: price.interval,
           interval_count:
             scenario === "wrong-interval-count" &&
-            lookupKey === "cmux-pro-monthly" &&
+            lookupKey === "hmux-pro-monthly" &&
             !expandedProduct
               ? 2
               : 1,
@@ -550,7 +550,7 @@ if (url.endsWith("/prices") && !isPost) {
 } else if (url.endsWith("/products/search") && !isPost) {
   const attacker = {
     id: "prod_attacker",
-    name: "cmux Pro",
+    name: "hmux Pro",
     active: true,
     metadata: { app: "other", plan: "pro" },
   };
@@ -569,11 +569,11 @@ if (url.endsWith("/prices") && !isPost) {
   }
 } else if (url.endsWith("/products") && isPost) {
   respond({
-    id: dataValue === "cmux Pro"
+    id: dataValue === "hmux Pro"
       ? "prod_new_pro"
-      : dataValue === "cmux Max"
+      : dataValue === "hmux Max"
         ? "prod_new_max"
-        : dataValue === "cmux Go"
+        : dataValue === "hmux Go"
           ? "prod_new_go"
           : "prod_new_team",
   });
@@ -587,13 +587,13 @@ if (url.endsWith("/prices") && !isPost) {
         is_default: true,
         business_profile: scenario === "empty-profile"
           ? {}
-          : { headline: "cmux", privacy_policy_url: "https://cmux.com/privacy" },
+          : { headline: "hmux", privacy_policy_url: "https://cmux.com/privacy" },
       }],
       has_more: false,
     });
   } else if (scenario === "portal-switch-exists") {
     respond({
-      data: [{ id: "bpc_switch", metadata: { app: "cmux", purpose: "personal_plan_switch" } }],
+      data: [{ id: "bpc_switch", metadata: { app: "hmux", purpose: "personal_plan_switch" } }],
       has_more: false,
     });
   } else {

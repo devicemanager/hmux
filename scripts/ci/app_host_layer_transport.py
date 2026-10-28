@@ -27,7 +27,7 @@ import parallel_artifact_download
 INDEX = "app-host-layer-index.json"
 MAX_INDEX = 8 * 1024 * 1024
 MAX_ARCHIVE = 8 * 1024 * 1024 * 1024
-SCHEMA = "cmux.app-host-layer-transport"
+SCHEMA = "hmux.app-host-layer-transport"
 APP_HOST_TEST_LAYERS = ("app-cli", "runtime", "tests")
 
 
@@ -196,7 +196,7 @@ def fetch_zip(api, reference, expected, target, limit, since, layer):
     finally:
         record["elapsed_seconds"] = round(time.monotonic() - started, 3)
         record["downloaded_bytes"] = target.stat().st_size if target.exists() else 0
-        print("CMUX_APP_HOST_LAYER_TRANSFER " + json.dumps(record, sort_keys=True))
+        print("HMUX_APP_HOST_LAYER_TRANSFER " + json.dumps(record, sort_keys=True))
 
 
 def extract_files(archive, expectations, output):
@@ -340,7 +340,7 @@ def restore_remote(api, reference, identity, expected, destination, restore, *, 
             restore(root / MANIFEST, destination, identity, selected)
             result = "success"
         finally:
-            print("CMUX_APP_HOST_LAYER_ASSEMBLY " + json.dumps({
+            print("HMUX_APP_HOST_LAYER_ASSEMBLY " + json.dumps({
                 "producer_run_id": expected["run_id"], "producer_run_attempt": expected["run_attempt"],
                 "profile": "app-host-tests" if selected == APP_HOST_TEST_LAYERS else "app-host-full",
                 "layers": list(selected), "result": result,
@@ -367,7 +367,7 @@ def main():
     if args.mode == "identity":
         args.path.write_text(json.dumps(identity, sort_keys=True) + "\n")
         return
-    expected = producer(os.environ["GITHUB_REPOSITORY"], identity, os.environ["CMUX_RUN_HEAD_SHA"])
+    expected = producer(os.environ["GITHUB_REPOSITORY"], identity, os.environ["HMUX_RUN_HEAD_SHA"])
     api = GitHub(expected["repository"])
     if args.mode == "publish-index":
         publish_index(api, args.path, json.loads(args.receipts.read_text()), identity, expected)
@@ -388,7 +388,7 @@ def main():
                 "--layers",
                 ",".join(required_layers),
             ], check=True)
-        requested = APP_HOST_TEST_LAYERS if os.environ.get("CMUX_APP_HOST_LAYER_PROFILE") == "app-host-tests" else NAMES
+        requested = APP_HOST_TEST_LAYERS if os.environ.get("HMUX_APP_HOST_LAYER_PROFILE") == "app-host-tests" else NAMES
         restore_remote(api, {"artifact_id": args.index_id, "artifact_digest": args.index_digest},
                        identity, expected, args.path, assemble, selected_layers=requested)
         hit = True
@@ -404,7 +404,7 @@ def main():
         # The workflow passes an absent, task-owned sibling directory. Adopt it
         # only after verified no-replace assembly; a miss leaves legacy state alone.
         with open(os.environ["GITHUB_ENV"], "a") as output:
-            output.write(f"CMUX_DERIVED_DATA_PATH={args.path.resolve()}\n")
+            output.write(f"HMUX_DERIVED_DATA_PATH={args.path.resolve()}\n")
 
 
 if __name__ == "__main__":

@@ -12,7 +12,7 @@ import {
 } from "./temporary-stack-user.mjs";
 
 function fixtureDirectory() {
-  const directory = mkdtempSync(path.join(os.tmpdir(), "cmux-stack-user-test-"));
+  const directory = mkdtempSync(path.join(os.tmpdir(), "hmux-stack-user-test-"));
   chmodSync(directory, 0o700);
   return directory;
 }
@@ -49,7 +49,7 @@ test("create writes only protected state and credential files", async (t) => {
     async createUser(options) {
       assert.equal(options.primaryEmailVerified, true);
       assert.equal(options.primaryEmailAuthEnabled, true);
-      assert.match(options.primaryEmail, /^cmux-iroh-gate\+/u);
+      assert.match(options.primaryEmail, /^hmux-iroh-gate\+/u);
       return user;
     },
   };
@@ -60,8 +60,8 @@ test("create writes only protected state and credential files", async (t) => {
   assert.doesNotThrow(() => assertSecureFile(stateFile));
   assert.doesNotThrow(() => assertSecureFile(credentialsFile));
   const credentials = readFileSync(credentialsFile, "utf8");
-  assert.match(credentials, /CMUX_UITEST_STACK_EMAIL=/u);
-  assert.match(credentials, /CMUX_UITEST_STACK_PASSWORD=/u);
+  assert.match(credentials, /HMUX_UITEST_STACK_EMAIL=/u);
+  assert.match(credentials, /HMUX_UITEST_STACK_PASSWORD=/u);
   assert.doesNotMatch(credentials, /access-token|refresh-token/u);
 });
 

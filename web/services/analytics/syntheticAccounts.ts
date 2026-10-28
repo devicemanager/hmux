@@ -3,7 +3,7 @@
 // The Cloud VM canary (.github/workflows/cloud-vm-canary.yml, every five
 // minutes) and the manual smoke, dogfood, stress and startup-bench scripts
 // under web/scripts/cloud-vm/ each mint a throwaway Stack user named
-// `cmux-<prod|staging>-<smoke|stress|bench>+<suffix>@manaflow.dev`, create a
+// `hmux-<prod|staging>-<smoke|stress|bench>+<suffix>@manaflow.dev`, create a
 // machine, and destroy it within a minute. Those rows are real production
 // traffic and stay in PostHog (they prove the create path works), but every
 // product count must be able to exclude them, so their events carry
@@ -12,7 +12,7 @@
 // The address is the authoritative marker: only the team controls the
 // manaflow.dev mailbox, and the scripts set the address server-side.
 
-const SYNTHETIC_ACCOUNT_EMAIL = /^cmux-(?:prod|staging)-(?:smoke|stress|bench)\+[^@\s]*@manaflow\.dev$/i;
+const SYNTHETIC_ACCOUNT_EMAIL = /^hmux-(?:prod|staging)-(?:smoke|stress|bench)\+[^@\s]*@manaflow\.dev$/i;
 
 /** Whether a Stack primary email belongs to a probe account. */
 export function isSyntheticAccountEmail(email: string | null | undefined): boolean {

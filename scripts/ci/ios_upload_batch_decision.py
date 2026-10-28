@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Batch scheduled iOS TestFlight uploads by commit count and age.
 
-Both iOS upload workflows poll main (CMUX INTERNAL every 20 minutes, official
-cmux.app hourly). Their decide jobs already skip an unchanged main, a delta
+Both iOS upload workflows poll main (HMUX INTERNAL every 20 minutes, official
+hmux.app hourly). Their decide jobs already skip an unchanged main, a delta
 with no iOS-relevant path, and (INTERNAL) inputs that already failed to
 upload. On a busy day nearly every poll still finds something, so each poll
 spent a cold Release archive on the macOS pool that PR CI shares.
@@ -175,7 +175,7 @@ def public_path_relevant(path: str) -> bool:
     """Mirror the public compare gate; parity is exercised against its code."""
     if not isinstance(path, str) or not path:
         return True
-    if path.startswith(("web/", "docs/", "tests/", "cmuxTests/")):
+    if path.startswith(("web/", "docs/", "tests/", "hmuxTests/")):
         return False
     if path.startswith(".github/workflows/"):
         return path in {

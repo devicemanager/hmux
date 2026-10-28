@@ -1,5 +1,5 @@
 import AppKit
-import CmuxChief
+import HmuxChief
 
 /// The settings panel's Memory list: the five newest notes Chief remembered,
 /// one line each at 11 pt with a relative time, a ✕ on hover that forgets the

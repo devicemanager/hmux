@@ -1,4 +1,4 @@
-import CmuxRemoteSession
+import HmuxRemoteSession
 import Foundation
 
 enum RemoteTmuxControlCommandKind: Equatable {

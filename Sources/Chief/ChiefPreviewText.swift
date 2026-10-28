@@ -1,5 +1,5 @@
-import CmuxChief
-import CmuxHomeCore
+import HmuxChief
+import HmuxHomeCore
 import Foundation
 import MessagesLabHome
 

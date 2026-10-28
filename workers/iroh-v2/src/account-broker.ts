@@ -9,8 +9,8 @@ import { ACCOUNT_DIRECTORY_RULES } from "./rules";
 import { installationKey, type AccountMacRow, type AccountRevalidation, type AccountStore } from "./storage/account-store";
 import { identityKey } from "./storage/team-store";
 
-export const MAC_HOST_CAPABILITY = "cmux.mac-host.v1";
-export const MAC_DEVICES_CAPABILITY = "cmux.mac-devices.v1";
+export const MAC_HOST_CAPABILITY = "hmux.mac-host.v1";
+export const MAC_DEVICES_CAPABILITY = "hmux.mac-devices.v1";
 
 /** What TeamControl.accountMacRecords returns for one identity. */
 export type AccountMacRecord = { device: DeviceRecord; authorityExpiresAt: number | null };

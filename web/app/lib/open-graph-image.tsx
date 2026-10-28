@@ -166,7 +166,7 @@ async function renderOpenGraphImage(locale: string) {
                     marginTop: -8 * S,
                   }}
                 >
-                  cmux
+                  hmux
                 </div>
                 <div
                   style={{

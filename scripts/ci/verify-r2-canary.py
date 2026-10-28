@@ -14,8 +14,8 @@ import time
 ARTIFACT = 10610975375
 SIZE = 606055512
 DIGEST = "08f56e901618eff4aacdffbd3046d9e9732b638004cba1d69ad44f447199608f"
-TOKEN_FILE = "cmux-r2-canary-access-token"
-READINESS_PATH = "/__cmux_artifact_canary_ready"
+TOKEN_FILE = "hmux-r2-canary-access-token"
+READINESS_PATH = "/__hmux_artifact_canary_ready"
 PATH = f"/v1/manaflow-ai/cmux/artifacts/{ARTIFACT}/{DIGEST}.zip"
 
 
@@ -43,10 +43,10 @@ def safe_headers(path):
             key, value = line.split(":", 1)
             values[key.strip().lower()] = value.strip()
     safe = {}
-    marker = values.get("x-cmux-canary-stage")
+    marker = values.get("x-hmux-canary-stage")
     if marker in {"gate-rejected", "ready-v1", "artifact-v1"}:
         safe["canary_stage"] = marker
-    cache = values.get("x-cmux-artifact-cache")
+    cache = values.get("x-hmux-artifact-cache")
     if cache in {"hit", "fill"}:
         safe["cache"] = cache
     if values.get("server", "").lower() == "cloudflare":
@@ -64,7 +64,7 @@ def request(origin, path, phase, receipt, work, limit, max_bytes):
         raise ValueError("missing valid per-run canary access token")
     config = work / "curl-secret-config"
     config.touch(mode=0o600)
-    config.write_text(f'header = "X-Cmux-Canary-Token: {token}"\n')
+    config.write_text(f'header = "X-Hmux-Canary-Token: {token}"\n')
     # A failed connection must not inherit the preceding probe's headers/body.
     headers.unlink(missing_ok=True)
     blob.unlink(missing_ok=True)
@@ -148,7 +148,7 @@ def main():
     args.add_argument("--origin", required=True)
     args.add_argument("--receipt", required=True, type=Path)
     options = args.parse_args()
-    if not re.fullmatch(r"https://cmux-ci-artifacts-canary-[1-9][0-9]{0,19}-[1-9][0-9]{0,3}\.[a-z0-9-]+\.workers\.dev", options.origin):
+    if not re.fullmatch(r"https://hmux-ci-artifacts-canary-[1-9][0-9]{0,19}-[1-9][0-9]{0,3}\.[a-z0-9-]+\.workers\.dev", options.origin):
         raise SystemExit("expected the isolated canary workers.dev HTTPS origin")
     receipt = {"artifact_id": ARTIFACT, "origin": options.origin, "requests": [],
                "runner_os": os.environ.get("RUNNER_OS", "local-unknown"),

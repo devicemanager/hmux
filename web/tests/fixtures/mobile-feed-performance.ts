@@ -5,7 +5,7 @@ export function feedPerformanceWindow() {
     timestamp: "2026-10-08T04:00:00Z",
     properties: {
       platform: "ios", client_channel: "dev", app_version: "0.1.0", build_number: "42",
-      bundle_identifier: "dev.cmux.ios.fperf4", os_version: "26.5", device_model: "iPhone",
+      bundle_identifier: "dev.hmux.ios.fperf4", os_version: "26.5", device_model: "iPhone",
       build_sha: "a".repeat(40), is_simulator: true, schema_version: 1,
       window_id: "2dcadcc5-4e91-4343-a48e-896889eb1e48", item_count: 400, window_ms: 10_000,
       callback_count: 2, callback_gap_max_ms: 120, scroll_observed_ms: 136,

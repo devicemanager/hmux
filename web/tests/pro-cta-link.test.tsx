@@ -23,7 +23,7 @@ describe("Pro pricing CTA", () => {
     );
 
     expect(html).toContain(
-      'href="/api/billing/checkout?plan=pro&amp;interval=month&amp;cmux_placement=pricing_page"',
+      'href="/api/billing/checkout?plan=pro&amp;interval=month&amp;hmux_placement=pricing_page"',
     );
     expect(html).not.toContain("interval=year");
     expect(html).not.toContain('href="/download/confirmation?dl=1"');
@@ -35,10 +35,10 @@ describe("Pro pricing CTA", () => {
 test("a pricing fallback click preserves inbound attribution before account data streams", async () => {
   const { PricingCheckoutButton } = await import("../app/components/pricing-checkout");
   const previous = Object.getOwnPropertyDescriptor(globalThis, "window");
-  Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { search: "?cmux_source=cli_free_access_expiry&utm_campaign=sept&plan=go" } } });
+  Object.defineProperty(globalThis, "window", { configurable: true, value: { location: { search: "?hmux_source=cli_free_access_expiry&utm_campaign=sept&plan=go" } } });
   try {
     for (const requiresSignIn of [false, true]) {
-      const element = PricingCheckoutButton({ href: "/api/billing/checkout?plan=max&cmux_scheme=cmux-dev-test&cmux_external_browser=1", requiresSignIn,
+      const element = PricingCheckoutButton({ href: "/api/billing/checkout?plan=max&hmux_scheme=hmux-dev-test&hmux_external_browser=1", requiresSignIn,
         plan: "max", location: "pricing_page", children: "Get Max" });
       let href = element.props.resolveHref();
       if (requiresSignIn) {
@@ -47,10 +47,10 @@ test("a pricing fallback click preserves inbound attribution before account data
       }
       const query = new URL(href, "https://cmux.com").searchParams;
       expect(query.get("plan")).toBe("max");
-      expect(query.get("cmux_scheme")).toBe("cmux-dev-test");
-      expect(query.get("cmux_source")).toBe("cli_free_access_expiry");
+      expect(query.get("hmux_scheme")).toBe("hmux-dev-test");
+      expect(query.get("hmux_source")).toBe("cli_free_access_expiry");
       expect(query.get("utm_campaign")).toBe("sept");
-      expect(query.get("cmux_placement")).toBe("pricing_page");
+      expect(query.get("hmux_placement")).toBe("pricing_page");
     }
   } finally {
     if (previous) Object.defineProperty(globalThis, "window", previous);

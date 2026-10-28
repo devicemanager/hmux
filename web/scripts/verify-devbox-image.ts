@@ -1,16 +1,16 @@
 #!/usr/bin/env bun
 /**
- * Post-bake verification for the cmux Cloud devbox images, run directly
+ * Post-bake verification for the hmux Cloud devbox images, run directly
  * against the provider SDKs. Boots ONE sandbox for the named provider,
  * asserts everything the devbox promises (pinned agents, the toolchain,
  * devtools, Chrome + cua-driver, ble.sh ghost text under a real PTY, the
  * agent-config generator byte-identical to this checkout, the desktop
  * contract on a desktop image), then asserts the
- * daemon contract with NO bootstrap of its own: the baked cmux-tui daemon must
+ * daemon contract with NO bootstrap of its own: the baked hmux-tui daemon must
  * come up by itself after resume, bound to this machine's instance id, with
  * the binary at the current files.cmux.com pin. A second machine from the same
  * snapshot must hold a different daemon identity (the snapshot is a memory
- * image; see cmux-devbox-boot). Both sandboxes are deleted.
+ * image; see hmux-devbox-boot). Both sandboxes are deleted.
  *
  * Usage:
  *   FREESTYLE_API_KEY=... bun scripts/verify-devbox-image.ts freestyle <snapshot-id>
@@ -26,24 +26,24 @@ import { agentLaunchCheck, codexHookTrustCheck } from "./devbox-agent-launch";
 import { DEFAULT_VM_EDGE_ALIAS_DOMAIN } from "../services/coderouter/vmGuestEnv";
 import path from "node:path";
 import {
-  CMUX_TUI_HOOK_PROVIDERS,
-  CMUX_TUI_LAYOUT_MARKER_PATH,
-  CMUX_TUI_SESSION,
-  cmuxTuiHooksReadyCommand,
-  cmuxTuiLayoutSelector,
-  cmuxTuiRunCommand,
-  resolveCmuxTuiSource,
-} from "../services/vms/drivers/cmuxTuiDaemon";
+  HMUX_TUI_HOOK_PROVIDERS,
+  HMUX_TUI_LAYOUT_MARKER_PATH,
+  HMUX_TUI_SESSION,
+  hmuxTuiHooksReadyCommand,
+  hmuxTuiLayoutSelector,
+  hmuxTuiRunCommand,
+  resolveHmuxTuiSource,
+} from "../services/vms/drivers/hmuxTuiDaemon";
 import {
   DEVBOX_WORK_HOME,
   DEVBOX_WORK_UID,
   DEVBOX_WORK_USER,
 } from "../services/vms/images/workUser";
 import {
-  CMUX_TUI_STATE_IMAGE_PATH,
-  CMUX_TUI_STATE_MOUNT_HELPER_PATH,
-  CMUX_TUI_STATE_RESERVATION_MARKER_PATH,
-  CMUX_TUI_STATE_RESERVATION_BYTES,
+  HMUX_TUI_STATE_IMAGE_PATH,
+  HMUX_TUI_STATE_MOUNT_HELPER_PATH,
+  HMUX_TUI_STATE_RESERVATION_MARKER_PATH,
+  HMUX_TUI_STATE_RESERVATION_BYTES,
   DEVBOX_DESKTOP_INSTALLS,
   DEVBOX_INSTANCE_ID_COMMAND,
   devboxAgentPins,
@@ -53,7 +53,7 @@ import {
   devboxIdleWakeupCheckCommand,
   devboxTerminfoCheckCommand,
   devboxWaitForDaemonCommand,
-  cmuxTuiWebsocketSmokeCommand,
+  hmuxTuiWebsocketSmokeCommand,
   sha256File,
 } from "./devbox-image-common";
 import {
@@ -76,11 +76,11 @@ const hexPort = (port: number): string => port.toString(16).toUpperCase().padSta
 
 // Every file the image bakes from this checkout must ship byte-identical.
 const FILE_PIN_CHECKS = [
-  ["cmux-bashrc", "/etc/cmux/bashrc"],
-  ["agent-config.sh", "/etc/cmux/agent-config.sh"],
-  ["seed-history", "/etc/cmux/seed-history"],
-  ["cmux-devbox-boot", "/usr/local/bin/cmux-devbox-boot"],
-  ["chrome-managed-policy.json", "/etc/opt/chrome/policies/managed/cmux.json"],
+  ["hmux-bashrc", "/etc/hmux/bashrc"],
+  ["agent-config.sh", "/etc/hmux/agent-config.sh"],
+  ["seed-history", "/etc/hmux/seed-history"],
+  ["hmux-devbox-boot", "/usr/local/bin/hmux-devbox-boot"],
+  ["chrome-managed-policy.json", "/etc/opt/chrome/policies/managed/hmux.json"],
 ].map(([source, target]) => `echo '${shaOf(source)}  ${target}' | sha256sum -c -`);
 
 const CHECKS: readonly string[] = [
@@ -96,16 +96,16 @@ const CHECKS: readonly string[] = [
   // The private-network announce (images/network.ts): arping is installed and
   // the boot supervisor's announce loop is running on the booted machine.
   // `[b]oot` keeps pgrep from matching this check's own shell command line.
-  "command -v arping && pgrep -f 'cmux-devbox-[b]oot' >/dev/null && grep -q 'announce_loop &' /usr/local/bin/cmux-devbox-boot && echo network-announce-ok",
-  // Quiet resume (cmux-devbox-boot park/re-arm, build-devbox-freestyle.ts
+  "command -v arping && pgrep -f 'hmux-devbox-[b]oot' >/dev/null && grep -q 'announce_loop &' /usr/local/bin/hmux-devbox-boot && echo network-announce-ok",
+  // Quiet resume (hmux-devbox-boot park/re-arm, build-devbox-freestyle.ts
   // "snapshot-resume-quiet"): this clone's resume killed no service by
   // watchdog, fired no parked housekeeping timer, printed no workqueue
   // lockup, and scheduled the delayed re-arm (or already ran it).
-  "! journalctl -b --no-pager 2>/dev/null | grep -qE 'Watchdog timeout|workqueue lockup|Starting (logrotate|man-db|dpkg-db-backup)\\.service' && { [ ! -e /sys/module/workqueue/parameters/watchdog_thresh ] || [ \"$(cat /sys/module/workqueue/parameters/watchdog_thresh)\" = 0 ]; } && { systemctl list-timers --all --no-pager | grep -q cmux-housekeeping-rearm || [ \"$(systemctl show -p ServiceWatchdogs --value)\" = yes ]; } && echo snapshot-resume-quiet-ok",
+  "! journalctl -b --no-pager 2>/dev/null | grep -qE 'Watchdog timeout|workqueue lockup|Starting (logrotate|man-db|dpkg-db-backup)\\.service' && { [ ! -e /sys/module/workqueue/parameters/watchdog_thresh ] || [ \"$(cat /sys/module/workqueue/parameters/watchdog_thresh)\" = 0 ]; } && { systemctl list-timers --all --no-pager | grep -q hmux-housekeeping-rearm || [ \"$(systemctl show -p ServiceWatchdogs --value)\" = yes ]; } && echo snapshot-resume-quiet-ok",
   // Chrome + managed policy + browser/computer-use drivers.
   "google-chrome-stable --version",
-  "jq -e '.DefaultSearchProviderSearchURL | test(\"duckduckgo\")' /etc/opt/chrome/policies/managed/cmux.json >/dev/null && echo chrome-ddg-policy-ok",
-  "grep -q AGENT_BROWSER_EXECUTABLE_PATH /etc/profile.d/cmux-media.sh && echo media-profile-ok",
+  "jq -e '.DefaultSearchProviderSearchURL | test(\"duckduckgo\")' /etc/opt/chrome/policies/managed/hmux.json >/dev/null && echo chrome-ddg-policy-ok",
+  "grep -q AGENT_BROWSER_EXECUTABLE_PATH /etc/profile.d/hmux-media.sh && echo media-profile-ok",
   "cua-driver --version",
   "ffmpeg -version | head -1 && command -v Xvfb && command -v xdpyinfo && command -v xdotool",
   // codex's Linux sandbox prerequisite: without the distro bwrap, codex warns
@@ -115,7 +115,7 @@ const CHECKS: readonly string[] = [
   ...FILE_PIN_CHECKS,
   // Devshell: ble.sh installed, bashrc chained, tmux pinned to bash, seed
   // history lands on first interactive shell.
-  "test -f /usr/local/share/blesh/ble.sh && grep -q '/etc/cmux/bashrc' /etc/skel/.bashrc && echo bashrc-chain-ok",
+  "test -f /usr/local/share/blesh/ble.sh && grep -q '/etc/hmux/bashrc' /etc/skel/.bashrc && echo bashrc-chain-ok",
   "grep default-shell /etc/tmux.conf",
   "bash -ic 'head -2 ~/.bash_history'",
   // Ghost-text smoke under a real PTY: type "cl" and expect ble.sh to render
@@ -129,17 +129,17 @@ const CHECKS: readonly string[] = [
   // so no [ble: ...] or "insane environment" text ever renders.
   "tmux new-session -d -s marks -x 100 -y 24 && sleep 3 && tmux send-keys -t marks not-a-command Enter && sleep 2 && tmux send-keys -t marks 'printf no-newline' Enter && sleep 2 && out=$(tmux capture-pane -pt marks); tmux kill-session -t marks 2>/dev/null; printf '%s\\n' \"$out\" | grep -E '\\[ble:|ble\\.sh:' && exit 1; echo no-ble-marks",
   // Coding-agent hooks: the work user's Claude Code and Codex hooks are
-  // installed and current (helper byte-equal to the pinned one, cmux marker
+  // installed and current (helper byte-equal to the pinned one, hmux marker
   // in both provider configs, codex trust table), and the daemon user's own
   // status verb reports both providers installed.
-  `${cmuxTuiHooksReadyCommand()} && ${cmuxTuiRunCommand(`--json agent hook status ${CMUX_TUI_HOOK_PROVIDERS.join(" ")}`)} > /tmp/hook-status.json && node -e 'const r = JSON.parse(require("fs").readFileSync("/tmp/hook-status.json","utf8")); for (const id of ${JSON.stringify([...CMUX_TUI_HOOK_PROVIDERS])}) { const p = (r.providers || []).find((x) => x.provider === id); if (!p || p.state !== "installed") { console.error(id, p); process.exit(1); } }' && rm -f /tmp/hook-status.json && echo agent-hooks-ok`,
+  `${hmuxTuiHooksReadyCommand()} && ${hmuxTuiRunCommand(`--json agent hook status ${HMUX_TUI_HOOK_PROVIDERS.join(" ")}`)} > /tmp/hook-status.json && node -e 'const r = JSON.parse(require("fs").readFileSync("/tmp/hook-status.json","utf8")); for (const id of ${JSON.stringify([...HMUX_TUI_HOOK_PROVIDERS])}) { const p = (r.providers || []).find((x) => x.provider === id); if (!p || p.state !== "installed") { console.error(id, p); process.exit(1); } }' && rm -f /tmp/hook-status.json && echo agent-hooks-ok`,
   // Agent-config generator: a login shell under a throwaway HOME with fake
   // model-plane env (placeholder keys, never a token) materializes the codex
   // custom provider plus the pi openai-codex override (no route-token
   // header: the edge injects it) and persists every var 0600; the
   // unreachable config endpoint writes no opencode config; the image ships
   // no pre-generated config for root.
-  `rm -rf /tmp/cmux-agent-config-verify && env HOME=/tmp/cmux-agent-config-verify OPENAI_BASE_URL=https://example.invalid/v1 OPENAI_API_KEY=cmux-vm-edge-placeholder CMUX_CODEROUTER_URL=https://example.invalid ANTHROPIC_BASE_URL=https://example.invalid ANTHROPIC_API_KEY=cmux-vm-edge-placeholder CMUX_VM_ID=vm-check bash -lc 'true' && grep -q 'model_provider = "cmux"' /tmp/cmux-agent-config-verify/.codex/config.toml && grep -q 'wire_api = "responses"' /tmp/cmux-agent-config-verify/.codex/config.toml && grep -q "export OPENAI_API_KEY='cmux-vm-edge-placeholder'" /tmp/cmux-agent-config-verify/.config/cmux/model-plane.env && grep -q "export CMUX_VM_ID='vm-check'" /tmp/cmux-agent-config-verify/.config/cmux/model-plane.env && [ "$(stat -c %a /tmp/cmux-agent-config-verify/.config/cmux/model-plane.env)" = "600" ] && grep -qF '"apiKey": "e30.' /tmp/cmux-agent-config-verify/.pi/agent/models.json && ! grep -q x-coderouter-route-token /tmp/cmux-agent-config-verify/.pi/agent/models.json && ! grep -q crt_ /tmp/cmux-agent-config-verify/.pi/agent/models.json && test ! -e /tmp/cmux-agent-config-verify/.config/opencode/opencode.json && rm -rf /tmp/cmux-agent-config-verify && grep -q 'base_url = "https://' /root/.codex/config.toml && grep -qF "${DEFAULT_VM_EDGE_ALIAS_DOMAIN}/v1" /root/.codex/config.toml && ! grep -q crt_ /root/.codex/config.toml && ! grep -q crt_ /root/.pi/agent/models.json && test ! -e /root/.config/opencode/opencode.json && echo agent-config-ok`,
+  `rm -rf /tmp/hmux-agent-config-verify && env HOME=/tmp/hmux-agent-config-verify OPENAI_BASE_URL=https://example.invalid/v1 OPENAI_API_KEY=hmux-vm-edge-placeholder HMUX_CODEROUTER_URL=https://example.invalid ANTHROPIC_BASE_URL=https://example.invalid ANTHROPIC_API_KEY=hmux-vm-edge-placeholder HMUX_VM_ID=vm-check bash -lc 'true' && grep -q 'model_provider = "hmux"' /tmp/hmux-agent-config-verify/.codex/config.toml && grep -q 'wire_api = "responses"' /tmp/hmux-agent-config-verify/.codex/config.toml && grep -q "export OPENAI_API_KEY='hmux-vm-edge-placeholder'" /tmp/hmux-agent-config-verify/.config/hmux/model-plane.env && grep -q "export HMUX_VM_ID='vm-check'" /tmp/hmux-agent-config-verify/.config/hmux/model-plane.env && [ "$(stat -c %a /tmp/hmux-agent-config-verify/.config/hmux/model-plane.env)" = "600" ] && grep -qF '"apiKey": "e30.' /tmp/hmux-agent-config-verify/.pi/agent/models.json && ! grep -q x-coderouter-route-token /tmp/hmux-agent-config-verify/.pi/agent/models.json && ! grep -q crt_ /tmp/hmux-agent-config-verify/.pi/agent/models.json && test ! -e /tmp/hmux-agent-config-verify/.config/opencode/opencode.json && rm -rf /tmp/hmux-agent-config-verify && grep -q 'base_url = "https://' /root/.codex/config.toml && grep -qF "${DEFAULT_VM_EDGE_ALIAS_DOMAIN}/v1" /root/.codex/config.toml && ! grep -q crt_ /root/.codex/config.toml && ! grep -q crt_ /root/.pi/agent/models.json && test ! -e /root/.config/opencode/opencode.json && echo agent-config-ok`,
   "python3 -c \"import json; s = json.load(open('/etc/claude-code/managed-settings.json')); assert s['cleanupPeriodDays'] == 99999 and s['skipDangerousModePermissionPrompt'] is True\" && echo claude-retention-ok",
   // Trust everywhere: the managed HOME entries for codex, the claude first-run
   // seed for root, and the sandbox env every login shell exports.
@@ -151,35 +151,35 @@ const CHECKS: readonly string[] = [
 // on 1337 (hex 0539), the baked binary is the one on PATH, and its identity is
 // bound to THIS machine's instance id, not the builder's.
 const INSTANCE_ID = DEVBOX_INSTANCE_ID_COMMAND;
-// cmux-remote keys per-session state by the base64url session name under its
+// hmux-remote keys per-session state by the base64url session name under its
 // default root state dir; the Noise static identity lives in auth/.
-const REMOTE_IDENTITY = `${DEVBOX_WORK_HOME}/.local/state/cmux/remote/sessions/${Buffer.from(CMUX_TUI_SESSION).toString("base64url")}/auth/identity.json`;
-// cmux-tui's own per-machine secrets, regenerated on first start after the bake.
-const MACHINE_SECRETS = `${DEVBOX_WORK_HOME}/.local/state/cmux-tui/sessions/machine-id ${DEVBOX_WORK_HOME}/.local/state/cmux-tui/sessions/resource-effect-pepper`;
+const REMOTE_IDENTITY = `${DEVBOX_WORK_HOME}/.local/state/hmux/remote/sessions/${Buffer.from(HMUX_TUI_SESSION).toString("base64url")}/auth/identity.json`;
+// hmux-tui's own per-machine secrets, regenerated on first start after the bake.
+const MACHINE_SECRETS = `${DEVBOX_WORK_HOME}/.local/state/hmux-tui/sessions/machine-id ${DEVBOX_WORK_HOME}/.local/state/hmux-tui/sessions/resource-effect-pepper`;
 const DAEMON_CHECKS: readonly string[] = [
   // [s]tart: the pattern must not match the exec shell carrying this very command line.
-  "pgrep -f 'cmux-tui server [s]tart' >/dev/null && echo daemon-running",
-  `${cmuxTuiRunCommand(`server status --session ${CMUX_TUI_SESSION}`)} >/dev/null && echo daemon-status-ok`,
+  "pgrep -f 'hmux-tui server [s]tart' >/dev/null && echo daemon-running",
+  `${hmuxTuiRunCommand(`server status --session ${HMUX_TUI_SESSION}`)} >/dev/null && echo daemon-status-ok`,
   "awk '$2 ~ /:0539$/ && $4 == \"0A\" { found=1 } END { exit !found }' /proc/net/tcp /proc/net/tcp6 && echo daemon-port-1337-ok",
-  `test "$(readlink /usr/local/bin/cmux-tui)" = ${DEVBOX_WORK_HOME}/.cmux/bin/cmux-tui && echo cmux-tui-symlink-ok`,
+  `test "$(readlink /usr/local/bin/hmux-tui)" = ${DEVBOX_WORK_HOME}/.hmux/bin/hmux-tui && echo hmux-tui-symlink-ok`,
   // Sessions are the work user's, not root's: the daemon took the user layout,
   // the process really runs as that account, and a pane it opens is a non-root
-  // shell in that home on a machine named cmux.
-  `[ "$(cat ${CMUX_TUI_LAYOUT_MARKER_PATH})" = user ] && echo daemon-layout-user`,
-  `[ "$(ps -o user= -C cmux-tui | tr -d ' ' | sort -u)" = ${DEVBOX_WORK_USER} ] && echo daemon-runs-as-work-user`,
+  // shell in that home on a machine named hmux.
+  `[ "$(cat ${HMUX_TUI_LAYOUT_MARKER_PATH})" = user ] && echo daemon-layout-user`,
+  `[ "$(ps -o user= -C hmux-tui | tr -d ' ' | sort -u)" = ${DEVBOX_WORK_USER} ] && echo daemon-runs-as-work-user`,
   `test -s ${REMOTE_IDENTITY} && echo daemon-identity-present`,
-  `test "$(cat /etc/cmux/daemon-instance-id)" = "$(${INSTANCE_ID})" && echo daemon-identity-bound-to-this-instance`,
-  `test -s /etc/cmux/bake-instance-id && test "$(cat /etc/cmux/bake-instance-id)" != "$(${INSTANCE_ID})" && echo builder-instance-differs`,
-  `test -f ${CMUX_TUI_STATE_RESERVATION_MARKER_PATH} && test -x ${CMUX_TUI_STATE_MOUNT_HELPER_PATH} && test -f ${CMUX_TUI_STATE_IMAGE_PATH} && mountpoint -q ${DEVBOX_WORK_HOME}/.local/state/cmux-tui && test "$(stat -c %s ${CMUX_TUI_STATE_IMAGE_PATH})" = ${CMUX_TUI_STATE_RESERVATION_BYTES} && echo daemon-state-reservation-ok`,
+  `test "$(cat /etc/hmux/daemon-instance-id)" = "$(${INSTANCE_ID})" && echo daemon-identity-bound-to-this-instance`,
+  `test -s /etc/hmux/bake-instance-id && test "$(cat /etc/hmux/bake-instance-id)" != "$(${INSTANCE_ID})" && echo builder-instance-differs`,
+  `test -f ${HMUX_TUI_STATE_RESERVATION_MARKER_PATH} && test -x ${HMUX_TUI_STATE_MOUNT_HELPER_PATH} && test -f ${HMUX_TUI_STATE_IMAGE_PATH} && mountpoint -q ${DEVBOX_WORK_HOME}/.local/state/hmux-tui && test "$(stat -c %s ${HMUX_TUI_STATE_IMAGE_PATH})" = ${HMUX_TUI_STATE_RESERVATION_BYTES} && echo daemon-state-reservation-ok`,
   // The static model-plane env is baked; a shell with no boot env sources it.
-  `test -s /etc/cmux/model-plane.env && grep -q "^export OPENAI_BASE_URL='https://" /etc/cmux/model-plane.env && ! grep -q crt_ /etc/cmux/model-plane.env && env -i HOME=/tmp/mp-verify bash -c '. /etc/cmux/agent-config.sh; printf %s "$OPENAI_BASE_URL"' | grep -q '^https://' && rm -rf /tmp/mp-verify && echo model-plane-env-baked`,
-  "systemctl is-active cmux-tui-daemon >/dev/null && echo systemd-supervisor-active",
-  "test -x /usr/local/bin/cmux-prompt-sync && python3 -m py_compile /usr/local/bin/cmux-prompt-sync && systemctl is-enabled cmux-prompt-sync >/dev/null && echo prompt-sync-contract-ok",
-  cmuxTuiWebsocketSmokeCommand(),
+  `test -s /etc/hmux/model-plane.env && grep -q "^export OPENAI_BASE_URL='https://" /etc/hmux/model-plane.env && ! grep -q crt_ /etc/hmux/model-plane.env && env -i HOME=/tmp/mp-verify bash -c '. /etc/hmux/agent-config.sh; printf %s "$OPENAI_BASE_URL"' | grep -q '^https://' && rm -rf /tmp/mp-verify && echo model-plane-env-baked`,
+  "systemctl is-active hmux-tui-daemon >/dev/null && echo systemd-supervisor-active",
+  "test -x /usr/local/bin/hmux-prompt-sync && python3 -m py_compile /usr/local/bin/hmux-prompt-sync && systemctl is-enabled hmux-prompt-sync >/dev/null && echo prompt-sync-contract-ok",
+  hmuxTuiWebsocketSmokeCommand(),
 ];
 
-// The desktop layer (Freestyle bakes; /etc/cmux/image-stamp says "desktop"),
-// the contract in web/services/vms/images/desktop.ts: the cmux-desktop
+// The desktop layer (Freestyle bakes; /etc/hmux/image-stamp says "desktop"),
+// the contract in web/services/vms/images/desktop.ts: the hmux-desktop
 // systemd unit runs start-vnc.sh as the work user, RFB 5901 (hex 170D) is
 // loopback-only, noVNC answers on 6901 (hex 1AF5), the window manager, dock,
 // clipboard helper and accessibility bus are up, the wallpaper is on the
@@ -216,7 +216,7 @@ const desktopChecks = (): readonly string[] => [
   `pgrep -u ${DEVBOX_DESKTOP_USER} -x vncconfig >/dev/null && echo clipboard-helper-ok`,
   `pgrep -u ${DEVBOX_DESKTOP_USER} -f at-spi-bus-launcher >/dev/null && echo accessibility-bus-ok`,
   `pgrep -u ${DEVBOX_DESKTOP_USER} -x websockify >/dev/null || pgrep -u ${DEVBOX_DESKTOP_USER} -f websockify >/dev/null && echo websockify-ok`,
-  // One supervisor: systemd's. cmux-devbox-boot must not start a second one
+  // One supervisor: systemd's. hmux-devbox-boot must not start a second one
   // on a machine with systemd.
   `[ "$(pgrep -u ${DEVBOX_DESKTOP_USER} -f ${DEVBOX_DESKTOP_SUPERVISOR} | wc -l)" = 1 ] && echo single-desktop-supervisor`,
   `runuser -u ${DEVBOX_DESKTOP_USER} -- env DISPLAY=${DEVBOX_DESKTOP_DISPLAY} xdpyinfo | grep dimensions`,
@@ -230,8 +230,8 @@ const desktopChecks = (): readonly string[] => [
   `${loginAs(DEVBOX_DESKTOP_USER, DEVBOX_DESKTOP_HOME, "cua-driver doctor")} 2>&1 | tee /tmp/cua-doctor.txt | grep -q 'X11 connection: connected' && grep -q 'AT-SPI: bus address present' /tmp/cua-doctor.txt && ! grep -q 'accessibility bus not reachable' /tmp/cua-doctor.txt && rm -f /tmp/cua-doctor.txt && echo cua-driver-sees-desktop`,
   "ghostty +version | head -1",
   `test -f '${DEVBOX_DESKTOP_HOME}/.config/google-chrome/First Run' && echo chrome-first-run-ok`,
-  "test -s /etc/cmux/icons/google-chrome.png && test -s /etc/cmux/icons/thunar.png && test -s /etc/cmux/icons/ghostty.png && echo dock-icons-ok",
-  `test -x ${DEVBOX_DESKTOP_START_SCRIPT} && grep -q '/etc/cmux/desktop-env.sh' /etc/profile.d/cmux-desktop.sh && grep -q '/etc/cmux/desktop-env.sh' ${DEVBOX_DESKTOP_HOME}/.bashrc && grep -q '/etc/cmux/desktop-env.sh' /root/.bashrc && echo desktop-env-chained`,
+  "test -s /etc/hmux/icons/google-chrome.png && test -s /etc/hmux/icons/thunar.png && test -s /etc/hmux/icons/ghostty.png && echo dock-icons-ok",
+  `test -x ${DEVBOX_DESKTOP_START_SCRIPT} && grep -q '/etc/hmux/desktop-env.sh' /etc/profile.d/hmux-desktop.sh && grep -q '/etc/hmux/desktop-env.sh' ${DEVBOX_DESKTOP_HOME}/.bashrc && grep -q '/etc/hmux/desktop-env.sh' /root/.bashrc && echo desktop-env-chained`,
   ...desktopFilePinChecks(),
 ];
 
@@ -240,26 +240,26 @@ const desktopChecks = (): readonly string[] => [
 const CLAUDE_LAUNCH_MARKER = "bypass permissions on";
 const CLAUDE_GATE_TEXTS = "Do you trust|Detected a custom API key|text style that looks best|Yes, I accept|cannot be used with root|Select login method";
 const CODEX_LAUNCH_MARKER = "Ask Codex to do anything";
-// "Hooks need review" is codex's hook-trust gate: every hook cmux installs or
+// "Hooks need review" is codex's hook-trust gate: every hook hmux installs or
 // injects must already be trusted.
 const CODEX_GATE_TEXTS = "Do you trust|new version|bubblewrap|sandbox prerequisites|Sign in with ChatGPT|Hooks need review";
 const AGENT_LAUNCH_CHECKS: readonly string[] = [
-  agentLaunchCheck("root", "/root", "claude-root-launch", "CMUX_CLAUDE_AUTH=team claude --dangerously-skip-permissions", CLAUDE_LAUNCH_MARKER, CLAUDE_GATE_TEXTS),
-  agentLaunchCheck("root", "/root", "codex-root-launch", "CMUX_CODEX_AUTH=team codex", CODEX_LAUNCH_MARKER, CODEX_GATE_TEXTS),
-  agentLaunchCheck(DEVBOX_DESKTOP_USER, DEVBOX_DESKTOP_HOME, "codex-work-user-launch", "CMUX_CODEX_AUTH=team codex", CODEX_LAUNCH_MARKER, CODEX_GATE_TEXTS),
-  // A daemon pane starts codex through cmux-tui's codex wrapper (the pane
+  agentLaunchCheck("root", "/root", "claude-root-launch", "HMUX_CLAUDE_AUTH=team claude --dangerously-skip-permissions", CLAUDE_LAUNCH_MARKER, CLAUDE_GATE_TEXTS),
+  agentLaunchCheck("root", "/root", "codex-root-launch", "HMUX_CODEX_AUTH=team codex", CODEX_LAUNCH_MARKER, CODEX_GATE_TEXTS),
+  agentLaunchCheck(DEVBOX_DESKTOP_USER, DEVBOX_DESKTOP_HOME, "codex-work-user-launch", "HMUX_CODEX_AUTH=team codex", CODEX_LAUNCH_MARKER, CODEX_GATE_TEXTS),
+  // A daemon pane starts codex through hmux-tui's codex wrapper (the pane
   // PATH's codex shim), which injects per-terminal hooks and their trust.
   // Codex draws the composer before "Hooks need review", so ask codex itself
   // whether every hook it would run is trusted (#20482).
-  codexHookTrustCheck(DEVBOX_WORK_USER, DEVBOX_WORK_HOME, "codex-pane-hooks-trusted", `${DEVBOX_WORK_HOME}/.cmux/bin/cmux-tui`, `/tmp/cmux-tui-$(id -u)/${CMUX_TUI_SESSION}.sock`),
+  codexHookTrustCheck(DEVBOX_WORK_USER, DEVBOX_WORK_HOME, "codex-pane-hooks-trusted", `${DEVBOX_WORK_HOME}/.hmux/bin/hmux-tui`, `/tmp/hmux-tui-$(id -u)/${HMUX_TUI_SESSION}.sock`),
   // Nothing a launch wrote in the work user's home may be root-owned (the
   // root probes ran with HOME=/root, never the work user's home).
   `[ "$(find ${DEVBOX_DESKTOP_HOME} -not -user ${DEVBOX_DESKTOP_USER} | wc -l)" = 0 ] && echo home-still-owned-by-${DEVBOX_DESKTOP_USER}`,
 ];
 
-// Freestyle: the work user is the base's uid-1000 account renamed to `cmux`
+// Freestyle: the work user is the base's uid-1000 account renamed to `hmux`
 // (passwordless sudo, the API's default exec user and the SSH default), the
-// machine is named `cmux`, the toolchain is the base's (Node under nvm
+// machine is named `hmux`, the toolchain is the base's (Node under nvm
 // symlinked into /usr/local/bin, Bun, Python, uv, Docker) with the pinned
 // agents installed on top, and the pins must win in every shell family: a
 // clean login shell (no PATH help from this verifier) and a daemon pane
@@ -270,7 +270,7 @@ const FREESTYLE_BASE_CHECKS: readonly string[] = [
   `[ "$(getent passwd ${DEVBOX_WORK_UID} | cut -d: -f1)" = ${DEVBOX_WORK_USER} ] && ! id -u ubuntu >/dev/null 2>&1 && test ! -e /home/ubuntu && echo one-work-user`,
   `[ "$(hostname)" = ${DEVBOX_HOSTNAME} ] && [ "$(cat /etc/hostname)" = ${DEVBOX_HOSTNAME} ] && grep -q '^127\\.0\\.1\\.1[[:space:]]\\+${DEVBOX_HOSTNAME}$' /etc/hosts && echo hostname-ok`,
   // The prompt a person reads on every line: \u@\h under a real login shell.
-  `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'tmux -L prompt new-session -d -s p -x 120 -y 30 && sleep 3 && pane="$(tmux -L prompt capture-pane -pt p)"; tmux -L prompt kill-server 2>/dev/null; printf "%s\\n" "$pane" | grep -q "${DEVBOX_WORK_USER}@${DEVBOX_HOSTNAME}"' && echo prompt-says-cmux-at-cmux`,
+  `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'tmux -L prompt new-session -d -s p -x 120 -y 30 && sleep 3 && pane="$(tmux -L prompt capture-pane -pt p)"; tmux -L prompt kill-server 2>/dev/null; printf "%s\\n" "$pane" | grep -q "${DEVBOX_WORK_USER}@${DEVBOX_HOSTNAME}"' && echo prompt-says-hmux-at-hmux`,
   // The reason none of this is cosmetic, and the exact thing a person does on
   // a new machine: type the seeded command into a pane and get a prompt.
   // `claude --dangerously-skip-permissions --version` is NOT this check —
@@ -278,7 +278,7 @@ const FREESTYLE_BASE_CHECKS: readonly string[] = [
   // the interactive path shows the five first-run dialogs, so the probe is a
   // real PTY with an interactive shell (what the daemon spawns), types the
   // command, and reads the screen.
-  `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'tmux -L claude new-session -d -s c -x 110 -y 34 && sleep 1 && tmux -L claude send-keys -t c "CMUX_CLAUDE_AUTH=team claude --dangerously-skip-permissions" Enter; pane=""; for i in $(seq 1 120); do pane="$(tmux -L claude capture-pane -pt c)"; printf "%s\\n" "$pane" | grep -qE "bypass permissions on|root/sudo|Lets get started|Select login method|use this API key|trust this folder|Do you want to proceed" && break; sleep 0.5; done; tmux -L claude kill-server 2>/dev/null; printf "%s\\n" "$pane"; printf "%s\\n" "$pane" | grep -qiE "root/sudo|Lets get started|Select login method|use this API key|trust this folder|Do you want to proceed" && exit 1; printf "%s\\n" "$pane" | grep -q "bypass permissions on"' && echo claude-reaches-the-prompt`,
+  `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'tmux -L claude new-session -d -s c -x 110 -y 34 && sleep 1 && tmux -L claude send-keys -t c "HMUX_CLAUDE_AUTH=team claude --dangerously-skip-permissions" Enter; pane=""; for i in $(seq 1 120); do pane="$(tmux -L claude capture-pane -pt c)"; printf "%s\\n" "$pane" | grep -qE "bypass permissions on|root/sudo|Lets get started|Select login method|use this API key|trust this folder|Do you want to proceed" && break; sleep 0.5; done; tmux -L claude kill-server 2>/dev/null; printf "%s\\n" "$pane"; printf "%s\\n" "$pane" | grep -qiE "root/sudo|Lets get started|Select login method|use this API key|trust this folder|Do you want to proceed" && exit 1; printf "%s\\n" "$pane" | grep -q "bypass permissions on"' && echo claude-reaches-the-prompt`,
   `[ "$(id -u ${DEVBOX_WORK_USER})" = 1000 ] && sudo -n -u ${DEVBOX_WORK_USER} sudo -n true && echo work-user-sudo-ok`,
   `sudo -n -u ${DEVBOX_WORK_USER} bash -ic 'head -1 ~/.bash_history' | grep -q claude && echo work-user-shell-ok`,
   "test ! -e /opt/mise && test ! -e /usr/local/bin/mise && readlink /usr/local/bin/node | grep -q /usr/local/nvm/ && echo base-toolchain-in-use",
@@ -287,19 +287,19 @@ const FREESTYLE_BASE_CHECKS: readonly string[] = [
   // own login per launch (agent-auth.sh); a login shell's PATH (nvm first)
   // resolves each agent to its launcher too, and no shell carries Claude's
   // model-plane key.
-  'for a in claude codex opencode; do test "$(readlink /usr/local/bin/$a)" = /etc/cmux/$a && test -x /usr/local/libexec/cmux-$a-real || exit 1; done && sh -n /etc/cmux/agent-auth.sh && bash -lc \'test -z "${ANTHROPIC_API_KEY-}" && test -n "${CMUX_CLAUDE_TEAM_BASE_URL-}" && for a in claude codex opencode; do test "$(readlink -f "$(type -P $a)")" = /etc/cmux/$a && test "$(type -t $a)" = function || exit 1; done\' && echo agent-launchers-ok',
+  'for a in claude codex opencode; do test "$(readlink /usr/local/bin/$a)" = /etc/hmux/$a && test -x /usr/local/libexec/hmux-$a-real || exit 1; done && sh -n /etc/hmux/agent-auth.sh && bash -lc \'test -z "${ANTHROPIC_API_KEY-}" && test -n "${HMUX_CLAUDE_TEAM_BASE_URL-}" && for a in claude codex opencode; do test "$(readlink -f "$(type -P $a)")" = /etc/hmux/$a && test "$(type -t $a)" = function || exit 1; done\' && echo agent-launchers-ok',
   ...pins.map((pin) => `env -i HOME=${DEVBOX_WORK_HOME} TERM=xterm sudo -n -u ${DEVBOX_WORK_USER} bash -lc '${pin.binary} --version' | grep -F '${pin.version}' >/dev/null && echo ${pin.binary}-login-pin-ok`),
   // Non-login probe, as the work user: probing as root with the work user's
   // HOME would itself leave root-owned state dirs behind.
   ...pins.map((pin) => `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin ${pin.binary} --version | grep -F '${pin.version}' >/dev/null && echo ${pin.binary}-nonlogin-pin-ok`),
-  "systemctl show cmux-tui-daemon -p Environment | grep -q 'PATH=/usr/local/sbin:/usr/local/bin:' && echo daemon-env-path-ok",
-  // Every pane inherits the daemon's terminal identity (cmux-devbox-boot):
+  "systemctl show hmux-tui-daemon -p Environment | grep -q 'PATH=/usr/local/sbin:/usr/local/bin:' && echo daemon-env-path-ok",
+  // Every pane inherits the daemon's terminal identity (hmux-devbox-boot):
   // TERM_PROGRAM=ghostty and the baked Ghostty version.
-  `pid=$(pgrep -f 'cmux-tui server [s]tart' | head -1) && tr '\\0' '\\n' < /proc/$pid/environ > /tmp/daemon-env && grep -qx TERM=xterm-256color /tmp/daemon-env && grep -qx TERM_PROGRAM=ghostty /tmp/daemon-env && grep -qx "TERM_PROGRAM_VERSION=${devboxGhosttyVersion()}" /tmp/daemon-env && test "$(cat /etc/cmux/ghostty-version)" = ${devboxGhosttyVersion()} && rm -f /tmp/daemon-env && echo daemon-terminal-identity-ok`,
+  `pid=$(pgrep -f 'hmux-tui server [s]tart' | head -1) && tr '\\0' '\\n' < /proc/$pid/environ > /tmp/daemon-env && grep -qx TERM=xterm-256color /tmp/daemon-env && grep -qx TERM_PROGRAM=ghostty /tmp/daemon-env && grep -qx "TERM_PROGRAM_VERSION=${devboxGhosttyVersion()}" /tmp/daemon-env && test "$(cat /etc/hmux/ghostty-version)" = ${devboxGhosttyVersion()} && rm -f /tmp/daemon-env && echo daemon-terminal-identity-ok`,
   devboxTerminfoCheckCommand,
   `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} TERM=xterm-256color PATH=/usr/bin:/bin sh -c 'tput setaf 8 | od -An -tx1 | tr -d " \\n"' | grep -qx 1b5b33383b353b386d && echo work-user-terminfo-ok`,
-  "grep -qx 'unset TERMINFO' /etc/profile.d/cmux-terminfo.sh && grep -qx 'export TERMINFO_DIRS=/etc/terminfo:' /etc/profile.d/cmux-terminfo.sh && echo terminfo-search-path-ok",
-  `shadow=$(mktemp -d) && mkdir -p "$shadow/.terminfo" && tic -x -o "$shadow/.terminfo" /etc/cmux/terminfo.src && sudo -n -u ${DEVBOX_WORK_USER} env -i HOME="$shadow" USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -lc 'test -z "$TERMINFO" && test "$TERMINFO_DIRS" = /etc/terminfo: && test "$(tput setaf 8 | od -An -tx1 | tr -d " \\n")" = 1b5b33383b353b386d && infocmp -x xterm-256color | head -1 | grep -q /etc/terminfo/ && tput -T screen-256color colors | grep -qx 256' && rm -rf "$shadow" && echo terminfo-shadow-resistant`,
+  "grep -qx 'unset TERMINFO' /etc/profile.d/hmux-terminfo.sh && grep -qx 'export TERMINFO_DIRS=/etc/terminfo:' /etc/profile.d/hmux-terminfo.sh && echo terminfo-search-path-ok",
+  `shadow=$(mktemp -d) && mkdir -p "$shadow/.terminfo" && tic -x -o "$shadow/.terminfo" /etc/hmux/terminfo.src && sudo -n -u ${DEVBOX_WORK_USER} env -i HOME="$shadow" USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -lc 'test -z "$TERMINFO" && test "$TERMINFO_DIRS" = /etc/terminfo: && test "$(tput setaf 8 | od -An -tx1 | tr -d " \\n")" = 1b5b33383b353b386d && infocmp -x xterm-256color | head -1 | grep -q /etc/terminfo/ && tput -T screen-256color colors | grep -qx 256' && rm -rf "$shadow" && echo terminfo-shadow-resistant`,
   `docker --version && sudo -n -u ${DEVBOX_WORK_USER} docker ps >/dev/null && echo docker-ok`,
   // Home hygiene: nothing root-owned in the work user's home, ble.sh's
   // fallback state dir writable, the legal-notice marker present, and two
@@ -309,31 +309,31 @@ const FREESTYLE_BASE_CHECKS: readonly string[] = [
   // ble.sh uses a boot-scoped /tmp runtime root instead of the transient
   // XDG runtime directory. Keep that root present while the durable shell
   // runs, then prove the caller's XDG value remains independent.
-  `runtime_probe=$(mktemp -d /tmp/cmux-blesh-runtime-probe.XXXXXX) && chown ${DEVBOX_WORK_USER}:${DEVBOX_WORK_USER} "$runtime_probe" && sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color XDG_RUNTIME_DIR="$runtime_probe" CMUX_BLESH_RUNTIME_SENTINEL="$runtime_probe/sentinel" PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'set -eu; tmux -L blesh-runtime-probe new-session -d -s login -x 120 -y 30; sleep 3; test -d "/tmp/cmux-blesh-runtime-$(id -u)/blesh"; tmux -L blesh-runtime-probe send-keys -t login "printf CMUX_BLESH_RUNTIME_OK > \\\"$CMUX_BLESH_RUNTIME_SENTINEL\\\"" Enter; sleep 1; tmux -L blesh-runtime-probe capture-pane -pt login >/dev/null; test -s "$CMUX_BLESH_RUNTIME_SENTINEL"; tmux -L blesh-runtime-probe kill-server' && test -s "$runtime_probe/sentinel" && rm -rf "$runtime_probe" && echo blesh-runtime-dir-isolated`,
-  // Not cosmetic: cmux-tui refuses to store its Noise identity under a group-
+  `runtime_probe=$(mktemp -d /tmp/hmux-blesh-runtime-probe.XXXXXX) && chown ${DEVBOX_WORK_USER}:${DEVBOX_WORK_USER} "$runtime_probe" && sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color XDG_RUNTIME_DIR="$runtime_probe" HMUX_BLESH_RUNTIME_SENTINEL="$runtime_probe/sentinel" PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'set -eu; tmux -L blesh-runtime-probe new-session -d -s login -x 120 -y 30; sleep 3; test -d "/tmp/hmux-blesh-runtime-$(id -u)/blesh"; tmux -L blesh-runtime-probe send-keys -t login "printf HMUX_BLESH_RUNTIME_OK > \\\"$HMUX_BLESH_RUNTIME_SENTINEL\\\"" Enter; sleep 1; tmux -L blesh-runtime-probe capture-pane -pt login >/dev/null; test -s "$HMUX_BLESH_RUNTIME_SENTINEL"; tmux -L blesh-runtime-probe kill-server' && test -s "$runtime_probe/sentinel" && rm -rf "$runtime_probe" && echo blesh-runtime-dir-isolated`,
+  // Not cosmetic: hmux-tui refuses to store its Noise identity under a group-
   // or other-writable ancestor, and the daemon's state dir lives in this home.
   // Ubuntu's user-private-group umask (002) is what puts it there.
   `[ "$(find ${DEVBOX_WORK_HOME} -type d \\( -perm -g+w -o -perm -o+w \\) | wc -l)" = 0 ] && [ "$(sudo -n -u ${DEVBOX_WORK_USER} sh -c umask)" = 0022 ] && echo home-perms-ok`,
   "[ \"$(stat -c %a /usr/local/share/blesh/state.d)\" = 1777 ] && [ \"$(stat -c %a /usr/local/share/blesh/cache.d)\" = 1777 ] && echo blesh-dirs-ok",
   `test -f ${DEVBOX_WORK_HOME}/.cache/motd.legal-displayed && test -f /root/.cache/motd.legal-displayed && test -f /etc/skel/.cache/motd.legal-displayed && echo legal-notice-silenced`,
   ...[1, 2].map((run) =>
-    `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'tmux -L vprobe${run} new-session -d -s login -x 120 -y 30 && sleep 3 && pane="$(tmux -L vprobe${run} capture-pane -pt login)"; tmux -L vprobe${run} kill-server 2>/dev/null; printf "%s\\n" "$pane" | grep -iE "ble\\.sh|bleopt|ble-face|denied|not found|WARRANTY${run > 1 ? "|updating tput" : ""}" && { printf "%s\\n" "$pane"; exit 1; }; printf "%s\\n" "$pane" | grep -q "@cmux" && printf "%s\\n" "$pane" | grep -q "λ" && echo work-user-login-silent-${run}'`,
+    `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'tmux -L vprobe${run} new-session -d -s login -x 120 -y 30 && sleep 3 && pane="$(tmux -L vprobe${run} capture-pane -pt login)"; tmux -L vprobe${run} kill-server 2>/dev/null; printf "%s\\n" "$pane" | grep -iE "ble\\.sh|bleopt|ble-face|denied|not found|WARRANTY${run > 1 ? "|updating tput" : ""}" && { printf "%s\\n" "$pane"; exit 1; }; printf "%s\\n" "$pane" | grep -q "@hmux" && printf "%s\\n" "$pane" | grep -q "λ" && echo work-user-login-silent-${run}'`,
   ),
   // The devshell chain lives in the per-user rc files (after Ubuntu's own
-  // PS1), never in /etc/bash.bashrc, so it loads once and the cmux prompt wins.
-  `grep -q '/etc/cmux/bashrc' ${DEVBOX_WORK_HOME}/.bashrc && grep -q '/etc/cmux/bashrc' /etc/skel/.bashrc && ! grep -q '/etc/cmux/bashrc' /etc/bash.bashrc && echo devshell-sourced-once`,
-  // The login banner is cmux's and offline.
+  // PS1), never in /etc/bash.bashrc, so it loads once and the hmux prompt wins.
+  `grep -q '/etc/hmux/bashrc' ${DEVBOX_WORK_HOME}/.bashrc && grep -q '/etc/hmux/bashrc' /etc/skel/.bashrc && ! grep -q '/etc/hmux/bashrc' /etc/bash.bashrc && echo devshell-sourced-once`,
+  // The login banner is hmux's and offline.
   "run-parts /etc/update-motd.d | grep -q 'persistent cloud VM' && ! run-parts /etc/update-motd.d | grep -qi 'ubuntu.com' && test ! -s /etc/motd && echo motd-ok",
   // ble.sh tput-cache seeds are readable by the work user and land in its
   // XDG cache verbatim on first shell, so no login prints the tput notice.
-  "[ \"$(find /etc/cmux/blesh-cache-seed -not -perm -o+r | wc -l)\" = 0 ] && test -s /etc/cmux/blesh-cache-seed/blesh/*/term.xterm-ghostty && echo blesh-seeds-readable",
-  `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'rm -rf ~/.cache/blesh; tmux -L seed new-session -d -s s -x 100 -y 24 "env TERM=xterm-256color bash -i" && sleep 3; tmux -L seed kill-server 2>/dev/null; cmp ~/.cache/blesh/*/term.xterm-256color /etc/cmux/blesh-cache-seed/blesh/*/term.xterm-256color' && echo blesh-cache-seeded`,
-  `echo '${shaOf("cmux-motd")}  /etc/update-motd.d/00-cmux' | sha256sum -c -`,
-  "cat /etc/cmux/tool-versions",
-  "cat /etc/cmux/image-stamp",
+  "[ \"$(find /etc/hmux/blesh-cache-seed -not -perm -o+r | wc -l)\" = 0 ] && test -s /etc/hmux/blesh-cache-seed/blesh/*/term.xterm-ghostty && echo blesh-seeds-readable",
+  `sudo -n -u ${DEVBOX_WORK_USER} env -i HOME=${DEVBOX_WORK_HOME} USER=${DEVBOX_WORK_USER} TERM=xterm-256color PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin bash -c 'rm -rf ~/.cache/blesh; tmux -L seed new-session -d -s s -x 100 -y 24 "env TERM=xterm-256color bash -i" && sleep 3; tmux -L seed kill-server 2>/dev/null; cmp ~/.cache/blesh/*/term.xterm-256color /etc/hmux/blesh-cache-seed/blesh/*/term.xterm-256color' && echo blesh-cache-seeded`,
+  `echo '${shaOf("hmux-motd")}  /etc/update-motd.d/00-hmux' | sha256sum -c -`,
+  "cat /etc/hmux/tool-versions",
+  "cat /etc/hmux/image-stamp",
 ];
 
-// The machine is `cmux`, not the base's `freestyle-vm`
+// The machine is `hmux`, not the base's `freestyle-vm`
 // (services/vms/images/identity.ts): the shared check covers the static and
 // live hostname, $HOSTNAME, the loopback alias, sudo, the host-key comment
 // and the residue audit; on top of that, the prompt a person sees in a real
@@ -373,11 +373,11 @@ async function runChecks(label: string, checks: readonly string[], exec: Exec): 
 async function waitForBakedDaemon(provider: string, exec: Exec): Promise<number> {
   const t0 = Date.now();
   for (let attempt = 0; attempt < 45; attempt += 1) {
-    const status = await exec(cmuxTuiRunCommand(`server status --session ${CMUX_TUI_SESSION}`), 30_000);
+    const status = await exec(hmuxTuiRunCommand(`server status --session ${HMUX_TUI_SESSION}`), 30_000);
     if (status.exitCode === 0) return Date.now() - t0;
     await new Promise((resolve) => setTimeout(resolve, 1000));
   }
-  throw new Error(`${provider}: baked cmux-tui daemon did not come up by itself`);
+  throw new Error(`${provider}: baked hmux-tui daemon did not come up by itself`);
 }
 
 const provider = process.argv[2] ?? "";
@@ -387,11 +387,11 @@ if (!image) {
 }
 // Machine id and random state per clone: reported always, failing only with
 // --strict-clone-identity until the bind step regenerates the machine id
-// (plans/cmux-next/vm-image.md, "Production promotion").
+// (plans/hmux-next/vm-image.md, "Production promotion").
 const strictCloneIdentity = process.argv.includes("--strict-clone-identity");
-// Prototype runs name their sandboxes (for example cmuxnp-dev-verify) so they
+// Prototype runs name their sandboxes (for example hmuxnp-dev-verify) so they
 // are told apart from production machines on a shared provider account.
-const verifyName = process.env.CMUX_DEVBOX_VERIFY_NAME?.trim() || "cmux-devbox-verify";
+const verifyName = process.env.HMUX_DEVBOX_VERIFY_NAME?.trim() || "hmux-devbox-verify";
 // The caller's belief about the image (promote-devbox-image.ts derives it from
 // --no-desktop). The stamp baked into the image is the truth; a mismatch fails
 // the verification so a base image is never promoted as the desktop default.
@@ -438,24 +438,24 @@ if (provider === "freestyle") {
     const settled = await exec(devboxWaitForDaemonCommand(), 200_000);
     if (settled.exitCode !== 0) throw new Error(`baked daemon never reached its listener: ${settled.output.slice(-500)}`);
     // The baked binary must be the pin the bake resolved and recorded in
-    // /etc/cmux/cmux-tui-pin (that is the image's contract; the manifest entry
+    // /etc/hmux/hmux-tui-pin (that is the image's contract; the manifest entry
     // carries the same commit). The live files.cmux.com pin moves with every
-    // cmux-tui release, so drift from it is reported, not failed: a new pin
+    // hmux-tui release, so drift from it is reported, not failed: a new pin
     // reaches machines through a rebake.
-    const bakedPin = await exec("cat /etc/cmux/cmux-tui-pin", 30_000);
+    const bakedPin = await exec("cat /etc/hmux/hmux-tui-pin", 30_000);
     const [bakedSha, bakedCommit] = bakedPin.output.trim().split(/\s+/);
     if (bakedPin.exitCode !== 0 || !/^[0-9a-f]{64}$/.test(bakedSha ?? "")) {
-      throw new Error(`image carries no readable /etc/cmux/cmux-tui-pin: ${bakedPin.output.slice(-300)}`);
+      throw new Error(`image carries no readable /etc/hmux/hmux-tui-pin: ${bakedPin.output.slice(-300)}`);
     }
-    const pin = await exec(`printf '%s  %s\\n' ${bakedSha} ${DEVBOX_WORK_HOME}/.cmux/bin/cmux-tui | sha256sum -c >/dev/null 2>&1 && echo baked-pin-ok`, 30_000);
+    const pin = await exec(`printf '%s  %s\\n' ${bakedSha} ${DEVBOX_WORK_HOME}/.hmux/bin/hmux-tui | sha256sum -c >/dev/null 2>&1 && echo baked-pin-ok`, 30_000);
     if (pin.exitCode !== 0) {
-      throw new Error(`baked cmux-tui does not match the pin recorded at bake time: ${pin.output.slice(-500)}`);
+      throw new Error(`baked hmux-tui does not match the pin recorded at bake time: ${pin.output.slice(-500)}`);
     }
-    const live = await resolveCmuxTuiSource("freestyle");
+    const live = await resolveHmuxTuiSource("freestyle");
     console.log(
       live.sha256 === bakedSha
-        ? `cmux-tui pin: ${bakedCommit} (${bakedSha.slice(0, 12)}…), the current files.cmux.com pin`
-        : `cmux-tui pin: baked ${bakedCommit} (${bakedSha.slice(0, 12)}…); files.cmux.com now pins ${live.commit} (${live.sha256.slice(0, 12)}…), a rebake picks it up`,
+        ? `hmux-tui pin: ${bakedCommit} (${bakedSha.slice(0, 12)}…), the current files.cmux.com pin`
+        : `hmux-tui pin: baked ${bakedCommit} (${bakedSha.slice(0, 12)}…); files.cmux.com now pins ${live.commit} (${live.sha256.slice(0, 12)}…), a rebake picks it up`,
     );
     // An idle machine must not wake: the terminal host's main thread (the warm
     // template terminal) stays under a small bound of voluntary context
@@ -484,7 +484,7 @@ if (provider === "freestyle") {
         throw new Error(`two machines from ${image} share one daemon identity (${digestA.slice(0, 12)}…)`);
       }
       console.log(`daemon identity + machine secrets differ across machines: ${digestA.slice(0, 12)}… vs ${digestB.slice(0, 12)}…`);
-      // The SSH host keys are per machine as well: cmux-devbox-boot regenerates
+      // The SSH host keys are per machine as well: hmux-devbox-boot regenerates
       // them on a clone, under the machine's own name.
       const hostKey = `ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub | awk '{ print $2 }'`;
       const [keyA, keyB] = await Promise.all([exec(hostKey, 30_000), exec2(hostKey, 30_000)]);
@@ -517,7 +517,7 @@ if (provider === "freestyle") {
     }
     // The image stamp says which layers were baked; a desktop image must
     // pass the desktop contract, a base image must not carry a desktop.
-    const stamp = await exec("cat /etc/cmux/image-stamp 2>/dev/null || true", 30_000);
+    const stamp = await exec("cat /etc/hmux/image-stamp 2>/dev/null || true", 30_000);
     const desktop = /\bdesktop\b/.test(stamp.output);
     console.log(`image stamp: ${stamp.output.trim() || "(none)"} -> desktop checks ${desktop ? "on" : "off"}`);
     const stampKind = desktop ? "desktop" : "base";

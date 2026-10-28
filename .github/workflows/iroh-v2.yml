@@ -4,13 +4,13 @@ on:
   pull_request:
     paths:
       - workers/iroh-v2/**
-      - Packages/Shared/CmuxIrxTransport/**
+      - Packages/Shared/HmuxIrxTransport/**
       - .github/workflows/iroh-v2.yml
   push:
     branches: [main]
     paths:
       - workers/iroh-v2/**
-      - Packages/Shared/CmuxIrxTransport/**
+      - Packages/Shared/HmuxIrxTransport/**
       - .github/workflows/iroh-v2.yml
   workflow_dispatch:
     inputs:
@@ -56,7 +56,7 @@ jobs:
       - name: Select Xcode
         run: ./scripts/select-ci-xcode.sh
       - name: Run WebSocket ping regression tests
-        run: swift test --package-path Packages/Shared/CmuxIrxTransport --filter V2URLSessionSocketTests
+        run: swift test --package-path Packages/Shared/HmuxIrxTransport --filter V2URLSessionSocketTests
 
   backend:
     runs-on: ${{ github.repository_owner != 'manaflow-ai' && 'ubuntu-24.04' || github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository && 'blacksmith-4vcpu-ubuntu-2404' || vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}

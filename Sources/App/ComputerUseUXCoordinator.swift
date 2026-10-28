@@ -1,7 +1,7 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import AppKit
-import CMUXAgentLaunch
-import CmuxSettings
+import HMUXAgentLaunch
+import HmuxSettings
 
 /// Owns the app-level computer-use menu-bar and onboarding controllers.
 @MainActor
@@ -88,9 +88,9 @@ final class ComputerUseUXCoordinator {
             return nil
         }
         // Accept the canonical MCP server spelling and the separator variants
-        // emitted by different MCP clients. There is one cmux-cua contract;
+        // emitted by different MCP clients. There is one hmux-cua contract;
         // legacy driver/server names are intentionally not recognized.
-        for prefix in ["mcp__cmux-cua__", "mcp__cmux_cua__", "cmux-cua.", "cmux_cua."] {
+        for prefix in ["mcp__hmux-cua__", "mcp__hmux_cua__", "hmux-cua.", "hmux_cua."] {
             if toolName.hasPrefix(prefix) {
                 let name = String(toolName.dropFirst(prefix.count))
                 return name.isEmpty ? nil : name
@@ -268,7 +268,7 @@ final class ComputerUseUXCoordinator {
         // always-on-top cursor and break that window-relative ordering.
 
         // Bring the app the local driver is steering to the front (once per target)
-        // so the user watches the automation instead of the cmux-hosted cursor
+        // so the user watches the automation instead of the hmux-hosted cursor
         // clicking on top of a hidden target. Gated the same way via `featureEnabled`.
         watchTarget.start()
         watchTargetController = watchTarget

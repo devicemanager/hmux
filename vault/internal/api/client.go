@@ -168,7 +168,7 @@ func (c *Client) FindSession(ctx context.Context, agent, agentSessionID string) 
 		return nil, nil
 	}
 	if len(out.Sessions) > 1 {
-		return nil, fmt.Errorf("session %s exists for multiple agents in cmux vault; pass --agent to disambiguate", agentSessionID)
+		return nil, fmt.Errorf("session %s exists for multiple agents in hmux vault; pass --agent to disambiguate", agentSessionID)
 	}
 	return &out.Sessions[0], nil
 }
@@ -262,7 +262,7 @@ func (c *Client) doJSONOnce(ctx context.Context, method, path string, payload []
 	}
 	if auth {
 		if c.Tokens == nil || c.Tokens.AccessToken == "" || c.Tokens.RefreshToken == "" {
-			return errors.New("not logged in; run cmux-vault login")
+			return errors.New("not logged in; run hmux-vault login")
 		}
 		req.Header.Set("Authorization", "Bearer "+c.Tokens.AccessToken)
 		req.Header.Set("X-Stack-Refresh-Token", c.Tokens.RefreshToken)

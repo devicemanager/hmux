@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// Turns an agent session panel's provider events into classic agent

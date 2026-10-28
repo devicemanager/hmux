@@ -1,9 +1,9 @@
-import CmuxCloudBannerCore
-import CmuxCloud
+import HmuxCloudBannerCore
+import HmuxCloud
 import AppKit
-import CmuxCloudMachines
-import CmuxSettings
-import CmuxSurfaceCatalogModel
+import HmuxCloudMachines
+import HmuxSettings
+import HmuxSurfaceCatalogModel
 import Combine
 import OSLog
 import SwiftUI
@@ -15,13 +15,13 @@ import SwiftUI
 /// snapshots plus closure bundles only (snapshot-boundary rule); every mutation
 /// routes through the shared Cloud VM action path or the Cloud tree service.
 struct MachinesPanelView: View {
-    private static let coderouterLogger = Logger(subsystem: "com.cmuxterm.app", category: "coderouter-accounts")
+    private static let coderouterLogger = Logger(subsystem: "com.hmuxterm.app", category: "coderouter-accounts")
     @StateObject var viewModel: MachinesPanelViewModel
     @State private var devicesModel: DevicesPanelViewModel
     @State private var discoveryManaged = ManagedDevicePolicy().isDeviceDiscoveryDisabled
     @State private var incomingAccessManaged = ManagedDevicePolicy().isIncomingDeviceAccessDisabled
     @State private var expansionStore = CloudTreeExpansionStore()
-    /// The explicit Cloud VPN's state (`cmux vpn up`), shown as a banner while
+    /// The explicit Cloud VPN's state (`hmux vpn up`), shown as a banner while
     /// it is starting, waiting for the extension approval, up, or failed.
     @State private var tunnelStatus = CloudTunnelStatusModel()
     @State private var devBackend = DevBackendStartup()
@@ -220,7 +220,7 @@ struct MachinesPanelView: View {
                     ProgressView().controlSize(.small)
                 }
                 Text(status.message)
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .multilineTextAlignment(.center)
                     .foregroundStyle(.secondary)
                 if status.isFailure {
@@ -331,9 +331,9 @@ struct MachinesPanelView: View {
                 .controlSize(.small)
             Text(String(
                 localized: "machines.auth.checking",
-                defaultValue: "Checking your cmux account…"
+                defaultValue: "Checking your hmux account…"
             ))
-            .cmuxFont(size: 13)
+            .hmuxFont(size: 13)
             .foregroundColor(.secondary)
             Spacer()
         }
@@ -355,12 +355,12 @@ struct MachinesPanelView: View {
                     localized: "machines.auth.title",
                     defaultValue: "Sign in to use Cloud Machines"
                 ))
-                .cmuxFont(size: 13, weight: .semibold)
+                .hmuxFont(size: 13, weight: .semibold)
                 Text(String(
                     localized: "machines.auth.subtitle",
-                    defaultValue: "Sign in to see and manage the machines in your cmux account."
+                    defaultValue: "Sign in to see and manage the machines in your hmux account."
                 ))
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 24)
@@ -394,7 +394,7 @@ struct MachinesPanelView: View {
                 ),
                 idleSubtitle: String(
                     localized: "machines.auth.subtitle",
-                    defaultValue: "Sign in to see and manage the machines in your cmux account."
+                    defaultValue: "Sign in to see and manage the machines in your hmux account."
                 )
             )
             .frame(maxWidth: 440)
@@ -542,7 +542,7 @@ struct MachinesPanelView: View {
         guard let readRevision = coderouterStore.state.beginRefresh(for: scope) else { return }
         do {
             let teamName = accountFlow?.availableTeams.first(where: { $0.id == scope.teamID })?.displayName
-            Self.coderouterLogger.info("Refreshing CodeRouter accounts for cmux team ID \(scope.teamID, privacy: .public), name \(teamName ?? "<nil>", privacy: .public)")
+            Self.coderouterLogger.info("Refreshing CodeRouter accounts for hmux team ID \(scope.teamID, privacy: .public), name \(teamName ?? "<nil>", privacy: .public)")
             let snapshot = try await CoderouterCLIAccountReader.snapshot(
                 for: scope.teamID,
                 name: teamName
@@ -620,13 +620,13 @@ struct MachinesPanelView: View {
             requestCoderouterRefresh()
             return
         }
-        // Use the same app-bundled cmux executable that owns the selected team;
+        // Use the same app-bundled hmux executable that owns the selected team;
         // a login shell can otherwise resolve a different installation.
-        let cmuxExecutable = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/bin/cmux").path
+        let hmuxExecutable = Bundle.main.bundleURL.appendingPathComponent("Contents/Resources/bin/hmux").path
         let command = provider.addCommand(
             for: destination.organizationID,
             scope: destination.teamScope,
-            cmuxExecutable: cmuxExecutable
+            hmuxExecutable: hmuxExecutable
         )
 
         Task { @MainActor in
@@ -692,7 +692,7 @@ struct MachinesPanelView: View {
                     .foregroundStyle(.secondary)
                 Text(String(localized: "devices.empty.title", defaultValue: "No other devices yet"))
                     .font(.callout.weight(.medium))
-                Text(String(localized: "devices.empty.help", defaultValue: "Sign in to cmux on another Mac and make it discoverable in Settings › Devices."))
+                Text(String(localized: "devices.empty.help", defaultValue: "Sign in to hmux on another Mac and make it discoverable in Settings › Devices."))
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .multilineTextAlignment(.center)
@@ -711,13 +711,13 @@ struct MachinesPanelView: View {
                     .font(.system(size: 30, weight: .light))
                     .foregroundColor(.secondary.opacity(0.55))
                 Text(String(localized: "machines.empty.title", defaultValue: "No machines yet"))
-                    .cmuxFont(size: 13, weight: .semibold)
+                    .hmuxFont(size: 13, weight: .semibold)
                     .foregroundColor(.primary.opacity(0.85))
                 Text(String(
                     localized: "machines.empty.subtitle",
                     defaultValue: "A machine is a persistent cloud computer. It keeps your files forever and costs nothing while it sleeps."
                 ))
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 28)
@@ -725,7 +725,7 @@ struct MachinesPanelView: View {
                     requestNewMachine()
                 } label: {
                     Text(String(localized: "machines.empty.create", defaultValue: "New Machine"))
-                        .cmuxFont(size: 12)
+                        .hmuxFont(size: 12)
                 }
                 .cloudProminentButtonStyle()
                 .controlSize(.small)
@@ -737,7 +737,7 @@ struct MachinesPanelView: View {
                         ProUpgradePresenter.present(source: .machinesPanelUpgradeNudge)
                     } label: {
                         Text(upgradeNudgeLabel(plan))
-                            .cmuxFont(size: 11)
+                            .hmuxFont(size: 11)
                             .foregroundColor(.secondary.opacity(0.7))
                             .underline()
                     }
@@ -745,7 +745,7 @@ struct MachinesPanelView: View {
                     .upgradePromptImpression(.machinesPanelUpgradeNudge)
                 } else if let plan = viewModel.plan {
                     Text(planIncludesLabel(plan))
-                        .cmuxFont(size: 11)
+                        .hmuxFont(size: 11)
                         .foregroundColor(.secondary.opacity(0.7))
                 }
             } else {
@@ -767,7 +767,7 @@ struct MachinesPanelView: View {
         guard let maxActiveVms = plan.maxActiveVms, maxActiveVms > 0 else {
             return String(
                 localized: "machines.empty.upgrade.none",
-                defaultValue: "Subscribe to cmux Pro to create Cloud machines"
+                defaultValue: "Subscribe to hmux Pro to create Cloud machines"
             )
         }
         if plan.isSingleMachinePlan {

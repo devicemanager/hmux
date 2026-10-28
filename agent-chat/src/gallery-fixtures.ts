@@ -89,7 +89,7 @@ export const galleryCommands: CommandGroup[] = [
 
 const assistantMarkdown = (i: number) => `### Review pass ${i}
 
-This assistant message mixes **markdown**, inline \`code_${i}\`, links like [cmux](https://cmux.dev), and enough prose to wrap across several lines in the transcript.
+This assistant message mixes **markdown**, inline \`code_${i}\`, links like [hmux](https://cmux.dev), and enough prose to wrap across several lines in the transcript.
 
 - Bullet item one for spacing checks
 - Bullet item two with \`inline_code\`
@@ -162,7 +162,7 @@ export const turnSummaryBlocks: Block[] = [
   { kind: "footer", text: "1432 in · 82 out · 4.2s" },
 ];
 
-// cmux agent messages: one that arrived with a prompt, one that woke the
+// hmux agent messages: one that arrived with a prompt, one that woke the
 // agent after its reply.
 export const agentMessageBlocks: Block[] = [
   { kind: "user", text: "Cut the 1.4 release branch." },

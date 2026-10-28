@@ -32,16 +32,16 @@ settled counts, `totalTokens`). The parts worth copying:
   the footer shows `N working / N idle / N settled` plus total tokens; the
   panel tab badges the live agent count.
 
-## What cmux knows about running agents
+## What hmux knows about running agents
 
-cmux has no first-class subagent (child agent) tree. `SubagentStart` /
+hmux has no first-class subagent (child agent) tree. `SubagentStart` /
 `SubagentStop` hook events arrive but are deliberately dropped for parent
 state (`Sources/Feed/WorkstreamEvent+FeedIngress.swift`,
 `Sources/Mobile/AgentChat/AgentChatSessionRegistry+Lifecycle.swift`); no child
 record or parent-child edge is stored. The only real hierarchy (codex-teams)
 lives in the CLI watcher process and surfaces to the app solely as startup env
-vars on the spawned pane (`CMUX_AGENT_MANAGED_SUBAGENT`,
-`CMUX_CODEX_TEAMS_THREAD_ID` / `_PARENT_THREAD_ID` / `_DEPTH`, readable via
+vars on the spawned pane (`HMUX_AGENT_MANAGED_SUBAGENT`,
+`HMUX_CODEX_TEAMS_THREAD_ID` / `_PARENT_THREAD_ID` / `_DEPTH`, readable via
 `TerminalSurface.startupEnvironmentValue(_:)`).
 
 What does exist, live and authoritative, is one agent session per terminal
@@ -103,7 +103,7 @@ per workspace. Each `agents[j]`:
 | `pid` | when known | agent process id |
 
 Types and projection: `CustomSidebarAgentSnapshot` +
-`CustomSidebarDataContextBuilder.agentValue(_:)` in the CmuxSidebar package;
+`CustomSidebarDataContextBuilder.agentValue(_:)` in the HmuxSidebar package;
 live mapping in `Workspace.customSidebarAgentSnapshots()` inside
 `Sources/Workspace+CustomSidebarSnapshot.swift`. Because the mapping lives in
 the shared `customSidebarWorkspaceSnapshot(...)` choke point, all three data
@@ -116,7 +116,7 @@ data churn.
 
 ## Panel layout (shipped: `Examples/CustomSidebars/panel-subagents.js`)
 
-t3code's presentation adapted to the cmux JS sidebar runtime:
+t3code's presentation adapted to the hmux JS sidebar runtime:
 
 - Header: "Agents" + a `● N working · N idle · N ended` summary (t3code's
   footer counts, moved to the top where the right panel keeps its title).
@@ -149,20 +149,20 @@ reordering only, and the interpreted runtime exposes no `onDrag` source. The
 work splits into four pieces, all in the scene-renderer / host layer (no JS
 API change required for v1):
 
-1. UTType. Declare `com.cmux.agent-session-transfer` in `Resources/Info.plist`
+1. UTType. Declare `com.hmux.agent-session-transfer` in `Resources/Info.plist`
    under `UTExportedTypeDeclarations`, conforming to `public.data`, exactly
-   like the existing `com.cmux.sidebar-tab-reorder` and
+   like the existing `com.hmux.sidebar-tab-reorder` and
    `com.splittabbar.tabtransfer` precedents. Payload: JSON
    `{ sessionId, kind, workspaceId, panelId, transcriptPath }`.
 2. Drag source. Add a `.draggable(payload)` chainable in the JS runtime
    (scene node prop, host-side `NSItemProvider` with the new UTType), applied
    by the panel to agent rows: `row.draggable({ type: "agent-session", id:
-   a.id, ... })`. The host renderer (`CmuxSwiftRenderUI` scene host and the
+   a.id, ... })`. The host renderer (`HmuxSwiftRenderUI` scene host and the
    remote-render worker) attaches `onDrag` / `NSItemProvider` the same way
    `Reorderable` already lifts rows, so both renderers keep parity.
 3. Drop handling. Terminal panes already accept drops for tab transfer; extend
    the pane drop delegate (bonsplit surface host) to accept
-   `com.cmux.agent-session-transfer` and route it to a shared action:
+   `com.hmux.agent-session-transfer` and route it to a shared action:
    `agentSession.open(sessionId:in:paneId:)`.
 4. Open action. Resolve the record via
    `AgentChatTranscriptService.sessionRecord(sessionID:)`. If the hosting
@@ -170,10 +170,10 @@ API change required for v1):
    move-to-pane; if the session has only a transcript (ended), open a
    read-only transcript viewer surface in the target pane (the session index
    viewer already renders transcript JSONL). Expose the same verb over the
-   socket (`cmux agent open <session-id> --pane <id>`) so the palette / CLI /
+   socket (`hmux agent open <session-id> --pane <id>`) so the palette / CLI /
    drag all share one path.
 
-Non-goals for that follow-up: no live child-agent tree (cmux does not track
+Non-goals for that follow-up: no live child-agent tree (hmux does not track
 Task-tool subagents; their hooks are dropped by design), and no dragging INTO
 the panel.
 
@@ -187,7 +187,7 @@ the panel.
 - `workspaces[i].agents` includes only sessions whose terminal still exists
   (or whose stored workspace id still matches); orphaned ended sessions are
   invisible by design, the session index panel remains the historical browser.
-- Codex-teams pane hierarchy (`CMUX_CODEX_TEAMS_*` env) is not yet projected;
+- Codex-teams pane hierarchy (`HMUX_CODEX_TEAMS_*` env) is not yet projected;
   when the drag follow-up lands, `tabs[k].subagentDepth` / `parentThreadId`
   from `TerminalSurface.startupEnvironmentValue(_:)` would let the panel
   indent teams children under their parent.

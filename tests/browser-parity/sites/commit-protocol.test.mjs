@@ -36,7 +36,7 @@ const READS = {
 // Methods that act without a draft, and why nobody else is reached.
 const LOCAL = {
   "googleDrive.create": "makes a new file private to the signed-in account",
-  "browserAuth.request": "the user fills a cmux sheet; the values never reach the agent",
+  "browserAuth.request": "the user fills a hmux sheet; the values never reach the agent",
 };
 
 const DOC_ID = "1docPRIVATE000000000000000000000x";
@@ -59,7 +59,7 @@ const WRITES = {
   "googleSheets.clear": { draft: `sites.googleSheets.clear(${JSON.stringify(SHEET)}, "E1")`, sent: ["range"] },
   "googleSlides.setNotes": { draft: `sites.googleSlides.setNotes(${JSON.stringify(DECK)}, 1, "Protocol notes")`, sent: ["notes"] },
   "googleSlides.replace": { draft: `sites.googleSlides.replace(${JSON.stringify(DECK)}, "Time", "Time")`, sent: ["find", "replace"] },
-  "googleDrive.trash": { draft: `(async () => { const f = await sites.googleDrive.create("document", "cmux REPL protocol trash"); return sites.googleDrive.trash(f.url); })()`, sent: [] },
+  "googleDrive.trash": { draft: `(async () => { const f = await sites.googleDrive.create("document", "hmux REPL protocol trash"); return sites.googleDrive.trash(f.url); })()`, sent: [] },
   "gmail.send": { draft: 'sites.gmail.send({ to: "bob@example.com", subject: "Protocol", body: "Read back before Send." })', sent: [] },
   "googleCalendar.create": { draft: 'sites.googleCalendar.create({ title: "Protocol", start: "2026-10-08T17:00:00Z", guests: ["bob@example.com"] })', sent: ["timeZone"] },
   "slack.post": { draft: 'sites.slack.post({ team: "T01ACME", channel: "#eng", text: "Read back before posting" })', sent: ["threadTs", "text"] },
@@ -116,7 +116,7 @@ for (const [key, fixture] of Object.entries(WRITES)) {
 // write, a commit that writes without reading back, a field the site does
 // not give and a field that differs all fail closed before the write.
 test("the commit protocol fails closed: undeclared writes, no read-back, unread and differing fields", async () => {
-  const S = globalThis.CmuxBrowserRepl.sites;
+  const S = globalThis.HmuxBrowserRepl.sites;
   const acts = [];
   globalThis.__protocolPage = { account: "ada", target: "T1", body: "hi" };
   S.register(
@@ -165,7 +165,7 @@ test("the commit protocol fails closed: undeclared writes, no read-back, unread 
 // when the tool's canon would turn it into the drafted value; nothing is
 // written.
 test("the commit protocol refuses read-backs that are not plain data: toString, toJSON, getters", async () => {
-  const S = globalThis.CmuxBrowserRepl.sites;
+  const S = globalThis.HmuxBrowserRepl.sites;
   const acts = [];
   globalThis.__plainProbe = null;
   S.register(
@@ -215,7 +215,7 @@ test("the commit protocol refuses read-backs that are not plain data: toString, 
 // fails as unverified; an account that changed before the input sends
 // nothing.
 test("the commit protocol reads the account again before every write: no reader, no guarded input, or a switched account fails closed", async () => {
-  const S = globalThis.CmuxBrowserRepl.sites;
+  const S = globalThis.HmuxBrowserRepl.sites;
   const acts = [];
   globalThis.__accountNow = "ada";
   S.register(

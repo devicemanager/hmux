@@ -5,7 +5,7 @@
 // clickable. This is the same reading applied to the transcript, so the same
 // sentence behaves the same way in both panes.
 //
-// The rules mirror TerminalGitHubReferenceDetector in CmuxTerminalCore,
+// The rules mirror TerminalGitHubReferenceDetector in HmuxTerminalCore,
 // including the parts that refuse: a bare number needs a known repository, a
 // hex run needs both a digit and a letter, and checksum lengths are not
 // commits. A false positive here is worse than a missed link, because it sends

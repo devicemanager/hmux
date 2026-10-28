@@ -154,7 +154,7 @@ class AppHostTestOutputTests(unittest.TestCase):
     def test_wrapper_retry_is_blocked_after_xctest_started(self) -> None:
         safe, message = MODULE.retry_safe(
             "Test Suite 'Selected tests' started at 2026-09-21 00:00:00.\n"
-            "Test Case '-[cmuxTests.ExampleTests testExample]' started.\n"
+            "Test Case '-[hmuxTests.ExampleTests testExample]' started.\n"
             "XCTAssertTrue failed\n"
             "Failed to establish communication with the test runner.\n"
         )
@@ -183,7 +183,7 @@ class AppHostTestOutputTests(unittest.TestCase):
 
     def test_timeout_words_in_successful_test_names_or_app_logs_are_not_failures(self) -> None:
         passed, _ = MODULE.classify(
-            "2026-09-20 07:11:24 cmux DEV[4667:30096] Receive failed: Operation timed out\n"
+            "2026-09-20 07:11:24 hmux DEV[4667:30096] Receive failed: Operation timed out\n"
             "✔ Test handlesTimeoutAndRestart() passed after 0.001 seconds.\n"
             "Executed 2 tests, with 0 failures (0 unexpected)\n"
             "✔ Test run with 6 tests in 1 suite passed after 2.562 seconds.\n"
@@ -197,7 +197,7 @@ class AppHostTestOutputTests(unittest.TestCase):
             replay = subprocess.run(
                 [sys.executable, str(ROOT / "scripts/ci/xcodebuild_noninteractive.py"),
                  sys.executable, "-c", "import sys; print(" + repr(fixture) + "); sys.exit(65)"],
-                env={**os.environ, "CMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH": str(output_path)},
+                env={**os.environ, "HMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH": str(output_path)},
                 capture_output=True, text=True, check=False, timeout=60,
             )
             self.assertEqual(replay.returncode, 65, replay.stderr)
@@ -456,9 +456,9 @@ class AppHostTestOutputTests(unittest.TestCase):
             self.assertEqual(
                 argv_log.read_text(encoding="utf-8").splitlines(),
                 [
-                    "-only-testing:cmuxTests/Foo/testSwift()",
-                    "-only-testing:cmuxTests/Bar/testXC",
-                    "-only-testing:cmuxTests/Baz",
+                    "-only-testing:hmuxTests/Foo/testSwift()",
+                    "-only-testing:hmuxTests/Bar/testXC",
+                    "-only-testing:hmuxTests/Baz",
                 ],
             )
             self.assertTrue((results / "Foo.testSwift.log").is_file())

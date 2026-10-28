@@ -27,11 +27,11 @@ class SelectedIOSTestExecutionGuardTests(unittest.TestCase):
     def test_workflow_documents_fully_qualified_ui_test_filter(self) -> None:
         workflow = IOS_WORKFLOW.read_text(encoding="utf-8")
         self.assertIn(
-            "cmuxUITests/cmuxUITests/testSignInPairingAndWorkspaceShell",
+            "hmuxUITests/hmuxUITests/testSignInPairingAndWorkspaceShell",
             workflow,
         )
         self.assertNotIn(
-            "for example cmuxUITests/testSignInPairingAndWorkspaceShell",
+            "for example hmuxUITests/testSignInPairingAndWorkspaceShell",
             workflow,
         )
 
@@ -41,18 +41,18 @@ class SelectedIOSTestExecutionGuardTests(unittest.TestCase):
             "Executed 17 tests, with 0 failures (0 unexpected)",
         ):
             with self.subTest(summary=summary):
-                result = self.run_guard(summary, "cmuxUITests/cmuxUITests/testExample")
+                result = self.run_guard(summary, "hmuxUITests/hmuxUITests/testExample")
                 self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_accepts_swift_testing_nonzero_count(self) -> None:
         result = self.run_guard(
             "Test run with 2 tests passed after 0.012 seconds.",
-            "cmuxFeatureTests/ExampleSuite",
+            "hmuxFeatureTests/ExampleSuite",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_rejects_zero_tests_for_requested_filter(self) -> None:
-        test_filter = "cmuxUITests/testMissingMethod\n::error::injected"
+        test_filter = "hmuxUITests/testMissingMethod\n::error::injected"
         result = self.run_guard(
             "Executed 0 tests, with 0 failures (0 unexpected)",
             test_filter,
@@ -60,7 +60,7 @@ class SelectedIOSTestExecutionGuardTests(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(
             result.stderr,
-            "selected test filter $'cmuxUITests/testMissingMethod\\n"
+            "selected test filter $'hmuxUITests/testMissingMethod\\n"
             "::error::injected' matched zero tests; "
             "use target/class or target/class/method syntax\n",
         )
@@ -72,18 +72,18 @@ class SelectedIOSTestExecutionGuardTests(unittest.TestCase):
             "\n".join(
                 (
                     "XCTExpectFailure: matcher accepted Assertion Failure: "
-                    "Failed to activate application 'com.cmuxterm.app.debug "
+                    "Failed to activate application 'com.hmuxterm.app.debug "
                     "(current state: Running Background)",
                     "Executed 1 test, with 0 failures (0 unexpected)",
                 )
             ),
-            "cmuxUITests/TerminalCmdClickUITests",
+            "hmuxUITests/TerminalCmdClickUITests",
         )
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("app activation failure", result.stderr)
 
     def test_rejects_missing_execution_summary_for_requested_filter(self) -> None:
-        result = self.run_guard("** TEST SUCCEEDED **", "cmuxUITests/testMissingMethod")
+        result = self.run_guard("** TEST SUCCEEDED **", "hmuxUITests/testMissingMethod")
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual(
             result.stderr,
@@ -95,7 +95,7 @@ class SelectedIOSTestExecutionGuardTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temp_dir:
             missing_log = str(Path(temp_dir) / "missing.log")
             result = subprocess.run(
-                ["bash", str(GUARD), missing_log, "cmuxUITests/testExample"],
+                ["bash", str(GUARD), missing_log, "hmuxUITests/testExample"],
                 cwd=REPO_ROOT,
                 text=True,
                 capture_output=True,
@@ -116,7 +116,7 @@ class SelectedIOSTestExecutionGuardTests(unittest.TestCase):
                     "Executed 1 test, with 0 failures (0 unexpected)",
                 )
             ),
-            "cmuxUITests/cmuxUITests/testExample",
+            "hmuxUITests/hmuxUITests/testExample",
         )
         self.assertEqual(result.returncode, 0, result.stderr)
 

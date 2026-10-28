@@ -37,13 +37,13 @@ describe("edgeCanaryProblems", () => {
 
   test("still fails when the edge contract or guest secret hygiene fails", () => {
     expect(edgeCanaryProblems({
-      tokenOnDisk: "/etc/cmux/model-plane.env",
+      tokenOnDisk: "/etc/hmux/model-plane.env",
       modelsStatus: "503",
       codexOutcome: "failed",
       codexTail: "coderouter_unavailable",
       claudeCheck: false,
     })).toEqual([
-      "route token found in guest files: /etc/cmux/model-plane.env",
+      "route token found in guest files: /etc/hmux/model-plane.env",
       "GET /api/coderouter/vm-usage/self from the guest returned 503",
       "codex turn through the edge did not answer: coderouter_unavailable",
     ]);

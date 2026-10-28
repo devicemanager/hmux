@@ -1,9 +1,9 @@
 # Browser Wayland SIGTRAP during EGL teardown (#18578)
 
-The Linux cmux Browser nightly exits with `SIGTRAP` about 15 seconds after
+The Linux hmux Browser nightly exits with `SIGTRAP` about 15 seconds after
 launch on Arch Linux under Hyprland/Wayland. The failing owner is the
-Linux-specific OpenGL adapter in the `cmux-browser` overlay, not the macOS
-cmux host and not Chromium's generic ANGLE loader. The affected nightly was
+Linux-specific OpenGL adapter in the `hmux-browser` overlay, not the macOS
+hmux host and not Chromium's generic ANGLE loader. The affected nightly was
 built before the browser-fork fix; a newer nightly must be used to deliver it
 to users.
 
@@ -31,7 +31,7 @@ to users.
 The reported stack is stripped, but the exact release binary was disassembled
 at each reported offset. Around `chrome+0xe779720`, the
 `LinuxOpenGLHost` destructor in
-`overlay/chrome/browser/cmux_term/cmux_ghostty_opengl_host.cc`:
+`overlay/chrome/browser/hmux_term/hmux_ghostty_opengl_host.cc`:
 
 1. calls `eglMakeCurrent(display, EGL_NO_SURFACE, EGL_NO_SURFACE,
    EGL_NO_CONTEXT)`;
@@ -62,7 +62,7 @@ if (lib_gl) {
 
 That commit also keeps the process-global EGL display alive instead of calling
 `eglTerminate()` from one host's destructor. It is an ancestor of the current
-browser-fork `main`, so no duplicate runtime patch is needed in cmux. The
+browser-fork `main`, so no duplicate runtime patch is needed in hmux. The
 affected `151.0.7922.64` artifact is stale; it cannot contain this fix.
 
 A later nightly whose release metadata proves it was built from a fixed
@@ -87,7 +87,7 @@ is considered:
 ```sh
 lspci -nnk | grep -A3 -E 'VGA|3D|Display'
 vainfo --display drm --device /dev/dri/renderD128
-sha256sum cmux-browser-nightly/chrome
+sha256sum hmux-browser-nightly/chrome
 ```
 
 The saved evidence bundle is under `out/perf-incident-18578/`. The local host

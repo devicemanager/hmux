@@ -1,10 +1,10 @@
 import Foundation
 import os
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 private let vaultCheckpointTimelineLogger = Logger(
-    subsystem: Bundle.main.bundleIdentifier ?? "com.cmuxterm.app",
+    subsystem: Bundle.main.bundleIdentifier ?? "com.hmuxterm.app",
     category: "VaultCheckpointTimeline"
 )
 
@@ -13,7 +13,7 @@ private let vaultCheckpointTimelineLogger = Logger(
 /// transcript (bounded scan); manual ones from `VaultSessionCheckpointStore`.
 /// All capabilities arrive as closures — no store references (issue #2586).
 struct VaultCheckpointTimelineView: View {
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     let entry: SessionEntry
     /// Opens a session in a new workspace; used to launch fork-from-checkpoint
     /// results through the exact same path as row resume.
@@ -65,7 +65,7 @@ struct VaultCheckpointTimelineView: View {
             HStack(spacing: 8) {
                 ProgressView().controlSize(.small)
                 Text(String(localized: "sessionIndex.popover.loading", defaultValue: "Loading…"))
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .foregroundColor(.secondary)
                 Spacer(minLength: 0)
             }
@@ -74,14 +74,14 @@ struct VaultCheckpointTimelineView: View {
         } else if mergedCheckpoints.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 Image(systemName: "flag")
-                    .cmuxFont(size: 18, weight: .regular)
+                    .hmuxFont(size: 18, weight: .regular)
                     .foregroundColor(.secondary.opacity(0.7))
                 Text(String(localized: "sessionIndex.checkpoints.empty", defaultValue: "No checkpoints yet"))
-                    .cmuxFont(size: 12, weight: .medium)
+                    .hmuxFont(size: 12, weight: .medium)
                     .foregroundColor(.secondary)
                 Text(String(localized: "sessionIndex.checkpoints.emptyHint",
                             defaultValue: "Name a point above to make it easy to return here."))
-                    .cmuxFont(size: 11)
+                    .hmuxFont(size: 11)
                     .foregroundColor(.secondary.opacity(0.7))
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -127,7 +127,7 @@ struct VaultCheckpointTimelineView: View {
                 text: $checkpointName
             )
             .textFieldStyle(.plain)
-            .cmuxFont(size: 12)
+            .hmuxFont(size: 12)
             .padding(.horizontal, 6)
             .padding(.vertical, 5)
             .background(
@@ -141,8 +141,8 @@ struct VaultCheckpointTimelineView: View {
                     String(localized: "sessionIndex.checkpoints.now", defaultValue: "Checkpoint Now"),
                     systemImage: "flag"
                 )
-                .cmuxFont(size: 11, weight: .semibold)
-                .foregroundColor(cmuxAccent.color)
+                .hmuxFont(size: 11, weight: .semibold)
+                .foregroundColor(hmuxAccent.color)
                 .padding(.horizontal, 10)
                 .frame(height: 26)
                 .background(
@@ -150,7 +150,7 @@ struct VaultCheckpointTimelineView: View {
                         cornerRadius: RightSidebarChromeMetrics.buttonCornerRadius,
                         style: .continuous
                     )
-                    .fill(cmuxAccent.color.opacity(0.13))
+                    .fill(hmuxAccent.color.opacity(0.13))
                 )
             }
             .buttonStyle(.borderless)
@@ -171,10 +171,10 @@ struct VaultCheckpointTimelineView: View {
     private func checkpointNotice(systemImage: String, text: String) -> some View {
         HStack(alignment: .top, spacing: 7) {
             Image(systemName: systemImage)
-                .cmuxFont(size: 11, weight: .medium)
+                .hmuxFont(size: 11, weight: .medium)
                 .foregroundColor(.secondary)
             Text(text)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundColor(.secondary.opacity(0.82))
                 .fixedSize(horizontal: false, vertical: true)
             Spacer(minLength: 0)
@@ -187,10 +187,10 @@ struct VaultCheckpointTimelineView: View {
     private func errorRow(_ text: String) -> some View {
         HStack(alignment: .top, spacing: 6) {
             Image(systemName: "exclamationmark.triangle.fill")
-                .cmuxFont(size: 10)
+                .hmuxFont(size: 10)
                 .foregroundColor(.orange)
             Text(text)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .foregroundColor(.primary.opacity(0.85))
             Spacer(minLength: 0)
         }
@@ -333,7 +333,7 @@ struct VaultCheckpointTimelineView: View {
 
 /// One checkpoint line: source icon, name/snippet, relative time, short sha.
 private struct VaultCheckpointRow: View, Equatable {
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     let checkpoint: VaultSessionCheckpoint
     let isForkEnabled: Bool
     let showsForkButton: Bool
@@ -351,12 +351,12 @@ private struct VaultCheckpointRow: View, Equatable {
             marker
             VStack(alignment: .leading, spacing: 1) {
                 Text(titleText)
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .foregroundColor(.primary.opacity(0.9))
                     .lineLimit(2)
                 HStack(spacing: 6) {
                     Text(subtitleText)
-                        .cmuxFont(size: 10)
+                        .hmuxFont(size: 10)
                         .foregroundColor(.secondary.opacity(0.7))
                         .lineLimit(1)
                         .truncationMode(.tail)
@@ -365,7 +365,7 @@ private struct VaultCheckpointRow: View, Equatable {
                             GhosttyApp.terminalPasteboard.writeString(sha, to: .general)
                         } label: {
                             Label(String(sha.prefix(7)), systemImage: "doc.on.doc")
-                                .cmuxFont(size: 10, monospacedDigit: true)
+                                .hmuxFont(size: 10, monospacedDigit: true)
                                 .foregroundColor(.secondary)
                         }
                         .buttonStyle(.plain)
@@ -399,7 +399,7 @@ private struct VaultCheckpointRow: View, Equatable {
             Circle()
                 .fill(
                     checkpoint.source == .manual
-                        ? cmuxAccent.color
+                        ? hmuxAccent.color
                         : Color.secondary.opacity(0.65)
                 )
                 .frame(width: checkpoint.source == .manual ? 9 : 7,
@@ -416,15 +416,15 @@ private struct VaultCheckpointRow: View, Equatable {
                 String(localized: "sessionIndex.checkpoints.forkShort", defaultValue: "Fork"),
                 systemImage: "arrow.triangle.branch"
             )
-            .cmuxFont(size: 10, weight: .semibold)
-            .foregroundColor(isForkEnabled ? cmuxAccent.color : .secondary)
+            .hmuxFont(size: 10, weight: .semibold)
+            .foregroundColor(isForkEnabled ? hmuxAccent.color : .secondary)
             .padding(.horizontal, 8)
             .frame(height: 22)
             .background(
                 RoundedRectangle(cornerRadius: RightSidebarChromeMetrics.buttonCornerRadius, style: .continuous)
                     .fill(
                         isForkEnabled
-                            ? cmuxAccent.color.opacity(isHovered ? 0.16 : 0.10)
+                            ? hmuxAccent.color.opacity(isHovered ? 0.16 : 0.10)
                             : Color.primary.opacity(0.04)
                     )
             )

@@ -44,45 +44,45 @@ describe("free plan VM allowance", () => {
     expect(maxActiveVmsForPlan("pro", {}, { seats: 4 })).toBe(5);
     expect(maxActiveVmsForPlan("free", {}, { seats: 4 })).toBe(0);
     // Retired overrides cannot erase paid seats.
-    expect(maxActiveVmsForPlan("team", { CMUX_VM_PLAN_TEAM_MAX_ACTIVE_VMS: "2" }, { seats: 3 })).toBe(15);
-    expect(maxActiveVmsForPlan("team", { CMUX_VM_PAID_MAX_ACTIVE_VMS: "1" }, { seats: 4 })).toBe(20);
+    expect(maxActiveVmsForPlan("team", { HMUX_VM_PLAN_TEAM_MAX_ACTIVE_VMS: "2" }, { seats: 3 })).toBe(15);
+    expect(maxActiveVmsForPlan("team", { HMUX_VM_PAID_MAX_ACTIVE_VMS: "1" }, { seats: 4 })).toBe(20);
   });
 
   test("retired paid overrides cannot change the product allowance", () => {
-    expect(maxActiveVmsForPlan("pro", { CMUX_VM_PAID_MAX_ACTIVE_VMS: "1" })).toBe(5);
+    expect(maxActiveVmsForPlan("pro", { HMUX_VM_PAID_MAX_ACTIVE_VMS: "1" })).toBe(5);
     expect(maxActiveVmsForPlan("pro", {
-      CMUX_VM_PAID_MAX_ACTIVE_VMS: "1",
-      CMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS: "25",
+      HMUX_VM_PAID_MAX_ACTIVE_VMS: "1",
+      HMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS: "25",
     })).toBe(5);
-    expect(maxActiveVmsForPlan("team", { CMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS: "25" })).toBe(5);
-    expect(maxActiveVmsForPlan("pro", { CMUX_VM_PAID_MAX_ACTIVE_VMS: "0" })).toBe(5);
+    expect(maxActiveVmsForPlan("team", { HMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS: "25" })).toBe(5);
+    expect(maxActiveVmsForPlan("pro", { HMUX_VM_PAID_MAX_ACTIVE_VMS: "0" })).toBe(5);
   });
 
   test("free allowance is env-overridable only with the explicit escape hatch", () => {
-    expect(maxActiveVmsForPlan("free", { CMUX_VM_FREE_MAX_ACTIVE_VMS: "7" })).toBe(0);
+    expect(maxActiveVmsForPlan("free", { HMUX_VM_FREE_MAX_ACTIVE_VMS: "7" })).toBe(0);
     expect(maxActiveVmsForPlan("free", {
-      CMUX_VM_ALLOW_FREE_PROVISIONING: "1",
-      CMUX_VM_FREE_MAX_ACTIVE_VMS: "7",
+      HMUX_VM_ALLOW_FREE_PROVISIONING: "1",
+      HMUX_VM_FREE_MAX_ACTIVE_VMS: "7",
     })).toBe(7);
     expect(maxActiveVmsForPlan("free", {
-      CMUX_VM_ALLOW_FREE_PROVISIONING: "1",
-      CMUX_VM_FREE_MAX_ACTIVE_VMS: "0",
+      HMUX_VM_ALLOW_FREE_PROVISIONING: "1",
+      HMUX_VM_FREE_MAX_ACTIVE_VMS: "0",
     })).toBe(0);
   });
 
   test("a plan-specific free override cannot bypass the default gate", () => {
     expect(maxActiveVmsForPlan("free", {
-      CMUX_VM_PLAN_FREE_MAX_ACTIVE_VMS: "9",
+      HMUX_VM_PLAN_FREE_MAX_ACTIVE_VMS: "9",
     })).toBe(0);
     expect(maxActiveVmsForPlan("unknown", {
-      CMUX_VM_PLAN_UNKNOWN_MAX_ACTIVE_VMS: "9",
+      HMUX_VM_PLAN_UNKNOWN_MAX_ACTIVE_VMS: "9",
     })).toBe(0);
     // Malformed plan metadata follows the closed free shape if an operator
     // explicitly enables local free provisioning; it never inherits Pro's
     // per-machine ceiling.
-    expect(maxMemoryMbForPlan("unknown", { CMUX_VM_ALLOW_FREE_PROVISIONING: "1" })).toBe(8192);
-    expect(lockedMemoryOptionsMbForPlan("unknown", { CMUX_VM_ALLOW_FREE_PROVISIONING: "1" }).upgradePlanId).toBe("pro");
-    expect(upgradePlanForMemory(16 * 1024, "unknown", { CMUX_VM_ALLOW_FREE_PROVISIONING: "1" })).toBe("pro");
+    expect(maxMemoryMbForPlan("unknown", { HMUX_VM_ALLOW_FREE_PROVISIONING: "1" })).toBe(8192);
+    expect(lockedMemoryOptionsMbForPlan("unknown", { HMUX_VM_ALLOW_FREE_PROVISIONING: "1" }).upgradePlanId).toBe("pro");
+    expect(upgradePlanForMemory(16 * 1024, "unknown", { HMUX_VM_ALLOW_FREE_PROVISIONING: "1" })).toBe("pro");
   });
 });
 
@@ -108,10 +108,10 @@ describe("Cloud VM memory allowance", () => {
     expect(maxDiskMbForPlan("max", {})).toBe(256 * GB);
     expect(memoryOptionsMbForPlan("max", {})).toEqual([4096, 8192, 16384, 24576, 32768, 65536]);
     expect(lockedMemoryOptionsMbForPlan("max", {})).toEqual({ memoryOptionsMb: [], upgradePlanId: null });
-    expect(maxDiskMbForPlan("pro", { CMUX_VM_PLAN_PRO_MAX_DISK_MB: "65536" })).toBe(64 * GB);
+    expect(maxDiskMbForPlan("pro", { HMUX_VM_PLAN_PRO_MAX_DISK_MB: "65536" })).toBe(64 * GB);
     // Per-plan overrides can tighten a tier, never expand it beyond the
     // product ceiling.
-    expect(maxDiskMbForPlan("pro", { CMUX_VM_PLAN_PRO_MAX_DISK_MB: "262144" })).toBe(128 * GB);
+    expect(maxDiskMbForPlan("pro", { HMUX_VM_PLAN_PRO_MAX_DISK_MB: "262144" })).toBe(128 * GB);
   });
 
   test("Go is capped at one 2 vCPU, 4 GB, 16 GB VM", () => {
@@ -135,7 +135,7 @@ describe("Cloud VM memory allowance", () => {
 
   test("an operator ceiling on Max leaves nothing to upgrade to", () => {
     // A lower Max ceiling can still advertise Max as the next tier for Pro.
-    const env = { CMUX_VM_PLAN_PRO_MAX_MEMORY_MB: "8192", CMUX_VM_PLAN_MAX_MAX_MEMORY_MB: "16384" };
+    const env = { HMUX_VM_PLAN_PRO_MAX_MEMORY_MB: "8192", HMUX_VM_PLAN_MAX_MAX_MEMORY_MB: "16384" };
     expect(lockedMemoryOptionsMbForPlan("pro", env)).toEqual({
       memoryOptionsMb: [16384, 24576, 32768, 65536],
       upgradePlanId: "max",
@@ -156,33 +156,33 @@ describe("Cloud VM memory allowance", () => {
 
   test("every machine starts with a 32 GB disk unless an operator overrides it", () => {
     expect(vmDiskMb({})).toBe(32768);
-    expect(vmDiskMb({ CMUX_VM_DISK_MB: "65536" })).toBe(65536);
-    expect(() => vmDiskMb({ CMUX_VM_DISK_MB: "0" })).toThrow();
+    expect(vmDiskMb({ HMUX_VM_DISK_MB: "65536" })).toBe(65536);
+    expect(() => vmDiskMb({ HMUX_VM_DISK_MB: "0" })).toThrow();
   });
 
   test("accepted sizes follow the plan ceiling and always include the configured default", () => {
     expect(memoryOptionsMbForPlan("pro", {})).toEqual([4096, 8192, 16384]);
     // A default above the ceiling is clamped, so an omitted size never 400s.
-    expect(memoryOptionsMbForPlan("free", { CMUX_VM_FREE_DEFAULT_MEMORY_MB: "16384" })).toEqual([4096, 8192]);
+    expect(memoryOptionsMbForPlan("free", { HMUX_VM_FREE_DEFAULT_MEMORY_MB: "16384" })).toEqual([4096, 8192]);
     // A raised paid ceiling cannot sell Max sizes to Pro.
-    expect(memoryOptionsMbForPlan("pro", { CMUX_VM_PAID_MAX_MEMORY_MB: "65536" })).toEqual([4096, 8192, 16384]);
+    expect(memoryOptionsMbForPlan("pro", { HMUX_VM_PAID_MAX_MEMORY_MB: "65536" })).toEqual([4096, 8192, 16384]);
     // A lower ceiling trims the catalog and keeps the (clamped) default.
-    expect(memoryOptionsMbForPlan("pro", { CMUX_VM_PLAN_PRO_MAX_MEMORY_MB: "4096" })).toEqual([4096]);
+    expect(memoryOptionsMbForPlan("pro", { HMUX_VM_PLAN_PRO_MAX_MEMORY_MB: "4096" })).toEqual([4096]);
   });
 
   test("memory defaults and caps are independently env-overridable", () => {
     const env = {
-      CMUX_VM_PLAN_PRO_DEFAULT_MEMORY_MB: "4096",
-      CMUX_VM_PLAN_PRO_MAX_MEMORY_MB: "4096",
+      HMUX_VM_PLAN_PRO_DEFAULT_MEMORY_MB: "4096",
+      HMUX_VM_PLAN_PRO_MAX_MEMORY_MB: "4096",
     };
     expect(defaultMemoryMbForPlan("pro", env)).toBe(4096);
     expect(maxMemoryMbForPlan("pro", env)).toBe(4096);
-    expect(defaultMemoryMbForPlan("max", { CMUX_VM_PLAN_MAX_DEFAULT_MEMORY_MB: "16384" })).toBe(16384);
+    expect(defaultMemoryMbForPlan("max", { HMUX_VM_PLAN_MAX_DEFAULT_MEMORY_MB: "16384" })).toBe(16384);
   });
 });
 
 describe("active-limit response as the paywall moment", () => {
-  test("a zero-allowance free plan is told Cloud VMs require a cmux Pro subscription", async () => {
+  test("a zero-allowance free plan is told Cloud VMs require a hmux Pro subscription", async () => {
     const response = await vmActiveLimitExceededResponse({
       limit: 0,
       planId: "free",
@@ -191,10 +191,10 @@ describe("active-limit response as the paywall moment", () => {
     expect(response.status).toBe(402);
     const payload = await body(response);
     expect(payload.error).toBe("vm_active_limit_exceeded");
-    expect(payload.message).toBe("Cloud VMs require a cmux Pro subscription.");
-    expect(String(payload.action)).toContain("Subscribe to cmux Pro");
+    expect(payload.message).toBe("Cloud VMs require a hmux Pro subscription.");
+    expect(String(payload.action)).toContain("Subscribe to hmux Pro");
     expect(String(payload.action)).not.toContain("up to");
-    expect(String(payload.action)).not.toContain("cmux vm rm");
+    expect(String(payload.action)).not.toContain("hmux vm rm");
     expect(payload.upgradeRequired).toBe(true);
     expect(payload.upgradeUrl).toBe("https://cmux.com/pricing");
   });
@@ -209,7 +209,7 @@ describe("active-limit response as the paywall moment", () => {
     const payload = await body(response);
     expect(payload.error).toBe("vm_active_limit_exceeded");
     expect(payload.message).toContain("free plan includes 3 Cloud VMs");
-    expect(String(payload.action)).toContain("Upgrade to cmux Pro");
+    expect(String(payload.action)).toContain("Upgrade to hmux Pro");
     expect(String(payload.action)).toContain("https://cmux.com/pricing");
     expect(payload.upgradeRequired).toBe(true);
     expect(payload.upgradeUrl).toBe("https://cmux.com/pricing");
@@ -219,13 +219,13 @@ describe("active-limit response as the paywall moment", () => {
     const response = await vmActiveLimitExceededResponse({
       limit: 10,
       planId: "pro",
-      retryAction: "Run `cmux vm ls`, then stop or delete an active VM.",
+      retryAction: "Run `hmux vm ls`, then stop or delete an active VM.",
     });
     expect(response.status).toBe(402);
     const payload = await body(response);
     expect(payload.error).toBe("vm_active_limit_exceeded");
     expect(payload.message).toContain("10 active Cloud VMs");
-    expect(String(payload.action)).toContain("cmux vm ls");
+    expect(String(payload.action)).toContain("hmux vm ls");
     expect(payload.upgradeRequired).toBeUndefined();
   });
 
@@ -284,7 +284,7 @@ describe("free access window", () => {
 
   test("defaults to 7 days and stays env-overridable", () => {
     expect(vmFreeAccessWindowDays({})).toBe(7);
-    expect(vmFreeAccessWindowDays({ CMUX_VM_FREE_ACCESS_WINDOW_DAYS: "14" })).toBe(14);
+    expect(vmFreeAccessWindowDays({ HMUX_VM_FREE_ACCESS_WINDOW_DAYS: "14" })).toBe(14);
   });
 
   test("a free machine expires after the window and not before", () => {
@@ -299,7 +299,7 @@ describe("free access window", () => {
   });
 
   test("window 0 disables the gate; unknown createdAt fails open", () => {
-    expect(isVmFreeAccessExpired("free", now - days(400), { CMUX_VM_FREE_ACCESS_WINDOW_DAYS: "0" }, now)).toBe(false);
+    expect(isVmFreeAccessExpired("free", now - days(400), { HMUX_VM_FREE_ACCESS_WINDOW_DAYS: "0" }, now)).toBe(false);
     expect(isVmFreeAccessExpired("free", null, {}, now)).toBe(false);
   });
 
@@ -311,7 +311,7 @@ describe("free access window", () => {
     expect(payload.message).toContain("5 days");
     expect(payload.message).toContain("preserved");
     expect(String(payload.action)).toContain("https://cmux.com/pricing");
-    expect(String(payload.action)).toContain("cmux vm rm noble-wren");
+    expect(String(payload.action)).toContain("hmux vm rm noble-wren");
     expect(payload.upgradeRequired).toBe(true);
     expect(payload.upgradeUrl).toBe("https://cmux.com/pricing");
   });

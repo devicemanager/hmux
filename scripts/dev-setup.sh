@@ -4,17 +4,17 @@
 # manual sign-in. Wraps the P1 macOS auto-sign-in path and the P2 iOS auto-pair.
 #
 # Everything here is DEBUG-only and targets the TAGGED app/socket/bundle id, so
-# it never touches the user's stable cmux instance.
+# it never touches the user's stable hmux instance.
 #
 # Flow (--surface both):
 #   1. Select exactly one auth profile for both surfaces.
 #   2. Enable the iOS pairing host on the tagged build (opt-in, default OFF):
-#        defaults write com.cmuxterm.app.debug.<tag-id> mobile.iOSPairingHost.enabled -bool true
+#        defaults write com.hmuxterm.app.debug.<tag-id> mobile.iOSPairingHost.enabled -bool true
 #      Written BEFORE the macOS launch so a single build binds the NWListener on
 #      first launch. NOTE: the first bind per bundle id triggers a one-time macOS
 #      "Local Network" permission prompt; click Allow.
 #   3. Build + launch the macOS dev app via reload.sh --tag <t> --launch. It
-#      auto-signs-in from ~/.secrets/cmuxterm-dev.env (DebugDogfoodCredentialResolver).
+#      auto-signs-in from ~/.secrets/hmuxterm-dev.env (DebugDogfoodCredentialResolver).
 #   4. Build the iOS dev app, then let mobile-dev-launch.sh mint a target-specific
 #      ticket and launch the app. Simulator and device policies stay distinct.
 #
@@ -85,7 +85,7 @@ source "$SCRIPT_DIR/lib/mobile-attach.sh"
 
 # Validate before loading credentials, enabling the host, or starting either
 # build. The shared validator also rejects the stable instance sentinel.
-if ! cmux_attach_validate_dev_tag "$TAG"; then
+if ! hmux_attach_validate_dev_tag "$TAG"; then
   exit 2
 fi
 
@@ -105,17 +105,17 @@ fi
 # --- credentials: validate only, do NOT export into this process -------------
 # The macOS app reads dogfood creds from disk (DebugDogfoodCredentialResolver),
 # and mobile-dev-launch.sh loads its own creds for the iOS launch. So this script
-# must NOT export CMUX_UITEST_STACK_PASSWORD: reload.sh launches the long-lived
+# must NOT export HMUX_UITEST_STACK_PASSWORD: reload.sh launches the long-lived
 # GUI process inheriting this environment (it only scrubs a denylist, and the
 # Stack vars are not on it), which would leak the password to every child
 # terminal/CLI the app spawns. Validate in a subshell to surface a clear early
 # error, but keep the password out of dev-setup.sh's environment.
 AUTH_PROFILE="personal"
-AUTH_CREDENTIALS_FILE="$HOME/.secrets/cmuxterm-dev.env"
+AUTH_CREDENTIALS_FILE="$HOME/.secrets/hmuxterm-dev.env"
 if [[ "$AGENT" -eq 1 ]]; then
   AUTH_PROFILE="agent"
   # Let the agent profile search both the current and legacy secret files.
-  # Passing cmuxterm-dev.env explicitly would make an older ~/.secrets/cmux.env
+  # Passing hmuxterm-dev.env explicitly would make an older ~/.secrets/hmux.env
   # pair undiscoverable because explicit files are intentionally exclusive.
   AUTH_CREDENTIALS_FILE=""
 fi
@@ -124,8 +124,8 @@ DEV_SECRETS_ARGS=(--profile "$AUTH_PROFILE")
 # shellcheck source=scripts/lib/dev-secrets.sh
 AUTH_ACCOUNT="$(
   source "$SCRIPT_DIR/lib/dev-secrets.sh"
-  cmux_dev_secrets_load "${DEV_SECRETS_ARGS[@]}" >/dev/null
-  printf '%s' "$CMUX_DEV_AUTH_ACCOUNT"
+  hmux_dev_secrets_load "${DEV_SECRETS_ARGS[@]}" >/dev/null
+  printf '%s' "$HMUX_DEV_AUTH_ACCOUNT"
 )" || exit 2
 if [[ -z "$AUTH_ACCOUNT" ]]; then
   echo "error: selected auth profile did not resolve an account" >&2
@@ -138,19 +138,19 @@ echo "==> dev auth contract: $AUTH_PROFILE ($AUTH_ACCOUNT)"
 # first device run does not depend on remembering two origin overrides. Keep
 # explicit caller values intact for controlled local or staging experiments.
 if [[ "$IOS_TARGET" == "device" && ( "$SURFACE" == "ios" || "$SURFACE" == "both" ) ]]; then
-  if [[ -z "${CMUX_DEV_API_BASE_URL:-}" ]]; then
-    export CMUX_DEV_API_BASE_URL="https://cmux-staging.vercel.app"
+  if [[ -z "${HMUX_DEV_API_BASE_URL:-}" ]]; then
+    export HMUX_DEV_API_BASE_URL="https://cmux-staging.vercel.app"
   fi
-  if [[ -z "${CMUX_IROH_BROKER_BASE_URL:-}" ]]; then
-    export CMUX_IROH_BROKER_BASE_URL="https://cmux-staging.vercel.app"
+  if [[ -z "${HMUX_IROH_BROKER_BASE_URL:-}" ]]; then
+    export HMUX_IROH_BROKER_BASE_URL="https://cmux-staging.vercel.app"
   fi
-  echo "==> physical-device dev backend: $CMUX_DEV_API_BASE_URL"
+  echo "==> physical-device dev backend: $HMUX_DEV_API_BASE_URL"
 fi
 
 # --- tag identity (delegated to scripts/lib/mobile-attach.sh) ----------------
 # slug -> socket path + DerivedData; tag-id -> bundle id. The shared lib owns the
-# exact derivation so it stays in sync with reload.sh / cmux-debug-cli.sh.
-dev_setup__sanitize_path() { cmux_attach__slug "$1"; }
+# exact derivation so it stays in sync with reload.sh / hmux-debug-cli.sh.
+dev_setup__sanitize_path() { hmux_attach__slug "$1"; }
 dev_setup__sanitize_bundle() {
   local cleaned
   cleaned="$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^a-z0-9]+/./g; s/^\.+//; s/\.+$//; s/\.+/./g')"
@@ -160,8 +160,8 @@ dev_setup__sanitize_bundle() {
 
 TAG_SLUG="$(dev_setup__sanitize_path "$TAG")"
 TAG_ID="$(dev_setup__sanitize_bundle "$TAG")"
-BUNDLE_ID="com.cmuxterm.app.debug.${TAG_ID}"
-SOCKET_PATH="/tmp/cmux-debug-${TAG_SLUG}.sock"
+BUNDLE_ID="com.hmuxterm.app.debug.${TAG_ID}"
+SOCKET_PATH="/tmp/hmux-debug-${TAG_SLUG}.sock"
 
 # --- enable the iOS pairing host (must precede the macOS launch) -------------
 enable_pairing_host() {
@@ -171,7 +171,7 @@ enable_pairing_host() {
   # the NWListener is bound. MobileHostService.start() reads this default at app
   # launch (applicationDidFinishLaunching), so it must be written BEFORE the
   # macOS launch below. The tagged bundle id is targeted, never the stable app.
-  cmux_attach_enable_pairing_host "$TAG"
+  hmux_attach_enable_pairing_host "$TAG"
 }
 
 # --- macOS build + launch (P1 auto-sign-in) ---------------------------------
@@ -233,8 +233,8 @@ build_and_launch_ios() {
 
 # --- apply environment profile(s) (P3) --------------------------------------
 # Profiles provision a realistic test environment against the TAGGED Mac socket
-# via scripts/cmux-debug-cli.sh. The replay engine spawns the debug CLI, which
-# refuses without CMUX_TAG and never touches the stable app.
+# via scripts/hmux-debug-cli.sh. The replay engine spawns the debug CLI, which
+# refuses without HMUX_TAG and never touches the stable app.
 #
 # This must run BEFORE build_and_launch_ios: the simulator launch path
 # (mobile-dev-launch.sh -> `simctl launch --console-pty`) attaches to the app

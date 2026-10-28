@@ -1,5 +1,5 @@
 import AppKit
-import CMUXMobileCore
+import HMUXMobileCore
 import WebKit
 
 @MainActor

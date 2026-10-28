@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 import WebKit
 
 /// Receives events for one REPL session: `(name, payload)`; the payload
@@ -21,7 +21,7 @@ enum BrowserReplOutsideClientRefusal: Sendable, Equatable {
 ///
 /// `BrowserPanel`'s UI and download delegates consult this registry: in a tab
 /// a session created, dialogs, file choosers, popups and downloads are routed
-/// to the session instead of cmux's native UI. A user's tab that a session
+/// to the session instead of hmux's native UI. A user's tab that a session
 /// only drives keeps that UI for every event the session has no handler for
 /// (``BrowserReplTabOwnership``). Panels without an attachment keep their
 /// normal behavior.
@@ -99,7 +99,7 @@ final class BrowserReplTabAttachments {
     }
 
     /// Why a client outside the browser REPL (the older `browser.*` socket
-    /// methods: `cmux browser eval`, `click`, `snapshot`, `screenshot`,
+    /// methods: `hmux browser eval`, `click`, `snapshot`, `screenshot`,
     /// `navigate` and the rest) may not use tab `panelID`, or nil. Those
     /// methods carry no session, so no ownership check, domain policy or
     /// secret masking applies to them: they are refused every tab a session
@@ -192,7 +192,7 @@ final class BrowserReplTabAttachments {
     }
 
     /// The session whose directories govern a load of the local file `url`
-    /// in `panelID` that cmux starts itself (a recovery, a restore, a
+    /// in `panelID` that hmux starts itself (a recovery, a restore, a
     /// reload, the page's own navigation), or nil for the user's own load
     /// (``BrowserReplPolicyBoard/fileLoadSession(_:creator:attached:)``).
     func fileLoadSession(panelID: UUID, url: URL) -> String? {
@@ -210,7 +210,7 @@ final class BrowserReplTabAttachments {
     }
 
     /// `webView` became `panelID`'s web view (``BrowserPanel/bindWebView(_:)``):
-    /// the first, or one that replaced it (a restore of a page cmux unloaded,
+    /// the first, or one that replaced it (a restore of a page hmux unloaded,
     /// a crash recovery), with fresh preferences and user content controller.
     /// A tab a session created gets its page clipboard guard again before
     /// it loads, for the tab's whole life, also after the session left
@@ -574,7 +574,7 @@ final class BrowserReplTabAttachment {
         return sessionID
     }
 
-    /// Whether `event` goes to a session instead of cmux's UI.
+    /// Whether `event` goes to a session instead of hmux's UI.
     func routesToSessions(_ event: BrowserReplTabEvent) -> Bool {
         recipient(for: event) != nil
     }
@@ -692,7 +692,7 @@ final class BrowserReplTabAttachment {
         // The portal owns the original pane container even while the WebView
         // is temporarily reparented into the render window.
         let paneHierarchyIsVisible = BrowserWindowPortalRegistry.paneHierarchyIsVisible(for: webView)
-            ?? webView.cmuxBrowserViewportAttachmentSuperview.map {
+            ?? webView.hmuxBrowserViewportAttachmentSuperview.map {
                 !$0.isHiddenOrHasHiddenAncestor
             }
         if shown,
@@ -707,7 +707,7 @@ final class BrowserReplTabAttachment {
         }
         releaseRenderHost()
         guard panel.mobileBrowserStreamRenderHost == nil,
-              !webView.cmuxIsElementFullscreenActiveOrTransitioning else {
+              !webView.hmuxIsElementFullscreenActiveOrTransitioning else {
             return
         }
         // A shown tab keeps its pane's size, so the page does not reflow.
@@ -892,7 +892,7 @@ final class BrowserReplTabAttachment {
     /// `microphone`, `geolocation`, `notifications`) to the origin and frame
     /// that ask: only those its current domain policy allows
     /// (``BrowserReplPermissionRequest/isGranted(by:authority:in:)``). Grants apply
-    /// only to tabs the session created; a user's tab keeps cmux's own answer.
+    /// only to tabs the session created; a user's tab keeps hmux's own answer.
     func grants(_ request: BrowserReplPermissionRequest) -> Bool {
         guard let creator = creatorSessionID else { return false }
         return request.isGranted(by: contextOptions.permissions, authority: Self.authority(for: creator), in: authorityFacts)
@@ -938,7 +938,7 @@ final class BrowserReplTabAttachment {
     /// Clipboard API and script paste are off and `page-clipboard.js` sends
     /// the page's Clipboard API and `execCommand("copy" | "cut")` writes to
     /// the tab's clipboard (``clipboard``). The guard also marks the web view
-    /// as one whose `cmux browser press` Meta+C, Meta+X and Meta+V run
+    /// as one whose `hmux browser press` Meta+C, Meta+X and Meta+V run
     /// nothing. The guard stays for the tab's life, also after the session
     /// leaves, and a web view that replaces the tab's gets it again before
     /// it loads (``BrowserReplTabAttachments/webViewDidBind(_:panelID:)``):
@@ -1016,7 +1016,7 @@ final class BrowserReplTabAttachment {
         var buttons: [BrowserReplMouseButton] = []
         var drag: DragState?
         /// The web view they were pressed in; the release goes only there.
-        var target = BrowserReplInputTarget<CmuxWebView>(nil)
+        var target = BrowserReplInputTarget<HmuxWebView>(nil)
 
         var isEmpty: Bool { keys.isEmpty && buttons.isEmpty && drag == nil }
     }
@@ -1029,7 +1029,7 @@ final class BrowserReplTabAttachment {
         var held = HeldInput(sessionID: sessionID, keys: heldKeys.releaseAll(heldBy: sessionID))
         // Held input is always the instrumented web view's: a replacement
         // forgets what was held in the one before (instrumentCurrentWebView).
-        held.target = BrowserReplInputTarget(instrumentedWebView as? CmuxWebView)
+        held.target = BrowserReplInputTarget(instrumentedWebView as? HmuxWebView)
         if pointer.owner == sessionID {
             held.buttons = mouseState.pressedButtons
             held.drag = drag
@@ -1049,7 +1049,7 @@ final class BrowserReplTabAttachment {
         guard !held.isEmpty else { return }
         // Only into the web view that got the press: after a replacement
         // the release is forgotten, never sent to the new page.
-        guard let webView = held.target.deliverable(to: panel?.webView as? CmuxWebView) else {
+        guard let webView = held.target.deliverable(to: panel?.webView as? HmuxWebView) else {
             forgetReleased(held)
             return
         }
@@ -1098,7 +1098,7 @@ final class BrowserReplTabAttachment {
     /// Forgets `held` (from ``takeHeldInput(of:)``) without sending the page
     /// any event: a release its session's guards refused.
     func forgetReleased(_ held: HeldInput) {
-        guard !held.isEmpty, let webView = held.target.target ?? (panel?.webView as? CmuxWebView) else { return }
+        guard !held.isEmpty, let webView = held.target.target ?? (panel?.webView as? HmuxWebView) else { return }
         for stroke in held.keys {
             webView.forgetBrowserReplModifier(stroke, heldBy: held.sessionID)
         }
@@ -1116,7 +1116,7 @@ final class BrowserReplTabAttachment {
         mouseState.reset()
         let dragState = drag
         drag = nil
-        guard let webView = panel?.webView as? CmuxWebView else { return }
+        guard let webView = panel?.webView as? HmuxWebView else { return }
         webView.cancelPendingAutomationContextMenus()
         endDragSilently(dragState, in: webView)
         webView.releaseBrowserReplModifiers()
@@ -1124,7 +1124,7 @@ final class BrowserReplTabAttachment {
 
     /// Forgets every session's held keys, buttons and drag, all held in
     /// `webView`, which the tab no longer shows; nothing is sent.
-    private func forgetHeldInput(in webView: CmuxWebView?) {
+    private func forgetHeldInput(in webView: HmuxWebView?) {
         _ = heldKeys.releaseAll()
         mouseState.reset()
         let dragState = drag
@@ -1140,7 +1140,7 @@ final class BrowserReplTabAttachment {
     func discardDrag() {
         let dragState = drag
         drag = nil
-        guard let dragState, let webView = panel?.webView as? CmuxWebView else { return }
+        guard let dragState, let webView = panel?.webView as? HmuxWebView else { return }
         endDragSilently(dragState, in: webView)
     }
 
@@ -1148,7 +1148,7 @@ final class BrowserReplTabAttachment {
     /// drag source is told it ended with no operation (the page gets
     /// `dragend`, which grants no user gesture). No mouse, key or drop
     /// event reaches the page.
-    private func endDragSilently(_ dragState: DragState?, in webView: CmuxWebView) {
+    private func endDragSilently(_ dragState: DragState?, in webView: HmuxWebView) {
         guard let dragState else { return }
         webView.automationDragCapture = nil
         if dragState.drop != nil, webView.window != nil {
@@ -1300,10 +1300,10 @@ final class BrowserReplTabAttachment {
     func instrumentCurrentWebView() {
         if isAttached { applyContextToWebView() }
         guard let webView = panel?.webView, webView !== instrumentedWebView, isAttached else { return }
-        let previous = instrumentedWebView as? CmuxWebView
+        let previous = instrumentedWebView as? HmuxWebView
         uninstrument()
         // A web view after the first is a replacement (a restore of a page
-        // cmux unloaded, a crash recovery): its frames have new ids.
+        // hmux unloaded, a crash recovery): its frames have new ids.
         let isReplacement = hasInstrumentedWebView
         if isReplacement {
             // Keys and buttons held in the replaced web view are its own:
@@ -1375,7 +1375,7 @@ final class BrowserReplTabAttachment {
 
     /// The agent-world message handler whose presence lets an agent's
     /// document-start script run.
-    private static let agentPresenceHandlerName = "cmuxReplAgent"
+    private static let agentPresenceHandlerName = "hmuxReplAgent"
 
     /// Requests in flight, or `nil` when the resource load SPI is unavailable.
     var inflightRequestCount: Int? {
@@ -1575,7 +1575,7 @@ final class BrowserReplTabAttachment {
         // depend on the controller.
         configuration.userContentController = WKUserContentController()
         BrowserPanel.configureWebViewConfiguration(configuration, websiteDataStore: panel.websiteDataStore)
-        let webView = CmuxWebView(frame: .zero, configuration: configuration, host: CmuxWebViewAppHost())
+        let webView = HmuxWebView(frame: .zero, configuration: configuration, host: HmuxWebViewAppHost())
         webView.allowsBackForwardNavigationGestures = true
         webView.pageZoom = panel.webView.pageZoom
         webView.underPageBackgroundColor = GhosttyBackgroundTheme.currentColor()
@@ -2012,7 +2012,7 @@ final class BrowserReplDownloadClaimBox: NSObject, @unchecked Sendable {
 /// Receives console and page error reports from the page telemetry script.
 @MainActor
 final class BrowserReplConsoleMessageHandler: NSObject, WKScriptMessageHandler {
-    static let name = "cmuxReplConsole"
+    static let name = "hmuxReplConsole"
 
     /// Called with the event, its payload and the document that sent it,
     /// as WebKit recorded it (the sessions whose policy blocks it get none).

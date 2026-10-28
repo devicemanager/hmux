@@ -26,9 +26,9 @@ class InfoPlistTests(unittest.TestCase):
             declaration["UTTypeIdentifier"]
             for declaration in info["UTExportedTypeDeclarations"]
         }
-        self.assertIn("com.cmux.cloud-sidebar-row", identifiers)
+        self.assertIn("com.hmux.cloud-sidebar-row", identifiers)
         self.assertIn("com.splittabbar.tabtransfer", identifiers)
-        self.assertIn("com.cmux.sidebar-tab-reorder", identifiers)
+        self.assertIn("com.hmux.sidebar-tab-reorder", identifiers)
 
 
 if __name__ == "__main__":

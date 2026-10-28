@@ -55,8 +55,8 @@ final class CodexAppServerSession {
             method: "initialize",
             params: [
                 "clientInfo": [
-                    "name": "cmux",
-                    "title": "cmux",
+                    "name": "hmux",
+                    "title": "hmux",
                     "version": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
                 ],
                 "capabilities": [
@@ -124,7 +124,7 @@ final class CodexAppServerSession {
         guard let data = line.data(using: .utf8),
               let decoded = try? JSONSerialization.jsonObject(with: data),
               let object = decoded as? [String: Any] else {
-            outputSink("stderr", String(localized: "agentSession.codex.error.invalidJSON", defaultValue: "cmux could not read the response from Codex. Try again."))
+            outputSink("stderr", String(localized: "agentSession.codex.error.invalidJSON", defaultValue: "hmux could not read the response from Codex. Try again."))
             return
         }
 
@@ -542,7 +542,7 @@ final class CodexAppServerSession {
         }
         guard threadID == nil, threadStartRequestID == nil else { return }
         var params: [String: Any] = [
-            "serviceName": "cmux",
+            "serviceName": "hmux",
             "threadSource": "user"
         ]
         if let workingDirectory {
@@ -662,7 +662,7 @@ final class CodexAppServerSession {
 
     private func emitCodexRPCFailure(_ error: Error) {
 #if DEBUG
-        cmuxDebugLog("agentSession.codex.rpc.failed error=\(error.localizedDescription)")
+        hmuxDebugLog("agentSession.codex.rpc.failed error=\(error.localizedDescription)")
 #endif
         outputSink("stderr", Self.rpcFailedMessage())
     }
@@ -670,7 +670,7 @@ final class CodexAppServerSession {
     private func emitCodexRPCFailure(details: String?) {
 #if DEBUG
         if let details, !details.isEmpty {
-            cmuxDebugLog("agentSession.codex.rpc.failed details=\(details)")
+            hmuxDebugLog("agentSession.codex.rpc.failed details=\(details)")
         }
 #else
         _ = details

@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxCloudTui
+import HmuxCloud
+import HmuxCloudTui
 import AppKit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 import Foundation
 /// Closure bundle handed to Cloud outline rows for the nodes below a machine.
 struct CloudTreeNodeActions {
@@ -22,7 +22,7 @@ struct CloudTreeNodeActions {
     /// Project an exact remote placement into one local workspace, preserving the
     /// daemon tab identity while narrowing reuse to that workspace.
     let projectRemoteViewInLocalWorkspace: @MainActor (_ resource: SurfaceResourceID, _ view: SurfaceRemoteView, _ workspaceID: UUID) -> Void
-    /// Start a plain terminal on a machine (in a cmux-tui workspace when given) and show it.
+    /// Start a plain terminal on a machine (in a hmux-tui workspace when given) and show it.
     let newTerminal: @MainActor (_ machine: SurfaceMachineID, _ remoteWorkspaceID: String?) -> Void
     /// Open a whole group (a workspace's terminals and browsers): the first at the
     /// selected workspace, the rest as tabs of that pane. An empty group starts a fresh
@@ -49,7 +49,7 @@ struct CloudTreeNodeActions {
     /// Close a workspace on its machine AND kill every terminal in it (austin,
     /// 2026-08-31: a closed workspace never leaves stray terminals behind in the
     /// pool). Confirms first when there is something to kill. The protocol's
-    /// keep-terminals close stays CLI-only (`cmux vm workspace close`).
+    /// keep-terminals close stays CLI-only (`hmux vm workspace close`).
     let closeWorkspace: @MainActor (_ machine: SurfaceMachineID, _ workspace: SurfaceRemoteWorkspace) -> Void
     /// Rename a remote workspace via a text prompt.
     let renameWorkspace: @MainActor (_ machine: SurfaceMachineID, _ workspace: SurfaceRemoteWorkspace) -> Void
@@ -577,7 +577,7 @@ struct CloudTreeNodeActions {
             copyPortLink: { resource in
                 guard let port = resource.forwardedPort else { return }
                 run(String(localized: "cloudTree.operation.copyPortLink", defaultValue: "Preparing the link\u{2026}")) { catalog in
-                    guard let provider = catalog.provider(for: resource.machine) as? CmuxTuiSurfaceProvider else {
+                    guard let provider = catalog.provider(for: resource.machine) as? HmuxTuiSurfaceProvider else {
                         throw SurfaceCatalogError.unsupported(SurfaceCatalog.portPreviewUnavailableMessage(machineID: resource.machine.rawValue))
                     }
                     // The same link the pane loads and `vm.port_open` reports.
@@ -631,7 +631,7 @@ struct CloudTreeNodeActions {
                     // Cancellation is silent by design; log it so a row that
                     // resolves to nothing is diagnosable from the debug log.
 #if DEBUG
-                    cmuxDebugLog("cloudTree.openWorkspace unresolved machine=\(machine.rawValue) workspace=\(workspace.id)")
+                    hmuxDebugLog("cloudTree.openWorkspace unresolved machine=\(machine.rawValue) workspace=\(workspace.id)")
 #endif
                     throw CancellationError()
                 }
@@ -740,7 +740,7 @@ struct CloudTreeNodeActions {
         pasteboard.clearContents()
         let ok = pasteboard.setString(text, forType: .string)
         #if DEBUG
-        cmuxDebugLog("cloudTree.copyToPasteboard ok=\(ok) chars=\(text.count)")
+        hmuxDebugLog("cloudTree.copyToPasteboard ok=\(ok) chars=\(text.count)")
         #endif
     }
 }

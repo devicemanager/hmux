@@ -7,7 +7,7 @@ the global EndpointID ownership map and the corresponding owner counts. Device
 registrations, challenges, permissions, directory state and rate limits remain
 in Durable Object SQLite. Credentials do not create a row per issuance.
 
-The shared development Worker is `cmux-v2-development`. For isolated
+The shared development Worker is `hmux-v2-development`. For isolated
 branch work, deploy a suffixed Worker:
 
 ```sh
@@ -26,7 +26,7 @@ For local CLI work, select PlanetScale without changing application code:
 
 ```sh
 cd web
-CMUX_DB_PROVIDER=planetscale bun db:migrate
+HMUX_DB_PROVIDER=planetscale bun db:migrate
 ```
 
 Set `PLANETSCALE_DATABASE_URL` in the environment or a local ignored env file.
@@ -49,15 +49,15 @@ environment file. Keep this live check separate from the local workerd suite.
 
 ## Guarded rollout and client rule dependencies
 
-Canonical Workers are `cmux-v2`, `cmux-v2-staging`, and `cmux-v2-development`.
-The old `cmux-iroh-v2*` hosts are forwarding aliases for existing Mac and iOS
+Canonical Workers are `hmux-v2`, `hmux-v2-staging`, and `hmux-v2-development`.
+The old `hmux-iroh-v2*` hosts are forwarding aliases for existing Mac and iOS
 clients. Deploy to the canonical Worker in place; never deploy a full Worker
 onto an alias or create replacement Durable Object namespaces. PR #13768 owns
 the broader client-origin rename and alias tooling; this follow-up adopts its
 deployment names so rollout cannot overwrite those existing aliases.
 
 Mac-to-Mac links require `directory.rules` to contain
-`cmux.mac-peer-inbound.v1`. An `inboundPeers` field alone is insufficient:
+`hmux.mac-peer-inbound.v1`. An `inboundPeers` field alone is insufficient:
 production's older iOS-only service also returns it. The Mac displays the
 existing service-update message until the rule is live. Once the directory
 advertises the rule, discovery refreshes even if the peer records did not change.
@@ -88,7 +88,7 @@ account, first deploy staging through the same guards:
 ```sh
 bun install --frozen-lockfile
 CLOUDFLARE_ACCOUNT_ID=0c1675e0def6de1ab3a50a4e17dc5656 bun run deploy:staging
-curl -sS https://cmux-v2-staging.debussy.workers.dev/v2/health
+curl -sS https://hmux-v2-staging.debussy.workers.dev/v2/health
 ```
 
 Confirm the exact source revision, `storage` reader 7/writer 6, and Mac rule.
@@ -98,7 +98,7 @@ same revision:
 
 ```sh
 CLOUDFLARE_ACCOUNT_ID=0c1675e0def6de1ab3a50a4e17dc5656 bun run deploy:production
-curl -sS https://cmux-v2.debussy.workers.dev/v2/health
+curl -sS https://hmux-v2.debussy.workers.dev/v2/health
 bun run drift:check
 ```
 
@@ -133,7 +133,7 @@ reports drift; merging code does not deploy production.
 holding the Macs that user published from any team. `/v2/account/socket` and
 `/v2/account/requests` accept only an `IrohTicket`; the user comes from the
 signed ticket, and every open or request carries a device proof over
-`cmux-iroh-v2-account-request`. Team objects stay the authority: each directory
+`hmux-iroh-v2-account-request`. Team objects stay the authority: each directory
 read re-checks every row against its team through the read-only
 `TeamControl.accountMacRecords` RPC, and a read that overlaps a revocation
 notice retries or answers `resync_required`. Team frames, rules and storage

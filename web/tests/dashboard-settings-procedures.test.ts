@@ -13,7 +13,7 @@ mock.module("@/app/lib/stack", () => ({
   getStackServerApp: () => ({
     getUser: async () => stackUser,
     getProject: async () => ({
-      displayName: "cmux",
+      displayName: "hmux",
       config: {
         credentialEnabled: true,
         passkeyEnabled: false,
@@ -28,7 +28,7 @@ mock.module("@/app/lib/stack", () => ({
 
 const { settingsRouter } = await import("../orpc/server/dashboard/settings");
 
-const context = { request: new Request("https://cmux.test/dashboard/settings"), serverPrefetch: true };
+const context = { request: new Request("https://hmux.test/dashboard/settings"), serverPrefetch: true };
 
 beforeEach(() => {
   allowUserApiKeys = true;
@@ -70,7 +70,7 @@ describe("dashboard.settings", () => {
   test("overview returns the project sign-in flags and plain email rows", async () => {
     expect(await call(settingsRouter.overview, undefined, { context })).toEqual({
       project: {
-        displayName: "cmux",
+        displayName: "hmux",
         credentialEnabled: true,
         passkeyEnabled: false,
         magicLinkEnabled: true,

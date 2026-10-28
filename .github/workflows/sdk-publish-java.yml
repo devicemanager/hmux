@@ -46,9 +46,9 @@ jobs:
           expected = sys.argv[1]
           root = pathlib.Path.cwd()
           versions = {
-              "typescript package.json": json.loads((root / "cmux-tui/bindings/typescript/package.json").read_text())["version"],
-              "python pyproject.toml": tomllib.loads((root / "cmux-tui/bindings/python/pyproject.toml").read_text())["project"]["version"],
-              "rust Cargo.toml": tomllib.loads((root / "cmux-tui/bindings/rust/Cargo.toml").read_text())["package"]["version"],
+              "typescript package.json": json.loads((root / "hmux-tui/bindings/typescript/package.json").read_text())["version"],
+              "python pyproject.toml": tomllib.loads((root / "hmux-tui/bindings/python/pyproject.toml").read_text())["project"]["version"],
+              "rust Cargo.toml": tomllib.loads((root / "hmux-tui/bindings/rust/Cargo.toml").read_text())["package"]["version"],
           }
           mismatches = {name: got for name, got in versions.items() if got != expected}
           if mismatches:
@@ -57,7 +57,7 @@ jobs:
               raise SystemExit(1)
           print(f"All package versions match {expected}")
           PY
-          python3 cmux-tui/bindings/check-versions.py --expected "$version"
+          python3 hmux-tui/bindings/check-versions.py --expected "$version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
 
   bindings-e2e-java:
@@ -99,17 +99,17 @@ jobs:
           java -version
           javac -version
 
-      - name: Build cmux-tui server
-        working-directory: cmux-tui
-        run: cargo build -p cmux-tui --bin cmux-tui --locked
+      - name: Build hmux-tui server
+        working-directory: hmux-tui
+        run: cargo build -p hmux-tui --bin hmux-tui --locked
 
       - name: Java SDK conformance
         run: |
-          report="$RUNNER_TEMP/cmux-sdk-conformance-java.txt"
-          python3 cmux-tui/bindings/conformance/runner.py \
+          report="$RUNNER_TEMP/hmux-sdk-conformance-java.txt"
+          python3 hmux-tui/bindings/conformance/runner.py \
             --language java \
             --require java \
-            --cmux-tui-bin "$GITHUB_WORKSPACE/cmux-tui/target/debug/cmux-tui" |
+            --hmux-tui-bin "$GITHUB_WORKSPACE/hmux-tui/target/debug/hmux-tui" |
             tee "$report"
           grep -Eq '^PASS +java +live-creation-exit-restart-unix$' "$report"
 
@@ -122,4 +122,4 @@ jobs:
       - name: Maven Central publish not implemented
         run: |
           echo "Java publishing is intentionally not automated yet."
-          echo "TODO: add Maven Central publishing after com.cmux namespace verification, project metadata, and signing/provenance setup are complete."
+          echo "TODO: add Maven Central publishing after com.hmux namespace verification, project metadata, and signing/provenance setup are complete."

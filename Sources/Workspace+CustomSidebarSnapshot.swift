@@ -1,5 +1,5 @@
-import CmuxAgentChat
-import CmuxSidebar
+import HmuxAgentChat
+import HmuxSidebar
 import Foundation
 
 @MainActor

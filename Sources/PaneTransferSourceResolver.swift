@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxHomeCore
+import HmuxHomeCore
 import Foundation
 
 /// Resolves the live in-process source behind an opaque pane-transfer payload.

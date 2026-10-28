@@ -76,7 +76,7 @@ const localIdentity = async (token: string) => token === "good-token"
   : null;
 
 function nativeRequest(access: string): Request {
-  return new Request("https://cmux.test/api/devices", {
+  return new Request("https://hmux.test/api/devices", {
     method: "POST",
     headers: {
       authorization: `Bearer ${access}`,
@@ -155,7 +155,7 @@ describe("verifyRequestFromSnapshot", () => {
   test("a request with no native tokens never answers from a snapshot", async () => {
     snapshotState.stored = { user: snapshotUser, ageMs: 1_000 };
     const user = await verifyRequestFromSnapshot(
-      new Request("https://cmux.test/api/devices", { method: "POST" }),
+      new Request("https://hmux.test/api/devices", { method: "POST" }),
       { verifyAccessToken: localIdentity, isAccountDeleted },
     );
     expect(user).toBeNull();

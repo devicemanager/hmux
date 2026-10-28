@@ -44,7 +44,7 @@ def issue(number=7, body="", author="lawrence", created=None, labels=("merge-fre
     }
 
 
-def body(paths="cmux-tui/crates/acpmux/ cmux-tui/spec/", expires=None, extra=""):
+def body(paths="hmux-tui/crates/acpmux/ hmux-tui/spec/", expires=None, extra=""):
     expires = expires or stamp(NOW + timedelta(hours=4))
     return f"paths: {paths}\nexpires: {expires}\n{extra}"
 
@@ -54,7 +54,7 @@ def labeled(actor, name="freeze-ok", event="labeled"):
 
 
 class FreezeTests(unittest.TestCase):
-    def check(self, issues, files, events=(), base="feat-cmux-next"):
+    def check(self, issues, files, events=(), base="feat-hmux-next"):
         with tempfile.TemporaryDirectory() as directory:
             paths = {}
             for name, content in (("issues", issues), ("events", list(events))):
@@ -72,11 +72,11 @@ class FreezeTests(unittest.TestCase):
             return status, out.getvalue(), err.getvalue()
 
     def test_a_frozen_path_blocks_and_names_the_freeze_and_owner(self):
-        status, out, _ = self.check([issue(body=body())], ["docs/a.md", "cmux-tui/crates/acpmux/src/deliver.rs"])
+        status, out, _ = self.check([issue(body=body())], ["docs/a.md", "hmux-tui/crates/acpmux/src/deliver.rs"])
         self.assertEqual(status, 1)
         self.assertIn("#7", out)
         self.assertIn("@lawrence", out)
-        self.assertIn("cmux-tui/crates/acpmux/src/deliver.rs", out)
+        self.assertIn("hmux-tui/crates/acpmux/src/deliver.rs", out)
 
     def test_a_sibling_of_a_frozen_prefix_is_not_frozen(self):
         status, _, _ = self.check([issue(body=body(paths="docs/frozen docs/app.md"))],
@@ -84,15 +84,15 @@ class FreezeTests(unittest.TestCase):
         self.assertEqual(status, 0)
 
     def test_leading_slashes_and_commas_still_freeze_and_globs_are_malformed(self):
-        for paths in ("/cmux-tui/spec/", "./cmux-tui/spec/", "cmux-tui/spec/,"):
+        for paths in ("/hmux-tui/spec/", "./hmux-tui/spec/", "hmux-tui/spec/,"):
             with self.subTest(paths=paths):
-                self.assertEqual(self.check([issue(body=body(paths=paths))], ["cmux-tui/spec/x.json"])[0], 1)
-        status, _, err = self.check([issue(body=body(paths="cmux-tui/*"))], ["cmux-tui/spec/x.json"])
+                self.assertEqual(self.check([issue(body=body(paths=paths))], ["hmux-tui/spec/x.json"])[0], 1)
+        status, _, err = self.check([issue(body=body(paths="hmux-tui/*"))], ["hmux-tui/spec/x.json"])
         self.assertEqual(status, 0)
         self.assertIn("not globs", err)
 
     def test_only_an_admin_or_maintainer_label_turns_a_freeze_on(self):
-        files = ["cmux-tui/spec/x.json"]
+        files = ["hmux-tui/spec/x.json"]
         for role in ("admin", "maintain"):
             with self.subTest(role=role):
                 self.assertEqual(self.check([issue(body=body(), labeler_role=role)], files)[0], 1)
@@ -103,7 +103,7 @@ class FreezeTests(unittest.TestCase):
                 self.assertIn("not an admin or maintainer", err)
 
     def test_an_edit_after_the_label_turns_the_freeze_off_until_labeled_again(self):
-        files = ["cmux-tui/spec/x.json"]
+        files = ["hmux-tui/spec/x.json"]
         labeled, edited = NOW - timedelta(minutes=30), NOW - timedelta(minutes=10)
         widened = issue(body=body(), labeled_at=stamp(labeled), last_edited_at=stamp(edited))
         status, _, err = self.check([widened], files)
@@ -114,42 +114,42 @@ class FreezeTests(unittest.TestCase):
 
     def test_an_expired_freeze_blocks_nothing(self):
         status, _, _ = self.check([issue(body=body(expires=stamp(NOW - timedelta(minutes=1))))],
-                                  ["cmux-tui/spec/x.json"])
+                                  ["hmux-tui/spec/x.json"])
         self.assertEqual(status, 0)
 
     def test_a_freeze_never_outlasts_72_hours_from_its_issue(self):
         old = issue(body=body(expires=stamp(NOW + timedelta(days=30))), created=NOW - timedelta(hours=73))
-        status, _, _ = self.check([old], ["cmux-tui/spec/x.json"])
+        status, _, _ = self.check([old], ["hmux-tui/spec/x.json"])
         self.assertEqual(status, 0)
 
     def test_a_malformed_freeze_warns_and_blocks_nothing(self):
-        for text in ("expires: tomorrow\npaths: cmux-tui/", "paths: cmux-tui/", body(paths="/")):
+        for text in ("expires: tomorrow\npaths: hmux-tui/", "paths: hmux-tui/", body(paths="/")):
             with self.subTest(body=text):
-                status, _, err = self.check([issue(body=text)], ["cmux-tui/spec/x.json"])
+                status, _, err = self.check([issue(body=text)], ["hmux-tui/spec/x.json"])
                 self.assertEqual(status, 0)
                 self.assertIn("malformed", err)
 
     def test_only_the_owners_freeze_ok_lets_a_pull_request_through(self):
         frozen = [issue(body=body())]
-        files = ["cmux-tui/spec/x.json"]
+        files = ["hmux-tui/spec/x.json"]
         self.assertEqual(self.check(frozen, files, [labeled("lawrence")])[0], 0)
         self.assertEqual(self.check(frozen, files, [labeled("someone-else")])[0], 1)
         self.assertEqual(self.check(frozen, files, [labeled("lawrence"), labeled("lawrence", event="unlabeled")])[0], 1)
 
     def test_an_owner_line_hands_the_freeze_to_someone_else(self):
         frozen = [issue(body=body(extra="owner: @austin"))]
-        self.assertEqual(self.check(frozen, ["cmux-tui/spec/x.json"], [labeled("austin")])[0], 0)
-        self.assertEqual(self.check(frozen, ["cmux-tui/spec/x.json"], [labeled("lawrence")])[0], 1)
+        self.assertEqual(self.check(frozen, ["hmux-tui/spec/x.json"], [labeled("austin")])[0], 0)
+        self.assertEqual(self.check(frozen, ["hmux-tui/spec/x.json"], [labeled("lawrence")])[0], 1)
 
     def test_a_branch_line_limits_the_freeze_to_that_base(self):
         frozen = [issue(body=body(extra="branch: main"))]
-        self.assertEqual(self.check(frozen, ["cmux-tui/spec/x.json"], base="feat-cmux-next")[0], 0)
-        self.assertEqual(self.check(frozen, ["cmux-tui/spec/x.json"], base="main")[0], 1)
+        self.assertEqual(self.check(frozen, ["hmux-tui/spec/x.json"], base="feat-hmux-next")[0], 0)
+        self.assertEqual(self.check(frozen, ["hmux-tui/spec/x.json"], base="main")[0], 1)
 
     def test_closed_or_unlabeled_issues_are_not_freezes(self):
         closed = dict(issue(body=body()), state="closed")
         other = issue(body=body(), labels=("bug",))
-        self.assertEqual(self.check([closed, other], ["cmux-tui/spec/x.json"])[0], 0)
+        self.assertEqual(self.check([closed, other], ["hmux-tui/spec/x.json"])[0], 0)
 
     def test_expire_closes_lapsed_and_old_inactive_freezes_only(self):
         old = NOW - timedelta(hours=73)
@@ -158,7 +158,7 @@ class FreezeTests(unittest.TestCase):
             "lapsed": (issue(body=body(expires=stamp(NOW - timedelta(minutes=5)))), "set"),
             "fresh unauthorised": (issue(body=body(), labeled_by="triager", labeler_role="triage"), None),
             "old unauthorised": (issue(body=body(), created=old, labeled_by="triager", labeler_role="triage"), "set"),
-            "old malformed": (issue(body="paths: cmux-tui/", created=old), "set"),
+            "old malformed": (issue(body="paths: hmux-tui/", created=old), "set"),
         }
         with tempfile.TemporaryDirectory() as directory:
             for name, (raw, expected) in cases.items():
@@ -233,7 +233,7 @@ class CheckApiCalls(unittest.TestCase):
     def run_check(self, fake, *extra, env=None):
         with mock.patch.object(freeze.subprocess, "run", fake), mock.patch.dict(os.environ, env or {}), \
                 redirect_stdout(io.StringIO()) as out, redirect_stderr(io.StringIO()):
-            status = freeze.main(["check", "--repo", self.REPO, "--pr", "42", "--base", "feat-cmux-next", *extra])
+            status = freeze.main(["check", "--repo", self.REPO, "--pr", "42", "--base", "feat-hmux-next", *extra])
         return status, out.getvalue(), [endpoint for endpoint, _ in fake.calls]
 
     def test_no_open_freeze_reads_only_the_freeze_list(self):
@@ -263,7 +263,7 @@ class CheckApiCalls(unittest.TestCase):
         })
 
     def test_an_applicable_freeze_still_blocks_using_the_events_file_count(self):
-        fake = self.applicable(["cmux-tui/spec/a.md"])
+        fake = self.applicable(["hmux-tui/spec/a.md"])
         status, out, calls = self.run_check(fake, "--changed-files", "1")
         self.assertEqual(status, 1)
         self.assertIn("#7", out)

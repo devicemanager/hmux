@@ -3,7 +3,7 @@
 Regression test for https://github.com/manaflow-ai/cmux/issues/9591.
 
 OMP task-tool subagents run in the same process as the top-level session and
-inherit CMUX_SURFACE_ID, but each has its own session id. The generated cmux
+inherit HMUX_SURFACE_ID, but each has its own session id. The generated hmux
 extension must only report lifecycle hooks (session-start / prompt-submit /
 stop) for the top-level session that owns the pane; a background subagent's
 agent_end must never mark the whole pane idle while the main agent is still
@@ -26,7 +26,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 
 
 def make_executable(path: Path, content: str) -> None:
@@ -45,12 +45,12 @@ def main() -> int:
         return 0
 
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
-    with tempfile.TemporaryDirectory(prefix="cmux-omp-subagent-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-omp-subagent-") as td:
         root = Path(td)
         home = root / "home"
         home.mkdir()
@@ -59,7 +59,7 @@ def main() -> int:
         env = os.environ.copy()
         env["HOME"] = str(home)
         env["PI_CODING_AGENT_DIR"] = str(agent_dir)
-        env.pop("CMUX_OMP_HOOKS_DISABLED", None)
+        env.pop("HMUX_OMP_HOOKS_DISABLED", None)
 
         install = subprocess.run(
             [cli_path, "hooks", "omp", "install", "--yes"],
@@ -75,26 +75,26 @@ def main() -> int:
             print(f"stdout={install.stdout.strip()}")
             print(f"stderr={install.stderr.strip()}")
             return 1
-        extension_path = agent_dir / "extensions" / "cmux-omp-session.ts"
+        extension_path = agent_dir / "extensions" / "hmux-omp-session.ts"
         if not extension_path.exists():
             print(f"FAIL: expected extension at {extension_path}")
             return 1
-        extension_override = os.environ.get("CMUX_TEST_OMP_EXTENSION_OVERRIDE")
+        extension_override = os.environ.get("HMUX_TEST_OMP_EXTENSION_OVERRIDE")
         if extension_override:
             shutil.copyfile(extension_override, extension_path)
 
-        fake_cmux = root / "fake-cmux"
-        fake_args_log = root / "fake-cmux-args.log"
-        fake_stdin_log = root / "fake-cmux-stdin.log"
+        fake_hmux = root / "fake-hmux"
+        fake_args_log = root / "fake-hmux-args.log"
+        fake_stdin_log = root / "fake-hmux-stdin.log"
         fake_args_log.touch()
         fake_stdin_log.touch()
         make_executable(
-            fake_cmux,
+            fake_hmux,
             """#!/usr/bin/env bash
 set -euo pipefail
-printf '%s\\n' "$*" >> "$FAKE_CMUX_ARGS_LOG"
-cat >> "$FAKE_CMUX_STDIN_LOG"
-printf '\\n---\\n' >> "$FAKE_CMUX_STDIN_LOG"
+printf '%s\\n' "$*" >> "$FAKE_HMUX_ARGS_LOG"
+cat >> "$FAKE_HMUX_STDIN_LOG"
+printf '\\n---\\n' >> "$FAKE_HMUX_STDIN_LOG"
 """,
         )
 
@@ -110,24 +110,24 @@ printf '\\n---\\n' >> "$FAKE_CMUX_STDIN_LOG"
 
         check_env = env.copy()
         for key in [
-            "CMUX_AGENT_LAUNCH_KIND",
-            "CMUX_AGENT_LAUNCH_EXECUTABLE",
-            "CMUX_AGENT_LAUNCH_ARGV_B64",
-            "CMUX_AGENT_LAUNCH_CWD",
+            "HMUX_AGENT_LAUNCH_KIND",
+            "HMUX_AGENT_LAUNCH_EXECUTABLE",
+            "HMUX_AGENT_LAUNCH_ARGV_B64",
+            "HMUX_AGENT_LAUNCH_CWD",
         ]:
             check_env.pop(key, None)
-        check_env["CMUX_TEST_OMP_EXTENSION_PATH"] = str(extension_path)
-        check_env["CMUX_TEST_OMP_MAIN_SESSION_FILE"] = str(main_session_file)
-        check_env["CMUX_TEST_OMP_SUBAGENT_SESSION_FILE"] = str(subagent_session_file)
-        check_env["CMUX_SURFACE_ID"] = "surface-omp-subagent-test"
-        check_env["CMUX_OMP_CMUX_BIN"] = str(fake_cmux)
-        check_env["FAKE_CMUX_ARGS_LOG"] = str(fake_args_log)
-        check_env["FAKE_CMUX_STDIN_LOG"] = str(fake_stdin_log)
+        check_env["HMUX_TEST_OMP_EXTENSION_PATH"] = str(extension_path)
+        check_env["HMUX_TEST_OMP_MAIN_SESSION_FILE"] = str(main_session_file)
+        check_env["HMUX_TEST_OMP_SUBAGENT_SESSION_FILE"] = str(subagent_session_file)
+        check_env["HMUX_SURFACE_ID"] = "surface-omp-subagent-test"
+        check_env["HMUX_OMP_HMUX_BIN"] = str(fake_hmux)
+        check_env["FAKE_HMUX_ARGS_LOG"] = str(fake_args_log)
+        check_env["FAKE_HMUX_STDIN_LOG"] = str(fake_stdin_log)
 
         check_source = """
 import * as fs from "node:fs";
 import * as path from "node:path";
-const extensionPath = process.env.CMUX_TEST_OMP_EXTENSION_PATH;
+const extensionPath = process.env.HMUX_TEST_OMP_EXTENSION_PATH;
 // OMP loads a fresh copy of the extension module for every session in the
 // process: each import goes through a unique ?mtime= cache-busting URL, so
 // module scope is per-session, never shared between the top-level session and
@@ -165,14 +165,14 @@ const mainCtx = {
   cwd: "/tmp/omp-subagent-project",
   sessionManager: {
     getSessionId() { return mainSessionId; },
-    getSessionFile() { return process.env.CMUX_TEST_OMP_MAIN_SESSION_FILE; }
+    getSessionFile() { return process.env.HMUX_TEST_OMP_MAIN_SESSION_FILE; }
   }
 };
 const subagentCtx = {
   cwd: "/tmp/omp-subagent-project",
   sessionManager: {
     getSessionId() { return "omp-subagent-1"; },
-    getSessionFile() { return process.env.CMUX_TEST_OMP_SUBAGENT_SESSION_FILE; }
+    getSessionFile() { return process.env.HMUX_TEST_OMP_SUBAGENT_SESSION_FILE; }
   }
 };
 function agentEndEvent(text, extra = {}) {
@@ -192,7 +192,7 @@ await handlers.get("before_agent_start")({ prompt: "plan the trip" }, mainCtx);
 
 // A background task-tool subagent boots, runs, and finishes while the main
 // agent is still mid-turn. Its events arrive through its own freshly loaded
-// module instance, as in real OMP. None of this may reach cmux.
+// module instance, as in real OMP. None of this may reach hmux.
 await subagentHandlers.get("session_start")({}, subagentCtx);
 await subagentHandlers.get("before_agent_start")({ prompt: "scout the beaches" }, subagentCtx);
 await subagentHandlers.get("agent_end")(agentEndEvent("subagent done"), subagentCtx);
@@ -209,20 +209,20 @@ await handlers.get("agent_end")(agentEndEvent("main done"), mainCtx);
 const sameSessionSwitch = handlers.get("session_switch");
 if (typeof sameSessionSwitch === "function") {
   await sameSessionSwitch(
-    { reason: "resume", previousSessionFile: process.env.CMUX_TEST_OMP_MAIN_SESSION_FILE },
+    { reason: "resume", previousSessionFile: process.env.HMUX_TEST_OMP_MAIN_SESSION_FILE },
     mainCtx
   );
 }
 
 // /new switches the top-level runtime to a fresh session id; ownership must
-// follow it and cmux must be rebound via a session-start hook. A missing
+// follow it and hmux must be rebound via a session-start hook. A missing
 // session_switch handler means post-switch sessions go dark; drive the
 // remaining flow anyway so the delivered hook sequence exposes every gap.
 mainSessionId = "omp-new-session";
 const sessionSwitch = handlers.get("session_switch");
 if (typeof sessionSwitch === "function") {
   await sessionSwitch(
-    { reason: "new", previousSessionFile: process.env.CMUX_TEST_OMP_MAIN_SESSION_FILE },
+    { reason: "new", previousSessionFile: process.env.HMUX_TEST_OMP_MAIN_SESSION_FILE },
     mainCtx
   );
 }
@@ -234,7 +234,7 @@ await handlers.get("agent_end")(agentEndEvent("new done"), mainCtx);
 const expectedDeliveredHooks = 5;
 const deliveryDeadline = Date.now() + 10000;
 while (Date.now() < deliveryDeadline) {
-  const delivered = fs.readFileSync(process.env.FAKE_CMUX_ARGS_LOG, "utf8")
+  const delivered = fs.readFileSync(process.env.FAKE_HMUX_ARGS_LOG, "utf8")
     .split("\\n")
     .filter((line) => line.trim().length > 0).length;
   if (delivered >= expectedDeliveredHooks) break;
@@ -289,7 +289,7 @@ await handlers.get("session_shutdown")({}, mainCtx);
             return 1
 
         if "omp-subagent-1" in stdin_log:
-            print(f"FAIL: a subagent session reached cmux lifecycle hooks: {stdin_log!r}")
+            print(f"FAIL: a subagent session reached hmux lifecycle hooks: {stdin_log!r}")
             return 1
         if "subagent done" in stdin_log or "scout the beaches" in stdin_log:
             print(f"FAIL: subagent turn content leaked into hook payloads: {stdin_log!r}")

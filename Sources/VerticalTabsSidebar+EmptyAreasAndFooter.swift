@@ -1,13 +1,13 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxCloud
-import CmuxProductAnalytics
-import CmuxFoundation
-import CmuxSettingsUI
-import CmuxSidebar
-import CmuxSidebarProviderKit
-import CmuxUpdater
-import CmuxWorkspaces
+import HmuxAppKitSupportUI
+import HmuxCloud
+import HmuxProductAnalytics
+import HmuxFoundation
+import HmuxSettingsUI
+import HmuxSidebar
+import HmuxSidebarProviderKit
+import HmuxUpdater
+import HmuxWorkspaces
 import SwiftUI
 
 /// Footer debug controls and empty-area drop targets for the vertical tabs sidebar, extracted from `ContentView.swift`, which sits at its file-length budget.
@@ -211,7 +211,7 @@ struct SidebarFooterCircularIcon: View {
     @Environment(\.sidebarReadabilityBackdrop) private var readabilityBackdrop
 
     var body: some View {
-        CmuxSystemSymbolImage(
+        HmuxSystemSymbolImage(
             systemName: systemName,
             pointSize: style.pointSize,
             weight: style.weight,
@@ -312,7 +312,7 @@ struct SidebarMobileConnectButton: View {
                     debugSource: "sidebar.mobileConnect"
                 )
             } label: {
-                CmuxSystemSymbolImage(systemName: "iphone", pointSize: iconSize, weight: .medium, tint: .secondary)
+                HmuxSystemSymbolImage(systemName: "iphone", pointSize: iconSize, weight: .medium, tint: .secondary)
                     .frame(
                         width: SidebarFooterButtonMetrics.buttonSize,
                         height: SidebarFooterButtonMetrics.buttonSize
@@ -420,7 +420,7 @@ struct SidebarDevFooter: View {
             SidebarFooterButtons(updateViewModel: updateViewModel, fileExplorerState: fileExplorerState, modifierKeyMonitor: modifierKeyMonitor, onSendFeedback: onSendFeedback)
             if showSidebarDevBuildBanner {
                 Text(String(localized: "debug.devBuildBanner.title", defaultValue: "THIS IS A DEV BUILD"))
-                    .cmuxFont(size: 11, weight: .semibold)
+                    .hmuxFont(size: 11, weight: .semibold)
                     .foregroundColor(.red)
             }
         }
@@ -432,7 +432,7 @@ struct SidebarDevFooter: View {
 #endif
 
 struct SidebarEmptyArea: View {
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     @EnvironmentObject var tabManager: TabManager
     let rowSpacing: CGFloat
     @Binding var selection: SidebarSelection
@@ -461,7 +461,7 @@ struct SidebarEmptyArea: View {
             .overlay(alignment: .top) {
                 if topDropIndicatorVisible {
                     Rectangle()
-                        .fill(cmuxAccent.color)
+                        .fill(hmuxAccent.color)
                         .frame(height: 2)
                         .padding(.horizontal, 8)
                         .offset(y: -(rowSpacing / 2))
@@ -538,14 +538,14 @@ private extension View {
 }
 
 struct ExtensionSidebarBrowserStackEmptyArea: View {
-    @Environment(\.cmuxAccentColor) private var cmuxAccent
+    @Environment(\.hmuxAccentColor) private var hmuxAccent
     let rowSpacing: CGFloat
     let orderedRows: [ExtensionSidebarBrowserStackDropRow]
     let dragAutoScrollController: SidebarDragAutoScrollController
     @Binding var draggedTabId: UUID?
     @Binding var dropIndicator: SidebarDropIndicator?
     let onNewTab: () -> Void
-    let onMove: (CmuxSidebarProviderWorkspaceMove) -> Bool
+    let onMove: (HmuxSidebarProviderWorkspaceMove) -> Bool
 
     var body: some View {
         Color.clear
@@ -562,7 +562,7 @@ struct ExtensionSidebarBrowserStackEmptyArea: View {
             .overlay(alignment: .top) {
                 if shouldShowTopDropIndicator {
                     Rectangle()
-                        .fill(cmuxAccent.color)
+                        .fill(hmuxAccent.color)
                         .frame(height: 2)
                         .padding(.horizontal, 8)
                         .offset(y: -(rowSpacing / 2))
@@ -585,7 +585,7 @@ private struct ExtensionSidebarBrowserStackEndDropDelegate: DropDelegate {
     @Binding var draggedTabId: UUID?
     let dragAutoScrollController: SidebarDragAutoScrollController
     @Binding var dropIndicator: SidebarDropIndicator?
-    let onMove: (CmuxSidebarProviderWorkspaceMove) -> Bool
+    let onMove: (HmuxSidebarProviderWorkspaceMove) -> Bool
 
     func validateDrop(info: DropInfo) -> Bool {
         info.hasItemsConforming(to: [SidebarTabDragPayload.typeIdentifier])

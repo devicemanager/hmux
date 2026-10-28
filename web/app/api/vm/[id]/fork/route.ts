@@ -34,7 +34,7 @@ export async function POST(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/[id]/fork",
-    { "cmux.vm.operation": "fork" },
+    { "hmux.vm.operation": "fork" },
     "/api/vm/[id]/fork POST failed",
     async ({ user: initialUser, span, authDurationMs, routeStartedAtMs, setResponseFinalizer }) => {
       const timing = new VmTimingRecorder(span, "fork", { startedAt: routeStartedAtMs });
@@ -73,9 +73,9 @@ export async function POST(
       const idempotencyKey = idempotencyKeyFromRequest(request);
       const name = stringField(body, "name");
       setSpanAttributes(span, {
-        "cmux.vm.id": id,
-        "cmux.billing.team_id_set": !!entitlements.billingTeamId,
-        "cmux.idempotency_key_set": !!idempotencyKey,
+        "hmux.vm.id": id,
+        "hmux.billing.team_id_set": !!entitlements.billingTeamId,
+        "hmux.idempotency_key_set": !!idempotencyKey,
       });
       const run = await runVmRoute(forkVm({
         userId: user.id,
@@ -100,7 +100,7 @@ export async function POST(
         onError: vmCreateLikeErrorResponders({
           operation: "fork",
           planId: entitlements.planId,
-          retryAction: "Run `cmux vm ls`, then delete an active VM with `cmux vm rm <id>` before forking another.",
+          retryAction: "Run `hmux vm ls`, then delete an active VM with `hmux vm rm <id>` before forking another.",
         }),
       });
       if (!run.ok) return run.response;

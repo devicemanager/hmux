@@ -1,7 +1,7 @@
 import AppKit
-import CmuxSettings
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxSettings
+import HmuxTerminal
+import HmuxTerminalCore
 import GhosttyKit
 
 extension GhosttySurfaceCallbackContext {

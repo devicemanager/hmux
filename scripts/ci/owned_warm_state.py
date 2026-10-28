@@ -22,7 +22,7 @@ other roots', then the local seeds' on a mini with one root
 The queue janitor folds those artifacts into its `macos-pool-load` snapshot
 as `warm` (sweep()), and pr_runner_pool.py reads it: when an idle root runner
 is warm for a run's merge base, admission's runs-on names that runner's own
-static label, `glaeda-runner-<runner name>` (glaeda-cmux-runner gives every
+static label, `glaeda-runner-<runner name>` (glaeda-hmux-runner gives every
 root runner one at install time). Nothing writes a runner label at job time,
 so the routing App needs only "Self-hosted runners: Read-only".
 

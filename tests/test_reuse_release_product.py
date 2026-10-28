@@ -64,7 +64,7 @@ class FakeGitHub:
 
 class ReleaseProductReuseTests(unittest.TestCase):
     def setUp(self):
-        self.temp = tempfile.TemporaryDirectory(prefix="cmux-release-product-")
+        self.temp = tempfile.TemporaryDirectory(prefix="hmux-release-product-")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
         self.producer = self.root / "producer"
@@ -80,14 +80,14 @@ class ReleaseProductReuseTests(unittest.TestCase):
             "package_resolved_sha256": "d" * 64,
             "build_flags": dict(reuse.BUILD_FLAGS),
             "ghostty_helper": {"sha256": "e" * 64, "toolchain_sha256": "f" * 64, "sdk": "15.5"},
-            "cmux_tui": {"commit": "1" * 40, "manifest_sha256": "2" * 64},
+            "hmux_tui": {"commit": "1" * 40, "manifest_sha256": "2" * 64},
         }
         self.api = FakeGitHub(self.contract)
         self._make_product()
 
     def _make_product(self, receipt_mutator=None):
         app = self.producer / Path(reuse.APP_REL)
-        binary = app / "Contents/MacOS/cmux"
+        binary = app / "Contents/MacOS/hmux"
         binary.parent.mkdir(parents=True, exist_ok=True)
         binary.write_bytes(b"release-app-bytes")
         binary.chmod(0o755)
@@ -140,7 +140,7 @@ class ReleaseProductReuseTests(unittest.TestCase):
         self.assertEqual(result["outcome"], "exact_restore")
         self.assertEqual(result["producer_run_attempt"], "1")
         app = self.consumer / Path(reuse.APP_REL)
-        self.assertEqual((app / "Contents/MacOS/cmux").read_bytes(), b"release-app-bytes")
+        self.assertEqual((app / "Contents/MacOS/hmux").read_bytes(), b"release-app-bytes")
         self.assertTrue((app / "Contents/Frameworks/Test.framework/Versions/Current").is_symlink())
         provenance = json.loads((self.consumer / "Build/Products" / reuse.PROVENANCE).read_text())
         self.assertEqual(provenance["artifact_id"], 42)
@@ -313,13 +313,13 @@ class ContractCoverageTests(unittest.TestCase):
     }
 
     ENVIRONMENT = {
-        "CMUX_RELEASE_ARCHS": "arm64 x86_64",
-        "CMUX_RELEASE_SOURCE_REVISION": BRANCH_REVISION,
-        "CMUX_RELEASE_GHOSTTY_HELPER_SHA256": "e" * 64,
-        "CMUX_RELEASE_GHOSTTY_HELPER_TOOLCHAIN_SHA256": "f" * 64,
-        "CMUX_RELEASE_GHOSTTY_HELPER_SDK": "15.5",
-        "CMUX_RELEASE_TUI_COMMIT": "1" * 40,
-        "CMUX_RELEASE_TUI_MANIFEST_SHA256": "2" * 64,
+        "HMUX_RELEASE_ARCHS": "arm64 x86_64",
+        "HMUX_RELEASE_SOURCE_REVISION": BRANCH_REVISION,
+        "HMUX_RELEASE_GHOSTTY_HELPER_SHA256": "e" * 64,
+        "HMUX_RELEASE_GHOSTTY_HELPER_TOOLCHAIN_SHA256": "f" * 64,
+        "HMUX_RELEASE_GHOSTTY_HELPER_SDK": "15.5",
+        "HMUX_RELEASE_TUI_COMMIT": "1" * 40,
+        "HMUX_RELEASE_TUI_MANIFEST_SHA256": "2" * 64,
     }
 
     def read(self, *args):

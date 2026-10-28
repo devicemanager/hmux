@@ -1,0 +1,119 @@
+#!/bin/bash
+# hmux's per-surface Pi launcher. It injects the bundled extension only when
+# Pi would otherwise discover no hmux-managed copy, leaving the user's Pi
+# configuration and other extensions untouched.
+
+set -u
+
+hmux_pi_wrapper_shim="${HMUX_PI_WRAPPER_SHIM:-}"
+hmux_pi_wrapper_root="${HMUX_PI_WRAPPER_SHIM_ROOT:-}"
+self_path="$0"
+
+resolve_pi() {
+    # PATH entries are literal directories, even when they contain glob characters.
+    set -f
+    local entry candidate
+    local old_ifs="$IFS"
+    IFS=:
+    for entry in ${PATH:-}; do
+        [ -n "$entry" ] || continue
+        if [ -n "$hmux_pi_wrapper_root" ] && [ "$entry" = "$hmux_pi_wrapper_root" ]; then
+            continue
+        fi
+        case "$entry" in
+            */hmux-cli-shims|*/hmux-cli-shims/*) continue ;;
+        esac
+        candidate="$entry/pi"
+        if [ -x "$candidate" ] && [ "$candidate" != "$self_path" ] &&
+           { [ -z "$hmux_pi_wrapper_shim" ] || [ "$candidate" != "$hmux_pi_wrapper_shim" ]; }; then
+            printf '%s' "$candidate"
+            IFS="$old_ifs"
+            return 0
+        fi
+    done
+    IFS="$old_ifs"
+    return 1
+}
+
+hmux_pi="$(resolve_pi 2>/dev/null || true)"
+if [ -z "$hmux_pi" ]; then
+    echo "Configured agent is unavailable. Install it or check the command configuration." >&2
+    exit 127
+fi
+
+if [ "${HMUX_PI_HOOKS_DISABLED:-0}" = "1" ]; then
+    exec "$hmux_pi" "$@"
+fi
+
+# Pi dispatches these commands before parsing options. These commands must
+# receive the original argv: prepending `-e` makes the command name look like a
+# prompt and can send it to the model instead. Keep this list in sync with
+# Pi's dispatcher when new subcommands are added.
+case "${1:-}" in
+    install|remove|uninstall|update|list|config|auth|mcp|--help|-h|--version|-v)
+        exec "$hmux_pi" "$@"
+        ;;
+esac
+
+# `--no-extensions` is an explicit request to run without extensions. It can
+# appear anywhere in Pi's option list, so honor it before creating a managed
+# extension rather than defeating the user's opt-out with an explicit `-e`.
+for hmux_pi_arg in "$@"; do
+    [ "$hmux_pi_arg" = "--" ] && break
+    if [ "$hmux_pi_arg" = "--no-extensions" ]; then
+        exec "$hmux_pi" "$@"
+    fi
+done
+
+hmux_pi_managed_extension() {
+    local candidate="$1"
+    [ -f "$candidate" ] || return 1
+    grep -q "hmux-pi-session-extension-marker" "$candidate" 2>/dev/null
+}
+
+hmux_pi_agent_dir="${PI_CODING_AGENT_DIR:-${HOME:-}/.pi/agent}"
+if hmux_pi_managed_extension "$hmux_pi_agent_dir/extensions/hmux-session.ts" ||
+   hmux_pi_managed_extension "$PWD/.pi/extensions/hmux-session.ts"; then
+    exec "$hmux_pi" "$@"
+fi
+
+hmux_cli="${HMUX_BUNDLED_CLI_PATH:-}"
+if [ -z "$hmux_cli" ] || [ ! -x "$hmux_cli" ]; then
+    hmux_cli="$(command -v hmux 2>/dev/null || true)"
+fi
+if [ -z "$hmux_cli" ] || [ ! -x "$hmux_cli" ]; then
+    exec "$hmux_pi" "$@"
+fi
+
+hmux_surface_tag="${HMUX_SURFACE_ID:-default}"
+hmux_extension_root="${TMPDIR:-/tmp}/hmux-pi-extensions/$hmux_surface_tag"
+hmux_extension="$hmux_extension_root/hmux-session.ts"
+hmux_extension_tmp="$hmux_extension_root/.hmux-session.ts.$$"
+if [ -s "$hmux_extension" ] && hmux_pi_managed_extension "$hmux_extension"; then
+    # Refresh a valid per-surface copy when the bundled source changes. If the
+    # CLI is temporarily unavailable, keep the last known-good copy.
+    if "$hmux_cli" hooks pi extension-source >"$hmux_extension_tmp" 2>/dev/null &&
+       hmux_pi_managed_extension "$hmux_extension_tmp"; then
+        if ! cmp -s "$hmux_extension_tmp" "$hmux_extension"; then
+            mv -f "$hmux_extension_tmp" "$hmux_extension"
+            chmod 600 "$hmux_extension" 2>/dev/null || true
+        else
+            rm -f "$hmux_extension_tmp"
+        fi
+    else
+        rm -f "$hmux_extension_tmp"
+    fi
+fi
+if [ ! -s "$hmux_extension" ] || ! hmux_pi_managed_extension "$hmux_extension"; then
+    if mkdir -p "$hmux_extension_root" &&
+       "$hmux_cli" hooks pi extension-source >"$hmux_extension_tmp" 2>/dev/null &&
+       hmux_pi_managed_extension "$hmux_extension_tmp"; then
+        mv -f "$hmux_extension_tmp" "$hmux_extension"
+        chmod 600 "$hmux_extension" 2>/dev/null || true
+    else
+        rm -f "$hmux_extension_tmp"
+        exec "$hmux_pi" "$@"
+    fi
+fi
+
+exec "$hmux_pi" -e "$hmux_extension" "$@"

@@ -6,9 +6,9 @@ import middleware from "../proxy";
 
 function withDirectOrigin(run: () => void) {
   const values = {
-    CMUX_DEV_BACKEND_TRANSPORT: "direct",
-    CMUX_DEV_BACKEND_TAILSCALE_HOST: "cmux-dev-backend-1.tail137216.ts.net",
-    CMUX_WWW_ORIGIN: "https://cmux-dev-backend-1.tail137216.ts.net:3916/",
+    HMUX_DEV_BACKEND_TRANSPORT: "direct",
+    HMUX_DEV_BACKEND_TAILSCALE_HOST: "hmux-dev-backend-1.tail137216.ts.net",
+    HMUX_WWW_ORIGIN: "https://hmux-dev-backend-1.tail137216.ts.net:3916/",
   };
   const previous = Object.fromEntries(Object.keys(values).map((key) => [key, process.env[key]]));
   Object.assign(process.env, values);
@@ -28,7 +28,7 @@ describe("direct dev backend host forwarding", () => {
   test("preserves double-slash paths without treating them as a new host", () => {
     withDirectOrigin(() => {
       const response = responseWithInternalRewrite(
-        NextResponse.rewrite("https://cmux-dev-backend-1.tail137216.ts.net:3916//another.example/page?x=1"),
+        NextResponse.rewrite("https://hmux-dev-backend-1.tail137216.ts.net:3916//another.example/page?x=1"),
         new NextRequest("http://0.0.0.0:3916/"),
       );
       expect(response.headers.get("x-middleware-rewrite"))
@@ -53,52 +53,52 @@ describe("direct dev backend host forwarding", () => {
     withDirectOrigin(() => {
       const response = middleware(new NextRequest("http://0.0.0.0:3916/en"));
       expect(response.status).toBe(307);
-      expect(response.headers.get("location")).toBe("https://cmux-dev-backend-1.tail137216.ts.net:3916/");
+      expect(response.headers.get("location")).toBe("https://hmux-dev-backend-1.tail137216.ts.net:3916/");
     });
   });
 
   test("uses the configured Tailscale origin for direct transport", () => {
     expect(
       requestOrigin(request("https://0.0.0.0:3916"), {
-        CMUX_DEV_BACKEND_TRANSPORT: "direct",
-        CMUX_DEV_BACKEND_TAILSCALE_HOST: "cmux-dev-backend-1.tail137216.ts.net",
-        CMUX_WWW_ORIGIN: "https://cmux-dev-backend-1.tail137216.ts.net:3916/",
+        HMUX_DEV_BACKEND_TRANSPORT: "direct",
+        HMUX_DEV_BACKEND_TAILSCALE_HOST: "hmux-dev-backend-1.tail137216.ts.net",
+        HMUX_WWW_ORIGIN: "https://hmux-dev-backend-1.tail137216.ts.net:3916/",
       }),
-    ).toBe("https://cmux-dev-backend-1.tail137216.ts.net:3916");
+    ).toBe("https://hmux-dev-backend-1.tail137216.ts.net:3916");
   });
 
   test("normalizes direct transport values before selecting the configured origin", () => {
     expect(
       requestOrigin(request("https://0.0.0.0:3916"), {
-        CMUX_DEV_BACKEND_TRANSPORT: "  DIRECT ",
-        CMUX_DEV_BACKEND_TAILSCALE_HOST: "cmux-dev-backend-1.tail137216.ts.net",
-        CMUX_WWW_ORIGIN: "https://cmux-dev-backend-1.tail137216.ts.net:3916/",
+        HMUX_DEV_BACKEND_TRANSPORT: "  DIRECT ",
+        HMUX_DEV_BACKEND_TAILSCALE_HOST: "hmux-dev-backend-1.tail137216.ts.net",
+        HMUX_WWW_ORIGIN: "https://hmux-dev-backend-1.tail137216.ts.net:3916/",
       }),
-    ).toBe("https://cmux-dev-backend-1.tail137216.ts.net:3916");
+    ).toBe("https://hmux-dev-backend-1.tail137216.ts.net:3916");
   });
 
   test("accepts the configured origin when it matches the trusted Tailscale host", () => {
     expect(
       requestOrigin(request("https://0.0.0.0:3916"), {
-        CMUX_DEV_BACKEND_TRANSPORT: "direct",
-        CMUX_DEV_BACKEND_TAILSCALE_HOST: " CMUX-Dev-Backend-1.tail137216.ts.net ",
-        CMUX_WWW_ORIGIN: "https://cmux-dev-backend-1.tail137216.ts.net:3916/",
+        HMUX_DEV_BACKEND_TRANSPORT: "direct",
+        HMUX_DEV_BACKEND_TAILSCALE_HOST: " HMUX-Dev-Backend-1.tail137216.ts.net ",
+        HMUX_WWW_ORIGIN: "https://hmux-dev-backend-1.tail137216.ts.net:3916/",
       }),
-    ).toBe("https://cmux-dev-backend-1.tail137216.ts.net:3916");
+    ).toBe("https://hmux-dev-backend-1.tail137216.ts.net:3916");
   });
 
   test("fails closed when no trusted Tailscale host is declared", () => {
     expect(
       requestOrigin(request("https://0.0.0.0:3916"), {
-        CMUX_DEV_BACKEND_TRANSPORT: "direct",
-        CMUX_WWW_ORIGIN: "https://cmux-dev-backend-1.tail137216.ts.net:3916/",
+        HMUX_DEV_BACKEND_TRANSPORT: "direct",
+        HMUX_WWW_ORIGIN: "https://hmux-dev-backend-1.tail137216.ts.net:3916/",
       }),
     ).toBe("https://0.0.0.0:3916");
     expect(
       requestOrigin(request("https://0.0.0.0:3916"), {
-        CMUX_DEV_BACKEND_TRANSPORT: "direct",
-        CMUX_DEV_BACKEND_TAILSCALE_HOST: "   ",
-        CMUX_WWW_ORIGIN: "https://cmux-dev-backend-1.tail137216.ts.net:3916/",
+        HMUX_DEV_BACKEND_TRANSPORT: "direct",
+        HMUX_DEV_BACKEND_TAILSCALE_HOST: "   ",
+        HMUX_WWW_ORIGIN: "https://hmux-dev-backend-1.tail137216.ts.net:3916/",
       }),
     ).toBe("https://0.0.0.0:3916");
   });
@@ -106,9 +106,9 @@ describe("direct dev backend host forwarding", () => {
   test("rejects a configured origin on a different host than the trusted one", () => {
     expect(
       requestOrigin(request("https://0.0.0.0:3916"), {
-        CMUX_DEV_BACKEND_TRANSPORT: "direct",
-        CMUX_DEV_BACKEND_TAILSCALE_HOST: "cmux-dev-backend-1.tail137216.ts.net",
-        CMUX_WWW_ORIGIN: "https://other-node.tail137216.ts.net:3916/",
+        HMUX_DEV_BACKEND_TRANSPORT: "direct",
+        HMUX_DEV_BACKEND_TAILSCALE_HOST: "hmux-dev-backend-1.tail137216.ts.net",
+        HMUX_WWW_ORIGIN: "https://other-node.tail137216.ts.net:3916/",
       }),
     ).toBe("https://0.0.0.0:3916");
   });
@@ -116,7 +116,7 @@ describe("direct dev backend host forwarding", () => {
   test("keeps the Next origin for the SSH transport", () => {
     expect(
       requestOrigin(request("http://127.0.0.1:3916"), {
-        CMUX_DEV_BACKEND_TRANSPORT: "ssh",
+        HMUX_DEV_BACKEND_TRANSPORT: "ssh",
       }),
     ).toBe("http://127.0.0.1:3916");
   });
@@ -124,9 +124,9 @@ describe("direct dev backend host forwarding", () => {
   test("rejects a malformed configured origin", () => {
     expect(
       requestOrigin(request("http://127.0.0.1:3916"), {
-        CMUX_DEV_BACKEND_TRANSPORT: "direct",
-        CMUX_DEV_BACKEND_TAILSCALE_HOST: "other.example",
-        CMUX_WWW_ORIGIN: "https://other.example:3916/",
+        HMUX_DEV_BACKEND_TRANSPORT: "direct",
+        HMUX_DEV_BACKEND_TAILSCALE_HOST: "other.example",
+        HMUX_WWW_ORIGIN: "https://other.example:3916/",
       }),
     ).toBe("http://127.0.0.1:3916");
   });
@@ -134,10 +134,10 @@ describe("direct dev backend host forwarding", () => {
   test("returns the hostname for Next.js dev-resource allowlisting", () => {
     expect(
       directDevBackendHost({
-        CMUX_DEV_BACKEND_TRANSPORT: "direct",
-        CMUX_DEV_BACKEND_TAILSCALE_HOST: "cmux-dev-backend-1.tail137216.ts.net",
-        CMUX_WWW_ORIGIN: "https://cmux-dev-backend-1.tail137216.ts.net:3916/",
+        HMUX_DEV_BACKEND_TRANSPORT: "direct",
+        HMUX_DEV_BACKEND_TAILSCALE_HOST: "hmux-dev-backend-1.tail137216.ts.net",
+        HMUX_WWW_ORIGIN: "https://hmux-dev-backend-1.tail137216.ts.net:3916/",
       }),
-    ).toBe("cmux-dev-backend-1.tail137216.ts.net");
+    ).toBe("hmux-dev-backend-1.tail137216.ts.net");
   });
 });

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """A focused test run must never pass after executing zero tests.
 
-`-only-testing:cmuxTests/Suite/method` matches no Swift Testing test: the
+`-only-testing:hmuxTests/Suite/method` matches no Swift Testing test: the
 selector needs the call suffix, `method()` or `method(label:)`. xcodebuild
 then reports zero executed tests and exits 0. These tests hold the three
 layers that stop that: the resolver that repairs or rejects a selector, the
@@ -83,10 +83,10 @@ class ResolveSelectorTests(unittest.TestCase):
 
     def test_a_swift_testing_method_without_its_suffix_gets_the_one_it_needs(self):
         for given, expected in (
-            ("cmuxTests/ModernTests/plain", "cmuxTests/ModernTests/plain()"),
-            ("cmuxTests/ModernTests/parameterized", "cmuxTests/ModernTests/parameterized(value:)"),
-            ("cmuxTests/ModernTests/unlabeled", "cmuxTests/ModernTests/unlabeled(_:_:)"),
-            ("cmuxTests/ModernTests/Nested/inner", "cmuxTests/ModernTests/Nested/inner()"),
+            ("hmuxTests/ModernTests/plain", "hmuxTests/ModernTests/plain()"),
+            ("hmuxTests/ModernTests/parameterized", "hmuxTests/ModernTests/parameterized(value:)"),
+            ("hmuxTests/ModernTests/unlabeled", "hmuxTests/ModernTests/unlabeled(_:_:)"),
+            ("hmuxTests/ModernTests/Nested/inner", "hmuxTests/ModernTests/Nested/inner()"),
         ):
             with self.subTest(given=given):
                 resolved, note = self.resolve(given)
@@ -94,32 +94,32 @@ class ResolveSelectorTests(unittest.TestCase):
                 self.assertIn(expected, note)
 
     def test_a_wrong_suffix_is_replaced_by_the_declared_labels(self):
-        resolved, _ = self.resolve("cmuxTests/ModernTests/parameterized()")
-        self.assertEqual(resolved, "cmuxTests/ModernTests/parameterized(value:)")
+        resolved, _ = self.resolve("hmuxTests/ModernTests/parameterized()")
+        self.assertEqual(resolved, "hmuxTests/ModernTests/parameterized(value:)")
 
     def test_a_selector_that_already_names_a_test_or_suite_is_unchanged(self):
         for selector in (
-            "cmuxTests/ModernTests",
-            "cmuxTests/ModernTests/Nested",
-            "cmuxTests/ModernTests/plain()",
-            "cmuxTests/ModernTests/parameterized(value:)",
-            "cmuxTests/LegacyTests/testOne()",
+            "hmuxTests/ModernTests",
+            "hmuxTests/ModernTests/Nested",
+            "hmuxTests/ModernTests/plain()",
+            "hmuxTests/ModernTests/parameterized(value:)",
+            "hmuxTests/LegacyTests/testOne()",
         ):
             with self.subTest(selector=selector):
                 self.assertEqual(self.resolve(selector), (selector, None))
 
     def test_an_xctest_method_is_given_the_suffix_xctest_also_accepts(self):
-        resolved, _ = self.resolve("cmuxTests/LegacyTests/testOne")
-        self.assertEqual(resolved, "cmuxTests/LegacyTests/testOne()")
+        resolved, _ = self.resolve("hmuxTests/LegacyTests/testOne")
+        self.assertEqual(resolved, "hmuxTests/LegacyTests/testOne()")
 
     def test_an_overloaded_name_is_rejected_with_every_form_named(self):
         with self.assertRaises(self.selectors.AmbiguousSelector) as raised:
-            self.resolve("cmuxTests/OverloadTests/run")
-        self.assertIn("cmuxTests/OverloadTests/run(a:)", str(raised.exception))
-        self.assertIn("cmuxTests/OverloadTests/run(b:)", str(raised.exception))
+            self.resolve("hmuxTests/OverloadTests/run")
+        self.assertIn("hmuxTests/OverloadTests/run(a:)", str(raised.exception))
+        self.assertIn("hmuxTests/OverloadTests/run(b:)", str(raised.exception))
 
     def test_a_name_the_inventory_lacks_is_rejected_with_the_correct_forms(self):
-        for selector in ("cmuxTests/MissingTests", "cmuxTests/ModernTests/absent"):
+        for selector in ("hmuxTests/MissingTests", "hmuxTests/ModernTests/absent"):
             with self.subTest(selector=selector):
                 with self.assertRaises(self.selectors.UnknownSelector) as raised:
                     self.resolve(selector)
@@ -129,9 +129,9 @@ class ResolveSelectorTests(unittest.TestCase):
     def test_every_bad_selector_in_a_batch_is_reported(self):
         resolved, notices, errors = self.selectors.resolve_selectors(
             INVENTORY,
-            ["cmuxTests/ModernTests/plain", "cmuxTests/MissingTests", "cmuxTests/OverloadTests/run"],
+            ["hmuxTests/ModernTests/plain", "hmuxTests/MissingTests", "hmuxTests/OverloadTests/run"],
         )
-        self.assertEqual(resolved, ["cmuxTests/ModernTests/plain()"])
+        self.assertEqual(resolved, ["hmuxTests/ModernTests/plain()"])
         self.assertEqual(len(notices), 1)
         self.assertEqual(len(errors), 2)
 
@@ -141,21 +141,21 @@ class ResolveSelectorTests(unittest.TestCase):
             inventory.write_text(json.dumps({"version": 1, "tests": sorted(INVENTORY)}))
             ok = subprocess.run(
                 [sys.executable, str(SCRIPT), "resolve", "--inventory", str(inventory),
-                 "--selectors", "cmuxTests/ModernTests/plain,cmuxTests/LegacyTests"],
+                 "--selectors", "hmuxTests/ModernTests/plain,hmuxTests/LegacyTests"],
                 text=True, capture_output=True,
             )
             self.assertEqual(ok.returncode, 0, ok.stderr)
-            self.assertEqual(ok.stdout.strip(), "cmuxTests/ModernTests/plain(),cmuxTests/LegacyTests")
+            self.assertEqual(ok.stdout.strip(), "hmuxTests/ModernTests/plain(),hmuxTests/LegacyTests")
             self.assertIn("::notice::", ok.stderr)
 
             bad = subprocess.run(
                 [sys.executable, str(SCRIPT), "resolve", "--inventory", str(inventory),
-                 "--selectors", "cmuxTests/ModernTests/plain,cmuxTests/MissingTests"],
+                 "--selectors", "hmuxTests/ModernTests/plain,hmuxTests/MissingTests"],
                 text=True, capture_output=True,
             )
             self.assertEqual(bad.returncode, 1)
             self.assertEqual(bad.stdout, "")
-            self.assertIn("::error::cmuxTests/MissingTests matches no built test", bad.stderr)
+            self.assertIn("::error::hmuxTests/MissingTests matches no built test", bad.stderr)
 
 
 class ExecutedCountTests(unittest.TestCase):
@@ -178,37 +178,37 @@ class ExecutedCountTests(unittest.TestCase):
 
     def test_a_selector_that_executed_nothing_fails_even_when_another_ran(self):
         result = self.check(
-            "cmuxTests/ModernTests/plain(),cmuxTests/ModernTests/parameterized",
+            "hmuxTests/ModernTests/plain(),hmuxTests/ModernTests/parameterized",
             typed_results("ModernTests/plain()"),
         )
         self.assertEqual(result.returncode, 1)
-        self.assertIn("::error::cmuxTests/ModernTests/parameterized executed zero tests", result.stderr)
+        self.assertIn("::error::hmuxTests/ModernTests/parameterized executed zero tests", result.stderr)
         self.assertNotIn("plain() executed zero", result.stderr)
 
     def test_every_selector_accounting_for_a_test_passes(self):
         result = self.check(
-            "cmuxTests/ModernTests,cmuxTests/LegacyTests/testOne",
+            "hmuxTests/ModernTests,hmuxTests/LegacyTests/testOne",
             typed_results("ModernTests/plain()", "ModernTests/Nested/inner()"),
             typed_results("LegacyTests/testOne()"),
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertIn("cmuxTests/ModernTests: 2 test(s) executed", result.stdout)
+        self.assertIn("hmuxTests/ModernTests: 2 test(s) executed", result.stdout)
 
     def test_ui_results_match_with_or_without_the_target_in_the_identifier(self):
-        for identifier in ("FooUITests/testBar()", "cmuxUITests/FooUITests/testBar()"):
+        for identifier in ("FooUITests/testBar()", "hmuxUITests/FooUITests/testBar()"):
             with self.subTest(identifier=identifier):
-                result = self.check("cmuxUITests/FooUITests/testBar,BazUITests", typed_results(identifier))
+                result = self.check("hmuxUITests/FooUITests/testBar,BazUITests", typed_results(identifier))
                 self.assertEqual(result.returncode, 1)
                 self.assertIn("::error::BazUITests executed zero tests", result.stderr)
                 self.assertNotIn("testBar executed zero", result.stderr)
 
     def test_an_empty_result_set_fails_every_selector(self):
-        result = self.check("cmuxTests/ModernTests/plain", {"testNodes": []})
+        result = self.check("hmuxTests/ModernTests/plain", {"testNodes": []})
         self.assertEqual(result.returncode, 1)
-        self.assertIn("::error::cmuxTests/ModernTests/plain executed zero tests", result.stderr)
+        self.assertIn("::error::hmuxTests/ModernTests/plain executed zero tests", result.stderr)
 
     def test_unreadable_results_defer_to_the_aggregate_guard_without_passing(self):
-        result = self.check("cmuxTests/ModernTests/plain", "")
+        result = self.check("hmuxTests/ModernTests/plain", "")
         self.assertEqual(result.returncode, 3)
         self.assertIn("::warning::", result.stderr)
 
@@ -221,8 +221,8 @@ class SourceInventoryTests(unittest.TestCase):
     def test_source_names_match_what_the_built_inventory_records(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
-            (root / "cmuxTests").mkdir()
-            (root / "cmuxTests/ModernTests.swift").write_text('''import Testing
+            (root / "hmuxTests").mkdir()
+            (root / "hmuxTests/ModernTests.swift").write_text('''import Testing
 
 @MainActor
 struct ModernTests {
@@ -273,7 +273,7 @@ class WorkflowTests(unittest.TestCase):
         for relative in (
             "scripts/ci/focused_test_selectors.py",
             "scripts/ci/app_host_result_accounting.py",
-            "scripts/ci/cmux_unit_test_shard.py",
+            "scripts/ci/hmux_unit_test_shard.py",
             "scripts/ci/run-and-capture.sh",
             "scripts/ci/require_selected_test_execution.sh",
             "scripts/swift_source_mask.py",
@@ -290,7 +290,7 @@ class WorkflowTests(unittest.TestCase):
             "PATH": f"{self.bin}{os.pathsep}{os.environ['PATH']}",
             "RUNNER_TEMP": str(self.root),
             "GITHUB_OUTPUT": str(self.root / "output"),
-            "CMUX_APP_HOST_XCTESTRUN": str(self.root / "unit.xctestrun"),
+            "HMUX_APP_HOST_XCTESTRUN": str(self.root / "unit.xctestrun"),
         }
 
     def tool(self, name, source):
@@ -311,7 +311,7 @@ class WorkflowTests(unittest.TestCase):
 
     def fake_enumeration(self):
         enumeration = {"values": [{"children": [{
-            "name": "cmuxTests",
+            "name": "hmuxTests",
             "children": [{"name": "ModernTests", "children": [
                 {"name": "plain()"}, {"name": "parameterized(value:)"},
             ]}],
@@ -335,18 +335,18 @@ open(path, "w").write({json.dumps(json.dumps(enumeration))})
         run = action_step(E2E_TESTS, "Run selected tests")["run"]
         ui_command = run[run.index('else\n', run.index('XCODEBUILD_CMD=')):]
         self.assertIn(
-            "env CMUX_CI_APP_HOST_ISOLATION_REQUIRED=0\n"
+            "env HMUX_CI_APP_HOST_ISOLATION_REQUIRED=0\n"
             "    scripts/ci/run-app-host-xcodebuild.sh",
             ui_command,
         )
         self.assertIn(
-            '"$RUNNER_TEMP/cmux-app-host-xcresults/cmuxUITests.xcresult"',
+            '"$RUNNER_TEMP/hmux-app-host-xcresults/hmuxUITests.xcresult"',
             ui_command,
         )
 
     def test_the_test_steps_resolve_selectors_before_running_them(self):
         resolve = action_step(E2E_TESTS, "Resolve selectors against the built tests")
-        self.assertEqual(resolve["if"], "${{ inputs.target == 'cmuxTests' }}")
+        self.assertEqual(resolve["if"], "${{ inputs.target == 'hmuxTests' }}")
         run = action_step(E2E_TESTS, "Run selected tests")
         self.assertEqual(
             run["env"]["TEST_SELECTORS"],
@@ -358,32 +358,32 @@ open(path, "w").write({json.dumps(json.dumps(enumeration))})
 
         self.fake_enumeration()
         result = self.run_script(
-            resolve["run"], TEST_SELECTORS="cmuxTests/ModernTests/plain,cmuxTests/ModernTests/parameterized"
+            resolve["run"], TEST_SELECTORS="hmuxTests/ModernTests/plain,hmuxTests/ModernTests/parameterized"
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         self.assertEqual(
             self.outputs()["selectors"],
-            "cmuxTests/ModernTests/plain(),cmuxTests/ModernTests/parameterized(value:)",
+            "hmuxTests/ModernTests/plain(),hmuxTests/ModernTests/parameterized(value:)",
         )
 
     def test_a_selector_matching_no_built_test_fails_before_the_run(self):
         self.fake_enumeration()
         result = self.run_script(
             action_step(E2E_TESTS, "Resolve selectors against the built tests")["run"],
-            TEST_SELECTORS="cmuxTests/ModernTests/plain,cmuxTests/ModernTests/misspelled",
+            TEST_SELECTORS="hmuxTests/ModernTests/plain,hmuxTests/ModernTests/misspelled",
         )
         self.assertNotEqual(result.returncode, 0)
-        self.assertIn("::error::cmuxTests/ModernTests/misspelled matches no built test", result.stderr)
+        self.assertIn("::error::hmuxTests/ModernTests/misspelled matches no built test", result.stderr)
         self.assertNotIn("selectors", self.outputs())
 
     def test_an_older_revision_or_failed_enumeration_runs_selectors_as_given(self):
         script = action_step(E2E_TESTS, "Resolve selectors against the built tests")["run"]
         self.tool("xcodebuild", "#!/bin/sh\nexit 70\n")
-        result = self.run_script(script, TEST_SELECTORS="cmuxTests/ModernTests/plain")
+        result = self.run_script(script, TEST_SELECTORS="hmuxTests/ModernTests/plain")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("::warning::Could not enumerate", result.stdout)
         (self.workspace / "scripts/ci/focused_test_selectors.py").unlink()
-        result = self.run_script(script, TEST_SELECTORS="cmuxTests/ModernTests/plain")
+        result = self.run_script(script, TEST_SELECTORS="hmuxTests/ModernTests/plain")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn("selectors", self.outputs())
 
@@ -394,32 +394,32 @@ open(path, "w").write({json.dumps(json.dumps(enumeration))})
         return script[start:end]
 
     def test_the_run_step_fails_a_batch_entry_that_executed_nothing(self):
-        results = self.root / "cmux-app-host-xcresults"
+        results = self.root / "hmux-app-host-xcresults"
         results.mkdir()
         (results / "attempt-1.tests.json").write_text(json.dumps(typed_results("ModernTests/plain()")))
         for selectors, expected in (
-            ("cmuxTests/ModernTests/plain()", 0),
-            ("cmuxTests/ModernTests/plain(),cmuxTests/ModernTests/parameterized", 1),
+            ("hmuxTests/ModernTests/plain()", 0),
+            ("hmuxTests/ModernTests/plain(),hmuxTests/ModernTests/parameterized", 1),
         ):
             with self.subTest(selectors=selectors):
                 result = self.run_script(
-                    self.backstop(), TEST_TARGET="cmuxTests", TEST_SELECTORS=selectors, OUTPUT="log"
+                    self.backstop(), TEST_TARGET="hmuxTests", TEST_SELECTORS=selectors, OUTPUT="log"
                 )
                 self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
-        self.assertIn("::error::cmuxTests/ModernTests/parameterized executed zero tests", result.stderr)
+        self.assertIn("::error::hmuxTests/ModernTests/parameterized executed zero tests", result.stderr)
         self.assertIn("test_result=failed", (self.root / "output").read_text())
 
     def test_the_run_step_reads_ui_results_from_the_ui_bundle(self):
-        bundle = self.root / "cmux-app-host-xcresults/cmuxUITests.xcresult"
+        bundle = self.root / "hmux-app-host-xcresults/hmuxUITests.xcresult"
         bundle.mkdir(parents=True)
         self.tool("xcrun", "#!/bin/sh\nprintf '%s' \"$FAKE_TESTS_JSON\"\n")
         result = self.run_script(
-            self.backstop(), TEST_TARGET="cmuxUITests", OUTPUT="log",
-            TEST_SELECTORS="cmuxUITests/FooUITests/testBar,cmuxUITests/FooUITests/testTypo",
+            self.backstop(), TEST_TARGET="hmuxUITests", OUTPUT="log",
+            TEST_SELECTORS="hmuxUITests/FooUITests/testBar,hmuxUITests/FooUITests/testTypo",
             FAKE_TESTS_JSON=json.dumps(typed_results("FooUITests/testBar()")),
         )
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-        self.assertIn("::error::cmuxUITests/FooUITests/testTypo executed zero tests", result.stderr)
+        self.assertIn("::error::hmuxUITests/FooUITests/testTypo executed zero tests", result.stderr)
 
     def test_macos_suite_ui_filter_that_executed_nothing_fails(self):
         script = step(MACOS_SUITE, "tests", "Run UI tests")["run"]
@@ -433,7 +433,7 @@ open(path, "w").write({json.dumps(json.dumps(enumeration))})
                 result = self.run_script(script, TEST_FILTER=filter_, TEST_TIMEOUT="120")
                 self.assertEqual(result.returncode, expected, result.stdout + result.stderr)
                 if expected:
-                    self.assertIn(f"::error::test_filter cmuxUITests/{filter_} executed zero tests", result.stdout)
+                    self.assertIn(f"::error::test_filter hmuxUITests/{filter_} executed zero tests", result.stdout)
 
 
 if __name__ == "__main__":

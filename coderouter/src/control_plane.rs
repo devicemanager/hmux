@@ -245,7 +245,7 @@ fn complete_login(
             .post(&public.coderouter.session_url)
             .header(AUTHORIZATION, format!("Bearer {}", tokens.access_token))
             .header("x-stack-refresh-token", &current_refresh_token)
-            .header("x-cmux-team-id", &team.id)
+            .header("x-hmux-team-id", &team.id)
             .send()
             .map_err(network_error("create coderouter route session"))?,
         "create coderouter route session",
@@ -489,7 +489,7 @@ pub fn ensure_route_config() -> Result<Config, Error> {
 
 /// Resolve the route authority for an agent command.
 ///
-/// A cmux handoff is a separate, possession-only path. Once the hidden socket
+/// A hmux handoff is a separate, possession-only path. Once the hidden socket
 /// launch form is accepted, every socket or exchange failure is terminal;
 /// this helper never falls back to the saved Stack session. The exchanged
 /// route is kept in memory only and is not written to normal configuration.
@@ -933,7 +933,7 @@ fn authenticated(
             format!("Bearer {}", current.stack_access_token),
         )
         .header("x-stack-refresh-token", &current.stack_refresh_token)
-        .header("x-cmux-team-id", &current.team_id)
+        .header("x-hmux-team-id", &current.team_id)
 }
 
 fn refresh_stack_tokens(
@@ -1136,7 +1136,7 @@ fn response_error(status: reqwest::StatusCode, parsed: Option<&Value>, action: &
         .and_then(Value::as_str);
     if status.as_u16() == 402 && code == Some("pro_required") {
         return Error::Usage(
-            "hosted coderouter requires cmux Pro or Team; upgrade at https://cmux.com/pricing or connect a self-hosted server with `coderouter login --server <URL>`".into(),
+            "hosted coderouter requires hmux Pro or Team; upgrade at https://cmux.com/pricing or connect a self-hosted server with `coderouter login --server <URL>`".into(),
         );
     }
     let server_message = parsed
@@ -1150,7 +1150,7 @@ fn response_error(status: reqwest::StatusCode, parsed: Option<&Value>, action: &
         }),
         401 if action.contains("handoff") => {
             format!(
-                "{action}: the handoff is invalid or no longer available; request a new handoff from cmux"
+                "{action}: the handoff is invalid or no longer available; request a new handoff from hmux"
             )
         }
         401 => {
@@ -1265,7 +1265,7 @@ mod fault_matrix_tests {
     fn snapshots_hosted_pro_self_hosting_guidance() {
         assert_eq!(
             message(402, Some(json!({ "error": "pro_required" }))),
-            "hosted coderouter requires cmux Pro or Team; upgrade at https://cmux.com/pricing or connect a self-hosted server with `coderouter login --server <URL>`"
+            "hosted coderouter requires hmux Pro or Team; upgrade at https://cmux.com/pricing or connect a self-hosted server with `coderouter login --server <URL>`"
         );
     }
 
@@ -1310,7 +1310,7 @@ mod fault_matrix_tests {
         .to_string();
         assert_eq!(
             rendered,
-            "exchange coderouter handoff: the handoff is invalid or no longer available; request a new handoff from cmux [HTTP 401]"
+            "exchange coderouter handoff: the handoff is invalid or no longer available; request a new handoff from hmux [HTTP 401]"
         );
         assert!(!rendered.contains("crh_"));
     }
@@ -1531,7 +1531,7 @@ mod fault_matrix_tests {
         use rustls::pki_types::{CertificateDer, PrivateKeyDer, PrivatePkcs8KeyDer};
 
         // These fixed values form one localhost-only test certificate and key.
-        // They do not grant access to any CodeRouter or cmux system.
+        // They do not grant access to any CodeRouter or hmux system.
         const CERTIFICATE_DER: &str = "MIIByjCCAXCgAwIBAgIUZSPF1zDAZmHw9NiDWRENQbgBZH8wCgYIKoZIzj0EAwIwHzEdMBsGA1UEAwwUQ29kZVJvdXRlci1UZXN0LVJvb3QwIBcNMjYwODE0MTUxMjAzWhgPMjEyNjA3MjExNTEyMDNaMBQxEjAQBgNVBAMMCWxvY2FsaG9zdDBZMBMGByqGSM49AgEGCCqGSM49AwEHA0IABOPlhXxu8Yw2FH+Ec8Ib/KfNJcQYrSedCvAwoPmOsCUfa5PsSzLJGpBD2+9RgAA/MAT1e7NfECTAda8JdZfNz/GjgZIwgY8wDAYDVR0TAQH/BAIwADAOBgNVHQ8BAf8EBAMCB4AwEwYDVR0lBAwwCgYIKwYBBQUHAwEwGgYDVR0RBBMwEYIJbG9jYWxob3N0hwR/AAABMB0GA1UdDgQWBBSxJgjGjoffiOjBmoEPmreQ3e51DDAfBgNVHSMEGDAWgBR/7QLdXw808MWE6R/q0PW42kJkVzAKBggqhkjOPQQDAgNIADBFAiEAykNGgbc3Pi7mX9m1bNbDxBy4LbzfIjM/hXDLLbtDG5UCID0kC+o3qFB7gqVmgYs4wrDJD7eu3oET+SKp0yeUmcKc";
         const PRIVATE_KEY_DER: &str = "MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgydwINsY2LZZ1OtHjpotocCJI1U65RhScnhfjdZemXUShRANCAATj5YV8bvGMNhR/hHPCG/ynzSXEGK0nnQrwMKD5jrAlH2uT7EsyyRqQQ9vvUYAAPzAE9XuzXxAkwHWvCXWXzc/x";
         const CERTIFICATE_PEM: &str = "-----BEGIN CERTIFICATE-----\nMIIBpjCCAUugAwIBAgIUcZtpXX4xyFGpw0qziTN1ddPfo2swCgYIKoZIzj0EAwIw\nHzEdMBsGA1UEAwwUQ29kZVJvdXRlci1UZXN0LVJvb3QwIBcNMjYwODE0MTUxMjAz\nWhgPMjEyNjA3MjExNTEyMDNaMB8xHTAbBgNVBAMMFENvZGVSb3V0ZXItVGVzdC1S\nb290MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE7kIFuDVG3oNzxMNeoqkI+nK0\nKHiaOHLKcXJMm8yolCjScBMZz/G1krT1JcQ/EFXEiCMK7UVPHJ4pWmG1d/ZinaNj\nMGEwHQYDVR0OBBYEFH/tAt1fDzTwxYTpH+rQ9bjaQmRXMB8GA1UdIwQYMBaAFH/t\nAt1fDzTwxYTpH+rQ9bjaQmRXMA8GA1UdEwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQD\nAgEGMAoGCCqGSM49BAMCA0kAMEYCIQD53niuJmzi3bmQ+78rf4XfEcHEmXnk2/Gj\nT6goWA70iQIhAMby87GRy+3Da1ZufM2598AQoLyV5gZIN63UiEYMexXG\n-----END CERTIFICATE-----\n";

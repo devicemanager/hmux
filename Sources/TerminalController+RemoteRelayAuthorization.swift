@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxRemoteWorkspace
+import HmuxControlSocket
+import HmuxRemoteWorkspace
 import Foundation
 
 extension TerminalController {

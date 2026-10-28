@@ -2,7 +2,7 @@ import { afterEach, describe, expect, setDefaultTimeout, test } from "bun:test";
 import { chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { GUEST_CMUX_SHIM } from "../services/vms/guestCli";
+import { GUEST_HMUX_SHIM } from "../services/vms/guestCli";
 import { VM_PLACEHOLDER_API_KEY } from "../services/coderouter/vmGuestEnv";
 import { runChild } from "./helpers/run-child";
 
@@ -14,8 +14,8 @@ import { runChild } from "./helpers/run-child";
 // choice the launchers read.
 
 const templateDir = path.join(import.meta.dirname, "../services/vms/images/devbox");
-const ORIGIN = "https://coderouter.cmux.test";
-const PLACEHOLDER = "cmux-vm-edge-placeholder";
+const ORIGIN = "https://coderouter.hmux.test";
+const PLACEHOLDER = "hmux-vm-edge-placeholder";
 const AGENTS = ["claude", "codex", "opencode"] as const;
 type Agent = (typeof AGENTS)[number];
 
@@ -45,7 +45,7 @@ type Machine = { root: string; home: string; bin: string; calls: string; launche
  * catalog (exit 7 when the answer is unset), logging every call.
  */
 function machine(): Machine {
-  const root = mkdtempSync(path.join(tmpdir(), "cmux-agent-auth-"));
+  const root = mkdtempSync(path.join(tmpdir(), "hmux-agent-auth-"));
   roots.push(root);
   const home = path.join(root, "home");
   const bin = path.join(root, "bin");
@@ -83,10 +83,10 @@ function machine(): Machine {
     const launcher = path.join(root, agent);
     writeFileSync(
       launcher,
-      readFileSync(path.join(templateDir, `cmux-${agent}`), "utf8")
-        .replaceAll("/etc/cmux/agent-config.sh", path.join(templateDir, "agent-config.sh"))
-        .replaceAll("/etc/cmux/agent-auth.sh", path.join(templateDir, "agent-auth.sh"))
-        .replaceAll(`/usr/local/libexec/cmux-${agent}-real`, real),
+      readFileSync(path.join(templateDir, `hmux-${agent}`), "utf8")
+        .replaceAll("/etc/hmux/agent-config.sh", path.join(templateDir, "agent-config.sh"))
+        .replaceAll("/etc/hmux/agent-auth.sh", path.join(templateDir, "agent-auth.sh"))
+        .replaceAll(`/usr/local/libexec/hmux-${agent}-real`, real),
     );
     chmodSync(real, 0o755);
     chmodSync(launcher, 0o755);
@@ -103,7 +103,7 @@ function bootEnv(m: Machine, extra: Record<string, string> = {}): Record<string,
     LANG: "en_US.UTF-8",
     OPENAI_BASE_URL: `${ORIGIN}/v1`,
     OPENAI_API_KEY: PLACEHOLDER,
-    CMUX_CODEROUTER_URL: ORIGIN,
+    HMUX_CODEROUTER_URL: ORIGIN,
     ANTHROPIC_BASE_URL: ORIGIN,
     ANTHROPIC_API_KEY: PLACEHOLDER,
     ...extra,
@@ -127,8 +127,8 @@ async function launch(m: Machine, agent: Agent, extra: Record<string, string> = 
 }
 
 function choose(m: Machine, mode: string, agent: Agent = "claude"): void {
-  mkdirSync(path.join(m.home, ".config/cmux/agent-auth"), { recursive: true });
-  writeFileSync(path.join(m.home, ".config/cmux/agent-auth", agent), `${mode}\n`);
+  mkdirSync(path.join(m.home, ".config/hmux/agent-auth"), { recursive: true });
+  writeFileSync(path.join(m.home, ".config/hmux/agent-auth", agent), `${mode}\n`);
 }
 
 /** The agent's own sign-in, as its login command leaves it on disk. */
@@ -146,19 +146,19 @@ function signIn(m: Machine, agent: Agent = "claude"): void {
 /** agent-config.sh with its launcher directory pointed at this machine's launchers. */
 function routedAgentConfig(m: Machine): string {
   const file = path.join(m.root, "agent-config.sh");
-  writeFileSync(file, readFileSync(path.join(templateDir, "agent-config.sh"), "utf8").replaceAll('"/etc/cmux/$cmux_ar_agent"', `"${m.root}/$cmux_ar_agent"`));
+  writeFileSync(file, readFileSync(path.join(templateDir, "agent-config.sh"), "utf8").replaceAll('"/etc/hmux/$hmux_ar_agent"', `"${m.root}/$hmux_ar_agent"`));
   return file;
 }
 
 /** The codex config agent-config.sh generates: CodeRouter as the provider. */
-function cmuxCodexConfig(m: Machine, provider = "cmux"): void {
+function hmuxCodexConfig(m: Machine, provider = "hmux"): void {
   mkdirSync(path.join(m.home, ".codex"), { recursive: true });
-  writeFileSync(path.join(m.home, ".codex/config.toml"), `model_provider = "${provider}"\n\n[model_providers.cmux]\nname = "cmux"\nbase_url = "${ORIGIN}/v1"\nenv_key = "OPENAI_API_KEY"\n`);
+  writeFileSync(path.join(m.home, ".codex/config.toml"), `model_provider = "${provider}"\n\n[model_providers.hmux]\nname = "hmux"\nbase_url = "${ORIGIN}/v1"\nenv_key = "OPENAI_API_KEY"\n`);
 }
 
 describe("agent-auth.sh", () => {
   test("sends only the placeholder the TypeScript side defines", () => {
-    expect(readFileSync(path.join(templateDir, "agent-auth.sh"), "utf8")).toContain(`cmux_aa_placeholder=${VM_PLACEHOLDER_API_KEY}\n`);
+    expect(readFileSync(path.join(templateDir, "agent-auth.sh"), "utf8")).toContain(`hmux_aa_placeholder=${VM_PLACEHOLDER_API_KEY}\n`);
     expect(PLACEHOLDER).toBe(VM_PLACEHOLDER_API_KEY);
   });
 });
@@ -166,7 +166,7 @@ describe("agent-auth.sh", () => {
 describe("Claude Code sign-in precedence", () => {
   test("a shell never exports the CodeRouter pair, and still persists it for the launcher", async () => {
     const m = machine();
-    const probe = `printf '%s|%s|%s|%s' "\${ANTHROPIC_BASE_URL-unset}" "\${ANTHROPIC_API_KEY-unset}" "\${CMUX_CLAUDE_TEAM_BASE_URL-}" "\${CMUX_CLAUDE_TEAM_API_KEY-}"`;
+    const probe = `printf '%s|%s|%s|%s' "\${ANTHROPIC_BASE_URL-unset}" "\${ANTHROPIC_API_KEY-unset}" "\${HMUX_CLAUDE_TEAM_BASE_URL-}" "\${HMUX_CLAUDE_TEAM_API_KEY-}"`;
     const first = await runChild("/bin/bash", ["-c", `. ${path.join(templateDir, "agent-config.sh")}; ${probe}`], { env: bootEnv(m) });
     expect(first.stdout).toBe(`unset|unset|${ORIGIN}|${PLACEHOLDER}`);
     // A nested shell inherits only the set-aside pair; it re-persists the
@@ -177,7 +177,7 @@ describe("Claude Code sign-in precedence", () => {
       { env: bootEnv(m) },
     );
     expect(nested.stdout).toBe(`unset|unset|${ORIGIN}|${PLACEHOLDER}`);
-    const plane = readFileSync(path.join(m.home, ".config/cmux/model-plane.env"), "utf8");
+    const plane = readFileSync(path.join(m.home, ".config/hmux/model-plane.env"), "utf8");
     expect(plane).toContain(`export ANTHROPIC_BASE_URL='${ORIGIN}'`);
     expect(plane).toContain(`export ANTHROPIC_API_KEY='${PLACEHOLDER}'`);
     // The first-run seed still pre-approves the placeholder for team mode.
@@ -204,7 +204,7 @@ describe("Claude Code sign-in precedence", () => {
   test("own mode starts claude with no CodeRouter env, so its /login is what it uses", async () => {
     const m = machine();
     choose(m, "own");
-    const env = await launch(m, "claude", { CMUX_WORKSPACE_ID: "ws-1", CMUX_SURFACE_ID: "sf-1" });
+    const env = await launch(m, "claude", { HMUX_WORKSPACE_ID: "ws-1", HMUX_SURFACE_ID: "sf-1" });
     expect(env.ANTHROPIC_BASE_URL).toBe("<unset>");
     expect(env.ANTHROPIC_API_KEY).toBe("<unset>");
     expect(env.ANTHROPIC_CUSTOM_HEADERS).toBe("<unset>");
@@ -225,10 +225,10 @@ describe("Claude Code sign-in precedence", () => {
     const m = machine();
     choose(m, "team");
     signIn(m);
-    const env = await launch(m, "claude", { CMUX_WORKSPACE_ID: "ws-1" });
+    const env = await launch(m, "claude", { HMUX_WORKSPACE_ID: "ws-1" });
     expect(env.ANTHROPIC_BASE_URL).toBe(ORIGIN);
     expect(env.ANTHROPIC_API_KEY).toBe(PLACEHOLDER);
-    expect(env.ANTHROPIC_CUSTOM_HEADERS).toBe("x-cmux-workspace-id: ws-1");
+    expect(env.ANTHROPIC_CUSTOM_HEADERS).toBe("x-hmux-workspace-id: ws-1");
   });
 
   test("a user-set key wins in every mode", async () => {
@@ -247,7 +247,7 @@ describe("Claude Code sign-in precedence", () => {
     // `ANTHROPIC_API_KEY=... claude` once: the launcher sources agent-config.sh.
     const once = await launch(m, "claude", {}, "ANTHROPIC_API_KEY=sk-ant-oneoff");
     expect(once.ANTHROPIC_API_KEY).toBe("sk-ant-oneoff");
-    const plane = readFileSync(path.join(m.home, ".config/cmux/model-plane.env"), "utf8");
+    const plane = readFileSync(path.join(m.home, ".config/hmux/model-plane.env"), "utf8");
     expect(plane).not.toContain("sk-ant-oneoff");
     expect(plane).toContain(`export ANTHROPIC_API_KEY='${PLACEHOLDER}'`);
     // A fresh shell without the boot env reads the persisted file only.
@@ -262,7 +262,7 @@ describe("Claude Code sign-in precedence", () => {
 describe("Codex sign-in precedence", () => {
   test("own mode starts codex on its built-in provider with no CodeRouter env, so codex login is what it uses", async () => {
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     choose(m, "own", "codex");
     const env = await launch(m, "codex");
     expect(env.args).toBe('-c model_provider="openai" --resume x');
@@ -272,7 +272,7 @@ describe("Codex sign-in precedence", () => {
 
   test("team mode keeps the CodeRouter provider and its key", async () => {
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     choose(m, "team", "codex");
     signIn(m, "codex");
     const env = await launch(m, "codex");
@@ -282,14 +282,14 @@ describe("Codex sign-in precedence", () => {
 
   test("a provider the user chose in config.toml is never overridden", async () => {
     const m = machine();
-    cmuxCodexConfig(m, "mine");
+    hmuxCodexConfig(m, "mine");
     choose(m, "own", "codex");
     expect((await launch(m, "codex")).args).toBe("--resume x");
   });
 
   test("own mode keeps a user's own OpenAI endpoint and key", async () => {
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     choose(m, "own", "codex");
     const env = await launch(m, "codex", {}, "export OPENAI_BASE_URL=https://api.example.test/v1 OPENAI_API_KEY=sk-user;");
     expect(env.OPENAI_BASE_URL).toBe("https://api.example.test/v1");
@@ -298,12 +298,12 @@ describe("Codex sign-in precedence", () => {
 
   test("with no choice, codex login counts as choosing own; an empty auth file does not", async () => {
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     signIn(m, "codex");
     expect((await launch(m, "codex", { FAKE_ACCESS: ALL })).args).toBe('-c model_provider="openai" --resume x');
     expect(existsSync(m.calls)).toBe(false);
     const empty = machine();
-    cmuxCodexConfig(empty);
+    hmuxCodexConfig(empty);
     mkdirSync(path.join(empty.home, ".codex"), { recursive: true });
     writeFileSync(path.join(empty.home, ".codex/auth.json"), '{"OPENAI_API_KEY":null,"tokens":null}');
     expect((await launch(empty, "codex", { FAKE_ACCESS: ALL })).args).toBe("--resume x");
@@ -311,7 +311,7 @@ describe("Codex sign-in precedence", () => {
 
   test("an API-key login counts too", async () => {
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     mkdirSync(path.join(m.home, ".codex"), { recursive: true });
     writeFileSync(path.join(m.home, ".codex/auth.json"), '{"OPENAI_API_KEY":"sk-user"}');
     expect((await launch(m, "codex", { FAKE_ACCESS: ALL })).args).toBe('-c model_provider="openai" --resume x');
@@ -323,7 +323,7 @@ describe("OpenCode sign-in precedence", () => {
     const m = machine();
     choose(m, "team", "opencode");
     const env = await launch(m, "opencode");
-    const team = path.join(m.home, ".config/cmux/opencode-team.json");
+    const team = path.join(m.home, ".config/hmux/opencode-team.json");
     expect(env.OPENCODE_CONFIG).toBe(team);
     expect(JSON.parse(readFileSync(team, "utf8")).provider.go.options.apiKey).toBe("{env:OPENAI_API_KEY}");
     expect(existsSync(path.join(m.home, ".config/opencode/opencode.json"))).toBe(false);
@@ -355,7 +355,7 @@ describe("OpenCode sign-in precedence", () => {
     expect(env.ANTHROPIC_API_KEY).toBe("<unset>");
     // No catalog fetch either.
     expect(existsSync(m.calls)).toBe(false);
-    expect(existsSync(path.join(m.home, ".config/cmux/opencode-team.json"))).toBe(false);
+    expect(existsSync(path.join(m.home, ".config/hmux/opencode-team.json"))).toBe(false);
   });
 
   test("with no choice, opencode auth login counts as choosing own", async () => {
@@ -374,11 +374,11 @@ describe("OpenCode sign-in precedence", () => {
 describe("the default for every agent", () => {
   test("with no choice and no sign-in, the team's accounts for that agent decide", async () => {
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     const answer = access(true, false, true);
     expect((await launch(m, "claude", { FAKE_ACCESS: answer })).ANTHROPIC_API_KEY).toBe(PLACEHOLDER);
     expect((await launch(m, "codex", { FAKE_ACCESS: answer })).args).toBe('-c model_provider="openai" --resume x');
-    expect((await launch(m, "opencode", { FAKE_ACCESS: answer })).OPENCODE_CONFIG).toBe(path.join(m.home, ".config/cmux/opencode-team.json"));
+    expect((await launch(m, "opencode", { FAKE_ACCESS: answer })).OPENCODE_CONFIG).toBe(path.join(m.home, ".config/hmux/opencode-team.json"));
     // One account check answered all three (the answer is reused for a minute).
     const calls = readFileSync(m.calls, "utf8").trim().split("\n").filter((call) => call.includes("agent-access"));
     expect(calls).toHaveLength(1);
@@ -388,7 +388,7 @@ describe("the default for every agent", () => {
 
   test("no account means the agent's own sign-in instead of a CodeRouter refusal", async () => {
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     expect((await launch(m, "claude", { FAKE_ACCESS: NONE })).ANTHROPIC_API_KEY).toBe("<unset>");
     expect((await launch(m, "codex", { FAKE_ACCESS: NONE })).args).toBe('-c model_provider="openai" --resume x');
     expect((await launch(m, "opencode", { FAKE_ACCESS: NONE })).OPENCODE_CONFIG).toBe("<unset>");
@@ -397,7 +397,7 @@ describe("the default for every agent", () => {
   test("no answer keeps the long-standing default (team)", async () => {
     for (const answer of [undefined, "<html>", JSON.stringify({ error: "not_found" })]) {
       const m = machine();
-      cmuxCodexConfig(m);
+      hmuxCodexConfig(m);
       const extra: Record<string, string> = answer === undefined ? {} : { FAKE_ACCESS: answer };
       expect((await launch(m, "claude", extra)).ANTHROPIC_API_KEY).toBe(PLACEHOLDER);
       expect((await launch(m, "codex", extra)).args).toBe("--resume x");
@@ -409,24 +409,24 @@ describe("the default for every agent", () => {
     // or connect (7); a dev environment without the edge is one such machine.
     for (const exit of ["6", "7"]) {
       const m = machine();
-      cmuxCodexConfig(m);
+      hmuxCodexConfig(m);
       expect((await launch(m, "claude", { FAKE_CURL_EXIT: exit })).ANTHROPIC_API_KEY).toBe("<unset>");
       expect((await launch(m, "codex", { FAKE_CURL_EXIT: exit })).args).toBe('-c model_provider="openai" --resume x');
       expect((await launch(m, "opencode", { FAKE_CURL_EXIT: exit })).OPENCODE_CONFIG).toBe("<unset>");
     }
   });
 
-  test("CMUX_<AGENT>_AUTH pins one launch over the recorded choice and the default", async () => {
+  test("HMUX_<AGENT>_AUTH pins one launch over the recorded choice and the default", async () => {
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     for (const agent of AGENTS) choose(m, "own", agent);
-    expect((await launch(m, "claude", { CMUX_CLAUDE_AUTH: "team" })).ANTHROPIC_API_KEY).toBe(PLACEHOLDER);
-    expect((await launch(m, "codex", { CMUX_CODEX_AUTH: "team" })).args).toBe("--resume x");
-    expect((await launch(m, "opencode", { CMUX_OPENCODE_AUTH: "team" })).OPENCODE_CONFIG).not.toBe("<unset>");
+    expect((await launch(m, "claude", { HMUX_CLAUDE_AUTH: "team" })).ANTHROPIC_API_KEY).toBe(PLACEHOLDER);
+    expect((await launch(m, "codex", { HMUX_CODEX_AUTH: "team" })).args).toBe("--resume x");
+    expect((await launch(m, "opencode", { HMUX_OPENCODE_AUTH: "team" })).OPENCODE_CONFIG).not.toBe("<unset>");
     // Anything else is ignored rather than trusted.
-    expect((await launch(m, "claude", { CMUX_CLAUDE_AUTH: "bogus" })).ANTHROPIC_API_KEY).toBe("<unset>");
+    expect((await launch(m, "claude", { HMUX_CLAUDE_AUTH: "bogus" })).ANTHROPIC_API_KEY).toBe("<unset>");
     const fresh = machine();
-    expect((await launch(fresh, "claude", { CMUX_CLAUDE_AUTH: "own", FAKE_ACCESS: ALL })).ANTHROPIC_API_KEY).toBe("<unset>");
+    expect((await launch(fresh, "claude", { HMUX_CLAUDE_AUTH: "own", FAKE_ACCESS: ALL })).ANTHROPIC_API_KEY).toBe("<unset>");
     expect(existsSync(fresh.calls)).toBe(false);
   });
 
@@ -444,14 +444,14 @@ describe("the default for every agent", () => {
     expect((await launch(m, "claude", { FAKE_ACCESS: ALL })).ANTHROPIC_API_KEY).toBe(PLACEHOLDER);
     expect((await launch(m, "claude", { FAKE_ACCESS: NONE })).ANTHROPIC_API_KEY).toBe(PLACEHOLDER);
     expect(readFileSync(m.calls, "utf8").trim().split("\n")).toHaveLength(1);
-    writeFileSync(path.join(m.home, ".cache/cmux/agent-access"), "1 0 0 0\n");
+    writeFileSync(path.join(m.home, ".cache/hmux/agent-access"), "1 0 0 0\n");
     expect((await launch(m, "claude", { FAKE_ACCESS: NONE })).ANTHROPIC_API_KEY).toBe("<unset>");
   });
 
   test("a HOME the generators cannot write still starts every agent", async () => {
     const m = machine();
     for (const agent of AGENTS) choose(m, "team", agent);
-    chmodSync(path.join(m.home, ".config/cmux"), 0o500);
+    chmodSync(path.join(m.home, ".config/hmux"), 0o500);
     chmodSync(m.home, 0o500);
     try {
       for (const agent of ["claude", "codex"] as const) {
@@ -461,14 +461,14 @@ describe("the default for every agent", () => {
       }
     } finally {
       chmodSync(m.home, 0o700);
-      chmodSync(path.join(m.home, ".config/cmux"), 0o700);
+      chmodSync(path.join(m.home, ".config/hmux"), 0o700);
     }
   });
 
   test("a shell whose PATH puts other copies first still launches through the launchers", async () => {
     // The base's login PATH puts nvm's bin ahead of /usr/local/bin.
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     for (const agent of AGENTS) choose(m, "own", agent);
     const nvm = path.join(m.root, "nvm-bin");
     mkdirSync(nvm);
@@ -486,18 +486,18 @@ describe("the default for every agent", () => {
     }
   });
 
-  test("a cmux-tui agent shim first on PATH keeps its place in front of the launcher", async () => {
+  test("a hmux-tui agent shim first on PATH keeps its place in front of the launcher", async () => {
     // The shim adds the pane's hook context, then finds the launcher further
     // down PATH; the shell function must not jump past it.
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     for (const agent of AGENTS) choose(m, "own", agent);
     const shims = path.join(m.root, "shims");
     const later = path.join(m.root, "later-bin");
     mkdirSync(shims);
     mkdirSync(later);
     for (const agent of ["claude", "codex"] as const) {
-      writeFileSync(path.join(shims, agent), `#!/bin/sh\n# cmux-tui-${agent}-shim\necho via-the-shim\nexec ${m.launchers[agent]} "$@"\n`);
+      writeFileSync(path.join(shims, agent), `#!/bin/sh\n# hmux-tui-${agent}-shim\necho via-the-shim\nexec ${m.launchers[agent]} "$@"\n`);
       chmodSync(path.join(shims, agent), 0o755);
     }
     const config = routedAgentConfig(m);
@@ -531,8 +531,8 @@ describe("the default for every agent", () => {
 
 describe("cr use", () => {
   async function cr(m: Machine, args: string[], extra: Record<string, string> = {}) {
-    const shim = path.join(m.root, "cmux-adapter");
-    writeFileSync(shim, GUEST_CMUX_SHIM);
+    const shim = path.join(m.root, "hmux-adapter");
+    writeFileSync(shim, GUEST_HMUX_SHIM);
     chmodSync(shim, 0o755);
     // The Cloud CLI facade hands `cr use …` to the adapter as `coderouter use …`.
     return runChild("/bin/sh", [shim, "coderouter", "use", ...args], {
@@ -540,26 +540,26 @@ describe("cr use", () => {
         PATH: `${m.bin}:${process.env.PATH ?? "/usr/bin:/bin"}`,
         HOME: m.home,
         LANG: "en_US.UTF-8",
-        CMUX_TUI_BIN: "/usr/bin/true",
-        CMUX_AGENT_AUTH_LIB: path.join(templateDir, "agent-auth.sh"),
+        HMUX_TUI_BIN: "/usr/bin/true",
+        HMUX_AGENT_AUTH_LIB: path.join(templateDir, "agent-auth.sh"),
         // What a machine shell exports after agent-config.sh set Claude's pair aside.
-        CMUX_CODEROUTER_URL: ORIGIN,
+        HMUX_CODEROUTER_URL: ORIGIN,
         OPENAI_BASE_URL: `${ORIGIN}/v1`,
         OPENAI_API_KEY: PLACEHOLDER,
-        CMUX_CLAUDE_TEAM_BASE_URL: ORIGIN,
-        CMUX_CLAUDE_TEAM_API_KEY: PLACEHOLDER,
+        HMUX_CLAUDE_TEAM_BASE_URL: ORIGIN,
+        HMUX_CLAUDE_TEAM_API_KEY: PLACEHOLDER,
         ...extra,
       },
     });
   }
   const choice = (m: Machine, agent: Agent) => {
-    const file = path.join(m.home, ".config/cmux/agent-auth", agent);
+    const file = path.join(m.home, ".config/hmux/agent-auth", agent);
     return existsSync(file) ? readFileSync(file, "utf8") : null;
   };
 
   test("without an agent, own and team apply to every agent the launchers read", async () => {
     const m = machine();
-    cmuxCodexConfig(m);
+    hmuxCodexConfig(m);
     const own = await cr(m, ["own"]);
     expect(own.status).toBe(0);
     for (const agent of AGENTS) expect(choice(m, agent)).toBe("own\n");
@@ -620,45 +620,45 @@ describe("cr use", () => {
     const adapter = path.join(m.root, "adapter");
     writeFileSync(adapter, '#!/bin/sh\necho "adapter $*"\n');
     chmodSync(adapter, 0o755);
-    for (const name of ["cr", "coderouter", "cmux"]) {
+    for (const name of ["cr", "coderouter", "hmux"]) {
       writeFileSync(path.join(m.bin, name), `#!/bin/sh\necho "installed ${name} $*"\n`);
       chmodSync(path.join(m.bin, name), 0o755);
     }
     const config = path.join(m.root, "agent-config-cr.sh");
-    writeFileSync(config, readFileSync(path.join(templateDir, "agent-config.sh"), "utf8").replaceAll("/usr/local/libexec/cmux-cloud-adapter", adapter));
+    writeFileSync(config, readFileSync(path.join(templateDir, "agent-config.sh"), "utf8").replaceAll("/usr/local/libexec/hmux-cloud-adapter", adapter));
     const run = async (command: string) =>
       (await runChild("/bin/bash", ["-c", `. ${config}; ${command}`], { env: bootEnv(m) })).stdout.trim();
     expect(await run("cr use own codex")).toBe("adapter coderouter use own codex");
     expect(await run("coderouter use --json")).toBe("adapter coderouter use --json");
-    expect(await run("cmux cr use team")).toBe("adapter coderouter use team");
-    expect(await run("cmux coderouter use")).toBe("adapter coderouter use");
+    expect(await run("hmux cr use team")).toBe("adapter coderouter use team");
+    expect(await run("hmux coderouter use")).toBe("adapter coderouter use");
     expect(await run("cr accounts --json")).toBe("installed cr accounts --json");
     expect(await run("cr")).toBe("installed cr");
-    expect(await run("cmux tree --json")).toBe("installed cmux tree --json");
-    expect(await run("cmux cr accounts")).toBe("installed cmux cr accounts");
+    expect(await run("hmux tree --json")).toBe("installed hmux tree --json");
+    expect(await run("hmux cr accounts")).toBe("installed hmux cr accounts");
   });
 
   test("an image without the switch says how to use an own login there", async () => {
     const m = machine();
-    const result = await cr(m, ["own"], { CMUX_AGENT_AUTH_LIB: path.join(m.root, "missing.sh") });
+    const result = await cr(m, ["own"], { HMUX_AGENT_AUTH_LIB: path.join(m.root, "missing.sh") });
     expect(result.status).toBe(2);
     expect(result.stderr).toContain("unset ANTHROPIC_API_KEY ANTHROPIC_BASE_URL");
     expect(result.stderr).toContain("codex -c model_provider=openai");
     expect(result.stderr).toContain("env -u OPENAI_BASE_URL -u ANTHROPIC_BASE_URL opencode");
-    expect(existsSync(path.join(m.home, ".config/cmux/agent-auth"))).toBe(false);
+    expect(existsSync(path.join(m.home, ".config/hmux/agent-auth"))).toBe(false);
   });
 
   test("a choice that cannot be written fails loudly instead of reporting it", async () => {
     const m = machine();
-    mkdirSync(path.join(m.home, ".config/cmux/agent-auth"), { recursive: true });
-    chmodSync(path.join(m.home, ".config/cmux/agent-auth"), 0o500);
+    mkdirSync(path.join(m.home, ".config/hmux/agent-auth"), { recursive: true });
+    chmodSync(path.join(m.home, ".config/hmux/agent-auth"), 0o500);
     try {
       const result = await cr(m, ["own"]);
       expect(result.status).toBe(1);
       expect(result.stderr).toContain("could not record the choice");
       expect(result.stdout).toBe("");
     } finally {
-      chmodSync(path.join(m.home, ".config/cmux/agent-auth"), 0o700);
+      chmodSync(path.join(m.home, ".config/hmux/agent-auth"), 0o700);
     }
   });
 
@@ -675,6 +675,6 @@ describe("cr use", () => {
     const twice = await cr(m, ["own", "team"]);
     expect(twice.status).toBe(2);
     expect(twice.stderr).toContain("one mode");
-    expect(existsSync(path.join(m.home, ".config/cmux/agent-auth"))).toBe(false);
+    expect(existsSync(path.join(m.home, ".config/hmux/agent-auth"))).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-import CMUXAgentLaunch
+import HMUXAgentLaunch
 import Foundation
 
 struct VaultObservedAgentProcess: Sendable {
@@ -48,7 +48,7 @@ struct VaultObservedAgentProcess: Sendable {
         arguments.piCompatibleSessionID(startingAt: piCompatibleSessionArgumentStartIndex)
     }
 
-    /// Whether this Hermes process owns an interactive conversation that cmux can restore.
+    /// Whether this Hermes process owns an interactive conversation that hmux can restore.
     ///
     /// The installed launcher execs Python with `hermes-agent/hermes` as its script, so the
     /// first Hermes argument is not always at index one. Management subcommands such as

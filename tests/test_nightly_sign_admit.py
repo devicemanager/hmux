@@ -84,10 +84,10 @@ def scenario(branch: str = "main", variants: tuple[str, ...] = ("arm64", "univer
     for index, variant in enumerate(variants):
         job_id = 200 + index
         artifact_id = 300 + index
-        name = f"cmux-{channel}-prepared-app-{variant}-{HEAD[:7]}"
+        name = f"hmux-{channel}-prepared-app-{variant}-{HEAD[:7]}"
         tarball = f"prepared app {variant} {branch}".encode() * 1000
         tarballs[variant] = tarball
-        blob = zip_of({"cmux-prepared-app.tar.gz": tarball})
+        blob = zip_of({"hmux-prepared-app.tar.gz": tarball})
         blobs[artifact_id] = blob
         jobs.append({"id": job_id, "name": f"prepare-nightly-variant ({variant})", "conclusion": "success",
                      "run_id": RUN_ID, "head_sha": HEAD, "run_attempt": ATTEMPT})
@@ -244,7 +244,7 @@ class AdmitCase(unittest.TestCase):
         self.assertEqual(result["outputs"].get("admitted"), "false")
         self.assertIn(f"skipped: ", result["stdout"])
         self.assertIn(reason, result["stdout"])
-        self.assertFalse(list(result["out"].glob("*/cmux-prepared-app.tar.gz")))
+        self.assertFalse(list(result["out"].glob("*/hmux-prepared-app.tar.gz")))
 
     def assert_admitted(self, result: dict, data: dict, channel: str, track: str) -> None:
         self.assertEqual(result["code"], 0, result["stdout"] + result["stderr"])
@@ -255,7 +255,7 @@ class AdmitCase(unittest.TestCase):
         self.assertEqual(outputs.get("source_head_sha"), HEAD)
         self.assertEqual(json.loads(outputs["variants"]), [v for v in ("universal", "arm64", "x86_64") if v in data["tarballs"]])
         for variant, tarball in data["tarballs"].items():
-            self.assertEqual((result["out"] / variant / "cmux-prepared-app.tar.gz").read_bytes(), tarball)
+            self.assertEqual((result["out"] / variant / "hmux-prepared-app.tar.gz").read_bytes(), tarball)
         self.assertFalse(list(result["out"].glob("*/artifact.zip")), "the artifact zip is removed after the check")
         blob_requests = [auth for path, auth in result["requests"] if path.startswith("/blob/")]
         self.assertEqual(len(blob_requests), len(data["tarballs"]))
@@ -288,13 +288,13 @@ class AdmitCase(unittest.TestCase):
         # The artifact the API serves is internally consistent (its zip digest
         # matches), but its tarball is not the one the prepare job recorded.
         tampered = b"another app" * 1000
-        blob = zip_of({"cmux-prepared-app.tar.gz": tampered})
+        blob = zip_of({"hmux-prepared-app.tar.gz": tampered})
         data["blobs"][300] = blob
         data["artifacts"][0]["digest"] = f"sha256:{hashlib.sha256(blob).hexdigest()}"
         data["artifacts"][0]["size_in_bytes"] = len(blob)
         result = self.run_tool(data)
         self.assert_refused(result, "the sha256 its producing job recorded")
-        self.assertFalse((result["out"] / "arm64" / "cmux-prepared-app.tar.gz").exists())
+        self.assertFalse((result["out"] / "arm64" / "hmux-prepared-app.tar.gz").exists())
 
     def test_zip_that_does_not_match_the_api_digest_is_refused(self) -> None:
         data = scenario("main")
@@ -325,7 +325,7 @@ class AdmitCase(unittest.TestCase):
     def test_digest_record_naming_another_channel_artifact_is_refused(self) -> None:
         data = scenario("main")
         record = data["annotations"][200][1]
-        record["message"] = record["message"].replace("cmux-nightly-", "cmux-rc-")
+        record["message"] = record["message"].replace("hmux-nightly-", "hmux-rc-")
         self.assert_refused(self.run_tool(data), "not a nightly arm64 prepared app")
 
     def test_artifact_of_another_run_is_refused(self) -> None:
@@ -336,11 +336,11 @@ class AdmitCase(unittest.TestCase):
     def test_zip_with_extra_members_is_refused(self) -> None:
         data = scenario("main")
         tarball = data["tarballs"]["arm64"]
-        blob = zip_of({"cmux-prepared-app.tar.gz": tarball, "extra.sh": b"#!/bin/sh\n"})
+        blob = zip_of({"hmux-prepared-app.tar.gz": tarball, "extra.sh": b"#!/bin/sh\n"})
         data["blobs"][300] = blob
         data["artifacts"][0]["digest"] = f"sha256:{hashlib.sha256(blob).hexdigest()}"
         data["artifacts"][0]["size_in_bytes"] = len(blob)
-        self.assert_refused(self.run_tool(data), "not only cmux-prepared-app.tar.gz")
+        self.assert_refused(self.run_tool(data), "not only hmux-prepared-app.tar.gz")
 
     # ---------------------------------------------------------------- refused: identity
 
@@ -377,7 +377,7 @@ class AdmitCase(unittest.TestCase):
 
     def test_fork_head_is_refused(self) -> None:
         data = scenario("main")
-        data["run"]["head_repository"] = {"full_name": "someone/cmux"}
+        data["run"]["head_repository"] = {"full_name": "someone/hmux"}
         self.assert_refused(self.run_tool(data), "head is in another repository")
 
     def test_non_publishing_event_is_refused(self) -> None:

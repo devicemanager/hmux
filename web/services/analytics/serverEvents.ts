@@ -56,8 +56,8 @@ export type ServerEventDependencies = {
 };
 
 /** Env flag that turns the sender on outside production (staging smoke tests). */
-export const SERVER_ANALYTICS_FORCE_ENV = "CMUX_SERVER_ANALYTICS_FORCE";
-export const SERVER_EVENT_LIB = "cmux-web-server";
+export const SERVER_ANALYTICS_FORCE_ENV = "HMUX_SERVER_ANALYTICS_FORCE";
+export const SERVER_EVENT_LIB = "hmux-web-server";
 export const STACK_TEAM_GROUP = "stack_team";
 
 const CAPTURE_TIMEOUT_MS = 2_000;
@@ -255,7 +255,7 @@ export function isAllowedPosthogHost(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   if (isSecurePosthogHost(host)) return true;
-  if (env.CMUX_SERVER_ANALYTICS_SMOKE !== "1") return false;
+  if (env.HMUX_SERVER_ANALYTICS_SMOKE !== "1") return false;
   try {
     const url = new URL(host);
     return url.protocol === "http:" &&
@@ -321,7 +321,7 @@ function normalizedOpaqueId(value: string | null | undefined): string | null {
 
 /** A stable RFC 4122 version-5-shaped uuid from a natural key. */
 function uuidFromKey(key: string): string {
-  const bytes = createHash("sha1").update(`cmux-server-event:${key}`).digest().subarray(0, 16);
+  const bytes = createHash("sha1").update(`hmux-server-event:${key}`).digest().subarray(0, 16);
   bytes[6] = (bytes[6]! & 0x0f) | 0x50;
   bytes[8] = (bytes[8]! & 0x3f) | 0x80;
   const hex = bytes.toString("hex");

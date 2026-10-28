@@ -48,7 +48,7 @@ the migration script above and can be removed from deployments.
 ## Capacity and session contract
 
 Hosted Subrouter owns provider-account placement and capacity failover. The
-cmux broker must keep the following boundary intact:
+hmux broker must keep the following boundary intact:
 
 - A model request must carry one stable session or conversation identity for
   every turn. Native clients should send `X-Subrouter-Session` with the
@@ -60,11 +60,11 @@ cmux broker must keep the following boundary intact:
   exhausted account, and select another eligible account without changing the
   requested model silently.
 - A lease holder reports a quota response as `rate_limited` through the lease
-  event endpoint. The cmux routes intentionally expose that existing outcome
+  event endpoint. The hmux routes intentionally expose that existing outcome
   rather than inventing a new outcome name; hosted Subrouter uses it to update
   account and model-pool cooldown state.
 - Requests that have already emitted model output must not be replayed by the
-  cmux broker. The client can reconnect or start the next turn, but replaying a
+  hmux broker. The client can reconnect or start the next turn, but replaying a
   partial turn would duplicate tool calls or assistant output.
 
 The hosted deployment must therefore be upgraded before clients rely on this
@@ -73,4 +73,4 @@ or quota event through both the SSE and WebSocket transports and verify that
 the first account is cooled, the same session is routed to a different
 eligible account, and no capacity error reaches the client. Keep the
 `x-coderouter-request-id` or equivalent request ID alongside the Subrouter
-session ID so cmux can show which account and fallback decision served a turn.
+session ID so hmux can show which account and fallback decision served a turn.

@@ -20,7 +20,7 @@ const NOW = new Date("2026-10-23T15:30:00Z");
 const PLANTED_IP = "203.0.113.77";
 
 const originalVercel = process.env.VERCEL;
-const originalRuleId = process.env.CMUX_HANG_REPORTS_RATE_LIMIT_ID;
+const originalRuleId = process.env.HMUX_HANG_REPORTS_RATE_LIMIT_ID;
 const originalCronSecret = process.env.CRON_SECRET;
 
 /** In-memory repository with the Postgres repository's semantics. */
@@ -68,7 +68,7 @@ const POST = makeHangReportsHandler({
 
 beforeEach(() => {
   delete process.env.VERCEL;
-  process.env.CMUX_HANG_REPORTS_RATE_LIMIT_ID = "hang-reports-test";
+  process.env.HMUX_HANG_REPORTS_RATE_LIMIT_ID = "hang-reports-test";
   repository = new FakeRepository();
   rateLimitResult = { rateLimited: false };
   rateLimitCalls.length = 0;
@@ -78,7 +78,7 @@ beforeEach(() => {
 
 afterAll(() => {
   restoreEnv("VERCEL", originalVercel);
-  restoreEnv("CMUX_HANG_REPORTS_RATE_LIMIT_ID", originalRuleId);
+  restoreEnv("HMUX_HANG_REPORTS_RATE_LIMIT_ID", originalRuleId);
   restoreEnv("CRON_SECRET", originalCronSecret);
 });
 
@@ -234,7 +234,7 @@ describe("POST /api/hang-reports", () => {
   test("answers 413 for a body over 64 KiB", async () => {
     const report = realisticReport();
     const body = JSON.stringify({ ...report, padding: "x".repeat(70 * 1024) });
-    const response = await POST(new Request("https://cmux.test/api/hang-reports", {
+    const response = await POST(new Request("https://hmux.test/api/hang-reports", {
       method: "POST",
       headers: { "content-type": "application/json", "content-length": String(body.length) },
       body,
@@ -250,12 +250,12 @@ describe("POST /api/hang-reports", () => {
         controller.close();
       },
     });
-    const response = await POST(new Request("https://cmux.test/api/hang-reports", { method: "POST", body: stream }));
+    const response = await POST(new Request("https://hmux.test/api/hang-reports", { method: "POST", body: stream }));
     expect(response.status).toBe(413);
   });
 
   test("rejects invalid JSON and a day outside server UTC today-15 ... today+1", async () => {
-    const invalid = await POST(new Request("https://cmux.test/api/hang-reports", { method: "POST", body: "{nope" }));
+    const invalid = await POST(new Request("https://hmux.test/api/hang-reports", { method: "POST", body: "{nope" }));
     expect(invalid.status).toBe(400);
     for (const day of ["2026-10-07", "2026-10-25", "2026-02-30", "26-10-23"]) {
       const report = { ...realisticReport(), day };
@@ -316,13 +316,13 @@ describe("POST /api/hang-reports", () => {
 
   test("answers 503 and reports it when the firewall rule is unset or not found on Vercel", async () => {
     process.env.VERCEL = "1";
-    delete process.env.CMUX_HANG_REPORTS_RATE_LIMIT_ID;
+    delete process.env.HMUX_HANG_REPORTS_RATE_LIMIT_ID;
     const unset = await POST(reportRequest(realisticReport()));
     expect(unset.status).toBe(503);
     expect(await unset.json()).toEqual({ error: "rate_limit_unavailable" });
     expect(rateLimitCalls).toEqual([]);
 
-    process.env.CMUX_HANG_REPORTS_RATE_LIMIT_ID = "hang-reports-test";
+    process.env.HMUX_HANG_REPORTS_RATE_LIMIT_ID = "hang-reports-test";
     rateLimitResult = { rateLimited: false, error: "not-found" };
     expect((await POST(reportRequest(realisticReport()))).status).toBe(503);
     expect(missingRuleReports).toEqual([
@@ -333,7 +333,7 @@ describe("POST /api/hang-reports", () => {
   });
 
   test("skips the firewall check off Vercel", async () => {
-    delete process.env.CMUX_HANG_REPORTS_RATE_LIMIT_ID;
+    delete process.env.HMUX_HANG_REPORTS_RATE_LIMIT_ID;
     expect((await POST(reportRequest(realisticReport()))).status).toBe(204);
     expect(missingRuleReports).toEqual([]);
   });
@@ -403,7 +403,7 @@ describe("POST /api/hang-reports", () => {
   test("stores the golden schema 2 fixture the Swift client round-trips", async () => {
     const fixture = readFileSync(new URL("./fixtures/hang-report-schema2.json", import.meta.url), "utf8");
     const body = fixture.replace('"day":"2026-10-23"', `"day":"${NOW.toISOString().slice(0, 10)}"`);
-    const response = await POST(new Request("https://cmux.test/api/hang-reports", {
+    const response = await POST(new Request("https://hmux.test/api/hang-reports", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body,
@@ -422,7 +422,7 @@ describe("POST /api/hang-reports", () => {
       "x-vercel-forwarded-for": PLANTED_IP,
       "cf-connecting-ip": PLANTED_IP,
       forwarded: `for=${PLANTED_IP}`,
-      "user-agent": "cmux-hang-reports/1",
+      "user-agent": "hmux-hang-reports/1",
     });
     const readHeaders: string[] = [];
     const headers = request.headers;
@@ -488,11 +488,11 @@ describe("GET /api/cron/hang-reports-retention", () => {
     }
     repository.rows.set("recent", { ...rowStub("recent"), receivedAt: recent });
 
-    const unauthorized = await handler(new Request("https://cmux.test/api/cron/hang-reports-retention"));
+    const unauthorized = await handler(new Request("https://hmux.test/api/cron/hang-reports-retention"));
     expect(unauthorized.status).toBe(401);
     expect(repository.rows.size).toBe(RETENTION_BATCH_SIZE + 6);
 
-    const response = await handler(new Request("https://cmux.test/api/cron/hang-reports-retention", {
+    const response = await handler(new Request("https://hmux.test/api/cron/hang-reports-retention", {
       headers: { authorization: "Bearer cron-secret" },
     }));
     expect(response.status).toBe(200);
@@ -512,7 +512,7 @@ describe("GET /api/cron/hang-reports-retention", () => {
       now: () => NOW,
       reportFailure: (context) => { reportedFailures.push(context); },
     });
-    const response = await handler(new Request("https://cmux.test/api/cron/hang-reports-retention", {
+    const response = await handler(new Request("https://hmux.test/api/cron/hang-reports-retention", {
       headers: { authorization: "Bearer cron-secret" },
     }));
     expect(response.status).toBe(500);
@@ -543,7 +543,7 @@ function rowStub(reportId: string): HangReportRow {
 }
 
 function reportRequest(body: unknown, headers: Record<string, string> = {}): Request {
-  return new Request("https://cmux.test/api/hang-reports", {
+  return new Request("https://hmux.test/api/hang-reports", {
     method: "POST",
     headers: { "content-type": "application/json", ...headers },
     body: JSON.stringify(body),
@@ -569,7 +569,7 @@ function realisticReport() {
         frames: [
           { image: "libsystem_kernel.dylib", uuid: "A1B2C3D4-0000-1111-2222-333344445555", offset: 4_660 },
           { image: "CoreFoundation", uuid: "B1B2C3D4-0000-1111-2222-333344445555", offset: 512_000 },
-          { image: "cmux NEXT", uuid: "C1B2C3D4-0000-1111-2222-333344445555", offset: 1_234_567 },
+          { image: "hmux NEXT", uuid: "C1B2C3D4-0000-1111-2222-333344445555", offset: 1_234_567 },
           { image: "other" },
           { image: "Chromium Embedded Framework", uuid: "D1B2C3D4-0000-1111-2222-333344445555", offset: 99_000_123 },
         ] as Array<{ image: string; uuid?: string; offset?: number }>,

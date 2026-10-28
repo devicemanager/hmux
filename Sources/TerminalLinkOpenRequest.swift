@@ -1,19 +1,19 @@
 import Foundation
-import CmuxTerminal
+import HmuxTerminal
 
-/// Immutable context captured when Ghostty asks cmux to open a terminal link.
+/// Immutable context captured when Ghostty asks hmux to open a terminal link.
 struct TerminalLinkOpenRequest: Sendable {
     /// Which browser the caller is asking for.
     enum Destination: Sendable {
-        /// Whatever `openTerminalLinksInCmuxBrowser` says. Every click, every
+        /// Whatever `openTerminalLinksInHmuxBrowser` says. Every click, every
         /// runtime-reported link: the user expressed no preference this time,
         /// so the setting speaks for them.
         case followsSetting
-        /// The user picked cmux's browser from a menu. It overrides the
+        /// The user picked hmux's browser from a menu. It overrides the
         /// setting and nothing else: a host the embedded browser is not
         /// allowed to load still falls back the way it always does, because
         /// that fallback is not the setting being overridden.
-        case cmuxBrowser
+        case hmuxBrowser
         /// The user picked the system default browser from a menu.
         case systemBrowser
     }

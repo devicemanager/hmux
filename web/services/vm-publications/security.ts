@@ -4,9 +4,9 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 
-export const PUBLICATION_SESSION_COOKIE = "__Host-cmux-preview";
-export const PUBLICATION_TRANSACTION_COOKIE = "__Host-cmux-preview-tx";
-export const PUBLICATION_CALLBACK_PATH = "/_cmux/auth/callback";
+export const PUBLICATION_SESSION_COOKIE = "__Host-hmux-preview";
+export const PUBLICATION_TRANSACTION_COOKIE = "__Host-hmux-preview-tx";
+export const PUBLICATION_CALLBACK_PATH = "/_hmux/auth/callback";
 
 const MAX_RETURN_PATH_LENGTH = 2_048;
 const PUBLICATION_TOKEN_PATTERN = /^[A-Za-z0-9_-]{32,256}$/u;

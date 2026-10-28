@@ -16,7 +16,7 @@ test("a paid upgrade cancels a stale Go pause instead of stopping the upgraded V
   const calls: string[] = [];
   const repo = {
     findUserVm: () => Effect.succeed({ id: "row", userId: "u", billingTeamId: "u", ownerTeamId: "u", coderouterPoolId: null, billingPlanId: "go", status: "running",
-      provider: "freestyle", providerVmId: "vm", providerMetadata: { cmuxGoPauseIntent: { requestedAt: "2026-09-01T00:00:00Z" } } }),
+      provider: "freestyle", providerVmId: "vm", providerMetadata: { hmuxGoPauseIntent: { requestedAt: "2026-09-01T00:00:00Z" } } }),
     mergeProviderMetadata: ({ patch }: { patch: Record<string, unknown> }) => Effect.sync(() => { writes.push(patch); }),
     markProviderObservedStatus: () => Effect.succeed(true),
     recordUsageEvent: () => Effect.void,
@@ -32,5 +32,5 @@ test("a paid upgrade cancels a stale Go pause instead of stopping the upgraded V
   await Effect.runPromise(resumeVm({ userId: "u", billingTeamId: "u", providerVmId: "vm", callerPlanId: "pro" }).pipe(Effect.provide(layer)));
   expect(calls).toEqual(["budget:null"]);
   expect(writes).toContainEqual({ billingPlanId: "pro" });
-  expect(writes).toContainEqual({ cmuxGoPauseIntent: null });
+  expect(writes).toContainEqual({ hmuxGoPauseIntent: null });
 });

@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@cmux/iroh-v2",
+      "name": "@hmux/iroh-v2",
       "dependencies": {
         "drizzle-orm": "0.45.2",
         "postgres": "3.4.9",

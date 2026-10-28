@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CmuxWorkspaces
+import HmuxFoundation
+import HmuxWorkspaces
 import Foundation
 
 extension AppDelegate {
@@ -30,7 +30,7 @@ extension AppDelegate {
         case .loaded(let snapshot):
             Self.clearCrashOnlyPrimarySnapshotRemovalMarker()
             guard let prunedSnapshot = SessionPersistencePolicy
-                .pruningCmuxCrashDiagnosticWindows(from: snapshot)
+                .pruningHmuxCrashDiagnosticWindows(from: snapshot)
                 .snapshot else {
                 return
             }
@@ -101,7 +101,7 @@ extension AppDelegate {
         }
         sessionSnapshotOverwriteGuard = SessionSnapshotOverwriteGuard(baseline: baseline, launchDate: now)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "session.history.archive baselineWorkspaces=\(baseline.workspaces) " +
                 "baselinePanels=\(baseline.panels)"
         )
@@ -126,7 +126,7 @@ extension AppDelegate {
             return snapshot
         case .hold:
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "session.save.held reason=poorer_young_launch " +
                     "panels=\(snapshot.richness.panels) baselinePanels=\(overwriteGuard.baseline.panels)"
             )

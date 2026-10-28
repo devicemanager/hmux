@@ -53,7 +53,7 @@ jobs:
           # test-e2e.yml for its default runner.
           sparse-checkout: |
             scripts/ci
-            cmuxTests
+            hmuxTests
             .github/workflows
 
       - name: Advance
@@ -61,15 +61,15 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           # The job token cannot list repository variables; the dispatcher
           # reads the pool choice from these instead.
-          CMUX_MACOS_RUNNER_TESTS: ${{ vars.MACOS_RUNNER_TESTS }}
-          CMUX_CI_E2E_LARGE_POOL_OVERFLOW: ${{ vars.CI_E2E_LARGE_POOL_OVERFLOW }}
-          CMUX_CI_PR_POOL_ORDER: ${{ vars.CI_PR_POOL_ORDER }}
-          CMUX_CI_PR_POOL_MAX_QUEUED: ${{ vars.CI_PR_POOL_MAX_QUEUED }}
-          CMUX_CI_PR_POOL_QUEUE_ROUNDS: ${{ vars.CI_PR_POOL_QUEUE_ROUNDS }}
-          CMUX_CI_PR_POOL_OWNED: ${{ vars.CI_PR_POOL_OWNED }}
-          CMUX_CI_OWNED_POOL_SLOTS: ${{ vars.CI_OWNED_POOL_SLOTS }}
-          CMUX_CMUX_CI_XCODE_APP_PR: ${{ vars.CMUX_CI_XCODE_APP_PR }}
-          CMUX_CI_E2E_OWNED_UI: ${{ vars.CI_E2E_OWNED_UI }}
+          HMUX_MACOS_RUNNER_TESTS: ${{ vars.MACOS_RUNNER_TESTS }}
+          HMUX_CI_E2E_LARGE_POOL_OVERFLOW: ${{ vars.CI_E2E_LARGE_POOL_OVERFLOW }}
+          HMUX_CI_PR_POOL_ORDER: ${{ vars.CI_PR_POOL_ORDER }}
+          HMUX_CI_PR_POOL_MAX_QUEUED: ${{ vars.CI_PR_POOL_MAX_QUEUED }}
+          HMUX_CI_PR_POOL_QUEUE_ROUNDS: ${{ vars.CI_PR_POOL_QUEUE_ROUNDS }}
+          HMUX_CI_PR_POOL_OWNED: ${{ vars.CI_PR_POOL_OWNED }}
+          HMUX_CI_OWNED_POOL_SLOTS: ${{ vars.CI_OWNED_POOL_SLOTS }}
+          HMUX_HMUX_CI_XCODE_APP_PR: ${{ vars.HMUX_CI_XCODE_APP_PR }}
+          HMUX_CI_E2E_OWNED_UI: ${{ vars.CI_E2E_OWNED_UI }}
           PER_DAY: ${{ vars.MAIN_REGRESSION_BISECT_DISPATCHES_PER_DAY || '24' }}
         run: |
           set -euo pipefail

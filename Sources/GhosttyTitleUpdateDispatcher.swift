@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
 /// Owns title-churn policy before any work reaches the main actor.

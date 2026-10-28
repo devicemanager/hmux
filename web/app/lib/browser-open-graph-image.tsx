@@ -70,7 +70,7 @@ export async function browserOpenGraphImageResponse(): Promise<Response> {
             letterSpacing: "-0.045em",
           }}
         >
-          cmux
+          hmux
         </div>
       </div>
 

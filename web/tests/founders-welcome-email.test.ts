@@ -39,12 +39,12 @@ describe("welcomeTriggerForMetadata", () => {
     );
   });
 
-  test("cmux Pro checkout metadata classifies as pro_plan (no founders key)", () => {
+  test("hmux Pro checkout metadata classifies as pro_plan (no founders key)", () => {
     expect(
       welcomeTriggerForMetadata({
         stackUserId: "user-1",
         plan: "pro",
-        app: "cmux",
+        app: "hmux",
       }),
     ).toBe("pro_plan");
   });
@@ -54,17 +54,17 @@ describe("welcomeTriggerForMetadata", () => {
       welcomeTriggerForMetadata({
         founders_edition: "true",
         plan: "pro",
-        app: "cmux",
+        app: "hmux",
       }),
     ).toBe("founders_edition");
   });
 
-  test("cmux Team checkout metadata classifies as team_plan", () => {
+  test("hmux Team checkout metadata classifies as team_plan", () => {
     expect(
       welcomeTriggerForMetadata({
         stackTeamId: "team-1",
         plan: "team",
-        app: "cmux",
+        app: "hmux",
       }),
     ).toBe("team_plan");
   });
@@ -88,7 +88,7 @@ describe("welcomeTriggerForCheckout", () => {
     expect(
       welcomeTriggerForCheckout(
         {},
-        { app: "cmux", plan: "pro", stackUserId: "user-1" },
+        { app: "hmux", plan: "pro", stackUserId: "user-1" },
       ),
     ).toBe("pro_plan");
   });
@@ -97,7 +97,7 @@ describe("welcomeTriggerForCheckout", () => {
     expect(
       welcomeTriggerForCheckout(
         { app: "other", plan: "pro" },
-        { app: "cmux", plan: "pro" },
+        { app: "hmux", plan: "pro" },
       ),
     ).toBe("other");
   });
@@ -105,14 +105,14 @@ describe("welcomeTriggerForCheckout", () => {
   test("falls back when the session has only a partial product marker", () => {
     expect(
       welcomeTriggerForCheckout(
-        { app: "cmux" },
-        { app: "cmux", plan: "pro" },
+        { app: "hmux" },
+        { app: "hmux", plan: "pro" },
       ),
     ).toBe("pro_plan");
     expect(
       welcomeTriggerForCheckout(
         { founders_edition: "false" },
-        { app: "cmux", plan: "pro" },
+        { app: "hmux", plan: "pro" },
       ),
     ).toBe("pro_plan");
   });
@@ -120,8 +120,8 @@ describe("welcomeTriggerForCheckout", () => {
   test("keeps malformed Founder metadata from falling back to another product", () => {
     expect(
       welcomeTriggerForCheckout(
-        { founders_edition: "true", app: "cmux", plan: "pro" },
-        { app: "cmux", plan: "pro" },
+        { founders_edition: "true", app: "hmux", plan: "pro" },
+        { app: "hmux", plan: "pro" },
       ),
     ).toBe("other");
   });
@@ -142,7 +142,7 @@ describe("foundersThreadRef", () => {
 });
 
 describe("buildFoundersWelcomeEmail", () => {
-  test("explains how to connect a purchase to a cmux account", () => {
+  test("explains how to connect a purchase to a hmux account", () => {
     const email = buildFoundersWelcomeEmail({
       ...baseParams,
       to: "customer@example.com",
@@ -211,7 +211,7 @@ describe("buildFoundersWelcomeEmail", () => {
     expect(pro.to).toEqual(founders.to);
     expect(pro.cc).toEqual(founders.cc);
     expect(pro.replyTo).toBe(founders.replyTo);
-    expect(pro.text).toContain("Thanks for joining cmux Pro!");
+    expect(pro.text).toContain("Thanks for joining hmux Pro!");
     expect(pro.text).toContain("Sign up for TestFlight: https://cmux.com/dashboard/testflight");
     expect(pro.headers[THREAD_HEADER]).toBe("founders-welcome/cs_pro");
   });
@@ -224,8 +224,8 @@ describe("buildFoundersWelcomeEmail", () => {
       locale: "ja",
     });
 
-    expect(pro.subject).toBe("cmux Pro へようこそ！");
-    expect(pro.text).toContain("cmux Pro にご参加いただきありがとうございます！");
+    expect(pro.subject).toBe("hmux Pro へようこそ！");
+    expect(pro.text).toContain("hmux Pro にご参加いただきありがとうございます！");
     expect(pro.text).toContain("TestFlight に登録する：https://cmux.com/dashboard/testflight");
   });
 
@@ -251,7 +251,7 @@ describe("buildFoundersWelcomeEmail", () => {
     });
 
     expect(pro.subject).toBe(PRO_EMAIL_SUBJECT);
-    expect(pro.text).toContain("Thanks for joining cmux Pro!");
+    expect(pro.text).toContain("Thanks for joining hmux Pro!");
   });
 
   test("recipients, sender, and reply-to are preserved unchanged", () => {
@@ -290,10 +290,10 @@ describe("buildFoundersWelcomeEmail", () => {
     });
 
     const iosBetaParagraph =
-      "cmux iOS Beta is out for cmux Founder's Edition! To connect this purchase " +
-      "to your cmux account, use the email from this purchase at " +
+      "hmux iOS Beta is out for hmux Founder's Edition! To connect this purchase " +
+      "to your hmux account, use the email from this purchase at " +
       "https://cmux.com/billing/recover. We will send a secure sign-in link. " +
-      "If you already use cmux with another email, reply to this message so we " +
+      "If you already use hmux with another email, reply to this message so we " +
       "can verify both addresses and move access safely.";
 
     // Keep the recovery URL and support handoff in the same paragraph as the

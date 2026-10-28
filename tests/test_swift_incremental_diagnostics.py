@@ -52,7 +52,7 @@ class SwiftIncrementalDiagnosticsTests(unittest.TestCase):
 
     def test_reload_diagnostics_are_opt_in_and_use_documented_driver_flags(self):
         reload_source = RELOAD.read_text()
-        enabled_guard = 'if [[ "${CMUX_SWIFT_INCREMENTAL_DIAGNOSTICS:-0}" == "1" ]]; then'
+        enabled_guard = 'if [[ "${HMUX_SWIFT_INCREMENTAL_DIAGNOSTICS:-0}" == "1" ]]; then'
         enabled_block = reload_source.split(enabled_guard, 1)[1].split("\nelse\n", 1)[0]
         self.assertIn("SWIFT_INCREMENTAL_DIAGNOSTICS_EFFECTIVE=1", enabled_block)
         self.assertIn("-driver-show-incremental", enabled_block)

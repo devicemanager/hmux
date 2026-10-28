@@ -19,7 +19,7 @@ final class CloudTunnelActivationObserver {
         self.bringDown = bringDown
         // Synchronous registration bridges the existing settings notifications
         // without an unobserved interval before an async iterator starts.
-        for name in [RightSidebarBetaFeatureSettings.didChangeNotification, .cmuxFeatureFlagsDidChange] {
+        for name in [RightSidebarBetaFeatureSettings.didChangeNotification, .hmuxFeatureFlagsDidChange] {
             observations.append(notificationCenter.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 MainActor.assumeIsolated { self?.reconcile() }
             })

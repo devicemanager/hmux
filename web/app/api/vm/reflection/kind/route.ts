@@ -33,8 +33,8 @@ async function listMembers(teamId: string): Promise<VmTeamMemberLookup> {
 }
 
 /**
- * The machine's kind for /etc/cmux/vm-kind (services/vms/vmKind.ts). The
- * guest's root-run cmux-vm-kind-sync asks every minute and writes `owner` or
+ * The machine's kind for /etc/hmux/vm-kind (services/vms/vmKind.ts). The
+ * guest's root-run hmux-vm-kind-sync asks every minute and writes `owner` or
  * `team`; a 503 leaves the guest's record as it was.
  */
 export const GET = coderouterControlRoute("vm_reflection_kind", "/api/vm/reflection/kind", async (request) => {

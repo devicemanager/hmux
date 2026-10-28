@@ -50,7 +50,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import pr_status  # noqa: E402
 
-MARKER = "<!-- cmux:merge-receipt -->"
+MARKER = "<!-- hmux:merge-receipt -->"
 LABEL = "merged-unverified"
 # Checks that are expected on every pull request even when they never reported.
 EXPECTED = ("ci-status",)

@@ -1,6 +1,6 @@
 import Foundation
-import CmuxCore
-import CmuxFoundation
+import HmuxCore
+import HmuxFoundation
 #if canImport(Security)
 import Security
 #endif
@@ -233,7 +233,7 @@ extension SessionRemoteWorkspaceSnapshot {
             agentSocketPath: WorkspaceRemoteConfiguration.resolvedAgentSocketPath(
                 sshOptions: restoredSSHOptions,
                 // The agent the connection authenticated with wins over a
-                // `ForwardAgent` path, as it does for cmux-tui carriers.
+                // `ForwardAgent` path, as it does for hmux-tui carriers.
                 explicitAgentSocketPath: agentSocketPath,
                 explicitAgentSocketPathIsSet: agentSocketPathOverrideIsSet,
                 // `restorableAgentSocketPath` already applied the restore
@@ -321,16 +321,16 @@ extension SessionRemoteWorkspaceSnapshot {
             shellFeatures: RemoteInteractiveShellBootstrapBuilder.shellFeatures(),
             configuredRemoteCommand: configuredRemoteCommand,
             bundledZshIntegration: RemoteInteractiveShellBootstrapBuilder
-                .bundledShellIntegrationScript(named: "cmux-zsh-integration.zsh"),
+                .bundledShellIntegrationScript(named: "hmux-zsh-integration.zsh"),
             bundledBashIntegration: RemoteInteractiveShellBootstrapBuilder
-                .bundledShellIntegrationScript(named: "cmux-bash-integration.bash"),
+                .bundledShellIntegrationScript(named: "hmux-bash-integration.bash"),
             bundledFishIntegration: RemoteInteractiveShellBootstrapBuilder
                 .bundledShellIntegrationScript(named: "fish/config.fish"),
             terminalProfile: terminalProfile
         )
         let failureMessage = String(
             localized: "cli.ssh.restore.lifecycleUnavailable",
-            defaultValue: "[cmux] SSH restore stopped because cmux could not register the connection lifecycle. Reopen this remote workspace to reconnect."
+            defaultValue: "[hmux] SSH restore stopped because hmux could not register the connection lifecycle. Reopen this remote workspace to reconnect."
         )
         let failureScript = "printf '%s\\n' \(Self.shellQuote(failureMessage)) >&2; exit 1"
         guard let staging = RemoteBootstrapStagingCommandBuilder(
@@ -362,25 +362,25 @@ extension SessionRemoteWorkspaceSnapshot {
         // outermost interpreter explicitly.
         let remoteCommandTemplate = "/bin/sh -c \(Self.shellQuote(remoteCommandScript))"
         let script = ([
-            "cmux_restore_fail() { \(failureScript); }",
-            "cmux_restore_cli=\"${CMUX_BUNDLED_CLI_PATH:-}\"",
-            "if [ -z \"$cmux_restore_cli\" ] || [ ! -x \"$cmux_restore_cli\" ]; then cmux_restore_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi",
-            "if [ -z \"$cmux_restore_cli\" ] || [ -z \"${CMUX_SOCKET_PATH:-}\" ] || [ -z \"${CMUX_WORKSPACE_ID:-}\" ] || [ -z \"${CMUX_SURFACE_ID:-}\" ] || [ -z \"${CMUX_TERMINAL_LIFECYCLE_ID:-}\" ]; then cmux_restore_fail; fi",
-            "cmux_restore_register_attempt() { cmux_restore_launch_payload=\"{\\\"workspace_id\\\":\\\"$CMUX_WORKSPACE_ID\\\",\\\"surface_id\\\":\\\"$CMUX_SURFACE_ID\\\",\\\"terminal_lifecycle_id\\\":\\\"$CMUX_TERMINAL_LIFECYCLE_ID\\\",\\\"attempt_id\\\":\\\"$CMUX_SSH_ATTEMPT_ID\\\"}\"; CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=2 \"$cmux_restore_cli\" --socket \"$CMUX_SOCKET_PATH\" rpc workspace.remote.terminal_session_launching \"$cmux_restore_launch_payload\" >/dev/null 2>&1; }",
-        ] + SSHPTYAttachRetryScriptBuilder().launchRegistrationRetryLines(functionPrefix: "cmux_restore") + [
-            "cmux_restore_begin_attempt",
-            "cmux_restore_launch_status=$?",
-            "if [ \"$cmux_restore_launch_status\" -ne 0 ]; then cmux_restore_fail; fi",
+            "hmux_restore_fail() { \(failureScript); }",
+            "hmux_restore_cli=\"${HMUX_BUNDLED_CLI_PATH:-}\"",
+            "if [ -z \"$hmux_restore_cli\" ] || [ ! -x \"$hmux_restore_cli\" ]; then hmux_restore_cli=\"$(command -v hmux 2>/dev/null || true)\"; fi",
+            "if [ -z \"$hmux_restore_cli\" ] || [ -z \"${HMUX_SOCKET_PATH:-}\" ] || [ -z \"${HMUX_WORKSPACE_ID:-}\" ] || [ -z \"${HMUX_SURFACE_ID:-}\" ] || [ -z \"${HMUX_TERMINAL_LIFECYCLE_ID:-}\" ]; then hmux_restore_fail; fi",
+            "hmux_restore_register_attempt() { hmux_restore_launch_payload=\"{\\\"workspace_id\\\":\\\"$HMUX_WORKSPACE_ID\\\",\\\"surface_id\\\":\\\"$HMUX_SURFACE_ID\\\",\\\"terminal_lifecycle_id\\\":\\\"$HMUX_TERMINAL_LIFECYCLE_ID\\\",\\\"attempt_id\\\":\\\"$HMUX_SSH_ATTEMPT_ID\\\"}\"; HMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=2 \"$hmux_restore_cli\" --socket \"$HMUX_SOCKET_PATH\" rpc workspace.remote.terminal_session_launching \"$hmux_restore_launch_payload\" >/dev/null 2>&1; }",
+        ] + SSHPTYAttachRetryScriptBuilder().launchRegistrationRetryLines(functionPrefix: "hmux_restore") + [
+            "hmux_restore_begin_attempt",
+            "hmux_restore_launch_status=$?",
+            "if [ \"$hmux_restore_launch_status\" -ne 0 ]; then hmux_restore_fail; fi",
             staging.preparationShellScript,
-            "if [ \"$cmux_remote_install_status\" -ne 0 ]; then cmux_restore_fail; fi",
-            "unset cmux_remote_install_status",
-            "cmux_restore_workspace_id=\"${CMUX_WORKSPACE_ID:-}\"",
-            "cmux_restore_surface_id=\"${CMUX_SURFACE_ID:-}\"",
-            "cmux_restore_terminal_lifecycle_id=\"${CMUX_TERMINAL_LIFECYCLE_ID:-}\"",
-            "cmux_restore_attempt_id=\"${CMUX_SSH_ATTEMPT_ID:-}\"",
-            "cmux_restore_remote_command_template=\(Self.shellQuote(remoteCommandTemplate))",
-            "cmux_restore_remote_command=\"$(printf '%s' \"$cmux_restore_remote_command_template\" | sed \"s/__CMUX_WORKSPACE_ID__/$cmux_restore_workspace_id/g; s/__CMUX_SURFACE_ID__/$cmux_restore_surface_id/g; s/__CMUX_TERMINAL_LIFECYCLE_ID__/$cmux_restore_terminal_lifecycle_id/g; s/__CMUX_SSH_ATTEMPT_ID__/$cmux_restore_attempt_id/g\")\"",
-            "exec \(sshInvocation) \"$cmux_restore_remote_command\"",
+            "if [ \"$hmux_remote_install_status\" -ne 0 ]; then hmux_restore_fail; fi",
+            "unset hmux_remote_install_status",
+            "hmux_restore_workspace_id=\"${HMUX_WORKSPACE_ID:-}\"",
+            "hmux_restore_surface_id=\"${HMUX_SURFACE_ID:-}\"",
+            "hmux_restore_terminal_lifecycle_id=\"${HMUX_TERMINAL_LIFECYCLE_ID:-}\"",
+            "hmux_restore_attempt_id=\"${HMUX_SSH_ATTEMPT_ID:-}\"",
+            "hmux_restore_remote_command_template=\(Self.shellQuote(remoteCommandTemplate))",
+            "hmux_restore_remote_command=\"$(printf '%s' \"$hmux_restore_remote_command_template\" | sed \"s/__HMUX_WORKSPACE_ID__/$hmux_restore_workspace_id/g; s/__HMUX_SURFACE_ID__/$hmux_restore_surface_id/g; s/__HMUX_TERMINAL_LIFECYCLE_ID__/$hmux_restore_terminal_lifecycle_id/g; s/__HMUX_SSH_ATTEMPT_ID__/$hmux_restore_attempt_id/g\")\"",
+            "exec \(sshInvocation) \"$hmux_restore_remote_command\"",
         ]).joined(separator: "\n")
         return "/bin/sh -c \(Self.shellQuote(script))"
     }
@@ -389,23 +389,23 @@ extension SessionRemoteWorkspaceSnapshot {
         remoteRelayPort: Int
     ) -> String {
         [
-            "if [ -n \"__CMUX_SURFACE_ID__\" ]; then",
-            "  cmux_restore_terminal_connected='{\"workspace_id\":\"__CMUX_WORKSPACE_ID__\",\"surface_id\":\"__CMUX_SURFACE_ID__\",\"relay_port\":\(remoteRelayPort),\"terminal_lifecycle_id\":\"__CMUX_TERMINAL_LIFECYCLE_ID__\",\"attempt_id\":\"__CMUX_SSH_ATTEMPT_ID__\"}'",
-            "  cmux_restore_terminal_connected_acknowledged=0",
-            "  cmux_restore_terminal_connected_retry=0",
-            "  while [ \"$cmux_restore_terminal_connected_retry\" -lt 4 ]; do",
-            "    cmux_restore_remote_cli=\"$HOME/.cmux/bin/cmux\"",
-            "    if [ ! -x \"$cmux_restore_remote_cli\" ]; then cmux_restore_remote_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi",
-            "    if [ -n \"$cmux_restore_remote_cli\" ] && env -u CMUX_SOCKET CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=0.5 CMUX_SOCKET_PATH=\"127.0.0.1:\(remoteRelayPort)\" \"$cmux_restore_remote_cli\" rpc workspace.remote.terminal_session_connected \"$cmux_restore_terminal_connected\" >/dev/null 2>&1; then",
-            "      cmux_restore_terminal_connected_acknowledged=1",
+            "if [ -n \"__HMUX_SURFACE_ID__\" ]; then",
+            "  hmux_restore_terminal_connected='{\"workspace_id\":\"__HMUX_WORKSPACE_ID__\",\"surface_id\":\"__HMUX_SURFACE_ID__\",\"relay_port\":\(remoteRelayPort),\"terminal_lifecycle_id\":\"__HMUX_TERMINAL_LIFECYCLE_ID__\",\"attempt_id\":\"__HMUX_SSH_ATTEMPT_ID__\"}'",
+            "  hmux_restore_terminal_connected_acknowledged=0",
+            "  hmux_restore_terminal_connected_retry=0",
+            "  while [ \"$hmux_restore_terminal_connected_retry\" -lt 4 ]; do",
+            "    hmux_restore_remote_cli=\"$HOME/.hmux/bin/hmux\"",
+            "    if [ ! -x \"$hmux_restore_remote_cli\" ]; then hmux_restore_remote_cli=\"$(command -v hmux 2>/dev/null || true)\"; fi",
+            "    if [ -n \"$hmux_restore_remote_cli\" ] && env -u HMUX_SOCKET HMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=0.5 HMUX_SOCKET_PATH=\"127.0.0.1:\(remoteRelayPort)\" \"$hmux_restore_remote_cli\" rpc workspace.remote.terminal_session_connected \"$hmux_restore_terminal_connected\" >/dev/null 2>&1; then",
+            "      hmux_restore_terminal_connected_acknowledged=1",
             "      break",
             "    fi",
-            "    cmux_restore_terminal_connected_retry=$((cmux_restore_terminal_connected_retry + 1))",
-            "    if [ \"$cmux_restore_terminal_connected_retry\" -lt 4 ]; then /bin/sleep 0.1; fi",
+            "    hmux_restore_terminal_connected_retry=$((hmux_restore_terminal_connected_retry + 1))",
+            "    if [ \"$hmux_restore_terminal_connected_retry\" -lt 4 ]; then /bin/sleep 0.1; fi",
             "  done",
-            "  if [ \"$cmux_restore_terminal_connected_acknowledged\" -ne 1 ]; then exit 255; fi",
+            "  if [ \"$hmux_restore_terminal_connected_acknowledged\" -ne 1 ]; then exit 255; fi",
             "fi",
-            "unset cmux_restore_remote_cli cmux_restore_terminal_connected cmux_restore_terminal_connected_acknowledged cmux_restore_terminal_connected_retry",
+            "unset hmux_restore_remote_cli hmux_restore_terminal_connected hmux_restore_terminal_connected_acknowledged hmux_restore_terminal_connected_retry",
         ].joined(separator: "\n")
     }
 
@@ -440,10 +440,10 @@ extension SessionRemoteWorkspaceSnapshot {
                 shellFeatures: RemoteInteractiveShellBootstrapBuilder.shellFeatures(),
                 configuredRemoteCommand: configuredRemoteCommand,
                 bundledZshIntegration: RemoteInteractiveShellBootstrapBuilder.bundledShellIntegrationScript(
-                    named: "cmux-zsh-integration.zsh"
+                    named: "hmux-zsh-integration.zsh"
                 ),
                 bundledBashIntegration: RemoteInteractiveShellBootstrapBuilder.bundledShellIntegrationScript(
-                    named: "cmux-bash-integration.bash"
+                    named: "hmux-bash-integration.bash"
                 ),
                 bundledFishIntegration: RemoteInteractiveShellBootstrapBuilder.bundledShellIntegrationScript(
                     named: "fish/config.fish"
@@ -470,27 +470,27 @@ extension SessionRemoteWorkspaceSnapshot {
             sshFallbackCommand: sshFallbackCommand,
             localMoshMissingMessage: String(
                 localized: "cli.ssh.mosh.localMissing",
-                defaultValue: "[cmux] Mosh is not installed locally; continuing over SSH."
+                defaultValue: "[hmux] Mosh is not installed locally; continuing over SSH."
             ),
             localMoshUnsupportedMessage: String(
                 localized: "cli.ssh.mosh.localUnsupported",
-                defaultValue: "[cmux] The local Mosh client lacks required SSH integration; continuing over SSH."
+                defaultValue: "[hmux] The local Mosh client lacks required SSH integration; continuing over SSH."
             ),
             remoteMoshMissingMessage: String(
                 localized: "cli.ssh.mosh.remoteMissing",
-                defaultValue: "[cmux] mosh-server is not installed on the remote host; continuing over SSH."
+                defaultValue: "[hmux] mosh-server is not installed on the remote host; continuing over SSH."
             ),
             remoteMoshProbeFailedMessage: String(
                 localized: "cli.ssh.mosh.probeFailed",
-                defaultValue: "[cmux] Could not verify remote Mosh support; continuing over SSH."
+                defaultValue: "[hmux] Could not verify remote Mosh support; continuing over SSH."
             ),
             remoteBootstrapInstallFailedMessage: String(
                 localized: "cli.ssh.mosh.bootstrapInstallFailed",
-                defaultValue: "[cmux] Remote bootstrap install failed; continuing over SSH."
+                defaultValue: "[hmux] Remote bootstrap install failed; continuing over SSH."
             ),
             remoteMoshAddressFallbackMessage: String(
                 localized: "cli.ssh.mosh.addressFallback",
-                defaultValue: "[cmux] Remote SSH advertised an unusable address; resolving the Mosh address through the SSH connection."
+                defaultValue: "[hmux] Remote SSH advertised an unusable address; resolving the Mosh address through the SSH connection."
             )
         ).command()
     }
@@ -515,7 +515,7 @@ extension SessionRemoteWorkspaceSnapshot {
             "/bin/sh",
             "-c",
             #"exec "${SHELL:-/bin/sh}" -c "$1""#,
-            "cmux-remote-command",
+            "hmux-remote-command",
             configuredRemoteCommand,
         ]
     }
@@ -555,16 +555,16 @@ extension SessionRemoteWorkspaceSnapshot {
         SSHAgentSocketResolver().removingOptions(named: "RemoteCommand", from: options)
     }
 
-    private static let defaultFreestylePersistentDaemonSlot = "cmux-default-freestyle-sshd-v1"
+    private static let defaultFreestylePersistentDaemonSlot = "hmux-default-freestyle-sshd-v1"
 
     private static func legacyDefaultFreestyleVMID(destination: String, skipDaemonBootstrap: Bool?) -> String? {
         guard skipDaemonBootstrap == true else { return nil }
-        let pattern = #"^([A-Za-z0-9._-]+)\+cmux@vm-ssh\.freestyle\.sh$"#
+        let pattern = #"^([A-Za-z0-9._-]+)\+hmux@vm-ssh\.freestyle\.sh$"#
         guard let match = destination.range(of: pattern, options: .regularExpression) else {
             return nil
         }
         let matched = String(destination[match])
-        guard let plusRange = matched.range(of: "+cmux@vm-ssh.freestyle.sh") else {
+        guard let plusRange = matched.range(of: "+hmux@vm-ssh.freestyle.sh") else {
             return nil
         }
         return String(matched[..<plusRange.lowerBound])
@@ -572,35 +572,35 @@ extension SessionRemoteWorkspaceSnapshot {
 
     private static func defaultFreestyleSSHAttachCommand(vmID: String) -> String {
         let lines = [
-            "cmux_freestyle_cli=\"${CMUX_BUNDLED_CLI_PATH:-}\"",
-            "if [ -z \"$cmux_freestyle_cli\" ] || [ ! -x \"$cmux_freestyle_cli\" ]; then cmux_freestyle_cli=\"$(command -v cmux 2>/dev/null || true)\"; fi",
-            "if [ -z \"$cmux_freestyle_cli\" ]; then printf '%s\\n' '[cmux] bundled CLI not found for Cloud VM SSH attach.' >&2; exit 127; fi",
-            "CMUX_SSH_RECONNECT_LIMIT=\"${CMUX_SSH_RECONNECT_LIMIT:-\(SSHReconnectBudget().maximumLimit)}\"",
-            "CMUX_SSH_RECONNECT_DELAY_SECONDS=\"${CMUX_SSH_RECONNECT_DELAY_SECONDS:-2}\"",
-            "CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT=\"${CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT:-$CMUX_SSH_RECONNECT_LIMIT}\"",
-            "CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS=\"${CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS:-$CMUX_SSH_RECONNECT_DELAY_SECONDS}\"",
-            "export CMUX_SSH_RECONNECT_LIMIT CMUX_SSH_RECONNECT_DELAY_SECONDS",
-            "export CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT CMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS",
-            "cmux_freestyle_attach() {",
-            "  if [ -n \"${CMUX_SOCKET_PATH:-}\" ]; then",
-            "    \"$cmux_freestyle_cli\" --socket \"$CMUX_SOCKET_PATH\" vm-pty-attach --id \(shellQuote(vmID)) --default-freestyle-sshd",
+            "hmux_freestyle_cli=\"${HMUX_BUNDLED_CLI_PATH:-}\"",
+            "if [ -z \"$hmux_freestyle_cli\" ] || [ ! -x \"$hmux_freestyle_cli\" ]; then hmux_freestyle_cli=\"$(command -v hmux 2>/dev/null || true)\"; fi",
+            "if [ -z \"$hmux_freestyle_cli\" ]; then printf '%s\\n' '[hmux] bundled CLI not found for Cloud VM SSH attach.' >&2; exit 127; fi",
+            "HMUX_SSH_RECONNECT_LIMIT=\"${HMUX_SSH_RECONNECT_LIMIT:-\(SSHReconnectBudget().maximumLimit)}\"",
+            "HMUX_SSH_RECONNECT_DELAY_SECONDS=\"${HMUX_SSH_RECONNECT_DELAY_SECONDS:-2}\"",
+            "HMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT=\"${HMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT:-$HMUX_SSH_RECONNECT_LIMIT}\"",
+            "HMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS=\"${HMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS:-$HMUX_SSH_RECONNECT_DELAY_SECONDS}\"",
+            "export HMUX_SSH_RECONNECT_LIMIT HMUX_SSH_RECONNECT_DELAY_SECONDS",
+            "export HMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_LIMIT HMUX_DEFAULT_FREESTYLE_ATTACH_RETRY_DELAY_SECONDS",
+            "hmux_freestyle_attach() {",
+            "  if [ -n \"${HMUX_SOCKET_PATH:-}\" ]; then",
+            "    \"$hmux_freestyle_cli\" --socket \"$HMUX_SOCKET_PATH\" vm-pty-attach --id \(shellQuote(vmID)) --default-freestyle-sshd",
             "  else",
-            "    \"$cmux_freestyle_cli\" vm-pty-attach --id \(shellQuote(vmID)) --default-freestyle-sshd",
+            "    \"$hmux_freestyle_cli\" vm-pty-attach --id \(shellQuote(vmID)) --default-freestyle-sshd",
             "  fi",
             "}",
-            "cmux_freestyle_retry=0",
+            "hmux_freestyle_retry=0",
             "while :; do",
-            "  if [ \"$cmux_freestyle_retry\" -gt 0 ]; then",
-            "    export CMUX_CLOUD_RECONNECT_ATTEMPT=\"$cmux_freestyle_retry\"",
+            "  if [ \"$hmux_freestyle_retry\" -gt 0 ]; then",
+            "    export HMUX_CLOUD_RECONNECT_ATTEMPT=\"$hmux_freestyle_retry\"",
             "  else",
-            "    unset CMUX_CLOUD_RECONNECT_ATTEMPT",
+            "    unset HMUX_CLOUD_RECONNECT_ATTEMPT",
             "  fi",
-            "  cmux_freestyle_attach",
-            "  cmux_freestyle_status=$?",
-            "  case \"$cmux_freestyle_status\" in 254|255) ;; *) exit \"$cmux_freestyle_status\" ;; esac",
-            "  if [ \"$cmux_freestyle_retry\" -ge \"$CMUX_SSH_RECONNECT_LIMIT\" ]; then exit \"$cmux_freestyle_status\"; fi",
-            "  cmux_freestyle_retry=$((cmux_freestyle_retry + 1))",
-            "  sleep \"$CMUX_SSH_RECONNECT_DELAY_SECONDS\"",
+            "  hmux_freestyle_attach",
+            "  hmux_freestyle_status=$?",
+            "  case \"$hmux_freestyle_status\" in 254|255) ;; *) exit \"$hmux_freestyle_status\" ;; esac",
+            "  if [ \"$hmux_freestyle_retry\" -ge \"$HMUX_SSH_RECONNECT_LIMIT\" ]; then exit \"$hmux_freestyle_status\"; fi",
+            "  hmux_freestyle_retry=$((hmux_freestyle_retry + 1))",
+            "  sleep \"$HMUX_SSH_RECONNECT_DELAY_SECONDS\"",
             "done",
         ]
         return "/bin/sh -c \(shellQuote(lines.joined(separator: "\n")))"
@@ -612,11 +612,11 @@ extension SessionRemoteWorkspaceSnapshot {
 }
 
 extension SessionRemoteWorkspaceSnapshot {
-    /// The agent a restored carrier authenticates with. cmux keys its shared
-    /// SSH master by agent, and `cmux ssh` sends its shell's `SSH_AUTH_SOCK`,
+    /// The agent a restored carrier authenticates with. hmux keys its shared
+    /// SSH master by agent, and `hmux ssh` sends its shell's `SSH_AUTH_SOCK`,
     /// so a restore that dropped the agent would dial a master no login opened.
     /// The saved agent wins while it still serves; after a reboot moves it,
-    /// the app's own agent matches what a new `cmux ssh` sends, as the CLI
+    /// the app's own agent matches what a new `hmux ssh` sends, as the CLI
     /// falls back to the same environment. A path that exists but no longer
     /// accepts connections never beats a live agent.
     func restorableAgentSocketPath(

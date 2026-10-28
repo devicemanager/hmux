@@ -1,5 +1,5 @@
-import CmuxControlSocket
-import CmuxSettings
+import HmuxControlSocket
+import HmuxSettings
 import Foundation
 
 extension TerminalController {
@@ -126,7 +126,7 @@ extension TerminalController {
     nonisolated static var socketClientAccessDeniedResponse: String {
         "ERROR: " + String(
             localized: "socket.client.accessDenied",
-            defaultValue: "Access denied - only processes started inside cmux can connect"
+            defaultValue: "Access denied - only processes started inside hmux can connect"
         )
     }
 

@@ -6,14 +6,14 @@ import { closeCloudDbForTests } from "../db/client";
 import { VmRepository, VmRepositoryLive } from "../services/vms/repository";
 import { VM_SLUG_PATTERN } from "../services/vms/vmNaming";
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 
 let sql: Sql | null = null;
 
 function databaseURL() {
   const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+  if (!url) throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   return url;
 }
 

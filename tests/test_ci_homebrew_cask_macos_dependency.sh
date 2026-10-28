@@ -17,12 +17,12 @@ deployment_targets="$(
       gsub(/[;[:space:]]/, "", $2)
       print $2
     }
-  ' "$ROOT_DIR/cmux.xcodeproj/project.pbxproj" | sort -u
+  ' "$ROOT_DIR/hmux.xcodeproj/project.pbxproj" | sort -u
 )"
 deployment_target_count="$(printf '%s\n' "$deployment_targets" | sed '/^$/d' | wc -l | tr -d ' ')"
 required_symbol=""
 if [ "$deployment_target_count" -ne 1 ]; then
-  echo "FAIL: cmux app must have exactly one macOS deployment target, got ${deployment_targets:-<none>}" >&2
+  echo "FAIL: hmux app must have exactly one macOS deployment target, got ${deployment_targets:-<none>}" >&2
   fail=1
 else
   case "$deployment_targets" in

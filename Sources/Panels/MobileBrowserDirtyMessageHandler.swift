@@ -2,7 +2,7 @@ import Foundation
 import WebKit
 
 final class MobileBrowserDirtyMessageHandler: NSObject, WKScriptMessageHandler {
-    static let name = "cmuxMobileBrowserStream"
+    static let name = "hmuxMobileBrowserStream"
 
     private let receive: @MainActor (Bool?) -> Void
 

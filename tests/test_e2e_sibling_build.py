@@ -29,7 +29,7 @@ def started(run_id: int) -> str:
 
 def run(run_id: int, revision: str = SHA, runner: str = SMALL, status: str = "in_progress",
         run_started_at: str | None = None) -> dict:
-    title = f"cmuxTests/Suite{run_id} on {runner} @ {revision} [d{run_id}]"
+    title = f"hmuxTests/Suite{run_id} on {runner} @ {revision} [d{run_id}]"
     return {"id": run_id, "status": status, "display_title": title,
             "run_started_at": run_started_at or started(run_id)}
 
@@ -231,7 +231,7 @@ class SiblingWaitTests(unittest.TestCase):
         self.assertNotIn("event=", sibling.RUNNING)
 
     def test_a_title_without_a_full_revision_is_ignored(self) -> None:
-        loose = {"id": 90, "status": "in_progress", "display_title": "cmuxTests/Suite on blacksmith-6vcpu-macos-26 @ main"}
+        loose = {"id": 90, "status": "in_progress", "display_title": "hmuxTests/Suite on blacksmith-6vcpu-macos-26 @ main"}
         self.assertIsNone(sibling.earlier_sibling([loose], THIS, SHA, SMALL))
 
 
@@ -247,7 +247,7 @@ class WorkflowTests(unittest.TestCase):
         wait = next(step for step in sibling_job["steps"] if "e2e_sibling_build.py wait" in str(step.get("run")))
         self.assertTrue(wait["run"].endswith("|| true"))
         # The job outlasts the wait, so the budget, not the timeout, ends it.
-        self.assertGreater(sibling_job["timeout-minutes"] * 60, int(wait["env"]["CMUX_E2E_SIBLING_WAIT_SECONDS"]))
+        self.assertGreater(sibling_job["timeout-minutes"] * 60, int(wait["env"]["HMUX_E2E_SIBLING_WAIT_SECONDS"]))
 
     def test_a_failed_wait_never_skips_the_build(self) -> None:
         condition = self.jobs["build"]["if"]
@@ -277,13 +277,13 @@ class WorkflowTests(unittest.TestCase):
 
     def test_the_build_restores_through_the_unchanged_reuse_step(self) -> None:
         reuse = next(step for step in self.jobs["build"]["steps"] if step.get("id") == "reuse")
-        self.assertEqual(reuse["run"].strip(), 'python3 scripts/ci/reuse_app_host_products.py restore "$CMUX_DERIVED_DATA_PATH"')
+        self.assertEqual(reuse["run"].strip(), 'python3 scripts/ci/reuse_app_host_products.py restore "$HMUX_DERIVED_DATA_PATH"')
 
 
     def test_only_an_owned_mac_moves_to_another_root_and_publishes_under_its_key(self) -> None:
         reuse = next(step for step in self.jobs["build"]["steps"] if step.get("id") == "reuse")
-        self.assertEqual(reuse["env"]["CMUX_REUSE_SWITCH_ROOTS"],
-                         "${{ startsWith(env.CMUX_PRODUCT_RUNNER, 'glaeda-') && '1' || '' }}")
+        self.assertEqual(reuse["env"]["HMUX_REUSE_SWITCH_ROOTS"],
+                         "${{ startsWith(env.HMUX_PRODUCT_RUNNER, 'glaeda-') && '1' || '' }}")
         # A product taken from another root is sealed and published at that root.
         text = (ROOT / ".github/workflows/test-e2e.yml").read_text()
         self.assertNotIn("${{ steps.product-key.outputs.key }}", text)

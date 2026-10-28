@@ -140,7 +140,7 @@ workflow text (tests/test_ci_self_hosted_guard.sh refuses `glaeda-` there):
 runs-on reads the JSON this prints.
 
 `runner: owned` forces the owned pool for the lane's Xcode pin
-(vars.CMUX_CI_XCODE_APP_PR), without reading the queue, for a proof run. It
+(vars.HMUX_CI_XCODE_APP_PR), without reading the queue, for a proof run. It
 is an explicit request, so instead of falling back it fails the runner job
 when the run could not be rescued or has nowhere to go: CI_PR_POOL_OWNED is
 not 1 (ci-owned-pool-rescue.yml then never watches it, and a job left queued
@@ -761,7 +761,7 @@ def main(argv: Sequence[str] | None = None, env: Mapping[str, str] | None = None
             and not (env.get("ROUTE_TOKEN") or env.get("GH_TOKEN"))):
         values = dict(env)
         values.update({"CI_PR_POOL_OWNED": args.owned, "CI_OWNED_POOL_SLOTS": args.owned_slots,
-                       "CMUX_CI_XCODE_APP_PR": args.pr_xcode_app})
+                       "HMUX_CI_XCODE_APP_PR": args.pr_xcode_app})
         choice = simple_pool_picker.pick(simple_pool_picker.observe(
             token=values.get("ROUTE_TOKEN") or values.get("GH_TOKEN") or "",
             repository=values.get("GH_REPO") or values.get("GITHUB_REPOSITORY") or "",

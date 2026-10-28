@@ -23,7 +23,7 @@ def check(name, status="COMPLETED", conclusion="SUCCESS", started=None, complete
 class Reader:
     """Returns one rollup per poll; the last one repeats."""
 
-    def __init__(self, *polls, files=("Packages/macOS/CmuxNext/Sources/A.swift",), head=HEAD, bases=("feat-cmux-next",)):
+    def __init__(self, *polls, files=("Packages/macOS/HmuxNext/Sources/A.swift",), head=HEAD, bases=("feat-hmux-next",)):
         self.polls, self.files, self.head, self.bases, self.calls, self.args = list(polls), files, head, bases, 0, None
 
     def __call__(self, *args):
@@ -49,30 +49,30 @@ class Clock:
 def run(reader, timeout=600, covered=True):
     clock = Clock()
     return gate.run("manaflow-ai/cmux", "42", HEAD, timeout, 30, covered, read=reader, clock=clock, sleep=clock.sleep,
-                    base="feat-cmux-next")
+                    base="feat-hmux-next")
 
 
-NEXT_WORKFLOW = """name: cmux-next
+NEXT_WORKFLOW = """name: hmux-next
 on:
   pull_request:
     paths:
-      - Packages/macOS/CmuxNext/**
+      - Packages/macOS/HmuxNext/**
 jobs:
   path_route:
-    name: cmux-next path routing
+    name: hmux-next path routing
     runs-on: ubuntu-latest
   checks:
-    name: cmux-next checks (god files, concurrency, crash safety, l10n)
+    name: hmux-next checks (god files, concurrency, crash safety, l10n)
   swift-canary:
-    name: cmux-next Swift canary
+    name: hmux-next Swift canary
   fast-tier:
-    name: cmux-next fast tier
+    name: hmux-next fast tier
   swift-test:
-    name: cmux-next swift test
+    name: hmux-next swift test
   release-compile:
-    name: cmux-next Release compile (Xcode 26)
-  cmux-scheme-compile:
-    name: ${{ inputs.dev_daily == true && 'cmux NEXT DEV Release compile' || 'cmux app scheme compile (Debug)' }}
+    name: hmux-next Release compile (Xcode 26)
+  hmux-scheme-compile:
+    name: ${{ inputs.dev_daily == true && 'hmux NEXT DEV Release compile' || 'hmux app scheme compile (Debug)' }}
 """
 CI_WORKFLOW = """name: CI
 jobs:
@@ -93,27 +93,27 @@ jobs:
 """
 
 
-GREEN = [check("cmux-next path routing"), check("cmux-next fast tier"), check("cmux-next Swift canary"),
-         check("cmux app scheme compile (Debug)", conclusion="SKIPPED"), check("cmux-next swift test", "IN_PROGRESS", "")]
+GREEN = [check("hmux-next path routing"), check("hmux-next fast tier"), check("hmux-next Swift canary"),
+         check("hmux app scheme compile (Debug)", conclusion="SKIPPED"), check("hmux-next swift test", "IN_PROGRESS", "")]
 
 
 class FastGate(unittest.TestCase):
     def test_passes_when_the_fast_lanes_are_green_while_the_full_suites_run(self):
         waited, seen, reds = run(Reader(GREEN))
         self.assertEqual(waited, 0)
-        self.assertEqual(seen, ["cmux-next Swift canary", "cmux-next fast tier", "cmux-next path routing"])
+        self.assertEqual(seen, ["hmux-next Swift canary", "hmux-next fast tier", "hmux-next path routing"])
         self.assertEqual(reds, [])
 
     def test_waits_for_routing_then_the_fast_tier(self):
-        polls = ([], [check("cmux-next path routing", "IN_PROGRESS", "")],
-                 [check("cmux-next path routing")], [check("cmux-next path routing"), check("cmux-next fast tier")])
+        polls = ([], [check("hmux-next path routing", "IN_PROGRESS", "")],
+                 [check("hmux-next path routing")], [check("hmux-next path routing"), check("hmux-next fast tier")])
         reader = Reader(*polls)
         waited, seen, _ = run(reader)
         self.assertEqual(reader.calls, 4)
         self.assertEqual(waited, 90)
-        self.assertIn("cmux-next fast tier", seen)
+        self.assertIn("hmux-next fast tier", seen)
 
-    def test_a_change_outside_cmux_next_and_webviews_needs_no_lane(self):
+    def test_a_change_outside_hmux_next_and_webviews_needs_no_lane(self):
         waited, seen, reds = run(Reader([], files=("docs/README.md",)), covered=False)
         self.assertEqual((waited, seen, reds), (0, [], []))
 
@@ -127,20 +127,20 @@ class FastGate(unittest.TestCase):
     def test_completed_reds_in_fast_lanes_and_gating_families_are_reported_pending_ones_are_not(self):
         rollup = GREEN + [check("app-size", conclusion="FAILURE"), check("render (head, 0)", conclusion="FAILURE"),
                           check("web / Web status", "IN_PROGRESS", "")]
-        rollup[1] = check("cmux-next fast tier", conclusion="FAILURE")
+        rollup[1] = check("hmux-next fast tier", conclusion="FAILURE")
         _, _, reds = run(Reader(rollup))
-        self.assertEqual(reds, ["app-size", "cmux-next fast tier"])
+        self.assertEqual(reds, ["app-size", "hmux-next fast tier"])
 
     def test_a_red_cargo_fast_tier_is_reported(self):
         """The fast tier's cargo entries run in their own Linux job; its red is a fast-lane red."""
-        _, seen, reds = run(Reader(GREEN + [check("cmux-next fast tier (cargo)", conclusion="FAILURE")]))
-        self.assertIn("cmux-next fast tier (cargo)", seen)
-        self.assertEqual(reds, ["cmux-next fast tier (cargo)"])
+        _, seen, reds = run(Reader(GREEN + [check("hmux-next fast tier (cargo)", conclusion="FAILURE")]))
+        self.assertIn("hmux-next fast tier (cargo)", seen)
+        self.assertEqual(reds, ["hmux-next fast tier (cargo)"])
 
     def test_completed_reds_in_the_full_gate_lanes_are_reported_pending_ones_are_not(self):
         """The fast gate does not wait for ci-status, the swift test or the Release compile,
         but a completed red one is judged as the full gate judges it."""
-        names = ("ci-status", "cmux-next swift test", "cmux-next Release compile (Xcode 26)")
+        names = ("ci-status", "hmux-next swift test", "hmux-next Release compile (Xcode 26)")
         rollup = [c for c in GREEN if c["name"] not in names] + [check(n, conclusion="FAILURE") for n in names]
         _, _, reds = run(Reader(rollup))
         self.assertEqual(reds, sorted(names))
@@ -152,7 +152,7 @@ class FastGate(unittest.TestCase):
         the exact head. A red one goes to gh-merge-green, which asks the base whether it
         prints every finding too or takes a human --override. One with no verdict refuses,
         as in the full gate, which takes only success, neutral, skipped or failure."""
-        lint = "cmux-next checks (god files, concurrency, crash safety, l10n)"
+        lint = "hmux-next checks (god files, concurrency, crash safety, l10n)"
         with self.assertRaisesRegex(gate.Refused, "still waiting on " + re.escape(lint)):
             run(Reader(GREEN + [check(lint, "IN_PROGRESS", "")]), timeout=60)
         for conclusion in ("CANCELLED", "TIMED_OUT", "ACTION_REQUIRED"):
@@ -171,27 +171,27 @@ class FastGate(unittest.TestCase):
             run(Reader(GREEN + [check("risk evidence", conclusion="FAILURE")]))
 
     def test_a_rerun_replaces_the_earlier_verdict(self):
-        rollup = GREEN + [check("cmux-next fast tier", conclusion="FAILURE"), check("cmux-next fast tier")]
+        rollup = GREEN + [check("hmux-next fast tier", conclusion="FAILURE"), check("hmux-next fast tier")]
         rollup.pop(1)
         _, _, reds = run(Reader(rollup))
         self.assertEqual(reds, [])
 
     def test_the_latest_started_run_wins_whatever_the_rollup_order(self):
         """The rollup is not ordered by time: an older green listed after a newer red must not hide it."""
-        rollup = [c for c in GREEN if c["name"] != "cmux-next fast tier"] + [
-            check("cmux-next fast tier", conclusion="FAILURE", started="2026-10-14T10:05:00Z", completed="2026-10-14T10:09:00Z"),
-            check("cmux-next fast tier", started="2026-10-14T09:00:00Z", completed="2026-10-14T09:04:00Z")]
+        rollup = [c for c in GREEN if c["name"] != "hmux-next fast tier"] + [
+            check("hmux-next fast tier", conclusion="FAILURE", started="2026-10-14T10:05:00Z", completed="2026-10-14T10:09:00Z"),
+            check("hmux-next fast tier", started="2026-10-14T09:00:00Z", completed="2026-10-14T09:04:00Z")]
         _, _, reds = run(Reader(rollup))
-        self.assertEqual(reds, ["cmux-next fast tier"])
-        rollup[-2] = check("cmux-next fast tier", conclusion="CANCELLED", started="2026-10-14T10:05:00Z", completed="2026-10-14T10:09:00Z")
+        self.assertEqual(reds, ["hmux-next fast tier"])
+        rollup[-2] = check("hmux-next fast tier", conclusion="CANCELLED", started="2026-10-14T10:05:00Z", completed="2026-10-14T10:09:00Z")
         with self.assertRaisesRegex(gate.Refused, "no verdict"):
             run(Reader(rollup))
         # Equal start times fall back to completedAt, then list order.
-        rollup = [c for c in GREEN if c["name"] != "cmux-next fast tier"] + [
-            check("cmux-next fast tier", conclusion="FAILURE", started="2026-10-14T10:00:00Z", completed="2026-10-14T10:09:00Z"),
-            check("cmux-next fast tier", started="2026-10-14T10:00:00Z", completed="2026-10-14T10:02:00Z")]
+        rollup = [c for c in GREEN if c["name"] != "hmux-next fast tier"] + [
+            check("hmux-next fast tier", conclusion="FAILURE", started="2026-10-14T10:00:00Z", completed="2026-10-14T10:09:00Z"),
+            check("hmux-next fast tier", started="2026-10-14T10:00:00Z", completed="2026-10-14T10:02:00Z")]
         _, _, reds = run(Reader(rollup))
-        self.assertEqual(reds, ["cmux-next fast tier"])
+        self.assertEqual(reds, ["hmux-next fast tier"])
 
     def test_a_webviews_change_stops_waiting_when_the_web_caller_finished_or_skipped_it(self):
         """No react-apps-check is coming once the caller job "web" finished, or react-apps-check was skipped."""
@@ -221,23 +221,23 @@ class FastGate(unittest.TestCase):
 
     def test_a_retargeted_base_refuses_mid_wait(self):
         """gh pr merge --match-head-commit pins the head, not the base: a PR moved from
-        feat-cmux-next to main while the gate waits must not merge on the fast gate."""
-        reader = Reader([check("cmux-next path routing", "IN_PROGRESS", "")], GREEN, bases=("feat-cmux-next", "main"))
+        feat-hmux-next to main while the gate waits must not merge on the fast gate."""
+        reader = Reader([check("hmux-next path routing", "IN_PROGRESS", "")], GREEN, bases=("feat-hmux-next", "main"))
         with self.assertRaisesRegex(gate.Refused, "base changed to main"):
             run(reader)
         self.assertIn("baseRefName", ",".join(reader.args))
 
     def test_a_cancelled_or_timed_out_fast_lane_has_no_verdict_to_waive(self):
         for conclusion in ("CANCELLED", "TIMED_OUT", "STARTUP_FAILURE", "STALE"):
-            rollup = [c for c in GREEN if c["name"] != "cmux-next fast tier"] + [check("cmux-next fast tier", conclusion=conclusion)]
-            with self.subTest(conclusion=conclusion), self.assertRaisesRegex(gate.Refused, "cmux-next fast tier.*no verdict"):
+            rollup = [c for c in GREEN if c["name"] != "hmux-next fast tier"] + [check("hmux-next fast tier", conclusion=conclusion)]
+            with self.subTest(conclusion=conclusion), self.assertRaisesRegex(gate.Refused, "hmux-next fast tier.*no verdict"):
                 run(Reader(rollup))
 
     def test_a_skipped_fast_tier_has_no_verdict(self):
-        """cmux-next.yml skips the fast tier on a PR when push-head-preflight is not current
+        """hmux-next.yml skips the fast tier on a PR when push-head-preflight is not current
         (a runner failure or its timeout): that is no verdict, not a pass."""
-        rollup = [c for c in GREEN if c["name"] != "cmux-next fast tier"] + [check("cmux-next fast tier", conclusion="SKIPPED")]
-        with self.assertRaisesRegex(gate.Refused, "cmux-next fast tier.*no verdict"):
+        rollup = [c for c in GREEN if c["name"] != "hmux-next fast tier"] + [check("hmux-next fast tier", conclusion="SKIPPED")]
+        with self.assertRaisesRegex(gate.Refused, "hmux-next fast tier.*no verdict"):
             run(Reader(rollup))
         self.assertEqual(run(Reader(rollup, files=("docs/README.md",)), covered=False)[2], [])
 
@@ -248,16 +248,16 @@ class FastGate(unittest.TestCase):
         reader = Reader([], files=tuple(f"docs/{i}.md" for i in range(100)))
         with self.assertRaisesRegex(gate.Refused, "react-apps-check"):
             gate.run("manaflow-ai/cmux", "42", HEAD, 60, 30, False, read=reader, clock=clock, sleep=clock.sleep,
-                     base="feat-cmux-next", files=[*reader.files, "webviews/src/a.ts"])
+                     base="feat-hmux-next", files=[*reader.files, "webviews/src/a.ts"])
 
     def test_a_raw_expression_name_is_the_lane_it_names(self):
         """A job whose name is an expression can report under the raw text (#21981)."""
-        raw = "inputs.dev_daily == true && 'cmux NEXT DEV Release compile' || 'cmux app scheme compile (Debug)'"
-        base = [c for c in GREEN if not c["name"].startswith("cmux app scheme")]
-        with self.assertRaisesRegex(gate.Refused, re.escape("still waiting on cmux app scheme compile (Debug)")):
+        raw = "inputs.dev_daily == true && 'hmux NEXT DEV Release compile' || 'hmux app scheme compile (Debug)'"
+        base = [c for c in GREEN if not c["name"].startswith("hmux app scheme")]
+        with self.assertRaisesRegex(gate.Refused, re.escape("still waiting on hmux app scheme compile (Debug)")):
             run(Reader(base + [check(raw, "QUEUED", "")]), timeout=60)
         _, _, reds = run(Reader(base + [check(raw, conclusion="FAILURE")]))
-        self.assertEqual(reds, ["cmux app scheme compile (Debug)"])
+        self.assertEqual(reds, ["hmux app scheme compile (Debug)"])
         self.assertEqual(run(Reader(base + [check(raw, conclusion="SKIPPED")]))[2], [])
 
     def test_web_routing_follows_ci_change_areas_not_just_webviews(self):
@@ -275,51 +275,51 @@ class FastGate(unittest.TestCase):
 
     def test_every_name_the_gate_keys_on_is_a_job_name(self):
         self.assertEqual(gate.missing_job_names(NEXT_WORKFLOW, CI_WORKFLOW, WEB_WORKFLOW), [])
-        renamed = NEXT_WORKFLOW.replace("cmux-next checks (god files, concurrency, crash safety, l10n)", "cmux-next checks")
+        renamed = NEXT_WORKFLOW.replace("hmux-next checks (god files, concurrency, crash safety, l10n)", "hmux-next checks")
         self.assertEqual(gate.missing_job_names(renamed, CI_WORKFLOW, WEB_WORKFLOW), ["a god-file, l10n or concurrency lint job"])
-        renamed = NEXT_WORKFLOW.replace("'cmux app scheme compile (Debug)'", "'cmux app compile'")
-        self.assertEqual(gate.missing_job_names(renamed, CI_WORKFLOW, WEB_WORKFLOW), ["cmux app scheme compile (Debug)"])
+        renamed = NEXT_WORKFLOW.replace("'hmux app scheme compile (Debug)'", "'hmux app compile'")
+        self.assertEqual(gate.missing_job_names(renamed, CI_WORKFLOW, WEB_WORKFLOW), ["hmux app scheme compile (Debug)"])
         self.assertEqual(gate.missing_job_names(NEXT_WORKFLOW, CI_WORKFLOW.replace("  web:", "  webs:"), WEB_WORKFLOW),
                          ["web / react-apps-check"])
         self.assertEqual(gate.missing_job_names(NEXT_WORKFLOW, CI_WORKFLOW, WEB_WORKFLOW.replace("  react-apps-check:", "  react-check:")),
                          ["web / react-apps-check"])
-        self.assertEqual(gate.missing_job_names("", None, None)[0], "cmux-next path routing")
+        self.assertEqual(gate.missing_job_names("", None, None)[0], "hmux-next path routing")
 
     def test_the_checked_in_workflows_still_name_every_lane(self):
-        """The web side reads this tree's ci.yml and ci-web.yml. cmux-next.yml is a stub on main,
-        so its side reads feat-cmux-next's when this clone has it; gh-merge-green also checks
+        """The web side reads this tree's ci.yml and ci-web.yml. hmux-next.yml is a stub on main,
+        so its side reads feat-hmux-next's when this clone has it; gh-merge-green also checks
         the PR head's copies at merge time and refuses a missing name."""
         ci = (ROOT / ".github/workflows/ci.yml").read_text()
         web = (ROOT / ".github/workflows/ci-web.yml").read_text()
         self.assertEqual([n for n in gate.missing_job_names(NEXT_WORKFLOW, ci, web)], [])
-        shown = subprocess.run(["git", "-C", str(ROOT), "show", "refs/remotes/origin/feat-cmux-next:.github/workflows/cmux-next.yml"],
+        shown = subprocess.run(["git", "-C", str(ROOT), "show", "refs/remotes/origin/feat-hmux-next:.github/workflows/hmux-next.yml"],
                                capture_output=True, text=True)
         if shown.returncode != 0:
-            self.skipTest("this clone has no origin/feat-cmux-next; the merge-time check still applies")
+            self.skipTest("this clone has no origin/feat-hmux-next; the merge-time check still applies")
         self.assertEqual(gate.missing_job_names(shown.stdout, ci, web), [])
 
     def test_times_out_naming_the_lane_and_refuses_a_moved_head(self):
-        with self.assertRaisesRegex(gate.Refused, "still waiting on cmux-next fast tier"):
-            run(Reader([check("cmux-next path routing"), check("cmux-next fast tier", "QUEUED", "")]), timeout=60)
+        with self.assertRaisesRegex(gate.Refused, "still waiting on hmux-next fast tier"):
+            run(Reader([check("hmux-next path routing"), check("hmux-next fast tier", "QUEUED", "")]), timeout=60)
         with self.assertRaisesRegex(gate.Refused, "head moved"):
             run(Reader(GREEN, head="b" * 40))
 
     def test_a_wait_that_runs_out_names_each_lane_still_queued(self):
         """2026-10-20: #22200's --wait ran out with a required lane still QUEUED, and the refusal
         read `fast gate: nothing reported; waited 0m00s, 898s in all`."""
-        reader = Reader([check("cmux-next path routing"), check("cmux-next fast tier", "QUEUED", "")],
-                        files=("Packages/macOS/CmuxNext/Sources/A.swift", "webviews/a.ts"))
+        reader = Reader([check("hmux-next path routing"), check("hmux-next fast tier", "QUEUED", "")],
+                        files=("Packages/macOS/HmuxNext/Sources/A.swift", "webviews/a.ts"))
         with self.assertRaises(gate.WaitRanOut) as caught:
             run(reader, timeout=60)
         error = caught.exception
         self.assertIn("--wait budget of 60s ran out", str(error))
-        self.assertIn("cmux-next fast tier (queued)", str(error))
+        self.assertIn("hmux-next fast tier (queued)", str(error))
         self.assertIn("react-apps-check (not reported yet)", str(error))
         self.assertGreaterEqual(error.waited, 60)
-        self.assertIn("cmux-next fast tier (queued)", error.waiting)
+        self.assertIn("hmux-next fast tier (queued)", error.waiting)
 
     def test_main_prints_the_wait_and_the_queued_lanes_when_the_wait_runs_out(self):
-        rollup = [check("cmux-next path routing"), check("cmux-next fast tier", "QUEUED", "")]
+        rollup = [check("hmux-next path routing"), check("hmux-next fast tier", "QUEUED", "")]
         original = gate.gh_json
         gate.gh_json = Reader(rollup)
         try:
@@ -332,7 +332,7 @@ class FastGate(unittest.TestCase):
             gate.gh_json = original
         self.assertEqual(status, 1)
         self.assertIn("waited=0", printed)
-        self.assertIn("waiting=cmux-next fast tier (queued)", printed)
+        self.assertIn("waiting=hmux-next fast tier (queued)", printed)
 
     def test_a_rate_limited_read_refuses_at_once_with_the_reset_time(self):
         def limited(args):

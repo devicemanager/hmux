@@ -1,11 +1,11 @@
 /**
- * The devbox identity contract: what a cmux Cloud machine calls itself.
+ * The devbox identity contract: what a hmux Cloud machine calls itself.
  *
  * A machine's own name is the identity string every surface repeats: the
  * prompt in every pane (`\u@\h`), `hostname` and `uname -n`, `$HOSTNAME` in
  * login shells, the journal's host field, sudo's resolver check, and the
  * comment on its SSH host keys. The Freestyle base ships `freestyle-vm`
- * there, so a cmux machine used to introduce itself as the provider's. The
+ * there, so a hmux machine used to introduce itself as the provider's. The
  * bake renames the machine to DEVBOX_HOSTNAME (the static name in
  * /etc/hostname, the kernel's live name, and Ubuntu's 127.0.1.1 loopback
  * alias in /etc/hosts), regenerates the SSH host keys under that name, and
@@ -25,7 +25,7 @@
  */
 
 /** The machine's name: static (/etc/hostname), live (the kernel's), and the loopback alias. */
-export const DEVBOX_HOSTNAME = "cmux";
+export const DEVBOX_HOSTNAME = "hmux";
 
 /**
  * The name the provider's base image ships. It must not survive the bake

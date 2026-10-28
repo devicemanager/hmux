@@ -1,5 +1,5 @@
-import CmuxCore
-import CmuxRemoteSession
+import HmuxCore
+import HmuxRemoteSession
 import Foundation
 
 // The app-side conformer of the session coordinator's build-info seam:

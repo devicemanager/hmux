@@ -30,7 +30,7 @@ on:
       v2_base_url:
         description: canonical v2 Worker origin used by the app and gate
         required: false
-        default: https://cmux-v2-staging.debussy.workers.dev
+        default: https://hmux-v2-staging.debussy.workers.dev
         type: string
       soak_profile:
         description: workload duration for automatic and relay-only verification
@@ -126,7 +126,7 @@ jobs:
           POOL_MAX_QUEUED: ${{ vars.CI_PR_POOL_MAX_QUEUED }}
           POOL_OWNED: ${{ vars.CI_PR_POOL_OWNED }}
           OWNED_SLOTS: ${{ vars.CI_OWNED_POOL_SLOTS }}
-          PR_XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_PR }}
+          PR_XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_PR }}
         run: |
           set -uo pipefail
           label="$(python3 scripts/ci/e2e_runner_pool.py \
@@ -186,11 +186,11 @@ jobs:
     timeout-minutes: 75
     env:
       # An owned Mac carries only the lane's Xcode pin, which its label names.
-      CMUX_CI_XCODE_APP: ${{ github.run_attempt == 1 && needs.runner.outputs.label != '' && vars.CMUX_CI_XCODE_APP_PR || vars.CMUX_CI_XCODE_APP_MACOS_15 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
-      CMUX_SKIP_ZIG_BUILD: "1"
+      HMUX_CI_XCODE_APP: ${{ github.run_attempt == 1 && needs.runner.outputs.label != '' && vars.HMUX_CI_XCODE_APP_PR || vars.HMUX_CI_XCODE_APP_MACOS_15 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_SKIP_ZIG_BUILD: "1"
       SWIFT_BACKTRACE: "interactive=no,timeout=0s,symbolicate=off,color=no"
-      CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS: "45"
+      HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS: "45"
     steps:
       - name: Checkout
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
@@ -220,7 +220,7 @@ jobs:
       - name: Take this Mac's gui token
         run: |
           set -uo pipefail
-          helper=/Users/Shared/cmux-build-fleet/bin/glaeda-canonical-root
+          helper=/Users/Shared/hmux-build-fleet/bin/glaeda-canonical-root
           [ -x "$helper" ] || exit 0
           status=0
           "$helper" take-gui --wait 1800 || status=$?
@@ -250,15 +250,15 @@ jobs:
       # use the same supported workaround as tagged cloud reloads and streamed
       # validation instead of allowing a compiler failure to masquerade as a
       # transport verdict.
-      CMUX_SWIFT_FRONTEND_WORKAROUND: "1"
+      HMUX_SWIFT_FRONTEND_WORKAROUND: "1"
       # Keep Xcode's normal module emission for optimized app verification.
       # reload's standalone-driver shortcut fails while merging opaque SwiftUI
       # return types on Xcode 26.3 before either endpoint can launch.
-      CMUX_RELOAD_APP_EMIT_MODULE: "1"
+      HMUX_RELOAD_APP_EMIT_MODULE: "1"
       # The release gate exercises IROH and does not need the optional Ghostty
       # CLI helper. Avoid an unrelated network fetch from Ghostty's Zig build
       # turning a transport verdict into a runner TLS failure.
-      CMUX_SKIP_ZIG_BUILD: "1"
+      HMUX_SKIP_ZIG_BUILD: "1"
     strategy:
       fail-fast: false
       # The app-backed modes share one temporary account per environment.
@@ -320,12 +320,12 @@ jobs:
       - name: Materialize isolated staging account
         if: ${{ inputs.environment == 'staging' && (matrix.mode == 'automatic' || matrix.mode == 'relay-only' || matrix.mode == 'relay-expiry') }}
         env:
-          CMUX_DOGFOOD_STACK_EMAIL: ${{ secrets.CMUX_DOGFOOD_STACK_EMAIL }}
-          CMUX_DOGFOOD_STACK_PASSWORD: ${{ secrets.CMUX_DOGFOOD_STACK_PASSWORD }}
+          HMUX_DOGFOOD_STACK_EMAIL: ${{ secrets.HMUX_DOGFOOD_STACK_EMAIL }}
+          HMUX_DOGFOOD_STACK_PASSWORD: ${{ secrets.HMUX_DOGFOOD_STACK_PASSWORD }}
         run: |
           set -euo pipefail
-          [[ -n "${CMUX_DOGFOOD_STACK_EMAIL:-}" ]] || { echo "::error::missing staging email"; exit 1; }
-          [[ -n "${CMUX_DOGFOOD_STACK_PASSWORD:-}" ]] || { echo "::error::missing staging password"; exit 1; }
+          [[ -n "${HMUX_DOGFOOD_STACK_EMAIL:-}" ]] || { echo "::error::missing staging email"; exit 1; }
+          [[ -n "${HMUX_DOGFOOD_STACK_PASSWORD:-}" ]] || { echo "::error::missing staging password"; exit 1; }
           # The Mac app's DebugDogfoodCredentialResolver and
           # scripts/lib/dev-secrets.sh read this fixed path under $HOME, so it
           # cannot move to $RUNNER_TEMP. "Remove staging account" below deletes
@@ -336,10 +336,10 @@ jobs:
             # The release gate explicitly selects the isolated agent profile.
             # Keep this account under the agent keys so the resolver cannot
             # silently choose a different personal profile.
-            printf 'CMUX_UITEST_STACK_EMAIL=%s\n' "$CMUX_DOGFOOD_STACK_EMAIL"
-            printf 'CMUX_UITEST_STACK_PASSWORD=%s\n' "$CMUX_DOGFOOD_STACK_PASSWORD"
-          ) > "$HOME/.secrets/cmuxterm-dev.env"
-          chmod 600 "$HOME/.secrets/cmuxterm-dev.env"
+            printf 'HMUX_UITEST_STACK_EMAIL=%s\n' "$HMUX_DOGFOOD_STACK_EMAIL"
+            printf 'HMUX_UITEST_STACK_PASSWORD=%s\n' "$HMUX_DOGFOOD_STACK_PASSWORD"
+          ) > "$HOME/.secrets/hmuxterm-dev.env"
+          chmod 600 "$HOME/.secrets/hmuxterm-dev.env"
 
       - name: Materialize production Stack environment
         if: ${{ inputs.environment == 'production' && (matrix.mode == 'automatic' || matrix.mode == 'relay-only' || matrix.mode == 'relay-expiry') }}
@@ -353,7 +353,7 @@ jobs:
           [[ -n "${STACK_PUBLISHABLE_CLIENT_KEY:-}" ]] || { echo "::error::missing production Stack publishable key"; exit 1; }
           [[ -n "${STACK_SECRET_SERVER_KEY:-}" ]] || { echo "::error::missing production Stack server key"; exit 1; }
           umask 077
-          production_dir="$RUNNER_TEMP/cmux-production-stack"
+          production_dir="$RUNNER_TEMP/hmux-production-stack"
           mkdir -p "$production_dir"
           chmod 700 "$production_dir"
           production_env="$production_dir/stack.env"
@@ -370,15 +370,15 @@ jobs:
         # setup, build, and launch phase separately.
         timeout-minutes: ${{ inputs.soak_profile == 'stress' && 75 || 25 }}
         env:
-          # The hosted runner does not have cmuxterm-hq's tagged-backend
+          # The hosted runner does not have hmuxterm-hq's tagged-backend
           # helper. The explicit Worker origin remains the app's API and v2
           # broker; local mode only prevents reload.sh from looking for that
           # helper while constructing the tagged artifacts.
-          CMUX_DEV_BACKEND_MODE: local
+          HMUX_DEV_BACKEND_MODE: local
           # The gate changes only the mobile transport. If the exact checkout
-          # has no cmux-tui artifact yet, use the newest older artifact with
+          # has no hmux-tui artifact yet, use the newest older artifact with
           # identical client inputs instead of failing before the app starts.
-          CMUX_TUI_CLIENT_MAX_FALLBACK: 5
+          HMUX_TUI_CLIENT_MAX_FALLBACK: 5
         run: |
           set -euo pipefail
           case "${{ matrix.mode }}" in
@@ -400,7 +400,7 @@ jobs:
             esac
             GATE_ARGS+=(
               --production
-              --stack-env-file "$RUNNER_TEMP/cmux-production-stack/stack.env"
+              --stack-env-file "$RUNNER_TEMP/hmux-production-stack/stack.env"
             )
           else
             GATE_ARGS+=(--v2-base-url "${{ inputs.v2_base_url }}")
@@ -420,12 +420,12 @@ jobs:
           name: iroh-release-gate-${{ matrix.mode }}
           path: |
             ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}.json
-            ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}-mac.cmuxdiag
+            ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}-mac.hmuxdiag
             ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}-ios-failure.log
             ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}-ios-failure.png
             ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}-ios-*.jsonl
             ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}-ios-*.log
-            ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}-mac-failure.cmuxdiag
+            ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}-mac-failure.hmuxdiag
             ${{ runner.temp }}/iroh-release-gate-${{ matrix.mode }}-real-usage/**
           if-no-files-found: warn
           retention-days: 7
@@ -435,11 +435,11 @@ jobs:
         # leave the staging credentials behind.
         if: ${{ always() && inputs.environment == 'staging' }}
         run: |
-          rm -f "$HOME/.secrets/cmuxterm-dev.env"
+          rm -f "$HOME/.secrets/hmuxterm-dev.env"
           rmdir "$HOME/.secrets" 2>/dev/null || true
 
       - name: Remove production Stack environment
         if: ${{ always() && inputs.environment == 'production' }}
         run: |
-          rm -f "$RUNNER_TEMP/cmux-production-stack/stack.env"
-          rmdir "$RUNNER_TEMP/cmux-production-stack" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/hmux-production-stack/stack.env"
+          rmdir "$RUNNER_TEMP/hmux-production-stack" 2>/dev/null || true

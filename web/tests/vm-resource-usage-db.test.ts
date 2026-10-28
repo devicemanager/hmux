@@ -4,11 +4,11 @@ import postgres, { type Sql } from "postgres";
 import { closeCloudDbForTests } from "../db/client";
 import type { VmPrincipalRow } from "../services/vms/vmPrincipalContract";
 
-const enabled = process.env.CMUX_DB_TEST === "1";
+const enabled = process.env.HMUX_DB_TEST === "1";
 const dbTest = enabled ? test : test.skip;
 const id = randomUUID();
 const suffix = id.replaceAll("-", "");
-const audit = `cmux_resource_audit_${suffix}`;
+const audit = `hmux_resource_audit_${suffix}`;
 const auditFunction = `${audit}_fn`;
 let sql: Sql;
 let principalRow: VmPrincipalRow | null = null;
@@ -33,7 +33,7 @@ beforeAll(async () => {
   // predicate values are generated UUIDs scoped to this test's isolated DB.
   await sql.unsafe(`create table ${audit} (written integer)`);
   await sql.unsafe(`create function ${auditFunction}() returns trigger language plpgsql as $$ begin
-    if NEW.id = '${id}'::uuid and NEW.provider_metadata->'cmuxResourceUsage' is distinct from OLD.provider_metadata->'cmuxResourceUsage' then
+    if NEW.id = '${id}'::uuid and NEW.provider_metadata->'hmuxResourceUsage' is distinct from OLD.provider_metadata->'hmuxResourceUsage' then
       insert into ${audit} values (1);
     end if; return NEW; end $$`);
   await sql.unsafe(`create trigger ${audit} after update of provider_metadata on cloud_vms for each row execute function ${auditFunction}()`);
@@ -58,7 +58,7 @@ dbTest("concurrent authenticated reports make one durable write per VM window", 
     // Every request has the same pre-write principal snapshot, reproducing
     // concurrent auth reads before the first update has committed.
     const responses = await Promise.all(Array.from({ length: 8 }, (_, cpuPercent) => POST(new Request(
-      "https://cmux.test/api/vm/resource-usage/self",
+      "https://hmux.test/api/vm/resource-usage/self",
       { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ cpuPercent }) },
     ))));
     expect(responses.map(response => response.status)).toEqual(Array(8).fill(204));
@@ -66,6 +66,6 @@ dbTest("concurrent authenticated reports make one durable write per VM window", 
     expect(writes.count).toBe(1);
     const [row] = await sql`select provider_metadata from cloud_vms where id = ${id}`;
     expect(row.provider_metadata.networkId).toBe("preserved");
-    expect(row.provider_metadata.cmuxResourceUsage.providerVmId).toBe(`provider-${id}`);
+    expect(row.provider_metadata.hmuxResourceUsage.providerVmId).toBe(`provider-${id}`);
   } finally { active = false; }
 });

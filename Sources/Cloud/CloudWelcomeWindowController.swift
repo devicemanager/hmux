@@ -1,6 +1,6 @@
 import AppKit
-import CmuxProductAnalytics
-import CmuxSettings
+import HmuxProductAnalytics
+import HmuxSettings
 import SwiftUI
 
 /// Whether a Cloud creation action (New Cloud Workspace, New Cloud Machine)
@@ -42,7 +42,7 @@ final class CloudWelcomeWindowController: NSObject, NSWindowDelegate {
     /// to extend the campaign; keep ``campaignVersion`` so earlier viewers are
     /// not shown it again.
     nonisolated static let campaignAppVersions: Set<String> = ["0.65.1", "0.65.2"]
-    nonisolated static let seenVersionDefaultsKey = "cmux.cloud.welcome.seenVersion"
+    nonisolated static let seenVersionDefaultsKey = "hmux.cloud.welcome.seenVersion"
 
     private let defaults: UserDefaults
     private let nextStep: @MainActor () -> CloudWelcomeNextStep
@@ -129,7 +129,7 @@ final class CloudWelcomeWindowController: NSObject, NSWindowDelegate {
             policy: ManagedDevicePolicy(),
             isDebugBuild: isDebugBuild,
             isRunningUnderXCTest: MacSentryStartupPolicy.isRunningUnderXCTest(environment: environment),
-            isUITestMode: environment["CMUX_UI_TEST_MODE"] == "1"
+            isUITestMode: environment["HMUX_UI_TEST_MODE"] == "1"
         ) else { return }
         show(over: parent, trigger: .launchAnnouncement)
     }
@@ -287,8 +287,8 @@ final class CloudWelcomeWindowController: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        window.identifier = NSUserInterfaceItemIdentifier("cmux.cloud.welcome")
-        window.title = String(localized: "cloud.welcome.title.eyebrow", defaultValue: "cmux cloud")
+        window.identifier = NSUserInterfaceItemIdentifier("hmux.cloud.welcome")
+        window.title = String(localized: "cloud.welcome.title.eyebrow", defaultValue: "hmux cloud")
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
         window.isMovableByWindowBackground = true

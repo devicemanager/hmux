@@ -1,6 +1,6 @@
 import AppKit
-import CmuxAppKitSupportUI
-import CmuxWorkspaces
+import HmuxAppKitSupportUI
+import HmuxWorkspaces
 
 @MainActor
 final class AppWindowBackdropControllerDependencies: WindowBackdropControllerDependencies {

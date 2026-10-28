@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-base_url="${1:-${CMUX_SOCIAL_IMAGE_BASE_URL:-}}"
+base_url="${1:-${HMUX_SOCIAL_IMAGE_BASE_URL:-}}"
 if [[ -z "$base_url" ]]; then
   echo "Usage: $0 <base-url>" >&2
   exit 2
 fi
 base_url="${base_url%/}"
 
-scratch_dir="$(mktemp -d "${TMPDIR:-/tmp}/cmux-social-images.XXXXXX")"
+scratch_dir="$(mktemp -d "${TMPDIR:-/tmp}/hmux-social-images.XXXXXX")"
 cleanup() {
   rm -rf -- "$scratch_dir"
 }

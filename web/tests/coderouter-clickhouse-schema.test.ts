@@ -143,7 +143,7 @@ describe("coderouter alerts cron: schema drift", () => {
     const reported: { message: string; context: Record<string, unknown> }[] = [];
     let now = new Date("2026-10-08T16:00:00Z");
     const run = () => runCoderouterAlertChecks({
-      env: { CMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x" },
+      env: { HMUX_ALERTS_SLACK_WEBHOOK_URL: "https://hooks.slack.test/x" },
       health: async () => ({ status: "ok", checks: [], checkedAt: now.toISOString() }),
       routeEvents: async () => ({ ok: true, rows: [] }),
       sendAlert: async (input): Promise<AlertResult> => {

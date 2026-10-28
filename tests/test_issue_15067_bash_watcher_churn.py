@@ -4,7 +4,7 @@
 The old PR poller has no production callers after #2585. Exercise it explicitly
 to reproduce its launch cost, then require retirement to leave no sleeping jobs.
 The normal-lifecycle case is a separate oracle: it already passed before removal.
-All shells, sockets, and logs belong to this test, not to a running cmux app.
+All shells, sockets, and logs belong to this test, not to a running hmux app.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ import time
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-INTEGRATION = ROOT / "Resources/shell-integration/cmux-bash-integration.bash"
+INTEGRATION = ROOT / "Resources/shell-integration/hmux-bash-integration.bash"
 
 
 def stop_shell(shell: subprocess.Popen) -> str:
@@ -37,17 +37,17 @@ def stop_shell(shell: subprocess.Popen) -> str:
 
 class BashWatcherChurnTests(unittest.TestCase):
     def measure(self, *, legacy: bool, panes: int) -> tuple[list[int], list[str]]:
-        with tempfile.TemporaryDirectory(prefix="cmux15067-", dir="/tmp") as directory, ExitStack() as stack:
+        with tempfile.TemporaryDirectory(prefix="hmux15067-", dir="/tmp") as directory, ExitStack() as stack:
             root = Path(directory)
             bindir = root / "bin"
             bindir.mkdir()
             # Count each actual external sleep invocation; retain its real delay.
             (bindir / "sleep").write_text(
-                '#!/bin/bash\nprintf "%s\\n" "$*" >> "$CMUX_TEST_SLEEP_LOG"\nexec /bin/sleep "$@"\n'
+                '#!/bin/bash\nprintf "%s\\n" "$*" >> "$HMUX_TEST_SLEEP_LOG"\nexec /bin/sleep "$@"\n'
             )
             (bindir / "sleep").chmod(0o755)
             (bindir / "gh").write_text(
-                '#!/bin/bash\nprintf "%s\\n" "$*" >> "$CMUX_TEST_GH_LOG"\nexit 1\n'
+                '#!/bin/bash\nprintf "%s\\n" "$*" >> "$HMUX_TEST_GH_LOG"\nexit 1\n'
             )
             (bindir / "gh").chmod(0o755)
             server = stack.enter_context(socket.socket(socket.AF_UNIX, socket.SOCK_STREAM))
@@ -61,39 +61,39 @@ class BashWatcherChurnTests(unittest.TestCase):
                 env = {
                     "PATH": f"{bindir}:/usr/bin:/bin:/usr/sbin:/sbin",
                     "HOME": str(home), "TMPDIR": str(home), "TERM": "dumb", "LC_ALL": "C",
-                    "CMUX_SOCKET_PATH": str(root / "socket"),
-                    "CMUX_TAB_ID": f"tab-15067-{os.getpid()}",
-                    "CMUX_PANEL_ID": f"panel-15067-{os.getpid()}-{pane}",
-                    "CMUX_TEST_INTEGRATION": str(INTEGRATION),
-                    "CMUX_TEST_SLEEP_LOG": str(home / "sleeps"),
-                    "CMUX_TEST_GH_LOG": str(home / "gh"),
-                    "CMUX_TEST_SEND_LOG": str(home / "send"),
+                    "HMUX_SOCKET_PATH": str(root / "socket"),
+                    "HMUX_TAB_ID": f"tab-15067-{os.getpid()}",
+                    "HMUX_PANEL_ID": f"panel-15067-{os.getpid()}-{pane}",
+                    "HMUX_TEST_INTEGRATION": str(INTEGRATION),
+                    "HMUX_TEST_SLEEP_LOG": str(home / "sleeps"),
+                    "HMUX_TEST_GH_LOG": str(home / "gh"),
+                    "HMUX_TEST_SEND_LOG": str(home / "send"),
                 }
                 script = (
-                    'set -m\ncd "$HOME"\nsource "$CMUX_TEST_INTEGRATION"\n'
-                    '_cmux_send() { printf "%s\\n" "$1" >> "$CMUX_TEST_SEND_LOG"; }\n'
-                    '_CMUX_TTY_NAME=test; _CMUX_TTY_REPORTED=1\n'
-                    'trap \'if declare -F _cmux_halt_pr_poll_loop >/dev/null; then '
-                    '_cmux_halt_pr_poll_loop; fi\' EXIT\n'
-                    '_cmux_prompt_command\n'
+                    'set -m\ncd "$HOME"\nsource "$HMUX_TEST_INTEGRATION"\n'
+                    '_hmux_send() { printf "%s\\n" "$1" >> "$HMUX_TEST_SEND_LOG"; }\n'
+                    '_HMUX_TTY_NAME=test; _HMUX_TTY_REPORTED=1\n'
+                    'trap \'if declare -F _hmux_halt_pr_poll_loop >/dev/null; then '
+                    '_hmux_halt_pr_poll_loop; fi\' EXIT\n'
+                    '_hmux_prompt_command\n'
                 )
                 if legacy:
                     # Isolate the timer from Darwin's identity provider and
                     # GitHub. The real identity guard is covered by #10926.
                     # This is an explicit legacy invocation, not a prompt path.
                     script += (
-                        'if declare -F _cmux_start_pr_poll_loop >/dev/null; then '
-                        '_cmux_capture_shell_start_time() { _CMUX_SHELL_START_TIME=1000000000; }; '
-                        '_cmux_watcher_parent_alive() { kill -0 "$1"; }; '
-                        '_cmux_run_pr_probe_with_timeout() { :; }; '
-                        '_cmux_start_pr_poll_loop "$PWD" 1; fi\n'
+                        'if declare -F _hmux_start_pr_poll_loop >/dev/null; then '
+                        '_hmux_capture_shell_start_time() { _HMUX_SHELL_START_TIME=1000000000; }; '
+                        '_hmux_watcher_parent_alive() { kill -0 "$1"; }; '
+                        '_hmux_run_pr_probe_with_timeout() { :; }; '
+                        '_hmux_start_pr_poll_loop "$PWD" 1; fi\n'
                     )
                 else:
                     script += (
                         'printf "ref: refs/heads/feature/new\\n" > .git/HEAD\n'
-                        '_cmux_prompt_command\n'
-                        '_cmux_preexec_command "gh pr merge 42"\n'
-                        ':; _cmux_prompt_command\n'
+                        '_hmux_prompt_command\n'
+                        '_hmux_preexec_command "gh pr merge 42"\n'
+                        ':; _hmux_prompt_command\n'
                     )
                 script += 'printf "READY\\n"\nIFS= read -r stop\n'
                 shell = subprocess.Popen(

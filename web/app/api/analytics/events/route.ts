@@ -65,7 +65,7 @@ export function makeAnalyticsEventsHandler(dependencies: AnalyticsEventsDependen
   return async function POST(request: Request): Promise<Response> {
     // An unset rule id means no rate limiting; a deleted rule (not-found)
     // fails open. Only genuine check failures reject the event.
-    const rateLimitId = process.env.CMUX_ANALYTICS_RATE_LIMIT_ID?.trim();
+    const rateLimitId = process.env.HMUX_ANALYTICS_RATE_LIMIT_ID?.trim();
     if (process.env.VERCEL === "1" && !rateLimitId) {
       void reportMissingRateLimitRule({ route: "/api/analytics/events", reason: "unset" });
     }

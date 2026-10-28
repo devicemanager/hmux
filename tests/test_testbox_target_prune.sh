@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# The Testbox commits cmux-tui/target as one shared sticky disk, so the prune
+# The Testbox commits hmux-tui/target as one shared sticky disk, so the prune
 # that runs before the commit must keep it bounded without removing the mount
 # point itself: stale incremental dirs go first, then all incremental dirs,
 # then whole profiles, oldest first.

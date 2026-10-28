@@ -49,8 +49,8 @@ MODEL = {
 
 class Features(unittest.TestCase):
     def test_app_swift_files_leave_out_tests(self):
-        paths = ["Sources/A.swift", "cmuxTests/ATests.swift", "Packages/macOS/X/Tests/XTests/T.swift",
-                 "Packages/macOS/X/Sources/X/X.swift", "README.md", "cmuxUITests/U.swift"]
+        paths = ["Sources/A.swift", "hmuxTests/ATests.swift", "Packages/macOS/X/Tests/XTests/T.swift",
+                 "Packages/macOS/X/Sources/X/X.swift", "README.md", "hmuxUITests/U.swift"]
         feature = wd.features(paths, interface=False)
         self.assertEqual((feature["app_swift_files"], feature["package_swift_files"]), (2, 1))
         self.assertIs(feature["package_interface"], False)
@@ -82,14 +82,14 @@ class Features(unittest.TestCase):
 
     def test_swift_units_count_each_file_of_a_batch(self):
         with tempfile.TemporaryDirectory() as tmp:
-            log = Path(tmp, "cmux-build.log")
+            log = Path(tmp, "hmux-build.log")
             log.write_text(
-                "SwiftCompile normal arm64 Compiling A.swift, B.swift /s/A.swift /s/B.swift (in target 'cmux' from project 'cmux')\n"
-                "SwiftCompile normal arm64 Compiling\\ C.swift /s/C.swift (in target 'cmux' from project 'cmux')\n"
-                "SwiftCompile normal arm64 /s/C.swift (in target 'cmux' from project 'cmux')\n"
-                "SwiftCompile normal arm64 Compiling P.swift /p/P.swift (in target 'CmuxKit' from project 'CmuxKit')\n"
-                "SwiftDriver cmux normal arm64 (in target 'cmux')\n")
-            self.assertEqual(wd.swift_units(log), {"cmux": 3, "CmuxKit": 1})
+                "SwiftCompile normal arm64 Compiling A.swift, B.swift /s/A.swift /s/B.swift (in target 'hmux' from project 'hmux')\n"
+                "SwiftCompile normal arm64 Compiling\\ C.swift /s/C.swift (in target 'hmux' from project 'hmux')\n"
+                "SwiftCompile normal arm64 /s/C.swift (in target 'hmux' from project 'hmux')\n"
+                "SwiftCompile normal arm64 Compiling P.swift /p/P.swift (in target 'HmuxKit' from project 'HmuxKit')\n"
+                "SwiftDriver hmux normal arm64 (in target 'hmux')\n")
+            self.assertEqual(wd.swift_units(log), {"hmux": 3, "HmuxKit": 1})
 
 
 class StartDistance(unittest.TestCase):
@@ -116,11 +116,11 @@ class StartDistance(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp, "start.json")
             changed = {f"Sources/F{i:04}.swift" for i in range(wd.MAX_PATHS + 50)}
-            changed |= {"vendor/bonsplit/Sources/B.swift", "cmuxTests/T.swift"}
+            changed |= {"vendor/bonsplit/Sources/B.swift", "hmuxTests/T.swift"}
             wd.start_distance({}, {}, changed, out)
             document = json.loads(out.read_text())
             self.assertIn("vendor/bonsplit/Sources/B.swift", document["swift_paths"])
-            self.assertNotIn("cmuxTests/T.swift", document["swift_paths"])
+            self.assertNotIn("hmuxTests/T.swift", document["swift_paths"])
             self.assertEqual((len(document["swift_paths"]), document["swift_paths_total"]),
                              (wd.MAX_PATHS, wd.MAX_PATHS + 51))
 
@@ -188,18 +188,18 @@ class Admission(unittest.TestCase):
                                          "swift_paths": ["Packages/macOS/X/Sources/X/X.swift", "Sources/A.swift"]}))
             logs = tmp / "dd"
             logs.mkdir()
-            (logs / "cmux-build.log").write_text("".join(
-                f"SwiftCompile normal arm64 Compiling F{i}.swift /s/F{i}.swift (in target 'cmux' from project 'cmux')\n"
+            (logs / "hmux-build.log").write_text("".join(
+                f"SwiftCompile normal arm64 Compiling F{i}.swift /s/F{i}.swift (in target 'hmux' from project 'hmux')\n"
                 for i in range(1200)))
             metrics = tmp / "metrics.json"
             metrics.write_text(json.dumps({"compile_duration_seconds": 401.5, "total_macos_compile_admission_seconds": 600,
                                            "queue_to_start_seconds": 4}))
             env = {"MERGED_ONTO": base, "PR_NUMBER": "7", "HEAD_SHA": "e" * 40, "GITHUB_SHA": git(repo, "rev-parse", "HEAD"),
-                   "CMUX_WARM_DISTANCE_START": str(start), "CMUX_WARM_START_STAMP": str(store / "stamp.json"),
+                   "HMUX_WARM_DISTANCE_START": str(start), "HMUX_WARM_START_STAMP": str(store / "stamp.json"),
                    "OWNED_ADOPT_HIT": "true", "KEPT": "true", "COMPILE_OUTCOME": "success", "METRICS": str(metrics),
-                   "BUILD_LOGS": str(logs), "RUNNER_NAME": "cmux14-glaeda-1", "GITHUB_RUN_ID": "1",
-                   "ADMISSION_RUNNER": json.dumps([ROOT_LABEL, label("cmux14-glaeda-1")]),
-                   "PICKER_ROUTE": json.dumps({"mode": "distance", "chosen": "cmux14-glaeda-1", "predicted": 140.0,
+                   "BUILD_LOGS": str(logs), "RUNNER_NAME": "hmux14-glaeda-1", "GITHUB_RUN_ID": "1",
+                   "ADMISSION_RUNNER": json.dumps([ROOT_LABEL, label("hmux14-glaeda-1")]),
+                   "PICKER_ROUTE": json.dumps({"mode": "distance", "chosen": "hmux14-glaeda-1", "predicted": 140.0,
                                                "baseline": 266.5, "candidates": []})}
             model = {**MODEL, "tiers_by_start": {"rebuild": {"kept": {"n": 5, "p50": 350.0}}}}
             with unittest.mock.patch.object(wd, "load_model", return_value=model):
@@ -216,7 +216,7 @@ class Admission(unittest.TestCase):
             self.assertEqual((record["swift_units_total"], record["app_rebuilt"], record["compile_seconds"]),
                              (1200, True, 401.5))
             self.assertEqual(record["own"]["app_swift_files"], 2)
-            self.assertEqual(record["route"]["picker"]["chosen"], "cmux14-glaeda-1")
+            self.assertEqual(record["route"]["picker"]["chosen"], "hmux14-glaeda-1")
             self.assertEqual(record["route"]["picker"]["predicted"], 140.0)
             stamp = json.loads((store / "stamp.json").read_text())
             self.assertEqual(stamp["pr_app_swift_files"], ["Packages/macOS/X/Sources/X/X.swift", "Sources/A.swift"])
@@ -224,7 +224,7 @@ class Admission(unittest.TestCase):
             self.assertEqual(stamp["merged_onto"], base)  # keep's fields stay
             self.assertTrue((store / wd.HOOK_MODEL_NAME).is_file())
             # Root 2's store writes to the mini's one log and model copy, beside root 1's stamp.
-            self.assertEqual(wd.fleet_dir(store / "cmux-ci-2"), store)
+            self.assertEqual(wd.fleet_dir(store / "hmux-ci-2"), store)
             self.assertEqual(wd.fleet_dir(store), store)
             self.assertIn("start: kept", wd.summary_line(record))
 
@@ -333,7 +333,7 @@ HOOK_CASES = [
     (((swift(1), False), {"merged_onto": HOOK_BASE, "pr": 5, "pr_app_swift_files": sorted(swift(9)),
                           "pr_app_swift_total": 3}, 7), (400.7, "rebuild", 4)),
     ((({"Sources/Hot.swift"}, False), {"merged_onto": HOOK_BASE}, 7), (400.7, "rebuild", 1)),
-    (((set(), False), {"merged_onto": HOOK_BASE, "pr": 5, "pr_app_swift_files": ["Sources/Hot.swift", "cmuxTests/T.swift"],
+    (((set(), False), {"merged_onto": HOOK_BASE, "pr": 5, "pr_app_swift_files": ["Sources/Hot.swift", "hmuxTests/T.swift"],
                        "pr_app_swift_total": 1, "pr_package_interface": False}, None), (400.7, "rebuild", 1)),
 ]
 
@@ -342,12 +342,12 @@ def glaeda_hook():
     """glaeda's hook module, from GLAEDA_HOOK or a glaeda checkout beside this one, or None."""
     import importlib.machinery
     import importlib.util
-    candidates = [os.environ.get("GLAEDA_HOOK") or "", str(ROOT.parent / "glaeda/scripts/glaeda-cmux-runner-hook"),
-                  str(ROOT.parent.parent / "glaeda/scripts/glaeda-cmux-runner-hook")]
+    candidates = [os.environ.get("GLAEDA_HOOK") or "", str(ROOT.parent / "glaeda/scripts/glaeda-hmux-runner-hook"),
+                  str(ROOT.parent.parent / "glaeda/scripts/glaeda-hmux-runner-hook")]
     path = next((candidate for candidate in candidates if candidate and Path(candidate).is_file()), None)
     if path is None:
         return None
-    loader = importlib.machinery.SourceFileLoader("glaeda_cmux_runner_hook", path)
+    loader = importlib.machinery.SourceFileLoader("glaeda_hmux_runner_hook", path)
     module = importlib.util.module_from_spec(importlib.util.spec_from_loader(loader.name, loader))
     loader.exec_module(module)
     return module if hasattr(module, "warm_root_costs") else None
@@ -379,7 +379,7 @@ class HookParity(unittest.TestCase):
                                                      "tiers": {"near": 140.0, "far": 266.5, "rebuild": 400.7},
                                                      "kept": {"near": 91.1}, "unknown": 309.7})
         self.assertEqual(wd.hook_model({"tiers": {}}), wd.HOOK_DEFAULT_MODEL)
-        raw = ("\0".join([":100644 100644 a b M", "Sources/A.swift", ":100644 100644 a b M", "cmuxTests/T.swift",
+        raw = ("\0".join([":100644 100644 a b M", "Sources/A.swift", ":100644 100644 a b M", "hmuxTests/T.swift",
                            ":160000 160000 a b M", "vendor/ghostty", ":100644 100644 a b M", "README.md"]) + "\0")
         self.assertEqual(wd.hook_changes(raw), ({"Sources/A.swift"}, True))
         self.assertEqual(wd.hook_changes(":100644 100644 a b M\0Packages/macOS/X/Sources/X/X.swift\0"),
@@ -388,10 +388,10 @@ class HookParity(unittest.TestCase):
     def test_against_the_hook_itself_when_at_hand(self):
         hook = glaeda_hook()
         if hook is None:
-            self.skipTest("no glaeda checkout (set GLAEDA_HOOK to scripts/glaeda-cmux-runner-hook)")
+            self.skipTest("no glaeda checkout (set GLAEDA_HOOK to scripts/glaeda-hmux-runner-hook)")
         with tempfile.TemporaryDirectory() as tmp:
-            (Path(tmp) / ".prefetch/cmux.git").mkdir(parents=True)
-            (Path(tmp) / ".prefetch/cmux.git/HEAD").write_text("ref: refs/heads/main\n")
+            (Path(tmp) / ".prefetch/hmux.git").mkdir(parents=True)
+            (Path(tmp) / ".prefetch/hmux.git/HEAD").write_text("ref: refs/heads/main\n")
             (Path(tmp) / "warm-distance-model.json").write_text(json.dumps(HOOK_MODEL))
             self.assertEqual(hook.read_warm_model(tmp), wd.hook_model(HOOK_MODEL))
             for (changes, stamp, number), _ in HOOK_CASES:
@@ -462,9 +462,9 @@ class DistanceRouting(unittest.TestCase):
         self.assertEqual(name, "m1-glaeda")
 
     def test_a_slower_mini_costs_more(self):
-        self.assertEqual(wd.compile_factor("cmux-austin-mini-0", 0), wd.SLOW_MINI_FACTOR)
-        self.assertEqual(wd.compile_factor("cmux8s-mac-mini", 0), 1.0)
-        self.assertEqual(wd.compile_factor("cmux8s-mac-mini", 1), wd.CONTENDED_FACTOR)
+        self.assertEqual(wd.compile_factor("hmux-austin-mini-0", 0), wd.SLOW_MINI_FACTOR)
+        self.assertEqual(wd.compile_factor("hmux8s-mac-mini", 0), 1.0)
+        self.assertEqual(wd.compile_factor("hmux8s-mac-mini", 1), wd.CONTENDED_FACTOR)
 
     def test_a_busy_runner_the_snapshot_does_not_list_waits_as_a_fresh_admission(self):
         minis = {"m1": [self.stamp("1" * 40)]}
@@ -709,9 +709,9 @@ class Refit(unittest.TestCase):
     def test_collect_reads_every_log_without_a_glob(self):
         with unittest.mock.patch.object(wd.subprocess, "run") as run:
             run.return_value.stdout = json.dumps({"at": "x"}) + "\n"
-            self.assertEqual(wd.collect_rows(["cmux14"]), [{"at": "x"}])
+            self.assertEqual(wd.collect_rows(["hmux14"]), [{"at": "x"}])
         command = run.call_args[0][0][-1]
-        self.assertTrue(command.startswith("find /Users/Shared/cmux-build-fleet/ci -maxdepth 2"))
+        self.assertTrue(command.startswith("find /Users/Shared/hmux-build-fleet/ci -maxdepth 2"))
         self.assertNotIn("*", command)
 
 

@@ -10,11 +10,11 @@ import unittest
 
 SCRIPT = Path(__file__).resolve().parents[1] / "scripts" / "devbox-codex-hook-trust.py"
 
-# Stands in for `cmux-tui agent codex-wrapper`: execs the first codex on PATH
+# Stands in for `hmux-tui agent codex-wrapper`: execs the first codex on PATH
 # with the hook flags, the way the real wrapper does.
 WRAPPER = """#!/bin/sh
 [ "$1 $2" = "agent codex-wrapper" ] || exit 64
-[ -n "$CMUX_TUI_SOCKET" ] && [ -n "$CMUX_TUI_TERMINAL_ID" ] || exit 65
+[ -n "$HMUX_TUI_SOCKET" ] && [ -n "$HMUX_TUI_TERMINAL_ID" ] || exit 65
 exec codex %s
 """
 
@@ -44,7 +44,7 @@ for line in sys.stdin:
 class CodexHookTrustTests(unittest.TestCase):
     def run_probe(self, wrapper_args):
         with tempfile.TemporaryDirectory() as tmp:
-            wrapper = os.path.join(tmp, "cmux-tui")
+            wrapper = os.path.join(tmp, "hmux-tui")
             codex = os.path.join(tmp, "codex-real")
             with open(wrapper, "w") as handle:
                 handle.write(WRAPPER % wrapper_args)

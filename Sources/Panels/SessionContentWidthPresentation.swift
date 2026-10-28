@@ -1,4 +1,4 @@
-import CmuxSettings
+import HmuxSettings
 import CoreGraphics
 
 /// Resolved session-width values shared by SwiftUI and direct AppKit terminal hosts.

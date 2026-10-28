@@ -19,7 +19,7 @@ from pathlib import Path
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 REPOSITORY = "manaflow-ai/cmux"
-OIDC_AUDIENCE = "cmux-ci-artifacts"
+OIDC_AUDIENCE = "hmux-ci-artifacts"
 OIDC_REQUEST_HOST_SUFFIX = ".actions.githubusercontent.com"
 MAX_BYTES = 2 * 1024**3
 ARCHIVES = {"app-host-products.tar.gz", "app-host-products.aar"}
@@ -87,7 +87,7 @@ def download(url: str, target: Path, size: int, identity: str, work: Path) -> di
     cache = ""
     for line in headers.read_text(errors="replace").splitlines():
         name, separator, value = line.partition(":")
-        if separator and name.strip().casefold() == "x-cmux-artifact-cache":
+        if separator and name.strip().casefold() == "x-hmux-artifact-cache":
             cache = value.strip().casefold()
     if cache not in {"fill", "hit"}:
         raise RuntimeError("broker omitted cache result")
@@ -145,7 +145,7 @@ def restore(broker: str, artifact_id: str, run_id: str, repository: str, destina
         "run_id": run_id,
         "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
         "job": os.environ.get("GITHUB_JOB"),
-        "shard": os.environ.get("CMUX_APP_HOST_SHARD"),
+        "shard": os.environ.get("HMUX_APP_HOST_SHARD"),
         "runner_name": os.environ.get("RUNNER_NAME"),
         "runner_os": os.environ.get("RUNNER_OS"),
         "transport": "github",
@@ -177,7 +177,7 @@ def restore(broker: str, artifact_id: str, run_id: str, repository: str, destina
             raise ValueError("artifact does not match this producer run")
 
         destination.parent.mkdir(parents=True, exist_ok=True)
-        with tempfile.TemporaryDirectory(prefix="cmux-r2-artifact-", dir=destination.parent) as work:
+        with tempfile.TemporaryDirectory(prefix="hmux-r2-artifact-", dir=destination.parent) as work:
             staging = Path(work)
             zip_path = staging / "artifact.zip"
             oidc = identity(staging)
@@ -196,14 +196,14 @@ def restore(broker: str, artifact_id: str, run_id: str, repository: str, destina
         record["transport"] = "r2"
         record["r2_result"] = str(record.get("cache", "hit"))
         record["elapsed_seconds"] = round(time.monotonic() - started, 3)
-        print("CMUX_TEST_PRODUCT_TRANSFER " + json.dumps(record, sort_keys=True))
+        print("HMUX_TEST_PRODUCT_TRANSFER " + json.dumps(record, sort_keys=True))
         print(f"R2 artifact transport restored GitHub artifact {artifact_id}; product validation still runs.")
         return True
     except (ValueError, TypeError, AttributeError, OSError, subprocess.SubprocessError,
             zipfile.BadZipFile, RuntimeError) as error:
         record["fallback_reason"] = type(error).__name__
         record["elapsed_seconds"] = round(time.monotonic() - started, 3)
-        print("CMUX_R2_ARTIFACT_ATTEMPT " + json.dumps(record, sort_keys=True))
+        print("HMUX_R2_ARTIFACT_ATTEMPT " + json.dumps(record, sort_keys=True))
         print(f"R2 artifact transport miss ({type(error).__name__}); using GitHub.")
         return False
 

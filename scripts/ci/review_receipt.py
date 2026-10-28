@@ -1,18 +1,18 @@
 #!/usr/bin/env python3
-"""The review receipt gh-merge-green requires before it merges a pull request into feat-cmux-next.
+"""The review receipt gh-merge-green requires before it merges a pull request into feat-hmux-next.
 
     review_receipt.py OWNER/REPO NUMBER SHA [--pr-file FILE]
 
 A head merges only when an independent review passed that exact commit. next-autoland applies the same rule
-(leo-workspace tools/next_autoland.py, e2a34f6): it paused 2026-10-21 after cmux#22899 merged before its re-review,
-which then found cmux#22988. A receipt, for the exact head, is one of:
+(leo-workspace tools/next_autoland.py, e2a34f6): it paused 2026-10-21 after hmux#22899 merged before its re-review,
+which then found hmux#22988. A receipt, for the exact head, is one of:
 
 - an APPROVED review of that commit (CHANGES_REQUESTED on it is a BLOCK);
 - the autoreview marker `<!-- autoreview verdict=SHIP|BLOCK sha=<sha> -->` anywhere in a comment or review body
   (the marker decides its comment);
 - otherwise the body's first non-empty line, "Review (<reviewer>): SHIP|BLOCK|FIX|NOT SHIP|HOLD ...", whose
   reviewer is not "self" and which names the head: a SHIP by the full 40-character sha, e.g.
-  "Review (subagent, correctness first): SHIP at 4b438e85a74f9c2d0e1f3a5b7c9d1e3f5a7b9c1d" (cmux#22762 merged at
+  "Review (subagent, correctness first): SHIP at 4b438e85a74f9c2d0e1f3a5b7c9d1e3f5a7b9c1d" (hmux#22762 merged at
   3a97b47e on a receipt naming 0b4c5bf3); a wait verdict by any 7-40 character prefix, since refusing more is safe.
 
 Only people (author __typename User) with OWNER, MEMBER or COLLABORATOR association count. The newest verdict
@@ -40,11 +40,11 @@ from typing import Callable
 
 TRUSTED = {"OWNER", "MEMBER", "COLLABORATOR"}
 # "Review (subagent, correctness first): SHIP", "Self-review", ... One stricter than next-autoland: a first line
-# "Verdict: BLOCK" counts too (autoland reads only lines that say "review"; review of cmux#23067).
+# "Verdict: BLOCK" counts too (autoland reads only lines that say "review"; review of hmux#23067).
 REVIEW_LINE = re.compile(r"review|\bverdict\b", re.I)
 HOLD_LINE = re.compile(r"^\W*hold(?:ing)?\b", re.I)  # "**Holding this PR. ...**"
 # A first line that is only a wait verdict, with or without a sha: "BLOCK at <sha>", "**BLOCK at <sha>**", "NOT SHIP",
-# "Do not merge". It names no review, so REVIEW_LINE misses it; it still says wait (re-review of cmux#23067).
+# "Do not merge". It names no review, so REVIEW_LINE misses it; it still says wait (re-review of hmux#23067).
 WAIT_LINE = re.compile(r"^\W*(?:BLOCK|NOT SHIP|HOLD|DO NOT MERGE)\b", re.I)
 # The read's windows, next-autoland's: the newest 30 reviews and 40 comments.
 REVIEWS_WINDOW, COMMENTS_WINDOW = 30, 40

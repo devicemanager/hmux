@@ -27,7 +27,7 @@ for (const [key, value] of Object.entries({
     setTimeout(callback: () => void) { const id = nextTimer++; timers.set(id, callback); return id; },
     clearTimeout(id: number) { timers.delete(id); },
   },
-  document: { title: "cmux agent" }, location,
+  document: { title: "hmux agent" }, location,
   history: { replaceState(_state: unknown, _unused: string, path: string) { location.pathname = path; } },
   sessionStorage: { setItem() {} }, WebSocket: FakeSocket, IS_REACT_ACT_ENVIRONMENT: true,
 })) Object.defineProperty(globalThis, key, { configurable: true, writable: true, value });
@@ -96,7 +96,7 @@ try {
   await git(["init", "--quiet"]);
   await writeFile(join(gitFixture, "tracked.txt"), "before\n");
   await git(["add", "tracked.txt"]);
-  await git(["-c", "user.name=cmux test", "-c", "user.email=cmux-test@example.invalid", "commit", "--quiet", "-m", "fixture"]);
+  await git(["-c", "user.name=hmux test", "-c", "user.email=hmux-test@example.invalid", "commit", "--quiet", "-m", "fixture"]);
   await writeFile(join(gitFixture, "tracked.txt"), "after\n");
   const sess = { id: "current", cwd: gitFixture, internal: {} };
   recordFilesChangedForTest(sess, [{ path: "tracked.txt", adds: 1, dels: 1, status: "modified" }]);

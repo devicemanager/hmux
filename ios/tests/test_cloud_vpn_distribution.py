@@ -24,8 +24,8 @@ class CloudVPNDistributionTests(unittest.TestCase):
         fixtures._install_fake_tools(fakebin)
         env = fixtures._base_env(path, fakebin)
         env.update({
-            "CMUX_IOS_UPLOAD_DIR": str(path / "upload"),
-            "CMUX_FAKE_INCLUDE_NOTIFICATION_EXTENSION": "1" if lane == "beta" else "0",
+            "HMUX_IOS_UPLOAD_DIR": str(path / "upload"),
+            "HMUX_FAKE_INCLUDE_NOTIFICATION_EXTENSION": "1" if lane == "beta" else "0",
         })
         env.update(overrides or {})
         result = fixtures._run([
@@ -36,7 +36,7 @@ class CloudVPNDistributionTests(unittest.TestCase):
         return path, result
 
     def test_both_exports_share_host_keychain_and_packet_tunnel(self):
-        for lane, host in (("beta", "dev.cmux.app.beta"),):
+        for lane, host in (("beta", "dev.hmux.app.beta"),):
             with self.subTest(lane=lane):
                 path, result = self.export(lane)
                 self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
@@ -46,7 +46,7 @@ class CloudVPNDistributionTests(unittest.TestCase):
                 with zipfile.ZipFile(ipa) as archive:
                     for component in ("", "PlugIns/CloudVPN.appex/"):
                         ent = plistlib.loads(archive.read(
-                            "Payload/cmux.app/" + component + "FakeSignedEntitlements.plist"
+                            "Payload/hmux.app/" + component + "FakeSignedEntitlements.plist"
                         ))
                         self.assertEqual(ent["keychain-access-groups"], [fixtures.TEAM_ID + "." + host])
                         self.assertIn("packet-tunnel-provider", ent["com.apple.developer.networking.networkextension"])
@@ -56,25 +56,25 @@ class CloudVPNDistributionTests(unittest.TestCase):
         path, result = self.export("appstore", {"IOS_APPSTORE_ENABLE_CLOUD_VPN": "1"})
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         options = plistlib.loads((path / "ExportOptions.plist").read_bytes())
-        self.assertNotIn("com.cmux.app.CloudVPN", options["provisioningProfiles"])
+        self.assertNotIn("com.hmux.app.CloudVPN", options["provisioningProfiles"])
         ipa = next((path / "upload/export").glob("*-resigned.ipa"))
         with zipfile.ZipFile(ipa) as archive:
             members = set(archive.namelist())
-            self.assertNotIn("Payload/cmux.app/PlugIns/CloudVPN.appex/Info.plist", members)
-            ent = plistlib.loads(archive.read("Payload/cmux.app/FakeSignedEntitlements.plist"))
+            self.assertNotIn("Payload/hmux.app/PlugIns/CloudVPN.appex/Info.plist", members)
+            ent = plistlib.loads(archive.read("Payload/hmux.app/FakeSignedEntitlements.plist"))
             self.assertNotIn("com.apple.developer.networking.networkextension", ent)
 
     def test_both_exports_reject_signed_hotspot_provider(self):
-        self.assert_rejected("CMUX_FAKE_HOST_HOTSPOT_PROVIDER", "hotspot-provider")
+        self.assert_rejected("HMUX_FAKE_HOST_HOTSPOT_PROVIDER", "hotspot-provider")
 
     def test_both_exports_reject_empty_signed_vpn_group(self):
-        self.assert_rejected("CMUX_FAKE_VPN_EMPTY_SIGNED_GROUP", "keychain")
+        self.assert_rejected("HMUX_FAKE_VPN_EMPTY_SIGNED_GROUP", "keychain")
 
     def test_both_exports_reject_unauthorized_profile_group(self):
-        self.assert_rejected("CMUX_FAKE_VPN_UNAUTHORIZED_GROUP", "keychain")
+        self.assert_rejected("HMUX_FAKE_VPN_UNAUTHORIZED_GROUP", "keychain")
 
     def test_both_exports_reject_host_without_packet_tunnel(self):
-        self.assert_rejected("CMUX_FAKE_HOST_MISSING_PACKET_TUNNEL", "packet-tunnel")
+        self.assert_rejected("HMUX_FAKE_HOST_MISSING_PACKET_TUNNEL", "packet-tunnel")
 
     def assert_rejected(self, override, diagnostic):
         for lane in ("beta",):

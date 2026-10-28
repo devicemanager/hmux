@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
 /// Records the process generation that a restored terminal already completed.

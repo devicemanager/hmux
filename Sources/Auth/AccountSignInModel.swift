@@ -1,4 +1,4 @@
-import CmuxSettingsUI
+import HmuxSettingsUI
 import Foundation
 import Observation
 
@@ -18,7 +18,7 @@ final class AccountSignInModel {
         case waiting
         case waitingSlow
         case finishing
-        /// The sign-in service refused with too many requests; cmux
+        /// The sign-in service refused with too many requests; hmux
         /// retries the completion on its own.
         case rateLimited
     }

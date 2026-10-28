@@ -134,8 +134,8 @@ export async function PlatformDownloadPage({
           {!isWindows && (
             <pre className="mt-4 overflow-x-auto rounded-xl border border-border bg-code-bg px-4 py-3 text-sm text-foreground">
               <code>
-                {"chmod +x cmux-linux-x64-installer.run\n" +
-                  "./cmux-linux-x64-installer.run"}
+                {"chmod +x hmux-linux-x64-installer.run\n" +
+                  "./hmux-linux-x64-installer.run"}
               </code>
             </pre>
           )}

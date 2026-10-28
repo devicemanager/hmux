@@ -2,8 +2,8 @@
 // audit script must stay a dependency-free .mjs for CI, so it cannot import
 // the runtime module; tests/cloud-vm-env-audit.test.ts pins the two together.
 
-export const FREE_PROVISIONING_ALLOW_KEY = "CMUX_VM_ALLOW_FREE_PROVISIONING";
-export const FREE_PROVISIONING_LEGACY_KEY = "CMUX_VM_REQUIRE_PRO";
+export const FREE_PROVISIONING_ALLOW_KEY = "HMUX_VM_ALLOW_FREE_PROVISIONING";
+export const FREE_PROVISIONING_LEGACY_KEY = "HMUX_VM_REQUIRE_PRO";
 export const freeProvisioningOverrideEnvKeys = [
   FREE_PROVISIONING_ALLOW_KEY,
   FREE_PROVISIONING_LEGACY_KEY,
@@ -27,9 +27,9 @@ export function isFreeProvisioningAllowed(env) {
 }
 
 /**
- * Key presence is not enough here: `CMUX_VM_ALLOW_FREE_PROVISIONING=0` is a
+ * Key presence is not enough here: `HMUX_VM_ALLOW_FREE_PROVISIONING=0` is a
  * harmless explicit default, while `=1` (or a lone legacy
- * `CMUX_VM_REQUIRE_PRO=0`) silently reopens free provisioning in a shared
+ * `HMUX_VM_REQUIRE_PRO=0`) silently reopens free provisioning in a shared
  * environment. Any problem fails the audit.
  */
 export function auditFreeProvisioningOverride(env) {

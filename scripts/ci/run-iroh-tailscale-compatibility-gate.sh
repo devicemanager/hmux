@@ -3,10 +3,10 @@
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-result_root="${CMUX_TAILSCALE_COMPAT_RESULT_ROOT:-${RUNNER_TEMP:-/tmp}/cmux-iroh-tailscale-compatibility}"
+result_root="${HMUX_TAILSCALE_COMPAT_RESULT_ROOT:-${RUNNER_TEMP:-/tmp}/hmux-iroh-tailscale-compatibility}"
 derived_data="$result_root/app-host-derived"
 result_bundle="$result_root/app-host.xcresult"
-source_packages="${CMUX_TAILSCALE_COMPAT_SOURCE_PACKAGES:-$repo_root/.ci-source-packages}"
+source_packages="${HMUX_TAILSCALE_COMPAT_SOURCE_PACKAGES:-$repo_root/.ci-source-packages}"
 swift_scratch_root="$result_root/swift-build"
 
 mkdir -p "$result_root" "$source_packages"
@@ -21,7 +21,7 @@ rm -f "$result_root"/*.log
 # surface and were retired rather than rewritten:
 #   testReleasedIOSWireFrameRemainsAcceptedByLegacyTCPAuthorization
 #   testLegacyCompatibilityPolicyCannotBecomeIrohAdmission
-# Shipped iOS builds are now served by the `cmux/mobile/1` dialect on the v2
+# Shipped iOS builds are now served by the `hmux/mobile/1` dialect on the v2
 # endpoint, behind Iroh admission. The two Stable listener tests cover that path.
 # See https://github.com/manaflow-ai/cmux/issues/13683.
 app_host_expected_count=4
@@ -32,15 +32,15 @@ run_app_host_gate() {
     cd "$repo_root"
     scripts/ci/xcodebuild_noninteractive.py \
       xcodebuild \
-      -project cmux.xcodeproj \
-      -scheme cmux-unit \
+      -project hmux.xcodeproj \
+      -scheme hmux-unit \
       -configuration Debug \
       -destination "platform=macOS" \
       -derivedDataPath "$derived_data" \
       -clonedSourcePackagesDirPath "$source_packages" \
       -resultBundlePath "$result_bundle" \
       COMPILER_INDEX_STORE_ENABLE=NO \
-      -only-testing:cmuxTests/IrohTailscaleVersionSkewMacGateTests \
+      -only-testing:hmuxTests/IrohTailscaleVersionSkewMacGateTests \
       test
   )
 
@@ -115,27 +115,27 @@ run_package_gate() {
 run_app_host_gate
 
 run_package_gate \
-  Packages/iOS/CmuxMobileShell \
+  Packages/iOS/HmuxMobileShell \
   'ReconnectRouteSelectionTests/(legacyMacWithoutIrohFailsClosedInsteadOfSendingBearerOverTCP|legacySavedMacWithoutPublishedIrohIsRetainedAndRequestsMacUpdate|preIrohPairingContinuesOverItsExactTailscaleRouteAfterIOSUpgrade|rejectedIrohReconnectNeverDowngradesToRawTailscale|storedReconnectPinsIrohAndExcludesRawFallbacks|switchToLegacySavedMacUpgradesFromRegistryWithoutRescan)' \
   6 \
-  'CmuxMobileShellTests.ReconnectRouteSelectionTests/legacyMacWithoutIrohFailsClosedInsteadOfSendingBearerOverTCP()' \
-  'CmuxMobileShellTests.ReconnectRouteSelectionTests/legacySavedMacWithoutPublishedIrohIsRetainedAndRequestsMacUpdate()' \
-  'CmuxMobileShellTests.ReconnectRouteSelectionTests/preIrohPairingContinuesOverItsExactTailscaleRouteAfterIOSUpgrade()' \
-  'CmuxMobileShellTests.ReconnectRouteSelectionTests/rejectedIrohReconnectNeverDowngradesToRawTailscale()' \
-  'CmuxMobileShellTests.ReconnectRouteSelectionTests/storedReconnectPinsIrohAndExcludesRawFallbacks()' \
-  'CmuxMobileShellTests.ReconnectRouteSelectionTests/switchToLegacySavedMacUpgradesFromRegistryWithoutRescan()'
+  'HmuxMobileShellTests.ReconnectRouteSelectionTests/legacyMacWithoutIrohFailsClosedInsteadOfSendingBearerOverTCP()' \
+  'HmuxMobileShellTests.ReconnectRouteSelectionTests/legacySavedMacWithoutPublishedIrohIsRetainedAndRequestsMacUpdate()' \
+  'HmuxMobileShellTests.ReconnectRouteSelectionTests/preIrohPairingContinuesOverItsExactTailscaleRouteAfterIOSUpgrade()' \
+  'HmuxMobileShellTests.ReconnectRouteSelectionTests/rejectedIrohReconnectNeverDowngradesToRawTailscale()' \
+  'HmuxMobileShellTests.ReconnectRouteSelectionTests/storedReconnectPinsIrohAndExcludesRawFallbacks()' \
+  'HmuxMobileShellTests.ReconnectRouteSelectionTests/switchToLegacySavedMacUpgradesFromRegistryWithoutRescan()'
 
 run_package_gate \
-  Packages/iOS/CmuxMobileRPC \
+  Packages/iOS/HmuxMobileRPC \
   'MobileCoreRPCClientTests/(admittedIrohRequestCarriesNoStackOrAttachCredential|hostStatusProbeNeverSendsStackTokenOnUntrustedRoute)' \
   2 \
-  'CmuxMobileRPCTests.MobileCoreRPCClientTests/admittedIrohRequestCarriesNoStackOrAttachCredential()' \
-  'CmuxMobileRPCTests.MobileCoreRPCClientTests/hostStatusProbeNeverSendsStackTokenOnUntrustedRoute()'
+  'HmuxMobileRPCTests.MobileCoreRPCClientTests/admittedIrohRequestCarriesNoStackOrAttachCredential()' \
+  'HmuxMobileRPCTests.MobileCoreRPCClientTests/hostStatusProbeNeverSendsStackTokenOnUntrustedRoute()'
 
 run_package_gate \
-  Packages/iOS/CmuxMobileShellModel \
+  Packages/iOS/HmuxMobileShellModel \
   'MobileShellRouteAuthPolicyTests/allowsStackAuthOnlyForLoopbackRoutes' \
   1 \
-  'CmuxMobileShellModelTests.MobileShellRouteAuthPolicyTests/allowsStackAuthOnlyForLoopbackRoutes()'
+  'HmuxMobileShellModelTests.MobileShellRouteAuthPolicyTests/allowsStackAuthOnlyForLoopbackRoutes()'
 
 echo "Iroh/Tailscale version-skew compatibility gate passed"

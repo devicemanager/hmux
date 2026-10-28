@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
-# Install a PREBUILT cmux iOS simulator .app into the tag's isolated simulator
+# Install a PREBUILT hmux iOS simulator .app into the tag's isolated simulator
 # and launch it signed in + auto-paired. Used by cloud iOS reloads
-# (cmuxterm-hq scripts/reload-cloud-ios.sh), which download the simulator app
+# (hmuxterm-hq scripts/reload-cloud-ios.sh), which download the simulator app
 # instead of building it locally; local builds go through ios/scripts/reload.sh,
 # which shares the same isolated-simulator resolution.
 #
-#   scripts/ios-sim-install.sh --tag <tag> --app <Debug-iphonesimulator/cmux.app>
+#   scripts/ios-sim-install.sh --tag <tag> --app <Debug-iphonesimulator/hmux.app>
 #                              [--auth-profile agent|personal]
 #                              [--expected-account <email>]
 #                              [--credentials-file <path>]
@@ -47,8 +47,8 @@ done
 [[ -n "$TAG" ]] || { echo "error: --tag is required" >&2; exit 2; }
 [[ -n "$APP" && -d "$APP" ]] || { echo "error: --app must point at a simulator .app" >&2; exit 2; }
 
-SLUG="$(cmux_attach__slug "$TAG")"
-BUNDLE_ID="dev.cmux.ios.$SLUG"
+SLUG="$(hmux_attach__slug "$TAG")"
+BUNDLE_ID="dev.hmux.ios.$SLUG"
 # Fail closed: an unreadable CFBundleIdentifier must not skip validation and
 # install an arbitrary app under this tag's identity.
 APP_BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$APP/Info.plist" 2>/dev/null || true)"
@@ -61,9 +61,9 @@ if [[ "$APP_BUNDLE_ID" != "$BUNDLE_ID" ]]; then
   exit 1
 fi
 
-SIM_UDID="$(cmux_ios_isolated_sim_udid "$SLUG")"
+SIM_UDID="$(hmux_ios_isolated_sim_udid "$SLUG")"
 [[ -n "$SIM_UDID" ]] || { echo "error: could not resolve isolated simulator" >&2; exit 1; }
-SIM_NAME="$(cmux_ios_isolated_sim_name "$SLUG")"
+SIM_NAME="$(hmux_ios_isolated_sim_name "$SLUG")"
 
 echo "==> installing $BUNDLE_ID into isolated simulator $SIM_NAME ($SIM_UDID)"
 xcrun simctl boot "$SIM_UDID" >/dev/null 2>&1 || true

@@ -12,7 +12,7 @@ describe("desktop upstream host allowlist", () => {
 
   test("anything else fails closed", () => {
     // The retired gateway's own preview domain is no longer trusted.
-    expect(isAllowedDesktopUpstreamHost("noble-wren-cmux.preview.bl.run")).toBe(false);
+    expect(isAllowedDesktopUpstreamHost("noble-wren-hmux.preview.bl.run")).toBe(false);
     expect(isAllowedDesktopUpstreamHost("evil.example.com")).toBe(false);
     expect(isAllowedDesktopUpstreamHost("vm.cmux.sh")).toBe(false);
     expect(isAllowedDesktopUpstreamHost("x.vm.cmux.sh.evil.com")).toBe(false);
@@ -24,7 +24,7 @@ describe("desktop upstream host allowlist", () => {
 });
 
 describe("wrapper URL (what people see and keep)", () => {
-  test("carries cmux_token on our origin, never the gateway parameter", () => {
+  test("carries hmux_token on our origin, never the gateway parameter", () => {
     const url = desktopWrapperUrl({
       origin: "http://localhost:3777",
       vmId: "tidy-heron",
@@ -33,7 +33,7 @@ describe("wrapper URL (what people see and keep)", () => {
       expiresAtMs: 1_800_000_000_000,
     });
     expect(url).toBe(
-      "http://localhost:3777/vm/desktop/tidy-heron?cmux_token=abc123def456&host=tidy-heron-6901.vm.cmux.sh&exp=1800000000000",
+      "http://localhost:3777/vm/desktop/tidy-heron?hmux_token=abc123def456&host=tidy-heron-6901.vm.cmux.sh&exp=1800000000000",
     );
     expect(url).not.toContain("bl_preview_token");
   });
@@ -60,7 +60,7 @@ describe("upstream URL (where the wrapper sends the pane)", () => {
       host: "tidy-heron-6901.vm.cmux.sh",
       token: "abc123def456",
       params: {
-        cmux_token: "abc123def456",
+        hmux_token: "abc123def456",
         host: "tidy-heron-6901.vm.cmux.sh",
         exp: "1800000000000",
         autoconnect: "1",
@@ -76,7 +76,7 @@ describe("upstream URL (where the wrapper sends the pane)", () => {
     expect(url).toContain("reconnect=1");
     expect(url).toContain("reconnect_delay=2000");
     expect(url).not.toContain("evil");
-    expect(url).not.toContain("cmux_token");
+    expect(url).not.toContain("hmux_token");
     expect(url).not.toContain("exp=");
   });
 

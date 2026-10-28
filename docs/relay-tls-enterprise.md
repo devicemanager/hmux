@@ -9,7 +9,7 @@ installing a certificate does not grant it trust.
 
 Hostname, validity dates, chain, and macOS trust restrictions remain enforced.
 There is no certificate bypass or fallback after macOS rejects a certificate.
-macOS owns public and enterprise root policy; cmux does not copy keychain roots
+macOS owns public and enterprise root policy; hmux does not copy keychain roots
 into a separate bundle. `SSL_CERT_FILE` and `SSL_CERT_DIR` do not override this
 native macOS Iroh policy.
 
@@ -28,7 +28,7 @@ while the Mac retries, and clears when relay readiness recovers. Diagnostics exc
 relay tokens, and raw provider error text.
 
 ```sh
-log show --last 10m --style compact --predicate 'subsystem == "com.cmux" AND category == "RelayTLS"'
+log show --last 10m --style compact --predicate 'subsystem == "com.hmux" AND category == "RelayTLS"'
 ```
 
 | Cause | Next step |
@@ -42,7 +42,7 @@ log show --last 10m --style compact --predicate 'subsystem == "com.cmux" AND cat
 | `NetworkFailed` | Check DNS, routing, firewall rules, and relay reachability. This is separate from certificate trust. |
 | `Other` | TLS may have succeeded but relay authentication or its protocol failed; check relay service status. |
 
-After IT corrects trust or the chain, reconnect or restart cmux for a fresh
+After IT corrects trust or the chain, reconnect or restart hmux for a fresh
 handshake. Do not export credentials or disable certificate validation as a
 workaround. Trusting a root does not repair a firewall rule or an inspection
 gateway that blocks the relay's WebSocket protocol.
@@ -56,7 +56,7 @@ python3 tests/relay_tls/system_keychain.py \
   --allow-system-keychain --diagnostics --output relay-tls-results
 ```
 
-The harness builds a consumer of the exact native framework pinned by cmux,
+The harness builds a consumer of the exact native framework pinned by hmux,
 generates a test CA, and checks rejection before installation. It installs that
 CA in the System keychain, confirms Apple's trust evaluation, and requires Iroh
 to send application data over the validated TLS connection. It also rejects a

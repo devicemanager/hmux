@@ -35,8 +35,8 @@ describe("VM timing helpers", () => {
     recorder.record("provider_create", 250);
     recorder.record("provider_create", 50);
     expect(recorder.serverTimingHeader()).toBe("auth;dur=12.35, connection_init;dur=8, admission;dur=20, provider_create;dur=300");
-    expect(attributes.some((attribute) => attribute.key === "cmux.vm.timing.provider_create_started_at_ms")).toBe(true);
-    expect(attributes.some((attribute) => attribute.key === "cmux.vm.timing.provider_create_ended_at_ms")).toBe(true);
+    expect(attributes.some((attribute) => attribute.key === "hmux.vm.timing.provider_create_started_at_ms")).toBe(true);
+    expect(attributes.some((attribute) => attribute.key === "hmux.vm.timing.provider_create_ended_at_ms")).toBe(true);
   });
 
   test("finish is idempotent", () => {
@@ -53,8 +53,8 @@ describe("VM timing helpers", () => {
     recorder.finish({ status: 200 });
     recorder.finish({ status: 200 });
 
-    expect(attributes.filter((attribute) => attribute.key === "cmux.vm.timing.total_ms")).toHaveLength(1);
-    expect(attributes.filter((attribute) => attribute.key === "cmux.vm.timing.total_count")).toHaveLength(1);
+    expect(attributes.filter((attribute) => attribute.key === "hmux.vm.timing.total_ms")).toHaveLength(1);
+    expect(attributes.filter((attribute) => attribute.key === "hmux.vm.timing.total_count")).toHaveLength(1);
   });
 
   test("accepts the phase end timestamp when work settles before its caller records it", () => {
@@ -62,7 +62,7 @@ describe("VM timing helpers", () => {
     const span = { setAttribute: (key: string, value: unknown) => attributes.push({ key, value }) } as unknown as Span;
     const recorder = new VmTimingRecorder(span, "create", { debugTimings: false });
     recorder.record("connection_init", 20, { endedAtMs: 1_500 });
-    expect(attributes.find((attribute) => attribute.key === "cmux.vm.timing.connection_init_ended_at_ms")?.value).toBe(1_500);
-    expect(attributes.find((attribute) => attribute.key === "cmux.vm.timing.connection_init_started_at_ms")?.value).toBe(1_480);
+    expect(attributes.find((attribute) => attribute.key === "hmux.vm.timing.connection_init_ended_at_ms")?.value).toBe(1_500);
+    expect(attributes.find((attribute) => attribute.key === "hmux.vm.timing.connection_init_started_at_ms")?.value).toBe(1_480);
   });
 });

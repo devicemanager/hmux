@@ -12,7 +12,7 @@ struct WelcomeCommand: LegacyMetaCommand {
 }
 
 /// Dispatched before the legacy parser's command switch. Its flag spelling,
-/// `cmux --skill`, is declared on `CmuxCommand` for completion only.
+/// `hmux --skill`, is declared on `HmuxCommand` for completion only.
 struct GuideCommand: LegacyMetaCommand {
     @Argument(parsing: .allUnrecognized) var arguments: [String] = []
     static let configuration = CommandConfiguration(commandName: "guide", helpNames: [])
@@ -22,7 +22,7 @@ struct DocsCommand: LegacyMetaCommand {
     // A single topic, not a subcommand tree: the runner rejects more than one
     // argument, so `.allUnrecognized` keeps the shape while the completion kind
     // supplies the topics.
-    @Argument(parsing: .allUnrecognized, completion: .list(CMUXCLI.docsTopicNames))
+    @Argument(parsing: .allUnrecognized, completion: .list(HMUXCLI.docsTopicNames))
     var arguments: [String] = []
     static let configuration = CommandConfiguration(commandName: "docs", helpNames: [])
 }
@@ -33,7 +33,7 @@ struct SettingsCommand: LegacyMetaCommand {
     // list covers both positions without splitting the runner's dispatch.
     @Argument(
         parsing: .allUnrecognized,
-        completion: .list(["open", "path", "docs"] + CMUXCLI.settingsTargetNames)
+        completion: .list(["open", "path", "docs"] + HMUXCLI.settingsTargetNames)
     ) var arguments: [String] = []
     static let configuration = CommandConfiguration(commandName: "settings", helpNames: [])
 }
@@ -43,7 +43,7 @@ struct ConfigCommand: LegacyMetaCommand {
     // The two font-size keys are both subcommands and the values `get`/`set`
     // take, so one list covers every position; the runner validates which
     // combination is legal.
-    @Argument(parsing: .allUnrecognized, completion: .list(CMUXCLI.configSubcommandNames))
+    @Argument(parsing: .allUnrecognized, completion: .list(HMUXCLI.configSubcommandNames))
     var arguments: [String] = []
     static let configuration = CommandConfiguration(commandName: "config", helpNames: [])
 }

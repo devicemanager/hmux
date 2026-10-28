@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for scripts/ci/reverse_test_impact.py and its report-only wiring.
 
-The selector maps a diff to app code onto the cmuxTests/ suites that name what
+The selector maps a diff to app code onto the hmuxTests/ suites that name what
 changed. ci.yml runs it in a job of its own once routing is known, from the
 trusted base revision, and only records the answer: nothing waits for that job,
 it writes no output, and it cannot fail the run.
@@ -45,7 +45,7 @@ final class FeedCoordinator {
 """
 FEED_TESTS = """\
 import XCTest
-@testable import cmux
+@testable import hmux
 
 final class FeedCoordinatorTests: XCTestCase {
     func testRefresh() {
@@ -71,8 +71,8 @@ def hunk(path: str, line: int, count: int = 1) -> str:
 def fixture(**extra: str) -> dict[str, str]:
     files = {
         "Sources/Feed/FeedCoordinator.swift": FEED_SOURCE,
-        "cmuxTests/FeedCoordinatorTests.swift": FEED_TESTS,
-        "cmuxTests/UnrelatedTests.swift": UNRELATED_TESTS,
+        "hmuxTests/FeedCoordinatorTests.swift": FEED_TESTS,
+        "hmuxTests/UnrelatedTests.swift": UNRELATED_TESTS,
     }
     files.update(extra)
     return files
@@ -88,15 +88,15 @@ class SelectorTests(unittest.TestCase):
         self.assertEqual((seed.name, seed.owner, seed.how), ("refreshFeed", "FeedCoordinator", "member"))
 
     def test_package_sources_count_as_app_code(self) -> None:
-        path = "Packages/macOS/CmuxFeed/Sources/CmuxFeed/FeedCoordinator.swift"
+        path = "Packages/macOS/HmuxFeed/Sources/HmuxFeed/FeedCoordinator.swift"
         files = fixture(**{path: FEED_SOURCE})
         del files["Sources/Feed/FeedCoordinator.swift"]
         selection = rti.select(files, hunk(path, 5))
         self.assertEqual(selection.app_files, [path])
         self.assertEqual(selection.suites, {"FeedCoordinatorTests"})
-        # iOS packages and package tests are not what cmuxTests/ links.
-        self.assertFalse(rti.is_app_path("Packages/iOS/CmuxFeed/Sources/CmuxFeed/A.swift"))
-        self.assertFalse(rti.is_app_path("Packages/macOS/CmuxFeed/Tests/CmuxFeedTests/A.swift"))
+        # iOS packages and package tests are not what hmuxTests/ links.
+        self.assertFalse(rti.is_app_path("Packages/iOS/HmuxFeed/Sources/HmuxFeed/A.swift"))
+        self.assertFalse(rti.is_app_path("Packages/macOS/HmuxFeed/Tests/HmuxFeedTests/A.swift"))
 
     def test_a_generic_name_is_dropped_with_its_reason(self) -> None:
         # Line 12 is `func update() {}`: every test file says "update".
@@ -111,7 +111,7 @@ class SelectorTests(unittest.TestCase):
         source = "func formatWidget() -> String {\n    \"w\"\n}\n"
         files = {"Sources/Widget.swift": source}
         for index in range(rti.HOT_TEST_FILES + 1):
-            files[f"cmuxTests/Widget{index}Tests.swift"] = (
+            files[f"hmuxTests/Widget{index}Tests.swift"] = (
                 f"final class Widget{index}Tests: XCTestCase {{\n"
                 f"    func testFormat() {{ _ = formatWidget() }}\n"
                 "}\n"
@@ -132,14 +132,14 @@ class SelectorTests(unittest.TestCase):
 
     def test_a_test_helper_continues_the_trail_to_its_suites(self) -> None:
         files = fixture(**{
-            "cmuxTests/FeedFixtures.swift": (
+            "hmuxTests/FeedFixtures.swift": (
                 "struct FeedFixture {\n"
                 "    static func refreshed() -> Int {\n"
                 "        FeedCoordinator().refreshFeed()\n"
                 "    }\n"
                 "}\n"
             ),
-            "cmuxTests/FeedBadgeTests.swift": (
+            "hmuxTests/FeedBadgeTests.swift": (
                 "final class FeedBadgeTests: XCTestCase {\n"
                 "    func testBadge() { XCTAssertEqual(FeedFixture.refreshed(), 1) }\n"
                 "}\n"
@@ -154,7 +154,7 @@ class SelectorTests(unittest.TestCase):
         without_tests = {"Sources/Feed/FeedCoordinator.swift": FEED_SOURCE}
         self.assertEqual(
             rti.select(without_tests, hunk("Sources/Feed/FeedCoordinator.swift", 5)).fallback,
-            "cmuxTests/ not found",
+            "hmuxTests/ not found",
         )
         # A diff that leaves app code alone is an empty answer, not a fallback.
         empty = rti.select(fixture(), hunk("docs/README.md", 1))
@@ -193,13 +193,13 @@ class LiteralTests(unittest.TestCase):
     """Tests that drive the CLI or socket assert on text, never on Swift names."""
 
     def test_a_changed_cli_literal_selects_the_suite_that_asserts_on_it(self) -> None:
-        path = "CLI/cmux.swift"
+        path = "CLI/hmux.swift"
         diff = change(
             path,
             ['        throw CLIError(message: "Workspace ref not found: \\(ref)")'],
             ['        throw CLIError(message: "No workspace matches \\(ref)")'],
         )
-        files = fixture(**{"cmuxTests/CLIWorkspaceRefTests.swift": CLI_OUTPUT_TESTS})
+        files = fixture(**{"hmuxTests/CLIWorkspaceRefTests.swift": CLI_OUTPUT_TESTS})
         selection = rti.select(files, diff)
         self.assertEqual(selection.app_files, [path])
         self.assertEqual(selection.suites, {"CLIWorkspaceRefTests"})
@@ -215,7 +215,7 @@ class LiteralTests(unittest.TestCase):
             ['        return "feed.badge_refresh"'],
         )
         files = fixture(**{
-            "cmuxTests/FeedSocketTests.swift": (
+            "hmuxTests/FeedSocketTests.swift": (
                 "final class FeedSocketTests: XCTestCase {\n"
                 '    func testMethod() { XCTAssertEqual(send("feed.refresh_badge"), "OK") }\n'
                 "}\n"
@@ -225,8 +225,8 @@ class LiteralTests(unittest.TestCase):
 
     def test_a_literal_on_both_sides_of_the_diff_only_moved(self) -> None:
         line = '        print("Workspace ref not found: \\(ref)")'
-        diff = change("CLI/cmux.swift", [line], ["    " + line])
-        files = fixture(**{"cmuxTests/CLIWorkspaceRefTests.swift": CLI_OUTPUT_TESTS})
+        diff = change("CLI/hmux.swift", [line], ["    " + line])
+        files = fixture(**{"hmuxTests/CLIWorkspaceRefTests.swift": CLI_OUTPUT_TESTS})
         self.assertEqual(rti.select(files, diff).suites, set())
 
     def test_short_text_comments_and_interpolations_are_not_searched(self) -> None:
@@ -240,10 +240,10 @@ class LiteralTests(unittest.TestCase):
         self.assertEqual(rti.literal_pieces('say("reply \\"hello there\\"")'), {'reply \\"hello there\\"'})
 
     def test_a_literal_many_tests_contain_is_dropped_as_hot(self) -> None:
-        diff = change("CLI/cmux.swift", ['    let key = "workspace_id_value"'], [])
+        diff = change("CLI/hmux.swift", ['    let key = "workspace_id_value"'], [])
         files = fixture()
         for index in range(rti.HOT_TEST_FILES + 1):
-            files[f"cmuxTests/Ref{index}Tests.swift"] = (
+            files[f"hmuxTests/Ref{index}Tests.swift"] = (
                 f"final class Ref{index}Tests: XCTestCase {{\n"
                 '    func testKey() { _ = "workspace_id_value" }\n'
                 "}\n"
@@ -257,8 +257,8 @@ class LiteralTests(unittest.TestCase):
 
     def test_text_moved_to_another_file_only_moved(self) -> None:
         line = '        throw CLIError(message: "Workspace ref not found: \\(ref)")'
-        diff = change("CLI/cmux.swift", [line], []) + change("CLI/CMUXCLI+Refs.swift", [], [line])
-        files = fixture(**{"cmuxTests/CLIWorkspaceRefTests.swift": CLI_OUTPUT_TESTS})
+        diff = change("CLI/hmux.swift", [line], []) + change("CLI/HMUXCLI+Refs.swift", [], [line])
+        files = fixture(**{"hmuxTests/CLIWorkspaceRefTests.swift": CLI_OUTPUT_TESTS})
         self.assertEqual(rti.changed_literals(diff), {})
         self.assertEqual(rti.select(files, diff).suites, set())
 
@@ -269,28 +269,28 @@ class LiteralTests(unittest.TestCase):
             f"Sources/Surface{index}.swift": f"struct Surface{index} {{ var surfaceIdentifier = 0 }}\n"
             for index in range(rti.AMBIGUOUS_APP_DECLARATIONS)
         })
-        files["cmuxTests/CLISurfaceJSONTests.swift"] = (
+        files["hmuxTests/CLISurfaceJSONTests.swift"] = (
             "final class CLISurfaceJSONTests: XCTestCase {\n"
             '    func testKey() { XCTAssertTrue(output().contains("surfaceIdentifier")) }\n'
             "}\n"
         )
-        diff = change("CLI/cmux.swift", ['    payload["surfaceIdentifier"] = id'], ['    payload["surface_id"] = id'])
+        diff = change("CLI/hmux.swift", ['    payload["surfaceIdentifier"] = id'], ['    payload["surface_id"] = id'])
         self.assertEqual(rti.select(files, diff).suites, {"CLISurfaceJSONTests"})
 
     def test_a_literal_is_followed_through_a_test_helper(self) -> None:
         files = fixture(**{
-            "cmuxTests/CLIFixtures.swift": (
+            "hmuxTests/CLIFixtures.swift": (
                 "enum CLIFixtures {\n"
                 '    static let missingRef = "Workspace ref not found: workspace:9"\n'
                 "}\n"
             ),
-            "cmuxTests/CLIRefErrorTests.swift": (
+            "hmuxTests/CLIRefErrorTests.swift": (
                 "final class CLIRefErrorTests: XCTestCase {\n"
                 "    func testMessage() { XCTAssertEqual(run(), CLIFixtures.missingRef) }\n"
                 "}\n"
             ),
         })
-        diff = change("CLI/cmux.swift", ['    fail("Workspace ref not found: \\(ref)")'], [])
+        diff = change("CLI/hmux.swift", ['    fail("Workspace ref not found: \\(ref)")'], [])
         self.assertEqual(rti.select(files, diff).suites, {"CLIRefErrorTests"})
 
     def test_a_literal_does_not_hide_a_type_with_the_same_name(self) -> None:
@@ -305,14 +305,14 @@ class LiteralTests(unittest.TestCase):
     def test_literals_past_the_cap_are_recorded_not_searched(self) -> None:
         added = [f'    let m{index} = "distinct message number {index}"' for index in range(5)]
         with unittest.mock.patch.object(rti, "MAX_LITERAL_SEEDS", 3):
-            selection = rti.select(fixture(), change("CLI/cmux.swift", [], added))
-        self.assertIn("CLI/cmux.swift literals over the cap of 3", selection.untraceable)
+            selection = rti.select(fixture(), change("CLI/hmux.swift", [], added))
+        self.assertIn("CLI/hmux.swift literals over the cap of 3", selection.untraceable)
 
     def test_text_no_test_contains_is_left_out_of_the_report(self) -> None:
-        diff = change("CLI/cmux.swift", ['    log("an internal log line nobody asserts")'], [])
+        diff = change("CLI/hmux.swift", ['    log("an internal log line nobody asserts")'], [])
         selection = rti.select(fixture(), diff)
         self.assertEqual((selection.reached, selection.dropped), ({}, []))
-        self.assertEqual(selection.app_files, ["CLI/cmux.swift"])
+        self.assertEqual(selection.app_files, ["CLI/hmux.swift"])
 
 
 class BudgetTests(unittest.TestCase):
@@ -345,11 +345,11 @@ class BudgetTests(unittest.TestCase):
     def test_suite_costs_come_from_the_measured_timings(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            (root / "cmuxTests").mkdir()
-            (root / "cmuxTests/MeasuredTests.swift").write_text(
+            (root / "hmuxTests").mkdir()
+            (root / "hmuxTests/MeasuredTests.swift").write_text(
                 "final class MeasuredTests: XCTestCase {\n    func testA() {}\n}\n"
             )
-            (root / "cmuxTests/GuessedTests.swift").write_text(
+            (root / "hmuxTests/GuessedTests.swift").write_text(
                 "final class GuessedTests: XCTestCase {\n"
                 "    func testA() {}\n    func testB() {}\n    func testC() {}\n}\n"
             )
@@ -493,7 +493,7 @@ class WorkflowGuardTests(unittest.TestCase):
         self.assertIn("          fetch-depth: 2", checkout)
         self.assertIn("          persist-credentials: false", checkout)
         # Its changed-file list is its own, not a file another job wrote.
-        self.assertNotIn("/tmp/cmux-ci-", self.job)
+        self.assertNotIn("/tmp/hmux-ci-", self.job)
         self.assertIn('git diff --no-renames --name-only "$base" HEAD', self.report)
         # CLI/ too: its string literals are what the CLI suites assert on.
         self.assertIn("^(Sources/|CLI/|Packages/(macOS|Shared)/[^/]+/Sources/)", self.report)
@@ -509,7 +509,7 @@ class WorkflowGuardTests(unittest.TestCase):
         # Everything it imports from scripts/ci/ comes along, or the trusted
         # copy fails to import and reports nothing.
         source = (SCRIPTS / "reverse_test_impact.py").read_text(encoding="utf-8")
-        needed = {"scripts/ci/reverse_test_impact.py", "scripts/ci/cmux-unit-test-timings.json"}
+        needed = {"scripts/ci/reverse_test_impact.py", "scripts/ci/hmux-unit-test-timings.json"}
         pending = [source]
         while pending:
             for module in re.findall(r"^\s*(?:from|import)\s+(\w+)", pending.pop(), re.M):

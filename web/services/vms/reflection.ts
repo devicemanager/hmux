@@ -1,4 +1,4 @@
-// cmux Reflection: what a machine can learn about itself from inside.
+// hmux Reflection: what a machine can learn about itself from inside.
 //
 // Modeled on exe.dev's reflection integration: `curl https://reflection…/` returns
 // the machine's own name plus an index of paths, and `/integrations` lists what the
@@ -47,7 +47,7 @@ export const REFLECTION_PATHS: readonly ReflectionPath[] = [
   { path: "/integrations", description: "what this machine can use, each with a help command" },
 ];
 
-/** The daemon listener every cmux Cloud machine serves on its private address. */
+/** The daemon listener every hmux Cloud machine serves on its private address. */
 export const REFLECTION_PEER_DAEMON_PORT = 1337;
 
 export type ReflectionNetwork = { readonly ipv4: string | null; readonly ipv6: string | null };
@@ -79,7 +79,7 @@ export function reflectionNetwork(metadata: Readonly<Record<string, unknown>>): 
   };
 }
 
-/** The reserved shape (`cmuxResourceReservation`), when the row carries one. */
+/** The reserved shape (`hmuxResourceReservation`), when the row carries one. */
 export function reflectionSize(metadata: Readonly<Record<string, unknown>>): ReflectionSize {
   const raw = metadata[VM_RESOURCE_RESERVATION_METADATA_KEY];
   const reservation = raw && typeof raw === "object" ? (raw as Record<string, unknown>) : {};
@@ -128,7 +128,7 @@ export function reflectionUrls(context: Pick<ReflectionContext, "aliasOrigin" | 
 }
 
 /**
- * One owner machine in the `cmux self` / `cmux vm ls` shape (`VmSelfMachine`),
+ * One owner machine in the `hmux self` / `hmux vm ls` shape (`VmSelfMachine`),
  * plus how a peer would reach it. The caller's own entry carries no route: a
  * machine does not link to itself.
  */
@@ -159,7 +159,7 @@ function reflectionMachineEntry(row: ReflectionRow, self: ReflectionRow): Reflec
 /**
  * Every live machine of the owner, the caller included and marked `self`,
  * newest first — the list `GET /api/vm/self` has always served, so the guest's
- * `cmux self` and `cmux vm ls` read one shape whichever endpoint answers, now
+ * `hmux self` and `hmux vm ls` read one shape whichever endpoint answers, now
  * with each machine's private route beside it.
  */
 export function reflectionMachines(context: ReflectionContext): ReflectionMachineEntry[] {
@@ -197,7 +197,7 @@ export function reflectionSelfMachine(context: ReflectionContext): ReflectionMac
 /**
  * The index: the machine's own name at the top level (exe.dev parity), the
  * owner, and the paths — plus the `GET /api/vm/self` fields (`schema`, `machine`,
- * `team`, `machines`) so this one answer serves `cmux self` and `cmux vm ls`.
+ * `team`, `machines`) so this one answer serves `hmux self` and `hmux vm ls`.
  */
 export function reflectionIndex(context: ReflectionContext): Record<string, unknown> {
   const { self, owner } = context;
@@ -284,7 +284,7 @@ export function reflectionPeers(context: ReflectionContext): { peers: Reflection
         network,
         route,
         reachable: route !== null,
-        help: `cmux vm exec ${name} -- <command>`,
+        help: `hmux vm exec ${name} -- <command>`,
       };
     })
     .sort((a, b) => a.name.localeCompare(b.name));
@@ -302,22 +302,22 @@ export const REFLECTION_AGENTS = ["claude", "codex", "opencode", "pi"] as const;
 
 export function reflectionIntegrations(context: ReflectionContext): { integrations: ReflectionIntegration[] } {
   const integrations: ReflectionIntegration[] = [
-    { type: "reflection", name: "reflection", help: "cmux whoami" },
+    { type: "reflection", name: "reflection", help: "hmux whoami" },
     {
       type: "llm",
       name: "coderouter",
-      help: "cmux coderouter models",
-      comment: "Model credentials are injected by the platform edge; agents authenticate with the placeholder key already in the environment. Spend readout: cmux coderouter usage (--json for the contract, --tsv for the day table).",
+      help: "hmux coderouter models",
+      comment: "Model credentials are injected by the platform edge; agents authenticate with the placeholder key already in the environment. Spend readout: hmux coderouter usage (--json for the contract, --tsv for the day table).",
     },
     ...REFLECTION_AGENTS.map((agent): ReflectionIntegration => ({
       type: "agent",
       name: agent,
-      help: `cmux agent ${agent} "<prompt>"`,
+      help: `hmux agent ${agent} "<prompt>"`,
     })),
-    { type: "notify", name: "notify", help: "cmux notify --title <text> --body <text>" },
-    { type: "peers", name: "machines", help: "cmux vm ls" },
-    { type: "env", name: "env", help: "cmux env ls" },
-    { type: "layout", name: "layout", help: "cmux layout export" },
+    { type: "notify", name: "notify", help: "hmux notify --title <text> --body <text>" },
+    { type: "peers", name: "machines", help: "hmux vm ls" },
+    { type: "env", name: "env", help: "hmux env ls" },
+    { type: "layout", name: "layout", help: "hmux layout export" },
   ];
   if (context.hasDesktop === true) {
     integrations.push({ type: "desktop", name: "display:1", help: "DISPLAY=:1 xdotool key ctrl+l" });

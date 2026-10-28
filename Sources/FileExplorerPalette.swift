@@ -170,7 +170,7 @@ struct FileExplorerPalette {
     ) -> NSColor {
         let lightColor = color(components: light)
         let darkColor = color(components: dark)
-        return NSColor(name: NSColor.Name("cmux.fileExplorer.\(name)")) { appearance in
+        return NSColor(name: NSColor.Name("hmux.fileExplorer.\(name)")) { appearance in
             appearance.bestMatch(from: [.darkAqua, .aqua]) == .darkAqua
                 ? darkColor
                 : lightColor

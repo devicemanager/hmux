@@ -7,7 +7,7 @@ and compare the .swiftinterface files the compiler emits. Equal interfaces
 mean an importer (the app, the CLI, other packages) sees the same declarations,
 so the edit is interface-equivalent; anything else is interface-changing.
 
-The receipt is one line, `CMUX_INTERFACE_FINGERPRINT=<json>`, so a fleet step
+The receipt is one line, `HMUX_INTERFACE_FINGERPRINT=<json>`, so a fleet step
 can hand it back through its streamed log, and `interface_fingerprint=<json>`
 in GITHUB_OUTPUT when there is one. macOS status reads it to shadow the skip
 (Work 3): it marks would_skip_app_compile and still compiles the app.
@@ -34,10 +34,10 @@ from pathlib import Path
 # package dependencies or @_spi. Each maps to the library modules importers
 # see. Add a package only once it meets all of that.
 ALLOWLIST = {
-    "CMUXAgentLaunch": ("CMUXAgentLaunch",),
+    "HMUXAgentLaunch": ("HMUXAgentLaunch",),
 }
 
-MARKER = "CMUX_INTERFACE_FINGERPRINT="
+MARKER = "HMUX_INTERFACE_FINGERPRINT="
 BUILD_TIMEOUT_SECONDS = 600
 DIFF_LINES = 60
 

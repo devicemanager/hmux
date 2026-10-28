@@ -59,7 +59,7 @@ const linkRoute = await import("../app/api/teams/[teamId]/links/[linkId]/route")
 const memberRoute = await import("../app/api/teams/[teamId]/members/[userId]/route");
 const joinRoute = await import("../app/api/teams/join/[token]/route");
 
-const ORIGIN = "https://cmux.test";
+const ORIGIN = "https://hmux.test";
 
 function browserRequest(path: string, init: { method?: string; body?: unknown; origin?: string | null } = {}): Request {
   const headers = new Headers({ "content-type": "application/json" });

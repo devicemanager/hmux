@@ -1,17 +1,17 @@
-# cmux iOS
+# hmux iOS
 
-SwiftUI iOS/iPadOS shell for the CMUXMobileCore production path.
+SwiftUI iOS/iPadOS shell for the HMUXMobileCore production path.
 
 Current phase:
 
 - Stack Auth sign-in gate with Apple, Google, email code, and a debug-only `42` shortcut
 - QR/manual pairing surface
-- CMUXMobileCore pairing payload and attach-ticket decoding
+- HMUXMobileCore pairing payload and attach-ticket decoding
 - injectable `CmxByteTransportFactory` runtime hook
 - isolated preview host data when no concrete transport is installed
 - workspace list, workspace detail, terminal dropdown, and input bar
 
-No Rust, Iroh, or Zig dependency is linked into this shell. Concrete route implementations should enter through `CMUXMobileRuntime`.
+No Rust, Iroh, or Zig dependency is linked into this shell. Concrete route implementations should enter through `HMUXMobileRuntime`.
 
 Build and reload the simulator:
 
@@ -22,7 +22,7 @@ ios/scripts/reload.sh --tag iossh
 Run package tests:
 
 ```bash
-swift test --package-path ios/cmuxPackage
+swift test --package-path ios/hmuxPackage
 ```
 
 ## Build compatibility and production-auth DEV builds
@@ -40,14 +40,14 @@ ios/scripts/reload.sh --tag my-tag --device-only --prod-auth
 
 What `--prod-auth` does:
 
-- Bakes `CMUXAuthEnvironment=production` into the app's Info.plist (via the
-  `CMUX_IOS_AUTH_ENV` build setting), so the build signs in against the
+- Bakes `HMUXAuthEnvironment=production` into the app's Info.plist (via the
+  `HMUX_IOS_AUTH_ENV` build setting), so the build signs in against the
   production Stack project and uses `https://cmux.com` for the device
   registry/API and the magic-link callback.
 - Makes the presence worker follow the auth channel: the app resolves the
   production presence instance (see `PresenceClient.productionServiceURL`) so
   compatible Macs appear in Computers. The worker URLs live only in Swift;
-  the script bakes no copy, and an explicit `CMUX_PRESENCE_BASE_URL` still
+  the script bakes no copy, and an explicit `HMUX_PRESENCE_BASE_URL` still
   wins.
 - Skips the dogfood auto sign-in/auto-pair (those credentials belong to the
   development Stack project). Sign in in-app with the same account as your
@@ -58,8 +58,8 @@ What `--prod-auth` does:
   stale identity.
 
 Every installed iOS bundle registers one URL scheme derived from its complete
-bundle identifier, for example `cmux-ios-dev.cmux.app.beta://…` or
-`cmux-ios-dev.cmux.ios.my-tag://…`. No two cmux builds register the same system
+bundle identifier, for example `hmux-ios-dev.hmux.app.beta://…` or
+`hmux-ios-dev.hmux.ios.my-tag://…`. No two hmux builds register the same system
 route. The authenticated Mac status supplies the exact instance tag, which the
 app validates before it saves or adopts the connection.
 
@@ -74,7 +74,7 @@ Info.plist value.
 beta. It builds the heavy GhosttyKit + Swift Release compile on a leased fleet
 Mac (same maclease pool as the device cloud reload, m1ultra excluded), so the
 build stays off this Mac's CPU. The fleet produces an UNSIGNED Release archive
-for the beta bundle id `dev.cmux.app.beta` (no signing material ever lands on
+for the beta bundle id `dev.hmux.app.beta` (no signing material ever lands on
 the shared Macs), downloads it locally, then hands it to
 `ios/scripts/upload-testflight.sh --archive-path`, which does the local export,
 re-sign with the Apple Distribution cert (re-adding `aps-environment=production`),
@@ -84,27 +84,27 @@ strict codesign verification, and TestFlight upload.
 # Dry run: build + export + re-sign + verify aps-environment=production, NO upload
 ios/scripts/cloud-testflight.sh --no-upload
 
-# Full lane: build on the fleet and upload to TestFlight (internal "cmux beta" group)
+# Full lane: build on the fleet and upload to TestFlight (internal "hmux beta" group)
 ios/scripts/cloud-testflight.sh
 
 # Also make the build eligible for external testers
 ios/scripts/cloud-testflight.sh --external
 ```
 
-A standalone cmux clone with no cmuxterm-hq checkout transparently falls back to
+A standalone hmux clone with no hmuxterm-hq checkout transparently falls back to
 a LOCAL Release archive (`--local` forces it), then takes the same export path.
 
-Internal testers (the `cmux beta` group) get every uploaded build instantly with
+Internal testers (the `hmux beta` group) get every uploaded build instantly with
 no review. An `--external` build is different: the FIRST external build of a new
 `MARKETING_VERSION` must pass a one-time Apple Beta App Review (~24h) before any
 external tester can install it. Subsequent external builds of the same version
 ship without re-review. External cuts reuse
-`CMUX_IOS_BETA_MARKETING_VERSION` from `ios/Config/Shared.xcconfig`; bump it
+`HMUX_IOS_BETA_MARKETING_VERSION` from `ios/Config/Shared.xcconfig`; bump it
 only when you want a fresh Beta App Review cycle. The upload path assigns the
 processed build to both the Founder's Edition and Pro external beta groups. It
-uses `CMUX_TESTFLIGHT_EXTERNAL_GROUP_ID` /
-`CMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME` for the primary group and
-`CMUX_TESTFLIGHT_PRO_GROUP_ID` for Pro. GitHub Actions maps the repository
+uses `HMUX_TESTFLIGHT_EXTERNAL_GROUP_ID` /
+`HMUX_TESTFLIGHT_EXTERNAL_GROUP_NAME` for the primary group and
+`HMUX_TESTFLIGHT_PRO_GROUP_ID` for Pro. GitHub Actions maps the repository
 variables `IOS_TESTFLIGHT_EXTERNAL_GROUP_ID`,
 `IOS_TESTFLIGHT_EXTERNAL_GROUP_NAME`, and `IOS_TESTFLIGHT_PRO_GROUP_ID` to those
 script inputs. When Apple reports the build as `READY_FOR_BETA_SUBMISSION`, the
@@ -137,7 +137,7 @@ Required GitHub secrets:
 - `ASC_API_KEY_P8_BASE64`
 - `IOS_DISTRIBUTION_CERTIFICATE_BASE64` (base64-encoded `.p12` for an Apple Distribution certificate on team `7WLXT3NR37`)
 - `IOS_DISTRIBUTION_CERTIFICATE_PASSWORD`
-- `IOS_BETA_PROVISIONING_PROFILE_BASE64` (base64-encoded App Store profile for `dev.cmux.app.beta`, with `aps-environment=production`)
+- `IOS_BETA_PROVISIONING_PROFILE_BASE64` (base64-encoded App Store profile for `dev.hmux.app.beta`, with `aps-environment=production`)
 
 ## App Store production lane
 
@@ -159,11 +159,11 @@ ios/scripts/validate-app-store-release.sh --app "$ASC_APP_ID" --build-number "$C
 
 Defaults:
 
-- Bundle ID: `com.cmux.app`
-- Marketing version: `CMUX_IOS_APPSTORE_MARKETING_VERSION` in `ios/Config/Shared.xcconfig`
-- Display name: `cmux`
-- Provisioning profile: `cmux App Store Distribution`
-- Entitlements: `Config/cmux-appstore-release.entitlements` (VPN-free App Store build; beta keeps `Config/cmux-release.entitlements`)
+- Bundle ID: `com.hmux.app`
+- Marketing version: `HMUX_IOS_APPSTORE_MARKETING_VERSION` in `ios/Config/Shared.xcconfig`
+- Display name: `hmux`
+- Provisioning profile: `hmux App Store Distribution`
+- Entitlements: `Config/hmux-appstore-release.entitlements` (VPN-free App Store build; beta keeps `Config/hmux-release.entitlements`)
 
 The review package lives in `ios/AppStoreReview/`:
 
@@ -177,4 +177,4 @@ and submits for review only when `submit_for_review` is set.
 Additional production workflow requirements:
 
 - Repository variable `IOS_APPSTORE_APP_ID`
-- Secret `IOS_APPSTORE_PROVISIONING_PROFILE_BASE64` (base64-encoded App Store profile for `com.cmux.app`, with `aps-environment=production`)
+- Secret `IOS_APPSTORE_PROVISIONING_PROFILE_BASE64` (base64-encoded App Store profile for `com.hmux.app`, with `aps-environment=production`)

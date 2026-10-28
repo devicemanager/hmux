@@ -1,16 +1,16 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxHive
-import CmuxSettings
-import CmuxSettingsUI
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxHive
+import HmuxSettings
+import HmuxSettingsUI
+import HmuxSurfaceCatalogModel
 import Foundation
 import Observation
 
 @MainActor
 final class HiveComputersService {
-    static let didChangeNotification = Notification.Name("cmux.computers.pairingsDidChange")
+    static let didChangeNotification = Notification.Name("hmux.computers.pairingsDidChange")
 
     private let registry: DeviceSurfaceProviderRegistry
     private let openSidebar: @MainActor (SurfaceDeviceInstanceID) -> RightSidebarRemoteApplyResult?
@@ -70,7 +70,7 @@ final class HiveComputersService {
         // these re-publish so the unavailable reason follows the Beta toggle
         // and the Cloud flag while Devices stays off.
         for observer in unavailableReasonObservers { NotificationCenter.default.removeObserver(observer) }
-        unavailableReasonObservers = [.cmuxFeatureFlagsDidChange, RightSidebarBetaFeatureSettings.didChangeNotification, ManagedDevicePolicy.didChangeNotification].map { name in
+        unavailableReasonObservers = [.hmuxFeatureFlagsDidChange, RightSidebarBetaFeatureSettings.didChangeNotification, ManagedDevicePolicy.didChangeNotification].map { name in
             NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { [weak self] _ in
                 Task { @MainActor [weak self] in self?.publish() }
             }
@@ -215,7 +215,7 @@ final class HiveComputersService {
             let directory = try FileManager.default.url(
                 for: .applicationSupportDirectory, in: .userDomainMask,
                 appropriateFor: nil, create: true
-            ).appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.cmuxterm.app", isDirectory: true)
+            ).appendingPathComponent(Bundle.main.bundleIdentifier ?? "com.hmuxterm.app", isDirectory: true)
             try FileManager.default.createDirectory(at: directory, withIntermediateDirectories: true)
             let runtime = HiveSyncRuntime(
                 allowsLoopback: allowsLoopback,
@@ -335,13 +335,13 @@ final class HiveComputersService {
         case .thisMac:
             String(localized: "settings.computers.selfPairing", defaultValue: "This code belongs to this Mac. Enter the other Mac’s pairing code.")
         case .missingIdentity, .identityMismatch:
-            String(localized: "settings.computers.identityFailed", defaultValue: "The Mac’s authenticated identity could not be verified. Update cmux on both Macs and copy a fresh pairing code.")
+            String(localized: "settings.computers.identityFailed", defaultValue: "The Mac’s authenticated identity could not be verified. Update hmux on both Macs and copy a fresh pairing code.")
         case .busy:
             String(localized: "settings.computers.pairingBusy", defaultValue: "Wait for the current pairing attempt to finish.")
         case .stopped:
             signInMessage
         case .storageFailed:
-            String(localized: "settings.computers.storageFailed", defaultValue: "Your paired Macs could not be loaded. Check available disk space and restart cmux.")
+            String(localized: "settings.computers.storageFailed", defaultValue: "Your paired Macs could not be loaded. Check available disk space and restart hmux.")
         case nil:
             String(localized: "settings.computers.operationFailed", defaultValue: "The computer operation failed. Check that both Macs are signed in and online, then try again.")
         }

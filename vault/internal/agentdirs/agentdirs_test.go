@@ -17,10 +17,10 @@ func TestClaudeDiscover(t *testing.T) {
 	root := filepath.Join(t.TempDir(), "claude-config")
 	secretPath := filepath.Join(t.TempDir(), "secret.jsonl")
 	writeFile(t, secretPath, `{"cwd":"/secret"}`+"\n")
-	sessionPath := filepath.Join(root, "projects", "-Users-dev-work-cmux", uuidA+".jsonl")
-	writeFile(t, sessionPath, `{"type":"message","cwd":"/Users/dev/work/cmux"}`+"\n")
-	writeFile(t, filepath.Join(root, "projects", "-Users-dev-work-cmux", "not-a-session.jsonl"), "{}\n")
-	writeFile(t, filepath.Join(root, "projects", "-Users-dev-work-cmux", uuidB+".txt"), "{}\n")
+	sessionPath := filepath.Join(root, "projects", "-Users-dev-work-hmux", uuidA+".jsonl")
+	writeFile(t, sessionPath, `{"type":"message","cwd":"/Users/dev/work/hmux"}`+"\n")
+	writeFile(t, filepath.Join(root, "projects", "-Users-dev-work-hmux", "not-a-session.jsonl"), "{}\n")
+	writeFile(t, filepath.Join(root, "projects", "-Users-dev-work-hmux", uuidB+".txt"), "{}\n")
 	writeFile(t, filepath.Join(root, "projects", "nested", uuidB+".jsonl"), `{"cwd":"/nested"}`+"\n")
 	if err := os.Symlink(filepath.Join(root, "missing-target.jsonl"), filepath.Join(root, "projects", "nested", uuidC+".jsonl")); err != nil {
 		t.Fatal(err)
@@ -52,10 +52,10 @@ func TestClaudeDiscover(t *testing.T) {
 		t.Fatalf("expected 2 sessions, got %d: %#v", len(got), got)
 	}
 	first := findSession(t, got, uuidA)
-	if first.CWD != "/Users/dev/work/cmux" {
+	if first.CWD != "/Users/dev/work/hmux" {
 		t.Fatalf("cwd = %q", first.CWD)
 	}
-	if first.RelPath != "projects/-Users-dev-work-cmux/"+uuidA+".jsonl" {
+	if first.RelPath != "projects/-Users-dev-work-hmux/"+uuidA+".jsonl" {
 		t.Fatalf("relPath = %q", first.RelPath)
 	}
 	if len(warnings) == 0 {
@@ -224,9 +224,9 @@ func TestCodexDiscoverSessionsAndArchived(t *testing.T) {
 
 func TestPiDiscover(t *testing.T) {
 	home := t.TempDir()
-	sessionPath := filepath.Join(home, ".pi", "agent", "sessions", "-Users-dev-work-cmux", "2026-07-04T00-00-00_"+uuidD+".jsonl")
-	writeFile(t, sessionPath, `{"cwd":"/Users/dev/work/cmux"}`+"\n")
-	writeFile(t, filepath.Join(home, ".pi", "agent", "sessions", "-Users-dev-work-cmux", "junk.jsonl"), "{}\n")
+	sessionPath := filepath.Join(home, ".pi", "agent", "sessions", "-Users-dev-work-hmux", "2026-07-04T00-00-00_"+uuidD+".jsonl")
+	writeFile(t, sessionPath, `{"cwd":"/Users/dev/work/hmux"}`+"\n")
+	writeFile(t, filepath.Join(home, ".pi", "agent", "sessions", "-Users-dev-work-hmux", "junk.jsonl"), "{}\n")
 
 	got, err := (Pi{}).Discover(Environ{HomeDir: home, Vars: map[string]string{}})
 	if err != nil {
@@ -238,7 +238,7 @@ func TestPiDiscover(t *testing.T) {
 	if got[0].AgentSessionID != uuidD {
 		t.Fatalf("id = %q", got[0].AgentSessionID)
 	}
-	if got[0].CWD != "/Users/dev/work/cmux" {
+	if got[0].CWD != "/Users/dev/work/hmux" {
 		t.Fatalf("cwd = %q", got[0].CWD)
 	}
 }

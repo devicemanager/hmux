@@ -195,8 +195,8 @@ def main(argv: list[str]) -> int:
         found = wait(
             os.environ["GITHUB_RUN_ID"],
             os.environ["TEST_REF"],
-            os.environ["CMUX_PRODUCT_RUNNER"],
-            float(os.environ.get("CMUX_E2E_SIBLING_WAIT_SECONDS", "0")),
+            os.environ["HMUX_PRODUCT_RUNNER"],
+            float(os.environ.get("HMUX_E2E_SIBLING_WAIT_SECONDS", "0")),
         )
     except (KeyError, ValueError, OSError, subprocess.SubprocessError) as error:
         # Waiting is an economy, never a gate.

@@ -1,6 +1,6 @@
 import AppKit
-import CmuxSimulator
-import CmuxSimulatorUI
+import HmuxSimulator
+import HmuxSimulatorUI
 import Foundation
 import Observation
 
@@ -114,8 +114,8 @@ final class SimulatorPanel: Panel {
     private func installFeatureFlagsObserver() {
         guard featureFlagsObserver == nil else { return }
         featureFlagsObserver = NotificationCenter.default.addObserver(
-            forName: .cmuxFeatureFlagsDidChange,
-            object: CmuxFeatureFlags.shared,
+            forName: .hmuxFeatureFlagsDidChange,
+            object: HmuxFeatureFlags.shared,
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
@@ -170,7 +170,7 @@ final class SimulatorPanel: Panel {
             guard let self,
                   !self.isClosed,
                   self.isFeatureDisabled,
-                  CmuxFeatureFlags.shared.isSimulatorEnabled,
+                  HmuxFeatureFlags.shared.isSimulatorEnabled,
                   self.featureTransitionGeneration == generation else { return }
             self.featureEnableTask = nil
             self.shutdownTask = nil
@@ -249,7 +249,7 @@ final class SimulatorPanel: Panel {
                 preferredDeviceTypeIdentifier: self.preferredDeviceTypeIdentifier,
                 requiresExplicitDeviceSelection: self.requiresExplicitDeviceSelection
             )
-            self.isFeatureDisabled = !CmuxFeatureFlags.shared.isSimulatorEnabled
+            self.isFeatureDisabled = !HmuxFeatureFlags.shared.isSimulatorEnabled
             self.isClosed = false
             self.installFeatureFlagsObserver()
             self.applyEffectiveVisibility()
@@ -393,7 +393,7 @@ final class SimulatorPanel: Panel {
     }
 
     private func reconcileRemoteFeatureFlag() {
-        if CmuxFeatureFlags.shared.isSimulatorEnabled {
+        if HmuxFeatureFlags.shared.isSimulatorEnabled {
             resumeAfterRemoteEnable()
         } else {
             suspendForRemoteDisable()

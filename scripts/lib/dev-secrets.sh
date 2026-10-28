@@ -1,30 +1,30 @@
 # shellcheck shell=bash
 # Sourceable helper that loads dogfood/agent Stack credentials for DEBUG dev
-# builds and exposes them as CMUX_UITEST_STACK_EMAIL / CMUX_UITEST_STACK_PASSWORD
+# builds and exposes them as HMUX_UITEST_STACK_EMAIL / HMUX_UITEST_STACK_PASSWORD
 # (the env vars the app's existing DEBUG sign-in hook reads).
 #
 # A complete email+password pair is resolved from ONE source, never mixed
 # across sources. Explicit profiles prevent a personal device build from
 # silently borrowing the shared agent identity. The automatic profile retains
 # the legacy dogfood-first chain for compatibility:
-#   1. file ~/.secrets/cmuxterm-dev.env  dogfood keys (CMUX_DOGFOOD_STACK_*)
-#   2. file ~/.secrets/cmux.env          dogfood keys (CMUX_DOGFOOD_STACK_*)
-#   3. env  CMUX_DOGFOOD_STACK_EMAIL / CMUX_DOGFOOD_STACK_PASSWORD
-#   4. file ~/.secrets/cmuxterm-dev.env  uitest  keys (CMUX_UITEST_STACK_*)
-#   5. file ~/.secrets/cmux.env          uitest  keys (CMUX_UITEST_STACK_*)
-#   6. env  CMUX_UITEST_STACK_EMAIL / CMUX_UITEST_STACK_PASSWORD
+#   1. file ~/.secrets/hmuxterm-dev.env  dogfood keys (HMUX_DOGFOOD_STACK_*)
+#   2. file ~/.secrets/hmux.env          dogfood keys (HMUX_DOGFOOD_STACK_*)
+#   3. env  HMUX_DOGFOOD_STACK_EMAIL / HMUX_DOGFOOD_STACK_PASSWORD
+#   4. file ~/.secrets/hmuxterm-dev.env  uitest  keys (HMUX_UITEST_STACK_*)
+#   5. file ~/.secrets/hmux.env          uitest  keys (HMUX_UITEST_STACK_*)
+#   6. env  HMUX_UITEST_STACK_EMAIL / HMUX_UITEST_STACK_PASSWORD
 #
 # The dogfood account (a personal dogfood login) is preferred so dev builds sign
 # in as the human, not the shared agent.
 #
 # Usage:
 #   source "scripts/lib/dev-secrets.sh"
-#   cmux_dev_secrets_load                         # legacy automatic profile
-#   cmux_dev_secrets_load --profile personal      # dogfood keys only
-#   cmux_dev_secrets_load --profile agent         # UI-test keys only
-#   cmux_dev_secrets_load --agent                 # compatibility alias
+#   hmux_dev_secrets_load                         # legacy automatic profile
+#   hmux_dev_secrets_load --profile personal      # dogfood keys only
+#   hmux_dev_secrets_load --profile agent         # UI-test keys only
+#   hmux_dev_secrets_load --agent                 # compatibility alias
 #
-# After a successful load, CMUX_UITEST_STACK_EMAIL / CMUX_UITEST_STACK_PASSWORD
+# After a successful load, HMUX_UITEST_STACK_EMAIL / HMUX_UITEST_STACK_PASSWORD
 # are exported. The email is echoed (so the operator can see who they signed in
 # as); the password is NEVER printed.
 #
@@ -33,7 +33,7 @@
 # Validate an explicitly selected credentials file before any caller bakes its
 # path into a tagged app or reads it. The file must be an absolute, regular,
 # non-symlink file owned by the current uid with no group/world permissions.
-cmux_dev_secrets_validate_file() {
+hmux_dev_secrets_validate_file() {
   local file="${1:-}" owner permissions
   [[ "$file" == /* ]] || {
     echo "error: credentials file path must be absolute" >&2
@@ -64,7 +64,7 @@ cmux_dev_secrets_validate_file() {
 # parseEnvFile: trims the line, skips blank/`#`-comment lines, trims the key and
 # value around the first `=`, and strips ONE layer of matching surrounding single
 # or double quotes. Prints the parsed value, or nothing.
-cmux_dev_secrets__read_key() {
+hmux_dev_secrets__read_key() {
   local file="$1" key="$2" line lkey lval
   [[ -f "$file" ]] || return 0
   while IFS= read -r line || [[ -n "$line" ]]; do
@@ -90,25 +90,25 @@ cmux_dev_secrets__read_key() {
   return 0
 }
 
-# Load dev sign-in credentials into CMUX_UITEST_STACK_EMAIL / _PASSWORD.
+# Load dev sign-in credentials into HMUX_UITEST_STACK_EMAIL / _PASSWORD.
 #
-#   cmux_dev_secrets_load [--profile personal|agent|automatic]
+#   hmux_dev_secrets_load [--profile personal|agent|automatic]
 #                         [--expected-account email]
 #                         [--credentials-file /absolute/0600/file]
 #
 # Without --agent, the full 6-step chain above runs (dogfood account preferred).
-# With --agent, only the agent (uitest) sources are used (env CMUX_UITEST_STACK_*,
-# then ~/.secrets/cmux.env uitest keys), for agent-driven flows that must not
+# With --agent, only the agent (uitest) sources are used (env HMUX_UITEST_STACK_*,
+# then ~/.secrets/hmux.env uitest keys), for agent-driven flows that must not
 # borrow a human's dogfood login.
 # Try to resolve a COMPLETE (email + password) credential pair from one source,
 # so a partial higher-precedence source never combines with a lower one. Sets
 # the caller's `email`/`password` and returns 0 on a full pair, else 1.
 #
-#   cmux_dev_secrets__try_pair email_var pw_var <getter...>
+#   hmux_dev_secrets__try_pair email_var pw_var <getter...>
 #
 # The getter is invoked as `<getter> EMAIL` and `<getter> PASSWORD`; it must echo
 # the value (or nothing). Both must be non-empty for the pair to be accepted.
-cmux_dev_secrets__try_pair() {
+hmux_dev_secrets__try_pair() {
   local email_var="$1" pw_var="$2"; shift 2
   local e p
   e="$("$@" EMAIL)"
@@ -121,7 +121,7 @@ cmux_dev_secrets__try_pair() {
   return 1
 }
 
-cmux_dev_secrets_load() {
+hmux_dev_secrets_load() {
   local profile="automatic" explicit_file="" expected_account=""
   while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -149,84 +149,84 @@ cmux_dev_secrets_load() {
     personal|agent|automatic) ;;
     *) echo "error: invalid auth profile '$profile' (expected personal, agent, or automatic)" >&2; return 2 ;;
   esac
-  [[ -z "$explicit_file" ]] || cmux_dev_secrets_validate_file "$explicit_file" || return $?
+  [[ -z "$explicit_file" ]] || hmux_dev_secrets_validate_file "$explicit_file" || return $?
 
   local home_dir="${HOME:-}"
-  local dogfood_file="${home_dir}/.secrets/cmuxterm-dev.env"
-  local agent_file="${home_dir}/.secrets/cmux.env"
+  local dogfood_file="${home_dir}/.secrets/hmuxterm-dev.env"
+  local agent_file="${home_dir}/.secrets/hmux.env"
   local email="" password="" resolved_profile=""
 
   # shellcheck disable=SC2329
-  cmux_dev_secrets__dev_file_dogfood() {
-    case "$1" in EMAIL) cmux_dev_secrets__read_key "$dogfood_file" CMUX_DOGFOOD_STACK_EMAIL ;; PASSWORD) cmux_dev_secrets__read_key "$dogfood_file" CMUX_DOGFOOD_STACK_PASSWORD ;; esac
+  hmux_dev_secrets__dev_file_dogfood() {
+    case "$1" in EMAIL) hmux_dev_secrets__read_key "$dogfood_file" HMUX_DOGFOOD_STACK_EMAIL ;; PASSWORD) hmux_dev_secrets__read_key "$dogfood_file" HMUX_DOGFOOD_STACK_PASSWORD ;; esac
   }
   # shellcheck disable=SC2329
-  cmux_dev_secrets__agent_file_dogfood() {
-    case "$1" in EMAIL) cmux_dev_secrets__read_key "$agent_file" CMUX_DOGFOOD_STACK_EMAIL ;; PASSWORD) cmux_dev_secrets__read_key "$agent_file" CMUX_DOGFOOD_STACK_PASSWORD ;; esac
+  hmux_dev_secrets__agent_file_dogfood() {
+    case "$1" in EMAIL) hmux_dev_secrets__read_key "$agent_file" HMUX_DOGFOOD_STACK_EMAIL ;; PASSWORD) hmux_dev_secrets__read_key "$agent_file" HMUX_DOGFOOD_STACK_PASSWORD ;; esac
   }
   # shellcheck disable=SC2329
-  cmux_dev_secrets__env_dogfood() {
-    case "$1" in EMAIL) printf '%s' "${CMUX_DOGFOOD_STACK_EMAIL:-}" ;; PASSWORD) printf '%s' "${CMUX_DOGFOOD_STACK_PASSWORD:-}" ;; esac
+  hmux_dev_secrets__env_dogfood() {
+    case "$1" in EMAIL) printf '%s' "${HMUX_DOGFOOD_STACK_EMAIL:-}" ;; PASSWORD) printf '%s' "${HMUX_DOGFOOD_STACK_PASSWORD:-}" ;; esac
   }
   # shellcheck disable=SC2329
-  cmux_dev_secrets__dev_file_uitest() {
-    case "$1" in EMAIL) cmux_dev_secrets__read_key "$dogfood_file" CMUX_UITEST_STACK_EMAIL ;; PASSWORD) cmux_dev_secrets__read_key "$dogfood_file" CMUX_UITEST_STACK_PASSWORD ;; esac
+  hmux_dev_secrets__dev_file_uitest() {
+    case "$1" in EMAIL) hmux_dev_secrets__read_key "$dogfood_file" HMUX_UITEST_STACK_EMAIL ;; PASSWORD) hmux_dev_secrets__read_key "$dogfood_file" HMUX_UITEST_STACK_PASSWORD ;; esac
   }
   # shellcheck disable=SC2329
-  cmux_dev_secrets__agent_file_uitest() {
-    case "$1" in EMAIL) cmux_dev_secrets__read_key "$agent_file" CMUX_UITEST_STACK_EMAIL ;; PASSWORD) cmux_dev_secrets__read_key "$agent_file" CMUX_UITEST_STACK_PASSWORD ;; esac
+  hmux_dev_secrets__agent_file_uitest() {
+    case "$1" in EMAIL) hmux_dev_secrets__read_key "$agent_file" HMUX_UITEST_STACK_EMAIL ;; PASSWORD) hmux_dev_secrets__read_key "$agent_file" HMUX_UITEST_STACK_PASSWORD ;; esac
   }
   # shellcheck disable=SC2329
-  cmux_dev_secrets__env_uitest() {
-    case "$1" in EMAIL) printf '%s' "${CMUX_UITEST_STACK_EMAIL:-}" ;; PASSWORD) printf '%s' "${CMUX_UITEST_STACK_PASSWORD:-}" ;; esac
+  hmux_dev_secrets__env_uitest() {
+    case "$1" in EMAIL) printf '%s' "${HMUX_UITEST_STACK_EMAIL:-}" ;; PASSWORD) printf '%s' "${HMUX_UITEST_STACK_PASSWORD:-}" ;; esac
   }
 
   if [[ -n "$explicit_file" ]]; then
     # shellcheck disable=SC2329
-    cmux_dev_secrets__explicit_dogfood() {
-      case "$1" in EMAIL) cmux_dev_secrets__read_key "$explicit_file" CMUX_DOGFOOD_STACK_EMAIL ;; PASSWORD) cmux_dev_secrets__read_key "$explicit_file" CMUX_DOGFOOD_STACK_PASSWORD ;; esac
+    hmux_dev_secrets__explicit_dogfood() {
+      case "$1" in EMAIL) hmux_dev_secrets__read_key "$explicit_file" HMUX_DOGFOOD_STACK_EMAIL ;; PASSWORD) hmux_dev_secrets__read_key "$explicit_file" HMUX_DOGFOOD_STACK_PASSWORD ;; esac
     }
     # shellcheck disable=SC2329
-    cmux_dev_secrets__explicit_uitest() {
-      case "$1" in EMAIL) cmux_dev_secrets__read_key "$explicit_file" CMUX_UITEST_STACK_EMAIL ;; PASSWORD) cmux_dev_secrets__read_key "$explicit_file" CMUX_UITEST_STACK_PASSWORD ;; esac
+    hmux_dev_secrets__explicit_uitest() {
+      case "$1" in EMAIL) hmux_dev_secrets__read_key "$explicit_file" HMUX_UITEST_STACK_EMAIL ;; PASSWORD) hmux_dev_secrets__read_key "$explicit_file" HMUX_UITEST_STACK_PASSWORD ;; esac
     }
     if [[ "$profile" != "agent" ]] \
-        && cmux_dev_secrets__try_pair email password cmux_dev_secrets__explicit_dogfood; then
+        && hmux_dev_secrets__try_pair email password hmux_dev_secrets__explicit_dogfood; then
       resolved_profile="personal"
     elif [[ "$profile" != "personal" ]] \
-        && cmux_dev_secrets__try_pair email password cmux_dev_secrets__explicit_uitest; then
+        && hmux_dev_secrets__try_pair email password hmux_dev_secrets__explicit_uitest; then
       resolved_profile="agent"
     fi
   elif [[ "$profile" == "personal" ]]; then
-    if cmux_dev_secrets__try_pair email password cmux_dev_secrets__dev_file_dogfood \
-        || cmux_dev_secrets__try_pair email password cmux_dev_secrets__agent_file_dogfood \
-        || cmux_dev_secrets__try_pair email password cmux_dev_secrets__env_dogfood; then
+    if hmux_dev_secrets__try_pair email password hmux_dev_secrets__dev_file_dogfood \
+        || hmux_dev_secrets__try_pair email password hmux_dev_secrets__agent_file_dogfood \
+        || hmux_dev_secrets__try_pair email password hmux_dev_secrets__env_dogfood; then
       resolved_profile="personal"
     fi
   elif [[ "$profile" == "agent" ]]; then
-    if cmux_dev_secrets__try_pair email password cmux_dev_secrets__dev_file_uitest \
-        || cmux_dev_secrets__try_pair email password cmux_dev_secrets__agent_file_uitest \
-        || cmux_dev_secrets__try_pair email password cmux_dev_secrets__env_uitest; then
+    if hmux_dev_secrets__try_pair email password hmux_dev_secrets__dev_file_uitest \
+        || hmux_dev_secrets__try_pair email password hmux_dev_secrets__agent_file_uitest \
+        || hmux_dev_secrets__try_pair email password hmux_dev_secrets__env_uitest; then
       resolved_profile="agent"
     fi
   else
-    if cmux_dev_secrets__try_pair email password cmux_dev_secrets__dev_file_dogfood \
-        || cmux_dev_secrets__try_pair email password cmux_dev_secrets__agent_file_dogfood \
-        || cmux_dev_secrets__try_pair email password cmux_dev_secrets__env_dogfood; then
+    if hmux_dev_secrets__try_pair email password hmux_dev_secrets__dev_file_dogfood \
+        || hmux_dev_secrets__try_pair email password hmux_dev_secrets__agent_file_dogfood \
+        || hmux_dev_secrets__try_pair email password hmux_dev_secrets__env_dogfood; then
       resolved_profile="personal"
-    elif cmux_dev_secrets__try_pair email password cmux_dev_secrets__dev_file_uitest \
-        || cmux_dev_secrets__try_pair email password cmux_dev_secrets__agent_file_uitest \
-        || cmux_dev_secrets__try_pair email password cmux_dev_secrets__env_uitest; then
+    elif hmux_dev_secrets__try_pair email password hmux_dev_secrets__dev_file_uitest \
+        || hmux_dev_secrets__try_pair email password hmux_dev_secrets__agent_file_uitest \
+        || hmux_dev_secrets__try_pair email password hmux_dev_secrets__env_uitest; then
       resolved_profile="agent"
     fi
   fi
 
   if [[ -z "$email" || -z "$password" ]]; then
     if [[ "$profile" == "personal" ]]; then
-      echo "error: personal auth profile requires complete CMUX_DOGFOOD_STACK_EMAIL and CMUX_DOGFOOD_STACK_PASSWORD values${explicit_file:+ in $explicit_file}" >&2
-      echo "error: run scripts/setup-team-dev.sh once to configure ~/.secrets/cmuxterm-dev.env" >&2
+      echo "error: personal auth profile requires complete HMUX_DOGFOOD_STACK_EMAIL and HMUX_DOGFOOD_STACK_PASSWORD values${explicit_file:+ in $explicit_file}" >&2
+      echo "error: run scripts/setup-team-dev.sh once to configure ~/.secrets/hmuxterm-dev.env" >&2
     elif [[ "$profile" == "agent" ]]; then
-      echo "error: agent auth profile requires complete CMUX_UITEST_STACK_EMAIL and CMUX_UITEST_STACK_PASSWORD values${explicit_file:+ in $explicit_file}" >&2
+      echo "error: agent auth profile requires complete HMUX_UITEST_STACK_EMAIL and HMUX_UITEST_STACK_PASSWORD values${explicit_file:+ in $explicit_file}" >&2
       echo "error: run scripts/setup-team-dev.sh to configure the development simulator/test account" >&2
     elif [[ -n "$explicit_file" ]]; then
       echo "error: explicit credentials file does not contain a complete supported credential pair" >&2
@@ -244,21 +244,21 @@ cmux_dev_secrets_load() {
     return 2
   fi
 
-  CMUX_UITEST_STACK_EMAIL="$email"
-  CMUX_UITEST_STACK_PASSWORD="$password"
-  CMUX_DEV_AUTH_PROFILE="$resolved_profile"
-  CMUX_DEV_AUTH_ACCOUNT="$normalized_email"
-  export CMUX_DEV_AUTH_PROFILE CMUX_DEV_AUTH_ACCOUNT
+  HMUX_UITEST_STACK_EMAIL="$email"
+  HMUX_UITEST_STACK_PASSWORD="$password"
+  HMUX_DEV_AUTH_PROFILE="$resolved_profile"
+  HMUX_DEV_AUTH_ACCOUNT="$normalized_email"
+  export HMUX_DEV_AUTH_PROFILE HMUX_DEV_AUTH_ACCOUNT
   if [[ -n "$explicit_file" ]]; then
-    export -n CMUX_UITEST_STACK_EMAIL CMUX_UITEST_STACK_PASSWORD
-    unset CMUX_DOGFOOD_STACK_EMAIL CMUX_DOGFOOD_STACK_PASSWORD
+    export -n HMUX_UITEST_STACK_EMAIL HMUX_UITEST_STACK_PASSWORD
+    unset HMUX_DOGFOOD_STACK_EMAIL HMUX_DOGFOOD_STACK_PASSWORD
   else
-    export CMUX_UITEST_STACK_EMAIL CMUX_UITEST_STACK_PASSWORD
+    export HMUX_UITEST_STACK_EMAIL HMUX_UITEST_STACK_PASSWORD
   fi
   if [[ -n "$explicit_file" ]]; then
     echo "==> dev sign-in profile: $resolved_profile ([redacted])"
   else
-    echo "==> dev sign-in profile: $resolved_profile ($CMUX_DEV_AUTH_ACCOUNT)"
+    echo "==> dev sign-in profile: $resolved_profile ($HMUX_DEV_AUTH_ACCOUNT)"
   fi
   return 0
 }

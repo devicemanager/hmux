@@ -1,5 +1,5 @@
 import Foundation
-import CmuxAgentSessionStore
+import HmuxAgentSessionStore
 
 struct GrokSessionRoot: Sendable, Hashable {
     let sessionsRoot: String
@@ -83,7 +83,7 @@ struct GrokSessionLocator {
     }
 
     static func sessionRoot(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         environment: [String: String] = ProcessInfo.processInfo.environment,
         homeDirectory: String = NSHomeDirectory()
     ) -> GrokSessionRoot {
@@ -110,7 +110,7 @@ struct GrokSessionLocator {
     }
 
     static func sessionRoots(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         cwdFilter: String?,
         environment: [String: String] = ProcessInfo.processInfo.environment,
         homeDirectory: String = NSHomeDirectory(),
@@ -194,7 +194,7 @@ struct GrokSessionLocator {
     }
 
     private static func registrationUsesDefaultGrokRoot(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         homeDirectory: String
     ) -> Bool {
         guard let configuredRoot = normalized(registration.sessionDirectory) else {
@@ -255,7 +255,7 @@ extension SessionIndexStore {
     }
 
     nonisolated static func loadGrokEntries(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         needle: String,
         cwdFilter: String?,
         offset: Int,
@@ -374,7 +374,7 @@ extension SessionIndexStore {
     }
 
     nonisolated static func loadRegisteredAgentEntries(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         needle: String,
         cwdFilter: String?,
         offset: Int,
@@ -400,7 +400,7 @@ extension SessionIndexStore {
     }
 
     nonisolated static func loadRegisteredAgentEntries(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         needle: String,
         cwdFilter: String?,
         offset: Int,
@@ -418,8 +418,8 @@ extension SessionIndexStore {
                 errorBag: errorBag
             )
         }
-        if case .cmuxHookStore = registration.sessionIdSource {
-            return await loadCmuxHookStoreEntries(
+        if case .hmuxHookStore = registration.sessionIdSource {
+            return await loadHmuxHookStoreEntries(
                 registration: registration,
                 needle: needle,
                 cwdFilter: cwdFilter,
@@ -439,13 +439,13 @@ extension SessionIndexStore {
     }
 
     nonisolated private static func loadFileBackedRegisteredAgentEntries(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         needle: String,
         cwdFilter: String?,
         offset: Int,
         limit: Int
     ) async -> [SessionEntry] {
-        if registration.id == CmuxVaultAgentRegistration.builtInAntigravity.id {
+        if registration.id == HmuxVaultAgentRegistration.builtInAntigravity.id {
             return loadAntigravityHistoryEntries(
                 registration: registration,
                 needle: needle,
@@ -536,7 +536,7 @@ extension SessionIndexStore {
     }
 
     nonisolated private static func loadAntigravityHistoryEntries(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         needle: String,
         cwdFilter: String?,
         offset: Int,
@@ -609,7 +609,7 @@ extension SessionIndexStore {
     }
 
     nonisolated private static func registeredSessionRoots(
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         cwdFilter: String?
     ) -> [String] {
         if case .grokSessionDirectory = registration.sessionIdSource {
@@ -628,9 +628,9 @@ extension SessionIndexStore {
     }
 
     nonisolated private static func registrationWithGrokHomePrefix(
-        _ registration: CmuxVaultAgentRegistration,
+        _ registration: HmuxVaultAgentRegistration,
         grokHome: String?
-    ) -> CmuxVaultAgentRegistration {
+    ) -> HmuxVaultAgentRegistration {
         guard let grokHome = grokHome?.trimmingCharacters(in: .whitespacesAndNewlines),
               !grokHome.isEmpty,
               !registration.resumeCommand.contains("GROK_HOME") else {
@@ -732,7 +732,7 @@ extension SessionIndexStore {
 
     nonisolated private static func extractRegisteredJSONLMetadata(
         url: URL,
-        registration: CmuxVaultAgentRegistration,
+        registration: HmuxVaultAgentRegistration,
         fallbackCWD: String?
     ) -> RegisteredAgentJSONLMetadata {
         var metadata = RegisteredAgentJSONLMetadata()
@@ -740,7 +740,7 @@ extension SessionIndexStore {
         switch registration.sessionIdSource {
         case .argvOption:
             needsNativeSessionID = true
-        case .piSessionFile, .grokSessionDirectory, .persistedStore, .cmuxHookStore:
+        case .piSessionFile, .grokSessionDirectory, .persistedStore, .hmuxHookStore:
             needsNativeSessionID = false
         }
         forEachJSONLine(url: url, maxBytes: 512 * 1024) { object in

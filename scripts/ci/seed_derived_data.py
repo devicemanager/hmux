@@ -23,8 +23,8 @@ recorded time onto every byte-identical input. Changed and new inputs get the
 current time, so Xcode rebuilds exactly what differs. A seed from an older main
 costs compile time, never correctness.
 
-That time is mostly distance, not the diff under test: a CmuxFoundation change
-between the seed and the checkout recompiles every file of the `cmux` module.
+That time is mostly distance, not the diff under test: a HmuxFoundation change
+between the seed and the checkout recompiles every file of the `hmux` module.
 So `adopt` takes the seed of REVISION, the commit being built on, or else of
 its nearest ancestor that has one. It used to take the pull request event's
 base.sha, which is not always the merge commit's parent, and then the newest
@@ -48,7 +48,7 @@ PREFIX, prefer their own width, and fall back to another width's seed,
 which still beats a cold build.
 
 An owned Mac downloads a seed at about a third of Blacksmith's speed (about
-190 s against 64 s on 2026-09-25). With CMUX_SEED_LOCAL_CACHE set, `adopt`
+190 s against 64 s on 2026-09-25). With HMUX_SEED_LOCAL_CACHE set, `adopt`
 clones the seed it just restored into that directory, keeping as many as the
 disk holds (prune_local), and `start` and `adopt` clone an exact key from there instead of
 downloading it. A clone shares blocks on APFS, so it costs seconds.
@@ -62,7 +62,7 @@ on that root recorded (SEED_SOURCE in STORE, written by owned_build_state.py
 `check`), finds REVISION's nearest seed of this width, and downloads it into
 STORE/seeds when it is not there yet. It runs outside any job, from glaeda on
 the Mac, with no credentials: the bucket is publicly readable, and REVISION's
-history comes from a local git directory (CMUX_SEED_GIT_DIR) instead of the
+history comes from a local git directory (HMUX_SEED_GIT_DIR) instead of the
 GitHub API. Nothing a job is cloning is pruned under it: `adopt` touches the
 seed before cloning, and the prune spares seeds touched in the last
 PRUNE_GRACE_SECONDS.
@@ -92,7 +92,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import apfs_clone  # noqa: E402
 import e2e_warm_derived_data as warm  # noqa: E402
 
-MANIFEST = "cmux-seed-input-mtimes.json"
+MANIFEST = "hmux-seed-input-mtimes.json"
 # Written by every build and read by none: the build log directory and the
 # index store, which is not a declared task output.
 UNREAD = ("Logs", "Index.noindex")
@@ -109,15 +109,15 @@ ANCESTOR_LIMIT = 50
 # own Xcode in the key's fingerprint, so a width is shared, never a seed.
 # Fallbacks go in this order after a runner's own width.
 SEEDED_JOB_WIDTHS = (12, 6, 14)
-USER_AGENT = "cmux-ci-seed-derived-data"
-# Seeds each canonical root keeps in its CMUX_SEED_LOCAL_CACHE (roots do not
+USER_AGENT = "hmux-ci-seed-derived-data"
+# Seeds each canonical root keeps in its HMUX_SEED_LOCAL_CACHE (roots do not
 # share seeds: the keys carry the root). The disk is there to use: a kept seed
 # clones in 14 to 42 s where a download takes 180 to 280 s, and main moves 5 to
 # 8 commits per seed, so every seed within ANCESTOR_LIMIT commits of a job's
 # base can be its cheapest start. Keep up to LOCAL_KEEP per root, and drop the
 # oldest seeds on the whole Mac, whichever root holds them, while free space is
 # under LOCAL_KEEP_MIN_FREE_BYTES: glaeda's job admission floor (100 GiB free,
-# cmuxterm-hq build-fleet/mini-fleet.json disk.min_free_gib) plus the most one
+# hmuxterm-hq build-fleet/mini-fleet.json disk.min_free_gib) plus the most one
 # mini's disk shrank within an hour, 50 GiB (glaeda-disk's 15-minute free-space
 # log on 12 owned minis, 2026-09-26; seed downloads included, since this prune
 # runs only when a seed lands, not while jobs grow the disk). So seeds fill the
@@ -182,7 +182,7 @@ def prune(derived: Path) -> dict[str, object]:
 def lineage(revision: str) -> list[str]:
     """REVISION, then its ancestors newest first. Only REVISION if unknown."""
     repository = os.environ.get("GITHUB_REPOSITORY", "")
-    git_dir = os.environ.get("CMUX_SEED_GIT_DIR", "")
+    git_dir = os.environ.get("HMUX_SEED_GIT_DIR", "")
     if not repository and git_dir:
         try:
             listed = subprocess.run(
@@ -240,7 +240,7 @@ def nearest(prefix: str, revisions: list[str], exists=None) -> tuple[str, int] |
 
 def swift_jobs() -> int:
     """The -j Swift Build gives swift-driver here: the active CPU count."""
-    override = os.environ.get("CMUX_SEED_SWIFT_JOBS")
+    override = os.environ.get("HMUX_SEED_SWIFT_JOBS")
     return int(override) if override else os.sysconf("SC_NPROCESSORS_ONLN")
 
 
@@ -265,13 +265,13 @@ def nearest_of_any_width(prefix: str, revisions: list[str]) -> tuple[str, int] |
     """The nearest seed of this width over REVISIONS, else the nearest of the
     first SEEDED_JOB_WIDTHS width that has one. PREFIX is unscoped.
 
-    A probe may set CMUX_SEED_REQUIRE_OWN_WIDTH when its runner's seed chain
+    A probe may set HMUX_SEED_REQUIRE_OWN_WIDTH when its runner's seed chain
     must match the width used by its Swift driver. That avoids silently
     adopting a seed from another runner shape when the matching chain has not
     been published yet; the caller then compiles from its own width or cold.
     """
     own = swift_jobs()
-    if os.environ.get("CMUX_SEED_REQUIRE_OWN_WIDTH") == "1":
+    if os.environ.get("HMUX_SEED_REQUIRE_OWN_WIDTH") == "1":
         return nearest(scoped(prefix, own), revisions)
     for jobs in (own, *(width for width in SEEDED_JOB_WIDTHS if width != own)):
         found = nearest(scoped(prefix, jobs), revisions)
@@ -296,7 +296,7 @@ def fetch(derived: Path, exact: str, prefix: str) -> str:
     shutil.rmtree(staging, ignore_errors=True)
     outputs.unlink(missing_ok=True)
     subprocess.run(
-        ["bash", str(os.environ.get("CMUX_R2_CACHE_SCRIPT", R2_CACHE)), "restore", str(staging), exact, prefix],
+        ["bash", str(os.environ.get("HMUX_R2_CACHE_SCRIPT", R2_CACHE)), "restore", str(staging), exact, prefix],
         check=True, env={**os.environ, "GITHUB_OUTPUT": str(outputs)},
     )
     restored = dict(
@@ -318,7 +318,7 @@ def fetch_detached(derived: Path, exact: str, prefix: str) -> None:
 
 
 def local_cache() -> Path | None:
-    value = os.environ.get("CMUX_SEED_LOCAL_CACHE", "")
+    value = os.environ.get("HMUX_SEED_LOCAL_CACHE", "")
     return Path(value) if value else None
 
 
@@ -372,12 +372,12 @@ def free_bytes(cache: Path) -> int:
 def seed_caches(cache: Path) -> list[Path]:
     """Every root's seed cache on this Mac, CACHE first.
 
-    Root 1 keeps STATE/seeds and root N STATE/cmux-ci-N/seeds, and they share
+    Root 1 keeps STATE/seeds and root N STATE/hmux-ci-N/seeds, and they share
     one disk, so a short disk prunes the oldest seed of any root.
     """
-    state = cache.parent.parent if cache.parent.name.startswith("cmux-ci-") else cache.parent
+    state = cache.parent.parent if cache.parent.name.startswith("hmux-ci-") else cache.parent
     found = [cache]
-    for other in [state / "seeds", *sorted(state.glob("cmux-ci-*/seeds"))]:
+    for other in [state / "seeds", *sorted(state.glob("hmux-ci-*/seeds"))]:
         if other.is_dir() and other.resolve() != cache.resolve():
             found.append(other)
     return found
@@ -470,7 +470,7 @@ def prefetch(store: Path, revision: str) -> dict[str, object]:
         if isinstance(value, str) and value:
             os.environ.setdefault(name, value)
     cache = store / "seeds"
-    os.environ["CMUX_SEED_LOCAL_CACHE"] = str(cache)
+    os.environ["HMUX_SEED_LOCAL_CACHE"] = str(cache)
     # The key `adopt` would pick (locate): this width's nearest seed, else another width's. A Mac of a
     # width nothing seeds at (the 10-core light minis) otherwise never prefetched at all.
     found = nearest_of_any_width(prefix, lineage(revision))
@@ -501,7 +501,7 @@ def start(derived: Path, exact: str, prefix: str, revision: str = "", distance: 
 
     Its output goes to a file, not the step's pipes, so the runner does not
     wait for it at the end of the step. `adopt` prints that file. A seed this
-    Mac keeps (CMUX_SEED_LOCAL_CACHE) needs no download: `adopt` clones it.
+    Mac keeps (HMUX_SEED_LOCAL_CACHE) needs no download: `adopt` clones it.
     """
     clear_download(derived)
     if cached(exact):
@@ -655,11 +655,11 @@ def adopt(source: Path, derived: Path, exact: str, prefix: str) -> dict[str, obj
 
 
 def chosen() -> tuple[str, int | None] | None:
-    """The kept seed owned_build_state.py `prefer` compared (CMUX_SEED_EXACT), if this Mac still has it."""
-    exact = os.environ.get("CMUX_SEED_EXACT", "")
+    """The kept seed owned_build_state.py `prefer` compared (HMUX_SEED_EXACT), if this Mac still has it."""
+    exact = os.environ.get("HMUX_SEED_EXACT", "")
     if not cached(exact):
         return None
-    distance = os.environ.get("CMUX_SEED_DISTANCE", "")
+    distance = os.environ.get("HMUX_SEED_DISTANCE", "")
     return exact, int(distance) if distance.isdigit() else None
 
 

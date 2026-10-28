@@ -10,19 +10,19 @@ import { vmModelPlaneRevoker } from "../../../../../services/vms/modelPlaneGatew
 export const maxDuration = 300;
 
 export async function POST(request: Request, { params }: { params: Promise<{ id: string }> }): Promise<Response> {
-  return withAuthedVmApiRoute(request, "/api/vm/[id]/scp-endpoint", { "cmux.vm.operation": "prepare_scp" }, "/api/vm/[id]/scp-endpoint failed", async ({ user, span, routeStartedAtMs }) => {
+  return withAuthedVmApiRoute(request, "/api/vm/[id]/scp-endpoint", { "hmux.vm.operation": "prepare_scp" }, "/api/vm/[id]/scp-endpoint failed", async ({ user, span, routeStartedAtMs }) => {
     let publicKey: string;
     try {
       const body = await request.json();
       if (typeof body?.publicKey !== "string" || body.publicKey.length > 512) throw new Error("Invalid key");
       publicKey = parseSshPublicKey(body.publicKey);
     } catch {
-      return vmErrorResponse({ error: "vm_invalid_ssh_key", status: 400, message: "Cloud file transfer requires one Ed25519 public key.", action: "Run cmux vm push again to create a new transfer key." });
+      return vmErrorResponse({ error: "vm_invalid_ssh_key", status: 400, message: "Cloud file transfer requires one Ed25519 public key.", action: "Run hmux vm push again to create a new transfer key." });
     }
     const { id } = await params;
     const account = resolveVmRouteAccountScope(user, request);
     if (!account.ok) return account.response;
-    setSpanAttributes(span, { "cmux.vm.id": id, "cmux.transfer.transport": "wireguard-scp" });
+    setSpanAttributes(span, { "hmux.vm.id": id, "hmux.transfer.transport": "wireguard-scp" });
     const run = await runVmRoute(prepareScpEndpoint({
       userId: user.id, billingTeamId: account.entitlements.billingTeamId,
       callerPlanId: account.entitlements.planId, maxActiveVms: account.entitlements.maxActiveVms,

@@ -21,7 +21,7 @@ const execFileAsync = promisify(execFile);
 
 function spec(overrides: Partial<RunSpec["source"]> = {}): RunSpec {
   return normalizeRunSpec({
-    schema: "cmux.run/v1",
+    schema: "hmux.run/v1",
     operationId: "source-verification-test",
     source: { repository: "manaflow-ai/cmux", commit, setupManifestDigest: digest, ...overrides },
     intent: { digest },
@@ -40,37 +40,37 @@ describe("Freestyle source verification", () => {
   test("normalizes only public GitHub repository forms", () => {
     expect(githubRepositoryUrl("manaflow-ai/cmux")).toBe("https://github.com/manaflow-ai/cmux.git");
     expect(githubRepositoryUrl("https://github.com/manaflow-ai/cmux.git")).toBe("https://github.com/manaflow-ai/cmux.git");
-    expect(() => githubRepositoryUrl("https://evil.example/cmux.git")).toThrow(SourceVerificationError);
+    expect(() => githubRepositoryUrl("https://evil.example/hmux.git")).toThrow(SourceVerificationError);
   });
 
   test("builds a bounded immutable checkout and setup digest check", () => {
     const command = sourceVerificationCommand(spec(), "run-id:attempt-id:completed");
     expect(command).toContain("fetch -q --depth=1 origin '0123456789abcdef0123456789abcdef01234567'");
-    expect(command).toContain("workspace=$(mktemp -d \"${HOME:-/home/cmux}/.cmux-run-XXXXXX\")");
+    expect(command).toContain("workspace=$(mktemp -d \"${HOME:-/home/hmux}/.hmux-run-XXXXXX\")");
     expect(command).toContain("trap 'if [ \"$cleanup\" -eq 1 ]; then rm -rf -- \"$workspace\"; fi' EXIT");
-    expect(command).toContain("node - \"$workspace/.cmux/setup.json\" \"$workspace\"");
-    expect(command).toContain("# CMUX_VARIANT_EXECUTION");
-    expect(command).toContain("printf 'cmux-source-verified commit=%s setup=%s workspace=%s\\n'");
-    expect(command).toContain("cmux-run:run-id:attempt-id:completed");
+    expect(command).toContain("node - \"$workspace/.hmux/setup.json\" \"$workspace\"");
+    expect(command).toContain("# HMUX_VARIANT_EXECUTION");
+    expect(command).toContain("printf 'hmux-source-verified commit=%s setup=%s workspace=%s\\n'");
+    expect(command).toContain("hmux-run:run-id:attempt-id:completed");
   });
 
   test("accepts an exact guest receipt and rejects mismatches", () => {
     const runSpec = spec();
-    const stdout = `cmux-setup-completed steps=0\ncmux-source-verified commit=${commit} setup=${digest} workspace=/home/cmux/.cmux-run-test\ncmux-run:run:attempt:completed\n`;
-    expect(parseSourceVerificationReceipt(stdout, runSpec)).toEqual({ commit, setupManifestDigest: digest, setupStepCount: 0, workspacePath: "/home/cmux/.cmux-run-test" });
+    const stdout = `hmux-setup-completed steps=0\nhmux-source-verified commit=${commit} setup=${digest} workspace=/home/hmux/.hmux-run-test\nhmux-run:run:attempt:completed\n`;
+    expect(parseSourceVerificationReceipt(stdout, runSpec)).toEqual({ commit, setupManifestDigest: digest, setupStepCount: 0, workspacePath: "/home/hmux/.hmux-run-test" });
     expect(() => parseSourceVerificationReceipt(stdout.replace(commit, "f".repeat(40)), runSpec)).toThrow(/checkout commit/);
     expect(() => parseSourceVerificationReceipt(stdout.replace(digest, "sha256:" + "b".repeat(64)), runSpec)).toThrow(/setup manifest/);
   });
 
   test("executes the checked-in setup schema and emits a separate completion receipt", async () => {
-    const workspace = await mkdtemp(join(tmpdir(), "cmux-run-setup-"));
-    await mkdir(join(workspace, ".cmux"));
-    const manifest = `${JSON.stringify({ schema: "cmux.setup/v1", version: 1, steps: [{ id: "fixture", command: "printf ready > setup-receipt.txt" }] })}\n`;
-    const manifestPath = join(workspace, ".cmux", "setup.json");
+    const workspace = await mkdtemp(join(tmpdir(), "hmux-run-setup-"));
+    await mkdir(join(workspace, ".hmux"));
+    const manifest = `${JSON.stringify({ schema: "hmux.setup/v1", version: 1, steps: [{ id: "fixture", command: "printf ready > setup-receipt.txt" }] })}\n`;
+    const manifestPath = join(workspace, ".hmux", "setup.json");
     await writeFile(manifestPath, manifest);
     const setupDigest = `sha256:${createHash("sha256").update(manifest).digest("hex")}`;
     const { stdout } = await execFileAsync("/bin/sh", ["-eu", "-c", setupExecutionCommand(workspace, setupDigest).join("\n")]);
-    expect(stdout).toContain("cmux-setup-completed steps=1");
+    expect(stdout).toContain("hmux-setup-completed steps=1");
     expect(await readFile(join(workspace, "setup-receipt.txt"), "utf8")).toBe("ready");
   });
 

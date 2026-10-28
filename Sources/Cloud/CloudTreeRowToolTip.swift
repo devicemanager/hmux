@@ -1,6 +1,6 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
-import CmuxWorkspacePresence
+import HmuxCloud
+import HmuxSurfaceCatalogModel
+import HmuxWorkspacePresence
 import Foundation
 
 enum CloudTreeRowToolTip {
@@ -107,7 +107,7 @@ enum CloudTreeRowToolTip {
         }
     }
 
-    /// Identity, size and occupancy for a cmux-tui workspace. A workspace row
+    /// Identity, size and occupancy for a hmux-tui workspace. A workspace row
     /// otherwise shows only a name the machine generated, with no way to tell
     /// two of them apart.
     private static func workspaceLines(

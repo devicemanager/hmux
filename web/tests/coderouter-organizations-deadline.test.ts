@@ -152,7 +152,7 @@ describe("GET /api/coderouter/organizations deadline", () => {
     try {
       const response = await organizationsGet(organizationsRequest(), listTeams);
       expect(response.status).toBe(503);
-      expect(consoleError.mock.calls.some((call) => call[0] === "cmux.observability.error")).toBe(true);
+      expect(consoleError.mock.calls.some((call) => call[0] === "hmux.observability.error")).toBe(true);
     } finally {
       consoleError.mockRestore();
     }

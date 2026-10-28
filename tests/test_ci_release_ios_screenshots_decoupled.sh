@@ -8,7 +8,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-WORKFLOW="${CMUX_RELEASE_WORKFLOW_FILE:-$ROOT_DIR/.github/workflows/release.yml}"
+WORKFLOW="${HMUX_RELEASE_WORKFLOW_FILE:-$ROOT_DIR/.github/workflows/release.yml}"
 
 job_block() {
   awk -v job="$1" '

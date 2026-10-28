@@ -2,7 +2,7 @@
 set -euo pipefail
 
 usage() {
-  echo "usage: $0 <cmux-diff-sidecar> [--archs \"arm64 x86_64\"] [--require-signed] [--static-only]" >&2
+  echo "usage: $0 <hmux-diff-sidecar> [--archs \"arm64 x86_64\"] [--require-signed] [--static-only]" >&2
   exit 2
 }
 
@@ -39,7 +39,7 @@ done
 [[ -f "$BINARY" ]] || { echo "error: missing diff sidecar at $BINARY" >&2; exit 1; }
 [[ -x "$BINARY" ]] || { echo "error: diff sidecar is not executable: $BINARY" >&2; exit 1; }
 
-MAX_BYTES="${CMUX_DIFF_SIDECAR_MAX_BYTES:-5242880}"
+MAX_BYTES="${HMUX_DIFF_SIDECAR_MAX_BYTES:-5242880}"
 SIZE_BYTES="$(stat -f %z "$BINARY")"
 if (( SIZE_BYTES > MAX_BYTES )); then
   echo "error: diff sidecar is ${SIZE_BYTES} bytes; limit is ${MAX_BYTES} bytes" >&2
@@ -93,7 +93,7 @@ fi
 
 # shellcheck source=ci/lib/signing-runtime-guard.sh
 source "$SCRIPT_DIR/ci/lib/signing-runtime-guard.sh"
-cmux_signing_runtime_guard
+hmux_signing_runtime_guard
 HANDSHAKE="$("$BINARY" handshake)"
 python3 - "$HANDSHAKE" <<'PY'
 import json

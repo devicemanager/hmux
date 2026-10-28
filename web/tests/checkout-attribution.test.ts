@@ -13,11 +13,11 @@ describe("checkout attribution", () => {
   test("normalizes request parameters and falls back to unknown/web", () => {
     const attribution = checkoutAttributionFromRequest({
       searchParams: new URLSearchParams(
-        "cmux_source=Mac_Sidebar_Badge&cmux_placement=<script>&cmux_client=MAC" +
-          "&cmux_channel=beta&cmux_app_version=0.65.1&cmux_app_build=x y&utm_source=" +
+        "hmux_source=Mac_Sidebar_Badge&hmux_placement=<script>&hmux_client=MAC" +
+          "&hmux_channel=beta&hmux_app_version=0.65.1&hmux_app_build=x y&utm_source=" +
           "%20Newsletter%20",
       ),
-      referer: "https://cmux.com/app-pricing?cmux_app=1&secret=1",
+      referer: "https://cmux.com/app-pricing?hmux_app=1&secret=1",
     });
 
     expect(attribution).toEqual({
@@ -51,17 +51,17 @@ describe("checkout attribution", () => {
   test("round-trips through Stripe metadata", () => {
     const attribution = checkoutAttributionFromRequest({
       searchParams: new URLSearchParams(
-        "cmux_source=pricing_page&cmux_placement=hero&cmux_client=web&utm_campaign=launch",
+        "hmux_source=pricing_page&hmux_placement=hero&hmux_client=web&utm_campaign=launch",
       ),
       referer: "https://cmux.com/pricing",
     });
     const metadata = checkoutAttributionMetadata(attribution);
     expect(metadata).toEqual({
-      cmuxSource: "pricing_page",
-      cmuxPlacement: "hero",
-      cmuxClient: "web",
-      cmuxReferrerHost: "cmux.com",
-      cmuxReferrerPath: "/pricing",
+      hmuxSource: "pricing_page",
+      hmuxPlacement: "hero",
+      hmuxClient: "web",
+      hmuxReferrerHost: "cmux.com",
+      hmuxReferrerPath: "/pricing",
       utmCampaign: "launch",
     });
     expect(checkoutAttributionFromMetadata(metadata)).toEqual(attribution);
@@ -83,7 +83,7 @@ describe("checkout attribution", () => {
   });
 
   test("reads sessions created before attribution existed as unknown", () => {
-    const attribution = checkoutAttributionFromMetadata({ plan: "pro", app: "cmux" });
+    const attribution = checkoutAttributionFromMetadata({ plan: "pro", app: "hmux" });
     expect(attribution.source).toBe("unknown");
     expect(attribution.client).toBe("web");
     expect(attribution.channel).toBeNull();
@@ -92,22 +92,22 @@ describe("checkout attribution", () => {
   test("appends attribution to a link and keeps the hash", () => {
     expect(
       withCheckoutAttribution("/api/billing/checkout?plan=pro#top", {
-        cmux_source: "dashboard_billing",
-        cmux_placement: null,
+        hmux_source: "dashboard_billing",
+        hmux_placement: null,
         utm_source: undefined,
       }),
-    ).toBe("/api/billing/checkout?plan=pro&cmux_source=dashboard_billing#top");
+    ).toBe("/api/billing/checkout?plan=pro&hmux_source=dashboard_billing#top");
   });
 
   test("forwards only attribution parameters onto a relay target", () => {
-    const target = new URL("https://checkout.cmux.test/api/billing/checkout?plan=pro");
+    const target = new URL("https://checkout.hmux.test/api/billing/checkout?plan=pro");
     forwardCheckoutAttribution(
-      new URLSearchParams("cmux_source=mac_help_menu&cmux_channel=nightly&cmux_scheme=cmux&plan=team"),
+      new URLSearchParams("hmux_source=mac_help_menu&hmux_channel=nightly&hmux_scheme=hmux&plan=team"),
       target,
     );
-    expect(target.searchParams.get("cmux_source")).toBe("mac_help_menu");
-    expect(target.searchParams.get("cmux_channel")).toBe("nightly");
+    expect(target.searchParams.get("hmux_source")).toBe("mac_help_menu");
+    expect(target.searchParams.get("hmux_channel")).toBe("nightly");
     expect(target.searchParams.get("plan")).toBe("pro");
-    expect(target.searchParams.has("cmux_scheme")).toBe(false);
+    expect(target.searchParams.has("hmux_scheme")).toBe(false);
   });
 });

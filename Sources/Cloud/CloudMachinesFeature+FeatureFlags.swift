@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSettings
+import HmuxCloud
+import HmuxSettings
 import Foundation
 
 /// The Cloud availability answers used by app entry points. Cloud no longer

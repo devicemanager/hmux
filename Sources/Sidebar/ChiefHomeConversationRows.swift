@@ -1,6 +1,6 @@
 import AppKit
-import CmuxFoundation
-import CmuxHomeCore
+import HmuxFoundation
+import HmuxHomeCore
 import MessagesLabSidebar
 import SwiftUI
 
@@ -12,7 +12,7 @@ import SwiftUI
 /// sidebar surface.
 struct ChiefHomeConversationRowsRepresentable: NSViewRepresentable {
     let home: ChiefHomeView
-    let accent: CmuxAccentColor
+    let accent: HmuxAccentColor
 
     func makeNSView(context: Context) -> ChiefHomeConversationRowsView {
         let view = ChiefHomeConversationRowsView(home: home, accent: accent)
@@ -34,7 +34,7 @@ struct ChiefHomeConversationRowsRepresentable: NSViewRepresentable {
 final class ChiefHomeConversationRowsView: NSHostingView<ChiefHomeConversationRows> {
     private let home: ChiefHomeView
 
-    init(home: ChiefHomeView, accent: CmuxAccentColor) {
+    init(home: ChiefHomeView, accent: HmuxAccentColor) {
         self.home = home
         super.init(rootView: ChiefHomeConversationRows(home: home, accent: accent))
         setAccessibilityIdentifier("ChiefHomeConversationRows")
@@ -48,7 +48,7 @@ final class ChiefHomeConversationRowsView: NSHostingView<ChiefHomeConversationRo
     @available(*, unavailable)
     required init?(coder: NSCoder) { nil }
 
-    func apply(accent: CmuxAccentColor) {
+    func apply(accent: HmuxAccentColor) {
         rootView = ChiefHomeConversationRows(home: home, accent: accent)
     }
 
@@ -61,9 +61,9 @@ final class ChiefHomeConversationRowsView: NSHostingView<ChiefHomeConversationRo
 /// A compact, sequential Home conversation stack with native pane drags.
 struct ChiefHomeConversationRows: View {
     let home: ChiefHomeView
-    let accent: CmuxAccentColor
+    let accent: HmuxAccentColor
 
-    @State private var entries: [CmuxSidebarEntry] = []
+    @State private var entries: [HmuxSidebarEntry] = []
     @Environment(\.colorScheme) private var colorScheme
 
     var body: some View {
@@ -91,7 +91,7 @@ struct ChiefHomeConversationRows: View {
         .accessibilityLabel(Text(ChiefStrings.conversationsList))
     }
 
-    private func row(_ entry: CmuxSidebarEntry) -> some View {
+    private func row(_ entry: HmuxSidebarEntry) -> some View {
         let selected = home.selected.rawValue == entry.id
         return Button {
             home.select(ConversationID(entry.id))
@@ -141,7 +141,7 @@ struct ChiefHomeConversationRows: View {
     }
 
     @ViewBuilder
-    private func avatar(_ entry: CmuxSidebarEntry) -> some View {
+    private func avatar(_ entry: HmuxSidebarEntry) -> some View {
         let initials = entry.people.first?.initials ?? String(entry.title.prefix(1)).uppercased()
         Text(initials)
             .font(.system(size: 11, weight: .semibold))

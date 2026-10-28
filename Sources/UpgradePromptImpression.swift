@@ -1,9 +1,9 @@
-import CmuxCloud
-import CmuxProductAnalytics
+import HmuxCloud
+import HmuxProductAnalytics
 import SwiftUI
 
 extension View {
-    /// Records `cmux_upgrade_prompt_shown` for `source` when this view
+    /// Records `hmux_upgrade_prompt_shown` for `source` when this view
     /// appears. The pipeline keeps one per source per launch, so re-renders
     /// and remounts are free.
     func upgradePromptImpression(

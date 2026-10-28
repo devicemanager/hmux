@@ -145,7 +145,7 @@ export default function IosPage() {
         {t.rich("enterpriseDesc", {
           link: (chunks) => (
             <a
-              href="mailto:founders@cmux.com?subject=cmux%20enterprise"
+              href="mailto:founders@cmux.com?subject=hmux%20enterprise"
               className={linkClass}
             >
               {chunks}

@@ -26,7 +26,7 @@ afterEach(() => {
 });
 
 function request(authorization?: string): Request {
-  return new Request("https://cmux.test/api/cron/team-seats", authorization ? { headers: { authorization } } : {});
+  return new Request("https://hmux.test/api/cron/team-seats", authorization ? { headers: { authorization } } : {});
 }
 
 describe("team seats cron route", () => {

@@ -1,12 +1,12 @@
 import AppKit
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxSurfaceCatalogModel
-import CmuxWorkspacePresence
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxSurfaceCatalogModel
+import HmuxWorkspacePresence
 import Foundation
 
 extension Notification.Name {
-    static let workspacePresenceDidChange = Notification.Name("cmux.workspacePresenceDidChange")
+    static let workspacePresenceDidChange = Notification.Name("hmux.workspacePresenceDidChange")
 }
 
 /// Bridges foreground selection and mounted Cloud rows to workspace-scoped presence.
@@ -107,7 +107,7 @@ final class WorkspacePresenceController {
         reconcile()
     }
 
-    func collaborators(forCloudMachine machine: SurfaceMachineID, workspaceID: String) -> [CmuxWorkspacePresence.WorkspacePresenceParticipant] {
+    func collaborators(forCloudMachine machine: SurfaceMachineID, workspaceID: String) -> [HmuxWorkspacePresence.WorkspacePresenceParticipant] {
         guard case .cloud(let machineID) = machine,
               let scope = cloudScope(machineID: machineID, workspaceID: workspaceID) else { return [] }
         return roster?.collaborators(in: scope) ?? []

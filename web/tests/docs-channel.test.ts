@@ -12,11 +12,11 @@ import {
 } from "../app/[locale]/components/docs-nav-items";
 
 const saved = {
-  channel: process.env.CMUX_DOCS_CHANNEL,
+  channel: process.env.HMUX_DOCS_CHANNEL,
 };
 
 afterEach(() => {
-  process.env.CMUX_DOCS_CHANNEL = saved.channel;
+  process.env.HMUX_DOCS_CHANNEL = saved.channel;
 });
 
 test("channel switching preserves localized path, query, and hash", () => {
@@ -52,13 +52,13 @@ test("Base appears only in nightly documentation navigation", () => {
 });
 
 test("release docs are the canonical default", () => {
-  delete process.env.CMUX_DOCS_CHANNEL;
+  delete process.env.HMUX_DOCS_CHANNEL;
   expect(docsChannel()).toBe("release");
   expect(docsCanonicalOrigin()).toBe("https://cmux.com");
 });
 
 test("nightly docs canonically point to the release channel", () => {
-  process.env.CMUX_DOCS_CHANNEL = "nightly";
+  process.env.HMUX_DOCS_CHANNEL = "nightly";
   expect(docsChannel()).toBe("nightly");
   expect(docsCanonicalOrigin()).toBe("https://cmux.com");
 });

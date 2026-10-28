@@ -1,10 +1,10 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxIrohTransport
-import CmuxIrxTransport
-import CmuxSettings
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxIrohTransport
+import HmuxIrxTransport
+import HmuxSettings
 import Foundation
 import IrohLib
 import OSLog
@@ -25,12 +25,12 @@ private final class MobileHostV2RelayAddressCallback: AddrChangeCallback, Sendab
 @MainActor
 final class MobileHostIrxRuntime: MobileHostPairingRuntime {
     static let shared = MobileHostIrxRuntime(publishesPublicHostStatus: true)
-    nonisolated static let forceRelayDefaultsKey = "cmux.iroh.v2.force-relay"
-    nonisolated static let pathModeDefaultsKey = "cmux.iroh.v2.path-mode"
+    nonisolated static let forceRelayDefaultsKey = "hmux.iroh.v2.force-relay"
+    nonisolated static let pathModeDefaultsKey = "hmux.iroh.v2.path-mode"
     nonisolated static let maximumActivationRetryDelay: TimeInterval = 5 * 60
     nonisolated static var forceRelayOnly: Bool {
-        ProcessInfo.processInfo.environment["CMUX_IROH_V2_FORCE_RELAY"] == "1"
-            || UserDefaults.standard.string(forKey: "cmux.iroh.v2.config.CMUX_IROH_V2_FORCE_RELAY") == "1"
+        ProcessInfo.processInfo.environment["HMUX_IROH_V2_FORCE_RELAY"] == "1"
+            || UserDefaults.standard.string(forKey: "hmux.iroh.v2.config.HMUX_IROH_V2_FORCE_RELAY") == "1"
             || UserDefaults.standard.bool(forKey: forceRelayDefaultsKey)
             || UserDefaults.standard.string(forKey: pathModeDefaultsKey) == "relay-only"
     }
@@ -38,8 +38,8 @@ final class MobileHostIrxRuntime: MobileHostPairingRuntime {
         if forceRelayOnly { return .relayOnly }
         return UserDefaults.standard.string(forKey: pathModeDefaultsKey) == "direct-only" ? .directOnly : .automatic
     }
-    nonisolated static let journal = IrxJournal(subsystem: "dev.cmux", category: "irx-host",
-        journalFileURL: URL(fileURLWithPath: "/tmp/cmux-irx-journal-mac-\(MobileHostIdentity.instanceTag()).jsonl"))
+    nonisolated static let journal = IrxJournal(subsystem: "dev.hmux", category: "irx-host",
+        journalFileURL: URL(fileURLWithPath: "/tmp/hmux-irx-journal-mac-\(MobileHostIdentity.instanceTag()).jsonl"))
 
     nonisolated static func activationRetryDelay(after error: any Error, failureCount: Int, jitterUnitInterval: Double) -> TimeInterval {
         let ladder = min(5 * pow(2, Double(min(max(failureCount, 0), 16))), maximumActivationRetryDelay)
@@ -157,8 +157,8 @@ final class MobileHostIrxRuntime: MobileHostPairingRuntime {
         incomingAccessEnabled: Bool
     ) -> [String] {
         var result: [String] = []
-        if discoveryEnabled { result.append("cmux.mac-devices.v1") }
-        if incomingAccessEnabled { result.append("cmux.mac-host.v1") }
+        if discoveryEnabled { result.append("hmux.mac-devices.v1") }
+        if incomingAccessEnabled { result.append("hmux.mac-host.v1") }
         return result
     }
 
@@ -180,7 +180,7 @@ final class MobileHostIrxRuntime: MobileHostPairingRuntime {
     }
 
     /// ALPNs the single v2 endpoint serves beside irx. Shipped iOS builds dial
-    /// the legacy `cmux/mobile/1` dialect, so it rides the same endpoint
+    /// the legacy `hmux/mobile/1` dialect, so it rides the same endpoint
     /// instead of a separate listener.
     nonisolated static var endpointAdditionalALPNs: [Data] {
         [MobileHostIrxLegacyDialectServer.legacyALPN]
@@ -275,7 +275,7 @@ final class MobileHostIrxRuntime: MobileHostPairingRuntime {
         }
         featureFlagTask?.cancel()
         featureFlagTask = Task { @MainActor [weak self] in
-            for await _ in NotificationCenter.default.notifications(named: .cmuxFeatureFlagsDidChange) {
+            for await _ in NotificationCenter.default.notifications(named: .hmuxFeatureFlagsDidChange) {
                 guard !Task.isCancelled else { return }
                 await self?.accountDirectoryFlagChanged()
             }
@@ -391,7 +391,7 @@ final class MobileHostIrxRuntime: MobileHostPairingRuntime {
                 guard let metadata = await service.snapshot().cache.device?.descriptor.metadata else { return }
                 guard self.isCurrent(token), !Task.isCancelled else { return }
                 let next = V2DeviceMetadata(appVersion: metadata.appVersion,
-                    capabilities: metadata.capabilities.filter { !["cmux.mac-devices.v1", "cmux.mac-host.v1"].contains($0) } + capabilities,
+                    capabilities: metadata.capabilities.filter { !["hmux.mac-devices.v1", "hmux.mac-host.v1"].contains($0) } + capabilities,
                     displayName: metadata.displayName, pairingEnabled: pairing,
                     platform: metadata.platform, relayURLs: metadata.relayURLs)
                 do {
@@ -449,9 +449,9 @@ final class MobileHostIrxRuntime: MobileHostPairingRuntime {
         // before the team withdrawal and before the old control service stops.
         await oldAccount?.withdraw()
         if let oldControl, let metadata = await oldControl.snapshot().cache.device?.descriptor.metadata,
-           metadata.pairingEnabled || metadata.capabilities.contains("cmux.mac-host.v1"), scope == nil || !pairingEnabled() {
+           metadata.pairingEnabled || metadata.capabilities.contains("hmux.mac-host.v1"), scope == nil || !pairingEnabled() {
             let withdrawn = V2DeviceMetadata(appVersion: metadata.appVersion,
-                capabilities: metadata.capabilities.filter { $0 != "cmux.mac-host.v1" },
+                capabilities: metadata.capabilities.filter { $0 != "hmux.mac-host.v1" },
                 displayName: metadata.displayName, pairingEnabled: false, platform: .mac, relayURLs: [])
             try? await oldControl.updateMetadata(withdrawn)
         }
@@ -940,7 +940,7 @@ final class MobileHostIrxRuntime: MobileHostPairingRuntime {
               metadata.relayURLs != [relay], let service = controlService else { return }
         let next = V2DeviceMetadata(
             appVersion: metadata.appVersion,
-            capabilities: metadata.capabilities.filter { !["cmux.mac-devices.v1", "cmux.mac-host.v1"].contains($0) } + deviceCapabilities,
+            capabilities: metadata.capabilities.filter { !["hmux.mac-devices.v1", "hmux.mac-host.v1"].contains($0) } + deviceCapabilities,
             displayName: metadata.displayName,
             pairingEnabled: metadata.pairingEnabled,
             platform: metadata.platform,

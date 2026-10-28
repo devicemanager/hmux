@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Released OpenCode loads cmux through each plugin's default `server` entry.
+"""Released OpenCode loads hmux through each plugin's default `server` entry.
 
 OpenCode 1.x (including the current dev channel) calls `default.server(ctx)`
 inside the TUI process with `{ client, project, worktree, directory,
 serverUrl, $ }` and delivers events through the returned `event` hook. It
-loads `cmux-feed.js`, `cmux-session.js` and `plugins/cmux/index.js`, so the
+loads `hmux-feed.js`, `hmux-session.js` and `plugins/hmux/index.js`, so the
 server entries must have unique IDs and deliver one Stop per turn instead of
 returning `{}`.
 """
@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def session_plugin_source() -> str:
-    swift = (ROOT / "CLI/cmux.swift").read_text(encoding="utf-8")
+    swift = (ROOT / "CLI/hmux.swift").read_text(encoding="utf-8")
     match = re.search(r'openCodeSessionPluginSource = #"""\n(.*?)\n"""#', swift, re.S)
     if match is None:
         raise RuntimeError("openCodeSessionPluginSource not found")
@@ -30,7 +30,7 @@ def session_plugin_source() -> str:
 
 
 HARNESS = r'''
-const { pluginDir, logPath, socketPath, fakeCmux } = JSON.parse(process.env.CMUX_OPENCODE_SERVER_HARNESS);
+const { pluginDir, logPath, socketPath, fakeHmux } = JSON.parse(process.env.HMUX_OPENCODE_SERVER_HARNESS);
 const fs = await import("node:fs");
 const net = await import("node:net");
 const path = await import("node:path");
@@ -68,7 +68,7 @@ const ctx = {
 
 // Old V2 snapshots called setup()/server() without the server context; they
 // must stay inert because their shared service is not owned by one TUI.
-const v2 = await import(path.join(pluginDir, "cmux", "index.js"));
+const v2 = await import(path.join(pluginDir, "hmux", "index.js"));
 const v2Hooks = await v2.default.server({});
 if (v2Hooks && typeof v2Hooks.event === "function") throw new Error("V2 shared server entry subscribed");
 const v2Cleanup = await v2.default.setup({});
@@ -77,9 +77,9 @@ v2Cleanup();
 
 const { execFileSync } = await import("node:child_process");
 const hookLog = () => (fs.existsSync(logPath) ? fs.readFileSync(logPath, "utf8") : "");
-const fakeCmuxRunning = () => {
+const fakeHmuxRunning = () => {
   try {
-    execFileSync("pgrep", ["-f", fakeCmux], { stdio: "ignore" });
+    execFileSync("pgrep", ["-f", fakeHmux], { stdio: "ignore" });
     return true;
   } catch (_) {
     return false;
@@ -93,10 +93,10 @@ const waitFor = async (predicate, message) => {
   }
 };
 
-// Load the three cmux entries for one plugin scope, as OpenCode does.
+// Load the three hmux entries for one plugin scope, as OpenCode does.
 const loadScope = async (scopeCtx) => {
   const hooks = [];
-  const files = ["cmux-feed.js", "cmux-session.js", path.join("cmux", "index.js")];
+  const files = ["hmux-feed.js", "hmux-session.js", path.join("hmux", "index.js")];
   const modules = [];
   for (const file of files) {
     const mod = await import(path.join(pluginDir, file));
@@ -138,7 +138,7 @@ const runTurn = async (scope, sid, { midTurn = [] } = {}) => {
     `feed sentinel never arrived for ${sid}: ${JSON.stringify(frames)}`,
   );
   await waitFor(() => sessionEnds() >= sessionEndsExpected, `session-end hook never ran for ${sid}`);
-  await waitFor(() => !fakeCmuxRunning(), "hook processes did not exit");
+  await waitFor(() => !fakeHmuxRunning(), "hook processes did not exit");
   const stops = frames.filter((frame) => forSession(frame) && frame.params.event.hook_event_name === "Stop");
   if (stops.length !== 1) throw new Error(`expected one feed Stop for ${sid}, got ${stops.length}: ${JSON.stringify(frames)}`);
   if (stops[0].params.event.surface_id !== "surface-server-entry") throw new Error("feed Stop lost the surface id");
@@ -173,7 +173,7 @@ for (const event of [
   for (const hook of first) await hook.event({ event });
 }
 // Hook processes are spawned synchronously inside event(); wait for them.
-await waitFor(() => !fakeCmuxRunning(), "hook processes did not exit");
+await waitFor(() => !fakeHmuxRunning(), "hook processes did not exit");
 if (frames.some((frame) => frame.params?.event?.session_id === `opencode-${stale}`)) {
   throw new Error("a disposed feed scope still emitted events");
 }
@@ -190,34 +190,34 @@ def main() -> int:
     if node is None:
         print("SKIP: node not found")
         return 0
-    with tempfile.TemporaryDirectory(prefix="cmux-opencode-server-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-opencode-server-") as td:
         root = Path(td)
         plugin_dir = root / "plugins"
-        package_dir = plugin_dir / "cmux"
+        package_dir = plugin_dir / "hmux"
         package_dir.mkdir(parents=True)
         feed_source = (ROOT / "Resources/opencode-plugin.js").read_text(encoding="utf-8")
-        server_source = feed_source.replace('id: "cmux.feed"', 'id: "cmux.server"')
-        (plugin_dir / "cmux-feed.js").write_text(feed_source, encoding="utf-8")
-        (plugin_dir / "cmux-session.js").write_text(session_plugin_source(), encoding="utf-8")
+        server_source = feed_source.replace('id: "hmux.feed"', 'id: "hmux.server"')
+        (plugin_dir / "hmux-feed.js").write_text(feed_source, encoding="utf-8")
+        (plugin_dir / "hmux-session.js").write_text(session_plugin_source(), encoding="utf-8")
         (package_dir / "index.js").write_text(
-            "// cmux-opencode-tui-plugin-server-marker v2\n" + server_source, encoding="utf-8"
+            "// hmux-opencode-tui-plugin-server-marker v2\n" + server_source, encoding="utf-8"
         )
         (plugin_dir / "package.json").write_text('{"type":"module"}', encoding="utf-8")
         (package_dir / "package.json").write_text('{"type":"module"}', encoding="utf-8")
-        log_path = root / "cmux.log"
-        fake_cmux = root / "cmux"
-        fake_cmux.write_text(f'#!/bin/sh\necho "$* $(cat)" >> "{log_path}"\n', encoding="utf-8")
-        fake_cmux.chmod(0o755)
-        socket_path = str(root / "cmux.sock")
+        log_path = root / "hmux.log"
+        fake_hmux = root / "hmux"
+        fake_hmux.write_text(f'#!/bin/sh\necho "$* $(cat)" >> "{log_path}"\n', encoding="utf-8")
+        fake_hmux.chmod(0o755)
+        socket_path = str(root / "hmux.sock")
         env = os.environ.copy()
         env.update(
-            CMUX_SURFACE_ID="surface-server-entry",
-            CMUX_WORKSPACE_ID="workspace-server-entry",
-            CMUX_SOCKET_PATH=socket_path,
-            CMUX_OPENCODE_CMUX_BIN=str(fake_cmux),
-            CMUX_OPENCODE_HOOKS_DISABLED="",
-            CMUX_OPENCODE_SERVER_HARNESS=json.dumps(
-                {"pluginDir": str(plugin_dir), "logPath": str(log_path), "socketPath": socket_path, "fakeCmux": str(fake_cmux)}
+            HMUX_SURFACE_ID="surface-server-entry",
+            HMUX_WORKSPACE_ID="workspace-server-entry",
+            HMUX_SOCKET_PATH=socket_path,
+            HMUX_OPENCODE_HMUX_BIN=str(fake_hmux),
+            HMUX_OPENCODE_HOOKS_DISABLED="",
+            HMUX_OPENCODE_SERVER_HARNESS=json.dumps(
+                {"pluginDir": str(plugin_dir), "logPath": str(log_path), "socketPath": socket_path, "fakeHmux": str(fake_hmux)}
             ),
         )
         harness = root / "harness.mjs"

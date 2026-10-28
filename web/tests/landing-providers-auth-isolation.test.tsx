@@ -24,11 +24,11 @@ describe("landing providers during a Hexclave outage", () => {
 
     const html = renderToStaticMarkup(
       <Providers>
-        <main>cmux landing content</main>
+        <main>hmux landing content</main>
       </Providers>,
     );
 
-    expect(html).toContain("cmux landing content");
+    expect(html).toContain("hmux landing content");
   });
 
   test("the isolated boundary swaps only its own subtree for the fallback", async () => {

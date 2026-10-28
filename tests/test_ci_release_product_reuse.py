@@ -51,8 +51,8 @@ for name in (
 validator = step(release, "Validate Release artifact slices")
 assert "\n        if:" not in validator
 for needle in (
-    './scripts/ci/verify-binary-archs.sh "$RELEASE_ARCHS" "$APP_BINARY" "$CLI_BINARY" "$CMUX_CUA_BINARY" "$HELPER_BINARY" "$TUI_CLIENT"',
-    'codesign --verify --strict --verbose=4 "$CMUX_CUA_BINARY"',
+    './scripts/ci/verify-binary-archs.sh "$RELEASE_ARCHS" "$APP_BINARY" "$CLI_BINARY" "$HMUX_CUA_BINARY" "$HELPER_BINARY" "$TUI_CLIENT"',
+    'codesign --verify --strict --verbose=4 "$HMUX_CUA_BINARY"',
     './scripts/verify-diff-sidecar-artifact.sh "$DIFF_SIDECAR" --archs "$RELEASE_ARCHS"',
     '[[ "$SDK_VERSION" == 26.* ]]',
     'shasum -a 256 "$HELPER_BINARY"',
@@ -63,10 +63,10 @@ assert "ghostty_helper_sha256:" in package
 assert "ghostty_helper_toolchain_sha256:" in package
 assert "ghostty_helper_sdk:" in package
 assert "Record Release Ghostty helper identity" in package
-assert "Resolve Release cmux-tui producer identity" in release
-assert '--expected-commit "$CMUX_TUI_COMMIT"' in release
-assert "CMUX_RELEASE_TUI_MANIFEST_SHA256" in release
-assert "CMUX_RELEASE_GHOSTTY_HELPER_SHA256" in release
+assert "Resolve Release hmux-tui producer identity" in release
+assert '--expected-commit "$HMUX_TUI_COMMIT"' in release
+assert "HMUX_RELEASE_TUI_MANIFEST_SHA256" in release
+assert "HMUX_RELEASE_GHOSTTY_HELPER_SHA256" in release
 
 receipt = step(release, "Emit Release product reuse receipt")
 for event in ("fresh_compile", "exact_restore", "restore_miss", "fallback_rebuild"):

@@ -1,5 +1,5 @@
 import Foundation
-import CmuxTerminal
+import HmuxTerminal
 
 extension TerminalPanel {
     func performInternalBindingAction(_ action: String) -> Bool {

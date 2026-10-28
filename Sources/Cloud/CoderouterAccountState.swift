@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// The signed-in account and cmux team a CodeRouter account snapshot belongs to.
+/// The signed-in account and hmux team a CodeRouter account snapshot belongs to.
 struct CoderouterAccountScope: Hashable {
     let teamID: String
     let identityID: String?
@@ -231,7 +231,7 @@ final class CoderouterAccountStore {
 
     init() {
         scopeChangeObserver = NotificationCenter.default.addObserver(
-            forName: .cmuxCloudTeamScopeDidChange,
+            forName: .hmuxCloudTeamScopeDidChange,
             object: nil,
             queue: .main
         ) { [weak self] _ in

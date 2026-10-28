@@ -56,14 +56,14 @@ export type ForwardAuthHandlerDependencies = {
 };
 
 const liveDependencies: ForwardAuthHandlerDependencies = {
-  serviceSecret: env.CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET,
-  authPageOrigin: normalizePublicationAuthOrigin(env.CMUX_VM_PUBLICATION_AUTH_ORIGIN) ??
+  serviceSecret: env.HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET,
+  authPageOrigin: normalizePublicationAuthOrigin(env.HMUX_VM_PUBLICATION_AUTH_ORIGIN) ??
     undefined,
   resolve: (input) => tracePublicationAuthOperation("resolve_publication", () => runPublicationAuth(resolvePublicationForRequest(input))),
   evaluate: (input) => tracePublicationAuthOperation("evaluate_access", () => runPublicationAuth(evaluatePublicationRequest(input))),
   rateLimit: (input) => tracePublicationAuthOperation("rate_limit", () => enforcePublicationSignInRateLimit({
     ...input,
-    ruleId: env.CMUX_VM_PUBLICATION_SIGN_IN_RATE_LIMIT_ID,
+    ruleId: env.HMUX_VM_PUBLICATION_SIGN_IN_RATE_LIMIT_ID,
   })),
   begin: (input) => tracePublicationAuthOperation("begin_sign_in", () => runPublicationAuth(beginPublicationAuthorization(input))),
   complete: (input) => tracePublicationAuthOperation("complete_sign_in", () => runPublicationAuth(completePublicationAuthorization(input))),
@@ -121,7 +121,7 @@ export async function handleForwardAuthRequest(
   if (request.headers.get("x-forwarded-proto")?.toLowerCase() !== "https") {
     return response(null, 400);
   }
-  // The sign-in handoff only ever targets the configured CMUX origin. The
+  // The sign-in handoff only ever targets the configured HMUX origin. The
   // request's own URL is never consulted: a Host header must not be able to
   // move the browser redirect, so a missing origin fails closed instead.
   const authPageOrigin = normalizePublicationAuthOrigin(dependencies.authPageOrigin);

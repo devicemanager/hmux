@@ -13,7 +13,7 @@ import { HangReportsRepository, HangReportsRepositoryLive, type HangReportRow } 
 import { pruneExpiredHangReports } from "../services/hangReports/retention";
 
 const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL ?? "";
-const enabled = process.env.CMUX_DB_TEST === "1";
+const enabled = process.env.HMUX_DB_TEST === "1";
 // This suite deletes every hang_reports row. Refuse anything but a local
 // database so a stray DATABASE_URL can never point it at PlanetScale.
 if (enabled && !isLocalDatabase(databaseURL)) {
@@ -23,7 +23,7 @@ const dbTest = enabled ? test : test.skip;
 const runtime = enabled ? makeDatabaseRuntime({
   url: Redacted.make(databaseURL),
   maxConnections: 4,
-  applicationName: "cmux-hang-reports-test",
+  applicationName: "hmux-hang-reports-test",
 }) : undefined;
 
 const INSTALL = "0b8d4a51-6c9e-4f0f-8f53-3c2d7b4f9e20";
@@ -104,10 +104,10 @@ describe("hang_reports migration", () => {
     const client = await pool.connect();
     try {
       await client.query("begin");
-      await client.query("create role cmux_hang_reports_replay nologin");
+      await client.query("create role hmux_hang_reports_replay nologin");
       // USAGE only: no CREATE on the schema, no ownership of the table.
-      await client.query("grant usage on schema public to cmux_hang_reports_replay");
-      await client.query("set local role cmux_hang_reports_replay");
+      await client.query("grant usage on schema public to hmux_hang_reports_replay");
+      await client.query("set local role hmux_hang_reports_replay");
       for (const statement of migrationStatements("20261023120000_hang_reports")) await client.query(statement);
       const indexes = await client.query<{ indexname: string }>(
         "select indexname from pg_indexes where tablename = 'hang_reports' order by indexname",

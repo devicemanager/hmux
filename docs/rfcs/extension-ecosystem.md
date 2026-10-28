@@ -4,16 +4,16 @@ Status: proposal
 
 ## Problem
 
-cmux already has useful built-in actions, workspace commands, surface buttons,
+hmux already has useful built-in actions, workspace commands, surface buttons,
 and the Markdown viewer. A project-scoped note primitive is proposed in #4331,
 but is not part of the current main tree. The local pack loader now lets a
-project or global `cmux.json` reuse declarative entries. It does not yet
+project or global `hmux.json` reuse declarative entries. It does not yet
 define how a pack names itself, how an intent selects an implementation, how a
-user inspects or replaces cmux's defaults, or how an external implementation is
+user inspects or replaces hmux's defaults, or how an external implementation is
 trusted.
 
 This RFC defines those boundaries. The first implementation remains local and
-declarative: a pack can add or override JSON configuration, while cmux keeps
+declarative: a pack can add or override JSON configuration, while hmux keeps
 ownership of intent dispatch, layout, lifecycle, and security. Providers are
 adapters behind that boundary, not native plug-ins and not a second scheduler.
 
@@ -33,27 +33,27 @@ The design must provide:
 
 The first release does not load arbitrary native code, execute TypeScript
 manifests, expose a marketplace, or silently grant a provider access to the
-whole filesystem. A provider cannot replace cmux's lifecycle or create a second
+whole filesystem. A provider cannot replace hmux's lifecycle or create a second
 execution scheduler.
 
 ## Terms
 
-**Intent** is a public cmux operation such as `cmux.markdown.open`,
-`cmux.note.open`, or `cmux.diff.open`. cmux owns its validation, target
+**Intent** is a public hmux operation such as `hmux.markdown.open`,
+`hmux.note.open`, or `hmux.diff.open`. hmux owns its validation, target
 selection, focus policy, lifecycle, and result shape.
 
 **Provider** is a named implementation of one provider kind. A provider may be
-built into cmux or run as a bounded filesystem, webview, or stdio adapter.
+built into hmux or run as a bounded filesystem, webview, or stdio adapter.
 
 **Route** binds an intent to a provider. A route can choose a provider by
 scope, but it cannot change the intent's public parameters or return contract.
 
 **Pack** is a versioned directory or file containing declarative defaults,
 routes, provider declarations, and capability metadata. Existing
-`cmux.pack.json` files remain valid as packs without a manifest; they are
+`hmux.pack.json` files remain valid as packs without a manifest; they are
 treated as version `1` anonymous packs during migration.
 
-**Defaults** are the effective built-in entries after cmux applies its bundled
+**Defaults** are the effective built-in entries after hmux applies its bundled
 defaults and the configured pack layers. Runtime/session state is not part of a
 pack and is never written by a defaults command.
 
@@ -64,21 +64,21 @@ limited to `[a-z0-9][a-z0-9-]*`; an optional `@major` suffix is used only for a
 provider protocol version. Display names, titles, file paths, and Git URLs are
 not identities.
 
-The first-party namespace is reserved for cmux:
+The first-party namespace is reserved for hmux:
 
 | Entity | Form | Examples |
 | --- | --- | --- |
-| Intent | `cmux.<domain>.<verb>` | `cmux.markdown.open`, `cmux.note.open` |
-| Built-in action | `cmux.action.<name>` | `cmux.action.new-terminal` |
-| Provider kind | `cmux.provider.<domain>` | `cmux.provider.markdown-render` |
-| Built-in provider | `cmux.provider.<domain>.<name>` | `cmux.provider.markdown-render.builtin` |
-| Route | `cmux.route.<intent>` | `cmux.route.markdown-open` |
-| Default entry | `cmux.default.<area>.<name>` | `cmux.default.surface-tab-bar` |
+| Intent | `hmux.<domain>.<verb>` | `hmux.markdown.open`, `hmux.note.open` |
+| Built-in action | `hmux.action.<name>` | `hmux.action.new-terminal` |
+| Provider kind | `hmux.provider.<domain>` | `hmux.provider.markdown-render` |
+| Built-in provider | `hmux.provider.<domain>.<name>` | `hmux.provider.markdown-render.builtin` |
+| Route | `hmux.route.<intent>` | `hmux.route.markdown-open` |
+| Default entry | `hmux.default.<area>.<name>` | `hmux.default.surface-tab-bar` |
 
 Existing built-in action IDs are a compatibility exception: current canonical
-IDs such as `cmux.newTerminal`, `cmux.newBrowser`, and `cmux.splitRight` remain
+IDs such as `hmux.newTerminal`, `hmux.newBrowser`, and `hmux.splitRight` remain
 stable canonical IDs. New registry metadata records those IDs as legacy
-first-party IDs, and the proposed kebab-case `cmux.action.*` names are aliases
+first-party IDs, and the proposed kebab-case `hmux.action.*` names are aliases
 only when a future migration explicitly declares them. A pack cannot rename a
 built-in action by supplying a second spelling. Diagnostics always show the
 existing canonical ID and any alias together.
@@ -93,54 +93,54 @@ that override in provenance, while two declarations of the same entry ID in
 one layer remain an error.
 
 Provider kinds are also stable IDs, not free-form labels. Built-in kinds use
-the `cmux.provider.<domain>` form in the table (for example,
-`cmux.provider.diff-render`); a third-party kind uses its own reverse-domain
+the `hmux.provider.<domain>` form in the table (for example,
+`hmux.provider.diff-render`); a third-party kind uses its own reverse-domain
 namespace. The short names in prose such as “diff renderer” are display terms
 only. `doctor` rejects a provider whose kind is not registered or whose kind
 namespace is owned by another pack.
 
 Existing wire names are compatibility aliases. For example, the v2 socket
 method `markdown.open` and CLI verb `markdown open` map to the canonical intent
-`cmux.markdown.open`; the same mapping applies to any existing unprefixed
+`hmux.markdown.open`; the same mapping applies to any existing unprefixed
 intent. The coordinator accepts both spellings, but provenance and new pack
 routes use the canonical ID. Removing a wire alias requires a separately
 versioned API change.
 
 Built-in aliases keep existing config working. For example, `newTerminal` and
-`cmux.newTerminal` continue to resolve to the same action while diagnostics
+`hmux.newTerminal` continue to resolve to the same action while diagnostics
 report the canonical ID. Aliases are read-only and cannot be introduced by a
 pack.
 
 ## Pack manifest
 
-The optional `cmux.pack.json` manifest describes ownership and compatibility.
+The optional `hmux.pack.json` manifest describes ownership and compatibility.
 The existing `actions`, `ui`, and `commands` keys remain at the top level so
 current packs do not need a rewrite.
 
 ```json
 {
-  "$schema": "https://cmux.app/schemas/pack-v1.json",
+  "$schema": "https://hmux.app/schemas/pack-v1.json",
   "schemaVersion": 1,
   "id": "com.example.review",
   "name": "Review workflow",
   "version": "1.2.0",
   "description": "Review actions and a diff renderer for this repository.",
-  "requires": { "cmux": ">=0.20.0 <1.0.0" },
+  "requires": { "hmux": ">=0.20.0 <1.0.0" },
   "capabilities": ["readWorkspace", "gitDiff", "runCommand"],
   "files": ["providers/diff-render.json"],
   "providers": {
     "com.example.provider.diff": {
-      "kind": "cmux.provider.diff-render",
+      "kind": "hmux.provider.diff-render",
       "driver": "stdio",
       "command": "review-diff-provider",
-      "protocol": "cmux.provider.diff@1",
+      "protocol": "hmux.provider.diff@1",
       "capabilities": ["gitDiff", "runCommand"]
     }
   },
   "routes": {
-    "cmux.diff.open": {
+    "hmux.diff.open": {
       "provider": "com.example.provider.diff",
-      "fallback": "cmux.provider.diff-render.builtin",
+      "fallback": "hmux.provider.diff-render.builtin",
       "allowFallback": true
     }
   },
@@ -151,7 +151,7 @@ current packs do not need a rewrite.
 ```
 
 `id`, `schemaVersion`, and `version` are required for an installed pack and
-optional for an inline legacy pack. `requires.cmux` is checked before any entry
+optional for an inline legacy pack. `requires.hmux` is checked before any entry
 is applied. Unknown keys are preserved for forward compatibility only when they
 are inside a provider's driver-specific `config` object; unknown top-level keys
 are diagnostics and do not activate the pack.
@@ -179,19 +179,19 @@ with no such assets may omit `files`. Legacy packs remain valid, but they have
 no provider assets until a versioned manifest declares them.
 
 For both local and installed provider packs, the declared tree is
-`cmux.pack.json` plus the files in `files`; the manifest must not be listed a
+`hmux.pack.json` plus the files in `files`; the manifest must not be listed a
 second time. Hash raw file bytes, including the manifest's whitespace and JSONC
 comments. Formatting changes therefore require renewed trust. Paths must be
 Unicode NFC and must not collide under the host filesystem's name comparison.
 Sort their UTF-8 bytes lexicographically. Each record is an unsigned 64-bit
 big-endian path-byte length, the path bytes, the type byte `0x01` (regular file),
 an unsigned 64-bit big-endian content length, and the raw 32-byte SHA-256 of the
-content. The tree digest is SHA-256 of the UTF-8 prefix `cmux.pack-tree.v1`, one
+content. The tree digest is SHA-256 of the UTF-8 prefix `hmux.pack-tree.v1`, one
 NUL byte, and the concatenated records.
 
 A checkout's `.git` directory and unlisted files are outside the declared tree
 and cannot be used as provider assets. Before every provider read or launch,
-cmux revalidates the declared path set and recomputes these records; a changed
+hmux revalidates the declared path set and recomputes these records; a changed
 declaration or a changed, missing, or replaced declared file fails closed and
 revokes the associated trust decision. Adding an unlisted file does not change
 the digest or grant access to it.
@@ -202,7 +202,7 @@ form:
 ```json
 {
   "provider": "com.example.provider.diff",
-  "fallback": "cmux.provider.diff-render.builtin",
+  "fallback": "hmux.provider.diff-render.builtin",
   "allowFallback": true
 }
 ```
@@ -214,7 +214,7 @@ the declaring layer (global or project), and a project route always outranks a
 global route. Unknown route fields are diagnostics and disable that route.
 
 Pack references stay local in the first phase. A Git install materializes a
-checked-out directory and records its exact commit; `cmux.json` still points at
+checked-out directory and records its exact commit; `hmux.json` still points at
 that local directory. HTTP(S) URLs in `packs` remain rejected by the loader.
 
 ## Provider registry
@@ -226,7 +226,7 @@ pack layers:
 ```text
 ProviderDescriptor {
   id:             stable provider id
-  kind:           provider-kind ID, such as cmux.provider.notes-store or cmux.provider.diff-render
+  kind:           provider-kind ID, such as hmux.provider.notes-store or hmux.provider.diff-render
   driver:         builtin | filesystem | webview | stdio
   protocol:       provider protocol id and major version
   source:         bundled | installed-pack | global-config | project-config
@@ -235,7 +235,7 @@ ProviderDescriptor {
 }
 
 RouteDescriptor {
-  intent:         stable cmux intent id
+  intent:         stable hmux intent id
   provider:       provider id
   scope:          global | project
   fallback:       optional built-in provider id
@@ -253,7 +253,7 @@ resolve(intent, context)
   → select provider, or declared built-in fallback
   → validate that provider's effective capabilities and exact-source trust grant
   → invoke with a bounded request and cancellation
-  → return the intent's cmux-owned result
+  → return the intent's hmux-owned result
 ```
 
 Every consumer uses that coordinator. The command palette, CLI, v2 socket,
@@ -274,13 +274,13 @@ protocol. `protocol` values are versioned references whose request, response,
 error, framing, handshake, and cancellation schemas must be published with the
 provider kind before a non-builtin driver is accepted. A provider kind owns its
 typed payload schema; the coordinator translates that payload to the stable
-cmux intent result and never forwards a raw socket or app object. Until a kind
+hmux intent result and never forwards a raw socket or app object. Until a kind
 schema exists, only the `builtin` driver is valid for that kind.
 
 The first external-driver follow-up must define, at minimum, a bounded
 handshake that returns the provider and protocol IDs, capability echo, and
 maximum request size; a framed request/response envelope with request IDs and
-typed errors; cancellation acknowledgement and a deadline after which cmux
+typed errors; cancellation acknowledgement and a deadline after which hmux
 terminates the process or closes the webview; and a capability-scoped payload
 for each intent. Those schemas are separate reviewable contracts, not implied
 by the registry manifest example below.
@@ -289,7 +289,7 @@ by the registry manifest example below.
 
 Drivers are introduced in this order:
 
-1. **builtin** — an in-process implementation registered by cmux. This is the
+1. **builtin** — an in-process implementation registered by hmux. This is the
    only driver that can participate in the first notes and Markdown migration.
 2. **filesystem** — a confined path under the project or pack root. It can
    read/write only the declared subpath and cannot execute a command.
@@ -299,7 +299,7 @@ Drivers are introduced in this order:
    The bridge is installed only while the top-level and frame origin matches
    the approved origin, is removed before a disallowed navigation commits, and
    every bridge call is checked against the current origin and capability grant.
-   It receives a capability-scoped `window.cmux` bridge and no ambient app or
+   It receives a capability-scoped `window.hmux` bridge and no ambient app or
    filesystem API.
 4. **stdio** — a child process launched with an argument array, a bounded
    handshake, a private environment, request deadlines, output limits, and an
@@ -316,7 +316,7 @@ The stdio process is untrusted code. `runCommand` authorizes starting the
 declared executable; it does not grant ambient filesystem or network access.
 The process must run in an OS-enforced sandbox that denies access by default,
 binds filesystem reads and writes to the declared project or pack subpaths,
-and sends network traffic through a cmux broker that enforces the declared
+and sends network traffic through a hmux broker that enforces the declared
 origin allowlist. The child receives no raw socket, app object, or unrestricted
 environment. If the host cannot enforce those boundaries, the provider is
 rejected rather than treating a manifest declaration as an advisory grant.
@@ -326,10 +326,10 @@ rejected rather than treating a manifest declaration as an advisory grant.
 The effective configuration is resolved in this order, from lowest to highest
 precedence:
 
-1. bundled cmux defaults;
+1. bundled hmux defaults;
 2. installed packs, in the order recorded by the pack lock;
-3. global `~/.config/cmux/cmux.json` and its local pack references;
-4. project `.cmux/cmux.json` and its local pack references;
+3. global `~/.config/hmux/hmux.json` and its local pack references;
+4. project `.hmux/hmux.json` and its local pack references;
 5. runtime/session state.
 
 Within one layer, later pack entries override earlier entries by stable ID.
@@ -357,7 +357,7 @@ user's trust decision.
 | --- | --- | --- |
 | `readWorkspace` | Read files below the project root | prompt once per fingerprint |
 | `writeWorkspace` | Write files below the project root | prompt per fingerprint |
-| `writeCmuxNotes` | Write `.cmux/notes` through the note store | prompt per fingerprint |
+| `writeHmuxNotes` | Write `.hmux/notes` through the note store | prompt per fingerprint |
 | `runCommand` | Start the declared stdio command | prompt per fingerprint |
 | `network` | Connect to declared origins | prompt per fingerprint |
 | `openWebview` | Create a webview for a declared origin | prompt per fingerprint |
@@ -405,11 +405,11 @@ mechanism for other command-backed actions until the provider registry has its
 own storage boundary.
 
 Every provider request carries the approved registry revision and fingerprint.
-When a pack is disabled, removed, updated, or replaced, cmux publishes a new
+When a pack is disabled, removed, updated, or replaced, hmux publishes a new
 registry revision and revokes grants associated with the old fingerprint. The
 coordinator cancels in-flight requests, terminates stdio processes it owns,
 closes provider webviews, and refuses new network requests for the revoked
-revision. A provider may finish a read already returned to cmux, but it cannot
+revision. A provider may finish a read already returned to hmux, but it cannot
 start another operation from that snapshot. Reload therefore cannot leave a
 removed provider with a live command process or webview.
 
@@ -419,11 +419,11 @@ Defaults commands are read-first and produce machine-readable receipts. They
 operate on the effective declarative defaults, never on runtime/session state.
 
 ```text
-cmux defaults show [--json]
-cmux defaults diff [--against <pack-or-path>] [--json]
-cmux defaults eject --to <directory> [--force]
-cmux defaults use <directory> [--preview] [--receipt <path>]
-cmux defaults reset [--preview] [--receipt <path>]
+hmux defaults show [--json]
+hmux defaults diff [--against <pack-or-path>] [--json]
+hmux defaults eject --to <directory> [--force]
+hmux defaults use <directory> [--preview] [--receipt <path>]
+hmux defaults reset [--preview] [--receipt <path>]
 ```
 
 - `show` prints the winning ID, provider, source, version, and capability
@@ -439,30 +439,30 @@ cmux defaults reset [--preview] [--receipt <path>]
   parse, schema, capability, and trust checks without publishing. A successful
   mutation writes atomically and returns a receipt containing the before and
   installed pack reference, target path, fingerprint, and revision.
-- `reset` removes only the cmux-managed defaults reference. It preserves a
-  user's unrelated `cmux.json` keys and refuses an undo when the target changed
+- `reset` removes only the hmux-managed defaults reference. It preserves a
+  user's unrelated `hmux.json` keys and refuses an undo when the target changed
   after the receipt was created.
 
 These commands share the existing config writer lock, source revision check,
 JSONC preservation, and conditional undo rules. A failed validation or trust
 decision publishes nothing. No defaults command clones a Git URL; installation
-is a separate `cmux pack` operation.
+is a separate `hmux pack` operation.
 
 ## Pack install, update, and doctor
 
 The first remote distribution path is Git, with no marketplace service:
 
 ```text
-cmux pack install <git-url> [--ref <commit-or-tag>]
-cmux pack list [--json]
-cmux pack update [<pack-id>]
-cmux pack remove <pack-id>
-cmux pack doctor [<pack-id>] [--json]
+hmux pack install <git-url> [--ref <commit-or-tag>]
+hmux pack list [--json]
+hmux pack update [<pack-id>]
+hmux pack remove <pack-id>
+hmux pack doctor [<pack-id>] [--json]
 ```
 
-Installation clones into `~/.config/cmux/packs/<pack-id>/`, verifies the
+Installation clones into `~/.config/hmux/packs/<pack-id>/`, verifies the
 manifest, records the exact commit and content fingerprint in
-`cmux.packs.lock.json`, and leaves the pack disabled until the user chooses
+`hmux.packs.lock.json`, and leaves the pack disabled until the user chooses
 where to reference it. Tags and branches are resolved once; updates require an
 explicit command. Offline `list`, `show`, `diff`, and `doctor` work from the
 lock and cached manifest without network access.
@@ -478,9 +478,9 @@ The first provider registry migration keeps existing behavior byte-for-byte:
 
 | Intent | Built-in provider | Safe fallback |
 | --- | --- | --- |
-| `cmux.note.open` (after #4331) | `cmux.provider.notes.filesystem` | none for writes; read-only list may use the built-in note store |
-| `cmux.markdown.open` | `cmux.provider.markdown-render.builtin` | bundled Markdown renderer |
-| `cmux.diff.open` | `cmux.provider.diff-render.builtin` | bundled diff viewer |
+| `hmux.note.open` (after #4331) | `hmux.provider.notes.filesystem` | none for writes; read-only list may use the built-in note store |
+| `hmux.markdown.open` | `hmux.provider.markdown-render.builtin` | bundled Markdown renderer |
+| `hmux.diff.open` | `hmux.provider.diff-render.builtin` | bundled diff viewer |
 
 When the note primitive from #4331 is available, its note store remains the
 authority for note identity, project-root resolution, attachments, and writes.
@@ -492,7 +492,7 @@ their internal route changes.
 
 ## Failure, diagnostics, and compatibility
 
-- Invalid packs are isolated. The current legacy `CmuxConfigStore` reports the
+- Invalid packs are isolated. The current legacy `HmuxConfigStore` reports the
   invalid source and removes that pack's entries on reload; the registry
   migration must preserve that observable behavior for legacy actions and
   commands. A future transactional registry snapshot may retain the last valid
@@ -512,7 +512,7 @@ their internal route changes.
   attribution, and trust ownership remain unchanged.
 
 Diagnostics expose the effective registry and provenance through the existing
-config diagnostics path and `cmux config` JSON output. They do not include
+config diagnostics path and `hmux config` JSON output. They do not include
 provider command arguments, environment secrets, note bodies, or file contents.
 
 ## Implementation slices
@@ -551,7 +551,7 @@ the pack protocol. Project routes are supported immediately because the
 project-local pack is the unit users can review and commit; global routes fill
 gaps but cannot override a project route.
 
-Webviews use a narrow `window.cmux` bridge with declared origins. Localhost HTTP
+Webviews use a narrow `window.hmux` bridge with declared origins. Localhost HTTP
 is an implementation detail of a webview driver, not a provider API. A provider
 must not receive a raw control socket or an unrestricted app object.
 
@@ -563,6 +563,6 @@ session state are excluded.
 
 The RFC is accepted when a reviewer can answer, from `defaults show` and
 `doctor`, which declaration won, what it can access, how to undo it, and which
-cmux-owned intent will receive the result. A provider implementation is not
+hmux-owned intent will receive the result. A provider implementation is not
 accepted merely because it can render a panel; it must preserve those answers
 through reload, restore, failure, and uninstall.

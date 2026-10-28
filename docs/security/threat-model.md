@@ -1,4 +1,4 @@
-# cmux threat model outline
+# hmux threat model outline
 
 Reviewed against source revision `ccefb63aa84` on 2026-10-06. This is a starting
 map for security review, not a penetration-test report or a claim that every
@@ -8,13 +8,13 @@ defines vulnerability reporting and supported versions.
 ## Scope and assumptions
 
 The scope is the macOS terminal and embedded browser, CLI and local automation,
-SSH and remote daemons, iOS access to Macs, cmux Cloud and its dashboard,
+SSH and remote daemons, iOS access to Macs, hmux Cloud and its dashboard,
 published previews, and build/update distribution. TUI clients and alternate
 transports share these review goals but need their own implementation evidence.
 Unreleased architectures and historical audits do not establish guarantees for
 the version a user has installed.
 
-cmux runs shells and agents with the authority available to those processes.
+hmux runs shells and agents with the authority available to those processes.
 The desktop app is not a sandbox for untrusted commands, repositories, shell
 configuration, or agents. Approving an agent or giving it terminal/automation
 access delegates real authority; workspace and pane separation are not OS
@@ -40,12 +40,12 @@ they arrive through an authenticated connection.
 
 ```mermaid
 flowchart LR
-    Content[Untrusted terminal output, repositories and webpages] --> App[cmux app and browser]
+    Content[Untrusted terminal output, repositories and webpages] --> App[hmux app and browser]
     Local[Local CLI and automation clients] --> Socket[Local control socket]
     Socket --> App
     App --> Shell[Shells and agents with user authority]
     App <-->|SSH and scoped remote commands| Remote[Remote host and daemon]
-    Clients[Native Mac and iOS clients] -->|Authenticated requests| Control[cmux control service]
+    Clients[Native Mac and iOS clients] -->|Authenticated requests| Control[hmux control service]
     Dashboard[Browser dashboard] -->|Authenticated HTTPS and WebSocket requests| Control
     Control -->|Discovery and access decisions| Host[Host admission checks]
     Clients <-->|Direct or relayed encrypted peer traffic| Host
@@ -81,15 +81,15 @@ and places to collect evidence.
 
 ## Existing source and review anchors
 
-- [Socket modes and permissions](../../Packages/macOS/CmuxSettings/Sources/CmuxSettings/Values/SocketControlMode.swift)
+- [Socket modes and permissions](../../Packages/macOS/HmuxSettings/Sources/HmuxSettings/Values/SocketControlMode.swift)
   include disabled, restricted, automation, password and `allowAll` modes.
   `allowAll` sets world-accessible socket permissions and expands local trust;
   inspect the effective configuration when assessing exposure.
-  [Connection authorization](../../Packages/macOS/CmuxControlSocket/Sources/CmuxControlSocket/Server/)
+  [Connection authorization](../../Packages/macOS/HmuxControlSocket/Sources/HmuxControlSocket/Server/)
   implements the other part of this boundary.
-- [Remote relay policy](../../Packages/macOS/CmuxRemoteWorkspace/Sources/CmuxRemoteWorkspace/Relay/RemoteRelayCommandPolicy.swift)
+- [Remote relay policy](../../Packages/macOS/HmuxRemoteWorkspace/Sources/HmuxRemoteWorkspace/Relay/RemoteRelayCommandPolicy.swift)
   rejects unlisted methods and scopes targets.
-  The [relay review guide](../../skills/cmux-socket-policy/references/remote-relay-authorization.md)
+  The [relay review guide](../../skills/hmux-socket-policy/references/remote-relay-authorization.md)
   explains the required negative tests when extending it.
 - The [device transport audit](../iroh-v2/SECURITY-AUDIT.md) describes identity
   proof, host admission and protected persistence, with explicit limits around
@@ -100,7 +100,7 @@ and places to collect evidence.
   [publication security helpers](../../web/services/vm-publications/security.ts)
   are starting points for following authorization through the complete request.
   A helper by itself does not prove every route uses it correctly.
-- [App entitlements](../../cmux.entitlements),
+- [App entitlements](../../hmux.entitlements),
   [update configuration](../../Resources/Info.plist), and the
   [release workflow](../../.github/workflows/release.yml) show relevant host and
   distribution authority. Configuration presence is not runtime verification.

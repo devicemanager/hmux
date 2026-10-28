@@ -13,8 +13,8 @@ function vm(id: string, overrides: Partial<ProviderInventoryVm> = {}): ProviderI
   return {
     id,
     state: "running",
-    metadata: { cmux: "cloud" },
-    snapshot: "cmux-devbox-4x8",
+    metadata: { hmux: "cloud" },
+    snapshot: "hmux-devbox-4x8",
     cpu: 4,
     memoryMib: 8192,
     storageMib: 20480,
@@ -56,8 +56,8 @@ function classify(input: Partial<Parameters<typeof classifyVmHealth>[0]> & { vms
 }
 
 describe("workload", () => {
-  test("cmux Cloud, other apps on the shared account, and everything else", () => {
-    expect(vmWorkload({ cmux: "cloud" })).toBe("cmux_cloud");
+  test("hmux Cloud, other apps on the shared account, and everything else", () => {
+    expect(vmWorkload({ hmux: "cloud" })).toBe("hmux_cloud");
     expect(vmWorkload({ app: "chatmux2" })).toBe("app:chatmux2");
     expect(vmWorkload({})).toBe("other");
   });
@@ -76,9 +76,9 @@ describe("hung VMs", () => {
     });
     expect(report.hung.map((entry) => entry.vmId).sort()).toEqual(["vm-a", "vm-b"]);
     const a = report.hung.find((entry) => entry.vmId === "vm-a")!;
-    expect(a.workload).toBe("cmux_cloud");
+    expect(a.workload).toBe("hmux_cloud");
     expect(a.owner).toEqual({ cloudVmId: "row-vm-a", userId: "user-vm-a", teamId: "team-vm-a" });
-    expect(a.snapshot).toBe("cmux-devbox-4x8");
+    expect(a.snapshot).toBe("hmux-devbox-4x8");
     expect(a.size).toEqual({ cpu: 4, memoryMib: 8192, storageMib: 20480 });
     expect(a.firstSeenHungAt).toBe(NOW.toISOString());
     expect(a.dbUpdatedAt).toBe(daysAgo(1));
@@ -227,7 +227,7 @@ describe("drift", () => {
     ]);
   });
 
-  test("cmux VMs the DB does not track, or tracks as destroyed, are drift; other workloads are not", () => {
+  test("hmux VMs the DB does not track, or tracks as destroyed, are drift; other workloads are not", () => {
     const report = classify({
       vms: [
         vm("vm-untracked"),
@@ -243,8 +243,8 @@ describe("drift", () => {
     ]);
   });
 
-  test("untracked cmux VMs are listed but do not by themselves need attention", () => {
-    // Another environment on the shared account tags its VMs cmux=cloud too.
+  test("untracked hmux VMs are listed but do not by themselves need attention", () => {
+    // Another environment on the shared account tags its VMs hmux=cloud too.
     const report = classify({ vms: [vm("vm-staging")] });
     expect(report.drift.map((entry) => entry.kind)).toEqual(["provider_untracked"]);
     expect(report.attention).toEqual({ needed: false, reasons: [] });
@@ -272,7 +272,7 @@ describe("drift", () => {
 
 describe("TLS rule budget", () => {
   const vms = [
-    vm("vm-cmux", { vpcIds: ["vpc-cmux"] }),
+    vm("vm-hmux", { vpcIds: ["vpc-hmux"] }),
     vm("vm-chat", { metadata: { app: "chatmux2" } }),
     vm("vm-paused-old", { state: "paused", updatedAt: daysAgo(10) }),
     vm("vm-paused-new", { state: "paused", updatedAt: daysAgo(2) }),
@@ -281,11 +281,11 @@ describe("TLS rule budget", () => {
 
   test("over the 200,000 limit, attributed by owner, with idle paused holders", () => {
     const rules = [
-      rule("r1", { vmIds: ["vm-cmux"] }),
-      rule("r2", { vmIds: ["vm-cmux"] }),
+      rule("r1", { vmIds: ["vm-hmux"] }),
+      rule("r2", { vmIds: ["vm-hmux"] }),
       rule("r3", { vmIds: ["vm-chat"] }),
       rule("r4"),
-      rule("r5", { vpcIds: ["vpc-cmux"] }),
+      rule("r5", { vpcIds: ["vpc-hmux"] }),
       rule("r6", { vpcIds: ["vpc-unknown"] }),
       rule("r7", { vmIds: ["vm-deleted"] }),
       rule("r8", { vmIds: ["vm-paused-old"] }),
@@ -299,7 +299,7 @@ describe("TLS rule budget", () => {
     expect(tls.limit).toBe(200_000);
     expect(tls.complete).toBe(false);
     expect(tls.byOwner).toEqual({
-      cmux_cloud: 6,
+      hmux_cloud: 6,
       "app:chatmux2": 1,
       account_level: 1,
       vpc_unattributed: 1,
@@ -308,7 +308,7 @@ describe("TLS rule budget", () => {
     });
     expect(tls.pausedHolders.vmCount).toBe(1);
     expect(tls.pausedHolders.ruleCount).toBe(2);
-    expect(tls.pausedHolders.top[0]).toMatchObject({ vmId: "vm-paused-old", rules: 2, workload: "cmux_cloud" });
+    expect(tls.pausedHolders.top[0]).toMatchObject({ vmId: "vm-paused-old", rules: 2, workload: "hmux_cloud" });
     expect(report.attention.needed).toBe(true);
     expect(report.attention.reasons).toContainEqual({ code: "tls_over_limit", count: 200_303, limit: 200_000 });
   });
@@ -321,9 +321,9 @@ describe("TLS rule budget", () => {
 
   test("rule owner falls back from VM to network to account", () => {
     const byId = new Map(vms.map((entry) => [entry.id, entry]));
-    const vpc = new Map([["vpc-cmux", "cmux_cloud"]]);
-    expect(tlsRuleOwner(rule("x", { vmIds: ["vm-chat"], vpcIds: ["vpc-cmux"] }), byId, vpc)).toBe("app:chatmux2");
-    expect(tlsRuleOwner(rule("x", { vpcIds: ["vpc-cmux"] }), byId, vpc)).toBe("cmux_cloud");
+    const vpc = new Map([["vpc-hmux", "hmux_cloud"]]);
+    expect(tlsRuleOwner(rule("x", { vmIds: ["vm-chat"], vpcIds: ["vpc-hmux"] }), byId, vpc)).toBe("app:chatmux2");
+    expect(tlsRuleOwner(rule("x", { vpcIds: ["vpc-hmux"] }), byId, vpc)).toBe("hmux_cloud");
     expect(tlsRuleOwner(rule("x"), byId, vpc)).toBe("account_level");
   });
 

@@ -23,7 +23,7 @@ def test_enumeration_uses_built_bundle_identifiers() -> None:
                 "name": "Test Plan",
                 "children": [
                     {
-                        "name": "cmuxTests",
+                        "name": "hmuxTests",
                         "children": [
                             {
                                 "name": "FooTests",
@@ -61,8 +61,8 @@ def test_enumeration_accepts_explicit_flat_identifiers() -> None:
         "values": [
             {
                 "children": [
-                    {"identifier": "cmuxTests/FooTests/testOne()"},
-                    {"identifier": "cmuxTests/ModernSuite/modern test"},
+                    {"identifier": "hmuxTests/FooTests/testOne()"},
+                    {"identifier": "hmuxTests/ModernSuite/modern test"},
                 ]
             }
         ]
@@ -120,7 +120,7 @@ def test_selector_index_preserves_suite_and_exact_test_matching() -> None:
 
     selected, missing = accounting.selected_inventory(
         inventory,
-        ["-only-testing:cmuxTests/FooTests", "BarTests/testThree()", "MissingSuite"],
+        ["-only-testing:hmuxTests/FooTests", "BarTests/testThree()", "MissingSuite"],
     )
     assert selected == inventory
     assert missing == ["MissingSuite"]
@@ -566,12 +566,12 @@ def test_catalog_requires_campaign_classification() -> None:
 
 
 def test_inventory_refuses_hung_or_empty_enumeration() -> None:
-    # What xcodebuild -enumerate-tests wrote (exit 0) when the runner hung on cmux9s.
+    # What xcodebuild -enumerate-tests wrote (exit 0) when the runner hung on hmux9s.
     hung = {
         "errors": [
-            "cmux DEV (65703) encountered an error. (Underlying Error: The test runner hung before establishing connection.)"
+            "hmux DEV (65703) encountered an error. (Underlying Error: The test runner hung before establishing connection.)"
         ],
-        "values": [{"children": [{"kind": "target", "name": "cmuxTests"}], "kind": "plan", "name": "cmux-unit"}],
+        "values": [{"children": [{"kind": "target", "name": "hmuxTests"}], "kind": "plan", "name": "hmux-unit"}],
     }
     with tempfile.TemporaryDirectory() as tmp:
         for payload, expected in ((hung, "hung before establishing connection"), ({"values": []}, "found no tests")):

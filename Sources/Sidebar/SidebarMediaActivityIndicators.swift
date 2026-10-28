@@ -11,7 +11,7 @@ struct SidebarMediaActivityIndicators: View {
                 localized: "sidebar.mediaActivity.audio.tooltip",
                 defaultValue: "Playing audio"
             )
-            CmuxSystemSymbolImage(magnified: "speaker.wave.2.fill", pointSize: symbolPointSize, weight: .semibold, tint: audioColor)
+            HmuxSystemSymbolImage(magnified: "speaker.wave.2.fill", pointSize: symbolPointSize, weight: .semibold, tint: audioColor)
                 .safeHelp(audioPlayingTooltip)
                 .accessibilityLabel(audioPlayingTooltip)
         }
@@ -21,7 +21,7 @@ struct SidebarMediaActivityIndicators: View {
                 localized: "sidebar.mediaActivity.microphone.tooltip",
                 defaultValue: "Microphone in use"
             )
-            CmuxSystemSymbolImage(magnified: "mic.fill", pointSize: symbolPointSize, weight: .semibold, tint: .orange)
+            HmuxSystemSymbolImage(magnified: "mic.fill", pointSize: symbolPointSize, weight: .semibold, tint: .orange)
                 .safeHelp(microphoneInUseTooltip)
                 .accessibilityLabel(microphoneInUseTooltip)
         }
@@ -31,7 +31,7 @@ struct SidebarMediaActivityIndicators: View {
                 localized: "sidebar.mediaActivity.camera.tooltip",
                 defaultValue: "Camera in use"
             )
-            CmuxSystemSymbolImage(magnified: "video.fill", pointSize: symbolPointSize, weight: .semibold, tint: .green)
+            HmuxSystemSymbolImage(magnified: "video.fill", pointSize: symbolPointSize, weight: .semibold, tint: .green)
                 .safeHelp(cameraInUseTooltip)
                 .accessibilityLabel(cameraInUseTooltip)
         }

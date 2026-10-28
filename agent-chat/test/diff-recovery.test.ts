@@ -27,7 +27,7 @@ const timerApi = {
 };
 for (const [key, value] of Object.entries({
   window: timerApi, ...timerApi,
-  document: { title: "cmux agent" }, location,
+  document: { title: "hmux agent" }, location,
   navigator: { languages: ["en"], language: "en" },
   history: { replaceState(_state: unknown, _unused: string, path: string) { location.pathname = path; } },
   sessionStorage: { setItem() {} }, WebSocket: FakeSocket, IS_REACT_ACT_ENVIRONMENT: true,

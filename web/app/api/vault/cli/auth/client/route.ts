@@ -14,7 +14,7 @@ export async function GET(request: Request): Promise<Response> {
   return withAuthedCliAuthApiRoute(
     request,
     "/api/vault/cli/auth/client",
-    { "cmux.vault.operation": "cli_auth.client" },
+    { "hmux.vault.operation": "cli_auth.client" },
     "/api/vault/cli/auth/client GET failed",
     {},
     async () => {

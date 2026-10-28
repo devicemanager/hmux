@@ -28,8 +28,8 @@ function runLoad({
     "set -euo pipefail",
     'source "$1"',
     "shift",
-    'cmux_dev_secrets_load "$@" >/dev/null',
-    'printf "%s\\n%s\\n%s\\n%s\\n" "${CMUX_UITEST_STACK_EMAIL:-}" "${CMUX_UITEST_STACK_PASSWORD:-}" "${CMUX_DEV_AUTH_PROFILE:-}" "${CMUX_DEV_AUTH_ACCOUNT:-}"',
+    'hmux_dev_secrets_load "$@" >/dev/null',
+    'printf "%s\\n%s\\n%s\\n%s\\n" "${HMUX_UITEST_STACK_EMAIL:-}" "${HMUX_UITEST_STACK_PASSWORD:-}" "${HMUX_DEV_AUTH_PROFILE:-}" "${HMUX_DEV_AUTH_ACCOUNT:-}"',
   ].join("; ");
 
   return spawnSync("bash", ["-c", command, "dev-secrets-test", script, ...loaderArguments], {
@@ -44,18 +44,18 @@ function runLoad({
 }
 
 function makeHome(structure) {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), "cmux-dev-secrets-test-"));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "hmux-dev-secrets-test-"));
   fs.mkdirSync(path.join(home, ".secrets"), { recursive: true });
-  if (structure[".secrets/cmuxterm-dev.env"] != null) {
+  if (structure[".secrets/hmuxterm-dev.env"] != null) {
     fs.writeFileSync(
-      path.join(home, ".secrets/cmuxterm-dev.env"),
-      structure[".secrets/cmuxterm-dev.env"],
+      path.join(home, ".secrets/hmuxterm-dev.env"),
+      structure[".secrets/hmuxterm-dev.env"],
     );
   }
-  if (structure[".secrets/cmux.env"] != null) {
+  if (structure[".secrets/hmux.env"] != null) {
     fs.writeFileSync(
-      path.join(home, ".secrets/cmux.env"),
-      structure[".secrets/cmux.env"],
+      path.join(home, ".secrets/hmux.env"),
+      structure[".secrets/hmux.env"],
     );
   }
   return home;
@@ -75,17 +75,17 @@ function resolveCredential(result) {
 
 test("file-backed dogfood creds win over ambient dogfood env", () => {
   const home = makeHome({
-    ".secrets/cmuxterm-dev.env": [
-      "CMUX_DOGFOOD_STACK_EMAIL=file@manaflow.ai",
-      "CMUX_DOGFOOD_STACK_PASSWORD=file-pw",
+    ".secrets/hmuxterm-dev.env": [
+      "HMUX_DOGFOOD_STACK_EMAIL=file@manaflow.ai",
+      "HMUX_DOGFOOD_STACK_PASSWORD=file-pw",
     ].join("\n"),
   });
 
   const result = runLoad({
     home,
     env: {
-      CMUX_DOGFOOD_STACK_EMAIL: "env@manaflow.ai",
-      CMUX_DOGFOOD_STACK_PASSWORD: "env-pw",
+      HMUX_DOGFOOD_STACK_EMAIL: "env@manaflow.ai",
+      HMUX_DOGFOOD_STACK_PASSWORD: "env-pw",
     },
   });
   assert.deepEqual(resolvePair(result), {
@@ -96,17 +96,17 @@ test("file-backed dogfood creds win over ambient dogfood env", () => {
 
 test("file-backed uitest creds win over ambient uitest env", () => {
   const home = makeHome({
-    ".secrets/cmuxterm-dev.env": [
-      "CMUX_UITEST_STACK_EMAIL=file@manaflow.ai",
-      "CMUX_UITEST_STACK_PASSWORD=file-pw",
+    ".secrets/hmuxterm-dev.env": [
+      "HMUX_UITEST_STACK_EMAIL=file@manaflow.ai",
+      "HMUX_UITEST_STACK_PASSWORD=file-pw",
     ].join("\n"),
   });
 
   const result = runLoad({
     home,
     env: {
-      CMUX_UITEST_STACK_EMAIL: "env@manaflow.ai",
-      CMUX_UITEST_STACK_PASSWORD: "env-pw",
+      HMUX_UITEST_STACK_EMAIL: "env@manaflow.ai",
+      HMUX_UITEST_STACK_PASSWORD: "env-pw",
     },
     agent: true,
   });
@@ -117,13 +117,13 @@ test("file-backed uitest creds win over ambient uitest env", () => {
 });
 
 test("ambient env still works when no secret files exist", () => {
-  const home = fs.mkdtempSync(path.join(os.tmpdir(), "cmux-dev-secrets-test-"));
+  const home = fs.mkdtempSync(path.join(os.tmpdir(), "hmux-dev-secrets-test-"));
 
   const result = runLoad({
     home,
     env: {
-      CMUX_DOGFOOD_STACK_EMAIL: "env@manaflow.ai",
-      CMUX_DOGFOOD_STACK_PASSWORD: "env-pw",
+      HMUX_DOGFOOD_STACK_EMAIL: "env@manaflow.ai",
+      HMUX_DOGFOOD_STACK_PASSWORD: "env-pw",
     },
   });
   assert.deepEqual(resolvePair(result), {
@@ -134,29 +134,29 @@ test("ambient env still works when no secret files exist", () => {
 
 test("personal profile never falls back to shared agent credentials", () => {
   const home = makeHome({
-    ".secrets/cmuxterm-dev.env": [
-      "CMUX_UITEST_STACK_EMAIL=agent@manaflow.ai",
-      "CMUX_UITEST_STACK_PASSWORD=agent-pw",
+    ".secrets/hmuxterm-dev.env": [
+      "HMUX_UITEST_STACK_EMAIL=agent@manaflow.ai",
+      "HMUX_UITEST_STACK_PASSWORD=agent-pw",
     ].join("\n"),
-    ".secrets/cmux.env": [
-      "CMUX_UITEST_STACK_EMAIL=other-agent@manaflow.ai",
-      "CMUX_UITEST_STACK_PASSWORD=other-agent-pw",
+    ".secrets/hmux.env": [
+      "HMUX_UITEST_STACK_EMAIL=other-agent@manaflow.ai",
+      "HMUX_UITEST_STACK_PASSWORD=other-agent-pw",
     ].join("\n"),
   });
 
   const result = runLoad({ home, profile: "personal" });
 
   assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /personal.*CMUX_DOGFOOD_STACK_EMAIL.*CMUX_DOGFOOD_STACK_PASSWORD/is);
+  assert.match(result.stderr, /personal.*HMUX_DOGFOOD_STACK_EMAIL.*HMUX_DOGFOOD_STACK_PASSWORD/is);
 });
 
 test("agent profile selects only the shared agent pair", () => {
   const home = makeHome({
-    ".secrets/cmuxterm-dev.env": [
-      "CMUX_DOGFOOD_STACK_EMAIL=person@manaflow.ai",
-      "CMUX_DOGFOOD_STACK_PASSWORD=person-pw",
-      "CMUX_UITEST_STACK_EMAIL=agent@manaflow.ai",
-      "CMUX_UITEST_STACK_PASSWORD=agent-pw",
+    ".secrets/hmuxterm-dev.env": [
+      "HMUX_DOGFOOD_STACK_EMAIL=person@manaflow.ai",
+      "HMUX_DOGFOOD_STACK_PASSWORD=person-pw",
+      "HMUX_UITEST_STACK_EMAIL=agent@manaflow.ai",
+      "HMUX_UITEST_STACK_PASSWORD=agent-pw",
     ].join("\n"),
   });
 
@@ -170,11 +170,11 @@ test("agent profile selects only the shared agent pair", () => {
   });
 });
 
-test("agent profile still discovers the legacy cmux.env pair", () => {
+test("agent profile still discovers the legacy hmux.env pair", () => {
   const home = makeHome({
-    ".secrets/cmux.env": [
-      "CMUX_UITEST_STACK_EMAIL=legacy-agent@manaflow.ai",
-      "CMUX_UITEST_STACK_PASSWORD=legacy-agent-pw",
+    ".secrets/hmux.env": [
+      "HMUX_UITEST_STACK_EMAIL=legacy-agent@manaflow.ai",
+      "HMUX_UITEST_STACK_PASSWORD=legacy-agent-pw",
     ].join("\n"),
   });
 
@@ -190,9 +190,9 @@ test("agent profile still discovers the legacy cmux.env pair", () => {
 
 test("expected account mismatch fails before credentials are exported", () => {
   const home = makeHome({
-    ".secrets/cmuxterm-dev.env": [
-      "CMUX_DOGFOOD_STACK_EMAIL=person@manaflow.ai",
-      "CMUX_DOGFOOD_STACK_PASSWORD=person-pw",
+    ".secrets/hmuxterm-dev.env": [
+      "HMUX_DOGFOOD_STACK_EMAIL=person@manaflow.ai",
+      "HMUX_DOGFOOD_STACK_PASSWORD=person-pw",
     ].join("\n"),
   });
 

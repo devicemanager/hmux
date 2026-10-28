@@ -40,8 +40,8 @@ function verifyJwt(token: string): {
 }
 
 beforeEach(() => {
-  process.env.CMUX_RELAY_JWT_PRIVATE_KEY_PEM = privatePem;
-  delete process.env.CMUX_RELAY_URLS;
+  process.env.HMUX_RELAY_JWT_PRIVATE_KEY_PEM = privatePem;
+  delete process.env.HMUX_RELAY_URLS;
 });
 
 describe("mintRelayToken", () => {
@@ -60,8 +60,8 @@ describe("mintRelayToken", () => {
     expect(valid).toBe(true);
     expect(header.alg).toBe("EdDSA");
     expect(header.typ).toBe("JWT");
-    expect(payload.iss).toBe("cmux");
-    expect(payload.aud).toBe("cmux-relay");
+    expect(payload.iss).toBe("hmux");
+    expect(payload.aud).toBe("hmux-relay");
     expect(payload.sub).toBe("user_abc");
     expect(payload.iat).toBe(now);
     expect(payload.exp).toBe(now + RELAY_TOKEN_TTL_SECONDS);
@@ -104,15 +104,15 @@ describe("mintRelayToken", () => {
 
 describe("relaySigningKey", () => {
   test("returns null when the PEM is unset or malformed", () => {
-    delete process.env.CMUX_RELAY_JWT_PRIVATE_KEY_PEM;
+    delete process.env.HMUX_RELAY_JWT_PRIVATE_KEY_PEM;
     expect(relaySigningKey()).toBeNull();
-    process.env.CMUX_RELAY_JWT_PRIVATE_KEY_PEM = "not a pem";
+    process.env.HMUX_RELAY_JWT_PRIVATE_KEY_PEM = "not a pem";
     expect(relaySigningKey()).toBeNull();
   });
 
   test("returns null for a non-Ed25519 key (RSA)", () => {
     const rsa = generateKeyPairSync("rsa", { modulusLength: 2048 });
-    process.env.CMUX_RELAY_JWT_PRIVATE_KEY_PEM = rsa.privateKey.export({
+    process.env.HMUX_RELAY_JWT_PRIVATE_KEY_PEM = rsa.privateKey.export({
       type: "pkcs8",
       format: "pem",
     }) as string;
@@ -151,7 +151,7 @@ describe("relayUrls", () => {
     expect(urls.length).toBe(7);
   });
   test("does not allow a legacy environment override to substitute the fleet", () => {
-    process.env.CMUX_RELAY_URLS = "https://a.example.com, https://b.example.com";
+    process.env.HMUX_RELAY_URLS = "https://a.example.com, https://b.example.com";
     expect(relayUrls()).not.toContain("https://a.example.com");
     expect(relayUrls().length).toBe(7);
   });

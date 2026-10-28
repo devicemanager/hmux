@@ -61,7 +61,7 @@ export async function POST(request: Request): Promise<Response> {
     })
     : await fetchClientConfig(cacheKey, distinctId, context);
   return result.kind === "config"
-    ? json(result.config, 200, { "x-cmux-client-config-cache": result.cacheStatus ?? "miss" })
+    ? json(result.config, 200, { "x-hmux-client-config-cache": result.cacheStatus ?? "miss" })
     : json(result.body, result.status, result.headers);
 }
 
@@ -120,7 +120,7 @@ async function checkClientConfigRateLimit(
 ): Promise<ClientConfigResult | undefined> {
   // An unset rule id means no rate limiting; a deleted rule (not-found) fails
   // open rather than making client config unavailable for every app boot.
-  const rateLimitId = process.env.CMUX_CLIENT_CONFIG_RATE_LIMIT_ID?.trim();
+  const rateLimitId = process.env.HMUX_CLIENT_CONFIG_RATE_LIMIT_ID?.trim();
   if (process.env.VERCEL === "1" && !rateLimitId) {
     void reportMissingRateLimitRule({ route: "/api/client-config", reason: "unset" });
   }
@@ -207,7 +207,7 @@ function json(
 
 function clientConfigRateLimitKey(distinctId: string): string {
   const installPartition = createHash("sha256")
-    .update(`cmux/client-config/v1\0${distinctId}`)
+    .update(`hmux/client-config/v1\0${distinctId}`)
     .digest("hex");
   return `${rateLimitDeploymentPartition()}:${installPartition}`;
 }

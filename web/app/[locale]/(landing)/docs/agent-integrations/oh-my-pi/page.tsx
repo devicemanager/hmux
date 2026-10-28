@@ -58,9 +58,9 @@ export default function OhMyPiPage() {
 # or
 brew install can1357/tap/omp
 
-cmux hooks setup omp
+hmux hooks setup omp
 # or
-cmux hooks omp install`}</CodeBlock>
+hmux hooks omp install`}</CodeBlock>
       <p>{t("setupUsageDesc")}</p>
 
       <DocsHeading level={2} id="what-you-get">{t("whatYouGet")}</DocsHeading>
@@ -83,7 +83,7 @@ cmux hooks omp install`}</CodeBlock>
           </tr>
         </thead>
         <tbody>
-          <tr><td><code>~/.omp/agent/extensions/cmux-omp-session.ts</code></td><td>{t("dirExtension")}</td></tr>
+          <tr><td><code>~/.omp/agent/extensions/hmux-omp-session.ts</code></td><td>{t("dirExtension")}</td></tr>
           <tr><td><code>~/.omp/agent/sessions</code></td><td>{t("dirSessions")}</td></tr>
         </tbody>
       </table>
@@ -97,8 +97,8 @@ cmux hooks omp install`}</CodeBlock>
           </tr>
         </thead>
         <tbody>
-          <tr><td><code>CMUX_OMP_HOOKS_DISABLED=1</code></td><td>{t("envHooksDisabled")}</td></tr>
-          <tr><td><code>CMUX_OMP_CMUX_BIN</code></td><td>{t("envCmuxBin")}</td></tr>
+          <tr><td><code>HMUX_OMP_HOOKS_DISABLED=1</code></td><td>{t("envHooksDisabled")}</td></tr>
+          <tr><td><code>HMUX_OMP_HMUX_BIN</code></td><td>{t("envHmuxBin")}</td></tr>
         </tbody>
       </table>
     </>

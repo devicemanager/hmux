@@ -1,17 +1,17 @@
 # Machine router: invisible cloud machines for coding agents
 
-Status: v1 shipped in the CLI (`cmux vm run`); this doc records the design and the path to the control-plane version that pairs with cmux-coderouter.
+Status: v1 shipped in the CLI (`hmux vm run`); this doc records the design and the path to the control-plane version that pairs with hmux-coderouter.
 
 ## Goal
 
-An agent (Claude Code, Codex, or any open-source-model harness) should be able to say *"run this in the cloud"* and never think about machines: no ids, no capacity, no setup. The router picks the computer, provisions when needed, keeps warm state where the work is, and meters usage — the same way cmux-coderouter makes model credentials invisible behind a `crk_` key.
+An agent (Claude Code, Codex, or any open-source-model harness) should be able to say *"run this in the cloud"* and never think about machines: no ids, no capacity, no setup. The router picks the computer, provisions when needed, keeps warm state where the work is, and meters usage — the same way hmux-coderouter makes model credentials invisible behind a `crk_` key.
 
 ## v1 — CLI-side router (this repo, shipped)
 
-`cmux vm run [--sync] [--pull <remote>] -- <command...>` routes over the existing `vm.*` socket methods:
+`hmux vm run [--sync] [--pull <remote>] -- <command...>` routes over the existing `vm.*` socket methods:
 
-1. **Sticky first.** A local binding store (`~/.cmuxterm/vm-run-bindings.json`) maps a work key — SHA-256 of the caller's directory — to the machine that last ran that work. A bound, ready pool machine wins outright: it holds the synced checkout, installed dependencies, and build caches. This mirrors coderouter's sticky `conversationKey → credential` assignment, which exists for the same reason (warm state is throughput).
-2. **Then load-aware scoring.** Pool machines (persisted pool id list (`~/.cmuxterm/vm-run-pool.json`; the `agent-pool` label is only for display)) are tiered: awake and under 60% CPU (least-loaded first) → asleep (exec wakes them) → provision fresh → at the plan cap, share the least-loaded busy machine. Stats reads never wake a sleeping machine.
+1. **Sticky first.** A local binding store (`~/.hmuxterm/vm-run-bindings.json`) maps a work key — SHA-256 of the caller's directory — to the machine that last ran that work. A bound, ready pool machine wins outright: it holds the synced checkout, installed dependencies, and build caches. This mirrors coderouter's sticky `conversationKey → credential` assignment, which exists for the same reason (warm state is throughput).
+2. **Then load-aware scoring.** Pool machines (persisted pool id list (`~/.hmuxterm/vm-run-pool.json`; the `agent-pool` label is only for display)) are tiered: awake and under 60% CPU (least-loaded first) → asleep (exec wakes them) → provision fresh → at the plan cap, share the least-loaded busy machine. Stats reads never wake a sleeping machine.
 3. **Pool isolation.** The router only touches machines it provisioned itself — membership is the persisted id list, written solely by the create path, never the display label (which is user-editable). A machine the user made and named by hand is never drafted into agent work, even if it is renamed `agent-pool`; `--machine <id>` is the explicit opt-in.
 4. **Deterministic contract.** `--machine <id>` pins, `--new` forces a fresh machine, the remote exit code passes through, `--json` returns `{machine, created, exit_code, stdout, stderr, ...}`.
 
@@ -21,7 +21,7 @@ Supporting primitives shipped alongside: `vm push` (SCP over private userspace W
 
 Routing and physical ownership are separate decisions.
 
-For a CMUX-owned node that uses Glaeda as its execution-side admission layer,
+For a HMUX-owned node that uses Glaeda as its execution-side admission layer,
 the router result is either a candidate-node choice or external reservation
 evidence. The semantic workload still crosses the adapter without raw host
 paths, cache directories, cgroup properties, arbitrary environment, or a
@@ -47,7 +47,7 @@ MachineCoordinator/controller holds reservation for node A
 
 The control-plane lease prevents another fleet scheduler from assigning the
 same globally scarce node allocation. The machine-local lease prevents GitHub
-Actions, `cmux-ci`, direct agent work, operator commands, or another adapter
+Actions, `hmux-ci`, direct agent work, operator commands, or another adapter
 from colliding over native build lanes, heavy slots, project locks, publisher
 slots, or resident workspaces after they reach the node.
 
@@ -62,7 +62,7 @@ same external request strings from unrelated callers stay independent.
 
 ## Why coderouter is the template
 
-cmux-coderouter (`manaflow/cmux-coderouter`) already solved this shape for model credentials: Worker edge → per-`team:family` `PoolCoordinator` Durable Object → upstreams, with the control plane owning durable state and billing. Model coverage there is exactly the set we care about — **Claude** (Anthropic OAuth/BYOK/managed via `/anthropic/*`), **Codex** (`/codex/*`, OAuth), and **open-source models** through OpenAI-compatible BYOK families (Groq for Llama/Kimi, z.ai for GLM, OpenRouter for anything, plus Gemini/xAI) — so agents on any of those model families can be given the same machine story.
+hmux-coderouter (`manaflow/hmux-coderouter`) already solved this shape for model credentials: Worker edge → per-`team:family` `PoolCoordinator` Durable Object → upstreams, with the control plane owning durable state and billing. Model coverage there is exactly the set we care about — **Claude** (Anthropic OAuth/BYOK/managed via `/anthropic/*`), **Codex** (`/codex/*`, OAuth), and **open-source models** through OpenAI-compatible BYOK families (Groq for Llama/Kimi, z.ai for GLM, OpenRouter for anything, plus Gemini/xAI) — so agents on any of those model families can be given the same machine story.
 
 Patterns to carry over verbatim when the router graduates server-side:
 
@@ -80,7 +80,7 @@ Patterns to carry over verbatim when the router graduates server-side:
 
 The concrete wiring, in dependency order:
 
-1. **`vm run` learns a session work key.** Accept `--work-key <id>` and default it from agent session env (`CMUX_WORKSPACE_ID`, Claude/Codex session ids) before the cwd hash, so parallel agents in one repo get their own lanes ("chunking" across machines falls out of distinct work keys).
+1. **`vm run` learns a session work key.** Accept `--work-key <id>` and default it from agent session env (`HMUX_WORKSPACE_ID`, Claude/Codex session ids) before the cwd hash, so parallel agents in one repo get their own lanes ("chunking" across machines falls out of distinct work keys).
 2. **Move the binding store server-side.** `vm.route` socket method → `POST /api/vm/route` with `{workKey, requirements}` returning `{machineId, created}`; the web control plane owns bindings and the pool, so routing is consistent across the user's Macs and future headless callers. The CLI store becomes a cache.
 3. **`MachineCoordinator` per team** (mirroring `PoolCoordinator` per `team:family`): live inventory, leases with TTL, health windows, scale-out decisions against plan entitlements (`maxActiveVms`), machine-minute metering back to billing.
 4. **crk_ keys become machine-entitled.** A coderouter key's policy grows `machines: {maxConcurrent, sizes}`; the gateway (or cmux.com API accepting `crk_` auth on `/api/vm/route`) lets an agent that already talks to coderouter for Claude/Codex/OSS models get compute with the *same* credential — zero extra setup, one revocation point, one usage ledger.

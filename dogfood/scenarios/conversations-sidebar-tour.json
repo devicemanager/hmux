@@ -3,14 +3,14 @@
     "Sources/ConversationSidebar*",
     "Sources/SessionIndexView*",
     "Sources/ContentView*",
-    "Sources/CmuxExtensionSidebarSelection*",
+    "Sources/HmuxExtensionSidebarSelection*",
     "Sources/FeatureFlags*",
-    "Packages/macOS/CmuxSettings*"
+    "Packages/macOS/HmuxSettings*"
   ],
   "launch": {
     "args": [
       "-sidebar.beta.conversations.enabled", "<true/>",
-      "-cmux.flags.override.conversation-sidebar-release", "<true/>"
+      "-hmux.flags.override.conversation-sidebar-release", "<true/>"
     ],
     "zoom": true
   },

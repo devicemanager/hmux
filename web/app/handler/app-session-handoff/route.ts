@@ -12,8 +12,8 @@ import {
 const MAX_BODY_BYTES = 32 * 1024;
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 60;
-const APP_HANDOFF_HEADER = "x-cmux-app-session-handoff";
-const APP_HANDOFF_RESPONSE_HEADER = "x-cmux-app-session-response";
+const APP_HANDOFF_HEADER = "x-hmux-app-session-handoff";
+const APP_HANDOFF_RESPONSE_HEADER = "x-hmux-app-session-response";
 
 type AppSessionHandoffDependencies = {
   sessionAdapter: StackBrowserSessionHandoffAdapter | null;
@@ -31,12 +31,12 @@ type RateLimitEntry = {
 function sanitizedAfterPath(value: string | null): string | null {
   if (!value || !value.startsWith("/") || value.startsWith("//")) return null;
   try {
-    const parsed = new URL(value, "https://cmux.invalid");
-    if (parsed.origin !== "https://cmux.invalid") return null;
+    const parsed = new URL(value, "https://hmux.invalid");
+    if (parsed.origin !== "https://hmux.invalid") return null;
     if (parsed.pathname === "/handler/app-session-handoff") return null;
     const result = `${parsed.pathname}${parsed.search}${parsed.hash}`;
     if (result.startsWith("//") || result.startsWith("/\\")) return null;
-    if (new URL(result, "https://cmux.invalid").origin !== "https://cmux.invalid") {
+    if (new URL(result, "https://hmux.invalid").origin !== "https://hmux.invalid") {
       return null;
     }
     return result;
@@ -109,8 +109,8 @@ async function isDurablyRateLimited(
   if (!isVercelRuntime(dependencies)) return false;
 
   const rateLimitId = dependencies.rateLimitId
-    ?? env.CMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID
-    ?? env.CMUX_FEEDBACK_RATE_LIMIT_ID;
+    ?? env.HMUX_APP_SESSION_HANDOFF_RATE_LIMIT_ID
+    ?? env.HMUX_FEEDBACK_RATE_LIMIT_ID;
   // Token exchange is security-sensitive, so a deployed route fails closed if
   // its durable limiter is missing, deleted, blocked, or unavailable.
   if (!rateLimitId) return true;
@@ -239,7 +239,7 @@ export function makeAppSessionHandoffHandler(
       response.headers.set("Cache-Control", "no-store");
       response.headers.set("Referrer-Policy", "no-referrer");
       if (cookieExchange) {
-        response.headers.set("X-Cmux-App-Session-Handoff", "ready");
+        response.headers.set("X-Hmux-App-Session-Handoff", "ready");
       }
       return response;
     } catch {

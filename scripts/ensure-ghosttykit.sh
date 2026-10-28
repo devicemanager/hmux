@@ -73,8 +73,8 @@ if ! validate_bridge_header "$PROJECT_DIR/ghostty.h"; then
 fi
 
 GHOSTTY_SHA="$(git -C ghostty rev-parse HEAD)"
-GHOSTTYKIT_CRASH_REPORT_SUBDIR="${CMUX_GHOSTTYKIT_CRASH_REPORT_SUBDIR:-cmux/crash}"
-# cmux owns process-wide crash capture through Sentry Cocoa. Linking Ghostty's
+GHOSTTYKIT_CRASH_REPORT_SUBDIR="${HMUX_GHOSTTYKIT_CRASH_REPORT_SUBDIR:-hmux/crash}"
+# hmux owns process-wide crash capture through Sentry Cocoa. Linking Ghostty's
 # native Sentry as well creates a second global crash handler and starts its
 # environment-reading init thread during Ghostty locale mutation.
 GHOSTTYKIT_BUILD_FLAVOR="crashsubdir-$(printf '%s' "$GHOSTTYKIT_CRASH_REPORT_SUBDIR" | tr '/=' '--')-sentry-off-noi18n-v2"
@@ -99,15 +99,15 @@ if ! git -C ghostty diff --quiet --ignore-submodules=all HEAD -- || [[ -n "$UNTR
   GHOSTTY_KEY="${GHOSTTY_CLEAN_KEY}-dirty-${DIRTY_HASH}"
 fi
 
-CACHE_ROOT="${CMUX_GHOSTTYKIT_CACHE_DIR:-$HOME/.cache/cmux/ghosttykit}"
+CACHE_ROOT="${HMUX_GHOSTTYKIT_CACHE_DIR:-$HOME/.cache/hmux/ghosttykit}"
 CACHE_DIR="$CACHE_ROOT/$GHOSTTY_KEY"
 CACHE_XCFRAMEWORK="$CACHE_DIR/GhosttyKit.xcframework"
 LOCAL_XCFRAMEWORK="$PROJECT_DIR/ghostty/macos/GhosttyKit.xcframework"
 LOCAL_KEY_STAMP="$LOCAL_XCFRAMEWORK/.ghostty_state_key"
 LEGACY_LOCAL_SHA_STAMP="$LOCAL_XCFRAMEWORK/.ghostty_sha"
 LOCK_DIR="$CACHE_ROOT/$GHOSTTY_KEY.lock"
-GHOSTTYKIT_CHECKSUMS_FILE="${CMUX_GHOSTTYKIT_CHECKSUMS_FILE:-$SCRIPT_DIR/ghosttykit-checksums.txt}"
-GHOSTTYKIT_ARCHIVE_VALIDATOR="${CMUX_GHOSTTYKIT_ARCHIVE_VALIDATOR:-$SCRIPT_DIR/validate-xcframework-archive.py}"
+GHOSTTYKIT_CHECKSUMS_FILE="${HMUX_GHOSTTYKIT_CHECKSUMS_FILE:-$SCRIPT_DIR/ghosttykit-checksums.txt}"
+GHOSTTYKIT_ARCHIVE_VALIDATOR="${HMUX_GHOSTTYKIT_ARCHIVE_VALIDATOR:-$SCRIPT_DIR/validate-xcframework-archive.py}"
 
 mkdir -p "$CACHE_ROOT"
 
@@ -174,7 +174,7 @@ done
 
 try_fetch_prebuilt_xcframework() {
   # Only attempt when Ghostty submodule is clean — dirty trees won't match any
-  # published release. Opt-out via CMUX_GHOSTTYKIT_NO_PREBUILT=1.
+  # published release. Opt-out via HMUX_GHOSTTYKIT_NO_PREBUILT=1.
   #
   # Trust model: only install prebuilt artifacts whose SHA256 is pinned in the
   # reviewed checksum manifest for the current ghostty submodule commit.
@@ -182,7 +182,7 @@ try_fetch_prebuilt_xcframework() {
   if [[ "$GHOSTTY_KEY" != "$GHOSTTY_CLEAN_KEY" ]]; then
     return 1
   fi
-  if [[ "${CMUX_GHOSTTYKIT_NO_PREBUILT:-0}" == "1" ]]; then
+  if [[ "${HMUX_GHOSTTYKIT_NO_PREBUILT:-0}" == "1" ]]; then
     return 1
   fi
   if ! command -v curl >/dev/null 2>&1; then
@@ -273,10 +273,10 @@ else
     (
       cd ghostty
       # -Di18n=false: compiling Ghostty's .po catalogs needs gettext's
-      # msgfmt, which not every builder has, and cmux never bundles the
+      # msgfmt, which not every builder has, and hmux never bundles the
       # resulting .mo files (they only install into Ghostty's own app
       # bundle, skipped by -Demit-macos-app=false). Runtime lookups are
-      # comptime-gated to return the msgid, which is what cmux shipped
+      # comptime-gated to return the msgid, which is what hmux shipped
       # all along.
       zig build \
         -Dcrash-report-subdir="$GHOSTTYKIT_CRASH_REPORT_SUBDIR" \

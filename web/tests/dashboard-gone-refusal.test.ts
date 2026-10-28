@@ -8,7 +8,7 @@ mock.module("@/services/teams/http", () => ({
 const { teamsRouter } = await import("../orpc/server/dashboard/teams");
 const { dashboardRefusal } = await import("../orpc/server/dashboard/errors");
 
-const context = { request: new Request("https://cmux.test/api/dashboard/rpc"), serverPrefetch: true };
+const context = { request: new Request("https://hmux.test/api/dashboard/rpc"), serverPrefetch: true };
 
 describe("refusal statuses the routes return are declared", () => {
   test("an invalid invite link is a declared GONE with reason link_invalid, not a 500", async () => {

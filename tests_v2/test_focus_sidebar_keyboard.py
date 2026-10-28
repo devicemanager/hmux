@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """Regression: Ctrl+Cmd+E focuses the workspace sidebar for keyboard use (cx-zjtn.5).
 
-cmux-next's Focus Sidebar hands the workspace list the keyboard: Down/Up
+hmux-next's Focus Sidebar hands the workspace list the keyboard: Down/Up
 select the next/previous workspace while the list keeps focus, and Return
 goes back to the selected workspace's terminal. Classic had no way to reach
 the sidebar without the mouse.
 
 Needs a key window, so run it where the app can be frontmost (a whole capture
 mini or a local tagged build), never against the user's default socket:
-  CMUX_SOCKET_PATH=/tmp/cmux-debug-<tag>.sock python3 tests_v2/test_focus_sidebar_keyboard.py
+  HMUX_SOCKET_PATH=/tmp/hmux-debug-<tag>.sock python3 tests_v2/test_focus_sidebar_keyboard.py
 
 simulate_shortcut routes through AppDelegate.debugHandleCustomShortcut; keys no
 shortcut claims (the arrows, Return) go to the key window's first responder.
@@ -19,29 +19,29 @@ import time
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
-def _call(c: cmux, fn, *args):
+def _call(c: hmux, fn, *args):
     # The socket rate-limits tight polling; back off and retry.
     for _ in range(20):
         try:
             return fn(*args)
-        except cmuxError as error:
+        except hmuxError as error:
             if "rate_limited" not in str(error):
                 raise
             time.sleep(0.3)
     return fn(*args)
 
 
-def _selected(c: cmux) -> str:
+def _selected(c: hmux) -> str:
     for _i, wsid, _t, selected in _call(c, c.list_workspaces):
         if selected:
             return wsid
     return ""
 
 
-def _focused_terminal(c: cmux) -> bool:
+def _focused_terminal(c: hmux) -> bool:
     surfaces = _call(c, c.list_pane_surfaces)
     selected = [sid for _i, sid, _t, sel in surfaces if sel]
     return bool(selected) and _call(c, c.is_terminal_focused, selected[0])
@@ -59,10 +59,10 @@ def _settle(check, timeout: float = 3.0):
 
 
 def main() -> int:
-    c = cmux()
+    c = hmux()
     c.connect()
     if not c.ping():
-        raise cmuxError("socket ping failed")
+        raise hmuxError("socket ping failed")
     c.activate_app()
     time.sleep(0.3)
 
@@ -71,7 +71,7 @@ def main() -> int:
         time.sleep(0.3)
     order = [wsid for _i, wsid, _t, _s in c.list_workspaces()]
     if len(order) < 3:
-        raise cmuxError(f"expected three workspaces, got {order}")
+        raise hmuxError(f"expected three workspaces, got {order}")
     created = order[-3:]
     ws1, ws2, ws3 = created
     print("workspaces", order)
@@ -121,7 +121,7 @@ def main() -> int:
     for wsid in created:
         try:
             c.close_workspace(wsid)
-        except cmuxError:
+        except hmuxError:
             pass
     passed = sum(results)
     print(f"RESULT {passed}/{len(results)}")

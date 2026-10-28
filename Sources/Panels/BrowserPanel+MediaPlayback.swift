@@ -1,9 +1,9 @@
-import CmuxBrowser
+import HmuxBrowser
 import Foundation
 import WebKit
 
 /// Name of the `WKScriptMessageHandler` the injected media-playback hook posts to.
-private let mediaPlaybackMessageHandlerName = "cmuxMediaPlayback"
+private let mediaPlaybackMessageHandlerName = "hmuxMediaPlayback"
 
 extension BrowserPanel {
     /// Isolated content world for the media-playback hook.
@@ -322,7 +322,7 @@ extension BrowserPanel {
         guard instanceID == webViewInstanceID else { return }
         applyMediaPlaybackReport(report)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "browser.media.playback panel=\(id.uuidString.prefix(5)) " +
             "frame=\(report.frameID.prefix(5)) playing=\(report.isPlaying ? 1 : 0) " +
             "audible=\(report.isAudible ? 1 : 0) pip=\(report.isPictureInPicture ? 1 : 0) " +

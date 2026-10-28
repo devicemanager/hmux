@@ -21,8 +21,8 @@ import {
 } from "../services/vms/vmPrincipalContract";
 import { ROUTE_TOKEN_HEADER, VM_ID_HEADER } from "../services/coderouter/routeTokenAuth";
 
-// cmux Reflection: a machine learns about itself through the identity the edge
-// injects (the VM-bound route token + x-cmux-vm-id), never through anything it
+// hmux Reflection: a machine learns about itself through the identity the edge
+// injects (the VM-bound route token + x-hmux-vm-id), never through anything it
 // claims. These tests cover the principal check and every payload the guest can
 // read, with rows and an owner snapshot supplied directly (no database).
 
@@ -58,7 +58,7 @@ const self = row({
   providerMetadata: {
     networkIpv4: "10.7.0.5",
     networkIpv6: "fd00:7::5",
-    cmuxResourceReservation: { vcpus: 5, memoryMb: 20480, diskMb: 32768 },
+    hmuxResourceReservation: { vcpus: 5, memoryMb: 20480, diskMb: 32768 },
   },
 });
 const peer = row({ id: PEER_ID, slug: "vivid-newt", providerMetadata: { networkIpv6: "fd00:7::9" } });
@@ -70,8 +70,8 @@ const context: ReflectionContext = {
   self,
   owner: { userId: "user-1", email: "austin@example.com", displayName: "Austin", teamId: "team-1", planId: "pro" },
   siblings: [self, peer, addressless, destroyed, otherOwner],
-  aliasOrigin: "https://coderouter.cmux.internal",
-  reflectionOrigin: "https://reflection.cmux.internal",
+  aliasOrigin: "https://coderouter.hmux.internal",
+  reflectionOrigin: "https://reflection.hmux.internal",
   hasDesktop: true,
 };
 
@@ -79,8 +79,8 @@ const signedToken = await vmToken(SELF_ID);
 function guestRequest(headers: Record<string, string> = {}): Request {
   return new Request("https://coderouter.dev/api/vm/reflection", {
     headers: {
-      authorization: "Bearer cmux-vm-edge-placeholder",
-      "x-cmux-authorization": `Bearer ${signedToken}`,
+      authorization: "Bearer hmux-vm-edge-placeholder",
+      "x-hmux-authorization": `Bearer ${signedToken}`,
       ...headers,
     },
   });
@@ -105,15 +105,15 @@ describe("requireVmPrincipal", () => {
 
   test("rejects requests without a machine credential, a forged VM id, and an unbound token", async () => {
     const noToken = new Request("https://coderouter.dev/api/vm/reflection", {
-      headers: { authorization: "Bearer cmux-vm-edge-placeholder" },
+      headers: { authorization: "Bearer hmux-vm-edge-placeholder" },
     });
     expect(await requireVmPrincipal(noToken, { authenticate: boundIdentity, loadVm: async () => self })).toEqual({ ok: false, reason: "missing_route_token" });
     expect((await requireVmPrincipal(guestRequest({ [VM_ID_HEADER]: PEER_ID }), { authenticate: boundIdentity, loadVm: async () => self })).ok).toBe(true);
-    expect(await requireVmPrincipal(guestRequest({ "x-cmux-authorization": "Bearer invalid" }), { authenticate: boundIdentity, loadVm: async () => self })).toEqual({ ok: false, reason: "invalid_route_token" });
+    expect(await requireVmPrincipal(guestRequest({ "x-hmux-authorization": "Bearer invalid" }), { authenticate: boundIdentity, loadVm: async () => self })).toEqual({ ok: false, reason: "invalid_route_token" });
     const unbound = async () => ({ teamId: "team-1", stackUserId: "user-1", vmId: null });
     expect(await requireVmPrincipal(guestRequest(), { authenticate: unbound, loadVm: async () => self })).toEqual({ ok: false, reason: "vm_mismatch" });
     const unboundRequest = new Request("https://coderouter.dev/api/vm/reflection", {
-      headers: { authorization: "Bearer cmux-vm-edge-placeholder", [ROUTE_TOKEN_HEADER]: "crt_edge-injected" },
+      headers: { authorization: "Bearer hmux-vm-edge-placeholder", [ROUTE_TOKEN_HEADER]: "crt_edge-injected" },
     });
     expect(await requireVmPrincipal(unboundRequest, { authenticate: unbound, loadVm: async () => self })).toEqual({ ok: false, reason: "vm_bound_token_required" });
   });
@@ -162,7 +162,7 @@ describe("reflection payloads", () => {
     expect(index.team_id).toBe("team-1");
     expect(index.plan_id).toBe("pro");
     expect(index.urls).toEqual({
-      reflection: ["https://coderouter.cmux.internal/api/vm/reflection", "https://reflection.cmux.internal/"],
+      reflection: ["https://coderouter.hmux.internal/api/vm/reflection", "https://reflection.hmux.internal/"],
     });
     expect(index.paths).toEqual(REFLECTION_PATHS);
     expect((index.paths as { path: string }[]).map((entry) => entry.path)).toEqual(["/owner", "/machine", "/peers", "/integrations"]);
@@ -242,7 +242,7 @@ describe("reflection payloads", () => {
       has_desktop: true,
     });
     expect(reflectionSize({})).toEqual({ memory_mb: null, cpu: null, disk_mb: null });
-    expect(reflectionSize({ cmuxResourceReservation: { memoryMb: -1, vcpus: "2" } })).toEqual({ memory_mb: null, cpu: null, disk_mb: null });
+    expect(reflectionSize({ hmuxResourceReservation: { memoryMb: -1, vcpus: "2" } })).toEqual({ memory_mb: null, cpu: null, disk_mb: null });
   });
 
   test("/peers lists the owner's other live machines with daemon routes, excluding self, destroyed, and foreign rows", () => {
@@ -258,7 +258,7 @@ describe("reflection payloads", () => {
       network: { ipv4: null, ipv6: "fd00:7::9" },
       route: "ws://[fd00:7::9]:1337/v1/link",
       reachable: true,
-      help: "cmux vm exec vivid-newt -- <command>",
+      help: "hmux vm exec vivid-newt -- <command>",
     });
     expect(peers[0]).toMatchObject({ name: "quiet-fox", status: "paused", route: null, reachable: false });
   });
@@ -279,11 +279,11 @@ describe("reflection payloads", () => {
 
   test("/integrations carries a help command per capability and a desktop only when there is a screen", () => {
     const withScreen = reflectionIntegrations(context).integrations;
-    expect(withScreen.every((entry) => entry.type && entry.name && entry.help.startsWith("cmux ") || entry.type === "desktop")).toBe(true);
+    expect(withScreen.every((entry) => entry.type && entry.name && entry.help.startsWith("hmux ") || entry.type === "desktop")).toBe(true);
     expect(withScreen.map((entry) => entry.type)).toEqual([
       "reflection", "llm", "agent", "agent", "agent", "agent", "notify", "peers", "env", "layout", "desktop",
     ]);
-    expect(withScreen.find((entry) => entry.type === "llm")?.help).toBe("cmux coderouter models");
+    expect(withScreen.find((entry) => entry.type === "llm")?.help).toBe("hmux coderouter models");
     expect(withScreen.filter((entry) => entry.type === "agent").map((entry) => entry.name)).toEqual(["claude", "codex", "opencode", "pi"]);
     const headless = reflectionIntegrations({ ...context, hasDesktop: false }).integrations;
     expect(headless.some((entry) => entry.type === "desktop")).toBe(false);

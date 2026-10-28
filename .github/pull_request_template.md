@@ -36,7 +36,7 @@ Left empty or deleted, /release falls back to the PR title and flags the PR for 
 
 - [ ] Behavior changes have added or updated tests, or Testing says why not
 - [ ] UI, settings, menu, schema, help-text or user-facing docs change: [localization audited](https://github.com/manaflow-ai/cmux/blob/main/skills/cmux-localization/SKILL.md), and the result is stated above
-- [ ] New or changed v2 socket method allowlisted for `cmux ssh`: the [relay authorization questions](https://github.com/manaflow-ai/cmux/blob/main/skills/cmux-socket-policy/references/remote-relay-authorization.md) are answered above
+- [ ] New or changed v2 socket method allowlisted for `hmux ssh`: the [relay authorization questions](https://github.com/manaflow-ai/cmux/blob/main/skills/cmux-socket-policy/references/remote-relay-authorization.md) are answered above
 - [ ] iOS connectivity, auth, lifecycle, workspace action, terminal I/O or mobile RPC contract change: [deterministic soak coverage](https://github.com/manaflow-ai/cmux/blob/main/docs/ios-connectivity-soak.md) updated, or explained why existing coverage still applies, with the affected workload result recorded
 - [ ] User-facing docs updated if needed
-- [ ] Reviewed with a subagent before merge ([cmux-review](https://github.com/manaflow-ai/cmux/blob/main/skills/cmux-review/SKILL.md)), and all bot and human review comments resolved
+- [ ] Reviewed with a subagent before merge ([hmux-review](https://github.com/manaflow-ai/cmux/blob/main/skills/cmux-review/SKILL.md)), and all bot and human review comments resolved

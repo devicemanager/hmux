@@ -1,6 +1,6 @@
 use std::time::SystemTime;
 
-use cmux_iroh_relay_minter::{MinterConfig, configuration_error_response, handle_request};
+use hmux_iroh_relay_minter::{MinterConfig, configuration_error_response, handle_request};
 use vercel_runtime::{Error, Request, Response, ResponseBody, run, service_fn};
 
 #[tokio::main]

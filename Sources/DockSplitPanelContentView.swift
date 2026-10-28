@@ -1,6 +1,6 @@
 import AppKit
 import Bonsplit
-import CmuxAppKitSupportUI
+import HmuxAppKitSupportUI
 import SwiftUI
 
 /// Isolates one Dock panel behind an immutable render snapshot so unread

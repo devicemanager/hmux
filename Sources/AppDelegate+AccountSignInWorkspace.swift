@@ -8,9 +8,9 @@ extension AppDelegate {
         preferredWindow: NSWindow? = nil,
         debugSource: String = "accountSignIn"
     ) -> Bool {
-        guard CmuxFeatureFlags.shared.isSidebarAccountButtonEnabled else {
+        guard HmuxFeatureFlags.shared.isSidebarAccountButtonEnabled else {
 #if DEBUG
-            cmuxDebugLog("accountSignIn.blocked_flag source=\(debugSource)")
+            hmuxDebugLog("accountSignIn.blocked_flag source=\(debugSource)")
 #endif
             return false
         }

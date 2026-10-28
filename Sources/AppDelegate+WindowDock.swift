@@ -1,5 +1,5 @@
 import AppKit
-import CmuxTerminal
+import HmuxTerminal
 
 extension AppDelegate.MainWindowContext {
     /// Cancels work scoped to this context before the window owner releases it.
@@ -101,7 +101,7 @@ extension AppDelegate.MainWindowContext {
 /// Every main window hosts its own independent `DockSplitStore`: a window's
 /// right-sidebar Dock panel mounts that window's store, created lazily the
 /// first time the window shows the Dock. Session state restores it when present;
-/// otherwise `~/.config/cmux/dock.json` seeds it. A transient SwiftUI context
+/// otherwise `~/.config/hmux/dock.json` seeds it. A transient SwiftUI context
 /// replacement transfers the Dock through the recoverable route; an
 /// authoritative close retires it so no PTYs outlive their window.
 ///

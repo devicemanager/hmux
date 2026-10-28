@@ -1,8 +1,8 @@
 import Foundation
-import CmuxAgentSessionStore
+import HmuxAgentSessionStore
 
 // MARK: - Global (cross-agent) session search for the recency "All" view and
-// the `cmux vault search` socket surface.
+// the `hmux vault search` socket surface.
 
 extension SessionIndexStore {
     /// Per-agent cap for the transcript-content phase of a global search.

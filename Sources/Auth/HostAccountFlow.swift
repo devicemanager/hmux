@@ -1,15 +1,15 @@
-import CmuxCloud
-import CmuxProductAnalytics
+import HmuxCloud
+import HmuxProductAnalytics
 import AppKit
-import CMUXAuthCore
-import CMUXMobileCore
-import CmuxAuthRuntime
-import CmuxSettingsUI
+import HMUXAuthCore
+import HMUXMobileCore
+import HmuxAuthRuntime
+import HmuxSettingsUI
 import Foundation
 import Observation
 
-/// Adapts the shared ``CmuxAuthRuntime/AuthCoordinator`` and the macOS
-/// ``HostBrowserSignInFlow`` to the `CmuxSettingsUI` `AccountFlow` protocol so
+/// Adapts the shared ``HmuxAuthRuntime/AuthCoordinator`` and the macOS
+/// ``HostBrowserSignInFlow`` to the `HmuxSettingsUI` `AccountFlow` protocol so
 /// the `AccountSection` can drive sign-in / sign-out / team selection without
 /// depending on the auth packages.
 ///
@@ -24,10 +24,10 @@ final class HostAccountFlow: AccountFlow, AccountSignInFlow {
     private(set) var billingPlanState = BillingPlanState.unknown
     var isProActive: Bool { billingPlanState.isPro }
     /// The signed-in account's tier, or nil while it is unknown.
-    var planTier: CmuxPlanTier? { hasLoadedBillingPlan ? billingPlanState.tier : nil }
+    var planTier: HmuxPlanTier? { hasLoadedBillingPlan ? billingPlanState.tier : nil }
     /// The tier every upgrade entrypoint offers, or nil to hide them.
-    var upgradeOffer: CmuxPlanTier? {
-        CmuxPlanTier.upgradeOffer(isSignedIn: currentIdentity != nil, knownTier: planTier)
+    var upgradeOffer: HmuxPlanTier? {
+        HmuxPlanTier.upgradeOffer(isSignedIn: currentIdentity != nil, knownTier: planTier)
     }
     /// The Settings plan row renders for every tier; it picks its own copy
     /// and actions from ``planTier``. Menus gate on ``upgradeOffer`` instead.
@@ -245,7 +245,7 @@ final class HostAccountFlow: AccountFlow, AccountSignInFlow {
     @ObservationIgnored private var switchAttempt: Task<Bool, Never>?
 
     /// Signs out, then signs in again asking the hosted page to confirm the
-    /// account. The browser may still hold a cmux session; the page's chooser
+    /// account. The browser may still hold a hmux session; the page's chooser
     /// offers "continue as" that account or a different one.
     func switchAccount() async {
         // Clicking again while a switch's window is open (it may be behind
@@ -341,7 +341,7 @@ final class HostAccountFlow: AccountFlow, AccountSignInFlow {
         }
     }
 
-    // `AccountFlow` (CmuxSettingsUI) cannot see `ProUpgradeSource`; its
+    // `AccountFlow` (HmuxSettingsUI) cannot see `ProUpgradeSource`; its
     // parameterless calls come from the Settings account card.
     func openProUpgrade() {
         openProUpgrade(source: .settingsAccountCard)
@@ -363,7 +363,7 @@ final class HostAccountFlow: AccountFlow, AccountSignInFlow {
         ProUpgradePresenter.presentBillingPortal()
     }
 
-    private static func identity(from user: CMUXAuthUser?) -> AccountIdentity? {
+    private static func identity(from user: HMUXAuthUser?) -> AccountIdentity? {
         guard let user else { return nil }
         return AccountIdentity(
             id: user.id,

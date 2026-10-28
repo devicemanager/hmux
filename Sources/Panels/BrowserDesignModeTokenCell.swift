@@ -1,5 +1,5 @@
 import AppKit
-import CmuxBrowser
+import HmuxBrowser
 
 /// Splits a composer deletion around authoritative context-token attachments.
 enum BrowserDesignModeTokenDeletion {

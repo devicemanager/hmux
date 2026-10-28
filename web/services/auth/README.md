@@ -13,7 +13,7 @@ Three paths now answer without calling Stack:
 | `verifyRequestFromSnapshot` | `/api/devices` GET and POST | User id plus team membership, from `stack_identity_snapshots` |
 | `verifyRequest` | billing, VM mutations, account, admin, `/api/devices` DELETE | Live Stack session, no caching of the decision |
 
-A snapshot is refreshed from Stack at most once per `CMUX_STACK_IDENTITY_
+A snapshot is refreshed from Stack at most once per `HMUX_STACK_IDENTITY_
 SNAPSHOT_TTL_MS` (default ten minutes) per user,
 and is deleted on sign-out. Account deletion is enforced on read instead: the
 snapshot path checks the deletion tombstone directly on every request, so a
@@ -59,19 +59,19 @@ there is no second event stream to pay for. The app-wide 2% head sample is
 ample for a rate in the hundreds per second.
 
 ```kusto
-['cmux-prod-otel-traces']
+['hmux-prod-otel-traces']
 | where _time > ago(1h)
-| where isnotempty(['attributes.custom']['cmux.auth.source'])
+| where isnotempty(['attributes.custom']['hmux.auth.source'])
 | summarize c=count() by
-    source=tostring(['attributes.custom']['cmux.auth.source']),
-    called=tostring(['attributes.custom']['cmux.auth.provider_called'])
+    source=tostring(['attributes.custom']['hmux.auth.source']),
+    called=tostring(['attributes.custom']['hmux.auth.provider_called'])
 ```
 
 The ground truth for provider load is the outbound span itself, which is what
 Stack Auth sees:
 
 ```kusto
-['cmux-prod-otel-traces']
+['hmux-prod-otel-traces']
 | where _time > ago(6h)
 | where name contains 'users/me'
 | summarize c=count() by bin(_time, 10m)
@@ -90,7 +90,7 @@ defenses exist for the same reason.
 incoming registration against the stored rows, under the per-team advisory
 lock so a concurrent registration cannot slip between the read and the answer,
 and returns success without either upsert when the only difference would be a
-presence timestamp refreshed within `CMUX_DEVICE_PRESENCE_TOUCH_INTERVAL_MS`
+presence timestamp refreshed within `HMUX_DEVICE_PRESENCE_TOUCH_INTERVAL_MS`
 (one minute). This matters because the Mac's own dedupe compares route hints
 carrying observation timestamps, which `sanitizeServerPublishedRoutes` strips
 before storing. A shipped Mac therefore re-registers identical rows for as long
@@ -102,6 +102,6 @@ across relaunch, so this is the one backpressure signal that reaches builds we
 cannot update. A 429 without the header tells that client nothing and it falls
 back to its own retry cadence.
 
-The client user agent is `cmux/102` for every build, stable and nightly alike,
+The client user agent is `hmux/102` for every build, stable and nightly alike,
 so traffic cannot currently be attributed to a version. Assume the worst case:
 whatever is storming will still be storming after the next release.

@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension SurfaceCatalog {
@@ -24,7 +24,7 @@ extension SurfaceCatalog {
             // A display tab renames the display itself, so the sidebar and every
             // other pane of it follow. The local title applies right away; the
             // daemon's name settles it.
-            (provider(for: projection.resource.machine) as? CmuxTuiSurfaceProvider)?
+            (provider(for: projection.resource.machine) as? HmuxTuiSurfaceProvider)?
                 .renameDisplayFromTab(displayID: projection.resource.key, name: title ?? "")
             return nil
         }

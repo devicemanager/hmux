@@ -21,7 +21,7 @@ const READ_SIZE = 2000000;
 // agent-world frame.evaluate, the length of its JSON result; for each
 // frame.contentFrames, how many elements it asked about.
 async function withLoggedRepl(fn) {
-  const dir = makeTestDir("cmux-repl-read-budget-");
+  const dir = makeTestDir("hmux-repl-read-budget-");
   const browser = await createDevBrowser();
   const base = browser.driver();
   const log = [];

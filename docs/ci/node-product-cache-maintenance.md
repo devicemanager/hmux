@@ -25,7 +25,7 @@ logical budget from current free space and the requested free-space target; it
 does not delete source checkouts or other caches.
 
 An owner can override the target with
-`CMUX_NODE_PRODUCT_CACHE_RECLAIM_NEED_BYTES` (for example `120GiB`). The hook
+`HMUX_NODE_PRODUCT_CACHE_RECLAIM_NEED_BYTES` (for example `120GiB`). The hook
 only lowers its normal budget when the current free-space measurement requires
 it; the variable is ignored when malformed or unset. Non-owned runners do not
 apply an implicit target.

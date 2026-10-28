@@ -4,7 +4,7 @@ import { DocsSchema } from "../docs-schema";
 import { DocsLink as Link } from "@/app/[locale]/components/docs-link";
 import { CodeBlock } from "@/app/[locale]/components/code-block";
 import { DocsHeading } from "@/app/[locale]/components/docs-heading";
-import { shortcutComboText } from "@/data/cmux-shortcuts";
+import { shortcutComboText } from "@/data/hmux-shortcuts";
 
 export async function generateMetadata({ params }: { params: Promise<{ locale: string }> }) {
   const { locale } = await params;
@@ -65,7 +65,7 @@ export default function ConceptsPage() {
           <tr>
             <td>{t("environmentVariable")}</td>
             <td>
-              <code>CMUX_WORKSPACE_ID</code>
+              <code>HMUX_WORKSPACE_ID</code>
             </td>
           </tr>
         </tbody>
@@ -170,7 +170,7 @@ export default function ConceptsPage() {
               <code>⌘N</code>
             </td>
             <td>
-              <code>CMUX_WORKSPACE_ID</code>
+              <code>HMUX_WORKSPACE_ID</code>
             </td>
           </tr>
           <tr>
@@ -188,7 +188,7 @@ export default function ConceptsPage() {
               <code>⌘T</code>
             </td>
             <td>
-              <code>CMUX_SURFACE_ID</code>
+              <code>HMUX_SURFACE_ID</code>
             </td>
           </tr>
           <tr>

@@ -263,13 +263,13 @@ export const cloudVms = pgTable(
     index("cloud_vms_observed_destroy_cleanup_idx")
       .on(table.updatedAt, table.id)
       .where(sql`${table.status} = 'destroyed'
-        and ${table.providerMetadata} ? 'cmuxObservedDestroyCleanup'
-        and jsonb_typeof(${table.providerMetadata}->'cmuxObservedDestroyCleanup') = 'object'
+        and ${table.providerMetadata} ? 'hmuxObservedDestroyCleanup'
+        and jsonb_typeof(${table.providerMetadata}->'hmuxObservedDestroyCleanup') = 'object'
         and (
-          ${table.providerMetadata}->'cmuxObservedDestroyCleanup' @> '{"modelPlane":true}'::jsonb
+          ${table.providerMetadata}->'hmuxObservedDestroyCleanup' @> '{"modelPlane":true}'::jsonb
           or (
-            jsonb_typeof(${table.providerMetadata}->'cmuxObservedDestroyCleanup'->'homeVolume') = 'string'
-            and length(btrim(${table.providerMetadata}->'cmuxObservedDestroyCleanup'->>'homeVolume')) > 0
+            jsonb_typeof(${table.providerMetadata}->'hmuxObservedDestroyCleanup'->'homeVolume') = 'string'
+            and length(btrim(${table.providerMetadata}->'hmuxObservedDestroyCleanup'->>'homeVolume')) > 0
           )
         )`),
     uniqueIndex("cloud_vms_billing_team_idempotency_key_unique")
@@ -494,7 +494,7 @@ export const accountMutationLeases = pgTable(
  *
  * Machines are attached to it at create, and the user's own computer reaches
  * them through a WireGuard tunnel attached to the same network — so the
- * cmux-tui daemon needs no public inbound port at all. One row per
+ * hmux-tui daemon needs no public inbound port at all. One row per
  * (user, provider): the network is the user's, not a machine's, and it
  * outlives every machine on it.
  */
@@ -544,9 +544,9 @@ export const cloudVmAccessGrants = pgTable(
     modelIdentifier: text("model_identifier"),
     osVersion: text("os_version"),
     architecture: text("architecture"),
-    cmuxVersion: text("cmux_version"),
-    cmuxBuild: text("cmux_build"),
-    cmuxChannel: text("cmux_channel"),
+    hmuxVersion: text("hmux_version"),
+    hmuxBuild: text("hmux_build"),
+    hmuxChannel: text("hmux_channel"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
     lastControlPlaneAt: timestamp("last_control_plane_at", { withTimezone: true }).notNull().defaultNow(),
@@ -675,14 +675,14 @@ export const cloudVmPublicationVmGuards = pgTable(
 );
 
 /**
- * A DNS zone CMUX has reserved for one user. Freestyle domain ownership is
- * account-wide, so this row is the CMUX-side ownership boundary that prevents
- * one CMUX account from reusing a base domain verified by another. A verified
+ * A DNS zone HMUX has reserved for one user. Freestyle domain ownership is
+ * account-wide, so this row is the HMUX-side ownership boundary that prevents
+ * one HMUX account from reusing a base domain verified by another. A verified
  * custom zone may back its apex and any one-label child covered by its wildcard
  * certificate; exact routing hostnames live on publication rows.
  *
  * Freestyle does not expose a domain object id. Custom domains therefore keep
- * the id of the exact verification challenge CMUX created; certificates are
+ * the id of the exact verification challenge HMUX created; certificates are
  * observed by hostname.
  */
 export const cloudVmDomains = pgTable(
@@ -920,7 +920,7 @@ export const cloudVmPublicationEmailGrants = pgTable("cloud_vm_publication_email
 
 /**
  * Cross-origin browser transaction created on the publication hostname before
- * the browser visits CMUX sign-in. Only hashes of the opaque transaction and
+ * the browser visits HMUX sign-in. Only hashes of the opaque transaction and
  * OAuth state values are persisted; the host-only cookie holds the verifier.
  */
 export const cloudVmPublicationAuthTransactions = pgTable(
@@ -1284,7 +1284,7 @@ export const deviceTokens = pgTable(
     pushPublicKey: text("push_public_key"),
     platform: text("platform").notNull().default("ios"),
     // The APNs topic the token belongs to (the iOS bundle id, which varies by
-    // build: dev.cmux.ios.<tag>, dev.cmux.app.beta, com.cmux.app).
+    // build: dev.hmux.ios.<tag>, dev.hmux.app.beta, com.hmux.app).
     bundleId: text("bundle_id").notNull(),
     // "sandbox" for development builds, "production" for TestFlight/App Store —
     // selects which APNs host the sender uses.
@@ -1473,7 +1473,7 @@ export const coderouterRouteTokens = pgTable(
     label: text("label").notNull().default("cli"),
     /**
      * Cloud VM this token is bound to. The Freestyle edge injects the token
-     * into that VM's sessions; requests must carry the matching x-cmux-vm-id.
+     * into that VM's sessions; requests must carry the matching x-hmux-vm-id.
      * Null for an unbound (cr CLI) token.
      */
     vmId: text("vm_id"),
@@ -1876,7 +1876,7 @@ export const vaultSnapshots = pgTable(
 
 // Ledger of presigned PUT URLs that were minted but not yet committed.
 // Pending grants count against the per-user storage quota so a client cannot
-// bypass CMUX_VAULT_MAX_USER_BYTES by uploading objects and never committing;
+// bypass HMUX_VAULT_MAX_USER_BYTES by uploading objects and never committing;
 // expired uncommitted grants and their storage objects are opportunistically
 // GC'd by the uploads route.
 export const vaultUploadGrants = pgTable(
@@ -1921,7 +1921,7 @@ export const vaultCliAuthRequests = pgTable(
     id: uuid("id").defaultRandom().primaryKey(),
     deviceCodeHash: text("device_code_hash").notNull(),
     userCode: text("user_code").notNull(),
-    client: text("client").notNull().default("cmux-vault"),
+    client: text("client").notNull().default("hmux-vault"),
     status: text("status").notNull(),
     userId: text("user_id"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
@@ -1933,7 +1933,7 @@ export const vaultCliAuthRequests = pgTable(
     index("vault_cli_auth_requests_user_code_idx").on(table.userCode),
     check(
       "vault_cli_auth_requests_client_check",
-      sql`${table.client} in ('cmux-vault', 'subrouter')`,
+      sql`${table.client} in ('hmux-vault', 'subrouter')`,
     ),
   ],
 );
@@ -1962,11 +1962,11 @@ export const cloudVmBillingGrants = pgTable(
 
 /**
  * Device registry — the team-scoped record of which physical machines (Macs /
- * hosts) and their running cmux app instances exist, so a phone can auto-pair
+ * hosts) and their running hmux app instances exist, so a phone can auto-pair
  * on reload instead of re-scanning a QR.
  *
  * Two-level model:
- *   `devices` (a physical machine) -> `deviceAppInstances` (one running cmux
+ *   `devices` (a physical machine) -> `deviceAppInstances` (one running hmux
  *   build/tag on that machine).
  *
  * The registry is a best-effort *rendezvous* layer that lets a re-launched
@@ -1975,7 +1975,7 @@ export const cloudVmBillingGrants = pgTable(
  * falls back to it if the registry is unreachable, so pairing survives the
  * cloud registry being down.
  *
- * Device identity is a cmux-GENERATED persisted UUID (see Mac
+ * Device identity is a hmux-GENERATED persisted UUID (see Mac
  * `MobileHostIdentity.deviceID()` / iOS `MobileDeviceIdentity`), NOT
  * IOPlatformUUID. It is cross-platform, survives relaunch, and is
  * user-renamable via `displayName`.
@@ -1986,9 +1986,9 @@ export const devices = pgTable(
     // Surrogate primary key for the team-scoped device row.
     id: uuid("id").defaultRandom().primaryKey(),
     // Stack team that owns this device row. All registry reads/writes are
-    // scoped to a team the caller is a verified member of (`X-Cmux-Team-Id`).
+    // scoped to a team the caller is a verified member of (`X-Hmux-Team-Id`).
     teamId: text("team_id").notNull(),
-    // The cmux-generated persisted UUID supplied by the device. It is the
+    // The hmux-generated persisted UUID supplied by the device. It is the
     // device's stable, global identity (mirrors Mac `MobileHostIdentity` / iOS
     // `MobileDeviceIdentity`), but identity is modeled per team: one row per
     // (team, device), so a Mac in two teams registers a row in each and a phone
@@ -2018,8 +2018,8 @@ export const devices = pgTable(
 );
 
 /**
- * A running cmux app instance on a device, keyed by `(deviceId, tag)` so each
- * tagged build (`dev.cmux.<tag>`, stable, etc.) on the same machine is its own
+ * A running hmux app instance on a device, keyed by `(deviceId, tag)` so each
+ * tagged build (`dev.hmux.<tag>`, stable, etc.) on the same machine is its own
  * row. Holds the attach `routes` the phone uses to reconnect; the registry is
  * port-flexible, so the endpoint lives in `routes` jsonb rather than a fixed
  * column. A re-register updates the routes for the same `(deviceId, tag)`.
@@ -2032,7 +2032,7 @@ export const deviceAppInstances = pgTable(
       .notNull()
       .references(() => devices.id, { onDelete: "cascade" }),
     teamId: text("team_id").notNull(),
-    // The cmux build tag this instance is running (e.g. "stable" or a dev tag).
+    // The hmux build tag this instance is running (e.g. "stable" or a dev tag).
     // Defaults to "default" when the build does not distinguish tags.
     tag: text("tag").notNull().default("default"),
     // Attach routes advertised by this instance, ordered by priority. Shape
@@ -2219,8 +2219,8 @@ export const irohPairGrantIssuances = pgTable(
       .notNull()
       .references(() => irohEndpointBindings.id, { onDelete: "cascade" }),
     signingKeyId: text("signing_key_id").notNull(),
-    alpn: text("alpn").notNull().default("cmux/mobile/1"),
-    scope: text("scope").notNull().default("cmux.mobile.attach"),
+    alpn: text("alpn").notNull().default("hmux/mobile/1"),
+    scope: text("scope").notNull().default("hmux.mobile.attach"),
     issuedAt: timestamp("issued_at", { withTimezone: true }).notNull(),
     notBefore: timestamp("not_before", { withTimezone: true }).notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
@@ -2540,7 +2540,7 @@ export const teamInviteRoles = pgTable("team_invite_roles", {
   role: teamInviteRole("role").notNull().default("member"),
   invitedByUserId: text("invited_by_user_id").notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-  /** The Stack invitation this role was sent with; null until cmux sees it. */
+  /** The Stack invitation this role was sent with; null until hmux sees it. */
   stackInvitationId: text("stack_invitation_id"),
 }, (table) => [
   primaryKey({ name: "team_invite_roles_pkey", columns: [table.stackTeamId, table.email] }),
@@ -2573,7 +2573,7 @@ export const teamInviteLinks = pgTable("team_invite_links", {
 ]);
 
 /**
- * Email invitations cmux sends itself (through Resend). One pending row per
+ * Email invitations hmux sends itself (through Resend). One pending row per
  * team and email: a re-invite revokes the older row after the new one exists.
  * Only a SHA-256 of the emailed token is stored. Accepting needs either the
  * token or a signed-in user whose verified email matches `email`.
@@ -2821,7 +2821,7 @@ export const hexclaveWebhookEvents = pgTable("hexclave_webhook_events", {
  * iOS in-app purchases (docs/billing/ios-in-app-purchases.md). The server is
  * the source of truth: every Apple transaction and App Store Server
  * Notification is verified, recorded here, and mirrored into the same
- * `cmuxPlan` entitlement Stripe fulfillment writes.
+ * `hmuxPlan` entitlement Stripe fulfillment writes.
  */
 export const APPLE_SUBSCRIPTION_STATUSES = [
   "active",
@@ -2832,7 +2832,7 @@ export const APPLE_SUBSCRIPTION_STATUSES = [
 ] as const;
 export type AppleSubscriptionStatus = (typeof APPLE_SUBSCRIPTION_STATUSES)[number];
 
-/** One `appAccountToken` per cmux user, minted by the server and sent with every purchase. */
+/** One `appAccountToken` per hmux user, minted by the server and sent with every purchase. */
 export const appleAccountTokens = pgTable("apple_account_tokens", {
   userId: text("user_id").primaryKey(),
   appAccountToken: uuid("app_account_token").notNull(),
@@ -2907,7 +2907,7 @@ export const appleTransactions = pgTable("apple_transactions", {
  * App Store Server Notifications V2 ledger, idempotent on `notification_uuid`.
  * The row is written before any state change. A failed application keeps
  * `processed_at` null and records `error`; the retry job re-applies those
- * rows. A notification that can never apply (no linked cmux account, an
+ * rows. A notification that can never apply (no linked hmux account, an
  * unknown product) is closed with `processed_at` and an `error` explaining
  * why, so it is not retried forever.
  */
@@ -2930,7 +2930,7 @@ export const appleNotifications = pgTable("apple_notifications", {
 ]);
 
 /**
- * Opt-in hang reports from cmux NEXT Nightly (schema 2, see
+ * Opt-in hang reports from hmux NEXT Nightly (schema 2, see
  * `app/api/hang-reports`). Anonymous: `install_id` is a random per-Mac UUID
  * the client rotates every 30 days. No IP address, account or user agent is
  * stored. `received_day` is the server's UTC day and carries the per-install

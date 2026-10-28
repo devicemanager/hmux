@@ -219,7 +219,7 @@ export type IrohRepositoryShape = {
   }) => Effect.Effect<void, RepositoryError>;
 };
 
-export class IrohRepository extends Context.Tag("cmux/IrohRepository")<
+export class IrohRepository extends Context.Tag("hmux/IrohRepository")<
   IrohRepository,
   IrohRepositoryShape
 >() {}

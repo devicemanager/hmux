@@ -14,8 +14,8 @@ import uuid
 
 sys.dont_write_bytecode = True
 loader = importlib.machinery.SourceFileLoader(
-    "cmux_display", str(Path(__file__).resolve().parents[1] /
-                        "tests/fixtures/cmux-display"))
+    "hmux_display", str(Path(__file__).resolve().parents[1] /
+                        "tests/fixtures/hmux-display"))
 spec = importlib.util.spec_from_loader(loader.name, loader)
 display = importlib.util.module_from_spec(spec)
 loader.exec_module(display)
@@ -126,7 +126,7 @@ class CloudDisplayCatalogTests(unittest.TestCase):
                 displays = sorted({env["DISPLAY"] for env in environments})
                 self.assertEqual(displays, [":2", ":3"])
                 by_display = {env["DISPLAY"]: env for env in environments}
-                self.assertNotEqual(by_display[":2"]["CMUX_DESKTOP_RUNTIME_DIR"], by_display[":3"]["CMUX_DESKTOP_RUNTIME_DIR"])
+                self.assertNotEqual(by_display[":2"]["HMUX_DESKTOP_RUNTIME_DIR"], by_display[":3"]["HMUX_DESKTOP_RUNTIME_DIR"])
                 self.assertNotEqual(by_display[":2"]["DBUS_SESSION_BUS_ADDRESS"], by_display[":3"]["DBUS_SESSION_BUS_ADDRESS"])
                 for env in by_display.values():
                     self.assertNotIn("NOTIFY_SOCKET", env)
@@ -208,7 +208,7 @@ class CloudDisplayCatalogTests(unittest.TestCase):
         process(102, *websockify, "[::]:6902", "127.0.0.1:5902")
         process(103, *websockify, "127.0.0.1:6903", "127.0.0.1:5903")
         process(104, *websockify, "[::]:6901", "127.0.0.1:5901")
-        process(105, "/usr/bin/python3", "/home/cmux/.cmux/cmux-display", "serve")
+        process(105, "/usr/bin/python3", "/home/hmux/.hmux/hmux-display", "serve")
 
         pids = display.DisplayService.untracked_websockify_pids(2, proc=proc)
 
@@ -285,8 +285,8 @@ class CloudDisplayCatalogTests(unittest.TestCase):
         service = display.DisplayService(self.catalog(), self.root / "runtime")
         runtime = self.root / "runtime" / "2"
         proc = self.fake_proc({
-            12345: [str(runtime / "bin" / "cmux-display-2-openbox")],
-            12346: [str(self.root / "runtime" / "3" / "bin" / "cmux-display-3-openbox")],
+            12345: [str(runtime / "bin" / "hmux-display-2-openbox")],
+            12346: [str(self.root / "runtime" / "3" / "bin" / "hmux-display-3-openbox")],
             22222: ["/usr/bin/Xvnc", ":2", "-geometry", "1440x900", "-rfbport", "5902", "-localhost"],
             33333: ["/usr/bin/Xvnc", ":3", "-rfbport", "5903"],
         })
@@ -491,7 +491,7 @@ class CloudDisplayCatalogTests(unittest.TestCase):
         source.write_text("#!/bin/sh\n")
         runtime = self.root / "runtime" / "2"
         scoped = service.scoped_component_path("openbox", str(source), 2, runtime)
-        self.assertEqual(Path(scoped).name, "cmux-display-2-openbox")
+        self.assertEqual(Path(scoped).name, "hmux-display-2-openbox")
         self.assertTrue(Path(scoped).exists())
 
     def test_start_failure_retains_resource_and_replay_receipt(self):

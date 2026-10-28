@@ -1,6 +1,6 @@
-import CmuxComputerUse
+import HmuxComputerUse
 import Foundation
-import CmuxFoundation
+import HmuxFoundation
 
 /// Tracks the last agent-turn completion for each stable Computer Use driver.
 ///

@@ -93,7 +93,7 @@ jobs:
         if: ${{ matrix.group == 'preflight' }}
         run: python3 tests/test_build_graph_health.py
 
-      - name: Validate CMUX workload profile contract
+      - name: Validate HMUX workload profile contract
         if: ${{ matrix.group == 'ci' }}
         run: python3 tests/test_ci_workload_profiles.py
 
@@ -235,14 +235,14 @@ jobs:
         if: ${{ matrix.group == 'ci' }}
         run: python3 tests/test_ci_cli_lane_in_admission.py
 
-      - name: Run canonical CMUX CI guard profile
+      - name: Run canonical HMUX CI guard profile
         if: ${{ matrix.group == 'ci' }}
         run: |
           set -euo pipefail
-          state_root="$RUNNER_TEMP/cmux-ci-guard-profile"
+          state_root="$RUNNER_TEMP/hmux-ci-guard-profile"
           result_path="$state_root/result.json"
           rm -rf "$state_root"
-          if python3 scripts/ci/cmux_workload_profile.py run cmux.ci.guard \
+          if python3 scripts/ci/hmux_workload_profile.py run hmux.ci.guard \
             --generation 1 \
             --state-class cold \
             --state-root "$state_root" \
@@ -270,9 +270,9 @@ jobs:
         if: ${{ matrix.group == 'preflight' }}
         run: ./tests/test_reload_build_only_keeps_tagged_app.sh
 
-      - name: Validate reload resolves the cmux-tui client before building
+      - name: Validate reload resolves the hmux-tui client before building
         if: ${{ matrix.group == 'preflight' }}
-        run: ./tests/test_reload_resolves_cmux_tui_client_before_build.sh
+        run: ./tests/test_reload_resolves_hmux_tui_client_before_build.sh
 
       - name: Validate reload --release builds the Release configuration
         if: ${{ matrix.group == 'preflight' }}
@@ -323,13 +323,13 @@ jobs:
         if: ${{ matrix.group == 'preflight' }}
         run: python3 tests/test_btop_agents_sidebar.py
 
-      - name: Validate settings rows advertise supported cmux.json paths
+      - name: Validate settings rows advertise supported hmux.json paths
         if: ${{ matrix.group == 'preflight' }}
         run: python3 tests/test_settings_configuration_review_paths.py
 
-      - name: Validate cmux.json schema covers supported settings and shortcut actions
+      - name: Validate hmux.json schema covers supported settings and shortcut actions
         if: ${{ matrix.group == 'preflight' }}
-        run: python3 tests/test_cmux_schema_parity.py
+        run: python3 tests/test_hmux_schema_parity.py
 
       - name: Validate Localizable.xcstrings catalog structure
         if: ${{ matrix.group == 'preflight' }}
@@ -374,21 +374,21 @@ jobs:
 
       - name: Test Computer Use drag regression harness
         if: ${{ matrix.group == 'preflight' }}
-        run: python3 tests/test_cmux_cua_drag_cursor_harness.py
+        run: python3 tests/test_hmux_cua_drag_cursor_harness.py
 
       - name: Validate Python test execution registry
         if: ${{ matrix.group == 'preflight' }}
         env:
-          CMUX_TEST_REGISTRY_BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || '' }}
+          HMUX_TEST_REGISTRY_BASE_REF: ${{ github.event.pull_request.base.ref || github.event.merge_group.base_ref || '' }}
         run: |
           set -euo pipefail
           args=()
-          if [[ -n "$CMUX_TEST_REGISTRY_BASE_REF" ]]; then
+          if [[ -n "$HMUX_TEST_REGISTRY_BASE_REF" ]]; then
             # Keep this fetch shallow. With the current base tip, merge-base may
             # be unavailable, and the two-tree diff fallback is the right answer.
-            git fetch --no-tags --depth=1 origin "$CMUX_TEST_REGISTRY_BASE_REF"
-            CMUX_TEST_REGISTRY_BASE_SHA="$(git rev-parse FETCH_HEAD)"
-            args=(--base-sha "$CMUX_TEST_REGISTRY_BASE_SHA")
+            git fetch --no-tags --depth=1 origin "$HMUX_TEST_REGISTRY_BASE_REF"
+            HMUX_TEST_REGISTRY_BASE_SHA="$(git rev-parse FETCH_HEAD)"
+            args=(--base-sha "$HMUX_TEST_REGISTRY_BASE_SHA")
           fi
           python3 scripts/ci/validate_test_execution_registry.py "${args[@]+"${args[@]}"}"
 
@@ -425,7 +425,7 @@ jobs:
         if: ${{ matrix.group == 'preflight' }}
         run: python3 tests/test_pr_media.py
 
-      - name: Validate cmux-cloud-vm skill covers the vm CLI
+      - name: Validate hmux-cloud-vm skill covers the vm CLI
         if: ${{ matrix.group == 'preflight' }}
         run: python3 tests/test_cloud_vm_skill_coverage.py
 
@@ -445,15 +445,15 @@ jobs:
         if: ${{ matrix.group == 'preflight' }}
         run: python3 scripts/generate-claude-launch-environment-policy.py --check
 
-      # The Swift validator reads the schema embedded in CmuxFoundation, so it
-      # must be regenerated whenever web/data/cmux.schema.json changes.
-      - name: Validate embedded cmux.json schema generation
+      # The Swift validator reads the schema embedded in HmuxFoundation, so it
+      # must be regenerated whenever web/data/hmux.schema.json changes.
+      - name: Validate embedded hmux.json schema generation
         if: ${{ matrix.group == 'preflight' }}
-        run: python3 scripts/generate-cmux-config-schema.py --check
+        run: python3 scripts/generate-hmux-config-schema.py --check
 
-      - name: Validate embedded cmux.json schema round trip
+      - name: Validate embedded hmux.json schema round trip
         if: ${{ matrix.group == 'preflight' }}
-        run: python3 tests/test_cmux_config_schema_embed.py
+        run: python3 tests/test_hmux_config_schema_embed.py
 
       - name: Set up Bun for guard tests
         if: ${{ matrix.group == 'preflight-agent-chat' || matrix.group == 'release-ios' }}
@@ -548,7 +548,7 @@ jobs:
 
       - name: Lint the Testbox lane helpers
         if: ${{ matrix.group == 'ci' }}
-        run: shellcheck scripts/blacksmith-bounded-command.sh scripts/blacksmith-cmux-tui-testbox-stage.sh scripts/blacksmith-testbox-cleanup.sh scripts/blacksmith-testbox-keepalive.sh scripts/blacksmith-testbox-busy.sh tests/test_testbox_keepalive_busy.sh scripts/blacksmith-testbox-target-prune.sh scripts/blacksmith-testbox-release.sh tests/test_testbox_target_prune.sh scripts/ci/install-actionlint.sh tests/test_ci_actionlint_download.sh scripts/blacksmith-testbox-demo.sh scripts/blacksmith-testbox-approve.sh tests/test_testbox_approve.sh tests/test_testbox_demo_cleanup.sh
+        run: shellcheck scripts/blacksmith-bounded-command.sh scripts/blacksmith-hmux-tui-testbox-stage.sh scripts/blacksmith-testbox-cleanup.sh scripts/blacksmith-testbox-keepalive.sh scripts/blacksmith-testbox-busy.sh tests/test_testbox_keepalive_busy.sh scripts/blacksmith-testbox-target-prune.sh scripts/blacksmith-testbox-release.sh tests/test_testbox_target_prune.sh scripts/ci/install-actionlint.sh tests/test_ci_actionlint_download.sh scripts/blacksmith-testbox-demo.sh scripts/blacksmith-testbox-approve.sh tests/test_testbox_approve.sh tests/test_testbox_demo_cleanup.sh
 
       - name: Test the actionlint downloader without a network outage
         if: ${{ matrix.group == 'ci' }}
@@ -580,7 +580,7 @@ jobs:
         run: python3 tests/test_ci_workflow_concurrency.py
 
       # Warn-level: a dispatched or PR workflow with macOS or long jobs needs a
-      # concurrency group not keyed by SHA or run id (cmuxterm-hq#2568 flood).
+      # concurrency group not keyed by SHA or run id (hmuxterm-hq#2568 flood).
       - name: Warn about workflows that can flood the queue
         if: ${{ matrix.group == 'ci' }}
         run: python3 scripts/ci/check_workflow_concurrency.py
@@ -663,9 +663,9 @@ jobs:
         if: ${{ matrix.group == 'ci' }}
         run: python3 tests/test_pr_status.py
 
-      - name: Validate the feat-cmux-next PR merge-tree publisher
+      - name: Validate the feat-hmux-next PR merge-tree publisher
         if: ${{ matrix.group == 'ci' }}
-        run: python3 tests/test_cmux_next_pr_merge_tree.py
+        run: python3 tests/test_hmux_next_pr_merge_tree.py
 
       - name: Validate merge-main's green base and guard failure labels
         if: ${{ matrix.group == 'ci' }}
@@ -759,8 +759,8 @@ jobs:
         if: ${{ matrix.group == 'ci' }}
         run: python3 tests/test_ci_owned_pool_rescue.py
 
-      # Reads the other branch's workflows too (origin/feat-cmux-next here, origin/main on
-      # feat-cmux-next); under Actions the test fetches it blob-less and fails if it cannot.
+      # Reads the other branch's workflows too (origin/feat-hmux-next here, origin/main on
+      # feat-hmux-next); under Actions the test fetches it blob-less and fails if it cannot.
       - name: Validate that the persistent-pool rescue watches every owned-pool workflow
         if: ${{ matrix.group == 'ci' }}
         run: python3 tests/test_ci_owned_pool_sources.py
@@ -813,7 +813,7 @@ jobs:
         if: ${{ matrix.group == 'ci' }}
         run: python3 tests/test_triage_rules.py
 
-      - name: Validate cmux-tui focused filter routing
+      - name: Validate hmux-tui focused filter routing
         if: ${{ matrix.group == 'ci' }}
         run: python3 tests/test_tui_focused_filter_guard.py
 
@@ -829,7 +829,7 @@ jobs:
         if: ${{ matrix.group == 'ci' }}
         run: python3 tests/test_ci_signing_secrets_need_release_environment.py
 
-      - name: Validate the nightly-next train runs only feat-cmux-next code with the release App
+      - name: Validate the nightly-next train runs only feat-hmux-next code with the release App
         if: ${{ matrix.group == 'ci' }}
         run: python3 tests/test_nightly_next_train_drive_pin.py
 
@@ -877,7 +877,7 @@ jobs:
 
       - name: Validate the R2 binaries pruner
         if: ${{ matrix.group == 'ci' }}
-        run: python3 tests/test_cmux_binaries_prune.py
+        run: python3 tests/test_hmux_binaries_prune.py
 
       - name: Validate the Actions artifact pruner
         if: ${{ matrix.group == 'ci' }}
@@ -1105,7 +1105,7 @@ jobs:
         if: ${{ matrix.group == 'release-ios' }}
         run: python3 tests/test_ios_testflight_notes.py
 
-      - name: Validate CMUX INTERNAL main-push path filter
+      - name: Validate HMUX INTERNAL main-push path filter
         if: ${{ matrix.group == 'release-ios' }}
         run: python3 tests/test_ios_testflight_main_push_filter.py
 
@@ -1125,7 +1125,7 @@ jobs:
         if: ${{ matrix.group == 'release-ios' }}
         run: python3 ios/tests/test_cloud_vpn_distribution.py
 
-      - name: Validate the cmux.app upload marker follows the receipt
+      - name: Validate the hmux.app upload marker follows the receipt
         if: ${{ matrix.group == 'release-ios' }}
         run: python3 tests/test_ios_appstore_upload_marker.py
 
@@ -1177,7 +1177,7 @@ jobs:
         if: ${{ matrix.group == 'release-ios' }}
         run: python3 tests/test_ios_simulator_build_once.py
 
-      - name: Validate cmux scheme test configuration
+      - name: Validate hmux scheme test configuration
         if: ${{ matrix.group == 'app-host-cache' }}
         run: ./tests/test_ci_scheme_testaction_debug.sh
 
@@ -1189,11 +1189,11 @@ jobs:
         if: ${{ matrix.group == 'app-host-cache' }}
         run: python3 tests/test_ios_selected_test_execution.py
 
-      - name: Validate cmuxTests sharding
+      - name: Validate hmuxTests sharding
         if: ${{ matrix.group == 'quality-sharding' }}
         run: |
-          python3 scripts/ci/cmux_unit_test_shard.py --validate
-          python3 tests/test_ci_cmux_unit_test_shard.py
+          python3 scripts/ci/hmux_unit_test_shard.py --validate
+          python3 tests/test_ci_hmux_unit_test_shard.py
 
       - name: Validate GhosttyKit checksum verification
         if: ${{ matrix.group == 'release-tooling' }}
@@ -1251,17 +1251,17 @@ jobs:
         if: ${{ matrix.group == 'release-notary' }}
         run: python3 tests/test_nightly_next_canary_runs_installed_app.py
 
-      - name: Validate the cmux NEXT DEV daily dispatcher
+      - name: Validate the hmux NEXT DEV daily dispatcher
         if: ${{ matrix.group == 'release-notary' }}
-        run: python3 tests/test_cmux_next_dev_daily_dispatch.py
+        run: python3 tests/test_hmux_next_dev_daily_dispatch.py
 
-      - name: Validate the cmux NEXT DEV tip feed
+      - name: Validate the hmux NEXT DEV tip feed
         if: ${{ matrix.group == 'release-notary' }}
-        run: python3 tests/test_cmux_next_dev_tip_feed.py
+        run: python3 tests/test_hmux_next_dev_tip_feed.py
 
-      - name: Validate the cmux NEXT tip Swift suite dispatcher
+      - name: Validate the hmux NEXT tip Swift suite dispatcher
         if: ${{ matrix.group == 'release-notary' }}
-        run: python3 tests/test_cmux_next_tip_swift_suite_dispatch.py
+        run: python3 tests/test_hmux_next_tip_swift_suite_dispatch.py
 
       - name: Validate nightly tag permission probe
         if: ${{ matrix.group == 'release-notary' }}
@@ -1333,9 +1333,9 @@ jobs:
           bash ./tests/test_ci_test_compilation_cache_seed.sh
           bash ./tests/test_ci_swiftpm_manifest_cache.sh
 
-      - name: Validate cmux-tui client installation
+      - name: Validate hmux-tui client installation
         if: ${{ matrix.group == 'release-tooling' }}
-        run: bash ./tests/test_install_cmux_tui_client.sh
+        run: bash ./tests/test_install_hmux_tui_client.sh
 
       - name: Validate nightly notarization behavior
         if: ${{ matrix.group == 'release-notary' }}
@@ -1438,9 +1438,9 @@ jobs:
         if: ${{ matrix.group == 'release-notary' }}
         run: ./tests/test_strip_release_bundle.sh
 
-      - name: Validate cmux-tui SSH payload thinning and signing
+      - name: Validate hmux-tui SSH payload thinning and signing
         if: ${{ matrix.group == 'release-notary' }}
-        run: ./tests/test_cmux_tui_ssh_payload_bundle.sh
+        run: ./tests/test_hmux_tui_ssh_payload_bundle.sh
 
       - name: Validate current GhosttyKit checksum pin
         if: ${{ matrix.group == 'release-tooling' }}
@@ -1593,13 +1593,13 @@ jobs:
       - name: Install workflow guard Python dependencies
         run: python3 -m pip install --disable-pip-version-check --no-input PyYAML==6.0.3 bashlex==0.18
 
-      - name: Validate cmux-tui client commit resolution
+      - name: Validate hmux-tui client commit resolution
         if: ${{ matrix.group == 'tui-resolution' }}
-        run: ./tests/test_ci_resolve_cmux_tui_client_commit.sh
+        run: ./tests/test_ci_resolve_hmux_tui_client_commit.sh
 
-      - name: Validate cmux profiling support scripts
+      - name: Validate hmux profiling support scripts
         if: ${{ matrix.group == 'profiling' }}
-        run: ./tests/test_start_cmux_profiling.sh
+        run: ./tests/test_start_hmux_profiling.sh
 
   workflow-guard-source-lints:
     if: ${{ inputs.linux_guard_source == 'true' }}

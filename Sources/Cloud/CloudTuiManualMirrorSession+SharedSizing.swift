@@ -1,11 +1,11 @@
-import CmuxCloudTui
-import CmuxTerminal
-import CmuxTerminalSharing
-import CmuxTerminalSizing
+import HmuxCloudTui
+import HmuxTerminal
+import HmuxTerminalSharing
+import HmuxTerminalSizing
 import Foundation
 
 /// The Mac as relay of a Cloud terminal (docs/shared-terminal-sizing.md):
-/// it forwards itself and every phone viewing this mirror to the cmux-tui
+/// it forwards itself and every phone viewing this mirror to the hmux-tui
 /// host, and forwards the host's size state and detach events back down.
 /// Daemons without `shared-sizing-v1` keep the legacy claim path.
 @MainActor

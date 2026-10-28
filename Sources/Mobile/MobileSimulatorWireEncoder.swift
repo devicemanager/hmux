@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxSimulator
+import HMUXMobileCore
+import HmuxSimulator
 import Foundation
 
 @MainActor

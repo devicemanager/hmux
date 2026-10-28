@@ -13,8 +13,8 @@ from typing import Any, Mapping
 
 
 CHANNELS = {
-    "nightly": {"prefix": "cmux-nightly-macos", "release_tag": "nightly", "app": "cmux NIGHTLY.app"},
-    "rc": {"prefix": "cmux-rc-macos", "release_tag": "rc", "app": "cmux RC.app"},
+    "nightly": {"prefix": "hmux-nightly-macos", "release_tag": "nightly", "app": "hmux NIGHTLY.app"},
+    "rc": {"prefix": "hmux-rc-macos", "release_tag": "rc", "app": "hmux RC.app"},
 }
 VARIANTS = {"arm64", "x86_64", "universal"}
 HEX_SHA256 = re.compile(r"[0-9a-fA-F]{64}\Z")
@@ -81,9 +81,9 @@ def validate_manifest(
     if Path(str(manifest["app_path"])).name != identity["app"]:
         raise ValueError("recovery app name does not match channel")
     app_parts = PurePosixPath(str(manifest["app_path"]))
-    if app_parts.parts[:1] != ("cmux-nightly-notarization-recovery-app",):
+    if app_parts.parts[:1] != ("hmux-nightly-notarization-recovery-app",):
         raise ValueError("recovery app path is not in the extracted app directory")
-    if manifest["app_archive_path"] != "cmux-nightly-notarization-recovery-app.tar.gz":
+    if manifest["app_archive_path"] != "hmux-nightly-notarization-recovery-app.tar.gz":
         raise ValueError("recovery app archive name is not canonical")
     if kind == "dmg":
         if manifest["state_path"] != f"{expected_dmg}.notarization.state":
@@ -93,9 +93,9 @@ def validate_manifest(
         if not HEX_SHA256.fullmatch(str(manifest["dmg_sha256"])):
             raise ValueError("invalid recovery DMG SHA-256")
     else:
-        if manifest["helper_state_path"] != "cmux-computer-use-notarization.state":
+        if manifest["helper_state_path"] != "hmux-computer-use-notarization.state":
             raise ValueError("helper state path is not canonical")
-        if manifest["helper_log_path"] != "cmux-computer-use-notarization.state.log":
+        if manifest["helper_log_path"] != "hmux-computer-use-notarization.state.log":
             raise ValueError("helper log path is not canonical")
         hashes = str(manifest["helper_cdhashes"]).split(",")
         if not hashes or any(not re.fullmatch(r"[A-Za-z0-9_=-]+=[0-9a-fA-F]{40}", value) for value in hashes):

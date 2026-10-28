@@ -1,5 +1,5 @@
 import AppKit
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
 extension WorkspaceContentView {
@@ -7,7 +7,7 @@ extension WorkspaceContentView {
         reason: String = "unspecified",
         backgroundOverride: NSColor? = nil,
         loadConfig: () -> GhosttyConfig = {
-            GhosttyConfig.loadForCmux(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent)
+            GhosttyConfig.loadForHmux(globalFontMagnificationPercent: GlobalFontMagnification.storedPercent)
         },
         defaultBackground: () -> NSColor = { GhosttyApp.shared.defaultBackgroundColor },
         defaultForeground: () -> NSColor = { GhosttyApp.shared.defaultForegroundColor },

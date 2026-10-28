@@ -5,7 +5,7 @@ import { cloudVmHealthSnapshots, cloudVms } from "../../../db/schema";
 import { VmDatabaseError } from "../errors";
 import type { StoredVmHealthReport, VmHealthDbRow, VmHealthReport } from "./types";
 
-/** Postgres side of the health sweep. Reads cmux rows; writes only its own snapshot table. */
+/** Postgres side of the health sweep. Reads hmux rows; writes only its own snapshot table. */
 export type VmHealthRepositoryMethods = {
   /** Every live row of `provider`, plus any row (destroyed included) naming one of `providerVmIds`. */
   readonly vmHealthDbRows: (input: {

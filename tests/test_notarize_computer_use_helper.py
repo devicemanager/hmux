@@ -34,7 +34,7 @@ if name == 'xcrun' and args[:1] == ['notarytool']:
             'content_ok': exists and key_path.read_bytes() == b'fixture-p8',
             'apple_id_auth': any(a in args for a in ('--apple-id', '--password', '--team-id')),
         }) + '\n')
-helper = root / 'cmux.app/Contents/Library/cmux Computer Use.app'
+helper = root / 'hmux.app/Contents/Library/hmux Computer Use.app'
 def arches():
     return os.environ.get('FIXTURE_ARCHS', 'arm64 x86_64').split()
 def cdhash(bundle, arch):
@@ -97,22 +97,22 @@ elif name == 'spctl':
         print('source=Unnotarized Developer ID', file=sys.stderr)
         sys.exit(3)
 elif name == 'sign-bundle':
-    if os.environ.get('CMUX_SIGN_MODE') != 'main-only':
+    if os.environ.get('HMUX_SIGN_MODE') != 'main-only':
         sys.exit('helper must not be re-signed after stapling')
 '''
 
 
 class HelperNotarizationTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(prefix='cmux-notary-test-')
+        self.tmp = tempfile.TemporaryDirectory(prefix='hmux-notary-test-')
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
-        self.app = self.root / 'cmux.app'
-        self.helper = self.app / 'Contents/Library/cmux Computer Use.app'
+        self.app = self.root / 'hmux.app'
+        self.helper = self.app / 'Contents/Library/hmux Computer Use.app'
         (self.helper / 'Contents/MacOS').mkdir(parents=True)
-        (self.helper / 'Contents/MacOS/cmux-cua').write_bytes(b'fixture-executable')
+        (self.helper / 'Contents/MacOS/hmux-cua').write_bytes(b'fixture-executable')
         (self.helper / 'Contents/Info.plist').write_bytes(plistlib.dumps({
-            'CFBundleExecutable': 'cmux-cua', 'CFBundleIdentifier': 'com.cmuxterm.cua',
+            'CFBundleExecutable': 'hmux-cua', 'CFBundleIdentifier': 'com.hmuxterm.cua',
         }))
         self.entitlements = self.root / 'entitlements.plist'
         self.entitlements.write_bytes(plistlib.dumps({}))
@@ -122,14 +122,14 @@ class HelperNotarizationTests(unittest.TestCase):
         self.env = dict(env, FIXTURE_ROOT=str(self.root),
                         ASC_API_KEY_ID='FIXTUREKEY', ASC_API_ISSUER_ID='fixture-issuer',
                         ASC_API_KEY_P8_BASE64=base64.b64encode(b'fixture-p8').decode(),
-                        CMUX_HELPER_ENTITLEMENTS=str(self.entitlements),
-                        CMUX_GATEKEEPER_ASSESS_DELAY_SECONDS='0',
-                        CMUX_GATEKEEPER_ASSESS_ATTEMPTS='3')
+                        HMUX_HELPER_ENTITLEMENTS=str(self.entitlements),
+                        HMUX_GATEKEEPER_ASSESS_DELAY_SECONDS='0',
+                        HMUX_GATEKEEPER_ASSESS_ATTEMPTS='3')
         for tool in ('codesign', 'lipo', 'ditto', 'xcrun', 'spctl', 'sign-bundle'):
             path = self.root / tool
             path.write_text(TOOL)
             path.chmod(0o755)
-            self.env['CMUX_' + tool.upper().replace('-', '_') + '_TOOL'] = str(path)
+            self.env['HMUX_' + tool.upper().replace('-', '_') + '_TOOL'] = str(path)
 
     def run_helper(self, *args, success=True, **env):
         # Only the repository script and fixture arguments are executed, without a shell.
@@ -157,7 +157,7 @@ class HelperNotarizationTests(unittest.TestCase):
         self.assertEqual((self.helper / 'Contents/Info.plist').read_bytes(), submitted)
         self.assertEqual(len(self.calls('xcrun', 'notarytool', 'submit')), 1)
         self.assertEqual(len(self.calls('sign-bundle')), 1)
-        self.assertIn('/standalone/cmux Computer Use.app', self.calls('spctl')[0][-1])
+        self.assertIn('/standalone/hmux Computer Use.app', self.calls('spctl')[0][-1])
         self.assertTrue((self.helper / 'Contents/CodeResources').exists())
 
     def test_each_submission_has_distinct_signed_hashes(self):
@@ -221,7 +221,7 @@ class HelperNotarizationTests(unittest.TestCase):
             '--finish', self.state,
             success=False,
             FIXTURE_LOG_TIMEOUT='2',
-            CMUX_HELPER_LOG_TIMEOUT_SECONDS='1',
+            HMUX_HELPER_LOG_TIMEOUT_SECONDS='1',
         )
         self.assertEqual(result.returncode, 75)
         self.assertTrue(self.state.exists())
@@ -253,10 +253,10 @@ class HelperNotarizationTests(unittest.TestCase):
         # The continuation re-runs this assessment after the outer Apple wait.
         # Deferral must retain every deterministic helper gate and only skip the
         # CDN-backed check on the signing lane.
-        self.run_helper(CMUX_DEFER_GATEKEEPER_ASSESSMENT='true')
+        self.run_helper(HMUX_DEFER_GATEKEEPER_ASSESSMENT='true')
         self.assertFalse(self.calls('spctl'))
         validations = self.calls('xcrun', 'stapler', 'validate')
-        self.assertTrue(any(call[-1].endswith('/standalone/cmux Computer Use.app') for call in validations))
+        self.assertTrue(any(call[-1].endswith('/standalone/hmux Computer Use.app') for call in validations))
         self.assertTrue(self.calls('sign-bundle'))
 
     def notary_auth(self):

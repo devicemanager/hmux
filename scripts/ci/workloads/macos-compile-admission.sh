@@ -2,14 +2,14 @@
 set -euo pipefail
 
 root="$(CDPATH= cd -- "$(dirname -- "$0")/../../.." && pwd)"
-state="${CMUX_WORKLOAD_STATE_ROOT:?CMUX_WORKLOAD_STATE_ROOT is required}"
+state="${HMUX_WORKLOAD_STATE_ROOT:?HMUX_WORKLOAD_STATE_ROOT is required}"
 derived="$state/derived-data"
 source_packages="$state/source-packages"
 cas="$state/xcode-compilation-cas"
 log="$state/compile-admission.log"
 
 stage() {
-  python3 "$root/scripts/ci/cmux_workload_profile.py" stage "$1" "$2"
+  python3 "$root/scripts/ci/hmux_workload_profile.py" stage "$1" "$2"
 }
 
 cd "$root"
@@ -17,8 +17,8 @@ mkdir -p "$state" "$source_packages" "$cas"
 export PATH="$HOME/.cargo/bin:$PATH"
 
 stage start setup
-export CMUX_CI_REQUIRED_MACOS_SDK_MAJOR="${CMUX_CI_REQUIRED_MACOS_SDK_MAJOR:-26}"
-export CMUX_SKIP_ZIG_BUILD=1
+export HMUX_CI_REQUIRED_MACOS_SDK_MAJOR="${HMUX_CI_REQUIRED_MACOS_SDK_MAJOR:-26}"
+export HMUX_SKIP_ZIG_BUILD=1
 xcode_env="$state/xcode.env"
 : > "$xcode_env"
 GITHUB_ENV="$xcode_env" ./scripts/select-ci-xcode.sh
@@ -42,7 +42,7 @@ scripts/ci/compile-app-host-test-product.sh build   "$derived" "$source_packages
 stage end compile
 
 stage start validation
-python3 scripts/swift_warning_budget.py --log "$derived/cmux-build.log"
+python3 scripts/swift_warning_budget.py --log "$derived/hmux-build.log"
 find "$derived/Build/Products" -type f -name '*.xctestrun' -print -quit | grep -q .
-test -x "$derived/Build/Products/Debug/cmux"
+test -x "$derived/Build/Products/Debug/hmux"
 stage end validation

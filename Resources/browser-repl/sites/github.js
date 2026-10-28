@@ -5,7 +5,7 @@
 // accept the browser session, so nothing here uses it.
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
   const ORIGIN = "https://github.com";
   const SIGN_IN = [/github\.com\/(login|session)/];
@@ -70,7 +70,7 @@
   function repoURL(name, rest) {
     const prefix = `${ORIGIN}/${name}/`;
     const url = prefix + rest;
-    if (!new root.CmuxBrowserRepl.core.URL(url).href.startsWith(prefix)) throw new S.SiteError("invalid", `github: ${JSON.stringify(rest)} is not a path inside the repository ${name}`);
+    if (!new root.HmuxBrowserRepl.core.URL(url).href.startsWith(prefix)) throw new S.SiteError("invalid", `github: ${JSON.stringify(rest)} is not a path inside the repository ${name}`);
     return url;
   }
 
@@ -134,7 +134,7 @@
           const out = [];
           for (let page = 1; out.length < limit && page <= 10; page++) {
             const r = await t.fetch(`${ORIGIN}/search?q=${encodeURIComponent(q)}&type=issues&p=${page}`, { headers: { accept: "application/json" } });
-            if (r.status === 401 || /\/login/.test(r.url)) throw new S.SiteError("not_signed_in", "github.assigned: the cmux browser is not signed in to GitHub; open https://github.com with tabs.open() and ask the user to sign in");
+            if (r.status === 401 || /\/login/.test(r.url)) throw new S.SiteError("not_signed_in", "github.assigned: the hmux browser is not signed in to GitHub; open https://github.com with tabs.open() and ask the user to sign in");
             if (!r.ok) throw new S.SiteError("http", `github.assigned: HTTP ${r.status}`);
             let json;
             try {
@@ -170,7 +170,7 @@
           }
           const prefix = repoURL(name, `raw/${encodeURIComponent(ref)}/`);
           const url = prefix + segments.map(encodeURIComponent).join("/");
-          if (!new root.CmuxBrowserRepl.core.URL(url).href.startsWith(prefix)) throw new S.SiteError("invalid", `github.file: ${JSON.stringify(String(filePath))} is not a path inside ${name}`);
+          if (!new root.HmuxBrowserRepl.core.URL(url).href.startsWith(prefix)) throw new S.SiteError("invalid", `github.file: ${JSON.stringify(String(filePath))} is not a path inside ${name}`);
           const res = await t.fetch(url);
           if (res.status === 404) throw new S.SiteError("not_found", `github.file: ${name}/${filePath} not found at ${options.ref || "HEAD"}`);
           if (!res.ok) throw new S.SiteError("http", `github.file: HTTP ${res.status}`);

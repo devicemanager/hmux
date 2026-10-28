@@ -1,6 +1,6 @@
-import CMUXAgentLaunch
-import CmuxTerminal
-import CmuxWorkspaces
+import HMUXAgentLaunch
+import HmuxTerminal
+import HmuxWorkspaces
 import Foundation
 
 /// How one restored terminal relates to a live Claude background session.
@@ -36,7 +36,7 @@ struct ClaudeBackgroundViewerObservation: Sendable {
     static func observe(
         processID: Int,
         previous: ClaudeBackgroundViewerObservation?,
-        processArguments: (Int) -> CmuxTopProcessArguments?
+        processArguments: (Int) -> HmuxTopProcessArguments?
     ) -> ClaudeBackgroundViewerObservation {
         if let previous, previous.processID == processID { return previous }
         let viewer = processArguments(processID).flatMap {
@@ -52,7 +52,7 @@ struct ClaudeBackgroundViewerObservation: Sendable {
 /// Restores panes that were viewing a Claude Code background session.
 ///
 /// Claude's daemon (`claude bg-pty-host` / `claude bg-spare`) owns a
-/// background session; a cmux pane only runs a `claude attach` viewer. On
+/// background session; a hmux pane only runs a `claude attach` viewer. On
 /// relaunch the session is still live in the daemon, so the pane must
 /// reattach. `claude --resume` would contend with the daemon as a second
 /// writer, and the manual hook binding alone left a bare shell.
@@ -64,8 +64,8 @@ extension Workspace {
     func claudeBackgroundViewerForSnapshot(
         panelId: UUID,
         terminal: TerminalPanel,
-        processArguments: (Int) -> CmuxTopProcessArguments? = {
-            CmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
+        processArguments: (Int) -> HmuxTopProcessArguments? = {
+            HmuxTopProcessSnapshot.processArgumentsAndEnvironment(for: $0)
         }
     ) -> ClaudeBackgroundSessionViewer? {
         guard !isRemoteTerminalSurface(panelId),

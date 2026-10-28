@@ -12,7 +12,7 @@ Bun.spawn = ((command: string[], options: Bun.SpawnOptions.SpawnOptions<"pipe", 
   assert.deepEqual(command, ["codex", "app-server"]);
   return originalSpawn([process.execPath, join(import.meta.dir, "fake-codex-initialize.ts")], {
     ...options,
-    env: { ...options.env, CMUX_CODEX_INIT_TEST_DIRECTORY: directory },
+    env: { ...options.env, HMUX_CODEX_INIT_TEST_DIRECTORY: directory },
   });
 }) as typeof Bun.spawn;
 

@@ -7,7 +7,7 @@ import ObjectiveC
 /// element. Its `nextResponder` getter returns `focusBridge.host`, an unowned reference to that
 /// hosting view. When the hosting view is freed while anything still holds the proxy, every
 /// `nextResponder` read traps with "Attempted to read an unowned reference but object was already
-/// deallocated". cmux's shortcut routing, AppKit's event routing and SwiftUI's own first-responder
+/// deallocated". hmux's shortcut routing, AppKit's event routing and SwiftUI's own first-responder
 /// observer all walk the chain, so the crash surfaces from many call sites.
 ///
 /// While the proxy is attached, its host is its superview and that is the value `nextResponder`

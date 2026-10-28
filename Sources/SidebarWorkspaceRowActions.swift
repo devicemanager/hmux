@@ -1,5 +1,5 @@
 import AppKit
-import CmuxWorkspaces
+import HmuxWorkspaces
 import Foundation
 
 /// Closure capabilities for a workspace row.

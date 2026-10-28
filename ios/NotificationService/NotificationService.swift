@@ -1,10 +1,10 @@
-import CmuxPhonePush
+import HmuxPhonePush
 import Foundation
 import OSLog
 import UserNotifications
 
 private let notificationServiceLog = Logger(
-    subsystem: "ai.manaflow.cmux",
+    subsystem: "ai.manaflow.hmux",
     category: "notification-service"
 )
 
@@ -21,15 +21,15 @@ final class NotificationService: UNNotificationServiceExtension {
         let content = (request.content.mutableCopy() as? UNMutableNotificationContent) ??
             UNMutableNotificationContent()
         deliveredContent = content
-        guard let cmux = request.content.userInfo["cmux"] as? [String: Any],
-              let raw = cmux["encryptedPayloads"] as? [[String: Any]] else {
+        guard let hmux = request.content.userInfo["hmux"] as? [String: Any],
+              let raw = hmux["encryptedPayloads"] as? [[String: Any]] else {
             finish(content)
             return
         }
         suppressOnExpiration = true
         guard let installation = try? PhonePushKeyMaterial.current(
-            bundleID: Bundle.main.object(forInfoDictionaryKey: "CMUXHostBundleIdentifier") as? String ?? "dev.cmux.ios",
-            accessGroup: Bundle.main.object(forInfoDictionaryKey: "CMUXKeychainAccessGroup") as? String
+            bundleID: Bundle.main.object(forInfoDictionaryKey: "HMUXHostBundleIdentifier") as? String ?? "dev.hmux.ios",
+            accessGroup: Bundle.main.object(forInfoDictionaryKey: "HMUXKeychainAccessGroup") as? String
         ) else {
             finishSuppressed(content, reason: "key_material_unavailable")
             return
@@ -39,7 +39,7 @@ final class NotificationService: UNNotificationServiceExtension {
         guard let envelope = candidates.first(where: {
             $0.installationID == installation.installationID
                 && $0.tuple.iosInstallationID == installation.installationID
-                && $0.tuple.iosBuildID == (Bundle.main.object(forInfoDictionaryKey: "CMUXHostBundleIdentifier") as? String ?? "dev.cmux.ios")
+                && $0.tuple.iosBuildID == (Bundle.main.object(forInfoDictionaryKey: "HMUXHostBundleIdentifier") as? String ?? "dev.hmux.ios")
         }) else {
             finishSuppressed(content, reason: "no_envelope_for_installation")
             return
@@ -121,22 +121,22 @@ final class NotificationService: UNNotificationServiceExtension {
         macPushPublicKey: String?
     ) -> [AnyHashable: Any] {
         var result = original
-        let originalCmux = (original["cmux"] as? [String: Any]) ?? [:]
-        var cmux: [String: Any] = [:]
+        let originalHmux = (original["hmux"] as? [String: Any]) ?? [:]
+        var hmux: [String: Any] = [:]
         for key in ["encryptedPayloads", "macDeviceId", "macInstanceTag", "correlationId"] {
-            if let value = originalCmux[key] { cmux[key] = value }
+            if let value = originalHmux[key] { hmux[key] = value }
         }
         for key in ["workspaceId", "surfaceId", "retargetsToLiveSurfaceOwner", "macDeviceId", "macInstanceTag", "macBuildID", "notificationId", "dismissedIds", "category", "macInstallationID", "macPushPublicKey"] {
-            if let value = payload[key] { cmux[key] = value }
+            if let value = payload[key] { hmux[key] = value }
         }
         if let notificationIds = payload["notificationIds"] {
-            cmux["dismissedIds"] = notificationIds
+            hmux["dismissedIds"] = notificationIds
         }
-        if let macPushPublicKey { cmux["macPushPublicKey"] = macPushPublicKey }
+        if let macPushPublicKey { hmux["macPushPublicKey"] = macPushPublicKey }
         if let macInstallationID = payload["macInstallationID"] as? String {
-            cmux["macInstallationID"] = macInstallationID
+            hmux["macInstallationID"] = macInstallationID
         }
-        result["cmux"] = cmux
+        result["hmux"] = hmux
         return result
     }
 }

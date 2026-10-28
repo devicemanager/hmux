@@ -59,7 +59,7 @@ export async function routeDashboard(request: Request, services: Dependencies): 
     const protocolHeader = request.headers.get("sec-websocket-protocol");
     if (!protocolHeader || protocolHeader.length > 8256) throw new OperationError("unauthorized", 401);
     const protocols = protocolHeader.split(",").map(value => value.trim());
-    if (protocols.length !== 2 || protocols[0] !== "cmux-v2-dashboard" || !protocols[1]?.startsWith("ticket.")) throw new OperationError("unauthorized", 401);
+    if (protocols.length !== 2 || protocols[0] !== "hmux-v2-dashboard" || !protocols[1]?.startsWith("ticket.")) throw new OperationError("unauthorized", 401);
     const claims = await verifyDashboardTicket(protocols[1].slice(7), services.keys, services.environment, services.projectId, origin, services.now());
     await services.charge(claims.authority.userId, "control.socket");
     // A fresh internal request copies no browser headers or credential values.

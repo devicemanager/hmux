@@ -1,12 +1,12 @@
-import CmuxSSHClipboardTrust
+import HmuxSSHClipboardTrust
 import AppKit
 import Foundation
-import CmuxFoundation
-import CmuxTerminal
-import CmuxTerminalCore
+import HmuxFoundation
+import HmuxTerminal
+import HmuxTerminalCore
 import GhosttyKit
-import CmuxSettings
-import struct CmuxSettings.AgentIntegrationSettingsStore
+import HmuxSettings
+import struct HmuxSettings.AgentIntegrationSettingsStore
 
 private enum GhosttyLinkFilterAPI {
     // Xcode 26.6's Clang importer omits this declaration even though the
@@ -20,7 +20,7 @@ private enum GhosttyLinkFilterAPI {
     )
 }
 
-// The app-side conformances and bridges injected into the CmuxTerminal
+// The app-side conformances and bridges injected into the HmuxTerminal
 // package through `GhosttyApp.terminalSurfaceRuntimeDependencies`. Each type
 // here carries behavior verbatim from the legacy god-file reach-up it
 // replaces; this file is intended composition-root residue.
@@ -75,7 +75,7 @@ struct TerminalSurfaceViewFactory: TerminalSurfaceViewProviding {
 /// `SidebarWorkspaceDetailDefaults`, and `TerminalController`'s socket path).
 @MainActor
 final class TerminalSurfaceSpawnPolicyBridge: TerminalSurfaceSpawnPolicyProviding {
-    private let computerUseConfigStore = JSONConfigStore(fileURL: CmuxConfigLocation().userConfigFile)
+    private let computerUseConfigStore = JSONConfigStore(fileURL: HmuxConfigLocation().userConfigFile)
     private let computerUseEnabledKey = SettingCatalog().computerUse.enabled
 
     func currentSpawnPolicy() -> TerminalSurfaceSpawnPolicy {
@@ -119,7 +119,7 @@ final class TerminalSurfaceSpawnPolicyBridge: TerminalSurfaceSpawnPolicyProvidin
         workspaceId: UUID,
         startupCommand: String?
     ) {
-        // The `cmux ssh` first terminal starts before `workspace.remote.configure`
+        // The `hmux ssh` first terminal starts before `workspace.remote.configure`
         // and runs a script file, so it relies on the token the CLI passed in
         // its initial environment. Leave that environment as it is.
         guard let startupCommand,
@@ -192,17 +192,17 @@ final class TerminalOutputByteTeeBridge: TerminalByteTeeBinding {
         let teeContext = Unmanaged.passRetained(TerminalOutputTeeContext(
             workspaceID: workspaceID,
             surfaceID: surfaceID,
-            agentDefinitions: CmuxTaskManagerCodingAgentDefinition.builtIns,
+            agentDefinitions: HmuxTaskManagerCodingAgentDefinition.builtIns,
             scrollbackCheckpointFlags: scrollbackCheckpointActivity
                 .register(surfaceID: surfaceID)
         ))
         ghostty_surface_set_pty_tee_cb(
             surface,
-            cmuxTerminalOutputTeeCallback,
+            hmuxTerminalOutputTeeCallback,
             teeContext.toOpaque()
         )
         let linkFilter = Unmanaged.passRetained(TerminalLinkHoverFilter(surfaceID: surfaceID))
-        GhosttyLinkFilterAPI.set(surface, cmuxTerminalLinkFilterCallback, linkFilter.toOpaque())
+        GhosttyLinkFilterAPI.set(surface, hmuxTerminalLinkFilterCallback, linkFilter.toOpaque())
         return Lease(
             context: teeContext,
             linkFilter: linkFilter,
@@ -246,10 +246,10 @@ extension TerminalSurfaceRuntimeFilesystem {
                 .appendingPathComponent(".local/bin", isDirectory: true)
         )
         // Per-surface command shims are part of the lifetime of their pane.
-        // Keep them beside cmux's durable state so macOS's periodic `$TMPDIR`
+        // Keep them beside hmux's durable state so macOS's periodic `$TMPDIR`
         // cleanup cannot remove a live pane's Claude entry from `PATH`.
         let agentCommandShimRootDirectory = homeDirectory
-            .appendingPathComponent(".cmuxterm", isDirectory: true)
+            .appendingPathComponent(".hmuxterm", isDirectory: true)
         return TerminalSurfaceRuntimeFilesystem(
             agentCommandShimRootDirectory: agentCommandShimRootDirectory,
             installAgentCommandShims: {
@@ -280,7 +280,7 @@ extension TerminalSurface {
         id: UUID = UUID(),
         tabId: UUID,
         context: ghostty_surface_context_e,
-        configTemplate: CmuxSurfaceConfigTemplate?,
+        configTemplate: HmuxSurfaceConfigTemplate?,
         workingDirectory: String? = nil,
         portOrdinal: Int = 0,
         initialCommand: String? = nil,

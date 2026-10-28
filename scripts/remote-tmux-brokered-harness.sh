@@ -1,11 +1,11 @@
 #!/bin/bash
-# remote-tmux-brokered-harness.sh — does cmux's own remote-tmux wire shape work when the host
+# remote-tmux-brokered-harness.sh — does hmux's own remote-tmux wire shape work when the host
 # is reached through an ssh/et broker instead of directly?
 #
-# The harness sends what cmux sends: the broker argv shape the ET profile builds, the quoted
+# The harness sends what hmux sends: the broker argv shape the ET profile builds, the quoted
 # `exec 'tmux' '-CC' 'new-session' '-t' <session>` control-stream command against a session a
-# one-shot created first, and a command sized to exactly cmux's delivery budget. If the checks
-# pass, cmux works here for the same reasons the harness did.
+# one-shot created first, and a command sized to exactly hmux's delivery budget. If the checks
+# pass, hmux works here for the same reasons the harness did.
 #
 # A brokered connection needs a human security-key touch, so a run is interactive by design. It
 # prints its plan, banners each check into the pane before prompting, and waits on observed
@@ -40,7 +40,7 @@ MODE="${1:-}"
 # Private by default. The harness writes wrapper scripts here and then executes them, so a
 # world-writable shared path would let another local user swap a wrapper between write and run,
 # or forge log bytes and fabricate any verdict.
-WORKDIR="${WORKDIR:-/tmp/cmux-brokered-harness-$(id -u)}"
+WORKDIR="${WORKDIR:-/tmp/hmux-brokered-harness-$(id -u)}"
 TMUX_BIN="${TMUX_BIN:-/opt/homebrew/bin/tmux}"
 [ -x "$TMUX_BIN" ] || TMUX_BIN="$(command -v tmux || true)"
 # When set, every tmux call goes to this socket explicitly rather than relying on TMUX_TMPDIR,
@@ -48,15 +48,15 @@ TMUX_BIN="${TMUX_BIN:-/opt/homebrew/bin/tmux}"
 TM_SOCKET="${TM_SOCKET:-}"
 PANE="${PANE:-}"
 # No default on purpose: the broker is site-specific, and guessing a path would make this harness
-# describe one organisation's tooling rather than the contract cmux actually models.
+# describe one organisation's tooling rather than the contract hmux actually models.
 BROKER="${BROKER:-}"
-# Flags the broker takes before the destination — cmux models these as the broker's leading
+# Flags the broker takes before the destination — hmux models these as the broker's leading
 # arguments. Ordering is load-bearing: a client flag placed before the destination is rejected
 # outright and the wrapper exits without connecting.
 # ${VAR-default}, not ${VAR:-default}: a caller passing an empty list means "no flags", and the
 # colon form silently substituted the wrapper's flags back in for the direct mode.
 BROKER_ARGS="${BROKER_ARGS--et -fallback}"
-# Which argv shape the client takes. cmux builds both:
+# Which argv shape the client takes. hmux builds both:
 #   broker  <flags> <destination> -c <command>   the wrapper parses up to the destination and
 #                                               forwards the rest, so a client flag placed
 #                                               before the destination is rejected outright
@@ -76,14 +76,14 @@ CONNECT_TIMEOUT="${CONNECT_TIMEOUT:-240}"
 OP_TIMEOUT="${OP_TIMEOUT:-30}"        # once the connection is provably up, results are fast
 POLL="${POLL:-0.2}"
 CAPTURE_LINES="${CAPTURE_LINES:-800}"
-# cmux's own numbers, so a pass is a statement about cmux rather than about a round number.
+# hmux's own numbers, so a pass is a statement about hmux rather than about a round number.
 # BUDGET_BYTES is RemoteTmuxETTransportProfile.deliverableCommandBytes; OVER_BYTES is past any
-# MAX_CANON cmux expects to meet (1024 on macOS, 4096 on Linux), so it must be cut.
+# MAX_CANON hmux expects to meet (1024 on macOS, 4096 on Linux), so it must be cut.
 BUDGET_BYTES="${BUDGET_BYTES:-928}"
 OVER_BYTES="${OVER_BYTES:-4200}"
 # Which tmux verb the control-stream check sends. Measured on a real host, these differ: attach
 # answered the handshake and then sent %exit with no window, while the grouped form stayed live. The
-# harness must be able to send either, and defaults to the one cmux ships.
+# harness must be able to send either, and defaults to the one hmux ships.
 CONTROL_VERB="${CONTROL_VERB:-attach-session}"
 case "$CONTROL_VERB" in
   attach-session|new-session) ;;
@@ -177,7 +177,7 @@ pane_send() { # type a line into the pane and press Enter
 }
 pane_enter() { tm send-keys -t "$PANE" Enter; }
 pane_text() { tm capture-pane -p -J -t "$PANE" -S "-${CAPTURE_LINES}" 2>/dev/null; }
-pane_banner() { pane_send "clear; echo; echo \"### cmux harness: $1\"; echo"; }
+pane_banner() { pane_send "clear; echo; echo \"### hmux harness: $1\"; echo"; }
 
 # Banner for a check that costs a touch. The number comes from a counter, because hand-written
 # "2/5" strings go stale as soon as checks start sharing connections.
@@ -386,7 +386,7 @@ start_heartbeat() {
     while :; do
       sleep 10
       if ! grep -aqE 'Passcode: [A-Za-z0-9]{8,}' "$log" 2>/dev/null; then
-        alert_clients "cmux harness: waiting for your security key — tap ${TAP_NO}/${TAP_TOTAL} is prompting in ${PANE}"
+        alert_clients "hmux harness: waiting for your security key — tap ${TAP_NO}/${TAP_TOTAL} is prompting in ${PANE}"
       fi
       printf '[harness] %s: %sB in raw log | transport: %s | pane: %s\n' "$tag" \
         "$(wc -c < "$log" 2>/dev/null | tr -d ' ')" \
@@ -477,7 +477,7 @@ launch_conn() {
   tm clear-history -t "$PANE" 2>/dev/null
   note "connection ${CONN_TAG}: touch your security key when the pane prompts (up to ${AUTH_TIMEOUT}s)"
   tm set-option -w -t "$PANE" monitor-activity on 2>/dev/null || true
-  alert_clients "cmux harness: tap ${TAP_NO}/${TAP_TOTAL} — a passcode prompt is coming in ${PANE}"
+  alert_clients "hmux harness: tap ${TAP_NO}/${TAP_TOTAL} — a passcode prompt is coming in ${PANE}"
   start_recorder
   start_heartbeat "$CONN_TAG"
   pane_send "bash '$CONN_SH'"
@@ -545,7 +545,7 @@ close_or_abort() {
 }
 
 # ---------- checks 1 + 2: does -c reach a login shell that resolves tmux? ----------
-# whence -p, not command -v: command -v answers for aliases and functions too, while cmux's
+# whence -p, not command -v: command -v answers for aliases and functions too, while hmux's
 # quoted 'tmux' suppresses both. A host with a tmux alias and no binary would pass on
 # command -v and then fail to reach control mode.
 login_probe_command() {
@@ -579,9 +579,9 @@ grade_login() { # emits checks 1 and 2 from a log that already delivered the pro
   if [ -n "$vals" ]; then login=${vals%% *}; tmuxp=${vals#* }; else login=""; tmuxp=""; fi
   want 1 && verdict Q1 PASS "the broker forwarded -c and the remote shell ran it (computed marker ${MV} came back)"
   if [ "$login" = yes ] && [ -n "$tmuxp" ] && [ "$tmuxp" != none ]; then
-    want 2 && verdict Q2 PASS "the shell is a login shell ([[ -o login ]]=yes) and resolves a bare tmux to ${tmuxp}, which is why cmux may drop the PATH resolver ssh needs"
+    want 2 && verdict Q2 PASS "the shell is a login shell ([[ -o login ]]=yes) and resolves a bare tmux to ${tmuxp}, which is why hmux may drop the PATH resolver ssh needs"
   else
-    want 2 && verdict Q2 FAIL "login=${login:-?} tmux=${tmuxp:-?}; cmux cannot rely on sending a bare tmux here"
+    want 2 && verdict Q2 FAIL "login=${login:-?} tmux=${tmuxp:-?}; hmux cannot rely on sending a bare tmux here"
   fi
 }
 
@@ -620,7 +620,7 @@ q12_run() {
   close_or_abort
 }
 
-# ---------- check 3: does cmux's delivery budget fit this transport? ----------
+# ---------- check 3: does hmux's delivery budget fit this transport? ----------
 # The start marker runs before the padding, so a cut is proven positively rather than inferred
 # from silence. Payload stays quote-free: a cut inside a quote parks the remote shell on a
 # continuation prompt instead of a normal one.
@@ -671,20 +671,20 @@ q3_probe() { # <label> <total-command-byte-length> <banner>
 
 q3_run() {
   q3_probe budget "$BUDGET_BYTES" \
-    "does a command sized to cmux's exact budget (${BUDGET_BYTES}B) survive delivery?"
+    "does a command sized to hmux's exact budget (${BUDGET_BYTES}B) survive delivery?"
   case "$PROBE_RESULT" in
     inconc)
       verdict Q3 INCONCLUSIVE "the ${BUDGET_BYTES}B budget probe was not measured: ${PROBE_DETAIL}"
       return;;
     fail)
-      verdict Q3 BUDGET-EXCEEDS-CAP "cmux's ${BUDGET_BYTES}B budget does not survive this transport: the start marker ran and the end marker did not, so the line was cut and a full-length cmux attach would silently deliver nothing"
+      verdict Q3 BUDGET-EXCEEDS-CAP "hmux's ${BUDGET_BYTES}B budget does not survive this transport: the start marker ran and the end marker did not, so the line was cut and a full-length hmux attach would silently deliver nothing"
       return;;
   esac
   q3_probe over "$OVER_BYTES" \
     "confirm a cut is detectable here: a deliberately over-limit ${OVER_BYTES}B command must NOT arrive whole"
   case "$PROBE_RESULT" in
     fail)
-      verdict Q3 BUDGET-FITS "a ${BUDGET_BYTES}B command (cmux's own budget) arrived whole while a ${OVER_BYTES}B one was cut, so the limit is real on this host and cmux's budget sits under it";;
+      verdict Q3 BUDGET-FITS "a ${BUDGET_BYTES}B command (hmux's own budget) arrived whole while a ${OVER_BYTES}B one was cut, so the limit is real on this host and hmux's budget sits under it";;
     pass)
       verdict Q3 NO-CAP-OBSERVED "the ${BUDGET_BYTES}B budget arrived whole and so did ${OVER_BYTES}B: the budget is safe here, but this run did not find the edge (raise OVER_BYTES to look further)";;
     *)
@@ -692,25 +692,25 @@ q3_run() {
   esac
 }
 
-# ---------- checks 4 + 5 + 7: cmux's control-stream command over the broker ----------
-# cmux's order: a one-shot creates the session, then the control client joins it as a grouped
-# session, which is what gives a mirror its own current window. cmux spends two connections on
+# ---------- checks 4 + 5 + 7: hmux's control-stream command over the broker ----------
+# hmux's order: a one-shot creates the session, then the control client joins it as a grouped
+# session, which is what gives a mirror its own current window. hmux spends two connections on
 # that and the harness spends one, so this does NOT cover a host that reaps detached sessions at
-# logout between cmux's two connections. Creation is proved before anything is graded: without
+# logout between hmux's two connections. Creation is proved before anything is graded: without
 # that, a stale session of the same name would answer for all three checks.
 SESS=""; SESS_CREATED=no
 q457_run() {
   next_marker
-  SESS="cmuxh${RUNID}"
+  SESS="hmuxh${RUNID}"
   local rcmd before hoff created
   rcmd="$(marker_prefix)$(login_probe_command); "
   rcmd="${rcmd}tmux new-session -d -s ${SESS} || { echo K\$v=failed; exit 1; }; echo K\$v=created; "
-  # The verb the PRODUCT sends, not a friendlier one. cmux uses `attach-session` for a session that
+  # The verb the PRODUCT sends, not a friendlier one. hmux uses `attach-session` for a session that
   # already exists; this harness always sent the grouped `new-session -t` form, so the one command
   # that mattered was never tested — and the harness passed on a host where the app's mirror came up
   # empty. CONTROL_VERB exists to compare them, and defaults to what ships.
   rcmd="${rcmd}exec 'tmux' '-CC' '${CONTROL_VERB}' '-t' '${SESS}'"
-  check_banner "cmux's own login probe and control-stream command over the broker (session ${SESS})"
+  check_banner "hmux's own login probe and control-stream command over the broker (session ${SESS})"
   launch_conn cc "$rcmd"
   if ! wait_delivery "$MK" "checks 4-7: command delivery"; then
     local d; d="$(delivery_failure_detail)"
@@ -753,13 +753,13 @@ q457_run() {
     elif grep -a -q '%exit' "$CONN_LOG"; then
       want 4 && verdict Q4 FAIL "control mode was reached and then the stream sent %exit before any window arrived: the client exited on its own, so there is nothing to mirror. This is the shape a mirror-comes-up-empty bug takes on the wire (raw log: ${CONN_LOG})"
     else
-      want 4 && verdict Q4 PASS "cmux's exact control-stream command reached control mode through the broker and stayed alive: ESC P 1000 p at byte ${hoff}, a complete %begin/%end block, no %exit (raw log: ${CONN_LOG})"
+      want 4 && verdict Q4 PASS "hmux's exact control-stream command reached control mode through the broker and stayed alive: ESC P 1000 p at byte ${hoff}, a complete %begin/%end block, no %exit (raw log: ${CONN_LOG})"
     fi
     # This check used to also require an unsolicited window notification, and that was wrong.
     # Measured against tmux directly (`tmux -CC attach-session -t <live session>` under a pty): the
     # whole stream is 84 bytes — the DCS intro, one %begin/%end pair, and %session-changed. No
     # %window-add, no %windows-changed, no %layout-change. Attaching to an existing session
-    # announces nothing, because there is no change to announce; cmux learns the topology by
+    # announces nothing, because there is no change to announce; hmux learns the topology by
     # SENDING list-windows and reading the reply, which is what check 7 below exercises.
     #
     # The false requirement survived 50 selftest assertions because the fake emitted %window-add on
@@ -771,7 +771,7 @@ q457_run() {
       # One complete block that contains a window line, found after the request was sent. Any
       # %end and a stray "N panes" in asynchronous output would satisfy two separate matches.
       if wait_block "$CONN_LOG" "$before" "$OP_TIMEOUT" '[0-9]+ panes' "check 7: the list-windows reply block" >/dev/null; then
-        want 7 && verdict Q7 PASS "the grouped session answered list-windows inside one complete %begin/%end block, so cmux's RPCs work over this transport and not only its handshake"
+        want 7 && verdict Q7 PASS "the grouped session answered list-windows inside one complete %begin/%end block, so hmux's RPCs work over this transport and not only its handshake"
       else
         want 7 && verdict Q7 FAIL "the control stream did not answer list-windows with a complete block within ${OP_TIMEOUT}s"
       fi
@@ -779,12 +779,12 @@ q457_run() {
       want 7 && verdict Q7 INCONCLUSIVE "the connection closed before list-windows could be sent"
     fi
     # An observation, not a pass or fail. et appends its own `exit` to the line it types, and
-    # because cmux's command execs tmux, that word arrives on the control stream as a command.
-    # tmux answers with a block carrying an id cmux never issued, so cmux's parser has to
+    # because hmux's command execs tmux, that word arrives on the control stream as a command.
+    # tmux answers with a block carrying an id hmux never issued, so hmux's parser has to
     # tolerate an unsolicited error block here. The substitute broker cannot reproduce this, so
     # it is only ever observed on a real run.
     if grep -a -q "unknown command: exit" "$CONN_LOG"; then
-      verdict Q8 OBSERVED "the transport's trailing exit reached tmux as a control command and tmux replied with an error block whose id cmux never issued, so cmux's parser must ignore unsolicited error blocks here (evidence in ${CONN_LOG})"
+      verdict Q8 OBSERVED "the transport's trailing exit reached tmux as a control command and tmux replied with an error block whose id hmux never issued, so hmux's parser must ignore unsolicited error blocks here (evidence in ${CONN_LOG})"
     else
       verdict Q8 NOT-SEEN "no stray exit reached the control stream on this run"
     fi
@@ -800,7 +800,7 @@ q457_run() {
   close_or_abort
 }
 
-q5_classify() { # where the handshake sits in the raw stream: cmux's parser has to find it there
+q5_classify() { # where the handshake sits in the raw stream: hmux's parser has to find it there
   python3 - "$1" <<'PY' | tee -a "$VERDICT_FILE"
 import sys
 data = open(sys.argv[1], 'rb').read()
@@ -817,7 +817,7 @@ PY
 }
 
 # ---------- check 6 + cleanup: does the session outlive its client? ----------
-# cmux treats end-of-stream on this transport as "reconnect" rather than "session gone", so
+# hmux treats end-of-stream on this transport as "reconnect" rather than "session gone", so
 # survival is load-bearing. Two details decide whether the answer means anything:
 #
 #   has-session -t NAME matches by prefix, so once tmux has auto-named the grouped sibling
@@ -848,9 +848,9 @@ q6_run() {
   fi
   alive=$(marker_value "A${MV}")
   if [ "$alive" = yes ]; then
-    verdict Q6 PASS "session ${SESS} was still there on a later connection (has-session -t =${SESS}, an exact match rather than a prefix that its grouped sibling would also satisfy), so cmux is right to treat end-of-stream here as reconnect rather than session-gone"
+    verdict Q6 PASS "session ${SESS} was still there on a later connection (has-session -t =${SESS}, an exact match rather than a prefix that its grouped sibling would also satisfy), so hmux is right to treat end-of-stream here as reconnect rather than session-gone"
   else
-    verdict Q6 FAIL "session ${SESS} was gone on a later connection: it died with its client, so end-of-stream means the session is gone and cmux's reconnect assumption does not hold here"
+    verdict Q6 FAIL "session ${SESS} was gone on a later connection: it died with its client, so end-of-stream means the session is gone and hmux's reconnect assumption does not hold here"
   fi
   if wait_marker "C${MV}=[0-9]+" "$OP_TIMEOUT" "check 6: cleanup count" >/dev/null; then
     left=$(marker_value "C${MV}")
@@ -897,11 +897,11 @@ cmd_run() {
     n=$((n+1)); plan="${plan}  touch ${n}: -c reaches a login shell that resolves tmux\n"
   fi
   if want 3; then
-    n=$((n+1)); plan="${plan}  touch ${n}: a ${BUDGET_BYTES}B command (cmux's budget) arrives whole\n"
+    n=$((n+1)); plan="${plan}  touch ${n}: a ${BUDGET_BYTES}B command (hmux's budget) arrives whole\n"
     n=$((n+1)); plan="${plan}  touch ${n}: a ${OVER_BYTES}B command does not, so a cut is detectable here\n"
   fi
   if [ "$folded" = 1 ]; then
-    n=$((n+1)); plan="${plan}  touch ${n}: login shell, tmux on PATH, and cmux's own tmux -CC command reaching control mode and answering an RPC, on one connection\n"
+    n=$((n+1)); plan="${plan}  touch ${n}: login shell, tmux on PATH, and hmux's own tmux -CC command reaching control mode and answering an RPC, on one connection\n"
   fi
   if want 6; then n=$((n+1)); plan="${plan}  touch ${n}: the session outlived its client, then cleanup\n"; fi
   TAP_TOTAL=$n
@@ -910,7 +910,7 @@ cmd_run() {
   printf '%b' "$plan"
   pane_banner "run ${RUNID}: ${n} security-key touches expected, one per check"
 
-  # q457_run answers checks 1 and 2 too, on the shell that actually runs cmux's command, so the
+  # q457_run answers checks 1 and 2 too, on the shell that actually runs hmux's command, so the
   # standalone probe runs only when no control-stream check was asked for.
   if { want 1 || want 2; } && [ "$folded" = 0 ]; then q12_run; fi
   if want 3; then q3_run; fi
@@ -1049,7 +1049,7 @@ case "$cmdname" in
     # changed every mutant that lived in only one branch silently stopped being exercised — the same
     # class of gap that let this harness pass while the app was broken.
     if [ "$cmdname" = new-session ] && [ "$cc" = 0 ]; then
-      # the detached one-shot cmux runs first
+      # the detached one-shot hmux runs first
       [ "$det" = 1 ] || { echo "shim: expected -d for a detached create" >&2; exit 1; }
       [ -n "$name" ] || { echo "shim: new-session -d needs -s" >&2; exit 1; }
       if [ -f "$state/session_$name" ] || [ "${FAKE_DUP_SESSION:-0}" = 1 ]; then
@@ -1298,7 +1298,7 @@ run_scenario() { # <name> <questions> <fake-env-list> [harness-env-list]
   fake="$wd/fake-broker"
   if ! tm display-message -p -t "$ST_PANE" '#{pane_id}' >/dev/null 2>&1; then
     note "selftest pane is gone; recreating it"
-    tm -f /dev/null new-session -d -s cmuxharness -x 220 -y 50 '/bin/bash --norc'
+    tm -f /dev/null new-session -d -s hmuxharness -x 220 -y 50 '/bin/bash --norc'
   fi
   {
     echo '#!/bin/bash'
@@ -1337,7 +1337,7 @@ cmd_selftest() {
   rm -rf "$ST_ROOT"; mkdir -p "$ST_ROOT"
   # A private directory and an explicit socket path, so no inherited TMUX_TMPDIR and no
   # fallback can put these tmux calls on the user's default server.
-  ST_DIR=$(mktemp -d "/tmp/cmux-harness-st.XXXXXX") || die "mktemp failed"
+  ST_DIR=$(mktemp -d "/tmp/hmux-harness-st.XXXXXX") || die "mktemp failed"
   TM_SOCKET="$ST_DIR/sock"
   case "$TM_SOCKET" in
     "/tmp/tmux-$(id -u)"/*) die "refusing a socket under the default tmux socket dir";;
@@ -1345,7 +1345,7 @@ cmd_selftest() {
   unset TMUX
   # Create the server first, then install the trap that can kill it, so a failure in between
   # cannot leave an orphan server behind with nothing to reap it.
-  tm -f /dev/null new-session -d -s cmuxharness -x 220 -y 50 '/bin/bash --norc' \
+  tm -f /dev/null new-session -d -s hmuxharness -x 220 -y 50 '/bin/bash --norc' \
     || { rm -rf "$ST_DIR"; die "could not start the private tmux server"; }
   trap 'tm kill-server 2>/dev/null; rm -rf "$ST_DIR"' EXIT
   local sock; sock=$(tm display-message -p '#{socket_path}')
@@ -1353,10 +1353,10 @@ cmd_selftest() {
     "$TM_SOCKET"|/private"$TM_SOCKET") ;;
     *) die "socket check failed: server is on $sock, not $TM_SOCKET";;
   esac
-  ST_PANE="cmuxharness:0.0"
+  ST_PANE="hmuxharness:0.0"
   note "selftest: private tmux server on $sock, pane $ST_PANE"
 
-  # Known-good substitute: cap 4095 bytes, so cmux's 928-byte budget fits and 4200 does not.
+  # Known-good substitute: cap 4095 bytes, so hmux's 928-byte budget fits and 4200 does not.
   run_scenario good "1 2 3 4 5 6 7" "FAKE_LIMIT=4095"
   expect_verdict good Q1 PASS
   expect_verdict good Q2 PASS
@@ -1377,7 +1377,7 @@ cmd_selftest() {
   expect_verdict q2fail Q1 PASS
   expect_verdict q2fail Q2 FAIL
 
-  # A cap below cmux's budget.
+  # A cap below hmux's budget.
   run_scenario q3tiny "3" "FAKE_LIMIT=500"
   expect_verdict q3tiny Q3 BUDGET-EXCEEDS-CAP
 

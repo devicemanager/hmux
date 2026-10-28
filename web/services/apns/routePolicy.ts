@@ -49,11 +49,11 @@ export type PushPayload = {
    * workspace ids are Mac-local and can collide across paired Macs.
    */
   readonly macDeviceId: string | null;
-  /** The cmux app-instance tag paired with `macDeviceId`. */
+  /** The hmux app-instance tag paired with `macDeviceId`. */
   readonly macInstanceTag: string | null;
   /**
    * Stable Mac-side notification id. Sent to APNs as `apns-collapse-id` and as
-   * `cmux.notificationId` so cross-device dismiss-sync can target the exact
+   * `hmux.notificationId` so cross-device dismiss-sync can target the exact
    * delivered banner. An opaque id, never terminal content.
    */
   readonly notificationId: string | null;
@@ -87,16 +87,16 @@ export type JsonObjectResult =
   | { readonly ok: true; readonly value: Record<string, unknown> }
   | { readonly ok: false; readonly error: "invalid_json" | "request_too_large" };
 
-const DEV_TAGGED_BUNDLE_ID = /^dev\.cmux\.ios\.[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
+const DEV_TAGGED_BUNDLE_ID = /^dev\.hmux\.ios\.[a-z0-9](?:[a-z0-9-]{0,62}[a-z0-9])?$/;
 // Every TestFlight lane (beta AND internal) uses the production APNs
 // environment; the internal lane's bundle id is set in
 // .github/workflows/ios-testflight.yml (IOS_BETA_BUNDLE_ID).
 const PROD_BUNDLE_IDS = new Set([
-  "com.cmux.app",
-  "com.cmuxterm.app",
-  "dev.cmux.app.beta",
-  "dev.cmux.app.internal",
-  "dev.cmux.app.demo",
+  "com.hmux.app",
+  "com.hmuxterm.app",
+  "dev.hmux.app.beta",
+  "dev.hmux.app.internal",
+  "dev.hmux.app.demo",
 ]);
 
 function stringValue(value: unknown): string {

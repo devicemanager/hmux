@@ -32,7 +32,7 @@ jobs:
           set -euo pipefail
 
           # `author_association` answers "has no merged commit here", not "this
-          # is their first PR". cmux merges few outside PRs, so a persistent
+          # is their first PR". hmux merges few outside PRs, so a persistent
           # contributor stays FIRST_TIME_CONTRIBUTOR indefinitely and would be
           # greeted again on every PR. Count their PRs instead; this one is
           # always included, so more than one means it is not their first.
@@ -55,7 +55,7 @@ jobs:
           # Search is eventually consistent, so it can undercount a burst of
           # PRs opened together. The marker makes a second greeting impossible
           # even when the count above is stale.
-          marker='<!-- cmux:contributor-welcome -->'
+          marker='<!-- hmux:contributor-welcome -->'
           if gh api "repos/$GH_REPO/issues/$PR/comments" --paginate --jq '.[].body' \
             | grep -qF "$marker"; then
             echo "Already welcomed on #$PR, skipping."

@@ -79,9 +79,9 @@ XCODE_PROJECT = """// !$*UTF8*$!
 }
 """
 
-XCODE_PROJECT_PATH = "cmux.xcodeproj/project.pbxproj"
+XCODE_PROJECT_PATH = "hmux.xcodeproj/project.pbxproj"
 XCODE_LOCKFILE_PATH = (
-    "cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+    "hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
 )
 
 
@@ -123,35 +123,35 @@ def workspace_data(locations):
 
 
 def make_base_repo(repo):
-    """A minimal cmux-shaped repo: an iOS package with remote pins, plus the
+    """A minimal hmux-shaped repo: an iOS package with remote pins, plus the
     iOS workspace the guard always reads."""
     git(repo, "init", "-q", "-b", "main")
     git(repo, "config", "user.email", "test@example.com")
     git(repo, "config", "user.name", "test")
 
     write_text(
-        os.path.join(repo, "Packages/iOS/CmuxMobileShellUI/Package.swift"),
-        manifest("CmuxMobileShellUI", [REMOTE_DEPENDENCY]),
+        os.path.join(repo, "Packages/iOS/HmuxMobileShellUI/Package.swift"),
+        manifest("HmuxMobileShellUI", [REMOTE_DEPENDENCY]),
     )
     write_text(
-        os.path.join(repo, "Packages/iOS/CmuxMobileShellUI/Package.resolved"),
+        os.path.join(repo, "Packages/iOS/HmuxMobileShellUI/Package.resolved"),
         RESOLVED_JSON,
     )
     write_text(
-        os.path.join(repo, "ios/cmuxPackage/Package.swift"),
+        os.path.join(repo, "ios/hmuxPackage/Package.swift"),
         manifest(
-            "cmuxPackage",
-            ['.package(path: "../../Packages/iOS/CmuxMobileShellUI")'],
+            "hmuxPackage",
+            ['.package(path: "../../Packages/iOS/HmuxMobileShellUI")'],
         ),
     )
-    write_text(os.path.join(repo, "ios/cmuxPackage/Package.resolved"), RESOLVED_JSON)
+    write_text(os.path.join(repo, "ios/hmuxPackage/Package.resolved"), RESOLVED_JSON)
     write_text(
-        os.path.join(repo, "ios/cmux.xcworkspace/contents.xcworkspacedata"),
-        workspace_data(["cmuxPackage", "../Packages/iOS/CmuxMobileShellUI"]),
+        os.path.join(repo, "ios/hmux.xcworkspace/contents.xcworkspacedata"),
+        workspace_data(["hmuxPackage", "../Packages/iOS/HmuxMobileShellUI"]),
     )
     write_text(
         os.path.join(
-            repo, "ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved"
+            repo, "ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved"
         ),
         RESOLVED_JSON,
     )
@@ -186,40 +186,40 @@ def scenario(mutate):
 
 
 def shell_ui_manifest(repo):
-    return os.path.join(repo, "Packages/iOS/CmuxMobileShellUI/Package.swift")
+    return os.path.join(repo, "Packages/iOS/HmuxMobileShellUI/Package.swift")
 
 
 def add_leaf_path_package(repo):
     write_text(
-        os.path.join(repo, "Packages/iOS/CmuxMobileChanges/Package.swift"),
-        manifest("CmuxMobileChanges", []),
+        os.path.join(repo, "Packages/iOS/HmuxMobileChanges/Package.swift"),
+        manifest("HmuxMobileChanges", []),
     )
     write_text(
         shell_ui_manifest(repo),
         manifest(
-            "CmuxMobileShellUI",
-            [REMOTE_DEPENDENCY, '.package(path: "../CmuxMobileChanges")'],
+            "HmuxMobileShellUI",
+            [REMOTE_DEPENDENCY, '.package(path: "../HmuxMobileChanges")'],
         ),
     )
 
 
 def add_remote_bearing_path_package(repo):
     write_text(
-        os.path.join(repo, "Packages/iOS/CmuxMobileChanges/Package.swift"),
+        os.path.join(repo, "Packages/iOS/HmuxMobileChanges/Package.swift"),
         manifest(
-            "CmuxMobileChanges",
+            "HmuxMobileChanges",
             ['.package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")'],
         ),
     )
     write_text(
-        os.path.join(repo, "Packages/iOS/CmuxMobileChanges/Package.resolved"),
+        os.path.join(repo, "Packages/iOS/HmuxMobileChanges/Package.resolved"),
         RESOLVED_JSON,
     )
     write_text(
         shell_ui_manifest(repo),
         manifest(
-            "CmuxMobileShellUI",
-            [REMOTE_DEPENDENCY, '.package(path: "../CmuxMobileChanges")'],
+            "HmuxMobileShellUI",
+            [REMOTE_DEPENDENCY, '.package(path: "../HmuxMobileChanges")'],
         ),
     )
 
@@ -228,7 +228,7 @@ def add_remote_package(repo):
     write_text(
         shell_ui_manifest(repo),
         manifest(
-            "CmuxMobileShellUI",
+            "HmuxMobileShellUI",
             [
                 REMOTE_DEPENDENCY,
                 '.package(url: "https://github.com/apple/swift-log.git", from: "1.0.0")',
@@ -238,14 +238,14 @@ def add_remote_package(repo):
 
 
 def remove_remote_package(repo):
-    write_text(shell_ui_manifest(repo), manifest("CmuxMobileShellUI", []))
+    write_text(shell_ui_manifest(repo), manifest("HmuxMobileShellUI", []))
 
 
 def bump_remote_requirement(repo):
     write_text(
         shell_ui_manifest(repo),
         manifest(
-            "CmuxMobileShellUI",
+            "HmuxMobileShellUI",
             [
                 '.package(url: "https://github.com/apple/swift-collections.git", '
                 'from: "2.0.0")'
@@ -282,9 +282,9 @@ def change_xcode_remote_requirement(repo):
 def touch_all_lockfiles(repo):
     bumped = RESOLVED_JSON.replace("1.1.0", "1.2.0")
     for lockfile in (
-        "Packages/iOS/CmuxMobileShellUI/Package.resolved",
-        "ios/cmuxPackage/Package.resolved",
-        "ios/cmux.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+        "Packages/iOS/HmuxMobileShellUI/Package.resolved",
+        "ios/hmuxPackage/Package.resolved",
+        "ios/hmux.xcworkspace/xcshareddata/swiftpm/Package.resolved",
     ):
         write_text(os.path.join(repo, lockfile), bumped)
 

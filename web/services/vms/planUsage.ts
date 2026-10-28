@@ -56,13 +56,13 @@ export const PLAN_BUDGETS: Readonly<Record<BudgetPlanId, { readonly computeHours
 };
 
 /**
- * The Pro and Max allowances are off unless `CMUX_VM_PLAN_BUDGETS=on`. The
+ * The Pro and Max allowances are off unless `HMUX_VM_PLAN_BUDGETS=on`. The
  * pricing page promises no hour limits, so by default no Pro or Max user gets
  * a compute-hour or disk limit and the 402 refusal never fires. Go's hours are
  * always enforced.
  */
 export function planBudgetsEnforced(env: Record<string, string | undefined> = process.env): boolean {
-  return env.CMUX_VM_PLAN_BUDGETS?.trim().toLowerCase() === "on";
+  return env.HMUX_VM_PLAN_BUDGETS?.trim().toLowerCase() === "on";
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;

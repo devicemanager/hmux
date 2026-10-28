@@ -25,22 +25,22 @@ class ReleaseVerificationTests(unittest.TestCase):
         self.directory = tempfile.TemporaryDirectory()
         self.addCleanup(self.directory.cleanup)
         self.root = Path(self.directory.name)
-        self.manifest_path = self.root / "cmuxd-remote-manifest.json"
-        self.app = self.root / "cmux.app"
+        self.manifest_path = self.root / "hmuxd-remote-manifest.json"
+        self.app = self.root / "hmux.app"
         (self.app / "Contents").mkdir(parents=True)
         self.plist = self.app / "Contents/Info.plist"
         self.plist.write_bytes(plistlib.dumps({"CFBundleShortVersionString": "0.64.25"}))
         release_url = "https://github.com/manaflow-ai/cmux/releases/download/v0.64.25"
         entries, checksums = [], []
         for go_os, go_arch in sorted(verify.TARGETS):
-            name = f"cmuxd-remote-{go_os}-{go_arch}"
+            name = f"hmuxd-remote-{go_os}-{go_arch}"
             payload = f"test fixture for {go_os}/{go_arch}".encode()
             (self.root / name).write_bytes(payload)
             digest = hashlib.sha256(payload).hexdigest()
             entries.append(dict(goOS=go_os, goArch=go_arch, assetName=name,
                                 downloadURL=f"{release_url}/{name}", sha256=digest))
             checksums.append(f"{digest}  {name}\n")
-        self.checksums_path = self.root / "cmuxd-remote-checksums.txt"
+        self.checksums_path = self.root / "hmuxd-remote-checksums.txt"
         self.checksums_path.write_text("".join(checksums))
         self.manifest = dict(schemaVersion=1, appVersion="0.64.25", releaseTag="v0.64.25",
                              releaseURL=release_url, checksumsAssetName=self.checksums_path.name,

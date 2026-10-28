@@ -21,21 +21,21 @@
 # (staging): nothing on the path under test calls web/.
 set -euo pipefail
 
-NAME="${CMUX_E2E_BACKEND_NAME:-}"
+NAME="${HMUX_E2E_BACKEND_NAME:-}"
 IROH_V2="https://$NAME:8443"
 PRESENCE="https://$NAME:8444"
-HOSTS_MARKER="# cmux-e2e-backend (scripts/e2e/backend-env.sh)"
+HOSTS_MARKER="# hmux-e2e-backend (scripts/e2e/backend-env.sh)"
 
 emit_env() {
-  : "${CMUX_E2E_BACKEND_NAME:?CMUX_E2E_BACKEND_NAME is required}"
+  : "${HMUX_E2E_BACKEND_NAME:?HMUX_E2E_BACKEND_NAME is required}"
   local simctl="${1:-}" line
   local lines=(
-    "CMUX_IROH_V2_BASE_URL=$IROH_V2"
-    "CMUX_IROH_V2_ENVIRONMENT=development"
+    "HMUX_IROH_V2_BASE_URL=$IROH_V2"
+    "HMUX_IROH_V2_ENVIRONMENT=development"
     # The lane gates the managed relay path; the relay-only policy forces the
     # terminal stream through this run's relay.
-    "CMUX_IROH_V2_FORCE_RELAY=1"
-    "CMUX_PRESENCE_BASE_URL=$PRESENCE"
+    "HMUX_IROH_V2_FORCE_RELAY=1"
+    "HMUX_PRESENCE_BASE_URL=$PRESENCE"
   )
   for line in "${lines[@]}"; do
     echo "$line"
@@ -45,9 +45,9 @@ emit_env() {
 }
 
 map_hosts() {
-  : "${CMUX_E2E_BACKEND_NAME:?CMUX_E2E_BACKEND_NAME is required}"
+  : "${HMUX_E2E_BACKEND_NAME:?HMUX_E2E_BACKEND_NAME is required}"
   local budget="${1:-300}" deadline ip=""
-  local peer="${CMUX_E2E_BACKEND_TAILNET_HOSTNAME:?CMUX_E2E_BACKEND_TAILNET_HOSTNAME is required}"
+  local peer="${HMUX_E2E_BACKEND_TAILNET_HOSTNAME:?HMUX_E2E_BACKEND_TAILNET_HOSTNAME is required}"
   deadline=$(( $(date +%s) + budget ))
   until ip="$(tailscale ip -4 "$peer" 2>/dev/null)" && [[ -n "$ip" ]]; do
     if (( $(date +%s) >= deadline )); then
@@ -75,7 +75,7 @@ unmap_hosts() {
 }
 
 wait_ready() {
-  : "${CMUX_E2E_BACKEND_NAME:?CMUX_E2E_BACKEND_NAME is required}"
+  : "${HMUX_E2E_BACKEND_NAME:?HMUX_E2E_BACKEND_NAME is required}"
   local budget="${1:-300}" deadline url
   deadline=$(( $(date +%s) + budget ))
   for url in "$IROH_V2/v2/health" "$PRESENCE/healthz"; do

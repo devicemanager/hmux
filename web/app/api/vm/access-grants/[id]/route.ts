@@ -29,7 +29,7 @@ export async function PATCH(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/access-grants/[id]",
-    { "cmux.vm.operation": "rename_access_grant" },
+    { "hmux.vm.operation": "rename_access_grant" },
     "/api/vm/access-grants/[id] failed",
     async ({ user }) => {
       const body = await parseLenientObjectBody(request);
@@ -71,7 +71,7 @@ export async function DELETE(
   return withAuthedVmApiRoute(
     request,
     "/api/vm/access-grants/[id]",
-    { "cmux.vm.operation": "revoke_access_grant" },
+    { "hmux.vm.operation": "revoke_access_grant" },
     "/api/vm/access-grants/[id] failed",
     async ({ user }) => {
       const revoke = await runVmRoute(revokeVmAccessGrant({

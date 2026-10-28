@@ -1,4 +1,4 @@
-import CmuxTerminalCore
+import HmuxTerminalCore
 import Foundation
 import os
 
@@ -57,7 +57,7 @@ final class TerminalOutputTeeContext: @unchecked Sendable {
     init(
         workspaceID: UUID,
         surfaceID: UUID,
-        agentDefinitions: [CmuxTaskManagerCodingAgentDefinition],
+        agentDefinitions: [HmuxTaskManagerCodingAgentDefinition],
         scrollbackCheckpointFlags: TerminalScrollbackOutputFlags
     ) {
         self.workspaceID = workspaceID

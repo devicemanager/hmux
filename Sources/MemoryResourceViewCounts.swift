@@ -1,4 +1,4 @@
-import CmuxTerminal
+import HmuxTerminal
 
 /// Count-only view telemetry read on the actor that owns the native surfaces.
 struct MemoryResourceViewCounts: Sendable {

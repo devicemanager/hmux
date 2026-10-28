@@ -50,7 +50,7 @@ runs:
             "run_id": os.environ.get("GITHUB_RUN_ID"),
             "run_attempt": os.environ.get("GITHUB_RUN_ATTEMPT"),
             "job": os.environ.get("GITHUB_JOB"),
-            "shard": os.environ.get("CMUX_APP_HOST_SHARD"),
+            "shard": os.environ.get("HMUX_APP_HOST_SHARD"),
             "runner_name": os.environ.get("RUNNER_NAME"),
             "runner_os": os.environ.get("RUNNER_OS"),
             "outcome": os.environ["TRANSFER_OUTCOME"],
@@ -65,7 +65,7 @@ runs:
                 if complete and archive_bytes is not None and elapsed > 0 else None
             ),
         }
-        print("CMUX_TEST_PRODUCT_TRANSFER " + json.dumps(record, sort_keys=True))
+        print("HMUX_TEST_PRODUCT_TRANSFER " + json.dumps(record, sort_keys=True))
         with open(os.environ["GITHUB_STEP_SUMMARY"], "a") as summary:
             summary.write("### Compiled test product transfer\n\n```json\n")
             summary.write(json.dumps(record, indent=2, sort_keys=True))

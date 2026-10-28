@@ -64,7 +64,7 @@ struct ClearNotificationsCommand: SharedLegacyFacadeCommand {
 
 struct FeedCommand: SharedLegacyFacadeCommand {
     // No catch-all argument alongside `subcommands`, and no default subcommand:
-    // a bare `cmux feed` prints the legacy usage, which no leaf stands for.
+    // a bare `hmux feed` prints the legacy usage, which no leaf stands for.
     static let configuration = CommandConfiguration(
         commandName: "feed",
         subcommands: [FeedTUICommand.self, FeedClearCommand.self],

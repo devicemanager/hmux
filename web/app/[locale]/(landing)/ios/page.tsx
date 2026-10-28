@@ -71,7 +71,7 @@ export default function IosLanding() {
           <BrandLogoLink className="shrink-0">
             <img
               src="/logo.png"
-              alt="cmux icon"
+              alt="hmux icon"
               width={48}
               height={48}
               className="rounded-xl"

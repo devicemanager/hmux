@@ -17,15 +17,15 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { runChild } from "./helpers/run-child";
 
-// cmux-machine-hygiene reclaims disk on an agent machine without touching
+// hmux-machine-hygiene reclaims disk on an agent machine without touching
 // source. Every test builds a throwaway machine under the system temp
-// directory, confines the script to it with CMUX_HYGIENE_SANDBOX, points it
+// directory, confines the script to it with HMUX_HYGIENE_SANDBOX, points it
 // there with --home/--root/--tmp-dir, and
 // asserts that nothing the script reports or removes lies outside it. Docker
 // is a stub that logs any call (none is allowed: the sandbox never runs
 // Docker), and `mount` is a stub that prints the fixture's mounts file.
 
-const SCRIPT = path.join(import.meta.dirname, "../services/vms/hygiene/cmux-machine-hygiene");
+const SCRIPT = path.join(import.meta.dirname, "../services/vms/hygiene/hmux-machine-hygiene");
 const DAY_S = 24 * 60 * 60;
 
 setDefaultTimeout(30_000);
@@ -67,7 +67,7 @@ function age(target: string, days: number) {
 }
 
 function machine(): Machine {
-  const root = mkdtempSync(path.join(tmpdir(), "cmux-hygiene-"));
+  const root = mkdtempSync(path.join(tmpdir(), "hmux-hygiene-"));
   fixtures.push(root);
   const home = path.join(root, "home");
   const tmp = path.join(root, "tmp");
@@ -103,8 +103,8 @@ function runRaw(m: Machine, args: string[], env: Record<string, string | undefin
       PATH: `${m.bin}:${process.env.PATH ?? "/usr/bin:/bin"}`,
       HOME: m.home,
       TMPDIR: m.tmp,
-      CMUX_HYGIENE_SANDBOX: m.root,
-      CMUX_HYGIENE_SANDBOX_APPLY: "1",
+      HMUX_HYGIENE_SANDBOX: m.root,
+      HMUX_HYGIENE_SANDBOX_APPLY: "1",
       ...env,
     },
   });
@@ -137,12 +137,12 @@ function ageHours(target: string, hours: number) {
   age(target, hours / 24);
 }
 
-/** A git checkout holding a Rust project one level down, like a cmux worktree's cmux-tui/. */
+/** A git checkout holding a Rust project one level down, like a hmux worktree's hmux-tui/. */
 function checkout(m: Machine, name: string, parent = m.code) {
   const dir = path.join(parent, name);
   write(path.join(dir, ".git"), "gitdir: /elsewhere\n");
   write(path.join(dir, "README.md"), "hi");
-  const rust = path.join(dir, "cmux-tui");
+  const rust = path.join(dir, "hmux-tui");
   write(path.join(rust, "Cargo.toml"), "[package]");
   write(path.join(rust, "src", "main.rs"), "fn main() {}");
   write(path.join(rust, "target", "debug", "deps", "libx.rlib"), "x");
@@ -163,7 +163,7 @@ async function processIn(m: Machine, cwd: string, name = "sleep") {
   };
 }
 
-describe("cmux-machine-hygiene", () => {
+describe("hmux-machine-hygiene", () => {
   test("dry-run is the default and removes nothing", async () => {
     const m = machine();
     const app = project(m, "app", "node_modules", "package.json");
@@ -221,14 +221,14 @@ describe("cmux-machine-hygiene", () => {
   test("keeps protected homes and agent sessions, and trims only old agent logs", async () => {
     const m = machine();
     write(path.join(m.home, ".ssh", "id_ed25519"), "secret");
-    write(path.join(m.home, ".cmux", "journal", "events"), "daemon state");
+    write(path.join(m.home, ".hmux", "journal", "events"), "daemon state");
     write(path.join(m.home, ".claude", "projects", "s.jsonl"), "session");
     write(path.join(m.home, ".claude", "debug", "old.txt"), "old log");
     write(path.join(m.home, ".claude", "debug", "new.txt"), "new log");
     write(path.join(m.home, ".codex", "sessions", "s.jsonl"), "session");
     write(path.join(m.home, ".codex", "log", "codex-tui.log"), "old log");
     age(path.join(m.home, ".ssh"), 90);
-    age(path.join(m.home, ".cmux"), 90);
+    age(path.join(m.home, ".hmux"), 90);
     age(path.join(m.home, ".claude", "projects"), 90);
     age(path.join(m.home, ".claude", "debug", "old.txt"), 30);
     age(path.join(m.home, ".codex"), 90);
@@ -238,7 +238,7 @@ describe("cmux-machine-hygiene", () => {
     );
     for (const kept of [
       ".ssh/id_ed25519",
-      ".cmux/journal/events",
+      ".hmux/journal/events",
       ".claude/projects/s.jsonl",
       ".claude/debug/new.txt",
       ".codex/sessions/s.jsonl",
@@ -264,16 +264,16 @@ describe("cmux-machine-hygiene", () => {
     const m = machine();
     write(path.join(m.tmp, "old-build.log"), "old");
     write(path.join(m.tmp, "scratch", "a.txt"), "old");
-    write(path.join(m.tmp, "cmux-socket-dir", "s"), "daemon");
+    write(path.join(m.tmp, "hmux-socket-dir", "s"), "daemon");
     write(path.join(m.tmp, "today.txt"), "new");
     age(path.join(m.tmp, "old-build.log"), 30);
     age(path.join(m.tmp, "scratch"), 30);
-    age(path.join(m.tmp, "cmux-socket-dir"), 30);
+    age(path.join(m.tmp, "hmux-socket-dir"), 30);
     const report = await run(m, ["--apply", "--only", "temp-files"]);
     expect(paths(report, "deleted", "temp-files").sort()).toEqual(
       [path.join(m.tmp, "old-build.log"), path.join(m.tmp, "scratch")].sort(),
     );
-    expect(existsSync(path.join(m.tmp, "cmux-socket-dir", "s"))).toBe(true);
+    expect(existsSync(path.join(m.tmp, "hmux-socket-dir", "s"))).toBe(true);
     expect(existsSync(path.join(m.tmp, "today.txt"))).toBe(true);
   });
 
@@ -326,7 +326,7 @@ describe("cmux-machine-hygiene", () => {
   test("allows one --apply run at a time and takes over a dead run's lock", async () => {
     const m = machine();
     const uid = (await runChild("id", ["-u"])).stdout.trim();
-    const lock = path.join(m.tmp, `.cmux-hygiene-${uid}.lock`);
+    const lock = path.join(m.tmp, `.hmux-hygiene-${uid}.lock`);
     write(path.join(lock, "pid"), String(process.pid));
     const busy = await runRaw(m, ["--apply", "--home", m.home, "--root", m.code, "--tmp-dir", m.tmp]);
     expect(busy.status).toBe(4);
@@ -380,8 +380,8 @@ describe("cmux-machine-hygiene", () => {
   test("finishes a removal an interrupted run left behind, but not one still running", async () => {
     const m = machine();
     const deadPid = 2_147_483_000;
-    const dead = path.join(m.code, "app", `.cmux-hygiene-deleting-node_modules-${deadPid}`);
-    const live = path.join(m.code, "app", `.cmux-hygiene-deleting-target-${process.pid}`);
+    const dead = path.join(m.code, "app", `.hmux-hygiene-deleting-node_modules-${deadPid}`);
+    const live = path.join(m.code, "app", `.hmux-hygiene-deleting-target-${process.pid}`);
     write(path.join(dead, "pkg", "index.js"));
     write(path.join(live, "debug", "app"));
     const report = await run(m, ["--apply", "--only", "interrupted"]);
@@ -407,7 +407,7 @@ describe("cmux-machine-hygiene", () => {
 
   test("outside the test sandbox, home must be a real user's home and temp a real temp dir", async () => {
     const m = machine();
-    const real = { CMUX_HYGIENE_SANDBOX: undefined, TMPDIR: undefined };
+    const real = { HMUX_HYGIENE_SANDBOX: undefined, TMPDIR: undefined };
     const cases: [string[], string][] = [
       [["--home", m.home, "--root", m.code, "--tmp-dir", "/tmp"], "home"],
       [["--home", "/var/tmp", "--root", "/var/tmp", "--tmp-dir", "/tmp"], "home"],
@@ -424,7 +424,7 @@ describe("cmux-machine-hygiene", () => {
       });
     }
     // A $TMPDIR that is not the macOS per-user .../T directory is not a temp dir either.
-    const viaTmpdir = await runRaw(m, ["--home", m.home, "--root", m.code], { CMUX_HYGIENE_SANDBOX: undefined });
+    const viaTmpdir = await runRaw(m, ["--home", m.home, "--root", m.code], { HMUX_HYGIENE_SANDBOX: undefined });
     expect(viaTmpdir.status).toBe(3);
     expect(viaTmpdir.stderr).toContain("refusing unsafe tmp-dir");
   });
@@ -435,7 +435,7 @@ describe("cmux-machine-hygiene", () => {
     expect(outsideHome.status).toBe(3);
     expect(outsideHome.stderr).toContain("refusing unsafe root");
     const nestedSandbox = await runRaw(m, ["--home", path.join(m.code), "--root", m.code, "--tmp-dir", m.tmp], {
-      CMUX_HYGIENE_SANDBOX: m.home,
+      HMUX_HYGIENE_SANDBOX: m.home,
     });
     expect(nestedSandbox.status).toBe(3);
     expect(nestedSandbox.stderr).toContain("refusing unsafe sandbox");
@@ -532,7 +532,7 @@ describe("cmux-machine-hygiene", () => {
     expect(mounted.stderr).toContain("mount point");
     mounts(m, ["/dev/root on / type ext4 (rw)"]);
     const noFlag = await runRaw(m, ["--apply", "--home", m.home, "--root", m.code, "--tmp-dir", m.tmp], {
-      CMUX_HYGIENE_SANDBOX_APPLY: undefined,
+      HMUX_HYGIENE_SANDBOX_APPLY: undefined,
     });
     expect(noFlag.status).toBe(2);
     expect(noFlag.stdout).toBe("");
@@ -616,7 +616,7 @@ describe("cmux-machine-hygiene", () => {
     ageHours(justBuilt.dir, 0.5);
     const report = await run(m, ["--apply", "--only", "project-artifacts"]);
     expect(paths(report, "deleted", "project-artifacts")).toEqual([done.target]);
-    expect(existsSync(path.join(done.dir, "cmux-tui", "src", "main.rs"))).toBe(true);
+    expect(existsSync(path.join(done.dir, "hmux-tui", "src", "main.rs"))).toBe(true);
     expect(existsSync(path.join(done.dir, ".git"))).toBe(true);
     expect(existsSync(justBuilt.target)).toBe(true);
   });

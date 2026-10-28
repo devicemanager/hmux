@@ -26,7 +26,7 @@ pinned.
 Mac forwarding reports a Sentry warning at most once a minute when encryption
 is unavailable. iOS records fixed `pushKeyExchange*` and `pushReply*` diagnostic
 events through the existing Sentry log exporter and its log budget. Backend
-registration rejection sets `cmux.apns.failure_stage` to
+registration rejection sets `hmux.apns.failure_stage` to
 `push_e2e_key_missing_or_invalid` on the existing Axiom trace.
 
 These events contain failure categories, never notification or reply content,

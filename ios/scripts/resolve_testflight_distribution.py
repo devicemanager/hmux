@@ -34,10 +34,10 @@ def resolve_distribution(
         )
     if override:
         return DistributionDecision(
-            bundle_id="dev.cmux.app.beta",
-            display_name="cmux BETA",
+            bundle_id="dev.hmux.app.beta",
+            display_name="hmux BETA",
             profile_type="beta",
-            expected_app_id="7WLXT3NR37.dev.cmux.app.beta",
+            expected_app_id="7WLXT3NR37.dev.hmux.app.beta",
             assign_external_group=True,
             assign_internal_group=False,
             metadata_artifact="ios-testflight-build-metadata-override",
@@ -47,10 +47,10 @@ def resolve_distribution(
         )
     if variant == "demo":
         return DistributionDecision(
-            bundle_id="dev.cmux.app.demo",
-            display_name="cmux DEMO",
+            bundle_id="dev.hmux.app.demo",
+            display_name="hmux DEMO",
             profile_type="demo",
-            expected_app_id="7WLXT3NR37.dev.cmux.app.demo",
+            expected_app_id="7WLXT3NR37.dev.hmux.app.demo",
             assign_external_group=False,
             assign_internal_group=True,
             metadata_artifact="ios-testflight-build-metadata-demo",
@@ -59,10 +59,10 @@ def resolve_distribution(
             review_note="no beta review needed",
         )
     return DistributionDecision(
-        bundle_id="dev.cmux.app.internal",
-        display_name="cmux INTERNAL",
+        bundle_id="dev.hmux.app.internal",
+        display_name="hmux INTERNAL",
         profile_type="internal",
-        expected_app_id="7WLXT3NR37.dev.cmux.app.internal",
+        expected_app_id="7WLXT3NR37.dev.hmux.app.internal",
         assign_external_group=False,
         assign_internal_group=True,
         metadata_artifact="ios-testflight-build-metadata",
@@ -115,7 +115,7 @@ def main() -> None:
         "IOS_BETA_DISPLAY_NAME": decision.display_name,
         "IOS_BETA_PROFILE_TYPE": decision.profile_type,
         "IOS_BETA_EXPECTED_APP_ID": decision.expected_app_id,
-        "CMUX_TESTFLIGHT_ASSIGN_EXTERNAL_GROUP": values[
+        "HMUX_TESTFLIGHT_ASSIGN_EXTERNAL_GROUP": values[
             "assign_external_group"
         ],
         "IOS_TESTFLIGHT_UPLOAD_MODE": decision.upload_mode,

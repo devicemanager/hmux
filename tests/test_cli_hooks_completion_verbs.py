@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Asserts `cmux hooks <TAB>` offers every catalog-wide verb `cmux hooks --help` documents.
+"""Asserts `hmux hooks <TAB>` offers every catalog-wide verb `hmux hooks --help` documents.
 
-The verbs are the literal first words of the `cmux hooks ...` lines in the help
-text in CLI/cmux.swift: `setup`, `uninstall` and `feed`, plus any agent an
+The verbs are the literal first words of the `hmux hooks ...` lines in the help
+text in CLI/hmux.swift: `setup`, `uninstall` and `feed`, plus any agent an
 example names (`codex`, `opencode`). Placeholder `<agent>` lines are skipped. The offered words come from docs/cli-command-tree.txt, which
 test_cli_command_tree_snapshot.py ties to the built binary.
 """
@@ -13,17 +13,17 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-HELP_SOURCE = ROOT / "CLI" / "cmux.swift"
+HELP_SOURCE = ROOT / "CLI" / "hmux.swift"
 COMMAND_TREE = ROOT / "docs" / "cli-command-tree.txt"
 
 
 def documented_verbs(source: str) -> set[str]:
     match = re.search(r'case "hooks":\n\s*return """\n(.*?)\n\s*"""', source, re.DOTALL)
     if not match:
-        raise AssertionError("`cmux hooks` help text not found")
-    verbs = set(re.findall(r"cmux hooks ([a-z][a-z-]*)\b", match.group(1)))
+        raise AssertionError("`hmux hooks` help text not found")
+    verbs = set(re.findall(r"hmux hooks ([a-z][a-z-]*)\b", match.group(1)))
     if not verbs:
-        raise AssertionError("no literal `cmux hooks <verb>` usage lines found")
+        raise AssertionError("no literal `hmux hooks <verb>` usage lines found")
     return verbs
 
 
@@ -43,9 +43,9 @@ def main() -> int:
     offered = offered_words(COMMAND_TREE.read_text(encoding="utf-8"))
     missing = sorted(expected - offered)
     if missing:
-        print(f"FAIL: cmux hooks completion: documented but not offered: {', '.join(missing)}")
+        print(f"FAIL: hmux hooks completion: documented but not offered: {', '.join(missing)}")
         return 1
-    print(f"PASS: cmux hooks completion offers {', '.join(sorted(expected))}")
+    print(f"PASS: hmux hooks completion offers {', '.join(sorted(expected))}")
     return 0
 
 

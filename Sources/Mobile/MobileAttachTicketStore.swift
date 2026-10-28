@@ -1,6 +1,6 @@
-import CmuxCloud
-import CMUXMobileCore
-import CmuxMobileHost
+import HmuxCloud
+import HMUXMobileCore
+import HmuxMobileHost
 import Foundation
 #if canImport(Security)
 import Security

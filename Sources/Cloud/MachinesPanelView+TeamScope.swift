@@ -22,7 +22,7 @@ extension MachinesPanelView {
             ProgressView()
                 .controlSize(.small)
             Text(teamScopeLoadingLabel)
-                .cmuxFont(size: 12)
+                .hmuxFont(size: 12)
                 .foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

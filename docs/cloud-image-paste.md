@@ -1,7 +1,7 @@
 # Clipboard images in Cloud terminals
 
 Cmd+V in a managed Cloud terminal uploads the prepared image to that terminal's
-cmux-tui daemon and pastes its remote filename. Codex and Claude receive the path
+hmux-tui daemon and pastes its remote filename. Codex and Claude receive the path
 through the daemon's bracketed-paste operation and can read the image on the VM.
 The clipboard's Mac filename is never submitted to the Cloud process.
 
@@ -25,7 +25,7 @@ leased attachments. This is an additive capability on mux protocol 12. Protocol
 12 alone is insufficient: older protocol-12 daemons do not implement it. The Mac
 shows an update/reconnect error for an older daemon and never falls back to a Mac
 path. Linux, Android, and Apple daemons advertise it; other platforms do not.
-Update the machine's cmux-tui daemon before enabling this client behavior in a
+Update the machine's hmux-tui daemon before enabling this client behavior in a
 rollout. Reconnect after updating so capabilities belong to the new connection.
 
 ## Limits and ownership
@@ -41,7 +41,7 @@ rollout. Reconnect after updating so capabilities belong to the new connection.
   on a daemon. Pending uploads reserve their entire declared size before bytes
   arrive. Recovered files count against the same storage limits. Failed deletion
   keeps the reservation charged and the upload retired until a safe retry succeeds.
-- The daemon chooses a random, private `cmux-image-…` directory below its temporary
+- The daemon chooses a random, private `hmux-image-…` directory below its temporary
   directory inside a verified private per-UID namespace, mode 0700, and a
   `clipboard.<extension>` file, mode 0600. Unsafe writable ancestors are refused. The terminal
   process normally has the same Unix owner as its daemon. The protocol accepts
@@ -72,7 +72,7 @@ rollout. Reconnect after updating so capabilities belong to the new connection.
   deleting it. Empty files left before receipt creation contain no clipboard bytes.
 
 Cancellation before commit cannot paste a path. Once commit starts, a lost
-acknowledgement means delivery is uncertain. cmux asks the user to inspect the
+acknowledgement means delivery is uncertain. hmux asks the user to inspect the
 agent before retrying; it does not retry automatically or delete a potentially
 delivered attachment. Multi-image clipboard selections are separate transactions,
 so an earlier image may already be attached if a later image fails.
@@ -93,10 +93,10 @@ expiry, crash recovery, and preservation of user files and symlinks. The daemon
 behavior test records the actual `Surface.write_paste` bytes and opens the resulting
 file; it requires both bracketed-paste delimiters.
 
-Run cmux-tui checks on hosted machines, never by compiling on the local Mac:
+Run hmux-tui checks on hosted machines, never by compiling on the local Mac:
 
 ```sh
-./scripts/verify-cmux-tui-hosted.sh --filter cloud_image_paste
+./scripts/verify-hmux-tui-hosted.sh --filter cloud_image_paste
 ```
 
 Mac coverage: `CloudImagePasteMirrorIntegrationTests` exercises begin/chunk/commit

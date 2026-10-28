@@ -1,6 +1,6 @@
 # coderouter
 
-Hosted model router for cmux Cloud VMs, the `cr` CLI, and direct API clients. The data plane serves the OpenAI Responses API (`/v1/responses`, `/v1/models`), the Anthropic Messages API (`/v1/messages`, `/v1/messages/count_tokens`, `/v1/models` for Anthropic clients) and the OpenCode provider proxy (`/api/coderouter/opencode/*`). Requests authenticate with a VM or CLI route token, or a long-lived `crk_` API key, then forward to one of the team's provider accounts with failover (`codexProxy.ts`, `claudeProxy.ts`, `opencodeProxy.ts`). The control plane under `/api/coderouter/*` manages accounts, sessions, API keys and usage.
+Hosted model router for hmux Cloud VMs, the `cr` CLI, and direct API clients. The data plane serves the OpenAI Responses API (`/v1/responses`, `/v1/models`), the Anthropic Messages API (`/v1/messages`, `/v1/messages/count_tokens`, `/v1/models` for Anthropic clients) and the OpenCode provider proxy (`/api/coderouter/opencode/*`). Requests authenticate with a VM or CLI route token, or a long-lived `crk_` API key, then forward to one of the team's provider accounts with failover (`codexProxy.ts`, `claudeProxy.ts`, `opencodeProxy.ts`). The control plane under `/api/coderouter/*` manages accounts, sessions, API keys and usage.
 
 Provider accounts are team resources. Every team member may add, rename,
 disable, transfer and remove the team's shared accounts and their own private
@@ -34,12 +34,12 @@ secret is logged or sent to telemetry.
 
 ClickHouse is the source of truth for CodeRouter route outcomes and model usage. PostHog receives only control-plane lifecycle events and operational exceptions. Sentry keeps receiving the legacy `coderouter.<failure>` events for existing alert rules. Axiom keeps the OpenTelemetry spans at 100% for `/v1/*` and `/api/coderouter/*`.
 
-Every coderouter route runs inside `withCoderouterRoute` (`requestTelemetry.ts`). It owns one request context, one OpenTelemetry route span, and stamps two headers on every response: `x-coderouter-request-id` (the ledger request id, a UUID) and `x-cmux-trace-id` (the Axiom trace). A user who reports a failed request only has to paste the request id. That id is:
+Every coderouter route runs inside `withCoderouterRoute` (`requestTelemetry.ts`). It owns one request context, one OpenTelemetry route span, and stamps two headers on every response: `x-coderouter-request-id` (the ledger request id, a UUID) and `x-hmux-trace-id` (the Axiom trace). A user who reports a failed request only has to paste the request id. That id is:
 
 - `request_id` of the ClickHouse `route_events` and `usage_events` rows;
-- `cmux.coderouter.request_id` on the Axiom route span.
+- `hmux.coderouter.request_id` on the Axiom route span.
 
-PostHog events go to the main cmux project (`POSTHOG_PROJECT_KEY` / `POSTHOG_HOST`, production or `CODEROUTER_ANALYTICS_FORCE=1`). The distinct id is the Stack user id whenever the request authenticated (the route token's owner, or the signed-in user on control-plane routes), so a person's coderouter requests sit on the same PostHog person as their cmux.com activity. The cmux web app already identifies visitors with the Stack user id (`services/analytics/stackIdentity.ts`); the macOS app still uses an anonymous PostHog id, so joining Mac app events needs a client-side `identify` there (follow-up). Unauthenticated events (auth rejects, alerts) use `coderouter-server` with person processing off. Team and VM ids travel as `team_id` and `coderouter_vm_id`. Until 2026-09-03 these events went to a separate project under HMAC pseudonyms; that project (549394) and its `POSTHOG_CODEROUTER_*` keys are retired, and its dashboards must be rebuilt in the cmux project.
+PostHog events go to the main hmux project (`POSTHOG_PROJECT_KEY` / `POSTHOG_HOST`, production or `CODEROUTER_ANALYTICS_FORCE=1`). The distinct id is the Stack user id whenever the request authenticated (the route token's owner, or the signed-in user on control-plane routes), so a person's coderouter requests sit on the same PostHog person as their cmux.com activity. The hmux web app already identifies visitors with the Stack user id (`services/analytics/stackIdentity.ts`); the macOS app still uses an anonymous PostHog id, so joining Mac app events needs a client-side `identify` there (follow-up). Unauthenticated events (auth rejects, alerts) use `coderouter-server` with person processing off. Team and VM ids travel as `team_id` and `coderouter_vm_id`. Until 2026-09-03 these events went to a separate project under HMAC pseudonyms; that project (549394) and its `POSTHOG_CODEROUTER_*` keys are retired, and its dashboards must be rebuilt in the hmux project.
 
 | event | when | key properties |
 | --- | --- | --- |
@@ -52,7 +52,7 @@ Fault classification (`classifyCoderouterFault`, `faultClassification.ts`) decid
 
 Unhandled throws in a route are no longer swallowed as a bare 503: the wrapper reports `route_crash` with the real stack (PostHog `$exception`, Sentry), then answers with the surface's own 503 shape. It also writes the `route_events` row the proxy never reached (outcome `route_crash`, the returned status, duration, request id), unless the proxy already wrote one for that request. The write is deferred and best effort; a ledger failure never changes the response. Before 2026-09-25 crashes wrote no row, so the 2026-09-24 signed-VM-auth outage (20,776 crashes in ten hours) was invisible to the alert cron.
 
-A crash carries a safe structured cause (`errorCause.ts`), never the message: Drizzle's query error embeds SQL and bound parameters. PostHog gets `coderouter_error_class`, `coderouter_error_cause_class`, `coderouter_db_sqlstate` (for example `42883`, undefined operator), `coderouter_db_operation` (the statement keyword, for example `select`) and `coderouter_error_code` (a transport code such as `ECONNREFUSED`); the Axiom span gets the same as `cmux.coderouter.*`, and Sentry gets them as context. The fingerprint is `coderouter:route_crash:<route>:<provider>:<cause>`, with cause `pg_<SQLSTATE>`, the transport code, or the class, so one bug is one issue. The provider comes from the surface (`responses` is `codex`, `messages` is `claude`, `/v1/models` decides by `anthropic-version`, control-plane routes are `control_plane`).
+A crash carries a safe structured cause (`errorCause.ts`), never the message: Drizzle's query error embeds SQL and bound parameters. PostHog gets `coderouter_error_class`, `coderouter_error_cause_class`, `coderouter_db_sqlstate` (for example `42883`, undefined operator), `coderouter_db_operation` (the statement keyword, for example `select`) and `coderouter_error_code` (a transport code such as `ECONNREFUSED`); the Axiom span gets the same as `hmux.coderouter.*`, and Sentry gets them as context. The fingerprint is `coderouter:route_crash:<route>:<provider>:<cause>`, with cause `pg_<SQLSTATE>`, the transport code, or the class, so one bug is one issue. The provider comes from the surface (`responses` is `codex`, `messages` is `claude`, `/v1/models` decides by `anthropic-version`, control-plane routes are `control_plane`).
 
 `failure_stage` on a crash is `auth` when the throw happened after credential verification started but before it produced an identity, else `handler`. Attribution (`team_id`, `stack_user_id`, `vm_id` on the row; `team_id`, the distinct id and `coderouter_vm_id` on PostHog) uses the verified identity when there is one. For a signed VM credential whose JWT signature, audience and lifetime verified, but whose database ownership check crashed, it uses the signed claims; `coderouter_identity_source` is then `signed_vm_claims` instead of `authenticated`. Those claims were signed by us, so they identify the machine even though the request was not authorized.
 
@@ -70,25 +70,25 @@ Scoping a crash: `SELECT failure_stage, provider, count(), uniqExact(team_id), u
 
 ## Alerts
 
-`/api/cron/coderouter-alerts` runs every five minutes (`services/observability/coderouterAlerts.ts`) and posts to the shared Slack webhook `CMUX_ALERTS_SLACK_WEBHOOK_URL` through `sendAlert`. It reads the health probe and the last five minutes of ClickHouse `route_events`:
+`/api/cron/coderouter-alerts` runs every five minutes (`services/observability/coderouterAlerts.ts`) and posts to the shared Slack webhook `HMUX_ALERTS_SLACK_WEBHOOK_URL` through `sendAlert`. It reads the health probe and the last five minutes of ClickHouse `route_events`:
 
 | key | condition | severity | env |
 | --- | --- | --- | --- |
 | `coderouter-health` | health is `degraded` or `down` | warning / critical | |
-| `coderouter-route-crashes` | `route_crash` rows (unhandled throws), ≥ 3; the body gives counts by stage and provider and the number of affected teams, not their ids | critical | `CMUX_CODEROUTER_ALERT_ROUTE_CRASHES_5M` |
-| `coderouter-operator-failures` | `provider_unavailable` from our side (PlanetScale/KMS/config), or any other outcome `classifyCoderouterFault` files as `operator` (such as a 5xx `server_error`), excluding `route_crash`, ≥ 1 | critical | `CMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M` |
-| `coderouter-upstream-failures` | provider 5xx/transport after failover, ≥ 5 | warning | `CMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M` |
-| `coderouter-no-usable-account` | tenants with no healthy account, ≥ 10 (names the teams) | warning | `CMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M` |
-| `coderouter-auth-rejected` | unauthorized requests ≥ 25 | warning | `CMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M` |
+| `coderouter-route-crashes` | `route_crash` rows (unhandled throws), ≥ 3; the body gives counts by stage and provider and the number of affected teams, not their ids | critical | `HMUX_CODEROUTER_ALERT_ROUTE_CRASHES_5M` |
+| `coderouter-operator-failures` | `provider_unavailable` from our side (PlanetScale/KMS/config), or any other outcome `classifyCoderouterFault` files as `operator` (such as a 5xx `server_error`), excluding `route_crash`, ≥ 1 | critical | `HMUX_CODEROUTER_ALERT_OPERATOR_FAILURES_5M` |
+| `coderouter-upstream-failures` | provider 5xx/transport after failover, ≥ 5 | warning | `HMUX_CODEROUTER_ALERT_UPSTREAM_FAILURES_5M` |
+| `coderouter-no-usable-account` | tenants with no healthy account, ≥ 10 (names the teams) | warning | `HMUX_CODEROUTER_ALERT_NO_ACCOUNT_5M` |
+| `coderouter-auth-rejected` | unauthorized requests ≥ 25 | warning | `HMUX_CODEROUTER_ALERT_AUTH_REJECTED_5M` |
 | `coderouter-ledger-unreachable` | the ClickHouse query itself failed | critical | |
 
-Slack has no dedupe: a persistent condition repeats every run, which is intended for `critical`. With no webhook configured, the cron returns `503 alert_sink_not_configured` until `CMUX_ALERTS_SINK_UNCONFIGURED_ACK` records a plain-text operator decision. After that acknowledgement, triggered alerts are counted as dropped, reported once through `reportCoderouterFailure("alerts")` and as a PostHog `coderouter_alert` event, and the response carries `configured: false`. Production has no webhook as of 2026-09-03; the env audit (`scripts/cloud-vm/projects.mjs`) applies the same waiver.
+Slack has no dedupe: a persistent condition repeats every run, which is intended for `critical`. With no webhook configured, the cron returns `503 alert_sink_not_configured` until `HMUX_ALERTS_SINK_UNCONFIGURED_ACK` records a plain-text operator decision. After that acknowledgement, triggered alerts are counted as dropped, reported once through `reportCoderouterFailure("alerts")` and as a PostHog `coderouter_alert` event, and the response carries `configured: false`. Production has no webhook as of 2026-09-03; the env audit (`scripts/cloud-vm/projects.mjs`) applies the same waiver.
 
 Why the threshold checks stay in code rather than moving to PostHog insight alerts: PostHog evaluates insight alerts on an hourly or slower cadence and after ingestion lag, while the cron reads the ledger (the source of truth for what was routed) within five minutes, and its thresholds are versioned and tested here. PostHog owns the alert it is good at: an Error Tracking issue alert to Slack when a new `coderouter*` issue appears (configured in the PostHog project, not in code).
 
 ## Production checklist
 
-Required env (audited by `bun scripts/cloud-vm/audit-env.mjs production`): `CLICKHOUSE_URL/USER/PASSWORD/DATABASE`, `CODEROUTER_KMS_KEY_ID` + `AWS_REGION`, and `CRON_SECRET`. Configure `CMUX_ALERTS_SLACK_WEBHOOK_URL` unless `CMUX_ALERTS_SINK_UNCONFIGURED_ACK` records the approved unconfigured sink. `POSTHOG_PROJECT_KEY` has an in-code default. The retired `POSTHOG_CODEROUTER_*` and `CODEROUTER_ANALYTICS_SCOPE_SECRET` keys are flagged as legacy by the audit and can be deleted from Vercel.
+Required env (audited by `bun scripts/cloud-vm/audit-env.mjs production`): `CLICKHOUSE_URL/USER/PASSWORD/DATABASE`, `CODEROUTER_KMS_KEY_ID` + `AWS_REGION`, and `CRON_SECRET`. Configure `HMUX_ALERTS_SLACK_WEBHOOK_URL` unless `HMUX_ALERTS_SINK_UNCONFIGURED_ACK` records the approved unconfigured sink. `POSTHOG_PROJECT_KEY` has an in-code default. The retired `POSTHOG_CODEROUTER_*` and `CODEROUTER_ANALYTICS_SCOPE_SECRET` keys are flagged as legacy by the audit and can be deleted from Vercel.
 
 Before merging a PR with a new `web/db/migrations/*` directory, run `bun run cloud-vm:migrate -- staging` then `-- production`; a merge deploys immediately and the new code selects the new columns first. ClickHouse DDL under `web/db/clickhouse/` is applied with `bun scripts/clickhouse-migrate.ts <db>` for `coderouter_dev` then `coderouter`, also before the merge. No deploy or CI job runs it, and inserts silently drop columns the database lacks, so a new ClickHouse migration must also add its columns to `CLICKHOUSE_EXPECTED_COLUMNS` in `clickhouseSchema.ts` (a test enforces this). The `coderouter-alerts` cron compares that list with `system.columns` and sends one critical `coderouter-clickhouse-schema-drift` Slack alert plus a Sentry event per day while a migration is unapplied.
 
@@ -111,7 +111,7 @@ another team or a private account. Requests already sent upstream may finish.
 
 New account API writes always record their importing user and an explicit
 visibility. A request may name `private` or `team`. When it names neither, as
-`cr add codex`, `cr add opencode` and the cmux sidebar do, an import into an
+`cr add codex`, `cr add opencode` and the hmux sidebar do, an import into an
 organization is shared with the team, so every machine the organization runs
 can use it; an import into a personal scope is private (`defaultImportVisibility`).
 Accounts imported before this default changed keep their visibility until
@@ -150,12 +150,12 @@ chatmux machine). It cannot list for management, import, update, share or
 remove accounts. A Cloud VM runs agents and untrusted code, so nothing in a
 machine can replace or remove the pool's accounts. It still uses the
 accounts its VM pool grants for model requests on the data plane. Accounts are
-added from a signed-in cmux app or the dashboard.
+added from a signed-in hmux app or the dashboard.
 
-Inside a managed machine, `cmux coderouter accounts --json` returns native and
-Claude account metadata under one team id, and `cmux coderouter org current
+Inside a managed machine, `hmux coderouter accounts --json` returns native and
+Claude account metadata under one team id, and `hmux coderouter org current
 --json` reports that fixed team. Organization switching is host-owned. These
-restrictions cover cmux's managed credential path; they do not claim to prevent
+restrictions cover hmux's managed credential path; they do not claim to prevent
 a shell user from manually supplying independent provider credentials.
 
 The migration preserves existing account visibility by placing existing
@@ -174,10 +174,10 @@ cross-team grants, spoofed headers, private visibility, pool revocation, and
 VM deletion. `scripts/coderouter/verify-vm-scope.ts` exercises the real Freestyle
 edge and guest CLI against an isolated development backend using disposable
 Stack identities and account metadata. The runner requires
-`CMUX_SCOPE_E2E_ENVIRONMENT=isolated-development`, the approved development
+`HMUX_SCOPE_E2E_ENVIRONMENT=isolated-development`, the approved development
 Stack project, and matching API/SQL instances on the shared backend host. It verifies account listing and routing
 denial after revocation, without importing customer credentials or invoking a
-paid upstream model. Route traces include `cmux.coderouter.pool_id`.
+paid upstream model. Route traces include `hmux.coderouter.pool_id`.
 
 The ownership migration is an atomic cutover for small catalogs, with an
 explicit precondition of at most 10,000 rows and 32 MiB per existing table.

@@ -28,7 +28,7 @@ describe("agent page variants", () => {
     const html = `
       <html>
         <head>
-          <title>Getting Started \u2014 cmux docs</title>
+          <title>Getting Started \u2014 hmux docs</title>
           <link rel="canonical" href="https://cmux.com/docs/getting-started"/>
         </head>
         <body>
@@ -109,9 +109,9 @@ describe("agent page variants", () => {
               </a>
               <table>
                 <thead><tr><th>Command</th><th>Description</th></tr></thead>
-                <tbody><tr><td><code>cmux list-workspaces</code></td><td>List workspaces.</td></tr></tbody>
+                <tbody><tr><td><code>hmux list-workspaces</code></td><td>List workspaces.</td></tr></tbody>
               </table>
-              <pre><code>cmux notify --title Done</code></pre>
+              <pre><code>hmux notify --title Done</code></pre>
             </main>
           </body>
         </html>`,
@@ -134,15 +134,15 @@ describe("agent page variants", () => {
     const markdown = markdownFromHtml({
       html: `
         <html>
-          <head><title>Settings &amp; Docs &#39;Guide&#39; \u2014 cmux</title></head>
+          <head><title>Settings &amp; Docs &#39;Guide&#39; \u2014 hmux</title></head>
           <body>
-            <main><p>Configure cmux.</p></main>
+            <main><p>Configure hmux.</p></main>
           </body>
         </html>`,
       sourceUrl: "https://cmux.com/docs/configuration",
     });
 
-    expect(markdown).toStartWith("# Settings & Docs 'Guide'\n\nConfigure cmux.");
+    expect(markdown).toStartWith("# Settings & Docs 'Guide'\n\nConfigure hmux.");
   });
 
   test("prefers the readable page heading over shell headings", () => {
@@ -193,7 +193,7 @@ describe("agent page variants", () => {
           <body>
             <main>
               <a href="/blog">Back to blog</a>
-              <img src="/logo.png" alt="cmux icon" />
+              <img src="/logo.png" alt="hmux icon" />
               <h1>Post Title</h1>
               <p>Body text.</p>
             </main>
@@ -265,13 +265,13 @@ describe("agent page variants", () => {
       [
         "# Docs",
         "",
-        "![cmux icon](https://cmux.com/logo.png)",
+        "![hmux icon](https://cmux.com/logo.png)",
         "",
         "Read the [API docs](https://cmux.com/docs/api).",
         "",
         "| Command | Description |",
         "| --- | --- |",
-        "| `cmux list-workspaces` | List workspaces. |",
+        "| `hmux list-workspaces` | List workspaces. |",
         "",
         "```",
         "arr.map(fn)[0]",
@@ -282,13 +282,13 @@ describe("agent page variants", () => {
     );
 
     expect(text).toContain("Docs");
-    expect(text).toContain("cmux icon (https://cmux.com/logo.png)");
+    expect(text).toContain("hmux icon (https://cmux.com/logo.png)");
     expect(text).toContain("API docs (https://cmux.com/docs/api)");
     expect(text).toContain("Command\tDescription");
-    expect(text).toContain("cmux list-workspaces\tList workspaces.");
+    expect(text).toContain("hmux list-workspaces\tList workspaces.");
     expect(text).toContain("arr.map(fn)[0]");
     expect(text).not.toContain("```");
-    expect(text).not.toContain("![cmux icon]");
+    expect(text).not.toContain("![hmux icon]");
     expect(text).not.toContain("[API docs]");
   });
 
@@ -306,11 +306,11 @@ describe("agent page variants", () => {
 
   test("removes single-column Markdown table dividers from text", () => {
     const text = plainTextFromMarkdown(
-      ["| Name |", "| --- |", "| cmux |"].join("\n"),
+      ["| Name |", "| --- |", "| hmux |"].join("\n"),
     );
 
     expect(text).toContain("Name");
-    expect(text).toContain("cmux");
+    expect(text).toContain("hmux");
     expect(text).not.toContain("---");
   });
 
@@ -400,7 +400,7 @@ describe("agent page variants", () => {
     const llms = buildLlmsText("https://preview.example");
 
     expect(llms).toContain(
-      "[cmux vs Herdr](https://preview.example/compare/cmux-vs-herdr)",
+      "[hmux vs Herdr](https://preview.example/compare/hmux-vs-herdr)",
     );
     expect(llms).toContain(
       "[How to run multiple Claude Code agents in parallel](https://preview.example/compare/multiple-claude-code-agents-parallel)",
@@ -433,8 +433,8 @@ describe("agent page variants", () => {
 
   test("limits English-only blog variants to their canonical routes", () => {
     for (const path of [
-      "/blog/cmux-claude-teams",
-      "/blog/cmux-omo",
+      "/blog/hmux-claude-teams",
+      "/blog/hmux-omo",
       "/blog/gpl",
     ]) {
       expect(resolveAgentPageVariant(`${path}.md`)).not.toBeNull();
@@ -447,7 +447,7 @@ describe("agent page variants", () => {
     for (const path of [
       "/blog/367-billion-tokens",
       "/blog/claude-code-best-worktree-manager",
-      "/blog/cmux-ssh",
+      "/blog/hmux-ssh",
     ]) {
       expect(resolveAgentPageVariant(`${path}.md`)).not.toBeNull();
       expect(resolveAgentPageVariant(`/ja${path}.md`)).not.toBeNull();

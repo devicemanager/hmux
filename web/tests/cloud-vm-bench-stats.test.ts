@@ -96,7 +96,7 @@ describe("ownerNetworkSlug", () => {
     for (const userId of ["user-1", "a6f2c1d0-3b4e-4f5a-9c8d-1e2f3a4b5c6d", ""]) {
       expect(ownerNetworkSlug(userId)).toBe(networkSlugForUser(userId));
     }
-    expect(ownerNetworkSlug("user-1")).toMatch(/^cmux-net-[0-9a-f]{32}$/);
+    expect(ownerNetworkSlug("user-1")).toMatch(/^hmux-net-[0-9a-f]{32}$/);
   });
 });
 

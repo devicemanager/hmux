@@ -127,7 +127,7 @@ describe("dashboard.account.billing", () => {
 
   test("returns 401 without a signed-in user", async () => {
     currentUser = null;
-    const response = await dashboardBillingGET(new Request("https://cmux.test/api/dashboard/billing"));
+    const response = await dashboardBillingGET(new Request("https://hmux.test/api/dashboard/billing"));
     expect(response.status).toBe(401);
   });
 
@@ -135,7 +135,7 @@ describe("dashboard.account.billing", () => {
     subscriptionRows = [stripeSubscriptionRow({ cancelAtPeriodEnd: false })];
     customerRows = [{ id: "cus_123" }];
 
-    const response = await dashboardBillingGET(new Request("https://cmux.test/api/dashboard/billing"));
+    const response = await dashboardBillingGET(new Request("https://hmux.test/api/dashboard/billing"));
     expect(response.status).toBe(200);
     const body = await response.json();
     expect(body.selectedTeamId).toBe("user-pro");
@@ -155,14 +155,14 @@ describe("dashboard.account.billing", () => {
   });
 
   test("returns the selected team's view with ISO dates", async () => {
-    const team = teamWithMembers("team-pro", "Team Pro", 3, { cmuxPlan: "team", cmuxSeats: 4 });
+    const team = teamWithMembers("team-pro", "Team Pro", 3, { hmuxPlan: "team", hmuxSeats: 4 });
     mockImplementation(proUser.listTeams, async () => [team]);
     subscriptionRows = [
       stripeSubscriptionRow({ cancelAtPeriodEnd: false, plan: "team", scope: "team", seats: 4, unitAmount: 6000 }),
     ];
 
     const response = await dashboardBillingGET(
-      new Request("https://cmux.test/api/dashboard/billing?team=team-pro"),
+      new Request("https://hmux.test/api/dashboard/billing?team=team-pro"),
     );
     const body = await response.json();
     expect(body.selectedTeamId).toBe("team-pro");
@@ -176,8 +176,8 @@ describe("dashboard.account.billing", () => {
   });
 
   test("marks an operator paid grant without a subscription", async () => {
-    proUser.clientReadOnlyMetadata = { cmuxVmPlan: "pro" };
-    const body = await (await dashboardBillingGET(new Request("https://cmux.test/api/dashboard/billing"))).json();
+    proUser.clientReadOnlyMetadata = { hmuxVmPlan: "pro" };
+    const body = await (await dashboardBillingGET(new Request("https://hmux.test/api/dashboard/billing"))).json();
     expect(body.personal.hasPaidManualGrant).toBe(true);
   });
 });
@@ -188,7 +188,7 @@ describe("dashboard.teams.billing", () => {
   test("returns 401 without a signed-in user", async () => {
     currentUser = null;
     const response = await teamBillingGET(
-      new Request("https://cmux.test/api/teams/team-pro/billing"),
+      new Request("https://hmux.test/api/teams/team-pro/billing"),
       { params: Promise.resolve({ teamId: "team-pro" }) },
     );
     expect(response.status).toBe(401);
@@ -196,7 +196,7 @@ describe("dashboard.teams.billing", () => {
 
   test("returns not_found for a team the user does not belong to", async () => {
     const response = await teamBillingGET(
-      new Request("https://cmux.test/api/teams/team-foreign/billing"),
+      new Request("https://hmux.test/api/teams/team-foreign/billing"),
       { params: Promise.resolve({ teamId: "team-foreign" }) },
     );
     expect(response.status).toBe(200);
@@ -210,7 +210,7 @@ describe("dashboard.teams.billing", () => {
     subscriptionRows = [stripeSubscriptionRow({ cancelAtPeriodEnd: false, plan: "team", scope: "team", seats: 4 })];
 
     const response = await teamBillingGET(
-      new Request("https://cmux.test/api/teams/team-pro/billing"),
+      new Request("https://hmux.test/api/teams/team-pro/billing"),
       { params: Promise.resolve({ teamId: "team-pro" }) },
     );
     const queryClient = createScreenQueryClient();
@@ -239,10 +239,10 @@ describe("dashboard billing screen", () => {
     expect(html).toContain("Current plan");
     // Checkout returns to Plan & billing with a welcome.
     expect(html).toContain(
-      'href="/api/billing/checkout?plan=pro&amp;cmux_external_browser=1&amp;interval=month&amp;cmux_source=dashboard_billing&amp;returnTo=%2Fdashboard%2Fbilling"',
+      'href="/api/billing/checkout?plan=pro&amp;hmux_external_browser=1&amp;interval=month&amp;hmux_source=dashboard_billing&amp;returnTo=%2Fdashboard%2Fbilling"',
     );
     expect(html).toContain(
-      'href="/api/billing/checkout?plan=max&amp;cmux_external_browser=1&amp;interval=month&amp;cmux_source=dashboard_billing&amp;returnTo=%2Fdashboard%2Fbilling"',
+      'href="/api/billing/checkout?plan=max&amp;hmux_external_browser=1&amp;interval=month&amp;hmux_source=dashboard_billing&amp;returnTo=%2Fdashboard%2Fbilling"',
     );
     expect(html).toContain("Upgrade to Pro");
     expect(html).toContain("Upgrade to Max");
@@ -261,7 +261,7 @@ describe("dashboard billing screen", () => {
     expect(html).toContain("$50");
     expect(html).not.toContain("billed yearly");
     expect(html).not.toContain("$24");
-    expect(html).toContain("plan=pro&amp;cmux_external_browser=1&amp;interval=month");
+    expect(html).toContain("plan=pro&amp;hmux_external_browser=1&amp;interval=month");
     expect(html).not.toContain("plan=team");
   });
 
@@ -286,10 +286,10 @@ describe("dashboard billing screen", () => {
   test("prices every Stripe Pro subscription from its own price amount", async () => {
     customerRows = [{ id: "cus_123" }];
     const cases: Array<[string | undefined, number, "month" | "year", string]> = [
-      ["cmux-pro-yearly-480", 48000, "year", ">$40</span> <span class=\"text-xs text-muted\">per month, billed annually<"],
-      ["cmux-pro-yearly-288", 28800, "year", ">$24</span> <span class=\"text-xs text-muted\">per month, billed annually<"],
-      ["cmux-pro-yearly", 24000, "year", ">$20</span> <span class=\"text-xs text-muted\">per month, billed annually<"],
-      ["cmux-pro-monthly", 3000, "month", ">$30</span> <span class=\"text-xs text-muted\">per month<"],
+      ["hmux-pro-yearly-480", 48000, "year", ">$40</span> <span class=\"text-xs text-muted\">per month, billed annually<"],
+      ["hmux-pro-yearly-288", 28800, "year", ">$24</span> <span class=\"text-xs text-muted\">per month, billed annually<"],
+      ["hmux-pro-yearly", 24000, "year", ">$20</span> <span class=\"text-xs text-muted\">per month, billed annually<"],
+      ["hmux-pro-monthly", 3000, "month", ">$30</span> <span class=\"text-xs text-muted\">per month<"],
       // Stack-era Prices carry no lookup key at all.
       [undefined, 3000, "month", ">$30</span> <span class=\"text-xs text-muted\">per month<"],
     ];
@@ -375,14 +375,14 @@ describe("dashboard billing screen", () => {
   });
 
   test("a granted Pro account is offered Max checkout", async () => {
-    proUser.clientReadOnlyMetadata = { cmuxVmPlan: "pro" };
+    proUser.clientReadOnlyMetadata = { hmuxVmPlan: "pro" };
 
     const html = await renderBillingPage();
 
     expect(html).toMatch(/data-plan="pro"[^>]*aria-current="true"/);
     expect(html).toMatch(/href="[^"]*\/api\/billing\/checkout\?plan=max[^"]*"[^>]*>Upgrade to Max/);
-    expect(html).not.toContain("Granted by cmux. There is nothing to change.");
-    expect(html).toContain("Granted by cmux, so there is nothing to cancel.");
+    expect(html).not.toContain("Granted by hmux. There is nothing to change.");
+    expect(html).toContain("Granted by hmux, so there is nothing to cancel.");
   });
 
   // A Founder's Edition purchase is stored as an active Pro row, but it is
@@ -405,7 +405,7 @@ describe("dashboard billing screen", () => {
 
   test("a Founder on Max is offered Pro by ending Max, not a paid Pro switch", async () => {
     subscriptionRows = [
-      stripeSubscriptionRow({ cancelAtPeriodEnd: false, plan: "max", lookupKey: "cmux-max-monthly-200", unitAmount: 20000 }),
+      stripeSubscriptionRow({ cancelAtPeriodEnd: false, plan: "max", lookupKey: "hmux-max-monthly-200", unitAmount: 20000 }),
       {
         id: "founders_cs_1", status: "active", plan: "pro", scope: "user", cancelAtPeriodEnd: false,
         currentPeriodEnd: null, raw: { metadata: { founders_edition: "true" }, items: { data: [] } },
@@ -437,7 +437,7 @@ describe("dashboard billing screen", () => {
   });
 
   test("renders the selected team's active Team plan with seats vs members and admin actions", async () => {
-    const team = teamWithMembers("team-pro", "Team Pro", 3, { cmuxPlan: "team", cmuxSeats: 4 });
+    const team = teamWithMembers("team-pro", "Team Pro", 3, { hmuxPlan: "team", hmuxSeats: 4 });
     proUser.selectedTeam = team;
     mockImplementation(proUser.listTeams, async () => [team]);
     subscriptionRows = [
@@ -446,7 +446,7 @@ describe("dashboard billing screen", () => {
         plan: "team",
         scope: "team",
         seats: 4,
-        lookupKey: "cmux-team-monthly-60",
+        lookupKey: "hmux-team-monthly-60",
         unitAmount: 6000,
       }),
     ];
@@ -473,7 +473,7 @@ describe("dashboard billing screen", () => {
         plan: "team",
         scope: "team",
         seats: 4,
-        lookupKey: "cmux-team-yearly-576",
+        lookupKey: "hmux-team-yearly-576",
         unitAmount: 57600,
         recurringInterval: "year",
       }),
@@ -492,7 +492,7 @@ describe("dashboard billing screen", () => {
         plan: "team",
         scope: "team",
         seats: 4,
-        lookupKey: "cmux-team-monthly",
+        lookupKey: "hmux-team-monthly",
         unitAmount: 3500,
         billingInterval: "year",
       }),
@@ -554,7 +554,7 @@ describe("dashboard billing screen", () => {
 
     expect(html).toMatch(/data-plan="free"[^>]*aria-current="true"/);
     expect(html).toContain("Upgrade to Team");
-    expect(html).toContain("/api/billing/checkout?plan=team&amp;cmux_external_browser=1&amp;teamId=team-free");
+    expect(html).toContain("/api/billing/checkout?plan=team&amp;hmux_external_browser=1&amp;teamId=team-free");
     expect(html).not.toContain("Upgrade to Pro");
   });
 
@@ -599,7 +599,7 @@ describe("dashboard billing screen", () => {
   });
 
   test("renders Stack metadata-only Pro as Free", async () => {
-    proUser.clientReadOnlyMetadata = { cmuxPlan: "pro" };
+    proUser.clientReadOnlyMetadata = { hmuxPlan: "pro" };
 
     const html = await renderBillingPage();
 
@@ -625,7 +625,7 @@ describe("dashboard billing screen", () => {
 function appleMaxRow() {
   return {
     originalTransactionId: "otx-apple", planId: "max", status: "active", environment: "Production",
-    bundleId: "com.cmux.app", expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), gracePeriodExpiresAt: null,
+    bundleId: "com.hmux.app", expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), gracePeriodExpiresAt: null,
     autoRenewEnabled: true,
   };
 }
@@ -657,7 +657,7 @@ function TeamPanelFromQuery({ teamId }: { teamId: string }) {
 async function renderBillingPage(searchParams: Record<string, string> = {}) {
   const search = new URLSearchParams(searchParams).toString();
   const response = await dashboardBillingGET(
-    new Request(`https://cmux.test/api/dashboard/billing${search ? `?${search}` : ""}`),
+    new Request(`https://hmux.test/api/dashboard/billing${search ? `?${search}` : ""}`),
   );
   expect(response.status).toBe(200);
   const queryClient = createScreenQueryClient();
@@ -686,7 +686,7 @@ function stripeSubscriptionRow({
   plan = "pro",
   scope = "user",
   seats = null,
-  lookupKey = "cmux-pro-monthly-50",
+  lookupKey = "hmux-pro-monthly-50",
   unitAmount = 5000,
   currency = "usd",
   billingInterval,

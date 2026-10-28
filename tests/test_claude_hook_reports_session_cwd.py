@@ -26,16 +26,16 @@ from pathlib import Path
 from fake_socket_env import cli_environment, unwrap_capability
 
 
-def resolve_cmux_cli() -> str:
-    explicit = os.environ.get("CMUX_CLI_BIN") or os.environ.get("CMUX_CLI")
+def resolve_hmux_cli() -> str:
+    explicit = os.environ.get("HMUX_CLI_BIN") or os.environ.get("HMUX_CLI")
     if explicit:
         if os.path.exists(explicit) and os.access(explicit, os.X_OK):
             return explicit
-        raise RuntimeError(f"Configured cmux CLI is not executable: {explicit}")
-    in_path = shutil.which("cmux")
+        raise RuntimeError(f"Configured hmux CLI is not executable: {explicit}")
+    in_path = shutil.which("hmux")
     if in_path:
         return in_path
-    raise RuntimeError("Unable to find cmux CLI binary. Set CMUX_CLI_BIN.")
+    raise RuntimeError("Unable to find hmux CLI binary. Set HMUX_CLI_BIN.")
 
 
 class HookSocketServer:
@@ -46,7 +46,7 @@ class HookSocketServer:
         self.ready = threading.Event()
         self.stop = threading.Event()
         self.error: Exception | None = None
-        self.socket_path = os.path.join(root, "cmux.sock")
+        self.socket_path = os.path.join(root, "hmux.sock")
         self.thread = threading.Thread(target=self._run, daemon=True)
         self.server: socket.socket | None = None
 
@@ -150,7 +150,7 @@ def run_claude_hook(cli_path: str, socket_path: str, subcommand: str, payload: d
     )
     if proc.returncode != 0:
         raise RuntimeError(
-            f"cmux claude-hook {subcommand} failed:\n"
+            f"hmux claude-hook {subcommand} failed:\n"
             f"exit={proc.returncode}\nstdout={proc.stdout}\nstderr={proc.stderr}"
         )
 
@@ -166,7 +166,7 @@ def expected_report(path: str, workspace_id: str, surface_id: str) -> str:
 
 def main() -> int:
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
@@ -175,7 +175,7 @@ def main() -> int:
     surface_id = str(uuid.uuid4()).upper()
     session_id = f"wt-{uuid.uuid4().hex}"
 
-    with tempfile.TemporaryDirectory(prefix="cmux-claude-cwd-") as root_name:
+    with tempfile.TemporaryDirectory(prefix="hmux-claude-cwd-") as root_name:
         root = Path(root_name).resolve()
         repo = root / "wt-test-repo"
         worktree = repo / ".claude" / "worktrees" / "wt2"
@@ -193,18 +193,18 @@ def main() -> int:
 
         with HookSocketServer(root_name, workspace_id, surface_id) as server:
             env = cli_environment(server.socket_path)
-            # Hermetic: a cmux or Claude session running this test exports its
+            # Hermetic: a hmux or Claude session running this test exports its
             # own launch capture, which would mark the hooks as a fork.
             for key in list(env):
-                if key.startswith(("CMUX_AGENT_", "CMUX_CLAUDE_", "CLAUDE")):
+                if key.startswith(("HMUX_AGENT_", "HMUX_CLAUDE_", "CLAUDE")):
                     del env[key]
-            env["CMUX_WORKSPACE_ID"] = workspace_id
-            env["CMUX_SURFACE_ID"] = surface_id
-            env["CMUX_CLAUDE_HOOK_STATE_PATH"] = str(root / "claude-hook-state.json")
-            env["CMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
-            env["CMUX_CLAUDE_PID"] = "33333"
-            env["CMUX_AGENT_LAUNCH_KIND"] = "claude"
-            env["CMUX_AGENT_LAUNCH_CWD"] = launch_cwd
+            env["HMUX_WORKSPACE_ID"] = workspace_id
+            env["HMUX_SURFACE_ID"] = surface_id
+            env["HMUX_CLAUDE_HOOK_STATE_PATH"] = str(root / "claude-hook-state.json")
+            env["HMUX_CLAUDE_HOOK_SENTRY_DISABLED"] = "1"
+            env["HMUX_CLAUDE_PID"] = "33333"
+            env["HMUX_AGENT_LAUNCH_KIND"] = "claude"
+            env["HMUX_AGENT_LAUNCH_CWD"] = launch_cwd
 
             def run_phase(subcommand: str, payload: dict[str, object], applied: str) -> list[str]:
                 start = len(server.commands)

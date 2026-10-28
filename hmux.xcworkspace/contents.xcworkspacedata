@@ -1,0 +1,371 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workspace
+   version = "1.0">
+   <FileRef
+      location = "group:hmux.xcodeproj">
+   </FileRef>
+   <FileRef
+      location = "group:ios/hmux-ios.xcodeproj">
+   </FileRef>
+   <Group
+      location = "container:Packages/Shared"
+      name = "Packages (Shared)">
+      <FileRef
+         location = "group:HmuxAgentChat">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxAgentQuestion">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxAPIClient">
+      </FileRef>
+      <FileRef
+         location = "group:HMUXAuthCore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxAuthRuntime">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxClientConfig">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxGhosttyKit">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxHomeCore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxHomeRender">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxIrohTransport">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxIrxTransport">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMessagesLab">
+      </FileRef>
+      <FileRef
+         location = "group:HMUXMobileCore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSentryTelemetry">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSimulatorStreamKit">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSyncStore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSyntaxHighlighting">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxTerminalClient">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxTerminalPrediction">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxTerminalSizing">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxWorkspacePresence">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:Packages/iOS"
+      name = "Packages (iOS)">
+      <FileRef
+         location = "container:ios/hmuxPackage">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxAgentChatUI">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxConversation">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileAnalytics">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileBilling">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileBrowser">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileBrowserStream">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileCamera">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileChanges">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileCloud">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileCloudBridge">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileCloudUI">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileCrashReporting">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileDiagnostics">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobilePairedMac">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileRPC">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileShell">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileShellModel">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileShellUI">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileSimulatorStream">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileSSH">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileSupport">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileTerminal">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileTerminalKit">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileToast">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileTransport">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileTunnel">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileWorkspace">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:Packages/macOS"
+      name = "Packages (macOS)">
+      <FileRef
+         location = "group:HmuxAgentDeliveryCore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxAgentJournal">
+      </FileRef>
+      <FileRef
+         location = "group:HMUXAgentLaunch">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxAgentSessionStore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxAppKitSupportUI">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxBrowser">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCanvas">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCanvasUI">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxChief">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCloud">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCloudBannerCore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCloudImagePaste">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCloudMachines">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCloudResizeCore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCloudTui">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCloudTunnelCore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCommandPalette">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxComputerUse">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxControlSocket">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxCore">
+      </FileRef>
+      <FileRef
+         location = "group:HMUXDebugLog">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxDiffComments">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxExtensionKit">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxFeedback">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxFilePreviewCore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxFoundation">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxGit">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxHerdrResume">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxHive">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxLiveEval">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMemoryPressure">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxMobileHost">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxNotifications">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxPanes">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxPhonePush">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxProductAnalytics">
+      </FileRef>
+      <FileRef
+         location = "group:HMUXProjectModel">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxRemoteDaemon">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxRemoteSession">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxRemoteWorkspace">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSettings">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSettingsUI">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSidebar">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSidebarGit">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSidebarInterpreterService">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSidebarProviderKit">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSimulator">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSSHClipboardTrust">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSudoBroker">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSudoBrokerUI">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSurfaceCatalogModel">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSwiftRender">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxSwiftRenderUI">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxTerminal">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxTerminalCore">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxTerminalImport">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxTerminalSharing">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxTestSupport">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxTextActions">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxUpdater">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxUpdaterUI">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxWindowing">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxWorkspaces">
+      </FileRef>
+   </Group>
+   <Group
+      location = "container:Examples"
+      name = "Examples">
+      <FileRef
+         location = "group:TabsVisibleSidebar/TabsVisibleSidebar.xcodeproj">
+      </FileRef>
+      <FileRef
+         location = "group:SampleSidebarExtensionApp/SampleSidebarExtensionApp.xcodeproj">
+      </FileRef>
+      <FileRef
+         location = "group:HmuxExtensionSidebarExamples">
+      </FileRef>
+   </Group>
+</Workspace>

@@ -1,6 +1,6 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
-import CmuxCommandPalette
+import HmuxCommandPalette
 
 private typealias CurrentWorkPaletteFocusTarget = (windowID: UUID, manager: TabManager, workspaceID: UUID, panelID: UUID)
 

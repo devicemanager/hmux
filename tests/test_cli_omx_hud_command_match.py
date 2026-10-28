@@ -19,7 +19,7 @@ import threading
 import unittest
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 from fake_socket_env import cli_environment, unwrap_capability
 
 
@@ -30,7 +30,7 @@ NEW_PANE_ID = "66666666-6666-4666-8666-666666666666"
 NEW_SURFACE_ID = "77777777-7777-4777-8777-777777777777"
 
 # What marks a split as launched through the OMX shim.
-SHIM_KEYS = ("CMUX_OMX_CMUX_BIN", "CMUX_AGENT_LAUNCH_KIND")
+SHIM_KEYS = ("HMUX_OMX_HMUX_BIN", "HMUX_AGENT_LAUNCH_KIND")
 
 
 class Handler(socketserver.StreamRequestHandler):
@@ -79,15 +79,15 @@ class Server(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
 
 class OMXHudCommandMatchTests(unittest.TestCase):
     def setUp(self) -> None:
-        self.temp = tempfile.TemporaryDirectory(prefix="cmux-omx-hud-match-", dir="/tmp")
+        self.temp = tempfile.TemporaryDirectory(prefix="hmux-omx-hud-match-", dir="/tmp")
         self.addCleanup(self.temp.cleanup)
         self.root = Path(self.temp.name)
-        self.cli = resolve_cmux_cli()
+        self.cli = resolve_hmux_cli()
 
     def split(self, command: list[str], *, through_shim: bool) -> list[tuple[str, dict[str, object]]]:
         """Run `tmux split-window <command>` and return the requests it sent."""
         case_dir = Path(tempfile.mkdtemp(dir=self.root))
-        socket_path = case_dir / "cmux.sock"
+        socket_path = case_dir / "hmux.sock"
         home = case_dir / "home"
         home.mkdir()
         cwd = case_dir / "project"
@@ -101,11 +101,11 @@ class OMXHudCommandMatchTests(unittest.TestCase):
             env = cli_environment(socket_path, home=home)
             for key in SHIM_KEYS:
                 env.pop(key, None)
-            env["CMUX_WORKSPACE_ID"] = "workspace:1"
-            env["CMUX_SURFACE_ID"] = "surface:1"
+            env["HMUX_WORKSPACE_ID"] = "workspace:1"
+            env["HMUX_SURFACE_ID"] = "surface:1"
             env["TMUX_PANE"] = f"%{PANE_ID}"
             if through_shim:
-                env["CMUX_OMX_CMUX_BIN"] = self.cli
+                env["HMUX_OMX_HMUX_BIN"] = self.cli
             proc = subprocess.run(
                 [self.cli, "--socket", str(socket_path), "__tmux-compat", "split-window",
                  "-v", "-l", "4", "-d", "-c", str(cwd), *command],

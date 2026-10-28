@@ -61,8 +61,8 @@ jobs:
       run:
         working-directory: web
     env:
-      CMUX_CLOUD_VM_ENV_SOURCE: process
-      CMUX_DB_DRIVER: url
+      HMUX_CLOUD_VM_ENV_SOURCE: process
+      HMUX_DB_DRIVER: url
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: Checkout
@@ -103,8 +103,8 @@ jobs:
       run:
         working-directory: web
     env:
-      CMUX_CLOUD_VM_ENV_SOURCE: process
-      CMUX_DB_DRIVER: url
+      HMUX_CLOUD_VM_ENV_SOURCE: process
+      HMUX_DB_DRIVER: url
       DATABASE_URL: ${{ secrets.DATABASE_URL }}
     steps:
       - name: Checkout

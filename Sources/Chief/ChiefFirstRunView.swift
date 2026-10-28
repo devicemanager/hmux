@@ -1,10 +1,10 @@
 import AppKit
-import CmuxHomeRender
+import HmuxHomeRender
 import QuartzCore
 
 /// The empty Chief conversation's first-run panel, between the header and
 /// the message box. Labels and actions only, no lines about what Chief is
-/// (cmux-next `HomeFirstRunView`). Hidden once the conversation has a
+/// (hmux-next `HomeFirstRunView`). Hidden once the conversation has a
 /// message (``ChiefTranscriptView``), with a short fade and lift.
 ///
 /// One centered column for everything, as wide as the widest line of chips
@@ -175,7 +175,7 @@ final class ChiefFirstRunView: NSView {
         }
     }
 
-    /// The rows' shortcuts and the hint's keys, as configured now (cmux.json overrides included).
+    /// The rows' shortcuts and the hint's keys, as configured now (hmux.json overrides included).
     private func refreshShortcuts() {
         if let terminal = actionRows.first {
             let keys = ChiefAgentGlanceSource.newWorkspaceKeys()

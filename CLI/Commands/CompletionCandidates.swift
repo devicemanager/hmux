@@ -4,7 +4,7 @@ import Foundation
 /// Candidate providers for dynamic shell completion.
 ///
 /// Every handler runs on the user's Tab key, so it must remain bounded, quiet,
-/// and successful even when the cmux app is unavailable. A broken or absent app
+/// and successful even when the hmux app is unavailable. A broken or absent app
 /// degrades to no suggestions instead of a hung or noisy shell.
 enum CompletionCandidates {
     /// Upper bound on a completion round trip. Past this the shell gets nothing.
@@ -37,7 +37,7 @@ enum CompletionCandidates {
     /// Browser tabs live in one workspace, so this is the one handler that has to
     /// say which. Without params the app answers for its *selected* workspace,
     /// which is not necessarily the one the completing shell sits in; the caller's
-    /// own surface and workspace come from the environment cmux exports into every
+    /// own surface and workspace come from the environment hmux exports into every
     /// terminal it owns. With neither set the app's selected-workspace fallback is
     /// still the best available answer.
     @Sendable static func tabs(_ arguments: [String], _ index: Int = 0, _ prefix: String = "") -> [String] {
@@ -46,9 +46,9 @@ enum CompletionCandidates {
         // An explicit selector on the line wins over the caller's environment.
         if !params.isEmpty {
             // keep as typed
-        } else if let surfaceID = nonEmpty(environment["CMUX_SURFACE_ID"]) {
+        } else if let surfaceID = nonEmpty(environment["HMUX_SURFACE_ID"]) {
             params["surface_id"] = surfaceID
-        } else if let workspaceID = nonEmpty(environment["CMUX_WORKSPACE_ID"]) {
+        } else if let workspaceID = nonEmpty(environment["HMUX_WORKSPACE_ID"]) {
             params["workspace_id"] = workspaceID
         }
         return fetch(arguments, method: "browser.tab.list", params: params, mapping: identifier)
@@ -64,7 +64,7 @@ enum CompletionCandidates {
         let box = ThemeNamesBox()
         let finished = DispatchSemaphore(value: 0)
         DispatchQueue.global(qos: .userInitiated).async {
-            box.value = CMUXCLI(args: CommandLine.arguments).availableThemeNames()
+            box.value = HMUXCLI(args: CommandLine.arguments).availableThemeNames()
             finished.signal()
         }
         guard finished.wait(timeout: .now() + timeout) == .success else { return [] }
@@ -112,7 +112,7 @@ enum CompletionCandidates {
     }
 
     /// The root `--socket` and `--password` typed before the command name, last
-    /// one winning. Like `CMUXCLI.run`, which reads global options only ahead of
+    /// one winning. Like `HMUXCLI.run`, which reads global options only ahead of
     /// the command, so completion connects where the completed command will.
     /// `words[0]` is the executable. Bash splits `--socket=<path>` at the `=` in
     /// COMP_WORDS, so a lone `=` between a flag and its value is skipped.
@@ -121,8 +121,8 @@ enum CompletionCandidates {
         var password: String?
         var index = 1
         while index < words.count {
-            let (name, inlineValue) = CMUXCLI.splitGlobalOption(words[index])
-            if CMUXCLI.valueTakingGlobalOptionNames.contains(name) {
+            let (name, inlineValue) = HMUXCLI.splitGlobalOption(words[index])
+            if HMUXCLI.valueTakingGlobalOptionNames.contains(name) {
                 var valueIndex = index + 1
                 if inlineValue == nil, valueIndex < words.count, words[valueIndex] == "=" {
                     valueIndex += 1
@@ -174,7 +174,7 @@ enum CompletionCandidates {
             let deadline = Date.now.addingTimeInterval(timeout)
             let processEnvironment = ProcessInfo.processInfo.environment
             let typed = connectionOptions(in: words)
-            // Same precedence as `CMUXCLI.run`: --socket, then CMUX_SOCKET_PATH,
+            // Same precedence as `HMUXCLI.run`: --socket, then HMUX_SOCKET_PATH,
             // then the default path.
             let environmentSocketPath = typed.socket == nil
                 ? try CLISocketEnvironment.socketPath(in: processEnvironment)
@@ -199,7 +199,7 @@ enum CompletionCandidates {
 
             try client.connect(deadline: deadline)
             guard let authenticationTimeout = remainingTimeout(until: deadline) else { return [] }
-            try CMUXCLI.authenticateSocketClientIfNeeded(
+            try HMUXCLI.authenticateSocketClientIfNeeded(
                 client,
                 explicitPassword: typed.password,
                 socketPath: socketPath,

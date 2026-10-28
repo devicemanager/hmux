@@ -1,0 +1,4 @@
+interface:
+  display_name: "hmux Customization"
+  short_description: "Customize hmux viewers, actions, UI, layouts, and presets."
+  default_prompt: "Use $hmux-customization to identify the viewer type, read the viewer customization matrix, choose any matching shipped workflow example with hmux docs workflows --json, edit only schema-backed configuration, validate it, and reload hmux."

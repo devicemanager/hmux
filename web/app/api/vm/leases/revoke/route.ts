@@ -19,7 +19,7 @@ export async function POST(request: Request): Promise<Response> {
   return withAuthedVmApiRoute(
     request,
     "/api/vm/leases/revoke",
-    { "cmux.vm.operation": "revoke_access" },
+    { "hmux.vm.operation": "revoke_access" },
     "/api/vm/leases/revoke failed",
     async ({ user }) => {
       const authorization = request.headers.get("authorization") ?? "";

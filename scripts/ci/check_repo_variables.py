@@ -10,15 +10,15 @@ readers use, on a schedule (.github/workflows/ci-repo-variables.yml), and turns
 a bad value into a red run with an error annotation that names the fix.
 
 Inputs, from the workflow's expression context (no token can read variables):
-  CMUX_CI_RUNNER_VARIABLES  NAME=value per line, the runner-label variables
+  HMUX_CI_RUNNER_VARIABLES  NAME=value per line, the runner-label variables
   CI_OWNED_POOL_SLOTS       the owned pool sizes pr_runner_pool.py reads
-  CMUX_CI_XCODE_APP_PR      pairs a class entry in the slots with an Xcode
+  HMUX_CI_XCODE_APP_PR      pairs a class entry in the slots with an Xcode
   CI_CLOUD_OVERFLOW_SAVED   the cloud overflow switch's record, present while
                             Blacksmith overflow is off (cloud_overflow_switch.py)
-  CI_NEXT_DAEMON_POOL       the pool of feat-cmux-next's daemon tests, which gate
-                            the nightly-next promotion (cmux-tui-artifacts.yml)
-  CI_PIN_DAEMON_POOL        the pool of cmux-tui-pin-* pushes' daemon tests; empty,
-                            they take CI_LIGHT_LANE_RUNNER (cmux-tui-artifacts.yml)
+  CI_NEXT_DAEMON_POOL       the pool of feat-hmux-next's daemon tests, which gate
+                            the nightly-next promotion (hmux-tui-artifacts.yml)
+  CI_PIN_DAEMON_POOL        the pool of hmux-tui-pin-* pushes' daemon tests; empty,
+                            they take CI_LIGHT_LANE_RUNNER (hmux-tui-artifacts.yml)
 
 While that record exists, a runner variable holding exactly the failover the
 switch wrote there is expected, not drift: an owned pool label in
@@ -37,7 +37,7 @@ from pr_runner_pool import PR_XCODE_VARIABLE, SLOTS_VARIABLE, slot_problems  # n
 from runner_label_policy import PolicyUnreadable, drifted_runner_variables  # noqa: E402
 from cloud_overflow_switch import RECORD_VARIABLE, parse_record  # noqa: E402
 
-RUNNER_VARIABLES_ENV = "CMUX_CI_RUNNER_VARIABLES"
+RUNNER_VARIABLES_ENV = "HMUX_CI_RUNNER_VARIABLES"
 DAEMON_POOL_VARIABLE = "CI_NEXT_DAEMON_POOL"
 SIDE_LANE_VARIABLE = "CI_SIDE_LANE_RUNNER"
 PIN_POOL_VARIABLE = "CI_PIN_DAEMON_POOL"
@@ -59,9 +59,9 @@ def parse_runner_variables(raw: str) -> dict[str, str]:
 
 
 def pin_pool_findings(pin_pool: str, daemon_pool: str, variables: dict[str, str]) -> tuple[list[str], list[str]]:
-    """(problems, warnings) for the pool of cmux-tui-pin-* pushes' daemon tests.
+    """(problems, warnings) for the pool of hmux-tui-pin-* pushes' daemon tests.
 
-    2026-10-21: every merged pull request pushes a cmux-tui-pin-* branch, and
+    2026-10-21: every merged pull request pushes a hmux-tui-pin-* branch, and
     its daemon tests flooded the pull request side lane; on CI_NEXT_DAEMON_POOL
     they queue ahead of the tests that gate nightly-next. A set
     CI_PIN_DAEMON_POOL equal to either fails, and so does the light-lane
@@ -77,13 +77,13 @@ def pin_pool_findings(pin_pool: str, daemon_pool: str, variables: dict[str, str]
             (SIDE_LANE_VARIABLE, side, "in the pull request side lane"),
         ):
             if label and pin_pool == label:
-                return [f"{PIN_POOL_VARIABLE}={pin_pool!r} is also {other}, so every cmux-tui-pin-* push queues "
+                return [f"{PIN_POOL_VARIABLE}={pin_pool!r} is also {other}, so every hmux-tui-pin-* push queues "
                         f"its daemon tests {why}. {fix}"], []
         return [], []
     light = variables.get(LIGHT_LANE_VARIABLE, "").strip()
-    via = f"{LIGHT_LANE_VARIABLE}={light!r} ({PIN_POOL_VARIABLE} is empty, so cmux-tui-pin-* daemon tests take it)"
+    via = f"{LIGHT_LANE_VARIABLE}={light!r} ({PIN_POOL_VARIABLE} is empty, so hmux-tui-pin-* daemon tests take it)"
     if light and light == side:
-        return [f"{via} is also {SIDE_LANE_VARIABLE}, so every cmux-tui-pin-* push queues its daemon tests "
+        return [f"{via} is also {SIDE_LANE_VARIABLE}, so every hmux-tui-pin-* push queues its daemon tests "
                 f"in the pull request side lane. {fix}"], []
     if light and light == daemon_pool:
         return [], [f"{via} is also {DAEMON_POOL_VARIABLE}: pin pushes share {light!r} with the daemon tests "
@@ -134,7 +134,7 @@ def problems(env: dict[str, str]) -> list[str]:
     for problem in slot_problems(env.get(SLOTS_VARIABLE), env.get(PR_XCODE_VARIABLE)):
         found.append(
             f"{problem}. The picker counts that as no owned machines. "
-            "Fix: build-fleet/mini-ops/set-owned-slots.sh in cmuxterm-hq"
+            "Fix: build-fleet/mini-ops/set-owned-slots.sh in hmuxterm-hq"
         )
     return found
 

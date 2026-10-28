@@ -9,8 +9,8 @@ import { join } from "node:path";
 import { handleSessionMessage } from "../server";
 import { setTranscriptRpcForTest } from "../adapters/transcript";
 
-const priorHooks = process.env.CMUX_AGENT_HOOK_STATE_DIR;
-const priorClaude = process.env.CMUX_CLAUDE_HOOK_STATE_PATH;
+const priorHooks = process.env.HMUX_AGENT_HOOK_STATE_DIR;
+const priorClaude = process.env.HMUX_CLAUDE_HOOK_STATE_PATH;
 const opened: string[] = [];
 const messages: any[] = [];
 const rpcCalls: { method: string; params: any }[] = [];
@@ -33,7 +33,7 @@ async function until(check: () => boolean, label: string) {
 
 let root: string | undefined;
 try {
-  // Queued-message reads go to the cmux control socket; keep them local.
+  // Queued-message reads go to the hmux control socket; keep them local.
   setTranscriptRpcForTest(async (method, params) => {
     rpcCalls.push({ method, params });
     return { ok: true, result: { messages: [] } };
@@ -41,8 +41,8 @@ try {
   const scratch = join(import.meta.dir, "../scratch");
   await mkdir(scratch, { recursive: true });
   root = await mkdtemp(join(scratch, "transcript-reconnect-"));
-  process.env.CMUX_AGENT_HOOK_STATE_DIR = root;
-  delete process.env.CMUX_CLAUDE_HOOK_STATE_PATH;
+  process.env.HMUX_AGENT_HOOK_STATE_DIR = root;
+  delete process.env.HMUX_CLAUDE_HOOK_STATE_PATH;
   await Promise.all(["claude", "codex"].map((agent) => writeFile(join(root!, `${agent}-hook-sessions.json`), "{}")));
 
   for (const agent of ["claude", "codex"] as const) {
@@ -111,9 +111,9 @@ try {
 } finally {
   for (const sessionId of opened) handleSessionMessage(ws, { op: "delete", sessionId });
   setTranscriptRpcForTest(null);
-  if (priorHooks === undefined) delete process.env.CMUX_AGENT_HOOK_STATE_DIR;
-  else process.env.CMUX_AGENT_HOOK_STATE_DIR = priorHooks;
-  if (priorClaude === undefined) delete process.env.CMUX_CLAUDE_HOOK_STATE_PATH;
-  else process.env.CMUX_CLAUDE_HOOK_STATE_PATH = priorClaude;
+  if (priorHooks === undefined) delete process.env.HMUX_AGENT_HOOK_STATE_DIR;
+  else process.env.HMUX_AGENT_HOOK_STATE_DIR = priorHooks;
+  if (priorClaude === undefined) delete process.env.HMUX_CLAUDE_HOOK_STATE_PATH;
+  else process.env.HMUX_CLAUDE_HOOK_STATE_PATH = priorClaude;
   if (root) await rm(root, { recursive: true, force: true });
 }

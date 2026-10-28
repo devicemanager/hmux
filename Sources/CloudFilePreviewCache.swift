@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import Darwin
 import Foundation
 
@@ -16,7 +16,7 @@ actor CloudFilePreviewCache {
     init(directory: URL = FileManager.default.temporaryDirectory, maximumEntries: Int = 32) {
         let owner = ProcessInfo.processInfo.processIdentifier
         root = directory.appendingPathComponent(
-            "cmux-cloud-previews-\(owner)-\(UUID().uuidString)",
+            "hmux-cloud-previews-\(owner)-\(UUID().uuidString)",
             isDirectory: true
         )
         self.maximumEntries = maximumEntries
@@ -32,7 +32,7 @@ actor CloudFilePreviewCache {
             options: [.skipsHiddenFiles]
         ) else { return }
         let cutoff = Date().addingTimeInterval(-staleDirectoryAge)
-        for url in urls where url.lastPathComponent.hasPrefix("cmux-cloud-previews-") {
+        for url in urls where url.lastPathComponent.hasPrefix("hmux-cloud-previews-") {
             guard !Task.isCancelled else { return }
             let components = url.lastPathComponent.split(separator: "-")
             guard components.count > 3, let owner = Int32(components[3]) else { continue }
@@ -88,7 +88,7 @@ actor CloudFilePreviewCache {
         let path = lease.remotePath, destination = lease.url
         let task = Task<Void, Error> {
             let temporary = destination.deletingLastPathComponent()
-                .appendingPathComponent(".cmux-refresh-" + UUID().uuidString, isDirectory: false)
+                .appendingPathComponent(".hmux-refresh-" + UUID().uuidString, isDirectory: false)
             defer { try? FileManager.default.removeItem(at: temporary) }
             try await provider.downloadFile(path: path, to: temporary)
             try Task.checkCancellation()

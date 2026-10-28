@@ -46,7 +46,7 @@ DEFAULT_ENFORCE_AFTER = "2026-10-27T16:00:00Z"
 REPORT_WEEK = dt.timedelta(days=7)
 ISSUE_TITLE = "nightly-next canary failed"
 # Every entry the canary writes starts with this (nightly-next-canary.yml).
-FAILURE_PREFIX = "cmux NEXT build "
+FAILURE_PREFIX = "hmux NEXT build "
 EXPLICIT = ("report", "enforce", "off")
 
 
@@ -111,7 +111,7 @@ def github_entries(repo: str, token: str) -> Callable[[dt.datetime], list[tuple[
         req = urllib.request.Request(url, headers={
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
-            "User-Agent": "cmux-nightly-next-canary-mode/1",
+            "User-Agent": "hmux-nightly-next-canary-mode/1",
             "X-GitHub-Api-Version": "2022-11-28",
         })
         with urllib.request.urlopen(req, timeout=20) as resp:

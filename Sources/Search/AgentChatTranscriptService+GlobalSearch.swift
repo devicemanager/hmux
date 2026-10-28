@@ -1,5 +1,5 @@
-import CmuxAgentChat
-import CmuxMobileHost
+import HmuxAgentChat
+import HmuxMobileHost
 import Foundation
 
 extension AgentChatTranscriptService {

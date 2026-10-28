@@ -21,8 +21,8 @@ describe("dependencyNameForHost", () => {
     expect(dependencyNameForHost("us.i.posthog.com")).toBe("posthog");
     expect(dependencyNameForHost("r.cmux.com")).toBe("posthog");
     expect(dependencyNameForHost("hooks.slack.com")).toBe("slack");
-    expect(dependencyNameForHost("machine-abc.vm.cmux.sh")).toBe("cmux-vm");
-    expect(dependencyNameForHost("files.cmux.com")).toBe("cmux");
+    expect(dependencyNameForHost("machine-abc.vm.cmux.sh")).toBe("hmux-vm");
+    expect(dependencyNameForHost("files.cmux.com")).toBe("hmux");
     expect(dependencyNameForHost("example.internal")).toBe("example.internal");
   });
 });
@@ -49,11 +49,11 @@ describe("dependencyAttributes", () => {
       "http.url": "https://api.freestyle.sh/v5/vms/vm-c29e0db6601a4aa39c7d6d9136b55df3/exec-await",
       "http.method": "POST",
     })).toEqual({
-      "cmux.dep.name": "freestyle",
-      "cmux.dep.host": "api.freestyle.sh",
-      "cmux.dep.method": "POST",
-      "cmux.dep.path": "/v5/vms/{id}/exec-await",
-      "cmux.dep.route": "POST /v5/vms/{id}/exec-await",
+      "hmux.dep.name": "freestyle",
+      "hmux.dep.host": "api.freestyle.sh",
+      "hmux.dep.method": "POST",
+      "hmux.dep.path": "/v5/vms/{id}/exec-await",
+      "hmux.dep.route": "POST /v5/vms/{id}/exec-await",
     });
   });
 
@@ -62,14 +62,14 @@ describe("dependencyAttributes", () => {
       "url.full": "https://api.stack-auth.com/api/v1/users/98c67a48-aeeb-41bd-8a81-182e1824f1fa?x=1",
       "http.request.method": "get",
     });
-    expect(attributes?.["cmux.dep.name"]).toBe("stack-auth");
-    expect(attributes?.["cmux.dep.route"]).toBe("GET /api/v1/users/{id}");
+    expect(attributes?.["hmux.dep.name"]).toBe("stack-auth");
+    expect(attributes?.["hmux.dep.route"]).toBe("GET /api/v1/users/{id}");
   });
 
   test("database spans are dependencies too", () => {
     expect(dependencyAttributes(SpanKind.CLIENT, { "db.system": "postgresql", "db.operation": "SELECT", "db.sql.table": "cloud_vms" })).toEqual({
-      "cmux.dep.name": "postgresql",
-      "cmux.dep.route": "SELECT cloud_vms",
+      "hmux.dep.name": "postgresql",
+      "hmux.dep.route": "SELECT cloud_vms",
     });
   });
 
@@ -77,7 +77,7 @@ describe("dependencyAttributes", () => {
     expect(dependencyAttributes(SpanKind.SERVER, { "http.url": "https://cmux.com/api/vm" })).toBeUndefined();
     expect(dependencyAttributes(SpanKind.INTERNAL, { "db.system": "postgresql" })).toBeUndefined();
     expect(dependencyAttributes(SpanKind.CLIENT, { "http.url": "not a url" })).toBeUndefined();
-    expect(dependencyAttributes(SpanKind.CLIENT, { "cmux.subsystem": "vm-cloud" })).toBeUndefined();
+    expect(dependencyAttributes(SpanKind.CLIENT, { "hmux.subsystem": "vm-cloud" })).toBeUndefined();
   });
 });
 
@@ -92,7 +92,7 @@ describe("DependencySpanProcessor", () => {
     await provider.shutdown();
   });
 
-  test("exported outbound spans carry cmux.dep.* alongside the instrumentation's own attributes", async () => {
+  test("exported outbound spans carry hmux.dep.* alongside the instrumentation's own attributes", async () => {
     tracer
       .startSpan("fetch POST https://api.freestyle.sh/v5/vms", {
         kind: SpanKind.CLIENT,
@@ -100,13 +100,13 @@ describe("DependencySpanProcessor", () => {
       })
       .setAttribute("http.status_code", 502)
       .end();
-    tracer.startSpan("cmux.api.POST /api/vm", { kind: SpanKind.SERVER }).end();
+    tracer.startSpan("hmux.api.POST /api/vm", { kind: SpanKind.SERVER }).end();
     await provider.forceFlush();
     const [outbound, inbound] = exporter.getFinishedSpans();
-    expect(outbound.attributes["cmux.dep.name"]).toBe("freestyle");
-    expect(outbound.attributes["cmux.dep.route"]).toBe("POST /v5/vms");
+    expect(outbound.attributes["hmux.dep.name"]).toBe("freestyle");
+    expect(outbound.attributes["hmux.dep.route"]).toBe("POST /v5/vms");
     expect(outbound.attributes["http.status_code"]).toBe(502);
-    expect(inbound.attributes["cmux.dep.name"]).toBeUndefined();
+    expect(inbound.attributes["hmux.dep.name"]).toBeUndefined();
     expect(trace.isSpanContextValid(outbound.spanContext())).toBe(true);
   });
 });

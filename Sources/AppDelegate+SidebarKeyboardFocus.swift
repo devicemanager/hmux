@@ -1,7 +1,7 @@
 import AppKit
 
 /// Focus Sidebar (cx-zjtn.5): the workspace list takes the keyboard, as in
-/// cmux-next. Down/Up select the next/previous workspace while the list keeps
+/// hmux-next. Down/Up select the next/previous workspace while the list keeps
 /// focus; Return or Escape hand the keyboard back to the selected workspace.
 extension AppDelegate {
     /// Reveals the window's workspace sidebar when hidden and focuses its list.

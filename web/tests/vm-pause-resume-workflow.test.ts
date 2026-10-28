@@ -12,7 +12,7 @@ import { PAUSE_OPERATION_TIMEOUT_MS, PAUSE_STATE_PROBE_TIMEOUT_MS, pauseVm, resu
 import { VmProviderOperationError } from "../services/vms/errors";
 import { providerConflictKind } from "../services/vms/drivers/types";
 
-// `cmux vm pause` / `cmux vm resume`: park a machine and wake it through the
+// `hmux vm pause` / `hmux vm resume`: park a machine and wake it through the
 // same suspended-resume path every open and exec uses. Fake repository and
 // gateway layers, so the contract is pinned without a database or a provider.
 
@@ -343,7 +343,7 @@ describe("resumeVm", () => {
     const { recorded, layer } = fakes({
       row: machineRow({
         status: "paused",
-        providerMetadata: { cmuxResourceReservation: { vcpus: 12, memoryMb: 24 * 1024, diskMb: 65536 } },
+        providerMetadata: { hmuxResourceReservation: { vcpus: 12, memoryMb: 24 * 1024, diskMb: 65536 } },
       }),
       providerStatus: "paused",
     });
@@ -372,7 +372,7 @@ describe("resumeVm", () => {
     const { recorded, layer } = fakes({
       row: machineRow({ status: "paused" }),
       providerStatus: "paused",
-      // A legacy Max-sized machine has no cmuxResourceReservation marker.
+      // A legacy Max-sized machine has no hmuxResourceReservation marker.
       stats: { cpus: 12, memoryTotalMb: 24 * 1024, diskTotalMb: 65536 },
       onReservation: () => undefined,
     });

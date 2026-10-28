@@ -33,8 +33,8 @@
     },
     "terminal.sample" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last login: Fri Aug 7 19:45:12 on ttys006\n\n~/cmux  git:(feat/keyboard-pinning-lab)\n❯" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最終ログイン: 8月7日 金 19:45:12 ttys006\n\n~/cmux  git:(feat/keyboard-pinning-lab)\n❯" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "Last login: Fri Aug 7 19:45:12 on ttys006\n\n~/hmux  git:(feat/keyboard-pinning-lab)\n❯" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "最終ログイン: 8月7日 金 19:45:12 ttys006\n\n~/hmux  git:(feat/keyboard-pinning-lab)\n❯" } }
       }
     },
     "terminal.accessibility" : {
@@ -45,8 +45,8 @@
     },
     "workspace.title" : {
       "localizations" : {
-        "en" : { "stringUnit" : { "state" : "translated", "value" : "cmux DEV lab" } },
-        "ja" : { "stringUnit" : { "state" : "translated", "value" : "cmux DEV ラボ" } }
+        "en" : { "stringUnit" : { "state" : "translated", "value" : "hmux DEV lab" } },
+        "ja" : { "stringUnit" : { "state" : "translated", "value" : "hmux DEV ラボ" } }
       }
     }
   },

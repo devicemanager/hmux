@@ -54,7 +54,7 @@ function analyticsPlan(metadata: unknown): "free" | "go" | "pro" | "max" | "team
   if (!metadata || typeof metadata !== "object" || Array.isArray(metadata)) {
     return "free";
   }
-  const plan = (metadata as Record<string, unknown>).cmuxPlan;
+  const plan = (metadata as Record<string, unknown>).hmuxPlan;
   return plan === "go" || plan === "pro" || plan === "max" || plan === "team" ? plan : "free";
 }
 

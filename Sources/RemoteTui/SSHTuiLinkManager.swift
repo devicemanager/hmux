@@ -1,7 +1,7 @@
-import CmuxCloud
-import CmuxCloudTui
+import HmuxCloud
+import HmuxCloudTui
 import Foundation
-import CmuxCore
+import HmuxCore
 
 /// Owns one SSH carrier and shares it between native projections and control requests.
 actor SSHTuiLinkManager: RemoteTuiLinkManaging {
@@ -150,7 +150,7 @@ actor SSHTuiLinkManager: RemoteTuiLinkManaging {
     }
 
     /// The local listener port for one loopback port on the SSH host, started
-    /// on first use and replaced when its `cmux-tui remote forward` child exits.
+    /// on first use and replaced when its `hmux-tui remote forward` child exits.
     /// `onExit` runs if the child exits after it was ready.
     func loopbackForward(machineID: String, port: Int,
                          onExit: @escaping @Sendable () -> Void = {}) async throws -> UInt16 {
@@ -255,7 +255,7 @@ actor SSHTuiLinkManager: RemoteTuiLinkManaging {
 }
 
 extension SSHTuiLinkManager {
-    /// Owns one `cmux-tui remote forward` process: a loopback listener on this
+    /// Owns one `hmux-tui remote forward` process: a loopback listener on this
     /// Mac that carries browser traffic to one loopback port on the SSH host.
     actor LoopbackForwardProcess {
         private var process: Process?

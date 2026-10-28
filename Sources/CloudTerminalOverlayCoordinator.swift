@@ -1,11 +1,11 @@
-import CmuxCloudBannerCore
-import CmuxCloud
+import HmuxCloudBannerCore
+import HmuxCloud
 import AppKit
-import CmuxTerminal
+import HmuxTerminal
 import os
 
 private let cloudTerminalPresentationLogger = Logger(
-    subsystem: "com.cmuxterm.app", category: "CloudTerminalPresentation"
+    subsystem: "com.hmuxterm.app", category: "CloudTerminalPresentation"
 )
 
 /// Owns one status card across the representable anchor and the native portal.

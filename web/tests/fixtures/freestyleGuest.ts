@@ -24,15 +24,15 @@ export type GuestExecRequest = {
 let testDistribution: Promise<GuestCliDistribution> | undefined;
 /** Builds the synthetic guest CLI archive once; a failed build is retried by the next caller. */
 const syntheticDistribution = () => (testDistribution ??= (async () => {
-  const root = mkdtempSync(join(tmpdir(), "cmux-guest-cli-fixture-"));
+  const root = mkdtempSync(join(tmpdir(), "hmux-guest-cli-fixture-"));
   const source = join(root, "source");
   mkdirSync(source);
   const facade = "#!/bin/sh\nprintf 'synthetic facade\\n'\n";
   const core = "#!/bin/sh\nprintf 'synthetic core\\n'\n";
-  writeFileSync(join(source, "cmux-cloud-cli"), facade, { mode: 0o755 });
+  writeFileSync(join(source, "hmux-cloud-cli"), facade, { mode: 0o755 });
   writeFileSync(join(source, "coderouter"), core, { mode: 0o755 });
   const archive = join(root, "cli.tar.gz");
-  const tar = await runChild("tar", ["-czf", archive, "-C", source, "cmux-cloud-cli", "coderouter"], {
+  const tar = await runChild("tar", ["-czf", archive, "-C", source, "hmux-cloud-cli", "coderouter"], {
     env: { ...process.env, COPYFILE_DISABLE: "1" },
   });
   if (tar.status !== 0) throw new Error("could not create the synthetic guest CLI archive");
@@ -40,7 +40,7 @@ const syntheticDistribution = () => (testDistribution ??= (async () => {
   return {
     url: pathToFileURL(archive).href,
     archiveSha256: digest(readFileSync(archive)),
-    binaries: { "cmux-cloud-cli": digest(facade), coderouter: digest(core) },
+    binaries: { "hmux-cloud-cli": digest(facade), coderouter: digest(core) },
   } satisfies GuestCliDistribution;
 })().catch((error: unknown) => {
   testDistribution = undefined;

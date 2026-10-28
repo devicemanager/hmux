@@ -1,7 +1,7 @@
 import AppKit
-import CmuxAgentQuestion
-import CmuxChief
-import CmuxHomeCore
+import HmuxAgentQuestion
+import HmuxChief
+import HmuxHomeCore
 import Foundation
 import MessagesLabHome
 

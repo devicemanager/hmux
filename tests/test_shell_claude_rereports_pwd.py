@@ -51,59 +51,59 @@ _test_prompt
 
 class ClaudeRereportsPwd(unittest.TestCase):
     def run_shell(self, shell: str, body: str) -> list[str]:
-        with tempfile.TemporaryDirectory(prefix="cmux-claude-pwd-", dir="/tmp") as tmp:
+        with tempfile.TemporaryDirectory(prefix="hmux-claude-pwd-", dir="/tmp") as tmp:
             directory = Path(tmp)
             log = directory / "messages"
             if shell == "fish":
                 script_path = INTEGRATION_DIR / "fish/config.fish"
             else:
-                script_path = INTEGRATION_DIR / f"cmux-{shell}-integration.{shell}"
+                script_path = INTEGRATION_DIR / f"hmux-{shell}-integration.{shell}"
             env = {
                 "HOME": tmp,
                 "TMPDIR": tmp,
                 "PATH": "/usr/bin:/bin",
                 "TERM": "xterm-256color",
-                "CMUX_SOCKET_PATH": str(directory / "socket"),
-                "CMUX_TAB_ID": str(uuid.uuid4()),
-                "CMUX_PANEL_ID": str(uuid.uuid4()),
-                "CMUX_NO_GIT_WATCH": "1",
-                "CMUX_NO_PR_WATCH": "1",
-                "CMUX_SHELL_INTEGRATION": "1",
-                "CMUX_FISH_USER_CONFIG_ALREADY_LOADED": "1",
-                "CMUX_TEST_SCRIPT": str(script_path),
-                "CMUX_TEST_LOG": str(log),
+                "HMUX_SOCKET_PATH": str(directory / "socket"),
+                "HMUX_TAB_ID": str(uuid.uuid4()),
+                "HMUX_PANEL_ID": str(uuid.uuid4()),
+                "HMUX_NO_GIT_WATCH": "1",
+                "HMUX_NO_PR_WATCH": "1",
+                "HMUX_SHELL_INTEGRATION": "1",
+                "HMUX_FISH_USER_CONFIG_ALREADY_LOADED": "1",
+                "HMUX_TEST_SCRIPT": str(script_path),
+                "HMUX_TEST_LOG": str(log),
             }
             if shell == "fish":
                 fish = shutil.which("fish")
                 assert fish is not None
                 script = r'''
-source "$CMUX_TEST_SCRIPT"
-function _cmux_send
-    printf '%s\n' $argv >> "$CMUX_TEST_LOG"
+source "$HMUX_TEST_SCRIPT"
+function _hmux_send
+    printf '%s\n' $argv >> "$HMUX_TEST_LOG"
 end
-function _cmux_send_bg
-    _cmux_send $argv
+function _hmux_send_bg
+    _hmux_send $argv
 end
-set -g _CMUX_TTY_NAME ttys-contract
-set -g _CMUX_PORTS_LAST_RUN (date +%s)
+set -g _HMUX_TTY_NAME ttys-contract
+set -g _HMUX_PORTS_LAST_RUN (date +%s)
 function _test_prompt
-    _cmux_prompt
+    _hmux_prompt
 end
 function _test_preexec
-    _cmux_preexec $argv[1]
+    _hmux_preexec $argv[1]
 end
 ''' + body
                 argv = [fish, "-c", script]
             else:
-                prompt = "_cmux_precmd" if shell == "zsh" else "_cmux_prompt_command"
-                preexec = "_cmux_preexec" if shell == "zsh" else "_cmux_preexec_command"
+                prompt = "_hmux_precmd" if shell == "zsh" else "_hmux_prompt_command"
+                preexec = "_hmux_preexec" if shell == "zsh" else "_hmux_preexec_command"
                 script = r'''
-source "$CMUX_TEST_SCRIPT"
-_cmux_send() { printf '%s\n' "$@" >> "$CMUX_TEST_LOG"; }
-_cmux_send_bg() { _cmux_send "$@"; }
-_cmux_capture_shell_start_time() { return 1; }
-_CMUX_TTY_NAME=ttys-contract
-_CMUX_PORTS_LAST_RUN=-100
+source "$HMUX_TEST_SCRIPT"
+_hmux_send() { printf '%s\n' "$@" >> "$HMUX_TEST_LOG"; }
+_hmux_send_bg() { _hmux_send "$@"; }
+_hmux_capture_shell_start_time() { return 1; }
+_HMUX_TTY_NAME=ttys-contract
+_HMUX_PORTS_LAST_RUN=-100
 '''
                 script += f'_test_prompt() {{ {prompt}; }}\n'
                 script += f'_test_preexec() {{ {preexec} "$1"; }}\n'
@@ -113,7 +113,7 @@ _CMUX_PORTS_LAST_RUN=-100
             script_done = '\nprintf "CONTRACT_FINISHED\\n"\n'
             argv[-1] += script_done
             with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as listener:
-                listener.bind(env["CMUX_SOCKET_PATH"])
+                listener.bind(env["HMUX_SOCKET_PATH"])
                 result = subprocess.run(
                     argv, cwd=tmp, env=env, capture_output=True, text=True, timeout=15,
                 )
@@ -139,7 +139,7 @@ _CMUX_PORTS_LAST_RUN=-100
         # the prompt's dedupe directly.
         reports = self.run_shell("bash", r'''
 _test_prompt
-( _CMUX_IN_PREEXEC=1; _cmux_preexec_command 'claude' )
+( _HMUX_IN_PREEXEC=1; _hmux_preexec_command 'claude' )
 _test_prompt
 _test_prompt
 ''')

@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxIrohTransport
+import HMUXMobileCore
+import HmuxIrohTransport
 
 /// Presentation fields for a Mac already authorized by the v2 directory.
 struct DeviceDiscoveredMac: Sendable {

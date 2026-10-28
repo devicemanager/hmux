@@ -6,7 +6,7 @@ import Foundation
 /// list: glyph then title on one line, with the details in the glyph's
 /// tooltip.
 ///
-/// Compact mode folds in the lines cmux generates on your behalf: the
+/// Compact mode folds in the lines hmux generates on your behalf: the
 /// agent-owned status entries (agent hooks report their lifecycle as keyed
 /// entries, `set_status claude_code Running --icon=bolt.fill`), the
 /// branch/directory line, the pull request rows, the notification preview,
@@ -14,7 +14,7 @@ import Foundation
 /// one line, so title wrapping does not undo it.
 ///
 /// Lines you asked for yourself stay where they are: the workspace
-/// description, your own `cmux set-status` keys, logs, progress, ports, the
+/// description, your own `hmux set-status` keys, logs, progress, ports, the
 /// checklist, and a remote workspace's connection row with its Reconnect
 /// button. Those carry text and controls a user chose to put there, so
 /// compact mode does not hide them; `set-status` under your own key stays the
@@ -38,7 +38,7 @@ import Foundation
 ///    the unread count; see ``applyingUnread(_:latestNotificationText:)``. It
 ///    outranks "starting", which asks for nothing.
 /// 8. Pull request: merged purple, open gray, closed gray with a minus badge.
-///    cmux does not fetch CI or mergeability for a pull request, so there is
+///    hmux does not fetch CI or mergeability for a pull request, so there is
 ///    no passing/failing/conflict glyph: adding one would advertise a color
 ///    no user could see. See #12807.
 /// 9. Agent idle (done and seen): gray checkmark.
@@ -75,7 +75,7 @@ struct SidebarCompactStatusGlyph: Equatable, Hashable {
     var iconOverrides: [String: String] = [:]
 
     /// The customizable states; raw values are the `sidebar.compactStatusIcons`
-    /// keys in cmux.json.
+    /// keys in hmux.json.
     enum IconSlot: String, CaseIterable {
         case error
         case needsInput

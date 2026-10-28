@@ -139,7 +139,7 @@ describe("billing plan route", () => {
     currentUser = planUser({
       selectedTeam: {
         id: "team-plan",
-        clientReadOnlyMetadata: { cmuxPlan: "team" },
+        clientReadOnlyMetadata: { hmuxPlan: "team" },
       },
     });
     stripeSubscriptionResults = [[], []];
@@ -171,7 +171,7 @@ describe("billing plan route", () => {
     stackAuthUnavailable = true;
 
     const response = await GET(
-      new NextRequest("https://cmux.test/api/billing/plan"),
+      new NextRequest("https://hmux.test/api/billing/plan"),
     );
 
     expect(response.status).toBe(503);
@@ -182,7 +182,7 @@ describe("billing plan route", () => {
 });
 
 async function planResponse() {
-  const response = await GET(new NextRequest("https://cmux.test/api/billing/plan"));
+  const response = await GET(new NextRequest("https://hmux.test/api/billing/plan"));
   return response.json() as Promise<Record<string, unknown>>;
 }
 

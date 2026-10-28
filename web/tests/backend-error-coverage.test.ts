@@ -113,7 +113,7 @@ const pushTokenRevocations = await import("../app/api/cron/push-token-revocation
 const cloudDiagnostics = await import("../app/api/cron/cloud-diagnostics/route");
 
 function cronRequest(path: string, authorization = "Bearer cron-secret"): Request {
-  return new Request(`https://cmux.test/api/cron/${path}`, { headers: { authorization } });
+  return new Request(`https://hmux.test/api/cron/${path}`, { headers: { authorization } });
 }
 
 function scheduleFor(cron: string): string | undefined {
@@ -209,7 +209,7 @@ describe("route span records a caught error behind a 5xx", () => {
 
   test("an unreported 5xx keeps the status and names the VM error code", async () => {
     const span = await route(async () =>
-      new Response("{}", { status: 503, headers: { "x-cmux-vm-error": "vm_create_failed" } }));
+      new Response("{}", { status: 503, headers: { "x-hmux-vm-error": "vm_create_failed" } }));
     expect(span.status).toEqual({ code: SpanStatusCode.ERROR, message: "HTTP 503 vm_create_failed" });
     expect(span.events).toEqual([]);
   });
@@ -298,7 +298,7 @@ describe("cron routes report failures and check in", () => {
   });
 
   test("the Hexclave inbox drain refuses a request without the cron secret", async () => {
-    const response = await hexclaveInbox.GET(new Request("https://cmux.test/api/cron/hexclave-inbox"));
+    const response = await hexclaveInbox.GET(new Request("https://hmux.test/api/cron/hexclave-inbox"));
     expect(response.status).toBe(401);
   });
 
@@ -326,8 +326,8 @@ describe("cron routes report failures and check in", () => {
       warnSpy.mockRestore();
     }
     expect(checkIns.map((entry) => entry.checkIn.status)).toEqual(["in_progress", "ok"]);
-    expect(reportLogs).not.toContain("cmux.observability.error");
-    expect(reportLogs).toContain("cmux.cron.cloud_diagnostics.unconfigured");
+    expect(reportLogs).not.toContain("hmux.observability.error");
+    expect(reportLogs).toContain("hmux.cron.cloud_diagnostics.unconfigured");
     expect(events).toEqual([]);
   });
 

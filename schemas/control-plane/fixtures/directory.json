@@ -17,7 +17,7 @@
         "revoked": false,
         "appVersion": "0.31.4",
         "releaseTrack": "internal",
-        "capabilities": ["cmux.irx.v1"],
+        "capabilities": ["hmux.irx.v1"],
         "lastConfirmedAt": "2026-08-27T02:49:40Z"
       },
       {

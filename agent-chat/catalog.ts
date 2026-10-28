@@ -57,7 +57,7 @@ interface CatalogStoreOptions {
 
 const PROVIDERS = ["claude", "codex", "gemini"] as const;
 const DEFAULT_URL = "https://cmux.com/api/agent-models";
-const DEFAULT_CACHE = `${homedir()}/.cache/cmux-agent-chat/models.json`;
+const DEFAULT_CACHE = `${homedir()}/.cache/hmux-agent-chat/models.json`;
 export const AGENT_MODEL_CATALOG_TTL_MS = 60 * 60_000;
 
 export function validateAgentModelCatalog(input: unknown): AgentModelCatalogPayload {
@@ -161,7 +161,7 @@ export class AgentModelCatalogStore {
   private listeners = new Set<(payload: AgentModelCatalogPayload) => void>();
 
   constructor(options: CatalogStoreOptions = {}) {
-    this.url = options.url ?? process.env.CMUX_AGENT_MODELS_URL ?? DEFAULT_URL;
+    this.url = options.url ?? process.env.HMUX_AGENT_MODELS_URL ?? DEFAULT_URL;
     this.cacheFile = options.cacheFile ?? DEFAULT_CACHE;
     this.ttlMs = options.ttlMs ?? AGENT_MODEL_CATALOG_TTL_MS;
     this.fetcher = options.fetcher ?? fetch;

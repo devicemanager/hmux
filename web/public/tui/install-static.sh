@@ -1,31 +1,31 @@
 #!/bin/sh
 set -eu
 
-base_url="${CMUX_DOWNLOAD_BASE_URL:-https://files.cmux.com/cmux-tui/latest}"
+base_url="${HMUX_DOWNLOAD_BASE_URL:-https://files.cmux.com/hmux-tui/latest}"
 base_url="${base_url%/}"
-install_root="${CMUX_INSTALL:-$HOME/.cmux}"
+install_root="${HMUX_INSTALL:-$HOME/.hmux}"
 bin_dir="$install_root/bin"
 
 os="$(uname -s)"
 arch="$(uname -m)"
 
 case "$os-$arch" in
-  Darwin-arm64) artifact="cmux-tui-aarch64-apple-darwin" ;;
-  Darwin-x86_64) artifact="cmux-tui-x86_64-apple-darwin" ;;
-  Linux-x86_64 | Linux-amd64) artifact="cmux-tui-x86_64-unknown-linux-gnu" ;;
-  Linux-aarch64 | Linux-arm64) artifact="cmux-tui-aarch64-unknown-linux-gnu" ;;
+  Darwin-arm64) artifact="hmux-tui-aarch64-apple-darwin" ;;
+  Darwin-x86_64) artifact="hmux-tui-x86_64-apple-darwin" ;;
+  Linux-x86_64 | Linux-amd64) artifact="hmux-tui-x86_64-unknown-linux-gnu" ;;
+  Linux-aarch64 | Linux-arm64) artifact="hmux-tui-aarch64-unknown-linux-gnu" ;;
   *)
-    echo "cmux: unsupported platform $os-$arch" >&2
+    echo "hmux: unsupported platform $os-$arch" >&2
     exit 1
     ;;
 esac
 
 if ! command -v curl >/dev/null 2>&1; then
-  echo "cmux: curl is required" >&2
+  echo "hmux: curl is required" >&2
   exit 1
 fi
 
-tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/cmux-install.XXXXXX")"
+tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/hmux-install.XXXXXX")"
 trap 'rm -rf "$tmp_dir"' EXIT HUP INT TERM
 
 curl --proto '=https' --tlsv1.2 -fsSL "$base_url/manifest.json" \
@@ -35,7 +35,7 @@ checksum="$(
     "$tmp_dir/manifest.json"
 )"
 if [ "${#checksum}" -ne 64 ]; then
-  echo "cmux: $artifact is unavailable for this release" >&2
+  echo "hmux: $artifact is unavailable for this release" >&2
   exit 1
 fi
 
@@ -44,7 +44,7 @@ commit="$(
     "$tmp_dir/manifest.json"
 )"
 if [ "${#commit}" -ne 40 ]; then
-  echo "cmux: manifest has no commit" >&2
+  echo "hmux: manifest has no commit" >&2
   exit 1
 fi
 
@@ -54,24 +54,24 @@ case "$artifact_base_url" in
 esac
 
 curl --proto '=https' --tlsv1.2 -fsSL "$artifact_base_url/$artifact" \
-  -o "$tmp_dir/cmux"
+  -o "$tmp_dir/hmux"
 
 if command -v shasum >/dev/null 2>&1; then
-  actual="$(shasum -a 256 "$tmp_dir/cmux" | awk '{print $1}')"
+  actual="$(shasum -a 256 "$tmp_dir/hmux" | awk '{print $1}')"
 elif command -v sha256sum >/dev/null 2>&1; then
-  actual="$(sha256sum "$tmp_dir/cmux" | awk '{print $1}')"
+  actual="$(sha256sum "$tmp_dir/hmux" | awk '{print $1}')"
 else
-  echo "cmux: shasum or sha256sum is required" >&2
+  echo "hmux: shasum or sha256sum is required" >&2
   exit 1
 fi
 
 if [ "$actual" != "$checksum" ]; then
-  echo "cmux: checksum verification failed" >&2
+  echo "hmux: checksum verification failed" >&2
   exit 1
 fi
 
 mkdir -p "$bin_dir"
-install -m 755 "$tmp_dir/cmux" "$bin_dir/cmux"
+install -m 755 "$tmp_dir/hmux" "$bin_dir/hmux"
 
 case ":$PATH:" in
   *":$bin_dir:"*) ;;
@@ -88,15 +88,15 @@ case ":$PATH:" in
       *) profile=""; line="" ;;
     esac
     if [ -n "$profile" ] && ! grep -F "$bin_dir" "$profile" >/dev/null 2>&1; then
-      printf '\n# cmux\n%s\n' "$line" >>"$profile"
-      echo "Added cmux to PATH in $profile"
+      printf '\n# hmux\n%s\n' "$line" >>"$profile"
+      echo "Added hmux to PATH in $profile"
     else
-      echo "Add $bin_dir to PATH to run cmux from a new shell."
+      echo "Add $bin_dir to PATH to run hmux from a new shell."
     fi
     ;;
 esac
 
-echo "Installed cmux to $bin_dir/cmux"
+echo "Installed hmux to $bin_dir/hmux"
 
 curl --proto '=https' --tlsv1.2 -fsS --max-time 2 \
   -H 'content-type: application/json' \

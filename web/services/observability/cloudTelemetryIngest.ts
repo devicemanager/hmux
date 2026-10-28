@@ -39,7 +39,7 @@ function ingest(request: Request, dependencies: CloudTelemetryIngestDependencies
     const labels: Record<string, string> = {};
     const ingress = yield* Effect.tryPromise(() => dependencies.checkIngress(request));
     if (ingress !== true) {
-      if (ingress) labels["cmux.telemetry.rate_limit_rule"] = ingress.rateLimitRule;
+      if (ingress) labels["hmux.telemetry.rate_limit_rule"] = ingress.rateLimitRule;
       // Before authentication and parsing, so only the cause and the rule are known.
       return refuse(429, "rate_limited", { submitted: 0, accepted: 0, rejected: 0, coerced: 0, refusal: "ingress_rate_limited" }, labels, dependencies.now());
     }
@@ -49,7 +49,7 @@ function ingest(request: Request, dependencies: CloudTelemetryIngestDependencies
     const user = yield* Effect.tryPromise(() => dependencies.authenticate(request));
     if (!user) return response(401, "unauthorized");
     const accountKey = cloudTelemetryAccountKeyFromEnvironment(user.id);
-    if (accountKey) labels["cmux.account_key"] = accountKey;
+    if (accountKey) labels["hmux.account_key"] = accountKey;
     const body = yield* Effect.tryPromise(() => readBoundedJsonObject(request, CLOUD_TELEMETRY_MAX_BYTES));
     if (!body.ok) {
       return refuse(body.error === "request_too_large" ? 413 : 400, body.error, { submitted: 0, accepted: 0, rejected: 0, coerced: 0, refusal: body.error }, labels, dependencies.now());
@@ -59,7 +59,7 @@ function ingest(request: Request, dependencies: CloudTelemetryIngestDependencies
       return refuse(400, "invalid_diagnostics", { submitted: parsed.submitted, accepted: 0, rejected: parsed.submitted, coerced: 0, refusal: parsed.reason }, labels, dependencies.now());
     }
     const { upload } = parsed;
-    if (upload.batch.client.instanceId) labels["cmux.client.instance_id"] = upload.batch.client.instanceId;
+    if (upload.batch.client.instanceId) labels["hmux.client.instance_id"] = upload.batch.client.instanceId;
     yield* store(user.id, upload.batch, dependencies).pipe(
       Effect.tapError((error) => Effect.sync(() => {
         const stored = error instanceof CloudTelemetryLimitError ? error.storedSpans : 0;
@@ -119,13 +119,13 @@ function uploadCounts(upload: CloudTelemetryUpload): UploadOutcome {
 function outcomeAttributes(outcome: UploadOutcome, labels: Readonly<Record<string, string>>): Attributes {
   return {
     ...labels,
-    "cmux.telemetry.submitted_spans": outcome.submitted,
-    "cmux.telemetry.accepted_spans": outcome.accepted,
-    "cmux.telemetry.rejected_spans": outcome.rejected,
-    "cmux.telemetry.coerced_spans": outcome.coerced,
-    ...(outcome.refusal ? { "cmux.telemetry.refusal": outcome.refusal } : {}),
-    ...(outcome.rejectedReasons ? { "cmux.telemetry.rejected_reasons": outcome.rejectedReasons } : {}),
-    ...(outcome.stored ? { "cmux.telemetry.stored_spans": outcome.stored } : {}),
+    "hmux.telemetry.submitted_spans": outcome.submitted,
+    "hmux.telemetry.accepted_spans": outcome.accepted,
+    "hmux.telemetry.rejected_spans": outcome.rejected,
+    "hmux.telemetry.coerced_spans": outcome.coerced,
+    ...(outcome.refusal ? { "hmux.telemetry.refusal": outcome.refusal } : {}),
+    ...(outcome.rejectedReasons ? { "hmux.telemetry.rejected_reasons": outcome.rejectedReasons } : {}),
+    ...(outcome.stored ? { "hmux.telemetry.stored_spans": outcome.stored } : {}),
   };
 }
 
@@ -137,16 +137,16 @@ function recordUploadOutcome(outcome: UploadOutcome, labels: Readonly<Record<str
 /**
  * The route span is head-sampled with the app-wide 2% ratio, so a refusal also
  * leaves its own always-kept span: refused uploads are countable in Axiom by
- * cause, firewall rule, account and install. `cmux.telemetry.refusal_count` is
+ * cause, firewall rule, account and install. `hmux.telemetry.refusal_count` is
  * the number of refusals the span stands for.
  */
 function recordRefusal(status: number, outcome: UploadOutcome, labels: Readonly<Record<string, string>>, refusalCount = 1): void {
   recordUploadOutcome(outcome, labels);
-  trace.getTracer("cmux.cloud-diagnostics").startSpan(CLOUD_TELEMETRY_REFUSAL_SPAN, {
+  trace.getTracer("hmux.cloud-diagnostics").startSpan(CLOUD_TELEMETRY_REFUSAL_SPAN, {
     root: true, kind: SpanKind.INTERNAL,
     attributes: {
-      ...outcomeAttributes(outcome, labels), "cmux.priority": true, "http.response.status_code": status,
-      "cmux.telemetry.refusal_count": refusalCount,
+      ...outcomeAttributes(outcome, labels), "hmux.priority": true, "http.response.status_code": status,
+      "hmux.telemetry.refusal_count": refusalCount,
     },
   }).end();
 }
@@ -163,7 +163,7 @@ const REFUSAL_COALESCE_MAX_KEYS = 1_000;
 const pendingRefusals = new Map<string, { readonly emittedAtMs: number; readonly suppressed: number }>();
 
 function refuse(status: number, error: string, outcome: UploadOutcome, labels: Readonly<Record<string, string>>, nowMs: number): Response {
-  const key = [outcome.refusal, labels["cmux.telemetry.rate_limit_rule"], labels["cmux.account_key"]].join("\u0000");
+  const key = [outcome.refusal, labels["hmux.telemetry.rate_limit_rule"], labels["hmux.account_key"]].join("\u0000");
   const pending = pendingRefusals.get(key);
   if (pending && nowMs - pending.emittedAtMs < REFUSAL_COALESCE_WINDOW_MS) {
     pendingRefusals.set(key, { ...pending, suppressed: pending.suppressed + 1 });
@@ -177,7 +177,7 @@ function refuse(status: number, error: string, outcome: UploadOutcome, labels: R
 }
 
 /** The always-sampled span name for a refused upload. */
-export const CLOUD_TELEMETRY_REFUSAL_SPAN = "cmux.cloud_diagnostics.refusal";
+export const CLOUD_TELEMETRY_REFUSAL_SPAN = "hmux.cloud_diagnostics.refusal";
 
 
 function storeRefusalStatus(error: unknown): number {
@@ -199,7 +199,7 @@ function storeRefusal(error: unknown): string {
  * is left out, never sent raw.
  */
 function cloudTelemetryAccountKeyFromEnvironment(userId: string): string | undefined {
-  const key = process.env.CMUX_CLOUD_TELEMETRY_ID_KEY?.trim();
+  const key = process.env.HMUX_CLOUD_TELEMETRY_ID_KEY?.trim();
   return key && key.length >= 32 ? cloudTelemetryAccountKey(key, userId) : undefined;
 }
 

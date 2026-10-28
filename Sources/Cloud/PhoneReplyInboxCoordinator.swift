@@ -1,9 +1,9 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
-import CmuxPhonePush
+import HmuxPhonePush
 import OSLog
 
-private let phoneReplySweepLog = Logger(subsystem: "dev.cmux", category: "phone-reply-inbox")
+private let phoneReplySweepLog = Logger(subsystem: "dev.hmux", category: "phone-reply-inbox")
 
 /// Delivers relayed phone inline-notification replies into the terminal.
 ///
@@ -78,7 +78,7 @@ final class PhoneReplyInboxCoordinator {
     func sweepSoon(reason: String) {
         guard client != nil else {
             #if DEBUG
-            cmuxDebugLog("phoneReply.sweepSkipped reason=\(reason) cause=no_client")
+            hmuxDebugLog("phoneReply.sweepSkipped reason=\(reason) cause=no_client")
             #endif
             return
         }
@@ -87,7 +87,7 @@ final class PhoneReplyInboxCoordinator {
             return
         }
         #if DEBUG
-        cmuxDebugLog("phoneReply.sweepScheduled reason=\(reason)")
+        hmuxDebugLog("phoneReply.sweepScheduled reason=\(reason)")
         #endif
         phoneReplySweepLog.debug("reply sweep scheduled: \(reason, privacy: .public)")
         sweepTask = Task { @MainActor [weak self] in
@@ -112,13 +112,13 @@ final class PhoneReplyInboxCoordinator {
               MobileHostService.isListeningEnabled else { return }
         guard let client, let inject = injectTerminalInput else {
             #if DEBUG
-            cmuxDebugLog("phoneReply.sweepAborted cause=\(client == nil ? "no_client" : "no_injector")")
+            hmuxDebugLog("phoneReply.sweepAborted cause=\(client == nil ? "no_client" : "no_injector")")
             #endif
             return
         }
         guard let pending = await client.fetchPending() else {
             #if DEBUG
-            cmuxDebugLog("phoneReply.sweepFetchFailed")
+            hmuxDebugLog("phoneReply.sweepFetchFailed")
             #endif
             return
         }
@@ -127,7 +127,7 @@ final class PhoneReplyInboxCoordinator {
             pendingReplyIDs.contains($0.key)
         }
         #if DEBUG
-        cmuxDebugLog("phoneReply.sweepFetched count=\(pending.count)")
+        hmuxDebugLog("phoneReply.sweepFetched count=\(pending.count)")
         #endif
         guard !pending.isEmpty else { return }
         var retryableCount = 0
@@ -186,7 +186,7 @@ final class PhoneReplyInboxCoordinator {
             }
             let outcome = await inject(params, decrypted.retargetsToLiveSurfaceOwner)
             #if DEBUG
-            cmuxDebugLog("phoneReply.inject outcome=\(outcome) surface=\(decrypted.surfaceId.prefix(8))")
+            hmuxDebugLog("phoneReply.inject outcome=\(outcome) surface=\(decrypted.surfaceId.prefix(8))")
             #endif
             switch outcome {
             case .delivered:
@@ -259,7 +259,7 @@ final class PhoneReplyInboxCoordinator {
         let identity: PhonePushKeyMaterial
         do {
             identity = try PhonePushKeyMaterial.current(
-                bundleID: Bundle.main.bundleIdentifier ?? "cmux"
+                bundleID: Bundle.main.bundleIdentifier ?? "hmux"
             )
         } catch {
             return .retryable
@@ -298,7 +298,7 @@ final class PhoneReplyInboxCoordinator {
 /// ack re-fetches the reply); typing the same line twice into an agent is
 /// worse than the bookkeeping, so recent ids persist across relaunches.
 struct PhoneReplySeenSet {
-    private static let key = "cmux.phoneReplyInbox.seenReplyIds"
+    private static let key = "hmux.phoneReplyInbox.seenReplyIds"
     private static let capacity = 64
     private let defaults: UserDefaults
     private var ordered: [String]

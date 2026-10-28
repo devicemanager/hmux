@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run CMUX's fast CI static checks locally, before a native build or push."""
+"""Run HMUX's fast CI static checks locally, before a native build or push."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import fnmatch
@@ -30,7 +30,7 @@ CHECKS = (
     ("localization-defaults", "static_analysis", "Swift defaultValue parity", ["python3", "scripts/localization_defaults.py"]),
     ("project-tests", "tests", "Project normalizer tests", ["python3", "tests/test_normalize_pbxproj.py"]),
     ("project", "static_analysis", "Xcode project normalization and version", ["bash", "scripts/check-pbxproj.sh"]),
-    ("config-schema", "static_analysis", "Embedded cmux.json schema", ["python3", "scripts/generate-cmux-config-schema.py", "--check"]),
+    ("config-schema", "static_analysis", "Embedded hmux.json schema", ["python3", "scripts/generate-hmux-config-schema.py", "--check"]),
     ("test-wiring-sync", "tests", "Test-wiring sync tool", ["python3", "tests/test_sync_test_wiring.py"]),
     ("wire-app-sources", "tests", "App-source wiring tool", ["python3", "tests/test_wire_app_sources.py"]),
     ("ui-lab", "tests", "ui-lab harness directives", ["python3", "tests/test_ui_lab.py"]),
@@ -56,23 +56,23 @@ CHECK_INPUTS = {
                               "scripts/localization-default-mismatches.json"),
     "project-tests": ("scripts/normalize-pbxproj.py", "scripts/check-pbxproj-group-membership.py"),
     "project": ("scripts/normalize-pbxproj.py", "scripts/check-pbxproj-group-membership.py",
-                "cmux.xcodeproj/project.pbxproj",
+                "hmux.xcodeproj/project.pbxproj",
                 ".xcode-version"),
-    "config-schema": ("web/data/cmux.schema.json",
-                      "Packages/macOS/CmuxFoundation/Sources/CmuxFoundation/ConfigValidation/CmuxConfigSchema.generated.swift"),
+    "config-schema": ("web/data/hmux.schema.json",
+                      "Packages/macOS/HmuxFoundation/Sources/HmuxFoundation/ConfigValidation/HmuxConfigSchema.generated.swift"),
     "test-wiring-sync": ("scripts/sync-test-wiring", "scripts/sync_test_wiring.py", "scripts/lint-pbxproj-test-wiring.sh",
                          "scripts/normalize-pbxproj.py", "tests/fixtures/pbxproj-test-wiring/*"),
-    "wire-app-sources": ("scripts/wire-app-sources.py", "cmux.xcodeproj/project.pbxproj", "Sources/**/*.swift"),
+    "wire-app-sources": ("scripts/wire-app-sources.py", "hmux.xcodeproj/project.pbxproj", "Sources/**/*.swift"),
     "ui-lab": ("scripts/ui-lab/**", "tests/test_ui_lab.py"),
     "ui-fuzzer": ("dogfood/fuzz/**", "scripts/fuzz", "tests/test_ui_fuzzer_engine.py"),
     "launch-policy": (
         "scripts/claude-launch-environment-policy.json",
-        "Packages/macOS/CMUXAgentLaunch/Sources/CMUXAgentLaunch/ClaudeSessionEnvironmentPolicy+Generated.swift",
+        "Packages/macOS/HMUXAgentLaunch/Sources/HMUXAgentLaunch/ClaudeSessionEnvironmentPolicy+Generated.swift",
         "agent-chat/adapters/claude-environment-policy.generated.ts",
-        "Resources/bin/cmux-claude-wrapper"),
-    "test-wiring": ("scripts/lint-pbxproj-test-wiring.sh", "cmuxTests/*",
-                    "cmux.xcodeproj/project.pbxproj"),
-    "package-groups": ("Packages/*", "cmux.xcworkspace/contents.xcworkspacedata"),
+        "Resources/bin/hmux-claude-wrapper"),
+    "test-wiring": ("scripts/lint-pbxproj-test-wiring.sh", "hmuxTests/*",
+                    "hmux.xcodeproj/project.pbxproj"),
+    "package-groups": ("Packages/*", "hmux.xcworkspace/contents.xcworkspacedata"),
     "remote-tmux-waits-tests": ("scripts/lint-remote-tmux-no-polling.sh",),
     "remote-tmux-waits": ("Sources/*RemoteTmux*", "Packages/*RemoteTmux*",
                           "scripts/remote-tmux-polling-baseline.txt"),
@@ -342,7 +342,7 @@ def run(repo, selected, timeout, stream=sys.stdout, swift_files=None, swift_chan
     if "swift-syntax" in selected and not swift_requested:
         raise ValueError("swift-syntax requires --swift FILE ..., --swift-changed [BASE], or --swift-stdin0")
     result = receipt.envelope()
-    result["recipe"] = {"id": "cmux-fast-static-checks/v1", "revision": receipt.digest(Path(__file__).read_bytes()),
+    result["recipe"] = {"id": "hmux-fast-static-checks/v1", "revision": receipt.digest(Path(__file__).read_bytes()),
                         "claim_class": "pre_build_static_sanity",
                         "argv": ["python3", "scripts/verify-local.py"] +
                         [arg for name in selected for arg in ("--only", name)]}
@@ -356,7 +356,7 @@ def run(repo, selected, timeout, stream=sys.stdout, swift_files=None, swift_chan
         result["recipe"]["argv"] += ["--swift-stdin0"]
     if jobs != 1:
         result["recipe"]["argv"] += ["--jobs", str(jobs)]
-    result["source"]["repository"] = "cmux (caller-supplied checkout)"
+    result["source"]["repository"] = "hmux (caller-supplied checkout)"
     result["source"].update(before=before, head_sha=before["commit"], checkout_sha=before["commit"],
                              tree=before.get("tree"))
     result["environment"].update(platform=platform.system(), architecture=platform.machine(),
@@ -530,7 +530,7 @@ def run(repo, selected, timeout, stream=sys.stdout, swift_files=None, swift_chan
         print("Source changed during checks; rerun against the current checkout.", file=stream)
     if before["commit"] is None or result["source"]["after"]["commit"] is None:
         status = "unsupported"
-        print("Git source observations unavailable; run from a CMUX Git checkout.", file=stream)
+        print("Git source observations unavailable; run from a HMUX Git checkout.", file=stream)
     result["outcome"] = {"status": status, "scope": "selected preflight checks"}
     if status == "skipped" and not states:
         result["outcome"]["reason"] = "no_swift_inputs"

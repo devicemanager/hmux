@@ -1,13 +1,13 @@
 use std::path::PathBuf;
 
 #[cfg(feature = "benchmark")]
-use cmux_diff_sidecar::benchmark;
-use cmux_diff_sidecar::server::{self, ServerConfig};
+use hmux_diff_sidecar::benchmark;
+use hmux_diff_sidecar::server::{self, ServerConfig};
 
 #[tokio::main]
 async fn main() {
     if let Err(message) = run().await {
-        eprintln!("cmux-diff-sidecar: {message}");
+        eprintln!("hmux-diff-sidecar: {message}");
         std::process::exit(1);
     }
 }
@@ -18,45 +18,45 @@ async fn run() -> Result<(), String> {
         #[cfg(feature = "http-server")]
         Some("serve") => {
             let mut root = None;
-            let mut cmux = None;
+            let mut hmux = None;
             while let Some(argument) = args.next() {
                 match argument.as_str() {
                     "--root" => root = args.next().map(PathBuf::from),
-                    "--cmux" => cmux = args.next().map(PathBuf::from),
+                    "--hmux" => hmux = args.next().map(PathBuf::from),
                     _ => return Err(format!("unexpected argument: {argument}")),
                 }
             }
             let root = root.ok_or_else(|| "serve requires --root".to_owned())?;
-            let cmux_executable = cmux.ok_or_else(|| "serve requires --cmux".to_owned())?;
+            let hmux_executable = hmux.ok_or_else(|| "serve requires --hmux".to_owned())?;
             let executable_path = std::env::current_exe().map_err(|error| error.to_string())?;
             server::run(ServerConfig {
                 root,
-                cmux_executable,
+                hmux_executable,
                 executable_path,
             })
             .await
         }
         Some("rpc") => {
             let mut root = None;
-            let mut cmux = None;
+            let mut hmux = None;
             let mut process_group_ready = false;
             while let Some(argument) = args.next() {
                 match argument.as_str() {
                     "--root" => root = args.next().map(PathBuf::from),
-                    "--cmux" => cmux = args.next().map(PathBuf::from),
+                    "--hmux" => hmux = args.next().map(PathBuf::from),
                     "--process-group-ready" => process_group_ready = true,
                     _ => return Err(format!("unexpected argument: {argument}")),
                 }
             }
             let root = root.ok_or_else(|| "rpc requires --root".to_owned())?;
-            let cmux_executable = cmux.ok_or_else(|| "rpc requires --cmux".to_owned())?;
+            let hmux_executable = hmux.ok_or_else(|| "rpc requires --hmux".to_owned())?;
             let executable_path = std::env::current_exe().map_err(|error| error.to_string())?;
             if process_group_ready {
                 establish_rpc_process_group()?;
             }
             server::run_rpc(ServerConfig {
                 root,
-                cmux_executable,
+                hmux_executable,
                 executable_path,
             })
             .await
@@ -88,7 +88,7 @@ async fn run() -> Result<(), String> {
             enforce_benchmark_budget(&report)?;
             Ok(())
         }
-        _ => Err("usage: cmux-diff-sidecar <rpc|handshake>".to_owned()),
+        _ => Err("usage: hmux-diff-sidecar <rpc|handshake>".to_owned()),
     }
 }
 
@@ -96,7 +96,7 @@ fn establish_rpc_process_group() -> Result<(), String> {
     #[cfg(unix)]
     {
         rustix::process::setpgid(None, None).map_err(|error| error.to_string())?;
-        eprintln!("cmux-diff-sidecar-process-group-ready");
+        eprintln!("hmux-diff-sidecar-process-group-ready");
         Ok(())
     }
     #[cfg(not(unix))]
@@ -112,7 +112,7 @@ fn reject_remaining_arguments(args: &mut impl Iterator<Item = String>) -> Result
 
 #[cfg(feature = "benchmark")]
 fn enforce_benchmark_budget(report: &benchmark::BenchmarkReport) -> Result<(), String> {
-    if let Some(maximum) = environment_number::<u128>("CMUX_DIFF_BENCH_MAX_MANIFEST_P95_US")?
+    if let Some(maximum) = environment_number::<u128>("HMUX_DIFF_BENCH_MAX_MANIFEST_P95_US")?
         && report.manifest_decode_p95_micros > maximum
     {
         return Err(format!(
@@ -120,10 +120,10 @@ fn enforce_benchmark_budget(report: &benchmark::BenchmarkReport) -> Result<(), S
             report.manifest_decode_p95_micros
         ));
     }
-    if let Some(minimum) = environment_number::<f64>("CMUX_DIFF_BENCH_MIN_READ_MIBPS")? {
+    if let Some(minimum) = environment_number::<f64>("HMUX_DIFF_BENCH_MIN_READ_MIBPS")? {
         if !minimum.is_finite() || minimum < 0.0 {
             return Err(
-                "CMUX_DIFF_BENCH_MIN_READ_MIBPS must be finite and non-negative".to_owned(),
+                "HMUX_DIFF_BENCH_MIN_READ_MIBPS must be finite and non-negative".to_owned(),
             );
         }
         if report.sequential_read_mib_per_second < minimum {

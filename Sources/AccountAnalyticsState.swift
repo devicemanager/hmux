@@ -1,4 +1,4 @@
-import CmuxProductAnalytics
+import HmuxProductAnalytics
 
 /// Turns account observations into analytics actions: identify on sign-in,
 /// a success or failure for each sign-in the user started, and sign-out. Pure, so the transitions are unit tested without auth.

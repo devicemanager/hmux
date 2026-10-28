@@ -135,11 +135,11 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          URL="https://github.com/manaflow-ai/cmux/releases/download/v${VERSION}/cmux-macos.dmg"
+          URL="https://github.com/manaflow-ai/cmux/releases/download/v${VERSION}/hmux-macos.dmg"
           MAX_RETRIES=5
           for i in $(seq 1 $MAX_RETRIES); do
-            HTTP_CODE=$(curl -sL -w '%{http_code}' "$URL" -o cmux.dmg)
-            FILE_SIZE=$(stat --printf="%s" cmux.dmg 2>/dev/null || stat -f%z cmux.dmg)
+            HTTP_CODE=$(curl -sL -w '%{http_code}' "$URL" -o hmux.dmg)
+            FILE_SIZE=$(stat --printf="%s" hmux.dmg 2>/dev/null || stat -f%z hmux.dmg)
             if [ "$HTTP_CODE" = "200" ] && [ "$FILE_SIZE" -gt 1000000 ]; then
               echo "Download OK: HTTP $HTTP_CODE, size $FILE_SIZE bytes"
               break
@@ -151,17 +151,17 @@ jobs:
             fi
             sleep 30
           done
-          SHA256=$(shasum -a 256 cmux.dmg | cut -d' ' -f1)
+          SHA256=$(shasum -a 256 hmux.dmg | cut -d' ' -f1)
           echo "sha256=$SHA256" >> $GITHUB_OUTPUT
           echo "DMG SHA256: $SHA256"
 
-      - name: Checkout homebrew-cmux
+      - name: Checkout homebrew-hmux
         if: steps.version.outputs.skip != 'true'
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           repository: manaflow-ai/homebrew-cmux
           token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
-          path: homebrew-cmux
+          path: homebrew-hmux
 
       - name: Update cask formula
         if: steps.version.outputs.skip != 'true'
@@ -169,13 +169,13 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
           SHA256: ${{ steps.sha.outputs.sha256 }}
         run: |
-          cat > homebrew-cmux/Casks/cmux.rb << CASKEOF
-          cask "cmux" do
+          cat > homebrew-hmux/Casks/hmux.rb << CASKEOF
+          cask "hmux" do
             version "${VERSION}"
             sha256 "${SHA256}"
 
-            url "https://github.com/manaflow-ai/cmux/releases/download/v#{version}/cmux-macos.dmg"
-            name "cmux"
+            url "https://github.com/manaflow-ai/cmux/releases/download/v#{version}/hmux-macos.dmg"
+            name "hmux"
             desc "Lightweight native macOS terminal with vertical tabs for AI coding agents"
             homepage "https://cmux.com/"
 
@@ -186,25 +186,25 @@ jobs:
 
             depends_on macos: :sonoma
 
-            app "cmux.app"
-            binary "#{appdir}/cmux.app/Contents/Resources/bin/cmux"
-            generate_completions_from_executable "#{HOMEBREW_PREFIX}/bin/cmux", "completion"
+            app "hmux.app"
+            binary "#{appdir}/hmux.app/Contents/Resources/bin/hmux"
+            generate_completions_from_executable "#{HOMEBREW_PREFIX}/bin/hmux", "completion"
 
             zap trash: [
-              "~/Library/Application Support/cmux",
-              "~/Library/Caches/cmux",
-              "~/Library/Preferences/ai.manaflow.cmuxterm.plist",
+              "~/Library/Application Support/hmux",
+              "~/Library/Caches/hmux",
+              "~/Library/Preferences/ai.manaflow.hmuxterm.plist",
             ]
           end
           CASKEOF
           # Remove leading whitespace from heredoc
-          sed -i 's/^          //' homebrew-cmux/Casks/cmux.rb
+          sed -i 's/^          //' homebrew-hmux/Casks/hmux.rb
 
       - name: Verify cask SHA matches DMG
         if: steps.version.outputs.skip != 'true'
         run: |
-          CASK_SHA=$(grep 'sha256' homebrew-cmux/Casks/cmux.rb | sed 's/.*"\(.*\)".*/\1/')
-          ACTUAL_SHA=$(shasum -a 256 cmux.dmg | cut -d' ' -f1)
+          CASK_SHA=$(grep 'sha256' homebrew-hmux/Casks/hmux.rb | sed 's/.*"\(.*\)".*/\1/')
+          ACTUAL_SHA=$(shasum -a 256 hmux.dmg | cut -d' ' -f1)
           if [ "$CASK_SHA" != "$ACTUAL_SHA" ]; then
             echo "SHA mismatch! Cask: $CASK_SHA, Actual: $ACTUAL_SHA" >&2
             exit 1
@@ -216,13 +216,13 @@ jobs:
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
-          cd homebrew-cmux
+          cd homebrew-hmux
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add Casks/cmux.rb
+          git add Casks/hmux.rb
           if git diff --staged --quiet; then
             echo "No changes - cask already up to date"
           else
-            git commit -m "Update cmux to ${VERSION}"
+            git commit -m "Update hmux to ${VERSION}"
             git push
           fi

@@ -108,7 +108,7 @@ is the desktop session, so fixed sleeps, app launch, polling, and XCTest setup
 are the next profiling targets. The current patch bounds their tail but does
 not guess at a safe redesign without per-step timings.
 
-The mini job record omitted the launched `cmux DEV` test app, so job CPU was
+The mini job record omitted the launched `hmux DEV` test app, so job CPU was
 undercounted at roughly 0.15 cores. The glaeda hook now attributes that launched
 app to its owning job using the exact temporary process tree and live
 Runner.Worker evidence; the fleet rollout and post-rollout sample are recorded

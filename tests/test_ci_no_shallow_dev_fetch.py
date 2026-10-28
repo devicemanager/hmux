@@ -11,7 +11,7 @@ shared clones on the team's machines, and those clones kept going shallow.
 
 So a script passes a depth flag to a fetch in a checkout it did not create only
 when `git rev-parse --is-shallow-repository` says the checkout is already
-shallow (scripts/cmux-next/check-app-ffi-pin.sh has the pattern). This guard
+shallow (scripts/hmux-next/check-app-ffi-pin.sh has the pattern). This guard
 scans tracked scripts for depth-limited fetches with no shallow check before
 them in the file. A script that fetches into a repository it just created
 belongs in OWN_REPOSITORY with the reason.

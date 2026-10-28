@@ -10,14 +10,14 @@ extension CloudTreeOutlineView.Coordinator {
                   group.remoteWorkspaceID == workspace.id,
                   row.remoteView?.workspace.id == nil || row.remoteView?.workspace.id == workspace.id else {
                 #if DEBUG
-                cmuxDebugLog("cloudTree.open terminal staleOwner resource=\(row.resource.id.rawValue)")
+                hmuxDebugLog("cloudTree.open terminal staleOwner resource=\(row.resource.id.rawValue)")
                 #endif
                 return
             }
             nodeActions.openRemoteTerminal(machine, group, row.resource.id, row.remoteView, openIn)
         } else if let view = row.remoteView {
             #if DEBUG
-            cmuxDebugLog("cloudTree.open terminal missingOwner resource=\(row.resource.id.rawValue) view=\(view.tabID)")
+            hmuxDebugLog("cloudTree.open terminal missingOwner resource=\(row.resource.id.rawValue) view=\(view.tabID)")
             #endif
         } else {
             // Pool terminals have no owner; retain their selected-workspace behavior.

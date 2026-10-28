@@ -33,7 +33,7 @@ const eslintConfig = defineConfig([
       // Streams the gzip transcript bytes from S3 and decodes them as they
       // arrive; a byte stream is not a typed data call.
       "dashboard-app/screens/vault/transcript-viewer.tsx",
-      // Talks to the iroh presence worker on its own origin, not a cmux API.
+      // Talks to the iroh presence worker on its own origin, not a hmux API.
       "dashboard-app/screens/mobile-devices/**",
     ],
     rules: dashboardTypedDataRules,

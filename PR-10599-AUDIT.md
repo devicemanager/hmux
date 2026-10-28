@@ -1,8 +1,8 @@
 # PR #10599 audit
 
 Audit target: https://github.com/manaflow-ai/cmux/pull/10599
-PR branch: `justincrich/cmux:upstream/file-preview-code-view-tokens-gutter`
-Maintainer update remote: `https://github.com/justincrich/cmux.git`
+PR branch: `justincrich/hmux:upstream/file-preview-code-view-tokens-gutter`
+Maintainer update remote: `https://github.com/justincrich/hmux.git`
 Audited runtime head: `7cc7044a4f0a61172b416c883ade503bfe02b81a`
 Merged base: `5a453950eac6e765e9d2eeb98fa45a68016f98b9`
 
@@ -40,7 +40,7 @@ Merged base: `5a453950eac6e765e9d2eeb98fa45a68016f98b9`
   are dropped; hidden tabs cancel and visible tabs force a fresh pass. No
   sleep-based debounce remains. The task capture also avoids retaining the
   styler across the highlighting await, allowing teardown cancellation.
-- `FilePreviewLineIndex` lives in `Packages/macOS/CmuxFilePreviewCore` and uses
+- `FilePreviewLineIndex` lives in `Packages/macOS/HmuxFilePreviewCore` and uses
   packed separator-aware block treap storage with lazy suffix shifts. UTF-16
   edits, exact boundaries (including CRLF and edits ending at line starts),
   randomized/exhaustive behavior, and a valid 16 MiB dense fixture are covered
@@ -58,9 +58,9 @@ Merged base: `5a453950eac6e765e9d2eeb98fa45a68016f98b9`
   an instance-owned catalog. Runtime reads use that owner. Tab-width bounds and
   defaults are shared by the catalog, parser, UI, and editor; invalid JSON
   values are logged and ignored without dropping sibling settings.
-- Pure line-index package/project/workspace wiring is present for `cmux` and
-  `cmux-unit`; the old app-target source and duplicate test wiring are absent.
-  `CmuxSyntaxHighlighting` is in the CI Swift package test list.
+- Pure line-index package/project/workspace wiring is present for `hmux` and
+  `hmux-unit`; the old app-target source and duplicate test wiring are absent.
+  `HmuxSyntaxHighlighting` is in the CI Swift package test list.
 - The tracked root Xcode `Package.resolved` retains Highlightr 2.3.0, Sentry
   9.3.0, Sparkle 2.9.5, and all required existing pins. The tab-width Stepper
   has a localized accessibility label. Positive line-count policy and safe
@@ -96,11 +96,11 @@ instruction.
 
 All focused Swift package commands used an arm64e invocation:
 
-- `CmuxFilePreviewCore`: 11 tests in 1 suite passed, including the dense 16 MiB
+- `HmuxFilePreviewCore`: 11 tests in 1 suite passed, including the dense 16 MiB
   fixture and separator-transition randomized edits.
-- `CmuxSyntaxHighlighting`: 24 tests in 5 suites passed.
-- `CmuxSettings` focused catalog run: 8 tests passed.
-- `CmuxSettingsUI` focused row-anchor run: 5 tests passed.
+- `HmuxSyntaxHighlighting`: 24 tests in 5 suites passed.
+- `HmuxSettings` focused catalog run: 8 tests passed.
+- `HmuxSettingsUI` focused row-anchor run: 5 tests passed.
 - `swiftc -parse` passed for touched app and test Swift files.
 - `git diff --check` passed.
 - `scripts/check-pbxproj.sh` passed.
@@ -119,7 +119,7 @@ The authorized command completed successfully for the code-affecting tree; the
 final base merge changed only iOS sources and was rebuilt under the same tag:
 
 ```text
-CMUX_SKIP_ZIG_BUILD=1 scripts/reload-cloud.sh --tag pr-10599-review --launch
+HMUX_SKIP_ZIG_BUILD=1 scripts/reload-cloud.sh --tag pr-10599-review --launch
 ```
 
 Cloud runs: `pr-10599-review-8ac6289031ae` (code tree) and
@@ -132,13 +132,13 @@ was reported. The next PR CI run must confirm the corresponding Release WMO
 compiler path; the prior failure was a Swift frontend crash, not a source
 diagnostic.
 
-The installed and launched identity is `cmux DEV pr-10599-review` with bundle
-identifier `com.cmuxterm.app.debug.pr.10599.review`. The matching tagged debug
+The installed and launched identity is `hmux DEV pr-10599-review` with bundle
+identifier `com.hmuxterm.app.debug.pr.10599.review`. The matching tagged debug
 socket responded to a workspace-list probe after launch. No launch failure was
 reported. The consolidated audit-table comment is GitHub comment `5502995722`.
 
 ## Remaining external action
 
 The PR remains open and is intentionally not merged. The contributor must sign
-the CLA, and the Vercel team must authorize the `cmux41`/`cmux166` preview
+the CLA, and the Vercel team must authorize the `hmux41`/`hmux166` preview
 deployments before those external gates can become green.

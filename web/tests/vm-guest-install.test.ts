@@ -64,7 +64,7 @@ describe("Freestyle guest install result contract (SDK 0.2.10)", () => {
     const fixture = freestyleGuestFixture({
       exec: async () => Response.json({
         statusCode: 1,
-        stderr: `CMUX_GUEST_INSTALL_FAILURE=${JSON.stringify({
+        stderr: `HMUX_GUEST_INSTALL_FAILURE=${JSON.stringify({
           stage: "publish", error: "OSError", rollbackError: "PermissionError", errno: 13,
         })}`,
       }),

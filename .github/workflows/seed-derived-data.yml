@@ -70,33 +70,33 @@ jobs:
         id: inputs
         env:
           GH_TOKEN: ${{ github.token }}
-          XCODE_APP: ${{ vars.CMUX_CI_XCODE_APP_PR || vars.CMUX_CI_XCODE_APP_MACOS_15 }}
-          XCODE_APP_MACOS_15: ${{ vars.CMUX_CI_XCODE_APP_MACOS_15 }}
+          XCODE_APP: ${{ vars.HMUX_CI_XCODE_APP_PR || vars.HMUX_CI_XCODE_APP_MACOS_15 }}
+          XCODE_APP_MACOS_15: ${{ vars.HMUX_CI_XCODE_APP_MACOS_15 }}
           # The pools that seed; see the seed job. Each decides alone, so one
           # pool's failing seed never makes every push rebuild the others.
           SEED_POOL_1: ${{ github.repository_owner != 'manaflow-ai' && 'macos-26' || vars.MACOS_RUNNER_PR == 'blacksmith-6vcpu-macos-26' && 'blacksmith-12vcpu-macos-26' || vars.MACOS_RUNNER_PR || 'blacksmith-6vcpu-macos-15' }}
           SEED_POOL_2: ${{ github.repository_owner != 'manaflow-ai' && 'macos-26' || vars.MACOS_RUNNER_PR || 'blacksmith-6vcpu-macos-15' }}
           SEED_POOL_3: ${{ github.repository_owner != 'manaflow-ai' && 'macos-26' || 'blacksmith-6vcpu-macos-15' }}
           # The owned std minis compile at -j14, and a j12 seed re-emits
-          # every module there (cmuxterm-hq#590). Their j14 seed comes from a
+          # every module there (hmuxterm-hq#590). Their j14 seed comes from a
           # trusted-only runner (glaeda-trusted-std-xcode-<version>, glaeda
-          # docs/CMUX_MINI_RUNNER.md 2e) on a mini with no pull-request
+          # docs/HMUX_MINI_RUNNER.md 2e) on a mini with no pull-request
           # runners, since this job holds the ci-cache-writer credentials
-          # (the host choice is on cmuxterm-hq#590). Its job-started hook
+          # (the host choice is on hmuxterm-hq#590). Its job-started hook
           # admits only a push to main, so the pool joins only then. Empty
           # (the default) leaves it out.
           SEED_TRUSTED_POOL: ${{ github.repository == 'manaflow-ai/cmux' && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.CI_SEED_TRUSTED_POOL || '' }}
           # How many canonical roots the trusted pool seeds. An owned Mac's
-          # second compile slot builds in /private/tmp/cmux-ci-2, which is
+          # second compile slot builds in /private/tmp/hmux-ci-2, which is
           # part of the seed key, so it never adopts a root 1 seed and
-          # compiled cold (471 s, 98 re-emits, cmuxterm-hq#590). Each extra
+          # compiled cold (471 s, 98 re-emits, hmuxterm-hq#590). Each extra
           # root is one more job per push on the trusted pool, so raise it
           # only with a trusted runner to take it. Unset means 1.
           SEED_TRUSTED_ROOTS: ${{ vars.CI_SEED_TRUSTED_ROOTS || '1' }}
           EVENT_NAME: ${{ github.event_name }}
         run: |
           set -euo pipefail
-          # Each pool's Xcode as the seed job picks it (its CMUX_CI_XCODE_APP).
+          # Each pool's Xcode as the seed job picks it (its HMUX_CI_XCODE_APP).
           pools=()
           lanes=()
           if [ -n "$SEED_TRUSTED_POOL" ]; then
@@ -135,7 +135,7 @@ jobs:
     # product; the second is admission's own pool, the same pool again under
     # any other MACOS_RUNNER_PR. The third is the macOS 15 pool, which
     # pr_runner_pool.py overflows pull requests to, on its own Xcode
-    # (CMUX_CI_XCODE_APP_MACOS_15): without a seed of its own every admission
+    # (HMUX_CI_XCODE_APP_MACOS_15): without a seed of its own every admission
     # there compiled cold for 17 to 25 minutes (2026-09-24). The fourth, when
     # CI_SEED_TRUSTED_POOL names one, is a trusted-only owned mini that seeds
     # j14 for the owned std pool on the lane's Xcode, and with
@@ -173,7 +173,7 @@ jobs:
       # Only "Start compile attribution" writes: it dispatches ci-compile-attribution.yml.
       actions: write
     # A chain with no seed yet builds cold. The first root 2 seed on the
-    # trusted pool (cmux11s) spent 14 minutes on checkout, packages and
+    # trusted pool (hmux11s) spent 14 minutes on checkout, packages and
     # resolve, then 44 in Build, and 60 cancelled it before it saved, so the
     # next push built cold again (run 36107956813). A seeded build finishes
     # in a fraction of either limit. 30 more minutes cover the wait for this
@@ -182,10 +182,10 @@ jobs:
     env:
       # The macOS 15 pool compiles with its own Xcode, as a pull request run
       # pr_runner_pool.py overflows there does; every other pool, the lane's.
-      CMUX_CI_XCODE_APP: ${{ endsWith(matrix.pool, 'vcpu-macos-15') && vars.CMUX_CI_XCODE_APP_MACOS_15 || vars.CMUX_CI_XCODE_APP_PR || vars.CMUX_CI_XCODE_APP_MACOS_15 }}
-      CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
-      CMUX_SKIP_ZIG_BUILD: "1"
-      CMUX_SEED_ROOT: ${{ matrix.root }}
+      HMUX_CI_XCODE_APP: ${{ endsWith(matrix.pool, 'vcpu-macos-15') && vars.HMUX_CI_XCODE_APP_MACOS_15 || vars.HMUX_CI_XCODE_APP_PR || vars.HMUX_CI_XCODE_APP_MACOS_15 }}
+      HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"
+      HMUX_SKIP_ZIG_BUILD: "1"
+      HMUX_SEED_ROOT: ${{ matrix.root }}
     steps:
       - name: Clear stale git locks (self-hosted reused workspace)
         shell: bash
@@ -215,15 +215,15 @@ jobs:
           if [ -x scripts/ci/canonical-build-root.sh ]; then
             root="$(scripts/ci/canonical-build-root.sh --print-root)"
           else
-            root="${CMUX_CI_CANONICAL_ROOT:?canonical root resolver is unavailable}"
+            root="${HMUX_CI_CANONICAL_ROOT:?canonical root resolver is unavailable}"
           fi
-          if [ -n "$CMUX_SEED_ROOT" ]; then
-            case "$CMUX_SEED_ROOT:$MATRIX_POOL" in
+          if [ -n "$HMUX_SEED_ROOT" ]; then
+            case "$HMUX_SEED_ROOT:$MATRIX_POOL" in
               [2-9]:"$TRUSTED_POOL") ;;
-              *) echo "::error::root $CMUX_SEED_ROOT is only for the trusted pool, not $MATRIX_POOL"; exit 1 ;;
+              *) echo "::error::root $HMUX_SEED_ROOT is only for the trusted pool, not $MATRIX_POOL"; exit 1 ;;
             esac
-            root="/private/tmp/cmux-ci-$CMUX_SEED_ROOT"
-            echo "CMUX_CI_CANONICAL_ROOT=$root" >> "$GITHUB_ENV"
+            root="/private/tmp/hmux-ci-$HMUX_SEED_ROOT"
+            echo "HMUX_CI_CANONICAL_ROOT=$root" >> "$GITHUB_ENV"
           fi
           # A far and a near seed of one root may run at once (the two
           # concurrency lanes), so on an owned Mac hold this root for the job
@@ -234,7 +234,7 @@ jobs:
           # one seed at a time (one trusted runner), as before. A near and a far
           # seed of one root on one Mac queue here for up to 30 minutes, inside
           # the job's limit. Blacksmith has no helper.
-          helper=/Users/Shared/cmux-build-fleet/bin/glaeda-canonical-root
+          helper=/Users/Shared/hmux-build-fleet/bin/glaeda-canonical-root
           if [ -x "$helper" ]; then
             status=0
             "$helper" take "$root" --wait 1800 >/dev/null || status=$?
@@ -250,10 +250,10 @@ jobs:
             esac
           fi
           scripts/ci/clear-dirs.sh "$root/derived-data-compile-admission" "$root/compile-admission-cas"
-          echo "CMUX_COMPILE_ADMISSION_DERIVED_DATA=$root/derived-data-compile-admission" >> "$GITHUB_ENV"
-          echo "CMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas" >> "$GITHUB_ENV"
-          if [ -z "$CMUX_SEED_ROOT" ]; then
-            echo "CMUX_CI_CANONICAL_ROOT=$root" >> "$GITHUB_ENV"
+          echo "HMUX_COMPILE_ADMISSION_DERIVED_DATA=$root/derived-data-compile-admission" >> "$GITHUB_ENV"
+          echo "HMUX_COMPILE_ADMISSION_CAS=$root/compile-admission-cas" >> "$GITHUB_ENV"
+          if [ -z "$HMUX_SEED_ROOT" ]; then
+            echo "HMUX_CI_CANONICAL_ROOT=$root" >> "$GITHUB_ENV"
           fi
 
       - name: Select Xcode
@@ -261,12 +261,12 @@ jobs:
 
       # A trusted seed Mac keeps the seeds it builds and adopts, so the next
       # seed job on it clones its lane's last seed instead of downloading it
-      # back from R2 (mini-6 and cmux15 seed jobs spent p50 856 s and 512 s
-      # at about 1.9 busy cores on 2026-09-25, cmuxterm-hq#661 Workstream 7).
+      # back from R2 (mini-6 and hmux15 seed jobs spent p50 856 s and 512 s
+      # at about 1.9 busy cores on 2026-09-25, hmuxterm-hq#661 Workstream 7).
       # Only on the runners vars.CI_SEED_KEEP_LOCAL_RUNNERS names (space
       # separated): the kept seed becomes the next R2 seed, so the Mac must
-      # run nothing else as this user (cmux15; not mini-6, whose dev-build
-      # worker builds PR code as cmux). The same per-root layout owned
+      # run nothing else as this user (hmux15; not mini-6, whose dev-build
+      # worker builds PR code as hmux). The same per-root layout owned
       # admission uses (seed_caches). It starts with 185 GiB free, and once
       # the cache exists it stays on so prune_local keeps the disk at its
       # floor (seed_derived_data.LOCAL_KEEP_MIN_FREE_BYTES, and each root's
@@ -276,14 +276,14 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          state=/Users/Shared/cmux-build-fleet/ci
+          state=/Users/Shared/hmux-build-fleet/ci
           cache="$state/seeds"
-          if [ -n "$CMUX_SEED_ROOT" ] && [ "$CMUX_SEED_ROOT" != 1 ]; then
-            cache="$state/cmux-ci-$CMUX_SEED_ROOT/seeds"
+          if [ -n "$HMUX_SEED_ROOT" ] && [ "$HMUX_SEED_ROOT" != 1 ]; then
+            cache="$state/hmux-ci-$HMUX_SEED_ROOT/seeds"
           fi
           free_gib=$(df -g / | awk 'NR==2 {print $4}')
           if [ -d "$cache" ] || [ "${free_gib:-0}" -ge 185 ]; then
-            echo "CMUX_SEED_LOCAL_CACHE=$cache" >> "$GITHUB_ENV"
+            echo "HMUX_SEED_LOCAL_CACHE=$cache" >> "$GITHUB_ENV"
             echo "Keeping seeds in $cache ($free_gib GiB free)"
           else
             echo "Not keeping seeds on this Mac: $free_gib GiB free, under 185"
@@ -293,7 +293,7 @@ jobs:
         id: key
         run: |
           set -euo pipefail
-          fingerprint="$(scripts/ci/compile-app-host-test-product.sh canonical-fingerprint "$CMUX_COMPILE_ADMISSION_DERIVED_DATA")"
+          fingerprint="$(scripts/ci/compile-app-host-test-product.sh canonical-fingerprint "$HMUX_COMPILE_ADMISSION_DERIVED_DATA")"
           prefix="admission-derived-data-v1-${RUNNER_OS}-${RUNNER_ARCH}-${fingerprint}-"
           # Adoption scopes the prefix itself; the save names this width.
           scoped="$(python3 scripts/ci/seed_derived_data.py scope "$prefix")"
@@ -311,7 +311,7 @@ jobs:
       # reads rustc and cargo, so it follows the install above.
       - name: Identify reusable compiled products
         id: product-key
-        run: python3 scripts/ci/reuse_app_host_products.py key "$CMUX_COMPILE_ADMISSION_DERIVED_DATA"
+        run: python3 scripts/ci/reuse_app_host_products.py key "$HMUX_COMPILE_ADMISSION_DERIVED_DATA"
 
       - name: Cache Swift packages
         id: swift-package-cache
@@ -319,7 +319,7 @@ jobs:
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
           path: .ci-source-packages
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
           restore-keys: spm-
 
       - name: Sanitize Swift package cache
@@ -363,7 +363,7 @@ jobs:
         run: |
           set -euo pipefail
           scripts/ci/compile-app-host-test-product.sh canonical-resolve \
-            "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" "$PWD/.ci-source-packages"
+            "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" "$PWD/.ci-source-packages"
 
       # Seed the `spm-` package cache from the first main push after a
       # Package.resolved change, instead of waiting up to a day for nightly.yml.
@@ -378,7 +378,7 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          resolved="$CMUX_CI_CANONICAL_ROOT/src/.ci-source-packages"
+          resolved="$HMUX_CI_CANONICAL_ROOT/src/.ci-source-packages"
           test -d "$resolved/.package-cache"
           rsync -a --delete "$resolved/" .ci-source-packages/
           python3 scripts/ci/sanitize-xcode-source-packages-cache.py .ci-source-packages
@@ -395,7 +395,7 @@ jobs:
         with:
           backend: ${{ vars.CI_CACHE_BACKEND || 'r2' }}
           path: .ci-source-packages
-          key: spm-${{ hashFiles('cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
+          key: spm-${{ hashFiles('hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved', 'scripts/ci/swiftpm-cache-layout') }}
 
       - name: Stage SwiftPM manifest cache
         id: swiftpm-manifest-stage
@@ -429,12 +429,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           python3 scripts/ci/seed_derived_data.py adopt \
-            "$CMUX_CI_CANONICAL_SRC" "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" \
+            "$HMUX_CI_CANONICAL_SRC" "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" \
             "$PREFIX" "$GITHUB_SHA"
 
       - name: Record seed inputs
         id: record
-        run: python3 scripts/ci/seed_derived_data.py record "$CMUX_CI_CANONICAL_SRC" "$CMUX_COMPILE_ADMISSION_DERIVED_DATA"
+        run: python3 scripts/ci/seed_derived_data.py record "$HMUX_CI_CANONICAL_SRC" "$HMUX_COMPILE_ADMISSION_DERIVED_DATA"
 
       - name: Build
         id: build
@@ -442,9 +442,9 @@ jobs:
           set -euo pipefail
           started="$(python3 -c 'import time; print(time.monotonic())')"
           scripts/ci/compile-app-host-test-product.sh canonical-build \
-            "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" \
+            "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" \
             "$PWD/.ci-source-packages" \
-            "$CMUX_COMPILE_ADMISSION_CAS"
+            "$HMUX_COMPILE_ADMISSION_CAS"
           python3 -c "import time; print(f'seconds={time.monotonic() - $started:.1f}')" >> "$GITHUB_OUTPUT"
 
       - name: Forget the adopted-build inode override
@@ -471,21 +471,21 @@ jobs:
 
       - name: Bound seed size
         id: bound
-        run: python3 scripts/ci/seed_derived_data.py prune "$CMUX_COMPILE_ADMISSION_DERIVED_DATA"
+        run: python3 scripts/ci/seed_derived_data.py prune "$HMUX_COMPILE_ADMISSION_DERIVED_DATA"
 
       # Before the R2 upload, and before the product steps below rewrite
       # Build/Products: the copy is the seed exactly as "Save seed" uploads it
       # (keep only clones the tree). An APFS clone, so seconds. The LAN seed
       # archive reads kept seeds from this Mac within a minute, so keeping
       # first hands them to the owned minis about 160 s sooner, the length of
-      # the upload (cmuxterm-hq#658).
+      # the upload (hmuxterm-hq#658).
       - name: Keep the seed on this Mac
-        if: steps.bound.outputs.save == 'true' && env.CMUX_SEED_LOCAL_CACHE != ''
+        if: steps.bound.outputs.save == 'true' && env.HMUX_SEED_LOCAL_CACHE != ''
         continue-on-error: true
         env:
           SEED_KEY: ${{ steps.key.outputs.scoped }}${{ github.sha }}
           SEED_PREFIX: ${{ steps.key.outputs.prefix }}
-        run: python3 scripts/ci/seed_derived_data.py keep "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" "$SEED_KEY" "$SEED_PREFIX"
+        run: python3 scripts/ci/seed_derived_data.py keep "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" "$SEED_KEY" "$SEED_PREFIX"
 
       - name: Save seed
         if: steps.bound.outputs.save == 'true'
@@ -497,7 +497,7 @@ jobs:
           CI_CACHE_R2_BUCKET: ${{ vars.CI_CACHE_R2_BUCKET }}
         with:
           backend: r2
-          path: ${{ env.CMUX_COMPILE_ADMISSION_DERIVED_DATA }}
+          path: ${{ env.HMUX_COMPILE_ADMISSION_DERIVED_DATA }}
           key: ${{ steps.key.outputs.scoped }}${{ github.sha }}
 
       # Publish the product exactly as ci-macos.yml compile admission does
@@ -517,10 +517,10 @@ jobs:
         continue-on-error: true
         run: |
           set -euo pipefail
-          products="$CMUX_COMPILE_ADMISSION_DERIVED_DATA/Build/Products/Debug"
-          stable="/private/tmp/cmux-app-host-package-frameworks"
+          products="$HMUX_COMPILE_ADMISSION_DERIVED_DATA/Build/Products/Debug"
+          stable="/private/tmp/hmux-app-host-package-frameworks"
           mkdir -p "$stable"
-          framework_source="$(find "$products" -type d -name 'CmuxAgentJournal*_PackageProduct.framework' -print -quit 2>/dev/null || true)"
+          framework_source="$(find "$products" -type d -name 'HmuxAgentJournal*_PackageProduct.framework' -print -quit 2>/dev/null || true)"
           test -n "$framework_source"
           framework_root="$(dirname "$framework_source")"
           rsync -aL --no-times "$framework_root/" "$stable/"
@@ -529,7 +529,7 @@ jobs:
           fi
           mkdir -p "$products/PackageFrameworks"
           rsync -aL --no-times "$framework_root/" "$products/PackageFrameworks/"
-          test -f "$products/PackageFrameworks/CmuxAgentJournal_27B6EF8727F6C277_PackageProduct.framework/Versions/A/CmuxAgentJournal_27B6EF8727F6C277_PackageProduct"
+          test -f "$products/PackageFrameworks/HmuxAgentJournal_27B6EF8727F6C277_PackageProduct.framework/Versions/A/HmuxAgentJournal_27B6EF8727F6C277_PackageProduct"
 
       - name: Package compiled app-host test product
         id: package-products
@@ -539,10 +539,10 @@ jobs:
           set -euo pipefail
           # Fresh manifests embed the canonical checkout. Stamp that producer
           # before relocating into this job's workspace, as admission does.
-          (cd "$CMUX_CI_CANONICAL_ROOT/src" && python3 scripts/ci/app_host_test_products.py stamp "$CMUX_COMPILE_ADMISSION_DERIVED_DATA")
-          python3 scripts/ci/app_host_test_products.py restore "$CMUX_COMPILE_ADMISSION_DERIVED_DATA"
-          python3 scripts/ci/app_host_test_products.py stamp "$CMUX_COMPILE_ADMISSION_DERIVED_DATA"
-          python3 scripts/ci/reuse_app_host_products.py seal "$CMUX_COMPILE_ADMISSION_DERIVED_DATA"
+          (cd "$HMUX_CI_CANONICAL_ROOT/src" && python3 scripts/ci/app_host_test_products.py stamp "$HMUX_COMPILE_ADMISSION_DERIVED_DATA")
+          python3 scripts/ci/app_host_test_products.py restore "$HMUX_COMPILE_ADMISSION_DERIVED_DATA"
+          python3 scripts/ci/app_host_test_products.py stamp "$HMUX_COMPILE_ADMISSION_DERIVED_DATA"
+          python3 scripts/ci/reuse_app_host_products.py seal "$HMUX_COMPILE_ADMISSION_DERIVED_DATA"
           archive="$RUNNER_TEMP/app-host-products.tar.gz"
           # Build/Products reaches each framework binary through Versions/Current
           # symlinks, and product extractors accept no symlinks, so `tar -h` stored
@@ -553,9 +553,9 @@ jobs:
           # other path as a hard link, which tar -x, aa and
           # reuse_app_host_products.py all extract. Same files, 572 MB, packed
           # faster.
-          stage="$(mktemp -d "${CMUX_COMPILE_ADMISSION_DERIVED_DATA%/*}/.product-pack.XXXXXX")"
+          stage="$(mktemp -d "${HMUX_COMPILE_ADMISSION_DERIVED_DATA%/*}/.product-pack.XXXXXX")"
           trap 'rm -rf "$stage"' EXIT
-          (cd "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" && pax -rwlL Build/Products "$stage")
+          (cd "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" && pax -rwlL Build/Products "$stage")
           COPYFILE_DISABLE=1 tar -cf - -C "$stage" Build/Products | gzip -1 > "$archive"
           echo "sha256=$(shasum -a 256 "$archive" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
 

@@ -1,8 +1,8 @@
 import AppKit
 import Bonsplit
-import CmuxFoundation
-import CmuxTerminalSharing
-import CmuxTerminalSizing
+import HmuxFoundation
+import HmuxTerminalSharing
+import HmuxTerminalSizing
 import SwiftUI
 
 /// Localized strings and glyphs for shared-terminal UI (tab accessory, pane

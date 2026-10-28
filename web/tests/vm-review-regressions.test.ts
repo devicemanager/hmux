@@ -9,13 +9,13 @@ import { PAID_MAX_ACTIVE_VMS_DEFAULT } from "../services/vms/machineSpec";
 import { VmBillingGateway, noOpVmBillingGateway } from "../services/vms/billingGateway";
 import { VmRepository, VmRepositoryLive } from "../services/vms/repository";
 import { VmProviderGateway, type VmProviderGatewayShape } from "../services/vms/providerGateway";
-import { execVm, openAttachEndpoint, openVmCmuxRemote, openVmSession, resizeVm } from "../services/vms/workflows";
+import { execVm, openAttachEndpoint, openVmHmuxRemote, openVmSession, resizeVm } from "../services/vms/workflows";
 
 const serialTest = (test as typeof test & { serial: typeof test }).serial;
-const dbTest = process.env.CMUX_DB_TEST === "1" ? serialTest : test.skip;
+const dbTest = process.env.HMUX_DB_TEST === "1" ? serialTest : test.skip;
 let sql: Sql;
 beforeAll(() => {
-  if (process.env.CMUX_DB_TEST === "1") {
+  if (process.env.HMUX_DB_TEST === "1") {
     sql = postgres(process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL!, { max: 1 });
   }
 });
@@ -54,13 +54,13 @@ describe("VM review regressions", () => {
     expect(count?.count).toBe(1);
   }));
 
-  for (const operation of ["resize", "exec", "attach", "session", "cmux-remote"] as const) {
+  for (const operation of ["resize", "exec", "attach", "session", "hmux-remote"] as const) {
     for (const allowance of [maxActiveVmsForPlan("team", {}, { seats: 10 }), null, 20, undefined]) {
       dbTest(`${operation} resumes a paused Team VM using allowance ${allowance}`, () => withTeam(async team => {
         await sql`
           insert into cloud_vms (user_id, billing_team_id, billing_plan_id, provider, provider_vm_id, image_id, status, provider_metadata)
           select ${team}, ${team}, 'team', 'freestyle', ${team} || '-' || n, 'snapshot-test', 'running',
-            '{"cmuxResourceReservation":{"vcpus":4,"memoryMb":8192,"diskMb":32768}}'::jsonb
+            '{"hmuxResourceReservation":{"vcpus":4,"memoryMb":8192,"diskMb":32768}}'::jsonb
           from generate_series(1, 21) n
         `;
         const providerVmId = `${team}-paused`;
@@ -68,7 +68,7 @@ describe("VM review regressions", () => {
           insert into cloud_vms (user_id, billing_team_id, billing_plan_id, provider, provider_vm_id, image_id, status, provider_metadata)
           values (
             ${team}, ${team}, 'team', 'freestyle', ${providerVmId}, 'snapshot-test', 'paused',
-            '{"cmuxResourceReservation":{"vcpus":4,"memoryMb":8192,"diskMb":32768}}'::jsonb
+            '{"hmuxResourceReservation":{"vcpus":4,"memoryMb":8192,"diskMb":32768}}'::jsonb
           )
         `;
         let resumes = 0;
@@ -96,10 +96,10 @@ describe("VM review regressions", () => {
               sessionId: "test-session", attachmentId: "test-attachment", expiresAtUnix: 2_000_000_000,
             };
           }),
-          openCmuxRemote: () => Effect.sync(() => {
+          openHmuxRemote: () => Effect.sync(() => {
             operations += 1;
             return {
-              transport: "cmux-remote", route: "ws://10.0.0.5:1337/v1/link", token: "test-token",
+              transport: "hmux-remote", route: "ws://10.0.0.5:1337/v1/link", token: "test-token",
               session: "test-session", expiresAtUnix: 2_000_000_000, trustedCarrier: true,
             };
           }),
@@ -114,7 +114,7 @@ describe("VM review regressions", () => {
           exec: () => execVm(input).pipe(Effect.asVoid),
           attach: () => openAttachEndpoint(input).pipe(Effect.asVoid),
           session: () => openVmSession(input).pipe(Effect.asVoid),
-          "cmux-remote": () => openVmCmuxRemote(input).pipe(Effect.asVoid),
+          "hmux-remote": () => openVmHmuxRemote(input).pipe(Effect.asVoid),
         }[operation]();
         const result = await Effect.runPromise(program.pipe(
           Effect.either,

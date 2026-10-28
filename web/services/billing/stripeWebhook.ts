@@ -15,7 +15,7 @@ import {
 import {
   applySubscriptionUpdate as applySubscriptionUpdateDefault,
   hasConflictingFounderMetadata,
-  isCmuxCheckoutSession,
+  isHmuxCheckoutSession,
   isActiveStripeSubscriptionStatus,
   recordCheckoutCompletion as recordCheckoutCompletionDefault,
   recordFoundersCheckoutCompletion as recordFoundersCheckoutCompletionDefault,
@@ -76,7 +76,7 @@ export function makeStripeWebhookHandler(
   return withApiRouteSpan(
     request,
     "/api/stripe/webhook",
-    { "cmux.subsystem": "stripe", "cmux.stripe.operation": "billing_webhook" },
+    { "hmux.subsystem": "stripe", "hmux.stripe.operation": "billing_webhook" },
     async (span): Promise<Response> => {
       const webhookSecret = dependencies.webhookSecret();
       if (!webhookSecret || !dependencies.isConfigured()) {
@@ -95,7 +95,7 @@ export function makeStripeWebhookHandler(
         return jsonError("Invalid Stripe signature", 400);
       }
 
-      setSpanAttributes(span, { "cmux.stripe.event_type": event.type });
+      setSpanAttributes(span, { "hmux.stripe.event_type": event.type });
       const db = dependencies.db();
       const [inserted] = await db
         .insert(stripeWebhookEvents)
@@ -153,7 +153,7 @@ async function processAndRecordStripeEvent(
     const retryable = isRetryableStripeEventError(error);
     const message = error instanceof Error ? error.message : String(error);
     if (span) {
-      setSpanAttributes(span, { "cmux.stripe.retryable": retryable });
+      setSpanAttributes(span, { "hmux.stripe.retryable": retryable });
       recordSpanError(span, error);
     }
     // Lease contention resolves once the sibling event finishes. Stripe
@@ -288,10 +288,10 @@ async function processCheckoutCompleted(
   // Preserve an explicit foreign marker from the signed event payload.
   // Stripe's retrieve response is authoritative for expanded fields, but
   // a test or a delayed provider read must not turn an explicitly foreign
-  // event into a cmux purchase.
+  // event into a hmux purchase.
   if (
     session.metadata?.app &&
-    session.metadata.app !== "cmux" &&
+    session.metadata.app !== "hmux" &&
     session.metadata.founders_edition !== "true"
   ) {
     return { skipped: "foreign_checkout" };
@@ -300,7 +300,7 @@ async function processCheckoutCompleted(
     expand: ["subscription", "customer"],
   });
   const subscription = expandedSubscription(expanded);
-  if (!isCmuxCheckoutSession(expanded, subscription)) {
+  if (!isHmuxCheckoutSession(expanded, subscription)) {
     return { skipped: "foreign_checkout" };
   }
   if (hasConflictingFounderMetadata(expanded, subscription, [session.metadata])) {
@@ -410,7 +410,7 @@ function processExpiredCheckout(
   session: Stripe.Checkout.Session,
   dependencies: StripeWebhookDependencies,
 ): { processed?: string; skipped?: string; analytics?: () => Promise<void> } {
-  if (session.metadata?.app !== "cmux") return { skipped: "foreign_checkout" };
+  if (session.metadata?.app !== "hmux") return { skipped: "foreign_checkout" };
   const subject = expiredCheckoutSubject(session.metadata);
   if (!subject) return { skipped: "checkout_unmapped" };
   return {
@@ -468,15 +468,15 @@ function isPersonalProCheckout(
   subscription?: Stripe.Subscription | null,
 ): boolean {
   return (
-    (session.metadata?.app === "cmux" && isPersonalPlanId(session.metadata?.plan)) ||
-    (subscription?.metadata?.app === "cmux" &&
+    (session.metadata?.app === "hmux" && isPersonalPlanId(session.metadata?.plan)) ||
+    (subscription?.metadata?.app === "hmux" &&
       isPersonalPlanId(subscription.metadata?.plan))
   );
 }
 
 function isPersonalWelcomeConfigured(): boolean {
   return personalProWelcomeOwnsDelivery({
-    enabled: env.CMUX_PERSONAL_PRO_WELCOME_ENABLED,
+    enabled: env.HMUX_PERSONAL_PRO_WELCOME_ENABLED,
     resendApiKey: env.RESEND_API_KEY,
     webhookSecret: env.STRIPE_FOUNDERS_WEBHOOK_SECRET,
     stripeSecretKey: env.STRIPE_SECRET_KEY,

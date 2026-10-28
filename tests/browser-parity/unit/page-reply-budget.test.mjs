@@ -65,7 +65,7 @@ const CALLS = {
 
 test("every page agent export replies through the reply budget, and a reply past it is cut with the page-read note", async () => {
   const servers = await startFixtureServers();
-  const dir = makeTestDir("cmux-repl-reply-budget-");
+  const dir = makeTestDir("hmux-repl-reply-budget-");
   const browser = await createDevBrowser();
   const lines = [];
   const host = createNodeHost({ workDir: dir, sessionId: `reply-budget-${process.pid}`, print: (level, text) => lines.push(text) });
@@ -78,7 +78,7 @@ test("every page agent export replies through the reply budget, and a reply past
         document.body.innerHTML = '<div id="t">t</div><div id="u">u</div><input id="i"><select id="s"><option value="a">a</option></select><iframe id="f"></iframe>';
       });
       const frame = page._mainFrame;
-      const AGENT = 'globalThis[Symbol.for("cmux.browserRepl.agent")]';
+      const AGENT = 'globalThis[Symbol.for("hmux.browserRepl.agent")]';
       const names = await frame._call("agent", "() => { const A = " + AGENT + "; return Object.keys(A).filter((k) => typeof A[k] === 'function'); }", []);
       const handles = {};
       for (const [name, selector] of [["$t", "#t"], ["$u", "#u"], ["$input", "#i"], ["$select", "#s"], ["$frame", "#f"]]) {
@@ -124,7 +124,7 @@ test("every page agent export replies through the reply budget, and a reply past
 // A REPL on the dev driver, on the fixture page, for one test.
 async function withRepl(fn) {
   const servers = await startFixtureServers();
-  const dir = makeTestDir("cmux-repl-reply-budget-");
+  const dir = makeTestDir("hmux-repl-reply-budget-");
   const browser = await createDevBrowser();
   const lines = [];
   const host = createNodeHost({ workDir: dir, sessionId: `reply-budget-${process.pid}`, print: (level, text) => lines.push(text) });
@@ -165,7 +165,7 @@ test("queryAll makes and returns at most the page-read node budget of handles, a
     const r = await run(`
       await page.evaluate(() => { document.body.innerHTML = "<div></div>".repeat(300000); });
       const got = await page.locator("div").count().then((n) => "counted " + n, (e) => String(e.message));
-      const kept = await page._mainFrame._call("agent", "() => " + 'globalThis[Symbol.for("cmux.browserRepl.agent")]' + ".stats().handles", []);
+      const kept = await page._mainFrame._call("agent", "() => " + 'globalThis[Symbol.for("hmux.browserRepl.agent")]' + ".stats().handles", []);
       console.log("@@" + JSON.stringify({ got, kept }));
     `);
     assert.match(r.got, /the page is too large to read whole: queryAll stopped after 250,000 nodes/, r.got.slice(0, 300));

@@ -20,12 +20,12 @@ log=""
 fail() { echo "FAIL: $*" >&2; if [[ -n "$log" && -f "$log" ]]; then cat "$log" >&2; fi; exit 1; }
 git_q() { git -c user.name=t -c user.email=t@e -c init.defaultBranch=main "$@" >/dev/null 2>&1; }
 
-# A cmux-shaped checkout whose branch is pushed, as the demo requires.
+# A hmux-shaped checkout whose branch is pushed, as the demo requires.
 git_q init --bare "$work/origin.git"
 repo="$work/repo"
 mkdir -p "$repo/scripts" "$repo/.github/workflows" "$repo/ghostty"
 cp "$bounded" "$repo/scripts/"
-echo "name: stub" >"$repo/.github/workflows/cmux-tui-testbox-warmup.yml"
+echo "name: stub" >"$repo/.github/workflows/hmux-tui-testbox-warmup.yml"
 echo ".{}" >"$repo/ghostty/build.zig.zon"
 git_q -C "$repo" init -b demo-branch
 git_q -C "$repo" add -A
@@ -75,7 +75,7 @@ cat >"$bin/gh" <<SH
 echo "gh \$*" >>"$work/calls"
 # Only a lookup that filters on this box's run title finds run 777.
 case "\$*" in
-  "api repos/manaflow-ai/cmux/actions/workflows/"*'"cmux-tui Rust Testbox setup tbx_'*) echo 777 ;;
+  "api repos/manaflow-ai/cmux/actions/workflows/"*'"hmux-tui Rust Testbox setup tbx_'*) echo 777 ;;
 esac
 exit 0
 SH
@@ -88,7 +88,7 @@ run_demo() { # <name> <env assignments or -u NAME>...
   : >"$work/calls"
   rm -f "$work/state/"*
   set +e
-  (cd "$repo" && env "$@" PATH="$bin:$PATH" FAKE_STATE="$work/state" CMUX_TESTBOX_DEMO_WARMUP_TIMEOUT=3 \
+  (cd "$repo" && env "$@" PATH="$bin:$PATH" FAKE_STATE="$work/state" HMUX_TESTBOX_DEMO_WARMUP_TIMEOUT=3 \
     "$bounded" 60 "$demo") >"$log" 2>&1
   rc=$?
   set -e
@@ -128,7 +128,7 @@ signal_demo() { # <case> <signal> <expected rc> [second signal during cleanup]
   log="$work/$name.log"
   set -m
   (cd "$repo" && exec env PATH="$bin:$PATH" FAKE_STATE="$work/state" HQ_TOOLS="$work/hq" \
-    FAKE_WARMUP=hang-after-tbx FAKE_SLOW_STOP="${second:+1}" CMUX_TESTBOX_DEMO_WARMUP_TIMEOUT=50 "$demo") >"$log" 2>&1 &
+    FAKE_WARMUP=hang-after-tbx FAKE_SLOW_STOP="${second:+1}" HMUX_TESTBOX_DEMO_WARMUP_TIMEOUT=50 "$demo") >"$log" 2>&1 &
   demo_pid=$!
   set +m
   for _ in $(seq 1 100); do [[ -e "$work/state/named" ]] && break; sleep 0.1; done
@@ -227,6 +227,6 @@ run_demo no-hq -u HQ_TOOLS FAKE_WARMUP=ok
 [[ ! -e "$work/state/wrapper-started" ]] || fail "2: the warmup wrapper ran without an hq checkout"
 ! called "testbox stop" || fail "2: the demo touched a box without the hq wrapper"
 grep -q 'HQ_TOOLS' "$log" || fail "2: the message does not say how to point at an hq checkout"
-grep -q 'cmux-tui/README.md' "$log" || fail "2: the message does not name the public fallback"
+grep -q 'hmux-tui/README.md' "$log" || fail "2: the message does not name the public fallback"
 
 echo "ok: the demo stops its box and cancels its run on every failure, and needs no personal path"

@@ -4,7 +4,7 @@
     "Sources/*Terminal*Link*",
     "Sources/*Hover*",
     "Sources/*Modifier*",
-    "Packages/macOS/CmuxTerminal/*"
+    "Packages/macOS/HmuxTerminal/*"
   ],
   "steps": [
     {

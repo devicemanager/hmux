@@ -6,10 +6,10 @@ import sys
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).parent))
-from cmux import cmux, cmuxError
+from hmux import hmux, hmuxError
 
 
-SOCKET_PATH = os.environ.get("CMUX_SOCKET_PATH", "/tmp/cmux-debug.sock")
+SOCKET_PATH = os.environ.get("HMUX_SOCKET_PATH", "/tmp/hmux-debug.sock")
 
 EXPECTED_SIMULATOR_METHODS = {
     "simulator.type",
@@ -45,12 +45,12 @@ EXPECTED_SIMULATOR_METHODS = {
 
 
 def main() -> int:
-    with cmux(SOCKET_PATH) as client:
+    with hmux(SOCKET_PATH) as client:
         advertised = set(client.capabilities().get("methods") or [])
 
     missing = sorted(EXPECTED_SIMULATOR_METHODS - advertised)
     if missing:
-        raise cmuxError(f"Missing Simulator methods in system.capabilities: {missing}")
+        raise hmuxError(f"Missing Simulator methods in system.capabilities: {missing}")
 
     print("PASS: system.capabilities advertises every Simulator RPC method")
     return 0

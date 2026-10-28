@@ -180,7 +180,7 @@ describe("bindingRequestTranscript", () => {
   it("builds the exact broker signed-bytes construction", () => {
     const transcript = bindingRequestTranscript(REQUEST);
     expect(new TextDecoder().decode(transcript)).toBe(
-      `cmux/iroh/binding-request/v1\n${BINDING_ID}\nPOST\napi/relay/token\n${NOW_SECONDS}\n${EMPTY_BODY_SHA256}`,
+      `hmux/iroh/binding-request/v1\n${BINDING_ID}\nPOST\napi/relay/token\n${NOW_SECONDS}\n${EMPTY_BODY_SHA256}`,
     );
   });
 });

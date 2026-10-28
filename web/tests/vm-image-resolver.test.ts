@@ -57,15 +57,15 @@ test("the promoted Freestyle ladder is complete and internally consistent", () =
     expect(base!.version).toBe(`${baseLadderVersion}-${size}-base`);
   }
 });
-// cmux's validated pre-ladder public-platform devbox: still listed (base only,
+// hmux's validated pre-ladder public-platform devbox: still listed (base only,
 // size-less) so stored rows and explicit requests keep resolving, no longer a
 // default.
 const legacySnapshot = "sh-940ec3bc46224c019e5e8d9a97053293";
-const legacyVersion = "freestyle-cmux-devbox-20260902c";
+const legacyVersion = "freestyle-hmux-devbox-20260902c";
 // The pre-ladder desktop devbox: validated, listed under both kinds with one
 // image id, never a default.
 const legacyDesktopSnapshot = "sh-1d66b9cad53a4811b5f63a4cae0b3faf";
-const legacyDesktopVersion = "freestyle-cmux-devbox-20260902h";
+const legacyDesktopVersion = "freestyle-hmux-devbox-20260902h";
 // The retired beta-endpoint bake: listed for history, never a default.
 const retiredBetaSnapshot = "sh-fb3dcf7b47894114889b10186626af5b";
 
@@ -153,7 +153,7 @@ describe("VM image resolver: request by kind", () => {
       [4097, "md"],
       [8192, "md"],
       [16384, "lg"],
-      // cmux's paid plan machine (20 GiB) lands on lgx (12 vCPU / 24 GB), the
+      // hmux's paid plan machine (20 GiB) lands on lgx (12 vCPU / 24 GB), the
       // step added for it; anything above boots xl.
       [20480, "lgx"],
       [24576, "lgx"],
@@ -273,9 +273,9 @@ describe("VM image resolver: request by kind", () => {
 
   test("client-requested unknown images stay strict and report imageRequested", () => {
     const err = captureImageConfigError(() =>
-      resolveVmImage("freestyle", "cmuxd-ws:unlisted", deployed),
+      resolveVmImage("freestyle", "hmuxd-ws:unlisted", deployed),
     );
-    expect(err).toMatchObject({ image: "cmuxd-ws:unlisted", source: "request" });
+    expect(err).toMatchObject({ image: "hmuxd-ws:unlisted", source: "request" });
     const report = reportVmImageConfigError(err, deployed);
     expect(report.details).toEqual({
       imageRequested: true,
@@ -285,7 +285,7 @@ describe("VM image resolver: request by kind", () => {
     });
     expect(report.message).toBe("The requested Cloud VM image is not available in this environment.");
     expect(report.action).toContain("kind`: desktop, base");
-    expect(report.operator).toMatchObject({ image: "cmuxd-ws:unlisted" });
+    expect(report.operator).toMatchObject({ image: "hmuxd-ws:unlisted" });
   });
 
   test("derives a kind for stored images and lists the kinds a provider can serve", () => {
@@ -293,7 +293,7 @@ describe("VM image resolver: request by kind", () => {
     expect(vmImageKindFor("freestyle", legacySnapshot)).toBe("base");
     // No manifest entry and no `xfce`/`devbox` in the id: the heuristic says base.
     expect(vmImageKindFor("freestyle", "sh-never-listed")).toBe("base");
-    expect(vmImageKindFor("freestyle", "cmux-xfce:custom")).toBe("desktop");
+    expect(vmImageKindFor("freestyle", "hmux-xfce:custom")).toBe("desktop");
 
     // Only the ladder is flagged default; the legacy bakes and the retired
     // beta entry never are.
@@ -336,7 +336,7 @@ describe("VM image resolver", () => {
       resolveVmImage("freestyle", "scratch-image", {
         VERCEL: "1",
         VERCEL_ENV: "preview",
-        CMUX_VM_ALLOW_UNMANIFESTED_IMAGES: "1",
+        HMUX_VM_ALLOW_UNMANIFESTED_IMAGES: "1",
       }),
     ).toMatchObject({
       provider: "freestyle",

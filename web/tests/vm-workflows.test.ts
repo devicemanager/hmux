@@ -66,12 +66,12 @@ import {
   getVm,
   homeVolumeNameForUser,
   listUserVms,
-  approveVmCmuxRemoteEnrollment,
+  approveVmHmuxRemoteEnrollment,
   openBaseVm,
   openAttachEndpoint,
   prepareScpEndpoint,
   openVmPort,
-  openVmCmuxRemote,
+  openVmHmuxRemote,
   openVmSession,
   revokeExpiredIdentityLeases,
   revokeUserIdentityLeasesForAccountDeletion,
@@ -155,7 +155,7 @@ describe("VM hard restart", () => {
   });
 });
 
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 // These cases share one Postgres database and several exercise paths read or
 // temporarily override process-wide VM plan limits. Keep the DB-backed group
 // explicitly serial even if a Bun config or command-line flag enables
@@ -222,7 +222,7 @@ type LeaseRevocationRetry = Parameters<NonNullable<VmRepositoryShape["markLeaseR
 function databaseURL() {
   const url = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!url) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   }
   return url;
 }
@@ -414,7 +414,7 @@ describe("VM Effect workflows", () => {
       values (
         'user-abandoned-create', 'team-abandoned-create', 'pro', 'freestyle',
         'snapshot-abandoned-create', 'provisioning',
-        '{"cmuxResourceReservation":{"vcpus":2,"memoryMb":8192,"diskMb":32768}}'::jsonb,
+        '{"hmuxResourceReservation":{"vcpus":2,"memoryMb":8192,"diskMb":32768}}'::jsonb,
         ${old}, ${old}
       )
       returning id
@@ -432,7 +432,7 @@ describe("VM Effect workflows", () => {
       from cloud_vms where id = ${vm.id}
     `;
     expect(row).toMatchObject({ status: "failed", failureCode: "create_abandoned" });
-    expect(row.metadata.cmuxResourceReservation).toBeUndefined();
+    expect(row.metadata.hmuxResourceReservation).toBeUndefined();
     expect(revokedModelPlaneIds).toEqual([vm.id]);
     const [event] = await sql<{ eventType: string; metadata: Record<string, unknown> }[]>`
       select event_type as "eventType", metadata
@@ -454,7 +454,7 @@ describe("VM Effect workflows", () => {
       values (
         'user-abandoned-race', 'team-abandoned-race', 'pro', 'freestyle',
         'snapshot-abandoned-race', 'provisioning',
-        '{"cmuxResourceReservation":{"vcpus":2,"memoryMb":8192,"diskMb":32768}}'::jsonb,
+        '{"hmuxResourceReservation":{"vcpus":2,"memoryMb":8192,"diskMb":32768}}'::jsonb,
         ${old}, ${old}
       )
       returning id
@@ -795,10 +795,10 @@ describe("VM Effect workflows", () => {
           vm: {
             ...pendingFork,
             providerMetadata: {
-              cmuxResourceReservation: input.resourceReservation,
+              hmuxResourceReservation: input.resourceReservation,
               ...(input.forkMinimumResourceReservation === undefined
                 ? {}
-                : { cmuxResourceForkPending: input.forkMinimumResourceReservation }),
+                : { hmuxResourceForkPending: input.forkMinimumResourceReservation }),
             },
           },
         });
@@ -883,10 +883,10 @@ describe("VM Effect workflows", () => {
           vm: {
             ...pendingFork,
             providerMetadata: {
-              cmuxResourceReservation: input.resourceReservation,
+              hmuxResourceReservation: input.resourceReservation,
               ...(input.forkMinimumResourceReservation === undefined
                 ? {}
-                : { cmuxResourceForkPending: input.forkMinimumResourceReservation }),
+                : { hmuxResourceForkPending: input.forkMinimumResourceReservation }),
             },
           },
         });
@@ -970,10 +970,10 @@ describe("VM Effect workflows", () => {
           vm: {
             ...pendingFork,
             providerMetadata: {
-              cmuxResourceReservation: input.resourceReservation,
+              hmuxResourceReservation: input.resourceReservation,
               ...(input.forkMinimumResourceReservation === undefined
                 ? {}
-                : { cmuxResourceForkPending: input.forkMinimumResourceReservation }),
+                : { hmuxResourceForkPending: input.forkMinimumResourceReservation }),
             },
           },
         });
@@ -1162,7 +1162,7 @@ describe("VM Effect workflows", () => {
     const source = testCloudVmRow({
       userId: "user-fork-team", billingTeamId: "team-fork", billingPlanId: "pro",
       providerVmId: "source-fork-team", status: "running",
-      providerMetadata: { cmuxResourceReservation: { vcpus: 2, memoryMb: 4096, diskMb: 32768 } },
+      providerMetadata: { hmuxResourceReservation: { vcpus: 2, memoryMb: 4096, diskMb: 32768 } },
     });
     const pending = testCloudVmRow({ ...source, id: "00000000-0000-4000-8000-000000000162", providerVmId: null, status: "provisioning" });
     let createdNetwork: unknown;
@@ -1299,7 +1299,7 @@ describe("VM Effect workflows", () => {
       const vm = testCloudVmRow({
         userId: "resize-reservation-race", providerVmId: "provider-reservation-race",
         status: "running", billingPlanId: "max",
-        providerMetadata: { cmuxResourceReservation: { vcpus: 2, memoryMb: 4096, diskMb: 32768 } },
+        providerMetadata: { hmuxResourceReservation: { vcpus: 2, memoryMb: 4096, diskMb: 32768 } },
       });
       const usageEvents: RecordedUsageEvent[] = [];
       const confirmations: Parameters<NonNullable<VmRepositoryShape["setResourceReservation"]>>[0][] = [];
@@ -1349,7 +1349,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "pro",
       providerVmId: "provider-vm-resize-confirmed",
       status: "running",
-      providerMetadata: { cmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
+      providerMetadata: { hmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
     });
     const confirmations: Array<{
       id: string;
@@ -1410,7 +1410,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "pro",
       providerVmId: "provider-vm-resize-confirmation-race",
       status: "running",
-      providerMetadata: { cmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
+      providerMetadata: { hmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
     });
     const usageEvents: RecordedUsageEvent[] = [];
     let statsCalls = 0;
@@ -1458,7 +1458,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "pro",
       providerVmId: "provider-vm-resize-stats-failure",
       status: "running",
-      providerMetadata: { cmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
+      providerMetadata: { hmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
     });
     const unconfirmed: Array<{
       id: string;
@@ -1551,7 +1551,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "pro",
       providerVmId: "provider-vm-resize-plan",
       status: "running",
-      providerMetadata: { cmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
+      providerMetadata: { hmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
     });
     let providerCalls = 0;
     const provider: VmProviderGatewayShape = {
@@ -1590,7 +1590,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "max",
       providerVmId: `provider-vm-resize-max-${cpu}`,
       status: "running",
-      providerMetadata: { cmuxResourceReservation: { vcpus: 8, memoryMb: 16 * 1024, diskMb: 65536 } },
+      providerMetadata: { hmuxResourceReservation: { vcpus: 8, memoryMb: 16 * 1024, diskMb: 65536 } },
     });
     let resized = false;
     let resizeOptions: { cpu?: number; memoryMb?: number } | undefined;
@@ -1734,7 +1734,7 @@ describe("VM Effect workflows", () => {
       provider: "freestyle",
       providerVmId: "provider-vm-exec-metadata",
       status: "running",
-      providerMetadata: { homeVolume: "cmux-home-user-workflow-exec-metadata" },
+      providerMetadata: { homeVolume: "hmux-home-user-workflow-exec-metadata" },
     });
     const repo = testWorkflowRepo({ vm });
     let receivedOptions: unknown;
@@ -1759,7 +1759,7 @@ describe("VM Effect workflows", () => {
     expect(result).toEqual({ exitCode: 0, stdout: "ok", stderr: "" });
     expect(receivedOptions).toEqual({
       timeoutMs: 1000,
-      providerMetadata: { homeVolume: "cmux-home-user-workflow-exec-metadata" },
+      providerMetadata: { homeVolume: "hmux-home-user-workflow-exec-metadata" },
     });
   });
 
@@ -1770,13 +1770,13 @@ describe("VM Effect workflows", () => {
       provider: "freestyle",
       providerVmId: "provider-vm-approve-metadata",
       status: "running",
-      providerMetadata: { homeVolume: "cmux-home-user-workflow-approve-metadata" },
+      providerMetadata: { homeVolume: "hmux-home-user-workflow-approve-metadata" },
     });
     const repo = testWorkflowRepo({ vm });
     const approvalCalls: unknown[][] = [];
     const provider: VmProviderGatewayShape = {
       ...unusedProviderGateway(),
-      approveCmuxRemoteEnrollment: (...args) =>
+      approveHmuxRemoteEnrollment: (...args) =>
         Effect.sync(() => {
           // Keep the tuple cast local so this test also catches the missing
           // optional argument on the pre-fix gateway contract.
@@ -1786,7 +1786,7 @@ describe("VM Effect workflows", () => {
     };
 
     const result = await Effect.runPromise(
-      approveVmCmuxRemoteEnrollment({
+      approveVmHmuxRemoteEnrollment({
         userId: "user-workflow-approve-metadata",
         providerVmId: "provider-vm-approve-metadata",
         invitationId: "invite-1",
@@ -1796,7 +1796,7 @@ describe("VM Effect workflows", () => {
     expect(result).toEqual({ approved: true, state: "approved", deviceFingerprint: "device-1" });
     expect(approvalCalls).toHaveLength(1);
     expect(approvalCalls[0]?.[3]).toEqual({
-      providerMetadata: { homeVolume: "cmux-home-user-workflow-approve-metadata" },
+      providerMetadata: { homeVolume: "hmux-home-user-workflow-approve-metadata" },
     });
   });
 
@@ -2875,8 +2875,8 @@ describe("VM Effect workflows", () => {
     expect(usageEvents).toHaveLength(1);
   });
 
-  test("openAttachEndpoint and openVmSession refuse the legacy transport on a cmux-tui-only provider", async () => {
-    // Machines run only the cmux-tui remote daemon: the legacy websocket/SSH
+  test("openAttachEndpoint and openVmSession refuse the legacy transport on a hmux-tui-only provider", async () => {
+    // Machines run only the hmux-tui remote daemon: the legacy websocket/SSH
     // attach must fail closed before the provider is asked (no wake, no lease, no
     // identity churn) with a typed error the route maps to 409.
     const vm = testCloudVmRow({
@@ -2894,7 +2894,7 @@ describe("VM Effect workflows", () => {
     let statusCalls = 0;
     const provider: VmProviderGatewayShape = {
       ...unusedProviderGateway(),
-      attachTransports: () => ["cmux-remote"] as const,
+      attachTransports: () => ["hmux-remote"] as const,
       openAttach: () =>
         Effect.suspend(() => {
           attachCalls += 1;
@@ -2920,7 +2920,7 @@ describe("VM Effect workflows", () => {
       provider: "freestyle",
       vmId: "provider-vm-attach-unsupported",
       requested: "websocket",
-      supported: ["cmux-remote"],
+      supported: ["hmux-remote"],
     });
 
     const sessionError = await Effect.runPromise(
@@ -2998,7 +2998,7 @@ describe("VM Effect workflows", () => {
     });
   });
 
-  test("openVmCmuxRemote rejects an explicitly unsupported transport before provider work", async () => {
+  test("openVmHmuxRemote rejects an explicitly unsupported transport before provider work", async () => {
     const vm = testCloudVmRow({ userId: "user-remote-unsupported", providerVmId: "vm-remote-unsupported", status: "running" });
     const repo = testWorkflowRepo({ vm });
     let providerCalls = 0;
@@ -3009,10 +3009,10 @@ describe("VM Effect workflows", () => {
         providerCalls += 1;
         return "running" as const;
       }),
-      openCmuxRemote: () => Effect.sync(() => {
+      openHmuxRemote: () => Effect.sync(() => {
         providerCalls += 1;
         return {
-          transport: "cmux-remote" as const,
+          transport: "hmux-remote" as const,
           route: "ws://10.0.0.5:1337/v1/link",
           token: "",
           expiresAtUnix: 0,
@@ -3021,7 +3021,7 @@ describe("VM Effect workflows", () => {
         };
       }),
     };
-    const error = await Effect.runPromise(openVmCmuxRemote({ userId: vm.userId, providerVmId: "vm-remote-unsupported" }).pipe(
+    const error = await Effect.runPromise(openVmHmuxRemote({ userId: vm.userId, providerVmId: "vm-remote-unsupported" }).pipe(
       Effect.flip,
       Effect.provide(workflowLayer(repo, provider)),
     ));
@@ -3029,7 +3029,7 @@ describe("VM Effect workflows", () => {
     expect(providerCalls).toBe(0);
   });
 
-  test("openVmCmuxRemote wakes a provider-paused VM even when its row still says running", async () => {
+  test("openVmHmuxRemote wakes a provider-paused VM even when its row still says running", async () => {
     const vm = testCloudVmRow({
       id: "00000000-0000-4000-8000-000000000146",
       userId: "user-workflow-remote-stale-running",
@@ -3042,7 +3042,7 @@ describe("VM Effect workflows", () => {
     const observedStatuses: ObservedStatusUpdate[] = [];
     const repo = testWorkflowRepo({ vm, usageEvents, leases, observedStatuses });
     const endpoint = {
-      transport: "cmux-remote" as const,
+      transport: "hmux-remote" as const,
       route: "ws://10.0.0.5:1337/v1/link",
       token: "remote-token",
       expiresAtUnix: Math.floor(Date.now() / 1000) + 300,
@@ -3067,16 +3067,16 @@ describe("VM Effect workflows", () => {
           callOrder.push("resume");
           return testVmHandle({ providerVmId: "provider-vm-remote-stale-running" });
         }),
-      openCmuxRemote: () =>
+      openHmuxRemote: () =>
         Effect.sync(() => {
           attachCalls += 1;
-          callOrder.push("openCmuxRemote");
+          callOrder.push("openHmuxRemote");
           return endpoint;
         }),
     };
 
     const result = await Effect.runPromise(
-      openVmCmuxRemote({
+      openVmHmuxRemote({
         userId: "user-workflow-remote-stale-running",
         teamIds: ["team-workflow-remote-stale-running"],
         providerVmId: "provider-vm-remote-stale-running",
@@ -3087,7 +3087,7 @@ describe("VM Effect workflows", () => {
     expect(statusCalls).toBe(1);
     expect(resumeCalls).toBe(1);
     expect(attachCalls).toBe(1);
-    expect(callOrder).toEqual(["getStatus", "resume", "openCmuxRemote"]);
+    expect(callOrder).toEqual(["getStatus", "resume", "openHmuxRemote"]);
     expect(observedStatuses).toEqual([
       { id: vm.id, providerVmId: "provider-vm-remote-stale-running", status: "running" },
     ]);
@@ -3095,11 +3095,11 @@ describe("VM Effect workflows", () => {
     expect(usageEvents.find((event) => event.eventType === "vm.attach")).toMatchObject({
       eventType: "vm.attach",
       vmId: vm.id,
-      metadata: { transport: "cmux-remote" },
+      metadata: { transport: "hmux-remote" },
     });
   });
 
-  test("openVmCmuxRemote fails closed when a stale running row cannot be probed", async () => {
+  test("openVmHmuxRemote fails closed when a stale running row cannot be probed", async () => {
     const vm = testCloudVmRow({
       id: "00000000-0000-4000-8000-000000000147",
       userId: "user-workflow-remote-probe-fail",
@@ -3113,11 +3113,11 @@ describe("VM Effect workflows", () => {
       ...unusedProviderGateway(),
       getStatus: () => Effect.fail(probeError),
       resume: () => Effect.fail(providerOperationError("resume", "should not resume")),
-      openCmuxRemote: () =>
+      openHmuxRemote: () =>
         Effect.sync(() => {
           attachCalls += 1;
           return {
-            transport: "cmux-remote" as const,
+            transport: "hmux-remote" as const,
             route: "ws://10.0.0.5:1337/v1/link",
             token: "remote-token",
             expiresAtUnix: Math.floor(Date.now() / 1000) + 300,
@@ -3128,7 +3128,7 @@ describe("VM Effect workflows", () => {
     };
 
     const error = await Effect.runPromise(
-      openVmCmuxRemote({
+      openVmHmuxRemote({
         userId: "user-workflow-remote-probe-fail",
         providerVmId: "provider-vm-remote-probe-fail",
       }).pipe(Effect.flip, Effect.provide(workflowLayer(repo, provider))),
@@ -3138,7 +3138,7 @@ describe("VM Effect workflows", () => {
     expect(attachCalls).toBe(0);
   });
 
-  test("openVmCmuxRemote fails before attaching when the provider reports destroyed", async () => {
+  test("openVmHmuxRemote fails before attaching when the provider reports destroyed", async () => {
     const vm = testCloudVmRow({
       id: "00000000-0000-4000-8000-000000000148",
       userId: "user-workflow-remote-destroyed",
@@ -3157,11 +3157,11 @@ describe("VM Effect workflows", () => {
           resumeCalls += 1;
           return testVmHandle({ providerVmId: "provider-vm-remote-destroyed" });
         }),
-      openCmuxRemote: () =>
+      openHmuxRemote: () =>
         Effect.sync(() => {
           attachCalls += 1;
           return {
-            transport: "cmux-remote" as const,
+            transport: "hmux-remote" as const,
             route: "ws://10.0.0.5:1337/v1/link",
             token: "remote-token",
             expiresAtUnix: Math.floor(Date.now() / 1000) + 300,
@@ -3172,7 +3172,7 @@ describe("VM Effect workflows", () => {
     };
 
     const error = await Effect.runPromise(
-      openVmCmuxRemote({
+      openVmHmuxRemote({
         userId: "user-workflow-remote-destroyed",
         providerVmId: "provider-vm-remote-destroyed",
       }).pipe(Effect.flip, Effect.provide(workflowLayer(repo, provider))),
@@ -3750,7 +3750,7 @@ describe("VM Effect workflows", () => {
             provider: "freestyle" as const,
             providerVmId: `provider-vm-idem-${createCalls}`,
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "hmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -3768,7 +3768,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 1,
       provider: "freestyle",
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       imageVersion: "test-version",
       idempotencyKey: "idem-1",
     });
@@ -3783,7 +3783,7 @@ describe("VM Effect workflows", () => {
         billingPlanId: "free",
         maxActiveVms: 1,
         provider: "freestyle",
-        image: "cmuxd-ws:test",
+        image: "hmuxd-ws:test",
         imageVersion: "test-version",
         idempotencyKey: "idem-1",
       }).pipe(Effect.provide(layer)),
@@ -3796,7 +3796,7 @@ describe("VM Effect workflows", () => {
         billingPlanId: "free",
         maxActiveVms: 1,
         provider: "freestyle",
-        image: "cmuxd-ws:test",
+        image: "hmuxd-ws:test",
         imageVersion: "test-version",
         idempotencyKey: "idem-1",
       }).pipe(Effect.provide(layer)),
@@ -3843,7 +3843,7 @@ describe("VM Effect workflows", () => {
             provider: "freestyle" as const,
             providerVmId: "provider-vm-base-deleting",
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "hmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -3861,7 +3861,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 1,
       provider: "freestyle" as const,
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       baseName: "default",
     };
 
@@ -3912,7 +3912,7 @@ describe("VM Effect workflows", () => {
             provider: "freestyle" as const,
             providerVmId: "provider-vm-base-stale-delete",
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "hmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -3930,7 +3930,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 1,
       provider: "freestyle",
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       baseName: "default",
     }).pipe(Effect.provide(providerLayer(provider))));
 
@@ -3951,7 +3951,7 @@ describe("VM Effect workflows", () => {
             provider: "freestyle" as const,
             providerVmId: `provider-vm-base-open-${createCalls}`,
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "hmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -3969,7 +3969,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "freestyle",
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
     const second = await Effect.runPromise(openBaseVm({
@@ -3979,7 +3979,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "freestyle",
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
     const otherTeam = await Effect.runPromise(openBaseVm({
@@ -3989,7 +3989,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "freestyle",
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
     const personal = await Effect.runPromise(openBaseVm({
@@ -3999,7 +3999,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "freestyle",
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
     const personalReopen = await Effect.runPromise(openBaseVm({
@@ -4009,7 +4009,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 5,
       provider: "freestyle",
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       imageVersion: "test-version",
     }).pipe(Effect.provide(layer)));
 
@@ -4327,7 +4327,7 @@ describe("VM Effect workflows", () => {
     const billing: VmBillingGatewayShape = {
       ...noOpVmBillingGateway(),
       reserveCreate: () => Effect.fail(new VmCreateCreditsInsufficientError({
-        itemId: "cmux-vm-create-credit",
+        itemId: "hmux-vm-create-credit",
         billingCustomerId: requested.billingTeamId!,
         amount: 1,
       })),
@@ -4458,7 +4458,7 @@ describe("VM Effect workflows", () => {
     };
     const reservation: VmCreateCreditReservation = {
       kind: "stack_item",
-      itemId: "cmux-vm-create-credit",
+      itemId: "hmux-vm-create-credit",
       customerType: "team",
       customerId: requested.billingTeamId!,
       amount: 1,
@@ -4490,7 +4490,7 @@ describe("VM Effect workflows", () => {
     expect(error).toMatchObject({ operation: "ensureNetwork" });
     // The reserved credit goes back to the customer.
     expect(refunds).toHaveLength(1);
-    expect(refunds[0]).toMatchObject({ itemId: "cmux-vm-create-credit", amount: 1 });
+    expect(refunds[0]).toMatchObject({ itemId: "hmux-vm-create-credit", amount: 1 });
     // Only the Base-aware mark fails the generation and promotes the retained
     // one back onto the base, so the ad-hoc mark is the wrong call here.
     expect(baseMarks).toHaveLength(1);
@@ -4551,7 +4551,7 @@ describe("VM Effect workflows", () => {
         ${vmId}, 'user-workflow-resize-headroom', ${teamId}, 'pro', 'freestyle',
         'provider-vm-resize-headroom', 'snapshot-test', 'running',
         ${sql.json({
-          cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 },
+          hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 },
         })}
       )
     `;
@@ -4630,7 +4630,7 @@ describe("VM Effect workflows", () => {
     expect(created.inserted).toBe(true);
 
     const [stored] = await sql<{ diskMb: number }[]>`
-      select (provider_metadata->'cmuxResourceReservation'->>'diskMb')::integer as "diskMb"
+      select (provider_metadata->'hmuxResourceReservation'->>'diskMb')::integer as "diskMb"
       from cloud_vms
       where id = ${vmId}
     `;
@@ -4650,7 +4650,7 @@ describe("VM Effect workflows", () => {
       ) values (
         ${sourceId}, 'user-workflow-fork-headroom', ${teamId}, 'pro', 'freestyle',
         ${sourceProviderId}, 'snapshot-test', 'running',
-        ${sql.json({ cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 } })}
+        ${sql.json({ hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 } })}
       )
     `;
 
@@ -4676,9 +4676,9 @@ describe("VM Effect workflows", () => {
 
     const [stored] = await sql<{ vcpus: number; memoryMb: number; diskMb: number }[]>`
       select
-        (provider_metadata->'cmuxResourceReservation'->>'vcpus')::integer as vcpus,
-        (provider_metadata->'cmuxResourceReservation'->>'memoryMb')::integer as "memoryMb",
-        (provider_metadata->'cmuxResourceReservation'->>'diskMb')::integer as "diskMb"
+        (provider_metadata->'hmuxResourceReservation'->>'vcpus')::integer as vcpus,
+        (provider_metadata->'hmuxResourceReservation'->>'memoryMb')::integer as "memoryMb",
+        (provider_metadata->'hmuxResourceReservation'->>'diskMb')::integer as "diskMb"
       from cloud_vms
       where id = ${created.vm.id}
     `;
@@ -4721,8 +4721,8 @@ describe("VM Effect workflows", () => {
         ${vmId}, 'user-workflow-resize-in-progress', ${teamId}, 'pro', 'freestyle',
         'provider-vm-resize-in-progress', 'snapshot-test', 'running',
         ${sql.json({
-          cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 },
-          cmuxResourceResizePending: {
+          hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 },
+          hmuxResourceResizePending: {
             operationId: "resize-operation-existing",
             requestedDiskMb: 65536,
             previousDiskMb: 32768,
@@ -4761,7 +4761,7 @@ describe("VM Effect workflows", () => {
       ) values (
         ${vmId}, 'user-workflow-resize-generation', ${teamId}, 'pro', 'freestyle',
         'provider-vm-resize-generation', 'snapshot-test', 'running',
-        ${sql.json({ cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 } })}
+        ${sql.json({ hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: 32768 } })}
       )
     `;
 
@@ -4797,7 +4797,7 @@ describe("VM Effect workflows", () => {
     }));
     const [protectedMarker] = await sql<{ operationId: string; networkId: string; hasObservedCleanup: boolean }[]>`
       select
-        provider_metadata->'cmuxResourceResizePending'->>'operationId' as "operationId",
+        provider_metadata->'hmuxResourceResizePending'->>'operationId' as "operationId",
         provider_metadata->>'networkId' as "networkId",
         provider_metadata ? ${OBSERVED_DESTROY_CLEANUP_METADATA_KEY} as "hasObservedCleanup"
       from cloud_vms
@@ -4813,7 +4813,7 @@ describe("VM Effect workflows", () => {
       update cloud_vms
       set provider_metadata = jsonb_set(
         provider_metadata,
-        '{cmuxResourceResizePending,operationId}',
+        '{hmuxResourceResizePending,operationId}',
         '"resize-operation-newer"'::jsonb,
         true
       )
@@ -4828,7 +4828,7 @@ describe("VM Effect workflows", () => {
     }));
     expect(stale).toBe(false);
     const [stillPending] = await sql<{ operationId: string }[]>`
-      select provider_metadata->'cmuxResourceResizePending'->>'operationId' as "operationId"
+      select provider_metadata->'hmuxResourceResizePending'->>'operationId' as "operationId"
       from cloud_vms
       where id = ${vmId}
     `;
@@ -4857,8 +4857,8 @@ describe("VM Effect workflows", () => {
         ${oldVmId}, 'user-workflow-resize-recovery-old', ${teamId}, 'pro', 'freestyle',
         'provider-vm-resize-recovery-old', 'snapshot-test', 'running',
         ${sql.json({
-          cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
-          cmuxResourceResizePending: {
+          hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
+          hmuxResourceResizePending: {
             operationId: "resize-operation-recovery",
             requestedDiskMb: 65536,
             previousDiskMb: 32768,
@@ -4909,7 +4909,7 @@ describe("VM Effect workflows", () => {
     expect(created.providerVmId).toBe("provider-vm-resize-recovery-new");
     const [oldRow] = await sql<{ diskMb: number; pending: boolean }[]>`
       select
-        (provider_metadata->'cmuxResourceReservation'->>'diskMb')::integer as "diskMb",
+        (provider_metadata->'hmuxResourceReservation'->>'diskMb')::integer as "diskMb",
         provider_metadata ? ${VM_RESOURCE_RESIZE_PENDING_METADATA_KEY} as pending
       from cloud_vms
       where id = ${oldVmId}
@@ -4930,7 +4930,7 @@ describe("VM Effect workflows", () => {
         ${vmId}, 'user-workflow-resize-unconfirmed', ${teamId}, 'pro', 'freestyle',
         'provider-vm-resize-unconfirmed', 'snapshot-test', 'running',
         ${sql.json({
-          cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
+          hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
           [VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY]: {
             operationId: "resize-operation-unconfirmed",
             requestedDiskMb: 65536,
@@ -4960,7 +4960,7 @@ describe("VM Effect workflows", () => {
 
     const [row] = await sql<{ diskMb: number; unconfirmed: boolean }[]>`
       select
-        (provider_metadata->'cmuxResourceReservation'->>'diskMb')::integer as "diskMb",
+        (provider_metadata->'hmuxResourceReservation'->>'diskMb')::integer as "diskMb",
         provider_metadata ? ${VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY} as unconfirmed
       from cloud_vms
       where id = ${vmId}
@@ -4981,7 +4981,7 @@ describe("VM Effect workflows", () => {
         ${vmId}, 'user-workflow-resize-abandoned', ${teamId}, 'pro', 'freestyle',
         'provider-vm-resize-abandoned', 'snapshot-test', 'running',
         ${sql.json({
-          cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
+          hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
           [VM_RESOURCE_RESIZE_PENDING_METADATA_KEY]: {
             operationId: "resize-operation-abandoned",
             requestedDiskMb: 65536,
@@ -5014,7 +5014,7 @@ describe("VM Effect workflows", () => {
       unconfirmed: boolean;
     }[]>`
       select
-        (provider_metadata->'cmuxResourceReservation'->>'diskMb')::integer as "diskMb",
+        (provider_metadata->'hmuxResourceReservation'->>'diskMb')::integer as "diskMb",
         provider_metadata ? ${VM_RESOURCE_RESIZE_PENDING_METADATA_KEY} as pending,
         provider_metadata ? ${VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY} as unconfirmed
       from cloud_vms
@@ -5031,7 +5031,7 @@ describe("VM Effect workflows", () => {
       unconfirmed: boolean;
     }[]>`
       select
-        (provider_metadata->'cmuxResourceReservation'->>'diskMb')::integer as "diskMb",
+        (provider_metadata->'hmuxResourceReservation'->>'diskMb')::integer as "diskMb",
         provider_metadata ? ${VM_RESOURCE_RESIZE_PENDING_METADATA_KEY} as pending,
         provider_metadata ? ${VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY} as unconfirmed
       from cloud_vms
@@ -5053,7 +5053,7 @@ describe("VM Effect workflows", () => {
         ${vmId}, 'user-workflow-resize-fresh-pending', ${teamId}, 'pro', 'freestyle',
         'provider-vm-resize-fresh-pending', 'snapshot-test', 'running',
         ${sql.json({
-          cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
+          hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
           [VM_RESOURCE_RESIZE_PENDING_METADATA_KEY]: {
             operationId: "resize-operation-fresh-pending",
             requestedDiskMb: 65536,
@@ -5108,7 +5108,7 @@ describe("VM Effect workflows", () => {
         ${vmId}, 'user-workflow-resize-unconfirmed-timeout', ${teamId}, 'pro', 'freestyle',
         'provider-vm-resize-unconfirmed-timeout', 'snapshot-test', 'running',
         ${sql.json({
-          cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
+          hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
           [VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY]: {
             operationId: "resize-operation-unconfirmed-timeout",
             requestedDiskMb: 65536,
@@ -5137,7 +5137,7 @@ describe("VM Effect workflows", () => {
 
     const [row] = await sql<{ diskMb: number; unconfirmed: boolean }[]>`
       select
-        (provider_metadata->'cmuxResourceReservation'->>'diskMb')::integer as "diskMb",
+        (provider_metadata->'hmuxResourceReservation'->>'diskMb')::integer as "diskMb",
         provider_metadata ? ${VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY} as unconfirmed
       from cloud_vms
       where id = ${vmId}
@@ -5158,7 +5158,7 @@ describe("VM Effect workflows", () => {
         ${vmId}, 'user-workflow-resize-noop-retry', ${teamId}, 'pro', 'freestyle',
         'provider-vm-resize-noop-retry', 'snapshot-test', 'running',
         ${sql.json({
-          cmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
+          hmuxResourceReservation: { vcpus: 2, memoryMb: 8192, diskMb: VM_DISK_MB_MAX },
           [VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY]: {
             operationId: "resize-operation-noop-retry",
             requestedDiskMb: 65536,
@@ -5191,7 +5191,7 @@ describe("VM Effect workflows", () => {
     });
     const [row] = await sql<{ diskMb: number; unconfirmed: boolean }[]>`
       select
-        (provider_metadata->'cmuxResourceReservation'->>'diskMb')::integer as "diskMb",
+        (provider_metadata->'hmuxResourceReservation'->>'diskMb')::integer as "diskMb",
         provider_metadata ? ${VM_RESOURCE_RESIZE_UNCONFIRMED_METADATA_KEY} as unconfirmed
       from cloud_vms
       where id = ${vmId}
@@ -5275,7 +5275,7 @@ describe("VM Effect workflows", () => {
       ) values (
         ${sourceVmId}, 'user-workflow-snapshot-grown', 'team-workflow-snapshot-grown',
         'pro', 'freestyle', 'provider-vm-snapshot-grown', 'snapshot-test', 'running',
-        ${sql.json({ cmuxResourceReservation: { vcpus: 16, memoryMb: 32768, diskMb: 160 * 1024 } })}
+        ${sql.json({ hmuxResourceReservation: { vcpus: 16, memoryMb: 32768, diskMb: 160 * 1024 } })}
       )
     `;
     await sql`
@@ -5541,7 +5541,7 @@ describe("VM Effect workflows", () => {
       reserveCreate: (input) =>
         refuseCredit
           ? Effect.fail(new VmCreateCreditsInsufficientError({
-            itemId: "cmux-vm-create-credit",
+            itemId: "hmux-vm-create-credit",
             billingCustomerId: "team-base-credit-retry",
             amount: 1,
           }))
@@ -5651,7 +5651,7 @@ describe("VM Effect workflows", () => {
     await sql`truncate cloud_vm_billing_grants, cloud_vm_usage_events, cloud_vm_leases, cloud_vms restart identity cascade`;
     await sql`
       insert into cloud_vms (user_id, billing_team_id, billing_plan_id, provider, provider_vm_id, image_id, status)
-      values ('user-workflow-limit-owner', 'team-workflow-limit', 'free', 'freestyle', 'provider-vm-limit-1', 'cmuxd-ws:test', 'running')
+      values ('user-workflow-limit-owner', 'team-workflow-limit', 'free', 'freestyle', 'provider-vm-limit-1', 'hmuxd-ws:test', 'running')
     `;
 
     let createCalls = 0;
@@ -5663,7 +5663,7 @@ describe("VM Effect workflows", () => {
             provider: "freestyle" as const,
             providerVmId: "provider-vm-limit-2",
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "hmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -5682,7 +5682,7 @@ describe("VM Effect workflows", () => {
         billingPlanId: "free",
         maxActiveVms: 1,
         provider: "freestyle",
-        image: "cmuxd-ws:test",
+        image: "hmuxd-ws:test",
         idempotencyKey: "limit-new-1",
       }).pipe(
         Effect.flip,
@@ -5756,8 +5756,8 @@ describe("VM Effect workflows", () => {
         ('user-workflow-resume-limit', 'team-workflow-resume-limit', 'resume-limit-one', 'freestyle', 'provider-vm-resume-paused', 'snapshot-test', 'paused')
     `;
 
-    const previousLimit = process.env.CMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS;
-    process.env.CMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS = "1";
+    const previousLimit = process.env.HMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS;
+    process.env.HMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS = "1";
     let resumeCalls = 0;
     let openAttachCalls = 0;
     const provider: VmProviderGatewayShape = {
@@ -5782,7 +5782,7 @@ describe("VM Effect workflows", () => {
             transport: "ssh" as const,
             host: "vm-ssh.example.invalid",
             port: 22,
-            username: "cmux",
+            username: "hmux",
             publicKeyFingerprint: null,
             credential: { kind: "password" as const, value: "token" },
             identityHandle: "identity-unused",
@@ -5815,9 +5815,9 @@ describe("VM Effect workflows", () => {
       expect(pausedVm?.status).toBe("paused");
     } finally {
       if (previousLimit === undefined) {
-        delete process.env.CMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS;
+        delete process.env.HMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS;
       } else {
-        process.env.CMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS = previousLimit;
+        process.env.HMUX_VM_PLAN_RESUME_LIMIT_ONE_MAX_ACTIVE_VMS = previousLimit;
       }
     }
   });
@@ -5847,7 +5847,7 @@ describe("VM Effect workflows", () => {
         'provider-vm-resume-fail',
         'snapshot-test',
         'paused',
-        '{"cmuxResourceReservation":{"vcpus":4,"memoryMb":8192,"diskMb":32768}}'::jsonb
+        '{"hmuxResourceReservation":{"vcpus":4,"memoryMb":8192,"diskMb":32768}}'::jsonb
       )
     `;
 
@@ -5874,7 +5874,7 @@ describe("VM Effect workflows", () => {
             transport: "ssh" as const,
             host: "vm-ssh.example.invalid",
             port: 22,
-            username: "cmux",
+            username: "hmux",
             publicKeyFingerprint: null,
             credential: { kind: "password" as const, value: "token" },
             identityHandle: "identity-unused",
@@ -5886,7 +5886,7 @@ describe("VM Effect workflows", () => {
     };
 
     const error = await withEnvironment(
-      { CMUX_VM_PLAN_FREE_MAX_ACTIVE_VMS: "1" },
+      { HMUX_VM_PLAN_FREE_MAX_ACTIVE_VMS: "1" },
       () => Effect.runPromise(
         openAttachEndpoint({
           userId: "user-workflow-resume-fail",
@@ -6452,7 +6452,7 @@ describe("VM Effect workflows", () => {
       ) values (
         ${vmId}, 'user-observed-cleanup-db', 'team-observed-cleanup-db', 'pro',
         'freestyle', 'provider-observed-cleanup-db', 'snapshot-test', 'running',
-        '{"homeVolume":"cmux-home-observed-cleanup-db","homeVolumePerMachine":true}'::jsonb
+        '{"homeVolume":"hmux-home-observed-cleanup-db","homeVolumePerMachine":true}'::jsonb
       )
     `;
 
@@ -6460,7 +6460,7 @@ describe("VM Effect workflows", () => {
       id: vmId,
       providerVmId: "provider-observed-cleanup-db",
       status: "destroyed",
-      cleanup: { modelPlane: true, homeVolume: "cmux-home-observed-cleanup-db" },
+      cleanup: { modelPlane: true, homeVolume: "hmux-home-observed-cleanup-db" },
       usageEvent: {
         userId: "user-observed-cleanup-db",
         billingTeamId: "team-observed-cleanup-db",
@@ -6481,7 +6481,7 @@ describe("VM Effect workflows", () => {
     `;
     expect(terminal).toMatchObject({
       status: "destroyed",
-      cleanup: { modelPlane: true, homeVolume: "cmux-home-observed-cleanup-db" },
+      cleanup: { modelPlane: true, homeVolume: "hmux-home-observed-cleanup-db" },
       events: "1",
     });
 
@@ -6491,10 +6491,10 @@ describe("VM Effect workflows", () => {
       ) values
         ('00000000-0000-4000-8000-000000000160', 'user-invalid-cleanup-empty', 'freestyle',
           'provider-invalid-cleanup-empty', 'snapshot-test', 'destroyed',
-          '{"cmuxObservedDestroyCleanup":{}}'::jsonb, now() - interval '2 days'),
+          '{"hmuxObservedDestroyCleanup":{}}'::jsonb, now() - interval '2 days'),
         ('00000000-0000-4000-8000-000000000161', 'user-invalid-cleanup-scalar', 'freestyle',
           'provider-invalid-cleanup-scalar', 'snapshot-test', 'destroyed',
-          '{"cmuxObservedDestroyCleanup":"collision"}'::jsonb, now() - interval '1 day')
+          '{"hmuxObservedDestroyCleanup":"collision"}'::jsonb, now() - interval '1 day')
     `;
     const cleanupCandidates = await Effect.runPromise(
       vmRepositoryLiveShape.observedDestroyCleanupCandidates!({ limit: 1 }),
@@ -6508,7 +6508,7 @@ describe("VM Effect workflows", () => {
       select provider_metadata->${OBSERVED_DESTROY_CLEANUP_METADATA_KEY} as cleanup
       from cloud_vms where id = ${vmId}
     `;
-    expect(volumePending.cleanup).toEqual({ homeVolume: "cmux-home-observed-cleanup-db" });
+    expect(volumePending.cleanup).toEqual({ homeVolume: "hmux-home-observed-cleanup-db" });
 
     expect(await Effect.runPromise(vmRepositoryLiveShape.completeObservedDestroyCleanup!({
       id: vmId, step: "homeVolume",
@@ -6686,7 +6686,7 @@ describe("VM Effect workflows", () => {
     await sql`
       insert into cloud_vms (user_id, billing_team_id, billing_plan_id, provider, provider_vm_id, image_id, status, provider_metadata, updated_at)
       values
-        ('user-workflow-reconcile-home', 'team-workflow-reconcile-home', 'free', 'freestyle', 'provider-vm-reconcile-home', 'snapshot-test', 'running', '{"homeVolume": "cmux-home-user-reconcile-home", "image": "sh-fb3dcf7b47894114889b10186626af5b"}'::jsonb, now() - interval '10 minutes'),
+        ('user-workflow-reconcile-home', 'team-workflow-reconcile-home', 'free', 'freestyle', 'provider-vm-reconcile-home', 'snapshot-test', 'running', '{"homeVolume": "hmux-home-user-reconcile-home", "image": "sh-fb3dcf7b47894114889b10186626af5b"}'::jsonb, now() - interval '10 minutes'),
         ('user-workflow-reconcile-nohome', 'team-workflow-reconcile-home', 'free', 'freestyle', 'provider-vm-reconcile-nohome', 'snapshot-test', 'running', '{}'::jsonb, now() - interval '10 minutes')
     `;
 
@@ -6909,7 +6909,7 @@ describe("VM Effect workflows", () => {
             provider: "freestyle" as const,
             providerVmId: "provider-vm-concurrent-idem",
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "hmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -6927,7 +6927,7 @@ describe("VM Effect workflows", () => {
       billingPlanId: "free",
       maxActiveVms: 1,
       provider: "freestyle" as const,
-      image: "cmuxd-ws:test",
+      image: "hmuxd-ws:test",
       idempotencyKey: "concurrent-idem-1",
     };
     const locker = postgres(databaseURL(), { max: 1 });
@@ -6983,7 +6983,7 @@ describe("VM Effect workflows", () => {
     await sql`truncate cloud_vm_billing_grants, cloud_vm_usage_events, cloud_vm_leases, cloud_vms restart identity cascade`;
     await sql`
       insert into cloud_vms (user_id, billing_team_id, billing_plan_id, provider, provider_vm_id, image_id, status)
-      values ('user-workflow-reuse-slot', 'team-workflow-reuse-slot', 'free', 'freestyle', 'provider-vm-reuse-old', 'cmuxd-ws:test', 'running')
+      values ('user-workflow-reuse-slot', 'team-workflow-reuse-slot', 'free', 'freestyle', 'provider-vm-reuse-old', 'hmuxd-ws:test', 'running')
     `;
 
     let createCalls = 0;
@@ -6996,7 +6996,7 @@ describe("VM Effect workflows", () => {
             provider: "freestyle" as const,
             providerVmId: "provider-vm-reuse-new",
             status: "running" as const,
-            image: "cmuxd-ws:test",
+            image: "hmuxd-ws:test",
             createdAt: Date.now(),
           };
         }),
@@ -7029,7 +7029,7 @@ describe("VM Effect workflows", () => {
         billingPlanId: "free",
         maxActiveVms: 1,
         provider: "freestyle",
-        image: "cmuxd-ws:test",
+        image: "hmuxd-ws:test",
         idempotencyKey: "reuse-slot-new",
       }).pipe(Effect.provide(layer)),
     );
@@ -7078,7 +7078,7 @@ describe("VM Effect workflows", () => {
           reserveCalls += 1;
           return {
             kind: "stack_item" as const,
-            itemId: "cmux-vm-create-credit",
+            itemId: "hmux-vm-create-credit",
             customerType: "team" as const,
             customerId: "team-workflow-credit-idem",
             amount: 1,
@@ -7127,7 +7127,7 @@ describe("VM Effect workflows", () => {
             provider: "freestyle" as const,
             providerVmId: `provider-vm-credit-grant-${createCalls}`,
             status: "running" as const,
-            image: "cmuxd-ws:credit-grant",
+            image: "hmuxd-ws:credit-grant",
             createdAt: Date.now(),
           };
         }),
@@ -7144,7 +7144,7 @@ describe("VM Effect workflows", () => {
       ...noOpVmBillingGateway(),
       resolveInitialCreateCreditGrant: () => ({
         kind: "stack_item" as const,
-        itemId: "cmux-vm-create-credit",
+        itemId: "hmux-vm-create-credit",
         customerType: "team" as const,
         customerId: "team-workflow-credit-grant",
         amount: 20,
@@ -7159,7 +7159,7 @@ describe("VM Effect workflows", () => {
           reserveCalls += 1;
           return {
             kind: "stack_item" as const,
-            itemId: "cmux-vm-create-credit",
+            itemId: "hmux-vm-create-credit",
             customerType: "team" as const,
             customerId: "team-workflow-credit-grant",
             amount: 1,
@@ -7177,7 +7177,7 @@ describe("VM Effect workflows", () => {
           billingPlanId: "free",
           maxActiveVms: 10,
           provider: "freestyle",
-          image: "cmuxd-ws:credit-grant",
+          image: "hmuxd-ws:credit-grant",
           idempotencyKey,
         }).pipe(Effect.provide(layer)),
       );
@@ -7191,7 +7191,7 @@ describe("VM Effect workflows", () => {
       select count(*)::int as total, count(applied_at)::int as applied
       from cloud_vm_billing_grants
       where billing_customer_id = 'team-workflow-credit-grant'
-        and item_id = 'cmux-vm-create-credit'
+        and item_id = 'hmux-vm-create-credit'
     `;
     expect(grantRow).toEqual({ total: 1, applied: 1 });
 
@@ -7224,7 +7224,7 @@ describe("VM Effect workflows", () => {
     const billing: VmBillingGatewayShape = {
       ...noOpVmBillingGateway(),
       reserveCreate: () => Effect.fail(new VmCreateCreditsInsufficientError({
-        itemId: "cmux-vm-create-credit",
+        itemId: "hmux-vm-create-credit",
         billingCustomerId: "team-workflow-credit-empty",
         amount: 1,
       })),
@@ -7405,8 +7405,8 @@ describe("VM Effect workflows", () => {
     const input = {
       userId: "user-network-upsert-lock",
       provider: "freestyle" as const,
-      providerNetworkId: "network-cmux-net-lock",
-      slug: "cmux-net-lock",
+      providerNetworkId: "network-hmux-net-lock",
+      slug: "hmux-net-lock",
       cidr: "10.41.0.0/24",
       cidrV6: "fd00:41::/64",
     };
@@ -7462,7 +7462,7 @@ describe("VM Effect workflows", () => {
       release();
       await holder;
       const row = await upsert;
-      expect(row.providerNetworkId).toBe("network-cmux-net-lock");
+      expect(row.providerNetworkId).toBe("network-hmux-net-lock");
     } finally {
       release();
       await holder?.catch(() => {});
@@ -7476,8 +7476,8 @@ describe("VM Effect workflows", () => {
     const input = {
       userId: "user-network-upsert-race",
       provider: "freestyle" as const,
-      providerNetworkId: "network-cmux-net-race",
-      slug: "cmux-net-race",
+      providerNetworkId: "network-hmux-net-race",
+      slug: "hmux-net-race",
       cidr: "10.42.0.0/24",
       cidrV6: "fd00:42::/64",
     };
@@ -7489,7 +7489,7 @@ describe("VM Effect workflows", () => {
     const rows = await sql<{ provider_network_id: string }[]>`
       select provider_network_id from cloud_vm_networks where user_id = ${input.userId}
     `;
-    expect(rows).toEqual([{ provider_network_id: "network-cmux-net-race" }]);
+    expect(rows).toEqual([{ provider_network_id: "network-hmux-net-race" }]);
   });
 
   dbTest("a transient provider create failure does not poison the idempotency key", async () => {
@@ -7677,7 +7677,7 @@ describe("VM Effect workflows", () => {
       ...noOpVmBillingGateway(),
       reserveCreate: () => Effect.succeed({
         kind: "stack_item" as const,
-        itemId: "cmux-vm-create-credit",
+        itemId: "hmux-vm-create-credit",
         customerType: "team" as const,
         customerId: "team-workflow-credit-refund",
         amount: 1,
@@ -7900,7 +7900,7 @@ describe("VM Effect workflows", () => {
           transport: "ssh" as const,
           host: "vm-ssh.freestyle.sh",
           port: 22,
-          username: "provider-vm-private-2+cmux",
+          username: "provider-vm-private-2+hmux",
           publicKeyFingerprint: null,
           credential: { kind: "password" as const, value: "token" },
           identityHandle: "identity",
@@ -7924,9 +7924,9 @@ describe("VM Effect workflows", () => {
         timeoutMs: 1000,
       }).pipe(Effect.flip, Effect.provide(layer)),
     );
-    // cmux-remote is the live attach verb; ownership must refuse it too.
+    // hmux-remote is the live attach verb; ownership must refuse it too.
     const attachError = await Effect.runPromise(
-      openVmCmuxRemote({ userId: "user-workflow-attacker", providerVmId: "provider-vm-private-2" }).pipe(
+      openVmHmuxRemote({ userId: "user-workflow-attacker", providerVmId: "provider-vm-private-2" }).pipe(
         Effect.flip,
         Effect.provide(layer),
       ),
@@ -8394,7 +8394,7 @@ describe("destroyVm home volume cleanup", () => {
 
   test("deletes the per-machine home volume marked in providerMetadata", async () => {
     const userId = "user-volume-marker";
-    const volume = "cmux-home-abcdef123456-noble-wren";
+    const volume = "hmux-home-abcdef123456-noble-wren";
     const vm = testCloudVmRow({
       id: "00000000-0000-4000-8000-000000000140",
       userId,
@@ -8469,7 +8469,7 @@ describe("destroyVm home volume cleanup", () => {
 
   test("records the leak and still destroys the row when the volume delete fails", async () => {
     const userId = "user-volume-leak";
-    const volume = "cmux-home-abcdef123456-noble-wren";
+    const volume = "hmux-home-abcdef123456-noble-wren";
     const vm = testCloudVmRow({
       id: "00000000-0000-4000-8000-000000000143",
       userId,
@@ -8511,7 +8511,7 @@ describe("destroyVm home volume cleanup", () => {
 
   test("persists per-machine volume cleanup when the provider cannot delete volumes", async () => {
     const userId = "user-volume-unsupported";
-    const volume = "cmux-home-abcdef123456-noble-wren";
+    const volume = "hmux-home-abcdef123456-noble-wren";
     const vm = testCloudVmRow({
       id: "00000000-0000-4000-8000-000000000173",
       userId,
@@ -8539,7 +8539,7 @@ describe("destroyVm home volume cleanup", () => {
 
   test("still deletes the volume and finalizes the row when afterProviderDestroy throws", async () => {
     const userId = "user-volume-hook-failure";
-    const volume = "cmux-home-abcdef123456-noble-wren";
+    const volume = "hmux-home-abcdef123456-noble-wren";
     const vm = testCloudVmRow({
       id: "00000000-0000-4000-8000-000000000145",
       userId,
@@ -8764,7 +8764,7 @@ describe("status read that observes a gone machine", () => {
     const revokedVmIds: string[] = [];
 
     const error = await Effect.runPromise(
-      openVmCmuxRemote({
+      openVmHmuxRemote({
         userId,
         providerVmId: "noble-wren",
         modelPlane: { revoke: async (cloudVmId) => { revokedVmIds.push(cloudVmId); } },
@@ -8772,7 +8772,7 @@ describe("status read that observes a gone machine", () => {
         Effect.flip,
         Effect.provide(workflowLayer(repo, {
           ...providerGone,
-          openCmuxRemote: () => {
+          openHmuxRemote: () => {
             throw new Error("must not attach to a machine the provider has dropped");
           },
         })),
@@ -8793,7 +8793,7 @@ describe("status read that observes a gone machine", () => {
       userId,
       providerVmId: "noble-wren",
       status: "running",
-      providerMetadata: { homeVolume: "cmux-home-volume-paused" },
+      providerMetadata: { homeVolume: "hmux-home-volume-paused" },
     });
     const usageEvents: RecordedUsageEvent[] = [];
     const observedStatuses: ObservedStatusUpdate[] = [];
@@ -8818,7 +8818,7 @@ describe("status read that observes a gone machine", () => {
   });
 
   test("reconciliation drains terminal cleanup after a crash and retries each failed step idempotently", async () => {
-    const homeVolume = "cmux-home-observed-destroy-crash";
+    const homeVolume = "hmux-home-observed-destroy-crash";
     const vm = testCloudVmRow({
       id: "00000000-0000-4000-8000-000000000155",
       userId: "user-observed-destroy-crash",
@@ -8894,7 +8894,7 @@ describe("status read that observes a gone machine", () => {
       status: "destroyed",
       destroyedAt: new Date(),
     });
-    const pending = { modelPlane: true as const, homeVolume: "cmux-home-capability-gap" };
+    const pending = { modelPlane: true as const, homeVolume: "hmux-home-capability-gap" };
     const deferred: string[] = [];
     const repo: VmRepositoryShape = {
       ...testWorkflowRepo({ vm }),
@@ -8976,7 +8976,7 @@ describe("status read that observes a gone machine", () => {
   });
 
   test("acknowledges an already-missing volume after deletion succeeds before the database ack", async () => {
-    const homeVolume = "cmux-home-observed-destroy-ack-crash";
+    const homeVolume = "hmux-home-observed-destroy-ack-crash";
     const vm = testCloudVmRow({
       id: "00000000-0000-4000-8000-000000000162",
       userId: "user-observed-destroy-ack-crash",
@@ -9070,7 +9070,7 @@ describe("status read that observes a gone machine", () => {
     const pending = new Map<string, Record<string, unknown>>([
       [modelRows[0]!.id, { modelPlane: true }],
       [modelRows[1]!.id, { modelPlane: true }],
-      [volumeRow.id, { homeVolume: "cmux-home-volume-fairness" }],
+      [volumeRow.id, { homeVolume: "hmux-home-volume-fairness" }],
     ]);
     const order = new Map(rows.map((row, index) => [row.id, index]));
     let nextOrder = rows.length;
@@ -9129,11 +9129,11 @@ describe("private SCP workflow", () => {
       providerVmId: "vm-scp",
       status: "running",
       billingPlanId: "pro",
-      providerMetadata: { cmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
+      providerMetadata: { hmuxResourceReservation: { vcpus: 4, memoryMb: 8 * 1024, diskMb: 32768 } },
     });
     const leases: RecordedLease[] = [];
     const events: RecordedUsageEvent[] = [];
-    const endpoint = { host: "10.1.2.3", port: 22, username: "cmux", hostPublicKey: "guest-key", expiresAtUnix: 123 };
+    const endpoint = { host: "10.1.2.3", port: 22, username: "hmux", hostPublicKey: "guest-key", expiresAtUnix: 123 };
     const result = await Effect.runPromise(prepareScpEndpoint({ userId: vm.userId, providerVmId: "vm-scp", publicKey: "client-key", callerPlanId: "pro" }).pipe(
       Effect.provide(Layer.succeed(VmRepository, testWorkflowRepo({ vm, leases, usageEvents: events }))),
       Effect.provide(Layer.succeed(VmProviderGateway, { ...unusedProviderGateway(),

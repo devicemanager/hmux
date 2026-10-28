@@ -18,7 +18,7 @@ FAILING_LOG = """\
 2026-09-25T08:44:02.2Z ✘ Test secondaryAggregationExcludesX() failed after 0.001 seconds with 1 issue.
 2026-09-25T08:44:02.3Z ✘ Test nextScope(signOutHook:) with 2 test cases failed after 6.808 seconds with 4 issues.
 2026-09-25T08:44:02.4Z ✘ Test "chip keeps its anchor" failed after 4.377 seconds with 1 issue.
-2026-09-25T08:44:02.5Z Test Case '-[CmuxMobileShellTests.LegacyTests testOld]' failed (0.1 seconds).
+2026-09-25T08:44:02.5Z Test Case '-[HmuxMobileShellTests.LegacyTests testOld]' failed (0.1 seconds).
 2026-09-25T08:44:02.55Z ✔ Test healthyTest() passed after 0.002 seconds.
 2026-09-25T08:44:02.56Z ✔ Test nextScope(signOutHook:) passed after 0.1 seconds.
 2026-09-25T08:44:02.6Z ✘ Suite MobileShellTests failed after 0.012 seconds with 2 issues.

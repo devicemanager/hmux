@@ -11,8 +11,8 @@
  * still requires it; add a new versioned identifier instead.
  */
 
-/** Same-account Macs with `cmux.mac-devices.v1` may enter a host that opted in with `cmux.mac-host.v1` (same app namespace and build tag). */
-export const MAC_PEER_INBOUND_RULE = "cmux.mac-peer-inbound.v1";
+/** Same-account Macs with `hmux.mac-devices.v1` may enter a host that opted in with `hmux.mac-host.v1` (same app namespace and build tag). */
+export const MAC_PEER_INBOUND_RULE = "hmux.mac-peer-inbound.v1";
 
 export const CONTROL_PLANE_RULES: readonly string[] = Object.freeze([MAC_PEER_INBOUND_RULE]);
 
@@ -22,7 +22,7 @@ export const CONTROL_PLANE_RULES: readonly string[] = Object.freeze([MAC_PEER_IN
  * unchanged. A Mac lists and admits the same Stack user's Macs across teams
  * through the account directory only when this rule is present.
  */
-export const MAC_ACCOUNT_PEER_RULE = "cmux.mac-account-peer.v1";
+export const MAC_ACCOUNT_PEER_RULE = "hmux.mac-account-peer.v1";
 
 export const ACCOUNT_DIRECTORY_RULES: readonly string[] = Object.freeze([MAC_ACCOUNT_PEER_RULE]);
 

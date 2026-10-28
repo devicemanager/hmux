@@ -26,13 +26,13 @@ import git_fixture_env  # noqa: F401  (disables git auto maintenance)
 
 ROOT = Path(__file__).resolve().parents[1]
 TEAM_ID = "7WLXT3NR37"
-APPSTORE_BUNDLE_ID = "com.cmux.app"
+APPSTORE_BUNDLE_ID = "com.hmux.app"
 APPSTORE_APP_ID = f"{TEAM_ID}.{APPSTORE_BUNDLE_ID}"
 APPSTORE_EXTENSION_BUNDLE_ID = f"{APPSTORE_BUNDLE_ID}.NotificationService"
-APPSTORE_EXTENSION_PROFILE_NAME = "cmux App Store Notification Service Distribution"
+APPSTORE_EXTENSION_PROFILE_NAME = "hmux App Store Notification Service Distribution"
 APPSTORE_CLOUD_VPN_BUNDLE_ID = f"{APPSTORE_BUNDLE_ID}.CloudVPN"
-APPSTORE_CLOUD_VPN_PROFILE_NAME = "cmux App Store CloudVPN Distribution"
-BETA_BUNDLE_ID = "dev.cmux.app.beta"
+APPSTORE_CLOUD_VPN_PROFILE_NAME = "hmux App Store CloudVPN Distribution"
+BETA_BUNDLE_ID = "dev.hmux.app.beta"
 BETA_APP_ID = f"{TEAM_ID}.{BETA_BUNDLE_ID}"
 ASC_APP_ID = "6783338052"
 ASC_VERSION_ID = "version-1.0.0"
@@ -43,17 +43,17 @@ IDENTITY = f"Apple Distribution: Manaflow, Inc. ({TEAM_ID})"
 PROFILE_VALIDATION_TIME = "2026-09-19T00:00:00Z"
 APPSTORE_MARKETING_VERSION = "1.0.0"
 PRODUCTION_RUNTIME_ORIGINS = {
-    "CMUXAuthEnvironment": "production",
-    "CMUXApiBaseURL": "https://cmux.com",
-    "CMUXIrohBrokerBaseURL": "https://cmux.com",
-    "CMUXPresenceBaseURL": "https://presence.cmux.dev",
-    "CMUXDevTag": "",
+    "HMUXAuthEnvironment": "production",
+    "HMUXApiBaseURL": "https://cmux.com",
+    "HMUXIrohBrokerBaseURL": "https://cmux.com",
+    "HMUXPresenceBaseURL": "https://presence.cmux.dev",
+    "HMUXDevTag": "",
 }
 PRODUCTION_RUNTIME_BUILD_ARGS = (
-    "CMUX_IOS_AUTH_ENV=production",
-    "CMUX_API_BASE_URL=https://cmux.com",
-    "CMUX_IROH_BROKER_BASE_URL=https://cmux.com",
-    "CMUX_PRESENCE_BASE_URL=https://presence.cmux.dev",
+    "HMUX_IOS_AUTH_ENV=production",
+    "HMUX_API_BASE_URL=https://cmux.com",
+    "HMUX_IROH_BROKER_BASE_URL=https://cmux.com",
+    "HMUX_PRESENCE_BASE_URL=https://presence.cmux.dev",
 )
 FIXTURE_CERTIFICATE_DER = base64.b64decode(
     "MIIDKTCCAhGgAwIBAgIUEv3LISQuuT8OjxfV//zjFyQ+TzEwDQYJKoZIhvcNAQELBQAwJDEiMCAGA1UEAwwZY211eCBmaXh0dXJlIGRpc3RyaWJ1dGlvbjAeFw0yNjA5MTkwMDI2NDRaFw0zNjA5MTYwMDI2NDRaMCQxIjAgBgNVBAMMGWNtdXggZml4dHVyZSBkaXN0cmlidXRpb24wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQCq2ClWbIuXTvS8Wm8d0LhDZZO494nA3XaVzYi3iutZDsuHCio6GslN9cGuDwI3thY71rCE5D+81bECHdK8yoKt5/rYhRySYXSxbqROO9ZgX8DxN++ewqr/yhG26rKczv0e4t09L26WKhlazM6Cyy5SkAOXcI34YcE3bXpTWjcvlf7QxikBNSTfuqRNYTaffBZgtwoocwlmhsOPjTwqbdWwUv2qEUChQ+N6Ucc4b2FI+4tFXIwiNlsQ/xZR5DxdxUj4GlzuD3V8yZpNSbkIaG5iosSLb3GN5KqTCBpfv95BLoi1lTCckTbp7gRGfeYaat/j2dQjyMRm1S1x9j85pCVxAgMBAAGjUzBRMB0GA1UdDgQWBBSV62e0TWExHARtKtzP1un//R8/BTAfBgNVHSMEGDAWgBSV62e0TWExHARtKtzP1un//R8/BTAPBgNVHRMBAf8EBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQB1VIgPD8AydYQYK/u7vcYT2ThTbINE7IAqIReBd5mO71HhRIYb9zGKPULLRUFXEdCVUt8dujiLDzNtwz4tWsOvftKD0K1anjCQIg/jJNt5nwFjhfyGq99Uf9WsQuyaq6cLpHopz55awc8N0vjnCYBTzhjnVUgcZLErIOGtVs0VAB9+NyjIQwOMEFcNZZPBiaeen3Sac3aw1yTS69CYgH7hwBElNcTqH25yFRszd792HnJj/cPVqCmqQ77rxNOkS1EXtb8cAADG7IfI3iwQaqOFkY1JXpZ+HkBJS2ZHskeN54QEBeM0N4hGveK/8BhILfcJe7hbHxf19v+ecEpu9Bft"
@@ -76,7 +76,7 @@ def _plist_bytes(value: object) -> bytes:
 
 def _profile_plist(
     bundle_id: str = APPSTORE_BUNDLE_ID,
-    name: str = "cmux App Store Distribution Test",
+    name: str = "hmux App Store Distribution Test",
     uuid: str = "00000000-0000-0000-0000-000000000001",
 ) -> dict[str, object]:
     app_id = f"{TEAM_ID}.{bundle_id}"
@@ -163,10 +163,10 @@ def write_plist(path, value):
     path.write_bytes(plist_bytes(value))
 
 APPSTORE_PROFILE = plistlib.loads({_plist_bytes(_profile_plist())!r})
-BETA_PROFILE = plistlib.loads({_plist_bytes(_profile_plist(BETA_BUNDLE_ID, "cmux Beta Distribution Test", "00000000-0000-0000-0000-000000000002"))!r})
+BETA_PROFILE = plistlib.loads({_plist_bytes(_profile_plist(BETA_BUNDLE_ID, "hmux Beta Distribution Test", "00000000-0000-0000-0000-000000000002"))!r})
 EXTENSION_PROFILE = plistlib.loads({_plist_bytes(_extension_profile_plist())!r})
 APPSTORE_CLOUD_VPN_PROFILE = plistlib.loads({_plist_bytes(_cloud_vpn_profile_plist())!r})
-BETA_EXTENSION_PROFILE = plistlib.loads({_plist_bytes(_profile_plist(BETA_BUNDLE_ID + ".NotificationServiceV2", "cmux Beta Notification Service Distribution", "00000000-0000-0000-0000-000000000004"))!r})
+BETA_EXTENSION_PROFILE = plistlib.loads({_plist_bytes(_profile_plist(BETA_BUNDLE_ID + ".NotificationServiceV2", "hmux Beta Notification Service Distribution", "00000000-0000-0000-0000-000000000004"))!r})
 BETA_EXTENSION_PROFILE["Entitlements"]["keychain-access-groups"] = [TEAM_ID + ".*"]
 FIXTURE_CERTIFICATE = {ssl.DER_cert_to_PEM_cert(FIXTURE_CERTIFICATE_DER)!r}
 
@@ -181,7 +181,7 @@ def profile_for_bundle(bundle_id):
         source = APPSTORE_CLOUD_VPN_PROFILE
     else:
         source = APPSTORE_PROFILE
-    if os.environ.get("CMUX_FAKE_PROFILE_MISSING_TIME_SENSITIVE") != "1":
+    if os.environ.get("HMUX_FAKE_PROFILE_MISSING_TIME_SENSITIVE") != "1":
         return source
     profile = dict(source)
     profile["Entitlements"] = dict(source["Entitlements"])
@@ -211,7 +211,7 @@ def entitlements_for_bundle(bundle_id):
         entitlements["application-identifier"] = f"{{TEAM_ID}}.{{bundle_id}}"
         entitlements.pop("com.apple.developer.networking.networkextension", None)
         entitlements["keychain-access-groups"] = []
-    override_group = os.environ.get("CMUX_FAKE_SIGNED_KEYCHAIN_GROUP")
+    override_group = os.environ.get("HMUX_FAKE_SIGNED_KEYCHAIN_GROUP")
     if override_group:
         entitlements["keychain-access-groups"] = [override_group]
     return entitlements
@@ -408,7 +408,7 @@ from pathlib import Path
 {common}
 
 args = sys.argv[1:]
-Path(os.environ["CMUX_FAKE_XCODEBUILD_LOG"]).open("a", encoding="utf-8").write(json.dumps(args) + "\\n")
+Path(os.environ["HMUX_FAKE_XCODEBUILD_LOG"]).open("a", encoding="utf-8").write(json.dumps(args) + "\\n")
 
 def after(flag):
     try:
@@ -428,13 +428,13 @@ if "archive" in args:
     # variable. The lane must override the app target without renaming the
     # notification extension (#12935).
     # ios/Config/Release.xcconfig derives the app target's
-    # PRODUCT_BUNDLE_IDENTIFIER from CMUX_APP_BUNDLE_IDENTIFIER; retain the
+    # PRODUCT_BUNDLE_IDENTIFIER from HMUX_APP_BUNDLE_IDENTIFIER; retain the
     # legacy setting as a fixture fallback for older lane invocations.
-    bundle_id = setting("CMUX_APP_BUNDLE_IDENTIFIER=") or setting("PRODUCT_BUNDLE_IDENTIFIER=")
+    bundle_id = setting("HMUX_APP_BUNDLE_IDENTIFIER=") or setting("PRODUCT_BUNDLE_IDENTIFIER=")
     build_number = setting("CURRENT_PROJECT_VERSION=") or "1"
     marketing_version = setting("MARKETING_VERSION=") or {BETA_MARKETING_VERSION!r}
-    crash_reporting_enabled = setting("CMUX_CRASH_REPORTING_ENABLED=") or "YES"
-    app = archive / "Products" / "Applications" / "cmux.app"
+    crash_reporting_enabled = setting("HMUX_CRASH_REPORTING_ENABLED=") or "YES"
+    app = archive / "Products" / "Applications" / "hmux.app"
     write_plist(
         archive / "Info.plist",
         {{
@@ -448,35 +448,35 @@ if "archive" in args:
     write_plist(
         app / "Info.plist",
         {{
-            "CFBundleExecutable": "cmux",
+            "CFBundleExecutable": "hmux",
             "CFBundleIdentifier": bundle_id,
             "CFBundleVersion": build_number,
             "CFBundleShortVersionString": marketing_version,
-            "CMUXAuthEnvironment": "production",
-            "CMUXApiBaseURL": "https://cmux.com",
-            "CMUXIrohBrokerBaseURL": "https://cmux.com",
-            "CMUXPresenceBaseURL": "https://presence.cmux.dev",
-            "CMUXCrashReportingEnabled": crash_reporting_enabled,
-            "CMUXAuthEnvironment": setting("CMUX_IOS_AUTH_ENV=") or "production",
-            "CMUXApiBaseURL": setting("CMUX_API_BASE_URL=") or "https://cmux.com",
-            "CMUXIrohBrokerBaseURL": setting("CMUX_IROH_BROKER_BASE_URL=") or "https://cmux.com",
-            "CMUXPresenceBaseURL": setting("CMUX_PRESENCE_BASE_URL=") or "https://presence.cmux.dev",
-            "CMUXDevTag": setting("CMUX_DEV_TAG="),
-            "CMUXAppStoreBuild": setting("CMUX_APPSTORE_BUILD="),
+            "HMUXAuthEnvironment": "production",
+            "HMUXApiBaseURL": "https://cmux.com",
+            "HMUXIrohBrokerBaseURL": "https://cmux.com",
+            "HMUXPresenceBaseURL": "https://presence.cmux.dev",
+            "HMUXCrashReportingEnabled": crash_reporting_enabled,
+            "HMUXAuthEnvironment": setting("HMUX_IOS_AUTH_ENV=") or "production",
+            "HMUXApiBaseURL": setting("HMUX_API_BASE_URL=") or "https://cmux.com",
+            "HMUXIrohBrokerBaseURL": setting("HMUX_IROH_BROKER_BASE_URL=") or "https://cmux.com",
+            "HMUXPresenceBaseURL": setting("HMUX_PRESENCE_BASE_URL=") or "https://presence.cmux.dev",
+            "HMUXDevTag": setting("HMUX_DEV_TAG="),
+            "HMUXAppStoreBuild": setting("HMUX_APPSTORE_BUILD="),
             # A manual archive builds with code signing disabled, so
             # $(AppIdentifierPrefix) expands to "" and the group bakes as the
             # bare bundle id, the exact mis-bake that made TestFlight builds
             # keychain-dead. The lane must correct it before codesign.
-            "CMUXKeychainAccessGroup": bundle_id,
+            "HMUXKeychainAccessGroup": bundle_id,
         }},
     )
     extension = app / "PlugIns" / "NotificationService.appex"
     write_plist(
         extension / "Info.plist",
         {{
-            "CFBundleIdentifier": setting("CMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER=") or f"{{bundle_id}}.NotificationService",
-            "CMUXHostBundleIdentifier": bundle_id,
-            "CMUXKeychainAccessGroup": bundle_id,
+            "CFBundleIdentifier": setting("HMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER=") or f"{{bundle_id}}.NotificationService",
+            "HMUXHostBundleIdentifier": bundle_id,
+            "HMUXKeychainAccessGroup": bundle_id,
         }},
     )
     cloud_vpn = app / "PlugIns" / "CloudVPN.appex"
@@ -487,21 +487,21 @@ if "archive" in args:
         }},
     )
     # upload-testflight.sh refuses archives without dSYM bundles.
-    (archive / "dSYMs" / "cmux.app.dSYM" / "Contents").mkdir(parents=True, exist_ok=True)
+    (archive / "dSYMs" / "hmux.app.dSYM" / "Contents").mkdir(parents=True, exist_ok=True)
     sys.exit(0)
 
 if "-exportArchive" in args:
     archive = Path(after("-archivePath"))
     export_path = Path(after("-exportPath"))
     export_options = Path(after("-exportOptionsPlist"))
-    shutil.copyfile(export_options, os.environ["CMUX_FAKE_EXPORT_OPTIONS_COPY"])
+    shutil.copyfile(export_options, os.environ["HMUX_FAKE_EXPORT_OPTIONS_COPY"])
     export_options_data = plistlib.loads(export_options.read_bytes())
     export_profiles = export_options_data.get("provisioningProfiles", {{}})
     app_info = next((archive / "Products" / "Applications").glob("*.app/Info.plist"))
     archived_info = plistlib.loads(app_info.read_bytes())
     bundle_id = archived_info["CFBundleIdentifier"]
     payload_root = export_path / "Payload"
-    app = payload_root / "cmux.app"
+    app = payload_root / "hmux.app"
     write_plist(app / "Info.plist", archived_info)
     archived_plugins = app_info.parent / "PlugIns"
     for archived_extension in sorted(archived_plugins.glob("*.appex")):
@@ -511,8 +511,8 @@ if "-exportArchive" in args:
         extension / "Info.plist",
         {{
             "CFBundleIdentifier": plistlib.loads((app_info.parent / "PlugIns" / "NotificationService.appex" / "Info.plist").read_bytes())["CFBundleIdentifier"],
-            "CMUXHostBundleIdentifier": bundle_id,
-            "CMUXKeychainAccessGroup": bundle_id,
+            "HMUXHostBundleIdentifier": bundle_id,
+            "HMUXKeychainAccessGroup": bundle_id,
         }},
     )
     cloud_vpn = app / "PlugIns" / "CloudVPN.appex"
@@ -529,7 +529,7 @@ if "-exportArchive" in args:
                 "CFBundleIdentifier": f"{{bundle_id}}.CloudVPN",
             }},
         )
-    if os.environ.get("CMUX_FAKE_EMBED_INVALID_FRAMEWORK_SHELL") == "1":
+    if os.environ.get("HMUX_FAKE_EMBED_INVALID_FRAMEWORK_SHELL") == "1":
         write_plist(
             app / "Frameworks" / "Iroh.framework" / "Info.plist",
             {{
@@ -537,7 +537,7 @@ if "-exportArchive" in args:
                 "CFBundlePackageType": "FMWK",
             }},
         )
-    if os.environ.get("CMUX_FAKE_INCLUDE_NOTIFICATION_EXTENSION") == "1":
+    if os.environ.get("HMUX_FAKE_INCLUDE_NOTIFICATION_EXTENSION") == "1":
         extension = app / "PlugIns" / "NotificationService.appex"
         write_plist(
             extension / "Info.plist",
@@ -555,8 +555,8 @@ if "-exportArchive" in args:
     # upload-testflight.sh refuses IPAs without Symbols/*.symbols.
     symbols_root = export_path / "Symbols"
     symbols_root.mkdir(parents=True, exist_ok=True)
-    (symbols_root / "cmux.symbols").write_text("fake symbols", encoding="utf-8")
-    ipa = export_path / "cmux.ipa"
+    (symbols_root / "hmux.symbols").write_text("fake symbols", encoding="utf-8")
+    ipa = export_path / "hmux.ipa"
     ipa.parent.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(ipa, "w") as zf:
         for item in payload_root.rglob("*"):
@@ -589,11 +589,11 @@ if "-d" in args and "--entitlements" in args:
         if marker is not None and marker.exists()
         else entitlements_for_bundle(bundle_id)
     )
-    if bundle_id.endswith(".CloudVPN") and os.environ.get("CMUX_FAKE_VPN_EMPTY_SIGNED_GROUP") == "1":
+    if bundle_id.endswith(".CloudVPN") and os.environ.get("HMUX_FAKE_VPN_EMPTY_SIGNED_GROUP") == "1":
         entitlements["keychain-access-groups"] = []
-    if bundle_id in (APPSTORE_BUNDLE_ID, BETA_BUNDLE_ID) and os.environ.get("CMUX_FAKE_HOST_MISSING_PACKET_TUNNEL") == "1":
+    if bundle_id in (APPSTORE_BUNDLE_ID, BETA_BUNDLE_ID) and os.environ.get("HMUX_FAKE_HOST_MISSING_PACKET_TUNNEL") == "1":
         entitlements.pop("com.apple.developer.networking.networkextension", None)
-    if bundle_id in (APPSTORE_BUNDLE_ID, BETA_BUNDLE_ID) and os.environ.get("CMUX_FAKE_HOST_HOTSPOT_PROVIDER") == "1":
+    if bundle_id in (APPSTORE_BUNDLE_ID, BETA_BUNDLE_ID) and os.environ.get("HMUX_FAKE_HOST_HOTSPOT_PROVIDER") == "1":
         entitlements.setdefault("com.apple.developer.networking.networkextension", []).append("hotspot-provider")
     sys.stdout.buffer.write(plist_bytes(entitlements))
     sys.exit(0)
@@ -602,7 +602,7 @@ if "--force" in args:
     if "--entitlements" in args and target.is_dir():
         source = Path(args[args.index("--entitlements") + 1])
         shutil.copyfile(source, target / "FakeSignedEntitlements.plist")
-        override_group = os.environ.get("CMUX_FAKE_SIGNED_KEYCHAIN_GROUP")
+        override_group = os.environ.get("HMUX_FAKE_SIGNED_KEYCHAIN_GROUP")
         if override_group and target.name.endswith(".app"):
             entitlements = plistlib.loads((target / "FakeSignedEntitlements.plist").read_bytes())
             entitlements["keychain-access-groups"] = [override_group]
@@ -622,8 +622,8 @@ from pathlib import Path
 {common}
 LEGACY_PROFILE = copy.deepcopy(APPSTORE_PROFILE)
 LEGACY_PROFILE["Entitlements"] = dict(APPSTORE_PROFILE["Entitlements"])
-LEGACY_PROFILE["Entitlements"]["application-identifier"] = f"{{TEAM_ID}}.com.cmuxterm.app"
-LEGACY_PROFILE["Entitlements"]["keychain-access-groups"] = [f"{{TEAM_ID}}.com.cmuxterm.app"]
+LEGACY_PROFILE["Entitlements"]["application-identifier"] = f"{{TEAM_ID}}.com.hmuxterm.app"
+LEGACY_PROFILE["Entitlements"]["keychain-access-groups"] = [f"{{TEAM_ID}}.com.hmuxterm.app"]
 
 args = sys.argv[1:]
 if args[:3] == ["find-identity", "-v", "-p"]:
@@ -643,7 +643,7 @@ if len(args) >= 2 and args[0] == "cms" and args[1] == "-D":
                 profile = BETA_EXTENSION_PROFILE
             elif b"cloud vpn profile" in body:
                 profile = copy.deepcopy(APPSTORE_CLOUD_VPN_PROFILE)
-                if os.environ.get("CMUX_FAKE_VPN_UNAUTHORIZED_GROUP") == "1":
+                if os.environ.get("HMUX_FAKE_VPN_UNAUTHORIZED_GROUP") == "1":
                     profile["Entitlements"]["keychain-access-groups"] = [TEAM_ID + ".unrelated.*"]
                 try:
                     cloud_vpn_info = source.parent / "Info.plist"
@@ -682,7 +682,7 @@ import os
 import sys
 from pathlib import Path
 
-log = os.environ.get("CMUX_FAKE_ASC_LOG")
+log = os.environ.get("HMUX_FAKE_ASC_LOG")
 if log:
     Path(log).open("a", encoding="utf-8").write(json.dumps(sys.argv[1:]) + "\\n")
 
@@ -693,7 +693,7 @@ if args[:2] == ["apps", "view"]:
         "data": {
             "id": app_id,
             "attributes": {
-                "bundleId": os.environ.get("CMUX_FAKE_ASC_APP_BUNDLE_ID", "com.cmux.app")
+                "bundleId": os.environ.get("HMUX_FAKE_ASC_APP_BUNDLE_ID", "com.hmux.app")
             }
         }
     }))
@@ -719,9 +719,9 @@ def _base_env(tmp: Path, fakebin: Path) -> dict[str, str]:
         "IOS_APPSTORE_BUNDLE_IDENTIFIER",
     ):
         env.pop(key, None)
-    env["CMUX_FAKE_XCODEBUILD_LOG"] = str(tmp / "xcodebuild.jsonl")
-    env["CMUX_FAKE_EXPORT_OPTIONS_COPY"] = str(tmp / "ExportOptions.plist")
-    env["CMUX_FAKE_ASC_LOG"] = str(tmp / "asc.jsonl")
+    env["HMUX_FAKE_XCODEBUILD_LOG"] = str(tmp / "xcodebuild.jsonl")
+    env["HMUX_FAKE_EXPORT_OPTIONS_COPY"] = str(tmp / "ExportOptions.plist")
+    env["HMUX_FAKE_ASC_LOG"] = str(tmp / "asc.jsonl")
     env["IOS_DISTRIBUTION_IDENTITY"] = IDENTITY
     # Manual App Store export maps the notification extension to its own
     # profile; the lane refuses to export without this name.
@@ -732,8 +732,8 @@ def _base_env(tmp: Path, fakebin: Path) -> dict[str, str]:
     env["IOS_APPSTORE_ENABLE_CLOUD_VPN"] = "0"
     env["IOS_APPSTORE_CLOUD_VPN_PROVISIONING_PROFILE_NAME"] = APPSTORE_CLOUD_VPN_PROFILE_NAME
     env["IOS_APPSTORE_CLOUD_VPN_PROVISIONING_PROFILE_BASE64"] = base64.b64encode(b"cloud vpn profile").decode()
-    env["IOS_BETA_EXTENSION_PROVISIONING_PROFILE_NAME"] = "cmux Beta Notification Service Distribution"
-    env["IOS_BETA_CLOUD_VPN_PROVISIONING_PROFILE_NAME"] = "cmux Beta CloudVPN Distribution"
+    env["IOS_BETA_EXTENSION_PROVISIONING_PROFILE_NAME"] = "hmux Beta Notification Service Distribution"
+    env["IOS_BETA_CLOUD_VPN_PROVISIONING_PROFILE_NAME"] = "hmux Beta CloudVPN Distribution"
     # Profile expiry is validated against this fixed instant, not the real clock.
     env["IOS_APPSTORE_PROFILE_VALIDATION_TIME"] = PROFILE_VALIDATION_TIME
     env["PLISTBUDDY"] = str(fakebin / "PlistBuddy")
@@ -748,12 +748,12 @@ def test_verify_ios_release_origins_does_not_trust_plistbuddy_override(
     (app / "Info.plist").write_bytes(
         plistlib.dumps(
             {
-                "CFBundleIdentifier": "com.cmux.app",
-                "CMUXAuthEnvironment": "production",
-                "CMUXApiBaseURL": "https://cmux.com",
-                "CMUXIrohBrokerBaseURL": "https://cmux-staging.vercel.app",
-                "CMUXPresenceBaseURL": "https://presence.cmux.dev",
-                "CMUXDevTag": "",
+                "CFBundleIdentifier": "com.hmux.app",
+                "HMUXAuthEnvironment": "production",
+                "HMUXApiBaseURL": "https://cmux.com",
+                "HMUXIrohBrokerBaseURL": "https://cmux-staging.vercel.app",
+                "HMUXPresenceBaseURL": "https://presence.cmux.dev",
+                "HMUXDevTag": "",
             }
         )
     )
@@ -762,12 +762,12 @@ def test_verify_ios_release_origins_does_not_trust_plistbuddy_override(
         override,
         """#!/bin/sh
 case "$2" in
-  "Print :CFBundleIdentifier") echo "com.cmux.app" ;;
-  "Print :CMUXAuthEnvironment") echo "production" ;;
-  "Print :CMUXApiBaseURL") echo "https://cmux.com" ;;
-  "Print :CMUXIrohBrokerBaseURL") echo "https://cmux.com" ;;
-  "Print :CMUXPresenceBaseURL") echo "https://presence.cmux.dev" ;;
-  "Print :CMUXDevTag") exit 1 ;;
+  "Print :CFBundleIdentifier") echo "com.hmux.app" ;;
+  "Print :HMUXAuthEnvironment") echo "production" ;;
+  "Print :HMUXApiBaseURL") echo "https://cmux.com" ;;
+  "Print :HMUXIrohBrokerBaseURL") echo "https://cmux.com" ;;
+  "Print :HMUXPresenceBaseURL") echo "https://presence.cmux.dev" ;;
+  "Print :HMUXDevTag") exit 1 ;;
   *) exit 1 ;;
 esac
 """,
@@ -834,19 +834,19 @@ def _bump_patch(version: str) -> str:
 
 
 def _write_fake_archive(path: Path, *, bundle_id: str, build_number: str, marketing_version: str) -> None:
-    app = path / "Products" / "Applications" / "cmux.app"
+    app = path / "Products" / "Applications" / "hmux.app"
     info = {
-        "CFBundleExecutable": "cmux",
+        "CFBundleExecutable": "hmux",
         "CFBundleIdentifier": bundle_id,
         "CFBundleVersion": build_number,
         "CFBundleShortVersionString": marketing_version,
-        "CMUXAppStoreBuild": "",
+        "HMUXAppStoreBuild": "",
         **PRODUCTION_RUNTIME_ORIGINS,
     }
     (path).mkdir(parents=True, exist_ok=True)
     app.mkdir(parents=True, exist_ok=True)
     # upload-testflight.sh refuses archives without dSYM bundles.
-    (path / "dSYMs" / "cmux.app.dSYM" / "Contents").mkdir(parents=True, exist_ok=True)
+    (path / "dSYMs" / "hmux.app.dSYM" / "Contents").mkdir(parents=True, exist_ok=True)
     (path / "Info.plist").write_bytes(
         _plist_bytes(
             {
@@ -873,8 +873,8 @@ def _set_fixture_versions(repo: Path) -> None:
     text = config.read_text(encoding="utf-8")
     for lane, version in (("BETA", BETA_MARKETING_VERSION), ("APPSTORE", APPSTORE_MARKETING_VERSION)):
         text, count = re.subn(
-            rf"^CMUX_IOS_{lane}_MARKETING_VERSION = .*$",
-            f"CMUX_IOS_{lane}_MARKETING_VERSION = {version}",
+            rf"^HMUX_IOS_{lane}_MARKETING_VERSION = .*$",
+            f"HMUX_IOS_{lane}_MARKETING_VERSION = {version}",
             text,
             flags=re.MULTILINE,
         )
@@ -890,7 +890,7 @@ def _copy_isolated_ios_upload_repo(target: Path) -> Path:
         "ios/scripts/filter-ios-appstore-entitlements.py",
         "ios/scripts/notification-service-bundle-id.sh",
         "ios/Config/Shared.xcconfig",
-        "ios/Config/cmux-release.entitlements",
+        "ios/Config/hmux-release.entitlements",
         "ios/Config/CloudVPN.entitlements",
         "ios/Config/NotificationService.entitlements",
         "scripts/lib/verify-ios-release-origins.sh",
@@ -942,16 +942,16 @@ def _read_xcconfig_setting(path: Path, key: str) -> str:
 
 
 BETA_MARKETING_VERSION = _read_xcconfig_setting(
-    ROOT / "ios/Config/Shared.xcconfig", "CMUX_IOS_BETA_MARKETING_VERSION"
+    ROOT / "ios/Config/Shared.xcconfig", "HMUX_IOS_BETA_MARKETING_VERSION"
 )
 
 
 def test_upload_beta_lane_uses_beta_marketing_version(tmp: Path, fakebin: Path) -> None:
     isolated_repo = _copy_isolated_ios_upload_repo(tmp / "isolated")
     env = _base_env(tmp, fakebin)
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
-    env["CMUX_BUILD_NUMBER_OUT_FILE"] = str(tmp / "build-number.txt")
-    env["CMUX_FAKE_INCLUDE_NOTIFICATION_EXTENSION"] = "1"
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_BUILD_NUMBER_OUT_FILE"] = str(tmp / "build-number.txt")
+    env["HMUX_FAKE_INCLUDE_NOTIFICATION_EXTENSION"] = "1"
     result = _run(
         [
             "bash",
@@ -976,15 +976,15 @@ def test_upload_beta_lane_uses_beta_marketing_version(tmp: Path, fakebin: Path) 
     ]
     archive_call = next(call for call in xcodebuild_calls if "archive" in call)
     _check(
-        f"CMUX_APP_BUNDLE_IDENTIFIER={BETA_BUNDLE_ID}" in archive_call,
+        f"HMUX_APP_BUNDLE_IDENTIFIER={BETA_BUNDLE_ID}" in archive_call,
         "beta archive command stamps the beta bundle id",
     )
     _check(
-        f"CMUX_HOST_BUNDLE_IDENTIFIER={BETA_BUNDLE_ID}" in archive_call,
+        f"HMUX_HOST_BUNDLE_IDENTIFIER={BETA_BUNDLE_ID}" in archive_call,
         "beta archive command stamps the beta host id for the notification extension",
     )
     _check(
-        f"CMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER={BETA_BUNDLE_ID}.NotificationServiceV2" in archive_call,
+        f"HMUX_NOTIFICATION_SERVICE_BUNDLE_IDENTIFIER={BETA_BUNDLE_ID}.NotificationServiceV2" in archive_call,
         "beta archive uses the registered notification extension identifier",
     )
     _check(
@@ -1000,7 +1000,7 @@ def test_upload_beta_lane_uses_beta_marketing_version(tmp: Path, fakebin: Path) 
         "beta archive command does not stamp the App Store marketing version",
     )
     _check(
-        "CMUX_CRASH_REPORTING_ENABLED=YES" in archive_call,
+        "HMUX_CRASH_REPORTING_ENABLED=YES" in archive_call,
         "beta archive keeps crash reporting enabled",
     )
     for build_arg in PRODUCTION_RUNTIME_BUILD_ARGS:
@@ -1009,8 +1009,8 @@ def test_upload_beta_lane_uses_beta_marketing_version(tmp: Path, fakebin: Path) 
     export_options = plistlib.loads((tmp / "ExportOptions.plist").read_bytes())
     profiles = export_options.get("provisioningProfiles", {})
     _check(
-        profiles.get(BETA_BUNDLE_ID) == "cmux Beta Distribution",
-        "export options map the beta profile to dev.cmux.app.beta",
+        profiles.get(BETA_BUNDLE_ID) == "hmux Beta Distribution",
+        "export options map the beta profile to dev.hmux.app.beta",
     )
     _check(
         profiles.get(f"{BETA_BUNDLE_ID}.NotificationServiceV2")
@@ -1021,16 +1021,16 @@ def test_upload_beta_lane_uses_beta_marketing_version(tmp: Path, fakebin: Path) 
     ipa_line = next(line for line in result.stdout.splitlines() if line.startswith("IPA_PATH="))
     ipa_path = Path(ipa_line.removeprefix("IPA_PATH="))
     with zipfile.ZipFile(ipa_path) as zf:
-        info = plistlib.loads(zf.read("Payload/cmux.app/Info.plist"))
+        info = plistlib.loads(zf.read("Payload/hmux.app/Info.plist"))
         extension_info = plistlib.loads(
-            zf.read("Payload/cmux.app/PlugIns/NotificationService.appex/Info.plist")
+            zf.read("Payload/hmux.app/PlugIns/NotificationService.appex/Info.plist")
         )
     _check(
         info.get("CFBundleIdentifier") == BETA_BUNDLE_ID,
-        "final signed beta IPA Info.plist is dev.cmux.app.beta",
+        "final signed beta IPA Info.plist is dev.hmux.app.beta",
     )
     _check(
-        info.get("CMUXKeychainAccessGroup") == BETA_APP_ID,
+        info.get("HMUXKeychainAccessGroup") == BETA_APP_ID,
         "final signed beta IPA Info.plist carries the exact beta keychain group",
     )
     _check(
@@ -1052,8 +1052,8 @@ def test_upload_keychain_group_failure_does_not_dump_entitlements(
     tmp: Path, fakebin: Path
 ) -> None:
     env = _base_env(tmp, fakebin)
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
-    env["CMUX_FAKE_SIGNED_KEYCHAIN_GROUP"] = f"{TEAM_ID}.unexpected.bundle"
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_FAKE_SIGNED_KEYCHAIN_GROUP"] = f"{TEAM_ID}.unexpected.bundle"
     result = _run(
         [
             "bash",
@@ -1084,8 +1084,8 @@ def test_upload_keychain_group_failure_does_not_dump_entitlements(
 
 def test_upload_strips_framework_without_valid_executable(tmp: Path, fakebin: Path) -> None:
     env = _base_env(tmp, fakebin)
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
-    env["CMUX_FAKE_EMBED_INVALID_FRAMEWORK_SHELL"] = "1"
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_FAKE_EMBED_INVALID_FRAMEWORK_SHELL"] = "1"
     result = _run(
         [
             "bash",
@@ -1113,7 +1113,7 @@ def test_upload_strips_framework_without_valid_executable(tmp: Path, fakebin: Pa
         ipa_entries = zf.namelist()
     _check(
         not any(
-            entry.startswith("Payload/cmux.app/Frameworks/Iroh.framework/")
+            entry.startswith("Payload/hmux.app/Frameworks/Iroh.framework/")
             for entry in ipa_entries
         ),
         "final signed IPA omits the stripped framework shell",
@@ -1125,8 +1125,8 @@ def test_upload_rejects_profile_without_time_sensitive_push_capability(
     fakebin: Path,
 ) -> None:
     env = _base_env(tmp, fakebin)
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
-    env["CMUX_FAKE_PROFILE_MISSING_TIME_SENSITIVE"] = "1"
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_FAKE_PROFILE_MISSING_TIME_SENSITIVE"] = "1"
     result = _run(
         [
             "bash",
@@ -1156,7 +1156,7 @@ def test_upload_rejects_profile_without_time_sensitive_push_capability(
 
 def test_upload_beta_archive_path_accepts_marketing_version_override(tmp: Path, fakebin: Path) -> None:
     override_version = "1.0.3"
-    archive = tmp / "cmux-beta.xcarchive"
+    archive = tmp / "hmux-beta.xcarchive"
     _write_fake_archive(
         archive,
         bundle_id=BETA_BUNDLE_ID,
@@ -1165,7 +1165,7 @@ def test_upload_beta_archive_path_accepts_marketing_version_override(tmp: Path, 
     )
     env = _base_env(tmp, fakebin)
     env["BETA_MARKETING_VERSION"] = override_version
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
     result = _run(
         [
             "bash",
@@ -1186,7 +1186,7 @@ def test_upload_beta_archive_path_accepts_marketing_version_override(tmp: Path, 
     ipa_line = next(line for line in result.stdout.splitlines() if line.startswith("IPA_PATH="))
     ipa_path = Path(ipa_line.removeprefix("IPA_PATH="))
     with zipfile.ZipFile(ipa_path) as zf:
-        info = plistlib.loads(zf.read("Payload/cmux.app/Info.plist"))
+        info = plistlib.loads(zf.read("Payload/hmux.app/Info.plist"))
     _check(
         info.get("CFBundleShortVersionString") == override_version,
         "reused beta archive keeps the override marketing version",
@@ -1194,7 +1194,7 @@ def test_upload_beta_archive_path_accepts_marketing_version_override(tmp: Path, 
 
 
 def test_upload_appstore_rejects_unmarked_reused_archive(tmp: Path, fakebin: Path) -> None:
-    archive = tmp / "cmux-appstore.xcarchive"
+    archive = tmp / "hmux-appstore.xcarchive"
     _write_fake_archive(
         archive,
         bundle_id=APPSTORE_BUNDLE_ID,
@@ -1202,7 +1202,7 @@ def test_upload_appstore_rejects_unmarked_reused_archive(tmp: Path, fakebin: Pat
         marketing_version=APPSTORE_MARKETING_VERSION,
     )
     env = _base_env(tmp, fakebin)
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
     result = _run(
         [
             "bash",
@@ -1219,7 +1219,7 @@ def test_upload_appstore_rejects_unmarked_reused_archive(tmp: Path, fakebin: Pat
     )
     _check(result.returncode != 0, "App Store rejects a reused archive without the VPN-free build marker")
     _check(
-        "CMUXAppStoreBuild=YES" in result.stderr,
+        "HMUXAppStoreBuild=YES" in result.stderr,
         "unmarked App Store archive error names the required build marker",
     )
 
@@ -1228,7 +1228,7 @@ def test_upload_beta_auto_version_uses_checked_in_beta_floor(tmp: Path, fakebin:
     isolated_repo = _copy_isolated_ios_upload_repo(tmp / "isolated")
     expected_version = _bump_patch(BETA_MARKETING_VERSION)
     env = _base_env(tmp, fakebin)
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
     result = _run(
         [
             "bash",
@@ -1284,7 +1284,7 @@ def test_external_beta_upload_fails_without_group_assignment_credentials(
     env["APPLE_ID"] = "release@example.invalid"
     env["APPLE_APP_SPECIFIC_PASSWORD"] = "test-password"
     env["APPLE_PROVIDER_PUBLIC_ID"] = "test-provider"
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
 
     result = _run(
         [
@@ -1328,23 +1328,23 @@ def test_bump_ios_version_accepts_trailing_appstore_lane(tmp: Path, fakebin: Pat
 
     _check(result.returncode == 0, "bump helper accepts trailing --lane appstore")
     _check(
-        _read_xcconfig_setting(config, "CMUX_IOS_APPSTORE_MARKETING_VERSION") == "1.0.1",
+        _read_xcconfig_setting(config, "HMUX_IOS_APPSTORE_MARKETING_VERSION") == "1.0.1",
         "trailing appstore lane updates the App Store marketing version",
     )
     _check(
-        _read_xcconfig_setting(config, "CMUX_IOS_BETA_MARKETING_VERSION") == BETA_MARKETING_VERSION,
+        _read_xcconfig_setting(config, "HMUX_IOS_BETA_MARKETING_VERSION") == BETA_MARKETING_VERSION,
         "trailing appstore lane leaves the beta marketing version unchanged",
     )
     _check(
-        "CMUX_IOS_APPSTORE_MARKETING_VERSION" not in result.stdout + result.stderr,
+        "HMUX_IOS_APPSTORE_MARKETING_VERSION" not in result.stdout + result.stderr,
         "bump helper output describes the lane without exposing the internal xcconfig key",
     )
 
 
 def test_upload_appstore_lane_uses_production_bundle_id(tmp: Path, fakebin: Path) -> None:
     env = _base_env(tmp, fakebin)
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
-    env["CMUX_BUILD_NUMBER_OUT_FILE"] = str(tmp / "build-number.txt")
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_BUILD_NUMBER_OUT_FILE"] = str(tmp / "build-number.txt")
     result = _run(
         [
             "bash",
@@ -1359,7 +1359,7 @@ def test_upload_appstore_lane_uses_production_bundle_id(tmp: Path, fakebin: Path
         tmp=tmp,
     )
     _check(result.returncode == 0, "appstore export-only lane succeeds with fake Apple tools")
-    _check("signed IPA bundle identity verified: com.cmux.app" in result.stdout, "signed IPA identity gate passes")
+    _check("signed IPA bundle identity verified: com.hmux.app" in result.stdout, "signed IPA identity gate passes")
 
     xcodebuild_calls = [
         json.loads(line)
@@ -1367,12 +1367,12 @@ def test_upload_appstore_lane_uses_production_bundle_id(tmp: Path, fakebin: Path
     ]
     archive_call = next(call for call in xcodebuild_calls if "archive" in call)
     _check(
-        f"CMUX_APP_BUNDLE_IDENTIFIER={APPSTORE_BUNDLE_ID}" in archive_call,
-        "archive command stamps com.cmux.app",
+        f"HMUX_APP_BUNDLE_IDENTIFIER={APPSTORE_BUNDLE_ID}" in archive_call,
+        "archive command stamps com.hmux.app",
     )
     _check(
-        f"CMUX_HOST_BUNDLE_IDENTIFIER={APPSTORE_BUNDLE_ID}" in archive_call,
-        "archive command stamps the com.cmux.app host id for the notification extension",
+        f"HMUX_HOST_BUNDLE_IDENTIFIER={APPSTORE_BUNDLE_ID}" in archive_call,
+        "archive command stamps the com.hmux.app host id for the notification extension",
     )
     _check(
         not any(arg.startswith("PRODUCT_BUNDLE_IDENTIFIER=") for arg in archive_call),
@@ -1387,68 +1387,68 @@ def test_upload_appstore_lane_uses_production_bundle_id(tmp: Path, fakebin: Path
         "archive command does not stamp the beta marketing version",
     )
     _check(
-        "CMUX_CRASH_REPORTING_ENABLED=YES" in archive_call,
+        "HMUX_CRASH_REPORTING_ENABLED=YES" in archive_call,
         "App Store archive keeps crash reporting enabled",
     )
     _check(
-        "SWIFT_ACTIVE_COMPILATION_CONDITIONS=CMUX_APPSTORE" in archive_call,
+        "SWIFT_ACTIVE_COMPILATION_CONDITIONS=HMUX_APPSTORE" in archive_call,
         "App Store archive compiles with the VPN-free condition",
     )
     _check(
-        "CMUX_APPSTORE_BUILD=YES" in archive_call,
+        "HMUX_APPSTORE_BUILD=YES" in archive_call,
         "App Store archive carries the VPN-free build marker",
     )
     for build_arg in PRODUCTION_RUNTIME_BUILD_ARGS:
         _check(build_arg in archive_call, f"App Store archive stamps {build_arg.split('=', 1)[0]}")
     _check(
         all(
-            "CMUX_APP_BUNDLE_IDENTIFIER=com.cmuxterm.app" not in call
-            and "PRODUCT_BUNDLE_IDENTIFIER=com.cmuxterm.app" not in call
+            "HMUX_APP_BUNDLE_IDENTIFIER=com.hmuxterm.app" not in call
+            and "PRODUCT_BUNDLE_IDENTIFIER=com.hmuxterm.app" not in call
             for call in archive_call
         ),
-        "archive command does not stamp the retired com.cmuxterm.app id",
+        "archive command does not stamp the retired com.hmuxterm.app id",
     )
 
     export_options = plistlib.loads((tmp / "ExportOptions.plist").read_bytes())
     profiles = export_options.get("provisioningProfiles", {})
     _check(
-        profiles.get(APPSTORE_BUNDLE_ID) == "cmux App Store Distribution",
-        "export options map the App Store profile to com.cmux.app",
+        profiles.get(APPSTORE_BUNDLE_ID) == "hmux App Store Distribution",
+        "export options map the App Store profile to com.hmux.app",
     )
     _check(
         profiles.get(APPSTORE_EXTENSION_BUNDLE_ID) == APPSTORE_EXTENSION_PROFILE_NAME,
         "export options map the notification extension to its App Store profile",
     )
     _check(APPSTORE_CLOUD_VPN_BUNDLE_ID not in profiles, "export options omit the disabled CloudVPN profile")
-    _check("com.cmuxterm.app" not in profiles, "export options do not include the retired app id")
+    _check("com.hmuxterm.app" not in profiles, "export options do not include the retired app id")
 
     ipa_line = next(line for line in result.stdout.splitlines() if line.startswith("IPA_PATH="))
     ipa_path = Path(ipa_line.removeprefix("IPA_PATH="))
     with zipfile.ZipFile(ipa_path) as zf:
-        info = plistlib.loads(zf.read("Payload/cmux.app/Info.plist"))
+        info = plistlib.loads(zf.read("Payload/hmux.app/Info.plist"))
         extension_info = plistlib.loads(
-            zf.read("Payload/cmux.app/PlugIns/NotificationService.appex/Info.plist")
+            zf.read("Payload/hmux.app/PlugIns/NotificationService.appex/Info.plist")
         )
         extension_entitlements = (
             plistlib.loads(
                 zf.read(
-                    "Payload/cmux.app/PlugIns/NotificationService.appex/"
+                    "Payload/hmux.app/PlugIns/NotificationService.appex/"
                     "FakeSignedEntitlements.plist"
                 )
             )
-            if "Payload/cmux.app/PlugIns/NotificationService.appex/FakeSignedEntitlements.plist"
+            if "Payload/hmux.app/PlugIns/NotificationService.appex/FakeSignedEntitlements.plist"
             in zf.namelist()
             else {}
         )
         members = set(zf.namelist())
-    _check(info.get("CFBundleIdentifier") == APPSTORE_BUNDLE_ID, "final signed IPA Info.plist is com.cmux.app")
+    _check(info.get("CFBundleIdentifier") == APPSTORE_BUNDLE_ID, "final signed IPA Info.plist is com.hmux.app")
     _check(
-        info.get("CMUXKeychainAccessGroup") == APPSTORE_APP_ID,
+        info.get("HMUXKeychainAccessGroup") == APPSTORE_APP_ID,
         "final signed App Store IPA Info.plist carries the exact App Store keychain group",
     )
-    _check(info.get("CMUXAppStoreBuild") == "YES", "final signed App Store IPA carries the VPN-free build marker")
+    _check(info.get("HMUXAppStoreBuild") == "YES", "final signed App Store IPA carries the VPN-free build marker")
     _check(
-        extension_info.get("CMUXKeychainAccessGroup") == APPSTORE_APP_ID,
+        extension_info.get("HMUXKeychainAccessGroup") == APPSTORE_APP_ID,
         "notification extension Info.plist carries the exact App Store keychain group",
     )
     _check(
@@ -1456,7 +1456,7 @@ def test_upload_appstore_lane_uses_production_bundle_id(tmp: Path, fakebin: Path
         "notification extension signature carries the exact App Store keychain group",
     )
     _check(
-        "Payload/cmux.app/PlugIns/CloudVPN.appex/Info.plist" not in members,
+        "Payload/hmux.app/PlugIns/CloudVPN.appex/Info.plist" not in members,
         "final signed App Store IPA omits the system-VPN extension",
     )
     _check(
@@ -1464,7 +1464,7 @@ def test_upload_appstore_lane_uses_production_bundle_id(tmp: Path, fakebin: Path
         "final signed IPA keeps the App Store marketing version",
     )
     _check(
-        info.get("CMUXCrashReportingEnabled") == "YES",
+        info.get("HMUXCrashReportingEnabled") == "YES",
         "final signed IPA keeps crash reporting enabled",
     )
     for key, expected in PRODUCTION_RUNTIME_ORIGINS.items():
@@ -1483,23 +1483,23 @@ def test_official_testflight_workflow_publishes_generated_notes() -> None:
     )[1].split("      - name: Record completed upload before group assignment", 1)[0]
     _check(
         "ARGS=(--lane appstore --signing manual)" in upload_step,
-        "official cmux.app TestFlight upload keeps the changelog notes path as the no-base fallback",
+        "official hmux.app TestFlight upload keeps the changelog notes path as the no-base fallback",
     )
     _check(
         '--notes-from-range "$LAST_UPLOAD_SHA"' in upload_step,
-        "official cmux.app TestFlight upload generates What to Test notes from the commits since the previous upload",
+        "official hmux.app TestFlight upload generates What to Test notes from the commits since the previous upload",
     )
     _check(
         "--skip-notes" not in upload_step,
-        "official cmux.app TestFlight upload does not suppress What to Test notes",
+        "official hmux.app TestFlight upload does not suppress What to Test notes",
     )
 
 
 def test_upload_appstore_checks_asc_app_bundle_id_before_upload(tmp: Path, fakebin: Path) -> None:
     env = _asc_upload_env(tmp, fakebin)
-    env["CMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
-    env["CMUX_BUILD_NUMBER_OUT_FILE"] = str(tmp / "build-number.txt")
-    env["CMUX_TESTFLIGHT_NOTES_REQUEST_FILE"] = str(tmp / "testflight-notes-request.json")
+    env["HMUX_IOS_UPLOAD_DIR"] = str(tmp / "upload")
+    env["HMUX_BUILD_NUMBER_OUT_FILE"] = str(tmp / "build-number.txt")
+    env["HMUX_TESTFLIGHT_NOTES_REQUEST_FILE"] = str(tmp / "testflight-notes-request.json")
     result = _run(
         [
             "bash",
@@ -1551,10 +1551,10 @@ def test_profile_installer_accepts_production_profile_by_default(tmp: Path, fake
         env=env,
         tmp=tmp,
     )
-    _check(result.returncode == 0, "profile installer accepts a com.cmux.app App Store profile")
+    _check(result.returncode == 0, "profile installer accepts a com.hmux.app App Store profile")
     github_env = Path(env["GITHUB_ENV"]).read_text(encoding="utf-8")
     _check(
-        "IOS_APPSTORE_PROVISIONING_PROFILE_NAME=cmux App Store Distribution Test" in github_env,
+        "IOS_APPSTORE_PROVISIONING_PROFILE_NAME=hmux App Store Distribution Test" in github_env,
         "profile installer exports the resolved App Store profile name",
     )
     _check(
@@ -1591,7 +1591,7 @@ def test_profile_installer_ignores_stale_primary_secret(tmp: Path, fakebin: Path
     _check("primary profile secret targets" in result.stderr, "profile installer reports the stale profile candidate")
     github_env = Path(env["GITHUB_ENV"]).read_text(encoding="utf-8")
     _check(
-        "IOS_APPSTORE_PROVISIONING_PROFILE_NAME=cmux App Store Distribution Test" in github_env,
+        "IOS_APPSTORE_PROVISIONING_PROFILE_NAME=hmux App Store Distribution Test" in github_env,
         "profile installer falls back to a matching production profile",
     )
     _check(
@@ -1737,7 +1737,7 @@ def test_validate_appstore_release_prepares_content_rights_and_build(
             "--content-rights",
             "USES_THIRD_PARTY_CONTENT",
         ],
-        "submission preparation declares that cmux accesses user-controlled third-party content",
+        "submission preparation declares that hmux accesses user-controlled third-party content",
     )
     _check(
         attach_build_call == [
@@ -1890,7 +1890,7 @@ def test_bootstrap_appstore_availability_creates_all_territories_once(tmp: Path)
                 "ASC_API_ISSUER_ID": "00000000-0000-0000-0000-000000000000",
                 "ASC_API_KEY_PATH": str(key_path),
                 "ASC_TIMEOUT_SECONDS": "120",
-                "CMUX_ASC_API_BASE_URL": f"http://127.0.0.1:{server.server_port}",
+                "HMUX_ASC_API_BASE_URL": f"http://127.0.0.1:{server.server_port}",
             }
         )
         command = [

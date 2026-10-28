@@ -11,15 +11,15 @@
 An owned mini keeps compile admission's DerivedData (owned_build_state.py),
 and what a compile costs depends on how far its start (the kept build, or a
 seed) is from the tree it builds. Measured on 142 owned admissions on
-2026-09-25 (cmuxterm-hq#661 WS6): starting within 5 app Swift files of the
-build never recompiled the `cmux` module (0 of 21), 6 or more did in 26 of
+2026-09-25 (hmuxterm-hq#661 WS6): starting within 5 app Swift files of the
+build never recompiled the `hmux` module (0 of 21), 6 or more did in 26 of
 40, and so did any change to an imported package's interface (about 2,700
-`cmux` files) and to in-module types most files use (AppDelegate,
-Workspace, cmuxApp). Commit counts and the kept record's changed inputs
+`hmux` files) and to in-module types most files use (AppDelegate,
+Workspace, hmuxApp). Commit counts and the kept record's changed inputs
 predicted it badly. An avoided rebuild saves about 220 s of wall time.
 
 Distance is counted in app Swift files: changed `.swift` files outside
-tests (any `/Tests/`, cmuxTests/, cmuxUITests/). A package Swift file is one
+tests (any `/Tests/`, hmuxTests/, hmuxUITests/). A package Swift file is one
 under PACKAGE_SOURCES; a package change is an interface change when a changed
 line declares something `public`, `open` or `package`, or `@inlinable` /
 `@usableFromInline` code, which every importer sees. A hot file is one the
@@ -28,11 +28,11 @@ model lists (HOT_FILES, refit from the data).
 Record. owned_build_state.py `record` compares the digests of the tree it is
 about to compile with the record the adopted DerivedData carries (the kept
 build's own record, or the seed's manifest) and writes the changed paths to
-CMUX_WARM_DISTANCE_START: the exact distance, at no cost, since the record is
+HMUX_WARM_DISTANCE_START: the exact distance, at no cost, since the record is
 computed anyway. `admission` runs at the end of every owned admission and
 appends one JSON line to STORE/admissions.jsonl with the pull request, head,
 merge base, the start (kept build, seed or cold), the distance features, the
-SwiftCompile units per target from the build log, whether the `cmux` module
+SwiftCompile units per target from the build log, whether the `hmux` module
 was rebuilt (APP_REBUILD_UNITS or more units), compile, admission and queue
 seconds, the runner and root, and the routing decisions (the picker's pin and
 glaeda's root choice). It also stamps the kept build with this pull
@@ -60,7 +60,7 @@ cells from recent admissions, `backtest` replays them in time order, and
 warm_model_refit.py runs both daily and proposes a drifted model as a pull
 request. The model is scripts/ci/warm-distance-model.json; refit all of it with
 
-    python3 scripts/ci/warm_distance.py collect cmux14 cmux8s-mac-mini ... > data.jsonl
+    python3 scripts/ci/warm_distance.py collect hmux14 hmux8s-mac-mini ... > data.jsonl
     python3 scripts/ci/warm_distance.py fit data.jsonl --out scripts/ci/warm-distance-model.json
 """
 from __future__ import annotations
@@ -82,23 +82,23 @@ from typing import Any, Callable, Iterable, Mapping, Sequence
 
 MODEL_PATH = Path(__file__).resolve().with_name("warm-distance-model.json")
 LOG_NAME = "admissions.jsonl"
-# The copy glaeda-cmux-runner-hook reads (its WARM_MODEL): beside root 1's stamp.
+# The copy glaeda-hmux-runner-hook reads (its WARM_MODEL): beside root 1's stamp.
 HOOK_MODEL_NAME = "warm-distance-model.json"
 LOG_MAX_BYTES = 8 * 1024 * 1024
 PACKAGE_SOURCES = ("Packages/", "vendor/", "Examples/")
-NOT_APP_SOURCES = ("cmuxTests/", "cmuxUITests/")
+NOT_APP_SOURCES = ("hmuxTests/", "hmuxUITests/")
 NEAR_APP_SWIFT_FILES = 5
-# The `cmux` target compiles about 2,700 Swift files; an incremental build a few hundred.
+# The `hmux` target compiles about 2,700 Swift files; an incremental build a few hundred.
 APP_REBUILD_UNITS = 1000
-# Files whose change recompiles the `cmux` module without any package change; `fit` learns them
-# (HOT_MIN_REBUILDS and HOT_MIN_SHARE). AppDelegate, Workspace and cmuxApp alone did not (09-25/26).
+# Files whose change recompiles the `hmux` module without any package change; `fit` learns them
+# (HOT_MIN_REBUILDS and HOT_MIN_SHARE). AppDelegate, Workspace and hmuxApp alone did not (09-25/26).
 DEFAULT_HOT_FILES: tuple[str, ...] = ()
 HOT_MIN_REBUILDS = 3
 HOT_MIN_SHARE = 0.6
 # A changed line that changes what an importer of the package sees.
 INTERFACE_LINE = re.compile(
     r"^[+-](?![+-])\s*(?:@\w+(?:\([^)]*\))?\s+)*(?:(?:public|open|package)\b|@inlinable\b|@usableFromInline\b|@_exported\b)")
-# xcodebuild escapes the space after "Compiling" ("Compiling\\ A.swift /abs/A.swift (in target 'cmux' ...)").
+# xcodebuild escapes the space after "Compiling" ("Compiling\\ A.swift /abs/A.swift (in target 'hmux' ...)").
 SWIFT_COMPILE = re.compile(r"^SwiftCompile \S+ \S+ Compiling\\? (.*?) \(in target '([^']*)'")
 TIERS = ("near", "far", "rebuild")
 # A (tier, start kind) cell of tiers_by_start predicts once it has this many compiles; glaeda's hook uses the same.
@@ -323,7 +323,7 @@ def append_line(log: Path, record: Mapping[str, Any]) -> None:
 
 def fleet_dir(store: Path) -> Path:
     """Root 1's store (the mini's ci directory) for any root's: the one log and model copy per mini."""
-    return store.parent if re.fullmatch(r"cmux-ci-[0-9]{1,2}", store.name) else store
+    return store.parent if re.fullmatch(r"hmux-ci-[0-9]{1,2}", store.name) else store
 
 
 def share_model(store: Path, model_path: Path = MODEL_PATH) -> None:
@@ -374,12 +374,12 @@ def admission(store: Path, env: Mapping[str, str], workspace: Path, now: Callabl
     base = (env.get("MERGED_ONTO") or "").strip().lower()
     start_doc: dict[str, Any] = {}
     with contextlib.suppress(OSError, ValueError):
-        start_doc = json.loads(Path(env.get("CMUX_WARM_DISTANCE_START") or "/nonexistent").read_text())
+        start_doc = json.loads(Path(env.get("HMUX_WARM_DISTANCE_START") or "/nonexistent").read_text())
     seed_key = env.get("SEED_KEY", "") if env.get("SEED_HIT") == "true" else ""
     kept = env.get("OWNED_ADOPT_HIT") == "true" and not seed_key
     start_stamp: dict[str, Any] = {}
     with contextlib.suppress(OSError, ValueError):
-        start_stamp = json.loads(Path(env.get("CMUX_WARM_START_STAMP") or "/nonexistent").read_text())
+        start_stamp = json.loads(Path(env.get("HMUX_WARM_START_STAMP") or "/nonexistent").read_text())
     if start_doc.get("start") != "warm":
         start = {"kind": "cold"}
     elif seed_key:
@@ -427,18 +427,18 @@ def admission(store: Path, env: Mapping[str, str], workspace: Path, now: Callabl
     compiled = env.get("COMPILE_OUTCOME") == "success"
     predicted = predict(distance, model, start["kind"]) if distance else (None, None)
     record = {
-        "schema": "cmux-warm-admission/v1",
+        "schema": "hmux-warm-admission/v1",
         "at": now().strftime("%Y-%m-%dT%H:%M:%SZ"),
         "run_id": env.get("GITHUB_RUN_ID"), "run_attempt": env.get("GITHUB_RUN_ATTEMPT"),
         "job": env.get("GITHUB_JOB"), "event": env.get("GITHUB_EVENT_NAME"),
         "pr": int(env["PR_NUMBER"]) if (env.get("PR_NUMBER") or "").isdigit() else None,
         "head_sha": env.get("HEAD_SHA") or None, "sha": env.get("GITHUB_SHA"), "merged_onto": base or None,
-        "runner": env.get("RUNNER_NAME"), "root": env.get("CMUX_CI_CANONICAL_ROOT") or "/private/tmp/cmux-ci",
+        "runner": env.get("RUNNER_NAME"), "root": env.get("HMUX_CI_CANONICAL_ROOT") or "/private/tmp/hmux-ci",
         "start": start, "distance": distance or None,
         "own": {**features(own[0], own[1], hot_files), "paths": own[0][:MAX_PATHS]} if own else None,
         "swift_units": units, "swift_units_total": sum(units.values()),
         # No build log: unknown. A log without SwiftCompile lines compiled no Swift at all.
-        "app_rebuilt": units.get("cmux", 0) >= APP_REBUILD_UNITS if found else None,
+        "app_rebuilt": units.get("hmux", 0) >= APP_REBUILD_UNITS if found else None,
         "compile_outcome": env.get("COMPILE_OUTCOME"),
         "compile_seconds": number(metrics.get("compile_duration_seconds")) if compiled else None,
         "admission_seconds": number(metrics.get("total_macos_compile_admission_seconds")),
@@ -639,7 +639,7 @@ def picker_route(runners: Sequence[Mapping[str, Any]], root: str, *, merged_onto
 # Distance routing across minis (pr_runner_pool.py, CI_OWNED_WARM_DISTANCE) ---------------------------------------
 #
 # route_admission() above pins only on an exact key (the merge base, or `pr-<n>`) and costs the root label at
-# start_classes["none"]. glaeda's job-started hook (teamleaderleo/glaeda scripts/glaeda-cmux-runner-hook,
+# start_classes["none"]. glaeda's job-started hook (teamleaderleo/glaeda scripts/glaeda-hmux-runner-hook,
 # warm_root_costs()) already ranks the free roots inside one mini by the near/far/rebuild tier of each kept
 # build's distance to the job. distance_route() scores every mini's roots the same way, from the stamps
 # owned_build_state.py `warm-keys` publishes (`roots`, owned_warm_state.py), so a near build on another mini
@@ -719,7 +719,7 @@ def hook_root_cost(changes: tuple[set[str], bool] | None, stamp: Mapping[str, An
         return max(model["tiers"].values()) + 1.0, "cold", -1
     same = isinstance(stamp.get("pr"), int) and stamp.get("pr") == number
     if changes is None or (not same and "pr_app_swift_files" not in stamp and stamp.get("pr")):
-        return model["unknown"], "unknown", -1  # not comparable, or an older cmux's stamp
+        return model["unknown"], "unknown", -1  # not comparable, or an older hmux's stamp
     files, package = changes
     kept = stamp.get("pr_app_swift_files") if not same else []
     kept = kept if isinstance(kept, list) else []
@@ -1056,7 +1056,7 @@ def cell(values: Sequence[float], rebuilt: Sequence[bool] = ()) -> dict[str, Any
 
 
 def from_dash(row: Mapping[str, Any]) -> dict[str, Any]:
-    """An admission line as ci-dash keeps it (cmuxterm-hq build-fleet/ci-dash, `estimates.jsonl`: the probe's
+    """An admission line as ci-dash keeps it (hmuxterm-hq build-fleet/ci-dash, `estimates.jsonl`: the probe's
     cut of this file's record, no paths) in this file's schema. Its hot files are only a count: the tier
     they gave under the model it was recorded with."""
     distance = None
@@ -1064,7 +1064,7 @@ def from_dash(row: Mapping[str, Any]) -> dict[str, Any]:
         distance = {"app_swift_files": row.get("files"), "package_swift_files": row.get("pkg"),
                     "package_interface": row.get("iface"), "hot_files": ["(recorded)"] * int(row.get("hot") or 0)}
     compiled = row.get("outcome") in (None, "success")
-    return {"schema": "cmux-warm-admission/v1", "at": row.get("at"), "run_id": row.get("run_id"),
+    return {"schema": "hmux-warm-admission/v1", "at": row.get("at"), "run_id": row.get("run_id"),
             "run_attempt": row.get("run_attempt"), "job": row.get("job"), "runner": row.get("runner"),
             "root": row.get("root"), "pr": row.get("pr"), "start": {"kind": row.get("start") or "cold"},
             "distance": distance, "tier": row.get("tier"), "predicted_seconds": row.get("pred"),
@@ -1448,8 +1448,8 @@ def collect(hosts: Sequence[str], out: Any = None) -> int:
         try:
             text = subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=10", host,
                                   # find, not a glob: the minis' login shell is zsh, whose unmatched glob
-                                  # (no cmux-ci-*/ log) failed the whole command and read nothing.
-                                  "find /Users/Shared/cmux-build-fleet/ci -maxdepth 2 -type f "
+                                  # (no hmux-ci-*/ log) failed the whole command and read nothing.
+                                  "find /Users/Shared/hmux-build-fleet/ci -maxdepth 2 -type f "
                                   f"\\( -name {LOG_NAME} -o -name {LOG_NAME}.1 \\) -exec cat {{}} + 2>/dev/null; true"],
                                  capture_output=True, text=True, timeout=120).stdout
         except (OSError, subprocess.SubprocessError) as error:

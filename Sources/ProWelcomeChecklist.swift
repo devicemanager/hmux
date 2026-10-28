@@ -1,8 +1,8 @@
-import CmuxFoundation
-import CmuxCloud
+import HmuxFoundation
+import HmuxCloud
 import AppKit
-import CmuxBrowser
-import CmuxTerminalCore
+import HmuxBrowser
+import HmuxTerminalCore
 import Foundation
 
 @MainActor
@@ -21,16 +21,16 @@ struct AppWebThemeSnapshot: Equatable {
         return resolved(
             backgroundColor: backgroundColor,
             foregroundColor: foregroundColor,
-            accent: (AppDelegate.shared?.accentColor ?? CmuxAccentColor())
+            accent: (AppDelegate.shared?.accentColor ?? HmuxAccentColor())
         )
     }
 
     static func resolved(
         backgroundColor: NSColor,
         foregroundColor: NSColor,
-        accent: CmuxAccentColor = CmuxAccentColor()
+        accent: HmuxAccentColor = HmuxAccentColor()
     ) -> AppWebThemeSnapshot {
-        let colorScheme = cmuxReadableColorScheme(for: backgroundColor)
+        let colorScheme = hmuxReadableColorScheme(for: backgroundColor)
         let appearance = colorScheme == .dark ? "dark" : "light"
         return AppWebThemeSnapshot(
             appearance: appearance,
@@ -80,7 +80,7 @@ struct AppWebThemeSnapshot: Equatable {
     ) -> NSColor {
         let preferred = RGBBytes(color: preferredColor).color
         let background = RGBBytes(color: backgroundColor).color
-        guard cmuxContrastRatio(
+        guard hmuxContrastRatio(
             foreground: preferred,
             background: background
         ) < minimumContrast else {
@@ -104,8 +104,8 @@ struct AppWebThemeSnapshot: Equatable {
             return candidate.color
         }
 
-        return cmuxContrastRatio(foreground: .white, background: background)
-            >= cmuxContrastRatio(foreground: .black, background: background)
+        return hmuxContrastRatio(foreground: .white, background: background)
+            >= hmuxContrastRatio(foreground: .black, background: background)
             ? .white
             : .black
     }
@@ -176,7 +176,7 @@ struct AppWebThemeSnapshot: Equatable {
                 step: step
             )
             let color = adjusted.color
-            let contrast = cmuxContrastRatio(
+            let contrast = hmuxContrastRatio(
                 foreground: color,
                 background: background
             )
@@ -192,14 +192,14 @@ struct AppWebThemeSnapshot: Equatable {
     }
 }
 
-/// Presents the one-time "Welcome to cmux Pro" checklist after a user becomes
+/// Presents the one-time "Welcome to hmux Pro" checklist after a user becomes
 /// Pro. The checklist is a chromeless in-app web page (`/app-pro-welcome`)
 /// shown in the same dedicated workspace surface as the pricing page, so it
 /// matches how upgrade/pricing already appears. Automatic presentation is
 /// gated on Pro status and a persisted seen-flag; manual and debug entrypoints
 /// call `present()` directly.
 enum ProWelcomeChecklistPresenter {
-    static let seenDefaultsKey = "cmux.pro.welcomeChecklist.seen"
+    static let seenDefaultsKey = "hmux.pro.welcomeChecklist.seen"
 
     /// Tracks the dedicated welcome workspace so repeated presentations reuse
     /// and focus it instead of spawning a duplicate workspace each time.
@@ -250,7 +250,7 @@ enum ProWelcomeChecklistPresenter {
 }
 
 extension ProUpgradePresenter {
-    /// Opens the in-app "Welcome to cmux Pro" checklist as a chromeless web page in the
+    /// Opens the in-app "Welcome to hmux Pro" checklist as a chromeless web page in the
     /// same dedicated workspace surface used for pricing, matching upgrade/pricing.
     @MainActor
     static func presentProWelcomeWeb() {
@@ -277,7 +277,7 @@ extension ProUpgradePresenter {
             ProWelcomeChecklistPresenter.workspaceReuseState.clear()
         }
 
-        let title = String(localized: "proWelcome.workspace.title", defaultValue: "Welcome to cmux Pro")
+        let title = String(localized: "proWelcome.workspace.title", defaultValue: "Welcome to hmux Pro")
         guard let workspace = appDelegate.performProUpgradeWorkspaceAction(
             title: title,
             url: url,
@@ -290,7 +290,7 @@ extension ProUpgradePresenter {
     }
 
     /// Builds an app web URL (pricing or Pro welcome) decorated with the current
-    /// Ghostty colors and cmux app/scheme query parameters.
+    /// Ghostty colors and hmux app/scheme query parameters.
     @MainActor
     static func decoratedAppWebURL(_ base: URL) -> URL {
         decoratedAppWebURL(base, theme: AppWebThemeSnapshot.current())
@@ -303,11 +303,11 @@ extension ProUpgradePresenter {
         let browserTheme = theme.browserTheme
         let themedQueryNames = Set(browserTheme.queryItems.map(\.name))
         queryItems.removeAll { themedQueryNames.contains($0.name) }
-        queryItems.removeAll { $0.name == "cmux_app" }
-        queryItems.removeAll { $0.name == "cmux_scheme" }
+        queryItems.removeAll { $0.name == "hmux_app" }
+        queryItems.removeAll { $0.name == "hmux_scheme" }
         queryItems.append(contentsOf: browserTheme.queryItems)
-        queryItems.append(URLQueryItem(name: "cmux_app", value: "1"))
-        queryItems.append(URLQueryItem(name: "cmux_scheme", value: AuthEnvironment.callbackScheme))
+        queryItems.append(URLQueryItem(name: "hmux_app", value: "1"))
+        queryItems.append(URLQueryItem(name: "hmux_scheme", value: AuthEnvironment.callbackScheme))
         components?.queryItems = queryItems
         return components?.url ?? base
     }

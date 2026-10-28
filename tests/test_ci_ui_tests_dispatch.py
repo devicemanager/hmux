@@ -81,22 +81,22 @@ NO_ARTIFACT = {"artifacts": []}
 
 class RequestTests(unittest.TestCase):
     def test_selectors_must_be_plain_class_or_method_names(self) -> None:
-        self.assertEqual(ui.build_request("cmuxUITests/A cmuxUITests/B/testC", HEAD, MERGE)["selectors"],
-                         ["cmuxUITests/A", "cmuxUITests/B/testC"])
-        for bad in ("", "--force", "cmuxUITests/A --runner=x", "cmuxTests/A", "cmuxUITests/A/b/c",
-                    "cmuxUITests/A;rm", " ".join(f"cmuxUITests/C{i}" for i in range(9)), "cmuxUITests/A cmuxUITests/A"):
+        self.assertEqual(ui.build_request("hmuxUITests/A hmuxUITests/B/testC", HEAD, MERGE)["selectors"],
+                         ["hmuxUITests/A", "hmuxUITests/B/testC"])
+        for bad in ("", "--force", "hmuxUITests/A --runner=x", "hmuxTests/A", "hmuxUITests/A/b/c",
+                    "hmuxUITests/A;rm", " ".join(f"hmuxUITests/C{i}" for i in range(9)), "hmuxUITests/A hmuxUITests/A"):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 ui.build_request(bad, HEAD, MERGE)
         with self.assertRaises(ValueError):
-            ui.build_request("cmuxUITests/A", "main", MERGE)
+            ui.build_request("hmuxUITests/A", "main", MERGE)
 
     def test_the_trusted_side_revalidates_the_artifact(self) -> None:
-        good = {"head_sha": HEAD, "merge_sha": MERGE, "selectors": ["cmuxUITests/A"]}
-        self.assertEqual(ui.parse_request(json.dumps(good).encode(), HEAD)["selectors"], ["cmuxUITests/A"])
+        good = {"head_sha": HEAD, "merge_sha": MERGE, "selectors": ["hmuxUITests/A"]}
+        self.assertEqual(ui.parse_request(json.dumps(good).encode(), HEAD)["selectors"], ["hmuxUITests/A"])
         for bad in (
             {**good, "head_sha": "c" * 40},  # not the head GitHub reports for the run
             {**good, "selectors": ["--workflow-ref=evil"]},
-            {**good, "selectors": "cmuxUITests/A"},
+            {**good, "selectors": "hmuxUITests/A"},
             {**good, "merge_sha": "refs/heads/x"},
             [good],
         ):
@@ -108,23 +108,23 @@ class RequestTests(unittest.TestCase):
 
 class AwaitRequestTests(unittest.TestCase):
     def test_serves_a_same_repository_pull_request_once_its_request_lands(self) -> None:
-        request = {"head_sha": HEAD, "merge_sha": MERGE, "selectors": ["cmuxUITests/A"]}
+        request = {"head_sha": HEAD, "merge_sha": MERGE, "selectors": ["hmuxUITests/A"]}
         gh = FakeGitHub({
             RUN: [ci_run()],
-            FILES: [[{"filename": "Sources/x.swift"}, {"filename": "cmuxUITests/AUITests.swift"}]],
+            FILES: [[{"filename": "Sources/x.swift"}, {"filename": "hmuxUITests/AUITests.swift"}]],
             ARTIFACTS: [NO_ARTIFACT, NO_ARTIFACT, ARTIFACT],
         }, request)
         sleeps = []
         self.assertEqual(ui.await_request(gh, "100", "1", sleep=sleeps.append), request)
         self.assertEqual(len(sleeps), 2)
 
-    def test_returns_nothing_without_a_cmux_ui_tests_change(self) -> None:
+    def test_returns_nothing_without_a_hmux_ui_tests_change(self) -> None:
         gh = FakeGitHub({RUN: [ci_run()], FILES: [[{"filename": "Sources/x.swift"}]]})
         self.assertIsNone(ui.await_request(gh, "100", "1", sleep=self.fail))
         self.assertFalse(any("artifacts" in call for call in gh.calls))
 
-    def test_a_rename_out_of_cmux_ui_tests_still_counts(self) -> None:
-        gh = FakeGitHub({FILES: [[{"filename": "x.swift", "previous_filename": "cmuxUITests/x.swift"}]]})
+    def test_a_rename_out_of_hmux_ui_tests_still_counts(self) -> None:
+        gh = FakeGitHub({FILES: [[{"filename": "x.swift", "previous_filename": "hmuxUITests/x.swift"}]]})
         self.assertTrue(ui.touches_ui_tests(gh, [7]))
 
     def test_a_truncated_file_listing_waits_instead_of_skipping(self) -> None:
@@ -140,7 +140,7 @@ class AwaitRequestTests(unittest.TestCase):
                 self.assertTrue(ui.touches_ui_tests(gh, [7]))
 
     def test_refuses_forks_other_workflows_and_events(self) -> None:
-        for run in (ci_run(head_repository={"full_name": "someone/cmux"}), ci_run(path=".github/workflows/x.yml"),
+        for run in (ci_run(head_repository={"full_name": "someone/hmux"}), ci_run(path=".github/workflows/x.yml"),
                     ci_run(event="merge_group")):
             with self.subTest(run=run):
                 gh = FakeGitHub({RUN: [run]})
@@ -150,23 +150,23 @@ class AwaitRequestTests(unittest.TestCase):
     def test_stops_when_the_attempt_completes_without_a_request(self) -> None:
         gh = FakeGitHub({
             RUN: [ci_run(), ci_run(), ci_run(status="completed")],
-            FILES: [[{"filename": "cmuxUITests/AUITests.swift"}]],
+            FILES: [[{"filename": "hmuxUITests/AUITests.swift"}]],
             ARTIFACTS: [NO_ARTIFACT],
         })
         self.assertIsNone(ui.await_request(gh, "100", "1", sleep=lambda _: None))
 
     def test_a_request_whose_attempt_completed_is_not_dispatched(self) -> None:
         # ui-tests was cancelled or gave up, so nothing would read the verdict.
-        request = {"head_sha": HEAD, "merge_sha": "", "selectors": ["cmuxUITests/A"]}
+        request = {"head_sha": HEAD, "merge_sha": "", "selectors": ["hmuxUITests/A"]}
         gh = FakeGitHub({
             RUN: [ci_run(), ci_run(status="completed")],
-            FILES: [[{"filename": "cmuxUITests/AUITests.swift"}]],
+            FILES: [[{"filename": "hmuxUITests/AUITests.swift"}]],
             ARTIFACTS: [ARTIFACT],
         }, request)
         self.assertIsNone(ui.await_request(gh, "100", "1", sleep=self.fail))
 
     def test_a_malformed_request_fails_instead_of_dispatching(self) -> None:
-        gh = FakeGitHub({RUN: [ci_run()], FILES: [[{"filename": "cmuxUITests/A.swift"}]], ARTIFACTS: [ARTIFACT]},
+        gh = FakeGitHub({RUN: [ci_run()], FILES: [[{"filename": "hmuxUITests/A.swift"}]], ARTIFACTS: [ARTIFACT]},
                         {"head_sha": HEAD, "selectors": ["-x"]})
         with self.assertRaises(ValueError):
             ui.await_request(gh, "100", "1", sleep=self.fail)
@@ -366,7 +366,7 @@ NOW = dt.datetime(2026, 9, 28, 10, 30, tzinfo=dt.timezone.utc)
 
 def e2e_run(title=None, run_id=700):
     return {"id": run_id, "created_at": "2026-09-28T10:10:00Z", "html_url": f"https://x/{run_id}",
-            "display_title": title or f"cmuxUITests/A,cmuxUITests/B on glaeda-std-xcode-26.6 @ {MERGE} [abc]"}
+            "display_title": title or f"hmuxUITests/A,hmuxUITests/B on glaeda-std-xcode-26.6 @ {MERGE} [abc]"}
 
 
 def build_job(status="in_progress", runner="mini", steps=()):
@@ -383,13 +383,13 @@ class ProgressTests(unittest.TestCase):
 
     def progress(self, routes) -> "ui.Progress":
         gh = FakeGitHub(routes)
-        return ui.Progress(gh, "100", "1", ["cmuxUITests/A", "cmuxUITests/B"], [MERGE, HEAD],
+        return ui.Progress(gh, "100", "1", ["hmuxUITests/A", "hmuxUITests/B"], [MERGE, HEAD],
                            dt.datetime(2026, 9, 28, 9, 50, tzinfo=dt.timezone.utc), now=lambda: NOW)
 
     def test_reports_admission_until_the_test_run_appears_then_its_steps(self) -> None:
         admission = {"name": "macos / macOS compile admission", "status": "in_progress", "runner_name": "mini-7",
                      "started_at": "2026-09-28T10:27:00Z", "steps": [{"name": "Compile app-host test product", "status": "in_progress"}]}
-        other = e2e_run(title=f"cmuxUITests/A on glaeda-std-xcode-26.6 @ {MERGE} [x]", run_id=701)
+        other = e2e_run(title=f"hmuxUITests/A on glaeda-std-xcode-26.6 @ {MERGE} [x]", run_id=701)
         progress = self.progress({
             E2E_LIST: [{"workflow_runs": [other]}, {"workflow_runs": [other, e2e_run()]}],
             OWN_JOBS: [{"jobs": [admission]}],
@@ -451,7 +451,7 @@ class ProgressTests(unittest.TestCase):
         self.assertEqual(len(progress.gh.calls), 2)
 
     def test_matches_the_same_selectors_in_any_order_and_looks_again_after_a_run_ends(self) -> None:
-        swapped = e2e_run(title=f"cmuxUITests/B,cmuxUITests/A on glaeda-std-xcode-26.6 @ {HEAD} [abc]")
+        swapped = e2e_run(title=f"hmuxUITests/B,hmuxUITests/A on glaeda-std-xcode-26.6 @ {HEAD} [abc]")
         newer = e2e_run(run_id=702) | {"created_at": "2026-09-28T10:40:00Z"}
         progress = self.progress({
             E2E_LIST: [{"workflow_runs": [swapped]}, {"workflow_runs": [swapped, newer]}],
@@ -471,7 +471,7 @@ class ProgressTests(unittest.TestCase):
             E2E_LIST: [lambda: (_ for _ in ()).throw(subprocess.TimeoutExpired("gh", 120))],
         })
         self.assertEqual(ui.await_verdict(gh, "100", "1", sleep=lambda _: None,
-                                          selectors=["cmuxUITests/A"], revisions=[MERGE, HEAD]), 0)
+                                          selectors=["hmuxUITests/A"], revisions=[MERGE, HEAD]), 0)
         self.assertEqual(sum(call.startswith(E2E_LIST) for call in gh.calls), 1)
 
     def test_ci_passes_what_names_the_test_run(self) -> None:
@@ -525,11 +525,11 @@ class DispatchTests(unittest.TestCase):
     def test_request_command_writes_what_the_trusted_side_accepts(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory) / "request.json"
-            env = {"SELECTORS": "cmuxUITests/A", "HEAD_SHA": HEAD, "MERGE_SHA": MERGE, "PATH": "/usr/bin:/bin"}
+            env = {"SELECTORS": "hmuxUITests/A", "HEAD_SHA": HEAD, "MERGE_SHA": MERGE, "PATH": "/usr/bin:/bin"}
             subprocess.run([sys.executable, str(SCRIPT), "request", "--out", str(out)], env=env, check=True,
                            capture_output=True)
-            self.assertEqual(ui.parse_request(out.read_bytes(), HEAD)["selectors"], ["cmuxUITests/A"])
-            env["SELECTORS"] = "cmuxUITests/A --force"
+            self.assertEqual(ui.parse_request(out.read_bytes(), HEAD)["selectors"], ["hmuxUITests/A"])
+            env["SELECTORS"] = "hmuxUITests/A --force"
             result = subprocess.run([sys.executable, str(SCRIPT), "request", "--out", str(out)], env=env,
                                     capture_output=True, text=True)
             self.assertEqual(result.returncode, 1)
@@ -590,9 +590,9 @@ class FuzzRegressionPathTests(unittest.TestCase):
     def test_the_areas_the_repros_exercise(self) -> None:
         for path in (
             "dogfood/fuzz/README.md", "dogfood/fuzz/regressions/15346-narrow-window-side-panels.json",
-            "dogfood/fuzz/cmuxfuzz/runner.py", "scripts/fuzz", "vendor/bonsplit", "vendor/bonsplit/Sources/x.swift",
-            "Packages/macOS/CmuxPanes/Sources/CmuxPanes/x.swift", "Packages/macOS/CmuxSidebar/Package.swift",
-            "Sources/Sidebar/SidebarState.swift", "Sources/App/CmuxMainWindow.swift",
+            "dogfood/fuzz/hmuxfuzz/runner.py", "scripts/fuzz", "vendor/bonsplit", "vendor/bonsplit/Sources/x.swift",
+            "Packages/macOS/HmuxPanes/Sources/HmuxPanes/x.swift", "Packages/macOS/HmuxSidebar/Package.swift",
+            "Sources/Sidebar/SidebarState.swift", "Sources/App/HmuxMainWindow.swift",
             "Sources/App/MainWindowFrameReconciler.swift", "Sources/AppDelegate+WindowFramePolicy.swift",
             "Sources/Workspace+EqualizeSplitsSupport.swift", "Sources/Workspace+SplitPaneProvisionalGeometry.swift",
         ):
@@ -601,9 +601,9 @@ class FuzzRegressionPathTests(unittest.TestCase):
 
     def test_everything_else(self) -> None:
         for path in (
-            "Sources/Workspace.swift", "Sources/ContentView.swift", "Packages/macOS/CmuxSidebarGit/x.swift",
+            "Sources/Workspace.swift", "Sources/ContentView.swift", "Packages/macOS/HmuxSidebarGit/x.swift",
             "vendor/bonsplit-old/x", "scripts/fuzzy", "dogfood/fuzzing.md", "Sources/Panels/x.swift",
-            "Sources/Workspace+Split/x.swift", "cmuxTests/Sources/Sidebar/x.swift", "README.md",
+            "Sources/Workspace+Split/x.swift", "hmuxTests/Sources/Sidebar/x.swift", "README.md",
         ):
             with self.subTest(path=path):
                 self.assertFalse(ui.fuzz_regression_path(path))
@@ -633,17 +633,17 @@ class E2EFuzzRegressionsTests(unittest.TestCase):
         status, values, log = e2e_filter(ui.FUZZ_REGRESSIONS_SELECTOR)
         self.assertEqual(status, 0, log)
         self.assertEqual((values["target"], values["selectors"], values["count"], values["fuzz_regressions"]),
-                         ("cmuxUITests", "", "0", "true"))
-        status, values, log = e2e_filter(f"cmuxUITests/SidebarUITests,{ui.FUZZ_REGRESSIONS_SELECTOR}")
+                         ("hmuxUITests", "", "0", "true"))
+        status, values, log = e2e_filter(f"hmuxUITests/SidebarUITests,{ui.FUZZ_REGRESSIONS_SELECTOR}")
         self.assertEqual(status, 0, log)
         self.assertEqual((values["selectors"], values["count"], values["fuzz_regressions"], values["selector"]),
-                         ("cmuxUITests/SidebarUITests", "1", "true", "cmuxUITests/SidebarUITests"))
-        status, values, log = e2e_filter("cmuxUITests/SidebarUITests")
+                         ("hmuxUITests/SidebarUITests", "1", "true", "hmuxUITests/SidebarUITests"))
+        status, values, log = e2e_filter("hmuxUITests/SidebarUITests")
         self.assertEqual(status, 0, log)
         self.assertEqual((values["count"], values["fuzz_regressions"]), ("1", "false"))
 
-    def test_the_filter_job_refuses_a_repeat_or_a_mix_with_cmux_tests(self) -> None:
-        for bad in (f"{ui.FUZZ_REGRESSIONS_SELECTOR},FuzzRegressions", f"cmuxTests/A,{ui.FUZZ_REGRESSIONS_SELECTOR}"):
+    def test_the_filter_job_refuses_a_repeat_or_a_mix_with_hmux_tests(self) -> None:
+        for bad in (f"{ui.FUZZ_REGRESSIONS_SELECTOR},FuzzRegressions", f"hmuxTests/A,{ui.FUZZ_REGRESSIONS_SELECTOR}"):
             with self.subTest(bad=bad):
                 status, _, _ = e2e_filter(bad)
                 self.assertNotEqual(status, 0)

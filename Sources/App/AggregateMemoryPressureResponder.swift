@@ -1,5 +1,5 @@
 import Foundation
-import CmuxMemoryPressure
+import HmuxMemoryPressure
 
 /// Responds to complete aggregate metrics by scheduling only safe idle-agent
 /// hibernation while that same aggregate pressure remains observable.

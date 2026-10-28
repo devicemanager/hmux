@@ -1,5 +1,5 @@
 #!/bin/bash
-# End-to-end check of what a cmux mirror does to a shared tmux server, and what it leaves
+# End-to-end check of what a hmux mirror does to a shared tmux server, and what it leaves
 # behind when the app quits.
 #
 # The three things this is here to catch, all seen for real on a live host:
@@ -17,7 +17,7 @@ set -uo pipefail
 HOST="${1:?usage: verify-mirror-detach-flow.sh <host> [--tag TAG] [--broker NAME]}"
 shift || true
 TAG="fleet"
-# A broker declared under remoteTmux.brokers in cmux.json, when the host is reached through
+# A broker declared under remoteTmux.brokers in hmux.json, when the host is reached through
 # one. Empty means connect directly.
 BROKER=""
 while [ "$#" -gt 0 ]; do
@@ -29,10 +29,10 @@ while [ "$#" -gt 0 ]; do
 done
 
 REPO="$(cd "$(dirname "$0")/.." && pwd)"
-CLI="$REPO/scripts/cmux-debug-cli.sh"
+CLI="$REPO/scripts/hmux-debug-cli.sh"
 
-BUNDLE="com.cmuxterm.app.debug.$TAG"
-export CMUX_TAG="$TAG"
+BUNDLE="com.hmuxterm.app.debug.$TAG"
+export HMUX_TAG="$TAG"
 MASTER="/tmp/cm-$HOST"
 
 pass=0; fail=0
@@ -52,7 +52,7 @@ if ! ssh -o ControlPath="$MASTER" -O check "$HOST" >/dev/null 2>&1; then
   echo "no ssh master at $MASTER — open one first (this script stays read-only otherwise)" >&2
   exit 2
 fi
-if ! pgrep -f "cmux DEV $TAG.app/Contents/MacOS/cmux DEV" >/dev/null 2>&1; then
+if ! pgrep -f "hmux DEV $TAG.app/Contents/MacOS/hmux DEV" >/dev/null 2>&1; then
   echo "the '$TAG' app is not running; launch it first" >&2
   exit 2
 fi
@@ -89,10 +89,10 @@ sizes | sed 's/^/  /'
 echo "=== quitting the app, the way the close button does ==="
 osascript -e "tell application id \"$BUNDLE\" to quit" >/dev/null 2>&1
 for _ in $(seq 1 30); do
-  pgrep -f "cmux DEV $TAG.app/Contents/MacOS/cmux DEV" >/dev/null 2>&1 || break
+  pgrep -f "hmux DEV $TAG.app/Contents/MacOS/hmux DEV" >/dev/null 2>&1 || break
   sleep 1
 done
-check "the app exited" "0" "$(pgrep -f "cmux DEV $TAG.app/Contents/MacOS/cmux DEV" >/dev/null 2>&1 && echo 1 || echo 0)"
+check "the app exited" "0" "$(pgrep -f "hmux DEV $TAG.app/Contents/MacOS/hmux DEV" >/dev/null 2>&1 && echo 1 || echo 0)"
 
 # The server needs a moment to notice the detach.
 sleep 3

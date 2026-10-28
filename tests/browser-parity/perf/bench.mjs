@@ -1,20 +1,20 @@
 // Snapshot performance and output size on large pages, per tool.
 //
-//   node tests/browser-parity/perf/bench.mjs [--backend cmux-dev|cmux|reference-a|chrome]
+//   node tests/browser-parity/perf/bench.mjs [--backend hmux-dev|hmux|reference-a|chrome]
 //        [--pages stress|corpus|live|all|name,name] [--runs 5] [--label before]
 //
 // Backends:
-//   cmux-dev  the Resources/browser-repl runtime in this process on Playwright
+//   hmux-dev  the Resources/browser-repl runtime in this process on Playwright
 //             WebKit (lib/dev-driver.mjs).
-//   cmux      a tagged app through its CLI: PARITY_CMUX_CLI and
-//             CMUX_SOCKET_PATH, as run.mjs --backend cmux.
+//   hmux      a tagged app through its CLI: PARITY_HMUX_CLI and
+//             HMUX_SOCKET_PATH, as run.mjs --backend hmux.
 //   reference-a  reference A's REPL (PARITY_REFERENCE_A_CLI, lib/references.mjs),
 //             one one-shot call per page (never its exec command).
 //   chrome    headless Google Chrome with a throwaway profile: Playwright's
 //             AI snapshot (perf/chrome-refs.mjs).
 //
 // Every page gets one program: navigate, take `runs` full snapshots, change
-// one element and take one more (the diff), resolve a ref, and for cmux read
+// one element and take one more (the diff), resolve a ref, and for hmux read
 // the ref table sizes after 100 snapshots of a page that replaces content.
 // Results go to perf/results/<label>-<backend>.json; report.mjs renders them.
 import fs from "node:fs";
@@ -36,7 +36,7 @@ const opt = (name, fallback) => {
   const i = args.indexOf(`--${name}`);
   return i >= 0 ? args[i + 1] : fallback;
 };
-const backend = opt("backend", "cmux-dev");
+const backend = opt("backend", "hmux-dev");
 const runs = Number(opt("runs", 5));
 const label = opt("label", "run");
 const pageSet = opt("pages", "stress,corpus");
@@ -89,12 +89,12 @@ const MUTATE_FN = `() => {
   document.body.insertAdjacentHTML("afterbegin", "<p>perf change</p>");
   return "insert";
 }`;
-// As an expression for tools that evaluate strings; cmux passes the
+// As an expression for tools that evaluate strings; hmux passes the
 // function, which a page's Content Security Policy does not block.
 const MUTATE = `(${MUTATE_FN})()`;
 
-// The cmux program: runs in the REPL (cmux-dev in this process, or the app).
-function cmuxProgram(p) {
+// The hmux program: runs in the REPL (hmux-dev in this process, or the app).
+function hmuxProgram(p) {
   return `
 const __out = { name: ${JSON.stringify(p.name)}, runs: [] };
 try {
@@ -183,10 +183,10 @@ function runProcess(cmd, argv, { input, env, timeoutMs = 600_000 } = {}) {
 // ---------------------------------------------------------------------------
 // Backends
 
-async function cmuxDevBackend() {
+async function hmuxDevBackend() {
   const ns = loadRuntime();
   const browser = await createDevBrowser({ viewport: { width: 1280, height: 800 } });
-  const workDir = makeTestDir("perf-cmux-");
+  const workDir = makeTestDir("perf-hmux-");
   const session = () => {
     const lines = [];
     const driver = browser.driver();
@@ -212,7 +212,7 @@ async function cmuxDevBackend() {
       const s = session();
       try {
         const heap0 = process.memoryUsage().heapUsed;
-        const r = await s.eval(cmuxProgram(p));
+        const r = await s.eval(hmuxProgram(p));
         if (!r.ok) throw new Error(r.error);
         const out = parseMarked(r.text);
         out.hostHeapDelta = process.memoryUsage().heapUsed - heap0;
@@ -248,9 +248,9 @@ async function cmuxDevBackend() {
   };
 }
 
-function cmuxAppBackend() {
-  const cli = process.env.PARITY_CMUX_CLI;
-  if (!cli || !process.env.CMUX_SOCKET_PATH) throw new Error("cmux backend needs PARITY_CMUX_CLI and CMUX_SOCKET_PATH");
+function hmuxAppBackend() {
+  const cli = process.env.PARITY_HMUX_CLI;
+  if (!cli || !process.env.HMUX_SOCKET_PATH) throw new Error("hmux backend needs PARITY_HMUX_CLI and HMUX_SOCKET_PATH");
   const call = (code, session) => runProcess(cli, ["browser", "repl", ...(session ? ["--session", session] : []), "--timeout", "600000", "--max-output", "0", "--eval", "-"], { input: code });
   return {
     // A session per page, as the dev backend does: the first snapshot of a
@@ -258,7 +258,7 @@ function cmuxAppBackend() {
     async page(p) {
       const session = `perf-${process.pid}-${p.name}`;
       try {
-        const r = await call(cmuxProgram(p), session);
+        const r = await call(hmuxProgram(p), session);
         if (!r.out.includes(MARK)) throw new Error(`exit ${r.code} after ${r.ms}ms: ${(r.err || r.out).slice(-600)}`);
         return parseMarked(r.out);
       } finally {
@@ -366,7 +366,7 @@ function summarize(result) {
 
 async function main() {
   const servers = await startFixtureServers();
-  const make = { "cmux-dev": cmuxDevBackend, cmux: cmuxAppBackend, "reference-a": referenceABackend, chrome: chromeBackend }[backend];
+  const make = { "hmux-dev": hmuxDevBackend, hmux: hmuxAppBackend, "reference-a": referenceABackend, chrome: chromeBackend }[backend];
   if (!make) throw new Error(`unknown backend ${backend}`);
   const b = await make();
   const pages = selectPages(servers.origins);

@@ -34,13 +34,13 @@ export type AuthResolution = {
 export function recordAuthResolution(resolution: AuthResolution): void {
   const span = trace.getActiveSpan();
   if (!span) return;
-  span.setAttribute("cmux.auth.source", resolution.source);
-  span.setAttribute("cmux.auth.provider_called", resolution.providerCalled);
+  span.setAttribute("hmux.auth.source", resolution.source);
+  span.setAttribute("hmux.auth.provider_called", resolution.providerCalled);
   if (resolution.snapshotAgeMs !== undefined) {
-    span.setAttribute("cmux.auth.snapshot_age_ms", Math.max(0, Math.round(resolution.snapshotAgeMs)));
+    span.setAttribute("hmux.auth.snapshot_age_ms", Math.max(0, Math.round(resolution.snapshotAgeMs)));
   }
   if (resolution.localVerifyMiss !== undefined) {
-    span.setAttribute("cmux.auth.local_verify_miss", resolution.localVerifyMiss);
+    span.setAttribute("hmux.auth.local_verify_miss", resolution.localVerifyMiss);
   }
 }
 
@@ -51,5 +51,5 @@ export function recordAuthResolution(resolution: AuthResolution): void {
  */
 export function recordRegistrationNoOp(): void {
   const span = trace.getActiveSpan();
-  span?.setAttribute("cmux.devices.registration_no_op", true);
+  span?.setAttribute("hmux.devices.registration_no_op", true);
 }

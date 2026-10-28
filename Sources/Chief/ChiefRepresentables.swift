@@ -1,6 +1,6 @@
 import AppKit
-import CmuxFoundation
-import CmuxHomeCore
+import HmuxFoundation
+import HmuxHomeCore
 import SwiftUI
 
 /// Home's transcript in the content area: the window's one ``ChiefHomeView``.
@@ -22,7 +22,7 @@ struct ChiefHomeRepresentable: NSViewRepresentable {
     }
 
     func updateNSView(_ view: ChiefHomeView, context: Context) {
-        // Focus follows `cmuxChiefHomeDidActivate` (ChiefHomeView), first entry included.
+        // Focus follows `hmuxChiefHomeDidActivate` (ChiefHomeView), first entry included.
         view.isActive = isActive
     }
 
@@ -35,10 +35,10 @@ struct ChiefHomeRepresentable: NSViewRepresentable {
 
 /// Home's conversation list in the left sidebar, under the Chief row, while
 /// Home is selected. It sits on the sidebar's material and takes the
-/// sidebar's content appearance and the cmux accent.
+/// sidebar's content appearance and the hmux accent.
 struct ChiefConversationListRepresentable: NSViewRepresentable {
     let home: ChiefHomeView
-    let accent: CmuxAccentColor
+    let accent: HmuxAccentColor
 
     @Environment(\.colorScheme) private var colorScheme
 

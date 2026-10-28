@@ -104,7 +104,7 @@ export interface PushDeliveryServiceShape {
 }
 
 export class PushDeliveryService extends Context.Tag(
-  "cmux/PushDeliveryService",
+  "hmux/PushDeliveryService",
 )<PushDeliveryService, PushDeliveryServiceShape>() {}
 
 export interface PushDeliveryDependencies {

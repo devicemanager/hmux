@@ -1,5 +1,5 @@
-import CmuxNotifications
-import CmuxSettings
+import HmuxNotifications
+import HmuxSettings
 import Foundation
 
 /// Live-retargeting delivery and clear semantics for agent notifications
@@ -55,7 +55,7 @@ extension TerminalController {
             )
         }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "notification.sync.deliver workspace=\(target.tabId.uuidString.prefix(8)) surface=\(target.surfaceId?.uuidString.prefix(8) ?? "nil") claimedWorkspace=\(tabId.uuidString.prefix(8)) titleLen=\(title.count) subtitleLen=\(subtitle.count) bodyLen=\(body.count)"
         )
 #endif
@@ -99,14 +99,14 @@ extension TerminalNotificationStore {
             surfaceId: surfaceId
         ) else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "notification.queue.deliver.skip workspace=\(claimedTabId.uuidString.prefix(8)) surface=\(surfaceId?.uuidString.prefix(8) ?? "nil") reason=targetMissing titleLen=\(title.count) subtitleLen=\(subtitle.count) bodyLen=\(body.count)"
             )
 #endif
             return
         }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "notification.queue.deliver workspace=\(target.tabId.uuidString.prefix(8)) surface=\(target.surfaceId?.uuidString.prefix(8) ?? "nil") claimedWorkspace=\(claimedTabId.uuidString.prefix(8)) titleLen=\(title.count) subtitleLen=\(subtitle.count) bodyLen=\(body.count)"
         )
 #endif

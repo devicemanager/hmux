@@ -82,7 +82,7 @@ describe("Open Graph image discovery", () => {
   });
 
   test("serves a platform-neutral browser social card", async () => {
-    const advertisedUrl = browserOpenGraphImage("cmux Browser").url;
+    const advertisedUrl = browserOpenGraphImage("hmux Browser").url;
     const response = await getBrowserImage();
     const body = new Uint8Array(await response.arrayBuffer());
 
@@ -202,8 +202,8 @@ describe("Open Graph image discovery", () => {
   test("uses the crawlable localized image in Article structured data", () => {
     const article = articleSchema({
       locale: "ja",
-      path: "/blog/cmux-fork",
-      headline: "Introducing cmux Fork",
+      path: "/blog/hmux-fork",
+      headline: "Introducing hmux Fork",
       description: "Fork an agent conversation.",
       datePublished: "2026-07-14T00:00:00Z",
       authorType: "Person",

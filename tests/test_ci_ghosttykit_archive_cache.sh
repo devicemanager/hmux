@@ -108,7 +108,7 @@ run_download "$WORK/out6/GhosttyKit.xcframework"
 step="$(awk '/^  macos-compile-admission:/{job=1} job && /^  [a-z0-9-]+:$/ && !/macos-compile-admission/{job=0}
   job && /- name: Download pre-built GhosttyKit.xcframework/{grab=1; next}
   grab && /- name:/{grab=0} grab' "$WORKFLOW")"
-printf '%s\n' "$step" | grep -Fq "GHOSTTYKIT_ARCHIVE_CACHE_DIR: \${{ startsWith(env.CMUX_PRODUCT_RUNNER, 'glaeda-') && '/Users/Shared/cmux-build-fleet/ci/ghosttykit-archives' || '' }}" || {
+printf '%s\n' "$step" | grep -Fq "GHOSTTYKIT_ARCHIVE_CACHE_DIR: \${{ startsWith(env.HMUX_PRODUCT_RUNNER, 'glaeda-') && '/Users/Shared/hmux-build-fleet/ci/ghosttykit-archives' || '' }}" || {
   echo "FAIL: compile admission must pass the owned Mac's GhosttyKit archive cache"
   printf '%s\n' "$step"
   exit 1

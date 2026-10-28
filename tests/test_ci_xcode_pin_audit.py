@@ -22,9 +22,9 @@ class XcodePinAudit(unittest.TestCase):
             for app in (old, new):
                 (app / "Contents" / "Developer").mkdir(parents=True)
             with patch.object(audit, "version", side_effect=lambda app: "26.3" if app == old else "26.5"):
-                errors = audit.audit({"26.3", "26.6"}, {"CMUX_CI_XCODE_APP_PR": str(new)}, apps_dir)
+                errors = audit.audit({"26.3", "26.6"}, {"HMUX_CI_XCODE_APP_PR": str(new)}, apps_dir)
             self.assertIn("pool pin Xcode 26.6 is missing", errors)
-            self.assertIn(f"CMUX_CI_XCODE_APP_PR={new} requires Xcode 26.6; found 26.5", errors)
+            self.assertIn(f"HMUX_CI_XCODE_APP_PR={new} requires Xcode 26.6; found 26.5", errors)
 
     def test_accepts_symlinked_app_when_versions_match(self):
         with tempfile.TemporaryDirectory() as temporary:
@@ -36,7 +36,7 @@ class XcodePinAudit(unittest.TestCase):
             link = apps_dir / "Xcode_26.3.app"
             link.symlink_to(actual, target_is_directory=True)
             with patch.object(audit, "version", side_effect=lambda app: "26.6" if app == newer else "26.3"):
-                errors = audit.audit({"26.3", "26.6"}, {"CMUX_CI_XCODE_APP_PR": str(newer)}, apps_dir)
+                errors = audit.audit({"26.3", "26.6"}, {"HMUX_CI_XCODE_APP_PR": str(newer)}, apps_dir)
             self.assertEqual(errors, [])
 
     def test_reads_pool_pins_and_rejects_invalid_rows(self):

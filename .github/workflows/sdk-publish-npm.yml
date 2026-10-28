@@ -50,11 +50,11 @@ jobs:
         run: |
           set -euo pipefail
           if [[ "${GITHUB_REF_TYPE:-}" == "tag" ]]; then
-            [[ "$GITHUB_REF_NAME" =~ ^cmux-sdk-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
-              echo "tag must match cmux-sdk-vX.Y.Z" >&2
+            [[ "$GITHUB_REF_NAME" =~ ^hmux-sdk-v[0-9]+\.[0-9]+\.[0-9]+$ ]] || {
+              echo "tag must match hmux-sdk-vX.Y.Z" >&2
               exit 1
             }
-            version="${GITHUB_REF_NAME#cmux-sdk-v}"
+            version="${GITHUB_REF_NAME#hmux-sdk-v}"
             [[ "$DISPATCH_VERSION" == "$version" ]] || {
               echo "workflow_dispatch version $DISPATCH_VERSION does not match tag version $version" >&2
               exit 1
@@ -66,7 +66,7 @@ jobs:
               exit 1
             }
           fi
-          python3 cmux-tui/bindings/validate_release_version.py \
+          python3 hmux-tui/bindings/validate_release_version.py \
             --version "$version"
           python3 - "$version" <<'PY'
           import json
@@ -77,9 +77,9 @@ jobs:
           expected = sys.argv[1]
           root = pathlib.Path.cwd()
           versions = {
-              "typescript package.json": json.loads((root / "cmux-tui/bindings/typescript/package.json").read_text())["version"],
-              "python pyproject.toml": tomllib.loads((root / "cmux-tui/bindings/python/pyproject.toml").read_text())["project"]["version"],
-              "rust Cargo.toml": tomllib.loads((root / "cmux-tui/bindings/rust/Cargo.toml").read_text())["package"]["version"],
+              "typescript package.json": json.loads((root / "hmux-tui/bindings/typescript/package.json").read_text())["version"],
+              "python pyproject.toml": tomllib.loads((root / "hmux-tui/bindings/python/pyproject.toml").read_text())["project"]["version"],
+              "rust Cargo.toml": tomllib.loads((root / "hmux-tui/bindings/rust/Cargo.toml").read_text())["package"]["version"],
           }
           mismatches = {name: got for name, got in versions.items() if got != expected}
           if mismatches:
@@ -88,7 +88,7 @@ jobs:
               raise SystemExit(1)
           print(f"All package versions match {expected}")
           PY
-          python3 cmux-tui/bindings/check-versions.py \
+          python3 hmux-tui/bindings/check-versions.py \
             --published-only \
             --expected "$version"
           echo "version=$version" >> "$GITHUB_OUTPUT"
@@ -130,39 +130,39 @@ jobs:
         with:
           node-version: "22.14.0"
           cache: npm
-          cache-dependency-path: cmux-tui/bindings/typescript/package-lock.json
+          cache-dependency-path: hmux-tui/bindings/typescript/package-lock.json
 
       - name: Install TypeScript adapter dependencies
-        working-directory: cmux-tui/bindings/typescript
+        working-directory: hmux-tui/bindings/typescript
         run: |
           npm ci --no-audit --no-fund
           npm test
 
-      - name: Build cmux-tui server
-        working-directory: cmux-tui
-        run: cargo build -p cmux-tui --bin cmux-tui --locked
+      - name: Build hmux-tui server
+        working-directory: hmux-tui
+        run: cargo build -p hmux-tui --bin hmux-tui --locked
 
       - name: TypeScript SDK conformance
         run: |
           test "$(node -p 'typeof WebSocket')" = "function"
-          report="$RUNNER_TEMP/cmux-sdk-conformance-typescript.txt"
-          python3 cmux-tui/bindings/conformance/runner.py \
+          report="$RUNNER_TEMP/hmux-sdk-conformance-typescript.txt"
+          python3 hmux-tui/bindings/conformance/runner.py \
             --language typescript \
             --require typescript \
-            --cmux-tui-bin "$GITHUB_WORKSPACE/cmux-tui/target/debug/cmux-tui" |
+            --hmux-tui-bin "$GITHUB_WORKSPACE/hmux-tui/target/debug/hmux-tui" |
             tee "$report"
           grep -Eq '^PASS +typescript +live-creation-exit-restart-unix$' "$report"
           grep -Eq '^PASS +typescript +live-creation-exit-restart-websocket$' "$report"
 
       - name: Pack the validated npm artifact
         id: package
-        working-directory: cmux-tui/bindings/typescript
+        working-directory: hmux-tui/bindings/typescript
         run: |
           set -euo pipefail
-          mkdir -p "$RUNNER_TEMP/cmux-npm-dist"
-          npm pack --pack-destination "$RUNNER_TEMP/cmux-npm-dist"
+          mkdir -p "$RUNNER_TEMP/hmux-npm-dist"
+          npm pack --pack-destination "$RUNNER_TEMP/hmux-npm-dist"
           shopt -s nullglob
-          packages=("$RUNNER_TEMP"/cmux-npm-dist/*.tgz)
+          packages=("$RUNNER_TEMP"/hmux-npm-dist/*.tgz)
           [[ "${#packages[@]}" == 1 ]] || {
             echo "expected one validated npm artifact" >&2
             exit 1
@@ -175,6 +175,6 @@ jobs:
         id: upload
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          name: cmux-npm-dist-${{ github.run_attempt }}
-          path: ${{ runner.temp }}/cmux-npm-dist/*.tgz
+          name: hmux-npm-dist-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/hmux-npm-dist/*.tgz
           if-no-files-found: error

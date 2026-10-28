@@ -279,7 +279,7 @@ def test_setup_zig_ignores_non_run_mentions() -> None:
                 with:
                   version: ${{ steps.ghostty-zig-version.outputs.version }}
         """,
-        name="cmux-tui.yml",
+        name="hmux-tui.yml",
     )
 
     assert failures == [], failures
@@ -306,7 +306,7 @@ def test_setup_zig_resolver_must_execute_helper() -> None:
                 with:
                   version: ${{ steps.ghostty-zig-version.outputs.version }}
         """,
-        name="cmux-tui.yml",
+        name="hmux-tui.yml",
     )
 
     assert any(
@@ -354,7 +354,7 @@ def test_setup_zig_resolver_must_propagate_multiline_helper_failure() -> None:
                 with:
                   version: ${{ steps.ghostty-zig-version.outputs.version }}
         """,
-        name="cmux-tui.yml",
+        name="hmux-tui.yml",
     )
 
     assert any(

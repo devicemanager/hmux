@@ -2,19 +2,19 @@
 //
 // Every checkout entrypoint (the /pricing page, the in-app /app-pricing page,
 // the dashboard billing page, every "Upgrade" button in the Mac app) tags its
-// link with the `cmux_*` query parameters below. The checkout route reads
+// link with the `hmux_*` query parameters below. The checkout route reads
 // them, stores them as Stripe Checkout Session and Subscription metadata, and
-// PostHog receives them on `cmux_billing_checkout_started`, on the webhook
-// events (`cmux_billing_checkout_completed`, `cmux_billing_subscription_*`),
+// PostHog receives them on `hmux_billing_checkout_started`, on the webhook
+// events (`hmux_billing_checkout_completed`, `hmux_billing_subscription_*`),
 // and as first-paid person properties. Attribution is analytics only: nothing
 // here changes what gets sold or to whom, so unknown values are normalized,
 // never rejected.
-export const CHECKOUT_SOURCE_PARAM = "cmux_source";
-export const CHECKOUT_PLACEMENT_PARAM = "cmux_placement";
-export const CHECKOUT_CLIENT_PARAM = "cmux_client";
-export const CHECKOUT_CHANNEL_PARAM = "cmux_channel";
-export const CHECKOUT_APP_VERSION_PARAM = "cmux_app_version";
-export const CHECKOUT_APP_BUILD_PARAM = "cmux_app_build";
+export const CHECKOUT_SOURCE_PARAM = "hmux_source";
+export const CHECKOUT_PLACEMENT_PARAM = "hmux_placement";
+export const CHECKOUT_CLIENT_PARAM = "hmux_client";
+export const CHECKOUT_CHANNEL_PARAM = "hmux_channel";
+export const CHECKOUT_APP_VERSION_PARAM = "hmux_app_version";
+export const CHECKOUT_APP_BUILD_PARAM = "hmux_app_build";
 
 /** Query parameters an entrypoint may forward unchanged to the checkout URL. */
 export const CHECKOUT_ATTRIBUTION_PARAMS = [
@@ -155,14 +155,14 @@ export function checkoutAttributionFromRequest(input: {
 // Session and the Subscription, and the webhook reads them back so the paid
 // events carry the same attribution as the started event.
 const METADATA_KEYS = {
-  source: "cmuxSource",
-  placement: "cmuxPlacement",
-  client: "cmuxClient",
-  channel: "cmuxChannel",
-  appVersion: "cmuxAppVersion",
-  appBuild: "cmuxAppBuild",
-  referrerHost: "cmuxReferrerHost",
-  referrerPath: "cmuxReferrerPath",
+  source: "hmuxSource",
+  placement: "hmuxPlacement",
+  client: "hmuxClient",
+  channel: "hmuxChannel",
+  appVersion: "hmuxAppVersion",
+  appBuild: "hmuxAppBuild",
+  referrerHost: "hmuxReferrerHost",
+  referrerPath: "hmuxReferrerPath",
   utmSource: "utmSource",
   utmMedium: "utmMedium",
   utmCampaign: "utmCampaign",

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Launch-smoke the app inside a final, stapled DMG, in a job that holds no
 # secrets. The signing and notarization jobs defer these smokes
-# (CMUX_DEFER_LAUNCH_SMOKES=true) so no bundle code runs where a signing,
+# (HMUX_DEFER_LAUNCH_SMOKES=true) so no bundle code runs where a signing,
 # notarization or publishing credential exists.
 #
 # Usage: smoke-dmg.sh <dmg> <channel> [--expect-sha256 HEX] [--require-stapled-app | --stapled-app-fallback ID]
@@ -47,15 +47,15 @@ while [ "$#" -gt 0 ]; do
 done
 
 ROOT_DIR="$(cd "$(dirname "$0")/../.." && pwd)"
-HDIUTIL_TOOL="${CMUX_HDIUTIL_TOOL:-hdiutil}"
-SPCTL_TOOL="${CMUX_SPCTL_TOOL:-spctl}"
-XCRUN_TOOL="${CMUX_XCRUN_TOOL:-xcrun}"
-SMOKE_TOOL="${CMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"
-VERIFY_METADATA_TOOL="${CMUX_VERIFY_METADATA_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-channel-metadata.sh}"
-VERIFY_LICENSES_TOOL="${CMUX_VERIFY_LICENSES_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-licenses.sh}"
+HDIUTIL_TOOL="${HMUX_HDIUTIL_TOOL:-hdiutil}"
+SPCTL_TOOL="${HMUX_SPCTL_TOOL:-spctl}"
+XCRUN_TOOL="${HMUX_XCRUN_TOOL:-xcrun}"
+SMOKE_TOOL="${HMUX_SMOKE_TOOL:-$ROOT_DIR/scripts/smoke-launch-macos-app.sh}"
+VERIFY_METADATA_TOOL="${HMUX_VERIFY_METADATA_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-channel-metadata.sh}"
+VERIFY_LICENSES_TOOL="${HMUX_VERIFY_LICENSES_TOOL:-$ROOT_DIR/scripts/verify-app-bundle-licenses.sh}"
 # shellcheck source=lib/signing-runtime-guard.sh
 source "$ROOT_DIR/scripts/ci/lib/signing-runtime-guard.sh"
-cmux_signing_runtime_guard
+hmux_signing_runtime_guard
 
 [ -f "$DMG" ] || { echo "DMG not found: $DMG" >&2; exit 1; }
 actual="$(shasum -a 256 "$DMG" | awk '{print $1}')"
@@ -85,8 +85,8 @@ fi
 "$SPCTL_TOOL" -a -vv --type execute "$APP"
 SMOKE_LOG="$(mktemp)"
 # The app must not inherit the fd that carries the tested line.
-CMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$APP" 3>&- 4>&- 2>&1 | tee "$SMOKE_LOG"
-CMUX_SMOKE_DIRECT_EXEC=1 CMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$APP" 3>&- 4>&- 2>&1 | tee -a "$SMOKE_LOG"
+HMUX_SMOKE_ALLOW_UNSUPPORTED_GUI=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$APP" 3>&- 4>&- 2>&1 | tee "$SMOKE_LOG"
+HMUX_SMOKE_DIRECT_EXEC=1 HMUX_SMOKE_DEBUG_LOGS=1 "$SMOKE_TOOL" "$APP" 3>&- 4>&- 2>&1 | tee -a "$SMOKE_LOG"
 if grep -q '^SKIP: cannot smoke-launch' "$SMOKE_LOG"; then
   # The same policy the in-job smokes had: an x86_64 app on a runner without
   # Rosetta is an environment gap. The stapler, Gatekeeper, metadata and

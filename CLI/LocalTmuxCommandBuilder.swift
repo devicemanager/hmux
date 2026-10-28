@@ -13,10 +13,10 @@ struct LocalTmuxSessionNameValidator {
     }
 }
 
-/// Builds the only shell command cmux persists for local-tmux reattachment.
+/// Builds the only shell command hmux persists for local-tmux reattachment.
 struct LocalTmuxCommandBuilder {
-    static let restoreMarker = "CMUX_LOCAL_TMUX=1"
-    static let serverIdentityOption = "@cmux_local_server_id"
+    static let restoreMarker = "HMUX_LOCAL_TMUX=1"
+    static let serverIdentityOption = "@hmux_local_server_id"
     static let identityMismatchCommand = "run-shell false"
 
     let tmuxPath: String
@@ -53,7 +53,7 @@ struct LocalTmuxCommandBuilder {
             "-S", socketPath, "set-option", "-soq",
             Self.serverIdentityOption, candidate.uuidString.lowercased(),
             ";",
-            // The profile owns this private server. Keep it alive when cmux's
+            // The profile owns this private server. Keep it alive when hmux's
             // client disconnects even if the user's global tmux config enables
             // `exit-unattached`.
             "set-option", "-s", "exit-unattached", "off",

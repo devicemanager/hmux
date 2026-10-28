@@ -2,7 +2,7 @@
 """The Debug CLI is built once per CI run, by compile admission, which tests it.
 
 A separate cli-pipe-regressions.yml job used to restore packages, resolve, and
-build the Debug cmux-cli scheme on its own Mac for three Python CLI tests, while
+build the Debug hmux-cli scheme on its own Mac for three Python CLI tests, while
 compile admission built the same binary in the same run. These guards keep the
 CLI tests on admission's binary and keep a second CLI build from coming back.
 """
@@ -23,8 +23,8 @@ CLI_TESTS = (
     "tests/test_cli_config_doctor.py",
     "tests/test_cli_glaeda_execution.py",
 )
-# xcodebuild -scheme cmux-cli, not cmux-cli-tests (admission's CLI scheme).
-CLI_SCHEME_BUILD = re.compile(r"-scheme[ \t]+[\"']?cmux-cli(?![A-Za-z0-9_-])")
+# xcodebuild -scheme hmux-cli, not hmux-cli-tests (admission's CLI scheme).
+CLI_SCHEME_BUILD = re.compile(r"-scheme[ \t]+[\"']?hmux-cli(?![A-Za-z0-9_-])")
 
 sys.path.insert(0, str(ROOT / "scripts" / "ci"))
 import product_input_identity  # noqa: E402
@@ -47,7 +47,7 @@ def step_block(job: str, name: str) -> str:
 
 
 class CliLaneInAdmissionTests(unittest.TestCase):
-    def test_no_workflow_builds_the_cmux_cli_scheme(self):
+    def test_no_workflow_builds_the_hmux_cli_scheme(self):
         self.assertFalse((WORKFLOWS / "cli-pipe-regressions.yml").exists())
         for path in sorted(WORKFLOWS.glob("*.y*ml")):
             with self.subTest(workflow=path.name):
@@ -62,11 +62,11 @@ class CliLaneInAdmissionTests(unittest.TestCase):
                           "ci-status still needs a `cli` job")
 
     def test_every_product_profile_builds_the_cli_binary(self):
-        # Both profiles build cmux-cli-tests, whose host is the Debug cmux CLI
-        # at Build/Products/Debug/cmux; reused products restore to that path.
+        # Both profiles build hmux-cli-tests, whose host is the Debug hmux CLI
+        # at Build/Products/Debug/hmux; reused products restore to that path.
         for profile, schemes in product_input_identity.PRODUCT_PROFILES.items():
             with self.subTest(profile=profile):
-                self.assertIn("cmux-cli-tests", schemes)
+                self.assertIn("hmux-cli-tests", schemes)
 
     def test_admission_runs_for_every_cli_route(self):
         ci = (WORKFLOWS / "ci.yml").read_text(encoding="utf-8")
@@ -81,10 +81,10 @@ class CliLaneInAdmissionTests(unittest.TestCase):
         step = step_block(admission, SMOKE_STEP)
         # No `if:`: the step runs after a compile and after a product reuse.
         self.assertNotRegex(step, r"(?m)^        if:")
-        self.assertIn('"$CMUX_COMPILE_ADMISSION_DERIVED_DATA/Build/Products/Debug/cmux"', step)
+        self.assertIn('"$HMUX_COMPILE_ADMISSION_DERIVED_DATA/Build/Products/Debug/hmux"', step)
         for test in CLI_TESTS:
             with self.subTest(test=test):
-                line = rf"(?m)^ +CMUX_CLI_BIN=\"\$CLI_BIN\" python3 {re.escape(test)}$"
+                line = rf"(?m)^ +HMUX_CLI_BIN=\"\$CLI_BIN\" python3 {re.escape(test)}$"
                 self.assertIsNotNone(re.search(line, step), f"{SMOKE_STEP} does not run {test}")
 
 

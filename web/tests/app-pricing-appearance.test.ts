@@ -6,7 +6,7 @@ import {
 } from "../app/app-pricing/appearance";
 
 describe("app pricing contrast-adjusted accent", () => {
-  test("keeps cmux blue when it already clears the small-text threshold", () => {
+  test("keeps hmux blue when it already clears the small-text threshold", () => {
     expect(appPricingContrastAdjustedAccent("#0091ff", "#0a0a0a")).toBe(
       "#0091ff",
     );

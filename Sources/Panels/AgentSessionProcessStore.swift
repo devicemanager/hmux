@@ -1,6 +1,6 @@
 import Foundation
 import Darwin
-import CmuxSettings
+import HmuxSettings
 
 @MainActor
 final class AgentSessionProcessStore {
@@ -30,7 +30,7 @@ final class AgentSessionProcessStore {
                 provider: plan.provider
             )
             launchEnvironment["TMPDIR"] = scratchDirectory.path
-            launchEnvironment["CMUX_AGENT_ARTIFACT_ROOT"] = scratchDirectory.path
+            launchEnvironment["HMUX_AGENT_ARTIFACT_ROOT"] = scratchDirectory.path
         }
         let process = try AgentSessionOwnedProcessLauncher().prepare(
             plan: plan, workingDirectory: workingDirectory, environment: launchEnvironment
@@ -529,7 +529,7 @@ final class AgentSessionProcessStore {
         } catch {
             guard !Task.isCancelled else { return }
 #if DEBUG
-            cmuxDebugLog("agentSession.opencode.eventStream.failed error=\(error.localizedDescription)")
+            hmuxDebugLog("agentSession.opencode.eventStream.failed error=\(error.localizedDescription)")
 #endif
             await failStream()
         }

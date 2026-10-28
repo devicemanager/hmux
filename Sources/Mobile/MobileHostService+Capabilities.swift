@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxIrxTransport
+import HMUXMobileCore
+import HmuxIrxTransport
 import Foundation
 
 extension MobileHostService {
@@ -152,7 +152,7 @@ extension MobileHostService {
     nonisolated static let phonePushSettingsCapability = "phone_push.settings.v1"
     /// Authenticated request to enqueue a truthful, correlated test alert.
     nonisolated static let phonePushTestCapability = "phone_push.test.v1"
-    /// Read and mutate cmux's process-scoped idle-sleep assertion.
+    /// Read and mutate hmux's process-scoped idle-sleep assertion.
     nonisolated static let caffeineControlCapability = "caffeine.control.v1"
     nonisolated static let taskCreateCapability = "workspace.task_create.v1"
     nonisolated static let taskAttachmentCapability = "task.attachments.v1"
@@ -176,14 +176,14 @@ extension MobileHostService {
     /// data plane enforces.
     nonisolated static var mobileHostCapabilities: [String] {
         mobileHostCapabilities(
-            includingWorkspaceChanges: CmuxFeatureFlags.offMainEffectiveValue(
-                for: CmuxFeatureFlags.mobileWorkspaceChangesFlag
+            includingWorkspaceChanges: HmuxFeatureFlags.offMainEffectiveValue(
+                for: HmuxFeatureFlags.mobileWorkspaceChangesFlag
             ),
-            includingSimulator: CmuxFeatureFlags.offMainEffectiveValue(
-                for: CmuxFeatureFlags.simulatorFlag
+            includingSimulator: HmuxFeatureFlags.offMainEffectiveValue(
+                for: HmuxFeatureFlags.simulatorFlag
             ),
-            includingTaskComposer: CmuxFeatureFlags.offMainEffectiveValue(
-                for: CmuxFeatureFlags.mobileTaskComposerFlag
+            includingTaskComposer: HmuxFeatureFlags.offMainEffectiveValue(
+                for: HmuxFeatureFlags.mobileTaskComposerFlag
             ),
             // Managed policy only: under it every browser pane is closed, so
             // no browser affordance can work. A user-level disable keeps live
@@ -363,7 +363,7 @@ extension MobileHostService {
         #if DEBUG
         // Lets a dev Mac impersonate an older host while dogfooding the iOS update hint.
         let suppressed = Set(
-            (ProcessInfo.processInfo.environment["CMUX_DEBUG_SUPPRESS_MOBILE_CAPS"] ?? "")
+            (ProcessInfo.processInfo.environment["HMUX_DEBUG_SUPPRESS_MOBILE_CAPS"] ?? "")
                 .split(separator: ",")
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
                 .filter { !$0.isEmpty }

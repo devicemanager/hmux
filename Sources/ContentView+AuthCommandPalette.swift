@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxCommandPalette
+import HmuxCloud
+import HmuxCommandPalette
 import AppKit
 import Foundation
 
@@ -61,7 +61,7 @@ extension ContentView {
     func registerAuthCommandHandlers(_ registry: inout CommandPaletteHandlerRegistry) {
         registry.register(commandId: Self.commandPaletteAuthSignInCommandId) {
 #if DEBUG
-            cmuxDebugLog("palette.auth.signIn.invoke")
+            hmuxDebugLog("palette.auth.signIn.invoke")
 #endif
             guard let auth = AppDelegate.shared?.auth else {
                 NSSound.beep()
@@ -71,7 +71,7 @@ extension ContentView {
         }
         registry.register(commandId: Self.commandPaletteAuthSignOutCommandId) {
 #if DEBUG
-            cmuxDebugLog("palette.auth.signOut.invoke")
+            hmuxDebugLog("palette.auth.signOut.invoke")
 #endif
             guard let auth = AppDelegate.shared?.auth else {
                 NSSound.beep()

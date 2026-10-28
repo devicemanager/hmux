@@ -7,7 +7,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 from test_codex_feed_hooks import (
     test_pi_compacted_feed_accepts_single_item_ack,
     test_pi_compacted_feed_allows_brief_auth_delay,
@@ -57,8 +57,8 @@ let request = PiCompactedFeedEventExpander(
     surfaceId: "22222222-2222-2222-2222-222222222222"
 ).acknowledgedBatchRequest(from: [
     "session_id": "pi-expander-session",
-    "cmux_compacted_terminal_omitted_count": 1,
-    "cmux_compacted_terminal_events": summaries,
+    "hmux_compacted_terminal_omitted_count": 1,
+    "hmux_compacted_terminal_events": summaries,
 ])
 guard let request else {{ fatalError("expected compacted Feed batch request") }}
 let params = request.request["params"] as? [String: Any]
@@ -83,8 +83,8 @@ let relayRequest = PiCompactedFeedEventExpander(
     maximumRequestCount: 2
 ).acknowledgedBatchRequest(from: [
     "session_id": "pi-expander-session",
-    "cmux_compacted_terminal_omitted_count": 0,
-    "cmux_compacted_terminal_events": summaries,
+    "hmux_compacted_terminal_omitted_count": 0,
+    "hmux_compacted_terminal_events": summaries,
 ])
 guard let relayRequest else {{ fatalError("expected relay compacted Feed batch request") }}
 let relayParams = relayRequest.request["params"] as? [String: Any]
@@ -126,12 +126,12 @@ guard relayRequest.eventCount == 2,
 
 def main() -> int:
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
-    with tempfile.TemporaryDirectory(prefix="cmux-pi-compacted-feed-", dir="/tmp") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-pi-compacted-feed-", dir="/tmp") as td:
         root = Path(td)
         try:
             test_expander_preserves_newest_retained_summary(root)

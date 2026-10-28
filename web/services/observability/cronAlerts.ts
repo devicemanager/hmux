@@ -5,8 +5,8 @@ import { sendAlert, type AlertFetch, type AlertInput, type AlertResult } from ".
  * trace sampler used to keep 2 percent of them. This check reads the last
  * hour of traces from Axiom and pages once per run with the failing routes.
  *
- * Needs `CMUX_AXIOM_READ_TOKEN` (an Axiom API token with query access) and
- * optionally `CMUX_AXIOM_TRACES_DATASET`; without the token the check is
+ * Needs `HMUX_AXIOM_READ_TOKEN` (an Axiom API token with query access) and
+ * optionally `HMUX_AXIOM_TRACES_DATASET`; without the token the check is
  * reported as unconfigured rather than failing the cron.
  */
 export type CronAlertSummary = {
@@ -15,7 +15,7 @@ export type CronAlertSummary = {
   readonly failures: { readonly triggered: boolean; readonly count: number };
 };
 
-const DEFAULT_DATASET = "cmux-prod-otel-traces";
+const DEFAULT_DATASET = "hmux-prod-otel-traces";
 const WINDOW_MINUTES = 65;
 
 export async function runCronAlertChecks(options: {
@@ -26,12 +26,12 @@ export async function runCronAlertChecks(options: {
 } = {}): Promise<CronAlertSummary> {
   const env = options.env ?? process.env;
   const now = options.now ?? new Date();
-  const token = env.CMUX_AXIOM_READ_TOKEN?.trim();
+  const token = env.HMUX_AXIOM_READ_TOKEN?.trim();
   const send = options.sendAlert ?? ((input) => sendAlert(input, { fetch: options.fetch, env }));
   if (!token) {
     return { configured: false, queryFailed: false, failures: { triggered: false, count: 0 } };
   }
-  const dataset = env.CMUX_AXIOM_TRACES_DATASET?.trim() || DEFAULT_DATASET;
+  const dataset = env.HMUX_AXIOM_TRACES_DATASET?.trim() || DEFAULT_DATASET;
   const doFetch: AlertFetch = options.fetch ?? fetch;
   const apl = [
     `['${dataset}']`,

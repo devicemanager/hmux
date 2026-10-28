@@ -3,9 +3,9 @@
 // the full sheet as Google exports it (not the first HTML chunk).
 (function (root) {
   "use strict";
-  const S = root.CmuxBrowserRepl && root.CmuxBrowserRepl.sites;
+  const S = root.HmuxBrowserRepl && root.HmuxBrowserRepl.sites;
   if (!S) return;
-  const { URL } = root.CmuxBrowserRepl.core;
+  const { URL } = root.HmuxBrowserRepl.core;
   S.register(
     "googleSheets",
     (t) => {

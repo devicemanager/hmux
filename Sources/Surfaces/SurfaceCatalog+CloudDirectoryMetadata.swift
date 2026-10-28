@@ -1,5 +1,5 @@
-import CmuxFoundation
-import CmuxSurfaceCatalogModel
+import HmuxFoundation
+import HmuxSurfaceCatalogModel
 import Foundation
 
 extension SurfaceCatalog {

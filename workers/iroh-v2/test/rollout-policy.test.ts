@@ -8,17 +8,17 @@ const bindings = [
   {name: "TEAM_CONTROL", type: "durable_object_namespace", class_name: "TeamControl", namespace_id: "existing-team"},
   {name: "USER_USAGE", type: "durable_object_namespace", class_name: "UserUsage", namespace_id: "existing-user"},
   {name: "ACCOUNT_CONTROL", type: "durable_object_namespace", class_name: "AccountControl", namespace_id: "existing-account"},
-  {name: "CMUX_SOURCE_REVISION", type: "plain_text", text: revision},
+  {name: "HMUX_SOURCE_REVISION", type: "plain_text", text: revision},
 ];
 const version = (id = "current"): Parameters<typeof assertPublished>[0] => ({id, resources: {bindings: structuredClone(bindings), script_runtime: {migration_tag: config.migrations.at(-1).tag}}});
 const health = () => ({schemaId: "health.v1", environment: "production", sourceRevision: revision,
-  rules: ["cmux.mac-peer-inbound.v1"], storage: {...candidateStorage}});
+  rules: ["hmux.mac-peer-inbound.v1"], storage: {...candidateStorage}});
 
 test("only canonical production and staging targets are deployable", () => {
   assertTarget(config, "production");
   assertTarget(config, "staging");
   const alias = structuredClone(config);
-  alias.env.production.name = "cmux-iroh-v2";
+  alias.env.production.name = "hmux-iroh-v2";
   expect(() => assertTarget(alias, "production")).toThrow("noncanonical");
   alias.env.production = {...config.env.production, durable_objects: {bindings: []}};
   expect(() => assertTarget(alias, "production")).toThrow("Durable Object");

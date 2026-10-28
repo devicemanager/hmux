@@ -1,4 +1,4 @@
-import CmuxAgentChat
+import HmuxAgentChat
 import Dispatch
 import Foundation
 
@@ -55,7 +55,7 @@ actor AgentSessionSearchTranscripts: AgentSessionTranscriptStore {
     /// Blocking JSONL reads use a utility queue because detached tasks share
     /// Swift's cooperative pool with unrelated app work.
     private let readQueue = DispatchQueue(
-        label: "com.cmux.global-search.agent-transcript-reads",
+        label: "com.hmux.global-search.agent-transcript-reads",
         qos: .utility
     )
 

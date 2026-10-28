@@ -19,11 +19,11 @@ import {
 
 const usage = "Usage: audit-vercel-env.mjs [web-dir] <staging|production> [--strict]";
 const { webDir, target, project, rest } = parseWebDirAndTarget(process.argv.slice(2), usage);
-const strict = rest.includes("--strict") || parseBoolean(process.env.CMUX_CLOUD_VM_ENV_AUDIT_STRICT, false);
+const strict = rest.includes("--strict") || parseBoolean(process.env.HMUX_CLOUD_VM_ENV_AUDIT_STRICT, false);
 
 try {
   // `target` selects which Vercel PROJECT to audit (staging and production
-  // are separate projects: cmux-staging vs cmux). Each project's runtime env
+  // are separate projects: hmux-staging vs hmux). Each project's runtime env
   // is its own "production" environment, so the project object fully encodes
   // the target and the loader needs nothing else.
   const { env: pulledEnv, metadata } = loadTargetEnvWithMetadata(project);
@@ -55,7 +55,7 @@ try {
   const legacyCloudVmPresent = legacyCloudVmEnvKeys.filter((key) => configuredKeys.has(key));
 
   // Key presence alone missed the 2026-08-26 outage (stale
-  // CMUX_VM_DEFAULT_PROVIDER value): provider VALUES must exist in the image
+  // HMUX_VM_DEFAULT_PROVIDER value): provider VALUES must exist in the image
   // manifest the same deploy ships, for the env-selected default AND for the
   // code default that shipped clients hardcode.
   const manifest = JSON.parse(

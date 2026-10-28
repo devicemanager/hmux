@@ -3,12 +3,12 @@
     "Sources/Chief/*",
     "Sources/*Chief*",
     "Sources/Sidebar/SidebarChiefHomeRow.swift",
-    "Packages/macOS/CmuxChief/*",
-    "Packages/Shared/CmuxMessagesLab/*"
+    "Packages/macOS/HmuxChief/*",
+    "Packages/Shared/HmuxMessagesLab/*"
   ],
   "launch": {
     "env": {
-      "CMUX_CHIEF_BRAIN": "scripted"
+      "HMUX_CHIEF_BRAIN": "scripted"
     }
   },
   "steps": [

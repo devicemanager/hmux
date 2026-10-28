@@ -45,13 +45,13 @@ def main() -> int:
         git(ghostty, "commit", "-q", "-m", "ghostty")
         pinned = git(ghostty, "rev-parse", "HEAD")
 
-        repo = scratch / "cmux"
+        repo = scratch / "hmux"
         repo.mkdir()
         git(repo, "init", "-q", "-b", "main")
         git(repo, "update-index", "--add", "--cacheinfo", f"160000,{pinned},ghostty")
-        (repo / "README").write_text("cmux\n")
+        (repo / "README").write_text("hmux\n")
         git(repo, "add", "README")
-        git(repo, "commit", "-q", "-m", "cmux")
+        git(repo, "commit", "-q", "-m", "hmux")
 
         # A clone without submodules is what a fleet step's worktree looks like.
         step = scratch / "step"

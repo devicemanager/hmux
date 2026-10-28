@@ -17,7 +17,7 @@ and vendor/bonsplit) at STORE/spm-scratch/<fingerprint>/<package path>, outside
 the workspace, where the clean cannot reach. The fingerprint hashes
 `xcodebuild -version`, `swift -version`, the workspace path and the vendored
 bonsplit commit, so a build against another bonsplit is never reused, and another
-Xcode (an upgrade, or a pull request's CMUX_CI_XCODE_APP) or another runner's
+Xcode (an upgrade, or a pull request's HMUX_CI_XCODE_APP) or another runner's
 workspace never reuses modules another compiler built for another path.
 
 A scratch directory in use is held by a shared flock on
@@ -48,7 +48,7 @@ import signal
 import subprocess
 import sys
 
-DEFAULT_STORE = Path("/Users/Shared/cmux-build-fleet/ci")
+DEFAULT_STORE = Path("/Users/Shared/hmux-build-fleet/ci")
 # For the whole mini: a full package selection keeps about 8 GiB per toolchain and workspace.
 MAX_BYTES = 24 * 1024**3
 SCRATCH = "spm-scratch"

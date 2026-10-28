@@ -1,11 +1,11 @@
-import CmuxChief
-import CmuxSettings
+import HmuxChief
+import HmuxSettings
 import Foundation
 
 /// Builds each Chief turn's ``ChiefTurnContext``: the system prompt from
 /// ``ChiefSystemPrompt`` and ``ChiefMemory`` (with the app's workspaces),
 /// the user's home directory as the working directory, the environment that
-/// lets the brain drive this cmux through its bundled CLI, and a
+/// lets the brain drive this hmux through its bundled CLI, and a
 /// `<memory-update>` preamble when memory changed since the brain session
 /// started (``ChiefMemoryFreshness``; the prompt only reaches a brain then).
 struct ChiefTurnContextBuilder: Sendable {
@@ -25,7 +25,7 @@ struct ChiefTurnContextBuilder: Sendable {
             userDisplayName: Self.userDisplayName,
             harness: settings.resolvedHarness.displayName,
             model: settings.resolvedModel,
-            cmuxVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
+            hmuxVersion: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String,
             socketPath: socketPath,
             chiefHomePath: input.home.root.path,
             workspacesSummary: workspaces,
@@ -42,7 +42,7 @@ struct ChiefTurnContextBuilder: Sendable {
     }
 
     /// Every window's workspaces as ``ChiefWorkspacesSummary`` lines, with
-    /// the refs the `cmux` CLI accepts; nil before session restore settles
+    /// the refs the `hmux` CLI accepts; nil before session restore settles
     /// (the window tree is not safe to walk until then) or with no workspace.
     @MainActor
     static func workspacesSummary() -> String? {
@@ -93,32 +93,32 @@ struct ChiefTurnContextBuilder: Sendable {
         TerminalController.shared.activeSocketPath(preferredPath: SocketControlSettings.socketPath())
     }
 
-    /// The bundled `cmux` CLI, nil when the build has none.
+    /// The bundled `hmux` CLI, nil when the build has none.
     static var bundledCLI: URL? {
-        guard let url = Bundle.main.resourceURL?.appendingPathComponent("bin/cmux"),
+        guard let url = Bundle.main.resourceURL?.appendingPathComponent("bin/hmux"),
               FileManager.default.isExecutableFile(atPath: url.path) else { return nil }
         return url
     }
 
     /// What the brain's process gets on top of the app's environment (the
-    /// brain's launcher already drops `CMUX_SURFACE_ID` and
-    /// `CMUX_WORKSPACE_ID`): this app's socket, its bundled CLI first on
-    /// `PATH`, the Chief home for `cmux chief memory`, and `CMUX_CHIEF_TURN`, so a note the
+    /// brain's launcher already drops `HMUX_SURFACE_ID` and
+    /// `HMUX_WORKSPACE_ID`): this app's socket, its bundled CLI first on
+    /// `PATH`, the Chief home for `hmux chief memory`, and `HMUX_CHIEF_TURN`, so a note the
     /// turn saves is recorded as saved by Chief (source `chief`), one typed in a terminal as
-    /// saved from the command line (`cli`). `CMUX_SOCKET`, an
+    /// saved from the command line (`cli`). `HMUX_SOCKET`, an
     /// older override the CLI also honors, is pinned to the same socket so an
-    /// inherited value never points the Chief at another cmux.
+    /// inherited value never points the Chief at another hmux.
     static func environment(socketPath: String, home: ChiefHome,
                             base: [String: String] = ProcessInfo.processInfo.environment) -> [String: String] {
         var environment: [String: String] = [
-            "CMUX_SOCKET_PATH": socketPath,
+            "HMUX_SOCKET_PATH": socketPath,
             ChiefHome.environmentKey: home.root.path,
-            "CMUX_CHIEF_TURN": "1",
+            "HMUX_CHIEF_TURN": "1",
         ]
-        if base["CMUX_SOCKET"] != nil { environment["CMUX_SOCKET"] = socketPath }
+        if base["HMUX_SOCKET"] != nil { environment["HMUX_SOCKET"] = socketPath }
         var path = (base["PATH"] ?? "/usr/bin:/bin:/usr/sbin:/sbin").split(separator: ":").map(String.init)
         if let cli = bundledCLI {
-            environment["CMUX_BUNDLED_CLI_PATH"] = cli.path
+            environment["HMUX_BUNDLED_CLI_PATH"] = cli.path
             let bin = cli.deletingLastPathComponent().path
             path.removeAll { $0 == bin }
             path.insert(bin, at: 0)

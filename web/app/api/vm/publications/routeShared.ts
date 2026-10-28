@@ -70,11 +70,11 @@ export async function withAuthedPublicationApiRoute(
   return withApiRouteSpan(
     request,
     publicationRouteTemplate(request),
-    { "cmux.subsystem": "vm-cloud", "cmux.vm.operation": "publication" },
+    { "hmux.subsystem": "vm-cloud", "hmux.vm.operation": "publication" },
     async (span) => {
       const response = await authedPublicationRoute(request, handler, run, verify);
       const code = response.headers.get(VM_ERROR_CODE_HEADER);
-      if (code) span.setAttribute("cmux.vm.error_code", code);
+      if (code) span.setAttribute("hmux.vm.error_code", code);
       return response;
     },
   );
@@ -159,14 +159,14 @@ export async function requestedPublicationTeamId(request: Request): Promise<stri
 export function publicationForwardAuthConfig(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): PublicationForwardAuthConfig | undefined {
-  const serviceToken = environment.CMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET?.trim();
+  const serviceToken = environment.HMUX_VM_PUBLICATION_FORWARD_AUTH_SECRET?.trim();
   if (!serviceToken) return undefined;
   // A development stack the edge cannot reach sets a separate public origin
   // for the edge alone; browsers still sign in on the auth origin. A set but
   // malformed override fails closed instead of falling back.
-  const override = environment.CMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN?.trim();
+  const override = environment.HMUX_VM_PUBLICATION_FORWARD_AUTH_ORIGIN?.trim();
   const origin = normalizePublicationAuthOrigin(
-    override || environment.CMUX_VM_PUBLICATION_AUTH_ORIGIN,
+    override || environment.HMUX_VM_PUBLICATION_AUTH_ORIGIN,
   );
   return {
     url: origin ? new URL("/api/freestyle/forward-auth", origin).href : "",
@@ -178,7 +178,7 @@ export function publicationForwardAuthConfig(
 export function publicationGeneratedDomain(
   environment: Readonly<Record<string, string | undefined>> = process.env,
 ): string {
-  return environment.CMUX_VM_PUBLICATION_GENERATED_DOMAIN?.trim() ||
+  return environment.HMUX_VM_PUBLICATION_GENERATED_DOMAIN?.trim() ||
     DEFAULT_GENERATED_PUBLICATION_DOMAIN;
 }
 
@@ -217,8 +217,8 @@ export function publicationErrorResponse(error: unknown, language?: string | nul
         ? "That Cloud VM was not found in your account or is not publishable."
         : "That Cloud VM publication was not found in your account.",
       action: error.resource === "vm"
-        ? "Run `cmux cloud list`, then publish a running machine by its id."
-        : "Run `cmux cloud domains list` and retry with a listed publication id.",
+        ? "Run `hmux cloud list`, then publish a running machine by its id."
+        : "Run `hmux cloud domains list` and retry with a listed publication id.",
       reason: error.resource,
     }, 404);
   }
@@ -284,14 +284,14 @@ export function publicationErrorResponse(error: unknown, language?: string | nul
     return publicationErrorJson({
       error: "vm_publication_provider_unavailable",
       message: "The Cloud VM domain service could not complete this change.",
-      action: "Run `cmux cloud domains list`; verify any provisioning entry, or retry if none exists. Contact support if it keeps failing.",
+      action: "Run `hmux cloud domains list`; verify any provisioning entry, or retry if none exists. Contact support if it keeps failing.",
       retryable: true,
     }, 502);
   }
   if (error instanceof PublicationInvariantError || error instanceof PublicationDatabaseError) {
     return publicationErrorJson({
       error: "vm_publication_internal_error",
-      message: "CMUX could not finish the Cloud VM domain change safely.",
+      message: "HMUX could not finish the Cloud VM domain change safely.",
       action: "Retry once. If it keeps failing, contact support with the publication id.",
     }, 500);
   }
@@ -320,7 +320,7 @@ export function reportTlsRuleLimit(operation: string, now: number = Date.now()):
   reportError(
     new Error("Cloud VM provider TLS rule limit reached"),
     { subsystem: "cloud_vm_alerts", code: "provider_tls_rule_limit", operation, operatorFault: true },
-    { fingerprint: ["cmux-vm-provider-tls-rule-limit", "freestyle"] },
+    { fingerprint: ["hmux-vm-provider-tls-rule-limit", "freestyle"] },
   );
   return true;
 }
@@ -358,13 +358,13 @@ function inputErrorCopy(error: PublicationInputError, language?: string | null):
       };
     case "generated_hostname_reserved":
       return {
-        message: "That hostname is inside a zone CMUX generates names from and cannot be selected with --domain.",
+        message: "That hostname is inside a zone HMUX generates names from and cannot be selected with --domain.",
         action: "Omit --domain for a generated name, or pass a hostname on a domain you own.",
       };
     case "verification_not_required":
       return {
-        message: "That name is a generated CMUX domain, which never needs verification.",
-        action: "Verify a domain you own instead, or run `cmux cloud domains list` to see the publication's state.",
+        message: "That name is a generated HMUX domain, which never needs verification.",
+        action: "Verify a domain you own instead, or run `hmux cloud domains list` to see the publication's state.",
       };
     case "invalid_port":
       return {
@@ -376,11 +376,11 @@ function inputErrorCopy(error: PublicationInputError, language?: string | null):
     case "team_required":
       return {
         message: "Team access requires a team id.",
-        action: "Pass --team with one of your CMUX team ids.",
+        action: "Pass --team with one of your HMUX team ids.",
       };
     case "team_not_allowed":
       return {
-        message: "You are not a member of the requested CMUX team.",
+        message: "You are not a member of the requested HMUX team.",
         action: "Choose one of your current teams or use personal access.",
       };
     case "invalid_access_mode":
@@ -398,17 +398,17 @@ function configurationCopy(reason: PublicationConfigurationError["reason"]): {
   switch (reason) {
     case "invalid_auth_origin":
       return {
-        message: "This CMUX deployment has no valid sign-in origin for protected Cloud VM domains.",
+        message: "This HMUX deployment has no valid sign-in origin for protected Cloud VM domains.",
         action: "Ask the deployment operator to configure protected domains.",
       };
     case "invalid_generated_domain":
       return {
-        message: "This CMUX deployment has no valid zone for generated Cloud VM domains.",
+        message: "This HMUX deployment has no valid zone for generated Cloud VM domains.",
         action: "Pass --domain with a hostname you own, or ask the deployment operator to configure the generated zone.",
       };
     case "forward_auth_not_configured":
       return {
-        message: "Protected Cloud VM domains are not configured on this CMUX deployment.",
+        message: "Protected Cloud VM domains are not configured on this HMUX deployment.",
         action: "Ask the deployment operator to enable protected domains.",
       };
   }
@@ -426,13 +426,13 @@ function conflictCopy(reason: PublicationConflictError["reason"], language?: str
       return { ...publicationApiCopy("organization_slug", language), status: 409 };
     case "hostname_taken":
       return {
-        message: "That hostname is already reserved by a CMUX account.",
+        message: "That hostname is already reserved by a HMUX account.",
         action: "Choose another hostname, or remove the existing publication first.",
         status: 409,
       };
     case "domain_in_use":
       return {
-        message: "That hostname already has a live CMUX publication.",
+        message: "That hostname already has a live HMUX publication.",
         action: "Update or remove the existing publication instead of creating a second one.",
         status: 409,
       };
@@ -455,7 +455,7 @@ function conflictCopy(reason: PublicationConflictError["reason"], language?: str
     case "publication_not_active":
       return {
         message: "That publication is not ready for this change.",
-        action: "Run `cmux cloud domains verify <id>` until it is active, then retry.",
+        action: "Run `hmux cloud domains verify <id>` until it is active, then retry.",
         status: 409,
       };
     case "invalid_access_policy":

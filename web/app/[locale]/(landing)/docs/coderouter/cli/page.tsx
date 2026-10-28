@@ -59,34 +59,34 @@ cr doctor
 cr upgrade`}</CodeBlock>
       <p>{t("crAddCodex")}</p>
 
-      <DocsHeading level={2} id="cmux-coderouter">{t("cmuxTitle")}</DocsHeading>
-      <p>{t("cmuxDesc")}</p>
-      <CodeBlock lang="bash">{`cmux coderouter status
-cmux coderouter machines
-cmux coderouter claude list
-cmux coderouter claude add oauth-token [--label <name>] [--stdin]
-cmux coderouter claude add api-key [--label <name>] [--stdin]
-cmux coderouter claude add bedrock [--label <name>] [--region <region>] [--model <claude-id>=<bedrock-id>]...
-cmux coderouter claude disable <account>
-cmux coderouter claude enable <account>
-cmux coderouter claude remove <account>
-cmux coderouter claude clear
-cmux coderouter agent <claude|codex|opencode|pi> [vm-agent-options] -- <prompt>`}</CodeBlock>
+      <DocsHeading level={2} id="hmux-coderouter">{t("hmuxTitle")}</DocsHeading>
+      <p>{t("hmuxDesc")}</p>
+      <CodeBlock lang="bash">{`hmux coderouter status
+hmux coderouter machines
+hmux coderouter claude list
+hmux coderouter claude add oauth-token [--label <name>] [--stdin]
+hmux coderouter claude add api-key [--label <name>] [--stdin]
+hmux coderouter claude add bedrock [--label <name>] [--region <region>] [--model <claude-id>=<bedrock-id>]...
+hmux coderouter claude disable <account>
+hmux coderouter claude enable <account>
+hmux coderouter claude remove <account>
+hmux coderouter claude clear
+hmux coderouter agent <claude|codex|opencode|pi> [vm-agent-options] -- <prompt>`}</CodeBlock>
       <p>{t("claudeAddDesc")}</p>
       <p>{t("accountSelector")}</p>
       <p>{t("passthroughDesc")}</p>
-      <CodeBlock lang="bash">{`cmux cr accounts
-cmux coderouter login`}</CodeBlock>
+      <CodeBlock lang="bash">{`hmux cr accounts
+hmux coderouter login`}</CodeBlock>
 
       <DocsHeading level={2} id="inside-a-machine">{t("guestTitle")}</DocsHeading>
       <p>{t("guestDesc")}</p>
-      <CodeBlock lang="bash">{`cmux auth status [--json]
-cmux coderouter status [--json]
-cmux coderouter usage [--json|--tsv] [--days <n>]
-cmux coderouter models
-cmux coderouter accounts [--json]
-cmux coderouter org current [--json]
-cmux coderouter agent <claude|codex|opencode|pi> [--timeout <seconds>] [args...]
+      <CodeBlock lang="bash">{`hmux auth status [--json]
+hmux coderouter status [--json]
+hmux coderouter usage [--json|--tsv] [--days <n>]
+hmux coderouter models
+hmux coderouter accounts [--json]
+hmux coderouter org current [--json]
+hmux coderouter agent <claude|codex|opencode|pi> [--timeout <seconds>] [args...]
 cr use [own|team|auto] [claude|codex|opencode] [--json]   # your own sign-in or the team's accounts`}</CodeBlock>
 
       <DocsHeading level={2} id="troubleshooting">{t("troubleTitle")}</DocsHeading>
@@ -119,7 +119,7 @@ cr use [own|team|auto] [claude|codex|opencode] [--json]   # your own sign-in or 
       <DocsHeading level={2} id="diagnose">{t("diagnoseTitle")}</DocsHeading>
       <p>{t("diagnoseDesc")}</p>
       <CodeBlock lang="bash">{`cr doctor
-cmux coderouter status`}</CodeBlock>
+hmux coderouter status`}</CodeBlock>
 
       <DocsHeading level={2} id="get-help">{t("supportTitle")}</DocsHeading>
       <p>{t("supportDesc")}</p>

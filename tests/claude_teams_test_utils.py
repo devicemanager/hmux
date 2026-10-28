@@ -15,7 +15,7 @@ import uuid
 from pathlib import Path
 from typing import BinaryIO
 
-FIXTURE_SOCKET_PASSWORD = "cmux-cli-fixture-password"
+FIXTURE_SOCKET_PASSWORD = "hmux-cli-fixture-password"
 
 
 def accept_fixture_socket_authentication(line: bytes, stream: BinaryIO) -> bool:
@@ -42,10 +42,10 @@ def stable_tmux_numeric_id(raw: str) -> str:
 
 
 def strip_capability_envelope(decoded_line: str) -> str | None:
-    """Unwrap the `_cmux_capability_v1 <token> <payload>` envelope the shell integration
-    adds when CMUX_SOCKET_CAPABILITY is set, so a test run from inside a cmux terminal
+    """Unwrap the `_hmux_capability_v1 <token> <payload>` envelope the shell integration
+    adds when HMUX_SOCKET_CAPABILITY is set, so a test run from inside a hmux terminal
     sees the same payload CI does. Returns None for a malformed envelope."""
-    capability_prefix = "_cmux_capability_v1 "
+    capability_prefix = "_hmux_capability_v1 "
     if not decoded_line.startswith(capability_prefix):
         return decoded_line
     envelope_parts = decoded_line.split(" ", 2)
@@ -64,23 +64,23 @@ def socket_request_method(request: object) -> str | None:
     return method if isinstance(method, str) and method else None
 
 
-def resolve_cmux_cli() -> str:
-    explicit = os.environ.get("CMUX_CLI_BIN") or os.environ.get("CMUX_CLI")
+def resolve_hmux_cli() -> str:
+    explicit = os.environ.get("HMUX_CLI_BIN") or os.environ.get("HMUX_CLI")
     if explicit and os.path.exists(explicit) and os.access(explicit, os.X_OK):
         return explicit
 
-    recorded_path = Path("/tmp/cmux-last-cli-path")
+    recorded_path = Path("/tmp/hmux-last-cli-path")
     if recorded_path.exists():
         candidate = recorded_path.read_text(encoding="utf-8").strip()
         if candidate and os.path.exists(candidate) and os.access(candidate, os.X_OK):
             return candidate
 
     raise RuntimeError(
-        "Unable to find cmux CLI binary. Set CMUX_CLI_BIN or run ./scripts/reload.sh --tag <tag> first."
+        "Unable to find hmux CLI binary. Set HMUX_CLI_BIN or run ./scripts/reload.sh --tag <tag> first."
     )
 
 
-class _FocusedCmuxHandler(socketserver.StreamRequestHandler):
+class _FocusedHmuxHandler(socketserver.StreamRequestHandler):
     def handle(self) -> None:
         while line := self.rfile.readline():
             unwrapped = strip_capability_envelope(line.decode("utf-8").rstrip("\r\n"))
@@ -137,7 +137,7 @@ class _FocusedCmuxHandler(socketserver.StreamRequestHandler):
             self.wfile.flush()
 
 
-class _FocusedCmuxServer(socketserver.ThreadingUnixStreamServer):
+class _FocusedHmuxServer(socketserver.ThreadingUnixStreamServer):
     allow_reuse_address = True
 
     def __init__(
@@ -163,11 +163,11 @@ class _FocusedCmuxServer(socketserver.ThreadingUnixStreamServer):
         self.identified_pane_id = identified_pane_id
         self.identified_surface_id = identified_surface_id
         self.stale_workspace_id = stale_workspace_id
-        super().__init__(socket_path, _FocusedCmuxHandler)
+        super().__init__(socket_path, _FocusedHmuxHandler)
 
 
 @contextmanager
-def focused_cmux_server(
+def focused_hmux_server(
     socket_path_hint: Path,
     *,
     workspace_id: str = FOCUSED_WORKSPACE_ID,
@@ -189,10 +189,10 @@ def focused_cmux_server(
     """
     del socket_path_hint
     with tempfile.TemporaryDirectory(
-        prefix="cmux-focused-socket-", dir="/tmp"
+        prefix="hmux-focused-socket-", dir="/tmp"
     ) as socket_dir:
-        socket_path = Path(socket_dir) / "cmux.sock"
-        server = _FocusedCmuxServer(
+        socket_path = Path(socket_dir) / "hmux.sock"
+        server = _FocusedHmuxServer(
             str(socket_path),
             workspace_id,
             window_id,
@@ -218,7 +218,7 @@ def focused_cmux_server(
 def canonical_managed_claude_shim_root() -> Iterator[tuple[str, Path]]:
     """Create an isolated per-surface shim at the app-owned temporary root."""
     surface_id = str(uuid.uuid4())
-    parent = Path(tempfile.gettempdir()) / "cmux-cli-shims"
+    parent = Path(tempfile.gettempdir()) / "hmux-cli-shims"
     root = parent / surface_id
     root.mkdir(parents=True)
     try:
@@ -235,7 +235,7 @@ def install_pi_extension(config_dir: Path, cli_path: str | None = None) -> Path:
     env = os.environ.copy()
     env["PI_CODING_AGENT_DIR"] = str(config_dir)
     install = subprocess.run(
-        [cli_path or resolve_cmux_cli(), "hooks", "pi", "install", "--yes"],
+        [cli_path or resolve_hmux_cli(), "hooks", "pi", "install", "--yes"],
         capture_output=True,
         text=True,
         check=False,
@@ -247,10 +247,10 @@ def install_pi_extension(config_dir: Path, cli_path: str | None = None) -> Path:
             f"exit={install.returncode} stdout={install.stdout!r} stderr={install.stderr!r}"
         )
 
-    extension_path = config_dir / "extensions" / "cmux-session.ts"
+    extension_path = config_dir / "extensions" / "hmux-session.ts"
     if not extension_path.exists():
         raise RuntimeError(f"expected extension at {extension_path}")
-    override = os.environ.get("CMUX_TEST_PI_EXTENSION_OVERRIDE")
+    override = os.environ.get("HMUX_TEST_PI_EXTENSION_OVERRIDE")
     if override:
         shutil.copyfile(override, extension_path)
     return extension_path

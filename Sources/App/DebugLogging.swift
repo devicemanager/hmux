@@ -1,8 +1,8 @@
 #if DEBUG
-import CMUXDebugLog
+import HMUXDebugLog
 
 @inline(__always)
-func cmuxDebugLog(_ message: @autoclosure () -> String) {
-    CMUXDebugLog.logDebugEvent(message())
+func hmuxDebugLog(_ message: @autoclosure () -> String) {
+    HMUXDebugLog.logDebugEvent(message())
 }
 #endif

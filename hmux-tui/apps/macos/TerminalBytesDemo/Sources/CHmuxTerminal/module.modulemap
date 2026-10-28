@@ -1,0 +1,4 @@
+module CHmuxTerminal [system] {
+    header "../../../../../crates/hmux-terminal-client/include/hmux_terminal_client.h"
+    export *
+}

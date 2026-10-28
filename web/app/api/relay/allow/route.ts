@@ -4,7 +4,7 @@
 // `true`; every other status or body is a deny. JSON `true`/`false` IS that
 // exact text, so the body stays JSON without breaking the contract.
 //
-// Auth is a shared-secret HMAC (CMUX_RELAY_ALLOW_HMAC_SECRET_B64): base64url
+// Auth is a shared-secret HMAC (HMUX_RELAY_ALLOW_HMAC_SECRET_B64): base64url
 // HMAC-SHA256 over the raw request body. Upstream iroh-relay sends an empty
 // body and can only attach a static bearer token, so the fleet is configured
 // with `bearer_token = relayAllowSignature(secret, empty)`; a relay-side
@@ -51,7 +51,7 @@ export interface RelayAllowDeps {
 }
 
 const productionDeps: RelayAllowDeps = {
-  secretBase64: () => env.CMUX_RELAY_ALLOW_HMAC_SECRET_B64,
+  secretBase64: () => env.HMUX_RELAY_ALLOW_HMAC_SECRET_B64,
   admission: relayAllowAdmission,
 };
 
@@ -164,7 +164,7 @@ function admissionResponse(admission: RelayAllowAdmission): Response {
   // X-Iroh-NodeId header of an otherwise identical POST, so any intermediary
   // HTTP cache would serve one endpoint's decision to a different endpoint,
   // and a cached allow would outlive revocation. Decision caching keyed by
-  // endpoint id belongs to the relay consumer (CMUX_RELAY_ALLOW_CACHE_SECS
+  // endpoint id belongs to the relay consumer (HMUX_RELAY_ALLOW_CACHE_SECS
   // in manaflow-ai/cmux-relay).
   return new Response(allow ? "true" : "false", {
     status: 200,

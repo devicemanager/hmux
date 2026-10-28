@@ -10,7 +10,7 @@ import tempfile
 import threading
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 from fake_socket_env import cli_environment, unwrap_capability
 
 
@@ -18,7 +18,7 @@ PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 SURFACE_ID = "22222222-2222-4222-8222-222222222222"
 
 
-class FakeCmuxState:
+class FakeHmuxState:
     def __init__(self) -> None:
         self.calls: list[tuple[str, dict[str, object]]] = []
         self.enveloped = 0
@@ -81,7 +81,7 @@ class FakeCmuxState:
         raise RuntimeError(f"unexpected method: {method}")
 
 
-class FakeCmuxHandler(socketserver.StreamRequestHandler):
+class FakeHmuxHandler(socketserver.StreamRequestHandler):
     def handle(self) -> None:
         while line := self.rfile.readline():
             raw = line.decode("utf-8")
@@ -107,7 +107,7 @@ class FakeCmuxHandler(socketserver.StreamRequestHandler):
 
 class ThreadedUnixServer(socketserver.ThreadingMixIn, socketserver.UnixStreamServer):
     daemon_threads = True
-    state: FakeCmuxState
+    state: FakeHmuxState
 
 
 def run_cli(cli: str, socket_path: str, arguments: list[str], **overrides: str) -> str:
@@ -152,7 +152,7 @@ def assert_cli_fails(
 
 
 def assert_last_call(
-    state: FakeCmuxState,
+    state: FakeHmuxState,
     expected_method: str,
     expected_profile: str | None,
 ) -> None:
@@ -166,11 +166,11 @@ def assert_last_call(
 
 
 def main() -> int:
-    cli = resolve_cmux_cli()
-    with tempfile.TemporaryDirectory(prefix="cmux-browser-profile-") as temporary:
-        socket_path = str(Path(temporary) / "cmux.sock")
-        state = FakeCmuxState()
-        server = ThreadedUnixServer(socket_path, FakeCmuxHandler)
+    cli = resolve_hmux_cli()
+    with tempfile.TemporaryDirectory(prefix="hmux-browser-profile-") as temporary:
+        socket_path = str(Path(temporary) / "hmux.sock")
+        state = FakeHmuxState()
+        server = ThreadedUnixServer(socket_path, FakeHmuxHandler)
         server.state = state
         thread = threading.Thread(target=server.serve_forever, daemon=True)
         thread.start()
@@ -179,7 +179,7 @@ def main() -> int:
                 cli,
                 socket_path,
                 ["browser", "open", "https://example.com", "--profile", "Work Profile"],
-                CMUX_SOCKET_CAPABILITY="synthetic-test-capability",
+                HMUX_SOCKET_CAPABILITY="synthetic-test-capability",
             )
             assert_last_call(state, "browser.open_split", "Work Profile")
             if state.enveloped == 0:

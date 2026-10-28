@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import SwiftUI
 
 /// Hosts ``CloudVPNSetupView`` inside a workspace pane and observes VPN state

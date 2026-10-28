@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import Foundation
 
 @MainActor
@@ -11,7 +11,7 @@ extension RemoteTmuxController {
     /// a slow link plus a session-heavy host legitimately takes longer, and dropping a mirror that
     /// was about to work is worse than waiting. A test driving a stream that will never publish
     /// anything pays the full 15 seconds per case, so DEBUG builds honor
-    /// `CMUX_REMOTE_TMUX_TOPOLOGY_BARRIER_SECONDS`; see ``RemoteTmuxDebugTimers``.
+    /// `HMUX_REMOTE_TMUX_TOPOLOGY_BARRIER_SECONDS`; see ``RemoteTmuxDebugTimers``.
     nonisolated static let mirrorTopologyBarrierSeconds: Double = {
         #if DEBUG
         if let override = RemoteTmuxDebugTimers.topologyBarrierSeconds { return override }
@@ -143,7 +143,7 @@ extension RemoteTmuxController {
         }
         // Reaching control mode is not the same as having something to mirror: a stream can send
         // the DCS intro, the attach block, and then `%exit` without ever publishing a window.
-        // Measured on a real host, and cmux reported that RPC as success, leaving an empty
+        // Measured on a real host, and hmux reported that RPC as success, leaving an empty
         // workspace whose only surface was a local placeholder shell. So a mirror only counts once
         // its connection has published a topology.
         let readiness = await mirrorsWithPublishedTopology(
@@ -252,7 +252,7 @@ extension RemoteTmuxController {
             case .loggingIn:
                 return .unreachable(
                     "the connection to \(destination) was still starting after \(seconds) seconds "
-                        + "of silence, before tmux answered; cmux stopped it")
+                        + "of silence, before tmux answered; hmux stopped it")
             case .inTmux:
                 return .unreachable(
                     "tmux on \(destination) answered and then sent nothing for \(seconds) seconds")
@@ -338,7 +338,7 @@ extension RemoteTmuxController {
                 // still around to be asked; the caller decides what to report long after it is gone.
                 if entry.connection.isAwaitingCredentials { awaitingCredentials = true }
                 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "remote-tmux: mirror for \(entry.connection.sessionName) published no topology; dropping it")
                 #endif
                 detach(host: host, sessionName: entry.connection.sessionName)
@@ -428,9 +428,9 @@ extension RemoteTmuxController {
     /// `sshArgv` is ``RemoteTmuxHost/interactiveAuthInvocation()``: under a tty it
     /// authenticates, opens the shared ControlMaster, runs a trivial remote `true`, and
     /// exits. Once the master is live the parked reconnect multiplexes over it with no
-    /// further prompt. This is the same invocation the `cmux ssh-tmux` CLI runs when the
+    /// further prompt. This is the same invocation the `hmux ssh-tmux` CLI runs when the
     /// initial attach reports ``RemoteTmuxAttachOutcome/authRequired(sshArgv:)``; a
-    /// reconnect has no CLI in the loop, so cmux runs it in a workspace instead.
+    /// reconnect has no CLI in the loop, so hmux runs it in a workspace instead.
     ///
     /// Idempotent per host: a host with several mirrored sessions loses one control
     /// stream per session, and each would otherwise open its own login terminal racing
@@ -445,7 +445,7 @@ extension RemoteTmuxController {
             return false
         }
         let key = host.connectionHash
-        // A socket-driven attach is in flight: its caller (the `cmux ssh-tmux` CLI) receives
+        // A socket-driven attach is in flight: its caller (the `hmux ssh-tmux` CLI) receives
         // `.authRequired` and runs the login in the user's own terminal. Opening the in-app
         // sign-in tab too would race two ssh processes for one security key — measured: the
         // tab's ssh grabbed the FIDO2 device and the CLI's fell through to a passcode prompt.
@@ -534,13 +534,13 @@ extension RemoteTmuxController {
     }
 
     /// Releases a host's login offer because a mirror is connected again, and closes the
-    /// login workspace cmux opened for it.
+    /// login workspace hmux opened for it.
     ///
     /// Closing is what keeps a flapping host from collecting tabs. The alternative —
     /// releasing the slot but leaving the pane — means the next drop cannot see the pane
-    /// that is already on screen and opens another, once per flap. cmux opened this
+    /// that is already on screen and opens another, once per flap. hmux opened this
     /// workspace by itself for one purpose, and the reconnect proves that purpose is
-    /// served, so cmux is the right owner to close it. A login the *user* dismissed is a
+    /// served, so hmux is the right owner to close it. A login the *user* dismissed is a
     /// different case and is already handled by the wait loop.
     func noteMirrorConnected(host: RemoteTmuxHost) {
         let key = host.connectionHash
@@ -553,7 +553,7 @@ extension RemoteTmuxController {
         if loginOffers.hasOffer(host: key) {
             Self.logger.info("reconnect-auth: \(host.connectionHash, privacy: .private) reconnected; offer released")
             // Clear the offer BEFORE closing the workspace. `TabManager.closeWorkspace` reports
-            // every login workspace to `noteLoginWorkspaceClosed`, which cannot tell cmux's own
+            // every login workspace to `noteLoginWorkspaceClosed`, which cannot tell hmux's own
             // close from the user's: with the offer still present it takes the decline path on a
             // successful reconnect and logs a dismissal that never happened. Clearing first makes
             // that re-entry inert instead of relying on the call below to undo it.
@@ -585,7 +585,7 @@ extension RemoteTmuxController {
               !sessionMirrors.values.contains(where: { $0.host.connectionHash == key }) else { return }
         // Release before closing, for the same reason as `noteMirrorConnected`: the close path
         // re-enters `noteLoginWorkspaceClosed`, and an offer still present sends it down the
-        // decline path for a workspace cmux is retiring itself.
+        // decline path for a workspace hmux is retiring itself.
         if let offer = loginOffers.openedWorkspace(host: key) {
             loginOffers.abandon(host: key, generation: offer.generation)
             closeLoginWorkspace(offer.workspace)
@@ -613,7 +613,7 @@ extension RemoteTmuxController {
               let tab = manager.tabs.first(where: { $0.id == workspace }) else { return }
         // `closeWorkspace` refuses to close the last tab in a window, so a login that ended up
         // alone in its own window could not be closed at all: the offer cleared while the obsolete
-        // sign-in shell stayed on screen, and cmux opened it, so cmux has to be able to remove it.
+        // sign-in shell stayed on screen, and hmux opened it, so hmux has to be able to remove it.
         // Discarding the window is the equivalent action when the login *is* the window.
         if manager.tabs.count <= 1, let windowId = appDelegate.windowId(for: manager) {
             appDelegate.discardMainWindowWithoutClosedHistory(windowId: windowId)
@@ -690,7 +690,7 @@ extension RemoteTmuxController {
     ///   there is nothing to authenticate for;
     /// - the user closed the login without finishing it, so nothing will arrive — the
     ///   connection goes back to retrying, and a later failure offers a fresh login. Left
-    ///   parked instead, that host would have no route back short of restarting cmux.
+    ///   parked instead, that host would have no route back short of restarting hmux.
     ///
     /// The wait ends on an event, so there is no interval to tune and no dead time behind one.
     private func awaitAuthenticationThenResume(host: RemoteTmuxHost) {
@@ -714,7 +714,7 @@ extension RemoteTmuxController {
                 }
             }
             // Edge-driven, not polled. Completing the login is the user opening the shared ssh
-            // master, and opening it creates the socket at cmux's own ControlPath — so the
+            // master, and opening it creates the socket at hmux's own ControlPath — so the
             // filesystem already reports the exact moment being waited for. `FileWatcher` watches
             // the path's parent directory too, which is what makes creation (not just change)
             // visible, and this socket does not exist yet when the wait starts.
@@ -782,7 +782,7 @@ extension RemoteTmuxController {
         }
     }
 
-    /// The user closed a login cmux opened, which is a decline.
+    /// The user closed a login hmux opened, which is a decline.
     ///
     /// Called from the close path rather than noticed by the waiter: a closed tab produces no
     /// filesystem or protocol event, so this is the only edge for it. Retrying resumes quietly so
@@ -837,7 +837,7 @@ extension RemoteTmuxController {
     /// shell with the command's *first* program — so with the ssh invocation written at
     /// the top level, everything after it (the result message, and the interactive shell
     /// that keeps the pane alive) is unreachable. The pane would then die the instant ssh
-    /// exits, on success and on failure alike, and cmux closes a workspace whose child
+    /// exits, on success and on failure alike, and hmux closes a workspace whose child
     /// exited: the login tab appears and vanishes in well under a second, taking the
     /// reason with it. Wrapping means `exec -l` replaces bash with `sh`, which then runs
     /// the payload to completion.
@@ -865,7 +865,7 @@ extension RemoteTmuxController {
         let banner = RemoteTmuxHost.shellSingleQuoted("+ \(quoted)")
         let payload =
             "printf '%s\\n' \(banner); "
-            + "CMUX_REMOTE_TMUX_AUTH=1 \(quoted) && printf '%s\\n' \(ok) || printf '%s\\n' \(failed); exec \(shell) -i"
+            + "HMUX_REMOTE_TMUX_AUTH=1 \(quoted) && printf '%s\\n' \(ok) || printf '%s\\n' \(failed); exec \(shell) -i"
         return "/bin/sh -c \(RemoteTmuxHost.shellSingleQuoted(payload))"
     }
 

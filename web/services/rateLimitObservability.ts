@@ -58,7 +58,7 @@ export class RateLimitRuleReporter {
   private async run(input: AlertInput, key: string): Promise<void> {
     const result = await this.claim(key);
     if (result === "unavailable") {
-      console.error("cmux.rate_limit.alert_dedupe_unavailable", {
+      console.error("hmux.rate_limit.alert_dedupe_unavailable", {
         route: input.route,
         reason: input.reason,
       });
@@ -70,7 +70,7 @@ export class RateLimitRuleReporter {
       { subsystem: "rate_limit", route: input.route, reason: input.reason },
       {
         level: "warning",
-        fingerprint: ["cmux-rate-limit-rule-missing", input.route],
+        fingerprint: ["hmux-rate-limit-rule-missing", input.route],
         tags: { subsystem: "rate_limit", route: input.route, reason: input.reason },
       },
     );

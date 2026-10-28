@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxCloudMachines
+import HmuxCloud
+import HmuxCloudMachines
 import Foundation
 
 /// Adapts the shared deletion owner to the destroy request, local workspaces, and panes.
@@ -24,7 +24,7 @@ final class MachineDeleteCoordinator {
     private var accessDidEndObserver: NSObjectProtocol?
 
     /// - Parameters:
-    ///   - notificationCenter: Where `.cmuxCloudVMAccessDidEnd` is posted.
+    ///   - notificationCenter: Where `.hmuxCloudVMAccessDidEnd` is posted.
     ///   - destroyMachine: Sends the provider destroy request.
     ///   - didHide: Detaches the machine's local presentations: when a delete begins,
     ///     and when a create cleanup's request starts.
@@ -39,7 +39,7 @@ final class MachineDeleteCoordinator {
             // reads as already deleted while the machine keeps running.
             try await VMClient.shared.destroy(
                 id: $0,
-                teamID: CmuxTuiSurfaceProviderRegistry.shared.ownerTeamID(forMachineID: $0)
+                teamID: HmuxTuiSurfaceProviderRegistry.shared.ownerTeamID(forMachineID: $0)
             )
         },
         didHide: @escaping @MainActor (String) -> Void = { MachineDeleteCoordinator.detachLocalPresentations(of: $0) },
@@ -51,7 +51,7 @@ final class MachineDeleteCoordinator {
         self.didRetire = didRetire
         self.didRestore = didRestore
         accessDidEndObserver = notificationCenter.addObserver(
-            forName: .cmuxCloudVMAccessDidEnd, object: nil, queue: .main
+            forName: .hmuxCloudVMAccessDidEnd, object: nil, queue: .main
         ) { [weak self] _ in
             MainActor.assumeIsolated { self?.endAccount() }
         }
@@ -116,7 +116,7 @@ final class MachineDeleteCoordinator {
     ///   - closeWorkspaces: Closes the machine's local workspaces whole.
     ///   - closePanes: Closes the machine's URL-backed panes.
     ///   - republishSocketReads: Refreshes what socket reads answer. Closing a
-    ///     background workspace posts no topology notification, and `cmux vm rm`
+    ///     background workspace posts no topology notification, and `hmux vm rm`
     ///     reaches the delete through a worker-lane `vm.destroy` call, which never
     ///     refreshes them.
     static func detachLocalPresentations(
@@ -152,7 +152,7 @@ final class MachineDeleteCoordinator {
     }
 
     /// Destroys the machine for the `vm.destroy` socket method, which every
-    /// entrypoint's `cmux vm rm` reaches. A repeated call joins the request in
+    /// entrypoint's `hmux vm rm` reaches. A repeated call joins the request in
     /// flight, and a confirmed deletion answers without another request.
     /// - Parameter machineID: The exact provider machine identifier.
     /// - Returns: True when the provider no longer knew the machine.
@@ -187,7 +187,7 @@ final class MachineDeleteCoordinator {
         return try await task.value
     }
 
-    /// Restores a machine whose `cmux vm rm` process exited before its destroy
+    /// Restores a machine whose `hmux vm rm` process exited before its destroy
     /// request reported an outcome, such as a CLI that never reached the socket.
     /// The launcher presents the failure.
     /// - Parameter machineID: The machine the process was deleting.

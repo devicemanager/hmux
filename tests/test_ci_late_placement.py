@@ -118,7 +118,7 @@ class Decide(unittest.TestCase):
                                                     "cli-regressions-3")})
 
     def test_a_changed_suites_run_moves_its_one_worker(self):
-        env = dict(FULL, FULL_SUITE="false", UNIT_SUITE="true", UNIT_SELECTORS="cmuxTests/FooTests")
+        env = dict(FULL, FULL_SUITE="false", UNIT_SUITE="true", UNIT_SELECTORS="hmuxTests/FooTests")
         self.assertEqual(late.decide(env, roots(idle=4))[0], {"shard-8": ROOT_STD})
 
     def test_a_compile_only_run_has_nothing_after_admission(self):

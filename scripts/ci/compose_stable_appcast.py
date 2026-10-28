@@ -6,7 +6,7 @@ arm64 and x86_64 DMGs next to the universal one, that feed carries all three
 items at one version, ordered so each installed Sparkle picks the right one:
 
 1. universal, with `sparkle:minimumUpdateVersion` set past any real build.
-   Sparkle 2.9+ drops the item; Sparkle 2.8.1 (cmux builds from June to
+   Sparkle 2.9+ drops the item; Sparkle 2.8.1 (hmux builds from June to
    August 2026) ignores the element and takes it because it comes first, so
    those installs stay universal instead of guessing an architecture.
 2. arm64, with `sparkle:hardwareRequirements` arm64. Sparkle 2.9+ drops it
@@ -30,7 +30,7 @@ import re
 import sys
 from pathlib import Path
 
-# Higher than any CFBundleVersion cmux will ship, so Sparkle 2.9+ never offers
+# Higher than any CFBundleVersion hmux will ship, so Sparkle 2.9+ never offers
 # the universal item to an installed app.
 UNIVERSAL_MINIMUM_UPDATE_VERSION = "999999999"
 SPARKLE_NS = "http://www.andymatuschak.org/xml-namespaces/sparkle"
@@ -71,9 +71,9 @@ def with_element(item: re.Match[str], element: str) -> str:
 
 def compose(universal: str, arm64: str, x86_64: str) -> tuple[str, str]:
     """Returns (legacy appcast.xml, arm64 appcast with its hardware requirement)."""
-    universal_item = single_item(universal, "cmux-macos.dmg", "universal")
-    arm64_item = single_item(arm64, "cmux-macos-arm64.dmg", "arm64")
-    x86_64_item = single_item(x86_64, "cmux-macos-x86_64.dmg", "x86_64")
+    universal_item = single_item(universal, "hmux-macos.dmg", "universal")
+    arm64_item = single_item(arm64, "hmux-macos-arm64.dmg", "arm64")
+    x86_64_item = single_item(x86_64, "hmux-macos-x86_64.dmg", "x86_64")
     versions = {VERSION.search(item.group("body")).group(1) for item in (universal_item, arm64_item, x86_64_item)}
     if len(versions) != 1:
         raise AppcastError(f"all three items must share one sparkle:version, found {sorted(versions)}")

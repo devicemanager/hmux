@@ -1,6 +1,6 @@
-import CmuxCloud
-import CMUXAuthCore
-import CmuxAuthRuntime
+import HmuxCloud
+import HMUXAuthCore
+import HmuxAuthRuntime
 import AppKit
 import Foundation
 import Network
@@ -10,8 +10,8 @@ import StackAuth
 ///
 /// Constructs the de-singletonized auth graph once at app startup, mirroring
 /// the iOS `MobileAuthComposition`: the keychain/file fallback token store, a
-/// `StackClientApp` over it (wrapped in ``CmuxAuthRuntime/StackAuthClient``),
-/// the shared ``CmuxAuthRuntime/AuthCoordinator`` bound to the historical mac
+/// `StackClientApp` over it (wrapped in ``HmuxAuthRuntime/StackAuthClient``),
+/// the shared ``HmuxAuthRuntime/AuthCoordinator`` bound to the historical mac
 /// defaults keys, and the ``HostBrowserSignInFlow``. Replaces
 /// `AuthManager.shared`.
 @MainActor
@@ -24,7 +24,7 @@ struct MacAuthComposition {
     let tokenStore: any StackAuthTokenStoreProtocol
     /// The hosted-browser sign-in flow used by app-session recovery.
     let browserSignIn: HostBrowserSignInFlow
-    /// Bridges the native Stack session into explicitly opened cmux web panes.
+    /// Bridges the native Stack session into explicitly opened hmux web panes.
     let browserAppSession: BrowserAppSessionController
     /// Shared observable account projection used by Settings and sidebar UI.
     let accountFlow: HostAccountFlow
@@ -38,7 +38,7 @@ struct MacAuthComposition {
     /// - Parameters:
     ///   - environment: The process environment (UI-test launch options).
     ///   - defaults: Persistence for the cached user / has-tokens flag /
-    ///     selected team (historical `cmux.auth.*` keys).
+    ///     selected team (historical `hmux.auth.*` keys).
     init(
         environment: [String: String] = ProcessInfo.processInfo.environment,
         defaults: UserDefaults = .standard
@@ -64,25 +64,25 @@ struct MacAuthComposition {
         )
         self.tokenStore = tokenStore
 
-        let userCache = CMUXAuthIdentityStore(
+        let userCache = HMUXAuthIdentityStore(
             keyValueStore: defaults,
-            key: "cmux.auth.cachedUser"
+            key: "hmux.auth.cachedUser"
         )
-        let sessionCache = CMUXAuthSessionCache(
+        let sessionCache = HMUXAuthSessionCache(
             keyValueStore: defaults,
-            key: "cmux.auth.hasTokens"
+            key: "hmux.auth.hasTokens"
         )
         // One-time migration: the deleted AuthManager never wrote a has-tokens
         // flag. Prime it from the cached user so the first post-migration
         // launch primes as "restoring" instead of flashing signed-out while
         // the stored session validates.
-        if defaults.object(forKey: "cmux.auth.hasTokens") == nil,
+        if defaults.object(forKey: "hmux.auth.hasTokens") == nil,
            (try? userCache.load()) != nil {
             sessionCache.setHasTokens(true)
         }
 
         let config = AuthConfig(
-            stack: CMUXAuthConfig(
+            stack: HMUXAuthConfig(
                 projectId: stackProjectID,
                 publishableClientKey: stackPublishableClientKey
             ),
@@ -97,20 +97,20 @@ struct MacAuthComposition {
             baseURL: AuthEnvironment.stackBaseURL.absoluteString,
             noAutomaticPrefetch: true
         )
-        // DEBUG-only: make a tagged `cmux DEV` build come up already signed in
+        // DEBUG-only: make a tagged `hmux DEV` build come up already signed in
         // as the dogfood account, mirroring iOS. A tagged build is a separate
         // bundle (separate keychain), so it starts signed out. iOS injects
-        // `CMUX_UITEST_STACK_*` into the launch environment; the Mac app needs
-        // the same, but a `cmux DEV` opened from Finder / the CMUX Tag Opener
+        // `HMUX_UITEST_STACK_*` into the launch environment; the Mac app needs
+        // the same, but a `hmux DEV` opened from Finder / the HMUX Tag Opener
         // does not inherit a shell's environment, so the resolver also reads
-        // `~/.secrets/cmuxterm-dev.env` / `~/.secrets/cmux.env` directly. The
+        // `~/.secrets/hmuxterm-dev.env` / `~/.secrets/hmux.env` directly. The
         // resolver runs unconditionally and applies file-first precedence, so
         // on the dog Mac the verified dogfood file wins even when stale Stack
         // creds are present in the environment; only the two resolved cred keys
         // are filled in (never the whole file). When the only creds are
-        // `CMUX_UITEST_STACK_*` env (a CI UI test with no `~/.secrets` files),
+        // `HMUX_UITEST_STACK_*` env (a CI UI test with no `~/.secrets` files),
         // the resolver returns that same pair, so the merge is a no-op. The
-        // existing `CMUXAuthAutoLoginCredentials` + `shouldStartAutoLogin` gate
+        // existing `HMUXAuthAutoLoginCredentials` + `shouldStartAutoLogin` gate
         // then fires unchanged. Compiled out of release builds.
         let resolvedEnvironment = Self.environmentWithDogfoodAutoSignIn(environment)
         let authProjectSwitched = Self.detectAuthProjectSwitch(
@@ -125,9 +125,9 @@ struct MacAuthComposition {
             resolvedAuthEnvironment: resolvedAuthEnvironment
         )
         let replacesStoredDevSession = includesDevAuth
-            && resolvedEnvironment["CMUX_DEV_AUTH_CREDENTIALS_RESOLVED"] == "1"
+            && resolvedEnvironment["HMUX_DEV_AUTH_CREDENTIALS_RESOLVED"] == "1"
         let launch = AuthLaunchOptions(
-            clearAuthRequested: resolvedEnvironment["CMUX_UITEST_CLEAR_AUTH"] == "1",
+            clearAuthRequested: resolvedEnvironment["HMUX_UITEST_CLEAR_AUTH"] == "1",
             mockDataEnabled: false,
             environment: resolvedEnvironment,
             includesDevAuth: includesDevAuth,
@@ -141,9 +141,9 @@ struct MacAuthComposition {
             client: Self.uiTestAuthClient(wrapping: client, environment: resolvedEnvironment),
             sessionCache: sessionCache,
             userCache: userCache,
-            teamSelection: CMUXAuthTeamSelectionStore(
+            teamSelection: HMUXAuthTeamSelectionStore(
                 keyValueStore: defaults,
-                key: "cmux.auth.selectedTeamID"
+                key: "hmux.auth.selectedTeamID"
             ),
             anchor: anchor,
             config: config,
@@ -152,7 +152,7 @@ struct MacAuthComposition {
                 browserAppSessionSignInRelay.sessionWillTransition()
             },
             onSignedIn: {
-                await CmuxTuiSurfaceProviderRegistry.shared.resumeAfterSignIn()
+                await HmuxTuiSurfaceProviderRegistry.shared.resumeAfterSignIn()
                 await browserAppSessionSignInRelay.signedIn()
             }
         )
@@ -202,7 +202,7 @@ struct MacAuthComposition {
                 MobileHostIrxRuntime.shared.beginSignOutPreparation()
             },
             localSignOut: {
-                await browserAppSession.clearCmuxWebSession()
+                await browserAppSession.clearHmuxWebSession()
             },
             onSignedOut: { accessToken, refreshToken in
                 await DeviceRegistryClient.shared.withdrawForSignOut(
@@ -253,8 +253,8 @@ struct MacAuthComposition {
             in: .userDomainMask
         ).first ?? URL(fileURLWithPath: NSHomeDirectory()).appendingPathComponent("Library/Application Support")
         return support
-            .appendingPathComponent("cmux", isDirectory: true)
-            .appendingPathComponent(bundleIdentifier ?? "cmux", isDirectory: true)
+            .appendingPathComponent("hmux", isDirectory: true)
+            .appendingPathComponent(bundleIdentifier ?? "hmux", isDirectory: true)
     }
 
     private static var isDebugBuild: Bool {
@@ -278,12 +278,12 @@ struct MacAuthComposition {
     }
 
     private static func includesDevAuth(
-        resolvedAuthEnvironment: CMUXAuthEnvironment
+        resolvedAuthEnvironment: HMUXAuthEnvironment
     ) -> Bool {
         isDebugBuild && resolvedAuthEnvironment == .development
     }
 
-    nonisolated static let storedStackProjectIDKey = "cmux.auth.stackProjectID"
+    nonisolated static let storedStackProjectIDKey = "hmux.auth.stackProjectID"
 
     /// Keep cached identities and Stack tokens from crossing projects when one
     /// tagged Debug bundle is rebuilt with `--prod-auth`, or switched back.
@@ -299,22 +299,22 @@ struct MacAuthComposition {
 
     #if DEBUG
     /// Returns `environment` with the dogfood auto-sign-in credentials filled in
-    /// under the `CMUX_UITEST_STACK_*` keys (DEBUG only; the whole method is
+    /// under the `HMUX_UITEST_STACK_*` keys (DEBUG only; the whole method is
     /// compiled out of release, so the auto-sign-in path can never run in
     /// production).
     ///
     /// Always consults ``DebugDogfoodCredentialResolver`` so the resolver's
-    /// file-first precedence is honored even when stale `CMUX_UITEST_STACK_*`
-    /// or `CMUX_DOGFOOD_STACK_*` vars are already present in the environment:
-    /// on the dog Mac, the verified `~/.secrets/cmuxterm-dev.env` account must
+    /// file-first precedence is honored even when stale `HMUX_UITEST_STACK_*`
+    /// or `HMUX_DOGFOOD_STACK_*` vars are already present in the environment:
+    /// on the dog Mac, the verified `~/.secrets/hmuxterm-dev.env` account must
     /// win, while a CI UI test with no `~/.secrets` files still resolves the
     /// env pair and merges it unchanged.
     ///
     /// - Parameters:
     ///   - environment: The launch environment.
     ///   - secretFilePaths: Ordered secret-file candidates for the resolver.
-    ///     Defaults to `nil` so the resolver uses `~/.secrets/cmuxterm-dev.env`
-    ///     then `~/.secrets/cmux.env`. Injected by tests to exercise the
+    ///     Defaults to `nil` so the resolver uses `~/.secrets/hmuxterm-dev.env`
+    ///     then `~/.secrets/hmux.env`. Injected by tests to exercise the
     ///     dog-Mac precedence without touching real files.
     ///   - readFile: File reader seam for the resolver. Defaults to a real read;
     ///     injected by tests.
@@ -341,30 +341,30 @@ struct MacAuthComposition {
         }
         guard let resolved = resolver.resolve() else {
             var unresolved = environment
-            unresolved["CMUX_DEV_AUTH_CREDENTIALS_RESOLVED"] = nil
-            unresolved["CMUX_DEV_AUTH_REPLACE_SESSION"] = nil
+            unresolved["HMUX_DEV_AUTH_CREDENTIALS_RESOLVED"] = nil
+            unresolved["HMUX_DEV_AUTH_REPLACE_SESSION"] = nil
             return unresolved
         }
         let replacementRequested = environment[DebugDogfoodCredentialResolver.authProfileEnvironmentKey] != nil
             || environment[DebugDogfoodCredentialResolver.explicitCredentialsFileEnvironmentKey] != nil
-            || environment["CMUX_DEV_AUTH_REPLACE_SESSION"] == "1"
+            || environment["HMUX_DEV_AUTH_REPLACE_SESSION"] == "1"
         var merged = environment
-        merged["CMUX_UITEST_STACK_EMAIL"] = resolved.email
-        merged["CMUX_UITEST_STACK_PASSWORD"] = resolved.password
+        merged["HMUX_UITEST_STACK_EMAIL"] = resolved.email
+        merged["HMUX_UITEST_STACK_PASSWORD"] = resolved.password
         if replacementRequested {
             // Credential resolution is the deterministic identity selection
             // for an explicit tagged DEBUG launch, even when the source is a
             // file and the secret values never arrive in the process
             // environment. Mirror the iOS launch contract so a stale stored
             // session cannot survive under a different account.
-            merged["CMUX_DEV_AUTH_CREDENTIALS_RESOLVED"] = "1"
-            merged["CMUX_DEV_AUTH_REPLACE_SESSION"] = "1"
+            merged["HMUX_DEV_AUTH_CREDENTIALS_RESOLVED"] = "1"
+            merged["HMUX_DEV_AUTH_REPLACE_SESSION"] = "1"
         } else {
             // Preserve legacy launches that only discover ambient credentials:
             // they may auto-login when signed out, but must not clear an active
             // persisted session on every ordinary restart.
-            merged["CMUX_DEV_AUTH_CREDENTIALS_RESOLVED"] = nil
-            merged["CMUX_DEV_AUTH_REPLACE_SESSION"] = nil
+            merged["HMUX_DEV_AUTH_CREDENTIALS_RESOLVED"] = nil
+            merged["HMUX_DEV_AUTH_REPLACE_SESSION"] = nil
         }
         return merged
     }
@@ -415,7 +415,7 @@ final class MacAuthTeamScopeRecoveryTriggers {
         pathMonitor.pathUpdateHandler = { path in
             continuation.yield(path.status == .satisfied)
         }
-        pathMonitor.start(queue: DispatchQueue(label: "com.cmux.auth.team-scope-path"))
+        pathMonitor.start(queue: DispatchQueue(label: "com.hmux.auth.team-scope-path"))
         tasks.append(Task { @MainActor [weak self] in
             var wasSatisfied = false
             for await satisfied in pathSatisfied {
@@ -427,8 +427,8 @@ final class MacAuthTeamScopeRecoveryTriggers {
     }
 }
 
-/// Native confirmation shown before a stateless auth callback that cmux did
-/// not request (for example a `cmux://auth-callback` link opened by a web
+/// Native confirmation shown before a stateless auth callback that hmux did
+/// not request (for example a `hmux://auth-callback` link opened by a web
 /// page) may sign the app in. Declining is the default action.
 @MainActor
 enum UnsolicitedAuthCallbackApprovalPrompt {
@@ -454,24 +454,24 @@ enum UnsolicitedAuthCallbackApprovalPrompt {
         if request.replacesSignedInSession {
             return String(
                 localized: "account.callbackApproval.replace.title",
-                defaultValue: "Switch cmux to another account?"
+                defaultValue: "Switch hmux to another account?"
             )
         }
         return String(
             localized: "account.callbackApproval.title",
-            defaultValue: "Sign in to cmux from a link?"
+            defaultValue: "Sign in to hmux from a link?"
         )
     }
 
     private static func message(for request: UnsolicitedAuthCallbackApprovalRequest) -> String {
         let account = String(
             localized: "account.callbackApproval.message.unknown",
-            defaultValue: "A link is asking cmux to sign in to an account. Continue only if you just signed in to cmux in your browser."
+            defaultValue: "A link is asking hmux to sign in to an account. Continue only if you just signed in to hmux in your browser."
         )
         guard request.replacesSignedInSession else { return account }
         let warning = String(
             localized: "account.callbackApproval.replace.generic",
-            defaultValue: "You\u{2019}re already signed in. Continuing replaces that session, and new cmux activity will belong to the account in the link. If you didn\u{2019}t just choose this account yourself, click Don\u{2019}t Sign In."
+            defaultValue: "You\u{2019}re already signed in. Continuing replaces that session, and new hmux activity will belong to the account in the link. If you didn\u{2019}t just choose this account yourself, click Don\u{2019}t Sign In."
         )
         return "\(account)\n\n\(warning)"
     }

@@ -1,0 +1,110 @@
+// swift-tools-version: 6.0
+
+import PackageDescription
+
+let package = Package(
+    name: "HmuxMobileShellUI",
+    defaultLocalization: "en",
+    platforms: [
+        .iOS(.v17),
+    ],
+    products: [
+        .library(
+            name: "HmuxMobileShellUI",
+            targets: ["HmuxMobileShellUI"]
+        ),
+    ],
+    dependencies: [
+        .package(path: "../../Shared/HMUXMobileCore"),
+        .package(path: "../../Shared/HmuxAgentChat"),
+        .package(path: "../HmuxAgentChatUI"),
+        .package(path: "../HmuxConversation"),
+        .package(path: "../../Shared/HmuxAuthRuntime"),
+        .package(path: "../../macOS/HmuxPhonePush"),
+        .package(path: "../HmuxMobileBilling"),
+        .package(path: "../HmuxMobileBrowser"),
+        .package(path: "../HmuxMobileBrowserStream"),
+        .package(path: "../HmuxMobileCamera"),
+        .package(path: "../HmuxMobileChanges"),
+        .package(path: "../HmuxMobileDiagnostics"),
+        .package(path: "../HmuxMobilePairedMac"),
+        .package(path: "../HmuxMobileRPC"),
+        .package(path: "../HmuxMobileSSH"),
+        .package(path: "../HmuxMobileShell"),
+        .package(path: "../HmuxMobileShellModel"),
+        .package(path: "../HmuxMobileSimulatorStream"),
+        .package(path: "../../Shared/HmuxSimulatorStreamKit"),
+        .package(path: "../HmuxMobileSupport"),
+        .package(path: "../HmuxMobileTerminal"),
+        .package(path: "../HmuxMobileToast"),
+        .package(path: "../HmuxMobileTerminalKit"),
+        .package(path: "../HmuxMobileWorkspace"),
+        .package(path: "../../Shared/HmuxTerminalSizing"),
+        .package(path: "../../../vendor/stack-auth-swift-sdk-prerelease"),
+    ],
+    targets: [
+        .target(
+            name: "HmuxMobileShellUI",
+            dependencies: [
+                "HMUXMobileCore",
+                "HmuxAgentChat",
+                "HmuxAgentChatUI",
+                .product(name: "HmuxConversationCore", package: "HmuxConversation"),
+                .product(name: "HmuxConversationUI", package: "HmuxConversation"),
+                "HmuxAuthRuntime",
+                "HmuxPhonePush",
+                .product(name: "HmuxMobileBillingUI", package: "HmuxMobileBilling"),
+                "HmuxMobileBrowser",
+                "HmuxMobileBrowserStream",
+                "HmuxMobileCamera",
+                "HmuxMobileChanges",
+                "HmuxMobileDiagnostics",
+                "HmuxMobilePairedMac",
+                "HmuxMobileRPC",
+                "HmuxMobileSSH",
+                "HmuxMobileShell",
+                "HmuxMobileShellModel",
+                "HmuxMobileSimulatorStream",
+                "HmuxSimulatorStreamKit",
+                "HmuxMobileSupport",
+                "HmuxMobileTerminal",
+                "HmuxMobileTerminalKit",
+                "HmuxMobileToast",
+                "HmuxMobileWorkspace",
+                "HmuxTerminalSizing",
+                .product(name: "StackAuth", package: "stack-auth-swift-sdk-prerelease"),
+            ],
+            resources: [.process("Resources")],
+            swiftSettings: [
+                .define("HMUX_DEV_AUTH", .when(configuration: .debug)),
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+        .testTarget(
+            name: "HmuxMobileShellUITests",
+            dependencies: [
+                "HMUXMobileCore",
+                "HmuxAuthRuntime",
+                "HmuxPhonePush",
+                "HmuxMobilePairedMac",
+                "HmuxMobileRPC",
+                "HmuxMobileShellUI",
+                "HmuxAgentChat",
+                .product(name: "HmuxConversationCore", package: "HmuxConversation"),
+                "HmuxMobileShell",
+                "HmuxMobileShellModel",
+                "HmuxMobileSimulatorStream",
+                "HmuxSimulatorStreamKit",
+                "HmuxMobileSupport",
+                "HmuxMobileTerminal",
+                "HmuxMobileToast",
+                "HmuxMobileWorkspace",
+                .product(name: "StackAuth", package: "stack-auth-swift-sdk-prerelease"),
+            ],
+            swiftSettings: [
+                .define("HMUX_DEV_AUTH", .when(configuration: .debug)),
+                .swiftLanguageMode(.v6),
+            ]
+        ),
+    ]
+)

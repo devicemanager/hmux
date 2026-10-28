@@ -1,4 +1,4 @@
-import CmuxFoundation
+import HmuxFoundation
 import SwiftUI
 
 /// A small info button next to the Network control that explains what
@@ -73,10 +73,10 @@ struct CloudInfoPopoverButton: View {
         .popover(isPresented: $showsDetails, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 8) {
                 Text(text)
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .fixedSize(horizontal: false, vertical: true)
                 Link(String(localized: "cloud.security.learnMore", defaultValue: "Learn more"), destination: learnMoreURL)
-                    .cmuxFont(size: 12)
+                    .hmuxFont(size: 12)
                     .accessibilityIdentifier("\(accessibilityIdentifier).learnMore")
             }
             .padding(14)

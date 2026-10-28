@@ -1,7 +1,7 @@
 import AppKit
 import Bonsplit
-import CmuxPanes
-import CmuxProductAnalytics
+import HmuxPanes
+import HmuxProductAnalytics
 import Foundation
 
 /// Preserves asynchronous acceptance through the shared terminal split action.
@@ -65,7 +65,7 @@ extension TabManager {
     }
 
     /// Adds a terminal pane from the focused panel and arranges the
-    /// workspace in Zellij's default tiling, the cmux-tui Alt-n behavior.
+    /// workspace in Zellij's default tiling, the hmux-tui Alt-n behavior.
     /// Remote tmux mirrors and Cloud panes keep their own layout owner, so
     /// they receive an ordinary split right.
     func createAutoLayoutPaneOutcome(

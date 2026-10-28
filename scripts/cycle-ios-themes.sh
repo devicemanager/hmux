@@ -5,12 +5,12 @@ usage() {
   cat >&2 <<'EOF'
 Usage: cycle-ios-themes.sh --tag <tag> [--interval <seconds>] [--cycles <count>]
 
-Cycles a dark, light, and custom Ghostty theme through a tagged cmux build.
+Cycles a dark, light, and custom Ghostty theme through a tagged hmux build.
 The original Ghostty config and any existing custom theme are restored on exit.
 EOF
 }
 
-tag="${CMUX_TAG:-}"
+tag="${HMUX_TAG:-}"
 interval=5
 cycles=0
 
@@ -56,9 +56,9 @@ repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 config_dir="${XDG_CONFIG_HOME:-$HOME/.config}/ghostty"
 config_file="${GHOSTTY_CONFIG_FILE:-$config_dir/config}"
 themes_dir="$config_dir/themes"
-custom_theme_name="cmux iOS Theme Cycle"
+custom_theme_name="hmux iOS Theme Cycle"
 custom_theme_file="$themes_dir/$custom_theme_name"
-backup_dir="$(mktemp -d "${TMPDIR:-/tmp}/cmux-theme-cycle.XXXXXX")"
+backup_dir="$(mktemp -d "${TMPDIR:-/tmp}/hmux-theme-cycle.XXXXXX")"
 config_existed=0
 custom_theme_existed=0
 config_mutated=0
@@ -66,7 +66,7 @@ custom_theme_mutated=0
 restored=0
 
 reload_config() {
-  CMUX_TAG="$tag" "$repo_root/scripts/cmux-debug-cli.sh" reload-config >/dev/null
+  HMUX_TAG="$tag" "$repo_root/scripts/hmux-debug-cli.sh" reload-config >/dev/null
 }
 
 restore() {

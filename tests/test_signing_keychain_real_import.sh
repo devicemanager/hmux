@@ -17,17 +17,17 @@ fi
 # The tool replaces the user keychain search list while the test runs. Run it
 # only on a CI runner (or with an explicit opt-in), never by accident on a
 # developer Mac whose login keychain a killed run would leave out of the list.
-if [ "${GITHUB_ACTIONS:-}" != true ] && [ "${CMUX_SIGNING_KEYCHAIN_REAL_TEST:-}" != 1 ]; then
-  echo "SKIP: set CMUX_SIGNING_KEYCHAIN_REAL_TEST=1 to run the real keychain test outside CI"
+if [ "${GITHUB_ACTIONS:-}" != true ] && [ "${HMUX_SIGNING_KEYCHAIN_REAL_TEST:-}" != 1 ]; then
+  echo "SKIP: set HMUX_SIGNING_KEYCHAIN_REAL_TEST=1 to run the real keychain test outside CI"
   exit 0
 fi
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 TOOL="$ROOT_DIR/scripts/ci/signing-keychain.sh"
 TMP_DIR="$(mktemp -d)"
-NAME="cmux-real-import-test-$$.keychain"
+NAME="hmux-real-import-test-$$.keychain"
 KEYCHAIN_FILE="$HOME/Library/Keychains/$NAME-db"
-SUBJECT="cmux CI throwaway signing test $$"
+SUBJECT="hmux CI throwaway signing test $$"
 
 # The tool replaces the user keychain search list; put it back afterwards.
 SAVED_LIST=()
@@ -81,7 +81,7 @@ fi
 rm -f "$TMP_DIR/key.pem"
 
 # 2. The real create, with the secret shapes the workflows pass.
-export CMUX_SIGNING_KEYCHAIN_STATE_DIR="$TMP_DIR/state"
+export HMUX_SIGNING_KEYCHAIN_STATE_DIR="$TMP_DIR/state"
 APPLE_CERTIFICATE_BASE64="$(base64 < "$TMP_DIR/identity.p12" | tr -d '\n')" \
 APPLE_CERTIFICATE_PASSWORD="$PASSWORD" \
   "$TOOL" create --keychain "$NAME" > "$TMP_DIR/create.log" 2>&1 \
@@ -94,7 +94,7 @@ grep -F "DeveloperIDG2CA is already in $NAME" "$TMP_DIR/create.log" >/dev/null \
 
 [ -e "$KEYCHAIN_FILE" ] || fail "create made no keychain at $KEYCHAIN_FILE"
 "$TOOL" is-present || fail "is-present must report the new keychain"
-if compgen -G "$CMUX_SIGNING_KEYCHAIN_STATE_DIR/certificate.*" >/dev/null; then
+if compgen -G "$HMUX_SIGNING_KEYCHAIN_STATE_DIR/certificate.*" >/dev/null; then
   fail "create left the decoded certificate on disk"
 fi
 
@@ -113,8 +113,8 @@ codesign -dvv "$TMP_DIR/signed-binary" 2>&1 | grep -F "Authority=$SUBJECT" >/dev
 [ ! -e "$KEYCHAIN_FILE" ] || fail "the keychain still exists after delete"
 if "$TOOL" is-present; then fail "is-present still reports a keychain after delete"; fi
 "$TOOL" assert-deleted || fail "assert-deleted fails after delete"
-if compgen -G "$CMUX_SIGNING_KEYCHAIN_STATE_DIR/*" >/dev/null; then
-  fail "delete left state in $CMUX_SIGNING_KEYCHAIN_STATE_DIR"
+if compgen -G "$HMUX_SIGNING_KEYCHAIN_STATE_DIR/*" >/dev/null; then
+  fail "delete left state in $HMUX_SIGNING_KEYCHAIN_STATE_DIR"
 fi
 
 echo "PASS: real signing keychain import, codesign and delete with a throwaway identity"

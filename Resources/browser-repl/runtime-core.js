@@ -1,4 +1,4 @@
-// cmux browser REPL runtime core.
+// hmux browser REPL runtime core.
 //
 // A Playwright-like object model (Page, Frame, Locator, Keyboard, Mouse, ...)
 // built on the engine driver protocol (docs/browser-repl/driver-protocol.md).
@@ -7,7 +7,7 @@
 // an injected `host` object; nothing here imports Node built-ins.
 (function (root) {
   "use strict";
-  const ns = (root.CmuxBrowserRepl = root.CmuxBrowserRepl || {});
+  const ns = (root.HmuxBrowserRepl = root.HmuxBrowserRepl || {});
   // Playwright's selector builders, with the text argument checked first:
   // getByText(42) fails as an invalid argument instead of matching nothing.
   const LU = (() => {
@@ -28,11 +28,11 @@
     };
     return wrapped;
   })();
-  const AGENT = 'globalThis[Symbol.for("cmux.browserRepl.agent")]';
+  const AGENT = 'globalThis[Symbol.for("hmux.browserRepl.agent")]';
   // The key of the page agent's cut marker (page-agent.js, `reply`).
-  const REPLY_CUT = "__cmuxReplyCut";
+  const REPLY_CUT = "__hmuxReplyCut";
   const DEFAULT_TIMEOUT = 30000;
-  const UNDEFINED_MARK = "__cmuxUndefined__";
+  const UNDEFINED_MARK = "__hmuxUndefined__";
 
   // ---------------------------------------------------------------------------
   // Errors
@@ -1035,7 +1035,7 @@
       if (blocked) return Promise.reject(blocked);
       const limit = this._session._replyLimit;
       const sealed = world !== "agent" ? source
-        : `(...a) => { const A = ${AGENT}; if (!A || typeof A.reply !== "function") throw new Error("the cmux page agent is not in this frame"); ` +
+        : `(...a) => { const A = ${AGENT}; if (!A || typeof A.reply !== "function") throw new Error("the hmux page agent is not in this frame"); ` +
           `return A.reply((${source})(...a), ${typeof limit === "number" ? limit : "undefined"}); }`;
       const call = this._page._raceDialog(this._session.call("frame.evaluate", {
         targetId: this._page._targetId,
@@ -1134,7 +1134,7 @@
         const r = await frame._parent._agent("ownerPoint", owner, at, !!check);
         if (r.error) throw Object.assign(new Error("The frame's <iframe> was detached from the DOM"), { code: "stale" });
         if (r.transformed) {
-          throw new Error(`${title || "frame"}: the element is in a frame whose <iframe> is transformed (${r.transformed}), so its position in the tab is not known and input could reach another element; cmux maps points into frames only through translations`);
+          throw new Error(`${title || "frame"}: the element is in a frame whose <iframe> is transformed (${r.transformed}), so its position in the tab is not known and input could reach another element; hmux maps points into frames only through translations`);
         }
         if (check && r.hit !== "done") return { log: `${r.hit} intercepts pointer events` };
         at = { x: r.x, y: r.y };
@@ -2190,7 +2190,7 @@
       return this._page;
     }
     async _respond(accept, promptText) {
-      // cmux already answered it; a listener's answer has nothing to do.
+      // hmux already answered it; a listener's answer has nothing to do.
       if (this._p.dismissedDuring) return;
       if (this._handled) throw new Error("Cannot accept dialog which is already handled!");
       // Validate before answering: a rejected answer must leave the dialog
@@ -2847,7 +2847,7 @@
       this._frames.clear();
       this.emit("crash", this);
     }
-    // cmux replaced the tab's web view (it restored a page it had unloaded
+    // hmux replaced the tab's web view (it restored a page it had unloaded
     // to save memory, or recovered a crashed one): frames have new ids.
     _onReplaced() {
       this._mainFrame._id = null;
@@ -2953,7 +2953,7 @@
       }
     }
 
-    // Public API: cmux additions (docs/browser-repl/README.md, Page additions)
+    // Public API: hmux additions (docs/browser-repl/README.md, Page additions)
     ref(ref) {
       if (typeof ref !== "string" || !REF_PATTERN.test(ref.trim())) {
         throw new Error(`page.ref: expected a snapshot ref such as "e5" or "f1e2", got ${JSON.stringify(ref)}`);
@@ -3155,7 +3155,7 @@
       try {
         r = await this._navigate("tab.reload", {}, options);
       } catch (e) {
-        // After a crash cmux reloads the tab itself when it shows it; that
+        // After a crash hmux reloads the tab itself when it shows it; that
         // load replacing ours is the recovery we asked for.
         if (!recovering || !/interrupted by another navigation/.test(String(e && e.message))) throw e;
         await this.waitForLoadState("load", options);

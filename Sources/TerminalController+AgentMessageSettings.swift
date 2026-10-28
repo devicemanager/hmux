@@ -1,4 +1,4 @@
-import CmuxAgentJournal
+import HmuxAgentJournal
 import Foundation
 
 /// What `agent.message.settings` acts on, resolved on the main actor.
@@ -40,7 +40,7 @@ extension TerminalController {
                 code: "invalid_params",
                 message: String(
                     localized: "socket.agentMessage.error.missingSettingsTarget",
-                    defaultValue: "Give a target workspace or surface, or run this inside a cmux surface."
+                    defaultValue: "Give a target workspace or surface, or run this inside a hmux surface."
                 ),
                 data: nil
             )
@@ -87,7 +87,7 @@ extension TerminalController {
                     code: "storage_failed",
                     message: String(
                         localized: "socket.agentMessage.error.settingNotSaved",
-                        defaultValue: "The setting was not changed: cmux could not save it to the message journal."
+                        defaultValue: "The setting was not changed: hmux could not save it to the message journal."
                     ),
                     data: ["reason": error.reason]
                 )
@@ -121,7 +121,7 @@ extension TerminalController {
         let surfaceId: UUID?
         let workspace: Workspace?
         if let target {
-            // The same resolution `cmux agent message` uses, so turning off
+            // The same resolution `hmux agent message` uses, so turning off
             // `<target>` silences exactly the agent a send to it would reach.
             guard let recipient = agentMessageResolveRecipient(target) else { return nil }
             surfaceId = recipient.surfaceId

@@ -53,10 +53,10 @@ mock.module("../services/coderouter/repository", () => ({
 const { GET } = await import("../app/api/vm/self/route");
 
 const edgeRequest = (token: string, vmId: string) =>
-  new Request("https://cmux.test/api/vm/self", {
+  new Request("https://hmux.test/api/vm/self", {
     headers: {
-      ...(token === "crt_cli" ? { authorization: `Bearer ${token}` } : { "x-cmux-authorization": `Bearer ${token}` }),
-      ...(token === "crt_cli" ? {} : { "x-cmux-vm-id": vmId }),
+      ...(token === "crt_cli" ? { authorization: `Bearer ${token}` } : { "x-hmux-authorization": `Bearer ${token}` }),
+      ...(token === "crt_cli" ? {} : { "x-hmux-vm-id": vmId }),
     },
   });
 
@@ -71,8 +71,8 @@ describe("GET /api/vm/self", () => {
 
   test("rejects the placeholder bearer without an edge-injected token", async () => {
     const response = await GET(
-      new Request("https://cmux.test/api/vm/self", {
-        headers: { authorization: "Bearer cmux-vm-edge-placeholder" },
+      new Request("https://hmux.test/api/vm/self", {
+        headers: { authorization: "Bearer hmux-vm-edge-placeholder" },
       }),
     );
     expect(response.status).toBe(401);
@@ -89,7 +89,7 @@ describe("GET /api/vm/self", () => {
 
   test("refuses unbound CLI tokens", async () => {
     const response = await GET(
-      new Request("https://cmux.test/api/vm/self", { headers: { authorization: "Bearer crt_cli" } }),
+      new Request("https://hmux.test/api/vm/self", { headers: { authorization: "Bearer crt_cli" } }),
     );
     expect(response.status).toBe(403);
     expect((await response.json()).error).toBe("vm_bound_token_required");

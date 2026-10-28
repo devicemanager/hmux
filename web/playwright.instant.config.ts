@@ -2,7 +2,7 @@ import { defineConfig } from "@playwright/test";
 
 const port = 4173;
 // Run the same browser regressions against a running dev server or preview.
-const externalBaseURL = process.env.CMUX_WEB_TEST_BASE_URL;
+const externalBaseURL = process.env.HMUX_WEB_TEST_BASE_URL;
 
 // Keep Stack configured in the production-style server. Requests have no
 // session cookie, so the server gate must redirect before it renders the shell.
@@ -13,7 +13,7 @@ const dashboardTestEnv =
 // CI runs the repository-wide typecheck immediately before this suite. Keep
 // the standalone command type-safe for local callers, but let CI avoid a
 // second tsgo process after the preceding typecheck has already run.
-const typecheckCommand = process.env.CMUX_INSTANT_SKIP_TYPECHECK === "1"
+const typecheckCommand = process.env.HMUX_INSTANT_SKIP_TYPECHECK === "1"
   ? ""
   : `${dashboardTestEnv} SKIP_ENV_VALIDATION=1 NEXT_INSTANT_TEST=1 bun run typecheck && `;
 

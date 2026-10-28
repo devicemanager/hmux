@@ -1,4 +1,4 @@
-import CmuxCloud
+import HmuxCloud
 import AppKit
 
 /// Scroll view + outline host for the Cloud tree.

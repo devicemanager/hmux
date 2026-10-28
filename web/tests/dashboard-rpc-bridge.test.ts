@@ -6,7 +6,7 @@ import { refusalFromResponse, teamRefusalFromError } from "../orpc/server/dashbo
 import { callRoute } from "../orpc/server/dashboard/route-call";
 import { TeamApiError, TeamGoneError, TeamServiceUnavailableError } from "../services/teams/errors";
 
-const ORIGIN = "https://cmux.test";
+const ORIGIN = "https://hmux.test";
 
 function rpcRequest(headers: Record<string, string> = {}): Request {
   return new Request(`${ORIGIN}/api/dashboard/rpc/x`, {
@@ -60,7 +60,7 @@ describe("route adapter", () => {
       path: "/api/vm/access-grants/g1",
       params: { id: "g1" },
       search: { teamId: "t1", skipped: null },
-      headers: { "x-cmux-team-id": "t1" },
+      headers: { "x-hmux-team-id": "t1" },
       body: { displayName: "Mac" },
     });
     expect(result).toEqual({ renamed: true });
@@ -71,7 +71,7 @@ describe("route adapter", () => {
     expect(seen!.headers).toMatchObject({
       cookie: "session=abc",
       origin: ORIGIN,
-      "x-cmux-team-id": "t1",
+      "x-hmux-team-id": "t1",
       "content-type": "application/json",
       accept: "application/json",
     });

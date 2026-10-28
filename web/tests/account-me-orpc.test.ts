@@ -11,7 +11,7 @@ import { generateOpenAPIDocument } from "../orpc/server/openapi";
 // file so the paths hold regardless of the process cwd.
 const CHECKED_IN_SPECS = [
   "../openapi/openapi.json",
-  "../../Packages/Shared/CmuxAPIClient/Sources/CmuxAPIClient/openapi.json",
+  "../../Packages/Shared/HmuxAPIClient/Sources/HmuxAPIClient/openapi.json",
 ] as const;
 
 // Drives the real resolveProPlanStatus with no module mocks, so nothing leaks

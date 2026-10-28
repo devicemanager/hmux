@@ -670,7 +670,7 @@ export function agentMessageLabel(from: string, languages?: readonly string[]): 
   return agentChatText("agentMessageFrom", languages).replace("{sender}", () => from);
 }
 
-/** A cmux agent message the agent received, shown with its sender. */
+/** A hmux agent message the agent received, shown with its sender. */
 export function AgentMessageRow({ message }: { message: { from: string; body: string } }) {
   return (
     <div className="msg agent-message">

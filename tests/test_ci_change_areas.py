@@ -28,7 +28,7 @@ GUARD_WORKFLOW = ROOT / ".github" / "workflows" / "ci-guards.yml"
 WEB_WORKFLOW = ROOT / ".github" / "workflows" / "ci-web.yml"
 MACOS_WORKFLOW = ROOT / ".github" / "workflows" / "ci-macos.yml"
 WEB_VALIDATION_WORKFLOW = ROOT / ".github" / "workflows" / "web-validation.yml"
-BROWSER_WORKFLOW = ROOT / ".github" / "workflows" / "cmux-browser.yml"
+BROWSER_WORKFLOW = ROOT / ".github" / "workflows" / "hmux-browser.yml"
 REMOTE_DAEMON_WORKFLOW = ROOT / ".github" / "workflows" / "remote-daemon.yml"
 GUARD_JOBS = (
     "workflow-guard-submodule-forward-only",
@@ -123,9 +123,9 @@ def assert_areas(
 
 def test_test_only_changes_skip_the_release_build() -> None:
     for paths in (
-        ["cmuxTests/WorkspaceRemoteConnectionTests.swift"],
-        ["cmuxUITests/SidebarUITests.swift", "cmuxTests/GhosttyConfigTests.swift"],
-        ["Packages/macOS/CmuxTerminal/Tests/CmuxTerminalTests/FakeTerminalEngine.swift", "docs/ci.md"],
+        ["hmuxTests/WorkspaceRemoteConnectionTests.swift"],
+        ["hmuxUITests/SidebarUITests.swift", "hmuxTests/GhosttyConfigTests.swift"],
+        ["Packages/macOS/HmuxTerminal/Tests/HmuxTerminalTests/FakeTerminalEngine.swift", "docs/ci.md"],
     ):
         actual = module.classify_files(paths)
         assert actual.macos is True, (paths, actual)
@@ -190,16 +190,16 @@ def test_linux_guard_only_scripts_reach_no_other_runner() -> None:
 def test_anything_the_app_can_build_from_runs_the_release_build() -> None:
     for path in (
         "Sources/AppDelegate.swift",
-        "cmux.xcodeproj/project.pbxproj",
-        "Packages/macOS/CmuxTerminal/Sources/CmuxTerminal/TerminalEngine.swift",
-        "Packages/macOS/CmuxTerminal/Package.swift",
+        "hmux.xcodeproj/project.pbxproj",
+        "Packages/macOS/HmuxTerminal/Sources/HmuxTerminal/TerminalEngine.swift",
+        "Packages/macOS/HmuxTerminal/Package.swift",
         "Resources/Localizable.xcstrings",
         "scripts/thin-app-bundle.sh",
         "tests/test_thin_app_bundle.sh",
         "package.json",
         "some-new-top-level-dir/file.txt",
     ):
-        paths = ["cmuxTests/GhosttyConfigTests.swift", path]
+        paths = ["hmuxTests/GhosttyConfigTests.swift", path]
         actual = module.classify_files(paths)
         assert actual.macos is True, (paths, actual)
         assert actual.release_build is True, (paths, actual)
@@ -207,7 +207,7 @@ def test_anything_the_app_can_build_from_runs_the_release_build() -> None:
 
 def test_cli_sources_route_the_cli_lane_without_app_host_compile() -> None:
     # tests/test_ci_cli_lane_in_admission.py pins where the CLI lane runs.
-    actual = module.classify_files(["CLI/cmux.swift", "CLI/FeedEventClassifier.swift"])
+    actual = module.classify_files(["CLI/hmux.swift", "CLI/FeedEventClassifier.swift"])
     assert actual.macos is False
     assert actual.web is False
     assert actual.agent_session_web is False
@@ -227,10 +227,10 @@ def test_cli_workflow_inputs_route_the_required_cli_lane() -> None:
         "scripts/ci/test_execution_registry.py",
         "tests/fixtures/glaeda-external-request.json",
         "tests/fixtures/glaeda-external-result.json",
-        "scripts/generate-cmux-config-schema.py",
-        "web/data/cmux.schema.json",
-        "cmux.xcodeproj/project.pbxproj",
-        "Packages/macOS/CmuxFoundation/Sources/CmuxFoundation/Process/AgentPIDProcessIdentity.swift",
+        "scripts/generate-hmux-config-schema.py",
+        "web/data/hmux.schema.json",
+        "hmux.xcodeproj/project.pbxproj",
+        "Packages/macOS/HmuxFoundation/Sources/HmuxFoundation/Process/AgentPIDProcessIdentity.swift",
         # Steps of compile admission the CLI product depends on.
         "scripts/select-ci-xcode.sh",
         "scripts/install-rust-ci.sh",
@@ -244,22 +244,22 @@ def test_cli_workflow_inputs_route_the_required_cli_lane() -> None:
         "scripts/ci/cache_restore_receipt.py",
         "scripts/ci/sanitize-xcode-source-packages-cache.py",
         # test_cli_config_doctor.py runs this helper.
-        "skills/cmux-settings/scripts/cmux-settings",
+        "skills/hmux-settings/scripts/hmux-settings",
     ):
         assert module.classify_files([path]).cli is True, path
 
 
-def test_cmux_foundation_tests_route_the_package_lane_not_the_cli_lane() -> None:
-    # The CLI lane no longer runs `swift test` in CmuxFoundation; the
-    # swift-package-tests lane runs every CmuxFoundation suite when the
-    # package changes, and its test sources never reach the cmux-cli binary.
-    for name in ("CmuxConfigSemanticValidatorTests", "CmuxGlaedaExecutionContractTests"):
-        path = f"Packages/macOS/CmuxFoundation/Tests/CmuxFoundationTests/{name}.swift"
+def test_hmux_foundation_tests_route_the_package_lane_not_the_cli_lane() -> None:
+    # The CLI lane no longer runs `swift test` in HmuxFoundation; the
+    # swift-package-tests lane runs every HmuxFoundation suite when the
+    # package changes, and its test sources never reach the hmux-cli binary.
+    for name in ("HmuxConfigSemanticValidatorTests", "HmuxGlaedaExecutionContractTests"):
+        path = f"Packages/macOS/HmuxFoundation/Tests/HmuxFoundationTests/{name}.swift"
         actual = module.classify_files([path])
         assert actual.cli is False, (path, actual)
         assert actual.swift_packages is True, (path, actual)
-    assert "CmuxFoundation" in module.swift_package_test_selection(
-        ["Packages/macOS/CmuxFoundation/Tests/CmuxFoundationTests/CmuxGlaedaExecutionContractTests.swift"]
+    assert "HmuxFoundation" in module.swift_package_test_selection(
+        ["Packages/macOS/HmuxFoundation/Tests/HmuxFoundationTests/HmuxGlaedaExecutionContractTests.swift"]
     )
 
 
@@ -270,26 +270,26 @@ def test_every_declared_cli_lane_input_exists() -> None:
         assert (ROOT / prefix).is_dir(), prefix
 
 
-def test_cli_lane_routes_the_cmux_cli_target_closure() -> None:
+def test_cli_lane_routes_the_hmux_cli_target_closure() -> None:
     inputs = module.load_cli_target_inputs()
     assert inputs is not None
-    # Products the cmux-cli target links, so a change to them can break its
+    # Products the hmux-cli target links, so a change to them can break its
     # build even though the app-host suite would also catch it.
-    assert "Packages/macOS/CmuxCore" in inputs.package_directories
-    assert "Packages/macOS/CmuxFoundation" in inputs.package_directories
-    assert "Packages/Shared/CMUXMobileCore" in inputs.package_directories
-    # Packages no cmux-cli product reaches.
-    assert "Packages/macOS/CmuxTerminal" not in inputs.package_directories
+    assert "Packages/macOS/HmuxCore" in inputs.package_directories
+    assert "Packages/macOS/HmuxFoundation" in inputs.package_directories
+    assert "Packages/Shared/HMUXMobileCore" in inputs.package_directories
+    # Packages no hmux-cli product reaches.
+    assert "Packages/macOS/HmuxTerminal" not in inputs.package_directories
     assert not any(
         directory.startswith("Packages/iOS/") for directory in inputs.package_directories
     )
 
-    assert module.classify_files(["Packages/macOS/CmuxCore/Sources/CmuxCore/Cmux.swift"]).cli is True
-    # Shared app sources the cmux-cli target compiles.
+    assert module.classify_files(["Packages/macOS/HmuxCore/Sources/HmuxCore/Hmux.swift"]).cli is True
+    # Shared app sources the hmux-cli target compiles.
     assert module.classify_files(["Sources/AutomationRule.swift"]).cli is True
-    # A package's test sources cannot reach the cmux-cli binary.
+    # A package's test sources cannot reach the hmux-cli binary.
     assert module.classify_files([
-        "Packages/macOS/CmuxCore/Tests/CmuxCoreTests/CmuxCoreTests.swift"
+        "Packages/macOS/HmuxCore/Tests/HmuxCoreTests/HmuxCoreTests.swift"
     ]).cli is False
 
 
@@ -301,23 +301,23 @@ def test_cli_lane_routes_stdlib_shadowing_ci_helpers() -> None:
     assert module.classify_files(["scripts/ci/queue_janitor.py"]).cli is False
 
 
-XCODE_PROJECT = "cmux.xcodeproj/project.pbxproj"
-CLI_SOURCE_REFERENCE = "B9000001A1B2C3D4E5F60719 /* cmux.swift */"
+XCODE_PROJECT = "hmux.xcodeproj/project.pbxproj"
+CLI_SOURCE_REFERENCE = "B9000001A1B2C3D4E5F60719 /* hmux.swift */"
 
 
 def with_build_setting(project: str, configuration: str) -> str:
     """Add a build setting to one XCBuildConfiguration of the real project."""
     anchor = f"\t\t{configuration} /* Debug */ = {{\n\t\t\tisa = XCBuildConfiguration;\n\t\t\tbuildSettings = {{\n"
     assert project.count(anchor) == 1, configuration
-    return project.replace(anchor, anchor + "\t\t\t\tCMUX_ROUTING_PROBE = 1;\n")
+    return project.replace(anchor, anchor + "\t\t\t\tHMUX_ROUTING_PROBE = 1;\n")
 
 
 def cli_neutral_project_edits(project: str) -> dict[str, str]:
-    """Real-shaped pbxproj edits the cmux-cli build cannot observe."""
+    """Real-shaped pbxproj edits the hmux-cli build cannot observe."""
     test_reference = "path = AboutLicensesResourceTests.swift;"
     assert project.count(test_reference) == 1
     return {
-        # Renaming a cmuxTests source, as a test-adding PR's pbxproj edit does.
+        # Renaming a hmuxTests source, as a test-adding PR's pbxproj edit does.
         "test file": project.replace(test_reference, "path = AboutLicensesResourceTests2.swift;"),
         # The app target's own Debug configuration.
         "app setting": with_build_setting(project, "A5001082"),
@@ -325,15 +325,15 @@ def cli_neutral_project_edits(project: str) -> dict[str, str]:
 
 
 def cli_relevant_project_edits(project: str) -> dict[str, str]:
-    """pbxproj edits that change what the cmux-cli target compiles or how."""
-    cli_reference = f"{CLI_SOURCE_REFERENCE} = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = cmux.swift;"
+    """pbxproj edits that change what the hmux-cli target compiles or how."""
+    cli_reference = f"{CLI_SOURCE_REFERENCE} = {{isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = hmux.swift;"
     child = f"\t\t\t\t{CLI_SOURCE_REFERENCE},\n"
     main_group = "\t\tA5001040 = {\n\t\t\tisa = PBXGroup;\n\t\t\tchildren = (\n"
     assert project.count(cli_reference) == 1
     assert project.count(child) == 1
     assert project.count(main_group) == 1
     return {
-        "cli source path": project.replace(cli_reference, cli_reference.replace("path = cmux.swift;", "path = cmux2.swift;")),
+        "cli source path": project.replace(cli_reference, cli_reference.replace("path = hmux.swift;", "path = hmux2.swift;")),
         # Moving the file changes its location even though no object it
         # references changed.
         "cli source moved": project.replace(child, "").replace(main_group, main_group + child),
@@ -342,10 +342,10 @@ def cli_relevant_project_edits(project: str) -> dict[str, str]:
     }
 
 
-def test_pbxproj_edits_outside_the_cmux_cli_build_skip_the_cli_lane() -> None:
+def test_pbxproj_edits_outside_the_hmux_cli_build_skip_the_cli_lane() -> None:
     # Of the 86 main commits that routed the CLI lane between 2026-09-20 and
     # 2026-09-23, 24 did so only through a project.pbxproj edit that left the
-    # cmux-cli target alone (app and test file wiring) or an app test scheme.
+    # hmux-cli target alone (app and test file wiring) or an app test scheme.
     project = (ROOT / XCODE_PROJECT).read_text(encoding="utf-8")
     for label, head in cli_neutral_project_edits(project).items():
         assert head != project, label
@@ -356,17 +356,17 @@ def test_pbxproj_edits_outside_the_cmux_cli_build_skip_the_cli_lane() -> None:
     # Unreadable input keeps the lane.
     assert not module.cli_xcode_project_change_is_neutral(project, project[:-200])
     assert not module.cli_xcode_project_change_is_neutral(
-        project, project.replace('name = "cmux-cli";', 'name = "cmux-cli-renamed";')
+        project, project.replace('name = "hmux-cli";', 'name = "hmux-cli-renamed";')
     )
 
 
 def test_only_the_schemes_the_cli_route_builds_select_it() -> None:
-    schemes = "cmux.xcodeproj/xcshareddata/xcschemes"
-    assert module.classify_files([f"{schemes}/cmux-cli.xcscheme"]).cli is True
-    for scheme in ("cmux-unit", "cmux-ci", "cmux"):
+    schemes = "hmux.xcodeproj/xcshareddata/xcschemes"
+    assert module.classify_files([f"{schemes}/hmux-cli.xcscheme"]).cli is True
+    for scheme in ("hmux-unit", "hmux-ci", "hmux"):
         assert module.classify_files([f"{schemes}/{scheme}.xcscheme"]).cli is False, scheme
     assert module.classify_files(
-        ["cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"]
+        ["hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"]
     ).cli is True
 
 
@@ -376,13 +376,13 @@ def test_package_changes_route_the_package_test_lane() -> None:
     # compile admission, which builds package library targets and never their
     # test targets, so those assertions would land with zero CI execution.
     for path in (
-        "Packages/macOS/CmuxSettingsUI/Tests/CmuxSettingsUITests/SettingsSearchIndexTests.swift",
-        "Packages/macOS/CmuxSettingsUI/Sources/CmuxSettingsUI/Bindings/SettingReadDriver.swift",
-        "Packages/macOS/CmuxSettings/Package.swift",
+        "Packages/macOS/HmuxSettingsUI/Tests/HmuxSettingsUITests/SettingsSearchIndexTests.swift",
+        "Packages/macOS/HmuxSettingsUI/Sources/HmuxSettingsUI/Bindings/SettingReadDriver.swift",
+        "Packages/macOS/HmuxSettings/Package.swift",
         # A dependency of packages the job runs, reached through Package.swift
         # path dependencies rather than by name.
-        "Packages/Shared/CMUXMobileCore/Sources/CMUXMobileCore/Whatever.swift",
-        # CmuxCommandPalette's declared extra input.
+        "Packages/Shared/HMUXMobileCore/Sources/HMUXMobileCore/Whatever.swift",
+        # HmuxCommandPalette's declared extra input.
         "Native/CommandPaletteNucleoFFI/src/lib.rs",
     ):
         assert module.classify_files([path]).swift_packages is True, path
@@ -392,14 +392,14 @@ def test_routed_lane_names_the_packages_the_job_would_run() -> None:
     # The area is the job's own selection, so routing and the job's package
     # list cannot disagree about what a change affects.
     assert module.swift_package_test_selection(
-        ["Packages/macOS/CmuxSettingsUI/Tests/CmuxSettingsUITests/SettingsSearchIndexTests.swift"]
-    ) == ("CmuxSettingsUI",)
+        ["Packages/macOS/HmuxSettingsUI/Tests/HmuxSettingsUITests/SettingsSearchIndexTests.swift"]
+    ) == ("HmuxSettingsUI",)
     # A dependency pulls in its dependents, and nothing else.
-    settings = module.swift_package_test_selection(["Packages/macOS/CmuxSettings/Package.swift"])
-    assert "CmuxSettings" in settings and "CmuxSettingsUI" in settings
-    # CmuxBrowser depends on CmuxSettings, so it is a dependent; CmuxGit is not.
-    assert "CmuxBrowser" in settings
-    assert "CmuxGit" not in settings
+    settings = module.swift_package_test_selection(["Packages/macOS/HmuxSettings/Package.swift"])
+    assert "HmuxSettings" in settings and "HmuxSettingsUI" in settings
+    # HmuxBrowser depends on HmuxSettings, so it is a dependent; HmuxGit is not.
+    assert "HmuxBrowser" in settings
+    assert "HmuxGit" not in settings
     assert module.swift_package_test_selection(["Sources/AppDelegate.swift"]) == ()
 
 
@@ -408,10 +408,10 @@ def test_non_package_changes_leave_the_package_test_lane_unrouted() -> None:
     # either covered by another lane or cannot reach a package test target.
     for path in (
         "Sources/AppDelegate.swift",
-        "cmuxTests/GhosttyConfigTests.swift",
-        "cmuxUITests/SidebarUITests.swift",
-        "cmux.xcodeproj/project.pbxproj",
-        "CLI/cmux.swift",
+        "hmuxTests/GhosttyConfigTests.swift",
+        "hmuxUITests/SidebarUITests.swift",
+        "hmux.xcodeproj/project.pbxproj",
+        "CLI/hmux.swift",
         "web/app/page.tsx",
         "webviews/src/agent-session/index.tsx",
         "docs/ci.md",
@@ -420,7 +420,7 @@ def test_non_package_changes_leave_the_package_test_lane_unrouted() -> None:
         "Resources/Localizable.xcstrings",
         # A package the job does not run. Routing it would start the lane only
         # for it to select nothing and test nothing.
-        "Packages/iOS/CmuxMobileShellUI/Tests/CmuxMobileShellUITests/Foo.swift",
+        "Packages/iOS/HmuxMobileShellUI/Tests/HmuxMobileShellUITests/Foo.swift",
     ):
         assert module.classify_files([path]).swift_packages is False, path
 
@@ -453,34 +453,34 @@ def test_package_lane_reads_the_job_package_list_from_the_workflow() -> None:
     lane = (ROOT / "scripts/ci/package-test-lane.sh").read_text(encoding="utf-8")
     body = lane.split("PACKAGES=(", 1)[1].split("\n  )", 1)[0]
     assert set(packages) == set(body.split()), set(packages) ^ set(body.split())
-    assert "CmuxSettingsUI" in packages
-    # CmuxWorkspaces was missing from the list, so its tests never ran in CI.
-    assert "CmuxWorkspaces" in packages
-    path = "Packages/macOS/CmuxWorkspaces/Tests/CmuxWorkspacesTests/Core/SurfaceRegistryModelTests.swift"
+    assert "HmuxSettingsUI" in packages
+    # HmuxWorkspaces was missing from the list, so its tests never ran in CI.
+    assert "HmuxWorkspaces" in packages
+    path = "Packages/macOS/HmuxWorkspaces/Tests/HmuxWorkspacesTests/Core/SurfaceRegistryModelTests.swift"
     assert module.classify_files([path]).swift_packages is True
-    assert "CmuxWorkspaces" in module.swift_package_test_selection([path])
+    assert "HmuxWorkspaces" in module.swift_package_test_selection([path])
     # These macOS packages had test targets but were missing from the list too.
     for name in (
-        "CmuxAppKitSupportUI",
-        "CmuxCanvas",
-        "CmuxCloudBannerCore",
-        "CmuxCloudImagePaste",
-        "CmuxCloudTunnelCore",
-        "CMUXDebugLog",
-        "CmuxExtensionKit",
-        "CmuxFeedback",
-        "CmuxLiveEval",
-        "CmuxPanes",
-        "CmuxPhonePush",
-        "CMUXProjectModel",
-        "CmuxSidebar",
-        "CmuxSidebarInterpreterService",
-        "CmuxSimulator",
-        "CmuxSwiftRender",
-        "CmuxSwiftRenderUI",
-        "CmuxTestSupport",
-        "CmuxUpdaterUI",
-        "CmuxWindowing",
+        "HmuxAppKitSupportUI",
+        "HmuxCanvas",
+        "HmuxCloudBannerCore",
+        "HmuxCloudImagePaste",
+        "HmuxCloudTunnelCore",
+        "HMUXDebugLog",
+        "HmuxExtensionKit",
+        "HmuxFeedback",
+        "HmuxLiveEval",
+        "HmuxPanes",
+        "HmuxPhonePush",
+        "HMUXProjectModel",
+        "HmuxSidebar",
+        "HmuxSidebarInterpreterService",
+        "HmuxSimulator",
+        "HmuxSwiftRender",
+        "HmuxSwiftRenderUI",
+        "HmuxTestSupport",
+        "HmuxUpdaterUI",
+        "HmuxWindowing",
     ):
         assert name in packages, name
     for name in packages:
@@ -492,7 +492,7 @@ def test_package_lane_does_not_widen_any_other_area() -> None:
     # package test source still skips the Release build, and nothing here
     # turns on web or CLI work.
     actual = module.classify_files([
-        "Packages/macOS/CmuxSettingsUI/Tests/CmuxSettingsUITests/SettingsSearchIndexTests.swift"
+        "Packages/macOS/HmuxSettingsUI/Tests/HmuxSettingsUITests/SettingsSearchIndexTests.swift"
     ])
     assert actual.swift_packages is True
     assert actual.release_build is False
@@ -504,7 +504,7 @@ def test_package_lane_does_not_widen_any_other_area() -> None:
 def test_app_and_web_only_changes_skip_the_cli_lane() -> None:
     for path in (
         "Sources/AppDelegate.swift",
-        "Packages/macOS/CmuxTerminal/Sources/CmuxTerminal/TerminalEngine.swift",
+        "Packages/macOS/HmuxTerminal/Sources/HmuxTerminal/TerminalEngine.swift",
         "webviews/src/agent-session/index.tsx",
         "Resources/Localizable.xcstrings",
         "docs/ci.md",
@@ -571,11 +571,11 @@ def runs_hang_diagnostics(path: str) -> bool:
 def test_terminal_sources_the_hang_jobs_build_run_the_diagnostics() -> None:
     for path in (
         "Sources/TerminalPortalReconciliationScheduler.swift",
-        "cmuxTests/TerminalPortalReconciliationReentrancyTests.swift",
+        "hmuxTests/TerminalPortalReconciliationReentrancyTests.swift",
         "tests/run_terminal_portal_reconciliation_tests.sh",
-        "Packages/Shared/CMUXMobileCore/Sources/CMUXMobileCore/TerminalWorkInterval.swift",
-        "Packages/Shared/CmuxSentryTelemetry/Sources/CmuxSentryTelemetry/TerminalWorkSentryContext.swift",
-        "cmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved",
+        "Packages/Shared/HMUXMobileCore/Sources/HMUXMobileCore/TerminalWorkInterval.swift",
+        "Packages/Shared/HmuxSentryTelemetry/Sources/HmuxSentryTelemetry/TerminalWorkSentryContext.swift",
+        "hmux.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved",
         "scripts/select-ci-xcode.sh",
         "scripts/terminal-hang-release-gate.py",
         "tests/test_terminal_hang_release_gate.py",
@@ -589,8 +589,8 @@ def test_unrelated_app_changes_skip_the_two_macos_hang_diagnostics_jobs() -> Non
         "Sources/Workspace.swift",
         "Sources/AppDelegate.swift",
         "Sources/GhosttyTerminalView.swift",
-        "Packages/macOS/CmuxTerminal/Sources/CmuxTerminal/TerminalEngine.swift",
-        "Packages/iOS/CmuxMobileTerminal/Sources/CmuxMobileTerminal/Terminal.swift",
+        "Packages/macOS/HmuxTerminal/Sources/HmuxTerminal/TerminalEngine.swift",
+        "Packages/iOS/HmuxMobileTerminal/Sources/HmuxMobileTerminal/Terminal.swift",
         "web/app/page.tsx",
     ):
         assert not runs_hang_diagnostics(path), path
@@ -658,7 +658,7 @@ def test_native_diff_sidecar_inputs_route_the_web_workflow_explicitly() -> None:
 
 
 def test_test_only_pull_request_routes_macos_without_the_release_build() -> None:
-    result, outputs = run_detect_step_for_paths(["cmuxTests/GhosttyConfigTests.swift"])
+    result, outputs = run_detect_step_for_paths(["hmuxTests/GhosttyConfigTests.swift"])
 
     assert result.returncode == 0, result.stderr
     assert outputs == ["macos=true", "web=false", "agent_session_web=false", "cli=false", "swift_packages=false", "release_build=false"]
@@ -674,8 +674,8 @@ def test_agent_instructions_and_skill_docs_skip_expensive_areas() -> None:
             "CLAUDE.md",
             "AGENTS.md",
             "Packages/iOS/AGENTS.md",
-            "skills/cmux-testing/references/local-vs-ci-validation.md",
-            "skills/cmux/SKILL.md",
+            "skills/hmux-testing/references/local-vs-ci-validation.md",
+            "skills/hmux/SKILL.md",
         ],
         macos=False,
         web=False,
@@ -693,14 +693,14 @@ def test_operational_ci_helpers_skip_product_areas() -> None:
         "scripts/ci/notify-indexnow.py",
         "scripts/ci/r2_cache_census.py",
         "scripts/ci/r2_cache_prune.py",
-        "scripts/ci/cmux_binaries_prune.py",
+        "scripts/ci/hmux_binaries_prune.py",
         "scripts/ci/r2_storage_census.py",
         "scripts/ci/verify-r2-canary.py",
         "scripts/ci/build_graph_health.py",
         "scripts/ci/validate_test_execution_registry.py",
         "scripts/ci/app_host_failure_census.py",
         "scripts/ci/swift_incremental_diagnostics.py",
-        "scripts/ci/cmux_workload_profile.py",
+        "scripts/ci/hmux_workload_profile.py",
         "scripts/ci/r2-canary-cloudflare.py",
     ):
         assert_areas([path], macos=False, web=False)
@@ -736,7 +736,7 @@ def test_routing_policy_and_build_helpers_still_run_macos() -> None:
         # Reached from a macOS job: directly, through run-app-host-xcodebuild.sh,
         # through the cache-restore composite action, and through
         # run_python_test_lane.py respectively.
-        "scripts/ci/cmux_unit_test_shard.py",
+        "scripts/ci/hmux_unit_test_shard.py",
         "scripts/ci/xcodebuild_noninteractive.py",
         "scripts/ci/cache_restore_receipt.py",
         "scripts/ci/test_execution_registry.py",
@@ -763,10 +763,10 @@ def test_bundled_root_markdown_still_runs_macos() -> None:
 
 
 def test_bundled_and_executable_skill_files_run_macos() -> None:
-    # The app bundles skills/cmux-cua as a folder resource.
-    assert_areas(["skills/cmux-cua/SKILL.md"], macos=True, web=False)
-    assert_areas(["skills/cmux-settings/scripts/cmux-settings"], macos=True, web=False)
-    assert_areas(["skills/cmux-browser/agents/openai.yaml"], macos=True, web=False)
+    # The app bundles skills/hmux-cua as a folder resource.
+    assert_areas(["skills/hmux-cua/SKILL.md"], macos=True, web=False)
+    assert_areas(["skills/hmux-settings/scripts/hmux-settings"], macos=True, web=False)
+    assert_areas(["skills/hmux-browser/agents/openai.yaml"], macos=True, web=False)
 
 
 def test_cli_contract_doc_runs_macos_contract_tests() -> None:
@@ -796,11 +796,11 @@ def test_macos_config_stays_macos_relevant() -> None:
 
 
 def test_standalone_browser_and_remote_daemon_skip_app_host_macos() -> None:
-    browser_area = module.classify_files(["cmux-browser/src/main.ts"])
+    browser_area = module.classify_files(["hmux-browser/src/main.ts"])
     assert browser_area.macos is False
     assert browser_area.release_build is False
 
-    daemon_area = module.classify_files(["daemon/remote/cmd/cmuxd-remote/cli.go"])
+    daemon_area = module.classify_files(["daemon/remote/cmd/hmuxd-remote/cli.go"])
     assert daemon_area.macos is False
     assert daemon_area.release_build is False
 
@@ -810,18 +810,18 @@ def test_required_ci_owns_standalone_browser_and_remote_daemon_pr_validation() -
     assert "browser: ${{ steps.standalone.outputs.browser }}" in changes
     assert "remote_daemon: ${{ steps.standalone.outputs.remote_daemon }}" in changes
     route = workflow_job_step_script("changes", "Route standalone project workflows")
-    assert "cmux-browser/*|.github/workflows/cmux-browser.yml" in route
+    assert "hmux-browser/*|.github/workflows/hmux-browser.yml" in route
     assert "daemon/remote/*|scripts/*remote_daemon*" in route
 
     browser_job = workflow_job_block("browser")
-    assert "uses: ./.github/workflows/cmux-browser.yml" in browser_job
+    assert "uses: ./.github/workflows/hmux-browser.yml" in browser_job
     daemon_job = workflow_job_block("remote-daemon")
     assert "uses: ./.github/workflows/remote-daemon.yml" in daemon_job
 
     browser_text = BROWSER_WORKFLOW.read_text(encoding="utf-8")
     assert "  workflow_call:" in browser_text
     assert "  pull_request:" not in browser_text
-    assert "group: cmux-browser-${{ github.ref }}" in browser_text
+    assert "group: hmux-browser-${{ github.ref }}" in browser_text
     remote_text = REMOTE_DAEMON_WORKFLOW.read_text(encoding="utf-8")
     assert "  workflow_call:" in remote_text
     assert "  pull_request:" not in remote_text
@@ -867,13 +867,13 @@ def test_stale_run_check_ignores_github_api_errors() -> None:
 
 def test_standalone_routes_preserve_missing_empty_and_owned_diffs() -> None:
     script = workflow_job_step_script("changes", "Route standalone project workflows")
-    script = script.replace("/tmp/cmux-ci-changed-files.txt", '"$CHANGED_FILES"')
+    script = script.replace("/tmp/hmux-ci-changed-files.txt", '"$CHANGED_FILES"')
     cases = (
         (None, "true", "true", "true"),
         ("", "false", "false", "false"),
         ("README.md\n", "false", "false", "false"),
         (".github/workflows/ci.yml\n", "true", "true", "true"),
-        ("cmux-browser/src/main.ts\n", "true", "false", "false"),
+        ("hmux-browser/src/main.ts\n", "true", "false", "false"),
         ("daemon/remote/main.go\n", "false", "true", "false"),
     )
     for contents, browser, daemon, wrapper in cases:
@@ -890,7 +890,7 @@ def test_standalone_routes_preserve_missing_empty_and_owned_diffs() -> None:
 
 def test_publishing_changes_keep_daemon_linux_checks_without_native_rerun() -> None:
     script = workflow_job_step_script("changes", "Route standalone project workflows")
-    script = script.replace("/tmp/cmux-ci-changed-files.txt", '\"$CHANGED_FILES\"')
+    script = script.replace("/tmp/hmux-ci-changed-files.txt", '\"$CHANGED_FILES\"')
     cases = (
         (".github/workflows/nightly.yml\nscripts/sparkle_generate_appcast.sh\n", "false"),
         (".github/workflows/release.yml\n", "false"),
@@ -916,9 +916,9 @@ def test_publishing_changes_keep_daemon_linux_checks_without_native_rerun() -> N
 
 
 def test_diff_failure_does_not_look_like_a_known_empty_standalone_diff() -> None:
-    detector = detect_step_script().replace("/tmp/cmux-ci-changed-files.txt", '"$CHANGED_FILES"')
+    detector = detect_step_script().replace("/tmp/hmux-ci-changed-files.txt", '"$CHANGED_FILES"')
     route = workflow_job_step_script("changes", "Route standalone project workflows")
-    route = route.replace("/tmp/cmux-ci-changed-files.txt", '"$CHANGED_FILES"')
+    route = route.replace("/tmp/hmux-ci-changed-files.txt", '"$CHANGED_FILES"')
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
         git = root / "git"
@@ -955,11 +955,11 @@ def test_remote_daemon_rejects_stale_heads_before_allocating_macos() -> None:
             assert result.returncode == expected, (current, result.stderr)
 
 
-def test_cmux_tui_only_skips_macos() -> None:
-    # cmux-tui is a standalone Rust project with its own `cmux-tui` workflow; its
+def test_hmux_tui_only_skips_macos() -> None:
+    # hmux-tui is a standalone Rust project with its own `hmux-tui` workflow; its
     # changes must not require the macOS app-host tests.
     assert_areas(
-        ["cmux-tui/crates/cmux-tui-core/src/browser.rs", "cmux-tui/README.md", "cmux-tui/docs/protocol.md"],
+        ["hmux-tui/crates/hmux-tui-core/src/browser.rs", "hmux-tui/README.md", "hmux-tui/docs/protocol.md"],
         macos=False,
         web=False,
     )
@@ -1065,12 +1065,12 @@ def test_agent_session_resources_run_web_and_macos() -> None:
 
 
 def test_ios_only_skips_main_macos_ci() -> None:
-    assert_areas(["ios/cmux/ContentView.swift"], macos=False, web=False)
+    assert_areas(["ios/hmux/ContentView.swift"], macos=False, web=False)
 
 
 def test_ios_packages_keep_macos_dependency_coverage() -> None:
     assert_areas(
-        ["Packages/iOS/CmuxMobileRPC/Sources/CmuxMobileRPC/MobileTerminalLaneConnection.swift"],
+        ["Packages/iOS/HmuxMobileRPC/Sources/HmuxMobileRPC/MobileTerminalLaneConnection.swift"],
         macos=True,
         web=False,
     )
@@ -1093,7 +1093,7 @@ def test_pbx_list_ids_accepts_bare_and_commented_references() -> None:
 
 
 def test_pbx_list_ids_rejects_present_malformed_optional_lists() -> None:
-    assert module._pbx_list_ids("name = cmux;", "dependencies") == []
+    assert module._pbx_list_ids("name = hmux;", "dependencies") == []
     assert module._pbx_list_ids("dependencies = (\n);", "dependencies") == []
 
     for body in ("dependencies = (\nTARGET,\n", "dependencies = TARGET;"):
@@ -1108,12 +1108,12 @@ def test_pbx_list_ids_rejects_present_malformed_optional_lists() -> None:
 def test_macos_ios_package_closure_matches_current_desktop_graph() -> None:
     assert module.macos_ios_package_closure(ROOT) == frozenset(
         {
-            "Packages/iOS/CmuxMobileDiagnostics",
-            "Packages/iOS/CmuxMobilePairedMac",
-            "Packages/iOS/CmuxMobileRPC",
-            "Packages/iOS/CmuxMobileShellModel",
-            "Packages/iOS/CmuxMobileSupport",
-            "Packages/iOS/CmuxMobileTransport",
+            "Packages/iOS/HmuxMobileDiagnostics",
+            "Packages/iOS/HmuxMobilePairedMac",
+            "Packages/iOS/HmuxMobileRPC",
+            "Packages/iOS/HmuxMobileShellModel",
+            "Packages/iOS/HmuxMobileSupport",
+            "Packages/iOS/HmuxMobileTransport",
         }
     )
 
@@ -1123,7 +1123,7 @@ def test_ios_package_tests_skip_macos_compile_but_keep_package_lane() -> None:
     # packages still need their dedicated package-test lane, so only the
     # macOS area is neutralized here.
     actual = module.classify_files([
-        "Packages/iOS/CmuxMobileRPC/Tests/CmuxMobileRPCTests/MobileCoreRPCTransportDrainTests.swift"
+        "Packages/iOS/HmuxMobileRPC/Tests/HmuxMobileRPCTests/MobileCoreRPCTransportDrainTests.swift"
     ])
     assert actual.macos is False, actual
     assert actual.release_build is False, actual
@@ -1132,12 +1132,12 @@ def test_ios_package_tests_skip_macos_compile_but_keep_package_lane() -> None:
 
 def test_ios_package_routing_follows_desktop_dependency_closure() -> None:
     mac_relevant = (
-        "CmuxMobileDiagnostics",
-        "CmuxMobilePairedMac",
-        "CmuxMobileRPC",
-        "CmuxMobileShellModel",
-        "CmuxMobileSupport",
-        "CmuxMobileTransport",
+        "HmuxMobileDiagnostics",
+        "HmuxMobilePairedMac",
+        "HmuxMobileRPC",
+        "HmuxMobileShellModel",
+        "HmuxMobileSupport",
+        "HmuxMobileTransport",
     )
     for package in mac_relevant:
         path = f"Packages/iOS/{package}/Sources/{package}/Probe.swift"
@@ -1145,7 +1145,7 @@ def test_ios_package_routing_follows_desktop_dependency_closure() -> None:
         assert actual.macos is True, (path, actual)
         assert actual.release_build is True, (path, actual)
 
-    for package in ("CmuxMobileAnalytics", "CmuxMobileShellUI"):
+    for package in ("HmuxMobileAnalytics", "HmuxMobileShellUI"):
         path = f"Packages/iOS/{package}/Sources/{package}/Probe.swift"
         actual = module.classify_files([path])
         assert actual.macos is False, (path, actual)
@@ -1177,10 +1177,10 @@ def test_recent_ios_pr_shapes_skip_unobservable_macos_compile() -> None:
     # PR #13441: iOS-only ShellUI sources plus an unrelated reusable guard workflow.
     pr_13441 = [
         ".github/workflows/ci-guards.yml",
-        "Packages/iOS/CmuxMobileShellUI/Sources/CmuxMobileShellUI/TaskComposer/TaskComposerAttachmentPickerModifier.swift",
-        "Packages/iOS/CmuxMobileShellUI/Sources/CmuxMobileShellUI/TaskComposer/TaskComposerAttachmentStager.swift",
-        "Packages/iOS/CmuxMobileShellUI/Sources/CmuxMobileShellUI/TaskComposer/TaskComposerSheet+Attachments.swift",
-        "Packages/iOS/CmuxMobileShellUI/Sources/CmuxMobileShellUI/TerminalComposerView.swift",
+        "Packages/iOS/HmuxMobileShellUI/Sources/HmuxMobileShellUI/TaskComposer/TaskComposerAttachmentPickerModifier.swift",
+        "Packages/iOS/HmuxMobileShellUI/Sources/HmuxMobileShellUI/TaskComposer/TaskComposerAttachmentStager.swift",
+        "Packages/iOS/HmuxMobileShellUI/Sources/HmuxMobileShellUI/TaskComposer/TaskComposerSheet+Attachments.swift",
+        "Packages/iOS/HmuxMobileShellUI/Sources/HmuxMobileShellUI/TerminalComposerView.swift",
     ]
     actual = module.classify_files(pr_13441)
     assert actual.macos is False, actual
@@ -1188,8 +1188,8 @@ def test_recent_ios_pr_shapes_skip_unobservable_macos_compile() -> None:
 
     # PR #13459: iOS-only analytics plus web and docs work. Web still routes.
     pr_13459 = [
-        "Packages/iOS/CmuxMobileAnalytics/Sources/CmuxMobileAnalytics/MobileNetworkOutcomeReporter.swift",
-        "Packages/iOS/CmuxMobileAnalytics/Tests/CmuxMobileAnalyticsTests/MobileNetworkOutcomeReporterTests.swift",
+        "Packages/iOS/HmuxMobileAnalytics/Sources/HmuxMobileAnalytics/MobileNetworkOutcomeReporter.swift",
+        "Packages/iOS/HmuxMobileAnalytics/Tests/HmuxMobileAnalyticsTests/MobileNetworkOutcomeReporterTests.swift",
         "docs/transport-sentry-diagnostics.md",
         "web/services/observability/mobileNetworkOutcome.ts",
         "web/tests/mobile-network-observability-route.test.ts",
@@ -1203,15 +1203,15 @@ def test_recent_ios_pr_shapes_skip_unobservable_macos_compile() -> None:
 def test_macos_ios_package_closure_is_derived_transitively() -> None:
     with tempfile.TemporaryDirectory() as temporary_directory:
         root = Path(temporary_directory)
-        project = root / "cmux.xcodeproj"
+        project = root / "hmux.xcodeproj"
         project.mkdir()
         (project / "project.pbxproj").write_text(
             textwrap.dedent(
                 """\
                 /* Begin PBXNativeTarget section */
-                    TARGET /* cmux */ = {
+                    TARGET /* hmux */ = {
                         isa = PBXNativeTarget;
-                        name = cmux;
+                        name = hmux;
                         packageProductDependencies = (
                             PRODUCT /* DesktopRoot */,
                         );
@@ -1276,15 +1276,15 @@ def test_macos_ios_package_closure_is_derived_transitively() -> None:
 def test_macos_ios_package_closure_rejects_ambiguous_unowned_product() -> None:
     with tempfile.TemporaryDirectory() as temporary_directory:
         root = Path(temporary_directory)
-        project = root / "cmux.xcodeproj"
+        project = root / "hmux.xcodeproj"
         project.mkdir()
         (project / "project.pbxproj").write_text(
             textwrap.dedent(
                 """\
                 /* Begin PBXNativeTarget section */
-                    TARGET /* cmux */ = {
+                    TARGET /* hmux */ = {
                         isa = PBXNativeTarget;
-                        name = cmux;
+                        name = hmux;
                         packageProductDependencies = (
                             PRODUCTA /* RootA */,
                             PRODUCTB /* RootB */,
@@ -1360,15 +1360,15 @@ def test_macos_ios_package_closure_rejects_xcode_path_escape() -> None:
     with tempfile.TemporaryDirectory() as temporary_directory:
         root = Path(temporary_directory) / "repo"
         root.mkdir()
-        project = root / "cmux.xcodeproj"
+        project = root / "hmux.xcodeproj"
         project.mkdir()
         (project / "project.pbxproj").write_text(
             textwrap.dedent(
                 """\
                 /* Begin PBXNativeTarget section */
-                    TARGET /* cmux */ = {
+                    TARGET /* hmux */ = {
                         isa = PBXNativeTarget;
-                        name = cmux;
+                        name = hmux;
                         packageProductDependencies = (
                             PRODUCT /* Escape */,
                         );
@@ -1413,7 +1413,7 @@ def test_ios_package_dependency_parser_failure_fails_open_to_macos() -> None:
     module.load_macos_ios_package_closure = lambda: None
     try:
         actual = module.classify_files(
-            ["Packages/iOS/CmuxMobileAnalytics/Sources/CmuxMobileAnalytics/AnalyticsEmitter.swift"]
+            ["Packages/iOS/HmuxMobileAnalytics/Sources/HmuxMobileAnalytics/AnalyticsEmitter.swift"]
         )
     finally:
         module.load_macos_ios_package_closure = original
@@ -1557,7 +1557,7 @@ def test_registry_cli_uses_base_and_keeps_mixed_product_changes() -> None:
         before.write_text(base)
         files = root / 'files.txt'
         files.write_text('tests/test-execution.toml\n')
-        env = {**os.environ, 'CMUX_CI_HEAD_TEST_REFERENCE_ROOT': str(root)}
+        env = {**os.environ, 'HMUX_CI_HEAD_TEST_REFERENCE_ROOT': str(root)}
         command = [sys.executable, str(HELPER), '--event-name', 'pull_request',
                    '--files-from', str(files), '--test-registry-base', str(before)]
         result = subprocess.run(command, env=env, capture_output=True, text=True, check=True)
@@ -1587,7 +1587,7 @@ def test_tests_run_by_macos_jobs_run_macos() -> None:
     # A macOS job runs these through a glob.
     assert_areas(["tests/test_nushell_integration_hooks.py"], macos=True, web=False)
     # Shared by a Linux guard job and release-build.
-    assert_areas(["tests/test_install_cmux_tui_client.sh"], macos=True, web=False)
+    assert_areas(["tests/test_install_hmux_tui_client.sh"], macos=True, web=False)
 
 
 def test_unreferenced_tests_run_macos() -> None:
@@ -1994,7 +1994,7 @@ def test_indirect_guard_profile_references_follow_invoking_runner() -> None:
         "name: Guards\njobs:\n  guard:\n"
         "    runs-on: ${{ vars.LINUX_RUNNER || 'blacksmith-4vcpu-ubuntu-2404' }}\n"
         "    steps:\n"
-        "      - run: python3 scripts/ci/cmux_workload_profile.py run cmux.ci.guard\n"
+        "      - run: python3 scripts/ci/hmux_workload_profile.py run hmux.ci.guard\n"
     )
     references = module.macos_job_test_references(linux_workflow, indirect)
     assert module.is_guard_only_test("tests/test_guard_profile_owned.py", references)
@@ -2063,14 +2063,14 @@ def workflow_job_block(job_name: str, workflow_path: Path = CI_WORKFLOW) -> str:
 
 
 def isolate_ci_tmp(script: str, directory: Path) -> str:
-    """Point a workflow step's fixed /tmp/cmux-* files into `directory`.
+    """Point a workflow step's fixed /tmp/hmux-* files into `directory`.
 
     On a runner each job has its own /tmp. Locally, two suites on one host (a
     parallel guard sweep, or another checkout) would share and overwrite
     those files: one run then reads another's changed-file list, sees an empty
     diff, and routes nothing.
     """
-    return script.replace("/tmp/cmux-", f"{directory}/cmux-")
+    return script.replace("/tmp/hmux-", f"{directory}/hmux-")
 
 
 def workflow_job_step_script(job_name: str, step_name: str, workflow_path: Path = CI_WORKFLOW) -> str:
@@ -2159,7 +2159,7 @@ def run_app_host_unit_test_step(
                 }),
                 encoding="utf-8",
             )
-        inventory = runner_temp / "cmux-app-host-test-inventory.json"
+        inventory = runner_temp / "hmux-app-host-test-inventory.json"
         inventory.write_text(
             json.dumps({
                 "version": 1,
@@ -2171,19 +2171,19 @@ def run_app_host_unit_test_step(
             encoding="utf-8",
         )
 
-        shard_helper = ci_scripts / "cmux_unit_test_shard.py"
+        shard_helper = ci_scripts / "hmux_unit_test_shard.py"
         shard_helper.write_text(
             """
 import os
 import sys
 from pathlib import Path
 
-mode = os.environ.get("CMUX_TEST_SHARD_MODE", "selectors")
+mode = os.environ.get("HMUX_TEST_SHARD_MODE", "selectors")
 if mode == "fail":
     raise SystemExit(23)
 output = Path(sys.argv[sys.argv.index("--output") + 1])
 output.parent.mkdir(parents=True, exist_ok=True)
-selectors = "" if mode == "empty" else "-only-testing:cmuxTests/FakeTests\\n"
+selectors = "" if mode == "empty" else "-only-testing:hmuxTests/FakeTests\\n"
 output.write_text(selectors, encoding="utf-8")
 """.lstrip(),
             encoding="utf-8",
@@ -2194,18 +2194,18 @@ output.write_text(selectors, encoding="utf-8")
             """
 #!/bin/bash
 set -euo pipefail
-counter="${CMUX_TEST_BATCH_COUNTER:?}"
-printf 'invoked\n' > "${CMUX_TEST_RUNNER_MARKER:?}"
+counter="${HMUX_TEST_BATCH_COUNTER:?}"
+printf 'invoked\n' > "${HMUX_TEST_RUNNER_MARKER:?}"
 iteration=0
 if [ -f "$counter" ]; then
   iteration="$(cat "$counter")"
 fi
 iteration=$((iteration + 1))
 printf '%s\n' "$iteration" > "$counter"
-result_root="${CMUX_APP_HOST_RESULT_BUNDLE_ROOT:-$RUNNER_TEMP/cmux-app-host-xcresults}"
+result_root="${HMUX_APP_HOST_RESULT_BUNDLE_ROOT:-$RUNNER_TEMP/hmux-app-host-xcresults}"
 mkdir -p "$result_root"
-if [ "${CMUX_TEST_KNOWN_FAILURE_MODE:-0}" = "1" ]; then
-  cat >"$result_root/cmux-app-host-xcodebuild-${CMUX_TAG}-pid-${iteration}.tests.json" <<'JSON'
+if [ "${HMUX_TEST_KNOWN_FAILURE_MODE:-0}" = "1" ]; then
+  cat >"$result_root/hmux-app-host-xcodebuild-${HMUX_TAG}-pid-${iteration}.tests.json" <<'JSON'
 {"testNodes":[{"nodeType":"Test Suite","children":[{"nodeType":"Test Case","nodeIdentifier":"FakeTests/testOne()","result":"Failed"},{"nodeType":"Test Case","nodeIdentifier":"FakeTests/testTwo()","result":"Passed"}]}]}
 JSON
   echo "Executed 2 tests, with 1 failure (0 unexpected)"
@@ -2213,7 +2213,7 @@ JSON
   exit 65
 fi
 if [ "$iteration" -eq 1 ]; then
-  cat >"$result_root/cmux-app-host-xcodebuild-${CMUX_TAG}-pid-1.tests.json" <<'JSON'
+  cat >"$result_root/hmux-app-host-xcodebuild-${HMUX_TAG}-pid-1.tests.json" <<'JSON'
 {"testNodes":[{"nodeType":"Test Suite","children":[{"nodeType":"Test Case","nodeIdentifier":"FakeTests/testOne()","result":"Failed"},{"nodeType":"Test Case","nodeIdentifier":"FakeTests/testTwo()","result":"Failed"}]}]}
 JSON
   echo "Executed 2 tests, with 2 failures (0 unexpected)"
@@ -2239,15 +2239,15 @@ exit 9
                 **os.environ,
                 "PATH": f"{fake_bin}:{os.environ['PATH']}",
                 "RUNNER_TEMP": str(runner_temp),
-                "CMUX_APP_HOST_XCTESTRUN": str(root / "cmux-unit.xctestrun"),
-                "CMUX_NUMERIC_LOCALE_XCTESTRUN": str(root / "numeric.xctestrun"),
-                "CMUX_DERIVED_DATA_PATH": str(root / "derived-data"),
-                "CMUX_TEST_BATCH_COUNTER": str(root / "batch-counter"),
-                "CMUX_TEST_RUNNER_MARKER": str(runner_marker),
-                "CMUX_TEST_SHARD_MODE": shard_mode,
-                "CMUX_TEST_KNOWN_FAILURE_MODE": "1" if known_failure else "0",
-                "CMUX_APP_HOST_TEST_INVENTORY": str(inventory),
-                "CMUX_APP_HOST_SHARD": "1",
+                "HMUX_APP_HOST_XCTESTRUN": str(root / "hmux-unit.xctestrun"),
+                "HMUX_NUMERIC_LOCALE_XCTESTRUN": str(root / "numeric.xctestrun"),
+                "HMUX_DERIVED_DATA_PATH": str(root / "derived-data"),
+                "HMUX_TEST_BATCH_COUNTER": str(root / "batch-counter"),
+                "HMUX_TEST_RUNNER_MARKER": str(runner_marker),
+                "HMUX_TEST_SHARD_MODE": shard_mode,
+                "HMUX_TEST_KNOWN_FAILURE_MODE": "1" if known_failure else "0",
+                "HMUX_APP_HOST_TEST_INVENTORY": str(inventory),
+                "HMUX_APP_HOST_SHARD": "1",
             },
             text=True,
             stdout=subprocess.PIPE,
@@ -2451,8 +2451,8 @@ def run_detect_step_for_paths(
             # The package-test lane's own inputs, which the router reads to
             # decide whether that lane is worth a macOS runner.
             ROOT / "scripts" / "ci" / "select_package_tests.py",
-            # The trusted base router reads the cmux-cli target from these.
-            ROOT / "cmux.xcodeproj" / "project.pbxproj",
+            # The trusted base router reads the hmux-cli target from these.
+            ROOT / "hmux.xcodeproj" / "project.pbxproj",
             *sorted(ROOT.glob("Packages/*/*/Package.swift")),
         ):
             relative = support.relative_to(ROOT)
@@ -2842,9 +2842,9 @@ def test_a_script_only_unrouted_workflows_or_linux_guards_run_reaches_no_macos_l
 def test_a_script_a_mac_job_the_app_or_a_native_test_runs_keeps_its_macos_route() -> None:
     for path in (
         # CLI/ names it.
-        "scripts/install-cmux-tui-client.sh",
+        "scripts/install-hmux-tui-client.sh",
         # A native shell test runs it.
-        "scripts/sign-cmux-bundle.sh",
+        "scripts/sign-hmux-bundle.sh",
         # ci.yml's Mac jobs run it.
         "scripts/reload.sh",
     ):
@@ -3153,7 +3153,7 @@ def test_ci_workflow_edits_to_a_mac_lane_caller_still_select_it() -> None:
 def test_mac_standalone_lane_inputs_still_select_their_lanes_beside_routing_edits() -> None:
     real = CI_WORKFLOW.read_text(encoding="utf-8")
     edited = edit_job(real, "changes")
-    wrapper = route_ci_workflow_edit(edited, ("Resources/bin/cmux-claude-wrapper",))
+    wrapper = route_ci_workflow_edit(edited, ("Resources/bin/hmux-claude-wrapper",))
     assert wrapper["claude_wrapper"] == "true", wrapper
     daemon = route_ci_workflow_edit(edited, (".github/workflows/remote-daemon.yml",))
     assert daemon["remote_daemon"] == "true", daemon
@@ -3167,9 +3167,9 @@ def test_standalone_route_fails_open_without_a_readable_ci_workflow_base() -> No
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             routed = isolate_ci_tmp(script, root)
-            (root / "cmux-ci-changed-files.txt").write_text(".github/workflows/ci.yml\n")
+            (root / "hmux-ci-changed-files.txt").write_text(".github/workflows/ci.yml\n")
             if base is not None:
-                (root / "cmux-ci-base-workflow.yml").write_text(base)
+                (root / "hmux-ci-base-workflow.yml").write_text(base)
             workflow = root / ".github" / "workflows" / "ci.yml"
             workflow.parent.mkdir(parents=True)
             workflow.write_text(edit_job(real, "changes"))
@@ -3417,8 +3417,8 @@ def test_ci_instant_navigation_owns_typecheck_once() -> None:
     typecheck = workflow_job_block("web-typecheck", WEB_WORKFLOW)
     instant = workflow_job_block("web-instant-navigation", WEB_WORKFLOW)
     web_validation = workflow_job_block("tests", WEB_VALIDATION_WORKFLOW)
-    assert "CMUX_INSTANT_SKIP_TYPECHECK" in config
-    assert "process.env.CMUX_INSTANT_SKIP_TYPECHECK === \"1\"" in config
+    assert "HMUX_INSTANT_SKIP_TYPECHECK" in config
+    assert "process.env.HMUX_INSTANT_SKIP_TYPECHECK === \"1\"" in config
     package_json = (ROOT / "web/package.json").read_text()
     assert '"test:instant": "playwright test -c playwright.instant.config.ts"' in package_json
     assert '"test:instant:checked"' not in package_json
@@ -3427,8 +3427,8 @@ def test_ci_instant_navigation_owns_typecheck_once() -> None:
     # Typecheck job. The browser job must never own a typecheck.
     assert typecheck.count("bun run typecheck") == 2
     assert "bun run typecheck" not in instant
-    assert "CMUX_INSTANT_CHECK_TYPECHECK" not in instant
-    assert '          CMUX_INSTANT_SKIP_TYPECHECK: "1"' in instant
+    assert "HMUX_INSTANT_CHECK_TYPECHECK" not in instant
+    assert '          HMUX_INSTANT_SKIP_TYPECHECK: "1"' in instant
     assert "        run: bun run test:instant" in instant
 
     validation_typecheck = web_validation.index("      - run: bun run typecheck")
@@ -3436,8 +3436,8 @@ def test_ci_instant_navigation_owns_typecheck_once() -> None:
     assert validation_typecheck < validation_instant
     assert web_validation[validation_typecheck:validation_instant].count("bun run typecheck") == 1
     validation_instant_step = web_validation[validation_instant:]
-    assert "CMUX_INSTANT_CHECK_TYPECHECK" not in validation_instant_step
-    assert '        env:\n          CMUX_INSTANT_SKIP_TYPECHECK: "1"' in validation_instant_step
+    assert "HMUX_INSTANT_CHECK_TYPECHECK" not in validation_instant_step
+    assert '        env:\n          HMUX_INSTANT_SKIP_TYPECHECK: "1"' in validation_instant_step
 
 
 def test_early_cli_smoke_checks_propagate_failure_and_require_this_build() -> None:
@@ -3453,7 +3453,7 @@ def test_early_cli_smoke_checks_propagate_failure_and_require_this_build() -> No
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             derived = root / "derived with spaces"
-            cli = derived / "Build/Products/Debug/cmux"
+            cli = derived / "Build/Products/Debug/hmux"
             cli.parent.mkdir(parents=True)
             if failed_probe != "missing-binary":
                 cli.write_text("#!/bin/sh\nexit 0\n")
@@ -3467,12 +3467,12 @@ def test_early_cli_smoke_checks_propagate_failure_and_require_this_build() -> No
                                     ("glaeda", "test_cli_glaeda_execution.py")):
                 (root / "tests" / filename).write_text(
                     "import os,pathlib\n"
-                    + "assert os.environ['CMUX_CLI_BIN'] == " + repr(str(cli)) + "\n"
+                    + "assert os.environ['HMUX_CLI_BIN'] == " + repr(str(cli)) + "\n"
                     + "with open(" + repr(str(trace)) + ", 'a') as out: out.write(" + repr(probe + "\n") + ")\n"
                     + "raise SystemExit(" + ("23" if probe == failed_probe else "0") + ")\n"
                 )
             result = subprocess.run(["bash", "-e", "-o", "pipefail", "-c", script], cwd=root,
-                env={**os.environ, "CMUX_COMPILE_ADMISSION_DERIVED_DATA": str(derived)},
+                env={**os.environ, "HMUX_COMPILE_ADMISSION_DERIVED_DATA": str(derived)},
                 capture_output=True, text=True)
             invoked = trace.read_text().splitlines() if trace.exists() else []
             if failed_probe == "missing-binary":
@@ -4031,8 +4031,8 @@ def test_build_input_fingerprint_tracks_product_identity_not_ci_orchestration() 
     )
 
     changed_admission = admission.replace(
-        '      CMUX_SKIP_ZIG_BUILD: "1"\n',
-        '      CMUX_SKIP_ZIG_BUILD: "0"\n',
+        '      HMUX_SKIP_ZIG_BUILD: "1"\n',
+        '      HMUX_SKIP_ZIG_BUILD: "0"\n',
         1,
     )
     assert changed_admission != admission
@@ -4117,7 +4117,7 @@ def test_only_an_in_org_run_with_a_passed_admission_counts_as_admitted() -> None
     assert find(api_for([run(8)], {8: [artifact_name("other", 1)]}, {8: passed})) is None, "different build inputs"
     assert find(api_for([run(8)], {8: inputs}, {8: failed})) is None, "admission did not pass"
     assert find(api_for([run(8)], {8: inputs}, {8: []})) is None, "admission was skipped or never ran"
-    assert find(api_for([run(8, owner="someone/cmux")], {8: inputs}, {8: passed})) is None, "a fork's run is not trusted"
+    assert find(api_for([run(8, owner="someone/hmux")], {8: inputs}, {8: passed})) is None, "a fork's run is not trusted"
 
     def broken(_path: str) -> dict:
         raise subprocess.CalledProcessError(1, "gh")
@@ -4437,12 +4437,12 @@ def test_a_skipped_suite_is_refused_when_only_the_suite_could_judge_the_diff() -
     sys.path.insert(0, str(ROOT / "scripts/ci"))
     from choose_ci_suite import coverage_gap
 
-    tests_diff = ["cmuxTests/WorkspaceUnitTests.swift"]
+    tests_diff = ["hmuxTests/WorkspaceUnitTests.swift"]
 
     # Compile admission builds the bundle and stops, so a test-only change is
     # unobserved when the suite is skipped.
     assert coverage_gap("pull_request", False, tests_diff, []) is True
-    assert coverage_gap("pull_request", False, ["cmuxUITests/A.swift"], []) is True
+    assert coverage_gap("pull_request", False, ["hmuxUITests/A.swift"], []) is True
     # Running the suite is the whole point; there is nothing to refuse.
     assert coverage_gap("pull_request", True, tests_diff, []) is False
     # Product sources still compile, which is what the policy claims to check.
@@ -4472,11 +4472,11 @@ def test_unit_ci_asks_for_the_unit_tests_without_the_expensive_lanes() -> None:
 
 
 
-def test_a_cmux_tests_diff_selects_the_unit_tests_without_a_label() -> None:
+def test_a_hmux_tests_diff_selects_the_unit_tests_without_a_label() -> None:
     sys.path.insert(0, str(ROOT / "scripts/ci"))
     from choose_ci_suite import coverage_gap, wants_unit_suite
 
-    tests_diff = ["cmuxTests/WorkspaceUnitTests.swift", "Sources/Workspace.swift"]
+    tests_diff = ["hmuxTests/WorkspaceUnitTests.swift", "Sources/Workspace.swift"]
     # The diff already says which job can judge it; no label is needed.
     assert wants_unit_suite("pull_request", "compile-only", [], tests_diff) is True
     assert (
@@ -4489,35 +4489,35 @@ def test_a_cmux_tests_diff_selects_the_unit_tests_without_a_label() -> None:
         )
         is False
     )
-    # A diff outside cmuxTests/ keeps the cheap path.
+    # A diff outside hmuxTests/ keeps the cheap path.
     assert wants_unit_suite("pull_request", "compile-only", [], ["Sources/Workspace.swift"]) is False
-    # cmuxUITests/ is not run by this job, so it does not select it, and the
+    # hmuxUITests/ is not run by this job, so it does not select it, and the
     # gap it leaves is still refused.
-    ui_diff = ["cmuxUITests/LaunchUITests.swift"]
+    ui_diff = ["hmuxUITests/LaunchUITests.swift"]
     assert wants_unit_suite("pull_request", "compile-only", [], ui_diff) is False
     assert coverage_gap("pull_request", False, ui_diff, [], unit_suite=False) is True
     # An unreadable diff runs the unit tests rather than guessing.
     assert wants_unit_suite("pull_request", "compile-only", [], None) is True
 
 
-def test_a_cmux_ui_tests_diff_runs_its_classes_without_a_label() -> None:
+def test_a_hmux_ui_tests_diff_runs_its_classes_without_a_label() -> None:
     sys.path.insert(0, str(ROOT / "scripts/ci"))
     from choose_ci_suite import MAX_UI_SELECTORS, changed_ui_selectors, coverage_gap
     with tempfile.TemporaryDirectory() as temp:
         tmp_path = Path(temp)
-        ui = tmp_path / "cmuxUITests"
+        ui = tmp_path / "hmuxUITests"
         ui.mkdir()
         (ui / "LaunchUITests.swift").write_text("import XCTest\n\nfinal class LaunchUITests: XCTestCase {}\n")
         (ui / "Pair.swift").write_text("class AUITests: XCTestCase {}\nclass BUITests : XCTestCase {}\n")
         (ui / "Helpers.swift").write_text("extension XCUIApplication {}\n")
         # ci.yml's ui-tests job runs the classes a diff changes; a deleted file adds nothing.
-        assert changed_ui_selectors(tmp_path, ["cmuxUITests/LaunchUITests.swift", "cmuxUITests/Gone.swift",
-                                               "Sources/A.swift"]) == ["cmuxUITests/LaunchUITests"]
-        assert changed_ui_selectors(tmp_path, ["cmuxUITests/Pair.swift"]) == ["cmuxUITests/AUITests",
-                                                                             "cmuxUITests/BUITests"]
+        assert changed_ui_selectors(tmp_path, ["hmuxUITests/LaunchUITests.swift", "hmuxUITests/Gone.swift",
+                                               "Sources/A.swift"]) == ["hmuxUITests/LaunchUITests"]
+        assert changed_ui_selectors(tmp_path, ["hmuxUITests/Pair.swift"]) == ["hmuxUITests/AUITests",
+                                                                             "hmuxUITests/BUITests"]
         assert changed_ui_selectors(tmp_path, ["Sources/A.swift"]) == []
         # A helper any class may use maps to no class, so it stays a gap.
-        assert changed_ui_selectors(tmp_path, ["cmuxUITests/Helpers.swift"]) is None
+        assert changed_ui_selectors(tmp_path, ["hmuxUITests/Helpers.swift"]) is None
         # A base class selects the test classes inheriting it, not itself; an
         # extension selects the class it extends; one of XCTestCase is a helper.
         (ui / "Base.swift").write_text("@MainActor class SocketTestCase: XCTestCase {}\n"
@@ -4525,16 +4525,16 @@ def test_a_cmux_ui_tests_diff_runs_its_classes_without_a_label() -> None:
         (ui / "More.swift").write_text("final class MoreSocketUITests: SocketTestCase {}\n")
         (ui / "Launch+Lab.swift").write_text("extension LaunchUITests { func testLab() {} }\n"
                                              "private extension XCTestCase { func wait() {} }\n")
-        assert changed_ui_selectors(tmp_path, ["cmuxUITests/Base.swift"]) == [
-            "cmuxUITests/MoreSocketUITests", "cmuxUITests/SocketUITests"]
-        assert changed_ui_selectors(tmp_path, ["cmuxUITests/Launch+Lab.swift"]) == ["cmuxUITests/LaunchUITests"]
+        assert changed_ui_selectors(tmp_path, ["hmuxUITests/Base.swift"]) == [
+            "hmuxUITests/MoreSocketUITests", "hmuxUITests/SocketUITests"]
+        assert changed_ui_selectors(tmp_path, ["hmuxUITests/Launch+Lab.swift"]) == ["hmuxUITests/LaunchUITests"]
         many = "".join(f"class C{index}UITests: XCTestCase {{}}\n" for index in range(MAX_UI_SELECTORS + 1))
         (ui / "Many.swift").write_text(many)
-        assert changed_ui_selectors(tmp_path, ["cmuxUITests/Many.swift"]) is None
+        assert changed_ui_selectors(tmp_path, ["hmuxUITests/Many.swift"]) is None
 
-        ui_diff = ["cmuxUITests/LaunchUITests.swift"]
+        ui_diff = ["hmuxUITests/LaunchUITests.swift"]
         assert coverage_gap("pull_request", False, ui_diff, [], ui_suite=True) is False
-        # The full suite never runs cmuxUITests/, so full-ci does not close that gap.
+        # The full suite never runs hmuxUITests/, so full-ci does not close that gap.
         assert coverage_gap("pull_request", True, ui_diff, []) is True
         assert coverage_gap("pull_request", True, ui_diff, [], ui_suite=True) is False
 
@@ -4574,15 +4574,15 @@ def test_a_diff_the_fuzz_repros_exercise_asks_for_their_replays() -> None:
         assert values["coverage_gap"] == "false"
         assert outputs("Sources/Workspace.swift\n")["ui_selectors"] == ""
         # A fork's ui-tests job refuses to run anything, and no-full-ci opts out.
-        assert outputs("Sources/Sidebar/SidebarState.swift\n", head="someone/cmux")["ui_selectors"] == ""
+        assert outputs("Sources/Sidebar/SidebarState.swift\n", head="someone/hmux")["ui_selectors"] == ""
         assert outputs("Sources/Sidebar/SidebarState.swift\n", labels=("no-full-ci",))["ui_selectors"] == ""
         # Next to a changed class, after it; a helper change stays a gap the replays do not close.
-        classes = changed_ui_selectors(ROOT, ["cmuxUITests/BonsplitTabDragUITests.swift"])
+        classes = changed_ui_selectors(ROOT, ["hmuxUITests/BonsplitTabDragUITests.swift"])
         assert classes
-        values = outputs("cmuxUITests/BonsplitTabDragUITests.swift\nvendor/bonsplit\n")
+        values = outputs("hmuxUITests/BonsplitTabDragUITests.swift\nvendor/bonsplit\n")
         assert values["ui_selectors"] == " ".join([*classes, FUZZ_REGRESSIONS_SELECTOR])
         assert values["coverage_gap"] == "false"
-        helper = next(path.relative_to(ROOT).as_posix() for path in sorted((ROOT / "cmuxUITests").rglob("*"))
+        helper = next(path.relative_to(ROOT).as_posix() for path in sorted((ROOT / "hmuxUITests").rglob("*"))
                       if path.is_file() and changed_ui_selectors(ROOT, [path.relative_to(ROOT).as_posix()]) is None)
         values = outputs(f"{helper}\nSources/Sidebar/SidebarState.swift\n")
         assert values["ui_selectors"] == FUZZ_REGRESSIONS_SELECTOR
@@ -4591,11 +4591,11 @@ def test_a_diff_the_fuzz_repros_exercise_asks_for_their_replays() -> None:
     # Classes that fill one focused run keep it: the replay gives way, and no gap opens.
     with tempfile.TemporaryDirectory() as temp:
         root = Path(temp)
-        (root / "cmuxUITests").mkdir()
+        (root / "hmuxUITests").mkdir()
         names = [f"SidebarWorkspaceReorderRows{index}UITests" for index in range(6)]  # 287 characters; 315 with the replay
-        (root / "cmuxUITests/Many.swift").write_text("".join(f"class {name}: XCTestCase {{}}\n" for name in names))
+        (root / "hmuxUITests/Many.swift").write_text("".join(f"class {name}: XCTestCase {{}}\n" for name in names))
         changed = root / "changed.txt"
-        changed.write_text("cmuxUITests/Many.swift\nSources/Sidebar/SidebarState.swift\n")
+        changed.write_text("hmuxUITests/Many.swift\nSources/Sidebar/SidebarState.swift\n")
         event = root / "event.json"
         event.write_text(json.dumps({"repository": {"full_name": "manaflow-ai/cmux"},
                                      "pull_request": {"head": {"repo": {"full_name": "manaflow-ai/cmux"}}, "labels": []}}))
@@ -4604,7 +4604,7 @@ def test_a_diff_the_fuzz_repros_exercise_asks_for_their_replays() -> None:
              "--event-path", str(event), "--files-from", str(changed), "--root", str(root)],
             capture_output=True, text=True, check=True)
         values = dict(line.split("=", 1) for line in run.stdout.splitlines() if "=" in line)
-        assert values["ui_selectors"] == " ".join(f"cmuxUITests/{name}" for name in names)
+        assert values["ui_selectors"] == " ".join(f"hmuxUITests/{name}" for name in names)
         assert values["coverage_gap"] == "false"
 
 
@@ -4618,7 +4618,7 @@ def test_a_diff_that_edits_a_few_suites_runs_only_those_suites() -> None:
 
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
-        tests = root / "cmuxTests"
+        tests = root / "hmuxTests"
         tests.mkdir()
         (root / ".github/workflows").mkdir(parents=True)
         (root / ".github/workflows/ci-macos.yml").write_text(MACOS_WORKFLOW.read_text(encoding="utf-8"))
@@ -4724,47 +4724,47 @@ def test_a_diff_that_edits_a_few_suites_runs_only_those_suites() -> None:
             (tests / name).write_text(text)
 
         def affected(path: str, line: int | None = None) -> list[str] | None:
-            full = f"cmuxTests/{path}"
+            full = f"hmuxTests/{path}"
             return affected_suites(root, [full], None if line is None else hunk(full, line))
 
         # A test method's edit runs its suite and nothing else, including a
         # Swift Testing method whose @Test sits above a multi-line argument.
-        assert affected("AlphaTests.swift", 6) == ["cmuxTests/AlphaTests"]
-        assert affected("AlphaTests.swift", 9) == ["cmuxTests/AlphaTests"]
+        assert affected("AlphaTests.swift", 6) == ["hmuxTests/AlphaTests"]
+        assert affected("AlphaTests.swift", 9) == ["hmuxTests/AlphaTests"]
         # A suite's helper reaches the suites that name the suite, not every
         # file with a method of the same name.
-        assert affected("AlphaTests.swift", 4) == ["cmuxTests/AlphaTests", "cmuxTests/BetaTests"]
+        assert affected("AlphaTests.swift", 4) == ["hmuxTests/AlphaTests", "hmuxTests/BetaTests"]
         # A top-level helper is traced through the helpers that call it.
-        assert affected("Helper.swift", 4) == ["cmuxTests/AlphaTests", "cmuxTests/UsesHelperTests"]
+        assert affected("Helper.swift", 4) == ["hmuxTests/AlphaTests", "hmuxTests/UsesHelperTests"]
         # Members added to another type are traced by their names.
-        assert affected("StringExtras.swift", 2) == ["cmuxTests/ShoutTests"]
+        assert affected("StringExtras.swift", 2) == ["hmuxTests/ShoutTests"]
         # A conformance has no name to search for.
         assert affected("Conformances.swift", 2) is None
         # A helper type's member traces the type: a suite that only builds
         # the mock for app code to call runs, and so does one that reaches it
         # through a factory without naming it.
-        assert affected("Recorder.swift", 3) == ["cmuxTests/BuildsRecorderTests", "cmuxTests/FactoryTests"]
+        assert affected("Recorder.swift", 3) == ["hmuxTests/BuildsRecorderTests", "hmuxTests/FactoryTests"]
         # A helper's `tearDown()` is a helper, not a hook only XCTest calls.
-        assert affected("Harness.swift", 3) == ["cmuxTests/HarnessTests"]
+        assert affected("Harness.swift", 3) == ["hmuxTests/HarnessTests"]
         # An attribute line belongs to the declaration below it.
-        assert affected("Plain.swift", 3) == ["cmuxTests/PlainTests"]
+        assert affected("Plain.swift", 3) == ["hmuxTests/PlainTests"]
         # Suites nested in a container are named nowhere here: run everything.
         assert affected("Container.swift", 4) is None
         # An import is a change to the whole file.
-        assert affected("AlphaTests.swift", 1) == ["cmuxTests/AlphaTests", "cmuxTests/BetaTests"]
+        assert affected("AlphaTests.swift", 1) == ["hmuxTests/AlphaTests", "hmuxTests/BetaTests"]
         # Without line information every line of the file counts.
-        assert affected("AlphaTests.swift") == ["cmuxTests/AlphaTests", "cmuxTests/BetaTests"]
+        assert affected("AlphaTests.swift") == ["hmuxTests/AlphaTests", "hmuxTests/BetaTests"]
         # Non-Swift inputs run everything; a deleted file leaves nothing.
-        assert affected_suites(root, ["cmuxTests/Fixture.json"], None) is None
-        assert affected_suites(root, ["cmuxTests/GoneTests.swift"], None) == []
+        assert affected_suites(root, ["hmuxTests/Fixture.json"], None) is None
+        assert affected_suites(root, ["hmuxTests/GoneTests.swift"], None) == []
         assert changed_unit_selectors(root, None) == []
-        assert changed_unit_selectors(root, ["cmuxTests/GoneTests.swift"]) == []
+        assert changed_unit_selectors(root, ["hmuxTests/GoneTests.swift"]) == []
         # A suite a strict step owns runs through that step, on the same worker.
-        feed = ["cmuxTests/FeedCoordinatorTests.swift"]
-        assert changed_unit_selectors(root, feed) == ["cmuxTests/FeedCoordinatorTests"]
+        feed = ["hmuxTests/FeedCoordinatorTests.swift"]
+        assert changed_unit_selectors(root, feed) == ["hmuxTests/FeedCoordinatorTests"]
         workflow = MACOS_WORKFLOW.read_text(encoding="utf-8")
-        assert strict_steps(workflow, ["cmuxTests/FeedCoordinatorTests"]) == ["Run Pi Feed ownership regressions"]
-        assert strict_steps(workflow, ["cmuxTests/AlphaTests"]) == []
+        assert strict_steps(workflow, ["hmuxTests/FeedCoordinatorTests"]) == ["Run Pi Feed ownership regressions"]
+        assert strict_steps(workflow, ["hmuxTests/AlphaTests"]) == []
 
 
 def app_host_product_consumers(workflow: dict) -> dict[str, dict]:
@@ -4805,7 +4805,7 @@ PRODUCT_RUNNER_OUTPUT = product_runner_output(PRODUCT_RUNNER_KEYS["app-host-unit
 # Compile admission may take the pinned labels admission-placement outputs in
 # this attempt (scripts/ci/admission_placement.py, spread-first) or, on attempt
 # 1, those pr_admission_runner carries (pr_runner_pool.py, warm affinity), a
-# JSON array whose first label is always pr_root_runner; CMUX_PRODUCT_RUNNER
+# JSON array whose first label is always pr_root_runner; HMUX_PRODUCT_RUNNER
 # restates it, the root label, which the consumers take.
 WARM_ADMISSION = ("needs.admission-placement.outputs.attempt == github.run_attempt && "
                   "needs.admission-placement.outputs.runner && fromJSON(needs.admission-placement.outputs.runner) || "
@@ -4861,17 +4861,17 @@ def product_consumer_route_violations(workflow: dict) -> list[str]:
     """
     producer = workflow["jobs"]["macos-compile-admission"]
     violations = []
-    if (producer["env"].get("CMUX_PRODUCT_RUNNER") or "").replace(WARM_ADMISSION_FIRST, WARM_ADMISSION) \
+    if (producer["env"].get("HMUX_PRODUCT_RUNNER") or "").replace(WARM_ADMISSION_FIRST, WARM_ADMISSION) \
             .replace(OVERFLOW_ADMISSION_FIRST, OVERFLOW_ADMISSION) != producer["runs-on"]:
-        violations.append("macos-compile-admission: CMUX_PRODUCT_RUNNER does not restate runs-on")
+        violations.append("macos-compile-admission: HMUX_PRODUCT_RUNNER does not restate runs-on")
     outputs = producer.get("outputs", {})
-    if outputs.get("runner") != "${{ env.CMUX_PRODUCT_RUNNER }}":
+    if outputs.get("runner") != "${{ env.HMUX_PRODUCT_RUNNER }}":
         violations.append("macos-compile-admission: missing runner output")
-    if outputs.get("xcode_app") != "${{ env.CMUX_CI_XCODE_APP }}":
+    if outputs.get("xcode_app") != "${{ env.HMUX_CI_XCODE_APP }}":
         violations.append("macos-compile-admission: missing xcode_app output")
     for name, job in app_host_product_consumers(workflow).items():
         runs_on = late_placement_route(workflow, name, job.get("runs-on", ""))
-        xcode = (job.get("env") or {}).get("CMUX_CI_XCODE_APP")
+        xcode = (job.get("env") or {}).get("HMUX_CI_XCODE_APP")
         if name in PRODUCT_RUNNER_KEYS and runs_on == product_runner_output(PRODUCT_RUNNER_KEYS[name]) \
                 and xcode == PRODUCT_XCODE_OUTPUT:
             continue
@@ -4883,10 +4883,10 @@ def product_consumer_route_violations(workflow: dict) -> list[str]:
             and runs_on.replace("vars.MACOS_RUNNER_DISPLAY", "vars.MACOS_RUNNER_15").replace(
                 "' lag '", "' admission '").replace("inputs.pr_gui_runner || ", "")
             == admission_route(producer["runs-on"])
-            and xcode == producer["env"]["CMUX_CI_XCODE_APP"]
+            and xcode == producer["env"]["HMUX_CI_XCODE_APP"]
         ):
             continue
-        violations.append(f"{name}: runs-on {runs_on}; CMUX_CI_XCODE_APP {xcode}")
+        violations.append(f"{name}: runs-on {runs_on}; HMUX_CI_XCODE_APP {xcode}")
     return violations
 
 
@@ -4905,7 +4905,7 @@ def test_app_host_product_consumers_run_on_the_producers_pool_and_xcode() -> Non
     # moves them without an edit here.
     shards = workflow["jobs"]["app-host-unit-tests"]
     assert late_placement_route(workflow, "app-host-unit-tests", shards["runs-on"]) == PRODUCT_RUNNER_OUTPUT
-    assert shards["env"]["CMUX_CI_XCODE_APP"] == PRODUCT_XCODE_OUTPUT
+    assert shards["env"]["HMUX_CI_XCODE_APP"] == PRODUCT_XCODE_OUTPUT
 
 
 def test_late_placement_must_keep_the_admissions_xcode() -> None:
@@ -4928,17 +4928,17 @@ def test_product_consumer_guard_follows_a_new_admission_route() -> None:
     producer = workflow["jobs"]["macos-compile-admission"]
     pull_request = "github.event_name == 'pull_request'"
     new_route = "(github.event_name == 'pull_request' || github.event_name == 'merge_group')"
-    for key in ("CMUX_PRODUCT_RUNNER", "CMUX_CI_XCODE_APP"):
+    for key in ("HMUX_PRODUCT_RUNNER", "HMUX_CI_XCODE_APP"):
         assert pull_request in producer["env"][key], key
         producer["env"][key] = producer["env"][key].replace(pull_request, new_route, 1)
-    producer["runs-on"] = producer["env"]["CMUX_PRODUCT_RUNNER"].replace(WARM_ADMISSION_FIRST, WARM_ADMISSION) \
+    producer["runs-on"] = producer["env"]["HMUX_PRODUCT_RUNNER"].replace(WARM_ADMISSION_FIRST, WARM_ADMISSION) \
         .replace(OVERFLOW_ADMISSION_FIRST, OVERFLOW_ADMISSION)
     violations = product_consumer_route_violations(workflow)
     assert [line.split(":", 1)[0] for line in violations] == ["tests-build-and-lag"], violations
 
 
 def test_app_host_rerun_runs_on_the_products_pool() -> None:
-    # The rerun rebuilds cmuxTests against downloaded products with the
+    # The rerun rebuilds hmuxTests against downloaded products with the
     # products' own Xcode, which only the pool that built them carries.
     rerun_workflow = ROOT / ".github" / "workflows" / "app-host-test-rerun.yml"
     workflow = yaml.safe_load(rerun_workflow.read_text(encoding="utf-8"))
@@ -4960,13 +4960,13 @@ def test_changed_suites_run_on_one_worker_and_labels_still_run_everything() -> N
     assert [row["shard"] for row in numbered_rows] == [1, 2, 3, 4, 5, 6, 7], numbered_rows
     # No row names a pool: every consumer runs where compile admission ran.
     assert all(set(row) == {"shard"} for row in changed_rows + numbered_rows), (changed_rows, numbered_rows)
-    assert job["env"]["CMUX_APP_HOST_UNIT_SELECTORS"] == "${{ inputs.unit_selectors }}"
+    assert job["env"]["HMUX_APP_HOST_UNIT_SELECTORS"] == "${{ inputs.unit_selectors }}"
     # Shard 8 must own none of the strict steps the numbered shards run.
     owners = {key: value for key, value in job["env"].items() if key.endswith("_SHARD")}
     assert "8" not in owners.values(), owners
     # Every strict suite has a step, and each such step runs when selected.
     from choose_ci_suite import strict_steps
-    from cmux_unit_test_shard import FOCUSED_GATE_SELECTORS
+    from hmux_unit_test_shard import FOCUSED_GATE_SELECTORS
 
     text = MACOS_WORKFLOW.read_text(encoding="utf-8")
     owners = strict_steps(text, sorted(FOCUSED_GATE_SELECTORS))
@@ -4981,7 +4981,7 @@ def test_changed_suites_run_on_one_worker_and_labels_still_run_everything() -> N
     script = ROOT / "scripts/ci/choose_ci_suite.py"
     with tempfile.TemporaryDirectory() as directory:
         changed = Path(directory) / "changed.txt"
-        changed.write_text("cmuxTests/TerminalTabIconRegressionTests.swift\n")
+        changed.write_text("hmuxTests/TerminalTabIconRegressionTests.swift\n")
         labels = Path(directory) / "labels.txt"
 
         def selectors(label: str) -> str:
@@ -4994,7 +4994,7 @@ def test_changed_suites_run_on_one_worker_and_labels_still_run_everything() -> N
             )
             return next(line for line in run.stdout.splitlines() if line.startswith("unit_selectors="))
 
-        assert selectors("") == "unit_selectors=cmuxTests/TerminalTabIconRegressionTests"
+        assert selectors("") == "unit_selectors=hmuxTests/TerminalTabIconRegressionTests"
         # An explicit request for every suite is honored.
         assert selectors("unit-ci\n") == "unit_selectors="
         assert selectors("full-ci\n") == "unit_selectors="
@@ -5004,7 +5004,7 @@ def test_a_changed_gated_test_runs_the_step_that_sets_its_gate() -> None:
     """Editing a test that only a dedicated step can run selects that step.
 
     The five-tab renderer memory test skips itself unless its step sets
-    CMUX_RENDERER_MEMORY_REGRESSION=1. A changed-suites run of its suite used
+    HMUX_RENDERER_MEMORY_REGRESSION=1. A changed-suites run of its suite used
     to run only the shared batch, where the edited test reported "skipped"
     and the run went green without executing it.
     """
@@ -5013,7 +5013,7 @@ def test_a_changed_gated_test_runs_the_step_that_sets_its_gate() -> None:
     from test_impact import affected_suites
 
     step_name = "Run five-tab renderer memory regression"
-    suite = "cmuxTests/GhosttySurfaceOverlayTests"
+    suite = "hmuxTests/GhosttySurfaceOverlayTests"
     text = MACOS_WORKFLOW.read_text(encoding="utf-8")
     assert strict_steps(text, [suite]) == [step_name]
     step = next(
@@ -5021,16 +5021,16 @@ def test_a_changed_gated_test_runs_the_step_that_sets_its_gate() -> None:
         if step.get("name") == step_name
     )
     assert f"contains(inputs.unit_strict_steps, '|{step_name}|')" in step["if"], step["if"]
-    assert "CMUX_RENDERER_MEMORY_REGRESSION=1" in step["run"]
+    assert "HMUX_RENDERER_MEMORY_REGRESSION=1" in step["run"]
     assert f"-only-testing:{suite}/" in step["run"]
 
     # The PR diff that edits the gated test routes to the worker with the step.
-    source = ROOT / "cmuxTests/TerminalAndGhosttyTests.swift"
+    source = ROOT / "hmuxTests/TerminalAndGhosttyTests.swift"
     gate = next(
         number for number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), 1)
-        if 'environment["CMUX_RENDERER_MEMORY_REGRESSION"]' in line
+        if 'environment["HMUX_RENDERER_MEMORY_REGRESSION"]' in line
     )
-    path = "cmuxTests/TerminalAndGhosttyTests.swift"
+    path = "hmuxTests/TerminalAndGhosttyTests.swift"
     script = ROOT / "scripts/ci/choose_ci_suite.py"
     with tempfile.TemporaryDirectory() as directory:
         changed = Path(directory) / "changed.txt"
@@ -5061,10 +5061,10 @@ def test_a_changed_gated_test_runs_the_step_that_sets_its_gate() -> None:
     assert strict_steps(unselectable, [suite]) is None
     with tempfile.TemporaryDirectory() as directory:
         root = Path(directory)
-        (root / "cmuxTests").mkdir()
+        (root / "hmuxTests").mkdir()
         (root / ".github/workflows").mkdir(parents=True)
         (root / ".github/workflows/ci-macos.yml").write_text(unselectable, encoding="utf-8")
-        (root / "cmuxTests/Overlay.swift").write_text(
+        (root / "hmuxTests/Overlay.swift").write_text(
             "import XCTest\n"
             "final class GhosttySurfaceOverlayTests: XCTestCase {\n"
             "    func testFiveTab() {}\n"
@@ -5073,28 +5073,28 @@ def test_a_changed_gated_test_runs_the_step_that_sets_its_gate() -> None:
         )
         # The fixture does select the suite, so the empty answer below comes
         # from the unselectable step and not from an untraced edit.
-        assert affected_suites(root, ["cmuxTests/Overlay.swift"], None) == [suite]
-        assert changed_unit_selectors(root, ["cmuxTests/Overlay.swift"]) == []
+        assert affected_suites(root, ["hmuxTests/Overlay.swift"], None) == [suite]
+        assert changed_unit_selectors(root, ["hmuxTests/Overlay.swift"]) == []
 
-    # A step that loops over `-only-testing:"cmuxTests/$suite"` names no suite
+    # A step that loops over `-only-testing:"hmuxTests/$suite"` names no suite
     # this module can read from the selector, so its suites have to be ones
     # strict_steps() finds by name: FOCUSED_GATE_SELECTORS.
-    from cmux_unit_test_shard import FOCUSED_GATE_SELECTORS
+    from hmux_unit_test_shard import FOCUSED_GATE_SELECTORS
 
     looped = 0
     for step in yaml.safe_load(text)["jobs"]["app-host-unit-tests"]["steps"]:
         run = step.get("run", "")
-        if '-only-testing:"cmuxTests/$' not in run or "_SHARD)" not in str(step.get("if", "")):
+        if '-only-testing:"hmuxTests/$' not in run or "_SHARD)" not in str(step.get("if", "")):
             continue
         looped += 1
         for listing in re.findall(r"for suite in(.*?)\n\s*do\b", run, re.S):
             for name in re.findall(r"[A-Za-z_][A-Za-z0-9_]*", listing):
-                assert f"cmuxTests/{name}" in FOCUSED_GATE_SELECTORS, (step["name"], name)
+                assert f"hmuxTests/{name}" in FOCUSED_GATE_SELECTORS, (step["name"], name)
     assert looped, "no looped -only-testing step found; update this check"
 
 
 def test_a_test_only_diff_runs_every_suite_it_edits() -> None:
-    """#14366 edited three cmuxTests/ files and nothing else.
+    """#14366 edited three hmuxTests/ files and nothing else.
 
     Each edited suite has to be selected, XCTest and Swift Testing alike, and a
     test-file edit that traces to no suite runs every suite rather than none.
@@ -5120,22 +5120,22 @@ def test_a_test_only_diff_runs_every_suite_it_edits() -> None:
             )
             return dict(line.split("=", 1) for line in run.stdout.splitlines())
 
-        swift_testing = ["cmuxTests/SurfacePaneFactoryFocusTests.swift", "cmuxTests/SurfaceSelectionTests.swift"]
+        swift_testing = ["hmuxTests/SurfacePaneFactoryFocusTests.swift", "hmuxTests/SurfaceSelectionTests.swift"]
         result = outputs(swift_testing)
         assert result["unit_suite"] == "true", result
         assert result["coverage_gap"] == "false", result
         assert result["unit_selectors"].split() == [
-            "cmuxTests/SurfacePaneFactoryFocusTests", "cmuxTests/SurfaceSelectionTests"
+            "hmuxTests/SurfacePaneFactoryFocusTests", "hmuxTests/SurfaceSelectionTests"
         ], result
 
-        source = ROOT / "cmuxTests/WorkspaceUnitTests.swift"
+        source = ROOT / "hmuxTests/WorkspaceUnitTests.swift"
         declaration = next(
             number for number, line in enumerate(source.read_text(encoding="utf-8").splitlines(), 1)
             if line.startswith("final class KeyboardShortcutSettingsFileStoreTests:")
         )
-        path = "cmuxTests/WorkspaceUnitTests.swift"
+        path = "hmuxTests/WorkspaceUnitTests.swift"
         result = outputs([path], f"--- a/{path}\n+++ b/{path}\n@@ -{declaration + 1},0 +{declaration + 1},1 @@\n")
-        assert result["unit_selectors"] == "cmuxTests/KeyboardShortcutSettingsFileStoreTests", result
+        assert result["unit_selectors"] == "hmuxTests/KeyboardShortcutSettingsFileStoreTests", result
 
         # An edit that traces to no single suite, such as an import, which
         # changes the whole file, runs every suite rather than none.
@@ -5184,18 +5184,18 @@ def test_an_app_source_diff_runs_the_suites_that_mention_what_it_changed() -> No
         # for, and take the changed-suites worker rather than admission.
         assert result["unit_canary"] == "true", result
         assert result["unit_in_admission"] == "false", result
-        assert "cmuxTests/AgentQuitOwnershipTests" in result["unit_selectors"].split(), result
+        assert "hmuxTests/AgentQuitOwnershipTests" in result["unit_selectors"].split(), result
         # Only suites the shared batch runs: the selector also names helper
         # types, and a selector matching no test fails the run.
         sys.path.insert(0, str(ROOT / "scripts/ci"))
-        from cmux_unit_test_shard import discover_selectors
-        batch = {f"cmuxTests/{s.identifier.split('/')[1]}" for s in discover_selectors(ROOT)}
+        from hmux_unit_test_shard import discover_selectors
+        batch = {f"hmuxTests/{s.identifier.split('/')[1]}" for s in discover_selectors(ROOT)}
         assert set(result["unit_selectors"].split()) <= batch, set(result["unit_selectors"].split()) - batch
         assert result["unit_strict_steps"] == "", result
 
         for unreadable in (None, ""):
             result = outputs(unreadable)
-            assert "cmuxTests/AgentQuitOwnershipTests" not in result["unit_selectors"].split(), result
+            assert "hmuxTests/AgentQuitOwnershipTests" not in result["unit_selectors"].split(), result
 
 
 def test_compile_admission_runs_changed_suites_that_need_no_worker() -> None:
@@ -5222,10 +5222,10 @@ def test_compile_admission_runs_changed_suites_that_need_no_worker() -> None:
             )
             return dict(line.split("=", 1) for line in run.stdout.splitlines())
 
-        plain = ["cmuxTests/TerminalTabIconRegressionTests.swift"]
+        plain = ["hmuxTests/TerminalTabIconRegressionTests.swift"]
         assert outputs(plain)["unit_in_admission"] == "true"
         # A strict step's suite needs that step's own app host: the worker.
-        strict = outputs(["cmuxTests/FeedCoordinatorTests.swift"])
+        strict = outputs(["hmuxTests/FeedCoordinatorTests.swift"])
         assert strict["unit_strict_steps"], strict
         assert strict["unit_in_admission"] == "false", strict
         # A consumer edit still has to be proven on the worker, canary or not.
@@ -5274,7 +5274,7 @@ def test_compile_admission_runs_changed_suites_that_need_no_worker() -> None:
             subprocess.run(["bash", "-e", "-c", take_step["run"]], env=env, check=True, capture_output=True)
             return output.read_text().strip()
 
-    assert take_step["env"]["GLAEDA_CANONICAL_ROOT"] == "/Users/Shared/cmux-build-fleet/bin/glaeda-canonical-root"
+    assert take_step["env"]["GLAEDA_CANONICAL_ROOT"] == "/Users/Shared/hmux-build-fleet/bin/glaeda-canonical-root"
     assert take_gui_output(0) == "tested=true"
     for gave_way in (1, 2, 3):
         assert take_gui_output(gave_way) == "tested=false", gave_way
@@ -5306,19 +5306,19 @@ def test_compile_admission_runs_changed_suites_that_need_no_worker() -> None:
     assert by_name["Upload built app-host test inventory"]["with"] == shard_steps["Upload built app-host test inventory"]["with"]
     assert by_name["Upload app-host failure diagnostics"]["with"] == shard_steps["Upload app-host failure diagnostics"]["with"]
     # The tests see what the worker's changed-suites run sees, as shard 8.
-    for key in ("CMUX_CI_APP_HOST_ISOLATION_REQUIRED", "CMUX_APP_HOST_UNIT_SELECTORS",
-                "CMUX_APP_HOST_CAPTURE_XCRESULTS", "CMUX_UNIT_TEST_TIMEOUT_SECONDS",
-                "CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS",
-                "CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET", "SWIFT_BACKTRACE",
-                "CMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS"):
+    for key in ("HMUX_CI_APP_HOST_ISOLATION_REQUIRED", "HMUX_APP_HOST_UNIT_SELECTORS",
+                "HMUX_APP_HOST_CAPTURE_XCRESULTS", "HMUX_UNIT_TEST_TIMEOUT_SECONDS",
+                "HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS",
+                "HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET", "SWIFT_BACKTRACE",
+                "HMUX_XCODEBUILD_NONINTERACTIVE_POST_TEST_TIMEOUT_SECONDS"):
         assert admission["env"][key] == shards["env"][key], key
-    assert admission["env"]["CMUX_APP_HOST_SHARD"] == "8"
+    assert admission["env"]["HMUX_APP_HOST_SHARD"] == "8"
 
     # macOS status takes admission's success as the tests' and names a test
     # failure apart from a compile failure.
     status = workflow_job_step_script("macos-status", "Check routed macOS jobs", MACOS_WORKFLOW)
     route = {"macos": "true", "full_suite": "false", "unit_suite": "true", "compile_admitted": "",
-             "release_build": "false", "unit_selectors": "cmuxTests/AlphaTests"}
+             "release_build": "false", "unit_selectors": "hmuxTests/AlphaTests"}
 
     def macos_status(in_admission: str, admission: str, shards: str, suites: str,
                      tested: str = "") -> subprocess.CompletedProcess[str]:
@@ -5358,7 +5358,7 @@ def test_an_app_host_consumer_edit_runs_a_canary_after_the_compile() -> None:
         CONSUMER_CANARY_SELECTOR,
         consumer_canary_selectors,
     )
-    from cmux_unit_test_shard import FOCUSED_GATE_SELECTORS, discover_selectors
+    from hmux_unit_test_shard import FOCUSED_GATE_SELECTORS, discover_selectors
 
     workflow_path = ".github/workflows/ci-macos.yml"
     lines = MACOS_WORKFLOW.read_text(encoding="utf-8").splitlines()
@@ -5375,7 +5375,7 @@ def test_an_app_host_consumer_edit_runs_a_canary_after_the_compile() -> None:
 
     canary = [CONSUMER_CANARY_SELECTOR]
     # A script only the shards run is a consumer edit.
-    for path in ("scripts/ci/app_host_test_products.py", "scripts/ci/cmux_unit_test_shard.py"):
+    for path in ("scripts/ci/app_host_test_products.py", "scripts/ci/hmux_unit_test_shard.py"):
         assert consumer_canary_selectors(ROOT, [path], None) == canary, path
     # So is a ci-macos.yml hunk inside the shards' job, first line to last.
     for line in (job_start, job_start + 20, job_end):
@@ -5384,7 +5384,7 @@ def test_an_app_host_consumer_edit_runs_a_canary_after_the_compile() -> None:
     # decide where the shards run and which Xcode loads the product (#14163).
     admission_start = lines.index("  macos-compile-admission:")
     admission_steps = lines.index("    steps:", admission_start)
-    for key in ("    outputs:", "      runner: ", "      CMUX_PRODUCT_RUNNER: ", "      CMUX_CI_XCODE_APP: "):
+    for key in ("    outputs:", "      runner: ", "      HMUX_PRODUCT_RUNNER: ", "      HMUX_CI_XCODE_APP: "):
         line = next(number for number, text in enumerate(lines[admission_start:admission_steps],
                                                        start=admission_start + 1) if text.startswith(key))
         assert consumer_canary_selectors(ROOT, [workflow_path], hunk(line)) == canary, key
@@ -5426,7 +5426,7 @@ def test_an_app_host_consumer_edit_runs_a_canary_after_the_compile() -> None:
 
     # The tests diff ci.yml hands the chooser carries ci-macos.yml's hunks.
     ci_text = CI_WORKFLOW.read_text(encoding="utf-8")
-    assert f'"$MERGE_SHA" -- cmuxTests {workflow_path} \\\n' in ci_text
+    assert f'"$MERGE_SHA" -- hmuxTests {workflow_path} \\\n' in ci_text
 
     script = ROOT / "scripts/ci/choose_ci_suite.py"
     with tempfile.TemporaryDirectory() as directory:
@@ -5452,8 +5452,8 @@ def test_an_app_host_consumer_edit_runs_a_canary_after_the_compile() -> None:
         assert result["unit_strict_steps"] == "", result
         assert result["coverage_gap"] == "false", result
         # Edited suites already run through the consumer; they replace the canary.
-        suites = outputs(consumer + ["cmuxTests/TerminalTabIconRegressionTests.swift"])
-        assert suites["unit_selectors"] == "cmuxTests/TerminalTabIconRegressionTests", suites
+        suites = outputs(consumer + ["hmuxTests/TerminalTabIconRegressionTests.swift"])
+        assert suites["unit_selectors"] == "hmuxTests/TerminalTabIconRegressionTests", suites
         # Labels asking for every suite still get every suite.
         assert outputs(consumer, "unit-ci\n")["unit_selectors"] == ""
         full = outputs(consumer, "full-ci\n")
@@ -5515,11 +5515,11 @@ def test_a_shard_layout_edit_runs_every_app_host_unit_shard() -> None:
     assert not shard_layout_changed(ROOT, None, None)
     # The shards' matrix, and the env that places strict steps and reserves
     # their time on a worker, are the layout.
-    for prefix in ('          {"shard": 3},', "    strategy:", "      CMUX_APP_HOST_RESERVED_WALL_SECONDS:",
-                   "      CMUX_APP_HOST_GLOBAL_SEARCH_SHARD:", "      CMUX_APP_HOST_FOCUSED_REGRESSION_B_SHARD:"):
+    for prefix in ('          {"shard": 3},', "    strategy:", "      HMUX_APP_HOST_RESERVED_WALL_SECONDS:",
+                   "      HMUX_APP_HOST_GLOBAL_SEARCH_SHARD:", "      HMUX_APP_HOST_FOCUSED_REGRESSION_B_SHARD:"):
         assert shard_layout_changed(ROOT, [workflow_path], hunk(line_of(prefix))), prefix
     # The rest of the job, and other jobs, are not.
-    for prefix in ("      CMUX_UNIT_TEST_TIMEOUT_SECONDS:", "    timeout-minutes:", "    runs-on:"):
+    for prefix in ("      HMUX_UNIT_TEST_TIMEOUT_SECONDS:", "    timeout-minutes:", "    runs-on:"):
         assert not shard_layout_changed(ROOT, [workflow_path], hunk(line_of(prefix))), prefix
     compile_line = lines.index("  macos-compile-admission:") + 2
     assert not shard_layout_changed(ROOT, [workflow_path], hunk(compile_line))
@@ -5527,13 +5527,13 @@ def test_a_shard_layout_edit_runs_every_app_host_unit_shard() -> None:
     assert shard_layout_changed(ROOT, [workflow_path], None)
     # A shard setting deleted or renamed to another key counts, although the
     # new-side line it leaves behind is not a layout line.
-    timeout_line = line_of("      CMUX_UNIT_TEST_TIMEOUT_SECONDS:")
-    for removed in ('      CMUX_APP_HOST_GLOBAL_SEARCH_SHARD: "3"', '          {"shard": 7},'):
+    timeout_line = line_of("      HMUX_UNIT_TEST_TIMEOUT_SECONDS:")
+    for removed in ('      HMUX_APP_HOST_GLOBAL_SEARCH_SHARD: "3"', '          {"shard": 7},'):
         renamed = (f"--- a/{workflow_path}\n+++ b/{workflow_path}\n@@ -{timeout_line},1 +{timeout_line},1 @@\n"
-                   f"-{removed}\n+      CMUX_APP_HOST_RENAMED: \"3\"\n")
+                   f"-{removed}\n+      HMUX_APP_HOST_RENAMED: \"3\"\n")
         assert shard_layout_changed(ROOT, [workflow_path], renamed), removed
     unrelated = (f"--- a/{workflow_path}\n+++ b/{workflow_path}\n@@ -{timeout_line},1 +{timeout_line},1 @@\n"
-                 "-      CMUX_UNIT_TEST_TIMEOUT_SECONDS: \"1\"\n+      CMUX_UNIT_TEST_TIMEOUT_SECONDS: \"2\"\n")
+                 "-      HMUX_UNIT_TEST_TIMEOUT_SECONDS: \"1\"\n+      HMUX_UNIT_TEST_TIMEOUT_SECONDS: \"2\"\n")
     assert not shard_layout_changed(ROOT, [workflow_path], unrelated)
 
     script = ROOT / "scripts/ci/choose_ci_suite.py"
@@ -5557,35 +5557,35 @@ def test_a_shard_layout_edit_runs_every_app_host_unit_shard() -> None:
         every_shard = {"full_suite": "false", "unit_suite": "true", "unit_selectors": "",
                        "unit_strict_steps": "", "unit_canary": "false", "unit_in_admission": "false"}
         # #14393's files, with and without the workflow hunk.
-        rebalance = ["scripts/ci/cmux-unit-test-timings.json", "scripts/ci/cmux_unit_test_shard.py",
+        rebalance = ["scripts/ci/hmux-unit-test-timings.json", "scripts/ci/hmux_unit_test_shard.py",
                      "scripts/ci/generate_test_timings.py", "scripts/ci/run-app-host-unit-batches.sh"]
-        reserved = hunk(line_of("      CMUX_APP_HOST_RESERVED_WALL_SECONDS:"))
+        reserved = hunk(line_of("      HMUX_APP_HOST_RESERVED_WALL_SECONDS:"))
         for paths, hunks in (
             (rebalance, ""),
             (rebalance + [workflow_path], reserved),
             ([workflow_path], reserved),
-            (["scripts/ci/cmux-unit-test-timings.json"], ""),
+            (["scripts/ci/hmux-unit-test-timings.json"], ""),
             # An edited suite does not narrow a layout change to that suite.
-            (["scripts/ci/cmux-unit-test-timings.json", "cmuxTests/TerminalTabIconRegressionTests.swift"], ""),
+            (["scripts/ci/hmux-unit-test-timings.json", "hmuxTests/TerminalTabIconRegressionTests.swift"], ""),
         ):
             result = outputs(paths, hunks)
             assert {key: result[key] for key in every_shard} == every_shard, (paths, result)
         # A consumer hunk elsewhere in the job keeps the one-suite canary.
-        other = outputs([workflow_path], hunk(line_of("      CMUX_UNIT_TEST_TIMEOUT_SECONDS:")))
-        assert (other["unit_selectors"], other["unit_canary"]) == ("cmuxTests/CmuxSSHURLRequestTests", "true"), other
+        other = outputs([workflow_path], hunk(line_of("      HMUX_UNIT_TEST_TIMEOUT_SECONDS:")))
+        assert (other["unit_selectors"], other["unit_canary"]) == ("hmuxTests/HmuxSSHURLRequestTests", "true"), other
 
 
 def test_the_unit_tier_closes_only_the_gap_its_job_can_judge() -> None:
     sys.path.insert(0, str(ROOT / "scripts/ci"))
     from choose_ci_suite import coverage_gap
 
-    tests_diff = ["cmuxTests/WorkspaceUnitTests.swift"]
-    ui_diff = ["cmuxUITests/LaunchUITests.swift"]
+    tests_diff = ["hmuxTests/WorkspaceUnitTests.swift"]
+    ui_diff = ["hmuxUITests/LaunchUITests.swift"]
 
-    # `app-host unit tests` executes cmuxTests/, so asking for it observes
+    # `app-host unit tests` executes hmuxTests/, so asking for it observes
     # the diff and there is nothing left to refuse.
     assert coverage_gap("pull_request", False, tests_diff, ["unit-ci"], unit_suite=True) is False
-    # No pull request job runs cmuxUITests/, so the cheap tier cannot clear it.
+    # No pull request job runs hmuxUITests/, so the cheap tier cannot clear it.
     assert coverage_gap("pull_request", False, ui_diff, ["unit-ci"], unit_suite=True) is True
     assert (
         coverage_gap("pull_request", False, tests_diff + ui_diff, ["unit-ci"], unit_suite=True)
@@ -5750,7 +5750,7 @@ def test_cli_xctest_enters_console_session() -> None:
 [ "${FIXTURE_CONSOLE:-}" = 1 ] || exit 70
 [ "$TEST_RUNNER_HOME" = "$EXPECTED_HOME" ] || exit 71
 [ "$TEST_RUNNER_CFFIXED_USER_HOME" = "$EXPECTED_HOME" ] || exit 72
-[ "$TEST_RUNNER_CMUX_CLI_PATH" = "$EXPECTED_CLI" ] || exit 73
+[ "$TEST_RUNNER_HMUX_CLI_PATH" = "$EXPECTED_CLI" ] || exit 73
 printf '%s\n' "$@" > "$RUNNER_TEMP/args"
 ''',
         }
@@ -5759,13 +5759,13 @@ printf '%s\n' "$@" > "$RUNNER_TEMP/args"
             fixture.write_text(content)
             fixture.chmod(0o755)
         env = dict(os.environ, PATH=f"{root / 'bin'}:{os.environ['PATH']}",
-                   RUNNER_TEMP=str(root), CMUX_CLI_TESTS_HOME=str(root / "home"),
-                   CMUX_CLI_PATH=str(root / "cli"), CMUX_CLI_TESTS_XCTESTRUN="fixture.xctestrun",
+                   RUNNER_TEMP=str(root), HMUX_CLI_TESTS_HOME=str(root / "home"),
+                   HMUX_CLI_PATH=str(root / "cli"), HMUX_CLI_TESTS_XCTESTRUN="fixture.xctestrun",
                    EXPECTED_HOME=str(root / "home"), EXPECTED_CLI=str(root / "cli"))
         result = subprocess.run(["bash", "-e", "-c", script], cwd=root, env=env,
                                 capture_output=True, text=True, timeout=15)
         assert result.returncode == 0, (result.returncode, result.stderr)
-        assert "-only-testing:cmuxCLITests" in (root / "args").read_text().splitlines()
+        assert "-only-testing:hmuxCLITests" in (root / "args").read_text().splitlines()
 
 
 def test_compile_admission_retry_executes_safely() -> None:
@@ -5787,7 +5787,7 @@ def test_compile_admission_retry_executes_safely() -> None:
             fixtures = {
                 "scripts/ci/compile-app-host-test-product.sh": r'''#!/bin/bash
 printf '%s\n' "$1" >> "$CALLS"
-printf '%s/%s\n' "${CMUX_CI_DISABLE_EXPLICIT_MODULES:-0}" "${CMUX_CI_DISABLE_COMPILATION_CACHE:-0}" >> "$ENV_CALLS"
+printf '%s/%s\n' "${HMUX_CI_DISABLE_EXPLICIT_MODULES:-0}" "${HMUX_CI_DISABLE_COMPILATION_CACHE:-0}" >> "$ENV_CALLS"
 if [ "$1" = canonical-resolve ]; then exit 0; fi
 if [ -e "$RUNNER_TEMP/attempt" ]; then exit 0; fi
 touch "$RUNNER_TEMP/attempt"
@@ -5795,7 +5795,7 @@ if [ "$SCENARIO" = stale-log ]; then
   echo 'real compiler error' >> "$5"
 else
   if [ "$SCENARIO" = module-dependency ]; then
-    echo 'error: unable to resolve module dependency: CmuxControlSocketAtomicsC' >> "$5"
+    echo 'error: unable to resolve module dependency: HmuxControlSocketAtomicsC' >> "$5"
   else
     echo 'unable to open dependencies file' >> "$5"
   fi
@@ -5804,20 +5804,20 @@ exit 65
 ''',
                 "scripts/ci/clear-dirs.sh": '#!/bin/bash\necho clear >> "$CALLS"\n',
                 "bin/pgrep": '#!/bin/bash\nif [ "$SCENARIO" = busy-worker ]; then echo 123; exit 0; fi\nif [ "$SCENARIO" = pgrep-error ]; then exit 2; fi\nexit 1\n',
-                "bin/ps": '#!/bin/bash\nif [ "$SCENARIO" = busy-worker ]; then echo "xcodebuild $CMUX_COMPILE_ADMISSION_DERIVED_DATA"; else command ps "$@"; fi\n',
+                "bin/ps": '#!/bin/bash\nif [ "$SCENARIO" = busy-worker ]; then echo "xcodebuild $HMUX_COMPILE_ADMISSION_DERIVED_DATA"; else command ps "$@"; fi\n',
                 "bin/sleep": '#!/bin/bash\nexit 0\n',
             }
             for relative, content in fixtures.items():
                 fixture = root / relative
                 fixture.write_text(content)
                 fixture.chmod(0o755)
-            (root / "cmux-compile-admission.txt").write_text("unable to open dependencies file\n")
+            (root / "hmux-compile-admission.txt").write_text("unable to open dependencies file\n")
             env = dict(os.environ, PATH=f"{root / 'bin'}:{os.environ['PATH']}",
                        RUNNER_TEMP=str(root), GITHUB_OUTPUT=str(root / "outputs"),
-                       CMUX_COMPILE_ADMISSION_DERIVED_DATA=str(root / "dd"),
-                       CMUX_COMPILE_ADMISSION_CAS=str(root / "cas"),
+                       HMUX_COMPILE_ADMISSION_DERIVED_DATA=str(root / "dd"),
+                       HMUX_COMPILE_ADMISSION_CAS=str(root / "cas"),
                        CALLS=str(root / "calls"), ENV_CALLS=str(root / "env-calls"),
-                       CMUX_CI_COMPILE_WORKER_WAIT_SECONDS="0", SCENARIO=scenario)
+                       HMUX_CI_COMPILE_WORKER_WAIT_SECONDS="0", SCENARIO=scenario)
             result = subprocess.run(["bash", "-e", "-c", script], cwd=root, env=env,
                                     capture_output=True, text=True, timeout=15)
             calls = (root / "calls").read_text().splitlines()
@@ -5840,11 +5840,11 @@ def test_macos_compile_admission_precedes_expensive_shards() -> None:
     # invocation; see tests/test_ci_test_compilation_cache_seed.sh.
     assert "scripts/ci/compile-app-host-test-product.sh canonical-build" in admission
     assert 'grep -Eq "unable to open dependencies file|CAS error: No such file or directory|cannot open file .*No such file or directory|unable to write file .*No such file or directory|[Uu]nable to resolve module dependency"' in admission
-    assert 'scripts/ci/clear-dirs.sh "$CMUX_COMPILE_ADMISSION_DERIVED_DATA" "$CMUX_COMPILE_ADMISSION_CAS"' in admission
-    assert 'export CMUX_CI_DISABLE_EXPLICIT_MODULES=1' in admission
-    assert 'export CMUX_CI_DISABLE_COMPILATION_CACHE=1' in admission
+    assert 'scripts/ci/clear-dirs.sh "$HMUX_COMPILE_ADMISSION_DERIVED_DATA" "$HMUX_COMPILE_ADMISSION_CAS"' in admission
+    assert 'export HMUX_CI_DISABLE_EXPLICIT_MODULES=1' in admission
+    assert 'export HMUX_CI_DISABLE_COMPILATION_CACHE=1' in admission
     assert 'compile admission exited $status without a compiler diagnostic' in admission
-    assert "find \"$CMUX_COMPILE_ADMISSION_DERIVED_DATA\" -type f -name '*-build.log'" in admission
+    assert "find \"$HMUX_COMPILE_ADMISSION_DERIVED_DATA\" -type f -name '*-build.log'" in admission
     assert "retrying compile from a clean tree" in admission
     assert 'tee -a "$compile_log"' not in admission
     assert "if compile_once; then" in admission
@@ -5865,14 +5865,14 @@ def test_macos_compile_admission_precedes_expensive_shards() -> None:
     assert 'product_input_identity.py" schemes' in compile_script
     assert 'for scheme in "${schemes[@]}"' in compile_script
     assert identity.PRODUCT_PROFILES["app-host"] == (
-        "cmux",
-        "cmux-unit",
-        "cmux-cli-tests",
+        "hmux",
+        "hmux-unit",
+        "hmux-cli-tests",
     )
-    # The numeric-locale gate reuses the cmux-unit xctestrun instead of paying
+    # The numeric-locale gate reuses the hmux-unit xctestrun instead of paying
     # for another build-for-testing; see scripts/ci/app_host_test_products.py.
-    assert "cmux-numeric-locale" not in compile_script
-    assert identity.PRODUCT_PROFILES["cli"] == ("cmux-cli-tests",)
+    assert "hmux-numeric-locale" not in compile_script
+    assert identity.PRODUCT_PROFILES["cli"] == ("hmux-cli-tests",)
     # Every profile must be distinguishable in the identity, or one profile's
     # product answers another profile's cache lookup.
     seen = {
@@ -5916,7 +5916,7 @@ def test_macos_compile_admission_precedes_expensive_shards() -> None:
 def test_static_preflight_rejects_stale_embedded_schema_before_native_work() -> None:
     steps = yaml.safe_load(CI_WORKFLOW.read_text())["jobs"]["static-preflight"]["steps"]
     scripts = [step["run"] for step in steps if "run" in step]
-    with tempfile.TemporaryDirectory(prefix="cmux-schema-preflight-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="hmux-schema-preflight-") as tmp:
         repo = Path(tmp)
         # Run the actual CI wrapper while isolating the schema checker from
         # unrelated validators. Read its declared recipe without importing it.
@@ -5942,17 +5942,17 @@ def test_static_preflight_rejects_stale_embedded_schema_before_native_work() -> 
                 target.chmod(0o755)
         for name in ("verify-local.py", "verification_receipt.py", "check-agent-hook-docs.py"):
             shutil.copy2(ROOT / "scripts" / name, repo / "scripts" / name)
-        for relative_path in ("CLI/CMUXCLI+AgentHookCatalog.swift", "docs/agent-hooks.md"):
+        for relative_path in ("CLI/HMUXCLI+AgentHookCatalog.swift", "docs/agent-hooks.md"):
             destination = repo / relative_path
             destination.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(ROOT / relative_path, destination)
-        generator = repo / "scripts/generate-cmux-config-schema.py"
+        generator = repo / "scripts/generate-hmux-config-schema.py"
         generator.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(ROOT / "scripts/generate-cmux-config-schema.py", generator)
-        schema = repo / "web/data/cmux.schema.json"
+        shutil.copy2(ROOT / "scripts/generate-hmux-config-schema.py", generator)
+        schema = repo / "web/data/hmux.schema.json"
         schema.parent.mkdir(parents=True)
         schema.write_text('{"type":"object"}\n')
-        generated = repo / "Packages/macOS/CmuxFoundation/Sources/CmuxFoundation/ConfigValidation"
+        generated = repo / "Packages/macOS/HmuxFoundation/Sources/HmuxFoundation/ConfigValidation"
         generated.mkdir(parents=True)
         subprocess.run([sys.executable, str(generator)], cwd=repo, check=True)
         subprocess.run(["git", "init", "-q", str(repo)], check=True)
@@ -5997,17 +5997,17 @@ def test_app_host_failures_preserve_attempt_and_crash_diagnostics() -> None:
     app_host = workflow_job_block("app-host-unit-tests", MACOS_WORKFLOW)
     console_runner = (ROOT / "scripts/ci/run-in-console-session.sh").read_text(encoding="utf-8")
 
-    assert 'CMUX_APP_HOST_CAPTURE_XCRESULTS: "1"' in app_host
-    assert "CMUX_APP_HOST_CAPTURE_XCRESULTS" in console_runner
-    assert "CMUX_APP_HOST_RESULT_BUNDLE_ROOT" in console_runner
-    assert "CMUX_CI_RUNTIME_SOURCE_ROOT" in console_runner
+    assert 'HMUX_APP_HOST_CAPTURE_XCRESULTS: "1"' in app_host
+    assert "HMUX_APP_HOST_CAPTURE_XCRESULTS" in console_runner
+    assert "HMUX_APP_HOST_RESULT_BUNDLE_ROOT" in console_runner
+    assert "HMUX_CI_RUNTIME_SOURCE_ROOT" in console_runner
     assert "- name: Collect app-host failure diagnostics" in app_host
     assert "- name: Upload app-host failure diagnostics" in app_host
     assert "run: scripts/ci/collect-app-host-diagnostics.sh" in app_host
     app_host += (ROOT / "scripts/ci/collect-app-host-diagnostics.sh").read_text(encoding="utf-8")
-    assert "cmux-app-host-xcodebuild-*.meta" in app_host
-    assert "cmux-app-host-xcresults" in app_host
-    assert ".local/state/cmux/crash" in app_host
+    assert "hmux-app-host-xcodebuild-*.meta" in app_host
+    assert "hmux-app-host-xcresults" in app_host
+    assert ".local/state/hmux/crash" in app_host
     assert "Library/Logs/DiagnosticReports" in app_host
     assert "if: ${{ failure() || cancelled() }}" in app_host
 
@@ -6205,7 +6205,7 @@ def test_web_workflow_parallelizes_typecheck_tests_and_browser_checks() -> None:
 
     assert "actions/cache@27d5ce7f107fe9357f9df03efb73ab90386fccae" in instant
     assert "bunx playwright install --with-deps chromium" in instant
-    assert "CMUX_INSTANT_SKIP_TYPECHECK" in instant
+    assert "HMUX_INSTANT_SKIP_TYPECHECK" in instant
 
 
 def test_web_subarea_router_keeps_expensive_lanes_narrow() -> None:
@@ -6511,11 +6511,11 @@ def test_compiled_product_cache_is_opt_in_on_persistent_macos_lanes() -> None:
         "tests-build-and-lag",
     ]:
         block = workflow_job_block(job_name, MACOS_WORKFLOW)
-        assert "CMUX_NODE_PRODUCT_CACHE_ROOT: ${{ vars.CMUX_NODE_PRODUCT_CACHE_ROOT }}" in block
-        assert "CMUX_NODE_PRODUCT_CACHE_MAX_BYTES: ${{ vars.CMUX_NODE_PRODUCT_CACHE_MAX_BYTES }}" in block
-        assert "CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS: ${{ vars.CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS }}" in block
-        assert "CMUX_ARTIFACT_PEER_URLS: ${{ vars.CMUX_ARTIFACT_PEER_URLS }}" in block
-        assert "CMUX_ARTIFACT_PEER_TOKEN_FILE: ${{ vars.CMUX_ARTIFACT_PEER_TOKEN_FILE }}" in block
+        assert "HMUX_NODE_PRODUCT_CACHE_ROOT: ${{ vars.HMUX_NODE_PRODUCT_CACHE_ROOT }}" in block
+        assert "HMUX_NODE_PRODUCT_CACHE_MAX_BYTES: ${{ vars.HMUX_NODE_PRODUCT_CACHE_MAX_BYTES }}" in block
+        assert "HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS: ${{ vars.HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS }}" in block
+        assert "HMUX_ARTIFACT_PEER_URLS: ${{ vars.HMUX_ARTIFACT_PEER_URLS }}" in block
+        assert "HMUX_ARTIFACT_PEER_TOKEN_FILE: ${{ vars.HMUX_ARTIFACT_PEER_TOKEN_FILE }}" in block
 
 
 def test_product_restore_receipt_binds_immutable_product_identity() -> None:
@@ -6523,10 +6523,10 @@ def test_product_restore_receipt_binds_immutable_product_identity() -> None:
         "ARTIFACT_ID: ${{ needs.macos-compile-admission.outputs.artifact_id }}",
         "ARTIFACT_PROVIDER_DIGEST: ${{ needs.macos-compile-admission.outputs.artifact_digest }}",
         "EXPECTED_SHA256: ${{ needs.macos-compile-admission.outputs.sha256 }}",
-        "CMUX_PRODUCT_CONTRACT: ${{ needs.macos-compile-admission.outputs.product_contract }}",
-        "CMUX_PRODUCT_SOURCE_REVISION: ${{ needs.macos-compile-admission.outputs.source_revision }}",
-        "CMUX_PRODUCT_PRODUCER_RUN_ID: ${{ needs.macos-compile-admission.outputs.producer_run_id }}",
-        "CMUX_PRODUCT_PRODUCER_RUN_ATTEMPT: ${{ needs.macos-compile-admission.outputs.producer_run_attempt }}",
+        "HMUX_PRODUCT_CONTRACT: ${{ needs.macos-compile-admission.outputs.product_contract }}",
+        "HMUX_PRODUCT_SOURCE_REVISION: ${{ needs.macos-compile-admission.outputs.source_revision }}",
+        "HMUX_PRODUCT_PRODUCER_RUN_ID: ${{ needs.macos-compile-admission.outputs.producer_run_id }}",
+        "HMUX_PRODUCT_PRODUCER_RUN_ATTEMPT: ${{ needs.macos-compile-admission.outputs.producer_run_attempt }}",
     )
     for job_name in ("app-host-unit-tests", "tests-build-and-lag"):
         block = workflow_job_block(job_name, MACOS_WORKFLOW)
@@ -6542,10 +6542,10 @@ def test_product_restore_receipt_binds_immutable_product_identity() -> None:
         '"artifact_id": int(os.environ["ARTIFACT_ID"]) if os.environ.get("ARTIFACT_ID") else None',
         '"provider_digest": os.environ.get("ARTIFACT_PROVIDER_DIGEST") or None',
         '"archive_sha256": os.environ["EXPECTED_SHA256"]',
-        '"product_contract": os.environ["CMUX_PRODUCT_CONTRACT"]',
-        '"source_revision": os.environ["CMUX_PRODUCT_SOURCE_REVISION"]',
-        '"producer_run_id": int(os.environ["CMUX_PRODUCT_PRODUCER_RUN_ID"])',
-        '"producer_run_attempt": int(os.environ["CMUX_PRODUCT_PRODUCER_RUN_ATTEMPT"])',
+        '"product_contract": os.environ["HMUX_PRODUCT_CONTRACT"]',
+        '"source_revision": os.environ["HMUX_PRODUCT_SOURCE_REVISION"]',
+        '"producer_run_id": int(os.environ["HMUX_PRODUCT_PRODUCER_RUN_ID"])',
+        '"producer_run_attempt": int(os.environ["HMUX_PRODUCT_PRODUCER_RUN_ATTEMPT"])',
     ):
         assert field in script
 
@@ -6582,15 +6582,15 @@ def test_r2_transport_is_an_explicit_optional_remote_broker() -> None:
 PR_LANE_XCODE_PIN = (
     "${{ github.event_name == 'pull_request' "
     "&& (inputs.pr_xcode_app || contains(fromJSON(inputs.owned_head_repos), github.event.pull_request.head.repo.full_name) "
-    "&& vars.CMUX_CI_XCODE_APP_PR || vars.CMUX_CI_XCODE_APP_MACOS_15) "
-    "|| vars.CMUX_CI_XCODE_APP_MACOS_15 }}"
+    "&& vars.HMUX_CI_XCODE_APP_PR || vars.HMUX_CI_XCODE_APP_MACOS_15) "
+    "|| vars.HMUX_CI_XCODE_APP_MACOS_15 }}"
 )
 
 
 def test_macos_jobs_use_lane_specific_xcode_pin_vars() -> None:
     # A pull-request job picks its pool through MACOS_RUNNER_PR, and the two
-    # macOS images carry different Xcodes: macos-15 ships CMUX_CI_XCODE_APP_MACOS_15
-    # and macos-26 ships CMUX_CI_XCODE_APP_MACOS_26. scripts/select-ci-xcode.sh
+    # macOS images carry different Xcodes: macos-15 ships HMUX_CI_XCODE_APP_MACOS_15
+    # and macos-26 ships HMUX_CI_XCODE_APP_MACOS_26. scripts/select-ci-xcode.sh
     # exits non-zero on a pinned path that is not installed, so a pin that does
     # not follow the same lane turns a routing change into a failed job rather
     # than a queued one. Require the pin to resolve through the pull-request
@@ -6615,9 +6615,9 @@ def test_macos_jobs_use_lane_specific_xcode_pin_vars() -> None:
         ("tests-build-and-lag", admission_pin),
     ]:
         block = workflow_job_block(job_name, MACOS_WORKFLOW)
-        assert f"CMUX_CI_XCODE_APP: {pin}" in block, job_name
-        assert "vars.CMUX_CI_XCODE_APP_MACOS_26" not in block, job_name
-        assert 'CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in block
+        assert f"HMUX_CI_XCODE_APP: {pin}" in block, job_name
+        assert "vars.HMUX_CI_XCODE_APP_MACOS_26" not in block, job_name
+        assert 'HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in block
 
     # swift-package-tests links the Release Ghostty CLI helper with Zig, which
     # Zig 0.15.2 cannot do on macOS 26, so it defaults to the macos-15 pool on
@@ -6628,24 +6628,24 @@ def test_macos_jobs_use_lane_specific_xcode_pin_vars() -> None:
     package_block = workflow_job_block("swift-package-tests", MACOS_WORKFLOW)
     assert "vars.MACOS_RUNNER_PR" not in package_block
     assert (
-        "CMUX_CI_XCODE_APP: ${{ (github.event_name == 'pull_request' && contains(fromJSON(inputs.owned_head_repos), github.event.pull_request.head.repo.full_name) && "
+        "HMUX_CI_XCODE_APP: ${{ (github.event_name == 'pull_request' && contains(fromJSON(inputs.owned_head_repos), github.event.pull_request.head.repo.full_name) && "
         "(github.run_attempt <= 2 || github.triggering_actor != 'github-actions[bot]') || "
         "github.event_name == 'workflow_dispatch' && github.run_attempt <= 2) && "
         "contains(inputs.pr_owned_jobs, ' swift-package ') && (inputs.pr_side_runner || inputs.pr_runner) && "
-        "(inputs.pr_xcode_app || vars.CMUX_CI_XCODE_APP_PR) || vars.CMUX_CI_XCODE_APP_MACOS_15 }}"
+        "(inputs.pr_xcode_app || vars.HMUX_CI_XCODE_APP_PR) || vars.HMUX_CI_XCODE_APP_MACOS_15 }}"
     ) in package_block
     assert (
-        "CMUX_CI_HELPER_XCODE_APP: ${{ vars.CMUX_CI_HELPER_XCODE_APP_MACOS_15 }}"
+        "HMUX_CI_HELPER_XCODE_APP: ${{ vars.HMUX_CI_HELPER_XCODE_APP_MACOS_15 }}"
         in package_block
     )
-    assert 'CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in package_block
+    assert 'HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in package_block
 
     release_block = workflow_job_block("release-build", MACOS_WORKFLOW)
     assert (
-        "CMUX_CI_XCODE_APP: ${{ (github.event_name == 'pull_request' && contains(fromJSON(inputs.owned_head_repos), github.event.pull_request.head.repo.full_name) && (github.run_attempt <= 2 || github.triggering_actor != 'github-actions[bot]') || github.event_name == 'workflow_dispatch' && github.run_attempt <= 2) && contains(inputs.pr_owned_jobs, ' release-build ') && (inputs.pr_side_runner || inputs.pr_runner) "
-        "&& (inputs.pr_xcode_app || vars.CMUX_CI_XCODE_APP_PR) || vars.CMUX_CI_XCODE_APP_MACOS_26 }}"
+        "HMUX_CI_XCODE_APP: ${{ (github.event_name == 'pull_request' && contains(fromJSON(inputs.owned_head_repos), github.event.pull_request.head.repo.full_name) && (github.run_attempt <= 2 || github.triggering_actor != 'github-actions[bot]') || github.event_name == 'workflow_dispatch' && github.run_attempt <= 2) && contains(inputs.pr_owned_jobs, ' release-build ') && (inputs.pr_side_runner || inputs.pr_runner) "
+        "&& (inputs.pr_xcode_app || vars.HMUX_CI_XCODE_APP_PR) || vars.HMUX_CI_XCODE_APP_MACOS_26 }}"
     ) in release_block
-    assert 'CMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in release_block
+    assert 'HMUX_CI_REQUIRED_MACOS_SDK_MAJOR: "26"' in release_block
 
 
 def test_required_macos_topology_collapses_display_and_release_helper_jobs() -> None:
@@ -6665,10 +6665,10 @@ def test_required_macos_topology_collapses_display_and_release_helper_jobs() -> 
     assert "scripts/ci/virtual-display-lock.sh reap-strays" in runtime_block
     assert runtime_block.rfind("scripts/ci/virtual-display-lock.sh reap-strays") < runtime_block.rfind("scripts/ci/virtual-display-lock.sh release")
     assert "timeout-minutes: 60" in package_block
-    assert "CMUX_CI_HELPER_XCODE_APP" in package_block
+    assert "HMUX_CI_HELPER_XCODE_APP" in package_block
     assert "/Applications/Xcode_16.4.app" not in package_block
     assert "Select helper Xcode" in package_block
-    assert "CMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15" in package_block
+    assert "HMUX_CI_REQUIRED_MACOS_SDK_MAJOR=15" in package_block
     assert "Build Release Ghostty CLI helper" in package_block
     assert '[[ "$HELPER_SDK_VERSION" == 15.* ]]' in package_block
     assert "actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a" in package_block
@@ -6726,7 +6726,7 @@ def test_swift_package_selection_precedes_optional_tool_setup() -> None:
 def test_remote_tmux_layout_identity_uses_a_nontolerant_focused_gate() -> None:
     block = workflow_job_block("app-host-unit-tests", MACOS_WORKFLOW)
     step = "Run remote tmux mirror layout identity regression"
-    selector = "-only-testing:cmuxTests/RemoteTmuxMirrorLayoutIdentityTests"
+    selector = "-only-testing:hmuxTests/RemoteTmuxMirrorLayoutIdentityTests"
 
     assert step in block
     assert selector in block
@@ -6736,7 +6736,7 @@ def test_remote_tmux_layout_identity_uses_a_nontolerant_focused_gate() -> None:
 def test_settings_store_noop_persistence_uses_a_nontolerant_focused_gate() -> None:
     block = workflow_job_block("app-host-unit-tests", MACOS_WORKFLOW)
     step = "Run settings file-store no-op persistence regression"
-    selector = "-only-testing:cmuxTests/KeyboardShortcutSettingsFileStoreNoOpPersistenceTests"
+    selector = "-only-testing:hmuxTests/KeyboardShortcutSettingsFileStoreNoOpPersistenceTests"
 
     assert step in block
     assert selector in block
@@ -6777,7 +6777,7 @@ def test_app_host_ratchet_uses_built_inventory_and_typed_results() -> None:
     run_script = (ROOT / "scripts/ci/run-app-host-unit-batches.sh").read_text(encoding="utf-8")
 
     assert "-enumerate-tests" in app_host
-    assert "CMUX_APP_HOST_TEST_INVENTORY" in app_host
+    assert "HMUX_APP_HOST_TEST_INVENTORY" in app_host
     assert "app_host_result_accounting.py inventory" in app_host
     assert "app_host_result_accounting.py check-run" in run_script
     assert "--tests-json" in run_script
@@ -6820,14 +6820,14 @@ def run_focused_app_host_step(
             """
 #!/bin/bash
 set -euo pipefail
-counter="${CMUX_TEST_INVOCATION_COUNTER:?}"
+counter="${HMUX_TEST_INVOCATION_COUNTER:?}"
 iteration=0
 if [ -f "$counter" ]; then
   iteration="$(cat "$counter")"
 fi
 iteration=$((iteration + 1))
 printf '%s\\n' "$iteration" > "$counter"
-outcome="$(sed -n "${iteration}p" "${CMUX_TEST_OUTCOMES:?}")"
+outcome="$(sed -n "${iteration}p" "${HMUX_TEST_OUTCOMES:?}")"
 printf 'invocation %s: %s\\n' "$iteration" "$*"
 case "$outcome" in
   empty)
@@ -6863,11 +6863,11 @@ esac
             env={
                 **os.environ,
                 "RUNNER_TEMP": str(runner_temp),
-                "CMUX_APP_HOST_XCTESTRUN": str(root / "cmux-unit.xctestrun"),
-                "CMUX_NUMERIC_LOCALE_XCTESTRUN": str(root / "numeric.xctestrun"),
-                "CMUX_DERIVED_DATA_PATH": str(root / "derived-data"),
-                "CMUX_TEST_INVOCATION_COUNTER": str(counter),
-                "CMUX_TEST_OUTCOMES": str(outcomes_file),
+                "HMUX_APP_HOST_XCTESTRUN": str(root / "hmux-unit.xctestrun"),
+                "HMUX_NUMERIC_LOCALE_XCTESTRUN": str(root / "numeric.xctestrun"),
+                "HMUX_DERIVED_DATA_PATH": str(root / "derived-data"),
+                "HMUX_TEST_INVOCATION_COUNTER": str(counter),
+                "HMUX_TEST_OUTCOMES": str(outcomes_file),
             },
             text=True,
             stdout=subprocess.PIPE,
@@ -6898,9 +6898,9 @@ def test_remote_tmux_mirror_gate_runs_each_suite_once_on_success() -> None:
 
     assert result.returncode == 0, result.stdout + result.stderr
     assert invocations == 3, result.stdout
-    assert result.stdout.count("-only-testing:cmuxTests/RemoteTmuxMirrorCloseDetachTests") == 1
-    assert result.stdout.count("-only-testing:cmuxTests/RemoteTmuxMirrorFocusPolicyTests") == 1
-    assert result.stdout.count("-only-testing:cmuxTests/RemoteTmuxMirrorDedicatedPlacementTests") == 1
+    assert result.stdout.count("-only-testing:hmuxTests/RemoteTmuxMirrorCloseDetachTests") == 1
+    assert result.stdout.count("-only-testing:hmuxTests/RemoteTmuxMirrorFocusPolicyTests") == 1
+    assert result.stdout.count("-only-testing:hmuxTests/RemoteTmuxMirrorDedicatedPlacementTests") == 1
 
 
 def test_devices_gate_propagates_assertion_failures_and_crashes() -> None:
@@ -6925,7 +6925,7 @@ def test_global_search_gate_requires_nonempty_successful_execution() -> None:
         )
         assert result.returncode == expected_status, result.stdout + result.stderr
         assert invocations == 1, result.stdout
-        assert "-only-testing:cmuxTests/GlobalSearchShortcutBehaviorTests" in result.stdout
+        assert "-only-testing:hmuxTests/GlobalSearchShortcutBehaviorTests" in result.stdout
         # The compile admission job supplies the build products, so focused
         # gates must use test-without-building just like the sharded batches.
         assert "test-without-building" in result.stdout
@@ -7149,20 +7149,20 @@ def test_trusted_router_reads_new_guard_tests_from_the_pr_head() -> None:
 
 
 def test_claude_wrapper_inputs_use_standalone_lane_without_native_compile() -> None:
-    for paths in (["Resources/bin/cmux-claude-wrapper"],
+    for paths in (["Resources/bin/hmux-claude-wrapper"],
                   ["tests/test_claude_wrapper_hooks.py"],
-                  ["Resources/bin/cmux-claude-wrapper", "tests/test_claude_wrapper_hooks.py"]):
+                  ["Resources/bin/hmux-claude-wrapper", "tests/test_claude_wrapper_hooks.py"]):
         areas = module.classify_files(paths)
         assert not areas.macos and not areas.cli and not areas.release_build and not areas.swift_packages, (paths, areas)
         assert module.classify_files([*paths, "Sources/AppDelegate.swift"]).macos
-    assert module.classify_files(["Resources/bin/cmux-unknown-wrapper"]).macos
+    assert module.classify_files(["Resources/bin/hmux-unknown-wrapper"]).macos
 
 
 def test_claude_wrapper_scope_executes_workflow_shell() -> None:
     workflow = yaml.safe_load(CI_WORKFLOW.read_text(encoding="utf-8"))
     script = next(step["run"] for step in workflow["jobs"]["changes"]["steps"] if step.get("id") == "standalone")
     for paths, expected in (
-        (["Resources/bin/cmux-claude-wrapper"], "true"),
+        (["Resources/bin/hmux-claude-wrapper"], "true"),
         (["tests/test_claude_wrapper_hooks.py"], "true"),
         (["tests/node_runtime.py"], "true"),
         (["scripts/ci/run_python_test_lane.py"], "true"),
@@ -7173,7 +7173,7 @@ def test_claude_wrapper_scope_executes_workflow_shell() -> None:
         (["tests/test-execution.toml"], "false"),
         (["tests/test-execution.toml", "tests/test_claude_wrapper_hooks.py"], "true"),
         ([".github/workflows/ci.yml"], "true"),
-        (["Resources/bin/cmux-claude-wrapper", "Sources/AppDelegate.swift"], "true"),
+        (["Resources/bin/hmux-claude-wrapper", "Sources/AppDelegate.swift"], "true"),
         (["Sources/AppDelegate.swift"], "false"),
         (["docs/example.md"], "false"),
         ([], "false"),
@@ -7185,7 +7185,7 @@ def test_claude_wrapper_scope_executes_workflow_shell() -> None:
             if paths is not None:
                 changed.write_text("\n".join(paths) + "\n")
             output = root / "output.txt"
-            run = subprocess.run(["bash", "-c", isolate_ci_tmp(script.replace("/tmp/cmux-ci-changed-files.txt", str(changed)), root)],
+            run = subprocess.run(["bash", "-c", isolate_ci_tmp(script.replace("/tmp/hmux-ci-changed-files.txt", str(changed)), root)],
                                  env={**os.environ, "GITHUB_OUTPUT": str(output)}, capture_output=True, text=True)
             assert run.returncode == 0, run.stderr
             assert f"claude_wrapper={expected}" in output.read_text().splitlines(), (paths, output.read_text())
@@ -7271,13 +7271,13 @@ def _main() -> int:
     # Most of these tests wait on git and the router in subprocesses, so they
     # overlap well. Each runs in its own forked worker: a test that patches
     # module state or the environment cannot leak into the next one.
-    # CMUX_TEST_WORKERS=1 runs them in order in this process, as before.
-    requested = os.environ.get("CMUX_TEST_WORKERS", "")
+    # HMUX_TEST_WORKERS=1 runs them in order in this process, as before.
+    requested = os.environ.get("HMUX_TEST_WORKERS", "")
     if requested and not requested.isdigit():
-        print(f"CMUX_TEST_WORKERS must be a whole number, got {requested!r}", file=sys.stderr)
+        print(f"HMUX_TEST_WORKERS must be a whole number, got {requested!r}", file=sys.stderr)
         return 2
     workers = int(requested) if requested else len(os.sched_getaffinity(0)) if hasattr(os, "sched_getaffinity") else 1
-    # Off Linux only an explicit CMUX_TEST_WORKERS forks (scripts/ci/run_ci_guards.py
+    # Off Linux only an explicit HMUX_TEST_WORKERS forks (scripts/ci/run_ci_guards.py
     # sets it on macOS, where the serial run takes about two minutes).
     if workers <= 1 or (sys.platform != "linux" and not requested):
         for name in names:

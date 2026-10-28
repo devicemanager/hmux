@@ -21,10 +21,10 @@ printf '\n'
 # Swift-driver operation without emitting a line, so keep the runner informed
 # with a bounded heartbeat. The interval is overrideable for deterministic
 # tests, but never disabled in the nightly workflow.
-heartbeat_seconds="${CMUX_XCODEBUILD_HEARTBEAT_SECONDS:-30}"
+heartbeat_seconds="${HMUX_XCODEBUILD_HEARTBEAT_SECONDS:-30}"
 if ! [[ "$heartbeat_seconds" =~ ^[0-9]+([.][0-9]+)?$ ]] \
   || ! awk -v interval="$heartbeat_seconds" 'BEGIN { exit !((interval + 0) > 0) }'; then
-  echo "CMUX_XCODEBUILD_HEARTBEAT_SECONDS must be a positive number" >&2
+  echo "HMUX_XCODEBUILD_HEARTBEAT_SECONDS must be a positive number" >&2
   exit 2
 fi
 

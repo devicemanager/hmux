@@ -1,7 +1,7 @@
 # App-host product layers (opt-in format v1)
 
 The legacy aggregate archive and broker contract remain unchanged. The opt-in
-layer format is `cmux.app-host-layers`, version `1`; it is not a legacy `.aar`
+layer format is `hmux.app-host-layers`, version `1`; it is not a legacy `.aar`
 artifact with a different name.
 
 ```sh
@@ -51,7 +51,7 @@ Layer ownership follows actual product boundaries:
 | --- | --- |
 | `app-cli` | App code, CLI, signatures, extensions and otherwise unclassified files |
 | `runtime` | Complete frameworks, package frameworks, resource bundles, app Resources and non-test plugins |
-| `tests` | All xctestruns and complete xctest bundles, including embedded tests and the standalone CmuxTerminalCoreTests consumer |
+| `tests` | All xctestruns and complete xctest bundles, including embedded tests and the standalone HmuxTerminalCoreTests consumer |
 | `diagnostics` | Top-level dSYMs, compiler Swift modules and `.a`/`.o` inputs; modules contained in runtime frameworks remain with those complete frameworks |
 
 No product is deleted, stripped or deduplicated. Unknown files remain in app-cli.

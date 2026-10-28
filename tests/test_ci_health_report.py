@@ -125,13 +125,13 @@ class JobRowTests(unittest.TestCase):
         self.assertNotEqual(label, report.runner_label({"labels": ["macos"]}))
 
     def test_a_per_run_dispatch_name_does_not_split_a_workflow(self):
-        # cmux's focused-test dispatches name each run after the test class,
+        # hmux's focused-test dispatches name each run after the test class,
         # runner and SHA, which grouped by run name buries the real cost.
         runs = [
             {"path": ".github/workflows/dispatch-focused-test.yml",
-             "name": "cmuxTests/FooTests on blacksmith-6vcpu-macos-15 @ abc123 [branch-a]"},
+             "name": "hmuxTests/FooTests on blacksmith-6vcpu-macos-15 @ abc123 [branch-a]"},
             {"path": ".github/workflows/dispatch-focused-test.yml",
-             "name": "cmuxTests/BarTests on blacksmith-6vcpu-macos-15 @ def456 [branch-b]"},
+             "name": "hmuxTests/BarTests on blacksmith-6vcpu-macos-15 @ def456 [branch-b]"},
         ]
         self.assertEqual(
             {report.workflow_name(run) for run in runs}, {"dispatch-focused-test.yml"}

@@ -23,7 +23,7 @@ BEGIN
       VALUES (u,u || '-other-team','go','freestyle','test','running');
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS constraint_seen=CONSTRAINT_NAME;
-    rejected := constraint_seen='cmux_go_active_limit';
+    rejected := constraint_seen='hmux_go_active_limit';
   END;
   IF NOT rejected THEN RAISE EXCEPTION 'cross-team active cap failed'; END IF;
   UPDATE cloud_vms SET status='paused' WHERE id=first_id;
@@ -38,7 +38,7 @@ BEGIN
       VALUES (u,u,'go','freestyle','test','paused');
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS constraint_seen=CONSTRAINT_NAME;
-    rejected := constraint_seen='cmux_go_saved_limit';
+    rejected := constraint_seen='hmux_go_saved_limit';
   END;
   IF NOT rejected THEN RAISE EXCEPTION 'saved cap failed'; END IF;
   UPDATE cloud_vm_runtime_intervals SET started_at=now()-interval '41 hours', ended_at=now() WHERE vm_id=first_id;
@@ -48,7 +48,7 @@ BEGIN
     UPDATE cloud_vms SET status='running' WHERE id=second_id;
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS constraint_seen=CONSTRAINT_NAME;
-    rejected := constraint_seen='cmux_go_hours_limit';
+    rejected := constraint_seen='hmux_go_hours_limit';
   END;
   IF NOT rejected THEN RAISE EXCEPTION 'deleting a VM bypassed the runtime cap'; END IF;
   UPDATE stripe_subscriptions SET current_period_end=now()+interval '1 month', raw=jsonb_build_object('current_period_start',extract(epoch from now())) WHERE id=u;
@@ -72,12 +72,12 @@ BEGIN
       VALUES (u,u,'go','freestyle','test','running');
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS constraint_seen=CONSTRAINT_NAME;
-    rejected := constraint_seen='cmux_go_period_unavailable';
+    rejected := constraint_seen='hmux_go_period_unavailable';
   END;
   IF NOT rejected THEN RAISE EXCEPTION 'Go started without any subscription'; END IF;
   INSERT INTO apple_subscriptions(original_transaction_id,user_id,bundle_id,environment,product_id,plan_id,status,
       purchase_date,expires_at,state_signed_at)
-    VALUES (u,u,'com.cmux.app','Production','com.cmux.app.go.monthly','go','active',
+    VALUES (u,u,'com.hmux.app','Production','com.hmux.app.go.monthly','go','active',
       now() - interval '3 days', now() + interval '27 days', now());
   INSERT INTO cloud_vms(user_id,billing_team_id,billing_plan_id,provider,image_id,status)
     VALUES (u,u,'go','freestyle','test','running') RETURNING id INTO apple_vm;
@@ -88,7 +88,7 @@ BEGIN
     UPDATE cloud_vms SET status='running' WHERE id=apple_vm;
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS constraint_seen=CONSTRAINT_NAME;
-    rejected := constraint_seen='cmux_go_hours_limit';
+    rejected := constraint_seen='hmux_go_hours_limit';
   END;
   IF NOT rejected THEN RAISE EXCEPTION 'App Store Go bypassed the runtime cap'; END IF;
   UPDATE apple_subscriptions SET status='expired' WHERE original_transaction_id=u;
@@ -97,7 +97,7 @@ BEGIN
     UPDATE cloud_vms SET status='running' WHERE id=apple_vm;
   EXCEPTION WHEN check_violation THEN
     GET STACKED DIAGNOSTICS constraint_seen=CONSTRAINT_NAME;
-    rejected := constraint_seen='cmux_go_period_unavailable';
+    rejected := constraint_seen='hmux_go_period_unavailable';
   END;
   IF NOT rejected THEN RAISE EXCEPTION 'an expired App Store Go subscription kept a period'; END IF;
   RAISE NOTICE 'PASS: App Store Go period, runtime cap, expiry';

@@ -1,4 +1,4 @@
-import CmuxWorkspacePresence
+import HmuxWorkspacePresence
 import Foundation
 
 /// Compact avatar-stack policy with deterministic overflow.

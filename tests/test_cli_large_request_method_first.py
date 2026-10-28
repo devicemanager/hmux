@@ -27,7 +27,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from claude_teams_test_utils import resolve_cmux_cli  # noqa: E402
+from claude_teams_test_utils import resolve_hmux_cli  # noqa: E402
 from fake_socket_env import cli_environment, unwrap_capability  # noqa: E402
 
 WORKSPACE_ID = "11111111-1111-4111-8111-111111111111"
@@ -160,7 +160,7 @@ def count_large(lines: list[str]) -> int:
 
 def run_cli(cli_path: str, socket_path: Path, home: Path, args: list[str], stdin: str | None = None
             ) -> subprocess.CompletedProcess[str]:
-    env = cli_environment(socket_path, home=home, CMUX_WORKSPACE_ID=WORKSPACE_ID, CMUX_SURFACE_ID=SURFACE_ID)
+    env = cli_environment(socket_path, home=home, HMUX_WORKSPACE_ID=WORKSPACE_ID, HMUX_SURFACE_ID=SURFACE_ID)
     return subprocess.run(
         [cli_path, "--socket", str(socket_path), *args],
         input=stdin,
@@ -173,7 +173,7 @@ def run_cli(cli_path: str, socket_path: Path, home: Path, args: list[str], stdin
 
 
 def scenarios() -> list[tuple[str, list[str], str | None]]:
-    long_command = "echo " + ("cmux-large-request " * 160)
+    long_command = "echo " + ("hmux-large-request " * 160)
     large_input = "x" * 6_000
     claude_event = {
         "hook_event_name": "PostToolUse",
@@ -221,12 +221,12 @@ def run_scenarios(cli_path: str, socket_path: Path, home: Path, failures: list[s
 
 
 def main() -> int:
-    cli_path = resolve_cmux_cli()
+    cli_path = resolve_hmux_cli()
     failures: list[str] = []
-    with tempfile.TemporaryDirectory(prefix="cmux-large-req-") as tmp:
+    with tempfile.TemporaryDirectory(prefix="hmux-large-req-") as tmp:
         root = Path(tmp)
         # Unix socket paths are short, so the socket lives under /tmp.
-        socket_dir = Path(tempfile.mkdtemp(prefix="cmux-lr-", dir="/tmp"))
+        socket_dir = Path(tempfile.mkdtemp(prefix="hmux-lr-", dir="/tmp"))
         socket_path = socket_dir / "s.sock"
         home = root / "home"
         home.mkdir()

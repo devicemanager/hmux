@@ -1,4 +1,4 @@
-import CmuxWorkspaces
+import HmuxWorkspaces
 import Foundation
 import SwiftUI
 

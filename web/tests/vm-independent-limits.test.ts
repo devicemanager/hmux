@@ -6,10 +6,10 @@ import { maxActiveVmsForPlan } from "../services/vms/entitlements";
 import { VmRepository, VmRepositoryLive, type VmRepositoryShape } from "../services/vms/repository";
 
 const serialTest = (test as typeof test & { serial: typeof test }).serial;
-const dbTest = process.env.CMUX_DB_TEST === "1" ? serialTest : test.skip;
+const dbTest = process.env.HMUX_DB_TEST === "1" ? serialTest : test.skip;
 let sql: Sql;
 beforeAll(() => {
-  if (process.env.CMUX_DB_TEST === "1") {
+  if (process.env.HMUX_DB_TEST === "1") {
     sql = postgres(process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL!, { max: 1 });
   }
 });
@@ -23,7 +23,7 @@ const runRepo = <T>(operation: (repo: VmRepositoryShape) => Effect.Effect<T, unk
 
 describe("independent Cloud VM limits", () => {
   test("retired deployment overrides cannot reduce the advertised paid allowance", () => {
-    const env = { CMUX_VM_PAID_MAX_ACTIVE_VMS: "1", CMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS: "1" };
+    const env = { HMUX_VM_PAID_MAX_ACTIVE_VMS: "1", HMUX_VM_PLAN_PRO_MAX_ACTIVE_VMS: "1" };
     expect(maxActiveVmsForPlan("pro", env)).toBe(5);
     expect(maxActiveVmsForPlan("founders", env)).toBe(5);
     expect(maxActiveVmsForPlan("team", env, { seats: 4 })).toBe(20);

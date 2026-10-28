@@ -17,7 +17,7 @@ Interactive / main-actor paths where this must not appear:
 
 Required shape:
 
-- Read the off-main, cached accessor instead (in cmux: `SharedLiveAgentIndex.shared`), which loads on a background task and serves a cached result.
+- Read the off-main, cached accessor instead (in hmux: `SharedLiveAgentIndex.shared`), which loads on a background task and serves a cached result.
 - Move unavoidable large-file reads/parses into a non-main `Task.detached`, actor, or repository/service method with an explicit actor hop back to `@MainActor` only for UI/process launch work.
 - Bound the scan to the focused workspace, surface, session, or target key as early as practical; avoid sorting or materializing the whole file when only the newest matching record is needed.
 - A synchronous load is allowed only as a cold-cache fallback guarded by a nil-cache check, or inside the cache's own off-main loader. Such call sites should carry a brief justification comment.

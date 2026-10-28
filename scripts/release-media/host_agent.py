@@ -6,12 +6,12 @@ payload is base64 JSON holding the scene, the options, and the window probe
 source. The agent:
 
 1. checks the host: console user, display scale, a capture backend, and that
-   no other `cmux NIGHTLY` is running (a second copy of the same bundle would
+   no other `hmux NIGHTLY` is running (a second copy of the same bundle would
    terminate it);
 2. downloads the latest nightly DMG on this host into ~/release-media/nightly
    (never relayed through the operator's Mac) and copies the app out of it;
 3. launches that copy on a private socket with a clean zsh, applies the scene's
-   cmux.json settings (restored afterwards), and runs the scene's cmux steps
+   hmux.json settings (restored afterwards), and runs the scene's hmux steps
    in a fresh window sized to the scene;
 4. captures the window: a PNG, or a clip as PNG frames with timestamps (helper
    backend) or a .mov (native backend);
@@ -38,12 +38,12 @@ import time
 
 ROOT = os.path.expanduser("~/release-media")
 NIGHTLY_URL = "https://github.com/manaflow-ai/cmux/releases/download/nightly/cmux-nightly-macos-{arch}.dmg"
-APP_NAME = "cmux NIGHTLY.app"
+APP_NAME = "hmux NIGHTLY.app"
 HELPER_CANDIDATES = [
     os.path.expanduser("~/Applications/CuaSshScreenCapture.app"),
     "/Applications/CuaSshScreenCapture.app",
 ]
-CMUX_JSON = os.path.expanduser("~/.config/cmux/cmux.json")
+HMUX_JSON = os.path.expanduser("~/.config/hmux/hmux.json")
 
 
 class AgentError(Exception):
@@ -129,11 +129,11 @@ def pgrep_lines(pattern):
 
 def check_not_busy(app_path):
     """Refuse when another nightly or a soak is running on this host."""
-    others = [line for line in pgrep_lines("cmux NIGHTLY.app/Contents/MacOS/cmux") if app_path not in line]
+    others = [line for line in pgrep_lines("hmux NIGHTLY.app/Contents/MacOS/hmux") if app_path not in line]
     if others:
         raise AgentError(
             "host-busy",
-            "another cmux NIGHTLY is running; launching a second copy would terminate it",
+            "another hmux NIGHTLY is running; launching a second copy would terminate it",
             {"processes": others},
         )
     soaks = pgrep_lines("[-_]soak|soak[-_]")
@@ -179,7 +179,7 @@ def install_nightly():
     arch = "arm64" if os.uname().machine == "arm64" else "x86_64"
     base = os.path.join(ROOT, "nightly", arch)
     os.makedirs(base, exist_ok=True)
-    dmg = os.path.join(base, "cmux-nightly.dmg")
+    dmg = os.path.join(base, "hmux-nightly.dmg")
     log("downloading the latest nightly DMG on this host")
     # -z skips the download unless the upload is newer than our copy; -R keeps
     # the upload's time on the file. Writing to .partial first means a failed
@@ -226,13 +226,13 @@ def install_nightly():
     }
 
 
-class Cmux:
+class Hmux:
     """The scratch nightly: its process, private socket, and CLI."""
 
     def __init__(self, app, rundir, zshrc):
         self.app = app
-        self.executable = os.path.join(app, "Contents", "MacOS", "cmux")
-        self.cli = os.path.join(app, "Contents", "Resources", "bin", "cmux")
+        self.executable = os.path.join(app, "Contents", "MacOS", "hmux")
+        self.cli = os.path.join(app, "Contents", "Resources", "bin", "hmux")
         # Unix socket paths are limited to 104 bytes; keep this one short.
         self.socket = "/tmp/rm-{}.sock".format(os.getpid())
         self.zdotdir = os.path.join(rundir, "zdot")
@@ -240,7 +240,7 @@ class Cmux:
         with open(os.path.join(self.zdotdir, ".zshrc"), "w") as handle:
             handle.write(zshrc)
         open(os.path.join(self.zdotdir, ".zshenv"), "w").close()
-        self.env = dict(os.environ, CMUX_SOCKET_PATH=self.socket, CMUX_QUIET="1")
+        self.env = dict(os.environ, HMUX_SOCKET_PATH=self.socket, HMUX_QUIET="1")
 
     def pids(self):
         """Processes running exactly this copy's main executable."""
@@ -269,9 +269,9 @@ class Cmux:
         run([
             # Foreground launch: the scene window must render as the key window.
             "/usr/bin/open", "-n",
-            "--env", "CMUX_ALLOW_SOCKET_OVERRIDE=1",
-            "--env", "CMUX_SOCKET_MODE=allowAll",
-            "--env", "CMUX_SOCKET_PATH=" + self.socket,
+            "--env", "HMUX_ALLOW_SOCKET_OVERRIDE=1",
+            "--env", "HMUX_SOCKET_MODE=allowAll",
+            "--env", "HMUX_SOCKET_PATH=" + self.socket,
             "--env", "ZDOTDIR=" + self.zdotdir,
             self.app,
         ])
@@ -289,7 +289,7 @@ class Cmux:
         if result.returncode != 0 or result.stdout.startswith("ERROR"):
             raise AgentError(
                 "scene-step-failed",
-                "cmux {} failed: {}".format(" ".join(args), (result.stderr or result.stdout).strip()),
+                "hmux {} failed: {}".format(" ".join(args), (result.stderr or result.stdout).strip()),
             )
         return result.stdout.strip()
 
@@ -330,14 +330,14 @@ def drop_trailing_comma(text, i):
 
 
 def parse_jsonc(text):
-    """Parse cmux.json the way cmux's JSONCParser does: a BOM, comments, then
+    """Parse hmux.json the way hmux's JSONCParser does: a BOM, comments, then
     trailing commas (so a comma before a commented-out last entry goes too)."""
     text = text.lstrip("\ufeff")
     stripped = scan_jsonc(scan_jsonc(text, drop_comment), drop_trailing_comma)
     try:
         return json.loads(stripped) if stripped.strip() else {}
     except ValueError as error:
-        raise AgentError("bad-settings", "cannot parse {}: {}".format(CMUX_JSON, error))
+        raise AgentError("bad-settings", "cannot parse {}: {}".format(HMUX_JSON, error))
 
 
 def deep_merge(base, overlay):
@@ -361,35 +361,35 @@ def write_atomically(path, data):
 
 
 class SettingsGuard:
-    """Merges scene settings into cmux.json and restores the original bytes.
+    """Merges scene settings into hmux.json and restores the original bytes.
 
     The merged file is plain JSON, so comments are gone until restore().
     """
 
     def __init__(self):
         self.original = None
-        if os.path.exists(CMUX_JSON):
-            with open(CMUX_JSON, "rb") as handle:
+        if os.path.exists(HMUX_JSON):
+            with open(HMUX_JSON, "rb") as handle:
                 self.original = handle.read()
         self.touched = False
 
     def apply(self, overlay):
         current = {}
-        if os.path.exists(CMUX_JSON):
-            with open(CMUX_JSON, encoding="utf-8") as handle:
+        if os.path.exists(HMUX_JSON):
+            with open(HMUX_JSON, encoding="utf-8") as handle:
                 current = parse_jsonc(handle.read())
-        os.makedirs(os.path.dirname(CMUX_JSON), exist_ok=True)
+        os.makedirs(os.path.dirname(HMUX_JSON), exist_ok=True)
         merged = json.dumps(deep_merge(current, overlay), indent=2) + "\n"
         self.touched = True
-        write_atomically(CMUX_JSON, merged.encode())
+        write_atomically(HMUX_JSON, merged.encode())
 
     def restore(self):
         if not self.touched:
             return
         if self.original is None:
-            os.unlink(CMUX_JSON)
+            os.unlink(HMUX_JSON)
         else:
-            write_atomically(CMUX_JSON, self.original)
+            write_atomically(HMUX_JSON, self.original)
         self.touched = False
 
 
@@ -402,14 +402,14 @@ def substitute(value, names):
     return value
 
 
-def run_step(step, cmux, settings, names):
+def run_step(step, hmux, settings, names):
     if "sleep" in step:
         time.sleep(float(step["sleep"]))
     elif "settings" in step:
         settings.apply(step["settings"])
-        cmux("reload-config")
-    elif "cmux" in step:
-        output = cmux(*[substitute(str(arg), names) for arg in step["cmux"]])
+        hmux("reload-config")
+    elif "hmux" in step:
+        output = hmux(*[substitute(str(arg), names) for arg in step["hmux"]])
         if "save" in step:
             # Creation commands answer "OK <handle> ...": keep the handle.
             parts = output.split()
@@ -438,7 +438,7 @@ def capture_still(backend, window_id, out):
     if backend["name"] == "native":
         run(["/usr/sbin/screencapture", "-x", "-o", "-l", str(window_id), out], timeout=60)
     else:
-        # -g: the helper must not take focus, or the cmux window renders inactive.
+        # -g: the helper must not take focus, or the hmux window renders inactive.
         run(["/usr/bin/open", "-g", "-n", "-W", backend["app"], "--args", "window", str(window_id), out], timeout=60)
     if not os.path.exists(out) or os.path.getsize(out) == 0:
         raise AgentError("capture-failed", "no image written to " + out)
@@ -453,7 +453,7 @@ def capture_clip(backend, window_id, seconds, during, run_timed_step, rundir):
         try:
             for step in sorted(during, key=lambda s: float(s["at"])):
                 # Event.wait returns True once recording has stopped: never run
-                # a step (it may rewrite cmux.json) after the caller cleaned up.
+                # a step (it may rewrite hmux.json) after the caller cleaned up.
                 if stopped.wait(max(0.0, start + float(step["at"]) - time.monotonic())):
                     return
                 run_timed_step(step)
@@ -508,7 +508,7 @@ def record(backend, window_id, seconds, rundir):
 
 def main(payload):
     """One capture at a time per host: a second run would kill the first's app
-    and snapshot its modified cmux.json as the original."""
+    and snapshot its modified hmux.json as the original."""
     os.makedirs(ROOT, exist_ok=True)
     with open(os.path.join(ROOT, "lock"), "w") as lock:
         try:
@@ -542,19 +542,19 @@ def capture(payload):
     result["nightly"] = nightly
     check_not_busy(nightly["app"])
 
-    cmux = Cmux(nightly["app"], rundir, scene.get("zshrc", 'PROMPT="%F{blue}~/project%f %# "\n'))
+    hmux = Hmux(nightly["app"], rundir, scene.get("zshrc", 'PROMPT="%F{blue}~/project%f %# "\n'))
     settings = SettingsGuard()
     try:
         if scene.get("settings"):
             settings.apply(scene["settings"])
-        pid = cmux.launch()
+        pid = hmux.launch()
         log("running the scene")
         width, height = scene["window"]["width"], scene["window"]["height"]
-        names = {"window": cmux("new-window").split()[1]}
-        cmux("resize-window", "--window", names["window"], "--width", str(width), "--height", str(height))
+        names = {"window": hmux("new-window").split()[1]}
+        hmux("resize-window", "--window", names["window"], "--width", str(width), "--height", str(height))
         for step in scene.get("setup", []):
-            run_step(step, cmux, settings, names)
-        cmux("focus-window", "--window", names["window"])
+            run_step(step, hmux, settings, names)
+        hmux("focus-window", "--window", names["window"])
         window = find_window(binary, pid, width, height)
         log("capturing window {}".format(window["id"]))
         result["window"] = window
@@ -569,24 +569,24 @@ def capture(payload):
                 window["id"],
                 float(capture["seconds"]),
                 capture.get("during", []),
-                lambda step: run_step(step, cmux, settings, names),
+                lambda step: run_step(step, hmux, settings, names),
                 rundir,
             )
-        cmux("close-window", "--window", names["window"])
+        hmux("close-window", "--window", names["window"])
     finally:
         settings.restore()
-        if options.get("keepApp") and cmux.pids():
+        if options.get("keepApp") and hmux.pids():
             try:
-                cmux("reload-config")
+                hmux("reload-config")
             except AgentError:
                 pass
         else:
-            cmux.stop()
+            hmux.stop()
     return result
 
 
 def exit_on_signal(signum, _frame):
-    # Raise instead of dying so main's finally restores cmux.json and quits the app.
+    # Raise instead of dying so main's finally restores hmux.json and quits the app.
     raise SystemExit(128 + signum)
 
 

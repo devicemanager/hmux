@@ -57,7 +57,7 @@ export type TeamSeatReconcileDependencies = {
   readonly stack?: TeamStackApp;
   readonly activeSubscription?: (stackTeamId: string) => Promise<ActiveTeamSubscriptionRow | null>;
   readonly stripe?: TeamSeatStripeClient;
-  /** Mirrors the updated subscription into our rows and Stack `cmuxSeats`. */
+  /** Mirrors the updated subscription into our rows and Stack `hmuxSeats`. */
   readonly apply?: (subscription: Stripe.Subscription) => Promise<unknown>;
   readonly captureError?: (error: unknown, context: Record<string, string | number | boolean>) => void;
 };

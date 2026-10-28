@@ -105,7 +105,7 @@ if ! awk '
   in_download && /^      - name:/ { in_download=0 }
   in_download && /id: signing-inputs-parallel/ { saw_id=1 }
   in_download && /download-run-artifact.py/ { downloads++ }
-  in_download && /--name cmux-nightly-unsigned-app --out nightly-inputs\/app/ { saw_app_download=1 }
+  in_download && /--name hmux-nightly-unsigned-app --out nightly-inputs\/app/ { saw_app_download=1 }
   in_download && /--connections 64/ { saw_app_connections=1 }
   in_download && /app_ok=/ { saw_app_output=1 }
   in_download && /daemon_ok=/ { saw_daemon_output=1 }
@@ -140,7 +140,7 @@ if ! awk -v refresh_runner="runs-on: macos-26" '
   # the ungated form, so this guard would keep passing if somebody dropped the
   # paid-overflow gate from the lane it exists to pin.
   in_refresh && index($0, refresh_runner) { saw_release_runner=1 }
-  in_refresh && /CMUX_CI_XCODE_APP_MACOS_26/ { saw_release_xcode=1 }
+  in_refresh && /HMUX_CI_XCODE_APP_MACOS_26/ { saw_release_xcode=1 }
   in_refresh && /select-ci-xcode\.sh/ { saw_xcode_selection=1 }
   in_refresh && /^      - name: Restore Xcode compilation cache/ { saw_lookup=1 }
   in_refresh && /uses: (actions\/cache\/restore@|\.\/\.github\/actions\/cache-restore$)/ { saw_restore_action=1 }
@@ -231,20 +231,20 @@ if ! awk -v helper_runner="runs-on: macos-15" \
   job == "helper" && index($0, helper_runner) { saw_helper_runner=1 }
   job == "helper" && /build-ghostty-cli-helper\.sh --universal/ { saw_build=1 }
   job == "helper" && /lipo .* -verify_arch arm64 x86_64/ { saw_arch_assert=1 }
-  job == "helper" && /name: cmux-nightly-ghostty-cli-helper/ { saw_helper_artifact=1 }
+  job == "helper" && /name: hmux-nightly-ghostty-cli-helper/ { saw_helper_artifact=1 }
   job == "app" && index($0, app_runner) { saw_app_runner=1 }
-  job == "app" && /CMUX_CI_XCODE_APP_MACOS_26/ { saw_app_xcode=1 }
+  job == "app" && /HMUX_CI_XCODE_APP_MACOS_26/ { saw_app_xcode=1 }
   job == "app" && /select-ci-xcode\.sh/ { saw_app_selection=1 }
-  job == "app" && /name: cmux-nightly-unsigned-app/ { saw_app_artifact=1 }
-  job == "app" && /tar -C "\$products" -czf "\$RUNNER_TEMP\/cmux-nightly-unsigned\.tar\.gz" cmux\.app/ { saw_app_only_archive=1 }
+  job == "app" && /name: hmux-nightly-unsigned-app/ { saw_app_artifact=1 }
+  job == "app" && /tar -C "\$products" -czf "\$RUNNER_TEMP\/hmux-nightly-unsigned\.tar\.gz" hmux\.app/ { saw_app_only_archive=1 }
   job == "app" && /^      - name: Upload dSYMs to Sentry/ { saw_app_dsym_upload=1 }
   job == "publish" && /build-nightly-ghostty-cli-helper/ { saw_publish_needs_helper=1 }
   job == "publish" && /build-nightly-app/ { saw_publish_needs_app=1 }
-  job == "publish" && /CMUX_CI_XCODE_APP_MACOS_26/ { saw_publish_xcode=1 }
+  job == "publish" && /HMUX_CI_XCODE_APP_MACOS_26/ { saw_publish_xcode=1 }
   job == "publish" && /select-ci-xcode\.sh/ { saw_publish_selection=1 }
-  job == "publish" && /name: cmux-nightly-unsigned-app/ { saw_app_download=1 }
+  job == "publish" && /name: hmux-nightly-unsigned-app/ { saw_app_download=1 }
   job == "publish" && /path: nightly-inputs\/app/ { saw_app_download_path=1 }
-  job == "publish" && /tar -C "\$products" -xzf nightly-inputs\/app\/cmux-nightly-unsigned\.tar\.gz/ { saw_app_restore=1 }
+  job == "publish" && /tar -C "\$products" -xzf nightly-inputs\/app\/hmux-nightly-unsigned\.tar\.gz/ { saw_app_restore=1 }
   job == "publish" && /^      - name: Upload dSYMs to Sentry/ { saw_publish_dsym_upload=1 }
   END { exit !(saw_helper_runner && saw_build && saw_arch_assert && saw_helper_artifact && saw_app_runner && saw_app_xcode && saw_app_selection && saw_app_artifact && saw_app_only_archive && saw_app_dsym_upload && saw_publish_needs_helper && saw_publish_needs_app && saw_publish_xcode && saw_publish_selection && saw_app_download && saw_app_download_path && saw_app_restore && !saw_publish_dsym_upload) }
 ' "$WORKFLOW_FILE"; then
@@ -298,13 +298,13 @@ if ! awk '
   job == "publish" && /^      - name: Thin bundle to the variant architecture/ { in_thin=1; next }
   in_thin && /^      - name:/ { in_thin=0 }
   in_thin && /if: matrix\.variant != '\''universal'\''/ { saw_thin_gate=1 }
-  in_thin && /thin-app-bundle\.sh build-universal\/Build\/Products\/Release\/cmux\.app "\$NIGHTLY_VARIANT"/ { saw_thin=1 }
+  in_thin && /thin-app-bundle\.sh build-universal\/Build\/Products\/Release\/hmux\.app "\$NIGHTLY_VARIANT"/ { saw_thin=1 }
   job == "publish" && /^      - name: Verify nightly binary architectures/ { in_verify=1; next }
   in_verify && /^      - name:/ { in_verify=0 }
-  in_verify && /Contents\/MacOS\/cmux"/ { saw_app=1 }
-  in_verify && /Contents\/Resources\/bin\/cmux"/ { saw_cli=1 }
+  in_verify && /Contents\/MacOS\/hmux"/ { saw_app=1 }
+  in_verify && /Contents\/Resources\/bin\/hmux"/ { saw_cli=1 }
   in_verify && /Contents\/Resources\/bin\/ghostty"/ { saw_helper=1 }
-  in_verify && /Contents\/Resources\/bin\/cmux-tui"/ { saw_tui=1 }
+  in_verify && /Contents\/Resources\/bin\/hmux-tui"/ { saw_tui=1 }
   in_verify && /\[\[ "\$archs" == \*arm64\* && "\$archs" == \*x86_64\* \]\]/ { saw_universal_assert=1 }
   in_verify && /\[ "\$archs" = "\$NIGHTLY_VARIANT" \]/ { saw_thin_assert=1 }
   in_verify && /Mach-O universal/ { saw_fat_scan=1 }
@@ -323,7 +323,7 @@ if ! awk '
   exit 1
 fi
 
-if ! grep -Fq "bundleId: 'com.cmuxterm.app.nightly'," "$WORKFLOW_FILE" || ! grep -Fq "bundleId: 'com.cmuxterm.app.rc'," "$WORKFLOW_FILE"; then
+if ! grep -Fq "bundleId: 'com.hmuxterm.app.nightly'," "$WORKFLOW_FILE" || ! grep -Fq "bundleId: 'com.hmuxterm.app.rc'," "$WORKFLOW_FILE"; then
   echo "FAIL: nightly workflow must publish the unified nightly bundle ID and the rc channel bundle ID"
   exit 1
 fi
@@ -344,7 +344,7 @@ if ! awk '
   job == "sign" && /SPARKLE_PREVIOUS_ARCHIVES_DIR|SPARKLE_MAXIMUM_DELTAS/ { initial_delta=1 }
   job == "delta" && /--count 1/ { saw_previous=1 }
   job == "delta" && /SPARKLE_MAXIMUM_DELTAS=1/ { saw_max=1 }
-  job == "delta" && /name: cmux-nightly-deltas-\$\{\{ matrix\.variant \}\}/ { saw_artifact=1 }
+  job == "delta" && /name: hmux-nightly-deltas-\$\{\{ matrix\.variant \}\}/ { saw_artifact=1 }
   END { exit !(saw_previous && saw_max && saw_artifact && !initial_delta) }
 ' "$WORKFLOW_FILE"; then
   echo "FAIL: initial appcasts must be full-only and delta generation must run later per variant"
@@ -389,7 +389,7 @@ if ! awk '
   in_prepare && /^      - name:/ { in_prepare=0 }
   in_prepare && /clear-dirs\.sh build-universal/ { saw_clear_dd=1 }
   in_prepare && /ln -s/ { saw_link=1 }
-  job == "app" && /cmux-nightly-\$\{\{ needs\.decide\.outputs\.channel \}\}-\$\{toolchain_key\}/ { saw_key=1 }
+  job == "app" && /hmux-nightly-\$\{\{ needs\.decide\.outputs\.channel \}\}-\$\{toolchain_key\}/ { saw_key=1 }
   job == "app" && /^      - name: Restore Xcode compilation cache/ && !saw_clear_dd { restore_first=1 }
   job == "app" && /^      - name: Build nightly app \(Release\)/ { saw_build=1 }
   job == "app" && !saw_build && /ln -s .*build-universal/ { saw_link=1 }
@@ -408,8 +408,8 @@ if ! awk '
   /NIGHTLY_APPCAST="appcast-\$\{NIGHTLY_VARIANT\}\.xml"/ { saw_thin_feed=1 }
   /NIGHTLY_APPCAST="appcast\.xml"/ { saw_legacy_feed=1 }
   /"\$\{CHANNEL_FEED_BASE\}\/\$\{NIGHTLY_APPCAST\}"/ { saw_feed_injection=1 }
-  /feedBase: .https:\/\/files\.cmux\.com\/nightly.,/ { saw_nightly_feed_base=1 }
-  /feedBase: .https:\/\/files\.cmux\.com\/rc.,/ { saw_rc_feed_base=1 }
+  /feedBase: .https:\/\/files\.hmux\.com\/nightly.,/ { saw_nightly_feed_base=1 }
+  /feedBase: .https:\/\/files\.hmux\.com\/rc.,/ { saw_rc_feed_base=1 }
   /NIGHTLY_DMG_IMMUTABLE="\$\{CHANNEL_DMG_PREFIX\}-\$\{NIGHTLY_VARIANT\}-\$\{NIGHTLY_BUILD\}\.dmg"/ { saw_immutable_name=1 }
   END { exit !(saw_thin_feed && saw_legacy_feed && saw_feed_injection && saw_nightly_feed_base && saw_rc_feed_base && saw_immutable_name) }
 ' "$WORKFLOW_FILE"; then
@@ -513,7 +513,7 @@ prepare_recovery = step("Prepare pending notarization recovery artifact")
 assert "steps.notarize-nightly.outputs.submission_pending == 'true'" in prepare_recovery
 assert "submission_id" in prepare_recovery and "dmg_sha256" in prepare_recovery
 assert "always() && steps.prepare-notarization-recovery.outcome == 'success'" in recovery
-assert "cmux-nightly-notarization-recovery-staging/*" in recovery
+assert "hmux-nightly-notarization-recovery-staging/*" in recovery
 assert "CHANNEL_APP_PATH" in prepare_recovery
 assert "NIGHTLY_DMG_RELEASE" in prepare_recovery
 assert ".notarization.state" in prepare_recovery
@@ -521,13 +521,13 @@ assert ".notarization.log" in prepare_recovery
 assert "computer-use-helper" in prepare_recovery
 assert "helper_state_path" in prepare_recovery
 assert "recovery-staging" in prepare_recovery
-assert "cmux-nightly-notarization-recovery-app.tar.gz" in prepare_recovery
+assert "hmux-nightly-notarization-recovery-app.tar.gz" in prepare_recovery
 assert "if-no-files-found: error" in recovery
 assert "compression-level: 0" in recovery
 metadata = step("Upload notarization polling metadata")
 assert "steps.prepare-notarization-recovery.outcome == 'success'" in metadata
 assert "-notarization-metadata-" in metadata
-assert "cmux-nightly-notarization-metadata-staging/*" in metadata
+assert "hmux-nightly-notarization-metadata-staging/*" in metadata
 assert "tar.gz" not in metadata and "NIGHTLY_DMG_RELEASE }}\n" not in metadata
 assert "retention-days: 14" in metadata
 
@@ -539,13 +539,13 @@ notarize_timeout = re.search(
 assert notarize_timeout, "missing notarization step"
 assert "timeout-minutes: ${{ needs.decide.outputs.should_publish == 'true' && 90 || 140 }}" in notarize_timeout.group(1)
 assert "timeout-minutes: 50" not in notarize_timeout.group(1)
-assert "CMUX_NOTARY_SUBMIT_ONLY: ${{ needs.decide.outputs.should_publish }}" in notarize_timeout.group(1)
-assert "CMUX_DEFER_GATEKEEPER_ASSESSMENT: ${{ needs.decide.outputs.should_publish }}" in notarize_timeout.group(1)
-assert "CMUX_NOTARY_WAIT_TIMEOUT" not in notarize_timeout.group(1)
+assert "HMUX_NOTARY_SUBMIT_ONLY: ${{ needs.decide.outputs.should_publish }}" in notarize_timeout.group(1)
+assert "HMUX_DEFER_GATEKEEPER_ASSESSMENT: ${{ needs.decide.outputs.should_publish }}" in notarize_timeout.group(1)
+assert "HMUX_NOTARY_WAIT_TIMEOUT" not in notarize_timeout.group(1)
 
 fast_package = step("Package signed fast dogfood DMG")
 assert "if: needs.decide.outputs.fast_build == 'true'" in fast_package
-assert 'CMUX_SKIP_NOTARIZATION: "true"' in fast_package
+assert 'HMUX_SKIP_NOTARIZATION: "true"' in fast_package
 assert "NIGHTLY_DMG_IMMUTABLE" in fast_package
 
 syspolicy = step("Gate distribution with syspolicy_check")
@@ -568,7 +568,7 @@ assert "standalone_helper" in resume_script
 assert "notarytool submit" not in resume_script
 assert "LOG_STATUS" in resume_script and "LOG_EXIT" in resume_script
 assert "run_with_timeout.py" in resume_script
-assert "CMUX_NOTARY_LOG_TIMEOUT_SECONDS" in resume_script
+assert "HMUX_NOTARY_LOG_TIMEOUT_SECONDS" in resume_script
 assert "SYSPOLICY_TOOL" in resume_script
 assert "refusing to staple or publish" in resume_script
 resolver = (Path(sys.argv[1]).parents[2] / "scripts/ci/resolve-notarization-recovery.py").read_text(encoding="utf-8")
@@ -580,7 +580,7 @@ assert "Install recovered DMG packaging tools" in auto
 assert "Import signing certificate for recovered DMG" in auto
 assert "Prepare outer DMG recovery after bounded wait" in auto
 assert "runner.temp" not in auto.split("  wait-and-staple:", 1)[1].split("  poll-outer:", 1)[0]
-assert 'outer_state="$RUNNER_TEMP/cmux-outer-dmg-notarization.state"' in auto
+assert 'outer_state="$RUNNER_TEMP/hmux-outer-dmg-notarization.state"' in auto
 assert "poll-outer:" in auto and "staple-outer:" in auto
 assert "outer-notarization-metadata-" in auto
 assert "fromJSON(needs.poll-outer.outputs.outer_variants)" in auto
@@ -605,8 +605,8 @@ assert "runs-on: ubuntu-24.04" in auto
 assert "sleep 300" in auto
 assert "exact recovery artifacts for manual continuation" in auto
 assert "needs.poll.outputs.all_accepted == 'true'" in auto
-assert "CMUX_OUTER_NOTARY_WAIT_TIMEOUT=25m" in auto
-assert "CMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT=40m" in auto
+assert "HMUX_OUTER_NOTARY_WAIT_TIMEOUT=25m" in auto
+assert "HMUX_STAPLED_APP_NOTARY_WAIT_TIMEOUT=40m" in auto
 # A recovered DMG gets the DMG around its stapled app as an outer submission.
 assert "./scripts/ci/resume-stapled-app-notarization.sh" in auto
 assert "steps.prepare-outer.outputs.prepared == 'true'" in auto
@@ -619,7 +619,7 @@ assert "fromJSON(needs.poll-stapled.outputs.outer_variants)" in auto
 assert "needs.staple-stapled.result == 'success'" in auto
 assert "--stapled-app-fallback" in auto and "--stapled-app-fallback" in resume
 poller = (Path(sys.argv[1]).parents[2] / "scripts/ci/poll-outer-notarizations.sh").read_text(encoding="utf-8")
-assert "stapled_submitted_at" in poller and "CMUX_STAPLED_APP_FALLBACK_SECONDS:-21600" in poller
+assert "stapled_submitted_at" in poller and "HMUX_STAPLED_APP_FALLBACK_SECONDS:-21600" in poller
 smoke = (Path(sys.argv[1]).parents[2] / "scripts/ci/smoke-dmg.sh").read_text(encoding="utf-8")
 assert '"$XCRUN_TOOL" stapler validate "$APP"' in smoke and "--stapled-app-fallback)" in smoke
 # The fallback record the wrapper writes is the one the verify jobs read.
@@ -628,19 +628,19 @@ assert 'verified/$immutable.stapled-app-fallback' in auto and '"$dmg.stapled-app
 assert "scripts/ci/stage-outer-notarization-recovery.py" in resume and "steps.prepare-outer.outputs.prepared == 'true'" in resume
 assert "./scripts/ci/resume-stapled-app-notarization.sh" in resume
 stapled = (Path(sys.argv[1]).parents[2] / "scripts/ci/resume-stapled-app-notarization.sh").read_text(encoding="utf-8")
-assert "CMUX_RESUME_APP_ONLY=true" in stapled and "CMUX_NOTARY_SUBMIT_ONLY=true" in stapled
+assert "HMUX_RESUME_APP_ONLY=true" in stapled and "HMUX_NOTARY_SUBMIT_ONLY=true" in stapled
 assert "stapled_app=true" in stapled
 assert "STATE_STAPLED_APP" in resume_script and "RESUME_APP_ONLY" in resume_script
 assert "wait-and-staple:" in auto
 assert "matrix:" in auto and "[arm64, x86_64, universal]" in auto
 assert "needs.wait-and-staple.result == 'success'" in auto
-assert "CMUX_NOTARY_WAIT_TIMEOUT=2m" in auto
+assert "HMUX_NOTARY_WAIT_TIMEOUT=2m" in auto
 assert "publish-release-assets.py" in auto
 assert "--replace-feeds" in auto
 assert "resolve-notarization-recovery.py" in auto
 assert "Reject stale continuation before publication" in auto
 assert "fetch-depth: 0" in auto
-assert "cmux-published-build" in auto
+assert "hmux-published-build" in auto
 assert "final_dmg_sha256" in auto
 # nightly-next continues on its own track (tests/test_nightly_resume_tracks.py).
 assert 'if branch == "nightly-next":' in auto and "nightly-next-continues-on-its-own-track" in auto
@@ -652,7 +652,7 @@ assert "Notarization continuation accepted and published ${process.env.SOURCE_HE
 assert "if (!(issue.body || '').toLowerCase().includes(process.env.SOURCE_HEAD_SHA.toLowerCase())) continue;" not in auto
 assert "--draft=false" in auto
 assert "prune_nightly_release_assets.py" in auto
-assert "cmux-${{ needs.decide.outputs.channel }}-notarization-recovery-" in workflow
+assert "hmux-${{ needs.decide.outputs.channel }}-notarization-recovery-" in workflow
 assert "reason=no-published-recovery-artifacts" in auto
 assert '"should_publish": "${{ needs.decide.outputs.should_publish }}" == "true"' in workflow
 assert "Verify immutable remote daemon assets" in auto
@@ -681,21 +681,21 @@ if ! awk '
 fi
 
 for workflow in "$WORKFLOW_FILE" "$RELEASE_WORKFLOW_FILE"; do
-  if ! grep -Fq 'cmux_tui_commit="$(./scripts/ci/resolve-cmux-tui-client-commit.sh' "$workflow"; then
-    echo "FAIL: $(basename "$workflow") must resolve the cmux-tui client commit through scripts/ci/resolve-cmux-tui-client-commit.sh"
+  if ! grep -Fq 'hmux_tui_commit="$(./scripts/ci/resolve-hmux-tui-client-commit.sh' "$workflow"; then
+    echo "FAIL: $(basename "$workflow") must resolve the hmux-tui client commit through scripts/ci/resolve-hmux-tui-client-commit.sh"
     exit 1
   fi
-  if grep -Fq 'git log -1 --format=%H -- cmux-tui' "$workflow"; then
-    echo "FAIL: $(basename "$workflow") must not pick the cmux-tui commit with a bare git log: actions/checkout is depth 1 there, so it always answers HEAD"
+  if grep -Fq 'git log -1 --format=%H -- hmux-tui' "$workflow"; then
+    echo "FAIL: $(basename "$workflow") must not pick the hmux-tui commit with a bare git log: actions/checkout is depth 1 there, so it always answers HEAD"
     exit 1
   fi
-  if ! grep -Fq 'https://files.cmux.com/cmux-tui/${cmux_tui_commit}/manifest.json' "$workflow"; then
-    echo "FAIL: $(basename "$workflow") must install the immutable cmux-tui manifest"
+  if ! grep -Fq 'https://files.cmux.com/hmux-tui/${hmux_tui_commit}/manifest.json' "$workflow"; then
+    echo "FAIL: $(basename "$workflow") must install the immutable hmux-tui manifest"
     exit 1
   fi
-  if ! grep -Fq -- '--expected-commit "$cmux_tui_commit"' "$workflow" ||
+  if ! grep -Fq -- '--expected-commit "$hmux_tui_commit"' "$workflow" ||
      ! grep -Fq -- '--require-capability wireguard-hub' "$workflow"; then
-    echo "FAIL: $(basename "$workflow") must reject a stale cmux-tui client without WireGuard hub support"
+    echo "FAIL: $(basename "$workflow") must reject a stale hmux-tui client without WireGuard hub support"
     exit 1
   fi
 done
@@ -705,17 +705,17 @@ done
 # and every sign variant installs that one commit before thinning.
 if ! awk '
   /^  [a-zA-Z0-9_-]+:$/ { job=$1 }
-  job == "build-nightly-app:" && /resolve-cmux-tui-client-commit\.sh/ { in_app=1 }
-  job == "resolve-nightly-cmux-tui-client:" && /^    needs: decide$/ { resolver_needs=1 }
-  job == "resolve-nightly-cmux-tui-client:" && /cmux_tui_commit="\$\(\.\/scripts\/ci\/resolve-cmux-tui-client-commit\.sh --max-fallback 5\)"/ { resolver=1 }
-  job == "prepare-nightly-variant:" && /^    needs: .*resolve-nightly-cmux-tui-client/ { sign_needs=1 }
-  job == "prepare-nightly-variant:" && /^      - name: Bundle the cmux-tui client$/ { install_line=NR }
+  job == "build-nightly-app:" && /resolve-hmux-tui-client-commit\.sh/ { in_app=1 }
+  job == "resolve-nightly-hmux-tui-client:" && /^    needs: decide$/ { resolver_needs=1 }
+  job == "resolve-nightly-hmux-tui-client:" && /hmux_tui_commit="\$\(\.\/scripts\/ci\/resolve-hmux-tui-client-commit\.sh --max-fallback 5\)"/ { resolver=1 }
+  job == "prepare-nightly-variant:" && /^    needs: .*resolve-nightly-hmux-tui-client/ { sign_needs=1 }
+  job == "prepare-nightly-variant:" && /^      - name: Bundle the hmux-tui client$/ { install_line=NR }
   job == "prepare-nightly-variant:" && /^      - name: Thin bundle to the variant architecture$/ { thin_line=NR }
-  job == "prepare-nightly-variant:" && /CMUX_TUI_CLIENT_COMMIT: \$\{\{ needs\.resolve-nightly-cmux-tui-client\.outputs\.commit \}\}/ { sign_commit=1 }
-  job == "report-nightly-failure:" && /^    needs: .*resolve-nightly-cmux-tui-client/ { reported=1 }
+  job == "prepare-nightly-variant:" && /HMUX_TUI_CLIENT_COMMIT: \$\{\{ needs\.resolve-nightly-hmux-tui-client\.outputs\.commit \}\}/ { sign_commit=1 }
+  job == "report-nightly-failure:" && /^    needs: .*resolve-nightly-hmux-tui-client/ { reported=1 }
   END { exit !(!in_app && resolver_needs && resolver && sign_needs && sign_commit && install_line && thin_line && install_line < thin_line && reported) }
 ' "$WORKFLOW_FILE"; then
-  echo "FAIL: nightly must resolve the cmux-tui commit beside the compile and install it in every sign variant before thinning"
+  echo "FAIL: nightly must resolve the hmux-tui commit beside the compile and install it in every sign variant before thinning"
   exit 1
 fi
 
@@ -726,30 +726,30 @@ for workflow in "$WORKFLOW_FILE" "$RELEASE_WORKFLOW_FILE"; do
   fi
 done
 
-# The sign job installs the cmux-tui client and its SSH payloads after the build
+# The sign job installs the hmux-tui client and its SSH payloads after the build
 # job's strip, so it must run strip-release-bundle.sh again after that install.
 if ! awk '
   /^  [a-zA-Z0-9_-]+:$/ { job=$1 }
-  job == "prepare-nightly-variant:" && /\.\/scripts\/install-cmux-tui-client\.sh/ && !install_line { install_line=NR }
+  job == "prepare-nightly-variant:" && /\.\/scripts\/install-hmux-tui-client\.sh/ && !install_line { install_line=NR }
   job == "prepare-nightly-variant:" && /\.\/scripts\/strip-release-bundle\.sh "\$app"/ { strip_line=NR }
   job == "prepare-nightly-variant:" && /^      - name: Thin bundle to the variant architecture$/ { thin_line=NR }
   END { exit !(install_line && strip_line && thin_line && install_line < strip_line && strip_line < thin_line) }
 ' "$WORKFLOW_FILE"; then
-  echo "FAIL: nightly sign job must run strip-release-bundle.sh after installing the cmux-tui client and before thinning"
+  echo "FAIL: nightly sign job must run strip-release-bundle.sh after installing the hmux-tui client and before thinning"
   exit 1
 fi
 
-INSTALL_TUI_SCRIPT="$ROOT_DIR/scripts/install-cmux-tui-client.sh"
-for expected in '--expected-commit' '--require-capability' 'required cmux-tui capability is missing'; do
+INSTALL_TUI_SCRIPT="$ROOT_DIR/scripts/install-hmux-tui-client.sh"
+for expected in '--expected-commit' '--require-capability' 'required hmux-tui capability is missing'; do
   if ! grep -Fq -- "$expected" "$INSTALL_TUI_SCRIPT"; then
-    echo "FAIL: cmux-tui installer must enforce $expected"
+    echo "FAIL: hmux-tui installer must enforce $expected"
     exit 1
   fi
 done
 
-if ! grep -A8 -F 'cmux_tui_install_args=(' "$ROOT_DIR/scripts/reload.sh" |
+if ! grep -A8 -F 'hmux_tui_install_args=(' "$ROOT_DIR/scripts/reload.sh" |
    grep -Fq -- '--require-capability wireguard-hub'; then
-  echo "FAIL: tagged reloads must reject a cmux-tui client without WireGuard hub support"
+  echo "FAIL: tagged reloads must reject a hmux-tui client without WireGuard hub support"
   exit 1
 fi
 
@@ -831,7 +831,7 @@ fi
 for expected in \
   'if: needs.decide.outputs.fast_build != '\''true'\''' \
   'if: needs.decide.outputs.fast_build == '\''true'\''' \
-  'name: cmux-nightly-fast-${{ needs.decide.outputs.short_sha }}'; do
+  'name: hmux-nightly-fast-${{ needs.decide.outputs.short_sha }}'; do
   if ! grep -Fq "$expected" "$WORKFLOW_FILE"; then
     echo "FAIL: fast build workflow is missing: $expected"
     exit 1
@@ -906,7 +906,7 @@ if ! awk '
 fi
 
 for expected in \
-  'cmux-published-sha:' \
+  'hmux-published-sha:' \
   'nightly-publication-marker.py' \
   'release metadata already records the exact' \
   'published, tag marker stale' \
@@ -968,7 +968,7 @@ PUBLISH_SCHEDULE="(github.event_name != 'schedule' || github.event.schedule == '
 if [ "$(job_if build-nightly-app)" != "    if: needs.decide.outputs.should_build == 'true' && $PUBLISH_SCHEDULE" ] \
   || [ "$(job_if build-nightly-ghostty-cli-helper)" != "    if: needs.decide.outputs.should_build == 'true' && $PUBLISH_SCHEDULE && needs.decide.outputs.build_only != 'true'" ] \
   || [ "$(job_if build-sign-notarize-nightly)" != "    if: needs.decide.outputs.should_build == 'true' && $PUBLISH_SCHEDULE && needs.decide.outputs.build_only != 'true'" ] \
-  || [ "$(job_if resolve-nightly-cmux-tui-client)" != "$(job_if build-sign-notarize-nightly)" ] \
+  || [ "$(job_if resolve-nightly-hmux-tui-client)" != "$(job_if build-sign-notarize-nightly)" ] \
   || [ "$(job_if publish-nightly)" != "    if: needs.decide.outputs.should_build == 'true' && needs.decide.outputs.fast_build != 'true' && needs.decide.outputs.build_only != 'true' && needs.decide.outputs.should_publish != 'true' && $PUBLISH_SCHEDULE" ]; then
   echo "FAIL: build_only must be a conjunctive exclusion on the helper, signing, and publication jobs, and must not gate the unsigned app build"
   exit 1

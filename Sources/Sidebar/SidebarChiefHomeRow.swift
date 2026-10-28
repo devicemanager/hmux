@@ -1,6 +1,6 @@
 import AppKit
-import CmuxFoundation
-import CmuxSettings
+import HmuxFoundation
+import HmuxSettings
 import SwiftUI
 
 /// The pinned Chief row at the top of the left sidebar, above the workspace
@@ -9,7 +9,7 @@ import SwiftUI
 /// A destination, not a workspace, so it never paints the solid workspace
 /// selection: selected, it takes a quiet accent tint (18%, neutral in a
 /// background window) with primary text, as a macOS source-list destination
-/// does and as cmux-next's rail Home item does. It leads with Chief's own
+/// does and as hmux-next's rail Home item does. It leads with Chief's own
 /// avatar at 16 pt (the header's and the list's face), says "Needs you" or
 /// "Working…" while a Chief waits or runs, and shows an 8 pt accent dot for unread replies only while Home
 /// is not showing. Selected, its trailing button starts a new conversation (the
@@ -129,7 +129,7 @@ struct SidebarChiefHomeRow: View {
 /// The way back to the workspace list while Home is selected: "‹ Workspaces"
 /// with the workspace count, right under the Home row and above Chief's
 /// conversation list. The workspace rows are hidden while Home is selected
-/// (one list at a time, as in Messages and cmux-next's rail), so the way back
+/// (one list at a time, as in Messages and hmux-next's rail), so the way back
 /// is spelled out instead of relying on clicking the selected Home row again.
 /// A back row rather than a Chief | Workspaces segmented control: the
 /// sidebar keeps one stack of rows (no new control style), and the Home row

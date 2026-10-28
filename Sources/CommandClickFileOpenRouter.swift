@@ -1,9 +1,9 @@
 import AppKit
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 enum CommandClickFileOpenRouter {
-    nonisolated static func shouldRouteInCmux(
+    nonisolated static func shouldRouteInHmux(
         path: String,
         defaults: UserDefaults = .standard
     ) -> Bool {
@@ -13,7 +13,7 @@ enum CommandClickFileOpenRouter {
     }
 
     @MainActor
-    static func openInCmux(
+    static func openInHmux(
         workspace: Workspace,
         sourcePanelId: UUID,
         filePath: String,
@@ -64,7 +64,7 @@ enum CommandClickFileOpenRouter {
         return dir.isEmpty ? nil : dir
     }
 
-    /// Schedule a file open in cmux, deferred to the next runloop tick.
+    /// Schedule a file open in hmux, deferred to the next runloop tick.
     ///
     /// Ghostty's `Surface.openUrl` holds an internal `os_unfair_lock` when it
     /// dispatches into Swift; opening a new panel synchronously re-enters
@@ -73,7 +73,7 @@ enum CommandClickFileOpenRouter {
     /// at dispatch time (TOCTOU). When routing fails, `fallback` is called so
     /// the caller can open the file externally.
     @MainActor
-    static func deferredOpenFileInCmux(
+    static func deferredOpenFileInHmux(
         workspace: Workspace,
         preferredWorkspaceId: UUID,
         surfaceId: UUID,
@@ -90,11 +90,11 @@ enum CommandClickFileOpenRouter {
                 fallback?()
                 return
             }
-            guard shouldRouteInCmux(path: filePath, defaults: defaults) else {
+            guard shouldRouteInHmux(path: filePath, defaults: defaults) else {
                 fallback?()
                 return
             }
-            if openInCmux(
+            if openInHmux(
                 workspace: resolvedWorkspace,
                 sourcePanelId: surfaceId,
                 filePath: filePath,

@@ -13,31 +13,31 @@ SPEC = importlib.util.spec_from_file_location("relocate", SCRIPT)
 relocate = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(relocate)
 
-PRODUCER = "/tmp/cmux-ci-2/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks"
+PRODUCER = "/tmp/hmux-ci-2/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks"
 
 
 class StaleRpaths(unittest.TestCase):
     def test_producer_roots_are_stale_for_another_products_directory(self):
-        own = "/Users/cmux/_work/_temp/dd-shard-1-layers/Build/Products/Debug/PackageFrameworks"
+        own = "/Users/hmux/_work/_temp/dd-shard-1-layers/Build/Products/Debug/PackageFrameworks"
         entries = [
             "/usr/lib/swift",
             PRODUCER,
-            "/private/tmp/cmux-ci/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks",
-            "/tmp/cmux-ci-12/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks/",
+            "/private/tmp/hmux-ci/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks",
+            "/tmp/hmux-ci-12/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks/",
             "@executable_path/../Frameworks",
-            "/private/tmp/cmux-app-host-package-frameworks",
+            "/private/tmp/hmux-app-host-package-frameworks",
         ]
         self.assertEqual(relocate.stale_rpaths(entries, own), sorted(entries[1:4]))
 
     def test_a_product_restored_where_it_was_compiled_keeps_its_rpath(self):
-        own = "/private/tmp/cmux-ci/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks"
-        entries = ["/tmp/cmux-ci/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks"]
+        own = "/private/tmp/hmux-ci/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks"
+        entries = ["/tmp/hmux-ci/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks"]
         with unittest.mock.patch.object(relocate.os.path, "realpath", lambda p: p.replace("/private/tmp", "/tmp")):
             self.assertEqual(relocate.stale_rpaths(entries, own), [])
 
     def test_other_absolute_paths_are_left_alone(self):
-        entries = ["/tmp/cmux-ci-x/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks",
-                   "/tmp/cmux-ci/derived-data/Build/Products/Debug/PackageFrameworks"]
+        entries = ["/tmp/hmux-ci-x/derived-data-compile-admission/Build/Products/Debug/PackageFrameworks",
+                   "/tmp/hmux-ci/derived-data/Build/Products/Debug/PackageFrameworks"]
         self.assertEqual(relocate.stale_rpaths(entries, "/elsewhere/PackageFrameworks"), [])
 
 
@@ -47,18 +47,18 @@ class Layout(unittest.TestCase):
         self.assertTrue(relocate.loadable(fw / "Versions/A/X_PackageProduct"))
         self.assertFalse(relocate.loadable(fw / "X_PackageProduct"))
         self.assertFalse(relocate.loadable(fw / "Versions/Current/X_PackageProduct"))
-        self.assertTrue(relocate.loadable(Path("/p/cmux DEV.app/Contents/Resources/bin/cmux")))
+        self.assertTrue(relocate.loadable(Path("/p/hmux DEV.app/Contents/Resources/bin/hmux")))
 
     def test_signing_target_is_the_bundle_for_its_main_executable(self):
         with tempfile.TemporaryDirectory() as work:
-            app = Path(work) / "cmux DEV.app"
+            app = Path(work) / "hmux DEV.app"
             (app / "Contents/MacOS").mkdir(parents=True)
             (app / "Contents/Info.plist").write_bytes(
                 b'<?xml version="1.0"?><plist version="1.0"><dict>'
-                b"<key>CFBundleExecutable</key><string>cmux DEV</string></dict></plist>")
-            self.assertEqual(relocate.signing_target(app / "Contents/MacOS/cmux DEV"), app)
-            self.assertEqual(relocate.signing_target(app / "Contents/MacOS/cmux DEV.debug.dylib"),
-                             app / "Contents/MacOS/cmux DEV.debug.dylib")
+                b"<key>CFBundleExecutable</key><string>hmux DEV</string></dict></plist>")
+            self.assertEqual(relocate.signing_target(app / "Contents/MacOS/hmux DEV"), app)
+            self.assertEqual(relocate.signing_target(app / "Contents/MacOS/hmux DEV.debug.dylib"),
+                             app / "Contents/MacOS/hmux DEV.debug.dylib")
             fw = Path(work) / "X.framework/Versions/A/X"
             self.assertEqual(relocate.signing_target(fw), fw.parent)
 
@@ -70,11 +70,11 @@ class RoundTrip(unittest.TestCase):
         with tempfile.TemporaryDirectory(prefix="relocate-rpaths-") as work:
             # A deep, long products directory like a runner's _work/_temp one.
             products = Path(work) / ("runner-temp-" + "x" * 90) / "Build/Products/Debug"
-            nested = products / "cmux DEV.app/Contents/Resources/bin"
+            nested = products / "hmux DEV.app/Contents/Resources/bin"
             nested.mkdir(parents=True)
             source = Path(work) / "main.c"
             source.write_text("int main(void) { return 0; }\n")
-            binary = nested / "cmux"
+            binary = nested / "hmux"
             subprocess.run(["clang", str(source), "-o", str(binary), "-Wl,-rpath," + PRODUCER], check=True)
             subprocess.run([sys.executable, str(SCRIPT), str(products)], check=True, capture_output=True)
             self.assertEqual(relocate.rpaths(binary), ["@loader_path/../../../../PackageFrameworks"])

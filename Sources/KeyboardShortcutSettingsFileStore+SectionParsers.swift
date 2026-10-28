@@ -1,8 +1,8 @@
-import CmuxSettings
+import HmuxSettings
 import Foundation
 
 /// Settings-file section parsers for file editor, file explorer, agent messages, markdown, mobile, and sidebar workspace-todo options, extracted from `KeyboardShortcutSettingsFileStore.swift`, which sits at its file-length budget.
-extension CmuxSettingsFileStore {
+extension HmuxSettingsFileStore {
     /// Parses canonical beta and integration sections that share legacy
     /// UserDefaults storage with the classic settings importer.
     func parseClassicCatalogSections(

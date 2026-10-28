@@ -1,8 +1,8 @@
 import AppKit
-import CmuxChief
+import HmuxChief
 
 /// The app's live view of Chief's memory files: the notes (memory.jsonl)
-/// re-read whenever any writer changes them (Chief through `cmux chief
+/// re-read whenever any writer changes them (Chief through `hmux chief
 /// memory add`, the user in the sheet or an editor), reported through a
 /// ``ChiefMemoryWatcher`` (file-system events, no polling).
 ///

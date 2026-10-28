@@ -1,6 +1,6 @@
 import AppKit
-import CmuxBrowser
-import CmuxFoundation
+import HmuxBrowser
+import HmuxFoundation
 import WebKit
 
 enum BrowserScreenshotCaptureBounds {
@@ -117,7 +117,7 @@ enum BrowserScreenshotWebViewSnapshotter {
             } catch {
                 onProgress()
                 #if DEBUG
-                cmuxDebugLog("browser.screenshot.fullPage.singleSnapshot.failed error=\(error.localizedDescription)")
+                hmuxDebugLog("browser.screenshot.fullPage.singleSnapshot.failed error=\(error.localizedDescription)")
                 #endif
             }
         }
@@ -174,7 +174,7 @@ enum BrowserScreenshotWebViewSnapshotter {
             } catch {
                 onProgress()
                 #if DEBUG
-                cmuxDebugLog("browser.screenshot.designMode.singleSnapshot.failed error=\(error.localizedDescription)")
+                hmuxDebugLog("browser.screenshot.designMode.singleSnapshot.failed error=\(error.localizedDescription)")
                 #endif
             }
         }
@@ -647,7 +647,7 @@ enum BrowserScreenshotWebViewSnapshotter {
             ).evaluate(script: visualCaptureLayoutFlushScript)
         } catch {
             #if DEBUG
-            cmuxDebugLog("browser.screenshot.prepare.failed error=\(error.localizedDescription)")
+            hmuxDebugLog("browser.screenshot.prepare.failed error=\(error.localizedDescription)")
             #endif
         }
 
@@ -753,9 +753,9 @@ enum BrowserScreenshotWebViewSnapshotter {
 
         let contentWidth = numberValue(value["contentWidth"])
         let contentHeight = numberValue(value["contentHeight"])
-        let containerBounds = webView.cmuxBrowserViewportContainerBounds
+        let containerBounds = webView.hmuxBrowserViewportContainerBounds
             ?? CGRect(origin: .zero, size: webView.bounds.size)
-        let fallbackViewportSize = webView.cmuxBrowserViewportLayout(in: containerBounds)?.bounds.size
+        let fallbackViewportSize = webView.hmuxBrowserViewportLayout(in: containerBounds)?.bounds.size
             ?? webView.bounds.size
         guard let metrics = BrowserViewportContentMetrics(
             contentSize: CGSize(width: contentWidth, height: contentHeight),
@@ -979,7 +979,7 @@ enum BrowserScreenshotWebViewSnapshotter {
     }
 
     private static func viewportSnapshotRenderer(for webView: WKWebView) -> BrowserViewportSnapshotRenderer? {
-        guard let viewport = (webView as? CmuxWebView)?.browserViewportModel?.viewport else {
+        guard let viewport = (webView as? HmuxWebView)?.browserViewportModel?.viewport else {
             return nil
         }
         return BrowserViewportSnapshotRenderer(
@@ -1032,11 +1032,11 @@ enum BrowserScreenshotWebViewSnapshotter {
     }
 
     private static func forceAppKitLayout(for webView: WKWebView) {
-        let presentationView = webView.cmuxBrowserViewportPresentationView
+        let presentationView = webView.hmuxBrowserViewportPresentationView
         webView.needsLayout = true
         presentationView.needsLayout = true
-        webView.cmuxBrowserViewportAttachmentSuperview?.needsLayout = true
-        webView.cmuxBrowserViewportAttachmentSuperview?.layoutSubtreeIfNeeded()
+        webView.hmuxBrowserViewportAttachmentSuperview?.needsLayout = true
+        webView.hmuxBrowserViewportAttachmentSuperview?.layoutSubtreeIfNeeded()
         presentationView.layoutSubtreeIfNeeded()
         webView.layoutSubtreeIfNeeded()
         presentationView.displayIfNeeded()

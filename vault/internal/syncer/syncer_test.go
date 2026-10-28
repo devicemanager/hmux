@@ -106,7 +106,7 @@ func TestSyncerUploadsIncrementallyAndCompresses(t *testing.T) {
 	}))
 	defer apiServer.Close()
 
-	store, err := state.Load(home, map[string]string{"CMUX_VAULT_STATE_DIR": filepath.Join(home, "state")})
+	store, err := state.Load(home, map[string]string{"HMUX_VAULT_STATE_DIR": filepath.Join(home, "state")})
 	if err != nil {
 		t.Fatal(err)
 	}

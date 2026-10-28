@@ -1,6 +1,6 @@
 import AppKit
 import Combine
-import CmuxTerminal
+import HmuxTerminal
 import Foundation
 import WebKit
 

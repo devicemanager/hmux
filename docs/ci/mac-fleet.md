@@ -8,7 +8,7 @@
 > The measurements and retired design remain here so later capacity work can
 > compare against the evidence without reviving the old control plane.
 
-How many CMUX-owned Mac minis the macOS CI queue needs, which lane they take
+How many HMUX-owned Mac minis the macOS CI queue needs, which lane they take
 first, what a compromised job on one could reach, and how one is enrolled,
 drained and rolled back.
 
@@ -28,7 +28,7 @@ happens at 3 a.m.", and it is the one that carries measurements.
 > compile-admission pilot this plan builds on (`persistent-macos-compile.yml`,
 > `persistent-macos-router.yml`, `CI_PERSISTENT_MAC_COMPILE` and
 > `scripts/persistent-compile`) was removed before it routed any pull request.
-> No workflow targets the `cmux-persistent-compile` runner group any more, so
+> No workflow targets the `hmux-persistent-compile` runner group any more, so
 > an org admin can remove the group and deregister its runners. Owned minis
 > will take pull request jobs through the pool picker instead
 > (`scripts/ci/pr_runner_pool.py`, #14205, #14237). The sections marked
@@ -227,7 +227,7 @@ them (section 5).
    fallback for shards the picker does not place and for re-runs. (The
    isolated Tart pool that once offered this was retired on 2026-09-25; see
    `ci-runners.md`.)
-4. **Nightly app compile** - `build-nightly-app` takes the trusted runner on cmux15
+4. **Nightly app compile** - `build-nightly-app` takes the trusted runner on hmux15
    (`CI_SEED_TRUSTED_POOL` plus `CI_NIGHTLY_TRUSTED_RUNNER`) first on main's push and schedule runs, with
    Blacksmith as the fallback through ci-owned-pool-rescue.yml
    (`docs/ci-runners.md`). Signing and notarization stay on Blacksmith.
@@ -236,7 +236,7 @@ them (section 5).
 
 ## 2. Security
 
-cmux is a public repository. A fork pull request can propose arbitrary
+hmux is a public repository. A fork pull request can propose arbitrary
 workflow YAML, including `runs-on:`. Every control below exists because of
 that single fact.
 
@@ -264,7 +264,7 @@ that single fact.
 ### 2.2 The three gates a fork PR must pass, and cannot
 
 1. **The runner group.** The owned Mac joins the organization-owned
-   `cmux-persistent-compile` group, whose workflow access is restricted to
+   `hmux-persistent-compile` group, whose workflow access is restricted to
    `manaflow-ai/cmux/.github/workflows/persistent-macos-compile.yml@refs/heads/main`.
    A fork's modified copy of that workflow is a different ref and cannot
    acquire the runner. **This is the external scheduling boundary and it is the
@@ -292,7 +292,7 @@ macOS equivalent primitive. See section 4 for what that means for the design.
 What the macOS producer does instead, today:
 
 - **Clean workspace per job by reconstruction, not by destruction.** The
-  producer's `Prepare exact cmux source` step re-inits the checkout if the
+  producer's `Prepare exact hmux source` step re-inits the checkout if the
   remote is wrong, hard-resets, resets and cleans every submodule, and then
   asserts `HEAD == source_sha`, `HEAD^{tree} == source_tree`,
   `parent1 == source_parent1`, `parent2 == head_sha` and a clean
@@ -351,7 +351,7 @@ discovered -> enrolling -> eligible -> draining | quarantined -> retired
 Leaving `quarantined` advances the enrollment generation, which stales every
 pre-quarantine acceptance receipt. Re-enrollment is therefore not a shortcut:
 it re-runs `accept-local` and mints a fresh
-`glaeda-cmux-fleet-acceptance/v2` receipt. `automaticDispatchAuthorized`
+`glaeda-hmux-fleet-acceptance/v2` receipt. `automaticDispatchAuthorized`
 remains `false` throughout; enrollment makes a node a routing *candidate*, not
 a dispatch target.
 
@@ -370,8 +370,8 @@ them literally:
 
 ```yaml
 runs-on:
-  group: cmux-persistent-compile
-  labels: [self-hosted, macOS, ARM64, cmux-persistent-macos-compile]
+  group: hmux-persistent-compile
+  labels: [self-hosted, macOS, ARM64, hmux-persistent-macos-compile]
 ```
 
 Group policy (organization settings, maintainer-only): allow the public
@@ -379,14 +379,14 @@ Group policy (organization settings, maintainer-only): allow the public
 `manaflow-ai/cmux/.github/workflows/persistent-macos-compile.yml@refs/heads/main`.
 
 Do **not** add these labels to the physical fleet records named in
-`ci-runners.md` (`cmux-mac-mini`, `studio1`, `mac4-cmuxvnc*`,
-`cmux-austin-mini-*`). A runner in the restricted group is a new registration,
+`ci-runners.md` (`hmux-mac-mini`, `studio1`, `mac4-hmuxvnc*`,
+`hmux-austin-mini-*`). A runner in the restricted group is a new registration,
 not a relabelled dev-build machine.
 
 ### 3.3 Xcode versions
 
-The mini must carry the exact app at `vars.CMUX_CI_XCODE_APP_PR ||
-vars.CMUX_CI_XCODE_APP_MACOS_15` with a macOS SDK major of 26, and
+The mini must carry the exact app at `vars.HMUX_CI_XCODE_APP_PR ||
+vars.HMUX_CI_XCODE_APP_MACOS_15` with a macOS SDK major of 26, and
 `scripts/select-ci-xcode.sh` must resolve it. `scripts/persistent-compile`
 reads those variables rather than a copy of the path, so `up` and the doctor
 check each mini against the value CI uses today and print it.
@@ -399,7 +399,7 @@ variable moves, every mini needs the new app at that exact path.
 
 Drift is now a guard failure rather than a silent waste:
 `check_persistent_compile_owned_mac_occupancy` compares the producer's
-`CMUX_CI_XCODE_APP` / `CMUX_CI_REQUIRED_MACOS_SDK_MAJOR` against
+`HMUX_CI_XCODE_APP` / `HMUX_CI_REQUIRED_MACOS_SDK_MAJOR` against
 `macos-compile-admission`'s. A mismatch does not produce a wrong build - the
 hosted job refuses the artifact with `Xcode identity mismatch` - but every
 producer run would burn an owned-Mac allocation to make something certain to be
@@ -427,7 +427,7 @@ quarantine store, stamping the generation in use with `os.utime` immediately
 before pruning so LRU cannot evict it. Evictions are logged and recorded in
 the admission metrics as `pruned_cache_generations`.
 
-Each generation is a full cmux DerivedData tree. Budget conservatively:
+Each generation is a full hmux DerivedData tree. Budget conservatively:
 **3 generations x ~40 GB plus the checkout plus the toolchains**, and keep the
 free-space floor above one full cold build.
 
@@ -439,7 +439,7 @@ than growing a parallel cleaner.
 
 **Automatic drain, repair and quarantine do not exist.** glaeda #1058 specifies
 them and glaeda #1095 specifies the autopilot, but only the state machine and
-the read-only `glaeda-cmux-fleet-operator-summary/v1` projection (#1096) have
+the read-only `glaeda-hmux-fleet-operator-summary/v1` projection (#1096) have
 landed. Everything below is a manual operator command today. Do not write a
 second drain mechanism in this repository; the primitive belongs in Glaeda.
 
@@ -483,7 +483,7 @@ once the runner is idle, stops and disables its launchd agent so it stays
 stopped across logins and reboots. A job GitHub assigns in the seconds between
 the last one ending and the stop is cancelled and falls back to the hosted
 compile. Until glaeda #1058's drain
-primitive lands, do not drain with `cmux_fleet.py transition-apply` alone; that
+primitive lands, do not drain with `hmux_fleet.py transition-apply` alone; that
 leaves the machine taking work.
 
 Quarantine, on the mini, with one of the eight reviewed reasons
@@ -497,7 +497,7 @@ scripts/persistent-compile up                         # once fixed: re-runs acce
 ```
 
 Like `drain`, it moves Glaeda and stops the runner. Quarantining with
-`cmux_fleet.py transition-apply` alone has the same trap as draining with it.
+`hmux_fleet.py transition-apply` alone has the same trap as draining with it.
 
 ### 3.6 When a mini is offline
 
@@ -527,7 +527,7 @@ scripts/persistent-compile off
 
 Glaeda owns the machine. This repository owns the routing and the guards. The
 split matters because the two have different threat models: Glaeda's sandbox
-work was proven on a private Linux host, and cmux is a public repository.
+work was proven on a private Linux host, and hmux is a public repository.
 
 | Concern | Owner | State |
 | --- | --- | --- |
@@ -536,14 +536,14 @@ work was proven on a private Linux host, and cmux is a public repository.
 | Physical execution lease, multi-orchestrator interop | Glaeda (#1057) | admission half landed (#1072/#1084); lease acquisition and the two-caller proof are not |
 | Drain / quarantine / repair / retire | Glaeda (#1058, #1095) | state machine only; drain primitive, auto-repair and autopilot not implemented |
 | JIT / ephemeral runner inside a task sandbox | Glaeda (#1008-#1010, merged #1017/#1053) | **Linux only**; no macOS equivalent |
-| Same-site immutable artifact distribution | Glaeda (#1068, #1103) + cmux #13540 | contract landed; physical two-node benchmark pending |
-| Warm-slot generation handoff | cmux #13091 (#13398) | landed |
-| Producer workflow, router, route script | **cmux repo** | landed, never run |
-| Fork-PR exclusion, author association, same-repo gates | **cmux repo** | landed and guarded |
-| Runner labels and group naming | **cmux repo** (names) + org settings (policy) | names landed; group does not exist |
-| Xcode pinning and drift detection | **cmux repo** | pin landed; drift guard added in this PR |
-| Hosted fallback to Blacksmith | **cmux repo** | landed and guarded |
-| Capacity sizing and lane order | **cmux repo** (this document) | new |
+| Same-site immutable artifact distribution | Glaeda (#1068, #1103) + hmux #13540 | contract landed; physical two-node benchmark pending |
+| Warm-slot generation handoff | hmux #13091 (#13398) | landed |
+| Producer workflow, router, route script | **hmux repo** | landed, never run |
+| Fork-PR exclusion, author association, same-repo gates | **hmux repo** | landed and guarded |
+| Runner labels and group naming | **hmux repo** (names) + org settings (policy) | names landed; group does not exist |
+| Xcode pinning and drift detection | **hmux repo** | pin landed; drift guard added in this PR |
+| Hosted fallback to Blacksmith | **hmux repo** | landed and guarded |
+| Capacity sizing and lane order | **hmux repo** (this document) | new |
 
 ### 4.1 Where Glaeda's plan does not satisfy a public repository
 
@@ -557,7 +557,7 @@ Four gaps, stated so nobody assumes the Linux work transfers:
 2. **The trust gate there is a runner label, and `runs-on:` is fork-editable
    text on a public repo.** The Linux design admits jobs by label
    (`glaeda-big-red-trusted`) with no fork/untrusted-ref discriminator at
-   admission. cmux compensates with something Glaeda does not have: a
+   admission. hmux compensates with something Glaeda does not have: a
    workflow-restricted runner group pinned to one workflow file on
    `refs/heads/main`, plus four independently guarded author-association gates.
    **That group policy is load-bearing.** Without it the label is the only gate,
@@ -596,7 +596,7 @@ to run next. Commands that change something show their plan and ask first
 | Who | Where | Command |
 | --- | --- | --- |
 | Org admin | anywhere with `gh` | `scripts/persistent-compile group` |
-| Operator | the mini, in a cmux checkout | `scripts/persistent-compile up --node-id cmux-mac-NNN` |
+| Operator | the mini, in a hmux checkout | `scripts/persistent-compile up --node-id hmux-mac-NNN` |
 | Maintainer | anywhere | `scripts/persistent-compile pilot <PR>`, later `all` |
 
 Before `up`, reserve the mini through its existing owner (#13491 step 1); `up`
@@ -609,20 +609,20 @@ the runner and starts it. It stops at the first
 step that needs sudo or a human, prints that step, and resumes from there when
 run again. It refuses to register a mini whose Glaeda enrollment is not
 `eligible`. The runner is the pinned `actions-runner` (sha256 checked) in
-`~/actions-runner-cmux-persistent-compile`, registered with the exact labels in
+`~/actions-runner-hmux-persistent-compile`, registered with the exact labels in
 3.2 and run as a launchd agent. The registration token comes from the
 operator's `gh` login. An operator who is not an org admin gets one from an
 admin instead: the admin runs `scripts/persistent-compile token`, and the
-operator runs `CMUX_RUNNER_TOKEN=<token> scripts/persistent-compile up`. The
+operator runs `HMUX_RUNNER_TOKEN=<token> scripts/persistent-compile up`. The
 token is valid for one hour.
 
 ### Stage 0 - preconditions (maintainer only)
 
-- [ ] Organization runner group `cmux-persistent-compile` exists, allows this
+- [ ] Organization runner group `hmux-persistent-compile` exists, allows this
       public repository, and restricts workflow access to
       `.../persistent-macos-compile.yml@refs/heads/main`.
 - [ ] One M4 Pro mini enrolled through `fleet-enrollment.md` with a green
-      `glaeda-cmux-fleet-acceptance/v2` receipt and state `eligible` (#13491).
+      `glaeda-hmux-fleet-acceptance/v2` receipt and state `eligible` (#13491).
 - [ ] That mini registered as an Actions runner in that group with exactly the
       labels in 3.2.
 - [ ] The Xcode that `scripts/persistent-compile` names from the CI
@@ -692,10 +692,10 @@ workflow files is never the rollback; the variable is.
 
 | Action | Who |
 | --- | --- |
-| Create/configure the `cmux-persistent-compile` runner group; set its workflow restriction | **Maintainer / org admin only.** Not expressible in the repository. |
+| Create/configure the `hmux-persistent-compile` runner group; set its workflow restriction | **Maintainer / org admin only.** Not expressible in the repository. |
 | Register or remove a self-hosted runner | **Maintainer.** `repos/.../actions/runners` returns 403 without the runners permission. |
 | Set `CI_PERSISTENT_MAC_COMPILE`, `..._COHORT`, `..._QUEUE_SECONDS`, `..._EXECUTION_SECONDS` | **Maintainer.** Repository variables require admin. |
-| Move `CMUX_CI_XCODE_APP_MACOS_*` or any `MACOS_RUNNER_*` | **Maintainer.** |
+| Move `HMUX_CI_XCODE_APP_MACOS_*` or any `MACOS_RUNNER_*` | **Maintainer.** |
 | Physically enroll a mini, run `accept-local`, drain, quarantine | **Operator with machine access.** Not a repository action. |
 | Edit the producer/router workflows, the route script, the guards | Write access. Effect is gated by the variable being unset. |
 | Add a lane, change labels, change the concurrency key or timeout | Write access, but `check_persistent_compile_owned_mac_occupancy` and `check_no_self_hosted_fleet_runners` must be updated deliberately. |
@@ -713,7 +713,7 @@ today. Nothing they merge takes effect until a maintainer sets one variable.
   (`docs/ci/workflow-inventory.md` line 21). The router has 6,887 skipped runs
   out of 6,927 and zero successes: it creates one run per CI run and exits on
   the unset variable.
-- No physical `cmux_macos_native_build` acceptance receipt exists yet
+- No physical `hmux_macos_native_build` acceptance receipt exists yet
   (#13491, glaeda #1056 checklist).
 - No drain primitive: Glaeda's state flag does not stop GitHub assignment
   (3.5). glaeda #1058.

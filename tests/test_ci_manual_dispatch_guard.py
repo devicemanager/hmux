@@ -159,7 +159,7 @@ class ManualDispatchGuard(unittest.TestCase):
     def test_closed_or_other_repository_pr_is_ignored(self):
         closed = pr(state="closed")
         other = pr()
-        other["head"]["repo"]["full_name"] = "teamleaderleo/cmux"
+        other["head"]["repo"]["full_name"] = "teamleaderleo/hmux"
         result = module.decide(event="workflow_dispatch", repository="manaflow-ai/cmux", ref_name="feat/custom-sidebar-templates", sha="7814d8f", pull_requests=[closed, other])
         self.assertFalse(result.cancel)
 

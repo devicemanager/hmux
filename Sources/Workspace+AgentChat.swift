@@ -3,8 +3,8 @@ import AppKit
 extension Workspace {
     func performSurfaceTabBarNewAgentChatAction(presentingWindow: NSWindow?) {
         guard let owningTabManager else { return }
-        _ = AppDelegate.shared?.executeConfiguredCmuxAction(
-            id: CmuxSurfaceTabBarBuiltInAction.newAgentChat.configID,
+        _ = AppDelegate.shared?.executeConfiguredHmuxAction(
+            id: HmuxSurfaceTabBarBuiltInAction.newAgentChat.configID,
             tabManager: owningTabManager,
             preferredWindow: presentingWindow
         )

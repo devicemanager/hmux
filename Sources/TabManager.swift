@@ -1,35 +1,35 @@
-import CmuxProductAnalytics
-import CmuxSSHClipboardTrust
+import HmuxProductAnalytics
+import HmuxSSHClipboardTrust
 import AppKit
-import CmuxAgentChat
-import CmuxCloudMachines
-import CmuxFoundation
-import CmuxTerminalCore
+import HmuxAgentChat
+import HmuxCloudMachines
+import HmuxFoundation
+import HmuxTerminalCore
 import SwiftUI
 import Foundation
-import CmuxTerminalSharing
+import HmuxTerminalSharing
 import Bonsplit
-import CmuxBrowser
-import CmuxGit
-import CmuxNotifications
-import CmuxPanes
-import CmuxRemoteSession
-import CmuxSettings
-import CmuxSidebar
-import CmuxSidebarGit
-import CmuxWorkspaces
+import HmuxBrowser
+import HmuxGit
+import HmuxNotifications
+import HmuxPanes
+import HmuxRemoteSession
+import HmuxSettings
+import HmuxSidebar
+import HmuxSidebarGit
+import HmuxWorkspaces
 import CoreVideo
 import Combine
 import CoreServices
 import Darwin
 import OSLog
-import CmuxTerminal
+import HmuxTerminal
 
 // MARK: - Tab Type Alias for Backwards Compatibility
 // The old Tab class is replaced by Workspace
 typealias Tab = Workspace
 
-private let tabManagerLogger = Logger(subsystem: "com.cmuxterm.app", category: "TabManager")
+private let tabManagerLogger = Logger(subsystem: "com.hmuxterm.app", category: "TabManager")
 
 enum WorkspaceOrderChangeNotificationKey {
     static let movedWorkspaceIds = "movedWorkspaceIds"
@@ -101,7 +101,7 @@ fileprivate final class VsyncIOSurfaceTimelineState {
     }
 }
 
-fileprivate func cmuxVsyncIOSurfaceTimelineCallback(
+fileprivate func hmuxVsyncIOSurfaceTimelineCallback(
     _ displayLink: CVDisplayLink,
     _ inNow: UnsafePointer<CVTimeStamp>,
     _ inOutputTime: UnsafePointer<CVTimeStamp>,
@@ -178,7 +178,7 @@ fileprivate func cmuxVsyncIOSurfaceTimelineCallback(
 #endif
 
 // WorkspaceGroup, WorkspaceReorderPlanItem, WorkspaceBatchReorderError, and
-// the pure batch-reorder planning live in CmuxWorkspaces.
+// the pure batch-reorder planning live in HmuxWorkspaces.
 
 @MainActor
 class TabManager: ObservableObject {
@@ -209,7 +209,7 @@ class TabManager: ObservableObject {
 
     // Wave-4 sub-model (TabManager decomposition): the workspace list, the
     // sidebar group sections, and the selected-workspace id storage live in
-    // WorkspacesModel (CmuxWorkspaces). TabManager stays the per-window
+    // WorkspacesModel (HmuxWorkspaces). TabManager stays the per-window
     // composition point: it owns the model, forwards the legacy accessors
     // below, and implements WorkspacesHosting (bottom of this file) to run
     // the legacy @Published property-observer side effects at identical
@@ -266,7 +266,7 @@ class TabManager: ObservableObject {
     @Published private(set) var mountedBackgroundWorkspaceLoadIds: Set<UUID> = []
     @Published private(set) var debugPinnedWorkspaceLoadIds: Set<UUID> = []
 
-    /// Global monotonically increasing counter for CMUX_PORT ordinal assignment.
+    /// Global monotonically increasing counter for HMUX_PORT ordinal assignment.
     /// Static so port ranges don't overlap across multiple windows (each window has its own TabManager).
     static var nextPortOrdinal: Int = 0
     var selectedTabId: UUID? {
@@ -396,14 +396,14 @@ class TabManager: ObservableObject {
                     )
                 }
             }
-            publishCmuxWorkspaceSelectedChange(from: previousTabId)
+            publishHmuxWorkspaceSelectedChange(from: previousTabId)
             let notificationDismissalContext = notificationDismissal.takePendingSelectionContext() ?? .activeFocus
 #if DEBUG
             let switchId = debugWorkspaceSwitchId
             let switchDtMs = debugWorkspaceSwitchStartTime > 0
                 ? (CACurrentMediaTime() - debugWorkspaceSwitchStartTime) * 1000
                 : 0
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "ws.select.didSet id=\(switchId) from=\(Self.debugShortWorkspaceId(previousTabId)) " +
                 "to=\(Self.debugShortWorkspaceId(selectedTabId)) dt=\(Self.debugMsText(switchDtMs))"
             )
@@ -442,7 +442,7 @@ class TabManager: ObservableObject {
                 let dtMs = self.debugWorkspaceSwitchStartTime > 0
                     ? (CACurrentMediaTime() - self.debugWorkspaceSwitchStartTime) * 1000
                     : 0
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "ws.select.asyncDone id=\(self.debugWorkspaceSwitchId) dt=\(Self.debugMsText(dtMs)) " +
                     "selected=\(Self.debugShortWorkspaceId(self.selectedTabId))"
                 )
@@ -471,14 +471,14 @@ class TabManager: ObservableObject {
     // Wave-3 sub-models (TabManager decomposition): TabManager is the
     // per-window composition point. It owns the concrete sub-models, hosts
     // their seams, and forwards its legacy entry points.
-    /// Per-panel notification-dismissal flow (CmuxNotifications).
+    /// Per-panel notification-dismissal flow (HmuxNotifications).
     let notificationDismissal: any NotificationDismissing = NotificationDismissalModel()
     private var pendingProjectedNotificationFocusRequestID: UUID?
-    /// Recently-closed browser panel history (CmuxBrowser).
+    /// Recently-closed browser panel history (HmuxBrowser).
     let browserModel = BrowserModel<ClosedBrowserPanelRestoreSnapshot>()
-    /// Sidebar multi-selection state + sync events (CmuxSidebar).
+    /// Sidebar multi-selection state + sync events (HmuxSidebar).
     let sidebarMultiSelection = SidebarMultiSelectionModel()
-    /// Typed synchronous settings access (CmuxSettings).
+    /// Typed synchronous settings access (HmuxSettings).
     private let settings: any SettingsWriting
     private let settingsCatalog = SettingCatalog()
     private let defaultWorkspaceWorkingDirectoryProvider: () -> String
@@ -495,18 +495,18 @@ class TabManager: ObservableObject {
         }
     }
     // The focus-history back/forward stack lives in FocusHistoryModel
-    // (CmuxWorkspaceNavigation); this window is its host via
+    // (HmuxWorkspaceNavigation); this window is its host via
     // FocusHistoryHosting and republishes its revision bumps through
     // `focusHistoryRevision` above.
     let focusHistoryNavigation: any FocusHistoryNavigating
     // Stateless split-geometry application (equalize/resize divider moves);
-    // the pure planning lives in CmuxPanes' ExternalTreeNode extensions.
+    // the pure planning lives in HmuxPanes' ExternalTreeNode extensions.
     let paneLayout = PaneLayoutService()
-    // Reorder/pin flows over the workspaces model (CmuxWorkspaces); owns
+    // Reorder/pin flows over the workspaces model (HmuxWorkspaces); owns
     // the pure batch-reorder planner.
     let workspaceReordering: WorkspaceReorderCoordinator<Workspace>
     // Workspace-group lifecycle flows over the workspaces model
-    // (CmuxWorkspaces); creation/teardown/selection invert through
+    // (HmuxWorkspaces); creation/teardown/selection invert through
     // WorkspaceGroupHosting.
     let workspaceGrouping: WorkspaceGroupCoordinator<Workspace>
     private var shouldRecordFocusHistory: Bool {
@@ -552,7 +552,7 @@ class TabManager: ObservableObject {
     // the legacy shared limiter; tests inject their own instance.
     private static let sharedWorkspaceGitProbeLimiter = WorkspaceGitMetadataProbeLimiter(limit: 2)
 
-    // The sidebar git/PR subsystem (extracted to CmuxSidebarGit). TabManager
+    // The sidebar git/PR subsystem (extracted to HmuxSidebarGit). TabManager
     // is the per-window composition point: it constructs the concrete
     // services, stores only the seams, implements SidebarGitHosting
     // (see TabManager+SidebarGitHosting.swift), and forwards its legacy
@@ -601,11 +601,11 @@ class TabManager: ObservableObject {
                 homeDirectory: FileManager.default.homeDirectoryForCurrentUser.path,
                 processWorkingDirectory: FileManager.default.currentDirectoryPath
             ).resolve(
-                configuredValue: GhosttyConfig.loadForCmux().workingDirectory
+                configuredValue: GhosttyConfig.loadForHmux().workingDirectory
             )
         },
         ghosttyWorkingDirectoryInheritanceProvider: @escaping () -> GhosttyWorkingDirectoryInheritance = {
-            GhosttyConfig.loadForCmux().workingDirectoryInheritance
+            GhosttyConfig.loadForHmux().workingDirectoryInheritance
         },
         workspaceCustomizationStore: WorkspaceCustomizationStore? = nil,
         nativeSSHConnectionBroker: NativeSSHConnectionBroker = NativeSSHConnectionBroker(),
@@ -646,7 +646,7 @@ class TabManager: ObservableObject {
         let isTitleUpdateCoalescingEnabled = PanelTitleUpdateCoalescingSettings.isEnabled(settings: settings)
         let areTitleUpdateDiagnosticsEnabled = PanelTitleUpdateCoalescingSettings.diagnosticsEnabled(settings: settings)
         if isTitleUpdateCoalescingEnabled || areTitleUpdateDiagnosticsEnabled {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "workspace.title.coalescing.config enabled=\(isTitleUpdateCoalescingEnabled ? 1 : 0) " +
                 "delayMs=\(PanelTitleUpdateCoalescingSettings.configuredDelayMilliseconds(settings: settings)) " +
                 "diagnostics=\(areTitleUpdateDiagnosticsEnabled ? 1 : 0)"
@@ -654,7 +654,7 @@ class TabManager: ObservableObject {
         }
 #endif
 #if DEBUG
-        let sidebarGitDebugLog: @Sendable (String) -> Void = { cmuxDebugLog($0) }
+        let sidebarGitDebugLog: @Sendable (String) -> Void = { hmuxDebugLog($0) }
 #else
         let sidebarGitDebugLog: @Sendable (String) -> Void = { _ in }
 #endif
@@ -686,7 +686,7 @@ class TabManager: ObservableObject {
         sidebarGitMetadataService.attach(host: self)
         notificationDismissal.attach(host: self)
         focusHistoryNavigation.attach(host: self)
-        // Workspace-list/group/selection storage (CmuxWorkspaces). Attached
+        // Workspace-list/group/selection storage (HmuxWorkspaces). Attached
         // before the first addWorkspace so the property-observer hooks fire
         // from the very first insertion, matching the legacy @Published
         // observer timing.
@@ -825,7 +825,7 @@ class TabManager: ObservableObject {
         agentPIDSweepTimer = timer
     }
 
-    // MARK: - Sidebar git/PR forwarders (subsystem extracted to CmuxSidebarGit)
+    // MARK: - Sidebar git/PR forwarders (subsystem extracted to HmuxSidebarGit)
 
     private func sidebarMetadataSettingsDidChange() {
         sidebarGitMetadataService.sidebarGitMetadataWatchSettingsDidChange()
@@ -976,7 +976,7 @@ class TabManager: ObservableObject {
                 )
             }
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "find.startSearch workspace=\(panel.workspaceId.uuidString.prefix(5)) " +
                 "panel=\(panel.id.uuidString.prefix(5)) existing=\(hadExistingSearch ? "yes" : "no") " +
                 "handled=\(handled ? 1 : 0) " +
@@ -1005,7 +1005,7 @@ class TabManager: ObservableObject {
                 panel.searchState = TerminalSurface.SearchState()
             }
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "find.searchSelection workspace=\(panel.workspaceId.uuidString.prefix(5)) " +
                 "panel=\(panel.id.uuidString.prefix(5))"
             )
@@ -1064,7 +1064,7 @@ class TabManager: ObservableObject {
     /// This is the non-keyboard escape hatch for control chords that a focused TUI
     /// reads off the raw tty. The motivating case is Claude Code's force-stop, which
     /// is only exposed as "press Ctrl-F twice"; invoke this action twice to deliver
-    /// it. Delivery bypasses cmux's shortcut/menu/responder layers entirely.
+    /// it. Delivery bypasses hmux's shortcut/menu/responder layers entirely.
     ///
     /// - Returns: `true` when the chord was sent or queued for the focused terminal,
     ///   `false` when no terminal panel is focused.
@@ -1076,7 +1076,7 @@ class TabManager: ObservableObject {
             panel.surface.forceRefresh(reason: "tabManager.sendCtrlFToFocusedTerminal")
         }
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "terminal.sendCtrlF workspace=\(panel.workspaceId.uuidString.prefix(5)) " +
             "panel=\(panel.id.uuidString.prefix(5)) result=\(result)"
         )
@@ -1199,7 +1199,7 @@ class TabManager: ObservableObject {
         title: String,
         workingDirectory: String?,
         portOrdinal: Int,
-        configTemplate: CmuxSurfaceConfigTemplate?,
+        configTemplate: HmuxSurfaceConfigTemplate?,
         initialSurface: NewWorkspaceInitialSurface = .terminal,
         initialTerminalCommand: String?,
         initialTerminalIsRemote: Bool = false,
@@ -1246,7 +1246,7 @@ class TabManager: ObservableObject {
         title: String,
         workingDirectory: String?,
         portOrdinal: Int,
-        configTemplate: CmuxSurfaceConfigTemplate?,
+        configTemplate: HmuxSurfaceConfigTemplate?,
         detachedSurface: Workspace.DetachedSurfaceTransfer
     ) -> Workspace {
         Workspace(
@@ -1352,10 +1352,10 @@ class TabManager: ObservableObject {
     ) {
         let env = ProcessInfo.processInfo.environment
         let isEnabled: Bool = {
-            if let raw = env["CMUX_DEV_MUTATE_WORKSPACE_SELECTION_DURING_CREATION"] {
+            if let raw = env["HMUX_DEV_MUTATE_WORKSPACE_SELECTION_DURING_CREATION"] {
                 return raw == "1" || raw.caseInsensitiveCompare("true") == .orderedSame
             }
-            return UserDefaults.standard.bool(forKey: "cmuxDevMutateWorkspaceSelectionDuringCreation")
+            return UserDefaults.standard.bool(forKey: "hmuxDevMutateWorkspaceSelectionDuringCreation")
         }()
         guard isEnabled,
               let selectedTabId = snapshot.selectedTabId,
@@ -1363,7 +1363,7 @@ class TabManager: ObservableObject {
               tabs.contains(where: { $0.id == targetId }) else {
             return
         }
-        cmuxDebugLog(
+        hmuxDebugLog(
             "workspace.create.devSelectionMutation from=\(selectedTabId.uuidString.prefix(5)) " +
             "to=\(targetId.uuidString.prefix(5))"
         )
@@ -1486,7 +1486,7 @@ class TabManager: ObservableObject {
             let insertIndex = newTabInsertIndex(snapshot: snapshot, placementOverride: placementOverride)
             var welcomeDelivery: WelcomeBannerDelivery?
             var resolvedInitialTerminalEnvironment = initialTerminalEnvironment
-            // An explicit command runs via `shell -lc`, which never loads cmux's
+            // An explicit command runs via `shell -lc`, which never loads hmux's
             // interactive shell integration, so it could not print the banner.
             let hasInitialTerminalCommand = !(initialTerminalCommand?
                 .trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ?? true)
@@ -1580,8 +1580,8 @@ class TabManager: ObservableObject {
                     newWorkspace.focusedTerminalPanel?.surface.requestBackgroundSurfaceStartIfNeeded()
                 }
             }
-            publishCmuxWorkspaceCreated(newWorkspace, selected: select)
-            publishCmuxInitialSurfaceCreated(newWorkspace, selected: select)
+            publishHmuxWorkspaceCreated(newWorkspace, selected: select)
+            publishHmuxInitialSurfaceCreated(newWorkspace, selected: select)
             if select {
 #if DEBUG
                 debugPrimeWorkspaceSwitchTrigger("create", to: newWorkspace.id)
@@ -1860,7 +1860,7 @@ class TabManager: ObservableObject {
         for workspace in currentTabs {
             guard let tabSnapshot = snapshotTabsById[workspace.id] else {
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "workspace.create.reentrantSnapshotFallback " +
                     "snapshotCount=\(snapshot.tabs.count) liveCount=\(currentTabs.count)"
                 )
@@ -1901,7 +1901,7 @@ class TabManager: ObservableObject {
         return candidates.first
     }
 
-    private func inheritedTerminalConfigForNewWorkspace() -> CmuxSurfaceConfigTemplate? {
+    private func inheritedTerminalConfigForNewWorkspace() -> HmuxSurfaceConfigTemplate? {
         inheritedTerminalConfigForNewWorkspace(workspace: selectedWorkspace)
     }
 
@@ -1924,13 +1924,13 @@ class TabManager: ObservableObject {
 
     func inheritedTerminalConfigForNewWorkspace(
         workspace: Workspace?
-    ) -> CmuxSurfaceConfigTemplate? {
+    ) -> HmuxSurfaceConfigTemplate? {
         guard let fontSizeLineage = cachedInheritedTerminalFontSizeLineageForNewWorkspace(
             workspace: workspace
         ) else {
             return nil
         }
-        var config = CmuxSurfaceConfigTemplate()
+        var config = HmuxSurfaceConfigTemplate()
         config.fontSizeLineage = fontSizeLineage
         return config
     }
@@ -1947,7 +1947,7 @@ class TabManager: ObservableObject {
 
     func workspaceCreationConfigTemplate(
         inheritedTerminalFontSizeLineage: TerminalFontSizeLineage?
-    ) -> CmuxSurfaceConfigTemplate? {
+    ) -> HmuxSurfaceConfigTemplate? {
         guard let inheritedTerminalFontSizeLineage,
               TerminalFontSizePolicy().acceptsPersistedBasePoints(
                 inheritedTerminalFontSizeLineage.basePoints
@@ -1956,13 +1956,13 @@ class TabManager: ObservableObject {
         }
         // Rebuild a clean Swift-owned template instead of carrying over any pointer-backed
         // inherited config state from the source workspace.
-        var config = CmuxSurfaceConfigTemplate()
+        var config = HmuxSurfaceConfigTemplate()
         config.fontSizeLineage = inheritedTerminalFontSizeLineage
         return config
     }
 
     func normalizedWorkingDirectory(_ directory: String?) -> String? {
-        // Single source of truth: the normalization moved to CmuxSidebarGit
+        // Single source of truth: the normalization moved to HmuxSidebarGit
         // with the git subsystem; non-git callers (workspace creation) keep
         // this forwarder.
         directory?.nonEmptyNormalizedGitProbeDirectory
@@ -2047,7 +2047,7 @@ class TabManager: ObservableObject {
         return preferredWorkingDirectoryForNewTab(workspace: sourceWorkspace)
     }
 
-    // MARK: - Reordering (WorkspaceReorderCoordinator, CmuxWorkspaces)
+    // MARK: - Reordering (WorkspaceReorderCoordinator, HmuxWorkspaces)
 
     func moveTabToTop(_ tabId: UUID) {
         workspaceReordering.moveTabToTop(tabId)
@@ -2227,7 +2227,7 @@ class TabManager: ObservableObject {
             object: self,
             userInfo: [WorkspaceOrderChangeNotificationKey.movedWorkspaceIds: movedWorkspaceIds]
         )
-        CmuxEventBus.shared.publishWorkspaceReordered(
+        HmuxEventBus.shared.publishWorkspaceReordered(
             workspaceIds: tabs.map(\.id),
             movedWorkspaceIds: movedWorkspaceIds,
             pinnedWorkspaceIds: tabs.filter(\.isPinned).map(\.id),
@@ -2312,7 +2312,7 @@ class TabManager: ObservableObject {
         workspaceReordering.setPinned(workspaceIds: workspaceIds, pinned: pinned)
     }
 
-    // MARK: - Workspace Groups (WorkspaceGroupCoordinator, CmuxWorkspaces)
+    // MARK: - Workspace Groups (WorkspaceGroupCoordinator, HmuxWorkspaces)
 
     @discardableResult
     func createWorkspaceGroup(
@@ -2677,7 +2677,7 @@ class TabManager: ObservableObject {
         if workspace.isRemoteTmuxMirror {
             AppDelegate.shared?.remoteTmuxController.detachMirrorWorkspaceKeptOpenLocally(workspaceId: workspace.id)
         }
-        // Closing the login cmux opened for a reconnect is the user declining it, and that is the
+        // Closing the login hmux opened for a reconnect is the user declining it, and that is the
         // only signal for it — a closed tab is not a filesystem or protocol event, so the waiter
         // watching for the shared master would never hear about it.
         if workspace.isRemoteTmuxAuthLogin {
@@ -2749,7 +2749,7 @@ class TabManager: ObservableObject {
                 workspaceOrderDidChange(movedWorkspaceIds: promotedAnchorIds)
             }
         }
-        publishCmuxWorkspaceClosed(workspace)
+        publishHmuxWorkspaceClosed(workspace)
     }
 
     /// Finalizes every workspace owned by a closing window without creating a
@@ -2797,7 +2797,7 @@ class TabManager: ObservableObject {
         agentPIDSweepTimer = nil
 
         for workspace in closingWorkspaces {
-            publishCmuxWorkspaceClosed(workspace)
+            publishHmuxWorkspaceClosed(workspace)
         }
     }
 
@@ -3165,8 +3165,8 @@ class TabManager: ObservableObject {
         defer { endCloseConfirmationSession() }
 
         let content = scrollableDetails.map {
-            CmuxAlertContent(flattenedText: message, separatingScrollableDetails: $0)
-        } ?? CmuxAlertContent(informativeText: message)
+            HmuxAlertContent(flattenedText: message, separatingScrollableDetails: $0)
+        } ?? HmuxAlertContent(informativeText: message)
         if let confirmCloseHandler {
             let accepted = confirmCloseHandler(title, content.flattenedText, acceptCmdD)
             if !dontAskAgain.isEmpty, confirmCloseDontAskAgainHandler?(dontAskAgain) == true {
@@ -3207,14 +3207,14 @@ class TabManager: ObservableObject {
 
     private func runCloseConfirmationAlert(
         _ alert: NSAlert,
-        content: CmuxAlertContent? = nil
+        content: HmuxAlertContent? = nil
     ) -> NSApplication.ModalResponse {
         // Presentation (activate + sheet-on-main-window, else app-modal) is
-        // shared with every other cmux dialog via `NSAlert.runCmuxModal`. This
+        // shared with every other hmux dialog via `NSAlert.runHmuxModal`. This
         // wrapper only adds the close-confirmation-specific UITest telemetry,
         // recorded from the presenter's actual path so the label can never
         // disagree with how the alert was really shown.
-        return alert.runCmuxModal(
+        return alert.runHmuxModal(
             presentingWindow: closeConfirmationPresentingWindow(),
             content: content
         ) { presentation in
@@ -3240,7 +3240,7 @@ class TabManager: ObservableObject {
     }
 
     private func closeConfirmationPresentingWindow() -> NSWindow? {
-        NSApp.cmuxMainWindowForModalPresentation(preferring: window)
+        NSApp.hmuxMainWindowForModalPresentation(preferring: window)
     }
 
     private struct CloseOtherTabsInFocusedPanePlan {
@@ -3560,7 +3560,7 @@ class TabManager: ObservableObject {
         guard !tab.isRemoteTmuxControlContainer(panelId) else { return }
         guard tab.panels[panelId] != nil else {
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "surface.close.shortcut.skip tab=\(tab.id.uuidString.prefix(5)) " +
                 "panel=\(panelId.uuidString.prefix(5)) reason=missingPanel"
             )
@@ -3579,7 +3579,7 @@ class TabManager: ObservableObject {
         }()
         let closesWorkspaceOnLastSurfaceShortcut = shouldCloseWorkspaceOnLastSurfaceShortcut(tab, panelId: panelId)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "surface.close.shortcut.begin tab=\(tab.id.uuidString.prefix(5)) " +
             "panel=\(panelId.uuidString.prefix(5)) kind=\(panelKind) " +
             "panelCount=\(tab.panels.count) bonsplitTabs=\(bonsplitTabCount) " +
@@ -3594,7 +3594,7 @@ class TabManager: ObservableObject {
         tab.markCloseHistoryEligible(panelId: panelId)
         let closed = tab.closePanel(panelId)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "surface.close.shortcut tab=\(tab.id.uuidString.prefix(5)) " +
             "panel=\(panelId.uuidString.prefix(5)) closed=\(closed ? 1 : 0) " +
             "panelsAfterCall=\(tab.panels.count)"
@@ -3685,7 +3685,7 @@ class TabManager: ObservableObject {
         }
 
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "surface.close.runtime tab=\(tabId.uuidString.prefix(5)) " +
             "surface=\(surfaceId.uuidString.prefix(5)) panelsBefore=\(tab.panels.count)"
         )
@@ -3697,7 +3697,7 @@ class TabManager: ObservableObject {
         reconcileFocusedPanelFromFirstResponderForKeyboard()
         let closed = tab.closePanel(surfaceId, force: true)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "surface.close.runtime.done tab=\(tabId.uuidString.prefix(5)) " +
             "surface=\(surfaceId.uuidString.prefix(5)) closed=\(closed ? 1 : 0) panelsAfter=\(tab.panels.count)"
         )
@@ -3742,7 +3742,7 @@ class TabManager: ObservableObject {
             ownsRemoteChildExit && tab.pendingRemoteTerminalChildExitSurfaceIds.contains(surfaceId)
 
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "surface.close.childExited tab=\(tabId.uuidString.prefix(5)) " +
             "surface=\(surfaceId.uuidString.prefix(5)) panels=\(tab.panels.count) workspaces=\(tabs.count) " +
             "remoteWorkspace=\(tab.isRemoteWorkspace ? 1 : 0) keepRemote=\(handlesRemoteExitThroughWorkspace ? 1 : 0) " +
@@ -3835,7 +3835,7 @@ class TabManager: ObservableObject {
 
     func workspaceNeedsConfirmClose(_ workspace: Workspace) -> Bool {
 #if DEBUG
-        if ProcessInfo.processInfo.environment["CMUX_UI_TEST_FORCE_CONFIRM_CLOSE_WORKSPACE"] == "1" {
+        if ProcessInfo.processInfo.environment["HMUX_UI_TEST_FORCE_CONFIRM_CLOSE_WORKSPACE"] == "1" {
             return true
         }
 #endif
@@ -3973,7 +3973,7 @@ class TabManager: ObservableObject {
     /// are nil this mirrors the keyboard shortcut: it resolves the browser + return terminal from the
     /// focused panel layout. An explicit browser surface (must be a browser) or return terminal
     /// (must be a terminal) overrides that route. Used by both the Cmd+Shift+G shortcut and the
-    /// `cmux browser react-grab toggle` CLI command so both share one action path.
+    /// `hmux browser react-grab toggle` CLI command so both share one action path.
     /// Returns the resolved browser surface id it acted on, or nil if it could not resolve/act
     /// (so callers can report the actual browser surface rather than the focused panel).
     @discardableResult
@@ -4030,7 +4030,7 @@ class TabManager: ObservableObject {
 
         let didRequestExplicitWebViewFocus = browserPanel.requestExplicitWebViewFocus()
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "reactGrab.pasteback h1.focusRequestResult " +
             "workspace=\(workspace.id.uuidString.prefix(5)) " +
             "browser=\(browserPanel.id.uuidString.prefix(5)) " +
@@ -4119,7 +4119,7 @@ class TabManager: ObservableObject {
         ) else {
             pendingWorkspaceUnfocusTarget = nil
 #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "ws.unfocus.drop tab=\(Self.debugShortWorkspaceId(pending.tabId)) panel=\(String(pending.panelId.uuidString.prefix(5))) reason=selected_again"
             )
 #endif
@@ -4130,12 +4130,12 @@ class TabManager: ObservableObject {
 #if DEBUG
         if let snapshot = debugCurrentWorkspaceSwitchSnapshot() {
             let dtMs = (CACurrentMediaTime() - snapshot.startedAt) * 1000
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "ws.unfocus.complete id=\(snapshot.id) dt=\(Self.debugMsText(dtMs)) " +
                 "tab=\(Self.debugShortWorkspaceId(pending.tabId)) panel=\(String(pending.panelId.uuidString.prefix(5))) reason=\(reason)"
             )
         } else {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "ws.unfocus.complete id=none tab=\(Self.debugShortWorkspaceId(pending.tabId)) " +
                 "panel=\(String(pending.panelId.uuidString.prefix(5))) reason=\(reason)"
             )
@@ -4207,13 +4207,13 @@ class TabManager: ObservableObject {
             ) {
                 unfocusWorkspacePanel(tabId: current.tabId, panelId: current.panelId)
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "ws.unfocus.flush tab=\(Self.debugShortWorkspaceId(current.tabId)) panel=\(String(current.panelId.uuidString.prefix(5))) reason=replaced"
                 )
 #endif
             } else {
 #if DEBUG
-                cmuxDebugLog(
+                hmuxDebugLog(
                     "ws.unfocus.drop tab=\(Self.debugShortWorkspaceId(current.tabId)) panel=\(String(current.panelId.uuidString.prefix(5))) reason=replaced_selected"
                 )
 #endif
@@ -4224,12 +4224,12 @@ class TabManager: ObservableObject {
 #if DEBUG
         if let snapshot = debugCurrentWorkspaceSwitchSnapshot() {
             let dtMs = (CACurrentMediaTime() - snapshot.startedAt) * 1000
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "ws.unfocus.defer id=\(snapshot.id) dt=\(Self.debugMsText(dtMs)) " +
                 "tab=\(Self.debugShortWorkspaceId(next.tabId)) panel=\(String(next.panelId.uuidString.prefix(5)))"
             )
         } else {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "ws.unfocus.defer id=none tab=\(Self.debugShortWorkspaceId(next.tabId)) panel=\(String(next.panelId.uuidString.prefix(5)))"
             )
         }
@@ -4246,7 +4246,7 @@ class TabManager: ObservableObject {
         selectedTabId != pendingTabId
     }
 
-    // MARK: Notification dismissal (CmuxNotifications)
+    // MARK: Notification dismissal (HmuxNotifications)
     //
     // The dismissal decision flow lives in NotificationDismissalModel;
     // TabManager hosts its seam (TabManager+NotificationDismissalHosting)
@@ -4258,7 +4258,7 @@ class TabManager: ObservableObject {
     ) {
         guard selectedTabId != tabId else {
             // Selecting the workspace that is already selected (its sidebar row, ⌘1…9, the
-            // palette, `cmux select-workspace`) still means "show this workspace": leave Chief
+            // palette, `hmux select-workspace`) still means "show this workspace": leave Chief
             // Home, which a selection change does through ContentView's selectedTabId observer.
             AppDelegate.shared?.leaveChiefHome(in: self)
             notificationDismissal.setPendingSelectionContext(nil)
@@ -4316,7 +4316,7 @@ class TabManager: ObservableObject {
         guard workspacesById[change.tabId]?.terminalPanel(for: change.surfaceId)?.surface === sourceSurface else { return }
 #if DEBUG
         if PanelTitleUpdateCoalescingSettings.diagnosticsEnabled(settings: settings) {
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "workspace.title.enqueue workspace=\(Self.debugShortWorkspaceId(change.tabId)) " +
                 "panel=\(change.surfaceId.uuidString.prefix(5)) title=\"\(Self.debugTitlePreview(trimmed))\""
             )
@@ -4342,7 +4342,7 @@ class TabManager: ObservableObject {
         pendingPanelTitleUpdates.removeAll(keepingCapacity: true)
 #if DEBUG
         if PanelTitleUpdateCoalescingSettings.diagnosticsEnabled(settings: settings) {
-            cmuxDebugLog("workspace.title.flush pending=\(updates.count)")
+            hmuxDebugLog("workspace.title.flush pending=\(updates.count)")
         }
 #endif
         for (key, update) in updates {
@@ -4490,7 +4490,7 @@ class TabManager: ObservableObject {
         }
         guard let tab = tabs.first(where: { $0.id == tabId }) else {
 #if DEBUG
-            cmuxDebugLog("notification.focus.fail tab=\(tabId.uuidString.prefix(5)) reason=missingTab")
+            hmuxDebugLog("notification.focus.fail tab=\(tabId.uuidString.prefix(5)) reason=missingTab")
 #endif
             completion?(false)
             return false
@@ -4498,7 +4498,7 @@ class TabManager: ObservableObject {
         let requestedPanelId = surfaceId.flatMap { panelId(forSurfaceOrPanelId: $0, in: tab) }
         if let surfaceId, requestedPanelId == nil {
 #if DEBUG
-            cmuxDebugLog("notification.focus.fail tab=\(tabId.uuidString.prefix(5)) panel=\(surfaceId.uuidString.prefix(5)) reason=missingPanel")
+            hmuxDebugLog("notification.focus.fail tab=\(tabId.uuidString.prefix(5)) panel=\(surfaceId.uuidString.prefix(5)) reason=missingPanel")
 #endif
             completion?(false)
             return false
@@ -4671,7 +4671,7 @@ class TabManager: ObservableObject {
         debugWorkspaceSwitchCounter &+= 1
         debugWorkspaceSwitchId = debugWorkspaceSwitchCounter
         debugWorkspaceSwitchStartTime = CACurrentMediaTime()
-        cmuxDebugLog(
+        hmuxDebugLog(
             "ws.switch.begin id=\(debugWorkspaceSwitchId) trigger=\(trigger) " +
             "from=\(Self.debugShortWorkspaceId(from)) to=\(Self.debugShortWorkspaceId(to)) " +
             "tabs=\(tabs.count)"
@@ -4804,12 +4804,12 @@ class TabManager: ObservableObject {
     }
 
     func applySurfaceTabBarButtons(
-        _ buttons: [CmuxSurfaceTabBarButton],
+        _ buttons: [HmuxSurfaceTabBarButton],
         sourcePath: String?,
         globalConfigPath: String,
-        settingPresets: [String: CmuxSettingValue] = [:],
+        settingPresets: [String: HmuxSettingValue] = [:],
         terminalCommandSourcePaths: [String: String],
-        workspaceCommands: [String: CmuxResolvedCommand]
+        workspaceCommands: [String: HmuxResolvedCommand]
     ) {
         for workspace in tabs {
             workspace.applySurfaceTabBarButtons(
@@ -4839,7 +4839,7 @@ class TabManager: ObservableObject {
         return cycleSplitFocus(tabId: selectedTabId, forward: forward)
     }
 
-    // MARK: - Focus History Navigation (CmuxWorkspaceNavigation)
+    // MARK: - Focus History Navigation (HmuxWorkspaceNavigation)
 
     // The back/forward stack, suppression depth, and navigation logic live
     // in FocusHistoryModel; these forwarders keep every existing entrypoint
@@ -5662,7 +5662,7 @@ class TabManager: ObservableObject {
         didSetupUITestFocusShortcuts = true
 
         let env = ProcessInfo.processInfo.environment
-        guard env["CMUX_UI_TEST_FOCUS_SHORTCUTS"] == "1" else { return }
+        guard env["HMUX_UI_TEST_FOCUS_SHORTCUTS"] == "1" else { return }
 
         // UI tests can't record arrow keys via the shortcut recorder. Use letter-based shortcuts
         // so tests can reliably drive pane navigation without mouse clicks.
@@ -5689,14 +5689,14 @@ class TabManager: ObservableObject {
         didSetupSplitCloseRightUITest = true
 
         let env = ProcessInfo.processInfo.environment
-        guard env["CMUX_UI_TEST_SPLIT_CLOSE_RIGHT_SETUP"] == "1" else { return }
-        guard let path = env["CMUX_UI_TEST_SPLIT_CLOSE_RIGHT_PATH"], !path.isEmpty else { return }
-        let visualMode = env["CMUX_UI_TEST_SPLIT_CLOSE_RIGHT_VISUAL"] == "1"
-        let shotsDir = (env["CMUX_UI_TEST_SPLIT_CLOSE_RIGHT_SHOTS_DIR"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
-        let visualIterations = Int((env["CMUX_UI_TEST_SPLIT_CLOSE_RIGHT_ITERATIONS"] ?? "20").trimmingCharacters(in: .whitespacesAndNewlines)) ?? 20
-        let burstFrames = Int((env["CMUX_UI_TEST_SPLIT_CLOSE_RIGHT_BURST_FRAMES"] ?? "6").trimmingCharacters(in: .whitespacesAndNewlines)) ?? 6
-        let closeDelayMs = Int((env["CMUX_UI_TEST_SPLIT_CLOSE_RIGHT_CLOSE_DELAY_MS"] ?? "70").trimmingCharacters(in: .whitespacesAndNewlines)) ?? 70
-        let pattern = (env["CMUX_UI_TEST_SPLIT_CLOSE_RIGHT_PATTERN"] ?? "close_right")
+        guard env["HMUX_UI_TEST_SPLIT_CLOSE_RIGHT_SETUP"] == "1" else { return }
+        guard let path = env["HMUX_UI_TEST_SPLIT_CLOSE_RIGHT_PATH"], !path.isEmpty else { return }
+        let visualMode = env["HMUX_UI_TEST_SPLIT_CLOSE_RIGHT_VISUAL"] == "1"
+        let shotsDir = (env["HMUX_UI_TEST_SPLIT_CLOSE_RIGHT_SHOTS_DIR"] ?? "").trimmingCharacters(in: .whitespacesAndNewlines)
+        let visualIterations = Int((env["HMUX_UI_TEST_SPLIT_CLOSE_RIGHT_ITERATIONS"] ?? "20").trimmingCharacters(in: .whitespacesAndNewlines)) ?? 20
+        let burstFrames = Int((env["HMUX_UI_TEST_SPLIT_CLOSE_RIGHT_BURST_FRAMES"] ?? "6").trimmingCharacters(in: .whitespacesAndNewlines)) ?? 6
+        let closeDelayMs = Int((env["HMUX_UI_TEST_SPLIT_CLOSE_RIGHT_CLOSE_DELAY_MS"] ?? "70").trimmingCharacters(in: .whitespacesAndNewlines)) ?? 70
+        let pattern = (env["HMUX_UI_TEST_SPLIT_CLOSE_RIGHT_PATTERN"] ?? "close_right")
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) { [weak self] in
@@ -5973,13 +5973,13 @@ class TabManager: ObservableObject {
             try? await Task.sleep(nanoseconds: 180_000_000)
 
             // Fill left panes with visible content.
-            sendText(topLeftId, "printf '\\033[2J\\033[H'; for i in {1..200}; do echo CMUX_SPLIT_TOPLEFT_\(i); done; printf '\\033[HCMUX_MARKER_TOPLEFT\\n'\r")
-            sendText(topRight.id, "printf '\\033[2J\\033[H'; for i in {1..200}; do echo CMUX_SPLIT_TOPRIGHT_\(i); done; printf '\\033[HCMUX_MARKER_TOPRIGHT\\n'\r")
+            sendText(topLeftId, "printf '\\033[2J\\033[H'; for i in {1..200}; do echo HMUX_SPLIT_TOPLEFT_\(i); done; printf '\\033[HHMUX_MARKER_TOPLEFT\\n'\r")
+            sendText(topRight.id, "printf '\\033[2J\\033[H'; for i in {1..200}; do echo HMUX_SPLIT_TOPRIGHT_\(i); done; printf '\\033[HHMUX_MARKER_TOPRIGHT\\n'\r")
             if let bottomLeft {
-                sendText(bottomLeft.id, "printf '\\033[2J\\033[H'; for i in {1..200}; do echo CMUX_SPLIT_BOTTOMLEFT_\(i); done; printf '\\033[HCMUX_MARKER_BOTTOMLEFT\\n'\r")
+                sendText(bottomLeft.id, "printf '\\033[2J\\033[H'; for i in {1..200}; do echo HMUX_SPLIT_BOTTOMLEFT_\(i); done; printf '\\033[HHMUX_MARKER_BOTTOMLEFT\\n'\r")
             }
             if let bottomRight {
-                sendText(bottomRight.id, "printf '\\033[2J\\033[H'; for i in {1..200}; do echo CMUX_SPLIT_BOTTOMRIGHT_\(i); done; printf '\\033[HCMUX_MARKER_BOTTOMRIGHT\\n'\r")
+                sendText(bottomRight.id, "printf '\\033[2J\\033[H'; for i in {1..200}; do echo HMUX_SPLIT_BOTTOMRIGHT_\(i); done; printf '\\033[HHMUX_MARKER_BOTTOMRIGHT\\n'\r")
             }
             // Give shell output a moment to paint before we start the close timeline.
             try? await Task.sleep(nanoseconds: 180_000_000)
@@ -6171,7 +6171,7 @@ class TabManager: ObservableObject {
 	            }
 	            st.link = link
 
-	            CVDisplayLinkSetOutputCallback(link, cmuxVsyncIOSurfaceTimelineCallback, ctx)
+	            CVDisplayLinkSetOutputCallback(link, hmuxVsyncIOSurfaceTimelineCallback, ctx)
 	            CVDisplayLinkStart(link)
 	        }
 
@@ -6200,9 +6200,9 @@ class TabManager: ObservableObject {
         didSetupChildExitSplitUITest = true
 
         let env = ProcessInfo.processInfo.environment
-        guard env["CMUX_UI_TEST_CHILD_EXIT_SPLIT_SETUP"] == "1" else { return }
-        guard let path = env["CMUX_UI_TEST_CHILD_EXIT_SPLIT_PATH"], !path.isEmpty else { return }
-        let requestedIterations = Int(env["CMUX_UI_TEST_CHILD_EXIT_SPLIT_ITERATIONS"] ?? "1") ?? 1
+        guard env["HMUX_UI_TEST_CHILD_EXIT_SPLIT_SETUP"] == "1" else { return }
+        guard let path = env["HMUX_UI_TEST_CHILD_EXIT_SPLIT_PATH"], !path.isEmpty else { return }
+        let requestedIterations = Int(env["HMUX_UI_TEST_CHILD_EXIT_SPLIT_ITERATIONS"] ?? "1") ?? 1
         let iterations = max(1, min(requestedIterations, 20))
 
         func write(_ updates: [String: String]) {
@@ -6353,21 +6353,21 @@ class TabManager: ObservableObject {
         didSetupChildExitKeyboardUITest = true
 
         let env = ProcessInfo.processInfo.environment
-        guard env["CMUX_UI_TEST_CHILD_EXIT_KEYBOARD_SETUP"] == "1" else { return }
-        guard let path = env["CMUX_UI_TEST_CHILD_EXIT_KEYBOARD_PATH"], !path.isEmpty else { return }
-        let autoTrigger = env["CMUX_UI_TEST_CHILD_EXIT_KEYBOARD_AUTO_TRIGGER"] == "1"
-        let strictKeyOnly = env["CMUX_UI_TEST_CHILD_EXIT_KEYBOARD_STRICT"] == "1"
-        let triggerMode = (env["CMUX_UI_TEST_CHILD_EXIT_KEYBOARD_TRIGGER_MODE"] ?? "shell_input")
+        guard env["HMUX_UI_TEST_CHILD_EXIT_KEYBOARD_SETUP"] == "1" else { return }
+        guard let path = env["HMUX_UI_TEST_CHILD_EXIT_KEYBOARD_PATH"], !path.isEmpty else { return }
+        let autoTrigger = env["HMUX_UI_TEST_CHILD_EXIT_KEYBOARD_AUTO_TRIGGER"] == "1"
+        let strictKeyOnly = env["HMUX_UI_TEST_CHILD_EXIT_KEYBOARD_STRICT"] == "1"
+        let triggerMode = (env["HMUX_UI_TEST_CHILD_EXIT_KEYBOARD_TRIGGER_MODE"] ?? "shell_input")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let useEarlyCtrlShiftTrigger = triggerMode == "early_ctrl_shift_d"
         let useEarlyCtrlDTrigger = triggerMode == "early_ctrl_d"
         let useEarlyTrigger = useEarlyCtrlShiftTrigger || useEarlyCtrlDTrigger
         let triggerUsesShift = triggerMode == "ctrl_shift_d" || useEarlyCtrlShiftTrigger
-        let layout = (env["CMUX_UI_TEST_CHILD_EXIT_KEYBOARD_LAYOUT"] ?? "lr")
+        let layout = (env["HMUX_UI_TEST_CHILD_EXIT_KEYBOARD_LAYOUT"] ?? "lr")
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let expectedPanelsAfter = max(
             1,
-            Int((env["CMUX_UI_TEST_CHILD_EXIT_KEYBOARD_EXPECTED_PANELS_AFTER"] ?? "1")
+            Int((env["HMUX_UI_TEST_CHILD_EXIT_KEYBOARD_EXPECTED_PANELS_AFTER"] ?? "1")
                 .trimmingCharacters(in: .whitespacesAndNewlines)
             ) ?? 1
         )
@@ -7466,65 +7466,65 @@ extension TabManager {
 extension TabManager: WorkspacesHosting {}
 extension TabManager: WorkspaceGroupHosting {}
 
-// Workspace satisfies the CmuxWorkspaces tab seam with its existing
+// Workspace satisfies the HmuxWorkspaces tab seam with its existing
 // id/groupId/isPinned storage.
 extension Workspace: WorkspaceTabRepresenting {}
 
 extension Notification.Name {
-    // The sidebar multi-selection sync events moved to CmuxSidebar as typed
+    // The sidebar multi-selection sync events moved to HmuxSidebar as typed
     // SidebarMultiSelectionShouldCollapseEvent / DidHideEvent (same names).
-    static let commandPaletteToggleRequested = Notification.Name("cmux.commandPaletteToggleRequested")
-    static let commandPaletteRequested = Notification.Name("cmux.commandPaletteRequested")
-    static let commandPaletteSwitcherRequested = Notification.Name("cmux.commandPaletteSwitcherRequested")
-    static let commandPaletteSubmitRequested = Notification.Name("cmux.commandPaletteSubmitRequested")
-    static let commandPaletteDismissRequested = Notification.Name("cmux.commandPaletteDismissRequested")
-    static let commandPaletteRenameTabRequested = Notification.Name("cmux.commandPaletteRenameTabRequested")
-    static let commandPaletteRenameWorkspaceRequested = Notification.Name("cmux.commandPaletteRenameWorkspaceRequested")
-    static let commandPaletteRenameRequested = Notification.Name("cmux.commandPaletteRenameRequested")
-    static let commandPaletteEditWorkspaceDescriptionRequested = Notification.Name("cmux.commandPaletteEditWorkspaceDescriptionRequested")
-    static let commandPaletteMoveSelection = Notification.Name("cmux.commandPaletteMoveSelection")
-    static let agentInboxReplyFieldFocusChanged = Notification.Name("cmux.agentInboxReplyFieldFocusChanged")
-    static let commandPaletteRenameInputInteractionRequested = Notification.Name("cmux.commandPaletteRenameInputInteractionRequested")
-    static let commandPaletteRenameInputDeleteBackwardRequested = Notification.Name("cmux.commandPaletteRenameInputDeleteBackwardRequested")
-    static let feedbackComposerRequested = Notification.Name("cmux.feedbackComposerRequested")
-    static let agentInboxRequested = Notification.Name("cmux.agentInboxRequested")
+    static let commandPaletteToggleRequested = Notification.Name("hmux.commandPaletteToggleRequested")
+    static let commandPaletteRequested = Notification.Name("hmux.commandPaletteRequested")
+    static let commandPaletteSwitcherRequested = Notification.Name("hmux.commandPaletteSwitcherRequested")
+    static let commandPaletteSubmitRequested = Notification.Name("hmux.commandPaletteSubmitRequested")
+    static let commandPaletteDismissRequested = Notification.Name("hmux.commandPaletteDismissRequested")
+    static let commandPaletteRenameTabRequested = Notification.Name("hmux.commandPaletteRenameTabRequested")
+    static let commandPaletteRenameWorkspaceRequested = Notification.Name("hmux.commandPaletteRenameWorkspaceRequested")
+    static let commandPaletteRenameRequested = Notification.Name("hmux.commandPaletteRenameRequested")
+    static let commandPaletteEditWorkspaceDescriptionRequested = Notification.Name("hmux.commandPaletteEditWorkspaceDescriptionRequested")
+    static let commandPaletteMoveSelection = Notification.Name("hmux.commandPaletteMoveSelection")
+    static let agentInboxReplyFieldFocusChanged = Notification.Name("hmux.agentInboxReplyFieldFocusChanged")
+    static let commandPaletteRenameInputInteractionRequested = Notification.Name("hmux.commandPaletteRenameInputInteractionRequested")
+    static let commandPaletteRenameInputDeleteBackwardRequested = Notification.Name("hmux.commandPaletteRenameInputDeleteBackwardRequested")
+    static let feedbackComposerRequested = Notification.Name("hmux.feedbackComposerRequested")
+    static let agentInboxRequested = Notification.Name("hmux.agentInboxRequested")
     static let ghosttyDidSetTitle = Notification.Name("ghosttyDidSetTitle")
     static let ghosttyDidFocusTab = Notification.Name("ghosttyDidFocusTab")
     static let ghosttyDidFocusSurface = Notification.Name("ghosttyDidFocusSurface")
     static let ghosttyDidBecomeFirstResponderSurface = Notification.Name("ghosttyDidBecomeFirstResponderSurface")
-    static let browserDidBecomeFirstResponderWebView = CmuxWebView.didBecomeFirstResponderNotification
+    static let browserDidBecomeFirstResponderWebView = HmuxWebView.didBecomeFirstResponderNotification
     static let browserFocusAddressBar = Notification.Name("browserFocusAddressBar")
     static let browserMoveOmnibarSelection = Notification.Name("browserMoveOmnibarSelection")
     static let browserDidExitAddressBar = Notification.Name("browserDidExitAddressBar")
     static let browserDidFocusAddressBar = Notification.Name("browserDidFocusAddressBar")
     static let browserDidBlurAddressBar = Notification.Name("browserDidBlurAddressBar")
-    static let browserFocusModeStateDidChange = Notification.Name("cmux.browserFocusModeStateDidChange")
-    static let webViewDidReceiveClick = CmuxWebView.didReceiveClickNotification
-    static let terminalPortalVisibilityDidChange = Notification.Name("cmux.terminalPortalVisibilityDidChange")
-    static let browserPortalRegistryDidChange = Notification.Name("cmux.browserPortalRegistryDidChange")
-    static let workspaceOrderDidChange = Notification.Name("cmux.workspaceOrderDidChange")
-    static let workspacePaneGeometryDidChange = Notification.Name("cmux.workspacePaneGeometryDidChange")
+    static let browserFocusModeStateDidChange = Notification.Name("hmux.browserFocusModeStateDidChange")
+    static let webViewDidReceiveClick = HmuxWebView.didReceiveClickNotification
+    static let terminalPortalVisibilityDidChange = Notification.Name("hmux.terminalPortalVisibilityDidChange")
+    static let browserPortalRegistryDidChange = Notification.Name("hmux.browserPortalRegistryDidChange")
+    static let workspaceOrderDidChange = Notification.Name("hmux.workspaceOrderDidChange")
+    static let workspacePaneGeometryDidChange = Notification.Name("hmux.workspacePaneGeometryDidChange")
     /// Posted when an existing workspace group's `name` changes (rename). The
     /// imperatively-cached window-chrome surfaces (custom title bar in
     /// `ContentView`, toolbar command label in `WindowToolbarController`) read
     /// a grouped anchor's displayed name from `group.name` and refresh on this.
-    static let workspaceGroupNameDidChange = Notification.Name("cmux.workspaceGroupNameDidChange")
+    static let workspaceGroupNameDidChange = Notification.Name("hmux.workspaceGroupNameDidChange")
     /// Posted after TabManager has applied a terminal title to workspace state.
-    static let workspaceTitleDidChange = Notification.Name("cmux.workspaceTitleDidChange")
-    static let workspaceCurrentDirectoryDidChange = Notification.Name("cmux.workspaceCurrentDirectoryDidChange")
-    static let tabManagerFocusHistoryRevisionDidChange = Notification.Name("cmux.tabManagerFocusHistoryRevisionDidChange")
+    static let workspaceTitleDidChange = Notification.Name("hmux.workspaceTitleDidChange")
+    static let workspaceCurrentDirectoryDidChange = Notification.Name("hmux.workspaceCurrentDirectoryDidChange")
+    static let tabManagerFocusHistoryRevisionDidChange = Notification.Name("hmux.tabManagerFocusHistoryRevisionDidChange")
 }
 
 enum BrowserFirstResponderNotificationUserInfoKey {
-    static let pointerInitiated = CmuxWebView.firstResponderPointerInitiatedUserInfoKey
+    static let pointerInitiated = HmuxWebView.firstResponderPointerInitiatedUserInfoKey
 }
 
 /// How the first-launch welcome banner reaches the new workspace's terminal.
 ///
-/// cmux shell integration prints the banner from inside the shell's startup
+/// hmux shell integration prints the banner from inside the shell's startup
 /// when ``environmentKey`` names a one-shot token file, so no command is typed
 /// and nothing lands in the user's shell history. Typing ``typedCommandText``
-/// is the fallback for shells that do not load cmux shell integration.
+/// is the fallback for shells that do not load hmux shell integration.
 ///
 /// Delivery is at most once: every integration unsets the variable, skips
 /// printing inside tmux, and prints only when its `rm` of the token file
@@ -7537,13 +7537,13 @@ enum WelcomeBannerDelivery: Equatable {
     case typedCommand
 
     /// Holds the path of the one-shot token file the bundled zsh, bash, fish
-    /// and nushell integrations consume to print `cmux welcome` at startup.
-    static let environmentKey = "CMUX_SHOW_WELCOME_FILE"
+    /// and nushell integrations consume to print `hmux welcome` at startup.
+    static let environmentKey = "HMUX_SHOW_WELCOME_FILE"
     /// Typed fallback. The leading space keeps it out of history only for zsh
     /// with HIST_IGNORE_SPACE, bash with HISTCONTROL=ignorespace or ignoreboth,
     /// and fish; other shells may still record it (best effort).
-    static let typedCommandText = " cmux welcome\n"
-    private static let tokenDirectoryName = "cmux-welcome-banner"
+    static let typedCommandText = " hmux welcome\n"
+    private static let tokenDirectoryName = "hmux-welcome-banner"
     private static let integratedShellNames: Set<String> = ["zsh", "bash", "fish", "nu"]
 
     static func resolve(

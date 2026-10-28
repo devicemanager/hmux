@@ -5,7 +5,7 @@ if [ "$(basename "$0")" = "fake-lsof" ]; then
   exit 0
 fi
 if [ "$(basename "$0")" = "launchctl" ]; then
-  printf '%s\n' "$*" >> "${CMUX_CAPTURE_LAUNCHCTL:?}"
+  printf '%s\n' "$*" >> "${HMUX_CAPTURE_LAUNCHCTL:?}"
   exit 0
 fi
 if [ "$(basename "$0")" = "xcrun" ]; then
@@ -14,12 +14,12 @@ if [ "$(basename "$0")" = "xcrun" ]; then
   exit 0
 fi
 if [ "$(basename "$0")" = "pgrep" ]; then
-  [ -z "${CMUX_FAKE_PGREP_PIDS:-}" ] || printf '%s\n' $CMUX_FAKE_PGREP_PIDS
+  [ -z "${HMUX_FAKE_PGREP_PIDS:-}" ] || printf '%s\n' $HMUX_FAKE_PGREP_PIDS
   exit 0
 fi
 
-if [ "${CMUX_MOCK_XCODEBUILD_PROCESS:-0}" = "1" ]; then
-  printf '%s\n' "$@" >> "$CMUX_CAPTURE_XCODEBUILD_ARGS"
+if [ "${HMUX_MOCK_XCODEBUILD_PROCESS:-0}" = "1" ]; then
+  printf '%s\n' "$@" >> "$HMUX_CAPTURE_XCODEBUILD_ARGS"
   result_bundle_path=""
   previous_argument=""
   for argument in "$@"; do
@@ -30,55 +30,55 @@ if [ "${CMUX_MOCK_XCODEBUILD_PROCESS:-0}" = "1" ]; then
     previous_argument="$argument"
   done
   if [ -n "$result_bundle_path" ]; then
-    if [ -e "$result_bundle_path" ] && [ -n "${CMUX_CAPTURE_RESULT_BUNDLE_STATE:-}" ]; then
-      echo "existing" >> "$CMUX_CAPTURE_RESULT_BUNDLE_STATE"
+    if [ -e "$result_bundle_path" ] && [ -n "${HMUX_CAPTURE_RESULT_BUNDLE_STATE:-}" ]; then
+      echo "existing" >> "$HMUX_CAPTURE_RESULT_BUNDLE_STATE"
     fi
     mkdir -p "$result_bundle_path"
     # xcodebuild writes Info.plist last, when it finalizes the bundle.
-    [ "${CMUX_MOCK_RESULT_BUNDLE_FINALIZED:-0}" != "1" ] || : >"$result_bundle_path/Info.plist"
+    [ "${HMUX_MOCK_RESULT_BUNDLE_FINALIZED:-0}" != "1" ] || : >"$result_bundle_path/Info.plist"
   fi
-  printf '%s\n' "${TEST_RUNNER_CMUX_TEST_PROCESS:-<unset>}" >> "$CMUX_CAPTURE_TEST_RUNNER_ENV"
-  if [ -n "${CMUX_CAPTURE_TEST_RUNNER_CI_ENV:-}" ]; then
+  printf '%s\n' "${TEST_RUNNER_HMUX_TEST_PROCESS:-<unset>}" >> "$HMUX_CAPTURE_TEST_RUNNER_ENV"
+  if [ -n "${HMUX_CAPTURE_TEST_RUNNER_CI_ENV:-}" ]; then
     printf '%s|%s\n' "${TEST_RUNNER_CI-<unset>}" "${TEST_RUNNER_GITHUB_ACTIONS-<unset>}" \
-      >> "$CMUX_CAPTURE_TEST_RUNNER_CI_ENV"
+      >> "$HMUX_CAPTURE_TEST_RUNNER_CI_ENV"
   fi
   printf '%s|%s|%s\n' \
     "${HOME:-<unset>}" \
     "${CFFIXED_USER_HOME:-<unset>}" \
     "${XDG_CONFIG_HOME:-<unset>}" \
-    >> "$CMUX_CAPTURE_XCODEBUILD_PARENT_ENV"
+    >> "$HMUX_CAPTURE_XCODEBUILD_PARENT_ENV"
   printf '%s|%s|%s|%s|%s|%s|%s|%s|%s\n' \
     "${TEST_RUNNER_HOME:-<unset>}" \
     "${TEST_RUNNER_CFFIXED_USER_HOME:-<unset>}" \
     "${TEST_RUNNER_XDG_CONFIG_HOME:-<unset>}" \
     "${TEST_RUNNER_SSH_AUTH_SOCK-<unset>}" \
-    "${TEST_RUNNER_CMUX_APP_HOST_ISOLATION_REQUIRED:-<unset>}" \
-    "${TEST_RUNNER_CMUX_APP_HOST_EXPECTED_HOME:-<unset>}" \
-    "${TEST_RUNNER_CMUX_APP_HOST_EXPECTED_XDG_CONFIG_HOME:-<unset>}" \
-    "${TEST_RUNNER_CMUX_APP_HOST_KEY:-<unset>}" \
-    "${TEST_RUNNER_CMUX_APP_HOST_RECEIPT_DIR:-<unset>}" \
-    >> "$CMUX_CAPTURE_TEST_RUNNER_HOME_ENV"
-  if [ -n "${CMUX_CAPTURE_TEST_RUNNER_TOOL_ENV:-}" ]; then
+    "${TEST_RUNNER_HMUX_APP_HOST_ISOLATION_REQUIRED:-<unset>}" \
+    "${TEST_RUNNER_HMUX_APP_HOST_EXPECTED_HOME:-<unset>}" \
+    "${TEST_RUNNER_HMUX_APP_HOST_EXPECTED_XDG_CONFIG_HOME:-<unset>}" \
+    "${TEST_RUNNER_HMUX_APP_HOST_KEY:-<unset>}" \
+    "${TEST_RUNNER_HMUX_APP_HOST_RECEIPT_DIR:-<unset>}" \
+    >> "$HMUX_CAPTURE_TEST_RUNNER_HOME_ENV"
+  if [ -n "${HMUX_CAPTURE_TEST_RUNNER_TOOL_ENV:-}" ]; then
     printf '%s|%s\n' "${TEST_RUNNER_PATH-<unset>}" "${TEST_RUNNER_BUN_INSTALL-<unset>}" \
-      >> "$CMUX_CAPTURE_TEST_RUNNER_TOOL_ENV"
+      >> "$HMUX_CAPTURE_TEST_RUNNER_TOOL_ENV"
   fi
   config_home="${TEST_RUNNER_HOME:-${HOME:-/tmp}}"
   config_category=default
   config_message="reading configuration file"
   config_suffix='Library/Application Support/com.mitchellh.ghostty/config.ghostty'
   emit_config_evidence=1
-  case "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" in
+  case "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" in
     leak) config_home=/Users/runner ;;
     sibling-leak) config_home="${TEST_RUNNER_HOME}-other" ;;
-    published-default-alias) config_home="$CMUX_APP_HOST_HOME" ;;
+    published-default-alias) config_home="$HMUX_APP_HOST_HOME" ;;
     published-config-alias)
       config_category=config
-      config_home="$CMUX_APP_HOST_HOME"
+      config_home="$HMUX_APP_HOST_HOME"
       ;;
-    published-default-sibling-leak) config_home="${CMUX_APP_HOST_HOME}-other" ;;
+    published-default-sibling-leak) config_home="${HMUX_APP_HOST_HOME}-other" ;;
     published-config-sibling-leak)
       config_category=config
-      config_home="${CMUX_APP_HOST_HOME}-other"
+      config_home="${HMUX_APP_HOST_HOME}-other"
       ;;
     xdg-config-leak)
       config_category=config
@@ -98,16 +98,16 @@ if [ "${CMUX_MOCK_XCODEBUILD_PROCESS:-0}" = "1" ]; then
       emit_config_evidence=0
       ;;
     missing-log)
-      rm -f "$CMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH"
+      rm -f "$HMUX_XCODEBUILD_NONINTERACTIVE_LOG_PATH"
       exit 0
       ;;
   esac
   if [ "$emit_config_evidence" = "1" ]; then
-    echo "cmux DEV [$config_category] $config_message path=$config_home/$config_suffix"
+    echo "hmux DEV [$config_category] $config_message path=$config_home/$config_suffix"
   fi
-  [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" != "leak" ] || exit 0
-  if [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "assertion-then-success" ]; then
-    sequence_file="${CMUX_MOCK_XCODEBUILD_SEQUENCE_FILE:?missing mock sequence file}"
+  [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" != "leak" ] || exit 0
+  if [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "assertion-then-success" ]; then
+    sequence_file="${HMUX_MOCK_XCODEBUILD_SEQUENCE_FILE:?missing mock sequence file}"
     sequence_attempt=1
     if [ -r "$sequence_file" ]; then
       sequence_attempt=$(( $(cat "$sequence_file") + 1 ))
@@ -115,48 +115,48 @@ if [ "${CMUX_MOCK_XCODEBUILD_PROCESS:-0}" = "1" ]; then
     printf '%s\n' "$sequence_attempt" >"$sequence_file"
     if [ "$sequence_attempt" -eq 1 ]; then
       echo "Test Suite 'Selected tests' started at 2026-09-21 00:00:00."
-      echo "Test Case '-[cmuxTests.ExampleTests testExample]' started."
-      echo "/tmp/ExampleTests.swift:1: error: -[cmuxTests.ExampleTests testExample] : XCTAssertTrue failed"
+      echo "Test Case '-[hmuxTests.ExampleTests testExample]' started."
+      echo "/tmp/ExampleTests.swift:1: error: -[hmuxTests.ExampleTests testExample] : XCTAssertTrue failed"
       echo "Executed 1 test, with 1 failure (0 unexpected)"
       echo "Failed to establish communication with the test runner"
       exit 65
     fi
-    echo 'cmux DEV message = "socket.listener.start"'
+    echo 'hmux DEV message = "socket.listener.start"'
     echo "Executed 1 test, with 0 failures (0 unexpected)"
     exit 0
   fi
-  if [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "startup-hang" ]; then
+  if [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "startup-hang" ]; then
     # testmanagerd refused xcodebuild's channel: the host launched, and no
     # test ever starts.
-    echo 'cmux DEV message = "socket.listener.start"'
+    echo 'hmux DEV message = "socket.listener.start"'
     echo "Testing started"
     sleep 30
     exit 0
   fi
-  if [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "crash-loop" ]; then
+  if [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "crash-loop" ]; then
     # xcodebuild relaunching an app host that crashes on contact: the run is
     # resumed after every crash and never ends on its own.
-    echo 'cmux DEV message = "socket.listener.start"'
+    echo 'hmux DEV message = "socket.listener.start"'
     for _ in 1 2 3 4 5 6 7 8; do
-      echo "Test Case '-[cmuxTests.ExampleTests testExample]' started."
+      echo "Test Case '-[hmuxTests.ExampleTests testExample]' started."
       echo "Restarting after unexpected exit, crash, or test timeout; summary will include totals from previous launches."
       sleep 0.2
     done
     sleep 600
     exit 0
   fi
-  if [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "success" ] \
-    || [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "xdg-config-leak" ] \
-    || [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "xdg-default-leak" ] \
-    || [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "unrelated-config-token" ] \
-    || [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "no-config-evidence" ] \
-    || [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "published-default-alias" ] \
-    || [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "published-config-alias" ] \
-    || [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "published-default-sibling-leak" ] \
-    || [ "${CMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "published-config-sibling-leak" ]; then
-    echo 'cmux DEV message = "socket.listener.start"'
-    if [ -n "${CMUX_MOCK_SUITE_LINES:-}" ]; then
-      printf '%b\n' "$CMUX_MOCK_SUITE_LINES"
+  if [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "success" ] \
+    || [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "xdg-config-leak" ] \
+    || [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "xdg-default-leak" ] \
+    || [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "unrelated-config-token" ] \
+    || [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "no-config-evidence" ] \
+    || [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "published-default-alias" ] \
+    || [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "published-config-alias" ] \
+    || [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "published-default-sibling-leak" ] \
+    || [ "${HMUX_MOCK_XCODEBUILD_MODE:-timeout}" = "published-config-sibling-leak" ]; then
+    echo 'hmux DEV message = "socket.listener.start"'
+    if [ -n "${HMUX_MOCK_SUITE_LINES:-}" ]; then
+      printf '%b\n' "$HMUX_MOCK_SUITE_LINES"
     fi
     exit 0
   fi
@@ -192,22 +192,22 @@ export GITHUB_ENV="$TMP_DIR/github-env"
 export GITHUB_REPOSITORY_ID=1234567
 export GITHUB_RUN_ID="910000$$"
 export GITHUB_RUN_ATTEMPT="2"
-export CMUX_APP_HOST_SHARD="4"
-export CMUX_CI_APP_HOST_CLEANUP_TEST_HELPER=1
-export CMUX_APP_HOST_LSOF="$TMP_DIR/fake-lsof"
+export HMUX_APP_HOST_SHARD="4"
+export HMUX_CI_APP_HOST_CLEANUP_TEST_HELPER=1
+export HMUX_APP_HOST_LSOF="$TMP_DIR/fake-lsof"
 mkdir -p "$RUNNER_TEMP_DIR"
-export CMUX_DERIVED_DATA_PATH="$RUNNER_TEMP_DIR/cmux-derived-data-tests-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-shard-$CMUX_APP_HOST_SHARD"
-mkdir -p "$CMUX_DERIVED_DATA_PATH"
+export HMUX_DERIVED_DATA_PATH="$RUNNER_TEMP_DIR/hmux-derived-data-tests-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-shard-$HMUX_APP_HOST_SHARD"
+mkdir -p "$HMUX_DERIVED_DATA_PATH"
 : > "$GITHUB_ENV"
 bash "$ROOT_DIR/scripts/ci/prepare-app-host-home.sh"
 set -a
 # shellcheck disable=SC1090
 source "$GITHUB_ENV"
 set +a
-APP_HOST_HOME="$CMUX_APP_HOST_HOME"
-APP_HOST_XDG_CONFIG_HOME="$CMUX_APP_HOST_XDG_CONFIG_HOME"
-APP_HOST_RECEIPT_DIR="$CMUX_APP_HOST_RECEIPT_DIR"
-APP_HOST_CONFIRMATION_FILE="$CMUX_APP_HOST_CONFIRMATION_FILE"
+APP_HOST_HOME="$HMUX_APP_HOST_HOME"
+APP_HOST_XDG_CONFIG_HOME="$HMUX_APP_HOST_XDG_CONFIG_HOME"
+APP_HOST_RECEIPT_DIR="$HMUX_APP_HOST_RECEIPT_DIR"
+APP_HOST_CONFIRMATION_FILE="$HMUX_APP_HOST_CONFIRMATION_FILE"
 XCODE_PARENT_FIXED_HOME="$TMP_DIR/xcode-parent-fixed-home"
 XCODE_PARENT_XDG_CONFIG_HOME="$TMP_DIR/xcode-parent-xdg"
 mkdir -p \
@@ -218,21 +218,21 @@ RESOLVED_APP_HOST_HOME="$(cd "$APP_HOST_HOME" && pwd -P)"
 RESOLVED_APP_HOST_XDG_CONFIG_HOME="$(cd "$APP_HOST_XDG_CONFIG_HOME" && pwd -P)"
 
 set +e
-/usr/bin/env -u CMUX_APP_HOST_HOME -u CMUX_APP_HOST_XDG_CONFIG_HOME \
+/usr/bin/env -u HMUX_APP_HOST_HOME -u HMUX_APP_HOST_XDG_CONFIG_HOME \
   -u CFFIXED_USER_HOME -u XDG_CONFIG_HOME \
   -u TEST_RUNNER_CI -u TEST_RUNNER_GITHUB_ACTIONS \
   CI=true GITHUB_ACTIONS=true \
   PATH="$BASH32_BIN_DIR:$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/non-isolated-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/non-isolated-test-runner-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_CI_ENV="$TMP_DIR/non-isolated-ci-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/non-isolated-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/non-isolated-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE=success \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/non-isolated-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/non-isolated-test-runner-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_CI_ENV="$TMP_DIR/non-isolated-ci-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/non-isolated-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/non-isolated-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE=success \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
   /bin/bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
     >"$TMP_DIR/non-isolated-output.log" 2>&1
 non_isolated_status=$?
@@ -254,21 +254,21 @@ fi
 AMBIENT_XDG_CONFIG_HOME="$TMP_DIR/ambient-xdg"
 mkdir -p "$AMBIENT_XDG_CONFIG_HOME"
 set +e
-/usr/bin/env -u CMUX_APP_HOST_HOME -u CMUX_APP_HOST_XDG_CONFIG_HOME \
+/usr/bin/env -u HMUX_APP_HOST_HOME -u HMUX_APP_HOST_XDG_CONFIG_HOME \
   -u CFFIXED_USER_HOME \
   -u CI -u GITHUB_ACTIONS -u TEST_RUNNER_CI -u TEST_RUNNER_GITHUB_ACTIONS \
   PATH="$BASH32_BIN_DIR:$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
   XDG_CONFIG_HOME="$AMBIENT_XDG_CONFIG_HOME" \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/ambient-xdg-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/ambient-xdg-test-runner-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_CI_ENV="$TMP_DIR/ambient-xdg-ci-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/ambient-xdg-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/ambient-xdg-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE=success \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/ambient-xdg-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/ambient-xdg-test-runner-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_CI_ENV="$TMP_DIR/ambient-xdg-ci-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/ambient-xdg-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/ambient-xdg-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE=success \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
   /bin/bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
     >"$TMP_DIR/ambient-xdg-output.log" 2>&1
 ambient_xdg_status=$?
@@ -293,19 +293,19 @@ if [ "$ambient_xdg_status" -ne 0 ] \
 fi
 
 set +e
-/usr/bin/env -u CMUX_APP_HOST_HOME -u CMUX_APP_HOST_XDG_CONFIG_HOME \
+/usr/bin/env -u HMUX_APP_HOST_HOME -u HMUX_APP_HOST_XDG_CONFIG_HOME \
   -u CFFIXED_USER_HOME -u XDG_CONFIG_HOME \
   PATH="$BASH32_BIN_DIR:$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-  CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/missing-isolation-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/missing-isolation-test-runner-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/missing-isolation-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/missing-isolation-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE=success \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+  HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/missing-isolation-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/missing-isolation-test-runner-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/missing-isolation-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/missing-isolation-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE=success \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
   /bin/bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
     >"$TMP_DIR/missing-isolation-output.log" 2>&1
 missing_isolation_status=$?
@@ -324,17 +324,17 @@ fi
 set +e
 PATH="$TMP_DIR:$PATH" \
 RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/xcodebuild-args.log" \
-CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/test-runner-env.log" \
-CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/xcodebuild-parent-env.log" \
-CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/test-runner-home-env.log" \
-CMUX_CAPTURE_TEST_RUNNER_TOOL_ENV="$TMP_DIR/test-runner-tool-env.log" \
-CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=2 \
-CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=0.1 \
-CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
-CMUX_APP_HOST_HOME="$APP_HOST_HOME" \
-CMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
+HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/xcodebuild-args.log" \
+HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/test-runner-env.log" \
+HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/xcodebuild-parent-env.log" \
+HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/test-runner-home-env.log" \
+HMUX_CAPTURE_TEST_RUNNER_TOOL_ENV="$TMP_DIR/test-runner-tool-env.log" \
+HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=2 \
+HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=0.1 \
+HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
+HMUX_APP_HOST_HOME="$APP_HOST_HOME" \
+HMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
 TEST_RUNNER_PATH="/ci/node/bin:/usr/bin" \
 TEST_RUNNER_BUN_INSTALL="/ci/bun" \
 CFFIXED_USER_HOME="$XCODE_PARENT_FIXED_HOME" \
@@ -366,7 +366,7 @@ invocation_count="$(grep -cx 'test' "$TMP_DIR/xcodebuild-args.log" || true)"
 runner_marker_count="$(grep -cx '1' "$TMP_DIR/test-runner-env.log" || true)"
 if [ "$runner_marker_count" -eq 0 ] || [ "$runner_marker_count" -ne "$invocation_count" ]; then
   cat "$TMP_DIR/test-runner-env.log"
-  echo "FAIL: expected every app-host launch to receive TEST_RUNNER_CMUX_TEST_PROCESS=1"
+  echo "FAIL: expected every app-host launch to receive TEST_RUNNER_HMUX_TEST_PROCESS=1"
   exit 1
 fi
 
@@ -389,17 +389,17 @@ fixed_result_bundle="$RUNNER_TEMP_DIR/fixed-ui.xcresult"
 result_bundle_state="$TMP_DIR/result-bundle-state.log"
 PATH="$TMP_DIR:$PATH" \
 RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/fixed-bundle-xcodebuild-args.log" \
-CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/fixed-bundle-test-runner-env.log" \
-CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/fixed-bundle-parent-env.log" \
-CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/fixed-bundle-runner-home-env.log" \
-CMUX_CAPTURE_RESULT_BUNDLE_STATE="$result_bundle_state" \
-CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=2 \
-CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=0.1 \
-CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
-CMUX_APP_HOST_HOME="$APP_HOST_HOME" \
-CMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
+HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/fixed-bundle-xcodebuild-args.log" \
+HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/fixed-bundle-test-runner-env.log" \
+HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/fixed-bundle-parent-env.log" \
+HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/fixed-bundle-runner-home-env.log" \
+HMUX_CAPTURE_RESULT_BUNDLE_STATE="$result_bundle_state" \
+HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=2 \
+HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=0.1 \
+HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
+HMUX_APP_HOST_HOME="$APP_HOST_HOME" \
+HMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
   bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" \
     -resultBundlePath "$fixed_result_bundle" test >"$TMP_DIR/fixed-bundle-output.log" 2>&1
 fixed_bundle_status=$?
@@ -433,7 +433,7 @@ if [ "$isolated_parent_count" -ne 0 ] \
 fi
 
 compiled_assertion_count="$(grep -Fxc \
-  "SWIFT_ACTIVE_COMPILATION_CONDITIONS=\$(inherited) CMUX_CI_APP_HOST_ISOLATION_REQUIRED" \
+  "SWIFT_ACTIVE_COMPILATION_CONDITIONS=\$(inherited) HMUX_CI_APP_HOST_ISOLATION_REQUIRED" \
   "$TMP_DIR/xcodebuild-args.log" || true)"
 if [ "$compiled_assertion_count" -ne "$invocation_count" ]; then
   cat "$TMP_DIR/xcodebuild-args.log"
@@ -444,8 +444,8 @@ fi
 isolated_runner_count="$(awk -F '|' \
   -v home="$RESOLVED_APP_HOST_HOME" \
   -v xdg="$RESOLVED_APP_HOST_XDG_CONFIG_HOME" \
-  -v key="$CMUX_APP_HOST_KEY" \
-  -v receipts="$CMUX_APP_HOST_RECEIPT_DIR" '
+  -v key="$HMUX_APP_HOST_KEY" \
+  -v receipts="$HMUX_APP_HOST_RECEIPT_DIR" '
   $1 == home && $2 == home && $3 == xdg && $4 == "" && $5 == "1" && $6 == home && $7 == xdg && $8 == key && $9 == receipts {
     count += 1
   }
@@ -461,17 +461,17 @@ for published_alias_evidence in published-default-alias published-config-alias; 
   set +e
   PATH="$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$published_alias_evidence-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$published_alias_evidence-test-runner-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$published_alias_evidence-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$published_alias_evidence-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE="$published_alias_evidence" \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
-  CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
-  CMUX_APP_HOST_HOME="$APP_HOST_HOME" \
-  CMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$published_alias_evidence-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$published_alias_evidence-test-runner-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$published_alias_evidence-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$published_alias_evidence-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE="$published_alias_evidence" \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+  HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
+  HMUX_APP_HOST_HOME="$APP_HOST_HOME" \
+  HMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
     bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
       >"$TMP_DIR/$published_alias_evidence-output.log" 2>&1
   published_alias_evidence_status=$?
@@ -488,17 +488,17 @@ for evidence_regression in no-config-evidence unrelated-config-token; do
   set +e
   PATH="$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$evidence_regression-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$evidence_regression-test-runner-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$evidence_regression-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$evidence_regression-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE="$evidence_regression" \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
-  CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
-  CMUX_APP_HOST_HOME="$APP_HOST_HOME" \
-  CMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$evidence_regression-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$evidence_regression-test-runner-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$evidence_regression-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$evidence_regression-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE="$evidence_regression" \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+  HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
+  HMUX_APP_HOST_HOME="$APP_HOST_HOME" \
+  HMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
     bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
       >"$TMP_DIR/$evidence_regression-output.log" 2>&1
   evidence_regression_status=$?
@@ -518,17 +518,17 @@ mkdir -p "$EXTERNAL_XDG_CONFIG_HOME"
 set +e
 PATH="$TMP_DIR:$PATH" \
 RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/external-xdg-xcodebuild-args.log" \
-CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/external-xdg-test-runner-env.log" \
-CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/external-xdg-parent-env.log" \
-CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/external-xdg-runner-home-env.log" \
-CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-CMUX_MOCK_XCODEBUILD_MODE=leak \
-CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
-CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
-CMUX_APP_HOST_HOME="$APP_HOST_HOME" \
-CMUX_APP_HOST_XDG_CONFIG_HOME="$EXTERNAL_XDG_CONFIG_HOME" \
+HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/external-xdg-xcodebuild-args.log" \
+HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/external-xdg-test-runner-env.log" \
+HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/external-xdg-parent-env.log" \
+HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/external-xdg-runner-home-env.log" \
+HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+HMUX_MOCK_XCODEBUILD_MODE=leak \
+HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
+HMUX_APP_HOST_HOME="$APP_HOST_HOME" \
+HMUX_APP_HOST_XDG_CONFIG_HOME="$EXTERNAL_XDG_CONFIG_HOME" \
   bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
     >"$TMP_DIR/external-xdg-output.log" 2>&1
 external_xdg_status=$?
@@ -536,7 +536,7 @@ set -e
 
 if [ "$external_xdg_status" -ne 1 ] \
   || ! grep -Fq \
-    "FAIL: published CMUX_APP_HOST_XDG_CONFIG_HOME does not match the run identity" \
+    "FAIL: published HMUX_APP_HOST_XDG_CONFIG_HOME does not match the run identity" \
     "$TMP_DIR/external-xdg-output.log" \
   || [ -s "$TMP_DIR/external-xdg-xcodebuild-args.log" ]; then
   cat "$TMP_DIR/external-xdg-output.log"
@@ -547,17 +547,17 @@ fi
 set +e
 PATH="$TMP_DIR:$PATH" \
 RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/leak-xcodebuild-args.log" \
-CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/leak-test-runner-env.log" \
-CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/leak-xcodebuild-parent-env.log" \
-CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/leak-test-runner-home-env.log" \
-CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-CMUX_MOCK_XCODEBUILD_MODE=leak \
-CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
-CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
-CMUX_APP_HOST_HOME="$APP_HOST_HOME" \
-CMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
+HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/leak-xcodebuild-args.log" \
+HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/leak-test-runner-env.log" \
+HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/leak-xcodebuild-parent-env.log" \
+HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/leak-test-runner-home-env.log" \
+HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+HMUX_MOCK_XCODEBUILD_MODE=leak \
+HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
+HMUX_APP_HOST_HOME="$APP_HOST_HOME" \
+HMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
   bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test >"$TMP_DIR/leak-output.log" 2>&1
 leak_status=$?
 set -e
@@ -574,17 +574,17 @@ for xdg_leak in xdg-config-leak xdg-default-leak; do
   set +e
   PATH="$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$xdg_leak-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$xdg_leak-test-runner-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$xdg_leak-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$xdg_leak-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE="$xdg_leak" \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
-  CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
-  CMUX_APP_HOST_HOME="$APP_HOST_HOME" \
-  CMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$xdg_leak-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$xdg_leak-test-runner-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$xdg_leak-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$xdg_leak-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE="$xdg_leak" \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+  HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
+  HMUX_APP_HOST_HOME="$APP_HOST_HOME" \
+  HMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
     bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
       >"$TMP_DIR/$xdg_leak-output.log" 2>&1
   xdg_leak_status=$?
@@ -616,17 +616,17 @@ for regression in \
   set +e
   PATH="$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$regression-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$regression-test-runner-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$regression-xcodebuild-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$regression-test-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE="$regression" \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
-  CMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
-  CMUX_APP_HOST_HOME="$APP_HOST_HOME" \
-  CMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$regression-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$regression-test-runner-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$regression-xcodebuild-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$regression-test-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE="$regression" \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+  HMUX_CI_APP_HOST_ISOLATION_REQUIRED=1 \
+  HMUX_APP_HOST_HOME="$APP_HOST_HOME" \
+  HMUX_APP_HOST_XDG_CONFIG_HOME="$APP_HOST_XDG_CONFIG_HOME" \
     bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
       >"$TMP_DIR/$regression-output.log" 2>&1
   regression_status=$?
@@ -643,18 +643,18 @@ done
 # A caller-supplied maximum allowance is authoritative. The wrapper may fill
 # the missing enable/default options, but it must not append a later maximum.
 set +e
-/usr/bin/env -u CMUX_APP_HOST_HOME -u CMUX_APP_HOST_XDG_CONFIG_HOME \
+/usr/bin/env -u HMUX_APP_HOST_HOME -u HMUX_APP_HOST_XDG_CONFIG_HOME \
   -u CFFIXED_USER_HOME -u XDG_CONFIG_HOME \
   PATH="$BASH32_BIN_DIR:$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/caller-timeout-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/caller-timeout-test-runner-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/caller-timeout-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/caller-timeout-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE=success \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/caller-timeout-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/caller-timeout-test-runner-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/caller-timeout-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/caller-timeout-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE=success \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
   /bin/bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" \
     test -maximum-test-execution-time-allowance 120 \
     >"$TMP_DIR/caller-timeout-output.log" 2>&1
@@ -675,20 +675,20 @@ if [ "$caller_timeout_status" -ne 0 ] \
 fi
 
 set +e
-/usr/bin/env -u CMUX_APP_HOST_HOME -u CMUX_APP_HOST_XDG_CONFIG_HOME \
+/usr/bin/env -u HMUX_APP_HOST_HOME -u HMUX_APP_HOST_XDG_CONFIG_HOME \
   -u CFFIXED_USER_HOME -u XDG_CONFIG_HOME \
   PATH="$BASH32_BIN_DIR:$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-  CMUX_TAG=sticky-retry \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/sticky-retry-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/sticky-retry-test-runner-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/sticky-retry-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/sticky-retry-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE=assertion-then-success \
-  CMUX_MOCK_XCODEBUILD_SEQUENCE_FILE="$TMP_DIR/sticky-retry-sequence" \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=2 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+  HMUX_TAG=sticky-retry \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/sticky-retry-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/sticky-retry-test-runner-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/sticky-retry-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/sticky-retry-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE=assertion-then-success \
+  HMUX_MOCK_XCODEBUILD_SEQUENCE_FILE="$TMP_DIR/sticky-retry-sequence" \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=2 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
   /bin/bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
     >"$TMP_DIR/sticky-retry-output.log" 2>&1
 sticky_retry_status=$?
@@ -711,7 +711,7 @@ if grep -Fq "Retrying app-host xcodebuild after" "$TMP_DIR/sticky-retry-output.l
   exit 1
 fi
 metadata_path="$(find "$RUNNER_TEMP_DIR" -maxdepth 1 \
-  -name 'cmux-app-host-xcodebuild-sticky-retry-pid-*-attempt-1.meta' -print -quit)"
+  -name 'hmux-app-host-xcodebuild-sticky-retry-pid-*-attempt-1.meta' -print -quit)"
 if [ -z "$metadata_path" ] || ! grep -Fxq "attempt=1" "$metadata_path" \
   || ! grep -Fxq "arg=test" "$metadata_path"; then
   cat "${metadata_path:-/dev/null}" 2>/dev/null || true
@@ -719,12 +719,12 @@ if [ -z "$metadata_path" ] || ! grep -Fxq "attempt=1" "$metadata_path" \
   exit 1
 fi
 if find "$RUNNER_TEMP_DIR" -maxdepth 1 \
-  -name 'cmux-app-host-xcodebuild-sticky-retry-pid-*-attempt-2.meta' -print -quit \
+  -name 'hmux-app-host-xcodebuild-sticky-retry-pid-*-attempt-2.meta' -print -quit \
   | grep -q .; then
   echo "FAIL: blocked retry created a second attempt artifact"
   exit 1
 fi
-if find "$RUNNER_TEMP_DIR" -maxdepth 1 -name 'cmux-app-host-xcodebuild-*-pid-$-*' -print -quit \
+if find "$RUNNER_TEMP_DIR" -maxdepth 1 -name 'hmux-app-host-xcodebuild-*-pid-$-*' -print -quit \
   | grep -q .; then
   echo "FAIL: per-invocation artifact stem contains a literal dollar sign instead of the process id"
   exit 1
@@ -734,20 +734,20 @@ fi
 # is spent, and must not be retried: each attempt would loop again and spend
 # the same runner time. https://github.com/manaflow-ai/cmux/issues/13707
 set +e
-/usr/bin/env -u CMUX_APP_HOST_HOME -u CMUX_APP_HOST_XDG_CONFIG_HOME \
+/usr/bin/env -u HMUX_APP_HOST_HOME -u HMUX_APP_HOST_XDG_CONFIG_HOME \
   -u CFFIXED_USER_HOME -u XDG_CONFIG_HOME \
   PATH="$BASH32_BIN_DIR:$TMP_DIR:$PATH" \
   RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-  CMUX_TAG=crash-loop \
-  CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/crash-loop-xcodebuild-args.log" \
-  CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/crash-loop-test-runner-env.log" \
-  CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/crash-loop-parent-env.log" \
-  CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/crash-loop-runner-home-env.log" \
-  CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-  CMUX_MOCK_XCODEBUILD_MODE=crash-loop \
-  CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=3 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET=2 \
-  CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=60 \
+  HMUX_TAG=crash-loop \
+  HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/crash-loop-xcodebuild-args.log" \
+  HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/crash-loop-test-runner-env.log" \
+  HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/crash-loop-parent-env.log" \
+  HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/crash-loop-runner-home-env.log" \
+  HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+  HMUX_MOCK_XCODEBUILD_MODE=crash-loop \
+  HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=3 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_RESTART_BUDGET=2 \
+  HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=60 \
   /bin/bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
     >"$TMP_DIR/crash-loop-output.log" 2>&1
 crash_loop_status=$?
@@ -782,23 +782,23 @@ fi
 run_startup_hang() {
   local name="$1" attempts="$2" pgrep_pids="${3:-}"
   set +e
-  /usr/bin/env -u CMUX_APP_HOST_HOME -u CMUX_APP_HOST_XDG_CONFIG_HOME \
+  /usr/bin/env -u HMUX_APP_HOST_HOME -u HMUX_APP_HOST_XDG_CONFIG_HOME \
     -u CFFIXED_USER_HOME -u XDG_CONFIG_HOME \
     PATH="$BASH32_BIN_DIR:$TMP_DIR:$PATH" \
     RUNNER_TEMP="$RUNNER_TEMP_DIR" \
     RUNNER_NAME=fake-mini-glaeda-1 \
-    CMUX_TAG="$name" \
-    CMUX_CAPTURE_LAUNCHCTL="$TMP_DIR/$name-launchctl.log" \
-    CMUX_FAKE_PGREP_PIDS="$pgrep_pids" \
-    CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$name-xcodebuild-args.log" \
-    CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$name-test-runner-env.log" \
-    CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$name-parent-env.log" \
-    CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$name-runner-home-env.log" \
-    CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-    CMUX_MOCK_XCODEBUILD_MODE=startup-hang \
-    CMUX_APP_HOST_XCODEBUILD_ATTEMPTS="$attempts" \
-    CMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS=0.5 \
-    CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=60 \
+    HMUX_TAG="$name" \
+    HMUX_CAPTURE_LAUNCHCTL="$TMP_DIR/$name-launchctl.log" \
+    HMUX_FAKE_PGREP_PIDS="$pgrep_pids" \
+    HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$name-xcodebuild-args.log" \
+    HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$name-test-runner-env.log" \
+    HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$name-parent-env.log" \
+    HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$name-runner-home-env.log" \
+    HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+    HMUX_MOCK_XCODEBUILD_MODE=startup-hang \
+    HMUX_APP_HOST_XCODEBUILD_ATTEMPTS="$attempts" \
+    HMUX_XCODEBUILD_NONINTERACTIVE_STARTUP_TIMEOUT_SECONDS=0.5 \
+    HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=60 \
     /bin/bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
       >"$TMP_DIR/$name-output.log" 2>&1
   startup_status=$?
@@ -846,23 +846,23 @@ grep -Fq "Not restarting testmanagerd: xcodebuild $other_xcodebuild is running t
 run_typed_results() {
   local name="$1" finalized="$2"
   set +e
-  /usr/bin/env -u CMUX_APP_HOST_HOME -u CMUX_APP_HOST_XDG_CONFIG_HOME \
+  /usr/bin/env -u HMUX_APP_HOST_HOME -u HMUX_APP_HOST_XDG_CONFIG_HOME \
     -u CFFIXED_USER_HOME -u XDG_CONFIG_HOME \
     PATH="$BASH32_BIN_DIR:$TMP_DIR:$PATH" \
     RUNNER_TEMP="$RUNNER_TEMP_DIR" \
-    CMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$name-xcodebuild-args.log" \
-    CMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$name-test-runner-env.log" \
-    CMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$name-parent-env.log" \
-    CMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$name-runner-home-env.log" \
-    CMUX_MOCK_XCODEBUILD_PROCESS=1 \
-    CMUX_MOCK_XCODEBUILD_MODE=success \
-    CMUX_MOCK_RESULT_BUNDLE_FINALIZED="$finalized" \
-    CMUX_MOCK_SUITE_LINES="Test Suite 'SlowTeardownTests' passed at now.\n  ✔ Suite SlowTeardownSuite passed after 0.1 seconds.\r\nTest Suite 'Selected tests' passed at now." \
-    CMUX_TAG="$name" \
-    CMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
-    CMUX_APP_HOST_XCRESULTTOOL_TIMEOUT_SECONDS=1 \
-    CMUX_APP_HOST_RESULT_BUNDLE_ROOT="$RUNNER_TEMP_DIR/$name" \
-    CMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
+    HMUX_CAPTURE_XCODEBUILD_ARGS="$TMP_DIR/$name-xcodebuild-args.log" \
+    HMUX_CAPTURE_TEST_RUNNER_ENV="$TMP_DIR/$name-test-runner-env.log" \
+    HMUX_CAPTURE_XCODEBUILD_PARENT_ENV="$TMP_DIR/$name-parent-env.log" \
+    HMUX_CAPTURE_TEST_RUNNER_HOME_ENV="$TMP_DIR/$name-runner-home-env.log" \
+    HMUX_MOCK_XCODEBUILD_PROCESS=1 \
+    HMUX_MOCK_XCODEBUILD_MODE=success \
+    HMUX_MOCK_RESULT_BUNDLE_FINALIZED="$finalized" \
+    HMUX_MOCK_SUITE_LINES="Test Suite 'SlowTeardownTests' passed at now.\n  ✔ Suite SlowTeardownSuite passed after 0.1 seconds.\r\nTest Suite 'Selected tests' passed at now." \
+    HMUX_TAG="$name" \
+    HMUX_APP_HOST_XCODEBUILD_ATTEMPTS=1 \
+    HMUX_APP_HOST_XCRESULTTOOL_TIMEOUT_SECONDS=1 \
+    HMUX_APP_HOST_RESULT_BUNDLE_ROOT="$RUNNER_TEMP_DIR/$name" \
+    HMUX_XCODEBUILD_NONINTERACTIVE_IDLE_TIMEOUT_SECONDS=5 \
     /bin/bash "$ROOT_DIR/scripts/ci/run-app-host-xcodebuild.sh" test \
       >"$TMP_DIR/$name-output.log" 2>&1
   typed_status=$?

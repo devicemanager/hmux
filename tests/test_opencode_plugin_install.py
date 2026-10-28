@@ -14,7 +14,7 @@ import tempfile
 import time
 from pathlib import Path
 
-from claude_teams_test_utils import resolve_cmux_cli
+from claude_teams_test_utils import resolve_hmux_cli
 
 
 def make_executable(path: Path, content: str) -> None:
@@ -39,12 +39,12 @@ def main() -> int:
         return 0
 
     try:
-        cli_path = resolve_cmux_cli()
+        cli_path = resolve_hmux_cli()
     except Exception as exc:
         print(f"FAIL: {exc}")
         return 1
 
-    with tempfile.TemporaryDirectory(prefix="cmux-opencode-plugin-") as td:
+    with tempfile.TemporaryDirectory(prefix="hmux-opencode-plugin-") as td:
         root = Path(td)
         config_dir = root / "opencode"
         config_dir.mkdir(parents=True, exist_ok=True)
@@ -55,8 +55,8 @@ def main() -> int:
                     "plugins": [
                         "oh-my-opencode",
                         ["existing-plugin", {"enabled": True}],
-                        "cmux-session",
-                        "./plugins/cmux-session.js",
+                        "hmux-session",
+                        "./plugins/hmux-session.js",
                     ]
                 }
             ),
@@ -80,21 +80,21 @@ def main() -> int:
             print(f"stderr={install.stderr.strip()}")
             return 1
 
-        plugin_path = config_dir / "plugins" / "cmux-session.js"
+        plugin_path = config_dir / "plugins" / "hmux-session.js"
         if not plugin_path.exists():
             print(f"FAIL: expected plugin at {plugin_path}")
             return 1
-        feed_plugin_path = config_dir / "plugins" / "cmux-feed.js"
+        feed_plugin_path = config_dir / "plugins" / "hmux-feed.js"
         if not feed_plugin_path.exists():
             print(f"FAIL: expected feed plugin at {feed_plugin_path}")
             return 1
-        if "cmux-feed-plugin-marker" not in feed_plugin_path.read_text(encoding="utf-8"):
-            print(f"FAIL: expected cmux feed marker in {feed_plugin_path}")
+        if "hmux-feed-plugin-marker" not in feed_plugin_path.read_text(encoding="utf-8"):
+            print(f"FAIL: expected hmux feed marker in {feed_plugin_path}")
             return 1
-        tui_directory = config_dir / "plugins" / "cmux"
-        ownership_marker = tui_directory / ".cmux-owned"
-        if not ownership_marker.exists() or "cmux-opencode-tui-plugin-ownership-marker" not in ownership_marker.read_text(encoding="utf-8"):
-            print(f"FAIL: expected cmux TUI ownership marker at {ownership_marker}")
+        tui_directory = config_dir / "plugins" / "hmux"
+        ownership_marker = tui_directory / ".hmux-owned"
+        if not ownership_marker.exists() or "hmux-opencode-tui-plugin-ownership-marker" not in ownership_marker.read_text(encoding="utf-8"):
+            print(f"FAIL: expected hmux TUI ownership marker at {ownership_marker}")
             return 1
 
         try:
@@ -110,13 +110,13 @@ def main() -> int:
             entry
             for entry in plugins
             if (entry if isinstance(entry, str) else entry[0] if isinstance(entry, list) and entry else "")
-            == "cmux-session"
+            == "hmux-session"
         ]
         if stale:
-            print(f"FAIL: expected stale cmux plugin registrations removed, got {plugins!r}")
+            print(f"FAIL: expected stale hmux plugin registrations removed, got {plugins!r}")
             return 1
-        if "./plugins/cmux" not in plugins:
-            print(f"FAIL: expected local cmux session plugin registration, got {plugins!r}")
+        if "./plugins/hmux" not in plugins:
+            print(f"FAIL: expected local hmux session plugin registration, got {plugins!r}")
             return 1
         if "oh-my-opencode" not in plugins or ["existing-plugin", {"enabled": True}] not in plugins:
             print(f"FAIL: installer did not preserve existing plugin entries: {plugins!r}")
@@ -139,57 +139,57 @@ def main() -> int:
                 print(debug_output[-4000:])
                 return 1
             if "failed to load plugin" in debug_output.lower() or "must default export" in debug_output.lower():
-                print("FAIL: opencode rejected an installed cmux plugin entrypoint")
+                print("FAIL: opencode rejected an installed hmux plugin entrypoint")
                 print(debug_output[-4000:])
                 return 1
-            if "path=cmux-session loading plugin" in debug_output:
-                print("FAIL: opencode tried to resolve cmux-session as a package")
+            if "path=hmux-session loading plugin" in debug_output:
+                print("FAIL: opencode tried to resolve hmux-session as a package")
                 print(debug_output[-4000:])
                 return 1
 
-        fake_cmux = root / "fake-cmux"
-        fake_args_log = root / "fake-cmux-args.log"
-        fake_stdin_log = root / "fake-cmux-stdin.log"
-        fake_env_log = root / "fake-cmux-env.log"
-        plugin_copy_path = config_dir / "plugins" / "cmux-session-copy.js"
+        fake_hmux = root / "fake-hmux"
+        fake_args_log = root / "fake-hmux-args.log"
+        fake_stdin_log = root / "fake-hmux-stdin.log"
+        fake_env_log = root / "fake-hmux-env.log"
+        plugin_copy_path = config_dir / "plugins" / "hmux-session-copy.js"
         shutil.copyfile(plugin_path, plugin_copy_path)
         make_executable(
-            fake_cmux,
+            fake_hmux,
             """#!/usr/bin/env bash
 set -euo pipefail
-printf '%s\\n' "$*" >> "$FAKE_CMUX_ARGS_LOG"
-cat >> "$FAKE_CMUX_STDIN_LOG"
-printf '\\n---\\n' >> "$FAKE_CMUX_STDIN_LOG"
+printf '%s\\n' "$*" >> "$FAKE_HMUX_ARGS_LOG"
+cat >> "$FAKE_HMUX_STDIN_LOG"
+printf '\\n---\\n' >> "$FAKE_HMUX_STDIN_LOG"
 {
-  printf 'kind=%s\\n' "${CMUX_AGENT_LAUNCH_KIND-}"
-  printf 'cwd=%s\\n' "${CMUX_AGENT_LAUNCH_CWD-}"
-  printf 'argv=%s\\n' "${CMUX_AGENT_LAUNCH_ARGV_B64-}"
-} >> "$FAKE_CMUX_ENV_LOG"
+  printf 'kind=%s\\n' "${HMUX_AGENT_LAUNCH_KIND-}"
+  printf 'cwd=%s\\n' "${HMUX_AGENT_LAUNCH_CWD-}"
+  printf 'argv=%s\\n' "${HMUX_AGENT_LAUNCH_ARGV_B64-}"
+} >> "$FAKE_HMUX_ENV_LOG"
 """,
         )
 
         check_env = env.copy()
-        check_env["CMUX_TEST_OPENCODE_PLUGIN_PATH"] = str(plugin_path)
-        check_env["CMUX_TEST_OPENCODE_PLUGIN_COPY_PATH"] = str(plugin_copy_path)
-        check_env["CMUX_SURFACE_ID"] = "surface-opencode-test"
-        check_env["CMUX_OPENCODE_CMUX_BIN"] = str(fake_cmux)
-        check_env["FAKE_CMUX_ARGS_LOG"] = str(fake_args_log)
-        check_env["FAKE_CMUX_STDIN_LOG"] = str(fake_stdin_log)
-        check_env["FAKE_CMUX_ENV_LOG"] = str(fake_env_log)
-        check_env["CMUX_OPENCODE_HOOKS_DISABLED"] = ""
+        check_env["HMUX_TEST_OPENCODE_PLUGIN_PATH"] = str(plugin_path)
+        check_env["HMUX_TEST_OPENCODE_PLUGIN_COPY_PATH"] = str(plugin_copy_path)
+        check_env["HMUX_SURFACE_ID"] = "surface-opencode-test"
+        check_env["HMUX_OPENCODE_HMUX_BIN"] = str(fake_hmux)
+        check_env["FAKE_HMUX_ARGS_LOG"] = str(fake_args_log)
+        check_env["FAKE_HMUX_STDIN_LOG"] = str(fake_stdin_log)
+        check_env["FAKE_HMUX_ENV_LOG"] = str(fake_env_log)
+        check_env["HMUX_OPENCODE_HOOKS_DISABLED"] = ""
         # OpenCode started from a shell inside another agent inherits that
         # agent's launch capture; the plugin must record OpenCode's own.
-        check_env["CMUX_AGENT_LAUNCH_KIND"] = "claude"
-        check_env["CMUX_AGENT_LAUNCH_EXECUTABLE"] = "/opt/homebrew/bin/claude"
-        check_env["CMUX_AGENT_LAUNCH_ARGV_B64"] = base64.b64encode(b"/opt/homebrew/bin/claude\0").decode()
-        check_env["CMUX_AGENT_LAUNCH_CWD"] = "/tmp/claude-project"
+        check_env["HMUX_AGENT_LAUNCH_KIND"] = "claude"
+        check_env["HMUX_AGENT_LAUNCH_EXECUTABLE"] = "/opt/homebrew/bin/claude"
+        check_env["HMUX_AGENT_LAUNCH_ARGV_B64"] = base64.b64encode(b"/opt/homebrew/bin/claude\0").decode()
+        check_env["HMUX_AGENT_LAUNCH_CWD"] = "/tmp/claude-project"
         check_source = """
-const pluginPath = process.env.CMUX_TEST_OPENCODE_PLUGIN_PATH;
-const pluginCopyPath = process.env.CMUX_TEST_OPENCODE_PLUGIN_COPY_PATH;
+const pluginPath = process.env.HMUX_TEST_OPENCODE_PLUGIN_PATH;
+const pluginCopyPath = process.env.HMUX_TEST_OPENCODE_PLUGIN_COPY_PATH;
 const mod = await import(pluginPath);
 const duplicateMod = await import(pluginCopyPath);
-if (typeof mod.CMUXSessionRestore !== "function") {
-  throw new Error("missing CMUXSessionRestore export");
+if (typeof mod.HMUXSessionRestore !== "function") {
+  throw new Error("missing HMUXSessionRestore export");
 }
 if (!mod.default || (typeof mod.default.server !== "function" && typeof mod.default.setup !== "function")) {
   throw new Error("missing V2 default server/setup export");
@@ -212,12 +212,12 @@ const idleContext = {
     }
   }
 };
-const v1Hooks = await mod.CMUXSessionRestore({ directory: "/tmp/opencode-project" });
+const v1Hooks = await mod.HMUXSessionRestore({ directory: "/tmp/opencode-project" });
 if (!v1Hooks || typeof v1Hooks.event !== "function") {
   throw new Error("missing V1 event hook");
 }
 const hooks = await mod.default.setup(idleContext);
-const duplicateHooks = await duplicateMod.CMUXSessionRestore({ directory: "/tmp/opencode-project" });
+const duplicateHooks = await duplicateMod.HMUXSessionRestore({ directory: "/tmp/opencode-project" });
 if (!duplicateHooks || typeof duplicateHooks.event === "function") {
   throw new Error("V1 duplicate plugin returned event hook");
 }
@@ -394,7 +394,7 @@ await v1Hooks.event({ event: { type: "session.deleted", properties: { info: { id
 
         # A package installed before the ownership marker was introduced must
         # leave a marker behind when unrelated files prevent full removal.
-        # That marker lets a later install reclaim only cmux's files.
+        # That marker lets a later install reclaim only hmux's files.
         extra_file = tui_directory / "user-extra.txt"
         extra_file.write_text("preserve me", encoding="utf-8")
         ownership_marker.unlink()
@@ -451,8 +451,8 @@ await v1Hooks.event({ event: { type: "session.deleted", properties: { info: { id
             print(f"stderr={project_install.stderr.strip()}")
             return 1
         project_plugin_dir = project_dir / ".opencode" / "plugins"
-        project_feed = project_plugin_dir / "cmux-feed.js"
-        project_tui = project_plugin_dir / "cmux"
+        project_feed = project_plugin_dir / "hmux-feed.js"
+        project_tui = project_plugin_dir / "hmux"
         if not project_feed.exists() or not project_tui.exists():
             print("FAIL: project-local install did not create the Feed and TUI bridge")
             return 1
@@ -473,14 +473,14 @@ await v1Hooks.event({ event: { type: "session.deleted", properties: { info: { id
             print(f"stderr={project_uninstall.stderr.strip()}")
             return 1
         if project_feed.exists() or project_tui.exists():
-            print("FAIL: project-local uninstall left cmux plugin files behind")
+            print("FAIL: project-local uninstall left hmux plugin files behind")
             return 1
         if not feed_plugin_path.exists() or not tui_directory.exists():
             print("FAIL: project-local uninstall removed the global OpenCode bridge")
             return 1
 
         # Project-local uninstall must preserve a user-owned Feed file while
-        # still removing the cmux-owned TUI package and registration.
+        # still removing the hmux-owned TUI package and registration.
         project_foreign_dir = root / "project-foreign"
         project_foreign_dir.mkdir(parents=True, exist_ok=True)
         project_foreign_install = subprocess.run(
@@ -496,8 +496,8 @@ await v1Hooks.event({ event: { type: "session.deleted", properties: { info: { id
             print("FAIL: project-local foreign-file install failed")
             return 1
         project_foreign_plugins = project_foreign_dir / ".opencode" / "plugins"
-        project_foreign_feed = project_foreign_plugins / "cmux-feed.js"
-        project_foreign_tui = project_foreign_plugins / "cmux"
+        project_foreign_feed = project_foreign_plugins / "hmux-feed.js"
+        project_foreign_tui = project_foreign_plugins / "hmux"
         project_foreign_feed.write_text("// user-owned project plugin\n", encoding="utf-8")
         project_foreign_uninstall = subprocess.run(
             [cli_path, "hooks", "opencode", "uninstall", "--project"],
@@ -532,8 +532,8 @@ await v1Hooks.event({ event: { type: "session.deleted", properties: { info: { id
         if orphan_install.returncode != 0:
             print("FAIL: orphan-case OpenCode plugin install failed")
             return 1
-        orphan_session = orphan_root / "plugins" / "cmux-session.js"
-        orphan_tui = orphan_root / "plugins" / "cmux"
+        orphan_session = orphan_root / "plugins" / "hmux-session.js"
+        orphan_tui = orphan_root / "plugins" / "hmux"
         orphan_session.unlink()
         orphan_uninstall = subprocess.run(
             [cli_path, "hooks", "opencode", "uninstall", "--yes"],
@@ -567,8 +567,8 @@ await v1Hooks.event({ event: { type: "session.deleted", properties: { info: { id
         if foreign_install.returncode != 0:
             print("FAIL: foreign-file OpenCode plugin install failed")
             return 1
-        foreign_session = foreign_root / "plugins" / "cmux-session.js"
-        foreign_tui = foreign_root / "plugins" / "cmux"
+        foreign_session = foreign_root / "plugins" / "hmux-session.js"
+        foreign_tui = foreign_root / "plugins" / "hmux"
         foreign_session.write_text("// user-owned plugin\n", encoding="utf-8")
         foreign_uninstall = subprocess.run(
             [cli_path, "hooks", "opencode", "uninstall", "--yes"],
@@ -583,7 +583,7 @@ await v1Hooks.event({ event: { type: "session.deleted", properties: { info: { id
             foreign_uninstall.returncode != 0
             or foreign_session.read_text(encoding="utf-8") != "// user-owned plugin\n"
             or foreign_tui.exists()
-            or "./plugins/cmux" in foreign_config.get("plugin", [])
+            or "./plugins/hmux" in foreign_config.get("plugin", [])
         ):
             print("FAIL: uninstall removed or retained the wrong files for an unmarked legacy plugin")
             return 1
@@ -591,10 +591,10 @@ await v1Hooks.event({ event: { type: "session.deleted", properties: { info: { id
         # Never follow a user symlink while validating or overwriting the
         # shared TUI package directory.
         symlink_root = root / "symlink-config"
-        symlink_directory = symlink_root / "plugins" / "cmux"
+        symlink_directory = symlink_root / "plugins" / "hmux"
         symlink_directory.mkdir(parents=True)
         symlink_target = root / "symlink-target.js"
-        symlink_target.write_text("// cmux-opencode-tui-plugin-server-marker v2\n", encoding="utf-8")
+        symlink_target.write_text("// hmux-opencode-tui-plugin-server-marker v2\n", encoding="utf-8")
         (symlink_directory / "index.js").symlink_to(symlink_target)
         symlink_env = env.copy()
         symlink_env["OPENCODE_CONFIG_DIR"] = str(symlink_root)

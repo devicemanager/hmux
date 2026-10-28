@@ -27,19 +27,19 @@ async function responseBody(response: Response): Promise<Record<string, unknown>
 
 describe("Cloud VM route input", () => {
   test("parses optional object bodies and keeps operation-specific validation messages", async () => {
-    const empty = await parseOptionalObjectBody(new Request("https://cmux.test"), {
+    const empty = await parseOptionalObjectBody(new Request("https://hmux.test"), {
       operation: "fork",
       action: "Send `{}`.",
     });
     expect(empty).toEqual({ ok: true, body: {} });
 
-    const valid = await parseOptionalObjectBody(new Request("https://cmux.test", {
+    const valid = await parseOptionalObjectBody(new Request("https://hmux.test", {
       method: "POST",
       body: JSON.stringify({ name: " agent " }),
     }), { operation: "fork", action: "Send `{}`." });
     expect(valid).toEqual({ ok: true, body: { name: " agent " } });
 
-    const malformed = await parseOptionalObjectBody(new Request("https://cmux.test", {
+    const malformed = await parseOptionalObjectBody(new Request("https://hmux.test", {
       method: "POST",
       body: "{",
     }), { operation: "snapshot", action: "Send `{}`." });
@@ -49,7 +49,7 @@ describe("Cloud VM route input", () => {
       expect((await responseBody(malformed.response)).message).toBe("Cloud VM snapshot expected valid JSON.");
     }
 
-    const array = await parseOptionalObjectBody(new Request("https://cmux.test", {
+    const array = await parseOptionalObjectBody(new Request("https://hmux.test", {
       method: "POST",
       body: "[]",
     }), { operation: "snapshot", action: "Send `{}`." });
@@ -58,19 +58,19 @@ describe("Cloud VM route input", () => {
   });
 
   test("preserves required-body empty handling and lenient legacy handling", async () => {
-    const required = await parseRequiredObjectBody(new Request("https://cmux.test"), {
+    const required = await parseRequiredObjectBody(new Request("https://hmux.test"), {
       operation: "restore",
       action: "Send `{ \"snapshotId\": \"...\" }`.",
     });
     expect(required).toEqual({ ok: true, body: null });
 
-    const malformed = await parseLenientObjectBody(new Request("https://cmux.test", {
+    const malformed = await parseLenientObjectBody(new Request("https://hmux.test", {
       method: "POST",
       body: "not-json",
     }));
     expect(malformed).toEqual({});
 
-    const primitive = await parseLenientObjectBody(new Request("https://cmux.test", {
+    const primitive = await parseLenientObjectBody(new Request("https://hmux.test", {
       method: "POST",
       body: "null",
     }));
@@ -99,17 +99,17 @@ describe("Cloud VM route input", () => {
 
   test("normalizes idempotency headers once", () => {
     const key = "x".repeat(140);
-    expect(idempotencyKeyFromRequest(new Request("https://cmux.test", {
+    expect(idempotencyKeyFromRequest(new Request("https://hmux.test", {
       headers: { "idempotency-key": `  ${key}  ` },
     }))).toBe("x".repeat(128));
-    expect(idempotencyKeyFromRequest(new Request("https://cmux.test", {
-      headers: { "idempotency-key": "", "x-cmux-idempotency-key": " fallback " },
+    expect(idempotencyKeyFromRequest(new Request("https://hmux.test", {
+      headers: { "idempotency-key": "", "x-hmux-idempotency-key": " fallback " },
     }))).toBe("fallback");
-    expect(idempotencyKeyFromRequest(new Request("https://cmux.test", {
-      headers: { "idempotency-key": "   ", "x-cmux-idempotency-key": " fallback " },
+    expect(idempotencyKeyFromRequest(new Request("https://hmux.test", {
+      headers: { "idempotency-key": "   ", "x-hmux-idempotency-key": " fallback " },
     }))).toBe("fallback");
-    expect(idempotencyKeyFromRequest(new Request("https://cmux.test", {
-      headers: { "idempotency-key": "   ", "x-cmux-idempotency-key": "   " },
+    expect(idempotencyKeyFromRequest(new Request("https://hmux.test", {
+      headers: { "idempotency-key": "   ", "x-hmux-idempotency-key": "   " },
     }))).toBeUndefined();
   });
 });

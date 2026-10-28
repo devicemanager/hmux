@@ -1,5 +1,5 @@
-import CmuxCloud
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxSurfaceCatalogModel
 import Foundation
 import Observation
 /// The single owner of surface identities and projections on this Mac.
@@ -25,7 +25,7 @@ final class SurfaceCatalog {
     /// while cancellation is unresolved. This prevents one unhealthy machine from blocking
     /// unrelated machines while also bounding repeated provider replacements.
     nonisolated static let defaultMaximumTrackedMaterializations = 16
-    static let didChangeNotification = Notification.Name("cmux.surfaces.didChange")
+    static let didChangeNotification = Notification.Name("hmux.surfaces.didChange")
     private(set) var machines: [SurfaceMachineID: SurfaceMachineInfo] = [:]
     private(set) var resources: [SurfaceResourceID: SurfaceResource] = [:]
     /// Native documents are presentation state, separate from the daemon's browser snapshot.
@@ -212,7 +212,7 @@ final class SurfaceCatalog {
         if machine.isLocal { return true }
         guard let registered = providers[machine] else {
 #if DEBUG
-            cmuxDebugLog("catalog.write.ignored machine=\(machine.rawValue) reason=unregistered")
+            hmuxDebugLog("catalog.write.ignored machine=\(machine.rawValue) reason=unregistered")
 #endif
             return false
         }
@@ -223,7 +223,7 @@ final class SurfaceCatalog {
         if let source,
            (source.machine != machine || ObjectIdentifier(registered) != ObjectIdentifier(source)) {
 #if DEBUG
-            cmuxDebugLog("catalog.write.ignored machine=\(machine.rawValue) reason=retired-provider")
+            hmuxDebugLog("catalog.write.ignored machine=\(machine.rawValue) reason=retired-provider")
 #endif
             return false
         }
@@ -690,7 +690,7 @@ final class SurfaceCatalog {
             }
             let resolved = attachRemoteView(resolvedRemoteView, to: existing)
             if resource.kind != .terminal,
-               let provider = providers[id.machine] as? CmuxTuiSurfaceProvider,
+               let provider = providers[id.machine] as? HmuxTuiSurfaceProvider,
                let browser = SurfacePaneFactory.browserPanel(panelID: resolved.panelID, in: resolved.workspaceID),
                (browser.cloudAccess.model == nil || browser.cloudAccess.model?.phase == .closed),
                let raw = resource.url, let url = URL(string: raw) {

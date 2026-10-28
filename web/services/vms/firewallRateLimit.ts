@@ -11,7 +11,7 @@ export type VmFirewallRateLimitCheck = (
 
 /**
  * Throttle firewall rule mutations per signed-in user. Every rule goes to one provider account
- * shared by all cmux users, so an unavailable firewall fails closed; an operator-removed rule
+ * shared by all hmux users, so an unavailable firewall fails closed; an operator-removed rule
  * (unset id, or "not-found") fails open and is reported, as the other Vercel-firewall limits do.
  */
 export async function enforceVmFirewallRateLimit(input: {
@@ -23,7 +23,7 @@ export async function enforceVmFirewallRateLimit(input: {
   readonly isVercel?: boolean;
 }): Promise<Response | null> {
   if (!(input.isVercel ?? process.env.VERCEL === "1")) return null;
-  const ruleId = (input.ruleId ?? process.env.CMUX_VM_FIREWALL_RATE_LIMIT_ID)?.trim();
+  const ruleId = (input.ruleId ?? process.env.HMUX_VM_FIREWALL_RATE_LIMIT_ID)?.trim();
   if (!ruleId) {
     void reportMissingRateLimitRule({ route: input.route, reason: "unset" });
     return null;

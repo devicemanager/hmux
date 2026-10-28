@@ -13,7 +13,7 @@ export function POST(request: Request, context: { params: Promise<{ id: string; 
     if (!target.redeemed) response = jsonResponse(target, 201);
     else {
       const client = await runCloudClient(scope.userId, scope.ownerTeamId);
-      const endpoint = await client("POST", `/api/vm/${encodeURIComponent(target.providerVmId)}/attach-endpoint`, { transport: "cmux-remote" });
+      const endpoint = await client("POST", `/api/vm/${encodeURIComponent(target.providerVmId)}/attach-endpoint`, { transport: "hmux-remote" });
       response = jsonResponse({ ...target, endpoint, transport: endpoint.transport, route: endpoint.route, token: endpoint.token, session: endpoint.session, expiresAtUnix: endpoint.expiresAtUnix });
     }
     response.headers.set("cache-control", "no-store");

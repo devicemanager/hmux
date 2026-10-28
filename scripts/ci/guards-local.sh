@@ -8,14 +8,14 @@
 #   scripts/ci/guards-local.sh --list        show the plan
 #
 # The "CI fast guards" check runs this same script. A clean full pass writes
-# ${XDG_CACHE_HOME:-~/.cache}/cmux-guards/pass/<HEAD sha>, which the agent
+# ${XDG_CACHE_HOME:-~/.cache}/hmux-guards/pass/<HEAD sha>, which the agent
 # merge guard accepts for `gh pr merge --admin` on that head.
 set -euo pipefail
 
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-cache="${XDG_CACHE_HOME:-$HOME/.cache}/cmux-guards"
+cache="${XDG_CACHE_HOME:-$HOME/.cache}/hmux-guards"
 packages=(PyYAML==6.0.3 bashlex==0.18)
-venv="${CMUX_GUARDS_VENV:-$cache/venv-$(printf '%s ' "${packages[@]}" | shasum | cut -c1-12)}"
+venv="${HMUX_GUARDS_VENV:-$cache/venv-$(printf '%s ' "${packages[@]}" | shasum | cut -c1-12)}"
 
 if [[ ! -x "$venv/bin/python3" ]]; then
   python3 -m venv "$venv"

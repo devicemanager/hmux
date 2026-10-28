@@ -1,4 +1,4 @@
-import CmuxControlSocket
+import HmuxControlSocket
 import Foundation
 
 /// Main-actor publication of the read-side control-plane mirror.
@@ -79,7 +79,7 @@ extension TerminalController {
 final class ControlHandleOrdinalDefaultsStore: @unchecked Sendable {
     static let defaultMigrationFloor = 1_000_000_000
     static let defaultReservationSize = 10_000
-    static let keyPrefix = "cmux.controlHandleOrdinals.v1.nextStart."
+    static let keyPrefix = "hmux.controlHandleOrdinals.v1.nextStart."
 
     private let defaults: UserDefaults
     private let migrationFloor: Int

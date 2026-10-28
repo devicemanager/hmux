@@ -28,7 +28,7 @@ import { parseRetryAfterSeconds, rateLimitedJson } from "./retryAfterResponse";
 export interface ControlPlaneEnv extends SentryEnv {
   /** Vercel web API origin the DO proxies (dev/prod), e.g. https://cmux.com.
    * Same optional-with-production-default pattern as STACK_API_URL. */
-  CMUX_WEB_BASE_URL?: string;
+  HMUX_WEB_BASE_URL?: string;
 }
 
 const PRODUCTION_WEB_BASE_URL = "https://cmux.com";
@@ -78,7 +78,7 @@ export class AccountControlPlane extends DurableObject<ControlPlaneEnv> {
     storage: this.ctx.storage as unknown as CtlStorage,
     now: () => Date.now(),
     upstream: async (path, init) => {
-      const base = (this.env.CMUX_WEB_BASE_URL ?? PRODUCTION_WEB_BASE_URL).replace(/\/+$/, "");
+      const base = (this.env.HMUX_WEB_BASE_URL ?? PRODUCTION_WEB_BASE_URL).replace(/\/+$/, "");
       let response: Response;
       try {
         response = await fetch(`${base}${path}`, {
@@ -185,7 +185,7 @@ export class AccountControlPlane extends DurableObject<ControlPlaneEnv> {
     // The web API's native auth requires the refresh token BESIDE the bearer
     // (parseNativeStackTokens); without it every upstream proxy call 401s.
     const refresh = request.headers.get("x-stack-refresh-token")?.trim() || undefined;
-    const namespace = request.headers.get("x-cmux-app-namespace")?.trim() || undefined;
+    const namespace = request.headers.get("x-hmux-app-namespace")?.trim() || undefined;
 
     const connected = this.ctx.getWebSockets().filter((ws) => {
       const attachment = wrapSocket(ws).getAttachment();

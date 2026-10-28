@@ -1,11 +1,11 @@
 import Foundation
 import NetworkExtension
-import CmuxCloudTunnelCore
+import HmuxCloudTunnelCore
 import os
 
-private let logger = Logger(subsystem: "dev.cmux.ios.cloud-vpn", category: "PacketTunnelProvider")
+private let logger = Logger(subsystem: "dev.hmux.ios.cloud-vpn", category: "PacketTunnelProvider")
 
-/// Runs the optional cmux Cloud system VPN on iOS.
+/// Runs the optional hmux Cloud system VPN on iOS.
 ///
 /// The same ordered lifecycle and WireGuard adapter as the macOS system
 /// extension (`TunnelExtension/`); only the configuration source differs. On
@@ -69,7 +69,7 @@ final class PacketTunnelProvider: NEPacketTunnelProvider {
     /// Every `Address` and `AllowedIPs` entry must be private, and there must
     /// be at least one route. Kept as a local copy of
     /// `CloudVPNRoutePolicy.permitsOnlyPrivateRoutes(inQuickConfig:)` because
-    /// this extension does not link CmuxMobileCloud; the two must change
+    /// this extension does not link HmuxMobileCloud; the two must change
     /// together.
     private func routesArePrivate(in configuration: String) -> Bool {
         var cidrs: [String] = []

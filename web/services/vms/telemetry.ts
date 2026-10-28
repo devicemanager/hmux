@@ -19,11 +19,11 @@ export async function withVmSpan<T>(
   fn: SpanCallback<T>,
 ): Promise<T> {
   return withSpan(
-    "cmux-vm",
+    "hmux-vm",
     name,
     {
-      "cmux.subsystem": VM_SUBSYSTEM,
-      "cmux.runtime": "provider-driver",
+      "hmux.subsystem": VM_SUBSYSTEM,
+      "hmux.runtime": "provider-driver",
       ...attributes,
     },
     (span) => {

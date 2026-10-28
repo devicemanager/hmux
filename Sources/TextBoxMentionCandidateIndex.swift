@@ -1,4 +1,4 @@
-import CmuxCommandPalette
+import HmuxCommandPalette
 import Foundation
 
 struct TextBoxMentionCandidateIndex: Sendable {

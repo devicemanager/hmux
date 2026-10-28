@@ -9,13 +9,13 @@ readonly environment="${1:-production}"
 case "$environment" in
   production)
     expected_project="9790718f-14cd-4f7e-824d-eaf527a82b82"
-    worker_name="cmux-v2"
+    worker_name="hmux-v2"
     foreign_environment="development"
     foreign_project="454ecd03-1db2-4050-845e-4ce5b0cd9895"
     ;;
   staging)
     expected_project="454ecd03-1db2-4050-845e-4ce5b0cd9895"
-    worker_name="cmux-v2-staging"
+    worker_name="hmux-v2-staging"
     foreign_environment="production"
     foreign_project="9790718f-14cd-4f7e-824d-eaf527a82b82"
     ;;
@@ -99,7 +99,7 @@ base = {
     "identity": {
       "environment": sys.argv[3], "projectId": project,
       "teamId": "production-config-probe", "userId": "production-config-probe",
-      "deviceId": "production-config-probe", "appNamespace": "com.cmux.config.probe", "buildTag": "probe"
+      "deviceId": "production-config-probe", "appNamespace": "com.hmux.config.probe", "buildTag": "probe"
     },
     "endpointId": "a" * 64, "identityGeneration": 0,
     "metadata": {"platform": "ios", "displayName": "probe", "appVersion": "1", "pairingEnabled": True, "capabilities": [], "relayURLs": []}
@@ -197,7 +197,7 @@ bun scripts/rollout-policy.ts pre "$environment" "$probe_dir/previous-version.js
 
 # Production promotes the same clean revision already verified in staging.
 if [[ "$environment" == "production" ]]; then
-  wrangler deployments status --env staging --name cmux-v2-staging --json >"$probe_dir/staging-deployment.json"
+  wrangler deployments status --env staging --name hmux-v2-staging --json >"$probe_dir/staging-deployment.json"
   staging_version="$(python3 - "$probe_dir/staging-deployment.json" <<'PY_STAGING'
 import json,sys
 value=json.load(open(sys.argv[1]))
@@ -206,14 +206,14 @@ if len(versions)!=1 or versions[0]["percentage"]!=100: raise SystemExit("staging
 print(versions[0]["version_id"])
 PY_STAGING
 )"
-  wrangler versions view "$staging_version" --env staging --name cmux-v2-staging --json >"$probe_dir/staging-version.json"
+  wrangler versions view "$staging_version" --env staging --name hmux-v2-staging --json >"$probe_dir/staging-version.json"
   staging_status="$(curl -sS --connect-timeout 10 --max-time 30 --max-filesize 65536 \
-    -o "$probe_dir/staging-health.json" -w '%{http_code}' https://cmux-v2-staging.debussy.workers.dev/v2/health)"
+    -o "$probe_dir/staging-health.json" -w '%{http_code}' https://hmux-v2-staging.debussy.workers.dev/v2/health)"
   if (( migration_plan == 10 )); then
     bun scripts/rollout-policy.ts migrated staging "$probe_dir/staging-version.json"
   fi
   bun scripts/rollout-policy.ts post staging "$probe_dir/staging-version.json" "$probe_dir/staging-health.json" "$staging_status" "$probe_dir/staging-version.json" "${source_revision_vars##*:}"
-  wrangler deployments status --env staging --name cmux-v2-staging --json >"$probe_dir/staging-after.json"
+  wrangler deployments status --env staging --name hmux-v2-staging --json >"$probe_dir/staging-after.json"
   python3 - "$probe_dir/staging-deployment.json" "$probe_dir/staging-after.json" <<'PY_STABLE'
 import json,sys
 before,after=(json.load(open(path)) for path in sys.argv[1:])
@@ -226,7 +226,7 @@ same_deployment "$probe_dir/pre-after.identity" "$probe_dir/final-pre.identity" 
   echo "refusing deployment: active version changed during rollout checks" >&2; exit 1;
 }
 
-deployment_marker="cmux-prod-guard-$(python3 -c 'import uuid; print(uuid.uuid4())')"
+deployment_marker="hmux-prod-guard-$(python3 -c 'import uuid; print(uuid.uuid4())')"
 # The published revision is what GET /v2/health reports and what
 # scripts/check-production-drift.ts compares against main.
 # shellcheck disable=SC2086

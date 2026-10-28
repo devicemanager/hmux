@@ -47,14 +47,14 @@ function request(value = token()) {
   });
 }
 
-test("accepts a signed identity only for cmux CI", async () => {
+test("accepts a signed identity only for hmux CI", async () => {
   const identity = await authenticateActionsRequest(request(), keys, now);
   assert.deepEqual(identity, { runId: "35580000000", runAttempt: "1", eventName: "pull_request" });
 });
 
 for (const [name, overrides] of [
   ["audience", { aud: "other" }],
-  ["repository", { repository: "someone/cmux" }],
+  ["repository", { repository: "someone/hmux" }],
   ["repository id", { repository_id: "1" }],
   ["owner id", { repository_owner_id: "1" }],
   ["visibility", { repository_visibility: "private" }],

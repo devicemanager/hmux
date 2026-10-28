@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "https://contracts.cmux.invalid/iroh-v2/V2ReadyResponse.json",
+  "$id": "https://contracts.hmux.invalid/iroh-v2/V2ReadyResponse.json",
   "type": "object",
   "properties": {
     "schemaId": {
@@ -25,28 +25,28 @@
     "ticket": {
       "allOf": [
         {
-          "$ref": "https://contracts.cmux.invalid/iroh-v2/V2Ticket.json"
+          "$ref": "https://contracts.hmux.invalid/iroh-v2/V2Ticket.json"
         }
       ]
     },
     "challenge": {
       "allOf": [
         {
-          "$ref": "https://contracts.cmux.invalid/iroh-v2/V2Challenge.json"
+          "$ref": "https://contracts.hmux.invalid/iroh-v2/V2Challenge.json"
         }
       ]
     },
     "device": {
       "allOf": [
         {
-          "$ref": "https://contracts.cmux.invalid/iroh-v2/V2DeviceRecord.json"
+          "$ref": "https://contracts.hmux.invalid/iroh-v2/V2DeviceRecord.json"
         }
       ]
     },
     "deliveryReceipt": {
       "allOf": [
         {
-          "$ref": "https://contracts.cmux.invalid/iroh-v2/V2DeliveryReceipt.json"
+          "$ref": "https://contracts.hmux.invalid/iroh-v2/V2DeliveryReceipt.json"
         }
       ]
     }

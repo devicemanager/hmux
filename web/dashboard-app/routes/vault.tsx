@@ -84,7 +84,7 @@ export const vaultSessionRoute = createRoute({
 });
 
 /**
- * Device-flow approval for `cmux-vault` and CodeRouter CLIs. CodeRouter
+ * Device-flow approval for `hmux-vault` and CodeRouter CLIs. CodeRouter
  * depends on it, so it is not gated by the Vault release flag.
  */
 export const vaultCliAuthRoute = createRoute({

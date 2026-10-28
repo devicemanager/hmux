@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxTerminal
+import HMUXMobileCore
+import HmuxTerminal
 import Foundation
 
 extension TerminalController {

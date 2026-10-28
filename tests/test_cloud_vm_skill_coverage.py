@@ -6,9 +6,9 @@ current CLI and guest dispatcher.
 Ground truth is the CLI, guest, and plugin source (no binary needed, so this
 runs on the Linux guard lane):
 
-  - every `cmux vm <verb>` (and alias) the dispatcher accepts,
-  - every `cmux vm workspace|terminal <sub>` and `cmux surface <sub>`,
-  - the `cmux vm` usage line and its probe in docs/cli-contract.md,
+  - every `hmux vm <verb>` (and alias) the dispatcher accepts,
+  - every `hmux vm workspace|terminal <sub>` and `hmux surface <sub>`,
+  - the `hmux vm` usage line and its probe in docs/cli-contract.md,
   - every `vm.*` / `surface.*` socket method the app advertises,
   - aliases, guest-only grammar, help options, and socket defaults called out
     by the CLI documentation.
@@ -26,23 +26,23 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-CLI_MAIN = ROOT / "CLI" / "cmux.swift"
-CLI_TUI = ROOT / "CLI" / "CMUXCLI+VMTui.swift"
-CLI_TASK_HELP = ROOT / "CLI" / "CMUXCLI+TaskHelp.swift"
-CLI_CODEROUTER = ROOT / "CLI" / "CMUXCLI+Coderouter.swift"
-CLI_HIBERNATION = ROOT / "CLI" / "CMUXCLI+AgentHibernation.swift"
+CLI_MAIN = ROOT / "CLI" / "hmux.swift"
+CLI_TUI = ROOT / "CLI" / "HMUXCLI+VMTui.swift"
+CLI_TASK_HELP = ROOT / "CLI" / "HMUXCLI+TaskHelp.swift"
+CLI_CODEROUTER = ROOT / "CLI" / "HMUXCLI+Coderouter.swift"
+CLI_HIBERNATION = ROOT / "CLI" / "HMUXCLI+AgentHibernation.swift"
 GUEST_CLI = ROOT / "web" / "services" / "vms" / "guestCli.ts"
 OPENCODE_PLUGIN = ROOT / "Resources" / "opencode-plugin.js"
 CAPABILITIES = ROOT / "Sources" / "TerminalController+Capabilities.swift"
 CONTRACT = ROOT / "docs" / "cli-contract.md"
 FEED_DOC = ROOT / "docs" / "feed.md"
-WORKSPACE_SKILL = ROOT / "skills" / "cmux-workspace" / "SKILL.md"
-BROWSER_COMMANDS = ROOT / "skills" / "cmux-browser" / "references" / "commands.md"
-SKILL_DIR = ROOT / "skills" / "cmux-cloud-vm"
+WORKSPACE_SKILL = ROOT / "skills" / "hmux-workspace" / "SKILL.md"
+BROWSER_COMMANDS = ROOT / "skills" / "hmux-browser" / "references" / "commands.md"
+SKILL_DIR = ROOT / "skills" / "hmux-cloud-vm"
 COMMANDS_MD = SKILL_DIR / "references" / "commands.md"
 BUNDLED_SKILL = ROOT / "Resources" / "en.lproj" / "cloud-agent-skill.md"
 
-# Every skill file whose `cmux vm …` examples must name real verbs.
+# Every skill file whose `hmux vm …` examples must name real verbs.
 SKILL_FILES = [
     SKILL_DIR / "SKILL.md",
     SKILL_DIR / "references" / "commands.md",
@@ -57,9 +57,9 @@ USAGE_LINE_INTERNAL = {"ssh-attach"}
 
 CASE_RE = re.compile(r'^\s*case ((?:"[a-z][a-z-]*"(?:, )?)+):', re.M)
 QUOTED_RE = re.compile(r'"([a-z][a-z-]*)"')
-TOKEN_RE = re.compile(r"cmux (?:vm|cloud) ([a-z][a-z-]*)(?: ([a-z][a-z-]*))?")
-SURFACE_TOKEN_RE = re.compile(r"cmux surface ([a-z][a-z-]*)")
-VPN_TOKEN_RE = re.compile(r"cmux vpn ([a-z][a-z-]*)")
+TOKEN_RE = re.compile(r"hmux (?:vm|cloud) ([a-z][a-z-]*)(?: ([a-z][a-z-]*))?")
+SURFACE_TOKEN_RE = re.compile(r"hmux surface ([a-z][a-z-]*)")
+VPN_TOKEN_RE = re.compile(r"hmux vpn ([a-z][a-z-]*)")
 
 
 def case_groups(block: str) -> list[set[str]]:
@@ -74,7 +74,7 @@ def vm_dispatch_block(source: str) -> str:
         re.M,
     )
     if marker is None:
-        raise RuntimeError("cannot find the `case \"vm\", \"cloud\":` dispatcher in CLI/cmux.swift")
+        raise RuntimeError("cannot find the `case \"vm\", \"cloud\":` dispatcher in CLI/hmux.swift")
     rest = source[marker.end():]
     end = re.search(r'^        (?:case "|default:)', rest, re.M)
     if end is None:
@@ -95,31 +95,31 @@ def sub_verbs(block: str) -> set[str]:
     verbs: set[str] = set()
     for group in case_groups(block):
         verbs |= group
-    # `cmux vm terminal close` is a guard, not a switch, on today's main.
+    # `hmux vm terminal close` is a guard, not a switch, on today's main.
     verbs |= set(re.findall(r'positional\[0\] == "([a-z][a-z-]*)"', block))
     return verbs
 
 
 def usage_line_verbs(source: str) -> list[str]:
-    """The `cmux vm` overview's usage line (the one `--help` prints)."""
-    match = re.search(r'return """\n\s+Usage: cmux \\\(command\) <([^>]+)> \[args\.\.\.\]', source)
+    """The `hmux vm` overview's usage line (the one `--help` prints)."""
+    match = re.search(r'return """\n\s+Usage: hmux \\\(command\) <([^>]+)> \[args\.\.\.\]', source)
     if match is None:
-        raise RuntimeError("cannot find the `cmux vm` usage line in CLI/cmux.swift")
+        raise RuntimeError("cannot find the `hmux vm` usage line in CLI/hmux.swift")
     return match.group(1).split("|")
 
 
 def error_usage_verbs(source: str) -> list[str]:
     """The usage line the unknown-verb error prints; a subset, but it must not lie."""
-    matches = re.findall(r'CLIError\(message: """\n\s+Usage: cmux \\\(command\) <([^>]+)> \[args\.\.\.\]', source)
+    matches = re.findall(r'CLIError\(message: """\n\s+Usage: hmux \\\(command\) <([^>]+)> \[args\.\.\.\]', source)
     if not matches:
-        raise RuntimeError("cannot find the unknown-verb error's usage line in CLI/cmux.swift")
+        raise RuntimeError("cannot find the unknown-verb error's usage line in CLI/hmux.swift")
     return [verb for match in matches for verb in match.split("|")]
 
 
 def contract_probe_verbs(contract: str) -> list[str]:
-    match = re.search(r"^- `cmux vm --help` -> `Usage: cmux vm <([^>]+)> \[args\.\.\.\]`$", contract, re.M)
+    match = re.search(r"^- `hmux vm --help` -> `Usage: hmux vm <([^>]+)> \[args\.\.\.\]`$", contract, re.M)
     if match is None:
-        raise RuntimeError("docs/cli-contract.md has no `cmux vm --help` probe")
+        raise RuntimeError("docs/cli-contract.md has no `hmux vm --help` probe")
     return match.group(1).split("|")
 
 
@@ -168,26 +168,26 @@ def cli_docs_drift_failures() -> list[str]:
     guest_vm = re.search(r'case "\\\$sub" in\n(?P<body>.*?)\n      connect\)', guest_cli, re.S)
     if guest_vm is None or not re.search(r"\bls\|list\|peers\|links\b", guest_vm.group("body")):
         failures.append("guest vm dispatcher no longer exposes ls/list/peers/links")
-    if "`cmux cloud ls` == `cmux vm ls`" not in commands:
+    if "`hmux cloud ls` == `hmux vm ls`" not in commands:
         failures.append("cloud ls reference does not document the vm ls alias")
-    if "guest `cmux vm ls` lists the team's machines" not in commands:
+    if "guest `hmux vm ls` lists the team's machines" not in commands:
         failures.append("cloud reference does not use the guest vm ls grammar")
-    if "guest `cmux vm self` lists the team's machines" in commands:
+    if "guest `hmux vm self` lists the team's machines" in commands:
         failures.append("cloud reference still claims guest vm self lists machines")
 
-    owned = re.search(r"cmuxOwnedCoderouterVerbs: Set<String> = \[(?P<verbs>[^]]+)\]", coderouter)
+    owned = re.search(r"hmuxOwnedCoderouterVerbs: Set<String> = \[(?P<verbs>[^]]+)\]", coderouter)
     if owned is None or "agent" not in QUOTED_RE.findall(owned.group("verbs")):
         failures.append("coderouter source no longer declares agent as an owned verb")
-    if "`cmux coderouter <status\\|machines\\|claude\\|agent>`" not in contract:
+    if "`hmux coderouter <status\\|machines\\|claude\\|agent>`" not in contract:
         failures.append("cli contract omits the app-owned coderouter agent verb")
 
-    hibernation_has_target_form = "cmux agent-hibernation <hibernate|wake> <surface>" in hibernation
-    if hibernation_has_target_form and "cmux agent-hibernation <hibernate|wake> <surface>" not in contract:
+    hibernation_has_target_form = "hmux agent-hibernation <hibernate|wake> <surface>" in hibernation
+    if hibernation_has_target_form and "hmux agent-hibernation <hibernate|wake> <surface>" not in contract:
         failures.append("cli contract omits the agent-hibernation target form")
-    close_help = re.search(r'case "close-window":\n\s+return """\n\s+(Usage: cmux close-window [^\n]+)', CLI_MAIN.read_text(encoding="utf-8"))
+    close_help = re.search(r'case "close-window":\n\s+return """\n\s+(Usage: hmux close-window [^\n]+)', CLI_MAIN.read_text(encoding="utf-8"))
     if close_help is None:
         failures.append("could not read close-window usage from the CLI")
-    elif f"`cmux close-window --help` -> `{close_help.group(1)}`" not in contract:
+    elif f"`hmux close-window --help` -> `{close_help.group(1)}`" not in contract:
         failures.append("cli contract close-window probe omits the live usage options")
 
     design_mode = re.search(r"browser design-mode ([a-z|]+) \[--surface", task_help)
@@ -197,7 +197,7 @@ def cli_docs_drift_failures() -> list[str]:
         failures.append("browser skill design-mode verbs differ from task help")
 
     default_socket = re.search(
-        r"CMUX_SOCKET_PATH\s+Override the Unix socket path\. Without this, the CLI defaults\s+to (~/\.local/state/cmux/cmux\.sock)",
+        r"HMUX_SOCKET_PATH\s+Override the Unix socket path\. Without this, the CLI defaults\s+to (~/\.local/state/hmux/hmux\.sock)",
         task_help,
     )
     if default_socket is None:
@@ -206,14 +206,14 @@ def cli_docs_drift_failures() -> list[str]:
         path = default_socket.group(1)
         if path not in feed:
             failures.append("feed docs use a stale socket path")
-        if ".local/state/cmux/cmux.sock" not in workspace or "/tmp/cmux.sock" in workspace:
+        if ".local/state/hmux/hmux.sock" not in workspace or "/tmp/hmux.sock" in workspace:
             failures.append("workspace skill uses a stale socket fallback")
         if "auto-discovers tagged/debug sockets" not in task_help:
             failures.append("could not read the CLI's tagged/debug socket discovery guidance")
         elif "auto-discovers tagged/debug sockets" not in feed or "auto-discovers tagged/debug sockets" not in workspace:
             failures.append("socket docs omit the CLI's tagged/debug socket discovery guidance")
         plugin_default = re.search(
-            r"const DEFAULT_SOCKET = `\$\{os\.homedir\(\)\}(/\.config/cmux/cmux\.sock)`",
+            r"const DEFAULT_SOCKET = `\$\{os\.homedir\(\)\}(/\.config/hmux/hmux\.sock)`",
             opencode_plugin,
         )
         if plugin_default is None:
@@ -262,7 +262,7 @@ def main() -> int:
     probe = contract_probe_verbs(CONTRACT.read_text(encoding="utf-8"))
     if probe != usage:
         failures.append(
-            "docs/cli-contract.md `cmux vm --help` probe differs from CLI/cmux.swift:\n"
+            "docs/cli-contract.md `hmux vm --help` probe differs from CLI/hmux.swift:\n"
             f"  probe:  {'|'.join(probe)}\n  source: {'|'.join(usage)}"
         )
 
@@ -276,15 +276,15 @@ def main() -> int:
             documented[verb].add(sub)
     for verb in sorted(verbs):
         if verb not in documented:
-            failures.append(f"{COMMANDS_MD.relative_to(ROOT)} never shows `cmux vm {verb}`")
+            failures.append(f"{COMMANDS_MD.relative_to(ROOT)} never shows `hmux vm {verb}`")
     for verb, subs in subs_by_verb.items():
         for sub in sorted(subs):
             if sub not in documented.get(verb, set()):
-                failures.append(f"{COMMANDS_MD.relative_to(ROOT)} never shows `cmux vm {verb} {sub}`")
+                failures.append(f"{COMMANDS_MD.relative_to(ROOT)} never shows `hmux vm {verb} {sub}`")
     documented_surface = set(SURFACE_TOKEN_RE.findall(shipped))
     for sub in sorted(surface_subs):
         if sub not in documented_surface:
-            failures.append(f"{COMMANDS_MD.relative_to(ROOT)} never shows `cmux surface {sub}`")
+            failures.append(f"{COMMANDS_MD.relative_to(ROOT)} never shows `hmux surface {sub}`")
 
     # Nothing the skill shows may be a verb that does not exist — except in the
     # "In flight" section, which may only name verbs that do not exist yet.
@@ -300,24 +300,24 @@ def main() -> int:
             flight = code_text(flight)
         for verb, sub in TOKEN_RE.findall(shipped_text):
             if verb not in verbs:
-                failures.append(f"{path.relative_to(ROOT)} shows `cmux vm {verb}`, which the CLI does not have")
+                failures.append(f"{path.relative_to(ROOT)} shows `hmux vm {verb}`, which the CLI does not have")
             elif verb in subs_by_verb and sub and sub not in subs_by_verb[verb]:
-                failures.append(f"{path.relative_to(ROOT)} shows `cmux vm {verb} {sub}`, which the CLI does not have")
+                failures.append(f"{path.relative_to(ROOT)} shows `hmux vm {verb} {sub}`, which the CLI does not have")
         for sub in SURFACE_TOKEN_RE.findall(shipped_text):
             if sub not in surface_subs:
-                failures.append(f"{path.relative_to(ROOT)} shows `cmux surface {sub}`, which the CLI does not have")
+                failures.append(f"{path.relative_to(ROOT)} shows `hmux surface {sub}`, which the CLI does not have")
         for verb, sub in TOKEN_RE.findall(flight):
             exists = verb in verbs and (verb not in subs_by_verb or not sub or sub in subs_by_verb[verb])
             if exists:
                 failures.append(
-                    f"{path.relative_to(ROOT)} lists `cmux vm {verb}{' ' + sub if sub else ''}` as in flight, "
+                    f"{path.relative_to(ROOT)} lists `hmux vm {verb}{' ' + sub if sub else ''}` as in flight, "
                     "but it exists: move it into the reference"
                 )
 
-    # The vpn dispatcher (CLI/CMUXCLI+VPN.swift) and the reference must agree:
+    # The vpn dispatcher (CLI/HMUXCLI+VPN.swift) and the reference must agree:
     # machines are unreachable without the tunnel, so a vpn verb the skill
     # misses (or invents) is a real gap.
-    vpn_source = (ROOT / "CLI" / "CMUXCLI+VPN.swift").read_text(encoding="utf-8")
+    vpn_source = (ROOT / "CLI" / "HMUXCLI+VPN.swift").read_text(encoding="utf-8")
     vpn_verbs = {
         verb
         for group in case_groups(function_switch_block(vpn_source, "runVPNCommand"))
@@ -327,7 +327,7 @@ def main() -> int:
         failures.append(f"vpn dispatcher parse looks wrong: {sorted(vpn_verbs)}")
     documented_vpn = set(VPN_TOKEN_RE.findall(shipped))
     for verb in sorted(vpn_verbs - documented_vpn):
-        failures.append(f"{COMMANDS_MD.relative_to(ROOT)} never shows `cmux vpn {verb}`")
+        failures.append(f"{COMMANDS_MD.relative_to(ROOT)} never shows `hmux vpn {verb}`")
     for path in SKILL_FILES:
         if not path.exists():
             continue
@@ -338,7 +338,7 @@ def main() -> int:
             text = code_text(text)
         for verb in VPN_TOKEN_RE.findall(text):
             if verb not in vpn_verbs:
-                failures.append(f"{path.relative_to(ROOT)} shows `cmux vpn {verb}`, which the CLI does not have")
+                failures.append(f"{path.relative_to(ROOT)} shows `hmux vpn {verb}`, which the CLI does not have")
 
     # Socket methods: the reference names every advertised vm.*/surface.* method
     # and no method the app does not advertise.

@@ -12,8 +12,8 @@ const postalCode = "91748-5142";
 export const metadata: Metadata = {
   ...legalMetadata(
     "/company-information",
-    "Company information — cmux",
-    "Legal entity, address, contact, and domain information for cmux and Manaflow",
+    "Company information — hmux",
+    "Legal entity, address, contact, and domain information for hmux and Manaflow",
   ),
   robots: {
     index: false,
@@ -51,7 +51,7 @@ export default function CompanyInformationPage() {
       <h1>Company information</h1>
       <p>
         This page provides the official legal entity and domain information for
-        cmux.
+        hmux.
       </p>
 
       <dl className="my-8 grid max-w-3xl gap-0 overflow-hidden rounded-lg border border-border">
@@ -79,7 +79,7 @@ export default function CompanyInformationPage() {
       <h2>Domain ownership and operation</h2>
       <p>
         {legalName} owns and operates <a href="https://manaflow.com">manaflow.com</a>{" "}
-        and <a href="https://cmux.com">cmux.com</a>. cmux is developed and
+        and <a href="https://cmux.com">cmux.com</a>. hmux is developed and
         operated by {legalName}.
       </p>
       <p>Last updated: July 30, 2026</p>

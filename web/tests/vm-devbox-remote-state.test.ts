@@ -7,15 +7,15 @@ import { devboxForkDaemonReadyCommand, devboxForkReadinessStage, devboxStrandedR
 
 // A fork of a machine from an image whose boot supervisor deleted only
 // sessions/<session>/auth resumes with the session's lifecycle fence still in
-// place, and cmux-tui refuses to start on a fence without auth. The repair
+// place, and hmux-tui refuses to start on a fence without auth. The repair
 // runs here against real directories laid out as that clone holds them.
 describe("stranded remote session repair (services/vms/images/remoteState.ts)", () => {
-  const session = (home: string, name: string) => path.join(home, ".local/state/cmux/remote/sessions", name);
+  const session = (home: string, name: string) => path.join(home, ".local/state/hmux/remote/sessions", name);
 
   test("removes a fenced session without auth and keeps a live one", async () => {
-    const root = mkdtempSync(path.join(tmpdir(), "cmux-remote-state-"));
+    const root = mkdtempSync(path.join(tmpdir(), "hmux-remote-state-"));
     try {
-      const user = path.join(root, "home-cmux");
+      const user = path.join(root, "home-hmux");
       const admin = path.join(root, "root");
       const stranded = session(user, "Y2xvdWQ");
       mkdirSync(stranded, { recursive: true });
@@ -58,7 +58,7 @@ describe("fork daemon readiness (services/vms/images/remoteState.ts)", () => {
     bound: string,
     run: (env: Record<string, string>, root: string, boundFile: string) => Promise<void>,
   ) => {
-    const root = mkdtempSync(path.join(tmpdir(), "cmux-fork-ready-"));
+    const root = mkdtempSync(path.join(tmpdir(), "hmux-fork-ready-"));
     try {
       const bin = path.join(root, "bin");
       mkdirSync(bin);
@@ -90,7 +90,7 @@ describe("fork daemon readiness (services/vms/images/remoteState.ts)", () => {
       const command = devboxForkDaemonReadyCommand(1, { homes: [path.join(root, "home")], boundInstanceFile: boundFile });
       const result = await runChild("/bin/sh", ["-c", command], { env });
       expect(result.status).toBe(1);
-      expect(result.stderr.split("\n")[0]).toBe("cmux fork daemon did not become ready: stage=unbound supervisor=unknown");
+      expect(result.stderr.split("\n")[0]).toBe("hmux fork daemon did not become ready: stage=unbound supervisor=unknown");
     });
   });
 
@@ -103,7 +103,7 @@ describe("fork daemon readiness (services/vms/images/remoteState.ts)", () => {
       const command = devboxForkDaemonReadyCommand(1, { homes: [path.join(root, "home")], boundInstanceFile: boundFile });
       const result = await runChild("/bin/sh", ["-c", command], { env });
       expect(result.status).toBe(1);
-      expect(result.stderr.split("\n")[0]).toBe("cmux fork daemon did not become ready: stage=metadata-unavailable supervisor=unknown");
+      expect(result.stderr.split("\n")[0]).toBe("hmux fork daemon did not become ready: stage=metadata-unavailable supervisor=unknown");
     });
   });
 
@@ -112,21 +112,21 @@ describe("fork daemon readiness (services/vms/images/remoteState.ts)", () => {
       const bin = env.PATH.split(":")[0];
       writeFileSync(path.join(bin, "ss"), "#!/bin/sh\nexit 0\n", { mode: 0o755 });
       writeFileSync(path.join(bin, "systemctl"), "#!/bin/sh\ncase \"$*\" in *is-active*) echo active; exit 0;; esac\nexit 0\n", { mode: 0o755 });
-      // No cmux-tui server process: the stub answers for the guest, not the host.
+      // No hmux-tui server process: the stub answers for the guest, not the host.
       writeFileSync(path.join(bin, "pgrep"), "#!/bin/sh\nexit 1\n", { mode: 0o755 });
-      writeFileSync(path.join(bin, "journalctl"), "#!/bin/sh\necho 'cmux-tui: some guest log line'\n", { mode: 0o755 });
+      writeFileSync(path.join(bin, "journalctl"), "#!/bin/sh\necho 'hmux-tui: some guest log line'\n", { mode: 0o755 });
       const command = devboxForkDaemonReadyCommand(1, { homes: [path.join(root, "home")], boundInstanceFile: boundFile });
       const result = await runChild("/bin/sh", ["-c", command], { env });
       expect(result.status).toBe(1);
       // The report is the one classified line; no guest log text follows it.
-      expect(result.stderr).toBe("cmux fork daemon did not become ready: stage=daemon-absent supervisor=active\n");
+      expect(result.stderr).toBe("hmux fork daemon did not become ready: stage=daemon-absent supervisor=active\n");
     });
   });
 
   test("repairs the stranded session and accepts the listener once bound", async () => {
     await withFakeGuest("vm-clone", async (env, root, boundFile) => {
       const home = path.join(root, "home");
-      const stranded = path.join(home, ".local/state/cmux/remote/sessions/Y2xvdWQ");
+      const stranded = path.join(home, ".local/state/hmux/remote/sessions/Y2xvdWQ");
       mkdirSync(stranded, { recursive: true });
       writeFileSync(path.join(stranded, "lifecycle-fence.json"), "{\"version\":1}");
       const command = devboxForkDaemonReadyCommand(1, { homes: [home], boundInstanceFile: boundFile });
@@ -147,7 +147,7 @@ describe("fork daemon readiness (services/vms/images/remoteState.ts)", () => {
         "#!/bin/sh",
         `case "$*" in`,
         `  *is-active*) [ -e '${started}' ] && exit 0; echo inactive; exit 3;;`,
-        `  *start*cmux-tui-daemon.service*) : > '${started}'; echo vm-clone > '${boundFile}'; exit 0;;`,
+        `  *start*hmux-tui-daemon.service*) : > '${started}'; echo vm-clone > '${boundFile}'; exit 0;;`,
         "esac",
         "exit 1",
       ].join("\n") + "\n", { mode: 0o755 });
@@ -169,7 +169,7 @@ describe("fork daemon readiness (services/vms/images/remoteState.ts)", () => {
       const command = devboxForkDaemonReadyCommand(3, { homes: [path.join(root, "home")], boundInstanceFile: boundFile });
       const result = await runChild("/bin/sh", ["-c", command], { env });
       expect(result.status).toBe(1);
-      expect(result.stderr).toBe("cmux fork daemon did not become ready: stage=metadata-unavailable supervisor=unknown\n");
+      expect(result.stderr).toBe("hmux fork daemon did not become ready: stage=metadata-unavailable supervisor=unknown\n");
       // The fake clock advances one second per read: the deadline (start + 3)
       // ends the loop after exactly 3 passes of two metadata calls each,
       // however long each call would take on a real guest.
@@ -178,12 +178,12 @@ describe("fork daemon readiness (services/vms/images/remoteState.ts)", () => {
   });
 
   test("the stage parser accepts only the fixed stage and supervisor sets", () => {
-    const line = (stage: string, supervisor: string) => `cmux fork daemon did not become ready: stage=${stage} supervisor=${supervisor}\nmore`;
+    const line = (stage: string, supervisor: string) => `hmux fork daemon did not become ready: stage=${stage} supervisor=${supervisor}\nmore`;
     expect(devboxForkReadinessStage(line("unbound", "active"))).toBe("stage=unbound supervisor=active");
     expect(devboxForkReadinessStage(line("daemon-not-listening", "failed"))).toBe("stage=daemon-not-listening supervisor=failed");
     expect(devboxForkReadinessStage(line("token-abc", "active"))).toBe("stage=unknown");
     expect(devboxForkReadinessStage(line("unbound", "secret-value"))).toBe("stage=unknown");
-    expect(devboxForkReadinessStage("cmux fork daemon did not become ready")).toBe("stage=unknown");
+    expect(devboxForkReadinessStage("hmux fork daemon did not become ready")).toBe("stage=unknown");
     expect(devboxForkReadinessStage(undefined)).toBe("stage=unknown");
   });
 
@@ -194,7 +194,7 @@ describe("fork daemon readiness (services/vms/images/remoteState.ts)", () => {
       const command = devboxForkDaemonReadyCommand(1, { homes: [path.join(root, "home")], boundInstanceFile: boundFile });
       const result = await runChild("/bin/sh", ["-c", command], { env });
       expect(result.status).toBe(1);
-      expect(result.stderr.split("\n")[0]).toBe("cmux fork daemon did not become ready: stage=unbound supervisor=failed");
+      expect(result.stderr.split("\n")[0]).toBe("hmux fork daemon did not become ready: stage=unbound supervisor=failed");
     });
   });
 });

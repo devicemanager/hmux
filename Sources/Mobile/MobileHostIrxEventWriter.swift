@@ -1,4 +1,4 @@
-import CmuxIrxTransport
+import HmuxIrxTransport
 import Foundation
 
 /// Server-events lane writer over irx: opened lazily at priority 50, reset on

@@ -106,7 +106,7 @@ export async function runFoundersLockoutBackfill(
       const summary = {
         email: target.email,
         status: "skipped" as const,
-        reason: "no_paid_cmux_purchase_found",
+        reason: "no_paid_hmux_purchase_found",
       };
       summaries.push(summary);
       dependencies.log?.(summary);
@@ -165,8 +165,8 @@ export async function runFoundersLockoutBackfill(
       metadata &&
       typeof metadata === "object" &&
       !Array.isArray(metadata) &&
-      ((metadata as Record<string, unknown>).cmuxPlan === "pro" ||
-        (metadata as Record<string, unknown>).cmuxVmPlan === "founders");
+      ((metadata as Record<string, unknown>).hmuxPlan === "pro" ||
+        (metadata as Record<string, unknown>).hmuxVmPlan === "founders");
     const billingDb = dependencies.billingDependencies?.db;
     const needsBillingRepair = await billingRowsNeedRepair(
       billingDb,
@@ -322,7 +322,7 @@ async function resolveStripeCase(
       const metadata = subscription.metadata ?? {};
       return (
         metadata.founders_edition === "true" ||
-        (metadata.app === "cmux" && metadata.plan === "pro")
+        (metadata.app === "hmux" && metadata.plan === "pro")
       );
     });
     const founderSubscriptions = relevant.filter(
@@ -330,7 +330,7 @@ async function resolveStripeCase(
     );
     // The legacy payment link can leave its subscription unclassified. A paid
     // Founder checkout session is still authoritative. Synthetic
-    // sessions and remaps use only subscriptions with an explicit cmux or
+    // sessions and remaps use only subscriptions with an explicit hmux or
     // Founder marker, never unrelated history on the same customer.
     const sessions = await listStripeCheckoutSessionsForCustomer(
       client,
@@ -568,10 +568,10 @@ async function billingRowsNeedRepair(
 
 /** Load audited customer identities from an operator-only JSON file. */
 async function loadFoundersLockoutCases(): Promise<readonly FoundersLockoutCase[]> {
-  const file = process.env.CMUX_FOUNDERS_LOCKOUT_CASES_FILE?.trim();
+  const file = process.env.HMUX_FOUNDERS_LOCKOUT_CASES_FILE?.trim();
   if (!file) {
     throw new Error(
-      "Set CMUX_FOUNDERS_LOCKOUT_CASES_FILE to an operator-only JSON case file.",
+      "Set HMUX_FOUNDERS_LOCKOUT_CASES_FILE to an operator-only JSON case file.",
     );
   }
   let contents: string;

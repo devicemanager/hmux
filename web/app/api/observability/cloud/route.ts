@@ -10,7 +10,7 @@ export const POST = makeCloudTelemetryHandler({
   authenticate: (request) => verifyRequest(request, { allowCookie: false }),
   checkIngress: async (request) => {
     if (process.env.VERCEL !== "1") return true;
-    const rule = process.env.CMUX_CLOUD_DIAGNOSTICS_RATE_LIMIT_ID?.trim();
+    const rule = process.env.HMUX_CLOUD_DIAGNOSTICS_RATE_LIMIT_ID?.trim();
     if (!rule) {
       reportMissingRateLimitRule({ route: "/api/observability/cloud", reason: "unset" });
       throw new Error("diagnostics_rate_limit_unconfigured");

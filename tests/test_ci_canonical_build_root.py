@@ -19,8 +19,8 @@ ROOT_SCRIPT = ROOT / "scripts" / "ci" / "canonical-build-root.sh"
 # The two layouts observed in CI. One underscore is the whole difference, and
 # it was enough to give the nightly seed and pull-request admission different
 # cache keys, so every admission compiled from scratch.
-BLACKSMITH = "/Users/runner/_work/cmux/cmux"
-WARP = "/Users/runner/work/cmux/cmux"
+BLACKSMITH = "/Users/runner/_work/hmux/hmux"
+WARP = "/Users/runner/work/hmux/hmux"
 
 
 def fingerprint(workspace: str, derived_data: str, *, xcode: str = "Xcode 26.3", root: str | None = None,
@@ -39,7 +39,7 @@ def fingerprint(workspace: str, derived_data: str, *, xcode: str = "Xcode 26.3",
     cwd.mkdir(parents=True, exist_ok=True)
     env = {"PATH": f"{stub_dir}:/usr/bin:/bin"}
     if root is not None:
-        env["CMUX_CI_CANONICAL_ROOT"] = str(base / root.lstrip("/"))
+        env["HMUX_CI_CANONICAL_ROOT"] = str(base / root.lstrip("/"))
     result = subprocess.run(
         [str(SCRIPT), "fingerprint", str(base / derived_data.lstrip("/"))],
         cwd=cwd, env=env, text=True, capture_output=True, check=True,
@@ -58,28 +58,28 @@ class CanonicalFingerprintTests(unittest.TestCase):
 
     def test_the_two_runner_layouts_disagree_today(self):
         # This is the bug: same repo, same toolchain, same purpose, two keys.
-        blacksmith = self._fp(BLACKSMITH, "/Users/runner/_work/_temp/cmux-derived-data-compile-admission")
-        warp = self._fp(WARP, "/Users/runner/work/_temp/cmux-derived-data-compile-admission")
+        blacksmith = self._fp(BLACKSMITH, "/Users/runner/_work/_temp/hmux-derived-data-compile-admission")
+        warp = self._fp(WARP, "/Users/runner/work/_temp/hmux-derived-data-compile-admission")
         self.assertNotEqual(blacksmith, warp)
 
     def test_canonical_paths_agree_across_runner_layouts(self):
         # Both pools build from the same canonical root, so the key matches and
         # one seed serves both.
-        root = "/private/tmp/cmux-ci"
+        root = "/private/tmp/hmux-ci"
         blacksmith = self._fp(f"{root}/src", f"{root}/derived-data-compile-admission", root=root)
         warp = self._fp(f"{root}/src", f"{root}/derived-data-compile-admission", root=root)
         self.assertEqual(blacksmith, warp)
 
     def test_canonical_key_differs_from_the_path_scoped_key(self):
-        root = "/private/tmp/cmux-ci"
+        root = "/private/tmp/hmux-ci"
         canonical = self._fp(f"{root}/src", f"{root}/derived-data-compile-admission", root=root)
-        legacy = self._fp(BLACKSMITH, "/Users/runner/_work/_temp/cmux-derived-data-compile-admission")
+        legacy = self._fp(BLACKSMITH, "/Users/runner/_work/_temp/hmux-derived-data-compile-admission")
         self.assertNotEqual(canonical, legacy)
 
     def test_a_noncanonical_build_keeps_its_private_key(self):
         # Fail closed: an unconverted lane must not claim the shared key and
         # download a seed whose entries cannot hit its paths.
-        root = "/private/tmp/cmux-ci"
+        root = "/private/tmp/hmux-ci"
         canonical = self._fp(f"{root}/src", f"{root}/derived-data-compile-admission", root=root)
         for workspace, derived in (
             (BLACKSMITH, f"{root}/derived-data-compile-admission"),   # canonical derived data only
@@ -90,27 +90,27 @@ class CanonicalFingerprintTests(unittest.TestCase):
                 self.assertNotEqual(self._fp(workspace, derived, root=root), canonical)
 
     def test_a_second_compile_slot_gets_keys_of_its_own(self):
-        # An owned Mac's second compile slot builds at /private/tmp/cmux-ci-2:
+        # An owned Mac's second compile slot builds at /private/tmp/hmux-ci-2:
         # different absolute paths in every entry, so it must never adopt a
         # seed or compilation cache keyed for the first slot's root.
-        first, second = "/private/tmp/cmux-ci", "/private/tmp/cmux-ci-2"
+        first, second = "/private/tmp/hmux-ci", "/private/tmp/hmux-ci-2"
         self.assertNotEqual(
             self._fp(f"{first}/src", f"{first}/derived-data-compile-admission", root=first),
             self._fp(f"{second}/src", f"{second}/derived-data-compile-admission", root=second))
         # The default root adds no line, so every existing key is unchanged.
         text = SCRIPT.read_text()
-        self.assertIn('if [ "$CANONICAL_BUILD_ROOT" != /private/tmp/cmux-ci ]; then', text)
+        self.assertIn('if [ "$CANONICAL_BUILD_ROOT" != /private/tmp/hmux-ci ]; then', text)
 
     def test_purposes_stay_separate_under_the_canonical_root(self):
         # Two purposes are two directories, so their entries cannot hit each
         # other and they must not share a key.
-        root = "/private/tmp/cmux-ci"
+        root = "/private/tmp/hmux-ci"
         admission = self._fp(f"{root}/src", f"{root}/derived-data-compile-admission", root=root)
         release = self._fp(f"{root}/src", f"{root}/derived-data-release", root=root)
         self.assertNotEqual(admission, release)
 
     def test_toolchain_still_invalidates_the_canonical_key(self):
-        root = "/private/tmp/cmux-ci"
+        root = "/private/tmp/hmux-ci"
         old = self._fp(f"{root}/src", f"{root}/derived-data-compile-admission", xcode="Xcode 26.3", root=root)
         new = self._fp(f"{root}/src", f"{root}/derived-data-compile-admission", xcode="Xcode 27.0", root=root)
         self.assertNotEqual(old, new)
@@ -122,16 +122,16 @@ class CanonicalFingerprintTests(unittest.TestCase):
                 result = subprocess.run(
                     [str(ROOT_SCRIPT), "--print-root"],
                     env={"PATH": "/usr/bin:/bin", "RUNNER_ENVIRONMENT": "self-hosted", "RUNNER_NAME": name,
-                         "CMUX_CI_CANONICAL_ROOT_HELPER": "/nonexistent/glaeda-canonical-root",
-                         "CMUX_CI_FLEET_DIR": fleet_dir},
+                         "HMUX_CI_CANONICAL_ROOT_HELPER": "/nonexistent/glaeda-canonical-root",
+                         "HMUX_CI_FLEET_DIR": fleet_dir},
                     text=True,
                     capture_output=True,
                     check=True,
                 )
                 roots.append(result.stdout.strip())
         self.assertEqual(roots, [
-            "/private/tmp/cmux-ci-aws-m4pro-9-glaeda",
-            "/private/tmp/cmux-ci-aws-m4pro-9-glaeda-1",
+            "/private/tmp/hmux-ci-aws-m4pro-9-glaeda",
+            "/private/tmp/hmux-ci-aws-m4pro-9-glaeda-1",
         ])
 
     def test_an_ephemeral_self_hosted_runner_keeps_the_shared_default(self):
@@ -142,17 +142,17 @@ class CanonicalFingerprintTests(unittest.TestCase):
             [str(ROOT_SCRIPT), "--print-root"],
             env={"PATH": "/usr/bin:/bin", "RUNNER_ENVIRONMENT": "self-hosted",
                  "RUNNER_NAME": "blacksmith-12vcpu-macos-26-abc123",
-                 "CMUX_CI_CANONICAL_ROOT_HELPER": "/nonexistent/glaeda-canonical-root",
-                 "CMUX_CI_FLEET_DIR": "/nonexistent/cmux-build-fleet"},
+                 "HMUX_CI_CANONICAL_ROOT_HELPER": "/nonexistent/glaeda-canonical-root",
+                 "HMUX_CI_FLEET_DIR": "/nonexistent/hmux-build-fleet"},
             text=True,
             capture_output=True,
             check=True,
         )
-        self.assertEqual(result.stdout.strip(), "/private/tmp/cmux-ci")
+        self.assertEqual(result.stdout.strip(), "/private/tmp/hmux-ci")
 
     def test_glaeda_managed_runner_keeps_the_hooks_canonical_root(self):
         # glaeda's runner hook already isolates roots per job and exports one
-        # (/private/tmp/cmux-ci for root 1, /private/tmp/cmux-ci-N otherwise);
+        # (/private/tmp/hmux-ci for root 1, /private/tmp/hmux-ci-N otherwise);
         # `glaeda-canonical-root take` rejects anything else, so a per-runner
         # root here fails the job before it builds (main compile probe run
         # 37157423969).
@@ -161,15 +161,15 @@ class CanonicalFingerprintTests(unittest.TestCase):
             helper.write_text("#!/bin/sh\nexit 0\n")
             helper.chmod(0o755)
             base_env = {"PATH": "/usr/bin:/bin", "RUNNER_ENVIRONMENT": "self-hosted",
-                        "RUNNER_NAME": "cmux13s-mac-mini-glaeda", "CMUX_CI_CANONICAL_ROOT_HELPER": str(helper)}
+                        "RUNNER_NAME": "hmux13s-mac-mini-glaeda", "HMUX_CI_CANONICAL_ROOT_HELPER": str(helper)}
             for exported, expected in (
-                (None, "/private/tmp/cmux-ci"),
-                ("/private/tmp/cmux-ci", "/private/tmp/cmux-ci"),
-                ("/private/tmp/cmux-ci-2", "/private/tmp/cmux-ci-2"),
+                (None, "/private/tmp/hmux-ci"),
+                ("/private/tmp/hmux-ci", "/private/tmp/hmux-ci"),
+                ("/private/tmp/hmux-ci-2", "/private/tmp/hmux-ci-2"),
             ):
                 env = dict(base_env)
                 if exported is not None:
-                    env["CMUX_CI_CANONICAL_ROOT"] = exported
+                    env["HMUX_CI_CANONICAL_ROOT"] = exported
                 with self.subTest(exported=exported):
                     result = subprocess.run(
                         [str(ROOT_SCRIPT), "--print-root"], env=env, text=True, capture_output=True, check=True)
@@ -183,10 +183,10 @@ class CanonicalFingerprintTests(unittest.TestCase):
             capture_output=True,
             check=True,
         )
-        self.assertEqual(hosted.stdout.strip(), "/private/tmp/cmux-ci")
+        self.assertEqual(hosted.stdout.strip(), "/private/tmp/hmux-ci")
         override = subprocess.run(
             [str(ROOT_SCRIPT), "--print-root"],
-            env={"PATH": "/usr/bin:/bin", "RUNNER_ENVIRONMENT": "self-hosted", "RUNNER_NAME": "aws-m4pro-9-glaeda-1", "CMUX_CI_CANONICAL_ROOT": "/private/tmp/custom"},
+            env={"PATH": "/usr/bin:/bin", "RUNNER_ENVIRONMENT": "self-hosted", "RUNNER_NAME": "aws-m4pro-9-glaeda-1", "HMUX_CI_CANONICAL_ROOT": "/private/tmp/custom"},
             text=True,
             capture_output=True,
             check=True,
@@ -210,7 +210,7 @@ class CanonicalRootMaterializationTests(unittest.TestCase):
     def run_script(self, workspace=None, root=None, extra_env=None):
         return subprocess.run(
             [str(ROOT / "scripts" / "ci" / "canonical-build-root.sh"), str(workspace or self.workspace)],
-            env={"PATH": "/usr/bin:/bin", "CMUX_CI_CANONICAL_ROOT": str(root or self.root), **(extra_env or {})},
+            env={"PATH": "/usr/bin:/bin", "HMUX_CI_CANONICAL_ROOT": str(root or self.root), **(extra_env or {})},
             text=True, capture_output=True,
         )
 
@@ -227,7 +227,7 @@ class CanonicalRootMaterializationTests(unittest.TestCase):
         packages = self.restored_packages()
         stale = self.root / "src" / ".ci-source-packages" / "checkouts" / "stale"
         stale.mkdir(parents=True)
-        result = self.run_script(extra_env={"CMUX_CI_MOVE_SOURCE_PACKAGES": "1"})
+        result = self.run_script(extra_env={"HMUX_CI_MOVE_SOURCE_PACKAGES": "1"})
         self.assertEqual(result.returncode, 0, result.stderr)
         moved = self.root / "src" / ".ci-source-packages" / "checkouts" / "pkg" / "Package.swift"
         self.assertEqual(moved.read_text(), "restored")
@@ -239,7 +239,7 @@ class CanonicalRootMaterializationTests(unittest.TestCase):
     def test_moving_without_a_restored_cache_still_clears_stale_packages(self):
         stale = self.root / "src" / ".ci-source-packages" / "checkouts" / "stale"
         stale.mkdir(parents=True)
-        result = self.run_script(extra_env={"CMUX_CI_MOVE_SOURCE_PACKAGES": "1"})
+        result = self.run_script(extra_env={"HMUX_CI_MOVE_SOURCE_PACKAGES": "1"})
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.root / "src" / ".ci-source-packages").exists())
 
@@ -254,7 +254,7 @@ class CanonicalRootMaterializationTests(unittest.TestCase):
     def test_runtime_source_alias_resolves_embedded_file_paths(self):
         result = subprocess.run(
             [str(ROOT / "scripts/ci/canonical-build-root.sh"), "--runtime-source", str(self.workspace)],
-            env={"PATH": "/usr/bin:/bin", "CMUX_CI_CANONICAL_ROOT": str(self.root)},
+            env={"PATH": "/usr/bin:/bin", "HMUX_CI_CANONICAL_ROOT": str(self.root)},
             text=True, capture_output=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -266,7 +266,7 @@ class CanonicalRootMaterializationTests(unittest.TestCase):
         self.assertEqual((self.root / "src/sub/keep.txt").read_text(), "keep")
         refused = subprocess.run(
             [str(ROOT / "scripts/ci/canonical-build-root.sh"), "--runtime-source", str(self.root / "src")],
-            env={"PATH": "/usr/bin:/bin", "CMUX_CI_CANONICAL_ROOT": str(self.root)},
+            env={"PATH": "/usr/bin:/bin", "HMUX_CI_CANONICAL_ROOT": str(self.root)},
             text=True, capture_output=True,
         )
         self.assertNotEqual(refused.returncode, 0)
@@ -276,8 +276,8 @@ class CanonicalRootMaterializationTests(unittest.TestCase):
         runtime_root = self.base / "stable-source"
         result = subprocess.run(
             [str(ROOT / "scripts/ci/canonical-build-root.sh"), "--runtime-source", str(self.workspace)],
-            env={"PATH": "/usr/bin:/bin", "CMUX_CI_CANONICAL_ROOT": str(self.root),
-                 "CMUX_CI_RUNTIME_SOURCE_ROOT": str(runtime_root)},
+            env={"PATH": "/usr/bin:/bin", "HMUX_CI_CANONICAL_ROOT": str(self.root),
+                 "HMUX_CI_RUNTIME_SOURCE_ROOT": str(runtime_root)},
             text=True, capture_output=True,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -316,7 +316,7 @@ class CanonicalRootMaterializationTests(unittest.TestCase):
         for tool in ("cp", "python3"):
             (bin_dir / tool).write_text("#!/bin/sh\nexit 1\n")
             (bin_dir / tool).chmod(0o755)
-        result = self.run_script(extra_env={"PATH": f"{bin_dir}:/usr/bin:/bin", "CMUX_CI_MOVE_SOURCE_PACKAGES": "1"})
+        result = self.run_script(extra_env={"PATH": f"{bin_dir}:/usr/bin:/bin", "HMUX_CI_MOVE_SOURCE_PACKAGES": "1"})
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("copying with rsync", result.stderr)
         self.assertFalse((self.root / "src" / "stale.txt").exists())
@@ -384,12 +384,12 @@ class CanonicalRecipeTests(unittest.TestCase):
             root.mkdir()
             (root / "src").symlink_to(workspace)
             env = dict(os.environ, PATH=f"{bin_dir}:" + os.environ['PATH'], CALLS=str(calls),
-                       CMUX_CI_SWIFTPM_KEEP_ENV="CALLS",
+                       HMUX_CI_SWIFTPM_KEEP_ENV="CALLS",
                        # The guard runs in a shared CI environment. Keep this
                        # recipe test independent of a cache-hit hint exported
                        # by a caller, which can add a fallback resolve call.
-                       CMUX_CI_SWIFTPM_CACHE_EXACT_HIT="",
-                       CMUX_CI_CANONICAL_ROOT=str(root))
+                       HMUX_CI_SWIFTPM_CACHE_EXACT_HIT="",
+                       HMUX_CI_CANONICAL_ROOT=str(root))
             derived = str(root / "derived-data-compile-admission")
             packages = str(workspace / ".ci-source-packages")
             for args in [("canonical-fingerprint", derived),
@@ -402,7 +402,7 @@ class CanonicalRecipeTests(unittest.TestCase):
             # Derive the expected builds from the recipe rather than pinning a
             # count: version probes, one resolve, then one build per scheme.
             # A hardcoded total silently breaks whenever a scheme is added --
-            # cmux-cli-tests did exactly that. The recipe now takes its scheme
+            # hmux-cli-tests did exactly that. The recipe now takes its scheme
             # list from PRODUCT_PROFILES, so read the same source it does.
             sys.path.insert(0, str(ROOT / "scripts" / "ci"))
             import product_input_identity as identity
@@ -416,7 +416,7 @@ class CanonicalRecipeTests(unittest.TestCase):
             self.assertGreaterEqual(len(probes), 1)
             self.assertEqual(len(resolves), 1)
             self.assertEqual(len(records), len(probes) + len(resolves) + len(expected_schemes))
-            # resolve() also passes -scheme (cmux-unit) alongside
+            # resolve() also passes -scheme (hmux-unit) alongside
             # -resolvePackageDependencies; only the build invocations count.
             built = [
                 args[args.index("-scheme") + 1]
@@ -424,10 +424,10 @@ class CanonicalRecipeTests(unittest.TestCase):
                 if "-scheme" in args and "-resolvePackageDependencies" not in args
             ]
             self.assertEqual(built, expected_schemes)
-            # cmux-numeric-locale reuses the cmux-unit product instead of being
+            # hmux-numeric-locale reuses the hmux-unit product instead of being
             # built again; tests/test_app_host_test_products.py holds the two
             # schemes equivalent.
-            self.assertNotIn("cmux-numeric-locale", built)
+            self.assertNotIn("hmux-numeric-locale", built)
             canonical_src = str((root / "src").resolve())
             for cwd, args in records:
                 self.assertEqual(cwd, canonical_src)
@@ -461,9 +461,9 @@ class CanonicalRecipeTests(unittest.TestCase):
             root.mkdir()
             (root / "src").symlink_to(workspace)
             env = dict(os.environ, PATH=f"{bin_dir}:" + os.environ['PATH'], CALLS=str(calls),
-                       CMUX_CI_SWIFTPM_KEEP_ENV="CALLS",
-                       CMUX_CI_SWIFTPM_CACHE_EXACT_HIT="",
-                       CMUX_CI_CANONICAL_ROOT=str(root))
+                       HMUX_CI_SWIFTPM_KEEP_ENV="CALLS",
+                       HMUX_CI_SWIFTPM_CACHE_EXACT_HIT="",
+                       HMUX_CI_CANONICAL_ROOT=str(root))
             derived = str(root / "derived-data-compile-admission")
             result = subprocess.run(
                 [str(SCRIPT), "canonical-build", derived,
@@ -508,11 +508,11 @@ class SeededBuildFileSystemModeTests(unittest.TestCase):
         root = base / "canonical"
         root.mkdir()
         env = dict(os.environ, PATH=f"{bin_dir}:" + os.environ["PATH"], CALLS=str(calls),
-                   CMUX_CI_SWIFTPM_KEEP_ENV="CALLS",
-                   CMUX_CI_CANONICAL_ROOT=str(root),
+                   HMUX_CI_SWIFTPM_KEEP_ENV="CALLS",
+                   HMUX_CI_CANONICAL_ROOT=str(root),
                    # A caller's per-step noise, its tools and its settings.
                    GITHUB_RUN_ID="12345", HOME=str(base / "home"), CI="true",
-                   CMUX_SKIP_ZIG_BUILD="1", CARGO_HOME=str(base / "cargo"),
+                   HMUX_SKIP_ZIG_BUILD="1", CARGO_HOME=str(base / "cargo"),
                    CARGO_REGISTRIES_X_TOKEN="secret")
         env.pop("FileSystemMode", None)
         self.caller_env = env
@@ -573,7 +573,7 @@ class SeedGhosttyPinTests(unittest.TestCase):
         xcode.chmod(0o755)
         root = base / "canonical"
         root.mkdir(exist_ok=True)
-        env = dict(os.environ, PATH=f"{bin_dir}:" + os.environ["PATH"], CMUX_CI_CANONICAL_ROOT=str(root))
+        env = dict(os.environ, PATH=f"{bin_dir}:" + os.environ["PATH"], HMUX_CI_CANONICAL_ROOT=str(root))
         result = subprocess.run([str(SCRIPT), "canonical-fingerprint", str(root / "derived-data-compile-admission")],
                                 cwd=workspace, env=env, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
@@ -620,9 +620,9 @@ class BuildEnvironmentTests(SeededBuildFileSystemModeTests):
         self.assertTrue(builds)
         for record in builds:
             args = record["args"]
-            for name in ("HOME", "CI", "CMUX_SKIP_ZIG_BUILD", "CARGO_HOME"):
+            for name in ("HOME", "CI", "HMUX_SKIP_ZIG_BUILD", "CARGO_HOME"):
                 self.assertIn(f"{name}={caller[name]}", args)
-            self.assertIn(f"CMUX_CALLER_PATH={caller['PATH']}", args)
+            self.assertIn(f"HMUX_CALLER_PATH={caller['PATH']}", args)
             self.assertFalse(any(a.startswith("GITHUB_RUN_ID=") for a in args))
             self.assertFalse(any(a.startswith("CARGO_REGISTRIES_X_TOKEN=") for a in args))
 
@@ -633,7 +633,7 @@ class BuildPhaseCallerPathTests(unittest.TestCase):
     def path_after(self, path: str, caller: str | None) -> str:
         env = {"PATH": path}
         if caller is not None:
-            env["CMUX_CALLER_PATH"] = caller
+            env["HMUX_CALLER_PATH"] = caller
         return subprocess.run(
             ["/bin/bash", "-c", f'. "{self.HELPER}"; printf %s "$PATH"'],
             env=env, capture_output=True, text=True, check=True,

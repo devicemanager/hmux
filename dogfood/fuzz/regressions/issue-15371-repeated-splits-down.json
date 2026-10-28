@@ -1,5 +1,5 @@
 {
- "kind": "cmux-fuzz-repro",
+ "kind": "hmux-fuzz-repro",
  "version": 1,
  "signature": {
   "kind": "invariant",

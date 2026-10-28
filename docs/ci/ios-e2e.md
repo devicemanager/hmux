@@ -61,7 +61,7 @@ loopback, and a TLS front listens only on the runner's tailnet address.
 
 ### TLS
 
-Every origin's host is one fixed name, `cmux-e2e-backend.tail137216.ts.net`
+Every origin's host is one fixed name, `hmux-e2e-backend.tail137216.ts.net`
 (`<name>` above). The apps accept only `https` origins, and the iOS Iroh
 client checks relay TLS against built-in public roots (`iroh-ffi`
 `src/relay_tls.rs`), so a private CA cannot serve the relay. A Tailscale
@@ -70,8 +70,8 @@ Let's Encrypt's 50 new certificates per week for the tailnet domain (`ts.net`
 is on the Public Suffix List).
 
 So the name's publicly trusted certificate is issued once, about every 60
-days, and stored in the `ios-e2e` environment as `CMUX_E2E_TLS_CERT` and
-`CMUX_E2E_TLS_KEY`. No tailnet node keeps the name. The macOS runner maps it in
+days, and stored in the `ios-e2e` environment as `HMUX_E2E_TLS_CERT` and
+`HMUX_E2E_TLS_KEY`. No tailnet node keeps the name. The macOS runner maps it in
 `/etc/hosts` to this run's backend runner (`backend-env.sh hosts`); the
 simulator shares that resolver. The backend maps it to loopback for Postgres.
 [scripts/e2e/tls-forward.mjs](../../scripts/e2e/tls-forward.mjs) terminates TLS
@@ -82,19 +82,19 @@ connection needs no test-only switch in product code.
 ### Renewing the backend certificate
 
 `backend-up.sh` warns when the certificate has fewer than 21 days left and
-fails the run at 7. Renew from a cmuxterm-hq checkout with tsadmin access:
+fails the run at 7. Renew from a hmuxterm-hq checkout with tsadmin access:
 
 ```bash
 ./scripts/ios-e2e-backend-cert.sh
 ```
 
-It creates the `cmux-e2e-backend` node for a moment with a one-use,
+It creates the `hmux-e2e-backend` node for a moment with a one-use,
 ephemeral, 10-minute `tag:e2e-backend` key, runs `tailscale cert`, stores the
 result in the environment, and always revokes the key, logs the node out,
 stops its daemon and deletes its temp directory.
 
 The relay is the upstream server that `manaflow-ai/cmux-relay` wraps, without
-cmux-relay's credential check (that repository tests it). iroh-v2 signs relay
+hmux-relay's credential check (that repository tests it). iroh-v2 signs relay
 credentials with a key minted for the run, so no production relay key reaches
 CI and relay key rotation cannot break the lane. The real relay fleet is not
 exercised here.
@@ -102,12 +102,12 @@ exercised here.
 `web/` is not started. Sign-in goes to Stack Auth directly and the Mac mints
 the attach URL locally. The apps' web side paths (device registry, push, What's
 New, the Mac compatibility policy, the legacy broker for older iOS clients) use
-shared staging through `CMUX_DEV_BACKEND_MODE=local` and
-`CMUX_DEV_API_BASE_URL`.
+shared staging through `HMUX_DEV_BACKEND_MODE=local` and
+`HMUX_DEV_API_BASE_URL`.
 
 [scripts/e2e/backend-env.sh](../../scripts/e2e/backend-env.sh) `env` sets
-`CMUX_IROH_V2_BASE_URL`, `CMUX_IROH_V2_ENVIRONMENT`, `CMUX_IROH_V2_FORCE_RELAY`
-and `CMUX_PRESENCE_BASE_URL`; the reload scripts bake them into both apps, and
+`HMUX_IROH_V2_BASE_URL`, `HMUX_IROH_V2_ENVIRONMENT`, `HMUX_IROH_V2_FORCE_RELAY`
+and `HMUX_PRESENCE_BASE_URL`; the reload scripts bake them into both apps, and
 the Mac's presence origin is also written to its `presenceServiceURL` default.
 
 Speed: sparse checkout of the three paths the backend runs; no certificate
@@ -138,7 +138,7 @@ that join the tailnet or read a secret run in the GitHub environment
 run it.
 
 No stored Tailscale secret is used. Jobs join with GitHub OIDC against the
-federated identity "cmux iOS E2E protected manual runs", which trusts only
+federated identity "hmux iOS E2E protected manual runs", which trusts only
 this repository, `.github/workflows/ios-e2e.yml`, `workflow_dispatch`, and the
 `ios-e2e` environment. It has the `auth_keys` scope and `tag:ci`, which owns
 `tag:e2e-backend`. The workflow reads its client ID and audience from the
@@ -146,9 +146,9 @@ repository variables `TS_E2E_OIDC_CLIENT_ID` and `TS_E2E_OIDC_AUDIENCE`.
 
 | Secret | Scope | Job | Purpose |
 | --- | --- | --- | --- |
-| `CMUX_E2E_STACK_PROJECT_ID` / `CMUX_E2E_STACK_PUBLISHABLE_KEY` / `CMUX_E2E_STACK_SERVER_KEY` | environment `ios-e2e` | `backend` | The dev Stack project of the CI account; the Workers verify the apps' tokens against it. |
-| `CMUX_E2E_TLS_CERT` / `CMUX_E2E_TLS_KEY` | environment `ios-e2e` | `backend` | Certificate chain and key for the backend's fixed name ([TLS](#tls)). Its key can only impersonate that name, which no real service uses. |
-| `CMUX_DOGFOOD_STACK_EMAIL` / `CMUX_DOGFOOD_STACK_PASSWORD` | repository | `mac-ios-e2e` | The CI Stack account both apps sign into. |
+| `HMUX_E2E_STACK_PROJECT_ID` / `HMUX_E2E_STACK_PUBLISHABLE_KEY` / `HMUX_E2E_STACK_SERVER_KEY` | environment `ios-e2e` | `backend` | The dev Stack project of the CI account; the Workers verify the apps' tokens against it. |
+| `HMUX_E2E_TLS_CERT` / `HMUX_E2E_TLS_KEY` | environment `ios-e2e` | `backend` | Certificate chain and key for the backend's fixed name ([TLS](#tls)). Its key can only impersonate that name, which no real service uses. |
+| `HMUX_DOGFOOD_STACK_EMAIL` / `HMUX_DOGFOOD_STACK_PASSWORD` | repository | `mac-ios-e2e` | The CI Stack account both apps sign into. |
 
 ## Runners that already run Tailscale
 
@@ -171,7 +171,7 @@ not arise.
 
 ## Tailscale ACL requirements
 
-The policy is cmuxterm-hq `skills/infra/tsadmin/acl.manaflow.hujson`, with a
+The policy is hmuxterm-hq `skills/infra/tsadmin/acl.manaflow.hujson`, with a
 policy test for each rule:
 
 - `tag:ci` to `tag:e2e-backend` on TCP 8443, 8444 and 10000. The relay has no
@@ -184,10 +184,10 @@ policy test for each rule:
 
 The relay-only setting is enforced in both app configurations:
 
-- Mac defaults: `cmux.iroh.debug.transport-mode=relayOnly` and
-  `cmux.iroh.v2.force-relay=true`.
-- iOS simulator defaults: `cmux.iroh.debug.transport-mode=relayOnly` and
-  `cmux.iroh.v2.config.CMUX_IROH_V2_FORCE_RELAY=1`.
+- Mac defaults: `hmux.iroh.debug.transport-mode=relayOnly` and
+  `hmux.iroh.v2.force-relay=true`.
+- iOS simulator defaults: `hmux.iroh.debug.transport-mode=relayOnly` and
+  `hmux.iroh.v2.config.HMUX_IROH_V2_FORCE_RELAY=1`.
 
 The workflow reads both values back before pairing and after launch. The E2E
 driver also asserts the tagged Mac socket and simulator rendering for every

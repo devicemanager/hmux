@@ -301,7 +301,7 @@ describe("responses routing through API keys", () => {
     const call = upstreamCalls[0]!;
     expect(call.url).toBe("https://openrouter.ai/api/v1/responses");
     expect(call.headers.get("authorization")).toBe(`Bearer ${openRouterKey.apiKey}`);
-    expect(call.headers.get("x-title")).toBe("cmux coderouter");
+    expect(call.headers.get("x-title")).toBe("hmux coderouter");
     expect(call.headers.get("openai-beta")).toBeNull();
     expect(JSON.parse(call.body)).toEqual({ model: "openai/gpt-5.3-codex", input: [], store: false });
   });

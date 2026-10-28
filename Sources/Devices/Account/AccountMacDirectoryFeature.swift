@@ -7,6 +7,6 @@ import Foundation
 enum AccountMacDirectoryFeature {
     nonisolated static func isEnabled(defaults: UserDefaults = .standard) -> Bool {
         DevicesFeature.isAvailable(defaults: defaults)
-            && CmuxFeatureFlags.offMainEffectiveValue(for: CmuxFeatureFlags.macAccountDirectoryFlag)
+            && HmuxFeatureFlags.offMainEffectiveValue(for: HmuxFeatureFlags.macAccountDirectoryFlag)
     }
 }

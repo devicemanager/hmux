@@ -17,7 +17,7 @@ function price(overrides: Partial<{
     currency: "usd",
     unit_amount: 5000,
     recurring: { interval: "month" as const, interval_count: 1 },
-    product: { id: "prod_pro", metadata: { app: "cmux", plan: "pro" } },
+    product: { id: "prod_pro", metadata: { app: "hmux", plan: "pro" } },
     ...overrides,
   } as Parameters<typeof assertPriceMatchesPlan>[0];
 }
@@ -33,7 +33,7 @@ describe("Stripe price override guard", () => {
           id: "price_team_60",
           unit_amount: 6000,
           recurring: { interval: "month" },
-          product: { id: "prod_team", metadata: { app: "cmux", plan: "team" } },
+          product: { id: "prod_team", metadata: { app: "hmux", plan: "team" } },
         }),
         TEAM_PRICING_USD.month,
         "month",
@@ -52,7 +52,7 @@ describe("Stripe price override guard", () => {
         "STRIPE_PRO_MONTHLY_50_PRICE_ID",
         "pro",
       ),
-    ).toThrow(/price_legacy_30.*cmux-pro-monthly-50.*unit_amount 3000 \(expected 5000\)/);
+    ).toThrow(/price_legacy_30.*hmux-pro-monthly-50.*unit_amount 3000 \(expected 5000\)/);
   });
 
   test("refuses the wrong interval, cadence, currency, or an inactive Price", () => {
@@ -79,13 +79,13 @@ describe("Stripe price override guard", () => {
   test("refuses a Price from another product, even at the right amount", () => {
     expect(() =>
       assertPriceMatchesPlan(
-        price({ product: { id: "prod_team", metadata: { app: "cmux", plan: "team" } } }),
+        price({ product: { id: "prod_team", metadata: { app: "hmux", plan: "team" } } }),
         PRO_PRICING_USD.month,
         "month",
         "x",
         "pro",
       ),
-    ).toThrow(/product prod_team is not the cmux pro product/);
+    ).toThrow(/product prod_team is not the hmux pro product/);
     expect(() =>
       assertPriceMatchesPlan(price({ product: "prod_pro" }), PRO_PRICING_USD.month, "month", "x", "pro"),
     ).toThrow(/product not expanded/);

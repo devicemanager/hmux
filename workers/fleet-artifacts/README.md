@@ -1,7 +1,7 @@
 # Private fleet artifact edge
 
 This Worker streams content-addressed fleet ZIPs from the existing private
-`cmux-fleet-artifacts` R2 bucket through Cloudflare's edge. It removes the
+`hmux-fleet-artifacts` R2 bucket through Cloudflare's edge. It removes the
 controller from the artifact byte path. It holds only an Ed25519 public key;
 the controller signs short-lived download URLs after authenticating a client.
 
@@ -18,7 +18,7 @@ fleet-artifact-v1
 ```
 
 The controller derives its Ed25519 seed as
-`SHA256("cmux-fleet-artifacts-v1\n" + R2 secret access key)`. Only its 32-byte
+`SHA256("hmux-fleet-artifacts-v1\n" + R2 secret access key)`. Only its 32-byte
 public key, lowercase hex, is provided as `ARTIFACT_PUBLIC_KEY`. The private
 seed and R2 credential never enter this Worker or deployment workflow.
 

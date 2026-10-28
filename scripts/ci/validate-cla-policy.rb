@@ -107,7 +107,7 @@ SH
 # blacksmith-4vcpu-ubuntu-2404-arm, which runs-on cannot select and which is
 # still a one-job Blacksmith VM), and also refuses any name containing
 # 'glaeda': owned machines are registered by glaeda as '<host>-glaeda[-N]'
-# (cmuxs-mac-mini-5-glaeda-1), so a misrouted job is refused by two
+# (hmuxs-mac-mini-5-glaeda-1), so a misrouted job is refused by two
 # independent signals.
 #
 # runner.name is chosen when a runner registers, which needs organization
@@ -2129,7 +2129,7 @@ def run_runner_regression_matrix!
     "blacksmith-4vcpu-ubuntu-2404-56ere4cqq7ryjqvc" => true,
     "blacksmith-2vcpu-ubuntu-2404-56ere4cqq7ryjqvc" => true,
     "blacksmith-4vcpu-ubuntu-2404-Runner-337101a82d" => true,
-    "cmuxs-mac-mini-5-glaeda-1" => false,
+    "hmuxs-mac-mini-5-glaeda-1" => false,
     "blacksmith-4vcpu-ubuntu-2404-glaeda" => false,
     "blacksmith-8vcpu-ubuntu-2404-56ere4cqq7ryjqvc" => false,
     "blacksmith-4vcpu-ubuntu-2204-56ere4cqq7ryjqvc" => false,

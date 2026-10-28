@@ -24,7 +24,7 @@ if (targetIndex !== -1) {
     url.searchParams.set("sslmode", "verify-full");
     databaseURL = url.href;
   }
-  process.env.CMUX_DB_DRIVER = "url";
+  process.env.HMUX_DB_DRIVER = "url";
   process.env.DATABASE_URL = databaseURL;
   process.env.AWS_REGION = env.AWS_REGION;
   delete process.env.DIRECT_DATABASE_URL;

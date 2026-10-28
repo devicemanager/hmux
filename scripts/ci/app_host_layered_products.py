@@ -13,7 +13,7 @@ import stat
 import subprocess
 import tempfile
 
-SCHEMA = "cmux.app-host-layers"
+SCHEMA = "hmux.app-host-layers"
 LAYERS = ("app-cli", "runtime", "tests", "diagnostics")
 ROOT = "Build/Products"
 MANIFEST = "app-host-layers.json"

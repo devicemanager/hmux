@@ -1,6 +1,6 @@
 import AppKit
-import CmuxCloud
-import CmuxFoundation
+import HmuxCloud
+import HmuxFoundation
 import SwiftUI
 
 /// Where the Cloud header puts Refresh and New Machine.
@@ -125,7 +125,7 @@ struct CloudTeamPickerHeader<Status: View>: View {
             Image(systemName: "exclamationmark.triangle")
                 .font(.system(size: 10, weight: .semibold))
             Text(message)
-                .cmuxFont(size: 11)
+                .hmuxFont(size: 11)
                 .fixedSize(horizontal: false, vertical: true)
                 .accessibilityIdentifier("CloudTeamPickerError")
             Spacer(minLength: 0)

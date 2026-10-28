@@ -132,7 +132,7 @@ describe("traceEvents", () => {
     expect(exception.properties.$exception_level).toBe("error");
     expect(exception.properties.$exception_fingerprint).toBe("coderouter:provider_unavailable:account_selection:codex");
     expect(exception.properties.$ai_trace_id).toBe("req-2");
-    // Server exceptions are grouped by `operation` across cmux; coderouter's
+    // Server exceptions are grouped by `operation` across hmux; coderouter's
     // carry the surface so they are not an unlabeled bucket.
     expect(exception.properties.operation).toBe("coderouter.responses");
     expect((exception.properties.$exception_list as Array<{ type: string }>)[0]!.type).toBe("coderouter_provider_unavailable");
@@ -519,9 +519,9 @@ describe("route token auth spans", () => {
   test("a rejected credential names a stable failure reason on the route span", async () => {
     const cases: Array<[Record<string, string>, string, string]> = [
       // A guest whose edge rule injected nothing sends only the public placeholder.
-      [{ authorization: "Bearer cmux-vm-edge-placeholder" }, "missing_route_token", "placeholder_only"],
+      [{ authorization: "Bearer hmux-vm-edge-placeholder" }, "missing_route_token", "placeholder_only"],
       [{}, "missing_route_token", "no_credential"],
-      [{ "x-cmux-authorization": "Bearer not-a-jwt" }, "invalid_route_token", "signed_unverified"],
+      [{ "x-hmux-authorization": "Bearer not-a-jwt" }, "invalid_route_token", "signed_unverified"],
       [{ authorization: "Bearer crt_abcdefghijklmnopqrstuvwxyz0123456789" }, "invalid_route_token", "not_live"],
     ];
     for (const [headers, reason, detail] of cases) {
@@ -535,7 +535,7 @@ describe("route token auth spans", () => {
       } finally {
         activeSpan.mockRestore();
       }
-      expect({ headers, reason: attributes["cmux.coderouter.auth_failure"], detail: attributes["cmux.coderouter.auth_failure_detail"] })
+      expect({ headers, reason: attributes["hmux.coderouter.auth_failure"], detail: attributes["hmux.coderouter.auth_failure_detail"] })
         .toEqual({ headers, reason, detail });
     }
   });
@@ -543,9 +543,9 @@ describe("route token auth spans", () => {
   test("a signed credential from another deployment's key names that key id", async () => {
     // A dev backend signs with its own key id; its machines' edge still
     // reached production, which knows no such key.
-    const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "cmux-vm+jwt", kid: "dev-backend-1" })).toString("base64url");
+    const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "hmux-vm+jwt", kid: "dev-backend-1" })).toString("base64url");
     const token = `${header}.${Buffer.from("{}").toString("base64url")}.${"A".repeat(43)}`;
-    const request = new Request("https://coderouter.dev/api/vm/reflection/name", { headers: { "x-cmux-authorization": `Bearer ${token}` } });
+    const request = new Request("https://coderouter.dev/api/vm/reflection/name", { headers: { "x-hmux-authorization": `Bearer ${token}` } });
     const context = newCoderouterRequestContext({ request, surface: "vm_reflection_name", route: "/api/vm/reflection/name" });
     const attributes: Record<string, unknown> = {};
     const span = { setAttributes: (values: Record<string, unknown>) => Object.assign(attributes, values) } as unknown as Span;
@@ -556,9 +556,9 @@ describe("route token auth spans", () => {
       activeSpan.mockRestore();
     }
     expect(attributes).toMatchObject({
-      "cmux.coderouter.auth_failure": "invalid_route_token",
-      "cmux.coderouter.auth_failure_detail": "signed_unknown_key",
-      "cmux.coderouter.auth_key_id": "dev-backend-1",
+      "hmux.coderouter.auth_failure": "invalid_route_token",
+      "hmux.coderouter.auth_failure_detail": "signed_unknown_key",
+      "hmux.coderouter.auth_key_id": "dev-backend-1",
     });
   });
 
@@ -572,9 +572,9 @@ describe("route token auth spans", () => {
       runWithCoderouterRequest(context, () => {
         recordCoderouterIdentity({ teamId: "team-1", stackUserId: "user-1", vmId: null }, "control_plane");
       });
-      expect(attributes["cmux.coderouter.auth_mode"]).toBe("control_plane");
+      expect(attributes["hmux.coderouter.auth_mode"]).toBe("control_plane");
       expect(traceEvents(context, { status: 200, durationMs: 1 })[0]!.properties.coderouter_auth_mode)
-        .toBe(attributes["cmux.coderouter.auth_mode"]);
+        .toBe(attributes["hmux.coderouter.auth_mode"]);
     } finally {
       activeSpan.mockRestore();
     }

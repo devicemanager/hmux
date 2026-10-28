@@ -30,7 +30,7 @@ describe("Stack SSR bootstrap script", () => {
       createElement(SsrScript, {
         nonce: "test-nonce",
         waitForBody: true,
-        script: "window.__cmuxTheme = true;",
+        script: "window.__hmuxTheme = true;",
       }),
     );
 
@@ -51,7 +51,7 @@ describe("Stack SSR bootstrap script", () => {
       'nonce="test-nonce"',
     );
     expect(renderToStaticMarkup(firstElement)).toContain(
-      "window.__cmuxTheme = true;",
+      "window.__hmuxTheme = true;",
     );
 
     const observerCallbacks: Array<() => void> = [];
@@ -76,10 +76,10 @@ describe("Stack SSR bootstrap script", () => {
     };
     runInNewContext(bodyReadyScript, context);
     expect(observerCallbacks).toHaveLength(1);
-    expect(context.window.__cmuxTheme).toBeUndefined();
+    expect(context.window.__hmuxTheme).toBeUndefined();
     context.document.body = {};
     observerCallbacks[0]!();
-    expect(context.window.__cmuxTheme).toBe(true);
+    expect(context.window.__hmuxTheme).toBe(true);
     expect(observerDisconnected).toBe(true);
     expect(second).toBeNull();
   });
@@ -89,7 +89,7 @@ describe("Stack SSR bootstrap script", () => {
     renderToStaticMarkup(
       createElement(SsrScript, {
         waitForElementId: "stack-full-page-container-target",
-        script: "window.__cmuxLayoutReady = true;",
+        script: "window.__hmuxLayoutReady = true;",
       }),
     );
 
@@ -120,9 +120,9 @@ describe("Stack SSR bootstrap script", () => {
 
     runInNewContext(script, context);
     expect(observerCallbacks).toHaveLength(1);
-    expect(context.window.__cmuxLayoutReady).toBeUndefined();
+    expect(context.window.__hmuxLayoutReady).toBeUndefined();
     target = {};
     observerCallbacks[0]!();
-    expect(context.window.__cmuxLayoutReady).toBe(true);
+    expect(context.window.__hmuxLayoutReady).toBe(true);
   });
 });

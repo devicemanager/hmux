@@ -1,9 +1,9 @@
-// cmux browser REPL snapshot: stitches each frame's tree from the page agent
+// hmux browser REPL snapshot: stitches each frame's tree from the page agent
 // into one accessibility snapshot, renders it as text, and diffs it against
 // the previous snapshot of the same tab. Format: docs/browser-repl/README.md.
 (function (root) {
   "use strict";
-  const ns = (root.CmuxBrowserRepl = root.CmuxBrowserRepl || {});
+  const ns = (root.HmuxBrowserRepl = root.HmuxBrowserRepl || {});
   const core = ns.core;
 
   const CELL_ROLES = new Set(["cell", "gridcell", "columnheader", "rowheader"]);
@@ -1133,7 +1133,7 @@
   }
 
   async function blockingLines(page) {
-    // Dialogs cmux dismissed during Copy, Cut or Paste, reported once.
+    // Dialogs hmux dismissed during Copy, Cut or Paste, reported once.
     const lines = page._dismissedDialogs.splice(0).map((d) => `dialog dismissed: ${d.type()} ${q(d.message())} (it opened during a ${d._p.dismissedDuring})`);
     const dialog = page._pendingDialog();
     if (dialog) {

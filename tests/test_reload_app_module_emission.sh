@@ -15,7 +15,7 @@ declare -F selected_xcode_version >/dev/null || fail "selected_xcode_version not
 declare -F reload_skips_app_module_emission >/dev/null \
   || fail "reload_skips_app_module_emission not found in reload.sh"
 
-unset CMUX_RELOAD_APP_EMIT_MODULE
+unset HMUX_RELOAD_APP_EMIT_MODULE
 for version in 26.2 26.2.1 26.3 26.3.1; do
   if reload_skips_app_module_emission "$version"; then
     fail "Xcode $version fails the module merge, so reload must emit the app's module there"
@@ -27,10 +27,10 @@ for version in 16.2 26.0 26.1 26.4 26.20 26.30 ""; do
 done
 
 # The variable still decides in both directions when it is set.
-CMUX_RELOAD_APP_EMIT_MODULE=1 reload_skips_app_module_emission 26.1 \
-  && fail "CMUX_RELOAD_APP_EMIT_MODULE=1 must emit the module on any Xcode"
-CMUX_RELOAD_APP_EMIT_MODULE=0 reload_skips_app_module_emission 26.3 \
-  || fail "CMUX_RELOAD_APP_EMIT_MODULE=0 must keep the shortcut on an affected Xcode"
+HMUX_RELOAD_APP_EMIT_MODULE=1 reload_skips_app_module_emission 26.1 \
+  && fail "HMUX_RELOAD_APP_EMIT_MODULE=1 must emit the module on any Xcode"
+HMUX_RELOAD_APP_EMIT_MODULE=0 reload_skips_app_module_emission 26.3 \
+  || fail "HMUX_RELOAD_APP_EMIT_MODULE=0 must keep the shortcut on an affected Xcode"
 
 # The version comes from the Xcode the build will use.
 tmp="$(mktemp -d)"; trap 'rm -rf "$tmp"' EXIT

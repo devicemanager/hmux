@@ -34,7 +34,7 @@ export class TestTeamControl extends ProductionTeamControl {
         teamId: TEAM_ID,
         userId: "control-user",
         deviceId: "control-device",
-        appNamespace: "cmux",
+        appNamespace: "hmux",
         buildTag: "test",
       };
       const descriptor = {
@@ -109,8 +109,8 @@ export default {
     // Durable Object's enrollment, delivery and socket code are production.
     const now = Math.floor(Date.now() / 1000);
     const forwarded = new Request("https://iroh-v2.internal/socket", {
-      headers: { upgrade: "websocket", "x-cmux-v2-setup": request.headers.get("x-cmux-v2-setup")!,
-        "x-cmux-v2-verified-authority": JSON.stringify({
+      headers: { upgrade: "websocket", "x-hmux-v2-setup": request.headers.get("x-hmux-v2-setup")!,
+        "x-hmux-v2-verified-authority": JSON.stringify({
           authority: { environment: env.ENVIRONMENT, projectId: env.STACK_PROJECT_ID, teamId: TEAM_ID, userId: "control-user", verifiedAt: now },
           expiresAt: now + 3600, issueTicket: true,
         }) },

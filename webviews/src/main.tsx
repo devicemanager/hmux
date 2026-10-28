@@ -2,9 +2,9 @@ type WebviewKind = "agent-session" | "diff";
 
 function resolveWebviewKind(): WebviewKind {
   if (
-    document.documentElement.dataset.cmuxWebviewKind === "agent-session" ||
-    document.body.dataset.cmuxWebviewKind === "agent-session" ||
-    document.getElementById("cmux-agent-session-config")
+    document.documentElement.dataset.hmuxWebviewKind === "agent-session" ||
+    document.body.dataset.hmuxWebviewKind === "agent-session" ||
+    document.getElementById("hmux-agent-session-config")
   ) {
     return "agent-session";
   }
@@ -13,7 +13,7 @@ function resolveWebviewKind(): WebviewKind {
 
 const rootElement = document.getElementById("root");
 if (!rootElement) {
-  throw new Error("Missing cmux webview root");
+  throw new Error("Missing hmux webview root");
 }
 
 // Load only the active surface so each one ships as its own chunk: the diff

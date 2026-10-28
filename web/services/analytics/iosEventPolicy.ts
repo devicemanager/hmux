@@ -18,7 +18,7 @@ export function isAnalyticsTestRun(
   env: Record<string, string | undefined> = process.env,
 ): boolean {
   return (
-    env.CMUX_ANALYTICS_TEST_MODE === "1" ||
+    env.HMUX_ANALYTICS_TEST_MODE === "1" ||
     env.NODE_ENV === "test" ||
     env.VITEST === "true" ||
     env.VITEST === "1"
@@ -39,7 +39,7 @@ export const MAX_ANALYTICS_EVENT_PROPERTIES = 64;
 // sync with the P0/P1/P2 catalog as new events ship.
 const ALLOWED_EVENTS: ReadonlySet<string> = new Set([
   "$identify",
-  // In-app purchase funnel (CmuxMobileBilling)
+  // In-app purchase funnel (HmuxMobileBilling)
   "ios_paywall_viewed",
   "ios_purchase_started",
   "ios_purchase_cancelled",
@@ -47,7 +47,7 @@ const ALLOWED_EVENTS: ReadonlySet<string> = new Set([
   "ios_purchase_pending",
   "ios_restore_started",
   "ios_restore_completed",
-  // StoreKit catalog and purchase delivery (CmuxMobileBilling)
+  // StoreKit catalog and purchase delivery (HmuxMobileBilling)
   "ios_products_loaded",
   "ios_products_failed",
   "ios_purchase_succeeded",
@@ -128,14 +128,14 @@ export type IosAnalyticsChannel = "production" | "beta" | "dev" | "third_party" 
 
 /**
  * Release channel of the app that sent an event, from its bundle id:
- * `com.cmux.app` is the App Store app, `dev.cmux.app.beta` is TestFlight beta,
- * any other `dev.cmux.*` is a tagged dev build, and anything else is a build
+ * `com.hmux.app` is the App Store app, `dev.hmux.app.beta` is TestFlight beta,
+ * any other `dev.hmux.*` is a tagged dev build, and anything else is a build
  * we do not ship. `unknown` when the event carried no bundle id.
  */
 export function iosAnalyticsChannel(bundleIdentifier: unknown): IosAnalyticsChannel {
   if (typeof bundleIdentifier !== "string" || bundleIdentifier.length === 0) return "unknown";
-  if (bundleIdentifier === "com.cmux.app") return "production";
-  if (bundleIdentifier === "dev.cmux.app.beta") return "beta";
-  if (bundleIdentifier.startsWith("dev.cmux.")) return "dev";
+  if (bundleIdentifier === "com.hmux.app") return "production";
+  if (bundleIdentifier === "dev.hmux.app.beta") return "beta";
+  if (bundleIdentifier.startsWith("dev.hmux.")) return "dev";
   return "third_party";
 }

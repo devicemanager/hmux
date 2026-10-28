@@ -21,7 +21,7 @@ export async function generateMetadata({
   const { locale } = await params;
   const t = await getTranslations({ locale, namespace: "landing.agents" });
   const alternates = buildAlternates(locale, "/agents/pi");
-  const title = `Pi: ${t("title")} | cmux`;
+  const title = `Pi: ${t("title")} | hmux`;
   const description = seoDescription(locale, `Pi. ${t("metaDescription")}`);
   return {
     title,

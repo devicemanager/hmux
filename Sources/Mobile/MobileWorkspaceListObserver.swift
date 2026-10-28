@@ -1,13 +1,13 @@
-import CMUXMobileCore
-import CmuxMobileHost
+import HMUXMobileCore
+import HmuxMobileHost
 import Combine
-import CmuxNotifications
-import CmuxSimulator
-import CmuxWorkspaces
+import HmuxNotifications
+import HmuxSimulator
+import HmuxWorkspaces
 import Foundation
 import OSLog
 
-private let mobileWorkspaceObserverLog = Logger(subsystem: "dev.cmux", category: "mobile-workspace-observer")
+private let mobileWorkspaceObserverLog = Logger(subsystem: "dev.hmux", category: "mobile-workspace-observer")
 
 /// Watches `TabManager.tabs` (and each workspace's panels publisher) and emits
 /// `workspace.updated` to subscribed mobile clients whenever the iOS-facing
@@ -27,7 +27,7 @@ final class MobileWorkspaceListObserver {
     private let sidebarUnread: SidebarUnreadModel?
     /// Per-window config supplies the effective group icon rendered by the Mac
     /// row when the group itself has no explicit icon.
-    private weak var configStore: CmuxConfigStore?
+    private weak var configStore: HmuxConfigStore?
     private var tabsCancellable: AnyCancellable?
     private var selectionCancellable: AnyCancellable?
     private var groupsCancellable: AnyCancellable?
@@ -74,7 +74,7 @@ final class MobileWorkspaceListObserver {
     init(
         tabManager: TabManager,
         sidebarUnread: SidebarUnreadModel? = nil,
-        configStore: CmuxConfigStore? = nil,
+        configStore: HmuxConfigStore? = nil,
         workspaceUpdateEmitter: (@MainActor () -> Void)? = nil,
         emissionSleep: @escaping @Sendable (Duration) async throws -> Void = { duration in
             try await ContinuousClock().sleep(for: duration)
@@ -95,7 +95,7 @@ final class MobileWorkspaceListObserver {
             MobileStateSyncHost.shared.broadcastIfSubscribed()
         }
         #if DEBUG
-        cmuxDebugLog("mobile.observer init tabs=\(tabManager.tabs.count)")
+        hmuxDebugLog("mobile.observer init tabs=\(tabManager.tabs.count)")
         #endif
         subscriptionsChangeObserver = NotificationCenter.default.addObserver(
             forName: .mobileHostEventSubscriptionsDidChange,
@@ -109,7 +109,7 @@ final class MobileWorkspaceListObserver {
         reconcilePipelines()
     }
 
-    func updateConfigStore(_ next: CmuxConfigStore?) {
+    func updateConfigStore(_ next: HmuxConfigStore?) {
         if let configStore, let next, configStore === next {
             return
         }
@@ -142,7 +142,7 @@ final class MobileWorkspaceListObserver {
 
     private func detachPipelines() {
         #if DEBUG
-        cmuxDebugLog("mobile.observer detach: no workspace.updated subscribers")
+        hmuxDebugLog("mobile.observer detach: no workspace.updated subscribers")
         #endif
         tabsCancellable = nil
         selectionCancellable = nil
@@ -175,7 +175,7 @@ final class MobileWorkspaceListObserver {
             .sink { [weak self] tabs in
                 guard let self else { return }
                 #if DEBUG
-                cmuxDebugLog("mobile.observer tabs sink fired count=\(tabs.count)")
+                hmuxDebugLog("mobile.observer tabs sink fired count=\(tabs.count)")
                 #endif
                 self.refreshPerWorkspaceSubscriptions(tabs: tabs)
                 self.requestEmission()
@@ -394,14 +394,14 @@ final class MobileWorkspaceListObserver {
         )
         if !force, hash == lastSummaryHash {
             #if DEBUG
-            cmuxDebugLog("mobile.observer skip: hash unchanged=\(hash) tabs=\(tabManager.tabs.count)")
+            hmuxDebugLog("mobile.observer skip: hash unchanged=\(hash) tabs=\(tabManager.tabs.count)")
             #endif
             return false
         }
         lastSummaryHash = hash
         mobileWorkspaceObserverLog.debug("emitting workspace.updated (hash=\(hash, privacy: .public))")
         #if DEBUG
-        cmuxDebugLog("mobile.observer EMIT workspace.updated hash=\(hash) tabs=\(tabManager.tabs.count) force=\(force)")
+        hmuxDebugLog("mobile.observer EMIT workspace.updated hash=\(hash) tabs=\(tabManager.tabs.count) force=\(force)")
         #endif
         workspaceUpdateEmitter()
         return true

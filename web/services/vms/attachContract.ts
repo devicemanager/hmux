@@ -1,10 +1,10 @@
-import { CMUX_TUI_SESSION } from "./drivers/cmuxTuiDaemon";
-import { freestyleCmuxRemoteRoute } from "./drivers/freestyle";
+import { HMUX_TUI_SESSION } from "./drivers/hmuxTuiDaemon";
+import { freestyleHmuxRemoteRoute } from "./drivers/freestyle";
 import type { VmImageManifestEntry } from "./images/resolver";
 
 /** The authenticated, dial-ready part of a snapshot-v2 create receipt. */
 export type VmAttachBlock = {
-  readonly transport: "cmux-remote";
+  readonly transport: "hmux-remote";
   readonly route: string;
   /** Trusted-carrier listeners authenticate by the carrier marker, so no bearer token is needed. */
   readonly token: string;
@@ -22,7 +22,7 @@ export type VmAttachBlock = {
 export type VmAttachEntry = {
   readonly addressIpv4: string | null;
   readonly addressIpv6: string | null;
-  readonly cmuxTuiContract: string | null;
+  readonly hmuxTuiContract: string | null;
   readonly providerVmId?: string;
 };
 
@@ -34,14 +34,14 @@ export function createAttachBlock(input: {
   const { entry, manifestEntry } = input;
   const ipv4 = entry.addressIpv4?.trim() || undefined;
   const ipv6 = entry.addressIpv6?.trim() || undefined;
-  if (!manifestEntry || entry.cmuxTuiContract !== "snapshot-v2" || (!ipv4 && !ipv6)) return null;
+  if (!manifestEntry || entry.hmuxTuiContract !== "snapshot-v2" || (!ipv4 && !ipv6)) return null;
   return {
-    transport: "cmux-remote",
-    route: freestyleCmuxRemoteRoute({ vpcs: [{ ipv4, ipv6 }] }, entry.providerVmId ?? "unknown"),
+    transport: "hmux-remote",
+    route: freestyleHmuxRemoteRoute({ vpcs: [{ ipv4, ipv6 }] }, entry.providerVmId ?? "unknown"),
     token: "",
-    session: CMUX_TUI_SESSION,
+    session: HMUX_TUI_SESSION,
     trustedCarrier: true,
-    daemonBuild: { commit: manifestEntry.cmuxdRemoteCommit ?? null, remoteProtocol: null, version: null },
+    daemonBuild: { commit: manifestEntry.hmuxdRemoteCommit ?? null, remoteProtocol: null, version: null },
     guestToolsBaked: true,
     readiness: "dial",
   };

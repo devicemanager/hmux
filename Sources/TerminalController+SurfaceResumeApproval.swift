@@ -177,7 +177,7 @@ extension TerminalController {
         let informativeText = String(
             format: String(
                 localized: "surfaceResumeApproval.proposal.message",
-                defaultValue: "A process wants cmux to keep this resume command for the current terminal:\n\nWorking directory: %@\n\n%@"
+                defaultValue: "A process wants hmux to keep this resume command for the current terminal:\n\nWorking directory: %@\n\n%@"
             ),
             cwd,
             details
@@ -205,7 +205,7 @@ extension TerminalController {
                 renderedPrefix
             )
         }
-        let content = CmuxAlertContent(
+        let content = HmuxAlertContent(
             flattenedText: informativeText,
             separatingScrollableDetails: details
         )

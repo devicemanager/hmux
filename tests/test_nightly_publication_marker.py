@@ -31,12 +31,12 @@ class NightlyPublicationMarkerTests(unittest.TestCase):
     SHA = "A" * 40
 
     def test_reads_exact_sha_marker_case_insensitively(self):
-        body = f"before\n<!-- cmux-published-sha: {self.SHA} -->\nafter"
+        body = f"before\n<!-- hmux-published-sha: {self.SHA} -->\nafter"
         self.assertEqual(MODULE.published_sha(body), self.SHA.lower())
 
     def test_missing_or_malformed_marker_does_not_claim_publication(self):
         self.assertIsNone(MODULE.published_sha("Published commit: `" + "a" * 40 + "`"))
-        self.assertIsNone(MODULE.published_sha("<!-- cmux-published-sha: " + "a" * 39 + " -->"))
+        self.assertIsNone(MODULE.published_sha("<!-- hmux-published-sha: " + "a" * 39 + " -->"))
 
     def test_continuation_retries_closure_only_for_the_published_source(self):
         steps = {step["name"]: step for step in yaml.safe_load(WORKFLOW.read_text())["jobs"]["publish"]["steps"]}
@@ -54,9 +54,9 @@ class NightlyPublicationMarkerTests(unittest.TestCase):
             (None, 101, False, False),
         ):
             with self.subTest(published_sha=published_sha, build=build):
-                body = f"<!-- cmux-published-build: {build} -->"
+                body = f"<!-- hmux-published-build: {build} -->"
                 if published_sha:
-                    body += f"<!-- cmux-published-sha: {published_sha} -->"
+                    body += f"<!-- hmux-published-sha: {published_sha} -->"
                 output = io.StringIO()
                 with patch("urllib.request.urlopen", return_value=io.StringIO(json.dumps({"body": body}))), \
                         patch.object(sys, "argv", ["-", "test/repo", "nightly", self.SHA, "100"]), \
@@ -76,7 +76,7 @@ class NightlyPublicationMarkerTests(unittest.TestCase):
         original_sha = "A" * 40
         published_sha = "B" * 40
         issue_body = (
-            f"cmux NIGHTLY run https://github.com/manaflow-ai/cmux/actions/runs/1 "
+            f"hmux NIGHTLY run https://github.com/manaflow-ai/cmux/actions/runs/1 "
             f"failed on {original_sha} (main) in: build-nightly-app."
         )
         node = f"""
@@ -91,7 +91,7 @@ const github = {{
   }},
 }};
 const context = {{
-  repo: {{ owner: "manaflow-ai", repo: "cmux" }},
+  repo: {{ owner: "manaflow-ai", repo: "hmux" }},
   serverUrl: "https://github.com",
   runId: 2,
 }};

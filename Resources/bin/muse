@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# cmux muse wrapper - installs cmux hooks and captures launch metadata.
+# hmux muse wrapper - installs hmux hooks and captures launch metadata.
 
 find_real_muse() {
     local self_dir
@@ -18,22 +18,22 @@ find_real_muse() {
     return 1
 }
 
-resolve_cmux_bin() {
+resolve_hmux_bin() {
     local bundled_cli self_dir
-    bundled_cli="${CMUX_BUNDLED_CLI_PATH:-}"
+    bundled_cli="${HMUX_BUNDLED_CLI_PATH:-}"
     if [[ -n "$bundled_cli" && -x "$bundled_cli" ]]; then
         printf '%s' "$bundled_cli"
         return 0
     fi
 
     self_dir="$(cd "$(dirname "$0")" && pwd)"
-    bundled_cli="$self_dir/cmux"
+    bundled_cli="$self_dir/hmux"
     if [[ -x "$bundled_cli" ]]; then
         printf '%s' "$bundled_cli"
         return 0
     fi
 
-    bundled_cli="$(command -v cmux || true)"
+    bundled_cli="$(command -v hmux || true)"
     if [[ -n "$bundled_cli" ]]; then
         printf '%s' "$bundled_cli"
         return 0
@@ -42,14 +42,14 @@ resolve_cmux_bin() {
     return 1
 }
 
-cmux_socket_available() {
-    local socket="${CMUX_SOCKET_PATH:-}"
+hmux_socket_available() {
+    local socket="${HMUX_SOCKET_PATH:-}"
     [[ -n "$socket" && -S "$socket" ]] || return 1
 
-    local cmux_bin
-    cmux_bin="$(resolve_cmux_bin)" || return 1
-    CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=0.75 \
-        "$cmux_bin" --socket "$socket" ping >/dev/null 2>&1
+    local hmux_bin
+    hmux_bin="$(resolve_hmux_bin)" || return 1
+    HMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=0.75 \
+        "$hmux_bin" --socket "$socket" ping >/dev/null 2>&1
 }
 
 encode_launch_argv() {
@@ -131,23 +131,23 @@ should_install_muse_hooks() {
 
 REAL_MUSE="$(find_real_muse)" || { echo "Error: muse not found in PATH" >&2; exit 127; }
 
-IN_CMUX=0
-if [[ -n "${CMUX_SURFACE_ID:-}" ]]; then
-    IN_CMUX=1
+IN_HMUX=0
+if [[ -n "${HMUX_SURFACE_ID:-}" ]]; then
+    IN_HMUX=1
 fi
 
-if [[ "$IN_CMUX" == "1" && "${CMUX_MUSE_HOOKS_DISABLED:-}" != "1" ]] \
-    && cmux_socket_available \
+if [[ "$IN_HMUX" == "1" && "${HMUX_MUSE_HOOKS_DISABLED:-}" != "1" ]] \
+    && hmux_socket_available \
     && should_install_muse_hooks "$@"; then
-    CMUX_BIN="$(resolve_cmux_bin || true)"
-    if [[ -n "$CMUX_BIN" ]]; then
-        CMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=2 \
-            "$CMUX_BIN" --socket "$CMUX_SOCKET_PATH" hooks muse install --yes >/dev/null 2>&1 || true
+    HMUX_BIN="$(resolve_hmux_bin || true)"
+    if [[ -n "$HMUX_BIN" ]]; then
+        HMUXTERM_CLI_RESPONSE_TIMEOUT_SEC=2 \
+            "$HMUX_BIN" --socket "$HMUX_SOCKET_PATH" hooks muse install --yes >/dev/null 2>&1 || true
     fi
-    export CMUX_AGENT_LAUNCH_KIND="muse"
-    export CMUX_AGENT_LAUNCH_EXECUTABLE="$REAL_MUSE"
-    export CMUX_AGENT_LAUNCH_ARGV_B64="$(encode_launch_argv "$@")"
-    export CMUX_AGENT_LAUNCH_CWD="$PWD"
+    export HMUX_AGENT_LAUNCH_KIND="muse"
+    export HMUX_AGENT_LAUNCH_EXECUTABLE="$REAL_MUSE"
+    export HMUX_AGENT_LAUNCH_ARGV_B64="$(encode_launch_argv "$@")"
+    export HMUX_AGENT_LAUNCH_CWD="$PWD"
 fi
 
 exec "$REAL_MUSE" "$@"

@@ -96,7 +96,7 @@ export function DownloadButton({
     "group flex items-center justify-center hover:bg-background/[0.04] dark:hover:bg-background/[0.03] data-[popup-open]:bg-background/[0.04] dark:data-[popup-open]:bg-background/[0.03]";
 
   const captureMac = () =>
-    posthog.capture("cmuxterm_download_clicked", { location, platform: "mac" });
+    posthog.capture("hmuxterm_download_clicked", { location, platform: "mac" });
 
   // The Apple mark artwork has an 814:1000 aspect ratio. Derive the box width
   // from its height so the glyph fills the frame instead of letterboxing inside
@@ -204,7 +204,7 @@ export function DownloadButton({
                 <Menu.Item
                   render={<Link href="/ios" target="_blank" rel="noreferrer" />}
                   onClick={() =>
-                    posthog.capture("cmuxterm_download_clicked", {
+                    posthog.capture("hmuxterm_download_clicked", {
                       location,
                       platform: "ios",
                     })
@@ -218,7 +218,7 @@ export function DownloadButton({
                 <Menu.Item
                   render={<Link href={BROWSER_NIGHTLY_PAGE} />}
                   onClick={() =>
-                    posthog.capture("cmux_browser_nightly_page_clicked", {
+                    posthog.capture("hmux_browser_nightly_page_clicked", {
                       location,
                     })
                   }
@@ -234,7 +234,7 @@ export function DownloadButton({
                     key={platform}
                     render={<Link href={PLATFORM_DOWNLOADS[platform].page} />}
                     onClick={() =>
-                      posthog.capture("cmux_browser_platform_page_clicked", {
+                      posthog.capture("hmux_browser_platform_page_clicked", {
                         location,
                         platform,
                       })
@@ -254,7 +254,7 @@ export function DownloadButton({
                     <Menu.Item
                       key={platform}
                       onClick={() => {
-                        posthog.capture("cmuxterm_waitlist_opened", {
+                        posthog.capture("hmuxterm_waitlist_opened", {
                           location,
                           platform,
                         });

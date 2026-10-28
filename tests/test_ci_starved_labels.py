@@ -36,7 +36,7 @@ def iso(minutes_ago: float) -> str:
     return (NOW - dt.timedelta(minutes=minutes_ago)).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
-def job(*, label=SIDE, status="queued", created=30, started=None, runner=None, name="cmux-next app compile (build fleet)"):
+def job(*, label=SIDE, status="queued", created=30, started=None, runner=None, name="hmux-next app compile (build fleet)"):
     job_id = next(_ids)
     return {
         "id": job_id, "name": name, "status": status, "labels": [label],
@@ -259,7 +259,7 @@ class MainTests(unittest.TestCase):
 
     def test_starved_without_an_issue_token_fails_loudly(self) -> None:
         entry = {"label": SIDE, "oldest_queued_minutes": 130, "queued": 1,
-                 "job_url": "https://example.test/job/1", "job": "cmux-next app compile (build fleet)"}
+                 "job_url": "https://example.test/job/1", "job": "hmux-next app compile (build fleet)"}
         code, out, summary = self.run_main({"starved": [entry]}, env={"GH_REPO": "manaflow-ai/cmux"})
         self.assertEqual(code, 1)
         self.assertIn(f"::error title=Runner label starved::{SIDE}", out)
@@ -301,7 +301,7 @@ class WorkflowTests(unittest.TestCase):
         sweep = workflow["jobs"]["sweep"]
         self.assertNotIn("issues", sweep["permissions"])
         step = next(step for step in sweep["steps"] if "starved_labels.py" in str(step.get("run")))
-        self.assertEqual(step["env"]["GH_TOKEN"], "${{ steps.cmux-bot-token.outputs.token }}")
+        self.assertEqual(step["env"]["GH_TOKEN"], "${{ steps.hmux-bot-token.outputs.token }}")
         self.assertIn("macos-pool-load.json", step["env"]["POOL_LOAD_OUT"])
         self.assertIn("!cancelled()", step["if"])
 

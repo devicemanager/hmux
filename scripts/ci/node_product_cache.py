@@ -34,13 +34,13 @@ PROVIDER = "github-actions"
 ARCHIVE_NAME = "app-host-products.tar.gz"
 OBJECT_NAME = "object.tar.gz"
 METADATA_NAME = "metadata.json"
-REUSE_RECEIPT = "Build/Products/cmux-product-reuse.json"
-PRODUCT_RECEIPT = "Build/Products/cmux-test-products.json"
+REUSE_RECEIPT = "Build/Products/hmux-product-reuse.json"
+PRODUCT_RECEIPT = "Build/Products/hmux-test-products.json"
 DEFAULT_BUDGET_BYTES = 24 * 1024**3
 DEFAULT_OWNED_NEED_BYTES = 100 * 1024**3
 DEFAULT_WAIT_SECONDS = 180.0
 # How long a consumer in CI waits for another job's fill on the same node
-# unless CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS says otherwise. A filler only
+# unless HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS says otherwise. A filler only
 # publishes from its finalize step, after its whole download and restore
 # (about 130 s of download alone on a mini, plus extraction and the
 # canonical-root lock), so a waiter would usually time out and then download
@@ -54,7 +54,7 @@ MAX_TAR_MEMBERS = 250_000
 MAX_WAITERS_PER_FILL = 64
 # glaeda names its runners `<mini>-glaeda` and `<mini>-glaeda-<n>`.
 OWNED_RUNNER = re.compile(r"[A-Za-z0-9][A-Za-z0-9.-]*-glaeda(?:-[0-9]+)?")
-OWNED_DEFAULT_ROOT = "/Users/Shared/cmux-build-fleet/node-products"
+OWNED_DEFAULT_ROOT = "/Users/Shared/hmux-build-fleet/node-products"
 _HEX64 = re.compile(r"[a-f0-9]{64}")
 # Where a published object came from, as stored in its metadata. Consumers on an
 # older revision delete entries whose class they do not know, so a LAN fetch
@@ -118,7 +118,7 @@ class Identity:
         repository = env.get("GITHUB_REPOSITORY", "")
         if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository):
             raise ValueError("invalid repository")
-        revision = env.get("CMUX_PRODUCT_SOURCE_REVISION", "").lower()
+        revision = env.get("HMUX_PRODUCT_SOURCE_REVISION", "").lower()
         if not _REVISION.fullmatch(revision):
             raise ValueError("invalid source revision")
         return cls(
@@ -126,13 +126,13 @@ class Identity:
             artifact_id=_positive_int(env.get("ARTIFACT_ID", ""), "artifact id"),
             provider_digest=_digest(env.get("ARTIFACT_PROVIDER_DIGEST", "")),
             archive_digest=_digest(env.get("EXPECTED_SHA256", "")),
-            product_contract=_digest(env.get("CMUX_PRODUCT_CONTRACT", "")),
+            product_contract=_digest(env.get("HMUX_PRODUCT_CONTRACT", "")),
             source_revision=revision,
             producer_run_id=_positive_int(
-                env.get("CMUX_PRODUCT_PRODUCER_RUN_ID", ""), "producer run id"
+                env.get("HMUX_PRODUCT_PRODUCER_RUN_ID", ""), "producer run id"
             ),
             producer_run_attempt=_positive_int(
-                env.get("CMUX_PRODUCT_PRODUCER_RUN_ATTEMPT", "1"), "producer run attempt"
+                env.get("HMUX_PRODUCT_PRODUCER_RUN_ATTEMPT", "1"), "producer run attempt"
             ),
         )
 
@@ -268,7 +268,7 @@ class Store:
 
 
 def configured_root(env=os.environ) -> str | None:
-    """The store root: CMUX_NODE_PRODUCT_CACHE_ROOT, else OWNED_DEFAULT_ROOT on an owned Mac.
+    """The store root: HMUX_NODE_PRODUCT_CACHE_ROOT, else OWNED_DEFAULT_ROOT on an owned Mac.
 
     Every owned runner is persistent and named `<mini>-glaeda[-N]`, all as one
     user, so one store per mini serves each of its runners. Until 2026-09-25 the
@@ -278,7 +278,7 @@ def configured_root(env=os.environ) -> str | None:
     runner (Blacksmith, GitHub-hosted) keeps no store unless the variable names
     one; `off` turns the store off everywhere.
     """
-    raw = env.get("CMUX_NODE_PRODUCT_CACHE_ROOT", "").strip()
+    raw = env.get("HMUX_NODE_PRODUCT_CACHE_ROOT", "").strip()
     if raw.lower() == "off":
         return None
     if raw:
@@ -308,7 +308,7 @@ def configured_existing_store(env=os.environ) -> Store | None:
 
 
 def budget_bytes(env=os.environ) -> int:
-    raw = env.get("CMUX_NODE_PRODUCT_CACHE_MAX_BYTES", "").strip()
+    raw = env.get("HMUX_NODE_PRODUCT_CACHE_MAX_BYTES", "").strip()
     if not raw:
         return DEFAULT_BUDGET_BYTES
     try:
@@ -344,7 +344,7 @@ def _cache_budget_for_need(store: Store, need_bytes: int) -> tuple[int, int]:
 
 def _pressure_budget(store: Store, budget: int, env=os.environ) -> int:
     """Optionally lower the hook budget when an owner requests free space."""
-    raw = env.get("CMUX_NODE_PRODUCT_CACHE_RECLAIM_NEED_BYTES", "").strip()
+    raw = env.get("HMUX_NODE_PRODUCT_CACHE_RECLAIM_NEED_BYTES", "").strip()
     if not raw and OWNED_RUNNER.fullmatch(env.get("RUNNER_NAME", "").strip()):
         raw = str(DEFAULT_OWNED_NEED_BYTES)
     if not raw:
@@ -358,7 +358,7 @@ def _pressure_budget(store: Store, budget: int, env=os.environ) -> int:
 
 
 def wait_seconds(env=os.environ) -> float:
-    raw = env.get("CMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS", "").strip()
+    raw = env.get("HMUX_NODE_PRODUCT_CACHE_WAIT_SECONDS", "").strip()
     if not raw:
         return CI_WAIT_SECONDS
     try:
@@ -507,7 +507,7 @@ def _materialize(obj: Path, destination: Path) -> None:
     if destination.exists():
         raise FileExistsError("product destination already exists")
     _mkdir(destination.parent)
-    staging = Path(tempfile.mkdtemp(prefix=".cmux-node-product-", dir=destination.parent))
+    staging = Path(tempfile.mkdtemp(prefix=".hmux-node-product-", dir=destination.parent))
     try:
         target = staging / ARCHIVE_NAME
         # A clone, not a hard link: the cached object keeps one link, so the job cannot
@@ -701,7 +701,7 @@ def _hit_locked(
     lease = _create_lease_locked(store, key)
     _state_update_locked(store, key, consumer_hit_count=1)
     avoided = metadata["size"]
-    fallback = os.environ.get("CMUX_NODE_PRODUCT_CACHE_FALLBACK_SOURCE", "").strip()
+    fallback = os.environ.get("HMUX_NODE_PRODUCT_CACHE_FALLBACK_SOURCE", "").strip()
     increments = {"hits": 1}
     if fallback == "peer":
         increments["bytes_avoided_peer"] = avoided
@@ -1352,7 +1352,7 @@ def _report(event: str, result: dict) -> None:
         "runner_name": os.environ.get("RUNNER_NAME"),
         **result,
     }
-    print("CMUX_NODE_PRODUCT_CACHE " + json.dumps(record, sort_keys=True))
+    print("HMUX_NODE_PRODUCT_CACHE " + json.dumps(record, sort_keys=True))
     summary = os.environ.get("GITHUB_STEP_SUMMARY")
     if summary:
         try:
@@ -1456,15 +1456,15 @@ def main() -> None:
     elif command == "finalize":
         if len(sys.argv) != 3:
             raise SystemExit("usage: node-product-cache.py finalize ARCHIVE")
-        source_class = os.environ.get("CMUX_NODE_PRODUCT_SOURCE_CLASS", "github")
+        source_class = os.environ.get("HMUX_NODE_PRODUCT_SOURCE_CLASS", "github")
         result = finalize(
             store,
             identity,
             Path(sys.argv[2]),
-            token=os.environ.get("CMUX_NODE_PRODUCT_CACHE_TOKEN", ""),
-            lease_token=os.environ.get("CMUX_NODE_PRODUCT_CACHE_LEASE", ""),
+            token=os.environ.get("HMUX_NODE_PRODUCT_CACHE_TOKEN", ""),
+            lease_token=os.environ.get("HMUX_NODE_PRODUCT_CACHE_LEASE", ""),
             source_class=source_class,
-            restore_succeeded=os.environ.get("CMUX_PRODUCT_RESTORE_SUCCEEDED") == "true",
+            restore_succeeded=os.environ.get("HMUX_PRODUCT_RESTORE_SUCCEEDED") == "true",
             budget=budget_bytes(),
             provider_metadata=(
                 same_run_provider_metadata if source_class == "peer" else github_metadata

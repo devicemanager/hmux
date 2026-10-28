@@ -50,7 +50,7 @@ describe("Iroh LAN rendezvous derivation", () => {
     const secret = Buffer.alloc(32, 0x4c);
     const encodedSecret = secret.toString("base64");
     const expected = createHmac("sha256", secret)
-      .update("cmux/iroh/lan-rendezvous/v1\0", "utf8")
+      .update("hmux/iroh/lan-rendezvous/v1\0", "utf8")
       .update("account-a", "utf8")
       .update("\0", "utf8")
       .update("1", "utf8")
@@ -356,7 +356,7 @@ describe("Iroh pair-grant verification", () => {
   for (const [name, header, changedClaims, nowSeconds] of [
     ["alg", { alg: "ES256", typ: IROH_PAIR_GRANT_TYP, kid: "current" }, claims, claims.iat],
     ["kid", { alg: "EdDSA", typ: IROH_PAIR_GRANT_TYP, kid: "unknown" }, claims, claims.iat],
-    ["ALPN", { alg: "EdDSA", typ: IROH_PAIR_GRANT_TYP, kid: "current" }, { ...claims, alpn: "cmux/other/1" }, claims.iat],
+    ["ALPN", { alg: "EdDSA", typ: IROH_PAIR_GRANT_TYP, kid: "current" }, { ...claims, alpn: "hmux/other/1" }, claims.iat],
     ["platform direction", { alg: "EdDSA", typ: IROH_PAIR_GRANT_TYP, kid: "current" }, { ...claims, initiator: { ...claims.initiator, platform: "mac" } }, claims.iat],
     ["expiry", { alg: "EdDSA", typ: IROH_PAIR_GRANT_TYP, kid: "current" }, claims, claims.exp],
   ] as const) {
@@ -607,7 +607,7 @@ describe("Iroh grant verification keys and offline endpoint attestations", () =>
       nowSeconds,
     })).toThrow();
     const tokenWithRawIdentity = manuallySignedJws(
-      { alg: "EdDSA", typ: "cmux-endpoint-attestation-v1+jwt", kid: "current" },
+      { alg: "EdDSA", typ: "hmux-endpoint-attestation-v1+jwt", kid: "current" },
       { ...initiator, userId: "must-not-appear" },
       current.privateKey,
     );
@@ -654,7 +654,7 @@ describe("Iroh relay minter response bounds", () => {
     }) as typeof fetch;
     try {
       const config: IrohTrustBrokerConfigShape = {
-        relayMinterUrl: "https://minter.cmux.test/api/relay-token",
+        relayMinterUrl: "https://minter.hmux.test/api/relay-token",
         relayMinterHmacSecretBase64: secret.toString("base64"),
         relayMinterInsecureLoopbackOptIn: false,
         deploymentEnvironment: "test",
@@ -679,7 +679,7 @@ describe("Iroh relay minter response bounds", () => {
     }
 
     const request = captured;
-    expect(request?.url).toBe("https://minter.cmux.test/api/relay-token");
+    expect(request?.url).toBe("https://minter.hmux.test/api/relay-token");
     expect(request?.init.method).toBe("POST");
     expect(request?.init.redirect).toBe("error");
     const body = JSON.stringify({ endpointId: "ab".repeat(32), lifetimeSeconds: 86_400 });
@@ -688,14 +688,14 @@ describe("Iroh relay minter response bounds", () => {
     const expectedSignature = createHmac("sha256", secret)
       .update(`POST\n/api/relay-token\n${timestamp}\n${createHash("sha256").update(body).digest("hex")}`)
       .digest("base64url");
-    expect(new Headers(request?.init.headers).get("x-cmux-iroh-timestamp")).toBe(timestamp);
-    expect(new Headers(request?.init.headers).get("x-cmux-iroh-signature")).toBe(expectedSignature);
+    expect(new Headers(request?.init.headers).get("x-hmux-iroh-timestamp")).toBe(timestamp);
+    expect(new Headers(request?.init.headers).get("x-hmux-iroh-signature")).toBe(expectedSignature);
     expect(new Headers(request?.init.headers).get("content-type")).toBe("application/json");
   });
 
   test("preserves an invalid EndpointID as an input error", async () => {
     const config: IrohTrustBrokerConfigShape = {
-      relayMinterUrl: "https://minter.cmux.test/api/relay-token",
+      relayMinterUrl: "https://minter.hmux.test/api/relay-token",
       relayMinterHmacSecretBase64: Buffer.alloc(32, 0x63).toString("base64"),
       relayMinterInsecureLoopbackOptIn: false,
       deploymentEnvironment: "test",
@@ -750,7 +750,7 @@ describe("Iroh relay minter response bounds", () => {
       deploymentEnvironment: "development",
       isVercelDeployment: false,
     };
-    expect(parseMinterUrl("https://minter.cmux.test/api/relay-token").pathname).toBe("/api/relay-token");
+    expect(parseMinterUrl("https://minter.hmux.test/api/relay-token").pathname).toBe("/api/relay-token");
     for (const value of [
       "http://localhost:49152/api/relay-token",
       "http://127.0.0.1:49152/api/relay-token",
@@ -759,11 +759,11 @@ describe("Iroh relay minter response bounds", () => {
       expect(parseMinterUrl(value, localDevelopment).protocol).toBe("http:");
     }
     for (const value of [
-      "http://minter.cmux.test/api/relay-token",
+      "http://minter.hmux.test/api/relay-token",
       "http://192.168.1.10:49152/api/relay-token",
-      "https://minter.cmux.test/api/relay-token/",
-      "https://minter.cmux.test/other",
-      "https://minter.cmux.test/api/relay-token?debug=1",
+      "https://minter.hmux.test/api/relay-token/",
+      "https://minter.hmux.test/other",
+      "https://minter.hmux.test/api/relay-token?debug=1",
     ]) {
       expect(() => parseMinterUrl(value, localDevelopment)).toThrow();
     }

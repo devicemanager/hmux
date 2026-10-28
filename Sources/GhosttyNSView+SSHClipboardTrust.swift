@@ -1,9 +1,9 @@
-import CmuxSSHClipboardTrust
+import HmuxSSHClipboardTrust
 import AppKit
-import CmuxSurfaceCatalogModel
+import HmuxSurfaceCatalogModel
 
 extension GhosttyNSView {
-    /// Adds the explicit, per-machine permission for an SSH cmux-tui mirror.
+    /// Adds the explicit, per-machine permission for an SSH hmux-tui mirror.
     /// The menu action itself is the user gesture that changes the persisted
     /// trust; the resulting grant is limited to OSC 52 writes.
     @discardableResult

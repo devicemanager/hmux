@@ -1,4 +1,4 @@
-import CmuxSimulatorUI
+import HmuxSimulatorUI
 import Foundation
 
 @MainActor

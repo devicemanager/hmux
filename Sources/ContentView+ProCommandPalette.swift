@@ -1,6 +1,6 @@
-import CmuxCommandPalette
+import HmuxCommandPalette
 import AppKit
-import CMUXMobileCore
+import HMUXMobileCore
 import Foundation
 
 extension ContentView {
@@ -10,7 +10,7 @@ extension ContentView {
     /// Encodes an upgrade offer for ``CommandPaletteContextKeys/accountUpgradeOffer``.
     /// No offer is written as `none`, so it stays distinct from a context
     /// that has not been filled in yet.
-    nonisolated static func commandPaletteUpgradeOfferValue(_ tier: CmuxPlanTier?) -> String {
+    nonisolated static func commandPaletteUpgradeOfferValue(_ tier: HmuxPlanTier?) -> String {
         switch tier {
         case .max: "max"
         case nil: "none"
@@ -21,7 +21,7 @@ extension ContentView {
     /// Decodes ``CommandPaletteContextKeys/accountUpgradeOffer``; nil hides the
     /// command. A context without the key (before the account is known) offers
     /// Pro, as a signed-out account does.
-    nonisolated static func commandPaletteUpgradeOffer(_ context: CommandPaletteContextSnapshot) -> CmuxPlanTier? {
+    nonisolated static func commandPaletteUpgradeOffer(_ context: CommandPaletteContextSnapshot) -> HmuxPlanTier? {
         switch context.string(CommandPaletteContextKeys.accountUpgradeOffer) {
         case "max": .max
         case "none": nil
@@ -37,7 +37,7 @@ extension ContentView {
         return [
             CommandPaletteCommandContribution(
                 commandId: commandPaletteProWelcomeChecklistCommandId,
-                title: constant(String(localized: "command.pro.welcomeChecklist.title", defaultValue: "Welcome to cmux Pro")),
+                title: constant(String(localized: "command.pro.welcomeChecklist.title", defaultValue: "Welcome to hmux Pro")),
                 subtitle: constant(String(localized: "command.auth.subtitle", defaultValue: "Account")),
                 keywords: ["pro", "welcome", "checklist", "onboarding", "cloud", "billing", "ios", "provider"]
             ),
@@ -56,13 +56,13 @@ extension ContentView {
     func registerProCommandHandlers(_ registry: inout CommandPaletteHandlerRegistry) {
         registry.register(commandId: Self.commandPaletteProUpgradeCommandId) {
 #if DEBUG
-            cmuxDebugLog("palette.pro.upgrade.invoke")
+            hmuxDebugLog("palette.pro.upgrade.invoke")
 #endif
             ProUpgradePresenter.present(source: .commandPalette)
         }
         registry.register(commandId: Self.commandPaletteProWelcomeChecklistCommandId) {
 #if DEBUG
-            cmuxDebugLog("palette.pro.welcomeChecklist.invoke")
+            hmuxDebugLog("palette.pro.welcomeChecklist.invoke")
 #endif
             ProWelcomeChecklistPresenter.present()
         }

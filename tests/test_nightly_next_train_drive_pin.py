@@ -2,7 +2,7 @@
 """The nightly-next train's drive job never runs code from inputs.tip.
 
 The drive job (nightly-next-train.yml) mints the release App token, which can
-push contents and workflows. It must check out the dispatched feat-cmux-next
+push contents and workflows. It must check out the dispatched feat-hmux-next
 head, and before the token exists it must refuse a tip that is not an
 ancestor of that head; otherwise anyone who can dispatch the workflow could
 run an unreviewed commit's code with the token. This test reads the job and
@@ -21,7 +21,7 @@ import yaml
 ROOT = Path(__file__).resolve().parents[1]
 WORKFLOW = ROOT / ".github/workflows/nightly-next-train.yml"
 DRIVE = ROOT / "scripts/ci/nightly_next_train_drive.py"
-CHECK_STEP = "Check the tip is on feat-cmux-next"
+CHECK_STEP = "Check the tip is on feat-hmux-next"
 MINT_STEP = "Mint release App token"
 
 
@@ -80,7 +80,7 @@ class DrivePinTests(unittest.TestCase):
     def test_tip_check_refuses_commits_off_the_head(self):
         script = drive_steps()[step_index(drive_steps(), CHECK_STEP)]["run"]
         with tempfile.TemporaryDirectory() as repo:
-            git(repo, "init", "-q", "-b", "feat-cmux-next")
+            git(repo, "init", "-q", "-b", "feat-hmux-next")
             git(repo, "commit", "-q", "--allow-empty", "-m", "base")
             base = git(repo, "rev-parse", "HEAD")
             git(repo, "commit", "-q", "--allow-empty", "-m", "head")
@@ -88,7 +88,7 @@ class DrivePinTests(unittest.TestCase):
             git(repo, "checkout", "-q", "-b", "side", base)
             git(repo, "commit", "-q", "--allow-empty", "-m", "unreviewed")
             side = git(repo, "rev-parse", "HEAD")
-            git(repo, "checkout", "-q", "feat-cmux-next")
+            git(repo, "checkout", "-q", "feat-hmux-next")
 
             def run(tip: str) -> int:
                 env = {**os.environ, "TIP": tip, "GITHUB_SHA": head}

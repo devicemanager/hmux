@@ -1,35 +1,35 @@
 $ErrorActionPreference = "Stop"
 [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.SecurityProtocolType]::Tls12
 
-$BaseUrl = if ($env:CMUX_DOWNLOAD_BASE_URL) {
-    $env:CMUX_DOWNLOAD_BASE_URL.TrimEnd("/")
+$BaseUrl = if ($env:HMUX_DOWNLOAD_BASE_URL) {
+    $env:HMUX_DOWNLOAD_BASE_URL.TrimEnd("/")
 } else {
-    "https://files.cmux.com/cmux-tui/latest"
+    "https://files.cmux.com/hmux-tui/latest"
 }
-$InstallRoot = if ($env:CMUX_INSTALL) {
-    $env:CMUX_INSTALL
+$InstallRoot = if ($env:HMUX_INSTALL) {
+    $env:HMUX_INSTALL
 } else {
-    Join-Path $env:USERPROFILE ".cmux"
+    Join-Path $env:USERPROFILE ".hmux"
 }
 $BinDir = Join-Path $InstallRoot "bin"
-$Destination = Join-Path $BinDir "cmux.exe"
+$Destination = Join-Path $BinDir "hmux.exe"
 
 $Architecture = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture
 if ($Architecture -ne [System.Runtime.InteropServices.Architecture]::X64 -and
     $Architecture -ne [System.Runtime.InteropServices.Architecture]::Arm64) {
-    throw "cmux: unsupported Windows architecture $Architecture"
+    throw "hmux: unsupported Windows architecture $Architecture"
 }
 
 # Windows on Arm runs this x64 build through the OS compatibility layer.
-$Artifact = "cmux-tui-x86_64-pc-windows-gnu.exe"
+$Artifact = "hmux-tui-x86_64-pc-windows-gnu.exe"
 $Manifest = Invoke-RestMethod "$BaseUrl/manifest.json"
 $Expected = $Manifest.binaries.$Artifact
 if (-not $Expected) {
-    throw "cmux: $Artifact is unavailable for this release"
+    throw "hmux: $Artifact is unavailable for this release"
 }
 $Commit = [string]$Manifest.commit
 if ($Commit -notmatch '^[0-9a-f]{40}$') {
-    throw "cmux: manifest has no commit"
+    throw "hmux: manifest has no commit"
 }
 $ArtifactBaseUrl = $BaseUrl
 if ($ArtifactBaseUrl -match '/latest$') {
@@ -37,13 +37,13 @@ if ($ArtifactBaseUrl -match '/latest$') {
 }
 
 $Temporary = Join-Path ([System.IO.Path]::GetTempPath()) (
-    "cmux-install-" + [System.Guid]::NewGuid().ToString("N") + ".exe"
+    "hmux-install-" + [System.Guid]::NewGuid().ToString("N") + ".exe"
 )
 try {
     Invoke-WebRequest "$ArtifactBaseUrl/$Artifact" -OutFile $Temporary
     $Actual = (Get-FileHash $Temporary -Algorithm SHA256).Hash.ToLowerInvariant()
     if ($Actual -ne $Expected.ToLowerInvariant()) {
-        throw "cmux: checksum verification failed"
+        throw "hmux: checksum verification failed"
     }
 
     New-Item -ItemType Directory -Force -Path $BinDir | Out-Null
@@ -64,7 +64,7 @@ if (($env:Path -split ";") -notcontains $BinDir) {
     $env:Path = "$BinDir;$env:Path"
 }
 
-Write-Host "Installed cmux to $Destination"
+Write-Host "Installed hmux to $Destination"
 
 try {
     $Telemetry = @{

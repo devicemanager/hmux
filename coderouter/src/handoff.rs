@@ -1,6 +1,6 @@
 //! Local CodeRouter handoff input.
 //!
-//! New cmux builds launch CodeRouter with a hidden argv form and a local,
+//! New hmux builds launch CodeRouter with a hidden argv form and a local,
 //! authenticated Unix socket. The socket returns a short-lived one-use lease;
 //! it never returns Stack credentials. The old inherited-FD and environment
 //! marker transports are deliberately not accepted by this release.
@@ -23,7 +23,7 @@ use zeroize::Zeroizing;
 
 use crate::cli::Error;
 
-pub const HIDDEN_HANDOFF_COMMAND: &str = "__cmux-handoff-v2";
+pub const HIDDEN_HANDOFF_COMMAND: &str = "__hmux-handoff-v2";
 const HANDOFF_FAILURE_MESSAGE: &str = "coderouter handoff is invalid or no longer available";
 #[cfg(unix)]
 pub const SOCKET_PROTOCOL_VERSION: u8 = 2;
@@ -102,10 +102,10 @@ pub fn requested() -> bool {
 /// Return whether the process contains a retired handoff activation marker.
 pub fn obsolete_marker_present() -> bool {
     env::var_os("CODEROUTER_HANDOFF_FD").is_some()
-        || env::var_os("CODEROUTER_CMUX_HANDOFF_SOCKET").is_some()
+        || env::var_os("CODEROUTER_HMUX_HANDOFF_SOCKET").is_some()
 }
 
-/// Validate and remove the hidden cmux argv prefix.
+/// Validate and remove the hidden hmux argv prefix.
 pub fn rewrite_hidden_args(
     args: &[std::ffi::OsString],
 ) -> Result<Option<Vec<std::ffi::OsString>>, Error> {
@@ -651,7 +651,7 @@ fn is_valid_team_id(value: &str) -> bool {
             .all(|character| !is_protocol_control(character) && !character.is_whitespace())
 }
 
-/// Match the Unicode Cc and Cf scalar classes used by native cmux validation.
+/// Match the Unicode Cc and Cf scalar classes used by native hmux validation.
 pub fn is_protocol_control(character: char) -> bool {
     if character.is_control() {
         return true;
@@ -691,7 +691,7 @@ pub fn is_valid_team_binding(value: &str) -> bool {
 
 pub fn team_binding(team_id: &str) -> String {
     let mut digest = Sha256::new();
-    digest.update(b"cmux-coderouter-team-v1\0");
+    digest.update(b"hmux-coderouter-team-v1\0");
     digest.update(team_id.as_bytes());
     digest
         .finalize()
@@ -925,7 +925,7 @@ mod tests {
         let binding = team_binding("team-handoff");
         let args = vec![
             std::ffi::OsString::from(HIDDEN_HANDOFF_COMMAND),
-            std::ffi::OsString::from("/tmp/cmux.sock"),
+            std::ffi::OsString::from("/tmp/hmux.sock"),
             std::ffi::OsString::from(binding),
             std::ffi::OsString::from("--"),
             std::ffi::OsString::from("codex"),
@@ -941,7 +941,7 @@ mod tests {
         let short_binding = "0".repeat(63);
         let valid = [
             HIDDEN_HANDOFF_COMMAND,
-            "/tmp/cmux.sock",
+            "/tmp/hmux.sock",
             binding.as_str(),
             "--",
             "codex",

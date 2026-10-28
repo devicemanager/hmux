@@ -5,7 +5,7 @@ import { connection } from "next/server";
 import { Suspense } from "react";
 import { stackServerApp } from "../../lib/stack";
 import { CliAuthConfirmation, type CliAuthIdentityMessages } from "../cli-auth-confirmation";
-import { CmuxOAuthCallback, CmuxSignIn, type CmuxSignInMessages } from "../cmux-sign-in";
+import { HmuxOAuthCallback, HmuxSignIn, type HmuxSignInMessages } from "../hmux-sign-in";
 import { EndSavedSessions } from "../end-saved-sessions";
 import { SignInSpinner } from "../sign-in-spinner";
 import { hostedAuthErrorRedirect } from "../sign-in-entry";
@@ -33,11 +33,11 @@ export default async function StackHandlerPage(
     headers(),
   ]);
 
-  // The handler page when the path is a single segment, as every page cmux
+  // The handler page when the path is a single segment, as every page hmux
   // replaces is.
   const page = stack.length === 1 ? stack[0] : null;
 
-  // A failed OAuth return goes to cmux's own recovery page rather than the
+  // A failed OAuth return goes to hmux's own recovery page rather than the
   // hosted one, which shows raw service codes.
   const errorTarget = page ? hostedAuthErrorRedirect(page, firstValues(await props.searchParams)) : null;
   if (errorTarget) redirect(errorTarget);
@@ -51,7 +51,7 @@ export default async function StackHandlerPage(
       identityMessages={(await messages()).cliAuthIdentity as CliAuthIdentityMessages}
     />
   ) : isCoderouterSignIn ? (
-    // The shared cmux Google connector requests Drive, Gmail, and Calendar
+    // The shared hmux Google connector requests Drive, Gmail, and Calendar
     // scopes for optional integrations. Those scopes are inappropriate for
     // coderouter authentication, so coderouter deliberately offers
     // passwordless email only.
@@ -62,20 +62,20 @@ export default async function StackHandlerPage(
         </p>
         <h1 className="mb-2 text-xl font-medium">sign in</h1>
         <p className="mb-6 text-sm leading-6 text-[#6f6a61]">
-          use your cmux account email. we’ll send a one-time code.
+          use your hmux account email. we’ll send a one-time code.
         </p>
         <MagicLinkSignIn />
       </section>
     </main>
   ) : page === "oauth-callback" ? (
-    <CmuxOAuthCallback messages={(await messages()).cmuxSignIn as CmuxSignInMessages} />
+    <HmuxOAuthCallback messages={(await messages()).hmuxSignIn as HmuxSignInMessages} />
   ) : page === "sign-in" || page === "sign-up" ? (
-    // cmux's own sign-in and sign-up screens. Every callback, reset and
+    // hmux's own sign-in and sign-up screens. Every callback, reset and
     // verification route below stays with the hosted handler.
-    <CmuxSignIn mode={page} messages={(await messages()).cmuxSignIn as CmuxSignInMessages} />
+    <HmuxSignIn mode={page} messages={(await messages()).hmuxSignIn as HmuxSignInMessages} />
   ) : (
     // The hosted pages spin a circular-arrow icon; the stylesheet redraws it
-    // in place as cmux's spinner so every loading state matches.
+    // in place as hmux's spinner so every loading state matches.
     <div className={hosted.hosted}>
       <StackHandler fullPage app={stackServerApp} params={props.params} />
     </div>

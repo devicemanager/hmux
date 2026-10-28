@@ -1,0 +1,28 @@
+{
+  "name": "hmux",
+  "version": "0.0.0-managed",
+  "description": "hmux — a tmux-like terminal multiplexer TUI backed by libghostty-vt. Run with `npx hmux`.",
+  "bin": {
+    "hmux": "bin/hmux.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/manaflow-ai/cmux.git",
+    "directory": "hmux-tui/dist/npm/hmux"
+  },
+  "homepage": "https://github.com/manaflow-ai/cmux/tree/main/cmux-tui",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin/hmux.js"
+  ],
+  "optionalDependencies": {
+    "hmux-tui-darwin-arm64": "0.0.0-managed",
+    "hmux-tui-darwin-x64": "0.0.0-managed",
+    "hmux-tui-linux-x64": "0.0.0-managed",
+    "hmux-tui-linux-arm64": "0.0.0-managed",
+    "hmux-tui-win32-x64": "0.0.0-managed"
+  }
+}

@@ -52,7 +52,7 @@ describe("dashboard session middleware", () => {
     expect(response.status).not.toBe(307);
     expect(response.headers.get("location")).toBeNull();
     expect(
-      response.headers.get("x-middleware-request-x-cmux-dashboard-return-path"),
+      response.headers.get("x-middleware-request-x-hmux-dashboard-return-path"),
     ).toBe("/dashboard/cloud");
   });
 

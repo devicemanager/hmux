@@ -12,7 +12,7 @@ struct RemoteTmuxAttachProgress: Equatable {
         /// The transport process is running and tmux has not answered yet: it is connecting or
         /// logging in. A person may be part of this, so it is allowed to be quiet for a long time.
         case loggingIn
-        /// tmux answered. What remains is cmux's own exchange with it, which is quick.
+        /// tmux answered. What remains is hmux's own exchange with it, which is quick.
         case inTmux
     }
 
@@ -147,7 +147,7 @@ final class RemoteTmuxViewConnection {
     private(set) var lastTransportStartDetail: String?
     /// How long an attach may stay quiet in each phase. A test shortens these.
     var attachQuietLimits = RemoteTmuxAttachProgress.QuietLimits.standard
-    /// Fires after `workspaces` changes (the controller rebuilds cmux workspaces).
+    /// Fires after `workspaces` changes (the controller rebuilds hmux workspaces).
     var onWorkspacesChanged: (() -> Void)?
     /// Fires when the view connection permanently ends.
     var onEnded: (() -> Void)?
@@ -162,7 +162,7 @@ final class RemoteTmuxViewConnection {
 
     private let initialCols: Int
     private let initialRows: Int
-    /// Window ids cmux has itself linked into the view (ownership for safe unlink).
+    /// Window ids hmux has itself linked into the view (ownership for safe unlink).
     private var ownedWindowIds: Set<String> = []
     private var placeholderWindowId: String?
     /// Whether the over-the-stream view bringup has completed: the ownership options are
@@ -171,7 +171,7 @@ final class RemoteTmuxViewConnection {
     ///
     /// Cleared whenever the stream leaves `.connected`, so the next connect re-runs the
     /// bringup. Server state does survive a transport's own internal reconnect — which
-    /// produces no state change here, so the latch holds across it — but a cmux-driven
+    /// produces no state change here, so the latch holds across it — but a hmux-driven
     /// respawn can find a view that was killed during the outage and recreated empty by
     /// the re-attach. The bringup is three constant option writes plus one query, so
     /// re-running it costs a round trip and removes the dependence on which mode the
@@ -506,7 +506,7 @@ final class RemoteTmuxViewConnection {
 
     /// Finishes bringing the view up on the stream that just attached it: stamps the
     /// ownership options, then reads the view's windows to recover the placeholder and the
-    /// windows a previous cmux run left linked.
+    /// windows a previous hmux run left linked.
     ///
     /// Runs from the first `reconcile()` rather than from `start()` because it needs the
     /// control stream, and `reconcile()` is where the stream's serialization already lives.
@@ -516,7 +516,7 @@ final class RemoteTmuxViewConnection {
     ///
     /// The writes are tracked to their `%begin`/`%end` blocks rather than fired and
     /// forgotten, because a write that is dropped or errors while the query still answers
-    /// is worse than no bringup at all: the view reads back with `@cmux_view` unset, so it
+    /// is worse than no bringup at all: the view reads back with `@hmux_view` unset, so it
     /// does not classify as ours, and the same reconcile then links every window into the
     /// view a SECOND time (measured on a live host: window `@18` linked at index 6 and
     /// again at index 8) and offers the session this client is attached to as a stale view
@@ -558,7 +558,7 @@ final class RemoteTmuxViewConnection {
     /// The placeholder is the window reconcile must never unlink: it is the only window the
     /// view is guaranteed to keep, and unlinking it would destroy the view. It is the
     /// lowest-index window that is NOT linked into another session — `list-windows` is
-    /// ordered by index, and every window cmux links in is by definition linked. Index alone
+    /// ordered by index, and every window hmux links in is by definition linked. Index alone
     /// is not enough: `link-window -b` inserts before the target and `base-index` differs
     /// between hosts, so on tmux 3.7 the first row can be a linked copy, which would then be
     /// protected from unlinking while the real placeholder was not. A window whose home
@@ -566,7 +566,7 @@ final class RemoteTmuxViewConnection {
     /// index than the placeholder; it would then be left in the view rather than unlinked,
     /// which is the same outcome the previous rule had for the placeholder itself.
     ///
-    /// Everything else is adopted as owned, so a view reused from a prior cmux run can have
+    /// Everything else is adopted as owned, so a view reused from a prior hmux run can have
     /// its dead linked copies unlinked — otherwise they accumulate in the persistent view.
     nonisolated static func readBringupRows(
         _ lines: [String]
@@ -590,8 +590,8 @@ final class RemoteTmuxViewConnection {
     /// session this client is attached to — and this call site is the one that can name the
     /// live view without any planning at all.
     ///
-    /// `=` pins an exact match; a bare name is a prefix match, so reaping `cmux-view-a`
-    /// could otherwise take `cmux-view-ab` — a name a second cmux install can hold.
+    /// `=` pins an exact match; a bare name is a prefix match, so reaping `hmux-view-a`
+    /// could otherwise take `hmux-view-ab` — a name a second hmux install can hold.
     private func reapStaleViews(_ conn: RemoteTmuxControlConnection, names: [String]) {
         for name in names where name != view.sessionName {
             _ = conn.send("kill-session -t \(quoted("=" + name))")
@@ -666,7 +666,7 @@ final class RemoteTmuxViewConnection {
         let snapshot = RemoteTmuxLinkedViewPlan.Snapshot(
             sessions: RemoteTmuxViewSession.parseRows(sessionLines.joined(separator: "\n")),
             windows: RemoteTmuxLinkedWorkspaceModel.parseRows(windowLines.joined(separator: "\n")),
-            cmuxOwnedWindowIds: ownedWindowIds,
+            hmuxOwnedWindowIds: ownedWindowIds,
             placeholderWindowId: placeholderWindowId)
         let plan = snapshotNamesViewSession(snapshot, viewSessionName: view.sessionName)
             ? RemoteTmuxLinkedViewPlan.plan(view: view, snapshot: snapshot) : nil
@@ -736,7 +736,7 @@ final class RemoteTmuxViewConnection {
         // on this stream can be trusted after that, so start a fresh one.
         guard let plan = preparedPlan else {
             #if DEBUG
-            cmuxDebugLog(
+            hmuxDebugLog(
                 "remote-tmux: reconcile-reply-mismatch sessions=\(snapshot.sessions.count)"
                     + " windows=\(snapshot.windows.count)"
             )

@@ -1,5 +1,5 @@
 import Foundation
-import CmuxProductAnalytics
+import HmuxProductAnalytics
 
 /// Reveals Cloud on every press, introducing it explicitly while activation is off.
 @MainActor

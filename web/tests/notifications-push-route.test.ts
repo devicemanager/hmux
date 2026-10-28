@@ -8,9 +8,9 @@ import { accountDeletionUserHash } from "../services/account/deletionLock";
 const envKeys = [
   "SKIP_ENV_VALIDATION",
   "VERCEL",
-  "CMUX_APNS_KEY_P8",
-  "CMUX_APNS_KEY_ID",
-  "CMUX_APNS_TEAM_ID",
+  "HMUX_APNS_KEY_P8",
+  "HMUX_APNS_KEY_ID",
+  "HMUX_APNS_TEAM_ID",
 ] as const;
 const originalEnv = Object.fromEntries(envKeys.map((key) => [key, process.env[key]])) as Record<
   (typeof envKeys)[number],
@@ -23,10 +23,10 @@ const dbClientModule = await import("../db/client");
 const realCloudDb = dbClientModule.cloudDb;
 const realCloseCloudDbForTests = dbClientModule.closeCloudDbForTests;
 const realCreateAwsRdsIamPool = dbClientModule.createAwsRdsIamPool;
-const runDbTests = process.env.CMUX_DB_TEST === "1";
+const runDbTests = process.env.HMUX_DB_TEST === "1";
 const dbTest = runDbTests ? test : test.skip;
 
-const TARGET_NAMESPACE = "com.cmux.app";
+const TARGET_NAMESPACE = "com.hmux.app";
 const MAC_DEVICE_ID = "mac-device-test";
 const MAC_INSTANCE_TAG = "test-instance";
 const MAC_BUILD_ID = "mac-build-test";
@@ -98,9 +98,9 @@ function pushBody(options: PushBodyOptions = {}): Record<string, unknown> {
 
 process.env.SKIP_ENV_VALIDATION = "1";
 process.env.VERCEL = "1";
-process.env.CMUX_APNS_KEY_P8 = "test-key";
-process.env.CMUX_APNS_KEY_ID = "test-key-id";
-process.env.CMUX_APNS_TEAM_ID = "test-team-id";
+process.env.HMUX_APNS_KEY_P8 = "test-key";
+process.env.HMUX_APNS_KEY_ID = "test-key-id";
+process.env.HMUX_APNS_TEAM_ID = "test-team-id";
 
 const getUser = mock(async () => ({
   id: "user-1",
@@ -170,7 +170,7 @@ beforeAll(() => {
   if (!runDbTests) return;
   const databaseURL = process.env.DIRECT_DATABASE_URL ?? process.env.DATABASE_URL;
   if (!databaseURL) {
-    throw new Error("DATABASE_URL is required when CMUX_DB_TEST=1");
+    throw new Error("DATABASE_URL is required when HMUX_DB_TEST=1");
   }
   sql = postgres(databaseURL, { max: 1 });
 });
@@ -197,9 +197,9 @@ beforeEach(async () => {
   // the route skip rate-limiting and flaked this suite in CI.
   process.env.SKIP_ENV_VALIDATION = "1";
   process.env.VERCEL = "1";
-  process.env.CMUX_APNS_KEY_P8 = "test-key";
-  process.env.CMUX_APNS_KEY_ID = "test-key-id";
-  process.env.CMUX_APNS_TEAM_ID = "test-team-id";
+  process.env.HMUX_APNS_KEY_P8 = "test-key";
+  process.env.HMUX_APNS_KEY_ID = "test-key-id";
+  process.env.HMUX_APNS_TEAM_ID = "test-team-id";
   getUser.mockClear();
   checkRateLimit.mockClear();
   checkRateLimit.mockResolvedValue({ rateLimited: true, error: null });
@@ -232,12 +232,12 @@ describe("notifications push route", () => {
   test("uses the database user limiter as the only in-code limiter", async () => {
     checkRateLimit.mockResolvedValue({ rateLimited: true, error: "blocked" });
     const response = await pushRoute.POST(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: "{",
       }),
@@ -252,12 +252,12 @@ describe("notifications push route", () => {
   test("rejects an invalid target namespace before DB access", async () => {
     checkRateLimit.mockResolvedValue({ rateLimited: false, error: null });
     const response = await pushRoute.POST(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "dev.cmux.ios.invalid_target",
+          "x-hmux-ios-target-namespace": "dev.hmux.ios.invalid_target",
         },
         body: JSON.stringify(pushBody()),
       }),
@@ -272,12 +272,12 @@ describe("notifications push route", () => {
 
   test("rejects an encrypted recipient tuple with the wrong account before DB access", async () => {
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": TARGET_NAMESPACE,
+          "x-hmux-ios-target-namespace": TARGET_NAMESPACE,
         },
         body: JSON.stringify(pushBody({ tuple: { accountID: "user-2" } })),
       }),
@@ -293,14 +293,14 @@ describe("notifications push route", () => {
 
   test("rejects an encrypted recipient tuple with the wrong iOS build before DB access", async () => {
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": TARGET_NAMESPACE,
+          "x-hmux-ios-target-namespace": TARGET_NAMESPACE,
         },
-        body: JSON.stringify(pushBody({ tuple: { iosBuildID: "dev.cmux.app.beta" } })),
+        body: JSON.stringify(pushBody({ tuple: { iosBuildID: "dev.hmux.app.beta" } })),
       }),
       sendApnsNotificationReliably as Parameters<
         typeof pushRoute.sendPushWithTransport
@@ -314,12 +314,12 @@ describe("notifications push route", () => {
 
   test("rejects an encrypted recipient tuple with the wrong Mac device before DB access", async () => {
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": TARGET_NAMESPACE,
+          "x-hmux-ios-target-namespace": TARGET_NAMESPACE,
         },
         body: JSON.stringify(pushBody({ tuple: { macDeviceID: "other-mac-device" } })),
       }),
@@ -335,12 +335,12 @@ describe("notifications push route", () => {
 
   test("rejects an encrypted recipient tuple with the wrong Mac instance before DB access", async () => {
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": TARGET_NAMESPACE,
+          "x-hmux-ios-target-namespace": TARGET_NAMESPACE,
         },
         body: JSON.stringify(pushBody({ tuple: { macInstanceTag: "other-instance" } })),
       }),
@@ -368,12 +368,12 @@ describe("notifications push route", () => {
       const body = pushBody();
       body[field] = value;
       const response = await pushRoute.sendPushWithTransport(
-        new Request("https://cmux.test/api/notifications/push", {
+        new Request("https://hmux.test/api/notifications/push", {
           method: "POST",
           headers: {
             authorization: "Bearer access-token",
             "x-stack-refresh-token": "refresh-token",
-            "x-cmux-ios-target-namespace": TARGET_NAMESPACE,
+            "x-hmux-ios-target-namespace": TARGET_NAMESPACE,
           },
           body: JSON.stringify(body),
         }),
@@ -393,12 +393,12 @@ describe("notifications push route", () => {
   test("an explicitly empty target namespace is rejected, not legacy", async () => {
     checkRateLimit.mockResolvedValue({ rateLimited: false, error: null });
     const response = await pushRoute.POST(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "",
+          "x-hmux-ios-target-namespace": "",
         },
         body: JSON.stringify(pushBody()),
       }),
@@ -422,21 +422,21 @@ describe("notifications push route", () => {
       insert into device_tokens (
         user_id, device_token, platform, bundle_id, environment
       ) values
-        ('user-1', ${sharedToken}, 'ios', 'dev.cmux.app.beta', 'production'),
-        ('user-1', ${sharedToken}, 'ios', 'dev.cmux.app.internal', 'production')
+        ('user-1', ${sharedToken}, 'ios', 'dev.hmux.app.beta', 'production'),
+        ('user-1', ${sharedToken}, 'ios', 'dev.hmux.app.internal', 'production')
     `;
 
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "dev.cmux.app.beta",
+          "x-hmux-ios-target-namespace": "dev.hmux.app.beta",
         },
         body: JSON.stringify(pushBody({
           correlationId: "ca04d429-a0a8-42ed-a5ef-74589bf5db28",
-          targetNamespace: "dev.cmux.app.beta",
+          targetNamespace: "dev.hmux.app.beta",
         })),
       }),
       sendApnsNotificationReliably as Parameters<
@@ -458,7 +458,7 @@ describe("notifications push route", () => {
     expect(targets).toHaveLength(1);
     expect(targets[0]).toMatchObject({
       deviceToken: sharedToken,
-      bundleId: "dev.cmux.app.beta",
+      bundleId: "dev.hmux.app.beta",
       environment: "production",
     });
     expect(typeof targets[0]?.targetId).toBe("string");
@@ -478,17 +478,17 @@ describe("notifications push route", () => {
         installation_id, push_key_id, push_public_key
       ) values
         (
-          'user-1', ${releaseToken}, 'ios', 'com.cmux.app', 'production',
+          'user-1', ${releaseToken}, 'ios', 'com.hmux.app', 'production',
           'release-installation', 'ios-push-key-1', ${'R'.repeat(43) + '='}
         ),
         (
-          'user-1', ${internalToken}, 'ios', 'dev.cmux.app.internal', 'production',
+          'user-1', ${internalToken}, 'ios', 'dev.hmux.app.internal', 'production',
           'internal-installation', 'ios-push-key-2', ${'I'.repeat(43) + '='}
         )
     `;
 
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
@@ -498,7 +498,7 @@ describe("notifications push route", () => {
           correlationId: "f8f18b05-cf10-46be-8bba-c5ea468efabc",
           installationIDs: ["release-installation", "internal-installation"],
           keyIDs: ["ios-push-key-1", "ios-push-key-2"],
-          targetNamespaces: ["com.cmux.app", "dev.cmux.app.internal"],
+          targetNamespaces: ["com.hmux.app", "dev.hmux.app.internal"],
         })),
       }),
       sendApnsNotificationReliably as Parameters<
@@ -517,20 +517,20 @@ describe("notifications push route", () => {
     );
     expect(targets).toHaveLength(2);
     expect(targets.map((target) => target.bundleId).sort()).toEqual([
-      "com.cmux.app",
-      "dev.cmux.app.internal",
+      "com.hmux.app",
+      "dev.hmux.app.internal",
     ]);
   });
 
   test("keeps correlation on unexpected failures after payload parsing", async () => {
     const correlationId = "db86fe5c-71f8-43bd-92e3-9347df3aab5c";
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId, ciphertextVariant: "private terminal output" })),
       }),
@@ -540,7 +540,7 @@ describe("notifications push route", () => {
     );
 
     expect(response.status).toBe(500);
-    expect(response.headers.get("x-cmux-push-correlation-id"))
+    expect(response.headers.get("x-hmux-push-correlation-id"))
       .toBe(correlationId);
     const body = await response.json();
     expect(body).toEqual({
@@ -562,9 +562,9 @@ describe("notifications push route", () => {
         user_id, device_token, platform, bundle_id, environment,
         installation_id, push_key_id
       ) values
-        ('user-1', ${"a".repeat(64)}, 'ios', 'com.cmux.app', 'production',
+        ('user-1', ${"a".repeat(64)}, 'ios', 'com.hmux.app', 'production',
           'legacy', 'legacy'),
-        ('user-1', ${"b".repeat(64)}, 'ios', 'com.cmux.app', 'production',
+        ('user-1', ${"b".repeat(64)}, 'ios', 'com.hmux.app', 'production',
           'ios-installation-2', 'ios-push-key-2')
     `;
 
@@ -594,13 +594,13 @@ describe("notifications push route", () => {
     const correlationId = "4d02de48-a21d-4ba1-97b5-42e9400ee09b";
     const expirationEpochSeconds = Math.floor(Date.now() / 1000) + 120;
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({
           correlationId,
@@ -713,19 +713,19 @@ describe("notifications push route", () => {
         'user-1',
         ${"a".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
     const correlationId = "d0c5aeef-950a-477e-bbd2-a656229f44be";
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId })),
       },
@@ -768,7 +768,7 @@ describe("notifications push route", () => {
         'user-1',
         ${"a".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
@@ -782,13 +782,13 @@ describe("notifications push route", () => {
     const correlationId = "2103504c-c64e-4017-941f-7703033da85c";
     const expirationEpochSeconds = Math.floor(Date.now() / 1_000) + 1_800;
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId, expirationEpochSeconds })),
       },
@@ -851,7 +851,7 @@ describe("notifications push route", () => {
         'user-1',
         ${"a".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
@@ -865,13 +865,13 @@ describe("notifications push route", () => {
     const correlationId = "530f66c4-095c-4648-8de5-852eac34b578";
     const expirationEpochSeconds = Math.floor(Date.now() / 1_000) + 120;
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId, expirationEpochSeconds })),
       },
@@ -897,7 +897,7 @@ describe("notifications push route", () => {
       >[1],
     );
     expect(replay.status).toBe(200);
-    expect(replay.headers.get("x-cmux-push-replayed")).toBe("true");
+    expect(replay.headers.get("x-hmux-push-replayed")).toBe("true");
     expect(await replay.json()).toMatchObject({
       devices: 1,
       transientFailures: 0,
@@ -955,7 +955,7 @@ describe("notifications push route", () => {
         'user-1',
         ${"a".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
@@ -969,13 +969,13 @@ describe("notifications push route", () => {
     const correlationId = "95e94601-0974-44ef-95b9-607e031345e1";
     const expirationEpochSeconds = Math.floor(Date.now() / 1_000) + 45;
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId, expirationEpochSeconds })),
       },
@@ -1023,7 +1023,7 @@ describe("notifications push route", () => {
         'user-1',
         ${"b".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
@@ -1035,12 +1035,12 @@ describe("notifications push route", () => {
     };
 
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId })),
         signal: controller.signal,
@@ -1075,9 +1075,9 @@ describe("notifications push route", () => {
         user_id, device_token, platform, bundle_id, environment,
         installation_id, push_key_id
       ) values
-        ('user-1', ${"a".repeat(64)}, 'ios', 'com.cmux.app', 'production',
+        ('user-1', ${"a".repeat(64)}, 'ios', 'com.hmux.app', 'production',
           'legacy', 'legacy'),
-        ('user-1', ${"b".repeat(64)}, 'ios', 'com.cmux.app', 'production',
+        ('user-1', ${"b".repeat(64)}, 'ios', 'com.hmux.app', 'production',
           'ios-installation-2', 'ios-push-key-2')
     `;
     scriptedSendOutcomes = [
@@ -1105,13 +1105,13 @@ describe("notifications push route", () => {
     const correlationId = "527e7ed5-b70d-45d8-a78e-fd032ae61ff5";
     const expirationEpochSeconds = Math.floor(Date.now() / 1000) + 120;
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({
           correlationId,
@@ -1168,7 +1168,7 @@ describe("notifications push route", () => {
         'user-1',
         ${"a".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
@@ -1187,13 +1187,13 @@ describe("notifications push route", () => {
     ];
     const correlationId = "c622f143-bbdb-4ec5-a1fd-fd3e8e541417";
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId })),
       },
@@ -1249,19 +1249,19 @@ describe("notifications push route", () => {
         'user-1',
         ${"a".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
     const correlationId = "0eb814aa-5b3b-4776-a4e8-f45f57c4f51f";
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId })),
       },
@@ -1277,7 +1277,7 @@ describe("notifications push route", () => {
       >[1],
     );
     expect(interrupted.status).toBe(500);
-    expect(interrupted.headers.get("x-cmux-push-correlation-id"))
+    expect(interrupted.headers.get("x-hmux-push-correlation-id"))
       .toBe(correlationId);
     expect(await interrupted.json()).toEqual({
       error: "push_internal_error",
@@ -1327,13 +1327,13 @@ describe("notifications push route", () => {
     const correlationId = "7e278f1d-4f9d-4d1e-9695-55db39373319";
     const expirationEpochSeconds = Math.floor(Date.now() / 1_000) + 120;
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId, expirationEpochSeconds })),
       },
@@ -1360,7 +1360,7 @@ describe("notifications push route", () => {
         'user-1',
         ${"c".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
@@ -1392,7 +1392,7 @@ describe("notifications push route", () => {
         'user-1',
         ${"a".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
@@ -1405,13 +1405,13 @@ describe("notifications push route", () => {
     const correlationId = "58f663e4-72f4-4904-82da-02c45bcb576f";
     const expirationEpochSeconds = Math.floor(Date.now() / 1_000) + 120;
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId, expirationEpochSeconds })),
       },
@@ -1425,7 +1425,7 @@ describe("notifications push route", () => {
     );
     await sql`
       update device_tokens
-      set bundle_id = 'dev.cmux.ios.push1', environment = 'sandbox'
+      set bundle_id = 'dev.hmux.ios.push1', environment = 'sandbox'
       where user_id = 'user-1' and device_token = ${"a".repeat(64)}
     `;
     await sql`
@@ -1460,8 +1460,8 @@ describe("notifications push route", () => {
       insert into device_tokens (
         user_id, device_token, platform, bundle_id, environment
       ) values
-        ('user-1', ${"a".repeat(64)}, 'ios', 'com.cmux.app', 'production'),
-        ('user-1', ${"b".repeat(64)}, 'ios', 'com.cmux.app', 'production')
+        ('user-1', ${"a".repeat(64)}, 'ios', 'com.hmux.app', 'production'),
+        ('user-1', ${"b".repeat(64)}, 'ios', 'com.hmux.app', 'production')
     `;
     scriptedSendOutcomes = [[
       { deviceToken: "a".repeat(64), status: 200, prune: false },
@@ -1475,13 +1475,13 @@ describe("notifications push route", () => {
     const correlationId = "8c797e1a-797a-47cc-a995-30cffdfbe423";
     const expirationEpochSeconds = Math.floor(Date.now() / 1000) + 120;
     const request = () => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId, expirationEpochSeconds })),
       },
@@ -1498,7 +1498,7 @@ describe("notifications push route", () => {
       insert into device_tokens (
         user_id, device_token, platform, bundle_id, environment
       ) values
-        ('user-1', ${"c".repeat(64)}, 'ios', 'com.cmux.app', 'production')
+        ('user-1', ${"c".repeat(64)}, 'ios', 'com.hmux.app', 'production')
     `;
     await sql`
       update notification_send_events
@@ -1558,18 +1558,18 @@ describe("notifications push route", () => {
       insert into device_tokens (
         user_id, device_token, platform, bundle_id, environment
       ) values
-        ('user-1', ${"a".repeat(64)}, 'ios', 'com.cmux.app', 'production')
+        ('user-1', ${"a".repeat(64)}, 'ios', 'com.hmux.app', 'production')
     `;
     const correlationId = "f57948e6-4456-4057-8820-b56af13faee9";
     const expirationEpochSeconds = Math.floor(Date.now() / 1000) + 120;
     const makeRequest = (options: PushBodyOptions = {}) => new Request(
-      "https://cmux.test/api/notifications/push",
+      "https://hmux.test/api/notifications/push",
       {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({
           correlationId,
@@ -1595,7 +1595,7 @@ describe("notifications push route", () => {
       >[1],
     );
     expect(replay.status).toBe(200);
-    expect(replay.headers.get("x-cmux-push-replayed")).toBe("true");
+    expect(replay.headers.get("x-hmux-push-replayed")).toBe("true");
 
     const changedBody = await pushRoute.sendPushWithTransport(
       makeRequest({ ciphertextVariant: "different secret body" }),
@@ -1605,7 +1605,7 @@ describe("notifications push route", () => {
     );
     expect(changedBody.status).toBe(409);
     expect(
-      changedBody.headers.get("x-cmux-push-correlation-id"),
+      changedBody.headers.get("x-hmux-push-correlation-id"),
     ).toBe(correlationId);
     expect(await changedBody.json()).toEqual({
       error: "correlation_payload_mismatch",
@@ -1648,9 +1648,9 @@ describe("notifications push route", () => {
         user_id, device_token, platform, bundle_id, environment,
         installation_id, push_key_id
       ) values
-        ('user-1', ${"a".repeat(64)}, 'ios', 'com.cmux.app', 'production',
+        ('user-1', ${"a".repeat(64)}, 'ios', 'com.hmux.app', 'production',
           'legacy', 'legacy'),
-        ('user-1', ${"b".repeat(64)}, 'ios', 'com.cmux.app', 'corrupt',
+        ('user-1', ${"b".repeat(64)}, 'ios', 'com.hmux.app', 'corrupt',
           'ios-installation-2', 'ios-push-key-2')
     `;
     scriptedSendOutcomes = [[
@@ -1664,12 +1664,12 @@ describe("notifications push route", () => {
     ]];
 
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({
           correlationId: "e9228cf1-bf4e-4f1a-9a89-2962d1882c4d",
@@ -1707,7 +1707,7 @@ describe("notifications push route", () => {
         'user-1',
         ${"a".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
@@ -1721,18 +1721,18 @@ describe("notifications push route", () => {
     beforeNextSend = async () => {
       await testSql`
         update device_tokens
-        set bundle_id = 'dev.cmux.ios.push1', environment = 'sandbox'
+        set bundle_id = 'dev.hmux.ios.push1', environment = 'sandbox'
         where user_id = 'user-1' and device_token = ${"a".repeat(64)}
       `;
     };
 
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId: "faef4983-0ce5-4543-822b-0af2f4495386" })),
       }),
@@ -1751,7 +1751,7 @@ describe("notifications push route", () => {
       where user_id = 'user-1' and device_token = ${"a".repeat(64)}
     `;
     expect(registered).toEqual({
-      bundleId: "dev.cmux.ios.push1",
+      bundleId: "dev.hmux.ios.push1",
       environment: "sandbox",
     });
   });
@@ -1770,7 +1770,7 @@ describe("notifications push route", () => {
         'user-1',
         ${"a".repeat(64)},
         'ios',
-        'com.cmux.app',
+        'com.hmux.app',
         'production'
       )
     `;
@@ -1786,12 +1786,12 @@ describe("notifications push route", () => {
     `;
 
     const response = await pushRoute.sendPushWithTransport(
-      new Request("https://cmux.test/api/notifications/push", {
+      new Request("https://hmux.test/api/notifications/push", {
         method: "POST",
         headers: {
           authorization: "Bearer access-token",
           "x-stack-refresh-token": "refresh-token",
-          "x-cmux-ios-target-namespace": "com.cmux.app",
+          "x-hmux-ios-target-namespace": "com.hmux.app",
         },
         body: JSON.stringify(pushBody({ correlationId: "a6e884c3-fc14-49c0-8ccb-b12a42b104ea" })),
       }),

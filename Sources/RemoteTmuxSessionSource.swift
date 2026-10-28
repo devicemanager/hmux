@@ -1,4 +1,4 @@
-import CmuxRemoteSession
+import HmuxRemoteSession
 import Foundation
 
 /// The per-session control callbacks a ``RemoteTmuxSessionMirror`` registers.

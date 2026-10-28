@@ -1,4 +1,4 @@
-import CmuxTerminalCore
+import HmuxTerminalCore
 
 extension GhosttyApp {
     /// Returns the Ghostty action native Copy surfaces should send.

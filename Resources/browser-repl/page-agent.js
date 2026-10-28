@@ -1,4 +1,4 @@
-// cmux browser REPL page agent.
+// hmux browser REPL page agent.
 //
 // Installed by the driver into every frame's isolated "agent" world. It owns
 // this frame's part of the snapshot tree, the ref table, element handles, and
@@ -10,16 +10,16 @@
 //   (() => {
 //     const module = {};
 //     <vendor/playwright-injected.js>
-//     const __cmuxInjectedScriptFactory = module.exports.InjectedScript;
+//     const __hmuxInjectedScriptFactory = module.exports.InjectedScript;
 //     <page-agent.js>
 //   })();
 //
-// The agent is stored on globalThis under Symbol.for("cmux.browserRepl.agent")
+// The agent is stored on globalThis under Symbol.for("hmux.browserRepl.agent")
 // as a non-enumerable property. Runtime code reaches it with
-// `globalThis[Symbol.for("cmux.browserRepl.agent")]`.
+// `globalThis[Symbol.for("hmux.browserRepl.agent")]`.
 (function (global, injectedFactory, ariaCaches) {
   "use strict";
-  const KEY = Symbol.for("cmux.browserRepl.agent");
+  const KEY = Symbol.for("hmux.browserRepl.agent");
   if (global[KEY]) return;
 
   const document = global.document;
@@ -1024,7 +1024,7 @@
   // read within the page-read budget can return: MAX_SIZE characters of
   // values and NODE_SIZE of keys for each of MAX_NODES nodes.
   const MAX_REPLY = MAX_SIZE + MAX_NODES * NODE_SIZE;
-  const REPLY_CUT = "__cmuxReplyCut";
+  const REPLY_CUT = "__hmuxReplyCut";
   // The reply of a method that stopped at its budget before it had all its
   // answer: the runtime fails the call with core.readCutNote's words, as
   // for a reply past the reply budget. `cut` is { truncated, maxNodes, maxSize }.
@@ -2120,7 +2120,7 @@
     const tooLarge = () => {
       if (b.truncated === "nodes") return agentError("invalid", "The composer holds too many nodes to compare");
       if (b.truncated === "time") return agentError("invalid", "The composer took too long to read to compare");
-      return agentError("invalid", `The composer holds more than ${String(MAX_SIZE).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} characters, more than cmux compares with a draft`);
+      return agentError("invalid", `The composer holds more than ${String(MAX_SIZE).replace(/\B(?=(\d{3})+(?!\d))/g, ",")} characters, more than hmux compares with a draft`);
     };
     const add = (s) => {
       if (!chargeSize(b, s.length)) throw tooLarge();
@@ -2324,7 +2324,7 @@
   function annotate(refs, doc) {
     clearAnnotations();
     if (doc !== docToken) return 0;
-    const host = document.createElement("cmux-annotations");
+    const host = document.createElement("hmux-annotations");
     host.style.cssText = "position:fixed;inset:0;pointer-events:none;z-index:2147483647;display:block";
     const root = host.attachShadow({ mode: "closed" });
     let drawn = 0;
@@ -2403,7 +2403,7 @@
   // or the agent itself (see the top of this file).
   Object.defineProperty(global, KEY, { value: Object.freeze(agent), enumerable: false, configurable: false, writable: false });
   // The Swift driver resolves handles for input.setFiles through this name.
-  Object.defineProperty(global, "__cmuxPageAgent", {
+  Object.defineProperty(global, "__hmuxPageAgent", {
     value: Object.freeze({ resolveHandle: (id) => handleElement(id) }),
     enumerable: false,
     configurable: false,
@@ -2411,7 +2411,7 @@
   });
 })(
   globalThis,
-  typeof __cmuxInjectedScriptFactory !== "undefined" ? __cmuxInjectedScriptFactory : null,
+  typeof __hmuxInjectedScriptFactory !== "undefined" ? __hmuxInjectedScriptFactory : null,
   // Playwright's role, name and hidden-state caches (its own snapshot and
   // getByRole turn them on while the DOM cannot change). The install recipe
   // puts the injected script's top-level functions in this scope.

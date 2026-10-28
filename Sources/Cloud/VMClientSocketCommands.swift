@@ -1,8 +1,8 @@
-import CmuxCloud
-import CmuxCloudTui
-import CmuxControlSocket
-import CmuxSettings
-import CmuxSurfaceCatalogModel
+import HmuxCloud
+import HmuxCloudTui
+import HmuxControlSocket
+import HmuxSettings
+import HmuxSurfaceCatalogModel
 import Foundation
 extension TerminalController {
     nonisolated func socketWorkerCloudVMResponse(
@@ -40,7 +40,7 @@ extension TerminalController {
             return socketWorkerFileTransferFailureResponse(id: id, params: params)
         case "vm.billing_checkout":
             guard let plan = params["plan"] as? String, plan == "go" || plan == "max" || plan == "pro" else {
-                return v2Error(id: id, code: "invalid_params", message: String(localized: "socket.cloudVM.billingCheckout.invalidPlan", defaultValue: "Choose Go, Pro, or Max: cmux billing checkout --plan <go|pro|max>"))
+                return v2Error(id: id, code: "invalid_params", message: String(localized: "socket.cloudVM.billingCheckout.invalidPlan", defaultValue: "Choose Go, Pro, or Max: hmux billing checkout --plan <go|pro|max>"))
             }
             return v2VmCall(id: id) { try await VMClient.shared.billingCheckout(plan: plan) }
         case "vm.list":
@@ -235,7 +235,7 @@ extension TerminalController {
                 return v2Error(
                     id: id,
                     code: "invalid_params",
-                    message: "vm.create requires `idempotency_key`. Use `cmux vm new` instead of calling the socket method directly."
+                    message: "vm.create requires `idempotency_key`. Use `hmux vm new` instead of calling the socket method directly."
                 )
             }
             let persistentHome = Self.socketWorkerBool(params["persistent_home"]) ?? false
@@ -270,9 +270,9 @@ extension TerminalController {
                 agentUpdates = decoded
             }
             return v2CloudCall(id: id, method: method, params: params) {
-                let scope = await CmuxTuiSurfaceProviderRegistry.shared.creationScope
+                let scope = await HmuxTuiSurfaceProviderRegistry.shared.creationScope
                 let vm = try await VMClient.shared.create(image: image, kind: kind, provider: provider, persistentHome: persistentHome, perMachineHome: perMachineHome, memoryMb: memoryMb, displayName: Self.socketWorkerString(params["display_name"]), networkPolicy: networkPolicy, agentUpdates: agentUpdates, idempotencyKey: idempotencyKey)
-                _ = await CmuxTuiSurfaceProviderRegistry.shared.recordCreatedMachine(vm, attach: vm.createAttach, scope: scope)
+                _ = await HmuxTuiSurfaceProviderRegistry.shared.recordCreatedMachine(vm, attach: vm.createAttach, scope: scope)
                 return Self.socketWorkerVMSummaryPayload(vm)
             }
         case "vm.base_open":
@@ -304,7 +304,7 @@ extension TerminalController {
             }
         case "vm.status":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.status requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.status requires `id`. Run `hmux vm ls` to find one.")
             }
             return v2CloudCall(id: id, method: method, params: params) {
                 let vm = try await VMClient.shared.status(id: vmId)
@@ -312,7 +312,7 @@ extension TerminalController {
             }
         case "vm.stats":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.stats requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.stats requires `id`. Run `hmux vm ls` to find one.")
             }
             return v2CloudCall(id: id, method: method, params: params) {
                 let stats = try await VMClient.shared.stats(id: vmId)
@@ -337,7 +337,7 @@ extension TerminalController {
                     code: "invalid_params",
                     message: String(
                         localized: "socket.cloudVM.resize.idRequired",
-                        defaultValue: "vm.resize requires `id`. Run `cmux vm ls` to find one."
+                        defaultValue: "vm.resize requires `id`. Run `hmux vm ls` to find one."
                     )
                 )
             }
@@ -374,7 +374,7 @@ extension TerminalController {
             return socketWorkerCloudAgentUpdatesResponse(method: method, id: id, params: params)
         case "vm.rename":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.rename requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.rename requires `id`. Run `hmux vm ls` to find one.")
             }
             let displayName = Self.socketWorkerString(params["display_name"])
             return v2CloudCall(id: id, method: method, params: params) {
@@ -389,7 +389,7 @@ extension TerminalController {
             }
         case "vm.hygiene":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.hygiene requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.hygiene requires `id`. Run `hmux vm ls` to find one.")
             }
             // Only a literal true applies; anything else is the dry-run.
             let apply = (params["apply"] as? Bool) == true
@@ -399,7 +399,7 @@ extension TerminalController {
             }
         case "vm.pause", "vm.resume", "vm.restart":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "\(method) requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "\(method) requires `id`. Run `hmux vm ls` to find one.")
             }
             let resume = method == "vm.resume"
             let restart = method == "vm.restart"
@@ -413,15 +413,15 @@ extension TerminalController {
                     status = try await VMClient.shared.pause(id: vmId)
                 }
                 if !resume && !restart {
-                    await CmuxTuiSurfaceProviderRegistry.shared.machineBecameInactive(vmId, status: status)
+                    await HmuxTuiSurfaceProviderRegistry.shared.machineBecameInactive(vmId, status: status)
                 }
                 return ["id": vmId, "status": status]
             }
         case "vm.reflection":
-            // `cmux vm self <machine> [<path>]`: the machine's platform identity through the
-            // user's session — what `cmux self` prints inside it — without starting a shell.
+            // `hmux vm self <machine> [<path>]`: the machine's platform identity through the
+            // user's session — what `hmux self` prints inside it — without starting a shell.
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.reflection requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.reflection requires `id`. Run `hmux vm ls` to find one.")
             }
             let rawPath = Self.socketWorkerString(params["path"]) ?? ""
             let path = rawPath.trimmingCharacters(in: CharacterSet(charactersIn: "/"))
@@ -441,9 +441,9 @@ extension TerminalController {
         case "vm.file_put":
             return socketWorkerVMFilePutResponse(id: id, params: params)
         case "vm.snapshot_list":
-            // `cmux vm snapshot ls <machine>`: this machine's snapshots, newest first.
+            // `hmux vm snapshot ls <machine>`: this machine's snapshots, newest first.
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.snapshot_list requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.snapshot_list requires `id`. Run `hmux vm ls` to find one.")
             }
             return v2CloudCall(id: id, method: method, params: params, timeoutSeconds: 60) {
                 let snapshots = try await VMClient.shared.listSnapshots(id: vmId)
@@ -455,12 +455,12 @@ extension TerminalController {
                 ]
             }
         case "vm.snapshot_delete":
-            // `cmux vm snapshot rm <machine> <snapshot-id>`: the snapshot must be this machine's.
+            // `hmux vm snapshot rm <machine> <snapshot-id>`: the snapshot must be this machine's.
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.snapshot_delete requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.snapshot_delete requires `id`. Run `hmux vm ls` to find one.")
             }
             guard let snapshotId = Self.socketWorkerString(params["snapshot_id"]), !snapshotId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.snapshot_delete requires `snapshot_id`. Run `cmux vm snapshot ls <machine>` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.snapshot_delete requires `snapshot_id`. Run `hmux vm snapshot ls <machine>` to find one.")
             }
             return v2CloudCall(id: id, method: method, params: params, timeoutSeconds: 120) {
                 let deleted = try await VMClient.shared.deleteSnapshot(id: vmId, snapshotId: snapshotId)
@@ -468,7 +468,7 @@ extension TerminalController {
             }
         case "vm.snapshot":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.snapshot requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.snapshot requires `id`. Run `hmux vm ls` to find one.")
             }
             let name = Self.socketWorkerString(params["name"])
             return v2CloudCall(id: id, method: method, params: params) {
@@ -477,10 +477,10 @@ extension TerminalController {
             }
         case "vm.fork":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.fork requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.fork requires `id`. Run `hmux vm ls` to find one.")
             }
             guard let idempotencyKey = Self.socketWorkerString(params["idempotency_key"]), !idempotencyKey.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.fork requires `idempotency_key`. Use `cmux vm fork` instead of calling the socket method directly.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.fork requires `idempotency_key`. Use `hmux vm fork` instead of calling the socket method directly.")
             }
             let name = Self.socketWorkerString(params["name"])
             return v2CloudCall(id: id, method: method, params: params) {
@@ -492,10 +492,10 @@ extension TerminalController {
         case "vm.restore":
             guard let snapshotId = Self.socketWorkerString(params["snapshot_id"]) ?? Self.socketWorkerString(params["snapshotId"]),
                   !snapshotId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.restore requires `snapshot_id`. Run `cmux vm snapshot <id>` first.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.restore requires `snapshot_id`. Run `hmux vm snapshot <id>` first.")
             }
             guard let idempotencyKey = Self.socketWorkerString(params["idempotency_key"]), !idempotencyKey.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.restore requires `idempotency_key`. Use `cmux vm restore` instead of calling the socket method directly.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.restore requires `idempotency_key`. Use `hmux vm restore` instead of calling the socket method directly.")
             }
             let provider = Self.socketWorkerString(params["provider"])
             return v2CloudCall(id: id, method: method, params: params) {
@@ -504,7 +504,7 @@ extension TerminalController {
             }
         case "vm.destroy":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.destroy requires `id`. Run `cmux vm ls` to find one, then `cmux vm rm <id>`.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.destroy requires `id`. Run `hmux vm ls` to find one, then `hmux vm rm <id>`.")
             }
             return v2CloudCall(id: id, method: method, params: params) {
                 // Every entrypoint (panel, tree, CLI, socket) funnels through this
@@ -517,10 +517,10 @@ extension TerminalController {
             }
         case "vm.exec":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.exec requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.exec requires `id`. Run `hmux vm ls` to find one.")
             }
             guard let command = Self.socketWorkerString(params["command"]), !command.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.exec requires `command`. From the CLI, use `cmux vm exec <id> -- <command>`.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.exec requires `command`. From the CLI, use `hmux vm exec <id> -- <command>`.")
             }
             let timeoutMs = max(1, Self.socketWorkerInt(params["timeout_ms"]) ?? 30_000)
             return v2CloudCall(id: id, method: method, params: params) {
@@ -529,10 +529,10 @@ extension TerminalController {
             }
         case "vm.open_port":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.open_port requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.open_port requires `id`. Run `hmux vm ls` to find one.")
             }
             guard let port = Self.socketWorkerInt(params["port"]), (1...65535).contains(port) else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.open_port requires `port` between 1 and 65535. From the CLI, use `cmux vm open <id> <port>`.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.open_port requires `port` between 1 and 65535. From the CLI, use `hmux vm open <id> <port>`.")
             }
             return v2CloudCall(id: id, method: method, params: params) {
                 let endpoint = try await VMClient.shared.openPort(id: vmId, port: port)
@@ -558,7 +558,7 @@ extension TerminalController {
             }
         case "vm.ssh_info":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.ssh_info requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.ssh_info requires `id`. Run `hmux vm ls` to find one.")
             }
             return v2CloudCall(id: id, method: method, params: params) {
                 let endpoint = try await VMClient.shared.openSSH(id: vmId)
@@ -571,7 +571,7 @@ extension TerminalController {
             }
             return v2CloudCall(id: id, method: method, params: params, timeoutSeconds: 90) {
                 let endpoint = try await VMClient.shared.prepareSCP(id: vmId, publicKey: publicKey)
-                let forwards = await MainActor.run { CmuxTuiSurfaceProviderRegistry.shared.portForwards }
+                let forwards = await MainActor.run { HmuxTuiSurfaceProviderRegistry.shared.portForwards }
                 guard let forwards else { throw CloudMachineLinkManager.ManagerError.wireGuardHubMissing }
                 let forward = try await forwards.forward(machineID: vmId, to: CloudPortForwardTarget(host: endpoint.host, port: endpoint.port))
                 try await forward.warmUpHub()
@@ -583,7 +583,7 @@ extension TerminalController {
             }
         case "vm.attach_info":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.attach_info requires `id`. Run `cmux vm ls` to find one, then `cmux vm ssh <id>`.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.attach_info requires `id`. Run `hmux vm ls` to find one, then `hmux vm ssh <id>`.")
             }
             let requireDaemon = Self.socketWorkerBool(params["require_daemon"])
                 ?? Self.socketWorkerBool(params["requireDaemon"])
@@ -592,9 +592,9 @@ extension TerminalController {
                 let endpoint = try await VMClient.shared.openAttach(id: vmId, requireDaemon: requireDaemon)
                 return Self.socketWorkerAttachInfoPayload(endpoint)
             }
-        case "vm.cmux_remote_info":
+        case "vm.hmux_remote_info":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.cmux_remote_info requires `id`. Run `cmux vm ls` to find one, then `cmux vm tui <id>`.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.hmux_remote_info requires `id`. Run `hmux vm ls` to find one, then `hmux vm tui <id>`.")
             }
             let deviceFingerprint = Self.socketWorkerString(params["device_fingerprint"])
                 ?? Self.socketWorkerString(params["deviceFingerprint"])
@@ -606,15 +606,15 @@ extension TerminalController {
                 id: id,
                 transportUnsupportedMachineID: vmId
             ) {
-                let registry = await MainActor.run { CmuxTuiSurfaceProviderRegistry.shared }
+                let registry = await MainActor.run { HmuxTuiSurfaceProviderRegistry.shared }
                 // The attach endpoint is the authoritative capability check. A
                 // status read here was redundant and, on a cold Next dev backend,
                 // forced an extra compilation of GET /api/vm/[id] before the
                 // attach request could begin. Reuse a cached provider verdict
-                // when available; otherwise let openCmuxRemote return the typed
+                // when available; otherwise let openHmuxRemote return the typed
                 // transport-unsupported error.
                 if let cachedCapabilities = await MainActor.run(body: { registry.provider(machineID: vmId)?.capabilities }),
-                   !cachedCapabilities.cmuxRemote {
+                   !cachedCapabilities.hmuxRemote {
                     throw VMClientError.httpStatus(501, #"{"error":"vm_attach_transport_unsupported"}"#)
                 }
                 guard clientCapabilities.contains(CloudTuiCommandLine.wireGuardHubCapability) else {
@@ -638,7 +638,7 @@ extension TerminalController {
                     // address. Skip POST /attach-endpoint (~2 s measured);
                     // it would return this same route from the same row.
                     payload = [
-                        "transport": "cmux-remote",
+                        "transport": "hmux-remote",
                         "route": createdRoute,
                         "token": "",
                         "expires_at_unix": 0,
@@ -654,7 +654,7 @@ extension TerminalController {
                     // carrier marker means dial the trusted listener again; a real
                     // fingerprint means present the stored device key.
                     payload = [
-                        "transport": "cmux-remote",
+                        "transport": "hmux-remote",
                         "route": knownRoute,
                         "token": "",
                         "expires_at_unix": 0,
@@ -662,13 +662,13 @@ extension TerminalController {
                         "trusted_carrier": deviceFingerprint == CloudTuiClientPaths.carrierDeviceMarker,
                     ]
                 } else {
-                    let endpoint = try await VMClient.shared.openCmuxRemote(
+                    let endpoint = try await VMClient.shared.openHmuxRemote(
                         id: vmId,
                         deviceFingerprint: deviceFingerprint,
                         clientCapabilities: clientCapabilities
                     )
                     payload = [
-                        "transport": "cmux-remote",
+                        "transport": "hmux-remote",
                         "route": endpoint.route,
                         "token": endpoint.token,
                         "expires_at_unix": endpoint.expiresAtUnix,
@@ -691,7 +691,7 @@ extension TerminalController {
                 }
                 // External clients pin the hub and use the same address race as app links.
                 let route = payload["route"] as? String ?? ""
-                let hub = await MainActor.run { CmuxTuiSurfaceProviderRegistry.shared.wireGuardHub }
+                let hub = await MainActor.run { HmuxTuiSurfaceProviderRegistry.shared.wireGuardHub }
                 guard let hub else { throw CloudMachineLinkManager.ManagerError.wireGuardHubMissing }
                 let ready = try await hub.pinForExternalClient()
                 payload["wireguard_hub_socket"] = ready.socketPath
@@ -707,7 +707,7 @@ extension TerminalController {
             }
         case "vm.sessions":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.sessions requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.sessions requires `id`. Run `hmux vm ls` to find one.")
             }
             return v2CloudCall(id: id, method: method, params: params) {
                 let sessions = try await VMClient.shared.listSessions(id: vmId)
@@ -715,7 +715,7 @@ extension TerminalController {
             }
         case "vm.session_attach_info":
             guard let vmId = Self.socketWorkerString(params["id"]), !vmId.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "vm.session_attach_info requires `id`. Run `cmux vm ls` to find one.")
+                return v2Error(id: id, code: "invalid_params", message: "vm.session_attach_info requires `id`. Run `hmux vm ls` to find one.")
             }
             let sessionId = Self.socketWorkerString(params["session_id"]) ?? Self.socketWorkerString(params["sessionId"])
             let attachmentId = Self.socketWorkerString(params["attachment_id"]) ?? Self.socketWorkerString(params["attachmentId"])
@@ -732,7 +732,7 @@ extension TerminalController {
                     "session": result.session.map(Self.socketWorkerCloudSessionPayload) ?? NSNull(),
                 ]
             }
-        // The cloud tree verbs (`cmux vm tree|open|agent`, the sidebar) are thin wrappers
+        // The cloud tree verbs (`hmux vm tree|open|agent`, the sidebar) are thin wrappers
         // over the surface catalog now; see SurfaceSocketCommands.swift. They stay on the
         // socket worker like every other vm verb and await the main-actor catalog.
         case "vm.tree":
@@ -780,9 +780,9 @@ extension TerminalController {
         }
     }
 
-    private nonisolated static func socketWorkerCloudAttachPayload(_ endpoint: VMCmuxRemoteEndpoint) -> [String: Any] {
+    private nonisolated static func socketWorkerCloudAttachPayload(_ endpoint: VMHmuxRemoteEndpoint) -> [String: Any] {
         var payload: [String: Any] = [
-            "transport": "cmux-remote",
+            "transport": "hmux-remote",
             "route": endpoint.route,
             "token": endpoint.token,
             "expires_at_unix": endpoint.expiresAtUnix,
@@ -804,7 +804,7 @@ extension TerminalController {
         }
         return payload
     }
-    /// Handles the `remotes.*` socket methods backing `cmux remotes`. Each maps
+    /// Handles the `remotes.*` socket methods backing `hmux remotes`. Each maps
     /// to a single ``RemotesClient`` operation (the shared registry mutation
     /// path); the CLI does presentation only.
     nonisolated func socketWorkerRemotesResponse(
@@ -828,7 +828,7 @@ extension TerminalController {
             }
         case "remotes.add":
             guard let name = Self.socketWorkerString(params["name"]), !name.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "remotes.add requires `name`. Use `cmux remotes add <name> --route host:port`.")
+                return v2Error(id: id, code: "invalid_params", message: "remotes.add requires `name`. Use `hmux remotes add <name> --route host:port`.")
             }
             let routes = Self.socketWorkerStringArray(params["routes"])
             guard !routes.isEmpty else {
@@ -841,7 +841,7 @@ extension TerminalController {
             }
         case "remotes.remove":
             guard let target = Self.socketWorkerString(params["target"]), !target.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "remotes.remove requires `target` (a remote name or deviceId). Run `cmux remotes list`.")
+                return v2Error(id: id, code: "invalid_params", message: "remotes.remove requires `target` (a remote name or deviceId). Run `hmux remotes list`.")
             }
             return v2CloudCall(id: id, method: method, params: params) {
                 let deviceId = try await RemotesClient.shared.remove(target: target)
@@ -913,8 +913,8 @@ extension TerminalController {
         if let agentUpdates = vm.agentUpdates {
             payload["agentUpdates"] = agentUpdates.rawValue
         }
-        if let cmuxTuiContract = vm.cmuxTuiContract, !cmuxTuiContract.isEmpty {
-            payload["cmuxTuiContract"] = cmuxTuiContract
+        if let hmuxTuiContract = vm.hmuxTuiContract, !hmuxTuiContract.isEmpty {
+            payload["hmuxTuiContract"] = hmuxTuiContract
         }
         if let attach = vm.createAttach {
             payload["attach"] = socketWorkerCloudAttachPayload(attach)
@@ -955,7 +955,7 @@ extension TerminalController {
         return array.compactMap { socketWorkerString($0) }
     }
 
-    /// Handles `aiAccounts.*` socket methods backing `cmux ai-accounts`.
+    /// Handles `aiAccounts.*` socket methods backing `hmux ai-accounts`.
     /// OAuth credential files are read here in the app process so the CLI only
     /// sends provider/options; API-key providers may carry an explicit key.
     ///
@@ -1010,7 +1010,7 @@ extension TerminalController {
             }
         case "aiAccounts.remove":
             guard let accountID = Self.socketWorkerString(params["id"]), !accountID.isEmpty else {
-                return v2Error(id: id, code: "invalid_params", message: "aiAccounts.remove requires `id`. Run `cmux ai-accounts list`.")
+                return v2Error(id: id, code: "invalid_params", message: "aiAccounts.remove requires `id`. Run `hmux ai-accounts list`.")
             }
             let teamID = Self.socketWorkerString(params["teamId"]) ?? Self.socketWorkerString(params["team_id"])
             return v2CloudCall(id: id, method: method, params: params) {

@@ -1,11 +1,11 @@
-import CmuxCloud
+import HmuxCloud
 import Foundation
-import CmuxTerminalCore
+import HmuxTerminalCore
 import Combine
 import AppKit
 import Bonsplit
-import CmuxTerminal
-import CmuxWorkspaces
+import HmuxTerminal
+import HmuxWorkspaces
 import GhosttyKit
 
 /// TerminalPanel wraps an existing TerminalSurface and conforms to the Panel protocol.
@@ -174,7 +174,7 @@ final class TerminalPanel: Panel, ObservableObject {
         self.id = surface.id
         self.workspaceId = workspaceId
         self.surface = surface
-        let persistedStableSurfaceId = surface.startupEnvironmentValue("CMUX_STABLE_SURFACE_ID")
+        let persistedStableSurfaceId = surface.startupEnvironmentValue("HMUX_STABLE_SURFACE_ID")
             .flatMap(UUID.init(uuidString:))
         self.stableSurfaceIdentity = PanelStableSurfaceIdentity(id: persistedStableSurfaceId ?? UUID())
         self.title = surface.agentPanelTitle.flatMap { AutomaticTerminalTitle($0)?.value } ?? "Terminal"
@@ -196,7 +196,7 @@ final class TerminalPanel: Panel, ObservableObject {
         id: UUID = UUID(),
         workspaceId: UUID,
         context: ghostty_surface_context_e = GHOSTTY_SURFACE_CONTEXT_SPLIT,
-        configTemplate: CmuxSurfaceConfigTemplate? = nil,
+        configTemplate: HmuxSurfaceConfigTemplate? = nil,
         workingDirectory: String? = nil,
         portOrdinal: Int = 0,
         initialCommand: String? = nil,
@@ -211,9 +211,9 @@ final class TerminalPanel: Panel, ObservableObject {
     ) {
         let stableSurfaceId = stableSurfaceId ?? UUID()
         var managedInitialEnvironmentOverrides = initialEnvironmentOverrides
-        managedInitialEnvironmentOverrides["CMUX_STABLE_SURFACE_ID"] = stableSurfaceId.uuidString
+        managedInitialEnvironmentOverrides["HMUX_STABLE_SURFACE_ID"] = stableSurfaceId.uuidString
         let managedAdditionalEnvironment = additionalEnvironment.merging(
-            ["CMUX_STABLE_SURFACE_ID": stableSurfaceId.uuidString],
+            ["HMUX_STABLE_SURFACE_ID": stableSurfaceId.uuidString],
             uniquingKeysWith: { _, stableValue in stableValue }
         )
         let surface = TerminalSurface(
@@ -245,7 +245,7 @@ final class TerminalPanel: Panel, ObservableObject {
     }
 
     private static func startsAtOwnedPrompt(
-        configTemplate: CmuxSurfaceConfigTemplate?,
+        configTemplate: HmuxSurfaceConfigTemplate?,
         initialCommand: String?,
         tmuxStartCommand: String?,
         initialInput: String?
@@ -710,7 +710,7 @@ final class TerminalPanel: Panel, ObservableObject {
 #if DEBUG
         let frame = String(format: "%.1fx%.1f", hostedView.frame.width, hostedView.frame.height)
         let bounds = String(format: "%.1fx%.1f", hostedView.bounds.width, hostedView.bounds.height)
-        cmuxDebugLog(
+        hmuxDebugLog(
             "surface.panel.close.begin panel=\(id.uuidString.prefix(5)) " +
             "workspace=\(workspaceId.uuidString.prefix(5)) runtimeSurface=\(surface.surface != nil ? 1 : 0) " +
             "inWindow=\(surface.isViewInWindow ? 1 : 0) hasSuperview=\(hostedView.superview != nil ? 1 : 0) " +
@@ -721,7 +721,7 @@ final class TerminalPanel: Panel, ObservableObject {
         hostedView.setVisibleInUI(false)
         TerminalWindowPortalRegistry.detach(hostedView: hostedView)
 #if DEBUG
-        cmuxDebugLog(
+        hmuxDebugLog(
             "surface.panel.close.end panel=\(id.uuidString.prefix(5)) " +
             "inWindow=\(surface.isViewInWindow ? 1 : 0) hasSuperview=\(hostedView.superview != nil ? 1 : 0) " +
             "hidden=\(hostedView.isHidden ? 1 : 0)"

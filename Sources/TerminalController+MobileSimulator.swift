@@ -1,5 +1,5 @@
-import CMUXMobileCore
-import CmuxSimulator
+import HMUXMobileCore
+import HmuxSimulator
 import Foundation
 
 extension TerminalController {
@@ -12,7 +12,7 @@ extension TerminalController {
         case "mobile.simulator.list":
             return v2MobileSimulatorList(params: params, connectionID: connectionID)
         case "mobile.simulator.stream.start":
-            guard CmuxFeatureFlags.shared.isSimulatorEnabled else {
+            guard HmuxFeatureFlags.shared.isSimulatorEnabled else {
                 MobileSimulatorDiagnostics.recordStream(
                     panelID: nil,
                     state: .startFailed,
@@ -120,7 +120,7 @@ extension TerminalController {
         params: [String: Any],
         connectionID: UUID?
     ) async -> V2CallResult {
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else {
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else {
             return .err(code: "capability_disabled", message: "Simulator panes are disabled", data: nil)
         }
         guard let panelIDString = v2RawString(params, "panel_id"),
@@ -156,7 +156,7 @@ extension TerminalController {
         params: [String: Any],
         connectionID: UUID?
     ) -> V2CallResult {
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else {
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else {
             return .err(code: "capability_disabled", message: "Simulator panes are disabled", data: nil)
         }
         guard let panelIDString = v2RawString(params, "panel_id"),
@@ -179,7 +179,7 @@ extension TerminalController {
         params: [String: Any],
         connectionID: UUID?
     ) -> V2CallResult {
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else {
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else {
             return .err(code: "capability_disabled", message: "Simulator panes are disabled", data: nil)
         }
         guard let panelIDString = v2RawString(params, "panel_id"),
@@ -199,7 +199,7 @@ extension TerminalController {
         if v2HasNonNullParam(params, "workspace_id"), v2UUID(params, "workspace_id") == nil {
             return .err(code: "invalid_params", message: "Missing or invalid workspace_id", data: nil)
         }
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else {
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else {
             return .ok(["panels": []])
         }
 
@@ -235,7 +235,7 @@ extension TerminalController {
         params: [String: Any],
         connectionID: UUID?
     ) -> V2CallResult {
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else {
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else {
             MobileSimulatorDiagnostics.recordInput(
                 panelID: nil,
                 state: .featureDisabled,
@@ -312,7 +312,7 @@ extension TerminalController {
         params: [String: Any],
         connectionID: UUID?
     ) -> V2CallResult {
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else {
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else {
             MobileSimulatorDiagnostics.recordInput(panelID: nil, state: .featureDisabled, kind: .text)
             return .err(code: "capability_disabled", message: "Simulator panes are disabled", data: nil)
         }
@@ -381,7 +381,7 @@ extension TerminalController {
         params: [String: Any],
         connectionID: UUID?
     ) -> V2CallResult {
-        guard CmuxFeatureFlags.shared.isSimulatorEnabled else {
+        guard HmuxFeatureFlags.shared.isSimulatorEnabled else {
             MobileSimulatorDiagnostics.recordInput(
                 panelID: nil,
                 state: .featureDisabled,

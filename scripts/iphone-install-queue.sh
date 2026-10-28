@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Offline install queue for tagged cmux iOS dev builds targeting a physical iPhone.
+# Offline install queue for tagged hmux iOS dev builds targeting a physical iPhone.
 #
 # When an iOS reload finishes but the target iPhone is unreachable (unplugged,
 # asleep, off the network), the signed .app is parked here instead of being
@@ -16,10 +16,10 @@
 #     Copy the signed app into the persistent queue (one slot per tag; a
 #     re-enqueue of the same tag replaces the older build). The sign-in/attach
 #     opt-out flags produce an unauthenticated install, so they require the human-only
-#     CMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 (agents never set it); reload also
+#     HMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 (agents never set it); reload also
 #     passes --allow-unauthenticated to make that intent explicit. The
 #     authorization is recorded in the entry so a headless drain honors it.
-#     --readiness (default auto: the app's Info.plist CMUXDogfoodReadiness,
+#     --readiness (default auto: the app's Info.plist HMUXDogfoodReadiness,
 #     app-receipt-v1 = app-receipt, absent = mac-rpc) is resolved now and
 #     replayed by the drain: app-receipt entries launch with
 #     `--readiness app-receipt` (no tagged Mac) instead of --ensure-mac.
@@ -33,8 +33,8 @@
 #   probe [--device-id <id>]         Exit 0 iff the (default) iPhone is reachable.
 #
 # Storage is persistent (NOT /tmp):
-#   ${CMUX_IPHONE_QUEUE_DIR:-~/Library/Application Support/cmux-dev/iphone-install-queue}
-#     pending/<slug>/cmux.app + meta.json     queued builds
+#   ${HMUX_IPHONE_QUEUE_DIR:-~/Library/Application Support/hmux-dev/iphone-install-queue}
+#     pending/<slug>/hmux.app + meta.json     queued builds
 #     needs-auth/<slug>/                      installed, but the iPhone auth gate
 #                                             failed (app on the phone is NOT
 #                                             signed in); kept for `retry`
@@ -43,8 +43,8 @@
 #     bin/                                    stable copy of this script for the LaunchAgent
 #
 # Default device id resolution (never hardcoded here):
-#   1. CMUX_IPHONE_DEVICE_ID environment variable
-#   2. first line of ${CMUX_CONFIG_DIR:-~/.config/cmux}/iphone-device-id
+#   1. HMUX_IPHONE_DEVICE_ID environment variable
+#   2. first line of ${HMUX_CONFIG_DIR:-~/.config/hmux}/iphone-device-id
 #
 # Launch policy mirrors the reload scripts: the queued launch goes through the
 # checkout's scripts/mobile-dev-launch.sh (auto sign-in + auto-pair via
@@ -60,13 +60,13 @@
 # This script and ios-device-process.sh are installed together as stable copies
 # so the LaunchAgent remains independent of a pruned enqueuing worktree.
 #
-# Testing hooks: CMUX_IPHONE_QUEUE_FORCE_UNREACHABLE=1 makes every device probe
+# Testing hooks: HMUX_IPHONE_QUEUE_FORCE_UNREACHABLE=1 makes every device probe
 # report unreachable (used by tests and for demonstrating the queue path while
 # the phone is actually connected).
 set -euo pipefail
 
-QUEUE_DIR="${CMUX_IPHONE_QUEUE_DIR:-$HOME/Library/Application Support/cmux-dev/iphone-install-queue}"
-CONFIG_DIR="${CMUX_CONFIG_DIR:-$HOME/.config/cmux}"
+QUEUE_DIR="${HMUX_IPHONE_QUEUE_DIR:-$HOME/Library/Application Support/hmux-dev/iphone-install-queue}"
+CONFIG_DIR="${HMUX_CONFIG_DIR:-$HOME/.config/hmux}"
 PENDING_DIR="$QUEUE_DIR/pending"
 NEEDS_AUTH_DIR="$QUEUE_DIR/needs-auth"
 FAILED_DIR="$QUEUE_DIR/failed"
@@ -74,9 +74,9 @@ LOGS_DIR="$QUEUE_DIR/logs"
 LOCK_DIR="$QUEUE_DIR/.drain-lock"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 DEVICE_PROCESS_HELPER="$SCRIPT_DIR/ios-device-process.sh"
-RECEIPT_DIR="${CMUX_READINESS_RECEIPT_DIR:-/tmp/cmux-ios-dogfood-readiness}"
+RECEIPT_DIR="${HMUX_READINESS_RECEIPT_DIR:-/tmp/hmux-ios-dogfood-readiness}"
 
-# Mirrors cmux_attach__slug (scripts/lib/mobile-attach.sh) for RECEIPT file
+# Mirrors hmux_attach__slug (scripts/lib/mobile-attach.sh) for RECEIPT file
 # names only; tag->slug still comes from the signed app's bundle id.
 slugify() {
   local cleaned
@@ -94,8 +94,8 @@ log() {
 usage() { sed -n '2,61p' "$0"; }
 
 default_device_id() {
-  if [[ -n "${CMUX_IPHONE_DEVICE_ID:-}" ]]; then
-    printf '%s' "$CMUX_IPHONE_DEVICE_ID"
+  if [[ -n "${HMUX_IPHONE_DEVICE_ID:-}" ]]; then
+    printf '%s' "$HMUX_IPHONE_DEVICE_ID"
     return 0
   fi
   local f="$CONFIG_DIR/iphone-device-id"
@@ -113,7 +113,7 @@ app_bundle_id() {
 }
 
 # Readiness contract declared by the signed app (mirrors
-# cmux_attach_app_readiness_mode in scripts/lib/mobile-attach.sh): absent key
+# hmux_attach_app_readiness_mode in scripts/lib/mobile-attach.sh): absent key
 # = mac-rpc, app-receipt-v1 = app-receipt, anything else fails closed.
 app_readiness_mode() {
   /usr/bin/python3 - "$1/Info.plist" <<'PY'
@@ -126,13 +126,13 @@ try:
 except Exception:
     print("mac-rpc")
     raise SystemExit(0)
-value = info.get("CMUXDogfoodReadiness") if isinstance(info, dict) else None
+value = info.get("HMUXDogfoodReadiness") if isinstance(info, dict) else None
 if value is None:
     print("mac-rpc")
 elif value == "app-receipt-v1":
     print("app-receipt")
 else:
-    print(f"unsupported CMUXDogfoodReadiness value {value!r}", file=sys.stderr)
+    print(f"unsupported HMUXDogfoodReadiness value {value!r}", file=sys.stderr)
     raise SystemExit(2)
 PY
 }
@@ -142,7 +142,7 @@ PY
 # availability rules as ios/scripts/reload.sh select_device.
 device_reachable() {
   local want_id="$1"
-  [[ "${CMUX_IPHONE_QUEUE_FORCE_UNREACHABLE:-0}" == "1" ]] && return 1
+  [[ "${HMUX_IPHONE_QUEUE_FORCE_UNREACHABLE:-0}" == "1" ]] && return 1
   [[ -n "$want_id" ]] || return 1
   WANT_ID="$want_id" /usr/bin/python3 -c '
 import json, os, subprocess, tempfile
@@ -221,12 +221,12 @@ PY
 }
 
 notify() {
-  local title="$1" body="$2" cmux_bin
-  cmux_bin="$(command -v cmux 2>/dev/null || true)"
-  [[ -z "$cmux_bin" && -x "$HOME/.local/bin/cmux" ]] && cmux_bin="$HOME/.local/bin/cmux"
-  [[ -n "$cmux_bin" ]] || { log "cmux CLI not found; skipping notification"; return 0; }
-  "$cmux_bin" notify --title "$title" --body "$body" >/dev/null 2>&1 \
-    || log "cmux notify failed (no running cmux?); continuing"
+  local title="$1" body="$2" hmux_bin
+  hmux_bin="$(command -v hmux 2>/dev/null || true)"
+  [[ -z "$hmux_bin" && -x "$HOME/.local/bin/hmux" ]] && hmux_bin="$HOME/.local/bin/hmux"
+  [[ -n "$hmux_bin" ]] || { log "hmux CLI not found; skipping notification"; return 0; }
+  "$hmux_bin" notify --title "$title" --body "$body" >/dev/null 2>&1 \
+    || log "hmux notify failed (no running hmux?); continuing"
 }
 
 # Select the newest stable launcher when this queue script was installed into
@@ -235,10 +235,10 @@ notify() {
 queue_mobile_launcher() {
   local checkout="$1" candidate
   for candidate in \
-      "${CMUX_IPHONE_QUEUE_MOBILE_LAUNCHER:-}" \
+      "${HMUX_IPHONE_QUEUE_MOBILE_LAUNCHER:-}" \
       "$SCRIPT_DIR/mobile-dev-launch.sh" \
       "$checkout/scripts/mobile-dev-launch.sh" \
-      "${CMUX_IPHONE_QUEUE_CHECKOUT:-}/scripts/mobile-dev-launch.sh"; do
+      "${HMUX_IPHONE_QUEUE_CHECKOUT:-}/scripts/mobile-dev-launch.sh"; do
     [[ -n "$candidate" && -x "$candidate" ]] || continue
     printf '%s' "$candidate"
     return 0
@@ -253,14 +253,14 @@ queue_validate_auth_contract() {
   local output resolved_profile resolved_account
   output="$(
     cd "$checkout" \
-      && CMUX_MOBILE_SOURCE_CHECKOUT="$checkout" "$launcher" \
+      && HMUX_MOBILE_SOURCE_CHECKOUT="$checkout" "$launcher" \
         --check-auth-contract \
         --auth-profile "$profile" \
         --expected-account "$expected" \
         --credentials-file "$credentials_file"
   )" || return $?
-  resolved_profile="$(printf '%s\n' "$output" | awk -F= '$1 == "CMUX_DEV_AUTH_PROFILE" { print substr($0, index($0, "=") + 1); exit }')"
-  resolved_account="$(printf '%s\n' "$output" | awk -F= '$1 == "CMUX_DEV_AUTH_ACCOUNT" { print substr($0, index($0, "=") + 1); exit }')"
+  resolved_profile="$(printf '%s\n' "$output" | awk -F= '$1 == "HMUX_DEV_AUTH_PROFILE" { print substr($0, index($0, "=") + 1); exit }')"
+  resolved_account="$(printf '%s\n' "$output" | awk -F= '$1 == "HMUX_DEV_AUTH_ACCOUNT" { print substr($0, index($0, "=") + 1); exit }')"
   [[ "$resolved_profile" == "$profile" && -n "$resolved_account" ]] || {
     err "launcher does not support the required iOS auth contract (profile/account proof missing)"
     return 2
@@ -298,8 +298,8 @@ cmd_enqueue() {
   # under a LaunchAgent where an ambient env var cannot express human intent.
   local allow_unauthenticated=0
   if [[ "$no_attach" -eq 1 || "$no_sign_in" -eq 1 || "$no_setup" -eq 1 ]]; then
-    if [[ "${CMUX_ALLOW_UNAUTHENTICATED_INSTALL:-0}" != "1" ]]; then
-      die "enqueue: --no-attach/--no-sign-in/--no-setup queue an unauthenticated install; humans only: rerun with CMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 (agents never set it)"
+    if [[ "${HMUX_ALLOW_UNAUTHENTICATED_INSTALL:-0}" != "1" ]]; then
+      die "enqueue: --no-attach/--no-sign-in/--no-setup queue an unauthenticated install; humans only: rerun with HMUX_ALLOW_UNAUTHENTICATED_INSTALL=1 (agents never set it)"
     fi
     allow_unauthenticated=1
   elif [[ "$allow_unauthenticated_requested" -eq 1 ]]; then
@@ -309,10 +309,10 @@ cmd_enqueue() {
   bundle_id="$(app_bundle_id "$app")"
   [[ -n "$bundle_id" ]] || die "enqueue: could not read CFBundleIdentifier from $app"
   case "$bundle_id" in
-    dev.cmux.ios.*) ;;
-    *) die "enqueue: refusing non-dev bundle id '$bundle_id' (expected dev.cmux.ios.<slug>)" ;;
+    dev.hmux.ios.*) ;;
+    *) die "enqueue: refusing non-dev bundle id '$bundle_id' (expected dev.hmux.ios.<slug>)" ;;
   esac
-  local slug="${bundle_id#dev.cmux.ios.}"
+  local slug="${bundle_id#dev.hmux.ios.}"
   case "$readiness" in
     mac-rpc|app-receipt) ;;
     auto) readiness="$(app_readiness_mode "$app")" \
@@ -320,7 +320,7 @@ cmd_enqueue() {
     *) die "enqueue: --readiness must be mac-rpc, app-receipt, or auto" ;;
   esac
   [[ -n "$device_id" ]] || device_id="$(default_device_id)"
-  [[ -n "$device_id" ]] || die "enqueue: no device id (pass --device-id, set CMUX_IPHONE_DEVICE_ID, or write $CONFIG_DIR/iphone-device-id)"
+  [[ -n "$device_id" ]] || die "enqueue: no device id (pass --device-id, set HMUX_IPHONE_DEVICE_ID, or write $CONFIG_DIR/iphone-device-id)"
   if [[ -z "$checkout" ]]; then
     local script_dir
     script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -350,7 +350,7 @@ cmd_enqueue() {
   local staging="$PENDING_DIR/.staging-$slug.$$"
   rm -rf "$staging"
   mkdir -p "$staging"
-  ditto "$app" "$staging/cmux.app"
+  ditto "$app" "$staging/hmux.app"
   # meta.json is written LAST: drain skips entries without it, so a scan can
   # never install a half-copied app.
   TAG="$tag" SLUG="$slug" BUNDLE_ID="$bundle_id" DEVICE_ID="$device_id" \
@@ -391,7 +391,7 @@ Bundle id: $bundle_id
 Device:    $device_id
 Queue:     $entry
 It will auto-install and launch when the iPhone reconnects (LaunchAgent
-dev.cmux.iphone-install-queue). Manual drain: scripts/iphone-install-queue.sh drain
+dev.hmux.iphone-install-queue). Manual drain: scripts/iphone-install-queue.sh drain
 EOF
 }
 
@@ -444,7 +444,7 @@ drain_entry() {
   local slug="$1" override_device="$2"
   local entry="$PENDING_DIR/$slug"
   local meta="$entry/meta.json"
-  local app="$entry/cmux.app"
+  local app="$entry/hmux.app"
   local tag device_id bundle_id checkout no_attach no_sign_in no_setup launch
   local allow_unauthenticated auth_profile expected_account credentials_file readiness
   local stamp
@@ -537,7 +537,7 @@ drain_entry() {
       return $?
     }
     if [[ ! -d "$source_checkout" ]]; then
-      source_checkout="${CMUX_IPHONE_QUEUE_CHECKOUT:-}"
+      source_checkout="${HMUX_IPHONE_QUEUE_CHECKOUT:-}"
     fi
     [[ -d "$source_checkout" ]] || {
       finish_failed "enqueuing checkout was pruned and no fallback source checkout is configured"
@@ -571,10 +571,10 @@ drain_entry() {
   fi
 
   log "installing $bundle_id (tag $tag) on $device_id"
-  # CMUX_SANCTIONED_IPHONE_INSTALL: see ios/scripts/reload.sh — lets the
+  # HMUX_SANCTIONED_IPHONE_INSTALL: see ios/scripts/reload.sh — lets the
   # local-build-guards devicectl interceptor distinguish this sanctioned flow
   # from a raw agent install. Inert without the guards.
-  if ! CMUX_SANCTIONED_IPHONE_INSTALL=1 \
+  if ! HMUX_SANCTIONED_IPHONE_INSTALL=1 \
       xcrun devicectl device install app --device "$device_id" "$app" \
       >>"$LOGS_DIR/drain.log" 2>&1; then
     finish_failed "devicectl install failed (see logs/drain.log)"
@@ -637,7 +637,7 @@ drain_entry() {
   # tagged Mac, so it replays its recorded mode instead of --ensure-mac.
   if [[ "$no_attach" == "1" ]]; then
     args+=(--no-attach)
-    [[ "$allow_unauthenticated" == "1" ]] && mdl_env=(CMUX_ALLOW_UNAUTHENTICATED_INSTALL=1)
+    [[ "$allow_unauthenticated" == "1" ]] && mdl_env=(HMUX_ALLOW_UNAUTHENTICATED_INSTALL=1)
   elif [[ "$readiness" == "app-receipt" ]]; then
     args+=(--readiness app-receipt)
   elif [[ "$readiness" == "mac-rpc" ]]; then
@@ -672,8 +672,8 @@ drain_entry() {
   local mdl_rc=0
   ( cd "$source_checkout" && \
       env ${mdl_env[@]+"${mdl_env[@]}"} \
-        CMUX_MOBILE_SOURCE_CHECKOUT="$source_checkout" \
-        CMUX_INSTALLED_APP_PATH="$app" \
+        HMUX_MOBILE_SOURCE_CHECKOUT="$source_checkout" \
+        HMUX_INSTALLED_APP_PATH="$app" \
         "$mdl" "${args[@]}" ) \
       >"$launch_log" 2>&1 || mdl_rc=$?
   cat "$launch_log" >>"$LOGS_DIR/drain.log" 2>/dev/null || true
@@ -815,7 +815,7 @@ cmd_drain() {
   done
   if [[ "$had_failure" -eq 1 ]]; then
     notify "iPhone install queue: install FAILED" \
-      "A queued cmux iOS dev build failed to install/launch. See $FAILED_DIR and $LOGS_DIR/drain.log"
+      "A queued hmux iOS dev build failed to install/launch. See $FAILED_DIR and $LOGS_DIR/drain.log"
   fi
   [[ "$had_failure" -eq 0 && -z "$needs_auth_slugs" ]] || exit 1
   exit 0

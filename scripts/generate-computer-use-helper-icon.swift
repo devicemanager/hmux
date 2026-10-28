@@ -136,7 +136,7 @@ private struct ComputerUseHelperIconExporter {
 
         let temporaryRoot = fileManager.temporaryDirectory
             .appendingPathComponent(
-                "cmux-computer-use-icon-\(UUID().uuidString)",
+                "hmux-computer-use-icon-\(UUID().uuidString)",
                 isDirectory: true
             )
         let iconsetURL = temporaryRoot

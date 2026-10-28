@@ -27,11 +27,11 @@ const skipInitialList = rest.includes("--skip-initial-list");
 // guest until the coderouter reflection route answers, so the report can
 // separate "terminal usable" from "agents can reach their credentials". The
 // alias host is the one the target deployment configures for its guests
-// (CMUX_VM_EDGE_ALIAS_DOMAIN in the pulled env, the runtime's default
+// (HMUX_VM_EDGE_ALIAS_DOMAIN in the pulled env, the runtime's default
 // otherwise), or --edge-alias; it is resolved once the env is loaded.
 const edgeCheck = rest.includes("--edge-check");
 const edgeAliasOption = optionValue(rest, "--edge-alias");
-const DEFAULT_EDGE_ALIAS_HOST = "coderouter.cmux.internal";
+const DEFAULT_EDGE_ALIAS_HOST = "coderouter.hmux.internal";
 const EDGE_BUDGET_MS = 90_000;
 const label = optionValue(rest, "--label") ?? "";
 const outPath = optionValue(rest, "--out");
@@ -62,18 +62,18 @@ const { Freestyle, FreestyleApiError } = await import("freestyle");
 const env = loadTargetEnv(project);
 // A Vercel "sensitive" variable pulls as an empty string (projects.mjs); the
 // operator's own copy of the same value fills it, and
-// CMUX_CLOUD_VM_ENV_SOURCE=process skips the pull altogether.
+// HMUX_CLOUD_VM_ENV_SOURCE=process skips the pull altogether.
 for (const key of ["NEXT_PUBLIC_STACK_PROJECT_ID", "NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY", "STACK_SECRET_SERVER_KEY"]) {
   if (!env[key]?.trim() && process.env[key]?.trim()) env[key] = process.env[key].trim();
 }
-requireEnvKeys(env, ["NEXT_PUBLIC_STACK_PROJECT_ID", "NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY", "STACK_SECRET_SERVER_KEY"], `${project.projectName} bench (export the missing keys, or set CMUX_CLOUD_VM_ENV_SOURCE=process)`);
+requireEnvKeys(env, ["NEXT_PUBLIC_STACK_PROJECT_ID", "NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY", "STACK_SECRET_SERVER_KEY"], `${project.projectName} bench (export the missing keys, or set HMUX_CLOUD_VM_ENV_SOURCE=process)`);
 // Cleanup is verified against the provider's own inventory (a create can
 // allocate a machine the control plane never records), so the deployment's
 // provider credentials are required, in either form the runtime's client
 // accepts (freestyleClient in services/vms/drivers/freestyle.ts): an API key,
 // or a Stack access token with a team id. A sensitive value pulls empty; the
-// operator's own copy (~/.secrets/cmux.env, the same account) covers that.
-const edgeAliasHost = edgeAliasOption?.trim() || env.CMUX_VM_EDGE_ALIAS_DOMAIN?.trim() || DEFAULT_EDGE_ALIAS_HOST;
+// operator's own copy (~/.secrets/hmux.env, the same account) covers that.
+const edgeAliasHost = edgeAliasOption?.trim() || env.HMUX_VM_EDGE_ALIAS_DOMAIN?.trim() || DEFAULT_EDGE_ALIAS_HOST;
 if (!/^[a-z0-9.-]+$/i.test(edgeAliasHost)) {
   console.error(`bench-vm-startup: the edge alias must be a bare host name, got ${JSON.stringify(edgeAliasHost)}`);
   process.exit(2);
@@ -82,7 +82,7 @@ const EDGE_PROBE = `curl -s -o /dev/null -w '%{http_code}' --max-time 4 https://
 // A complete credential form from the deployment's pulled env first (the
 // account that allocates the benchmark machines), in either form the
 // runtime accepts; the operator's own environment only when the pull holds
-// none (a Vercel "sensitive" value pulls empty; ~/.secrets/cmux.env is the
+// none (a Vercel "sensitive" value pulls empty; ~/.secrets/hmux.env is the
 // same account). The two are never mixed key by key, or a local API key
 // could shadow the deployment's token pair and cleanup would inspect the
 // wrong account.
@@ -104,7 +104,7 @@ const app = new StackServerApp({
 });
 
 const suffix = `${Date.now()}-${randomBytes(3).toString("hex")}`;
-const benchEmail = `cmux-${project.stackLabel}-bench+${suffix}@manaflow.dev`;
+const benchEmail = `hmux-${project.stackLabel}-bench+${suffix}@manaflow.dev`;
 const liveVmIds = new Set();
 // Creates whose response never arrived (idempotency key → request time): the
 // server may still be making the machine, so teardown resolves them first.
@@ -242,7 +242,7 @@ async function attachUntilReady(vmId, stage) {
     const response = await fetchTimed(vmUrl(vmId, "/attach-endpoint"), {
       method: "POST",
       headers: { ...authHeaders, "content-type": "application/json" },
-      body: JSON.stringify({ transport: "cmux-remote", clientCapabilities: ["wireguard-hub", "direct-ws-user-agent"] }),
+      body: JSON.stringify({ transport: "hmux-remote", clientCapabilities: ["wireguard-hub", "direct-ws-user-agent"] }),
     });
     const body = json(response.text);
     attempts.push({ status: response.status, ms: response.ms, error: body.error ?? null });
@@ -346,7 +346,7 @@ async function runTrial(trial) {
   }
   trial.createMs = create.ms;
   trial.createStatus = create.status;
-  trial.createTraceId = create.headers.get("x-cmux-trace-id");
+  trial.createTraceId = create.headers.get("x-hmux-trace-id");
   trial.createVercelId = create.headers.get("x-vercel-id");
   trial.createStages = parseServerTiming(create.headers.get("server-timing"));
   if (create.status >= 500) {
@@ -703,7 +703,7 @@ async function reconcileCreatedUser() {
 /**
  * True only when Vercel itself says the host is a deployment of the selected
  * project in its team. A hostname pattern proves nothing (any tenant can name
- * a project `cmux-staging-…`), so ownership is read from the API; an error
+ * a project `hmux-staging-…`), so ownership is read from the API; an error
  * or another project's deployment is a refusal.
  */
 function deploymentBelongsToProject(host, project) {
@@ -948,10 +948,10 @@ try {
     primaryEmailVerified: true,
     primaryEmailAuthEnabled: true,
     password: randomBytes(24).toString("base64url"),
-    displayName: `cmux ${project.stackLabel} startup bench`,
+    displayName: `hmux ${project.stackLabel} startup bench`,
   }), STACK_TIMEOUT_MS, "Stack createUser");
   // Provisioning is paid-plan gated; the plan is metadata on the throwaway user only.
-  await withTimeout(user.update({ clientReadOnlyMetadata: { cmuxVmPlan: "pro" } }), STACK_TIMEOUT_MS, "Stack user update");
+  await withTimeout(user.update({ clientReadOnlyMetadata: { hmuxVmPlan: "pro" } }), STACK_TIMEOUT_MS, "Stack user update");
   // The session must outlive the trials at their bounds: per trial, the
   // create's deadline, three attach stages (each its budget plus one more
   // request), exec, pause and destroy requests and the edge probe, in

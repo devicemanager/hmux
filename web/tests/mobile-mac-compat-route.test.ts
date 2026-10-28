@@ -14,9 +14,9 @@ const { GET, OPTIONS, validateList } = await import(
 );
 
 /**
- * The compat list gates whether cmux iOS accepts a connected Mac, so the
+ * The compat list gates whether hmux iOS accepts a connected Mac, so the
  * route must validate it at build time: a malformed version, an unordered
- * tier list, or a download URL off cmux-owned hosts would otherwise ship to
+ * tier list, or a download URL off hmux-owned hosts would otherwise ship to
  * every device that fetches the list.
  */
 describe("mobile-mac-compat route", () => {
@@ -36,7 +36,7 @@ describe("mobile-mac-compat route", () => {
 
   test("serves the checked-in list with the caching and CORS headers", async () => {
     const response = await GET(
-      new Request("https://cmux.test/api/mobile-mac-compat"),
+      new Request("https://hmux.test/api/mobile-mac-compat"),
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("Content-Type")).toBe(
@@ -59,12 +59,12 @@ describe("mobile-mac-compat route", () => {
 
   test("returns 304 for a matching If-None-Match", async () => {
     const first = await GET(
-      new Request("https://cmux.test/api/mobile-mac-compat"),
+      new Request("https://hmux.test/api/mobile-mac-compat"),
     );
     const etag = first.headers.get("ETag");
     expect(etag).toBeTruthy();
     const second = await GET(
-      new Request("https://cmux.test/api/mobile-mac-compat", {
+      new Request("https://hmux.test/api/mobile-mac-compat", {
         headers: { "If-None-Match": etag as string },
       }),
     );
@@ -331,11 +331,11 @@ describe("mobile-mac-compat route", () => {
       ...base,
       downloads: {
         ...base.downloads,
-        nightly: "https://example.com/cmux-nightly.dmg",
+        nightly: "https://example.com/hmux-nightly.dmg",
       },
     };
     expect(() => validateList(list)).toThrow(
-      "downloads.nightly must be on a cmux-owned or cmux-release host, got example.com",
+      "downloads.nightly must be on a hmux-owned or hmux-release host, got example.com",
     );
   });
 

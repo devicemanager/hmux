@@ -10,8 +10,8 @@ import type { FullConfig } from "@playwright/test";
 export default async function globalSetup(config: FullConfig) {
   const projectId = requiredEnv("NEXT_PUBLIC_STACK_PROJECT_ID");
   const publishableKey = requiredEnv("NEXT_PUBLIC_STACK_PUBLISHABLE_CLIENT_KEY");
-  const email = requiredEnv("CMUX_E2E_STACK_EMAIL");
-  const password = requiredEnv("CMUX_E2E_STACK_PASSWORD");
+  const email = requiredEnv("HMUX_E2E_STACK_EMAIL");
+  const password = requiredEnv("HMUX_E2E_STACK_PASSWORD");
   const apiUrl = process.env.NEXT_PUBLIC_STACK_API_URL ?? "https://api.hexclave.com";
   const response = await fetch(`${apiUrl}/api/v1/auth/password/sign-in`, {
     method: "POST",

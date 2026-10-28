@@ -6,7 +6,7 @@ import { inviteBody } from "../../../../../services/teams/schemas";
 
 type RouteContext = { params: TeamRouteParams };
 
-/** Invite up to 20 emails. cmux sends each email through Resend. */
+/** Invite up to 20 emails. hmux sends each email through Resend. */
 export async function POST(request: Request, context: RouteContext): Promise<Response> {
   const { teamId } = await context.params;
   return withTeamAccessRoute(

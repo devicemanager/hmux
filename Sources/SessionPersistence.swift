@@ -1,12 +1,12 @@
-import CMUXAgentLaunch
-import CmuxSurfaceCatalogModel
+import HMUXAgentLaunch
+import HmuxSurfaceCatalogModel
 import CoreGraphics
-import CmuxBrowser
-import CmuxCore
+import HmuxBrowser
+import HmuxCore
 import Foundation
-import CmuxPanes
+import HmuxPanes
 import Bonsplit
-import CmuxWorkspaces
+import HmuxWorkspaces
 #if canImport(CryptoKit)
 import CryptoKit
 #endif
@@ -32,7 +32,7 @@ enum SessionPersistencePolicy {
     // Below ~400pt the chrome cannot lay out without overlap: the sidebar
     // footer (account/help/update pill) collides with workspace rows and the
     // update pill clips at the window edge. User resizes stop here via
-    // minSize/contentMinSize; programmatic paths via CmuxMainWindow.setFrame.
+    // minSize/contentMinSize; programmatic paths via HmuxMainWindow.setFrame.
     static let minimumWindowHeight: Double = 400
     static let autosaveInterval: TimeInterval = 8.0
     static let maxWindowsPerSnapshot: Int = 12
@@ -212,13 +212,13 @@ enum SessionRestorePolicy {
     static func isRunningUnderAutomatedTests(
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
-        if environment["CMUX_TEST_PROCESS"] == "1" {
+        if environment["HMUX_TEST_PROCESS"] == "1" {
             return true
         }
-        if environment["CMUX_UI_TEST_MODE"] == "1" {
+        if environment["HMUX_UI_TEST_MODE"] == "1" {
             return true
         }
-        if environment.keys.contains(where: { $0.hasPrefix("CMUX_UI_TEST_") }) {
+        if environment.keys.contains(where: { $0.hasPrefix("HMUX_UI_TEST_") }) {
             return true
         }
         if environment["XCTestConfigurationFilePath"] != nil {
@@ -246,7 +246,7 @@ enum SessionRestorePolicy {
         arguments: [String] = CommandLine.arguments,
         environment: [String: String] = ProcessInfo.processInfo.environment
     ) -> Bool {
-        if environment["CMUX_DISABLE_SESSION_RESTORE"] == "1" {
+        if environment["HMUX_DISABLE_SESSION_RESTORE"] == "1" {
             return false
         }
         if isRunningUnderAutomatedTests(environment: environment) {
@@ -468,11 +468,11 @@ struct SurfaceResumeBindingSnapshot: Codable, Equatable, Sendable {
     }
 
     /// Source for bindings restored from an untrusted session file
-    /// (`cmux restore-session --from <path>`).
+    /// (`hmux restore-session --from <path>`).
     static let untrustedSessionImportSource = "session-import"
 
     /// A binding restored from an untrusted session file. It is kept for
-    /// manual `cmux restore --surface` only: the approval store never matches
+    /// manual `hmux restore --surface` only: the approval store never matches
     /// it against approved prefixes and never records an approval for it.
     var isUntrustedSessionImportBinding: Bool {
         source == Self.untrustedSessionImportSource
@@ -1014,12 +1014,12 @@ enum SurfaceResumeApprovalSignature {
 }
 
 enum SurfaceResumeApprovalStore {
-    static let didChangeNotification = Notification.Name("cmux.surfaceResumeApprovalsDidChange")
+    static let didChangeNotification = Notification.Name("hmux.surfaceResumeApprovalsDidChange")
     private static let legacyFileName = "resume-commands.json"
     private static let secretFileName = ".surface-resume-approval-secret"
     private static let settingsTerminalSectionKey = "terminal"
     private static let settingsRecordsKey = "resumeCommands"
-    private static let keychainService = "com.cmuxterm.app.surface-resume-approvals"
+    private static let keychainService = "com.hmuxterm.app.surface-resume-approvals"
     private static let keychainAccount = "hmac-secret-v1"
     private static let signingSecretCache = SurfaceResumeApprovalSigningSecretCache(
         loader: {
@@ -1035,18 +1035,18 @@ enum SurfaceResumeApprovalStore {
         var records: [SurfaceResumeApprovalRecord]
     }
 
-    private enum CmuxSettingsRootLoadResult {
+    private enum HmuxSettingsRootLoadResult {
         case missing
         case invalid
         case parsed([String: Any])
     }
 
     static func defaultURL(environment: [String: String] = ProcessInfo.processInfo.environment) -> URL {
-        if let override = environment["CMUX_SURFACE_RESUME_APPROVAL_STORE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
+        if let override = environment["HMUX_SURFACE_RESUME_APPROVAL_STORE_PATH"]?.trimmingCharacters(in: .whitespacesAndNewlines),
            !override.isEmpty {
             return URL(fileURLWithPath: (override as NSString).expandingTildeInPath, isDirectory: false)
         }
-        return URL(fileURLWithPath: CmuxSettingsFileStore.defaultPrimaryPath, isDirectory: false)
+        return URL(fileURLWithPath: HmuxSettingsFileStore.defaultPrimaryPath, isDirectory: false)
     }
 
     static func loadRecords(
@@ -1054,15 +1054,15 @@ enum SurfaceResumeApprovalStore {
         fileManager: FileManager = .default,
         defaultSettingsURL: URL = defaultURL()
     ) -> [SurfaceResumeApprovalRecord] {
-        if storesRecordsInCmuxSettings(fileURL) {
-            let loaded = loadRecordsFromCmuxSettings(fileURL: fileURL)
+        if storesRecordsInHmuxSettings(fileURL) {
+            let loaded = loadRecordsFromHmuxSettings(fileURL: fileURL)
             if loaded.hasResumeCommandsKey {
                 return loaded.records
             }
             guard fileURL.standardizedFileURL.path == defaultSettingsURL.standardizedFileURL.path else {
                 return loaded.records
             }
-            let legacyURL = legacyURL(forCmuxSettingsURL: fileURL)
+            let legacyURL = legacyURL(forHmuxSettingsURL: fileURL)
             let legacyRecords = loadStandaloneRecords(fileURL: legacyURL, fileManager: fileManager)
             guard !legacyRecords.isEmpty else {
                 return loaded.records
@@ -1086,22 +1086,22 @@ enum SurfaceResumeApprovalStore {
         fileManager: FileManager = .default,
         legacyFileURL: URL? = nil
     ) -> Bool {
-        guard storesRecordsInCmuxSettings(fileURL) else {
+        guard storesRecordsInHmuxSettings(fileURL) else {
             return false
         }
-        let loaded = loadRecordsFromCmuxSettings(fileURL: fileURL)
+        let loaded = loadRecordsFromHmuxSettings(fileURL: fileURL)
         guard !loaded.hasResumeCommandsKey else {
             return false
         }
         guard loaded.canWriteSettings else {
             return false
         }
-        let legacyURL = legacyFileURL ?? legacyURL(forCmuxSettingsURL: fileURL)
+        let legacyURL = legacyFileURL ?? legacyURL(forHmuxSettingsURL: fileURL)
         let legacyRecords = loadStandaloneRecords(fileURL: legacyURL, fileManager: fileManager)
         guard !legacyRecords.isEmpty else {
             return false
         }
-        return writeRecordsToCmuxSettings(records: legacyRecords, fileURL: fileURL, fileManager: fileManager)
+        return writeRecordsToHmuxSettings(records: legacyRecords, fileURL: fileURL, fileManager: fileManager)
     }
 
     private static func loadStandaloneRecords(
@@ -1266,7 +1266,7 @@ enum SurfaceResumeApprovalStore {
         fileURL: URL = defaultURL(),
         fileManager: FileManager = .default
     ) -> Bool {
-        if storesRecordsInCmuxSettings(fileURL) {
+        if storesRecordsInHmuxSettings(fileURL) {
             return write(records: [], fileURL: fileURL, fileManager: fileManager)
         }
         try? fileManager.removeItem(at: fileURL)
@@ -1307,7 +1307,7 @@ enum SurfaceResumeApprovalStore {
     }
 
     private static func environmentSigningSecret() -> Data? {
-        guard let encoded = ProcessInfo.processInfo.environment["CMUX_SURFACE_RESUME_APPROVAL_SECRET_B64"],
+        guard let encoded = ProcessInfo.processInfo.environment["HMUX_SURFACE_RESUME_APPROVAL_SECRET_B64"],
               let data = Data(base64Encoded: encoded),
               !data.isEmpty else {
             return nil
@@ -1332,8 +1332,8 @@ enum SurfaceResumeApprovalStore {
         fileURL: URL,
         fileManager: FileManager
     ) -> Bool {
-        if storesRecordsInCmuxSettings(fileURL) {
-            return writeRecordsToCmuxSettings(records: records, fileURL: fileURL, fileManager: fileManager)
+        if storesRecordsInHmuxSettings(fileURL) {
+            return writeRecordsToHmuxSettings(records: records, fileURL: fileURL, fileManager: fileManager)
         }
         return writeStandaloneRecords(records: records, fileURL: fileURL, fileManager: fileManager)
     }
@@ -1362,20 +1362,20 @@ enum SurfaceResumeApprovalStore {
         }
     }
 
-    private static func storesRecordsInCmuxSettings(_ fileURL: URL) -> Bool {
-        fileURL.lastPathComponent == "cmux.json"
+    private static func storesRecordsInHmuxSettings(_ fileURL: URL) -> Bool {
+        fileURL.lastPathComponent == "hmux.json"
     }
 
-    private static func legacyURL(forCmuxSettingsURL fileURL: URL) -> URL {
+    private static func legacyURL(forHmuxSettingsURL fileURL: URL) -> URL {
         fileURL.deletingLastPathComponent()
             .appendingPathComponent(legacyFileName, isDirectory: false)
     }
 
-    private static func loadRecordsFromCmuxSettings(
+    private static func loadRecordsFromHmuxSettings(
         fileURL: URL
     ) -> (records: [SurfaceResumeApprovalRecord], hasResumeCommandsKey: Bool, canWriteSettings: Bool) {
         let root: [String: Any]
-        switch loadCmuxSettingsRoot(fileURL: fileURL) {
+        switch loadHmuxSettingsRoot(fileURL: fileURL) {
         case .missing:
             return ([], false, true)
         case .invalid:
@@ -1395,7 +1395,7 @@ enum SurfaceResumeApprovalStore {
         return (records, true, true)
     }
 
-    private static func loadCmuxSettingsRoot(fileURL: URL) -> CmuxSettingsRootLoadResult {
+    private static func loadHmuxSettingsRoot(fileURL: URL) -> HmuxSettingsRootLoadResult {
         guard let data = try? Data(contentsOf: fileURL), !data.isEmpty else {
             return .missing
         }
@@ -1411,13 +1411,13 @@ enum SurfaceResumeApprovalStore {
     }
 
     @discardableResult
-    private static func writeRecordsToCmuxSettings(
+    private static func writeRecordsToHmuxSettings(
         records: [SurfaceResumeApprovalRecord],
         fileURL: URL,
         fileManager: FileManager
     ) -> Bool {
         do {
-            let rootLoadResult = loadCmuxSettingsRoot(fileURL: fileURL)
+            let rootLoadResult = loadHmuxSettingsRoot(fileURL: fileURL)
 
             let encoder = JSONEncoder()
             encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -1431,8 +1431,8 @@ enum SurfaceResumeApprovalStore {
             switch rootLoadResult {
             case .missing:
                 let root: [String: Any] = [
-                    "$schema": CmuxSettingsFileStore.schemaURLString,
-                    "schemaVersion": CmuxSettingsFileStore.currentSchemaVersion,
+                    "$schema": HmuxSettingsFileStore.schemaURLString,
+                    "schemaVersion": HmuxSettingsFileStore.currentSchemaVersion,
                     settingsTerminalSectionKey: [
                         settingsRecordsKey: recordsValue,
                     ],
@@ -1793,14 +1793,14 @@ struct SessionPanelSnapshot: Codable, Sendable {
 }
 extension SessionPanelSnapshot: WorkspaceSessionRemoteRestorePanelSnapshot {}
 
-// The pane layout value types and Bonsplit codec live in CmuxPanes so the
+// The pane layout value types and Bonsplit codec live in HmuxPanes so the
 // reusable topology boundary is independent of the app's session models. Keep
 // these module-local aliases for persisted-session source compatibility.
-typealias SessionSplitOrientation = CmuxPanes.SessionSplitOrientation
-typealias SessionPaneLayoutSnapshot = CmuxPanes.SessionPaneLayoutSnapshot
-typealias SessionSplitLayoutSnapshot = CmuxPanes.SessionSplitLayoutSnapshot
-typealias SessionWorkspaceLayoutSnapshot = CmuxPanes.SessionWorkspaceLayoutSnapshot
-typealias SessionSplitContainerLayoutCodec = CmuxPanes.SessionSplitContainerLayoutCodec
+typealias SessionSplitOrientation = HmuxPanes.SessionSplitOrientation
+typealias SessionPaneLayoutSnapshot = HmuxPanes.SessionPaneLayoutSnapshot
+typealias SessionSplitLayoutSnapshot = HmuxPanes.SessionSplitLayoutSnapshot
+typealias SessionWorkspaceLayoutSnapshot = HmuxPanes.SessionWorkspaceLayoutSnapshot
+typealias SessionSplitContainerLayoutCodec = HmuxPanes.SessionSplitContainerLayoutCodec
 
 /// One canvas pane's persisted geometry, ordered back-to-front so restore
 /// reproduces the z-order.
@@ -1818,14 +1818,14 @@ struct SessionCanvasPaneSnapshot: Codable, Equatable, Sendable {
     var selectedPanelId: UUID? = nil
 }
 
-/// A cloud machine bound to a workspace through the cmux-tui remote daemon, persisted so a
+/// A cloud machine bound to a workspace through the hmux-tui remote daemon, persisted so a
 /// restored `vm:<id>` workspace stays that machine's workspace (`workspace(forCloudVMID:)`,
 /// the sidebar cloud button's Base reuse, `vm.terminal_open` targeting). Only the binding is
 /// persisted: the pane's link is a process and is not replayed on restore.
 struct SessionCloudVMBindingSnapshot: Codable, Sendable, Equatable {
     var vmID: String
     var isBase: Bool
-    /// The machine's cmux-tui workspace this local workspace stands for; absent in
+    /// The machine's hmux-tui workspace this local workspace stands for; absent in
     /// legacy snapshots and for machine-only bindings (`vm shell`).
     var remoteWorkspaceID: String? = nil
     /// The team that owns the machine. Absent in snapshots written before
@@ -1876,7 +1876,7 @@ struct SessionWorkspaceSnapshot: Codable, Sendable {
     var progress: SessionProgressSnapshot?
     var gitBranch: SessionGitBranchSnapshot?
     var remote: SessionRemoteWorkspaceSnapshot?
-    /// cmux-tui cloud machine binding; absent in manifests written before the Cloud tree and for
+    /// hmux-tui cloud machine binding; absent in manifests written before the Cloud tree and for
     /// workspaces that are not cloud machines.
     var cloudVM: SessionCloudVMBindingSnapshot? = nil
     /// Remote surfaces this workspace's panes projected (`SurfaceCatalog`); absent for
@@ -1984,7 +1984,7 @@ struct AppSessionSnapshot: Codable, Sendable {
 }
 
 extension AppSessionSnapshot: SessionSnapshotRepresenting {
-    /// Whether the snapshot carries at least one window. The `CmuxSession` repository
+    /// Whether the snapshot carries at least one window. The `HmuxSession` repository
     /// treats an empty-window snapshot as unusable (empty states remove the file instead
     /// of writing it), matching the legacy `!snapshot.windows.isEmpty` usability check.
     var hasWindows: Bool { !windows.isEmpty }
@@ -2018,9 +2018,9 @@ extension AppSessionSnapshot: SessionSnapshotRepresenting {
 }
 
 enum SessionScrollbackReplayStore {
-    static let environmentKey = "CMUX_RESTORE_SCROLLBACK_FILE"
-    static let boundaryPrefix = "/.cmux/session-scrollback-replay/"
-    private static let directoryName = "cmux-session-scrollback"
+    static let environmentKey = "HMUX_RESTORE_SCROLLBACK_FILE"
+    static let boundaryPrefix = "/.hmux/session-scrollback-replay/"
+    private static let directoryName = "hmux-session-scrollback"
     static let staleReplayLifetime: TimeInterval = 60 * 60
     private static let ansiEscape = "\u{001B}"
     private static let ansiReset = "\u{001B}[0m"
