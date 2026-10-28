@@ -24,8 +24,9 @@ case-insensitive file systems.
 Kept as cmux by the rename:
   * legal files (licenses, CLA, notices) and submodule contents
   * binary and non-UTF-8 files
-  * real external addresses: github.com/manaflow-ai/..., cmux.com, cmux.dev,
-    cmux.sh, cmuxterm.com, *cmux*.vercel.app, e-mail addresses at cmux.com
+  * real external addresses, with their paths: github.com/manaflow-ai/...,
+    cmux.com, cmux.dev, cmux.sh, cmuxterm.com, *cmux*.vercel.app, and e-mail
+    addresses at cmux.com
   * versions and branches of the cmux forks of iroh (1.0.2-cmux.7, cmux/v1.2.0-cmux.1)
   * names of external sources and prebuilt binaries, in the files that use
     them (FILE_RULES): the cmux-cua engine and the cmux terminal client
@@ -52,7 +53,7 @@ LEGAL = re.compile(r"(^|/)(LICENSE[^/]*|CLA\.md|THIRD_PARTY_LICENSES\.md|NOTICE[
 PROTECT = re.compile(
     r"(?:https?://|git@|ssh://git@)?"
     r"(?:(?:github\.com|raw\.githubusercontent\.com|codeload\.github\.com|api\.github\.com/repos)[/:]manaflow-ai/[A-Za-z0-9._/#?=&%~+-]*"
-    r"|[A-Za-z0-9.-]*\bcmux\.(?:com|dev|sh)\b|[A-Za-z0-9.-]*\bcmuxterm\.com\b[A-Za-z0-9._/#?=&%~+:-]*"
+    r"|[A-Za-z0-9.-]*\bcmux(?:term)?\.(?:com|dev|sh)\b[A-Za-z0-9._/#?=&%~+:-]*"
     r"|[A-Za-z0-9.-]*cmux[A-Za-z0-9-]*\.vercel\.app\b[A-Za-z0-9._/#?=&%~+:-]*"
     r"|api\.star-history\.com/[^\s\"'<>)`]*)"
     r"|manaflow-ai/[A-Za-z0-9._-]*cmux[A-Za-z0-9._/-]*"
@@ -274,9 +275,10 @@ def require_clean():
         sys.exit("error: a merge is in progress; finish it with `git commit` or `git merge --abort`")
 
 
+# A URL or a fork version naming hmux; test hosts are fine.
 SUSPECT = re.compile(
-    r"https?://\S*hmux|\bhmux[\w-]*\.(?:com|dev|sh|io|app|net|org)\b|\d+\.\d+\.\d+-hmux\."
-    r"|releases/download/\S*hmux|manaflow-ai/\S*hmux"
+    r"https?://(?!(?:[\w-]+\.)*(?:hmux\.test|localhost|example\.\w+)\b)[^\s\"'<>)]*hmux"
+    r"|\bv?\d+\.\d+\.\d+-hmux\."
 )
 
 
