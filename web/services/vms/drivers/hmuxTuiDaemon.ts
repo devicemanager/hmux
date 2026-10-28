@@ -135,13 +135,13 @@ export const HMUX_TUI_HOOK_LINUX_TARGET = "hmux-tui-hook-x86_64-unknown-linux-mu
 export const HMUX_TUI_HOOK_MARKER = "hmux-tui-journal-hook";
 /** Coding agents whose hooks every machine ships with; `hmux-tui agent hook install` names them. */
 export const HMUX_TUI_HOOK_PROVIDERS = ["claude", "codex"] as const;
-export const HMUX_TUI_DEFAULT_MANIFEST_URL = "https://files.cmux.com/hmux-tui/latest/manifest.json";
+export const HMUX_TUI_DEFAULT_MANIFEST_URL = "https://files.cmux.com/cmux-tui/latest/manifest.json";
 const HMUX_TUI_MANIFEST_CACHE_MS = 5 * 60 * 1000;
 
 /**
  * HMUX_VM_HMUX_TUI_MANIFEST_URL pins the image scripts (bake, verify, reachability,
  * BusyBox probe) to one commit's manifest
- * (`https://files.cmux.com/hmux-tui/<commit>/manifest.json`) instead of the rolling
+ * (`https://files.cmux.com/cmux-tui/<commit>/manifest.json`) instead of the rolling
  * `latest`; the server never installs hmux-tui, so a deployment ignores it. Nothing
  * else is configured by hand: the build and its sha256 come from the manifest the
  * artifacts workflow publishes.

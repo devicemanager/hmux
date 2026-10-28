@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ فيديو توضيحي</a> · <a href="https://cmux.com/blog/zen-of-hmux">فلسفة hmux</a>
+  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ فيديو توضيحي</a> · <a href="https://cmux.com/blog/zen-of-cmux">فلسفة hmux</a>
 </p>
 
 ## الميزات

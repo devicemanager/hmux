@@ -17,7 +17,7 @@ describe("checkout attribution", () => {
           "&hmux_channel=beta&hmux_app_version=0.65.1&hmux_app_build=x y&utm_source=" +
           "%20Newsletter%20",
       ),
-      referer: "https://cmux.com/app-pricing?hmux_app=1&secret=1",
+      referer: "https://cmux.com/app-pricing?cmux_app=1&secret=1",
     });
 
     expect(attribution).toEqual({

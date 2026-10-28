@@ -4,7 +4,7 @@
 #
 # The `hmux-tui artifacts` workflow publishes one client build per main commit that
 # touches hmux-tui or its build inputs, at
-# https://files.cmux.com/hmux-tui/<commit>/manifest.json. The app workflows bundle the
+# https://files.cmux.com/cmux-tui/<commit>/manifest.json. The app workflows bundle the
 # client of the newest such commit in the checked-out history.
 #
 # A bare `git log -1 -- <paths>` is wrong on CI: actions/checkout clones with depth 1,
@@ -27,7 +27,7 @@
 #                       manifest yet (artifacts run failed or still running). Default 0: a
 #                       commit with HEAD's exact inputs must be published, or this fails.
 #   --head <rev>        history to search (default HEAD).
-# Env: HMUX_TUI_CLIENT_MANIFEST_BASE (default https://files.cmux.com/hmux-tui),
+# Env: HMUX_TUI_CLIENT_MANIFEST_BASE (default https://files.cmux.com/cmux-tui),
 #      HMUX_TUI_CLIENT_REMOTE (default origin; where a shallow clone deepens from),
 #      HMUX_TUI_CLIENT_FETCH_ATTEMPTS (default 5; tries per deepen before giving up),
 #      HMUX_TUI_CLIENT_FETCH_RETRY_SECONDS (default 2; first backoff, doubles per try),
@@ -37,7 +37,7 @@
 set -euo pipefail
 
 PATHS=(hmux-tui ghostty .github/workflows/hmux-tui-artifacts.yml .github/workflows/hmux-tui-build-package.yml)
-BASE="${HMUX_TUI_CLIENT_MANIFEST_BASE:-https://files.cmux.com/hmux-tui}"
+BASE="${HMUX_TUI_CLIENT_MANIFEST_BASE:-https://files.cmux.com/cmux-tui}"
 REMOTE="${HMUX_TUI_CLIENT_REMOTE:-origin}"
 MAX_FALLBACK=0
 HEAD_REV=HEAD

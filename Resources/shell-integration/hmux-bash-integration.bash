@@ -1292,8 +1292,10 @@ _hmux_terminal_history_prompt() {
             local limit="${HISTFILESIZE:-500}"
             if [[ "$limit" =~ ^[0-9]+$ ]] && (( $(wc -l <"$HMUX_HISTORY_FILE") > limit )); then
                 local trimmed
+                # `>|` so noclobber does not refuse to rewrite hmux's own
+                # file and print an error on every restart (#26514).
                 trimmed="$(tail -n "$limit" "$HMUX_HISTORY_FILE")" \
-                    && printf '%s\n' "$trimmed" >"$HMUX_HISTORY_FILE"
+                    && printf '%s\n' "$trimmed" >|"$HMUX_HISTORY_FILE"
             fi
             builtin history -r "$HMUX_HISTORY_FILE"
         fi

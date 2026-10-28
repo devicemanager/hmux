@@ -115,7 +115,7 @@ def test_install_scripts_are_public_and_checksum_verified() -> None:
     unix = UNIX_INSTALLER.read_text()
     windows = WINDOWS_INSTALLER.read_text()
 
-    assert "https://files.cmux.com/hmux-tui/latest" in unix
+    assert "https://files.cmux.com/cmux-tui/latest" in unix
     assert "checksum verification failed" in unix
     assert '"commit"' in unix
     assert "artifact_base_url" in unix

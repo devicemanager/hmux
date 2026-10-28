@@ -7,10 +7,10 @@ import {
 } from "../services/vms/drivers/hmuxTuiDaemon";
 
 const SOURCE = {
-  url: "https://files.cmux.com/hmux-tui/test/hmux-tui-x86_64-unknown-linux-musl",
+  url: "https://files.cmux.com/cmux-tui/test/cmux-tui-x86_64-unknown-linux-musl",
   sha256: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
   commit: "0123456789abcdef0123456789abcdef01234567",
-  builtAt: null, hookUrl: "https://files.cmux.com/hmux-tui/test/hmux-tui-hook-x86_64-unknown-linux-musl", hookSha256: "1".repeat(64),
+  builtAt: null, hookUrl: "https://files.cmux.com/cmux-tui/test/cmux-tui-hook-x86_64-unknown-linux-musl", hookSha256: "1".repeat(64),
 } as const;
 
 describe("Freestyle Cloud VM daemon repair", () => {

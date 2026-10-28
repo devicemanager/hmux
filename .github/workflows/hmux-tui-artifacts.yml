@@ -240,7 +240,7 @@ jobs:
                       f"hmux-tui dependency commit {dependency_commit!r} "
                       f"does not match {sys.argv[1]!r}"
                   )
-              dependency_base = f"https://files.cmux.com/hmux-tui/{sys.argv[1]}"
+              dependency_base = f"https://files.cmux.com/cmux-tui/{sys.argv[1]}"
               manifest["dependencies"] = {
                   "hmux-tui": {
                       "commit": dependency_commit,
@@ -418,8 +418,8 @@ jobs:
           publish_prefix assets/hmux-tui "hmux-tui/$GITHUB_SHA" "public, max-age=31536000, immutable" true
           publish_prefix assets/hmux-relay "hmux-relay/$GITHUB_SHA" "public, max-age=31536000, immutable" true
           publish_prefix assets/chatmux-relay "chatmux-relay/$GITHUB_SHA" "public, max-age=31536000, immutable" true
-          echo "Published: https://files.cmux.com/hmux-tui/$GITHUB_SHA/manifest.json"
-          echo "Published: https://files.cmux.com/hmux-relay/$GITHUB_SHA/manifest.json"
+          echo "Published: https://files.cmux.com/cmux-tui/$GITHUB_SHA/manifest.json"
+          echo "Published: https://files.cmux.com/cmux-relay/$GITHUB_SHA/manifest.json"
           echo "Published: https://files.cmux.com/chatmux-relay/$GITHUB_SHA/manifest.json"
 
           # Transitional double-publish under the pre-rename prefix and binary
@@ -486,7 +486,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 hmux-tui/scripts/verify_published_manifest.py \
-            --manifest-url "https://files.cmux.com/hmux-tui/$GITHUB_SHA/manifest.json" \
+            --manifest-url "https://files.cmux.com/cmux-tui/$GITHUB_SHA/manifest.json" \
             --expected-commit "$GITHUB_SHA" \
             --require-provenance \
             --require-artifact hmux-tui-aarch64-apple-darwin \
@@ -495,9 +495,9 @@ jobs:
             --require-artifact hmux-tui-aarch64-unknown-linux-musl \
             --forbid-artifact hmux-tui-x86_64-pc-windows-gnu.exe \
             --forbid-artifact hmux-tui-hook-x86_64-pc-windows-gnu.exe \
-            --artifact-base-url "https://files.cmux.com/hmux-tui/$GITHUB_SHA"
+            --artifact-base-url "https://files.cmux.com/cmux-tui/$GITHUB_SHA"
           python3 hmux-tui/scripts/verify_published_manifest.py \
-            --manifest-url "https://files.cmux.com/hmux-relay/$GITHUB_SHA/manifest.json" \
+            --manifest-url "https://files.cmux.com/cmux-relay/$GITHUB_SHA/manifest.json" \
             --expected-commit "$GITHUB_SHA" \
             --require-provenance \
             --require-artifact hmux-relay-aarch64-apple-darwin \
@@ -505,7 +505,7 @@ jobs:
             --require-artifact hmux-relay-x86_64-unknown-linux-musl \
             --require-artifact hmux-relay-aarch64-unknown-linux-musl \
             --forbid-artifact hmux-relay-x86_64-pc-windows-gnu.exe \
-            --artifact-base-url "https://files.cmux.com/hmux-relay/$GITHUB_SHA"
+            --artifact-base-url "https://files.cmux.com/cmux-relay/$GITHUB_SHA"
           python3 hmux-tui/scripts/verify_published_manifest.py \
             --manifest-url "https://files.cmux.com/chatmux-relay/$GITHUB_SHA/manifest.json" \
             --expected-commit "$GITHUB_SHA" \
@@ -567,7 +567,7 @@ jobs:
         run: |
           set -euo pipefail
           python3 hmux-tui/scripts/verify_published_manifest.py \
-            --manifest-url "https://files.cmux.com/hmux-tui/$GITHUB_SHA/manifest.json" \
+            --manifest-url "https://files.cmux.com/cmux-tui/$GITHUB_SHA/manifest.json" \
             --expected-commit "$GITHUB_SHA" \
             --require-provenance \
             --require-artifact hmux-tui-aarch64-apple-darwin \
@@ -576,9 +576,9 @@ jobs:
             --require-artifact hmux-tui-aarch64-unknown-linux-musl \
             --forbid-artifact hmux-tui-x86_64-pc-windows-gnu.exe \
             --forbid-artifact hmux-tui-hook-x86_64-pc-windows-gnu.exe \
-            --artifact-base-url "https://files.cmux.com/hmux-tui/$GITHUB_SHA"
+            --artifact-base-url "https://files.cmux.com/cmux-tui/$GITHUB_SHA"
           python3 hmux-tui/scripts/verify_published_manifest.py \
-            --manifest-url "https://files.cmux.com/hmux-relay/$GITHUB_SHA/manifest.json" \
+            --manifest-url "https://files.cmux.com/cmux-relay/$GITHUB_SHA/manifest.json" \
             --expected-commit "$GITHUB_SHA" \
             --require-provenance \
             --require-artifact hmux-relay-aarch64-apple-darwin \
@@ -586,7 +586,7 @@ jobs:
             --require-artifact hmux-relay-x86_64-unknown-linux-musl \
             --require-artifact hmux-relay-aarch64-unknown-linux-musl \
             --forbid-artifact hmux-relay-x86_64-pc-windows-gnu.exe \
-            --artifact-base-url "https://files.cmux.com/hmux-relay/$GITHUB_SHA"
+            --artifact-base-url "https://files.cmux.com/cmux-relay/$GITHUB_SHA"
           python3 hmux-tui/scripts/verify_published_manifest.py \
             --manifest-url "https://files.cmux.com/chatmux-relay/$GITHUB_SHA/manifest.json" \
             --expected-commit "$GITHUB_SHA" \
@@ -594,7 +594,7 @@ jobs:
             --artifact-base-url "https://files.cmux.com/chatmux-relay/$GITHUB_SHA"
           if [ "$GITHUB_REF" = "refs/heads/main" ]; then
             python3 hmux-tui/scripts/verify_published_manifest.py \
-              --manifest-url "https://files.cmux.com/hmux-tui/latest/manifest.json?verify=$GITHUB_SHA" \
+              --manifest-url "https://files.cmux.com/cmux-tui/latest/manifest.json?verify=$GITHUB_SHA" \
               --expected-commit "$GITHUB_SHA" \
               --require-provenance \
               --require-artifact hmux-tui-aarch64-apple-darwin \
@@ -603,9 +603,9 @@ jobs:
               --require-artifact hmux-tui-aarch64-unknown-linux-musl \
               --forbid-artifact hmux-tui-x86_64-pc-windows-gnu.exe \
               --forbid-artifact hmux-tui-hook-x86_64-pc-windows-gnu.exe \
-              --artifact-base-url "https://files.cmux.com/hmux-tui/latest"
+              --artifact-base-url "https://files.cmux.com/cmux-tui/latest"
             python3 hmux-tui/scripts/verify_published_manifest.py \
-              --manifest-url "https://files.cmux.com/hmux-relay/latest/manifest.json?verify=$GITHUB_SHA" \
+              --manifest-url "https://files.cmux.com/cmux-relay/latest/manifest.json?verify=$GITHUB_SHA" \
               --expected-commit "$GITHUB_SHA" \
               --require-provenance \
               --require-artifact hmux-relay-aarch64-apple-darwin \
@@ -613,7 +613,7 @@ jobs:
               --require-artifact hmux-relay-x86_64-unknown-linux-musl \
               --require-artifact hmux-relay-aarch64-unknown-linux-musl \
               --forbid-artifact hmux-relay-x86_64-pc-windows-gnu.exe \
-              --artifact-base-url "https://files.cmux.com/hmux-relay/latest"
+              --artifact-base-url "https://files.cmux.com/cmux-relay/latest"
             python3 hmux-tui/scripts/verify_published_manifest.py \
               --manifest-url "https://files.cmux.com/chatmux-relay/latest/manifest.json?verify=$GITHUB_SHA" \
               --expected-commit "$GITHUB_SHA" \

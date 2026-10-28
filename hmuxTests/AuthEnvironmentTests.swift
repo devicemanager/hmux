@@ -643,7 +643,7 @@ struct AuthEnvironmentTests {
 
         let appDelegate = AppDelegate()
         let manager = TabManager()
-        let pricingURL = URL(string: "https://cmux.com/app-pricing?hmux_app=1")!
+        let pricingURL = URL(string: "https://cmux.com/app-pricing?cmux_app=1")!
         let workspace = manager.addWorkspace(
             title: "hmux Pro",
             initialSurface: .browser,
@@ -732,7 +732,7 @@ struct CheckoutAttributionTests {
 
     @Test
     func applyingReplacesStaleAttributionAndKeepsOtherQuery() throws {
-        let base = try #require(URL(string: "https://cmux.com/app-pricing?hmux_app=1&hmux_source=mac_help_menu&hmux_channel=stable"))
+        let base = try #require(URL(string: "https://cmux.com/app-pricing?cmux_app=1&cmux_source=mac_help_menu&cmux_channel=stable"))
         let url = CheckoutAttribution.applying(
             to: base,
             source: .commandPalette,
@@ -778,7 +778,7 @@ struct CheckoutAttributionTests {
     /// `plan` on the base URL is replaced rather than duplicated.
     @Test
     func checkoutURLCarriesThePlanOnlyForMax() throws {
-        let base = try #require(URL(string: "https://cmux.com/api/billing/checkout?hmux_external_browser=1&plan=pro"))
+        let base = try #require(URL(string: "https://cmux.com/api/billing/checkout?cmux_external_browser=1&plan=pro"))
         let pro = ProUpgradePresenter.checkoutURL(source: .newMachineSheetMaxUpgrade, plan: .pro, base: base)
         let max = ProUpgradePresenter.checkoutURL(source: .newMachineSheetMaxUpgrade, plan: .max, base: base)
         let proItems = try #require(URLComponents(url: pro, resolvingAgainstBaseURL: false)?.queryItems)

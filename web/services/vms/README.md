@@ -562,7 +562,7 @@ need root should use `sudo`, and snapshots with the former `/home/ubuntu` uid-10
 leak a stale `HOME`. Config: `FREESTYLE_API_KEY` (or `FREESTYLE_STACK_ACCESS_TOKEN` + `FREESTYLE_TEAM_ID`);
 optionally `FREESTYLE_API_URL` to point at a non-default edge. `HMUX_VM_HMUX_TUI_MANIFEST_URL`
 is read only by the bake, verify, reachability-check and BusyBox-probe scripts, to pin one
-commit's `https://files.cmux.com/hmux-tui/<commit>/manifest.json` instead of the rolling
+commit's `https://files.cmux.com/cmux-tui/<commit>/manifest.json` instead of the rolling
 `latest`; a deployment ignores it.
 
 Cloud-created Freestyle machines explicitly set `idleTimeoutSeconds: -1`, making them

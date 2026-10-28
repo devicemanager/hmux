@@ -36,7 +36,7 @@ set -euo pipefail
 usage() { sed -n '2,22p' "$0"; }
 
 APP_PATH=""
-MANIFEST_URL="${HMUX_TUI_CLIENT_MANIFEST_URL:-https://files.cmux.com/hmux-tui/latest/manifest.json}"
+MANIFEST_URL="${HMUX_TUI_CLIENT_MANIFEST_URL:-https://files.cmux.com/cmux-tui/latest/manifest.json}"
 CACHE_DIR="${HMUX_TUI_CLIENT_CACHE:-$HOME/Library/Caches/hmux/hmux-tui-client}"
 EXPECTED_COMMIT=""
 ARCH="universal"

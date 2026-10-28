@@ -4,7 +4,7 @@ $ErrorActionPreference = "Stop"
 $BaseUrl = if ($env:HMUX_DOWNLOAD_BASE_URL) {
     $env:HMUX_DOWNLOAD_BASE_URL.TrimEnd("/")
 } else {
-    "https://files.cmux.com/hmux-tui/latest"
+    "https://files.cmux.com/cmux-tui/latest"
 }
 $InstallRoot = if ($env:HMUX_INSTALL) {
     $env:HMUX_INSTALL

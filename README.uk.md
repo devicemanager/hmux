@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ Демо-відео</a> · <a href="https://cmux.com/blog/zen-of-hmux">Філософія hmux</a>
+  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ Демо-відео</a> · <a href="https://cmux.com/blog/zen-of-cmux">Філософія hmux</a>
 </p>
 
 ## Можливості

@@ -209,7 +209,7 @@ jobs:
           client_bundle="$RUNNER_TEMP/hmux-tui-prebuilt"
           mkdir -p "$client_bundle/Contents"
           env -u HMUX_TUI_CLIENT_LOCAL scripts/install-hmux-tui-client.sh "$client_bundle" \
-            --manifest-url "https://files.cmux.com/hmux-tui/$client_commit/manifest.json" \
+            --manifest-url "https://files.cmux.com/cmux-tui/$client_commit/manifest.json" \
             --expected-commit "$client_commit" --require-capability wireguard-hub \
             --attest-signer-workflow "$GITHUB_REPOSITORY/.github/workflows/hmux-tui-artifacts.yml"
           client="$client_bundle/Contents/Resources/bin/hmux-tui"

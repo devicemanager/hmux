@@ -485,7 +485,7 @@ bake and adopts the derived ids (they already exist on the account, each
 booted and checked by that run).
 
 Pin the daemon for both with `HMUX_VM_HMUX_TUI_MANIFEST_URL` (one commit's
-`https://files.cmux.com/hmux-tui/<commit>/manifest.json`) so the two ladders
+`https://files.cmux.com/cmux-tui/<commit>/manifest.json`) so the two ladders
 cannot straddle an artifacts publish.
 
 ### Two promotions in flight

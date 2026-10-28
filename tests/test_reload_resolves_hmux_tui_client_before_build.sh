@@ -109,13 +109,13 @@ echo "PASS: the hmux-tui client resolves before the shared dev backend starts"
 
 # Overrides supply the client, so nothing is resolved (today's behavior).
 for override in "HMUX_TUI_CLIENT_LOCAL=$TMP_DIR/hmux-tui" \
-    "HMUX_TUI_CLIENT_MANIFEST_URL=https://files.cmux.com/hmux-tui/x/manifest.json" \
+    "HMUX_TUI_CLIENT_MANIFEST_URL=https://files.cmux.com/cmux-tui/x/manifest.json" \
     "HMUX_SKIP_HMUX_TUI_CLIENT=1"; do
   run_reload fail "$override" --
   [[ "$(events)" == "ensure-ghosttykit" ]] \
     || fail "${override%%=*} should skip the early resolve, got: $(events)"
 done
-run_reload fail -- --hmux-tui-manifest-url "https://files.cmux.com/hmux-tui/x/manifest.json"
+run_reload fail -- --hmux-tui-manifest-url "https://files.cmux.com/cmux-tui/x/manifest.json"
 [[ "$(events)" == "ensure-ghosttykit" ]] \
   || fail "--hmux-tui-manifest-url should skip the early resolve, got: $(events)"
 echo "PASS: HMUX_TUI_CLIENT_LOCAL, HMUX_TUI_CLIENT_MANIFEST_URL, --hmux-tui-manifest-url and HMUX_SKIP_HMUX_TUI_CLIENT skip it"
