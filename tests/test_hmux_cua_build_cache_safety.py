@@ -48,8 +48,8 @@ def fake_tool_environment(root: Path, sha: str) -> dict[str, str]:
 set -eu
 if [[ "${{1:-}}" == "clone" ]]; then
   target="${{@: -1}}"
-  mkdir -p "$target/.git" "$target/libs/hmux-cua/rust"
-  : > "$target/libs/hmux-cua/rust/Cargo.toml"
+  mkdir -p "$target/.git" "$target/libs/cmux-cua/rust"
+  : > "$target/libs/cmux-cua/rust/Cargo.toml"
   : > "$target/LICENSE.md"
   exit 0
 fi
@@ -124,7 +124,7 @@ while (($#)); do
 done
 [[ -n "$target" ]]
 mkdir -p "$CARGO_TARGET_DIR/$target/release"
-cp /usr/bin/true "$CARGO_TARGET_DIR/$target/release/hmux-cua"
+cp /usr/bin/true "$CARGO_TARGET_DIR/$target/release/cmux-cua"
 """,
     )
     environment["PRODUCT_BUNDLE_IDENTIFIER"] = "com.hmuxterm.app.debug.cua-safety-test"
@@ -171,8 +171,8 @@ def test_clean_legacy_source_is_adopted(sha: str) -> None:
         cache_dir = root / "cache"
         source_dir = cache_dir / f"src-{sha}"
         (source_dir / ".git").mkdir(parents=True)
-        (source_dir / "libs/hmux-cua/rust").mkdir(parents=True)
-        (source_dir / "libs/hmux-cua/rust/Cargo.toml").touch()
+        (source_dir / "libs/cmux-cua/rust").mkdir(parents=True)
+        (source_dir / "libs/cmux-cua/rust/Cargo.toml").touch()
         (source_dir / ".hmux-last-used").touch()
 
         result = run_until_compile(root, cache_dir, sha)

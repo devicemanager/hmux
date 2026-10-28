@@ -85,4 +85,4 @@ tmux-*.log
 /.hmux-scratch/
 
 # Locally downloaded prebuilt client for Packages/Shared/HmuxTerminalClient
-Packages/Shared/HmuxTerminalClient/HmuxTerminalClient.xcframework/
+Packages/Shared/HmuxTerminalClient/CmuxTerminalClient.xcframework/

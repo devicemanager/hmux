@@ -1,5 +1,5 @@
 public import HmuxTerminalClientModel
-internal import HmuxTerminalClientFFI
+internal import CmuxTerminalClientFFI
 public import Foundation
 import Dispatch
 
@@ -22,14 +22,14 @@ public final class WireGuardNet: @unchecked Sendable {
     /// parsed in memory and not written anywhere.
     public init(wgQuickConfig: String) throws {
         var error = [CChar](repeating: 0, count: 1024)
-        guard let raw = hmux_wireguard_net_start(wgQuickConfig, &error, error.count) else {
+        guard let raw = cmux_wireguard_net_start(wgQuickConfig, &error, error.count) else {
             throw TerminalClientError.failed(String(cString: error))
         }
         self.raw = raw
     }
 
     deinit {
-        hmux_wireguard_net_free(raw)
+        cmux_wireguard_net_free(raw)
     }
 }
 
@@ -96,12 +96,12 @@ private final class TerminalClientState: @unchecked Sendable {
         lock.unlock()
 
         withExtendedLifetime(installedOutputBox) {
-            hmux_terminal_client_set_output_callback(raw, nil, nil)
+            cmux_terminal_client_set_output_callback(raw, nil, nil)
         }
         lock.lock()
         outputBox = nil
         lock.unlock()
-        hmux_terminal_client_disconnect(raw)
+        cmux_terminal_client_disconnect(raw)
     }
 
     func withConnectedFFI<Result>(
@@ -201,7 +201,7 @@ private final class TerminalClientState: @unchecked Sendable {
                 // call because the handler can request a deferred replacement.
                 do {
                     try withConnectedFFI { raw in
-                        hmux_terminal_client_set_output_callback(raw, nil, nil)
+                        cmux_terminal_client_set_output_callback(raw, nil, nil)
                     }
                 } catch {
                     abandonOutputHandlerUpdate()
@@ -224,7 +224,7 @@ private final class TerminalClientState: @unchecked Sendable {
             if let latest {
                 do {
                     try withConnectedFFI { raw in
-                        hmux_terminal_client_set_output_callback(
+                        cmux_terminal_client_set_output_callback(
                             raw,
                             outputTrampoline,
                             Unmanaged.passUnretained(latest).toOpaque())
@@ -238,7 +238,7 @@ private final class TerminalClientState: @unchecked Sendable {
     }
 }
 
-/// One authenticated link to a hmux daemon with a persistent device identity.
+/// One authenticated link to a cmux daemon with a persistent device identity.
 public final class TerminalClient: @unchecked Sendable {
     private let state: TerminalClientState
 
@@ -269,17 +269,17 @@ public final class TerminalClient: @unchecked Sendable {
             guard let wireGuard else {
                 throw TerminalClientError.failed("Trusted Cloud access requires a WireGuard tunnel")
             }
-            guard hmux_wireguard_net_route_is_allowed(
+            guard cmux_wireguard_net_route_is_allowed(
                 wireGuard.raw, route, &error, error.count)
             else {
                 throw TerminalClientError.failed(String(cString: error))
             }
-            raw = hmux_terminal_client_connect_trusted_route(
+            raw = cmux_terminal_client_connect_trusted_route(
                 route, stateDirectory.path, deviceName, wireGuard.raw,
                 &error, error.count, timeout.milliseconds)
         } else {
             raw = invitation.withOptionalCString { invitationPointer in
-                hmux_terminal_client_connect_route(
+                cmux_terminal_client_connect_route(
                     route,
                     stateDirectory.path,
                     deviceName,
@@ -321,11 +321,11 @@ public final class TerminalClient: @unchecked Sendable {
     public func listTerminals(timeout: Duration = .seconds(15)) throws -> [TerminalSummary] {
         var error = [CChar](repeating: 0, count: 1024)
         guard let text = try state.withConnectedFFI({ raw in
-            hmux_terminal_client_list_terminals(raw, &error, error.count, timeout.milliseconds)
+            cmux_terminal_client_list_terminals(raw, &error, error.count, timeout.milliseconds)
         }) else {
             throw TerminalClientError.failed(String(cString: error))
         }
-        defer { hmux_terminal_client_string_free(text) }
+        defer { cmux_terminal_client_string_free(text) }
         return try TerminalCatalogDecoding.terminals(fromListResult: Data(bytes: text, count: strlen(text)))
     }
 
@@ -334,11 +334,11 @@ public final class TerminalClient: @unchecked Sendable {
         var error = [CChar](repeating: 0, count: 1024)
         let text = try name.withOptionalCString { namePointer in
             try state.withConnectedFFI { raw in
-                hmux_terminal_client_create_terminal(raw, namePointer, &error, error.count, timeout.milliseconds)
+                cmux_terminal_client_create_terminal(raw, namePointer, &error, error.count, timeout.milliseconds)
             }
         }
         guard let text else { throw TerminalClientError.failed(String(cString: error)) }
-        defer { hmux_terminal_client_string_free(text) }
+        defer { cmux_terminal_client_string_free(text) }
         return try TerminalCatalogDecoding.createdTerminalID(fromCreateResult: Data(bytes: text, count: strlen(text)))
     }
 
@@ -354,25 +354,25 @@ public final class TerminalClient: @unchecked Sendable {
         let text = try workspaceID.withCString { workspacePointer in
             try name.withOptionalCString { namePointer in
                 try state.withConnectedFFI { raw in
-                    hmux_terminal_client_create_terminal_in_workspace(
+                    cmux_terminal_client_create_terminal_in_workspace(
                         raw, workspacePointer, namePointer, &error, error.count, timeout.milliseconds
                     )
                 }
             }
         }
         guard let text else { throw TerminalClientError.failed(String(cString: error)) }
-        defer { hmux_terminal_client_string_free(text) }
+        defer { cmux_terminal_client_string_free(text) }
         return try TerminalCatalogDecoding.createdTerminalID(fromCreateResult: Data(bytes: text, count: strlen(text)))
     }
 
     public func listWorkspaces(timeout: Duration = .seconds(15)) throws -> [RemoteWorkspaceSummary] {
         var error = [CChar](repeating: 0, count: 1024)
         guard let text = try state.withConnectedFFI({ raw in
-            hmux_terminal_client_list_workspaces(raw, &error, error.count, timeout.milliseconds)
+            cmux_terminal_client_list_workspaces(raw, &error, error.count, timeout.milliseconds)
         }) else {
             throw TerminalClientError.failed(String(cString: error))
         }
-        defer { hmux_terminal_client_string_free(text) }
+        defer { cmux_terminal_client_string_free(text) }
         return try TerminalCatalogDecoding.workspaces(fromListResult: Data(bytes: text, count: strlen(text)))
     }
 
@@ -381,11 +381,11 @@ public final class TerminalClient: @unchecked Sendable {
         var error = [CChar](repeating: 0, count: 1024)
         let text = try name.withOptionalCString { namePointer in
             try state.withConnectedFFI { raw in
-                hmux_terminal_client_create_workspace(raw, namePointer, &error, error.count, timeout.milliseconds)
+                cmux_terminal_client_create_workspace(raw, namePointer, &error, error.count, timeout.milliseconds)
             }
         }
         guard let text else { throw TerminalClientError.failed(String(cString: error)) }
-        defer { hmux_terminal_client_string_free(text) }
+        defer { cmux_terminal_client_string_free(text) }
         return try TerminalCatalogDecoding.createdWorkspaceID(fromCreateResult: Data(bytes: text, count: strlen(text)))
     }
 
@@ -394,11 +394,11 @@ public final class TerminalClient: @unchecked Sendable {
     public func loadCatalog(timeout: Duration = .seconds(15)) throws -> SessionCatalog {
         var error = [CChar](repeating: 0, count: 1024)
         guard let text = try state.withConnectedFFI({ raw in
-            hmux_terminal_client_session_snapshot(raw, &error, error.count, timeout.milliseconds)
+            cmux_terminal_client_session_snapshot(raw, &error, error.count, timeout.milliseconds)
         }) else {
             throw TerminalClientError.failed(String(cString: error))
         }
-        defer { hmux_terminal_client_string_free(text) }
+        defer { cmux_terminal_client_string_free(text) }
         return try TerminalCatalogDecoding.catalog(fromSnapshot: Data(bytes: text, count: strlen(text)))
     }
 
@@ -408,14 +408,14 @@ public final class TerminalClient: @unchecked Sendable {
     @discardableResult
     public func setViewerSizePriority(_ preferred: Bool) -> Bool {
         (try? state.withConnectedFFI { raw in
-            hmux_terminal_client_set_viewer_size_priority(raw, preferred)
+            cmux_terminal_client_set_viewer_size_priority(raw, preferred)
         }) ?? false
     }
 
     public func attach(terminalID: String, timeout: Duration = .seconds(15)) throws {
         var error = [CChar](repeating: 0, count: 1024)
         guard try state.withConnectedFFI({ raw in
-            hmux_terminal_client_attach_with_timeout(raw, terminalID, &error, error.count, timeout.milliseconds)
+            cmux_terminal_client_attach_with_timeout(raw, terminalID, &error, error.count, timeout.milliseconds)
         }) else {
             throw TerminalClientError.failed(String(cString: error))
         }
@@ -423,7 +423,7 @@ public final class TerminalClient: @unchecked Sendable {
 
     public func detach() {
         _ = try? state.withConnectedFFI { raw in
-            hmux_terminal_client_detach(raw)
+            cmux_terminal_client_detach(raw)
         }
     }
 
@@ -432,7 +432,7 @@ public final class TerminalClient: @unchecked Sendable {
     public func send(_ bytes: Data) -> Bool {
         (try? state.withConnectedFFI { raw in
             bytes.withUnsafeBytes { buffer in
-                hmux_terminal_client_send(raw, buffer.bindMemory(to: UInt8.self).baseAddress, buffer.count)
+                cmux_terminal_client_send(raw, buffer.bindMemory(to: UInt8.self).baseAddress, buffer.count)
             }
         }) ?? false
     }
@@ -441,7 +441,7 @@ public final class TerminalClient: @unchecked Sendable {
     public func paste(_ bytes: Data) -> Bool {
         (try? state.withConnectedFFI { raw in
             bytes.withUnsafeBytes { buffer in
-                hmux_terminal_client_paste(raw, buffer.bindMemory(to: UInt8.self).baseAddress, buffer.count)
+                cmux_terminal_client_paste(raw, buffer.bindMemory(to: UInt8.self).baseAddress, buffer.count)
             }
         }) ?? false
     }
@@ -449,13 +449,13 @@ public final class TerminalClient: @unchecked Sendable {
     @discardableResult
     public func resize(cols: UInt16, rows: UInt16) -> Bool {
         (try? state.withConnectedFFI { raw in
-            hmux_terminal_client_resize(raw, cols, rows)
+            cmux_terminal_client_resize(raw, cols, rows)
         }) ?? false
     }
 
     public var hasExited: Bool {
         (try? state.withConnectedFFI { raw in
-            hmux_terminal_client_has_exited(raw)
+            cmux_terminal_client_has_exited(raw)
         }) ?? false
     }
 }

@@ -113,26 +113,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 
 [[package]]
-name = "hmux-diff-sidecar"
-version = "0.1.0"
-dependencies = [
- "axum",
- "fs2",
- "futures-util",
- "notify",
- "reqwest",
- "rustix",
- "rustls",
- "serde",
- "serde_json",
- "tokio",
- "tokio-tungstenite",
- "tokio-util",
- "ts-rs",
- "uuid",
-]
-
-[[package]]
 name = "combine"
 version = "4.6.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -350,6 +330,26 @@ dependencies = [
  "cfg-if",
  "libc",
  "r-efi 6.0.0",
+]
+
+[[package]]
+name = "hmux-diff-sidecar"
+version = "0.1.0"
+dependencies = [
+ "axum",
+ "fs2",
+ "futures-util",
+ "notify",
+ "reqwest",
+ "rustix",
+ "rustls",
+ "serde",
+ "serde_json",
+ "tokio",
+ "tokio-tungstenite",
+ "tokio-util",
+ "ts-rs",
+ "uuid",
 ]
 
 [[package]]

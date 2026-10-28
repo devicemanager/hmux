@@ -6,7 +6,8 @@ import PackageDescription
 // The Rust client (hmux-tui/crates/hmux-terminal-client) arrives as a prebuilt
 // xcframework. Two sources, chosen when this manifest is evaluated:
 //
-//   * HmuxTerminalClient.xcframework next to this file, when a developer has
+//   * CmuxTerminalClient.xcframework next to this file (the binary keeps its
+//     upstream cmux name), when a developer has
 //     downloaded one from a workflow run (the directory is gitignored);
 //   * otherwise the release zip pinned below, produced by
 //     .github/workflows/hmux-terminal-client-xcframework.yml.
@@ -15,11 +16,11 @@ import PackageDescription
 // Set HMUX_TERMINAL_CLIENT_MODEL_ONLY to build and test only the pure Swift
 // model target, for a checkout with no binary available at all.
 let releaseRepository = "manaflow-ai/cmux"
-let releaseTag = "hmux-terminal-client-v0.1.0+6ba5de550cd4"
+let releaseTag = "cmux-terminal-client-v0.1.0+6ba5de550cd4"
 let releaseChecksum = "ecda518668cb64ad54c25869dd0996fc99e63c738bfa5e176b2b524d78290681"
 
 let packageDir = URL(fileURLWithPath: #filePath).deletingLastPathComponent()
-let localXcframework = packageDir.appendingPathComponent("HmuxTerminalClient.xcframework")
+let localXcframework = packageDir.appendingPathComponent("CmuxTerminalClient.xcframework")
 let forceRemote =
     ProcessInfo.processInfo.environment["HMUX_TERMINAL_CLIENT_FORCE_REMOTE_XCFRAMEWORK"] != nil
 let useLocal =
@@ -28,11 +29,11 @@ let useLocal =
 
 let ffiBinary: Target =
     useLocal
-    ? .binaryTarget(name: "HmuxTerminalClientFFI", path: "HmuxTerminalClient.xcframework")
+    ? .binaryTarget(name: "CmuxTerminalClientFFI", path: "CmuxTerminalClient.xcframework")
     : .binaryTarget(
-        name: "HmuxTerminalClientFFI",
+        name: "CmuxTerminalClientFFI",
         url:
-            "https://github.com/\(releaseRepository)/releases/download/\(releaseTag)/HmuxTerminalClient.xcframework.zip",
+            "https://github.com/\(releaseRepository)/releases/download/\(releaseTag)/CmuxTerminalClient.xcframework.zip",
         checksum: releaseChecksum)
 
 let modelOnly = ProcessInfo.processInfo.environment["HMUX_TERMINAL_CLIENT_MODEL_ONLY"] != nil
@@ -73,7 +74,7 @@ let package = Package(
             // The Swift face of the C ABI.
             .target(
                 name: "HmuxTerminalClientKit",
-                dependencies: ["HmuxTerminalClientModel", "HmuxTerminalClientFFI"],
+                dependencies: ["HmuxTerminalClientModel", "CmuxTerminalClientFFI"],
                 swiftSettings: swiftSettings,
                 // What the static library needs from the system: Network for
                 // iroh's netdev backend (nw_*), CoreFoundation and

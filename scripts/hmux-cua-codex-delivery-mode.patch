@@ -1,7 +1,7 @@
-diff --git a/libs/hmux-cua/rust/crates/platform-macos/src/tools/codex_compat.rs b/libs/hmux-cua/rust/crates/platform-macos/src/tools/codex_compat.rs
+diff --git a/libs/cmux-cua/rust/crates/platform-macos/src/tools/codex_compat.rs b/libs/cmux-cua/rust/crates/platform-macos/src/tools/codex_compat.rs
 index 151a8a11..886487e4 100644
---- a/libs/hmux-cua/rust/crates/platform-macos/src/tools/codex_compat.rs
-+++ b/libs/hmux-cua/rust/crates/platform-macos/src/tools/codex_compat.rs
+--- a/libs/cmux-cua/rust/crates/platform-macos/src/tools/codex_compat.rs
++++ b/libs/cmux-cua/rust/crates/platform-macos/src/tools/codex_compat.rs
 @@ -260,7 +260,8 @@ fn defs() -> &'static [ToolDef] {
                          "x":{"type":"number","description":"X coordinate in screenshot pixel coordinates"},
                          "y":{"type":"number","description":"Y coordinate in screenshot pixel coordinates"},

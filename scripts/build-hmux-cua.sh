@@ -404,7 +404,7 @@ else
 fi
 release_src_lock
 
-CARGO_ROOT="$BUILD_SOURCE/libs/hmux-cua/rust"
+CARGO_ROOT="$BUILD_SOURCE/libs/cmux-cua/rust"
 if [[ ! -f "$CARGO_ROOT/Cargo.toml" ]]; then
   echo "error: hmux-cua Cargo workspace not found at $CARGO_ROOT" >&2
   exit 1
@@ -448,7 +448,7 @@ for arch in "${ARCHS[@]}"; do
     if CARGO_TARGET_DIR="$target_dir" \
       CARGO_NET_RETRY="${CARGO_NET_RETRY:-5}" \
       CARGO_HTTP_MULTIPLEXING="${CARGO_HTTP_MULTIPLEXING:-false}" \
-      cargo build --manifest-path "$CARGO_ROOT/Cargo.toml" --locked -p hmux-cua --release --target "$target"; then
+      cargo build --manifest-path "$CARGO_ROOT/Cargo.toml" --locked -p cmux-cua --release --target "$target"; then
       cargo_status=0
       break
     else
@@ -463,7 +463,7 @@ for arch in "${ARCHS[@]}"; do
     exit "$cargo_status"
   fi
   arch_output="$TMPDIR_BUILD/hmux-cua-$arch"
-  cp "$target_dir/$target/release/hmux-cua" "$arch_output"
+  cp "$target_dir/$target/release/cmux-cua" "$arch_output"
   # Cargo's Swift bridge can inherit absolute Xcode toolchain rpaths from the
   # runner. Strip those from each thin slice before lipo and signing so a
   # changed upstream build script cannot reintroduce a Gatekeeper-invalid

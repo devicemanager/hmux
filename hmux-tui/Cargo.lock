@@ -588,9 +588,9 @@ dependencies = [
  "async-trait",
  "base64",
  "bytes",
- "hmux-pty",
  "futures-util",
  "getrandom 0.3.4",
+ "hmux-pty",
  "http",
  "http-body-util",
  "hyper",
@@ -653,262 +653,6 @@ name = "cmov"
 version = "0.5.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "0c9ea0ac24bc397ab3c98583a3c9ba74fa56b09a4449bbe172b9b1ddb016027a"
-
-[[package]]
-name = "hmux-cloud-cli"
-version = "0.1.0"
-
-[[package]]
-name = "hmux-pty"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "libc",
- "portable-pty",
-]
-
-[[package]]
-name = "hmux-relay"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "axum",
- "base64",
- "bytes",
- "hmux-remote-protocol",
- "futures-util",
- "getrandom 0.3.4",
- "hmac",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "tokio",
- "tokio-tungstenite",
- "uuid",
-]
-
-[[package]]
-name = "hmux-remote"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "axum",
- "base64",
- "bytes",
- "hmux-pty",
- "hmux-relay",
- "hmux-remote-protocol",
- "hmux-tui-core",
- "hmux-tui-source-watch",
- "hmux-wg",
- "diffy",
- "flate2",
- "fs4",
- "futures-util",
- "getrandom 0.3.4",
- "ghostty-vt",
- "hmac",
- "http",
- "hyper",
- "hyper-util",
- "iroh",
- "libc",
- "rcgen",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "snow",
- "subtle",
- "tempfile",
- "tokio",
- "tokio-rustls",
- "tokio-tungstenite",
- "tower",
- "tower-http",
- "url",
- "uuid",
- "x25519-dalek",
- "zeroize",
-]
-
-[[package]]
-name = "hmux-remote-protocol"
-version = "0.1.0"
-dependencies = [
- "base64",
- "serde",
- "serde_json",
- "uuid",
-]
-
-[[package]]
-name = "hmux-sdk"
-version = "1.0.0"
-dependencies = [
- "base64",
- "getrandom 0.3.4",
- "libc",
- "serde",
- "serde_json",
- "sha2 0.10.9",
-]
-
-[[package]]
-name = "hmux-sidebar"
-version = "1.0.0"
-dependencies = [
- "base64",
- "hmux-sdk",
- "crossterm",
- "ratatui",
- "serde_json",
-]
-
-[[package]]
-name = "hmux-terminal-client"
-version = "0.1.0"
-dependencies = [
- "async-trait",
- "base64",
- "bytes",
- "hmux-remote",
- "hmux-remote-protocol",
- "hmux-tui-core",
- "hmux-wg",
- "getrandom 0.3.4",
- "ghostty-vt",
- "serde",
- "serde_json",
- "tempfile",
- "tokio",
- "url",
- "zeroize",
-]
-
-[[package]]
-name = "hmux-tui"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "async-trait",
- "base64",
- "bytes",
- "hmux-pty",
- "hmux-remote",
- "hmux-remote-protocol",
- "hmux-tui-cdp",
- "hmux-tui-core",
- "hmux-tui-machine-agent-protocol",
- "hmux-tui-machine-protocol",
- "hmux-wg",
- "crossbeam-channel",
- "crossterm",
- "getrandom 0.3.4",
- "ghostty-vt",
- "glob",
- "libc",
- "parking_lot",
- "ratatui",
- "reqwest",
- "rusqlite",
- "rustls",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "smallvec",
- "tempfile",
- "terminput",
- "terminput-crossterm",
- "tokio",
- "toml",
- "toml_edit 0.22.27",
- "unicode-segmentation",
- "unicode-width",
- "url",
- "uuid",
- "wait-timeout",
- "windows-sys 0.61.2",
- "zeroize",
-]
-
-[[package]]
-name = "hmux-tui-cdp"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "serde_json",
- "tungstenite",
-]
-
-[[package]]
-name = "hmux-tui-core"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "base64",
- "hmux-pty",
- "hmux-remote-protocol",
- "hmux-tui-cdp",
- "flate2",
- "fs4",
- "getrandom 0.3.4",
- "ghostty-vt",
- "jsonschema",
- "libc",
- "regex",
- "rusqlite",
- "serde",
- "serde_json",
- "sha2 0.10.9",
- "tungstenite",
- "uds_windows",
- "url",
- "wait-timeout",
- "windows-sys 0.61.2",
- "zeroize",
-]
-
-[[package]]
-name = "hmux-tui-machine-agent-protocol"
-version = "0.1.0"
-dependencies = [
- "base64",
- "serde",
- "serde_json",
- "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "hmux-tui-machine-protocol"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_json",
- "subtle",
- "zeroize",
-]
-
-[[package]]
-name = "hmux-tui-source-watch"
-version = "0.0.0"
-
-[[package]]
-name = "hmux-wg"
-version = "0.1.0"
-dependencies = [
- "base64",
- "boringtun",
- "bytes",
- "getrandom 0.3.4",
- "ip_network",
- "smoltcp",
- "tokio",
- "tokio-util",
- "x25519-dalek",
- "zeroize",
-]
 
 [[package]]
 name = "cobs"
@@ -2062,6 +1806,262 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6c49c37c09c17a53d937dfbb742eb3a961d65a994e6bcdcf37e7399d0cc8ab5e"
 dependencies = [
  "digest 0.10.7",
+]
+
+[[package]]
+name = "hmux-cloud-cli"
+version = "0.1.0"
+
+[[package]]
+name = "hmux-pty"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "libc",
+ "portable-pty",
+]
+
+[[package]]
+name = "hmux-relay"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "axum",
+ "base64",
+ "bytes",
+ "futures-util",
+ "getrandom 0.3.4",
+ "hmac",
+ "hmux-remote-protocol",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tokio",
+ "tokio-tungstenite",
+ "uuid",
+]
+
+[[package]]
+name = "hmux-remote"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "axum",
+ "base64",
+ "bytes",
+ "diffy",
+ "flate2",
+ "fs4",
+ "futures-util",
+ "getrandom 0.3.4",
+ "ghostty-vt",
+ "hmac",
+ "hmux-pty",
+ "hmux-relay",
+ "hmux-remote-protocol",
+ "hmux-tui-core",
+ "hmux-tui-source-watch",
+ "hmux-wg",
+ "http",
+ "hyper",
+ "hyper-util",
+ "iroh",
+ "libc",
+ "rcgen",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "snow",
+ "subtle",
+ "tempfile",
+ "tokio",
+ "tokio-rustls",
+ "tokio-tungstenite",
+ "tower",
+ "tower-http",
+ "url",
+ "uuid",
+ "x25519-dalek",
+ "zeroize",
+]
+
+[[package]]
+name = "hmux-remote-protocol"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
+name = "hmux-sdk"
+version = "1.0.0"
+dependencies = [
+ "base64",
+ "getrandom 0.3.4",
+ "libc",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+]
+
+[[package]]
+name = "hmux-sidebar"
+version = "1.0.0"
+dependencies = [
+ "base64",
+ "crossterm",
+ "hmux-sdk",
+ "ratatui",
+ "serde_json",
+]
+
+[[package]]
+name = "hmux-terminal-client"
+version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "base64",
+ "bytes",
+ "getrandom 0.3.4",
+ "ghostty-vt",
+ "hmux-remote",
+ "hmux-remote-protocol",
+ "hmux-tui-core",
+ "hmux-wg",
+ "serde",
+ "serde_json",
+ "tempfile",
+ "tokio",
+ "url",
+ "zeroize",
+]
+
+[[package]]
+name = "hmux-tui"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "async-trait",
+ "base64",
+ "bytes",
+ "crossbeam-channel",
+ "crossterm",
+ "getrandom 0.3.4",
+ "ghostty-vt",
+ "glob",
+ "hmux-pty",
+ "hmux-remote",
+ "hmux-remote-protocol",
+ "hmux-tui-cdp",
+ "hmux-tui-core",
+ "hmux-tui-machine-agent-protocol",
+ "hmux-tui-machine-protocol",
+ "hmux-wg",
+ "libc",
+ "parking_lot",
+ "ratatui",
+ "reqwest",
+ "rusqlite",
+ "rustls",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "smallvec",
+ "tempfile",
+ "terminput",
+ "terminput-crossterm",
+ "tokio",
+ "toml",
+ "toml_edit 0.22.27",
+ "unicode-segmentation",
+ "unicode-width",
+ "url",
+ "uuid",
+ "wait-timeout",
+ "windows-sys 0.61.2",
+ "zeroize",
+]
+
+[[package]]
+name = "hmux-tui-cdp"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "serde_json",
+ "tungstenite",
+]
+
+[[package]]
+name = "hmux-tui-core"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "base64",
+ "flate2",
+ "fs4",
+ "getrandom 0.3.4",
+ "ghostty-vt",
+ "hmux-pty",
+ "hmux-remote-protocol",
+ "hmux-tui-cdp",
+ "jsonschema",
+ "libc",
+ "regex",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "sha2 0.10.9",
+ "tungstenite",
+ "uds_windows",
+ "url",
+ "wait-timeout",
+ "windows-sys 0.61.2",
+ "zeroize",
+]
+
+[[package]]
+name = "hmux-tui-machine-agent-protocol"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "serde",
+ "serde_json",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
+name = "hmux-tui-machine-protocol"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "serde_json",
+ "subtle",
+ "zeroize",
+]
+
+[[package]]
+name = "hmux-tui-source-watch"
+version = "0.0.0"
+
+[[package]]
+name = "hmux-wg"
+version = "0.1.0"
+dependencies = [
+ "base64",
+ "boringtun",
+ "bytes",
+ "getrandom 0.3.4",
+ "ip_network",
+ "smoltcp",
+ "tokio",
+ "tokio-util",
+ "x25519-dalek",
+ "zeroize",
 ]
 
 [[package]]
