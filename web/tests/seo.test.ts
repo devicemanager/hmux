@@ -82,8 +82,8 @@ describe("SEO metadata helpers", () => {
       buildAlternates("en", "/blog/hmux-omo", englishFallbackContentLocales)
         .languages,
     ).toEqual({
-      en: "https://cmux.com/blog/hmux-omo",
-      "x-default": "https://cmux.com/blog/hmux-omo",
+      en: "https://cmux.com/blog/cmux-omo",
+      "x-default": "https://cmux.com/blog/cmux-omo",
     });
   });
 
@@ -1226,8 +1226,8 @@ describe("SEO middleware", () => {
       "https://cmux.com/ja/blog/367-billion-tokens",
       "https://cmux.com/blog/claude-code-best-worktree-manager",
       "https://cmux.com/ja/blog/claude-code-best-worktree-manager",
-      "https://cmux.com/blog/hmux-ssh",
-      "https://cmux.com/ja/blog/hmux-ssh",
+      "https://cmux.com/blog/cmux-ssh",
+      "https://cmux.com/ja/blog/cmux-ssh",
       "https://cmux.com/docs/agent-integrations/oh-my-pi",
       "https://cmux.com/ja/docs/agent-integrations/oh-my-pi",
     ]);
@@ -1274,8 +1274,8 @@ describe("SEO middleware", () => {
           url.endsWith("/blog/gpl"),
       );
     expect(urls).toEqual([
-      "https://cmux.com/blog/hmux-claude-teams",
-      "https://cmux.com/blog/hmux-omo",
+      "https://cmux.com/blog/cmux-claude-teams",
+      "https://cmux.com/blog/cmux-omo",
       "https://cmux.com/blog/gpl",
     ]);
   });

@@ -4461,7 +4461,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
-          latest_url="https://files.cmux.com/hmux-tui/latest/manifest.json"
+          latest_url="https://files.cmux.com/cmux-tui/latest/manifest.json"
           latest_manifest="$RUNNER_TEMP/hmux-tui-release-latest-manifest.json"
           curl --proto '=https' --tlsv1.2 -fsSL --retry 5 --retry-delay 3 --retry-all-errors --retry-connrefused "$latest_url" -o "$latest_manifest"
           gh attestation verify "$latest_manifest" \
@@ -4469,7 +4469,7 @@ jobs:
             --signer-workflow manaflow-ai/cmux/.github/workflows/cmux-tui-artifacts.yml >&2
           commit="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["commit"])' "$latest_manifest")"
           [[ "$commit" =~ ^[0-9a-f]{40}$ ]]
-          manifest_url="https://files.cmux.com/hmux-tui/$commit/manifest.json"
+          manifest_url="https://files.cmux.com/cmux-tui/$commit/manifest.json"
           manifest="$RUNNER_TEMP/hmux-tui-release-manifest.json"
           curl --proto '=https' --tlsv1.2 -fsSL --retry 5 --retry-delay 3 --retry-all-errors --retry-connrefused "$manifest_url" -o "$manifest"
           gh attestation verify "$manifest" \

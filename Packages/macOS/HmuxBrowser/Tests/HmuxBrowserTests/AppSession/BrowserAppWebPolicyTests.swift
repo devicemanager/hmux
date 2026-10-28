@@ -27,19 +27,19 @@ struct BrowserAppWebPolicyTests {
         )
 
         #expect(policy.shouldOpenInSystemBrowser(
-            try #require(URL(string: "https://cmux.com/api/billing/checkout?hmux_external_browser=1")),
+            try #require(URL(string: "https://cmux.com/api/billing/checkout?cmux_external_browser=1")),
             sourceURL: trustedSource
         ))
         #expect(policy.shouldOpenInSystemBrowser(
-            try #require(URL(string: "https://cmux.com/enterprise?hmux_external_browser=1")),
+            try #require(URL(string: "https://cmux.com/enterprise?cmux_external_browser=1")),
             sourceURL: trustedSource
         ))
         #expect(policy.shouldOpenInSystemBrowser(
-            try #require(URL(string: "https://cmux.com/api/billing/checkout?hmux_external_browser=1")),
+            try #require(URL(string: "https://cmux.com/api/billing/checkout?cmux_external_browser=1")),
             sourceURL: publicPricingSource
         ))
         #expect(policy.shouldOpenInSystemBrowser(
-            try #require(URL(string: "https://cmux.com/api/billing/checkout?hmux_external_browser=1")),
+            try #require(URL(string: "https://cmux.com/api/billing/checkout?cmux_external_browser=1")),
             sourceURL: dashboardBillingSource
         ))
         #expect(!policy.shouldOpenInSystemBrowser(
@@ -59,15 +59,15 @@ struct BrowserAppWebPolicyTests {
             sourceURL: trustedSource
         ))
         #expect(!policy.shouldOpenInSystemBrowser(
-            try #require(URL(string: "https://cmux.com/enterprise?hmux_external_browser")),
+            try #require(URL(string: "https://cmux.com/enterprise?cmux_external_browser")),
             sourceURL: trustedSource
         ))
         #expect(!policy.shouldOpenInSystemBrowser(
-            try #require(URL(string: "https://cmux.com/enterprise?hmux_external_browser=yes")),
+            try #require(URL(string: "https://cmux.com/enterprise?cmux_external_browser=yes")),
             sourceURL: trustedSource
         ))
         #expect(!policy.shouldOpenInSystemBrowser(
-            try #require(URL(string: "https://cmux.com/enterprise?hmux_external_browser=0")),
+            try #require(URL(string: "https://cmux.com/enterprise?cmux_external_browser=0")),
             sourceURL: trustedSource
         ))
         #expect(!policy.shouldOpenInSystemBrowser(
@@ -79,7 +79,7 @@ struct BrowserAppWebPolicyTests {
             sourceURL: untrustedSource
         ))
         #expect(!policy.shouldOpenInSystemBrowser(
-            try #require(URL(string: "http://cmux.com/?hmux_external_browser=1")),
+            try #require(URL(string: "http://cmux.com/?cmux_external_browser=1")),
             sourceURL: trustedSource
         ))
         #expect(!policy.shouldOpenInSystemBrowser(
@@ -131,7 +131,7 @@ struct BrowserAppWebPolicyTests {
             trustedOrigin: try #require(URL(string: "https://cmux.com"))
         )
         #expect(!securePolicy.shouldOpenInSystemBrowser(
-            try #require(URL(string: "https://cmux.com/enterprise?hmux_external_browser=1")),
+            try #require(URL(string: "https://cmux.com/enterprise?cmux_external_browser=1")),
             sourceURL: URL(string: "https://user@cmux.com/app-pricing")
         ))
     }

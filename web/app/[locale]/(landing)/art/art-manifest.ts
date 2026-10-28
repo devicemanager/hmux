@@ -5,8 +5,8 @@ import { cacheLife } from "next/cache";
  * collection's source of truth is art/manifest.json on feat-hmux-next; its publish workflow
  * serves it here with each work's image and thumbnail URL.
  */
-export const ART_MANIFEST_URL = "https://files.cmux.com/hmux-art/manifest.json";
-const ART_ORIGIN = "https://files.cmux.com/hmux-art/";
+export const ART_MANIFEST_URL = "https://files.cmux.com/cmux-art/manifest.json";
+const ART_ORIGIN = "https://files.cmux.com/cmux-art/";
 const ART_MANIFEST_TIMEOUT_MS = 10_000;
 
 export const artCollections = ["darkArt", "museumIcons", "calm", "dore"] as const;

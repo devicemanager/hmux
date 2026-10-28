@@ -80,7 +80,7 @@ function writeFileCommand(file: string, content: string): string {
 }
 
 const commit = argValue("--commit") ?? defaultImageCommit();
-const manifestUrl = `https://files.cmux.com/hmux-tui/${commit}/manifest.json`;
+const manifestUrl = `https://files.cmux.com/cmux-tui/${commit}/manifest.json`;
 const source = parseHmuxTuiManifest(manifestUrl, await (await fetch(manifestUrl)).json());
 const ids = machineIds();
 console.log(`target hmux-tui ${source.commit} sha256 ${source.sha256}; ${ids.length} machine(s)`);

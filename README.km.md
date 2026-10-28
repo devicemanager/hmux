@@ -24,7 +24,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ វីដេអូបង្ហាញពីដំណើរការ (Demo)</a> · <a href="https://cmux.com/blog/zen-of-hmux">ទស្សនវិជ្ជារបស់ hmux (The Zen of hmux)</a>
+  <a href="https://www.youtube.com/watch?v=i-WxO5YUTOs">▶ វីដេអូបង្ហាញពីដំណើរការ (Demo)</a> · <a href="https://cmux.com/blog/zen-of-cmux">ទស្សនវិជ្ជារបស់ hmux (The Zen of hmux)</a>
 </p>
 
 ## មុខងារ

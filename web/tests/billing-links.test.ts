@@ -19,7 +19,7 @@ describe("billing links", () => {
         "https://cmux.com/api/billing/checkout?plan=pro#pay",
       ),
     ).toBe(
-      "https://cmux.com/api/billing/checkout?plan=pro&hmux_external_browser=1#pay",
+      "https://cmux.com/api/billing/checkout?plan=pro&cmux_external_browser=1#pay",
     );
   });
 
@@ -28,7 +28,7 @@ describe("billing links", () => {
       "http://localhost:9210/api/billing/checkout?plan=pro&hmux_external_browser=1",
     );
     expect(appPricingCheckoutURL("team", "https://cmux.com")).toBe(
-      "https://cmux.com/api/billing/checkout?plan=team&hmux_external_browser=1",
+      "https://cmux.com/api/billing/checkout?plan=team&cmux_external_browser=1",
     );
   });
 

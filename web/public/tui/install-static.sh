@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-base_url="${HMUX_DOWNLOAD_BASE_URL:-https://files.cmux.com/hmux-tui/latest}"
+base_url="${HMUX_DOWNLOAD_BASE_URL:-https://files.cmux.com/cmux-tui/latest}"
 base_url="${base_url%/}"
 install_root="${HMUX_INSTALL:-$HOME/.hmux}"
 bin_dir="$install_root/bin"

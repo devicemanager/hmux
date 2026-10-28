@@ -254,7 +254,7 @@ describe("after sign-in native handoff", () => {
     expect(afterSignInTarget.searchParams.get("web_return_to")).toBe(webReturnTo);
   });
 
-  test("omits account switching when there is no native return target to preserve", async () => {
+  test("a website sign-in with no app target stays on the website", async () => {
     const response = await GET(
       new NextRequest("https://hmux.test/handler/after-sign-in", {
         headers: {
@@ -263,10 +263,11 @@ describe("after sign-in native handoff", () => {
       })
     );
 
-    expect(response.status).toBe(200);
-    const html = await response.text();
-    expect(html).toContain("Return to hmux");
-    expect(html).not.toContain("Use a different account");
+    // No app asked for this sign-in, so the browser's session must not be
+    // handed to whatever app owns hmux://.
+    expect(response.status).toBe(307);
+    expect(response.headers.get("location")).toBe("https://hmux.test/");
+    expect(await response.text()).not.toContain("hmux://");
   });
 
   test("does not crash on malformed percent-encoded stack cookies", async () => {

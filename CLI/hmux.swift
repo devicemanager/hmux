@@ -288,6 +288,11 @@ struct ClaudeHookSessionRecord: Codable {
     var autoNameRecentMessages: [AutoNamingTranscriptMessage]?
     var autoNameMessageSequence: Int?
     var hadPendingBackgroundWorkAtStop: Bool?
+    /// Whether the last Stop reported a session cron or scheduled wakeup. The
+    /// app settles a pane whose background tasks ended only when this is
+    /// recorded false: a pending cron leaves nothing in the transcript or
+    /// process tree to show whether it still waits.
+    var hadSessionCronsAtStop: Bool?
     /// Unsandboxed Cursor shell calls that hmux asked Cursor to gate. The
     /// after/failure hooks do not carry a native approval decision, so the
     /// command identity is the only safe completion correlation available.
@@ -1443,6 +1448,7 @@ final class ClaudeHookSessionStore {
         runtimeStatus: AgentHookRuntimeStatus? = nil,
         updateRuntimeStatus: Bool = false,
         hadPendingBackgroundWorkAtStop: Bool? = nil,
+        hadSessionCronsAtStop: Bool? = nil,
         title: String? = nil,
         markActive: Bool = false,
         turnId: String? = nil,
@@ -1502,6 +1508,7 @@ final class ClaudeHookSessionStore {
                 runtimeStatus: runtimeStatus,
                 updateRuntimeStatus: updateRuntimeStatus,
                 hadPendingBackgroundWorkAtStop: hadPendingBackgroundWorkAtStop,
+                hadSessionCronsAtStop: hadSessionCronsAtStop,
                 title: title,
                 now: now
             )
@@ -1623,6 +1630,7 @@ final class ClaudeHookSessionStore {
                     superseded.lastNotificationStatus = nil
                     superseded.runtimeStatus = .idle
                     superseded.hadPendingBackgroundWorkAtStop = nil
+                    superseded.hadSessionCronsAtStop = nil
                     superseded.updatedAt = now
                     state.sessions[supersededSessionId] = superseded
                     if ownsTargetSurface,
@@ -1674,6 +1682,7 @@ final class ClaudeHookSessionStore {
             record.lastNotificationStatus = nil
             record.runtimeStatus = .idle
             record.hadPendingBackgroundWorkAtStop = nil
+            record.hadSessionCronsAtStop = nil
             state.sessions[normalizedSessionId] = record
 
             for (workspaceId, activeSession) in state.activeSessionsByWorkspace
@@ -2059,6 +2068,7 @@ final class ClaudeHookSessionStore {
         runtimeStatus: AgentHookRuntimeStatus?,
         updateRuntimeStatus: Bool,
         hadPendingBackgroundWorkAtStop: Bool? = nil,
+        hadSessionCronsAtStop: Bool? = nil,
         title: String? = nil,
         now: TimeInterval
     ) {
@@ -2179,6 +2189,9 @@ final class ClaudeHookSessionStore {
         }
         if let hadPendingBackgroundWorkAtStop {
             record.hadPendingBackgroundWorkAtStop = hadPendingBackgroundWorkAtStop
+        }
+        if let hadSessionCronsAtStop {
+            record.hadSessionCronsAtStop = hadSessionCronsAtStop
         }
         record.updatedAt = now
     }
@@ -6440,7 +6453,9 @@ struct HMUXCLI {
         if passesThroughProviderArguments {
             presentationOptions = (false, nil, rawCommandArgs)
         } else {
-            let parsed = try HmuxCLIArgumentParser().parse(rawCommandArgs)
+            let parsed = try HmuxCLIArgumentParser().parse(
+                rawCommandArgs, optionsWithOptionalValues: command == "surface" ? ["--focus"] : []
+            )
             presentationOptions = (parsed.jsonOutput, parsed.idFormat, parsed.remaining)
         }
         if presentationOptions.jsonOutput {
@@ -7278,7 +7293,7 @@ struct HMUXCLI {
                         let expiresAt = Date(timeIntervalSince1970: TimeInterval(expiresAtMs) / 1000)
                         let remaining = expiresAt.timeIntervalSinceNow
                         // Attribution only: the pricing page forwards it to checkout.
-                        let upgradeURL = "https://cmux.com/pricing?hmux_source=cli_free_access_expiry&hmux_client=cli"
+                        let upgradeURL = "https://cmux.com/pricing?cmux_source=cli_free_access_expiry&cmux_client=cli"
                         // "6d 23h" / "5h 12m" / "1m": whole units, truncated, never overstated.
                         func countdown(_ remaining: TimeInterval) -> String {
                             let total = max(Int(remaining), 60)
@@ -11567,7 +11582,7 @@ struct HMUXCLI {
                 jsonOutput: jsonOutput,
                 windowOverride: windowOverride
             )
-        case "ls", "list", "tree", "catalog", "open", "project", "new-terminal", "new":
+        case "ls", "list", "tree", "catalog", "open", "project", "new-terminal", "new", "new-display":
             // The surface catalog: terminals, screens and browsers on This Mac and every
             // cloud machine, and one open path for all of them (`surface.project`).
             try runSurfaceCatalogCommand(
@@ -22685,6 +22700,7 @@ struct HMUXCLI {
             Usage: hmux surface ls [<machine>|local] [--refresh] [--json]
                    hmux surface open <resource> [--workspace <id|ref|index>] [--pane <id|ref>] [--left|--right|--up|--down|--tab] [--new] [--focus|--no-focus]
                    hmux surface new-terminal --machine <id|local> [--cwd <dir>] [--name <name>] [--remote-workspace <ws_…>] [--workspace <id|ref|index>] [--no-open] [--focus|--no-focus] [-- <command...>]
+                   hmux surface new-display --machine <cloud-id> [--workspace <id|ref|index>] [--no-open] [--focus|--no-focus] [--json]
                    hmux surface resume set [flags] -- <argv...>
                    hmux surface resume set [flags] --shell <command>
                    hmux surface resume show [--json] [flags]
@@ -22696,13 +22712,15 @@ struct HMUXCLI {
                    hmux surface size-counts <true|false|auto> [--participant <id>] [--surface <id|ref|index>]
                    hmux surface disconnect-participant <participant-id> [--surface <id|ref|index>]
 
-            ls / open / new-terminal: the surface catalog. Terminals, VNC screens and browsers
+            ls / open / new-terminal / new-display: the surface catalog. Terminals, VNC screens and browsers
             on This Mac and on every cloud machine are resources (`<machine>/<kind>/<key>`,
             e.g. local/terminal/<uuid>, vivid-newt/terminal/term_2f9c…, vivid-newt/display/display:1,
             vivid-newt/browser/port:3000); panes project them. `open` reuses the pane already
             showing a resource unless --new; --pane with a side splits that pane on that side,
             --tab adds a tab to it. A local terminal moves to the destination (it is shown once).
             `new-terminal` creates a terminal on the machine (cloud: in its hmux-tui session).
+            `new-display` creates a new VNC display on a cloud machine and opens it in the
+            selected workspace unless `--no-open` is passed.
             `hmux vm tree` prints the same catalog.
 
             resume: attach restart command metadata to a terminal surface.
@@ -31656,6 +31674,9 @@ struct HMUXCLI {
                         lastSubtitle: completion?.subtitle,
                         lastBody: completion?.body,
                         hadPendingBackgroundWorkAtStop: hasPendingBackgroundWork,
+                        // A payload that does not report crons may still have
+                        // one, so the drain check must not settle it.
+                        hadSessionCronsAtStop: hasClaudeSessionCrons(parsedInput) ?? true,
                         markActive: true,
                         allowsNewSessionReplacement: true
                     )

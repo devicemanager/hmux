@@ -134,7 +134,7 @@ public func defaultCloudVMAction(status: Int, errorCode: String, response: [Stri
     case "vm_requires_pro":
         return String(
             localized: "cloudVM.error.requiresPro.action",
-            defaultValue: "Upgrade to hmux Pro at https://cmux.com/pricing?hmux_source=mac_vm_requires_pro_error&hmux_client=mac to create Cloud VMs."
+            defaultValue: "Upgrade to hmux Pro at https://cmux.com/pricing?cmux_source=mac_vm_requires_pro_error&cmux_client=mac to create Cloud VMs."
         )
     case "vm_memory_requires_plan":
         let details = response["details"] as? [String: Any]

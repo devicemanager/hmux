@@ -2119,7 +2119,7 @@ else
     if [[ -z "$HMUX_TUI_CLIENT_COMMIT" ]]; then
       HMUX_TUI_CLIENT_COMMIT="$(resolve_hmux_tui_client_commit)" || exit 1
     fi
-    hmux_tui_manifest_base="${HMUX_TUI_CLIENT_MANIFEST_BASE:-https://files.cmux.com/hmux-tui}"
+    hmux_tui_manifest_base="${HMUX_TUI_CLIENT_MANIFEST_BASE:-https://files.cmux.com/cmux-tui}"
     hmux_tui_install_args+=(
       --manifest-url "${hmux_tui_manifest_base%/}/$HMUX_TUI_CLIENT_COMMIT/manifest.json"
       --expected-commit "$HMUX_TUI_CLIENT_COMMIT"

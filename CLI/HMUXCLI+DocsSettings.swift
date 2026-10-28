@@ -1,7 +1,7 @@
 import Foundation
 
 extension HMUXCLI {
-    static let settingsDocsURL = "https://cmux.com/docs/configuration#hmux-json"
+    static let settingsDocsURL = "https://cmux.com/docs/configuration#cmux-json"
     static let settingsSchemaURL = "https://raw.githubusercontent.com/manaflow-ai/cmux/main/web/data/cmux.schema.json"
     static let primarySettingsDisplayPath = "~/.config/hmux/hmux.json"
     static let legacySettingsDisplayPath = "~/.config/hmux/settings.json"
