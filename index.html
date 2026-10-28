@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="description" content="Setup guide for private cmux Mac and iPhone builds that pair directly over Tailscale, with no cmux account or cloud.">
+<meta name="description" content="Setup guide for hmux, private Mac and iPhone builds of cmux that pair directly over Tailscale, with no cmux account or cloud.">
 <style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
-<title>cmux local</title>
+<title>hmux</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Source+Sans+3:ital,wght@0,400;0,600;0,700;1,400&display=swap">
@@ -205,14 +205,14 @@ footer nav { display: flex; gap: 1rem; flex-wrap: wrap; }
 <body>
 <header class="site">
   <div class="wrap">
-    <a class="brand" href="#top"><span class="cursor" aria-hidden="true"></span>cmux local</a>
+    <a class="brand" href="#top"><span class="cursor" aria-hidden="true"></span>hmux</a>
     <nav class="links" aria-label="Sections">
       <a href="#different">What's different</a>
       <a href="#how">How it works</a>
       <a href="#setup">Setup</a>
       <a href="#settings">Settings</a>
       <a href="#trouble">Troubleshooting</a>
-      <a href="https://github.com/devicemanager/cmux">GitHub</a>
+      <a href="https://github.com/devicemanager/hmux">GitHub</a>
     </nav>
   </div>
 </header>
@@ -223,11 +223,11 @@ footer nav { display: flex; gap: 1rem; flex-wrap: wrap; }
       <div class="prose">
         <p class="eyebrow">Private build of cmux · macOS + iPhone</p>
         <h1>Your terminal on your iPhone, over <em>your own</em> tailnet.</h1>
-        <p class="lead">cmux local is cmux with the cloud taken out. The Mac app and the iPhone app talk to each other directly over Tailscale, paired with a one-time code. No cmux account, no relays, no telemetry.</p>
+        <p class="lead">hmux is cmux with the cloud taken out. The Mac app and the iPhone app talk to each other directly over Tailscale, paired with a one-time code. No cmux account, no relays, no telemetry.</p>
       </div>
       <div class="cta">
         <a class="btn primary" href="#setup">Set it up</a>
-        <a class="btn" href="https://github.com/devicemanager/cmux">View the fork on GitHub</a>
+        <a class="btn" href="https://github.com/devicemanager/hmux">View on GitHub</a>
       </div>
       <p class="reqs">Requires macOS 14 or later, iOS 17 or later, Tailscale on both devices, and an Apple Developer account to sign your own builds.</p>
 
@@ -235,7 +235,7 @@ footer nav { display: flex; gap: 1rem; flex-wrap: wrap; }
         <div class="bar" aria-hidden="true"><span></span><span></span><span></span></div>
 <pre><span class="p">$</span> cmux rpc mobile.local_pairing.create
 <span class="d">{</span>
-<span class="d">  "url": </span>"cmux-local://pair?v=1&amp;host=100.101.102.103&amp;port=4399&amp;code=…"<span class="d">,</span>
+<span class="d">  "url": </span>"hmux://pair?v=1&amp;host=100.101.102.103&amp;port=4399&amp;code=…"<span class="d">,</span>
 <span class="d">  "expires_at": </span>"2026-10-26T20:04:27Z"
 <span class="d">}</span>
 <span class="p">$</span> lsof -nP -iTCP:4399
@@ -257,7 +257,7 @@ cmux  TCP 100.101.102.103:4399-&gt;100.88.12.34:49315 (ESTABLISHED)</pre>
       <div class="prose">
         <h2 id="why">Why this exists</h2>
         <p>The official cmux connects the iPhone app to the Mac through a cmux account and Iroh relays run by the cmux service. That is convenient, but it puts a third-party service between your phone and a terminal on your own infrastructure.</p>
-        <p>cmux local keeps the connection between your devices. The Mac listens on one TCP port that only Tailscale addresses can reach, and the iPhone proves itself with a key the Mac issued to it. Everything that would talk to cmux.com is switched off at build time.</p>
+        <p>hmux keeps the connection between your devices. The Mac listens on one TCP port that only Tailscale addresses can reach, and the iPhone proves itself with a key the Mac issued to it. Everything that would talk to cmux.com is switched off at build time.</p>
       </div>
     </section>
 
@@ -297,13 +297,13 @@ cmux  TCP 100.101.102.103:4399-&gt;100.88.12.34:49315 (ESTABLISHED)</pre>
           <title id="dg-title">The iPhone connects to the Mac's TCP port 4399 across the Tailscale network; the cmux cloud is not involved.</title>
           <rect x="20" y="40" width="210" height="110" rx="10" fill="var(--bg)" stroke="var(--line)"/>
           <text x="40" y="72" font-size="15" font-weight="600" fill="var(--fg)">Mac</text>
-          <text x="40" y="96" font-size="12" fill="var(--muted)">cmux local</text>
+          <text x="40" y="96" font-size="12" fill="var(--muted)">hmux</text>
           <text x="40" y="118" font-size="12" fill="var(--muted)">listens on TCP 4399</text>
           <text x="40" y="138" font-size="12" fill="var(--muted)">Tailscale peers only</text>
 
           <rect x="490" y="40" width="210" height="110" rx="10" fill="var(--bg)" stroke="var(--line)"/>
           <text x="510" y="72" font-size="15" font-weight="600" fill="var(--fg)">iPhone</text>
-          <text x="510" y="96" font-size="12" fill="var(--muted)">cmux local app</text>
+          <text x="510" y="96" font-size="12" fill="var(--muted)">hmux app</text>
           <text x="510" y="118" font-size="12" fill="var(--muted)">device key in Keychain</text>
           <text x="510" y="138" font-size="12" fill="var(--muted)">sent with every request</text>
 
@@ -347,8 +347,8 @@ brew install go rust
 
         <li><div>
           <h3>Get the source</h3>
-          <div class="code"><button class="copy" type="button">Copy</button><pre>git clone https://github.com/devicemanager/cmux.git
-cd cmux
+          <div class="code"><button class="copy" type="button">Copy</button><pre>git clone https://github.com/devicemanager/hmux.git
+cd hmux
 git submodule update --init --recursive</pre></div>
         </div></li>
 
@@ -364,10 +364,10 @@ open -e .env-local</pre></div>
 
         <li><div>
           <h3>Build the Mac app</h3>
-          <p>This builds a Release copy and registers your Mac bundle ID with Apple if needed. It creates a Developer ID provisioning profile, signs and notarizes the app, then installs <b>cmux local</b> in /Applications. It installs under your own bundle ID and never replaces the official cmux.</p>
+          <p>This builds a Release copy and registers your Mac bundle ID with Apple if needed. It creates a Developer ID provisioning profile, signs and notarizes the app, then installs <b>hmux</b> in /Applications. It installs under your own bundle ID and never replaces the official cmux.</p>
           <p class="note">Without the profile the app can't keep secrets in its own Keychain group, and macOS refuses to launch a Developer ID app that claims one. Run <code>scripts/build-local-only-mac.sh --skip-build</code> to re-sign the last build without compiling again.</p>
           <div class="code"><button class="copy" type="button">Copy</button><pre>scripts/build-local-only-mac.sh</pre></div>
-          <p>Open cmux local, then turn on iOS pairing in <b>Settings › Mobile</b>. The pairing listener uses TCP port 4399.</p>
+          <p>Open hmux, then turn on iOS pairing in <b>Settings › Mobile</b>. The pairing listener uses TCP port 4399.</p>
         </div></li>
 
         <li><div>
@@ -384,15 +384,15 @@ ios/scripts/build-local-only.sh --device-id &lt;identifier&gt;</pre></div>
           <h3>Pair</h3>
           <ul>
             <li>On the Mac: open <b>Pair your iPhone</b> and click <b>Show Pairing Code</b>.</li>
-            <li>On the iPhone: open cmux local, go to <b>Add Computer</b> and scan the code within five minutes.</li>
+            <li>On the iPhone: open hmux, go to <b>Add Computer</b> and scan the code within five minutes.</li>
           </ul>
         </div></li>
 
         <li><div>
           <h3>Check what leaves your Mac</h3>
           <p>With the phone connected, the only sockets should be the listener and your phone's Tailscale address:</p>
-          <div class="code"><button class="copy" type="button">Copy</button><pre>lsof -nP -a -p "$(pgrep -f 'cmux local.app/Contents/MacOS' | head -1)" -i</pre></div>
-          <p>On the iPhone, turn on <b>Settings › Privacy &amp; Security › App Privacy Report</b>. After a day of use it lists every domain and address cmux local contacted. It should show only your Mac. For proof over longer periods, run a per-app firewall such as LuLu or Little Snitch on the Mac.</p>
+          <div class="code"><button class="copy" type="button">Copy</button><pre>lsof -nP -a -p "$(pgrep -f 'hmux.app/Contents/MacOS' | head -1)" -i</pre></div>
+          <p>On the iPhone, turn on <b>Settings › Privacy &amp; Security › App Privacy Report</b>. After a day of use it lists every domain and address hmux contacted. It should show only your Mac. For proof over longer periods, run a per-app firewall such as LuLu or Little Snitch on the Mac.</p>
         </div></li>
       </ol>
     </section>
@@ -406,7 +406,8 @@ ios/scripts/build-local-only.sh --device-id &lt;identifier&gt;</pre></div>
             <tr><td><code>CMUX_LOCAL_TEAM_ID</code></td><td>Your 10-character Apple Developer team ID.</td></tr>
             <tr><td><code>CMUX_LOCAL_BUNDLE_PREFIX</code></td><td>A reverse-DNS prefix you own. Gives <code>&lt;prefix&gt;.cmux</code> for the iPhone and <code>&lt;prefix&gt;.cmux.mac</code> for the Mac.</td></tr>
             <tr><td><code>CMUX_LOCAL_IOS_BUNDLE_ID</code><br><code>CMUX_LOCAL_MAC_BUNDLE_ID</code></td><td>Optional overrides for the derived bundle IDs. Official cmux IDs are refused.</td></tr>
-            <tr><td><code>CMUX_LOCAL_MAC_APP_NAME</code></td><td>The Mac app's name. Default <code>cmux local</code>.</td></tr>
+            <tr><td><code>CMUX_LOCAL_MAC_APP_NAME</code></td><td>The Mac app's name. Default <code>hmux</code>.</td></tr>
+            <tr><td><code>CMUX_LOCAL_IOS_APP_NAME</code></td><td>The iPhone app's name. Default <code>hmux</code>.</td></tr>
             <tr><td><code>CMUX_LOCAL_MAC_SIGNING_IDENTITY</code></td><td>Your Developer ID Application identity. Empty picks the first one for your team.</td></tr>
             <tr><td><code>CMUX_LOCAL_NOTARY_PROFILE</code></td><td>notarytool keychain profile. Empty skips notarization.</td></tr>
             <tr><td><code>CMUX_LOCAL_ASC_KEY_ID</code><br><code>CMUX_LOCAL_ASC_ISSUER_ID</code><br><code>CMUX_LOCAL_ASC_KEY_PATH</code></td><td>App Store Connect API key for the Mac app's Developer ID profile.</td></tr>
@@ -423,7 +424,7 @@ ios/scripts/build-local-only.sh --device-id &lt;identifier&gt;</pre></div>
     <section aria-labelledby="phones-h">
       <div class="prose">
         <h2 id="phones-h">Managing paired iPhones</h2>
-        <p>Run these in a terminal inside cmux local. Each pairing creates one entry, so pairing again after reinstalling the app leaves the old entry behind.</p>
+        <p>Run these in a terminal inside hmux. Each pairing creates one entry, so pairing again after reinstalling the app leaves the old entry behind.</p>
       </div>
       <div class="code"><button class="copy" type="button">Copy</button><pre>cmux rpc mobile.local_devices.list
 cmux rpc mobile.local_devices.revoke '{"id":"&lt;device id&gt;"}'</pre></div>
@@ -463,7 +464,7 @@ lsof -nP -iTCP:4399 -sTCP:LISTEN</pre></div>
         </details>
         <details>
           <summary>The phone doesn't use my Pi-hole or other DNS server</summary>
-          <div><p>With Tailscale on, the phone sends DNS to Tailscale. Make the DNS server reachable from the tailnet and set it under DNS in the Tailscale admin console. cmux local itself makes no DNS lookups: it connects to your Mac by numeric address.</p></div>
+          <div><p>With Tailscale on, the phone sends DNS to Tailscale. Make the DNS server reachable from the tailnet and set it under DNS in the Tailscale admin console. hmux itself makes no DNS lookups: it connects to your Mac by numeric address.</p></div>
         </details>
       </div>
     </section>
@@ -473,7 +474,7 @@ lsof -nP -iTCP:4399 -sTCP:LISTEN</pre></div>
 <footer>
   <div class="wrap">
     <nav aria-label="Links">
-      <a href="https://github.com/devicemanager/cmux">Fork on GitHub</a>
+      <a href="https://github.com/devicemanager/hmux">Source on GitHub</a>
       <a href="https://github.com/manaflow-ai/cmux">Upstream cmux</a>
       <a href="https://tailscale.com/kb">Tailscale docs</a>
     </nav>
