@@ -20535,7 +20535,7 @@
 			repositoryURL = "https://github.com/manaflow-ai/iroh-ffi.git";
 			requirement = {
 				kind = exactVersion;
-				version = "1.2.0-hmux.1.ios17";
+				version = "1.2.0-cmux.1.ios17";
 			};
 		};
 		C1A900000000000000000006 /* XCRemoteSwiftPackageReference "swift-argument-parser" */ = {

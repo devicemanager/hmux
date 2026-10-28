@@ -38,7 +38,7 @@ Resolved source packages:
   HMUXAuthCore: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HMUXAuthCore @ local
   HmuxMobilePairedMac: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobilePairedMac @ local
   swift-asn1: https://github.com/apple/swift-asn1.git @ 1.7.1
-  IrohLib: https://github.com/manaflow-ai/iroh-ffi.git @ 1.0.2-hmux.7
+  IrohLib: https://github.com/manaflow-ai/iroh-ffi.git @ 1.0.2-cmux.7
   HmuxMobileShellUI: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileShellUI
   HmuxSimulatorStreamKit: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/Shared/HmuxSimulatorStreamKit @ local
   HmuxMobileShell: /Users/hmux/hmux-runners/iroh-v2-integration-20260910211351-8258-9168/Packages/iOS/HmuxMobileShell @ local

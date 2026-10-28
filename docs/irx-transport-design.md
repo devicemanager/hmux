@@ -37,8 +37,8 @@ Rebuilt from scratch (package `Packages/Shared/HmuxIrxTransport`, prefix
   reconnect ownership, keepalive, supersession, event journaling.
 
 Consumed unchanged (stable, not flaky, and battle-tested):
-- iroh-ffi fork binary `1.2.0-hmux.1.ios17` (iroh fork branch
-  `hmux/v1.2.0-hmux.1`, rev 9816d25: upstream iroh 1.2.0 plus the hmux patches,
+- iroh-ffi fork binary `1.2.0-cmux.1.ios17` (iroh fork branch
+  `hmux/v1.2.0-cmux.1`, rev 9816d25: upstream iroh 1.2.0 plus the hmux patches,
   including make-before-break relay credential handoff; noq fork rev 05055f8 on
   upstream noq 1.3.0). Note: the `hmux.8` tag is unusable as a pin because its
   release asset was re-uploaded after the manifest checksum was baked; the

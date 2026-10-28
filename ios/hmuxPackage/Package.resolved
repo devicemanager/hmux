@@ -16,7 +16,7 @@
       "location" : "https://github.com/manaflow-ai/iroh-ffi.git",
       "state" : {
         "revision" : "ee19f156667ca640b912108a45f8b5bb8d156fec",
-        "version" : "1.2.0-hmux.1.ios17"
+        "version" : "1.2.0-cmux.1.ios17"
       }
     },
     {

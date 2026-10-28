@@ -18,7 +18,7 @@ let package = Package(
         .package(path: "../HMUXMobileCore"),
         .package(
             url: "https://github.com/manaflow-ai/iroh-ffi.git",
-            exact: "1.2.0-hmux.1.ios17"
+            exact: "1.2.0-cmux.1.ios17"
         ),
     ],
     targets: [

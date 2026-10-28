@@ -31,10 +31,15 @@ hmux_local_only_load_env() {
   local id
   for id in "$HMUX_LOCAL_IOS_BUNDLE_ID" "$HMUX_LOCAL_MAC_BUNDLE_ID"; do
     case "$id" in
-      com.hmuxterm.*|dev.hmux.*|ai.manaflow.*)
-        echo "error: bundle ID $id belongs to the official hmux apps; use your own prefix" >&2
+      com.cmuxterm.*|dev.cmux.*|ai.manaflow.*)
+        echo "error: bundle ID $id belongs to the official cmux apps; use your own prefix" >&2
         return 1
         ;;
     esac
   done
+
+  # GhosttyKit's build takes zig from PATH; put the configured one first.
+  if [[ -n "${HMUX_ZIG:-}" ]]; then
+    export PATH="$(dirname "$HMUX_ZIG"):$PATH"
+  fi
 }

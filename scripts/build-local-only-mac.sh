@@ -9,7 +9,7 @@
 # policies itself (ManagedDevicePolicy.localOnlyEnforcedKeys).
 #
 # It installs under its own name and bundle ID, never over the official
-# com.hmuxterm.app.
+# cmux app (com.cmuxterm.app).
 #
 # Settings come from .env-local in the repository root (copy
 # .env-local.template): team, bundle prefix, app name, Developer ID identity,

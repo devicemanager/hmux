@@ -53,7 +53,7 @@ Resolved source packages:
   HmuxMobileShellUI: /Users/hmux/.cache/hmux-job/reload-cloud-ios/work/hmux11s-v.4/v2sm/Packages/iOS/HmuxMobileShellUI
   HmuxMobilePairedMac: /Users/hmux/.cache/hmux-job/reload-cloud-ios/work/hmux11s-v.4/v2sm/Packages/iOS/HmuxMobilePairedMac @ local
   HmuxMobileSimulatorStream: /Users/hmux/.cache/hmux-job/reload-cloud-ios/work/hmux11s-v.4/v2sm/Packages/iOS/HmuxMobileSimulatorStream @ local
-  IrohLib: https://github.com/manaflow-ai/iroh-ffi.git @ 1.0.2-hmux.7
+  IrohLib: https://github.com/manaflow-ai/iroh-ffi.git @ 1.0.2-cmux.7
   HmuxMobileCrashReporting: /Users/hmux/.cache/hmux-job/reload-cloud-ios/work/hmux11s-v.4/v2sm/Packages/iOS/HmuxMobileCrashReporting @ local
   HmuxSimulatorStreamKit: /Users/hmux/.cache/hmux-job/reload-cloud-ios/work/hmux11s-v.4/v2sm/Packages/Shared/HmuxSimulatorStreamKit @ local
   HmuxMobileRPC: /Users/hmux/.cache/hmux-job/reload-cloud-ios/work/hmux11s-v.4/v2sm/Packages/iOS/HmuxMobileRPC @ local
