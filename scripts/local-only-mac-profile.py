@@ -136,7 +136,8 @@ def main():
     token = _token()
     bundle_resource_id = bundle_id(token, args.bundle_id, args.app_name)
     certificate_id = certificate(token, args.identity_sha1)
-    content = profile(token, f"{args.app_name} Developer ID", bundle_resource_id, certificate_id)
+    # The bundle ID keeps the name unique when an app name moves to a new ID.
+    content = profile(token, f"{args.app_name} {args.bundle_id} Developer ID", bundle_resource_id, certificate_id)
     with open(args.output, "wb") as out:
         out.write(base64.b64decode(content))
     print(f"==> Wrote {args.output}")
