@@ -6,8 +6,7 @@ import PackageDescription
 // The Rust client (hmux-tui/crates/hmux-terminal-client) arrives as a prebuilt
 // xcframework. Two sources, chosen when this manifest is evaluated:
 //
-//   * CmuxTerminalClient.xcframework next to this file (the binary keeps its
-//     upstream cmux name), when a developer has
+//   * CmuxTerminalClient.xcframework next to this file, when a developer has
 //     downloaded one from a workflow run (the directory is gitignored);
 //   * otherwise the release zip pinned below, produced by
 //     .github/workflows/hmux-terminal-client-xcframework.yml.

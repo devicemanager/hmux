@@ -11,10 +11,10 @@ Swift (result decoding, output event mapping) and carries the unit tests, so
 runs them without the binary (the variable drops the Kit and binary targets
 from the manifest for that invocation).
 
-The binary is `HmuxTerminalClient.xcframework`, built by
+The binary is `CmuxTerminalClient.xcframework`, built by
 `.github/workflows/hmux-terminal-client-xcframework.yml` and pinned in
 `Package.swift` by release tag and SwiftPM checksum. To try an unreleased
-build, download the workflow artifact, unzip `HmuxTerminalClient.xcframework`
+build, download the workflow artifact, unzip `CmuxTerminalClient.xcframework`
 next to `Package.swift` (gitignored), and the manifest picks it up. Set
 `HMUX_TERMINAL_CLIENT_FORCE_REMOTE_XCFRAMEWORK=1` to ignore a local copy.
 

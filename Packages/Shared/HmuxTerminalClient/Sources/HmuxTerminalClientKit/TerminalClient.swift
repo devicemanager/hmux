@@ -238,7 +238,7 @@ private final class TerminalClientState: @unchecked Sendable {
     }
 }
 
-/// One authenticated link to a cmux daemon with a persistent device identity.
+/// One authenticated link to a hmux daemon with a persistent device identity.
 public final class TerminalClient: @unchecked Sendable {
     private let state: TerminalClientState
 
