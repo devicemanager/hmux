@@ -62,6 +62,9 @@ PROTECT = re.compile(
     # Releases and branches of the cmux forks of iroh and iroh-ffi.
     r"|\bcmux/v\d+\.\d+\.\d+-cmux\.\d+[A-Za-z0-9.]*"
     r"|\bv?\d+\.\d+\.\d+-cmux\.\d+[A-Za-z0-9.]*"
+    # Wire labels libghostty writes (ghostty/src/apprt/embedded.zig); the
+    # submodule is not renamed, so the app must keep matching them.
+    r"|\bcmux\.(?:render-grid|font-query)\.v\d+\b"
 )
 
 # Spans kept verbatim only in matching files (globs on the renamed path).
