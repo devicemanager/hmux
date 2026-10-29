@@ -11,7 +11,9 @@ public enum MobileTerminalRenderGridError: Error, Equatable, Sendable {
 }
 
 public struct MobileTerminalRenderGridFrame: Codable, Equatable, Sendable {
-    public static let currentFormat = "hmux.render-grid.v1"
+    /// Wire label written by libghostty (`ghostty/src/apprt/embedded.zig`) and
+    /// upstream cmux. Keep it as-is when renaming the product.
+    public static let currentFormat = "cmux.render-grid.v1"
 
     public var format: String
     public var surfaceID: String

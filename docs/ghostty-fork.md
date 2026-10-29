@@ -1873,7 +1873,7 @@ preservation head `1b454eb99` from manaflow-ai/ghostty#89 with the
 Arabic/Hebrew RTL shaping head `7a5179843` from manaflow-ai/ghostty#88.
 
 The render-grid change keeps wide or grapheme-backed cells in their own
-`hmux.render-grid.v1` spans so mobile replay receives the producer's exact
+`cmux.render-grid.v1` spans so mobile replay receives the producer's exact
 start column and `cell_width` instead of inferring per-grapheme columns from an
 aggregate same-style span.
 

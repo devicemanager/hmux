@@ -239,7 +239,7 @@ import Testing
         let json = """
         {
           "render_grid": {
-            "format": "hmux.render-grid.v1",
+            "format": "cmux.render-grid.v1",
             "surface_id": "surface-1",
             "state_seq": 7,
             "columns": 2,
@@ -272,7 +272,7 @@ import Testing
         let json = """
         {
           "render_grid": {
-            "format": "hmux.render-grid.v1",
+            "format": "cmux.render-grid.v1",
             "surface_id": "surface-2",
             "state_seq": 3,
             "columns": 4,
@@ -289,7 +289,7 @@ import Testing
     @Test func renderGridEventHasNilFrameWhenUnwrapped() throws {
         let json = """
         {
-          "format": "hmux.render-grid.v1",
+          "format": "cmux.render-grid.v1",
           "surface_id": "surface-3",
           "state_seq": 5,
           "columns": 4,

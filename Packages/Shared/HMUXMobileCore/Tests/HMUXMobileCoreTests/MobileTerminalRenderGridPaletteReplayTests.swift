@@ -68,7 +68,7 @@ import Testing
     let json = Data(
         """
         {
-          "format": "hmux.render-grid.v1",
+          "format": "cmux.render-grid.v1",
           "surface_id": "semantic-theme",
           "state_seq": 1,
           "columns": 4,
