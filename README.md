@@ -29,10 +29,16 @@ Everything else is cmux: vertical tabs, notification rings, split panes, the
 in-app browser, the socket API and agent integrations. hmux follows upstream
 through regular syncs.
 
-## Status
+## Download
 
-Early and maintained by one person. There are no prebuilt downloads yet: you
-build and sign the apps yourself with your own Apple developer account.
+**Mac:** download the DMG from the [latest release](https://github.com/devicemanager/hmux/releases/latest),
+open it and drag hmux to Applications. It is signed and notarized by Apple and
+needs macOS 14 or later. There is no auto-update: download new versions from
+Releases.
+
+**iPhone:** not in the App Store. Build it yourself as described below.
+
+hmux is early and maintained by one person.
 
 ## Build
 
