@@ -1,5 +1,6 @@
 <h1 align="center">hmux</h1>
 <p align="center">A Ghostty-based macOS terminal with vertical tabs and notifications for AI coding agents</p>
+<p align="center"><sub>hmux is a personal fork of <a href="https://github.com/manaflow-ai/cmux">cmux</a> by Manaflow, Inc. and its contributors. All credit for the app goes to them; see <a href="NOTICE.md">NOTICE</a>.</sub></p>
 
 <p align="center">
   <a href="https://github.com/manaflow-ai/cmux/releases/latest/download/cmux-macos.dmg">
