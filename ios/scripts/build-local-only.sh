@@ -46,12 +46,13 @@ INSTALL=1
 OTA_DIR="${HMUX_LOCAL_IOS_OTA_DIR:-}"
 OTA_URL="${HMUX_LOCAL_IOS_OTA_URL:-}"
 APPSTORE_DIR=""
+PROFILE_FROM_ARG=0
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --device-id) DEVICE_ID="$2"; shift 2 ;;
     --no-install) INSTALL=0; shift ;;
-    --profile) PROFILE_UUID="$2"; shift 2 ;;
+    --profile) PROFILE_UUID="$2"; PROFILE_FROM_ARG=1; shift 2 ;;
     --team) TEAM_ID="$2"; shift 2 ;;
     --bundle-id) BUNDLE_ID="$2"; shift 2 ;;
     --ota-dir) OTA_DIR="$2"; shift 2 ;;
@@ -63,10 +64,11 @@ while [[ $# -gt 0 ]]; do
 done
 
 # An App Store build is never published over the air, even when .env-local
-# sets an OTA folder.
+# sets an OTA folder, and HMUX_LOCAL_IOS_PROFILE names the development profile.
 if [[ -n "$APPSTORE_DIR" ]]; then
   OTA_DIR=""
   OTA_URL=""
+  [[ "$PROFILE_FROM_ARG" -eq 1 ]] || PROFILE_UUID=""
 fi
 if [[ -n "$OTA_DIR" || -n "$OTA_URL" ]]; then
   [[ -n "$OTA_DIR" && -n "$OTA_URL" ]] \
@@ -221,6 +223,13 @@ done
 WORK_DIR="$(mktemp -d)"
 trap 'rm -rf "$WORK_DIR"' EXIT
 security cms -D -i "$PROFILE_FILE" > "$WORK_DIR/profile.plist"
+if [[ -n "$APPSTORE_DIR" ]]; then
+  if [[ "$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:get-task-allow' "$WORK_DIR/profile.plist" 2>/dev/null)" == "true" ]] \
+    || /usr/libexec/PlistBuddy -c 'Print :ProvisionedDevices' "$WORK_DIR/profile.plist" >/dev/null 2>&1; then
+    echo "error: profile $PROFILE_UUID is not an App Store distribution profile" >&2
+    exit 1
+  fi
+fi
 # Sign with the profile's first certificate whose private key is in the
 # keychain.
 IDENTITY=""
