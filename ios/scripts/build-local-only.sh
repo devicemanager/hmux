@@ -16,11 +16,16 @@
 #                                        [--profile <uuid>] [--team <id>]
 #                                        [--bundle-id <id>]
 #                                        [--ota-dir <dir> --ota-url <https-url>]
+#                                        [--app-store <dir>]
 #
 # --ota-dir/--ota-url publish an over-the-air install instead of a cable
 # install: the signed .ipa, an itms-services manifest and an install page are
 # written to <dir>, which a web server must serve at <https-url> (iOS requires
 # HTTPS). Open <https-url>/install.html on the iPhone to install.
+#
+# --app-store writes an App Store build to <dir> instead of installing: signed
+# with an App Store distribution profile for the bundle id (Apple Distribution
+# certificate) and ready to upload to App Store Connect. Nothing is uploaded.
 #
 # Team, bundle ID, app name, profile, OTA folder and URL come from .env-local in the
 # repository root (see .env-local.template), so none of them live in the
@@ -40,6 +45,7 @@ DEVICE_ID="${HMUX_IPHONE_DEVICE_ID:-}"
 INSTALL=1
 OTA_DIR="${HMUX_LOCAL_IOS_OTA_DIR:-}"
 OTA_URL="${HMUX_LOCAL_IOS_OTA_URL:-}"
+APPSTORE_DIR=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -50,11 +56,18 @@ while [[ $# -gt 0 ]]; do
     --bundle-id) BUNDLE_ID="$2"; shift 2 ;;
     --ota-dir) OTA_DIR="$2"; shift 2 ;;
     --ota-url) OTA_URL="$2"; shift 2 ;;
-    -h|--help) sed -n '2,26p' "$0"; exit 0 ;;
+    --app-store) APPSTORE_DIR="$2"; INSTALL=0; shift 2 ;;
+    -h|--help) sed -n '2,31p' "$0"; exit 0 ;;
     *) echo "error: unknown argument: $1" >&2; exit 2 ;;
   esac
 done
 
+# An App Store build is never published over the air, even when .env-local
+# sets an OTA folder.
+if [[ -n "$APPSTORE_DIR" ]]; then
+  OTA_DIR=""
+  OTA_URL=""
+fi
 if [[ -n "$OTA_DIR" || -n "$OTA_URL" ]]; then
   [[ -n "$OTA_DIR" && -n "$OTA_URL" ]] \
     || { echo "error: --ota-dir and --ota-url go together" >&2; exit 2; }
@@ -67,8 +80,9 @@ if [[ -z "$DEVICE_ID" && -f "$HOME/.config/hmux/iphone-device-id" ]]; then
   DEVICE_ID="$(tr -d '[:space:]' < "$HOME/.config/hmux/iphone-device-id")"
 fi
 
-# Pick a development profile that covers the bundle id: an exact App ID wins
-# over the team wildcard.
+# Pick a profile that covers the bundle id: an exact App ID wins over the team
+# wildcard. A development profile allows debugging (get-task-allow); an App
+# Store profile does not, and lists no devices.
 find_profile() {
   local dir file plist appid best="" wildcard=""
   plist="$(mktemp)"
@@ -78,7 +92,13 @@ find_profile() {
     for file in "$dir"/*.mobileprovision; do
       [[ -f "$file" ]] || continue
       security cms -D -i "$file" > "$plist" 2>/dev/null || continue
-      [[ "$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:get-task-allow' "$plist" 2>/dev/null)" == "true" ]] || continue
+      if [[ -n "$APPSTORE_DIR" ]]; then
+        [[ "$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:get-task-allow' "$plist" 2>/dev/null)" != "true" ]] || continue
+        /usr/libexec/PlistBuddy -c 'Print :ProvisionedDevices' "$plist" >/dev/null 2>&1 && continue
+        /usr/libexec/PlistBuddy -c 'Print :ProvisionsAllDevices' "$plist" >/dev/null 2>&1 && continue
+      else
+        [[ "$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:get-task-allow' "$plist" 2>/dev/null)" == "true" ]] || continue
+      fi
       appid="$(/usr/libexec/PlistBuddy -c 'Print :Entitlements:application-identifier' "$plist" 2>/dev/null)"
       local uuid
       uuid="$(/usr/libexec/PlistBuddy -c 'Print :UUID' "$plist")"
@@ -95,6 +115,12 @@ find_profile() {
 
 if [[ -z "$PROFILE_UUID" ]]; then
   PROFILE_UUID="$(find_profile)"
+fi
+if [[ -z "$PROFILE_UUID" && -n "$APPSTORE_DIR" ]]; then
+  echo "error: no App Store profile for $TEAM_ID.$BUNDLE_ID or $TEAM_ID.* on this Mac." >&2
+  echo "       Create an App Store Connect distribution profile in the Apple Developer portal," >&2
+  echo "       double-click the downloaded file to install it, then rerun." >&2
+  exit 1
 fi
 if [[ -z "$PROFILE_UUID" ]]; then
   echo "error: no development profile for $TEAM_ID.$BUNDLE_ID or $TEAM_ID.* on this Mac." >&2
@@ -209,6 +235,15 @@ while /usr/libexec/PlistBuddy -c "Print :DeveloperCertificates:$index" "$WORK_DI
 done
 [[ -n "$IDENTITY" ]] || { echo "error: no signing identity in this keychain matches profile $PROFILE_UUID" >&2; exit 1; }
 
+GET_TASK_ALLOW=true
+BETA_REPORTS=""
+TIMESTAMP=(--timestamp=none)
+if [[ -n "$APPSTORE_DIR" ]]; then
+  GET_TASK_ALLOW=false
+  # Lets App Store Connect offer the build to TestFlight testers.
+  BETA_REPORTS=$'\t<key>beta-reports-active</key>\n\t<true/>\n'
+  TIMESTAMP=(--timestamp)
+fi
 cat > "$WORK_DIR/app.entitlements" <<PLIST
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -219,8 +254,8 @@ cat > "$WORK_DIR/app.entitlements" <<PLIST
 	<key>com.apple.developer.team-identifier</key>
 	<string>$TEAM_ID</string>
 	<key>get-task-allow</key>
-	<true/>
-	<key>keychain-access-groups</key>
+	<$GET_TASK_ALLOW/>
+$BETA_REPORTS	<key>keychain-access-groups</key>
 	<array>
 		<string>$TEAM_ID.$BUNDLE_ID</string>
 	</array>
@@ -231,13 +266,26 @@ cp "$PROFILE_FILE" "$APP_PATH/embedded.mobileprovision"
 if [[ -d "$APP_PATH/Frameworks" ]]; then
   find "$APP_PATH/Frameworks" -maxdepth 1 \( -name '*.framework' -o -name '*.dylib' \) -print0 \
     | while IFS= read -r -d '' nested; do
-        codesign --force --sign "$IDENTITY" --timestamp=none "$nested"
+        codesign --force --sign "$IDENTITY" "${TIMESTAMP[@]}" "$nested"
       done
 fi
-codesign --force --sign "$IDENTITY" --timestamp=none \
+codesign --force --sign "$IDENTITY" "${TIMESTAMP[@]}" \
   --entitlements "$WORK_DIR/app.entitlements" "$APP_PATH"
 codesign --verify --strict "$APP_PATH"
 echo "==> Built and signed $APP_NAME ($BUNDLE_ID)"
+
+if [[ -n "$APPSTORE_DIR" ]]; then
+  version="$(plist_value CFBundleShortVersionString)"
+  build="$(plist_value CFBundleVersion)"
+  ipa="$APPSTORE_DIR/$APP_NAME-$version-$build-appstore.ipa"
+  mkdir -p "$APPSTORE_DIR" "$WORK_DIR/ipa/Payload"
+  cp -R "$APP_PATH" "$WORK_DIR/ipa/Payload/"
+  (cd "$WORK_DIR/ipa" && /usr/bin/zip -qry "$WORK_DIR/app.ipa" Payload)
+  mv "$WORK_DIR/app.ipa" "$ipa"
+  echo "==> App Store build: $ipa"
+  echo "    Not uploaded. See ios/AppStoreReview/local-only/README.md before submitting."
+  exit 0
+fi
 
 if [[ -n "$OTA_DIR" ]]; then
   version="$(plist_value CFBundleShortVersionString)"
