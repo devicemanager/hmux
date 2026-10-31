@@ -1,6 +1,6 @@
 {
   "name": "hmux",
-  "subtitle": "Your Mac terminals, self-hosted",
+  "subtitle": "Mac terminals, self-hosted",
   "description": "hmux for iPhone and iPad shows the terminals of your Mac running hmux, over your own Tailscale or Headscale network. No account, no cloud and no relay servers: the app connects only to your Mac.\n\nWatch coding agents such as Claude Code, Codex and OpenCode work, type into any terminal, switch between workspaces and split panes, and see which agent needs you.\n\nRequirements:\n- A Mac running hmux (free, from https://github.com/devicemanager/hmux)\n- Tailscale or Headscale on the Mac and on this device\n\nPair once by scanning a one-time code that hmux on the Mac shows. hmux collects no data: everything stays between your devices.\n\nhmux is an independent, open-source fork of cmux by Manaflow, Inc. It is not affiliated with or endorsed by Manaflow. Source code: https://github.com/devicemanager/hmux",
   "keywords": "terminal,tailscale,headscale,self-hosted,homelab,claude,codex,agents,mac,remote",
   "promotionalText": "Your Mac's terminals in your pocket, over your own tailnet. No account, no cloud.",
