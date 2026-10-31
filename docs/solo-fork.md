@@ -43,6 +43,32 @@ Remotes: `origin` is upstream cmux, `private` is this fork (`devicemanager/hmux`
    Both read their settings from `.env-local` (copy `.env-local.template`).
 5. Commit to `main` and push to `private`.
 
+## Connections: Tailscale or Headscale, no Iroh
+
+A local-only build reaches the phone only over your tailnet. It has no hmux
+account, Iroh relays or push, so Settings hides Networking (Iroh relays) on the
+Mac and the iPhone, and the iPhone hides the introduction with its
+Auto-Connect (Iroh) choice.
+
+[Headscale](https://headscale.net), the self-hosted Tailscale control server,
+works unchanged: hmux talks to the `tailscale` client, which you point at your
+Headscale server. hmux accepts only peers in Tailscale's default ranges
+(`100.64.0.0/10`, `fd7a:115c:a1e0::/48`), so keep Headscale's `prefixes` at those
+defaults. The app keeps the name Tailscale, because that is the client it uses.
+
+## Using official cmux as well
+
+Upstream's account, Iroh relays and push are tied to Manaflow's signed apps,
+and their Iroh broker checks a cmux account on every request. A build signed
+with your team cannot use them, even pointed at `cmux.com`. When you want those
+features, install the official cmux apps next to hmux: they use the
+`com.cmuxterm.*` bundle IDs and the local-only builds never install over them.
+
+The Iroh service's source is in `workers/iroh-v2/`, so self-hosting it is
+possible in principle, but it is under the Business Source License (see
+[LICENSE](../LICENSE)) and depends on upstream's account system. With a tailnet
+it is not worth it.
+
 ## Syncing upstream
 
 Don't `git merge origin/main`: nearly every line would conflict on the rename.

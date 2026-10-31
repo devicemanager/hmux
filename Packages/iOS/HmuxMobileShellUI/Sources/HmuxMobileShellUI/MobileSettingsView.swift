@@ -34,6 +34,10 @@ struct MobileSettingsView: View {
     @Environment(MobileWhatsNewCenter.self) private var whatsNewCenter: MobileWhatsNewCenter?
     @Environment(\.irohSettingsController) private var irohSettingsController
     @Environment(\.mobileDiagnosticLog) private var diagnosticLog
+    /// A local-only build has no Iroh relays and no account, so it hides the
+    /// Networking (Iroh) settings and the introduction, which teaches account
+    /// sign-in and offers Auto-Connect over Iroh.
+    private let isLocalOnly = CmxLocalOnlyMode.isEnabled()
     let connectedHostName: String
     let startPairingScanner: (() -> Void)?
     /// Re-evaluates the scanner entrypoint after the replay picker changes the
@@ -228,18 +232,20 @@ struct MobileSettingsView: View {
                         )
                     }
                     .accessibilityIdentifier("MobileSettingsSetUpYourMac")
-                    Button {
-                        showingOnboarding = true
-                    } label: {
-                        Label(
-                            L10n.string(
-                                "mobile.settings.viewIntroductionAgain",
-                                defaultValue: "View Introduction Again"
-                            ),
-                            systemImage: "sparkles"
-                        )
+                    if !isLocalOnly {
+                        Button {
+                            showingOnboarding = true
+                        } label: {
+                            Label(
+                                L10n.string(
+                                    "mobile.settings.viewIntroductionAgain",
+                                    defaultValue: "View Introduction Again"
+                                ),
+                                systemImage: "sparkles"
+                            )
+                        }
+                        .accessibilityIdentifier("MobileSettingsHowPairingWorks")
                     }
-                    .accessibilityIdentifier("MobileSettingsHowPairingWorks")
                 }
 
                 if let store {
@@ -260,7 +266,7 @@ struct MobileSettingsView: View {
                     }
                 }
 
-                if let irohSettingsController {
+                if let irohSettingsController, !isLocalOnly {
                     Section(L10n.string("mobile.settings.networking", defaultValue: "Networking")) {
                         NavigationLink {
                             MobileIrohSettingsView(

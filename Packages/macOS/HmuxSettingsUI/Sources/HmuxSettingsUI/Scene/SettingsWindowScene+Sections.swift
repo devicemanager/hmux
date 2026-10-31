@@ -5,11 +5,21 @@ import SwiftUI
 /// (https://github.com/manaflow-ai/cmux/issues/12134): the one the window
 /// opens on in the first layout pass, the rest one per run-loop turn.
 extension SettingsWindowRoot {
-    /// Sections a window opening now mounts progressively. Cloud stays
-    /// eager while unavailable: it renders nothing, so a placeholder would
-    /// only advertise a section the sidebar hides.
-    static func mountOrder(cloudAvailable: Bool) -> [SettingsSectionID] {
-        SettingsSectionMountModel.displayOrder.filter { $0 != .cloudMachines || cloudAvailable }
+    /// Sections the window hides outright: Cloud without a Cloud host, and
+    /// Networking (Iroh relays) when Iroh networking is disabled, as in a
+    /// local-only build.
+    static func hiddenSections(cloudAvailable: Bool, irohNetworkingDisabled: Bool) -> Set<SettingsSectionID> {
+        var hidden: Set<SettingsSectionID> = []
+        if !cloudAvailable { hidden.insert(.cloudMachines) }
+        if irohNetworkingDisabled { hidden.insert(.networking) }
+        return hidden
+    }
+
+    /// Sections a window opening now mounts progressively. Hidden sections
+    /// stay eager: they render nothing, so a placeholder would only
+    /// advertise a section the sidebar hides.
+    static func mountOrder(hidden: Set<SettingsSectionID>) -> [SettingsSectionID] {
+        SettingsSectionMountModel.displayOrder.filter { !hidden.contains($0) }
     }
 
     func anchorID(for section: SettingsSectionID) -> String {
@@ -85,7 +95,9 @@ extension SettingsWindowRoot {
         }
 
         slot(.networking, proxy: proxy) {
-            IrohNetworkingSection(hostActions: hostActions)
+            if !hiddenSections.contains(.networking) {
+                IrohNetworkingSection(hostActions: hostActions)
+            }
         }
 
         slot(.sidebarAppearance, proxy: proxy) {
@@ -188,7 +200,7 @@ extension SettingsWindowRoot {
             section: section,
             isActive: section == SettingsSectionMountModel.hostSection(for: activeSection),
             isMounted: mountModel.isMounted(section),
-            showsPlaceholder: section != .cloudMachines || isCloudSectionAvailable,
+            showsPlaceholder: !hiddenSections.contains(section),
             onMountedAppear: { sectionContentDidAppear(section, proxy: proxy) },
             content: content
         )

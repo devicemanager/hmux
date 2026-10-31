@@ -49,11 +49,14 @@ public struct SettingsWindowRoot: View {
         let defaults = UserDefaults.standard
         let restoredSection = defaults.string(forKey: Self.selectedSectionDefaultsKey)
             .flatMap(SettingsSectionID.init(rawValue:)) ?? .account
-        let cloudAvailable = !ManagedDevicePolicy().isEnforced(.disableCloud)
-            && runtime.hostActions.isCloudMachinesAvailable
+        let policy = ManagedDevicePolicy()
+        let hidden = Self.hiddenSections(
+            cloudAvailable: !policy.isEnforced(.disableCloud) && runtime.hostActions.isCloudMachinesAvailable,
+            irohNetworkingDisabled: policy.isEnforced(.disableIrohNetworking)
+        )
         _mountModel = State(initialValue: mountModel ?? SettingsSectionMountModel(
             initial: initialSection ?? restoredSection,
-            order: Self.mountOrder(cloudAvailable: cloudAvailable)
+            order: Self.mountOrder(hidden: hidden)
         ))
     }
     /// A targeted open's section, shown until the first navigation request
@@ -65,6 +68,7 @@ public struct SettingsWindowRoot: View {
     /// again, so its rows only exist once this matches.
     @State var shownPaneSection: SettingsSectionID?
     @State private var cloudDisabledByPolicy = ManagedDevicePolicy().isEnforced(.disableCloud)
+    @State private var irohNetworkingDisabledByPolicy = ManagedDevicePolicy().isEnforced(.disableIrohNetworking)
     @State private var cloudFeatureFlagRevision = 0
     /// Never read in this body, so a keystroke does not re-render the root
     /// or its detail pane; see ``SettingsSearchQuery``.
@@ -129,6 +133,14 @@ public struct SettingsWindowRoot: View {
         _ = cloudFeatureFlagRevision
         return !cloudDisabledByPolicy && hostActions.isCloudMachinesAvailable
     }
+    /// Sections the window hides along with their sidebar rows; see
+    /// ``hiddenSections(cloudAvailable:irohNetworkingDisabled:)``.
+    var hiddenSections: Set<SettingsSectionID> {
+        Self.hiddenSections(
+            cloudAvailable: isCloudSectionAvailable,
+            irohNetworkingDisabled: irohNetworkingDisabledByPolicy
+        )
+    }
     /// Resolves the selected section pane from the persisted raw value,
     /// defaulting to ``SettingsSectionID/account`` when the stored value
     /// is unrecognized (e.g., after dropping a case).
@@ -164,7 +176,7 @@ public struct SettingsWindowRoot: View {
             SettingsSidebarList(
                 query: searchQuery,
                 selection: sidebarSelectionBinding,
-                isCloudSectionAvailable: isCloudSectionAvailable
+                hiddenSections: hiddenSections
             )
         } detail: {
             detailScroll
@@ -192,13 +204,13 @@ public struct SettingsWindowRoot: View {
         }
         .task {
             let signals = ManagedDevicePolicy.changeSignals()
-            cloudDisabledByPolicy = ManagedDevicePolicy().isEnforced(.disableCloud)
+            readSectionPolicies()
             // A profile installed before this window opened: the persisted
-            // selection may still point at the hidden Cloud section.
-            leaveCloudSectionIfDisabledByPolicy()
+            // selection may still point at a hidden section.
+            leaveHiddenSections()
             for await _ in signals {
-                cloudDisabledByPolicy = ManagedDevicePolicy().isEnforced(.disableCloud)
-                leaveCloudSectionIfDisabledByPolicy()
+                readSectionPolicies()
+                leaveHiddenSections()
             }
         }
         .task {
@@ -212,7 +224,7 @@ public struct SettingsWindowRoot: View {
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("hmuxFeatureFlagsDidChange"))) { _ in
             cloudFeatureFlagRevision &+= 1
-            leaveCloudSectionIfDisabledByPolicy()
+            leaveHiddenSections()
         }
     }
     public static let navigationRequestName = Notification.Name("hmux.settings.navigate")
@@ -241,16 +253,23 @@ public struct SettingsWindowRoot: View {
         navigate(to: target, preferSectionSelection: !shouldPreserveSearchSelection)
     }
 
-    /// Moves a selection that rests on an unavailable Cloud section to Account,
-    /// both at first render and on a transition.
-    private func leaveCloudSectionIfDisabledByPolicy() {
-        if !isCloudSectionAvailable {
-            // If the Cloud slot is the outstanding progressive mount, its
+    private func readSectionPolicies() {
+        let policy = ManagedDevicePolicy()
+        cloudDisabledByPolicy = policy.isEnforced(.disableCloud)
+        irohNetworkingDisabledByPolicy = policy.isEnforced(.disableIrohNetworking)
+    }
+
+    /// Moves a selection that rests on a hidden section to Account, both at
+    /// first render and on a transition.
+    private func leaveHiddenSections() {
+        let hidden = hiddenSections
+        for section in SettingsSectionMountModel.displayOrder where hidden.contains(section) {
+            // If a hidden slot is the outstanding progressive mount, its
             // intentionally empty content has no onAppear to advance the
             // queue. Skip it explicitly so later sections still mount.
-            _ = mountModel.skip(.cloudMachines)
+            _ = mountModel.skip(section)
         }
-        if !isCloudSectionAvailable && selectedSection == .cloudMachines {
+        if hidden.contains(selectedSection) {
             navigate(to: .account)
         }
     }

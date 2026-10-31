@@ -6,11 +6,11 @@ import SwiftUI
 struct SettingsSidebarList: View {
     @Bindable var query: SettingsSearchQuery
     @Binding var selection: String
-    let isCloudSectionAvailable: Bool
+    let hiddenSections: Set<SettingsSectionID>
 
     var body: some View {
         List(selection: $selection) {
-            SettingsSidebarRows(query: query, isCloudSectionAvailable: isCloudSectionAvailable)
+            SettingsSidebarRows(query: query, hiddenSections: hiddenSections)
         }
         .listStyle(.sidebar)
         .navigationTitle(String(localized: "settings.title", defaultValue: "Settings"))
@@ -25,7 +25,7 @@ struct SettingsSidebarList: View {
 @MainActor
 private struct SettingsSidebarRows: View {
     let query: SettingsSearchQuery
-    let isCloudSectionAvailable: Bool
+    let hiddenSections: Set<SettingsSectionID>
 
     var body: some View {
         let matches = query.results.filter { isEntryVisible($0) }
@@ -57,12 +57,12 @@ private struct SettingsSidebarRows: View {
     }
 
     private func isEntryVisible(_ entry: SettingsSearchIndex.Entry) -> Bool {
-        guard !isCloudSectionAvailable else { return true }
+        guard !hiddenSections.isEmpty else { return true }
         switch entry.kind {
         case .section:
-            return entry.id != "section:\(SettingsSectionID.cloudMachines.rawValue)"
+            return !hiddenSections.contains { entry.id == "section:\($0.rawValue)" }
         case .setting(let parent):
-            return parent != .cloudMachines
+            return !hiddenSections.contains(parent)
         }
     }
 
