@@ -373,7 +373,8 @@ def main():
     if is_ancestor(branch_ref, "HEAD"):
         print("==> Already merged")
         return
-    result = subprocess.run(["git", "merge", "--no-ff", "-m",
+    # merge=ours in .gitattributes (README.md) needs this driver defined.
+    result = subprocess.run(["git", "-c", "merge.ours.driver=true", "merge", "--no-ff", "-m",
                              f"Merge cmux {target[:12]} (renamed) into hmux", BRANCH])
     if result.returncode != 0:
         print("\n==> The merge stopped on conflicts: these are lines both cmux and hmux changed.")

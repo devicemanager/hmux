@@ -30,3 +30,7 @@ Resources/markdown-viewer/webviews-app/** linguist-generated
 # added and writes an ordinary conflict whenever a hunk is anything else. Same
 # registration.
 hmux.xcodeproj/project.pbxproj merge=pbxproj-v1
+
+# hmux writes its own README; upstream syncs keep it (scripts/hmux-sync-upstream.py
+# defines the `ours` merge driver for the merge).
+README.md merge=ours
