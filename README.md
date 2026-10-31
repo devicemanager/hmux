@@ -42,6 +42,9 @@ install it with a sideloading tool such as [AltStore](https://altstore.io) or
 (with a free Apple ID, every 7 days). It needs iOS 17 or later. Or build it
 yourself as described below.
 
+Step-by-step instructions, with and without an Apple developer account, and
+how to pair the iPhone: [docs/install.md](docs/install.md).
+
 hmux is early and maintained by one person.
 
 ## Build
