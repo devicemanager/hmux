@@ -36,7 +36,11 @@ open it and drag hmux to Applications. It is signed and notarized by Apple and
 needs macOS 14 or later. There is no auto-update: download new versions from
 Releases.
 
-**iPhone:** not in the App Store. Build it yourself as described below.
+**iPhone:** not in the App Store. The release also has an unsigned `.ipa`:
+install it with a sideloading tool such as [AltStore](https://altstore.io) or
+[Sideloadly](https://sideloadly.io), which signs it with your own Apple ID
+(with a free Apple ID, every 7 days). It needs iOS 17 or later. Or build it
+yourself as described below.
 
 hmux is early and maintained by one person.
 
