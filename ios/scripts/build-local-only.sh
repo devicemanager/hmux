@@ -295,6 +295,8 @@ body { font-family: -apple-system, sans-serif; padding: 40px 20px; text-align: c
 .card p { color: #aaa; font-size: 14px; line-height: 1.5; }
 .btn { display: block; padding: 16px; background: #007AFF; color: #fff; text-decoration: none; border-radius: 12px; font-size: 17px; font-weight: 600; text-align: center; margin: 16px 0 8px; }
 .info { font-family: 'SF Mono', monospace; font-size: 11px; color: #8f8; word-break: break-all; }
+.kofi { display: inline-flex; align-items: center; gap: 8px; margin-top: 24px; padding: 10px 18px; background: #FF5E5B; color: #fff; text-decoration: none; border-radius: 999px; font-size: 15px; font-weight: 600; }
+.kofi:active { opacity: 0.8; }
 </style>
 </head>
 <body>
@@ -304,6 +306,7 @@ body { font-family: -apple-system, sans-serif; padding: 40px 20px; text-align: c
 <a class="btn" href="itms-services://?action=download-manifest&amp;url=$OTA_URL/manifest.plist">Install $display_name</a>
 <p class="info">Bundle: $BUNDLE_ID<br>Version: $version ($build)<br>Git: $git_sha<br>Built: $built_at<br>Signed: team $TEAM_ID, development profile $PROFILE_UUID</p>
 </div>
+<a class="kofi" href="https://ko-fi.com/devicemanager">☕ Buy me a coffee</a>
 </body>
 </html>
 HTML
