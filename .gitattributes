@@ -31,6 +31,7 @@ Resources/markdown-viewer/webviews-app/** linguist-generated
 # registration.
 hmux.xcodeproj/project.pbxproj merge=pbxproj-v1
 
-# hmux writes its own README; upstream syncs keep it (scripts/hmux-sync-upstream.py
+# hmux writes its own READMEs; upstream syncs keep them (scripts/hmux-sync-upstream.py
 # defines the `ours` merge driver for the merge).
 README.md merge=ours
+README.*.md merge=ours
