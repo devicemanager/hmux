@@ -1,5 +1,13 @@
 # App Store submission: local-only hmux for iPhone
 
+> **On hold (November 2026): wait for Manaflow's answer.** Permission to
+> distribute through the App Store was requested by email in October 2026.
+> Until Manaflow replies with written permission, don't upload or submit
+> anything. The App Store Connect record is ready (texts, screenshots, price,
+> age rating, review notes); only App Privacy, the review contact's phone
+> number, the demo video and the upload are left. Meanwhile hmux is shared
+> through GitHub Releases, which the GPL fully allows.
+
 Everything needed to submit the local-only iPhone app to the App Store. The
 rest of `ios/AppStoreReview/` is upstream's package for the account-based app
 and doesn't apply to this build.
