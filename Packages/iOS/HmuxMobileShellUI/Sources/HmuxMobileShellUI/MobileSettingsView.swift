@@ -36,7 +36,9 @@ struct MobileSettingsView: View {
     @Environment(\.mobileDiagnosticLog) private var diagnosticLog
     /// A local-only build has no Iroh relays and no account, so it hides the
     /// Networking (Iroh) settings and the introduction, which teaches account
-    /// sign-in and offers Auto-Connect over Iroh.
+    /// sign-in and offers Auto-Connect over Iroh. It also hides Push Alerts,
+    /// because the Mac sends pushes only for a signed-in account, and Privacy,
+    /// because its telemetry consent is permanently off.
     private let isLocalOnly = CmxLocalOnlyMode.isEnabled()
     let connectedHostName: String
     let startPairingScanner: (() -> Void)?
@@ -589,84 +591,86 @@ struct MobileSettingsView: View {
                 // toggle the app always had; the delivery-status diagnostics,
                 // Mac forwarding controls, and test actions are a dev surface
                 // and stay DEBUG-only.
-                Section(L10n.string("mobile.settings.notifications", defaultValue: "Push Alerts")) {
+                if !isLocalOnly {
+                    Section(L10n.string("mobile.settings.notifications", defaultValue: "Push Alerts")) {
 #if DEBUG
-                    MobilePushSettingsContent(
-                        readiness: pushCoordinator.readiness(
+                        MobilePushSettingsContent(
+                            readiness: pushCoordinator.readiness(
+                                macStatus: store?.phonePushMacStatus,
+                                macAccountMismatch: store?.connectionRequiresReauth == true,
+                                securePushSetupFailed: store?.phonePushKeyExchangeFailed == true
+                            ),
+                            phoneEnabled: $notificationsEnabled,
                             macStatus: store?.phonePushMacStatus,
-                            macAccountMismatch: store?.connectionRequiresReauth == true,
-                            securePushSetupFailed: store?.phonePushKeyExchangeFailed == true
-                        ),
-                        phoneEnabled: $notificationsEnabled,
-                        macStatus: store?.phonePushMacStatus,
-                        supportsMacSettings: store?.supportsPhonePushSettings == true,
-                        supportsMacTest: store?.supportsPhonePushTest == true,
-                        canConnectMac: startPairingScanner != nil,
-                        onPhoneEnabledChange: updatePhonePushEnabled,
-                        onRepair: repairPhonePush,
-                        onMacMutation: updateMacPhonePush,
-                        onSendTest: sendPhonePushTest
-                    )
-                    Button {
-                        Task { @MainActor in
-                            debugReplyScheduled = await pushCoordinator
-                                .debugScheduleLocalReplyNotification()
-                        }
-                    } label: {
-                        Text(L10n.string(
-                            "mobile.settings.debugReplyTest",
-                            defaultValue: "Test Inline Reply (Local)"
-                        ))
-                    }
-                    .accessibilityIdentifier("MobileSettingsDebugReplyTestButton")
-                    if let debugReplyScheduled {
-                        Text(L10n.string(
-                            debugReplyScheduled
-                                ? "mobile.settings.debugReplyTest.scheduled"
-                                : "mobile.settings.debugReplyTest.failed",
-                            defaultValue: debugReplyScheduled
-                                ? "Scheduled: lock the phone; the notification fires in 5 seconds."
-                                : "Couldn't schedule: open a workspace and select a terminal first."
-                        ))
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                    }
-#else
-                    if store?.phonePushKeyExchangeFailed == true {
-                        MobilePushSecuritySetupFailureView(
-                            onRetry: retrySecurePushSetup
+                            supportsMacSettings: store?.supportsPhonePushSettings == true,
+                            supportsMacTest: store?.supportsPhonePushTest == true,
+                            canConnectMac: startPairingScanner != nil,
+                            onPhoneEnabledChange: updatePhonePushEnabled,
+                            onRepair: repairPhonePush,
+                            onMacMutation: updateMacPhonePush,
+                            onSendTest: sendPhonePushTest
                         )
-                    }
-                    MobilePushToggle(
-                        isEnabled: $notificationsEnabled,
-                        applyEnabledIntent: setPhonePushEnabledIntent
-                    )
+                        Button {
+                            Task { @MainActor in
+                                debugReplyScheduled = await pushCoordinator
+                                    .debugScheduleLocalReplyNotification()
+                            }
+                        } label: {
+                            Text(L10n.string(
+                                "mobile.settings.debugReplyTest",
+                                defaultValue: "Test Inline Reply (Local)"
+                            ))
+                        }
+                        .accessibilityIdentifier("MobileSettingsDebugReplyTestButton")
+                        if let debugReplyScheduled {
+                            Text(L10n.string(
+                                debugReplyScheduled
+                                    ? "mobile.settings.debugReplyTest.scheduled"
+                                    : "mobile.settings.debugReplyTest.failed",
+                                defaultValue: debugReplyScheduled
+                                    ? "Scheduled: lock the phone; the notification fires in 5 seconds."
+                                    : "Couldn't schedule: open a workspace and select a terminal first."
+                            ))
+                            .font(.footnote)
+                            .foregroundStyle(.secondary)
+                        }
+#else
+                        if store?.phonePushKeyExchangeFailed == true {
+                            MobilePushSecuritySetupFailureView(
+                                onRetry: retrySecurePushSetup
+                            )
+                        }
+                        MobilePushToggle(
+                            isEnabled: $notificationsEnabled,
+                            applyEnabledIntent: setPhonePushEnabledIntent
+                        )
 #endif
-                }
+                    }
 
-                Section {
-                    Toggle(isOn: $sendAnonymousTelemetry) {
+                    Section {
+                        Toggle(isOn: $sendAnonymousTelemetry) {
+                            Text(L10n.string(
+                                Self.crashReportingEnabled
+                                    ? "mobile.settings.telemetry"
+                                    : "mobile.settings.telemetryAnalyticsOnly",
+                                defaultValue: Self.crashReportingEnabled
+                                    ? "Share Analytics and Crash Reports"
+                                    : "Share Anonymous Analytics"
+                            ))
+                        }
+                        .accessibilityIdentifier("MobileSettingsTelemetryToggle")
+                    } header: {
+                        Text(L10n.string("mobile.settings.privacy", defaultValue: "Privacy"))
+                    } footer: {
                         Text(L10n.string(
                             Self.crashReportingEnabled
-                                ? "mobile.settings.telemetry"
-                                : "mobile.settings.telemetryAnalyticsOnly",
+                                ? "mobile.settings.telemetryFooter"
+                                : "mobile.settings.telemetryAnalyticsOnlyFooter",
                             defaultValue: Self.crashReportingEnabled
-                                ? "Share Analytics and Crash Reports"
-                                : "Share Anonymous Analytics"
+                                ? "When off, hmux does not send iPhone or iPad product analytics or crash reports."
+                                : "When off, hmux does not send iPhone or iPad product analytics."
                         ))
                     }
-                    .accessibilityIdentifier("MobileSettingsTelemetryToggle")
-                } header: {
-                    Text(L10n.string("mobile.settings.privacy", defaultValue: "Privacy"))
-                } footer: {
-                    Text(L10n.string(
-                        Self.crashReportingEnabled
-                            ? "mobile.settings.telemetryFooter"
-                            : "mobile.settings.telemetryAnalyticsOnlyFooter",
-                        defaultValue: Self.crashReportingEnabled
-                            ? "When off, hmux does not send iPhone or iPad product analytics or crash reports."
-                            : "When off, hmux does not send iPhone or iPad product analytics."
-                    ))
                 }
 
                 MobileSettingsDiagnosticsSection()
