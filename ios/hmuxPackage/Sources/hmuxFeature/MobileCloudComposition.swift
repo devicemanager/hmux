@@ -33,8 +33,14 @@ struct MobileCloudComposition {
     /// The Info.plist key naming the packet tunnel extension's bundle id.
     static let systemVPNProviderInfoKey = "HMUXCloudVPNProviderBundleIdentifier"
 
+    /// Whether this build offers Cloud.
+    static func isAvailable(isLocalOnly: Bool = CmxLocalOnlyMode.isEnabled()) -> Bool {
+        true
+    }
+
     @MainActor
     func makeController() -> CloudSessionController? {
+        guard Self.isAvailable() else { return nil }
         guard let service = makeService(), let identityStore = makeIdentityStore() else { return nil }
         let visibilityScope: String?
         if let userID = auth.coordinator.currentUser?.id {

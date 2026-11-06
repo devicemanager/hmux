@@ -276,16 +276,16 @@ struct DisconnectedWorkspaceShellView: View {
             return MobilePairingScannerSheet.emptyStateGuidanceText
         }
         #endif
-        let pairing = L10n.string(
+        let macPairing = L10n.string(
             "mobile.v2.devices.emptyDescription",
             defaultValue: "On your Mac, turn on Enable iOS pairing in hmux Settings. Select the same team on both devices and keep hmux running. Only Macs you own or have permission to connect to appear here."
-        ) + " " + MobilePairingCopy().emptyWorkspaceMessage
-        guard cloudTabContent != nil else { return pairing }
+        )
         // Cloud needs no Mac, so a user without one is not stuck here.
-        return pairing + "\n\n" + L10n.string(
+        let cloudHint = cloudTabContent == nil ? nil : L10n.string(
             "mobile.cloud.emptyWorkspacesHint",
             defaultValue: "No Mac? Create a Cloud machine in the Cloud tab and its workspaces appear here."
         )
+        return MobilePairingCopy().computersEmptyDescription(macPairing: macPairing, cloudHint: cloudHint)
     }
 
     /// Reconnect this row's computer. `switchToMac` promotes a live secondary

@@ -341,7 +341,7 @@ struct DeviceTreeView: View {
                 "mobile.v2.devices.emptyDescription",
                 defaultValue: "On your Mac, turn on Enable iOS pairing in hmux Settings. Select the same team on both devices and keep hmux running. Only Macs you own or have permission to connect to appear here."
             )
-        return "\(description) \(MobilePairingCopy().emptyWorkspaceMessage)"
+        return MobilePairingCopy().computersEmptyDescription(macPairing: description, cloudHint: nil)
     }
 
     private func hideComputer(_ computer: MacComputerSnapshot) {
