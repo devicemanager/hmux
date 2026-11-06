@@ -33,9 +33,10 @@ struct MobileCloudComposition {
     /// The Info.plist key naming the packet tunnel extension's bundle id.
     static let systemVPNProviderInfoKey = "HMUXCloudVPNProviderBundleIdentifier"
 
-    /// Whether this build offers Cloud.
+    /// Whether this build offers Cloud. Cloud needs a hmux account, which a
+    /// local-only build never has.
     static func isAvailable(isLocalOnly: Bool = CmxLocalOnlyMode.isEnabled()) -> Bool {
-        true
+        !isLocalOnly
     }
 
     @MainActor

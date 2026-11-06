@@ -107023,6 +107023,65 @@
           }
         }
       }
+    },
+    "mobile.workspaces.empty.localOnly.message": {
+      "extractionState": "manual",
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On your Mac, open Mobile Pairing, click Show Pairing Code, and scan it from Add Computer. Both devices must be on the same Tailscale network, and hmux must keep running on the Mac."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac で「モバイルペアリング」を開き、「ペアリングコードを表示」をクリックして、「コンピュータを追加」からスキャンしてください。両方のデバイスを同じ Tailscale ネットワークに接続し、Mac で hmux を起動したままにしてください。"
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Mac 上打开“移动设备配对”，点按“显示配对码”，然后在“添加计算机”中扫描。两台设备必须位于同一 Tailscale 网络中，并且 Mac 上的 hmux 必须保持运行。"
+          }
+        },
+        "zh-Hant": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "在 Mac 上開啟「行動裝置配對」，按一下「顯示配對碼」，然後在「新增計算機」中掃描。兩部裝置必須位於同一個 Tailscale 網路，且 Mac 上的 hmux 必須保持執行。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Mac에서 모바일 페어링을 열고 페어링 코드 보기를 클릭한 다음 컴퓨터 추가에서 스캔하세요. 두 기기가 같은 Tailscale 네트워크에 있어야 하며, Mac에서 hmux가 계속 실행 중이어야 합니다."
+          }
+        },
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Öffnen Sie auf dem Mac „Mobilgeräte koppeln“, klicken Sie auf „Kopplungscode anzeigen“ und scannen Sie den Code unter „Computer hinzufügen“. Beide Geräte müssen im selben Tailscale-Netzwerk sein, und hmux muss auf dem Mac geöffnet bleiben."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sur votre Mac, ouvrez Jumelage mobile, cliquez sur Afficher le code de jumelage, puis scannez-le depuis Ajouter un ordinateur. Les deux appareils doivent être sur le même réseau Tailscale, et hmux doit rester ouvert sur le Mac."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En tu Mac, abre Vinculación móvil, haz clic en Mostrar código de vinculación y escanéalo desde Agregar computadora. Ambos dispositivos deben estar en la misma red de Tailscale y hmux debe seguir abierto en el Mac."
+          }
+        },
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على جهاز Mac، افتح اقتران الأجهزة المحمولة، وانقر على عرض رمز الاقتران، ثم امسحه من إضافة جهاز كمبيوتر. يجب أن يكون الجهازان على شبكة Tailscale نفسها، وأن يظل hmux قيد التشغيل على Mac."
+          }
+        }
+      }
     }
   },
   "version": "1.0"

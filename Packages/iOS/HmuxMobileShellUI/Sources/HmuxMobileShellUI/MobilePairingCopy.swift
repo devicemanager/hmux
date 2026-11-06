@@ -22,15 +22,25 @@ struct MobilePairingCopy {
     }
 
     var emptyWorkspaceMessage: String {
-        L10n.string(
+        // No account, team or Cloud exists here: the Mac's local pairing
+        // code is the only way to add it.
+        if isLocalOnly {
+            return L10n.string(
+                "mobile.workspaces.empty.localOnly.message",
+                defaultValue: "On your Mac, open Mobile Pairing, click Show Pairing Code, and scan it from Add Computer. Both devices must be on the same Tailscale network, and hmux must keep running on the Mac."
+            )
+        }
+        return L10n.string(
             "mobile.workspaces.empty.message",
             defaultValue: "Enable iOS pairing in hmux Settings > Mobile on your Mac, sign in to the same hmux account on both devices, and keep hmux running. Your Mac and its workspaces will appear here after pairing is enabled."
         )
     }
 
     /// The empty Computers list text: how to pair a Mac, then the Cloud
-    /// alternative when this build offers Cloud.
+    /// alternative when this build offers Cloud. A local-only build gives
+    /// only its local pairing steps.
     func computersEmptyDescription(macPairing: String, cloudHint: String?) -> String {
+        guard !isLocalOnly else { return emptyWorkspaceMessage }
         let pairing = "\(macPairing) \(emptyWorkspaceMessage)"
         guard let cloudHint else { return pairing }
         return "\(pairing)\n\n\(cloudHint)"
