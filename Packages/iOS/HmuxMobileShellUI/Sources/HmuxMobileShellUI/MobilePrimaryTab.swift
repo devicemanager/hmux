@@ -12,10 +12,11 @@ enum MobilePrimaryTab: Hashable {
 }
 
 extension MobilePrimaryTab {
-    /// Whether the tab bar offers Cloud, given the content the composition
-    /// root supplied.
+    /// Whether the tab bar offers Cloud. The composition root supplies Cloud
+    /// content only when the build has Cloud; a local-only build has none, so
+    /// it gets no Cloud tab rather than an empty one.
     static func showsCloudTab(cloudTabContent: MobileCloudTabContent?) -> Bool {
-        true
+        cloudTabContent != nil
     }
 }
 #endif
