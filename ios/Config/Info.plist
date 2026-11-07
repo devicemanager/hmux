@@ -14,34 +14,6 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
-	<key>HMUXAuthEnvironment</key>
-	<string>$(HMUX_IOS_AUTH_ENV)</string>
-	<key>HMUXApiBaseURL</key>
-	<string>$(HMUX_API_BASE_URL)</string>
-	<key>HMUXIrohBrokerBaseURL</key>
-	<string>$(HMUX_IROH_BROKER_BASE_URL)</string>
-	<key>HMUX_IROH_V2_ENVIRONMENT</key>
-	<string>$(HMUX_IROH_V2_ENVIRONMENT)</string>
-	<key>HMUX_IROH_V2_BASE_URL</key>
-	<string>$(HMUX_IROH_V2_BASE_URL)</string>
-	<key>HMUX_IROH_V2_FORCE_RELAY</key>
-	<string>$(HMUX_IROH_V2_FORCE_RELAY)</string>
-	<key>HMUXDevTag</key>
-	<string>$(HMUX_DEV_TAG)</string>
-	<key>HMUXAppStoreBuild</key>
-	<string>$(HMUX_APPSTORE_BUILD)</string>
-	<key>HMUXCloudVPNProviderBundleIdentifier</key>
-	<string>$(HMUX_CLOUD_VPN_PROVIDER_BUNDLE_IDENTIFIER)</string>
-	<key>HMUXKeychainAccessGroup</key>
-	<string>$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)</string>
-	<key>HMUXGitSHA</key>
-	<string>$(HMUX_GIT_SHA)</string>
-	<key>HMUXCrashReportingEnabled</key>
-	<string>$(HMUX_CRASH_REPORTING_ENABLED)</string>
-	<key>HMUXPresenceBaseURL</key>
-	<string>$(HMUX_PRESENCE_BASE_URL)</string>
-	<key>HMUXLocalOnly</key>
-	<string>$(HMUX_LOCAL_ONLY)</string>
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundlePackageType</key>
@@ -57,82 +29,29 @@
 			<string>dev.hmux.ios.attach</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<!-- Exact-bundle pairing scheme. No two installed hmux apps
-				     register the same route with iOS. -->
 				<string>$(HMUX_IOS_URL_SCHEME)</string>
-				<!-- hmux in a local-only build; repeats the bundle
-				     scheme otherwise. -->
 				<string>$(HMUX_LOCAL_PAIRING_URL_SCHEME)</string>
 			</array>
 		</dict>
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(CURRENT_PROJECT_VERSION)</string>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>LSRequiresIPhoneOS</key>
-	<true/>
-	<key>NSCameraUsageDescription</key>
-	<string>Scan hmux pairing QR codes from your Mac terminal.</string>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_hmux-iroh._udp</string>
-	</array>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>Connect to your Mac on the local network for hmux mobile pairing and terminal sync.</string>
-	<key>NSMicrophoneUsageDescription</key>
-	<string>Record audio to transcribe your voice into the message box.</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Attach photos to send to your terminal agent.</string>
-	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Transcribe your speech into the message box.</string>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<!-- The in-app browser (WKWebView) loads pages the user navigates to,
-		     which include plain-HTTP sites and local dev servers (localhost,
-		     127.0.0.1, and RFC1918 private-LAN like 192.168.x). This key exempts
-		     ONLY WKWebView web content from ATS; the app's own API/auth/pairing
-		     traffic stays under ATS and still requires HTTPS. NSAllowsLocalNetworking
-		     alone would not cover routable private-LAN dev servers. -->
-		<key>NSAllowsArbitraryLoadsInWebContent</key>
-		<true/>
-	</dict>
-	<key>UIApplicationSceneManifest</key>
-	<dict>
-		<key>UIApplicationSupportsMultipleScenes</key>
-		<true/>
-		<key>UISceneConfigurations</key>
-		<dict/>
-	</dict>
-	<key>UIApplicationSupportsIndirectInputEvents</key>
-	<true/>
-	<key>UIBackgroundModes</key>
-	<array>
-		<string>remote-notification</string>
-	</array>
-	<key>UILaunchScreen</key>
-	<dict>
-		<!-- HIG "Launching": match the first screen (plain systemBackground
-		     surfaces) and keep it static — a solid adaptive background with the
-		     exact cmux.com app mark used in the App Store banner, no text. -->
-		<key>UIColorName</key>
-		<string>LaunchBackground</string>
-		<key>UIImageName</key>
-		<string>LaunchLogo</string>
-	</dict>
-	<key>UISupportedInterfaceOrientations</key>
-	<array>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationPortrait</string>
-	</array>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-	</array>
+	<key>HMUXApiBaseURL</key>
+	<string>$(HMUX_API_BASE_URL)</string>
+	<key>HMUXAppStoreBuild</key>
+	<string>$(HMUX_APPSTORE_BUILD)</string>
+	<key>HMUXAuthEnvironment</key>
+	<string>$(HMUX_IOS_AUTH_ENV)</string>
+	<key>HMUXCloudVPNProviderBundleIdentifier</key>
+	<string>$(HMUX_CLOUD_VPN_PROVIDER_BUNDLE_IDENTIFIER)</string>
+	<key>HMUXCrashReportingEnabled</key>
+	<string>$(HMUX_CRASH_REPORTING_ENABLED)</string>
+	<key>HMUXDevTag</key>
+	<string>$(HMUX_DEV_TAG)</string>
+	<key>HMUXGitSHA</key>
+	<string>$(HMUX_GIT_SHA)</string>
+	<key>HMUXIrohBrokerBaseURL</key>
+	<string>$(HMUX_IROH_BROKER_BASE_URL)</string>
 	<key>HMUXIrohRelayPolicyKeyID</key>
 	<string>$(HMUX_IROH_RELAY_POLICY_KEY_ID)</string>
 	<key>HMUXIrohRelayPolicyPublicKeyBase64</key>
@@ -151,6 +70,74 @@
 			<key>publicKeyBase64</key>
 			<string>$(HMUX_IROH_RELAY_POLICY_NEXT_PUBLIC_KEY_BASE64)</string>
 		</dict>
+	</array>
+	<key>HMUXKeychainAccessGroup</key>
+	<string>$(AppIdentifierPrefix)$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>HMUXLocalOnly</key>
+	<string>$(HMUX_LOCAL_ONLY)</string>
+	<key>HMUXPresenceBaseURL</key>
+	<string>$(HMUX_PRESENCE_BASE_URL)</string>
+	<key>HMUX_IROH_V2_BASE_URL</key>
+	<string>$(HMUX_IROH_V2_BASE_URL)</string>
+	<key>HMUX_IROH_V2_ENVIRONMENT</key>
+	<string>$(HMUX_IROH_V2_ENVIRONMENT)</string>
+	<key>HMUX_IROH_V2_FORCE_RELAY</key>
+	<string>$(HMUX_IROH_V2_FORCE_RELAY)</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<true/>
+	</dict>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_hmux-iroh._udp</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>Scan hmux pairing QR codes from your Mac terminal.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>Connect to your Mac on the local network for hmux mobile pairing and terminal sync.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Record audio to transcribe your voice into the message box.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Attach photos to send to your terminal agent.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Transcribe your speech into the message box.</string>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<true/>
+		<key>UISceneConfigurations</key>
+		<dict/>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+	</array>
+	<key>UILaunchScreen</key>
+	<dict>
+		<key>UIColorName</key>
+		<string>LaunchBackground</string>
+		<key>UIImageName</key>
+		<string>LaunchLogo</string>
+	</dict>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 </dict>
 </plist>
