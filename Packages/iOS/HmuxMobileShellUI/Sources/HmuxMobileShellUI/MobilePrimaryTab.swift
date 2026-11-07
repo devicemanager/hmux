@@ -10,4 +10,12 @@ enum MobilePrimaryTab: Hashable {
     case cloud
     case search
 }
+
+extension MobilePrimaryTab {
+    /// Whether the tab bar offers Cloud, given the content the composition
+    /// root supplied.
+    static func showsCloudTab(cloudTabContent: MobileCloudTabContent?) -> Bool {
+        true
+    }
+}
 #endif

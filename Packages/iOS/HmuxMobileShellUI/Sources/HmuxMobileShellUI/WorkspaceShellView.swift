@@ -453,6 +453,7 @@ struct WorkspaceShellView: View {
                 )
             },
             showsNotificationsTab: !displaySettings.feedReplacesNotifications,
+            showsCloudTab: MobilePrimaryTab.showsCloudTab(cloudTabContent: cloudTabContent),
             homeContent: store.supportsChief ? AnyView(chiefHomeContent) : nil,
             taskComposerAction: usesCompactStack && !compactNavigationPath.isEmpty
                 ? nil

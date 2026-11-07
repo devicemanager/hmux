@@ -19,6 +19,8 @@ struct MobilePrimaryTabScaffold<
     let feedNeedsInputCountProvider: (@MainActor () -> Int)?
     /// False when the Feed replaces the Notifications tab (HMUX Labs).
     let showsNotificationsTab: Bool
+    /// False when the build supplies no Cloud content (a local-only build).
+    let showsCloudTab: Bool
     /// Chief/Home is negotiated per Mac. `nil` keeps the existing tab layout
     /// for hosts that predate the Chief mobile surface.
     let homeContent: AnyView?
@@ -36,6 +38,7 @@ struct MobilePrimaryTabScaffold<
         feedNeedsInputCount: Int = 0,
         feedNeedsInputCountProvider: (@MainActor () -> Int)? = nil,
         showsNotificationsTab: Bool = true,
+        showsCloudTab: Bool = true,
         homeContent: AnyView? = nil,
         taskComposerAction: (() -> Void)? = nil,
         @ViewBuilder workspaces: () -> Workspaces,
@@ -50,6 +53,7 @@ struct MobilePrimaryTabScaffold<
         self.feedNeedsInputCount = feedNeedsInputCount
         self.feedNeedsInputCountProvider = feedNeedsInputCountProvider
         self.showsNotificationsTab = showsNotificationsTab
+        self.showsCloudTab = showsCloudTab
         self.homeContent = homeContent
         self.taskComposerAction = taskComposerAction
         self.workspaces = workspaces()
@@ -122,9 +126,11 @@ struct MobilePrimaryTabScaffold<
                         .tag(MobilePrimaryTab.notifications)
                         .badge(notificationUnreadCount)
                 }
-                cloud
-                    .tabItem { cloudLabel }
-                    .tag(MobilePrimaryTab.cloud)
+                if showsCloudTab {
+                    cloud
+                        .tabItem { cloudLabel }
+                        .tag(MobilePrimaryTab.cloud)
+                }
             }
             .accessibilityIdentifier("MobilePrimaryTabs")
         }
@@ -195,10 +201,12 @@ struct MobilePrimaryTabScaffold<
             }
             .badge(notificationUnreadCount)
         }
-        Tab(value: MobilePrimaryTab.cloud) {
-            cloud
-        } label: {
-            cloudLabel
+        if showsCloudTab {
+            Tab(value: MobilePrimaryTab.cloud) {
+                cloud
+            } label: {
+                cloudLabel
+            }
         }
     }
 
